@@ -1,4 +1,4 @@
-# Install McStas 2.7 on Linux and Unix.
+# Install McStas 2.7.1 on Linux and Unix.
 
 * We provide Debian packages, RedHat packages, and tar.gz's of "preconfigured" source code.
 

@@ -83,7 +83,6 @@ void r_off_normal(Coords* n, r_polygon p)
 int r_off_pnpoly(r_polygon p, Coords v)
 {
   int i=0, c = 0;
-  MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
   MCNUM areax=0,areay=0,areaz=0;
 
   int pol2dx=0,pol2dy=1;          //2d restriction of the poly
@@ -718,6 +717,13 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   data->polySize   = polySize;
   data->faceSize   = faceSize;
   data->filename   = offfile;
+
+   #ifdef OPENACC
+   acc_attach((void *)&vtxArray);
+   acc_attach((void *)&normalArray);
+   acc_attach((void *)&faceArray);
+   #endif
+
   return(polySize);
 } /* r_off_init */
 

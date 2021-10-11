@@ -1,0 +1,224 @@
+McStas simulation description file for BNL_H8.
+Date:    Tue Oct  5 15:05:43 2021
+Program: McStas 3.0-dev - Oct. 05, 2021
+
+begin instrument: BNL_H8
+  File: 1e5/mccode
+  Source: BNL_H8.instr
+  Parameters:  lambda(double)
+  Trace_enabled: yes
+  Default_main: yes
+  Embedded_runtime: yes
+end instrument
+
+begin simulation: 1e5
+  Format: McCode with text headers
+  URL: http://www.mccode.org
+  Creator: McStas 3.0-dev - Oct. 05, 2021
+  Instrument: BNL_H8.instr
+  Ncount: 100000
+  Trace: no
+  Gravitation: no
+  Seed: 1000
+  Directory: 1e5
+  Nodes: 8
+  Param: lambda=2.36
+end simulation
+
+begin data
+  Date: Tue Oct  5 15:05:43 2021 (1633439143)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8.instr)
+  component: D0_Source
+  position: 0 0 0.0001
+  title: PSD monitor
+  Ncount: 200000
+  filename: D0_Source.psd
+  statistics: X0=-0.00623609; dX=0.866654; Y0=0.0165938; dY=1.5675;
+  signal: Min=2.45545e-06; Max=1.35078e-05; Mean=7.73097e-06;
+  values: 0.00309239 4.3572e-05 5037
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -1.5 1.5 -2.7 2.7
+  variables: I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:05:43 2021 (1633439143)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8.instr)
+  component: D1_SC1_Out
+  position: 0 0 3.6618
+  title: PSD monitor
+  Ncount: 200000
+  filename: D1_SC1_Out.psd
+  statistics: X0=-0.00336125; dX=0.856929; Y0=0.0110404; dY=1.47459;
+  signal: Min=3.06735e-05; Max=7.36346e-05; Mean=5.10594e-05;
+  values: 0.0204238 0.000111939 33466
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -1.5 1.5 -2.7 2.7
+  variables: I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:05:43 2021 (1633439143)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8.instr)
+  component: D2_A4
+  position: 0 0 4.4142
+  title: PSD monitor
+  Ncount: 200000
+  filename: D2_A4.psd
+  statistics: X0=-0.0063327; dX=1.23646; Y0=0.0082575; dY=1.76329;
+  signal: Min=1.34947e-05; Max=5.03387e-05; Mean=3.42736e-05;
+  values: 0.0137094 9.17212e-05 22500
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -2.225 2.225 -3.175 3.175
+  variables: I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:05:43 2021 (1633439143)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8.instr)
+  component: D4_SC2_In
+  position: 0.146427 0 5.44198
+  title: PSD monitor
+  Ncount: 200000
+  filename: D4_SC2_In.psd
+  statistics: X0=0.0356124; dX=0.883361; Y0=0.00444401; dY=1.43599;
+  signal: Min=1.22713e-06; Max=7.30358e-06; Mean=3.96207e-06;
+  values: 0.00158483 9.86162e-06 26202
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -1.59 1.59 -2.475 2.475
+  variables: I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:05:43 2021 (1633439143)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8.instr)
+  component: D5_SC2_Out
+  position: 0.548083 0 5.90081
+  title: PSD monitor
+  Ncount: 200000
+  filename: D5_SC2_Out.psd
+  statistics: X0=0.0288411; dX=0.847829; Y0=0.00131749; dY=1.43869;
+  signal: Min=1.28885e-06; Max=5.83127e-06; Mean=3.07239e-06;
+  values: 0.00122896 8.68335e-06 20527
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -1.59 1.59 -2.475 2.475
+  variables: I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:05:43 2021 (1633439143)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8.instr)
+  component: D7_SC3_In
+  position: 1.06257 0 6.72344
+  title: PSD monitor
+  Ncount: 200000
+  filename: D7_SC3_In.psd
+  statistics: X0=0.011363; dX=1.35979; Y0=-0.00406617; dY=1.41045;
+  signal: Min=1.15102e-10; Max=6.07915e-10; Mean=3.10876e-10;
+  values: 1.24351e-07 7.07827e-10 33954
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -2.39 2.39 -2.45 2.45
+  variables: I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:05:43 2021 (1633439143)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8.instr)
+  component: D8_SC3_Out
+  position: 1.06257 0 7.02824
+  title: PSD monitor
+  Ncount: 200000
+  filename: D8_SC3_Out.psd
+  statistics: X0=0.0381959; dX=1.36219; Y0=-0.00163209; dY=1.4218;
+  signal: Min=7.77577e-12; Max=1.19583e-10; Mean=6.10664e-11;
+  values: 2.44265e-08 3.14654e-10 6651
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -2.39 2.39 -2.45 2.45
+  variables: I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:05:43 2021 (1633439143)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8.instr)
+  component: D10_SC4_In
+  position: 1.28421 0 7.42113
+  title: PSD monitor
+  Ncount: 200000
+  filename: D10_SC4_In.psd
+  statistics: X0=0.0834926; dX=0.380284; Y0=0.0792881; dY=1.46904;
+  signal: Min=0; Max=2.64927e-11; Mean=3.2501e-12;
+  values: 1.30004e-09 2.29232e-11 3434
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -2.39 2.39 -2.45 2.45
+  variables: I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:05:43 2021 (1633439143)
+  type: array_2d(20, 20)
+  Source: BNL_H8 (BNL_H8.instr)
+  component: He3H
+  position: 1.48511 0 7.65062
+  title: PSD monitor
+  Ncount: 200000
+  filename: He3.psd
+  statistics: X0=0.0764665; dX=0.375234; Y0=0.0646598; dY=1.44174;
+  signal: Min=0; Max=3.81123e-11; Mean=2.36987e-12;
+  values: 9.47946e-10 1.94627e-11 2527
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [cm]
+  ylabel: Y position [cm]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -2.54 2.54 -4.285 4.285
+  variables: I I_err N
+end data

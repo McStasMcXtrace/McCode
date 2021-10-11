@@ -48,23 +48,16 @@ typedef va_list mcmagnet_data;
 /*here's where the mcstas magnet stack is declared*/
 /*the magnet stack*/
 
-struct field_parameters{
-  double field_prms[8];
-  void *generic;
-};
-
 typedef struct mcmagnet_field_info {
   int func_id;
   Rotation *rot;
   Coords *pos;
-  struct field_parameters *field_parameters;
+  double *field_parameters;
   int stop;
 } mcmagnet_field_info;
 
 void mc_pol_set_timestep(double);
 void mc_pol_set_angular_accuracy(double);
-
-#define mcmagnet_sizeof (sizeof(mcmagnet_field_func *)+ sizeof(Rotation *)+ sizeof(Coords *)+ sizeof(struct field_parameters *))
 
 #define mcmagnet_pack(dest,id,rotation,position,stopbit,args) \
   do { \
@@ -84,19 +77,6 @@ void mc_pol_set_angular_accuracy(double);
     MAGNET_OFF; \
   } while (0);
 
-/*should be removed*/
-#define mcmagnet_set_active(mcmagnet_new) \
-  do { \
-    if (mcmagnet_new!=NULL){ \
-      mcMagneticField=(mcmagnet_new).func; \
-      rot_copy(mcMagnetRot, *((mcmagnet_new)->rot)); \
-      mcMagnetPos=*((mcmagnet_new)->pos); \
-      mcMagnetData=(void *)(mcmagnet_new)->field_parameters; \
-    }else{ \
-      mcmagnet_reset(); \
-    } \
-  } while (0);
-
 #define mcmagnet_free(mcmagnet_desc) \
   do { \
     mcmagnet_field_info * mctmp_p=(mcmagnet_desc); \
@@ -107,9 +87,6 @@ void mc_pol_set_angular_accuracy(double);
   } while(0);
 
 #define MCMAGNET_STOP_ARG INT_MIN
-
-//#define mcmagnet_init_par(...) \
-//  mcmagnet_init_par_backend(0, __VA_ARGS__, MCMAGNET_STOP_ARG);
 
 void mcmagnet_print_active();
 void mcmagnet_print_field(mcmagnet_field_info *);

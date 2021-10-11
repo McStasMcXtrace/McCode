@@ -1,0 +1,402 @@
+INFO: Using directory: "1e4"
+INFO: Using existing c-file: ./ILL_IN5.c
+INFO: Using existing binary: ./ILL_IN5.out
+INFO: ===
+Instrument: ILL_IN5 (IN5 disk chopper time-of-flight spectrometer).
+  Wavelength lambda=4.5 [Angs]
+Chopper 0: L=0.000000 [m] V=890.117919 [rad/s] Phase=0.000000 [mu-sec]           op-times(0.000000+n*0.003529)s +/- 0.000176
+Chopper 1: L=5.308300 [m] V=890.117919 [rad/s] Phase=6038.204920 [mu-sec]           op-times(0.006038+n*0.003529)s +/- 0.000176
+Chopper 2: L=5.458300 [m] V=890.117919 [rad/s] Phase=6208.830306 [mu-sec]           op-times(0.006209+n*0.003529)s +/- 0.000176
+Chopper 3: L=12.428900 [m] V=445.058959 [rad/s] Phase=14137.905757 [mu-sec]           op-times(0.014138+n*0.007059)s +/- 0.000373
+Chopper 4: L=12.483900 [m] V=890.117919 [rad/s] Phase=14200.468398 [mu-sec]           op-times(0.014200+n*0.003529)s +/- 0.000186
+Chopper 5: L=13.253900 [m] V=890.117919 [rad/s] Phase=15076.345381 [mu-sec]           op-times(0.015076+n*0.003529)s +/- 0.000064
+Chopper 6: L=13.308900 [m] V=890.117919 [rad/s] Phase=15138.908023 [mu-sec]           op-times(0.015139+n*0.003529)s +/- 0.000064
+[ILL_IN5] Initialize
+Source_gen: component VCS (square 0.14 x 0.22)
+            focusing distance dist=2.55 area=0.038 x 0.2
+            spectra 4.450 to 4.550 AA (3.952 to 4.131 meV)
+            T1=216.8 K (2.093 AA), T2=33.9 K (5.292 AA), T3=16.7 K (7.539 AA)
+  Flux is dPhi/dlambda in [n/s/cm2].
+Monitor_nD: Det_sample_t is requesting automatic limits option 'auto' together with OpenACC.
+WARNING     this feature is NOT supported using OpenACC and has been disabled!
+Isotropic_Sqw: SAMPLE: is a hollow cylinder: radius=0.015000 thickness=0.012500 height=0.060000 [J Comp Phys 228 (2009) 5251]
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Y3Fe5O12_YIG.laz' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Y3Fe5O12_YIG.laz' (Table_Read_Offset)
+Isotropic_sqw: Converting 594 powder lines from Y3Fe5O12_YIG.laz into S(q,w) data
+Isotropic_sqw: q range [0:11.7751], creating 1678 elements vector
+Isotropic_Sqw: SAMPLE: Generated Y3Fe5O12_YIG.laz coherent Sqw
+                   q=[0:11.7681 Angs-1] w=[0:0 meV] |S|=0.0250511 size=[1678x1] sigma=1036.16 [barns]
+               Mainly elastic scattering.
+Isotropic_Sqw: SAMPLE: Using Isotropic elastic incoherent scattering (sigma=19.672 [barns])
+Isotropic_Sqw: SAMPLE: Sample temperature not defined (T=0).
+Warning        Disabling detailed balance.
+Isotropic_Sqw: SAMPLE: Focusing can only apply for single
+               scattering. Setting to order=1.
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Fe.laz' (Table_Read_Offset)
+Table from file 'Fe.laz' (block 1) is 17 x 18 (x=1:5), constant step. interpolation: linear
+  '# TITLE *Iron-Fe-[IM3-M] Swanson, H.E.;Tatge, E.[1954] [Iron alpha phase];# ...'
+PowderN: hous: Reading 17 rows from Fe.laz
+PowderN: hous: Read 17 reflections from file 'Fe.laz'
+PowderN: hous: Vc=24.04 [Angs] sigma_abs=5.12 [barn] sigma_inc=0.8 [barn] reflections=Fe.laz
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+*** TRACE end *** 
+
+Save [ILL_IN5]
+Detector: Det_sample_t_I=4.11805e+07 Det_sample_t_ERR=6.52397e+06 Det_sample_t_N=52 "Det_sample_t_1633442112.t"
+Detector: Det_ideal_ay_I=1.15674e+06 Det_ideal_ay_ERR=352011 Det_ideal_ay_N=13 "Det_ideal_ay_1633442112.th_y"
+Detector: Det_PSD_I=1.51238e+06 Det_PSD_ERR=423729 Det_PSD_N=15 "in5det.dat"
+Detector: in5_t_I=3.67098e+06 in5_t_ERR=1.06546e+06 in5_t_N=46 "in5_t_1633442112.t"
+
+Finally [ILL_IN5: 1e4]. Time: 0 [s] 
+Isotropic_Sqw: SAMPLE: Scattering fraction=0.447137 of incoming intensity
+               Absorption fraction           =0.461068
+               Single   scattering intensity =5.26981e+06 (coh=5.26981e+06 inc=2.48618e-16)
+               Multiple scattering intensity =0
+INFO: Placing instr file copy ILL_IN5.instr in dataset 1e4
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 1.05
+user 0.38
+sys 0.64
+INFO: Using directory: "1e5"
+INFO: Using existing c-file: ./ILL_IN5.c
+INFO: Using existing binary: ./ILL_IN5.out
+INFO: ===
+Instrument: ILL_IN5 (IN5 disk chopper time-of-flight spectrometer).
+  Wavelength lambda=4.5 [Angs]
+Chopper 0: L=0.000000 [m] V=890.117919 [rad/s] Phase=0.000000 [mu-sec]           op-times(0.000000+n*0.003529)s +/- 0.000176
+Chopper 1: L=5.308300 [m] V=890.117919 [rad/s] Phase=6038.204920 [mu-sec]           op-times(0.006038+n*0.003529)s +/- 0.000176
+Chopper 2: L=5.458300 [m] V=890.117919 [rad/s] Phase=6208.830306 [mu-sec]           op-times(0.006209+n*0.003529)s +/- 0.000176
+Chopper 3: L=12.428900 [m] V=445.058959 [rad/s] Phase=14137.905757 [mu-sec]           op-times(0.014138+n*0.007059)s +/- 0.000373
+Chopper 4: L=12.483900 [m] V=890.117919 [rad/s] Phase=14200.468398 [mu-sec]           op-times(0.014200+n*0.003529)s +/- 0.000186
+Chopper 5: L=13.253900 [m] V=890.117919 [rad/s] Phase=15076.345381 [mu-sec]           op-times(0.015076+n*0.003529)s +/- 0.000064
+Chopper 6: L=13.308900 [m] V=890.117919 [rad/s] Phase=15138.908023 [mu-sec]           op-times(0.015139+n*0.003529)s +/- 0.000064
+[ILL_IN5] Initialize
+Source_gen: component VCS (square 0.14 x 0.22)
+            focusing distance dist=2.55 area=0.038 x 0.2
+            spectra 4.450 to 4.550 AA (3.952 to 4.131 meV)
+            T1=216.8 K (2.093 AA), T2=33.9 K (5.292 AA), T3=16.7 K (7.539 AA)
+  Flux is dPhi/dlambda in [n/s/cm2].
+Monitor_nD: Det_sample_t is requesting automatic limits option 'auto' together with OpenACC.
+WARNING     this feature is NOT supported using OpenACC and has been disabled!
+Isotropic_Sqw: SAMPLE: is a hollow cylinder: radius=0.015000 thickness=0.012500 height=0.060000 [J Comp Phys 228 (2009) 5251]
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Y3Fe5O12_YIG.laz' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Y3Fe5O12_YIG.laz' (Table_Read_Offset)
+Isotropic_sqw: Converting 594 powder lines from Y3Fe5O12_YIG.laz into S(q,w) data
+Isotropic_sqw: q range [0:11.7751], creating 1678 elements vector
+Isotropic_Sqw: SAMPLE: Generated Y3Fe5O12_YIG.laz coherent Sqw
+                   q=[0:11.7681 Angs-1] w=[0:0 meV] |S|=0.0250511 size=[1678x1] sigma=1036.16 [barns]
+               Mainly elastic scattering.
+Isotropic_Sqw: SAMPLE: Using Isotropic elastic incoherent scattering (sigma=19.672 [barns])
+Isotropic_Sqw: SAMPLE: Sample temperature not defined (T=0).
+Warning        Disabling detailed balance.
+Isotropic_Sqw: SAMPLE: Focusing can only apply for single
+               scattering. Setting to order=1.
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Fe.laz' (Table_Read_Offset)
+Table from file 'Fe.laz' (block 1) is 17 x 18 (x=1:5), constant step. interpolation: linear
+  '# TITLE *Iron-Fe-[IM3-M] Swanson, H.E.;Tatge, E.[1954] [Iron alpha phase];# ...'
+PowderN: hous: Reading 17 rows from Fe.laz
+PowderN: hous: Read 17 reflections from file 'Fe.laz'
+PowderN: hous: Vc=24.04 [Angs] sigma_abs=5.12 [barn] sigma_inc=0.8 [barn] reflections=Fe.laz
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+*** TRACE end *** 
+
+Save [ILL_IN5]
+Detector: Det_sample_t_I=3.54178e+07 Det_sample_t_ERR=1.94692e+06 Det_sample_t_N=468 "Det_sample_t_1633442113.t"
+Detector: Det_ideal_ay_I=1.29932e+06 Det_ideal_ay_ERR=119088 Det_ideal_ay_N=168 "Det_ideal_ay_1633442113.th_y"
+Detector: Det_PSD_I=1.33511e+06 Det_PSD_ERR=128889 Det_PSD_N=160 "in5det.dat"
+Detector: in5_t_I=2.66629e+06 in5_t_ERR=271024 in5_t_N=401 "in5_t_1633442113.t"
+
+Finally [ILL_IN5: 1e5]. Time: 1 [s] 
+Isotropic_Sqw: SAMPLE: Scattering fraction=0.411063 of incoming intensity
+               Absorption fraction           =0.452617
+               Single   scattering intensity =3.69408e+06 (coh=3.46471e+06 inc=229370)
+               Multiple scattering intensity =0
+INFO: Placing instr file copy ILL_IN5.instr in dataset 1e5
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 1.20
+user 0.39
+sys 0.78
+INFO: Using directory: "1e6"
+INFO: Using existing c-file: ./ILL_IN5.c
+INFO: Using existing binary: ./ILL_IN5.out
+INFO: ===
+Instrument: ILL_IN5 (IN5 disk chopper time-of-flight spectrometer).
+  Wavelength lambda=4.5 [Angs]
+Chopper 0: L=0.000000 [m] V=890.117919 [rad/s] Phase=0.000000 [mu-sec]           op-times(0.000000+n*0.003529)s +/- 0.000176
+Chopper 1: L=5.308300 [m] V=890.117919 [rad/s] Phase=6038.204920 [mu-sec]           op-times(0.006038+n*0.003529)s +/- 0.000176
+Chopper 2: L=5.458300 [m] V=890.117919 [rad/s] Phase=6208.830306 [mu-sec]           op-times(0.006209+n*0.003529)s +/- 0.000176
+Chopper 3: L=12.428900 [m] V=445.058959 [rad/s] Phase=14137.905757 [mu-sec]           op-times(0.014138+n*0.007059)s +/- 0.000373
+Chopper 4: L=12.483900 [m] V=890.117919 [rad/s] Phase=14200.468398 [mu-sec]           op-times(0.014200+n*0.003529)s +/- 0.000186
+Chopper 5: L=13.253900 [m] V=890.117919 [rad/s] Phase=15076.345381 [mu-sec]           op-times(0.015076+n*0.003529)s +/- 0.000064
+Chopper 6: L=13.308900 [m] V=890.117919 [rad/s] Phase=15138.908023 [mu-sec]           op-times(0.015139+n*0.003529)s +/- 0.000064
+[ILL_IN5] Initialize
+Source_gen: component VCS (square 0.14 x 0.22)
+            focusing distance dist=2.55 area=0.038 x 0.2
+            spectra 4.450 to 4.550 AA (3.952 to 4.131 meV)
+            T1=216.8 K (2.093 AA), T2=33.9 K (5.292 AA), T3=16.7 K (7.539 AA)
+  Flux is dPhi/dlambda in [n/s/cm2].
+Monitor_nD: Det_sample_t is requesting automatic limits option 'auto' together with OpenACC.
+WARNING     this feature is NOT supported using OpenACC and has been disabled!
+Isotropic_Sqw: SAMPLE: is a hollow cylinder: radius=0.015000 thickness=0.012500 height=0.060000 [J Comp Phys 228 (2009) 5251]
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Y3Fe5O12_YIG.laz' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Y3Fe5O12_YIG.laz' (Table_Read_Offset)
+Isotropic_sqw: Converting 594 powder lines from Y3Fe5O12_YIG.laz into S(q,w) data
+Isotropic_sqw: q range [0:11.7751], creating 1678 elements vector
+Isotropic_Sqw: SAMPLE: Generated Y3Fe5O12_YIG.laz coherent Sqw
+                   q=[0:11.7681 Angs-1] w=[0:0 meV] |S|=0.0250511 size=[1678x1] sigma=1036.16 [barns]
+               Mainly elastic scattering.
+Isotropic_Sqw: SAMPLE: Using Isotropic elastic incoherent scattering (sigma=19.672 [barns])
+Isotropic_Sqw: SAMPLE: Sample temperature not defined (T=0).
+Warning        Disabling detailed balance.
+Isotropic_Sqw: SAMPLE: Focusing can only apply for single
+               scattering. Setting to order=1.
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Fe.laz' (Table_Read_Offset)
+Table from file 'Fe.laz' (block 1) is 17 x 18 (x=1:5), constant step. interpolation: linear
+  '# TITLE *Iron-Fe-[IM3-M] Swanson, H.E.;Tatge, E.[1954] [Iron alpha phase];# ...'
+PowderN: hous: Reading 17 rows from Fe.laz
+PowderN: hous: Read 17 reflections from file 'Fe.laz'
+PowderN: hous: Vc=24.04 [Angs] sigma_abs=5.12 [barn] sigma_inc=0.8 [barn] reflections=Fe.laz
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+*** TRACE end *** 
+
+Save [ILL_IN5]
+Detector: Det_sample_t_I=3.85965e+07 Det_sample_t_ERR=642363 Det_sample_t_N=5301 "Det_sample_t_1633442114.t"
+Detector: Det_ideal_ay_I=1.38372e+06 Det_ideal_ay_ERR=38664.7 Det_ideal_ay_N=1887 "Det_ideal_ay_1633442115.th_y"
+Detector: Det_PSD_I=1.38165e+06 Det_PSD_ERR=41008.6 Det_PSD_N=1775 "in5det.dat"
+Detector: in5_t_I=2.71424e+06 in5_t_ERR=81546.8 in5_t_N=4499 "in5_t_1633442115.t"
+
+Finally [ILL_IN5: 1e6]. Time: 1 [s] 
+Isotropic_Sqw: SAMPLE: 3 neutron events (out of 4214) that should have
+               scattered were transmitted because scattering conditions
+WARNING        could not be satisfied after 100 tries.
+Isotropic_Sqw: SAMPLE: Scattering fraction=0.406708 of incoming intensity
+               Absorption fraction           =0.457891
+               Single   scattering intensity =3.72121e+06 (coh=3.5108e+06 inc=210407)
+               Multiple scattering intensity =0
+INFO: Placing instr file copy ILL_IN5.instr in dataset 1e6
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 1.21
+user 0.47
+sys 0.73
+INFO: Using directory: "1e7"
+INFO: Using existing c-file: ./ILL_IN5.c
+INFO: Using existing binary: ./ILL_IN5.out
+INFO: ===
+Instrument: ILL_IN5 (IN5 disk chopper time-of-flight spectrometer).
+  Wavelength lambda=4.5 [Angs]
+Chopper 0: L=0.000000 [m] V=890.117919 [rad/s] Phase=0.000000 [mu-sec]           op-times(0.000000+n*0.003529)s +/- 0.000176
+Chopper 1: L=5.308300 [m] V=890.117919 [rad/s] Phase=6038.204920 [mu-sec]           op-times(0.006038+n*0.003529)s +/- 0.000176
+Chopper 2: L=5.458300 [m] V=890.117919 [rad/s] Phase=6208.830306 [mu-sec]           op-times(0.006209+n*0.003529)s +/- 0.000176
+Chopper 3: L=12.428900 [m] V=445.058959 [rad/s] Phase=14137.905757 [mu-sec]           op-times(0.014138+n*0.007059)s +/- 0.000373
+Chopper 4: L=12.483900 [m] V=890.117919 [rad/s] Phase=14200.468398 [mu-sec]           op-times(0.014200+n*0.003529)s +/- 0.000186
+Chopper 5: L=13.253900 [m] V=890.117919 [rad/s] Phase=15076.345381 [mu-sec]           op-times(0.015076+n*0.003529)s +/- 0.000064
+Chopper 6: L=13.308900 [m] V=890.117919 [rad/s] Phase=15138.908023 [mu-sec]           op-times(0.015139+n*0.003529)s +/- 0.000064
+[ILL_IN5] Initialize
+Source_gen: component VCS (square 0.14 x 0.22)
+            focusing distance dist=2.55 area=0.038 x 0.2
+            spectra 4.450 to 4.550 AA (3.952 to 4.131 meV)
+            T1=216.8 K (2.093 AA), T2=33.9 K (5.292 AA), T3=16.7 K (7.539 AA)
+  Flux is dPhi/dlambda in [n/s/cm2].
+Monitor_nD: Det_sample_t is requesting automatic limits option 'auto' together with OpenACC.
+WARNING     this feature is NOT supported using OpenACC and has been disabled!
+Isotropic_Sqw: SAMPLE: is a hollow cylinder: radius=0.015000 thickness=0.012500 height=0.060000 [J Comp Phys 228 (2009) 5251]
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Y3Fe5O12_YIG.laz' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Y3Fe5O12_YIG.laz' (Table_Read_Offset)
+Isotropic_sqw: Converting 594 powder lines from Y3Fe5O12_YIG.laz into S(q,w) data
+Isotropic_sqw: q range [0:11.7751], creating 1678 elements vector
+Isotropic_Sqw: SAMPLE: Generated Y3Fe5O12_YIG.laz coherent Sqw
+                   q=[0:11.7681 Angs-1] w=[0:0 meV] |S|=0.0250511 size=[1678x1] sigma=1036.16 [barns]
+               Mainly elastic scattering.
+Isotropic_Sqw: SAMPLE: Using Isotropic elastic incoherent scattering (sigma=19.672 [barns])
+Isotropic_Sqw: SAMPLE: Sample temperature not defined (T=0).
+Warning        Disabling detailed balance.
+Isotropic_Sqw: SAMPLE: Focusing can only apply for single
+               scattering. Setting to order=1.
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Fe.laz' (Table_Read_Offset)
+Table from file 'Fe.laz' (block 1) is 17 x 18 (x=1:5), constant step. interpolation: linear
+  '# TITLE *Iron-Fe-[IM3-M] Swanson, H.E.;Tatge, E.[1954] [Iron alpha phase];# ...'
+PowderN: hous: Reading 17 rows from Fe.laz
+PowderN: hous: Read 17 reflections from file 'Fe.laz'
+PowderN: hous: Vc=24.04 [Angs] sigma_abs=5.12 [barn] sigma_inc=0.8 [barn] reflections=Fe.laz
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+*** TRACE end *** 
+
+Save [ILL_IN5]
+Detector: Det_sample_t_I=3.80904e+07 Det_sample_t_ERR=201709 Det_sample_t_N=52192 "Det_sample_t_1633442116.t"
+Detector: Det_ideal_ay_I=1.3531e+06 Det_ideal_ay_ERR=12129.5 Det_ideal_ay_N=18351 "Det_ideal_ay_1633442116.th_y"
+Detector: Det_PSD_I=1.32927e+06 Det_PSD_ERR=12734 Det_PSD_N=17398 "in5det.dat"
+Detector: in5_t_I=2.67448e+06 in5_t_ERR=25351.7 in5_t_N=44208 "in5_t_1633442116.t"
+
+Finally [ILL_IN5: 1e7]. Time: 0 [s] 
+Isotropic_Sqw: SAMPLE: 25 neutron events (out of 41103) that should have
+               scattered were transmitted because scattering conditions
+WARNING        could not be satisfied after 100 tries.
+Isotropic_Sqw: SAMPLE: Scattering fraction=0.389346 of incoming intensity
+               Absorption fraction           =0.452273
+               Single   scattering intensity =3.59362e+06 (coh=3.37267e+06 inc=220949)
+               Multiple scattering intensity =0
+INFO: Placing instr file copy ILL_IN5.instr in dataset 1e7
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 1.61
+user 0.77
+sys 0.83
+INFO: Using directory: "1e8"
+INFO: Using existing c-file: ./ILL_IN5.c
+INFO: Using existing binary: ./ILL_IN5.out
+INFO: ===
+Instrument: ILL_IN5 (IN5 disk chopper time-of-flight spectrometer).
+  Wavelength lambda=4.5 [Angs]
+Chopper 0: L=0.000000 [m] V=890.117919 [rad/s] Phase=0.000000 [mu-sec]           op-times(0.000000+n*0.003529)s +/- 0.000176
+Chopper 1: L=5.308300 [m] V=890.117919 [rad/s] Phase=6038.204920 [mu-sec]           op-times(0.006038+n*0.003529)s +/- 0.000176
+Chopper 2: L=5.458300 [m] V=890.117919 [rad/s] Phase=6208.830306 [mu-sec]           op-times(0.006209+n*0.003529)s +/- 0.000176
+Chopper 3: L=12.428900 [m] V=445.058959 [rad/s] Phase=14137.905757 [mu-sec]           op-times(0.014138+n*0.007059)s +/- 0.000373
+Chopper 4: L=12.483900 [m] V=890.117919 [rad/s] Phase=14200.468398 [mu-sec]           op-times(0.014200+n*0.003529)s +/- 0.000186
+Chopper 5: L=13.253900 [m] V=890.117919 [rad/s] Phase=15076.345381 [mu-sec]           op-times(0.015076+n*0.003529)s +/- 0.000064
+Chopper 6: L=13.308900 [m] V=890.117919 [rad/s] Phase=15138.908023 [mu-sec]           op-times(0.015139+n*0.003529)s +/- 0.000064
+[ILL_IN5] Initialize
+Source_gen: component VCS (square 0.14 x 0.22)
+            focusing distance dist=2.55 area=0.038 x 0.2
+            spectra 4.450 to 4.550 AA (3.952 to 4.131 meV)
+            T1=216.8 K (2.093 AA), T2=33.9 K (5.292 AA), T3=16.7 K (7.539 AA)
+  Flux is dPhi/dlambda in [n/s/cm2].
+Monitor_nD: Det_sample_t is requesting automatic limits option 'auto' together with OpenACC.
+WARNING     this feature is NOT supported using OpenACC and has been disabled!
+Isotropic_Sqw: SAMPLE: is a hollow cylinder: radius=0.015000 thickness=0.012500 height=0.060000 [J Comp Phys 228 (2009) 5251]
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Y3Fe5O12_YIG.laz' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Y3Fe5O12_YIG.laz' (Table_Read_Offset)
+Isotropic_sqw: Converting 594 powder lines from Y3Fe5O12_YIG.laz into S(q,w) data
+Isotropic_sqw: q range [0:11.7751], creating 1678 elements vector
+Isotropic_Sqw: SAMPLE: Generated Y3Fe5O12_YIG.laz coherent Sqw
+                   q=[0:11.7681 Angs-1] w=[0:0 meV] |S|=0.0250511 size=[1678x1] sigma=1036.16 [barns]
+               Mainly elastic scattering.
+Isotropic_Sqw: SAMPLE: Using Isotropic elastic incoherent scattering (sigma=19.672 [barns])
+Isotropic_Sqw: SAMPLE: Sample temperature not defined (T=0).
+Warning        Disabling detailed balance.
+Isotropic_Sqw: SAMPLE: Focusing can only apply for single
+               scattering. Setting to order=1.
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Fe.laz' (Table_Read_Offset)
+Table from file 'Fe.laz' (block 1) is 17 x 18 (x=1:5), constant step. interpolation: linear
+  '# TITLE *Iron-Fe-[IM3-M] Swanson, H.E.;Tatge, E.[1954] [Iron alpha phase];# ...'
+PowderN: hous: Reading 17 rows from Fe.laz
+PowderN: hous: Read 17 reflections from file 'Fe.laz'
+PowderN: hous: Vc=24.04 [Angs] sigma_abs=5.12 [barn] sigma_inc=0.8 [barn] reflections=Fe.laz
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+*** TRACE end *** 
+
+Save [ILL_IN5]
+Detector: Det_sample_t_I=3.80283e+07 Det_sample_t_ERR=63729.3 Det_sample_t_N=524272 "Det_sample_t_1633442117.t"
+Detector: Det_ideal_ay_I=1.3623e+06 Det_ideal_ay_ERR=3846.94 Det_ideal_ay_N=185427 "Det_ideal_ay_1633442117.th_y"
+Detector: Det_PSD_I=1.33306e+06 Det_PSD_ERR=4029.24 Det_PSD_N=175415 "in5det.dat"
+Detector: in5_t_I=2.71604e+06 in5_t_ERR=8169.19 in5_t_N=444760 "in5_t_1633442117.t"
+
+Finally [ILL_IN5: 1e8]. Time: 5 [s] 
+Isotropic_Sqw: SAMPLE: 308 neutron events (out of 410210) that should have
+               scattered were transmitted because scattering conditions
+WARNING        could not be satisfied after 100 tries.
+Isotropic_Sqw: SAMPLE: Scattering fraction=0.378783 of incoming intensity
+               Absorption fraction           =0.448048
+               Single   scattering intensity =3.55855e+06 (coh=3.33773e+06 inc=220820)
+               Multiple scattering intensity =0
+INFO: Placing instr file copy ILL_IN5.instr in dataset 1e8
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 5.81
+user 3.71
+sys 2.09
+INFO: Using directory: "1e9"
+INFO: Using existing c-file: ./ILL_IN5.c
+INFO: Using existing binary: ./ILL_IN5.out
+INFO: ===
+Instrument: ILL_IN5 (IN5 disk chopper time-of-flight spectrometer).
+  Wavelength lambda=4.5 [Angs]
+Chopper 0: L=0.000000 [m] V=890.117919 [rad/s] Phase=0.000000 [mu-sec]           op-times(0.000000+n*0.003529)s +/- 0.000176
+Chopper 1: L=5.308300 [m] V=890.117919 [rad/s] Phase=6038.204920 [mu-sec]           op-times(0.006038+n*0.003529)s +/- 0.000176
+Chopper 2: L=5.458300 [m] V=890.117919 [rad/s] Phase=6208.830306 [mu-sec]           op-times(0.006209+n*0.003529)s +/- 0.000176
+Chopper 3: L=12.428900 [m] V=445.058959 [rad/s] Phase=14137.905757 [mu-sec]           op-times(0.014138+n*0.007059)s +/- 0.000373
+Chopper 4: L=12.483900 [m] V=890.117919 [rad/s] Phase=14200.468398 [mu-sec]           op-times(0.014200+n*0.003529)s +/- 0.000186
+Chopper 5: L=13.253900 [m] V=890.117919 [rad/s] Phase=15076.345381 [mu-sec]           op-times(0.015076+n*0.003529)s +/- 0.000064
+Chopper 6: L=13.308900 [m] V=890.117919 [rad/s] Phase=15138.908023 [mu-sec]           op-times(0.015139+n*0.003529)s +/- 0.000064
+[ILL_IN5] Initialize
+Source_gen: component VCS (square 0.14 x 0.22)
+            focusing distance dist=2.55 area=0.038 x 0.2
+            spectra 4.450 to 4.550 AA (3.952 to 4.131 meV)
+            T1=216.8 K (2.093 AA), T2=33.9 K (5.292 AA), T3=16.7 K (7.539 AA)
+  Flux is dPhi/dlambda in [n/s/cm2].
+Monitor_nD: Det_sample_t is requesting automatic limits option 'auto' together with OpenACC.
+WARNING     this feature is NOT supported using OpenACC and has been disabled!
+Isotropic_Sqw: SAMPLE: is a hollow cylinder: radius=0.015000 thickness=0.012500 height=0.060000 [J Comp Phys 228 (2009) 5251]
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Y3Fe5O12_YIG.laz' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Y3Fe5O12_YIG.laz' (Table_Read_Offset)
+Isotropic_sqw: Converting 594 powder lines from Y3Fe5O12_YIG.laz into S(q,w) data
+Isotropic_sqw: q range [0:11.7751], creating 1678 elements vector
+Isotropic_Sqw: SAMPLE: Generated Y3Fe5O12_YIG.laz coherent Sqw
+                   q=[0:11.7681 Angs-1] w=[0:0 meV] |S|=0.0250511 size=[1678x1] sigma=1036.16 [barns]
+               Mainly elastic scattering.
+Isotropic_Sqw: SAMPLE: Using Isotropic elastic incoherent scattering (sigma=19.672 [barns])
+Isotropic_Sqw: SAMPLE: Sample temperature not defined (T=0).
+Warning        Disabling detailed balance.
+Isotropic_Sqw: SAMPLE: Focusing can only apply for single
+               scattering. Setting to order=1.
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../data/Fe.laz' (Table_Read_Offset)
+Table from file 'Fe.laz' (block 1) is 17 x 18 (x=1:5), constant step. interpolation: linear
+  '# TITLE *Iron-Fe-[IM3-M] Swanson, H.E.;Tatge, E.[1954] [Iron alpha phase];# ...'
+PowderN: hous: Reading 17 rows from Fe.laz
+PowderN: hous: Read 17 reflections from file 'Fe.laz'
+PowderN: hous: Vc=24.04 [Angs] sigma_abs=5.12 [barn] sigma_inc=0.8 [barn] reflections=Fe.laz
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inHe.table' (Table_Read_Offset)
+Opening input file '/u/data/pkwi/McStas/mcstas/3.0-dev/tools/Python/mcrun/../mccodelib/../../../contrib/Gas_tables/He3inCF4.table' (Table_Read_Offset)
+*** TRACE end *** 
+
+Save [ILL_IN5]
+Detector: Det_sample_t_I=3.8114e+07 Det_sample_t_ERR=20177.7 Det_sample_t_N=5.25283e+06 "Det_sample_t_1633442123.t"
+Detector: Det_ideal_ay_I=1.36447e+06 Det_ideal_ay_ERR=1217.52 Det_ideal_ay_N=1.86444e+06 "Det_ideal_ay_1633442123.th_y"
+Detector: Det_PSD_I=1.33437e+06 Det_PSD_ERR=1274.56 Det_PSD_N=1.76127e+06 "in5det.dat"
+Detector: in5_t_I=2.72877e+06 in5_t_ERR=2587.7 in5_t_N=4.45847e+06 "in5_t_1633442123.t"
+
+Finally [ILL_IN5: 1e9]. Time: 45 [s] 
+Isotropic_Sqw: SAMPLE: 3050 neutron events (out of 4095177) that should have
+               scattered were transmitted because scattering conditions
+WARNING        could not be satisfied after 100 tries.
+Isotropic_Sqw: SAMPLE: Scattering fraction=0.373668 of incoming intensity
+               Absorption fraction           =0.445853
+               Single   scattering intensity =3.54689e+06 (coh=3.32442e+06 inc=222466)
+               Multiple scattering intensity =0
+INFO: Placing instr file copy ILL_IN5.instr in dataset 1e9
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 46.33
+user 32.22
+sys 14.10

@@ -1,0 +1,665 @@
+INFO: Using directory: "1e4"
+INFO: Using existing c-file: ./BNL_H8.c
+INFO: Using existing binary: ./BNL_H8.out
+INFO: ===
+Simulation 'BNL_H8' (BNL_H8.instr): running on 8 nodes (master is 'hypatia.fysik.dtu.dk', MPI version 3.1).
+Node 0 should use device 0
+Node 6 should use device 6
+Node 4 should use device 4
+Node 7 should use device 7
+Node 3 should use device 3
+Node 5 should use device 5
+Node 2 should use device 2
+Node 1 should use device 1
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+*** TRACE end *** 
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+
+Save [BNL_H8]
+Detector: D0_Source_I=0.00306356 D0_Source_ERR=0.000137144 D0_Source_N=499 "D0_Source.psd"
+Detector: D1_SC1_Out_I=0.0205419 D1_SC1_Out_ERR=0.00035499 D1_SC1_Out_N=3363 "D1_SC1_Out.psd"
+Detector: D2_A4_I=0.0138696 D2_A4_ERR=0.000291718 D2_A4_N=2274 "D2_A4.psd"
+Detector: D4_SC2_In_I=0.00162832 D4_SC2_In_ERR=3.16114e-05 D4_SC2_In_N=2693 "D4_SC2_In.psd"
+Detector: D5_SC2_Out_I=0.0012465 D5_SC2_Out_ERR=2.76569e-05 D5_SC2_Out_N=2097 "D5_SC2_Out.psd"
+Detector: D7_SC3_In_I=1.20452e-07 D7_SC3_In_ERR=2.19872e-09 D7_SC3_In_N=3259 "D7_SC3_In.psd"
+Detector: D8_SC3_Out_I=2.53299e-08 D8_SC3_Out_ERR=1.0267e-09 D8_SC3_Out_N=664 "D8_SC3_Out.psd"
+Detector: D10_SC4_In_I=1.3126e-09 D10_SC4_In_ERR=7.39931e-11 D10_SC4_In_N=335 "D10_SC4_In.psd"
+
+Finally [BNL_H8: 1e4]. Time: 0 [s] 
+
+Finally [BNL_H8: 1e4]. Time: 0 [s] 
+
+Finally [BNL_H8: 1e4]. Time: 0 [s] 
+
+Finally [BNL_H8: 1e4]. Time: 0 [s] 
+
+Finally [BNL_H8: 1e4]. Time: 0 [s] 
+Detector: He3H_I=9.22319e-10 He3H_ERR=6.19988e-11 He3H_N=237 "He3.psd"
+
+Finally [BNL_H8: 1e4]. Time: 0 [s] 
+
+Finally [BNL_H8: 1e4]. Time: 0 [s] 
+
+Finally [BNL_H8: 1e4]. Time: 2 [s] 
+INFO: Placing instr file copy BNL_H8.instr in dataset 1e4
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 5.18
+user 2.83
+sys 7.90
+INFO: Using directory: "1e5"
+INFO: Using existing c-file: ./BNL_H8.c
+INFO: Using existing binary: ./BNL_H8.out
+INFO: ===
+Simulation 'BNL_H8' (BNL_H8.instr): running on 8 nodes (master is 'hypatia.fysik.dtu.dk', MPI version 3.1).
+Node 0 should use device 0
+Node 2 should use device 2
+Node 3 should use device 3
+Node 7 should use device 7
+Node 6 should use device 6
+Node 4 should use device 4
+Node 5 should use device 5
+Node 1 should use device 1
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+*** TRACE end *** 
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+
+Save [BNL_H8]
+Detector: D0_Source_I=0.00309239 D0_Source_ERR=4.3572e-05 D0_Source_N=5037 "D0_Source.psd"
+Detector: D1_SC1_Out_I=0.0204238 D1_SC1_Out_ERR=0.000111939 D1_SC1_Out_N=33466 "D1_SC1_Out.psd"
+Detector: D2_A4_I=0.0137094 D2_A4_ERR=9.17212e-05 D2_A4_N=22500 "D2_A4.psd"
+Detector: D4_SC2_In_I=0.00158529 D4_SC2_In_ERR=9.86448e-06 D4_SC2_In_N=26202 "D4_SC2_In.psd"
+Detector: D5_SC2_Out_I=0.00122931 D5_SC2_Out_ERR=8.68583e-06 D5_SC2_Out_N=20527 "D5_SC2_Out.psd"
+Detector: D7_SC3_In_I=1.24387e-07 D7_SC3_In_ERR=7.08035e-10 D7_SC3_In_N=33954 "D7_SC3_In.psd"
+Detector: D8_SC3_Out_I=2.44335e-08 D8_SC3_Out_ERR=3.14745e-10 D8_SC3_Out_N=6651 "D8_SC3_Out.psd"
+Detector: D10_SC4_In_I=1.30083e-09 D10_SC4_In_ERR=2.29374e-11 D10_SC4_In_N=3434 "D10_SC4_In.psd"
+
+Finally [BNL_H8: 1e5]. Time: 0 [s] 
+
+Finally [BNL_H8: 1e5]. Time: 0 [s] 
+
+
+Finally [BNL_H8: 1e5]. Time: 1 [s] 
+Finally [BNL_H8: 1e5]. Time: 0 [s] 
+Detector: He3H_I=9.4855e-10 He3H_ERR=1.94754e-11 He3H_N=2527 "He3.psd"
+
+Finally [BNL_H8: 1e5]. Time: 1 [s] 
+
+Finally [BNL_H8: 1e5]. Time: 0 [s] 
+
+Finally [BNL_H8: 1e5]. Time: 0 [s] 
+
+Finally [BNL_H8: 1e5]. Time: 2 [s] 
+INFO: Placing instr file copy BNL_H8.instr in dataset 1e5
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 4.79
+user 2.66
+sys 7.50
+INFO: Using directory: "1e6"
+INFO: Using existing c-file: ./BNL_H8.c
+INFO: Using existing binary: ./BNL_H8.out
+INFO: ===
+Simulation 'BNL_H8' (BNL_H8.instr): running on 8 nodes (master is 'hypatia.fysik.dtu.dk', MPI version 3.1).
+Node 6 should use device 6
+Node 3 should use device 3
+Node 1 should use device 1
+Node 0 should use device 0
+Node 4 should use device 4
+Node 5 should use device 5
+Node 2 should use device 2
+Node 7 should use device 7
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+*** TRACE end *** 
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+
+Save [BNL_H8]
+Detector: D0_Source_I=0.0031652 D0_Source_ERR=1.394e-05 D0_Source_N=51556 "D0_Source.psd"
+Detector: D1_SC1_Out_I=0.0204889 D1_SC1_Out_ERR=3.54536e-05 D1_SC1_Out_N=335921 "D1_SC1_Out.psd"
+Detector: D2_A4_I=0.0137995 D2_A4_ERR=2.90989e-05 D2_A4_N=226595 "D2_A4.psd"
+Detector: D4_SC2_In_I=0.00155685 D4_SC2_In_ERR=3.09098e-06 D4_SC2_In_N=257579 "D4_SC2_In.psd"
+Detector: D5_SC2_Out_I=0.00121965 D5_SC2_Out_ERR=2.73561e-06 D5_SC2_Out_N=203252 "D5_SC2_Out.psd"
+Detector: D7_SC3_In_I=1.23403e-07 D7_SC3_In_ERR=2.23712e-10 D7_SC3_In_N=333852 "D7_SC3_In.psd"
+Detector: D8_SC3_Out_I=2.35203e-08 D8_SC3_Out_ERR=9.81417e-11 D8_SC3_Out_N=63051 "D8_SC3_Out.psd"
+Detector: D10_SC4_In_I=1.26355e-09 D10_SC4_In_ERR=7.1828e-12 D10_SC4_In_N=34068 "D10_SC4_In.psd"
+Detector: He3H_I=9.57211e-10 He3H_ERR=6.24546e-12 He3H_N=25867 "He3.psd"
+
+Finally [BNL_H8: 1e6]. Time: 1 [s] 
+
+
+Finally [BNL_H8: 1e6]. Time: 1 [s] 
+
+Finally [BNL_H8: 1e6]. Time: 1 [s] 
+
+Finally [BNL_H8: 1e6]. Time: 1 [s] 
+
+Finally [BNL_H8: 1e6]. Time: 1 [s] 
+
+Finally [BNL_H8: 1e6]. Time: 1 [s] 
+Finally [BNL_H8: 1e6]. Time: 1 [s] 
+
+Finally [BNL_H8: 1e6]. Time: 2 [s] 
+INFO: Placing instr file copy BNL_H8.instr in dataset 1e6
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 4.80
+user 3.26
+sys 7.29
+INFO: Using directory: "1e7"
+INFO: Using existing c-file: ./BNL_H8.c
+INFO: Using existing binary: ./BNL_H8.out
+INFO: ===
+Simulation 'BNL_H8' (BNL_H8.instr): running on 8 nodes (master is 'hypatia.fysik.dtu.dk', MPI version 3.1).
+Node 2 should use device 2
+Node 4 should use device 4
+Node 5 should use device 5
+Node 7 should use device 7
+Node 3 should use device 3
+Node 1 should use device 1
+Node 6 should use device 6
+Node 0 should use device 0
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+*** TRACE end *** 
+
+Save [BNL_H8]
+Detector: D0_Source_I=0.00315983 D0_Source_ERR=4.40446e-06 D0_Source_N=514685 "D0_Source.psd"
+Detector: D1_SC1_Out_I=0.0204457 D1_SC1_Out_ERR=1.11996e-05 D1_SC1_Out_N=3.35149e+06 "D1_SC1_Out.psd"
+Detector: D2_A4_I=0.0137655 D2_A4_ERR=9.19061e-06 D2_A4_N=2.25981e+06 "D2_A4.psd"
+Detector: D4_SC2_In_I=0.00154887 D4_SC2_In_ERR=9.74978e-07 D4_SC2_In_N=2.56134e+06 "D4_SC2_In.psd"
+Detector: D5_SC2_Out_I=0.00121131 D5_SC2_Out_ERR=8.6215e-07 D5_SC2_Out_N=2.01881e+06 "D5_SC2_Out.psd"
+Detector: D7_SC3_In_I=1.24203e-07 D7_SC3_In_ERR=7.09845e-11 D7_SC3_In_N=3.36308e+06 "D7_SC3_In.psd"
+Detector: D8_SC3_Out_I=2.38169e-08 D8_SC3_Out_ERR=3.12491e-11 D8_SC3_Out_N=638795 "D8_SC3_Out.psd"
+Detector: D10_SC4_In_I=1.29225e-09 D10_SC4_In_ERR=2.30325e-12 D10_SC4_In_N=347257 "D10_SC4_In.psd"
+
+Finally [BNL_H8: 1e7]. Time: 1 [s] 
+
+Finally [BNL_H8: 1e7]. Time: 1 [s] 
+
+Finally [BNL_H8: 1e7]. Time: 1 [s] 
+
+Finally [BNL_H8: 1e7]. Time: 1 [s] 
+
+Finally [BNL_H8: 1e7]. Time: 1 [s] 
+
+Finally [BNL_H8: 1e7]. Time: 1 [s] 
+
+Finally [BNL_H8: 1e7]. Time: 1 [s] 
+Detector: He3H_I=9.93578e-10 He3H_ERR=2.01948e-12 He3H_N=266876 "He3.psd"
+
+Finally [BNL_H8: 1e7]. Time: 2 [s] 
+INFO: Placing instr file copy BNL_H8.instr in dataset 1e7
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 5.50
+user 6.59
+sys 8.61
+INFO: Using directory: "1e8"
+INFO: Using existing c-file: ./BNL_H8.c
+INFO: Using existing binary: ./BNL_H8.out
+INFO: ===
+Simulation 'BNL_H8' (BNL_H8.instr): running on 8 nodes (master is 'hypatia.fysik.dtu.dk', MPI version 3.1).
+Node 0 should use device 0
+Node 5 should use device 5
+Node 1 should use device 1
+Node 6 should use device 6
+Node 7 should use device 7
+Node 4 should use device 4
+Node 3 should use device 3
+Node 2 should use device 2
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+*** TRACE end *** 
+
+Save [BNL_H8]
+Detector: D0_Source_I=0.00316618 D0_Source_ERR=1.39421e-06 D0_Source_N=5.15719e+06 "D0_Source.psd"
+Detector: D1_SC1_Out_I=0.0204135 D1_SC1_Out_ERR=3.53885e-06 D1_SC1_Out_N=3.34625e+07 "D1_SC1_Out.psd"
+Detector: D2_A4_I=0.01375 D2_A4_ERR=2.90469e-06 D2_A4_N=2.25728e+07 "D2_A4.psd"
+Detector: D4_SC2_In_I=0.00154921 D4_SC2_In_ERR=3.08348e-07 D4_SC2_In_N=2.56133e+07 "D4_SC2_In.psd"
+Detector: D5_SC2_Out_I=0.0012112 D5_SC2_Out_ERR=2.72621e-07 D5_SC2_Out_N=2.01859e+07 "D5_SC2_Out.psd"
+Detector: D7_SC3_In_I=1.24448e-07 D7_SC3_In_ERR=2.24749e-11 D7_SC3_In_N=3.36613e+07 "D7_SC3_In.psd"
+Detector: D8_SC3_Out_I=2.38674e-08 D8_SC3_Out_ERR=9.89013e-12 D8_SC3_Out_N=6.39603e+06 "D8_SC3_Out.psd"
+Detector: D10_SC4_In_I=1.30308e-09 D10_SC4_In_ERR=7.31406e-13 D10_SC4_In_N=3.4886e+06 "D10_SC4_In.psd"
+
+Finally [BNL_H8: 1e8]. Time: 6 [s] 
+Detector: He3H_I=1.00189e-09 He3H_ERR=6.41255e-13 He3H_N=2.68308e+06 "He3.psd"
+
+Finally [BNL_H8: 1e8]. Time: 6 [s] 
+
+Finally [BNL_H8: 1e8]. Time: 6 [s] 
+
+Finally [BNL_H8: 1e8]. Time: 7 [s] 
+
+Finally [BNL_H8: 1e8]. Time: 6 [s] 
+
+Finally [BNL_H8: 1e8]. Time: 7 [s] 
+
+Finally [BNL_H8: 1e8]. Time: 8 [s] 
+
+Finally [BNL_H8: 1e8]. Time: 6 [s] 
+INFO: Placing instr file copy BNL_H8.instr in dataset 1e8
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 10.60
+user 36.87
+sys 20.85
+INFO: Using directory: "1e9"
+INFO: Using existing c-file: ./BNL_H8.c
+INFO: Using existing binary: ./BNL_H8.out
+INFO: ===
+Simulation 'BNL_H8' (BNL_H8.instr): running on 8 nodes (master is 'hypatia.fysik.dtu.dk', MPI version 3.1).
+Node 0 should use device 0
+Node 2 should use device 2
+Node 5 should use device 5
+Node 3 should use device 3
+Node 1 should use device 1
+Node 4 should use device 4
+Node 6 should use device 6
+Node 7 should use device 7
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+*** TRACE end *** 
+
+Save [BNL_H8]
+Detector: D0_Source_I=0.00316546 D0_Source_ERR=4.40838e-07 D0_Source_N=5.15601e+07 "D0_Source.psd"
+Detector: D1_SC1_Out_I=0.0204122 D1_SC1_Out_ERR=1.11905e-06 D1_SC1_Out_N=3.34603e+08 "D1_SC1_Out.psd"
+Detector: D2_A4_I=0.0137509 D2_A4_ERR=9.18572e-07 D2_A4_N=2.25743e+08 "D2_A4.psd"
+Detector: D4_SC2_In_I=0.00154945 D4_SC2_In_ERR=9.75153e-08 D4_SC2_In_N=2.56163e+08 "D4_SC2_In.psd"
+Detector: D5_SC2_Out_I=0.00121116 D5_SC2_Out_ERR=8.62083e-08 D5_SC2_Out_N=2.01856e+08 "D5_SC2_Out.psd"
+Detector: D7_SC3_In_I=1.24301e-07 D7_SC3_In_ERR=7.10422e-12 D7_SC3_In_N=3.36104e+08 "D7_SC3_In.psd"
+Detector: D8_SC3_Out_I=2.38476e-08 D8_SC3_Out_ERR=3.12727e-12 D8_SC3_Out_N=6.38784e+07 "D8_SC3_Out.psd"
+Detector: D10_SC4_In_I=1.30549e-09 D10_SC4_In_ERR=2.31635e-13 D10_SC4_In_N=3.49048e+07 "D10_SC4_In.psd"
+
+Finally [BNL_H8: 1e9]. Time: 56 [s] 
+
+Finally [BNL_H8: 1e9]. Time: 56 [s] 
+
+Finally [BNL_H8: 1e9]. Time: 56 [s] 
+Detector: He3H_I=1.00425e-09 He3H_ERR=2.03152e-13 He3H_N=2.68532e+07 "He3.psd"
+
+Finally [BNL_H8: 1e9]. Time: 56 [s] 
+
+Finally [BNL_H8: 1e9]. Time: 56 [s] 
+
+Finally [BNL_H8: 1e9]. Time: 56 [s] 
+
+Finally [BNL_H8: 1e9]. Time: 56 [s] 
+
+Finally [BNL_H8: 1e9]. Time: 57 [s] 
+INFO: Placing instr file copy BNL_H8.instr in dataset 1e9
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 60.03
+user 316.14
+sys 136.51
+INFO: Using directory: "1e10"
+INFO: Using existing c-file: ./BNL_H8.c
+INFO: Using existing binary: ./BNL_H8.out
+INFO: ===
+Simulation 'BNL_H8' (BNL_H8.instr): running on 8 nodes (master is 'hypatia.fysik.dtu.dk', MPI version 3.1).
+Node 4 should use device 4
+Node 5 should use device 5
+Node 7 should use device 7
+Node 6 should use device 6
+Node 2 should use device 2
+Node 3 should use device 3
+Node 1 should use device 1
+Node 0 should use device 0
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+[BNL_H8] Initialize
+*** TRACE end *** 
+
+Save [BNL_H8]
+Detector: D0_Source_I=0.00316578 D0_Source_ERR=1.39412e-07 D0_Source_N=5.15654e+08 "D0_Source.psd"
+Detector: D1_SC1_Out_I=0.0204117 D1_SC1_Out_ERR=3.5387e-07 D1_SC1_Out_N=3.34595e+09 "D1_SC1_Out.psd"
+Detector: D2_A4_I=0.01375 D2_A4_ERR=2.90469e-07 D2_A4_N=2.25728e+09 "D2_A4.psd"
+Detector: D4_SC2_In_I=0.00154944 D4_SC2_In_ERR=3.0837e-08 D4_SC2_In_N=2.5616e+09 "D4_SC2_In.psd"
+Detector: D5_SC2_Out_I=0.00121124 D5_SC2_Out_ERR=2.72625e-08 D5_SC2_Out_N=2.01866e+09 "D5_SC2_Out.psd"
+Detector: D7_SC3_In_I=1.24259e-07 D7_SC3_In_ERR=2.24609e-12 D7_SC3_In_N=3.36041e+09 "D7_SC3_In.psd"
+Detector: D8_SC3_Out_I=2.38504e-08 D8_SC3_Out_ERR=9.88983e-13 D8_SC3_Out_N=6.38938e+08 "D8_SC3_Out.psd"
+Detector: D10_SC4_In_I=1.30569e-09 D10_SC4_In_ERR=7.32648e-14 D10_SC4_In_N=3.49021e+08 "D10_SC4_In.psd"
+
+Finally [BNL_H8: 1e10]. Time: 9.21667 [min] 
+
+Finally [BNL_H8: 1e10]. Time: 9.21667 [min] 
+
+Finally [BNL_H8: 1e10]. Time: 9.21667 [min] 
+Detector: He3H_I=1.00448e-09 He3H_ERR=6.4261e-14 He3H_N=2.68513e+08 "He3.psd"
+
+Finally [BNL_H8: 1e10]. Time: 9.21667 [min] 
+
+Finally [BNL_H8: 1e10]. Time: 9.21667 [min] 
+
+Finally [BNL_H8: 1e10]. Time: 9.21667 [min] 
+
+Finally [BNL_H8: 1e10]. Time: 9.21667 [min] 
+
+Finally [BNL_H8: 1e10]. Time: 9.21667 [min] 
+INFO: Placing instr file copy BNL_H8.instr in dataset 1e10
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 557.33
+user 3119.84
+sys 1308.77

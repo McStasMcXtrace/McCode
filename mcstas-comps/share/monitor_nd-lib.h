@@ -132,13 +132,13 @@
     int    Flag_signal       ;   /* 0:monitor p, else monitor a mean value */
     int    Flag_mantid       ;   /* 0:normal monitor, else do mantid-event specifics */
     int    Flag_OFF          ;   /* Flag to indicate external geometry from OFF file */
-    unsigned long OFF_polyidx;   /* When intersection is done externally by off_intersect, this gives the 
+    long long OFF_polyidx;   /* When intersection is done externally by off_intersect, this gives the 
 				    polygon number, i.e. pixel index */
 
     unsigned long Coord_Number      ;   /* total number of variables to monitor, plus intensity (0) */
     unsigned long Coord_NumberNoPixel;  /* same but without counting PixelID */
     unsigned long Buffer_Block      ;   /* Buffer size for list or auto limits */
-    unsigned long Neutron_Counter   ;   /* event counter, simulation total counts is mcget_ncount() */
+    long long Neutron_Counter   ;   /* event counter, simulation total counts is mcget_ncount() */
     unsigned long Buffer_Counter    ;   /* index in Buffer size (for realloc) */
     unsigned long Buffer_Size       ;
     int    Coord_Type[MONnD_COORD_NMAX];      /* type of variable */

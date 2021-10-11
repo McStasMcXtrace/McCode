@@ -3665,37 +3665,6 @@ randstate_t _hash(randstate_t x) {
   return x;
 }
 
-// fast kiss state is a pointer to 5 long [x,y,z,w,c]
-randstate_t fast_kiss(randstate_t * state) {
-
-    state[1] ^= state[1] << 5;
-    state[1] ^= state[1] >> 7;
-    state[1] ^= state[1] << 22;
-
-    randstate_t t = state[2]+state[3]+state[4];
-    state[2]  = state[3];
-    state[4]  = t < 0;
-    state[3]  = t & 2147483647;
-    state[0] += 1411392427;
-
-    // combine
-    return state[0]+state[1]+state[3];
-}
-
-randstate_t * fast_kiss_seed(randstate_t * state, randstate_t seed) {
-
-  randstate_t num_iters=8;
-
-  state[3] = !seed ? 4294967295 : seed;
-  for (randstate_t iter = 0; iter < num_iters; iter++) {
-      state[0] = _hash(state[3]);
-      state[1] = _hash(state[0]);
-      state[2] = _hash(state[1]);
-      state[3] = _hash(state[2]);
-  }
-  return state;
-}
-
 
 // SECTION: random number transforms ==========================================
 
@@ -3740,32 +3709,11 @@ double _randnorm2(randstate_t* state) {
   return x * sqrt((-2.0 * log(r)) / r);
 }
 
-double _gaussian_double(randstate_t * state) {
-
-    double x, y, r;
-
-    do {
-        x = 2.0 * _uniform_double(state) - 1.0;
-        y = 2.0 * _uniform_double(state) - 1.0;
-        r = x*x + y*y;
-    } while (r == 0.0 || r >= 1.0);
-
-    return x * sqrt((-2.0 * log(r)) / r);
-}
 // Generate a random number from -1 to 1 with triangle distribution
 double _randtriangle(randstate_t* state) {
 	double randnum = _rand01(state);
 	if (randnum>0.5) return(1-sqrt(2*(randnum-0.5)));
 	else return(sqrt(2*randnum)-1);
-}
-// Random number between 0.0 and 1.0
-double _uniform_double(randstate_t * state) {
-
-    randstate_t a = fast_kiss(state) >> 6;
-    randstate_t b = fast_kiss(state) >> 5;
-    double x = (a * 134217728.0 + b) / 9007199254740992.0;
-
-    return x;
 }
 double _rand01(randstate_t* state) {
 	double randnum;
@@ -3819,9 +3767,12 @@ mchelp(char *pgmname)
 "  -i        --info           Detailed instrument information.\n"
 "  --source                   Show the instrument code which was compiled.\n"
 #ifdef OPENACC
-"  --vecsize                  OpenACC vector-size\n"
-"  --numgangs                 Number of OpenACC gangs\n"
-"  --gpu_innerloop            Maximum rays to process in a kernel call\n"
+"\n"
+"  --vecsize                  OpenACC vector-size (default: 128)\n"
+"  --numgangs                 Number of OpenACC gangs (default: 7813)\n"
+"  --gpu_innerloop            Maximum rays to process pr. OpenACC \n"
+"                             kernel run (default: 2147483647)\n"
+"\n"
 #endif
 "  --format=FORMAT            Output data files using FORMAT="
    FLAVOR_UPPER

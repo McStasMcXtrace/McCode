@@ -63,9 +63,6 @@ DECLARE
   double  alpha1;
   double  beta2;                 /* ellipse squared parameters */
   double alpha2;
-  double a;
-  double b;                         
-  double delta;
   t_Table pTable;
   int err;                            
 %}  
@@ -107,6 +104,10 @@ TRACE
   double old_x;
   double old_y;
   double old_z;
+  double par[5] = {R0, Qc, alpha, m, W};
+  double a,b;
+  double delta;
+
   /* First check if neutron has the right direction. */
   if((vz != 0.0 && -z/vz >= 0) && x+beta1> 0)
   {
@@ -184,7 +185,6 @@ TRACE
         if (reflect && strlen(reflect) && strcmp(reflect,"NULL") && strcmp(reflect,"0"))
           TableReflecFunc(q, &pTable, &B);
         else {
-          double par[] = {R0, Qc, alpha, m, W};
           StdReflecFunc(q, par, &B);
         }
         if (B <= 0) { ABSORB; }

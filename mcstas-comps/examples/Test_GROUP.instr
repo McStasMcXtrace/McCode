@@ -1,0 +1,83 @@
+/*******************************************************************************
+* Instrument: Test_GROUP
+*
+* %I
+* Written by: Erik Knudsen, Peter Willendrup
+* Date: 2021/09/30
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests
+*
+* Tests that GROUP logic works as expected
+*
+* %D
+* Unit test for the GROUP logic
+*
+* %Example: SIGNI=1  Detector: psd00_I=2e-08
+* %Example: SIGNI=-1 Detector: psd00_I=2e-08
+*
+* %P
+* SLITW: [m] Width of the GROUP'ed slits
+* SIGNI: [1] Which slit should be hit (left or right)
+*
+* %L
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Test_GROUP(SLITW=1e-6,SIGNI=1)
+
+DECLARE
+%{
+  double slit_offset;
+  double signi;
+  #pragma acc declare create(slit_offset,signi)
+%}
+
+INITIALIZE
+%{
+  slit_offset=4e-6;
+  signi=SIGNI;
+  #pragma acc update device(slit_offset,signi)
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+// insert components here (e.g. Insert -> Source -> ...)
+COMPONENT source = Source_simple(
+    yheight=0.001, 
+    xwidth=0.001, 
+    dist=1, 
+    focus_xw=0.001, 
+    focus_yh=0.001, 
+    lambda0=5, 
+    dlambda=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+EXTEND
+%{
+  x=signi*slit_offset;
+  y=0;
+  z=0;
+  double v=sqrt(vx*vx+vy*vy+vz*vz);
+  vx=vy=0;
+  vz=v;
+%}
+
+COMPONENT s1 = Slit(
+    xwidth=SLITW, yheight=0.8e-6)
+AT(slit_offset,0,1) RELATIVE source
+GROUP slits
+
+COMPONENT s2 = COPY(s1)()
+AT(-slit_offset,0,1) RELATIVE source
+GROUP slits
+
+COMPONENT psd00 = PSD_monitor(
+    yheight=2e-6, xwidth=200e-6, nx=501, ny=2, filename="psd00")
+AT(0,0,1+1e-6) RELATIVE source
+FINALLY
+%{
+%}
+
+END

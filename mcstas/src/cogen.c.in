@@ -845,6 +845,7 @@ int cogen_comp_section_class(
     //if (!strcmp(section, "TRACE")) cout("{"); // scope it to avoid EXTEND clashes
     codeblock_out(code); // component definition code common to all instances, needs defines
     if (!strcmp(section, "TRACE")) {
+      cout("#ifndef NOABSORB_INF_NAN");
       cout("  /* Check for nan or inf particle parms */ ");
       cout("  if(isnan(p)  ||  isinf(p)) ABSORB;");
       cout("  if(isnan(t)  ||  isinf(t)) ABSORB;");
@@ -854,6 +855,16 @@ int cogen_comp_section_class(
       cout("  if(isnan(x)  ||  isinf(x)) ABSORB;");
       cout("  if(isnan(y)  ||  isinf(y)) ABSORB;");
       cout("  if(isnan(z)  ||  isinf(z)) ABSORB;");
+      cout("#else");
+      cout("  if(isnan(p)  ||  isinf(p)) printf(\"NAN or INF found in p,  %s\\n\",_comp->_name);");
+      cout("  if(isnan(t)  ||  isinf(t)) printf(\"NAN or INF found in t,  %s\\n\",_comp->_name);");
+      cout("  if(isnan(vx) || isinf(vx)) printf(\"NAN or INF found in vx, %s\\n\",_comp->_name);");
+      cout("  if(isnan(vy) || isinf(vy)) printf(\"NAN or INF found in vy, %s\\n\",_comp->_name);");
+      cout("  if(isnan(vy) || isinf(vy)) printf(\"NAN or INF found in vz, %s\\n\",_comp->_name);");
+      cout("  if(isnan(x)  ||  isinf(x)) printf(\"NAN or INF found in x,  %s\\n\",_comp->_name);");
+      cout("  if(isnan(y)  ||  isinf(y)) printf(\"NAN or INF found in y,  %s\\n\",_comp->_name);");
+      cout("  if(isnan(z)  ||  isinf(z)) printf(\"NAN or INF found in z,  %s\\n\",_comp->_name);");
+      cout("#endif");
       //cout("}");
     }
 
@@ -1906,6 +1917,14 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("");
   coutf("  // set up outer (CPU) loop / particle batches");
   coutf("  unsigned long long loops;");
+  coutf("");
+  coutf("  /* if on GPU, printf has been globally nullified, re-enable here */");
+  coutf("  #ifdef OPENACC");
+  coutf("  #ifndef MULTICORE");
+  coutf("  #undef printf");
+  coutf("  #endif");
+  coutf("  #endif");
+  coutf("");
   coutf("  #ifdef OPENACC");
   coutf("  loops = ceil((double)ncount/gpu_innerloop);");
   coutf("  if (ncount>gpu_innerloop) {");
@@ -1995,7 +2014,7 @@ int cogen_rt_funnel(struct instr_def *instr)
     }
     coutf("");
     coutf("      // %s", comp->name);
-    coutf("      if (!ABSORBED) {");
+    coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
     // coordinate transformations (wrt to PREVIOUS)
     coutf("        if (_%s_var._rotation_is_identity)", comp->name);
     coutf("          coords_get("

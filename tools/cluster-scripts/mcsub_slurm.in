@@ -10,8 +10,8 @@ use File::Basename;
 use Cwd 'abs_path';
 
 my $nodes = "1";
-my $queue = "express";
-my $MPImodule = "openmpi/3.0_gcc540";
+my $queue = "quark";
+my $MPImodule = "openmpi/4.0_gcc831";
 my $runtime = 1;;
 my $name = "McSub_" . $ENV{'USER'} . "_" . POSIX::strftime("%Y%m%d_%H%M%S", localtime);
 my $mailrcpt = "none";
@@ -33,6 +33,8 @@ for($i = 0; $i < @ARGV; $i++) {
     } elsif(($ARGV[$i] =~ /^-e([0-9a-zA-Z_\.\@]+)$/) ||
             ($ARGV[$i] =~ /^--email=([0-9a-zA-Z_\.\@]+)$/)) {
         $mailrcpt = $1;
+    } elsif($ARGV[$i] =~ /^--mpimodule=([0-9a-zA-Z_\.\@]+)$/) {
+	$MPImodule = $1;
     } elsif($ARGV[$i] =~ /@MCCODE_PREFIX@run/) {
 	# strip any reference to @MCCODE_PREFIX@run
      } else {

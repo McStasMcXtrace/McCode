@@ -1,0 +1,121 @@
+INFO: Using directory: "1e4"
+INFO: Using existing c-file: ./BNL_H8.c
+INFO: Using existing binary: ./BNL_H8.out
+INFO: ===
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+*** TRACE end *** 
+
+Save [BNL_H8]
+Detector: D0_Source_I=0.00300828 D0_Source_ERR=0.0001359 D0_Source_N=490 "D0_Source.psd"
+Detector: D1_SC1_Out_I=0.0204453 D1_SC1_Out_ERR=0.000354172 D1_SC1_Out_N=3348 "D1_SC1_Out.psd"
+Detector: D2_A4_I=0.013632 D2_A4_ERR=0.00028923 D2_A4_N=2235 "D2_A4.psd"
+Detector: D4_SC2_In_I=0.00147983 D4_SC2_In_ERR=3.0138e-05 D4_SC2_In_N=2446 "D4_SC2_In.psd"
+Detector: D5_SC2_Out_I=0.00118168 D5_SC2_Out_ERR=2.6931e-05 D5_SC2_Out_N=1971 "D5_SC2_Out.psd"
+Detector: D7_SC3_In_I=1.20594e-07 D7_SC3_In_ERR=2.19463e-09 D7_SC3_In_N=3419 "D7_SC3_In.psd"
+Detector: D8_SC3_Out_I=2.20924e-08 D8_SC3_Out_ERR=9.18071e-10 D8_SC3_Out_N=649 "D8_SC3_Out.psd"
+Detector: D10_SC4_In_I=1.50477e-09 D10_SC4_In_ERR=7.63328e-11 D10_SC4_In_N=398 "D10_SC4_In.psd"
+Detector: He3H_I=1.06574e-09 He3H_ERR=6.36092e-11 He3H_N=287 "He3.psd"
+
+Finally [BNL_H8: 1e4]. Time: 0 [s] 
+INFO: Placing instr file copy BNL_H8.instr in dataset 1e4
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 0.38
+user 0.32
+sys 0.06
+INFO: Using directory: "1e5"
+INFO: Using existing c-file: ./BNL_H8.c
+INFO: Using existing binary: ./BNL_H8.out
+INFO: ===
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+*** TRACE end *** 
+
+Save [BNL_H8]
+Detector: D0_Source_I=0.00310283 D0_Source_ERR=4.36456e-05 D0_Source_N=5054 "D0_Source.psd"
+Detector: D1_SC1_Out_I=0.0206143 D1_SC1_Out_ERR=0.000112457 D1_SC1_Out_N=33787 "D1_SC1_Out.psd"
+Detector: D2_A4_I=0.013916 D2_A4_ERR=9.2407e-05 D2_A4_N=22840 "D2_A4.psd"
+Detector: D4_SC2_In_I=0.00154918 D4_SC2_In_ERR=9.74974e-06 D4_SC2_In_N=25565 "D4_SC2_In.psd"
+Detector: D5_SC2_Out_I=0.00120485 D5_SC2_Out_ERR=8.59787e-06 D5_SC2_Out_N=20020 "D5_SC2_Out.psd"
+Detector: D7_SC3_In_I=1.23304e-07 D7_SC3_In_ERR=7.04744e-10 D7_SC3_In_N=33503 "D7_SC3_In.psd"
+Detector: D8_SC3_Out_I=2.24251e-08 D8_SC3_Out_ERR=3.01092e-10 D8_SC3_Out_N=6057 "D8_SC3_Out.psd"
+Detector: D10_SC4_In_I=1.32811e-09 D10_SC4_In_ERR=2.3071e-11 D10_SC4_In_N=3666 "D10_SC4_In.psd"
+Detector: He3H_I=1.02846e-09 He3H_ERR=2.02886e-11 He3H_N=2832 "He3.psd"
+
+Finally [BNL_H8: 1e5]. Time: 0 [s] 
+INFO: Placing instr file copy BNL_H8.instr in dataset 1e5
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 0.66
+user 0.60
+sys 0.06
+INFO: Using directory: "1e6"
+INFO: Using existing c-file: ./BNL_H8.c
+INFO: Using existing binary: ./BNL_H8.out
+INFO: ===
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+*** TRACE end *** 
+
+Save [BNL_H8]
+Detector: D0_Source_I=0.00312996 D0_Source_ERR=1.38621e-05 D0_Source_N=50982 "D0_Source.psd"
+Detector: D1_SC1_Out_I=0.0204081 D1_SC1_Out_ERR=3.53837e-05 D1_SC1_Out_N=334551 "D1_SC1_Out.psd"
+Detector: D2_A4_I=0.0137594 D2_A4_ERR=2.90566e-05 D2_A4_N=225908 "D2_A4.psd"
+Detector: D4_SC2_In_I=0.00153732 D4_SC2_In_ERR=3.07116e-06 D4_SC2_In_N=254439 "D4_SC2_In.psd"
+Detector: D5_SC2_Out_I=0.00119712 D5_SC2_Out_ERR=2.70995e-06 D5_SC2_Out_N=199779 "D5_SC2_Out.psd"
+Detector: D7_SC3_In_I=1.21028e-07 D7_SC3_In_ERR=2.21517e-10 D7_SC3_In_N=329599 "D7_SC3_In.psd"
+Detector: D8_SC3_Out_I=2.32048e-08 D8_SC3_Out_ERR=9.75343e-11 D8_SC3_Out_N=62432 "D8_SC3_Out.psd"
+Detector: D10_SC4_In_I=1.25719e-09 D10_SC4_In_ERR=7.16879e-12 D10_SC4_In_N=34180 "D10_SC4_In.psd"
+Detector: He3H_I=9.58585e-10 He3H_ERR=6.25798e-12 He3H_N=26082 "He3.psd"
+
+Finally [BNL_H8: 1e6]. Time: 3 [s] 
+INFO: Placing instr file copy BNL_H8.instr in dataset 1e6
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 3.02
+user 2.96
+sys 0.06
+INFO: Using directory: "1e7"
+INFO: Using existing c-file: ./BNL_H8.c
+INFO: Using existing binary: ./BNL_H8.out
+INFO: ===
+Instrument:     BNL_H8 on hypatia.fysik.dtu.dk.
+Monochromator : DM = 3.3539
+A1 = 20.60, A2 = 41.20 (deg)
+Ki = 2.662 Angs-1 Energy = 14.69 meV
+Velocity = 1676 m/s, lambda = 2.36 Angs
+[BNL_H8] Initialize
+
+Trace ETA 28 [s] % 39 40 50 60 70 80 90 *** TRACE end *** 
+
+Save [BNL_H8]
+Detector: D0_Source_I=0.00316434 D0_Source_ERR=4.40761e-06 D0_Source_N=515420 "D0_Source.psd"
+Detector: D1_SC1_Out_I=0.020408 D1_SC1_Out_ERR=1.11893e-05 D1_SC1_Out_N=3.34538e+06 "D1_SC1_Out.psd"
+Detector: D2_A4_I=0.0137474 D2_A4_ERR=9.18457e-06 D2_A4_N=2.25701e+06 "D2_A4.psd"
+Detector: D4_SC2_In_I=0.00154805 D4_SC2_In_ERR=9.74572e-07 D4_SC2_In_N=2.56044e+06 "D4_SC2_In.psd"
+Detector: D5_SC2_Out_I=0.00121051 D5_SC2_Out_ERR=8.61732e-07 D5_SC2_Out_N=2.01859e+06 "D5_SC2_Out.psd"
+Detector: D7_SC3_In_I=1.24011e-07 D7_SC3_In_ERR=7.09601e-11 D7_SC3_In_N=3.35602e+06 "D7_SC3_In.psd"
+Detector: D8_SC3_Out_I=2.37872e-08 D8_SC3_Out_ERR=3.12128e-11 D8_SC3_Out_N=638279 "D8_SC3_Out.psd"
+Detector: D10_SC4_In_I=1.28802e-09 D10_SC4_In_ERR=2.29922e-12 D10_SC4_In_N=345277 "D10_SC4_In.psd"
+Detector: He3H_I=9.90848e-10 He3H_ERR=2.01668e-12 He3H_N=265795 "He3.psd"
+
+Finally [BNL_H8: 1e7]. Time: 26 [s] 
+INFO: Placing instr file copy BNL_H8.instr in dataset 1e7
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+real 25.71
+user 25.67
+sys 0.05

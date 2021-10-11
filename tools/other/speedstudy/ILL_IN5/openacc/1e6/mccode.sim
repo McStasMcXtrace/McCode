@@ -1,0 +1,119 @@
+McStas simulation description file for ILL_IN5.
+Date:    Tue Oct  5 15:55:14 2021
+Program: McStas 3.0-dev - Oct. 05, 2021
+
+begin instrument: ILL_IN5
+  File: 1e6/mccode
+  Source: ILL_IN5.instr
+  Parameters:  lambda(double) dlambda(double) speed(double) ratio(double) housing(string) coh(string) inc(string) thickness(double) height(double) radius(double) order(double)
+  Trace_enabled: no
+  Default_main: yes
+  Embedded_runtime: yes
+end instrument
+
+begin simulation: 1e6
+  Format: McCode with text headers
+  URL: http://www.mccode.org
+  Creator: McStas 3.0-dev - Oct. 05, 2021
+  Instrument: ILL_IN5.instr
+  Ncount: 1000000
+  Trace: no
+  Gravitation: no
+  Seed: 1000
+  Directory: 1e6
+  Param: lambda=4.5
+  Param: dlambda=0.05
+  Param: speed=8500
+  Param: ratio=0.5
+  Param: housing=Fe.laz
+  Param: coh=Y3Fe5O12_YIG.laz
+  Param: inc=NULL
+  Param: thickness=0
+  Param: height=0.025
+  Param: radius=0.005
+  Param: order=0
+end simulation
+
+begin data
+  Date: Tue Oct  5 15:55:15 2021 (1633442115)
+  type: array_1d(20)
+  Source: ILL_IN5 (ILL_IN5.instr)
+  component: Det_sample_t
+  position: 0 0 17.0191
+  title: TOF [s] monitor
+  Ncount: 2000000
+  filename: Det_sample_t_1633442114.t
+  statistics: X0=0.025; dX=2.28127e-10;
+  signal: Min=0; Max=3.85965e+07; Mean=1.92983e+06;
+  values: 3.85965e+07 642363 5301
+  xvar: t
+  yvar: (I,I_err)
+  xlabel: TOF [s]
+  ylabel: Intensity [n/s/bin]
+  xlimits: 0 1
+  variables: t I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:55:15 2021 (1633442115)
+  type: array_2d(100, 100)
+  Source: ILL_IN5 (ILL_IN5.instr)
+  component: Det_ideal_ay
+  position: 0 0 17.2589
+  title:  Intensity Angle Position Monitor (Banana) [out] per bin
+  Ncount: 2000000
+  filename: Det_ideal_ay_1633442115.th_y
+  statistics: X0=45.6063; dX=20.7262; Y0=-0.0167379; dY=0.800633;
+  signal: Min=0; Max=7049.46; Mean=138.372;
+  values: 1.38372e+06 38664.7 1887
+  xvar: Lo
+  yvar: y 
+  xlabel: Longitude [deg]
+  ylabel: y [m]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -73.3674 73.3676 -1.5 1.5
+  variables: I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:55:15 2021 (1633442115)
+  type: array_2d(384, 128)
+  Source: ILL_IN5 (ILL_IN5.instr)
+  component: Det_PSD
+  position: 0 0 17.2589
+  title: PSD Detector
+  Ncount: 2000000
+  filename: in5det.dat
+  statistics: X0=3.19906; dX=1.49995; Y0=-0.0254489; dY=0.810697;
+  signal: Min=0; Max=3546.66; Mean=28.1098;
+  values: 1.38165e+06 41008.6 1775
+  xvar: X 
+  yvar: Y 
+  xlabel: X position [m]
+  ylabel: Y position [m]
+  zvar: I
+  zlabel: Signal per bin
+  xylimits: -5.12201 5.12201 -1.5 1.5
+  variables: I I_err N
+end data
+
+begin data
+  Date: Tue Oct  5 15:55:15 2021 (1633442115)
+  type: array_1d(41)
+  Source: ILL_IN5 (ILL_IN5.instr)
+  component: in5_t
+  position: 0 0 17.2589
+  title: TOF [s] monitor
+  Ncount: 2000000
+  filename: in5_t_1633442115.t
+  statistics: X0=0.0211433; dX=9.60505e-05;
+  signal: Min=0; Max=341195; Mean=66200.9;
+  values: 2.71424e+06 81546.8 4499
+  xvar: t
+  yvar: (I,I_err)
+  xlabel: TOF [s]
+  ylabel: Intensity [n/s/bin]
+  xlimits: 0.0206 0.0216
+  variables: t I I_err N
+end data

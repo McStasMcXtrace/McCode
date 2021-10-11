@@ -1,0 +1,234 @@
+INFO: No output directory specified (--dir)
+INFO: Using directory: "ILL_IN5_20211005_155319"
+INFO: Regenerating c-file: ILL_IN5.c
+Info:    'PSD_Detector' is a contributed component.
+CFLAGS=
+      
+WARNING:
+ The parameter powder_format of SAMPLE is intitalized 
+ using a static {,,,} vector.
+  -> Such static vectors support literal numbers ONLY.
+  -> Any vector use of variables or defines must happen via a 
+     DECLARE/INITIALIZE pointer.
+
+
+WARNING:
+ The parameter format of hous is intitalized 
+ using a static {,,,} vector.
+  -> Such static vectors support literal numbers ONLY.
+  -> Any vector use of variables or defines must happen via a 
+     DECLARE/INITIALIZE pointer.
+
+
+-----------------------------------------------------------
+
+Generating single GPU kernel or single CPU section layout: 
+
+-----------------------------------------------------------
+
+Generating GPU/CPU -DFUNNEL layout:
+
+-----------------------------------------------------------
+INFO: Recompiling: ./ILL_IN5.out
+"./ILL_IN5.c", line 4889: warning: pointless comparison of unsigned integer with zero
+      state[4]  = t < 0;
+                    ^
+
+"./ILL_IN5.c", line 6262: warning: missing return statement at end of non-void function "Table_File_List_Handler"
+  }
+  ^
+
+"./ILL_IN5.c", line 8050: warning: integer conversion resulted in a change of sign
+      Vars->OFF_polyidx       = -1;
+                                ^
+
+"./ILL_IN5.c", line 8977: warning: pointless comparison of unsigned integer with zero
+  	  if (Vars->Flag_mantid && Vars->Flag_OFF && Vars->OFF_polyidx >=0) XY=Vars->OFF_polyidx;
+  	                                                               ^
+
+"./ILL_IN5.c", line 9123: warning: variable "ratio" was set but never used
+      double  ratio;
+              ^
+
+"./ILL_IN5.c", line 9638: warning: variable "y0" is used before its value is set
+              if (y0 < ymin) y0=ymin; 
+                  ^
+
+"./ILL_IN5.c", line 9640: warning: variable "y1" is used before its value is set
+              if (y1 < ymin) y1=ymin; 
+                  ^
+
+"./ILL_IN5.c", line 9674: warning: variable "dt" was set but never used
+  	double dt, dy;
+  	       ^
+
+"./ILL_IN5.c", line 9674: warning: variable "dy" was set but never used
+  	double dt, dy;
+  	           ^
+
+"./ILL_IN5.c", line 9701: warning: variable "dx" was set but never used
+  	double dx, dy;
+  	       ^
+
+"./ILL_IN5.c", line 9701: warning: variable "dy" was set but never used
+  	double dx, dy;
+  	           ^
+
+"./ILL_IN5.c", line 9993: warning: variable "minx" was declared but never referenced
+    MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
+          ^
+
+"./ILL_IN5.c", line 9993: warning: variable "maxx" was declared but never referenced
+    MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
+                       ^
+
+"./ILL_IN5.c", line 9993: warning: variable "miny" was declared but never referenced
+    MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
+                                     ^
+
+"./ILL_IN5.c", line 9993: warning: variable "maxy" was declared but never referenced
+    MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
+                                                  ^
+
+"./ILL_IN5.c", line 9993: warning: variable "minz" was declared but never referenced
+    MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
+                                                                ^
+
+"./ILL_IN5.c", line 9993: warning: variable "maxz" was declared but never referenced
+    MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
+                                                                             ^
+
+"./ILL_IN5.c", line 10625: warning: argument of type "Coords **" is incompatible with parameter of type "void **"
+    acc_attach(&vtxArray);
+               ^
+
+"./ILL_IN5.c", line 10626: warning: argument of type "Coords **" is incompatible with parameter of type "void **"
+    acc_attach(&normalArray);
+               ^
+
+"./ILL_IN5.c", line 10627: warning: argument of type "unsigned long **" is incompatible with parameter of type "void **"
+    acc_attach(&faceArray);
+               ^
+
+"./ILL_IN5.c", line 11558: warning: variable "n" was declared but never referenced
+          double n;
+                 ^
+
+"./ILL_IN5.c", line 11537: warning: variable "w_c" was declared but never referenced
+      double w_c         = 0;
+             ^
+
+"./ILL_IN5.c", line 11538: warning: variable "w_l" was declared but never referenced
+      double w_l         = 0;
+             ^
+
+"./ILL_IN5.c", line 11449: warning: variable "w_c" was declared but never referenced
+    t_Table  w_c, w_l;
+             ^
+
+"./ILL_IN5.c", line 11449: warning: variable "w_l" was declared but never referenced
+    t_Table  w_c, w_l;
+                  ^
+
+"./ILL_IN5.c", line 13558: warning: variable "tc2" was declared but never referenced
+      Coords tc1, tc2;
+                  ^
+
+"./ILL_IN5.c", line 13559: warning: variable "tr1" was declared but never referenced
+      Rotation tr1;
+               ^
+
+"./ILL_IN5.c", line 16920: warning: variable "element_size" is used before its value is set
+             bufsize*element_size/1e6, bufsize*sizeof(double)/1e6);
+                     ^
+
+"./ILL_IN5.c", line 16571: warning: variable "j" was declared but never referenced
+    long  i,j;
+            ^
+
+"./ILL_IN5.c", line 18258: warning: variable "Ei" was set but never used
+  double k=0, Ei=0;
+              ^
+
+"./ILL_IN5.c", line 18289: warning: variable "ti" was set but never used
+  double ki_x,ki_y,ki_z,ti,vi,ki;
+                        ^
+
+"./ILL_IN5.c", line 18290: warning: variable "tf" was set but never used
+  double kf_x,kf_y,kf_z,tf,kf;
+                        ^
+
+"./ILL_IN5.c", line 18290: warning: variable "kf" was set but never used
+  double kf_x,kf_y,kf_z,tf,kf;
+                           ^
+
+"./ILL_IN5.c", line 18901: warning: variable "type" was set but never used
+    char type = '\0';
+         ^
+
+"./ILL_IN5.c", line 18902: warning: variable "itype" was set but never used
+    int itype = 0;
+        ^
+
+"./ILL_IN5.c", line 18905: warning: variable "nb_reuses" was declared but never referenced
+    int nb_reuses = line_info.nb_reuses;
+        ^
+
+"./ILL_IN5.c", line 18908: warning: variable "vcache" was set but never used
+    double vcache = line_info.v; 
+           ^
+
+"./ILL_IN5.c", line 18912: warning: variable "lfree" was set but never used
+    double lfree = line_info.lfree;
+           ^
+
+"./ILL_IN5.c", line 18914: warning: variable "xs_compute" was declared but never referenced
+    long   xs_compute = line_info.xs_compute;
+           ^
+
+"./ILL_IN5.c", line 18915: warning: variable "xs_reuse" was declared but never referenced
+    long   xs_reuse   = line_info.xs_reuse;
+           ^
+
+"./ILL_IN5.c", line 18916: warning: variable "xs_calls" was declared but never referenced
+    long   xs_calls   = line_info.xs_calls;
+           ^
+
+"./ILL_IN5.c", line 18918: warning: variable "dq" was set but never used
+    double dq = line_info.dq;
+           ^
+
+"./ILL_IN5.c", line 19398: warning: incompatible redefinition of macro "HUGE_VAL" (declared at line 28 of "/usr/include/bits/huge_val.h")
+    #define HUGE_VAL DBL_MAX
+            ^
+
+"./ILL_IN5.c", line 19867: warning: variable "pp" was set but never used
+                double pp,P2;
+                       ^
+
+"./ILL_IN5.c", line 23116: warning: variable "t" is used before its value is set
+    mcstartdate = (long)t;  /* set start date before parsing options and creating sim file */
+                        ^
+
+"./ILL_IN5.c", line 23061: warning: variable "ct" was declared but never referenced
+    clock_t ct;
+            ^
+
+"./ILL_IN5.c", line 1272: warning: variable "mcstartdate" was set but never used
+  static   long mcstartdate            = 0; /* start simulation time */
+                ^
+
+"./ILL_IN5.c", line 2513: warning: function "strcpy_valid" was declared but never referenced
+  static char *strcpy_valid(char *valid, char *original)
+               ^
+
+NVC++-W-0155-Upcoming behavior change: array reference in data/update clause with no triplet notation will be treated as an array element in a future release: par (./ILL_IN5.c: 17785)
+NVC++-W-0155-Upcoming behavior change: array reference in data/update clause with no triplet notation will be treated as an array element in a future release: par (./ILL_IN5.c: 17785)
+NVC++/x86-64 Linux 21.7-0: compilation completed with warnings
+INFO: ===
+loading system configuration
+loading user configuration from /home/nexmap/pkwi/.mcstas/3.0-dev/mccode_config.json
+
+real	0m44.557s
+user	0m43.108s
+sys	0m1.451s
