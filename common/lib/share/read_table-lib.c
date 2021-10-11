@@ -108,6 +108,8 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
              * collection.*/
             return (void *) 0x1 ;
     }
+    /* If we arrive here, nothing worked, return NULL */
+    return NULL;
 }
 
 /* Access functions to the handler*/

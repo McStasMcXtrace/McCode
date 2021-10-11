@@ -1248,11 +1248,9 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
     double  Coord[MONnD_COORD_NMAX];
     long    Coord_Index[MONnD_COORD_NMAX];
     char    label[CHAR_BUF_LENGTH];
-    double  ratio;
 
     MCDETECTOR detector;
 
-    ratio = 100.0*mcget_run_num()/mcget_ncount();
     if (Vars->Flag_Verbose && Vars->Flag_per_cm2) {
       printf("Monitor_nD: %s: active flat detector area is %g [cm^2], total area is %g [cm^2]\n",
         Vars->compcurname, (Vars->max_x-Vars->min_x)
@@ -1763,10 +1761,6 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
           {
             theta0= (vdiv_min+height* iv + 90)   *DEG2RAD; /* in vertical plane */
             theta1= (vdiv_min+height*(iv+1) + 90)*DEG2RAD;
-            if (y0 < ymin) y0=ymin; 
-            if (y0 > ymax) y0=ymax;
-            if (y1 < ymin) y1=ymin; 
-            if (y1 > ymax) y1=ymax;
             
             y0 = -radius*cos(theta0);            /* z with Z vertical */
             y1 = -radius*cos(theta1);
@@ -1799,11 +1793,13 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
         }
       if (Vars->Flag_mantid) {
 	/* First define the base pixel type */
+	#ifndef OPENACC
 	double dt, dy;
 	dt = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
 	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
 	printf("MANTID_BANANA_DET:  %g, %g, %g, %g, %g, %li, %li, %g\n", radius, 
 	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2], Vars->Coord_Min[4]); 
+	#endif
       }
     }
     /* disk (circle) */
@@ -1825,12 +1821,14 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
              (double)xmin, (double)ymin, 0.0);
       
       if (Vars->Flag_mantid) {
+	#ifndef OPENACC
 	/* First define the base pixel type */
 	double dx, dy;
 	dx = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
 	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
 	printf("MANTID_RECTANGULAR_DET:  %g, %g, %g, %g, %li, %li, %g\n", 
 	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2], Vars->Coord_Min[4]);
+	#endif
       }
     }
     /* full cylinder/banana */
