@@ -128,7 +128,7 @@ int mcmagnet_get_field(_class_particle *_particle, double x, double y, double z,
   while(p!=NULL){
     /*transform to the coordinate system of the particular magnetic function*/
     loc=coords_sub(rot_apply(*(p->rot),in),*(p->pos));
-    stat=magnetic_field_dispatcher((p->func_id),loc.x,loc.y,loc.z,t,&(b.x),&(b.y),&(b.z),dummy);
+    stat=magnetic_field_dispatcher((p->func_id),loc.x,loc.y,loc.z,t,&(b.x),&(b.y),&(b.z),p->field_parameters);
     /*check if the field function should be garbage collected*/
     if (!stat){
       /*transform to the lab system and add up. (resusing loc variable - to now contain the field in lab coords)*/
