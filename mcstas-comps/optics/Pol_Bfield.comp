@@ -18,18 +18,24 @@
 *
 * Region with a definable magnetic field.
 *
-* The component is nestable. This means that it requires a
-*
+* The component is nestable if the concentric flag is set (the default). This means that it may have a
+* construction like the following:
 * // START MAGNETIC FIELD
 * COMPONENT msf =
 * Pol_Bfield(xwidth=0.08, yheight=0.08, zdepth=0.2, Bx=0, By=-0.678332e-4, Bz=0)
 *      AT (0, 0, 0) RELATIVE armMSF
 *
-* // HERE CAN BE OTHER COMPONENTS INSIDE THE MAGNETIC FIELD
+* // OTHER COMPONENTS INSIDE THE MAGNETIC FIELD CAN BE PLACED HERE
 *
 * // STOP MAGNETIC FIELD
 * COMPONENT msf_stop = Pol_simpleBfield_stop(magnet_comp_stop=msf)
 *      AT (0, 0, 0) RELATIVE armMSF
+*
+* Note that if you have objects within the magnetic field that extend outside it you may get
+* wrong results, because propagation within the field will then possibly extend outside, e.g.
+* when using a tabled field. The evaluated field will then use the nearest defined field point
+* _also_ outside the defintion area. If these outside-points have a non-zero field precession will
+* continue - even after the neutron has left the field region.
 *
 * In between the two component instances the propagation routine
 * PROP_DT also handles spin propagation.
@@ -44,17 +50,18 @@
 * 1. Constant magnetic field: Constant field (Bx,By,Bz) within the region
 * 2. Rotating magnetic_field: Field is initially (0,By,0) but after a length of zdepth
 *      has rotated to (By,0,0)
-* 3. majorana magnetic_field: Field is initially (Bx,By,0) liearly transforms to
-*      (-Bx,By,0) after zdepth where By<<Bx
+* 3. Majorana magnetic_field: Field is initially (Bx,By,0) with By<<Bx, then linearly transforms to
+*      (-Bx,By,0) at z=zdepth.
+* 4. MSF field:
+* 5. RF field: A radio frequency field is modeled by an implcit use of a roating frame.
+* 6. Gradient field: Similar to Majorana by without an x-component to the field. I.e. it (0,By,0) at z=0, and
+*    becomes (0,-By,0) AT z=zdepth.
 *
 * If the concentric parameter is set to 1 the magnetic field is turned on by an
 * instance of this component, and turned off by an instance of Pol_simpleBfield_stop.
 * Anything in between is considered inside the field.
-* If concentric is nonzero the field is considered a closed component - neutrons are propagated
-* through the field region, and no other are cmoponents are permitted inside the field.
-*
-* When using table_magnetic_field as * fieldFunction the input data is first resampled 
-* to speed up the interpolation. 
+* If concentric is zero the field is considered a closed component - neutrons are propagated
+* through the field region, and no other components are permitted inside the field.
 *
 * %P
 * INPUT PARAMETERS:
@@ -154,7 +161,7 @@ TRACE
             hit=cylinder_intersect(&t0,&t1,x,y,z,vx,vy,vz,radius,yheight);
             /*terminate neutrons which miss the component*/
             if(!hit)ABSORB;
-            /*If we do hit - propagate to the start of the field unless the nuetron is already there.*/
+            /*If we do hit - propagate to the start of the field unless the neutron is already there.*/
             if(t0>FLT_EPSILON) {
                 PROP_DT(t0);
                 t1-=t0;
@@ -196,14 +203,34 @@ TRACE
             default:
                 PROP_Z0;
         }
-        mcmagnet_pop(_particle);
+        mcmagnet_pop();
     }
 %}
 
 MCDISPLAY
 %{
-  
-  rectangle("xy",0,0,0,xwidth,yheight);
+    enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
+    switch (prms.shape){
+        case BOX:
+            box(0,0,0,xwidth,yheight,zdepth);
+            break;
+        case CYLINDER:
+            circle("xz",0, yheight/2.0,0,radius);
+            circle("xz",0,-yheight/2.0,0,radius);
+            line(-radius,-yheight/2.0,0,-radius,yheight/2.0,0);
+            line( radius,-yheight/2.0,0, radius,yheight/2.0,0);
+            line(0,-yheight/2.0,-radius,0,yheight/2.0,-radius);
+            line(0,-yheight/2.0, radius,0,yheight/2.0, radius);
+            break;
+        case SPHERE:
+            circle("xz",0,0,0,radius);
+            circle("xy",0,0,0,radius);
+            circle("yz",0,0,0,radius);
+            break;
+        case WINDOW:
+            rectangle("xy",0,0,0,xwidth,yheight);
+            break;
+    }
 %}
 
 END
