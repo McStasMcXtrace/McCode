@@ -503,6 +503,8 @@ TRACE
     index=(int)floor(rand01()*nf);
 //fatalerror("1 line after after call of findroots");
 /*    printf("Root index: %i %g \n", index, vf_list[index]); */
+
+  if (index<7) {
     v_f=vf_list[index];
     parms[0]=v_f;
     parms[14]=1; // return coherence factor
@@ -547,11 +549,14 @@ TRACE
     p *= p1*p2*p3*p4*p5;
     SCATTER;
 
- if (verbose==1){    printf("p factors : %g %g %g %g %g Omega: %g \n", p1, p2, p3, p4, p5, omega);
+    if (verbose==1){    printf("p factors : %g %g %g %g %g Omega: %g \n", p1, p2, p3, p4, p5, omega);
       printf("J_factor %g l_full %g, v_f/v_i %g, DW %g, kappa2 %g, bose_factor%g, fabs(omega) %g, coherence %g \n",
               J_factor, l_full, v_f/v_i, DW, kappa2, bose_factor, fabs(omega), coherence_factor); 
- }
-  } /* else transmit: Neutron did not hit the sample */
+    }
+  } else {
+  ABSORB; // Findroots returned junk
+  }
+} /* else transmit: Neutron did not hit the sample */
 %}
 
 MCDISPLAY
