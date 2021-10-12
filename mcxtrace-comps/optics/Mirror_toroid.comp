@@ -42,57 +42,27 @@ OUTPUT PARAMETERS ()
 
 SHARE
 %{
+  %include "reflectivity-lib"
+  %include "read_table-lib"
 %}
 
 DECLARE
 %{  
-  double e_min;
-  double e_max;
-  double e_step;
-  double theta_min;
-  double theta_max;
-  double theta_step;
-  int use_reflec_table;
-  t_Table reflec_table;
-
+  t_Reflec re;
 %}
 
 INITIALIZE
 %{
-    if (reflec && strlen(reflec) && strcmp(reflec,"NULL") ) {
-        use_reflec_table=1;
-        char **header_parsed;
-        t_Table *tp=&reflec_table;
-        /* read 1st block data from file into tp */
-        if (Table_Read(tp, reflec, 1) <= 0)
-        {
-            exit(fprintf(stderr,"Error: %s: cannot read file %s\n",NAME_CURRENT_COMP, reflec));
-        }
-        header_parsed = Table_ParseHeader(tp->header,
-                "e_min=","e_max=","e_step=","theta_min=","theta_max=","theta_step=",NULL);
-        if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
-                header_parsed[3] && header_parsed[4] && header_parsed[5])
-        {
-            e_min=strtod(header_parsed[0],NULL);
-            e_max=strtod(header_parsed[1],NULL);
-            e_step=strtod(header_parsed[2],NULL);
-            theta_min=strtod(header_parsed[3],NULL);
-            theta_max=strtod(header_parsed[4],NULL);
-            theta_step=strtod(header_parsed[5],NULL);
-        } else {
-            exit(fprintf(stderr,"Error: %s: wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, reflec));
-        }
-        if ((e_max-e_min) != ((tp->rows-1)*e_step) )
-        {
-            exit(fprintf(stderr,"Error: %s: e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, reflec));
-        }
-        if ((theta_max-theta_min) != ((tp->columns-1)*theta_step) )
-        {
-            exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, reflec));
-        }
-    }else{
-        use_reflec_table=0;
-    }
+  int status;
+  if (reflec && strlen(reflec) && strcmp(reflec,"NULL") ) {
+    status=reflec_Init(&re,COATING_UNDEFINED,reflec,NULL);
+  }else{
+    status=reflec_Init_const(&re,R0);
+  }
+  if(status!=0){
+    fprintf(stderr,"ERROR (%s): Could not interpret reflectivity. Aborting.\n", NAME_CURRENT_COMP);
+    exit(-1);
+  }
 %}
 
 TRACE
@@ -140,17 +110,12 @@ TRACE
         ky=ky-2*s*ny;
         kz=kz-2*s*nz;
 
-        /*find energy, and glancing angle*/ 
-        if (use_reflec_table){
-            /*the get ref. by call to Table_value2d*/
-            double R;
-            double theta=RAD2DEG*(acos(s/k)-M_PI_2);
-            double e=K2E*k;
-            R=Table_Value2d(reflec_table,(e-e_min)/e_step, ((theta-theta_min)/theta_step));
-            p*=R;
-        }else{
-            p*=R0;
-        }
+	/*the get ref. by call to reflectivity lib*/
+	double R,q;
+	q=2.0*s;
+	R=reflecq(&re,q,0,k*K2E,fabs(90-acos(s/k)*RAD2DEG));
+	p*=R;
+	phi+=M_PI;
     }while(0);
 %}
 
