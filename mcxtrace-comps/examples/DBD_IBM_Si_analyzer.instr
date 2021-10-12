@@ -16,11 +16,34 @@
 * This is a preliminary setup of the DBD with the Ge111 Johansson IBM
 *
 * %Parameters
-* Par1: [unit] Parameter1 description
+* a_distance_error: [m]
+* figure_radius_multiplier: [ ]
+* lattice_radius_miltiplier: [ ]
+* beam_hor: [m]
+* beam_vert: [m]
+* tails_integral: [ ]
+* tails_width: [ ]
+* slit_1_vert: [m]
+* slit_1_hor: [m]
+* slit_2_vert: [m]
+* slit_2_hor: [m]
+* slit_3_vert: [m]
+* slit_3_hor: [m]
+* ibm_offset: [m]
+* two_theta_si: [deg.]
+* emin: [keV]
+* emax: [keV]
+* take_off: [deg]
+* use_flat_source: [ ]
+* use_si_crystal: [ ]
+* si_hh: [ ]
+* si_kk: [ ]
+* si_ll: [ ]
+* min_log_weight: [ ]
 *
 * %Link
-* A reference/HTML link for more information
-*
+* <a href="https://www.nist.gov/programs-projects/diffraction-metrology-and-standards/divergent-beam-diffractometer-dbd-laboratory"></a>
+* <a href="https://tsapps.nist.gov/publication/get_pdf.cfm?<pub_id=927309">"International Tables for Crystallography (2018). Vol. H, Chapter 3.1, pp. 224–251."</a>
 * %End
 *******************************************************************************/
 
