@@ -102,7 +102,7 @@ DECLARE
 
 INITIALIZE
 %{
-  enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
+  enum shapes {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY};
   enum field_functions ff=field_type;
   /* these default field functions are part of pol-lib */
   if (ff==constant){
@@ -129,10 +129,10 @@ INITIALIZE
   }
 
   if(shape == WINDOW && !concentric){
-      printf("Warning (%s): Magnetic field has window shape and has concentric set => Field volume == 0.\n",NAME_CURRENT_COMP);
+      printf("Warning (%s): Magnetic field has window shape and concentric==0 => Field volume == 0.\n",NAME_CURRENT_COMP);
   }
   if(shape == NONE) {
-      printf("Warning (%s): Magnetic field no geometry. Full Z=0-plane is used as boundary.\n",NAME_CURRENT_COMP);
+      printf("Warning (%s): Magnetic field has no geometry. Full Z=0-plane is used as boundary.\n",NAME_CURRENT_COMP);
   }
 
 %}
@@ -141,7 +141,7 @@ TRACE
 %{
     double t0,t1;
     int hit;
-    enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
+    enum shapes {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY};
 
     /*enter through whatever object we are*/
     switch (shape){
@@ -149,7 +149,7 @@ TRACE
             hit=box_intersect(&t0,&t1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth);
             /*terminate neutrons which miss the component*/
             if(!hit) ABSORB;
-            /*If we do hit - propagate to the start of the field unless the nuetron is already there.*/
+            /*If we do hit - propagate to the start of the field unless the neutron is already there.*/
             if(t0>FLT_EPSILON) {
                 PROP_DT(t0);
                 t1-=t0;
@@ -203,14 +203,14 @@ TRACE
             default:
                 PROP_Z0;
         }
-        mcmagnet_pop();
+        mcmagnet_pop(_particle);
     }
 %}
 
 MCDISPLAY
 %{
-    enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
-    switch (prms.shape){
+    enum shapes {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY};
+    switch (shape){
         case BOX:
             box(0,0,0,xwidth,yheight,zdepth);
             break;

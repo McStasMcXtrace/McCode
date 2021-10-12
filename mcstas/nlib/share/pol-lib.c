@@ -68,22 +68,22 @@ enum field_functions{
 };
 
 #pragma acc routine seq
-int magnetic_field_dispatcher(int func_id, double x, double y, double z, double t, double *bx,double *by, double *bz, double dummy[8]){
+int magnetic_field_dispatcher(int func_id, double x, double y, double z, double t, double *bx,double *by, double *bz, double pars[8]){
   int retval=1;
   switch (func_id){
     case constant: 
       {
-        retval=const_magnetic_field(x,y,z,t,bx,by,bz, dummy);
+        retval=const_magnetic_field(x,y,z,t,bx,by,bz, pars);
         break;
       }
     case majorana:
       {
-        retval=majorana_magnetic_field(x,y,z,t,bx,by,bz, dummy);
+        retval=majorana_magnetic_field(x,y,z,t,bx,by,bz, pars);
         break;
       }
     case rotating:
       {
-        retval=rot_magnetic_field(x,y,z,t,bx,by,bz, dummy);
+        retval=rot_magnetic_field(x,y,z,t,bx,by,bz, pars);
         break;
       }
     case RF:
@@ -93,7 +93,7 @@ int magnetic_field_dispatcher(int func_id, double x, double y, double z, double 
       }
     case gradient:
       {
-        retval=gradient_magnetic_field(x,y,z,t,bx,by,bz,dummy);
+        retval=gradient_magnetic_field(x,y,z,t,bx,by,bz,pars);
         break;
       }
     case none:
