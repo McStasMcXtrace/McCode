@@ -69,7 +69,8 @@ DECLARE
 %{
     DArray2d PSD_N;
     DArray2d PSD_p2;
-    double complex *PSD_phi;
+    DArray2d PSD_phi_real;
+    DArray2d PSD_phi_imag;
 %}
 
 INITIALIZE
@@ -85,8 +86,9 @@ INITIALIZE
     }
 
     PSD_N = create_darr2d(nx,ny);
-    PSD_phi = calloc(nx*ny,sizeof(double complex));
     PSD_p2 = create_darr2d(nx,ny);
+    PSD_phi_real = create_darr2d(nx,ny);
+    PSD_phi_imag = create_darr2d(nx,ny);
 %}
 
 TRACE
@@ -95,6 +97,7 @@ TRACE
     double k,x_o,y_o,z_o;
     double p2;
     double complex dphi;
+    double dphi_r,dphi_i;
 
     x_o=x;y_o=y;z_o=z;
     k=sqrt(kx*kx+ky*ky+kz*kz);
@@ -123,11 +126,15 @@ TRACE
       /*check if within the ratio of the pixel*/
       if ( fabs(xwidth/nx*(i+0.5)-xwidth/2.0-x)<xwidth/nx*ratio && fabs(yheight/ny*(j+0.5)-yheight/2.0-y)<yheight/ny*ratio ){
         dphi=p*cexp(I*(phi-dnu));
+	dphi_r=creal(dphi);
+	dphi_i=cimag(dphi);
         p2 = p*p;
 #pragma acc atomic
         PSD_N[i][j]+=1;
 #pragma acc atomic
-        PSD_phi[i*ny+j]+= dphi;//p*cexp(I*(phi-dnu));//I*fmod(phi,2*M_PI));
+        PSD_phi_real[i][j]+= dphi_r;
+#pragma acc atomic
+        PSD_phi_imag[i][j]+= dphi_i;
 #pragma acc atomic
         PSD_p2[i][j] += p2;
           SCATTER;
@@ -159,8 +166,8 @@ SAVE
 
     for (i=0;i<nx;i++){
       for (j=0;j<ny;j++){
-        PSD_p_abs[i*ny +j]=cabs(PSD_phi[i*ny+j]);
-        PSD_p_arg[i*ny +j]=carg(PSD_phi[i*ny+j]);
+        PSD_p_abs[i*ny +j]=cabs(PSD_phi_real[i][j] + I*PSD_phi_imag[i][j]);
+        PSD_p_arg[i*ny +j]=carg(PSD_phi_real[i][j] + I*PSD_phi_imag[i][j]);
       }
     }
 
@@ -254,7 +261,8 @@ FINALLY
 %{
   destroy_darr2d(PSD_N);
   destroy_darr2d(PSD_p2);
-  free(PSD_phi);
+  destroy_darr2d(PSD_phi_real);
+  destroy_darr2d(PSD_phi_imag);
 %}
 
 MCDISPLAY
