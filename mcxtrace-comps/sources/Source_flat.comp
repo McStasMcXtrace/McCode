@@ -50,7 +50,7 @@ SETTING PARAMETERS (radius=0, yheight=0, xwidth=0,xmin=0,xmax=0,
   dist=0, focus_xw=.045, focus_yh=.12, 
   E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,randomphase=1,phase=0,
   string spectrum_file="")
-OUTPUT PARAMETERS (pmul, spectrum_T,srcArea,square)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -68,7 +68,8 @@ DECLARE
 
 INITIALIZE
 %{
-  square = 0;srcArea=0;
+  square = 0;
+  srcArea=0;
   /* Determine source area */
 
   if (xmin && xmax && !xwidth){
