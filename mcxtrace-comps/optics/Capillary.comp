@@ -38,6 +38,7 @@ OUTPUT PARAMETERS()
 SHARE
 %{
 #include <complex.h>
+#include <math.h>
 %include "read_table-lib"
 %}
 DECLARE
@@ -175,7 +176,7 @@ TRACE
                 Qc=4*sqrt(M_PI*na*RE*f1);
                 double R=1;
                 if (Q>Qc){
-                    complex double qp;
+                    double complex qp,Rc;
                     double q,b_mu;
 
                     q=Q/Qc;
@@ -190,10 +191,12 @@ TRACE
                         qp=csqrt(q*q-1+2*I*b_mu);
                     }
                     /*and from this compute the reflectivity*/
-                    R=cabs((q-qp)/(q+qp));
+                    Rc=(q-qp)/(q+qp);
+		    R=cabs(Rc);
                     p*=R;//pow(R,scatterc);
-                    /*now also set the phase*/
-                    phi+=carg((q-qp)/(q+qp));//*scatterc;
+                    /*now also set the phase - have to compute manually since carg is not GPU yet*/
+                    double arg = atan2(cimag(Rc),creal(Rc));
+		    phi= phi + arg;//*scatterc;
                 }
             }else{
                 double e,R,theta;

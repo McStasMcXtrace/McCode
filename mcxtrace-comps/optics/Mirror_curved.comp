@@ -136,7 +136,7 @@ TRACE
         Qc=4*sqrt(M_PI*na*RE*f1);
         
         if (Q>Qc){ 
-          complex double qp;
+          complex double qp,Rc;
           double q,b_mu,R;
 
           q=Q/Qc;
@@ -151,10 +151,12 @@ TRACE
               qp=csqrt(q*q-1+2*I*b_mu);
           }
           /*and from this compute the reflectivity*/
-          R=cabs((q-qp)/(q+qp));
+          Rc=((q-qp)/(q+qp));
+          R=cabs(Rc);
           p*=R;
-          /*now also set the phase*/
-          phi+=carg((q-qp)/(q+qp));
+          /*now also set the phase - have to compute manually since carg is not GPU yet*/
+          double arg = atan2(cimag(Rc),creal(Rc));
+	  phi= phi + arg;//*scatterc;
         }
       }else{
         /*R0 !=0 -> use that for reflectivity*/
