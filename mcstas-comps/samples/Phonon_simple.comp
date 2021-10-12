@@ -421,40 +421,43 @@ TRACE
     findroots_gpu(0, v_i, v_i+2*c*V2K/VS2E, vf_list, &nf, parms);
     #endif
     index=(int)floor(rand01()*nf);
-    v_f=vf_list[index];
-    parms[0]=v_f-DV;
-    f1=omega_q(parms);
-    parms[0]=v_f+DV;
-    f2=omega_q(parms);
-    J_factor = fabs(f2-f1)/(2*DV*K2V);
-    omega=VS2E*(v_i*v_i-v_f*v_f);
-    vx *= v_f;
-    vy *= v_f;
-    vz *= v_f;
-    kappa_x=V2K*(vx_i-vx);
-    kappa_y=V2K*(vy_i-vy);
-    kappa_z=V2K*(vz_i-vz);
-    kappa2=kappa_z*kappa_z+kappa_y*kappa_y+kappa_x*kappa_x;
-
-    if(!cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight))
-    {
-      /* ??? did not hit cylinder */
-      printf("FATAL ERROR: Did not hit cylinder from inside.\n");
-      exit(1);
+    if (index<2) {
+      v_f=vf_list[index];
+      parms[0]=v_f-DV;
+      f1=omega_q(parms);
+      parms[0]=v_f+DV;
+      f2=omega_q(parms);
+      J_factor = fabs(f2-f1)/(2*DV*K2V);
+      omega=VS2E*(v_i*v_i-v_f*v_f);
+      vx *= v_f;
+      vy *= v_f;
+      vz *= v_f;
+      kappa_x=V2K*(vx_i-vx);
+      kappa_y=V2K*(vy_i-vy);
+      kappa_z=V2K*(vz_i-vz);
+      kappa2=kappa_z*kappa_z+kappa_y*kappa_y+kappa_x*kappa_x;
+      
+      if(!cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight))
+	{
+	  /* ??? did not hit cylinder */
+	  printf("FATAL ERROR: Did not hit cylinder from inside.\n");
+	  exit(1);
+	}
+      dt = t1;
+      l_o = v_f*dt;
+      
+      my_a_i = V_my_a_v/v_i;
+      my_a_f = V_my_a_v/v_f;
+      bose_factor=nbose(omega,T);
+      p1 = exp(-(V_my_s*(l_i+l_o)+my_a_i*l_i+my_a_f*l_o)); /* Absorption factor */
+      p2 = nf*solid_angle*l_full*V_rho/(4*PI);     /* Focusing factors; assume random choice of n_f possibilities */
+      p3 = (v_f/v_i)*DW*(kappa2*K2V*K2V*VS2E)/fabs(omega)*bose_factor;   /* Cross section factor 1 */
+      p4 = 2*VS2E*v_f/J_factor;  /* Jacobian of delta functions in cross section */
+      p5 = b*b/M;  /* Cross section factor 2 */
+      p *= p1*p2*p3*p4*p5;
+    } else {
+      ABSORB; // findroots returned junk
     }
-    dt = t1;
-    l_o = v_f*dt;
-
-    my_a_i = V_my_a_v/v_i;
-    my_a_f = V_my_a_v/v_f;
-    bose_factor=nbose(omega,T);
-    p1 = exp(-(V_my_s*(l_i+l_o)+my_a_i*l_i+my_a_f*l_o)); /* Absorption factor */
-    p2 = nf*solid_angle*l_full*V_rho/(4*PI);     /* Focusing factors; assume random choice of n_f possibilities */
-    p3 = (v_f/v_i)*DW*(kappa2*K2V*K2V*VS2E)/fabs(omega)*bose_factor;   /* Cross section factor 1 */
-    p4 = 2*VS2E*v_f/J_factor;  /* Jacobian of delta functions in cross section */
-    p5 = b*b/M;  /* Cross section factor 2 */
-    p *= p1*p2*p3*p4*p5;
-
   } /* else transmit: Neutron did not hit the sample */
 %}
 
