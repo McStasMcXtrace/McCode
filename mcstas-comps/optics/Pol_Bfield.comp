@@ -102,7 +102,7 @@ DECLARE
 
 INITIALIZE
 %{
-  enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
+  enum shapes {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY};
   enum field_functions ff=field_type;
   /* these default field functions are part of pol-lib */
   if (ff==constant){
@@ -141,7 +141,7 @@ TRACE
 %{
     double t0,t1;
     int hit;
-    enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
+    enum shapes {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY};
 
     /*enter through whatever object we are*/
     switch (shape){
@@ -209,7 +209,7 @@ TRACE
 
 MCDISPLAY
 %{
-    enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
+    enum shapes {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY};
     switch (shape){
         case BOX:
             box(0,0,0,xwidth,yheight,zdepth);
