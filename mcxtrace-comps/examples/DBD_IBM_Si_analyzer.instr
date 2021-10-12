@@ -53,10 +53,13 @@ DECLARE
     double IBM_curvature_radius, alpha, theta_a, theta_b;
     double hc_eV_m=1.0/806554.429;
     double design_wavelength_angstroms;
-    int source_selector_random;
     double take_off_beam_height_scale;
 %}
 
+USERVARS
+%{
+    int source_selector_random;
+%}
 INITIALIZE
 %{
     design_wavelength_angstroms=1e10*hc_eV_m/8047.8;

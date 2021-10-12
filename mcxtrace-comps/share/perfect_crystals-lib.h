@@ -6,22 +6,26 @@
 enum {Mx_crystal_explicit=0, Mx_crystal_diamond, Mx_crystal_fcc,Mx_crystal_bcc};
 
 /* make proper function declaration to be standards-compliant */
+#pragma acc routine
 void Mx_CubicCrystalChi(double complex *chi0, double complex *chih, double *k0mag, double *hscale, double *thetaB,
                          double f00, double f0h, double fp, double fpp, double V, int h, int k, int l,
                          double debye_waller_B, double E,
                          int crystal_type, double fscaler, double fscalei);
 
+#pragma acc routine
 int Mx_DiffractionDispersion(double complex kqvals[4], double complex xi0[4], double complex xih[4],
         const double k0[3], const double nhat[3],
         const double H[3],
         double complex chi0, double complex chih_chihbar, double C, int nroots);
 
+#pragma acc routine
 int Mx_DarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
 	const double k0hat[3], const double nhat[3],
 	const double alpha[3],
 	double complex chi0, double complex chih, double complex chihbar,
 	double k0mag, double hscale, double thetaB);
 
+#pragma acc routine
 int Mx_LaueReflectivityBC(double *Rsig, double *Rpi, double *Tsig, double *Tpi,
 	double *Asig, double *Api, // primary attenuation
 	double kh[3],
@@ -31,11 +35,13 @@ int Mx_LaueReflectivityBC(double *Rsig, double *Rpi, double *Tsig, double *Tpi,
 	double k0mag, double hscale, double thetaB, double thickness);
 
 /*This is the old Darwin function*/
+#pragma acc routine
 void Mx_DarwinReflectivity(double *R, double *Thetah, double *Theta0, double *DeltaTheta0,
         double f00, double f0h, double fp, double fpp, double V, double alpha, int h, int k, int l,
         double debye_waller_B, double E, double Thetain, int pol,
         int crystal_type, double fscaler, double fscalei);
 
+#pragma acc routine
 void cross(double res[3], const double v1[3], const double v2[3], int unitize);
 
 %include "read_table-lib"
