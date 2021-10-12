@@ -58,10 +58,10 @@ INITIALIZE
     int status;
 
     if (reflectivity && strlen(reflectivity) && strcmp(reflectivity,"NULL") ) {
-      status=reflec_Init(&re,COATING_UNDEFINED,reflectivity);
+      status=reflec_Init(&re,COATING_UNDEFINED,reflectivity,NULL);
     }else{
       /*assume a constant reflectivity*/
-      status=reflec_Init(&re,CONSTANT,R0);
+      status=reflec_Init_const(&re,R0);
     }
 
     if(status!=0){
