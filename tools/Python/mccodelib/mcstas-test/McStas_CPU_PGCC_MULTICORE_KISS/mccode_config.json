@@ -17,7 +17,7 @@
     "CFLAGS": "-g -ta=multicore -Minfo=accel -DOPENACC",
     "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
     "MPIFLAGS": "-DUSE_MPI -lmpi",
-    "OACCFLAGS": "-g -ta:multicore -Minfo=accel -DOPENACC,
+    "OACCFLAGS": "-g -ta:multicore -Minfo=accel -DOPENACC",
     "CC": "nvc",
     "OACC": "nvc",
     "MPICC": "mpicc",
