@@ -231,10 +231,10 @@ TRACE
             double alpha1=alpha+delta_alpha; /* the angle between the lattice planes and the surface, including curvature */
             /* check for 3rd & 1st quadrant hits, backward hit from above or forward hit from below and reverse sense of alpha */
             if( (ky<0 && kz<0) || (ky>0 && kz>0) ) alpha1=-alpha1;
-            MxBragg_DarwinReflectivity(&Rpi , &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, alpha1, h, k, l,
+            Mx_DarwinReflectivity(&Rpi , &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, alpha1, h, k, l,
                 debye_waller_B, E, Thetain,1, crystal_type, structure_factor_scale_r, structure_factor_scale_i
             );
-            MxBragg_DarwinReflectivity(&Rsig, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, alpha1, h, k, l,
+            Mx_DarwinReflectivity(&Rsig, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, alpha1, h, k, l,
                 debye_waller_B, E, Thetain,2, crystal_type, structure_factor_scale_r, structure_factor_scale_i
             );
 
