@@ -220,7 +220,7 @@ SHARE
   };
   struct line_info_struct
   {
-  struct line_data *list;     /* Reflection array */
+      struct line_data *list;     /* Reflection array */
       int  count;                  /* Number of reflections */
       double Dd;
       double DWfactor;
@@ -250,13 +250,13 @@ SHARE
       double k_min, k_max;
       double xs_Nq[CHAR_BUF_LENGTH];
       double xs_sum[CHAR_BUF_LENGTH];
-      double photon_passed;
+      unsigned int photon_passed;
       long   xs_compute, xs_reuse, xs_calls;
       t_Table mat_table;
       int mat_column_order[5]; /*column signification for the coeff. in material data file*/
-    };
+  };
 
- off_struct offdata;
+  off_struct offdata;
   // PN_list_compare *****************************************************************
 
   int PN_list_compare (void const *a, void const *b)
@@ -268,45 +268,6 @@ SHARE
      if (!s) return 0;
      else    return (s < 0 ? -1 : 1);
   } /* PN_list_compare */
-
-  /*TODO - the following function should just use read_table-lib*/
-/*  #pragma acc routine*/
-/*  int read_abs_data(char *ABS_file, struct abs_data **abs)*/
-/*  {*/
-/*    t_Table table;*/
-/*    char **parsing;*/
-/*    int status,i;*/
-/**/
-/*    if (!ABS_file || !strlen(ABS_file) || !strcmp(ABS_file, "NULL")) {*/
-/*      fprintf(stderr,"Warning: material file (%s) not found.\n",ABS_file);*/
-/*      *abs=calloc(2,sizeof(struct abs_data));*/
-/*      (*abs)[1].E=-1;*/
-/*      (*abs)[1].k=-1;*/
-/*      (*abs)[1].mu=-1;*/
-/*    }else{*/
-/*      if ( (status=Table_Read(&table,ABS_file,0))==-1){*/
-/*        fprintf(stderr,"Error (read_abs_data): Could not parse file \"%s\"\n",ABS_file);*/
-/*        exit(-1);*/
-/*      }*/
-/*      parsing=Table_ParseHeader(table.header,"Z","A[r]","rho",NULL);*/
-/*      *abs=calloc(table.rows+1,sizeof(struct abs_data));*/
-/*      for (i=0;i<table.rows;i++){*/
-/*        (*abs)[i].E=table.data[i*table.columns];*/
-/*        (*abs)[i].k=(*abs)[i].E*E2K;*/
-        // get from cox_76 abs_info.data[i].sigma_a=aba_info.data[i]*
-/*        (*abs)[i].mu=100*table.data[i*table.columns + 3];*/
-        /* column 4 (but 0-indexed) is photoabsorption in cm^2 / g
-         * density is in g / cm^3 ->factor 100 to get mu in m^-1.*/
-/*        (*abs)[i].cohinc=100*table.data[i*table.columns + 4];*/
-        /* column 5 contains the coh+inc mean free paths (mus). in cm^2 / g.*/
-/*      }*/
-/*      (*abs)[i].E=-1;*/
-/*      (*abs)[i].k=-1;*/
-/*      (*abs)[i].mu=-1;*/
-/*      Table_Free(&table);*/
-/*      return 1;*/
-/*    }*/
-/*  }*/
 
   int read_line_data(char *SC_file, struct line_info_struct *info)
   {
@@ -434,7 +395,6 @@ SHARE
       /* assign and check values */
       j        = (j > 0 ? j : 0);
       q        = (d > 0 ? 2*PI/d : 0); /* this is q */
-  
       DWfactor = (DWfactor > 0 ? DWfactor : 1);
       w        = (w>0 ? w : 0); /* this is q and d relative spreading */
       F2       = (F2 >= 0 ? F2 : 0);
@@ -715,24 +675,14 @@ INITIALIZE
   if (!line_info.yheight_i) {
     line_info.yheight_i = yheight;
   }
-  if (p_interact) {
-    if (p_interact < p_inc) { double tmp=p_interact; p_interact=p_inc; p_inc=tmp; }
-    p_transmit = 1-p_interact-p_inc;
-  }
 
-  if (p_inc + p_transmit > 1) {
-    MPI_MASTER(
-    printf("PowderN: %s: You have requested an unmeaningful choice of the 'p_inc' and 'p_transmit' parameters (sum is %g, exeeding 1). Fixing.\n",
-                 NAME_CURRENT_COMP, p_inc+p_transmit);
-    );
-    if (p_inc > p_transmit) p_transmit=1-2*p_inc;
-    else p_transmit=1-2*p_inc;
-  } else if (p_inc + p_transmit == 1) {
-    MPI_MASTER(
-    printf("PowderN: %s: You have requested all photons be attenuated\n"
-           "WARNING  or incoherently scattered!\n", NAME_CURRENT_COMP);
-    );
-  }
+  if (!p_interact) p_interact=1e-2;
+  if (!p_inc)      p_inc     =1e-2;
+  if (!p_transmit) p_transmit=1e-2;
+
+  p_interact = p_interact / (p_interact+p_inc+p_transmit);
+  p_inc      = p_inc      / (p_interact+p_inc+p_transmit);
+  p_transmit = p_transmit / (p_interact+p_inc+p_transmit);
 
   if (concentric) {
     MPI_MASTER(
@@ -825,6 +775,7 @@ INITIALIZE
       }
     }
   }
+
 %}
 
 TRACE
@@ -849,19 +800,23 @@ TRACE
   double k_min = line_info.k_min;
   double k_max = line_info.k_max;
   double lfree = line_info.lfree;
-  double photon_passed = line_info.photon_passed;
+  unsigned int photon_passed = line_info.photon_passed;
   long   xs_compute = line_info.xs_compute;
   long   xs_reuse   = line_info.xs_reuse;
   long   xs_calls   = line_info.xs_calls;
   int    flag_warning = line_info.flag_warning;
   double dq = line_info.dq;
 
-  #ifdef OPENACC
+  double my_s_k2_sum = line_info.my_s_k2_sum;
+  double my_a = line_info.my_a;
+  double my_inc = line_info.my_inc;
+
   #ifdef USE_OFF
+  #ifdef OPENACC
   off_struct thread_offdata = offdata;
-  #endif
   #else
   #define thread_offdata offdata
+  #endif
   #endif
   
   if (line_info.V_0 > 0 && (line_info.count || line_info.my_inc)) {
@@ -874,9 +829,10 @@ TRACE
     } else if (line_info.shape == 2) {
       intersect  = sphere_intersect  (&l0, &l3, x,y,z, kx,ky,kz, radius);
       intersecti = sphere_intersect  (&l1, &l2, x,y,z, kx,ky,kz, line_info.radius_i);
+    }
     #ifdef USE_OFF
-    } else if (line_info.shape == 3) {
-      intersect  = off_x_intersect  (&l0, &l3, NULL, NULL, x,y,z, kx,ky,kz, offdata);
+      else if (line_info.shape == 3) {
+      intersect  = off_x_intersect  (&l0, &l3, NULL, NULL, x,y,z, kx,ky,kz, thread_offdata);
       intersecti = 0;
     }
     #endif
@@ -911,39 +867,45 @@ TRACE
     if (line_info.photon_passed < CHAR_BUF_LENGTH) {
       if (k < line_info.k_min) line_info.k_min = k;
       if (k > line_info.k_max) line_info.k_max = k;
-      line_info.photon_passed++;
+      photon_passed++;
     }
 
-    /* Calculate total scattering cross section at relevant wavevector */
+    /* Calculate total scattering cross section at relevant wavevector.
+       Reuse calculation if possible (i.e if photon is identical ot preceeding one and not GPU.*/
     #ifndef OPENACC
     if ( fabs(k - line_info.k) < 1e-15) {
         line_info.nb_reuses++;
+	my_s_k2_sum=line_info.my_s_k2_sum;
+	my_inc=line_info.my_inc;
+	my_a=line_info.my_a;
     } else {
     #endif
-        line_info.Nq = calc_xsect(k, line_info.q, line_info.my_s_k2, line_info.count, d_theta*0.5, &line_info.my_s_k2_sum, &line_info);
-        calc_abs_xsect(k, &line_info.my_a, &line_info);
-        calc_inc_xsect(k, &line_info.my_inc, &line_info);
-        line_info.k = k;
+        Nq = calc_xsect(k, line_info.q, line_info.my_s_k2, line_info.count, d_theta*0.5, &my_s_k2_sum, &line_info);
+        calc_abs_xsect(k, &my_a, &line_info);
+        calc_inc_xsect(k, &my_inc, &line_info);
+	if(pack!=1){
+	  /*apply packing factor correction*/
+	  my_a *= pack;
+	  my_inc *= pack;
+	  my_s_k2_sum *=pack;
+	}
+    #ifndef OPENACC
+        line_info.my_s_k2_sum=my_s_k2_sum;
+        line_info.my_inc=my_inc;
+        line_info.my_a=my_a;
+	line_info.Nq = Nq;
+	line_info.k  = k;
         line_info.nb_refl += line_info.Nq;
         line_info.nb_refl_count++;
-    #ifndef OPENACC
     }
     #endif
-
-    if(pack!=1){
-      /*apply packing factor correction*/
-      line_info.my_a *= pack;
-      line_info.my_inc *= pack;
-      line_info.my_s_k2_sum *=pack;
-    }
-
 
     if (l3 < 0) {
       l3=0; /* Already past sample?! */
       if (flag_warning < 100)
       printf("PowderN: %s: Warning: xray has already passed us? (Skipped).\n"
              "         In concentric geometry, this may be caused by a missing concentric=0 option in 2nd enclosing instance.\n", NAME_CURRENT_COMP);
-      line_info.flag_warning++;
+      flag_warning++;
     } else {
       if (dl<0) { /* Calculate scattering point position */
         dl = fabs(dl)*(l1 - l0); /* 'Forward' part */
@@ -951,7 +913,7 @@ TRACE
         dl = dl * (l3 - l2) + (l2-l0) ; /* Possibly also 'backside' part */
       }
 
-      my_s=line_info.my_s_k2_sum/(k*k)+line_info.my_inc;
+      my_s=my_s_k2_sum/(k*k)+my_inc;
       /* Total attenuation from scattering*/
 
       ptype = rand01();
@@ -977,7 +939,7 @@ TRACE
       if (photontype == 3) { /* Make coherent scattering event */
         if (line_info.count > 0) {
           /* choose line */
-          if (line_info.Nq > 1) line=floor(line_info.Nq*rand01());  /* Select between Nq powder lines */
+          if (Nq > 1) line=floor(Nq*rand01());  /* Select between Nq powder lines */
           else line = 0;
           if (line_info.w[line])
             arg = line_info.q[line]*(1+line_info.w[line]*randnorm())/(2.0*k);
@@ -1090,7 +1052,7 @@ TRACE
 
           l_1 = l3 - l2 + l1 - l0; /* Length to exit */
 
-          pmul  = line_info.Nq*l_full*my_s_n*exp(-(line_info.my_a+my_s)*(l+l_1))/(1-(p_inc+p_transmit));
+          pmul  = Nq*l_full*my_s_n*exp(-(my_a+my_s)*(l+l_1))/(1-(p_inc+p_transmit));
           /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
           if (d_phi_thread) pmul *= alpha/PI;
 
@@ -1126,8 +1088,8 @@ TRACE
           intersecti = sphere_intersect  (&l1, &l2, x,y,z, kx,ky,kz, line_info.radius_i);
         }
 	#ifdef USE_OFF
-	else if (line_info.shape == 3) {
-          intersect  = off_x_intersect  (&l0, &l3, NULL, NULL, x,y,z, kx,ky,kz, offdata);
+	  else if (line_info.shape == 3) {
+          intersect  = off_x_intersect  (&l0, &l3, NULL, NULL, x,y,z, kx,ky,kz, thread_offdata);
           intersecti = 0;
         }
 	#endif
@@ -1158,7 +1120,7 @@ TRACE
 
         l_1 = (l3 - l2 + l1 - l0); /* Length to exit */
 
-        pmul = l_full*line_info.my_inc*exp(-(line_info.my_a+my_s)*(l+l_1))/(p_inc);
+        pmul = l_full*my_inc*exp(-(my_a+my_s)*(l+l_1))/(p_inc);
         pmul *= solid_angle/(4*PI);
 
         type = 'i';
@@ -1168,7 +1130,7 @@ TRACE
       else if (photontype == 1) {
         /* Make transmitted (absorption-corrected) event */
         /* No coordinate changes here, simply change xray weight */
-        pmul = exp(-(line_info.my_a+my_s)*(l))/(p_transmit);
+        pmul = exp(-(my_a+my_s)*(l))/(p_transmit);
 
         type = 't';
 	itype = 3;
@@ -1177,6 +1139,25 @@ TRACE
     } /* Photon leaving since it has passed already */
   } /* else transmit non interacting xrays */
 
+  // Inject these back to component struct in non-OpenACC case
+  #ifndef OPENACC
+  line_info.nb_reuses=nb_reuses;
+  line_info.nb_refl=nb_refl;
+  line_info.nb_refl_count=nb_refl_count;
+  line_info.k=kcache;
+  line_info.Nq=Nq;
+  line_info.k_min=k_min;
+  line_info.k_max=k_max;
+  line_info.lfree=lfree;
+  line_info.xs_compute=xs_compute;
+  line_info.xs_reuse=xs_reuse;
+  line_info.xs_calls=xs_calls;
+  line_info.dq=dq;
+  line_info.photon_passed = photon_passed;
+  #endif
+  // These should be updated in any case
+  #pragma acc atomic write
+  line_info.flag_warning = flag_warning;
 %}
 
 FINALLY
