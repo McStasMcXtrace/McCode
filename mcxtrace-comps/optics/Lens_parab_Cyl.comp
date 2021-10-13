@@ -52,13 +52,10 @@ SHARE
       double coord[3];
       double k[3];
   } data_lens_parab_Cyl;
-  typedef struct {
-      double constants[6];
-  } param_lens_parab_Cyl;
  
   // intersect_parab_Cyl function calculates the intersection point on a surface of a parabolic cylinder with the photon's trajectory, estimates two points of intersection (if only) and chooses the one that lies within the interval (-yheight/2<=y=<yheight/2 && -xwidth/2<=x=<xwidth/2) and returns it.
-
-  data_lens_parab_Cyl intersect_parab_Cyl(data_lens_parab_Cyl a, param_lens_parab_Cyl b, double rough_xy, double rough_z){
+#pragma acc routine
+  data_lens_parab_Cyl intersect_parab_Cyl(data_lens_parab_Cyl a, double *b, double rough_xy, double rough_z){
     data_lens_parab_Cyl result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};
     int i;
     double A,B,C,D,rr;
@@ -81,12 +78,12 @@ SHARE
     knorm[1]=k[1]/Knorm; 
     knorm[2]=k[2]/Knorm;
        
-    rr=b.constants[0];
-    yh=b.constants[1];
-    xw=b.constants[2];
-    dd=b.constants[3];
-    M=b.constants[4];
-    Sign=b.constants[5];
+    rr=b[0];
+    yh=b[1];
+    xw=b[2];
+    dd=b[3];
+    M=b[4];
+    Sign=b[5];
     
     A=knorm[1]*knorm[1];
     B=2*(p[1]*knorm[1]-Sign*rr*knorm[2]);
@@ -128,7 +125,8 @@ SHARE
 	}
       }	else return result;
     }
-    
+
+    /*compute normal vector*/
     Nx=0;
     if (result.coord[1]==0){
       Ny=1;
@@ -181,6 +179,7 @@ DECLARE
   t_Table matT;
 %}
 
+
 INITIALIZE
 %{
   int status=0;
@@ -199,7 +198,7 @@ INITIALIZE
 TRACE
 %{
   // calculation of the parabolic parameters
-  param_lens_parab_Cyl parab_Cyl;
+  double parab_Cyl[6];
   data_lens_parab_Cyl incid,refr,outg;
   
   int i=0,nr;  
@@ -208,12 +207,12 @@ TRACE
  
   w=(yheight*yheight)/(8.0*r); //calculation of the "depth" of the profile
   
-  parab_Cyl.constants[0]=r;
-  parab_Cyl.constants[1]=yheight;
-  parab_Cyl.constants[2]=xwidth;
+  parab_Cyl[0]=r;
+  parab_Cyl[1]=yheight;
+  parab_Cyl[2]=xwidth;
   
-  parab_Cyl.constants[6]=rough_xy;
-  parab_Cyl.constants[7]=rough_z;
+  parab_Cyl[6]=rough_xy;
+  parab_Cyl[7]=rough_z;
 
   k=sqrt(kx*kx+ky*ky+kz*kz);
   e=K2E*k;  /*Energy in KeV, same unit as datafile */
@@ -241,9 +240,9 @@ TRACE
 
   d_total=0;
   for (nr=0;nr<=(N-1);nr++){
-    parab_Cyl.constants[3]=nr*d+nr*2*w; // d constant
-    parab_Cyl.constants[4]=1.0/Refractive_Index_Re; // M constant
-    parab_Cyl.constants[5]=-1.0; //Sign constant
+    parab_Cyl[3]=nr*d+nr*2*w; // d constant
+    parab_Cyl[4]=1.0/Refractive_Index_Re; // M constant
+    parab_Cyl[5]=-1.0; //Sign constant
     
     refr=intersect_parab_Cyl(incid,parab_Cyl,rough_xy,rough_z);
     
@@ -258,9 +257,9 @@ TRACE
     kz=refr.k[2];
 
     //alter parabolic input to match second parabola
-    parab_Cyl.constants[3]=(nr+1)*d+nr*2*w;
-    parab_Cyl.constants[4]=Refractive_Index_Re;
-    parab_Cyl.constants[5]=1.0; 
+    parab_Cyl[3]=(nr+1)*d+nr*2*w;
+    parab_Cyl[4]=Refractive_Index_Re;
+    parab_Cyl[5]=1.0;
 
     outg=intersect_parab_Cyl(refr,parab_Cyl,rough_xy,rough_z);
     
