@@ -34,7 +34,7 @@
 /* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT Test_Magnon_bcc_2D(lambda=10, dlambda=9.9, Rotation=0, inelastic=1, aa=6.283185307179586,
 				     sample_J=2, TT=300, FerroMagnet=0, Verbose=0, imultiplier=1)
-DEPENDENCY " -g "
+DEPENDENCY " -O0 "
 
 DECLARE %{
 %}
