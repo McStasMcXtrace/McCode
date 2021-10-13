@@ -134,14 +134,14 @@ SHARE
     } else if (result.coord[1]!=0){
 	Ny=Sign*rr/result.coord[1]; Nz=1;
     }
-    if (rough_xy) {
-     	double d_xy=rough_xy*randnorm(); 	
-	Ny+=d_xy; 
-    } 
-    if (rough_z) {
-    	double d_z=rough_z*randnorm(); 
-	Nz+=d_z;
-    }  
+    //if (rough_xy) {
+    // 	double d_xy=rough_xy*randnorm();
+    //	Ny+=d_xy;
+    //}
+    //if (rough_z) {
+    //	double d_z=rough_z*randnorm();
+    //  Nz+=d_z;
+    //}
    
     Nnorm=sqrt(Nx*Nx+Ny*Ny+Nz*Nz);
     N[0]=Nx/Nnorm;
