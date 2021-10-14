@@ -25,7 +25,11 @@ DEFINE INSTRUMENT Test_MCPL_output(merge=1)
 
 DECLARE
 %{
-    int32_t flag;
+%}
+
+USERVARS
+%{
+  double flag;
 %}
 
 INITIALIZE
@@ -43,7 +47,7 @@ COMPONENT sa = Source_flat(
 AT(0,0,0) RELATIVE Origin
 EXTEND %{
   t=1e-3*rand01();
-  flag=(uint32_t)mcget_run_num();
+  flag=(double)mcget_run_num();
 %}
 
 /* the output ============================================================== */
