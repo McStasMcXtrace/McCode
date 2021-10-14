@@ -64,9 +64,9 @@ int ismpislave;
 DArray1d X;
 DArray1d Y;
 DArray1d Z;
-DArray1d VX;
-DArray1d VY;
-DArray1d VZ;
+DArray1d KX;
+DArray1d KY;
+DArray1d KZ;
 DArray1d EX;
 DArray1d EY;
 DArray1d EZ;
@@ -140,12 +140,14 @@ INITIALIZE
       X = create_darr1d(nparticles);
       Y = create_darr1d(nparticles);
       Z = create_darr1d(nparticles);
-      VX = create_darr1d(nparticles);
-      VY = create_darr1d(nparticles);
-      VZ = create_darr1d(nparticles);
-      SX = create_darr1d(nparticles);
-      SY = create_darr1d(nparticles);
-      SZ = create_darr1d(nparticles);
+      KX = create_darr1d(nparticles);
+      KY = create_darr1d(nparticles);
+      KZ = create_darr1d(nparticles);
+      if(polarisationuse){
+	EX = create_darr1d(nparticles);
+      	EY = create_darr1d(nparticles);
+      	EZ = create_darr1d(nparticles);
+      }
       T = create_darr1d(nparticles);
       P = create_darr1d(nparticles);
       printf("Initiating file read...\n");
@@ -184,9 +186,9 @@ INITIALIZE
 
 	      double d0=particle->direction[0],d1=particle->direction[1],d2=particle->direction[2];
 
-	      VX[read_photons]=d0*nrm;
-	      VY[read_photons]=d1*nrm;
-	      VZ[read_photons]=d2*nrm;
+	      KX[read_photons]=d0*nrm;
+	      KY[read_photons]=d1*nrm;
+	      KZ[read_photons]=d2*nrm;
 
 	      /*time in ms:*/
 	      T[read_photons] = particle->time*1e-3;
@@ -225,7 +227,7 @@ TRACE
     // fprintf(stdout,"Trace ncount is %ld\n",ncount);      
     if (!particle) {
       if(repeat_cnt>1) {
-	/* Trigger rewind of the file and ABSORB to get the first neutron "again" */
+	/* Trigger rewind of the file and ABSORB to get the first photon "again" */
 	repeating++;
 	mcpl_rewind(inputfile);
 	particle = mcpl_read(inputfile);
@@ -330,12 +332,12 @@ TRACE
   x=X[i];
   y=Y[i];
   z=Z[i];
-  vx=VX[i];
-  vy=VY[i];
-  vz=VZ[i];
-  Ex=SX[i];
-  Ey=SY[i];
-  Ez=SZ[i];
+  kx=KX[i];
+  ky=KY[i];
+  kz=KZ[i];
+  Ex=EX[i];
+  Ey=EY[i];
+  Ez=EZ[i];
   t=T[i];
   phi=PHI[i];
   p=P[i];
@@ -350,7 +352,7 @@ TRACE
     tmpx *= pos_smear*rand01(); tmpy *= pos_smear*rand01(); tmpz *= pos_smear*rand01();
     x+=tmpx; y+=tmpy; z+=tmpz;
 
-    double d0=vx,d1=vy,d2=vz;
+    double d0=kx,d1=ky,d2=kz;
     /* Direction smearing: */
     randvec_target_circle(&d0, &d1, &d2, NULL, kx, ky, kz, sin(dir_smear*DEG2RAD));
     NORM(d0,d1,d2);
@@ -391,8 +393,20 @@ FINALLY
                 "Please examine the recorded intensities carefully.\n",
           NAME_CURRENT_COMP,(long unsigned)ncount,(long unsigned)nparticles,(long unsigned)used_photons);
     }
-
-
+    
+    destroy_darr1d(X);
+    destroy_darr1d(Y);
+    destroy_darr1d(Z);
+    destroy_darr1d(KX);
+    destroy_darr1d(KY);
+    destroy_darr1d(KZ);
+    if(polarisationuse){
+      destroy_darr1d(EX);
+      destroy_darr1d(EY);
+      destroy_darr1d(EZ);
+    }
+    destroy_darr1d(T);
+    destroy_darr1d(P);
 %}
 
 MCDISPLAY

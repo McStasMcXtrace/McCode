@@ -23,8 +23,8 @@
 *
 * When used with MPI, the component will output #MPI nodes individual MCPL files that
 * can be merged using the mcpltool.
-* 
-* MCPL_output allows a few flags to tweak the output files: 
+*
+* MCPL_output allows a few flags to tweak the output files:
 * 1. If use_polarisation is unset (default) the polarisation vector will not be stored (saving space)
 * 2. If doubleprec is unset (default) data will be stored as 32 bit floating points, effectively cutting the output file size in half.
 * 3. Extra information may be attached to each ray in the form of a userflag, a user-defined variable wich is packed into 32 bits. If
@@ -39,14 +39,14 @@
 * INPUT PARAMETERS
 *
 * filename:        [str] Name of photon file to write. Default is standard output [string]. If not given, a unique name will be used.
-* verbose:         [1]   If 1) Print summary information for created MCPL file. 2) Also print summary of first 10 particles information stored in the MCPL file. >2) Also print information for first 10 particles as they are being stored by McStas.
-* polarisationuse: [1]   Enable storing the polarisation state of the neutron.
-* doubleprec:      [1]   Use double precision storage
-* userflag:        [1]   Extra variable to attach to each neutron. The value of this variable will be packed into a 32 bit integer.
+* verbose:         [1]   If 1) Print summary information for created MCPL file. 2) Also print summary of first 10 particles information stored in the MCPL file. >2) Also print information for first 10 particles as they are being stored by McXtrace.
+* polarisationuse: [1]   Enable storing the polarization state of the photon.
+* doubleprec:      [1]   Use double precision storage.
+* userflag:        [1]   Extra variable to attach to each photon. The value of this variable will be packed into a 32 bit integer.
 * userflagcomment: [str] String variable to describe the userflag. If this string is empty (the default) no userflags will be stored.
-* merge_mpi:       [1]   Flag to indicate if output should be merged in case of MPI 
+* merge_mpi:       [1]   Flag to indicate if output should be merged in case of MPI.
 * keep_mpi_unmerged: [1] Flag to indicate if original unmerged mcpl-files should be kept (or deleted).
-* buffermax: [1]          Maximal number of events to save ( <= MAXINT), GPU/OpenACC only
+* buffermax: [1]         Maximal number of events to save ( <= MAXINT), GPU/OpenACC only.
 * %E
 *******************************************************************************/
 
@@ -96,7 +96,7 @@ INITIALIZE
 
 #if defined (USE_MPI)
   /* In case of MPI, simply redefine the filename used by each node */
-    MPI_MASTER(fprintf(stdout, "Message(%s): You are using MCPL_output with MPI, hence your will get %i filenames %s_node_#i as output.\n",NAME_CURRENT_COMP,mpi_node_count,filename); );
+    MPI_MASTER(fprintf(stdout, "INFO (%s): You are using MCPL_output with MPI, hence you will get %i filenames %s_node_#i as output.\n",NAME_CURRENT_COMP,mpi_node_count,filename); );
     sprintf(extension,"node_%i.mcpl",mpi_node_rank);
 #else
     sprintf(extension,"mcpl");
@@ -111,7 +111,7 @@ INITIALIZE
 
     snprintf(line,255,"%s %s %s",MCCODE_NAME,MCCODE_VERSION,instrument_name);
     mcpl_hdr_set_srcname(outputfile,line);
-    mcpl_enable_universal_pdgcode(outputfile,2112);/*all particles are neutrons*/
+    mcpl_enable_universal_pdgcode(outputfile,22);/*all particles are photons*/
     snprintf(line,255,"Output by COMPONENT: %s",NAME_CURRENT_COMP);
     mcpl_hdr_add_comment(outputfile,line);
 
@@ -216,7 +216,7 @@ TRACE
   int fail;
 #ifdef OPENACC
   int cap;
-  #pragma acc atomic capture
+#pragma acc atomic capture
   {
     cap=captured++;
   }
@@ -226,12 +226,12 @@ TRACE
     X[cap]=x;
     Y[cap]=y;
     Z[cap]=z;
-    KX[cap]=vx;
-    KY[cap]=vy;
-    KZ[cap]=vz;
-    EX[cap]=sx;
-    EY[cap]=sy;
-    EZ[cap]=sz;
+    KX[cap]=kx;
+    KY[cap]=ky;
+    KZ[cap]=kz;
+    EX[cap]=Ex;
+    EY[cap]=Ey;
+    EZ[cap]=Ez;
     T[cap]=t;
     PHI[cap]=phi;
     P[cap]=p;
@@ -305,13 +305,13 @@ SAVE
       Particle.position[0]=X[i]*100;
       Particle.position[1]=Y[i]*100;
       Particle.position[2]=Z[i]*100;
-      
+
       if(polarisationuse){
 	Particle.polarisation[0]=EX[i];
 	Particle.polarisation[1]=EY[i];
 	Particle.polarisation[2]=EZ[i];
       }
-      
+
       nrm =sqrt(KX[i]*KX[i] + KY[i]*KY[i] + KZ[i]*KZ[i]);
       /*ekin is in MeV in McXtrace keV*/
       Particle.ekin = K2E*nrm*1e-3;
@@ -326,14 +326,14 @@ SAVE
       if(userflagenabled){
 	Particle.userflags = (uint32_t) U[i];
       }
-      
+
       if (verbose==3 && mcrun_num<10) {
 	printf("id=%ld\tpdg=2112\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
 	       mcrun_num, Particle.ekin, Particle.position[0], Particle.position[1], Particle.position[2],
 	       Particle.direction[0], Particle.direction[1], Particle.direction[2], Particle.time, Particle.weight,
 	       Particle.polarisation[0], Particle.polarisation[1], Particle.polarisation[2]);
       }
-      
+
       mcpl_add_particle(outputfile,&Particle);
     }
   }
