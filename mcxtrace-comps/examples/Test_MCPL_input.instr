@@ -1,4 +1,5 @@
 /*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
 * Instrument: Test_MCPL_input
 *
@@ -14,7 +15,7 @@
 *
 * This is a unit test for the MCPL_input component.
 *
-* %Example: -n1e3 repeat=1 Detector: m1_I=2.42284e+11
+* %Example: -n1e3 repeat=1 Detector: m1_I=7.9657e-08
 *
 * %Parameters
 *
@@ -31,20 +32,18 @@ DEPENDENCY "-DMCPLPATH=@MCCODE_LIB@/libs/mcpl/voutput.mcpl"
 DECLARE
 %{
   long long ncount_i;
-  
-  #define QUOTE(name) #name
-  #define STR(macro) QUOTE(macro)
-
-  #ifndef MCPLPATH
-  #define MCPLPATH=/usr/share/mcstas/2.3/MCPL/voutput.mcpl
-  #endif
-
-  #define MCPLFILE STR(MCPLPATH)
 %}
 
 INITIALIZE
 %{
+#define QUOTE(name) #name
+#define STR(macro) QUOTE(macro)
 
+#ifndef MCPLPATH
+#define MCPLPATH=/usr/share/mcxtrace/1.6/MCPL/voutput.mcpl
+#endif
+
+#define MCPLFILE STR(MCPLPATH)
 
 printf("Using the input file: %s\n", MCPLFILE);
 
