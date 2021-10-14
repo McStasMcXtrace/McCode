@@ -10,7 +10,6 @@
 * Written by: Erik B Knudsen
 * Date: Aug 2016
 * Origin: DTU Physics
-* Release: McXtrace 1.6
 *
 * Source-like component that reads photon state parameters from an mcpl-file.
 * %D
@@ -27,11 +26,11 @@
 * %P
 * INPUT PARAMETERS
 *
-* filename: [str] Name of photon mcpl file to read.
-* verbose:  [ ]   Print debugging information for first 10 particles read. 
-* polarisationuse: [ ] If !=0 read polarisation vectors from file.
-* Emin: [keV] Lower energy bound. Particles found in the MCPL-file below the limit are skipped.
-* Emax: [keV] Upper energy bound. Particles found in the MCPL-file above the limit are skipped.
+* filename: [str]       Name of photon mcpl file to read.
+* verbose: [ ]          Print debugging information for first 10 particles read.
+* polarisationuse: [ ]  If !=0 read polarisation vectors from file.
+* Emin: [keV]           Lower energy bound. Particles found in the MCPL-file below the limit are skipped.
+* Emax: [keV]           Upper energy bound. Particles found in the MCPL-file above the limit are skipped.
 * repeat_count: [1]     Repeat contents of the MCPL file this number of times. NB: When running MPI, repeating is implicit and is taken into account by integer division. Should be combined sith the _smear options!
 * E_smear: [1]          When repeating events, make a Gaussian MC choice within E_smear*E around particle energy E
 * pos_smear: [m]        When repeating events, make a flat MC choice of position within pos_smear around particle starting position
