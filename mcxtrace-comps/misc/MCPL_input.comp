@@ -71,7 +71,6 @@ DArray1d EY;
 DArray1d EZ;
 DArray1d T;
 DArray1d P;
-DArray1d Phi;
 #endif
 %}
 
@@ -193,8 +192,6 @@ INITIALIZE
 	      T[read_photons] = particle->time*1e-3;
 	      /*weight in unspecified units:*/
 	      P[read_photons] = particle->weight;
-              /*MCPL does not store photon phase*/
-              PHI[read_photons] = 0;
 	      read_photons++;
 	    }
 	  }
@@ -338,7 +335,8 @@ TRACE
   Ey=EY[i];
   Ez=EZ[i];
   t=T[i];
-  phi=PHI[i];
+  /*MCPL does not store photon phase information.*/
+  phi=0
   p=P[i];
   if (repeat_cnt>1) p = p /repeat_cnt;
 
