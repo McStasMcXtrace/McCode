@@ -32,22 +32,22 @@ DEPENDENCY "-DMCPLPATH=@MCCODE_LIB@/libs/mcpl/voutput.mcpl"
 DECLARE
 %{
   long long ncount_i;
+
+  #define QUOTE(name) #name
+  #define STR(macro) QUOTE(macro)
+
+  #ifndef MCPLPATH
+  #define MCPLPATH=/usr/share/mcxtrace/1.6/MCPL/voutput.mcpl
+  #endif
+
+  #define MCPLFILE STR(MCPLPATH)
 %}
 
 INITIALIZE
 %{
-#define QUOTE(name) #name
-#define STR(macro) QUOTE(macro)
+  printf("INFO (%s) Using the input file: %s\n", instrument_name, MCPLFILE);
 
-#ifndef MCPLPATH
-#define MCPLPATH=/usr/share/mcxtrace/1.6/MCPL/voutput.mcpl
-#endif
-
-#define MCPLFILE STR(MCPLPATH)
-
-printf("Using the input file: %s\n", MCPLFILE);
-
- ncount_i=0;
+  ncount_i=0;
 %}
 
 TRACE
