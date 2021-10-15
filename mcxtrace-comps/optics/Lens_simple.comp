@@ -40,7 +40,7 @@
 *******************************************************************************/
 DEFINE COMPONENT Lens_simple
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xwidth=0,yheight=0,radius=1e-3, T=1 ,r=0, int N=1, int verbose=0, f=1, string material_datafile="Be.txt")
+SETTING PARAMETERS (xwidth=0,yheight=0,radius=1e-3, T=1 ,r=0, int N=1, int verbose=0, f=0, string material_datafile="Be.txt")
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -61,7 +61,7 @@ INITIALIZE
 %{
   int status=0;
  
-  if(!r && !(xwidth && yheight) ){
+  if(!radius && !(xwidth && yheight) ){
     fprintf(stderr,"%s: Lens has zero effective area\n",NAME_CURRENT_COMP);
     exit(-1);
   }
@@ -96,7 +96,7 @@ TRACE
   double f1,rhoel;
 
   PROP_Z0;
-  if (r && x*x+y*y<r*r){
+  if (radius && x*x+y*y<radius*radius){
       SCATTER;
   }else if (xwidth && (x >-xwidth*0.5 && x<xwidth*0.5 && y>-yheight*0.5 && y<yheight*0.5)){
       SCATTER;
