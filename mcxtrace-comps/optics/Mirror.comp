@@ -28,7 +28,7 @@
 * xwidth:  [m] The width of the mirror
 * zdepth:  [m] The length of the mirror
 * yheight: [m] The height of the mirror. This overrides xwidth and puts the mirror in the yz-plane. 
-* R0:      [ ] Constant reflecticity
+* R0:      [ ] Constant reflectivity
 * reflectivity: [ ] Filename containing reflectivities (or coating).
 *
 * (none)
@@ -76,7 +76,8 @@ TRACE
     int status,hit;
     double l0,l1,l2,l3,tx,ty,tz;
     double nx,ny,nz;
-    
+    double s,k,q,R;
+
     hit=1;
     if(yheight){
         PROP_X0;
@@ -98,15 +99,15 @@ TRACE
         }
     }
     if(hit){
-        double s=scalar_prod(kx,ky,kz,nx,ny,nz);
-        double k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); 
+        s=scalar_prod(kx,ky,kz,nx,ny,nz);
+        k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
          
         kx=kx-2*s*nx;
         ky=ky-2*s*ny;
         kz=kz-2*s*nz;
         SCATTER;
-        double q=2.0*s;
-        double R=reflecq(&re,q,0,k*K2E,fabs(90-acos(s/k)*RAD2DEG));
+        q=2.0*s;
+        R=reflecq(re,q,0.0,k,fabs(90-acos(s/k)*RAD2DEG));
         p*=R;
         /*update phase - as an approximation turn by 180 deg.*/;
         phi+=M_PI;
