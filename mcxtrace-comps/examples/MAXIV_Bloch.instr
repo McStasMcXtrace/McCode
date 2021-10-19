@@ -246,7 +246,7 @@ if (cff && !grating_mode){
 /*}*/
 
 if(verbose){
-  fprintf(stdout,"INFO(%s):Monochromator specs: \n Angle of pre-mirror=%f deg. \n Angle of grating=%f deg.",mcinstrument_name,mirror2_angle,angle_grating);
+  fprintf(stdout,"INFO(%s):Monochromator specs: \n Angle of pre-mirror=%f deg. \n Angle of grating=%f deg.",instrument_name,mirror2_angle,angle_grating);
 }
 MCAngleVariation=angle_grating*0.99;
 
