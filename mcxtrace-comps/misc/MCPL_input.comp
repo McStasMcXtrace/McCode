@@ -336,7 +336,7 @@ TRACE
   Ez=EZ[i];
   t=T[i];
   /*MCPL does not store photon phase information.*/
-  phi=0
+  phi=0;
   p=P[i];
   if (repeat_cnt>1) p = p /repeat_cnt;
 
