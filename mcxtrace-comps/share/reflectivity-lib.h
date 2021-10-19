@@ -77,25 +77,25 @@ int reflec_Init_kinematic(t_Reflec *R, int N, double Gamma, double Lambda, doubl
 int reflec_Init_const(t_Reflec *R, double R0);
 
 #pragma acc routine
-double complex refleccq(t_Reflec *r_handle, double q, double g, double k, double theta );
+double complex refleccq(t_Reflec r_handle, double q, double g, double k, double theta );
 #pragma acc routine
-double reflecq(t_Reflec *r_handle, double q, double g, double k, double theta );
+double reflecq(t_Reflec r_handle, double q, double g, double k, double theta );
 #pragma acc routine
-double complex reflecc(t_Reflec *r_handle, double kix, double kiy, double kiz, double kfx, double kfy, double kfz, double g );
+double complex reflecc(t_Reflec r_handle, double kix, double kiy, double kiz, double kfx, double kfy, double kfz, double g );
 
 #pragma acc routine
-double complex reflec_coating(t_Reflec *r_handle, double q, double g, double k);
+double complex reflec_coating(t_Reflec r_handle, double q, double g, double k);
 #pragma acc routine
-double complex reflec_bare(t_Reflec *r_handle, double q, double g);
+double complex reflec_bare(t_Reflec r_handle, double q, double g);
 #pragma acc routine
-double complex reflec_q_prmtc(t_Reflec *r_handle, double q, double g);
+double complex reflec_q_prmtc(t_Reflec r_handle, double q, double g);
 #pragma acc routine
-double complex reflec_parratt(t_Reflec *r_handle, double q, double g, double k);
+double complex reflec_parratt(t_Reflec r_handle, double q, double g, double k);
 #pragma acc routine
-double complex reflec_kinematic(t_Reflec *r_handle, double q, double g);
+double complex reflec_kinematic(t_Reflec r_handle, double q, double g);
 #pragma acc routine
 double complex parrat_reflec_bulk(int lc, double *delta, double *beta, double *d, double k, double q);
 #pragma acc routine
-double complex reflec_eth_prmtc(t_Reflec *r_handle, double e, double theta, double g);
+double complex reflec_eth_prmtc(t_Reflec r_handle, double e, double theta, double g);
 
 enum reflec_Type get_table_reflec_type(t_Table *t);

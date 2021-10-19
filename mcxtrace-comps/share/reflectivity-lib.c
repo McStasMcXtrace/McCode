@@ -302,8 +302,8 @@ enum reflec_Type get_table_reflec_type(t_Table *t){
 }
 
 /*This section contains the functions that compute the actual reflectivity*/
-double complex reflec_coating(t_Reflec *r_handle, double q, double g, double k){
-    struct t_reflec_coating *ptr=&(r_handle->prms.rc);
+double complex reflec_coating(t_Reflec r_handle, double q, double g, double k){
+    struct t_reflec_coating *ptr=&(r_handle.prms.rc);
     /*adjust p according to reflectivity*/
     double Qc,f1,f2,na,e;
     /*length of wavevector transfer may be compute from s and n_ above*/
@@ -334,13 +334,13 @@ double complex reflec_coating(t_Reflec *r_handle, double q, double g, double k){
     return rr;
 }
 
-double complex reflec_bare(t_Reflec *r_handle, double q, double g){
+double complex reflec_bare(t_Reflec r_handle, double q, double g){
     return 0.0;
 }
 
-double complex reflec_kinematic(t_Reflec *r_handle, double q, double g){
+double complex reflec_kinematic(t_Reflec r_handle, double q, double g){
     double complex r1,rN;
-    struct t_reflec_kinematic *ptr=&(r_handle->prms.rk);
+    struct t_reflec_kinematic *ptr=&(r_handle.prms.rk);
     double zeta=ptr->Lambda*q/(2*M_PI);
     double beta=0;
     r1 = -2*I*RE* ptr->rho_AB * (pow(ptr->Lambda,2.0)*ptr->Gamma/zeta) * sin(M_PI*ptr->Gamma*zeta)/(M_PI*ptr->Gamma*zeta);
@@ -348,9 +348,9 @@ double complex reflec_kinematic(t_Reflec *r_handle, double q, double g){
     return rN;
 }
 
-double complex reflec_q_prmtc(t_Reflec *r_handle, double q, double g){
+double complex reflec_q_prmtc(t_Reflec r_handle, double q, double g){
     double r;
-    struct t_reflec_q_prmtc *ptr=&(r_handle->prms.rqpm);
+    struct t_reflec_q_prmtc *ptr=&(r_handle.prms.rqpm);
     if (ptr->T->columns>2){
         double c=(ptr->T->columns-2)*g+1;
         r=Table_Value2d(*(ptr->T),ptr->T->rows*q/(ptr->qmax-ptr->qmin),c);
@@ -360,9 +360,9 @@ double complex reflec_q_prmtc(t_Reflec *r_handle, double q, double g){
     return (double complex)r;
 }
 
-double complex reflec_eth_prmtc(t_Reflec *r_handle, double g, double e, double th){
+double complex reflec_eth_prmtc(t_Reflec r_handle, double g, double e, double th){
     double r,ec,thc;
-    struct t_reflec_eth_prmtc *ptr=&(r_handle->prms.rethpm);
+    struct t_reflec_eth_prmtc *ptr=&(r_handle.prms.rethpm);
     ec=(ptr->T->rows-1) * (e-ptr->emin)/(ptr->emax - ptr->emin);
     thc=(ptr->T->columns-1)*(th-ptr->thetamin)/(ptr->thetamax - ptr->thetamin);
     r=Table_Value2d(*(ptr->T),ec,thc);
@@ -370,12 +370,12 @@ double complex reflec_eth_prmtc(t_Reflec *r_handle, double g, double e, double t
 }
 
 /* Entry function to Parratt's recursive algorithm for multilayers.*/
-double complex reflec_parratt(t_Reflec *r_handle, double q, double g, double k){
+double complex reflec_parratt(t_Reflec r_handle, double q, double g, double k){
     double complex r,qp,rp;
     double k2;
     double complex qinf;
     double qpd,rd,p;
-    t_reflec_parratt *pp=&(r_handle->prms.rp);
+    t_reflec_parratt *pp=&(r_handle.prms.rp);
 
     qp=q;
     qpd=csqrt(q*q - 8*k2* *(pp->delta) + I*8*k2* *(pp->beta));
@@ -417,14 +417,14 @@ double complex parrat_reflec_bulk(int N, double *delta, double *beta, double *d,
 
 /* Dispatcher functions that call the underlying computations depending on the type of reflectivity*/
 
-double complex refleccq( t_Reflec *r_handle, double q, double g, double k, double theta){
+double complex refleccq( t_Reflec r_handle, double q, double g, double k, double theta){
     double complex r;
     /*using the normalized coordinate g which lies along the grading direction*/
 
-    switch(r_handle->type){
+    switch(r_handle.type){
       case CONSTANT:
         {
-          r=r_handle->prms.rconst.R;
+          r=r_handle.prms.rconst.R;
           break;
         }
       case BARE:
@@ -462,44 +462,44 @@ double complex refleccq( t_Reflec *r_handle, double q, double g, double k, doubl
 #ifndef OPENACC
           fprintf(stderr,"Error (%s): Undetermined reflectivity type. r set to 1\n", REFLIBNAME);
 #endif
-          return 1.0;
+          r=1.0;
         }
     }
     return r;
 }
 
-double reflecq( t_Reflec *r_handle, double q, double g, double k, double theta){
+double reflecq( t_Reflec r_handle, double q, double g, double k, double theta){
     double r;
 
-    switch(r_handle->type){
+    switch(r_handle.type){
       case CONSTANT:
         {
-          r=cabs(r_handle->prms.rconst.R);
+          r=fabs(r_handle.prms.rconst.R);
           break;
         }
-      case BARE:
+    case BARE:
         {
           r=cabs(reflec_bare(r_handle,q,g));
           break;
         }
-      case COATING:
+	case COATING:
         {
             double complex rp;
             rp=reflec_coating(r_handle,q,g,k);
             r= creal(rp * conj(rp));
             break;
         }
-      case Q_PARAMETRIC:
+	case Q_PARAMETRIC:
         {
           r=cabs(reflec_q_prmtc(r_handle,q,g));
           break;
         }
-      case PARRATT:
+	/*case PARRATT:
         {
           r=cabs(reflec_parratt(r_handle,q,g,k));
           break;
-        }
-      case ETH_PARAMETRIC:
+	  }*/
+	case ETH_PARAMETRIC:
         {
             r=cabs(reflec_eth_prmtc(r_handle,g,k*K2E,theta));
             break;
@@ -508,34 +508,34 @@ double reflecq( t_Reflec *r_handle, double q, double g, double k, double theta){
         {
           r=cabs(reflec_kinematic(r_handle,q,g));
           break;
-        }
-      default:
+	  }
+	default:
         {
 #ifndef OPENACC
           fprintf(stderr,"ERROR (%s): Undetermined reflectivity type. r set to 1\n", REFLIBNAME);
 #endif
-          return 1.0;
-        }
+          r=1.0;
+	}
     }
     return r;
 }
 
-double refleceth( t_Reflec *r_handle,double e, double th, double g){
+double refleceth( t_Reflec r_handle,double e, double th, double g){
     double q;
     double k=e*E2K;
     q=k*2.0*sin(th);
-    if(r_handle->type==PARRATT || r_handle->type==COATING){
+    if(r_handle.type==PARRATT || r_handle.type==COATING){
       return reflecq(r_handle,q,g,k,0);
     }else{
       return reflecq(r_handle,q,g,k,th);
     }
 }
 
-double complex reflecceth( t_Reflec *r_handle,double e, double th, double g){
+double complex reflecceth( t_Reflec r_handle,double e, double th, double g){
     double q;
     double k=e*E2K;
     q=k*2.0*sin(th);
-    if(r_handle->type==PARRATT){
+    if(r_handle.type==PARRATT){
       return refleccq(r_handle,q,g,k,0);
     }else{
       return refleccq(r_handle,q,g,k,th);
