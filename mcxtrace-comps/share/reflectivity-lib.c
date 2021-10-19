@@ -192,12 +192,13 @@ int reflec_Init_File(t_Reflec *R, char *filename){
             fprintf(stderr,"Error (%s) Error: Could not parse file \"%s\"\n",__FILE__,filename);
             exit(-1);
           }
-          R->prms.rp.N = strtol(header_parsed[0], NULL, 10);
-          R->prms.rp.d = malloc(sizeof(double));
+          unsigned long N=strtol(header_parsed[0], NULL, 10);
+          R->prms.rp.N = N;
+          R->prms.rp.d = calloc(N,sizeof(double));
           *(R->prms.rp.d) = strtod(header_parsed[1], NULL);
-          R->prms.rp.delta = malloc(sizeof(double));
+          R->prms.rp.delta = calloc(N,sizeof(double));
           *(R->prms.rp.delta) = strtod(header_parsed[2], NULL);
-          R->prms.rp.beta = malloc(sizeof(double));
+          R->prms.rp.beta = calloc(N,sizeof(double));
           *(R->prms.rp.beta) = strtod(header_parsed[3], NULL);
           break;
         }
