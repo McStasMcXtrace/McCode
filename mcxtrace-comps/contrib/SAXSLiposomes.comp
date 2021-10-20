@@ -10,7 +10,6 @@
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
 * Date: May 2, 2012
 * Origin: KU-Science
-* Release: McXtrace 1.0
 *
 * A sample of polydisperse liposomes in solution (water).
 *
@@ -60,7 +59,7 @@ SETTING PARAMETERS (Radius = 800.0, Thickness = 38.89, SigmaRadius = 0.20,
 
 OUTPUT PARAMETERS ()
 
-/*STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
+/*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
 DECLARE
 %{

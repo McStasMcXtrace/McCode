@@ -19,21 +19,16 @@
 * of monodisperse, shell-like particles.
 *
 * %P
-* R						  : [AA]		Average radius of the particles.
-* Thickness				  : [AA]		Thickness of the shell - so that the outer 
-*										radius is R + Thickness and the inner is 
-*										R - Thickness.
-* Concentration		  	  : [mM]		Concentration of sample.
-* DeltaRho  			  : [cm/AA^3]	Excess scattering length density of the 
-*                                   	particles.
-* AbsorptionCrosssection  : [1/m]		Absorption cross section of the sample.
-* xwidth    			  : [m]  		Dimension of component in the x-direction.
-* yheight   			  : [m]			Dimension of component in the y-direction.
-* zdepth    			  : [m]			Dimension of component in the z-direction.
-* SampleToDetectorDistance: [m]			Distance from sample to detector (for 
-*										focusing the scattered x-rays).
-* DetectorRadius          : [m] 		Radius of the detector (for focusing the 
-*										scattered x-rays).
+* R: [AA]          Average radius of the particles.
+* Thickness: [AA]  Thickness of the shell - so that the outer radius is R + Thickness and the inner is R - Thickness.
+* Concentration: [mM]  Concentration of sample.
+* DeltaRho: [cm/AA^3]  Excess scattering length density of the particles.
+* AbsorptionCrosssection: [1/m]  Absorption cross section of the sample.
+* xwidth: [m]      Dimension of component in the x-direction.
+* yheight: [m]     Dimension of component in the y-direction.
+* zdepth: [m]      Dimension of component in the z-direction.
+* SampleToDetectorDistance: [m]   Distance from sample to detector (for focusing the scattered x-rays).
+* DetectorRadius: [m]  Radius of the detector (for focusing the scattered x-rays).
 *
 * %E
 *******************************************************************************/
@@ -47,11 +42,10 @@ SETTING PARAMETERS (R = 100.0, Thickness = 5.0, Concentration = 0.01, DeltaRho =
 
 OUTPUT PARAMETERS ()
 
-/*STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
+/*X-ray PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
 DECLARE
 %{
-	// Declarations	
 	double Prefactor;
 	double Absorption;
 	double q;
@@ -121,7 +115,7 @@ TRACE
 		if (l0 < 0.0) {
 			fprintf(stderr, "Photon already inside sample %s - absorbing...\n", NAME_CURRENT_COMP);
 			ABSORB;
-    	}
+                }
 
 		// Compute properties of photon
 		k = sqrt(pow(kx, 2) + pow(ky, 2) + pow(kz, 2));
@@ -164,7 +158,6 @@ TRACE
 
 MCDISPLAY
 %{
-	
 	box(0, 0, 0, xwidth, yheight, zdepth);
 %}
 

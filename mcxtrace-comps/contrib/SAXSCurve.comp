@@ -11,7 +11,6 @@
 * Based on a SANS-component in McStas by Søren Kynde
 * Date: May 2, 2012
 * Origin: KU-Science
-* Release: McXtrace 1.0
 *
 * A component mimicking the scattering from a given I(q)-curve by using
 * linear interpolation between the given points.
@@ -22,19 +21,16 @@
 * compute the scattering of any given photon.
 *
 * %P
-* DeltaRho					: [cm/AA^3]	Excess scattering length density of the
-*										particles.
-* Volume					: [AA^3]	Volume of the particles.
-* Concentration		  		: [mM]		Concentration of sample.
-* AbsorptionCrosssection  	: [1/m]		Absorption cross section of the sample.
-* xwidth    			  	: [m]  		Dimension of component in the x-direction.
-* yheight   			  	: [m]		Dimension of component in the y-direction.
-* zdepth    			  	: [m]		Dimension of component in the z-direction.
-* SampleToDetectorDistance	: [m]		Distance from sample to detector (for 
-*										focusing the scattered x-rays).
-* DetectorRadius          	: [m] 		Radius of the detector (for focusing the 
-*										scattered x-rays).
-* FileWithCurve				: []		Datafile with the given I(q).
+* DeltaRho:       [cm/AA^3]	Excess scattering length density of the particles.
+* Volume:         [AA^3]	Volume of the particles.
+* Concentration:  [mM]		Concentration of sample.
+* AbsorptionCrosssection: [1/m]	Absorption cross section of the sample.
+* xwidth:         [m]  		Dimension of component in the x-direction.
+* yheight:        [m]		Dimension of component in the y-direction.
+* zdepth:         [m]		Dimension of component in the z-direction.
+* SampleToDetectorDistance: [m]	Distance from sample to detector (for focusing the scattered x-rays).
+* DetectorRadius: [m] 		Radius of the detector (for focusing the scattered x-rays).
+* FileWithCurve:  []		Datafile with the given I(q).
 *
 * %E
 *******************************************************************************/
@@ -44,194 +40,197 @@ DEFINE COMPONENT SAXSCurve
 DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (DeltaRho = 1.0e-14, Volume = 10000.0, 
-					Concentration = 0.01, AbsorptionCrosssection = 0.0,
-		    		xwidth, yheight, zdepth, 
-					SampleToDetectorDistance, DetectorRadius,
-					string FileWithCurve = "Curve.dat")
+    Concentration = 0.01, AbsorptionCrosssection = 0.0,
+    xwidth, yheight, zdepth, 
+    SampleToDetectorDistance, DetectorRadius,
+    string FileWithCurve = "Curve.dat")
 
 OUTPUT PARAMETERS ()
+/*X-ray PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
-/*STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
+
+SHARE
+%{
+  // Function used to determine the number of datapoints in the input file
+  int CountLines(FILE* File)
+  {
+    // Declarations        
+    double Dummy1;
+    double Dummy2;
+    char Line[256];
+    int NumberOfDatapoints = 0;
+
+    // I/O
+    while (fgets(Line, sizeof(Line), File) != NULL) {
+
+      if (sscanf(Line, "%lf %lf", &Dummy1, &Dummy2) == 2) {
+        ++NumberOfDatapoints;
+      }
+    }
+
+    return NumberOfDatapoints;
+  }
+
+  // Function used to extract the scattering profile from a given curve
+  int LoadCurve(char Filename[], double** Q, double** I) 
+  {
+    // Declarations
+    FILE* File;
+
+    int i = 0;
+    int NumberOfDatapoints;
+
+    char Line[256];
+
+    double *IntensityArray;
+    double *qArray;
+
+    // Reading file
+    if ((File = fopen(Filename, "r")) == 0) {
+      fprintf(stderr,"ERROR: (%s): Cannot open file: %s...\n", "SAXSCurve.comp",Filename);
+      exit(-1);
+    }
+
+    NumberOfDatapoints = CountLines(File);
+
+    qArray         = (double *) calloc(NumberOfDatapoints, sizeof(double));
+    IntensityArray = (double *) calloc(NumberOfDatapoints, sizeof(double));
+
+    rewind(File);
+
+    while (i < NumberOfDatapoints && fgets(Line, sizeof(Line), File) != NULL) {
+      if (sscanf(Line, "%lf %lf", &qArray[i], &IntensityArray[i]) == 2) {
+        ++i;
+      }
+    }
+
+    *I = IntensityArray;
+    *Q = qArray;
+
+    return NumberOfDatapoints;
+  }
+%}
+
 
 DECLARE
 %{
-	double Absorption;
-	double q;
-	double* Q;
-	double* I;
-	double ForwardScattering;
-	double Prefactor;
-	int NumberOfDatapoints;
-	double NumberDensity; 
+  double Absorption;
+  double q;
+  double* Q;
+  double* I;
+  double ForwardScattering;
+  double Prefactor;
+  int NumberOfDatapoints;
+  double NumberDensity; 
 %}
 
 INITIALIZE
 %{	
-	// Rescale concentration into number of aggregates per m^3 times 10^-4
-	NumberDensity = Concentration * 6.02214129e19;
+  // Rescale concentration into number of aggregates per m^3 times 10^-4
+  NumberDensity = Concentration * 6.02214129e19;
 
-	// Function used to determine the number of datapoints in the input file
-    int CountLines(FILE* File)
-	{
-		// Declarations        
-		double Dummy1;
-		double Dummy2;
-        char Line[256];
-        int NumberOfDatapoints = 0;
+  // Initializing curve from file
+  NumberOfDatapoints = LoadCurve(FileWithCurve, &Q, &I);
+  ForwardScattering = I[0];
 
-		// I/O
-        while (fgets(Line, sizeof(Line), File) != NULL) {
+  if (!xwidth || !yheight || !zdepth) {
+    printf("%s: Sample has no volume, check parameters!\n", NAME_CURRENT_COMP);
+  }
 
-            if (sscanf(Line, "%lf %lf", &Dummy1, &Dummy2) == 2) {
-                ++NumberOfDatapoints;
-			}
-        }
-
-        return NumberOfDatapoints;
-    }
-
-	// Function used to extract the scattering profile from a given curve
-    int LoadCurve(char Filename[], double** Q, double** I) 
-	{
-		// Declarations
-        FILE* File;
-        
-        int i = 0;
-		int NumberOfDatapoints;
-
-        char Line[256];
-        
-		double *IntensityArray;
-		double *qArray;
-
-		// Reading file
-        if ((File = fopen(Filename, "r")) == 0) {
-            printf("Cannot open file: %s...\n", Filename);
-            exit(0);
-        }
-
-        NumberOfDatapoints = CountLines(File);
-
-        qArray         = (double *) calloc(NumberOfDatapoints, sizeof(double));
-        IntensityArray = (double *) calloc(NumberOfDatapoints, sizeof(double));
-
-        rewind(File);
-
-        while (i < NumberOfDatapoints && fgets(Line, sizeof(Line), File) != NULL) {
-            if (sscanf(Line, "%lf %lf", &qArray[i], &IntensityArray[i]) == 2) {
-                ++i;
-            }
-        }
-
-        *I = IntensityArray;
-        *Q = qArray;
-
-        return NumberOfDatapoints;
-    }
-
-	// Initializing curve from file
-    NumberOfDatapoints = LoadCurve(FileWithCurve, &Q, &I);
-    ForwardScattering = I[0];
-
-	if (!xwidth || !yheight || !zdepth) {
-		printf("%s: Sample has no volume, check parameters!\n", NAME_CURRENT_COMP);
-	}
-
-	Absorption = AbsorptionCrosssection;
-	Prefactor = NumberDensity * pow(DeltaRho * Volume, 2);
+  Absorption = AbsorptionCrosssection;
+  Prefactor = NumberDensity * pow(DeltaRho * Volume, 2);
 %}
 
 TRACE
 %{
-	// Declarations	
-	double l0; 
-	double l1; 
-	double l_full;
-	double l;
-	double l_1;
-	double Intensity;
-	double Weight;
-	double IntensityPart;
-	double SolidAngle;
-	double qx; 
-	double qy; 
-	double qz;
-	double k;
-	double dl;
-	double kx_i;
-	double ky_i;
-	double kz_i;
-	char Intersect = 0;
-	double Slope;	
-	double Offset;
-	int i;
+  // Declarations	
+  double l0; 
+  double l1; 
+  double l_full;
+  double l;
+  double l_1;
+  double Intensity;
+  double Weight;
+  double IntensityPart;
+  double SolidAngle;
+  double qx; 
+  double qy; 
+  double qz;
+  double k;
+  double dl;
+  double kx_i;
+  double ky_i;
+  double kz_i;
+  char Intersect = 0;
+  double Slope;	
+  double Offset;
+  int i;
 
-	// Computation
-    Intersect = box_intersect(&l0, &l1, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
-    
-	if (Intersect) {
+  // Computation
+  Intersect = box_intersect(&l0, &l1, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
 
-		if (l0 < 0.0) {
-			fprintf(stderr, "Photon already inside sample %s - absorbing...\n", NAME_CURRENT_COMP);
-			ABSORB;
-    	}
+  if (Intersect) {
 
-		// Compute properties of photon
-		k = sqrt(pow(kx, 2) + pow(ky, 2) + pow(kz, 2));
-		l_full = l1 - l0;
-		dl = rand01() * (l1 - l0) + l0; 
-		PROP_DL(dl);                  
-		l = dl - l0;
+    if (l0 < 0.0) {
+      fprintf(stderr, "Photon already inside sample %s - absorbing...\n", NAME_CURRENT_COMP);
+      ABSORB;
+    }
 
-		// Store properties of incoming photon
-		kx_i = kx;
-		ky_i = ky;
-		kz_i = kz;
+    // Compute properties of photon
+    k = sqrt(pow(kx, 2) + pow(ky, 2) + pow(kz, 2));
+    l_full = l1 - l0;
+    dl = rand01() * (l1 - l0) + l0; 
+    PROP_DL(dl);                  
+    l = dl - l0;
 
-		// Generate new direction of photon
-		randvec_target_circle(&kx, &ky, &kz, &SolidAngle, 0, 0, SampleToDetectorDistance, DetectorRadius);
+    // Store properties of incoming photon
+    kx_i = kx;
+    ky_i = ky;
+    kz_i = kz;
 
-		NORM(kx, ky, kz);
+    // Generate new direction of photon
+    randvec_target_circle(&kx, &ky, &kz, &SolidAngle, 0, 0, SampleToDetectorDistance, DetectorRadius);
 
-		kx *= k;
-		ky *= k;
-		kz *= k;
+    NORM(kx, ky, kz);
 
-		// Compute q
-		qx = kx_i - kx;
-		qy = ky_i - ky;
-		qz = kz_i - kz;
+    kx *= k;
+    ky *= k;
+    kz *= k;
 
-		q = sqrt(pow(qx, 2) + pow(qy, 2) + pow(qz, 2));
+    // Compute q
+    qx = kx_i - kx;
+    qy = ky_i - ky;
+    qz = kz_i - kz;
 
-		// Discard photon, if q is out of range
-		if ((q < Q[0]) || (q > Q[NumberOfDatapoints - 1])) {
-		    ABSORB;
-		}
-   
-		// Find the first value of q in the curve larger than that of the photon
-		i = 1;
+    q = sqrt(pow(qx, 2) + pow(qy, 2) + pow(qz, 2));
 
-		while (q > Q[i]) {
-			++i;
-		}
+    // Discard photon, if q is out of range
+    if ((q < Q[0]) || (q > Q[NumberOfDatapoints - 1])) {
+      ABSORB;
+    }
 
-		// Do a linear interpolation
-		Slope = (I[i] - I[i - 1]) / (Q[i] - Q[i - 1]);
-		Offset = I[i] - Slope * Q[i];
+    // Find the first value of q in the curve larger than that of the photon
+    i = 1;
 
-		Intensity = (Slope * q + Offset) / ForwardScattering;
+    while (q > Q[i]) {
+      ++i;
+    }
 
-		p *= l_full * SolidAngle / (4.0 * PI) * Prefactor * Intensity * exp(- Absorption * (l + l1));
-		
-		SCATTER;
-	}
+    // Do a linear interpolation
+    Slope = (I[i] - I[i - 1]) / (Q[i] - Q[i - 1]);
+    Offset = I[i] - Slope * Q[i];
+
+    Intensity = (Slope * q + Offset) / ForwardScattering;
+
+    p *= l_full * SolidAngle / (4.0 * PI) * Prefactor * Intensity * exp(- Absorption * (l + l1));
+
+    SCATTER;
+  }
 %}
 
 MCDISPLAY
-%{
-	
-	box(0, 0, 0, xwidth, yheight, zdepth);
+%{	
+  box(0, 0, 0, xwidth, yheight, zdepth);
 %}
 
 END

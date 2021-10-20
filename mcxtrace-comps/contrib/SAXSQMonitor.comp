@@ -21,18 +21,14 @@
 * of monodisperse, spherical particles.
 *
 * %P
-* RadiusDetector	: [m]	Radius of the detector (in the xy-plane).
-* DistanceFromSample: [m] 	Distance from the sample to this component.
-* LambdaMin  		: [AA]	Max sensitivity in lambda - used to compute the
-*							highest possible value of momentum transfer, q.
-* NumberOfBins      : []	Number of bins in the r (and q).
-* RFilename	        : []	File used for storing I(r).
-* qFilename         : [] 	File used for storing I(q).
-* Lambda0			: []	If lambda is given, the momentum transfers of all
-*							rays are computed from this value. Otherwise,
-*							instrumental effects are negated.
-* restore_xray      : []	If set to 1, the component restores the original 
-*							x-ray.
+* RadiusDetector: [m]     Radius of the detector (in the xy-plane).
+* DistanceFromSample: [m] Distance from the sample to this component.
+* LambdaMin: [AA]         Max sensitivity in lambda - used to compute the highest possible value of momentum transfer, q.
+* NumberOfBins: [] Number of bins in the r (and q).
+* RFilename: []    File used for storing I(r).
+* qFilename: []    File used for storing I(q).
+* Lambda0: []      If lambda is given, the momentum transfers of all rays are computed from this value. Otherwise, instrumental effects are negated.
+* restore_xray: [] If set to 1, the component restores the original x-ray.
 *
 * %E
 *******************************************************************************/
@@ -43,153 +39,147 @@ DEFINITION PARAMETERS (string RFilename = "RDetector", string qFilename = "QDete
 
 SETTING PARAMETERS (RadiusDetector, DistanceFromSample, LambdaMin = 1.0, Lambda0 = 0.0)
 
-OUTPUT PARAMETERS (Nofq, Iofq, IofqSquared, NofR, IofR, IofRSquared)
+OUTPUT PARAMETERS ()
 
-/*STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
+/*X-ray PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
 DECLARE
 %{
-	// Declarations
     double TwoThetaMax;
     double qMax;
 
-	double Nofq[NumberOfBins];
+    double Nofq[NumberOfBins];
     double Iofq[NumberOfBins];
     double IofqSquared[NumberOfBins];
 
-	double NofR[NumberOfBins];
+    double NofR[NumberOfBins];
     double IofR[NumberOfBins];
     double IofRSquared[NumberOfBins];
 %}
 
 INITIALIZE
 %{
-	// Declarations
     int i;
 
-	// Initializations
     for (i = 0; i < NumberOfBins; ++i) {
 		Nofq[i] = 0.0;
 		Iofq[i] = 0.0;
 		IofqSquared[i] = 0.0;
     }
 
-	TwoThetaMax = atan(RadiusDetector / DistanceFromSample);
-	qMax = 4 * PI * sin(TwoThetaMax / 2.0) / LambdaMin;
+    TwoThetaMax = atan(RadiusDetector / DistanceFromSample);
+    qMax = 4 * PI * sin(TwoThetaMax / 2.0) / LambdaMin;
 %}
 
 TRACE
 %{
-	// Declarations
     int i;
     double TwoTheta;
-	double Lambda;
+    double Lambda;
 
-	double R;
-	double RLow;
-	double RHigh;
+    double R;
+    double RLow;
+    double RHigh;
 
     double q;
-	double qLow;
-	double qHigh;
+    double qLow;
+    double qHigh;
 
-	double TwoThetaLow; 
-	double TwoThetaHigh;
-	double AreaOfSlice;
+    double TwoThetaLow; 
+    double TwoThetaHigh;
+    double AreaOfSlice;
     
     PROP_Z0;
 
-	// Computation of R
     R = sqrt(pow(x, 2) + pow(y, 2));
 
-	// Computation of q
-	if (Lambda0 <= 0.0) {
-		Lambda = 2.0 * PI / sqrt(pow(kx, 2) + pow(ky, 2) + pow(kz, 2));
-	} else {
-		Lambda = Lambda0;
-	}
+    // Computation of q
+    if (Lambda0 <= 0.0) {
+      Lambda = 2.0 * PI / sqrt(pow(kx, 2) + pow(ky, 2) + pow(kz, 2));
+    } else {
+      Lambda = Lambda0;
+    }
 
     TwoTheta = atan(R / DistanceFromSample);
     q = 4.0 * PI * sin(TwoTheta / 2.0) / Lambda;
 
-	// Put photon in the correct r-bin
-	if (R < RadiusDetector) {
-		i = floor(NumberOfBins * R / RadiusDetector);
+    // Put photon in the correct r-bin
+    if (R < RadiusDetector) {
+      i = floor(NumberOfBins * R / RadiusDetector);
 
-		RLow = RadiusDetector / NumberOfBins * i;
-		RHigh = RadiusDetector / NumberOfBins * (i + 1);
+      RLow = RadiusDetector / NumberOfBins * i;
+      RHigh = RadiusDetector / NumberOfBins * (i + 1);
 
-		TwoThetaLow = atan(RLow / DistanceFromSample);
-		TwoThetaHigh = atan(RHigh / DistanceFromSample);
+      TwoThetaLow = atan(RLow / DistanceFromSample);
+      TwoThetaHigh = atan(RHigh / DistanceFromSample);
 
-		AreaOfSlice = fabs((cos(2.0 * TwoThetaLow) - cos(2.0 * TwoThetaHigh)) * 2.0 * PI);
-	
-		++NofR[i];
-		IofR[i] += p / AreaOfSlice;
-		IofRSquared[i] += pow(p / AreaOfSlice, 2);
+      AreaOfSlice = fabs((cos(2.0 * TwoThetaLow) - cos(2.0 * TwoThetaHigh)) * 2.0 * PI);
+
+      ++NofR[i];
+      IofR[i] += p / AreaOfSlice;
+      IofRSquared[i] += pow(p / AreaOfSlice, 2);
     }
       
-	// Put photon in the correct q-bin
+    // Put photon in the correct q-bin
     if (q < qMax) {
-		i = floor(NumberOfBins * q / qMax);
+      i = floor(NumberOfBins * q / qMax);
 
-		qLow = qMax / NumberOfBins * i;
-		qHigh = qMax / NumberOfBins * (i + 1);
+      qLow = qMax / NumberOfBins * i;
+      qHigh = qMax / NumberOfBins * (i + 1);
 
-		TwoThetaLow = asin(qLow * Lambda / (4.0 * PI));
-		TwoThetaHigh = asin(qHigh * Lambda / (4.0 * PI));
+      TwoThetaLow = asin(qLow * Lambda / (4.0 * PI));
+      TwoThetaHigh = asin(qHigh * Lambda / (4.0 * PI));
 
-		AreaOfSlice = fabs((cos(2.0 * TwoThetaLow) - cos(2.0 * TwoThetaHigh)) * 2.0 * PI);
-	
-		++Nofq[i];
-		Iofq[i] += p / AreaOfSlice;
-		IofqSquared[i] += pow(p / AreaOfSlice, 2);
+      AreaOfSlice = fabs((cos(2.0 * TwoThetaLow) - cos(2.0 * TwoThetaHigh)) * 2.0 * PI);
 
-		SCATTER;
+      ++Nofq[i];
+      Iofq[i] += p / AreaOfSlice;
+      IofqSquared[i] += pow(p / AreaOfSlice, 2);
+
+      SCATTER;
     }
 
-	// Restore xray if requested
+    // Restore xray if requested
     if (restore_xray) {
-		RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
+      RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
     }
 %}
 
 SAVE
 %{
-	// Output I(r)
+  // Output I(r)
     DETECTOR_OUT_1D(
         "QMonitor - Radially averaged distribution",
         "Radius [m]",
         "I(r)",
         "r", 
-		0.0, 
-		RadiusDetector, 
-		NumberOfBins,
+        0.0, 
+        RadiusDetector, 
+        NumberOfBins,
         &NofR[0],
-		&IofR[0],
-		&IofRSquared[0],
+        &IofR[0],
+        &IofRSquared[0],
         RFilename
-	);
+        );
 
-	// Output I(q)
+    // Output I(q)
     DETECTOR_OUT_1D(
         "QMonitor - Distribution in q (Radially averaged)",
         "q [1 / AA]",
         "I(q)",
         "q", 
-		0.0, 
-		qMax, 
-		NumberOfBins,
+        0.0, 
+        qMax, 
+        NumberOfBins,
         &Nofq[0],
-		&Iofq[0],
-		&IofqSquared[0],
+        &Iofq[0],
+        &IofqSquared[0],
         qFilename
-	);
+        );
 %}
 
 MCDISPLAY
 %{
-	
 	circle("xy", 0, 0, 0, RadiusDetector);
 %}
 

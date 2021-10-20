@@ -10,7 +10,6 @@
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
 * Date: May 2, 2012
 * Origin: KU-Science
-* Release: McXtrace 1.0
 *
 * A sample of monodisperse cylindrical particles with elliptic cross section in 
 * solution.
@@ -49,7 +48,7 @@ SETTING PARAMETERS (R1 = 20.0, R2 = 40.0, Height = 100.0, Concentration = 0.01, 
 
 OUTPUT PARAMETERS ()
 
-/*STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
+/*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
 DECLARE
 %{

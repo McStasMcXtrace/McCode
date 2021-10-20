@@ -11,7 +11,6 @@
 * Based on a SANS-component in McStas by Peter Willendrup
 * Date: May 2, 2012
 * Origin: KU-Science
-* Release: McXtrace 1.0
 *
 * A sample of monodisperse spherical particles in solution.
 *
@@ -20,18 +19,15 @@
 * of monodisperse, spherical particles.
 *
 * %P
-* R						  : [AA]		Radius of the spherical particles.
-* Concentration		  	  : [mM]		Concentration of sample.
-* DeltaRho  			  : [cm/AA^3]	Excess scattering length density of the 
-*								   	    particles.
-* AbsorptionCrosssection  : [1/m]		Absorption cross section of the sample.
-* xwidth    			  : [m]  		Dimension of component in the x-direction.
-* yheight   			  : [m]			Dimension of component in the y-direction.
-* zdepth    			  : [m]			Dimension of component in the z-direction.
-* SampleToDetectorDistance: [m]			Distance from sample to detector (for 
-*										focusing the scattered x-rays).
-* DetectorRadius          : [m] 		Radius of the detector (for focusing the 
-*										scattered x-rays).
+* R: [AA]        Radius of the spherical particles.
+* Concentration	: [mM]   Concentration of sample.
+* DeltaRho: [cm/AA^3]	 Excess scattering length density of the particles.
+* AbsorptionCrosssection: [1/m]		Absorption cross section of the sample.
+* xwidth: [m]            Dimension of component in the x-direction.
+* yheight: [m]           Dimension of component in the y-direction.
+* zdepth: [m]            Dimension of component in the z-direction.
+* SampleToDetectorDistance: [m] Distance from sample to detector (for focusing the scattered x-rays).
+* DetectorRadius: [m]    Radius of the detector (for focusing the scattered x-rays).
 *
 * %E
 *******************************************************************************/
@@ -41,15 +37,14 @@ DEFINE COMPONENT SAXSSpheres
 DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (R = 100.0, Concentration = 0.01, DeltaRho = 1.0e-14, AbsorptionCrosssection = 0.0,
-		    		xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
+    xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
 
 OUTPUT PARAMETERS ()
 
-/*STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
+/*X-ray PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
 DECLARE
 %{
-	// Declarations	
 	double Prefactor;
 	double Absorption;
 	double q;
@@ -99,7 +94,7 @@ TRACE
 		if (l0 < 0.0) {
 			fprintf(stderr, "Photon already inside sample %s - absorbing...\n", NAME_CURRENT_COMP);
 			ABSORB;
-    	}
+                }
 
 		// Compute properties of photon
 		k = sqrt(pow(kx, 2) + pow(ky, 2) + pow(kz, 2));
@@ -140,7 +135,6 @@ TRACE
 
 MCDISPLAY
 %{
-	
 	box(0, 0, 0, xwidth, yheight, zdepth);
 %}
 

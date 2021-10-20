@@ -23,18 +23,15 @@
 * The component must have a valid .pdb-file as an argument.
 *
 * %P
-* RhoSolvent  			  : [AA]	Scattering length density of the buffer.
-* Concentration		  	  : [mM]	Concentration of sample.
-* AbsorptionCrosssection  : [1/m]	Absorption cross section of the sample.
-* xwidth    			  : [m]  	Dimension of component in the x-direction.
-* yheight   			  : [m]		Dimension of component in the y-direction.
-* zdepth    			  : [m]		Dimension of component in the z-direction.
-* SampleToDetectorDistance: [m]		Distance from sample to detector (for 
-*									focusing the scattered x-rays).
-* DetectorRadius          : [m] 	Radius of the detector (for focusing the 
-*									scattered x-rays).
-* PDBFilepath			  : []		Path to the file describing the high resolution
-*									structure of the protein.
+* RhoSolvent: [AA]    Scattering length density of the buffer.
+* Concentration: [mM] Concentration of sample.
+* AbsorptionCrosssection: [1/m] Absorption cross section of the sample.
+* xwidth: [m]         Dimension of component in the x-direction.
+* yheight: [m]        Dimension of component in the y-direction.
+* zdepth: [m]         Dimension of component in the z-direction.
+* SampleToDetectorDistance: [m]  Distance from sample to detector (for focusing the scattered x-rays).
+* DetectorRadius: [m] Radius of the detector (for focusing the scattered x-rays).
+* PDBFilepath: []     Path to the file describing the high resolution structure of the protein.
 *
 * %E
 *******************************************************************************/
@@ -44,17 +41,18 @@ DEFINE COMPONENT SAXSPDB
 DEFINITION PARAMETERS (NumberOfQBins = 200)
 
 SETTING PARAMETERS (RhoSolvent = 9.4e-14, Concentration = 0.01, AbsorptionCrosssection = 0.0,
-		    		xwidth, yheight, zdepth, 
-					SampleToDetectorDistance, DetectorRadius,
-					string PDBFilepath = "PDBfile.pdb")
+    xwidth, yheight, zdepth, 
+    SampleToDetectorDistance, DetectorRadius,
+    string PDBFilepath = "PDBfile.pdb")
 
 OUTPUT PARAMETERS ()
 
-/*STATE PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
+/*X-ray PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
+
+
 
 DECLARE
 %{
-	// Declarations
 	double Absorption;
 	double NumberDensity;
 	#define OrderOfHarmonics 21
@@ -132,13 +130,13 @@ DECLARE
 		const double DeltaRhoProtein = Protein->Beads[ResidueID].ScatteringLength - Volume * RhoSolvent;
 
 		const double x = (Protein->Beads[ResidueID].x * Protein->Beads[ResidueID].ScatteringLength - 
-						  RhoSolvent * Volume * Protein->Beads[ResidueID].xv) / DeltaRhoProtein;
+                    RhoSolvent * Volume * Protein->Beads[ResidueID].xv) / DeltaRhoProtein;
 
 		const double y = (Protein->Beads[ResidueID].y * Protein->Beads[ResidueID].ScatteringLength - 
-						  RhoSolvent * Volume * Protein->Beads[ResidueID].yv) / DeltaRhoProtein;
+                    RhoSolvent * Volume * Protein->Beads[ResidueID].yv) / DeltaRhoProtein;
 
 		const double z = (Protein->Beads[ResidueID].z * Protein->Beads[ResidueID].ScatteringLength - 
-						  RhoSolvent * Volume * Protein->Beads[ResidueID].zv) / DeltaRhoProtein;
+                    RhoSolvent * Volume * Protein->Beads[ResidueID].zv) / DeltaRhoProtein;
 
 		// Convert bead position to spherical coordinates
 		const double Radius = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
@@ -333,64 +331,64 @@ INITIALIZE
 		
 		while (fgets(Buffer, sizeof(Buffer), PDBFile) != NULL) {
 		    Atom = 0; 
-			ResidueID = 0;
+                    ResidueID = 0;
 
-			sscanf(Buffer,"ATOM%*9c%c%*8c%d%*4c%lf%lf%lf%*23c%c", &DummyChar, &ResidueID, &x, &y, &z, &Atom);
+                    sscanf(Buffer,"ATOM%*9c%c%*8c%d%*4c%lf%lf%lf%*23c%c", &DummyChar, &ResidueID, &x, &y, &z, &Atom);
 
 		    if (ResidueID != PreviousResidueID && ResidueID != 0) {
 
-		        if (PreviousResidueID != 0) {
+                        if (PreviousResidueID != 0) {
 
-					// Assign center of scattering
-				    Residue[i].xv = X / Weight; 
-					Residue[i].yv = Y / Weight; 
-					Residue[i].zv = Z / Weight;
+                            // Assign center of scattering
+                            Residue[i].xv = X / Weight; 
+                            Residue[i].yv = Y / Weight; 
+                            Residue[i].zv = Z / Weight;
 
-					// Assign center of mass
-				    Residue[i].x = XA / Aweight; 
-					Residue[i].y = YA / Aweight; 
-					Residue[i].z = ZA / Aweight;
+                            // Assign center of mass
+                            Residue[i].x = XA / Aweight; 
+                            Residue[i].y = YA / Aweight; 
+                            Residue[i].z = ZA / Aweight;
 
-					// Other residue attributes
-				    Residue[i].Volume = Weight;
-				    Residue[i].ScatteringLength = Aweight;
+                            // Other residue attributes
+                            Residue[i].Volume = Weight;
+                            Residue[i].ScatteringLength = Aweight;
 
-				    X = 0.0;
-					Y = 0.0;
-					Z = 0.0;
-					Weight = 0.0;
+                            X = 0.0;
+                            Y = 0.0;
+                            Z = 0.0;
+                            Weight = 0.0;
 
-					XA = 0.0;
-					YA = 0.0;
-					ZA = 0.0;
-					Aweight = 0.0;
+                            XA = 0.0;
+                            YA = 0.0;
+                            ZA = 0.0;
+                            Aweight = 0.0;
 
-				    ++i;
+                            ++i;
 
-				    if (i < NumberOfResidues) {
-				        Residue[i].NameOfResidue = (char *) calloc(3, sizeof(char));
-				    }
+                            if (i < NumberOfResidues) {
+                                Residue[i].NameOfResidue = (char *) calloc(3, sizeof(char));
+                            }
 
-				}
+                        }
 
 		        PreviousResidueID = ResidueID;
 		    }
 
-			// Finish the final amino acid
-			if (i == NumberOfResidues - 1) {
-				Residue[i].xv = X / Weight; 
-				Residue[i].yv = Y / Weight; 
-				Residue[i].zv = Z / Weight;
+                    // Finish the final amino acid
+                    if (i == NumberOfResidues - 1) {
+                        Residue[i].xv = X / Weight; 
+                        Residue[i].yv = Y / Weight; 
+                        Residue[i].zv = Z / Weight;
 
-				// Assign center of mass
-				Residue[i].x = XA / Aweight; 
-				Residue[i].y = YA / Aweight; 
-				Residue[i].z = ZA / Aweight;
+                        // Assign center of mass
+                        Residue[i].x = XA / Aweight; 
+                        Residue[i].y = YA / Aweight; 
+                        Residue[i].z = ZA / Aweight;
 
-				// Other residue attributes
-				Residue[i].Volume = Weight;
-				Residue[i].ScatteringLength = Aweight;
-			}
+                        // Other residue attributes
+                        Residue[i].Volume = Weight;
+                        Residue[i].ScatteringLength = Aweight;
+                    }
 
 		    sscanf(Buffer, "ATOM%*9cCA%*2c%*s%*10c%lf%lf%lf", &Residue[i].xa, &Residue[i].ya, &Residue[i].za);
 		    sscanf(Buffer, "ATOM%*13c%s", Residue[i].NameOfResidue);
@@ -399,32 +397,32 @@ INITIALIZE
 		        case 'C':
 		            A = AC;
 		            W = WC;
-		        break;
+                            break;
 
 		        case 'N':
 		            A = AN;
 		            W = WN;
-		        break;
+                            break;
 
 		        case 'O':
 		            A = AO;
-		            W = WO;
-		        break;
+                            W = WO;
+                            break;
 
 		        case 'S':
 		            A = AS;
 		            W = WS;
-		        break;
+                            break;
 
 		        case 'H':
 		            A = AH;
 		            W = WH;
-		        break;
+                            break;
 
 		        case 'P':
 		            A = AP;
 		            W = WP;
-		        break;
+                            break;
 
 		        default:
 		            A = 0.0;
@@ -454,7 +452,7 @@ INITIALIZE
 	Absorption = AbsorptionCrosssection;
 
 	printf("Initializing protein structure...\n");
-    NumberOfResidues = CountResidues(PDBFilepath);
+        NumberOfResidues = CountResidues(PDBFilepath);
 	InitializeProtein(&Protein, NumberOfResidues);
 	Matrix = ComplexMatrix(OrderOfHarmonics + 1, OrderOfHarmonics + 1);
 
@@ -491,14 +489,14 @@ TRACE
 	int i;
 
 	// Computation
-    Intersect = box_intersect(&l0, &l1, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
+        Intersect = box_intersect(&l0, &l1, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
     
 	if (Intersect) {
 
 		if (l0 < 0.0) {
 			fprintf(stderr, "Photon already inside sample %s - absorbing...\n", NAME_CURRENT_COMP);
 			ABSORB;
-    	}
+                }
 
 		// Compute properties of photon
 		k = sqrt(pow(kx, 2) + pow(ky, 2) + pow(kz, 2));
@@ -546,7 +544,6 @@ TRACE
 
 MCDISPLAY
 %{
-	
 	box(0, 0, 0, xwidth, yheight, zdepth);
 %}
 
