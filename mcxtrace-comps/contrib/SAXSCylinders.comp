@@ -9,7 +9,6 @@
 * %I
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
 * Date: May 2, 2012
-* Version: $Revision$
 * Origin: KU-Science
 *
 * A sample of monodisperse cylindrical particles in solution.
@@ -19,20 +18,16 @@
 * of monodisperse, cylindrical particles.
 *
 * %P
-* R							; [AA]		Semiaxis of the cross section of the 
-*										cylinder.
-* Height					: [AA]		Height of the cylinder.
-* Concentration		  		: [mM]		Concentration of sample.
-* DeltaRho					: [cm/AA^3]	Excess scattering length density of the
-*										particles.
-* AbsorptionCrosssection  	: [1/m]		Absorption cross section of the sample.
-* xwidth    			  	: [m]  		Dimension of component in the x-direction.
-* yheight   			  	: [m]		Dimension of component in the y-direction.
-* zdepth    			  	: [m]		Dimension of component in the z-direction.
-* SampleToDetectorDistance	: [m]		Distance from sample to detector (for 
-*										focusing the scattered x-rays).
-* DetectorRadius          	: [m] 		Radius of the detector (for focusing the 
-*										scattered x-rays).
+* R: [AA]              Semiaxis of the cross section of the cylinder.
+* Height: [AA]         Height of the cylinder.
+* Concentration: [mM]  Concentration of sample.
+* DeltaRho: [cm/AA^3]  Excess scattering length density of the particles.
+* AbsorptionCrosssection: [1/m]  Absorption cross section of the sample.
+* xwidth: [m]          Dimension of component in the x-direction.
+* yheight: [m]         Dimension of component in the y-direction.
+* zdepth: [m]          Dimension of component in the z-direction.
+* SampleToDetectorDistance: [m]  Distance from sample to detector (for focusing the scattered x-rays).
+* DetectorRadius: [m]  Radius of the detector (for focusing the scattered x-rays).
 *
 * %E
 *******************************************************************************/
@@ -42,7 +37,7 @@ DEFINE COMPONENT SAXSCylinders
 DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (R = 40.0, Height = 100.0, Concentration = 0.01, DeltaRho = 1.0e-14, AbsorptionCrosssection = 0.0,
-		    		xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
+    xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
 
 OUTPUT PARAMETERS ()
 
@@ -160,7 +155,6 @@ TRACE
 
 MCDISPLAY
 %{
-	
 	box(0, 0, 0, xwidth, yheight, zdepth);
 %}
 
