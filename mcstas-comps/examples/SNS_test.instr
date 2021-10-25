@@ -40,11 +40,11 @@ INITIALIZE %{
 #define STR(macro) QUOTE(macro)
 
 #ifndef LOADPATH
-#define LOADPATH=/usr/share/mcstas/2.7.1/
+#define LOADPATH=/usr/share/mcstas/2.7.1/data
 #endif
 
 #define LOADPATH_ STR(LOADPATH)
-  sprintf(fullfile,"%s/data/%s",LOADPATH_,filename);
+  sprintf(fullfile,"%s/%s",LOADPATH_,filename);
 printf("Using the input file: %s\n", fullfile);
   
 %}
