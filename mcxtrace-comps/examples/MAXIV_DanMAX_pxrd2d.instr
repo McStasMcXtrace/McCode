@@ -113,6 +113,8 @@ DECLARE
     const int pxrd_2d_ny=1679;
     int h;
 
+    char emon_options[256];
+    char divmon_options[256];
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -167,7 +169,10 @@ INITIALIZE
         monitor_DE=E0*3e-2;
     }
 
-/* set coarse E-monitor parameters */
+    snprintf(emon_options,255,"e limits %e %e\n",E0-DE, E0+DE);
+    snprintf(divmon_options,255,"xdiv limits -4e-3 4e-3 ydiv limits -4e-3 4e-3");
+
+   /* set coarse E-monitor parameters */
    Efull_min = E0-(0.5*DE);
    Efull_max = E0+(0.5*DE);
 
@@ -255,11 +260,11 @@ AT(0,0,0) RELATIVE Origin
 /*COMPONENT src_mon = DanMAX_monitor (filename = "src_mon", xwidth=5e-3, yheight=5e-3, ndiv=101, E0=monitor_E0, dE=monitor_DE, Efull_min=Efull_min, Efull_max=Efull_max, restore_xray=1)*/
 /*AT (0,0,1) RELATIVE Origin*/
 
-COMPONENT src_psd = Monitor_nD(restore_xray=1, filename="src_mon.psd", xwidth=5e-3, yheight=5e-3, bins=101, options="x y auto")
+COMPONENT src_psd = Monitor_nD(restore_xray=1, filename="src_mon.psd", xwidth=5e-3, yheight=5e-3, bins=101, options="x limits -0.2e-3 0.2e-3 y limits -0.2e-3 0.2e-3")
 AT(0,0,1) RELATIVE Origin
-COMPONENT src_div = Monitor_nD(restore_xray=1, filename="src_mon.div", xwidth=5e-3, yheight=5e-3, bins=101, options="xdiv ydiv auto")
+COMPONENT src_div = Monitor_nD(restore_xray=1, filename="src_mon.div", xwidth=5e-3, yheight=5e-3, bins=101, options=divmon_options)
 AT(0,0,1) RELATIVE Origin
-COMPONENT src_e = Monitor_nD(restore_xray=1, filename="src_mon.e", xwidth=5e-3, yheight=5e-3, bins=101, options="energy auto")
+COMPONENT src_e = Monitor_nD(restore_xray=1, filename="src_mon.e", xwidth=5e-3, yheight=5e-3, bins=101, options=emon_options)
 AT(0,0,1) RELATIVE Origin
 
 COMPONENT FM1 = Slit(
@@ -382,11 +387,11 @@ AT(beam_xoff,0,7.375) RELATIVE oh0
 /*COMPONENT oh_postmono = COPY(src_mon)(filename="oh_postmono")*/
 /*WHEN(debugMon) AT(beam_xoff,0,7.869) RELATIVE oh0*/
 
-COMPONENT oh_postmono_psd = COPY(src_psd)(filename="oh_postmono.psd")
+COMPONENT oh_postmono_psd = COPY(src_psd)(filename="oh_postmono.psd", options="x limits -0.5e-3 0.5e-3 y limits -0.5e-3 0.5e-3")
 WHEN(debugMon) AT(beam_xoff,0,7.869) RELATIVE oh0
-COMPONENT oh_postmono_div = COPY(src_div)(filename="oh_postmono.div")
+COMPONENT oh_postmono_div = COPY(src_div)(filename="oh_postmono.div", options=divmon_options)
 WHEN(debugMon) AT(beam_xoff,0,7.869) RELATIVE oh0
-COMPONENT oh_postmono_e = COPY(src_e)(filename="oh_postmono.e")
+COMPONENT oh_postmono_e = COPY(src_e)(filename="oh_postmono.e", options=emon_options)
 WHEN(debugMon) AT(beam_xoff,0,7.869) RELATIVE oh0
 
 
@@ -415,11 +420,11 @@ AT(beam_xoff,0,38.158) RELATIVE Origin
 /*COMPONENT eh_start = COPY(src_mon)(filename="eh_start")*/
 /*WHEN(debugMon) AT(0,0,0) RELATIVE eh0*/
 
-COMPONENT eh_start_psd = COPY(src_psd)(filename="eh_start.psd")
+COMPONENT eh_start_psd = COPY(src_psd)(filename="eh_start.psd", options="x limits -0.5e-3 0.5e-3 y limits -0.5e-3 0.5e-3")
 WHEN(debugMon) AT(0,0,0) RELATIVE eh0
-COMPONENT eh_start_div = COPY(src_div)(filename="eh_start.div")
+COMPONENT eh_start_div = COPY(src_div)(filename="eh_start.div", options=divmon_options)
 WHEN(debugMon) AT(0,0,0) RELATIVE eh0
-COMPONENT eh_start_e = COPY(src_e)(filename="eh_start.e")
+COMPONENT eh_start_e = COPY(src_e)(filename="eh_start.e", options=emon_options)
 WHEN(debugMon) AT(0,0,0) RELATIVE eh0
 
 
@@ -429,11 +434,11 @@ AT(0,0,2) RELATIVE eh0
 /*COMPONENT imaging_monitor = COPY(src_mon)(filename="imaging_monitor")*/
 /*AT(0,0,0) RELATIVE Imaging*/
 
-COMPONENT imaging_psd = COPY(src_psd)(filename="imaging.psd")
+COMPONENT imaging_psd = COPY(src_psd)(filename="imaging.psd", options="x limits -0.5e-3 0.5e-3 y limits -0.5e-3 0.5e-3")
 AT(0,0,0) RELATIVE Imaging
-COMPONENT imaging_div = COPY(src_div)(filename="imaging.div")
+COMPONENT imaging_div = COPY(src_div)(filename="imaging.div", options=divmon_options)
 AT(0,0,0) RELATIVE Imaging
-COMPONENT imaging_e = COPY(src_e)(filename="imaging.e")
+COMPONENT imaging_e = COPY(src_e)(filename="imaging.e", options=emon_options)
 AT(0,0,0) RELATIVE Imaging
 
 /*XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX*/
@@ -474,11 +479,11 @@ AT(0,0,-0.2) RELATIVE pxrd_2d_pt
 
 /*COMPONENT pxrd2 = COPY(src_mon)(filename="pxrd2")*/
 /*AT(0,0,0) RELATIVE pxrd_2d_pt*/
-COMPONENT pxrd2_psd = COPY(src_psd)(filename="pxrd2.psd")
+COMPONENT pxrd2_psd = COPY(src_psd)(filename="pxrd2.psd", options="x limits -0.5e-3 0.5e-3 y limits -0.5e-3 0.5e-3")
 AT(0,0,0) RELATIVE pxrd_2d_pt
-COMPONENT pxrd2_div = COPY(src_div)(filename="pxrd2.div")
+COMPONENT pxrd2_div = COPY(src_div)(filename="pxrd2.div", options=divmon_options)
 AT(0,0,0) RELATIVE pxrd_2d_pt
-COMPONENT pxrd2_e = COPY(src_e)(filename="pxrd2.e")
+COMPONENT pxrd2_e = COPY(src_e)(filename="pxrd2.e", options=emon_options)
 AT(0,0,0) RELATIVE pxrd_2d_pt
 
 SPLIT 100 COMPONENT powdern = PowderN(
