@@ -469,19 +469,26 @@ void tPcalc(double (*func)(double,double,double*,double*),double llim, double hl
 
 DECLARE
 %{
-  double hdiv;
-  double vdiv;
   double p_in;
   double *inxvec;
+  #pragma acc shape(inxvec[0:500])
   double *inyvec;
+  #pragma acc shape(inyvec[0:500])
   double *Pvec;
+  #pragma acc shape(Pvec[0:500])
   int xylength;
   double *tcol;
+  #pragma acc shape(tcol[0:200])
   double *Ecol;
+  #pragma acc shape(Ecol[0:200])
   double *txval;
+  #pragma acc shape(txval[0:500])
   double *tyval;
+  #pragma acc shape(tyval[0:500])
   double *tPvec;
+  #pragma acc shape(tPvec[0:500])
   double **Ptmat;
+  #pragma acc shape(Ptmat[0:200][0:200])
   double EPmax;
   double EPmin;
   double INorm;
@@ -499,7 +506,6 @@ INITIALIZE
 %{
   FILE *fp;
   double llim, hlim,ltlim,htlim,junk;
-  double tycol[200];
   double **Imat;
   int idx1,idx2;
   Pvec=malloc(500*sizeof(double));
@@ -558,16 +564,19 @@ INITIALIZE
   }
   free(Imat);
 
-printf("Finished calculating probability distribution\n");
+  printf("Finished calculating probability distribution\n");
   #if defined (USE_MPI)
   pmul=1/mpi_node_count;
   #else
   pmul=1;
   #endif
+  pmul/=mcget_ncount();
 %}
 TRACE
 %{
-  double theta,phi,v,tauv,E,Eval,tval,randp;
+  double theta,phi,v,tauv,E,Eval,tval,randp;  
+  double hdiv;
+  double vdiv;
   double hdivmin,hdivmax,vdivmin,vdivmax;
   int idx1,idx3,Eidxl,Eidxh;
   p=p_in;
@@ -629,7 +638,7 @@ TRACE
   vy = v*sin(phi);
   vx = v*cos(phi)*sin(theta);
 
-  p*=(xwidth*yheight/(0.1*0.12))*INorm2*pmul/mcget_ncount();
+  p*=(xwidth*yheight/(0.1*0.12))*INorm2*pmul;
 
 %}
 FINALLY
