@@ -63,8 +63,10 @@ DEFINE INSTRUMENT MAXIV_DanMAX_pxrd1d(E0=35,DE=0.05,undK=0,undDetune=4,
 DECLARE
 %{
 
-    double FEMMw=0.7e-3, FEMMh=0.7e-3;
-    double oh_postmonow=1e-3,oh_postmonoh=1e-3;
+    double FEMMw=0.7e-3;
+    double FEMMh=0.7e-3;
+    double oh_postmonow=1e-3;
+    double oh_postmonoh=1e-3;
 
     double diamond_zd=1e-3;
 
@@ -120,6 +122,8 @@ DECLARE
     const int pxrd_2d_ny=1679;
     int h;
 
+    char emon_options[256];
+    char divmon_options[256];
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -174,7 +178,10 @@ INITIALIZE
         monitor_DE=E0*3e-2;
     }
 
-/* set coarse E-monitor parameters */
+    snprintf(emon_options,255,"e limits %e %e\n",E0-DE, E0+DE);
+    snprintf(divmon_options,255,"xdiv limits -4e-3 4e-3 ydiv limits -4e-3 4e-3");
+
+   /* set coarse E-monitor parameters */
    Efull_min = E0-(0.5*DE);
    Efull_max = E0+(0.5*DE);
 
@@ -264,16 +271,15 @@ COMPONENT dmu = Undulator(verbose=1, E0=E0, dE=DE, E1st=E1st,
         quick_integ=1, Nper=187, lu=0.016, sigex=53.66e-6, sigey=4.008e-6, sigepx=5.963e-6, sigepy=2.004e-6)
 AT(0,0,0) RELATIVE Origin
 
-
 /* Monitors */
 /*COMPONENT src_mon = DanMAX_monitor (filename = "src_mon", xwidth=5e-3, yheight=5e-3, ndiv=101, E0=monitor_E0, dE=monitor_DE, Efull_min=Efull_min, Efull_max=Efull_max, restore_xray=1)*/
 /*AT (0,0,1) RELATIVE Origin*/
 
-COMPONENT src_psd = Monitor_nD(restore_xray=1, filename="src_mon.psd", xwidth=5e-3, yheight=5e-3, bins=101, options="x y auto")
+COMPONENT src_psd = Monitor_nD(restore_xray=1, filename="src_mon.psd", xwidth=5e-3, yheight=5e-3, bins=101, options="x limits -0.2e-3 0.2e-3 y limits -0.2e-3 0.2e-3")
 AT(0,0,1) RELATIVE Origin
-COMPONENT src_div = Monitor_nD(restore_xray=1, filename="src_mon.div", xwidth=5e-3, yheight=5e-3, bins=101, options="xdiv ydiv auto")
+COMPONENT src_div = Monitor_nD(restore_xray=1, filename="src_mon.div", xwidth=5e-3, yheight=5e-3, bins=101, options=divmon_options)
 AT(0,0,1) RELATIVE Origin
-COMPONENT src_e = Monitor_nD(restore_xray=1, filename="src_mon.e", xwidth=5e-3, yheight=5e-3, bins=101, options="energy auto")
+COMPONENT src_e = Monitor_nD(restore_xray=1, filename="src_mon.e", xwidth=5e-3, yheight=5e-3, bins=101, options=emon_options)
 AT(0,0,1) RELATIVE Origin
 
 COMPONENT FM1 = Slit(
@@ -325,7 +331,7 @@ ROTATED(0,DCM_theta,0) RELATIVE oh0
 
 COMPONENT DCM0 =  Bragg_crystal(
         length=50e-3, width=20e-3, h=1, k=1, l=1, V=160.1826, alpha=0, material="Si.txt")
-WHEN(DCM) AT(0,0,0) RELATIVE DCM0_a0
+WHEN(DCM!=0) AT(0,0,0) RELATIVE DCM0_a0
 ROTATED (0,0,-90) RELATIVE DCM0_a0
 EXTEND
 %{
@@ -341,13 +347,12 @@ ROTATED (0,-DCM_theta,0) RELATIVE DCM0_a1
 
 COMPONENT DCM1 = Bragg_crystal(
         length=100e-3, width=20e-3, h=1, k=1, l=1, V=160.1826, alpha=0, material="Si.txt")
-WHEN(DCM) AT(0,0,0) RELATIVE DCM1_a0
+WHEN(DCM!=0) AT(0,0,0) RELATIVE DCM1_a0
 ROTATED (0,0,90) RELATIVE DCM1_a0
 EXTEND
 %{
     if (!SCATTERED) ABSORB;
 %}
-
 COMPONENT DCM1_a1 = Arm()
 AT(0,0,0) RELATIVE DCM1_a0
 ROTATED (0,-DCM_theta,0) RELATIVE DCM1_a0
@@ -360,14 +365,14 @@ ROTATED (0,DMM_theta,0) RELATIVE oh0
 
 /* if only DMM is used the first mirror is toroidal due to the heat bump */
 COMPONENT DMM0a = Mirror_toroid(
-        xwidth=45e-3, zdepth=200e-3, reflec="w_b4c_si_3AArghn.dat", radius=DMM_rsag, radius_o=DMM_rmer)
-WHEN (DMM && !DCM) AT (0,0,0) RELATIVE DMM0_a0
+  xwidth=45e-3, zdepth=200e-3, reflec="w_b4c_si_3AArghn.dat", radius=DMM_rsag, radius_o=DMM_rmer)
+WHEN( (DCM==0) && (DMM!=0) ) AT (0,0,0) RELATIVE DMM0_a0
 ROTATED (0,0,-90) RELATIVE DMM0_a0
 
 /* if both monos are used, the first ML mirror is flat, no heat bump on it */
 COMPONENT DMM0b = Mirror(
-    xwidth=45e-3, zdepth=200e-3, reflectivity="w_b4c_si_3AArghn.dat")
-WHEN (DCM && DMM) AT (0,0,0) RELATIVE DMM0_a0
+  xwidth=45e-3, zdepth=200e-3, reflectivity="w_b4c_si_3AArghn.dat")
+WHEN ( (DCM!=0) && (DMM!=0) ) AT (0,0,0) RELATIVE DMM0_a0
 ROTATED (0,0,-90) RELATIVE DMM0_a0
 
 COMPONENT DMM0_a1 = Arm()
@@ -379,8 +384,8 @@ AT(0,0,DMM_d) RELATIVE DMM0_a1
 ROTATED(0,-DMM_theta,0) RELATIVE DMM0_a1
 
 COMPONENT DMM1 = Mirror(
-    xwidth=45e-3, zdepth=200e-3, reflectivity="w_b4c_si_3AArghn.dat")
-WHEN (DMM) AT (0,0,0) RELATIVE PREVIOUS
+  xwidth=45e-3, zdepth=200e-3, reflectivity="w_b4c_si_3AArghn.dat")
+WHEN (DMM!=0) AT (0,0,0) RELATIVE PREVIOUS
 ROTATED (0,0,90) RELATIVE PREVIOUS
 
 COMPONENT DMM1_a1 = Arm()
@@ -396,11 +401,11 @@ AT(beam_xoff,0,7.375) RELATIVE oh0
 /*COMPONENT oh_postmono = COPY(src_mon)(filename="oh_postmono")*/
 /*WHEN(debugMon) AT(beam_xoff,0,7.869) RELATIVE oh0*/
 
-COMPONENT oh_postmono_psd = COPY(src_psd)(filename="oh_postmono.psd")
+COMPONENT oh_postmono_psd = COPY(src_psd)(filename="oh_postmono.psd", options="x limits -0.5e-3 0.5e-3 y limits -0.5e-3 0.5e-3")
 WHEN(debugMon) AT(beam_xoff,0,7.869) RELATIVE oh0
-COMPONENT oh_postmono_div = COPY(src_div)(filename="oh_postmono.div")
+COMPONENT oh_postmono_div = COPY(src_div)(filename="oh_postmono.div", options=divmon_options)
 WHEN(debugMon) AT(beam_xoff,0,7.869) RELATIVE oh0
-COMPONENT oh_postmono_e = COPY(src_e)(filename="oh_postmono.e")
+COMPONENT oh_postmono_e = COPY(src_e)(filename="oh_postmono.e", options=emon_options)
 WHEN(debugMon) AT(beam_xoff,0,7.869) RELATIVE oh0
 
 
@@ -429,11 +434,11 @@ AT(beam_xoff,0,38.158) RELATIVE Origin
 /*COMPONENT eh_start = COPY(src_mon)(filename="eh_start")*/
 /*WHEN(debugMon) AT(0,0,0) RELATIVE eh0*/
 
-COMPONENT eh_start_psd = COPY(src_psd)(filename="eh_start.psd")
+COMPONENT eh_start_psd = COPY(src_psd)(filename="eh_start.psd", options="x limits -0.5e-3 0.5e-3 y limits -0.5e-3 0.5e-3")
 WHEN(debugMon) AT(0,0,0) RELATIVE eh0
-COMPONENT eh_start_div = COPY(src_div)(filename="eh_start.div")
+COMPONENT eh_start_div = COPY(src_div)(filename="eh_start.div", options=divmon_options)
 WHEN(debugMon) AT(0,0,0) RELATIVE eh0
-COMPONENT eh_start_e = COPY(src_e)(filename="eh_start.e")
+COMPONENT eh_start_e = COPY(src_e)(filename="eh_start.e", options=emon_options)
 WHEN(debugMon) AT(0,0,0) RELATIVE eh0
 
 
@@ -443,11 +448,11 @@ AT(0,0,2) RELATIVE eh0
 /*COMPONENT imaging_monitor = COPY(src_mon)(filename="imaging_monitor")*/
 /*AT(0,0,0) RELATIVE Imaging*/
 
-COMPONENT imaging_psd = COPY(src_psd)(filename="imaging.psd")
+COMPONENT imaging_psd = COPY(src_psd)(filename="imaging.psd", options="x limits -0.5e-3 0.5e-3 y limits -0.5e-3 0.5e-3")
 AT(0,0,0) RELATIVE Imaging
-COMPONENT imaging_div = COPY(src_div)(filename="imaging.div")
+COMPONENT imaging_div = COPY(src_div)(filename="imaging.div", options=divmon_options)
 AT(0,0,0) RELATIVE Imaging
-COMPONENT imaging_e = COPY(src_e)(filename="imaging.e")
+COMPONENT imaging_e = COPY(src_e)(filename="imaging.e", options=emon_options)
 AT(0,0,0) RELATIVE Imaging
 
 /*XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX*/
@@ -480,11 +485,11 @@ AT(0,0,-0.2) RELATIVE pxrd_1d_pt
 
 /*COMPONENT pxrd1 = COPY(src_mon)(filename="pxrd1")*/
 /*AT(0,0,0) RELATIVE pxrd_1d_pt*/
-COMPONENT pxrd1_psd = COPY(src_psd)(filename="pxrd1.psd")
+COMPONENT pxrd1_psd = COPY(src_psd)(filename="pxrd1.psd", options="x limits -0.5e-3 0.5e-3 y limits -0.5e-3 0.5e-3")
 AT(0,0,0) RELATIVE pxrd_1d_pt
-COMPONENT pxrd1_div = COPY(src_div)(filename="pxrd1.div")
+COMPONENT pxrd1_div = COPY(src_div)(filename="pxrd1.div", options=divmon_options)
 AT(0,0,0) RELATIVE pxrd_1d_pt
-COMPONENT pxrd1_e = COPY(src_e)(filename="pxrd1.e")
+COMPONENT pxrd1_e = COPY(src_e)(filename="pxrd1.e", options=divmon_options)
 AT(0,0,0) RELATIVE pxrd_1d_pt
 
 SPLIT 1410 COMPONENT powdern = PowderN(
