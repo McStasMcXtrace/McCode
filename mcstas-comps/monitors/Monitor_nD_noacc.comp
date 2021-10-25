@@ -313,7 +313,6 @@ INITIALIZE
 	radius=zdepth/2.0;
       }
     }else{
-      /*radius is set - propagate to xwidth. It is used inside monitor_nd-lib*/
       xwidth=2*radius;
     }
     if(!yheight){
@@ -321,7 +320,8 @@ INITIALIZE
       yheight=2*radius;
     }
   }else if (radius) {
-    /*radius is set - this must be curved shape then. Infer shape from yheight*/
+    /*radius is set - this must be a curved shape. Infer shape from yheight, and set remaining values
+     (xwidth etc. They are used inside monitor_nd-lib.*/
     xwidth = zdepth = 2*radius;
     if (yheight){
       /*a height is given (and no shape explitly set - assume cylinder*/
@@ -348,6 +348,7 @@ INITIALIZE
     }
     #endif
   }
+
   if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax &&
     !strstr(Vars.option, "previous") && (!geometry || !strlen(geometry)))
     exit(printf("Monitor_nD: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth, previous, geometry).\n", NAME_CURRENT_COMP));
@@ -358,6 +359,7 @@ INITIALIZE
     offdata.mantidflag=Vars.Flag_mantid;
     offdata.mantidoffset=Vars.Coord_Min[Vars.Coord_Number-1];
   }
+
 
   if (filename && strlen(filename) && strcmp(filename,"NULL") && strcmp(filename,"0"))
     strncpy(Vars.Mon_File, filename, 128);
@@ -463,7 +465,7 @@ TRACE
   {
     if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND)
      || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)
-	|| (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL")) )
+     || (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL")) )
     {
       /* check if we have to remove the top/bottom with BANANA shape */
       if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) {
@@ -471,8 +473,8 @@ TRACE
         /* propagate to intersection point as temporary variable to check top/bottom */
         y0 = y+t0*vy;
         y1 = y+t1*vy;
-        if (fabs(y0) >= Vars.Cylinder_Height/2*0.99) t0 = t1;
-        if (fabs(y1) >= Vars.Cylinder_Height/2*0.99) t1 = t0;
+        if (fabs(y0) >= Vars.Cylinder_Height/2) t0 = t1;
+        if (fabs(y1) >= Vars.Cylinder_Height/2) t1 = t0;
       }
       if (t0 < 0 && t1 > 0)
         t0 = t;  /* neutron was already inside ! */
@@ -485,7 +487,7 @@ TRACE
         PROP_DT(t0); /* t0 incoming beam */
       /* Final test if we are on lid / bottom of banana/sphere */
       if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA || abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) {
-        if (fabs(y) >= Vars.Cylinder_Height/2*0.99) {
+        if (fabs(y) >= Vars.Cylinder_Height/2 - FLT_EPSILON) {
           intersect=0;
           Flag_Restore=1;
         }
