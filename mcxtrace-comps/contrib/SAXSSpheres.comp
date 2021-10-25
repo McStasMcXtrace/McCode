@@ -99,8 +99,8 @@ TRACE
 		// Compute properties of photon
 		k = sqrt(pow(kx, 2) + pow(ky, 2) + pow(kz, 2));
 		l_full = l1 - l0;
-		dl = rand01() * (l1 - l0) + l0; 
-		PROP_DL(dl);                  
+		dl = rand01() * (l1 - l0) + l0;
+		PROP_DL(dl);
 		l = dl - l0;
 
 		// Store properties of incoming photon
