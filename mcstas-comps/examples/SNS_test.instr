@@ -44,7 +44,7 @@ INITIALIZE %{
 #endif
 
 #define LOADPATH_ STR(LOADPATH)
-  sprintf(fullfile,"%s/%s",LOADPATH_,filename);
+sprintf(fullfile,"%s/%s",LOADPATH_,filename);
 printf("Using the input file: %s\n", fullfile);
   
 %}
