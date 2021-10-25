@@ -481,10 +481,6 @@ DECLARE
   #pragma acc shape(tcol[0:200])
   double *Ecol;
   #pragma acc shape(Ecol[0:200])
-  double *txval;
-  #pragma acc shape(txval[0:500])
-  double *tyval;
-  #pragma acc shape(tyval[0:500])
   double *tPvec;
   #pragma acc shape(tPvec[0:500])
   double **Ptmat;
@@ -508,13 +504,15 @@ INITIALIZE
   double llim, hlim,ltlim,htlim,junk;
   double **Imat;
   int idx1,idx2;
+
+  double tyval[500];
+  double txval[500];
+
   Pvec=malloc(500*sizeof(double));
   inxvec=malloc(500*sizeof(double));
   inyvec=malloc(500*sizeof(double));
   tcol=malloc(200*sizeof(double));
   Ecol=malloc(200*sizeof(double));
-  tyval=malloc(500*sizeof(double));
-  txval=malloc(500*sizeof(double));
   tPvec=malloc(500*sizeof(double));
   Ptmat=malloc(200*sizeof(double *));
   for(idx1=0;idx1<200;idx1++){
@@ -579,6 +577,8 @@ TRACE
   double vdiv;
   double hdivmin,hdivmax,vdivmin,vdivmax;
   int idx1,idx3,Eidxl,Eidxh;
+  double tyval[500];
+  double txval[500];
   p=p_in;
   z=0;
 
@@ -644,7 +644,7 @@ TRACE
 FINALLY
 %{
   int idxf;
-  free(txval);free(tyval);free(tPvec);
+  free(tPvec);
   free(inxvec);free(inyvec);free(Pvec);free(tcol);free(Ecol);
   for(idxf=0;idxf<200;idxf++){
     free(Ptmat[idxf]);
