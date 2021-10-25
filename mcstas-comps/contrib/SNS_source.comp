@@ -566,10 +566,8 @@ INITIALIZE
   pmul=1;
   #if defined (USE_MPI)
   pmul/=mpi_node_count;
-  printf("division by node count, %g\n",pmul);
   #endif
   pmul/=mcget_ncount();
-  printf("divided by stats %g\n",pmul);
 %}
 TRACE
 %{
