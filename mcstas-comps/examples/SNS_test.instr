@@ -19,7 +19,7 @@
 * Simple test instrument for the SNS_source component.
 * Refer to SNS <A href="http://neutrons.ornl.gov/instrument_systems/components/moderators.shtml">Source files.</A>
 *
-* Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
+* %Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
 *
 * %Link
 * Written by G. Granroth
@@ -28,10 +28,29 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT SNS_test(string filename="source_sct21a_td_05_1.dat")
+DEFINE INSTRUMENT SNS_test(string filename="source_sct091_tu_02_1.dat")
+DEPENDENCY " -DLOADPATH=@MCCODE_LIB@/data "
+
+DECLARE %{
+  char fullfile[256];
+%}
+
+INITIALIZE %{
+#define QUOTE(name) #name
+#define STR(macro) QUOTE(macro)
+
+#ifndef LOADPATH
+#define LOADPATH=/usr/share/mcstas/3.1/
+#endif
+
+#define LOADPATH_ STR(LOADPATH)
+  sprintf(fullfile,"%s/data/%s",LOADPATH_,filename);
+printf("Using the input file: %s\n", fullfile);
+  
+%}
 
 TRACE
-COMPONENT mod=SNS_source(filename=filename,
+COMPONENT mod=SNS_source(filename=fullfile,
   xwidth=0.1, yheight=0.12,
   dist=1, focus_xw=0.10, focus_yh=0.24,
   Emin=1.0,Emax=10.0)
