@@ -35,9 +35,9 @@
 
 DEFINE COMPONENT SAXSQMonitor
 
-DEFINITION PARAMETERS (string RFilename = "RDetector", string qFilename = "QDetector", NumberOfBins = 100, restore_xray = 0)
-
-SETTING PARAMETERS (RadiusDetector, DistanceFromSample, LambdaMin = 1.0, Lambda0 = 0.0)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string RFilename="RDetectror", string qFilename="QDetector", int NumberOfBins=100, restore_xray=0,
+    RadiusDetector, DistanceFromSample, LambdaMin = 1.0, Lambda0 = 0.0)
 
 OUTPUT PARAMETERS ()
 
@@ -48,24 +48,23 @@ DECLARE
     double TwoThetaMax;
     double qMax;
 
-    double Nofq[NumberOfBins];
-    double Iofq[NumberOfBins];
-    double IofqSquared[NumberOfBins];
+    DArray1d Nofq;
+    DArray1d Iofq;
+    DArray1d IofqSquared;
 
-    double NofR[NumberOfBins];
-    double IofR[NumberOfBins];
-    double IofRSquared[NumberOfBins];
+    DArray1d NofR;
+    DArray1d IofR;
+    DArray1d IofRSquared;
 %}
 
 INITIALIZE
 %{
-    int i;
-
-    for (i = 0; i < NumberOfBins; ++i) {
-		Nofq[i] = 0.0;
-		Iofq[i] = 0.0;
-		IofqSquared[i] = 0.0;
-    }
+    Nofq=create_darr1d(NumberOfBins);
+    Iofq=create_darr1d(NumberOfBins);
+    IofqSquared=create_darr1d(NumberOfBins);
+    NofR=create_darr1d(NumberOfBins);
+    IofR=create_darr1d(NumberOfBins);
+    IofRSquared=create_darr1d(NumberOfBins);
 
     TwoThetaMax = atan(RadiusDetector / DistanceFromSample);
     qMax = 4 * PI * sin(TwoThetaMax / 2.0) / LambdaMin;
@@ -115,9 +114,14 @@ TRACE
 
       AreaOfSlice = fabs((cos(2.0 * TwoThetaLow) - cos(2.0 * TwoThetaHigh)) * 2.0 * PI);
 
-      ++NofR[i];
-      IofR[i] += p / AreaOfSlice;
-      IofRSquared[i] += pow(p / AreaOfSlice, 2);
+#pragma acc atomic
+      NofR[i]++;
+      double p_A=p/AreaOfSlice;
+#pragma acc atomic
+      IofR[i] += p_A;
+      double p2_A2= p*p/(AreaOfSlice*AreaOfSlice);
+#pragma acc atomic
+      IofRSquared[i] += p2_A2;
     }
       
     // Put photon in the correct q-bin
@@ -132,9 +136,14 @@ TRACE
 
       AreaOfSlice = fabs((cos(2.0 * TwoThetaLow) - cos(2.0 * TwoThetaHigh)) * 2.0 * PI);
 
+#pragma acc atomic
       ++Nofq[i];
-      Iofq[i] += p / AreaOfSlice;
-      IofqSquared[i] += pow(p / AreaOfSlice, 2);
+      double p_A=p/AreaOfSlice;
+#pragma acc atomic
+      Iofq[i] += p_A;
+      double p2_A2= p*p/(AreaOfSlice*AreaOfSlice);
+#pragma acc atomic
+      IofqSquared[i] += p2_A2;
 
       SCATTER;
     }
@@ -156,9 +165,9 @@ SAVE
         0.0, 
         RadiusDetector, 
         NumberOfBins,
-        &NofR[0],
-        &IofR[0],
-        &IofRSquared[0],
+        NofR,
+        IofR,
+        IofRSquared,
         RFilename
         );
 
@@ -171,11 +180,21 @@ SAVE
         0.0, 
         qMax, 
         NumberOfBins,
-        &Nofq[0],
-        &Iofq[0],
-        &IofqSquared[0],
+        Nofq,
+        Iofq,
+        IofqSquared,
         qFilename
         );
+%}
+
+FINALLY
+%{
+  destroy_darr1d(Nofq);
+  destroy_darr1d(Iofq);
+  destroy_darr1d(IofqSquared);
+  destroy_darr1d(NofR);
+  destroy_darr1d(IofR);
+  destroy_darr1d(IofRSquared);
 %}
 
 MCDISPLAY
