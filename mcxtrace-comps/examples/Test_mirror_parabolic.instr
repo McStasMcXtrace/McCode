@@ -24,11 +24,15 @@
 * 
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT template_body_simple(D=1,MM=1)
+DEFINE INSTRUMENT Test_mirror_parabolic(D=1,MM=1)
 
 DECLARE
 %{
-  int bounce;
+%}
+
+USERVARS
+%{
+  double bounce;
 %}
 
 INITIALIZE
@@ -45,10 +49,6 @@ COMPONENT source = Source_div(
     focus_aw=0, focus_ah=0, xwidth=0.1, yheight=0.5e-2,
     E0=12, dE=1)
 AT (0, 0, 0) RELATIVE origin
-EXTEND
-%{
-  //y=mcipYH;
-%}
 
 
 COMPONENT m2 = Mirror_parabolic(
