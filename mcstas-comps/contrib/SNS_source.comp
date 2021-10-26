@@ -564,9 +564,6 @@ INITIALIZE
 
   printf("Finished calculating probability distribution\n");
   pmul=1;
-  #if defined (USE_MPI)
-  pmul/=mpi_node_count;
-  #endif
   pmul/=mcget_ncount();
 %}
 TRACE
