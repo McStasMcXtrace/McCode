@@ -1736,7 +1736,7 @@ int cogen_raytrace(struct instr_def *instr)
             comp->name, this_jump->target, exp);
           coutf("        _particle->_index = %i;", this_jump->target_index-1);
           cout( "        flag_nocoordschange=1; // pass corrdinate transformations when jumping");
-          coutf("      } else " "_particle->_logic.Jump_%s_%s=0; /* reset Jump loop and go forward */",
+          coutf("      } else { " "_particle->_logic.Jump_%s_%s=0; /* reset Jump loop and go forward */",
             comp->name, this_jump->target);
         } else {
           coutf("      if (%s) {/* conditional JUMP to %s */", exp, this_jump->target);
@@ -1764,8 +1764,12 @@ int cogen_raytrace(struct instr_def *instr)
       else // comp_absorb_sends_to_next
         coutf("      else ABSORBED=0; // not SCATTERED within GROUP: always tries next");
     }
-
-    coutf("      _particle->_index++;");
+    
+    coutf("        _particle->_index++;");
+    if(list_len(comp->jump) > 0) {
+      // Closing bracket in case of JUMP
+      cout("      } ");
+    } 
     coutf("      if (!ABSORBED) DEBUG_STATE();");
     coutf("    } /* end component %s [%i] */", comp->name, comp->index);
 
