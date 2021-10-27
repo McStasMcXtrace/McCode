@@ -1086,7 +1086,7 @@ int cogen_decls(struct instr_def *instr)
 
   /* 2a. output an instrument logic structure to hold control statement logic */
   if (index > 0) {
-    cout("/* instrument SPLIT, GROUP and JUMP control logic */");
+    cout("/* instrument SPLIT and GROUP control logic */");
     cout("struct instrument_logic_struct {");
 
     if (list_len(instr->grouplist)) {
@@ -1098,17 +1098,6 @@ int cogen_decls(struct instr_def *instr)
     }
     liter = list_iterate(instr->complist);
     while((comp = list_next(liter)) != NULL) {
-      if (list_len(comp->jump) > 0) { // JUMP ITERATE counters
-        struct jump_struct *this_jump;
-        List_handle liter2;
-        liter2 = list_iterate(comp->jump);
-        while((this_jump = list_next(liter2))) {
-          /* create counter for JUMP iteration */
-          if (this_jump->iterate)
-            coutf("  long Jump_%s_%s; /* the JUMP connection <from>_<to> */", comp->name, this_jump->target);
-        }
-        list_iterate_end(liter2);
-      }
       if (comp->split) {
         coutf("  long Split_%s; /* this is the SPLIT counter decremented down to 0 */", comp->name);
         coutf("  _class_particle Split_%s_particle; /* this is the particle to duplicate */", comp->name);
@@ -1651,7 +1640,7 @@ int cogen_raytrace(struct instr_def *instr)
       while((this_jump = list_next(liter2))) {
         /* create counter for JUMP iteration */
         if (this_jump->iterate)
-          coutf("  instrument->logic.Jump_%s_%s=0;", comp->name, this_jump->target);
+          coutf("  _particle->_logic.Jump_%s_%s=0;", comp->name, this_jump->target);
         /* check that the target_index is defined, else search for the target comp index */
         if (!this_jump->target_index) {
           List_handle liter3 = list_iterate(instr->complist);
@@ -1743,11 +1732,11 @@ int cogen_raytrace(struct instr_def *instr)
         char *exp = exp_tostring(this_jump->condition);
         /* as there will be a neutron->index++, we subtract 1 to the target */
         if (this_jump->iterate) {
-          coutf("      if (++instrument->logic.Jump_%s_%s < %s) { /* test for iteration */",
+          coutf("      if (++_particle->_logic.Jump_%s_%s < %s) { /* test for iteration */",
             comp->name, this_jump->target, exp);
           coutf("        _particle->_index = %i;", this_jump->target_index-1);
           cout( "        flag_nocoordschange=1; // pass corrdinate transformations when jumping");
-          coutf("      } else " "instrument->logic.Jump_%s_%s=0; /* reset Jump loop and go forward */",
+          coutf("      } else " "_particle->_logic.Jump_%s_%s=0; /* reset Jump loop and go forward */",
             comp->name, this_jump->target);
         } else {
           coutf("      if (%s) {/* conditional JUMP to %s */", exp, this_jump->target);
@@ -2191,7 +2180,31 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#define MC_NUSERVAR 10");
   cout("#endif");
   cout("");
+  List_handle liter,liter2;
+  struct comp_inst *comp;        /* Component instance. */
 
+  /* Output a particle logic JUMP struct */
+  cout("/* Particle JUMP control logic */");
+  cout("struct particle_logic_struct {");
+  cout("int dummy;");
+  liter = list_iterate(instr->complist);
+  while((comp = list_next(liter)) != NULL) {
+    if (list_len(comp->jump) > 0) { // JUMP ITERATE counters
+      struct jump_struct *this_jump;
+      List_handle liter2;
+      liter2 = list_iterate(comp->jump);
+      while((this_jump = list_next(liter2))) {
+	/* create counter for JUMP iteration */
+	if (this_jump->iterate)
+	  coutf("  long Jump_%s_%s; /* the JUMP connection <from>_<to> */", comp->name, this_jump->target);
+      }
+      list_iterate_end(liter2);
+    }
+  }
+  cout("};");
+  list_iterate_end(liter);
+  cout("");
+  
   /* generate particle struct */
   cout("struct _struct_particle {");
   cout("  double x,y,z; /* position [m] */");
@@ -2214,6 +2227,8 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  long _absorbed;  /* flag set to TRUE when this event is to be removed/ignored */");
   cout("  long _scattered; /* flag set to TRUE when this event has interacted with the last component instance */");
   cout("  long _restore;   /* set to true if neutron event must be restored */");
+  /* Include the struct defined earlier holding information on JUMP logic*/
+  cout("  struct particle_logic_struct _logic;");
   /* Append variables from instr USERVARS block to particle struct (user vars,
   *  always double). Also store these strings in in the appropriate instrument
   *  list for later def/undef as state variables (see cogen_raytrace). */
@@ -2262,7 +2277,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   /*generate uservar return functions*/
   cout("/*Generated user variable handlers:*/");
   cout("");
-  List_handle liter,liter2;
+
   liter = list_iterate(instr->user_vars);
   cout("#pragma acc routine");
   cout("double particle_getvar(_class_particle *p, char *name, int *suc);");

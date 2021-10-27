@@ -22,7 +22,7 @@ do
 done
 
 #git checkout mcstas-3.0
-git pull
+#git pull
 
 WORK=`pwd`
 
