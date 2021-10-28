@@ -96,7 +96,6 @@ COMPONENT Sample1 = SAXSShells(
 )
 WHEN(SAMPLE==1) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
 
-
 COMPONENT Sample2 = SAXSCylinders(
 	xwidth = 0.01,
 	yheight = 0.01,
@@ -105,7 +104,6 @@ COMPONENT Sample2 = SAXSCylinders(
 	DetectorRadius = RadiusOfDetector
 )
 WHEN(SAMPLE==2) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
-
 
 COMPONENT Sample3= SAXSEllipticCylinders(
 	xwidth = 0.01,
@@ -116,7 +114,6 @@ COMPONENT Sample3= SAXSEllipticCylinders(
 )
 WHEN(SAMPLE==3) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
 
-
 COMPONENT Sample4= SAXSLiposomes(
 	xwidth = 0.01,
 	yheight = 0.01,
@@ -126,7 +123,6 @@ COMPONENT Sample4= SAXSLiposomes(
 )
 WHEN(SAMPLE==4) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
 
-/*
 COMPONENT Sample5= SAXSNanodiscs(
 	xwidth = 0.01,
 	yheight = 0.01,
@@ -135,9 +131,7 @@ COMPONENT Sample5= SAXSNanodiscs(
 	DetectorRadius = RadiusOfDetector
 )
 WHEN(SAMPLE==5) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
-*/
 
-/*
 COMPONENT Sample6= SAXSNanodiscsWithTags(
 	xwidth = 0.01,
 	yheight = 0.01,
@@ -146,10 +140,8 @@ COMPONENT Sample6= SAXSNanodiscsWithTags(
 	DetectorRadius = RadiusOfDetector
 )
 WHEN(SAMPLE==6) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
-*/
 
-
-
+/*
 COMPONENT Sample7 = SAXSPDB(
 	xwidth = 0.01,
 	yheight = 0.01,
@@ -161,8 +153,8 @@ COMPONENT Sample7 = SAXSPDB(
 	PDBFilepath = "3V03.pdb"
 )
 WHEN(SAMPLE==7) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
+*/
 /*
-
 COMPONENT Sample8 = SAXSCurve(
 	FileWithCurve = "Curve.mcp",
 	xwidth = 0.01,
@@ -183,7 +175,6 @@ COMPONENT Sample9 = SAXSNanodiscsFast(
 )
 WHEN(SAMPLE==9) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
 
-/*
 COMPONENT Sample10 = SAXSNanodiscsWithTagsFast(
 	xwidth = 0.01,
 	yheight = 0.01,
@@ -192,8 +183,7 @@ COMPONENT Sample10 = SAXSNanodiscsWithTagsFast(
 	DetectorRadius = RadiusOfDetector
 )
 WHEN(SAMPLE=10) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
-*/
-
+/*
 COMPONENT Sample11 = SAXSPDBFast(
 	xwidth = 0.01,
 	yheight = 0.01,
@@ -204,7 +194,7 @@ COMPONENT Sample11 = SAXSPDBFast(
     qMax = 0.9
 )
 WHEN(SAMPLE==11) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
-
+*/
 
 COMPONENT Beamstop = Beamstop(
 	radius = 0.001
