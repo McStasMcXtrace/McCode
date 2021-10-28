@@ -18,7 +18,7 @@
 *
 *
 * %Example: jumps=10 Detector: PSD_I=3.5
-* * %Example: jumps=100 Detector: PSD_I=26
+* %Example: jumps=100 Detector: PSD_I=26
 *
 * %P
 * jumps: [1] Number of jumps to do
@@ -29,7 +29,7 @@
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT Unittest_JUMP_WHEN(int jumps=10)
+DEFINE INSTRUMENT Unittest_JUMP_WHEN(int jumps=10, Pp0=0)
 
 DECLARE
 %{
