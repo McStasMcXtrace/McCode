@@ -14,7 +14,7 @@
 *
 * %Description
 *
-* %Example: kI=1.55 Detector: 1dpsd_I=4.3e+06
+* %Example: kI=1.55 Detector: dpsd1_I=4.3e+06
 *
 * %Parameters
 * kI: [inv AA]          incident wavevector
