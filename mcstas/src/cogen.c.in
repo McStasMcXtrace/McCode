@@ -1924,11 +1924,11 @@ int cogen_rt_funnel(struct instr_def *instr)
   while((comp = list_next(liter)) != NULL) {
     if (list_len(comp->jump) > 0) { // JUMP ITERATE counters
         printf("\nWARNING:\n   --> JUMP found at COMPONENT %i, %s \n", comp->index, comp->name);
-	printf("   --> JUMPS are not supported in FUNNEL mode and are ignored.\n");
-	printf("   --> Your instrument may give different output with FUNNEL.\n");
+	printf(" --> JUMPS are not supported in FUNNEL mode and are ignored.\n");
+	printf(" --> Your instrument may give different output with FUNNEL.\n");
         coutf("printf(\"\\nWARNING:\\n   --> JUMP found at COMPONENT %i, %s\\n\");", comp->index, comp->name);
-	coutf("printf(\"   --> JUMPS are not supported in FUNNEL mode and are ignored.\\n\");");
-	coutf("printf(\"   --> Your instrument may give different output with FUNNEL.\\n\");");
+	coutf("printf(\" --> JUMPS are not supported in FUNNEL mode and are ignored.\\n\");");
+	coutf("printf(\" --> Your instrument may give different output with FUNNEL.\\n\");");
     }
   }
   coutf("  #ifdef OPENACC");
