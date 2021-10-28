@@ -19,22 +19,17 @@
 * of monodisperse, cylindrical particles with elliptic cross section.
 *
 * %P
-* R1						; [AA]		First semiaxis of the cross section of the 
-*										elliptic cylinder.
-* R2						; [AA]		Second semiaxis of the cross section of the 
-*										elliptic cylinder.
-* Height					: [AA]		Height of the elliptic cylinder.
-* Concentration		  		: [mM]		Concentration of sample.
-* DeltaRho					: [cm/AA^3]	Excess scattering length density of the
-*										particles.
-* AbsorptionCrosssection  	: [1/m]		Absorption cross section of the sample.
-* xwidth    			  	: [m]  		Dimension of component in the x-direction.
-* yheight   			  	: [m]		Dimension of component in the y-direction.
-* zdepth    			  	: [m]		Dimension of component in the z-direction.
-* SampleToDetectorDistance	: [m]		Distance from sample to detector (for 
-*										focusing the scattered x-rays).
-* DetectorRadius          	: [m] 		Radius of the detector (for focusing the 
-*										scattered x-rays).
+* R1; [AA]              First semiaxis of the cross section of the elliptic cylinder.
+* R2; [AA]              Second semiaxis of the cross section of the elliptic cylinder.
+* Height: [AA]         Height of the cylinder.
+* Concentration: [mM]  Concentration of sample.
+* DeltaRho: [cm/AA^3]  Excess scattering length density of the particles.
+* AbsorptionCrosssection: [1/m]  Absorption cross section of the sample.
+* xwidth: [m]          Dimension of component in the x-direction.
+* yheight: [m]         Dimension of component in the y-direction.
+* zdepth: [m]          Dimension of component in the z-direction.
+* SampleToDetectorDistance: [m]  Distance from sample to detector (for focusing the scattered x-rays).
+* DetectorRadius: [m]  Radius of the detector (for focusing the scattered x-rays).
 *
 * %E
 *******************************************************************************/
@@ -44,19 +39,21 @@ DEFINE COMPONENT SAXSEllipticCylinders
 DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (R1 = 20.0, R2 = 40.0, Height = 100.0, Concentration = 0.01, DeltaRho = 1.0e-14, AbsorptionCrosssection = 0.0,
-		    		xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
-
+    xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
 OUTPUT PARAMETERS ()
+DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
+NOACC
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
-
+SHARE
+%{
+  #include <gsl/gsl_sf_bessel.h>
+%}
 DECLARE
 %{
-	// Declarations	
-	double Prefactor;
-	double Absorption;
-	double q;
-	double NumberDensity;
+  double Prefactor;
+  double Absorption;
+  double NumberDensity;
 %}
 
 INITIALIZE
@@ -76,7 +73,6 @@ INITIALIZE
 
 TRACE
 %{
-	// Declarations	
 	double l0; 
 	double l1; 
 	double l_full;
@@ -89,6 +85,7 @@ TRACE
 	double qx; 
 	double qy; 
 	double qz;
+	double q;
 	double k;
 	double dl;
 	double kx_i;
@@ -97,7 +94,7 @@ TRACE
 	double ProjectedRadius;
 	char Intersect = 0;
 
-	// Variables needed for integration over alpha
+	/* variables needed for integration over alpha */
 	int i;
 	const int NumberOfStepsInAlpha = 30;
 	double Alpha;
@@ -105,7 +102,7 @@ TRACE
 	const double AlphaMax = PI / 2.0;
 	const double AlphaStep = (AlphaMax - AlphaMin) / (1.0 * NumberOfStepsInAlpha);
 
-	// Variables needed in integration over beta
+	/* Variables needed in integration over beta */
 	int j;
 	const int NumberOfStepsInBeta = 30;
 	double Beta;
@@ -113,7 +110,6 @@ TRACE
 	const double BetaMax = PI / 2.0;
 	const double BetaStep = (BetaMax - BetaMin) / (1.0 * NumberOfStepsInBeta);
 
-	// Computation
 	Intersect = box_intersect(&l0, &l1, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
 
 	if (Intersect) {
@@ -121,7 +117,7 @@ TRACE
 		if (l0 < 0.0) {
 			fprintf(stderr, "Photon already inside sample %s - absorbing...\n", NAME_CURRENT_COMP);
 			ABSORB;
-    	}
+		}
 
 		// Compute properties of photon
 		k = sqrt(pow(kx, 2) + pow(ky, 2) + pow(kz, 2));
@@ -135,7 +131,7 @@ TRACE
 		ky_i = ky;
 		kz_i = kz;
 
-		// Generate new direction of photon
+		/* Generate new direction of photon */
 		randvec_target_circle(&kx, &ky, &kz, &SolidAngle, 0, 0, SampleToDetectorDistance, DetectorRadius);
 
 		NORM(kx, ky, kz);
@@ -144,14 +140,14 @@ TRACE
 		ky *= k;
 		kz *= k;
 
-		// Compute q
+		/* Compute q */
 		qx = kx_i - kx;
 		qy = ky_i - ky;
 		qz = kz_i - kz;
 
 		q = sqrt(pow(qx, 2) + pow(qy, 2) + pow(qz, 2));
 
-		// Compute scattering
+		/* Compute scattering */
 		Intensity = 0.0;
 
 		for (i = 0; i < NumberOfStepsInAlpha; ++i) {
@@ -161,7 +157,7 @@ TRACE
 				Beta = (j + 0.5) * BetaStep;
 				ProjectedRadius = sqrt(pow(R1 * sin(Beta), 2) + pow(R2 * cos(Beta), 2));
 
-				Formfactor1 = j1(q * ProjectedRadius * sin(Alpha)) / (q * ProjectedRadius * sin(Alpha));
+				Formfactor1 = gsl_sf_bessel_J1(q * ProjectedRadius * sin(Alpha)) / (q * ProjectedRadius * sin(Alpha));
 				Formfactor2 = sin(q * Height * cos(Alpha) / 2.0) / (q * Height * cos(Alpha) / 2.0);
 
 				Intensity += 2 / PI * sin(Alpha) * Prefactor * pow(2 * Formfactor1 * Formfactor2, 2) * AlphaStep * BetaStep;
@@ -176,7 +172,6 @@ TRACE
 
 MCDISPLAY
 %{
-	
 	box(0, 0, 0, xwidth, yheight, zdepth);
 %}
 
