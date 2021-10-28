@@ -51,19 +51,19 @@ SETTING PARAMETERS (AxisRatio = 1.4, NumberOfLipids = 130.0, AreaPerLipidHeadgro
     ScatteringLengthOfOneMSP = 3.34E-9, ScatteringLengthOfHeadgroup = 4.62E-11, ScatteringLengthOfCH2Tail = 6.71E-11, ScatteringLengthOfCH3Tail = 5.08E-12,
     Roughness = 3.5, Concentration = 0.01, AbsorptionCrosssection = 0.0,
     xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
-
 OUTPUT PARAMETERS ()
+DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
+NOACC
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
-
 SHARE
 %{
-	// Functions used to compute the formfactor of a cylinder
+	/* Functions used to compute the formfactor of a nanodisc */
 	double ND_FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, double Height, double Alpha, double Beta)
 	{
 		double ProjectedRadius = sqrt(pow(MajorSemiAxis * sin(Beta), 2) + pow(MinorSemiAxis * cos(Beta), 2));
 
-		double Formfactor1 = j1(q * ProjectedRadius * sin(Alpha)) / (q * ProjectedRadius * sin(Alpha));
+		double Formfactor1 = gsl_sf_bessel_J1(q * ProjectedRadius * sin(Alpha)) / (q * ProjectedRadius * sin(Alpha));
 		double Formfactor2 = sin(q * Height * cos(Alpha) / 2.0) / (q * Height * cos(Alpha) / 2.0);
 
 		return 2 * Formfactor1 * Formfactor2;

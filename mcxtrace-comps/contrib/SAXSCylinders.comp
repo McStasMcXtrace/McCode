@@ -35,22 +35,24 @@
 DEFINE COMPONENT SAXSCylinders
 
 DEFINITION PARAMETERS ()
-
 SETTING PARAMETERS (R = 40.0, Height = 100.0, Concentration = 0.01, DeltaRho = 1.0e-14, AbsorptionCrosssection = 0.0,
     xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
-
 OUTPUT PARAMETERS ()
+DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
+NOACC
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
-
+SHARE
+%{
+  #include <gsl/gsl_sf_bessel.h>
+%}
 DECLARE
 %{
-	// Declarations	
-	double Prefactor;
-	double Absorption;
-	double q;
-	double NumberDensity;
+  double Prefactor;
+  double Absorption;
+  double NumberDensity;
 %}
+
 
 INITIALIZE
 %{
@@ -82,6 +84,7 @@ TRACE
 	double qx; 
 	double qy; 
 	double qz;
+	double q;
 	double k;
 	double dl;
 	double kx_i;
@@ -105,7 +108,7 @@ TRACE
 		if (l0 < 0.0) {
 			fprintf(stderr, "Photon already inside sample %s - absorbing...\n", NAME_CURRENT_COMP);
 			ABSORB;
-    	}
+		}
 
 		// Compute properties of photon
 		k = sqrt(pow(kx, 2) + pow(ky, 2) + pow(kz, 2));
@@ -141,7 +144,7 @@ TRACE
 		for (i = 0; i < NumberOfSteps; ++i) {
 			Alpha = (i + 0.5) * AlphaStep;
     
-			Formfactor1 = j1(q * R * sin(Alpha)) / (q * R * sin(Alpha));
+			Formfactor1 = gsl_sf_bessel_J1(q * R * sin(Alpha)) / (q * R * sin(Alpha));
 			Formfactor2 = sin(q * Height * cos(Alpha) / 2.0) / (q * Height * cos(Alpha) / 2.0);
 
 			Intensity += sin(Alpha) * Prefactor * pow(2 * Formfactor1 * Formfactor2, 2) * AlphaStep;
