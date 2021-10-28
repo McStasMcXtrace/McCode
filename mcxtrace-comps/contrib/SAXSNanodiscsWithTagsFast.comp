@@ -65,162 +65,163 @@ DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgs
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 SHARE
 %{
-	/* Functions used for compution the intensity from a given liposome */
-	double NDTFFormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, double Height, double Alpha, double Beta)
-	{
-		double const ProjectedRadius = sqrt(pow(MajorSemiAxis * sin(Beta), 2) + pow(MinorSemiAxis * cos(Beta), 2));
+#include <gsl/gsl_sf_bessel.h>
 
-		double const Formfactor1 = gsl_sf_bessel_J1(q * ProjectedRadius * sin(Alpha)) / (q * ProjectedRadius * sin(Alpha));
-		double const Formfactor2 = sin(q * Height * cos(Alpha) / 2.0) / (q * Height * cos(Alpha) / 2.0);
+  /* Functions used for compution the intensity from a given liposome */
+  double NDTFFormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, double Height, double Alpha, double Beta)
+  {
+    double const ProjectedRadius = sqrt(pow(MajorSemiAxis * sin(Beta), 2) + pow(MinorSemiAxis * cos(Beta), 2));
 
-		return 2 * Formfactor1 * Formfactor2;
-	}
+    double const Formfactor1 = gsl_sf_bessel_J1(q * ProjectedRadius * sin(Alpha)) / (q * ProjectedRadius * sin(Alpha));
+    double const Formfactor2 = sin(q * Height * cos(Alpha) / 2.0) / (q * Height * cos(Alpha) / 2.0);
 
-	// Functions used to compute the characteristics of the histidine tags
-	double NDTFDebye(double q, double r)
-	{
-		// Variables needed in functions
-		double ReturnValue;
+    return 2 * Formfactor1 * Formfactor2;
+  }
 
-		// Constants needed in function
-		double Dummy1;
-		double Dummy2;
+  // Functions used to compute the characteristics of the histidine tags
+  double NDTFDebye(double q, double r)
+  {
+    // Variables needed in functions
+    double ReturnValue;
 
-		// Computation
-		Dummy1 = (q * q) * (r * r);
-		Dummy2 = 2 * ((exp(-Dummy1) + Dummy1 - 1) / (Dummy1 * Dummy1));
+    // Constants needed in function
+    double Dummy1;
+    double Dummy2;
 
-		ReturnValue = Dummy2;
+    // Computation
+    Dummy1 = (q * q) * (r * r);
+    Dummy2 = 2 * ((exp(-Dummy1) + Dummy1 - 1) / (Dummy1 * Dummy1));
 
-		return ReturnValue;
-	}
+    ReturnValue = Dummy2;
 
-	
-	double NDTFXiRodWithoutEndcaps(double q, double r, double l, double Alpha)
-	{
-		// Variables needed in function
-		double ReturnValue;
+    return ReturnValue;
+  }
 
-		// Computation
-		ReturnValue = gsl_sf_bessel_J0(q * r * sin(Alpha)) * sin(q * l * cos(Alpha) / 2.f) / (q * l * cos(Alpha) / 2.f);
 
-		return ReturnValue;
-	}
+  double NDTFXiRodWithoutEndcaps(double q, double r, double l, double Alpha)
+  {
+    // Variables needed in function
+    double ReturnValue;
 
-	double NDTFPsiHammouda(double x)
-	{
-		// Variables used in function
-		double ReturnValue;
+    // Computation
+    ReturnValue = gsl_sf_bessel_J0(q * r * sin(Alpha)) * sin(q * l * cos(Alpha) / 2.f) / (q * l * cos(Alpha) / 2.f);
 
-		// Computation
-		ReturnValue = (1.0 - exp(-pow(x, 2))) / pow(x, 2);
+    return ReturnValue;
+  }
 
-		return ReturnValue;
-	}
+  double NDTFPsiHammouda(double x)
+  {
+    // Variables used in function
+    double ReturnValue;
 
-	/* Computation of the intensity from a given nanodisc */
-	double NDTF_IntensityOfEmptyNanodiscsWithTags(double q, double MajorSemiAxis, double MinorSemiAxis, double ThicknessOfBelt,
-						      double HeightOfBelt, double HeightOfLipids, double HeightOfTails, double HeightOfCH3, double RadiusOfGyrationForHisTag, double VolumeOfOneHisTag,
-						      double DeltaRhoBelt, double DeltaRhoHead, double DeltaRhoCH2Tail, double DeltaRhoCH3Tail, double DeltaRhoTag)
-	{
-		double Intensity;
-		double IntensityPart;
-		double IntensityDisc;
+    // Computation
+    ReturnValue = (1.0 - exp(-pow(x, 2))) / pow(x, 2);
 
-		double AmplitudeOfBelt;
-		double AmplitudeOfHeads;
-		double AmplitudeOfCH2Tail;
-		double AmplitudeOfCH3Tail;
+    return ReturnValue;
+  }
 
-		double FormfactorOfBelt;
-		double FormfactorOfHeads;
-		double FormfactorOfCH2Tail;
-		double FormfactorOfCH3Tail;
+  /* Computation of the intensity from a given nanodisc */
+  double NDTF_IntensityOfEmptyNanodiscsWithTags(double q, double MajorSemiAxis, double MinorSemiAxis, double ThicknessOfBelt,
+						double HeightOfBelt, double HeightOfLipids, double HeightOfTails, double HeightOfCH3, double RadiusOfGyrationForHisTag, double VolumeOfOneHisTag,
+						double DeltaRhoBelt, double DeltaRhoHead, double DeltaRhoCH2Tail, double DeltaRhoCH3Tail, double DeltaRhoTag)
+  {
+    double Intensity;
+    double IntensityPart;
+    double IntensityDisc;
 
-		const double OuterMajorSemiAxis = MajorSemiAxis + ThicknessOfBelt;
-		const double OuterMinorSemiAxis = MinorSemiAxis + ThicknessOfBelt;
-		const double AverageRadiusOfBelt = sqrt(pow(OuterMajorSemiAxis, 2) + pow(OuterMinorSemiAxis, 2));
+    double AmplitudeOfBelt;
+    double AmplitudeOfHeads;
+    double AmplitudeOfCH2Tail;
+    double AmplitudeOfCH3Tail;
 
-		const double VolumeOfBelt    = PI * HeightOfBelt * OuterMajorSemiAxis * OuterMinorSemiAxis - PI * HeightOfBelt * MajorSemiAxis * MinorSemiAxis;
-		const double VolumeOfHeads   = PI * HeightOfLipids * MajorSemiAxis * MinorSemiAxis         - PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis;
-		const double VolumeOfCH2Tail = PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis          - PI * HeightOfCH3 * MajorSemiAxis * MinorSemiAxis;
-		const double VolumeOfCH3Tail = PI * HeightOfCH3 * MajorSemiAxis * MinorSemiAxis;
+    double FormfactorOfBelt;
+    double FormfactorOfHeads;
+    double FormfactorOfCH2Tail;
+    double FormfactorOfCH3Tail;
 
-		double Autocorrelation;
-		double Crosscorrelation;
-		double Disccorrelation;
-		double FormfactorOfTags;
+    const double OuterMajorSemiAxis = MajorSemiAxis + ThicknessOfBelt;
+    const double OuterMinorSemiAxis = MinorSemiAxis + ThicknessOfBelt;
+    const double AverageRadiusOfBelt = sqrt(pow(OuterMajorSemiAxis, 2) + pow(OuterMinorSemiAxis, 2));
 
-		// Variables needed for integration over alpha
-		int i;
-		const int NumberOfStepsInAlpha = 50;
-		double Alpha;
-		const double AlphaMin = 0.0;
-		const double AlphaMax = PI / 2.0;
-		const double AlphaStep = (AlphaMax - AlphaMin) / (1.0 * NumberOfStepsInAlpha);
+    const double VolumeOfBelt    = PI * HeightOfBelt * OuterMajorSemiAxis * OuterMinorSemiAxis - PI * HeightOfBelt * MajorSemiAxis * MinorSemiAxis;
+    const double VolumeOfHeads   = PI * HeightOfLipids * MajorSemiAxis * MinorSemiAxis         - PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis;
+    const double VolumeOfCH2Tail = PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis          - PI * HeightOfCH3 * MajorSemiAxis * MinorSemiAxis;
+    const double VolumeOfCH3Tail = PI * HeightOfCH3 * MajorSemiAxis * MinorSemiAxis;
 
-		// Variables needed in integration over beta
-		int j;
-		const int NumberOfStepsInBeta = 50;
-		double Beta;
-		const double BetaMin = 0.0;
-		const double BetaMax = PI / 2.0;
-		const double BetaStep = (BetaMax - BetaMin) / (1.0 * NumberOfStepsInBeta);
+    double Autocorrelation;
+    double Crosscorrelation;
+    double Disccorrelation;
+    double FormfactorOfTags;
 
-		// Computation
-		Intensity = 0.0;
+    // Variables needed for integration over alpha
+    int i;
+    const int NumberOfStepsInAlpha = 50;
+    double Alpha;
+    const double AlphaMin = 0.0;
+    const double AlphaMax = PI / 2.0;
+    const double AlphaStep = (AlphaMax - AlphaMin) / (1.0 * NumberOfStepsInAlpha);
 
-		for (i = 0; i < NumberOfStepsInAlpha; ++i) {
-			Alpha = (i + 0.5) * AlphaStep;
+    // Variables needed in integration over beta
+    int j;
+    const int NumberOfStepsInBeta = 50;
+    double Beta;
+    const double BetaMin = 0.0;
+    const double BetaMax = PI / 2.0;
+    const double BetaStep = (BetaMax - BetaMin) / (1.0 * NumberOfStepsInBeta);
 
-			for (j = 0; j < NumberOfStepsInBeta; ++j) {
-				Beta = (j + 0.5) * BetaStep;
+    // Computation
+    Intensity = 0.0;
 
-				// Compute formfactors
-				FormfactorOfBelt = (PI * HeightOfBelt * OuterMajorSemiAxis * OuterMinorSemiAxis * NDTFFormfactorCylinder(q, OuterMajorSemiAxis, OuterMinorSemiAxis, HeightOfBelt, Alpha, Beta) -
-								    PI * HeightOfBelt * MajorSemiAxis * MinorSemiAxis * NDTFFormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfBelt, Alpha, Beta)) /
-								   (PI * HeightOfBelt * OuterMajorSemiAxis * OuterMinorSemiAxis - PI * HeightOfBelt * MajorSemiAxis * MinorSemiAxis);
+    for (i = 0; i < NumberOfStepsInAlpha; ++i) {
+      Alpha = (i + 0.5) * AlphaStep;
 
-				FormfactorOfHeads = (PI * HeightOfLipids * MajorSemiAxis * MinorSemiAxis * NDTFFormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfLipids, Alpha, Beta) -
-								     PI * HeightOfTails  * MajorSemiAxis * MinorSemiAxis * NDTFFormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfTails , Alpha, Beta)) /
-								    (PI * HeightOfLipids * MajorSemiAxis * MinorSemiAxis - PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis);
+      for (j = 0; j < NumberOfStepsInBeta; ++j) {
+	Beta = (j + 0.5) * BetaStep;
 
-				FormfactorOfCH2Tail = (PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis * NDTFFormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfTails, Alpha, Beta) -
-								       PI * HeightOfCH3   * MajorSemiAxis * MinorSemiAxis * NDTFFormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfCH3  , Alpha, Beta)) /
-								      (PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis - PI * HeightOfCH3 * MajorSemiAxis * MinorSemiAxis);
+	// Compute formfactors
+	FormfactorOfBelt = (PI * HeightOfBelt * OuterMajorSemiAxis * OuterMinorSemiAxis * NDTFFormfactorCylinder(q, OuterMajorSemiAxis, OuterMinorSemiAxis, HeightOfBelt, Alpha, Beta) -
+			    PI * HeightOfBelt * MajorSemiAxis * MinorSemiAxis * NDTFFormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfBelt, Alpha, Beta)) /
+	  (PI * HeightOfBelt * OuterMajorSemiAxis * OuterMinorSemiAxis - PI * HeightOfBelt * MajorSemiAxis * MinorSemiAxis);
 
-				FormfactorOfCH3Tail = NDTFFormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfCH3, Alpha, Beta);
+	FormfactorOfHeads = (PI * HeightOfLipids * MajorSemiAxis * MinorSemiAxis * NDTFFormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfLipids, Alpha, Beta) -
+			     PI * HeightOfTails  * MajorSemiAxis * MinorSemiAxis * NDTFFormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfTails , Alpha, Beta)) /
+	  (PI * HeightOfLipids * MajorSemiAxis * MinorSemiAxis - PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis);
+
+	FormfactorOfCH2Tail = (PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis * NDTFFormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfTails, Alpha, Beta) -
+			       PI * HeightOfCH3   * MajorSemiAxis * MinorSemiAxis * NDTFFormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfCH3  , Alpha, Beta)) /
+	  (PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis - PI * HeightOfCH3 * MajorSemiAxis * MinorSemiAxis);
+
+	FormfactorOfCH3Tail = NDTFFormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfCH3, Alpha, Beta);
     
-				// Compute amplitudes
-				AmplitudeOfBelt    = DeltaRhoBelt * VolumeOfBelt * FormfactorOfBelt;
-				AmplitudeOfHeads   = DeltaRhoHead * VolumeOfHeads * FormfactorOfHeads;
-				AmplitudeOfCH2Tail = DeltaRhoCH2Tail * VolumeOfCH2Tail * FormfactorOfCH2Tail;
-				AmplitudeOfCH3Tail = DeltaRhoCH3Tail * VolumeOfCH3Tail * FormfactorOfCH3Tail;
+	// Compute amplitudes
+	AmplitudeOfBelt    = DeltaRhoBelt * VolumeOfBelt * FormfactorOfBelt;
+	AmplitudeOfHeads   = DeltaRhoHead * VolumeOfHeads * FormfactorOfHeads;
+	AmplitudeOfCH2Tail = DeltaRhoCH2Tail * VolumeOfCH2Tail * FormfactorOfCH2Tail;
+	AmplitudeOfCH3Tail = DeltaRhoCH3Tail * VolumeOfCH3Tail * FormfactorOfCH3Tail;
 
-				// Perform integration
-				IntensityDisc = pow(AmplitudeOfBelt + AmplitudeOfHeads + AmplitudeOfCH2Tail + AmplitudeOfCH3Tail, 2);
+	// Perform integration
+	IntensityDisc = pow(AmplitudeOfBelt + AmplitudeOfHeads + AmplitudeOfCH2Tail + AmplitudeOfCH3Tail, 2);
 
-				// Add the histidine tags
-		        FormfactorOfTags = NDTFXiRodWithoutEndcaps(q, AverageRadiusOfBelt + RadiusOfGyrationForHisTag, HeightOfBelt, Alpha);
+	// Add the histidine tags
+	FormfactorOfTags = NDTFXiRodWithoutEndcaps(q, AverageRadiusOfBelt + RadiusOfGyrationForHisTag, HeightOfBelt, Alpha);
 
-		        Crosscorrelation = 2.0 * pow(DeltaRhoTag * VolumeOfOneHisTag, 2) * pow(FormfactorOfTags, 2) * pow(NDTFPsiHammouda(q * RadiusOfGyrationForHisTag), 2);
+	Crosscorrelation = 2.0 * pow(DeltaRhoTag * VolumeOfOneHisTag, 2) * pow(FormfactorOfTags, 2) * pow(NDTFPsiHammouda(q * RadiusOfGyrationForHisTag), 2);
 
-		        Autocorrelation  = 2.0 * pow(DeltaRhoTag * VolumeOfOneHisTag, 2) * NDTFDebye(q, RadiusOfGyrationForHisTag);
+	Autocorrelation  = 2.0 * pow(DeltaRhoTag * VolumeOfOneHisTag, 2) * NDTFDebye(q, RadiusOfGyrationForHisTag);
 
-		        Disccorrelation  = 4.0 * (AmplitudeOfBelt + AmplitudeOfHeads + AmplitudeOfCH2Tail + AmplitudeOfCH3Tail) * 
-									     DeltaRhoTag * VolumeOfOneHisTag * FormfactorOfTags * NDTFPsiHammouda(q * RadiusOfGyrationForHisTag);
+	Disccorrelation  = 4.0 * (AmplitudeOfBelt + AmplitudeOfHeads + AmplitudeOfCH2Tail + AmplitudeOfCH3Tail) *
+	  DeltaRhoTag * VolumeOfOneHisTag * FormfactorOfTags * NDTFPsiHammouda(q * RadiusOfGyrationForHisTag);
 
-		        IntensityPart = IntensityDisc + Crosscorrelation + Autocorrelation + Disccorrelation;
+	IntensityPart = IntensityDisc + Crosscorrelation + Autocorrelation + Disccorrelation;
 
-				// Return the final intensity
-				Intensity += 2 / PI * sin(Alpha) * IntensityPart * AlphaStep * BetaStep;
-			}
-		}
+	// Return the final intensity
+	Intensity += 2 / PI * sin(Alpha) * IntensityPart * AlphaStep * BetaStep;
+      }
+    }
 
-		return Intensity;
-	}
-
-%}
+    return Intensity;
+  }
+  %}
 
 DECLARE
 %{
