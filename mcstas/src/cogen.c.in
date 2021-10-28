@@ -1630,7 +1630,7 @@ int cogen_raytrace(struct instr_def *instr)
   cout("  DEBUG_STATE();");
   printf("\n-----------------------------------------------------------\n");
   printf("\nGenerating single GPU kernel or single CPU section layout: \n");
-  /* intialize split counters */
+  /* intialize JUMP counters */
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL) {
     if (list_len(comp->jump) > 0) { // JUMP ITERATE counters
@@ -1916,6 +1916,18 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("  #endif");
   coutf("  #endif");
   coutf("");
+    /* Check if instrument uses JUMPS */
+  liter = list_iterate(instr->complist);
+  while((comp = list_next(liter)) != NULL) {
+    if (list_len(comp->jump) > 0) { // JUMP ITERATE counters
+        printf("\nWARNING:\n   --> JUMP spotted on COMPONENT %s \n", comp->name);
+	printf("   --> JUMPS are for now not supported in FUNNEL mode and thus ignored.\n");
+	printf("       Hence your instrument may give different output in in funnel-mode.\n");
+        coutf("printf(\"\\nWARNING:\\n   --> A JUMP clause was spotted on COMPONENT %s \\n\");", comp->name);
+	coutf("printf(\"   --> JUMPS are for now not supported in FUNNEL mode and thus ignored.\\n\");");
+	coutf("printf(\"       Hence your instrument may give different output in in funnel-mode.\\n\");");
+    }
+  }
   coutf("  #ifdef OPENACC");
   coutf("  loops = ceil((double)ncount/gpu_innerloop);");
   coutf("  if (ncount>gpu_innerloop) {");
@@ -1965,15 +1977,17 @@ int cogen_rt_funnel(struct instr_def *instr)
   int cpuonly_last=-1;
   int first=1;
   int do_split=0;
-  liter = list_iterate(instr->complist);
   printf("\n-----------------------------------------------------------\n");
   printf("\nGenerating GPU/CPU -DFUNNEL layout:\n");
+  liter = list_iterate(instr->complist);
   // iterate component list
   while((comp = list_next(liter)) != NULL) {
     List_handle liter2;
     if (comp->def->flag_noacc) {
       printf("Component %s is NOACC, CPUONLY=%i\n",comp->name,comp->cpuonly);
       printf("-> FUNNEL mode enabled, SPLIT within buffer.\n");
+      coutf("        #define JUMP_FUNNEL");
+      
     }
 
     if (!first && ((comp->cpuonly != cpuonly_last) || comp->split)) { // Terminate loop if we are shifting between processing units
