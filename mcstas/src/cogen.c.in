@@ -1658,11 +1658,11 @@ int cogen_raytrace(struct instr_def *instr)
     }
   }
 
+  cout("_particle->flag_nocoordschange=0; /* Init */");
   cout("  /* the main iteration loop for one incoming event */");
   cout("  while (!ABSORBED) { /* iterate event until absorbed */");
   cout("    _class_particle _particle_save;");
   cout("    /* send particle event to component instance, one after the other */");
-  cout("    char flag_nocoordschange=0;");
 
   /* now we produce the list of statements for each component index, with the attached logic */
   liter = list_iterate(instr->complist);
@@ -1693,15 +1693,17 @@ int cogen_raytrace(struct instr_def *instr)
     }
     // coordinate transformations (wrt to PREVIOUS)
     coutf("    /* begin component %s=%s() [%i] */", comp->name, comp->def->name, comp->index);
-    cout( "    if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change");
+    cout( "    if (!_particle->flag_nocoordschange) { // flag activated by JUMP to pass coords change");
     coutf("      if (_%s_var._rotation_is_identity) {", comp->name);
     coutf("        coords_get("
 	  "coords_add(coords_set(x,y,z), _%s_var._position_relative),"
 	  "&x, &y, &z);", comp->name);
-    cout( "      } else");
+    cout( "      } else { ");
     coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
-    cout( "    } else flag_nocoordschange=0;");
+    cout( "      }");
+    cout( "    }");
     coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
+    coutf("      _particle->flag_nocoordschange=0; /* Reset if we came here from a JUMP */");
     cout( "      _particle_save = *_particle;");
     coutf("      DEBUG_COMP(_%s_var._name);", comp->name);
     cout ("      DEBUG_STATE();");
@@ -1735,13 +1737,13 @@ int cogen_raytrace(struct instr_def *instr)
           coutf("      if (++_particle->_logic.Jump_%s_%s < %s) { /* test for iteration */",
             comp->name, this_jump->target, exp);
           coutf("        _particle->_index = %i;", this_jump->target_index-1);
-          cout( "        flag_nocoordschange=1; // pass corrdinate transformations when jumping");
+          cout( "        _particle->flag_nocoordschange=1; /* pass corrdinate transformations when jumping */");
           coutf("      } else\n" "          _particle->_logic.Jump_%s_%s=0; /* reset Jump loop and go forward */",
             comp->name, this_jump->target);
         } else {
           coutf("      if (%s) {/* conditional JUMP to %s */", exp, this_jump->target);
           coutf("        _particle->_index=%i;", this_jump->target_index-1);
-          cout( "        flag_nocoordschange=1; // pass corrdinate transformations when jumping");
+          cout( "        _particle->flag_nocoordschange=1; /* pass corrdinate transformations when jumping */");
           cout( "      }");
         }
       }
@@ -2227,6 +2229,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  long _absorbed;  /* flag set to TRUE when this event is to be removed/ignored */");
   cout("  long _scattered; /* flag set to TRUE when this event has interacted with the last component instance */");
   cout("  long _restore;   /* set to true if neutron event must be restored */");
+  cout("  long flag_nocoordschange;   /* set to true if neutron is jumping */");
   /* Include the struct defined earlier holding information on JUMP logic*/
   cout("  struct particle_logic_struct _logic;");
   /* Append variables from instr USERVARS block to particle struct (user vars,
