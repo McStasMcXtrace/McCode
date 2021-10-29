@@ -38,29 +38,25 @@
 
 DEFINE COMPONENT SAXSPDB
 
-DEFINITION PARAMETERS (NumberOfQBins = 200)
+DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (RhoSolvent = 9.4e-14, Concentration = 0.01, AbsorptionCrosssection = 0.0,
     xwidth, yheight, zdepth, 
-    SampleToDetectorDistance, DetectorRadius,
+		    SampleToDetectorDistance, DetectorRadius,int NumberOfQBins = 200,
     string PDBFilepath = "PDBfile.pdb")
 
 OUTPUT PARAMETERS ()
+DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
+NOACC
 
 /*X-ray PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
-
-
-DECLARE
+SHARE
 %{
-	double Absorption;
-	double NumberDensity;
-	#define OrderOfHarmonics 21
-
-	// GSL libraries
 	#include <gsl/gsl_sf_legendre.h>
 	#include <gsl/gsl_sf_bessel.h>
 	#include <complex.h>
+	#define SAXSPDBOrderOfHarmonics 21
 
 	// Simple mathematical functions
 	int Sign(double x) {
@@ -122,8 +118,8 @@ DECLARE
 		int j;
 
 		// Arrays used for storing Legendre and Bessel function values
-		double Legendre[OrderOfHarmonics + 1];
-		double Bessel[OrderOfHarmonics + 1];
+		double Legendre[SAXSPDBOrderOfHarmonics + 1];
+		double Bessel[SAXSPDBOrderOfHarmonics + 1];
 
 		// Residue information
 		const double Volume = Protein->Beads[ResidueID].Volume;
@@ -144,12 +140,12 @@ DECLARE
 		const double Concentration    = acos(x / (Radius * sin(Theta))) * Sign(y);
 
 		// Expand protein structure on harmonics
-		gsl_sf_bessel_jl_array(OrderOfHarmonics, q * Radius, Bessel);
+		gsl_sf_bessel_jl_array(SAXSPDBOrderOfHarmonics, q * Radius, Bessel);
 
-		for (i = 0; i <= OrderOfHarmonics; ++i) {
-		    gsl_sf_legendre_sphPlm_array(OrderOfHarmonics, i, cos(Theta), &Legendre[i]);
+		for (i = 0; i <= SAXSPDBOrderOfHarmonics; ++i) {
+		    gsl_sf_legendre_sphPlm_array(SAXSPDBOrderOfHarmonics, i, cos(Theta), &Legendre[i]);
 
-		    for(j = i; j <= OrderOfHarmonics; ++j) {
+		    for(j = i; j <= SAXSPDBOrderOfHarmonics; ++j) {
 		        Matrix[j][i] += sqrt(4.0 * PI) * cpow(_Complex_I, j) * DeltaRhoProtein * Bessel[j] * Legendre[j] * Polar(1.0, -i * Concentration);
 		    }
 		}
@@ -164,7 +160,7 @@ DECLARE
 		double Intensity = 0.0;
 
 		// Computation
-		for (i = 0; i <= OrderOfHarmonics; ++i) {
+		for (i = 0; i <= SAXSPDBOrderOfHarmonics; ++i) {
 
 		    for (j = 0; j <= i; ++j) {
 		        Intensity += ((j > 0) + 1.0) * pow(cabs(Matrix[i][j]), 2);
@@ -186,37 +182,6 @@ DECLARE
 		        Matrix[i][j] = 0.0;
 		    }
 		}
-	}
-
-	// Protein properties
-	double complex ** Matrix;
-	int NumberOfResidues;
-	ProteinStruct Protein;
-%}
-
-INITIALIZE
-%{
-	// Rescale concentration into number of aggregates per m^3 times 10^-4
-	NumberDensity = Concentration * 6.02214129e19;
-
-	// Initialization of the array
-	double complex ** ComplexMatrix(int A, int B)
-	{
-		int i;
-		int j;
-		double complex ** Matrix;
-
-		Matrix = (double complex **) malloc(A * sizeof(double complex *));
-
-		for (i = 0; i < A; ++i) {
-		    Matrix[i] = (double complex *) malloc(B * sizeof(double complex));
-
-		    for (j = 0; j < B; ++j) {
-		        Matrix[i][j] = 0.0;
-		    }
-		}
-
-		return Matrix;
 	}
 
 	// Function used to determine the number of residues in the .pdb-file
@@ -260,13 +225,6 @@ INITIALIZE
 		printf("Calculating scattering from %d residues...\n", NumberOfResidues);
 
         return NumberOfResidues;
-	}
-
-	// Declaration of the protein struct
-	void InitializeProtein(ProteinStruct *Protein, int NumberOfResiduesInFile)
-	{
-		Protein->NumberOfResidues = NumberOfResiduesInFile;
-		Protein->Beads = calloc((size_t) NumberOfResiduesInFile, sizeof(BeadStruct));
 	}
 
 	// Function used to read .pdb-file
@@ -443,23 +401,48 @@ INITIALIZE
 
 		fclose(PDBFile);
 	}
+%}
 
-	// Standard sample handling
-	if (!xwidth || !yheight || !zdepth) {
-		printf("%s: Sample has no volume - check parameters...! \n", NAME_CURRENT_COMP);
-	}
+DECLARE
+%{
+	double Absorption;
+	double NumberDensity;
 
-	Absorption = AbsorptionCrosssection;
+	// Protein properties
+	double complex ** Matrix;
+	//int NumberOfResidues;
+	ProteinStruct Protein;
+%}
 
-	printf("Initializing protein structure...\n");
-        NumberOfResidues = CountResidues(PDBFilepath);
-	InitializeProtein(&Protein, NumberOfResidues);
-	Matrix = ComplexMatrix(OrderOfHarmonics + 1, OrderOfHarmonics + 1);
+INITIALIZE
+%{
+  // Rescale concentration into number of aggregates per m^3 times 10^-4
+  NumberDensity = Concentration * 6.02214129e19;
 
-	printf("Creating protein structure...\n");
-	ReadAminoPDB(PDBFilepath, &Protein);
-	
-	printf("Initializations complete...\n");
+  int i,j;
+
+  Matrix = (double complex **) calloc(SAXSPDBOrderOfHarmonics+1,sizeof(double complex *));
+  for (i = 0; i <= SAXSPDBOrderOfHarmonics; ++i) {
+    Matrix[i] = (double complex *) calloc(SAXSPDBOrderOfHarmonics+1,sizeof(double complex));
+  }
+
+  //NumberOfResidues = CountResidues(PDBFilepath);
+
+  Protein.NumberOfResidues=CountResidues(PDBFilepath);//NumberOfResidues;
+  Protein.Beads=calloc(Protein.NumberOfResidues,sizeof(BeadStruct));
+
+
+  // Standard sample handling
+  if (!xwidth || !yheight || !zdepth) {
+    printf("Warning (%s): Sample has no volume - check parameters.\n", NAME_CURRENT_COMP);
+  }
+
+  Absorption = AbsorptionCrosssection;
+
+  //Matrix = ComplexMatrix(SAXSPDBOrderOfHarmonics + 1, SAXSPDBOrderOfHarmonics + 1);
+  
+  printf("INFO (%s): Creating protein structure from file %s\n",NAME_CURRENT_COMP, PDBFilepath);
+  ReadAminoPDB(PDBFilepath, &Protein);
 %}
 
 TRACE
@@ -527,9 +510,9 @@ TRACE
 		q = sqrt(pow(qx, 2) + pow(qy, 2) + pow(qz, 2));
 
 		// Compute scattering for a given q-value
-		ResetMatrix(Matrix, OrderOfHarmonics);
+		ResetMatrix(Matrix, SAXSPDBOrderOfHarmonics);
 
-		for (i = 0; i < NumberOfResidues; ++i) {
+		for (i = 0; i < Protein.NumberOfResidues; ++i) {
 			ExpandStructure(Matrix, &Protein, i, q, RhoSolvent);		
 		}
 
@@ -540,6 +523,15 @@ TRACE
 		
 		SCATTER;
 	}
+%}
+
+FINALLY
+%{
+  int i;
+  for (i = 0; i < SAXSPDBOrderOfHarmonics; ++i) {
+    free(Matrix[i]);
+  }
+  free(Matrix);
 %}
 
 MCDISPLAY
