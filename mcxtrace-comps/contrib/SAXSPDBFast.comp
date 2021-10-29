@@ -59,7 +59,9 @@ SHARE
 	#include <gsl/gsl_sf_legendre.h>
 	#include <gsl/gsl_sf_bessel.h>
 	#include <complex.h>
-	#define SAXSPDBFOrderOfHarmonics 21
+#ifndef SAXSPDB
+#define SAXSPDB
+	#define SAXSPDBOrderOfHarmonics 21
 
 	// Simple mathematical functions
 	int Sign(double x) {
@@ -121,8 +123,8 @@ SHARE
 		int j;
 
 		// Arrays used for storing Legendre and Bessel function values
-		double Legendre[SAXSPDBFOrderOfHarmonics + 1];
-		double Bessel[SAXSPDBFOrderOfHarmonics + 1];
+		double Legendre[SAXSPDBOrderOfHarmonics + 1];
+		double Bessel[SAXSPDBOrderOfHarmonics + 1];
 
 		// Residue information
 		const double Volume = Protein->Beads[ResidueID].Volume;
@@ -143,12 +145,12 @@ SHARE
 		const double Concentration    = acos(x / (Radius * sin(Theta))) * Sign(y);
 
 		// Expand protein structure on harmonics
-		gsl_sf_bessel_jl_array(SAXSPDBFOrderOfHarmonics, q * Radius, Bessel);
+		gsl_sf_bessel_jl_array(SAXSPDBOrderOfHarmonics, q * Radius, Bessel);
 
-		for (i = 0; i <= SAXSPDBFOrderOfHarmonics; ++i) {
-		    gsl_sf_legendre_sphPlm_array(SAXSPDBFOrderOfHarmonics, i, cos(Theta), &Legendre[i]);
+		for (i = 0; i <= SAXSPDBOrderOfHarmonics; ++i) {
+		    gsl_sf_legendre_sphPlm_array(SAXSPDBOrderOfHarmonics, i, cos(Theta), &Legendre[i]);
 
-		    for(j = i; j <= SAXSPDBFOrderOfHarmonics; ++j) {
+		    for(j = i; j <= SAXSPDBOrderOfHarmonics; ++j) {
 		        Matrix[j][i] += sqrt(4.0 * PI) * cpow(_Complex_I, j) * DeltaRhoProtein * Bessel[j] * Legendre[j] * Polar(1.0, -i * Concentration);
 		    }
 		}
@@ -229,7 +231,7 @@ SHARE
 
         return NumberOfResidues;
 	}
-	
+
 	// Function used to read .pdb-file
 	void ReadAminoPDB(char PDBFilename[256], ProteinStruct *Protein)
 	{
@@ -404,6 +406,7 @@ SHARE
 
 		fclose(PDBFile);
 	}
+#endif /*SAXSPDB*/
 %}
 
 DECLARE
@@ -436,9 +439,9 @@ INITIALIZE
 	double qDummy;
 	const double qStep = (qMax - qMin) / (1.0 * NumberOfQBins);
 
-	Matrix = (double complex **) calloc(SAXSPDBFOrderOfHarmonics+1,sizeof(double complex *));
-	for (i = 0; i <= SAXSPDBFOrderOfHarmonics; ++i) {
-	    Matrix[i] = (double complex *) calloc(SAXSPDBFOrderOfHarmonics+1,sizeof(double complex));
+	Matrix = (double complex **) calloc(SAXSPDBOrderOfHarmonics+1,sizeof(double complex *));
+	for (i = 0; i <= SAXSPDBOrderOfHarmonics; ++i) {
+	    Matrix[i] = (double complex *) calloc(SAXSPDBOrderOfHarmonics+1,sizeof(double complex));
 	}
 
 	Protein.NumberOfResidues = CountResidues(PDBFilepath);
@@ -453,7 +456,7 @@ INITIALIZE
 
 	// Computing scattering profile
 	for (i = 0; i < NumberOfQBins; ++i) {
-	    ResetMatrix(Matrix, SAXSPDBFOrderOfHarmonics);
+	    ResetMatrix(Matrix, SAXSPDBOrderOfHarmonics);
 
 	    qDummy = qMin + (i + 0.5) * qStep;
 
@@ -462,10 +465,10 @@ INITIALIZE
 	    }
 
 	    qArray[i] = qDummy;
-	    IArray[i] = ComputeIntensity(Matrix, SAXSPDBFOrderOfHarmonics);
+	    IArray[i] = ComputeIntensity(Matrix, SAXSPDBOrderOfHarmonics);
 	}
 
-	for (i = 0; i < SAXSPDBFOrderOfHarmonics; ++i) {
+	for (i = 0; i < SAXSPDBOrderOfHarmonics; ++i) {
 	    free(Matrix[i]);
 	}
 	free(Matrix);	

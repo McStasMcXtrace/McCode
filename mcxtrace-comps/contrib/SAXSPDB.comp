@@ -56,6 +56,8 @@ SHARE
 	#include <gsl/gsl_sf_legendre.h>
 	#include <gsl/gsl_sf_bessel.h>
 	#include <complex.h>
+#ifndef SAXSPDB
+#define SAXSPDB
 	#define SAXSPDBOrderOfHarmonics 21
 
 	// Simple mathematical functions
@@ -152,7 +154,7 @@ SHARE
 	}
 
 	// Function used to generate intensity for a given q-value
-	double ComputeIntensity(double complex ** Matrix) 
+	double ComputeIntensity(double complex ** Matrix, int order)
 	{
 		// Declarations
 		int i;
@@ -160,7 +162,7 @@ SHARE
 		double Intensity = 0.0;
 
 		// Computation
-		for (i = 0; i <= SAXSPDBOrderOfHarmonics; ++i) {
+		for (i = 0; i <= order; ++i) {
 
 		    for (j = 0; j <= i; ++j) {
 		        Intensity += ((j > 0) + 1.0) * pow(cabs(Matrix[i][j]), 2);
@@ -401,6 +403,7 @@ SHARE
 
 		fclose(PDBFile);
 	}
+#endif /*SAXSPDB*/
 %}
 
 DECLARE
@@ -512,7 +515,7 @@ TRACE
 			ExpandStructure(Matrix, &Protein, i, q, RhoSolvent);		
 		}
 
-	 	Intensity = ComputeIntensity(Matrix);
+	 	Intensity = ComputeIntensity(Matrix, SAXSPDBOrderOfHarmonics);
 
 		// Compute new weight
 		p *= l_full * SolidAngle / (4.0 * PI) * NumberDensity * Intensity * exp(- Absorption * (l + l1));
