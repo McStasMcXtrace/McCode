@@ -72,7 +72,7 @@ SHARE
   }
 
   // Function used to extract the scattering profile from a given curve
-  int LoadCurve(char Filename[], double** Q, double** I) 
+  int LoadCurve(char Filename[], double** Q, double** II)
   {
     // Declarations
     FILE* File;
@@ -104,7 +104,7 @@ SHARE
       }
     }
 
-    *I = IntensityArray;
+    *II = IntensityArray;
     *Q = qArray;
 
     return NumberOfDatapoints;
