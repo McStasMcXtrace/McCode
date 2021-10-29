@@ -426,8 +426,6 @@ INITIALIZE
     Matrix[i] = (double complex *) calloc(SAXSPDBOrderOfHarmonics+1,sizeof(double complex));
   }
 
-  //NumberOfResidues = CountResidues(PDBFilepath);
-
   Protein.NumberOfResidues=CountResidues(PDBFilepath);//NumberOfResidues;
   Protein.Beads=calloc(Protein.NumberOfResidues,sizeof(BeadStruct));
 
@@ -439,8 +437,6 @@ INITIALIZE
 
   Absorption = AbsorptionCrosssection;
 
-  //Matrix = ComplexMatrix(SAXSPDBOrderOfHarmonics + 1, SAXSPDBOrderOfHarmonics + 1);
-  
   printf("INFO (%s): Creating protein structure from file %s\n",NAME_CURRENT_COMP, PDBFilepath);
   ReadAminoPDB(PDBFilepath, &Protein);
 %}
