@@ -84,7 +84,7 @@ COMPONENT Sample0 = SAXSSpheres(
 	DetectorRadius = RadiusOfDetector
 )
 WHEN(SAMPLE==0) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
-/*
+
 COMPONENT Sample1 = SAXSShells(
 	xwidth = 0.01,
 	yheight = 0.01, 
@@ -150,7 +150,7 @@ COMPONENT Sample7 = SAXSPDB(
 	PDBFilepath = "3v03.pdb"
 )
 WHEN(SAMPLE==7) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
-/*
+
 COMPONENT Sample8 = SAXSCurve(
 	FileWithCurve = "Curve.mcp",
 	xwidth = 0.01,
@@ -160,7 +160,7 @@ COMPONENT Sample8 = SAXSCurve(
 	DetectorRadius = RadiusOfDetector
 )
 WHEN(SAMPLE==8) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
-*/
+
 COMPONENT Sample9 = SAXSNanodiscsFast(
 	xwidth = 0.01,
 	yheight = 0.01,
@@ -222,4 +222,3 @@ FINALLY
 %}
 
 END
-
