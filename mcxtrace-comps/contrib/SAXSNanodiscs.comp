@@ -51,105 +51,106 @@ SETTING PARAMETERS (AxisRatio = 1.4, NumberOfLipids = 130.0, AreaPerLipidHeadgro
     ScatteringLengthOfOneMSP = 3.34E-9, ScatteringLengthOfHeadgroup = 4.62E-11, ScatteringLengthOfCH2Tail = 6.71E-11, ScatteringLengthOfCH3Tail = 5.08E-12,
     Roughness = 3.5, Concentration = 0.01, AbsorptionCrosssection = 0.0,
     xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
-
 OUTPUT PARAMETERS ()
+DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
+NOACC
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
-
 SHARE
-%{
-	// Functions used to compute the formfactor of a cylinder
-	double ND_FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, double Height, double Alpha, double Beta)
-	{
-		double ProjectedRadius = sqrt(pow(MajorSemiAxis * sin(Beta), 2) + pow(MinorSemiAxis * cos(Beta), 2));
+  %{
+#include <gsl/gsl_sf_bessel.h>
 
-		double Formfactor1 = j1(q * ProjectedRadius * sin(Alpha)) / (q * ProjectedRadius * sin(Alpha));
-		double Formfactor2 = sin(q * Height * cos(Alpha) / 2.0) / (q * Height * cos(Alpha) / 2.0);
+  /* Functions used to compute the formfactor of a nanodisc */
+  double ND_FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, double Height, double Alpha, double Beta)
+  {
+    double ProjectedRadius = sqrt(pow(MajorSemiAxis * sin(Beta), 2) + pow(MinorSemiAxis * cos(Beta), 2));
 
-		return 2 * Formfactor1 * Formfactor2;
-	}
+    double Formfactor1 = gsl_sf_bessel_J1(q * ProjectedRadius * sin(Alpha)) / (q * ProjectedRadius * sin(Alpha));
+    double Formfactor2 = sin(q * Height * cos(Alpha) / 2.0) / (q * Height * cos(Alpha) / 2.0);
 
-	double ND_IntensityOfEmptyNanodiscs(double q, double MajorSemiAxis, double MinorSemiAxis, double ThicknessOfBelt,
-            double HeightOfBelt, double HeightOfLipids, double HeightOfTails, double HeightOfCH3,
-            double DeltaRhoBelt, double DeltaRhoHead, double DeltaRhoCH2Tail, double DeltaRhoCH3Tail)
-	{
-		// Declaration
-		double Intensity;
-		double IntensityPart;
+    return 2 * Formfactor1 * Formfactor2;
+  }
 
-		double AmplitudeOfBelt;
-		double AmplitudeOfHeads;
-		double AmplitudeOfCH2Tail;
-		double AmplitudeOfCH3Tail;
+  double ND_IntensityOfEmptyNanodiscs(double q, double MajorSemiAxis, double MinorSemiAxis, double ThicknessOfBelt,
+				      double HeightOfBelt, double HeightOfLipids, double HeightOfTails, double HeightOfCH3,
+				      double DeltaRhoBelt, double DeltaRhoHead, double DeltaRhoCH2Tail, double DeltaRhoCH3Tail)
+  {
+    double Intensity;
+    double IntensityPart;
 
-		double FormfactorOfBelt;
-		double FormfactorOfHeads;
-		double FormfactorOfCH2Tail;
-		double FormfactorOfCH3Tail;
+    double AmplitudeOfBelt;
+    double AmplitudeOfHeads;
+    double AmplitudeOfCH2Tail;
+    double AmplitudeOfCH3Tail;
 
-		const double OuterMajorSemiAxis = MajorSemiAxis + ThicknessOfBelt;
-		const double OuterMinorSemiAxis = MinorSemiAxis + ThicknessOfBelt;
+    double FormfactorOfBelt;
+    double FormfactorOfHeads;
+    double FormfactorOfCH2Tail;
+    double FormfactorOfCH3Tail;
 
-		const double VolumeOfBelt    = PI * HeightOfBelt * OuterMajorSemiAxis * OuterMinorSemiAxis - PI * HeightOfBelt * MajorSemiAxis * MinorSemiAxis;
-		const double VolumeOfHeads   = PI * HeightOfLipids * MajorSemiAxis * MinorSemiAxis         - PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis;
-		const double VolumeOfCH2Tail = PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis          - PI * HeightOfCH3 * MajorSemiAxis * MinorSemiAxis;
-		const double VolumeOfCH3Tail = PI * HeightOfCH3 * MajorSemiAxis * MinorSemiAxis;
+    double OuterMajorSemiAxis = MajorSemiAxis + ThicknessOfBelt;
+    double OuterMinorSemiAxis = MinorSemiAxis + ThicknessOfBelt;
 
-		// Variables needed for integration over alpha
-		int i;
-		const int NumberOfStepsInAlpha = 50;
-		double Alpha;
-		const double AlphaMin = 0.0;
-		const double AlphaMax = PI / 2.0;
-		const double AlphaStep = (AlphaMax - AlphaMin) / (1.0 * NumberOfStepsInAlpha);
+    double VolumeOfBelt    = PI * HeightOfBelt * OuterMajorSemiAxis * OuterMinorSemiAxis - PI * HeightOfBelt * MajorSemiAxis * MinorSemiAxis;
+    double VolumeOfHeads   = PI * HeightOfLipids * MajorSemiAxis * MinorSemiAxis         - PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis;
+    double VolumeOfCH2Tail = PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis          - PI * HeightOfCH3 * MajorSemiAxis * MinorSemiAxis;
+    double VolumeOfCH3Tail = PI * HeightOfCH3 * MajorSemiAxis * MinorSemiAxis;
 
-		// Variables needed in integration over beta
-		int j;
-		const int NumberOfStepsInBeta = 50;
-		double Beta;
-		const double BetaMin = 0.0;
-		const double BetaMax = PI / 2.0;
-		const double BetaStep = (BetaMax - BetaMin) / (1.0 * NumberOfStepsInBeta);
+    // Variables needed for integration over alpha
+    int i;
+    int NumberOfStepsInAlpha = 50;
+    double Alpha;
+    double AlphaMin = 0.0;
+    double AlphaMax = PI / 2.0;
+    double AlphaStep = (AlphaMax - AlphaMin) / (1.0 * NumberOfStepsInAlpha);
 
-		// Computation
-		Intensity = 0.0;
+    // Variables needed in integration over beta
+    int j;
+    int NumberOfStepsInBeta = 50;
+    double Beta;
+    double BetaMin = 0.0;
+    double BetaMax = PI / 2.0;
+    double BetaStep = (BetaMax - BetaMin) / (1.0 * NumberOfStepsInBeta);
 
-		for (i = 0; i < NumberOfStepsInAlpha; ++i) {
-                  Alpha = (i + 0.5) * AlphaStep;
+    // Computation
+    Intensity = 0.0;
 
-                  for (j = 0; j < NumberOfStepsInBeta; ++j) {
-                    Beta = (j + 0.5) * BetaStep;
+    for (i = 0; i < NumberOfStepsInAlpha; ++i) {
+      Alpha = (i + 0.5) * AlphaStep;
 
-                    // Compute formfactors
-                    FormfactorOfBelt = (PI * HeightOfBelt * OuterMajorSemiAxis * OuterMinorSemiAxis * ND_FormfactorCylinder(q, OuterMajorSemiAxis, OuterMinorSemiAxis, HeightOfBelt, Alpha, Beta) - 
-                        PI * HeightOfBelt * MajorSemiAxis * MinorSemiAxis * ND_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfBelt, Alpha, Beta)) /
-                      (PI * HeightOfBelt * OuterMajorSemiAxis * OuterMinorSemiAxis - PI * HeightOfBelt * MajorSemiAxis * MinorSemiAxis);
+      for (j = 0; j < NumberOfStepsInBeta; ++j) {
+	Beta = (j + 0.5) * BetaStep;
 
-                    FormfactorOfHeads = (PI * HeightOfLipids * MajorSemiAxis * MinorSemiAxis * ND_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfLipids, Alpha, Beta) -
-                        PI * HeightOfTails  * MajorSemiAxis * MinorSemiAxis * ND_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfTails , Alpha, Beta)) /
-                      (PI * HeightOfLipids * MajorSemiAxis * MinorSemiAxis - PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis);
+	// Compute formfactors
+	FormfactorOfBelt = (PI * HeightOfBelt * OuterMajorSemiAxis * OuterMinorSemiAxis * ND_FormfactorCylinder(q, OuterMajorSemiAxis, OuterMinorSemiAxis, HeightOfBelt, Alpha, Beta) -
+			    PI * HeightOfBelt * MajorSemiAxis * MinorSemiAxis * ND_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfBelt, Alpha, Beta)) /
+	  (PI * HeightOfBelt * OuterMajorSemiAxis * OuterMinorSemiAxis - PI * HeightOfBelt * MajorSemiAxis * MinorSemiAxis);
 
-                    FormfactorOfCH2Tail = (PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis * ND_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfTails, Alpha, Beta) -
-                        PI * HeightOfCH3   * MajorSemiAxis * MinorSemiAxis * ND_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfCH3  , Alpha, Beta)) /
-                      (PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis - PI * HeightOfCH3 * MajorSemiAxis * MinorSemiAxis);
+	FormfactorOfHeads = (PI * HeightOfLipids * MajorSemiAxis * MinorSemiAxis * ND_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfLipids, Alpha, Beta) -
+			     PI * HeightOfTails  * MajorSemiAxis * MinorSemiAxis * ND_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfTails , Alpha, Beta)) /
+	  (PI * HeightOfLipids * MajorSemiAxis * MinorSemiAxis - PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis);
 
-                    FormfactorOfCH3Tail = ND_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfCH3, Alpha, Beta);
+	FormfactorOfCH2Tail = (PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis * ND_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfTails, Alpha, Beta) -
+			       PI * HeightOfCH3   * MajorSemiAxis * MinorSemiAxis * ND_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfCH3  , Alpha, Beta)) /
+	  (PI * HeightOfTails * MajorSemiAxis * MinorSemiAxis - PI * HeightOfCH3 * MajorSemiAxis * MinorSemiAxis);
 
-                    // Compute amplitudes
-                    AmplitudeOfBelt    = DeltaRhoBelt * VolumeOfBelt * FormfactorOfBelt;
-                    AmplitudeOfHeads   = DeltaRhoHead * VolumeOfHeads * FormfactorOfHeads;
-                    AmplitudeOfCH2Tail = DeltaRhoCH2Tail * VolumeOfCH2Tail * FormfactorOfCH2Tail;
-                    AmplitudeOfCH3Tail = DeltaRhoCH3Tail * VolumeOfCH3Tail * FormfactorOfCH3Tail;
+	FormfactorOfCH3Tail = ND_FormfactorCylinder(q, MajorSemiAxis, MinorSemiAxis, HeightOfCH3, Alpha, Beta);
 
-                    // Perform integration
-                    IntensityPart = pow(AmplitudeOfBelt + AmplitudeOfHeads + AmplitudeOfCH2Tail + AmplitudeOfCH3Tail, 2);
+	// Compute amplitudes
+	AmplitudeOfBelt    = DeltaRhoBelt * VolumeOfBelt * FormfactorOfBelt;
+	AmplitudeOfHeads   = DeltaRhoHead * VolumeOfHeads * FormfactorOfHeads;
+	AmplitudeOfCH2Tail = DeltaRhoCH2Tail * VolumeOfCH2Tail * FormfactorOfCH2Tail;
+	AmplitudeOfCH3Tail = DeltaRhoCH3Tail * VolumeOfCH3Tail * FormfactorOfCH3Tail;
 
-                    Intensity += 2 / PI * sin(Alpha) * IntensityPart * AlphaStep * BetaStep;
-                  }
-		}
+	// Perform integration
+	IntensityPart = pow(AmplitudeOfBelt + AmplitudeOfHeads + AmplitudeOfCH2Tail + AmplitudeOfCH3Tail, 2);
 
-                return Intensity;
-        }
+	Intensity += 2 / PI * sin(Alpha) * IntensityPart * AlphaStep * BetaStep;
+      }
+    }
+
+    return Intensity;
+  }
 
 %}
 
@@ -170,7 +171,6 @@ DECLARE
 	double MinorSemiAxis;
 	double ThicknessOfBelt;
 
-	double HeightOfBelt;
 	double HeightOfLipids;
 	double HeightOfTails;
 	double HeightOfCH3;
@@ -275,7 +275,7 @@ TRACE
 		kx *= k;
 		ky *= k;
 		kz *= k;
-
+		
 		// Compute q
 		qx = kx_i - kx;
 		qy = ky_i - ky;
@@ -284,9 +284,9 @@ TRACE
 		q = sqrt(pow(qx, 2) + pow(qy, 2) + pow(qz, 2));
 
 		// Compute scattering
-		Intensity = exp(- pow(q * Roughness, 2)) * ND_IntensityOfEmptyNanodiscs(q, MajorSemiAxis, MinorSemiAxis, ThicknessOfBelt, HeightOfMSP, HeightOfLipids, 
-			HeightOfTails, HeightOfCH3, DeltaRhoBelt, DeltaRhoHead, DeltaRhoCH2Tail, DeltaRhoCH3Tail);
-
+		Intensity = exp(- pow(q * Roughness, 2))* ND_IntensityOfEmptyNanodiscs(q, MajorSemiAxis, MinorSemiAxis, ThicknessOfBelt, HeightOfMSP, HeightOfLipids, 
+										       HeightOfTails, HeightOfCH3, DeltaRhoBelt, DeltaRhoHead, DeltaRhoCH2Tail, DeltaRhoCH3Tail);
+		
 		p *= l_full * SolidAngle / (4.0 * PI) * NumberDensity * Intensity * exp(- Absorption * (l + l1));
 
 		SCATTER;

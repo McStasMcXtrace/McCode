@@ -72,7 +72,7 @@ SHARE
   }
 
   // Function used to extract the scattering profile from a given curve
-  int LoadCurve(char Filename[], double** Q, double** I) 
+  int LoadCurve(char Filename[], double** Q, double** II)
   {
     // Declarations
     FILE* File;
@@ -104,7 +104,7 @@ SHARE
       }
     }
 
-    *I = IntensityArray;
+    *II = IntensityArray;
     *Q = qArray;
 
     return NumberOfDatapoints;
@@ -115,9 +115,8 @@ SHARE
 DECLARE
 %{
   double Absorption;
-  double q;
-  double* Q;
-  double* I;
+  double* QQ;
+  double* II;
   double ForwardScattering;
   double Prefactor;
   int NumberOfDatapoints;
@@ -130,8 +129,8 @@ INITIALIZE
   NumberDensity = Concentration * 6.02214129e19;
 
   // Initializing curve from file
-  NumberOfDatapoints = LoadCurve(FileWithCurve, &Q, &I);
-  ForwardScattering = I[0];
+  NumberOfDatapoints = LoadCurve(FileWithCurve, &QQ, &II);
+  ForwardScattering = II[0];
 
   if (!xwidth || !yheight || !zdepth) {
     printf("%s: Sample has no volume, check parameters!\n", NAME_CURRENT_COMP);
@@ -153,6 +152,7 @@ TRACE
   double Weight;
   double IntensityPart;
   double SolidAngle;
+  double q;
   double qx; 
   double qy; 
   double qz;
@@ -205,20 +205,20 @@ TRACE
     q = sqrt(pow(qx, 2) + pow(qy, 2) + pow(qz, 2));
 
     // Discard photon, if q is out of range
-    if ((q < Q[0]) || (q > Q[NumberOfDatapoints - 1])) {
+    if ((q < QQ[0]) || (q > QQ[NumberOfDatapoints - 1])) {
       ABSORB;
     }
 
     // Find the first value of q in the curve larger than that of the photon
     i = 1;
 
-    while (q > Q[i]) {
+    while (q > QQ[i]) {
       ++i;
     }
 
     // Do a linear interpolation
-    Slope = (I[i] - I[i - 1]) / (Q[i] - Q[i - 1]);
-    Offset = I[i] - Slope * Q[i];
+    Slope = (II[i] - II[i - 1]) / (QQ[i] - QQ[i - 1]);
+    Offset = II[i] - Slope * QQ[i];
 
     Intensity = (Slope * q + Offset) / ForwardScattering;
 
