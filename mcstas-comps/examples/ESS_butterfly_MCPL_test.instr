@@ -35,7 +35,10 @@
 * Benchmarking website available at <a href="http://ess_butterfly.mcstas.org">http://ess_butterfly.mcstas.org</a>
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT ESS_butterfly_test(string sector="N",int beamline=1,Lmin=0.2,Lmax=20,c_performance=1,t_performance=1,int index=8,dist=0,cold=1,Yheight=0.03,delta=0,thres=0.003,filter=0,repeat=1,E_smear=0.1,pos_smear=0.01,dir_smear=0.01)
+DEFINE INSTRUMENT ESS_butterfly_test(string sector="N",
+  int beamline=1,Lmin=0.2,Lmax=20,c_performance=1,t_performance=1,
+  int index=8,dist=0,cold=1,Yheight=0.03,delta=0,thres=0.003,filter=0,repeat=1,
+  E_smear=0.1,pos_smear=0.01,dir_smear=0.01)
 
 
 DECLARE %{
