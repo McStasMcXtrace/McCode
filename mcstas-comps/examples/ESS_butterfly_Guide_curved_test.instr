@@ -13,7 +13,7 @@
 * Test instrument for the updated BF1 butterfly moderator design.
 *
 * The below example gives a 50-50 (statistics-wise) cold/thermal beam at beamline N10.
-* %Example: ESS_butterfly_MCPL_test.instr sector=N beamline=10 cold=0.5 Detector: Monitor2_xy1_I=4.48e+11
+* %Example: ESS_butterfly_MCPL_test.instr sector=N beamline=10 cold=0.5 Detector: Monitor2_xy1_I=4.4e+11
 *
 *
 * %P
