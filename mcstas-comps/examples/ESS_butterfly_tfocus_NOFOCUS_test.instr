@@ -11,9 +11,9 @@
 *
 * %D
 * Test instrument for the updated BF1 butterfly moderator design.
-* 
+*
 * The below example gives a 50-50 (statistics-wise) cold/thermal beam at beamline N10.
-* %Example: mcrun ESS_butterfly_test.instr sector=N beamline=1 cold=0.5 Detector: AutoTOFLend_I=1.5e+08
+* %Example: sector=N beamline=1 cold=0.5 Detector: AutoTOFLend_I=1.5e+08
 *
 * This variant is set up for comparison with ESS_butterfly_tfocus_test - but without focusing from the source.
 *
@@ -35,36 +35,61 @@
 * Benchmarking website available at <a href="http://ess_butterfly.mcstas.org">http://ess_butterfly.mcstas.org</a>
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT ESS_butterfly_tfocus_NOFOCUS_test(string sector="N",beamline=1,Lmin=0.2,Lmax=20,c_performance=1,t_performance=1,int index=0,dist=100,cold=0.5,Yheight=0.03,delta=0,tfocus_dist=10,tfocus_time=0.01,tfocus_width=0.001)
+DEFINE INSTRUMENT ESS_butterfly_tfocus_NOFOCUS_test(
+  string sector="N",
+  beamline=1,
+  Lmin=0.2,
+  Lmax=20,
+  c_performance=1,
+  t_performance=1,
+  int index=0,
+  dist=100,
+  cold=0.5,
+  Yheight=0.03,
+  delta=0,
+  tfocus_dist=10,
+  tfocus_time=0.01,
+  tfocus_width=0.001)
 
 DECLARE
 %{
-  int IsCold;
-  double SrcX, SrcY, SrcZ;
   double Theta;
   double MonTransl;
   double XW, YH;
   char options1[256],options2[256],options3[256],options4[256],options5[256];
   char srcdef[128];
   double WidthC=0.072,WidthT=0.108;
-  double WL;
   double lambdamin, lambdamax;
-  double CCold,CThermal;
-  double SurfSign;
-  double TCollmin;
-  double TCollmax;
-  double Emin,Emax;
   double EminTh=20, EmaxTh=100, EminC=0, EmaxC=20;
-  double Eneutron;
   double TFocus_dist, TFocus_min, TFocus_max;
+  double TCollmin;
+  double TCollmax;  
+  #pragma acc declare create(EminC,EmaxC,EminTh,EmaxTh,TCollmin,TCollmax)
+
 %}
+
+USERVARS
+%{
+  int IsCold;
+  double SrcX;
+  double SrcY;
+  double SrcZ;
+  double WL;
+  double SurfSign;
+  double Eneutron;
+  double CCold;
+  double CThermal;
+  double Emin;
+  double Emax;
+%}
+
 
 INITIALIZE
 %{
-  lambdamin=Lmin; 
+  lambdamin=Lmin;
   lambdamax=Lmax;
   XW=1.05*(WidthC+2*WidthT);
-  YH=1.05*Yheight; 
+  YH=1.05*Yheight;
   sprintf(options1,"user1 bins=201 limits=[-%g,%g]",XW/2,XW/2);
   sprintf(options4,"user1 bins=201 limits=[-%g,%g]",YH/2,YH/2);
   sprintf(options2,"user1 bins=201 limits=[-%g,%g], user2 bins=201 limits=[-%g,%g]",XW/2,XW/2,YH/2,YH/2);
@@ -89,6 +114,7 @@ INITIALIZE
     TFocus_min=0;
     TFocus_min=1e6;
   }
+  #pragma acc update device(EminC,EmaxC,EminTh,EmaxTh,TCollmin,TCollmax)
 %}
 
 TRACE
@@ -102,10 +128,11 @@ COMPONENT Source = ESS_butterfly(sector=sector,beamline=beamline,Lmin=Lmin,Lmax=
 AT (0,0,0) ABSOLUTE
 EXTEND %{
   /* Various logical flags for measuring brilliances etc. below */
-  IsCold=iscold;
-  SurfSign=surf_sign;
+  IsCold=round(rand01());//iscold;
+  SurfSign=rand01();//surf_sign;
+  SurfSign=SurfSign/fabs(SurfSign);
   SrcX=x;SrcY=y;SrcZ=z;
-  WL=lambda;
+  WL=(2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
   CCold=cos_cold;
   CThermal=cos_thermal;
   Eneutron=VS2E*(vx*vx + vy*vy + vz*vz);
@@ -142,31 +169,31 @@ COMPONENT Arm2 = Arm()
   AT (0,0,3.5) RELATIVE ABSOLUTE
 
 /* Measures the horizontal emmision coordinate of all neutrons - gives the "apparent width" of the moderators as seen from the beamline */
-COMPONENT MonND1 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
+COMPONENT MonND1 = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcX", username1="Horizontal position / [m]", options=options1, restore_neutron=1)
   WHEN(Eneutron<=Emax && Eneutron>=Emin) AT (0, 0, 1) RELATIVE Source
 
 /* Measures the horizontal emmision coordinate of all neutrons - gives the "apparent width" of the moderators as seen from the beamline */
-COMPONENT CWidth = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
+COMPONENT CWidth = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcX", username1="Horizontal position / [m]", options=options1, restore_neutron=1)
   WHEN(Eneutron<=EmaxC && Eneutron>=EminC) AT (0, 0, 1) RELATIVE Source
 
 /* Measures the horizontal emmision coordinate of all neutrons - gives the "apparent width" of the moderators as seen from the beamline */
-COMPONENT TWidth = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
+COMPONENT TWidth = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcX", username1="Horizontal position / [m]", options=options1, restore_neutron=1)
   WHEN(Eneutron<=EmaxTh && Eneutron>=EminTh) AT (0, 0, 1) RELATIVE Source
 
 /* Measures the vertical emmision coordinate of cold neutrons */
-COMPONENT MonND2 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcY, username1="Vertical position COLD / [m]", options=options4, restore_neutron=1)
+COMPONENT MonND2 = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcY", username1="Vertical position COLD / [m]", options=options4, restore_neutron=1)
   WHEN(IsCold) AT (0, 0, 1) RELATIVE Source
 
 /* Measures the vertical emmision coordinate of thermal neutrons */
-COMPONENT MonND2_2 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcY, username1="Vertical position THERMAL/ [m]", options=options4, restore_neutron=1)
+COMPONENT MonND2_2 = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcY", username1="Vertical position THERMAL/ [m]", options=options4, restore_neutron=1)
   WHEN(!IsCold) AT (0, 0, 1) RELATIVE Source
 
 /* 2D-plot of emmision coordinates for all neutrons */
-COMPONENT MonND3 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", user2=SrcY,username2="Vertical position / [m]", options=options2, restore_neutron=1)
+COMPONENT MonND3 = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcX", username1="Horizontal position / [m]", user2="SrcY",username2="Vertical position / [m]", options=options2, restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
 
 /* 2D-plot of (x,z) emmision coordinates for all neutrons */
-COMPONENT MonND4 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Emission position / [m]", user2=SrcZ, username2="Z-component of position / [m]", options="user1 bins=201 limits=[-0.3,0.3], user2 bins=201 limits=[-0.3,0.3]", restore_neutron=1)
+COMPONENT MonND4 = Monitor_nD(xwidth=XW, yheight=YH, user1="SrcX", username1="Emission position / [m]", user2="SrcZ", username2="Z-component of position / [m]", options="user1 bins=201 limits=[-0.3,0.3], user2 bins=201 limits=[-0.3,0.3]", restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
 
 COMPONENT AutoTOFL = Monitor_nD(xwidth=XW, yheight=YH, options="tof limits=[0 15e-3] bins=51, lambda limits=[0.1 20] bins=41", restore_neutron=1)
@@ -202,20 +229,10 @@ COMPONENT BrillmonTHRM_COLL = Brilliance_monitor(
       Freq =14, toflambda=1,tofcuts=0, srcarea=(100*0.06*100*2*Yheight/2.5), restore_neutron=1)
   WHEN (SurfSign==1 && (!IsCold) && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)>(TCollmin+delta) && fabs(SrcX)<(TCollmax+delta))  AT (0, 0, 1) RELATIVE Source
 
-COMPONENT ArmDummy = Arm()
-  AT (0, 0, TFocus_dist-0.00001) RELATIVE Source
-EXTEND %{
-  PROP_Z0;
-  double tmin,tmax;
-  tmin=mciptfocus_time-mciptfocus_width/2.0;
-  tmax=mciptfocus_time+mciptfocus_width/2.0;
-  if (t<tmin) ABSORB;
-  if (t>tmax) ABSORB;
-%}
 
  COMPONENT AutoTOFLend = Monitor_nD(xwidth=100, yheight=100, options=options5, restore_neutron=1)
   AT (0, 0, TFocus_dist) RELATIVE Source
-  
+
 /* /\* Uncomment these helper-arms to view "full" monolith *\/ */
 
 /* COMPONENT DummyArm1 = Arm() */
