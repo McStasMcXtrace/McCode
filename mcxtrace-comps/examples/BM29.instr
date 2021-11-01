@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: BM29
+* Instrument: ESRF_BM29
 *
 * %Identification
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
@@ -14,8 +14,11 @@
 * Toy model used for testing various sample components for solution-SAXS 
 * mimicking the geometry of the BM29 beamline at ESRF:
 * https://www.esrf.fr/home/UsersAndScience/Experiments/MX/About_our_beamlines/bm29/beamline-specifications.html
+* 
+* Note that this model does not include much of the beamline optics, instead it emulates their effect
+* by settgin relevant beam parameters from a model source.
 *
-* %Example BM29.instr Lambda=1 
+* %Example ESRF_BM29.instr Lambda=1 Detector: QMonitor_I=2.25593e-11 
 *
 * %Parameters
 * DistanceFromSourceToFirstPinhole: [m]	   Distance to first pinhole from source.
@@ -29,7 +32,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT BM29(
+DEFINE INSTRUMENT ESRF_BM29(
 	DistanceFromSourceToFirstPinhole = 31.4,
 	DistanceFromSourceToSecondPinhole = 42.5,
 	DistanceFromSecondPinholeToSample = 0.1,
