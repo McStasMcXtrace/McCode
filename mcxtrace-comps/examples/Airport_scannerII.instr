@@ -15,15 +15,15 @@
 * 
 * %Description
 * This instrument simply has a lab source, a few monitors and a multi-off object scene
-* by means of the Abs_objects component. BY sullpiying a control fiel and a set of 
-* off/ply-files a scene is put together which may be used for tomography style
+* by means of the Abs_objects component. By supplying a control file and a set of 
+* off/ply-files a scene is put together which may be used for radiography (and tomography) style
 * simulations. The default input file contains a single object: a mechanical socket.
 * 
 * %Example Airport_scannerII.instr -n1e5 posX=-0.25 posY=-0.3 Detector: psd2_I=0.000629398
 *
 * %Parameters
 * SFILE: [ ]    Name of file that contains the off/ply parameters for the scene
-* ANGLE: [ ]    Rotation around y-axis
+* ANGLE: [deg]    Rotation around y-axis
 * posX: [m]     Displacement of scene along x-axis
 * posY: [m]     Displacement of scene along y-axis
 * posZ: [m]     Displacement of scene along z-axis
