@@ -13,7 +13,7 @@
 * Test instrument for the updated BF1 butterfly moderator design.
 *
 * The below example gives a 50-50 (statistics-wise) cold/thermal beam at beamline N10.
-* %Example: mcrun ESS_butterfly_test.instr sector=N beamline=1 cold=0.5 Detector: AutoTOFLend_I=1.5e+08
+* %Example: sector=N beamline=1 cold=0.5 Detector: AutoTOFLend_I=1.5e+08
 *
 * This variant is set up for comparison with ESS_butterfly_tfocus_test - but without focusing from the source.
 *
@@ -60,15 +60,11 @@ DECLARE
   char srcdef[128];
   double WidthC=0.072,WidthT=0.108;
   double lambdamin, lambdamax;
-  double tmin, tmax;
-  double CCold,CThermal;
-  double SurfSign;
-  double TCollmin;
-  double TCollmax;
-  double Emin,Emax;
   double EminTh=20, EmaxTh=100, EminC=0, EmaxC=20;
   double TFocus_dist, TFocus_min, TFocus_max;
-  #pragma acc declare create(CCold,CThermal,EminC,EmaxC,Emin,Emax,EminTh,EmaxTh,TCollmin,TCollmax,tmin,tmax)
+  double TCollmin;
+  double TCollmax;  
+  #pragma acc declare create(EminC,EmaxC,EminTh,EmaxTh,TCollmin,TCollmax)
 
 %}
 
@@ -81,6 +77,10 @@ USERVARS
   double WL;
   double SurfSign;
   double Eneutron;
+  double CCold;
+  double CThermal;
+  double Emin;
+  double Emax;
 %}
 
 
@@ -90,8 +90,6 @@ INITIALIZE
   lambdamax=Lmax;
   XW=1.05*(WidthC+2*WidthT);
   YH=1.05*Yheight;
-  tmin=tfocus_time-tfocus_width/2.0; // workaround code
-  tmax=tfocus_time+tfocus_width/2.0; // workaround code
   sprintf(options1,"user1 bins=201 limits=[-%g,%g]",XW/2,XW/2);
   sprintf(options4,"user1 bins=201 limits=[-%g,%g]",YH/2,YH/2);
   sprintf(options2,"user1 bins=201 limits=[-%g,%g], user2 bins=201 limits=[-%g,%g]",XW/2,XW/2,YH/2,YH/2);
@@ -116,6 +114,7 @@ INITIALIZE
     TFocus_min=0;
     TFocus_min=1e6;
   }
+  #pragma acc update device(EminC,EmaxC,EminTh,EmaxTh,TCollmin,TCollmax)
 %}
 
 TRACE
@@ -230,17 +229,6 @@ COMPONENT BrillmonTHRM_COLL = Brilliance_monitor(
       Freq =14, toflambda=1,tofcuts=0, srcarea=(100*0.06*100*2*Yheight/2.5), restore_neutron=1)
   WHEN (SurfSign==1 && (!IsCold) && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)>(TCollmin+delta) && fabs(SrcX)<(TCollmax+delta))  AT (0, 0, 1) RELATIVE Source
 
-COMPONENT ArmDummy = Arm()
-  AT (0, 0, TFocus_dist-0.00001) RELATIVE Source
-EXTEND %{
-  PROP_Z0;
-  // jg-191021: see INITIALIZE for the workaround
-  //double tmin,tmax;
-  //tmin=tfocus_time-tfocus_width/2.0;
-  //tmax=tfocus_time+tfocus_width/2.0;
-  if (t<tmin) ABSORB;
-  if (t>tmax) ABSORB;
-%}
 
  COMPONENT AutoTOFLend = Monitor_nD(xwidth=100, yheight=100, options=options5, restore_neutron=1)
   AT (0, 0, TFocus_dist) RELATIVE Source
