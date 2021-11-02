@@ -1658,7 +1658,7 @@ int cogen_raytrace(struct instr_def *instr)
     }
   }
 
-  cout("_particle->flag_nocoordschange=0; /* Init */");
+  cout("  _particle->flag_nocoordschange=0; /* Init */");
   cout("  /* the main iteration loop for one incoming event */");
   cout("  while (!ABSORBED) { /* iterate event until absorbed */");
   cout("    _class_particle _particle_save;");
@@ -1767,7 +1767,7 @@ int cogen_raytrace(struct instr_def *instr)
         coutf("      else ABSORBED=0; // not SCATTERED within GROUP: always tries next");
     }
     
-    coutf("        _particle->_index++;");
+    coutf("      _particle->_index++;");
     coutf("      if (!ABSORBED) DEBUG_STATE();");
     coutf("    } /* end component %s [%i] */", comp->name, comp->index);
 
