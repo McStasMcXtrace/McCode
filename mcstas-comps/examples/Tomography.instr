@@ -23,7 +23,6 @@
 * isosurface to do thresholding for extraction of the object surface.
 *
 * %Example: omega=0 Detector: monitor_I=2.23492e-09
-* %Example: omega=0 Detector: monitor_I=2.23492e-09
 *
 * %Parameters
 * geometry: [string]  Name of the OFF file describing the sample shape
