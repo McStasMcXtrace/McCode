@@ -320,14 +320,8 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
   off_init_planes(a, b, &A1, &C1, &D1, &A2, &B2, &C2, &D2);
 
   int t_size=0;
-  //unsigned long vtxSize=vtxTable.rows, faceSize=faceTable.columns;  //Size of the corresponding tables
-  char sg[vtxSize];  //array telling if vertex is left or right of the plane
-  MCNUM popol[3*CHAR_BUF_LENGTH];
+  MCNUM popol[3*4]; /*3 dimensions and max 4 vertices to form a polygon*/
   unsigned long i=0,indPoly=0;
-  for (i=0; i < vtxSize; ++i)
-  {
-    sg[i]=off_sign(off_F(vtxArray[i].x,vtxArray[i].y,vtxArray[i].z,A1,0,C1,D1));
-  }
 
   //exploring the polygons :
   i=indPoly=0;
@@ -339,10 +333,15 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
     pol.normal= coords_set(0,0,1);
     unsigned long indVertP1=faceArray[++i];  //polygon's first vertex index in vtxTable
     int j=1;
+    /*check whether vertex is left or right of plane*/
+    char sg0=off_sign(off_F(vtxArray[indVertP1].x,vtxArray[indVertP1].y,vtxArray[indVertP1].z,A1,0,C1,D1));
     while (j<pol.npol)
     {
       //polygon's j-th vertex index in vtxTable
-      if (sg[indVertP1]!=sg[faceArray[i+j]]) //if the plane intersect the polygon
+      unsigned long indVertP2=faceArray[i+j];
+      /*check whether vertex is left or right of plane*/
+      char sg1=off_sign(off_F(vtxArray[indVertP2].x,vtxArray[indVertP2].y,vtxArray[indVertP2].z,A1,0,C1,D1));
+      if (sg0!=sg1) //if the plane intersect the polygon
         break;
 
       ++j;
