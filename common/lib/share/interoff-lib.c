@@ -79,7 +79,6 @@ void off_normal(Coords* n, polygon p)
 int off_pnpoly(polygon p, Coords v)
 {
   int i=0, c = 0;
-  MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
   MCNUM areax=0,areay=0,areaz=0;
 
   int pol2dx=0,pol2dy=1;          //2d restriction of the poly
