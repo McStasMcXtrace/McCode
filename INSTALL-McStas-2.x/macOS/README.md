@@ -13,9 +13,9 @@
 ## Steps to perform
 
 * Download the Intel package:
-  [McStas 2.7.1 for macOS on Intel](http://download.mcstas.org/mcstas-2.7.1/mac/x86_64/mcstas-2.7.1_x86_64.tgz)
+  [McStas 2.7.1 for macOS on Intel](https://download.mcstas.org/mcstas-2.7.1/mac/x86_64/mcstas-2.7.1_x86_64.tgz)
   or M1 package:
-  [McStas 2.7.1 for macOS on Apple Silicon / M1](http://download.mcstas.org/mcstas-2.7.1/mac/arm64/mcstas-2.7.1_arm64.tgz)
+  [McStas 2.7.1 for macOS on Apple Silicon / M1](https://download.mcstas.org/mcstas-2.7.1/mac/arm64/mcstas-2.7.1_arm64.tgz)
  and unpack it (e.g. double-clicking should work)
 
 * Open the resulting folder
