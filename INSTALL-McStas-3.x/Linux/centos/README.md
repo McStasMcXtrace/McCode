@@ -10,7 +10,7 @@ CentOS 7 and will require glibc-2.14 or newer. In some cases, the best solution 
 ## Add the McCode repo to your system
 ```bash
 cd /etc/yum.repos.d
-sudo wget http://packages.mccode.org/rpm/mccode.repo
+sudo wget https://packages.mccode.org/rpm/mccode.repo
 sudo yum update
 ```
 
@@ -60,7 +60,7 @@ latest McStas 2.x package
 all dependencies, and hence is preferred!
 
 ## Install without repo use
-If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at http://download.mcstas.org/mcstas-3.0/linux/mcstas-3.0-rpm64-CentOS_7/
+If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at https://download.mcstas.org/mcstas-3.0/linux/mcstas-3.0-rpm64-CentOS_7/
 
 
 ## In case of issues
