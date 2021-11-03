@@ -1694,9 +1694,11 @@ int cogen_raytrace(struct instr_def *instr)
     coutf("    /* begin component %s=%s() [%i] */", comp->name, comp->def->name, comp->index);
     cout( "    if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change");
     coutf("      if (_%s_var._rotation_is_identity) {", comp->name);
-    coutf("        coords_get("
+    coutf("        if(!%s_var._position_relative_is_zero) {", comp->name);
+    coutf("          coords_get("
 	  "coords_add(coords_set(x,y,z), _%s_var._position_relative),"
 	  "&x, &y, &z);", comp->name);
+    cout( "        }");
     cout( "      } else");
     coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
     cout( "    } else flag_nocoordschange=0;");
