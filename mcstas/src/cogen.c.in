@@ -2071,15 +2071,6 @@ int cogen_rt_funnel(struct instr_def *instr)
   cout( "");
   list_iterate_end(liter);
 
-  // finalize batch
-  coutf("    // finalize particle batch");
-  coutf("    #pragma acc parallel loop present(particles)");
-  coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
-  coutf("      _class_particle* _particle = &particles[pidx];");
-  coutf("      if (_particle->_index > 4)");
-  coutf("        ABSORBED++; /* absorbed when passed all components */");
-  coutf("    }");
-  coutf("");
   coutf("    // jump to next viable seed");
   coutf("    seed = seed + gpu_innerloop;");
   coutf("  } // outer loop / particle batches");
