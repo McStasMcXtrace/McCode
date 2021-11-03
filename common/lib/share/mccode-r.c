@@ -2637,6 +2637,11 @@ mcstatic void coords_norm(Coords* c) {
 	c->z /= temp;
 }
 
+/* coords_test_zero: check if zero vector*/
+int coords_test_zero(Coords a){
+  return ( a.x==0 && a.y==0 && a.z==0 );
+}
+
 /*******************************************************************************
 * The Rotation type implements a rotation transformation of a coordinate
 * system in the form of a double[3][3] matrix.
