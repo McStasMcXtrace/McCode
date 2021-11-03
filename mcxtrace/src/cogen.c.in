@@ -520,6 +520,7 @@ int cogen_comp_declare(struct comp_inst *comp)
     cout( "  Rotation _rotation_absolute;");
     cout( "  Rotation _rotation_relative; /* wrt PREVIOUS */");
     cout( "  int      _rotation_is_identity;");
+    cout( "  int      _position_relative_is_zero;");
     coutf("  _class_%s_parameters _parameters;", comp->def->name);
     cout("};");
     coutf("typedef struct _struct_%s _class_%s;", comp->def->name, comp->def->name);
