@@ -4,7 +4,7 @@
 After following the below steps your package manager should now be aware of mcstas
 ```bash
 cd /etc/apt/sources.list.d
-sudo wget http://packages.mccode.org/debian/mccode.list
+sudo wget https://packages.mccode.org/debian/mccode.list
 sudo apt-get update
 ```
 
@@ -43,7 +43,7 @@ Please report any trouble with the repository to [mcstas-users](mailto:mcstas-us
 
 # Installing without adding the repo
 If you want to attempt installing our debian packages manually via
-dpkg, the packages are available for download at http://download.mcstas.org/mcstas-2.7.1/linux/debian/
+dpkg, the packages are available for download at https://download.mcstas.org/mcstas-2.7.1/linux/debian/
 
 ## In case of issues
 Please report any trouble with the repository to [mcstas-users](mailto:mcstas-users@mcstas.org)
