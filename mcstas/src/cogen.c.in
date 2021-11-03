@@ -707,7 +707,7 @@ static void cogen_comp_init_position(
   coutf("  instrument->_position_absolute[%i] = _%s_var._position_absolute;", comp->index, comp->name);
   coutf("  instrument->_position_relative[%i] = _%s_var._position_relative;", comp->index, comp->name);
 
-  coutf("    _%s_var._position_relative_is_zero=  coords_test_zero(_%s_var._position__relative);", comp->name, comp->name);
+  coutf("    _%s_var._position_relative_is_zero =  coords_test_zero(_%s_var._position__relative);", comp->name, comp->name);
 
 } /* cogen_comp_init_position */
 
