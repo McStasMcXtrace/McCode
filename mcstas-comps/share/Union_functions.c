@@ -53,21 +53,25 @@ int number_of_dashes;
 struct pointer_to_1d_int_list {
 int num_elements;
 int *elements;
+#pragma acc shape(elements[0:num_elements]) init_needed(num_elements)
 };
 
 struct pointer_to_1d_double_list {
 int num_elements;
 double *elements;
+#pragma acc shape(elements[0:num_elements]) init_needed(num_elements)
 };
 
 struct pointer_to_1d_coords_list {
 int num_elements;
 Coords *elements;
+#pragma acc shape(elements[0:num_elements]) init_needed(num_elements)
 };
 
 struct lines_to_draw{
 int number_of_lines;
 struct line_segment *lines;
+#pragma acc shape(lines[0:number_of_lines]) init_needed(number_of_lines)
 };
 
 // 2D lists not needed anyway
@@ -110,6 +114,7 @@ struct focus_data_array_struct
 {
 struct focus_data_struct *elements;
 int num_elements;
+#pragma acc shape(elements[0:num_elements]) init_needed(num_elements)
 };
 
 struct Detector_3D_struct {
@@ -327,6 +332,7 @@ struct logger_for_each_process_list {
 struct loggers_struct {
   int num_elements;
   struct logger_for_each_process_list *p_logger_volume;
+  #pragma acc shape(p_logger_volume[0:num_elements]) init_needed(num_elements)
 };
 
 
@@ -1358,13 +1364,15 @@ struct tagging_tree_node_struct *goto_volume_node(struct tagging_tree_node_struc
     
     // Debug phase
     //printf("Tagging: going from volume %d to volume %d, which is index number %d on it's next volume list \n",current_volume,next_volume,next_volume_list_index);
+    #ifndef OPENACC
     if (next_volume_list_index == -1) {
         printf("ERROR in Union component, tagging or destination system failed, next volume was not on next volume list\n");
         printf("current_volume = %d, next_volume = %d \n",current_volume,next_volume);
         print_1d_int_list(Volumes[current_volume]->geometry.destinations_list,"destinations_list for current volume");
         exit(1);
     }
-    
+    #endif
+
     // Either create a new node if it has not been created yet, or travel down the tree
     if (current_node->volume_branches[next_volume_list_index] == NULL) {
       if (stop_creating_nodes == 0) {
@@ -2517,6 +2525,7 @@ int inside_function(struct Volume_struct *parent_volume, struct Volume_struct *c
         if (cone_within_box(&child_volume->geometry,&parent_volume->geometry)) return 1;
     }
     else {
+        #ifndef OPENACC
         printf("Need within function for type: ");
         printf("%s",parent_volume->geometry.shape);
         printf(" and type: ");
@@ -2524,6 +2533,7 @@ int inside_function(struct Volume_struct *parent_volume, struct Volume_struct *c
         printf(".\n");
         printf("It is not yet supported to mix mesh geometries with the basic shapes, but several mesh geometries are allowed.\n");
         exit(1);
+	#endif
     }
     
     return 0;
