@@ -1039,6 +1039,7 @@ TRACE
   // Could be improved by using the precompiler instead as ncount times the number of Union_masters could be avoided.
   if (global_master_list_master->elements[0].component_index == INDEX_CURRENT_COMP) {
     // If this is the first Union master, clean up logger data for rays that did not make it through Union components
+    #ifndef OPENACC
     for (log_index=loggers_with_data_array.used_elements-1;log_index>-1;log_index--) {
       loggers_with_data_array.logger_pointers[log_index]->function_pointers.clear_temp(&loggers_with_data_array.logger_pointers[log_index]->data_union);
     }
@@ -1047,6 +1048,7 @@ TRACE
       abs_loggers_with_data_array.abs_logger_pointers[log_index]->function_pointers.clear_temp(&abs_loggers_with_data_array.abs_logger_pointers[log_index]->data_union);
     }
     abs_loggers_with_data_array.used_elements = 0;
+    #endif
   }
   tagging_conditional_extend = 0;
   for (iterator=0;iterator<max_conditional_extend_index+1;iterator++) {
@@ -1094,7 +1096,9 @@ TRACE
   if (allow_inside_start == 0 && starting_lists.allowed_starting_volume_logic_list.elements[current_volume] == 0) {
     printf("ERROR, ray ''teleported'' into Union component %s, if intentional, set allow_inside_start=1\n", NAME_CURRENT_COMP);
     // NEED ERROR FLAG: Need to set an error flag that is read in finally to warn user of problem.
+    #ifndef OPENACC
     exit(1);
+    #endif
   }
   // Warn the user that rays have appeared inside a volume instead of outside as expected
   if (starting_volume_warning == 0 && current_volume != 0) {
@@ -1983,11 +1987,13 @@ TRACE
             #endif
         }
         
+	#ifndef OPENACC
         // Record final position here and write to file
         MPI_MASTER(
             //if (record_absorption == 1 && abs_weight_factor < 1.0) record_abs_to_file(r_old, time_old, r, t, initial_weight*(1.0-abs_weight_factor), current_volume, mcget_run_num(), &absorption_index, absorption_event_data);
             if (record_absorption == 1) record_abs_to_file(r_old, time_old, r, t, initial_weight*(1.0-abs_weight_factor), current_volume, mcget_run_num(), &absorption_index, absorption_event_data);
         );
+	#endif
         
     } else { // Here because a shortest time is not found
         if (current_volume == 0) {
@@ -2024,11 +2030,13 @@ TRACE
             
             //exit(1); // temp for debug
             
+            #ifndef OPENACC
             if (component_error_msg > 100) {
                 printf("To many errors encountered, exiting. \n");
                 // need ERROR FLAG to be read in finally which can warn the user of problems!
                 exit(1);
             }
+	    #endif
         }
     }
     /*
@@ -2066,6 +2074,7 @@ TRACE
     // Loggers attatched to specific volumes need to be handled with care to avoid looping over all loggers for every ray
     //for (log_index=0;log_index<loggers_with_data_array.used_elements;log_index++) {
     // TEST
+    #ifndef OPENACC
     if (enable_conditionals == 1) {
       for (log_index=loggers_with_data_array.used_elements-1;log_index>-1;log_index--) {
         // Check all conditionals attatched to the current logger
@@ -2192,6 +2201,7 @@ TRACE
       }
       
     }
+    
         
     if (enable_tagging && stop_tagging_ray == 0) {
       conditional_status = 1;
@@ -2225,7 +2235,7 @@ TRACE
         #endif
       }
     }
-        
+    #endif    
     // Move the rays a nano meter away from the surface it left, in case activation counter > 1, this will prevent the ray from starting on a volume boundery
     x += vx*1E-9; y += vy*1E-9; z += vz*1E-9; t += 1E-9;
         
