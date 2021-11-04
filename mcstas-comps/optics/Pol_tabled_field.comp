@@ -48,9 +48,14 @@ SHARE
 %{
   %include "read_table-lib"
   %include "interpolation-lib"
-  %include "pol-lib"
 
+  // Polarisation-defines ala pol-lib
+  #define tabled_pol_omegaL (-2 * PI * 29.16e6) /* MHz*rad/Tesla */
+  #define tabled_pol_mu0 (4*M_PI*1e-7)
+  #define tabled_pol_angular_accuracy (1.0*DEG2RAD)
+  #define tabled_pol_initial_timestep 1e-5;
 
+  
 #pragma acc routine seq
   int table_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz,
       struct interpolator_struct *interpolator)
@@ -67,60 +72,61 @@ SHARE
   double fmin(double, double);
 
   /*most of this function is borrowed from SimpleNumMagnetPrecession in pol-lib.c*/
+#pragma acc routine seq
   int prop_precess(_class_particle *_particle, struct interpolator_struct *interpolator, double dt){
 
-    double Bx, By, Bz, mc_pol_phiz;
+    double Bx, By, Bz, tabled_pol_phiz;
     double BxStart, ByStart, BzStart, Bstart;
     double BxTemp, ByTemp, BzTemp, Btemp;
-    double Bstep, mc_pol_timeStep, mc_pol_sp;
-    const double mc_pol_spThreshold  = cos(mc_pol_angular_accuracy);
+    double Bstep, tabled_pol_timeStep, tabled_pol_sp;
+    const double tabled_pol_spThreshold  = cos(tabled_pol_angular_accuracy);
     _class_particle *pp = _particle;
     table_magnetic_field(pp->x, pp->y, pp->z, pp->t,&BxTemp, &ByTemp, &BzTemp,interpolator);
 
     do {
 
-      Bx = 0; By = 0; Bz = 0; mc_pol_phiz = 0;
+      Bx = 0; By = 0; Bz = 0; tabled_pol_phiz = 0;
       BxStart = BxTemp; ByStart = ByTemp; BzStart = BzTemp;
       Bstart = sqrt(BxStart*BxStart + ByStart*ByStart + BzStart*BzStart);
 
-      mc_pol_timeStep = mc_pol_initial_timestep;
+      tabled_pol_timeStep = tabled_pol_initial_timestep;
 
-      /*check if we need to take multiple steps of maximum size mc_pol_timeStep*/
-      if(dt<mc_pol_timeStep){
-        mc_pol_timeStep = dt;
+      /*check if we need to take multiple steps of maximum size tabled_pol_timeStep*/
+      if(dt<tabled_pol_timeStep){
+        tabled_pol_timeStep = dt;
       }
       double xp,yp,zp; 
       do {
-        xp = pp->x+ pp->vx*mc_pol_timeStep;
-        yp = pp->y+ pp->vy*mc_pol_timeStep;
-        zp = pp->z+ pp->vz*mc_pol_timeStep;
+        xp = pp->x+ pp->vx*tabled_pol_timeStep;
+        yp = pp->y+ pp->vy*tabled_pol_timeStep;
+        zp = pp->z+ pp->vz*tabled_pol_timeStep;
 
-        table_magnetic_field(xp, yp, zp,pp->t+mc_pol_timeStep, &BxTemp, &ByTemp, &BzTemp,interpolator);
+        table_magnetic_field(xp, yp, zp,pp->t+tabled_pol_timeStep, &BxTemp, &ByTemp, &BzTemp,interpolator);
         /* not so elegant, but this is how we make sure that the steps decrease
            when the WHILE condition is not met*/
-        mc_pol_timeStep *= 0.5;
+        tabled_pol_timeStep *= 0.5;
 
         Btemp = sqrt(BxTemp*BxTemp + ByTemp*ByTemp + BzTemp*BzTemp);
 
-        mc_pol_sp = scalar_prod(BxStart, ByStart, BzStart, BxTemp, ByTemp, BzTemp);
-        mc_pol_sp /= Bstart*Btemp;
+        tabled_pol_sp = scalar_prod(BxStart, ByStart, BzStart, BxTemp, ByTemp, BzTemp);
+        tabled_pol_sp /= Bstart*Btemp;
 
-      } while (mc_pol_sp<mc_pol_spThreshold && mc_pol_timeStep>FLT_EPSILON);
+      } while (tabled_pol_sp<tabled_pol_spThreshold && tabled_pol_timeStep>FLT_EPSILON);
 
-      mc_pol_timeStep*=2;
+      tabled_pol_timeStep*=2;
 
       // update coordinate values
       pp->x = xp;
       pp->y = yp;
       pp->z = zp;
-      pp->t += mc_pol_timeStep;
-      dt -= mc_pol_timeStep;
+      pp->t += tabled_pol_timeStep;
+      dt -= tabled_pol_timeStep;
 
       /*precess around mean magnetic field*/
       Bx = 0.5 * (BxStart + BxTemp);
       By = 0.5 * (ByStart + ByTemp);
       Bz = 0.5 * (BzStart + BzTemp);
-      mc_pol_phiz = fmod(sqrt(Bx*Bx+ By*By+ Bz*Bz) * mc_pol_timeStep*mc_pol_omegaL, 2*PI);
+      tabled_pol_phiz = fmod(sqrt(Bx*Bx+ By*By+ Bz*Bz) * tabled_pol_timeStep*tabled_pol_omegaL, 2*PI);
 
       /* Do the neutron spin precession for the small timestep*/
       if(!(Bx==0 && By==0 && Bz==0)) {
@@ -129,7 +135,7 @@ SHARE
         double sy_in = pp->sy;
         double sz_in = pp->sz;
 
-        rotate(pp->sx, pp->sy, pp->sz, sx_in,sy_in,sz_in, mc_pol_phiz, Bx, By, Bz);
+        rotate(pp->sx, pp->sy, pp->sz, sx_in,sy_in,sz_in, tabled_pol_phiz, Bx, By, Bz);
       }
 
     } while (dt>0);
@@ -147,7 +153,7 @@ DECLARE
 
 INITIALIZE
 %{
-  enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
+  enum shapes {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY};
   /* these default field functions are part of pol-lib */
   /*initialize the interpolation vertex structure*/
 

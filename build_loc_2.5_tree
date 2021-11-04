@@ -38,6 +38,8 @@ export FC=gfortran
 ./mkdist mcstas-tools-python-mcgui 2.5 tools/Python/mcgui/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mccodelib 2.5 tools/Python/mccodelib/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph 2.5 tools/Python/mcdisplay/pyqtgraph/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mcdisplay-webgl 2.5 tools/Python/mcdisplay/webgl/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mcplot-pyqtgraph 2.5 tools/Python/mcplot/pyqtgraph/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-matplotlib 2.5 tools/Python/mcplot/matplotlib/ "" deb64 "" -- justinst
 
 export MCINSTALL_PREFIX=$HOME/McStas/mcstas/2.5/

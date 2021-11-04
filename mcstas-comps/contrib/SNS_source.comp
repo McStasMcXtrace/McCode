@@ -469,19 +469,22 @@ void tPcalc(double (*func)(double,double,double*,double*),double llim, double hl
 
 DECLARE
 %{
-  double hdiv;
-  double vdiv;
   double p_in;
   double *inxvec;
+  #pragma acc shape(inxvec[0:500])
   double *inyvec;
+  #pragma acc shape(inyvec[0:500])
   double *Pvec;
+  #pragma acc shape(Pvec[0:500])
   int xylength;
   double *tcol;
+  #pragma acc shape(tcol[0:200])
   double *Ecol;
-  double *txval;
-  double *tyval;
+  #pragma acc shape(Ecol[0:200])
   double *tPvec;
+  #pragma acc shape(tPvec[0:500])
   double **Ptmat;
+  #pragma acc shape(Ptmat[0:200][0:200])
   double EPmax;
   double EPmin;
   double INorm;
@@ -499,16 +502,17 @@ INITIALIZE
 %{
   FILE *fp;
   double llim, hlim,ltlim,htlim,junk;
-  double tycol[200];
   double **Imat;
   int idx1,idx2;
+
+  double tyval[500];
+  double txval[500];
+
   Pvec=malloc(500*sizeof(double));
   inxvec=malloc(500*sizeof(double));
   inyvec=malloc(500*sizeof(double));
   tcol=malloc(200*sizeof(double));
   Ecol=malloc(200*sizeof(double));
-  tyval=malloc(500*sizeof(double));
-  txval=malloc(500*sizeof(double));
   tPvec=malloc(500*sizeof(double));
   Ptmat=malloc(200*sizeof(double *));
   for(idx1=0;idx1<200;idx1++){
@@ -558,18 +562,19 @@ INITIALIZE
   }
   free(Imat);
 
-printf("Finished calculating probability distribution\n");
-  #if defined (USE_MPI)
-  pmul=1/mpi_node_count;
-  #else
+  printf("Finished calculating probability distribution\n");
   pmul=1;
-  #endif
+  pmul/=mcget_ncount();
 %}
 TRACE
 %{
-  double theta,phi,v,tauv,E,Eval,tval,randp;
+  double theta,phi,v,tauv,E,Eval,tval,randp;  
+  double hdiv;
+  double vdiv;
   double hdivmin,hdivmax,vdivmin,vdivmax;
   int idx1,idx3,Eidxl,Eidxh;
+  double tyval[500];
+  double txval[500];
   p=p_in;
   z=0;
 
@@ -629,13 +634,13 @@ TRACE
   vy = v*sin(phi);
   vx = v*cos(phi)*sin(theta);
 
-  p*=(xwidth*yheight/(0.1*0.12))*INorm2*pmul/mcget_ncount();
+  p*=(xwidth*yheight/(0.1*0.12))*INorm2*pmul;
 
 %}
 FINALLY
 %{
   int idxf;
-  free(txval);free(tyval);free(tPvec);
+  free(tPvec);
   free(inxvec);free(inyvec);free(Pvec);free(tcol);free(Ecol);
   for(idxf=0;idxf<200;idxf++){
     free(Ptmat[idxf]);

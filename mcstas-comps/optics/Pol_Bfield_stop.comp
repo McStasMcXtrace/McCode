@@ -65,7 +65,7 @@ DECLARE
 %}
 INITIALIZE
 %{
-    enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
+    enum shapes {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY};
     /*if a start component is given, and no geometry is set, inherent geometry from start comp.*/
     if(geometry && strlen(geometry)){
         shape=ANY;
@@ -86,7 +86,7 @@ TRACE
 %{
     double t0,t1;
     int nofield=0;
-    enum {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY} shapes;
+    enum shapes {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY};
     /*enter through whatever object we are*/
     switch (shape){
         case BOX:

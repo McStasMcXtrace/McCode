@@ -6,7 +6,7 @@ McStas provides a package repository for use with RedHat-based distributions, su
 ## Add the McCode repo to your system
 ```bash
 cd /etc/yum.repos.d
-sudo wget http://packages.mccode.org/rpm/mccode.repo
+sudo wget https://packages.mccode.org/rpm/mccode.repo
 sudo yum update
 ```
 
@@ -54,7 +54,7 @@ sudo yum install mcstas-suite-python
 all dependencies, and hence is preferred!
 
 ## Install without repo use
-If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at http://download.mcstas.org/mcstas-2.7.1/linux/centos/
+If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at https://download.mcstas.org/mcstas-2.7.1/linux/centos/
 
 
 ## In case of issues

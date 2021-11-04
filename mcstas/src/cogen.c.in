@@ -859,14 +859,14 @@ int cogen_comp_section_class(
       cout("  if(isnan(y)  ||  isinf(y)) ABSORB;");
       cout("  if(isnan(z)  ||  isinf(z)) ABSORB;");
       cout("#else");
-      cout("  if(isnan(p)  ||  isinf(p)) printf(\"NAN or INF found in p,  %s\\n\",_comp->_name);");
-      cout("  if(isnan(t)  ||  isinf(t)) printf(\"NAN or INF found in t,  %s\\n\",_comp->_name);");
-      cout("  if(isnan(vx) || isinf(vx)) printf(\"NAN or INF found in vx, %s\\n\",_comp->_name);");
-      cout("  if(isnan(vy) || isinf(vy)) printf(\"NAN or INF found in vy, %s\\n\",_comp->_name);");
-      cout("  if(isnan(vy) || isinf(vy)) printf(\"NAN or INF found in vz, %s\\n\",_comp->_name);");
-      cout("  if(isnan(x)  ||  isinf(x)) printf(\"NAN or INF found in x,  %s\\n\",_comp->_name);");
-      cout("  if(isnan(y)  ||  isinf(y)) printf(\"NAN or INF found in y,  %s\\n\",_comp->_name);");
-      cout("  if(isnan(z)  ||  isinf(z)) printf(\"NAN or INF found in z,  %s\\n\",_comp->_name);");
+      cout("  if(isnan(p)  ||  isinf(p)) printf(\"NAN or INF found in p,  %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
+      cout("  if(isnan(t)  ||  isinf(t)) printf(\"NAN or INF found in t,  %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
+      cout("  if(isnan(vx) || isinf(vx)) printf(\"NAN or INF found in vx, %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
+      cout("  if(isnan(vy) || isinf(vy)) printf(\"NAN or INF found in vy, %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
+      cout("  if(isnan(vy) || isinf(vy)) printf(\"NAN or INF found in vz, %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
+      cout("  if(isnan(x)  ||  isinf(x)) printf(\"NAN or INF found in x,  %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
+      cout("  if(isnan(y)  ||  isinf(y)) printf(\"NAN or INF found in y,  %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
+      cout("  if(isnan(z)  ||  isinf(z)) printf(\"NAN or INF found in z,  %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
       cout("#endif");
       //cout("}");
     }
@@ -1089,7 +1089,7 @@ int cogen_decls(struct instr_def *instr)
 
   /* 2a. output an instrument logic structure to hold control statement logic */
   if (index > 0) {
-    cout("/* instrument SPLIT, GROUP and JUMP control logic */");
+    cout("/* instrument SPLIT and GROUP control logic */");
     cout("struct instrument_logic_struct {");
 
     if (list_len(instr->grouplist)) {
@@ -1101,17 +1101,6 @@ int cogen_decls(struct instr_def *instr)
     }
     liter = list_iterate(instr->complist);
     while((comp = list_next(liter)) != NULL) {
-      if (list_len(comp->jump) > 0) { // JUMP ITERATE counters
-        struct jump_struct *this_jump;
-        List_handle liter2;
-        liter2 = list_iterate(comp->jump);
-        while((this_jump = list_next(liter2))) {
-          /* create counter for JUMP iteration */
-          if (this_jump->iterate)
-            coutf("  long Jump_%s_%s; /* the JUMP connection <from>_<to> */", comp->name, this_jump->target);
-        }
-        list_iterate_end(liter2);
-      }
       if (comp->split) {
         coutf("  long Split_%s; /* this is the SPLIT counter decremented down to 0 */", comp->name);
         coutf("  _class_particle Split_%s_particle; /* this is the particle to duplicate */", comp->name);
@@ -1644,7 +1633,7 @@ int cogen_raytrace(struct instr_def *instr)
   cout("  DEBUG_STATE();");
   printf("\n-----------------------------------------------------------\n");
   printf("\nGenerating single GPU kernel or single CPU section layout: \n");
-  /* intialize split counters */
+  /* intialize JUMP counters */
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL) {
     if (list_len(comp->jump) > 0) { // JUMP ITERATE counters
@@ -1654,7 +1643,7 @@ int cogen_raytrace(struct instr_def *instr)
       while((this_jump = list_next(liter2))) {
         /* create counter for JUMP iteration */
         if (this_jump->iterate)
-          coutf("  instrument->logic.Jump_%s_%s=0;", comp->name, this_jump->target);
+          coutf("  _particle->_logic.Jump_%s_%s=0;", comp->name, this_jump->target);
         /* check that the target_index is defined, else search for the target comp index */
         if (!this_jump->target_index) {
           List_handle liter3 = list_iterate(instr->complist);
@@ -1672,11 +1661,11 @@ int cogen_raytrace(struct instr_def *instr)
     }
   }
 
+  cout("  _particle->flag_nocoordschange=0; /* Init */");
   cout("  /* the main iteration loop for one incoming event */");
   cout("  while (!ABSORBED) { /* iterate event until absorbed */");
   cout("    _class_particle _particle_save;");
   cout("    /* send particle event to component instance, one after the other */");
-  cout("    char flag_nocoordschange=0;");
 
   /* now we produce the list of statements for each component index, with the attached logic */
   liter = list_iterate(instr->complist);
@@ -1707,7 +1696,7 @@ int cogen_raytrace(struct instr_def *instr)
     }
     // coordinate transformations (wrt to PREVIOUS)
     coutf("    /* begin component %s=%s() [%i] */", comp->name, comp->def->name, comp->index);
-    cout( "    if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change");
+    cout( "    if (!_particle->flag_nocoordschange) { // flag activated by JUMP to pass coords change");
     coutf("      if (_%s_var._rotation_is_identity) {", comp->name);
     coutf("        if(!_%s_var._position_relative_is_zero) {", comp->name);
     coutf("          coords_get("
@@ -1716,8 +1705,10 @@ int cogen_raytrace(struct instr_def *instr)
     cout( "        }");
     cout( "      } else");
     coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
-    cout( "    } else flag_nocoordschange=0;");
+    cout( "      }");
+    cout( "    }");
     coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
+    coutf("      _particle->flag_nocoordschange=0; /* Reset if we came here from a JUMP */");
     cout( "      _particle_save = *_particle;");
     coutf("      DEBUG_COMP(_%s_var._name);", comp->name);
     cout ("      DEBUG_STATE();");
@@ -1748,16 +1739,16 @@ int cogen_raytrace(struct instr_def *instr)
         char *exp = exp_tostring(this_jump->condition);
         /* as there will be a neutron->index++, we subtract 1 to the target */
         if (this_jump->iterate) {
-          coutf("      if (++instrument->logic.Jump_%s_%s < %s) { /* test for iteration */",
+          coutf("      if (++_particle->_logic.Jump_%s_%s < %s) { /* test for iteration */",
             comp->name, this_jump->target, exp);
           coutf("        _particle->_index = %i;", this_jump->target_index-1);
-          cout( "        flag_nocoordschange=1; // pass corrdinate transformations when jumping");
-          coutf("      } else " "instrument->logic.Jump_%s_%s=0; /* reset Jump loop and go forward */",
+          cout( "        _particle->flag_nocoordschange=1; /* pass corrdinate transformations when jumping */");
+          coutf("      } else\n" "          _particle->_logic.Jump_%s_%s=0; /* reset Jump loop and go forward */",
             comp->name, this_jump->target);
         } else {
           coutf("      if (%s) {/* conditional JUMP to %s */", exp, this_jump->target);
           coutf("        _particle->_index=%i;", this_jump->target_index-1);
-          cout( "        flag_nocoordschange=1; // pass corrdinate transformations when jumping");
+          cout( "        _particle->flag_nocoordschange=1; /* pass corrdinate transformations when jumping */");
           cout( "      }");
         }
       }
@@ -1780,7 +1771,7 @@ int cogen_raytrace(struct instr_def *instr)
       else // comp_absorb_sends_to_next
         coutf("      else ABSORBED=0; // not SCATTERED within GROUP: always tries next");
     }
-
+    
     coutf("      _particle->_index++;");
     coutf("      if (!ABSORBED) DEBUG_STATE();");
     coutf("    } /* end component %s [%i] */", comp->name, comp->index);
@@ -1912,6 +1903,9 @@ int cogen_rt_funnel(struct instr_def *instr)
     };
   List l;
 
+  printf("\n-----------------------------------------------------------\n");
+  printf("\nGenerating GPU/CPU -DFUNNEL layout:\n");
+  
   coutf("");
   coutf("#ifdef FUNNEL");
   coutf("// Alternative raytrace algorithm which iterates all particles through");
@@ -1930,6 +1924,18 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("  #endif");
   coutf("  #endif");
   coutf("");
+    /* Check if instrument uses JUMPS */
+  liter = list_iterate(instr->complist);
+  while((comp = list_next(liter)) != NULL) {
+    if (list_len(comp->jump) > 0) { // JUMP ITERATE counters
+        printf("\nWARNING:\n --> JUMP found at COMPONENT %i, %s \n", comp->index, comp->name);
+	printf(" --> JUMPS are not supported in FUNNEL mode and are ignored\n");
+	printf(" --> Your instrument may give different output with FUNNEL\n");
+        coutf("printf(\"\\nWARNING:\\n --> JUMP found at COMPONENT %i, %s\\n\");", comp->index, comp->name);
+	coutf("printf(\" --> JUMPS are not supported in FUNNEL mode and are ignored\\n\");");
+	coutf("printf(\" --> Your instrument may give different output with FUNNEL\\n\");");
+    }
+  }
   coutf("  #ifdef OPENACC");
   coutf("  loops = ceil((double)ncount/gpu_innerloop);");
   coutf("  if (ncount>gpu_innerloop) {");
@@ -1980,14 +1986,14 @@ int cogen_rt_funnel(struct instr_def *instr)
   int first=1;
   int do_split=0;
   liter = list_iterate(instr->complist);
-  printf("\n-----------------------------------------------------------\n");
-  printf("\nGenerating GPU/CPU -DFUNNEL layout:\n");
   // iterate component list
   while((comp = list_next(liter)) != NULL) {
     List_handle liter2;
     if (comp->def->flag_noacc) {
       printf("Component %s is NOACC, CPUONLY=%i\n",comp->name,comp->cpuonly);
       printf("-> FUNNEL mode enabled, SPLIT within buffer.\n");
+      coutf("        #define JUMP_FUNNEL");
+      
     }
 
     if (!first && ((comp->cpuonly != cpuonly_last) || comp->split)) { // Terminate loop if we are shifting between processing units
@@ -2070,15 +2076,6 @@ int cogen_rt_funnel(struct instr_def *instr)
   cout( "");
   list_iterate_end(liter);
 
-  // finalize batch
-  coutf("    // finalize particle batch");
-  coutf("    #pragma acc parallel loop present(particles)");
-  coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
-  coutf("      _class_particle* _particle = &particles[pidx];");
-  coutf("      if (_particle->_index > 4)");
-  coutf("        ABSORBED++; /* absorbed when passed all components */");
-  coutf("    }");
-  coutf("");
   coutf("    // jump to next viable seed");
   coutf("    seed = seed + gpu_innerloop;");
   coutf("  } // outer loop / particle batches");
@@ -2196,7 +2193,31 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#define MC_NUSERVAR 10");
   cout("#endif");
   cout("");
+  List_handle liter,liter2;
+  struct comp_inst *comp;        /* Component instance. */
 
+  /* Output a particle logic JUMP struct */
+  cout("/* Particle JUMP control logic */");
+  cout("struct particle_logic_struct {");
+  cout("int dummy;");
+  liter = list_iterate(instr->complist);
+  while((comp = list_next(liter)) != NULL) {
+    if (list_len(comp->jump) > 0) { // JUMP ITERATE counters
+      struct jump_struct *this_jump;
+      List_handle liter2;
+      liter2 = list_iterate(comp->jump);
+      while((this_jump = list_next(liter2))) {
+	/* create counter for JUMP iteration */
+	if (this_jump->iterate)
+	  coutf("  long Jump_%s_%s; /* the JUMP connection <from>_<to> */", comp->name, this_jump->target);
+      }
+      list_iterate_end(liter2);
+    }
+  }
+  cout("};");
+  list_iterate_end(liter);
+  cout("");
+  
   /* generate particle struct */
   cout("struct _struct_particle {");
   cout("  double x,y,z; /* position [m] */");
@@ -2219,6 +2240,9 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  long _absorbed;  /* flag set to TRUE when this event is to be removed/ignored */");
   cout("  long _scattered; /* flag set to TRUE when this event has interacted with the last component instance */");
   cout("  long _restore;   /* set to true if neutron event must be restored */");
+  cout("  long flag_nocoordschange;   /* set to true if neutron is jumping */");
+  /* Include the struct defined earlier holding information on JUMP logic*/
+  cout("  struct particle_logic_struct _logic;");
   /* Append variables from instr USERVARS block to particle struct (user vars,
   *  always double). Also store these strings in in the appropriate instrument
   *  list for later def/undef as state variables (see cogen_raytrace). */
@@ -2267,7 +2291,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   /*generate uservar return functions*/
   cout("/*Generated user variable handlers:*/");
   cout("");
-  List_handle liter,liter2;
+
   liter = list_iterate(instr->user_vars);
   cout("#pragma acc routine");
   cout("double particle_getvar(_class_particle *p, char *name, int *suc);");

@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Component: Monitor_nD
+* Component: Monitor_nD_noacc
 *
 * %Identification
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
@@ -218,7 +218,7 @@
 *
 * %End
 ******************************************************************************/
-DEFINE COMPONENT Monitor_nD
+DEFINE COMPONENT Monitor_nD_noacc
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (
   string user1="", string user2="", string user3="",
@@ -231,18 +231,19 @@ SETTING PARAMETERS (
 /* these are protected C variables */
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+NOACC
 
 SHARE
 %{
-  %include "monitor_nd-lib"
+  %include "monitor_nd_noacc-lib"
   %include "read_table-lib"
   %include "interoff-lib"
 %}
 
 DECLARE
 %{
-  MonitornD_Defines_type DEFS;
-  MonitornD_Variables_type Vars;
+  Monitornd_noaccDefines_type DEFS;
+  Monitornd_noaccVariables_type Vars;
   MCDETECTOR detector;
   off_struct offdata;
 %}
@@ -352,7 +353,7 @@ INITIALIZE
     !strstr(Vars.option, "previous") && (!geometry || !strlen(geometry)))
     exit(printf("Monitor_nD: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth, previous, geometry).\n", NAME_CURRENT_COMP));
 
-  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax,offflag);
+  Monitor_nd_noaccInit(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax,offflag);
 
   if (Vars.Flag_OFF) {
     offdata.mantidflag=Vars.Flag_mantid;
@@ -376,18 +377,20 @@ MPI_MASTER(
     printf("Monitor_nD: %s is using automatic limits option 'auto' together with MPI.\n"
            "WARNING     this may create incorrect distributions (but integrated flux will be right).\n", NAME_CURRENT_COMP);
 );
-#else
-#ifdef OPENACC
-  if (strstr(Vars.option, "auto"))
-    printf("Monitor_nD: %s is requesting automatic limits option 'auto' together with OpenACC.\n"
-           "WARNING     this feature is NOT supported using OpenACC and has been disabled!\n", NAME_CURRENT_COMP);
-#endif
 #endif
 
 %}
 
 TRACE
 %{
+  #ifdef OPENACC
+  #define OPENACC_BAK
+  #undef OPENACC
+  #undef printf
+  #undef sprintf
+  #undef exit
+  #endif
+  
   double  transmit_he3=1.0;
   double  multiplier_capture=1.0;
   double  t0 = 0;
@@ -396,18 +399,11 @@ TRACE
   int     intersect   = 0;
   char    Flag_Restore = 0;
 
-  #ifdef OPENACC
-  #ifdef USE_OFF
-  off_struct thread_offdata = offdata;
-  #endif
-  #else
   #define thread_offdata offdata
-  #endif
   
   /* this is done automatically
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   */
-  #ifdef USE_OFF
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
   {
     /* determine intersections with object */
@@ -422,7 +418,6 @@ TRACE
     }
   }
   else
-  #endif
     if ( (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE)
             || (abs(Vars.Flag_Shape) == DEFS.SHAPE_DISK) ) /* square xy or disk xy */
   {
@@ -532,7 +527,7 @@ TRACE
       p = p * multiplier_capture/1.7985;
     }
 
-    pp = Monitor_nD_Trace(&DEFS, &Vars, _particle);
+    pp = Monitor_nd_noaccTrace(&DEFS, &Vars, _particle);
     if (pp==0.0)
     {
       ABSORB;
@@ -569,20 +564,29 @@ TRACE
   {
     RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   }
+  
+  #ifdef OPENACC_BAK
+  #define OPENACC
+  #define fprintf(stderr,...) printf(__VA_ARGS__)
+  #define sprintf(string,...) printf(__VA_ARGS__)
+  #define printf(...) noprintf()
+  #define exit(...) noprintf()
+  #endif
 %}
 
 SAVE
 %{
 if (!nowritefile) {
+  
   /* save results, but do not free pointers */
-  detector = Monitor_nD_Save(&DEFS, &Vars);
+  detector = Monitor_nd_noaccSave(&DEFS, &Vars);
 }
 %}
 
 FINALLY
 %{
   /* free pointers */
-  Monitor_nD_Finally(&DEFS, &Vars);
+  Monitor_nd_noaccFinally(&DEFS, &Vars);
 %}
 
 MCDISPLAY
@@ -591,7 +595,7 @@ MCDISPLAY
   {
     off_display(offdata);
   } else {
-    Monitor_nD_McDisplay(&DEFS, &Vars);
+    Monitor_nd_noaccMcDisplay(&DEFS, &Vars);
   }
 %}
 
