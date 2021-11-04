@@ -80,6 +80,7 @@
     char    monotonic;     /* true when 1st column/vector data is monotonic */
     char    constantstep;  /* true when 1st column/vector data has constant step */
     char    method[32];    /* interpolation method: nearest, linear */
+    char    quiet;   /*output level for messages to the console 0: print all messages, 1:only print some/including errors, 2: never print anything.*/
   } t_Table;
 
 /*maximum number of rows to rebin a table = 1M*/

@@ -292,8 +292,11 @@ void *Table_File_List_store(t_Table *tab){
     t_Table *tab_p= Table_File_List_find(name,block_number,begin);
     if ( tab_p!=NULL ){
         /*table was found in the Table_File_List*/
-        // printf("Reusing input file '%s' (Table_Read_Offset)\n", name);
         *Table=*tab_p;
+        MPI_MASTER(
+            if(Table->quiet<1)
+              printf("Reusing input file '%s' (Table_Read_Offset)\n", name);
+            );
         return Table->rows*Table->columns;
     }
 
@@ -302,8 +305,9 @@ void *Table_File_List_store(t_Table *tab){
     if (!hfile) return(-1);
     else {
       MPI_MASTER(
-      printf("Opening input file '%s' (Table_Read_Offset)\n", path);
-      );
+          if(Table->quiet<1)
+            printf("Opening input file '%s' (Table_Read_Offset)\n", path);
+          );
     }
     
     /* read file state */
@@ -362,7 +366,8 @@ void *Table_File_List_store(t_Table *tab){
     if (!hfile) return(-1);
     else {
       MPI_MASTER(
-      printf("Opening input file '%s' (Table_Read, Binary)\n", path);
+          if(Table->quiet<1)
+            printf("Opening input file '%s' (Table_Read, Binary)\n", path);
       );
     }
     
@@ -382,14 +387,16 @@ void *Table_File_List_store(t_Table *tab){
     if (!nelements || filesize <= *offset) return(0);
     data    = (double*)malloc(nelements*sizeofelement);
     if (!data) {
-      fprintf(stderr,"Error: allocating %ld elements for %s file '%s'. Too big (Table_Read_Offset_Binary).\n", nelements, type, File);
+      if(!(Table->quiet>1))
+        fprintf(stderr,"Error: allocating %ld elements for %s file '%s'. Too big (Table_Read_Offset_Binary).\n", nelements, type, File);
       exit(-1);
     }
     nelements = fread(data, sizeofelement, nelements, hfile);
 
     if (!data || !nelements)
     {
-      fprintf(stderr,"Error: reading %ld elements from %s file '%s' (Table_Read_Offset_Binary)\n", nelements, type, File);
+      if(!(Table->quiet>1))
+        fprintf(stderr,"Error: reading %ld elements from %s file '%s' (Table_Read_Offset_Binary)\n", nelements, type, File);
       exit(-1);
     }
     Table->begin   = begin;
@@ -919,7 +926,7 @@ double Table_Value2d(t_Table Table, double X, double Y)
     if (!Table.block_number) strcpy(buffer, "catenated");
     else sprintf(buffer, "block %li", Table.block_number);
     printf("Table from file '%s' (%s)",
-      Table.filename[0] != '\0' ? Table.filename : "", buffer);
+        Table.filename[0] != '\0' ? Table.filename : "", buffer);
     if ((Table.data != NULL) && (Table.rows*Table.columns))
     {
       printf(" is %li x %li ", Table.rows, Table.columns);
@@ -982,8 +989,9 @@ long Table_Init(t_Table *Table, long rows, long columns)
     data    = (double*)malloc(rows*columns*sizeof(double));
     if (data) for (i=0; i < rows*columns; data[i++]=0);
     else {
-      fprintf(stderr,"Error: allocating %ld double elements."
-                     "Too big (Table_Init).\n", rows*columns);
+      if(Table->quiet<2)
+        fprintf(stderr,"Error: allocating %ld double elements."
+            "Too big (Table_Init).\n", rows*columns);
       rows = columns = 0;
     }
   }
