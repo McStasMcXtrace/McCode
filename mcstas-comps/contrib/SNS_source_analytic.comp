@@ -932,6 +932,7 @@ INITIALIZE
   #ifdef USE_MPI
   p_in /= mpi_node_count;
   #endif
+  p_in /= mcget_ncount();
 %}
 
 TRACE
@@ -1047,7 +1048,7 @@ TRACE
   vy = v*sin(phi);
   vx = v*cos(phi)*sin(theta);
 
-  p*=p_E*p_sa*p_t/mcget_ncount();
+  p*=p_E*p_sa*p_t;
 
   //printf("Eval=%e tval=%e p_E=%e p_t=%e p_sa=%e p=%e\n", Eval, tval, p_E, p_t, p_sa, p);
 %}
