@@ -16,7 +16,8 @@
 * %Description
 *  Validation of Union single crystal against standard single_crystal.
 *
-* %Example: comp_select=1 Detector: Banana_monitor_I=965535
+* %Example: comp_select=1 Detector: Banana_monitor_I=9.5e5
+* %Example: comp_select=2 Detector: Banana_monitor_I=9.5e5
 *
 * %Parameters
 * comp_select: [1] 1: Union components, 2: Single crystal
@@ -133,7 +134,7 @@ COMPONENT sample = Single_crystal(
           bx = 0,      by = 3.8843, bz = 0,
           cx = 0,      cy = 0,      cz = 11.6777,
           reflections="YBaCuO.lau",
-          sigma_abs=sigma_abs_sc*100, order=10000,barns=0, sigma_inc=sigma_inc*100,
+	  order=10000,barns=0,
           powder=powder,PG=PG)
 WHEN (comp_select == 2)
 AT (0,0,0.10) RELATIVE slit
