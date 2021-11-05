@@ -1703,7 +1703,7 @@ int cogen_raytrace(struct instr_def *instr)
 	  "coords_add(coords_set(x,y,z), _%s_var._position_relative),"
 	  "&x, &y, &z);", comp->name);
     cout( "        }");
-    cout( "      } else");
+    cout( "      } else {");
     coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
     cout( "      }");
     cout( "    }");
