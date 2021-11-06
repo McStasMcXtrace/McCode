@@ -105,7 +105,7 @@ Returns
 -------
 The index of the nearest diffraction line from the dhkl list, or -1 if not found.
 */
-int getNearestLine(int iex, double sinth, double tof, double trange) {
+    int getNearestLine(int iex, double sinth, double tof, double trange, int n_dhkl, double* dhkl, double mod_shift, double Ltof) {
 	int i;
 	int j=0;
 	int io=-1;
@@ -141,7 +141,7 @@ The values are:
 1: valid region (diffraction line without overlap)
 2: overlaping of 2 or more lines
 */	
-void calcOverlaps(double tmin, double tmax, double ami, double ama, double trange) {
+  void calcOverlaps(double tmin, double tmax, double ami, double ama, double trange, int na, int nt, double t2lam, double mod_shift, double Ltof, double** TOF_N, double** TOF_p, double** TOF_p2, int n_dhkl, double* dhkl) {
 	int i,j,iline,io;
 	double tdet,a,sth;	
 	double a1,a2,drange;
@@ -153,26 +153,22 @@ void calcOverlaps(double tmin, double tmax, double ami, double ama, double trang
 		a=a1+(i+0.5)*da;
 		sth=sin(a/2);
 		drange=trange*t2lam/2/sth;
-		for (j=0;j<nt;j++) {
-			TOF_N[i][j] = 0;
-			TOF_p[i][j] = 0;
-			TOF_p2[i][j] = 0;
-			tdet=tmin+(j+0.5)*dt;
-			iline=getNearestLine(-1,sth, tdet, trange);
-			if (iline>=0) {
-				io=getNearestLine(iline, sth, tdet, trange);
-				if (io<0) {
-					TOF_N[i][j] += 1;
-					TOF_p[i][j] += 1;
-					TOF_p2[i][j] += 1;
-				} else {
-					TOF_N[i][j] += 1;
-					TOF_p[i][j] += 2;
-					TOF_p2[i][j] += 4;
-				}
-			} 
-		}
+		tdet=tmin+(j+0.5)*dt;
+		iline=getNearestLine(-1,sth, tdet, trange, n_dhkl, dhkl, mod_shift,Ltof);
+		if (iline>=0) {
+		  io=getNearestLine(iline, sth, tdet, trange, n_dhkl, dhkl, mod_shift,Ltof);
+		  if (io<0) {
+		    TOF_N[i][j] += 1;
+		    TOF_p[i][j] += 1;
+		    TOF_p2[i][j] += 1;
+		  } else {
+		    TOF_N[i][j] += 1;
+		    TOF_p[i][j] += 2;
+		    TOF_p2[i][j] += 4;
+		  }
+		} 
 	}
+  }
 
 %}
 
@@ -191,11 +187,12 @@ DECLARE
   double grf_th1;
   double grf_th2;
   double t2lam;
-  double L0, Ltof;
+  double L0;
+  double Ltof;
   long iev;
   int n_dhkl;
   // set to 1 for some debugging info
-  int dbg=0;
+  int dbg;
   int dbgn;
 
 }
@@ -206,7 +203,8 @@ INITIALIZE
     /* h/m_n in [Ang*m/s]  */
     double hm = 2*PI*K2V;
     dbgn=0;
-    iev = 0;
+    dbg=0;
+    iev = -1;
     
     D_N=create_darr1d(nd);
     D_p=create_darr1d(nd);
@@ -233,7 +231,8 @@ INITIALIZE
 	  Table_Read(&sTable, mod_d0_table, 1); 
 	  double size = sTable.rows;
 	  if (size>0) {
-	    dhkl = (double*)malloc(sizeof(double)*size);		
+	    dhkl = (double*)malloc(sizeof(double)*size);
+	    int i;
 	    for (i=0; i<size; i++) {
 	      dhkl[i] = Table_Index(sTable, i, 0);
 	    }
@@ -285,7 +284,7 @@ INITIALIZE
     grf_th1=amin;
     grf_th2=amax;
     if (modulation) {
-	calcOverlaps(time_min, time_max, grf_th1, grf_th2, mod_twidth);
+      calcOverlaps(time_min, time_max, grf_th1, grf_th2, mod_twidth, na, nt, mod_shift, Ltof, t2lam, TOF_N, TOF_p, TOF_p2, n_dhkl, dhkl);
     }
     MPI_MASTER(
 	       if (verbose) {
@@ -310,7 +309,10 @@ TRACE
     double th2_min=amin*PI/180;
     double th2_max=amax*PI/180;
     
-    if (dbgn>20) dbg=0;
+    if (dbgn>20) {
+      #pragma acc atomic write
+      dbg=0;
+    }
     /* cross-section with the detector front face. Allow height = yheight+3*res_y to account for a random 
        displacement due to vertical resolution.
     */
@@ -362,9 +364,9 @@ TRACE
 	     Exclude regions with overlaping diffraction lines
 	  */
 	  if (modulation) {
-	    iline=getNearestLine(-1, sinth, tof, mod_twidth);
+	    iline=getNearestLine(-1, sinth, tof, mod_twidth,n_dhkl,dhkl,mod_shift,Ltof);
 	    if (iline>=0) {
-	      io=getNearestLine(iline, sinth, tof, mod_twidth);
+	      io=getNearestLine(iline, sinth, tof, mod_twidth,n_dhkl,dhkl,mod_shift,Ltof);
 	      if (io<0) {
 		valid_region=1;
 		/*
@@ -379,7 +381,8 @@ TRACE
 		iref=(int)floor(tc/mod_dt+0.5);
 		dt=iref*mod_dt+time0;
 		if (iline==0 && dbg) {
-		  dbgn++;
+		  #pragma acc atomic
+		  dbgn = dbgn+1;
 		  printf("iref=%d, dt=%g, t=%g, tcor=%g\n",
 			 iref, iref*mod_dt*1000,tc*1000, (tof-tref-dt)*1000);
 		}
@@ -392,9 +395,13 @@ TRACE
 	    i = (int)floor((theta2-grf_th1*DEG2RAD)/(grf_th2*DEG2RAD-grf_th1*DEG2RAD)*na+0.5);
 	    j = (int)floor((t-time_min)/(time_max-time_min)*nt+0.5);
 	    if ( j>=0 && j<nt && i>=0 && i<na ) {
-	      TOF_N[i][j]++;
-	      TOF_p[i][j] += p;
-	      TOF_p2[i][j] += p*p;
+	      double p2=p*p;
+	      #pragma acc atomic
+	      TOF_N[i][j] = TOF_N[i][j] + 1;
+              #pragma acc atomic
+	      TOF_p[i][j] = TOF_p[i][j] + p;
+              #pragma acc atomic
+	      TOF_p2[i][j] = TOF_p2[i][j] + p2;
 	    }
 	  }
 	  /*  Valid event: calculate wavelength and dhkl "as recorded by the instrument", i.e.
@@ -405,20 +412,40 @@ TRACE
 	    // subtract reference chopper time from tof and calculate wavelength
 	    lam=hm*(tof-dt)/(L0-radius+L1);
 	    d=lam/2/sinth;
+	    #pragma acc atomic
+	    iev = iev + 1;
 	    if (iev<nev) {
-	      EVENTS[iev][0] = x0*1e3;
-	      EVENTS[iev][1] = y0*1e3;
-	      EVENTS[iev][2] = z0*1e3;
-	      EVENTS[iev][3] = tof*1e3;
+	      double tmp;
+
+	      tmp = x0*1e3;
+              #pragma acc atomic write
+	      EVENTS[iev][0] = tmp;
+
+	      tmp = y0*1e3;
+              #pragma acc atomic write
+	      EVENTS[iev][1] = tmp;
+
+	      tmp = z0*1e3;
+              #pragma acc atomic write
+	      EVENTS[iev][2] = tmp;
+
+              tmp = tof*1e3;
+              #pragma acc atomic write
+	      EVENTS[iev][3] = tmp;
+
+              #pragma acc atomic write
 	      EVENTS[iev][4] = sinth;
+
+	      #pragma acc atomic write
 	      EVENTS[iev][5] = p;
-	      iev ++;
 	    }
 	    i=(int)floor((d-d_min)/dd+0.5);
 	    if (i>=0 && i<nd) {
-	      D_N[i]++;
-	      D_p[i] += p;
-	      D_p2[i] += p*p;
+	      double p2 = p*p;
+	      #pragma acc atomic
+	      D_N[i] = D_N[i] + 1;
+	      D_p[i] = D_p[i] + p;
+	      D_p2[i] = D_p2[i] + p2;
 	    }
 	  }
 	}

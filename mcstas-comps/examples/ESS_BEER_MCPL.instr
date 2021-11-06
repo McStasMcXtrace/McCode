@@ -349,7 +349,7 @@ COMPONENT MonNDZ = Monitor_nD(xwidth=2, yheight=2, user1="scZ",
   Generates 1D diffractogram and a 2D overlap map (in modulation mode).
   Should be centered at the sample axis and aligned with the primary beam.
   */ 
-  /*  COMPONENT dhklmon = NPI_tof_dhkl_detector(  
+  COMPONENT dhklmon = NPI_tof_dhkl_detector(  
 	nd=3000, 
 	filename="dhkl.dat",  
 	yheight=1.0, 
@@ -372,7 +372,7 @@ COMPONENT MonNDZ = Monitor_nD(xwidth=2, yheight=2, user1="scZ",
 	mod_shift=mod_shift,
 	mod_d0_table=dhklTable,  
 	restore_neutron=1)  
-	AT (0, 0, 0) RELATIVE Sample_axis   */
+  AT (0, 0, 0) RELATIVE Sample_axis  
  
  /* ToF vs. 2theta map */
   COMPONENT psdtof = NPI_tof_theta_monitor( 
