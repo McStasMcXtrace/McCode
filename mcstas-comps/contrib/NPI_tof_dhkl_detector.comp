@@ -75,8 +75,8 @@
 *
 ******************************************************************************/
 DEFINE COMPONENT NPI_tof_dhkl_detector
-DEFINITION PARAMETERS (nd=200, na=800, nt=800, nev=1)
-SETTING PARAMETERS (string filename=0, radius=2, yheight=0.3, zdepth=0.01, amin=75, amax=105,
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string filename=0, radius=2, yheight=0.3, zdepth=0.01, amin=75, amax=105, int nd=200, int na=800, int nt=800, int nev=1
 d_min=1, d_max=3, time0, Linst, Lc, 
 res_x=0, res_y=0, res_t=0, mu=1.0, mod_shift=0,
 modulation=0, mod_dt=0, mod_twidth=0, string mod_d0_table=0, 
@@ -88,25 +88,6 @@ SHARE
 %{
 /* used for reading data table from file */
 %include "read_table-lib"
-%}
-
-DECLARE
-%{
-double D_N[nd];
-double D_p[nd], D_p2[nd];
-double TOF_N[na][nt];
-double TOF_p[na][nt];
-double TOF_p2[na][nt];
-double EVENTS[nev][6]; // save x, y, z, time, theta, p 
-double *dhkl;
-double time_min,time_max,grf_th1,grf_th2;
-double t2lam;
-double L0, Ltof;
-long iev;
-int n_dhkl;
-// set to 1 for some debugging info
-int dbg=0;
-int dbgn;
 
 /*
 Save up to nmax events stored by the detector in a text file, one per row.
@@ -229,260 +210,282 @@ void calcOverlaps(double tmin, double tmax, double ami, double ama, double trang
 			} 
 		}
 	}
+
+%}
+
+DECLARE
+%{
+  DArray1d D_N;//[nd];
+  DArray1d D_p;//[nd];
+  DArray1d D_p2;//[nd];
+  DArray2d TOF_N;//[na][nt];
+  DArray2d TOF_p;//[na][nt];
+  DArray2d TOF_p2;//[na][nt];
+  DArray2d EVENTS;//[nev][6]; // save x, y, z, time, theta, p 
+  double *dhkl;
+  double time_min,time_max,grf_th1,grf_th2;
+  double t2lam;
+  double L0, Ltof;
+  long iev;
+  int n_dhkl;
+  // set to 1 for some debugging info
+  int dbg=0;
+  int dbgn;
+
 }
   
 %}
 INITIALIZE
   %{
-	/* h/m_n in [Ang*m/s]  */
+    /* h/m_n in [Ang*m/s]  */
     double hm = 2*PI*K2V;
-	dbgn=0;
-	iev = 0;
-    int i;
-    for (i=0; i<nd; i++)
-    {
-      D_N[i] = 0;
-      D_p[i] = 0;
-      D_p2[i] = 0;
-    }
-	// read dhkl table
-	n_dhkl=0;
-	if (modulation) {	
-		MPI_MASTER(
-			printf("%s: Modulation on, table = %s, line shift=%g\n",NAME_CURRENT_COMP,mod_d0_table,mod_shift);
-		)
-		if (! mod_d0_table || !strlen(mod_d0_table) || !strcmp(mod_d0_table, "NULL")) {			
-			MPI_MASTER(
-				fprintf(stderr,"ERROR %s: Can't read table with d0 values: %s \n",NAME_CURRENT_COMP, mod_d0_table);
-			)
-			exit(-1);
-		} else {
-			t_Table sTable;	
-			MPI_MASTER(printf("trying to read dhkl table [%s]\n",mod_d0_table));
-			Table_Read(&sTable, mod_d0_table, 1); 
-			double size = sTable.rows;
-			if (size>0) {
-				dhkl = (double*)malloc(sizeof(double)*size);		
-				for (i=0; i<size; i++) {
-					dhkl[i] = Table_Index(sTable, i, 0);
-				}
-				n_dhkl=size;
-				if (verbose) printf("Read %d rows from dhkl table [%s]\n",n_dhkl,mod_d0_table);
-			}
-			Table_Free(&sTable);
-		}
-		if (! n_dhkl) {
-			MPI_MASTER(
-				fprintf(stderr,"ERROR %s: Can't evaluate modulated data without dhkl list\n",NAME_CURRENT_COMP);
-			);
-		exit(-1);
-		}
-		
-		if (! n_dhkl) {
-			MPI_MASTER(
-				fprintf(stderr,"ERROR %s: Can't evaluate modulated data without dhkl list\n",NAME_CURRENT_COMP);
-			);
-			exit(-1);
-		}
-		if (mod_dt<=0) {
-			MPI_MASTER(
-			fprintf(stderr,"ERROR %s: Modulation period must be positive\n",NAME_CURRENT_COMP);
-			);
-			exit(-1);
-		}
-		if (mod_twidth<=0) {
-			MPI_MASTER(
-				fprintf(stderr,"ERROR %s: Time range in modulation mode must be positive\n",NAME_CURRENT_COMP);
-			);
-			exit(-1);
-		}
+    dbgn=0;
+    iev = 0;
+    
+    D_N=create_darr1d(nd);
+    D_p=create_darr1d(nd);
+    D_p2=create_darr1d(nd);
+    TOF_N=create_darr2d(na,nt);
+    TOF_p=create_darr2d(na,nt);
+    TOF_p2=create_darr2d(na,nt);
+    EVENTS=create_darr2d(nev,6);
+    
+    // read dhkl table
+    n_dhkl=0;
+    if (modulation) {	
+      MPI_MASTER(
+		 printf("%s: Modulation on, table = %s, line shift=%g\n",NAME_CURRENT_COMP,mod_d0_table,mod_shift);
+		 )
+	if (! mod_d0_table || !strlen(mod_d0_table) || !strcmp(mod_d0_table, "NULL")) {			
+	  MPI_MASTER(
+		     fprintf(stderr,"ERROR %s: Can't read table with d0 values: %s \n",NAME_CURRENT_COMP, mod_d0_table);
+		     )
+	    exit(-1);
 	} else {
-		MPI_MASTER(
-			printf("%s: Modulation off\n",NAME_CURRENT_COMP);
-		);
+	  t_Table sTable;	
+	  MPI_MASTER(printf("trying to read dhkl table [%s]\n",mod_d0_table));
+	  Table_Read(&sTable, mod_d0_table, 1); 
+	  double size = sTable.rows;
+	  if (size>0) {
+	    dhkl = (double*)malloc(sizeof(double)*size);		
+	    for (i=0; i<size; i++) {
+	      dhkl[i] = Table_Index(sTable, i, 0);
+	    }
+	    n_dhkl=size;
+	    if (verbose) printf("Read %d rows from dhkl table [%s]\n",n_dhkl,mod_d0_table);
+	  }
+	  Table_Free(&sTable);
 	}
-
-// Distance L0 determines the wavelength
-L0=Linst-Lc;
-Ltof=Linst;
-t2lam=hm/L0;
-
-
-// range of theta-tof plot
-time_min=2*d_min*sin(amin*DEG2RAD/2)/t2lam;
-time_max=2*d_max*sin(amax*DEG2RAD/2)/t2lam;
-grf_th1=amin;
-grf_th2=amax;
-if (modulation) {
+      if (! n_dhkl) {
+	MPI_MASTER(
+		   fprintf(stderr,"ERROR %s: Can't evaluate modulated data without dhkl list\n",NAME_CURRENT_COMP);
+		   );
+	exit(-1);
+      }
+      
+      if (! n_dhkl) {
+	MPI_MASTER(
+		   fprintf(stderr,"ERROR %s: Can't evaluate modulated data without dhkl list\n",NAME_CURRENT_COMP);
+		   );
+	exit(-1);
+      }
+      if (mod_dt<=0) {
+	MPI_MASTER(
+		   fprintf(stderr,"ERROR %s: Modulation period must be positive\n",NAME_CURRENT_COMP);
+		   );
+	exit(-1);
+      }
+      if (mod_twidth<=0) {
+	MPI_MASTER(
+		   fprintf(stderr,"ERROR %s: Time range in modulation mode must be positive\n",NAME_CURRENT_COMP);
+		   );
+	exit(-1);
+      }
+    } else {
+      MPI_MASTER(
+		 printf("%s: Modulation off\n",NAME_CURRENT_COMP);
+		 );
+    }
+    
+    // Distance L0 determines the wavelength
+    L0=Linst-Lc;
+    Ltof=Linst;
+    t2lam=hm/L0;
+    
+    
+    // range of theta-tof plot
+    time_min=2*d_min*sin(amin*DEG2RAD/2)/t2lam;
+    time_max=2*d_max*sin(amax*DEG2RAD/2)/t2lam;
+    grf_th1=amin;
+    grf_th2=amax;
+    if (modulation) {
 	calcOverlaps(time_min, time_max, grf_th1, grf_th2, mod_twidth);
-}
-MPI_MASTER(
-if (verbose) {
-	printf("%s: lambda/(t-t0)=%g\n",NAME_CURRENT_COMP,t2lam); 
-	printf("Lc=%g, L0=%g, LD=%g, time0=%g\n", Lc, L0, radius, time0*1000); 
-	printf("For Fe110 at 90 deg: tof=%g [ms]\n",2*2.1055*sin(45*DEG2RAD)/hm*Ltof); 
-	if (modulation) {	
-		printf("mod_dt=%g [ms], mod_shift=%g\n", mod_dt, mod_shift); 
-	}
-}
-);
- %}
+    }
+    MPI_MASTER(
+	       if (verbose) {
+		 printf("%s: lambda/(t-t0)=%g\n",NAME_CURRENT_COMP,t2lam); 
+		 printf("Lc=%g, L0=%g, LD=%g, time0=%g\n", Lc, L0, radius, time0*1000); 
+		 printf("For Fe110 at 90 deg: tof=%g [ms]\n",2*2.1055*sin(45*DEG2RAD)/hm*Ltof); 
+		 if (modulation) {	
+		   printf("mod_dt=%g [ms], mod_shift=%g\n", mod_dt, mod_shift); 
+		 }
+	       }
+	       );
+    %}
 TRACE
   %{
     int i,j,io,iline,iref,valid_region;
     double t0,t1,lam,theta2,d,cos2;
-	double sinth,dt,p0,tau,v0,x0,y0,z0,dx,dy,sig,tof,dd;
-	double tref,tc;
-	double r8ln2=2.355;
-	const double hm = 2*PI*K2V; // = h/m_n
-	double L1;
-	double th2_min=amin*PI/180;
-	double th2_max=amax*PI/180;
-
-	if (dbgn>20) dbg=0;
-	/* cross-section with the detector front face. Allow height = yheight+3*res_y to account for a random 
-	displacement due to vertical resolution.
-	*/
-	int cross=cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight+3*res_y);	
-	/* don't allow intersections with top/bottom cylinder walls,
-	   only neutrons from inside of the cylinder are allowed.
-	*/
-	if ( (cross!=1) ||  (t0>0) || (t1<0) ) {
-		p=0;
-	} else {
-		// go to cylinder surface = detector entry
-		PROP_DT(t1);
-		// save position before propagation through the detection volume
-		x0=x;
-		y0=y;
-		z0=z;
-		// add random penetration within the detector depth
-		v0=sqrt(vx*vx+vy*vy+vz*vz);
-		sig=100*mu*hm/v0; // mu is in 1/cm
-		p0=1.0-exp(-sig*zdepth);
-		tau=-1.0*log(1.0-p0*rand01())/sig/v0;
-		PROP_DT(tau);
-		p *= p0;
-		// add random shift by y-resolution	
-		dy = randnorm()*res_y/r8ln2;
-		y0 += dy;
-		// add random shift by x-resolution	(normal to radius)
-		dx = randnorm()*res_x/r8ln2;
-		cos2=z0/radius;
-		z0 += dx*sqrt(1.-cos2*cos2);
-		x0 += dx*cos2;
-		// add random time resolution shift
-		tof = t + randnorm()*res_t/r8ln2;
-		// NOTE: detection coordinates are x0, y0, z0, tof
-		// L1 = detected sample to detector distance:
-		L1=sqrt(x0*x0 + z0*z0 + y0*y0);
-        // Clip y on +- 0.5*yheight
-		if (fabs(y)<(0.5*yheight)) {
-			dd=(d_max-d_min)/nd;
-			// get cos(2*theta), assume primary beam axis // [0 0 1]
-			cos2=z0/L1;
-			theta2=acos(cos2);
-			dt = 0;
-			if (theta2>th2_min && theta2< th2_max) {
-				sinth=sin(theta2/2);
-				valid_region=0;
-				int iex=-1;
-				/* Modulation mode: estimate the number of modulation periods and correct dt.
-				 Exclude regions with overlaping diffraction lines
-				*/
-				if (modulation) {
-					iline=getNearestLine(-1, sinth, tof, mod_twidth);
-					if (iline>=0) {
-						io=getNearestLine(iline, sinth, tof, mod_twidth);
-						if (io<0) {
-							valid_region=1;
-							/*
-							Correction for modulation in steps:
-							1) tref = reference time for given dhkl, theta and reference chopper window 
-							2) tc = neutron time minus tref
-							3) iref = new reference chopper window
-							4) dt = correction for tof
-							*/
-							tref=2*(1.0+mod_shift)*dhkl[iline]*sinth/hm*L0; 
-							tc=tof-time0-tref;
-							iref=(int)floor(tc/mod_dt+0.5);
-							dt=iref*mod_dt+time0;
-							if (iline==0 && dbg) {
-								dbgn++;
-								printf("iref=%d, dt=%g, t=%g, tcor=%g\n",
-								iref, iref*mod_dt*1000,tc*1000, (tof-tref-dt)*1000);
-							}
-						}
-					}
-				// Normal mode: get indices in the ToF - 2theta grid and accumulate plot data
-				} else {					
-					valid_region=1;
-					dt=time0;
-					i = (int)floor((theta2-grf_th1*DEG2RAD)/(grf_th2*DEG2RAD-grf_th1*DEG2RAD)*na+0.5);
-					j = (int)floor((t-time_min)/(time_max-time_min)*nt+0.5);
-					if ( j>=0 && j<nt && i>=0 && i<na ) {
-						TOF_N[i][j]++;
-						TOF_p[i][j] += p;
-						TOF_p2[i][j] += p*p;
-					}
-				}
-				/*  Valid event: calculate wavelength and dhkl "as recorded by the instrument", i.e.
-				including smearing by instrument resolution.
-				Record a list of detection event coordinates in EVENTS array.
-				*/
-				if (valid_region) {
-					// subtract reference chopper time from tof and calculate wavelength
-					lam=hm*(tof-dt)/(L0-radius+L1);
-					d=lam/2/sinth;
-					if (iev<nev) {
-						EVENTS[iev][0] = x0*1e3;
-						EVENTS[iev][1] = y0*1e3;
-						EVENTS[iev][2] = z0*1e3;
-						EVENTS[iev][3] = tof*1e3;
-						EVENTS[iev][4] = sinth;
-						EVENTS[iev][5] = p;
-						iev ++;
-					}
-					i=(int)floor((d-d_min)/dd+0.5);
-					if (i>=0 && i<nd) {
-						D_N[i]++;
-						D_p[i] += p;
-						D_p2[i] += p*p;
-					}
-				}
-			}
-		} else {
-          p=0;  /*... not necessary ? */
+    double sinth,dt,p0,tau,v0,x0,y0,z0,dx,dy,sig,tof,dd;
+    double tref,tc;
+    double r8ln2=2.355;
+    const double hm = 2*PI*K2V; // = h/m_n
+    double L1;
+    double th2_min=amin*PI/180;
+    double th2_max=amax*PI/180;
+    
+    if (dbgn>20) dbg=0;
+    /* cross-section with the detector front face. Allow height = yheight+3*res_y to account for a random 
+       displacement due to vertical resolution.
+    */
+    int cross=cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight+3*res_y);	
+    /* don't allow intersections with top/bottom cylinder walls,
+       only neutrons from inside of the cylinder are allowed.
+    */
+    if ( (cross!=1) ||  (t0>0) || (t1<0) ) {
+      p=0;
+    } else {
+      // go to cylinder surface = detector entry
+      PROP_DT(t1);
+      // save position before propagation through the detection volume
+      x0=x;
+      y0=y;
+      z0=z;
+      // add random penetration within the detector depth
+      v0=sqrt(vx*vx+vy*vy+vz*vz);
+      sig=100*mu*hm/v0; // mu is in 1/cm
+      p0=1.0-exp(-sig*zdepth);
+      tau=-1.0*log(1.0-p0*rand01())/sig/v0;
+      PROP_DT(tau);
+      p *= p0;
+      // add random shift by y-resolution	
+      dy = randnorm()*res_y/r8ln2;
+      y0 += dy;
+      // add random shift by x-resolution	(normal to radius)
+      dx = randnorm()*res_x/r8ln2;
+      cos2=z0/radius;
+      z0 += dx*sqrt(1.-cos2*cos2);
+      x0 += dx*cos2;
+      // add random time resolution shift
+      tof = t + randnorm()*res_t/r8ln2;
+      // NOTE: detection coordinates are x0, y0, z0, tof
+      // L1 = detected sample to detector distance:
+      L1=sqrt(x0*x0 + z0*z0 + y0*y0);
+      // Clip y on +- 0.5*yheight
+      if (fabs(y)<(0.5*yheight)) {
+	dd=(d_max-d_min)/nd;
+	// get cos(2*theta), assume primary beam axis // [0 0 1]
+	cos2=z0/L1;
+	theta2=acos(cos2);
+	dt = 0;
+	if (theta2>th2_min && theta2< th2_max) {
+	  sinth=sin(theta2/2);
+	  valid_region=0;
+	  int iex=-1;
+	  /* Modulation mode: estimate the number of modulation periods and correct dt.
+	     Exclude regions with overlaping diffraction lines
+	  */
+	  if (modulation) {
+	    iline=getNearestLine(-1, sinth, tof, mod_twidth);
+	    if (iline>=0) {
+	      io=getNearestLine(iline, sinth, tof, mod_twidth);
+	      if (io<0) {
+		valid_region=1;
+		/*
+		  Correction for modulation in steps:
+		  1) tref = reference time for given dhkl, theta and reference chopper window 
+		  2) tc = neutron time minus tref
+		  3) iref = new reference chopper window
+		  4) dt = correction for tof
+		*/
+		tref=2*(1.0+mod_shift)*dhkl[iline]*sinth/hm*L0; 
+		tc=tof-time0-tref;
+		iref=(int)floor(tc/mod_dt+0.5);
+		dt=iref*mod_dt+time0;
+		if (iline==0 && dbg) {
+		  dbgn++;
+		  printf("iref=%d, dt=%g, t=%g, tcor=%g\n",
+			 iref, iref*mod_dt*1000,tc*1000, (tof-tref-dt)*1000);
 		}
+	      }
+	    }
+	    // Normal mode: get indices in the ToF - 2theta grid and accumulate plot data
+	  } else {					
+	    valid_region=1;
+	    dt=time0;
+	    i = (int)floor((theta2-grf_th1*DEG2RAD)/(grf_th2*DEG2RAD-grf_th1*DEG2RAD)*na+0.5);
+	    j = (int)floor((t-time_min)/(time_max-time_min)*nt+0.5);
+	    if ( j>=0 && j<nt && i>=0 && i<na ) {
+	      TOF_N[i][j]++;
+	      TOF_p[i][j] += p;
+	      TOF_p2[i][j] += p*p;
+	    }
+	  }
+	  /*  Valid event: calculate wavelength and dhkl "as recorded by the instrument", i.e.
+	      including smearing by instrument resolution.
+	      Record a list of detection event coordinates in EVENTS array.
+	  */
+	  if (valid_region) {
+	    // subtract reference chopper time from tof and calculate wavelength
+	    lam=hm*(tof-dt)/(L0-radius+L1);
+	    d=lam/2/sinth;
+	    if (iev<nev) {
+	      EVENTS[iev][0] = x0*1e3;
+	      EVENTS[iev][1] = y0*1e3;
+	      EVENTS[iev][2] = z0*1e3;
+	      EVENTS[iev][3] = tof*1e3;
+	      EVENTS[iev][4] = sinth;
+	      EVENTS[iev][5] = p;
+	      iev ++;
+	    }
+	    i=(int)floor((d-d_min)/dd+0.5);
+	    if (i>=0 && i<nd) {
+	      D_N[i]++;
+	      D_p[i] += p;
+	      D_p2[i] += p*p;
+	    }
+	  }
 	}
-	if (restore_neutron) {
+      } 
+    }
+    if (restore_neutron) {
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
-  %}
+%}
 SAVE
-  %{
+%{
   
-		if (nev>1) {
-			saveEvents("events.dat", nev);
-		}
-        DETECTOR_OUT_1D(
-        "ToF to dhkl detector",
-        "dhkl [AA]",
-        "Intensity",
-        "d", d_min, d_max, nd,
-        &D_N[0],&D_p[0],&D_p2[0],
-        filename);
-		if (modulation) {
-			DETECTOR_OUT_2D(
-			"Map of overlapping regions",
-			"Scattering angle [deg]",
-			"Time-of-flight [ms]",
-			grf_th1, grf_th2, time_min*1000, time_max*1000, 
-			na, nt,
-			&TOF_N[0][0],&TOF_p[0][0],&TOF_p2[0][0],
-			"overlap_map.dat");
-		}
-  %}
+  if (nev>1) {
+    saveEvents("events.dat", nev);
+  }
+  DETECTOR_OUT_1D(
+		  "ToF to dhkl detector",
+		  "dhkl [AA]",
+		  "Intensity",
+		  "d", d_min, d_max, nd,
+		  &D_N[0],&D_p[0],&D_p2[0],
+		  filename);
+  if (modulation) {
+    DETECTOR_OUT_2D(
+		    "Map of overlapping regions",
+		    "Scattering angle [deg]",
+		    "Time-of-flight [ms]",
+		    grf_th1, grf_th2, time_min*1000, time_max*1000, 
+		    na, nt,
+		    &TOF_N[0][0],&TOF_p[0][0],&TOF_p2[0][0],
+		    "overlap_map.dat");
+  }
+%}
 FINALLY
 %{
   free(dhkl);
