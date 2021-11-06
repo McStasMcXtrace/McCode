@@ -520,6 +520,13 @@ SAVE
 FINALLY
 %{
   free(dhkl);
+  destroy_darr1d(D_N);
+  destroy_darr1d(D_p);
+  destroy_darr1d(D_p2);
+  destroy_darr2d(TOF_N);
+  destroy_darr2d(TOF_p);
+  destroy_darr2d(TOF_p2);
+  destroy_darr2d(EVENTS);
 %}
 MCDISPLAY
 %{

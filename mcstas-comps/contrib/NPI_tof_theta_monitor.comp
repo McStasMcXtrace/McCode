@@ -144,6 +144,13 @@ SAVE
         filename);
   %}
 
+FINALLY
+  %{
+  destroy_darr2d(TOF_N);
+  destroy_darr2d(TOF_p);
+  destroy_darr2d(TOF_p2);
+  %}
+
 MCDISPLAY
 %{
   magnify("y");
