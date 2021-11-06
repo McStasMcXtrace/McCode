@@ -90,6 +90,43 @@ SHARE
 %include "read_table-lib"
 
 /*
+Save up to nmax events stored by the detector in a text file, one per row.
+Each row contains detection coordinates: x, y, t, sin(theta), p.
+*/
+
+void saveEvents(double** EVENTS, char* file_name, long int nmax, long int iev) {
+	long int i, j, n;
+	double sumP;
+	FILE *hfile;
+	hfile=fopen(file_name,"w");
+	if (!hfile)
+	{
+        fprintf(stderr,"saveEvents: can't open file for output (%s)\n",file_name);
+        exit(-1);
+	} else {
+		n = nmax;
+		if (n > iev) {
+			n = iev;
+		}
+		sumP = 0.0;
+		for (i=0;i<n;i++) {
+			sumP += EVENTS[i][5];
+		}
+		fprintf(hfile, "# Detection events\n");
+		fprintf(hfile, "# sum(p) = %g\n",sumP);
+		fprintf(hfile, "# sum(n) = %ld\n",n);
+		fprintf(hfile, "# Columns: x [mm], y[mm], z[mm], t[ms], sin(theta), p\n");
+		for (i=0;i<n;i++) {
+			for (j=0; j<6; j++) {
+				fprintf(hfile, "%g ", EVENTS[i][j]);
+			}
+			fprintf(hfile, "\n");
+		}
+		fclose(hfile);
+	}	
+}  
+
+/*
 Used in the modulation mode:
 Calculates the index of the nearest line which fits within given time interval (trange).
 Excludes the line with given index (iex).
@@ -203,7 +240,6 @@ INITIALIZE
     /* h/m_n in [Ang*m/s]  */
     double hm = 2*PI*K2V;
     dbgn=0;
-    dbg=0;
     iev = -1;
     
     D_N=create_darr1d(nd);
@@ -321,7 +357,7 @@ TRACE
        only neutrons from inside of the cylinder are allowed.
     */
     if ( (cross!=1) ||  (t0>0) || (t1<0) ) {
-      p=0;
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     } else {
       // go to cylinder surface = detector entry
       PROP_DT(t1);
@@ -444,7 +480,9 @@ TRACE
 	      double p2 = p*p;
 	      #pragma acc atomic
 	      D_N[i] = D_N[i] + 1;
+              #pragma acc atomic
 	      D_p[i] = D_p[i] + p;
+              #pragma acc atomic
 	      D_p2[i] = D_p2[i] + p2;
 	    }
 	  }
@@ -458,9 +496,9 @@ TRACE
 SAVE
 %{
   
-  /*  if (nev>1) {
+  if (nev>1) {
     saveEvents(EVENTS,"events.dat", nev, iev);
-    }*/
+  }
   DETECTOR_OUT_1D(
 		  "ToF to dhkl detector",
 		  "dhkl [AA]",
