@@ -44,6 +44,8 @@ SETTING PARAMETERS (R = 40.0, Height = 100.0, Concentration = 0.01, DeltaRho = 1
 xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
 
 OUTPUT PARAMETERS ()
+DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
+NOACC
 
 DECLARE
 %{
@@ -145,7 +147,7 @@ TRACE
 		for (i = 0; i < NumberOfSteps; ++i) {
 			Alpha = (i + 0.5) * AlphaStep;
     
-			Formfactor1 = j1(q * R * sin(Alpha)) / (q * R * sin(Alpha));
+			Formfactor1 = gsl_sf_bessel_J1(q * R * sin(Alpha)) / (q * R * sin(Alpha));
 			Formfactor2 = sin(q * Height * cos(Alpha) / 2.0) / (q * Height * cos(Alpha) / 2.0);
 
 			Intensity += sin(Alpha) * Prefactor * pow(2 * Formfactor1 * Formfactor2, 2) * AlphaStep;
@@ -158,8 +160,7 @@ TRACE
 %}
 
 MCDISPLAY
-%{
-	
+%{	
 	box(0, 0, 0, xwidth, yheight, zdepth);
 %}
 
