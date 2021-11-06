@@ -54,11 +54,13 @@ OUTPUT PARAMETERS ()
 SHARE
 %{
   // Functions used for compution the intensity from a given liposome
+#pragma acc routine
   double FormfactorSphere(double q, double R)
 	{
 		return 3 * (sin(q * R) - q * R * cos(q * R)) / pow(q * R, 3);
 	}
 
+#pragma acc routine
 	double IntensityOfLiposome(double q, double R, double ThicknessHead, double ThicknessTail, double ThicknessCH3, double DeltaRhoHead, double DeltaRhoCH2, double DeltaRhoCH3)
 	{
 		const double RHeadOut = R + ThicknessHead + ThicknessTail + ThicknessCH3;
@@ -233,8 +235,7 @@ TRACE
 %}
 
 MCDISPLAY
-%{
-	
+%{	
 	box(0, 0, 0, xwidth, yheight, zdepth);
 %}
 
