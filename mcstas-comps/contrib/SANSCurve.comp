@@ -47,17 +47,8 @@ string FileWithCurve = "Curve.dat")
 
 OUTPUT PARAMETERS ()
 
-DECLARE
+SHARE
 %{
-double Absorption;
-double q;
-double* Q;
-double* I;
-double ForwardScattering;
-double Prefactor;
-int NumberOfDatapoints;
-double NumberDensity;
-
 // Function used to determine the number of datapoints in the input file
 int CountLines(FILE* File)
 	{
@@ -116,6 +107,18 @@ int CountLines(FILE* File)
 
         return NumberOfDatapoints;
     }
+%}
+
+DECLARE
+%{
+double Absorption;
+double q;
+double* Q;
+double* I;
+double ForwardScattering;
+double Prefactor;
+int NumberOfDatapoints;
+double NumberDensity;
 %}
 
 INITIALIZE
@@ -227,7 +230,6 @@ TRACE
 
 MCDISPLAY
 %{
-	
 	box(0, 0, 0, xwidth, yheight, zdepth);
 %}
 
