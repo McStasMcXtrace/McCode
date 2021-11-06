@@ -63,30 +63,18 @@ SETTING PARAMETERS ( NumberOfQBins = 200,
 	xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius, qMin = 0.001, qMax = 1.0)
 
 OUTPUT PARAMETERS ()
+DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
+NOACC
 
-DECLARE
+SHARE
 %{
-// Declarations
-double Absorption;
-double q;
-double NumberDensity;
-
-// Curve used in linear
-double *qArray;
-double *IArray;
-%}
-
-INITIALIZE
-%{
-// Rescale concentration into number of aggregates per m^3 times 10^-4
-NumberDensity = Concentration * 6.02214129e19;
-
+#include <gsl/gsl_sf_bessel.h>
 // Functions used for compution the intensity from a given liposome
 double FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, double Height, double Alpha, double Beta)
 	{
 		double const ProjectedRadius = sqrt(pow(MajorSemiAxis * sin(Beta), 2) + pow(MinorSemiAxis * cos(Beta), 2));
 
-		double const Formfactor1 = j1(q * ProjectedRadius * sin(Alpha)) / (q * ProjectedRadius * sin(Alpha));
+		double const Formfactor1 = gsl_sf_bessel_J1((q * ProjectedRadius * sin(Alpha)) / (q * ProjectedRadius * sin(Alpha));
 		double const Formfactor2 = sin(q * Height * cos(Alpha) / 2.0) / (q * Height * cos(Alpha) / 2.0);
 
 		return 2 * Formfactor1 * Formfactor2;
@@ -236,8 +224,19 @@ double FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, 
 
 		return Intensity;
 	}
+%}
 
-	// Declarations
+DECLARE
+%{
+// Declarations
+double Absorption;
+double q;
+double NumberDensity;
+
+// Curve used in linear
+double *qArray;
+double *IArray;
+
 	double RhoBelt;
 	double RhoHead;
 	double RhoCH2Tail;
@@ -261,6 +260,9 @@ double FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, 
 
 	double AreaOfLipids;
 
+INITIALIZE %{
+	// Rescale concentration into number of aggregates per m^3 times 10^-4
+       NumberDensity = Concentration * 6.02214129e19;
 	const double qStep = (qMax - qMin) / (1.0 * NumberOfQBins);
 	int i;
 	double qDummy;
