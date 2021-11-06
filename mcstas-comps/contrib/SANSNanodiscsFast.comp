@@ -59,21 +59,13 @@ SETTING PARAMETERS (NumberOfQBins = 200,
 	xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius, qMin = 0.001, qMax = 1.0)
 
 OUTPUT PARAMETERS ()
+DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
+NOACC
 
-DECLARE
+SHARE
 %{
-// Declarations
-double Absorption;
-double q;
-double NumberDensity;
+#include <gsl/gsl_sf_bessel.h>
 
-// Curve used in linear
-double *qArray;
-double *IArray;
-%}
-
-INITIALIZE
-%{
 // Functions used for compution the intensity from a given liposome
 double FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, double Height, double Alpha, double Beta)
 	{
@@ -167,6 +159,9 @@ double FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, 
 		return Intensity;
 	}
 
+DECLARE 
+%{
+
 	// Declarations
 	double RhoBelt;
 	double RhoHead;
@@ -188,7 +183,18 @@ double FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, 
 	double HeightOfCH3;
 
 	double AreaOfLipids;
+	// Declarations
+	double Absorption;
+	double q;
+	double NumberDensity;
 
+	// Curve used in linear
+	double *qArray;
+	double *IArray;
+
+
+INITIALIZE
+%{
 	const double ScatteringLengthOfWater = 2.82E-12;
 	const double VolumeOfWater = 30.0;
 
