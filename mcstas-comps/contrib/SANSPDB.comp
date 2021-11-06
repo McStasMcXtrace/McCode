@@ -45,9 +45,14 @@ SampleToDetectorDistance, DetectorRadius,
 string PDBFilepath = "PDBfile.pdb")
 
 OUTPUT PARAMETERS ()
+DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
+NOACC
 
 SHARE
 %{
+	#include <gsl/gsl_sf_legendre.h>
+	#include <gsl/gsl_sf_bessel.h>
+	#include <complex.h>
 // Simple mathematical functions
 int Sign(double x) {
 		int Sign;
