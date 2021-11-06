@@ -50,31 +50,15 @@ SETTING PARAMETERS (NumberOfQBins = 200,
 	string PDBFilepath = "PDBfile.pdb")
 
 OUTPUT PARAMETERS ()
+DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
+NOACC
 
-DECLARE
+SHARE
 %{
-	// Declarations
-	double Absorption;
-	double q;
-	double NumberDensity;
-	const int OrderOfHarmonics;
-
-	// Arrays for storing q and I(q)
-	double * qArray;
-	double * IArray;
-
 	// GSL libraries
 	#include <gsl/gsl_sf_legendre.h>
 	#include <gsl/gsl_sf_bessel.h>
 	#include <complex.h>
-%}
-
-INITIALIZE
-%{
-	OrderOfHarmonics = 21;
-
-	// Rescale concentration into number of aggregates per m^3 times 10^-4
-	NumberDensity = Concentration * 6.02214129e19;
 
 	// Structs describing the protein
 	struct Bead
@@ -461,6 +445,29 @@ INITIALIZE
 		    }
 		}
 	}
+
+%}
+
+DECLARE 
+%{
+	// Declarations
+	double Absorption;
+	double q;
+	double NumberDensity;
+	const int OrderOfHarmonics;
+
+	// Arrays for storing q and I(q)
+	double * qArray;
+	double * IArray;
+%}
+
+INITIALIZE
+%{
+	OrderOfHarmonics = 21;
+
+	// Rescale concentration into number of aggregates per m^3 times 10^-4
+	NumberDensity = Concentration * 6.02214129e19;
+
 
 	// Standard sample handling
 	if (!xwidth || !yheight || !zdepth) {

@@ -130,10 +130,14 @@ TRACE
 		TwoThetaHigh = atan(RHigh / DistanceFromSample);
 
 		AreaOfSlice = fabs((cos(2.0 * TwoThetaLow) - cos(2.0 * TwoThetaHigh)) * 2.0 * PI);
-
-		++NofR[i];
-		IofR[i] += p / AreaOfSlice;
-		IofRSquared[i] += pow(p / AreaOfSlice, 2);
+		#pragma acc atomic
+		NofR[i]++;
+		double p_A=p/AreaOfSlice;
+		#pragma acc atomic
+		IofR[i] += p_A;
+		double p2_A2= p*p/(AreaOfSlice*AreaOfSlice);
+		#pragma acc atomic
+		IofRSquared[i] += p2_A2;
     }
 
 	// Put neutron in the correct q-bin
@@ -148,10 +152,15 @@ TRACE
 
 		AreaOfSlice = fabs((cos(2.0 * TwoThetaLow) - cos(2.0 * TwoThetaHigh)) * 2.0 * PI);
 
+		#pragma acc atomic
 		++Nofq[i];
-		Iofq[i] += p / AreaOfSlice;
-		IofqSquared[i] += pow(p / AreaOfSlice, 2);
-
+		double p_A=p/AreaOfSlice;
+		#pragma acc atomic
+		Iofq[i] += p_A;
+		double p2_A2= p*p/(AreaOfSlice*AreaOfSlice);
+		#pragma acc atomic
+		IofqSquared[i] += p2_A2;
+		
 		SCATTER;
     }
 
