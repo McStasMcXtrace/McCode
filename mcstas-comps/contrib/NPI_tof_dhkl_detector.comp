@@ -76,7 +76,7 @@
 ******************************************************************************/
 DEFINE COMPONENT NPI_tof_dhkl_detector
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string filename=0, radius=2, yheight=0.3, zdepth=0.01, amin=75, amax=105, int nd=200, int na=800, int nt=800, int nev=1
+SETTING PARAMETERS (string filename=0, radius=2, yheight=0.3, zdepth=0.01, amin=75, amax=105, int nd=200, int na=800, int nt=800, int nev=1,
 d_min=1, d_max=3, time0, Linst, Lc, 
 res_x=0, res_y=0, res_t=0, mu=1.0, mod_shift=0,
 modulation=0, mod_dt=0, mod_twidth=0, string mod_d0_table=0, 
@@ -88,43 +88,6 @@ SHARE
 %{
 /* used for reading data table from file */
 %include "read_table-lib"
-
-/*
-Save up to nmax events stored by the detector in a text file, one per row.
-Each row contains detection coordinates: x, y, t, sin(theta), p.
-*/
-
-void saveEvents(char* file_name, long int nmax) {
-	long int i, j, n;
-	double sumP;
-	FILE *hfile;
-	hfile=fopen(file_name,"w");
-	if (!hfile)
-	{
-        fprintf(stderr,"saveEvents: can't open file for output (%s)\n",file_name);
-        exit(-1);
-	} else {
-		n = nmax;
-		if (n > iev) {
-			n = iev;
-		}
-		sumP = 0.0;
-		for (i=0;i<n;i++) {
-			sumP += EVENTS[i][5];
-		}
-		fprintf(hfile, "# Detection events\n");
-		fprintf(hfile, "# sum(p) = %g\n",sumP);
-		fprintf(hfile, "# sum(n) = %ld\n",n);
-		fprintf(hfile, "# Columns: x [mm], y[mm], z[mm], t[ms], sin(theta), p\n");
-		for (i=0;i<n;i++) {
-			for (j=0; j<6; j++) {
-				fprintf(hfile, "%g ", EVENTS[i][j]);
-			}
-			fprintf(hfile, "\n");
-		}
-		fclose(hfile);
-	}	
-}  
 
 /*
 Used in the modulation mode:
@@ -215,15 +178,18 @@ void calcOverlaps(double tmin, double tmax, double ami, double ama, double trang
 
 DECLARE
 %{
-  DArray1d D_N;//[nd];
-  DArray1d D_p;//[nd];
-  DArray1d D_p2;//[nd];
-  DArray2d TOF_N;//[na][nt];
-  DArray2d TOF_p;//[na][nt];
-  DArray2d TOF_p2;//[na][nt];
-  DArray2d EVENTS;//[nev][6]; // save x, y, z, time, theta, p 
+  DArray1d D_N;
+  DArray1d D_p;
+  DArray1d D_p2;
+  DArray2d TOF_N;
+  DArray2d TOF_p;
+  DArray2d TOF_p2;
+  DArray2d EVENTS;
   double *dhkl;
-  double time_min,time_max,grf_th1,grf_th2;
+  double time_min;
+  double time_max;
+  double grf_th1;
+  double grf_th2;
   double t2lam;
   double L0, Ltof;
   long iev;
@@ -465,9 +431,9 @@ TRACE
 SAVE
 %{
   
-  if (nev>1) {
-    saveEvents("events.dat", nev);
-  }
+  /*  if (nev>1) {
+    saveEvents(EVENTS,"events.dat", nev, iev);
+    }*/
   DETECTOR_OUT_1D(
 		  "ToF to dhkl detector",
 		  "dhkl [AA]",

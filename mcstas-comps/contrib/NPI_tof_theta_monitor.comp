@@ -116,9 +116,13 @@ TRACE
 	  i = (int)floor((theta2-th2_min)/dth+0.5);
 	  j = (int)floor((t-tt_0)/dtof+0.5);
 	  if ( j>=0 && j<nt && i>=0 && i<na ) {
-	    TOF_N[i][j]++;
-	    TOF_p[i][j] += p;
-	    TOF_p2[i][j] += p*p;
+	    double p2=p*p;
+	    #pragma acc atomic
+	    TOF_N[i][j] = TOF_N[i][j] + 1;
+	    #pragma acc atomic
+	    TOF_p[i][j] = TOF_p[i][j] + p;
+	    #pragma acc atomic
+	    TOF_p2[i][j] = TOF_p2[i][j] + p2;
 	  } else {
 	  }
 	}
