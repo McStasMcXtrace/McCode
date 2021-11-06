@@ -56,8 +56,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT NPI_tof_theta_monitor
-DEFINITION PARAMETERS (nt=128, na=90)
-SETTING PARAMETERS (string filename=0, radius=1, yheight=0.3, tmin, tmax, amin, amax, restore_neutron=1, verbose=0)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string filename=0, radius=1, yheight=0.3, tmin, tmax, amin, amax, restore_neutron=1, verbose=0, int nt=128, int na=90)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
@@ -66,67 +66,65 @@ SHARE
   %}
 DECLARE
   %{
-    double TOF_N[na][nt];
-    double TOF_p[na][nt];
-    double TOF_p2[na][nt];
-    double th2_min, th2_max, dth, dtof;
-	double tt_0, tt_1;
+    DArray2d TOF_N;  
+    DArray2d TOF_p;  
+    DArray2d TOF_p2; 
+    double th2_min;
+    double th2_max;
+    double dth;
+    double dtof;
+    double tt_0;
+    double tt_1;
   %}
 INITIALIZE
   %{	
-	th2_min = amin*DEG2RAD;
-	th2_max = amax*DEG2RAD;
-	dth=(th2_max-th2_min)/na;
+    th2_min = amin*DEG2RAD;
+    th2_max = amax*DEG2RAD;
+    dth=(th2_max-th2_min)/na;
     tt_0=tmin*1e-6;
     tt_1=tmax*1e-6;
-	dtof=(tt_1-tt_0)/nt;
-	int i,j;
-    for (i=0; i<na; i++) {
-      for (j=0; j<nt; j++)
-      {
-        TOF_N[i][j] = 0;
-        TOF_p[i][j] = 0;
-        TOF_p2[i][j] = 0;
-      }
-	}
-	if (verbose) {
-		printf("%s: range 2theta=(%g,%g), time(%g,%g)\n",NAME_CURRENT_COMP,amin,amax,tmin/1000,tmax/1000);
-	}
+    dtof=(tt_1-tt_0)/nt;
+    
+    TOF_N = create_darr2d(na, nt);
+    TOF_p = create_darr2d(na, nt);
+    TOF_p2 = create_darr2d(na, nt);
+    
+    if (verbose) {
+      printf("%s: range 2theta=(%g,%g), time(%g,%g)\n",NAME_CURRENT_COMP,amin,amax,tmin/1000,tmax/1000);
+    }
   %}
 TRACE
   %{
     int i,j;
     double t0,t1,theta2;
-	double cos2;
-	int cross=cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight);
-
-	/* don't allow intersections with top/bottom cylinder walls
-	   only neutrons from inside are allowed 
-	*/
-	if ( (cross!=1) ||  (t0>0) || (t1<0) ) {
-		p=0;
-	} else {
-		PROP_DT(t1);
-		 
-    /* Calculate pixel */
-		if (fabs(y)<(0.5*yheight)) {
-			cos2=z/sqrt(radius*radius+y*y);
-			theta2=acos(cos2);
-			if (theta2>th2_min && theta2< th2_max) {
-				i = (int)floor((theta2-th2_min)/dth+0.5);
-				j = (int)floor((t-tt_0)/dtof+0.5);
-				if ( j>=0 && j<nt && i>=0 && i<na ) {
-					TOF_N[i][j]++;
-					TOF_p[i][j] += p;
-					TOF_p2[i][j] += p*p;
-				} else {
-				}
-			}
-		} else {
-          p=0;  /*... not necessary ? */
-		}
+    double cos2;
+    int cross=cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight);
+    
+    /* don't allow intersections with top/bottom cylinder walls
+       only neutrons from inside are allowed 
+    */
+    if ( (cross!=1) ||  (t0>0) || (t1<0) ) {
+      p=0;
+    } else {
+      PROP_DT(t1);
+      
+      /* Calculate pixel */
+      if (fabs(y)<(0.5*yheight)) {
+	cos2=z/sqrt(radius*radius+y*y);
+	theta2=acos(cos2);
+	if (theta2>th2_min && theta2< th2_max) {
+	  i = (int)floor((theta2-th2_min)/dth+0.5);
+	  j = (int)floor((t-tt_0)/dtof+0.5);
+	  if ( j>=0 && j<nt && i>=0 && i<na ) {
+	    TOF_N[i][j]++;
+	    TOF_p[i][j] += p;
+	    TOF_p2[i][j] += p*p;
+	  } else {
+	  }
 	}
-	if (restore_neutron) {
+      }
+    }
+    if (restore_neutron) {
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
   %}
@@ -135,7 +133,7 @@ SAVE
     DETECTOR_OUT_2D(
         "Cylindrical monitor ToF x 2theta",
         "Scattering angle [deg]",
-		"Time-of-flight [\\gms]",
+	"Time-of-flight [\\gms]",
         amin, amax, tmin, tmax, 
         na, nt,
         &TOF_N[0][0],&TOF_p[0][0],&TOF_p2[0][0],
