@@ -92,7 +92,6 @@ DECLARE
 	double Absorption;
 	double NumberDensity;
 
-	int i;
 	int NumberOfStepsInR;
 	double RMin;
 	double RMax;
@@ -172,6 +171,7 @@ TRACE
 	double vz_i;
 	char Intersect = 0;
 	double R;
+	int i;
 
 	// Computation
 	Intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
