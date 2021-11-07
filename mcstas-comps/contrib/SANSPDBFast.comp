@@ -42,7 +42,7 @@ DEFINE COMPONENT SANSPDBFast
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (NumberOfQBins = 200,
+SETTING PARAMETERS (int NumberOfQBins = 200,
 	RhoSolvent = 6.4e-14, Concentration = 0.01, AbsorptionCrosssection = 0.0,
 	xwidth, yheight, zdepth,
 	SampleToDetectorDistance, DetectorRadius,
@@ -60,6 +60,7 @@ SHARE
 	#include <gsl/gsl_sf_bessel.h>
 	#include <complex.h>
 
+        #define OrderOfHarmonics 21
 	// Structs describing the protein
 	struct Bead
 	{
@@ -452,9 +453,7 @@ DECLARE
 %{
 	// Declarations
 	double Absorption;
-	double q;
 	double NumberDensity;
-	const int OrderOfHarmonics;
 
 	// Arrays for storing q and I(q)
 	double * qArray;
@@ -463,8 +462,6 @@ DECLARE
 
 INITIALIZE
 %{
-	OrderOfHarmonics = 21;
-
 	// Rescale concentration into number of aggregates per m^3 times 10^-4
 	NumberDensity = Concentration * 6.02214129e19;
 
@@ -530,6 +527,7 @@ TRACE
 	double Weight;
 	double IntensityPart;
 	double SolidAngle;
+	double q;
 	double qx;
 	double qy;
 	double qz;
