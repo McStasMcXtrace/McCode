@@ -47,12 +47,15 @@ OUTPUT PARAMETERS ()
 DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
 NOACC
 
+SHARE %{
+  #include <gsl/gsl_sf_bessel.h>
+%}
+
 DECLARE
 %{
 // Declarations
 double Prefactor;
 double Absorption;
-double q;
 double NumberDensity;
 %}
 
@@ -83,6 +86,7 @@ TRACE
 	double Formfactor2;
 	double Intensity;
 	double SolidAngle;
+	double q;
 	double qx; 
 	double qy; 
 	double qz;
@@ -116,7 +120,7 @@ TRACE
 		l_full = v * (t1 - t0);
 		dt = rand01() * (t1 - t0) + t0;
 		PROP_DT(dt);                   
-	    l = v * (dt - t0);
+		l = v * (dt - t0);
 
 		// Store properties of incoming neutron
 		vx_i = vx;
@@ -152,7 +156,6 @@ TRACE
 
 			Intensity += sin(Alpha) * Prefactor * pow(2 * Formfactor1 * Formfactor2, 2) * AlphaStep;
 		}
-
 		p *= l_full * SolidAngle / (4.0 * PI) * Intensity * exp(- Absorption * (l + l1) / v);
 
 		SCATTER;
