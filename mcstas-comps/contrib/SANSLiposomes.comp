@@ -90,7 +90,6 @@ DECLARE
 %{
 	// Declarations
 	double Absorption;
-	double q;
 	double NumberDensity;
 
 	int i;
@@ -162,6 +161,7 @@ TRACE
 	double Weight2;
 	double IntensityPart;
 	double SolidAngle;
+	double q;
 	double qx;
 	double qy;
 	double qz;
@@ -188,7 +188,7 @@ TRACE
 		l_full = v * (t1 - t0);
 		dt = rand01() * (t1 - t0) + t0;
 		PROP_DT(dt);
-	    l = v * (dt - t0);
+		l = v * (dt - t0);
 
 		// Store properties of incoming neutron
 		vx_i = vx;
