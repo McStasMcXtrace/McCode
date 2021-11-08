@@ -95,6 +95,7 @@ int reflec_Init(t_Reflec *R, enum reflec_Type typ, char *file, void *pars){
 }
 
 int reflec_Init_parratt(t_Reflec *R, int N, double *d, double *delta, double *beta){
+    R->type=PARRATT;
     R->prms.rp.N=N;
     R->prms.rp.d=d;
     R->prms.rp.delta=delta;
@@ -103,6 +104,7 @@ int reflec_Init_parratt(t_Reflec *R, int N, double *d, double *delta, double *be
 }
 
 int reflec_Init_kinematic(t_Reflec *R, int N, double Gamma, double Lambda, double rhoAB){
+    R->type=KINEMATIC;
     R->prms.rk.N=N;
     R->prms.rk.Gamma=Gamma;
     R->prms.rk.Lambda=Lambda;
@@ -110,6 +112,7 @@ int reflec_Init_kinematic(t_Reflec *R, int N, double Gamma, double Lambda, doubl
     return 0;
 }
  int reflec_Init_const(t_Reflec *R, double R0){
+   R->type=CONSTANT;
    R->prms.rconst.R=R0;
    return 0;
  }
