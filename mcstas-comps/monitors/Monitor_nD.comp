@@ -549,7 +549,7 @@ TRACE
     }
 
     if (Vars.Flag_capture){
-      p = p / multiplier_capture;
+      p = p / multiplier_capture*1.7985;
     }
 
     if (Vars.Flag_parallel) /* back to neutron state before detection */
