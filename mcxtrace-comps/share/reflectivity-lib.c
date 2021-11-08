@@ -260,7 +260,7 @@ int reflec_Init_File(t_Reflec *R, char *filename){
       case UNDETERMINED:
       default:
         {
-          fprintf(stderr,"Error (%s): Undetermined reflectivity parametrization type. r set to 1\n",REFLIBNAME);
+          fprintf(stderr,"Warning (%s): Undetermined reflectivity parametrization type. r set to 1\n",REFLIBNAME);
           return 1;
         }
     }
@@ -485,24 +485,24 @@ double reflecq( t_Reflec r_handle, double q, double g, double k, double theta){
           r=cabs(reflec_bare(r_handle,q,g));
           break;
         }
-	case COATING:
+    case COATING:
         {
-            double complex rp;
-            rp=reflec_coating(r_handle,q,g,k);
-            r= creal(rp * conj(rp));
-            break;
+          double complex rp;
+          rp=reflec_coating(r_handle,q,g,k);
+          r= creal(rp * conj(rp));
+          break;
         }
-	case Q_PARAMETRIC:
+    case Q_PARAMETRIC:
         {
           r=cabs(reflec_q_prmtc(r_handle,q,g));
           break;
         }
-	/*case PARRATT:
+        /*case PARRATT:
         {
           r=cabs(reflec_parratt(r_handle,q,g,k));
           break;
 	  }*/
-	case ETH_PARAMETRIC:
+    case ETH_PARAMETRIC:
         {
             r=cabs(reflec_eth_prmtc(r_handle,g,k*K2E,theta));
             break;
@@ -512,10 +512,10 @@ double reflecq( t_Reflec r_handle, double q, double g, double k, double theta){
           r=cabs(reflec_kinematic(r_handle,q,g));
           break;
 	  }
-	default:
+      default:
         {
 #ifndef OPENACC
-          fprintf(stderr,"ERROR (%s): Undetermined reflectivity type. r set to 1\n", REFLIBNAME);
+          fprintf(stderr,"Warning (%s): Undetermined reflectivity type. r set to 1\n", REFLIBNAME);
 #endif
           r=1.0;
 	}
