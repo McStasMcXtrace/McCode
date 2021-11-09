@@ -36,8 +36,6 @@ DECLARE
 
 USERVARS
 %{
-  int doJump;
-  int numJump;
 %}
 
 INITIALIZE
@@ -59,7 +57,7 @@ EXTEND %{
 SPLIT SPLITS COMPONENT Slit = Arm()
   AT (0,0,0) ABSOLUTE
   
-COMPONENT PSD = PSD_monitor(xwidth=2.0, yheight=2.0, filename="rngout", nx=100, ny=100)
+COMPONENT PSD = PSD_monitor(xwidth=2.0, yheight=2.0, filename="splits", nx=100, ny=100)
   AT (0,0,0.1) ABSOLUTE
   
 FINALLY
