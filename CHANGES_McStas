@@ -42,13 +42,13 @@
 * Modified by: PW November 2020: version 2.7
 * Modified by: PW December 2020: version 3.0
 * Modified by: PW September-October 2021: version 2.7.1
-* Modified by: PW September-October 2021: version 3.1
+* Modified by: PW September-November 2021: version 3.1
 *
-* This file is part of McStas 3.1, released October 11th 2021.
+* This file is part of McStas 3.1, released November 12th 2021.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas 3.1, October 11th, 2021
+Changes in McStas 3.1, November 12th, 2021
 
  McStas 3.1 is the second official release in the 3.x series, with a modernised 
  code-generator and support for GPU acceleration on NVIDIA cards.
@@ -139,6 +139,12 @@ Changes in McStas 3.1, October 11th, 2021
    * We don't ship an updated set of manuals for McStas 3.1, but essential documentation is available
      on the McCode GitHub wiki https://github.com/McStasMcXtrace/McCode/wiki
 
+Components:
+ - A new source component Source_pulsed form Klaus Lieutentant (FZJ/Vitess) has been added with a
+   corresponding test instrument Test_Source_pulsed.instr. Default parametrisations correspond to
+   those of the source of the Juelich HBS project.
+ - Special NOACC versions of Monitor_nD and MCPL_output have been added. When using these for event-mode
+   output, more than 2e9 events can be stored.
 
 Tools:
  - The tools for McStas 3.1 correspond to those distributed with McStas 2.7.1, that is:
