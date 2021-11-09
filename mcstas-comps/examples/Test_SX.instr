@@ -15,6 +15,8 @@
 * A test instrument to compare Monitor_nD output against basic 1D and 2D monitors.
 *
 * %Example: lambda=5 Detector: Sph_mon_I=6.13193e+7
+* %Example: lambda=5 SPLITS=5 Detector: Sph_mon_I=6.13193e+7
+* %Example: lambda=5 SPLITS=10 Detector: Sph_mon_I=6.13193e+7
 *
 * %Parameters
 * lambda: [Angs]  Central wavelength emitted from source
