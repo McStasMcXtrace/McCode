@@ -355,6 +355,8 @@ double zero_find_gpu1(double yval,double xmin,double xmax, double tol, double ar
   }
   dx=xh-xl;
   rtb=xl;
+  max_iter = 10000;
+  iter_no=0;
   while(fabs(Pfunc(rtb,yval, arg1, arg2, arg3))>tol && iter_no++<max_iter){
     dx=dx*0.5;
     xmid=rtb+dx;
