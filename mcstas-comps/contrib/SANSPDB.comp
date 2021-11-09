@@ -1,5 +1,5 @@
 /*******************************************************************************
-* McStas, neutron ray-tracing package
+**McStas, neutron ray-tracing package
 *         Copyright 1997-2003, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
@@ -7,7 +7,7 @@
 * Component: SANSPDB
 *
 * %I
-* Written by: Martin Cramer Pedersen (mcpe@nbi.dk) and Søren Kynde (kynde@nbi.dk)
+* Written by:**Martin Cramer Pedersen (mcpe@nbi.dk) and Søren Kynde (kynde@nbi.dk)
 * Date: October 17, 2012
 * Origin: KU-Science
 *
@@ -39,10 +39,8 @@ DEFINE COMPONENT SANSPDB
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (RhoSolvent = 6.4e-14, Concentration = 0.01, AbsorptionCrosssection = 0.0,
-xwidth, yheight, zdepth,
-SampleToDetectorDistance, DetectorRadius,
-string PDBFilepath = "PDBfile.pdb")
+SETTING PARAMETERS (RhoSolvent = 6.4e-14, Concentration = 0.01, AbsorptionCrosssection = 0.0, string PDBFilepath="PDBfile.pdb",
+		    xwidth=0, yheight=0, zdepth=0, SampleToDetectorDistance=1, DetectorRadius=1)
 
 OUTPUT PARAMETERS ()
 DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
@@ -53,9 +51,12 @@ SHARE
 	#include <gsl/gsl_sf_legendre.h>
 	#include <gsl/gsl_sf_bessel.h>
 	#include <complex.h>
-// Simple mathematical functions
-int Sign(double x) {
+        #define OrderOfHarmonics 21
+
+	// Simple mathematical functions
+	int Sign(double x) {
 		int Sign;
+
 		if (x > 0) {
 			Sign = 1;
 		} else if (x < 0) {
@@ -65,6 +66,7 @@ int Sign(double x) {
 		}
 		return Sign;
 	}
+
 	double complex Polar(double R, double Concentration)
 	{
 		double complex Polar;
@@ -74,8 +76,39 @@ int Sign(double x) {
 		return Polar;
 	}
 
+
+        // Protein structs                                                                                                                                                                                                                                                          
+        struct Bead
+        {
+                double x;
+                double y;
+                double z;
+
+                double xv;
+                double yv;
+                double zv;
+
+                double xa;
+                double ya;
+                double za;
+
+                char *NameOfResidue;
+
+                double Volume;
+		double ScatteringLength;
+        };
+        typedef struct Bead BeadStruct;
+        struct Protein
+        {
+         	BeadStruct *Beads;
+                int NumberOfResidues;
+        };
+	typedef struct Protein ProteinStruct;
+
+
+
 	// Function used to compute scattering from protein
-	void ExpandStructure(double complex ** Matrix, ProteinStruct *Protein, int ResidueID, double q, double RhoSolvent)
+	void ExpandStructure(double complex **Matrix, ProteinStruct *Protein, int ResidueID, double q, double RhoSolvent)
 	{
 		// Dummy integers
 		int i;
@@ -104,24 +137,26 @@ int Sign(double x) {
 		    gsl_sf_legendre_sphPlm_array(OrderOfHarmonics, i, cos(Theta), &Legendre[i]);
 
 		    for(j = i; j <= OrderOfHarmonics; ++j) {
-		        Matrix[j][i] += sqrt(4.0 * PI) * cpow(_Complex_I, j) * DeltaRhoProtein * Bessel[j] * Legendre[j] * Polar(1.0, -i * Concentration);
+		       Matrix[j][i] += sqrt(4.0 * PI) * cpow(_Complex_I, j) * DeltaRhoProtein * Bessel[j] * Legendre[j] * Polar(1.0, -i * Concentration);
 		    }
 		}
 	}
 
 	// Function used to generate intensity for a given q-value
-	double ComputeIntensity(double complex ** Matrix)
+	double ComputeIntensity(double complex **Matrix)
 	{
 		// Declarations
 		int i;
 		int j;
 		double Intensity = 0.0;
+
 		// Computation
 		for (i = 0; i <= OrderOfHarmonics; ++i) {
 		    for (j = 0; j <= i; ++j) {
 		        Intensity += ((j > 0) + 1.0) * pow(cabs(Matrix[i][j]), 2);
 		    }
 		}
+
 		return Intensity;
 	}
 
@@ -130,87 +165,13 @@ int Sign(double x) {
 	{
 		int i;
 		int j;
+
 		for (i = 0; i <= Size; ++i) {
+
 		    for (j = 0; j <= Size; ++j) {
 		        Matrix[i][j] = 0.0;
 		    }
 		}
-	}
-
-	// Protein structs
-	struct Bead
-	{
-		double x;
-		double y;
-		double z;
-
-		double xv;
-		double yv;
-		double zv;
-
-		double xa;
-		double ya;
-		double za;
-
-		char *NameOfResidue;
-
-		double Volume;
-		double ScatteringLength;
-	};
-
-	struct Protein
-	{
-		BeadStruct *Beads;
-		int NumberOfResidues;
-	};
-%}
-
-DECLARE
-%{
-	// Declarations
-	double Absorption;
-	double NumberDensity;
-	#define OrderOfHarmonics 21
-
-	// GSL libraries
-	#include <gsl/gsl_sf_legendre.h>
-	#include <gsl/gsl_sf_bessel.h>
-	#include <complex.h>
-
-	typedef struct Bead;
-	Bead BeadStruct;
-	typedef struct Protein;
-	Protein ProteinStruct;
-
-	// Protein properties
-	double complex ** Matrix;
-	int NumberOfResidues;
-	ProteinStruct Protein;
-%}
-
-INITIALIZE
-%{
-	// Rescale concentration into number of aggregates per m^3 times 10^-4
-	NumberDensity = Concentration * 6.02214129e19;
-
-	// Initialization of the array
-	double complex ** ComplexMatrix(int A, int B)
-	{
-		int i;
-		int j;
-		double complex ** Matrix;
-
-		Matrix = (double complex **) malloc(A * sizeof(double complex *));
-
-		for (i = 0; i < A; ++i) {
-		    Matrix[i] = (double complex *) malloc(B * sizeof(double complex));
-
-		    for (j = 0; j < B; ++j) {
-		        Matrix[i][j] = 0.0;
-		    }
-		}
-
-		return Matrix;
 	}
 
 	// Function used to determine the number of residues in the .pdb-file
@@ -438,6 +399,27 @@ INITIALIZE
 		fclose(PDBFile);
 	}
 
+
+%}
+
+DECLARE
+%{
+	// Declarations
+	double Absorption;
+	double NumberDensity;
+
+	// Protein properties
+	double complex **Matrix;
+	int NumberOfResidues;
+	ProteinStruct Protein;
+%}
+
+INITIALIZE
+%{
+	// Rescale concentration into number of aggregates per m^3 times 10^-4
+	NumberDensity = Concentration * 6.02214129e19;
+
+
 	// Standard sample handling
 	if (!xwidth || !yheight || !zdepth) {
 		printf("%s: Sample has no volume - check parameters...! \n", NAME_CURRENT_COMP);
@@ -446,10 +428,15 @@ INITIALIZE
 	Absorption = AbsorptionCrosssection;
 
 	printf("Initializing protein structure...\n");
-    NumberOfResidues = CountResidues(PDBFilepath);
+        NumberOfResidues = CountResidues(PDBFilepath);
 	InitializeProtein(&Protein, NumberOfResidues);
-	Matrix = ComplexMatrix(OrderOfHarmonics + 1, OrderOfHarmonics + 1);
 
+	int i;
+	Matrix = (double complex **) calloc(OrderOfHarmonics+1,sizeof(double complex *));
+	for (i = 0; i <= OrderOfHarmonics; ++i) {
+	  Matrix[i] = (double complex *) calloc(OrderOfHarmonics+1,sizeof(double complex));
+	}
+	
 	printf("Creating protein structure...\n");
 	ReadAminoPDB(PDBFilepath, &Protein);
 
