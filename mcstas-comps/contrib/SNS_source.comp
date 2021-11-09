@@ -10,6 +10,9 @@
 * Written by: G. Granroth
 * Date: July 2004
 * Origin: SNS Project Oak Ridge National Laboratory
+* Modified: G. E. Granroth  Nov 2014 Move to Mcstas V2
+* Modified: J.Y.Y. Lin April 2021 to Fix race condition
+* Modified: P. WIllendrup 2021 Move to Move to Mcstas Version 3 and enable GPus
 *
 * A source that produces a time and energy distribution from the SNS moderator files
 *
@@ -311,6 +314,8 @@ double zero_find(double (*func)(double, double, double, double*, double*),
   double yval,double xmin,double xmax, double tol, double arg1, double *arg2, double *arg3)
 {
   double xl,xh,f,fmid,xmid,dx,rtb;
+  int max_iter;
+  int iter_no;
   xl=xmin;
   xh=pow(10,(log10(xmin)+yval*(log10(xmax)-log10(xmin))));
   f=(*func)(xl,yval, arg1, arg2, arg3);
@@ -321,7 +326,9 @@ double zero_find(double (*func)(double, double, double, double*, double*),
   }
   dx=xh-xl;
   rtb=xl;
-  while(fabs((*func)(rtb,yval, arg1, arg2, arg3))>tol){
+  max_iter = 10000;
+  iter_no=0;
+  while(fabs((*func)(rtb,yval, arg1, arg2, arg3))>tol && iter_no++<max_iter){
     dx=dx*0.5;
     xmid=rtb+dx;
     fmid=(*func)(xmid,yval, arg1, arg2, arg3);
@@ -336,6 +343,8 @@ double zero_find(double (*func)(double, double, double, double*, double*),
 double zero_find_gpu1(double yval,double xmin,double xmax, double tol, double arg1, double *arg2, double *arg3)
 {
   double xl,xh,f,fmid,xmid,dx,rtb;
+  int max_iter;
+  int iter_no;
   xl=xmin;
   xh=pow(10,(log10(xmin)+yval*(log10(xmax)-log10(xmin))));
   f=Pfunc(xl,yval, arg1, arg2, arg3);
@@ -346,7 +355,7 @@ double zero_find_gpu1(double yval,double xmin,double xmax, double tol, double ar
   }
   dx=xh-xl;
   rtb=xl;
-  while(fabs(Pfunc(rtb,yval, arg1, arg2, arg3))>tol){
+  while(fabs(Pfunc(rtb,yval, arg1, arg2, arg3))>tol && iter_no++<max_iter){
     dx=dx*0.5;
     xmid=rtb+dx;
     fmid=Pfunc(xmid,yval, arg1, arg2, arg3);
@@ -596,10 +605,10 @@ TRACE
     randp=EPmin+rand01()*(EPmax-EPmin);
     /* find E value corresponding to random probability */
     #ifndef OPENACC
-    Eval=zero_find(Pfunc,randp,inxvec[idxstart],inxvec[idxstop],1e-5,
+    Eval=zero_find(Pfunc,randp,inxvec[idxstart],inxvec[idxstop],1e-7,
       xylength,inxvec,Pvec);
     #else
-    Eval=zero_find_gpu1(randp,inxvec[idxstart],inxvec[idxstop],1e-5,
+    Eval=zero_find_gpu1(randp,inxvec[idxstart],inxvec[idxstop],1e-7,
       xylength,inxvec,Pvec);
     #endif
    /* from a known E value generate an emission time value */
