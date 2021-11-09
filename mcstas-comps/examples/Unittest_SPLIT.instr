@@ -21,23 +21,17 @@
 *
 * %P
 * SPLITS: [1] Number of SPLIT to do
-* Pp0:   [1] Dummy input parameter used internally
 *
 * %L
 * <reference/HTML link>
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT Unittest_JUMP_WHEN(int SPLITS=10, Pp0=1)
+DEFINE INSTRUMENT Unittest_JUMP_WHEN(int SPLITS=10)
 
 DECLARE
 %{
-%}
-
-USERVARS
-%{
-  int doJump;
-  int numJump;
+  double Pp0;
 %}
 
 INITIALIZE
@@ -59,7 +53,7 @@ EXTEND %{
 SPLIT SPLITS COMPONENT Slit = Arm()
   AT (0,0,0) ABSOLUTE
   
-COMPONENT PSD = PSD_monitor(xwidth=2.0, yheight=2.0, filename="rngout", nx=100, ny=100)
+COMPONENT PSD = PSD_monitor(xwidth=2.0, yheight=2.0, filename="splits", nx=100, ny=100)
   AT (0,0,0.1) ABSOLUTE
   
 FINALLY
