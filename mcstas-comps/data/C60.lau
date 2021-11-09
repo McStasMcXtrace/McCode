@@ -7,6 +7,7 @@
 # sigma_abs 0.0035  absorption scattering cross section in [barn]
 # weight    12.01   in [g/mol]
 # At_number 6       atomic number Z
+# Vc        1076.89 volume of unit cell in [A^3]
 # lattice_a 14.04078 lattice parameter a in [Angs]
 #
 # Format parameters: Crystallographica format
