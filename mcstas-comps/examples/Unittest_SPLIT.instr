@@ -1,0 +1,69 @@
+/*******************************************************************************
+* Instrument: Unittest_JUMP_WHEN
+*
+* %I
+* Written by: Peter Willendrup
+* Date: Oct 28th, 2021
+* Origin: DTU
+* %INSTRUMENT_SITE: Test
+*
+* SPLIT unittest
+*
+* %D
+* SPLIT unittest.
+* 
+* One unit of intensity is emitted from a 1x1 m.
+*
+*
+* %Example: SPLITS=1 Detector: PSD_I=1
+* %Example: SPLITS=10 Detector: PSD_I=1
+* %Example: SPLITS=100 Detector: PSD_I=1
+*
+* %P
+* SPLITS: [1] Number of SPLIT to do
+* Pp0:   [1] Dummy input parameter used internally
+*
+* %L
+* <reference/HTML link>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Unittest_JUMP_WHEN(int SPLITS=10, Pp0=1)
+
+DECLARE
+%{
+%}
+
+USERVARS
+%{
+  int doJump;
+  int numJump;
+%}
+
+INITIALIZE
+%{
+  Pp0=1.0/mcget_ncount();
+%}
+
+TRACE
+
+COMPONENT Arm = Arm()
+  AT (0,0,0) ABSOLUTE
+EXTEND %{
+  // position x in one of 100 bins
+  x = rand01()-0.5;
+  y = rand01()-0.5;
+  p = INSTRUMENT_GETPAR(Pp0);
+%}
+
+SPLIT SPLITS COMPONENT Slit = Arm()
+  AT (0,0,0) ABSOLUTE
+  
+COMPONENT PSD = PSD_monitor(xwidth=2.0, yheight=2.0, filename="rngout", nx=100, ny=100)
+  AT (0,0,0.1) ABSOLUTE
+  
+FINALLY
+%{
+%}
+
+END
