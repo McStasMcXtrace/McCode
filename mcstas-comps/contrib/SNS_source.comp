@@ -371,6 +371,8 @@ double zero_find_gpu1(double yval,double xmin,double xmax, double tol, double ar
 double zero_find_gpu2(double yval,double xmin,double xmax, double tol, double arg1, double *arg2, double *arg3)
 {
   double xl,xh,f,fmid,xmid,dx,rtb;
+  int max_iter;
+  int iter_no;
   xl=xmin;
   xh=pow(10,(log10(xmin)+yval*(log10(xmax)-log10(xmin))));
   f=tPfunc(xl,yval, arg1, arg2, arg3);
@@ -381,7 +383,9 @@ double zero_find_gpu2(double yval,double xmin,double xmax, double tol, double ar
   }
   dx=xh-xl;
   rtb=xl;
-  while(fabs(tPfunc(rtb,yval, arg1, arg2, arg3))>tol){
+  max_iter = 10000;
+  iter_no=0;
+  while(fabs(tPfunc(rtb,yval, arg1, arg2, arg3))>tol && iter_no++<max_iter){
     dx=dx*0.5;
     xmid=rtb+dx;
     fmid=tPfunc(xmid,yval, arg1, arg2, arg3);
