@@ -47,7 +47,7 @@ EXTEND %{
   // position x in one of 100 bins
   x = rand01()-0.5;
   y = rand01()-0.5;
-  p = INSTRUMENT_GETPAR(Pp0);
+  p = Pp0;
 %}
 
 SPLIT SPLITS COMPONENT Slit = Arm()
