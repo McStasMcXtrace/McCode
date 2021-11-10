@@ -56,9 +56,13 @@ REMOVABLE COMPONENT Source = Source_gen(
     T1=229.6,I1=5.32e13,T2=1102, I2=4.37e12, T3=437.1,I3=3.84e13)
   AT (0, 0, 0) RELATIVE Origin
 
+/* Incoming beam */ 
+COMPONENT PSD = PSD_monitor(filename="incoming",xwidth=0.02, yheight=0.02)
+  AT (0, 0, L1-0.02) RELATIVE Origin
+
 /* TIP: monochromator cradle */ 
 COMPONENT sample_cradle = Arm()
-  AT (0, 0, L1) RELATIVE PREVIOUS
+  AT (0, 0, L1) RELATIVE Origin
 
 SPLIT SPLITS COMPONENT SX = Single_crystal(radius=0.005, yheight=0.01, reflections=reflections, mosaic=10, delta_d_d=1e-4)
   AT (0, 0, 0) RELATIVE sample_cradle
