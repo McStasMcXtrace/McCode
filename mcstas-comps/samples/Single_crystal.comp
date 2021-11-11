@@ -1141,6 +1141,13 @@ TRACE
   double _vy;
   double _vz;
 
+  char   type;      /* type of last event: t=transmit,c=coherent or i=incoherent */
+  int    itype;     /* type of last event: t=1,c=2 or i=3 */
+
+  int force_transmit; /* Flag to handle cross-section weighting in case of finite order */
+
+  force_transmit=0;
+
   #ifdef OPENACC
   #ifdef USE_OFF
   off_struct thread_offdata = offdata;
@@ -1180,9 +1187,13 @@ TRACE
     abs_xlen *= 100; inc_xlen *= 100;
 
     L = hkl_list;
+    
+    type = '\0';
+    itype = 0;
+    
 #ifndef OPENACC
     T = tau_list;
-    hkl_info.type = '\0';
+    hkl_info.type = type;
 #endif
     do {  /* Loop over multiple scattering events */
       /* Angles for powder randomization */
@@ -1273,10 +1284,16 @@ TRACE
       /* in case we use 'SPLIT' then consecutive neutrons can be identical when entering here
          and we may skip the hkl_search call */
 #ifndef OPENACC
-      if ( fabs(kix - hkl_info.kix) < deltak
+      if (order==1 && fabs(kix - hkl_info.kix) < deltak
         && fabs(kiy - hkl_info.kiy) < deltak
         && fabs(kiz - hkl_info.kiz) < deltak) {
         hkl_info.nb_reuses++;
+
+	/* Restore in case of matching event (e.g. SPLIT) */
+	coh_refl = hkl_info.coh_refl;
+        coh_xsect = hkl_info.coh_xsect;
+	tau_count = hkl_info.tau_count;
+
       } else {
 #endif
         /* Max possible tau for this ki with 5*sigma delta-d/d cutoff. */
@@ -1308,12 +1325,14 @@ TRACE
           hkl_info.kix = kix;
           hkl_info.kiy = kiy;
           hkl_info.kiz = kiz;
-        }
 
-        hkl_info.coh_refl  = coh_refl;
-        hkl_info.coh_xsect = coh_xsect;
-        hkl_info.nb_refl += tau_count;
-        hkl_info.nb_refl_count++;
+	  /* Store for potential re-use (e.g. SPLIT) */
+	  hkl_info.coh_refl  = coh_refl;
+	  hkl_info.coh_xsect = coh_xsect;
+	  hkl_info.tau_count = tau_count;
+	  hkl_info.nb_refl += tau_count;
+	  hkl_info.nb_refl_count++;
+	}
       }
 #endif
       /* (3). Probabilities of the different possible interactions. */
@@ -1326,6 +1345,15 @@ TRACE
       } /* else assume fm^2 */
       tot_xlen = abs_xlen + inc_xlen + coh_xlen;
 
+      if(tot_xlen <= 0){
+        ABSORB; // Should we really absorb here? If "nothing" can happen we perhaps ought to "pass" instead? 
+      }
+
+      if (force_transmit) {
+	/* Exit due to truncated order, weight with relevant cross-sections to distance l_full */
+	 p*=exp(-abs_xlen*l_full);
+      }
+      
       /* (5). Transmission */
       p_trans = exp(-tot_xlen*l_full);
       if(!event_counter && p_transmit >= 0 && p_transmit <= 1) {
@@ -1333,9 +1361,6 @@ TRACE
       } else {
         mc_trans = p_trans;
       }
-#ifndef OPENACC
-      hkl_info.type = 't';
-#endif
       mc_interact = 1 - mc_trans;
       if(mc_trans > 0 && (mc_trans >= 1 || rand01() < mc_trans))  /* Transmit */
       {
@@ -1347,11 +1372,19 @@ TRACE
         if (PG) { /* orientation of crystallite is longer random */
           PGderotate(&vx, &vy, &vz, Alpha, hkl_info.m_cx, hkl_info.m_cz, hkl_info.m_cz);
         }
-        break;
+
+	type = 't';
+	if (!itype) itype = 1;
+        #ifndef OPENACC
+	hkl_info.type = type;
+        #endif
+
+        break; 
+        /* This break means that we are leaving the while-loop, exiting the
+	   crystal by "tunneling". */
       }
-      if(tot_xlen <= 0){
-        ABSORB;
-      }
+
+      /* Scattering "proper", i.e. coh or incoh */
       if(mc_interact <= 0)        /* Protect against rounding errors */
         { intersect=0;
           if (powder) { /* orientation of crystallite is no longer random */
@@ -1362,6 +1395,8 @@ TRACE
           }
           break;
         }
+
+      /* First-pass considerations: */
       if (!event_counter) p *= fabs(1 - p_trans)/mc_interact;
       /* Select a point at which to scatter the neutron, taking
          secondary extinction into account. */
@@ -1376,6 +1411,8 @@ TRACE
         l = rand0max(l_full);
       else
         l = -log(1 - rand0max((1 - exp(-tot_xlen*l_full))))/tot_xlen;
+ 
+      /* Propagate to scattering point */
       PROP_DT(l/v);
       event_counter++;
 
@@ -1389,8 +1426,11 @@ TRACE
         vx = kix; /* ki vector is used as tmp var with norm v */
         vy = kiy;
         vz = kiz; /* Go for next scattering event */
+	
+	type = 'i';
+	if (!itype) itype = 2;
 #ifndef OPENACC
-        hkl_info.type = 'i';
+        hkl_info.type = type;
 #endif
       } else {
         /* 7. Coherent scattering. Select reciprocal lattice point. */
@@ -1430,8 +1470,11 @@ TRACE
         vx = K2V*(L[i].u1x*kfx + L[i].u2x*kfy + L[i].u3x*kfz);
         vy = K2V*(L[i].u1y*kfx + L[i].u2y*kfy + L[i].u3y*kfz);
         vz = K2V*(L[i].u1z*kfx + L[i].u2z*kfy + L[i].u3z*kfz);
+	
+	type = 'c';
+	if (!itype) itype = 3;
 #ifndef OPENACC
-        hkl_info.type = 'c';
+        hkl_info.type = type;
         hkl_info.h    = L[i].h;
         hkl_info.k    = L[i].k;
         hkl_info.l    = L[i].l;
@@ -1465,7 +1508,7 @@ TRACE
 	PGderotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
       }
       /* exit if multiple scattering order has been reached */
-      if (order && event_counter >= order) { intersect=0; break; }
+      if (order && event_counter >= order) { intersect=0; force_transmit=1; }
       /* Repeat loop for next scattering event. */
     } while (intersect); /* end do (intersect) (multiple scattering loop) */
   } /* if intersect */
