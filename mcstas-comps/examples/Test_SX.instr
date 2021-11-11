@@ -45,12 +45,12 @@ INITIALIZE
 /* Here comes the TRACE section, where the actual      */
 /* instrument is defined as a sequence of components.  */
 TRACE
-EXTEND %{
-  Type=0;
-%}
 
 REMOVABLE COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
+EXTEND %{
+  Type=0;
+%}
 
 /* source with constant flux */
 REMOVABLE COMPONENT Source = Source_gen(
@@ -69,7 +69,7 @@ COMPONENT sample_cradle = Arm()
 
 SPLIT SPLITS COMPONENT SX = Single_crystal(xwidth=0.01, yheight=0.01, zdepth=0.01,reflections=reflections, mosaic=10, delta_d_d=1e-4, order=order, sigma_inc=inc, p_transmit=trans)
 AT (0, 0, 0) RELATIVE sample_cradle
-  ROTATED (0,omega,0) RELATIVE sample_cradle
+ROTATED (0,omega,0) RELATIVE sample_cradle
 EXTEND %{
   Type=itype;
 %}
