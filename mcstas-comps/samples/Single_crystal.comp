@@ -1352,6 +1352,8 @@ TRACE
       if (force_transmit) {
 	/* Exit due to truncated order, weight with relevant cross-sections to distance l_full */
 	 p*=exp(-abs_xlen*l_full);
+        intersect=0; 
+	 break;
       }
       
       /* (5). Transmission */
@@ -1508,7 +1510,7 @@ TRACE
 	PGderotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
       }
       /* exit if multiple scattering order has been reached */
-      if (order && event_counter >= order) { intersect=0; force_transmit=1; }
+      if (order && event_counter >= order) { force_transmit=1; }
       /* Repeat loop for next scattering event. */
     } while (intersect); /* end do (intersect) (multiple scattering loop) */
   } /* if intersect */
