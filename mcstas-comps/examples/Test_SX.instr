@@ -14,9 +14,9 @@
 * %Description
 * A test instrument to compare Monitor_nD output against basic 1D and 2D monitors.
 *
-* %Example: lambda=5 Detector: Sph_mon_I=6.13193e+7
-* %Example: lambda=5 SPLITS=5 Detector: Sph_mon_I=6.13193e+7
-* %Example: lambda=5 SPLITS=10 Detector: Sph_mon_I=6.13193e+7
+* %Example: lambda=5 directbeam=0 Detector: Sph_mon_I=6.13193e+7
+* %Example: lambda=5 directbeam=0 SPLITS=5 Detector: Sph_mon_I=6.13193e+7
+* %Example: lambda=5 directbeam=0 SPLITS=10 Detector: Sph_mon_I=6.13193e+7
 *
 * %Parameters
 * lambda: [Angs]  Central wavelength emitted from source
@@ -28,7 +28,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_SX(lambda=5, dlambda=9.8, L1=30, int directbeam=1, string reflections="YBaCuO.lau", int SPLITS=1, order=0, inc=0, trans=0.001, omega=0)
+DEFINE INSTRUMENT Test_SX(lambda=5, dlambda=9.8, L1=30, int directbeam=0, beamstop=0, string reflections="YBaCuO.lau", int SPLITS=1, order=0, inc=0, trans=0.001, omega=0)
 
 DECLARE %{
   int DirectBeam;
@@ -44,6 +44,7 @@ USERVARS %{
 INITIALIZE
 %{
   DirectBeam = directbeam;
+  #pragma acc update device(DirectBeam)
 %}
 
 /* Here comes the TRACE section, where the actual      */
@@ -73,6 +74,9 @@ AT (0, 0, 0) RELATIVE sample_cradle
   ROTATED (0,omega,0) RELATIVE sample_cradle
 EXTEND %{
   Type=itype;
+  if (DirectBeam==0) {
+    if(!SCATTERED) ABSORB;
+  }
 %}
 
 COMPONENT Full_mon = PSD_monitor_4PI(nx=100,ny=100, radius=1, restore_neutron=1, filename="FULL")
@@ -82,10 +86,10 @@ COMPONENT Sph_tun = PSD_monitor_4PI(nx=100,ny=100, radius=1, restore_neutron=1, 
   WHEN (Type==1) AT (0, 0, 0) RELATIVE sample_cradle
 
 COMPONENT PSDBS = PSD_monitor(filename="BS0",xwidth=0.04, yheight=0.04, restore_neutron=1)
-  AT (0, 0, 0.5) RELATIVE sample_cradle
+  WHEN(beamstop) AT (0, 0, 0.5) RELATIVE sample_cradle
 
 COMPONENT BeamStop = Beamstop(radius=0.1)
-  AT (0,0,0.5) RELATIVE sample_cradle
+  WHEN (beamstop) AT (0,0,0.5) RELATIVE sample_cradle
 
 COMPONENT Sph_mon = PSD_monitor_4PI(nx=100,ny=100, radius=1, restore_neutron=1, filename="Tot")
   AT (0, 0, 0) RELATIVE sample_cradle
