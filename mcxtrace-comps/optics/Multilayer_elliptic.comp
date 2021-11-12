@@ -200,9 +200,7 @@ TRACE
              * \Gamma:  \Gamma*\Lambda thickness of high electron density material.
              * r1(zeta) = 2 i r_0 \rho_{AB} \left(\frac{\Lambda^2 \Gamma}{\zeta}\right) \frac{\sin\left(\pi\Gamma\zeta\right)}{\pi\Gamma\zeta);
              */
-            double complex rN;
-            rN=refleccq(re,QQ,0,0,0);
-            Ref=cabs(rN);
+            Ref=reflecq(re,QQ,0,0,0);
             if (Ref>1){
               /*Reflectivity can't be >1*/
               Ref=1.0;
