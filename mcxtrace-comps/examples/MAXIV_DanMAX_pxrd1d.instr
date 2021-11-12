@@ -489,7 +489,7 @@ COMPONENT pxrd1_psd = COPY(src_psd)(filename="pxrd1.psd", options="x limits -0.5
 AT(0,0,0) RELATIVE pxrd_1d_pt
 COMPONENT pxrd1_div = COPY(src_div)(filename="pxrd1.div", options=divmon_options)
 AT(0,0,0) RELATIVE pxrd_1d_pt
-COMPONENT pxrd1_e = COPY(src_e)(filename="pxrd1.e", options=divmon_options)
+COMPONENT pxrd1_e = COPY(src_e)(filename="pxrd1.e", options=emon_options)
 AT(0,0,0) RELATIVE pxrd_1d_pt
 
 SPLIT 1410 COMPONENT powdern = PowderN(
