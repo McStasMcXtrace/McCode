@@ -303,7 +303,7 @@ macro(installMCCODE)
     endforeach()
 
     # Python/Perl related batches special handling
-    foreach (name run.bat run-pl.bat doc.bat doc-pl.bat resplot.bat plot.bat plot-pl.bat display.bat display-pl.bat gui.bat guistart.bat gui-pl.bat plot-pyqtgraph.bat plot-matplotlib.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-mantid.bat)
+    foreach (name run.bat run-pl.bat doc.bat doc-pl.bat resplot.bat plot.bat plot-pl.bat display.bat display-pl.bat gui.bat guistart.bat gui-pl.bat plot-pyqtgraph.bat plot-matplotlib.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-mantid.bat display-matlab-pl.bat display-mantid-pl.bat.in)
       configure_file(
 	      cmake/support/run-scripts/${name}.in
 	      work/support/${MCCODE_PREFIX}${name}
