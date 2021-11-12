@@ -17,6 +17,9 @@
 * %Example: lambda=5 directbeam=0 Detector: Sph_mon_I=6.13193e+7
 * %Example: lambda=5 directbeam=0 SPLITS=5 Detector: Sph_mon_I=6.13193e+7
 * %Example: lambda=5 directbeam=0 SPLITS=10 Detector: Sph_mon_I=6.13193e+7
+* %Example: lambda=5 order=1 directbeam=0 Detector: Sph_mon_I=6.13193e+7
+* %Example: lambda=5 order=1 directbeam=0 SPLITS=5 Detector: Sph_mon_I=6.13193e+7
+* %Example: lambda=5 order=1 directbeam=0 SPLITS=10 Detector: Sph_mon_I=6.13193e+7
 *
 * %Parameters
 * lambda: [Angs]  Central wavelength emitted from source
