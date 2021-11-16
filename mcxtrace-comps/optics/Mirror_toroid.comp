@@ -44,6 +44,7 @@ SHARE
 %{
   #include <complex.h>
   %include "reflectivity-lib"
+  %include "read_table-lib" 
 %}
 
 DECLARE

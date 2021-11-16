@@ -24,7 +24,7 @@
 *
 * MCSTAS_CFLAGS = -g -O2 -lm -lgsl -lgslcblas
 *
-* Example: -lgsl -lgslcblas FRAC=0.1 Detector: PSDdet1_I=43.7829
+* %Example: FRAC=0.1 Detector: PSDdet1_I=120
 *
 * %Parameters
 * glen: [m]  Length of the elliptical guides

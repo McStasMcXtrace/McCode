@@ -81,7 +81,7 @@ echo "*********************************************************"
 echo "* Embedding miniconda3 in your app                      *"
 echo "*********************************************************"
 chmod a+x Miniconda3-py38_4.10.3-MacOSX-x86_64.sh
-./Miniconda3-py38_4.10.3-MacOSX-x86_64.sh -b -p $MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/
+./Miniconda3-py38_4.10.3-MacOSX-x86_64.sh -b -p $MCINSTALL_PREFIX/mcstas/$1/miniconda3/
 
 # Run conda to install the dependencies
 echo
@@ -118,7 +118,7 @@ if [ "x$2" = "x" ]; then
     mv dist mcstas-$1
     mkdir dist
     tar cfz dist/mcstas-$1_x86_64.tgz mcstas-$1
-    cp INSTALL-McStas-3.0/macOS/README.md dist
+    cp INSTALL-McStas-2.x/macOS/README.md dist
     echo A tgz of your app is now located in the dist folder
     rm -rf mcstas-$1
 else

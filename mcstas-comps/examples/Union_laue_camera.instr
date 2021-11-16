@@ -16,7 +16,7 @@
 * %Description
 * Laue camera using Union components for the sample
 *
-* Example: mosaic=5 Detector: Banana_monitor_I=1.74328e+06
+* %Example: mosaic=5 Detector: Banana_monitor_I=1.74328e+06
 *
 * %Parameters
 * delta_d_d: []               

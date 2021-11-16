@@ -188,6 +188,7 @@ double prepare_cumulative_spectral_function (  double *csfE, double Emin, double
   umin = log(Emin*1e-3);
   du = (umax - umin)*1e-5;
   CItot=0.0;
+  E0=0.0;
   I0 = spectral_function( para, Emin );
   for(u=umin+du; u<=umax; u+=du) {
     E1=exp(u);

@@ -365,77 +365,82 @@ TRACE
       randvec_target_sphere(&vx,&vy,&vz,&solid_angle,aim_x,aim_y,aim_z, focus_r);
     }
     NORM(vx, vy, vz);
-/*    printf("focussed direction (vx,vy,vz=(%g %g %g) \n",vx,vy,vz); */
+    /*    printf("focussed direction (vx,vy,vz=(%g %g %g) \n",vx,vy,vz); */
     nf=0;
-      parms[0]=-1;
-      parms[1]=v_i;
-      parms[2]=vx;
-      parms[3]=vy;
-      parms[4]=vz;
-      parms[5]=vx_i;
-      parms[6]=vy_i;
-      parms[7]=vz_i;
-      parms[8]=a;
-      parms[9]=J1;
-      parms[10]=J2;
-      parms[11]=s;
-      parms[12]=D;
-      parms[13]=verbose;
-      parms[14]=0;
-      parms[15]=FM;
+    parms[0]=-1;
+    parms[1]=v_i;
+    parms[2]=vx;
+    parms[3]=vy;
+    parms[4]=vz;
+    parms[5]=vx_i;
+    parms[6]=vy_i;
+    parms[7]=vz_i;
+    parms[8]=a;
+    parms[9]=J1;
+    parms[10]=J2;
+    parms[11]=s;
+    parms[12]=D;
+    parms[13]=verbose;
+    parms[14]=0;
+    parms[15]=FM;
     findroots(0, v_i, v_i+SE2V*sqrt(8*s*fabs(J1)+6*s*fabs(J2)+s*fabs(D)), vf_list, &nf, omega_q, parms);
     index=(int)floor(rand01()*nf);
-//fatalerror("1 line after after call of findroots");
-/*    printf("Root index: %i %g \n", index, vf_list[index]); */
-    v_f=vf_list[index];
-    parms[0]=v_f;
-    parms[14]=1; // return coherence factor
-    coherence_factor = omega_q(parms);
-    parms[0]=v_f-DV;
-    parms[14]=0;  // return dispersion
-    f1=omega_q(parms);
-    parms[0]=v_f+DV;
-    f2=omega_q(parms);
-    J_factor = fabs(f2-f1)/(2*DV*K2V);
-/*    printf("f1,f2: %g %g , J factor %g \n",f1,f2,J_factor); */
-    omega=VS2E*(v_i*v_i-v_f*v_f);
-/*    printf("nf, omega: %i %g v_i index, v_f: %g %i %g \n", nf,omega,v_i,index,v_f); */
-    vx *= v_f;
-    vy *= v_f;
-    vz *= v_f;
-/* printf("vi= %g (vi_x,vi_y,vi_z)= (%g %g %g); vf= %g (vx,vy,vz)=(%g %g %g) \n",
+    //fatalerror("1 line after after call of findroots");
+    /*    printf("Root index: %i %g \n", index, vf_list[index]); */
+    
+    if (index<7) {
+      v_f=vf_list[index];
+      parms[0]=v_f;
+      parms[14]=1; // return coherence factor
+      coherence_factor = omega_q(parms);
+      parms[0]=v_f-DV;
+      parms[14]=0;  // return dispersion
+      f1=omega_q(parms);
+      parms[0]=v_f+DV;
+      f2=omega_q(parms);
+      J_factor = fabs(f2-f1)/(2*DV*K2V);
+      /*    printf("f1,f2: %g %g , J factor %g \n",f1,f2,J_factor); */
+      omega=VS2E*(v_i*v_i-v_f*v_f);
+      /*    printf("nf, omega: %i %g v_i index, v_f: %g %i %g \n", nf,omega,v_i,index,v_f); */
+      vx *= v_f;
+      vy *= v_f;
+      vz *= v_f;
+      /* printf("vi= %g (vi_x,vi_y,vi_z)= (%g %g %g); vf= %g (vx,vy,vz)=(%g %g %g) \n",
          v_i,vx_i,vy_i,vz_i,v_f,vx,vy,vz); */
-    kappa_x=V2K*(vx_i-vx);
-    kappa_y=V2K*(vy_i-vy);
-    kappa_z=V2K*(vz_i-vz);
-    kappa2=kappa_z*kappa_z+kappa_y*kappa_y+kappa_x*kappa_x;
-    kappa2_norm_z=kappa_z*kappa_z/kappa2;
-
-    if(!cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight))
-    {
-      /* ??? did not hit cylinder */
-      printf("FATAL ERROR: Did not hit cylinder from inside.\n");
-      exit(1);
+      kappa_x=V2K*(vx_i-vx);
+      kappa_y=V2K*(vy_i-vy);
+      kappa_z=V2K*(vz_i-vz);
+      kappa2=kappa_z*kappa_z+kappa_y*kappa_y+kappa_x*kappa_x;
+      kappa2_norm_z=kappa_z*kappa_z/kappa2;
+      
+      if(!cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight))
+	{
+	  /* ??? did not hit cylinder */
+	  printf("FATAL ERROR: Did not hit cylinder from inside.\n");
+	  exit(1);
+	}
+      dt = t1;
+      l_o = v_f*dt;
+      
+      my_a_i = V_my_a_v/v_i;
+      my_a_f = V_my_a_v/v_f;
+      bose_factor=nbose(omega,T);
+      p1 = exp(-(V_my_s*(l_i+l_o)+my_a_i*l_i+my_a_f*l_o)); /* Absorption factor */
+      p2 = nf*solid_angle*l_full*V_rho/(4*PI);     /* Focusing factors; assume random choice of n_f possibilities */
+      p3 = gamma_n*gamma_n*r0*r0*(v_f/v_i)*F2*DW*s*s*(1+kappa2_norm_z)*bose_factor;   
+      /* Cross section factor approx */
+      p4 = 2*VS2E*v_f/J_factor;  /* Jacobian of delta functions in cross section */
+      p5 = coherence_factor;  /* Cross section factor 2 */
+      p *= p1*p2*p3*p4*p5;
+      SCATTER;
+      
+      if (verbose==1){    printf("p factors : %g %g %g %g %g Omega: %g \n", p1, p2, p3, p4, p5, omega);
+	printf("J_factor %g l_full %g, v_f/v_i %g, DW %g, kappa2 %g, bose_factor%g, fabs(omega) %g, coherence %g \n",
+	       J_factor, l_full, v_f/v_i, DW, kappa2, bose_factor, fabs(omega), coherence_factor); 
+      }
+    } else {
+      ABSORB; // Findroots returned junk
     }
-    dt = t1;
-    l_o = v_f*dt;
-
-    my_a_i = V_my_a_v/v_i;
-    my_a_f = V_my_a_v/v_f;
-    bose_factor=nbose(omega,T);
-    p1 = exp(-(V_my_s*(l_i+l_o)+my_a_i*l_i+my_a_f*l_o)); /* Absorption factor */
-    p2 = nf*solid_angle*l_full*V_rho/(4*PI);     /* Focusing factors; assume random choice of n_f possibilities */
-    p3 = gamma_n*gamma_n*r0*r0*(v_f/v_i)*F2*DW*s*s*(1+kappa2_norm_z)*bose_factor;   
-        /* Cross section factor approx */
-    p4 = 2*VS2E*v_f/J_factor;  /* Jacobian of delta functions in cross section */
-    p5 = coherence_factor;  /* Cross section factor 2 */
-    p *= p1*p2*p3*p4*p5;
-    SCATTER;
-
- if (verbose==1){    printf("p factors : %g %g %g %g %g Omega: %g \n", p1, p2, p3, p4, p5, omega);
-      printf("J_factor %g l_full %g, v_f/v_i %g, DW %g, kappa2 %g, bose_factor%g, fabs(omega) %g, coherence %g \n",
-              J_factor, l_full, v_f/v_i, DW, kappa2, bose_factor, fabs(omega), coherence_factor); 
- }
   } /* else transmit: Neutron did not hit the sample */
 %}
 

@@ -137,37 +137,37 @@ def _parse_1D_monitor(text):
     try:
         # load essential header data
         '''# component: Ldetector'''
-        m = re.search('\# component: ([\w\.]+)\n', text)
+        m = re.search('\# component: ([\w\.]+)', text)
         data.component = m.group(1)
         '''# filename: Edet.dat'''
-        m = re.search('\# filename: ([\-\+\w\.\,]+)\n', text)
+        m = re.search('\# filename: ([\-\+\w\.\,]+)', text)
         data.filename = m.group(1)
         '''# title: Wavelength monitor'''
-        m = re.search('\# title: (%s)\n' % freetext_pat, text)
+        m = re.search('\# title: (%s)' % freetext_pat, text)
         data.title = m.group(1)
         '''# xlabel: Wavelength [AA]'''
-        m = re.search('\# xlabel: (%s)\n' % freetext_pat, text)
+        m = re.search('\# xlabel: (%s)' % freetext_pat, text)
         data.xlabel = m.group(1)
         '''# ylabel: Intensity'''
-        m = re.search('\# ylabel: (%s)\n' % freetext_pat, text)
+        m = re.search('\# ylabel: (%s)' % freetext_pat, text)
         data.ylabel = m.group(1)
 
         '''# xvar: L'''
-        m = re.search('\# xvar: ([\w]+)\n', text)
+        m = re.search('\# xvar: ([\w]+)', text)
         data.xvar = m.group(1)
         '''# xlimits: 5.5 6.5'''
-        m = re.search('\# xlimits: ([\d\.\-\+e]+) ([\d\.\-\+e]+)\n', text)
+        m = re.search('\# xlimits: ([\d\.\-\+e]+) ([\d\.\-\+e]+)', text)
         data.xlimits = (float(m.group(1)), float(m.group(2)))
 
         '''# yvar: (I,I_err)'''
-        m = re.search('\# yvar: \(([\w]+),([\w]+)\)\n', text)
+        m = re.search('\# yvar: \(([\w]+),([\w]+)\)', text)
         data.yvar = (m.group(1), m.group(2))
         
         '''# values: 6.72365e-17 4.07766e-18 4750'''
-        m = re.search('\# values: ([\d\-\+\.e]+) ([\d\-\+\.e]+) ([\d\-\+\.e]+)\n', text)
+        m = re.search('\# values: ([\d\-\+\.e]+) ([\d\-\+\.e]+) ([\d\-\+\.e]+)', text)
         data.values = (Decimal(m.group(1)), Decimal(m.group(2)), float(m.group(3)))
         '''# statistics: X0=5.99569; dX=0.0266368;'''
-        m = re.search('\# statistics: X0=([\d\.\-\+e]+); dX=([\d\.\-\+e]+);\n', text)
+        m = re.search('\# statistics: X0=([\d\.\-\+e]+); dX=([\d\.\-\+e]+);', text)
         data.statistics = 'X0=%.2E; dX=%.2E;' % (Decimal(m.group(1)), Decimal(m.group(2)))
 
         # load the actual data
@@ -204,51 +204,51 @@ def _parse_2D_monitor(text):
     try:
         # load essential header data
         '''# component: detector'''
-        m = re.search('\# component: ([\w]+)\n', text)
+        m = re.search('\# component: ([\w]+)', text)
         if m:
             data.component = m.group(1)
         else:
             data.component = "(no comp name)"
         '''# filename: PSD.dat'''
-        m = re.search('\# filename: ([\-\+\w\.\,]+)\n', text)
+        m = re.search('\# filename: ([\-\+\w\.\,]+)', text)
         data.filename = m.group(1)
         '''# title: PSD monitor'''
-        m = re.search('\# title: (%s)\n' % freetext_pat, text)
+        m = re.search('\# title: (%s)' % freetext_pat, text)
         data.title = m.group(1)
         
         '''# xlabel: X position [cm]'''
-        m = re.search('\# xlabel: (%s)\n' % freetext_pat, text)
+        m = re.search('\# xlabel: (%s)' % freetext_pat, text)
         data.xlabel = m.group(1)
         '''# ylabel: Y position [cm]'''
-        m = re.search('\# ylabel: (%s)\n' % freetext_pat, text)
+        m = re.search('\# ylabel: (%s)' % freetext_pat, text)
         data.ylabel = m.group(1)
         
         '''# xvar: X'''
-        m = re.search('\# xvar: (%s)\n' % freetext_pat, text)
+        m = re.search('\# xvar: (%s)' % freetext_pat, text)
         data.xvar = m.group(1)
         '''# yvar: Y '''
-        m = re.search('\# yvar: (%s)\n' % freetext_pat, text)
+        m = re.search('\# yvar: (%s)' % freetext_pat, text)
         data.yvar = m.group(1)
         
         '''# zvar: I '''
-        m = re.search('\# zvar: (%s)\n' % freetext_pat, text)
+        m = re.search('\# zvar: (%s)' % freetext_pat, text)
         data.zvar = m.group(1)
         '''
         # xylimits: -30 30 -30 30
         # xylimits: 0 5e+06 0.5 100
         '''
-        m = re.search('\# xylimits: ([\d\.\-\+e]+) ([\d\.\-\+e]+) ([\d\.\-\+e]+) ([\d\.\-\+e]+)([\ \d\.\-\+e]*)\n', text)
+        m = re.search('\# xylimits: ([\d\.\-\+e]+) ([\d\.\-\+e]+) ([\d\.\-\+e]+) ([\d\.\-\+e]+)([\ \d\.\-\+e]*)', text)
         data.xlimits = (float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4)))
         
         '''# values: 6.72365e-17 4.07766e-18 4750'''
-        m = re.search('\# values: ([\d\+\-\.e]+) ([\d\+\-\.e]+) ([\d\+\-\.e]+)\n', text)
+        m = re.search('\# values: ([\d\+\-\.e]+) ([\d\+\-\.e]+) ([\d\+\-\.e]+)', text)
         data.values = (Decimal(m.group(1)), Decimal(m.group(2)), float(m.group(3)))
         '''# statistics: X0=5.99569; dX=0.0266368;'''
-        m = re.search('\# statistics: X0=([\d\.\+\-e]+); dX=([\d\.\+\-e]+); Y0=([\d\.\+\-e]+); dY=([\d\.\+\-e]+);\n', text)
+        m = re.search('\# statistics: X0=([\d\.\+\-e]+); dX=([\d\.\+\-e]+); Y0=([\d\.\+\-e]+); dY=([\d\.\+\-e]+);', text)
         
         data.statistics = 'X0=%.2E; dX=%.2E; Y0=%.2E; dY=%.2E;' % (Decimal(m.group(1)), Decimal(m.group(2)), Decimal(m.group(3)), Decimal(m.group(4)))
         '''# signal: Min=0; Max=1.20439e-18; Mean=4.10394e-21;'''
-        m = re.search('\# signal: Min=([\ \d\.\+\-e]+); Max=([\ \d\.\+\-e]+); Mean=([\ \d\.\+\-e]+);\n', text)
+        m = re.search('\# signal: Min=([\ \d\.\+\-e]+); Max=([\ \d\.\+\-e]+); Mean=([\ \d\.\+\-e]+);', text)
         data.signal = 'Min=%f; Max=%f; Mean=%f;' % (float(m.group(1)), float(m.group(2)), float(m.group(3)))
         
         '''# Data [detector/PSD.dat] I:'''
@@ -359,32 +359,32 @@ def _load_multiplot_1D_lst(f_dat):
         
         # NOTE: title this is overwritten below to be equal to yvar
         '''# title: Scan of lambda'''
-        m = re.search('\# title: ([\w, ]+)\n', text)
+        m = re.search('\# title: ([\w, ]+)', text)
         header.title = m.group(1)
         
         '''# xlabel: 'lambda\''''
-        m = re.search('\# xlabel: ([\w \[\]\/\^\',]+)\n', text)
+        m = re.search('\# xlabel: ([\w \[\]\/\^\',]+)', text)
         header.xlabel = m.group(1).strip("\'")
         '''# ylabel: 'Intensity\''''
-        m = re.search('\# ylabel: ([\w \[\]\/\^\',]+)\n', text)
+        m = re.search('\# ylabel: ([\w \[\]\/\^\',]+)', text)
         header.ylabel = m.group(1).strip("\'")
 
         # NOTE: this only supports a single xvar
         '''# xvars: lambda'''
-        m = re.search('\# xvars: ([\w, ]+)\n', text)
+        m = re.search('\# xvars: ([\w, ]+)', text)
         header.xvar = m.group(1).replace(',', '')
         num_xvars = len(header.xvar.split())
         
         '''# xlimits: 6 7'''
-        m = re.search('\# xlimits: ([\d\.\-e]+) ([\d\.\-e]+)\n', text)
+        m = re.search('\# xlimits: ([\d\.\-e]+) ([\d\.\-e]+)', text)
         header.xlimits = (float(m.group(1)), float(m.group(2)))
         
         '''# variables: lambda Ldetector_I Ldetector_ERR PSDrad_I PSDrad_ERR PSDrad_I PSDrad_ERR detector_I detector_ERR'''
-        m = re.search('\# variables: ([\w ]+)\n', text)
+        m = re.search('\# variables: ([\w ]+)', text)
         variables = m.group(1).split()
         
         '''# yvars: (AutoTOFL0_I,AutoTOFL0_ERR) (AutoTOF0_I,AutoTOF0_ERR) (AutoL0_I,AutoL0_ERR) ...'''
-        m = re.search('\# yvars: ([\w \(\)\,]+)\n', text)
+        m = re.search('\# yvars: ([\w \(\)\,]+)', text)
         unsplit = m.group(1)
         unsplit = unsplit.replace('(', ' ')
         unsplit = unsplit.replace(')', ' ')

@@ -106,80 +106,83 @@ fi
 # Figure out which OS X this is...
 OSXVER=`sw_vers -productVersion|cut -f 2 -d.`
 OSXVER_MAJOR=`sw_vers -productVersion|cut -f 1 -d.`
-if [ "$OSXVER" == "6" ];
+echo $OSXVER
+echo $OSXVER_MAJOR
+if [ "$OSXVER_MAJOR" == "11" ];
 then
-    # 10.6 aka Snow Leopard
-    PERLVER="5.8.9"
-    TKPKG="Tk-804_030_MacOSX_10_6_Perl_5_8_9.pkg.zip"
-    SCIPDL="SciKarl-Intel-v0.12.pkg.zip"
-elif [ "$OSXVER" == "7" ];
+    # 11.x aka Big Sur
+    PERLVER="SCIPDL"
+    TKPKG=""
+    SCIPDL="SciPDL-v2.019.dmg"
+elif [ "$OSXVER_MAJOR" == "10" ];
 then
-    # 10.7 aka Lion
-    PERLVER="5.12"
-    TKPKG="Tk-804_030_MacOSX_10_7_Perl_5_12.pkg.zip"
-    SCIPDL="SciPDL-v2.4.10-Lion.pkg.zip"
-elif [ "$OSXVER" == "8" ];
-then
-    # 10.8 aka Mountain Lion
-    PERLVER="5.12"
-    TKPKG="Tk-804_030_MacOSX_10_8_Perl_5_12.pkg.zip"
-    SCIPDL="SciPDL-v2.4.10-Lion.pkg.zip"
-elif [ "$OSXVER" == "9" ];
-then
-    # 10.9 aka Mavericks
-    PERLVER="5.12"
-    TKPKG="Tk-804_030_MacOSX_10_8_Perl_5_12.pkg.zip"
-    SCIPDL="SciPDL-v2.4.10-Lion.pkg.zip"
-elif [ "$OSXVER" == "10" ];
-then
-    # 10.10 aka Yosemite
-    PERLVER="SYSTEM"
-    TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
-    SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
-elif [ "$OSXVER" == "11" ];
-then
-    # 10.11 aka El Capitan
-    PERLVER="SYSTEM"
-    TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
-    SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
-elif [ "$OSXVER" == "12" ];
-then
-    # 10.12 aka Sierra
-    PERLVER="SYSTEM"
-    TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
-    SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
-elif [ "$OSXVER" == "13" ];
-then
-    # 10.13 aka High Sierra
-    PERLVER="SYSTEM"
-    TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
-    SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
-elif [ "$OSXVER" == "14" ];
-then
-    # 10.14 aka Mojave
-    PERLVER="SYSTEM"
-    TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
-    SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
-elif [ "$OSXVER" == "15" ];
-then
-    # 10.15 aka Catalina
-    PERLVER="SYSTEM"
-    TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
-    SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
-elif [ "$OSXVER" == "0" ];
-then
-    if [ "$OSXVER_MAJOR" == "11" ];
+    if [ "$OSXVER" == "6" ];
     then
-	# 11.0 aka Big Sur
-	PERLVER="SCIPDL"
-	TKPKG=""
-	SCIPDL="SciPDL-v2.019.dmg"
+	# 10.6 aka Snow Leopard
+	echo Show Leopard detected
+	PERLVER="5.8.9"
+	TKPKG="Tk-804_030_MacOSX_10_6_Perl_5_8_9.pkg.zip"
+	SCIPDL="SciKarl-Intel-v0.12.pkg.zip"
+    elif [ "$OSXVER" == "7" ];
+    then
+	# 10.7 aka Lion
+	PERLVER="5.12"
+	TKPKG="Tk-804_030_MacOSX_10_7_Perl_5_12.pkg.zip"
+	SCIPDL="SciPDL-v2.4.10-Lion.pkg.zip"
+    elif [ "$OSXVER" == "8" ];
+    then
+	# 10.8 aka Mountain Lion
+	PERLVER="5.12"
+	TKPKG="Tk-804_030_MacOSX_10_8_Perl_5_12.pkg.zip"
+	SCIPDL="SciPDL-v2.4.10-Lion.pkg.zip"
+    elif [ "$OSXVER" == "9" ];
+    then
+	# 10.9 aka Mavericks
+	PERLVER="5.12"
+	TKPKG="Tk-804_030_MacOSX_10_8_Perl_5_12.pkg.zip"
+	SCIPDL="SciPDL-v2.4.10-Lion.pkg.zip"
+    elif [ "$OSXVER" == "10" ];
+    then
+	# 10.10 aka Yosemite
+	PERLVER="SYSTEM"
+	TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
+	SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
+    elif [ "$OSXVER" == "11" ];
+    then
+	# 10.11 aka El Capitan
+	PERLVER="SYSTEM"
+	TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
+	SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
+    elif [ "$OSXVER" == "12" ];
+    then
+	# 10.12 aka Sierra
+	PERLVER="SYSTEM"
+	TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
+	SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
+    elif [ "$OSXVER" == "13" ];
+    then
+	# 10.13 aka High Sierra
+	PERLVER="SYSTEM"
+	TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
+	SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
+    elif [ "$OSXVER" == "14" ];
+    then
+	# 10.14 aka Mojave
+	PERLVER="SYSTEM"
+	TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
+	SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
+    elif [ "$OSXVER" == "15" ];
+    then
+	# 10.15 aka Catalina
+	PERLVER="SYSTEM"
+	TKPKG="Tk-804_032_MacOSX_10_10_Perl_5_18.pkg.zip"
+	SCIPDL="SciPDL-v2.5-Yosemite.pkg.zip"
     fi
 else
-    osascript -e "tell app \"System Events\" to display dialog \"Your macOS version ${OSXVER_MAJOR}.${OSXVER} is not confirmed to work with the the McCode perl tools... Would you like to attempt installation of the tools known to give partial support on 11.0?\""
-    rc1=$?; 
-    if [[ $rc1 == 0 ]]; 
-    then    
+    osascript -e "tell app \"System Events\" to display dialog \"Your macOS version ${OSXVER_MAJOR}.${OSXVER} is not confirmed to work with the the McCode perl tools... Would you like to attempt installation of the tools known to give partial support on Big Sur 11.x?\""
+    rc1=$?;
+    if [[ $rc1 == 0 ]];
+    then
         # Assume that what works partiallu for 11.0
 	PERLVER="SCIPDL"
 	TKPKG=""
