@@ -691,13 +691,9 @@ SHARE
                 Jacobianv[2] = XiCLength / hklInfo->LatticeVectorcLength / CurrenthklData->TauLength * scalar_prod(hklInfo->ReciprocalLatticeVectorc[0], hklInfo->ReciprocalLatticeVectorc[1], hklInfo->ReciprocalLatticeVectorc[2], Temp[0], Temp[1], Temp[2]);
 
                 // With the jacobian we can compute the sigmas in terms of the orthogonal vectors u2 and u3
-                CurrenthklData->Sigma[1] = ConvertedMosaicityA * fabs(Jacobianv[0]) +
-                    ConvertedMosaicityB * fabs(Jacobianv[1]) +
-                    ConvertedMosaicityC * fabs(Jacobianv[2]);
+                CurrenthklData->Sigma[1] = ConvertedMosaicityA * fabs(Jacobianv[0]) + ConvertedMosaicityB * fabs(Jacobianv[1]) + ConvertedMosaicityC * fabs(Jacobianv[2]);
 
-                CurrenthklData->Sigma[2] = ConvertedMosaicityA * fabs(Jacobiann[0]) +
-                    ConvertedMosaicityB * fabs(Jacobiann[1]) +
-                    ConvertedMosaicityC * fabs(Jacobiann[2]);
+                CurrenthklData->Sigma[2] = ConvertedMosaicityA * fabs(Jacobiann[0]) + ConvertedMosaicityB * fabs(Jacobiann[1]) + ConvertedMosaicityC * fabs(Jacobiann[2]);
 
             } else if (MosaicityAB[0] != 0 && MosaicityAB[1] != 0) {
 
@@ -712,46 +708,28 @@ SHARE
 
                 // Convert Miller indices to taus
                 if (hklInfo->LatticeVectoraLength == 0) {
-                    hklInfo->LatticeVectoraLength = sqrt(hklInfo->LatticeVectora[0] * hklInfo->LatticeVectora[0] +
-                            hklInfo->LatticeVectora[1] * hklInfo->LatticeVectora[1] +
-                            hklInfo->LatticeVectora[2] * hklInfo->LatticeVectora[2]);
+                    hklInfo->LatticeVectoraLength = sqrt(hklInfo->LatticeVectora[0] * hklInfo->LatticeVectora[0] + hklInfo->LatticeVectora[1] * hklInfo->LatticeVectora[1] + hklInfo->LatticeVectora[2] * hklInfo->LatticeVectora[2]);
                 }
 
                 if (hklInfo->LatticeVectorbLength == 0) {
-                    hklInfo->LatticeVectorbLength = sqrt(hklInfo->LatticeVectorb[0] * hklInfo->LatticeVectorb[0] +
-                            hklInfo->LatticeVectorb[1] * hklInfo->LatticeVectorb[1] +
-                            hklInfo->LatticeVectorb[2] * hklInfo->LatticeVectorb[2]);
+                    hklInfo->LatticeVectorbLength = sqrt(hklInfo->LatticeVectorb[0] * hklInfo->LatticeVectorb[0] + hklInfo->LatticeVectorb[1] * hklInfo->LatticeVectorb[1] + hklInfo->LatticeVectorb[2] * hklInfo->LatticeVectorb[2]);
                 }
 
                 if (hklInfo->LatticeVectorcLength == 0) {
-                    hklInfo->LatticeVectorcLength = sqrt(hklInfo->LatticeVectorc[0] * hklInfo->LatticeVectorc[0] +
-                            hklInfo->LatticeVectorc[1] * hklInfo->LatticeVectorc[1] +
-                            hklInfo->LatticeVectorc[2] * hklInfo->LatticeVectorc[2]);
+                    hklInfo->LatticeVectorcLength = sqrt(hklInfo->LatticeVectorc[0] * hklInfo->LatticeVectorc[0] + hklInfo->LatticeVectorc[1] * hklInfo->LatticeVectorc[1] + hklInfo->LatticeVectorc[2] * hklInfo->LatticeVectorc[2]);
                 }
 
-                TauA[0] = M_2_PI * ((MosaicityAB[2] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[0] +
-                        (MosaicityAB[3] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[0] +
-                        (MosaicityAB[4] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[0]);
+                TauA[0] = M_2_PI * ((MosaicityAB[2] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[0] + (MosaicityAB[3] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[0] + (MosaicityAB[4] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[0]);
 
-                TauA[1] = M_2_PI * ((MosaicityAB[2] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[1] +
-                        (MosaicityAB[3] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[1] +
-                        (MosaicityAB[4] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[1]);
+                TauA[1] = M_2_PI * ((MosaicityAB[2] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[1] + (MosaicityAB[3] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[1] + (MosaicityAB[4] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[1]);
 
-                TauA[2] = M_2_PI * ((MosaicityAB[2] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[2] +
-                        (MosaicityAB[3] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[2] +
-                        (MosaicityAB[4] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[2]);
+                TauA[2] = M_2_PI * ((MosaicityAB[2] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[2] + (MosaicityAB[3] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[2] + (MosaicityAB[4] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[2]);
 
-                TauB[0] = M_2_PI * ((MosaicityAB[5] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[0] +
-                        (MosaicityAB[6] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[0] +
-                        (MosaicityAB[7] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[0]);
+                TauB[0] = M_2_PI * ((MosaicityAB[5] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[0] + (MosaicityAB[6] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[0] + (MosaicityAB[7] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[0]);
 
-                TauB[1] = M_2_PI * ((MosaicityAB[5] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[1] +
-                        (MosaicityAB[6] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[1] +
-                        (MosaicityAB[7] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[1]);
+                TauB[1] = M_2_PI * ((MosaicityAB[5] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[1] + (MosaicityAB[6] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[1] + (MosaicityAB[7] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[1]);
 
-                TauB[2] = M_2_PI * ((MosaicityAB[5] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[2] +
-                        (MosaicityAB[6] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[2] +
-                        (MosaicityAB[7] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[2]);
+                TauB[2] = M_2_PI * ((MosaicityAB[5] / hklInfo->LatticeVectoraLength) * hklInfo->ReciprocalLatticeVectora[2] + (MosaicityAB[6] / hklInfo->LatticeVectorbLength) * hklInfo->ReciprocalLatticeVectorb[2] + (MosaicityAB[7] / hklInfo->LatticeVectorcLength) * hklInfo->ReciprocalLatticeVectorc[2]);
 
                 // Check determinants to see how we should compute the linear combination of a and b (to match c)
                 if ((Determinant = TauA[0] * TauB[1] - TauA[1] * TauB[0]) != 0){
@@ -963,7 +941,6 @@ INITIALIZE
         fprintf(stderr,"Error (%s): Unable to read orientation file \'%s\'. Aborting.\n",NAME_CURRENT_COMP,OrientationsFile);
         exit(-1);
     }
-
     PolyInfo = calloc(TableOfOrientations->rows, sizeof(struct hklStruct));
 
     // Compute dimensions of voxels
@@ -1244,13 +1221,11 @@ TRACE
             // Check, if the x-ray is leaving the sample unexpectedly
             if (!IntersectVoxel || l2 < -1e-9 || l1 > 1e-9) {
                 fprintf(stderr,	"%s: Warning: Ray number %d has unexpectedly left the crystal.\n l1 = %g l2 = %g x = %g y = %g z = %g kx = %g ky = %g kz = %g.\n", NAME_CURRENT_COMP, (int) mcget_run_num(), l1, l2, x, y, z, kx, ky, kz);
-
                 break;
             }
 
             if (BackgroundVoxel) {
                 PROP_DL(l2);
-
                 break;
             }
 
@@ -1267,7 +1242,6 @@ TRACE
             j = 0;
 
             for (i = 0; i < PolyInfo[OrientationIndex].NumberOfReflections; ++i) {
-
                 // End loop if the largest relevant length of tau has been reached
                 if (TauMax < CurrenthklData[i].TauLength) {
                     break;
@@ -1278,9 +1252,7 @@ TRACE
                 Rho[1] = ki[1] - CurrenthklData[i].Tau[1];
                 Rho[2] = ki[2] - CurrenthklData[i].Tau[2];
 
-                RhoLength = sqrt(pow(Rho[0], 2) +
-                        pow(Rho[1], 2) +
-                        pow(Rho[2], 2));
+                RhoLength = sqrt(pow(Rho[0], 2) + pow(Rho[1], 2) + pow(Rho[2], 2));
 
                 // Check if scattering is possible (cutoff of Gaussian tails)
                 if (fabs(RhoLength - kiLength) < CurrenthklData[i].GaussianCutoff) {
@@ -1289,17 +1261,9 @@ TRACE
                     CurrentTauData[j].Index = i;
 
                     // Get ki vector in local coordinates
-                    CurrentTauData[j].ki[0] = ki[0] * CurrenthklData[i].u1[0] +
-                        ki[1] * CurrenthklData[i].u1[1] +
-                        ki[2] * CurrenthklData[i].u1[2];
-
-                    CurrentTauData[j].ki[1] = ki[0] * CurrenthklData[i].u2[0] +
-                        ki[1] * CurrenthklData[i].u2[1] +
-                        ki[2] * CurrenthklData[i].u2[2];
-
-                    CurrentTauData[j].ki[2] = ki[0] * CurrenthklData[i].u3[0] +
-                        ki[1] * CurrenthklData[i].u3[1] +
-                        ki[2] * CurrenthklData[i].u3[2];
+                    CurrentTauData[j].ki[0] = ki[0] * CurrenthklData[i].u1[0] + ki[1] * CurrenthklData[i].u1[1] + ki[2] * CurrenthklData[i].u1[2];
+                    CurrentTauData[j].ki[1] = ki[0] * CurrenthklData[i].u2[0] + ki[1] * CurrenthklData[i].u2[1] + ki[2] * CurrenthklData[i].u2[2];
+                    CurrentTauData[j].ki[2] = ki[0] * CurrenthklData[i].u3[0] + ki[1] * CurrenthklData[i].u3[1] + ki[2] * CurrenthklData[i].u3[2];
 
                     CurrentTauData[j].Rho[0] = CurrentTauData[j].ki[0] - CurrenthklData[i].TauLength;
                     CurrentTauData[j].Rho[1] = CurrentTauData[j].ki[1];
@@ -1329,17 +1293,9 @@ TRACE
                     CurrentTauData[j].b2[2] = b2[2];
 
                     // Compute the 2D projection of the 3D Gauss of the reflection - the symmetric 2x2 matrix N describing the 2D gauss
-                    N11 = CurrenthklData[i].m[0] * pow(b1[0], 2) +
-                        CurrenthklData[i].m[1] * pow(b1[1], 2) +
-                        CurrenthklData[i].m[2] * pow(b1[2], 2);
-
-                    N12 = CurrenthklData[i].m[0] * b1[0] * b2[0] +
-                        CurrenthklData[i].m[1] * b1[1] * b2[1] +
-                        CurrenthklData[i].m[2] * b1[2] * b2[2];
-
-                    N22 = CurrenthklData[i].m[0] * pow(b2[0], 2) +
-                        CurrenthklData[i].m[1] * pow(b2[1], 2) +
-                        CurrenthklData[i].m[2] * pow(b2[2], 2);
+                    N11 = CurrenthklData[i].m[0] * pow(b1[0], 2) + CurrenthklData[i].m[1] * pow(b1[1], 2) + CurrenthklData[i].m[2] * pow(b1[2], 2);
+                    N12 = CurrenthklData[i].m[0] * b1[0] * b2[0] + CurrenthklData[i].m[1] * b1[1] * b2[1] + CurrenthklData[i].m[2] * b1[2] * b2[2];
+                    N22 = CurrenthklData[i].m[0] * pow(b2[0], 2) + CurrenthklData[i].m[1] * pow(b2[1], 2) + CurrenthklData[i].m[2] * pow(b2[2], 2);
 
                     // The (symmetric) inverse matrix of N
                     DeterminantN = N11 * N22 - pow(N12, 2);
@@ -1362,13 +1318,8 @@ TRACE
                     CurrentTauData[j].DeterminantL = DeterminantL;
 
                     // Compute product
-                    Productx = b1[0] * CurrenthklData[i].m[0] * CurrentTauData[j].Origin[0] +
-                        b1[1] * CurrenthklData[i].m[1] * CurrentTauData[j].Origin[1] +
-                        b1[2] * CurrenthklData[i].m[2] * CurrentTauData[j].Origin[2];
-
-                    Producty = b2[0] * CurrenthklData[i].m[0] * CurrentTauData[j].Origin[0] +
-                        b2[1] * CurrenthklData[i].m[1] * CurrentTauData[j].Origin[1] +
-                        b2[2] * CurrenthklData[i].m[2] * CurrentTauData[j].Origin[2];
+                    Productx = b1[0] * CurrenthklData[i].m[0] * CurrentTauData[j].Origin[0] + b1[1] * CurrenthklData[i].m[1] * CurrentTauData[j].Origin[1] + b1[2] * CurrenthklData[i].m[2] * CurrentTauData[j].Origin[2];
+                    Producty = b2[0] * CurrenthklData[i].m[0] * CurrentTauData[j].Origin[0] + b2[1] * CurrenthklData[i].m[1] * CurrentTauData[j].Origin[1] + b2[2] * CurrenthklData[i].m[2] * CurrentTauData[j].Origin[2];
 
                     // Center of 2D Gauss in plane coordinates
                     GaussCenterx = -Productx * NInverse11 - Producty * NInverse12;
@@ -1396,11 +1347,10 @@ TRACE
             }
 
             TauCount = j;
-
-            if (TauCount == 0) {
+            
+	    if (TauCount == 0) {
                 IntersectVoxel = 0;
                 PROP_DL(l2);
-
                 break;
             }
 
@@ -1414,7 +1364,6 @@ TRACE
 
             if (!NumberOfScatteringEvents && ProbabilityOfTransmission >= 0.0 && ProbabilityOfTransmission <= 1.0) {
                 MCTransmission = ProbabilityOfTransmission;
-
             } else {
                 MCTransmission = CalculatedProbabilityOfTransmission;
             }
@@ -1438,7 +1387,6 @@ TRACE
             if (MCInteract < 0) {
                 IntersectVoxel = 0;
                 PROP_DL(l2);
-
                 break;
             }
 
@@ -1450,7 +1398,6 @@ TRACE
             // Calculate, where the ray is scattered - use linear sampling for weak scatterers
             if (TotalScatteringLength * l2 < 1e-6) {
                 l = rand0max(l2);
-
             } else {
                 l = -log(1.0 - rand0max(1.0 - exp(-TotalScatteringLength * l2))) / TotalScatteringLength;
             }
@@ -1465,9 +1412,7 @@ TRACE
             // Randomly select between coherent and incoherent scattering
             if(rand0max(CoherentScatteringLength + IncoherentScatteringLength) < IncoherentScatteringLength) {
                 randvec_target_circle(&ki[0], &ki[1], &ki[2], NULL, kx, ky, kz, 0);
-                kx = ki[0];
-                ky = ki[1];
-                kz = ki[2];
+                kx = ki[0]; ky = ki[1]; kz = ki[2];
             } else {
                 if (TotalReflectivity < 0) {
                     ABSORB;
@@ -1475,7 +1420,6 @@ TRACE
 
                 // Decide, which reflection will interact with the ray
                 r = rand0max(TotalReflectivity);
-
                 Sum = 0;
 
                 for (j = 0; j < TauCount; ++j) {
@@ -1485,7 +1429,6 @@ TRACE
                         break;
                     }
                 }
-
                 // If no suitable reflection is found - use the last one in the list (this should not happen in practice)
                 if (j >= TauCount) {
                     fprintf(stderr, "%s: Error: Illegal tau search: r = %g, Sum = %g.\n", NAME_CURRENT_COMP, r, Sum);
@@ -1505,11 +1448,8 @@ TRACE
                 kf[1] = CurrentTauData[j].Rho[1] + CurrentTauData[j].Origin[1] + CurrentTauData[j].b1[1] * y1 + CurrentTauData[j].b2[1] * y2;
                 kf[2] = CurrentTauData[j].Rho[2] + CurrentTauData[j].Origin[2] + CurrentTauData[j].b1[2] * y1 + CurrentTauData[j].b2[2] * y2;
 
-                // Normalize kf to length of ki to account for planer approximation of the Ewald sphere
-                kfLength = sqrt(pow(kf[0], 2) +
-                        pow(kf[1], 2) +
-                        pow(kf[2], 2));
-
+                // Normalize kf to length of ki to account for plane approximation of the Ewald sphere
+                kfLength = sqrt(kf[0]*kf[0] + kf[1]*kf[1] + kf[2]*kf[2]);
                 kf[0] *= kiLength / kfLength;
                 kf[1] *= kiLength / kfLength;
                 kf[2] *= kiLength / kfLength;
@@ -1518,25 +1458,19 @@ TRACE
                 p *= CurrentTauData[j].Crosssection * TotalReflectivity / (CoherentCrosssection * CurrentTauData[j].Reflectivity);
 
                 // Adjust direction of ray
-                kx = CurrenthklData[i].u1[0] * kf[0] +
-                    CurrenthklData[i].u2[0] * kf[1] +
-                    CurrenthklData[i].u3[0] * kf[2];
+                kx = CurrenthklData[i].u1[0] * kf[0] + CurrenthklData[i].u2[0] * kf[1] + CurrenthklData[i].u3[0] * kf[2];
 
-                ky = CurrenthklData[i].u1[1] * kf[0] +
-                    CurrenthklData[i].u2[1] * kf[1] +
-                    CurrenthklData[i].u3[1] * kf[2];
+		ky = CurrenthklData[i].u1[1] * kf[0] + CurrenthklData[i].u2[1] * kf[1] + CurrenthklData[i].u3[1] * kf[2];
 
-                kz = CurrenthklData[i].u1[2] * kf[0] +
-                    CurrenthklData[i].u2[2] * kf[1] +
-                    CurrenthklData[i].u3[2] * kf[2];
+                kz = CurrenthklData[i].u1[2] * kf[0] + CurrenthklData[i].u2[2] * kf[1] + CurrenthklData[i].u3[2] * kf[2];
             }
 
             SCATTER;
 
-            // Calculate new trajectory (the 1.0001 has been added to make sure that the ray leaves the ray if it has to)
+            /* Calculate new trajectory (the 1.0001 has been added to make sure that the ray leaves the current voxel*/
             IntersectVoxel = box_intersect(&l1, &l2, x - VoxelCenterx, y - VoxelCentery, z - VoxelCenterz, kx, ky, kz, 1.0001 * Voxelxwidth, 1.0001 * Voxelyheight, 1.0001 * Voxelzdepth);
 
-            // End loop if maximum numer of scattering events has been reached
+            /* End loop if maximum numer of scattering events has been reached */
             if (MaxNumberOfReflections && NumberOfScatteringEvents >= MaxNumberOfReflections) {
                 box_intersect(&l1, &l2, x - VoxelCenterx, y - VoxelCentery, z - VoxelCenterz, kx, ky, kz, xwidth, yheight, zdepth);
 
