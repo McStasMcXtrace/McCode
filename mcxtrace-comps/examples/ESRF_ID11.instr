@@ -82,12 +82,12 @@ AT (0,0,29.1) RELATIVE Origin
 
   /*in -vacuum transfocator*/
 COMPONENT transfocator1=Lens_simple(
-    xwidth=2e-1,yheight=2e-1,N=T1_N, material_datafile="Be.txt",r=300e-6)
+    xwidth=2e-1,yheight=2e-1, radius=0, N=T1_N, material_datafile="Be.txt",r=300e-6)
 WHEN(IVT1BE) AT(0,0,31.5) RELATIVE Origin
 ROTATED (0,ANGLE,0) RELATIVE PREVIOUS
 
 COMPONENT transfocator2=Lens_simple(
-    xwidth=2e-3,yheight=2e-3, N=T2_N,material_datafile="Al.txt",r=300e-6)
+    xwidth=2e-3,yheight=2e-3, radius=0, N=T2_N,material_datafile="Al.txt",r=300e-6)
 WHEN (!IVT1BE) AT(0,0,31.5) RELATIVE Origin
 
 COMPONENT psd2 = PSD_monitor(nx=301,ny=301,filename="psd2.dat",xwidth=0.002,yheight=0.002)
@@ -104,12 +104,12 @@ COMPONENT wavel_eh1_sample=L_monitor(filename="lmon_eh1.dat",Lmin=0,Lmax=3,xwidt
 
 /*EH3 transfoc*/
 COMPONENT transfocator3=Lens_simple(
-    xwidth=2e-3,yheight=2e-3, r=2e-3, N=T3_N,material_datafile="Al.txt")
+    xwidth=2e-3,yheight=2e-3, r=2e-3, radius=0, N=T3_N,material_datafile="Al.txt")
 AT (0,0,92.25+EH3TFOC_offset) RELATIVE Origin
 
 /*Si chip nanofocus*/
 COMPONENT si_chip_nanofocus=Lens_simple(
-    xwidth=1e-3,yheight=1e-3, r=100e-6, N=SI_N,material_datafile="Si.txt")
+    xwidth=1e-3,yheight=1e-3, r=100e-6, radius=0, N=SI_N,material_datafile="Si.txt")
 AT (0,0,94-chip2sample) RELATIVE Origin
 
 /*EH3 sample position*/
