@@ -93,6 +93,9 @@ SHARE
 %{
     // External libraries
     %include "read_table-lib"
+#ifndef MXPX_REFL_SLIST_SIZE
+#define MXPX_REFL_SLIST_SIZE 128
+#endif
 
     // Structs for hkl-data
     struct hklDataStruct {
@@ -162,9 +165,6 @@ SHARE
     struct hklStruct {
         // List of reflections
         struct hklDataStruct *hklData;
-
-        // List of reflections close to the Ewald sphere
-        struct TauDataStruct *TauData;
         int NumberOfReflections;
 
         // Format of columns in list: [h, k, l, F, F2]
@@ -836,14 +836,8 @@ SHARE
 
         hklInfo->hklData = hklData;
         hklInfo->NumberOfReflections = i;
-        hklInfo->TauData = malloc(i * sizeof(*hklInfo->TauData));
 
-        if (!hklInfo->TauData) {
-          fprintf(stderr, "ERROR (%s): Out of memory.\n", "ReadReflectionData");
-            return(-1);
-        }
-
-        return(hklInfo->NumberOfReflections = i);
+        return(i);
     }
 
     // Struct for description of absorption
@@ -1064,7 +1058,7 @@ TRACE
     struct hklDataStruct *CurrenthklData;
 
     // List of reflections close to Ewald sphere
-    struct TauDataStruct *CurrentTauData;
+    struct TauDataStruct CurrentTauData[MXPX_REFL_SLIST_SIZE];
     int TauCount;
 
     // Number of scattering events
@@ -1233,8 +1227,6 @@ TRACE
 
             // Get info from PolyInfo-struct
             CurrenthklData = PolyInfo[OrientationIndex].hklData;
-            CurrentTauData = PolyInfo[OrientationIndex].TauData;
-
         } else {
             BackgroundVoxel = 1;
         }
