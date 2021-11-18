@@ -51,12 +51,12 @@ DEFINE COMPONENT SANSNanodiscsFast
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (NumberOfQBins = 200,
+SETTING PARAMETERS (int NumberOfQBins = 200,
 	AxisRatio = 1.4, NumberOfLipids = 130.0, AreaPerLipidHeadgroup = 65.0, HeightOfMSP = 24.0,
 	VolumeOfOneMSP = 26296.5, VolumeOfHeadgroup = 319.0, VolumeOfCH2Tail = 818.8, VolumeOfCH3Tail = 108.6,
 	ScatteringLengthOfOneMSP = 8.8E-10, ScatteringLengthOfHeadgroup = 7.05E-12, ScatteringLengthOfCH2Tail = -1.76E-12, ScatteringLengthOfCH3Tail = -9.15E-13,
 	Roughness = 5.0, Concentration = 0.01, RhoSolvent = 6.4e-14, AbsorptionCrosssection = 0.0,
-	xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius, qMin = 0.001, qMax = 1.0)
+	xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius, qMin = 0.001, qMax = 1.0 )
 
 OUTPUT PARAMETERS ()
 DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
@@ -159,8 +159,25 @@ double FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, 
 		return Intensity;
 	}
 
-DECLARE 
+%}
+
+
+DECLARE
 %{
+// Declarations
+double Absorption;
+double NumberDensity;
+
+// Curve used in linear
+double *qArray;
+double *IArray;
+%}
+
+INITIALIZE
+%{
+// Functions used for compution the intensity from a given liposome
+
+>>>>>>> b6fb3daa6... move function declarations to SHARE
 
 	// Declarations
 	double RhoBelt;
@@ -226,18 +243,18 @@ INITIALIZE
 	// Geometric properties of different components
 	AreaOfLipids = NumberOfLipids * AreaPerLipidHeadgroup / 2.0;
 
-    MinorSemiAxis = sqrt(AreaOfLipids / (PI * AxisRatio));
-    MajorSemiAxis = MinorSemiAxis * AxisRatio;
+	MinorSemiAxis = sqrt(AreaOfLipids / (PI * AxisRatio));
+	MajorSemiAxis = MinorSemiAxis * AxisRatio;
 
-    HeightOfLipids = 2.0 * (VolumeOfHeadgroup + VolumeOfCH2Tail + VolumeOfCH3Tail) / AreaPerLipidHeadgroup;
-    HeightOfTails  = 2.0 * (VolumeOfCH2Tail + VolumeOfCH3Tail) / AreaPerLipidHeadgroup;
-    HeightOfCH3    = 2.0 * VolumeOfCH3Tail / AreaPerLipidHeadgroup;
+	HeightOfLipids = 2.0 * (VolumeOfHeadgroup + VolumeOfCH2Tail + VolumeOfCH3Tail) / AreaPerLipidHeadgroup;
+	HeightOfTails  = 2.0 * (VolumeOfCH2Tail + VolumeOfCH3Tail) / AreaPerLipidHeadgroup;
+	HeightOfCH3    = 2.0 * VolumeOfCH3Tail / AreaPerLipidHeadgroup;
 
 	ThicknessOfBelt = sqrt(pow(MinorSemiAxis + MajorSemiAxis, 2) / 4.0 + 2.0 * VolumeOfOneMSP / (PI * HeightOfMSP)) - (MajorSemiAxis + MinorSemiAxis) / 2.0;
 
 	// Compute scattering from nanodiscs in predecided points
-    qArray = (double *) calloc(NumberOfQBins, sizeof(double));
-    IArray = (double *) calloc(NumberOfQBins, sizeof(double));
+	qArray = (double *) calloc(NumberOfQBins, sizeof(double));
+	IArray = (double *) calloc(NumberOfQBins, sizeof(double));
 
 	for (i = 0; i < NumberOfQBins; ++i) {
 		qDummy = qMin + (i + 0.5) * qStep;
@@ -260,6 +277,7 @@ TRACE
 	double Weight;
 	double IntensityPart;
 	double SolidAngle;
+	double q;
 	double qx;
 	double qy;
 	double qz;
