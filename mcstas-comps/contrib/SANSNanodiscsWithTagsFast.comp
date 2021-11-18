@@ -55,7 +55,7 @@ DEFINE COMPONENT SANSNanodiscsWithTagsFast
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS ( NumberOfQBins = 200,
+SETTING PARAMETERS ( int NumberOfQBins = 200,
 	AxisRatio = 1.4, NumberOfLipids = 130.0, AreaPerLipidHeadgroup = 65.0, HeightOfMSP = 24.0, RadiusOfGyrationForHisTag = 12.7,
 	VolumeOfOneMSP = 26296.5, VolumeOfHeadgroup = 319.0, VolumeOfCH2Tail = 818.8, VolumeOfCH3Tail = 108.6, VolumeOfOneHisTag = 2987.3,
 	ScatteringLengthOfOneMSP = 8.8E-10, ScatteringLengthOfHeadgroup = 7.05E-12, ScatteringLengthOfCH2Tail = -1.76E-12, ScatteringLengthOfCH3Tail = -9.15E-13,ScatteringLengthOfOneHisTag = 1.10E-10,
@@ -64,13 +64,12 @@ SETTING PARAMETERS ( NumberOfQBins = 200,
 
 OUTPUT PARAMETERS ()
 DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
-NOACC
 
 SHARE
 %{
 #include <gsl/gsl_sf_bessel.h>
-// Functions used for compution the intensity from a given liposome
-double FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, double Height, double Alpha, double Beta)
+  // Functions used for compution the intensity from a given liposome
+  double FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, double Height, double Alpha, double Beta)
 	{
 		double const ProjectedRadius = sqrt(pow(MajorSemiAxis * sin(Beta), 2) + pow(MinorSemiAxis * cos(Beta), 2));
 
@@ -80,8 +79,9 @@ double FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, 
 		return 2 * Formfactor1 * Formfactor2;
 	}
 
-	// Functions used to compute the characteristics of the histidine tags
-	double Debye(double q, double r)
+
+  // Functions used to compute the characteristics of the histidine tags
+  double Debye(double q, double r)
 	{
 		// Variables needed in functions
 		double ReturnValue;
@@ -99,8 +99,7 @@ double FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, 
 		return ReturnValue;
 	}
 
-
-	double XiRodWithoutEndcaps(double q, double r, double l, double Alpha)
+  double XiRodWithoutEndcaps(double q, double r, double l, double Alpha)
 	{
 		// Variables needed in function
 		double ReturnValue;
@@ -111,7 +110,7 @@ double FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, 
 		return ReturnValue;
 	}
 
-	double PsiHammouda(double x)
+  double PsiHammouda(double x)
 	{
 		// Variables used in function
 		double ReturnValue;
@@ -122,8 +121,7 @@ double FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, 
 		return ReturnValue;
 	}
 
-	// Computation of the intensity from a given nanodisc
-	double IntensityOfEmptyNanodiscsWithTags(double q, double MajorSemiAxis, double MinorSemiAxis, double ThicknessOfBelt,
+  double IntensityOfEmptyNanodiscsWithTags(double q, double MajorSemiAxis, double MinorSemiAxis, double ThicknessOfBelt,
 											 double HeightOfBelt, double HeightOfLipids, double HeightOfTails, double HeightOfCH3, double RadiusOfGyrationForHisTag, double VolumeOfOneHisTag,
 											 double DeltaRhoBelt, double DeltaRhoHead, double DeltaRhoCH2Tail, double DeltaRhoCH3Tail, double DeltaRhoTag)
 	{
@@ -206,22 +204,21 @@ double FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, 
 				IntensityDisc = pow(AmplitudeOfBelt + AmplitudeOfHeads + AmplitudeOfCH2Tail + AmplitudeOfCH3Tail, 2);
 
 				// Add the histidine tags
-		        FormfactorOfTags = XiRodWithoutEndcaps(q, AverageRadiusOfBelt + RadiusOfGyrationForHisTag, HeightOfBelt, Alpha);
+				FormfactorOfTags = XiRodWithoutEndcaps(q, AverageRadiusOfBelt + RadiusOfGyrationForHisTag, HeightOfBelt, Alpha);
 
-		        Crosscorrelation = 2.0 * pow(DeltaRhoTag * VolumeOfOneHisTag, 2) * pow(FormfactorOfTags, 2) * pow(PsiHammouda(q * RadiusOfGyrationForHisTag), 2);
+				Crosscorrelation = 2.0 * pow(DeltaRhoTag * VolumeOfOneHisTag, 2) * pow(FormfactorOfTags, 2) * pow(PsiHammouda(q * RadiusOfGyrationForHisTag), 2);
 
-		        Autocorrelation  = 2.0 * pow(DeltaRhoTag * VolumeOfOneHisTag, 2) * Debye(q, RadiusOfGyrationForHisTag);
+				Autocorrelation  = 2.0 * pow(DeltaRhoTag * VolumeOfOneHisTag, 2) * Debye(q, RadiusOfGyrationForHisTag);
 
-		        Disccorrelation  = 4.0 * (AmplitudeOfBelt + AmplitudeOfHeads + AmplitudeOfCH2Tail + AmplitudeOfCH3Tail) *
+				Disccorrelation  = 4.0 * (AmplitudeOfBelt + AmplitudeOfHeads + AmplitudeOfCH2Tail + AmplitudeOfCH3Tail) *
 									     DeltaRhoTag * VolumeOfOneHisTag * FormfactorOfTags * PsiHammouda(q * RadiusOfGyrationForHisTag);
 
-		        IntensityPart = IntensityDisc + Crosscorrelation + Autocorrelation + Disccorrelation;
+				IntensityPart = IntensityDisc + Crosscorrelation + Autocorrelation + Disccorrelation;
 
 				// Return the final intensity
 				Intensity += 2 / PI * sin(Alpha) * IntensityPart * AlphaStep * BetaStep;
 			}
 		}
-
 		return Intensity;
 	}
 %}
@@ -230,14 +227,15 @@ DECLARE
 %{
 // Declarations
 double Absorption;
-double q;
 double NumberDensity;
 
 // Curve used in linear
 double *qArray;
 double *IArray;
+%}
 
-	double RhoBelt;
+INITIALIZE
+%{
 	double RhoHead;
 	double RhoCH2Tail;
 	double RhoCH3Tail;
@@ -260,7 +258,6 @@ double *IArray;
 
 	double AreaOfLipids;
 
-INITIALIZE %{
 	// Rescale concentration into number of aggregates per m^3 times 10^-4
        NumberDensity = Concentration * 6.02214129e19;
 	const double qStep = (qMax - qMin) / (1.0 * NumberOfQBins);
@@ -324,6 +321,7 @@ TRACE
 	double Weight;
 	double IntensityPart;
 	double SolidAngle;
+	double q;
 	double qx;
 	double qy;
 	double qz;
