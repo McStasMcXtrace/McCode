@@ -137,7 +137,7 @@ AT (0, 0, DistSampDet) RELATIVE SecondPinhole*/
 	DetectorRadius = DetRadius,
 	//PDBFilepath = "1EV3.pdb"
 	//PDBFilepath = "6LYZ.pdb"
-	PDBFilepath = "3V03.pdb")
+	PDBFilepath = "3v03.pdb")
 AT (0, 0, DistSampDet) RELATIVE SecondPinhole*/
 
 
