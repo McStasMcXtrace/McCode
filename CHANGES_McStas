@@ -44,11 +44,11 @@
 * Modified by: PW September-October 2021: version 2.7.1
 * Modified by: PW September-November 2021: version 3.1
 *
-* This file is part of McStas 3.1, released November 12th 2021.
+* This file is part of McStas 3.1, released November 24th 2021.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas 3.1, November 12th, 2021
+Changes in McStas 3.1, November 24th, 2021
 
  McStas 3.1 is the second official release in the 3.x series, with a modernised 
  code-generator and support for GPU acceleration on NVIDIA cards.
@@ -57,8 +57,19 @@ Changes in McStas 3.1, November 12th, 2021
  - Thanks to all members of the joint McStas-McXtrace team, you guys ROCK!
 
  Fixes of issues from last 3.x release:
- - A number of issues from 3.0 were addressed, see the relevant GitHub issues for details:
+ - A largetnumber of issues from 3.0 were addressed, see the relevant GitHub issues for details:
    - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-3.0
+   - Many GPU-related bugs fixes in all layers of the code, be it components, instruments or
+     libraries.
+
+ Documentation & guides:
+ - The Wiki has been updated with a dedicated section on McStas 2.x -> McStas 3.x conversion
+ - It includes:
+   - A nomenclature list containing short descriptions of new concepts and important keywords
+     in McStas 3.x and OpenACC / CUDA code in general.
+   - A document outlining the most importand differences between 2.x and 3.x.
+   - A guide for 2.x -> 3.x instrument conversion.
+   - A guide for 2.x -> 3.x component conversion.
 
  Installation:
  - Our install docs are available on the McCode GitHub page at
