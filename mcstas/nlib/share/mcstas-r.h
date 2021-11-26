@@ -55,17 +55,31 @@
 #else
 #define SCATTER0 do {DEBUG_SCATTER(); SCATTERED++; \ 
   if( _particle->logged < NLOG) { \
-    _particle->logged++; \
+    Rotation _Rtmp;\
+    rot_transpose(ROT_A_CURRENT_COMP,_Rtmp);\
+    Coords _Ttmp = coords_neg(POS_A_CURRENT_COMP);\
+    Coords _tmp1,_tmp2;\
+    double xtmp,ytmp,ztmp;\
+    _particle->logged++;\
     _particle->complog[_particle->logged]=_comp->_index;\
-    _particle->xlog[_particle->logged]=x;\
-    _particle->ylog[_particle->logged]=y;\
-    _particle->zlog[_particle->logged]=z;\
-    _particle->vxlog[_particle->logged]=vx;\
-    _particle->vylog[_particle->logged]=vy;\
-    _particle->vzlog[_particle->logged]=vz;\
-    _particle->sxlog[_particle->logged]=sx;\
-    _particle->sylog[_particle->logged]=sy;\
-    _particle->szlog[_particle->logged]=sz;\
+    _tmp1 = coords_set(x,y,z);\
+    _tmp2=mccoordschange_coords(_Ttmp,_Rtmp,_tmp1, 1);	\
+    coords_get(_tmp2,&xtmp,&ytmp,&ztmp);\
+    _particle->xlog[_particle->logged]=xtmp;\
+    _particle->ylog[_particle->logged]=ytmp;\
+    _particle->zlog[_particle->logged]=ztmp;\
+    _tmp1 = coords_set(vx,vy,vz);\
+    _tmp2=mccoordschange_coords(_Ttmp,_Rtmp,_tmp1, 0); \
+    coords_get(_tmp2,&xtmp,&ytmp,&ztmp);\
+    _particle->vxlog[_particle->logged]=xtmp;\
+    _particle->vylog[_particle->logged]=ytmp;\
+    _particle->vzlog[_particle->logged]=ztmp;\
+    _tmp1 = coords_set(sx,sy,sz);\
+    _tmp2=mccoordschange_coords(_Ttmp,_Rtmp,_tmp1, 0); \
+    coords_get(_tmp2,&xtmp,&ytmp,&ztmp);\
+    _particle->sxlog[_particle->logged]=xtmp;\
+    _particle->sylog[_particle->logged]=ytmp;\
+    _particle->szlog[_particle->logged]=ztmp;\
     _particle->tlog[_particle->logged]=t;\
     _particle->plog[_particle->logged]=p;\
   }\
