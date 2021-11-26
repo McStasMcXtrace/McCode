@@ -1,0 +1,79 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Zlosses
+*
+* %Identification
+* Written by: E. Farhi [farhi@ill.fr]
+* Date: Sept 1st, 2008
+* Origin: ILL
+* %INSTRUMENT_SITE: Tests_optics
+*
+* Cross comparison of Guide components
+*
+* %Description
+* Cross comparison of Guide components, using McStas and
+* contributed components. It shows that all implementations are equivalent,
+* except the Guide_honeycomb which has a different geometry.
+*
+* %Example: Guide=1 Detector: Monitor2_xy_I=0.00726875
+* %Example: Guide=2 Detector: Monitor2_xy_I=0.00725213
+* %Example: Guide=3 Detector: Monitor2_xy_I=0.00727304
+* %Example: Guide=4 Detector: Monitor2_xy_I=0.00721742
+* %Example: Guide=5 Detector: Monitor2_xy_I=0.00721742
+* %Example: Guide=6 Detector: Monitor2_xy_I=0.00721742
+* %Example: Guide=7 Detector: Monitor2_xy_I=0.00724912
+* %Example: Guide=8 Detector: Monitor2_xy_I=0.00683072
+* %Example: Guide=9 Detector: Monitor2_xy_I=0.00724912
+*
+* %Parameters
+* Guide: [1]  Choice of Guide component to test, with 1=Guide, 2=Guide_channeled, 3=Guide_gravity, 4=Guide_wavy, 5=Guide_curved 6=Elliptic_guide_gravity 7=Guide_honeycomb
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Zlosses(int Guide=1)
+DEPENDENCY " -DSCATTERLOG -DSCATTERLOG_BUFFER=50 "
+
+DECLARE %{
+%}
+
+USERVARS
+%{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT Source = Source_gen(
+   focus_xw = 0.05, focus_yh = 0.05, lambda0 = 3.39, dlambda = 0.3,
+   yheight = 0.05, xwidth = 0.05)
+  AT (0, 0, 0) RELATIVE PREVIOUS
+EXTEND %{
+	t = randtriangle()*1e-3;	/* 1 ms triangle time window */
+%}
+
+COMPONENT Monitor1_xt = Monitor_nD(
+    options = "x y", xwidth = 0.05, yheight = 0.05)
+  AT (0, 0, 1) RELATIVE PREVIOUS
+
+COMPONENT Guide_Position = Arm( )
+  AT (0, 0, 0.1) RELATIVE PREVIOUS
+
+COMPONENT Guide1 = Guide(
+    w1 = 0.05, h1 = 0.05, l = 100, R0 = 0.99, m=1)
+  AT (0, 0, 0) RELATIVE Guide_Position
+
+COMPONENT Monitor2_xy = Monitor_nD(
+    options = "x y", xwidth = 0.07, yheight = 0.07)
+  AT (0, 0, 100+0.001) RELATIVE Guide_Position
+
+COMPONENT Zloss = Zlosses(filename="losses",zmin=-1,zmax=100,nbins=200)
+  AT(0,0,0) ABSOLUTE  
+
+END

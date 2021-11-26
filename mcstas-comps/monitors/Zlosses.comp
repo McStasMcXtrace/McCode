@@ -1,0 +1,109 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* %I
+* Written by:  Kim Lefmann
+* Date: May 7, 2001
+* Version: $Revision$
+ Origin: Risoe
+* Release: McStas 1.6
+*
+* Rectangular 1D PSD, measuring intensity vs. position along an axis, 
+*
+* %D
+* A 1-dimensional PSD measuring intensity along either the horizontal axis x (default) or
+* the vertical axis y. 
+*
+*
+* Example: PSDlin_monitor(nbins=20, filename="Output.x", xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin: [m]    Lower x bound of detector opening.
+* xmax: [m]    Upper x bound of detector opening.
+* ymin: [m]    Lower y bound of detector opening.
+* ymax: [m]    Upper y bound of detector opening.
+* xwidth: [m]  Width of detector. Overrides xmin, xmax.
+* yheight: [m] Height of detector. Overrides ymin, ymax.
+* nbins: [1]   Number of positional bins.
+* filename: [str] Name of file in which to store the detector image.
+* vertical: [1]   Flag to indicate whether the monitor measures along the horiz. or vert. axis
+* restore_neutron: [1] If set, the monitor does not influence the neutron state.
+* nowritefile: [1]      If set, monitor will skip writing to disk
+*
+* OUTPUT PARAMETERS:
+*
+* PSDlin_N:    Array of neutron counts
+* PSDlin_p:    Array of neutron weight counts
+* PSDlin_p2:   Array of second moments
+*
+* %E
+******************************************************************************/
+
+DEFINE COMPONENT Zlosses
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (nbins=100, string filename=0, zmin=0, zmax=10,int nowritefile=0)
+OUTPUT PARAMETERS ()
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+DECLARE
+%{
+  DArray1d Z_N;
+  DArray1d Z_p;
+  DArray1d Z_p2;
+%}
+
+INITIALIZE
+%{
+
+  Z_N = create_darr1d(nbins);
+  Z_p = create_darr1d(nbins);
+  Z_p2 = create_darr1d(nbins);
+%}
+
+TRACE
+%{
+  
+  if(_particle->logged>0) {
+    int i,j;
+    for (j=1; j<=_particle->logged;j++)
+      
+      if (_particle->zlog[j]>zmin && _particle->zlog[j]<zmax){
+	/* Bin number */
+	i = floor(nbins*(_particle->zlog[j]-zmin)/(zmax-zmin));
+	double dp;
+	dp=_particle->plog[j-1]-_particle->plog[j];
+	double p2 = dp*dp;
+        #pragma acc atomic
+	Z_N[i] = Z_N[i] +1;
+        #pragma acc atomic
+	Z_p[i] = Z_p[i] + dp;
+        #pragma acc atomic
+	Z_p2[i] = Z_p2[i] + p2;
+      }
+  }
+%}
+
+SAVE
+%{
+if (!nowritefile) {
+  DETECTOR_OUT_1D(
+        "Losses","z-Position [m]","Intensity","z", zmin, zmax, nbins,
+        &Z_N[0],&Z_p[0],&Z_p2[0],filename);
+ }
+%}
+
+FINALLY
+%{
+  destroy_darr1d(Z_N);
+  destroy_darr1d(Z_p);
+  destroy_darr1d(Z_p2);
+%}
+
+
+END
