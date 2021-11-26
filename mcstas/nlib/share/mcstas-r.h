@@ -53,20 +53,23 @@
 #define SCATTER0 do {DEBUG_SCATTER(); SCATTERED++;} while(0)
 #define SCATTER SCATTER0
 #else
-#define SCATTER0 do {DEBUG_SCATTER(); SCATTERED++; _particle->logged++; \
-  _particle->complog[_particle->logged]=_particle->_index;\
-  _particle->xlog[_particle->logged]=x;\
-  _particle->ylog[_particle->logged]=y;\
-  _particle->zlog[_particle->logged]=z;\
-  _particle->vxlog[_particle->logged]=vx;\
-  _particle->vylog[_particle->logged]=vy;\
-  _particle->vzlog[_particle->logged]=vz;\
-  _particle->sxlog[_particle->logged]=sx;\
-  _particle->sylog[_particle->logged]=sy;\
-  _particle->szlog[_particle->logged]=sz;\
-  _particle->tlog[_particle->logged]=t;\
-  _particle->plog[_particle->logged]=p;\
-  } while(0)
+#define SCATTER0 do {DEBUG_SCATTER(); SCATTERED++; \ 
+  if( _particle->logged < NLOG) { \
+    _particle->logged++; \
+    _particle->complog[_particle->logged]=_comp->_index;\
+    _particle->xlog[_particle->logged]=x;\
+    _particle->ylog[_particle->logged]=y;\
+    _particle->zlog[_particle->logged]=z;\
+    _particle->vxlog[_particle->logged]=vx;\
+    _particle->vylog[_particle->logged]=vy;\
+    _particle->vzlog[_particle->logged]=vz;\
+    _particle->sxlog[_particle->logged]=sx;\
+    _particle->sylog[_particle->logged]=sy;\
+    _particle->szlog[_particle->logged]=sz;\
+    _particle->tlog[_particle->logged]=t;\
+    _particle->plog[_particle->logged]=p;\
+  }\
+} while(0)
 #define SCATTER SCATTER0
 #endif
 
