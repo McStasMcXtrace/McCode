@@ -2977,6 +2977,16 @@ long sort_absorb_last_serial(_class_particle* particles, long len) {
     return i;
 }
 
+Coords mccoordschange_coords(Coords a, Rotation t, Coords in, int trans) {
+  Coords b, c;
+  c = rot_apply(t, in);
+  if (trans) {
+    b = coords_add(c, a);
+    return b;
+  } else
+    return c;
+}
+
 /*******************************************************************************
 * mccoordschange: applies rotation to (x y z) and (vx vy vz) and Spin (sx,sy,sz)
 *******************************************************************************/

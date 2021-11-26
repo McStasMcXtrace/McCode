@@ -647,6 +647,8 @@ Coords rot_apply(Rotation t, Coords a);
 #pragma acc routine seq
 void mccoordschange(Coords a, Rotation t, _class_particle *particle);
 #pragma acc routine seq
+Coords mccoordschange_coords(Coords a, Rotation t, Coords input, int trans);
+#pragma acc routine seq
 void mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz);
 
 double mcestimate_error(double N, double p1, double p2);
