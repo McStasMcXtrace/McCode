@@ -2217,7 +2217,16 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("};");
   list_iterate_end(liter);
   cout("");
-  
+
+  cout("/* Infrastructire for scatter-logging */");
+  cout("#ifdef SCATTERLOG");
+  cout("#ifdef SCATTERLOG_BUFFER");
+  cout("#define NLOG SCATTERLOG_BUFFER");
+  cout("#else");
+  cout("#define NLOG 100");
+  cout("#endif");
+  cout("#endif");
+  cout("");
   /* generate particle struct */
   cout("struct _struct_particle {");
   cout("  double x,y,z; /* position [m] */");
@@ -2241,6 +2250,23 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  long _scattered; /* flag set to TRUE when this event has interacted with the last component instance */");
   cout("  long _restore;   /* set to true if neutron event must be restored */");
   cout("  long flag_nocoordschange;   /* set to true if neutron is jumping */");
+  /* Scatter-logging datastructures */
+  cout("  #ifdef SCATTERLOG");
+  cout("  /* Scatter-logging datastructures */");
+  cout("  int logged;");
+  cout("  int complog[NLOG];");
+  cout("  double xlog[NLOG];");
+  cout("  double ylog[NLOG];");
+  cout("  double zlog[NLOG];");
+  cout("  double vxlog[NLOG];");
+  cout("  double vylog[NLOG];");
+  cout("  double vzlog[NLOG];");
+  cout("  double sxlog[NLOG];");
+  cout("  double sylog[NLOG];");
+  cout("  double szlog[NLOG];");
+  cout("  double plog[NLOG];");
+  cout("  double tlog[NLOG];");
+  cout("  #endif");
   /* Include the struct defined earlier holding information on JUMP logic*/
   cout("  struct particle_logic_struct _logic;");
   /* Append variables from instr USERVARS block to particle struct (user vars,
@@ -2285,6 +2311,10 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("");
   cout("_class_particle mcgenstate(void) {");
   cout("  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, NULL, mcallowbackprop);");
+  cout("  /* Scatter-logging infrastructure */");
+  cout("  #ifdef SCATTERLOG");
+  cout("  particle.logged=-1;");
+  cout("  #endif");
   cout("  return(particle);");
   cout("}");
 
