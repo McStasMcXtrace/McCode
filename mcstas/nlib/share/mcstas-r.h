@@ -54,7 +54,7 @@
 #define SCATTER SCATTER0
 #else
 #define SCATTER0 do {DEBUG_SCATTER(); SCATTERED++; _particle->logged++; \
-  _particle->complog[_particle->logged]=_comp->_index;\
+  _particle->complog[_particle->logged]=_particle->_index;\
   _particle->xlog[_particle->logged]=x;\
   _particle->ylog[_particle->logged]=y;\
   _particle->zlog[_particle->logged]=z;\
