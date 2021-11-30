@@ -88,6 +88,21 @@ INITIALIZE
   }else{
     prms_o.E_c=0;prms_o.mu_c=5;
   }
+  if(rho_o==0){
+    char **header_parsed;
+    header_parsed=Table_ParseHeader(t_o.header,"Z","A[r]","rho","Z/A",NULL);
+    if(header_parsed[3]){ /*assuming that a Z/A is given, i.e. Z and A[r] are redundant*/
+      prms_o.Z_A=strtod(header_parsed[3],NULL);
+    }else if ( (strlen(header_parsed[0])) && (strlen(header_parsed[1])) ){
+      prms_o.Z_A=strtod(header_parsed[0],NULL)/strtod(header_parsed[1],NULL);
+    }
+    if(strlen(header_parsed[2])){
+      prms_o.rho=strtod(header_parsed[2],NULL);
+      printf("rho_o %g\n",prms_o.rho);
+    }
+  }else{
+    prms_o.rho=rho_o;
+  }
   if (prms_i.V){ /*if volume is zero - don't bother to read the file*/
     printf("Loading inner datafiles");
     if ( material_datafile_i && (status=Table_Read(&t_i,material_datafile_i,0))==-1){
@@ -99,33 +114,21 @@ INITIALIZE
     }else{
       prms_i.E_c=0;prms_i.mu_c=5;
     }
-	if(rho_i && rho_o == 0){ /*when density is not from input, try to read from tables */
-		char **header_parsed;
-		header_parsed=Table_ParseHeader(t_o.header,"Z","A[r]","rho","Z/A",NULL);
-		if(header_parsed[3]){ /*assuming that a Z/A is given, i.e. Z and A[r] are redundant*/
-			prms_o.Z_A=strtod(header_parsed[3],NULL);
-		}else if ( (strlen(header_parsed[0])) && (strlen(header_parsed[1])) ){
-			prms_o.Z_A=strtod(header_parsed[0],NULL)/strtod(header_parsed[1],NULL);
-		}
-		if(strlen(header_parsed[2])){
-			prms_o.rho=strtod(header_parsed[2],NULL);
-			printf("rho_o %g\n",prms_o.rho);
-		}
-		header_parsed=Table_ParseHeader(t_i.header,"Z","A[r]","rho","Z/A",NULL);
-		if(header_parsed[3]){/*assuming that a Z/A is given, i.e. Z and A[r] are redundant*/
-			prms_i.Z_A=strtod(header_parsed[3],NULL);
-		}else if ( (strlen(header_parsed[0])) && (strlen(header_parsed[1])) ){
-			prms_i.Z_A=strtod(header_parsed[0],NULL)/strtod(header_parsed[1],NULL);
-		}
-		if(strlen(header_parsed[2])){
-			prms_i.rho=strtod(header_parsed[2],NULL);
-			printf("rho_i %g\n",prms_i.rho);
-		}
-	}
-	else{ /*read densities from input*/
-		prms_o.rho = rho_o;
-		prms_i.rho = rho_i;
-	}
+    if(rho_i==0){ /*when density is not from input, try to read from tables */
+      char **header_parsed;
+      header_parsed=Table_ParseHeader(t_i.header,"Z","A[r]","rho","Z/A",NULL);
+      if(header_parsed[3]){/*assuming that a Z/A is given, i.e. Z and A[r] are redundant*/
+        prms_i.Z_A=strtod(header_parsed[3],NULL);
+      }else if ( (strlen(header_parsed[0])) && (strlen(header_parsed[1])) ){
+        prms_i.Z_A=strtod(header_parsed[0],NULL)/strtod(header_parsed[1],NULL);
+      }
+      if(strlen(header_parsed[2])){
+        prms_i.rho=strtod(header_parsed[2],NULL);
+        printf("rho_i %g\n",prms_i.rho);
+      }
+    }else{ /*read densities from input*/
+      prms_i.rho = rho_i;
+    }
   }
 %}
 
