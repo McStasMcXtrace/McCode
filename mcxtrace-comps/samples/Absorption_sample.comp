@@ -12,7 +12,6 @@
 * Written by:Erik B Knudsen
 * Date: March 2011
 * Version: 1.0
-* Release: McXtrace 1.0
 * Origin: Risoe
 *
 * Sample component with absorbing materials.
@@ -99,6 +98,18 @@ INITIALIZE
   }else{
     E_c_o=0;mu_c_o=5;
   }
+  if(rho_o==0){
+    char **header_parsed;
+    header_parsed=Table_ParseHeader(t_o.header,"Z","A[r]","rho","Z/A",NULL);
+    if(header_parsed[3]){ /*assuming that a Z/A is given, i.e. Z and A[r] are redundant*/
+      Z_A_o=strtod(header_parsed[3],NULL);
+    }else if ( (strlen(header_parsed[0])) && (strlen(header_parsed[1])) ){
+      Z_A_o=strtod(header_parsed[0],NULL)/strtod(header_parsed[1],NULL);
+    }
+    if(strlen(header_parsed[2])){
+      rho_o=strtod(header_parsed[2],NULL);
+    }
+  }
   if (V_i){ /*if volume is zero - don't bother to read the file*/
     if ( material_datafile_i && (status=Table_Read(&t_i,material_datafile_i,0))==-1){
       fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile_i,NAME_CURRENT_COMP);
@@ -109,33 +120,18 @@ INITIALIZE
     }else{
       E_c_i=0;mu_c_i=5;
     }
-	if(rho_i && rho_o == 0){ /*when density is not from input, try to read from tables */
-		char **header_parsed;
-		header_parsed=Table_ParseHeader(t_o.header,"Z","A[r]","rho","Z/A",NULL);
-		if(header_parsed[3]){ /*assuming that a Z/A is given, i.e. Z and A[r] are redundant*/
-			Z_A_o=strtod(header_parsed[3],NULL);
-		}else if ( (strlen(header_parsed[0])) && (strlen(header_parsed[1])) ){
-			Z_A_o=strtod(header_parsed[0],NULL)/strtod(header_parsed[1],NULL);
-		}
-		if(strlen(header_parsed[2])){
-			rho_o=strtod(header_parsed[2],NULL);
-			printf("rho_o %g\n",rho_o);
-		}
-		header_parsed=Table_ParseHeader(t_i.header,"Z","A[r]","rho","Z/A",NULL);
-		if(header_parsed[3]){/*assuming that a Z/A is given, i.e. Z and A[r] are redundant*/
-			Z_A_i=strtod(header_parsed[3],NULL);
-		}else if ( (strlen(header_parsed[0])) && (strlen(header_parsed[1])) ){
-			Z_A_i=strtod(header_parsed[0],NULL)/strtod(header_parsed[1],NULL);
-		}
-		if(strlen(header_parsed[2])){
-			rho_i=strtod(header_parsed[2],NULL);
-			printf("rho_i %g\n",rho_i);
-		}
-	}
-	else{ /*read densities from input*/
-		rho_o = rho_o;
-		rho_i = rho_i;
-	}
+    if(rho_i==0){ /*when density is not from input, try to read from tables */
+      char **header_parsed;
+      header_parsed=Table_ParseHeader(t_i.header,"Z","A[r]","rho","Z/A",NULL);
+      if(header_parsed[3]){/*assuming that a Z/A is given, i.e. Z and A[r] are redundant*/
+        Z_A_i=strtod(header_parsed[3],NULL);
+      }else if ( (strlen(header_parsed[0])) && (strlen(header_parsed[1])) ){
+        Z_A_i=strtod(header_parsed[0],NULL)/strtod(header_parsed[1],NULL);
+      }
+      if(strlen(header_parsed[2])){
+        rho_i=strtod(header_parsed[2],NULL);
+      }
+    }
   }
 %}
 
