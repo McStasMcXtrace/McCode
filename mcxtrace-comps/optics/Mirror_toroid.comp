@@ -42,8 +42,8 @@ OUTPUT PARAMETERS ()
 
 SHARE
 %{
-  %include "reflectivity-lib"
   %include "read_table-lib"
+  %include "reflectivity-lib"
 %}
 
 DECLARE
