@@ -46,7 +46,20 @@
 #define RE       2.8179402894e-5   /*[AA] Thomson scattering length*/
 #define ALPHA    7.2973525698e-3   /*[ ] Fine structure constant CODATA 2006*/
 
+#ifndef MCLOG
 #define SCATTER0 do {DEBUG_SCATTER(); SCATTERED++;} while(0)
+#else
+#define SCATTER0 do {\
+  int ii;\
+  _class_particle *_pp= _particle->_log;\
+  if(_pp!=NULL){\
+    _pp[_particle->_logindex]=*_particle;\
+    _particle->_logindex++;\
+  }\
+  DEBUG_SCATTER();\
+  SCATTERED;\
+} while (0)
+#endif /*MCLOG*/
 #define SCATTER SCATTER0
 
 #define JUMPTOCOMP(comp) mcphoton->_index = INDEX_COMP(comp);

@@ -2135,6 +2135,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   /* Basic includes */
   cout("");
   cout("#include <string.h>");
+  cout("#include <stdlib.h>");
   cout("");
 
   /* Math constants */
@@ -2197,10 +2198,13 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  long _absorbed;  /* flag set to TRUE when this event is to be removed/ignored */");
   cout("  long _scattered; /* flag set to TRUE when this event has interacted with the last component instance */");
   cout("  long _restore;   /* set to true if neutron event must be restored */");
+  cout("#ifdef MCLOG");
+  cout("  struct _struct_particle *_log;       /* infrastructure to have logging capabilities*/");
+  cout("  short _logindex;");
+  cout("#endif");
   /* Append variables from instr USERVARS block to particle struct (user vars,
   *  always double). Also store these strings in in the appropriate instrument
   *  list for later def/undef as state variables (see cogen_raytrace). */
-
   instr->user_vars = list_create();
   instr->user_vars_types = list_create();
   if (get_codeblock_vars(instr->vars, instr->user_vars, instr->user_vars_types, "USERVARS", "EXTEND")) {
@@ -2242,6 +2246,10 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("");
   cout("_class_particle mcgenstate(void) {");
   cout("  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, mcgravitation, NULL, mcallowbackprop);");
+  cout("  #ifdef MCLOG");
+  cout("  particle._log=malloc(MCLOG*sizeof(struct _struct_particle));");
+  cout("  particle._logindex=0;");
+  cout("  #endif /*MCLOG*/");
   cout("  return(particle);");
   cout("}");
 
@@ -2252,6 +2260,9 @@ cogen_header(struct instr_def *instr, char *output_name)
   liter = list_iterate(instr->user_vars);
   cout("#pragma acc routine");
   cout("double particle_getvar(_class_particle *p, char *name, int *suc);");
+  cout("");
+  cout("#pragma acc routine");
+  cout("int particle_setvar(_class_particle *p, char *name, double val);");
   cout("");
   cout("#ifdef OPENACC");
   cout("#pragma acc routine");
@@ -2283,6 +2294,31 @@ cogen_header(struct instr_def *instr, char *output_name)
   list_iterate_end(liter);
   cout("  if (suc!=0x0) {*suc=s;}");
   cout("  return rval;");
+  cout("}");
+  cout("");
+  cout("int particle_setvar(_class_particle *p, char *name, double val){");
+  cout("#ifndef OPENACC");
+  cout("#define str_comp strcmp");
+  cout("#endif");
+  cout("  int s=1;");
+  cout("  if(!str_comp(\"x\",name)){p->x=val;s=0;}");
+  cout("  if(!str_comp(\"y\",name)){p->y=val;s=0;}");
+  cout("  if(!str_comp(\"z\",name)){p->z=val;s=0;}");
+  cout("  if(!str_comp(\"phi\",name)){p->phi=val;s=0;}");
+  cout("  if(!str_comp(\"kx\",name)){p->kx=val;s=0;}");
+  cout("  if(!str_comp(\"ky\",name)){p->ky=val;s=0;}");
+  cout("  if(!str_comp(\"kz\",name)){p->kz=val;s=0;}");
+  cout("  if(!str_comp(\"Ex\",name)){p->Ex=val;s=0;}");
+  cout("  if(!str_comp(\"Ey\",name)){p->Ey=val;s=0;}");
+  cout("  if(!str_comp(\"Ez\",name)){p->Ez=val;s=0;}");
+  cout("  if(!str_comp(\"t\",name)){p->t=val;s=0;}");
+  cout("  if(!str_comp(\"p\",name)){p->p=val;s=0;}");
+  liter = list_iterate(instr->user_vars);
+  while((var = list_next(liter))) {
+    coutf("  if(!str_comp(\"%s\",name)){*(double *)(&(p->%s))=val;s=0;}",var);
+  }
+  list_iterate_end(liter);
+  cout("  return s;");
   cout("}");
   cout("");
 
