@@ -1,0 +1,119 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*         University of Copenhagen, Copenhagen, Denmark
+*
+* Component: Arm
+*
+* %I
+*
+* Written by: Kim Lefmann and Kristian Nielsen
+* Modified by: Erik Knudsen 
+* Date: September 2009
+* Version: 1.0
+* Release: McXtrace 1.0
+* Origin: Risoe
+*
+* Arm/optical bench
+*
+* %D
+* An arm does not actually do anything, it is just there to set
+* up a new coordinate system.
+*
+* %P
+* Input parameters:
+*
+* (none)
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Scatter_log_asciidump
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS ()
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+SHARE
+%{
+#ifndef LOGMAXPARTICLE
+  #define LOGMAXPARTICLE 1000000 
+#endif
+%}
+DECLARE
+%{
+  unsigned int logcounter;
+  double particlestore[LOGMAXPARTICLE][12];
+  unsigned long long uids[LOGMAXPARTICLE];
+%}
+
+INITIALIZE
+%{
+  logcounter=0;
+
+%}
+TRACE
+%{
+  /*drop all the logged particles to console*/
+#ifdef MCLOG
+  int jj=0;
+  while (jj<_particle->_logindex){
+    _class_particle *pp=&(_particle->_log[jj]);
+    unsigned int index;
+#pragma acc atomic capture
+    {
+      index=logcounter++;
+    }
+
+    if (index<LOGMAXPARTICLE){
+      particlestore[index][0]=particle_getvar(pp,"x",NULL);
+      particlestore[index][1]=particle_getvar(pp,"y",NULL);
+      particlestore[index][2]=particle_getvar(pp,"z",NULL);
+      particlestore[index][3]=particle_getvar(pp,"kx",NULL);
+      particlestore[index][4]=particle_getvar(pp,"ky",NULL);
+      particlestore[index][5]=particle_getvar(pp,"kz",NULL);
+      particlestore[index][6]=particle_getvar(pp,"t",NULL);
+      particlestore[index][7]=particle_getvar(pp,"phi",NULL);
+      particlestore[index][8]=particle_getvar(pp,"Ex",NULL);
+      particlestore[index][9]=particle_getvar(pp,"Ey",NULL);
+      particlestore[index][10]=particle_getvar(pp,"Ez",NULL);
+      particlestore[index][11]=particle_getvar(pp,"p",NULL);
+      uids[index]=pp->_uid;
+    }
+    jj++;
+  }
+  if(_particle->_log!=NULL){
+    free(_particle->_log);
+  }
+#endif
+%}
+
+FINALLY
+%{
+#ifdef MCLOG
+  int ii,jj;
+  jj=logcounter>LOGMAXPARTICLE ? LOGMAXPARTICLE : logcounter;
+  for (ii=0;ii<jj;ii++){
+    printf("pseudoparticle %u (uid) %ld ",ii, uids[ii]);
+    printf("(x,y,z) %g %g %g ",particlestore[ii][0],particlestore[ii][1],particlestore[ii][2]);   
+    printf("(kx,ky,kz) %g %g %g ",particlestore[ii][3],particlestore[ii][4],particlestore[ii][5]);   
+    printf("(t,phi) %g %g ",particlestore[ii][6],particlestore[ii][7]);   
+    printf("(Ex,Ey,Ez) %g %g %g ",particlestore[ii][8],particlestore[ii][9],particlestore[ii][10]);   
+    printf("(p) %g\n",particlestore[ii]);   
+  }
+#endif
+%}
+
+
+MCDISPLAY
+%{
+  /* A bit ugly; hard-coded dimensions. */
+  
+  line(0,0,0,0.2,0,0);
+  line(0,0,0,0,0.2,0);
+  line(0,0,0,0,0,0.2);
+%}
+
+END
