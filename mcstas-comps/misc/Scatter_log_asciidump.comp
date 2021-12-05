@@ -98,7 +98,7 @@ FINALLY
     printf("(x,y,z) %g %g %g ",particlestore[ii][0],particlestore[ii][1],particlestore[ii][2]);   
     printf("(vx,vy,vz) %g %g %g ",particlestore[ii][3],particlestore[ii][4],particlestore[ii][5]);
     printf("(sx,sy,sz) %g %g %g ",particlestore[ii][6],particlestore[ii][7],particlestore[ii][8]);    
-    printf("(t,p) %g %g ",particlestore[ii][9],particlestore[ii][10]);   
+    printf("(t,p) %g %g\n ",particlestore[ii][9],particlestore[ii][10]);   
   }
 #endif
 %}
