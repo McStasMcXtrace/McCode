@@ -68,25 +68,26 @@ INITIALIZE
 
 TRACE
 %{
-  
-  if(_particle->logged>0) {
-    int i,j;
-    for (j=1; j<=_particle->logged;j++)
-      
-      if (_particle->zlog[j]>zmin && _particle->zlog[j]<zmax){
-	/* Bin number */
-	i = floor(nbins*(_particle->zlog[j]-zmin)/(zmax-zmin));
-	double dp;
-	dp=_particle->plog[j-1]-_particle->plog[j];
-	double p2 = dp*dp;
-        #pragma acc atomic
-	Z_N[i] = Z_N[i] +1;
-        #pragma acc atomic
-	Z_p[i] = Z_p[i] + dp;
-        #pragma acc atomic
-	Z_p2[i] = Z_p2[i] + p2;
-      }
+  #ifdef MCLOG
+  int jj=1;
+  while (jj<_particle->_logindex){
+    _class_particle *pp=&(_particle->_log[jj]);
+    _class_particle *pp0=&(_particle->_log[jj-1]);
+    double z0=particle_getvar(pp,"z",NULL);
+    if (z0>zmin && z0<zmax){
+      int i = floor(nbins*(z0-zmin)/(zmax-zmin));
+      double dp;
+      dp=particle_getvar(pp0,"p",NULL)-particle_getvar(pp,"p",NULL);
+      double p2 = dp*dp;
+      #pragma acc atomic
+      Z_N[i] = Z_N[i] +1;
+      #pragma acc atomic
+      Z_p[i] = Z_p[i] + dp;
+      #pragma acc atomic
+      Z_p2[i] = Z_p2[i] + p2;
+    }
   }
+  #endif
 %}
 
 SAVE
