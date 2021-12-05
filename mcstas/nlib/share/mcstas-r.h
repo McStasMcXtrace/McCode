@@ -49,43 +49,22 @@
 #define SE2V     437.393377        /* Convert sqrt(E)[meV] to v[m/s] */
 #define VS2E     5.22703725e-6     /* Convert (v[m/s])**2 to E[meV] */
 
-#ifndef SCATTERLOG
+#ifndef MCLOG
 #define SCATTER0 do {DEBUG_SCATTER(); SCATTERED++;} while(0)
-#define SCATTER SCATTER0
 #else
-#define SCATTER0 do {DEBUG_SCATTER(); SCATTERED++; \ 
-  if( _particle->logged < NLOG) { \
-    Rotation _Rtmp;\
-    rot_transpose(ROT_A_CURRENT_COMP,_Rtmp);\
-    Coords _Ttmp = coords_neg(POS_A_CURRENT_COMP);\
-    Coords _tmp1,_tmp2;\
-    double xtmp,ytmp,ztmp;\
-    _particle->logged++;\
-    _particle->complog[_particle->logged]=_comp->_index;\
-    _tmp1 = coords_set(x,y,z);\
-    _tmp2=mccoordschange_coords(_Ttmp,_Rtmp,_tmp1, 1);	\
-    coords_get(_tmp2,&xtmp,&ytmp,&ztmp);\
-    _particle->xlog[_particle->logged]=xtmp;\
-    _particle->ylog[_particle->logged]=ytmp;\
-    _particle->zlog[_particle->logged]=ztmp;\
-    _tmp1 = coords_set(vx,vy,vz);\
-    _tmp2=mccoordschange_coords(_Ttmp,_Rtmp,_tmp1, 0); \
-    coords_get(_tmp2,&xtmp,&ytmp,&ztmp);\
-    _particle->vxlog[_particle->logged]=xtmp;\
-    _particle->vylog[_particle->logged]=ytmp;\
-    _particle->vzlog[_particle->logged]=ztmp;\
-    _tmp1 = coords_set(sx,sy,sz);\
-    _tmp2=mccoordschange_coords(_Ttmp,_Rtmp,_tmp1, 0); \
-    coords_get(_tmp2,&xtmp,&ytmp,&ztmp);\
-    _particle->sxlog[_particle->logged]=xtmp;\
-    _particle->sylog[_particle->logged]=ytmp;\
-    _particle->szlog[_particle->logged]=ztmp;\
-    _particle->tlog[_particle->logged]=t;\
-    _particle->plog[_particle->logged]=p;\
-  }\
-} while(0)
+#define SCATTER0 do {\
+  int ii;					\
+   _class_particle *_pp= _particle->_log;\
+   if(_pp!=NULL){\
+     _pp[_particle->_logindex]=*_particle;\
+     _particle->_logindex++;\
+   }\
+   DEBUG_SCATTER();\
+   SCATTERED;\
+} while (0)
+#endif /*MCLOG*/
 #define SCATTER SCATTER0
-#endif
+
 
 
 #define JUMPTOCOMP(comp) mcneutron->_index = INDEX_COMP(comp);

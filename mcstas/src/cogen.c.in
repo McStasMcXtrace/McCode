@@ -2154,6 +2154,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   /* Basic includes */
   cout("");
   cout("#include <string.h>");
+  cout("#include <stdlib.h>");
   cout("");
 
   /* Math constants */
@@ -2250,23 +2251,10 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  long _scattered; /* flag set to TRUE when this event has interacted with the last component instance */");
   cout("  long _restore;   /* set to true if neutron event must be restored */");
   cout("  long flag_nocoordschange;   /* set to true if neutron is jumping */");
-  /* Scatter-logging datastructures */
-  cout("  #ifdef SCATTERLOG");
-  cout("  /* Scatter-logging datastructures */");
-  cout("  int logged;");
-  cout("  int complog[NLOG];");
-  cout("  double xlog[NLOG];");
-  cout("  double ylog[NLOG];");
-  cout("  double zlog[NLOG];");
-  cout("  double vxlog[NLOG];");
-  cout("  double vylog[NLOG];");
-  cout("  double vzlog[NLOG];");
-  cout("  double sxlog[NLOG];");
-  cout("  double sylog[NLOG];");
-  cout("  double szlog[NLOG];");
-  cout("  double plog[NLOG];");
-  cout("  double tlog[NLOG];");
-  cout("  #endif");
+  cout("#ifdef MCLOG");
+  cout("  struct _struct_particle *_log;       /* infrastructure to have logging capabilities*/");
+  cout("  short _logindex;");
+  cout("#endif");
   /* Include the struct defined earlier holding information on JUMP logic*/
   cout("  struct particle_logic_struct _logic;");
   /* Append variables from instr USERVARS block to particle struct (user vars,
@@ -2302,6 +2290,9 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#pragma acc routine");
   cout("_class_particle mcsetstate(double x, double y, double z, double vx, double vy, double vz,");
   cout("			   double t, double sx, double sy, double sz, double p, int mcgravitation, void *mcMagnet, int mcallowbackprop);");
+  cout("#pragma acc routine");
+  cout("_class_particle mcgetstate(_class_particle mcneutron, double *x, double *y, double *z, double *vx, double *vy, double *vz,");
+  cout("			   double *sx, double *sy, double *sz, double *t, double *p);");  
   cout("");
   cout("extern int mcgravitation;      /* flag to enable gravitation */");
   cout("#pragma acc declare create ( mcgravitation )");
@@ -2311,10 +2302,10 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("");
   cout("_class_particle mcgenstate(void) {");
   cout("  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, NULL, mcallowbackprop);");
-  cout("  /* Scatter-logging infrastructure */");
-  cout("  #ifdef SCATTERLOG");
-  cout("  particle.logged=-1;");
-  cout("  #endif");
+  cout("  #ifdef MCLOG");
+  cout("  particle._log=malloc(MCLOG*sizeof(struct _struct_particle));");
+  cout("  particle._logindex=0;");
+  cout("  #endif /*MCLOG*/");
   cout("  return(particle);");
   cout("}");
 
@@ -2367,7 +2358,31 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  return rval;");
   cout("}");
   cout("");
-
+   cout("int particle_setvar(_class_particle *p, char *name, double val){");
+   cout("#ifndef OPENACC");
+   cout("#define str_comp strcmp");
+   cout("#endif");
+   cout("  int s=1;");
+   cout("  if(!str_comp(\"x\",name)){p->x=val;s=0;}");
+   cout("  if(!str_comp(\"y\",name)){p->y=val;s=0;}");
+   cout("  if(!str_comp(\"z\",name)){p->z=val;s=0;}");
+   cout("  if(!str_comp(\"vx\",name)){p->vx=val;s=0;}");
+   cout("  if(!str_comp(\"vy\",name)){p->vy=val;s=0;}");
+   cout("  if(!str_comp(\"vz\",name)){p->vz=val;s=0;}");
+   cout("  if(!str_comp(\"sx\",name)){p->sx=val;s=0;}");
+   cout("  if(!str_comp(\"sy\",name)){p->sy=val;s=0;}");
+   cout("  if(!str_comp(\"sz\",name)){p->sz=val;s=0;}");
+   cout("  if(!str_comp(\"t\",name)){p->t=val;s=0;}");
+   cout("  if(!str_comp(\"p\",name)){p->p=val;s=0;}");
+   liter = list_iterate(instr->user_vars);
+   while((var = list_next(liter))) {
+     coutf("  if(!str_comp(\"%s\",name)){*(double *)(&(p->%s))=val;s=0;}",var);
+   }
+   list_iterate_end(liter);
+   cout("  return s;");
+   cout("}");
+   cout("");
+  
   liter = list_iterate(instr->user_vars);
   cout("#pragma acc routine");
   cout("double particle_getuservar_byid(_class_particle *p, int id, int *suc){");
