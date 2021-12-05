@@ -86,6 +86,7 @@ TRACE
       #pragma acc atomic
       Z_p2[i] = Z_p2[i] + p2;
     }
+    jj++;
   }
   #endif
 %}
