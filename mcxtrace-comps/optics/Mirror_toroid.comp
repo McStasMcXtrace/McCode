@@ -43,8 +43,8 @@ OUTPUT PARAMETERS (reflec_table, prms)
 SHARE
 %{
   #include <complex.h>
-  %include "reflectivity-lib"
   %include "read_table-lib" 
+  %include "reflectivity-lib"
 %}
 
 DECLARE
