@@ -99,16 +99,17 @@ END
 ; comment: [str]      additional comment to put in the header
 ; substrate: [str]    substrate material
 pro ethcompute, OUTFILE=outfile, materials, Zs, COMMENT=comment, Es, ths, SUBSTRATE=substrate
-  eN=Es(1)
-  e_min=Es(0)
-  e_max=Es(2)
+  eN=Es[1]
+  e_min=Es[0]
+  e_max=Es[2]
   e_step=(e_max-e_min)/(eN-1)
   ;make an array of e's
   e = e_step*findgen(eN)+e_min
 
-  th_min=ths(0)
-  th_max=ths(2)
-  thN=ths(1)
+  print, Zs
+  th_min=ths[0]
+  th_max=ths[2]
+  thN=ths[1]
   th_step=(th_max-th_min)/(thN-1)
   ;array of thetas
   th = th_step*findgen(thN)+th_min
