@@ -1132,6 +1132,7 @@ int cogen_decls(struct instr_def *instr)
   cout("#pragma acc declare create ( _instrument_var )");
   cout("#pragma acc declare create ( instrument )");
   cout("");
+  //  CCC
 
   /* 3. Table of instrument parameters. Used in mcparseoptions and various output functions */
   coutf("int numipar = %d;", numipar);
@@ -1847,6 +1848,10 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("    #endif");
   coutf("    #endif");
   coutf("");
+  coutf("    _log=malloc(MCLOG*sizeof(struct _struct_particle));");
+  coutf("    #pragma acc update device(_log);");
+  coutf("");
+  coutf("");
   coutf("    #pragma acc parallel loop num_gangs(numgangs) vector_length(vecsize)");
   coutf("    for (unsigned long pidx=0 ; pidx < gpu_innerloop ; pidx++) {");
   coutf("      _class_particle particleN = mcgenstate(); // initial particle");
@@ -1869,6 +1874,7 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("  #endif");
   coutf("  MPI_MASTER(");
   coutf("  printf(\"*** TRACE end *** \\n\");");
+  coutf("    #pragma acc update host(_log);");
   coutf("  );");
   coutf("} /* raytrace_all */");
   coutf("");
@@ -2252,7 +2258,6 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  long _restore;   /* set to true if neutron event must be restored */");
   cout("  long flag_nocoordschange;   /* set to true if neutron is jumping */");
   cout("#ifdef MCLOG");
-  cout("  struct _struct_particle *_log;       /* infrastructure to have logging capabilities*/");
   cout("  short _logindex;");
   cout("#endif");
   /* Include the struct defined earlier holding information on JUMP logic*/
@@ -2280,6 +2285,11 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("};");
   cout("typedef struct _struct_particle _class_particle;");
   cout("");
+  cout("#ifdef MCLOG");
+  cout("struct _struct_particle *_log;       /* infrastructure to have logging capabilities*/");
+  cout("#pragma acc declare create(_log)");
+  cout("#endif");
+  cout("");   
   cout("_class_particle _particle_global_randnbuse_var;");
   cout("_class_particle* _particle = &_particle_global_randnbuse_var;");
   cout("");
@@ -2303,7 +2313,6 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("_class_particle mcgenstate(void) {");
   cout("  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, NULL, mcallowbackprop);");
   cout("  #ifdef MCLOG");
-  cout("  particle._log=malloc(MCLOG*sizeof(struct _struct_particle));");
   cout("  particle._logindex=0;");
   cout("  #endif /*MCLOG*/");
   cout("  return(particle);");
