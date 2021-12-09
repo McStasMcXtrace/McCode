@@ -361,7 +361,6 @@ TRACE
         r2z=c2z - sphi*(p2x-c2x) + cphi*(p2z-c2z);
         double nx,ny,nz;
         vec_prod(nx,ny,nz,0.0,1.0,0.0,r2x-r1x,0,r2z-r1z);
-        //printf("DEBUG: %d   %g %g %g %g     %g %g %g %g     %g %g %g %g   %g %g %g %g   %g %g %g %g   %g %g %g %g\n",channel_no,p1x,p1z,p2x,p2z, r1x,r1z,r2x,r2z, q1x,q1z,q2x,q2z,outer_radius, q0x,q0z, asin(q0x/outer_radius)*outer_radius, c1x,c1z,c2x,c2z,dx1,dx2,dx1_q,dx2_q);
       }
 
       /*set a scatter upon entry*/
@@ -553,7 +552,6 @@ TRACE
             Rup=Table_Value(prms.R,Q,1);
             Rdown=Table_Value(prms.R,Q,2);
             p*=pol_reflect_spin(Rup,Rdown,&sx,&sy,&sz);
-            //printf("DEBUG: %g %g %g %g %g %g\n",Q,Rup,Rdown,sx,sy,sz);
           }
           /*if trace is set - transform back to bender frame, set SCATTER, and transform back to channel frame again*/
           bounce++;
