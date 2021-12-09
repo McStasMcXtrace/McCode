@@ -71,8 +71,8 @@ TRACE
   #ifdef MCLOG
   int jj=1;
   while (jj<_particle->_logindex){
-    _class_particle *pp=&(_particle->_log[jj]);
-    _class_particle *pp0=&(_particle->_log[jj-1]);
+    _class_particle *pp=&(_log[jj]);
+    _class_particle *pp0=&(_log[jj-1]);
     double z0=particle_getvar(pp,"z",NULL);
     if (z0>zmin && z0<zmax){
       int i = floor(nbins*(z0-zmin)/(zmax-zmin));
