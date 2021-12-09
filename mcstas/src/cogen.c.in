@@ -1849,7 +1849,6 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("    #endif");
   coutf("");
   coutf("    _log=malloc(MCLOG*sizeof(struct _struct_particle));");
-  coutf("    #pragma acc declare create(_log)");
   coutf("    #pragma acc update device(_log)");
   coutf("");
   coutf("");
@@ -2288,7 +2287,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("");
   cout("#ifdef MCLOG");
   cout("struct _struct_particle *_log;       /* infrastructure to have logging capabilities*/");
-  //  cout("#pragma acc declare create(_log)");
+  cout("#pragma acc declare create(_log)");
   cout("#endif");
   cout("");   
   cout("_class_particle _particle_global_randnbuse_var;");
