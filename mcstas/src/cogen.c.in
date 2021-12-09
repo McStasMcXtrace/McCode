@@ -1849,7 +1849,7 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("    #endif");
   coutf("");
   coutf("    _log=malloc(MCLOG*sizeof(struct _struct_particle));");
-  coutf("    #pragma acc update device(_log);");
+  coutf("    #pragma acc update device(_log)");
   coutf("");
   coutf("");
   coutf("    #pragma acc parallel loop num_gangs(numgangs) vector_length(vecsize)");
@@ -1874,7 +1874,7 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("  #endif");
   coutf("  MPI_MASTER(");
   coutf("  printf(\"*** TRACE end *** \\n\");");
-  coutf("    #pragma acc update host(_log);");
+  coutf("    #pragma acc update host(_log)");
   coutf("  );");
   coutf("} /* raytrace_all */");
   coutf("");
