@@ -134,7 +134,7 @@ double pol_reflect_spin_ref(double Rup, double Rdown, double *sx, double *sy, do
  * Calculate new spin vector after reflection in a surface with reflectivities
  * Rup and Rdown referring to the y-axis (up)
  *****************************************************************/
-inline double pol_reflect_spin(double Rup,double Rdown, double *sx, double *sy, double *sz){
+double pol_reflect_spin(double Rup,double Rdown, double *sx, double *sy, double *sz){
   return pol_reflect_spin_ref(Rup, Rdown, sx, sy, sz, 0.0, 0.0, 0.0);
 }
 
@@ -168,15 +168,14 @@ inline double pol_reflect_spin(double Rup,double Rdown, double *sx, double *sy, 
 
 DECLARE
 %{
-  struct {
-    t_Table T;
-    t_Table R;
-    t_Table C;
-    int by_q;
-    double rw;
-    double rw_q;
-    double phi;
-  } prms;
+  t_Table T;
+  t_Table R;
+  t_Table C;
+  int by_q;
+  double rw;
+  double rw_q;
+  double phi;
+  int bounce;
 %}
 
 INITIALIZE
@@ -188,45 +187,45 @@ INITIALIZE
     xwidth=0;
   }
 
-  if ( (status=Table_Read(&(prms.T),channel_file,0))==-1){
+  if ( (status=Table_Read(&(T),channel_file,0))==-1){
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",channel_file,NAME_CURRENT_COMP);
     exit(-1);
   }
 
   /*compute total opening and exit face of bender*/
-  prms.rw=(prms.T.rows+1)*d_substrate;/*the substrate thickness * number of blades*/
-  prms.rw_q=(prms.T.rows+1)*d_substrate;/*the substrate thickness * number of blades*/
-  for (i=0;i<prms.T.rows;i++){
-    prms.rw+=prms.T.data[i*prms.T.columns + 0];/*the channel spacing*/
-    prms.rw+=prms.T.data[i*prms.T.columns + 3];/*the positive side coating*/
-    prms.rw+=prms.T.data[i*prms.T.columns + 4];/*the negative side coating*/
+  rw=(T.rows+1)*d_substrate;/*the substrate thickness * number of blades*/
+  rw_q=(T.rows+1)*d_substrate;/*the substrate thickness * number of blades*/
+  for (i=0;i<T.rows;i++){
+    rw+=T.data[i*T.columns + 0];/*the channel spacing*/
+    rw+=T.data[i*T.columns + 3];/*the positive side coating*/
+    rw+=T.data[i*T.columns + 4];/*the negative side coating*/
 
-    prms.rw_q+=prms.T.data[i*prms.T.columns + 1];/*channel exit spacing*/
-    prms.rw_q+=prms.T.data[i*prms.T.columns + 3];/*the positive side coating*/
-    prms.rw_q+=prms.T.data[i*prms.T.columns + 4];/*the negative side coating*/
+    rw_q+=T.data[i*T.columns + 1];/*channel exit spacing*/
+    rw_q+=T.data[i*T.columns + 3];/*the positive side coating*/
+    rw_q+=T.data[i*T.columns + 4];/*the negative side coating*/
   }
 
   /*angular opening*/
-  prms.phi=prms.rw/entry_radius;
+  phi=rw/entry_radius;
 
-  if ( (status=Table_Read(&(prms.R),reflect_file,0))==-1){
+  if ( (status=Table_Read(&(R),reflect_file,0))==-1){
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",reflect_file?reflect_file:"",NAME_CURRENT_COMP);
     exit(-1);
   }
   char **header_parsed;
-  header_parsed=Table_ParseHeader(prms.R.header,"parameter");
-  if (strcmp("m",header_parsed[0])){
-    prms.by_q=0;
+  header_parsed=Table_ParseHeader(R.header,"parameter");
+  if (strstr(header_parsed[0],"m")){
+    by_q=0;
   }else{
-    prms.by_q=1;
+    by_q=1;
   }
 
   /*Now do computations on the channel edge curvatures and store in a table
    *We need 2 cols for entry position, 2 for q (flat face exit pos), 2 for centre of curvature and 2 for exit pos
-   * After this the channel details can be gotten by Table_index(prms.C,coli,channel_no) and Table_Index(prms.C,coli,channel_no+)
+   * After this the channel details can be gotten by Table_index(C,coli,channel_no) and Table_Index(C,coli,channel_no+)
    * where the latter is the edge on the positive side.*/
   /*initialize the table*/
-  Table_Init(&(prms.C),8,prms.T.rows);
+  Table_Init(&(C),8,T.rows);
 
 %}
 
@@ -235,13 +234,14 @@ TRACE
   int status,channel_no;
   double t0,t1;
   double rx,dx1,dx2;
-  Rotation T,tT;
-  Coords off;
   double xo,yo,zo,vox,voy,voz;
-
+  double outer_radius;
+  double dx1_q,dx2_q;
   /*propagate to entry surface (cylinder!)*/
   /*check which channel we're in, if any*/
+  bounce=0;
   channel_no=0;
+  
   if(xwidth){
     PROP_Z0;
     if ( y<-0.5*yheight || y>0.5*yheight ||x<-0.5*xwidth || x>0.5*xwidth) {
@@ -260,7 +260,7 @@ TRACE
     }
     xo=x;yo=y;zo=z;
     vox=vx;voy=vy;voz=vz;
-    if (!status || t1<0 || y<-0.5*yheight || y>0.5*yheight ||x<entry_radius*sin(-0.5*prms.rw/entry_radius) || x>entry_radius*sin(0.5*prms.rw/entry_radius)){
+    if (!status || t1<0 || y<-0.5*yheight || y>0.5*yheight ||x<entry_radius*sin(-0.5*rw/entry_radius) || x>entry_radius*sin(0.5*rw/entry_radius)){
       /*Missed curved face bender. leave neutron be*/
       channel_no=-1;
       RESTORE_NEUTRON(INDEX_CURRENT_COMP,x,y,z,vx,vy,vz,t,sx,sy,sz,p);
@@ -271,16 +271,15 @@ TRACE
     double cphi, sphi, d1,d2, p0x,p0z, p1x,p1z, p2x,p2z, c1x,c1z, c2x,c2z, q0x,q0z, q1x,q1z, q2x,q2z, r1x,r1z, r2x,r2z;
     if (entry_radius) {
       channel_no=0;
-      double dx1,dx2,dx1_q,dx2_q;
       /*offsets of channel entry - initialize
        * outer edge (dx2) : bender end + 1 substrate thickness + coating (outer)
        * inner edge (dx1) : outer edge + channel width*/
-      dx2 = -0.5*prms.rw + d_substrate + prms.T.data[channel_no*prms.T.columns + 3];
+      dx2 = -0.5*rw + d_substrate + T.data[channel_no*T.columns + 3];
       if ( x< dx2){
         /*hit first substrate*/
         ABSORB;
       }
-      dx1 = dx2 +prms.T.data[channel_no*prms.T.columns + 0];
+      dx1 = dx2 +T.data[channel_no*T.columns + 0];
 
       cphi=cos(length/radius);
       sphi=sin(length/radius);
@@ -288,13 +287,18 @@ TRACE
       q0x=radius*(1-cos(length/radius));/*exit point of bender centre*/
       q0z=radius*(sin(length/radius));
 
+      /*the plates will end on a cirle of this radius*/
+      outer_radius=entry_radius+length;//sqrt(q0x*q0x + (q0z+entry_radius)*(q0z+entry_radius));
+
       p2x= entry_radius*sin(dx2/entry_radius); /*channel entry coordinates*/
       p2z= entry_radius*(cos(dx2/entry_radius)-1);
       p1x= entry_radius*sin(dx1/entry_radius);
       p1z= entry_radius*(cos(dx1/entry_radius)-1);
 
-      dx2_q = -0.5*prms.rw_q + d_substrate + prms.T.data[channel_no*prms.T.columns + 3];
-      dx1_q = dx2_q + prms.T.data[channel_no*prms.T.columns + 1];
+      dx2_q = -0.5*rw_q + d_substrate + T.data[channel_no*T.columns + 3];
+      /*add the offset due to blade curvature to dx2_q*/
+      //dx2_q += asin(q0x/outer_radius)*outer_radius;
+      dx1_q = dx2_q + T.data[channel_no*T.columns + 1];
 
       q2x= q0x - dx2_q*(-cphi);/*exit point of outer channel edge (without correction for channel blade length)*/
       q2z= q0z - dx2_q*(sphi);
@@ -307,7 +311,7 @@ TRACE
 
       while ( !( x> entry_radius*sin(dx2/entry_radius) && x< entry_radius*sin(dx1/entry_radius) ) ){
         channel_no++;
-        if(channel_no>prms.T.rows && x>entry_radius*sin((dx2+d_substrate+1e-6)/entry_radius)  ){
+        if(channel_no>T.rows){
           //printf("oops I've missed all channels ");
           //printf("%lld %g %g %g %g %g %g %g\n",mcget_run_num(),x,y,z,vx,vy,vz,p);
           ABSORB;
@@ -315,16 +319,16 @@ TRACE
         /*offsets of channel entry - update
          * outer edge (dx2) : previous inner edge + 1 coating (inner) + substrate thickness + coating (outer)
          * inner edge (dx1) : outer edge + channel width*/
-        dx2=dx1 + prms.T.data[channel_no*prms.T.columns + 3] + d_substrate + prms.T.data[channel_no*prms.T.columns + 4];
+        dx2=dx1 + T.data[channel_no*T.columns + 3] + d_substrate + T.data[channel_no*T.columns + 4];
         /*now check if we've hit the blade*/
-        if ( x< dx2 && x>dx1 ){
+        //if ( x< dx2 && x>dx1 ){
           /*hit a substrate*/
-          ABSORB;
-        }
-        dx1=dx2 + prms.T.data[channel_no*prms.T.columns + 0];
+        //  ABSORB;
+        //}
+        dx1=dx2 + T.data[channel_no*T.columns + 0];
 
-        dx2_q= dx1_q + d_substrate + prms.T.data[channel_no*prms.T.columns + 3]+ prms.T.data[channel_no*prms.T.columns + 4];
-        dx1_q= dx2_q+prms.T.data[channel_no*prms.T.columns + 1];
+        dx2_q= dx1_q + d_substrate + T.data[channel_no*T.columns + 3]+ T.data[channel_no*T.columns + 4];
+        dx1_q= dx2_q+T.data[channel_no*T.columns + 1];
 
 
         p2x= entry_radius*sin(dx2/entry_radius);
@@ -336,9 +340,34 @@ TRACE
         q2z= q0z - dx2_q*(sphi);
         q1x= q0x - dx1_q*(-cphi);/*exit point of inner channel edge (without correction for channel blade length)*/
         q1z= q0z - dx1_q*(sphi);
-#ifdef MCDEBUG
-        printf("%sPTS: %d %g %g %g %g %g %g %g %g %g %g\n",NAME_CURRENT_COMP,channel_no,p1x,p1z,p2x,p2z,q1x,q1z,q2x,q2z,q0x,q0z);
-#endif
+
+        q1x=outer_radius*sin(dx1_q/outer_radius);
+        q1z=outer_radius*(cos(dx1_q/outer_radius))-entry_radius;
+        q2x=outer_radius*sin(dx2_q/outer_radius);
+        q2z=outer_radius*(cos(dx2_q/outer_radius))-entry_radius;
+        double h1,D1,h2,D2;
+        /*helper variables to to compute intersection points of circles*/
+        /*We need to put h1 and h2  to the side the bender is curving to - hence the sign operation*/
+        D1=sqrt( (q1x-p1x)*(q1x-p1x) + (q1z-p1z)*(q1z-p1z) ) ;
+        h1=(radius<0?-1:1)*sqrt( radius*radius - 0.25*D1*D1);
+        D2=sqrt( (q2x-p2x)*(q2x-p2x) + (q2z-p2z)*(q2z-p2z) ) ;
+        h2=(radius<0?-1:1)*sqrt( radius*radius - 0.25*D2*D2);
+
+        c1x= p1x + 0.5*(q1x-p1x) + h1/D1 *  (q1z-p1z); /*these are the centers around which the channel edges actually rotate*/
+        c1z= p1z + 0.5*(q1z-p1z) + h1/D1 * -(q1x-p1x); /*positive*/
+
+        c2x= p2x + 0.5*(q2x-p2x) + h2/D2 *  (q2z-p2z); /*negative*/
+        c2z= p2z + 0.5*(q2z-p2z) + h2/D2 * -(q2x-p2x);
+
+        /*now find the exit points to place exit plane*/
+        r1x=c1x + cphi*(p1x-c1x) + sphi*(p1z-c1z);
+        r1z=c1z - sphi*(p1x-c1x) + cphi*(p1z-c1z);
+
+        r2x=c2x + cphi*(p2x-c2x) + sphi*(p2z-c2z);
+        r2z=c2z - sphi*(p2x-c2x) + cphi*(p2z-c2z);
+        double nx,ny,nz;
+        vec_prod(nx,ny,nz,0.0,1.0,0.0,r2x-r1x,0,r2z-r1z);
+      //printf("DEBUG: %d   %g %g %g %g     %g %g %g %g     %g %g %g %g   %g %g %g %g   %g %g %g %g   %g %g %g %g\n",channel_no,p1x,p1z,p2x,p2z, r1x,r1z,r2x,r2z, q1x,q1z,q2x,q2z,outer_radius, q0x,q0z, asin(q0x/outer_radius)*outer_radius, c1x,c1z,c2x,c2z,dx1,dx2,dx1_q,dx2_q);
       }
 
       /*set a scatter upon entry*/
@@ -347,52 +376,69 @@ TRACE
     }else{
       /*so it is a flat face bender*/
       channel_no=0;
-      dx2=-0.5*prms.rw;
-      dx1=dx2+prms.T.data[channel_no*prms.T.columns + 0] + prms.T.data[channel_no*prms.T.columns + 4] + prms.T.data[channel_no*prms.T.columns + 3];
+      dx2=-0.5*rw;
+      dx1=dx2+T.data[channel_no*T.columns + 0] + T.data[channel_no*T.columns + 4] + T.data[channel_no*T.columns + 3];
       while (!(x>dx2 && x<dx1)){
         channel_no++;
         dx2=dx1;
-        dx1+=prms.T.data[channel_no*prms.T.columns + 0] + prms.T.data[channel_no*prms.T.columns + 4] + prms.T.data[channel_no*prms.T.columns + 3];
+        dx1+=T.data[channel_no*T.columns + 0] + T.data[channel_no*T.columns + 4] + T.data[channel_no*T.columns + 3];
       }
       rx=(dx1+dx2)*0.5;
       SCATTER;
     }
 
     /*now the channel number is known. Given the central curvature of bender we may compute the placement of inner and outer cylinders. */
-    /*Some helper points and variables*/
+    /*Some helper points and variables:
+      q is the end point of the uncurved blade.
+      r is the end point of the curved blade 
+      we get the offset of the curved endpoint from the central blade, and apply it to vectors
+      parallel and perpendicular to QP.*/
+    q1x=outer_radius*sin(dx1_q/outer_radius);
+    q1z=outer_radius*(cos(dx1_q/outer_radius))-entry_radius;
+    q2x=outer_radius*sin(dx2_q/outer_radius);
+    q2z=outer_radius*(cos(dx2_q/outer_radius))-entry_radius;
 
+    double L1,L2;
+    L1=sqrt( (q1x-p1x)*(q1x-p1x) + (q1z-p1z)*(q1z-p1z) ) ;
+    L2=sqrt( (q2x-p2x)*(q2x-p2x) + (q2z-p2z)*(q2z-p2z) ) ;
+    r1x=p1x + q0z * (q1x-p1x)/L1 + q0x* (q1z-p1z)/L1; 
+    r1z=p1z + q0z * (q1z-p1z)/L1 + q0x* -(q1x-p1x)/L1; 
+    r2x=p2x + q0z * (q2x-p2x)/L2 + q0x* (q2z-p2z)/L2; 
+    r2z=p2z + q0z * (q2z-p2z)/L2 + q0x* -(q2x-p2x)/L2; 
+ 
     double h1,D1,h2,D2;
     /*helper variables to to compute intersection points of circles*/
     /*We need to put h1 and h2  to the side the bender is curving to - hence the sign operation*/
-    D1=sqrt( (q1x-p1x)*(q1x-p1x) + (q1z-p1z)*(q1z-p1z) ) ;
+    D1=sqrt( (r1x-p1x)*(r1x-p1x) + (r1z-p1z)*(r1z-p1z) ) ;
     h1=(radius<0?-1:1)*sqrt( radius*radius - 0.25*D1*D1);
-    D2=sqrt( (q2x-p2x)*(q2x-p2x) + (q2z-p2z)*(q2z-p2z) ) ;
+    D2=sqrt( (r2x-p2x)*(r2x-p2x) + (r2z-p2z)*(r2z-p2z) ) ;
     h2=(radius<0?-1:1)*sqrt( radius*radius - 0.25*D2*D2);
 
-    c1x= p1x + 0.5*(q1x-p1x) + h1/D1 *  (q1z-p1z); /*these are the centers around which the channel edges actually rotate*/
-    c1z= p1z + 0.5*(q1z-p1z) + h1/D1 * -(q1x-p1x); /*positive*/
+    c1x= p1x + 0.5*(r1x-p1x) + h1/D1 *  (r1z-p1z); /*these are the centers around which the channel edges actually rotate*/
+    c1z= p1z + 0.5*(r1z-p1z) + h1/D1 * -(r1x-p1x); /*positive*/
 
-    c2x= p2x + 0.5*(q2x-p2x) + h2/D2 *  (q2z-p2z); /*negative*/
-    c2z= p2z + 0.5*(q2z-p2z) + h2/D2 * -(q2x-p2x);
+    c2x= p2x + 0.5*(r2x-p2x) + h2/D2 *  (r2z-p2z); /*negative*/
+    c2z= p2z + 0.5*(r2z-p2z) + h2/D2 * -(r2x-p2x);
 
     /*now find the exit points to place exit plane*/
-    r1x=c1x + cphi*(p1x-c1x) + sphi*(p1z-c1z);
-    r1z=c1z - sphi*(p1x-c1x) + cphi*(p1z-c1z);
-
-    r2x=c2x + cphi*(p2x-c2x) + sphi*(p2z-c2z);
-    r2z=c2z - sphi*(p2x-c2x) + cphi*(p2z-c2z);
+/*    r1x=c1x + cphi*(p1x-c1x) + sphi*(p1z-c1z);*/
+/*    r1z=c1z - sphi*(p1x-c1x) + cphi*(p1z-c1z);*/
+/**/
+/*    r2x=c2x + cphi*(p2x-c2x) + sphi*(p2z-c2z);*/
+/*    r2z=c2z - sphi*(p2x-c2x) + cphi*(p2z-c2z);*/
     double nx,ny,nz;
     vec_prod(nx,ny,nz,0.0,1.0,0.0,r2x-r1x,0,r2z-r1z);
 #ifdef MCDEBUG
-        printf("%sPTS2: %d %g %g %g %g\n",NAME_CURRENT_COMP,channel_no,r1x,r1z,r2x,r2z);
+      printf("%sPTS2: %d %g %g %g %g\n",NAME_CURRENT_COMP,channel_no,r1x,r1z,r2x,r2z);
 #endif
+      //printf("DEBUG: %d   %g %g %g %g     %g %g %g %g     %g %g %g %g   %g %g %g %g   %g %g %g %g\n",channel_no,p1x,p1z,p2x,p2z, r1x,r1z,r2x,r2z, q1x,q1z,q2x,q2z,outer_radius, q0x,q0z, asin(q0x/outer_radius)*outer_radius, c1x,c1z,c2x,c2z);
 
     int exit=0;
     int coat1,coat2; /*are the blades coated at all*/
-    coat1=(Table_Index(prms.T,channel_no,3)>0.0);/*positive side coating*/
-    coat2=(Table_Index(prms.T,channel_no,4)>0.0);/*negative side coating*/
+    coat1=(Table_Index(T,channel_no,3)>0.0);/*positive side coating*/
+    coat2=(Table_Index(T,channel_no,4)>0.0);/*negative side coating*/
     do {
-      int i1,i2,ic,ie,cyl,bounce=0;
+      int i1,i2,ic,ie,cyl;
       double t10,t11,t20,t21,tc,te;
 
       /*initialize times to seomthing known*/
@@ -441,7 +487,8 @@ TRACE
          * since by design the neutron is always outside cyl. 1.*/
         branch = TOPBOTTOM;
         tt=0;
-      }
+        ABSORB;
+      } 
       if(tt==FLT_MAX){
         tt=0;
         branch=UNKNOWN;
@@ -484,11 +531,11 @@ TRACE
             /* Now compute reflectivity. */
             Q = 2.0*sin(alpha/2.0)*sqrt(scalar_prod(vx,vy,vz,vx,vy,vz))*V2K;
 
-            if(!prms.by_q){
+            if(!by_q){
               Q=Q/0.0217; /*convert to m-value by conversion factor 2.17 AA^-1*/
             }
-            Rup=Table_Value(prms.R,Q,1);
-            Rdown=Table_Value(prms.R,Q,2);
+            Rup=Table_Value(R,Q,1);
+            Rdown=Table_Value(R,Q,2);
             p*=pol_reflect_spin(Rup,Rdown,&sx,&sy,&sz);
           }else{
             if(!coat2){
@@ -511,18 +558,15 @@ TRACE
             /* Now compute reflectivity. */
             Q = 2.0*sin(alpha/2.0)*sqrt(scalar_prod(vx,vy,vz,vx,vy,vz))*V2K;
 
-            if(!prms.by_q){
+            if(!by_q){
               Q=Q/0.0217; /*convert to m-value by conversion factor 2.17 AA^-1*/
             }
-            Rup=Table_Value(prms.R,Q,1);
-            Rdown=Table_Value(prms.R,Q,2);
+            Rup=Table_Value(R,Q,1);
+            Rdown=Table_Value(R,Q,2);
             p*=pol_reflect_spin(Rup,Rdown,&sx,&sy,&sz);
           }
           /*if trace is set - transform back to bender frame, set SCATTER, and transform back to channel frame again*/
           bounce++;
-          if( p<DBL_EPSILON){
-            ABSORB;
-          }
           SCATTER;
 
           break;
@@ -532,7 +576,7 @@ TRACE
     /*add spacer absorption*/
     double v,pmul;
     v=sqrt(scalar_prod(vx,vy,vz,vx,vy,vz));
-    pmul = exp( - (nspacer*Table_Index(prms.T,channel_no,2)) * (sigma_abs*2200*100/V0/v));
+    pmul = exp( - (nspacer*Table_Index(T,channel_no,2)) * (sigma_abs*2200*100/V0/v));
     p*=pmul;
 
     SCATTER;
@@ -551,20 +595,20 @@ MCDISPLAY
     double cphi, sphi, d1,d2, p0x,p0z, p1x,p1z, p2x,p2z, c1x,c1z, c2x,c2z, q0x,q0z, q1x,q1z, q2x,q2z, r1x,r1z, r2x,r2z;
     double dx1,dx2,dx1_q,dx2_q;
     channel_no=0;
-    dx2 = -0.5*prms.rw + d_substrate + prms.T.data[channel_no*prms.T.columns + 3];
-    dx1 = dx2 +prms.T.data[channel_no*prms.T.columns + 0];
+    dx2 = -0.5*rw + d_substrate + T.data[channel_no*T.columns + 3];
+    dx1 = dx2 +T.data[channel_no*T.columns + 0];
 
-    dx2_q = -0.5*prms.rw_q + d_substrate + prms.T.data[channel_no*prms.T.columns + 3];
-    dx1_q = dx2_q + prms.T.data[channel_no*prms.T.columns + 1];
+    dx2_q = -0.5*rw_q + d_substrate + T.data[channel_no*T.columns + 3];
+    dx1_q = dx2_q + T.data[channel_no*T.columns + 1];
 
-    for (channel_no=0;channel_no<prms.T.rows;channel_no++){
-      if (prms.T.rows>20 && channel_no!=0 && channel_no!=prms.T.rows-1 && channel_no%5!=0){
+    for (channel_no=0;channel_no<T.rows;channel_no++){
+      if (T.rows>20 && channel_no!=0 && channel_no!=T.rows-1 && channel_no%100!=0){
         /*update the relative coordinates of the channel entry and exits but don't actually draw anything*/
-        dx2=dx1 + prms.T.data[channel_no*prms.T.columns + 3] + d_substrate + prms.T.data[channel_no*prms.T.columns + 4];
-        dx1=dx2 + prms.T.data[channel_no*prms.T.columns + 0];
+        dx2=dx1 + T.data[channel_no*T.columns + 3] + d_substrate + T.data[channel_no*T.columns + 4];
+        dx1=dx2 + T.data[channel_no*T.columns + 0];
 
-        dx2_q= dx1_q + d_substrate + prms.T.data[channel_no*prms.T.columns + 3]+ prms.T.data[channel_no*prms.T.columns + 4];
-        dx1_q= dx2_q+prms.T.data[channel_no*prms.T.columns + 1];
+        dx2_q= dx1_q + d_substrate + T.data[channel_no*T.columns + 3]+ T.data[channel_no*T.columns + 4];
+        dx1_q= dx2_q+T.data[channel_no*T.columns + 1];
         continue;
       }
 
@@ -652,11 +696,11 @@ MCDISPLAY
       multiline(5,ro1x,yh2,ro1z, ro1x,-yh2,ro1z, ro2x,-yh2,ro2z, ro2x,yh2,ro2z, ro1x,yh2,ro1z);
 
       /*update the relative coordinates of the channel entry and exits*/
-      dx2=dx1 + prms.T.data[channel_no*prms.T.columns + 3] + d_substrate + prms.T.data[channel_no*prms.T.columns + 4];
-      dx1=dx2 + prms.T.data[channel_no*prms.T.columns + 0];
+      dx2=dx1 + T.data[channel_no*T.columns + 3] + d_substrate + T.data[channel_no*T.columns + 4];
+      dx1=dx2 + T.data[channel_no*T.columns + 0];
 
-      dx2_q= dx1_q + d_substrate + prms.T.data[channel_no*prms.T.columns + 3]+ prms.T.data[channel_no*prms.T.columns + 4];
-      dx1_q= dx2_q+prms.T.data[channel_no*prms.T.columns + 1];
+      dx2_q= dx1_q + d_substrate + T.data[channel_no*T.columns + 3]+ T.data[channel_no*T.columns + 4];
+      dx1_q= dx2_q+T.data[channel_no*T.columns + 1];
 
     }
   }
