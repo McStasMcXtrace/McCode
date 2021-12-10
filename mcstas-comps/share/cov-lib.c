@@ -70,10 +70,22 @@ void tl2_lst_remove(tl2_list_type *lst, void *elem)
 		lst = lst->next;
 	}
 
-	/* remove element */
-	lst_prev->next = lst->next;
-	free(lst->elem);
-	free(lst);
+	if(lst)
+	{
+		/* remove element */
+		if(lst->elem)
+		{
+			free(lst->elem);
+			lst->elem = 0;
+		}
+
+		/* unlink */
+		if(lst_prev)
+		{
+			lst_prev->next = lst->next;
+			free(lst);
+		}
+	}
 }
 
 
