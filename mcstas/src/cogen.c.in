@@ -2359,6 +2359,9 @@ cogen_header(struct instr_def *instr, char *output_name)
 #endif
   cout("  if(!str_comp(\"t\",name)){rval=p->t;s=0;}");
   cout("  if(!str_comp(\"p\",name)){rval=p->p;s=0;}");
+  cout("  #ifdef MCLOG");
+  cout("  if(!str_comp(\"_logindex\",name)){rval=(double)p->_logindex;s=0;}");
+  cout("  #endif MCLOG");
   while((var = list_next(liter))) {
     coutf("  if(!str_comp(\"%s\",name)){rval=*( (double *)(&(p->%s)) );s=0;}",var,var);
   }
@@ -2385,7 +2388,7 @@ cogen_header(struct instr_def *instr, char *output_name)
    cout("  if(!str_comp(\"p\",name)){p->p=val;s=0;}");
    liter = list_iterate(instr->user_vars);
    while((var = list_next(liter))) {
-     coutf("  if(!str_comp(\"%s\",name)){*(double *)(&(p->%s))=val;s=0;}",var);
+     coutf("  if(!str_comp(\"%s\",name)){p->%s=val;s=0;}",var,var);
    }
    list_iterate_end(liter);
    cout("  return s;");
