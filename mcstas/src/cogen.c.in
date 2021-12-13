@@ -1848,7 +1848,7 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("    #endif");
   coutf("    #endif");
   coutf("");
-  coutf("    _log=malloc(MCLOG*sizeof(struct _struct_particle));");
+  coutf("    _log=malloc(MCLOG*ncount*sizeof(struct _struct_particle));");
   coutf("    #pragma acc update device(_log)");
   coutf("");
   coutf("");

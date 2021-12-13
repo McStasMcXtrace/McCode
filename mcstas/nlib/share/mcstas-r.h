@@ -56,7 +56,7 @@
   int ii;					\
    _class_particle *_pp= _log;\
    if(_pp!=NULL){\
-     _pp[_particle->_logindex+_particle->_uid]=*_particle;\
+     _pp[_particle->_logindex+MCLOG*_particle->_uid]=*_particle;\
      _particle->_logindex++;\
    }\
    DEBUG_SCATTER();\
