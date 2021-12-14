@@ -46,12 +46,23 @@ DECLARE
   unsigned int logcounter;
   double particlestore[LOGMAXPARTICLE][12];
   unsigned long long uids[LOGMAXPARTICLE];
+  char fullfile[1024];
+  char outputdir[512];
 %}
 
 INITIALIZE
 %{
   logcounter=0;
-
+  if (dirname == NULL) {
+    sprintf(outputdir,".");
+  } else {
+    sprintf(outputdir,dirname);
+  }
+  #ifndef USE_MPI
+  sprintf(fullfile,"%s/%s.%s",outputdir,NAME_CURRENT_COMP,"log");
+  #else
+  sprintf(fullfile,"%s/%s_%i.%s",outputdir,NAME_CURRENT_COMP,mpi_node_rank,"log");
+  #endif
 %}
 TRACE
 %{
@@ -89,14 +100,19 @@ FINALLY
 %{
 #ifdef MCLOG
   int ii,jj;
+  FILE * fp;
+  printf("Storing event log -->  %s\n",fullfile);
+  fp = fopen(fullfile, "w+");
   jj=logcounter>LOGMAXPARTICLE ? LOGMAXPARTICLE : logcounter;
   for (ii=0;ii<jj;ii++){
-    printf("pseudoparticle %u (uid) %ld ",ii, uids[ii]);
-    printf("(x,y,z) %g %g %g ",particlestore[ii][0],particlestore[ii][1],particlestore[ii][2]);   
-    printf("(vx,vy,vz) %g %g %g ",particlestore[ii][3],particlestore[ii][4],particlestore[ii][5]);
-    printf("(sx,sy,sz) %g %g %g ",particlestore[ii][6],particlestore[ii][7],particlestore[ii][8]);    
-    printf("(t,p) %g %g\n ",particlestore[ii][9],particlestore[ii][10]);   
+    fprintf(fp,"pseudoparticle %u (uid) %ld ",ii, uids[ii]);
+    fprintf(fp,"(x,y,z) %g %g %g ",particlestore[ii][0],particlestore[ii][1],particlestore[ii][2]);   
+    fprintf(fp,"(vx,vy,vz) %g %g %g ",particlestore[ii][3],particlestore[ii][4],particlestore[ii][5]);
+    fprintf(fp,"(sx,sy,sz) %g %g %g ",particlestore[ii][6],particlestore[ii][7],particlestore[ii][8]);    
+    fprintf(fp,"(t,p) %g %g\n ",particlestore[ii][9],particlestore[ii][10]);   
   }
+  fclose(fp);
+  printf("Done storing logfile.\n");
 #endif
 %}
 
