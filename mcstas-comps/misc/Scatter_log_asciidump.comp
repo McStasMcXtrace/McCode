@@ -59,7 +59,7 @@ TRACE
 #ifdef MCLOG
   int jj=0;
   while (jj<_particle->_logindex){
-    _class_particle *pp=&(_log[jj]);
+    _class_particle *pp=&(_particle->_log[jj]);
     unsigned int index;
 #pragma acc atomic capture
     {

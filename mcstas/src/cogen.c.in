@@ -1848,10 +1848,6 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("    #endif");
   coutf("    #endif");
   coutf("");
-  coutf("    _log=malloc(MCLOG*ncount*sizeof(struct _struct_particle));");
-  coutf("    #pragma acc update device(_log)");
-  coutf("");
-  coutf("");
   coutf("    #pragma acc parallel loop num_gangs(numgangs) vector_length(vecsize)");
   coutf("    for (unsigned long pidx=0 ; pidx < gpu_innerloop ; pidx++) {");
   coutf("      _class_particle particleN = mcgenstate(); // initial particle");
@@ -2259,6 +2255,9 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  long flag_nocoordschange;   /* set to true if neutron is jumping */");
   cout("#ifdef MCLOG");
   cout("  short _logindex;");
+  cout("  short bufsiz;");
+  cout("  struct _struct_particle *_log;       /* infrastructure to have logging capabilities*/");
+  cout("  #pragma acc shape(_log[0:bufsiz]) init_needed(bufsiz)");
   cout("#endif");
   /* Include the struct defined earlier holding information on JUMP logic*/
   cout("  struct particle_logic_struct _logic;");
@@ -2285,11 +2284,6 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("};");
   cout("typedef struct _struct_particle _class_particle;");
   cout("");
-  cout("#ifdef MCLOG");
-  cout("struct _struct_particle *_log;       /* infrastructure to have logging capabilities*/");
-  cout("#pragma acc declare create(_log)");
-  cout("#endif");
-  cout("");   
   cout("_class_particle _particle_global_randnbuse_var;");
   cout("_class_particle* _particle = &_particle_global_randnbuse_var;");
   cout("");
@@ -2314,6 +2308,8 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, NULL, mcallowbackprop);");
   cout("  #ifdef MCLOG");
   cout("  particle._logindex=0;");
+  cout("  particle.bufsiz=MCLOG;");
+  cout("  particle._log=malloc(particle.bufsiz*sizeof(struct _struct_particle));");
   cout("  #endif /*MCLOG*/");
   cout("  return(particle);");
   cout("}");
