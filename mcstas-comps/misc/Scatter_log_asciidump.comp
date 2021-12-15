@@ -70,7 +70,7 @@ TRACE
 #ifdef MCLOG
   int jj=0;
   while (jj<_particle->_logindex){
-    _class_particle *pp=&(_particle->_log[jj]);
+    //_class_particle *pp=&(_particle->_log[jj]);
     unsigned int index;
 #pragma acc atomic capture
     {
@@ -78,18 +78,18 @@ TRACE
     }
 
     if (index<LOGMAXPARTICLE){
-      particlestore[index][0]=particle_getvar(pp,"x",NULL);
-      particlestore[index][1]=particle_getvar(pp,"y",NULL);
-      particlestore[index][2]=particle_getvar(pp,"z",NULL);
-      particlestore[index][3]=particle_getvar(pp,"vx",NULL);
-      particlestore[index][4]=particle_getvar(pp,"vy",NULL);
-      particlestore[index][5]=particle_getvar(pp,"vz",NULL);
-      particlestore[index][6]=particle_getvar(pp,"sx",NULL);
-      particlestore[index][7]=particle_getvar(pp,"sy",NULL);
-      particlestore[index][8]=particle_getvar(pp,"sz",NULL);
-      particlestore[index][9]=particle_getvar(pp,"t",NULL);
-      particlestore[index][10]=particle_getvar(pp,"p",NULL);
-      uids[index]=pp->_uid;
+      particlestore[index][0]=-1;//_particle->xlog[jj];
+      particlestore[index][1]=-1;//_particle->ylog[jj];
+      particlestore[index][2]=_particle->zlog[jj];
+      particlestore[index][3]=-1;//_particle->vxlog[jj];
+      particlestore[index][4]=-1;//_particle->vylog[jj];
+      particlestore[index][5]=-1;//_particle->vzlog[jj];
+      particlestore[index][6]=-1;//_particle->sxlog[jj];
+      particlestore[index][7]=-1;//_particle->sylog[jj];
+      particlestore[index][8]=-1;//_particle->szlog[jj];
+      particlestore[index][9]=-1;//_particle->tlog[jj];
+      particlestore[index][10]=_particle->plog[jj];
+      uids[index]=_particle->_uid;
     }
     jj++;
   }

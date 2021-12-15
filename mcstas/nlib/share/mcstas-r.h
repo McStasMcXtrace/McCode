@@ -53,14 +53,22 @@
 #define SCATTER0 do {DEBUG_SCATTER(); SCATTERED++;} while(0)
 #else
 #define SCATTER0 do {\
-  int ii;					\
-   _class_particle *_pp= _particle->_log;\
-   if(_pp!=NULL){\
-     _pp[_particle->_logindex]=*_particle;\
-     _particle->_logindex++;\
-   }\
+  if (_particle->_logindex<MCLOG) {		\
+    _particle->xlog[_particle->_logindex]=x;    \
+    _particle->ylog[_particle->_logindex]=y;	\
+    _particle->zlog[_particle->_logindex]=z;    \
+    _particle->vxlog[_particle->_logindex]=vx;    \
+    _particle->vylog[_particle->_logindex]=vy;    \
+    _particle->vzlog[_particle->_logindex]=vz;    \
+    _particle->sxlog[_particle->_logindex]=sx;    \
+    _particle->sylog[_particle->_logindex]=sy;    \
+    _particle->szlog[_particle->_logindex]=sz;    \
+    _particle->tlog[_particle->_logindex]=t;    \
+    _particle->plog[_particle->_logindex]=p;	\
+    _particle->_logindex++;			\
    DEBUG_SCATTER();\
    SCATTERED;\
+  }\
 } while (0)
 #endif /*MCLOG*/
 #define SCATTER SCATTER0

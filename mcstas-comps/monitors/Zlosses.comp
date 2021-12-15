@@ -71,13 +71,11 @@ TRACE
   #ifdef MCLOG
   int jj=1;
   while (jj<_particle->_logindex){
-    _class_particle *pp = &(_particle->_log[jj]);
-    _class_particle *pp0= &(_particle->_log[jj-1]);
-    double z0=particle_getvar(pp,"z",NULL);
+    double z0=_particle->zlog[jj];
     if (z0>zmin && z0<zmax){
       int i = floor(nbins*(z0-zmin)/(zmax-zmin));
       double dp;
-      dp=particle_getvar(pp0,"p",NULL)-particle_getvar(pp,"p",NULL);
+      dp=_particle->plog[jj-1] - _particle->plog[jj];
       double p2 = dp*dp;
       #pragma acc atomic
       Z_N[i] = Z_N[i] +1;
