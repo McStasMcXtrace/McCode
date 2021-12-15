@@ -1849,23 +1849,6 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("    #endif");
   coutf("");
   
-  cout("    #ifdef MCLOG");
-  cout("    #ifndef OPENACC");
-  cout("    double xlog[MCLOG];");
-  cout("    double ylog[MCLOG];");
-  cout("    double zlog[MCLOG];");
-  cout("    double vxlog[MCLOG];");
-  cout("    double vylog[MCLOG];");
-  cout("    double vzlog[MCLOG];");
-  cout("    double sxlog[MCLOG];");
-  cout("    double sylog[MCLOG];");
-  cout("    double szlog[MCLOG];");
-  cout("    double tlog[MCLOG];");
-  cout("    double plog[MCLOG];");
-  cout("    #endif");
-  cout("    #endif");
-  coutf("");
-
   coutf("    #pragma acc parallel loop num_gangs(numgangs) vector_length(vecsize)");
   coutf("    for (unsigned long pidx=0 ; pidx < gpu_innerloop ; pidx++) {");
   coutf("      _class_particle particleN = mcgenstate(); // initial particle");
@@ -1874,21 +1857,6 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("");
   coutf("      srandom(_hash((pidx+1)*(seed+1)));");
   coutf("      particle_uservar_init(_particle);");
-  coutf("      #ifdef MCLOG");
-  coutf("      #ifndef OPENACC");
-  coutf("      _particle->xlog=xlog;");
-  coutf("      _particle->ylog=ylog;");
-  coutf("      _particle->zlog=zlog;");
-  coutf("      _particle->vxlog=vxlog;");
-  coutf("      _particle->vylog=vylog;");
-  coutf("      _particle->vzlog=vzlog;");
-  coutf("      _particle->sxlog=sxlog;");
-  coutf("      _particle->sylog=sylog;");
-  coutf("      _particle->szlog=szlog;");
-  coutf("      _particle->tlog=tlog;");
-  coutf("      _particle->plog=plog;");
-  coutf("      #endif /\*OPENACC*\/");
-  coutf("      #endif /\*MCLOG*\/");
   coutf("");
   coutf("      raytrace(_particle);");
   coutf("    } /* inner for */");
@@ -2287,7 +2255,6 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  long flag_nocoordschange;   /* set to true if neutron is jumping */");
   cout("#ifdef MCLOG");
   cout("  short _logindex;");
-  cout("  #ifdef OPENACC");
   cout("  double xlog[MCLOG];");
   cout("  double ylog[MCLOG];");
   cout("  double zlog[MCLOG];");
@@ -2299,19 +2266,6 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  double szlog[MCLOG];");
   cout("  double tlog[MCLOG];");
   cout("  double plog[MCLOG];");
-  cout("  #else ");
-  cout("  double *xlog;");
-  cout("  double *ylog;");
-  cout("  double *zlog;");
-  cout("  double *vxlog;");
-  cout("  double *vylog;");
-  cout("  double *vzlog;");
-  cout("  double *sxlog;");
-  cout("  double *sylog;");
-  cout("  double *szlog;");
-  cout("  double *tlog;");
-  cout("  double *plog;");
-  cout("  #endif");
   cout("#endif");
   /* Include the struct defined earlier holding information on JUMP logic*/
   cout("  struct particle_logic_struct _logic;");
@@ -2360,6 +2314,9 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("");
   cout("_class_particle mcgenstate(void) {");
   cout("  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, NULL, mcallowbackprop);");
+  cout("  #ifdef MCLOG");
+  cout("  particle._logindex=0;");
+  cout("  #endif");
   cout("  return(particle);");
   cout("}");
 
