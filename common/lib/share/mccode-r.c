@@ -3858,8 +3858,16 @@ mcusage(char *pgmname)
 static void
 mcenabletrace(void)
 {
- if(traceenabled)
+ if(traceenabled) {
   mcdotrace = 1;
+  #ifdef DEBUGGPU
+  printf("\n\nRunning trace/display with OpenACC:\n"
+         "  Note that particles will only be visualised if\n"
+         "  a) The instrument is compiled with e.g. -DMCLOG=100\n"
+         "  b) The Display component is included as last component.\n\n");
+  #endif
+
+ }
  else
  {
    fprintf(stderr,
