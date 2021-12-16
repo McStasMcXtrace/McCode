@@ -403,10 +403,17 @@ void* _getvar_parameters(char* compname);
   printf("Component %30s AT (%g,%g,%g)\n", name, c.x, c.y, c.z); \
   }
 #define DEBUG_INSTR_END() if(!mcdotrace); else printf("INSTRUMENT END:\n");
+#ifndef DEBUGGPU
 #define DEBUG_ENTER() if(!mcdotrace); else printf("ENTER:\n");
 #define DEBUG_COMP(c) if(!mcdotrace); else printf("COMP: \"%s\"\n", c);
 #define DEBUG_LEAVE() if(!mcdotrace); else printf("LEAVE:\n");
 #define DEBUG_ABSORB() if(!mcdotrace); else printf("ABSORB:\n");
+#else
+#define DEBUG_ENTER()
+#define DEBUG_COMP(c)
+#define DEBUG_LEAVE()
+#define DEBUG_ABSORB()
+#endif
 #else
 #define DEBUG_INSTR()
 #define DEBUG_COMPONENT(name,c,t)
