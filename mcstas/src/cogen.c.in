@@ -2280,6 +2280,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  double szlog[MCLOG];");
   cout("  double tlog[MCLOG];");
   cout("  double plog[MCLOG];");
+  cout("  long complog[MCLOG];");
   cout("#else");
   cout("  double *xlog;");
   cout("  #pragma acc shape(xlog[0:MCLOG])");
@@ -2303,6 +2304,8 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  #pragma acc shape(tlog[0:MCLOG])");  
   cout("  double *plog;");
   cout("  #pragma acc shape(plog[0:MCLOG])");
+  cout("  long *complog;");
+  cout("  #pragma acc shape(complog[0:MCLOG])");
   cout("#endif");  
   cout("#endif");
   /* Include the struct defined earlier holding information on JUMP logic*/

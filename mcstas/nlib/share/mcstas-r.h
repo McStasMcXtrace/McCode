@@ -65,6 +65,7 @@
     _particle->szlog[_particle->_logindex]=sz;    \
     _particle->tlog[_particle->_logindex]=t;    \
     _particle->plog[_particle->_logindex]=p;	\
+    _particle->complog[_particle->_logindex]=_particle->_index;	\
     _particle->_logindex++;			\
    DEBUG_SCATTER();\
    SCATTERED;\
