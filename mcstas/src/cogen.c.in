@@ -1120,9 +1120,11 @@ int cogen_decls(struct instr_def *instr)
     list_len(instr->complist)+2, list_len(instr->complist)+2, list_len(instr->complist)+2);
   coutf("  _class_particle _trajectory[%i]; /* current trajectory for STORE/RESTORE */", list_len(instr->complist)+2);
   cout( "/* Components position table (absolute and relative coords) */");
-  coutf("  Coords _position_relative[%i]; /* positions of all components */",
+  coutf("  Coords _position_relative[%i]; /* positions of all components - rel */",
     list_len(instr->complist)+2);
-  coutf("  Coords _position_absolute[%i];",
+  coutf("  Coords _position_absolute[%i]; /* positions of all components - abs */",
+    list_len(instr->complist)+2);
+  coutf("  Rotation _rotation_absolute[%i]; /* rotation of all components - abs */",
     list_len(instr->complist)+2);
   cout( "  _class_instrument_parameters _parameters; /* instrument parameters */");
   if (index)
