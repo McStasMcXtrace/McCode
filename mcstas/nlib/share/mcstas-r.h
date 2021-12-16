@@ -223,14 +223,19 @@
 
 
 #ifdef DEBUG
-
+#ifndef DEBUGGPU
 #define DEBUG_STATE() if(!mcdotrace); else \
   printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
          x,y,z,vx,vy,vz,t,sx,sy,sz,p);
 #define DEBUG_SCATTER() if(!mcdotrace); else \
   printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
          x,y,z,vx,vy,vz,t,sx,sy,sz,p);
+#else
 
+#define DEBUG_STATE()
+#define DEBUG_SCATTER()
+
+#endif
 #else
 
 #define DEBUG_STATE()
