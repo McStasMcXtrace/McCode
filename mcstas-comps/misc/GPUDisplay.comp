@@ -1,0 +1,180 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*         University of Copenhagen, Copenhagen, Denmark
+*
+* Component: Arm
+*
+* %I
+*
+* Written by: Kim Lefmann and Kristian Nielsen
+* Modified by: Erik Knudsen 
+* Date: September 2009
+* Version: 1.0
+* Release: McXtrace 1.0
+* Origin: Risoe
+*
+* Arm/optical bench
+*
+* %D
+* An arm does not actually do anything, it is just there to set
+* up a new coordinate system.
+*
+* %P
+* Input parameters:
+*
+* (none)
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT GPUDisplay
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS ()
+SHARE
+%{
+#ifndef LOGMAXPARTICLE
+  #define LOGMAXPARTICLE 1000000 
+#endif
+%}
+DECLARE
+%{
+  unsigned int logcounter;
+  double particlestore[LOGMAXPARTICLE][12];
+  long compstore[LOGMAXPARTICLE];
+  unsigned long long uids[LOGMAXPARTICLE];
+%}
+
+INITIALIZE
+%{
+  logcounter=0;
+%}
+TRACE
+%{
+  /*drop all the logged particles to console*/
+#ifdef MCLOG
+  int jj=0;
+  while (jj<_particle->_logindex){
+    //_class_particle *pp=&(_particle->_log[jj]);
+    unsigned int index;
+#pragma acc atomic capture
+    {
+      index=logcounter++;
+    }
+
+    if (index<LOGMAXPARTICLE){
+      particlestore[index][0]=_particle->xlog[jj];
+      particlestore[index][1]=_particle->ylog[jj];
+      particlestore[index][2]=_particle->zlog[jj];
+      particlestore[index][3]=_particle->vxlog[jj];
+      particlestore[index][4]=_particle->vylog[jj];
+      particlestore[index][5]=_particle->vzlog[jj];
+      particlestore[index][6]=_particle->sxlog[jj];
+      particlestore[index][7]=_particle->sylog[jj];
+      particlestore[index][8]=_particle->szlog[jj];
+      particlestore[index][9]=_particle->tlog[jj];
+      particlestore[index][10]=_particle->plog[jj];
+      compstore[index]=_particle->complog[jj];
+      uids[index]=_particle->_uid;
+    }
+    jj++;
+  }
+#endif
+%}
+
+FINALLY
+%{
+#ifdef MCLOG
+#ifdef OPENACC
+  if (mcdotrace) {
+    int ii,jj;
+    long LastparticleID=-1;
+    long CurrentparticleID=-1;
+    long lastcomp=-1;
+    long currentcomp=-1;
+    double x,y,z,vx,vy,vz,t,sx,sy,sz,p;
+    double x0,y0,z0,vx0,vy0,vz0,t0,sx0,sy0,sz0,p0;
+    char compname[256];
+    
+    printf("Displaying event log...\n");
+    /* Indicate entry */
+    printf("ENTER:\n");
+    /* Do scatter / state event */
+    
+    x=particlestore[0][0];
+    y=particlestore[0][1];
+    z=particlestore[0][2];
+    vx=particlestore[0][3];
+    vy=particlestore[0][4];
+    vz=particlestore[0][5];
+    t=particlestore[0][9];
+    sx=particlestore[0][6];
+    sy=particlestore[0][7];
+    sz=particlestore[0][8];
+
+    
+    x0=0; y0=0; z0=0; vx0=0; vy0=0; vz0=0; sx0=0; sy0=0; sz0=0; t0=0; p0=0;
+    
+    printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n",	\
+	   x,y,z,vx,vy,vz,t,sx,sy,sz,p);
+    jj=logcounter>LOGMAXPARTICLE ? LOGMAXPARTICLE : logcounter;
+    for (ii=0;ii<jj;ii++){
+      x=particlestore[ii][0];
+      y=particlestore[ii][1];
+      z=particlestore[ii][2];
+      vx=particlestore[ii][3];
+      vy=particlestore[ii][4];
+      vz=particlestore[ii][5];
+      t=particlestore[ii][9];
+      sx=particlestore[ii][6];
+      sy=particlestore[ii][7];
+      sz=particlestore[ii][8];
+      CurrentparticleID=uids[ii];
+      currentcomp=compstore[ii];
+
+      /* Is this a new particle? */
+      if (CurrentparticleID != LastparticleID) {
+	/* Is this the first or a later particle? */
+	printf("ABSORB:\n");
+	printf("LEAVE:\n");
+	printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n",	\
+	       x0,y0,z0,vx0,vy0,vz0,t0,sx0,sy0,sz0,p0);
+      }
+      /* Do scatter / state event */
+      printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n",	\
+	     x,y,z,vx,vy,vz,t,sx,sy,sz,p);
+      /* Is this a new component? */
+      if (currentcomp != lastcomp) {
+	_get_comp_name_index(compname, currentcomp);
+	printf("COMP: \"%s\"\n", compname);
+      }
+      /* Store for next */
+      x0=x; y0=y; z0=z; vx0=vx; vy0=vy; vz0=vz; sx0=sx; sy0=sy; sz0=sz; t0=t; p0=p;
+      lastcomp=currentcomp;
+      LastparticleID=CurrentparticleID;
+    }
+    printf("ABSORB:\n");
+    printf("LEAVE:\n");
+    printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n",	\
+	   x0,y0,z0,vx0,vy0,vz0,t0,sx0,sy0,sz0,p0);
+    printf("Done displaying event log\n");
+  }
+#endif
+#endif
+%}
+
+
+MCDISPLAY
+%{
+  /* A bit ugly; hard-coded dimensions. */
+  
+  line(0,0,0,0.2,0,0);
+  line(0,0,0,0,0.2,0);
+  line(0,0,0,0,0,0.2);
+%}
+
+END
