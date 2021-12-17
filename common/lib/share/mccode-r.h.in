@@ -387,6 +387,11 @@ void* _getvar_parameters(char* compname);
 
 #define NAME_INSTRUMENT (instrument->_name)
 
+/* Cogen-driven functions for looking up name, position, rotation of 
+   component from its integer index */
+Coords _get_comp_pos_index(int compnum);
+void _get_comp_rot_index(Rotation comprot, int compnum);
+void _get_comp_name_index(char *compname, int compnum);
 
 /* MCDISPLAY/trace and debugging message sent to stdout */
 #ifdef MC_TRACE_ENABLED
