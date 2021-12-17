@@ -997,6 +997,53 @@ void cogen_getvarpars_fct(struct instr_def *instr)
 }
 
 /*******************************************************************************
+* Generates the function that returns a component absolute position,
+* based on the component index as an int. Used in GPU display mode
+*******************************************************************************/
+void cogen_getpos_fct(struct instr_def *instr)
+{
+  cout("Coords _getpos_index(int compnum)");
+  cout("/* Returns absolute coordinates of component based list index */");
+  cout("{");
+
+  List_handle iter;
+  iter = list_iterate(instr->complist);
+  struct comp_inst *comp;
+
+  while((comp = list_next(iter)) != NULL) {
+    coutf("  if (compnum==%i) return (_%s_var._position_absolute);", comp->index, comp->name);
+  }
+  list_iterate_end(iter);
+
+  cout("  return coords_set(0,0,0);"); /* return origin pos if case is not handled in the loop above */
+  cout("}");
+  cout("");
+}
+
+/*******************************************************************************
+* Generates the function that returns a component absolute rotation,
+* based on the component index as an int. Used in GPU display mode
+*******************************************************************************/
+void cogen_getrot_fct(struct instr_def *instr)
+{
+  cout("void _getrot_index(Rotation comprot, int compnum)");
+  cout("/* Returns absolute orientation of component based list index */");
+  cout("{");
+
+  List_handle iter;
+  iter = list_iterate(instr->complist);
+  struct comp_inst *comp;
+  cout("  rot_set_rotation(comprot, 0,0,0);"); /* return origin rot by default */
+  while((comp = list_next(iter)) != NULL) {
+    coutf("  if (compnum==%i) rot_copy(comprot,_%s_var._rotation_absolute);", comp->index, comp->name);
+  }
+  list_iterate_end(iter);
+  cout("}");
+  cout("");
+}
+
+
+/*******************************************************************************
 * Generates the function that returns a particle var ptr of type void*,
 * based on the variable name as a string.
 *
@@ -2829,6 +2876,8 @@ cogen(char *output_name, struct instr_def *instr)
 
   // API macro support functions
   cogen_getvarpars_fct(instr);
+  cogen_getpos_fct(instr);
+  cogen_getrot_fct(instr);
   cogen_getparticlevar_fct(instr);
 
 
