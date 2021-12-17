@@ -1002,8 +1002,8 @@ void cogen_getvarpars_fct(struct instr_def *instr)
 *******************************************************************************/
 void cogen_getpos_fct(struct instr_def *instr)
 {
-  cout("Coords _getpos_index(int compnum)");
-  cout("/* Returns absolute coordinates of component based list index */");
+  cout("Coords _get_comp_pos_index(int compnum)");
+  cout("/* Returns absolute coordinates of component based on list index */");
   cout("{");
 
   List_handle iter;
@@ -1026,8 +1026,8 @@ void cogen_getpos_fct(struct instr_def *instr)
 *******************************************************************************/
 void cogen_getrot_fct(struct instr_def *instr)
 {
-  cout("void _getrot_index(Rotation comprot, int compnum)");
-  cout("/* Returns absolute orientation of component based list index */");
+  cout("void _get_comp_rot_index(Rotation comprot, int compnum)");
+  cout("/* Returns absolute orientation of component based on list index */");
   cout("{");
 
   List_handle iter;
@@ -1036,6 +1036,28 @@ void cogen_getrot_fct(struct instr_def *instr)
   cout("  rot_set_rotation(comprot, 0,0,0);"); /* return origin rot by default */
   while((comp = list_next(iter)) != NULL) {
     coutf("  if (compnum==%i) rot_copy(comprot,_%s_var._rotation_absolute);", comp->index, comp->name);
+  }
+  list_iterate_end(iter);
+  cout("}");
+  cout("");
+}
+
+/*******************************************************************************
+* Generates the function that returns a component name,
+* based on the component index as an int. Used in GPU display mode
+*******************************************************************************/
+void cogen_getname_fct(struct instr_def *instr)
+{
+  cout("void _get_comp_name_index(char *compname, int compnum)");
+  cout("/* Returns component name based on list index */");
+  cout("{");
+
+  List_handle iter;
+  iter = list_iterate(instr->complist);
+  struct comp_inst *comp;
+  cout("  sprintf(compname,\"NONAME\");"); /* return origin rot by default */
+  while((comp = list_next(iter)) != NULL) {
+    coutf("  if (compnum==%i) sprintf(compname,\"%s\");", comp->index, comp->name);
   }
   list_iterate_end(iter);
   cout("}");
@@ -2878,6 +2900,7 @@ cogen(char *output_name, struct instr_def *instr)
   cogen_getvarpars_fct(instr);
   cogen_getpos_fct(instr);
   cogen_getrot_fct(instr);
+  cogen_getname_fct(instr);
   cogen_getparticlevar_fct(instr);
 
 
