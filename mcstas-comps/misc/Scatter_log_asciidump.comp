@@ -45,6 +45,7 @@ DECLARE
 %{
   unsigned int logcounter;
   double particlestore[LOGMAXPARTICLE][12];
+  long compstore[LOGMAXPARTICLE];
   unsigned long long uids[LOGMAXPARTICLE];
   char fullfile[1024];
   char outputdir[512];
@@ -89,6 +90,7 @@ TRACE
       particlestore[index][8]=_particle->szlog[jj];
       particlestore[index][9]=_particle->tlog[jj];
       particlestore[index][10]=_particle->plog[jj];
+      compstore[index]=_particle->complog[jj];
       uids[index]=_particle->_uid;
     }
     jj++;
