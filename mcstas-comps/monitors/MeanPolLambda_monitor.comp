@@ -17,6 +17,8 @@
 * %D A square single monitor that measures the MEAN projection of the
 * polarisation along a given normalized m-vector (mx, my, mz) as a
 * function of wavelength.
+* Mean and variance algorithm adapted from:
+*   West. 1979. Updating mean and variance estimates: an improved method. Commun. ACM 22, 9 (Sept. 1979)
 *
 * Example: MeanPollambda_monitor(xwidth=0.1, yheight=0.1, npol=11, my=1, filename="meanpollambdaMon.data")
 *
