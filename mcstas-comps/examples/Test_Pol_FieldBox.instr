@@ -69,6 +69,9 @@ AT(0,0,0.01+1e-3) RELATIVE PREVIOUS
 COMPONENT pl1z = COPY(pl0x)(mx=0, my=0, mz=1, filename="pl1z.dat")
 AT(0,0,0) RELATIVE PREVIOUS
 
+COMPONENT mpl1x = MeanPolLambda_monitor(mx=1, my=0, mz=0, filename="mpl1x", nL=21,Lmin=0.5*L0, Lmax=L0*1.5 )
+AT(0,0,1e-3) RELATIVE PREVIOUS
+
 FINALLY
 %{
 %}
