@@ -25,7 +25,7 @@ typedef struct t_reflec_bare{
 typedef struct t_reflec_coating{
   char *matrl;
   t_Table *T;
-  double *d;
+  double d;
   double rho,Z,At;
 }t_reflec_coating;
 
