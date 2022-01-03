@@ -62,7 +62,6 @@ COMPONENT Source = Source_gen(
   AT (0, 0, 0) RELATIVE PREVIOUS
 EXTEND %{
 	t = randtriangle()*1e-3;	/* 1 ms triangle time window */
-	SCATTER;
 %}
 
 COMPONENT Monitor1_xt = Monitor_nD(
@@ -80,8 +79,11 @@ COMPONENT Monitor2_xy = Monitor_nD(
     options = "x y", xwidth = 0.07, yheight = 0.07,restore_neutron=1)
   AT (0, 0, len+0.001) RELATIVE Guide_Position
 EXTEND %{
-   if(!SCATTERED) ABSORB;
-   SCATTER;
+   if(!SCATTERED) {
+     ABSORB;
+   } else {
+     SCATTER;
+   }
 %}  
 
 COMPONENT Flex = Flex_monitor_1D(nU=100,filename="Flex",Umin=-0.5,Umax=100.5,ustring="_logindex")
@@ -92,13 +94,13 @@ COMPONENT Lmon = L_monitor(filename="lmon", xwidth = 0.07, yheight = 0.07, resto
 
   
 COMPONENT Log = Scatter_log_asciidump()
-    AT(0,0,0) ABSOLUTE
+  AT(0,0,0) ABSOLUTE
 
-COMPONENT Zloss = Zlosses(filename="losses",zmin=-1,zmax=len,nbins=200)
-    AT(0,0,0) ABSOLUTE  
+COMPONENT Zloss = Zlosses(filename="losses",zmin=1e-9,zmax=len,nbins=200)
+  AT(0,0,0) ABSOLUTE  
 
 COMPONENT Monitor3_xy = Monitor_nD(
     options = "x y", xwidth = 0.07, yheight = 0.07)
-    AT (0, 0, len+0.001) RELATIVE Guide_Position
+  AT (0, 0, len+0.001) RELATIVE Guide_Position
   
 END
