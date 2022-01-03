@@ -6,10 +6,10 @@
 * Version: $Revision$
 * Origin: Risoe
 *
-* A curved mirror
+* A cylindrically curved mirror
 *
 * %D
-* mirror is in the yz-plane curved towards positive x if radius is positive
+* Model of a cylindrically curved mirror. Mirror is in the yz-plane curved towards positive x if radius is positive
 * 
 * %P
 * radius: [m]   Radius of curvature.
@@ -30,6 +30,7 @@ SHARE
 %{
 #include <complex.h>
   %include "read_table-lib"
+  %include "reflectivity-lib"
 %}
 
 
@@ -41,31 +42,21 @@ DECLARE
     double At, rho;
     t_Table T;
   } prms,*prmsp;
+  t_Reflec re;
 %}
 
 INITIALIZE
 %{
   int status;
 
-  if (coating && ! R0){
-    if ( coating && (status=Table_Read(&(prms.T),coating,0))==-1){
-      fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,coating);
-      exit(-1);
+    if (coating && strlen(coating)) {
+      status=reflec_Init(&re,COATING_UNDEFINED,coating);
+      prmsp=&prms;
+    }else{
+      /*assume a constant reflectivity*/
+      status=reflec_Init(&re,CONSTANT,R0);
+      prmsp=NULL;
     }
-    char **header_parsed;
-    header_parsed=Table_ParseHeader(prms.T.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
-    if(header_parsed[2]){prms.rho=strtod(header_parsed[2],NULL);}
-    if(header_parsed[0]){prms.Z=strtod(header_parsed[0],NULL);}
-    if(header_parsed[1]){prms.At=strtod(header_parsed[1],NULL);}
-    prmsp=&prms;
-  }else{
-    if (R0<0 || R0>1){
-      fprintf(stderr,"Error(%s) reflectivity (%g) is specified but is not in [0:1]\n",NAME_CURRENT_COMP,R0);
-      exit(-1);
-    }
-    prmsp=NULL;
-  }
-
 %}
 
 TRACE
@@ -116,50 +107,12 @@ TRACE
       kx=kx-2*s*nx;
       kz=kz-2*s*nz;
       
-
-      if (prmsp && !R0){
-        /*compute reflectivity from material data*/
-
-        /*adjust p according to reflectivity*/
-        double Qc,Q,f1,f2,delta,beta,na,e,k2,rho;
-        /*length of wavevector transfer may be compute from s and n_ above*/
-        Q=fabs(2*s*sqrt(nx*nx+nz*nz));
-
-        /*interpolate in material data*/
-        k2=scalar_prod(kx,ky,kz,kx,ky,kz);
-        e=K2E*sqrt(k2);
-        f1=Table_Value(prms.T,e,1); 
-
-        /*the conversion factor in  the end is to transform the atomic density from cm^-3 to AA^-3
-          -> therefore we get Q in AA^-1*/
-        na=NA*prms.rho/prms.At*1e-24;
-        Qc=4*sqrt(M_PI*na*RE*f1);
-        
-        if (Q>Qc){ 
-          complex double qp;
-          double q,b_mu,R;
-
-          q=Q/Qc;
-          /*delta=na*r0*2*M_PI/k2*f1;*/  
-          f2=Table_Value(prms.T,e,2); 
-          /*beta=na*r0*2*M_PI/k2*f2;*/
-          /*b_mu=beta*(2*k)^2 / Qc^2*/
-          b_mu=4*M_PI*na*RE*f2/(Qc*Qc);
-          if(q==1){
-            qp=sqrt(b_mu)*(1+I);
-          }else {
-              qp=csqrt(q*q-1+2*I*b_mu);
-          }
-          /*and from this compute the reflectivity*/
-          R=cabs((q-qp)/(q+qp));
-          p*=R;
-          /*now also set the phase*/
-          phi+=carg((q-qp)/(q+qp));
-        }
-      }else{
-        /*R0 !=0 -> use that for reflectivity*/
-          p*=R0;
-      }
+      double Q;
+      /*length of wavevector transfer may be compute from s and n_ above*/
+      Q=fabs(2*s*sqrt(nx*nx+nz*nz));
+      double complex R=refleccq(&re,Q,0,k);
+      p*=cabs(R);
+      phi+=carg(R);
     }
   }else if(fabs(kx)<DBL_EPSILON && fabs(kz)<DBL_EPSILON && ky!=0){
     /*This to catch the extreme case where k//y.*/
