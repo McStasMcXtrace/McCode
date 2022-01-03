@@ -31,10 +31,11 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Zlosses(int Guide=1)
-DEPENDENCY " -DSCATTERLOG -DSCATTERLOG_BUFFER=50 "
+DEFINE INSTRUMENT Zlosses(int Guide=1, int lastindex=1, len=100)
+DEPENDENCY " -DMCLOG=50 "
 
 DECLARE %{
+  double dist;
 %}
 
 USERVARS
@@ -43,6 +44,11 @@ USERVARS
 
 INITIALIZE
 %{
+  if (Guide==1) {
+    dist=1.1;
+  } else {
+    dist=1.1+len;
+  }
 %}
 
 TRACE
@@ -52,10 +58,11 @@ COMPONENT Origin = Progress_bar()
 
 COMPONENT Source = Source_gen(
    focus_xw = 0.05, focus_yh = 0.05, lambda0 = 3.39, dlambda = 0.3,
-   yheight = 0.05, xwidth = 0.05)
+   yheight = 0.05, xwidth = 0.05, dist=dist)
   AT (0, 0, 0) RELATIVE PREVIOUS
 EXTEND %{
 	t = randtriangle()*1e-3;	/* 1 ms triangle time window */
+	SCATTER;
 %}
 
 COMPONENT Monitor1_xt = Monitor_nD(
@@ -66,14 +73,32 @@ COMPONENT Guide_Position = Arm( )
   AT (0, 0, 0.1) RELATIVE PREVIOUS
 
 COMPONENT Guide1 = Guide(
-    w1 = 0.05, h1 = 0.05, l = 100, R0 = 0.99, m=1)
-  AT (0, 0, 0) RELATIVE Guide_Position
-
+    w1 = 0.05, h1 = 0.05, l = len, R0 = 0.99, m=1)
+WHEN(Guide==1)  AT (0, 0, 0) RELATIVE Guide_Position
+  
 COMPONENT Monitor2_xy = Monitor_nD(
+    options = "x y", xwidth = 0.07, yheight = 0.07,restore_neutron=1)
+  AT (0, 0, len+0.001) RELATIVE Guide_Position
+EXTEND %{
+   if(!SCATTERED) ABSORB;
+   SCATTER;
+%}  
+
+COMPONENT Flex = Flex_monitor_1D(nU=100,filename="Flex",Umin=-0.5,Umax=100.5,ustring="_logindex")
+  AT (0, 0, len+0.001) RELATIVE Guide_Position
+    
+COMPONENT Lmon = L_monitor(filename="lmon", xwidth = 0.07, yheight = 0.07, restore_neutron=1, Lmin=3, Lmax=4, nL=11)
+      AT (0, 0, len+0.001) RELATIVE Guide_Position  
+
+  
+COMPONENT Log = Scatter_log_asciidump()
+    AT(0,0,0) ABSOLUTE
+
+COMPONENT Zloss = Zlosses(filename="losses",zmin=-1,zmax=len,nbins=200)
+    AT(0,0,0) ABSOLUTE  
+
+COMPONENT Monitor3_xy = Monitor_nD(
     options = "x y", xwidth = 0.07, yheight = 0.07)
-  AT (0, 0, 100+0.001) RELATIVE Guide_Position
-
-COMPONENT Zloss = Zlosses(filename="losses",zmin=-1,zmax=100,nbins=200)
-  AT(0,0,0) ABSOLUTE  
-
+    AT (0, 0, len+0.001) RELATIVE Guide_Position
+  
 END
