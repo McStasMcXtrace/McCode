@@ -1,0 +1,106 @@
+/*******************************************************************************
+* Instrument: Test_Air
+*
+* %I
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Origin: DTU Physics
+* %INSTRUMENT_SITE: Tests
+*
+* Unit test for the Air component
+*
+* %D
+* This instrument checks whether the Air component works as intended.
+* A point source illuminates  the central part of a rectangular volume of air ( 0.02 x 0.02 x Lair  m^3 ).
+* 
+* %Example: Test_Air.instr AIR=1 E0=7 Lair=0.01 Detector: fpi_scat_I=7.94701e-15
+*
+* %P
+* FRAC: [ ]     Fraction of statistics to use for Air-scatter.
+* E0: [keV]     Central energy to be emitted from the source.
+* dE_E: [ ]     Relative full bandwidth of the source.
+* Lair: [m]     The length of air to be traversed by the beam.
+* MXDIV: [ ]    Maximal divergence to allow in divergence monitors.
+* AIR: [ ]      Flag to enable (nonzero) / disable (0) the block of Air. 
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Test_Air(FRAC=0.5,E0=12.3984,dE_E=0.1, Lair=1, MXDIV=1, int AIR=0)
+
+DECLARE
+%{
+  double dE;
+  double L1;
+  double mxdiv;
+%}
+
+USERVARS
+%{
+  int scattered;
+%}
+
+INITIALIZE
+%{
+  dE=E0*dE_E/2.0;
+
+  L1=4;
+  if(MXDIV){
+    mxdiv=MXDIV;
+  }else{
+    mxdiv=atan(5e-2/(Lair/2.0));
+  }
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+EXTEND
+%{
+  scattered=0;
+%}
+// insert components here (e.g. Insert -> Source -> ...)
+COMPONENT source = Source_pt(E0=E0, dE=dE, focus_xw=1e-2, focus_yh=1e-2, dist=L1)
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT psd0 = PSD_monitor(xwidth=2e-2, yheight=2e-2, filename="psd0")
+AT(0,0,4) RELATIVE source
+
+COMPONENT div0 = Divergence_monitor(xwidth=2e-2, yheight=2e-2, filename="div0")
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT airbox = Air(frac=FRAC, xwidth=2e-2, yheight=2e-2, zdepth=Lair, xwidth=2e-2, yheight=2e-2,
+	focus_aw=mxdiv*2, focus_ah=mxdiv*2)
+WHEN(AIR) AT(0,0,Lair/2.0+1e-3) RELATIVE psd0
+EXTEND
+%{
+    scattered=SCATTERED;
+%}
+
+COMPONENT fpi = PSD_monitor_4PI(radius=1, restore_xray=1, filename="fpi")
+AT(0,0,0) RELATIVE airbox
+
+COMPONENT fpi_scat = COPY(fpi)(filename="fpi_sc")
+WHEN(scattered) AT(0,0,0) RELATIVE airbox
+
+COMPONENT fpi_noscat = COPY(fpi)(filename="fpi_no")
+WHEN(!scattered) AT(0,0,0) RELATIVE airbox
+
+COMPONENT psd1 = PSD_monitor(xwidth=5e-2, yheight=5e-2, filename="psd1",restore_xray=1, nx=201, ny=201)
+AT(0,0,Lair/2.0+1e-6) RELATIVE airbox
+
+COMPONENT div1 = Divergence_monitor(maxdiv_h=mxdiv*RAD2DEG, maxdiv_v=mxdiv*RAD2DEG, xwidth=5e-2, yheight=5e-2, filename="div1")
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT psd2 = COPY(psd1)(filename="psd2")
+AT(0,0,1) RELATIVE psd1
+
+COMPONENT div2 = COPY(div1)(filename="div2")
+AT(0,0,1) RELATIVE div1
+
+
+
+FINALLY
+%{
+%}
+
+END

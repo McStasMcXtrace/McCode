@@ -17,6 +17,8 @@
 * %D A square single monitor that measures the MEAN projection of the
 * polarisation along a given normalized m-vector (mx, my, mz) as a
 * function of wavelength.
+* Mean and variance algorithm adapted from:
+*   West. 1979. Updating mean and variance estimates: an improved method. Commun. ACM 22, 9 (Sept. 1979)
 *
 * Example: MeanPollambda_monitor(xwidth=0.1, yheight=0.1, npol=11, my=1, filename="meanpollambdaMon.data")
 *
@@ -51,41 +53,42 @@ DEFINITION PARAMETERS (xwidth=0.1, yheight=0.1, nL=20, restore_neutron=0, int no
 
 SETTING PARAMETERS (string filename, mx=0, my=0, mz=0, Lmin, Lmax)
 
-OUTPUT PARAMETERS (PolL_N, PolL_p, PolL_p2, HelpArray)
+OUTPUT PARAMETERS (PolL_N, PolL_p, PolL_p2, PolL_w, PolL_w2, PolL_wp)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
 %{
-double PolL_N[nL];
-double PolL_p[nL];
-double PolL_p2[nL];
-double HelpArray[nL];
+  double PolL_N[nL];
+  double PolL_T[nL];
+  double PolL_W[nL];
+  double PolL_W2[nL];
+  double PolL_M[nL];
 %}
 
 INITIALIZE
 %{
-int i;
+  int i;
 
-// Check that input parameteters makes sense
+  // Check that input parameteters makes sense
 
-if (Lmax<=Lmin) {
+  if (Lmax<=Lmin) {
     fprintf(stderr, "Pol_monitor: %s: l1 <= l0!\n"
-	   "ERROR. Exiting",
-           NAME_CURRENT_COMP);
+        "ERROR. Exiting",
+        NAME_CURRENT_COMP);
     exit(1);
   }
 
   if (mx==0 && my==0 && mz==0) {
     fprintf(stderr, "Pol_monitor: %s: NULL vector defined!\n"
-	   "ERROR      (mx, my, mz). Exiting",
-           NAME_CURRENT_COMP);
+        "ERROR      (mx, my, mz). Exiting",
+        NAME_CURRENT_COMP);
     exit(1);
   }
 
   if ((xwidth<=0) || (yheight <= 0)) {
     fprintf(stderr, "Pol_monitor: %s: Null detection area !\n"
-	   "ERROR      (xwidth,yheight). Exiting",
-           NAME_CURRENT_COMP);
+        "ERROR      (xwidth,yheight). Exiting",
+        NAME_CURRENT_COMP);
     exit(1);
   }
 
@@ -94,11 +97,10 @@ if (Lmax<=Lmin) {
   NORM(mx, my, mz);
 
   for (i=0; i<nL; i++) {
-
-      PolL_N[i] = 0;
-      PolL_p[i] = 0;
-      PolL_p2[i] = 0;
-      HelpArray[i] = 0;
+    PolL_N[i] = 0;
+    PolL_W[i] = 0;
+    PolL_T[i] = 0;
+    PolL_M[i] = 0;
   }
 %}
 
@@ -118,10 +120,25 @@ TRACE
 
     i= floor((lambda - Lmin)*nL/(Lmax - Lmin));
 
+    /*update the samples according to West's algorithm*/
+    if(PolL_N[i]==0){
+      PolL_M[i]=pol_proj;
+      PolL_W[i]=p;
+      PolL_W2[i]=p*p;
+      PolL_T[i]=0;
+    }else{
+      double R,Q;
+      double TT,dt;
+      TT=PolL_W[i]; /*previous weight sum*/
+      PolL_W[i]+=p; /*West temp*/
+      PolL_W2[i]+=p*p;
+      Q=(pol_proj- PolL_M[i]);
+      R=Q * p / PolL_W[i];
+      PolL_M[i] += R;
+      dt= Q * R * TT;
+      PolL_T[i] += dt;
+    }
     PolL_N[i]++;
-    HelpArray[i] += p;
-    PolL_p[i]    += pol_proj*p;
-    PolL_p2[i]   += pol_proj*pol_proj*p;
 
     SCATTER;
   }
@@ -132,38 +149,41 @@ TRACE
 
 SAVE
 %{
-    if (!nowritefile) {
-  int i;
-  double mpifactor=1;
+  if (!nowritefile) {
+    int j;
+    double mpifactor=1;
+    double error[nL];
 
-  /*1st order correction: As polarisation is not an additive signal we should downweight by the node count.
-    This asssumes that all nodes have equal weight sum.*/
+    MCDETECTOR mcd;
+    /*call imcdetector_import to formalize structure and do MPI-reduction as normal.*/
+    mcd=mcdetector_import(mcformat, NAME_CURRENT_COMP, "Pol-wavelength monitor", 
+        nL, 1, 1, 
+        "Wavelength [AA]", "Mean Polarisation",(nL > 1 ? "Signal per bin" : " Signal"), 
+        "Wavelength", "(I,I_err)", "I",
+        Lmin,Lmax, 0, 0, 0, 0, filename,
+        &PolL_N[0],&PolL_M[0],&PolL_T[0], POS_A_CURRENT_COMP);
+
+    /*mpi-reduce on the weighted arrays if necessary*/
 #ifdef USE_MPI
-  mpifactor=mpi_node_count;
+
 #endif
-
-  // Average output
-  for (i=0; i<nL; i++) {
-
-    if(HelpArray[i] == 0)
-      continue;
-
-    PolL_p[i]  /= HelpArray[i]*mpifactor;
-    // Mcstas uses the error sigma**2=sum p_i**2 for intensities
-    // But here we have the mean so the error**2 should be VAR/N:
-    // sigma**2 = [sum s_i*s_i*p_i/sum p_i - (sum s_i*p_i/sum p_i)**2]/N
-    PolL_p2[i] /= HelpArray[i]*mpifactor;
-    PolL_p2[i] -= PolL_p[i]*PolL_p[i];
-    PolL_p2[i] /= PolL_N[i];
-  }
-
-  DETECTOR_OUT_1D("Pol-wavelength monitor",
-		  "Wavelength [AA]",
-		  "Mean Polarisation",
-		  "Wavelength", Lmin, Lmax, nL,
-		  &PolL_N[0],&PolL_p[0],&PolL_p2[0],
-		  filename);
+    
+    /* Rewrite the mean signal slot and the error slot in the mcdetector struct. mcdetector_import puts these
+       in p1 as a 1d-array with sets of four numbers in a row: [x0, y0, ye0, N0, x1, y1, ...., yen, Nn].*/
+    for (j=0;j<nL;j++){
+      /*overwrite with weighted mean*/
+      mcd.p1[j*4+1]=PolL_M[j];
+      /*overwrite with weighted and frequency corrected stddev*/
+      mcd.p1[j*4+2]=sqrt(fabs(PolL_T[j])*PolL_N[j]/(PolL_N[j]-1)*PolL_W[j]);
     }
+
+#ifdef USE_NEXUS
+  if (strcasestr(detector.format, "NeXus"))
+   mcdetector_out_1D_nexus(mcd);
+  else
+#endif
+    mcdetector_out_1D_ascii(mcd);
+  }
 %}
 
 MCDISPLAY

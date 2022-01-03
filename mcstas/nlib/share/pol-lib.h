@@ -30,7 +30,7 @@
 
 // Constant used 
 #define mc_pol_omegaL (-2 * PI * 29.16e6) /* MHz*rad/Tesla */
-#define mc_pol_mu0=4*M_PI*1e-7
+#define mc_pol_mu0 (4*M_PI*1e-7)
 
 /*example field functions should have a variable set of arguments*/
 #include <stdarg.h>

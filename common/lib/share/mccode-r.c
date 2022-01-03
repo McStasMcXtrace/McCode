@@ -1757,7 +1757,7 @@ MCDETECTOR mcdetector_out_0D_nexus(MCDETECTOR detector)
   );
   
   return(detector);
-} /* mcdetector_out_0D_ascii */
+} /* mcdetector_out_0D_nexus */
 
 MCDETECTOR mcdetector_out_1D_nexus(MCDETECTOR detector_inc)
 {
@@ -1767,7 +1767,7 @@ MCDETECTOR mcdetector_out_1D_nexus(MCDETECTOR detector_inc)
   mcdetector_out_data_nexus(nxhandle, detector);
   );
   return(detector);
-} /* mcdetector_out_1D_ascii */
+} /* mcdetector_out_1D_nexus */
 
 MCDETECTOR mcdetector_out_2D_nexus(MCDETECTOR detector_inc)
 {
