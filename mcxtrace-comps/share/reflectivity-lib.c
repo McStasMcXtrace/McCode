@@ -496,7 +496,7 @@ double reflecq( t_Reflec r_handle, double q, double g, double k, double theta){
         {
           double complex rp;
           rp=reflec_coating(r_handle,q,g,k);
-          r= creal(rp * conj(rp));
+          r= sqrt(creal(rp * conj(rp)));
           break;
         }
     case Q_PARAMETRIC:
