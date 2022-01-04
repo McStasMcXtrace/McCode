@@ -88,6 +88,7 @@ then
 	    echo "***************************************************"
 	    echo
 	    WORKDIR=`dirname $0`
+	    xattr -d com.apple.quarantine ${WORKDIR}/Setup-homebrew.command
 	    open ${WORKDIR}/Setup-homebrew.command
 	    sleep 3
 	    exit 0
