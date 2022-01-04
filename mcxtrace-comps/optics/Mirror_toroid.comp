@@ -80,14 +80,22 @@ INITIALIZE
             prms.theta_step=strtod(header_parsed[5],NULL);
         } else {
             exit(fprintf(stderr,"Error: %s: wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, reflec));
+        }	
+        if (((tp->rows-2)*prms.e_step) > (prms.e_max-prms.e_min))
+        {   
+            exit(fprintf(stderr,"Error: %s: e_step does not match e_min and e_max in file %s (<)\n",NAME_CURRENT_COMP, reflec));    
         }
-        if ((prms.e_max-prms.e_min) != ((tp->rows-1)*prms.e_step) )
+        if ((prms.e_max-prms.e_min) > ((tp->rows)*prms.e_step))
         {
-            exit(fprintf(stderr,"Error: %s: e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, reflec));
+            exit(fprintf(stderr,"Error: %s: e_step does not match e_min and e_max in file %s (>)\n",NAME_CURRENT_COMP, reflec));
+        }        
+        if (((tp->columns-2)*prms.theta_step) > (prms.theta_max-prms.theta_min))  
+        {
+            exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s (<)\n",NAME_CURRENT_COMP,reflec));
         }
-        if ((prms.theta_max-prms.theta_min) != ((tp->columns-1)*prms.theta_step) )
+        if ((prms.theta_max-prms.theta_min) > ((tp->columns)*prms.theta_step))
         {
-            exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, reflec));
+            exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s (>)\n",NAME_CURRENT_COMP,reflec));
         }
         prms.use_reflec_table=1;
     }else{
