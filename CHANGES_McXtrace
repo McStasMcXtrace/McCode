@@ -10,6 +10,36 @@
 *
 *
 *************************************************************************/
+CHANGES in 1.7
+
+This is mainly an bugfix/update release. 
+
+1. Improved installation scripts
+        1. Installs cleanly on Mac silicon 
+2. Updated examples:
+        1. MAXIV_DanMAX_pxrd2d.instr
+3. New examples:
+        1. SOLEIL ROCKS beamline.
+        2. ESRF BM29 skeleton beamline.
+        3. Example of Air-scattering block.
+        4. Test example for the GROUP langnuage feature
+        5. Union demo test example
+        6. New Example of Compton scattering union process.
+3. Updated Components
+	1. Lens_parab_Cyl_rough.comp, Lens_parab_rough.comp, Lens_Kinoform.comp: documentation issues
+	2. Mirror.comp: documentation update
+	3. Mirror_curved.comp, Mirror_elliptic.comp: Use reflectivity library
+	4. Mirror_toroid.comp: Fix for stable handling of reflectivity file
+	12. Absorption_sample.comp: Fix inner/outer volume logic 
+	13. Source_genesis13.comp, Source_simplex.comp: Documentation issues.
+5. Updated libraries:
+        1. Reflectivity-lib has a series of bugfixes. 
+4. New tools:
+        1. Test tool for component writers' convenience.
+        2. Script for generating reflectivity files.
+5. License change:
+        The release includes a switch to the GPLv3-license for McXtrace. The underlying reason for this 
+        is to help collaboration wih the Debian project.
 
 CHANGES in 1.6
 
