@@ -16,6 +16,7 @@
 * length: [m]   Length of the unbent mirror.
 * coating: []   Name of file containing the material data (i.e. f1 and f2) for the coating
 * width: [m]    width of the mirror
+* R0: [ ]       Constant reflectivity instead of datafile/reflectivity calculations.
 *
 * %E
 ***********************************************************************/
