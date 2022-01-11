@@ -113,7 +113,7 @@ INITIALIZE
         theta_b=asin(stha/x);
         alpha=(ge_cu_theta0-theta_a);
         IBM_curvature_radius=IBM_distance/stha/2;
-        printf("INFO (%s): Johansson optic x=%f, tha=%f, thb=%f, R=%f\n", instrument_name, x, theta_a*180/PI, theta_b*180/PI, IBM_curvature_radius);
+        printf("INFO (%s): Johansson optic x=%f, tha=%f, thb=%f, R=%f\n", mcinstrument_name, x, theta_a*180/PI, theta_b*180/PI, IBM_curvature_radius);
         fflush(NULL); // get messages in order
     }
 %}
