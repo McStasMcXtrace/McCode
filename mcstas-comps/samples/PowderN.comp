@@ -80,7 +80,7 @@
 *   #sigma_abs    <value of Absorption cross section [barns]>
 *   #sigma_inc    <value of Incoherent cross section [barns]>
 *   #Debye_Waller <value of Debye-Waller factor DW>
-*   #delta_d_d/d    <value of Detla_d/d width for all lines>
+*   #delta_d_d/d    <value of delta_d_d/d width for all lines>
 * These values are not read if entered as component parameters (Vc=...)
 *
 * The signification of the columns in the numerical block may be
@@ -141,26 +141,26 @@
 *                Use only incoherent scattering if NULL or "" [string]
 *
 * Optional parameters:
-* d_phi: [deg]         Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing 
-* d_omega: [deg]        Horizontal focus range (only for incoherent scattering), 0 for no focusing
-* tth_sign: [1]        Sign of the scattering angle. If 0, the sign is chosen randomly
+* d_phi: [deg]         Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
+* d_omega: [deg]       Horizontal focus range (only for incoherent scattering), 0 for no focusing.
+* tth_sign: [1]        Sign of the scattering angle. If 0, the sign is chosen randomly.
 * focus_flip:   [1]    Controls the sense of d_phi. If 0 d_phi is measured against the xz-plane. If !=0 d_phi is measured against zy-plane.
-* pack: [1]            Packing factor
+* pack: [1]            Packing factor.
 * delta_d_d: [0/1]     Global relative delta_d_d/d broadening when the 'w' column is not available. Use 0 if ideal.
 * Strain: [ppm]        Global relative delta_d_d/d shift when the 'Strain' column is not available. Use 0 if ideal.
 * format: [no quotes]  Name of the format, or list of column indexes (see Description).
-* p_inc: [1]           Fraction of incoherently scattered neutron rays
-* p_transmit: [1]      Fraction of transmitted (only attenuated) neutron rays
-* p_interact: [1]      Fraction of events interacting with sample, e.g. 1-p_transmit-p_inc
-* concentric: [1]      Indicate that this component has a hollow geometry and may contain other components. It should then be duplicated after the inside part (only for box, cylinder, sphere)
-* geometry: [str]      Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust
+* p_inc: [1]           Fraction of incoherently scattered neutron rays.
+* p_transmit: [1]      Fraction of transmitted (only attenuated) neutron rays.
+* p_interact: [1]      Fraction of events interacting coherently with sample.
+* concentric: [1]      Indicate that this component has a hollow geometry and may contain other components. It should then be duplicated after the inside part (only for box, cylinder, sphere).
+* geometry: [str]      Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust.
 * barns: [1]           Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2 (barns=1 for laz, barns=0 for lau type files).
-* sigma_abs: [barns]   Absorption cross section per unit cell at 2200 m/s. Use a negative value to unactivate it
-* sigma_inc: [barns]   Incoherent cross section per unit cell. Use a negative value to unactivate it
-* Vc:         Volume of unit cell=nb atoms per cell/density of atoms [AA^3]
+* sigma_abs: [barns]   Absorption cross section per unit cell at 2200 m/s. Use a negative value to unactivate it.
+* sigma_inc: [barns]   Incoherent cross section per unit cell. Use a negative value to unactivate it.
+* Vc: [AA^3]           Volume of unit cell=nb atoms per cell/density of atoms.
 * DW: [1]              Global Debye-Waller factor when the 'DW' column is not available. Use 1 if included in F2
-* weight: [g/mol]      Atomic/molecular weight of material
-* density:    Density of material. rho=density/weight/1e24*N_A. [g/cm^3]
+* weight: [g/mol]      Atomic/molecular weight of material.
+* density: [g/cm^3]    Density of material. rho=density/weight/1e24*N_A.
 * nb_atoms: [1]        Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell
 * target_index: [1]    Relative index of component to focus at, e.g. next is +1
 *
@@ -203,7 +203,7 @@ SETTING PARAMETERS (
   vector format={0, 0, 0, 0, 0, 0, 0, 0, 0},
   radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
   pack=1, Vc=0, sigma_abs=0, sigma_inc=0, delta_d_d=0, p_inc=0.1, p_transmit=0.1,
-  DW=0, nb_atoms=1, d_omega=0, d_phi=0, tth_sign=0, p_interact=0,
+  DW=0, nb_atoms=1, d_omega=0, d_phi=0, tth_sign=0, p_interact=0.8,
   concentric=0, density=0, weight=0, barns=1, Strain=0, focus_flip=0, int target_index=0)
 OUTPUT PARAMETERS ()
 
@@ -647,23 +647,32 @@ INITIALIZE
     line_info.yheight_i = yheight;
   }
 
-  if (!p_interact) p_interact=1e-2;
-  if (!p_inc)      p_inc     =1e-2;
-  if (!p_transmit) p_transmit=1e-2;
-
-  p_interact = p_interact / (p_interact+p_inc+p_transmit);
-  p_inc      = p_inc      / (p_interact+p_inc+p_transmit);
-  p_transmit = p_transmit / (p_interact+p_inc+p_transmit);
+  if (!p_interact){
+    fprintf(stderr,"WARNING(%s): p_interact=0, adjusting to 0.01, to avoid algorithm instability\n",NAME_CURRENT_COMP);
+    p_interact=1e-2;
+  }
+  if (!p_inc){
+    fprintf(stderr,"WARNING(%s): p_inc=0, adjusting to 0.01, to avoid algorithm instability\n",NAME_CURRENT_COMP);
+    p_inc     =1e-2;
+  }
+  if (!p_transmit){
+    fprintf(stderr,"WARNING(%s): p_transmit=0, adjusting to 0.01, to avoid algorithm instability\n",NAME_CURRENT_COMP);
+    p_transmit=1e-2;
+  }
+  double p_sum=p_interact+p_inc+p_transmit;
+  p_interact = p_interact / p_sum;
+  p_inc      = p_inc      / p_sum;
+  p_transmit = p_transmit / p_sum;
 
   if (concentric) {
     MPI_MASTER(
     printf("PowderN: %s: Concentric mode - remember to include the 'opposite' copy of this component !\n"
            "WARNING  The equivalent, 'opposite' comp should have concentric=0\n", NAME_CURRENT_COMP);
     );
-    if (p_transmit == 0) {
+    if (p_transmit < 0.1) {
       MPI_MASTER(
-      printf("PowderN: %s: Concentric mode and p_transmit==0 !?\n"
-             "WARNING  Don't you want any transmitted neutrons?\n", NAME_CURRENT_COMP);
+      printf("PowderN: %s: Concentric mode and p_transmit<0.1 !\n"
+        "WARNING  Consider increasing p_transmit as few particles will reach the inner hollow.\n", NAME_CURRENT_COMP);
       );
     }
   }
