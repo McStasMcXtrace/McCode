@@ -15,33 +15,32 @@
 * %Description
 * This is a preliminary setup of the DBD with the Ge111 Johansson IBM
 *
-* %Example: DBD_IBM_Si_analyzer_BC.instr use_flat_source=0 Detector: lynxeye_I=3.10641e+07
+* %Example: DBD_IBM_Si_analyzer_BC.instr use_flat_source=0 -n1e7 Detector: lynxeye_I=3.39272e+07
 *
 * %Parameters
-* a_distance_error: [m]
-* figure_radius_multiplier: [ ]
-* lattice_radius_miltiplier: [ ]
-* beam_hor: [m]
-* beam_vert: [m]
-* tails_integral: [ ]
-* tails_width: [ ]
-* slit_1_vert: [m]
-* slit_1_hor: [m]
-* slit_2_vert: [m]
-* slit_2_hor: [m]
-* slit_3_vert: [m]
-* slit_3_hor: [m]
-* ibm_offset: [m]
-* two_theta_si: [deg.]
-* emin: [keV]
-* emax: [keV]
-* take_off: [deg]
-* use_flat_source: [ ]
-* use_si_crystal: [ ]
-* si_hh: [ ]
-* si_kk: [ ]
-* si_ll: [ ]
-* min_log_weight: [ ]
+* a_distance_error: [m]          Logitudinal offset of source.
+* figure_radius_multiplier: [ ]  Extra multiplicative factor to the crystal curvature.
+* lattice_radius_miltiplier: [ ] Extra factor to the lattice curvature. Currently IGNORED.
+* beam_hor: [m]                  Beam width of source.
+* beam_vert: [m]                 Unscaled Beam height of source. Will be scaled with take_off angle.
+* tails_integral: [ ]            Integrated beam power in the source tails.
+* tails_width: [m]               Width of the source tails.
+* slit_1_vert: [m]               Vertical opening of 1st slit.
+* slit_1_hor: [m]                Horizontal opening of 1st slit.
+* slit_2_vert: [m]               Vertical opening of 2nd slit.
+* slit_2_hor: [m]                Horizontal opening of 2nd slit.
+* slit_3_vert: [m]               Vertical opening of 3rd slit.
+* slit_3_hor: [m]                Horizontal opening of 3rd slit.
+* ibm_offset: [m]                Offset (rotational) of optical arm.
+* two_theta_si: [deg.]           Monochromator crystal scattering angle.
+* emin: [keV]                    Lower energy to be simulated.
+* emax: [keV]i                   Upper energy to be simulated.
+* take_off: [deg]                Take off angle of source.
+* use_flat_source: [ ]           Use a soimplified flat source approximation.
+* use_si_crystal: [ ]            Activate the monochromator crystal.
+* si_hh: [ ]                     1st Miller index (h) of monochromator crystal.
+* si_kk: [ ]                     2nd index (k) of monochromator crystal.
+* si_ll: [ ]                     3rd Miller index (l) of monochromator crystal.
 *
 * %Link
 * <a href="https://www.nist.gov/programs-projects/diffraction-metrology-and-standards/divergent-beam-diffractometer-dbd-laboratory"></a>
@@ -51,7 +50,7 @@
 
 /* Change name of instrument and input parameters with default values */
 
-DEFINE INSTRUMENT DBD_IBM(
+DEFINE INSTRUMENT DBD_IBM_Si_analyzer_BC(
   a_distance_error=0.0, figure_radius_multiplier=1.0, lattice_radius_multiplier=1.0,
   beam_hor=0.01, beam_vert=0.00004, tails_integral=0.05, tails_width=0.002,
   slit_1_vert=0.004, slit_1_hor=0.01, slit_2_vert=0.0002, slit_2_hor=0.02,
@@ -59,8 +58,7 @@ DEFINE INSTRUMENT DBD_IBM(
   ibm_offset=0.00, two_theta_si=94.963,
   emin=8.047, emax=8.0471, take_off=6.0, 
   int use_flat_source=0, int use_si_crystal=1,
-  si_hh=3, si_kk=3, si_ll=3,
-  min_log_weight=1e20)
+  si_hh=3, si_kk=3, si_ll=3)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -115,7 +113,7 @@ INITIALIZE
         theta_b=asin(stha/x);
         alpha=(ge_cu_theta0-theta_a);
         IBM_curvature_radius=IBM_distance/stha/2;
-        printf("Johansson optic x=%f, tha=%f, thb=%f, R=%f\n", x, theta_a*180/PI, theta_b*180/PI, IBM_curvature_radius);
+        printf("INFO (%s): Johansson optic x=%f, tha=%f, thb=%f, R=%f\n", instrument_name, x, theta_a*180/PI, theta_b*180/PI, IBM_curvature_radius);
         fflush(NULL); // get messages in order
     }
 %}
