@@ -452,11 +452,11 @@ double complex refleccq( t_Reflec r_handle, double q, double g, double k, double
           r=reflec_q_prmtc(r_handle,q,g);
           break;
         }
-      case PARRATT:
-        {
-          r=reflec_parratt(r_handle,q,g,k);
-          break;
-        }
+/*      case PARRATT:*/
+/*        {*/
+/*          r=reflec_parratt(r_handle,q,g,k);*/
+/*          break;*/
+/*        }*/
       case ETH_PARAMETRIC:
         {
           r=reflec_eth_prmtc(r_handle,g,k*K2E,theta);

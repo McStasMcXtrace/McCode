@@ -63,10 +63,11 @@
 
 DEFINE COMPONENT Air
 
-DEFINITION PARAMETERS (R_gas=8.3144621, bond_N=1.0976, bond_O=1.2074, Nitrogen_part=0.781, Oxygen_part=0.21, Argon_part=0.009)
+DEFINITION PARAMETERS ()
 
     /* number-density (num_den) is declared and computed in TRACE !!! */
 SETTING PARAMETERS (frac=0.3, pressure=101325, temperature=273.15+21.1,
+        R_gas=8.3144621, bond_N=1.0976, bond_O=1.2074, Nitrogen_part=0.781, Oxygen_part=0.21, Argon_part=0.009,
         xwidth=0, yheight=0, zdepth=0, radius=0,
         target_x=0, target_y=0, target_z=6, int target_index=0, 
         focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0, focus_r=0)
@@ -86,9 +87,10 @@ INITIALIZE
     else if (radius > 0 && yheight)   shape=0;	/* cylinder */
     else if (radius > 0 && !yheight)  shape=2;	/* sphere */
 
-    if (shape < 0)
-        exit(fprintf(stderr,"Air: %s: sample has invalid dimensions.\n"
-                    "ERROR     Please check parameter values.\n", NAME_CURRENT_COMP));
+    if (shape < 0){
+        fprintf(stderr,"ERROR: %s: Air volume has invalid dimensions, please check parameter values.\n", NAME_CURRENT_COMP);
+	exit(-1);
+    }
 
     /* now compute target coords if a component index is supplied */
     if (!target_index && !target_x && !target_y && !target_z)
@@ -102,7 +104,7 @@ INITIALIZE
     }
 
     if (!(target_x || target_y || target_z)) {
-        printf("Air: %s: The target is not defined. Using direct beam (Z-axis).\n", NAME_CURRENT_COMP);
+        printf("INFO %s: The target is not defined. Using direct beam (Z-axis).\n", NAME_CURRENT_COMP);
         target_z=1;
     }
 
@@ -148,13 +150,14 @@ TRACE
         PROP_DL(dl);                      /* Point of scattering */
         l = (dl-l0);                      /* Penetration in the air */
 
-        /* The total probability for the (unpolarized) X-ray to interact with the air as a function of k is approximated with a 9th degree polynomium to the logarithm 
+        /* The total probability for the (unpolarized) X-ray to interact with the air as a function of k is approximated
+           with a 9th degree polynomium to the logarithm
            of the total probability. This is done because the real expression had to be solved numerically.
-           The exp-polynomium has units of squared AAngström and to become the actual total scattering probabillity it has 
+           The exp-polynomium has units of squared Angstrom and to become the actual total scattering probabillity it has
            to be multiplied by l_full*P*NA/(R*T). The factor of P*NA/(R*T) does however have units of reciprocal cubed meters so we have
            to scale by 10^-30 [m^2/AA^2] to match the polynomium. NB: The factor of (n_i/n)*P*NA/(R*T) constitues the particle number 
            density; while the factor of (n_i/n) is contained in the polynomium, the factor of P*NA/(R*T) has to be multiplied below.
-           The variable l_full has units of meters so it too has to be rescaled to AAngströms - hence we multiply by 10^10 [AA/m].*/
+           The variable l_full has units of meters so it too has to be rescaled to Angstrom - hence we multiply by 10^10 [AA/m].*/
 
         Ptot_sc_unpolarized = exp(-13.239209120968501922 + 7.7523973158902582507e-1*k - 1.9753647234751300397*k*k + 1.1395382484098412215*k*k*k - 3.5117800398913380701e-1*k*k*k*k + 6.493474609841591379e-2*k*k*k*k*k - 7.40740935645497008e-3*k*k*k*k*k*k + 5.1039561005291247e-4*k*k*k*k*k*k*k - 1.947399876590436e-5*k*k*k*k*k*k*k*k + 3.1587814532171995885e-7*k*k*k*k*k*k*k*k*k)*l_full*pressure*NA/(R_gas*temperature)*1e-30*1e10;
 
@@ -163,24 +166,25 @@ TRACE
         /* This non-interaction weight is p *= (1 - Ptot_sc_unpolarized)/(1 - frac)*/
         ran_var = rand01();
         if (ran_var < frac) {
-
+	    p*=Ptot_sc_unpolarized/frac;
             kx_i=kx;
             ky_i=ky;
             kz_i=kz;
 
             /* Vector pointing at target (anal./det.) */
             if ((target_x || target_y || target_z)) {
-                aim_x = target_x-x;
-                aim_y = target_y-y;
-                aim_z = target_z-z;
+                aim_x = target_x;
+                aim_y = target_y;
+                aim_z = target_z;
             }
 
-            if (focus_aw && focus_ah)
+            if (focus_aw && focus_ah){
                 randvec_target_rect_angular(&kx, &ky, &kz, &solid_angle, aim_x, aim_y, aim_z, focus_aw, focus_ah, ROT_A_CURRENT_COMP);
-            else if (focus_xw && focus_yh)
-                randvec_target_rect(&kx, &ky, &kz, &solid_angle, aim_x, aim_y, aim_z, focus_xw, focus_yh, ROT_A_CURRENT_COMP);
-            else
+            } else if (focus_xw && focus_yh) {
+                randvec_target_rect_real(&kx, &ky, &kz, &solid_angle, aim_x, aim_y, aim_z, focus_xw, focus_yh, ROT_A_CURRENT_COMP,x,y,z,2);
+	    } else {
                 randvec_target_circle(&kx, &ky, &kz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
+	    }
 
             NORM(kx, ky, kz);
             kx *= k;
@@ -202,35 +206,30 @@ TRACE
                     an[2]*exp(-bn[2]*(q/(4*PI))*(q/(4*PI))) +
                     an[3]*exp(-bn[3]*(q/(4*PI))*(q/(4*PI))) + cn;
 
-                p *= ( 3*solid_angle/frac )*( Nitrogen_part*pressure*NA/(R_gas*temperature) )*l_full*RE*RE*f0*f0*polarization*( 2 + 2*sin(q*bond_N)/(q*bond_N) )*1e-30*1e10;
-
-            }
-            else if (1/3 <= ran_var < 2/3) {
+                p *= ( 3*solid_angle )*( Nitrogen_part*pressure*NA/(R_gas*temperature) )*l_full*RE*RE*f0*f0*polarization*( 2 + 2*sin(q*bond_N)/(q*bond_N) )*1e-30*1e10;
+            } else if (1/3 <= ran_var < 2/3) {
                 f0 = ao[0]*exp(-bo[0]*(q/(4*PI))*(q/(4*PI))) +
                     ao[1]*exp(-bo[1]*(q/(4*PI))*(q/(4*PI))) +
                     ao[2]*exp(-bo[2]*(q/(4*PI))*(q/(4*PI))) +
                     ao[3]*exp(-bo[3]*(q/(4*PI))*(q/(4*PI))) + co;
 
-                p *= ( 3*solid_angle/frac )*( Oxygen_part*pressure*NA/(R_gas*temperature) )*l_full*RE*RE*f0*f0*polarization*( 2 + 2*sin(q*bond_O)/(q*bond_O) )*1e-30*1e10;
-
-            }
-            else {
+                p *= ( 3*solid_angle )*( Oxygen_part*pressure*NA/(R_gas*temperature) )*l_full*RE*RE*f0*f0*polarization*( 2 + 2*sin(q*bond_O)/(q*bond_O) )*1e-30*1e10;
+            } else {
                 f0 = aar[0]*exp(-bar[0]*(q/(4*PI))*(q/(4*PI))) +
                     aar[1]*exp(-bar[1]*(q/(4*PI))*(q/(4*PI))) +
                     aar[2]*exp(-bar[2]*(q/(4*PI))*(q/(4*PI))) +
                     aar[3]*exp(-bar[3]*(q/(4*PI))*(q/(4*PI))) + car;
 
                 /* Argon is monoatomic so the weight multiplier is different */
-
-                p *= ( 3*solid_angle/frac )*( Argon_part*pressure*NA/(R_gas*temperature) )*l_full*RE*RE*f0*f0*polarization*1e-30*1e10;
-
+                p *= ( 3*solid_angle )*( Argon_part*pressure*NA/(R_gas*temperature) )*l_full*RE*RE*f0*f0*polarization*1e-30*1e10;
             }
             SCATTER;
         }
-        else
+        else {
             PROP_DL(l_full);
-        /* When no interaction between our ray and the air, we adjust the weight by: */
-        p *= (1 - Ptot_sc_unpolarized)/(1 - frac);
+	    /* When no interaction between our ray and the air, we adjust the weight by: */
+	    p *= (1 - Ptot_sc_unpolarized)/(1 - frac);
+        }
     }
 %}
 
