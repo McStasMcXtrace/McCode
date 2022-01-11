@@ -49,7 +49,7 @@
 *   The complex geometry option handles any closed non-convex polyhedra.
 *   It computes the intersection points of the xray with the object
 *   transparently, so that it can be used like a regular sample object.
-*   It supports the OFF and NOFF file format but not COFF (colored faces).
+*   It supports the PLY, OFF and NOFF file format but not COFF (colored faces).
 *   Such files may be generated from XYZ data using:
 *     qhull < coordinates.xyz Qx Qv Tv o > geomview.off
 *   or
@@ -716,34 +716,33 @@ INITIALIZE
   if (!line_info.yheight_i) {
     line_info.yheight_i = yheight;
   }
-  if (p_interact) {
-    if (p_interact < p_inc) { double tmp=p_interact; p_interact=p_inc; p_inc=tmp; }
-    p_transmit = 1-p_interact-p_inc;
-  }
 
-  if (p_inc + p_transmit > 1) {
-    MPI_MASTER(
-    printf("PowderN: %s: You have requested an unmeaningful choice of the 'p_inc' and 'p_transmit' parameters (sum is %g, exeeding 1). Fixing.\n",
-                 NAME_CURRENT_COMP, p_inc+p_transmit);
-    );
-    if (p_inc > p_transmit) p_transmit=1-2*p_inc;
-    else p_transmit=1-2*p_inc;
-  } else if (p_inc + p_transmit == 1) {
-    MPI_MASTER(
-    printf("PowderN: %s: You have requested all photons be attenuated\n"
-           "WARNING  or incoherently scattered!\n", NAME_CURRENT_COMP);
-    );
+  if (!p_interact){
+    fprintf(stderr,"WARNING(%s): p_interact=0, adjusting to 0.01, to avoid algorithm instability\n",NAME_CURRENT_COMP);
+    p_interact=1e-2;
   }
+  if (!p_inc){
+    fprintf(stderr,"WARNING(%s): p_inc=0, adjusting to 0.01, to avoid algorithm instability\n",NAME_CURRENT_COMP);
+    p_inc     =1e-2;
+  }
+  if (!p_transmit){
+    fprintf(stderr,"WARNING(%s): p_transmit=0, adjusting to 0.01, to avoid algorithm instability\n",NAME_CURRENT_COMP);
+    p_transmit=1e-2;
+  }
+  double p_sum=p_interact+p_inc+p_transmit;
+  p_interact = p_interact / p_sum;
+  p_inc      = p_inc      / p_sum;
+  p_transmit = p_transmit / p_sum;
 
   if (concentric) {
     MPI_MASTER(
     printf("PowderN: %s: Concentric mode - remember to include the 'opposite' copy of this component !\n"
            "WARNING  The equivalent, 'opposite' comp should have concentric=0\n", NAME_CURRENT_COMP);
     );
-    if (p_transmit == 0) {
+    if (p_transmit < 0.1) {
       MPI_MASTER(
-      printf("PowderN: %s: Concentric mode and p_transmit==0 !?\n"
-             "WARNING  Don't you want any transmitted xrays?\n", NAME_CURRENT_COMP);
+      printf("PowderN: %s: Concentric mode and p_transmit<0.1 !\n"
+        "WARNING  Consider increasing p_transmit as few particles will reach the inner hollow.\n", NAME_CURRENT_COMP);
       );
     }
   }
