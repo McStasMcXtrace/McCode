@@ -6,7 +6,7 @@
 *         University of Copenhagen, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Component: Source_div
+* Component: Source_div_quasi
 *
 * %I
 * Written by: Mads Carlsen and Erik Bergbäck Knudsen (erkn@fysik.dtu.dk)
@@ -28,7 +28,7 @@
 * The phase space sapnned by the generated X-rays is sampled by means of Halton-sequences, instead of regular
 * pseudo random numbers. This ensures that samples are evenly distributed within the phase space region of interest.
 *
-* Example: Source_div(xwidth=0.1, yheight=0.1, focus_aw=2, focus_ah=2, E0=14, dE=2, gauss=0)
+* Example: Source_div_quasi(xwidth=0.1, yheight=0.1, focus_aw=2, focus_ah=2, E0=14, dE=2, gauss=0)
 *
 * %VALIDATION
 *
@@ -68,6 +68,7 @@ SHARE
 #define MX_SOURCE_DIV_QUASI_H 1
   %include "read_table-lib"
     
+#pragma acc routine
   double _quasi_rand01(int axis, long long uid){
     const int no_primes=32;
     const int primes[]={2,3,5,7,9,11,13,17,19,23,29, 
