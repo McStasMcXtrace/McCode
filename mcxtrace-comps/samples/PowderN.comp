@@ -899,15 +899,13 @@ TRACE
         line_info.k = k;
         line_info.nb_refl += line_info.Nq;
         line_info.nb_refl_count++;
+        if(pack!=1){
+          /*apply packing factor correction*/
+          line_info.my_a *= pack;
+          line_info.my_inc *= pack;
+          line_info.my_s_k2_sum *=pack;
+        }
     }
-
-    if(pack!=1){
-      /*apply packing factor correction*/
-      line_info.my_a *= pack;
-      line_info.my_inc *= pack;
-      line_info.my_s_k2_sum *=pack;
-    }
-
 
     if (l3 < 0) {
       l3=0; /* Already past sample?! */
