@@ -16,6 +16,10 @@
 *
 * %Example: lambda=1 Detector: Sph_mon_I=1.12762e+09
 * %Example: lambda=1 d_phi=10 Detector: Sph_mon_I=8.94853e+07
+* %Example: lambda=1 directbeam=1 SPLITS=2 Detector: Sph_mon_I=4.77847e+09
+* %Example: lambda=1 directbeam=1 SPLITS=5 Detector: Sph_mon_I=4.77847e+09
+* %Example: lambda=1 directbeam=1 SPLITS=10 Detector: Sph_mon_I=4.77847e+09
+* %Example: lambda=1 directbeam=1 SPLITS=20 Detector: Sph_mon_I=4.77847e+09
 *
 * %Parameters
 * lambda: [Angs]  Wavelength emitted from source, 1% wl-interval around.
@@ -23,13 +27,13 @@
 * directbeam: [1] Suppress direct beam or not
 * reflections: [str] List of powder reflections
 * SPLITS: [1] Number of SPLIT's before sample
-* frac_c: [1] Fraction of stats assigned to coherent scattering (auto-computed if left at 0)
+* frac_c: [1] Fraction of stats assigned to coherent scattering 
 * frac_i: [1] Fraction of stats assigned to incoherent scattering
 * frac_t: [1] Fraction of stats assigned to unscattered, "direct beam"
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_PowderN(lambda=1, L1=10, int directbeam=0, string reflections="Fe.laz", int SPLITS=1, frac_c=0, frac_i=0.01, frac_t=0.01, d_phi=0)
+DEFINE INSTRUMENT Test_PowderN(lambda=1, L1=10, int directbeam=0, string reflections="Fe.laz", int SPLITS=1, frac_c=0.8, frac_i=0.1, frac_t=0.1, d_phi=0)
 
 DECLARE %{
 %}
