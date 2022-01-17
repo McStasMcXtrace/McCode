@@ -264,7 +264,7 @@ TRACE
     }else if (gauss){
       l=lambda0+dlambda*randnorm();
     }else{
-      l=randpm1()*dlambda*0.5 + lambda0;
+      l=randpm1()*dlambda + lambda0;
     }
     k=(2*M_PI/l);
   }
