@@ -16,8 +16,8 @@
 * %Description
 * This instrument is a unit test for the quasi-stochastic source component.
 *
-* %Example: Test_Source_quasi.instr SRC=0 Detector: psd_I=1
-* %Example: Test_Source_quasi.instr SRC=1 Detector: psd_I=1
+* %Example: Test_Source_quasi.instr SRC=0 Detector: psd_I=1.21847E-18
+* %Example: Test_Source_quasi.instr SRC=1 Detector: psd_I=1.21847E-18
 *
 * %Parameters
 * SRC: [ ] Integer parameter picks a source model. 0 normal Source_div, Quasi-stochastic 
@@ -58,6 +58,7 @@ COMPONENT sd = Source_div(
     xwidth=1e-3, yheight=1e-3, focus_aw=1e-6, focus_ah=1e-6, lambda0=2.5, dlambda=0.2, gauss=0
 )
 WHEN (SRC==0) AT (0,0,0) RELATIVE Origin
+
 COMPONENT sdq = Source_div_quasi(
     xwidth=1e-3, yheight=1e-3, focus_aw=1e-6, focus_ah=1e-6, lambda0=2.5, dlambda=0.2, gauss=0
 )
@@ -69,9 +70,11 @@ WHEN (SRC==1) AT (0,0,0) RELATIVE Origin
 COMPONENT lmon= L_monitor(
    restore_neutron=1, xwidth=0.02, yheight=0.02,Lmin=2,Lmax=3.2,filename="lmon.dat")
 AT(0,0,1) RELATIVE Origin
+
 COMPONENT emon= E_monitor(
-   restore_neutron=1, xwidth=0.02, yheight=0.02,Emin=3,Emax=7,filename="emon.dat")
+   restore_neutron=1, xwidth=0.02, yheight=0.02,Emin=5,Emax=20,filename="emon.dat")
 AT(0,0,1) RELATIVE Origin
+
 COMPONENT psd= PSD_monitor(
    restore_neutron=1, xwidth=0.0011, yheight=0.0011,nx=101, ny=101,filename="psdmon.dat")
 AT(0,0,4) RELATIVE Origin
