@@ -41,6 +41,7 @@
 * focus_ah: [rad] Std. dev. (Gaussian) or maximal (uniform) vert. height divergence
 * focus_xw: [m]   Width of sampling window
 * focus_yh: [m]   Height of sampling window
+* dist: [m]     Downstream distance to place sampling target window
 * E0: [keV]       Mean energy of X-rays.
 * dE: [keV]       Energy spread of X-rays.
 * lambda0: [AA]   Mean wavelength of X-rays (only relevant for E0=0)
@@ -70,7 +71,7 @@ SHARE
 #define MX_SOURCE_DIV_QUASI_H 1
   %include "read_table-lib"
     
-    double quasi_rand01(int axis){
+    double quasi_rand01(int axis, double shift){
     const int no_primes=32;
     const int primes[]={2,3,5,7,11,13,17,19,23,29,
         31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 
@@ -89,6 +90,7 @@ SHARE
         f = f/primes[axis];
         n0 = n1;
     }
+    hn=modf(hn+shift,&f);    
     return hn;
 }
 #endif /*MX_SOURCE_DIV_H*/
@@ -99,7 +101,6 @@ SHARE
 
 DECLARE
 %{
-  double dist;
   int ray_number;
   double xmin;
   double xmax;
@@ -110,10 +111,16 @@ DECLARE
   double pmul;
   double pint;
   t_Table T;
+  double shifts[32];
 %}
 
 INITIALIZE
 %{
+  int j;
+  /*random shifts to avoid correlation between runs*/
+  for (j=0;j<32;j++){
+    shifts[j]=rand01();
+  }
 	
   ray_number=1;
 
@@ -186,7 +193,7 @@ TRACE
   double kk,theta_x,theta_y,l,e,k;
   p=pmul;
   if (!gauss_a){ 
-    theta_x=(quasi_rand01(0)-0.5)*focus_aw;
+    theta_x=(quasi_rand01(0,shifts[0])-0.5)*focus_aw;
     if(focus_xw!=0.0){
       double x0,x1,pi_x;
       x0=-focus_xw_2-dist*tan(theta_x);
@@ -194,12 +201,12 @@ TRACE
       x1= focus_xw_2-dist*tan(theta_x);
       x1= MIN(xmax,x1);
       pi_x = (x1-x0)/(xwidth);
-      x=x0+(x1-x0)*quasi_rand01(2);
+      x=x0+(x1-x0)*quasi_rand01(2,shifts[2]);
       p*=pi_x;
     } else {
-      x=xmin + quasi_rand01(2)*xwidth;
+      x=xmin + quasi_rand01(2,shifts[2])*xwidth;
     }
-    theta_y=(quasi_rand01(1)-0.5)*focus_ah;
+    theta_y=(quasi_rand01(1,shifts[1])-0.5)*focus_ah;
     if(focus_yh!=0.0){
       double y0,y1,pi_y;
       y0=-focus_yh_2-dist*tan(theta_y);
@@ -207,10 +214,10 @@ TRACE
       y1= focus_yh_2-dist*tan(theta_y);
       y1= MIN(ymax,y1);
       pi_y = (y1-y0)/(yheight);
-      y=y0+(y1-y0)*quasi_rand01(3);
+      y=y0+(y1-y0)*quasi_rand01(3,shifts[3]);
       p*=pi_y;
     } else {
-      y=ymin + quasi_rand01(3)*yheight;
+      y=ymin + quasi_rand01(3,shifts[3])*yheight;
     }
   } else {
     theta_x=randnorm()*focus_aw;
@@ -222,7 +229,7 @@ TRACE
   if (spectrum_file){
     double pp=0;
     while (pp<=0){ 
-      l=T.data[0]+ (T.data[(T.rows-1)*T.columns] -T.data[0])*quasi_rand01(4);
+      l=T.data[0]+ (T.data[(T.rows-1)*T.columns] -T.data[0])*quasi_rand01(4,shifts[4]);
       pp=Table_Value(T,l,1);
     }
     p*=pp;
@@ -238,7 +245,7 @@ TRACE
     }else if (gauss){
       e=E0+dE*randnorm();
     }else{
-      e=randpm1()*dE*0.5 + E0;
+      e=randpm1()*dE + E0;
     }
     k=E2K*e;
   }else if (lambda0){
