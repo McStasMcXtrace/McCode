@@ -18,7 +18,7 @@
 * This early version uses a Gaussian approximation source, and a simple bandpass filter
 * as the multilayer.
 *
-* %Example: MAXIV_DanMAX_pxrd2d.instr -c -n1e6 E0=15 Detector: Pilatus_2M_I=0.00033782
+* %Example: MAXIV_DanMAX_pxrd2d.instr -c -n1e6 E0=15 Detector: Pilatus_2M_I=8.10837e-05
 *
 * %Parameters
 * E0: [keV]        The central energy to sample from source model.
@@ -42,6 +42,7 @@
 * pxrd_2d_y: [m]   Offset of 2d-area detector centre perpendicular to the detector arm.
 * debugMon: [ ]    If nonzero, all intermediate monitors appear for debugging purposes.
 * beamStop: [ ]    If nonzero, a beamstop is in between sample and PXRD 2d-detector.
+* SPLITS: [ ]      Split-number at the sample position.
 * %End
 *******************************************************************************/
 
@@ -56,7 +57,7 @@ DEFINE INSTRUMENT MAXIV_DanMAX_pxrd2d(E0=35,DE=0.05,undK=0,undDetune=4,
         OH_2DCRL_N=0,EH_2DCRL_N=0, D_EH_2DCRL=0,
         sample_radius=100e-6,
         pxrd_2d_y=135e-3, pxrd_2d_tthc=0, SDD_2D=150e-3,
-        debugMon=1, beamStop=1)
+        debugMon=1, beamStop=1, int SPLITS=100)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -486,12 +487,13 @@ AT(0,0,0) RELATIVE pxrd_2d_pt
 COMPONENT pxrd2_e = COPY(src_e)(filename="pxrd2.e", options=emon_options)
 AT(0,0,0) RELATIVE pxrd_2d_pt
 
-SPLIT 100 COMPONENT powdern = PowderN(
+SPLIT SPLITS COMPONENT powdern = PowderN(
     reflections="LaB6_660b_AVID2.hkl",
     material="lab6.abs",
     radius=sample_radius,
     yheight=10e-3, d_phi = 90,
-    pack = 0.6, Vc=71.830, density = 4.72)
+    pack = 0.6, Vc=71.830, density = 4.72,
+    p_interact=0.8, p_transmit=0.1, p_inc=0.1)
 AT (0, 0, 0) RELATIVE pxrd_2d_pt
 ROTATED (0,0,90) RELATIVE pxrd_2d_pt
 
