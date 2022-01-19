@@ -31,10 +31,6 @@ DECLARE
   double dE;
   double L1;
   double mxdiv;
-%}
-
-USERVARS
-%{
   int scattered;
 %}
 
