@@ -42,6 +42,7 @@
 * pxrd_strip_tth0: [deg] Angle offset of the PXRD 1d-strip detector from the optical axis. 
 * debugMon: [ ]    If nonzero, all intermediate monitors appear for debugging purposes.
 * beamStop: [ ] If nonzero, a beamstop is in between sample and PXRD 1d-strip detector.
+* SPLITS: [ ]      Split-number at the sample-position
 * %End
 *******************************************************************************/
 
@@ -56,7 +57,7 @@ DEFINE INSTRUMENT MAXIV_DanMAX_pxrd1d(E0=35,DE=0.05,undK=0,undDetune=4,
         OH_2DCRL_N=11,EH_2DCRL_N=0, D_EH_2DCRL=0,
         PXRD_SIMPLE=1, sample_radius=100e-6,
         pxrd_strip_tth0=0, 
-        debugMon=1, beamStop=0)
+        debugMon=1, beamStop=0, int SPLITS=1410)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -492,12 +493,13 @@ AT(0,0,0) RELATIVE pxrd_1d_pt
 COMPONENT pxrd1_e = COPY(src_e)(filename="pxrd1.e", options=emon_options)
 AT(0,0,0) RELATIVE pxrd_1d_pt
 
-SPLIT 1410 COMPONENT powdern = PowderN(
+SPLIT SPLITS COMPONENT powdern = PowderN(
     reflections="LaB6_660b_AVID2.hkl",
     material="lab6.abs",
     radius=sample_radius,
     yheight=10e-3, d_phi = 1,
-    pack = 0.6, Vc=71.830, density = 4.72)
+    pack = 0.6, Vc=71.830, density = 4.72,
+    p_interact=0.8, p_transmit=0.1, p_inc=0.1)
 AT (0, 0, 0) RELATIVE pxrd_1d_pt
 ROTATED (0,0,90) RELATIVE pxrd_1d_pt
 
@@ -705,6 +707,13 @@ COMPONENT mythen_23 = COPY(mythen_0)(filename="mythen_23")
 WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_23a
 GROUP mythen
 
+COMPONENT mythen_catchall = Arm()
+AT (0,0,0) RELATIVE pxrd_1d_pt
+GROUP mythen
+EXTEND
+%{
+  SCATTER;
+%}
 
 FINALLY
 %{
