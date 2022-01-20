@@ -1040,14 +1040,9 @@ INITIALIZE
   /*this should not be in hkl_info*/
   hkl_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
-    #ifndef USE_OFF
-    fprintf(stderr,"Error: You are attempting to use an OFF geometry without -DUSE_OFF. You will need to recompile with that define set!\n");
-    exit(-1);
-    #else
     if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       hkl_info.shape=3;
     }
-    #endif
   }
   else
   if (xwidth && yheight && zdepth)  hkl_info.shape=1; /* box */
@@ -1086,11 +1081,7 @@ TRACE
   double t1, t2=0;                /* Entry and exit times in sample */
   struct hkl_data *L;           /* Structure factor list */
   int i;                        /* Index into structure factor list */
-#ifndef OPENACC
   struct tau_data *T;           /* List of reflections close to Ewald sphere */
-#else
-  struct tau_data T[MCSX_REFL_SLIST_SIZE];
-#endif
   int tau_count;                /* Number of reflections close to Ewald sphere*/
   int j;                        /* Index into reflection list */
   int event_counter;            /* scattering event counter */
@@ -1139,13 +1130,7 @@ TRACE
 
   force_transmit=0;
 
-  #ifdef OPENACC
-  #ifdef USE_OFF
-  off_struct thread_offdata = offdata;
-  #endif
-  #else
   #define thread_offdata offdata
-  #endif
   
   /* Intersection neutron trajectory / sample (sample surface) */
   if (hkl_info.shape == 0)
@@ -1154,10 +1139,8 @@ TRACE
     intersect = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
   else if (hkl_info.shape == 2)
     intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
-  #ifdef USE_OFF
   else if (hkl_info.shape == 3)
       intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, thread_offdata );
-  #endif
   if (t2 < 0) intersect=0;  /* we passed sample volume already */
 
   if(intersect)
@@ -1182,10 +1165,8 @@ TRACE
     type = '\0';
     itype = 0;
     itype=0;
-#ifndef OPENACC
     T = tau_list;
     hkl_info.type = type;
-#endif
     do {  /* Loop over multiple scattering events */
       /* Angles for powder randomization */
       double Alpha, Beta, Gamma;
@@ -1196,21 +1177,17 @@ TRACE
         intersect = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
       else if (hkl_info.shape == 2)
         intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
-      #ifdef USE_OFF
       else if (hkl_info.shape == 3)
 	      intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, thread_offdata );
-      #endif
       if(!intersect || t2*v < -1e-9 || t1*v > 1e-9)
       {
         /* neutron is leaving the sample */
         if (hkl_info.flag_warning < 100)
-#ifndef OPENACC
           fprintf(stderr,
                 "Single_crystal: %s: Warning: neutron has unexpectedly left the crystal!\n"
                 "                t1=%g t2=%g x=%g y=%g z=%g vx=%g vy=%g vz=%g\n",
                 NAME_CURRENT_COMP, t1, t2, x, y, z, vx, vy, vz);
         hkl_info.flag_warning++;
-#endif
         break;
       }
 
@@ -1274,7 +1251,6 @@ TRACE
       double coh_xsect = 0, coh_refl = 0;
       /* in case we use 'SPLIT' then consecutive neutrons can be identical when entering here
          and we may skip the hkl_search call */
-#ifndef OPENACC
       if (order==1 && fabs(kix - hkl_info.kix) < deltak
         && fabs(kiy - hkl_info.kiy) < deltak
         && fabs(kiz - hkl_info.kiz) < deltak) {
@@ -1286,7 +1262,6 @@ TRACE
 	tau_count = hkl_info.tau_count;
 
       } else {
-#endif
         /* Max possible tau for this ki with 5*sigma delta-d/d cutoff. */
         double tau_max   = 2*ki/(1 - 5*hkl_info.m_delta_d_d);
 
@@ -1297,7 +1272,6 @@ TRACE
               &coh_refl, &coh_xsect);
 
         /* store ki so that we can check for further SPLIT iterations */
-#ifndef OPENACC
         if (tau_count>hkl_info.max_tau_count){
           hkl_info.max_tau_count=tau_count;
         }
@@ -1314,7 +1288,6 @@ TRACE
 	  hkl_info.nb_refl_count++;
 	}
       }
-#endif
       /* (3). Probabilities of the different possible interactions. */
       /* Cross-sections are in barns = 10**-28 m**2, and unit cell volumes are
          in AA**3 = 10**-30 m**2. Hence a factor of 100 is used to convert
@@ -1357,9 +1330,7 @@ TRACE
 
 	type = 't';
 	if (!itype) itype = 1;
-        #ifndef OPENACC
 	hkl_info.type = type;
-        #endif
 
         break; 
         /* This break means that we are leaving the while-loop, exiting the
@@ -1411,9 +1382,7 @@ TRACE
 	
 	type = 'i';
 	if (!itype) itype = 2;
-#ifndef OPENACC
         hkl_info.type = type;
-#endif
       } else {
         /* 7. Coherent scattering. Select reciprocal lattice point. */
         if(coh_refl <= 0){
@@ -1423,12 +1392,10 @@ TRACE
         j = hkl_select(T, tau_count, coh_refl, &sum);
         if(j >= tau_count)
         {
-#ifndef OPENACC
           if (hkl_info.flag_warning < 100)
             fprintf(stderr, "Single_crystal: Error: Illegal tau search "
               "(sum=%g, j=%i, tau_count=%i).\n", sum, j , tau_count);
           hkl_info.flag_warning++;
-#endif
           j = tau_count - 1;
         }
         i = T[j].index;
@@ -1455,12 +1422,10 @@ TRACE
 	
 	type = 'c';
 	if (!itype) itype = 3;
-#ifndef OPENACC
         hkl_info.type = type;
         hkl_info.h    = L[i].h;
         hkl_info.k    = L[i].k;
         hkl_info.l    = L[i].l;
-#endif
 
       }
       /* ------------------------------------------------------------------------- */
