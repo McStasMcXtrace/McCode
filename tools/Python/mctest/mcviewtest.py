@@ -70,11 +70,9 @@ def run_normal_mode(testdir, reflabel):
             if cellobj["testnb"] > 1:
                 compiletime = ""
 
-            if refval is None:
-                refval = float(cellobj["targetval"])
-            else:
-                refval = float(refval)
-    
+            # Always use embedded target value
+            refval = float(cellobj["targetval"])
+
             refp = abs(float(cellobj["testval"])/refval*100)
             if abs(refp-100) > ERROR_PERCENT_THRESSHOLD_ACCEPT:
                 state = 2
