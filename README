@@ -112,50 +112,13 @@ installation packages (Linux)
 
  - The 'mcstas/mcxtrace' base programs only requires a C compiler, which is usually
    provided with most Unix/Linux systems. For Windows, a MinGW C compiler
-   is shipped with Strawberry-Perl which we recommend.
- - The `mcrun' front-end requires Perl or python,
-   which are available on most Unix-like systems, and may installed for
-   Windows as well.
- - The `mcdisplay' front-end requires Perl or python, and one
-   of the following:
-   1- the PGPLOT graphics Fortran library, and the PgPerl interface
-      between Perl and PGPLOT
-   2- Matlab or iFit
-   3- a VRML/X3D viewer (we recommend InstantPlayer)
-   
- - The `mcplot' front-end requires Perl or python, and one
-   of the following:
-   1- the PGPLOT graphics Fortran library, and the PgPerl interface
-      between Perl and PGPLOT, and the PDL scientific data extension
-      for Perl.
-   2- Matlab or iFit
-   3- Gnuplot
-   4- Python/matplotlib or Python/chaco.
-   
- - The `mcgui' front-end requires  Perl, the perl/tk
-   perl extension, and one of the following:,
-   1- the PGPLOT graphics library, the PgPerl interface between Perl
-      and PGPLOT, and the PDL scientific data extension for Perl.
-   2- Matlab or iFit
-   3- Gnuplot
-
-Information on Perl may be found on
-    http://language.perl.com/index.html
-Information on Tcl/Tk may be found on
-    http://tcl.tk.com/
-  and
-    http://strawberryperl.com/ (includes a C compiler)
-Information on perl/tk may be found on
-    http://w4.lns.cornell.edu/~pvhp/ptk/ptkFAQ.html
-Information on PGPLOT may be found on
-    http://astro.caltech.edu/~tjp/pgplot/index.html
-Information on PgPerl may be found on
-    http://www.aao.gov.au/local/www/kgb/pgperl/
-Information on PDL may be found on
-    http://www.aao.gov.au/local/www/kgb/perldl/
-Information on Matlab may be found on (commercial)
-    http://www.mathworks.com
-Information on iFit may be found on (free)
-    http://ifit.mccode.org/
-
+   is shipped with Strawberry-Perl which is distributed alongside the installers.
+ - The `mcrun/mxrun' front-ends require Perl or python
+ - The `mcdisplay/mxdisplay' front-ends requires Perl or python plus graphical
+   backend(s)
+ - The `mcplot/mxplot' front-ends requires Perl or python plus graphical
+   backend(s) 
+ - The `mcgui/mxgui' graphical user interface requires python, PyQt and optionally
+   qscintilla for the built in instrument editor. Alternatively an external editor
+   can be used, we recommend gedit.
 
