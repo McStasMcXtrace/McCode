@@ -221,10 +221,11 @@ TRACE
             }
             SCATTER;
         }
-        else
+        else{
             PROP_DL(l_full);
-        /* When no interaction between our ray and the air, we adjust the weight by: */
-        p *= (1 - Ptot_sc_unpolarized)/(1 - frac);
+            /* When no interaction between our ray and the air, we adjust the weight by: */
+            p *= (1 - Ptot_sc_unpolarized)/(1 - frac);
+        }
     }
 %}
 
