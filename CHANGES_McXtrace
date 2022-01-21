@@ -12,7 +12,7 @@
 *************************************************************************/
 CHANGES in 1.7
 
-This is mainly an bugfix/update release. 
+This is mainly a bugfix/update release. 
 
 1. Improved installation scripts
         1. Installs cleanly on Mac silicon 
@@ -40,6 +40,9 @@ This is mainly an bugfix/update release.
 5. License change:
         The release includes a switch to the GPLv3-license for McXtrace. The underlying reason for this 
         is to help collaboration wih the Debian project.
+
+Keep an eye open for the forthcoming McXtrace 3.0 technology-preview that will allow GPU acceleration
+using OpenACC on NVIDIA cards.
 
 CHANGES in 1.6
 
