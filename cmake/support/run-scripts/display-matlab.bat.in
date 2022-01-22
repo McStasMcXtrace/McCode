@@ -1,0 +1,2 @@
+@REM Isn't windows a lovely place???
+@python @CPACK_NSIS_INSTALL_ROOT@\\lib\\tools\\Python\\@MCCODE_PREFIX@display\\mantid_xml\\mcdisplay.py %*
