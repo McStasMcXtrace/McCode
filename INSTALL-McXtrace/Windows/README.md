@@ -1,4 +1,4 @@
-# Installation of McXtrace 1.6 on Windows 64 bit systems
+# Installation of McXtrace 1.7 on Windows 64 bit systems
 
 
 ## IMPORTANT A:
@@ -12,11 +12,11 @@
 in a cmd.exe shell and start the Perl and McXtrace installers from there
 	
 ##  IMPORTANT B:
-* Please install [strawberry-perl-5.26.3.1-64bit.msi](http://download.mcxtrace.org/current/windows/strawberry-perl-5.26.3.1-64bit.msi)
+* Please install [strawberry-perl-5.26.3.1.74bit.msi](http://download.mcxtrace.org/current/windows/strawberry-perl-5.26.3.1.74bit.msi)
 BEFORE  attempting to install the McXtrace metapackage!!!
 
 ## IMPORTANT C:
-* Please install the [McXtrace 1.6 metapackage](http://download.mcxtrace.org/current/windows/McXtrace-Metapackage-1.6-win64.exe)
+* Please install the [McXtrace 1.7 metapackage](http://download.mcxtrace.org/current/windows/McXtrace-Metapackage-1.7-win64.exe)
 
 * The [extras](http://download.mcxtrace.org/current/windows/extras)
   folder provides binaries for Microsoft MPI and NeXus, which can be utilised by the McXtrace metapackage installation
