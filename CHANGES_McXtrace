@@ -28,14 +28,14 @@ It also marks a switch for McXtrace to the the GPLv3 license.
         6. New Example of Compton scattering union process.
 3. Updated Components
         1. PowderN.comp: Fix bug with faulty packing factor logic, which lead to wrong intensities when used with SPLIT.
-	1. Lens_parab_Cyl_rough.comp, Lens_parab_rough.comp, Lens_Kinoform.comp: documentation issues
-	2. Mirror.comp: documentation update
-	3. Mirror_curved.comp, Mirror_elliptic.comp: Use reflectivity library
-	4. Mirror_toroid.comp: Fix for stable handling of reflectivity file
-	5. Absorption_sample.comp: Fix inner/outer volume logic 
-	6. Source_genesis13.comp, Source_simplex.comp: Documentation issues.
-        7. Air.comp: Correct scattering amplitude.
-        8. New: Laue_crystal_BC.comp: experimental model of a Laue crystal available for testing.
+	2. Lens_parab_Cyl_rough.comp, Lens_parab_rough.comp, Lens_Kinoform.comp: documentation issues
+	3. Mirror.comp: documentation update
+	4. Mirror_curved.comp, Mirror_elliptic.comp: Use reflectivity library
+	5. Mirror_toroid.comp: Fix for stable handling of reflectivity file
+	6. Absorption_sample.comp: Fix inner/outer volume logic 
+	7. Source_genesis13.comp, Source_simplex.comp: Documentation issues.
+        8. Air.comp: Correct scattering amplitude.
+        9. New: Laue_crystal_BC.comp: experimental model of a Laue crystal available for testing.
 5. Updated libraries:
         1. Reflectivity-lib has a series of bugfixes. 
 4. New tools:
