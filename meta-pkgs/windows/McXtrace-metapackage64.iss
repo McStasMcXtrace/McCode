@@ -32,7 +32,6 @@ SolidCompression=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "postsetup.bat"; DestDir: "{tmp}"
 Source: "python-install.bat"; DestDir: "{tmp}"
 Source: "docupdate.bat"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
@@ -52,7 +51,6 @@ Source: "Support\Miniconda3-latest-Windows-x86_64.exe"; DestDir: "{tmp}"
 
 [Run]
 Filename: "{tmp}\python-install.bat"
-Filename: "{tmp}\postsetup.bat"
 Filename: "{tmp}\mcxtrace-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcxtrace-comps-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcxtrace-manuals-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
