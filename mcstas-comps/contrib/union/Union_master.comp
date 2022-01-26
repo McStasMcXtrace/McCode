@@ -1372,7 +1372,6 @@ TRACE
               
               int physics_output;
               physics_output = physics_my(process->eProcess, p_my_trace, k_rotated, process->data_transfer,&Volumes[current_volume]->geometry.focus_data_array.elements[focus_data_index], _particle);
-
               
               my_sum += *p_my_trace;
               #ifdef Union_trace_verbal_setting
