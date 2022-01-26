@@ -47,10 +47,10 @@
 ***************************************************************************/
 
 DEFINE COMPONENT Wiggler
-DEFINITION PARAMETERS (verbose=0)
+DEFINITION PARAMETERS ()
 SETTING PARAMETERS (E0=0, dE=0, lambda0=0,dlambda=-1, phase=0, randomphase=1, Ee=2.4, Ie=0.4, tbunch=0, t0=0, B=1.6, K=3,
-    gap=1e-3, int Nper=1, length=1, sigey=0, sigex=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0)
-OUTPUT PARAMETERS (prms,alpha,MELE)
+    gap=1e-3, int Nper=1, length=1, sigey=0, sigex=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0, int verbose=0)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -58,7 +58,8 @@ SHARE
 #ifndef MCCODE_BESSELKNU
 #define MCCODE_BESSELKNU 1
 
-  double besselKnu(double nu, double x){
+#pragma acc routine seq
+double besselKnu(double nu, double x){
     const double h=0.5;
     double KK=0,dK;
     int r=0;
@@ -70,27 +71,31 @@ SHARE
       dK=exp(-x*cosh(r*h))*cosh(nu*r*h);
       KK+=dK;
     }
+#ifndef OPENACC
     if (r>=maxiter) {
-      fprintf(stderr,"Warning (%s): Maximum number of iterations exceeded in besselKnu(%g,%g).\n",NAME_CURRENT_COMP,nu,x);
+      fprintf(stderr,"Warning: Maximum number of iterations exceeded in besselKnu(%g,%g).\n",nu,x);
     }
+#endif
     KK*=h;
     return KK;
   }
 #endif /*MCCODE_BESSELKNU*/
 
+#ifndef M_SQRT1_2
+#define M_SQRT1_2 0.70710678118654752440
+#endif
+
 %}
 
 DECLARE
 %{
-  struct {
-    double gamma,gamma2,igamma;
-    double kc; /*characteristic wavenumber of radiation from bending magnet*/
-    double s1x,s1y; /*beam's size at dist (convolution of sigex/sigey and igamma)*/
-    double lu; /*undulator wavelenght*/
-  } prms;
-  /*fine structure constant from CODATA*/
-  const double alpha=7.2973525698e-3;
-  const double MELE=9.10938291e-31;
+  double gamma;
+  double gamma2;
+  double igamma;
+  double kc; /*characteristic wavenumber of radiation from bending magnet*/
+  double s1x;
+  double s1y; /*beam's size at dist (convolution of sigex/sigey and igamma)*/
+  double lu; /*wiggler magnetic period*/
 %}
 
 
@@ -98,7 +103,7 @@ INITIALIZE
 %{
   fprintf(stderr,"Warning (%s): Wiggler is an experimental component - testing is ongoing\n",NAME_CURRENT_COMP);
   
-  prms.lu=length/Nper;
+  lu=length/Nper;
 
   if( (!K && B<=0) || Ee<=0 || Ie<=0 ){
     fprintf(stderr, "Error (%s): K, B, Ee, and Ie do not have a consistent set of values. Found (%g %g %g %g). Aborting.\n",NAME_CURRENT_COMP,K,B,Ee,Ie);
@@ -106,15 +111,15 @@ INITIALIZE
   }
   
   if(K){
-    B=2*M_PI*MELE*M_C*K/CELE/prms.lu;
+    B=2*M_PI*MELECTRON*M_C*K/CELE/lu;
     if (verbose) printf("Wiggler (%s) B=f(K=%g)= %g\n",NAME_CURRENT_COMP,K,B);
   }else if (B>0){
-    K=CELE*B*prms.lu/(2*M_PI*MELE*M_C);
+    K=CELE*B*lu/(2*M_PI*MELECTRON*M_C);
     if (verbose) printf("Wiggler (%s) K=f(B=%g)= %g\n",NAME_CURRENT_COMP,B,K);
   }
 
   if (sigex <0 || sigey<0){
-   fprintf(stderr, "Error (%s): sigex and sigey must be > 0. Negative beam size isn't meaningful. Aborting.\n",NAME_CURRENT_COMP,sigex,sigey);
+    fprintf(stderr, "Error (%s): sigex and sigey must be > 0. Negative beam size isn't meaningful. Aborting.\n",NAME_CURRENT_COMP,sigex,sigey);
     exit(1);
   }
   if (dist<=0){
@@ -123,16 +128,16 @@ INITIALIZE
   }
 
   /*compute gamma*/
-  prms.gamma=(Ee*1e9)/(MELE/CELE*M_C*M_C);/*the extra CELE is to convert to eV*/
-  prms.gamma2=prms.gamma*prms.gamma;
-  prms.igamma=1.0/prms.gamma;
+  gamma=(Ee*1e9)/(MELECTRON/CELE*M_C*M_C);/*the extra CELE is to convert to eV*/
+  gamma2=gamma*gamma;
+  igamma=1.0/gamma;
 
-  //printf("Wiggler (%s): gamma=%g, divergence is 1/gamma=%g rad.\n",NAME_CURRENT_COMP,prms.gamma,prms.igamma);
+  //printf("Wiggler (%s): gamma=%g, divergence is 1/gamma=%g rad.\n",NAME_CURRENT_COMP,gamma,igamma);
   /*compute characteristic energy in keV*/
   double Ec=0.665*Ee*Ee*B;
-  //double Ec=1.5*prms.gamma2*HBAR*CELE*B/MELE *1e-3; /*check units on this one. The 1e-3 factor is because energy is assumed to be in keV*/
+  //double Ec=1.5*gamma2*HBAR*CELE*B/MELE *1e-3; /*check units on this one. The 1e-3 factor is because energy is assumed to be in keV*/
   /*We normally do computations in k so use that for transfer*/
-  prms.kc=E2K*Ec;
+  kc=E2K*Ec;
 
 
 %}
@@ -172,35 +177,35 @@ TRACE
   }
 
   // targeted area calculation
-  prms.s1x=sqrt(sigex*sigex + K*prms.igamma*K*prms.igamma*(dist-z)*(dist-z));
-  prms.s1y=sqrt(sigey*sigey + prms.igamma*prms.igamma*(dist-z)*(dist-z));
+  s1x=sqrt(sigex*sigex + K*igamma*K*igamma*(dist-z)*(dist-z));
+  s1y=sqrt(sigey*sigey + igamma*igamma*(dist-z)*(dist-z));
   if (focus_xw){
     if (!gauss_t){
       /*sample uniformly but adjust weight*/
       x1=randpm1()*focus_xw/2.0;
-      p*=exp(-(x1*x1)/(2.0*prms.s1x*prms.s1x));
+      p*=exp(-(x1*x1)/(2.0*s1x*s1x));
     }else {
       do {
-        x1=randnorm()*prms.s1x;
+        x1=randnorm()*s1x;
       }while (fabs(x1)>focus_xw/2.0);
-      p*=erf(focus_xw*0.5*M_SQRT1_2/prms.s1x);
+      p*=erf(focus_xw*0.5*M_SQRT1_2/s1x);
     }
   }else{
-    x1=randnorm()*prms.igamma*K;
+    x1=randnorm()*igamma*K;
   }
   if (focus_yh){
     if (!gauss_t){
       /*sample uniformly but adjust weight*/
       y1=randpm1()*focus_yh/2.0;
-      p*=exp(-(y1*y1)/(2.0*prms.s1y*prms.s1y));
+      p*=exp(-(y1*y1)/(2.0*s1y*s1y));
     }else {
       do {
-        y1=randnorm()*prms.s1y;
+        y1=randnorm()*s1y;
       }while (fabs(y1)>focus_yh/2.0);
-      p*=erf(focus_yh*0.5*M_SQRT1_2/prms.s1y);
+      p*=erf(focus_yh*0.5*M_SQRT1_2/s1y);
     }
   }else{
-    y1=randnorm()*prms.igamma;
+    y1=randnorm()*igamma;
   }
   z1=dist;
   dx=x1-x;
@@ -212,10 +217,10 @@ TRACE
   kz=(k*(dist-z))/dz;
   
   /*spectral strength of radiation is given by Patterson*/  
-  double k_kc=k/prms.kc;
+  double k_kc=k/kc;
   double K2_3=besselKnu(0.666666666666666666666666667,k_kc*0.5);
   p*=2*Nper*1.33e13*Ee*Ee*Ie* k_kc*k_kc*K2_3*K2_3;
-  //p*=2*Nper*alpha/(M_PI*M_PI)*prms.gamma2*Ie/CELE* 1e-4 * 0.75 *k_kc*k_kc*K2_3*K2_3; 
+  //p*=2*Nper*ALPHA/(M_PI*M_PI)*gamma2*Ie/CELE* 1e-4 * 0.75 *k_kc*k_kc*K2_3*K2_3; 
 
   /*randomly pick phase*/
   if (randomphase){
@@ -235,31 +240,31 @@ MCDISPLAY
   const double xwidth=1e-2;
   const double D=dist;
   double x0,z0,x1,z1;
-  zz=-(length+prms.lu)/2.0;
-  dz=prms.lu/2.0;
+  zz=-(length+lu)/2.0;
+  dz=lu/2.0;
 
-  while (zz<=(length-prms.lu)/2.0){
-    box(0.0,gap/2.0+5e-4,zz,xwidth,1e-3,prms.lu/2.0);
-    box(0.0,-gap/2.0-5e-4,zz,xwidth,1e-3,prms.lu/2.0);
+  while (zz<=(length-lu)/2.0){
+    box(0.0,gap/2.0+5e-4,zz,xwidth,1e-3,lu/2.0);
+    box(0.0,-gap/2.0-5e-4,zz,xwidth,1e-3,lu/2.0);
     zz+=dz;
   }
 
-  line(0.0,0.0,0.0, K*D*sin(prms.igamma), 0.0, D);
-  line(0.0,0.0,0.0,-K*D*sin(prms.igamma), 0.0, D);
-  line(0.0,0.0,0.0, 0.0, D*sin(prms.igamma), D);
-  line(0.0,0.0,0.0, 0.0,-D*sin(prms.igamma), D);
+  line(0.0,0.0,0.0, K*D*sin(igamma), 0.0, D);
+  line(0.0,0.0,0.0,-K*D*sin(igamma), 0.0, D);
+  line(0.0,0.0,0.0, 0.0, D*sin(igamma), D);
+  line(0.0,0.0,0.0, 0.0,-D*sin(igamma), D);
   
-  double phi,dphi;  
-  phi =-prms.igamma;
-  dphi= 2.0*prms.igamma/32;
-  while(phi<prms.igamma){
-    x0=D*sin(phi);
-    x1=D*sin(phi+dphi);
-    z0=D*cos(phi);
-    z1=D*cos(phi+dphi);
+  double psi,dpsi;  
+  psi =-igamma;
+  dpsi= 2.0*igamma/32;
+  while(psi<igamma){
+    x0=D*sin(psi);
+    x1=D*sin(psi+dpsi);
+    z0=D*cos(psi);
+    z1=D*cos(psi+dpsi);
     line(K*x0,0.0,z0,K*x1,0.0,z1);
     line(0.0,x0,z0,0.0,x1,z1);
-    phi+=dphi;
+    psi+=dpsi;
   }
 %}
 

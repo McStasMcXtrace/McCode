@@ -34,15 +34,17 @@
 #ifndef MCXTRACE_R_H
 #define MCXTRACE_R_H "$Revision$"
 
-/* Following part is only embedded when not redundant with mcxtrace.h ========= */
+/* Following part is only embedded when not redundant with mcxtrace.h */
 
 #ifndef MCCODE_H
 
 #define CELE     1.602176487e-19   /* [C] Elementary charge CODATA 2006*/
+#define MELECTRON 9.10938291e-31    /* [kg] Electron mass CODATA 2006*/
 #define M_C      299792458         /* [m/s] speed of light CODATA 2006*/
 #define E2K      0.506773091264796 /* Convert k[1/AA] to E [keV] (CELE/(HBAR*M_C)*1e-10)*1e3 */
 #define K2E      1.97326972808327  /*Convert E[keV] to k[1/AA] (1e10*M_C*HBAR/CELE)/1e3 */
 #define RE       2.8179402894e-5   /*[AA] Thomson scattering length*/
+#define ALPHA    7.2973525698e-3   /*[ ] Fine structure constant CODATA 2006*/
 
 #define SCATTER0 do {DEBUG_SCATTER(); SCATTERED++;} while(0)
 #define SCATTER SCATTER0
@@ -52,12 +54,10 @@
 /*magnet stuff is probably redundant*/
 #define MAGNET_ON \
   do { \
-    mcMagnet = 1; \
   } while(0)
 
 #define MAGNET_OFF \
   do { \
-    mcMagnet = 0; \
   } while(0)
 
 #define ALLOW_BACKPROP \
@@ -96,11 +96,11 @@
 
 #define mcPROP_DL(dl) \
   do { \
-    MCNUM k=sqrt( scalar_prod(kx,ky,kz,kx,ky,kz));\
-    x = x+ (dl)*kx/k;\
-    y = y+ (dl)*ky/k;\
-    z = z+ (dl)*kz/k;\
-    phi = phi+ 1e10*k*(dl);\
+    MCNUM mc_k=sqrt( scalar_prod(kx,ky,kz,kx,ky,kz));\
+    x = x+ (dl)*kx/mc_k;\
+    y = y+ (dl)*ky/mc_k;\
+    z = z+ (dl)*kz/mc_k;\
+    phi = phi+ 1e10*mc_k*(dl);\
     t = t + (dl)/((double)M_C);\
   }while (0)
 /* this had to be taken out to avoid error 700. This may need to be atomic, but probably should be somewhere else.*/
@@ -142,37 +142,60 @@
     DISALLOW_BACKPROP;\
   } while(0)
 
-
-#define PROP_Z0 \
-  mcPROP_P0(z)
-
 #define PROP_X0 \
-  mcPROP_P0(x)
+  do { \
+    mcPROP_X0; \
+    DISALLOW_BACKPROP; \
+  }while(0)
 
-#define PROP_Y0 \
-  mcPROP_P0(y)
-
-#define mcPROP_P0(P) \
+#define mcPROP_X0 \
   do { \
     MCNUM mc_dl,mc_k; \
-    if(k ## P == 0) { instrument->counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
+    if(kx == 0) { ABSORB; }; \
     mc_k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); \
-    mc_dl= - ## P * mc_k / k ## P; \
-    if(mc_dl<0 && mcallowbackprop==0) {instrument->counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; };\
+    mc_dl= -x * mc_k / kx; \
+    if(mc_dl<0 && mcallowbackprop==0) { ABSORB; };\
     PROP_DL(mc_dl); \
   } while(0)
 
-#pragma acc routine seq
-_class_particle mcsetstate(double x, double y, double z, double kx, double ky, double kz,
-    double phi, double t, double Ex, double Ey, double Ez, double p, int mcgravitation, int mcMagnet, int mcallowbackprop);
+#define PROP_Y0 \
+  do { \
+    mcPROP_Y0; \
+    DISALLOW_BACKPROP; \
+  }while(0)
 
+#define mcPROP_Y0 \
+  do { \
+    MCNUM mc_dl,mc_k; \
+    if(ky == 0) { ABSORB; }; \
+    mc_k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); \
+    mc_dl= -y * mc_k / ky; \
+    if(mc_dl<0 && mcallowbackprop==0) { ABSORB; };\
+    PROP_DL(mc_dl); \
+  } while(0)
+
+#define PROP_Z0 \
+  do { \
+    mcPROP_Z0; \
+    DISALLOW_BACKPROP; \
+  }while(0)
+
+#define mcPROP_Z0 \
+  do { \
+    MCNUM mc_dl,mc_k; \
+    if(kz == 0) { ABSORB; }; \
+    mc_k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); \
+    mc_dl= -z * mc_k / kz; \
+    if(mc_dl<0 && mcallowbackprop==0) { ABSORB; };\
+    PROP_DL(mc_dl); \
+  } while(0)
 
 #ifdef DEBUG
 
-#define DEBUG_STATE(x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) if(!mcdotrace); else \
+#define DEBUG_STATE() if(!mcdotrace); else \
   printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
       x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p);
-#define DEBUG_SCATTER(x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) if(!mcdotrace); else \
+#define DEBUG_SCATTER() if(!mcdotrace); else \
   printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
       x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p);
 

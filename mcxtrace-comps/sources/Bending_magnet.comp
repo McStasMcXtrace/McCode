@@ -8,7 +8,7 @@
 * Component: Bending_magnet
 *
 * %I
-* Written by: Erik Knudsen
+* Written by: Erik B. Knudsen
 * Date: May, 2013.
 * Version: 1.0
 * Origin: DTU Physics
@@ -21,7 +21,6 @@
 *
 * %P
 * Input Parameters:
-* gamma: [ ] Gamma parameter of the Bending Magnet
 * Ee: [GeV] Storage ring electron energy (typically a few GeV)
 * Ie: [A]   Ring current
 * tbunch: [s] Bunch length. 0 means continous source.
@@ -46,7 +45,7 @@
 DEFINE COMPONENT Bending_magnet
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (E0=0, dE=0, lambda0=0,dlambda=-1, phase=0, randomphase=1, Ee=2.4, Ie=0.4, tbunch=0, t0=0, B=1.6, sigey=0, sigex=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0)
-OUTPUT PARAMETERS (prms,alpha,MELE)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -56,7 +55,8 @@ SHARE
 #ifndef MCCODE_BESSELKNU
 #define MCCODE_BESSELKNU 1
 
-  double besselKnu(double nu, double x){
+#pragma acc routine seq
+double besselKnu(double nu, double x){
     const double h=0.5;
     double KK=0,dK;
     int r=0;
@@ -68,25 +68,30 @@ SHARE
       dK=exp(-x*cosh(r*h))*cosh(nu*r*h);
       KK+=dK;
     }
+#ifndef OPENACC
     if (r>=maxiter) {
-      fprintf(stderr,"Warning (%s): Maximum number of iterations exceeded in besselKnu(%g,%g).\n",NAME_CURRENT_COMP,nu,x);
+      fprintf(stderr,"Warning: Maximum number of iterations exceeded in besselKnu(%g,%g).\n",nu,x);
     }
+#endif
     KK*=h;
     return KK;
   }
 #endif /*MCCODE_BESSELKNU*/
+
+#ifndef M_SQRT1_2
+#define M_SQRT1_2 0.70710678118654752440
+#endif
+
 %}
 
 DECLARE
 %{
-  struct {
-    double gamma,gamma2,igamma;
-    double kc; /*characteristic wavenumber of radiation from bending magnet*/
-    double s1x,s1y; /*beam's size at dist (convolution of sigex/sigey and igamma)*/
-  } prms;
-  /*fine structure constant from CODATA*/
-  const double alpha=7.2973525698e-3;
-  const double MELE=9.10938291e-31;
+  double gamma;
+  double gamma2;
+  double igamma;
+  double kc; /*characteristic wavenumber of radiation from bending magnet*/
+  double s1x;
+  double s1y; /*beam's size at dist (convolution of sigex/sigey and igamma)*/
 %}
 
 
@@ -110,19 +115,19 @@ INITIALIZE
   }
 
   /*compute gamma*/
-  prms.gamma=(Ee*1e9)/(MELE/CELE*M_C*M_C);/*the extra CELE is to convert to eV*/
-  prms.gamma2=prms.gamma*prms.gamma;
-  prms.igamma=1.0/prms.gamma;
+  gamma=(Ee*1e9)/(MELECTRON/CELE*M_C*M_C);/*the extra CELE is to convert to eV*/
+  gamma2=gamma*gamma;
+  igamma=1.0/gamma;
 
-  //printf("Bending_magnet (%s): gamma=%g, divergence is 1/gamma=%g rad.\n",NAME_CURRENT_COMP,prms.gamma,prms.igamma);
+  //printf("Bending_magnet (%s): gamma=%g, divergence is 1/gamma=%g rad.\n",NAME_CURRENT_COMP,gamma,igamma);
   /*compute characteristic energy in keV*/
   double Ec=0.665*Ee*Ee*B;
-  //double Ec=1.5*prms.gamma2*HBAR*CELE*B/MELE *1e-3; /*check units on this one. The 1e-3 factor is because energy is assumed to be in keV*/
+  //double Ec=1.5*gamma2*HBAR*CELE*B/MELECTRON *1e-3; /*check units on this one. The 1e-3 factor is because energy is assumed to be in keV*/
   /*We normally do computations in k so use that for transfer*/
-  prms.kc=E2K*Ec;
+  kc=E2K*Ec;
 
-  prms.s1x=sqrt(sigex*sigex + prms.igamma*prms.igamma*dist*dist);
-  prms.s1y=sqrt(sigey*sigey + prms.igamma*prms.igamma*dist*dist);
+  s1x=sqrt(sigex*sigex + igamma*igamma*dist*dist);
+  s1y=sqrt(sigey*sigey + igamma*igamma*dist*dist);
 
 %}
 
@@ -164,31 +169,31 @@ TRACE
     if (!gauss_t){
       /*sample uniformly but adjust weight*/
       x1=randpm1()*focus_xw/2.0;
-      p*=exp(-(x1*x1)/(2.0*prms.s1x*prms.s1x));
+      p*=exp(-(x1*x1)/(2.0*s1x*s1x));
     }else {
       do {
-        x1=randnorm()*prms.s1x;
+        x1=randnorm()*s1x;
       }while (focus_xw!=0 && fabs(x1)>focus_xw/2.0);
       /*adjust for restricted sampling window*/
-      p*=erf(focus_xw*0.5*M_SQRT1_2/prms.s1x);
+      p*=erf(focus_xw*0.5*M_SQRT1_2/s1x);
     }
   }else{
-    x1=randnorm()*prms.igamma;
+    x1=randnorm()*igamma;
   }
   if (focus_yh){
     if (!gauss_t){
       /*sample uniformly but adjust weight*/
       y1=randpm1()*focus_yh/2.0;
-      p*=exp(-(y1*y1)/(2.0*prms.s1y*prms.s1y));
+      p*=exp(-(y1*y1)/(2.0*s1y*s1y));
     }else {
       do {
-        y1=randnorm()*prms.s1y;
+        y1=randnorm()*s1y;
       }while (fabs(y1)>focus_yh/2.0);
       /*adjust for restricted sampling window*/
-      p*=erf(focus_yh*0.5*M_SQRT1_2/prms.s1y);
+      p*=erf(focus_yh*0.5*M_SQRT1_2/s1y);
     }
   }else{
-    y1=randnorm()*prms.igamma;
+    y1=randnorm()*igamma;
   }
   z1=dist;
   dx=x1-x;
@@ -200,10 +205,10 @@ TRACE
   kz=(k*dist)/dz;
   
   /*spectral strength of radiation is given by Patterson*/  
-  double k_kc=k/prms.kc;
+  double k_kc=k/kc;
   double K2_3=besselKnu(0.666666666666666666666666667,k_kc*0.5);
   p*=1.33e13*Ee*Ee*Ie* k_kc*k_kc*K2_3*K2_3;
-  //p*=alpha/(M_PI*M_PI)*prms.gamma2*Ie/CELE* 1e-4 * 0.75 *k_kc*k_kc*K2_3*K2_3; 
+  //p*=ALPHA/(M_PI*M_PI)*gamma2*Ie/CELE* 1e-4 * 0.75 *k_kc*k_kc*K2_3*K2_3;
   
 
   /*randomly pick phase*/
@@ -237,14 +242,14 @@ MCDISPLAY
     phi+=dphi;
   }
 
-  line(0.0,0.0,0.0, D*sin(prms.igamma), 0.0, D);
-  line(0.0,0.0,0.0,-D*sin(prms.igamma), 0.0, D);
-  line(0.0,0.0,0.0, 0.0, D*sin(prms.igamma), D);
-  line(0.0,0.0,0.0, 0.0,-D*sin(prms.igamma), D);
+  line(0.0,0.0,0.0, D*sin(igamma), 0.0, D);
+  line(0.0,0.0,0.0,-D*sin(igamma), 0.0, D);
+  line(0.0,0.0,0.0, 0.0, D*sin(igamma), D);
+  line(0.0,0.0,0.0, 0.0,-D*sin(igamma), D);
   
-  phi =-prms.igamma;
-  dphi= 2.0*prms.igamma/32;
-  while(phi<prms.igamma){
+  phi =-igamma;
+  dphi= 2.0*igamma/32;
+  while(phi<igamma){
     x0=D*sin(phi);
     x1=D*sin(phi+dphi);
     z0=D*cos(phi);

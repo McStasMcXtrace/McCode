@@ -1,0 +1,28 @@
+{
+  "configuration": {
+    "MCCODE_VERSION": "3.0-dev",
+    "MCCODE_LIB_DIR": "/zhome/7c/9/7041/McXtrace/mcxtrace/1.5/tools/Python/mccodelib/mcxtrace-test/../../..",
+    "MCCODE": "mcxtrace",
+    "MCRUN": "mxrun --openacc",
+    "MCPLOT": "mxplot-pyqtgraph",
+    "MCDISPLAY": "mxdisplay-webgl",
+    "TOOL_NAME": "mxgui",
+    "PARTICLE": "xray",
+    "BROWSER": "xdg-open",
+    "GUICOLS": "3"
+  },
+  "compilation": {
+    "CFLAGS": "-lm -O2 -acc=multicore -DOPENACC",
+    "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
+    "MPIFLAGS": "",
+    "OACCFLAGS": "-acc=multicore -DOPENACC",
+    "CC": "nvc",
+    "OACC": "nvc",
+    "MPICC": "",
+    "MPIRUN": "",
+    "MPINODES": "1"
+  },
+  "platform": {
+    "EXESUFFIX": "out"
+  }
+}

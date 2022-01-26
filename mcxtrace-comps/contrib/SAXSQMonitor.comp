@@ -1,0 +1,205 @@
+/*******************************************************************************
+* McXtrace, X-ray tracing package
+*           Copyright, All rights reserved
+*           Risoe National Laboratory, Roskilde, Denmark
+*           Institut Laue Langevin, Grenoble, France
+*
+* Component: SAXSQMonitor
+*
+* %I
+* Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
+* Based on a SANS-component in McStas by Søren Kynde
+* Date: May 2, 2012
+* Origin: KU-Science
+* Release: McXtrace 1.0
+*
+* A circular detector measuring the radial average of intensity as a function 
+* of the momentum transform in the sample.
+*
+* %D
+* A simple component simulating the scattering from a box-shaped, thin solution
+* of monodisperse, spherical particles.
+*
+* %P
+* RadiusDetector: [m]     Radius of the detector (in the xy-plane).
+* DistanceFromSample: [m] Distance from the sample to this component.
+* LambdaMin: [AA]         Max sensitivity in lambda - used to compute the highest possible value of momentum transfer, q.
+* NumberOfBins: [] Number of bins in the r (and q).
+* RFilename: []    File used for storing I(r).
+* qFilename: []    File used for storing I(q).
+* Lambda0: []      If lambda is given, the momentum transfers of all rays are computed from this value. Otherwise, instrumental effects are negated.
+* restore_xray: [] If set to 1, the component restores the original x-ray.
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT SAXSQMonitor
+
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string RFilename="RDetectror", string qFilename="QDetector", int NumberOfBins=100, restore_xray=0,
+    RadiusDetector, DistanceFromSample, LambdaMin = 1.0, Lambda0 = 0.0)
+
+OUTPUT PARAMETERS ()
+
+/*X-ray PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
+
+DECLARE
+%{
+    double TwoThetaMax;
+    double qMax;
+
+    DArray1d Nofq;
+    DArray1d Iofq;
+    DArray1d IofqSquared;
+
+    DArray1d NofR;
+    DArray1d IofR;
+    DArray1d IofRSquared;
+%}
+
+INITIALIZE
+%{
+    Nofq=create_darr1d(NumberOfBins);
+    Iofq=create_darr1d(NumberOfBins);
+    IofqSquared=create_darr1d(NumberOfBins);
+    NofR=create_darr1d(NumberOfBins);
+    IofR=create_darr1d(NumberOfBins);
+    IofRSquared=create_darr1d(NumberOfBins);
+
+    TwoThetaMax = atan(RadiusDetector / DistanceFromSample);
+    qMax = 4 * PI * sin(TwoThetaMax / 2.0) / LambdaMin;
+%}
+
+TRACE
+%{
+    int i;
+    double TwoTheta;
+    double Lambda;
+
+    double R;
+    double RLow;
+    double RHigh;
+
+    double q;
+    double qLow;
+    double qHigh;
+
+    double TwoThetaLow; 
+    double TwoThetaHigh;
+    double AreaOfSlice;
+    
+    PROP_Z0;
+
+    R = sqrt(pow(x, 2) + pow(y, 2));
+
+    // Computation of q
+    if (Lambda0 <= 0.0) {
+      Lambda = 2.0 * PI / sqrt(pow(kx, 2) + pow(ky, 2) + pow(kz, 2));
+    } else {
+      Lambda = Lambda0;
+    }
+
+    TwoTheta = atan(R / DistanceFromSample);
+    q = 4.0 * PI * sin(TwoTheta / 2.0) / Lambda;
+
+    // Put photon in the correct r-bin
+    if (R < RadiusDetector) {
+      i = floor(NumberOfBins * R / RadiusDetector);
+
+      RLow = RadiusDetector / NumberOfBins * i;
+      RHigh = RadiusDetector / NumberOfBins * (i + 1);
+
+      TwoThetaLow = atan(RLow / DistanceFromSample);
+      TwoThetaHigh = atan(RHigh / DistanceFromSample);
+
+      AreaOfSlice = fabs((cos(2.0 * TwoThetaLow) - cos(2.0 * TwoThetaHigh)) * 2.0 * PI);
+
+#pragma acc atomic
+      NofR[i]++;
+      double p_A=p/AreaOfSlice;
+#pragma acc atomic
+      IofR[i] += p_A;
+      double p2_A2= p*p/(AreaOfSlice*AreaOfSlice);
+#pragma acc atomic
+      IofRSquared[i] += p2_A2;
+    }
+      
+    // Put photon in the correct q-bin
+    if (q < qMax) {
+      i = floor(NumberOfBins * q / qMax);
+
+      qLow = qMax / NumberOfBins * i;
+      qHigh = qMax / NumberOfBins * (i + 1);
+
+      TwoThetaLow = asin(qLow * Lambda / (4.0 * PI));
+      TwoThetaHigh = asin(qHigh * Lambda / (4.0 * PI));
+
+      AreaOfSlice = fabs((cos(2.0 * TwoThetaLow) - cos(2.0 * TwoThetaHigh)) * 2.0 * PI);
+
+#pragma acc atomic
+      ++Nofq[i];
+      double p_A=p/AreaOfSlice;
+#pragma acc atomic
+      Iofq[i] += p_A;
+      double p2_A2= p*p/(AreaOfSlice*AreaOfSlice);
+#pragma acc atomic
+      IofqSquared[i] += p2_A2;
+
+      SCATTER;
+    }
+
+    // Restore xray if requested
+    if (restore_xray) {
+      RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
+    }
+%}
+
+SAVE
+%{
+  // Output I(r)
+    DETECTOR_OUT_1D(
+        "QMonitor - Radially averaged distribution",
+        "Radius [m]",
+        "I(r)",
+        "r", 
+        0.0, 
+        RadiusDetector, 
+        NumberOfBins,
+        NofR,
+        IofR,
+        IofRSquared,
+        RFilename
+        );
+
+    // Output I(q)
+    DETECTOR_OUT_1D(
+        "QMonitor - Distribution in q (Radially averaged)",
+        "q [1 / AA]",
+        "I(q)",
+        "q", 
+        0.0, 
+        qMax, 
+        NumberOfBins,
+        Nofq,
+        Iofq,
+        IofqSquared,
+        qFilename
+        );
+%}
+
+FINALLY
+%{
+  destroy_darr1d(Nofq);
+  destroy_darr1d(Iofq);
+  destroy_darr1d(IofqSquared);
+  destroy_darr1d(NofR);
+  destroy_darr1d(IofR);
+  destroy_darr1d(IofRSquared);
+%}
+
+MCDISPLAY
+%{
+	circle("xy", 0, 0, 0, RadiusDetector);
+%}
+
+END

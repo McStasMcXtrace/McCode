@@ -33,9 +33,8 @@
 /*******************************************************************************
 * mcsetstate: transfer parameters into global McXtrace variables
 *******************************************************************************/
-#pragma acc routine seq
 _class_particle mcsetstate(double x, double y, double z, double kx, double ky, double kz,
-			   double phi, double t, double Ex, double Ey, double Ez, double p, int mcgravitation, int mcMagnet, int mcallowbackprop)
+			   double phi, double t, double Ex, double Ey, double Ez, double p, int mcgravitation, void *mcMagnet, int mcallowbackprop)
 {
   _class_particle mcphoton;
 
@@ -51,9 +50,9 @@ _class_particle mcsetstate(double x, double y, double z, double kx, double ky, d
   mcphoton.Ey = Ey;
   mcphoton.Ez = Ez;
   mcphoton.p  = p;
-  mcphoton.mcgravitation = mcgravitation;
+  /*mcphoton.mcgravitation = mcgravitation;
   mcphoton.mcMagnet = mcMagnet;
-  mcphoton.allow_backprop = mcallowbackprop;
+  mcphoton.allow_backprop = mcallowbackprop;*/
   mcphoton._uid       = 0;
   mcphoton._index     = 1;
   mcphoton._absorbed  = 0;
@@ -66,7 +65,6 @@ _class_particle mcsetstate(double x, double y, double z, double kx, double ky, d
 /*******************************************************************************
 * mcgetstate: get photon parameters from particle structure
 *******************************************************************************/
-#pragma acc routine seq
 _class_particle mcgetstate(_class_particle mcphoton, double *x, double *y, double *z,
                double *kx, double *ky, double *kz, double *phi, double *t,
                double *Ex, double *Ey, double *Ez, double *p)
@@ -91,11 +89,12 @@ _class_particle mcgetstate(_class_particle mcphoton, double *x, double *y, doubl
 /*******************************************************************************
 * mcgenstate: set default photon parameters 
 *******************************************************************************/
-#pragma acc routine seq
-_class_particle mcgenstate(void)
-{
-  return(mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, mcgravitation, mcMagnet, mcallowbackprop));
-}
+/*moved to generated code*/
+/*#pragma acc routine seq*/
+/*_class_particle mcgenstate(void)*/
+/*{*/
+/*  return(mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, mcgravitation, mcMagnet, mcallowbackprop));*/
+/*}*/
 
 /*******************************************************************************
 * mccoordschanges: old style rotation routine rot -> (x y z) ,(vx vy vz),(sx,sy,sz)
@@ -129,7 +128,6 @@ mccoordschanges(Coords a, Rotation t, double *x, double *y, double *z,
 * inside_rectangle: Check if (x,y) is inside rectangle (xwidth, yheight)
 * return 0 if outside and 1 if inside
 *******************************************************************************/
-#pragma acc routine seq
 int inside_rectangle(double x, double y, double xwidth, double yheight)
 {
   if (x>-xwidth/2 && x<xwidth/2 && y>-yheight/2 && y<yheight/2)
@@ -143,7 +141,6 @@ int inside_rectangle(double x, double y, double xwidth, double yheight)
  * returns 0 when no intersection is found
  *      or 1 in case of intersection with resulting lengths dl_in and dl_out
 *******************************************************************************/
-#pragma acc routine sequential
 int box_intersect(double *dl_in, double *dl_out,
                   double x, double y, double z,
                   double kx, double ky, double kz,
@@ -222,6 +219,7 @@ int box_intersect(double *dl_in, double *dl_out,
     *dl_in=ab[1];*dl_out=ab[0];
     return 1;
   }
+
 } /* box_intersect */
 
 /*******************************************************************************
@@ -231,7 +229,6 @@ int box_intersect(double *dl_in, double *dl_out,
  *     and resulting times l0 and l1
  * Written by: EK 11.6.09 
  *******************************************************************************/
-#pragma acc routine sequential
 int cylinder_intersect(double *l0, double *l1, double x, double y, double z,
                    double kx, double ky, double kz, double r, double h)
 {
@@ -293,12 +290,13 @@ int cylinder_intersect(double *l0, double *l1, double x, double y, double z,
   return stat;
 } /* cylinder_intersect */
 
+
 /*******************************************************************************
  * sphere_intersect: Calculate intersection between a line and a sphere.
  * returns 0 when no intersection is found
  *      or 1 in case of intersection with resulting lengths l0 and l1 
  *******************************************************************************/
-#pragma acc routine sequential
+#pragma acc routine seq
 int sphere_intersect(double *l0, double *l1, double x, double y, double z,
                  double kx, double ky, double kz, double r)
 {
@@ -324,7 +322,6 @@ int sphere_intersect(double *l0, double *l1, double x, double y, double z,
  * returns 0 when no intersection is found
  *      or 1 when they _are_ found with resulting lengths l0 and l1.
  *****************************************************************************/
-#pragma acc routine sequential
 int ellipsoid_intersect(double *l0, double *l1, double x, double y, double z,
     double kx, double ky, double kz, double a, double b, double c,
     Rotation Q)
@@ -386,7 +383,6 @@ int ellipsoid_intersect(double *l0, double *l1, double x, double y, double z,
  * returns 0 when no intersection is found (i.e. line is parallel to the plane)
  * returns 1 or -1 when intersection length is positive and negative, respectively
  *******************************************************************************/
-#pragma acc routine sequential
 int plane_intersect(double *l, double x, double y, double z,
                  double kx, double ky, double kz, double nx, double ny, double nz, double wx, double wy, double wz)
 {

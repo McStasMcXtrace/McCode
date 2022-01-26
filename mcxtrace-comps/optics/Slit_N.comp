@@ -10,7 +10,6 @@
 * %I
 * Written by: Erik Knudsen
 * Date: June 16, 2009
-* Version: $Revision: 1.0$
 * Origin: Risoe
 * Release: McXtrace 0.1
 *
@@ -51,7 +50,10 @@ SETTING PARAMETERS (radius=0, cut=0, xwidth=0, yheight=0, N=2, d=0)
 
 DECLARE
 %{
-  double xmax,ymax,xmin,ymin;
+  double xmax;
+  double ymax;
+  double xmin;
+  double ymin;
 %}
 
 INITIALIZE

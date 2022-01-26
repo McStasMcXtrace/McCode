@@ -13,7 +13,6 @@
 * Based on neutron component written by Kristian Nielsen and Kim Lefmann
 *
 * Date: June 22, 2009
-* Version: $Revision$
 * Origin: Risoe
 * Release: McXtrace 0.1
 *
@@ -48,12 +47,13 @@ DEFINE COMPONENT Monitor
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
   xwidth=0, yheight=0, restore_xray=0)
-OUTPUT PARAMETERS (Nsum, psum, p2sum)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 DECLARE
 %{
   double Nsum;
-  double psum, p2sum;
+  double psum;
+  double p2sum;
 %}
 
 INITIALIZE
@@ -77,9 +77,13 @@ TRACE
     PROP_Z0;
     if (x>xmin && x<xmax && y>ymin && y<ymax)
     {
-      Nsum++;
+      double p2 = p*p;
+#pragma acc atomic
+      Nsum = Nsum +1;;
+#pragma acc atomic
       psum += p;
-      p2sum += p*p;
+#pragma acc atomic
+      p2sum += p2;
       SCATTER;
     }
     if (restore_xray) {
@@ -89,7 +93,9 @@ TRACE
 
 SAVE
 %{
-    DETECTOR_OUT_0D("Intensity monitor " NAME_CURRENT_COMP, (double) Nsum, psum, p2sum);
+  char title[1024];
+  snprintf(title,1023,"Single monitor %s",NAME_CURRENT_COMP);
+  DETECTOR_OUT_0D(title, (double) Nsum, psum, p2sum);
 %}
 
 MCDISPLAY

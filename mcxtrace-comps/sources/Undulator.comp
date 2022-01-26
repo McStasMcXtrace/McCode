@@ -12,7 +12,6 @@
 * Date: May, 2013.
 * Version: 1.0
 * Origin: DTU Physics
-* Release: McXtrace 1.2
 *
 * Model of an undulator source
 *
@@ -54,13 +53,14 @@
 *****************************************************************/
 
 DEFINE COMPONENT Undulator
-DEFINITION PARAMETERS (verbose=0)
+DEFINITION PARAMETERS ()
 SETTING PARAMETERS (E0=0, dE=0, phase=0, randomphase=1, Ee=2.4, dEe=0, Ie=0.4, tbunch=0, t0=0, B=0, K=0,
         gap=1e-3, int Nper=1, lu=16e-3, sigey=0, sigex=0, sigepx=0, sigepy=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0, quick_integ=0,
-        E1st=0)
-OUTPUT PARAMETERS (prms,alpha,MELE)
-DEPENDENCY "-lgsl -lgslcblas"
+        E1st=0, int verbose=0)
+OUTPUT PARAMETERS ()
+DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+NOACC
 
 SHARE
 %{
@@ -104,31 +104,34 @@ double mxundulator_S_N(double w_w1, int N){
 
 DECLARE
 %{
-  struct {
-    double gamma,gamma2,igamma;
-    double s1x,s1y; /*beam's size at dist (convolution of sigex/sigey and igamma)*/
-    double length; /*undulator magnetic length*/
-    double kc; /*undulator kritical wavenumber*/
-    double pmul; /*initial photon weight*/
-    gsl_function Bsig,Bpi;
-    gsl_integration_workspace *gsl_int_ws;
-  } prms;
+  double gamma;
+  double gamma2;
+  double igamma;
+  double s1x;
+  double s1y; /*beam's size at dist (convolution of sigex/sigey and igamma)*/
+  double length; /*undulator magnetic length*/
+  double kc; /*undulator kritical wavenumber*/
+  double pmul; /*initial photon weight*/
+  gsl_function Bsig;
+  gsl_function Bpi;
+  gsl_integration_workspace *gsl_int_ws;
 
-  /*fine structure constant from CODATA*/
-  const double alpha=7.2973525698e-3;
-  /*electron mass from CODATA in kg*/
-  const double MELE=9.10938291e-31;
+  /*fine structure*/
+  double alpha;
+  /*electron mass*/
+  double MELE;
   //double besselj[nharm],besselh[nharm];
-
-
 %}
 
 
 INITIALIZE
 %{
-  fprintf(stderr,"Warning (%s): Undulator is an experimental component - testing is ongoing\n",NAME_CURRENT_COMP);
+  /*fine structure constant from CODATA*/
+  alpha=7.2973525698e-3;
+  /*electron mass from CODATA in kg*/
+  MELE=9.10938291e-31;
   
-  prms.length=lu*Nper;
+  length=lu*Nper;
 
   if( (!E1st && !K && B<=0) || Ee<=0 || Ie<=0 ){
     fprintf(stderr, "Error (%s): E1st, K, B, Ee, and Ie do not have a sane set of values. Found (%g %g %g %g %g). Aborting.\n",NAME_CURRENT_COMP,E1st,K,B,Ee,Ie);
@@ -136,13 +139,13 @@ INITIALIZE
   }
 
   /*compute gamma*/
-  prms.gamma=(Ee*1e9)/(MELE/CELE*M_C*M_C);/*the extra CELE is to convert to eV*/
-  prms.gamma2=prms.gamma*prms.gamma;
-  prms.igamma=1.0/prms.gamma;
+  gamma=(Ee*1e9)/(MELE/CELE*M_C*M_C);/*the extra CELE is to convert to eV*/
+  gamma2=gamma*gamma;
+  igamma=1.0/gamma;
 
   if(E1st){
       /*compute K and B from desired target energy*/
-      K=sqrt(2*(4*M_PI*prms.gamma2/(E2K*E1st*lu*1e10) -1));
+      K=sqrt(2*(4*M_PI*gamma2/(E2K*E1st*lu*1e10) -1));
       B=2*M_PI*MELE*M_C*K/CELE/lu;
       if (verbose) printf("Undulator (%s) (K,B)=f(E1st=%g)= (%g , %g)\n",NAME_CURRENT_COMP,E1st,K,B);
   }else if(B>0){
@@ -154,7 +157,7 @@ INITIALIZE
   }
 
   if (sigex <0 || sigey<0){
-   fprintf(stderr, "Error (%s): sigex and sigey must be >= 0. Negative beam size isn't meaningful. Aborting.\n",NAME_CURRENT_COMP,sigex,sigey);
+   fprintf(stderr, "Error (%s): sigex (= %g) and sigey (= %g) must both be >= 0. Negative beam size isn't meaningful. Aborting.\n",NAME_CURRENT_COMP,sigex,sigey);
     exit(1);
   }
   if (dist<=0 || focus_xw < 0 || focus_yh < 0){
@@ -163,27 +166,27 @@ INITIALIZE
   }
 
 
-  //printf("Undulator (%s): gamma=%g, divergence is 1/gamma=%g rad.\n",NAME_CURRENT_COMP,prms.gamma,prms.igamma);
+  //printf("Undulator (%s): gamma=%g, divergence is 1/gamma=%g rad.\n",NAME_CURRENT_COMP,gamma,igamma);
   /*compute characteristic energy in keV*/
   double Ec=0.665*Ee*Ee*B;
-  //double Ec=1.5*prms.gamma2*HBAR*CELE*B/MELE *1e-3; /*check units on this one. The 1e-3 factor is because energy is assumed to be in keV*/
+  //double Ec=1.5*gamma2*HBAR*CELE*B/MELE *1e-3; /*check units on this one. The 1e-3 factor is because energy is assumed to be in keV*/
   /*We normally do computations in k so use that for transfer*/
-  prms.kc=E2K*Ec;
+  kc=E2K*Ec;
 
   /*allocate an integration workspace*/
   if(!quick_integ){
-      prms.gsl_int_ws = gsl_integration_workspace_alloc (1000);
+      gsl_int_ws = gsl_integration_workspace_alloc (1000);
   }
-  prms.Bsig.function= &mxundulator_Bsig_integrand;
-  prms.Bpi.function = &mxundulator_Bpi_integrand;
+  Bsig.function= &mxundulator_Bsig_integrand;
+  Bpi.function = &mxundulator_Bpi_integrand;
   gsl_set_error_handler_off();
 
   /*correct for number of rays*/
-  prms.pmul=1.0/( (double) mcget_ncount());
+  pmul=1.0/( (double) mcget_ncount());
 
   /*correct for finite energy interval*/
   if(dE){
-      prms.pmul*=dE*2.0;
+      pmul*=dE*2.0;
   }
 
 %}
@@ -203,9 +206,9 @@ TRACE
     /* add electron beam energy spread to gamma parameters (if necessary).*/
     if( dEe){
         double deltaEe=(randnorm()*dEe*Ee)+ Ee;
-        prms.gamma=(deltaEe*1e9)/(MELE/CELE*M_C*M_C);/*the extra CELE is to convert to eV*/
-        prms.gamma2=prms.gamma*prms.gamma;
-        prms.igamma=1.0/prms.gamma;
+        gamma=(deltaEe*1e9)/(MELE/CELE*M_C*M_C);/*the extra CELE is to convert to eV*/
+        gamma2=gamma*gamma;
+        igamma=1.0/gamma;
     }
 
     /* the undulator's fundamental angular frequency*/
@@ -228,7 +231,7 @@ TRACE
         xi=0;psi=0;xo=0;yo=0;
         Omega=1;
     }
-    p=prms.pmul*Omega/(4*M_PI);
+    p=pmul*Omega/(4*M_PI);
 
     /*add emittance effects - note that doing it this way will shoot some rays outside the focus-window*/
     x=y=z=0;
@@ -239,8 +242,8 @@ TRACE
         y=randnorm()*sigey;
     }
 
-    xi=fabs(atan2(xo/dist));
-    psi=fabs(atan2(yo/dist));
+    xi=fabs(atan2(xo,dist));
+    psi=fabs(atan2(yo,dist));
     /* This has to be after (xi,psi), else it will be convoluted into the weight calculation.*/
     if(sigepx){
         xo+=randnorm()*sigepx*dist;
@@ -262,35 +265,35 @@ TRACE
     kz*=k;
 
 
-    double w1theta=2*prms.gamma2/(1+K*K/2.0 + prms.gamma2 *theta2) * w_u; 
-    double w10=2*prms.gamma2/(1+K*K/2.0) * w_u; 
+    double w1theta=2*gamma2/(1+K*K/2.0 + gamma2 *theta2) * w_u;
+    double w10=2*gamma2/(1+K*K/2.0) * w_u;
     double w_w1=w/w1theta;
     double w_w10=w/w10;
 
     double Bsig_integ_prms[4],Bpi_integ_prms[4];
     Bsig_integ_prms[0] = Bpi_integ_prms[0]=w_w1; /*relative frequency*/
-    Bsig_integ_prms[1] = Bpi_integ_prms[1] = 2*w_w10*xi*prms.gamma*K/(1+K*K/2.0); /*p*/
+    Bsig_integ_prms[1] = Bpi_integ_prms[1] = 2*w_w10*xi*gamma*K/(1+K*K/2.0); /*p*/
     Bsig_integ_prms[2] = Bpi_integ_prms[2] = 0.25 * w_w10*K*K/(1+K*K/2.0); /*q*/
-    Bsig_integ_prms[3] = xi *prms.gamma/K; /*angle terms*/
-    Bpi_integ_prms[3]  = psi*prms.gamma/K; 
+    Bsig_integ_prms[3] = xi *gamma/K; /*angle terms*/
+    Bpi_integ_prms[3]  = psi*gamma/K;
 
     /*pass the parameters to the integrand*/
-    prms.Bsig.params=Bsig_integ_prms;
-    prms.Bpi.params =Bpi_integ_prms;
+    Bsig.params=Bsig_integ_prms;
+    Bpi.params =Bpi_integ_prms;
     if (!quick_integ){
-        gsl_integration_qags (&(prms.Bsig),    0, M_PI,    0, 1e-6, 1000, prms.gsl_int_ws, &bsigma_integral, &bsigma_error); 
-        gsl_integration_qags (&(prms.Bpi),     0, M_PI,    0, 1e-6, 1000, prms.gsl_int_ws, &bpi_integral, &bpi_error); 
+        gsl_integration_qags (&(Bsig),    0, M_PI,    0, 1e-6, 1000, gsl_int_ws, &bsigma_integral, &bsigma_error);
+        gsl_integration_qags (&(Bpi),     0, M_PI,    0, 1e-6, 1000, gsl_int_ws, &bpi_integral, &bpi_error);
     }else{
         size_t neval;
-        gsl_integration_qng (&(prms.Bsig),    0, M_PI,    0, 1e-6, &bsigma_integral, &bsigma_error,&neval);
-        gsl_integration_qng (&(prms.Bpi),     0, M_PI,    0, 1e-6, &bpi_integral, &bpi_error,&neval); 
+        gsl_integration_qng (&(Bsig),    0, M_PI,    0, 1e-6, &bsigma_integral, &bsigma_error,&neval);
+        gsl_integration_qng (&(Bpi),     0, M_PI,    0, 1e-6, &bpi_integral, &bpi_error,&neval);
     }
     bsigma_integral*=M_2_PI;/*correct for only integrating half interval and normalize by pi.*/
     bpi_integral*=M_2_PI;
 
     s_n2=mxundulator_S_N(w_w1, Nper);
     
-    double prefactor=alpha*Ie/CELE*pow(K*prms.gamma/(1+K*K/2.0),2.0)*Nper*Nper*w_w10*w_w10;
+    double prefactor=alpha*Ie/CELE*pow(K*gamma/(1+K*K/2.0),2.0)*Nper*Nper*w_w10*w_w10;
 
     p*=prefactor* ( pow(bsigma_integral,2.0)+pow(bpi_integral,2.0) ) *s_n2;
 
@@ -307,7 +310,7 @@ TRACE
 FINALLY
 %{
     if(!quick_integ){
-        gsl_integration_workspace_free (prms.gsl_int_ws);
+        gsl_integration_workspace_free (gsl_int_ws);
     }
 %}
 MCDISPLAY
@@ -318,24 +321,24 @@ MCDISPLAY
   const double D=dist;
   double x0,z0,x1,z1;
 
-  zz=-(prms.length+lu)/2.0;
+  zz=-(length+lu)/2.0;
   dz=lu/2.0;
 
-  while (zz<=(prms.length-lu)/2.0){
+  while (zz<=(length-lu)/2.0){
     box(0.0,gap/2.0+5e-4,zz,xwidth,1e-3,lu/2.0);
     box(0.0,-gap/2.0-5e-4,zz,xwidth,1e-3,lu/2.0);
     zz+=dz;
   }
 
-  line(0.0,0.0,0.0, K*D*sin(prms.igamma), 0.0, D);
-  line(0.0,0.0,0.0,-K*D*sin(prms.igamma), 0.0, D);
-  line(0.0,0.0,0.0, 0.0, D*sin(prms.igamma), D);
-  line(0.0,0.0,0.0, 0.0,-D*sin(prms.igamma), D);
+  line(0.0,0.0,0.0, K*D*sin(igamma), 0.0, D);
+  line(0.0,0.0,0.0,-K*D*sin(igamma), 0.0, D);
+  line(0.0,0.0,0.0, 0.0, D*sin(igamma), D);
+  line(0.0,0.0,0.0, 0.0,-D*sin(igamma), D);
   
   double phi,dphi;  
-  phi =-prms.igamma;
-  dphi= 2.0*prms.igamma/32;
-  while(phi<prms.igamma){
+  phi =-igamma;
+  dphi= 2.0*igamma/32;
+  while(phi<igamma){
     x0=D*sin(phi);
     x1=D*sin(phi+dphi);
     z0=D*cos(phi);

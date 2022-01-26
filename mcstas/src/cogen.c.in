@@ -1301,7 +1301,7 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
     cout("  #undef sphere");
   }
   cout("");
-  
+
   /* then write the instrument main code, which calls component ones */
   coutf("int %s(%s) { /* called by mccode_main for %s:%s */",
     section_lower,
@@ -1471,11 +1471,7 @@ void def_trace_section(struct instr_def *instr)
   coutf("#define %s (_particle->%s)", "ABSORBED" , "_absorbed");
   /* define mcget_run_num within trace scope to refer to the particle */
   coutf("#define mcget_run_num() _particle->_uid");
-  #if MCCODE_PROJECT == 1     /* neutron */
   cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(_comp); } while(0)");
-  #elif MCCODE_PROJECT == 2   /* xray */
-  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); ABSORBED++; return(_comp); } while(0)");
-  #endif
   cout( "#define ABSORB ABSORB0");
 } /* def_trace_section */
 
@@ -2300,7 +2296,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#pragma acc routine");
   cout("int str_comp(char *str1, char *str2);");
   cout("#endif");
-  cout("");  
+  cout("");
   cout("double particle_getvar(_class_particle *p, char *name, int *suc){");
   cout("#ifndef OPENACC");
   cout("#define str_comp strcmp");
@@ -2311,22 +2307,12 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  if(!str_comp(\"x\",name)){rval=p->x;s=0;}");
   cout("  if(!str_comp(\"y\",name)){rval=p->y;s=0;}");
   cout("  if(!str_comp(\"z\",name)){rval=p->z;s=0;}");
-#if MCCODE_PROJECT == 1   /* neutron */
   cout("  if(!str_comp(\"vx\",name)){rval=p->vx;s=0;}");
   cout("  if(!str_comp(\"vy\",name)){rval=p->vy;s=0;}");
   cout("  if(!str_comp(\"vz\",name)){rval=p->vz;s=0;}");
   cout("  if(!str_comp(\"sx\",name)){rval=p->sx;s=0;}");
   cout("  if(!str_comp(\"sy\",name)){rval=p->sy;s=0;}");
   cout("  if(!str_comp(\"sz\",name)){rval=p->sz;s=0;}");
-#elif MCCODE_PROJECT == 2   /* xray */
-  cout("  if(!str_comp(\"phi\",name)){rval=p->phi;s=0;}");
-  cout("  if(!str_comp(\"kx\",name)){rval=p->kx;s=0;}");
-  cout("  if(!str_comp(\"ky\",name)){rval=p->ky;s=0;}");
-  cout("  if(!str_comp(\"kz\",name)){rval=p->kz;s=0;}");
-  cout("  if(!str_comp(\"Ex\",name)){rval=p->Ex;s=0;}");
-  cout("  if(!str_comp(\"Ey\",name)){rval=p->Ey;s=0;}");
-  cout("  if(!str_comp(\"Ez\",name)){rval=p->Ez;s=0;}");
-#endif
   cout("  if(!str_comp(\"t\",name)){rval=p->t;s=0;}");
   cout("  if(!str_comp(\"p\",name)){rval=p->p;s=0;}");
   while((var = list_next(liter))) {

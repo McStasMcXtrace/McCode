@@ -851,9 +851,10 @@ int cogen_comp_section_class(
       cout("  /* Check for nan or inf particle parms */ ");
       cout("  if(isnan(p)  ||  isinf(p)) ABSORB;");
       cout("  if(isnan(t)  ||  isinf(t)) ABSORB;");
+      cout("  if(isnan(phi)  ||  isinf(phi)) ABSORB;");
       cout("  if(isnan(kx) || isinf(kx)) ABSORB;");
       cout("  if(isnan(ky) || isinf(ky)) ABSORB;");
-      cout("  if(isnan(ky) || isinf(ky)) ABSORB;");
+      cout("  if(isnan(kz) || isinf(kz)) ABSORB;");
       cout("  if(isnan(x)  ||  isinf(x)) ABSORB;");
       cout("  if(isnan(y)  ||  isinf(y)) ABSORB;");
       cout("  if(isnan(z)  ||  isinf(z)) ABSORB;");
@@ -1513,8 +1514,8 @@ void undef_trace_section(struct instr_def *instr)
   cout("#endif");
   cout("#undef SCATTERED");
   cout("#undef RESTORE"  );
-  cout("#undef RESTORE_NEUTRON"  );
-  cout("#undef STORE_NEUTRON"  );
+  cout("#undef RESTORE_XRAY"  );
+  cout("#undef STORE_XRAY"  );
   cout("#undef ABSORBED" );
   cout("#undef ABSORB");
   cout("#undef ABSORB0");
@@ -1621,7 +1622,7 @@ int cogen_raytrace(struct instr_def *instr)
   // we need this override, since "comp" is not defined in raytrace() - see section-wide define
   cout("  #undef ABSORB0");
   cout("  #undef ABSORB");
-  cout("  #define ABSORB0 do { DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(ABSORBED);} while(0)");
+  cout("  #define ABSORB0 do { DEBUG_ABSORB(); ABSORBED++; return(ABSORBED);} while(0)");
   cout("  #define ABSORB ABSORB0");
 
   /* Debugging (initial state). */
@@ -1690,8 +1691,6 @@ int cogen_raytrace(struct instr_def *instr)
       coutf("#endif");
       str_free(exp);
     }
-    coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
-    coutf("      /* begin component %s=%s() [%i] */", comp->name, comp->def->name, comp->index);
     // coordinate transformations (wrt to PREVIOUS)
     coutf("    /* begin component %s=%s() [%i] */", comp->name, comp->def->name, comp->index);
     cout( "    if (!flag_nocoordschange) { // flag activated by JUMP to pass coords change");
@@ -1703,7 +1702,8 @@ int cogen_raytrace(struct instr_def *instr)
     cout( "        }");
     cout( "      } else");
     coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
-    cout( "      } else flag_nocoordschange=0;");
+    cout( "    } else flag_nocoordschange=0;");
+    coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
     cout( "      _particle_save = *_particle;");
     coutf("      DEBUG_COMP(_%s_var._name);", comp->name);
     cout ("      DEBUG_STATE();");
@@ -1810,27 +1810,30 @@ int cogen_raytrace(struct instr_def *instr)
 
   coutf("  /* CPU-loop */");
   coutf("  unsigned long long loops;");
-  coutf("  #ifndef GPU_INNERLOOP");
-  coutf("  #define GPU_INNERLOOP 2147483647");
-  coutf("  #endif");
-  coutf("  long innerloop=GPU_INNERLOOP;");
-  coutf("  loops = ceil((double)ncount/innerloop);");
+  coutf("  loops = ceil((double)ncount/gpu_innerloop);");
   coutf("  /* if on GPU, printf has been globally nullified, re-enable here */");
   coutf("  #ifdef OPENACC");
   coutf("  #ifndef MULTICORE");
   coutf("  #undef printf");
   coutf("  #endif");
   coutf("  #endif");
-  coutf("  if (ncount>innerloop) {");
-  coutf("    printf(\"Defining %%llu CPU loops around kernel and adjusting ncount\\n\",loops);");
-  coutf("    mcset_ncount(loops*innerloop);");
+  coutf("");
+  coutf("  #ifdef OPENACC");
+  coutf("  if (ncount>gpu_innerloop) {");
+  coutf("    printf(\"Defining %%llu CPU loops around GPU kernel and adjusting ncount\\n\",loops);");
+  coutf("    mcset_ncount(loops*gpu_innerloop);");
   coutf("  } else {");
+  coutf("    #endif");
   coutf("    loops=1;");
-  coutf("    innerloop = ncount;");
+  coutf("    gpu_innerloop = ncount;");
+  coutf("    #ifdef OPENACC");
   coutf("  }");
+  coutf("    #endif");
   coutf("");
   coutf("  for (unsigned long long cloop=0; cloop<loops; cloop++) {");
+  coutf("    #ifdef OPENACC");
   coutf("    if (loops>1) fprintf(stdout, \"%%d..\", (int)cloop); fflush(stdout);");
+  coutf("    #endif");
   coutf("");
   coutf("    /* if on GPU, re-nullify printf */");
   coutf("    #ifdef OPENACC");
@@ -1839,12 +1842,8 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("    #endif");
   coutf("    #endif");
   coutf("");
-  coutf("    #ifndef VECSIZE");
-  coutf("    #define VECSIZE 128");
-  coutf("    #endif");
-  coutf("");
-  coutf("    #pragma acc parallel loop gang vector vector_length(VECSIZE)");
-  coutf("    for (unsigned long pidx=0 ; pidx < innerloop ; pidx++) {");
+  coutf("    #pragma acc parallel loop num_gangs(numgangs) vector_length(vecsize)");
+  coutf("    for (unsigned long pidx=0 ; pidx < gpu_innerloop ; pidx++) {");
   coutf("      _class_particle particleN = mcgenstate(); // initial particle");
   coutf("      _class_particle* _particle = &particleN;");
   coutf("      particleN._uid = pidx;");
@@ -1854,8 +1853,8 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("");
   coutf("      raytrace(_particle);");
   coutf("    } /* inner for */");
-  coutf("    seed = seed+innerloop;");
-  coutf("    mcncount += innerloop;");
+  coutf("    seed = seed+gpu_innerloop;");
+  coutf("    mcncount += gpu_innerloop;");
   coutf("  } /* CPU for */");
   coutf("  /* if on GPU, printf has been globally nullified, re-enable here */");
   coutf("  #ifdef OPENACC");
@@ -1909,24 +1908,30 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("");
   coutf("  // set up outer (CPU) loop / particle batches");
   coutf("  unsigned long long loops;");
-  coutf("  #ifndef GPU_FUNNEL_INNERLOOP");
-  coutf("  #define GPU_FUNNEL_INNERLOOP 1024*1024");
-  coutf("  #endif");
-  coutf("  long innerloop=GPU_FUNNEL_INNERLOOP; // <-- tune by memory capacity here (max threads: 2147483647);");
-  coutf("  loops = ceil((double)ncount/innerloop);");
-  coutf("  if (ncount>innerloop) {");
+  coutf("  #ifdef OPENACC");
+  coutf("  loops = ceil((double)ncount/gpu_innerloop);");
+  coutf("  if (ncount>gpu_innerloop) {");
   coutf("    printf(\"Defining %%llu CPU loops around kernel and adjusting ncount\\n\",loops);");
-  coutf("    mcset_ncount(loops*2147483647);");
+  coutf("    mcset_ncount(loops*gpu_innerloop);");
   coutf("  } else {");
+  coutf("  #endif");
   coutf("    loops=1;");
-  coutf("    innerloop = ncount;");
+  coutf("    gpu_innerloop = ncount;");
+  coutf("  #ifdef OPENACC");
   coutf("  }");
+  coutf("  #endif");
   coutf("");
   coutf("  // create particles struct and pointer arrays (same memory used by all batches)");
-  coutf("  _class_particle* particles = malloc(innerloop*sizeof(_class_particle));");
-  coutf("  _class_particle* pbuffer = malloc(innerloop*sizeof(_class_particle));");
-  coutf("  long livebatchsize = innerloop;");
+  coutf("  _class_particle* particles = malloc(gpu_innerloop*sizeof(_class_particle));");
+  coutf("  _class_particle* pbuffer = malloc(gpu_innerloop*sizeof(_class_particle));");
+  coutf("  long livebatchsize = gpu_innerloop;");
   coutf("");
+
+  // we need this override, since "comp" is not defined in raytrace() - see section-wide define
+  cout("  #undef ABSORB0");
+  cout("  #undef ABSORB");
+  cout("  #define ABSORB0 do { DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; } while(0)");
+  cout("  #define ABSORB ABSORB0");
 
   // batches
   coutf("  // outer loop / particle batches");
@@ -1969,7 +1974,7 @@ int cogen_rt_funnel(struct instr_def *instr)
         coutf("");
         coutf("    // SPLIT with available livebatchsize ");
         coutf("    long mult_%s;",comp->name);
-        coutf("    livebatchsize = sort_absorb_last(particles, pbuffer, livebatchsize, innerloop, 1, &mult_%s);",comp->name);
+        coutf("    livebatchsize = sort_absorb_last(particles, pbuffer, livebatchsize, gpu_innerloop, 1, &mult_%s);",comp->name);
         coutf("    //printf(\"livebatchsize: %cld, split: %cld\\n\",  livebatchsize, mult);", '%', '%');
       }
       if (comp->split) {
@@ -2019,6 +2024,20 @@ int cogen_rt_funnel(struct instr_def *instr)
       cout( "        if (_particle->_restore)");
       coutf("          *_particle = _particle_save;", comp->index);
     };
+    // GROUP
+    if (comp->group) {
+      coutf("      // GROUP %s: from %s [%i] to %s [%i]", comp->group->name,
+        comp->group->first_comp, comp->group->first_comp_index,
+        comp->group->last_comp,  comp->group->last_comp_index);
+      // skip_following_when_scattered (to end of group)
+      coutf("      if (SCATTERED) _particle->_index = %i; // when SCATTERED in GROUP: reach exit of GROUP after %s",
+        comp->group->last_comp_index, comp->group->last_comp);
+      // final_absorb_when_all_not_scattered
+      if (comp->index == comp->group->last_comp_index)
+        coutf("      else ABSORB;     // not SCATTERED at end of GROUP: removes left events", comp->group->last_comp);
+      else // comp_absorb_sends_to_next
+        coutf("      else ABSORBED=0; // not SCATTERED within GROUP: always tries next");
+    }
     coutf("        _particle->_index++;");
     coutf("      }");
     first=0;
@@ -2039,7 +2058,7 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("    }");
   coutf("");
   coutf("    // jump to next viable seed");
-  coutf("    seed = seed + innerloop;");
+  coutf("    seed = seed + gpu_innerloop;");
   coutf("  } // outer loop / particle batches");
   cout( "");
   coutf("  free(particles);");
@@ -2054,7 +2073,7 @@ int cogen_rt_funnel(struct instr_def *instr)
 } /* cogen_rt_funnel */
 
 /*******************************************************************************
-* Output code for the mcstas runtime system. Default is to copy the runtime
+* Output code for the mcxtrace runtime system. Default is to copy the runtime
 * code into the generated executable, to minimize problems with finding the
 * right files during compilation and linking, but this may be changed using
 * the --no-runtime compiler switch.
@@ -2168,9 +2187,6 @@ cogen_header(struct instr_def *instr, char *output_name)
 #elif MCCODE_PROJECT == 2 /* xray */
   cout("  double kx,ky,kz; /* wave-vector */");
   cout("  double phi, Ex,Ey,Ez; /* phase and electrical field */");
-  cout("  int mcgravitation; /* gravity-state */");
-  cout("  int mcMagnet;    /* precession-state */");
-  cout("  int allow_backprop; /* allow backprop */");
 #endif
   //cout("  randstate_t randstate[RANDSTATE_LEN]");
   cout("  unsigned long randstate[7];"); // for the KISS generator
@@ -2214,8 +2230,8 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#pragma acc routine");
   cout("_class_particle mcsetstate(double x, double y, double z, double kx, double ky, double kz,");
   cout("			   double phi, double t, double Ex, double Ey, double Ez, double p, int mcgravitation, void *mcMagnet, int mcallowbackprop);");
-  cout("");
-  cout("_class_particle mcgetstate(_class_particle _particle, double *x, double *y, double *z, double *kx, double *ky, double *kz,");
+  cout("#pragma acc routine");
+  cout("_class_particle mcgetstate(_class_particle mcphoton, double *x, double *y, double *z, double *kx, double *ky, double *kz,");
   cout("			   double *phi, double *t, double *Ex, double *Ey, double *Ez, double *p);");
   cout("");
   cout("extern int mcgravitation;      /* flag to enable gravitation */");
@@ -2241,7 +2257,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#pragma acc routine");
   cout("int str_comp(char *str1, char *str2);");
   cout("#endif");
-  cout("");  
+  cout("");
   cout("double particle_getvar(_class_particle *p, char *name, int *suc){");
   cout("#ifndef OPENACC");
   cout("#define str_comp strcmp");
@@ -2252,14 +2268,6 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  if(!str_comp(\"x\",name)){rval=p->x;s=0;}");
   cout("  if(!str_comp(\"y\",name)){rval=p->y;s=0;}");
   cout("  if(!str_comp(\"z\",name)){rval=p->z;s=0;}");
-#if MCCODE_PROJECT == 1   /* neutron */
-  cout("  if(!str_comp(\"vx\",name)){rval=p->vx;s=0;}");
-  cout("  if(!str_comp(\"vy\",name)){rval=p->vy;s=0;}");
-  cout("  if(!str_comp(\"vz\",name)){rval=p->vz;s=0;}");
-  cout("  if(!str_comp(\"sx\",name)){rval=p->sx;s=0;}");
-  cout("  if(!str_comp(\"sy\",name)){rval=p->sy;s=0;}");
-  cout("  if(!str_comp(\"sz\",name)){rval=p->sz;s=0;}");
-#elif MCCODE_PROJECT == 2   /* xray */
   cout("  if(!str_comp(\"phi\",name)){rval=p->phi;s=0;}");
   cout("  if(!str_comp(\"kx\",name)){rval=p->kx;s=0;}");
   cout("  if(!str_comp(\"ky\",name)){rval=p->ky;s=0;}");
@@ -2267,7 +2275,6 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  if(!str_comp(\"Ex\",name)){rval=p->Ex;s=0;}");
   cout("  if(!str_comp(\"Ey\",name)){rval=p->Ey;s=0;}");
   cout("  if(!str_comp(\"Ez\",name)){rval=p->Ez;s=0;}");
-#endif
   cout("  if(!str_comp(\"t\",name)){rval=p->t;s=0;}");
   cout("  if(!str_comp(\"p\",name)){rval=p->p;s=0;}");
   while((var = list_next(liter))) {

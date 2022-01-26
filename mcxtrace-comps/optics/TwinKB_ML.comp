@@ -6,30 +6,30 @@
 *         Institut Laue Langevin, Grenoble, France
 *         University of Copenhagen, Copenhagen, Denmark
 *
-* Component: Multilayer_elliptic
+* Component: TwinKB_ML
 *
 * %I
 *
 * Written by: Jana Baltser, Peter Willendrup, Anette Vickery, Andrea Prodi, Erik Knudsen, Jesper Buch Jensen
 * Date: May 2012
 * Version: 1.0
-* Release: McXtrace 0.1
 * Origin: NBI
 *
-* Elliptic multilayer mirror
-* 
-* Reads reflectivity values from a data input file (Ref.dat) for a W/B4C multilayer.
-* The multilayer code reflects ray in an ideal geometry, the reflectivity datafile accounts for surface roughness, sigma.
-*
-* The mirror is positioned such that the long axis of the mirror elliptical surface coincides with
-* z-axis
+* Montel optic model (aka side-by-side Kirkpatrick Baez)
 * 
 * %D
+* Models a Montel optic, or Twin Kirkpatrick Baez mirror optic (hence the component name).
+* The mirror are cfully abutting, i.e. there's is no gap between them, and perfectly elliptic.
+*
+* Reads reflectivity values from a data input file for a W/B4C multilayer.
+* The multilayer code reflects ray in an ideal geometry, the reflectivity datafile accounts for surface roughness, sigma.
+*
+* The mirror is positioned such that the long axis of the mirror elliptical surface coincides with the z-axis.
+* 
 * The algorithm:
-*  Incoming photon's coordinates and direction (k-vector) are transformed into an elliptical reference frame 
+* Incoming photon's coordinates and direction (k-vector) are transformed into an elliptical reference frame
 * (elliptical parameters are calculated according to the mirror's position and its focusing distances and the  * incident angle), the intersection point is then defined. A new, reflected photon is then starting at the  
 * point of intersection.
-* 
 *
 * %P
 * Input parameters:
@@ -39,15 +39,15 @@
 * length: [m]  Length of the mirrors
 * width: [m]   Width of the mirror along x-axis
 * R0: [ ]      Constant reflectivity, R0=1 for an ideal situation. If R0=0, the code reads the reflectivity from the datafile
-* reflectivity_datafile: [str] File whih contains reflectivity data as a function of q.
+* reflectivity_datafile: [str] File which contains reflectivities as a function of q.
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT TwinKB_ML
-DEFINITION PARAMETERS (string reflectivity_datafile="Ref.txt")
-SETTING PARAMETERS (theta=1.2,s1,s2,length=0.6,width=0.2,R0=0)
-OUTPUT PARAMETERS (ref_table, a,b,c,M,Z0,Y0,xi,cost0, Q1, Q2)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string reflectivity_datafile="Ref.txt", theta=1.2,s1,s2,length=0.6,width=0.2,R0=0)
+OUTPUT PARAMETERS ()
 //STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
 
 SHARE 
@@ -81,8 +81,16 @@ SHARE
 
 DECLARE
 %{
-  double a,b,c,M,Z0,Y0,xi,cost0;
-  Rotation Q1,Q2;
+  double a;
+  double b;
+  double c;
+  double M;
+  double Z0;
+  double Y0;
+  double xi;
+  double cost0;
+  Rotation Q1;
+  Rotation Q2;
   t_Table ref_table;
 %}
 

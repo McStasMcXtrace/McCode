@@ -17,8 +17,9 @@
 * Tests the correct working of the mulitlyer_elliptic component both using a
 * reflectivity file and the kinematical approximation. 
 *
-* Example: Test_ML_elliptic.instr s1=1 s2=2 gamma=1.2 fromfile=0 Detector: emonsingle_I=8.79613e-11
-* Example: Test_ML_elliptic.instr s1=1 s2=2 gamma=1.2 fromfile=1 Detector: emonsingle_I=6.1809e-10
+* %Example: Test_ML_elliptic.instr S1=1 S2=2 gamma=1.2 fromfile=0 Detector: emon1_I=6.91956e-21
+* %Example: Test_ML_elliptic.instr S1=1 S2=2 gamma=1.2 fromfile=1 Detector: emon1_I=4.61321e-21
+* %Example: Test_ML_elliptic.instr S1=1 S2=2 gamma=1.2 fromfile=1 fxw=2e-2 fyh=1e-3 Detector: emon1_I=9.22372e-08
 *
 * %Parameters
 * s1: [m] Distance from source focus to multilayer centre.
@@ -33,7 +34,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Test_ML_elliptic(S1=1, S2=2, gamma=1.2, fromfile=1)
+DEFINE INSTRUMENT Test_ML_elliptic(S1=1, S2=2, gamma=1.2, fromfile=1, fxw=1e-9, fyh=1e-9)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -61,10 +62,9 @@ TRACE
 COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
-
 COMPONENT source = Source_flat(
-    radius = 1e-6, dist = 1, focus_xw = 1e-2, focus_yh = 1e-4,
-    E0 = 7.1, dE = 14.1999)
+    radius = 1e-6, dist = 1, focus_xw = fxw, focus_yh = fyh,
+    E0 = 20.1, dE = 20.0)
 AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT psd0 = PSD_monitor(
@@ -73,7 +73,7 @@ COMPONENT psd0 = PSD_monitor(
 AT(0,0,1) RELATIVE source
 
 COMPONENT emon0 = E_monitor(
-    filename="emon0",xwidth=.3, yheight=.1, nE=201,restore_xray=1, Emin=0, Emax=14.2)
+    filename="emon0",xwidth=.3, yheight=.1, nE=201,restore_xray=1, Emin=0, Emax=50)
 AT(0,0,1) RELATIVE source
 
 COMPONENT a1=Arm()
@@ -81,13 +81,13 @@ AT(0,0,1) RELATIVE source
 ROTATED (gamma,0,0) RELATIVE source
 
 COMPONENT ml0 = Multilayer_elliptic(
-    reflectivity_datafile = "reflectivity.txt", theta = gamma,
+    reflectivity_datafile = "Ref_W_B4C.txt", theta = gamma,
     s1 = S1, s2 = S2, length = 0.1, width = 0.1, R0 = 1,
     Emin=7, Emax=10, Estep=0.05)
 WHEN (fromfile) AT (0, 0, 0) RELATIVE a1
 
 COMPONENT ml1 = Multilayer_elliptic(
-    reflectivity_datafile = NULL, theta = gamma,
+    reflectivity_datafile = "NULL", theta = gamma,
     s1 = S1, s2 = S2, length = 0.1, width = 0.1, R0 = 1,
     Emin=0, Emax=14.2, Estep=0.05,
     Gamma=0.2, Lambda=50, N=10, rho_AB=3.9817)

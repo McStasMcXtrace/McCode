@@ -10,7 +10,6 @@
 * %I
 * Written by: Erik Knudsen
 * Date: Jan 24, 2011
-* Version: $Revision$
 * Origin: DTU Physics
 * Release: McXtrace 1.1
 *
@@ -33,9 +32,10 @@
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Filter
-DEFINITION PARAMETERS (refraction=1,fixed_delta=0,string material_datafile="Be.txt")
-SETTING PARAMETERS (string geometry=0,xwidth,yheight,zdepth) 
-OUTPUT PARAMETERS (prms,filter_row)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (refraction=1,fixed_delta=0,string material_datafile="Be.txt",
+    string geometry=0,xwidth=0,yheight=0,zdepth=0)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -44,7 +44,7 @@ SHARE
   %include "interoff-lib"
 
   enum shapes_t {NONE=-1,SPHERE, CUBE, ELLIPSOID, ANY};
-
+  #pragma acc routine
   int filter_refract(double *kx, double *ky, double *kz, double nx, double ny, double nz, double delta0, double delta1){
     const double n2=scalar_prod(nx,ny,nz, nx,ny,nz);
     const double k=sqrt(scalar_prod(*kx,*ky,*kz, *kx,*ky,*kz));
@@ -83,57 +83,52 @@ SHARE
 
 DECLARE
 %{
-  struct {
-    int Z,mu_c;
-    double Ar, rho;
-    double delta_prefactor,betafact;
-    t_Table table;
-    enum shapes_t shape;
-    off_struct offdata;
-  } *prms;
+  int Z;
+  int mu_c;
+  double Ar;
+  double rho;
+  double delta_prefactor;
+  double betafact;
+  t_Table table;
+  int shape;
+  off_struct offdata;
   int filter_row;
-
 %}
 
 INITIALIZE
 %{
   int status=0;
  
-  prms=calloc(1,sizeof(* prms));
-
   /*if geometry is specified - try to read the off/ply file and set shape*/
-  prms->shape=CUBE; 
+  shape=CUBE;
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
-    if (off_init(geometry, xwidth, yheight, zdepth, 0, &(prms->offdata))) {
-      prms->shape=ANY; 
+    if (off_init(geometry, xwidth, yheight, zdepth, 0, &(offdata))) {
+      shape=ANY;
     }
   } else if(!xwidth || !yheight || !zdepth){
-    fprintf(stderr,"Error (%s): Filter has zero effective volume\n",NAME_CURRENT_COMP);
+    fprintf(stderr,"Error (%s): Filter has zero effective volume.\n",NAME_CURRENT_COMP);
     exit(-1);
   }
   
-  
-  //t_Table T;
-  if ( (status=Table_Read(&(prms->table),material_datafile,0))==-1){
-    fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
+  if ( (status=Table_Read(&(table),material_datafile,0))==-1){
+    fprintf(stderr,"Error (%s): Could not parse file \"%s\".\n",NAME_CURRENT_COMP,material_datafile);
     exit(-1);
   }
   char **header_parsed;
-  header_parsed=Table_ParseHeader(prms->table.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
-  if (header_parsed[0]){prms->Z=strtol(header_parsed[0],NULL,10);}
-  if (header_parsed[1]){prms->Ar=strtod(header_parsed[1],NULL);}
-  if (header_parsed[2]){prms->rho=strtod(header_parsed[2],NULL);}
-  else{fprintf(stderr,"Warning(%s): %s not found in header of %s, set to 1\n",NAME_CURRENT_COMP,"rho",material_datafile);prms->rho=1;}
+  header_parsed=Table_ParseHeader(table.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
+  if (header_parsed[0]){Z=strtol(header_parsed[0],NULL,10);}
+  if (header_parsed[1]){Ar=strtod(header_parsed[1],NULL);}
+  if (header_parsed[2]){rho=strtod(header_parsed[2],NULL);}
+  else{fprintf(stderr,"Warning(%s): %s not found in header of %s, set to 1\n",NAME_CURRENT_COMP,"rho",material_datafile);rho=1;}
   /*which columns holds the mus*/
-  prms->mu_c=5;
-  if (prms->table.columns==3) prms->mu_c=1;
+  mu_c=5;
+  if (table.columns==3) mu_c=1;
 
-  prms->delta_prefactor= NA*(prms->rho*1e-24)/prms->Ar * 2.0*M_PI*RE;
-  int j;
-  if(10*(double)mcget_ncount()>(prms->table.max_x-prms->table.min_x)/(prms->table.step_x)){
+  delta_prefactor= NA*(rho*1e-24)/Ar * 2.0*M_PI*RE;
+  if(10*(double)mcget_ncount()>(table.max_x-table.min_x)/(table.step_x)){
     /*it is probably worth Rebinning*/
     printf("%s: Rebinning material data (%s) for faster tracing...",NAME_CURRENT_COMP,material_datafile); 
-    Table_Rebin(&(prms->table));
+    Table_Rebin(&(table));
     printf("done\n");
   }
   
@@ -144,10 +139,10 @@ TRACE
   double alpha,e,k,mu,mu0,delta,beta,f;
   double l0,l1,nx,ny,nz;
   int i,status=0;
-  if (prms->shape==CUBE) {
+  if (shape==CUBE) {
     status=box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth);
-  }else if (prms->shape==ANY){
-    status = off_x_intersect(&l0, &l1, NULL, NULL, x, y, z, kx, ky, kz, prms->offdata );
+  }else if (shape==ANY){
+    status = off_x_intersect(&l0, &l1, NULL, NULL, x, y, z, kx, ky, kz, offdata );
   } 
 
   if(status){
@@ -157,14 +152,14 @@ TRACE
     k=sqrt(kx*kx+ky*ky+kz*kz);
     e=k*K2E;
     /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
-    f=Table_Value(prms->table,e,1);
-    delta = (fixed_delta ? fixed_delta : f/(k*k) * prms->delta_prefactor);
-    mu0=Table_Value(prms->table,e,prms->mu_c)*prms->rho*1e2;
+    f=Table_Value(table,e,1);
+    delta = (fixed_delta ? fixed_delta : f/(k*k) * delta_prefactor);
+    mu0=Table_Value(table,e,mu_c)*rho*1e2;
     beta = mu0/(2*k);
 
     /*change direction of ray due to refraction*/
     if(refraction){
-      switch (prms->shape){
+      switch (shape){
         case CUBE:
           if( fabs(x-xwidth*0.5)<FLT_EPSILON || fabs(x+xwidth*0.5)<FLT_EPSILON ){
             nx=1.0;ny=0.0;nz=0.0;
@@ -181,10 +176,10 @@ TRACE
       SCATTER;
 
       /*change of direction - we must now intersect again*/
-      if (prms->shape==CUBE) {
+      if (shape==CUBE) {
           status=box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth);
-      }else if (prms->shape==ANY){
-          status = off_x_intersect(&l0, &l1, NULL, NULL, x, y, z, kx, ky, kz, prms->offdata );
+      }else if (shape==ANY){
+          status = off_x_intersect(&l0, &l1, NULL, NULL, x, y, z, kx, ky, kz, offdata );
       }
     }
 
@@ -200,7 +195,7 @@ TRACE
     
     /*change direction of ray due to refraction*/
     if(refraction){
-      switch (prms->shape){
+      switch (shape){
         case CUBE:
           if( fabs(x-xwidth*0.5)<FLT_EPSILON || fabs(x+xwidth*0.5)<FLT_EPSILON ){
             nx=1.0;ny=0.0;nz=0.0;
@@ -227,17 +222,16 @@ TRACE
 
 FINALLY
 %{
-  Table_Free(&(prms->table));
-  free(prms);
+  Table_Free(&(table));
 %}
 
 MCDISPLAY
 %{
   
-  if (prms->shape==CUBE){
+  if (shape==CUBE){
     box(0,0,0,xwidth,yheight,zdepth);
-  }else if (prms->shape == ANY) {	/* OFF file */
-    off_display(prms->offdata);
+  }else if (shape == ANY) {	/* OFF file */
+    off_display(offdata);
   }
 %}
 

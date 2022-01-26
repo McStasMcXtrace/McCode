@@ -40,9 +40,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Lens_parab_Cyl
-DEFINITION PARAMETERS (string material_datafile="Be.txt")
-SETTING PARAMETERS (r=.5e-3,yheight=1.2e-3,xwidth=1.2e-3,d=.1e-3, int N=1, rough_z=0, rough_xy=0)
-OUTPUT PARAMETERS (prms,parab)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string material_datafile="Be.txt",r=.5e-3,yheight=1.2e-3,xwidth=1.2e-3,d=.1e-3, int N=1, rough_z=0, rough_xy=0)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -52,17 +52,14 @@ SHARE
       double coord[3];
       double k[3];
   } data_lens_parab_Cyl;
-  typedef struct {
-      double constants[6];
-  } param_lens_parab_Cyl;
  
   // intersect_parab_Cyl function calculates the intersection point on a surface of a parabolic cylinder with the photon's trajectory, estimates two points of intersection (if only) and chooses the one that lies within the interval (-yheight/2<=y=<yheight/2 && -xwidth/2<=x=<xwidth/2) and returns it.
-
-  data_lens_parab_Cyl intersect_parab_Cyl(data_lens_parab_Cyl a, param_lens_parab_Cyl b, double rough_xy, double rough_z){
+#pragma acc routine
+  data_lens_parab_Cyl intersect_parab_Cyl(data_lens_parab_Cyl a, double *b, double rough_xy, double rough_z){
     data_lens_parab_Cyl result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};
     int i;
     double A,B,C,D,rr;
-    double t[2],p[3],knorm[3],k[3],Knorm,p_tmp[3],p1_tmp[3];
+    double t[2],p[3],knorm[3],k[3],Knorm,pos_tmp[3],pos1_tmp[3];
     double Sign,dd,M;
     
     double N[3],Nx,Ny,Nz,Nnorm;
@@ -81,85 +78,84 @@ SHARE
     knorm[1]=k[1]/Knorm; 
     knorm[2]=k[2]/Knorm;
        
-    rr=b.constants[0];
-    yh=b.constants[1];
-    xw=b.constants[2];
-    dd=b.constants[3];
-    M=b.constants[4];
-    Sign=b.constants[5];
+    rr=b[0];
+    yh=b[1];
+    xw=b[2];
+    dd=b[3];
+    M=b[4];
+    Sign=b[5];
     
     A=knorm[1]*knorm[1];
     B=2*(p[1]*knorm[1]-Sign*rr*knorm[2]);
     C=p[1]*p[1]-Sign*2*rr*p[2]+Sign*dd*2*rr;
     D=B*B-4.0*A*C;
  
-    if (D<0) {
-        /*ray does not intersect the parabola*/
-	fprintf(stderr,"line 89: D<0 %s\n",NAME_CURRENT_COMP);
+    if (D<0) { /*ray does not intersect the parabola*/
         return result;
+    }
+    if (A==0){ /*incident k-vector is parallel (exactly) to the z-axis. Thus, the eq. becomes linear*/
+      if (B==0){
+	return result;
       }
-    if (A==0){
-      /*incident k-vector is parallel (exactly) to the z-axis. Thus, the eq. becomes linear*/
-      if (B==0){ fprintf(stderr, "line 92: Division by zero in %s\n",NAME_CURRENT_COMP); return result;}
-      t[0]=-C/B; 
-      for (i=0;i<=2;i++){
-	result.coord[i]=p[i]+t[0]*knorm[i]; 
+      t[0]=-C/B;
+      for(i=0;i<=2;i++){
+	result.coord[i]=p[i]+t[0]*knorm[i];
       }
     } else {
       double qq;
       if (B<0){
 	qq=-0.5*(B-sqrt(D));
-        }else{
-          qq=-0.5*(B+sqrt(D));
-	}
-        t[0]=qq/A; 
-        t[1]=C/qq;
-      
+      }else{
+        qq=-0.5*(B+sqrt(D));
+      }
+      t[0]=qq/A;
+      t[1]=C/qq;
+
       for(i=0;i<=2;i++){
-	p_tmp[i]=p[i]+t[0]*knorm[i];
-	p1_tmp[i]=p[i]+t[1]*knorm[i];
+	pos_tmp[i]=p[i]+t[0]*knorm[i];
+	pos1_tmp[i]=p[i]+t[1]*knorm[i];
       }
-  
-      if ( fabs(p_tmp[1])<=fabs(yh/2) && fabs(p_tmp[0])<=fabs(xw/2) ){
+      if ( fabs(pos_tmp[1])<=fabs(yh/2) && fabs(pos_tmp[0])<=fabs(xw/2) ){
+        for(i=0;i<=2;i++){
+          result.coord[i]=pos_tmp[i];
+        }
+      }	else if ( fabs(pos1_tmp[1])<=fabs(yh/2) && fabs(pos1_tmp[0])<=fabs(xw/2) ){
 	for(i=0;i<=2;i++){
-	  result.coord[i]=p_tmp[i];
+	  result.coord[i]=pos1_tmp[i];
 	}
-      }	else if ( fabs(p1_tmp[1])<=fabs(yh/2) && fabs(p1_tmp[0])<=fabs(xw/2) ){
-	for(i=0;i<=2;i++){
-	  result.coord[i]=p1_tmp[i];
-	}
-      }	else return result; 
-      }
-   
-    
+      }	else return result;
+    }
+
+    /*compute normal vector*/
     Nx=0;
-    if (result.coord[1]==0){		
-	Ny=1;	
-	Nz=0; 
-    } else if (result.coord[1]!=0) {	
+    if (result.coord[1]==0){
+      Ny=1;
+      Nz=0;
+    } else if (result.coord[1]!=0){
 	Ny=Sign*rr/result.coord[1]; Nz=1;
     }
-    if (rough_xy) {
-     	double d_xy=rough_xy*randnorm(); 	
-	Ny+=d_xy; 
-    } 
-    if (rough_z) {
-    	double d_z=rough_z*randnorm(); 
-	Nz+=d_z;
-    }  
+    //if (rough_xy) {
+    // 	double d_xy=rough_xy*randnorm();
+    //	Ny+=d_xy;
+    //}
+    //if (rough_z) {
+    //	double d_z=rough_z*randnorm();
+    //  Nz+=d_z;
+    //}
    
     Nnorm=sqrt(Nx*Nx+Ny*Ny+Nz*Nz);
-    N[0]=Nx/Nnorm; 
-    N[1]=Ny/Nnorm; 
-    N[2]=Nz/Nnorm; 
+    N[0]=Nx/Nnorm;
+    N[1]=Ny/Nnorm;
+    N[2]=Nz/Nnorm;
     
     cos_theta=N[0]*knorm[0]+N[1]*knorm[1]+N[2]*knorm[2];
-    cos_theta1=M*cos_theta;   // Snell's law
- 
+    cos_theta1=M*cos_theta; /* Snell's law*/
+
     /* new k vector */
     if ((1.0-cos_theta*cos_theta)==0) {
-       fprintf(stderr,"line 134: Division by zero\n"); return result; }
-       
+       return result; 
+    }
+   
     Arg=(1.0-cos_theta1*cos_theta1)/(1.0-cos_theta*cos_theta);
     s=(1/M)*sqrt(Arg);
     q=(Knorm/Nnorm)*((1/M)*cos_theta1-s*cos_theta);
@@ -171,41 +167,38 @@ SHARE
     for(i=0;i<3;i++) { 
       result.k[i]=k_new[i]; 
     }
-
    return result;
   }
 %}
 
 DECLARE
 %{
-  struct {
-    int Z;
-    double Ar, rho;
-    double *E, *mu, *f;
-    t_Table T;
-  } *prms;
+  int Z;
+  double Ar;
+  double rho;
+  t_Table matT;
 %}
+
 
 INITIALIZE
 %{
   int status=0;
-  prms=calloc(1,sizeof(*prms));
 
-  if ( (status=Table_Read(&(prms->T),material_datafile,0))==-1){
+  if ( (status=Table_Read(&(matT),material_datafile,0))==-1){
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
     exit(-1);
   }
   char **header_parsed;
-  header_parsed=Table_ParseHeader(prms->T.header,"Z","A[r]","rho",NULL);
-  if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
-  if (!prms->Ar) prms->Ar=strtod(header_parsed[1],NULL);
-  if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
+  header_parsed=Table_ParseHeader(matT.header,"Z","A[r]","rho",NULL);
+  if (!Z) Z=strtol(header_parsed[0],NULL,10);
+  if (!Ar) Ar=strtod(header_parsed[1],NULL);
+  if (!rho) rho=strtod(header_parsed[2],NULL);
 %}
 
 TRACE
 %{
-   // calculation of the parabolic parameters
-  param_lens_parab_Cyl parab_Cyl;
+  // calculation of the parabolic parameters
+  double parab_Cyl[6];
   data_lens_parab_Cyl incid,refr,outg;
   
   int i=0,nr;  
@@ -214,25 +207,25 @@ TRACE
  
   w=(yheight*yheight)/(8.0*r); //calculation of the "depth" of the profile
   
-  parab_Cyl.constants[0]=r;
-  parab_Cyl.constants[1]=yheight;
-  parab_Cyl.constants[2]=xwidth;
+  parab_Cyl[0]=r;
+  parab_Cyl[1]=yheight;
+  parab_Cyl[2]=xwidth;
   
-  parab_Cyl.constants[6]=rough_xy;
-  parab_Cyl.constants[7]=rough_z;
-  
+  parab_Cyl[6]=rough_xy;
+  parab_Cyl[7]=rough_z;
+
   k=sqrt(kx*kx+ky*ky+kz*kz);
   e=K2E*k;  /*Energy in KeV, same unit as datafile */
 
   /*Interpolation of Table Values*/
-  mu=Table_Value(prms->T,e,5)*prms->rho*1e2;/*mu is now in SI, [m^-1]*/;
+  mu=Table_Value(matT,e,5)*rho*1e2;/*mu is now in SI, [m^-1]*/;
 
-  f=Table_Value(prms->T,e,1);
+  f=Table_Value(matT,e,1);
 
   /*Calculation of Refractive Index */
-  rhoel= f*NA*(prms->rho*1e-24)/prms->Ar; /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
+  rhoel= f*NA*(rho*1e-24)/Ar; /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
   delta= 2.0*M_PI*RE*rhoel/(k*k);
-  beta= mu/(2.0*k); /*mu and k in  A^-1*/
+  beta= mu*1e-10/(2.0*k); /*mu and k in  A^-1*/
 
   Refractive_Index_Re = 1.0-delta; 
   Refractive_Index_Im = beta; 
@@ -247,13 +240,13 @@ TRACE
 
   d_total=0;
   for (nr=0;nr<=(N-1);nr++){
-    parab_Cyl.constants[3]=nr*d+nr*2*w; // d constant
-    parab_Cyl.constants[4]=1.0/Refractive_Index_Re; // M constant
-    parab_Cyl.constants[5]=-1.0; //Sign constant
+    parab_Cyl[3]=nr*d+nr*2*w; // d constant
+    parab_Cyl[4]=1.0/Refractive_Index_Re; // M constant
+    parab_Cyl[5]=-1.0; //Sign constant
     
     refr=intersect_parab_Cyl(incid,parab_Cyl,rough_xy,rough_z);
     
-    if(refr.k[0]==0 && refr.k[1]==0 && refr.k[2]==0) continue;   
+    if(refr.k[0]==0 && refr.k[1]==0 && refr.k[2]==0) continue;
     
     dl=sqrt( (refr.coord[0]-x)*(refr.coord[0]-x) + (refr.coord[1]-y)*(refr.coord[1]-y) + (refr.coord[2]-z)*(refr.coord[2]-z) );
     PROP_DL(dl);
@@ -264,11 +257,10 @@ TRACE
     kz=refr.k[2];
 
     //alter parabolic input to match second parabola
-    
-    parab_Cyl.constants[3]=(nr+1)*d+nr*2*w;
-    parab_Cyl.constants[4]=Refractive_Index_Re;
-    parab_Cyl.constants[5]=1.0; 
- 
+    parab_Cyl[3]=(nr+1)*d+nr*2*w;
+    parab_Cyl[4]=Refractive_Index_Re;
+    parab_Cyl[5]=1.0;
+
     outg=intersect_parab_Cyl(refr,parab_Cyl,rough_xy,rough_z);
     
     dl=sqrt( (outg.coord[0]-x)*(outg.coord[0]-x) + (outg.coord[1]-y)*(outg.coord[1]-y) + (outg.coord[2]-z)*(outg.coord[2]-z) );
@@ -286,8 +278,7 @@ TRACE
 
 FINALLY
 %{
-    Table_Free(&(prms->T));
-    free(prms);
+    Table_Free(&(matT));
 %}
 
 MCDISPLAY

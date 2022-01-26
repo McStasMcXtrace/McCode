@@ -8,11 +8,9 @@
 * Component: PSD_monitor
 *
 * %I
-* Written by: Erik Knudsen
+* Written by: Erik B Knudsen
 * Date: June 22, 2009
-* Version: $Revision$
 * Origin: Risoe
-* Release: McXtrace 0.1
 *
 * Position-sensitive monitor.
 *
@@ -22,162 +20,148 @@
 * detector. If instead of xwidth, yheight a radius is given, the component has a circular footprint
 * and integrates circularly (caking).
 *
-* Example: PSD_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, nx=90, ny=90, filename="Output.psd")
-*
+* Example: PSD_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
+            nx=90, ny=90, filename="Output.psd")
 *
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width of detector. Overrides xmin,xmax. (m)
-* yheight:  Height of detector. Overrides ymin,ymax. (m)
-* radius:   Radius of circular detetor (m)
-* nx:       Number of pixel columns (1)
-* ny:       Number of pixel rows (1)
-* nr:       Number of radial pixels (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_xray: If set, the monitor does not influence the xray state (1)
-*
-* OUTPUT PARAMETERS:
-*
-* PSD_N:    Array of xray counts
-* PSD_p:    Array of xray weight counts
-* PSD_p2:   Array of second moments
+* xmin: [m]             Lower x bound of detector opening
+* xmax: [m]             Upper x bound of detector opening
+* ymin: [m]             Lower y bound of detector opening
+* ymax: [m]             Upper y bound of detector opening
+* xwidth: [m]           Width of detector. Overrides xmin,xmax.
+* yheight: [m]          Height of detector. Overrides ymin,ymax.
+* radius:  [m]          Radius of circular detetor.
+* nx: [1]               Number of pixel columns.
+* ny: [1]               Number of pixel rows.
+* nr: [1]               Number of radial pixels.
+* filename: [1]         Name of file in which to store the detector image.
+* restore_xray: [1]     If set, the monitor does not influence the xray state.
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT PSD_monitor
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, radius=0,
-    int nx=90, int ny=90, int nr=0, string filename="", restore_xray=0)
-OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
+SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, radius=0, restore_xray=1, int nowritefile=0, int nx=90, int ny=90, int nr=0)
+OUTPUT PARAMETERS ()
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE
 %{
-  double **PSD_N;
-  double **PSD_p;
-  double **PSD_p2;
+  DArray2d PSD_N;
+  DArray2d PSD_p;
+  DArray2d PSD_p2;
 %}
 
 INITIALIZE
 %{
-  int i,j;
-  double *p1,*p2,*p3;
+    int i,j;
+    double *p1,*p2,*p3;
 
-  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
-  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
-  if ( ((xmin >= xmax) || (ymin >= ymax)) && !radius ) {
-    printf("PSD_monitor: %s: Null detection area !\n"
-        "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax,radius). Exiting",
-        NAME_CURRENT_COMP);
-    exit(0);
-  }
-  if(!radius){
-    p1=calloc(nx*ny,sizeof(double));
-    p2=calloc(nx*ny,sizeof(double));
-    p3=calloc(nx*ny,sizeof(double));
-
-    PSD_N=calloc(nx,sizeof(double *));
-    PSD_p=calloc(nx,sizeof(double *));
-    PSD_p2=calloc(nx,sizeof(double *));
-
-    for (i=0; i<nx; i++){
-      PSD_N[i]=&(p1[i*ny]);//calloc(ny,sizeof(double));
-      PSD_p[i]=&(p2[i*ny]);//calloc(ny,sizeof(double));
-      PSD_p2[i]=&(p3[i*ny]);//calloc(ny,sizeof(double));
+    if ( ((xmin >= xmax) || (ymin >= ymax)) && !radius ) {
+      fprintf(stderr,"ERROR (%s): Null detection area! Aborting.\n",NAME_CURRENT_COMP);
+      exit(-1);
     }
-  }else{
-    PSD_N=calloc(1,sizeof(double *));
-    PSD_p=calloc(1,sizeof(double *));
-    PSD_p2=calloc(1,sizeof(double *));
-    *PSD_N=calloc(nr,sizeof(double));
-    *PSD_p=calloc(nr,sizeof(double));
-    *PSD_p2=calloc(nr,sizeof(double));
-  }
-
+    if(!radius){
+      PSD_N = create_darr2d(nx, ny);
+      PSD_p = create_darr2d(nx, ny);
+      PSD_p2 = create_darr2d(nx, ny);
+    }else{
+      PSD_N = create_darr2d(1, nr);
+      PSD_p = create_darr2d(1, nr);
+      PSD_p2 = create_darr2d(1, nr);
+    }
 %}
 
 TRACE
 %{
-  int i,j;
+    int i,j,k;
+    double e,p2;
 
-  PROP_Z0;
-  if (!radius){
-    if (x>xmin && x<xmax && y>ymin && y<ymax)
-    {
-      i = floor((x - xmin)*nx/(xmax - xmin));
-      j = floor((y - ymin)*ny/(ymax - ymin));
+    PROP_Z0;
+    if (!radius){
+      if (x>xmin && x<xmax && y>ymin && y<ymax)
+      {
+        i = floor((x - xmin)*nx/(xmax - xmin));
+        j = floor((y - ymin)*ny/(ymax - ymin));
+        p2=p*p;
 #pragma acc atomic
-      PSD_N[i][j]= PSD_N[i][j] + 1;
+        PSD_N[i][j] += 1;
 #pragma acc atomic
-      PSD_p[i][j] = PSD_p[i][j] + p;
+        PSD_p[i][j] += p;
 #pragma acc atomic
-      PSD_p2[i][j] = PSD_p2[i][j] + p*p;
-      SCATTER;
+        PSD_p2[i][j] += p2;
+        SCATTER;
+      }
+    }else{
+      double r=sqrt(x*x+y*y);
+      if (r<radius){
+        i = floor(r*nr/radius);
+        p2=p*p;
+#pragma acc atomic
+        PSD_N[0][i] += 1;
+#pragma acc atomic
+        PSD_p[0][i] += p;
+#pragma acc atomic
+        PSD_p2[0][i] += p2;
+        SCATTER;
+      }
     }
-  }else{
-    double r=sqrt(x*x+y*y);
-    if (r<radius){
-      i = floor(r*nr/radius);
-      PSD_N[0][i]++;
-      PSD_p[0][i] += p;
-      PSD_p2[0][i] += p*p;
-      SCATTER;
+    if (restore_xray) {
+      RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
     }
-  }
-  if (restore_xray) {
-    RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
-  }
 %}
 
 SAVE
 %{
-  if(!radius){
-    if(nx==1 && ny==1){
-      DETECTOR_OUT_0D(NAME_CURRENT_COMP, PSD_N[0][0], PSD_p[0][0], PSD_p2[0][0]);
-    }else if(nx==1){
-      DETECTOR_OUT_1D(
-          "PSD_monitor","Y Position[m]", "Intensity", "Y",
-          ymin,ymax,ny,&PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],filename);
-    }else if (ny==1){
-      DETECTOR_OUT_1D(
-          "PSD_monitor","X Position[m]", "Intensity", "X",
-          xmin,xmax,nx,&PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],filename);
-    }else{
-      DETECTOR_OUT_2D(
-          "PSD monitor",
-          "X position [m]",
-          "Y position [m]",
-          xmin, xmax, ymin, ymax,
-          nx, ny,
-          *PSD_N,*PSD_p,*PSD_p2,
-          filename);
+    if(!nowritefile){
+      if(!radius){
+        if(nx==1 && ny==1){
+          char title[256];
+          snprintf(title,255,"Intensity monitor %s",NAME_CURRENT_COMP);
+          DETECTOR_OUT_0D(title, (double) PSD_N[0][0], PSD_p[0][0], PSD_p2[0][0]);
+        }else if(nx==1){
+            DETECTOR_OUT_1D(
+                    "PSD_monitor","Y Position[m]", "Intensity", "Y",
+                    ymin,ymax,ny,&PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],filename);
+        }else if (ny==1){
+            DETECTOR_OUT_1D(
+                    "PSD_monitor","X Position[m]", "Intensity", "X",
+                    xmin,xmax,nx,&PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],filename);
+        }else{
+            DETECTOR_OUT_2D(
+                    "PSD monitor",
+                    "X position [m]",
+                    "Y position [m]",
+                    xmin, xmax, ymin, ymax,
+                    nx, ny,
+                    *PSD_N,*PSD_p,*PSD_p2,
+                    filename);
+        }
+      }else{
+        DETECTOR_OUT_1D(
+          "PSD_monitor","Radial Position[m]", "Intensity", "R",
+          0,radius,nr,&PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],filename);
+      }
     }
-  }else{
-    DETECTOR_OUT_1D(
-        "PSD_monitor","Radial Position[m]", "Intensity", "R",
-        0,radius,nr,&PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],filename);
-  }
 %}
 
 FINALLY
 %{
-   free(PSD_N[0]);
-   free(PSD_N);
-   free(PSD_p[0]);
-   free(PSD_p);
-   free(PSD_p2[0]);
-   free(PSD_p2);
+    destroy_darr2d(PSD_N);
+    destroy_darr2d(PSD_p);
+    destroy_darr2d(PSD_p2);
 %}
+
 MCDISPLAY
 %{
-
+  
   multiline(5, (double)xmin, (double)ymin, 0.0,
                (double)xmax, (double)ymin, 0.0,
                (double)xmax, (double)ymax, 0.0,

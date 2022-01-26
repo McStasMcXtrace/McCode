@@ -143,7 +143,7 @@ if(WINDOWS)
     )
   add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
   add_library(neutronics "STATIC" libs/neutronics/neutronics-subs.f)
-  target_compile_options(mcpl PUBLIC "-std=c99") 
+  target_compile_options(mcpl PUBLIC "-std=c99")
 else()
   install(
     FILES "${WORK}/revision" "${WORK}/NOMENCLATURE" "${WORK}/README.md"
@@ -158,4 +158,3 @@ else()
   install(TARGETS mcpl DESTINATION "${lib}/libs/mcpl/")
   install(TARGETS neutronics DESTINATION "${lib}/libs/neutronics/")
 endif()
-

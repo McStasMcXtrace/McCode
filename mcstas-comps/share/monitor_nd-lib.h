@@ -195,7 +195,7 @@ int Monitor_nD_Trace(MonitornD_Defines_type *, MonitornD_Variables_type *, _clas
 MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *, MonitornD_Variables_type *);
 void Monitor_nD_Finally(MonitornD_Defines_type *, MonitornD_Variables_type *);
 void Monitor_nD_McDisplay(MonitornD_Defines_type *, MonitornD_Variables_type *);
- 
+
 #endif
 
 /* end of monitor_nd-lib.h */

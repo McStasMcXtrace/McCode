@@ -2,82 +2,81 @@
  *
  * McXtrace, X-ray tracing package
  *         Copyright, All rights reserved
- *         Risoe National Laboratory, Roskilde, Denmark
+ *         DTU Physics, Kgs. Lyngby, Denmark
  *         Institut Laue Langevin, Grenoble, France
  *         University of Copenhagen, Copenhagen, Denmark
  *
- * Component: NIST_bent_Crystal
+ * Component: Bragg_crystal_bent_BC
  *
  * %I
+ * Written by: Marcus H Mendenhall, NIST <marcus.mendenhall@nist.gov>
+ * Date: Dec 2016
+ * Version: 2.0a
+ * Release: McXtrace 1.2
+ * Origin: NIST
  *
+ * Bent, perfect crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
+ *
+ * %D
+ * Bragg_crystal_bent_BC.com is intended to supercede Bragg_Crystal_bent.comp
+ * For details see:
+ * The optics of focusing bent-crystal monochromators on X-ray powder diffractometers with application to lattice parameter determination and microstructure analysis, 
+ * Marcus H. Mendenhall,* David Black and James P. Cline, J. Appl. Cryst. (2019). 52, https://doi.org/10.1107/S1600576719010951
+ *
+ * Reads atomic formfactors from a data input file.
+ * The Bragg_Crystal code reflects ray in an ideal geometry, does not include surface imperfections or mosaicity
+ *
+ * The crystal code reflects ray in an ideal geometry, i.e. does not include surface imperfections or mosaicity.
+ * The crystal planes from which the reflection is made lies in the X-Z plane on the unbent crystal rotated
+ * by an angle alpha about the Y axis with respect to the crystal surface.
+ *
+ * The crystal itself is set in the X-Z plane positioned such that the long axis of the crystal surface coincides with
+ * the Z-axis, withs normal pointing in the poisitivce Y-direction.
+ *
+ * The asummetry angle alpha is defined so that positive alpha reduces the Bragg angle to the plane i.e. alpha=Thetain grazes the planes.
+ *    if alpha!=0,  one should restrict to rays which have small kx values, since otherwise the alpha rotation is not
+ *    around the diffraction axis.
+ *
+ * The mirror is positioned such that the a-axis of the mirror ellipsoid is on the
+ * z-axis, the b-axis is along the y-axis and the c is along the x-axis.
+ * The reference point of the mirror is the ellipsoid centre, offset by one half-axis along the y-axis.
+ * (See the component manual for a drawing).
+ *
+ * Notation follows Tadashi Matsushita and Hiro-O Hashizume, X-RAY MONOCHROMATORS. Handbook on Synchrotron Radiation,North-Holland Publishing Company, 1:263–274, 1983.
+ *
+ * NOTE: elliptical coordinate code and documentation taken from Mirror_elliptic.comp distributed in McXtrace v1.2
+ * written by: Erik Knudsen. However, the coordinates are rotated to be consistent with Perfect_Crystal.comp and NIST_Perfect_Crystal.comp
+ * Idealized elliptic mirror with surface ellipse and lattice ellipses independent, to allow construction of
+ * Johansson optics, for example.
+ * 
  * Non-copyright notice:
  * Contributed by the National Institute of Standards and Technology; not subject to copyright in the United States. 
  * This is not an official contribution, in that the results are in no way certified by NIST.
  *
- * Date: December 1, 2016
- * Version: 2.0-a
- * Release: McXtrace 1.5
- * Origin: Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
- * marcus.mendenhall@nist.gov
- *
- * Bent, perfect crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
- *
- *
-* NOTE: elliptical coordinate code and documentation taken from Mirror_elliptic.comp distributed in McXtrace v1.2
-* Written by: Erik Knudsen
-* Date: Feb 11, 2010
-* Version: $Revision$
-* Origin: Risoe
-* Release: McXtrace 1.0
-* However, the coordinates are rotated to be consistent with Perfect_Crystal.comp and NIST_Perfect_Crystal.comp
-* Idealized elliptic mirror with surface ellipse and lattice ellipses independent, to allow construction of
-* Johansson optics, for example.
-* 
-* %P
-* INPUT PARAMETERS
-***** From Elliptic_mirror.comp
-* x_a: [m] 1st short half axis (along x). Commonly set to zero, which really implies infinite value, so crystal is an elliptic cylinder.
-* y_b: [m] 2nd short half axis (along y), which is also the presumed near-normal direction, reflection near the y-z plane.
-* z_c: [m]     long  half axis (along z). Commonly a=0. b=c, which creates a circular cylindrical surface.
-* width: [m] x height (width) of the mirror.
-* length: [m] z depth (length) of the mirror.
-* lattice_x_a, lattice_y_b, lattice_z_c [m]:  curvature matrix for underlying lattice, for bent/ground/rebent crystals
-*    THERE HAS BEEN NO TESTING for the case in which lattice_x_a != x_a.
-***** End From Elliptic_mirror.comp
- * Input parameters:
- * Material 			Si, Ge (maybe also GaAs?)
- * V [Å^3]			unit cell volume
- * h [ ]                          Miller index of reflection
- * k [ ]                          Miller index of reflection
- * l [ ]                          Miller index of reflection
- * alpha [rad]		 	asymmetry angle (alpha=0 for symmetric reflection, ie the Bragg planes are parallel to the crystal surface)
- *    alpha is defined so that positive alpha reduces the Bragg angle to the plane i.e. alpha=Thetain grazes the planes.
- *    if alpha!=0,  one should restrict to rays which have small kx values, since otherwise the alpha rotation is not
- *    around the diffraction axis.
- * R0 [ ]                         Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging.
- * debye_waller_B [Å^2]	debye-waller temperature factor, M=B*(sin(theta)/lambda)^2*(2/3), default=silicon at room temp,
- * crystal_type:
- *  NIST_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i
- *  NIST_crystal_diamond: diamond
- *  NIST_crystal_fcc: fcc
- *  NIST_crystal_fcc: bcc
- *
-
- * %D
- * Reads atomic formfactors from a data input file.
- * The PerfectCrystal code reflects ray in an ideal geometry, does not include surface imperfections or mosaicity
- * The crystal planes from which the reflection is made must line in the X-Z plane on the unbent crystal rotated
- * by an angle alpha about the x axis with respect to the crystal surface.
-***** From Elliptic_mirror.comp
-* The mirror is positioned such that the a-axis of the mirror ellipsoid is on the
-* z-axis, the b-axis is along the y-axis and the c is along the x-axis.
-* The reference point of the mirror is the ellipsoid centre, offset by one half-axis along the y-axis.
-* (See the component manual for a drawing).
-*
-***** End From Elliptic_mirror.comp
-
- * Notation follows Tadashi Matsushita and Hiro-O Hashizume, X-RAY MONOCHROMATORS. Handbook on Synchrotron Radiation,North-Holland Publishing Company, 1:263–274, 1983.
- *
+ * %P
+ * INPUT PARAMETERS
+ * width:   [m]    x width of the crystal.
+ * length:  [m]    z depth (length) of the crystal.
+ * material: [ ]   Si, Ge (maybe also GaAs?)
+ * V:       [AA^3] unit cell volume
+ * h:       [ ]    Miller index of reflection
+ * k:       [ ]    Miller index of reflection
+ * l:       [ ]    Miller index of reflection
+ * alpha: [rad]    Asymmetry angle (alpha=0 for symmetric reflection, i.e. the Bragg planes are parallel to the crystal surface)
+ * x_a: [m]        1st short half axis (along x). Commonly set to zero, which really implies infinite value, so crystal is an elliptic cylinder.
+ * y_b: [m]        2nd short half axis (along y), which is also the presumed near-normal direction, reflection near the y-z plane.
+ * z_c: [m]        Long half axis (along z). Commonly a=0. b=c, which creates a circular cylindrical surface.
+ * lattice_x_a: [m]   Curvature matrix component around a for underlying lattice, for bent/ground/rebent crystals
+ * lattice_y_b: [m]   Curvature matrix component around b for underlying lattice, for bent/ground/rebent crystals
+ * lattice_z_c: [m]   curvature matrix component around c for underlying lattice, for bent/ground/rebent crystals
+ *    THERE HAS BEEN NO TESTING for the case in which lattice_x_a != x_a.
+ * R0: [ ]        Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging.
+ *debye_waller_B: [AA^2] Debye-Waller temperature factor, M=B*(sin(theta)/lambda)^2*(2/3), default=silicon at room temp.
+ * crystal_type: [ ] 1 => Mx_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i,
+ *      2 => Mx_crystal_diamond: diamond
+ *      3 => Mx_crystal_fcc: fcc
+ *      4 => Mx_crystal_fcc: bcc
+ * verbose [ ]     if non-zero: Output more information (warnings and messages) to the console.
  * %E
  *******************************************************************************/
 
@@ -86,8 +85,9 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (x_a=0, y_b=1.0, z_c=1.0, lattice_x_a=0, lattice_y_b=1.0, lattice_z_c=1.0,
         length=0.05, width=0.02, V=160.1826, string form_factors="FormFactors.txt", string material="Si.txt", alpha=0.0,
         R0=0, debye_waller_B=0.4632, int crystal_type=1, int h=1, int k=1, int l=1,
-        structure_factor_scale_r=0.0, structure_factor_scale_i=0.0)
-OUTPUT PARAMETERS (prms)
+        structure_factor_scale_r=0.0, structure_factor_scale_i=0.0, int verbose=0)
+OUTPUT PARAMETERS ()
+DEPENDENCY "-std=c99"
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE
@@ -97,61 +97,62 @@ SHARE
 
 DECLARE
 %{
-    struct {
-        int Z;
-        double rho,At,f_rel,f_nt;
-        t_Table m_t;
-        t_Table f0_t;
-    }prms;
-  double a2inv,b2inv,c2inv; /* 1/r^2 for physical ellipse */
-  double l_a2inv,l_b2inv,l_c2inv; /* 1/r^2 for lattice ellipse */
-  double cos_alpha0, sin_alpha0;
+  int Z;
+  double rho;
+  double At;
+  double f_rel;
+  double f_nt;
+  t_Table m_t;
+  t_Table f0_t;
+  double a2inv;
+  double b2inv;
+  double c2inv; /* 1/r^2 for physical ellipse */
+  double l_a2inv;
+  double l_b2inv;
+  double l_c2inv; /* 1/r^2 for lattice ellipse */
+  double cos_alpha0;
+  double sin_alpha0;
 %}
 
 INITIALIZE
 %{
-    fflush(NULL); // put diagnostics in order!
-    printf("Component %s: starting up\n",NAME_CURRENT_COMP);
     int status;
     if (material){
-        if ((status=Table_Read(&(prms.m_t),material,0))==-1){
+        if ((status=Table_Read(&(m_t),material,0))==-1){
             fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,material);
             exit(-1);
         }
         char **header_parsed;
-        header_parsed=Table_ParseHeader(prms.m_t.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
-        if(header_parsed[2]){prms.rho=strtod(header_parsed[2],NULL);}
-        if(header_parsed[0]){prms.Z=strtod(header_parsed[0],NULL);}
-        if(header_parsed[1]){prms.At=strtod(header_parsed[1],NULL);}
+        header_parsed=Table_ParseHeader(m_t.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
+        if(header_parsed[2]){rho=strtod(header_parsed[2],NULL);}
+        if(header_parsed[0]){Z=strtod(header_parsed[0],NULL);}
+        if(header_parsed[1]){At=strtod(header_parsed[1],NULL);}
     }else{
         fprintf(stderr,"Error(%s): No material file specified\n",NAME_CURRENT_COMP);
     }
     if(form_factors){
-        if ((status=Table_Read(&(prms.f0_t),form_factors,0))==-1){
+        if ((status=Table_Read(&(f0_t),form_factors,0))==-1){
             fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,form_factors);
             exit(-1);
         }
     }
 
-  
     a2inv=(x_a)?1/(x_a*x_a):0; /* 0 really means infinity for x direction */
-    b2inv=1/(y_b*y_b);
-    c2inv=1/(z_c*z_c);
+    b2inv=(y_b)?1/(y_b*y_b):0;
+    c2inv=(z_c)?1/(z_c*z_c):0;
 
     l_a2inv=(lattice_x_a)?1/(lattice_x_a*lattice_x_a):0; /* 0 really means infinity for x direction */
-    l_b2inv=1/(lattice_y_b*lattice_y_b);
-    l_c2inv=1/(lattice_z_c*lattice_z_c);
+    l_b2inv=(lattice_y_b)?1/(lattice_y_b*lattice_y_b):0;
+    l_c2inv=(lattice_z_c)?1/(lattice_z_c*lattice_z_c):0;
 
     cos_alpha0=cos(alpha);
     sin_alpha0=sin(alpha);
 
-    printf("Component %s: curve=(%.5f %.5f %.5f) lcurve=(%.3f %.5f %.5f)\n\n",NAME_CURRENT_COMP,
-            a2inv, b2inv, c2inv, l_a2inv, l_b2inv, l_c2inv
-          );
-
-    printf("Component %s: initialized\n",NAME_CURRENT_COMP);
-
-    fflush(NULL); // put diagnostics in order!
+    if (verbose){
+      printf("INFO (%s): curve=(%.5f %.5f %.5f) lcurve=(%.3f %.5f %.5f)\n\n",NAME_CURRENT_COMP,
+          a2inv, b2inv, c2inv, l_a2inv, l_b2inv, l_c2inv);
+      printf("INFO (%s): initialized\n",NAME_CURRENT_COMP);
+    }
 %}
 
 TRACE
@@ -161,11 +162,12 @@ TRACE
     double kxu,kyu,kzu;			// unit vector in the direction of k-vector.
     double x_int,y_int,z_int;		// intersection with the y=0 plane
     double f00, f0h, fp, fpp;		// atomic form factors for Q=0 is (f00 + fp + i*fpp) and for Q= ha*+kb*+lc* it is (f0h + fp + i*fpp).
-    double Thetain;			// (rad) angle between the crystal surface and the incident ray
-    double Theta0;			// (rad) angle between the Bragg planes and the incident ray
-    double Thetah;			// (rad) angle between the Bragg planes and the reflected ray
-    double DeltaTheta0;			// (rad) the center of the reflectivity curve is at asin(n*lambda/(2*d)) + DeltaTheta0
-    double Rpi, Rsig, R;          // Reflectivity value calculated by MxBragg_DarwinReflectivity() function for each incoming photon
+    //double Thetain;			// (rad) angle between the crystal surface and the incident ray
+    //double Theta0;			// (rad) angle between the Bragg planes and the incident ray
+    //double Thetah;			// (rad) angle between the Bragg planes and the reflected ray
+    //double DeltaTheta0;			// (rad) the center of the reflectivity curve is at asin(n*lambda/(2*d)) + DeltaTheta0
+    //double Rpi, Rsig;
+    double R;          // Reflectivity value calculated by Mx_DarwinReflectivity() function for each incoming photon
     
     /* get the photon's kvector and energy */
     K=sqrt(kx*kx+ky*ky+kz*kz);
@@ -200,8 +202,10 @@ TRACE
         xx0=x+kxu*t0; yy0=y+kyu*t0; zz0=z+kzu*t0;
         xx1=x+kxu*t1; yy1=y+kyu*t1; zz1=z+kzu*t1;
 
-        int hit0=(fabs(xx0)<width/2.0) && (fabs(zz0)<length/2.0);
-        int hit1=(fabs(xx1)<width/2.0) && (fabs(zz1)<length/2.0);
+        /*Check if we hit the mirror and whether the hit it is in front of the ray.
+         * This does not account for mirror curvature */
+        int hit0=(fabs(xx0)<width/2.0) && (fabs(zz0)<length/2.0) && t0>0;
+        int hit1=(fabs(xx1)<width/2.0) && (fabs(zz1)<length/2.0) && t1>0;
         int doit=hit0 || hit1;
         if(hit0 && !hit1) PROP_DL(t0); /* only one intersection actually on mirror */
         else if (hit1 && !hit0) PROP_DL(t1); /* other intersection */
@@ -218,7 +222,7 @@ TRACE
             SCATTER;
             xt=x; yt=y-y_b; zt=z; /* update shifted coordinates to intersection point */
             double grad_x, grad_y, grad_z;
-            /* grad is the outer normal to the surface at this point */
+            /* grad is the outer normal to the surface at this point on surface presumed to be concave */
             double nhat[3]={-xt*a2inv, -yt*b2inv, -zt*c2inv}; NORM(nhat[0], nhat[1], nhat[2]);
 
             /* compute angle of crystal planes based on lattice ellipse, need to include rotation still! */
@@ -230,53 +234,64 @@ TRACE
             double ay=alpha_v[1]*cos_alpha0-alpha_v[2]*sin_alpha0;
             double az=alpha_v[2]*cos_alpha0+alpha_v[1]*sin_alpha0;
             alpha_v[1]=ay; alpha_v[2]=az;
-            
+
             double d=cbrt(V)/(sqrt(h*h+k*k+l*l));/*this is valid only for cubic structures*/
-            f00 = prms.Z;
-            f0h = Table_Value(prms.f0_t,1/(2*d),prms.Z);
-            fp  = Table_Value(prms.m_t,E,1)-prms.Z;
-            fpp = Table_Value(prms.m_t,E,2);
-            
+            f00 = Z;
+            f0h = Table_Value(f0_t,1/(2*d),Z);
+            fp  = Table_Value(m_t,E,1)-Z;
+            fpp = Table_Value(m_t,E,2);
+
             double Rsig, Rpi;
             double kh[3], sig_axis[3], pi_axis[3];
             int fail;
             
-            fail=MxBragg_DarwinReflectivityBC(&Rsig, &Rpi, kh, // these are the return values
+            double complex chi0, chih;
+            double k0mag, hscale, thetaB;
+
+            Mx_CubicCrystalChi(&chi0, &chih, &k0mag, &hscale, &thetaB,
+                         f00, f0h, fp, fpp, V, h, k, l,
+                         debye_waller_B, E,
+                         crystal_type,structure_factor_scale_r,structure_factor_scale_i);
+            if(thetaB==0){
+              if(verbose){
+                fprintf(stderr,"WARNING (%s): reflection [%d %d %d] is inaccessible for E= %g keV. Terminating photon,\n",NAME_CURRENT_COMP,h,k,l,E);
+                ABSORB;
+              }
+            }
+            fail=Mx_DarwinReflectivityBC(&Rsig, &Rpi, kh, // these are the return values
                   k0hat, nhat, alpha_v,
-                  f00, f0h, fp, fpp, V, h, k, l,
-                  debye_waller_B, E,
-                  crystal_type, structure_factor_scale_r, structure_factor_scale_i
+                  chi0, chih, chih, k0mag, hscale, thetaB
               );
-            
+
             cross(sig_axis, k0hat, kh, 1); /* kin x kout is sigma direction */
             /* sig_axis is the sigma direction, as returned by Bragg_Geometry inside DarwinReflectivityBT */
             /* pi is a vector perpendicular to k_in and sig i.e. the direction of pi polarization incoming */
             cross(pi_axis, k0hat, sig_axis, 1);
-            
+
             /* update outgoing direction vector kx, ky, kz = kh, fully scaled outgoing k vector */
             kx=kh[0]; ky=kh[1]; kz=kh[2];
-            
+
             /* resolve incoming polarization into sig and pi bits, and scale by sqrt(reflectivity) which is amplitude scale */
             double Esig=(Ex*sig_axis[0]+Ey*sig_axis[1]+Ez*sig_axis[2]);
             double Epi= (Ex* pi_axis[0]+Ey* pi_axis[1]+Ez* pi_axis[2]);
             if(Esig==0 && Epi==0) { /* someone didn't set the polarization direction; set it now to a random value and it will propagate */
-                double phi=rand01()*PI/2;
-                Esig=cos(phi); Epi=sin(phi);
+                double psi=rand01()*PI/2;
+                Esig=cos(psi); Epi=sin(psi);
             }
             Esig=Esig*sqrt(Rsig);
             Epi=Epi*sqrt(Rpi);
             R=Esig*Esig+Epi*Epi; /* projected reflectivity, squared back to intensity */
-            
+
             double pi1_axis[3];
             /* pi1 is now a vector perpendicular to k_out and sig i.e. the direction of pi polarization outgoing */
             cross(pi1_axis, kh, sig_axis,1);
-            
+
             /* a linear combination of these is still perpendicular to k, but has the correct polarization weighting */
             Ex=Epi*pi1_axis[0]+Esig*sig_axis[0];
             Ey=Epi*pi1_axis[1]+Esig*sig_axis[1];
             Ez=Epi*pi1_axis[2]+Esig*sig_axis[2];
             NORM(Ex, Ey, Ez);
-            
+
 #ifdef MCDEBUG
             fprintf(stderr,"Bent Crystal: %s: Rsig=%.4g Rpi=%.4g "
                     " k0=(%.8f, %.8f, %.8f), nhat=(%.8f, %.8f, %.8f) alpha=(%.8f, %.8f, %.8f), "
@@ -300,7 +315,6 @@ TRACE
             RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
         }
     }
-    
 #ifdef MCDEBUG
     fflush(NULL); // make sure all error messages are in order!
 #endif
@@ -310,28 +324,60 @@ TRACE
 
 MCDISPLAY
 %{
-  int i,j,N=12;
-  double t,xx,yy,zz,xx0,yy0,zz0;
+  int i,j,N=12, M=12;
+  double aa,bb,cc;
+  double vmax,vmin,umax,umin;
   magnify("");
 #ifdef MCDEBUG
   printf("Bent Crystal(%s): plot params (%f %f %f) (%f %f %f) %f %f\n", NAME_CURRENT_COMP,
     x_a, y_b, z_c, a2inv, b2inv, c2inv, width, length);
   fflush(NULL);
 #endif
-  xx=width/2.0;
+
+  /*use the circumference of the ellipse/4 = the the ratio between that and the crystal length/2 should be reasonably close to umax/pi_2*/
+  /*according to Ramanujan 1914*/
+  double Pv=M_PI*(3*(z_c+y_b)- sqrt( (3*z_c+y_b)*(z_c+3*y_b)));
+  double Pu=M_PI*(3*(x_a+y_b)- sqrt( (3*x_a+y_b)*(x_a+3*y_b)));
+
+  vmax = length/2.0 /(Pv/4.0) * M_PI_2;
+  vmin=-vmax;
+
+  umax = width/2.0 /(Pu/4.0) * M_PI_2;
+  umin=-umax;
+
   for (j=0;j<N;j++){
-    zz=j*length/(N-1)-length/2.0;
-    yy=-sqrt((1-zz*zz*c2inv)/b2inv);
-    if(j) multiline(5,
-        -xx,yy0+y_b,zz0,
-         xx,yy0+y_b,zz0,
-         xx, yy+y_b,zz,
-        -xx, yy+y_b,zz,
-        -xx,yy0+y_b,zz0); /* draw a rectangular slice of the mirror */
-    zz0=zz;
-    yy0=yy; 
+      double v0,v1;
+      v0=j*(vmax-vmin)/N + vmin;
+      v1=(j+1)*(vmax-vmin)/N + vmin;
+
+      for (i=0;i<M;i++){
+          double u0,u1;
+          u0=i*(umax-umin)/M + umin;
+          u1=(i+1)*(umax-umin)/M + umin;
+          double nx,ny,nz,l0,l1;
+          double x[4],y[4],z[4];
+          /*assuming 0,0,0 is inside are inside the ellisoid*/
+          nx=cos(v0)*sin(u0);ny=cos(v0)*cos(u0);nz=sin(v0);
+          ellipsoid_intersect(&l0,&l1, 0,0,0, nx,ny,nz, x_a,y_b,z_c, NULL);
+          x[0]=nx*l1; y[0]=ny*l1; z[0]=nz*l1;
+
+          nx=cos(v0)*sin(u1);ny=cos(v0)*cos(u1);nz=sin(v0);
+          ellipsoid_intersect(&l0,&l1, 0,0,0, nx,ny,nz, x_a,y_b,z_c, NULL);
+          x[1]=nx*l1; y[1]=ny*l1; z[1]=nz*l1;
+
+          nx=cos(v1)*sin(u1);ny=cos(v1)*cos(u1);nz=sin(v1);
+          ellipsoid_intersect(&l0,&l1, 0,0,0, nx,ny,nz, x_a,y_b,z_c, NULL);
+          x[2]=nx*l1; y[2]=ny*l1; z[2]=nz*l1;
+
+          nx=cos(v1)*sin(u0);ny=cos(v1)*cos(u0);nz=sin(v1);
+          ellipsoid_intersect(&l0,&l1, 0,0,0, nx,ny,nz, x_a,y_b,z_c, NULL);
+          x[3]=nx*l1; y[3]=ny*l1; z[3]=nz*l1;
+
+          multiline(5, x[0],y_b-y[0],z[0], x[1],y_b-y[1],z[1], x[2],y_b-y[2],z[2], x[3],y_b-y[3],z[3], x[0],y_b-y[0],z[0]);
+      }
   }
-  line(0.,0.,0., 0., cos_alpha0*(width+length)/2.0, sin_alpha0*(width+length)/2.0); // display alpha vector
+
+  line(0.,y_b,0., 0., y_b-cos_alpha0*(width+length)/2.0, sin_alpha0*(width+length)/2.0); // display alpha vector
 %}
 
 END

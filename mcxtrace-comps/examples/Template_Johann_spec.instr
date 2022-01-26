@@ -1,0 +1,103 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Template_Johann_spec
+*
+* %Identification
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Jan 2019
+* Origin: DTU Physics
+* Version: 1.0 
+* %INSTRUMENT_SITE: Templates
+*
+* Template instrument for a curved crystal Johann-spectrometer
+*
+* %Description
+* This is a template instrument for a Johann spectrometer intended
+* for easy inclusion in other "real" instrument simulations. 
+*
+* The source is a divergent line like source which illumnates the 
+* full crystal. The analyzer crystal itself is modelled as a single
+* bent crystal curved to a primary radius of 2*Rowland-radius.
+*
+* To include a Johann spectrometer in an instrument the sample should be put where
+* source is in this template. and otherwis copy-paste.
+*
+* %Example: L=2 dtheta_s=0 Detector: det4_I=8.16127e-05
+*
+* %Parameters
+* L:         [m]   Length of the analyzer crystal.
+* r_Row:     [m]   Radius of the Rowland circle. Also governs the crystal curvature (2*r_Row).
+* theta_inc: [deg] Angle of incidence at the crystal centre
+* phi_s:     [deg] Opening angle of source. If 0 it is set to cover the full crystal (and some).
+* dtheta_s:  [deg] Rotation angle of the Source. To allow scanning with a pencil beam across the crystal face.
+* 
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Template_Johann_spec(L=0.2, r_Row=0.5, theta_inc=78.5 ,dtheta_s=0, phi_s=0)
+
+DECLARE
+%{
+   double theta_s,theta_d;
+
+%}
+
+INITIALIZE
+%{
+    theta_s=theta_inc*2;
+    theta_d=theta_inc*2;
+
+    if (!phi_s){
+      phi_s=L/(2*r_Row);
+    }
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT s_arm = Arm()
+AT(0,0,0) RELATIVE origin
+ROTATED (0,(180-theta_s),0) RELATIVE origin
+
+COMPONENT d_arm = Arm()
+AT(0,0,0) RELATIVE origin
+ROTATED (0,theta_d,0) RELATIVE origin
+
+COMPONENT src = Source_div(
+        xwidth=1e-3, yheight=1e-9, focus_ah=0, focus_aw=phi_s, E0=6.93, dE=0.175, gauss_a=0)
+AT(0,0,-r_Row) RELATIVE s_arm
+ROTATED (0,-(90-theta_inc)+dtheta_s,0) RELATIVE s_arm
+
+COMPONENT analyzer_psd= PSD_monitor(restore_xray=1, xwidth=2*L, yheight=0.02, ny=11, nx=201, filename="analyzer_psd")
+AT(0,0,r_Row) RELATIVE origin
+
+COMPONENT bc=Bragg_crystal_bent_BC(
+	h=5, k=3, l=1, material="Si.txt", alpha=0,
+        length=L, width=0.02, V=160.1826, y_b=2*r_Row, lattice_y_b=2*r_Row, z_c=2*r_Row, lattice_z_c=2*r_Row, x_a=1000, lattice_x_a=1000)
+AT(0,0,r_Row) RELATIVE origin
+ROTATED (0,90,-90) RELATIVE origin
+EXTEND
+%{
+    if(!SCATTERED) ABSORB;
+%}
+COMPONENT fpi=PSD_monitor_4PI(radius=0.5, filename="fpi", restore_xray=1)
+AT(0,0,0) RELATIVE origin
+
+COMPONENT det = Monitor_nD(restore_xray=1, yheight=0.02, radius=r_Row, options="banana theta limits -10 10 bins 1001", filename="det")
+AT(0,0,0) RELATIVE d_arm
+
+COMPONENT det2 = Monitor_nD(restore_xray=1, yheight=0.02, radius=r_Row, options="banana theta limits -4 4 bins 200 e limits 6.8 7.2 bins 200", filename="det2")
+AT(0,0,0) RELATIVE d_arm
+
+COMPONENT det3 = Monitor_nD(restore_xray=1, yheight=0.02, radius=r_Row, options="banana theta limits -4 4 bins 200 e limits 6.82 6.94 bins 200", filename="det3")
+AT(0,0,0) RELATIVE d_arm
+
+COMPONENT det4 = Monitor_nD(filename="det4", xwidth=200e-3, yheight=1e-3, options="square x limits -0.05 0.05 bins 200 e limits 6.82 6.94 bins 200" ) 
+AT(0,0,r_Row) RELATIVE d_arm
+FINALLY
+%{
+%}
+
+END

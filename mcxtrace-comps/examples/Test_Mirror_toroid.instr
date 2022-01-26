@@ -1,22 +1,21 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: test (rename also the example and DEFINE lines below)
+* Instrument: Test_Mirror_toroid
 *
 * %Identification
-* Written by: Your name (email)
-* Date: Current Date
-* Origin: Your institution
-* Release: McXtrace 1.0
-* Version: 0.2
-* %INSTRUMENT_SITE: Tests_optics
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Jul 16
+* Origin: DTU Physics
+* Version: 1.0
+* %INSTRUMENT_SITE: Tests
 *
 * Unit test instrument to check that Mirrror_toroid is working
 *
 * %Description
 * A mere unit test instrument. Also includes a perfectly flat Mirror as reference.
 *
-* Example: Test_Mirror_toroid.instr gamma=5
+* %Example: Test_Mirror_toroid.instr gamma=5 Detector: psd3_I=7.21499e-08
 *
 * %Parameters		
 * gamma: [deg] Nominal glancing angle of mirror

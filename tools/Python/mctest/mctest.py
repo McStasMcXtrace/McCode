@@ -213,7 +213,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
             if test.testnb > 0 or (not args.skipnontest):
                 log = LineLogger()
                 t1 = time.time()
-                cmd = "mcrun"
+                cmd = mccode_config.configuration["MCRUN"]
                 if version:
                     cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test",version)
                 if openacc:
@@ -256,19 +256,17 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
 
         # run the test, record time and runtime success/fail
         t1 = time.time()
+        cmd = mccode_config.configuration["MCRUN"]
         if mpi is not None:
             if openacc is True:
-                cmd = "mcrun"
                 if version:
                     cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test",version)
                 cmd = cmd + " -s 1000 %s %s -n%s --openacc --mpi=%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
             else:
-                cmd = "mcrun"
                 if version:
                     cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test",version)
                 cmd = cmd + " -s 1000 %s %s -n%s --mpi=%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
         else:
-            cmd = "mcrun"
             if version:
                     cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test",version)
             cmd = cmd + " -s 1000 %s %s -n%s -d%d  &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, test.testnb, test.testnb)
@@ -390,7 +388,7 @@ def run_default_test(testdir, mccoderoot, limit, instrfilter):
 
     # get default/system version number
     logger = LineLogger()
-    utils.run_subtool_to_completion("mcrun --version", stdout_cb=logger.logline)
+    utils.run_subtool_to_completion("%s --version" % (mccode_config.configuration["MCRUN"]), stdout_cb=logger.logline)
     try:
         version = logger.lst[-1].strip()
     except:
@@ -543,7 +541,7 @@ def show_installed_versions(mccoderoot):
         utils.run_subtool_to_completion(cmd, stdout_cb=print_to_console, stderr_cb=print_to_console)
         logging.info("")
     
-        # TODO: should we test the existence of mcrun?
+        # TODO: should we test the existence of m[xc]run?
     
         # restore environment
         del os.environ["MCSTAS"]
@@ -633,9 +631,9 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('testversion', nargs="?", help='mccode version to test')
-    parser.add_argument('--ncount', nargs=1, help='ncount sent to mcrun')
-    parser.add_argument('--mpi', nargs=1, help='mpi nodecount sent to mcrun')
-    parser.add_argument('--openacc', action='store_true', help='openacc flag sent to mcrun')
+    parser.add_argument('--ncount', nargs=1, help='ncount sent to %s' % (mccode_config.configuration["MCRUN"]))
+    parser.add_argument('--mpi', nargs=1, help='mpi nodecount sent to %s' % (mccode_config.configuration["MCRUN"]) )
+    parser.add_argument('--openacc', action='store_true', help='openacc %s' % (mccode_config.configuration["MCRUN"]) )
     parser.add_argument('--configs', action='store_true', help='test config files under mccodelib/MCCODE')
     parser.add_argument('--config', nargs="?", help='test this specific config only - label name or absolute path (enables --configs)')
     parser.add_argument('--instr', nargs="?", help='test only intruments matching this filter (py regex)')

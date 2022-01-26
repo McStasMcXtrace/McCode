@@ -76,10 +76,10 @@ DArray1d P;
 
 INITIALIZE
 %{
-char line[256];
-long long ncount;
+    char line[256];
+    long long ncount;
 
-if(Emax<Emin){
+    if(Emax<Emin){
         fprintf(stderr,"Warning(%s): Nonsensical energy interval: E=[%g,%g]. Aborting.\n",NAME_CURRENT_COMP,Emin,Emax);
         exit(-1);
     }
@@ -132,7 +132,6 @@ if(Emax<Emin){
 
 #if defined (USE_MPI) 
     );
-    
 #endif
     repeating = 0;
 #ifdef OPENACC
@@ -178,8 +177,8 @@ if(Emax<Emin){
 		SZ[read_neutrons]=0;
 	      }
 	      double nrm;
-	      nrm = particle->ekin *1e9/VS2E;
-	      nrm = sqrt(nrm);
+              nrm = particle->ekin *1e9/VS2E;
+              nrm = sqrt(nrm);
 
 	      double d0=particle->direction[0],d1=particle->direction[1],d2=particle->direction[2];
 
@@ -235,7 +234,7 @@ TRACE
     );
 #endif
       } else
-	ABSORB;       
+	ABSORB;
     }
     if (particle->pdgcode!=2112) {
         /*Either no particle read, particle is not a neutron, or it has invalid energy - terminate to trigger next ray*/
@@ -249,7 +248,7 @@ TRACE
         ABSORB;
     }
     used_neutrons++;
-    
+
 #if defined (USE_MPI)   
   MPI_MASTER(
 #endif
@@ -259,7 +258,6 @@ TRACE
 	     (long unsigned)read_neutrons, particle->ekin, particle->position[0], particle->position[1], particle->position[2],
 	     particle->direction[0], particle->direction[1], particle->direction[2], particle->time, particle->weight,
 	     particle->polarisation[0], particle->polarisation[1], particle->polarisation[2]);
-     
     }
 
 #if defined (USE_MPI)   
@@ -356,9 +354,9 @@ TRACE
 
     /* Energy smearing: */
     double tmpe=(1.0+E_smear*randpm1());
-    double nrm=VS2E*vx*vx+vy*vy+vz*vz;
+    double nrm=VS2E*(vx*vx+vy*vy+vz*vz);
     nrm *= (1.0+E_smear*randpm1());
-    nrm = sqrt(nrm);
+    nrm = sqrt(nrm)*SE2V;
 
     vx=nrm*d0;
     vy=nrm*d1;
@@ -380,7 +378,7 @@ FINALLY
     long long ncount;
 
     ncount=mcget_ncount();
-    
+
     if (used_neutrons!=read_neutrons){
         fprintf(stdout,"Message(%s): You have used %lu of %lu neutrons available in the MCPL file.\n",NAME_CURRENT_COMP,
           (long unsigned)used_neutrons,(long unsigned)read_neutrons);

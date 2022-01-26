@@ -5,9 +5,8 @@
 *
 * %Identification
 * Written by: Marcus H. Mendenhall (marcus.mendenhall@nist.gov)
-* Date: Current Date
-* Origin: Your institution
-* Release: McXtrace 1.2
+* Date: May '17
+* Origin: NIST
 * Version: 0.2
 * %INSTRUMENT_SITE: NIST
 *
@@ -16,25 +15,50 @@
 * %Description
 * This is a preliminary setup of the DBD with the Ge111 Johansson IBM
 *
+* %Example: DBD_IBM_Si_analyzer_BC.instr use_flat_source=0 -n1e7 Detector: lynxeye_I=3.39272e+07
+*
 * %Parameters
-* Par1: [unit] Parameter1 description
+* a_distance_error: [m]          Logitudinal offset of source.
+* figure_radius_multiplier: [ ]  Extra multiplicative factor to the crystal curvature.
+* lattice_radius_miltiplier: [ ] Extra factor to the lattice curvature. Currently IGNORED.
+* beam_hor: [m]                  Beam width of source.
+* beam_vert: [m]                 Unscaled Beam height of source. Will be scaled with take_off angle.
+* tails_integral: [ ]            Integrated beam power in the source tails.
+* tails_width: [m]               Width of the source tails.
+* slit_1_vert: [m]               Vertical opening of 1st slit.
+* slit_1_hor: [m]                Horizontal opening of 1st slit.
+* slit_2_vert: [m]               Vertical opening of 2nd slit.
+* slit_2_hor: [m]                Horizontal opening of 2nd slit.
+* slit_3_vert: [m]               Vertical opening of 3rd slit.
+* slit_3_hor: [m]                Horizontal opening of 3rd slit.
+* ibm_offset: [m]                Offset (rotational) of optical arm.
+* two_theta_si: [deg.]           Monochromator crystal scattering angle.
+* emin: [keV]                    Lower energy to be simulated.
+* emax: [keV]i                   Upper energy to be simulated.
+* take_off: [deg]                Take off angle of source.
+* use_flat_source: [ ]           Use a soimplified flat source approximation.
+* use_si_crystal: [ ]            Activate the monochromator crystal.
+* si_hh: [ ]                     1st Miller index (h) of monochromator crystal.
+* si_kk: [ ]                     2nd index (k) of monochromator crystal.
+* si_ll: [ ]                     3rd Miller index (l) of monochromator crystal.
 *
 * %Link
-* A reference/HTML link for more information
-*
+* <a href="https://www.nist.gov/programs-projects/diffraction-metrology-and-standards/divergent-beam-diffractometer-dbd-laboratory"></a>
+* <a href="https://tsapps.nist.gov/publication/get_pdf.cfm?<pub_id=927309">"International Tables for Crystallography (2018). Vol. H, Chapter 3.1, pp. 224–251."</a>
 * %End
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
 
-DEFINE INSTRUMENT DBD_IBM(
+DEFINE INSTRUMENT DBD_IBM_Si_analyzer_BC(
   a_distance_error=0.0, figure_radius_multiplier=1.0, lattice_radius_multiplier=1.0,
   beam_hor=0.01, beam_vert=0.00004, tails_integral=0.05, tails_width=0.002,
   slit_1_vert=0.004, slit_1_hor=0.01, slit_2_vert=0.0002, slit_2_hor=0.02,
   slit_3_hor=0.02, slit_3_vert=0.01,
   ibm_offset=0.00, two_theta_si=94.963,
   emin=8.047, emax=8.0471, take_off=6.0, 
-  int use_flat_source=0, int use_si_crystal=1, min_log_weight=1e20)
+  int use_flat_source=0, int use_si_crystal=1,
+  si_hh=3, si_kk=3, si_ll=3)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -52,10 +76,13 @@ DECLARE
     double IBM_curvature_radius, alpha, theta_a, theta_b;
     double hc_eV_m=1.0/806554.429;
     double design_wavelength_angstroms;
-    int source_selector_random;
     double take_off_beam_height_scale;
 %}
 
+USERVARS
+%{
+    int source_selector_random;
+%}
 INITIALIZE
 %{
     design_wavelength_angstroms=1e10*hc_eV_m/8047.8;
@@ -74,7 +101,7 @@ INITIALIZE
        sin(θa) =       x sin(2θ) / sqrt(1 + x^2 + 2 x cos(2θ))
        sin(θb) = sin(θa) / x
 
-       and the tilt angle of the lattice α=θbragg-θa
+       and the tilt angle of the lattice alpha=θbragg-θa
      */
 
     { /* make a local block for calculation scoping */
@@ -89,7 +116,7 @@ INITIALIZE
         theta_b=asin(stha/x);
         alpha=(ge_cu_theta0-theta_a);
         IBM_curvature_radius=IBM_distance/stha/2;
-        printf("Johansson optic x=%f, tha=%f, thb=%f, R=%f\n", x, theta_a*180/PI, theta_b*180/PI, IBM_curvature_radius);
+        printf("INFO (%s): Johansson optic x=%f, tha=%f, thb=%f, R=%f\n", instrument_name, x, theta_a*180/PI, theta_b*180/PI, IBM_curvature_radius);
         fflush(NULL); // get messages in order
     }
 %}
@@ -109,7 +136,7 @@ EXTEND
 COMPONENT DBD_tube = Source_lab(
     material_datafile = "Cu.txt", height = beam_vert*take_off_beam_height_scale, width = beam_hor,
     E0 = 40, Emin = emin, Emax=emax, focus_yh = slit_1_vert, focus_xw = slit_1_hor,
-    take_off = take_off, dist = IBM_distance, tube_current = 0.03, lorentzian=1)
+    take_off = take_off, dist = IBM_distance, tube_current = 0.03, lorentzian=1,exit_window_refpt=1)
 WHEN  (use_flat_source == 0 && (source_selector_random || !tails_integral))
 AT (0, 0, -a_distance_error) RELATIVE Origin
 ROTATED (0, 0, 0) RELATIVE Origin
@@ -142,7 +169,7 @@ COMPONENT ibm_crystal = Bragg_crystal_bent_BC(
     alpha=alpha,
     material = "Ge.txt", length = 0.02, width = 0.01,
     V=ge_volume,  debye_waller_B=0.47,
-    h=1, k=1, l=1, crystal_type=Bragg_crystal_diamond)
+    h=1, k=1, l=1, crystal_type=Mx_crystal_diamond)
 AT (0, 0, 0) RELATIVE IBM_arm
 ROTATED (180, 0, 0) RELATIVE IBM_arm
 
@@ -175,8 +202,8 @@ ROTATED (0, 0, 0) RELATIVE sample_arm
 COMPONENT si_crystal = Bragg_crystal_BC(
     material = "Si.txt", length = 0.05, width = 0.05,
    V=si_volume,  debye_waller_B=0.4632,
-   alphax=0, alphay=1, alphaz=0, 
-    h=3, k=3, l=3, crystal_type=Bragg_crystal_diamond) WHEN (use_si_crystal != 0)
+   alphax=0, alphay=1, alphaz=0,
+   h=si_hh, k=si_kk, l=si_ll, crystal_type=Mx_crystal_diamond) WHEN (use_si_crystal != 0)
 AT (0, 0, 2*focal_distance) RELATIVE sample_arm
 ROTATED (-two_theta_si/2.0, 0 ,0) RELATIVE sample_arm
 
@@ -186,13 +213,9 @@ ROTATED (-two_theta_si, 0, 0 ) RELATIVE sample_arm
 
 COMPONENT spectrum_mon = E_monitor(
     nE = 700, filename = "emon", xwidth = 0.05, yheight = 0.05,
-    Emin = 8.010, Emax = 8.080, restore_xray = 1)
-AT (0, 0, 0.216) RELATIVE twotheta_arm
-ROTATED (0, 0, 0) RELATIVE twotheta_arm
-
-//COMPONENT phase_space=phase_space_monitor(filename="events.dat", restore_xray=1, pmin=min_log_weight) 
-// AT (0,0,0.2165) relative twotheta_arm
-//  ROTATED (0,0,0) relative twotheta_arm
+    Emin = (emin+emax)/2-(emax-emin), Emax = (emin+emax)/2+(emax-emin), restore_xray = 1)
+  AT (0, 0, 0.216) RELATIVE twotheta_arm
+  ROTATED (0, 0, 0) RELATIVE twotheta_arm
 
 COMPONENT lynxeye = PSD_monitor(
     nx = 1, ny = 192, xwidth = .01, yheight = 0.0144,

@@ -37,6 +37,12 @@ TRACE
 COMPONENT init = Union_init()
 AT (0,0,0) ABSOLUTE
 
+<<<<<<< HEAD
+=======
+COMPONENT init = Union_init()
+AT (0,0,0) ABSOLUTE
+
+>>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
 // P0
 COMPONENT Al_incoherent = Incoherent_process(sigma=4*0.0082,packing_factor=1,unit_cell_volume=66.4)
 AT (0,0,0) ABSOLUTE

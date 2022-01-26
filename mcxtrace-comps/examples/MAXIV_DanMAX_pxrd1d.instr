@@ -1,0 +1,722 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: MAXIV_DanMAX_pxrd1d
+*
+* %Identification
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Aug 2015
+* Origin: DTU Physics
+* Version: 1.0
+* %INSTRUMENT_SITE: MAXIV
+*
+* DanMAX Powder diffraction/Imaging beamline being designed at MAX IV.
+*
+* %Description
+*
+* Design study model of the DanMAX PowderX/Imaging beamline.
+* This early version uses a Gaussian approximation source, and a simple bandpass filter
+* as the multilayer.
+*
+* %Example: MAXIV_DanMAX_pxrd1d.instr -c -n1e6 E0=15 PXRD_SIMPLE=1 Detector: dm_strip_banana_I=0.00081782
+*
+* %Parameters
+* E0: [keV]        The central energy to sample from source model.
+* DE: [keV]        Spectral width (std. dev. if gaussian source) to sample from source model.
+* undDetune: [eV]  First harmonic detuning in eV. When zero - max flux on axis. If set to approx. 4 eV one can gain ~20% of flux through the aperture.
+* undK: [ ]        Undulator K parameter, overrides E0.
+* oh_premonoh: [m] Pre-mono (white beam) slit height.
+* oh_premonow: [m] Pre-mono (white beam) slit width.
+* oh_endh: [m]     OH exit slit height.
+* oh_endw: [m]     OH exit slit width.
+* PXRDsampleap_h: [m] PXRD clean-up aperture height.
+* PXRDsampleap_w: [m] PXRD clean-up aperture width.
+* DMM_angle: [deg] Glancing angle of the ML.
+* DCM_angle: [deg] Glacing angle of the Si-111 monochromator crystals.
+* DCM: [ ]         If nonzero the high-resolution SI DCM is active.
+* DCM_e0: [keV]    The energy to tune the Si monochromator to. May be different from E0. If 0 the DCM is controlled by DCM_angle.
+* DMM: [ ]         If nonzero the multilayer mono is active.
+* DMM_e0: [keV]    The energy to tune the ML monochromator to. May be different from E0. If 0 the DMM is controlled by DMM_angle.
+* OH_2DCRL_N: [ ]  Number of 2D focus CRLs in the optics hutch transfocator. 0 means transfocator is inactive.
+* PXRD_SIMPLE: [ ] If zero - the full powder diffraction strip detector is active, else a single circular approximation is active.
+* pxrd_strip_tth0: [deg] Angle offset of the PXRD 1d-strip detector from the optical axis. 
+* debugMon: [ ]    If nonzero, all intermediate monitors appear for debugging purposes.
+* beamStop: [ ] If nonzero, a beamstop is in between sample and PXRD 1d-strip detector.
+* SPLITS: [ ]      Split-number at the sample-position
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT MAXIV_DanMAX_pxrd1d(E0=35,DE=0.05,undK=0,undDetune=4,
+        DCM_e0=35,DMM_e0=35,
+        oh_premonoh=1e-3,oh_premonow=1e-3,
+        oh_endh=1e-3,oh_endw=1e-3,
+        PXRDsampleap_h=300e-6, PXRDsampleap_w=300e-6,
+        DMM_angle=0, DCM_angle=0,
+        DCM=1, DMM=0,
+        OH_2DCRL_N=11,EH_2DCRL_N=0, D_EH_2DCRL=0,
+        PXRD_SIMPLE=1, sample_radius=100e-6,
+        pxrd_strip_tth0=0, 
+        debugMon=1, beamStop=0, int SPLITS=1410)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+
+    double FEMMw=0.7e-3;
+    double FEMMh=0.7e-3;
+    double oh_postmonow=1e-3;
+    double oh_postmonoh=1e-3;
+
+    double diamond_zd=1e-3;
+
+    double DMM_theta;
+    double DMM_d;
+    double DMM_rsag;
+    double DMM_rmer;
+
+    int DebMon;
+
+    const char *ml_mono_Rfn="mirror_coating_unity.dat";
+
+    double DCM_theta;
+    double DCM_d;
+
+    double oh_2dcrl_ap=0.4405e-3;
+    const double oh_2dcrl_r=200e-6;
+    int oh_2dcrl_N;
+
+    double eh_2dcrl_ap=0.2e-3;
+    const double eh_2dcrl_r=50e-6;
+    int eh_2dcrl_N;
+    double d_eh_2dcrl;
+
+    double pxrd_sampleap_h;
+    double pxrd_sampleap_w;
+
+    const double beam_xoff=10e-3;
+    double midmono_xoff;
+
+    double r;
+    double energy0;
+    double E1st;
+
+    double monitor_E0;
+    double monitor_DE;
+    double Efull_min;
+    double Efull_max;
+
+    double SDD_1D=760e-3;
+    //double SDD_2D=150e-3;
+    double dm_strip_deth,dm_strip_detw;/*height and width for a single strip-detector block*/
+    double dm_strip_tth0;/*tth_offset, 0 is when the first module is perpendicular to the beam*/
+    double dm_strip_tthc;/*angle coverage of single strip-detector_block*/
+    double dm_strip_tthg;/*angle gap between strip-detector blocks*/
+
+    char dm_strip_banana_options[512];/*string containing parameter for circular appr of mythen detctector.*/ 
+    double sample_radius;
+
+    const double pxrd_2d_px=172e-6;
+    const double pxrd_2d_py=172e-6;
+    const int pxrd_2d_nx=1475;
+    const int pxrd_2d_ny=1679;
+    int h;
+
+    char emon_options[256];
+    char divmon_options[256];
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+    DMM_theta=DMM_angle;
+    energy0=E0;
+    DebMon = debugMon;
+    /*compute the monochromator angles from E0*/
+    if (DCM_e0){
+        energy0=DCM_e0;
+        double wl=12.3984/DCM_e0;
+        const double a_si = 5.431020504; /*in AA*/
+        const double d_si111 = a_si/sqrt(3);
+        const double f00=8*14;/*forward atomic scattering factor*/
+        double th_b = asin(wl/(2*d_si111));  /* Bragg angle in rad*/
+        double rel_displacement = 2*pow(d_si111,2.0)*f00*RE/(M_PI*pow(a_si,3.0));
+        DCM_angle=RAD2DEG * (th_b* (1.0+rel_displacement));
+        printf("DCM is tuned to E=%g keV corresponding to an angle of %g (%g + %g) deg.\n",DCM_e0, DCM_angle, th_b*RAD2DEG, rel_displacement*th_b*RAD2DEG);
+    }
+    DCM_theta=DCM_angle;
+
+
+    if(DMM_e0){
+        /*if the DCM is not active => center the post mono energy monitors around DCM_e0.*/
+        if (!DCM) energy0=DMM_e0;
+        DMM_angle=14.45048/DMM_e0;
+        printf("DMM is tuned to E=%g keV corresponding to an angle of %g deg.\n",DMM_e0, DMM_angle);
+    }
+    DMM_theta=DMM_angle;
+
+/* compute DMM curvature from energy */
+    DMM_rsag= (1093.1*E0) - 11847;
+    DMM_rmer= 176 + (1.8*E0);
+
+/* set fine E-monitor parameters  */
+    if(DCM && DCM_e0) {
+        monitor_E0=DCM_e0;
+        monitor_DE=DCM_e0*0.5e-3;
+    }
+    if(DCM && !DCM_e0) {
+        monitor_E0=E0;
+        monitor_DE=E0*0.5e-3;
+    }
+    if(!DCM && DMM_e0) {
+        monitor_E0=DMM_e0;
+        monitor_DE=DMM_e0*3e-2;
+    }
+    if(!DCM && !DMM_e0) {
+        monitor_E0=E0;
+        monitor_DE=E0*3e-2;
+    }
+
+    snprintf(emon_options,255,"e limits %e %e\n",E0-DE, E0+DE);
+    snprintf(divmon_options,255,"xdiv limits -4e-3 4e-3 ydiv limits -4e-3 4e-3");
+
+   /* set coarse E-monitor parameters */
+   Efull_min = E0-(0.5*DE);
+   Efull_max = E0+(0.5*DE);
+
+    if(DCM && DMM) {
+        /*if si-mono and ml mono the beam is only partly displaced by the 1st si mono (6 mm)
+        * The ml mono should probably have the largest  */
+        midmono_xoff=6e-3;
+        printf("si mono in, ml mono in\n");
+        DMM_rsag=10e7;
+        DMM_rmer=10e7;
+    } else if (DCM && !DMM) {
+        /*if si-mono and no ml mono the beam displacement is done in full by the 1st-mono*/
+        midmono_xoff=beam_xoff;
+        printf("si mono in, ml mono out\n");
+    } else if (!DCM && DMM) {
+        /*if only ml mono the displacement is doen in full by the 2nd mono*/
+        midmono_xoff=0;
+        printf("si mono out, ml mono in\n");
+    } else {
+        /*neither mono is inserted - disallowed*/
+        fprintf(stderr,"Error (%s): must have at least one monochromator in. Please set DCM and/or DMM.\n","DanMAX.instr");
+        exit(-1);
+    }
+
+    printf("DMM1 saggital curvature radius is %g m, meridional radius is %g m.\n",DMM_rsag, DMM_rmer);
+
+    DCM_d=midmono_xoff/sin(2.0*DCM_theta*DEG2RAD);/**/
+    DMM_d=(beam_xoff-midmono_xoff)/sin(2.0*DMM_theta*DEG2RAD);
+    printf("x offset after DCM is: %g, x offset after DMM is: %g\n",midmono_xoff,beam_xoff);
+    printf("z ml mono offset is: %g, z si mono offset is: %g\n",DMM_d,DCM_d);
+
+    oh_2dcrl_N=OH_2DCRL_N;
+    eh_2dcrl_N=EH_2DCRL_N;
+    d_eh_2dcrl=D_EH_2DCRL;
+
+    dm_strip_deth=1280*50e-6;
+    dm_strip_detw=8e-3;
+    dm_strip_tthc=4.8220595;
+    dm_strip_tthg=0.5279405;
+    dm_strip_tth0=pxrd_strip_tth0;/*tth_offset, 0 is when the first module is perpendicular to the beam*/
+    snprintf(dm_strip_banana_options,511,"banana theta limits=[%g %g] bins=%d",dm_strip_tth0-0.5*dm_strip_tthc, dm_strip_tth0+23.5*dm_strip_tthc,24*1280);
+    printf("%s\n",dm_strip_banana_options);
+
+    pxrd_sampleap_h=PXRDsampleap_h;
+    pxrd_sampleap_w=PXRDsampleap_w;
+
+    /*calculate harmonic order and fundamental harmonic of the undulator*/
+    if (E0>33.755){
+      h=15;
+    } else if (E0>29.254){
+      h=13;
+    } else if (E0>24.753){
+      h=11;
+    } else if (E0>20.253){
+      h=9;
+    } else if (E0>15.757){
+      h=7;
+    } else {
+      h=5;
+    }
+    E1st=E0/h+(undDetune/1000);
+
+    printf("INFO: DanMAX_undulator: fundamental energy: %g, harmonic= %d, target energy= %g\n",E1st, h, E0);
+
+    printf("INFO: DanMAX: PXRD 1d-strip prms: %g %g %g %g\n",dm_strip_deth,dm_strip_detw, dm_strip_tthc, dm_strip_tth0);
+
+%}
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  *//* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+
+COMPONENT Origin = Progress_bar( )
+AT (0,0,0) ABSOLUTE
+EXTEND
+%{
+%}
+
+COMPONENT dmu = Undulator(verbose=1, E0=E0, dE=DE, E1st=E1st,
+        focus_yh=1.1e-3, focus_xw=1.1e-3, dist=20, Ie=0.5, Ee=3.0, dEe=0.0008, K=undK, B=0,
+        quick_integ=1, Nper=187, lu=0.016, sigex=53.66e-6, sigey=4.008e-6, sigepx=5.963e-6, sigepy=2.004e-6)
+AT(0,0,0) RELATIVE Origin
+
+/* Monitors */
+/*COMPONENT src_mon = DanMAX_monitor (filename = "src_mon", xwidth=5e-3, yheight=5e-3, ndiv=101, E0=monitor_E0, dE=monitor_DE, Efull_min=Efull_min, Efull_max=Efull_max, restore_xray=1)*/
+/*AT (0,0,1) RELATIVE Origin*/
+
+COMPONENT src_psd = Monitor_nD(restore_xray=1, filename="src_mon.psd", xwidth=5e-3, yheight=5e-3, bins=101, options="x limits -0.2e-3 0.2e-3 y limits -0.2e-3 0.2e-3")
+AT(0,0,1) RELATIVE Origin
+COMPONENT src_div = Monitor_nD(restore_xray=1, filename="src_mon.div", xwidth=5e-3, yheight=5e-3, bins=101, options=divmon_options)
+AT(0,0,1) RELATIVE Origin
+COMPONENT src_e = Monitor_nD(restore_xray=1, filename="src_mon.e", xwidth=5e-3, yheight=5e-3, bins=101, options=emon_options)
+AT(0,0,1) RELATIVE Origin
+
+COMPONENT FM1 = Slit(
+        xwidth=5.68e-3, yheight=5.68e-3)
+AT(0,0,11.35) RELATIVE Origin
+
+COMPONENT FM2 = Slit(
+        xwidth=1.58e-3, yheight=1.58e-3)
+AT(0,0,15.75) RELATIVE Origin
+
+/* The beam defining movable mask */
+COMPONENT FEMM = Slit(
+        xwidth=FEMMw, yheight=FEMMh)
+AT(0,0,19.324) RELATIVE Origin
+
+/* COMPONENT FE_PDc = PD_monitor(filename = "FE_PDc", xwidth=3, yheight=3, nx=3, ny=3) */
+/* AT(0,0,0.001) RELATIVE PREVIOUS */
+
+/* COMPONENT FE_PDf = PD_monitor(filename = "FE_PDf", xwidth=1.4e-3, yheight=1.4e-3, nx=51, ny=51) */
+/* AT(0,0,0.001) RELATIVE PREVIOUS */
+
+/*FE wall*/
+
+/*Optics hutch*/
+COMPONENT oh0 = Arm()
+AT(0,0,22.5) RELATIVE Origin
+
+/* diamond_filters */
+COMPONENT oh_diamond_filter1 = Filter(
+        refraction=0,xwidth=0.01,yheight=0.01, zdepth=diamond_zd,material_datafile="C-diamond.txt")
+AT(0,0,0.975) RELATIVE oh0
+
+
+/* placeholder: A single laue crystal to deflect the "parasitic" beam */
+
+
+/* pre-monochromator guard slits*/
+
+
+COMPONENT oh_premono_ap = Slit(
+    xwidth=oh_premonow,yheight=oh_premonoh)
+AT(0,0,3.727) RELATIVE oh0
+
+
+/* Optional high-resolution Si-111 monochromator.*/
+COMPONENT DCM0_a0 = Arm()
+AT(0,0,4.655) RELATIVE oh0
+ROTATED(0,DCM_theta,0) RELATIVE oh0
+
+COMPONENT DCM0 =  Bragg_crystal(
+        length=50e-3, width=20e-3, h=1, k=1, l=1, V=160.1826, alpha=0, material="Si.txt")
+WHEN(DCM!=0) AT(0,0,0) RELATIVE DCM0_a0
+ROTATED (0,0,-90) RELATIVE DCM0_a0
+EXTEND
+%{
+    if (!SCATTERED) ABSORB;
+%}
+COMPONENT DCM0_a1 = Arm()
+AT(0,0,0) RELATIVE DCM0_a0
+ROTATED (0,DCM_theta,0) RELATIVE DCM0_a0
+
+COMPONENT DCM1_a0 = Arm()
+AT(0,0,DCM_d) RELATIVE DCM0_a1
+ROTATED (0,-DCM_theta,0) RELATIVE DCM0_a1
+
+COMPONENT DCM1 = Bragg_crystal(
+        length=100e-3, width=20e-3, h=1, k=1, l=1, V=160.1826, alpha=0, material="Si.txt")
+WHEN(DCM!=0) AT(0,0,0) RELATIVE DCM1_a0
+ROTATED (0,0,90) RELATIVE DCM1_a0
+EXTEND
+%{
+    if (!SCATTERED) ABSORB;
+%}
+COMPONENT DCM1_a1 = Arm()
+AT(0,0,0) RELATIVE DCM1_a0
+ROTATED (0,-DCM_theta,0) RELATIVE DCM1_a0
+
+
+/* The Multilayer monochromator goes here - the displacement should be given depending on an input target energy*/
+COMPONENT DMM0_a0= Arm()
+AT(midmono_xoff,0,5.848) RELATIVE oh0
+ROTATED (0,DMM_theta,0) RELATIVE oh0
+
+/* if only DMM is used the first mirror is toroidal due to the heat bump */
+COMPONENT DMM0a = Mirror_toroid(
+  xwidth=45e-3, zdepth=200e-3, reflec="w_b4c_si_3AArghn.dat", radius=DMM_rsag, radius_o=DMM_rmer)
+WHEN( (DCM==0) && (DMM!=0) ) AT (0,0,0) RELATIVE DMM0_a0
+ROTATED (0,0,-90) RELATIVE DMM0_a0
+
+/* if both monos are used, the first ML mirror is flat, no heat bump on it */
+COMPONENT DMM0b = Mirror(
+  xwidth=45e-3, zdepth=200e-3, reflectivity="w_b4c_si_3AArghn.dat")
+WHEN ( (DCM!=0) && (DMM!=0) ) AT (0,0,0) RELATIVE DMM0_a0
+ROTATED (0,0,-90) RELATIVE DMM0_a0
+
+COMPONENT DMM0_a1 = Arm()
+AT(0,0,0) RELATIVE DMM0_a0
+ROTATED(0,DMM_theta,0) RELATIVE DMM0_a0
+
+COMPONENT DMM1_a0= Arm()
+AT(0,0,DMM_d) RELATIVE DMM0_a1
+ROTATED(0,-DMM_theta,0) RELATIVE DMM0_a1
+
+COMPONENT DMM1 = Mirror(
+  xwidth=45e-3, zdepth=200e-3, reflectivity="w_b4c_si_3AArghn.dat")
+WHEN (DMM!=0) AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (0,0,90) RELATIVE PREVIOUS
+
+COMPONENT DMM1_a1 = Arm()
+AT(0,0,0) RELATIVE DMM1_a0
+ROTATED(0,-DMM_theta,0) RELATIVE DMM1_a0
+
+/* Monochromatic slits 1 */
+COMPONENT oh_postmono_ap = Slit(
+    xwidth=oh_postmonow,yheight=oh_postmonoh)
+AT(beam_xoff,0,7.375) RELATIVE oh0
+
+/* post mono monitors */
+/*COMPONENT oh_postmono = COPY(src_mon)(filename="oh_postmono")*/
+/*WHEN(debugMon) AT(beam_xoff,0,7.869) RELATIVE oh0*/
+
+COMPONENT oh_postmono_psd = COPY(src_psd)(filename="oh_postmono.psd", options="x limits -0.5e-3 0.5e-3 y limits -0.5e-3 0.5e-3")
+WHEN(debugMon) AT(beam_xoff,0,7.869) RELATIVE oh0
+COMPONENT oh_postmono_div = COPY(src_div)(filename="oh_postmono.div", options=divmon_options)
+WHEN(debugMon) AT(beam_xoff,0,7.869) RELATIVE oh0
+COMPONENT oh_postmono_e = COPY(src_e)(filename="oh_postmono.e", options=emon_options)
+WHEN(debugMon) AT(beam_xoff,0,7.869) RELATIVE oh0
+
+
+/* Focusing by CRLs 1D and 2D blocks */
+
+COMPONENT oh_2dcrl_guard=Slit(radius=oh_2dcrl_ap)
+WHEN(OH_2DCRL_N) AT(beam_xoff,0,8.198) RELATIVE oh0
+
+COMPONENT oh_2dcrl= Lens_parab(
+        r=oh_2dcrl_r, r_ap=oh_2dcrl_ap, material_datafile="Be.txt", N=oh_2dcrl_N, d=30e-6)
+WHEN (OH_2DCRL_N) AT(beam_xoff,0,8.418) RELATIVE oh0
+
+
+
+/* Aperture forming the exit of the optics hutch */
+COMPONENT oh_end_ap = Slit(
+    xwidth=oh_endw,yheight=oh_endh)
+AT(beam_xoff,0,8.939) RELATIVE oh0
+
+
+/*The experimental hutch starts here*/
+COMPONENT eh0 = Arm()
+AT(beam_xoff,0,38.158) RELATIVE Origin
+
+/* EH start monitors */
+/*COMPONENT eh_start = COPY(src_mon)(filename="eh_start")*/
+/*WHEN(debugMon) AT(0,0,0) RELATIVE eh0*/
+
+COMPONENT eh_start_psd = COPY(src_psd)(filename="eh_start.psd", options="x limits -0.5e-3 0.5e-3 y limits -0.5e-3 0.5e-3")
+WHEN(debugMon) AT(0,0,0) RELATIVE eh0
+COMPONENT eh_start_div = COPY(src_div)(filename="eh_start.div", options=divmon_options)
+WHEN(debugMon) AT(0,0,0) RELATIVE eh0
+COMPONENT eh_start_e = COPY(src_e)(filename="eh_start.e", options=emon_options)
+WHEN(debugMon) AT(0,0,0) RELATIVE eh0
+
+
+/*imaging sample station*/
+COMPONENT Imaging = Arm()
+AT(0,0,2) RELATIVE eh0
+/*COMPONENT imaging_monitor = COPY(src_mon)(filename="imaging_monitor")*/
+/*AT(0,0,0) RELATIVE Imaging*/
+
+COMPONENT imaging_psd = COPY(src_psd)(filename="imaging.psd", options="x limits -0.5e-3 0.5e-3 y limits -0.5e-3 0.5e-3")
+AT(0,0,0) RELATIVE Imaging
+COMPONENT imaging_div = COPY(src_div)(filename="imaging.div", options=divmon_options)
+AT(0,0,0) RELATIVE Imaging
+COMPONENT imaging_e = COPY(src_e)(filename="imaging.e", options=emon_options)
+AT(0,0,0) RELATIVE Imaging
+
+/*XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX*/
+/*XXX                                PXRD                                  XXX*/
+/*XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX*/
+
+/*XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX*/
+/*XXX                        CRL FOCUS AT PXRD 2D                          XXX*/
+/*XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX*/
+
+/*COMPONENT eh_pre_crl_mon = COPY(src_mon)(filename="eh_pre_crl_mon")*/
+/*AT(0,0,d_eh_2dcrl-0.02) RELATIVE Imaging*/
+/**/
+/*COMPONENT eh_2dcrl_guard=Slit(radius=eh_2dcrl_ap)*/
+/*WHEN(EH_2DCRL_N) AT(0,0,d_eh_2dcrl-0.01) RELATIVE Imaging*/
+/**/
+/*COMPONENT eh_2dcrl= Lens_parab(*/
+/*        r=eh_2dcrl_r, r_ap=eh_2dcrl_ap, material_datafile="Be.txt", N=eh_2dcrl_N, d=30e-6)*/
+/*WHEN (EH_2DCRL_N) AT(0,0,d_eh_2dcrl) RELATIVE Imaging*/
+
+/*XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX*/
+/*XXX                               PXRD_1D                                XXX*/
+/*XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX*/
+
+COMPONENT pxrd_1d_pt = Arm()
+AT(0,0,10.8) RELATIVE eh0
+
+COMPONENT pxrd1_slit = Slit(xwidth=pxrd_sampleap_w,yheight=pxrd_sampleap_h)
+AT(0,0,-0.2) RELATIVE pxrd_1d_pt
+
+/*COMPONENT pxrd1 = COPY(src_mon)(filename="pxrd1")*/
+/*AT(0,0,0) RELATIVE pxrd_1d_pt*/
+COMPONENT pxrd1_psd = COPY(src_psd)(filename="pxrd1.psd", options="x limits -0.5e-3 0.5e-3 y limits -0.5e-3 0.5e-3")
+AT(0,0,0) RELATIVE pxrd_1d_pt
+COMPONENT pxrd1_div = COPY(src_div)(filename="pxrd1.div", options=divmon_options)
+AT(0,0,0) RELATIVE pxrd_1d_pt
+COMPONENT pxrd1_e = COPY(src_e)(filename="pxrd1.e", options=emon_options)
+AT(0,0,0) RELATIVE pxrd_1d_pt
+
+SPLIT SPLITS COMPONENT powdern = PowderN(
+    reflections="LaB6_660b_AVID2.hkl",
+    material="lab6.abs",
+    radius=sample_radius,
+    yheight=10e-3, d_phi = 1,
+    pack = 0.6, Vc=71.830, density = 4.72,
+    p_interact=0.8, p_transmit=0.1, p_inc=0.1)
+AT (0, 0, 0) RELATIVE pxrd_1d_pt
+ROTATED (0,0,90) RELATIVE pxrd_1d_pt
+
+COMPONENT beamstop1 = Beamstop(radius = 1e-3)
+WHEN(beamStop) AT(0,0,150e-3) RELATIVE pxrd_1d_pt
+
+/* MythenII 24k */
+COMPONENT mythen_0a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tth0,0,0) RELATIVE pxrd_1d_pt
+
+COMPONENT mythen_1a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_0a
+
+COMPONENT mythen_2a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_1a
+
+COMPONENT mythen_3a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_2a
+
+COMPONENT mythen_4a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_3a
+
+COMPONENT mythen_5a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_4a
+
+COMPONENT mythen_6a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_5a
+
+COMPONENT mythen_7a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_6a
+
+COMPONENT mythen_8a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_7a
+
+COMPONENT mythen_9a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_8a
+
+COMPONENT mythen_10a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_9a
+
+COMPONENT mythen_11a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_10a
+
+COMPONENT mythen_12a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_11a
+
+COMPONENT mythen_13a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_12a
+
+COMPONENT mythen_14a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_13a
+
+COMPONENT mythen_15a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_14a
+
+COMPONENT mythen_16a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_15a
+
+COMPONENT mythen_17a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_16a
+
+COMPONENT mythen_18a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_17a
+
+COMPONENT mythen_19a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_18a
+
+COMPONENT mythen_20a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_19a
+
+COMPONENT mythen_21a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_20a
+
+COMPONENT mythen_22a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_21a
+
+COMPONENT mythen_23a = Arm()
+AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED(-dm_strip_tthc-dm_strip_tthg,0,0) RELATIVE mythen_22a
+
+
+
+COMPONENT dm_strip_banana = Monitor_nD(restore_xray=1, yheight=dm_strip_detw, radius=SDD_1D, options=dm_strip_banana_options, 
+    filename="dm_strip_banana", nowritefile=!PXRD_SIMPLE) 
+WHEN(PXRD_SIMPLE) AT(0,0,0) RELATIVE pxrd_1d_pt
+ROTATED (0,0,90) RELATIVE pxrd_1d_pt
+
+COMPONENT mythen_0 = PSD_monitor(
+restore_xray=1, ny=1280, nx=1, yheight=dm_strip_deth, xwidth=dm_strip_detw,filename="mythen_0", nowritefile=PXRD_SIMPLE)
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_0a
+GROUP mythen
+
+COMPONENT mythen_1 = COPY(mythen_0)(filename="mythen_1")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_1a
+GROUP mythen
+
+COMPONENT mythen_2 = COPY(mythen_0)(filename="mythen_2")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_2a
+GROUP mythen
+
+COMPONENT mythen_3 = COPY(mythen_0)(filename="mythen_3")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_3a
+GROUP mythen
+
+COMPONENT mythen_4 = COPY(mythen_0)(filename="mythen_4")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_4a
+GROUP mythen
+
+COMPONENT mythen_5 = COPY(mythen_0)(filename="mythen_5")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_5a
+GROUP mythen
+
+COMPONENT mythen_6 = COPY(mythen_0)(filename="mythen_6")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_6a
+GROUP mythen
+
+COMPONENT mythen_7 = COPY(mythen_0)(filename="mythen_7")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_7a
+GROUP mythen
+
+COMPONENT mythen_8 = COPY(mythen_0)(filename="mythen_8")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_8a
+GROUP mythen
+
+COMPONENT mythen_9 = COPY(mythen_0)(filename="mythen_9")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_9a
+GROUP mythen
+
+COMPONENT mythen_10 = COPY(mythen_0)(filename="mythen_10")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_10a
+GROUP mythen
+
+COMPONENT mythen_11 = COPY(mythen_0)(filename="mythen_11")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_11a
+GROUP mythen
+
+COMPONENT mythen_12 = COPY(mythen_0)(filename="mythen_12")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_12a
+GROUP mythen
+
+COMPONENT mythen_13 = COPY(mythen_0)(filename="mythen_13")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_13a
+GROUP mythen
+
+COMPONENT mythen_14 = COPY(mythen_0)(filename="mythen_14")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_14a
+GROUP mythen
+
+COMPONENT mythen_15 = COPY(mythen_0)(filename="mythen_15")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_15a
+GROUP mythen
+
+COMPONENT mythen_16 = COPY(mythen_0)(filename="mythen_16")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_16a
+GROUP mythen
+
+COMPONENT mythen_17 = COPY(mythen_0)(filename="mythen_17")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_17a
+GROUP mythen
+
+COMPONENT mythen_18 = COPY(mythen_0)(filename="mythen_18")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_18a
+GROUP mythen
+
+COMPONENT mythen_19 = COPY(mythen_0)(filename="mythen_19")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_19a
+GROUP mythen
+
+COMPONENT mythen_20 = COPY(mythen_0)(filename="mythen_20")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_20a
+GROUP mythen
+
+COMPONENT mythen_21 = COPY(mythen_0)(filename="mythen_21")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_21a
+GROUP mythen
+
+COMPONENT mythen_22 = COPY(mythen_0)(filename="mythen_22")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_22a
+GROUP mythen
+
+COMPONENT mythen_23 = COPY(mythen_0)(filename="mythen_23")
+WHEN(!PXRD_SIMPLE) AT (0,0,SDD_1D) RELATIVE mythen_23a
+GROUP mythen
+
+COMPONENT mythen_catchall = Arm()
+AT (0,0,0) RELATIVE pxrd_1d_pt
+GROUP mythen
+EXTEND
+%{
+  SCATTER;
+%}
+
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END

@@ -10,7 +10,6 @@
 * %I
 * Written by: Erik Knudsen
 * Date: June 23rd, 2009
-* Version: $Revision$
 * Origin: Risoe
 * Release: McXtrace 0.1
 *
@@ -63,14 +62,6 @@ INITIALIZE
   PSD_N = create_darr2d(nx, ny);
   PSD_p = create_darr2d(nx, ny);
   PSD_p2 = create_darr2d(nx, ny);
-
-  for (i=0; i<nx; i++)
-    for (j=0; j<ny; j++)
-    {
-      PSD_N[i][j] = 0;
-      PSD_p[i][j] = 0;
-      PSD_p2[i][j] = 0;
-    }
 %}
 TRACE
 %{
@@ -95,12 +86,13 @@ TRACE
       j = ny-1;                      /* Special case for y = radius. */
     else if(j < 0)
       j = 0;
+    double p2 = p*p;
 #pragma acc atomic
     PSD_N[i][j] = PSD_N[i][j]+1 ;
 #pragma acc atomic
     PSD_p[i][j] = PSD_p[i][j] + p;
 #pragma acc atomic
-    PSD_p2[i][j] = PSD_p2[i][j] + p*p;
+    PSD_p2[i][j] = PSD_p2[i][j] + p2;
     SCATTER;
   }
   if (restore_xray) {

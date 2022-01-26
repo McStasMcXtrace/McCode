@@ -43,7 +43,7 @@
 
 DEFINE COMPONENT Chopper_simple
 DEFINITION PARAMETERS ()
-  SETTING PARAMETERS (t0=0,T=1,tau=0.1,xwidth=0.1,yheight=0.1,isfirst=0,t_rise=0, tjit=0)
+SETTING PARAMETERS (t0=0,T=1,tau=0.1,xwidth=0.1,yheight=0.1,isfirst=0,t_rise=0, tjit=0)
 OUTPUT PARAMETERS ( )
 /*X-ray PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)*/
 

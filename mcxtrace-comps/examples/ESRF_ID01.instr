@@ -8,7 +8,6 @@
 *
 * Date: March, 2015
 * Origin: University of Copenhagen
-* Release: McXtrace 1.0
 * %INSTRUMENT_SITE: ESRF
 *
 * Nano-diffraction imaging beamline at ESRF, Grenoble
@@ -23,6 +22,10 @@
 * and then scan across the sample (using the variables Pix and ySamplePosition). By plotting 
 * e.g. total detector intensity as a function of position, one can map out impurities in the sample by  
 * their scattering properties.
+*
+* %Example: ESRF_ID01.instr Pix=0 Piy=0 Detector: PSDMonitor_I=3.26027e-05
+* %Example: ESRF_ID01.instr Delta=65.88 Eta=32.945 Pix=50 Piy=-50 Detector: MAXIPix_I=1.77323e-06
+* %Example: ESRF_ID01.instr Delta=67.44 Eta=33.22 Pix=50 Piy=-50 Detector: MAXIPix_I=2.26516e-06
 *
 * %Parameters
 * DistanceSampleToDetector: [m]   Distance from sample to detector
@@ -234,7 +237,6 @@ AT (0, 0, DistanceSourceToFZP - DistanceSourceToSecondarySlit2 - 0.00001) RELATI
 
 
 COMPONENT FresnelZonePlate = ZonePlate(
-	cut      = 0.0,
 	radius   = FZPRadius, 
 	L        = FZPFocalLength, 
 	lambda0  = 12.39842 / NominalEnergy,
@@ -327,7 +329,7 @@ COMPONENT Sample = Polycrystal(
         bx = 0.0000, by = 5.6579, bz = 0.0000,
         cx = 0.0000, cy = 0.0000, cz = 5.6579
 )
-AT (Pix * 1e-6, Piy * 1e-6, SamplezDepth) RELATIVE SampleArm
+AT (Pix * 1e-6, Piy * 1e-6, SamplezDepth/2.0) RELATIVE SampleArm
 
 
 COMPONENT DetectorArm = Arm()

@@ -5,9 +5,8 @@
 *
 * %Identification
 * Written by: Marcus H. Mendenhall (marcus.mendenhall@nist.gov)
-* Date: Current Date
+* Date: May '17
 * Origin: NIST
-* Release: McXtrace 1.2
 * Version: 0.2
 * %INSTRUMENT_SITE: NIST
 *
@@ -17,11 +16,34 @@
 * This is a preliminary setup of the DBD with the Ge111 Johansson IBM
 *
 * %Parameters
-* Par1: [unit] Parameter1 description
+* a_distance_error: [m]
+* figure_radius_multiplier: [ ]
+* lattice_radius_miltiplier: [ ]
+* beam_hor: [m]
+* beam_vert: [m]
+* tails_integral: [ ]
+* tails_width: [ ]
+* slit_1_vert: [m]
+* slit_1_hor: [m]
+* slit_2_vert: [m]
+* slit_2_hor: [m]
+* slit_3_vert: [m]
+* slit_3_hor: [m]
+* ibm_offset: [m]
+* two_theta_si: [deg.]
+* emin: [keV]
+* emax: [keV]
+* take_off: [deg]
+* use_flat_source: [ ]
+* use_si_crystal: [ ]
+* si_hh: [ ]
+* si_kk: [ ]
+* si_ll: [ ]
+* min_log_weight: [ ]
 *
 * %Link
-* A reference/HTML link for more information
-*
+* <a href="https://www.nist.gov/programs-projects/diffraction-metrology-and-standards/divergent-beam-diffractometer-dbd-laboratory"></a>
+* <a href="https://tsapps.nist.gov/publication/get_pdf.cfm?<pub_id=927309">"International Tables for Crystallography (2018). Vol. H, Chapter 3.1, pp. 224–251."</a>
 * %End
 *******************************************************************************/
 
@@ -34,7 +56,9 @@ DEFINE INSTRUMENT DBD_IBM(
   slit_3_hor=0.02, slit_3_vert=0.01,
   ibm_offset=0.00, two_theta_si=94.963,
   emin=8.047, emax=8.0471, take_off=6.0, 
-  int use_flat_source=0, int use_si_crystal=1, min_log_weight=1e20)
+  int use_flat_source=0, int use_si_crystal=1,
+  si_hh=3, si_kk=3, si_ll=3,
+  min_log_weight=1e20)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -42,57 +66,59 @@ DECLARE
 %{
 #define MCDEBUGxx
 #include <math.h>
-const double ge_a0=5.65791; /* angstroms */
-double ge_volume;
-const double si_d_220=1.920155714; /* angstroms */
-double si_volume;
-double ge_cu_theta0, ge_cu_theta0_deg;
-double IBM_distance=0.119, focal_distance=0.218;
-double IBM_curvature_radius, alpha, theta_a, theta_b;
-double hc_eV_m=1.0/806554.429;
-double design_wavelength_angstroms;
-int source_selector_random;
-double take_off_beam_height_scale;
+#include <stdio.h>
+    const double ge_a0=5.65791; /* angstroms */
+    double ge_volume;
+    const double si_d_220=1.920155714; /* angstroms */
+    double si_volume;
+    double ge_cu_theta0, ge_cu_theta0_deg;
+    double IBM_distance=0.119, focal_distance=0.218;
+    double IBM_curvature_radius, alpha, theta_a, theta_b;
+    double hc_eV_m=1.0/806554.429;
+    double design_wavelength_angstroms;
+    double take_off_beam_height_scale;
 %}
 
+USERVARS
+%{
+    int source_selector_random;
+%}
 INITIALIZE
 %{
-design_wavelength_angstroms=1e10*hc_eV_m/8047.8;
+    design_wavelength_angstroms=1e10*hc_eV_m/8047.8;
 
-ge_volume=ge_a0*ge_a0*ge_a0;
-ge_cu_theta0=asin(sqrt(3.0)*design_wavelength_angstroms/2.0/ge_a0); /* designed to pass Cu kalpha1 on Ge111 */
-ge_cu_theta0_deg=ge_cu_theta0*180/PI; /* designed to pass Cu kalpha1 on Ge111 */
-double si_a0=si_d_220*sqrt(8.0);
-si_volume=si_a0*si_a0*si_a0;
-take_off_beam_height_scale=1.0/sin(take_off*PI/180.0);
+    ge_volume=ge_a0*ge_a0*ge_a0;
+    ge_cu_theta0=asin(sqrt(3.0)*design_wavelength_angstroms/2.0/ge_a0); /* designed to pass Cu kalpha1 on Ge111 */
+    ge_cu_theta0_deg=ge_cu_theta0*180/PI; /* designed to pass Cu kalpha1 on Ge111 */
+    double si_a0=si_d_220*sqrt(8.0);
+    si_volume=si_a0*si_a0*si_a0;
+    take_off_beam_height_scale=1.0/sin(take_off*PI/180.0);
 
-/*
-For a Johansson optic with focal lengths a,b, x = a/b,
-a sin(θa) = b sin(θb)
-cos(θa) = (1 + x cos(2θ)) / sqrt(1 + x^2 + 2 x cos(2θ))
-sin(θa) =       x sin(2θ) / sqrt(1 + x^2 + 2 x cos(2θ))
-sin(θb) = sin(θa) / x
+    /*
+       For a Johansson optic with focal lengths a,b, x = a/b,
+       a sin(θa) = b sin(θb)
+       cos(θa) = (1 + x cos(2θ)) / sqrt(1 + x^2 + 2 x cos(2θ))
+       sin(θa) =       x sin(2θ) / sqrt(1 + x^2 + 2 x cos(2θ))
+       sin(θb) = sin(θa) / x
 
-and the tilt angle of the lattice α=θbragg-θa
+       and the tilt angle of the lattice alpha=θbragg-θa
+     */
 
-*/
+    { /* make a local block for calculation scoping */
+        double x= IBM_distance/focal_distance;
+        double cth2=cos(2*ge_cu_theta0);
+        double sth2=sin(2*ge_cu_theta0);
 
-{ /* make a local block for calculation scoping */
-double x= IBM_distance/focal_distance;
-double cth2=cos(2*ge_cu_theta0);
-double sth2=sin(2*ge_cu_theta0);
+        double ctha=(1 + x*cth2) / sqrt(1 + x*x + 2*x*cth2);
+        double stha=(    x*sth2) / sqrt(1 + x*x + 2*x*cth2);
 
-double ctha=(1 + x*cth2) / sqrt(1 + x*x + 2*x*cth2);
-double stha=(    x*sth2) / sqrt(1 + x*x + 2*x*cth2);
-
-theta_a=asin(stha);
-theta_b=asin(stha/x);
-alpha=(ge_cu_theta0-theta_a);
-IBM_curvature_radius=IBM_distance/stha/2;
-printf("Johansson optic x=%f, tha=%f, thb=%f, R=%f\n", x, theta_a*180/PI, theta_b*180/PI, IBM_curvature_radius);
-
-}
-
+        theta_a=asin(stha);
+        theta_b=asin(stha/x);
+        alpha=(ge_cu_theta0-theta_a);
+        IBM_curvature_radius=IBM_distance/stha/2;
+        printf("Johansson optic x=%f, tha=%f, thb=%f, R=%f\n", x, theta_a*180/PI, theta_b*180/PI, IBM_curvature_radius);
+        fflush(NULL); // get messages in order
+    }
 %}
 
 /* Here comes the TRACE section, where the actual      */
@@ -101,15 +127,16 @@ TRACE
 
 /* Progress_bar is an Arm displaying simulation progress.               */
 COMPONENT Origin = Progress_bar()
-  AT (0,0,0) ABSOLUTE
-  EXTEND %{
+AT (0,0,0) ABSOLUTE
+EXTEND 
+%{
     source_selector_random=rand01() > 0.25;
-  %}
+%}
 
-COMPONENT DBD_tube = Source_lab_lorentzian(
+COMPONENT DBD_tube = Source_lab(
     material_datafile = "Cu.txt", height = beam_vert*take_off_beam_height_scale, width = beam_hor,
     E0 = 40, Emin = emin, Emax=emax, focus_yh = slit_1_vert, focus_xw = slit_1_hor,
-    take_off = take_off, dist = IBM_distance, tube_current = 0.03)
+    take_off = take_off, dist = IBM_distance, tube_current = 0.03, lorentzian=1,exit_window_refpt=1)
 WHEN  (use_flat_source == 0 && (source_selector_random || !tails_integral))
 AT (0, 0, -a_distance_error) RELATIVE Origin
 ROTATED (0, 0, 0) RELATIVE Origin
@@ -117,7 +144,7 @@ ROTATED (0, 0, 0) RELATIVE Origin
 /* tube tails are about an integrated intensity of 5% of main peak i.e. 2 mm wide x 0.001 intensity vs. 0.040 x 1
   the extra factor of 3 in the tube current is because we are generating randoms on a 3:1 bias */
 COMPONENT DBD_tube_tails = COPY(DBD_tube) (height = tails_width*take_off_beam_height_scale, tube_current = 0.03*tails_integral*3)
-    WHEN  (use_flat_source == 0 && (!source_selector_random && tails_integral))
+WHEN  (use_flat_source == 0 && (!source_selector_random && tails_integral))
 AT (0, 0, -a_distance_error) RELATIVE Origin
 ROTATED (0, 0, 0) RELATIVE Origin
 
@@ -128,12 +155,11 @@ COMPONENT flat_source = Source_flat(
 AT (0, 0, -a_distance_error) RELATIVE Origin
 ROTATED (0, 0, 0) RELATIVE Origin
 
-COMPONENT IBM_arm = Arm(
-    )
+COMPONENT IBM_arm = Arm()
 AT (0,0,IBM_distance) RELATIVE Origin
 ROTATED (ibm_offset+theta_a*180/PI, 0, 0) RELATIVE Origin
 
-COMPONENT ibm_crystal = Bragg_crystal_bent(
+COMPONENT ibm_crystal = Bragg_crystal_bent_BC(
     x_a=0,
     y_b=IBM_curvature_radius*figure_radius_multiplier,
     z_c=IBM_curvature_radius*figure_radius_multiplier,
@@ -143,12 +169,11 @@ COMPONENT ibm_crystal = Bragg_crystal_bent(
     alpha=alpha,
     material = "Ge.txt", length = 0.02, width = 0.01,
     V=ge_volume,  debye_waller_B=0.47,
-    h=1, k=1, l=1, crystal_type=NIST_crystal_diamond)
+    h=1, k=1, l=1, crystal_type=Mx_crystal_diamond)
 AT (0, 0, 0) RELATIVE IBM_arm
 ROTATED (180, 0, 0) RELATIVE IBM_arm
 
-COMPONENT sample_arm = Arm(
-    )
+COMPONENT sample_arm = Arm()
 AT (0,0,0.0) RELATIVE IBM_arm
 ROTATED (2*ge_cu_theta0_deg, 0, 0) RELATIVE Origin
 
@@ -174,10 +199,11 @@ COMPONENT slit_3 = Slit(
 AT (0, 0, 0.1) RELATIVE slit_2
 ROTATED (0, 0, 0) RELATIVE sample_arm
 
-COMPONENT si_crystal = NIST_Perfect_crystal(
+COMPONENT si_crystal = Bragg_crystal(
     material = "Si.txt", length = 0.05, width = 0.05,
    V=si_volume,  debye_waller_B=0.4632,
-    h=3, k=3, l=3, crystal_type=NIST_crystal_diamond) WHEN (use_si_crystal != 0)
+   alpha=alpha,
+   h=si_hh, k=si_kk, l=si_ll, crystal_type=Mx_crystal_diamond) WHEN (use_si_crystal != 0)
 AT (0, 0, 2*focal_distance) RELATIVE sample_arm
 ROTATED (-two_theta_si/2.0, 0 ,0) RELATIVE sample_arm
 
@@ -187,13 +213,9 @@ ROTATED (-two_theta_si, 0, 0 ) RELATIVE sample_arm
 
 COMPONENT spectrum_mon = E_monitor(
     nE = 700, filename = "emon", xwidth = 0.05, yheight = 0.05,
-    Emin = 8.010, Emax = 8.080, restore_xray = 1)
-AT (0, 0, 0.216) RELATIVE twotheta_arm
-ROTATED (0, 0, 0) RELATIVE twotheta_arm
-
-COMPONENT phase_space=phase_space_monitor(filename="events.dat", restore_xray=1, pmin=min_log_weight) 
-AT (0,0,0.2165) relative twotheta_arm
-ROTATED (0,0,0) relative twotheta_arm
+    Emin = (emin+emax)/2-(emax-emin), Emax = (emin+emax)/2+(emax-emin), restore_xray = 1)
+  AT (0, 0, 0.216) RELATIVE twotheta_arm
+  ROTATED (0, 0, 0) RELATIVE twotheta_arm
 
 COMPONENT lynxeye = PSD_monitor(
     nx = 1, ny = 192, xwidth = .01, yheight = 0.0144,

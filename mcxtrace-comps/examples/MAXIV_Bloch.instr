@@ -1,0 +1,695 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: MAXIV_Bloch
+*
+* %Identification
+* Written by: Kristian Soerensen and Philip Smith (s154443@win.dtu.dk)
+* Date: June 2018
+* Origin: DTU Physics
+* Version: 1.7
+* %INSTRUMENT_SITE: MAXIV
+*
+* Bloch high resolution photoelectron spectroscopy beamline under development at the MAX IV synchrotron. 
+*
+* %Description
+* This is a simple simulation of the BLOCH beamline at MAXIV. 
+*
+* Two kinds of paramters are given, P and P2.
+* P Parameters are the ones used in the general simulation, i.e when the FOI is intensity ect.
+* P2 parameters are used when the strain of the beamline is the FOI, i.e what happens when the distances change.
+*
+* %Example MAXIV_Bloch E0=0.03 dE=0 undK=0 lu=0.016 Nper=187 zm_mirror1=14 theta_mirror1=3 R0_M1=1 zm_mirror2=2 R0_M2=1  grating_mode=0 zm_mirror3=1 theta_mirror3=3 R0_M3=1 zm_ExitSlit=9 xwidth_ExSlit=0.005 yheight_ExSlit=0.005 zm_mirror4=19 theta_mirror4=3 R0_M4=1 SourceChoice=0 cff=2.25 n=800 m=3 Exitslit_yshift=2 display=0
+*
+* %Parameters:
+* E0: [keV]      The centreal energy to sample from source model.
+* dE: [keV]      Spectral width to sample from source model.
+* SourceChoice: [0/1]   Choice of souce. For easy simulation do Flat souce [0],in nonzero, the undulator is used.   
+* r_rho: [l/mm]  Ruling density of the grating.
+* cff: [ ]       Constant cff value for the grating.
+* xwidth_ExSlit: [m]    xwidth of exit slit.
+* yheight_ExSlit: [m]   yheight of exit slit.
+* Exitslit_yshift: [ ]  y-shift of the exit slit.
+* m: [ ]         Diffraction order, used for Monochromator angle. (fungerer ikke).
+* display: [ ]   If nonzero, different output will be printet, e.g PGM angle calculated.
+* undK: [ ]      Undulator K parameter, overrides E0, only used if SourceChoice is non zero.
+* lu: [m]        Magnetic period length of the undulator.
+* Nper: [ ]      Number of magnetic periods in the undulator.
+* grating_mode: [0/1]   If [1] the NIM mode will be used. If [0] cPGM. Otherwise, optimum will be calculated.
+* MCAngle: [deg] Monte Carlo variation of grating. If wanted energy is given, MCAngle is found automaticaly. 
+* zm_mirror1: [m]       distance(z) to first mirror from previous component.
+* theta_mirror1: [m]    glancing angle of first mirror.
+* R0_M1: [ ]            Constant relectivity of Mirror2 [0;1].
+* zm_mirror2: [m]       distance(z) to mirror2 from previous component.
+* R0_M2: [ ]            Constant relectivity of Mirror2 [0;1].
+* zm_mirror3: [m]       distance(z) to mirror3 from previous component.
+* theta_mirror3: [deg]  glancing angle of mirror3.
+* R0_M3: [ ]            Constant relectivity of Mirror3 [0;1].
+* zm_ExitSlit: [m]      distance from Mirror4 to exit slit.
+* zm_mirror4: [m]       distance(z) to mirror4 from previous component.
+* theta_mirror4: [deg]  glancing angle of mirror4.
+* R0_M4: [ ]            Constant relectivity of Mirror4 [0;1].
+*  
+* %L
+* Bloch_MAX IV description:
+* https://www.maxiv.lu.se/accelerators-beamlines/beamlines/bloch/
+* McXtrace komponent definition:
+* http://www.mcxtrace.org
+* Further reading:
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT MAXIV_Bloch(
+    Wanted_energy=0.378,m=3,cff=0,
+    r_rho=800,blazed=0,blazed_angle=0,
+    SourceChoice=0,E0=0.6, dE=0.4,
+    undK=5.6,Nper=187,
+    grating_mode=-1,
+    zm_mirror2=2,R0_M2=1,R0_PG=1,
+    zm_mirror1=14,theta_mirror1=3,R0_M1=1,
+    zm_mirror3=1,theta_mirror3=3,R0_M3=1,
+    zm_mirror4=19,theta_mirror4=3,R0_M4=1,
+    zm_ExitSlit=9,xwidth_ExSlit=1e-2,yheight_ExSlit=1e-2,Exitslit_yshift=0.005,R0_PG=1,
+    int verbose=0,perfectMirrors=0,Error=0, angle_grating=6, mirror2_angle=6)
+
+/******************************************************
+*
+*The DECLARE section is used to define parameters or small functions than can be used within the entire instrument. 
+*
+*******************************************************/
+DECLARE
+%{ 
+   /* values for the undulator */
+   int h; 
+   double E1st; 
+   /*For monitor energies*/
+   double monitor_wl_min,monitor_wl_max, monitor_Emin, monitor_Emax; 
+   /*Parameters for the slits*/
+   double slit_yshit; 
+   /* Angles used in the beamline */
+   double theta_cPGM, theta_PG_NIM, theta_NIM,theta_mirror2, PGM_theta;  
+   /*Parameters to find grating angle theta_cPGM.*/
+   double grating_mode,Wanted_energy,m, PGM_alpha, PGM_r_rho,PGM_beta,PGM_wl; 
+   /* Distances for monochromtor, for motivation see (R. Sabkari: "ARPES beamline at MAX IV: Detailed optical design report", 2014) */
+   double A,B,C,D,E,F,G,X; 
+   /* Parameters for errors */
+   double Error,M2_theta_error,theta_PG1_error;
+   double M2_theta_error,theta_PG1_error,X_error,y_error ,pitch_error ,yaw_error ,roll_error ,X_error_PGM ,Y_error_PGM ,Z_error_PGM, pitch_error_PGM ,yaw_error_PGM ,roll_error_PGM ,Z_error_exitSlit,
+Opening_error_exitslit;
+   /* MISC*/
+   double R0_cPGM, R0_NIM,d;
+   double MCAngleVariation;
+   double d,a,bb,c,vinkel,beta_wl,beta_rho;
+   //double angle_grating;
+   double alpha,beta;
+   //double mirror2_angle;
+%}
+
+
+
+/******************************************************
+*
+*The INITIALIZE section is used to caculate/define/run jobs once.
+*You may use them as component parameter values.  
+*
+*The INITIALIZE section is devided into several sub-secions. This is purly done for readability.
+*
+*******************************************************/
+INITIALIZE
+%{
+/*
+Description of initialize section: 
+1) Error section.
+2) Undulator section.
+3) Distances in monochromator section.
+4) Calculate wanted energy and corresponding grating order.
+5) Calculating angles used in the monochromator as defined from input parameters.
+6) Monitor definitions.  
+7) Error messages.
+*/
+
+#include <complex.h>
+/******************************************************
+1)
+Errors: 
+If Error=1, the error in accuracy will be implemented as a random error in the beamline.
+The errors are found from R. Sankari.
+These can easily be implemented.
+*******************************************************/
+M2_theta_error=0;theta_PG1_error=0;X_error=0;y_error=0;pitch_error=0;yaw_error =0;roll_error=0;X_error_PGM =0;Y_error_PGM =0;Z_error_PGM=0; pitch_error_PGM =0;yaw_error_PGM =0;roll_error_PGM =0;
+Z_error_exitSlit=0;Opening_error_exitslit=0;
+
+if(Error)
+{
+  M2_theta_error=rand01()*(0.01*(1/3600));
+  theta_PG1_error=rand01()*(0.02*(1/3600));
+  X_error = 5e-6*rand01();
+  y_error = 5e-6*rand01();
+  pitch_error =0.5e-6*rand01()*RAD2DEG;
+  yaw_error = 0.5e-6*rand01()*RAD2DEG;
+  roll_error = 5e-6*rand01()*RAD2DEG;
+  X_error_PGM = 1e-4*rand01();
+  Y_error_PGM = 1e-4*rand01();
+  Z_error_PGM = 1e-4*rand01();
+  pitch_error_PGM =2e-6*rand01()*RAD2DEG; 
+  yaw_error_PGM = 2e-6*rand01()*RAD2DEG;
+  roll_error_PGM = 2e-6*rand01()*RAD2DEG;
+  Z_error_exitSlit = 1e-5*rand01();
+  Opening_error_exitslit = 1e-6*rand01();
+}
+
+/******************************************************
+2)
+Calculate harmonic order(h) and fundamental harmonic(E1st) of the undulator
+
+If SourceChoice!=0 and undulator will be used. 
+*******************************************************/
+h=5;
+    if (E0>15.757){
+	h=7;
+    } else if (E0>20.253){
+        h=9;
+    } else if (E0>24.753){
+	h=11;
+    }else if (E0>29.254){
+        h=13;
+    }else if (E0>33.755){
+        h=15;
+    }
+E1st=1.0018*E0/h;
+
+/*******************************************************
+3)
+Distances used in the Monochromator:
+*******************************************************/
+
+A = 0.064819;
+B = -0.000125;
+C = 0.043821;
+D = 0.020;
+E = 0.620;
+F = 0.042;
+G = 0.140;
+X = 0.072746;
+theta_NIM = (M_PI_2-atan(F/X))*RAD2DEG;
+
+/*******************************************************
+4)
+Finding wanted energy if none is given
+Finding grating mode if none is given
+*******************************************************/
+if (!Wanted_energy){
+  /* If no wanted energy is given, it is assumed the wanted energy is E0. */
+  printf("Warning: No wanted energy is given. Default is E0=%f keV \n",E0);
+  Wanted_energy = E0;
+}
+if(grating_mode!=1 && grating_mode!=0){
+  // If no grating mode is given, the grating mode will be found using the incoming energy. 
+  if(E0>=0.01 && E0<0.025){
+    grating_mode=1;
+    printf("Exception: Cannot set range [nan, nan]No grating mode is given. The NIM mode will be used. \n");
+  } 
+  else if (E0>=0.025){
+    printf("No grating mode is given. The cPGM mode will be used.\n");
+    grating_mode=0;
+  } 
+  else {
+    printf("Warning:Energy below 1 keV (%f keV), NIM mode is used. \n", E0);
+    grating_mode=0;
+  }
+}
+/*******************************************************
+5)
+Calculating the angle for the monochromator. For motivation, see Urpelainen, Samuli 2014.
+*******************************************************/
+MCAngleVariation=5;
+/*If grating_mode=0, the cPGM will be used.*/
+
+if (cff && !grating_mode){
+  beta_wl = (12.398/Wanted_energy)*pow(10,-10);
+  beta_rho = 1/(r_rho*1000);
+  a = (1-pow(cff,2));
+  bb = 2*pow(cff,2)*(m*beta_wl/beta_rho);
+  c = pow(cff,2)-1-pow(cff,2)*((pow(m,2)*pow(beta_wl,2))/pow(beta_rho,2)); 
+  beta = asin((-bb+sqrt(pow(bb,2)-4*a*c))/(2*a));      
+  alpha =acos(cos(beta)/cff);
+  beta = (beta*RAD2DEG);
+  alpha = alpha*RAD2DEG;
+  angle_grating = (beta+90);   
+  mirror2_angle = ((180+beta-alpha));
+  mirror2_angle= mirror2_angle/2;
+  //            mirror2_angle = (90-blazed_angle+beta);   
+  mirror2_angle = (90+beta);   
+} 
+/*if(blazed && blazed_angle){*/
+/*  angle_grating = angle_grating-blazed_angle;*/
+/*}*/
+
+if(verbose){
+  fprintf(stdout,"INFO(%s):Monochromator specs: \n Angle of pre-mirror=%f deg. \n Angle of grating=%f deg.",instrument_name,mirror2_angle,angle_grating);
+}
+MCAngleVariation=angle_grating*0.99;
+
+
+
+
+/*******************************************************
+6)
+Monitor definitions:
+*******************************************************/
+
+if(E0 && dE){
+  monitor_Emin = E0-2*dE;
+  monitor_Emax = E0+2*dE;
+} else if(E0 && !dE){
+  monitor_Emin = E0-3e-3;
+  monitor_Emax = E0+3e-2;
+} else if (!E0){
+  printf("\n Error: No Energy is given! \n");
+  exit(-1);
+}
+monitor_wl_max = 12.3984/monitor_Emin;
+monitor_wl_min = 12.3984/monitor_Emax;
+
+/*******************************************************
+7)
+Error messages:
+*******************************************************/
+if (angle_grating>30 || angle_grating<0)
+{
+  fprintf(stderr,"ERROR: cPGM grating angle is out of bounds(%f DEG). Simulation ended",angle_grating);
+  exit(-1);
+}
+if (mirror2_angle>21 || mirror2_angle<0)
+{
+  fprintf(stderr,"ERROR: M2 angle is out of bounds(%f DEG). Simulation ended",mirror2_angle);
+  exit(-1);
+}
+if (theta_PG_NIM>30 || theta_PG_NIM<0)
+{
+  fprintf(stderr,"ERROR: NIM grating angle is out of bounds(%f DEG). Simulation ended",theta_PG_NIM);
+  exit(-1);
+}
+%}
+
+/**************************************************************
+*
+*Trace section:
+*The TRACE section is where the actual components are placed.
+*
+**************************************************************/
+TRACE
+
+
+COMPONENT origin = Progress_bar()
+AT (0, 1.3, 0) RELATIVE ABSOLUTE
+
+/**************************************************************
+Sources:
+1) When SourceChoice=0 the flat source is used.
+2) When SourceChoice=1 the undulator is used. The TRACE option in the McXtrace GUI IS NOT possible when using the undulator.  
+
+using the Undulator:
+Harmonics are found in initialize. 
+Find general info on the undulator at:
+https://www.maxiv.lu.se/accelerators-beamlines/technology/insertion-devices/
+Find general info on the 1.5 GeV storage ring at:
+https://www.maxiv.lu.se/accelerators-beamlines/accelerators/accelerator-documentation/1-5-gev-storage-ring/
+Find live info on the 1.5 storage ring at:
+**************************************************************/
+
+COMPONENT source_flat = Source_flat(
+    yheight=0.001e-5,xwidth=0.001,dist=zm_mirror1,focus_xw=0.02e-6,focus_yh=0.02,E0=E0,dE=dE)
+WHEN (!SourceChoice)
+AT (0, 0, 0) RELATIVE origin
+EXTEND %{
+  do {
+    double k=sqrt(kx*kx+ky*ky+kz*kz);
+    kx=ky=0;kz=k;
+  }while(0);
+%}
+
+/*COMPONENT dmu = Undulator(verbose=1,E0=E0,dE=dE,Ee=1.5,dEe=((6e-9)*(60e-12))/1.5,Ie=0.5,tbunch=43,K=undK,gap=14e-3,Nper=Nper, */
+/*    lu=84e-3,sigey=1.3e-5,sigex=185e-5,sigepx=32e-6,sigepy=4.6e-6,focus_xw=1.1e-3,focus_yh=1.1e-3,dist=zm_mirror1,E1st=E1st)*/
+/*WHEN (SourceChoice)*/
+/*AT(0,0,0) RELATIVE origin*/
+
+/****************************************
+ Monitors After source:
+****************************************/
+COMPONENT Source_E_monitor = E_monitor(nE=101,filename="source_E_monitor",xwidth=5e-3,yheight=5e-3,Emin=monitor_Emin,Emax=monitor_Emax,restore_xray=1)
+AT (0, 0, 1) RELATIVE PREVIOUS
+
+/*COMPONENT Source_wl_monitor = L_monitor(nL=101,filename="source_wl_monitor",xwidth=5e-3,yheight=5e-3,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)*/
+/*AT (0, 0, 0) RELATIVE PREVIOUS*/
+
+COMPONENT Source_psd_monitor = PSD_monitor(filename="Source_psd_monitor",restore_xray=1,nx = 271,ny = 271,xwidth=0.06,yheight=0.06)
+AT (0, 0, 0.0) RELATIVE PREVIOUS
+
+/**************************************************************
+ M1: toroidial mirror
+1) When perfectMirrors=0, a toroidal mirros is used:
+ - collimates vertically
+ - focuses horizontally 
+2) When perfectMirrors=1, a plane mirror is used. 
+**************************************************************/
+
+COMPONENT M1_arm= Arm()
+AT(0,0,zm_mirror1) RELATIVE origin 
+ROTATED (0,0,90) RELATIVE origin   
+
+COMPONENT Mirror_toroid = Mirror_toroid(zdepth=0.340,xwidth=0.020,radius=246.9254,radius_o=246.9254,R0=R0_M1)
+WHEN (!perfectMirrors)
+AT (0, 0, 0) RELATIVE M1_arm
+ROTATED (-theta_mirror1, 0, 0) RELATIVE M1_arm
+
+COMPONENT M1_perfect_mirror = Mirror(zdepth=0.34,xwidth=0.02,R0=R0_M1)
+WHEN (perfectMirrors)
+AT (0, 0, 0) RELATIVE M1_arm
+ROTATED (-theta_mirror1,0, 0) RELATIVE M1_arm
+
+/****************************************
+ Monitors After Toroidal Mirror:
+****************************************/
+COMPONENT Toroidal_Monitor_arm1= Arm()
+AT(0,0,zm_mirror1) RELATIVE origin
+ROTATED (0,-2*theta_mirror1,0) RELATIVE origin
+
+COMPONENT Toroidal_Monitor_arm2= Arm()
+AT(0,0,1) RELATIVE Toroidal_Monitor_arm1
+ROTATED (0,90,90) RELATIVE Toroidal_Monitor_arm1
+
+COMPONENT M1_E_monitor = E_monitor(nE=101,filename="M1_E_monitor", xwidth=0.06,yheight=0.06,Emin=monitor_Emin,Emax=monitor_Emax,restore_xray=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (90,0,90) RELATIVE PREVIOUS
+
+/*COMPONENT M1_wl_monitor = L_monitor(nL=101,filename="M1_wl_monitor",xwidth=0.06,yheight=0.06,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)*/
+/*AT (0, 0, 0) RELATIVE PREVIOUS*/
+
+COMPONENT M1_psd_monitor = PSD_monitor(filename="M1_psd_monitor",nx = 21,ny = 21,xwidth=0.06,yheight=0.06,restore_xray=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+/**************************************************************
+cPGM mode:
+1) Arms are placed to define rotation axis.
+2) If perfect mirrors are used, grating will be removed, 
+orherwise, blazed should be used. 
+
+ **************************************************************/
+/*Rotation arms*/
+COMPONENT cPGM_arm= Arm()
+AT(0,0,zm_mirror1) RELATIVE origin
+ROTATED (0,-2*theta_mirror1,0) RELATIVE origin
+
+COMPONENT PG1_arm= Arm()
+AT(0,F,2) RELATIVE cPGM_arm
+ROTATED (0,0,0) RELATIVE cPGM_arm
+
+COMPONENT M2_rotation_arm1= Arm()
+AT(0,A-F,B) RELATIVE PG1_arm
+ROTATED (-mirror2_angle+M2_theta_error,0,0) RELATIVE PG1_arm
+
+COMPONENT M2_rotation_arm2= Arm()
+AT(0,0,-D-(E/2)) RELATIVE M2_rotation_arm1
+ROTATED (0,0,0) RELATIVE M2_rotation_arm1
+
+COMPONENT M2_rotation_arm3= Arm()
+AT(0,-C,0) RELATIVE M2_rotation_arm2
+ROTATED (0,0,0) RELATIVE M2_rotation_arm2
+
+/*Mirror and grating*/
+COMPONENT mirror2 = Mirror(
+    zdepth=0.57,xwidth=0.015,R0=R0_M2) 
+WHEN (!grating_mode)
+AT (0, 0, 0) RELATIVE M2_rotation_arm3
+ROTATED (0,0, 0) RELATIVE M2_rotation_arm3
+
+COMPONENT pg_a = Arm()
+AT (0, 0, 0) RELATIVE PG1_arm
+ROTATED (-angle_grating,0, 0) RELATIVE PG1_arm
+
+COMPONENT Plane_grating2 = Grating_reflect(
+    d_phi=MCAngleVariation/100,
+    rho_l=r_rho,
+    zdepth=0.136,xwidth=0.015)
+WHEN(grating_mode==0) AT(0,0,0) RELATIVE PG1_arm
+ROTATED(-angle_grating,0,180) RELATIVE PG1_arm
+
+COMPONENT postPgmfpi=PSD_monitor_4PI(filename="postpgm",radius=1, restore_xray=1)
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT psd2ma = Arm()
+AT(0,0,0) RELATIVE pg_a
+ROTATED (angle_grating,0,0) RELATIVE pg_a
+
+COMPONENT vbanana = Monitor_nD(xwidth=1,yheight=0.1,options="banana theta limits -6 6 energy limits 0.1 1.1", bins=1001, 
+	filename="vbanana",restore_xray=1)
+AT(0,0,0) RELATIVE psd2ma
+ROTATED (0,0,90) RELATIVE psd2ma
+
+COMPONENT psd2m = PSD_monitor(nx=1,ny=501, yheight=0.5, xwidth=0.1, filename="psd2m", restore_xray=1)
+AT(0,0,2) RELATIVE psd2ma
+
+
+/**/
+/*COMPONENT Plane_grating_perfect_mirror = Mirror(*/
+/*    zdepth=0.136,xwidth=0.015,R0=R0_PG)*/
+/*WHEN (!grating_mode && perfectMirrors)*/
+/*AT (0, 0, 0) RELATIVE PG1_arm*/
+/*ROTATED (-angle_grating,0, 0) RELATIVE PG1_arm*/
+/**/
+/**************************************************************
+NIM  mode:
+1) Arm for the NIM mirror is placed
+2) lamellar grating is used
+There is no reason for a perfect mirror in the NIM case.
+**************************************************************/
+
+/*COMPONENT NIM_arm1= Arm()*/
+/*AT(0,-A,X) RELATIVE M2_rotation_arm1*/
+/*ROTATED (0,0,0) RELATIVE M2_rotation_arm1*/
+/**/
+/*COMPONENT NIM = Mirror(*/
+/*    zdepth=0.02,xwidth=0.02,R0=0) */
+/*WHEN (!grating_mode)*/
+/*AT (0, 0, 0) RELATIVE PREVIOUS*/
+/*ROTATED (-theta_NIM,-2*theta_mirror1, 0) RELATIVE origin*/
+/**/
+/*COMPONENT Laminar_Grating = Reflective_grating(*/
+/*    d_phi=4,blazed=0,cff=0,display=0,blazed_angle=0,zdepth=0.136,xwidth=0.015,R0=R0_PG,r_rho=r_rho,b=0,N_slits=0,d=0)*/
+/*WHEN (grating_mode)*/
+/*AT (0, 0, 0) RELATIVE PG1_arm*/
+/*ROTATED (-theta_PG_NIM,0, 0) RELATIVE PG1_arm*/
+
+/****************************************
+ Monitors After Monochromator
+****************************************/
+COMPONENT Monochromator_Monitor_arm= Arm()
+AT(0,F,2.7) RELATIVE PG1_arm 
+ROTATED (0,0,0) RELATIVE PG1_arm
+
+COMPONENT Monochromator_E_monitor = E_monitor(nE=101,filename="AfterMonochromator_E_monitor", xwidth=0.06,yheight=0.06+(F/8),Emin=monitor_Emin,Emax=monitor_Emax,restore_xray=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0,0,0) RELATIVE PREVIOUS
+
+/*COMPONENT Monochromator_wl_monitor = L_monitor(nL=101,filename="AfterMonochromator_wl_monitor",xwidth=0.06,yheight=0.06+(F/8),Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)*/
+/*AT (0, 0, 0) RELATIVE PREVIOUS*/
+
+COMPONENT Monochromator_psd_monitor = PSD_monitor(filename="AfterMonochromator_psd_monitor",nx = 40,ny = 100,xwidth=0.06,yheight=0.06+(F/8),restore_xray=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+/**************************************************************  
+Mirror 3:
+1) M3_Arm to point in M3 location:
+ -Even though the monochromator is rotating, the cylindrical mirror has to stay stationary relative to M2 
+2) Plane mirror in place of the true cylindrical mirror (which isnt developed in McXtrace)
+ - Deflect horizontally
+**************************************************************/
+
+COMPONENT M3_arm= Arm()
+AT(0,F,3) RELATIVE cPGM_arm 
+ROTATED (0,theta_mirror3,0) RELATIVE cPGM_arm
+
+COMPONENT m3Psd=PSD_monitor(xwidth=0.5, yheight=0.5, filename="m3psd", restore_xray=1)
+AT(0,0,0) RELATIVE M3_arm
+
+COMPONENT mirror3 = Mirror_curved(
+    R0=1,
+    radius=0.94205, 
+    length=0.06,
+    width=0.2)
+AT (0, 0, 0) RELATIVE M3_arm
+ROTATED (90, 0, 0) RELATIVE M3_arm
+EXTEND
+%{
+/*    if(!SCATTERED){*/
+/*        ABSORB;*/
+/*    }*/
+%}
+/*    else{*/
+/*        printf("through\n");*/
+/*    }*/
+/*%}*/
+/**/
+/*COMPONENT mirror3_perfect_mirror = Mirror(*/
+/*    zdepth=0.2, */
+/*    xwidth=0.06, */
+/*    R0=1)*/
+/*WHEN(perfectMirrors)*/
+/*AT (0, 0, 0) RELATIVE M3_arm*/
+/*ROTATED (0, 0, 90) RELATIVE M3_arm*/
+/**/
+COMPONENT Exit_slit_arm0= Arm()
+AT(0,0,0) RELATIVE M3_arm 
+ROTATED (0,0,0) RELATIVE M3_arm
+
+COMPONENT M4_arm1= Arm()
+AT(0,0,0) RELATIVE Exit_slit_arm0 
+ROTATED (0,theta_mirror3,0) RELATIVE Exit_slit_arm0
+
+/****************************************
+ Monitors After Mirror 3
+****************************************/
+
+COMPONENT M3_Monitor_arm= Arm()
+AT(0,0,0.5) RELATIVE M4_arm1 
+ROTATED (0,0,0) RELATIVE M4_arm1
+
+COMPONENT M3_E_monitor = E_monitor(nE=101,filename="M3_E_monitor", xwidth=0.04,yheight=0.03,Emin=monitor_Emin,Emax=monitor_Emax,restore_xray=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0,0,0) RELATIVE PREVIOUS
+
+/*COMPONENT M3_wl_monitor = L_monitor(nL=101,filename="M3_wl_monitor",xwidth=0.04,yheight=0.03,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)*/
+/*AT (0, 0, 0) RELATIVE PREVIOUS*/
+
+COMPONENT M3_psd_monitor = PSD_monitor(filename="M3_psd_monitor",nx = 171,ny = 171,xwidth=0.04,yheight=0.03,restore_xray=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+/**************************************************************
+EXIT SLIT:
+1)Exit slit placed in front of mirror 4
+2) based on input parameters, different photons will be let through, i.e different wavelengths.
+*************************************************************/
+
+
+COMPONENT ExT_arm2= Arm()
+AT(0,0,zm_ExitSlit) RELATIVE M4_arm1 
+ROTATED (0,0,0) RELATIVE M4_arm1
+
+COMPONENT bef_slit = PSD_monitor(xwidth=3*xwidth_ExSlit, yheight=3*yheight_ExSlit, filename="bef_slit")
+AT(0,0,-1e-3) RELATIVE ExT_arm2
+
+COMPONENT Exitslit = Slit(
+    xwidth=xwidth_ExSlit, 
+    yheight=yheight_ExSlit)
+AT (0, 0,0) RELATIVE ExT_arm2
+ROTATED (0,0,0) RELATIVE ExT_arm2
+
+COMPONENT aft_slit = COPY(bef_slit)(filename="aft_slit")
+AT(0,0,1e-3) RELATIVE ExT_arm2
+
+/****************************************
+ Monitors Before Mirror 4
+****************************************/
+
+COMPONENT M4Before_psd_monitor = PSD_monitor(filename="M4Before_psd_monitor",restore_xray=1,nx = 271,ny = 271,xwidth=0.2,yheight=0.2)
+AT (0, 0, 1) RELATIVE Exitslit
+
+COMPONENT M4Before_e_monitor = E_monitor(nE=101,filename="M4Before_e_monitor",xwidth=0.2,yheight=0.2,Emin=0,Emax=2,restore_xray=1)
+AT (0, 0, 1) RELATIVE Exitslit
+
+/*COMPONENT M4Before_wl_monitor = L_monitor(nL=101,filename="M4Before_wl_monitor",xwidth=0.2,yheight=0.2,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)*/
+/*AT (0, 0, 1) RELATIVE Exitslit*/
+
+/**************************************************************
+ Mirror 4
+1) Placing an arm
+2) Placing a plane mirror instead of a ellipsoidal mirror for simplicity.
+  - deflect horizontally.
+**************************************************************/
+
+COMPONENT M4_arm2= Arm()
+AT(0,0,zm_mirror4) RELATIVE M4_arm1
+ROTATED (0,theta_mirror4,0) RELATIVE M4_arm1
+
+COMPONENT mirror4 = Mirror(
+    zdepth=0.2,yheight=0.06,R0=R0_M4)
+AT (0, 0, 0) RELATIVE M4_arm2 
+ROTATED (0, 0, 0) RELATIVE M4_arm2
+
+
+/****************************************
+ Monitors After Mirror 4
+****************************************/
+
+COMPONENT M4_Monitor_Arm= Arm()
+AT(0,0,0) RELATIVE mirror4 
+ROTATED (0,theta_mirror4,0) RELATIVE mirror4
+
+COMPONENT M4_psd_monitor = PSD_monitor(filename="M4_psd_monitor",restore_xray=1,nx = 271,ny = 271,xwidth=0.06,yheight=0.06)
+AT (0, 0, 0.3) RELATIVE PREVIOUS
+ROTATED (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT M4_e_monitor = E_monitor(nE=101,filename="M4_e_monitor",xwidth=0.06,yheight=0.06,Emin=0,Emax=2,restore_xray=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+/*COMPONENT M4_wl_monitor = L_monitor(nL=101,filename="M4_wl_monitor",xwidth=0.06,yheight=0.06,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=1)*/
+/*AT (0, 0, 0) RELATIVE PREVIOUS*/
+
+
+/*
+COMPONENT Filter_Argon = Filter(
+    material_datafile="Ar.txt", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    zdepth=0.2)
+WHEN(E0>0.0015759)
+AT (0, 0, 0.5) RELATIVE M4_Monitor_Arm
+
+COMPONENT Filter_Neon = Filter(
+    material_datafile="Ne.txt", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    zdepth=0.2)
+WHEN(E0>0.0021565)
+AT (0, 0, 0.4) RELATIVE PREVIOUS
+
+COMPONENT Filter_Helium = Filter(
+    material_datafile="He.txt", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    zdepth=0.2)
+WHEN(E0>0.0024587)
+AT (0, 0, 0.4) RELATIVE PREVIOUS
+
+
+
+COMPONENT Filter_psd_monitor = PSD_monitor(filename="Filter_psd_monitor",restore_xray=0,nx = 271,ny = 271,xwidth=0.06,yheight=0.06)
+AT (0, 0, 1) RELATIVE PREVIOUS
+ROTATED (0,0,90) RELATIVE M4_Monitor_Arm
+
+COMPONENT Filter_e_monitor = E_monitor(nE=101,filename="Filter_e_monitor",xwidth=0.06,yheight=0.06,Emin=0,Emax=50,restore_xray=0)
+AT (0, 0, 0) RELATIVE M4_Monitor_Arm
+
+COMPONENT Filter_wl_monitor = L_monitor(nL=101,filename="Filter_wl_monitor",xwidth=0.06,yheight=0.06,Lmin=monitor_wl_min,Lmax=monitor_wl_max,restore_xray=0)
+AT (0, 0, 0) RELATIVE M4_Monitor_Arm
+*/
+
+
+/**************************************************************
+
+Experiment hutch:
+   - sample station
+   - monitor
+   - detector
+   - sample
+ect..
+**************************************************************/
+
+
+
+FINALLY
+%{
+%}
+
+END

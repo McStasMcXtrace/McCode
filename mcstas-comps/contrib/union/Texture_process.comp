@@ -54,7 +54,12 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS(string crystal_fn=0, string fcoef_fn=0, int lmax_user=-1,
             barns = 0, order = 0, interact_fraction = -1, packing_factor = 1,
 	    int maxNeutronSaved = 1, string init="init")
+<<<<<<< HEAD
 OUTPUT PARAMETERS ()
+=======
+OUTPUT PARAMETERS (This_process,Texture_storage,effective_my_scattering,
+                   hkl_info_texture, global_process_element)
+>>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
 
 SHARE
 %{
@@ -2175,11 +2180,22 @@ int Texture_physics_scattering(double *k_final, double *k_initial, double *weigh
 };
 
 #ifndef PROCESS_DETECTOR
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> d7fdbe7cb... Manual merge of branch without polymorphism into McStas 3.0 branch.
     #define PROCESS_DETECTOR dummy
 #endif
 
 #ifndef PROCESS_TEXTURE_DETECTOR
     #define PROCESS_TEXTURE_DETECTOR dummy
+<<<<<<< HEAD
+=======
+//struct pointer_to_global_process_list global_process_list = {0,NULL};
+#define PROCESS_DETECTOR dummy
+>>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
+=======
+>>>>>>> d7fdbe7cb... Manual merge of branch without polymorphism into McStas 3.0 branch.
 #endif
 %}
 

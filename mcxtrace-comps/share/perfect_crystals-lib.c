@@ -1,22 +1,29 @@
-#ifndef MXBRAGG_CRYSTALS_C
-#define MXBRAGG_CRYSTALS_C
+#ifndef MX_CRYSTALS_C
+#define MX_CRYSTALS_C
 
-int MxBragg_DarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
-                         const double k0hat[3], const double nhat[3],
-                         const double alpha[3],
+void Mx_CubicCrystalChi(double complex *chi0, double complex *chih, double *k0mag, double *hscale, double *thetaB,
                          double f00, double f0h, double fp, double fpp, double V, int h, int k, int l,
                          double debye_waller_B, double E,
-                         int crystal_type, double fscaler, double fscalei){
-    double lambda,theta, a, d;
+                         int crystal_type, double fscaler, double fscalei)
+{
+    double lambda, a, d;
     
     lambda = 2*PI/(E2K*E);  			/* wavelength in Å, E in keV, using built-in constants for safety    */
     a = cbrt(V); 				/* side length of unit cubic cell (Å)*/
     d = a/sqrt(h*h + k*k + l*l); 		/* d-spacing (Å)*/
-    theta = asin(lambda/(2*d));  		/* kinematical bragg angle (rad) */
-    double k0mag=2.0*M_PI/lambda; /* magnitude of k0 consistent with energy scale */
-    double k0[3]={k0hat[0]*k0mag, k0hat[1]*k0mag, k0hat[2]*k0mag}; /* actual incoming k vector */
-    double hscale=2.0*M_PI/d; /* minus sign to make it point into the crystal */
-    double H[3]={alpha[0]*hscale, alpha[1]*hscale, alpha[2]*hscale};
+
+    if (lambda>2*d){
+      /*cannot close scattering triangle, set all returns to 0 and exit*/
+      *thetaB=0;
+      *k0mag=0;
+      *hscale=0;
+      *chi0=*chih=0;
+      return;
+    }
+
+    *thetaB = asin(lambda/(2*d));  		/* kinematical bragg angle (rad) */
+    *k0mag=2.0*M_PI/lambda; /* magnitude of k0 consistent with energy scale */
+    *hscale=2.0*M_PI/d; /* minus sign to make it point into the crystal */
     
     /* structure factor rules from:
      https://en.wikipedia.org/wiki/Structure_factor section on diamond cubic crystals
@@ -26,10 +33,10 @@ int MxBragg_DarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
     double fscale0;
     
     switch(crystal_type) {
-        case Bragg_crystal_explicit:
+        case Mx_crystal_explicit:
             /* use explicitly provided structure factor scale factor */
             break;
-        case Bragg_crystal_diamond: /* diamond lattice rules */
+        case Mx_crystal_diamond: /* diamond lattice rules */
             if (((h+k+l)%2) != 0){ 		/* (111) etc. odd sum eflection */
                 fscaleh=4+4*I;
                 fscale0=8;
@@ -44,7 +51,7 @@ int MxBragg_DarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
                 fscale0=0;
             }
             break;
-        case Bragg_crystal_fcc: /* fcc lattice rules */
+        case Mx_crystal_fcc: /* fcc lattice rules */
         {
             int hpar=h%2, kpar=k%2, lpar=l%2;
             if ( hpar==kpar && kpar==lpar ) { /* all parities the same */
@@ -57,7 +64,7 @@ int MxBragg_DarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
             }
         }
             break;
-        case Bragg_crystal_bcc: /* bcc lattice rules */
+        case Mx_crystal_bcc: /* bcc lattice rules */
             if ( ((h+k+l)%2) == 0 ) { /* h+k+l even */
                 fscaleh=2;
                 fscale0=2;
@@ -76,14 +83,25 @@ int MxBragg_DarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
     double complex Fh=cabs(fscaleh)*((f0h+fp)+fpp*I);
     
     double GAMMA=RE*lambda*lambda/(PI*V);
-    double M=debye_waller_B*SQR(sin(theta)/lambda)*(2./3.); /* isotropic temperature factor */
-    double complex chi0 = -F0*GAMMA;
-    double complex chih = -Fh*GAMMA*exp(-M);
+    double M=debye_waller_B*SQR(sin(*thetaB)/lambda)*(2./3.); /* isotropic temperature factor */
+    *chi0 = -F0*GAMMA;
+    *chih = -Fh*GAMMA*exp(-M);
+}
+
+int Mx_DarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
+                         const double k0hat[3], const double nhat[3],
+                         const double alpha[3],
+                         double complex chi0, double complex chih, double complex chihbar,
+                         double k0mag, double hscale, double thetaB
+                         )
+{
+    double k0[3]={k0hat[0]*k0mag, k0hat[1]*k0mag, k0hat[2]*k0mag}; /* actual incoming k vector */
+    double H[3]={alpha[0]*hscale, alpha[1]*hscale, alpha[2]*hscale};
     
     /* now we have to solve for the free-space kh vector outside the crystal.
-     The requirement is that kh = Kh + e * nhat, and is pure real and has the same magnitude as k0.
-     Thus, kh = k0 + kq*nhat + H + e*nhat, |kh| = |k0|, and kq+e must be real to make kh real.
-     if kq+e == q,
+     The requirement is that kh = Kh + q2 * nhat, and is pure real and has the same magnitude as k0.
+     Thus, kh = k0 + q1 * nhat + H + q2 * nhat, |kh| = |k0|, and (q1 + q2) must be real to make kh real.
+     if (q1 + q2) == q,
      q^2 + H^2 + 2 q (k0+H).nhat + 2 k0.H = 0
      Note that this is independent of the messy dispersion relationship, and the same for both polarizations.
      */
@@ -94,24 +112,23 @@ int MxBragg_DarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
     double root1, root2;
     qsolve(root1, root2, 1., bb, cc, sqrt); //root2 is the small root
     vplus(kh, k0plusH, root2*nhat);
-
-    /* compute the external asymmetry b0 which is the ratio of the sizes of the footprint of the beam on the crystal */
-    double b0 = vdot(k0, nhat)/vdot(kh, nhat); // since |k0|=|kh| from above, we don't have to worry about the normalization
     
     for (int i=0; i<2; i++) { // do reflectivity using shared geometry for both polarizations
-        double C=(i==0)?fabs(cos(2*theta)) : 1; // polarization factor
+        double C=(i==0)?fabs(cos(2*thetaB)) : 1; // polarization factor
         double complex xi0;
         double K0[3], Kh[3];
         double complex kqvals[4], xi0vals[4], xihvals[4];
-        
-        // warning: valid only for centrosymmetric crystals here where chih=chihbar
-        int fail=MxBragg_DiffractionDispersion(kqvals, xi0vals, xihvals,
-                   k0, nhat, H, chi0, chih*chih, C, 1); // get first (interesting) root only
+
+        int fail=Mx_DiffractionDispersion(kqvals, xi0vals, xihvals,
+                   k0, nhat, H, chi0, chih*chihbar, C, 1); // get first (interesting) root only
 
         double complex kq=kqvals[0];
         xi0=xi0vals[0];
         vplus(K0, k0, creal(kq)*nhat);
         vplus(Kh, K0, H);
+
+        /* compute the asymmetry b which is the ratio of the sizes of the footprint of the beam on the crystal */
+        double b = (vdot(K0, nhat)/sqrt(vdot(K0,K0)))/(vdot(Kh, nhat)/sqrt(vdot(Kh, Kh)));
         
         if(fail) {
             *Rsig=0;
@@ -123,6 +140,7 @@ int MxBragg_DarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
         double eratio=cabs(eq24);
         
 #ifdef MCDEBUG
+#ifndef OPENACC
         fprintf(stderr,
                 "Bragg Geometry results: k0=(%.3f %.3f %.3f), kh=(%.3f %.3f %.3f) "
                 "xi0 = (%.3e + %.3e i) "
@@ -132,12 +150,13 @@ int MxBragg_DarwinReflectivityBC(double *Rsig, double *Rpi, double kh[3],
                 "\n",
                 k0[0], k0[1], k0[2], kh[0], kh[1], kh[2],
                 creal(xi0), cimag(xi0),
-                b0,
-                creal(eq24), cimag(eq24), eratio*eratio/fabs(b0));
+                b,
+                creal(eq24), cimag(eq24), eratio*eratio/fabs(b));
+#endif
 #endif
         
-        if(i==0)  *Rpi=eratio*eratio/fabs(b0); // the fabs(b0) is the footprint correction
-        else      *Rsig=eratio*eratio/fabs(b0);
+        if(i==0)  *Rpi=eratio*eratio/fabs(b); // the fabs(b0) is the footprint correction
+        else      *Rsig=eratio*eratio/fabs(b);
     }
     return 0;
 }
@@ -155,13 +174,13 @@ void cross(double res[3], const double v1[3], const double v2[3], int unitize)
     }
 }
     
-int MxBragg_DiffractionDispersion(double complex kqvals[4], double complex xi0[4], double complex xih[4],
+int Mx_DiffractionDispersion(double complex kqvals[4], double complex xi0[4], double complex xih[4],
                           const double k0[3], const double nhat[3],
                           const double H[3],
                           double complex chi0, double complex chih_chihbar, double C, int nroots){
     /* compute the Batterman & Cole eq. 17 dispersion relation, and associated quantities.
        nroots sets how many roots to find.  They are sorted, with the first root being the attenuated incoming ray,
-       then the  amplfied incoming ray, then the two 'big roots'.
+       then the amplified incoming ray, then the two 'big roots'.
        Normally only nroots=1 is interesting for Bragg diffraction.
      */
 
@@ -217,21 +236,25 @@ int MxBragg_DiffractionDispersion(double complex kqvals[4], double complex xi0[4
             swap=initroots[0]; initroots[0]=initroots[1]; initroots[1]=swap;
         } else {
             // neither root has im(k) < 0, no physically possible solution.  Should never happen.
+#ifndef OPENACC
             fprintf(stderr, "PerfectCrystal: No attenuating solution for incoming vector found, r1=(%.3e + %.3e i) 	r2=(%.3e + %.3e i) \n",
                     creal(initroots[0]), cimag(initroots[0]), creal(initroots[1]), cimag(initroots[1]));
-            exit(1);
+#endif
+            return -1;
         }
     }
     initroots[2]=p1b;
     initroots[3]=p2b; // the two big roots are last in the list
-    
+
     for(rootloops=0; rootloops < nroots; rootloops++) {
         double complex dd, kq, pv, dv;
         kq=initroots[rootloops];
 #if MCDEBUG
+#ifndef OPENACC
         fprintf(stderr,"Batterman Cole dispersion Newton Iterations, starting at root =(%.3e + %.3e i) \n",
                 creal(kq), cimag(kq)
                 );
+#endif
 #endif
         int stepcount=0;
         do {
@@ -241,27 +264,155 @@ int MxBragg_DiffractionDispersion(double complex kqvals[4], double complex xi0[4
             kq+=dd;
             stepcount++;
 #ifdef MCDEBUG_EXTRA
+#ifndef OPENACC
+        fprintf(stderr,"Batterman Cole dispersion Newton Iterations, starting at root =(%.3e + %.3e i) \n",
             fprintf(stderr,"Batterman Cole dispersion Newton Iterations, step count=%d, pv=%.3e dv=%.3e "
                     "kq=(%.3e + %.3e I) shift=%.3e\n",
                     stepcount,
                     cabs(pv), cabs(dv), creal(kq), cimag(kq), cabs(dd) );
 #endif
+#endif
         } while ( ((cabs(dd) > 1e-15) && (stepcount < 20)) );
         kqvals[rootloops]=kq;
-        
+
         fail= (stepcount == 20);
         if(fail) { // should never happen. always converges in about 3 steps!
+#ifndef OPENACC
             fprintf(stderr,"****Newton's method convergence failure in Bragg_Geometry, killing particle!\n");
+#endif
             kq=initroots[rootloops]; // leave offset plausible, close to quadratic start
         }
+
+
+        // batterman and cole eq. 18, exact definitions of xi0 and xih
+        // but adjust for numerical stability.
+        // The smaller of xi0, xih depends on delicate cancellation of the polynomial.  The larger doesn't.
+        // Thus, replace the small polynomial with epsilon / (large one)
+        // This is equivalent to the Numerical Recipes trick for stable computation of quadratic roots
+        double complex poly1v=(poly1[2]*kq+poly1[1])*kq+poly1[0];
+        double complex poly2v=(poly2[2]*kq+poly2[1])*kq+poly2[0];
+        if( fabs(creal(poly1v)) < fabs(creal(poly2v)) ) {
+            poly1v=epsilon/poly2v;
+        } else {
+            poly2v=epsilon/poly1v;
+        }
+        xi0[rootloops]=poly1v/(2*k0mag);
+        xih[rootloops]=poly2v/(2*k0mag);
         
-        xi0[rootloops]=((poly1[2]*kq+poly1[1])*kq+poly1[0])/(2*k0mag);
-        xih[rootloops]=((poly2[2]*kq+poly2[1])*kq+poly2[0])/(2*k0mag);
     }
     return fail;
 }
+
+int Mx_LaueReflectivityBC(double *Rsig, double *Rpi, double *Tsig, double *Tpi,
+                         double *Asig, double *Api, // primary attenuation
+                         double kh[3],
+                         const double k0hat[3], const double nhat[3],
+                         const double alpha[3],
+                         double complex chi0, double complex chih, double complex chihbar,
+                         double k0mag, double hscale, double thetaB, double thickness)
+{
+    double k0[3]={k0hat[0]*k0mag, k0hat[1]*k0mag, k0hat[2]*k0mag}; /* actual incoming k vector */
+    double H[3]={alpha[0]*hscale, alpha[1]*hscale, alpha[2]*hscale};
+
+    /* a bunch of precomputed dot products we will use over and over.*/
+    double k0dotnhat=vdot(k0,nhat);
+    double Hdotnhat=vdot(H, nhat);
+    double k0dotH=vdot(k0,H);
+    double HdotH=vdot(H,H);
     
-void MxBragg_DarwinReflectivity(double *R, double *Thetah, double *Theta0, double *DeltaTheta0,
+    /* now we have to solve for the free-space kh vector outside the crystal.
+     The requirement is that kh = Kh + e * nhat, and is pure real and has the same magnitude as k0.
+     Thus, kh = k0 + kq*nhat + H + e*nhat, |kh| = |k0|, and kq+e must be real to make kh real.
+     if kq+e == q,
+     q^2 + H^2 + 2 q (k0+H).nhat + 2 k0.H = 0
+     Note that this is independent of the messy dispersion relationship, and the same for both polarizations.
+     */
+    double k0plusH[3];
+    vplus(k0plusH, k0, H);
+    double bb=2*(k0dotnhat+Hdotnhat);
+    double cc = HdotH +2*k0dotH;
+    double root1, root2;
+    qsolve(root1, root2, 1., bb, cc, sqrt); //root2 is the small root
+    vplus(kh, k0plusH, root2*nhat);
+
+    for (int i=0; i<2; i++) { // do reflectivity using shared geometry for both polarizations
+        double C=(i==0)?fabs(cos(2*thetaB)) : 1; // polarization factor
+        double complex kqvals[4], xi0vals[4], xihvals[4];
+
+        int fail=Mx_DiffractionDispersion(kqvals, xi0vals, xihvals,
+                   k0, nhat, H, chi0, chih*chihbar, C, 2); // get first 2 (alpha and beta) roots only
+
+        double complex a1=2*xi0vals[0]/(k0mag*C*chih);  // complex Eha/E0a from B&C eq. 24
+        double complex a2=2*xi0vals[1]/(k0mag*C*chih);  // complex Ehb/E0a from B&C eq. 24
+        // compute amplitudes from solving B&C eqns. 40
+        double complex i1=a2/(a2-a1); // e0a/e0i
+        double complex i2=-a1/(a2-a1); // e0a/e0i
+        double complex ix=-thickness*1e10*I; // convert thickness to angstroms for absorption
+
+        // factor out main K vector and difference explicitly,
+        // so that dphi, the relative phase & amplitude of the alpha and beta
+        // rays can be calculated to high accuracy
+        // note: K0=k0 + r nhat, so K0.nhat = k0.nhat + r
+        // similarly for Kh=k0 + H + r nhat so Kh.nhat = k0.nhat + H.nhat + r
+
+        // we don't actually use the main phase (yet), so only compute real part
+        // of transport exponentials
+        // double complex phi0t=cexp((k0dotnhat+kqvals[0])*ix) #alpha transmitted wave factor
+        // double complex phi0r=cexp((k0dotnhat+Hdotnhat+kqvals[0])*ix) #alpha reflected factor
+        double phi0t=exp(creal((k0dotnhat+kqvals[0])*ix)); // alpha transmitted wave factor
+        double phi0r=exp(creal((k0dotnhat+Hdotnhat+kqvals[0])*ix)); // alpha reflected factor
+        double complex dphi=cexp((kqvals[1]-kqvals[0])*ix); // beta-alpha transmission ratio
+
+        double complex t0zz=phi0t*(i1+i2*dphi); // transmitted complex field amplitude at exit
+        double complex thzz=phi0r*(a1*i1+a2*i2*dphi); // reflected complex field amplitude at exit
+#ifdef MCDEBUG
+#ifndef OPENACC
+        fprintf(stderr, "LAUE: "
+        " k0 = (%.3f %.3f %.3f) thickness=%.3e"
+        " a1=(%.3f + %.3fj) "
+        " a2=(%.3f + %.3fj) "
+        " i1=(%.3f + %.3fj) "
+        " i2=(%.3f + %.3fj) "
+        " phi0t = %.3e phi0r = %.3e "
+        " dphi=(%.3f + %.3fj) "
+        " t0zz=(%.3f + %.3fj) "
+        " thzz=(%.3f + %.3fj) "
+        " \n",
+        k0[0], k0[1], k0[2], thickness,
+        creal(a1), cimag(a1),
+        creal(a2), cimag(a2),
+        creal(i1), cimag(i1),
+        creal(i2), cimag(i2),
+        phi0t, phi0r,
+        creal(dphi), cimag(dphi),
+        creal(t0zz), cimag(t0zz),
+        creal(thzz), cimag(thzz)
+        );
+#endif
+#endif
+
+        /* compute the asymmetry b which is the ratio of the sizes of the footprint of the beam on the crystal.
+        Assume it is the same for alpha and beta branches!
+        */
+        double K0[3], Kh[3];
+        vplus(K0, k0, creal(kqvals[0])*nhat);
+        vplus(Kh, K0, H);
+        double b = (vdot(K0, nhat)/sqrt(vdot(K0,K0)))/(vdot(Kh, nhat)/sqrt(vdot(Kh, Kh)));
+
+        double R=cabs(thzz*thzz)/fabs(b); // the fabs(b) is the footprint correction
+        double T=cabs(t0zz*t0zz)/fabs(b);
+
+        if(i==0) {
+            *Rpi= R; *Tpi= T; *Api=phi0t*phi0t;
+        } else {
+            *Rsig=R; *Tsig=T; *Asig=phi0t*phi0t;
+        }
+    }
+    return 0;
+}
+
+/*This is the old Darwin function*/ 
+void Mx_DarwinReflectivity(double *R, double *Thetah, double *Theta0, double *DeltaTheta0,
                              double f00, double f0h, double fp, double fpp, double V, double alpha, int h, int k, int l,
                              double debye_waller_B, double E, double Thetain, int pol,
                             int crystal_type, double fscaler, double fscalei
@@ -303,10 +454,10 @@ https://en.wikipedia.org/wiki/Structure_factor section on diamond cubic crystals
      */
 
     switch(crystal_type) {
-        case Bragg_crystal_explicit:
+        case Mx_crystal_explicit:
             /* use explicitly provided structure factor scale factor */
             break;
-        case Bragg_crystal_diamond: /* diamond lattice rules */
+        case Mx_crystal_diamond: /* diamond lattice rules */
             if (((h+k+l)%2) != 0){ 		/* (111) etc. odd sum eflection */
                 fscaler=fscalei=4.0;
             }
@@ -318,7 +469,7 @@ https://en.wikipedia.org/wiki/Structure_factor section on diamond cubic crystals
                 fscaler=0; fscalei=0;
             }
             break;
-        case Bragg_crystal_fcc: /* fcc lattice rules */
+        case Mx_crystal_fcc: /* fcc lattice rules */
             {
                 int hpar=h%2, kpar=k%2, lpar=l%2;
                 if ( hpar==kpar && kpar==lpar ) { /* all parities the same */
@@ -329,7 +480,7 @@ https://en.wikipedia.org/wiki/Structure_factor section on diamond cubic crystals
                 }
             }
             break;
-        case Bragg_crystal_bcc: /* bcc lattice rules */
+        case Mx_crystal_bcc: /* bcc lattice rules */
             if ( ((h+k+l)%2) == 0 ) { /* h+k+l even */
                 fscaler=2.0; fscalei=0.0;
             }
@@ -366,6 +517,7 @@ https://en.wikipedia.org/wiki/Structure_factor section on diamond cubic crystals
 
     DeltaThetas = psi0r/sin(2*theta);               	/* eq 32 */
 #ifdef MCDEBUG
+#ifndef OPENACC
     printf("E,lambda= %f , %f \n",E,lambda);
     printf("theta= %f \n",theta*180/PI);
     printf("Theta0= %f \n",*Theta0*180/PI);
@@ -383,8 +535,9 @@ https://en.wikipedia.org/wiki/Structure_factor section on diamond cubic crystals
     printf("R= %f \n",*R);
     printf("DeltaThetas %f \n",3600*DeltaThetas*180/PI);
 #endif
+#endif
     *DeltaTheta0 = 0.5*(1 + 1/b)*DeltaThetas;                        	/* center of reflectivity curve is at theta + DeltaTheta0 eq 31 */
 }
 
 
-#endif /* MXBRAGG_CRYSTALS_BC_C SHARE section */
+#endif /* MX_CRYSTALS_C */

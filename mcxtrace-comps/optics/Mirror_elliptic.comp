@@ -10,7 +10,6 @@
 * %I
 * Written by: Erik Knudsen
 * Date: Feb 11, 2010
-* Version: $Revision$
 * Origin: Risoe
 * Release: McXtrace 1.0
 *
@@ -52,8 +51,12 @@ OUTPUT PARAMETERS ()
 
 DECLARE
 %{
-  double a2,b2,c2;
-  double Ox,Oy,Oz;
+  double a2;
+  double b2;
+  double c2;
+  double Ox;
+  double Oy;
+  double Oz;
 %}
 
 INITIALIZE

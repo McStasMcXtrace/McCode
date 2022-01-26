@@ -55,7 +55,11 @@
 DEFINE COMPONENT PhononSimple_process
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(packing_factor=1,unit_cell_volume=13.8,interact_fraction=-1,a=4.95,c=10,M=207.2,b=9.4,T=290,DW=1,longitudinal=1,transverse=1, string init="init")
+<<<<<<< HEAD
 OUTPUT PARAMETERS ()
+=======
+OUTPUT PARAMETERS (This_process,PhononSimple_storage,effective_my_scattering)
+>>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
 
 SHARE
 %{
@@ -444,12 +448,28 @@ int PhononSimple_physics_scattering(double *k_final, double *k_initial, double *
 // These lines help with future error correction, and tell other Union components
 //  that at least one process have been defined.
 #ifndef PROCESS_DETECTOR
+<<<<<<< HEAD
+<<<<<<< HEAD
     #define PROCESS_DETECTOR dummy
 #endif
 
 #ifndef PROCESS_PHONONSIMPLE_DETECTOR
     #define PROCESS_PHONONSIMPLE_DETECTOR dummy
 #endif
+=======
+    // Obsolete
+    //struct pointer_to_global_process_list global_process_list = {0,NULL};
+    #define PROCESS_DETECTOR dummy
+#endif
+>>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
+=======
+    #define PROCESS_DETECTOR dummy
+#endif
+
+#ifndef PROCESS_PHONONSIMPLE_DETECTOR
+    #define PROCESS_PHONONSIMPLE_DETECTOR dummy
+#endif
+>>>>>>> d7fdbe7cb... Manual merge of branch without polymorphism into McStas 3.0 branch.
 %}
 
 DECLARE

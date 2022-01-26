@@ -1,0 +1,241 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: test (rename also the example and DEFINE lines below)
+*
+* %Identification
+* Written by: Erik B Knudsen and M Thomsen 
+* Date: March 3rd 2014
+* Origin: Your institution
+* Release: McXtrace 1.5
+* Version: 0.1
+* %INSTRUMENT_SITE: NBI
+*
+* Laboratory tomography setup at NBI
+*
+* %Description
+* Consists simply of a Mo-source, a sample, an Al-filter and a detector, all in line with each other
+* The sample is a chess-king off-shape. 
+*
+* Example: mxrun NBI_Lab_TOMO.instr fname="spectrumU50_th5.dat" Omega=0 detw=0.2 deth=0.2
+*
+* %Parameters
+* fname: [] filename which contains the emission spectrum for the source
+* d_source_det: [m] distance between the source and the detector
+* d_source_sample. [m] distance between source adn sample
+* Omega: [deg] rotation angle of sample (around y-axis)
+* detw: [m] Detector width
+* deth: [m] Height of detector
+*
+* %Link
+* A reference/HTML link for more information
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT NBI_Lab_TOMO(string fname="spectrumU50_th5.dat",d_sample_det=.790, d_source_sample=1.1450,Omega=0,detw=.0351,deth=.0334, MONO=0, Energy=50, deltaE=1)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+	double II;
+	double K;
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+	II=0;
+
+  /*figure out which spectrum file to use*/
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+COMPONENT source=Source_pt(spectrum_file=fname,E0=1,
+    dist=d_source_sample+d_sample_det,focus_xw=detw,focus_yh=deth, flux=1e6)
+WHEN(!MONO)  AT (0,0,0) ABSOLUTE
+
+/*COMPONENT filter_Be_inverse=Filter(*/
+/*    material_datafile="Beryllium_inverse.dat",xwidth=detw,yheight=deth,zdepth=400e-6)*/
+/*AT(0,0,1e-3) RELATIVE PREVIOUS*/
+
+
+COMPONENT emon0 = E_monitor(
+    nE = 1000, filename = "emon0", xwidth = detw/8, yheight = detw/8,
+    Emin = 0, Emax = 120, restore_xray = 1)
+  AT (0, 0, 0.5e-3) RELATIVE PREVIOUS 
+
+COMPONENT filter_Be=Filter(
+    material_datafile="Be.txt",xwidth=detw,yheight=deth,zdepth=250e-6)
+AT(0,0,1e-3) RELATIVE PREVIOUS 
+
+COMPONENT filterAl=Filter(
+    material_datafile="Al.txt",xwidth=detw,yheight=deth,zdepth=0.002)
+AT(0,0,3e-1) RELATIVE PREVIOUS
+
+COMPONENT emonef = E_monitor(
+    xwidth=detw/8,yheight=detw/8,Emin=0,Emax=120,nE=1000,filename="emon0ef",restore_xray=1)
+AT(0,0,1e-2) RELATIVE PREVIOUS
+
+
+COMPONENT sample_mnt=Arm()
+AT(0,0,d_source_sample) RELATIVE Origin
+
+
+//chess king
+COMPONENT king =Filter(
+    material_datafile="Glass.dat", geometry="king.off",xwidth=1.5e-2,yheight=1.5e-2,zdepth=1.5e-2)
+AT(0,0,0) RELATIVE sample_mnt
+ROTATED (0,Omega,0) RELATIVE sample_mnt
+
+COMPONENT e_mon1 = E_monitor(
+    filename="emon1",xwidth=detw/8,yheight=detw/8,Emin=0,Emax=120,nE=1000,restore_xray=1
+)
+AT(0,0,d_sample_det-15e-3) RELATIVE sample_mnt
+
+COMPONENT filter_air=Filter(
+    material_datafile="FilterAir_1mm.dat",xwidth=detw,yheight=deth,zdepth=1e-3*10)
+AT(0,0,d_sample_det-20e-3+1e-3-0.2) RELATIVE sample_mnt
+
+COMPONENT filter_Al=Filter(
+    material_datafile="Al.txt",xwidth=detw,yheight=deth,zdepth=50e-6*100)
+AT(0,0,1e-3+0.1) RELATIVE PREVIOUS
+
+
+
+COMPONENT Detector_Si=Detector_pn(
+    material_datafile="Silicon.dat", zdepth=1000e-6,  filename="detector_Si",xwidth=detw,yheight=deth,nx=204,ny=194, restore_xray=0)
+AT(0,0,d_sample_det) RELATIVE sample_mnt
+
+
+COMPONENT e_mon2 = E_monitor(
+    filename="emon2",xwidth=detw/8,yheight=detw/8,Emin=0,Emax=120,nE=1000,restore_xray=1
+)
+AT(0,0,0.5e-3) RELATIVE PREVIOUS
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+
+%}
+/* The END token marks the instrument definition end */
+END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

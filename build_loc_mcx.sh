@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 # rapid-build script for mcxtrace-kernel dev:
 

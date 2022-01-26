@@ -7,39 +7,70 @@
 * Written by: Marcus H. Mendenhall (marcus.mendenhall@nist.gov)
 * Date: Current Date
 * Origin: Your institution
-* Release: McXtrace 1.0
 * Version: 0.2
 * %INSTRUMENT_SITE: NIST
 *
 * Mockup of 219/B004 PBD
 *
 * %Description
-* This is a preliminary setup of the PBD, using single-bounce crystals instead of 3-bounce crystals 
+* This is a preliminary setup of the PBD, using single-bounce crystals instead of 3-bounce crystals
 *
-* Example: mxrun-1.1 --mpi=8 rigaku_source.out --dir=scan --format=PGPLOT --ncount=1000000 beam_vert=0.005 beam_hor=0.001 slit_vert=0.001 slit_hor=0.002 omega=53.35 theta=160.05 xtal_len=0.1 xtal_wid=0.02
+* %Example: PBD_BT.instr --ncount=1000000 beam_vert=0.005 beam_hor=0.001 slit_1_vert=0.001 slit_1_hor=0.002 omega=53.35 theta=160.05
+*
 * %Parameters
-* Par1: [unit] Parameter1 description
+* source_y: [m]           Vertical offset of the source exit-widow.
+* source_rotation: [deg]  Rotation around the X-axis of the source.
+* beam_vert: [m]          Height of beam exit.window.
+* beam_hor:  [m]          Width of beam exit-window.
+* mirror_length: [m]      Length of the focusing mirror
+* mirror_full_deflection_angle: [deg]  Deflection angle of mirror
+* mirror_center_distance: [m]  Distance from
+* mirror_focal_error: [ ]
+* mirror_rotation_angle:  [ ]
+* mirror_y_offset: [m]
+* use_mirror: [ ]         Flag to set whether to use the mirror or no.
+* mono_rotation: [ ]      Rotation angle of the monochromator crystal.
+* use_mono: [ ]           Flag enabling/disabling the monochromator.
+* mono_detuning_seconds: [arcsec]  Detuning angle for the monochromator crystal(s).
+* mono_misalignment_angle_arcsec: [arcsec] Mislignment of the monochromator.
+* mono_incident_angle_deg: [deg] Nominal angle of incidence for beam vs. monochromator.
+* slit_1_vert: [m]        1st aperture vertical.
+* slit_1_hor: [m]         1st aperture horizontal.
+* slit_2_vert: [m]        2nd aperture vertical.
+* slit_2_hor: [m]         2nd aperture horizontal.
+* emin: [keV]             Minimal energy to sample.
+* emax: [keV]             Maximal energy to sample.
+* omega: [deg]            Sample roation around the Y-axis.
+* theta: [deg]            Sample rotation around the X-axis.
+* crystal_central_angle: [deg]    sample_crystal_angle.
+* hh: [ ]                 1st Miller index of the sample crystal reflection under study.
+* kk: [ ]                 2nd Miller index of the sample crystal reflection under study.
+* ll: [ ]                 3rd  Miller index of the sample crystal reflection under study.
+* use_flat_source: [ ]    Use a flat source instead of Lab_source, for debugging.
+* stop_at_energy: [ ]     Flag
+* use_3_bounce: [ ]       Use a 3-bounce set up instead of 1-bounce.
+* run_setup: [string]     Which setup to use?
+* polarization: [string]  Should polarization be taken into effect.
 *
 * %Link
-* A reference/HTML link for more information
-*
+* <a href="https://www.nist.gov/programs-projects/diffraction-metrology-and-standards/parallel-beam-diffractometer-pbd-laboratory"></a>
 * %End
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
 /* note: the mirror (Mirror-Id.: 4148a) has d=3.8 nm at the center, which for 0.15406 nm radiation, gives a full deflection angle of 2.32 degrees */
-DEFINE INSTRUMENT PBD(source_y=0.0, source_rotation=0.0, beam_vert=0.002, beam_hor=0.001,
-  mirror_length = 0.05,  
-  mirror_full_deflection_angle=2.32, 
+DEFINE INSTRUMENT PBD_BT(source_y=0.0, source_rotation=0.0, beam_vert=0.002, beam_hor=0.001,
+  mirror_length = 0.05,
+  mirror_full_deflection_angle=2.32,
   mirror_center_distance=0.1, mirror_focal_error=0.0,
-  mirror_rotation_angle=-2.32, mirror_y_offset=0.0, int use_mirror=1, 
-  mono_rotation=0.0, int use_mono=1, double  mono_detuning_seconds=34, 
-  double mono_misalignment_angle_arcsec=0, double mono_incident_angle_deg=3.0,  
-  slit_1_vert=0.001, slit_1_hor=0.0015, slit_2_vert=0.005, slit_2_hor=0.002, 
-  emin=8.046, emax=8.050, 
+  mirror_rotation_angle=-2.32, mirror_y_offset=0.0, int use_mirror=1,
+  mono_rotation=0.0, int use_mono=1, double  mono_detuning_seconds=34,
+  double mono_misalignment_angle_arcsec=0, double mono_incident_angle_deg=3.0,
+  slit_1_vert=0.001, slit_1_hor=0.0015, slit_2_vert=0.005, slit_2_hor=0.002,
+  emin=8.046, emax=8.050,
   omega=106.715, theta=-160.0725,
   crystal_central_angle=53.355, int hh=4, int kk=4, int ll=0,
-  int use_flat_source=0, int stop_at_energy=0, 
+  int use_flat_source=0, int stop_at_energy=0,
   int use_3_bounce=1, string run_setup="nosetup",
   string polarization="0")
 
@@ -58,18 +89,17 @@ DECLARE
     const double debye_waller_B=0.4632;
 
     /* set up the parameters for the focusing mirror..
-       note that the mirror_parabolic.comp has a mirror with surface y=z^2/a^2 + x^2 / b^2 = z^2/(4 p)+x^2/b^2
+       note that the Mirror_parabolic.comp has a mirror with surface y=x^2/a^2 + z^2 / b^2 = z^2/(4 p)+x^2/a^2
        where 'p' is the focal length of the parabola
        Since a parabola with equation 4 p y = z^2 has a focal length of p,
-       the focal length of such a mirror is p=a^2/4 (assuming b=infinity), or a=sqrt(4*p).
-       Also, the vertex of the mirror is the located at y=-p.
+       the focal length of such a mirror is p=b^2/4 (assuming a=infinity), or b=sqrt(4*p).
        To focus along the 'z' axis, it must be rotated 90 degrees around 'x'.
 
-       If the mirror is operated at a half deflection angle of theta_m near its active center, 
+       If the mirror is operated at a half deflection angle of theta_m near its active center,
        the angle of the surface is theta_m=arctan(dy/dz)=arctan(z/(2 p)) so tan(theta_m)=z/(2 p), but z=l sin(2 theta_m)
-       so p=l sin(2 theta_m)/(2 tan(theta_m)) = l (2 cos(theta_m) sin(theta_m)) / (2 sin(theta_m)/cos(theta_m)) = l sin(theta_m)^2 
+       so p=l sin(2 theta_m)/(2 tan(theta_m)) = l (2 cos(theta_m) sin(theta_m)) / (2 sin(theta_m)/cos(theta_m)) = l sin(theta_m)^2
        where 'l' is the distance from the focus to the active center.
-*/
+     */
 
     double mirror_focal_length, mirror_tantheta, mirror_tansq, mirror_cosrot, mirror_sinrot;
     double mirror_vertex_x, mirror_vertex_z;
@@ -129,51 +159,57 @@ TRACE
 COMPONENT Origin = Progress_bar()
 AT (0,0,1) ABSOLUTE
 
-COMPONENT PBD_Rigaku = Source_lab_lorentzian(
+COMPONENT PBD_Rigaku = Source_lab(
     material_datafile = "Cu.txt", width = beam_vert, height = beam_hor,
     E0 = 40, Emin = emin, Emax=emax, focus_xw = slit_1_vert, focus_yh = slit_1_hor,
-    take_off = 6, dist = mirror_center_distance-.03, tube_current = 0.3)   WHEN  use_flat_source == 0
+    take_off = 6, dist = mirror_center_distance-.03, tube_current = 0.3, lorentzian=1,
+    exit_window_refpt=1)   WHEN  use_flat_source == 0
 AT (0,source_y, 0) RELATIVE Origin
 ROTATED (source_rotation, 0, 90) RELATIVE Origin
 EXTEND %{
-    if(mcippolarization[0]=='0') {
+    if(INSTRUMENT_GETPAR(polarization)[0]=='0') {
         Ex=0; Ey=0; Ez=0;
-    } else if (mcippolarization[0]=='x') {
+    } else if (INSTRUMENT_GETPAR(polarization)[0]=='x') {
         Ex=0; Ey=1; Ez=0; // x & y are reversed by 90 degree rotation of source
-    } else if (mcippolarization[0]=='y') {
+    } else if (INSTRUMENT_GETPAR(polarization)[0]=='y') {
         Ex=1; Ey=0; Ez=0; // x & y are reversed by 90 degree rotation of source
     } else {
-        fprintf(stderr, "invalid polarization\n");
-        exit(1);
-    }	
+      fprintf(stderr, "ERROR (%s): invalid polarization\n",instrument_name);
+      exit(-1);
+    }
 %}
 
 COMPONENT mirror_arm = Arm()
 AT (0,0,mirror_center_distance+mirror_focal_error) RELATIVE Origin
-ROTATED (0, mirror_rotation_angle,0) RELATIVE Origin
+ROTATED (0,0,90) RELATIVE Origin
 
-COMPONENT mirror = Mirror_parabolic(R=1, a=mirror_a, b=0, 
-    xmin=-0.01, xmax=0.01, ymin=mirror_center_distance-mirror_length/2, ymax=mirror_center_distance+mirror_length/2, zmin=0, zmax=1) WHEN use_mirror!=0
-AT (mirror_vertex_x,0, mirror_vertex_z) RELATIVE mirror_arm
-ROTATED (0,90,90) RELATIVE mirror_arm
+COMPONENT mirror = Mirror_parabolic(R=1, a=mirror_a, b=0,
+    xwidth=0.02, yheight=0, zdepth=mirror_length) WHEN use_mirror!=0
+AT (0,0,0) RELATIVE mirror_arm
+ROTATED (-mirror_rotation_angle,0,0) RELATIVE mirror_arm
 
-/*
+
 COMPONENT mirror_psd = PSD_monitor(
     nx = 100, ny = 100, filename = "mirror.psd", restore_xray = 1,
     xwidth = 0.05, yheight = 0.05)
-  AT (0, 0, mirror_center_distance+0.02) RELATIVE Origin
-  ROTATED (0, 0, 0) RELATIVE Origin
-*/
+AT (0, 0, mirror_center_distance+0.02) RELATIVE Origin
+ROTATED (0, 0, 0) RELATIVE Origin
+  
+/*rotate to the outgoing optical axis*/
+COMPONENT mirror_arm_exit0 = Arm()
+AT(0,0,0) RELATIVE mirror
+ROTATED (-mirror_rotation_angle,0,-90) RELATIVE mirror
+
 
 COMPONENT monochromator_arm=Arm()
-AT (0,0,0.25) RELATIVE mirror_arm
-ROTATED (0,mono_rotation,90) RELATIVE mirror_arm
+AT (0,0,0.25) RELATIVE mirror_arm_exit0
+ROTATED (0,mono_rotation,90) RELATIVE mirror_arm_exit0
 
 COMPONENT mono_silicon_1a = Bragg_crystal_BC(
-    material = "Si.txt", length = mono_face_length, width = 0.75*inch, 
+    material = "Si.txt", length = mono_face_length, width = 0.75*inch,
     alphax=alphax, alphay=alphay, alphaz=alphaz,
     V=160.19329232,  debye_waller_B=0.4632,
-    h=mono_hh, k=mono_kk, l=mono_ll, crystal_type=Bragg_crystal_diamond) WHEN use_mono!=0
+    h=mono_hh, k=mono_kk, l=mono_ll, crystal_type=Mx_crystal_diamond) WHEN use_mono!=0
 AT (0, 0 , -mono_face_length/2.0-0.005) RELATIVE monochromator_arm
 ROTATED (180+mono_incident_angle_deg+mono_detuning_seconds/3600.0,0, -mono_misalignment_angle/2) RELATIVE monochromator_arm
 
@@ -202,20 +238,20 @@ ROTATED (180-mono_incident_angle_deg-mono_detuning_seconds/3600.0, 0, mono_misal
 COMPONENT slit_2 = Slit(
     xwidth = slit_2_hor, yheight = slit_2_vert)
 AT (0, 0, 0.1) RELATIVE monochromator_arm
-ROTATED (0, 0, 0) RELATIVE mirror_arm
+ROTATED (0, 0, 0) RELATIVE mirror_arm_exit0
 
 COMPONENT incoming_spectrum_mon = E_monitor(
     nE = 200, filename = "mono_all_spect", xwidth = 0.2, yheight = 0.2,
-    Emin = emin, Emax = emax, restore_xray = 1) 
+    Emin = emin, Emax = emax, restore_xray = 1)
 AT (0, 0, .11) RELATIVE monochromator_arm
-ROTATED (0, 0, 0) RELATIVE mirror_arm
+ROTATED (0, 0, 0) RELATIVE mirror_arm_exit0
 EXTEND %{
-    if(mcipstop_at_energy) ABSORB;
+    if(INSTRUMENT_GETPAR(stop_at_energy)) ABSORB;
 %}
 
 COMPONENT silicon_1_arm = Arm()
-AT (0,0,1.0) RELATIVE mirror_arm
-ROTATED (0, 0, 90) RELATIVE mirror_arm
+AT (0,0,1.0) RELATIVE mirror_arm_exit0
+ROTATED (0, 0, 90) RELATIVE mirror_arm_exit0
 
 COMPONENT silicon_1_arm_2 = Arm()
 AT (0, 0, 0) RELATIVE silicon_1_arm
@@ -232,9 +268,9 @@ ROTATED (90, 0, 0) RELATIVE silicon_1_arm_2
 
 COMPONENT silicon_1a = Bragg_crystal_BC(
     material = "Si.txt", length = crystal_1_back_length, width = 0.02,
-   alphax=0, alphay=1, alphaz=0, 
+   alphax=0, alphay=1, alphaz=0,
    V=160.19329232,  debye_waller_B=debye_waller_B,
-    h=hh, k=kk, l=ll, crystal_type=Bragg_crystal_diamond)
+    h=hh, k=kk, l=ll, crystal_type=Mx_crystal_diamond)
 AT (0, -crystal_1_channel_width*use_3_bounce, 0) RELATIVE silicon_1_arm_2
 ROTATED (180, 0, 0) RELATIVE silicon_1_arm_2
 
@@ -255,7 +291,7 @@ ROTATED (90, 0, 0) RELATIVE silicon_1_arm_2
 
 COMPONENT diffracted_arm = Arm()
 AT (0, 0, 0) RELATIVE silicon_1_arm
-ROTATED (0,-(theta+crystal_central_angle), 90) RELATIVE mirror_arm
+ROTATED (0,-(theta+crystal_central_angle), 90) RELATIVE mirror_arm_exit0
 
 COMPONENT crystal_2_arm = Arm()
 AT (0, 0, 0.27) RELATIVE diffracted_arm
@@ -296,7 +332,7 @@ ROTATED (crystal_central_angle, 0, 0 ) RELATIVE crystal_2_arm
 
 COMPONENT spectrum_mon = E_monitor(
     nE = 200, filename = "emon", xwidth = 0.2, yheight = 0.2,
-    Emin = emin, Emax = emax, restore_xray = 1) WHEN (!stop_at_energy) 
+    Emin = emin, Emax = emax, restore_xray = 1) WHEN (!stop_at_energy)
 AT (0, 0, .10) RELATIVE camera_arm
 
 COMPONENT camera = PSD_monitor(
@@ -312,19 +348,3 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

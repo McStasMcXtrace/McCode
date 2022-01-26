@@ -3,7 +3,6 @@
 * %I
 * Written by: Erik B Knudsen
 * Date: July 2015
-* Version: $Revision$
 * Origin: DTU Physics
 * Release: McXtrace 1.2
 *
@@ -32,22 +31,29 @@
 ***********************************************************************/
 
 DEFINE COMPONENT Capillary
-DEFINITION PARAMETERS (string coating="Be.txt", longw=1)
-SETTING PARAMETERS ( radius=1, length=0.2, R0=0, rtable=0, waviness=0)
-OUTPUT PARAMETERS(prms,prmsp)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS ( string coating="Be.txt", longw=1, radius=1, length=0.2, R0=0, rtable=0, waviness=0)
+OUTPUT PARAMETERS()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
-
-DECLARE
+SHARE
 %{
 #include <complex.h>
-  %include "read_table-lib"
-  struct {
-    int Z;
-    double At, rho;
-    double E_max,E_min,E_step;
-    double theta_max,theta_min,theta_step;
-    t_Table T;
-  } prms,*prmsp;
+#include <math.h>
+%include "read_table-lib"
+%}
+DECLARE
+%{
+  int Z;
+  double At;
+  double rho;
+  double E_max;
+  double E_min;
+  double E_step;
+  double theta_max;
+  double theta_min;
+  double theta_step;
+  t_Table T;
+  int constant_R;
 %}
 
 INITIALIZE
@@ -56,39 +62,38 @@ INITIALIZE
 
   if (coating && !R0){
       char **header_parsed;
-      prmsp=&prms;
-      if ( coating && (status=Table_Read(&(prms.T),coating,0))==-1){
+      if ( coating && (status=Table_Read(&(T),coating,0))==-1){
           fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,coating);
           exit(-1);
       }
       if (!rtable){
           /*the given coating file is to be interpreted as a material data file*/
-          header_parsed=Table_ParseHeader(prms.T.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
-          if(header_parsed[2]){prms.rho=strtod(header_parsed[2],NULL);}
-          if(header_parsed[0]){prms.Z=strtod(header_parsed[0],NULL);}
-          if(header_parsed[1]){prms.At=strtod(header_parsed[1],NULL);}
-          prmsp=&prms;
+          header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
+          if(header_parsed[2]){rho=strtod(header_parsed[2],NULL);}
+          if(header_parsed[0]){Z=strtod(header_parsed[0],NULL);}
+          if(header_parsed[1]){At=strtod(header_parsed[1],NULL);}
       }else{
-          header_parsed = Table_ParseHeader(prms.T.header,
+          header_parsed = Table_ParseHeader(T.header,
                   "E_min=", "E_max=", "E_step=",
                   "theta_min=", "theta_max=", "theta_step=",
                   NULL);
           if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
                   header_parsed[3] && header_parsed[4] && header_parsed[5]){
-              sscanf(header_parsed[0], "%lf", &prmsp->E_min);
-              sscanf(header_parsed[1], "%lf", &prmsp->E_max);
-              sscanf(header_parsed[2], "%lf", &prmsp->E_step);
-              sscanf(header_parsed[3], "%lf", &prmsp->theta_min);
-              sscanf(header_parsed[4], "%lf", &prmsp->theta_max);
-              sscanf(header_parsed[5], "%lf", &prmsp->theta_step);
+              sscanf(header_parsed[0], "%lf", &E_min);
+              sscanf(header_parsed[1], "%lf", &E_max);
+              sscanf(header_parsed[2], "%lf", &E_step);
+              sscanf(header_parsed[3], "%lf", &theta_min);
+              sscanf(header_parsed[4], "%lf", &theta_max);
+              sscanf(header_parsed[5], "%lf", &theta_step);
           }
       }
+      constant_R=0;
   }else{
       if (R0<0 || R0>1){
           fprintf(stderr,"Error(%s) reflectivity (%g) is specified but is not in [0:1]\n",NAME_CURRENT_COMP,R0);
           exit(-1);
       }
-      prmsp=NULL;
+      constant_R=1;
   }
 %}
 
@@ -129,13 +134,13 @@ TRACE
                     NORM(nx,ny,nz);
                 }else{
                     /*waviness is also transversal but anisotropic*/
-                    double radius;
+                    double scat_radius;
                     if(theta<waviness){
-                        radius=atan(waviness);
-                        randvec_target_circle(&nx,&ny,&nz,NULL,nx,ny,0,radius);
+                        scat_radius=atan(waviness);
+                        randvec_target_circle(&nx,&ny,&nz,NULL,nx,ny,0,scat_radius);
                     }else{
-                        radius=(atan(theta)+atan(waviness))/2.0;
-                        randvec_target_circle(&nx,&ny,&nz,NULL,nx,ny,radius-atan(theta),radius);
+                        scat_radius=(atan(theta)+atan(waviness))/2.0;
+                        randvec_target_circle(&nx,&ny,&nz,NULL,nx,ny,scat_radius-atan(theta),scat_radius);
                     }
                     NORM(nx,ny,nz);
                 }
@@ -150,33 +155,33 @@ TRACE
                 kz-=2*s*nz;
             }
 
-            if (!prmsp){
+            if (constant_R){
                 /*apply constant reflectivity*/
                 p*=R0;//pow(R0,scatterc);
             }else if (!rtable){
                 /*compute reflectivity from material data*/
 
                 /*adjust p according to reflectivity*/
-                double Qc,Q,f1,f2,delta,beta,na,e,k2,rho;
+                double Qc,Q,f1,f2,delta,beta,na,e,k2;
                 /*length of wavevector transfer may be compute from s and n_ above*/
                 Q=fabs(2*s*sqrt(nx*nx+ny*ny+nz*nz));
 
                 /*interpolate in material data*/
                 e=K2E*k;
-                f1=Table_Value(prms.T,e,1);
+                f1=Table_Value(T,e,1);
 
                 /*the conversion factor in  the end is to transform the atomic density from cm^-3 to AA^-3
                   -> therefore we get Q in AA^-1*/
-                na=NA*prms.rho/prms.At*1e-24;
+                na=NA*rho/At*1e-24;
                 Qc=4*sqrt(M_PI*na*RE*f1);
                 double R=1;
                 if (Q>Qc){
-                    complex double qp;
+                    double complex qp,Rc;
                     double q,b_mu;
 
                     q=Q/Qc;
                     /*delta=na*r0*2*M_PI/k2*f1;*/
-                    f2=Table_Value(prms.T,e,2);
+                    f2=Table_Value(T,e,2);
                     /*beta=na*r0*2*M_PI/k2*f2;*/
                     /*b_mu=beta*(2*k)^2 / Qc^2*/
                     b_mu=4*M_PI*na*RE*f2/(Qc*Qc);
@@ -186,21 +191,21 @@ TRACE
                         qp=csqrt(q*q-1+2*I*b_mu);
                     }
                     /*and from this compute the reflectivity*/
-                    R=cabs((q-qp)/(q+qp));
+                    Rc=(q-qp)/(q+qp);
+		    R=cabs(Rc);
                     p*=R;//pow(R,scatterc);
-                    /*now also set the phase*/
-                    phi+=carg((q-qp)/(q+qp));//*scatterc;
+                    /*now also set the phase - have to compute manually since carg is not GPU yet*/
+                    double arg = atan2(cimag(Rc),creal(Rc));
+		    phi= phi + arg;//*scatterc;
                 }
-                //printf("E= %g R= %g Q= %g Qc= %g\n",e,R,Q,Qc);
             }else{
                 double e,R,theta;
                 e=k*K2E;
                 theta=RAD2DEG*(M_PI_2-acos(s/k));
                 /*find reflectivity by interpolation*/
-                R=Table_Value2d(prmsp->T, (e-prmsp->E_min)/prmsp->E_step, (theta-prmsp->theta_min)/prmsp->theta_step);
+                R=Table_Value2d(T, (e-E_min)/E_step, (theta-theta_min)/theta_step);
                 /*apply interpolated value*/
-                //printf("E= %g R= %g theta= %g norm_e= %g norm_th= %g\n",e,R,theta,(e-prmsp->E_min)/prmsp->E_step, (theta-prmsp->theta_min)/prmsp->theta_step );
-                p*=R;//pow(R,scatterc);
+                p*=R;
             }
 
             scatterc++;

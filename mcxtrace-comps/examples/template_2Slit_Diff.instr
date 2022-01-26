@@ -7,7 +7,6 @@
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
 * Date: Jan 2014
 * Origin: DTU Physics
-* Release: McXtrace 1.2
 * Version: 1.0
 * %INSTRUMENT_SITE: Templates
 *
@@ -58,7 +57,7 @@ COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT source=Source_pt(
-    focus_xw=6e-6, focus_yh=0.8e-6, dist=1, lambda0=2.0, dE=0, gauss=1, randomphase=0)
+    focus_xw=6e-6, focus_yh=0.8e-6, dist=1, E0=12.398/2.0, dE=0, gauss=1, randomphase=0)
 AT(0,0,0) RELATIVE Origin
 
 COMPONENT s1 = Slit(
@@ -73,6 +72,9 @@ COMPONENT s2 = COPY(s1)()
 AT(-slit_offset,0,1) RELATIVE source
 GROUP slits
 
+COMPONENT psd00 = PSD_monitor_coh(
+    yheight=2e-6, xwidth=200e-6, nx=501, ny=1, filename="psd00")
+AT(0,0,1+1e-6) RELATIVE source
 
 COMPONENT psd0 = PSD_monitor_coh(
     yheight=2e-6, xwidth=200e-6, nx=501, ny=1, filename="psd0")

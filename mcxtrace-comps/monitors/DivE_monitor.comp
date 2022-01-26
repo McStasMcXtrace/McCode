@@ -11,11 +11,9 @@
 * Written by: Erik B Knudsen
 * Based on neutron component by Kristian Nielsen
 * Date: Jun. 2016
-* Version: $Revision$
-* Origin: Dtu Physics
-* Release: McXtrace  1.3
+* Origin: DTU Physics
 *
-* Divergence/wavelength monitor.
+* Divergence/Energy monitor.
 *
 * %Description
 * 2D detector for intensity as a function of both horizontal divergence
@@ -44,52 +42,43 @@
 * Emax:     Maximum energy detected (keV)
 * filename: Name of file in which to store the detector image (string)
 * restore_xray: If set, the monitor does not influence the photon state (1)
-*
-* OUTPUT PARAMETERS:
-*
-* Div_N:    Array of photon ray counts
-* Div_p:    Array of photon weight counts
-* Div_p2:   Array of second moments
+* nowritefile: [1]  If set, monitor will skip writing to disk.
 *
 * %End
 *******************************************************************************/
 
 DEFINE COMPONENT DivE_monitor
-DEFINITION PARAMETERS (nE=20, nh=20)
-SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, maxdiv_h=2, Emin, Emax, restore_xray=0, nx=0, ny=0, nz=1)
-OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (int nE=20, int nh=20, string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, maxdiv_h=2, Emin, Emax, restore_xray=0, nx=0, ny=0, nz=1, int nowritefile=0)
+OUTPUT PARAMETERS ()
+/* X-ray  parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
 DECLARE
-  %{
-    double Div_N[nE][nh];
-    double Div_p[nE][nh];
-    double Div_p2[nE][nh];
-  %}
+%{
+  DArray2d DivE_N;
+  DArray2d DivE_p;
+  DArray2d DivE_p2;
+%}
+
 INITIALIZE
-  %{
+%{
     int i,j;
 
     if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
     if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
     if ((xmin >= xmax) || (ymin >= ymax)) {
-            printf("Divlambda_monitor: %s: Null detection area !\n"
-                   "ERROR              (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
-           NAME_CURRENT_COMP);
-      exit(0);
+      printf("ERROR: (%s): Null detection area! Exiting.\n",NAME_CURRENT_COMP);
+      exit(-1);
     }
-
-    for (i=0; i<nE; i++)
-     for (j=0; j<nh; j++)
-     {
-      Div_N[i][j] = 0;
-      Div_p[i][j] = 0;
-      Div_p2[i][j] = 0;
-     }
+    DivE_N = create_darr2d(nE, nh);
+    DivE_p = create_darr2d(nE, nh);
+    DivE_p2 = create_darr2d(nE, nh);
     NORM(nx,ny,nz);
-  %}
+%}
+
 TRACE
-  %{
+%{
     int i,j;
     double div;
     double e;
@@ -108,27 +97,37 @@ TRACE
       {
         i = floor((lambda - Lmin)*nL/(Lmax - Lmin));
         j = floor((div + maxdiv_h)*nh/(2.0*maxdiv_h));
-        Div_N[i][j]++;
-        Div_p[i][j] += p;
-        Div_p2[i][j] += p*p;
+        DivE_N[i][j]++;
+        DivE_p[i][j] += p;
+        DivE_p2[i][j] += p*p;
         SCATTER;
       }
     }
     if (restore_xray) {
         RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
     }
-  %}
+%}
+
 SAVE
-  %{
+%{
+  if(!nowritefile){
     DETECTOR_OUT_2D(
         "Energy-divergence monitor",
         "Energy [keV]",
         "divergence [deg]",
         Lmin, Lmax, -maxdiv_h, maxdiv_h,
         nE, nh,
-        &Div_N[0][0],&Div_p[0][0],&Div_p2[0][0],
+        &DivE_N[0][0],&DivE_p[0][0],&DivE_p2[0][0],
         filename);
-  %}
+  }
+%}
+
+FINALLY
+%{
+  destroy_darr2d(DivE_N);
+  destroy_darr2d(DivE_p);
+  destroy_darr2d(DivE_p2);
+%}
 
 MCDISPLAY
   %{

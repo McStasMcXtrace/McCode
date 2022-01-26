@@ -12,7 +12,6 @@
 * Date: April, 2011.
 * Version: 1.0 
 * Origin: NBI
-* Release: McXtrace 0.1
 *
 * Gaussian cross-section source 
 * 
@@ -50,9 +49,9 @@
 *****************************************/
 
 DEFINE COMPONENT Source_gaussian
-DEFINITION PARAMETERS (string spectrum_file=NULL)
-SETTING PARAMETERS (sig_x=1,sig_y=0,sigPr_x=0,sigPr_y=0,flux=1,brilliance=0,dist=1,gauss=0,focus_xw=0,focus_yh=0,E0=0, dE=0, lambda0=0,dlambda=-1,phase=0, randomphase=1)
-OUTPUT PARAMETERS (prms,spX,spY)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string spectrum_file="NULL", sig_x=1,sig_y=0,sigPr_x=0,sigPr_y=0,flux=1,brilliance=0,dist=1,gauss=0,focus_xw=0,focus_yh=0,E0=0, dE=0, lambda0=0,dlambda=-1,phase=0, randomphase=1)
+OUTPUT PARAMETERS (spX,spY)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -62,15 +61,19 @@ SHARE
 
 DECLARE
 %{
-  struct {
-    double l0,dl;
-    double pmul,pint;
-    int column_e,column_flux;/*column specifiers for energy and intenisty/brilliance.*/
-    t_Table T;
-  } prms;
+  double l0,
+  double dl;
+  double pmul;
+  double pint;
+  /*column specifiers for energy and intenisty/brilliance.*/
+  int column_e;
+  int column_flux;
+  t_Table sT;
 
-  double spX,spY;
+  double spX;
+  double spY;
   int uniform_sampling;
+  int spectrum_from_file;
 %}
 
 
@@ -88,61 +91,57 @@ INITIALIZE
     exit(1);
   }
 
-  /*calculate the X-ray weight from the flux*/
-  if (flux){//pmul=flux;
-    prms.pmul=flux*1.0/(double)mcget_ncount();
-  }else{
-    prms.pmul=1.0/(double)mcget_ncount();
-  }
+  /*flag if we are using a datafile*/
+  spectrum_from_file=(spectrum_file && strcmp(spectrum_file,"NULL") && strlen(spectrum_file));
 
-  if (spectrum_file){
+  if (spectrum_from_file){
     /*read spectrum from file*/
     int status=0;
-    if ( (status=Table_Read(&(prms.T),spectrum_file,0))==-1){
+    if ( (status=Table_Read(&sT,spectrum_file,0))==-1){
       fprintf(stderr,"Source_gaussian(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,spectrum_file?spectrum_file:"");
       exit(1);
     }
-    /*data is now in table t*/
+    /*data is now in table sT*/
 
     /*integrate to get total flux, assuming numbers have been corrected for measuring aperture*/
     int i;
     int cols,rows;
-    prms.pint=0;
+    pint=0;
 
-    cols=prms.T.columns;
-    rows=prms.T.rows;
-    prms.column_e=0;/*default column specifiers*/
-    prms.column_flux=1;
+    cols=sT.columns;
+    rows=sT.rows;
+    column_e=0;/*default column specifiers*/
+    column_flux=1;
 
     /*parse header for column specifiers*/
     char **parsing;
-    parsing=Table_ParseHeader(prms.T.header,"column_e","column_E", 
+    parsing=Table_ParseHeader(sT.header,"column_e","column_E", 
             "column_l", "column_L",
             "column_bril", "column_flux",NULL);
     if (parsing){
-            if (parsing[0]) { E0=-1; prms.column_e=strtol(parsing[0],NULL,0); }
-            if (parsing[1]) { E0=-1; prms.column_e=strtol(parsing[1],NULL,10); }
-            if (parsing[2]) { E0=0;  prms.column_e=strtol(parsing[2],NULL,10); }
-            if (parsing[3]) { E0=0;  prms.column_e=strtol(parsing[3],NULL,10); }
-            if (parsing[4]) { brilliance=1; prms.column_flux=strtol(parsing[4],NULL,10); }
-            if (parsing[5]) { brilliance=0; prms.column_flux=strtol(parsing[5],NULL,10); }
+            if (parsing[0]) { E0=-1; column_e=strtol(parsing[0],NULL,0); }
+            if (parsing[1]) { E0=-1; column_e=strtol(parsing[1],NULL,10); }
+            if (parsing[2]) { E0=0;  column_e=strtol(parsing[2],NULL,10); }
+            if (parsing[3]) { E0=0;  column_e=strtol(parsing[3],NULL,10); }
+            if (parsing[4]) { brilliance=1; column_flux=strtol(parsing[4],NULL,10); }
+            if (parsing[5]) { brilliance=0; column_flux=strtol(parsing[5],NULL,10); }
     }
-    t_Table *T=&(prms.T);
+    t_Table *T=&(sT);
 
     for (i=0;i<rows-1;i++){
-        int ec=prms.column_e;
-        int flc=prms.column_flux;
+        int ec=column_e;
+        int flc=column_flux;
         double ebin=(T->data[(i+1)*cols + ec]-T->data[i*cols + ec]); /*energy bin width in keV*/
         if (brilliance){
             /*unit is brilliance - not raw flux per unit angle and source area*/
             /*correct for the non-uniform energy binning*/
             double ebw=T->data[i*cols + ec]*1e-3; /*absolute bw in keV (should be the mean energy of the bin edges)*/
-            prms.pint+=T->data[i*cols+flc]/ebw*ebin;
+            pint+=T->data[i*cols+flc]/ebw*ebin;
         }else{
-            prms.pint+=T->data[i*cols+flc]*ebin;
+            pint+=T->data[i*cols+flc]*ebin;
         }
     }
-    printf("%s: Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
+    printf("INFO (%s): Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,pint);
     if(E0) printf("%s: E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
   } else if (!E0 && !lambda0){
     fprintf(stderr,"Error (%s): Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
@@ -156,22 +155,25 @@ INITIALIZE
   uniform_sampling=0;
   if (focus_xw && focus_yh){
     /*adjust for a focusing window*/
-    prms.pmul*=erf(focus_xw*0.5*M_SQRT1_2/spX)*erf(focus_yh*0.5*M_SQRT1_2/spY);
+    pmul*=erf(focus_xw*0.5/M_SQRT2/spX)*erf(focus_yh*0.5/M_SQRT2/spY);
     if ( focus_xw<spX || focus_yh<spY){
       /*use a uniform sampling scheme for more efficient sampling by adjusting weights*/
       uniform_sampling=1;
     }
   }
 
-  /*corrections for energy range*/
-  if(spectrum_file){
-      prms.pmul*=(prms.T.data[(prms.T.rows-1)*prms.T.columns]-prms.T.data[0]);
+  /*corrections for energy range, calculate the X-ray weight from the flux*/
+  if (flux){//pmul=flux;
+    pmul=flux*1.0/(double)mcget_ncount();
+    if(E0 && dE){
+      pmul*=2*dE;
+    }else if (lambda0 && dlambda){
+      pmul*=2*(12.398/(lambda0-dlambda)-12.398/(lambda0+dlambda));
+    }
+  }else if(spectrum_from_file ){
+      pmul*=(sT.data[(sT.rows-1)*sT.columns]-sT.data[0]);
   }else{
-      if(E0){
-          prms.pmul*=2*dE;
-      }else{
-          prms.pmul*=2*(12.398/(lambda0-dlambda)-12.398/(lambda0+dlambda));
-      }
+    pmul=1.0/(double)mcget_ncount();
   }
 %}
 
@@ -192,14 +194,14 @@ TRACE
   p=1.0;
  
 
-  if (spectrum_file){
+  if (spectrum_from_file){
     double pp=0;
-    l=prms.T.data[0]+ (prms.T.data[(prms.T.rows-1)*prms.T.columns] -prms.T.data[0])*rand01();
+    l=sT.data[0]+ (sT.data[(sT.rows-1)*sT.columns] -sT.data[0])*rand01();
     if(brilliance){
       /*correct for brilliance being defined in relative wavelength band to get raw flux*/
-      pp=Table_Value(prms.T,l,prms.column_flux)/(Table_Value(prms.T,l,prms.column_e)*1e-3);
+      pp=Table_Value(sT,l,column_flux)/(Table_Value(sT,l,column_e)*1e-3);
     }else{
-      pp=Table_Value(prms.T,l,prms.column_flux);
+      pp=Table_Value(sT,l,column_flux);
     }
     p*=pp;
     
@@ -275,7 +277,7 @@ TRACE
 
   /*set polarization vector*/
   Ex=0;Ey=0;Ez=0;
-  p*=prms.pmul;
+  p*=pmul;
   
 %}
 

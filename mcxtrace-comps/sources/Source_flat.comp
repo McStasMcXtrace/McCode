@@ -10,7 +10,6 @@
 * %I
 * Written by:Erik Knudsen
 * Date: September 25, 2009
-* Version: $Revision$
 * Origin: Risoe
 * Release: McXtrace 0.1_alpha
 *
@@ -47,11 +46,11 @@
 
 DEFINE COMPONENT Source_flat
 DEFINITION PARAMETERS ()
-  SETTING PARAMETERS (radius=0, yheight=0, xwidth=0,xmin=0,xmax=0, 
+SETTING PARAMETERS (radius=0, yheight=0, xwidth=0,xmin=0,xmax=0, 
   dist=0, focus_xw=.045, focus_yh=.12, 
   E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,randomphase=1,phase=0,
   string spectrum_file="")
-OUTPUT PARAMETERS (pmul, spectrum_T,srcArea,square)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -61,14 +60,16 @@ SHARE
 
 DECLARE
 %{
-  double pmul, srcArea;
+  double pmul;
+  double srcArea;
   int square;
   t_Table spectrum_T;
 %}
 
 INITIALIZE
 %{
-  square = 0;srcArea=0;
+  square = 0;
+  srcArea=0;
   /* Determine source area */
 
   if (xmin && xmax && !xwidth){

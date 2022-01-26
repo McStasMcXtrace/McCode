@@ -6,10 +6,8 @@
 * %Identification
 * Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
 * Date: Mar 2016
-* Origin: 
-* Release: McStas 2.3
-* Version: $Revision$
-* %INSTRUMENT_SITE: Tests_optics
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests
 *
 * A test instrument for MCPL_input
 *
@@ -17,28 +15,39 @@
 *
 * This is a unit test for the MCPL_input component.
 *
-* %Example: -n1e3 dummy=0 Detector: m1_I=2.42284e+11
+* %Example: -n1e3 repeat=1 Detector: m1_I=7.9657e-08
 *
 * %Parameters
 *
+* repeat: [1]       Repeat the contents of the inputfile this many times. NB: When using MPI you implicitly repeat by #mpi processes
+* E_smear: [1]      When repeating, make Gaussian MC choice on particle energy with spread E_smear * particle energy
+* pos_smear: [m]    When repeating, make uniform MC choice on sphere of radius pos_spear around particle position
+* dir_smear: [deg]  When repeating, make Gaussian MC choice in cone of opening dir_smear around particle direction
+*
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_MCPL_input(dummy=0)
-DEPENDENCY "-DMCPLPATH=@MCCODE_LIB@/MCPL/voutput.mcpl"
+DEFINE INSTRUMENT Test_MCPL_input(repeat=1,E_smear=0.1,pos_smear=0.001,dir_smear=0.01)
+DEPENDENCY "-DMCPLPATH=@MCCODE_LIB@/libs/mcpl/voutput.mcpl"
+
+DECLARE
+%{
+  long long ncount_i;
+
+  #define QUOTE(name) #name
+  #define STR(macro) QUOTE(macro)
+
+  #ifndef MCPLPATH
+  #define MCPLPATH=/usr/share/mcxtrace/1.6/MCPL/voutput.mcpl
+  #endif
+
+  #define MCPLFILE STR(MCPLPATH)
+%}
 
 INITIALIZE
 %{
-#define QUOTE(name) #name
-#define STR(macro) QUOTE(macro)
+  printf("INFO (%s) Using the input file: %s\n", instrument_name, MCPLFILE);
 
-#ifndef MCPLPATH
-#define MCPLPATH=/usr/share/mcxtrace/1.4/MCPL/voutput.mcpl
-#endif
-
-#define MCPLFILE STR(MCPLPATH)
-
-printf("Using the input file: %s\n", MCPLFILE);
-
+  ncount_i=0;
 %}
 
 TRACE
@@ -47,36 +56,33 @@ COMPONENT Origin = Progress_bar()
 AT (0, 0, 0) ABSOLUTE
 
 /* read photons from an mcpl file*/
-
-COMPONENT vin = MCPL_input(filename=MCPLFILE,verbose=1)
+COMPONENT vin = MCPL_input(filename=MCPLFILE,verbose=1,repeat_count=repeat,E_smear=E_smear,pos_smear=pos_smear,dir_smear=dir_smear)
 AT( 0,0,0) RELATIVE PREVIOUS
 
 COMPONENT m1 = Monitor_nD(
   xwidth=0.2, yheight=0.2,
-  options="auto lambda, parallel", bins=40
+  options="lambda limits=[0.1 11], parallel, previous", bins=40
 ) AT (0,0,0) ABSOLUTE
 
 COMPONENT m2 = Monitor_nD(
   xwidth=0.2, yheight=0.2,
-  options="auto x, auto y, parallel", bins=40
+  options="x limits=[-0.005 0.005],  y limits=[-0.005 0.005], parallel, previous", bins=40
 ) AT (0,0,0) ABSOLUTE
 
 COMPONENT m3 = Monitor_nD(
   xwidth=0.2, yheight=0.2,
-  options="auto t parallel", bins=40
+  options="t limits=[0 1e-3]parallel, previous", bins=40
 ) AT (0,0,0) ABSOLUTE
 
 COMPONENT m4 = Monitor_nD(
   xwidth=0.2, yheight=0.2,
-  options="auto E, parallel", bins=40
+  options="E, limits=[0 90] parallel, previous", bins=40
 ) AT (0,0,0) ABSOLUTE
 
-COMPONENT m5 = Monitor_nD(
+/*COMPONENT m5 = Monitor_nD(
   xwidth=0.2, yheight=0.2, user1=22,
-  options="parallel, neutron, user1, energy, x, y, z, vx, vy, vz, time, list all photons"
-) AT (0,0,0) ABSOLUTE
+  options="parallel, photon, user1, energy, x, y, z, vx, vy, vz, time, list all photons"
+) AT (0,0,0) ABSOLUTE*/
 
 
 END
-
-
