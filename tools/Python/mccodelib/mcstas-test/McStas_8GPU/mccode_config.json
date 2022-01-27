@@ -1,6 +1,6 @@
 {
   "configuration": {
-    "MCCODE_VERSION": "3.0-dev",
+    "MCCODE_VERSION": "3.x-dev",
     "MCCODE": "mcstas",
     "MCRUN": "mcrun --openacc",
     "MCPLOT": "mcplot-pyqtgraph",
