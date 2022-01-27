@@ -17,7 +17,7 @@
     "CFLAGS": "-ta=tesla,managed -Minfo=accel -DOPENACC -DNOSPLIT",
     "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
     "MPIFLAGS": "-DUSE_MPI -lmpi",
-    "OACCFLAGS": "-ta:multicore -DOPENACC",
+    "OACCFLAGS": "-ta:tesla,managed -DOPENACC",
     "CC": "nvc",
     "OACC": "nvc",
     "MPICC": "mpicc",
