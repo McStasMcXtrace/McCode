@@ -41,7 +41,4 @@ $HOME/McCode/tools/Python/mctest/mctest.py --ncount=5e7 --configs --mccoderoot $
 cd $HOME
 
 echo done on GPU with split
-#echo submitting multi-GPU job
-# 
-#bsub < $HOME/McCode/test-batches/v3.0_gpu_a100_KISS.scpt
 bsub < $HOME/McCode/test-batches/plots_gpu.scpt 

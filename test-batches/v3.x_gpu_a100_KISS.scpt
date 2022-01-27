@@ -1,15 +1,19 @@
 #!/bin/sh
 ### General options
 ### –- specify queue --
-#BSUB -q hpc
+#BSUB -q gpua100
 ### -- set the job Name --
 #BSUB -J McStas_test_job
 ### -- ask for number of cores (default: 1) --
 #BSUB -n 1
+### -- Select the resources: 1 gpu in exclusive process mode --
+#BSUB -gpu "num=1:mode=exclusive_process"
 ### -- set walltime limit: hh:mm --  maximum 24 hours for GPU-queues right now
-#BSUB -W 2:00
+#BSUB -W 20:00
 # request 5GB of system-memory
 #BSUB -R "rusage[mem=5GB]"
+# Avoid the node with the buggy a100 card...
+#BSUB -R "select[hname!='n-62-12-22']"
 ### -- set the email address --
 # please uncomment the following line and put in your e-mail address,
 # if you want to receive e-mail notifications on a non-default address
@@ -33,10 +37,10 @@ mkdir -p $HOME/TESTS/${DATE}
 
 cd $HOME/TESTS/${DATE}
 
-$HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e6 --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --config=McStas_CPU_GCC_KISS
+$HOME/McCode/tools/Python/mctest/mctest.py --ncount=5e7 --configs --mccoderoot $HOME/McStas/mcstas --verbose --testdir $HOME/TESTS/${DATE} --openacc --config=McStas_GPU_A100_PGCC_TESLA_KISS
 
 cd $HOME
 
-echo done on single-CPU / KISS, submitting next job
-#bsub < $HOME/McCode/test-batches/v3.0_cpu_MT.scpt
-bsub < $HOME/McCode/test-batches/plots_cpu_KISS.scpt
+echo done on GPU with split
+
+bsub < $HOME/McCode/test-batches/plots_gpu_a100.scpt 
