@@ -48,7 +48,7 @@ fi
 ./mkdist mcstas-tools-python-mcplot-pyqtgraph 3.x-dev tools/Python/mcplot/pyqtgraph/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-svg 3.x-dev tools/Python/mcplot/svg/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-matplotlib 3.x-dev tools/Python/mcplot/matplotlib/ "" deb64 "" -- justinst
-cp tools/other/mcsplit/mcsplit.py $MCINSTALL_PREFIX/mcstas/3.x-dev/bin/
+cp tools/other/mcsplit/mcsplit.py $HOME/McStas/mcstas/3.x-dev/bin/
 
 export MCINSTALL_PREFIX=$HOME/McStas/mcstas/3.x-dev/
 ./mkdist mcstas-ncrystal 3.x-dev 3rdparty/ncrystal "" deb64 "" -- justinst
