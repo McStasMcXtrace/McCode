@@ -25,7 +25,7 @@
 # -- end of LSF options --
 
 DATE=`date +%F`
-REF="McStas-2.5_CPU_MPICC"
+REF="McStas-2.x_CPU_MPICC"
 TARGET="McStas_multiGPU_PGCC_TESLA_KISS"
 cd $HOME/TESTS/
 
