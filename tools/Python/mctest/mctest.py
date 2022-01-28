@@ -215,7 +215,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
                 t1 = time.time()
                 cmd = mccode_config.configuration["MCRUN"]
                 if version:
-                    cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test",version)
+                    cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
                 if openacc:
                     cmd = cmd + " --openacc "
                 if mpi:
@@ -463,7 +463,11 @@ def run_configs_test(testdir, mccoderoot, limit, configfilter, instrfilter):
     
     def get_config_files(configfltr):
         ''' look in "__file__/../mccodelib/MCCODE-test" location or config files'''
-        lookin = join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test")
+        if re.search("%s" % configfltr, "McStas"):
+            mccode="mcstas"
+        else:
+            mccode="mcxtrace"
+        lookin = join(os.path.dirname(__file__), mccode + "-test")
         print("getting config files...")
         print(configfltr + " vs " + os.path.join(lookin,configfltr,'mccode_config.json'))
         if configfltr is not None and os.path.isfile(os.path.join(lookin,configfltr,'mccode_config.json')):
@@ -472,8 +476,10 @@ def run_configs_test(testdir, mccoderoot, limit, configfilter, instrfilter):
         for (_, _, files) in os.walk(lookin):
             print("Looking")
             if configfltr is not None:
+                print(configfltr)
                 return [join(lookin, f) for f in files if re.search("^%s/mccode_config.json$" % configfltr, f)]
             else:
+                print("nah")
                 return [join(lookin, f) for f in files if re.search("^mccode_config.json$", f)]
 
     # get test directory datetime string
