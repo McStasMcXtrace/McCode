@@ -1,6 +1,6 @@
 {
   "configuration": {
-    "MCCODE_VERSION": "1.x",
+    "MCCODE_VERSION": "1.x-dev",
     "MCCODE": "mcxtrace",
     "MCRUN": "mxrun --mpi=auto",
     "MCPLOT": "mxplot-pyqtgraph",
