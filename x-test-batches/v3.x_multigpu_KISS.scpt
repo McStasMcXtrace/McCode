@@ -35,7 +35,7 @@ mkdir -p $HOME/xTESTS/${DATE}
 
 cd $HOME/xTESTS/${DATE}
 export LD_LIBRARY_PATH=/appl/gcc/8.3.0/openmpi/4.0.1-lsf10/lib:$LD_LIBRARY_PATH
-$HOME/McCode/tools/Python/mctest/mctest.py --ncount=5e7 --configs --mccoderoot $HOME/McXtrace/mcxtrace --verbose --testdir $HOME/xTESTS/${DATE} --config=McXtrace_multiGPU_PGCC_TESLA_KISS --mpi=2
+$HOME/mxtest/mctest/mctest.py --ncount=5e7 --configs --mccoderoot $HOME/McXtrace/mcxtrace --verbose --testdir $HOME/xTESTS/${DATE} --config=McXtrace_multiGPU_PGCC_TESLA_KISS --mpi=2
 
 cd $HOME
 

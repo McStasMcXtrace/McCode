@@ -33,7 +33,7 @@ mkdir -p $HOME/xTESTS/${DATE}
 
 cd $HOME/xTESTS/${DATE}
 
-$HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e6 --configs --mccoderoot $HOME/McXtrace/mcxtrace --verbose --testdir $HOME/xTESTS/${DATE} --config=McXtrace_CPU_GCC_MT
+$HOME/mxtest/mctest/mctest.py --ncount=1e6 --configs --mccoderoot $HOME/McXtrace/mcxtrace --verbose --testdir $HOME/xTESTS/${DATE} --config=McXtrace_CPU_GCC_MT
 
 cd $HOME
 

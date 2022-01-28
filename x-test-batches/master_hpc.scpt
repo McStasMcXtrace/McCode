@@ -34,7 +34,7 @@ mkdir -p $HOME/xTESTS/${DATE}
 
 cd $HOME/xTESTS/${DATE}
 
-$HOME/McCode/tools/Python/mctest/mctest.py --ncount=1e7 --mpi=auto --configs --mccoderoot $HOME/McXtrace/mcxtrace --verbose --testdir $HOME/xTESTS/${DATE} --config=McXtrace-1.x_CPU_MPICC
+$HOME/mxtest/mctest/mctest.py --ncount=1e7 --mpi=auto --configs --mccoderoot $HOME/McXtrace/mcxtrace --verbose --testdir $HOME/xTESTS/${DATE} --config=McXtrace-1.x_CPU_MPICC
 
 cd $HOME
 $HOME/do_plots.sh

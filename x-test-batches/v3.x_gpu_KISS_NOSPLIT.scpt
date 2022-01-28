@@ -35,7 +35,7 @@ mkdir -p $HOME/xTESTS/${DATE}
 
 cd $HOME/xTESTS/${DATE}
 
-$HOME/McCode/tools/Python/mctest/mctest.py --ncount=5e7 --configs --mccoderoot $HOME/McXtrace/mcxtrace --verbose --testdir $HOME/xTESTS/${DATE} --openacc --config=McXtrace_GPU_PGCC_TESLA_KISS_NOSPLIT
+$HOME/mxtest/mctest/mctest.py --ncount=5e7 --configs --mccoderoot $HOME/McXtrace/mcxtrace --verbose --testdir $HOME/xTESTS/${DATE} --openacc --config=McXtrace_GPU_PGCC_TESLA_KISS_NOSPLIT
 
 cd $HOME
 
