@@ -58,11 +58,7 @@ SETTING PARAMETERS(string reflections=0, delta_d_d=1e-4,
             //p_transmit = -1, sigma_abs = 0, sigma_inc = 0, // handled elsewhere
 		   aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0, powder=0, PG=0,
            interact_fraction=-1,packing_factor=1, string init="init")
-<<<<<<< HEAD
 OUTPUT PARAMETERS ()
-=======
-OUTPUT PARAMETERS (This_process, Single_crystal_storage, effective_my_scattering, hkl_info_union, global_process_element)
->>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
 
 SHARE
 %{
@@ -916,27 +912,12 @@ int Single_crystal_physics_scattering(double *k_final, double *k_initial, double
 };
 
 #ifndef PROCESS_DETECTOR
-<<<<<<< HEAD
-<<<<<<< HEAD
     #define PROCESS_DETECTOR dummy
 #endif
 
 #ifndef PROCESS_SINGLE_CRYSTAL_DETECTOR
     #define PROCESS_SINGLE_CRYSTAL_DETECTOR dummy
 #endif
-=======
-    //struct pointer_to_global_process_list global_process_list = {0,NULL};
-    #define PROCESS_DETECTOR dummy
-#endif
->>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
-=======
-    #define PROCESS_DETECTOR dummy
-#endif
-
-#ifndef PROCESS_SINGLE_CRYSTAL_DETECTOR
-    #define PROCESS_SINGLE_CRYSTAL_DETECTOR dummy
-#endif
->>>>>>> d7fdbe7cb... Manual merge of branch without polymorphism into McStas 3.0 branch.
 %}
 
 DECLARE

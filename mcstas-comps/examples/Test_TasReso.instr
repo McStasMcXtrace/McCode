@@ -146,7 +146,6 @@ DECLARE
 %}
 
 
-<<<<<<< HEAD
 /* needed for resolution calculation */
 USERVARS
 %{
@@ -170,8 +169,6 @@ USERVARS
 %}
 
 
-=======
->>>>>>> ed9470a6a... tasreso: got test instrument back to compile (not yet with openacc, though)
 INITIALIZE
 %{
 	/* energy & angle */

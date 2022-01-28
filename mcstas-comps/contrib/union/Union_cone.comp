@@ -388,11 +388,7 @@ this_cone_storage.height = yheight;
 
 sprintf(this_cone_volume.name,NAME_CURRENT_COMP);
 sprintf(this_cone_volume.geometry.shape,"cone");
-<<<<<<< HEAD
 this_cone_volume.geometry.eShape = cone;
-=======
-thos_cone_volume.geometry.eShape = cone;
->>>>>>> d7fdbe7cb... Manual merge of branch without polymorphism into McStas 3.0 branch.
 this_cone_volume.geometry.priority_value = priority;
 // Currently the coordinates will be in absolute space.
 this_cone_volume.geometry.center = POS_A_CURRENT_COMP;

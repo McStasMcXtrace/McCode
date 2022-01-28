@@ -57,11 +57,7 @@
 DEFINE COMPONENT AF_HB_1D_process // Remember to change the name of process here
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(atom_distance=1, number_density=0, unit_cell_volume=0, A_constant=1, J_interaction=1, packing_factor=1, interact_fraction=-1, string init="init")
-<<<<<<< HEAD
 OUTPUT PARAMETERS ()
-=======
-OUTPUT PARAMETERS (This_process,AF_HB_1D_storage,effective_my_scattering)
->>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
 
 SHARE
 %{
@@ -253,18 +249,9 @@ int AF_HB_1D_physics_scattering(double *k_final, double *k_initial, double *weig
     #define PROCESS_DETECTOR dummy
 #endif
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 #ifndef PROCESS_AF_HB_1D_DETECTOR
     #define PROCESS_AF_HB_1D_DETECTOR dummy
 #endif
-=======
->>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
-=======
-#ifndef PROCESS_AF_HB_1D_DETECTOR
-    #define PROCESS_AF_HB_1D_DETECTOR dummy
-#endif
->>>>>>> d7fdbe7cb... Manual merge of branch without polymorphism into McStas 3.0 branch.
 %}
 
 DECLARE

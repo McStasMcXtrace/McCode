@@ -52,11 +52,7 @@
 DEFINE COMPONENT Non_process // Remember to change the name of process here
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(sigma=5.08,packing_factor=1,unit_cell_volume=13.8,interact_fraction=-1, string init="init")
-<<<<<<< HEAD
 OUTPUT PARAMETERS ()
-=======
-OUTPUT PARAMETERS (This_process,Non_storage,effective_my_scattering)
->>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
 
 SHARE
 %{
@@ -81,11 +77,7 @@ struct Non_physics_storage_struct{
 
 // Function for calculating my, the inverse penetration depth (for only this scattering process).
 // The input for this function and its order may not be changed, but the names may be updated.
-<<<<<<< HEAD
 int Non_physics_my(double *my, double *k_initial, union data_transfer_union data_transfer, struct focus_data_struct *focus_data, _class_particle *_particle) {
-=======
-int Non_physics_my(double *my, double *k_initial, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
->>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
     // *k_initial is a pointer to a simple vector with 3 doubles, k[0], k[1], k[2] which describes the wavevector
 
     // Simple case, just retrive the parameter saved from initialize
@@ -95,11 +87,7 @@ int Non_physics_my(double *my, double *k_initial, union data_transfer_union data
 
 // Function that provides description of a basic scattering event.
 // Do not change the
-<<<<<<< HEAD
 int Non_physics_scattering(double *k_final, double *k_initial, double *weight, union data_transfer_union data_transfer, struct focus_data_struct *focus_data, _class_particle *_particle) {
-=======
-int Non_physics_scattering(double *k_final, double *k_initial, double *weight, union data_transfer_union data_transfer, struct focus_data_struct *focus_data) {
->>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
 
     k_final[0] = k_initial[0];
     k_final[1] = k_initial[1];

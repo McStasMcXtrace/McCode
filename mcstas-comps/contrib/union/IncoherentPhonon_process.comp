@@ -65,11 +65,7 @@ SETTING PARAMETERS(double T=394, double density=6.0, double M=50.94,
 		   int nphe_exact=1, int nphe_approx=0, int approx=0, int mph_resum=0, 
 		   int nxs=1000, double kabsmin=0.1, double kabsmax=25,
 		   int interact_fraction=-1, string init="init")
-<<<<<<< HEAD
 OUTPUT PARAMETERS ()
-=======
-OUTPUT PARAMETERS (This_process, IncoherentPhonon_storage, global_process_element)
->>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -4620,19 +4616,10 @@ int finish(struct IncoherentPhonon_physics_storage_struct *data)
     //struct pointer_to_global_process_list global_process_list = {0,NULL};
     #define PROCESS_DETECTOR dummy
 #endif
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> d7fdbe7cb... Manual merge of branch without polymorphism into McStas 3.0 branch.
 
 #ifndef PROCESS_INCOHERENTPHONON_DETECTOR
     #define PROCESS_INCOHERENTPHONON_DETECTOR dummy
 #endif
-<<<<<<< HEAD
-=======
->>>>>>> f262afd14... Update of the Union components that now work on cogen 3.
-=======
->>>>>>> d7fdbe7cb... Manual merge of branch without polymorphism into McStas 3.0 branch.
 %}
 
 DECLARE
