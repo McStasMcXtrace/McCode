@@ -36,7 +36,7 @@ mkdir -p $HOME/xTESTS/${DATE}
 
 cd $HOME/xTESTS/${DATE}
 
-$HOME/McCode/tools/Python/mctest/mctest.py --ncount=5e7 --mpi=auto --configs --mccoderoot $HOME/McXtrace/mcxtrace --verbose --testdir $HOME/xTESTS/${DATE} --config=McXtrace_CPU_MPICC_MT
+$HOME/mxtest/mctest/mctest.py --ncount=5e7 --mpi=auto --configs --mccoderoot $HOME/McXtrace/mcxtrace --verbose --testdir $HOME/xTESTS/${DATE} --config=McXtrace_CPU_MPICC_MT
 
 cd $HOME
 echo done on CPU/MPI, submitting next job
