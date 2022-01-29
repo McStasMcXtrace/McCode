@@ -8,7 +8,7 @@
 #BSUB -n 10
 #BSUB -R "span[block=1]"
 ### -- Select the resources: 1 gpu in exclusive process mode --
-#BSUB -W 2:00
+#BSUB -W 10:00
 # request 5GB of system-memory
 #BSUB -R "rusage[mem=5GB]"
 ### -- set the email address --
