@@ -1,7 +1,6 @@
 {
   "configuration": {
     "MCCODE_VERSION": "3.0-dev",
-    "MCCODE_LIB_DIR": "/zhome/7c/9/7041/McXtrace/mcxtrace/1.5/tools/Python/mccodelib/mcxtrace-test/../../..",
     "MCCODE": "mcxtrace",
     "MCRUN": "mxrun --openacc",
     "MCPLOT": "mxplot-pyqtgraph",
