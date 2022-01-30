@@ -8,7 +8,7 @@
 #BSUB -n 10
 #BSUB -R "span[block=1]"
 ### -- Select the resources: 1 gpu in exclusive process mode --
-#BSUB -W 2:00
+#BSUB -W 10:00
 # request 5GB of system-memory
 #BSUB -R "rusage[mem=5GB]"
 ### -- set the email address --
@@ -34,7 +34,7 @@ mkdir -p $HOME/xTESTS/${DATE}
 
 cd $HOME/xTESTS/${DATE}
 
-$HOME/mxtest/mctest/mctest.py --ncount=1e7 --mpi=auto --configs --mccoderoot $HOME/McXtrace/mcxtrace --verbose --testdir $HOME/xTESTS/${DATE} --config=McXtrace-1.x_CPU_MPICC
+$HOME/mxtest/mctest/mctest.py --ncount=5e7 --mpi=auto --configs --mccoderoot $HOME/McXtrace/mcxtrace --verbose --testdir $HOME/xTESTS/${DATE} --config=McXtrace-1.x_CPU_MPICC
 
 cd $HOME
 $HOME/do_plots.sh
