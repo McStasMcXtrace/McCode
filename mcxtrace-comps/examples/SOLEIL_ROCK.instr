@@ -68,23 +68,18 @@ double length_second_crystal;
 double center_first_crystal;
 double dist_center_to_center;
 double center_to_c_mono_angle;
-double energy_i0;
-double energy_i1;
-#pragma acc declare create(energy_i0,energy_i1)
 
 %}
 
 USERVARS %{
   double coeffabsorption;
+  double energy_i0;
+  double energy_i1;
 %}
 
 
 INITIALIZE
 %{
-energy_i1=0;
-energy_i0=0;
-
-#pragma acc update device(energy_i0,energy_i1)
 
 i_h=1;
 i_k=1;
@@ -342,8 +337,7 @@ COMPONENT EnergyMonitor_before_sample = E_monitor(
 AT (0, 0, 10) RELATIVE PREVIOUS
 EXTEND
 %{
-  #pragma acc atomic
-  energy_i0=energy_i0+p;
+  energy_i0=p;
 %}
 
 
@@ -392,10 +386,8 @@ COMPONENT EnergyMonitor_after_sample = E_monitor(
 AT (0, 0, 0.5) RELATIVE PREVIOUS
 EXTEND
 %{
-  #pragma acc atomic
-  energy_i1=energy_i1+p;
+  energy_i1=p;
   coeffabsorption = log(energy_i0/energy_i1);
-  //MONND_USER_VALUE(absorption_monitor, 1,coeffabsorption);
 %}
 
 
