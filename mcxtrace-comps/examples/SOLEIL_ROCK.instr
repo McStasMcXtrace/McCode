@@ -1,3 +1,4 @@
+
 /*******************************************************************************
 * Instrument: ROCK beam-line at SOLEIL
 *
@@ -68,20 +69,16 @@ double length_second_crystal;
 double center_first_crystal;
 double dist_center_to_center;
 double center_to_c_mono_angle;
+char coeffopts[128];
 double energy_i0;
 double energy_i1;
 double coeffabsorption;
-
-%include "monitor_nd-lib"
-MONND_DECLARE(absorption_monitor);
 
 %}
 
 
 INITIALIZE
 %{
-energy_i1=0;
-energy_i0=0;
 
 i_h=1;
 i_k=1;
@@ -158,6 +155,7 @@ reflec_material_M2A="Pt.dat";
 reflec_material_M2B="Pt.txt";
 }
 
+sprintf(coeffopts,"signal=user1 e limits=[%g %g]",Etohitkev-(0.005+(Etohitkev-Eminkev)*incr),Etohitkev+(0.005+(Etohitkev-Eminkev)*incr));
 %}
 
 
@@ -174,7 +172,10 @@ COMPONENT Source = Bending_magnet(
     dE = dE    
     )
 AT (0, 0, 0) RELATIVE Origin
-
+EXTEND %{
+  energy_i0=0;
+  energy_i1=0;
+%}
 
 /* -------------------------------------------------- Vertical slit 1 */
 COMPONENT slit1 = Slit(
@@ -338,8 +339,8 @@ COMPONENT EnergyMonitor_before_sample = E_monitor(
 )
 AT (0, 0, 10) RELATIVE PREVIOUS
 EXTEND
-%{ 
-	energy_i0=energy_i0+p;
+%{
+  energy_i0=p;
 %}
 
 
@@ -387,11 +388,13 @@ COMPONENT EnergyMonitor_after_sample = E_monitor(
 )
 AT (0, 0, 0.5) RELATIVE PREVIOUS
 EXTEND
-%{ 
-	energy_i1=energy_i1+p;
-	coeffabsorption = log(energy_i0/energy_i1);
-	MONND_USER_VALUE(absorption_monitor, 1,coeffabsorption);
-
+%{
+  energy_i1=p;
+  if (energy_i1) { // Protect against div by 0
+    coeffabsorption = log(energy_i0/energy_i1);
+  } else {
+    coeffabsorption=0;
+  }
 %}
 
 
@@ -408,8 +411,8 @@ COMPONENT psd_monitor = PSD_monitor(
 AT (0, 0, 0) RELATIVE PREVIOUS
 
 
-COMPONENT absorption_monitor = Monitor_nD(
-  xwidth=4, yheight=4, bins=500, options="signal u1 e", filename="c_absorption",username1="Absorption coefficient") 
+COMPONENT absorption_monitor = Monitor_nD(user1=coeffabsorption,
+  xwidth=4, yheight=4, bins=500, options=coeffopts, filename="c_absorption",username1="Absorption coefficient") 
 AT (0,0,1) RELATIVE PREVIOUS
 
 
