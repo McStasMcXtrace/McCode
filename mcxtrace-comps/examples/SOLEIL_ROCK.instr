@@ -68,7 +68,7 @@ double length_second_crystal;
 double center_first_crystal;
 double dist_center_to_center;
 double center_to_c_mono_angle;
-
+char coeffopts[128];
 %}
 
 USERVARS %{
@@ -156,6 +156,7 @@ reflec_material_M2A="Pt.dat";
 reflec_material_M2B="Pt.txt";
 }
 
+sprintf(coeffopts,"signal=user1 e limits=[%g %g]",Etohitkev-(0.005+(Etohitkev-Eminkev)*incr),Etohitkev+(0.005+(Etohitkev-Eminkev)*incr));
 %}
 
 
@@ -331,8 +332,8 @@ COMPONENT EnergyMonitor_before_sample = E_monitor(
         Emin         = Etohitkev-(0.005+(Etohitkev-Eminkev)*incr), 
         Emax         = Etohitkev+(0.005+(Etohitkev-Eminkev)*incr), 
         nE           = 500, 
-        filename     = "EnergyMonitor_before_sample",
-        restore_xray = 1
+        filename     = "EnergyMonitor_before_sample"/*,
+	restore_xray = 1*/ 
 )
 AT (0, 0, 10) RELATIVE PREVIOUS
 EXTEND
@@ -380,14 +381,18 @@ COMPONENT EnergyMonitor_after_sample = E_monitor(
         Emin         = Etohitkev-(0.005+(Etohitkev-Eminkev)*incr), 
         Emax         = Etohitkev+(0.005+(Etohitkev-Eminkev)*incr),             
         nE           = 500, 
-        filename     = "EnergyMonitor_after_sample",
-        restore_xray = 1
+        filename     = "EnergyMonitor_after_sample"/*,
+        restore_xray = 1*/
 )
 AT (0, 0, 0.5) RELATIVE PREVIOUS
 EXTEND
 %{
   energy_i1=p;
-  coeffabsorption = log(energy_i0/energy_i1);
+  if (energy_i1) { // Protect against div by 0
+    coeffabsorption = log(energy_i0/energy_i1);
+  } else {
+    coeffabsorption=0;
+  }
 %}
 
 
@@ -405,7 +410,7 @@ AT (0, 0, 0) RELATIVE PREVIOUS
 
 
 COMPONENT absorption_monitor = Monitor_nD(user1="coeffabsorption",
-  xwidth=4, yheight=4, bins=500, options="signal=user1 e", filename="c_absorption",username1="Absorption coefficient") 
+  xwidth=4, yheight=4, bins=500, options=coeffopts, filename="c_absorption",username1="Absorption coefficient") 
 AT (0,0,1) RELATIVE PREVIOUS
 
 
