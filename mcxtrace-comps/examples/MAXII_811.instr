@@ -230,8 +230,8 @@ COMPONENT c_filter =COPY(fe_c_filter)(zdepth=1e-4)
 AT(0,0,c_filter_L) RELATIVE wiggler
 
 /*Monochromator crystals*/
-COMPONENT mono_lower = Bragg_crystal_BC(
-  length=0.05,width=0.02,h=1,k=1,l=1)
+COMPONENT mono_lower = Bragg_crystal(
+  length=0.05,width=0.02,h=1,k=1,l=1,alpha=0)
 AT(0,-mono1_y,8) RELATIVE mirror1_pos
 ROTATED(-(theta-2*mirror1_angle),0,0) RELATIVE mirror1_pos 
 
@@ -239,8 +239,8 @@ COMPONENT mono_upper_mnt = Arm()
 AT(0,mono2_y,mono2_z) RELATIVE mirror1_pos
 ROTATED (0,0,180) RELATIVE wiggler
 
-COMPONENT mono_upper = Bragg_crystal_BC(
-  length=0.05, width=0.02,h=1,k=1,l=1)
+COMPONENT mono_upper = Bragg_crystal(
+  length=0.05, width=0.02,h=1,k=1,l=1,alpha=0)
 AT(0,0,0) RELATIVE mono_upper_mnt
 ROTATED (theta-2*mirror1_angle,0,0) RELATIVE mono_upper_mnt
 
