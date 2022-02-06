@@ -22,26 +22,28 @@
 * 2: Bragg_crystal_bent - bent version of the above
 * 3: Bragg_crystal_BC - variant of the above based on Mendenhall et. al., J. Appl. Cryst 2019
 * 4: Bragg_crystal_bent_BC - variant of the above based on Mendenhall et. al., J. Appl. Cryst 2019
-* 5: Bragg_crystal_simple - a simple mono with a static (flat) Dawrin width.
+* 5: Bragg_crystal_simple - a simple mono with a static (flat) Darwin width.
 *
 * %Example: Test_Mono.instr Mono=1 Detector: emon_I=5.39036e-17
+* %Example: Test_Mono.instr Mono=3 Detector: emon_I=5.33687e-17
 * %Example: Test_Mono.instr Mono=5 Detector: emon_I=5.33687e-17
 *
 * %Parameters
 * INPUT PARAMETERS:
-* Mono: [ ]    Which monochromator model to use.
-* lambda: [AA] Source wavelength.
-* L1: [m]      Distance from source to monochromator.
-* OMM: [deg]   Rotation angle of monochromator, i.e. angle of incidence.
-* TTM: [deg]   Scattering angle at which to put the detector.
-* BEND: [m]    Curvature radius of the monochromator crystal lattice. Only relevant for Mono==2.
+* Mono:   [ ]   Which monochromator model to use.
+* lambda: [AA]  Source wavelength.
+* L1:     [m]   Distance from source to monochromator.
+* OMM:    [deg] Rotation angle of monochromator, i.e. angle of incidence.
+* TTM:    [deg] Scattering angle at which to put the detector.
+* BEND:   [m]   Curvature radius of the monochromator crystal lattice. Only relevant for Mono==2.
+* monsiz: [m]   Size (h and w) of PSD measuring diffracted beam.
 *
 * %Link
 *
 * %End
 ****************************************************************************/
 
-DEFINE INSTRUMENT Test_Mono(int Mono=1, lambda=1.0, L1=10.0,OMM=14.2208,TTM=28.4416, BEND=1)
+DEFINE INSTRUMENT Test_Mono(int Mono=1, lambda=1.0, L1=10.0,OMM=14.2208,TTM=28.4416, BEND=1, monsiz=5e-5)
 
 DECLARE
 %{
@@ -143,8 +145,8 @@ ROTATED (-TTM, 0, 0) RELATIVE generic_source
 COMPONENT fpi = PSD_monitor_4PI(radius=0.1, filename="fpi",nx=51,ny=51)
 AT(0,0,0) RELATIVE Mono_Out
 
-COMPONENT psd1 = PSD_monitor(xwidth = 0.20, yheight = 0.20,
-        nx=20, ny=20, filename="psd1.dat")
+COMPONENT psd1 = PSD_monitor(xwidth = monsiz, yheight = monsiz,
+        nx=50, ny=50, filename="psd1.dat")
 AT (0, 0, 1) RELATIVE Mono_Out
 
 COMPONENT emon = E_monitor(nE=200, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
