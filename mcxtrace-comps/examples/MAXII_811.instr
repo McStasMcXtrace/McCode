@@ -318,7 +318,7 @@ COMPONENT  diff_sample_psd = PSD_monitor(
 AT(0,0,0) RELATIVE diff_sample_pos
 
 COMPONENT si_sample = PowderN(
-  reflections = "Si.laz", radius = 0.0002,
+  reflections = "Si.laz", material="Si.txt", radius = 0.0002,
   yheight = 0.05, d_phi= 0)
 AT (0, 0, 0) RELATIVE diff_sample_pos
 EXTEND
