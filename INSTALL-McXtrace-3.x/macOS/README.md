@@ -13,9 +13,9 @@
 ## Steps to perform
 
 * Download the Intel package:
-  [McXtrace 3.0 for macOS on Intel](http://download.mcstas.org/mcxtrace-3.0/mac/mcxtrace-mac_x86_64/mcxtrace-3.0_x86_64.tgz)
+  [McXtrace 3.0 for macOS on Intel](http://download.mcxtrace.org/mcxtrace-3.0/mac/mcxtrace-mac_x86_64/mcxtrace-3.0_x86_64.tgz)
   or M1 package:
-  [McXtrace 3.0 for macOS on Apple Silicon / M1 ](http://download.mcstas.org/mcxtrace-3.0/mac/mcxtrace-mac_arm64/mcxtrace-3.0_arm64.tgz)
+  [McXtrace 3.0 for macOS on Apple Silicon / M1 ](http://download.mcxtrace.org/mcxtrace-3.0/mac/mcxtrace-mac_arm64/mcxtrace-3.0_arm64.tgz)
   and unpack it (e.g. double-clicking should work)
 
 * Open the resulting folder

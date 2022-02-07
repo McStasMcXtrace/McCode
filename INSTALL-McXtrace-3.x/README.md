@@ -1,4 +1,4 @@
-# Installation instructions for McStas 3.0
+# Installation instructions for McXtrace 3.0
 
 Please consult the individual platform instructions:
 
@@ -7,4 +7,4 @@ Please consult the individual platform instructions:
 * [Linux (Debian/Ubuntu/CentOS via repo, Fedora manual install)](Linux/README.md)
 * [Unix (source code)](Linux/src/README.md)
 
-**If you can not find documentation for your specific OS above, chances are we can help you anyway - write us an email at [mcstas-users](mailto:"mcstas-users@mcstas.org")**
+**If you can not find documentation for your specific OS above, chances are we can help you anyway - write us an email at [mcxtrace-users](mailto:"mcxtrace-users@mcxtrace.org")**
