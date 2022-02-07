@@ -1,6 +1,6 @@
-%define name			mcxtrace-suite-python-ng
-%define summary			A metapackage for McXtrace + python tools
-%define version			@VERSION@
+%define name			mcstas-suite
+%define summary			A metapackage for McStas + perl and python tools
+%define version			2.2a
 %define release			1
 %define license			GPL
 %define group			Documentation
@@ -17,9 +17,9 @@ Summary:   %{summary}
 Group:     %{group}
 URL:       http://www.mccode.org
 Buildroot: %{buildroot}
-Requires:  mcxtrace-@VERSION@ mcxtrace-comps-@VERSION@ mcxtrace-tools-python-mxplot-chaco-@VERSION@ mcxtrace-tools-python-mxplot-matplotlib-@VERSION@ mcxtrace-tools-python-mxrun-@VERSION@
+Requires:  mcstas-suite-perl mcstas-suite-python
 
 %description
-A metapackage for McXtrace + python tools
+A metapackage for McStas + perl and python tools
 
 %files
