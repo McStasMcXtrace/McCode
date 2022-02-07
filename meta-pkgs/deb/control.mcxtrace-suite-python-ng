@@ -1,4 +1,4 @@
-Package: mcxtrace-suite-python
+Package: mcxtrace-suite-python-ng
 Version: @VERSION@
 Section: main
 Priority: optional
