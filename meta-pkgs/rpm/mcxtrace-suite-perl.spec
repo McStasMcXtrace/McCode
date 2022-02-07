@@ -1,4 +1,4 @@
-%define name			mcxtrace-suite-perl
+%define name			mcxtrace-suite-perl-ng
 %define summary			A metapackage for McXtrace + perl tools
 %define version			@VERSION@
 %define release			1
