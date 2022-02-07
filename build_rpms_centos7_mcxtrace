@@ -33,7 +33,7 @@ WORK=`pwd`
 if [ "x$2" != "x" ]; then
   ./support/rpm/miniconda3/prepare.sh $1
   ./mkdist mcxtrace-miniconda3 $1 support/rpm/miniconda3/ "" rpm64 "" -- rpm
-  cd meta-pkgs/rpm
+  cd meta-pkgs/rpm-centos
 
   for controlfile in `ls mcxtrace-*.spec`
   do
