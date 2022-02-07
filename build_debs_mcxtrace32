@@ -1,0 +1,49 @@
+#!/bin/sh
+
+if [ "x$1" = "x" ]; then
+    # No arguments
+    echo Please provide one argument,e.g : $0 2.0
+    exit 1;
+fi
+
+# Ensure our 3rd party modules are in place and updated
+git submodule init
+git submodule update --recursive --remote --recursive --remote
+
+WORK=`pwd`
+
+# From 1.4 onwards, let McXtrace reside in /usr/share on Debian-like systems
+export MCINSTALL_PREFIX=/usr/share/
+
+# 64-bit
+./mkdist mcxtrace $1 "" "" deb32 "" -- deb
+./mkdist mcxtrace-comps $1 "" "" deb32 "" -- deb
+./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" deb32 "" -- deb
+./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" deb32 "" -- deb
+./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" deb32 "" -- deb
+./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" deb32 "" -- deb
+./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" deb32 "" -- deb
+./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" deb32 "" -- deb
+./mkdist mcxtrace-tools-python-mxplot-svg $1 tools/Python/mcplot/svg/ "" deb32 "" -- deb
+./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" deb32 "" -- deb
+./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" deb32 "" -- deb
+./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" deb32 "" -- deb
+./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" deb32 "" -- deb
+./mkdist mcxtrace-clusterscripts $1 tools/cluster-scripts/ "" deb32 "" -- deb
+./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" deb32 "o" -- deb
+./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" deb32 "" -- deb
+
+#build metapackages?
+if [ "x$2" != "x" ]; then
+  cd meta-pkgs/deb
+
+  for controlfile in `ls control.mcxtrace*`
+  do
+    sed -i.bak s/@VERSION@/${1}/g $controlfile
+    equivs-build $controlfile
+    mv $controlfile.bak $controlfile
+  done
+
+  mv $WORK/meta-pkgs/deb/mcxtrace-suite*${1}*.deb $WORK/dist
+  cp $WORK/INSTALL-McXtrace/Linux/debian/README.md $WORK/dist
+fi
