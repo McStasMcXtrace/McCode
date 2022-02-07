@@ -7,8 +7,4 @@ Please consult the individual platform instructions:
 * [Linux (Debian/Ubuntu/CentOS via repo, Fedora manual install)](Linux/README.md)
 * [Unix (source code)](Linux/src/README.md)
 
-<<<<<<< HEAD
-**If you can not find documentation for your specific OS above, chances are we can help you anyway - write us an email at [mcstas-users](mailto:"mcxtrace-users@mcxtrace.org")**
-=======
 **If you can not find documentation for your specific OS above, chances are we can help you anyway - write us an email at [mcxtrace-users](mailto:"mcxtrace-users@mcxtrace.org")**
->>>>>>> 583832a02 (Name changes everywhere)
