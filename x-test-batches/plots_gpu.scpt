@@ -25,7 +25,7 @@
 # -- end of LSF options --
 
 DATE=`date +%F`
-REF="McXtrace-2.x_CPU_MPICC_5e7"
+REF="McXtrace-1.x_CPU_MPICC_5e7"
 TARGET="McXtrace_GPU_PGCC_TESLA_KISS_5e7"
 cd $HOME/xTESTS/
 
