@@ -1,4 +1,4 @@
-# Installation of McStas 3.0 on Windows 64 bit systems - using WSL
+# Installation of McXtrace 3.0 on Windows 64 bit systems - using WSL
 *(WSL is the Windows Subsystem for Linux, aka. bash on Ubuntu on Windows)*
 
 
@@ -18,10 +18,10 @@ available, but we recommend Ubuntu)
 * To open it again later, simply issue bash in a terminal or through
 the start menu
 
-## Install the McStas 3.0 Debian packages
+## Install the McXtrace 3.0 Debian packages
 * Follow the
   [normal Debian installation instructions](../../Linux/debian/README.md)
-  - essentially a matter of sudo apt-get install mcstas-suite-python mcstas-suite-perl
+  - essentially a matter of sudo apt-get install mcxtrace-suite-python mcxtrace-suite-perl
 
 ##  Install Xming or another X11 server application
 * Download and install Xming via https://sourceforge.net/projects/xming/
@@ -47,10 +47,10 @@ export DISPLAY=:0.0
 DISPLAY=:0.0)
 * Issue the command mcgui
 
-## Configuring McStas to use the Windows browser
+## Configuring McXtrace to use the Windows browser
 * Ensure the package ubuntu-wsl (or equivalent) is installed
-* Set the BROWSER="wslview" in your /usr/share/mcstas/3.0/tools/Python/mccodelib/mccode_config.py
+* Set the BROWSER="wslview" in your /usr/share/mcxtrace/3.0/tools/Python/mccodelib/mccode_config.py
 
 ## In case of issues
-Please report any trouble with the repository to [mcstas-users](mailto:mcstas-users@mcstas.org)
+Please report any trouble with the repository to [mcxtrace-users](mailto:mcxtrace-users@mcxtrace.org)
 
