@@ -104,7 +104,7 @@ Platforms:
    newer). For FreeBSD you may build from source, an entry into the ports system is pending.
 
 Components and Instruments:
-   - Most components and instruments work out of the box. See https://new-nightlies.mcxtrace.org for details.
+   - Most components and instruments work out of the box. See https://new-nightly.mcxtrace.org for details.
    - Monitor_nD.comp: the uservar utility should now be given a string insted of a token name to measure a USERVAR entity
    tagged onto the photon. The string is used to look-up the name of the variable which should be declared in the USERVARS-section
    of the instrument file.
