@@ -744,7 +744,7 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
     return(info->count);
   } /* read_hkl_data */
 
-  struct abs_data
+  struct sx_abs_data
   {
     int muc; /*column where mu is to be found*/
     t_Table table;
@@ -886,7 +886,7 @@ int hkl_search(struct hkl_data *L, void *TT, int count, double V0,
       return j;
     }
 
-  int sx_read_abs_data(char *ABS_file, struct abs_data *abs){
+  int sx_read_abs_data(char *ABS_file, struct sx_abs_data *abs){
     int status;
     char **parsing;
     if (ABS_file && strlen(ABS_file) && strcmp(ABS_file, "NULL")) {
@@ -922,7 +922,7 @@ DECLARE
   struct hkl_data *hkl_list;
 //#endif
   struct tau_data tau_list[MCSX_REFL_SLIST_SIZE];
-  struct abs_data abs_info;
+  struct sx_abs_data abs_info;
 %}
 
 INITIALIZE
