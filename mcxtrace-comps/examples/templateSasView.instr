@@ -31,6 +31,7 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT templateSasView(lambda=1.54, dlambda=0.05)
+DEPENDENCY " -DSASmodel_index=10 "
 
 TRACE
 
