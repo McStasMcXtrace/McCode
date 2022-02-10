@@ -45,7 +45,7 @@
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT rock (
+DEFINE INSTRUMENT SOLEIL_ROCK (
     Etohit=15918, angle_m2a_m2b=0.008, nbsample = 1, string sample_file="Cu.txt", sample_density=8.96, string sample_file_2="Mo.txt", sample_density_2=10.28, string reflec_material_M1="Ir.dat",string reflec_material_M2A="B4C.dat", string reflec_material_M2B="B4C.txt", cc=0
 )
 
@@ -53,26 +53,26 @@ DEFINE INSTRUMENT rock (
 
 DECLARE
 %{
-double dE;
-double AngleMonochromator;    
-double calculated_angle;
-double Etohitkev;
-double Eminkev;
-double Emaxkev;
-double incr;
-int n;
-int i_h;
-int i_k;
-int i_l;
-double length_first_crystal;
-double length_second_crystal;
-double center_first_crystal;
-double dist_center_to_center;
-double center_to_c_mono_angle;
-char coeffopts[128];
-double energy_i0;
-double energy_i1;
-double coeffabsorption;
+  double dE;
+  double AngleMonochromator;    
+  double calculated_angle;
+  double Etohitkev;
+  double Eminkev;
+  double Emaxkev;
+  double incr;
+  int n;
+  int i_h;
+  int i_k;
+  int i_l;
+  double length_first_crystal;
+  double length_second_crystal;
+  double center_first_crystal;
+  double dist_center_to_center;
+  double center_to_c_mono_angle;
+  char coeffopts[128];
+  double energy_i0;
+  double energy_i1;
+  double coeffabsorption;
 
 %}
 
@@ -80,82 +80,80 @@ double coeffabsorption;
 INITIALIZE
 %{
 
-i_h=1;
-i_k=1;
-i_l=1;
- 
+  i_h=1;
+  i_k=1;
+  i_l=1;
+   
 
-if(cc>=3){ //automatically select the right cc for the energy Etohit
+  if(cc>=3){ //automatically select the right cc for the energy Etohit
 
-if(Etohit<=15516){ 
-cc = 2;
-}
-else if (Etohit<=17439){
-cc = 1;
-}
-else if (Etohit<=34055){
-}
-cc = 0;
-}
+    if(Etohit<=15516) { 
+      cc = 2;
+    } else if (Etohit<=17439){
+      cc = 1;
+    } else if (Etohit<=34055){
+      cc = 0;
+    }
+  }
 
-if(cc<=0){ //cc 220
-Eminkev=5.62883;
-Emaxkev=46.2834;
-incr=0.995/(Emaxkev-Eminkev);
-n=8;
-i_h=2;
-i_k=2;
-i_l=0;
-length_first_crystal=70e-3;
-length_second_crystal=70e-3;
-center_first_crystal=20;
-dist_center_to_center = sqrt(0.01*0.01+0.07*0.07);
-/// center_to_c_mono_angle is arctan(e/(length_first_crystal/2 + length_second_crystal/2))
-center_to_c_mono_angle=0.14189;
+  if(cc<=0){ //cc 220
+    Eminkev=5.62883;
+    Emaxkev=46.2834;
+    incr=0.995/(Emaxkev-Eminkev);
+    n=8;
+    i_h=2;
+    i_k=2;
+    i_l=0;
+    length_first_crystal=70e-3;
+    length_second_crystal=70e-3;
+    center_first_crystal=20;
+    dist_center_to_center = sqrt(0.01*0.01+0.07*0.07);
+    /// center_to_c_mono_angle is arctan(e/(length_first_crystal/2 + length_second_crystal/2))
+    center_to_c_mono_angle=0.14189;
 
-}
-else if (cc<=1){ //cc long 111
-Eminkev=3.44694;
-Emaxkev=28.3427;
-incr=0.995/(Emaxkev-Eminkev);
-n=3;
-length_first_crystal=70e-3;
-length_second_crystal=70e-3;
-center_first_crystal=18.92;
-dist_center_to_center = sqrt(0.01*0.01+0.07*0.07);
-center_to_c_mono_angle=0.14189;
+  } else if (cc<=1){ //cc long 111
+    Eminkev=3.44694;
+    Emaxkev=28.3427;
+    incr=0.995/(Emaxkev-Eminkev);
+    n=3;
+    length_first_crystal=70e-3;
+    length_second_crystal=70e-3;
+    center_first_crystal=18.92;
+    dist_center_to_center = sqrt(0.01*0.01+0.07*0.07);
+    center_to_c_mono_angle=0.14189;
 
-} else if (cc<=2){ //cc short 111
-Eminkev=3.44694;
-Emaxkev=18.9143;
-incr=0.995/(Emaxkev-Eminkev);
-n=3;
-length_first_crystal=50e-3;
-length_second_crystal=70e-3;
-center_first_crystal=19.25;
-dist_center_to_center = sqrt(0.01*0.01+0.06*0.06);
-center_to_c_mono_angle=0.1651;
-}
+  } else if (cc<=2){ //cc short 111
+    Eminkev=3.44694;
+    Emaxkev=18.9143;
+    incr=0.995/(Emaxkev-Eminkev);
+    n=3;
+    length_first_crystal=50e-3;
+    length_second_crystal=70e-3;
+    center_first_crystal=19.25;
+    dist_center_to_center = sqrt(0.01*0.01+0.06*0.06);
+    center_to_c_mono_angle=0.1651;
+  }
 
-calculated_angle=RAD2DEG*asin(12398.42*sqrt(n)/(2*5.4309*Etohit));
-Etohitkev=Etohit*(1/1e3);
-dE = 0.01 * Etohitkev;
-fprintf(stdout,"Energie %g / Angle %g", Etohitkev, calculated_angle);
+  calculated_angle=RAD2DEG*asin(12398.42*sqrt(n)/(2*5.4309*Etohit));
+  Etohitkev=Etohit*(1/1e3);
+  dE = 0.01 * Etohitkev;
+  fprintf(stdout,"Energie %g / Angle %g", Etohitkev, calculated_angle);
 
-if(Etohitkev<=7.98){
-reflec_material_M2A="B4C.dat";
-reflec_material_M2B="B4C.txt";
-}
-else if (Etohitkev<=16.46){
-reflec_material_M2A="Pd.dat";
-reflec_material_M2B="Pd.txt";
-}
-else if (Etohitkev<=21.19){
-reflec_material_M2A="Pt.dat";
-reflec_material_M2B="Pt.txt";
-}
+  if(Etohitkev<=7.98){
+    reflec_material_M2A="B4C.dat";
+    reflec_material_M2B="B4C.txt";
+  }
+  else if (Etohitkev<=16.46){
+    reflec_material_M2A="Pd.dat";
+    reflec_material_M2B="Pd.txt";
+  }
+  else if (Etohitkev<=21.19){
+    reflec_material_M2A="Pt.dat";
+    reflec_material_M2B="Pt.txt";
+  }
 
-sprintf(coeffopts,"signal=user1 e limits=[%g %g]",Etohitkev-(0.005+(Etohitkev-Eminkev)*incr),Etohitkev+(0.005+(Etohitkev-Eminkev)*incr));
+  sprintf(coeffopts,"signal=user1 e limits=[%g %g]",
+    Etohitkev-(0.005+(Etohitkev-Eminkev)*incr),Etohitkev+(0.005+(Etohitkev-Eminkev)*incr));
 %}
 
 
@@ -267,14 +265,8 @@ ROTATED (-calculated_angle, 0, 0) RELATIVE PREVIOUS
 
 
 /* -------------------------------------------------- CC crystal 2 */
-COMPONENT bragg_crystal_two = Bragg_crystal(
-    length=length_second_crystal,
-    width=25e-3,
-    material = "Si.txt",
-    h = i_h,
-    k = i_k,
-    l = i_l,
-    crystal_type = 2) 
+COMPONENT bragg_crystal_two = COPY(bragg_crystal)(
+    length=length_second_crystal) 
 AT (0, 0.01, (length_first_crystal/2)+(length_second_crystal/2)) RELATIVE bragg_crystal
 ROTATED (calculated_angle, 0, 0) RELATIVE PREVIOUS
 EXTEND
@@ -375,16 +367,8 @@ AT (0, 0, 0.5) RELATIVE PREVIOUS
 
 
 /* -------------------------------------------------- E monitor */ 
-COMPONENT EnergyMonitor_after_sample = E_monitor(
-        xmin         = -2.0 , 
-        xmax         =  2.0 , 
-        ymin         = -2.0 , 
-        ymax         =  2.0 ,
-        Emin         = Etohitkev-(0.005+(Etohitkev-Eminkev)*incr), 
-        Emax         = Etohitkev+(0.005+(Etohitkev-Eminkev)*incr),             
-        nE           = 500, 
-        filename     = "EnergyMonitor_after_sample",
-        restore_xray = 1
+COMPONENT EnergyMonitor_after_sample = COPY(EnergyMonitor_before_sample)(
+        filename     = "EnergyMonitor_after_sample"
 )
 AT (0, 0, 0.5) RELATIVE PREVIOUS
 EXTEND
@@ -415,11 +399,6 @@ COMPONENT absorption_monitor = Monitor_nD(user1=coeffabsorption,
   xwidth=4, yheight=4, bins=500, options=coeffopts, filename="c_absorption",username1="Absorption coefficient") 
 AT (0,0,1) RELATIVE PREVIOUS
 
-
-
-FINALLY
-%{
-%}
 
 
 END
