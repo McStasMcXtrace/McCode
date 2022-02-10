@@ -2186,14 +2186,12 @@ SHARE %{
 
 DECLARE
 %{
-  float *model_pars_ptr;
   double shape;
   double my_a_v;
 %}
 
 INITIALIZE
 %{
-  model_pars_ptr = (float*)model_pars;
 shape=-1;  /* -1:no shape, 0:cyl, 1:box, 2:sphere  */
 if (xwidth && yheight && zdepth)
     shape=1;
@@ -2278,10 +2276,10 @@ TRACE
     q = sqrt(qx*qx+qy*qy+qz*qz);
 
     float Iq_out;
-    Iq_out = getIq(q, qx, qy, model_pars_ptr);
+    Iq_out = getIq(q, qx, qy, model_pars);
 
     float vol;
-    vol=getFormVol(model_pars_ptr);
+    vol=getFormVol(model_pars);
     // Scale by 1.0E2 [SasView: 1/cm  ->   McStas: 1/m]
     Iq_out = model_scale*Iq_out / vol * 1.0E2;
 

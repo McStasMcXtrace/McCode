@@ -8,10 +8,9 @@
 * Instrument: templateSasView
 *
 * %Identification
-* Written by: Kim Lefmann
-* Date: 19th Dec 2003.
-* Origin: Risoe
-* Modified by: Torben  Nielsen 25 Jan. 2016
+* Written by: Torben Nielsen 
+* Origin: DTU Physics / ESS DMSC
+* 
 *
 * %INSTRUMENT_SITE: Templates
 *
@@ -29,6 +28,7 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT templateSasView(lambda=6, dlambda=0.05)
+DEPENDENCY " -DSASmodel_index=47 "
 
 TRACE
 
