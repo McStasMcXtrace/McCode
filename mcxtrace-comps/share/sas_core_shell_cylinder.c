@@ -178,7 +178,7 @@ float J1(float x)
  */
 
 // Gaussians
-constant float Gauss76Wt[76]={
+constant float Gauss76Wt[]={
 	.00126779163408536f,		//0
 	.00294910295364247f,
 	.00462793522803742f,
@@ -257,7 +257,9 @@ constant float Gauss76Wt[76]={
 	.00126779163408536f		//75 (indexed from 0)
 };
 
-constant float Gauss76Z[76]={
+#pragma acc declare create ( Gauss76Wt )
+
+constant float Gauss76Z[]={
 	-.999505948362153f,		//0
 	-.997397786355355f,
 	-.993608772723527f,
@@ -336,6 +338,7 @@ constant float Gauss76Z[76]={
 	.999505948362153f		//75
 };
 
+#pragma acc declare create ( Gauss76Z )
 
 float form_volume(float radius, float thickness, float length);
 float Iq(float q, float core_sld, float shell_sld, float solvent_sld,

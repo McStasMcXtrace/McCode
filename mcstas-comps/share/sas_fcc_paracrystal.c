@@ -165,7 +165,7 @@ float J1(float x)
  */
 
 // Gaussians
-constant float Gauss150Z[150]={
+constant float Gauss150Z[]={
   	-0.9998723404457334f,
   	-0.9993274305065947f,
   	-0.9983473449340834f,
@@ -318,7 +318,9 @@ constant float Gauss150Z[150]={
   	0.9998723404457334f
 };
 
-constant float Gauss150Wt[150]={
+#pragma acc declare create ( Gauss150Z )
+
+constant float Gauss150Wt[]={
   	0.0003276086705538f,
   	0.0007624720924706f,
   	0.0011976474864367f,
@@ -471,6 +473,7 @@ constant float Gauss150Wt[150]={
   	0.0003276086705538f
 };
 
+#pragma acc declare create ( Gauss150Wt )
 
 float form_volume(float radius);
 float Iq(float q,float dnn,float d_factor, float radius,float sld, float solvent_sld);
