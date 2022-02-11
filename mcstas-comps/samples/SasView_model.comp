@@ -2192,6 +2192,18 @@ DECLARE
 
 INITIALIZE
 %{
+  
+int chosen=model_index;
+#ifndef SASmodel_index
+  exit(fprintf(stderr, "SasView_model: %s: Your instrument was without the define -DSASmodel_index \n"
+	       "ERROR Please recompile your instrument with -DSASmodel_index=%i to enable model_index=%i.\n", NAME_CURRENT_COMP, chosen, chosen));
+#else
+  if (!(SASmodel_index==model_index)) {
+      exit(fprintf(stderr, "SasView_model: %s: Your instrument was compiled with -DSASmodel_index=%i \n"
+		   "ERROR Please recompile your instrument with -DSASmodel_index=%i to enable model_index=%i\n", NAME_CURRENT_COMP, SASmodel_index, chosen, chosen));
+  }
+#endif
+  
 shape=-1;  /* -1:no shape, 0:cyl, 1:box, 2:sphere  */
 if (xwidth && yheight && zdepth)
     shape=1;
