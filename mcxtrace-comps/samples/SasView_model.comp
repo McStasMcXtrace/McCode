@@ -2191,7 +2191,7 @@ INITIALIZE
   
 int chosen=model_index;
 #ifndef SASmodel_index
-  exit(fprintf(stderr, "SasView_model: %s: Your instrument was without the define -DSASmodel_index \n"
+  exit(fprintf(stderr, "SasView_model: %s: Your instrument was compiled without the define -DSASmodel_index \n"
 	       "ERROR Please recompile your instrument with -DSASmodel_index=%i to enable model_index=%i.\n", NAME_CURRENT_COMP, chosen, chosen));
 #else
   if (!(SASmodel_index==model_index)) {
