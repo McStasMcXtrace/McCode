@@ -17,6 +17,20 @@
 * Test instrument for the SasView_model component. No guide / velocity selector
 * etc.
 *
+*
+* Example: --D1=SASmodel_index=1 model_index=1 par1=4 par2=1 par3=40 par4=20 par5=400
+* Example: --D1=SASmodel_index=2 model_index=2 par1=4 par2=1 par3=40 par4=20 par5=400 par6=60 par7=60
+* Example: --D1=SASmodel_index=3 model_index=3 par1=220 par2=0.06 par3=40 par4=4 par5=1
+* Example: --D1=SASmodel_index=4 model_index=4 par1=4 parX=2 par3=20 par4=20 par5=400 par6=60 par7=60
+* Example: --D1=SASmodel_index=5 model_index=5 par1=4 parX=1 par2=20 par3=20 par4=400
+* Example: --D1=SASmodel_index=6 model_index=6 par1=4 par2=1 par3=20 par4=20 par5=400 par6=0 par7=0
+* Example: --D1=SASmodel_index=6 model_index=6 par1=4 par2=1 par3=20 par4=20 par5=400 par6=60 par7=60
+* Example: --D1=SASmodel_index=10 model_index=10 par1=4 par2=1 par3=20 par4=400 par5=60 par6=60
+* Example: --D1=SASmodel_index=21 model_index=21 par1=60
+* Example: --D1=SASmodel_index=47 model_index=47 par1=4 parX=2 par3=35 par4=75 par5=400
+* Example: --D1=SASmodel_index=48 model_index=48 par1=4 parX=1 par2=35 par3=75 par4=400 par5=60 par6=60 par7=60
+* Example: --D1=SASmodel_index=55 model_index=55 par1=50.0 par2=0.2 par3=0.05 par4=0.2
+*
 * %Description
 * Very simple test instrument for the SasView_model component
 *
@@ -27,8 +41,22 @@
 * %Link
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT templateSasView(lambda=6, dlambda=0.05)
-DEPENDENCY " -DSASmodel_index=47 "
+DEFINE INSTRUMENT templateSasView(lambda=6, dlambda=0.05, model_index=47, par1=0, par2=0, par3=0, par4=0, par5=0, par6=0, par7=0, par8=0)
+
+DECLARE %{
+  double modelpars[8];
+%}
+
+INITIALIZE %{
+  modelpars[0]=par1;
+  modelpars[1]=par2;
+  modelpars[2]=par3;
+  modelpars[3]=par4;
+  modelpars[4]=par5;
+  modelpars[5]=par6;
+  modelpars[6]=par7;
+  modelpars[7]=par8;
+%}
 
 TRACE
 
@@ -53,7 +81,7 @@ COMPONENT coll2 = Slit(
   AT (0, 0, 6) RELATIVE arm
 
 // Example sphere
-SPLIT COMPONENT sample = SasView_model(model_index=47, model_scale=1,   model_pars={ 1, 7, 200 },
+SPLIT COMPONENT sample = SasView_model(model_index=model_index, model_scale=1, model_pars=modelpars,
 model_abs=0.0,
                          xwidth=0.01, yheight=0.01, zdepth=0.005,focus_xw=0.6, focus_yh=0.6, target_index=1)
    AT (0,0,0.2) RELATIVE coll2
