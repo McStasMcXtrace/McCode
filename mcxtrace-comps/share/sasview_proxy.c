@@ -173,7 +173,7 @@
     %include "sas_triaxial_ellipsoid.c"
   #endif
 
-  float getIq(float q, float qx, float qy, double *pars)
+  float getIq(float q, float qx, float qy, double pars[8])
   {
     float Iq_out = 1;
     #if SASmodel_index == 1
@@ -353,7 +353,7 @@
     return Iq_out;
   }
 
-  float getFormVol(double *pars)
+  float getFormVol(double pars[8])
   {
     float form_vol;
     #if SASmodel_index == 1
