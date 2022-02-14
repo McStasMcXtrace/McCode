@@ -21,8 +21,8 @@
 #BSUB -N
 ### -- Specify the output and error file. %J is the job-id --
 ### -- -o and -e mean append, -oo and -eo mean overwrite --
-#BSUB -o gpu-%J.out
-#BSUB -e gpu_%J.err
+#BSUB -o mcstas-master-%J.out
+#BSUB -e mcstas-master_%J.err
 # -- end of LSF options --
 
 # Ensure we run with our own miniconda3
