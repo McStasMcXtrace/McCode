@@ -75,12 +75,12 @@ INITIALIZE
     if (!zdepth_i) zdepth_i=yheight_i;
     if (!xwidth_i) xwidth_i=yheight_i;
   }else if (!yheight_i && !radius_i){
-    fprintf(stderr,"Absorption_sample(%s): Warning: Inner volume = 0\n",NAME_CURRENT_COMP);
+    fprintf(stderr,"Warning: (%s): Warning: Inner volume = 0\n",NAME_CURRENT_COMP);
     prms_i.V=0;
   }
   /* Loading datafiles */
   if ( material_datafile_o && (status=Table_Read(&t_o,material_datafile_o,0))==-1){
-    fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile_o,NAME_CURRENT_COMP);
+    fprintf(stderr,"Error: (%s) Could not parse file \"%s\".\n",NAME_CURRENT_COMP, material_datafile_o);
     exit(-1);
   }
   if (t_o.columns==3) {  /*which column is the energy in and which holds mu*/
@@ -104,9 +104,9 @@ INITIALIZE
     prms_o.rho=rho_o;
   }
   if (prms_i.V){ /*if volume is zero - don't bother to read the file*/
-    printf("Loading inner datafiles");
+    printf("INFO (%s): Loading inner datafile.\n", NAME_CURRENT_COMP);
     if ( material_datafile_i && (status=Table_Read(&t_i,material_datafile_i,0))==-1){
-      fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile_i,NAME_CURRENT_COMP);
+      fprintf(stderr,"Error (%s): Could not parse file \"%s\".\n",NAME_CURRENT_COMP,material_datafile_i);
       exit(-1);
     }
     if (t_i.columns==3) {
