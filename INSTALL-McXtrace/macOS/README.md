@@ -1,4 +1,4 @@
-# Installation of McXtrace 1.6 on macOS 
+# Installation of McXtrace 1.7 on macOS 
 
 ## Supported macOS releases
 * macOS 11.0 (Big Sur, Fully supported python tool set, partially
@@ -13,12 +13,12 @@
 
 * Download the relevant verison (arm64 for M1/Silicon processor,
 x86_64 for Intel processor) from 
-[McXtrace 1.6 for macOS](https://download.mcxtrace.org/mcxtrace-1.6/mac/)
+[McXtrace 1.7 for macOS](https://download.mcxtrace.org/mcxtrace-1.7/mac/)
   and unpack it (e.g. double-clicking should work)
 
 * Open the resulting folder and
 
-* Drag the McXtrace-1.6.app and the McXtrace-1.6-environment.command to
+* Drag the McXtrace-1.7.app and the McXtrace-1.7-environment.command to
 /Applications
 
 * Run the Check-PY-dependencies.command script to check for / install

@@ -1,5 +1,4 @@
-# Installation instructions for McXtrace 1.6
-
+# Installation instructions for McXtrace 1.7
 Please consult the individual pages for your platform of choice. 
 
 - [Linux](Linux/README.md)
