@@ -7,5 +7,6 @@ Please consult the individual platform instructions:
 * [Linux (Debian/Ubuntu/CentOS via repo, Fedora manual install)](Linux/README.md)
 * [Unix (source code)](Linux/src/README.md)
 * [Docker image](Docker/README.md)
+* [In your browser via Binder, no installation](Binder/README.md)
 
 **If you can not find documentation for your specific OS above, chances are we can help you anyway - write us an email at [mcxtrace-users](mailto:"mcxtrace-users@mcxtrace.org")**
