@@ -829,7 +829,7 @@ switch(*num_solutions) {
 
 /*
     int output;
-    // Run McStas built in sphere intersect funtion (sphere centered around origin)
+    // Run McXtrace built in sphere intersect funtion (sphere centered around origin)
     if ((output = cone_intersect(&t[0],&t[1],rotated_coordinates,rotated_velocity,radius_top,radius_bottom,height,is_cylinder,cone_tip,center)) == 0) {
         *num_solutions = 0;t[0]=-1;t[1]=-1;}
     else if (t[1] != 0) *num_solutions = 2;

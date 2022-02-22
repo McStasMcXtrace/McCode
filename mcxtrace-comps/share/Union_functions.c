@@ -103,10 +103,10 @@ struct Detector_3D_struct {
   double D2max;
   double D3min;
   double D3max;
-  double bins_1; // McStas uses doubles for bin numbers for some reason
+  double bins_1; // McXtrace uses doubles for bin numbers for some reason
   double bins_2;
   double bins_3;
-  double ***Array_N; // McStas uses doubles for number of rays in each bin for some reason
+  double ***Array_N; // McXtrace uses doubles for number of rays in each bin for some reason
   double ***Array_p;
   double ***Array_p2;
 };
@@ -120,9 +120,9 @@ struct Detector_2D_struct {
   double D1max;
   double D2min;
   double D2max;
-  double bins_1; // McStas uses doubles for bin numbers for some reason
+  double bins_1; // McXtrace uses doubles for bin numbers for some reason
   double bins_2;
-  double **Array_N; // McStas uses doubles for number of rays in each bin for some reason
+  double **Array_N; // McXtrace uses doubles for number of rays in each bin for some reason
   double **Array_p;
   double **Array_p2;
 };
@@ -135,8 +135,8 @@ struct Detector_1D_struct {
   char Filename[256];
   double min;
   double max;
-  double bins; // McStas uses doubles for bin numbers for some reason
-  double *Array_N; // McStas uses doubles for number of rays in each bin for some reason
+  double bins; // McXtrace uses doubles for bin numbers for some reason
+  double *Array_N; // McXtrace uses doubles for number of rays in each bin for some reason
   double *Array_p;
   double *Array_p2;
 };
@@ -1436,7 +1436,7 @@ void write_tagging_tree(struct list_of_tagging_tree_node_pointers *master_list, 
   FILE *fp;
   fp = fopen("union_history.dat","w");
   
-  fprintf(fp,"History file written by the McStas component Union_master \n");
+  fprintf(fp,"History file written by the McXtrace component Union_master \n");
   fprintf(fp,"When running with MPI, the results may be from just a single thread, meaning intensities are divided by number of threads\n");
   fprintf(fp,"----- Description of the used volumes -----------------------------------------------------------------------------------\n");
   
@@ -3962,19 +3962,19 @@ void generate_lists(struct Volume_struct **Volumes, struct starting_lists_struct
 //};
 
 void randvec_target_rect_angular_union(Coords *v_out,double *solid_angle_out, struct focus_data_struct *focus_data) {
-    // Calls the standard McStas randvec_target_rect_angular focusing function, but is with the new data input format.
+    // Calls the standard McXtrace randvec_target_rect_angular focusing function, but is with the new data input format.
     randvec_target_rect_angular(&v_out->x, &v_out->y, &v_out->z, solid_angle_out, focus_data->Aim.x,focus_data->Aim.y, focus_data->Aim.z, focus_data->angular_focus_width, focus_data->angular_focus_height,focus_data->absolute_rotation);
     //randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,aim_x, aim_y, aim_z, VarsInc.aw, VarsInc.ah, ROT_A_CURRENT_COMP);
 };
 
 void randvec_target_rect_union(Coords *v_out,double *solid_angle_out, struct focus_data_struct *focus_data) {
-// Calls the standard McStas randvec_target_rect focusing function, but is with the new data input format.
+// Calls the standard McXtrace randvec_target_rect focusing function, but is with the new data input format.
     randvec_target_rect(&v_out->x, &v_out->y, &v_out->z, solid_angle_out, focus_data->Aim.x,focus_data->Aim.y, focus_data->Aim.z, focus_data->spatial_focus_width, focus_data->spatial_focus_height,focus_data->absolute_rotation);
     // randvec_target_rect(&vx, &vy, &vz, &solid_angle,aim_x, aim_y, aim_z, VarsInc.xw, VarsInc.yh, ROT_A_CURRENT_COMP);
 };
 
 void randvec_target_circle_union(Coords *v_out,double *solid_angle_out, struct focus_data_struct *focus_data) {
-// Calls the standard McStas randvec_target_circle focusing function, but is with the new data input format.
+// Calls the standard McXtrace randvec_target_circle focusing function, but is with the new data input format.
 
     // debug input into randvec_target_circle
     //print_position(focus_data->Aim,"Aim vector input for randvec_target_circle");

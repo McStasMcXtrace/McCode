@@ -27,7 +27,7 @@
 *******************************************************************************/
 
 #ifndef SHADOW_LIB_H
-#error McStas : please import this library with %include "shadow-lib"
+#error McXtrace : please import this library with %include "shadow-lib"
 #endif
 
 /********************************************************************************************/
