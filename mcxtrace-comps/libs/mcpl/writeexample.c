@@ -12,13 +12,13 @@ int main(int argc,char**argv) {
   const char * filename = argv[1];
 
   // Initialisation, create output file handle, embed name of source application
-  // in the header and declare that this is a neutron-only file. Note that an
+  // in the header and declare that this is a photon-only file. Note that an
   // ".mcpl" extension will be added to the filename if it doesn't have it
   // already:
 
   mcpl_outfile_t f = mcpl_create_outfile(filename);
   mcpl_hdr_set_srcname(f,"FakeMcStas-v2.2a");
-  mcpl_enable_universal_pdgcode(f,2112);//all particles are neutrons
+  mcpl_enable_universal_pdgcode(f,2112);//all particles are photons
 
   // By default, floating point numbers will be stored in single precision and
   // neither polarisation nor user-flags will be stored in the file. These

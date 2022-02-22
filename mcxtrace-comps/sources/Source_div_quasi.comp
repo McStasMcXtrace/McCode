@@ -53,7 +53,7 @@
 * OUTPUT PARAMETERS:
 * sigmah:  (rad) parameter 'sigma' of the Gaussian distribution for horizontal divergence
 * sigmav:  (rad) parameter 'sigma' of the Gaussian distribution for vertical divergence
-* p_init:   (-)  normalisation factor 1/'neutron_count'
+* p_init:   (-)  normalisation factor 1/'photon_count'
 *
 * %E
 *******************************************************************************/

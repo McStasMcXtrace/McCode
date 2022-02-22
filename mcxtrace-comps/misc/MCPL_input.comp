@@ -138,7 +138,7 @@ TRACE
     // fprintf(stdout,"Trace ncount is %ld\n",ncount);
     if (!particle) {
       if(repeat_cnt>1) {
-	/* Trigger rewind of the file and ABSORB to get the first neutron "again" */
+	/* Trigger rewind of the file and ABSORB to get the first photon "again" */
 	repeating++;
 	mcpl_rewind(inputfile);
 	particle = mcpl_read(inputfile);

@@ -9,7 +9,6 @@
 *
 * %I
 * Written by: Erik B Knudsen
-* Based on neutron component by Kim Lefmann
 * Date: Jun. 16
 * Version: $Revision$
 * Origin: DTU Physics
@@ -20,6 +19,8 @@
 * 2D detector for intensity as a function of both horizontal position
 * and wavelength. This gives information similar to an aceptance diagram used
 * eg. to investigate beam profiles in neutron guides.
+*
+* Based on neutron component by Kim Lefmann
 *
 * Example: DivPos_monitor(nh=20, ndiv=20, filename="Output.dip",
 *           xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, maxdiv_h=2)

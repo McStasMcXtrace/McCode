@@ -21,7 +21,7 @@
 *           reflectivities, transmissions, ...)
 * doc:      documentation (McXtrace and component manuals)
 * misc:     miscellaneous components.
-* monitors: monitors to analyse neutron beam. Use mcplot to display results.
+* monitors: monitors to analyse beam. Use mcplot to display results.
 * obsolete: old (from previous releases) and unstable components
 * optics:   x-ray optics (mirrors, monochromators, slits, ...)
 * samples:  sample components (Powders, crystals, ...)

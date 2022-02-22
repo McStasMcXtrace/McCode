@@ -18,7 +18,7 @@
 * %D
 * Detector-like component writing x-ray state parameters to a
 * SHADOW x-ray file. Used to interface McXtrace components or
-* simulations into SHADOW. Each neutron is 104 bytes.
+* simulations into SHADOW. Each photon is 104 bytes.
 *
 * Note that when standard output is used, as is the default, no
 * monitors or other components that produce terminal output must be

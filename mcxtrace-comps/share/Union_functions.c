@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-*  McStas, neutron ray-tracing package
+*  McXtrace, photon ray-tracing package
 *  Copyright(C) 2007 Risoe National Laboratory.
 *
 * %I
@@ -3617,7 +3617,7 @@ void generate_starting_logic_list(struct starting_lists_struct *starting_lists, 
     // Start with a list of all vacuum volumes
     // Remove all volumes that are children of non-vacuum volumes
     // It is still possible to have a volume on this list that is surrounded by non-vacuum volumes, but it is hard to detect these situations,
-    //  meaning that it is ultimately partly the users responsibility to not send neutrons directly into materials.
+    //  meaning that it is ultimately partly the users responsibility to not send photons directly into materials.
     
     int volume_index,*start,*check;
     

@@ -16,10 +16,11 @@
 * Position-sensitive monitor.
 *
 * %D
-* Based on neutron component written by Kim Lefmann
 * An nx times ny pixel PSD monitor, which only counts photons with energy in an interval
 * given by Emin and Emax in nE energy bins. The default energy interval is (almost) infinite, with a single bin.
 * If nE>1 the component will output nE detector files + one which is integrated over the full energy interval.
+*
+* Based on neutron component written by Kim Lefmann
 *
 * Example: EPSD_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
             nx=90, ny=90, filename="Output.psd")

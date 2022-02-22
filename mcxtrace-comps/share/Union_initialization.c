@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-*  McStas, neutron ray-tracing package
+*  McXtrace, photon ray-tracing package
 *  Copyright(C) 2007 Risoe National Laboratory.
 *
 * %I

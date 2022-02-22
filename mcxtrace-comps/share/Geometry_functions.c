@@ -87,7 +87,7 @@ Coords transform_position(Coords ray_position, Coords component_position, Rotati
 
     Coords non_rotated_position = coords_sub(ray_position,component_position);
     
-    // Rotate the position of the neutron around the center of the cylinder
+    // Rotate the position of the photon around the center of the cylinder
     Coords rotated_coordinates = rot_apply(component_t_rotation,non_rotated_position);
     
     return rotated_coordinates;
@@ -327,13 +327,13 @@ int sample_box_intersect_advanced(double *t,int *num_solutions,double *r,double 
     coordinates.z = r[2] - geometry->center.z;
     
     Coords rotated_coordinates;
-    // Rotate the position of the neutron around the center of the cylinder
+    // Rotate the position of the photon around the center of the cylinder
     rotated_coordinates = rot_apply(geometry->transpose_rotation_matrix,coordinates);
     
     Coords velocity = coords_set(v[0],v[1],v[2]);
     Coords rotated_velocity;
     
-    // Rotate the position of the neutron around the center of the cylinder
+    // Rotate the position of the photon around the center of the cylinder
     rotated_velocity = rot_apply(geometry->transpose_rotation_matrix,velocity);
     
     double x_result,y_result,z_result;
@@ -511,7 +511,7 @@ int sample_box_intersect_simple(double *t,int *num_solutions,double *r,double *v
     Coords rotated_coordinates;
     // printf("Cords coordinates = (%f,%f,%f)\n",coordinates.x,coordinates.y,coordinates.z);
     
-    // Rotate the position of the neutron around the center of the cylinder
+    // Rotate the position of the photon around the center of the cylinder
     rotated_coordinates = rot_apply(geometry->transpose_rotation_matrix,coordinates);
     // rotated_coordinates = rot_apply(rotation_matrix_debug,coordinates);
     //     printf("Cords rotated_coordinates = (%f,%f,%f)\n",rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z);
@@ -520,7 +520,7 @@ int sample_box_intersect_simple(double *t,int *num_solutions,double *r,double *v
     Coords rotated_velocity;
     //     printf("Cords velocity = (%f,%f,%f)\n",velocity.x,velocity.y,velocity.z);
     
-    // Rotate the position of the neutron around the center of the cylinder
+    // Rotate the position of the photon around the center of the cylinder
     rotated_velocity = rot_apply(geometry->transpose_rotation_matrix,velocity);
     // rotated_velocity = rot_apply(rotation_matrix_debug,velocity);
     //     printf("Cords rotated_velocity = (%f,%f,%f)\n",rotated_velocity.x,rotated_velocity.y,rotated_velocity.z);
@@ -547,7 +547,7 @@ int r_within_box_simple(Coords pos,struct geometry_struct *geometry) {
     Coords rotated_coordinates;
     // printf("Cords coordinates = (%f,%f,%f)\n",coordinates.x,coordinates.y,coordinates.z);
     
-    // Rotate the position of the neutron around the center of the cylinder
+    // Rotate the position of the photon around the center of the cylinder
     rotated_coordinates = rot_apply(geometry->transpose_rotation_matrix,coordinates);
     
     // May be faster to check for one at a time to get an early return 0
@@ -669,7 +669,7 @@ int sample_cone_intersect(double *t,int *num_solutions,double *r,double *v,struc
     Coords rotated_velocity;
     //     printf("Cords velocity = (%f,%f,%f)\n",velocity.x,velocity.y,velocity.z);
     
-    // Rotate the position of the neutron around the center of the cone
+    // Rotate the position of the photon around the center of the cone
     rotated_velocity = rot_apply(geometry->transpose_rotation_matrix,velocity);
     // rotated_velocity = rot_apply(rotation_matrix_debug,velocity);
     //     printf("Cords rotated_velocity = (%f,%f,%f)\n",rotated_velocity.x,rotated_velocity.y,rotated_velocity.z);
@@ -1224,7 +1224,7 @@ int sample_mesh_intersect(double *t,int *num_solutions,double *r,double *v,struc
     Coords rotated_velocity;
     //     ////printf("Cords velocity = (%f,%f,%f)\n",velocity.x,velocity.y,velocity.z);
     
-    // Rotate the position of the neutron around the center of the mesh
+    // Rotate the position of the photon around the center of the mesh
     rotated_velocity = rot_apply(geometry->transpose_rotation_matrix,velocity);
     // rotated_velocity = rot_apply(rotation_matrix_debug,velocity);
     //     ////printf("Cords rotated_velocity = (%f,%f,%f)\n",rotated_velocity.x,rotated_velocity.y,rotated_velocity.z);
@@ -1412,7 +1412,7 @@ int r_within_box_advanced(Coords pos,struct geometry_struct *geometry) {
     Coords rotated_coordinates;
     // printf("Cords coordinates = (%f,%f,%f)\n",coordinates.x,coordinates.y,coordinates.z);
     
-    // Rotate the position of the neutron around the center of the cylinder
+    // Rotate the position of the photon around the center of the cylinder
     rotated_coordinates = rot_apply(geometry->transpose_rotation_matrix,coordinates);
     
     if (rotated_coordinates.z < -0.5*depth || rotated_coordinates.z > 0.5*depth) return 0;
@@ -1613,7 +1613,7 @@ int sample_cylinder_intersect(double *t,int *num_solutions,double *r,double *v,s
     // rot_set_rotation(rotation_matrix_debug,-1.0*geometry->rotation.x,-1.0*geometry->rotation.y,-1.0*geometry->rotation.z);
     // rot_transpose(geometry->rotation_matrix,rotation_matrix_debug);
 
-    // Rotate the position of the neutron around the center of the cylinder
+    // Rotate the position of the photon around the center of the cylinder
     rotated_coordinates = rot_apply(geometry->transpose_rotation_matrix,coordinates);
     // rotated_coordinates = rot_apply(rotation_matrix_debug,coordinates);
     //     printf("Cords rotated_coordinates = (%f,%f,%f)\n",rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z);
@@ -1622,7 +1622,7 @@ int sample_cylinder_intersect(double *t,int *num_solutions,double *r,double *v,s
     Coords rotated_velocity;
     //     printf("Cords velocity = (%f,%f,%f)\n",velocity.x,velocity.y,velocity.z);
     
-    // Rotate the position of the neutron around the center of the cylinder
+    // Rotate the position of the photon around the center of the cylinder
     rotated_velocity = rot_apply(geometry->transpose_rotation_matrix,velocity);
     // rotated_velocity = rot_apply(rotation_matrix_debug,velocity);
     //     printf("Cords rotated_velocity = (%f,%f,%f)\n",rotated_velocity.x,rotated_velocity.y,rotated_velocity.z);
@@ -1667,7 +1667,7 @@ int r_within_cylinder(Coords pos,struct geometry_struct *geometry) {
     Coords vector1,vector2;
     if (verbal == 1) printf("Cords start_vector = (%f,%f,%f)\n",simple_vector.x,simple_vector.y,simple_vector.z);
 
-    // Rotate the position of the neutron around the center of the cylinder
+    // Rotate the position of the photon around the center of the cylinder
     vector1 = rot_apply(geometry->rotation_matrix,simple_vector);
     if (verbal == 1) printf("Cords vector1 = (%f,%f,%f)\n",vector1.x,vector1.y,vector1.z);
     
@@ -1731,10 +1731,10 @@ int cylinder_overlaps_cylinder(struct geometry_struct *geometry1,struct geometry
     Coords vector1,vector2;
     if (verbal == 1) printf("Cords start_vector = (%f,%f,%f)\n",simple_vector.x,simple_vector.y,simple_vector.z);
 
-    // Rotate the position of the neutron around the center of the cylinder
+    // Rotate the position of the photon around the center of the cylinder
     vector1 = rot_apply(geometry1->rotation_matrix,simple_vector);
     if (verbal == 1) printf("Cords vector1 = (%f,%f,%f)\n",vector1.x,vector1.y,vector1.z);
-    // Rotate the position of the neutron around the center of the cylinder
+    // Rotate the position of the photon around the center of the cylinder
     vector2 = rot_apply(geometry2->rotation_matrix,simple_vector);
     if (verbal == 1) printf("Cords vector2 = (%f,%f,%f)\n",vector2.x,vector2.y,vector2.z);
     

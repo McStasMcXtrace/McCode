@@ -42,7 +42,7 @@
 #define KM2S 1.0e+08     /* Convert k[1/AA](McXtrace) to k[1/cm](Shadow) */
 #define KS2M 1.0e-08     /* Convert k[1/cm](Shadow) to k[1/AA](McXtrace) */
 
-long     BufferSize;       /* size of the neutron input and output buffer */
+long     BufferSize;       /* size of the photon input and output buffer */
 char*    ParDirectory;     /* parameter directory */
 int      ParDirectoryLength;
 

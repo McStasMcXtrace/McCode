@@ -1,9 +1,8 @@
 /*******************************************************************************
 *
-* McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+* McXtrace, xray-tracing package
+*         Copyright (C) 1997-2017, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
 *
 * Component: Scatter_log_iterator_stop.comp
 *
@@ -19,7 +18,7 @@
 *
 * %D
 *
-* This component marks the end of the trace-region in which pseudo-neutrons are handled. Please see the Scatter_log_iterator-component for more details.
+* This component marks the end of the trace-region in which pseudo-photons are handled. Please see the Scatter_log_iterator-component for more details.
 * N.B. This component should be immediately followed by a construction like:
 * COMPONENT a1 = Arm()
 * AT (0,0,0) ABSOLUTE
@@ -63,7 +62,7 @@ scatter_iterator_stop:
   struct Generalized_State_t *s1=MC_GETPAR(iterator,s1);
 
   if (s1->_p==-1){
-    /*we have reached the end - unset loop and reset neutron state to whatever it was before we entered the pseudo neutron iterator*/
+    /*we have reached the end - unset loop and reset photon state to whatever it was before we entered the pseudo photon iterator*/
     loop=0;
     double *ns=MC_GETPAR(iterator,nstate_initial);
     x=ns[0];y=ns[1];z=ns[2];

@@ -1,9 +1,8 @@
 /*******************************************************************************
 *
 * McXtrace, xray-tracing package
-*         Copyright 1997-2002, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+*         Copyright (C) 1997-2017, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
 *
 * Component: Monitor_nD
 *
@@ -67,7 +66,7 @@
 * angle: [-50 50] deg
 * divergence, vdiv, hdiv, xdiv, ydiv: [-5 5] deg
 * longitude, lattitude: [-180 180] deg
-* neutron: [0 simulaton_ncount]
+* photon: [0 simulaton_ncount]
 * id, pixel id: [0 FLT_MAX]
 * uservars u1,u2,u3: [-1e10 1e10]
 *
@@ -337,7 +336,7 @@ TRACE
   if (user3 != FLT_MAX) Vars.UserVariable3 = user3;
 
   /* this is done automatically
-    STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+    STORE_PHOTON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   */
 
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
