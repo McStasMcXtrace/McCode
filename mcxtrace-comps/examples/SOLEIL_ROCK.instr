@@ -100,8 +100,8 @@ INITIALIZE
             cc = 1;
         }
         else if (Etohit<=34055){
+            cc = 0;	
         }
-            cc = 0;
     }
 
     if(cc<=0){ //cc 220
