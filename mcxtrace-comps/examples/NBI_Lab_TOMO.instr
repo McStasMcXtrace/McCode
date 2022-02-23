@@ -17,7 +17,7 @@
 * Consists simply of a Mo-source, a sample, an Al-filter and a detector, all in line with each other
 * The sample is a chess-king off-shape. 
 *
-* Example: mxrun NBI_Lab_TOMO.instr fname="spectrumU50_th5.dat" Omega=0 detw=0.2 deth=0.2
+* %Example: mxrun NBI_Lab_TOMO.instr fname="spectrumU50_th5.dat" Omega=0 detw=0.2 deth=0.2 Detector: Detector_Si_I=9.87e+11
 *
 * %Parameters
 * fname: [] filename which contains the emission spectrum for the source
@@ -34,7 +34,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT NBI_Lab_TOMO(string fname="spectrumU50_th5.dat",d_sample_det=.790, d_source_sample=1.1450,Omega=0,detw=.0351,deth=.0334, MONO=0, Energy=50, deltaE=1)
+DEFINE INSTRUMENT NBI_Lab_TOMO(string fname="spectrumU50_th5.dat",d_sample_det=.790, d_source_sample=1.1450,Omega=0,detw=.0351,deth=.0334, MONO=0, Energy=50, deltaE=1, rx=-80, ry=0, rz=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -96,13 +96,13 @@ AT(0,0,1e-2) RELATIVE PREVIOUS
 
 COMPONENT sample_mnt=Arm()
 AT(0,0,d_source_sample) RELATIVE Origin
-
-
+ROTATED (0,Omega,0) RELATIVE Origin
+  
 //chess king
 COMPONENT king =Filter(
     material_datafile="Glass.dat", geometry="king.off",xwidth=1.5e-2,yheight=1.5e-2,zdepth=1.5e-2)
 AT(0,0,0) RELATIVE sample_mnt
-ROTATED (0,Omega,0) RELATIVE sample_mnt
+ROTATED (rx,ry,rz) RELATIVE sample_mnt
 
 COMPONENT e_mon1 = E_monitor(
     filename="emon1",xwidth=detw/8,yheight=detw/8,Emin=0,Emax=120,nE=1000,restore_xray=1
@@ -120,7 +120,7 @@ AT(0,0,1e-3+0.1) RELATIVE PREVIOUS
 
 
 COMPONENT Detector_Si=Detector_pn(
-    material_datafile="Silicon.dat", zdepth=1000e-6,  filename="detector_Si",xwidth=detw,yheight=deth,nx=204,ny=194, restore_xray=0)
+    material_datafile="Si.txt", zdepth=1000e-6,  filename="detector_Si",xwidth=detw,yheight=deth,nx=204,ny=194, restore_xray=0)
 AT(0,0,d_sample_det) RELATIVE sample_mnt
 
 
