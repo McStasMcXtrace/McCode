@@ -48,7 +48,7 @@
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT rock (Etohit=15918,
+DEFINE INSTRUMENT SOLEIL_ROCK (Etohit=15918,
     scan=0, 
     angle_m2a_m2b=0.008, 
     nbsample = 1, 
@@ -143,7 +143,6 @@ INITIALIZE
 
     calculated_angle=RAD2DEG*asin(12398.42*sqrt(n)/(2*5.4309*Etohit));
     Etohitkev=Etohit*(1/1e3);
-    dE = 0.01 * Etohitkev;
     fprintf(stdout,"Energie %g / Angle %g", Etohitkev, calculated_angle);
 
     if(Etohitkev<=7.98){
