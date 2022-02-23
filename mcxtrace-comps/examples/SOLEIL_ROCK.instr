@@ -159,7 +159,8 @@ INITIALIZE
         reflec_material_M2B="Pt.txt";
     }
 
-    snprintf(e_repartition_options,512,"energy  bins=500 limits=[%g %g],  y  bins=500",Etohitkev-0.02*Etohitkev, Etohitkev+0.02*Etohitkev);  
+    sprintf(e_repartition_options,"energy  bins=500 limits=[%g %g],  y  bins=500",
+        Etohitkev-0.02*Etohitkev, Etohitkev+0.02*Etohitkev);  
 %}
 
 TRACE
@@ -255,14 +256,8 @@ AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (-calculated_angle, 0, 0) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- CC crystal 2 */
-COMPONENT bragg_crystal_two = Bragg_crystal(
-    length=length_second_crystal,
-    width=25e-3,
-    material = "Si.txt",
-    h = i_h,
-    k = i_k,
-    l = i_l,
-    crystal_type = 2) 
+COMPONENT bragg_crystal_two = COPY(bragg_crystal)(
+    length=length_second_crystal) 
 AT (0, 0.01, (length_first_crystal/2)+(length_second_crystal/2)) RELATIVE bragg_crystal
 ROTATED (calculated_angle, 0, 0) RELATIVE PREVIOUS
 EXTEND
@@ -348,19 +343,10 @@ COMPONENT absorption_sample_2 = Absorption_sample(
 WHEN(nbsample==2)
 AT (0, 0, 0.5) RELATIVE PREVIOUS
 
-/* -------------------------------------------------- E monitor */ 
-COMPONENT EnergyMonitor_after_sample = Monitor_nD(  
-    xmin =-2 , 
-    xmax =2 ,
-    ymin=-2 ,
-    ymax=2, 
-    min=Etohitkev-(0.005+(Etohitkev-Eminkev)*incr), 
-    max=Etohitkev+(0.005+(Etohitkev-Eminkev)*incr), 
-    bins=500,
-    filename="EnergyMonitor_after_sample",
-    options = "energy",
-    restore_xray = 1
-) 
+/* -------------------------------------------------- E monitor */
+COMPONENT EnergyMonitor_after_sample = COPY(EnergyMonitor_before_sample)(
+        filename     = "EnergyMonitor_after_sample"
+)  
 AT (0,0,0.5) RELATIVE PREVIOUS
 
 COMPONENT psd_monitor = PSD_monitor(
