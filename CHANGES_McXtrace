@@ -10,6 +10,195 @@
 *
 *
 *************************************************************************/
+CHANGES in 3.0
+
+McXtrace 3.0 is the first release in the 3.0 series with a completely rewritten code-generator and thereby
+support for GPU-acceleration through the OpenACC programming model.
+
+THANKS:
+- Thanks to: all members of the team (and also to the McStas team), for pulling together to make this possible.
+- Thanks to the mentors at the GPU Hackathons that really made this happen
+- Thanks to NVIDIA for making the hackathons happen
+
+INSTALLATION:
+- Installation instructions for McXtrace-3.0 and support libraries may be found on our the McCode github-site:
+https://github.com/McStasMcXtrace/McCode/tree/master/Install_McXtrace-3.x
+- OpenACC acceleration is at present available out of the box on Linux. On windows it is possible to target GPU-acceleration
+through Windows Subsystem For Linux v2: WSL2. The present McXtrace-3.0 implementation relies the concept managed memory, which
+is at the time of writing only supported by the NVHPC-kit, downloadable from https://developer.nvidia.com/hpc-sdk
+
+Main new features and changes:
+1. New code-generation scheme based on functions instead of #defines, which brings
+  - Highly improved interfacing to regular debugging tools. 
+  - Much improved compilation-times, the code is better suited for modern compilers
+  - In most cases a speed-up of order 20%
+  - The xray _particle is now represented by a struct
+  - The component types and instances are also represented by structs
+  - In the generic TRACE function of a given component type, the _comp var is
+    short-hand for "whatever the component instance is"
+  - New instrument section of USERVARS %{ double example_flag; %} which enriches
+    the _particle struct to allow per particle extra information to be tracked.
+  - In component DECLARE blocks, assignments can no longer be done and all declarations
+    must be listed independently, i.e double a; is OK, double a,b; is not. Variables in
+    this scope are automatically so-called "OUTPUT PARAMETERS" (we may deprecate that
+    keyword completely for the official McXtrace 3.0 release)
+  - Components no longer support DEFINITION PARAMETERS, instead the SETTING PARAMETERS
+    must be used, which now includes a vector and string type supplementing the (default)
+    double/MCNUM and int types.
+  - New macros have been added for
+        - INSTRUMENT_GETPAR(parameter_name)
+        - COMP_GETPAR(component, parameter_name) which is similar to the legacy MC_GETPAR
+        - MC_GETPAR3(component_class, component_name,parameter_name)
+        - The function particle_getvar(_particle,"variable",success) provides component-access
+        to the instrument USERVARS, e.g. in Monitor_nD.
+        - Further, the new cogen implements support for Nvidia GPU's, for details see point 2 below.
+2. Support for OpenACC acceleration on NVIDIA GPU's on Linux systems
+  - #pragma driven, inserted by the code-generation, but also implemented in libs and comps
+  - Speedups measured using top-notch NVIDIA V100 datacenter cards are in the range of 10-600 with
+    respect to a single-core of a modern CPU. See ( 
+  - Platform support / compiler configuration:
+    - Required compiler for GPU/OpenACC: NVIDIA HPC SDK 20.x or newer. Community edition works fine. Older compiler
+    may work in most cases.
+    - Required GPU hardware: NVIDIA Tesla card + configured driver
+    - Windows: Possible with WSL 2.0.
+    - macOS: At this point UNSUPPORTED for OpenACC since NVIDIA does not ship a package for
+      this platform.
+    - Linux: Full acceleration support with GPU, and with CPU/multicore.
+  - Install the compiler and put it on your system PATH. Install and configure Nvidia drivers for your card.
+  - We hope that GCC will offer better support for OpenACC in the near future.
+  - Tool support
+    - On Linux and macOS mxrun is preconfigured so that mxrun -c --openacc compiles with:
+    - Linux: nvc -ta:tesla,managed,deepcopy -DOPENACC
+    - Linux: You may configure for use on CPU/multicore via: nvc -ta:multicore -DOPENACC
+    - The --funnel option can be used to launch the FUNNEL simulation flow, see description below.
+  - For both of the above, adding -Minfo:accel will output verbose information on parallelisation
+  - In mxgui, the mxrun --openacc configuration can be selected via the preferences
+  - Both mxgui and mxrun allow combining --openacc and --mpi if you have multiple GPU's available.
+    The n'th mpi process will attempt to use the k'th GPU, where k = #available GPU's % #MPI nodes.
+3. Special McStas 3.0 grammar for mixed CPU/GPU mode:
+  - A "FUNNEL" mode has been added, which allows
+    - Mixed GPU/CPU mode, were sections of the instrument are executed on each device type, with
+      copying of photon-bunches back and forth.
+    - When this instrument grammar is specified, it signifies that the component should be executed
+      on CPU rather than GPU.
+       CPU SPLIT 10 COMPONENT Sample = Something()
+    - Sections before and after that are not marked CPU will be executed on GPU.
+    - If a component includes the NOACC token in the component header, the CPU-mode is forced
+      through the compilation, as it signifies that the component does NOT support GPU. This is
+      for the time being the case for Undulator & Union_master
+4. Interopreability between McXtrace 1.7 and 3.0
+   Simulations of the two version are able to interchange particles through the MCPL_output/input
+   components, i.e. through event data files.
+5. Limitations:
+   - Some components: those that rely on external libraries such as GSL and the Union subsystem, cannot run GPU.
+   These may however be run CPU-side in FUNNEL-mode. In terms of the undulator component which tends to be one
+   of the first components (if not the first), the program flow is mostly indentical to normal.
+   - We do not ship an updated manual for McXtrace 3.0. Instead you may rely on online docs from the 
+   McCode github wiki: https://github.com/McStasMcXtrace/McCode/wiki
+
+Tools:
+   - The perl-suite of tools are no longer actively supported. They may still work.
+
+Platforms:
+   - We support the platforms Debian/Ubuntu and Fedora for Linux, 64 bit Windows 10, and recent 64 bit macOS (big Sur and
+   newer). For FreeBSD you may build from source, an entry into the ports system is pending.
+
+Components and Instruments:
+   - Most components and instruments work out of the box. See https://new-nightly.mcxtrace.org for details.
+   - Monitor_nD.comp: the uservar utility should now be given a string insted of a token name to measure a USERVAR entity
+   tagged onto the photon. The string is used to look-up the name of the variable which should be declared in the USERVARS-section
+   of the instrument file.
+
+ 
+CHANGES in 1.7
+
+This is mainly a bugfix/update release, but does include the first model of a beamline at the SOLEIL synchrotron.
+It also marks a switch for McXtrace to the the GPLv3 license.
+
+1. Improved installation scripts
+        1. Installs cleanly on Mac silicon 
+2. Updated examples:
+        1. MAXIV_DanMAX_pxrd2d.instr
+3. New examples:
+        1. SOLEIL ROCK beamline.
+        2. ESRF BM29 skeleton beamline.
+        3. Example of Air-scattering block.
+        4. Test example for the GROUP langnuage feature
+        5. Union demo test example
+        6. New Example of Compton scattering union process.
+3. Updated Components
+        1. PowderN.comp: Fix bug with faulty packing factor logic, which lead to wrong intensities when used with SPLIT.
+	2. Lens_parab_Cyl_rough.comp, Lens_parab_rough.comp, Lens_Kinoform.comp: documentation issues
+	3. Mirror.comp: documentation update
+	4. Mirror_curved.comp, Mirror_elliptic.comp: Use reflectivity library
+	5. Mirror_toroid.comp: Fix for stable handling of reflectivity file
+	6. Absorption_sample.comp: Fix inner/outer volume logic 
+	7. Source_genesis13.comp, Source_simplex.comp: Documentation issues.
+        8. Air.comp: Correct scattering amplitude.
+        9. New: Laue_crystal_BC.comp: experimental model of a Laue crystal available for testing.
+5. Updated libraries:
+        1. Reflectivity-lib has a series of bugfixes. 
+4. New tools:
+        1. Test tool for component writers' convenience.
+        2. Scripts for generating reflectivity files.
+5. License change:
+        The release includes a switch to the GPLv3-license for McXtrace. The underlying reason for this 
+        is to help collaboration wih the Debian project.
+
+Keep an eye open for the forthcoming McXtrace 3.0 technology-preview that will allow GPU acceleration
+using OpenACC on NVIDIA cards.
+
+CHANGES in 1.6
+
+1. Union concept for X-ray
+        A subsystem under McXtrace that separate physics from geometry, 
+        thereby allowing multiscattering processes from object to object.
+2. Scatter logger subsystem
+        A concept to allow quantification of parasitic scattering from e.g. mirror substrate.
+3. New Components
+        Sources, Source_div_quasi.comp - quasi-stochastic sampled set divergence source.
+        Samples, Abs_objects.comp - A set of absorbing objects
+
+        Misc, Scatter_logger.comp - The set of components defining the scatter logger interface.  
+        Misc, Scatter_logger_stop.comp 
+        Misc, Scatter_log_iterator.comp
+        Misc, Scatter_log_iterator_stop.comp
+        Misc, Shape.comp - Inactive shape, to embellish instrument display, e.g. a flight tube. 
+        
+        Optics, Grating_trans.comp - Linear transmission grating 
+        Optics, Lens_CRL_RTM.comp - 1D-compound refractive lens based of the ray transfer matrix method
+
+        Union, Union_master.comp - Set of components defining the Union subsystem.
+        Union, Union_cylinder.comp 
+        Union, Union_sphere.comp
+        Union, Union_make_material.comp
+        Union, Union_box.comp
+        Union, Compton_xrl_process.comp
+        Union, Incoherent_process.comp
+        Union, Union_logger_2D_space.comp
+        Union, Union_logger_1D.comp
+        ...and more...
+
+        Contrib, Bragg_crystal_simple.comp - Simple, easy-to-use reflective crystal.
+4. Many new test-examples and bug fixes.
+        Refer to new-nightly.mcxtrace.org for daily tests
+5. New example instruments
+        Test_mirror_parabolic.instr - Template instrument for the parabolic reflector. 
+        Test_Detector_pn.instr - Templat/test instrument for a detector with quantum efficiency.
+        Test_grating_trans.instr - Template transmission grating instrument
+        Focal_pt_monitor.instr - Template for setting up direct measurement of focal point.
+        NBI_Lab_TOMO.instr - Laboratory tomography setup.
+        Airport_scannerII.instr - Lab-based large scale tomograhy setup with multiple off-objects
+        Union_incoherent.instr - Examples that shows how to use Union.
+        Union_geom_demo.instr 
+        Template_DCM.instr - a template for how to set up a double crystal monochromator.
+        Template_Johann_spec.instr - template for a Johann spectrometer (such as FXE@E-XFEL) 
+        Template_Scatter_log_losses.instr - template for logging losses in a mirror
+        Test_source_spectra.instr
+
+6. A GUI feature to connect the McXtrace GUI with your editor of choice.
+7. Many updates to existing beamline models.
+
 CHANGES in 1.5
 
 1. Standardized reflectivity library, making it much simpler to deal with reflectivity files

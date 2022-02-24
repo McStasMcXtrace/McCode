@@ -37,7 +37,6 @@ find mcxtrace-comps-win -type f -name \*.comp -exec sed -i 's+@MCCODE_LIB@/minic
 ./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-tools-python-mxdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mingw64 "" -- nsis64
-./mkdist mcxtrace-clusterscripts $1 tools/cluster-scripts/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" mingw64 "o" -- nsis64
 ./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" mingw64 "" -- nsis64
 
@@ -65,8 +64,8 @@ if [ "x$2" != "x" ]; then
     cp MSMPI/*.* dist/extras
     cp NeXus/*.* dist/extras
     cp Perl/*.msi dist/
-    # Needs creation : cp $WORK/INSTALL-McStas-2.x/Windows/README.md dist/
+    cp $WORK/INSTALL-McXtrace-1.x/Windows/README.md dist/
     mkdir dist/single-packages
     mv dist/mcxtrace-* dist/single-packages
-    # Needs creation : cp INSTALL-McStas-2.x/Windows/README.md dist
+    cp INSTALL-McXtrace-1.x/Windows/README.md dist
 fi

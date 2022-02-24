@@ -144,23 +144,22 @@
 * focus_flip: [1]   Controls the sense of d_phi. If 0 d_phi is measured against the xz-plane. If !=0 d_phi is measured against zy-plane.
 * pack: [1]         Packing factor
 * Delta_d: [AA]     Global relative Delta_d/d spreading when the 'w' column is not available. Use 0 if ideal.
-* format: [ ]       Name of the format, or list of column indexes (see Description). N.b. no qoutes!
-* p_inc: [1]        Fraction of incoherently scattered rays.
-* p_transmit: [1]   Fraction of transmitted (only attenuated) rays. Used to improve statistics of the scattering pattern wrt. the attenuated,
-*                   direct beam. It is typically beneficial to leave this parameter at a value << 1.
+* format:  [ ]      Name of the format, or list of column indexes (see Description). N.b. no qoutes!
+* p_inc:   [1]      Fraction of incoherently scattered rays.
+* p_transmit: [1]   Fraction of transmitted (only attenuated) rays.
 * p_interact: [1]   Fraction of events interacting with sample, e.g. 1-p_transmit-p_inc.
 * concentric: [1]   Indicate that this component has a hollow geometry and may contain other components. It should then be duplicated after the inside part (only for box, cylinder, sphere).
-* geometry: [str]   Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust.
-* barns: [1]        Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2, (barns=1 for laz, barns=0 for lau type files).
-* Vc:    [AA^3]     Volume of unit cell=nb atoms per cell/density of atoms.
-* DW: [1]           Global Debye-Waller factor when the 'DW' column is not available. Use 1 if included in F2.
-* weight: [g/mol]   Atomic/molecular weight of material [g/mol]
+* geometry:   [str] Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust.
+* barns:   [1]      Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2, (barns=1 for laz, barns=0 for lau type files).
+* Vc:      [AA^3]   Volume of unit cell=nb atoms per cell/density of atoms.
+* DW:      [1]      Global Debye-Waller factor when the 'DW' column is not available. Use 1 if included in F2.
+* weight:  [g/mol]  Atomic/molecular weight of material [g/mol]
 * density: [g/cm^3] Density of material. rho=density/weight/1e24*N_A.
 * nb_atoms:[1]      Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell.
 *
 * OUTPUT PARAMETERS:
-* line_info: [struct]     Internal structure containing many members/info.
-* line_info.type: [char]  Interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent.
+* line_info: [struct]     Internal structure containing many members/info [struct]
+* line_info.type: [char]  Interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent [char]
 * line_info.dq: [Angs^-1] Wavevector transfer of last coherent scattering event.
 *
 * %L
@@ -193,7 +192,7 @@ DEFINITION PARAMETERS (format=Undefined, mat_format=mat_Undefined)
 SETTING PARAMETERS (string reflections=0, string material=0, string geometry=0,
 radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
 pack=1, Vc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
-DW=0, nb_atoms=1, d_phi=0, d_theta=360, p_interact=0,
+DW=0, nb_atoms=1, d_phi=0, d_theta=360, p_interact=0.8,
 concentric=0, density=0, weight=0, barns=1, focus_flip=0)
 OUTPUT PARAMETERS (line_info,columns,mat_columns,offdata)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
@@ -718,34 +717,33 @@ INITIALIZE
   if (!line_info.yheight_i) {
     line_info.yheight_i = yheight;
   }
-  if (p_interact) {
-    if (p_interact < p_inc) { double tmp=p_interact; p_interact=p_inc; p_inc=tmp; }
-    p_transmit = 1-p_interact-p_inc;
-  }
 
-  if (p_inc + p_transmit > 1) {
-    MPI_MASTER(
-    printf("PowderN: %s: You have requested an unmeaningful choice of the 'p_inc' and 'p_transmit' parameters (sum is %g, exeeding 1). Fixing.\n",
-                 NAME_CURRENT_COMP, p_inc+p_transmit);
-    );
-    if (p_inc > p_transmit) p_transmit=1-2*p_inc;
-    else p_transmit=1-2*p_inc;
-  } else if (p_inc + p_transmit == 1) {
-    MPI_MASTER(
-    printf("PowderN: %s: You have requested all photons be attenuated\n"
-           "WARNING  or incoherently scattered!\n", NAME_CURRENT_COMP);
-    );
+  if (!p_interact){
+    fprintf(stderr,"WARNING(%s): p_interact=0, adjusting to 0.01, to avoid algorithm instability\n",NAME_CURRENT_COMP);
+    p_interact=1e-2;
   }
+  if (!p_inc){
+    fprintf(stderr,"WARNING(%s): p_inc=0, adjusting to 0.01, to avoid algorithm instability\n",NAME_CURRENT_COMP);
+    p_inc     =1e-2;
+  }
+  if (!p_transmit){
+    fprintf(stderr,"WARNING(%s): p_transmit=0, adjusting to 0.01, to avoid algorithm instability\n",NAME_CURRENT_COMP);
+    p_transmit=1e-2;
+  }
+  double p_sum=p_interact+p_inc+p_transmit;
+  p_interact = p_interact / p_sum;
+  p_inc      = p_inc      / p_sum;
+  p_transmit = p_transmit / p_sum;
 
   if (concentric) {
     MPI_MASTER(
     printf("PowderN: %s: Concentric mode - remember to include the 'opposite' copy of this component !\n"
            "WARNING  The equivalent, 'opposite' comp should have concentric=0\n", NAME_CURRENT_COMP);
     );
-    if (p_transmit == 0) {
+    if (p_transmit < 0.1) {
       MPI_MASTER(
-      printf("PowderN: %s: Concentric mode and p_transmit==0 !?\n"
-             "WARNING  Don't you want any transmitted xrays?\n", NAME_CURRENT_COMP);
+      printf("PowderN: %s: Concentric mode and p_transmit<0.1 !\n"
+        "WARNING  Consider increasing p_transmit as few particles will reach the inner hollow.\n", NAME_CURRENT_COMP);
       );
     }
   }
@@ -901,15 +899,13 @@ TRACE
         line_info.k = k;
         line_info.nb_refl += line_info.Nq;
         line_info.nb_refl_count++;
+        if(pack!=1){
+          /*apply packing factor correction*/
+          line_info.my_a *= pack;
+          line_info.my_inc *= pack;
+          line_info.my_s_k2_sum *=pack;
+        }
     }
-
-    if(pack!=1){
-      /*apply packing factor correction*/
-      line_info.my_a *= pack;
-      line_info.my_inc *= pack;
-      line_info.my_s_k2_sum *=pack;
-    }
-
 
     if (l3 < 0) {
       l3=0; /* Already past sample?! */

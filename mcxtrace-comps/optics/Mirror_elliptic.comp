@@ -28,13 +28,14 @@
 *
 * %P
 * INPUT PARAMETERS
-* R: [1] reflectivity of mirror.
-* a: [m] long half axis (along z).
-* b: [m] 1st short half axis (along x)
-* c: [m] 2nd short half axis (along y)
-* yheight: [m] yheight (width) of the mirror.
-* zdepth: [m] zdepth (length) of the mirror.
-* z_offset: [m] shift of mirror centre along the z-axis.
+* R: [1]         Reflectivity of mirror.
+* coating: [str] Datafile containing either mirror material constants or reflectivity  numbers.
+* a: [m]         long half axis (along z).
+* b: [m]         1st short half axis (along x)
+* c: [m]         2nd short half axis (along y)
+* yheight: [m]   yheight (width) of the mirror.
+* zdepth: [m]    zdepth (length) of the mirror.
+* z_offset: [m]  shift of mirror centre along the z-axis.
 * 
 * %E
 *******************************************************************************/
@@ -42,7 +43,7 @@
 
 DEFINE COMPONENT Mirror_elliptic
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (R=1, a=0, b=0, c=1, yheight=1, zdepth=1)
+SETTING PARAMETERS (R=1, a=0, b=0, c=1, yheight=1, zdepth=1, string coating="")
 OUTPUT PARAMETERS (a2,b2,c2,Ox,Oy,Oz)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -50,6 +51,7 @@ DECLARE
 %{
   double a2,b2,c2;
   double Ox,Oy,Oz;
+  t_Reflec re;
 %}
 
 INITIALIZE
@@ -69,10 +71,17 @@ INITIALIZE
   b2=b*b;
   c2=c*c;
 
-  /*check for combinations of width, length etc*/
+  if (coating && strlen(coating)) {
+    status=reflec_Init(&re,COATING_UNDEFINED,coating);
+  }else{
+    /*assume a constant reflectivity*/
+    status=reflec_Init(&re,CONSTANT,R0);
+  }
 
-  /* check for valid z_offset*/
-
+  if(status!=0){
+    fprintf(stderr,"ERROR (%s): Could not interpret coating/reflectivity. Aborting.\n", NAME_CURRENT_COMP);
+    exit(-1);
+  }
 %}
 
 TRACE
@@ -114,9 +123,12 @@ TRACE
        kfz=kz+2*kdotn*nz;
 
        kx=kfx;ky=kfy;kz=kfz;
+
        /*adjust weight of ray*/
+       double q=2.0*kdotn;
+       double R=reflecq(&re,q,0,k*K2E,fabs(90-acos(kdotn/k)*RAD2DEG));
        p*=R;
-       /*update phase - as an approximation turn by 180 deg.*/
+       /*update phase - as an approximation turn by 180 deg.*/;
        phi+=M_PI;
      }
   }

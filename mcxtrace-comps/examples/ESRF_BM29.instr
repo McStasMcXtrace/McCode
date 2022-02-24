@@ -8,7 +8,8 @@
 * Date: October 28th, 2021
 * Version: $Revision$
 * Origin: KU-Science
-* Release: McXtrace 1.0
+* Release: McXtrace 1.7
+* %INSTRUMENT_SITE: ESRF
 *
 * %Description
 * Toy model used for testing various sample components for solution-SAXS 

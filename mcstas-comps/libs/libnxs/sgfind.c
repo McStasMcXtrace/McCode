@@ -1,1 +1,0 @@
-../../../3rdparty/nxs/libnxs/sgfind.c

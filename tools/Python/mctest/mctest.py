@@ -633,7 +633,7 @@ if __name__ == '__main__':
     parser.add_argument('testversion', nargs="?", help='mccode version to test')
     parser.add_argument('--ncount', nargs=1, help='ncount sent to %s' % (mccode_config.configuration["MCRUN"]) )
     parser.add_argument('--mpi', nargs=1, help='mpi nodecount sent to %s' % (mccode_config.configuration["MCRUN"]) )
-    parser.add_argument('--openacc', action='store_true', help='openacc flag sent to %s' % (mccode_config.configuration["MCRUN"])
+    parser.add_argument('--openacc', action='store_true', help='openacc flag sent to %s' % (mccode_config.configuration["MCRUN"]))
     parser.add_argument('--configs', action='store_true', help='test config files under mccodelib/MCCODE')
     parser.add_argument('--config', nargs="?", help='test this specific config only - label name or absolute path (enables --configs)')
     parser.add_argument('--instr', nargs="?", help='test only intruments matching this filter (py regex)')

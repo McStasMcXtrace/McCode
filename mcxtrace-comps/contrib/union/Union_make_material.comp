@@ -51,8 +51,6 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS(string process_string="NULL",my_absorption,absorber=0, string material_string="NULL")
 OUTPUT PARAMETERS (loop_index,this_material,accepted_processes,global_material_element)
 
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
-
 SHARE
 %{
 %include "read_table-lib"

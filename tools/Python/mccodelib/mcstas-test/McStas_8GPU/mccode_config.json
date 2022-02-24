@@ -1,6 +1,6 @@
 {
   "configuration": {
-    "MCCODE_VERSION": "3.0-dev",
+    "MCCODE_VERSION": "3.x-dev",
     "MCCODE": "mcstas",
     "MCRUN": "mcrun --openacc",
     "MCPLOT": "mcplot-pyqtgraph",
@@ -15,7 +15,7 @@
   "compilation": {
     "CFLAGS": "-ta=tesla,managed -Minfo=accel -DOPENACC -DUSE_MPI -lmpi -L/opt/nvidia/hpc_sdk/Linux_x86_64/21.7/comm_libs/mpi/lib -I/opt/nvidia/hpc_sdk/Linux_x86_64/21.7/comm_libs/mpi/include",
     "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
-    "MPIFLAGS": "-DUSE_MPI -lmpi -I/usr/lib/x86_64-linux-gnu/openmpi/include/ -L/usr/lib/x86_64-linux-gnu/openmpi/lib/",
+    "MPIFLAGS": "-DUSE_MPI -lmpi -L/opt/nvidia/hpc_sdk/Linux_x86_64/21.7/comm_libs/mpi/lib -I/opt/nvidia/hpc_sdk/Linux_x86_64/21.7/comm_libs/mpi/include",
     "OACCFLAGS": "-ta:tesla,managed -DOPENACC",
     "CC": "gcc",
     "OACC": "nvc",

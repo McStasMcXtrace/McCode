@@ -1,1 +1,0 @@
-../../../3rdparty/nxs/libnxs/sgsi.c

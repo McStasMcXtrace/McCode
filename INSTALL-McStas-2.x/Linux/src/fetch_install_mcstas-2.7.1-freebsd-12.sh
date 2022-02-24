@@ -44,6 +44,10 @@ sleep 10
 # McStas Perl commandline tools
 cd mcstas-tools-perl-cmdline-2.7.1-src
 cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+# McXtrace Perl commandline tools
+cd mcxtrace-tools-perl-cmdline-3.0-src
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcxtrace=1
+>>>>>>> 583832a02 (Name changes everywhere):INSTALL-McXtrace-3.x/Linux/src/fetch_install_mcxtrace-3.0-freebsd-12.sh
 make
 sudo make install
 cd ..
@@ -136,4 +140,3 @@ cd $WORK
 
 # Make this version the system-wide mcstas
 sudo /usr/local/mcstas/2.7.1/bin/postinst set_mccode_default
-

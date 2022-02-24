@@ -75,12 +75,12 @@ INITIALIZE
     if (!zdepth_i) zdepth_i=yheight_i;
     if (!xwidth_i) xwidth_i=yheight_i;
   }else if (!yheight_i && !radius_i){
-    fprintf(stderr,"Absorption_sample(%s): Warning: Inner volume = 0\n",NAME_CURRENT_COMP);
+    fprintf(stderr,"Warning: (%s): Warning: Inner volume = 0\n",NAME_CURRENT_COMP);
     prms_i.V=0;
   }
   /* Loading datafiles */
   if ( material_datafile_o && (status=Table_Read(&t_o,material_datafile_o,0))==-1){
-    fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile_o,NAME_CURRENT_COMP);
+    fprintf(stderr,"Error: (%s) Could not parse file \"%s\".\n",NAME_CURRENT_COMP, material_datafile_o);
     exit(-1);
   }
   if (t_o.columns==3) {  /*which column is the energy in and which holds mu*/
@@ -104,9 +104,9 @@ INITIALIZE
     prms_o.rho=rho_o;
   }
   if (prms_i.V){ /*if volume is zero - don't bother to read the file*/
-    printf("Loading inner datafiles");
+    printf("INFO (%s): Loading inner datafile.\n", NAME_CURRENT_COMP);
     if ( material_datafile_i && (status=Table_Read(&t_i,material_datafile_i,0))==-1){
-      fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile_i,NAME_CURRENT_COMP);
+      fprintf(stderr,"Error (%s): Could not parse file \"%s\".\n",NAME_CURRENT_COMP,material_datafile_i);
       exit(-1);
     }
     if (t_i.columns==3) {
@@ -141,7 +141,11 @@ TRACE
   }else{
     status=box_intersect(&l0o,&l1o,x,y,z,kx,ky,kz,xwidth_o,yheight_o,zdepth_o);
   }
-  if (status ){ /*rays intersects the enclosing material*/
+  if (status && l1o>0 ){ /*rays intersects the enclosing material but has not gone past it*/
+    if(l0o>0){
+      /*already inside sample - don't move*/
+      l0o=0;
+    }
     PROP_DL(l0o);
     SCATTER;
     status_i=0;
@@ -154,6 +158,10 @@ TRACE
       status_i=box_intersect(&l0i,&l1i,(x-x_i),(y-y_i),(z-z_i),kx,ky,kz,xwidth_i,yheight_i,zdepth_i);
     }
     if(status_i){ /*rays intersect the inclusion*/
+      if(l0i<0){
+        /*already inside inclusion*/
+        l0i=0;
+      }
       PROP_DL(l0i);
       SCATTER;
       PROP_DL(l1i-l0i);

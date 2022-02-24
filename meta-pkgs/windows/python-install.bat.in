@@ -9,7 +9,6 @@
 @echo Miniconda install completed, proceeding with McCode dependencies...
 @SET PATH=c:\\@FLAVOR@-@VERSION@\\bin;c:\\@FLAVOR@-@VERSION@\\miniconda3;c:\\@FLAVOR@-@VERSION@\\miniconda3\\Scripts\\;c:\\@FLAVOR@-@VERSION@\\miniconda3\\Library\\bin;c:\\@FLAVOR@-@VERSION@\\miniconda3\\Library\\mingw-w64\\bin;%PATH%
 @REM conda config --add channels conda-forge
-@conda install mingw -y
 @conda install -c msys2 m2w64-gsl -y
 @conda install matplotlib numpy scipy pillow -y
 @pip install pyqt5 qscintilla mpld3 pyqtgraph pyaml ply tornado pillow

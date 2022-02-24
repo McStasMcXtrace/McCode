@@ -43,7 +43,7 @@
 * INPUT PARAMETERS
 *
 * filename:        [str] Name of photon file to write. Default is standard output [string]. If not given, a unique name will be used.
-* verbose:         [1]   If 1) Print summary information for created MCPL file. 2) Also print summary of first 10 particles information stored in the MCPL file. >2) Also print information for first 10 particles as they are being stored by McStas.
+* verbose:         [1]   If 1) Print summary information for created MCPL file. 2) Also print summary of first 10 particles information stored in the MCPL file. >2) Also print information for first 10 particles as they are being stored by McXtrace.
 * polarisationuse: [1]   Enable storing the polarisation state of the photon.
 * doubleprec:      [1]   Use double precision storage
 * userflag:        [1]   Extra variable to attach to each photon. The value of this variable will be packed into a 32 bit integer.

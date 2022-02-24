@@ -13,9 +13,11 @@
 * Crude model of a laboratory SAXS-instrument mimicking the type sold by SAXSlab/JJ-Xray Systems.
 *
 * %Description
-* This is a very sketchy model of a SAXS-system, related to the old design of JJ X-ray systems.
-* It has been superseeded by the SAXS_saxslab model.
-*
+* This is a very sketchy model of a SAXS-system, related to the old design of JJ X-ray systems. 
+* It has been superseeded by the SAXS_saxslab model. 
+* Limitations include:
+* - Focusing only in 1 direction.
+* - iNo reflectivity coating is implemented.
 *
 * %Parameters
 * pin2_pos: [m] distance between 1st and 2nd pinhole in beam tube
@@ -62,7 +64,7 @@ AT(0,0,0.1) RELATIVE apparent_source
 ROTATED(0,0,-90) RELATIVE apparent_source
 
 COMPONENT optic=Mirror_curved(
-    radius=20,length=0.2)
+        radius=20,length=0.2, coating="", R0=1)
 AT(0,0,0) RELATIVE optic_arm
 ROTATED(0,2.75,0) RELATIVE optic_arm
 EXTEND

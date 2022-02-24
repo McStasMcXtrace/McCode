@@ -170,7 +170,7 @@
 *
 * Optional input parameters:
 *
-* p_transmit: [1] Monte Carlo probability for neutrons to be transmitted without any scattering. 
+* p_transmit: [1] Monte Carlo probability for photons to be transmitted without any scattering. 
 *                 Used to improve statistics of the scattering pattern wrt. the attenuated, direct beam. 
 *                 It is typically beneficial to leave this parameter at a value << 1. Use the value -1 to 
 *                 deactivate any stratified sampling and partition probabilities fully in accordance with the material cross-sections.
@@ -863,7 +863,6 @@ TRACE
   int event_counter;            /* scattering event counter */
   double kix, kiy, kiz, ki;     /* Initial wave vector [1/AA] */
   double kfx, kfy, kfz;         /* Final wave vector */
-  //double v;                     /* Neutron velocity */
   double tau_max;               /* Max tau allowing reflection at this ki */
   double rho_x, rho_y, rho_z;   /* the vector ki - tau */
   double rho;

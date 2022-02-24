@@ -8,7 +8,7 @@
 * Version: 0.5
 * Origin: SasView, DTU, European Spallation Source ERIC 
 *
-* This SANS sample exposes <a href="http://www.sasview.org">SasView's</a> scattering kernels to McStas. In this way SasView's monodisperse scattering kernels can be call from McStas.
+* This SANS sample exposes <a href="http://www.sasview.org">SasView's</a> scattering kernels to McXtrace. In this way SasView's monodisperse scattering kernels can be call from McXtrace.
 *
 * %D
 * Sample for use in SANS instruments. The models describe mono disperse particles in thin solution. The sample geometry may have the shape:
@@ -24,14 +24,14 @@
                          xwidth=0.01, yheight=0.01, zdepth=0.005,)
 * 
 *
-* The algorithm of this component requires use of the ISO C standard c99. You could use MCSTAS_CFLAGS like MCSTAS_CFLAGS = -std=c99 -g -O2 -lm. 
+* The algorithm of this component requires use of the ISO C standard c99. You could use MCXTRACE_CFLAGS like MCXTRACE_CFLAGS = -std=c99 -g -O2 -lm. 
 * Or, add the flag "-std=c99" to "C flags" in the mcgui or mcgui-py config. 
 *
-* The list of scattering models in SasView is called sasmodels. The list of McStas available <a href="http://www.sasview.org/sasview/user/models/model_functions.html#model">SasView sasmodels</a> are found in the table below.
+* The list of scattering models in SasView is called sasmodels. The list of McXtrace available <a href="http://www.sasview.org/sasview/user/models/model_functions.html#model">SasView sasmodels</a> are found in the table below.
 *
 * A few models may require manual documentation lookup using the above link to the SasView site. 
 *
-* McStas does currently not support multiplication of formfactor models with structure factor models. 
+* McXtrace does currently not support multiplication of formfactor models with structure factor models. 
 * 
 * The 2D scattering scattering kernels are denoted by modelname_xy. I.e. to evalulate scattering from aligned cylinders use model_index=10 to use cylinder_xy. 
 * 
