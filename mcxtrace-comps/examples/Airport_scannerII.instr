@@ -15,7 +15,7 @@
 * 
 * %Description
 * This instrument simply has a lab source, a few monitors and a multi-off object scene
-* by means of the Abs_objects component. BY sullpiying a control fiel and a set of 
+* by means of the Abs_objects component. By supliying a control file and a set of 
 * off/ply-files a scene is put together which may be used for tomography style
 * simulations. The default input file contains a single object: a mechanical socket.
 * 

@@ -41,7 +41,7 @@
 *******************************************************************************/
 DEFINE COMPONENT Abs_objects
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (int refraction=1, string objects="input_small.dat", string geometry=0) 
+SETTING PARAMETERS (int refraction=1, string objects="input_abs_objects_template.dat", string geometry=0) 
 OUTPUT PARAMETERS (object_data,objectsc)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
