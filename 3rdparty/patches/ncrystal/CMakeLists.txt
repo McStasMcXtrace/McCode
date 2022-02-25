@@ -2,7 +2,7 @@
 ##                                                                            ##
 ##  This file is part of NCrystal (see https://mctools.github.io/ncrystal/)   ##
 ##                                                                            ##
-##  Copyright 2015-2020 NCrystal developers                                   ##
+##  Copyright 2015-2021 NCrystal developers                                   ##
 ##                                                                            ##
 ##  Licensed under the Apache License, Version 2.0 (the "License");           ##
 ##  you may not use this file except in compliance with the License.          ##
@@ -69,7 +69,7 @@ if(NOT DEFINED NCRYSTAL_NOTOUCH_CMAKE_BUILD_TYPE)
 endif()
 
 #Setup project:
-project(NCrystal VERSION 2.2.2 LANGUAGES CXX C)
+project(NCrystal VERSION 2.7.3 LANGUAGES CXX C)
 
 # Set module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -122,15 +122,22 @@ set(NCrystal_PYMODDIR "${NCrystal_PYPATH}/NCrystal")#e.g. <prefix>/share/NCrysta
 #set(NCrystal_DOCDIR "${CMAKE_INSTALL_DOCDIR}")#e.g. <prefix>/doc>#todo: use
 set(NCrystal_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake")#e.g. <prefix>/lib/cmake>
 
-#Get a few relative paths installation root (we use CMAKE_CURRENT_BINARY_DIR as
-#prefix here, but it should not matter which as long as it is an absolute path):
-file(RELATIVE_PATH NCrystal_relpath_CMAKEDIR2ROOT   "${CMAKE_CURRENT_BINARY_DIR}/${NCrystal_CMAKEDIR}" "${CMAKE_CURRENT_BINARY_DIR}/")
-file(RELATIVE_PATH NCrystal_relpath_PYMODDIR2LIBDIR "${CMAKE_CURRENT_BINARY_DIR}/${NCrystal_PYMODDIR}" "${CMAKE_CURRENT_BINARY_DIR}/${NCrystal_LIBDIR}")
-file(RELATIVE_PATH NCrystal_relpath_BINDIR2LIBDIR   "${CMAKE_CURRENT_BINARY_DIR}/${NCrystal_BINDIR}"   "${CMAKE_CURRENT_BINARY_DIR}/${NCrystal_LIBDIR}")
-file(RELATIVE_PATH NCrystal_relpath_BINDIR2DATAROOT "${CMAKE_CURRENT_BINARY_DIR}/${NCrystal_BINDIR}"   "${CMAKE_CURRENT_BINARY_DIR}/${NCrystal_DATAROOT}")
-file(RELATIVE_PATH NCrystal_relpath_BINDIR2CMAKEDIR "${CMAKE_CURRENT_BINARY_DIR}/${NCrystal_BINDIR}"   "${CMAKE_CURRENT_BINARY_DIR}/${NCrystal_CMAKEDIR}")
-file(RELATIVE_PATH NCrystal_relpath_BINDIR2INCDIR   "${CMAKE_CURRENT_BINARY_DIR}/${NCrystal_BINDIR}"   "${CMAKE_CURRENT_BINARY_DIR}/${NCrystal_INCDIR}")
-file(RELATIVE_PATH NCrystal_relpath_BINDIR2ROOT     "${CMAKE_CURRENT_BINARY_DIR}/${NCrystal_BINDIR}"   "${CMAKE_CURRENT_BINARY_DIR}/")
+#Get a few relative paths, mostly for expansion in various installed files (we
+#use PROJECT_BINARY_DIR as prefix here, but it should not matter which as long
+#as it is an absolute path):
+file(RELATIVE_PATH NCrystal_relpath_PYMODDIR2LIBDIR "${PROJECT_BINARY_DIR}/${NCrystal_PYMODDIR}" "${PROJECT_BINARY_DIR}/${NCrystal_LIBDIR}")
+file(RELATIVE_PATH NCrystal_relpath_BINDIR2LIBDIR   "${PROJECT_BINARY_DIR}/${NCrystal_BINDIR}"   "${PROJECT_BINARY_DIR}/${NCrystal_LIBDIR}")
+file(RELATIVE_PATH NCrystal_relpath_BINDIR2DATAROOT "${PROJECT_BINARY_DIR}/${NCrystal_BINDIR}"   "${PROJECT_BINARY_DIR}/${NCrystal_DATAROOT}")
+file(RELATIVE_PATH NCrystal_relpath_BINDIR2CMAKEDIR "${PROJECT_BINARY_DIR}/${NCrystal_BINDIR}"   "${PROJECT_BINARY_DIR}/${NCrystal_CMAKEDIR}")
+file(RELATIVE_PATH NCrystal_relpath_BINDIR2INCDIR   "${PROJECT_BINARY_DIR}/${NCrystal_BINDIR}"   "${PROJECT_BINARY_DIR}/${NCrystal_INCDIR}")
+file(RELATIVE_PATH NCrystal_relpath_BINDIR2ROOT     "${PROJECT_BINARY_DIR}/${NCrystal_BINDIR}"   "${PROJECT_BINARY_DIR}/")
+file(RELATIVE_PATH NCrystal_relpath_CMAKEDIR2ROOT   "${PROJECT_BINARY_DIR}/${NCrystal_CMAKEDIR}" "${PROJECT_BINARY_DIR}/")
+file(RELATIVE_PATH NCrystal_relpath_CMAKEDIR2BINDIR   "${PROJECT_BINARY_DIR}/${NCrystal_CMAKEDIR}" "${PROJECT_BINARY_DIR}/${NCrystal_BINDIR}")
+file(RELATIVE_PATH NCrystal_relpath_CMAKEDIR2LIBDIR   "${PROJECT_BINARY_DIR}/${NCrystal_CMAKEDIR}" "${PROJECT_BINARY_DIR}/${NCrystal_LIBDIR}")
+file(RELATIVE_PATH NCrystal_relpath_CMAKEDIR2INCDIR   "${PROJECT_BINARY_DIR}/${NCrystal_CMAKEDIR}" "${PROJECT_BINARY_DIR}/${NCrystal_INCDIR}")
+file(RELATIVE_PATH NCrystal_relpath_CMAKEDIR2PYPATH   "${PROJECT_BINARY_DIR}/${NCrystal_CMAKEDIR}" "${PROJECT_BINARY_DIR}/${NCrystal_PYPATH}")
+file(RELATIVE_PATH NCrystal_relpath_CMAKEDIR2DATAFILESDIR   "${PROJECT_BINARY_DIR}/${NCrystal_CMAKEDIR}" "${PROJECT_BINARY_DIR}/${NCrystal_DATAFILESDIR}")
+
 
 #Dummy interface target for common properties. Note that the interface is always
 #built with C++11 compatible compiler (which CMake will choose from a wide
@@ -172,7 +179,7 @@ if ( MODIFY_RPATH )
   #NB: CMake 3.18 introduces CheckLinkerFlag module which we can eventually use
   #    instead of try_compile!!
   if( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.14.0" )
-    set(TMP_TESTDIR ${CMAKE_CURRENT_BINARY_DIR}/test_dtagflags)
+    set(TMP_TESTDIR ${PROJECT_BINARY_DIR}/test_dtagflags)
     file(WRITE ${TMP_TESTDIR}/test.c "int main() { return 0; }\n")
     try_compile(LINKER_HAS_DTAGS "${TMP_TESTDIR}" "${TMP_TESTDIR}/test.c" LINK_OPTIONS -Wl,--disable-new-dtags)
     if (LINKER_HAS_DTAGS)
@@ -214,64 +221,12 @@ if (BUILD_EXTRA)
   file_globsrc( SRCS_EXTRA "ncrystal_extra/*/*.cc")
   list(APPEND SRCS_NC "${SRCS_EXTRA}")
   file_globsrc( DATAFILES_NXS "data/*.nxs")
-  if ( EMBED_DATA )
-    message(WARNING "EMBED_DATA=ON so .nxs files are ignored despite normally being installed when BUILD_EXTRA=ON.")
-  else()
-    list(APPEND DATAFILES "${DATAFILES_NXS}")
-  endif()
+  list(APPEND DATAFILES "${DATAFILES_NXS}")
 endif()
 
 if (INSTALL_SETUPSH AND NOT INSTALL_PY)
   message(WARNING "INSTALL_SETUPSH is not possible when INSTALL_PY is OFF (forcing INSTALL_SETUPSH=OFF).")
   set(INSTALL_SETUPSH OFF)
-endif()
-
-if ( EMBED_DATA )
-  if (INSTALL_DATA)
-    message(WARNING "EMBED_DATA and INSTALL_DATA flags were both enabled (forcing INSTALL_DATA=OFF).")
-    set(INSTALL_DATA OFF)
-  endif()
-
-  #Embed data (needs to invoke python process to generate C++ code from .ncmat files)
-
-  #We must find python3 interpreter. The FindPython3 module is only available
-  #from CMake 3.12 and is reported to not work well until CMake 3.15.5.
-  if( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.15.5" )
-    find_package (Python3 COMPONENTS Interpreter)#With cmake 3.15.5 we can put
-                                                 #3.5 REQUIRED here and simplify
-                                                 #the code below.
-  else()
-    #Older CMake, look for python3 command in path:
-    execute_process(COMMAND python3 -c "import sys;print('%s.%s.%s'%sys.version_info[0:3])"
-      RESULT_VARIABLE status OUTPUT_VARIABLE Python3_VERSION ERROR_QUIET)
-    if(status AND NOT status EQUAL 0)
-      set(Python3_FOUND OFF)
-      set(Python3_Interpreter_FOUND OFF)
-    else()
-      set(Python3_FOUND ON)
-      set(Python3_Interpreter_FOUND ON)
-      set(Python3_EXECUTABLE python3)
-    endif()
-  endif()
-  if( Python3_FOUND AND NOT Python3_Interpreter_FOUND)
-    set(Python3_FOUND OFF)
-  endif()
-  if ( Python3_FOUND AND "${Python3_VERSION}" VERSION_LESS "3.5.0" )
-    set(Python3_FOUND OFF)
-  endif()
-  if (NOT Python3_FOUND)
-    message(FATAL_ERROR "Python3.5+ interpreter not found (required when EMBED_DATA options are enabled).")
-  endif()
-  #Generate C++ code from the .ncmat files:
-  execute_process(COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/ncrystal_python/ncrystal_ncmat2cpp"
-    "-n" "NCrystal::AutoGenNCMAT::registerStdNCMAT"
-    "--regfctname" "NCrystal::internal::registerEmbeddedNCMAT(const char*,const char*)"
-    "-o" "${CMAKE_CURRENT_BINARY_DIR}/autogen_ncmat_data.cc" ${DATAFILES} RESULT_VARIABLE status )
-  if(status AND NOT status EQUAL 0)
-    message(FATAL_ERROR "Failure while trying to invoke ncrystal_ncmat2cpp (needed since the EMBED_DATA flag was enabled).")
-  endif()
- list(APPEND SRCS_NC "${CMAKE_CURRENT_BINARY_DIR}/autogen_ncmat_data.cc")
-  message("-- Generated autogen_ncmat_data.cc with embedded NCMAT data (will be compiled into the NCrystal library).")
 endif()
 
 set( NC_STRICT_COMP_FLAGS -Wall -Wextra -pedantic -Werror )
@@ -338,17 +293,13 @@ target_include_directories(NCrystal PRIVATE "${PROJECT_SOURCE_DIR}/ncrystal_core
  PUBLIC   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/ncrystal_core/include>
         $<INSTALL_INTERFACE:${NCrystal_INCDIR}> )
 
-if (EMBED_DATA)
-  target_compile_definitions(NCrystal PRIVATE NCRYSTAL_STDCMAKECFG_EMBED_DATA_ON)
-endif()
-
 #Make sure we link in math functions correctly (typically the linker needs libm on unix, but nothing on Windows).
 set(TMP_TESTLIBMSRC "#include <math.h>\nint main(int argc,char** argv) { (void)argv;double a=(exp)(argc+1.0); return (int)(a*0.1); }\n")
-set(TMP_TESTDIR ${CMAKE_CURRENT_BINARY_DIR}/test_libm)
+set(TMP_TESTDIR ${PROJECT_BINARY_DIR}/test_libm)
 file(WRITE ${TMP_TESTDIR}/test.c "${TMP_TESTLIBMSRC}")
 try_compile(ALWAYS_HAS_MATH "${TMP_TESTDIR}" "${TMP_TESTDIR}/test.c")
 if (NOT ALWAYS_HAS_MATH)
-  set(TMP_TESTDIR ${CMAKE_CURRENT_BINARY_DIR}/test_libm2)
+  set(TMP_TESTDIR ${PROJECT_BINARY_DIR}/test_libm2)
   file(WRITE ${TMP_TESTDIR}/test.c "${TMP_TESTLIBMSRC}")
   try_compile(MATH_NEEDS_LIBM "${TMP_TESTDIR}" "${TMP_TESTDIR}/test.c" LINK_LIBRARIES m)
   if (MATH_NEEDS_LIBM)
@@ -450,9 +401,11 @@ foreach(pluginentry ${BUILTIN_PLUGIN_LIST})
   set(NCPLUGIN_DEVMODE OFF)
   set(NCPLUGIN_ASBUILTIN ON)
   unset(NCPLUGIN_SRCFILES)
+  unset(NCPLUGIN_DATAFILES)
   unset(NCPLUGIN_COMPILEDEFS)
   unset(NCPLUGIN_INCDIRS)
-  add_subdirectory(${pluginlocalsrcdir} ${CMAKE_CURRENT_BINARY_DIR}/ncplugins/${NCPlugin_NAME})
+  set(plugin_binary_dir "${PROJECT_BINARY_DIR}/ncplugins/${NCPlugin_NAME}")
+  add_subdirectory(${pluginlocalsrcdir} "${plugin_binary_dir}")
   if (NOT NCPLUGIN_SRCFILES OR NOT NCPlugin_NAME)
     message(FATAL_ERROR "Problem adding plugin (did not provide both NCPLUGIN_SRCFILES and NCPlugin_NAME variables): ${pluginentry}")
   endif()
@@ -462,6 +415,16 @@ foreach(pluginentry ${BUILTIN_PLUGIN_LIST})
   if (NCPLUGIN_INCDIRS)
     set_property(SOURCE ${NCPLUGIN_SRCFILES} APPEND PROPERTY INCLUDE_DIRECTORIES ${NCPLUGIN_INCDIRS})
   endif()
+  if (NCPLUGIN_DATAFILES)
+    foreach(df ${NCPLUGIN_DATAFILES})
+      #Check that data file name follows convention: ncplugin-<pluginname>_*.ncmat
+      get_filename_component(dfbn "${df}" NAME)
+      if(NOT dfbn MATCHES "ncplugin-${NCPlugin_NAME}_.+\.ncmat")
+        message(FATAL_ERROR "Problem adding plugin: name of datafile ${dfbn} does not have required form: ncplugin-${NCPlugin_NAME}_*.ncmat")
+      endif()
+      list(APPEND DATAFILES "${df}")
+    endforeach()
+  endif()
   list(APPEND NCrystal_builtin_plugin_names ${NCPlugin_NAME})
   target_sources(NCrystal PRIVATE ${NCPLUGIN_SRCFILES})
   message("---- Configured plugin ${NCPlugin_NAME}")
@@ -469,7 +432,7 @@ endforeach()
 if (NCrystal_builtin_plugin_names)
   target_compile_definitions(NCrystal PRIVATE NCRYSTAL_HAS_BUILTIN_PLUGINS)
   #Add generated .cc file which can load the plugins.
-  set(ncplugcc "${CMAKE_CURRENT_BINARY_DIR}/autogen_ncplugins.cc.in")
+  set(ncplugcc "${PROJECT_BINARY_DIR}/autogen_ncplugins.cc.in")
   file(WRITE ${ncplugcc} "//Autogenerated file\n#include <iostream>\n#include \"NCrystal/NCPluginMgmt.hh\"\n")
   foreach(NCPlugin_NAME ${NCrystal_builtin_plugin_names})
     file(APPEND ${ncplugcc} "namespace NCrystalPlugin_${NCPlugin_NAME} { void registerPlugin(); }\n")
@@ -480,9 +443,59 @@ if (NCrystal_builtin_plugin_names)
   endforeach()
   file(APPEND ${ncplugcc} "  }\n")
   file(APPEND ${ncplugcc} "}\n")
-  configure_file("${ncplugcc}" "${CMAKE_CURRENT_BINARY_DIR}/autogen_ncplugins.cc" COPYONLY)
-  target_sources(NCrystal PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/autogen_ncplugins.cc")
+  configure_file("${ncplugcc}" "${PROJECT_BINARY_DIR}/autogen_ncplugins.cc" COPYONLY)
+  target_sources(NCrystal PRIVATE "${PROJECT_BINARY_DIR}/autogen_ncplugins.cc")
   message("-- Generated autogen_ncplugins.cc for enabling embedded plugins (will be compiled into the NCrystal library).")
+endif()
+
+if ( EMBED_DATA )
+  if (INSTALL_DATA)
+    message(WARNING "EMBED_DATA and INSTALL_DATA flags were both enabled (forcing INSTALL_DATA=OFF).")
+    set(INSTALL_DATA OFF)
+  endif()
+
+  target_compile_definitions(NCrystal PRIVATE NCRYSTAL_STDCMAKECFG_EMBED_DATA_ON)
+
+  #Embed data (needs to invoke python process to generate C++ code from .ncmat files)
+
+  #We must find python3 interpreter. The FindPython3 module is only available
+  #from CMake 3.12 and is reported to not work well until CMake 3.15.5.
+  if( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.15.5" )
+    find_package (Python3 COMPONENTS Interpreter)#With cmake 3.15.5 we can put
+                                                 #3.5 REQUIRED here and simplify
+                                                 #the code below.
+  else()
+    #Older CMake, look for python3 command in path:
+    execute_process(COMMAND python3 -c "import sys;print('%s.%s.%s'%sys.version_info[0:3])"
+      RESULT_VARIABLE status OUTPUT_VARIABLE Python3_VERSION ERROR_QUIET)
+    if(status AND NOT status EQUAL 0)
+      set(Python3_FOUND OFF)
+      set(Python3_Interpreter_FOUND OFF)
+    else()
+      set(Python3_FOUND ON)
+      set(Python3_Interpreter_FOUND ON)
+      set(Python3_EXECUTABLE python3)
+    endif()
+  endif()
+  if( Python3_FOUND AND NOT Python3_Interpreter_FOUND)
+    set(Python3_FOUND OFF)
+  endif()
+  if ( Python3_FOUND AND "${Python3_VERSION}" VERSION_LESS "3.5.0" )
+    set(Python3_FOUND OFF)
+  endif()
+  if (NOT Python3_FOUND)
+    message(FATAL_ERROR "Python3.5+ interpreter not found (required when EMBED_DATA options are enabled).")
+  endif()
+  #Generate C++ code from the .ncmat files:
+  execute_process(COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/ncrystal_python/ncrystal_ncmat2cpp"
+    "-n" "NCrystal::AutoGenNCMAT::registerStdNCMAT"
+    "--regfctname" "NCrystal::internal::registerEmbeddedNCMAT(const char*,const char*)"
+    "-o" "${PROJECT_BINARY_DIR}/autogen_ncmat_data.cc" ${DATAFILES} RESULT_VARIABLE status )
+  if(status AND NOT status EQUAL 0)
+    message(FATAL_ERROR "Failure while trying to invoke ncrystal_ncmat2cpp (needed since the EMBED_DATA flag was enabled).")
+  endif()
+  target_sources(NCrystal PRIVATE "${PROJECT_BINARY_DIR}/autogen_ncmat_data.cc")#too late to just append to SRCS_NC
+  message("-- Generated autogen_ncmat_data.cc with embedded NCMAT data (will be compiled into the NCrystal library).")
 endif()
 
 if (INSTALL_DATA)
