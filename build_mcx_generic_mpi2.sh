@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "import os;print(os.cpu_count())")}
 
 # rapid-build script for mcxtrace-kernel dev:
 
