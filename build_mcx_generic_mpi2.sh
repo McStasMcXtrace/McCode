@@ -2,8 +2,8 @@
 
 # rapid-build script for mcxtrace-kernel dev:
 
-git submodule init
-git submodule update
+
+./3rdparty/sync.sh
 
 WORK=`pwd`
 
