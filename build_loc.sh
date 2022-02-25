@@ -2,8 +2,8 @@
 
 # rappid-build script for mcstas-kernel dev:
 
-git submodule init
-git submodule update
+
+./3rdparty/sync.sh
 
 WORK=`pwd`
 

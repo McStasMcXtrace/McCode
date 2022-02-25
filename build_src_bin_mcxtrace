@@ -7,8 +7,8 @@ if [ "x$1" = "x" ]; then
 fi
 
 # Ensure our 3rd party modules are in place and updated
-git submodule init
-git submodule update
+
+./3rdparty/sync.sh
 
 # 64-bit
 ./mkdist mcxtrace $1 "" "" linux64 "" -- src bin

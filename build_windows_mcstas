@@ -11,10 +11,10 @@ fi
 # Ensure our 3rd party modules are in place and updated
 THIRDPARTY=`ls 3rdparty | grep -v patches`
 cd 3rdparty
-echo $THIRDPARTY | xargs -n1 rm -r
+
 cd -
-git submodule init
-git submodule update
+
+./3rdparty/sync.sh
 
 
 for MODULE in `echo $THIRDPARTY`

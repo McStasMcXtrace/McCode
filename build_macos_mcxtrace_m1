@@ -7,8 +7,8 @@ if [ "x$1" = "x" ]; then
 fi
 
 # Ensure our 3rd party modules are in place and updated
-git submodule init
-git submodule update
+
+./3rdparty/sync.sh
 
 # This is an app bundle being built, but non-relocatable.
 export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/

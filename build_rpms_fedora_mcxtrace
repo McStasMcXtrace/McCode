@@ -9,10 +9,10 @@ fi
 # Ensure our 3rd party modules are in place and updated
 THIRDPARTY="mcpl"
 cd 3rdparty
-echo $THIRDPARTY | xargs -n1 rm -r
+
 cd -
-git submodule init
-git submodule update --recursive --remote --recursive --remote
+
+./3rdparty/sync.sh  
 
 
 for MODULE in `echo $THIRDPARTY`
