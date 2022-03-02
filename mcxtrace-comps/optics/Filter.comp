@@ -120,11 +120,16 @@ INITIALIZE
   if (header_parsed[1]){Ar=strtod(header_parsed[1],NULL);}
   if (header_parsed[2]){rho=strtod(header_parsed[2],NULL);}
   else{fprintf(stderr,"Warning(%s): %s not found in header of %s, set to 1\n",NAME_CURRENT_COMP,"rho",material_datafile);rho=1;}
-  /*which columns holds the mus*/
-  mu_c=5;
-  if (table.columns==3) mu_c=1;
-
-  delta_prefactor= NA*(rho*1e-24)/Ar * 2.0*M_PI*RE;
+ 
+  /*If we are using a three column format assume only attenuation
+   I.e. set the delta prefactor to 0*/
+  if (table.columns==3) {
+    mu_c=1;
+    delta_prefactor=0;
+  } else {
+    mu_c=5;
+    delta_prefactor= NA*(rho*1e-24)/Ar * 2.0*M_PI*RE;
+  }
   if(10*(double)mcget_ncount()>(table.max_x-table.min_x)/(table.step_x)){
     /*it is probably worth Rebinning*/
     printf("%s: Rebinning material data (%s) for faster tracing...",NAME_CURRENT_COMP,material_datafile); 
