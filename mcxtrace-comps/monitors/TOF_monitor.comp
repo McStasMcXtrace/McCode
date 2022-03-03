@@ -51,7 +51,9 @@ DECLARE
     DArray1d TOF_N;
     DArray1d TOF_p;
     DArray1d TOF_p2;
-    double t_min, t_max, delta_t;
+    double t_min;
+    double t_max;
+    double delta_t;
   %}
 INITIALIZE
   %{
