@@ -15,15 +15,15 @@
 * 
 * %Description
 * This instrument simply has a lab source, a few monitors and a multi-off object scene
-* by means of the Abs_objects component. By supplying a control file and a set of 
-* off/ply-files a scene is put together which may be used for radiography (and tomography) style
+* by means of the Abs_objects component. By supliying a control file and a set of 
+* off/ply-files a scene is put together which may be used for tomography style
 * simulations. The default input file contains a single object: a mechanical socket.
 * 
-* %Example Airport_scannerII.instr -n1e5 posX=-0.25 posY=-0.3 Detector: psd2_I=0.000629398
+* %Example: Airport_scannerII.instr -n1e5 posX=-0.25 posY=-0.3 Detector: psd2_I=0.000629398
 *
 * %Parameters
 * SFILE: [ ]    Name of file that contains the off/ply parameters for the scene
-* ANGLE: [deg]    Rotation around y-axis
+* ANGLE: [ ]    Rotation around y-axis
 * posX: [m]     Displacement of scene along x-axis
 * posY: [m]     Displacement of scene along y-axis
 * posZ: [m]     Displacement of scene along z-axis
@@ -33,6 +33,7 @@
 *******************************************************************************/
 
 DEFINE INSTRUMENT Airp_scannerII(string SFILE="input_abs_objects_template.dat",ANGLE=0,posX=0,posY=0,posZ=0)
+DEPENDENCY " -DLOADPATH=@MCCODE_LIB@/data "
 
 DECLARE
 %{
@@ -43,6 +44,7 @@ DECLARE
   double trow=0.6;
 
   int dNx,dNy;
+  char fullfile[256];
 %}
 
 
@@ -57,6 +59,17 @@ INITIALIZE
   deth=s*dNy*2e-3;//7.0/6.0*troh;
   detw=s*dNx*2e-3;//7.0/6.0*trow;
 
+#define QUOTE(name) #name
+#define STR(macro) QUOTE(macro)
+
+#ifndef LOADPATH
+#define LOADPATH=/usr/share/mcxtrace/3.0/data
+#endif
+
+#define LOADPATH_ STR(LOADPATH)
+sprintf(fullfile,"%s/%s",LOADPATH_,SFILE);
+printf("Using the input file: %s\n", fullfile);
+  
 %}
 
 TRACE
@@ -77,7 +90,7 @@ COMPONENT sample_mount_point = Arm()
 AT(0,0,3) RELATIVE Origin
 ROTATED (0,ANGLE,0) RELATIVE Origin
 
-COMPONENT sample_scan=Abs_objects(objects=SFILE)
+COMPONENT sample_scan=Abs_objects(objects=fullfile)
 AT (posX,posY,posZ) RELATIVE sample_mount_point
 
 COMPONENT psd2 = PSD_monitor(restore_xray=1,nx=dNx,ny=dNy,filename="psd2.dat",xwidth=detw,yheight=deth)
