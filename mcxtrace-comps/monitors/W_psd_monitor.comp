@@ -87,7 +87,6 @@ TRACE
       i = floor((x - xmin)*nx/(xmax - xmin));
       j = floor((y - ymin)*ny/(ymax - ymin));
       double k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
-      p2=p*p;
 #pragma acc atomic
       PSD_N[i][j] += 1;
       W1=p*k*K2E*1.6022e-16;
