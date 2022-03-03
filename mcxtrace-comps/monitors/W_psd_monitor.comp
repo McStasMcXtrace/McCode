@@ -52,6 +52,10 @@ SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yhei
 OUTPUT PARAMETERS (PSD_N, PSD_W, PSD_W2)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
+SHARE %{
+  %include "array-lib"
+%}
+
 DECLARE
   %{
   DArray2d PSD_N;
