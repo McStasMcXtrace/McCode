@@ -48,9 +48,9 @@ OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2, t_min, t_max, delta_t)
 
 DECLARE
   %{
-    double TOF_N[nt];
-    double TOF_p[nt];
-    double TOF_p2[nt];
+    DArray1d TOF_N;
+    DArray1d TOF_p;
+    DArray1d TOF_p2;
     double t_min, t_max, delta_t;
   %}
 INITIALIZE
@@ -67,12 +67,10 @@ INITIALIZE
       exit(0);
     }
 
-    for (i=0; i<nt; i++)
-    {
-      TOF_N[i] = 0;
-      TOF_p[i] = 0;
-      TOF_p2[i] = 0;
-    }
+    TOF_N = create_darr1d(nt);
+    TOF_p = create_darr1d(nt);
+    TOF_p2 = create_darr1d(nt);
+    
     if (tmax!=0)
     {
       t_max=tmax;
@@ -95,9 +93,12 @@ TRACE
     { 
       i = floor((t-t_min)/delta_t);              /* Bin number */
       if(i >= 0 && i < nt) {
-        TOF_N[i]++;
-        TOF_p[i] += p;
-        TOF_p2[i] += p*p;
+#pragma acc atomic
+	TOF_N[i] = TOF_N[i] + 1;
+#pragma acc atomic
+        TOF_p[i] = TOF_p[i] + p;
+#pragma acc atomic
+        TOF_p2[i] = TOF_p2[i] + p*p;
         SCATTER;
       }
     }
