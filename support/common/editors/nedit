@@ -272,7 +272,7 @@ nedit.highlightPatterns: Matlab:1:0{\n\
 	Verilog:Default\n\
 	NEdit Macro:Default\n\
 	C:Default\n\
-	McStas Instrument:1:0{\n\
+	McStas/McXtrace Instrument:1:0{\n\
 		cplus comment:"//":"$"::Comment::\n\
 		preprocessor cplus comment:"//":"$"::Comment:preprocessor line:\n\
 		comment:"/\\*":"\\*/"::Comment::\n\
@@ -304,7 +304,7 @@ nedit.languageModes: 	Ada:.ada .ad .ads .adb .a:::::::\n\
 	LaTeX:.tex .sty .cls:::::::\n\
 	Makefile:Makefile makefile:::::::\n\
 	Matlab:.m::::::".,/\\`'!|@#%^&*()-=+{}[]"":;<>?~":\n\
-	McStas Instrument:.instr .comp:"<(DEFINE|INSTRUMENT|COMPONENT)>":::::".,/\\`'!|@#%^&*()-=+{}[]"":;<>?~":\n\
+	McStas/McXtrace Instrument:.instr .comp:"<(DEFINE|INSTRUMENT|COMPONENT)>":::::".,/\\`'!|@#%^&*()-=+{}[]"":;<>?~":\n\
 	NEdit Macro:.nm .neditmacro:::::::\n\
 	Pascal:.pas .p .int:::::::\n\
 	Perl:.pl .pm .p5 .PL:"^[ \\t]*#[ \\t]*!.*perl":Auto:None:::".,/\\\\`'!$@#%^&*()-=+{}[]"":;<>?~|":\n\
