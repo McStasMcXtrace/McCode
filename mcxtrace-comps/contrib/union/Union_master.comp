@@ -9,6 +9,7 @@
 * Version: $Revision: 0.8 $
 * Origin: ESS DMSC & DTU Physics
 *
+* The Master Union assembles specifications (e.g. processes, materials, geometries).
 *
 * %D
 * Part of the Union components, a set of components that work together and thus

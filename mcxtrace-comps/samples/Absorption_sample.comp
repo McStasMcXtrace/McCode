@@ -29,6 +29,8 @@
 *
 * %P
 * Input parameters: 
+* material_datafile_o: [str] material for outer volume
+* material_datafile_i: [str] material for inner volume
 * radius_o: [m] Radius of "outer" enclosing material cylinder (0)
 * xwidth_o: [m] Width of "outer" enclosing material box (yheight)
 * yheight_o: [m] Height of "outer enclosing material box (1) 

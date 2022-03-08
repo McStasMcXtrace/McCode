@@ -31,8 +31,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Lens_Kinoform
-DEFINITION PARAMETERS (string datafile="kinoform.txt", material_datafile="Si.txt",Re=2.8179402894e-5,Na=6.02214179e23)
-SETTING PARAMETERS (yheight=1e-2,xwidth=5.268e-4,deltaN=0)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (yheight=1e-2,xwidth=5.268e-4,deltaN=0,string datafile="kinoform.txt", string material_datafile="Si.txt",Re=2.8179402894e-5,Na=6.02214179e23)
 OUTPUT PARAMETERS (prms,mat_data)
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 

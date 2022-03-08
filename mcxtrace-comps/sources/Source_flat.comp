@@ -33,6 +33,7 @@
 * dist:   [m]   Distance to target along z axis.
 * focus_xw:[m]  Width of target
 * focus_yh:[m]  Height of target
+* focus_r: [m]  Radius of target (superseeds focus_xh, focus_yh)
 * E0:     [keV] Mean energy of xrays.
 * dE:     [keV] Energy half spread of x-rays (flat or gaussian sigma).
 * lambda0:[AA]  Mean wavelength of x-rays.

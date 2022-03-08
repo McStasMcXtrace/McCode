@@ -11,9 +11,8 @@
 * %I
 * Written by: Erik Knudsen 
 * Date: November 11, 2019
-* Version: $Revision$
+* Revision: 1.5
 * Origin: Risoe
-* Release: McXtrace 1.5
 *
 * Specialized X-ray source for reading in SPECTRA 10 source definitions
 *
@@ -39,7 +38,7 @@
 * %VALIDATION
 *
 * %BUGS
-* Absolute intensity of 4D (x,y,x',y') is nor correctly normalized.
+* Absolute intensity of 4D (x,y,x',y') is not correctly normalized.
 *
 * %P
 * E0: [keV]         Mean energy of X-rays.

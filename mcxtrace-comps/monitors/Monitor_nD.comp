@@ -7,11 +7,9 @@
 * Component: Monitor_nD
 *
 * %Identification
-* Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
-* Modified for xray use by: Erik B Knudsen
+* Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>, Modified for xray use by: Erik B Knudsen
 * Date: 14th Feb 2000.
 * Origin: <a href="http://www.ill.fr">ILL</a>
-* Version: $Revision$
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
 * Modified by: EF, 01st Feb 2001 : PreMonitor for correlation studies (0.13.6)
 * Modified by: EF, 5th  Apr 2001 : use global functions (0.14) compile faster
@@ -155,15 +153,10 @@
 *        a 4pi detector which outputs an event list with pixelID from the actual
 *        detector surface, starting from index 100.
 *   options = "list all kx ky kz limits 0 2000" 
-*        records all events with 0<kz<2000 AA^{-1}, _and_ -2000<kx,ky<2000 AA^{-1} (default limits).
-*
-* To dynamically define a number of bins, or limits:
-*   Use in DECLARE:    char op[256];
-*   Use in INITIALIZE: sprintf(op, "lambda limits=[%g %g], bins=%i", lmin, lmax, lbin);
-*   Use in TRACE:      Monitor_nD(... options=op ...)
+*        records all events with kz in [0 2000] AA^{-1}, _and_ kx in [-2000 2000] AA^{-1} (default limits).
 *
 * <b>How to monitor any instrument/component variable into a Monitor_nD</b>
-* Suppose you want to monitor a variable 'age' which you assign somwhere in
+* Suppose you want to monitor a variable 'age' which you assign somewhere in
 * the instrument:
 *      COMPONENT MyMonitor = Monitor_nD(
 *       xwidth = 0.1, yheight = 0.1,

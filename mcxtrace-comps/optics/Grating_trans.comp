@@ -41,9 +41,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Grating_trans
-DEFINITION PARAMETERS (fixed_delta=0)
+DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth=1e-3, yheight=1e-3, period=1e-6,gamma=0.5,zdepth=1e-6,sdepth=0, string material="Au.txt",
-      string substrate="",int max_order=2)
+      string substrate="",int max_order=2, fixed_delta=0)
 OUTPUT PARAMETERS (order, Z, mu_c, Ar, rho, table, delta_prefactor)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 

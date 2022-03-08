@@ -9,6 +9,8 @@
 * Version: $Revision: 0.1 $
 * Origin: ESS DMSC & DTU Physics
 *
+* Material description in a Union.
+*
 * %D
 * Part of the Union components, a set of components that work together and thus
 *  separates geometry and physics within McXtrace.

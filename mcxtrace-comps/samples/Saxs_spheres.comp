@@ -47,7 +47,7 @@
 * target_y:   position of target to focus at [m]
 * target_z:
 * sphere_mtrl: [] Material datafile from which to find absorption. If none is given absorption is neglected. 
-* mu_c: [5] Column of the datafiel which contains absorption coefficients.
+* mu_c: [5] Column of the datafile which contains absorption coefficients.
 *
 *
 * %Link

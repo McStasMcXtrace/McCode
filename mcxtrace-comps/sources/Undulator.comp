@@ -39,7 +39,7 @@
 * phase:  [ ] Initial phase of radiation.
 * randomphase: [ ] If !=0 phase will be random (I.e. the emitted radiation is completely incoherent).
 * focus_xw: [m] Width of target window.
-* focus yh: [m] Height of target window.
+* focus_yh: [m] Height of target window.
 * dist: [m] Distance from source plane to target window along the optical axis.
 * E0: [keV] Center of emitted energy spectrum (overrides lambda0).
 * dE: [keV] Half-width of emitted energy spectrum.
@@ -55,7 +55,7 @@
 DEFINE COMPONENT Undulator
 DEFINITION PARAMETERS (verbose=0)
 SETTING PARAMETERS (E0=0, dE=0, phase=0, randomphase=1, Ee=2.4, dEe=0, Ie=0.4, tbunch=0, t0=0, B=0, K=0,
-        gap=1e-3, int Nper=1, lu=16e-3, sigey=0, sigex=0, sigepx=0, sigepy=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0, quick_integ=0,
+        gap=1e-3, int Nper=1, lu=16e-3, sigey=0, sigex=0, sigepx=0, sigepy=0, focus_xw=0, focus_yh=0, dist=1, quick_integ=0,
         E1st=0)
 OUTPUT PARAMETERS (prms,alpha,MELE)
 DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
