@@ -4,7 +4,7 @@
 SasView_generator.py analyzes C-files prefixed "sas_" in the specified directory.
 It the C-files contain valid sasmodels, it generates a file bassed on these - "sasview_proxy.c".
 This file is written to the same directory as the C-files (and thus may overwrite any previous version of the file).
-It also generates rudimentary, but necessary, documentation and inserts it into the mcstas component.
+It also generates rudimentary, but necessary, documentation and inserts it into the mcxtrace component.
 The modified component template (suffix .Template) is output as a new file. The input component template must contain
 MCDOC and MCDOC_END flags in the header.
 The new component file has the same base name, except that the .Template suffix is removed.

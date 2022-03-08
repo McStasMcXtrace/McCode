@@ -12,7 +12,7 @@
 * Modified for xray use by: Erik B Knudsen
 * Date: 14th Feb 2000.
 * Origin: <a href="http://www.ill.fr">ILL</a>
-* Release: McStas 1.6
+* Release: McXtrace 1.2
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
 * Modified by: EF, 01st Feb 2001 : PreMonitor for correlation studies (0.13.6)
 * Modified by: EF, 5th  Apr 2001 : use global functions (0.14) compile faster
@@ -68,7 +68,7 @@
 * angle: [-50 50] deg
 * divergence, vdiv, hdiv, xdiv, ydiv: [-5 5] deg
 * longitude, lattitude: [-180 180] deg
-* neutron: [0 simulaton_ncount]
+* photon: [0 simulaton_ncount]
 * id, pixel id: [0 FLT_MAX]
 * uservars u1,u2,u3: [-1e10 1e10]
 *
@@ -97,7 +97,7 @@
 *     user2 user3           to be assigned in an other component (see below)
 *
 *     p intensity flux      [phts/s  or  phts/cm^2/s]
-*     ncounts n neutron     [1]      neutron ID, i.e current event index
+*     ncounts n photon      [1]      photon ID, i.e current event index
 *     pixel id              [1]      pixelID in histogram made of preceeding vars, e.g. 'theta y'. To set an offset PixelID use the 'min=value' keyword. Sets event mode.
 *
 * <b>Other options keywords are:</b>
@@ -398,7 +398,7 @@ TRACE
   #endif
 
   /* this is done automatically
-    STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+    STORE_XRAY(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   */
   #ifdef USE_OFF
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))

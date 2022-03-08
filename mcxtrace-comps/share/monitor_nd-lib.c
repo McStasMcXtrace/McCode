@@ -750,7 +750,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
   } /* end Monitor_nD_Init */
 
 /* ========================================================================= */
-/* Monitor_nD_Trace: this routine is used to monitor one propagating neutron */
+/* Monitor_nD_Trace: this routine is used to monitor one propagating particle */
 /* return values: 0=photon was absorbed, -1=photon was outside bounds, 1=photon was measured*/
 /* ========================================================================= */
 int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars, _class_particle* _particle)

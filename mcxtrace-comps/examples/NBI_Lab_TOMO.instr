@@ -63,7 +63,7 @@ TRACE
 /* Origin is used. This Arm() component is set to define the origin of  */
 /* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
 /* for further RELATIVE reference, Other useful keywords are : ROTATED  */
-/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* EXTEND GROUP PREVIOUS. Also think about adding a photon source !    */
 /* Progress_bar is an Arm displaying simulation progress.               */
 COMPONENT Origin = Progress_bar()
 AT (0,0,0) ABSOLUTE
