@@ -17,8 +17,15 @@
 * Sample component with absorbing materials.
 *
 * %D
-* A sample component consisting of a box/cylinder of one material and a box/cylinder of another 
+* A sample component consisting of a volume of one material and volume of another 
 * material inside. This is useful as a phantom for simulating tomography experiments.
+* The inner material can be left unset (all 0), to only have one volume.
+*
+* Sample shape may be a cylinder, a sphere, a box or any other shape
+*   box/plate:       xwidth x yheight x zdepth
+*   cylinder:        radius x yheight
+*   sphere:          radius (yheight=0)
+*   any shape:       geometry=OFF/PLY file
 *
 * %P
 * Input parameters: 
@@ -30,24 +37,42 @@
 * xwidth_i: [m] Width of "inner" enclosed material box (yheight)
 * yheight_i: [m] Height of "inner enclosed material (1) 
 * zdepth_i: [m] Thickness of inner enclosed material box (yheight)
-* x_i: [m] center x-coordinate of "inner" object
-* y_i: [m] center y-coordinate of "inner" object
-* z_i: [m] center z-coordinate of "inner" object
-* rho_i: [g/cm^3] density of the enclosed material
-* rho_o: [g/cm^3] density of the enclosing material
+* x_i: [m] center x-coordinate of "inner" object offset
+* y_i: [m] center y-coordinate of "inner" object offset
+* z_i: [m] center z-coordinate of "inner" object offset
+* rho_i: [g/cm^3] density of the enclosed material, extracted from material data file when not set.
+* rho_o: [g/cm^3] density of the enclosing material, extracted from material data file when not set.
+* geometry_o: [str] Name of the outer Object File Format (OFF) or PLY file for complex geometry. 
+*               The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust
+* geometry_i: [str] Name of an inner Object File Format (OFF) or PLY file for complex geometry. 
+*               The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust [str]
+*
+* %L
+* Geomview and Object File Format (OFF) <http://www.geomview.org>
+* %L
+* Java version of Geomview (display only) jroff.jar <http://www.holmes3d.net/graphics/roffview/> 
+* %L
+* Powercrust/qhull <http://qhull.org>
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Absorption_sample
-DEFINITION PARAMETERS (string material_datafile_i="",string material_datafile_o="")
-SETTING PARAMETERS (radius_o=0,xwidth_o=0,yheight_o=1,zdepth_o=0,radius_i=0,xwidth_i=0,yheight_i=0.0,zdepth_i=0,x_i=0,y_i=0,z_i=0,rho_i=0,rho_o=0)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (
+  string material_datafile_i="",string material_datafile_o="",
+  radius_o=0,xwidth_o=0,yheight_o=1,zdepth_o=0,rho_o=0,
+  radius_i=0,xwidth_i=0,yheight_i=0,zdepth_i=0,rho_i=0,x_i=0,y_i=0,z_i=0,
+  string geometry_i="", string geometry_o="")
 OUTPUT PARAMETERS (prms_i,prms_o,t_i,t_o)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{
   %include "read_table-lib"
+  %include "interoff-lib"
+  
+  enum shapes_t {NONE=-1,SPHERE, CYLINDER, CUBE, ELLIPSOID, ANY};
 %}
 
 DECLARE
@@ -55,8 +80,10 @@ DECLARE
   struct {
     double Z_A,rho,V;
     int E_c,l_c,mu_c;
+    int shape;
   } prms_o,prms_i;
   t_Table t_o,t_i;
+  off_struct offdata_o, offdata_i;
 %}
 
 INITIALIZE
@@ -64,23 +91,45 @@ INITIALIZE
   int status;
   prms_i.V = 1;
   /* Checking volumes */
-  if (yheight_o && !radius_o){
+  if (geometry_o && strlen(geometry_o) && strcmp(geometry_o, "NULL") && strcmp(geometry_o, "0")) {
+	  if (!off_init(geometry_o, xwidth_o, yheight_o, zdepth_o, 0, &offdata_o))
+      exit(printf("Absorption_sample: %s: FATAL: invalid OFF/PLY geometry specification for file '%s'.\n",
+      NAME_CURRENT_COMP, geometry_o));
+    prms_o.shape = ANY;
+  } else if (!yheight_o && !xwidth_o && !zdepth_o && radius_o)
+    prms_o.shape = SPHERE;
+  else if (yheight_o && radius_o)
+    prms_o.shape = CYLINDER;
+  else if (yheight_o && !radius_o) {
     if (!zdepth_o) zdepth_o=yheight_o;
     if (!xwidth_o) xwidth_o=yheight_o;
-  }else if (!yheight_o && !radius_o){
-    fprintf(stderr,"ERROR: (%s): Error: Unmeaningful outer volume description.\n",NAME_CURRENT_COMP);
-    exit(-1);
+    prms_o.shape = CUBE;
+  } else {
+    exit(fprintf(stderr,"ERROR: %s: Unmeaningful outer volume description.\n",NAME_CURRENT_COMP));
   }
-  if (yheight_i && !radius_i){
+  
+  if (geometry_i && strlen(geometry_i) && strcmp(geometry_i, "NULL") && strcmp(geometry_i, "0")) {
+	  if (!off_init(geometry_i, xwidth_i, yheight_i, zdepth_i, 0, &offdata_i))
+      exit(printf("Absorption_sample: %s: FATAL: invalid OFF/PLY geometry specification for file '%s'.\n",
+      NAME_CURRENT_COMP, geometry_i));
+    prms_i.shape = ANY;
+  } else if (!yheight_i && !xwidth_i && !zdepth_i && radius_i)
+    prms_i.shape = SPHERE;
+  else if (yheight_i && radius_i)
+    prms_i.shape = CYLINDER;
+  else if (yheight_i && !radius_i) {
     if (!zdepth_i) zdepth_i=yheight_i;
     if (!xwidth_i) xwidth_i=yheight_i;
-  }else if (!yheight_i && !radius_i){
-    fprintf(stderr,"Warning: (%s): Warning: Inner volume = 0\n",NAME_CURRENT_COMP);
+    prms_i.shape = CUBE;
+  } else {
+    fprintf(stderr,"Warning: %s: Invalid inner volume specification. Ignoring.\n",NAME_CURRENT_COMP);
     prms_i.V=0;
+    prms_i.shape=NONE;
   }
+  
   /* Loading datafiles */
   if ( material_datafile_o && (status=Table_Read(&t_o,material_datafile_o,0))==-1){
-    fprintf(stderr,"Error: (%s) Could not parse file \"%s\".\n",NAME_CURRENT_COMP, material_datafile_o);
+    fprintf(stderr,"Error: %s: Could not parse file \"%s\".\n",NAME_CURRENT_COMP, material_datafile_o);
     exit(-1);
   }
   if (t_o.columns==3) {  /*which column is the energy in and which holds mu*/
@@ -135,12 +184,18 @@ INITIALIZE
 TRACE
 %{
   double l0o=0,l1o=0,l0i=0,l1i=0,mu_o=0,mu_i=0;
-  int status,status_i;
-  if (radius_o && yheight_o){
-    status=cylinder_intersect(&l0o,&l1o,x,y,z,kx,ky,kz,radius_o,yheight_o);
-  }else{
-    status=box_intersect(&l0o,&l1o,x,y,z,kx,ky,kz,xwidth_o,yheight_o,zdepth_o);
+  int status=0,status_i;
+  
+  if (prms_i.shape==ANY) {
+    status= off_x_intersect    (&l0o, &l1o, NULL, NULL, x,y,z, kx,ky,kz, offdata_o);
+  } else if (prms_i.shape==CYLINDER) {
+    status=cylinder_intersect  (&l0o,&l1o,x,y,z,kx,ky,kz,radius_o,yheight_o);
+  } else if (prms_i.shape==CUBE) {
+    status=box_intersect       (&l0o,&l1o,x,y,z,kx,ky,kz,xwidth_o,yheight_o,zdepth_o);
+  } else if (prms_i.shape==SPHERE) {
+    status=sphere_intersect    (&l0o,&l1o,x,y,z,kx,ky,kz,radius_o);
   }
+  
   if (status && l1o>0 ){ /*rays intersects the enclosing material but has not gone past it*/
     if(l0o>0){
       /*already inside sample - don't move*/
@@ -150,13 +205,17 @@ TRACE
     SCATTER;
     status_i=0;
     double k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
-    if (radius_i && !yheight_i){
-      status_i=sphere_intersect(&l0i,&l1i,(x-x_i),(y-y_i),(z-z_i),kx,ky,kz,radius_i);
-    }else if (radius_i && yheight_i){
-      status_i=cylinder_intersect(&l0i,&l1i,(x-x_i),(y-y_i),(z-z_i),kx,ky,kz,radius_i,yheight_i);
-    }else if (xwidth_i && yheight_i && zdepth_i){
-      status_i=box_intersect(&l0i,&l1i,(x-x_i),(y-y_i),(z-z_i),kx,ky,kz,xwidth_i,yheight_i,zdepth_i);
+    
+    if (prms_i.shape==ANY) {
+      status_i= off_x_intersect    (&l0i, &l1i, NULL, NULL, (x-x_i),(y-y_i),(z-z_i), kx,ky,kz, offdata_i);
+    } else if (prms_i.shape==CYLINDER) {
+      status_i=cylinder_intersect  (&l0i,&l1i,(x-x_i),(y-y_i),(z-z_i),kx,ky,kz,radius_i,yheight_i);
+    } else if (prms_i.shape==CUBE) {
+      status_i=box_intersect       (&l0i,&l1i,(x-x_i),(y-y_i),(z-z_i),kx,ky,kz,xwidth_i,yheight_i,zdepth_i);
+    } else if (prms_i.shape==SPHERE) {
+      status_i=sphere_intersect    (&l0i,&l1i,(x-x_i),(y-y_i),(z-z_i),kx,ky,kz,radius_i);
     }
+    
     if(status_i){ /*rays intersect the inclusion*/
       if(l0i<0){
         /*already inside inclusion*/
@@ -179,34 +238,39 @@ TRACE
 
 MCDISPLAY
 %{
-  /* A bit ugly; hard-coded dimensions. */
   
-  if (radius_o && yheight_o){
-    circle("xz",0, yheight_o/2.0,0,radius_o);
-    circle("xz",0,-yheight_o/2.0,0,radius_o);
-    line(-radius_o,-yheight_o/2.0,0,-radius_o,yheight_o/2.0,0);
-    line( radius_o,-yheight_o/2.0,0, radius_o,yheight_o/2.0,0);
-    line(0,-yheight_o/2.0,-radius_o,0,yheight_o/2.0,-radius_o);
-    line(0,-yheight_o/2.0, radius_o,0,yheight_o/2.0, radius_o);
-  }else{
+  if (prms_o.shape==CUBE){
     box(0,0,0,xwidth_o,yheight_o,zdepth_o);
+  } else if (prms_o.shape==CYLINDER){
+    circle("xy",0, yheight_o/2.0,0,radius_o);
+    circle("xy",0,-yheight_o/2.0,0,radius_o);
+    line( radius_o,yheight_o/2.0,0, radius_o,-yheight_o/2.0,0);
+    line(-radius_o,yheight_o/2.0,0,-radius_o,-yheight_o/2.0,0);
+    line(0,yheight_o/2.0, radius_o, 0,-yheight_o/2.0, radius_o);
+    line(0,yheight_o/2.0,-radius_o, 0,-yheight_o/2.0,-radius_o);
+  } else if (prms_o.shape==SPHERE){
+    circle("xy",0,0,0,radius_o);
+    circle("xz",0,0,0,radius_o);
+    circle("yz",0,0,0,radius_o);
+  } else if (prms_o.shape == ANY) {	/* OFF file */
+    off_display(offdata_o);
   }
-
-  if (prms_i.V){
-    if(radius_i && !yheight_i){
-      circle("xz",x_i,y_i,z_i,radius_i);
-      circle("yz",x_i,y_i,z_i,radius_i);
-      circle("xy",x_i,y_i,z_i,radius_i);   
-    }else if (radius_i && yheight_i){
-      circle("xz",x_i,z_i+yheight_i/2.0,z_i,radius_i);
-      circle("xz",x_i,z_i-yheight_i/2.0,z_i,radius_i);
-      line(x_i-radius_i,y_i-yheight_i/2.0,z_i,x_i-radius_i,yheight_i/2.0,z_i);
-      line(x_i+radius_i,y_i-yheight_i/2.0,z_i,x_i+radius_i,yheight_i/2.0,z_i);
-      line(x_i,y_i-yheight_i/2.0,z_i-radius_i,x_i,y_i+yheight_i/2.0,z_i-radius_i);
-      line(x_i,y_i-yheight_i/2.0,z_i+radius_i,x_i,y_i+yheight_i/2.0,z_i+radius_i);
-    }else{
-      box(x_i,y_i,z_i,xwidth_i,yheight_i,zdepth_i);
-    }
+  
+  if (prms_i.shape==CUBE){
+    box(0,0,0,xwidth_i,yheight_i,zdepth_i);
+  } else if (prms_i.shape==CYLINDER){
+    circle("xy",0, yheight_i/2.0,0,radius_i);
+    circle("xy",0,-yheight_i/2.0,0,radius_i);
+    line( radius_i,yheight_i/2.0,0, radius_i,-yheight_i/2.0,0);
+    line(-radius_i,yheight_i/2.0,0,-radius_i,-yheight_i/2.0,0);
+    line(0,yheight_i/2.0, radius_i, 0,-yheight_i/2.0, radius_i);
+    line(0,yheight_i/2.0,-radius_i, 0,-yheight_i/2.0,-radius_i);
+  } else if (prms_i.shape==SPHERE){
+    circle("xy",0,0,0,radius_i);
+    circle("xz",0,0,0,radius_i);
+    circle("yz",0,0,0,radius_i);
+  } else if (prms_i.shape == ANY) {	/* OFF file */
+    off_display(offdata_i);
   }
 %}
 
