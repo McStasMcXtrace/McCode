@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Instrument: <instrument name>
+* Instrument: Union_geom_demo
 *
 * %I
 * Written by: <your name (email)>
@@ -8,10 +8,10 @@
 * Version: <instrument version>
 * %INSTRUMENT_SITE: Templates
 *
-* <instrument short description>
+* instrument short description
 *
 * %D
-* <instrument description>
+* instrument description
 *
 * Example: <parameters=values>
 *

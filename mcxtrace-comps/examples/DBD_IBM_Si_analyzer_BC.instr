@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: NIST DBD with IBM (rename also the example and DEFINE lines below)
+* Instrument: DBD_IBM_Si_analyzer_BC
 *
 * %Identification
 * Written by: Marcus H. Mendenhall (marcus.mendenhall@nist.gov)
@@ -14,6 +14,7 @@
 *
 * %Description
 * This is a preliminary setup of the DBD with the Ge111 Johansson IBM
+* NIST DBD with IBM
 *
 * %Example: DBD_IBM_Si_analyzer_BC.instr use_flat_source=0 -n1e7 Detector: lynxeye_I=3.39272e+07
 *

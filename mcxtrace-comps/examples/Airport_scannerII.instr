@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: ESRF-ID11-nanofocus beamline
+* Instrument: Airport_scannerII
 *
 * %Identification
 * Written by: E. B. Knudsen (erkn@fysik.dtu.dk)
@@ -11,13 +11,13 @@
 * Version: $Revision$
 * %INSTRUMENT_SITE: DTU
 *
-* Example instrument to display how to use the absorption multiobject component
+* Example instrument to display how to use the absorption multiobject component.
 * 
 * %Description
 * This instrument simply has a lab source, a few monitors and a multi-off object scene
-* by means of the Abs_objects component. By supliying a control file and a set of 
+* by means of the Abs_objects component. By supplying a control file and a set of 
 * off/ply-files a scene is put together which may be used for tomography style
-* simulations. The default input file contains a single object: a mechanical socket.
+* simulations. The default input file contains a luggage with objects there-in.
 * 
 * %Example: Airport_scannerII.instr -n1e5 posX=-0.25 posY=-0.3 Detector: psd2_I=0.000629398
 *
@@ -32,8 +32,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Airp_scannerII(string SFILE="input_abs_objects_template.dat",ANGLE=0,posX=0,posY=0,posZ=0)
-DEPENDENCY " -DLOADPATH=@MCCODE_LIB@/data "
+DEFINE INSTRUMENT Airport_scannerII(string SFILE="input_abs_objects_template.dat",ANGLE=0,posX=0,posY=0,posZ=0)
 
 DECLARE
 %{
@@ -89,17 +88,4 @@ AT(0,0,20) RELATIVE Origin
 
 
 END
-
-
-
-
-
-
-
-
-
-
-
-
-
 
