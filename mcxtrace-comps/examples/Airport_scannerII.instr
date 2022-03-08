@@ -44,7 +44,6 @@ DECLARE
   double trow=0.6;
 
   int dNx,dNy;
-  char fullfile[256];
 %}
 
 
@@ -58,17 +57,6 @@ INITIALIZE
 
   deth=s*dNy*2e-3;//7.0/6.0*troh;
   detw=s*dNx*2e-3;//7.0/6.0*trow;
-
-#define QUOTE(name) #name
-#define STR(macro) QUOTE(macro)
-
-#ifndef LOADPATH
-#define LOADPATH=/usr/share/mcxtrace/3.0/data
-#endif
-
-#define LOADPATH_ STR(LOADPATH)
-sprintf(fullfile,"%s/%s",LOADPATH_,SFILE);
-printf("Using the input file: %s\n", fullfile);
   
 %}
 
@@ -90,7 +78,7 @@ COMPONENT sample_mount_point = Arm()
 AT(0,0,3) RELATIVE Origin
 ROTATED (0,ANGLE,0) RELATIVE Origin
 
-COMPONENT sample_scan=Abs_objects(objects=fullfile)
+COMPONENT sample_scan=Abs_objects(objects=SFILE)
 AT (posX,posY,posZ) RELATIVE sample_mount_point
 
 COMPONENT psd2 = PSD_monitor(restore_xray=1,nx=dNx,ny=dNy,filename="psd2.dat",xwidth=detw,yheight=deth)

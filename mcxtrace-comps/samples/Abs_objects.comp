@@ -104,7 +104,11 @@ INITIALIZE
 %{
   int status=0;
 
-  FILE *fp=fopen(objects,"r");
+  FILE *fp=Open_File(objects,"r",NULL);
+  if (fp == NULL) {
+    fprintf(stderr,"Error: %s: Could not open file \"%s\"\n", NAME_CURRENT_COMP, objects);
+    exit(-1);
+  }
   char line[512];
   fgets(line,512,fp);
   objectsc=atoi(line);
