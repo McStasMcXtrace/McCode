@@ -74,7 +74,10 @@ SHARE
   %include "read_table-lib"
   %include "interoff-lib"
   
+  #ifndef SHAPES_T
+  #define SHAPES_T
   enum shapes_t {NONE=-1,SPHERE, CYLINDER, CUBE, ELLIPSOID, ANY};
+  #endif
 %}
 
 DECLARE
