@@ -5,8 +5,6 @@
 * Written by: <your name (email)>
 * Date: <current date>
 * Origin: <your institution>
-* Release: <McXtrace V.X.X>
-* Version: <instrument version>
 * %INSTRUMENT_SITE: Templates
 *
 * <instrument short description>
@@ -19,7 +17,7 @@
 * %P
 * <parameter1>: [<unit>] <parameter1 description>
 * ...
-* 
+*
 * %L
 * <reference/HTML link>
 *
@@ -28,6 +26,10 @@
 DEFINE INSTRUMENT template_simple(Par1=1)
 
 DECLARE
+%{
+%}
+
+USERVARS
 %{
 %}
 
