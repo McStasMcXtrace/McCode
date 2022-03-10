@@ -36,7 +36,7 @@ INITIALIZE %{
   FILE *fp = fopen("input_small.dat", "w");
   if (fp == NULL) exit(fprintf(stderr, "ERROR: can not open file for Abs_objects\n"));
   fprintf(fp, "1\n");
-  fprintf(fp, "%s cube.off 0 0 0 0.001 0.001 0.0001\n\n", material);
+  fprintf(fp, "%s cube.off -0.0005 -0.0005 -0.0005 0.001 0.001 0.0001\n\n", material);
   fclose(fp);
 
 %}
@@ -46,7 +46,7 @@ TRACE
 COMPONENT Origin = Progress_bar(percent=1)
 AT (0,0,0) ABSOLUTE
 
-COMPONENT source1 =  Source_flat(E0=E0, dE=dE, xwidth=1e-3, yheight=1e-3, focus_xw=0.001, focus_yh=0.001, dist=3)
+COMPONENT source1 =  Source_flat(E0=E0, dE=dE, xwidth=1e-3, yheight=1e-3, focus_xw=0.0015, focus_yh=0.0015, dist=3)
 AT(0,0,0) RELATIVE Origin
 
 COMPONENT sample_mount_point = Arm()
@@ -67,7 +67,11 @@ WHEN(index==3)
 AT (0,0,0) RELATIVE sample_mount_point
 
 COMPONENT emon = E_monitor(restore_xray=1,nE=101,Emin=E0-dE, Emax=E0+dE, 
-  filename="emon.dat",xwidth=0.1, yheight=0.1)
+  filename="emon.dat",xwidth=0.0005, yheight=0.0005)
 AT(0,0,0.1) RELATIVE PREVIOUS
+
+COMPONENT psd = PSD_monitor(xwidth=0.0015, yheight=0.0015, nx=100, ny=100, filename="psd.dat")
+AT(0,0,0.1) RELATIVE PREVIOUS
+
 
 END
