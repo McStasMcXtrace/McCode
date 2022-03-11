@@ -12,7 +12,7 @@
 in a cmd.exe shell and start the Perl and McXtrace installers from there
 	
 ##  IMPORTANT B:
-* Please install [strawberry-perl-5.26.3.1-64bit.msi](http://download.mcxtrace.org/current/windows/strawberry-perl-5.26.3.1-64bit.msi)
+* Please install [strawberry-perl-5.26.3.1-64bit.msi](http://download.mcxtrace.org/current/windows/mcxtrace-win64/strawberry-perl-5.26.3.1-64bit.msi)
 BEFORE  attempting to install the McXtrace metapackage!!!
 
 ## IMPORTANT C:
