@@ -23,6 +23,7 @@ set(TOOLS_CC "gcc")
 set(OACCFLAGS "-ta:multicore -DOPENACC")
 set(MPICC "mpicc.bat")
 set(MPIRUN "mpiexec.exe")
+set(MPILIB "msmpi")
 set(PGPLOT "yes") # <- Not actually run, but non-empty indicates available
 set(GNUPLOT "gnuplot.exe")
 set(MCCODE_CFLAGS "-g -O2 -lm -std=c99 -D_POSIX_SOURCE")
