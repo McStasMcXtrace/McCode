@@ -18,7 +18,9 @@
 * to model material absorption. Material is chosen to be Mn (K-edge 6.5 keV).
 *
 * 
-* %Example: Test_Absorption.instr -n1e5 sample=1 Detector: psd2_I=0.000629398
+* %Example: Test_Absorption.instr -n1e5 index=1 Detector: emon_I=8.25376e-12
+* %Example: Test_Absorption.instr -n1e5 index=2 Detector: emon_I=8.24127e-12
+* %Example: Test_Absorption.instr -n1e5 index=3 Detector: emon_I=8.28866e-12
 *
 * %Parameters
 * index:    [1]    Index of the absorption component to use in 1-3
