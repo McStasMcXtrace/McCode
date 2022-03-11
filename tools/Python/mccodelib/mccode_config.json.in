@@ -16,7 +16,7 @@
   "compilation": {
     "CFLAGS": "@CFLAGS@",
     "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
-    "MPIFLAGS": "-DUSE_MPI -lmpi",
+    "MPIFLAGS": "-DUSE_MPI -l@MPILIB@",
     "OACCFLAGS": "-ta:tesla,managed -DOPENACC",
     "CC": "@TOOLS_CC@",
     "OACC": "nvc",
