@@ -29,8 +29,9 @@
 * Be.txt  cube.off  0 0.01 0    0 0 0
 * Rh.txt  chess.off 0 -0.01 0   0 0 0
 *
-* A xwidth etc of zero means use whatever dimensions are in the off/ply file. If xwidth (or yheight or zdepth)
-* is nonzero, the component tries to scale the object to fill that dimension. This is an experimental option.
+* A xwidth etc of zero means use whatever dimensions are in the off/ply file. 
+* If xwidth (or yheight or zdepth) is nonzero, the component scales the object 
+* to fill that dimension. The xyz coordinates indicate the object shift.
 *
 * %P
 * INPUT PARAMETERS
@@ -41,14 +42,14 @@
 *******************************************************************************/
 DEFINE COMPONENT Abs_objects
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (int refraction=1, string objects="input_small.dat", string geometry=0)
+SETTING PARAMETERS (int refraction=1, string objects="input_small.dat")
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE
 %{
 #ifndef MX_ABS_OBJECTS_MAX_INTERSECTS
- #define MX_ABS_OBJECTS_MAX_INTERSECTS 256
+#define MX_ABS_OBJECTS_MAX_INTERSECTS 256
 #endif
 
   %include "read_table-lib"
@@ -122,7 +123,7 @@ INITIALIZE
 %{
   FILE *fp=Open_File(objects,"r",NULL);
   if (fp == NULL) {
-    fprintf(stderr,"Error: %s: Could not open file \"%s\"\n", NAME_CURRENT_COMP, objects);
+    fprintf(stderr,"Error: %s: Could not open file \"%s\".\n", NAME_CURRENT_COMP, objects);
     exit(-1);
   }
   char line[512];
@@ -133,12 +134,23 @@ INITIALIZE
   for (i=0;i<objectsc;i++){
     fgets(line,512,fp);
     char off_fn[512],mat_fn[512];
+    float xx1,yy1,zz1,xwidth,yheight,zdepth;
     int status;
-    sscanf(line,"%s %s \n", mat_fn,off_fn);
-   /*sscanf(line,"%s %s %f %f %f %f %f %f\n", mat_fn,off_fn,xx[i],yy[i],zz[i],xwidth[i],yheight[i],zdepth[i]);*/
+    //sscanf(line,"%s %s \n", mat_fn,off_fn);
+    status=sscanf(line,"%s %s %g %g %g %g %g %g\n",
+      mat_fn,off_fn, &xx1,&yy1,&zz1,&xwidth,&yheight,&zdepth);
+    
+    if (status < 8) {
+      fprintf(stderr,"Error: %s: Invalid line %i in file \"%s\".\n",
+        NAME_CURRENT_COMP, i+1, objects);
+      exit(-1);
+    }
+    xx[i]=xx1;         yy[i]=yy1;           zz[i]=zz1;
+    obj_xwidth[i]=xwidth; obj_yheight[i]=yheight; obj_zdepth[i]=zdepth;
 
     if ( (status=Table_Read(&(mat_table[i]),mat_fn,0))==-1){
-      fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",mat_fn,NAME_CURRENT_COMP);
+      fprintf(stderr,"Error: %s: Could not parse file \"%s\".\n",
+        NAME_CURRENT_COMP, mat_fn);
       exit(-1);
     }
     char **header_parsed;
@@ -146,7 +158,8 @@ INITIALIZE
     if (header_parsed[0]){Z[i]=strtod(header_parsed[0],NULL);}
     if (header_parsed[1]){Ar[i]=strtod(header_parsed[1],NULL);}
     if (header_parsed[2]){rho[i]=strtod(header_parsed[2],NULL);}
-    else{fprintf(stderr,"Warning(%s): %s not found in header of %s, set to 1\n",NAME_CURRENT_COMP,"rho",mat_fn);rho[i]=1;}
+    else{fprintf(stderr,"Warning: %s: %s not found in header of %s, set to 1.\n",
+      NAME_CURRENT_COMP,"rho",mat_fn);rho[i]=1;}
     /*which columns holds the mus*/
     mu_c[i]=5;
     if (mat_table[i].columns==3) {
@@ -158,10 +171,12 @@ INITIALIZE
     }
     /*read in the off/ply data from file. The literal 1 is to not center the object in local (0,0,0)*/
     if (!off_init(off_fn, obj_xwidth[i], obj_yheight[i], obj_zdepth[i], 1, &(offdata[i]))) {
-      fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",off_fn,NAME_CURRENT_COMP);
+      fprintf(stderr,"Error: %s: Could not parse file \"%s\".\n",
+        NAME_CURRENT_COMP, off_fn);
       exit(-1);
     }
-    printf("i=%d, mfn=%s, ofn=%s\n",i,mat_fn,off_fn);
+    printf("%s: Volume[%d], material='%s' geometry='%s'\n", 
+      NAME_CURRENT_COMP, i+1,mat_fn,off_fn);
   }
   fclose(fp);
 %}
@@ -209,7 +224,7 @@ TRACE
         intersectionc++;
 
 	if(intersectionc>=MX_ABS_OBJECTS_MAX_INTERSECTS){
-	  fprintf("Warning (%s): Intersection storage overrun. Rest of scene will be ignored. Please examine results carefully and/or recompile with \"-DMX_ABS_OBJECTS_MAX_INTERSECTS=N\" where N>256",NAME_CURRENT_COMP);
+	  fprintf("Warning: %s: Intersection storage overrun. Rest of scene will be ignored. Please examine results carefully and/or recompile with \"-DMX_ABS_OBJECTS_MAX_INTERSECTS=N\" where N>256",NAME_CURRENT_COMP);
 	  break;
 	}
         /*a dl of 0 marks an unused slot*/
