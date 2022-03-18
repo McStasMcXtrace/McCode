@@ -1,0 +1,438 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2015, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Guide_multichannel
+*
+* %I
+* Written by: Jan Saroun (saroun@ujf.cas.cz)
+* Modified by: Celine Durniak
+* Date: 17.3.2022
+* Version: 1.3
+* Release: McStas
+* Origin: Nuclear Physics Institute, CAS, Rez
+*
+* Multichannel neutron guide with semi-transparent blades. 
+* Derived from Guide_channeled by Christian Nielsen.
+* Allows to simulate bi-spectral extraction optics.
+*
+* %D
+* Models a rectangular guide with equidistant vertical blades of finite thickness. 
+* The blades material can be either fully absorbing or semi-transparent. The absorption 
+* coefficient is wavelength dependent according to the semi-empirical model used 
+* e.g. in J. Baker et al., J. Appl. Cryst. 41 (2008) 1003 or 
+* A. Freund, Nucl. Instr. Meth. A 213 (1983) 495.
+* Data are provided for Si and Al2O3. 
+* 
+* All walls are flat, curvature is not implemented (may be added as a future upgrade)
+* Tapering is possible by setting different entry ad exit dimensions.
+* Different guide coating can be set for vertical and horizontal mirrors.
+* For transparent walls, neutrons are alloed to migrate between channels and to 
+* propagate through the blades. 
+*
+* The model is almost equivalent to the GUIDE component in SIMRES (http://neutron.ujf.cas.cz/restrax)
+* when used with zero curvature and type set to "guide or bender". 
+* The features from SIMRES not included in this McSas model are:
+* - has a more conservative model for absorption in blades: events above r(m<mc) are automatically ABSORBED.
+* - defines waviness
+* - works with bent geometry 
+* - works with gravity
+* - allows for 2D grid of blades
+*
+* bug fix 24/3/2017: incorrect handling of transition into blades = no transmission
+*
+* %P
+* INPUT PARAMETERS:
+*
+* w1:      (m)    Width at the guide entry
+* h1:      (m)    Height at the guide entry
+* w2:      (m)    Width at the guide exit
+* h2:      (m)    Height at the guide exit
+* l:       (m)    Length of guide
+* dlam:    (m)    Thickness of lamellae
+* nslit:   (1)    Number of channels in the guide (>= 1)
+* R0:      (1)    Low-angle reflectivity
+* Qc:      (AA-1) Critical scattering vector
+* alpha:   (AA)   Slope of reflectivity
+* m:       (1)    m-value of material. Zero means completely absorbing.
+* W:       (AA-1) Width of supermirror cut-off for all mirrors
+*
+* Qcx:     (AA-1) Critical scattering vector for left and right vertical
+*                 mirrors in each channel
+* Qcy:     (AA-1) Critical scattering vector for top and bottom mirrors
+* alphax:  (AA)   Slope of reflectivity for left and right vertical
+*                 mirrors in each channel
+* alphay:  (AA)   Slope of reflectivity for top and bottom mirrors
+* mx:      (1)    m-value of material for left and right vertical mirrors
+*                 in each channel. Zero means completely absorbing.
+* my:      (1)    m-value of material for top and bottom mirrors. Zero
+*                 means completely absorbing.
+* mater:   (string)   "Si", "Al2O3", or "absorb" (default)
+*
+* %D
+*
+* Example: Bi-specctral extraction:
+* Guide_multichannel (
+*    w1 = 0.058, h1=0.0528 ,  w2=0.063, h2=0.0555, l=0.5, 
+*    nslit=8, dlam=0.001, mx=4, my=4,   mater="Si" 
+*  ) AT (0.0034, 0, 4.15) RELATIVE SOURCE
+* ROTATED (0.0, -0.78, 0.0) RELATIVE SOURCE
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Guide_multichannel
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
+  R0=0.995, Qc=0, alpha=0, m=0, int nslit=1, dlam=0.0005,
+  Qcx=0.0218, Qcy=0.0218, alphax=4.38, alphay=4.38, W=0.003, mx=1, my=1, string mater="absorb")
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+SHARE %{
+%include "ref-lib"
+
+/* return reflectivity parameters as an array*/
+void getRefPar(double par[], double R0, double Qc, double alpha, double m, double W) {
+   par[0]=R0;
+   par[1]=Qc;
+   par[2]=alpha;
+   par[3]=m;
+   par[4]=W;
+}
+
+%}
+DECLARE
+%{
+  /* 
+    Absorption formula:
+	mu = A*lambda + s_free*(1 - exp(-B/lambda^2 - D/lambda^4)
+	following coefficients in mu_par array correspond to { s_free, A, B, D }
+	Units:
+	s_free [1/cm]
+	A [1/cm/A]
+	B [A^2]
+	D [A^4]
+  */
+  /* Si at room temperature */ 
+  //const double mu_Si[4];
+  /* Al2O3 (sapphire) at room temperature */   
+  //const double mu_Al2O3[4];
+  /* default - high absorption */ 
+  //const double mu_default[4];
+  double w1c;
+  double w2c;
+  double ww;
+  double hh;
+  double whalf;
+  double hhalf;
+  double winner;
+  double dah;
+  double ah;
+  double av;
+  int opaque;
+  double mu_par[4];
+  double v2lam;
+  double refpar_x[5];
+  double refpar_y[5];
+%}
+
+INITIALIZE
+%{
+
+  static const double mu_Si[4] = {0.1018, 6.054e-3, 0.38, 0.0};
+  static const double mu_Al2O3[4] = {0.2120, 8.11e-3, 0.16, 0.129};
+  static const double mu_default[4] = {100.0, 100.0, 100.0, 100.0};
+  getRefPar(refpar_x,R0, Qcx, alphax, mx, W);
+  getRefPar(refpar_y,R0, Qcy, alphay, my, W);
+
+  /* lambda = v2lam/v */
+  v2lam=2*PI/V2K;
+  
+  /* Set absorption coefficient */
+  memcpy(mu_par, mu_default, sizeof(mu_par));  
+  opaque=1; 
+  if (nslit>1) {
+	  if (strcmp(mater,"Si") ==0) {
+		memcpy(mu_par, mu_Si, sizeof(mu_par));
+		opaque=0;
+	  } else if (strcmp(mater,"Al2O3") ==0) {
+		memcpy(mu_par, mu_Al2O3, sizeof(mu_par));
+		opaque=0;
+	  }
+  }
+  if (opaque) {
+	printf("%s: Absorbing blades.\n",NAME_CURRENT_COMP);  
+  } else {
+	ww = mu_par[1]*2 + mu_par[0]*(1.0 - exp(-mu_par[2]/4 - mu_par[3]/16));
+	printf("%s: Translucent blades, %s, mu(2A) = %g [1/cm].\n",NAME_CURRENT_COMP,mater,ww);  
+  }
+  printf("%s: nslit=%d\n",NAME_CURRENT_COMP,nslit); 
+  
+  /* process input data */
+  if (!w2) w2=w1;
+  if (!h2) h2=h1;
+  if (nslit <= 0)
+  { fprintf(stderr,"Guide_multichannel: %s: nslit must be positive\n", NAME_CURRENT_COMP);
+    exit(-1); }
+  if (m)     { mx=my=m; }
+  if (Qc)    { Qcx=Qcy=Qc; }
+  if (alpha) { alphax=alphay=alpha; }
+  w1c = (w1 + dlam)/(double)nslit;
+  w2c = (w2 + dlam)/(double)nslit;
+  ww = .5*(w2 - w1);
+  hh = .5*(h2 - h1);
+  winner = w1c - dlam; // width of one channel at the entry
+  whalf = .5*winner;
+  hhalf = .5*h1;
+  av = hh/l;   // angular deflection of top(+)/bottom(-) walls
+  ah = ww/l;  // angular deflection of left(+)/right(-) walls
+  dah = (w2-w1)/(l*nslit); // angular step between blades
+
+
+  
+  if (dlam*nslit >= w1+dlam) exit(fprintf(stderr, "Guide_multichannel: %s: No space left for channels, " 
+    "blades are too thick, (dlam*nslit >= w1+dlam).\n", NAME_CURRENT_COMP));
+
+  if (mcgravitation) fprintf(stderr,"WARNING: Guide_multichannel: %s: "
+    "This component produces wrong results with gravitation.\n",NAME_CURRENT_COMP);
+%}
+
+TRACE
+%{
+  double tt,tout;           
+  double a1,b1,a2,b2;     // side wall equation (right, left)
+  double vdotn, mu, q, edge,N0,v0, p0, p1, lam0, lam2, lam4;  
+  double ref,rtmp;
+  int ic;     // which wall hit ?  
+  int is;     // channel index
+  int inblade;  // flags
+  int i,nloop;
+  double tc[4]; // Intersection times
+  double N[3]; // surface normal
+  
+
+  /* Propagate neutron to the guide entrance. */
+  PROP_Z0;
+  /* Call Scatter at the guide entry, needed for GROUP construction. */
+  SCATTER;
+  /* apply front mask */
+  if(fabs(x) >= w1/2.0 || fabs(y) >= hhalf)
+    ABSORB;
+  /* slit index 
+   Each slit includes the empty chanel of width = winner + the wall on the left/top side
+  */
+  is=floor((x+0.5*w1)/w1c);
+  /* right edge of the channel */
+  edge = is*w1c - 0.5*w1;
+  inblade=(x-edge>winner ? 1:0); // is inside the blade ?
+  if (inblade && opaque) {
+	  ABSORB;
+  }
+  /* wall equation: x = a + b*z */
+  if (inblade) {
+	 a1=edge+winner; b1=(is+1)*dah-ah; // right wall
+	 a2=a1+dlam;b2=b1;  // left wall
+  } else {
+	 a1=edge; b1=is*dah-ah;  // right wall
+	 a2=edge+winner; b2=b1+dah; // left wall
+  }
+  v0=sqrt(vx*vx+vy*vy+vz*vz);
+  nloop=0;
+  if (opaque) {
+	mu = 1e10;
+  } else {
+	lam0=v2lam/v0;
+	lam2=lam0*lam0;
+	lam4=lam2*lam2;
+	mu = mu_par[1]*lam0 + mu_par[0]*(1.0 - exp( - mu_par[2]/lam2 - mu_par[3]/lam4));
+	mu *= 100.0; // convert to m^-1
+  }
+
+  for(;;)
+  {
+	/* kill events with too many bounces */
+	if (nloop>100) {
+		/* stopped on loop limit */
+		ABSORB;
+	}
+    /* Compute intersection times. */
+    tout = (l - z)/vz;
+    tc[0] = (a1 - x + b1*z)/(vx - b1*vz);        // right
+    tc[1] = (a2 - x + b2*z)/(vx - b2*vz);        // left
+    tc[2] = (-hhalf - y - av*z)/(vy + av*vz);    // bottom
+    tc[3] = ( hhalf - y + av*z)/(vy - av*vz);    // top
+	tt=tout;
+	ic=-1;
+	for (i=0;i<4;i++) {
+		if ((tc[i]>0.0) && (tc[i]< tt)) {
+			tt=tc[i];
+			ic=i;
+		}
+	}	
+	 /* Neutron left guide. */   
+    if(ic < 0) {
+		PROP_DT(tt);
+		if (inblade && (! opaque))
+			p *= exp(-mu*v0*tt);   // transmission probability
+		break;                   
+	}
+       
+	/* handle interactions with walls */
+    switch(ic)
+    {
+      case 0:                   /* Right vertical mirror */	   
+		N[0]=1.0; N[1]=0.0; N[2]=-b1;
+	    N0=sqrt(1.0+b1*b1);
+        break;
+      case 1:                   /* Left vertical mirror */
+		N[0]=-1.0; N[1]=0.0; N[2]=b2;
+		N0=sqrt(1.0+b2*b2);
+        break;
+      case 2:                   /* Lower horizontal mirror */
+		N[0]=0.0; N[1]=1.0; N[2]=av;
+		N0=sqrt(1.0+av*av);
+        break;
+      case 3:                   /* Upper horizontal mirror */
+		N[0]=0.0; N[1]=-1.0; N[2]=av;
+		N0=sqrt(1.0+av*av);
+        break;
+    }
+	/* scattering vector */
+	vdotn = N[0]*vx + N[1]*vy + N[2]*vz;
+	q=-2.0*vdotn/N0;
+	
+	if (q<=0.0) { 
+	   /* stopped on q<0, this should not happen */
+        ABSORB;
+	}
+    /* compute reflectivity. */
+	double ref=0;
+    if ((ic <= 1 && mx == 0) || (ic >= 2 && my == 0))
+    { 	
+	  if (opaque) {
+		/* stopped, no way through blind & opaque mirrors*/
+        ABSORB;
+	  } else ref=0;
+	} else {
+		/*
+		if (ic<=1) {
+			double par[] = {R0, Qcx, alphax, mx, W};
+		} else {
+			double par[] = {R0, Qcy, alphay, my, W};
+		}
+        StdReflecFunc(q*V2Q, par, &ref);
+		*/
+		if (ic<=1) {
+			StdReflecFunc(q*V2Q, refpar_x, &ref);
+		} else {
+			StdReflecFunc(q*V2Q, refpar_y, &ref);
+		}
+	}
+	if (inblade) {  
+     // cumulative probabilities	
+		p0 = 1.0-exp(-mu*v0*tt);  // absorption 
+		p1 = 1.0 - (1.0-p0)*ref; // absorption or transmission 	
+	} else {
+		p0=0.0;
+		p1=1.0 - ref;
+		// no entry into lamella below reflectivity edge ... 
+		if ((ic<=1) && (q*V2Q<refpar_x[1]*refpar_x[3])) {
+		   p0=1.0-ref;
+		   p1=p0;
+		}	
+	}
+/* play the rullette */
+	rtmp = rand01();
+/* absorb */
+	if (rtmp<p0) {
+		/* stopped, absorption in the blade */
+		ABSORB;
+/* transmit */
+	} else if (rtmp<p1) {
+		/* into blade */				
+		if (! inblade) {
+			// no transport into the outer walls or opaque material
+			/* bug fix 24/3/2017
+			if ( opaque || (ic>=2) || (is<=0) || (is>=nslit-1)) {
+				ABSORB;
+			}
+			*/
+			if ( opaque || (ic>=2)) {
+			    // ABSORB, no way through bottom/top walls
+				ABSORB;
+			}
+			if (((ic==0) && (is==0)) || ((ic==nslit-1) && (is==1)) ) {
+			    // ABSORB, no way through right/left walls 
+				ABSORB;
+			}
+			PROP_DT(tt+1.0e-9); // add small shift to avoid num. prec.  errors
+			if (ic==0) {
+				is -= 1;
+				edge = is*w1c - 0.5*w1;				
+			}
+			inblade=1;
+			/* new wall equation */
+			a1=edge+winner; b1=(is+1)*dah-ah; // right wall
+			a2=a1+dlam;b2=b1;  // left wall	
+			SCATTER;
+		/* into channel */	
+		} else {
+			PROP_DT(tt+1.0e-9); // add small shift to avoid num. prec.  errors
+			if (ic==1) {
+				is += 1;
+				edge = is*w1c - 0.5*w1;
+			}
+			inblade=0;
+			/* new wall equation */
+			a1=edge; b1=is*dah-ah;  // right wall
+			a2=edge+winner; b2=b1+dah; // left wall
+			SCATTER;
+		}
+/* reflect */
+	} else {		
+		PROP_DT(tt); // move to the reflection point 
+		vx += N[0]*q;
+		vy += N[1]*q;
+		vz += N[2]*q;
+		PROP_DT(1.0e-9); // add small shift away from the surface to avoid num. prec.  errors
+	    nloop++; // count reflections
+		SCATTER;
+    }
+  } /* end for */
+  /* renormalize to avoid accumulation of num. precision errors*/
+  if (nloop>0) {
+	rtmp=v0/sqrt(vx*vx+vy*vy+vz*vz);
+	vx = vx * rtmp;
+	vy = vy * rtmp;
+	vz = vz * rtmp;  
+  }
+%}
+
+MCDISPLAY
+%{
+  int i;
+
+  magnify("xy");
+  for(i = 0; i < nslit; i++)
+  {
+    multiline(5,
+              i*w1c - w1/2.0, -h1/2.0, 0.0,
+              i*w2c - w2/2.0, -h2/2.0, (double)l,
+              i*w2c - w2/2.0,  h2/2.0, (double)l,
+              i*w1c - w1/2.0,  h1/2.0, 0.0,
+              i*w1c - w1/2.0, -h1/2.0, 0.0);
+    multiline(5,
+              (i+1)*w1c - dlam - w1/2.0, -h1/2.0, 0.0,
+              (i+1)*w2c - dlam - w2/2.0, -h2/2.0, (double)l,
+              (i+1)*w2c - dlam - w2/2.0,  h2/2.0, (double)l,
+              (i+1)*w1c - dlam - w1/2.0,  h1/2.0, 0.0,
+              (i+1)*w1c - dlam - w1/2.0, -h1/2.0, 0.0);
+  }
+  line(-w1/2.0, -h1/2.0, 0.0, w1/2.0, -h1/2.0, 0.0);
+  line(-w2/2.0, -h2/2.0, (double)l, w2/2.0, -h2/2.0, (double)l);
+
+%}
+
+END
