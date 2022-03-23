@@ -16,25 +16,44 @@
 * Block of an attenuating material
 * 
 * %D
-* A rectangular block of attenuating material. Attenuation is computed through
-* the effective length travelled within the material. No scattering is modelled at present.
+* A chunk of attenuating material. Attenuation is computed through
+* the effective length travelled within the material. 
+* No scattering is modelled at present.
+*
+* Filter shape may be a cylinder, a sphere, a box or any other shape.
+*   box/plate:       xwidth x yheight x zdepth 
+*   cylinder:        radius x yheight (along Y axis)
+*   sphere:          radius
+*   any shape:       geometry=OFF/PLY_file
 *
 * %P
 * INPUT PARAMETERS
 *
-* xwidth: Width of block. (m) 
+* xwidth:  Width of block. (m) 
 * yheight: Height of block. (m)
 * zdepth:  Thickness of block. (m)
-* material_datafile: Dile where the material parameters for the filter may be found. Format is similar to what may be found off the NISP website. [Be.txt]
-* geometry: File (off/ply) containing the polygon definition of a general shape object. ( )
+* radius:  Radius of cylinder or sphere. (m)
+* material_datafile: File where the material parameters for the filter may be found. Format is similar to what may be found off the NISP website. [Be.txt]
+* geometry: File containing the polygon definition of a general shape object. When xwidth is also given, the object is rescaled accordingly (OFF/PLY)
 * fixed_delta: Use a fixed delta to compute refraction - useful for debugging. ( ) 
-* refraction: If nonzero, refraction is enabled. ( ) 
+* refraction: If nonzero, refraction is enabled. (0/1) 
+*
+* %L
+* Meshlab https://www.meshlab.net/
+* %L
+* Geomview and Object File Format (OFF) <http://www.geomview.org>
+* %L
+* Java version of Geomview (display only) jroff.jar <http://www.holmes3d.net/graphics/roffview/> 
+* %L
+* qhull <http://qhull.org>
+* %Link
+* Powercrust https://www.cs.ucdavis.edu/~amenta/powercrust.html
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Filter
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (refraction=1,fixed_delta=0,string material_datafile="Be.txt",
-    string geometry=0,xwidth=0,yheight=0,zdepth=0)
+    string geometry=0,xwidth=0,yheight=0,zdepth=0,radius=0)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -43,7 +62,11 @@ SHARE
   %include "read_table-lib"
   %include "interoff-lib"
 
-  enum shapes_t {NONE=-1,SPHERE, CUBE, ELLIPSOID, ANY};
+  #ifndef SHAPES_T
+  #define SHAPES_T
+  enum shapes_t {NONE=-1,SPHERE, CYLINDER, CUBE, ELLIPSOID, ANY};
+  #endif
+  
   #pragma acc routine
   int filter_refract(double *kx, double *ky, double *kz, double nx, double ny, double nz, double delta0, double delta1){
     const double n2=scalar_prod(nx,ny,nz, nx,ny,nz);
@@ -100,13 +123,17 @@ INITIALIZE
   int status=0;
  
   /*if geometry is specified - try to read the off/ply file and set shape*/
-  shape=CUBE;
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
-    if (off_init(geometry, xwidth, yheight, zdepth, 0, &(offdata))) {
-      shape=ANY;
-    }
-  } else if(!xwidth || !yheight || !zdepth){
-    fprintf(stderr,"Error (%s): Filter has zero effective volume.\n",NAME_CURRENT_COMP);
+    if (off_init(geometry, xwidth, yheight, zdepth, 0, &(offdata)))
+      shape=ANY; 
+  } else if (radius && yheight){
+    shape=CYLINDER;
+  } else if (radius){
+    shape=SPHERE;
+  } else if (xwidth && yheight && zdepth){
+    shape=CUBE;
+  } else {
+    fprintf(stderr,"Error (%s): Filter has zero effective volume\n",NAME_CURRENT_COMP);
     exit(-1);
   }
   
@@ -144,11 +171,15 @@ TRACE
   double alpha,e,k,mu,mu0,delta,beta,f;
   double l0,l1,nx,ny,nz;
   int i,status=0;
-  if (shape==CUBE) {
+  if (shape==CYLINDER) {
+    status=cylinder_intersect(&l0,&l1,x,y,z,kx,ky,kz,radius,yheight);
+  } else if (shape==SPHERE) {
+    status=sphere_intersect(&l0,&l1,x,y,z,kx,ky,kz,radius);
+  } else if (shape==CUBE) {
     status=box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth);
-  }else if (shape==ANY){
+  } else if (shape==ANY) {
     status = off_x_intersect(&l0, &l1, NULL, NULL, x, y, z, kx, ky, kz, offdata );
-  } 
+  }
 
   if(status){
     PROP_DL(l0);
@@ -235,9 +266,21 @@ MCDISPLAY
   
   if (shape==CUBE){
     box(0,0,0,xwidth,yheight,zdepth);
-  }else if (shape == ANY) {	/* OFF file */
+  } else if (shape==CYLINDER){
+    circle("xy",0, yheight/2.0,0,radius);
+    circle("xy",0,-yheight/2.0,0,radius);
+    line( radius,yheight/2.0,0, radius,-yheight/2.0,0);
+    line(-radius,yheight/2.0,0,-radius,-yheight/2.0,0);
+    line(0,yheight/2.0, radius, 0,-yheight/2.0, radius);
+    line(0,yheight/2.0,-radius, 0,-yheight/2.0,-radius);
+  } else if (shape==SPHERE){
+    circle("xy",0,0,0,radius);
+    circle("xz",0,0,0,radius);
+    circle("yz",0,0,0,radius);
+  } else if (shape == ANY) {	/* OFF file */
     off_display(offdata);
   }
+  
 %}
 
 END

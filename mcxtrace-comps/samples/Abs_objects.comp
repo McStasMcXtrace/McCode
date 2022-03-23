@@ -42,7 +42,7 @@
 *******************************************************************************/
 DEFINE COMPONENT Abs_objects
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (int refraction=1, string objects="input_small.dat")
+SETTING PARAMETERS (int refraction=1, string objects="input_abs_objects_template.dat")
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
@@ -224,7 +224,7 @@ TRACE
         intersectionc++;
 
 	if(intersectionc>=MX_ABS_OBJECTS_MAX_INTERSECTS){
-	  fprintf("Warning: %s: Intersection storage overrun. Rest of scene will be ignored. Please examine results carefully and/or recompile with \"-DMX_ABS_OBJECTS_MAX_INTERSECTS=N\" where N>256",NAME_CURRENT_COMP);
+	  fprintf(stderr, "Warning: %s: Intersection storage overrun. Rest of scene will be ignored. Please examine results carefully and/or recompile with \"-DMX_ABS_OBJECTS_MAX_INTERSECTS=N\" where N>256",NAME_CURRENT_COMP);
 	  break;
 	}
         /*a dl of 0 marks an unused slot*/
