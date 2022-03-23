@@ -3,7 +3,7 @@
 * McXtrace, x-ray tracing package
 *         Copyright -2017, All rights reserved
 *         DTU Physics, Kgs. Lyngby, Denmark
-*         Institut Laue Langevin, Grenoble, France
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Library: lib directory
 *

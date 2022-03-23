@@ -9,12 +9,13 @@
 *
 * %I
 * Written by: E. Farhi, V. Hugouvieux
-* Date: August 2003
-* Origin:  ILL
+* Date: March 2022
+* Origin:  Synchrotron SOLEIL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
 * Modified by: E. Farhi, Oct 2008: added any shape sample geometry
 * Modified by: E. Farhi, Oct 2012: improved sampling scheme, correct bug in powder S(q)
+* Modified by: E. Farhi, Mar 2022: port to X-rays
 *
 * Isotropic sample handling multiple scattering and absorption for a general
 * S(q,w) (coherent and/or incoherent/self)

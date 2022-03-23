@@ -3,7 +3,7 @@
 * McXtrace, X-ray ray-tracing package
 *         Copyright (C) 1997-2009, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Runtime: share/mcxtrace-r.h
 *
