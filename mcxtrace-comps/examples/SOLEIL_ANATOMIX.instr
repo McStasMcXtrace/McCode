@@ -1,0 +1,165 @@
+/*******************************************************************************
+* Instrument: SOLEIL_ANATOMIX
+*
+* %I
+* Written by: J. Perrin and E. Farhi
+* Date: 2022-03-23
+* Origin: Synchrotron SOLEIL
+* %INSTRUMENT_SITE: SOLEIL
+*
+* The ANATOMY tomography beam-line at Synchrotron SOLEIL.
+*
+* %D
+* The beamline ANATOMIX (Advanced Nanotomography and Imaging with coherent X rays)
+* works at photon energies between 5 and 50 keV. It is dedicated to full-field
+* radiography and tomography in absorption and phase contrast, with pixel sizes
+* from 20 nm to 20 µm.
+
+* ANATOMIX is a beamline for X-ray tomography on the micro- and nanoscale, in
+* absorption and phase contrast. It operates in the energy range from 5 keV upward
+* and allows its users to obtain two- and three-dimensional radiographic images of
+* bulk volume samples of macroscopic size (up to several cm thickness). For
+* smaller samples, a spatial resolution down to 50 nm (20 nm pixel size) can be
+* achieved. Real-time studies are possible at speeds of currently up to one
+* microtomography scan per second; higher speeds up to 20 volume scans per second
+* (50 ms per scan) have been demonstrated.
+
+* A flexible sample interface enables in situ and/or operando studies under
+* conditions similar to the natural or working environment of the samples
+* (temperature, humidity, mechanical load, transport processes). Biological
+* samples can be measured without dehydration and, in many cases, without chemical
+* fixation. With suitable sample preparation, cellular imaging without cryogenic
+* environment is possible.
+*
+* This is a simplified model with an Undulator, a double channel-cut monochromator,
+* a sample stage and a detector. It models a parallel beam full field tomograph.
+* The monochromator is an Si(111), the sample is made of Be. The sample is 2 cm
+* wide.
+*
+* %P
+* E0:    [keV] Energy selected at the Undulator.
+* Emono: [keV] Energy selected at the monochromator. When 0, it is set to E0.
+* dE:    [keV] Energy spread at the Undulator.
+* ANGLE: [deg] Rotation angle of the sample stage.
+* sample:[str] Sample geometry file, OFF/PLY format.
+* 
+* %L
+* https://www.synchrotron-soleil.fr/en/beamlines/anatomix
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT SOLEIL_ANATOMIX(E0=17, Emono=0, dE=1, ANGLE=0, string sample="wire.ply")
+
+DECLARE
+%{
+    double calculated_angle;
+%}
+
+INITIALIZE
+%{
+    double arg=12398.42*sqrt(3)/(2*5.4309*E0*1e3);
+    if (fabs(arg) > 1)
+      exit(printf("%s: ERROR: Monochromator can not reach this energy.\n",
+        NAME_INSTRUMENT));
+    calculated_angle = RAD2DEG*asin(arg);
+    
+    if (Emono==0) Emono=E0;
+    printf("%s: Monochromator energy=%g [keV], angle=%g [deg]\n", 
+      NAME_INSTRUMENT, Emono, calculated_angle);
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+// Undulator U20 - this model is not exact.
+COMPONENT source=Undulator(
+ E0=E0, dE=dE, Ee=8, dEe=0.001, Ie=0.1, 
+ K=1.03118, Nper=140, lu=3.2e-2, sigey=6.17e-6, 
+ sigex=0.29979e-3, sigepx=0.01226e-3, sigepy=1.1e-6, 
+ focus_xw=1e-4, focus_yh=1e-4, dist=50, E1st=12.400)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT e_repartition_before_cc = Monitor_nD(
+    xwidth=0.01, 
+    yheight=0.01, 
+    restore_xray=1, 
+    options="auto energy, y", bins=100,
+    filename="e_repartition_before_cc")
+AT (0, 0, 50) RELATIVE PREVIOUS
+
+COMPONENT psd_monitor_before_cc = PSD_monitor(
+    filename="psd_monitor_before_cc.dat", 
+    xwidth=0.01, 
+    yheight=0.01)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+// double channel-cut monochromator at about 50 m from undulator
+COMPONENT bragg_crystal = Bragg_crystal(
+    crystal_type=2)
+AT (0, 0, 0.1) RELATIVE PREVIOUS
+ROTATED (-calculated_angle, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT arm = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (-calculated_angle, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT bragg_crystal_two = Bragg_crystal(
+    crystal_type=2)
+AT (0, 0.01, 0.1) RELATIVE bragg_crystal
+ROTATED (calculated_angle, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT arm_two = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (calculated_angle, 0, 0) RELATIVE PREVIOUS
+
+
+COMPONENT psd_after_cc = PSD_monitor(
+  xwidth =0.1 , yheight=0.1 ,
+  filename="psd_after_cc2",restore_xray = 1) 
+AT (0,0,1) RELATIVE PREVIOUS
+
+COMPONENT e_monitor_before_sample = E_monitor(
+    filename="e_monitor_before_sample.dat", 
+    xwidth=1, 
+    yheight=1, 
+    Emin=E0-dE, 
+    Emax=E0+dE, 
+    nE=500,
+    restore_xray=1)
+AT (0, 0, 1) RELATIVE PREVIOUS
+
+COMPONENT psd_repartition_after_cc = PSD_monitor(
+  xwidth =.1 , yheight=.1 ,
+  filename="psd_repartition_after_cc",restore_xray = 1) 
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT sample_rotation_stage = Arm()
+AT (0, 0, 150) RELATIVE PREVIOUS
+
+// sample at about 200 m from Undulator
+COMPONENT sample = Filter(material_datafile="Be.txt",
+    geometry=sample,xwidth=0.02,yheight=0,zdepth=0)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0,ANGLE,0) RELATIVE PREVIOUS
+
+COMPONENT e_monitor_after_sample = E_monitor(
+    filename="e_monitor_after_sample.dat", 
+    xwidth=1, 
+    yheight=1, 
+    Emin=E0-E0*0.1, 
+    Emax=E0+E0*0.1, 
+    nE=500,
+    restore_xray=1)
+AT (0, 0, 0.5) RELATIVE sample_rotation_stage
+
+COMPONENT psd_monitor_after_cc = PSD_monitor(
+    filename="psd_monitor_after_sample.dat", nx=512, ny=512,
+    xwidth=.02, 
+    yheight=.02)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+
+END
+
