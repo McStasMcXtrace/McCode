@@ -1,0 +1,73 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Test Isotropic_Sqw output
+*
+* %Identification
+* Written by: P. Willendrup
+* Date: October 1st 2020
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests
+*
+* Test output of Isotropic_Sqw on a spherical monitor.
+*
+* %Description
+* A test instrument for testing Isotropic_Sqw output on a spherical monitor.
+*
+* %Example: lambda=1 Detector: Sph_mon_I=1.21087e+08
+*
+* %Parameters
+* lambda: [Angs]  Wavelength emitted from source, 1% wl-interval around.
+* L1: [m]         Source-sample distance
+* directbeam: [1] Suppress direct beam or not
+* sqw_coh: [str] Sqw material definition
+* SPLITS: [1] Number of SPLIT's before sample
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_Sqw(lambda=1, L1=10, int directbeam=0, string sqw_coh="Rb_liq_tot.sqw", int SPLITS=1)
+
+DECLARE %{
+  int DirectBeam;
+  #pragma acc declare create(DirectBeam)
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+  DirectBeam = directbeam;
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+REMOVABLE COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+/* source with constant flux */
+REMOVABLE COMPONENT Source = Source_flat(
+    radius = 0.11, dist = L1, focus_xw = 0.01, focus_yh = 0.1,
+    lambda0 = lambda, dlambda = lambda*0.01)
+  AT (0, 0, 0) RELATIVE Origin
+
+/* TIP: monochromator cradle */ 
+COMPONENT sample_cradle = Arm()
+  AT (0, 0, L1) RELATIVE PREVIOUS
+
+SPLIT SPLITS COMPONENT Sqw = Isotropic_Sqw(radius=0.005, yheight=0.1, Sqw_coh=sqw_coh)
+  AT (0, 0, 0) RELATIVE sample_cradle
+EXTEND %{
+  if(DirectBeam == 0) {
+    if (!SCATTERED) {
+      ABSORB;
+    }
+  }
+%}
+
+COMPONENT Sph_mon = PSD_monitor_4PI(nx=100,ny=100, radius=1, filename="Sphere")
+  AT (0, 0, 0) RELATIVE PREVIOUS
+
+/* The END token marks the instrument definition end */
+END
