@@ -1722,7 +1722,7 @@ int cogen_raytrace(struct instr_def *instr)
         list_len(comp->extend->lines) ? " /* contains EXTEND code */" : "");
 
       cout( "      if (_particle->_restore)");
-      coutf("        *_particle = _particle_save;", comp->index);
+      cout( "        particle_restore(_particle,&_particle_save);");
     };
 
     /* if we have a JUMP, change the index */
@@ -2022,7 +2022,7 @@ int cogen_rt_funnel(struct instr_def *instr)
       list_len(comp->extend->lines) ? " /* contains EXTEND code */" : "");
 
       cout( "        if (_particle->_restore)");
-      coutf("          *_particle = _particle_save;", comp->index);
+      cout( "          particle_restore(_particle,&_particle_save);");
     };
     // GROUP
     if (comp->group) {
@@ -2283,6 +2283,18 @@ cogen_header(struct instr_def *instr, char *output_name)
   list_iterate_end(liter);
   cout("  if (suc!=0x0) {*suc=s;}");
   cout("  return rval;");
+  cout("}");
+  cout("");
+
+  /* Function to handle a particle restore of physical particle params */
+  cout("#pragma acc routine");
+  cout("void particle_restore(_class_particle *p, _class_particle *p0);");
+  cout("");
+  cout("void particle_restore(_class_particle *p, _class_particle *p0) {");
+  cout("  p->x  = p0->x;  p->y  = p0->y;  p->z   = p0->z;");
+  cout("  p->kx = p0->kx; p->ky = p0->ky; p->kz  = p0->kz;");
+  cout("  p->Ex = p0->Ex; p->Ey = p0->Ey; p->Ez  = p0->Ez;");
+  cout("  p->t  = p0->t;  p->p  = p0->p;  p->phi = p0->phi;");
   cout("}");
   cout("");
 
