@@ -477,7 +477,7 @@ int cogen_comp_declare(struct comp_inst *comp)
       char *val = exp_tostring(entry->val); /* replaced by instrument parameter when exists */
       if (val[0] == '{') {
         int vl = parse_curlybrackets_vector(val, NULL);
-	printf("\nWARNING:\n The parameter %s of %s is intitalized \n using a static {,,,} vector.\n",c_formal->id,comp->name);
+	printf("\nWARNING:\n The parameter %s of %s is initialized \n using a static {,,,} vector.\n",c_formal->id,comp->name);
 	printf("  -> Such static vectors support literal numbers ONLY.\n");
 	printf("  -> Any vector use of variables or defines must happen via a \n");
 	printf("     DECLARE/INITIALIZE pointer.\n\n");
