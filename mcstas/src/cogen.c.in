@@ -2332,7 +2332,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  p->x  = p0->x;  p->y  = p0->y;  p->z  = p0->z;");
   cout("  p->vx = p0->vx; p->vy = p0->vy; p->vz = p0->vz;");
   cout("  p->sx = p0->sx; p->sy = p0->sy; p->sz = p0->sz;");
-  cout("  p->t = p0->t;  p->p  = p0-p;");
+  cout("  p->t = p0->t;  p->p  = p0->p;");
   cout("}");
   cout("");
 
