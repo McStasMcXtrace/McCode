@@ -55724,7 +55724,7 @@ subroutine CFML_cif2hkl(file_in, file_out, lambda, powxtal, verbose, message, mo
 !    write(*,*) "% sigma_coh  ",  sigma_coh, " coherent   scattering cross section in [barn]"
 !    write(*,*) "% sigma_inc  " , sigma_inc, " incoherent scattering cross section in [barn]"
 !    write(*,*) "% sigma_abs  " , sigma_abs, " absorption scattering cross section in [barn]"
-!    write(*,*) "% density    ",  mass/cell%cellVol, " in [g/cm^3]"
+!    write(*,*) "% density    ",  mass/cell%cellVol**1e24/6.0221409e+23, " in [g/cm^3]"
 !    write(*,*) "% weight     ",  mass,         " in [g/mol]"
 !    write(*,*) "% Vc         ",  cell%cellVol, " volume of unit cell in [A^3]" 
     message = s1
@@ -55778,7 +55778,7 @@ subroutine CFML_cif2hkl(file_in, file_out, lambda, powxtal, verbose, message, mo
     write(unit=lun,fmt="(a,f14.5,a)") "# sigma_coh  ",  sigma_coh, " coherent   scattering cross section in [barn]"
     write(unit=lun,fmt="(a,f14.5,a)") "# sigma_inc  " , sigma_inc, " incoherent scattering cross section in [barn]"
     write(unit=lun,fmt="(a,f14.5,a)") "# sigma_abs  " , sigma_abs, " absorption scattering cross section in [barn]"
-    write(unit=lun,fmt="(a,f14.5,a)") "# density    ",  mass/cell%cellVol, " in [g/cm^3]"
+    write(unit=lun,fmt="(a,f14.5,a)") "# density    ",  mass/cell%cellVol**1e24/6.0221409e+23, " in [g/cm^3]"
     write(unit=lun,fmt="(a,f14.5,a)") "# weight     ",  mass,         " in [g/mol]"
     write(unit=lun,fmt="(a,f14.5,a)") "# Vc         ",  cell%cellVol, " volume of unit cell in [A^3]" 
     write(unit=lun,fmt="(a,f14.5,a)") "# lattice_a  ", Cell%cell(1),  " lattice parameter a in [Angs]"
