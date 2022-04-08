@@ -1,60 +1,69 @@
-function [comps, fig, model] = mcdisplay(model, options, match)
+function [comps, fig] = mcdisplay(varargin)
 % mcdisplay: runs the McStas/McXtrace model in --trace mode and capture the output
 %   grab all MCDISPLAY lines, and render the TRACE information into a figure.
 %
-%  mcdisplay(command)
+%  mcdisplay instr
 %     displays the given McCode model with its defaults/current parameters.
-%  mcdisplay(command, options)
-%     same as above, and specifies an output file format to generate
-%  mcdisplay(command, options, match)
-%     same as above, and only plot component names that match 'match'
-%  [comps, fig] = mcdisplay(...)
-%     returns the list of components, figure used for display and updated model.
+%  mcdisplay instr name1=value1 ...
+%     displays the given McCode model with given parameters.
+%  mcdisplay -png instr name1=value1 ...
+%     same as above, and specifies an output file format to generate (here PNG)
+%     Possible save_as are -png -pdf -fig -tif -jpg -eps
+%  mcdisplay --inspect=COMP instr name1=value1 ...
+%     same as above, and only plot component names that match 'inspect', given as
+%                 a single component word for partial match, such as Monitor
+%                 a component interval such as Monok:Sample or 2:10 or 2:end
 %     
 % Example:
-%   model = mcdisplay('mxrun Test_SX.instr TTH=13.4')
-%   mcdisplay(model)
-%     a figure is generated, which shows the instrument geometry.
-%   mcdisplay(model,'', 'Diff_')
-%   mcdisplay(model,'', 'Monok:Sample')
-%   mcdisplay(model,'', '3:inf')
-%   mcdisplay(model,'', {'Diff_Mono_XY', 'Alpha',')
-%
-% syntax:
-%   [comps, fig, model]=mcdisplay(model, p, options, match)
-%
-% input:
-%   mcdisplay  :      instrument simulation as obtained with 'mccode' (iFunc)
-%               or path to an instrument definition to compile.
-%   options:    rendering/export options. Can contain 
-%     'png','pdf','fig','tif','jpg','eps' or empty for no output
-%   match:      token(s) to only render components that match it, or empty for all.
-%               each token can be: 
-%                 a single component word for partial match, such as 'Monitor'
-%                 a component interval such as 'Monok:Sample' or 2:10 or '2:end'
-%               you may specify a cell of tokens for multiple matches.
+%   mcdisplay Test_SX.instr TTH=13.4
+%   mcdisplay Test_SX.instr TTH=13.4 --inspect=Diff
+%   mcdisplay Test_SX.instr TTH=13.4 --inspect=2:end
 %   
 % output:
 %   comps: a list of component specifications (structure array)
 %   fig:   figure handle
-%   model: model, updated or created (iFunc)
 %
 % See also: http://www.mcstas.org, http://www.mcxtrace.org
 
-  comps = [];
-
-  if nargin < 3, match  =[]; end
-  if nargin < 2, options=''; end
+  comps = []; fig = []; model = ''; match = '';
   
-  % add --trace --no-output-files -n 1e3
-  model = [ model ' --trace --no-output-files' ];
+  % handle input arguments
+  save_as = '';
+  params  = '';
+  instr   = '';
+  options = '';
+  for index= 1 : size(varargin,2)
+    this_arg = varargin{index};
+    switch this_arg
+    case {'-png' '-pdf' '-fig' '-tif' '-jpg' '-eps'}
+      save_as = [ save_as ' ' this_arg ];
+      continue
+    end
+    if strncmp(this_arg, '--inspect=', 10)  % get option for inspection 
+      match=this_arg(11:end); 
+      continue;
+    elseif strcmp(this_arg, '--inspect')  % get option for inspection 
+      match=varargin{index+1}; 
+      index = index+1;
+      continue;
+    elseif this_arg(1) == '-'
+      options = [ options ' ' this_arg ];
+    elseif isempty(instr) & ~any(strcmp({ 'mxrun','mcrun'}, this_arg))
+      instr = this_arg;
+    end
+    
+    % else treat other arguments as args for the instrument executable
+    model = [ model ' ' this_arg ];
+  end
   
   % execute McCode command
   if ismac,      precmd = 'DYLD_LIBRARY_PATH= ; DISPLAY= ; ';
   elseif isunix, precmd = 'LD_LIBRARY_PATH= ; DISPLAY= ; ';
   else           precmd = ''; end
-  [status,output] = system([ precmd model ]);
+  % add --trace --no-output-files
+  [status,output] = system([ precmd model ' --trace --no-output-files' ]);
   
+  disp([ mfilename ': plotting ' instr ]);
   if isempty(comps)
     index_start = strfind(output, 'MCDISPLAY: start');
     index_end   = strfind(output, 'MCDISPLAY: end');
@@ -114,64 +123,52 @@ function [comps, fig, model] = mcdisplay(model, options, match)
   % PLOTTING: transform the points and plot them
   fig = gcf; 
   
-  if ischar(match),       match = cellstr(match); 
-  elseif isempty(match),  match = {}; 
-  elseif isnumeric(match) match = { match }; 
-  end
-
-  if ~isempty(match) && ~iscell(match)
-    warning([ mfilename ': invalid component token specification. Plotting all.' ]);
-    match = {}; 
-  end
-  
   % handle match types: single name, range: i1:i2, range name1:name2
   if ~isempty(match)
-    for m=1:numel(match)
-      if isnumeric(match{m})
-        new_match = ' ';
-        for c = 1:numel(comps)
-          if any(c == match{m})
-            new_match = [ new_match comps(c).name ' ' ];
-          end
+    if ~isnan(str2double(match)) 
+      new_match = ' ';
+      for c = 1:numel(comps)
+        if any(c == match)
+          new_match = [ new_match comps(c).name ' ' ];
         end
-        match{m} = new_match;
-      elseif any(match{m} == ':')
-        [i1,i2] = strtok(match{m}, ':'); % get 'from:to' items
-        i2 = i2(2:end);
-        if ~isnan(str2double(i1)) 
-          i1 = str2double(i1);
-          if i1 < 1, i1=1; elseif i1 > numel(comps), i1=numel(comps); end
-          i1 = comps(i1).name;
-        end
-        if ischar(i2) && (strcmp(lower(i2), 'end') || strcmp(lower(i2), 'inf'))
-          i2 = numel(comps)
-        end
-        if ~isnan(str2double(i2)) 
-          i2 = str2double(i2);
-          if i2 < 1, i2=1; elseif i2 > numel(comps), i2=numel(comps); end
-          i2 = comps(i2).name;
-        end
-        
-        % now set all names in between
-        flag = false;
-        new_match = ' ';
-        for c = 1:numel(comps)
-          if ~flag && strcmp(comps(c).name, i1), flag = true; end
-          if flag, new_match = [ new_match comps(c).name ' ' ]; end
-          if flag  && strcmp(comps(c).name, i2), flag = false; break; end
-        end
-        match{m} = new_match; % replace range by list of names
       end
+      match = new_match;
+    elseif any(match == ':')
+      [i1,i2] = strtok(match, ':'); % get 'from:to' items
+      i2 = i2(2:end);
+      if ~isnan(str2double(i1)) 
+        i1 = str2double(i1);
+        if i1 < 1, i1=1; elseif i1 > numel(comps), i1=numel(comps); end
+        i1 = comps(i1).name;
+      end
+      if ischar(i2) && (strcmp(lower(i2), 'end') || strcmp(lower(i2), 'inf'))
+        i2 = numel(comps)
+      end
+      if ~isnan(str2double(i2)) 
+        i2 = str2double(i2);
+        if i2 < 1, i2=1; elseif i2 > numel(comps), i2=numel(comps); end
+        i2 = comps(i2).name;
+      end
+      
+      % now set all names in between
+      flag = false;
+      new_match = ' ';
+      for c = 1:numel(comps)
+        if ~flag && strcmp(comps(c).name, i1), flag = true; end
+        if flag, new_match = [ new_match comps(c).name ' ' ]; end
+        if flag  && strcmp(comps(c).name, i2), flag = false; break; end
+      end
+      match = new_match; % replace range by list of names
     end
   end
   
   % create figure
   if ~isempty(match)
-    t = sprintf('%s ', match{:});
+    t = sprintf('%s ', match);
     if numel(t) > 160, t=[ t(1:150) ' ...' ]; end
-    set(fig, 'Name',[ 'Instrument: ' model ': ' t ]);
+    set(fig, 'Name',[ 'Instrument: ' instr ': ' t ]);
   else
-    set(fig, 'Name',[ 'Instrument: ' model ]);
+    set(fig, 'Name',[ 'Instrument: ' instr ]);
     t = '';
   end
   colors='bgrcmk';
@@ -183,11 +180,11 @@ function [comps, fig, model] = mcdisplay(model, options, match)
     if ~isempty(match)
       found = false;
       for m=1:numel(match)
-        match{m} = deblank(match{m});
+        match = deblank(match);
         % OK when no pattern, or pattern is in comp.name or ' comp.name ' is in pattern
-        if isempty(match{m}) ...
-        || (~any(match{m} == ' ') && ~isempty(strfind(comp.name, match{m}))) ...
-        || ( any(match{m} == ' ') && ~isempty(strfind(match{m}, [ ' ' comp.name ' ' ])))
+        if isempty(match) ...
+        || (~any(match == ' ') && ~isempty(strfind(comp.name, match))) ...
+        || ( any(match == ' ') && ~isempty(strfind(match, [ ' ' comp.name ' ' ])))
           found = true;
           break
         end
@@ -227,49 +224,52 @@ function [comps, fig, model] = mcdisplay(model, options, match)
   daspect([1 1 1]);
   box on;
   a0 = gca;
+  if exist ("OCTAVE_VERSION", "builtin")
+    legend show
+  end
 
-  t = { sprintf([ 'Instrument: ' model ' ' sprintf('%s ', match{:}) '\n']) ; t };
+  t = { sprintf([ 'Instrument: ' model ' ' match '\n']) ; t };
   if exist('trextwrap'), t = textwrap(t, 80); end
   t = sprintf('%s\n', t{:});
   if numel(t) > 160, t = [ t(1:150) ' ...' ]; end
   title(t ,'Interpreter','None');
 
-  plot_contextmenu(gca, model, t);
-  [~,filename] = fileparts(strtok(model));
+  plot_contextmenu(gca, instr, t);
+  [~,filename] = fileparts(strtok(instr));
   if isempty(filename), filename = 'instrument'; end
 
   if ~isempty(match)
-    t = sprintf('%s', match{:});
+    t = match;
     if numel(t) > 20, t = t(1:20); end
     filename = [ filename t ];
   end
   
-  % export options to x3d/xhtml
+  % export save_as to x3d/xhtml
   if exist('figure2xhtml')
-    if ~isempty(strfind(options, 'html'))
+    if ~isempty(strfind(save_as, 'html'))
       t(t=='<')='[';
       t(t=='>')=']';
       figure2xhtml(filename, fig, ...
-        struct('title', model, 'Description',t,'interactive',true));
+        struct('title', instr, 'Description',t,'interactive',true));
       plot_exportmessage([ filename '.xhtml' ])
       plot_exportmessage([ filename '.x3d' ])
     end
-    if ~isempty(strfind(options, 'x3d'))
+    if ~isempty(strfind(save_as, 'x3d'))
       t(t=='<')='[';
       t(t=='>')=']';
       figure2xhtml(filename, fig, struct('interactive',true, ...
-        'output', 'x3d','title',model,'Description',t));
+        'output', 'x3d','title',instr,'Description',t));
       plot_exportmessage([ filename '.x3d' ])
     end
   end
-  if exist('plot2svg') && ~isempty(strfind(options, 'svg'))
+  if exist('plot2svg') && ~isempty(strfind(save_as, 'svg'))
     plot2svg([ filename '.svg' ], fig);
     plot_exportmessage([ filename '.svg' ])
   end
   
   % export to static images
   for f={'png','pdf','fig','tif','jpg','eps'}
-    if ~isempty(strfind(options, f{1}))
+    if ~isempty(strfind(save_as, f{1}))
       try
         saveas(fig, [ filename '.' f{1} ], f{1});
         plot_exportmessage([ filename '.' f{1} ])
@@ -279,10 +279,6 @@ function [comps, fig, model] = mcdisplay(model, options, match)
     end
   end
   axes(a0);
-  
-  if ~isempty(inputname(1)) && nargout < 3
-    assignin('caller',inputname(1),model); % update in original object
-  end
 
 end % plot
 
@@ -384,10 +380,17 @@ function plot_contextmenu(a, name, pars)
   uimenu(uicm, 'Label','Toggle grid', 'Callback','grid');
   uimenu(uicm, 'Label','Toggle aspect ratio','Callback','if all(daspect == 1) daspect(''auto''); else daspect([ 1 1 1 ]); end');
   uimenu(uicm, 'Label','Toggle Perspective','Callback', 'if strcmp(get(gca,''Projection''),''orthographic'')  set(gca,''Projection'',''perspective''); else set(gca,''Projection'',''orthographic''); end');
+  if exist ("OCTAVE_VERSION", "builtin")
+  uimenu(uicm, 'Label','Toggle legend','Callback','legend(''toggle'');');
+  else
   uimenu(uicm, 'Label','Toggle legend','Callback','tmp_h=legend(''toggle''); set(tmp_h,''Interpreter'',''None''); if strcmp(get(tmp_h,''Visible''),''off''), legend(gca,''off''); end; clear tmp_h;');
+  end
+  uimenu(uicm, 'Label','Top View (XZ)', 'Callback', 'view([0 90])')
+  uimenu(uicm, 'Label','Side View (YZ)', 'Callback', 'view([0 0])')
+  uimenu(uicm, 'Label','Front View (XY)', 'Callback', 'view([90 0])')
   uimenu(uicm, 'Label','Reset Flat/3D View', 'Callback', [ ...
       '[tmp_a,tmp_e]=view; if (tmp_a==0 & tmp_e==90) view(3); else view(2); end;' ...
-      'clear tmp_a tmp_e; lighting none;alpha(1);shading flat;rotate3d off;axis tight;legend off;' ]);
+      'clear tmp_a tmp_e; rotate3d off;axis tight;' ]);
   
   % attach the contextual menu
   set(a, 'UIContextMenu', uicm);
@@ -403,11 +406,15 @@ function plot_contextmenu(a, name, pars)
       if ndims(a) >= 2
         uimenu(uicmf, 'Label', 'Rotate on/off', 'Callback','rotate3d');
       end
+      if exist ("OCTAVE_VERSION", "builtin")
+      uimenu(uicmf, 'Label','Legend on/off', 'Callback','legend(''toggle'');');
+      else
       uimenu(uicmf, 'Label','Legend on/off', 'Callback','legend(gca, ''toggle'',''Location'',''Best'');');
+      end
       uimenu(uicmf, 'Label','Print...', 'Callback','printpreview');
 
       set(gcf, 'UIContextMenu', uicmf);
-      set(gcf, 'KeyPressFcn', @(src,evnt) eval('if lower(evnt.Character)==''r'', lighting none;alpha(1);shading flat;axis tight;rotate3d off; zoom off; pan off; end') );
+      set(gcf, 'KeyPressFcn', @(src,evnt) eval('if lower(evnt.Character)==''r'', axis tight;rotate3d off; zoom off; pan off; end') );
     end
   end
     
