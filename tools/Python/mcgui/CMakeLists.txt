@@ -15,8 +15,10 @@ include(MCUtil)
 
 if (${enable_mcxtrace})
   set(FLAVOR "mcxtrace")
+  set(CPACK_PACKAGE_HOMEPAGE_URL "http://mcxtrace.org/")
 elseif(${enable_mcstas})
   set(FLAVOR "mcstas")
+  set(CPACK_PACKAGE_HOMEPAGE_URL "http://mcstas.org/")
 else()
   message(FATAL_ERROR "No flavor specified!\n"
     "Please use either -Denable_mcstas=1 or -Denable_mcxtrace=1")
@@ -50,7 +52,7 @@ set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}gui-${MCCODE_VERSION
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
 
-set(CPACK_PACKAGE_VERSION       "1.0")
+set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
 
@@ -59,6 +61,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 set(NSIS_NAME "Python-based mcgui (mcgui-py), ${MCCODE_STRING}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 # Debian
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-tools-perl-cmdline-${MCCODE_VERSION}, ${FLAVOR}-tools-python-mccodelib-${MCCODE_VERSION}, python3, python3-pyqt5.qsci")
