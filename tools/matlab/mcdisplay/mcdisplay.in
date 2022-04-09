@@ -46,7 +46,7 @@ if ( canrun_m ); then
 elif ( canrun_i ); then
     ifit -r $*
 elif ( canrun_o ); then
-    octave --eval "addpath('${LIB}');${TOOL} ${MCRUN} $*"
+    octave --eval "addpath('${LIB}');${TOOL} ${MCRUN} $* ; legend off ; disp('Press a key to exit @P@display-matlab ...'); pause"
 else
     echo ":: Failed to run Matlab/iFit/Octave ${TOOL}, trying default ${TOOL} instead."
     echo ":: If this fails too, consider reinstalling ${TOOL}."
