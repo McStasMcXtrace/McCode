@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# launcher for octave 3d geometry plotter
+
+LIB="@TOOLS_LIB@"
+TOOL="mcdisplay"
+MCRUN="@P@run"
+VERS="@MCCODE_VERSION@"
+
+canrun_o() {
+    if ! [ -x ${LIB}/${TOOL}.m ]; then
+        exit 127;
+    fi
+    
+    # is octave on the path?
+    if ! [ `which octave` ]; then
+            exit 127;
+    fi
+}
+
+
+if ( canrun_o ); then
+    octave --eval "addpath('${LIB}');${TOOL} ${MCRUN} $* ; legend off ; disp('Press a key to exit @P@display-octave ...'); pause"
+else
+    echo ":: Failed to run Octave ${TOOL}, trying default ${TOOL} instead."
+    echo ":: If this fails too, consider reinstalling ${TOOL}."
+    echo ""
+
+    # Try old Perl-version of mcplot if Python version cannot run
+    ${TOOL} $*
+fi
