@@ -20,7 +20,7 @@ canrun_o() {
 
 
 if ( canrun_o ); then
-    octave --eval "addpath('${LIB}');${TOOL} ${MCRUN} $* ; legend off ; disp('Press a key to exit @P@display-octave ...'); set(gcf,'closerequestfcn','exit'; pause"
+    octave --eval "addpath('${LIB}');${TOOL} ${MCRUN} $* ; legend off ; disp('Press a key to exit @P@display-octave ...'); set(gcf,'closerequestfcn','exit'); pause"
 else
     echo ":: Failed to run Octave ${TOOL}, trying default ${TOOL} instead."
     echo ":: If this fails too, consider reinstalling ${TOOL}."
