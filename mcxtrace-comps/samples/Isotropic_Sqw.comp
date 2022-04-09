@@ -192,9 +192,7 @@
 * INPUT PARAMETERS:
 * Sqw_coh: [str]              Name of the file containing the values of Q, w and S(Q,w) Coherent part; Q in Angs-1, E in meV, S(q,w) in meV-1. Use 0, NULL or "" to disable.
 * Sqw_inc: [str]              Name of the file containing the values of Q, w and S(Q,w). Incoherent (self) part. Use 0, NULL or "" to scatter isotropically (V-like).
-* sigma_coh: [barns]          Coherent Scattering cross-section. Use -1 to unactivate.
-* sigma_inc: [barns]          Incoherent Scattering cross-section. Use -1 to unactivate.
-* sigma_abs: [barns]          Absorption cross-section at 2200 m/s. Use -1 to unactivate.
+* material: [str]             Absorption file.
 * rho: [AA-3]                 Density of scattering elements (nb atoms/unit cell V_0).
 * T: [K]                      Temperature of sample, detailed balance. Use T=-1 to disable it, and T=-2 to guess it from non-classical S(q,w) input.
 *
@@ -274,8 +272,9 @@
 DEFINE COMPONENT Isotropic_Sqw
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(
-  vector powder_format={0,0,0,0,0,0,0,0,0},
+  vector powder_format={0,0,0,0,0,0,0,0,0}, vector mat_format={0,0,0,0,0},
   string Sqw_coh=0, string Sqw_inc=0, string geometry=0,
+  string material="NULL",
   radius=0,thickness=0,
   xwidth=0, yheight=0, zdepth=0,
   threshold=1e-20, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
@@ -361,7 +360,8 @@ struct Sqw_sample_struct { /* global parameters gathered as a structure */
 
   double s_abs, s_coh, s_inc; /* material constants */
   double my_s;
-  double my_a_v;
+  double my_a;
+  double my_inc;
   double mat_rho;
   double mat_weight;
   double mat_density;
@@ -371,6 +371,7 @@ struct Sqw_sample_struct { /* global parameters gathered as a structure */
   double sqw_threshold;       /* options to tune S(q,w) */
   double sqw_classical;
   double sqw_norm;
+  double sqw_K2E;
 
   double barns;               /* for powders */
   double Dd, DWfactor;
@@ -385,7 +386,7 @@ struct Sqw_sample_struct { /* global parameters gathered as a structure */
   long   photon_pmult;
   long   photon_exit;
   char   verbose_output;
-  int    column_order[9];     /* column signification */
+  int    powder_columns_order[9];     /* column signification in powder files*/
   long   lookup_length;
 
   double dq, dw; /* q/w transfer */
@@ -406,7 +407,11 @@ struct Sqw_sample_struct { /* global parameters gathered as a structure */
   double multi;
 
   double rw, rq;
-};
+  
+  t_Table mat_table;  /* holds material absorption data */
+  int mat_mu_c_o;         /* column for absorption in material file */
+  int    mat_columns_order[5]; /*column signification for the coeff. in material data file*/
+}; // Sqw_sample_struct
 
 #include <stdio.h>
 #include <math.h>
@@ -512,14 +517,14 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
 
   t_Table *retTable;
 
-  flag_qSq = (Sqw->column_order[8]>0 && Sqw->column_order[6]>0);
+  flag_qSq = (Sqw->powder_columns_order[8]>0 && Sqw->powder_columns_order[6]>0);
 
   MPI_MASTER(
-  if (Sqw->column_order[0] == 4 && Sqw->barns !=0)
+  if (Sqw->powder_columns_order[0] == 4 && Sqw->barns !=0)
     printf("Isotropic_sqw: %s: Powder file probably of type Crystallographica/Fullprof (lau)\n"
            "WARNING:       but F2 unit is set to powder_barns=1 (barns). Intensity might be 100 times too high.\n",
            Sqw->compname);
-  if (Sqw->column_order[0] == 17 && Sqw->barns == 0)
+  if (Sqw->powder_columns_order[0] == 17 && Sqw->barns == 0)
     printf("Isotropic_sqw: %s: Powder file probably of type Lazy Pulver (laz)\n"
            "WARNING:       but F2 unit is set to powder_barns=0 (fm^2). Intensity might be 100 times too low.\n",
            Sqw->compname);
@@ -544,25 +549,25 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
 
       /* get data from table using columns {j d F2 DW Dd inv2d q} + { Sq }*/
       /* column indexes start at 1, thus need to substract 1 */
-      if (Sqw->column_order[0]>0)
-        j = Table_Index(sqwTable, i, Sqw->column_order[0]-1);
-      if (Sqw->column_order[1]>0)
-        d = Table_Index(sqwTable, i, Sqw->column_order[1]-1);
-      if (Sqw->column_order[2]>0)
-        F2 = Table_Index(sqwTable, i, Sqw->column_order[2]-1);
-      if (Sqw->column_order[3]>0)
-        DWfactor = Table_Index(sqwTable, i, Sqw->column_order[3]-1);
-      if (Sqw->column_order[4]>0)
-        w = Table_Index(sqwTable, i, Sqw->column_order[4]-1);
-      if (Sqw->column_order[5]>0 && !(Sqw->column_order[1]>0))  {
-        d = Table_Index(sqwTable, i, Sqw->column_order[5]-1); if (d) d = 1/d/2; }
-      if (Sqw->column_order[6]>0)
-        q = Table_Index(sqwTable, i, Sqw->column_order[6]-1);
-      if (Sqw->column_order[7]>0 && !F2)
-        {F2= Table_Index(sqwTable, i, Sqw->column_order[7]-1); F2 *= F2;}
+      if (Sqw->powder_columns_order[0]>0)
+        j = Table_Index(sqwTable, i, Sqw->powder_columns_order[0]-1);
+      if (Sqw->powder_columns_order[1]>0)
+        d = Table_Index(sqwTable, i, Sqw->powder_columns_order[1]-1);
+      if (Sqw->powder_columns_order[2]>0)
+        F2 = Table_Index(sqwTable, i, Sqw->powder_columns_order[2]-1);
+      if (Sqw->powder_columns_order[3]>0)
+        DWfactor = Table_Index(sqwTable, i, Sqw->powder_columns_order[3]-1);
+      if (Sqw->powder_columns_order[4]>0)
+        w = Table_Index(sqwTable, i, Sqw->powder_columns_order[4]-1);
+      if (Sqw->powder_columns_order[5]>0 && !(Sqw->powder_columns_order[1]>0))  {
+        d = Table_Index(sqwTable, i, Sqw->powder_columns_order[5]-1); if (d) d = 1/d/2; }
+      if (Sqw->powder_columns_order[6]>0)
+        q = Table_Index(sqwTable, i, Sqw->powder_columns_order[6]-1);
+      if (Sqw->powder_columns_order[7]>0 && !F2)
+        {F2= Table_Index(sqwTable, i, Sqw->powder_columns_order[7]-1); F2 *= F2;}
 
-      if (Sqw->column_order[8]>0)
-        Sq= Table_Index(sqwTable, i, Sqw->column_order[8]-1);
+      if (Sqw->powder_columns_order[8]>0)
+        Sq= Table_Index(sqwTable, i, Sqw->powder_columns_order[8]-1);
 
       if (q > 0 && Sq >= 0) F2 = Sq;
       if (d > 0 && q <= 0)  q = 2*PI/d;
@@ -776,8 +781,7 @@ int Sqw_search_Q_proba_per_w(struct Sqw_Data_struct Sqw, double randnum, int ind
 * compute the effective total cross section \int q S(q,w) dw dq
 * for incoming photon energy 0 < Ei < 2*w_max, and
 * integration range w=-w_max:Ei and q=Q0:Q1 with
-*   Q0 = SE2Q*(sqrt(Ei)-sqrt(Ei-w))=|Ki-Kf|
-*   Q1 = SE2Q*(sqrt(Ei)+sqrt(Ei-w))=|Ki+Kf|
+*
 * The data to use is Sqw_Data->Sqw, and the limits are Sqw_Data->w_max Sqw_Data->q_max
 *   Returns the integral value
 * Used in: Sqw_readfile (1)
@@ -792,15 +796,11 @@ double Sqw_integrate_iqSq(struct Sqw_Data_struct *Sqw_Data, double Ei)
     long   index_q;
     double w = -Sqw_Data->w_max + index_w * Sqw_Data->w_step; /* in the Sqw table */
     if (w <= Ei) {       /* integration range w=-w_max:Ei, Ef = Ei-w > 0 */
-      double sq=0, Q0=0, Q1=0;
-      sq = sqrt(Ei-w);  /* always real as test was true before */
-      Q0 = E2K*(sqrt(Ei)-sq);
-      Q1 = E2K*(sqrt(Ei)+sq);
 
       for (index_q=0; index_q < Sqw_Data->q_bins; index_q++) {
         double q=(double)index_q * Sqw_Data->q_step;
         /* add 'pixel' = q S(q,w) */
-        if (Q0 <= q && q <= Q1) iqSq += q*Table_Index(Sqw_Data->Sqw, index_q, index_w);
+        iqSq += q*Table_Index(Sqw_Data->Sqw, index_q, index_w);
       }
     }
   }
@@ -1222,21 +1222,21 @@ struct Sqw_Data_struct *Sqw_readfile(
     if (parsing[3] && !Sqw->s_abs)    Sqw->s_abs  =  atof(parsing[3]);
     if (parsing[4] && !Sqw->s_inc)    Sqw->s_inc  =  atof(parsing[4]);
     if (parsing[5] && !Sqw->s_inc)    Sqw->s_inc  =  atof(parsing[5]);
-    if (parsing[6])                   Sqw->column_order[0]=atoi(parsing[6]);
-    if (parsing[7])                   Sqw->column_order[1]=atoi(parsing[7]);
-    if (parsing[8])                   Sqw->column_order[2]=atoi(parsing[8]);
-    if (parsing[9])                   Sqw->column_order[3]=atoi(parsing[9]);
-    if (parsing[10])                  Sqw->column_order[4]=atoi(parsing[10]);
-    if (parsing[11])                  Sqw->column_order[5]=atoi(parsing[11]);
-    if (parsing[12])                  Sqw->column_order[5]=atoi(parsing[12]);
-    if (parsing[13])                  Sqw->column_order[5]=atoi(parsing[13]);
-    if (parsing[14])                  Sqw->column_order[6]=atoi(parsing[14]);
+    if (parsing[6])                   Sqw->powder_columns_order[0]=atoi(parsing[6]);
+    if (parsing[7])                   Sqw->powder_columns_order[1]=atoi(parsing[7]);
+    if (parsing[8])                   Sqw->powder_columns_order[2]=atoi(parsing[8]);
+    if (parsing[9])                   Sqw->powder_columns_order[3]=atoi(parsing[9]);
+    if (parsing[10])                  Sqw->powder_columns_order[4]=atoi(parsing[10]);
+    if (parsing[11])                  Sqw->powder_columns_order[5]=atoi(parsing[11]);
+    if (parsing[12])                  Sqw->powder_columns_order[5]=atoi(parsing[12]);
+    if (parsing[13])                  Sqw->powder_columns_order[5]=atoi(parsing[13]);
+    if (parsing[14])                  Sqw->powder_columns_order[6]=atoi(parsing[14]);
     if (parsing[15] && !Sqw->s_coh)   Sqw->s_coh=atof(parsing[15]);
     if (parsing[16] && !Sqw->s_coh)   Sqw->s_coh=atof(parsing[16]);
     if (parsing[17] && !Sqw->Temperature) Sqw->Temperature=atof(parsing[17]); /* from user or file */
     if (parsing[17] )                 T_file=atof(parsing[17]); /* from file */
-    if (parsing[18])                  Sqw->column_order[8]=atoi(parsing[18]);
-    if (parsing[19])                  Sqw->column_order[7]=atoi(parsing[19]);
+    if (parsing[18])                  Sqw->powder_columns_order[8]=atoi(parsing[18]);
+    if (parsing[19])                  Sqw->powder_columns_order[7]=atoi(parsing[19]);
     if (parsing[20] && !Sqw->mat_rho)     Sqw->mat_rho    =atof(parsing[20]);
     if (parsing[21] && !Sqw->mat_density) Sqw->mat_density=atof(parsing[21]);
     if (parsing[22] && !Sqw->mat_weight)  Sqw->mat_weight =atof(parsing[22]);
@@ -1708,8 +1708,6 @@ struct Sqw_Data_struct *Sqw_readfile(
         sigma(Ei) = sigma/2/Ki^2 * \int q S(q,w) dw dq
    * for each incoming photon energy 0 < Ei < 2*w_max, and
    * integration range w=-Ei:w_max and q=Q0:Q1 with
-   *   Q0 = SE2Q*(sqrt(E)-sqrt(E+w))
-   *   Q1 = SE2Q*(sqrt(E)+sqrt(E+w))
    */
 
   Sqw_Data->lookup_length = Sqw->lookup_length;
@@ -1729,26 +1727,9 @@ struct Sqw_Data_struct *Sqw_readfile(
   /* compute the maximum incoming energy that can be handled */
   Sqw_Data->Ei_max = 2*w_max;
 
-  /* Checked in different ways in Powder and "proper inelastic" case */
-  if (w_step==1) {
-    /* Powder */
-    double Ei_max_q = q_max*K2E;
+  {
+    double Ei_max_q = q_max*Sqw->sqw_K2E;
     if (Ei_max_q > Sqw_Data->Ei_max) Sqw_Data->Ei_max = Ei_max_q;
-  } else {
-    /* Proper inelastic */
-    /* check if the q-range will limit the integration */
-    if (q_max*K2E > Sqw_Data->Ei_max) {
-      /* then scan Ei until we pass q_max */
-      for (index_w=0; index_w < Sqw_Data->iqSq_length; index_w++) {
-	double Ei = index_w*2*w_max/Sqw_Data->iqSq_length;
-	if ( (Ei > w_max && sqrt(Ei)+sqrt(Ei-w_max) >= q_max)
-	     || sqrt(Ei)+sqrt(Ei+w_max) >= q_max*K2E)
-	  if (Ei < Sqw_Data->Ei_max) {
-	    Sqw_Data->Ei_max = Ei;
-	    break;
-	  }
-      }
-    }
   }
 
   MPI_MASTER(
@@ -1767,7 +1748,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     double Ki;
     double Sigma=0;
     Ei = index_w*Sqw_Data->Ei_max/Sqw_Data->iqSq_length;
-    Ki = E2K*Ei;
+    Ki = Ei/Sqw->sqw_K2E;
     /* sigma(Ei) = sigma/2/Ki^2 * \int q S(q,w) dq dw */
     /* Eq (6) from E. Farhi et al. J. Comp. Phys. 228 (2009) 5251 */
     Sigma = Ki <= 0 ? 0 : (Sqw->type=='c' ? Sqw->s_coh : Sqw->s_inc)
@@ -1936,6 +1917,8 @@ struct Sqw_Data_struct *Sqw_readfile(
   return(Sqw_Data);
 } /* end Sqw_readfile */
 
+
+
 /*****************************************************************************
 * Sqw_init_read: Read coherent/incoherent Sqw data files
 *   Returns Sqw total intensity, or 0 (error)
@@ -2004,7 +1987,6 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
 DECLARE
 %{
   struct Sqw_sample_struct VarSqw;
-  int *columns;
   off_struct offdata;
 %}
 
@@ -2015,7 +1997,13 @@ INITIALIZE
 %{
   int i;
   /* check for parameters */
-  columns = (int*)powder_format;
+  int *powder_columns, *mat_columns;
+  powder_columns = (int*)powder_format; // also in VarSqw.powder_columns_order
+  mat_columns    = (int*)mat_format;
+  
+  for (i=0; i< 4;  i++) {
+    VarSqw.mat_columns_order[i] = (int)mat_columns[i];
+  }
 
   VarSqw.verbose_output= verbose;
   VarSqw.shape = -1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
@@ -2037,8 +2025,6 @@ INITIALIZE
   if (VarSqw.shape < 0)
     exit(fprintf(stderr,"Isotropic_Sqw: %s: sample has invalid dimensions.\n"
                         "ERROR          Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
-
-
 
   if (thickness) {
     if (radius && (radius < fabs(thickness) )) {
@@ -2098,6 +2084,7 @@ INITIALIZE
   VarSqw.photon_exit    = 0;
   VarSqw.mat_rho       = rho;
   VarSqw.sqw_norm  = norm;
+  VarSqw.sqw_K2E   = K2E*1e6; /* E from photon in keV, Sqw in meV */
   VarSqw.mean_scatt= 0;
   VarSqw.mean_abs  = 0;
   VarSqw.psum_scatt= 0;
@@ -2118,8 +2105,8 @@ INITIALIZE
   VarSqw.Dd        = powder_Dd;
   VarSqw.DWfactor  = powder_DW;
   VarSqw.Temperature= T;
-  for (i=0; i< 9; i++) VarSqw.column_order[i] = columns[i];
-  VarSqw.column_order[8] = (VarSqw.column_order[0] >= 0 ? 0 : 2);
+  for (i=0; i< 9; i++) VarSqw.powder_columns_order[i] = powder_columns[i];
+  VarSqw.powder_columns_order[8] = (VarSqw.powder_columns_order[0] >= 0 ? 0 : 2);
 
   /* optional ways to define rho */
   if (!VarSqw.mat_rho && powder_Vc > 0)
@@ -2140,8 +2127,8 @@ INITIALIZE
     VarSqw.s_coh=VarSqw.s_inc=0;
   }
   /* 100: convert from barns to fm^2 */
-  VarSqw.my_a_v  =(VarSqw.mat_rho*100*VarSqw.s_abs*2200);
-  VarSqw.my_s    =(VarSqw.mat_rho*100*(VarSqw.s_coh>0 ? VarSqw.s_coh : 0
+  VarSqw.my_a =(VarSqw.mat_rho*100*VarSqw.s_abs);
+  VarSqw.my_s =(VarSqw.mat_rho*100*(VarSqw.s_coh>0 ? VarSqw.s_coh : 0
                                      +VarSqw.s_inc>0 ? VarSqw.s_inc : 0));
   MPI_MASTER(
   if ((VarSqw.s_coh > 0 || VarSqw.s_inc > 0) && !VarSqw.Temperature
@@ -2165,6 +2152,29 @@ INITIALIZE
            NAME_CURRENT_COMP);
     );
     order = 1;
+  }
+  
+  /* Loading material datafile for the absorption */
+  if (material && strlen(material) && strcmp(material, "NULL")) {
+    int status;
+    char **parsing;
+    if( (status=Table_Read(&(VarSqw.mat_table),material,0))==-1){
+       fprintf(stderr,"Isotropic_Sqw: %s: Error reading material data from file %s.\n",NAME_CURRENT_COMP,material);
+    }
+    parsing=Table_ParseHeader(VarSqw.mat_table.header,
+       "column_e","column_abs","column_inc","column_cohinc","column_tot",NULL);
+
+    if (parsing){
+      int i;
+      for (i=0;i<5;i++){
+        if (parsing[i]) VarSqw.mat_columns_order[i]=atoi(parsing[i]);
+      }
+    }
+    if (VarSqw.mat_table.columns==3) {  /*which column is the energy in and which holds mu*/
+      VarSqw.mat_mu_c_o=1;
+    }else{
+      VarSqw.mat_mu_c_o=5;
+    }
   }
 
   /* request statistics */
@@ -2191,9 +2201,7 @@ int    intersect=0;     /* flag to continue/stop */
 double l0,  l1,  l2,  l3; /* times for intersections */
 double dl0, dl1, dl2, dl; /* time intervals */
 double k=0, Ei=0;
-double v=0, vf=0;
 double d_path;        /* total path length for straight trajectory */
-double my_a;          /* absorption cross-section scaled to velocity (2200) */
 double ws, p_scatt;   /* probability for scattering/absorption and for */
                       /* interaction along d_path */
 double tmp_rand;      /* temporary var */
@@ -2212,7 +2220,7 @@ int    flag=0;
 int    flag_concentric=0;
 int    flag_ishollow=0;
 double solid_angle=0;
-double my_t=0;
+double my_t=0, my_a=0;
 double p_mult=1;
 double mc_trans, p_trans, mc_scatt;
 double coh=0, inc=0;
@@ -2273,7 +2281,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     }
   } else intersect=0;
 
-  /* Computing the intermediate times */
+  /* Computing the intermediate lengths */
   if (intersect) {
     flag_ishollow = 0;
     if (thickness > 0) {
@@ -2336,24 +2344,27 @@ do { /* Main interaction loop. Ends with intersect=0 */
     VarSqw.photon_enter++;
     p_mult = 1;
     k  = sqrt(kx*kx+ky*ky+kz*kz);
-    Ei = K2E*k;
 
     if (!ki) ki = k;
 
     /* check for scattering event */
-    my_a   = VarSqw.my_a_v / v; /* absorption 'mu' */
+    /* absorption cross-section, energy is in keV */
+    my_a = VarSqw.s_abs*Table_Value(VarSqw.mat_table,k*K2E, VarSqw.mat_mu_c_o);
+    /*assume the given sigma a is like taken from the NIST file*/
+
+
     /* compute total scattering X section */
     /* \int q S(q) dq /2 /ki^2 sigma  OR  bare Xsection*/
     /* contains the 4*PI*kf/ki factor */
     coh = VarSqw.s_coh;
     inc = VarSqw.s_inc;
     if (k && VarSqw.s_coh>0 && VarSqw.Data_coh.intensity) {
-      double Ei       = K2E*k;
+      double Ei       = VarSqw.sqw_K2E*k;
       double index_Ei = Ei / (VarSqw.Data_coh.Ei_max/VarSqw.Data_coh.iqSq_length);
       coh = Table_Value2d(VarSqw.Data_coh.iqSq, index_Ei, 0);
     }
     if (k && VarSqw.s_inc>0 && VarSqw.Data_inc.intensity) {
-      double Ei       = K2E*k;
+      double Ei       = VarSqw.sqw_K2E*k;
       double index_Ei = Ei / (VarSqw.Data_inc.Ei_max/VarSqw.Data_inc.iqSq_length);
       inc = Table_Value2d(VarSqw.Data_inc.iqSq, index_Ei, 0);
     }
@@ -2377,7 +2388,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
     /* Proba of scattering vs absorption (integrating along the whole trajectory) */
     ws = VarSqw.my_s/my_t;  /* (inc+coh)/(inc+coh+abs) */
-    d_path = v*( dl0 +dl2 );    /* total path lenght in sample */
+    d_path = ( dl0 +dl2 );  /* total path lenght in sample */
     /* Proba of transmission/interaction along length d_path */
     p_trans = exp(-my_t*d_path);
     p_scatt = 1 - p_trans; /* portion of beam which scatters */
@@ -2573,18 +2584,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
         }
 
         /* Search for length of final wave vector kf */
-        /* kf is such that : hbar*w = hbar*hbar/2/m*(k*k - kf*kf) */
-        /* acceptable values for kf are kf1 and kf2 */
-        if (!solve_2nd_order(&kf1, &kf2, 1, 0, -k*k + K2E*omega)) {
-          if (VarSqw.verbose_output >= 3 && VarSqw.photon_removed<VarSqw.maxloop)
-            printf("Isotropic_Sqw: %s: Warning: imaginary root for w=%g q=%g Ei=%g (triangle can not close)\n",
-              NAME_CURRENT_COMP, omega, q, Ei);
-          VarSqw.photon_removed++;
-          continue; /* all roots are imaginary */
-        }
-
-        /* kf1 and kf2 are opposite */
-        kf = fabs(kf1);
+        /* photons: hbar*w = E2K*ki- E2K*kf -> kf = k - omega*E2K */
+        kf = k - omega/VarSqw.sqw_K2E;
 
         /* Search of the direction of kf such that : q = ki - kf */
         /* cos theta = (ki2+kf2-q2)/(2ki kf) */
@@ -2702,7 +2703,7 @@ if (SCATTERED) {
     VarSqw.dq = sqrt((kf_x-ki_x)*(kf_x-ki_x)
                   +(kf_y-ki_y)*(kf_y-ki_y)
                   +(kf_z-ki_z)*(kf_z-ki_z));
-    VarSqw.dw = K2E*(kf - ki);
+    VarSqw.dw = VarSqw.sqw_K2E*(kf - ki);
   } else VarSqw.multi += p;
 
 } else VarSqw.dq=VarSqw.dw=0;
