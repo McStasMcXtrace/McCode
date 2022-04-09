@@ -370,6 +370,7 @@ struct Sqw_sample_struct { /* global parameters gathered as a structure */
   double sqw_threshold;       /* options to tune S(q,w) */
   double sqw_classical;
   double sqw_norm;
+  double sqw_K2E;
 
   double barns;               /* for powders */
   double Dd, DWfactor;
@@ -779,8 +780,7 @@ int Sqw_search_Q_proba_per_w(struct Sqw_Data_struct Sqw, double randnum, int ind
 * compute the effective total cross section \int q S(q,w) dw dq
 * for incoming photon energy 0 < Ei < 2*w_max, and
 * integration range w=-w_max:Ei and q=Q0:Q1 with
-*   Q0 = SE2Q*(sqrt(Ei)-sqrt(Ei-w))=|Ki-Kf|
-*   Q1 = SE2Q*(sqrt(Ei)+sqrt(Ei-w))=|Ki+Kf|
+*
 * The data to use is Sqw_Data->Sqw, and the limits are Sqw_Data->w_max Sqw_Data->q_max
 *   Returns the integral value
 * Used in: Sqw_readfile (1)
@@ -795,15 +795,11 @@ double Sqw_integrate_iqSq(struct Sqw_Data_struct *Sqw_Data, double Ei)
     long   index_q;
     double w = -Sqw_Data->w_max + index_w * Sqw_Data->w_step; /* in the Sqw table */
     if (w <= Ei) {       /* integration range w=-w_max:Ei, Ef = Ei-w > 0 */
-      double sq=0, Q0=0, Q1=0;
-      sq = sqrt(Ei-w);  /* always real as test was true before */
-      Q0 = E2K*(sqrt(Ei)-sq);
-      Q1 = E2K*(sqrt(Ei)+sq);
 
       for (index_q=0; index_q < Sqw_Data->q_bins; index_q++) {
         double q=(double)index_q * Sqw_Data->q_step;
         /* add 'pixel' = q S(q,w) */
-        if (Q0 <= q && q <= Q1) iqSq += q*Table_Index(Sqw_Data->Sqw, index_q, index_w);
+        iqSq += q*Table_Index(Sqw_Data->Sqw, index_q, index_w);
       }
     }
   }
@@ -1711,8 +1707,6 @@ struct Sqw_Data_struct *Sqw_readfile(
         sigma(Ei) = sigma/2/Ki^2 * \int q S(q,w) dw dq
    * for each incoming photon energy 0 < Ei < 2*w_max, and
    * integration range w=-Ei:w_max and q=Q0:Q1 with
-   *   Q0 = SE2Q*(sqrt(E)-sqrt(E+w))
-   *   Q1 = SE2Q*(sqrt(E)+sqrt(E+w))
    */
 
   Sqw_Data->lookup_length = Sqw->lookup_length;
@@ -1732,26 +1726,9 @@ struct Sqw_Data_struct *Sqw_readfile(
   /* compute the maximum incoming energy that can be handled */
   Sqw_Data->Ei_max = 2*w_max;
 
-  /* Checked in different ways in Powder and "proper inelastic" case */
-  if (w_step==1) {
-    /* Powder */
-    double Ei_max_q = q_max*K2E;
+  {
+    double Ei_max_q = q_max*Sqw->sqw_K2E;
     if (Ei_max_q > Sqw_Data->Ei_max) Sqw_Data->Ei_max = Ei_max_q;
-  } else {
-    /* Proper inelastic */
-    /* check if the q-range will limit the integration */
-    if (q_max*K2E > Sqw_Data->Ei_max) {
-      /* then scan Ei until we pass q_max */
-      for (index_w=0; index_w < Sqw_Data->iqSq_length; index_w++) {
-	double Ei = index_w*2*w_max/Sqw_Data->iqSq_length;
-	if ( (Ei > w_max && sqrt(Ei)+sqrt(Ei-w_max) >= q_max)
-	     || sqrt(Ei)+sqrt(Ei+w_max) >= q_max*K2E)
-	  if (Ei < Sqw_Data->Ei_max) {
-	    Sqw_Data->Ei_max = Ei;
-	    break;
-	  }
-      }
-    }
   }
 
   MPI_MASTER(
@@ -1770,7 +1747,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     double Ki;
     double Sigma=0;
     Ei = index_w*Sqw_Data->Ei_max/Sqw_Data->iqSq_length;
-    Ki = E2K*Ei;
+    Ki = Ei/Sqw->sqw_K2E;
     /* sigma(Ei) = sigma/2/Ki^2 * \int q S(q,w) dq dw */
     /* Eq (6) from E. Farhi et al. J. Comp. Phys. 228 (2009) 5251 */
     Sigma = Ki <= 0 ? 0 : (Sqw->type=='c' ? Sqw->s_coh : Sqw->s_inc)
@@ -2106,6 +2083,7 @@ INITIALIZE
   VarSqw.photon_exit    = 0;
   VarSqw.mat_rho       = rho;
   VarSqw.sqw_norm  = norm;
+  VarSqw.sqw_K2E   = K2E*1e6; /* E from photon in keV, Sqw in meV */
   VarSqw.mean_scatt= 0;
   VarSqw.mean_abs  = 0;
   VarSqw.psum_scatt= 0;
@@ -2365,12 +2343,11 @@ do { /* Main interaction loop. Ends with intersect=0 */
     VarSqw.photon_enter++;
     p_mult = 1;
     k  = sqrt(kx*kx+ky*ky+kz*kz);
-    Ei = K2E*k;
 
     if (!ki) ki = k;
 
     /* check for scattering event */
-    /*absorption cross-section */
+    /* absorption cross-section, energy is in keV */
     my_a = VarSqw.s_abs*Table_Value(VarSqw.mat_table,k*K2E, VarSqw.mat_mu_c_o);
     /*assume the given sigma a is like taken from the NIST file*/
 
@@ -2381,12 +2358,12 @@ do { /* Main interaction loop. Ends with intersect=0 */
     coh = VarSqw.s_coh;
     inc = VarSqw.s_inc;
     if (k && VarSqw.s_coh>0 && VarSqw.Data_coh.intensity) {
-      double Ei       = K2E*k;
+      double Ei       = VarSqw.sqw_K2E*k;
       double index_Ei = Ei / (VarSqw.Data_coh.Ei_max/VarSqw.Data_coh.iqSq_length);
       coh = Table_Value2d(VarSqw.Data_coh.iqSq, index_Ei, 0);
     }
     if (k && VarSqw.s_inc>0 && VarSqw.Data_inc.intensity) {
-      double Ei       = K2E*k;
+      double Ei       = VarSqw.sqw_K2E*k;
       double index_Ei = Ei / (VarSqw.Data_inc.Ei_max/VarSqw.Data_inc.iqSq_length);
       inc = Table_Value2d(VarSqw.Data_inc.iqSq, index_Ei, 0);
     }
@@ -2607,7 +2584,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
         /* Search for length of final wave vector kf */
         /* photons: hbar*w = E2K*ki- E2K*kf -> kf = k - omega*E2K */
-        kf = k - omega*E2K;
+        kf = k - omega/VarSqw.sqw_K2E;
 
         /* Search of the direction of kf such that : q = ki - kf */
         /* cos theta = (ki2+kf2-q2)/(2ki kf) */
@@ -2725,7 +2702,7 @@ if (SCATTERED) {
     VarSqw.dq = sqrt((kf_x-ki_x)*(kf_x-ki_x)
                   +(kf_y-ki_y)*(kf_y-ki_y)
                   +(kf_z-ki_z)*(kf_z-ki_z));
-    VarSqw.dw = K2E*(kf - ki);
+    VarSqw.dw = VarSqw.sqw_K2E*(kf - ki);
   } else VarSqw.multi += p;
 
 } else VarSqw.dq=VarSqw.dw=0;
