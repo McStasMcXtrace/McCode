@@ -19,9 +19,11 @@ WORK=`pwd`
 ./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" rpm64 "" -- rpm
 ./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" rpm64 "" -- rpm
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" rpm64 "" -- rpm
+./mkdist mcxtrace-tools-matlab-mxdisplay $1 tools/matlab/mcdisplay/ "" rpm64 "" -- rpm
 ./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" rpm64 "" -- rpm
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" rpm64 "" -- rpm
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" rpm64 "" -- rpm
+./mkdist mcxtrace-tools-python-mxplot-svg $1 tools/Python/mcplot/svg/ "" rpm64 "" -- rpm
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" rpm64 "" -- rpm
 ./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" rpm64 "" -- rpm
 ./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" rpm64 "" -- rpm

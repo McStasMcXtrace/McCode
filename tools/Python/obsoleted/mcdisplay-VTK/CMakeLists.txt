@@ -15,8 +15,10 @@ include(MCUtil)
 
 if (${enable_mcxtrace})
   set(FLAVOR "mcxtrace")
+  set(CPACK_PACKAGE_HOMEPAGE_URL "http://mcxtrace.org/")
 elseif(${enable_mcstas})
   set(FLAVOR "mcstas")
+  set(CPACK_PACKAGE_HOMEPAGE_URL "http://mcstas.org/")
 else()
   message(FATAL_ERROR "No flavor specified!\n"
     "Please use either -Denable_mcstas=1 or -Denable_mcxtrace=1")
@@ -48,7 +50,7 @@ set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-vtk-${MCCODE
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
-set(CPACK_PACKAGE_VERSION       "1.0")
+set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
 
@@ -57,6 +59,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 set(NSIS_NAME "Python and VTK based mcdisplay (mcdisplay-vtk-py), ${MCCODE_STRING}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 # Debian
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python, python-vtk")

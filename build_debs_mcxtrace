@@ -22,9 +22,11 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" deb64 "" -- deb
 ./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" deb64 "" -- deb
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" deb64 "" -- deb
+./mkdist mcxtrace-tools-matlab-mxdisplay $1 tools/matlab/mcdisplay/ "" deb64 "" -- deb
 ./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" deb64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" deb64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" deb64 "" -- deb
+./mkdist mcxtrace-tools-python-mxplot-svg $1 tools/Python/mcplot/svg/ "" deb64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" deb64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" deb64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" deb64 "" -- deb
