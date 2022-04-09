@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# launcher for matlab/octave/ifit 3d geometry plotter
+# launcher for matlab/octave 3d geometry plotter
 
 LIB="@TOOLS_LIB@"
 TOOL="mcdisplay"
@@ -18,17 +18,6 @@ canrun_m() {
     fi
 }
 
-canrun_i() {
-    if ! [ -x ${LIB}/${TOOL}.m ]; then
-        exit 127;
-    fi
-    
-    # is ifit on the path?
-    if ! [ `which ifit` ]; then
-            exit 127;
-    fi
-}
-
 canrun_o() {
     if ! [ -x ${LIB}/${TOOL}.m ]; then
         exit 127;
@@ -42,13 +31,11 @@ canrun_o() {
 
 
 if ( canrun_m ); then
-    matlab -nosplash -nodesktop -r "addpath('${LIB}');${TOOL} $*"
-elif ( canrun_i ); then
-    ifit -r $*
+    matlab -nosplash -nodesktop -r "addpath('${LIB}');${TOOL} ${MCRUN} $*"
 elif ( canrun_o ); then
     octave --eval "addpath('${LIB}');${TOOL} ${MCRUN} $* ; legend off ; disp('Press a key to exit @P@display-matlab ...'); pause"
 else
-    echo ":: Failed to run Matlab/iFit/Octave ${TOOL}, trying default ${TOOL} instead."
+    echo ":: Failed to run Matlab/Octave ${TOOL}, trying default ${TOOL} instead."
     echo ":: If this fails too, consider reinstalling ${TOOL}."
     echo ""
 
