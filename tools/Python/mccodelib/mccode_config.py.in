@@ -112,6 +112,8 @@ def get_options():
                          prefix+"display-pyqtgraph",
                          prefix+"display-pyqtgraph --tof",
                          prefix+"display-mantid",
+                         prefix+"display-matlab",
+                         prefix+"display-octave",
                          prefix+"display"+suffix,
                          prefix+"display"+suffix+" -m",
                          prefix+"display"+suffix+" --format=Matlab",
@@ -121,9 +123,12 @@ def get_options():
         prefix = "mx"
         mcdisplay_lst = [prefix+"display-webgl",
                          prefix+"display-pyqtgraph",
+                         prefix+"display-matlab",
+                         prefix+"display-octave",
                          prefix+"display"+suffix,
                          prefix+"display"+suffix+" -m", 
                          prefix+"display"+suffix+" --format=Matlab",
+                         prefix+"display"+suffix+" --format=VRML",
                          prefix+"display"+suffix+" --format=VRML"]
 
  
