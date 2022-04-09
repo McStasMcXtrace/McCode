@@ -38,6 +38,7 @@ export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
 ./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-matlab-mxdisplay $1 tools/matlab/mcdisplay/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxplot-svg $1 tools/Python/mcplot/svg/ "" mac "" -- OSXapp
