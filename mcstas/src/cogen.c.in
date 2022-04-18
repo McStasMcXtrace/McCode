@@ -1658,9 +1658,9 @@ int cogen_raytrace(struct instr_def *instr)
   }
 
   cout("  _particle->flag_nocoordschange=0; /* Init */");
+  cout("  _class_particle _particle_save;");
   cout("  /* the main iteration loop for one incoming event */");
   cout("  while (!ABSORBED) { /* iterate event until absorbed */");
-  cout("    _class_particle _particle_save;");
   cout("    /* send particle event to component instance, one after the other */");
 
   /* now we produce the list of statements for each component index, with the attached logic */
@@ -1796,6 +1796,7 @@ int cogen_raytrace(struct instr_def *instr)
   cout("  } /* while !ABSORBED */");
   cout("");
   cout("  DEBUG_LEAVE()");
+  cout("  particle_restore(_particle,&_particle_save);");
   /* Debugging (final state). */
   cout("  DEBUG_STATE()");
 
