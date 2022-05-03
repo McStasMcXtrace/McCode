@@ -143,7 +143,7 @@ TRACE
   z=0;
 
   // Gaussian distribution at origin
-  p=p0;/*initial weight is 0*/
+  p=p0;/*initial weight is p0*/
   if (E0){
     if(!dE){
       e=E0;
