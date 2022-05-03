@@ -96,6 +96,7 @@ DECLARE
   double s1x;
   double s1y; /*beam's size at dist (convolution of sigex/sigey and igamma)*/
   double lu; /*wiggler magnetic period*/
+  double p0;
 %}
 
 
@@ -139,7 +140,7 @@ INITIALIZE
   /*We normally do computations in k so use that for transfer*/
   kc=E2K*Ec;
 
-
+  p0 = 1.0/mcget_ncount();
 %}
 
 
@@ -159,7 +160,7 @@ TRACE
   z=(rand01()-0.5)*length;
 
   // Gaussian distribution at origin
-  p=1;/*initial weight is 1*/
+  p=p0;/*initial weight is p0*/
   if (E0){
     if(!dE){
       e=E0;

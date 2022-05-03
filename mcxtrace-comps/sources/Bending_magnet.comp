@@ -92,6 +92,7 @@ DECLARE
   double kc; /*characteristic wavenumber of radiation from bending magnet*/
   double s1x;
   double s1y; /*beam's size at dist (convolution of sigex/sigey and igamma)*/
+  double p0;
 %}
 
 
@@ -128,7 +129,7 @@ INITIALIZE
 
   s1x=sqrt(sigex*sigex + igamma*igamma*dist*dist);
   s1y=sqrt(sigey*sigey + igamma*igamma*dist*dist);
-
+  p0=1.0/mcget_ncount();
 %}
 
 
@@ -148,7 +149,7 @@ TRACE
   z=0;
 
   // Gaussian distribution at origin
-  p=1;/*initial weight is 1*/
+  p=p0;/*initial weight is p0*/
   if (E0){
     if(!dE){
       e=E0;
