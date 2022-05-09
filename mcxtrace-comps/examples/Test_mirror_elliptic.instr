@@ -1,0 +1,94 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Test_mirror_elliptic
+*
+* %Identification
+* Date: May 9th 2022
+* Origin: Synchrotron Soleil
+* %INSTRUMENT_SITE: Tests
+*
+* Unit-test instrument for the Mirror_elliptic component.
+*
+* Simply a flat source illuminating an elliptical mirror.
+*
+* Try distance_from_source = 1 (rays reflected back towards the center)
+*     distance_from_source = 0.5 (rays reflected back in a parallel-like fashion)
+*
+* %Parameters
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT template_body_simple(distance_from_source=1)
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+/* -------------------------------------------------- Source */
+COMPONENT Source = Source_flat(
+    E0=22,   
+    dE = 18,
+    focus_xw=0.5,
+    focus_yh=0.5,
+    dist=distance_from_source,
+    xwidth=0.001, yheight=0.001)
+AT (0, 0, 0) RELATIVE origin
+
+
+COMPONENT arm_position = Arm()
+AT (0, 0, distance_from_source) RELATIVE PREVIOUS
+
+COMPONENT arm_rotation = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS	
+ROTATED (0, 0, 90) RELATIVE PREVIOUS	
+
+COMPONENT a_mirror_elliptic = Mirror_elliptic(
+    length=0.5, 
+    width=0.5,
+    x_a=1, 
+    y_b=1, 
+    z_c=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (-90, 0, 0) RELATIVE PREVIOUS
+EXTEND
+%{ 
+	if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT arm = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (-90, 0, 0) RELATIVE PREVIOUS
+
+
+COMPONENT e_monitor = E_monitor(
+    nE=100, 
+    filename="e_monitor.dat", 
+    xwidth=2, 
+    yheight=2, 
+    Emin=4, 
+    Emax=40,        
+    restore_xray=1)
+AT (0, 0, 2) RELATIVE PREVIOUS
+
+COMPONENT psd_monitor = PSD_monitor(
+    filename="psd.dat", 
+    xwidth=2, 
+    yheight=2)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+FINALLY
+%{
+%}
+
+END
