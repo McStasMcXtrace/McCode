@@ -113,6 +113,15 @@ function data = mcplot(varargin)
   
   drawnow;
 
+  % Many versions of Octave needs a pause() here to keep the final plot open.
+  if exist ('OCTAVE_VERSION', 'builtin')
+    if ~isempty(data)
+      if nargin==0 || nargin==1
+	display("Pausing --> Please press a key in the octave terminal to continue");
+	pause();
+      end
+    end
+  end
 end % mcplot (main)
 
 % ==============================================================================
@@ -883,6 +892,7 @@ function data = mcplot_display(data, fig)
 
   % update data structure
   data.handle = h;
+
 end % mcplot_display
 
 % ==============================================================================
