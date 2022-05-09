@@ -6,70 +6,65 @@
 *         Institut Laue Langevin, Grenoble, France
 *
 * Component: Mirror_elliptic
-*
+* 
 * %I
 * Written by: Erik Knudsen
 * Date: Feb 11, 2010
 * Version: $Revision$
 * Origin: Risoe
+* Modified by: Bac Stephane, Padovani Antoine, 09th May 2022 : melded Bragg_crystal_bent.comp into here.
 *
 * Idealized elliptic mirror.
 * 
-* %D 
+* %D
 * Takes a reflectivity (default=1) as input and reflects rays in a ideal geometry
 * elliptic mirror.
 * The mirror is positioned such that the a-axis of the mirror ellipsoid is on the
-* z-axis, the b-axis is along the y-axis and the c is along the x-axis.
+* x-axis, the b-axis is along the y-axis and the c is along the z-axis.
 * The reference point of the mirror is the ellipsoid centre, offset by one half-axis along the y-axis.
-* (See the component manual for a drawing). Furthermore, the mirror centre may be shifted by z_offset
-* along the z-axis ( -c < z_offset < c ).
+* (See the component manual for a drawing). 
 * This means that to position the mirror correctly.
 * the user positions the ellipsoid governing the mirror shape, not the mirror itself.
-*
+* 
 * %P
 * INPUT PARAMETERS
-* R: [1]         Reflectivity of mirror.
+* x_a:     [m]    1st short half axis (along x). Commonly set to zero, which really implies infinite value, so crystal is an elliptic cylinder.
+* y_b:     [m]    2nd short half axis (along y), which is also the presumed near-normal direction, reflection near the y-z plane.
+* z_c:     [m]    long  half axis (along z). Commonly a=0. b=c, which creates a circular cylindrical surface.
+* width:   [m]    x width of the crystal.
+* length:  [m]    z depth (length) of the crystal.
+* R0: [1]         Reflectivity of mirror.
 * coating: [str] Datafile containing either mirror material constants or reflectivity  numbers.
-* a: [m]         long half axis (along z).
-* b: [m]         1st short half axis (along x)
-* c: [m]         2nd short half axis (along y)
-* yheight: [m]   yheight (width) of the mirror.
-* zdepth: [m]    zdepth (length) of the mirror.
-* z_offset: [m]  shift of mirror centre along the z-axis.
-* 
+*
 * %E
 *******************************************************************************/
 
-
 DEFINE COMPONENT Mirror_elliptic
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (R=1, a=0, b=0, c=1, yheight=1, zdepth=1, string coating="")
-OUTPUT PARAMETERS (a2,b2,c2,Ox,Oy,Oz)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+SETTING PARAMETERS (x_a=0, y_b=1.0, z_c=1.0, 
+        length=0.05, width=0.02,   
+        R0=1,string coating="")
+OUTPUT PARAMETERS (a2inv,b2inv,c2inv)
+DEPENDENCY "-std=c99"
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
+
+SHARE
+%{
+  %include "perfect_crystals-lib"
+  #include <complex.h>
+  %include "read_table-lib" 
+  %include "reflectivity-lib"  
+%}
 
 DECLARE
 %{
-  double a2,b2,c2;
-  double Ox,Oy,Oz;
+  double a2inv,b2inv,c2inv; /* 1/r^2 for physical ellipse */
   t_Reflec re;
 %}
 
 INITIALIZE
 %{
-
-  /*check for 0 a or b*/
-  Ox=0;Oy=0;Oz=0;
-  if(!c){
-
-  }
-  if(a && !b){
-    b=a;
-  }else if(!a && b){
-    a=b;
-  }
-  a2=a*a;
-  b2=b*b;
-  c2=c*c;
+  int status;
 
   if (coating && strlen(coating)) {
     status=reflec_Init(&re,COATING_UNDEFINED,coating);
@@ -78,76 +73,115 @@ INITIALIZE
     status=reflec_Init(&re,CONSTANT,R0);
   }
 
-  if(status!=0){
-    fprintf(stderr,"ERROR (%s): Could not interpret coating/reflectivity. Aborting.\n", NAME_CURRENT_COMP);
-    exit(-1);
-  }
+    a2inv=(x_a)?1/(x_a*x_a):0; /* 0 really means infinity for x direction */
+    b2inv=(y_b)?1/(y_b*y_b):0;
+    c2inv=(z_c)?1/(z_c*z_c):0;
+
+    printf("Component %s: initialized\n",NAME_CURRENT_COMP);
+
+    fflush(NULL); // put diagnostics in order!
 %}
 
 TRACE
 %{
-  double A,B,C,k,kxn,kyn,kzn;
-  double t0,t1,l0,l1;
-  /*an offset to the mirror parameters perhaps*/
+    double E;				// (keV) x-ray energy
+    double K; 				// length of k-vector
+    double kxu,kyu,kzu;			// unit vector in the direction of k-vector.
+    double x_int,y_int,z_int;
+    double R;
+    
+    /* get the photon's kvector and energy */
+    K=sqrt(kx*kx+ky*ky+kz*kz);
+    E = K2E*K; /* use built-in constants for consistency */
+    /* make unit vector in the direction of k :*/
+    kxu = kx; kyu = ky; kzu = kz;
+    NORM(kxu,kyu,kzu);
 
-  k=sqrt(kx*kx+ky*ky+kz*kz);
-  kxn=kx/k;kyn=ky/k;kzn=kz/k;
-  /*mirror centre may be shifted along z*/
-  zt=z-z_offset;
-  /*the reference point is on the ellipsoid surface such that the ellipsoid mass lies on the positive
-    x-side of the zy-plane*/ 
-  xt=x-a;
+    double A,B,C, xt, yt, zt;
+    double t0,t1;
+    /*an offset to the mirror parameters perhaps*/
 
-  C=xt*xt/a2 + y*y/b2 + zt*zt/c2 -1;
-  B=2*(kxn*xt/a2 + kyn*y/b2 + kzn*zt/c2);
-  A=kxn*kxn/a2 + kyn*kyn/b2 + kzn*kzn/c2;
-  
-  if(solve_2nd_order(&t0,&t1,A,B,C)){
-     l0=t0*k;
-     l1=t1*k;
-     if (l1>0) {
-       fprintf(stderr,"Warning(%s): x-ray hits mirror on back surface\n",NAME_CURRENT_COMP);
-     }
-     PROP_DL(l0);
-     /*this should use the path length or whatever*/
-     if ( (fabs(y)<yheight/2.0) && (fabs(zt)<zdepth/2.0) ){
-       /*reflect through normal vector*/
-       double nx,ny,nz,kfx,kfy,kfz,kdotn;
-       nx=Ox-x;
-       ny=Oy-y;
-       nz=Oz-z;
-       NORM(nx,ny,nz);
-       kdotn=-scalar_prod(kx,ky,kz,nx,ny,nz);
-       kfx=kx+2*kdotn*nx;
-       kfy=ky+2*kdotn*ny;
-       kfz=kz+2*kdotn*nz;
+    xt=x;
+    zt=z;
+    yt=y-y_b;
 
-       kx=kfx;ky=kfy;kz=kfz;
+    C=xt*xt*a2inv + yt*yt*b2inv + zt*zt*c2inv -1;
+    B=2*(kxu*xt*a2inv + kyu*yt*b2inv + kzu*zt*c2inv);
+    A=kxu*kxu*a2inv + kyu*kyu*b2inv + kzu*kzu*c2inv;
 
-       /*adjust weight of ray*/
-       double q=2.0*kdotn;
-       double R=reflecq(&re,q,0,k*K2E,fabs(90-acos(kdotn/k)*RAD2DEG));
-       p*=R;
-       /*update phase - as an approximation turn by 180 deg.*/;
-       phi+=M_PI;
-     }
-  }
+    if(solve_2nd_order(&t0,&t1,A,B,C)){
+        double xx0, xx1, yy0, yy1, zz0, zz1; /* we will have to tentatively propagate twice to see which surface we hit */
+        xx0=x+kxu*t0; yy0=y+kyu*t0; zz0=z+kzu*t0;
+        xx1=x+kxu*t1; yy1=y+kyu*t1; zz1=z+kzu*t1;
+        
+        /*Check if we hit the mirror and whether the hit it is in front of the ray.
+         * This does not account for mirror curvature */
+                              
+        int hit0=(fabs(xx0)<width/2.0) && (fabs(zz0)<length/2.0) && t0>0;
+        int hit1=(fabs(xx1)<width/2.0) && (fabs(zz1)<length/2.0) && t1>0;
+        int doit=hit0 || hit1;
+                
+        if(hit0 && !hit1) PROP_DL(t0); /* only one intersection actually on mirror */
+        else if (hit1 && !hit0) PROP_DL(t1); /* other intersection */
+        else if (hit0 && hit1) { /* both, take first strike (which may be back of mirror) */
+            PROP_DL(t0<t1?t0:t1);	
+        } else {
+            RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
+        }
 
+        if ( doit ){
+            SCATTER;
+            xt=x; yt=y-y_b; zt=z; /* update shifted coordinates to intersection point */
+            double nx, ny, nz;
+            /* grad is the inner normal to the surface at this point */
+            nx=-xt*a2inv; ny=-yt*b2inv; nz=-zt*c2inv; NORM(nx, ny, nz);
+
+            double kdotn;
+            kdotn=-scalar_prod(kx,ky,kz,nx,ny,nz);
+            double kfx,kfy,kfz;
+            kfx=kx+2*kdotn*nx;
+            kfy=ky+2*kdotn*ny;
+            kfz=kz+2*kdotn*nz;
+
+            kx=kfx;ky=kfy;kz=kfz;
+
+            /*adjust weight of ray*/
+
+            double q=2.0*kdotn;
+            double R=reflecq(&re,q,0,K*K2E,fabs(90-acos(kdotn/K)*RAD2DEG));
+            p*=R;
+            /*update phase - as an approximation turn by 180 deg.*/;
+            phi+=M_PI; 
+
+            /*catch dead rays*/
+
+            //if (p==0) ABSORB;
+        } else {
+        RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
+        }
+    }   
 %}
 
 MCDISPLAY
 %{
   int i,j,N=12;
   double t,xx,yy,zz,xx0,yy0,zz0;
-
+  double xwidth;
+  double zdepth;
+  zdepth=length;
+  xwidth=width;  
+  double a2,b2,c2; 
+  a2=1.0/a2inv;
+  b2=1.0/b2inv;
+  c2=1.0/c2inv; 
   if (xwidth && zdepth){
     for (i=0;i<N;i++){
       xx0=-xwidth/2.0;
       zz=i*zdepth/(N-1)-zdepth/2.0;
-      yy0=sqrt(b2*(1-xx0*xx0/a2-zz*zz/c2));
+      yy0=-(1)*sqrt(b2*(1-xx0*xx0/a2-zz*zz/c2))+sqrt(b2);
       for (j=1;j<N;j++){
         xx=j*xwidth/(N-1)-xwidth/2.0;
-        yy=sqrt(b2*(1-xx*xx/a2-zz*zz/c2));
+        yy=-(1)*sqrt(b2*(1-xx*xx/a2-zz*zz/c2))+sqrt(b2);
         line(xx0,yy0,zz,xx,yy,zz);
         xx0=xx;
         yy0=yy; 
@@ -156,29 +190,16 @@ MCDISPLAY
     for (i=0;i<N;i++){
       zz0=-zdepth/2.0;
       xx=i*xwidth/(N-1)-xwidth/2.0;
-      yy0=sqrt(b2*(1-xx*xx/a2-zz0*zz0/c2));
+      yy0=-(1)*sqrt(b2*(1-xx*xx/a2-zz0*zz0/c2))+sqrt(b2);
       for (j=1;j<N;j++){
         zz=j*zdepth/(N-1)-zdepth/2.0;
-        yy=sqrt(b2*(1-xx*xx/a2-zz*zz/c2));
+        yy=-(1)*sqrt(b2*(1-xx*xx/a2-zz*zz/c2))+sqrt(b2);
         line(xx,yy0,zz0,xx,yy,zz);
         zz0=zz;
         yy0=yy; 
       }
     }
-  }
-  for (i=0;i<1;i++){
-    yy=i*b/(N-1);
-    xx0=0;
-    zz0=c;
-    for (j=1;j<=180;j++){
-      t=j*M_PI/180;
-      xx=a*sin(t*2);
-      zz=c*cos(t*2);
-      line(xx0,yy,zz0,xx,yy,zz);
-      xx0=xx;zz0=zz;
-    }
-  }
-
+  }    
 %}
 
 END
