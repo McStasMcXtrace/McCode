@@ -56,7 +56,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
 # NSIS
-set(NSIS_NAME "Python and matplotlib based mcdisplay (mcdisplay-matplotlib-py), ${MCCODE_STRING}")
+set(NSIS_NAME "Python and matplotlib based mcdisplay (mcdisplay-matplotlib), ${MCCODE_STRING}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
@@ -76,7 +76,7 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
 # Configure fallback script
-configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-py" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display" @ONLY)
 
 # Configure internal naming and how we call mcrun/mxrun across systems
 configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.py" "${CMAKE_SOURCE_DIR}/${P}display.py" @ONLY)
@@ -84,7 +84,7 @@ configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.py" "${CMAKE_SOURCE_DIR}/${P}displ
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/${P}display.py" "${WORK}/${P}display-py")
+  set(BINS "${PROJECT_SOURCE_DIR}/${P}display.py" "${WORK}/${P}display")
 endif()
 
 # Program files
@@ -127,8 +127,8 @@ if(NOT WINDOWS)
   )
 
   install(
-    PROGRAMS "${WORK}/${P}display-py"
+    PROGRAMS "${WORK}/${P}display"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}display-matplotlib-py${DOT_PYTHON_SUFFIX}"
+    RENAME "${P}display-matplotlib${DOT_PYTHON_SUFFIX}"
     )
 endif()

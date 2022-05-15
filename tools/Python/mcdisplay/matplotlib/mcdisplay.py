@@ -41,7 +41,10 @@ def parse_trace():
     ax.set_xlabel("z")
     ax.set_ylabel("x")
     ax.set_zlabel("y")
-    ax.set_aspect('equal')
+    try:
+        ax.set_aspect('equal')
+    except:
+        print("manual aspect not supported")
     #    ax.autoscale_view(scalex=False, scaley=False, scalez=False)
     color = 0
 

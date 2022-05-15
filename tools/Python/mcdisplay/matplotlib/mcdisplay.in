@@ -25,11 +25,11 @@ canrun() {
     for name in ${modules}; do
         cmd="${cmd}import ${name}; "
     done
-    python -c "${cmd}"
+    python3 -c "${cmd}"
 }
 
 if ( canrun ); then
-    mcrun  $* --trace --no-output-files -n1e2 | python ${LIB}/${TOOL}.py 
+    mcrun  $* --trace --no-output-files -n1e2 | python3 ${LIB}/${TOOL}.py 
 else
     echo ":: Failed to run Python ${TOOL}, trying old Perl version."
     echo ":: If this fails too, consider reinstalling ${TOOL}."

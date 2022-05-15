@@ -19,12 +19,14 @@ def parse_multiline(line):
     return points
 
 
-def rotate(point, (origin, rotm)):
+def rotate(point, inps):
     ''' Rotate and move v according to origin and rotation matrix '''
+    (origin, rotm)=inps
     return dot(point, rotm) + origin
 
-def rotate_points(points, (origin, rotm)):
+def rotate_points(points, inps):
     ''' Rotate and move v according to origin and rotation matrix '''
+    (origin, rotm)=inps
     count = 0
     rpoints=[]
     x=[]
@@ -50,7 +52,7 @@ def draw_circle(plane, pos, radius, comp):
     x=[]
     y=[]
     z=[]
-    for i in xrange(0, POINTS_IN_CIRCLE):
+    for i in range(0, POINTS_IN_CIRCLE):
         walk = 2 * pi * i / POINTS_IN_CIRCLE
         xyz = array(pos)
         xyz[plane[0]] += cos(walk) * radius
