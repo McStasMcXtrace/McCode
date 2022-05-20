@@ -60,6 +60,7 @@ NOACC
 SHARE
 %{
 #include <mcpl.h>
+#include <sys/stat.h>
 int mcpl_file_exist (char *filename)
   {
     struct stat   buffer;
