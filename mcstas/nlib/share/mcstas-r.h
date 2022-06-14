@@ -106,7 +106,7 @@
 #define PROP_GRAV_DT(dt, Ax, Ay, Az) \
   do { \
     if(dt < 0 && mcallowbackprop == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }\
-    if (mcMagnet) printf("Spin precession gravity\n"); \
+    if (mcMagnet) /*printf("Spin precession gravity\n")*/; \
     mcnlx  += mcnlvx*(dt) + (Ax)*(dt)*(dt)/2; \
     mcnly  += mcnlvy*(dt) + (Ay)*(dt)*(dt)/2; \
     mcnlz  += mcnlvz*(dt) + (Az)*(dt)*(dt)/2; \
