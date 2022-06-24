@@ -155,7 +155,7 @@ void *mcmagnet_pop(void) {
   mcmagnet_field_info **p,*t;
   /*move the stack one step up*/
   int i;
-  t=stack[0];
+  free(stack[0]);
   for (i=0;i<MCMAGNET_STACKSIZE-2;i++){
     stack[i]=stack[i+1];
   }
@@ -166,6 +166,7 @@ void *mcmagnet_pop(void) {
   }else{
     mcMagnet=0;
   }
+  t=stack[0];
   return (void*) t;
 }
 
