@@ -22,6 +22,7 @@
 * %Example: ROT_ANGLE=180 Detector: pollambdaMonitor2z_I=0.0768972
 * %Example: ROT_ANGLE=180 ONOFF=1 Detector: pollambdaMonitor2z_I=0.0768972
 * %Example: ROT_ANGLE=180 ONOFF=2 Detector: pollambdaMonitor2z_I=0.0768972
+* %Example: ROT_ANGLE=180 ONOFF=3 Detector: pollambdaMonitor2z_I=0.0768972
 *
 * %Parameters
 * ROT_ANGLE: [deg]  Angle that the spin of a 5AA neutron rotates in the 0.2 m magnet
@@ -110,13 +111,17 @@ WHEN (ONOFF==1) AT (0, 0, 0) RELATIVE armMSF
 COMPONENT msf_onoff_stop = Pol_Bfield_stop( xwidth=0.08, yheight=0.08)
 WHEN (ONOFF==1) AT (0, 0, MAGNETLENGTH) RELATIVE armMSF
 
+COMPONENT msfieldbox =
+  Pol_FieldBox(xwidth=0.08, yheight=0.08, zdepth=MAGNETLENGTH, Bx=0, By=BVALUE, Bz=0)
+WHEN (ONOFF==2) AT (0, 0, 0) RELATIVE armMSF
+
 COMPONENT msf_onoff2 =
   Pol_Bfield(field_type=1, xwidth=0.18, yheight=0.18, zdepth=MAGNETLENGTH, Bx=0, By=BVALUE, Bz=0, concentric = 1)
-WHEN (ONOFF==2) AT (0, 0, MAGNETLENGTH/2.0) RELATIVE armMSF
+WHEN (ONOFF==3) AT (0, 0, MAGNETLENGTH/2.0) RELATIVE armMSF
 
 COMPONENT msf_onoff2_stop = Pol_Bfield_stop( xwidth=0.18, yheight=0.18, zdepth=MAGNETLENGTH)
-WHEN (ONOFF==2) AT (0, 0, MAGNETLENGTH/2.0) RELATIVE armMSF
-
+WHEN (ONOFF==3) AT (0, 0, MAGNETLENGTH/2.0) RELATIVE armMSF
+ 
 COMPONENT pollambdaMonitor2x =
 PolLambda_monitor(xwidth=0.1, yheight=0.1,
 		  nL=100, Lmin = 0.0, Lmax = 10.0, npol=21,
