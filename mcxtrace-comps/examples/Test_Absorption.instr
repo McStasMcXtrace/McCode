@@ -9,7 +9,7 @@
 * Origin: Synchrotron SOLEIL
 * Release: McXtrace 1.7
 * Version: $Revision$
-* %INSTRUMENT_SITE: Tests
+* %INSTRUMENT_SITE: Tests_samples
 *
 * Example instrument to compare material absorption components.
 * 

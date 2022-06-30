@@ -1,14 +1,14 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: test (rename also the example and DEFINE lines below)
+* Instrument: Test_ML_elliptic
 *
 * %Identification
 * Written by: Your name (email)
 * Date: Current Date
 * Origin: Your institution
 * Version: 0.2
-* %INSTRUMENT_SITE: Tests
+* %INSTRUMENT_SITE: Tests_optics
 *
 * Unit test instrument for Multilayer_elliptic
 *
