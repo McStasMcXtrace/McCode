@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: test (rename also the example and DEFINE lines below)
+* Instrument: Test_Sources
 *
 * %Identification
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
@@ -9,7 +9,7 @@
 * Origin: DTU Fysik 
 * Release: McXtrace 1.1
 * Version: 1.0
-* %INSTRUMENT_SITE: Tests
+* %INSTRUMENT_SITE: Tests_sources
 *
 * Test instrument to show that the source components work
 *

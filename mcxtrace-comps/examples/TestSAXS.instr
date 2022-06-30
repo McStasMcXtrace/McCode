@@ -7,7 +7,7 @@
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk) and Søren Kynde (kynde@nbi.dk)
 * Date: October 29th, 2012
 * Origin: KU-Science
-* %INSTRUMENT_SITE: Tests
+* %INSTRUMENT_SITE: Tests_samples
 *
 * %Description
 * Toy model used for testing various sample components for solution-SAXS.

@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: test (rename also the example and DEFINE lines below)
+* Instrument: Test_BM (rename also the example and DEFINE lines below)
 *
 * %Identification
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
@@ -9,7 +9,7 @@
 * Origin: DTU Physics
 * Release: McXtrace 1.0
 * Version: 0.2
-* %INSTRUMENT_SITE: None
+* %INSTRUMENT_SITE: Tests_sources
 *
 * Test instrument for the Bending_magnet component
 *

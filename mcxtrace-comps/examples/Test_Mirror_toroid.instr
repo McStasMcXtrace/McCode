@@ -8,7 +8,7 @@
 * Date: Jul 16
 * Origin: DTU Physics
 * Version: 1.0
-* %INSTRUMENT_SITE: Tests
+* %INSTRUMENT_SITE: Tests_optics
 *
 * Unit test instrument to check that Mirrror_toroid is working
 *
