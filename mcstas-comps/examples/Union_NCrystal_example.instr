@@ -2,6 +2,7 @@
 * Modified NCrystal_example to use the Union components with an NCrystal       *
 * process instead of their stand alone component.                              *
 * Changes by Mads Bertelsen, 13/8 2020.                                        *
+* %INSTRUMENT_SITE: Union_demos                                                *
 *                                                                              *
 * NB: This instrument requires that the below commands are run prior to        *
 *     compilation with mcrun or mcgui                                          *
