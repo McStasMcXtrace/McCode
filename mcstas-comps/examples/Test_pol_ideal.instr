@@ -5,7 +5,7 @@
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
 * Date: Nov 20
 * Origin: DTU Physics
-* %INSTRUMENT_SITE: Test
+* %INSTRUMENT_SITE: Tests_polarization
 *
 * Unit test instrument for Set_pol, PolAnalyser_ideal, and Pol_monitor
 *

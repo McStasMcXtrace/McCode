@@ -1,3 +1,7 @@
+/*
+ * %INSTRUMENT_SITE: Mantid
+ */
+
 DEFINE INSTRUMENT templateVanadiumMultipleScat_Mantid()
 
 USERVARS

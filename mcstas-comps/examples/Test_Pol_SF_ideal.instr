@@ -9,7 +9,7 @@
 * Origin: DTU Physics 
 * Release: McStas
 * Version: 2.4
-* %INSTRUMENT_SITE: Test
+* %INSTRUMENT_SITE: Tests_polarization
 *
 * Unit test of the Pol_SF_ideal component
 *
