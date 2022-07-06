@@ -1,0 +1,157 @@
+DEFINE INSTRUMENT SOLEIL_PX2a(
+  E0=12.65, hfm_radius=495, vfm_radius=859,
+  mirror_grazing_angle=4e-3,
+  string sample="adrenaline.lau",
+  rotX=0, rotY=0, rotZ=0)
+
+DECLARE
+%{
+    double calculated_angle;
+%}
+
+INITIALIZE
+%{
+  double arg=  12398.42*sqrt(3)/(2*5.4309*E0*1e3);
+  if (fabs(arg) > 1)
+    exit(fprintf(stderr, "ERROR: Monochromator can not reach this energy (arg=%g > 1)\n",
+      arg));
+  calculated_angle = RAD2DEG*asin(arg);
+  
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+// Undulator U24
+COMPONENT undulator = Undulator(
+    E0=E0, 
+    dE=1, 
+    Ee=8, 
+    dEe=0.001, 
+    Ie=0.1, 
+    K=1.788, 
+    Nper=80, 
+    lu=2.4e-2, 
+    sigey=9.3e-6, 
+    sigex=215.7e-6, 
+    sigepx=29.3e-6, 
+    sigepy=4.2e-6, 
+    focus_xw=1e-4, 
+    focus_yh=1e-4, 
+    dist=29.5, 
+    E1st=12.400)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+
+
+// Channel_cut Si(111) ----------------------------------------------------
+COMPONENT bragg_crystal_location = Arm()
+AT (0,0,29.5) RELATIVE PREVIOUS
+
+COMPONENT bragg_crystal = Bragg_crystal(
+    crystal_type=2)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (-calculated_angle, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT arm = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (-calculated_angle, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT bragg_crystal_two = Bragg_crystal(
+    crystal_type=2)
+AT (0, 0.006, 0.05) RELATIVE bragg_crystal
+ROTATED (calculated_angle, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT arm_two = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (calculated_angle, 0, 0) RELATIVE PREVIOUS
+
+// horizontal pre-focusing curved mirror (XZ -> YZ plane)
+COMPONENT hpm_location = Arm()
+AT (0,0,32.1-29.5-0.05) RELATIVE arm_two
+
+COMPONENT hpm_in_yz_plane = Arm()
+AT (0,0,0) RELATIVE hpm_location
+ROTATED (0,0,90) RELATIVE hpm_location
+
+COMPONENT hpm = Mirror_toroid(
+  reflec   = "Ir.dat", //This needs to be Rh.dat, will need to generate the file with xraydb
+  zdepth   = 150e-3,
+  xwidth   = 15e-3,
+  radius   = 495,
+  radius_o = 1000)
+AT (0,0,0) RELATIVE hpm_in_yz_plane
+ROTATED (mirror_grazing_angle, 0, 0) RELATIVE hpm_in_yz_plane
+
+COMPONENT hpm_takeoff = Arm()
+AT (0,0,0) RELATIVE hpm_location
+ROTATED (0, 2*mirror_grazing_angle, 0) RELATIVE hpm_location
+
+// KB pair ----------------------------------------------------------------
+// could use Mirror_elliptic
+// incidence angle 4 mrad
+
+// KB 1st mirror (XZ plane) at 1.6m from sample
+COMPONENT vfm_location = Arm()
+AT (0,0,33.9-32.1) RELATIVE hpm_takeoff
+
+COMPONENT vfm_in_xz_plane = Arm()
+AT (0,0,0) RELATIVE vfm_location
+ROTATED(0,0,-90) RELATIVE vfm_location // YZ -> XZ
+
+COMPONENT vfm = Mirror_curved(
+  coating="Rh.txt",
+  length=450e-3,
+  radius=vfm_radius)
+AT (0,0,0) RELATIVE vfm_location
+ROTATED(0,-mirror_grazing_angle,0) RELATIVE vfm_in_xz_plane
+
+COMPONENT vfm_takeoff = Arm()
+AT (0,0,0) RELATIVE vfm_in_xz_plane
+ROTATED (-2*mirror_grazing_angle, 0, 0) RELATIVE vfm_location
+
+// KB 2nd mirror (YZ) at 1m from sample, shift height=4.8 mm 
+COMPONENT hfm_location = Arm()
+AT (0,0,34.5-33.9) RELATIVE vfm_takeoff
+
+// 859 m tangential; sagital > 1 km, in YZ plane
+COMPONENT hfm = Mirror_curved(
+  coating="Rh.txt",
+  length=450e-3,
+  radius=hfm_radius)
+AT (0,0,0) RELATIVE hfm_location
+ROTATED (0,-mirror_grazing_angle,0) RELATIVE hfm_location
+
+COMPONENT hfm_takeoff = Arm()
+AT (0,0,0) RELATIVE hfm_location
+ROTATED (0,-2*mirror_grazing_angle,0) RELATIVE hfm_location
+
+// Sample -----------------------------------------------------------------
+COMPONENT sample_stage = Arm()
+AT (0,0,1) RELATIVE hfm_takeoff
+
+COMPONENT sample_monitor = Monitor_nD(
+  xwidth = 0.01, yheight = 0.01,
+  options = "x y", bins=100)
+  AT (0, 0, 0) RELATIVE sample_stage
+
+SPLIT COMPONENT sample = Single_crystal(reflections=sample, 
+  radius = .5e-4, yheight = 5e-3, p_transmit = 0, mosaic=0.1)
+  AT (0, 0, 0) RELATIVE sample_stage
+  ROTATED (rotX,rotY,rotZ) RELATIVE sample_stage
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+// Detector
+COMPONENT Eiger9M = PSD_monitor(
+  nx=3108, ny=3262,
+  xwidth = 233.1e-3,
+  yheight= 244.7e-3,
+  filename="Eiger9M.dat"
+)
+AT (0,0,0.12) RELATIVE sample_stage
+
+END
