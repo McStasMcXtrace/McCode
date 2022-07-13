@@ -63,7 +63,7 @@ canrun() {
 }
 
 if ( canrun ); then
-    python3 ${LIB}/${TOOL}.py $*
+    python3 -u ${LIB}/${TOOL}.py $*
 else
     @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
 fi
