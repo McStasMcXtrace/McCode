@@ -1,0 +1,3 @@
+[submodule "tools/mxoptim"]
+	path = tools/mxoptim
+	url = https://gitlab.com/soleil-data-treatment/soleil-software-projects/mxoptim.git
