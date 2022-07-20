@@ -1,0 +1,263 @@
+/*******************************************************************************
+* Instrument: SOLEIL_MARS
+*
+* %I
+* Written by: IGUILIZ Salah-Eddine, MENUT Denis and FARHI Emmanuel.
+* Date: July 2022
+* Origin: SOLEIL
+* Version: 1.0
+* %INSTRUMENT_SITE: SOLEIL
+*
+* The MARS beam-line at Synchrotron SOLEIL.
+*
+* %D
+* MARS beamline is aiming to extend the research capabilities on radioactive
+* matter towards the use of synchrotron radiation in multidisciplinary fields
+* biology, chemistry, physics) with respect to national and European safety law*.
+*
+* The design of MARS beamline (infrastructure and optics) is also optimized to
+* alternatively run two experimental stations in order to perform
+* characterizations with transmission and high resolution X-ray powder-diffraction
+* (XRD), Wide Angle X-ray Scattering (WAXS), Small Angle X-ray scattering (SAXS),
+* standard and high resolution X-ray absorption spectroscopy (XANES, EXAFS and
+* HERFD-XANES) and microbeam techniques (microXRF, XAS, XRD).
+*
+* This model implements the XRD station for powders.
+*
+* %P
+* E0: [keV]     Central energy to be emitted by the source
+* dEr: [keV]    Relative half width to emitted by the source, e.g. 1e-4
+* alpha: [deg]  Asymmetry angle for the crystals.
+* reflections: [str] List of powder reflections, obtained with e.g. cif2hkl
+* reflec_material_M12: [str] reflecting coating on curved mirrors, e.g. Pt
+* 
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT SOLEIL_MARS(E0=16.99,
+  string reflec_material_M12="Pt.dat",
+  string reflections="LaB6_660b_AVID2.hkl", 
+  dEr=1e-4,alpha=0)
+
+DECLARE
+%{
+	  //Slit 1
+	double DistanceToPrimarySlit1 = 11.340;
+	double DistanceToPrimarySlit2 = 11.440;
+	double PrimarySlit1Width  = 0.02;
+	double PrimarySlit1Height = 0.002;
+	double PrimarySlit2Width  = 0.02;
+	double PrimarySlit2Height = 0.002;
+
+	//Mirror M1
+	double DistanceSourceToM1 = 12.784;
+	double M12_depth = 0.06;
+	double M12_lenght = 2.1;
+	double AngleM1 = 0.0031*RAD2DEG;
+
+	//DCM
+	double DistanceSourceToDCM = 14.395;
+	double DcmGap = 0.101268;
+	double AngleDCM = 10.59;
+	double alpha = 0;
+	double DcmHoriGap = 0.09863;
+	double Ts=0.04506/(2*0.1832);
+	double Tz=0.04506/(2*0.9830);
+	//double DiagonaleDcmGap = sqrt(Ts*Ts+Tz*Tz);
+
+	//BeamMonitor1
+	double DistanceToPrimaryBeamMonitor = 15.678;
+	double PrimaryBeamMonitorWidth = 0.05;
+	double PrimaryBeamMonitorHeight = 0.05;
+
+	//Mirror M2
+	double DistanceSourceToM2 = 16.826;
+	double AngleM2 = 0.0031*RAD2DEG;
+	double RadiusM1 = 8248;
+  double RadiusM2 = 6600;
+
+	//Slit 2
+	double DistanceToSecondarySlit1 = 18.231;
+	double DistanceToSecondarySlit2 = 18.315;
+	double SecondarySlit1Width  = 0.03; // 3x5
+	double SecondarySlit1Height = 0.05;
+	double SecondarySlit2Width  = 0.005;
+	double SecondarySlit2Height = 0.03;
+
+	//BeamMonitor2
+	double DistanceToSecondaryBeamMonitor = 18.588;
+	double SecondaryBeamMonitorWidth = 0.5;
+	double SecondaryBeamMonitorHeight = 0.5;
+	
+	//Sample
+
+	double DistanceToSample = 23.06;
+
+
+	//cristal analyzor
+	double DistanceCentreToCristal = 0.446;
+	double AngleCa = 6.2267;
+	
+	//slit A1
+	double distanceCristalslitA1 = 0.194;
+
+
+
+	//slit A2
+	double distanceCristalslitA2 = 0.224;
+
+
+	//detector
+	double distanceCristaldetector = 0.224;
+
+
+	/* Declarations */
+	
+	double M12_width=0.05;
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT Source = Bending_magnet(
+    E0=E0,   
+    B=1.71,
+    dE = dEr*E0
+    )
+AT (0, 0, 0) RELATIVE origin
+/*Longueur d'onde*/
+COMPONENT displaySourceLenght = L_monitor(
+  xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
+  nL=20, filename="Output1.L", Lmin=0.1, Lmax=8
+)
+AT(0,0,2) RELATIVE Source
+/*Visualise*/
+COMPONENT displaySource = PSD_monitor(
+	filename="emon_psd1"
+)
+AT(0,0,10) RELATIVE Source
+
+/* ------------------------------------- Vertical slit 1 */
+COMPONENT slit1 = Slit(
+    xwidth=PrimarySlit1Width, 
+    yheight=PrimarySlit1Height)
+AT (0, 0, DistanceToPrimarySlit1) RELATIVE Source
+
+/* -------------------------------------- Horizontal slit 1 */
+COMPONENT slit2 = Slit(
+    xwidth=PrimarySlit2Width, 
+    yheight=PrimarySlit2Height)
+AT (0, 0, DistanceToPrimarySlit2) RELATIVE Source
+/* -------------------------------------- Mirror M1 */  
+COMPONENT mirror_M1 = Mirror_curved(
+    length = M12_lenght,
+    width = M12_width,
+    radius = RadiusM1,
+    coating=reflec_material_M12)    
+AT (0, 0, DistanceSourceToM1) RELATIVE Source   
+ROTATED (AngleM1,0, -90) RELATIVE PREVIOUS
+/*----------------------------------------Monochromator*/
+
+COMPONENT dcm_xtal0 = Bragg_crystal(
+    length=0.04, width=0.05, 
+    alpha=alpha, h=2, k=2, l=0, material="Silicon.dat", V=5)
+AT(0,-0.00989,DistanceSourceToDCM) RELATIVE Source
+ROTATED (-AngleDCM,0,0) RELATIVE Source
+
+COMPONENT dcm0 = Arm()
+AT(0,0,0) RELATIVE dcm_xtal0
+ROTATED (-AngleDCM,0,0) RELATIVE PREVIOUS
+
+COMPONENT dcm_xtal1 = COPY(dcm_xtal0)
+AT(0,0,sqrt(Ts*Ts+Tz*Tz)) RELATIVE dcm0
+ROTATED (AngleDCM,0,0) RELATIVE dcm0
+
+COMPONENT dcm1 =Arm()
+AT(0,0,0) RELATIVE dcm_xtal1
+ROTATED (AngleDCM,0,0) RELATIVE dcm_xtal1 
+/*---------------------------------------- BeamMonitor1 */
+COMPONENT emon_dcm0 = E_monitor(
+	xwidth=PrimaryBeamMonitorWidth, 
+	yheight=PrimaryBeamMonitorHeight, 
+	filename="emon_dcm0", 
+	Emin=E0-dE*2, 
+	Emax=E0+dE*2, 
+	nE=101)
+AT(0,0,DistanceToPrimaryBeamMonitor) RELATIVE Source
+/*Visualise*/
+COMPONENT displayMono = PSD_monitor(
+	filename="emon_psd"
+)
+AT(0,0,DistanceToPrimaryBeamMonitor) RELATIVE Source
+/*Longueur d'onde*/
+COMPONENT displayMonoLenght = L_monitor(
+  xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
+  nL=20, filename="Output.L", Lmin=0.1, Lmax=8
+)
+AT(0,0,DistanceToPrimaryBeamMonitor) RELATIVE Source
+
+/* -------------------------------------- Toroidal mirror M2 */   
+COMPONENT mirror_M2 = Mirror_curved(
+    length = M12_lenght,
+    width = M12_width,
+    radius = RadiusM2,
+    coating=reflec_material_M12)    
+AT (0, 0.02, DistanceSourceToM2) RELATIVE Source   
+ROTATED (AngleM2,0, -90) RELATIVE PREVIOUS
+
+/* ------------------------------------- Vertical slit 2 */
+COMPONENT slitSecon1 = Slit(
+    xwidth=SecondarySlit1Width, 
+    yheight=SecondarySlit1Height)
+AT (0, 0, DistanceToSecondarySlit1) RELATIVE Source
+
+/* -------------------------------------- Horizontal slit 2 */
+COMPONENT slitSecon2 = Slit(
+    xwidth=SecondarySlit2Width, 
+    yheight=SecondarySlit2Height)
+AT (0, 0, DistanceToSecondarySlit2) RELATIVE Source
+
+/*---------------------------------------- BeamMonitor2 */
+COMPONENT emon_dcm1 = E_monitor(
+	xwidth=SecondaryBeamMonitorWidth, 
+	yheight=SecondaryBeamMonitorHeight, 
+	filename="BeamMonitor2", 
+	Emin=E0-dE*2, 
+	Emax=E0+dE*2, 
+	nE=101)
+AT(0,0,DistanceToSecondaryBeamMonitor) RELATIVE Source
+
+/*Visualise*/
+COMPONENT displaySlit2 = PSD_monitor(
+	filename="emon_psd3"
+)
+AT(0,0,DistanceToSecondaryBeamMonitor) RELATIVE Source
+
+
+/*------------------------------------ Sample */
+
+SPLIT 100 COMPONENT Sample = PowderN(
+  reflections = reflections, material="Si.txt",
+  xwidth = 0.005,
+  yheight = 0.05,
+  zdepth = 0.0001,
+  d_phi=asin(0.02/0.670)*RAD2DEG
+)
+AT (0, 0.020, DistanceToSample) RELATIVE Source
+
+
+/*------------------------------------- detector */
+COMPONENT displayMonoLenght1 = Monitor_nD(
+  bins=90000, options="abs theta",
+  min=5,max=90, radius= 0.670, yheight = 0.02
+)
+AT(0,0,0) RELATIVE Sample
+
+
+END
+
