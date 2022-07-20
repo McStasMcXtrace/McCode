@@ -4,10 +4,10 @@
 * Instrument: Test_PowderN
 *
 * %Identification
-* Written by: Your name (email)
-* Date: Current Date
-* Origin: Your institution
-* Version: 0.2
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: 2009
+* Origin: DTU Physics
+* Version: 1.0
 * %INSTRUMENT_SITE: Tests_samples
 *
 * Unit-test instrument for the PowderN sample component.
@@ -38,17 +38,6 @@
 *******************************************************************************/
 DEFINE INSTRUMENT Test_PowderN(E0=45, L1=10, int directbeam=0, string reflections="LaB6_660b_AVID2.hkl", int SPLITS=1, frac_c=0.8, frac_i=0.1, frac_t=0.1, d_phi=0, TTH=0)
 
-DECLARE %{
-%}
-
-/* The INITIALIZE section is executed when the simulation starts     */
-/* (C code). You may use them as component parameter values.         */
-INITIALIZE
-%{
-%}
-
-/* Here comes the TRACE section, where the actual      */
-/* instrument is defined as a sequence of components.  */
 TRACE
 
 REMOVABLE COMPONENT Origin = Progress_bar()
@@ -87,6 +76,9 @@ COMPONENT detector2 = PSD_monitor(
 )
 AT(0,0,0.1) RELATIVE ttharm
 
+// ideal "banana" detector
+COMPONENT det_angle = Monitor_nD(options="abs theta limits=[5 90]",
+  radius=0.6, yheight=1e-2, bins=10000)
+AT (0,0,0) RELATIVE Pow
 
-/* The END token marks the instrument definition end */
 END
