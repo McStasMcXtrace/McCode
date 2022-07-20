@@ -33,22 +33,12 @@
 * frac_i: [1] Fraction of stats assigned to incoherent scattering
 * frac_t: [1] Fraction of stats assigned to unscattered, "direct beam"
 * TTH: [deg]  Rotation of secondary detector arm.
+* d_phi:  [deg] Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
 *
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT Test_PowderN(E0=45, L1=10, int directbeam=0, string reflections="LaB6_660b_AVID2.hkl", int SPLITS=1, frac_c=0.8, frac_i=0.1, frac_t=0.1, d_phi=0, TTH=0)
 
-DECLARE %{
-%}
-
-/* The INITIALIZE section is executed when the simulation starts     */
-/* (C code). You may use them as component parameter values.         */
-INITIALIZE
-%{
-%}
-
-/* Here comes the TRACE section, where the actual      */
-/* instrument is defined as a sequence of components.  */
 TRACE
 
 REMOVABLE COMPONENT Origin = Progress_bar()
@@ -87,6 +77,10 @@ COMPONENT detector2 = PSD_monitor(
 )
 AT(0,0,0.1) RELATIVE ttharm
 
+// ideal "banana" detector
+COMPONENT det_angle = Monitor_nD(options="abs theta limits=[5 90]",
+  radius=0.6, yheight=1e-2, bins=10000)
+AT (0,0,0) RELATIVE Pow
 
-/* The END token marks the instrument definition end */
+
 END
