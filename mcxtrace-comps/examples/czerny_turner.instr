@@ -1,0 +1,281 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: czerny_turner
+*
+* %Identification
+* Written by: Stephane Bac, Antoine Padovani
+* Date: Jul 21st 2022
+* Origin: Synchrotron Soleil
+* %INSTRUMENT_SITE: BARC
+*
+* Czerny-turner monochromator.
+*
+* This Czerny-turner monochromator was built from "Design and fabrication of a Czerny-Turner monochromator-cum-spectrograph" by
+* Murty, M.V.R.K.; Shukla, R.P.; Bhattacharya, S.S.; Krishnamurthy, G. (Bhabha Atomic Research Centre, Bombay (India). Spectroscopy Div.)
+* Bhabha Atomic Research Centre, Bombay (India)
+* 1987
+* It can be found here: https://inis.iaea.org/collection/NCLCollectionStore/_Public/19/019/19019134.pdf
+* Example: Do a scan (scan parameter =1) from x_screw=20 to 103 mm. The calculated monitor "Wavelength(Ang) as a function of x_screw(mm)" will be a linear function. The monochromator functions properly.
+*
+* %Parameters
+* x_screw: [mm] Displacement perpendicular to initial position of the lever (sine drive mechanism)
+* scan: [0 or 1] 1 is to activate wavelength monitor while scanning the x_screw parameter
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT czerny_turner(x_screw=0, scan=0)
+
+DECLARE
+%{
+double E0;
+double dE;
+
+double grazing_angle_reflect_grating;
+
+double number_lines_per_mm; //Number of lines pr mm of the grating
+double grazing_angle_order_grating;
+double order;
+double period;
+
+double x_screw; //x_screw=L*sin(theta_calculated), L=164.61 and x_screw goes from 0 to 100 mm (0 to 10K Angstroms)
+double theta_calculated;
+
+double w_monitor_value;
+double x_screw_var;
+double w_monitor_error;
+double number_events_w_monitor;
+%}
+
+INITIALIZE
+%{
+
+//For 5k Ang, give a d_phi=0 to the grating to verify with the 3D views that the ray behaves correctly
+//E0=0.00248;
+//dE=0;
+
+//Our source range: 1.2 to 6.2 eV
+E0 = 0.0037;
+dE = 0.0025;
+
+number_lines_per_mm = 1200;
+
+theta_calculated = RAD2DEG*asin(x_screw/164.61);
+
+fprintf(stdout,"theta_calculated %g degrees, should be 17.6833 for x_screw 50 mm approximately \n", theta_calculated);
+
+order=1;
+
+if (theta_calculated<9){ //to take into account the ray arriving on the other side of the norm. The order 1 does not go towards the M2 when theta_calculated is inferior to 9 degrees, so 
+//better to be centered on the order -1.
+order=-1;
+}
+
+period = 1/(1e3*number_lines_per_mm);
+fprintf(stdout,"Grating period %g \n", period);
+
+
+//Information purposes only:
+//For 5K Angstroms (x_screw = 50 mm), the angle between the grating's norm and the incident ray arrives at 8.6833 degrees
+//and the angle between the grating's norm and the order m=1 is equal to 26.6833 deg
+//the angle between the incident ray and the order m=1 equals to 26.6833-8.6833 = 18 degrees (angle called phi)
+//we position the grating angle's norm on the bisector of phi
+//then a sine drive mechanism gives us a simple linear relation: lambda = 2*period*cos(pĥi)*x_screw/L
+//grazing_angle_reflect_grating = 90-8.6833;
+//grazing_angle_order_grating = RAD2DEG*acos(-(12.39842/(E0))/1e10*order/period+cos(DEG2RAD*grazing_angle_reflect_grating));
+//fprintf(stdout,"Grazing angle for order %g is %g degrees \n", order, grazing_angle_order_grating);
+
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT Source = Bending_magnet(
+    E0=E0,   
+    dE = dE,
+    B=1.72,
+    Ee=2.75
+    )
+AT (0, 0, 0) RELATIVE origin
+
+COMPONENT M1_position = Arm()
+AT (0, 0, 844e-3) RELATIVE PREVIOUS	
+
+COMPONENT M1_rotation = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS	
+ROTATED (0, 0, 90) RELATIVE PREVIOUS	
+
+COMPONENT mirror_m1 = Mirror_elliptic(
+    length=150e-3, 
+    width=150e-3,
+    x_a=1.025, 
+    y_b=1.025, 
+    z_c=1.025)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (-(90-4.5), 0, 0) RELATIVE PREVIOUS
+EXTEND
+%{ 
+	if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT arm = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (-(90-4.5), 0, 0) RELATIVE PREVIOUS
+
+//rotate 90 back so our frame is normal again
+COMPONENT M1_arm_back = Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (0, 0, -90) RELATIVE PREVIOUS
+
+COMPONENT Grating_position = Arm()
+AT (0, 0, 834.35e-3) RELATIVE PREVIOUS	
+
+COMPONENT Grating_rotation = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS	
+ROTATED (-90, 0, 0) RELATIVE PREVIOUS	
+
+COMPONENT Grating_rotation_lines_grating = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS	
+ROTATED (0, -90, 0) RELATIVE PREVIOUS	
+
+COMPONENT Grating_rotation_nine_degrees = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS	
+ROTATED (-9, 0, 0) RELATIVE PREVIOUS	
+
+COMPONENT reflective_grating = Grating_reflect(
+    d_phi=1,order=order,
+    rho_l=number_lines_per_mm,
+    zdepth=102e-3,xwidth=102e-3)    
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (theta_calculated, 0, 0) RELATIVE PREVIOUS //theta_calculated will change, angle between the bisector of phi and the grating's norm
+
+//4PI monitor for debugging purposes
+//COMPONENT psd_monitor_4pi = PSD_monitor_4PI(
+//filename="3D.dat",restore_xray=1)
+//AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT Grating_rotation_lines_grating_back = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS	
+ROTATED (0, 90, 0) RELATIVE PREVIOUS
+
+//rotate 90 back so our frame is normal again
+COMPONENT Grating_arm_back = Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (90, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT Grating_arm_back_2 = Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (0, 180, 0) RELATIVE PREVIOUS
+
+COMPONENT Grating_arm_back_3 = Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (0, -theta_calculated-9, 0) RELATIVE PREVIOUS
+
+COMPONENT M2_location = Arm()
+AT (0,0,749.1e-3) RELATIVE PREVIOUS
+
+COMPONENT M2_rotated = Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (0,0,90) RELATIVE PREVIOUS
+
+COMPONENT mirror_m2 = Mirror_elliptic(
+    length=150e-3, 
+    width=150e-3,
+    x_a=0.925, 
+    y_b=0.925, 
+    z_c=0.925)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (-(90-5), 0, 0) RELATIVE PREVIOUS
+EXTEND
+%{ 
+	if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT arm2 = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (-(90-5), 0, 0) RELATIVE PREVIOUS
+
+//rotate 90 back so our frame is normal again
+COMPONENT M4_arm_back = Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (0, 0, -90) RELATIVE PREVIOUS
+
+//4PI monitor for debugging purposes
+//COMPONENT psd_monitor_4pi_2 = PSD_monitor_4PI(
+//filename="3D2.dat",restore_xray=1)
+//AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT arm3 = Arm()
+AT (0, 0, 760.33e-3) RELATIVE PREVIOUS
+ROTATED (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT arm4 = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0, 0, 0) RELATIVE PREVIOUS 
+
+COMPONENT slit = Slit(
+    xwidth=13.5e-6, 
+    yheight=0.01)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT psd_monitor = PSD_monitor(
+    filename="psd", 
+    xmin=-0.01, 
+    xmax=0.01,
+    ymin=-0.01, 
+    ymax=0.01,             
+    nx=100,
+    ny=100,
+    restore_xray = 1
+    )
+AT (0, 0, 10e-3) RELATIVE PREVIOUS
+
+COMPONENT psd_giant_after_grating = PSD_monitor(xwidth=1e-2, yheight=1e-2, filename="psd_giant_after_grating",nx=2001,ny=1)
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT e_monitor = Monitor_nD(
+  xwidth=1e-2, yheight=1e-2, options="energy  bins=500 limits=[0 0.007],  x  bins=500", filename="e_monitor",restore_xray = 1) 
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT w_monitor = Monitor_nD(
+  xwidth=1e-2, yheight=1e-2, options="wavelength  bins=500 limits=[1980 11000],  x  bins=500", filename="w_monitor",restore_xray = 1) 
+AT (0,0,0) RELATIVE PREVIOUS
+
+FINALLY
+%{
+    // If there is a scan, calculate the Wavelength(Angstroms) as a function of x_screw(mm).
+    if(scan>=1){ 
+#ifdef USE_MPI
+        //MPI_MASTER is equivalent to if(mpi_node_root>=mpi_node_rank){ //statement }
+        //If DETECTOR_OUT_0D is inside of MPI_MASTER the program hangs forever. 
+        //If outside it seems to work. Weird.
+        MPI_MASTER(
+#endif
+        MCDETECTOR w_monitor_var = MC_GETPAR(w_monitor,detector); // We have to think in terms of wavelength, the sine drive mechanism was built to linearize the wavelength.
+        w_monitor_value = w_monitor_var.centerX;
+        x_screw_var = x_screw;
+        w_monitor_error = 0; //Forgot how to get rid of the error bar.  
+        //For the error we could have dlambda = lambda*2*period*cos(phi)/L*dx_screw/x_screw, but we need to have dx_screw. Does it make sense for dx_screw to exist in an exact simulation?
+        number_events_w_monitor = w_monitor_var.events;   
+                                                 
+#ifdef USE_MPI                  
+        );
+        //MPI_Barrier(MPI_COMM_WORLD);
+#endif  
+        //Adding a legend to the graph would be good, need to find out how to do that at a later date. todo            
+        // This set of defines is to avoid getting a '.' in the component name
+        #ifdef NAME_CURRENT_COMP
+        #undef NAME_CURRENT_COMP
+        #define NAME_CURRENT_COMP "Wavelength"
+        #endif
+                  
+        DETECTOR_OUT_0D(
+                  "Wavelength(Ang) as a function of x_screw(mm)",
+                  number_events_w_monitor, w_monitor_value, w_monitor_error);                  
+    }
+%}
+
+END

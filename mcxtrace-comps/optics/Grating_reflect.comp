@@ -14,6 +14,7 @@
 * Date: June 2021
 * Version: 1.6
 * Origin: DTU
+* Modified by: Padovani Antoine, Bac Stephane, 21st July 2022.
 *
 * A reflective grating.
 *
@@ -21,7 +22,7 @@
 * A reflective grating that diffracts incident photons. 
 * The grating is in the XZ-plane. It then reflects the incoming photon using a MC picked angle, 
 * where the angle is picked from a uniform distribution of width d_phi, i.e. U[-d_phi/2,d_phi/2]
-* The Monte Carlo wight of the ray is then adjusted wrt. to the grating interference pattern, and
+* The Monte Carlo weight of the ray is then adjusted wrt. to the grating interference pattern, and
 * the diffraction pattern associated with each grating line. All lines are considered equal.
 * For more efficient sampling of a particular direction the centre of the d_phi may be shifted
 * using the parameters order or phi0. In the latter case a set angle is chosen as the centre of the
@@ -53,6 +54,10 @@ SETTING PARAMETERS (d_phi=1, R0=1, rho_l=800,
 OUTPUT PARAMETERS (d,pdir,b,nslits)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
+SHARE
+%{
+  %include "read_table-lib"
+%}
 
 /********************************************************************************************
 In DECLARE section, small functions or variables can be defined and used in the entire grating.
@@ -109,6 +114,7 @@ TRACE
   }else{
     double nx,ny,nz;
     double Gamma,gamma,psi_i,psi_o,spsi_i,spsi_o;
+    double kx_notouch,ky_notouch,kz_notouch;    
     double delta_theta,pdiff;
     /* Normal vector for the grating*/
     nx=0;
@@ -119,7 +125,7 @@ TRACE
     double k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
     /* Outgoing grazing angle for a perfectly reflecting mirror using angle between two vectors.*/
     psi_i = acos(s/k)-M_PI_2;
-
+    
     /* outgoing vector for a perfectly reflecting mirror. Order 0.*/
     kx=kx-2*s*nx;
     ky=ky-2*s*ny;
@@ -135,17 +141,43 @@ TRACE
     /* Lamellar grating is used.
          Thus finding outgoing angle only from ingoing angle.
          using old k and n and rotation matrix.*/
-    beta=asin(order*(2*M_PI/k)/d-sin(alpha));
+    beta=asin(-order*(2*M_PI/k)/d+sin(alpha));
+    //Could have also used an angle convention where the angle between the grating's norm and the ray of order m is positive if it is on the samer side as the incident angle, negative otherwise.
     if(phi0){
       /*a target angle is specified*/
       psi_o=phi0*DEG2RAD;
     }else{
       psi_o=M_PI_2-fabs(beta);/*the fabs is necessary due to the sign convention of beta*/
     }
-    kx=kx;
-    ky=(ky*cos(-(psi_o-psi_i) + delta_theta) - kz*sin( -(psi_o-psi_i) + delta_theta));
-    kz=(ky*sin(-(psi_o-psi_i) + delta_theta) + kz*cos( -(psi_o-psi_i) + delta_theta));
 
+    kx_notouch=kx;
+    ky_notouch=ky;
+    kz_notouch=kz;
+              
+    kx=kx_notouch;
+    
+    //Still need to take into account the case where the incident ray does not hit perpendicular to the grating
+    if(beta>=0){
+        if(kz>=0){
+            ky=(ky_notouch*cos(-(psi_o-psi_i) + delta_theta) - kz_notouch*sin(-(psi_o-psi_i) + delta_theta)); 
+            kz=(ky_notouch*sin(-(psi_o-psi_i) + delta_theta) + kz_notouch*cos(-(psi_o-psi_i) + delta_theta));
+        }
+        else{
+            ky=(ky_notouch*cos((psi_o-psi_i) + delta_theta) - kz_notouch*sin((psi_o-psi_i) + delta_theta)); 
+            kz=(ky_notouch*sin((psi_o-psi_i) + delta_theta) + kz_notouch*cos((psi_o-psi_i) + delta_theta));
+        }
+    }
+    else{
+        if(kz>=0){
+            ky=(ky_notouch*cos((-2*alpha+(psi_o-psi_i)) + delta_theta) - kz_notouch*sin((-2*alpha+(psi_o-psi_i)) + delta_theta));
+            kz=(ky_notouch*sin((-2*alpha+(psi_o-psi_i)) + delta_theta) + kz_notouch*cos((-2*alpha+(psi_o-psi_i)) + delta_theta));
+        }
+        else{
+            ky=(ky_notouch*cos((2*alpha-(psi_o-psi_i)) + delta_theta) - kz_notouch*sin((2*alpha-(psi_o-psi_i)) + delta_theta));
+            kz=(ky_notouch*sin((2*alpha-(psi_o-psi_i)) + delta_theta) + kz_notouch*cos((2*alpha-(psi_o-psi_i)) + delta_theta));
+        }   
+    }
+    
     /*Finding the weight using diffraction theory.*/ 
     s=scalar_prod(kx,ky,kz,nx,ny,nz);
     psi_o = acos(s/k)-M_PI_2;
