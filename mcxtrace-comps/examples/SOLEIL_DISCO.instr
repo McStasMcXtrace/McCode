@@ -20,7 +20,7 @@
 *
 * %E
 *******************************************************************************/
-//N=1e8 has good statistics. Work in progress.
+//Work in progress.
 DEFINE INSTRUMENT SOLEIL_DISCO(grazing_angle_one=22.5, HFP_shift=0, VFP_shift=0, second_HFP_shift=0, x_screw=50, scan=0)
 
 DECLARE
@@ -126,7 +126,7 @@ COMPONENT M2_other_side = Arm()
 AT (0,0,0) RELATIVE PREVIOUS
 ROTATED (0,0,180) RELATIVE PREVIOUS
 
-//the side orientation matters, one of the side does not reflect the rays
+//the side orientation matters, one of the sides does not reflect the rays
 COMPONENT M2 = Mirror_toroid( 
     xwidth = 0.26,
     zdepth = 0.3,
@@ -154,7 +154,7 @@ COMPONENT HFP_location = Arm()
 AT (0,0,8) RELATIVE M2_takeoff
 
 COMPONENT HFP = PSD_monitor(
-  nx=100, ny=100, filename="HFP_image.dat")
+  nx=100, ny=100, filename="HFP_image.dat",xwidth=0.08,yheight=0.04)
 AT (0,0, HFP_shift) RELATIVE PREVIOUS //HFP_shift should be less than 2.6m
 
 //____________________________________________________________  16.600 M3 elliptical cylindrical mirror (horizontal deviation) / 22.5 ° / Si / R = 9.93 m
@@ -212,7 +212,7 @@ COMPONENT VFP_location = Arm()
 AT (0,0,1.67) RELATIVE M4_arm_back
 
 COMPONENT VFP = PSD_monitor(
-  nx=100, ny=100, filename="VFP_image.dat")
+  nx=100, ny=100, filename="VFP_image.dat",xwidth=0.02,yheight=0.04)
 AT (0,0,VFP_shift) RELATIVE PREVIOUS //VFP_shift should be less than 1.48m
 
 //____________________________________________________________  19.950 m : M51 Convex spherical mirror (horizontal deviation)  / 22.5° Si / R = -35 //Aluminium or Si?
@@ -271,9 +271,8 @@ COMPONENT second_HFP_location = Arm()
 AT (0,0,4.96) RELATIVE M52_takeoff
 
 COMPONENT second_HFP = PSD_monitor(
-  nx=100, ny=100, filename="second_HFP_image.dat")
+  nx=100, ny=100, filename="second_HFP_image.dat",xwidth=0.8,yheight=0.08)
 AT (0,0, second_HFP_shift) RELATIVE PREVIOUS 
-
 
 //____________________________________________________________  44.500 m : M53 toroidal mirror (horizontal deviation) / 22.5° / AlMgF2 / R = 4.75 m, r = 0.714 m     
 COMPONENT M53_location = Arm()
@@ -378,7 +377,7 @@ COMPONENT Grating_rotation_nine_degrees = Arm()
 AT (0, 0, 0) RELATIVE PREVIOUS	
 ROTATED (-9, 0, 0) RELATIVE PREVIOUS	
 
-COMPONENT reflective_grating = Grating_reflect(
+SPLIT 100 COMPONENT reflective_grating = Grating_reflect(
     d_phi=1,order=order,
     rho_l=number_lines_per_mm,
     zdepth=102e-3,xwidth=102e-3)    
@@ -435,6 +434,10 @@ COMPONENT arm3 = Arm()
 AT (0, 0, 760.33e-3) RELATIVE PREVIOUS
 ROTATED (0, 0, 0) RELATIVE PREVIOUS
 
+COMPONENT psd_before_slit = PSD_monitor(
+  nx=100, ny=100, filename="psd_before_slit.dat",xwidth=130e-3,yheight=130e-3)
+AT (0,0,0) RELATIVE PREVIOUS 
+
 COMPONENT slit = Slit(
     //xwidth=13.5e-4, 
     xwidth=13.5e-6, 
@@ -443,8 +446,8 @@ AT (0, 0, 0) RELATIVE PREVIOUS
 
 COMPONENT psd_monitor = PSD_monitor(
     filename="psd", 
-    xmin=-0.01, 
-    xmax=0.01,
+    xmin=-0.001, 
+    xmax=0.001,
     ymin=-0.01, 
     ymax=0.01,             
     nx=100,
@@ -453,15 +456,15 @@ COMPONENT psd_monitor = PSD_monitor(
     )
 AT (0, 0, 10e-3) RELATIVE PREVIOUS
 
-COMPONENT psd_giant_after_grating = PSD_monitor(xwidth=1e-2, yheight=1e-2, filename="psd_giant_after_grating",nx=2001,ny=1)
+COMPONENT psd_giant_after_grating = PSD_monitor(xwidth=2e-3, yheight=1e-2, filename="psd_giant_after_grating",nx=2001,ny=1)
 AT(0,0,0) RELATIVE PREVIOUS
 
 COMPONENT e_monitor = Monitor_nD(
-  xwidth=1e-2, yheight=1e-2, options="energy  bins=500 limits=[0 0.007],  x  bins=500", filename="e_monitor",restore_xray = 1) 
+  xwidth=2e-3, yheight=1e-2, options="energy  bins=500 limits=[0 0.007],  x  bins=500", filename="e_monitor",restore_xray = 1) 
 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT w_monitor = Monitor_nD(
-  xwidth=1e-2, yheight=1e-2, options="wavelength  bins=500 limits=[1980 11000],  x  bins=500", filename="w_monitor",restore_xray = 1) 
+  xwidth=2e-3, yheight=1e-2, options="wavelength  bins=500 limits=[1980 11000],  x  bins=500", filename="w_monitor",restore_xray = 1) 
 AT (0,0,0) RELATIVE PREVIOUS
 
 
