@@ -129,7 +129,7 @@ ROTATED (0,0,180) RELATIVE PREVIOUS
 //the side orientation matters, one of the sides does not reflect the rays
 COMPONENT M2 = Mirror_toroid( 
     xwidth = 0.26,
-    zdepth = 0.3,
+    zdepth = 0.19,
     radius = 2.56, 
     radius_o=21.04,
     reflec="Si_disco.dat")
@@ -224,8 +224,8 @@ AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (0, 0, 90) RELATIVE PREVIOUS	
 
 COMPONENT M51 = Mirror_elliptic(
-    length=0.5, 
-    width=0.5,
+    length=40e-3, 
+    width=20e-3,
     x_a=35, //positive or negative radius? come back later ...
     y_b=35, 
     z_c=35,
