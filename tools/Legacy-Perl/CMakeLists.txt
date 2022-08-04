@@ -88,7 +88,7 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 if(${enable_mcstas})
   set(P "mc")
   set(SOURCENAMES daemon display formatgui
-      gui plot resplot stas2vitess )
+      gui plot resplot )
 else()
   set(P "mx")
   set(SOURCENAMES daemon display formatgui
