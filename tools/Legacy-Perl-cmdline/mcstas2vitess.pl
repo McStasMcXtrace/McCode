@@ -344,7 +344,7 @@ make_instr_file($INSTR, \@param, $data);
 close($INSTR);
 print "Wrote Vitess Module instrument file '$instr_name'.\n";
 
-my @mcstas_cmd = ("mcstas", "--no-main", "-o", $c_name, $instr_name);
+my @mcstas_cmd = ("${MCSTAS::sys_dir}/bin/mcstas", "--no-main", "-o", $c_name, $instr_name);
 print join(" ", @mcstas_cmd), "\n";
 if(system(@mcstas_cmd)) {
     print "*** Error exit ***\n";
