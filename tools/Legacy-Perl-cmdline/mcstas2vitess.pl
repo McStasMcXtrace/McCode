@@ -339,6 +339,9 @@ my $INSTR = new FileHandle;
 my $instr_name = lc("McStas_${compname}.instr");
 my $c_name = lc("McStas_${compname}.c");
 my $out_name1 = lc("McStas_${compname}.out");
+if (!($Config{'osname'} eq 'MSWin32')) {
+  $out_name1 = lc("McStas_${compname}.exe");
+}
 
 open($INSTR, ">$instr_name") ||
     die "Could not open output Vitess Module instrument file '$instr_name'.";
@@ -364,12 +367,12 @@ if (!($Config{'osname'} eq 'MSWin32')) {
   $out_name = "${out_name}.exe";
 }
 
-my @cc_cmd = ('mv', $out_name1, $out_name);
+my @mv_cmd = ('mv', $out_name1, $out_name);
 
-print join(" ", @cc_cmd), "\n";
-if(system(@cc_cmd)) {
+print join(" ", @mv_cmd), "\n";
+if(system(@mv_cmd)) {
     print "*** Error exit ***\n";
-    print STDERR "C compilation likely failed.\n";
+    print STDERR "Final rename failed, C compilation likely also failed.\n";
     exit 1;
 }
 
@@ -383,6 +386,6 @@ open($TCL, ">$tcl_name") ||
 make_tcl_file($TCL, \@param, $data);
 close($TCL);
 print "\nWrote Vitess Module Tcl GUI file '$tcl_name' for inclusion in your vitess/GUI/usermodule.tcl script.\n\n";
-print "mcstas2vitess: Convertion has been performed\n";
+print "mcstas2vitess: Conversion has been performed\n";
 
 exit 0;
