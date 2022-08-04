@@ -336,15 +336,17 @@ for $p (@{$data->{'inputpar'}}) {
 print "mcstas2vitess: Converting McStas component ${compname} into Vitess Module 'McStas_${compname}'\n";
 # Output the .instr file.
 my $INSTR = new FileHandle;
-my $instr_name = "McStas_${compname}.instr";
-my $c_name = "McStas_${compname}.c";
+my $instr_name = lc("McStas_${compname}.instr");
+my $c_name = lc("McStas_${compname}.c");
+my $out_name1 = lc("McStas_${compname}.out");
+
 open($INSTR, ">$instr_name") ||
     die "Could not open output Vitess Module instrument file '$instr_name'.";
 make_instr_file($INSTR, \@param, $data);
 close($INSTR);
 print "Wrote Vitess Module instrument file '$instr_name'.\n";
 
-my @mcstas_cmd = ("${MCSTAS::sys_dir}/bin/mcstas", "--no-main", "-o", $c_name, $instr_name);
+my @mcstas_cmd = ("${MCSTAS::sys_dir}/bin/mcrun", "--no-main", $instr_name,"-n0");
 print join(" ", @mcstas_cmd), "\n";
 if(system(@mcstas_cmd)) {
     print "*** Error exit ***\n";
@@ -361,22 +363,17 @@ if (!($Config{'osname'} eq 'MSWin32')) {
 } else {
   $out_name = "${out_name}.exe";
 }
-my $cc = $ENV{'MCSTAS_CC'} || $MCSTAS::mcstas_config{CC};
-my $cflags = $ENV{'MCSTAS_CFLAGS'} || $MCSTAS::mcstas_config{CFLAGS};
-my $vitess_lib_name = "vitess-lib.c";
-$vitess_lib_name = $MCSTAS::sys_dir . "/share/" . $vitess_lib_name
-    unless -r $vitess_lib_name;
-die "Cannot find VITESS library file '$vitess_lib_name'"
-    unless -r $vitess_lib_name;
-my @cc_cmd = ($cc, split(' ', $cflags), "-o", $out_name,
-              "-I$MCSTAS::sys_dir", $c_name, "-lm");
+
+my @cc_cmd = ('mv', $out_name1, $out_name);
+
 print join(" ", @cc_cmd), "\n";
 if(system(@cc_cmd)) {
     print "*** Error exit ***\n";
-    print STDERR "C compilation failed.\n";
+    print STDERR "C compilation likely failed.\n";
     exit 1;
 }
-print "\nWrote executable Vitess Module file '$out_name' for placement in your vitess/MODULES folder.\n\n";
+
+print "\nGenerated executable Vitess Module file '$out_name' for placement in your vitess/MODULES folder.\n\n";
 
 # Output the .tcl file for the VITESS gui.
 my $TCL = new FileHandle;
