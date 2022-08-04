@@ -20,7 +20,7 @@
 *
 * %E
 *******************************************************************************/
-//Work in progress.
+//Work in progress. Need to check and correct all the radiuses and orientations of the mirrors (for example M1 needs to have a negative radius and be turned so the curvature is along the width, another example is the toroidal mirror that is actually a bump so it needs to be turned around and made to work from that side too).
 DEFINE INSTRUMENT SOLEIL_DISCO(grazing_angle_one=22.5, HFP_shift=0, VFP_shift=0, second_HFP_shift=0, x_screw=50, scan=0)
 
 DECLARE
