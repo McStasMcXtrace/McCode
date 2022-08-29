@@ -995,6 +995,27 @@ void cogen_getvarpars_fct(struct instr_def *instr)
   cout("");
 }
 
+/*
+ * Generates the function that returns the index of a named component or -1 if 
+ * it does not exist in the instrument
+ */
+void cogen_getcompindex_fct(struct instr_def *instr){
+  cout("int _getcomp_index(char* compname)");
+  cout("/* Enables retrieving the component position & rotation when the index is not known.");
+  cout(" * Component indexing into MACROS, e.g., POS_A_COMP_INDEX, are 1-based! */");
+  cout("{");
+  List_handle iter;
+  iter = list_iterate(instr->complist);
+  struct comp_inst *comp;
+  int index=1;
+  while ((comp = list_next(iter)) != NULL) {
+    coutf("  if (!strcmp(compname, \"%s\")) return %i;", comp->name, index++);
+  }
+  cout("  return -1;");
+  cout("}");
+  cout("");
+}
+
 /*******************************************************************************
 * Generates the function that returns a particle var ptr of type void*,
 * based on the variable name as a string.
@@ -2337,6 +2358,25 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  return rval;");
   cout("}");
   cout("");
+  
+  liter = list_iterate(instr->user_vars);
+  cout("#pragma acc routine");
+  cout("int particle_setvar(_class_particle *, char *, double);");
+  cout("");
+  cout("int particle_setvar(_class_particle *p, char *name, double value){");
+  cout("#ifndef OPENACC");
+  cout("#define str_comp strcmp");
+  cout("#endif");
+  cout("  int rval=1;");
+  char *invar;
+  while((invar = list_next(liter))) {
+    coutf("  if(!str_comp(\"%s\",name)){p->%s = value; rval = 0;}",invar,invar);
+  }
+  list_iterate_end(liter);
+  cout("  return rval;");
+  cout("}");
+  cout("");
+  
 
   liter = list_iterate(instr->user_vars);
   cout("#pragma acc routine");
@@ -2714,7 +2754,7 @@ cogen(char *output_name, struct instr_def *instr)
   // API macro support functions
   cogen_getvarpars_fct(instr);
   cogen_getparticlevar_fct(instr);
-
+  cogen_getcompindex_fct(instr);
 
   embed_file("mccode_main.c");
 
