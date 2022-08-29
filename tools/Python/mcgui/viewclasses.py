@@ -789,7 +789,7 @@ class McStartSimDialog(QtWidgets.QDialog):
 
             i = i + 1
             x = i % (int(mccode_config.configuration["GUICOLS"])*2)
-            y = i / (int(mccode_config.configuration["GUICOLS"])*2)
+            y = i // (int(mccode_config.configuration["GUICOLS"])*2)
 
             lbl = QtWidgets.QLabel(self.ui.gbxGrid)
             lbl.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
