@@ -77,8 +77,8 @@ def create_plotwindow(title):
     
     # window size
     rect = QtGui.QApplication.desktop().screenGeometry()
-    w = 0.7 * rect.width()
-    h = 0.7 * rect.height()
+    w = int(0.7 * rect.width())
+    h = int(0.7 * rect.height())
     mw.resize(w, h)
     
     global g_window
@@ -381,7 +381,7 @@ def add_plot(layout, node, plot_node_func, i, n, viewmodel):
     options = get_plot_func_opts(viewmodel.logstate(), viewmodel.legendstate(), viewmodel.cmapindex(), verbose, fontsize, cbmin, cbmax)
     view_box, plt_itm = plot_node_func(node, i, plt, options)
     if (view_box):
-        layout.addItem(plt_itm, i / rowlen, i % rowlen)
+        layout.addItem(plt_itm, i // rowlen, i % rowlen)
     
     return view_box
 
