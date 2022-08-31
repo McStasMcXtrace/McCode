@@ -94,6 +94,10 @@ def add_mcrun_options(parser):
         action='store_true', default=False,
         help='disable optimising compiler flags for faster compilation')
 
+    add('--no-main',
+        action='store_true', default=False,
+        help='do not generate a main(), e.g. for use with mcstas2vitess.pl. Implies -c')
+
     add('--verbose',
         action='store_true', default=False,
         help='enable verbose output')

@@ -156,42 +156,48 @@ TRACE
               
     kx=kx_notouch;
     
-    //Still need to take into account the case where the incident ray does not hit perpendicular to the grating
-    if(beta>=0){
-        if(kz>=0){
-            ky=(ky_notouch*cos(-(psi_o-psi_i) + delta_theta) - kz_notouch*sin(-(psi_o-psi_i) + delta_theta)); 
-            kz=(ky_notouch*sin(-(psi_o-psi_i) + delta_theta) + kz_notouch*cos(-(psi_o-psi_i) + delta_theta));
+    if(!isnan(psi_o) && !isnan(psi_i)){    
+        //Still need to take into account the case where the incident ray does not hit perpendicular to the grating
+        if(beta>=0){
+            if(kz>=0){
+                ky=(ky_notouch*cos(-(psi_o-psi_i) + delta_theta) - kz_notouch*sin(-(psi_o-psi_i) + delta_theta)); 
+                kz=(ky_notouch*sin(-(psi_o-psi_i) + delta_theta) + kz_notouch*cos(-(psi_o-psi_i) + delta_theta));
+            }
+            else{
+                ky=(ky_notouch*cos((psi_o-psi_i) + delta_theta) - kz_notouch*sin((psi_o-psi_i) + delta_theta)); 
+                kz=(ky_notouch*sin((psi_o-psi_i) + delta_theta) + kz_notouch*cos((psi_o-psi_i) + delta_theta));
+            }
         }
         else{
-            ky=(ky_notouch*cos((psi_o-psi_i) + delta_theta) - kz_notouch*sin((psi_o-psi_i) + delta_theta)); 
-            kz=(ky_notouch*sin((psi_o-psi_i) + delta_theta) + kz_notouch*cos((psi_o-psi_i) + delta_theta));
+            if(kz>=0){
+                ky=(ky_notouch*cos((-2*alpha+(psi_o-psi_i)) + delta_theta) - kz_notouch*sin((-2*alpha+(psi_o-psi_i)) + delta_theta));
+                kz=(ky_notouch*sin((-2*alpha+(psi_o-psi_i)) + delta_theta) + kz_notouch*cos((-2*alpha+(psi_o-psi_i)) + delta_theta));
+            }
+            else{
+                ky=(ky_notouch*cos((2*alpha-(psi_o-psi_i)) + delta_theta) - kz_notouch*sin((2*alpha-(psi_o-psi_i)) + delta_theta));
+                kz=(ky_notouch*sin((2*alpha-(psi_o-psi_i)) + delta_theta) + kz_notouch*cos((2*alpha-(psi_o-psi_i)) + delta_theta));
+            }   
         }
-    }
-    else{
-        if(kz>=0){
-            ky=(ky_notouch*cos((-2*alpha+(psi_o-psi_i)) + delta_theta) - kz_notouch*sin((-2*alpha+(psi_o-psi_i)) + delta_theta));
-            kz=(ky_notouch*sin((-2*alpha+(psi_o-psi_i)) + delta_theta) + kz_notouch*cos((-2*alpha+(psi_o-psi_i)) + delta_theta));
-        }
-        else{
-            ky=(ky_notouch*cos((2*alpha-(psi_o-psi_i)) + delta_theta) - kz_notouch*sin((2*alpha-(psi_o-psi_i)) + delta_theta));
-            kz=(ky_notouch*sin((2*alpha-(psi_o-psi_i)) + delta_theta) + kz_notouch*cos((2*alpha-(psi_o-psi_i)) + delta_theta));
-        }   
-    }
+        
+        /*Finding the weight using diffraction theory.*/ 
+        s=scalar_prod(kx,ky,kz,nx,ny,nz);
+        psi_o = acos(s/k)-M_PI_2;
+
+        /*pay attention to sign conventions here. We might cross to the "incoming" side of the normal.*/
+        spsi_i = sin(M_PI_2-psi_i);
+        spsi_o = sin(M_PI_2-psi_o);//+delta_theta)); // asin angle out
+
+        /* Phase for interference pattern:  k = wave vector, d = lines/Angstrom, b=width in Angstrom */
+        gamma = k*d*(spsi_o-spsi_i);
+        /* Phase for diffraction pattern */
+        Gamma = k*b*(spsi_o-spsi_i);
+        pdiff=((sin(Gamma/2)/(Gamma/2))*(sin(Gamma/2)/(Gamma/2)))*((sin(nslits*gamma/2)/sin(gamma/2))*(sin(nslits*gamma/2)/sin(gamma/2)));
+        p=p*pdir*(pdiff/(pow(nslits,2)));
+        
+    }else{
+        p=0;
+    }    
     
-    /*Finding the weight using diffraction theory.*/ 
-    s=scalar_prod(kx,ky,kz,nx,ny,nz);
-    psi_o = acos(s/k)-M_PI_2;
-
-    /*pay attention to sign conventions here. We might cross to the "incoming" side of the normal.*/
-    spsi_i = sin(M_PI_2-psi_i);
-    spsi_o = sin(M_PI_2-psi_o);//+delta_theta)); // asin angle out
-
-    /* Phase for interference pattern:  k = wave vector, d = lines/Angstrom, b=width in Angstrom */
-    gamma = k*d*(spsi_o-spsi_i);
-    /* Phase for diffraction pattern */
-    Gamma = k*b*(spsi_o-spsi_i);
-    pdiff=((sin(Gamma/2)/(Gamma/2))*(sin(Gamma/2)/(Gamma/2)))*((sin(nslits*gamma/2)/sin(gamma/2))*(sin(nslits*gamma/2)/sin(gamma/2)));
-    p=p*pdir*(pdiff/(pow(nslits,2)));
   }
 
 %}

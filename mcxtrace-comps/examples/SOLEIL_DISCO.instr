@@ -5,7 +5,7 @@
 * Written by: Stephane Bac, Emmanuel Farhi, Antoine Padovani
 * Date: 01/08/2022
 * Origin: SOLEIL
-* Version: 0.1
+* Version: 0.2
 * %INSTRUMENT_SITE: SOLEIL
 *
 * DISCO beam-line at SOLEIL, imaging branch
@@ -20,7 +20,12 @@
 *
 * %E
 *******************************************************************************/
-//Work in progress. Need to check and correct all the radiuses and orientations of the mirrors (for example M1 needs to have a negative radius and be turned so the curvature is along the width, another example is the toroidal mirror that is actually a bump so it needs to be turned around and made to work from that side too).
+//DISCO beamline description here: https://hal.archives-ouvertes.fr/hal-01479318/document
+//Work in progress.
+//M3 should probably deviate the rays in the other direction, not very important (qualitatively), but something to change later on if so.
+//Check that M53 and M54 should face each other in that fashion. Not sure.
+//Add trapezoidal diaphragm.
+//webgl viewer works but takes a bit of time to load.
 DEFINE INSTRUMENT SOLEIL_DISCO(grazing_angle_one=22.5, HFP_shift=0, VFP_shift=0, second_HFP_shift=0, x_screw=50, scan=0)
 
 DECLARE
@@ -99,11 +104,15 @@ COMPONENT M1_rotated = Arm()
 AT (0,0,0) RELATIVE PREVIOUS
 ROTATED (0,0,90) RELATIVE PREVIOUS
 
+COMPONENT M1_x = Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (90, 0, 0) RELATIVE PREVIOUS
+
 // Mirror_curved is initially in the YZ plane
 COMPONENT M1 = Mirror_curved(
-  coating="Si_disco.dat", radius=75, length=0.19, width=0.26)
+  coating="Si_disco.dat", radius=-75, length=0.26, width=0.19)//radius=-0.1 to see the curve for testing purposes. length and width reversed.
 AT (0,0,0) RELATIVE PREVIOUS
-ROTATED (0, grazing_angle_one, 0) RELATIVE PREVIOUS
+ROTATED (0, 0, -grazing_angle_one) RELATIVE PREVIOUS
 EXTEND
 %{ 
 	if (!SCATTERED) ABSORB;
@@ -111,27 +120,36 @@ EXTEND
 
 COMPONENT M1_takeoff = Arm()
 AT (0,0,0) RELATIVE PREVIOUS
-ROTATED (0, grazing_angle_one, 0) RELATIVE PREVIOUS
+ROTATED (0, 0, -grazing_angle_one) RELATIVE PREVIOUS
+
+
+COMPONENT M1_x_takeoff = Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (-90, 0, 0) RELATIVE PREVIOUS
+
 
 //____________________________________________________________  6.000 m : M2 toroidal mirror (vertical deviation) : beam is sent back horizontally / 22.5° / Si / R = 21.04 m, r = 2.56 m
 
 COMPONENT M2_location = Arm()
-AT (0,0,0.2) RELATIVE M1_takeoff
+AT (0,0,0.2) RELATIVE M1_x_takeoff
+
+COMPONENT M2_rotated_x = Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (-90,0,0) RELATIVE M1
 
 COMPONENT M2_rotated = Arm()
 AT (0,0,0) RELATIVE PREVIOUS
-ROTATED (0,0,-90) RELATIVE M1
+ROTATED (0,0,-90) RELATIVE PREVIOUS
 
 COMPONENT M2_other_side = Arm()
 AT (0,0,0) RELATIVE PREVIOUS
 ROTATED (0,0,180) RELATIVE PREVIOUS
 
-//the side orientation matters, one of the sides does not reflect the rays
-COMPONENT M2 = Mirror_toroid( 
+COMPONENT M2 = Mirror_toroid_pothole( 
     xwidth = 0.26,
     zdepth = 0.19,
     radius = 2.56, 
-    radius_o=21.04,
+    radius_o = 21.04,
     reflec="Si_disco.dat")
 AT (0,0,0) RELATIVE PREVIOUS
 ROTATED (0, 0, 0) RELATIVE PREVIOUS
@@ -157,8 +175,8 @@ COMPONENT HFP = PSD_monitor(
   nx=100, ny=100, filename="HFP_image.dat",xwidth=0.08,yheight=0.04)
 AT (0,0, HFP_shift) RELATIVE PREVIOUS //HFP_shift should be less than 2.6m
 
-//____________________________________________________________  16.600 M3 elliptical cylindrical mirror (horizontal deviation) / 22.5 ° / Si / R = 9.93 m
-//use a cylindrical mirror for now
+//____________________________________________________________  16.600 M3 elliptic cylindrical mirror (horizontal deviation) / 22.5 ° / Si / R = 9.93 m
+//use a cylindrical mirror for now because I do not know what elliptic cylindrical means
 
 COMPONENT M3_arm = Arm()
 AT (0,0,2.6) RELATIVE HFP_location
@@ -221,17 +239,17 @@ AT (0, 0, 1.48) RELATIVE VFP_location
 
 COMPONENT M51_rotation = Arm()
 AT (0, 0, 0) RELATIVE PREVIOUS	
-ROTATED (0, 0, 90) RELATIVE PREVIOUS	
+ROTATED (0, 0, -90) RELATIVE PREVIOUS	
 
 COMPONENT M51 = Mirror_elliptic(
     length=40e-3, 
     width=20e-3,
-    x_a=35, //positive or negative radius? come back later ...
+    x_a=35, //0.04 for testing purposes
     y_b=35, 
     z_c=35,
     coating="Si_disco.dat")
 AT (0, 0, 0) RELATIVE PREVIOUS
-ROTATED (-22.5, 0, 0) RELATIVE PREVIOUS
+ROTATED (22.5, 0, 0) RELATIVE PREVIOUS
 EXTEND
 %{ 
 	if (!SCATTERED) ABSORB;
@@ -239,23 +257,28 @@ EXTEND
 
 COMPONENT arm = Arm()
 AT (0, 0, 0) RELATIVE PREVIOUS
-ROTATED (-22.5, 0, 0) RELATIVE PREVIOUS
+ROTATED (22.5, 0, 0) RELATIVE PREVIOUS
 
 //rotate 90 back so our frame is normal again
 COMPONENT M51_arm_back = Arm()
 AT (0,0,0) RELATIVE PREVIOUS
-ROTATED (0, 0, -90) RELATIVE PREVIOUS
+ROTATED (0, 0, 90) RELATIVE PREVIOUS
 
 //____________________________________________________________  20.750 m : M52 cylindrical mirror (horizontal deviation)   / 20.65° / AlMgF2 / r = 2 m
+COMPONENT M52_position = Arm()
+AT (0,0,0.8) RELATIVE PREVIOUS
+
+COMPONENT M52_x = Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (90, 0, 0) RELATIVE PREVIOUS
+
 COMPONENT M52 = Mirror_curved(
-    radius=2, 
-    //length=10*40e-3, //increased the size *10 to intercept a maximum of rays, ajust the positionning because the real size should catch the rays
-    //width=10*20e-3,
-    length=40e-3,
-    width=20e-3,      
+    radius=2, //0.04 for testing purposes
+    length=20e-3,//length and width reversed
+    width=40e-3,      
     coating="AlMgF2_disco.dat") // used the density of MgF2
-AT (0, 0, 0.8) RELATIVE PREVIOUS
-ROTATED (0, 20.65, 0) RELATIVE PREVIOUS
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0, 0, -20.65) RELATIVE PREVIOUS
 EXTEND
 %{ 
 	if (!SCATTERED) ABSORB;
@@ -263,12 +286,17 @@ EXTEND
 
 COMPONENT M52_takeoff = Arm()
 AT (0, 0, 0) RELATIVE PREVIOUS	
-ROTATED ( 0, 20.65, 0) RELATIVE PREVIOUS
+ROTATED ( 0, 0, -20.65) RELATIVE PREVIOUS
+
+
+COMPONENT M52_x_takeoff = Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (-90, 0, 0) RELATIVE PREVIOUS
 
 //____________________________________________________________  25.71 m : HFP : Horizontal Focal Point ==>  PSD
 
 COMPONENT second_HFP_location = Arm()
-AT (0,0,4.96) RELATIVE M52_takeoff
+AT (0,0,4.96) RELATIVE M52_x_takeoff
 
 COMPONENT second_HFP = PSD_monitor(
   nx=100, ny=100, filename="second_HFP_image.dat",xwidth=0.8,yheight=0.08)
@@ -276,17 +304,16 @@ AT (0,0, second_HFP_shift) RELATIVE PREVIOUS
 
 //____________________________________________________________  44.500 m : M53 toroidal mirror (horizontal deviation) / 22.5° / AlMgF2 / R = 4.75 m, r = 0.714 m     
 COMPONENT M53_location = Arm()
-AT (0,0,23.75) RELATIVE M52_takeoff
+AT (0,0,23.75) RELATIVE M52_x_takeoff
 
 COMPONENT M53_rotated = Arm()
 AT (0,0,0) RELATIVE PREVIOUS
 ROTATED (0,0,90) RELATIVE PREVIOUS
 
-// Mirror_curved is initially in XZ plane we want it in YZ plane
-COMPONENT M53 = Mirror_toroid(
+COMPONENT M53 = Mirror_toroid_pothole(
     xwidth = 50e-3,
     zdepth = 130e-3,
-    radius = 0.714, 
+    radius = 0.714,
     radius_o=4.75,
     reflec="AlMgF2_disco.dat")
 AT (0,0,0) RELATIVE PREVIOUS
@@ -309,11 +336,10 @@ COMPONENT M54_rotated = Arm()
 AT (0,0,0) RELATIVE PREVIOUS
 ROTATED (0,0,180) RELATIVE PREVIOUS
 
-// Mirror_curved is initially in XZ plane we want it in YZ plane
-COMPONENT M54 = Mirror_toroid(
+COMPONENT M54 = Mirror_toroid_pothole(
     xwidth = 50e-3,
     zdepth = 110e-3,
-    radius = 1.12, 
+    radius = 1.12,
     radius_o=7.8,
     reflec="AlMgF2_disco.dat")    
 AT (0,0,0) RELATIVE PREVIOUS
@@ -377,7 +403,8 @@ COMPONENT Grating_rotation_nine_degrees = Arm()
 AT (0, 0, 0) RELATIVE PREVIOUS	
 ROTATED (-9, 0, 0) RELATIVE PREVIOUS	
 
-SPLIT 100 COMPONENT reflective_grating = Grating_reflect(
+//COMPONENT reflective_grating = Grating_reflect(
+SPLIT 100 COMPONENT reflective_grating = Grating_reflect(//SPLIT 100 can be taken off
     d_phi=1,order=order,
     rho_l=number_lines_per_mm,
     zdepth=102e-3,xwidth=102e-3)    
