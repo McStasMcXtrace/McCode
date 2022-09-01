@@ -29,8 +29,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT CppWrap
-DEFINITION PARAMETERS (string something="default")
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string something="default")
 OUTPUT PARAMETERS ()
 DEPENDENCY "-L. -lhellowrap"
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
