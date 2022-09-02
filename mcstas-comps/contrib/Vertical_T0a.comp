@@ -1,65 +1,58 @@
 /******************************************************************
 *
-*  McStas, version 1.0, released October 26, 1998
-*          Maintained by Kristian Nielsen and Kim Lefmann,
-*          Risoe National Laboratory, Roskilde, Denmark
+*  McStas, version 3.0
 *
-*  Component: vertical_T0
+*  Component: vertical_T0 
 *
-* %I
+* %Identification
 * Written by: Garrett Granroth
 * Date: 2 NOV 2004
 * Origin: SNS Oak Ridge,TN
-*
-* Vertical T0 chopper contributed by Garrett Granroth, SNS.
-*
-* %D
-*
-* Vertical T0 chopper contributed by Garrett Granroth, SNS.
-*
-* %P
+* Version: 0.4
+* %Parameters
 *  Input Parameters:
-*
-* len: [m]      length of slot
-* w1: [m]       center width
-* w2: []        edgewidth
-* nu: [Hz]      frequency
-* delta: [sec]  time from edge of chopper to center Phase angle
-* tc: [sec]     time when desired neutron is at the center of the chopper
-* ymin: [m]     Lower y bound
-* ymax: [m]     Upper y bound
-*
+*  
+*  len:  length of slot (m)
+*  w1: center width (m)
+*  w2: edgewidth
+*  nu:     frequency (Hz)
+*  delta:  time from edge of chopper to center Phase angle (sec)
+*  tc:     time when desired neutron is at the center of the chopper (sec)
+*  ymin:   Lower y bound (m)
+*  ymax:   Upper y bound (m)
+*  
 *
 * %End
 *******************************************************************/
 DEFINE COMPONENT Vertical_T0a
-
 DEFINITION PARAMETERS ()
-
-SETTING PARAMETERS (len, w1, w2, nu, delta, tc, ymin, ymax)
-
-OUTPUT PARAMETERS ()
+SETTING PARAMETERS (len, w1,w2, nu, delta, tc, ymin, ymax)
+OUTPUT PARAMETERS (omega, r_blade, x_width, nn, tdr)
 //STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
-
 SHARE
 %{
 #ifndef FERMI_CHOP_DEFS
-#define FERMI_CHOP_DEFS
-/* routine to calculate acos in proper quadrant  range = 0 to 2PI*/
-double acos0_2pi(double x,double y)
-     {
-       if (y>0.0){
+#define FERMI_CHOP_DEFS   
+   /* routine to calculate acos in proper quadrant  range = 0 to 2PI*/
+   #pragma acc routine 
+   double acos0_2pi(double x,double y)
+    {
+       if (y>0.0){ 
          return acos(x);
        }
          return 2.0*PI-acos(x);
-     }
+    }
+
    /*routine to calculate x and y positions of a neutron in a fermi chopper */
+   #pragma acc routine
    void neutxypos(double *x, double *y, double phi, double inrad,double c[])
-    {
+    {      
         *x=c[0]+inrad*cos(phi);
         *y=c[1]+inrad*sin(phi);
     }
-    /* routine to calculate the origin of a circle that describes the neutron path through the chopper */
+
+    /* routine to calculate the origin of a circle that describes the neutron path through the chopper */  
+    #pragma acc routine
     void calccenter(double c[],double zr[], double xr[]){
       double denom, A,B,C,D,a,b;
       denom=2*(-zr[0]*xr[2] +zr[0]*xr[1]+ zr[1]*xr[2]+xr[0]*zr[2]-xr[0]*zr[1] - xr[1]*zr[2]);
@@ -67,77 +60,52 @@ double acos0_2pi(double x,double y)
        a=zr[0]*zr[0]-zr[1]*zr[1]+xr[0]*xr[0]-xr[1]*xr[1];
        b=zr[2]*zr[2]-zr[1]*zr[1]+xr[2]*xr[2]-xr[1]*xr[1];
        c[0]=1.0/denom*(A*a+B*b);
-       c[1]=1.0/denom*(C*a+D*b);
+       c[1]=1.0/denom*(C*a+D*b);  
     }
 
-/* function that describes the shape of the blades */
-    double blades(double zin,double rin,double off){
-        if (rin!=0.0)
-         return rin*(1-cos(asin(zin/fabs(rin))))+off;
-        else
-           return 0;
-    }
-    /* function to calculate which channel the neturon is in and to check if it is in a blade
-     *  or outside the slit package
-     * return 0 if neutron does not transmit return 1 with channel number if neutron will pass*/
-    int checkabsorb(double phi,int *chan_num, double inrad,double inw, double insw, double inbw,
-      double c[], double blader,double off){
-     double xtmp,neuzr,neuxr;
-     neutxypos(&neuzr,&neuxr,phi,inrad,c);
-  // printf("xr:%g zr:%g phi: %g r: %g c[0]: %g c[1]: %g\n",neuxr,neuzr,phi,inrad,c[0],c[1]);
-     if (fabs(neuxr)>inw/2.0) // check if neutron x position is outside of slit package
-         return 0;
-     xtmp=neuxr+inw/2.0;  // move origin to side of slit package
-     *chan_num=ceil((xtmp-blades(neuzr,blader,off))/(inbw+insw)); //calculate channel number
-      //check if neutron is in blade
-     if (xtmp >*chan_num*(inbw+insw)+blades(neuzr,blader,off))
-         return 0;
-     return 1;
-    }
-
-    /* function to calculate if the neutron is in the channel or not
-     * return 0 if neutron does not transmit return 1  if neutron will pass*/
-    int t0checkabsorb(double phi, double inrad,double inw1, double inw2, double c[]) {
-     double xtmp,neuzr,neuxr;
-     neutxypos(&neuzr,&neuxr,phi,inrad,c);
-  // printf("xr:%g zr:%g phi: %g r: %g c[0]: %g c[1]: %g\n",neuxr,neuzr,phi,inrad,c[0],c[1]);
-        if (fabs(neuxr)>inw1/2.0+(inw2-inw1)/(inrad/2.0)*fabs(neuzr)) // check if neutron x position is outside of channel
-         return 0;
-     return 1;
-    }
 #endif
-%}
+/* function to calculate if the neutron is in the channel or not 
+     * return 0 if neutron does not transmit return 1  if neutron will pass*/
+    int t0checkabsorb(double phi, double inrad,double inw1, double inw2, double c[]){
+        double xtmp,neuzr,neuxr;
+        neutxypos(&neuzr,&neuxr,phi,inrad,c);
+     // printf("xr:%g zr:%g phi: %g r: %g c[0]: %g c[1]: %g\n",neuxr,neuzr,phi,inrad,c[0],c[1]);
+        if (fabs(neuxr)>inw1/2.0+(inw2-inw1)/(inrad/2.0)*fabs(neuzr)) // check if neutron x position is outside of channel 
+           return 0;    
+        return 1;
+    }
+ %}   
 
 DECLARE
 %{
-   double omega;
+
+   double omega; 
    double off;
-   double splen;
+   double splen; 
    double rad;
    double sw;
+ 
 %}
-
 INITIALIZE
 %{
    splen=len/2.0;
    omega=2.0*PI*nu;
    rad=sqrt(w2*w2/4.0+splen*splen); //radius of cylinder containing slit package.
 %}
-
 TRACE
 %{
-
+ 
   double t0,t1,dphi,dt2,tneuzr,tneuxr,nrad;
   double phivec[200],tpt[3],xpt[3],ypt[3],zpt[3],zr[3],xr[3],yr[3],theta[3],c[2];
   int chan_num,chan_num0,idx1,idx3;
   if (cylinder_intersect (&t0, &t1, x, y, z, vx, vy, vz, rad, ymax-ymin)){
-    if (t0 < 0)      /*Neutron started inside cylinder */
+    if (t0 < 0)			/*Neutron started inside cylinder */
         ABSORB;
-    dt2=t1-t0;
+    dt2=t1-t0;	
     PROP_DT(t0);                /*propagate neutron to edge of chopper*/
-    /*calculate neutron position and velocity in chopper frame
+    /*calculate neutron position and velocity in chopper frame 
       calculate 3 points in the instrument frame and put them into the
-      chopper frame inorder to determine the radius and center of a circle
+      chopper frame inorder to determine the radius and center of a circle 
        that describes the path of the neutron in the chopper frame. */
     tpt[1]=t;
     tpt[2]=t+dt2;
@@ -149,14 +117,14 @@ TRACE
     zpt[1]=-sqrt(rad*rad-x*x);  xpt[1]=x; ypt[1]=y;   /* point where neutron intersects chopper */
     zpt[2]=zpt[1]+vz*(dt2); xpt[2]=xpt[1]+vx*(dt2); ypt[2]=ypt[1]+vy*(dt2);  /* point where neutron leaves the chopper */
     xpt[0]=xpt[1]+vx*(dt2/2.0); ypt[0]=ypt[1]+vy*(dt2/2.0); zpt[0]=zpt[1]+vz*(dt2/2.0); /*point half way between in time */
-   /* do the rotation */
+   /* do the rotation */ 
    for(idx3=0;idx3<3;idx3++){
-       rotate(xr[idx3],yr[idx3],zr[idx3],xpt[idx3],ypt[idx3],zpt[idx3],theta[idx3],0,1,0);
-    }
+       rotate(xr[idx3],yr[idx3],zr[idx3],xpt[idx3],ypt[idx3],zpt[idx3],theta[idx3],0,1,0);     
+    }       
     calccenter(c,zr,xr); /* calculate the center */
     nrad=sqrt((zr[0]-c[0])*(zr[0]-c[0])+(xr[0]-c[1])*(xr[0]-c[1])); /*calculate the radius of curvature for the neutron path */
    /* calculate points along path of neutron through cylinder quit on absorption
-    * or transmit neutron if 200 points are calculated
+    * or transmit neutron if 200 points are calculated 
     * calculate phi for first and last points */
    phivec[0]=acos0_2pi((zr[1]-c[0])/nrad,xr[1]-c[1]);phivec[1]=acos0_2pi((zr[2]-c[0])/nrad,xr[2]-c[1]);
    neutxypos(&tneuzr,&tneuxr,phivec[0],nrad,c);
@@ -191,42 +159,40 @@ TRACE
      }
      else if (dphi<0){
          while ((phivec[idx1]>phivec[1])&&(idx1<129)){
-        /* printf("phivec[%i]: %g\n", idx1,phivec[idx1]);*/
-         idx1++;
-         phivec[idx1]=phivec[idx1-1]+dphi;
-         if (!t0checkabsorb(phivec[idx1],nrad,w1,w2,c))
-           ABSORB;
-       }
-       if (phivec[idx1]<=phivec[1]) idx1--; //remove the point that is beyond phivec[1]
+           /* printf("phivec[%i]: %g\n", idx1,phivec[idx1]);*/
+             idx1++;
+             phivec[idx1]=phivec[idx1-1]+dphi;
+             if (!t0checkabsorb(phivec[idx1],nrad,w1,w2,c))
+                 ABSORB;   
+          }
+         if (phivec[idx1]<=phivec[1]) idx1--; //remove the point that is beyond phivec[1]
      }
      else
         ABSORB; /* dphi =0? */
-   }
+   }      
   }
-  else        /* The neutron failed to even hit the chopper */
+  else				/* The neutron failed to even hit the chopper */
     ABSORB;
 
 %}
-
 MCDISPLAY
 %{
-  double zstep,x1,x2,x3,x4,z1,z2;
-  int idx, idx2;
-  line(w2/2.0,ymin,splen,w2/2.0,ymax,splen);
-  line(w2/2.0,ymin,-splen,w2/2.0,ymax,-splen);
-  line(-w2/2.0,ymin,splen,-w2/2.0,ymax,splen);
-  line(-w2/2.0,ymin,-splen,-w2/2.0,ymax,-splen);
-  line(w2/2.0,ymax,splen,w1/2.0,ymax,0);
-  line(w1/2.0,ymax,0,w2/2.0,ymax,-splen);
-  line(-w2/2.0,ymax,splen,-w1/2.0,ymax,0);
-  line(-w1/2.0,ymax,0,-w2/2.0,ymax,-splen);
-  line(w2/2.0,ymin,splen,w1/2.0,ymin,0);
-  line(w1/2.0,ymin,0,w2/2.0,ymin,-splen);
-  line(-w2/2.0,ymin,splen,-w1/2.0,ymin,0);
-  line(-w1/2.0,ymin,0,-w2/2.0,ymin,-splen);
-  circle("zx",0,ymin,0,rad);
-  circle("zx",0,ymax,0,rad);
-  zstep=2.0*splen/10.0;
+double zstep,x1,x2,x3,x4,z1,z2;
+int idx, idx2;
+line(w2/2.0,ymin,splen,w2/2.0,ymax,splen);
+line(w2/2.0,ymin,-splen,w2/2.0,ymax,-splen);
+line(-w2/2.0,ymin,splen,-w2/2.0,ymax,splen);
+line(-w2/2.0,ymin,-splen,-w2/2.0,ymax,-splen);
+line(w2/2.0,ymax,splen,w1/2.0,ymax,0);
+line(w1/2.0,ymax,0,w2/2.0,ymax,-splen);
+line(-w2/2.0,ymax,splen,-w1/2.0,ymax,0);
+line(-w1/2.0,ymax,0,-w2/2.0,ymax,-splen);
+line(w2/2.0,ymin,splen,w1/2.0,ymin,0);
+line(w1/2.0,ymin,0,w2/2.0,ymin,-splen);
+line(-w2/2.0,ymin,splen,-w1/2.0,ymin,0);
+line(-w1/2.0,ymin,0,-w2/2.0,ymin,-splen);
+circle("zx",0,ymin,0,rad);
+circle("zx",0,ymax,0,rad);
+zstep=2.0*splen/10.0;
 %}
-
 END
