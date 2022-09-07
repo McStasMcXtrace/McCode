@@ -388,7 +388,7 @@ void SetMonoPolTransOut(double mc_pol_FN, double mc_pol_FM,
   SetMonoPolRefOut(mc_pol_FN, mc_pol_FM, 1,
 		   &mc_pol_sx_ref, &mc_pol_sy_ref, &mc_pol_sz_ref);
   *mc_pol_sx = (*mc_pol_sx - mc_pol_sx_ref)/(1 - mc_pol_refProb);
-  *mc_pol_sy = (*mc_pol_sy - mc_pol_sy_ref)/(1 - mc_pol_refProb);
+  *mc_pol_sy = (*mc_pol_sy - mc_pol_refProb * mc_pol_sy_ref)/(1 - mc_pol_refProb);
   *mc_pol_sz = (*mc_pol_sz - mc_pol_sz_ref)/(1 - mc_pol_refProb);
   return;
 }
