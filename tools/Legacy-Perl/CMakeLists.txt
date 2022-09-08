@@ -24,7 +24,6 @@ else()
     "Please use either -Denable_mcstas=1 or -Denable_mcxtrace=1")
 endif()
 
-message("Enabling ${FLAVOR} flavor")
 setupMCCODE("${FLAVOR}")
 
 

@@ -1,14 +1,17 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.18.0)
+cmake_policy(VERSION 3.18.0)
 
 # This will install McStas components
 project(python-tools-mcgui C)
+
+message(STATUS "Configure ${CMAKE_PROJECT_NAME} ${FLAVOR} ${PROJECT_NAME}")
 
 # Choose between McStas or McXtrace
 option(enable_mcstas   "Choose the McStas flavor" off)
 option(enable_mcxtrace "Choose the McXtrace flavor (trumps enable_mcstas)" Off)
 
 # Set module path
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 
 # Set McCode values (from mkdist or defaults)
 include(MCUtil)
@@ -24,7 +27,6 @@ else()
     "Please use either -Denable_mcstas=1 or -Denable_mcxtrace=1")
 endif()
 
-message("Enabling ${FLAVOR} flavor")
 setupMCCODE("${FLAVOR}")
 
 # Select prefix
@@ -88,10 +90,10 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
 # Configure fallback script
-configure_file("${CMAKE_SOURCE_DIR}/mcgui.in" "${WORK}/${P}gui" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcgui.in" "${WORK}/${P}gui" @ONLY)
 
 # Configure launcher
-configure_file("${CMAKE_SOURCE_DIR}/McCode-py.desktop.in" work/@NAME@-@MCCODE_VERSION@-py.desktop @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/McCode-py.desktop.in" "work/${NAME}-${MCCODE_VERSION}-py.desktop")
 
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py")
@@ -137,7 +139,7 @@ if(NOT WINDOWS)
   )
 
   add_custom_target(
-    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}gui"
+    "CREATE_${PROJECT_NAME}_SYMLINK" ALL DEPENDS "${WORK}/${P}gui"
     )
 
   install(
@@ -147,7 +149,7 @@ if(NOT WINDOWS)
     )
 
   install(
-    FILES "${WORK}/@NAME@-@MCCODE_VERSION@-py.desktop" "@FLAVOR@-py.png"
+    FILES "${WORK}/${NAME}-${MCCODE_VERSION}-py.desktop" "${FLAVOR}-py.png"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/launchers/"
   )
 
