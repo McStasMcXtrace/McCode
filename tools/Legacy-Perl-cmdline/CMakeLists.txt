@@ -1,7 +1,10 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.18.0)
+cmake_policy(VERSION 3.18.0)
 
 # This will install McStas components
 project(legacy-tools-cmdline C)
+
+message(STATUS "Configure ${CMAKE_PROJECT_NAME} ${FLAVOR} ${PROJECT_NAME}")
 
 # Choose between McStas or McXtrace
 option(enable_mcstas   "Choose the McStas flavor" off)
@@ -22,7 +25,6 @@ else()
     "Please use either -Denable_mcstas=1 or -Denable_mcxtrace=1")
 endif()
 
-message("Enabling ${FLAVOR} flavor")
 setupMCCODE("${FLAVOR}")
 
 

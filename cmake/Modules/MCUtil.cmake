@@ -1,3 +1,5 @@
+cmake_policy(VERSION 3.18.0)
+
 # Install library files into lib/${FLAVOR}, while skipping unneeded files
 macro(installLib path)
   if(WINDOWS)
@@ -20,8 +22,8 @@ endmacro()
 
 # Check whether we are being run through mkdist
 macro(isMkDist outvar)
-  string(REPLACE "@" "_" TMP "@MCCODE_NAME@")
-  string(COMPARE NOTEQUAL "${TMP}" "_MCCODE_NAME_" ${outvar})
+  string(CONFIGURE "@MCCODE_NAME@" TMP @ONLY) # TMP is empty unless MCCODE_NAME is set already
+  string(LENGTH "${TMP}" ${outvar})
 endmacro()
 
 
@@ -57,6 +59,7 @@ macro(setupMCCODE FLAVOR)
 
   # Set macros
   if("${FLAVOR}" STREQUAL "mcstas")
+
     set(NAME             "McStas")
 
     set(FLAVOR           "mcstas")
@@ -93,7 +96,7 @@ macro(setupMCCODE FLAVOR)
     set(MCCODE_YEAR "2100")
   endif()
 
-  set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND PROPERTY COMPILE_DEFINITIONS
+  set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} APPEND PROPERTY COMPILE_DEFINITIONS
     NAME="${NAME}" FLAVOR="${FLAVOR}" FLAVOR_UPPER="${FLAVOR_UPPER}"
     FLAVOR_LIB="${FLAVOR_LIB}"
     MCCODE_LIBENV="${MCCODE_LIBENV}" MCCODE_PARTICLE="${MCCODE_PARTICLE}"
@@ -105,11 +108,12 @@ macro(setupMCCODE FLAVOR)
 
   if(MKDIST)
     ## Set mkdist-provided version
-    set(MCCODE_VERSION "@MCCODE_VERSION@")
-    set(MCCODE_NAME "@MCCODE_NAME@")
-    set(MCCODE_DATE "@MCCODE_DATE@")
-    set(MCCODE_STRING "@MCCODE_STRING@")
-    set(MCCODE_TARNAME "@MCCODE_TARNAME@")
+    string(CONFIGURE "@MCCODE_VERSION@" MCCODE_VERSION @ONLY)
+    string(CONFIGURE "@MCCODE_NAME@" MCCODE_NAME @ONLY)
+    string(CONFIGURE "@MCCODE_DATE@" MCCODE_DATE @ONLY)
+    string(CONFIGURE "@MCCODE_STRIN@" MCCODE_STRING @ONLY)
+    string(CONFIGURE "@MCCODE_TARNAME@" MCCODE_TARNAME @ONLY)
+    message(STATUS "Using provided settings MCCODE_VERSION=${MCCODE_VERSION}, MCCODE_NAME=${MCCODE_NAME}, MCCODE_DATE=${MCCODE_DATE}, MCCODE_STRING=${MCCODE_STRING}, MCCODE_TARNAME=${MCCODE_TARNAME}")
   else()
     ## Set Git-specific version
     set(MCCODE_VERSION "2.9999-git")
@@ -197,7 +201,7 @@ macro(setupMCCODE FLAVOR)
   else()
 
     # Have CMake respect install prefix
-    message(${CMAKE_INSTALL_PREFIX})
+    message(STATUS "Install prefix -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}")
     set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
     set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 

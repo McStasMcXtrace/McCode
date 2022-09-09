@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.18.0)
+cmake_policy(VERSION 3.18.0)
 
 # This will install McStas components
 project(python-tools-mcdisplay-pyqtgraph C)
@@ -8,7 +9,7 @@ option(enable_mcstas   "Choose the McStas flavor" off)
 option(enable_mcxtrace "Choose the McXtrace flavor (trumps enable_mcstas)" Off)
 
 # Set module path
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 
 # Set McCode values (from mkdist or defaults)
 include(MCUtil)
@@ -24,7 +25,6 @@ else()
     "Please use either -Denable_mcstas=1 or -Denable_mcxtrace=1")
 endif()
 
-message("Enabling ${FLAVOR} flavor")
 setupMCCODE("${FLAVOR}")
 
 
@@ -84,7 +84,7 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-pyqtgraph-py" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-pyqtgraph-py" @ONLY)
 
 # Program files
 if(WINDOWS)
