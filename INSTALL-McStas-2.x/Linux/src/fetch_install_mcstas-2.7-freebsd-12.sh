@@ -41,7 +41,7 @@ cd mcstas-2.7-src
 =======
 cd mcstas-3.0-src
 >>>>>>> e5e92d9ba... Update readme's:INSTALL-McStas/Linux/src/fetch_install_mcstas-3.0-freebsd-12.sh
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 cd ..
@@ -54,7 +54,7 @@ cd mcstas-comps-2.7-src
 =======
 cd mcstas-comps-3.0-src
 >>>>>>> e5e92d9ba... Update readme's:INSTALL-McStas/Linux/src/fetch_install_mcstas-3.0-freebsd-12.sh
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 cd ..
@@ -67,7 +67,7 @@ cd mcstas-tools-perl-cmdline-2.7-src
 =======
 cd mcstas-tools-perl-cmdline-3.0-src
 >>>>>>> e5e92d9ba... Update readme's:INSTALL-McStas/Linux/src/fetch_install_mcstas-3.0-freebsd-12.sh
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 cd ..
@@ -80,7 +80,7 @@ cd mcstas-manuals-2.7-src
 =======
 cd mcstas-manuals-3.0-src
 >>>>>>> e5e92d9ba... Update readme's:INSTALL-McStas/Linux/src/fetch_install_mcstas-3.0-freebsd-12.sh
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 cd ..
@@ -92,7 +92,7 @@ cd mcstas-tools-perl-2.7-src
 =======
 cd mcstas-tools-perl-3.0-src
 >>>>>>> e5e92d9ba... Update readme's:INSTALL-McStas/Linux/src/fetch_install_mcstas-3.0-freebsd-12.sh
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 cd ..
@@ -105,7 +105,7 @@ cd mcstas-tools-python-mccodelib-2.7-src
 =======
 cd mcstas-tools-python-mccodelib-3.0-src
 >>>>>>> e5e92d9ba... Update readme's:INSTALL-McStas/Linux/src/fetch_install_mcstas-3.0-freebsd-12.sh
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -117,7 +117,7 @@ cd mcstas-tools-python-mcgui-2.7-src
 =======
 cd mcstas-tools-python-mcgui-3.0-src
 >>>>>>> e5e92d9ba... Update readme's:INSTALL-McStas/Linux/src/fetch_install_mcstas-3.0-freebsd-12.sh
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -129,7 +129,7 @@ cd mcstas-tools-python-mcrun-2.7-src
 =======
 cd mcstas-tools-python-mcrun-3.0-src
 >>>>>>> e5e92d9ba... Update readme's:INSTALL-McStas/Linux/src/fetch_install_mcstas-3.0-freebsd-12.sh
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -141,7 +141,7 @@ cd mcstas-tools-python-mcplot-matplotlib-2.7-src
 =======
 cd mcstas-tools-python-mcplot-matplotlib-3.0-src
 >>>>>>> e5e92d9ba... Update readme's:INSTALL-McStas/Linux/src/fetch_install_mcstas-3.0-freebsd-12.sh
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -154,7 +154,7 @@ cd mcstas-tools-python-mcdisplay-webgl-2.7-src
 =======
 cd mcstas-tools-python-mcdisplay-webgl-3.0-src
 >>>>>>> e5e92d9ba... Update readme's:INSTALL-McStas/Linux/src/fetch_install_mcstas-3.0-freebsd-12.sh
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -166,7 +166,7 @@ cd mcstas-tools-python-mcdoc-2.7-src
 =======
 cd mcstas-tools-python-mcdoc-3.0-src
 >>>>>>> e5e92d9ba... Update readme's:INSTALL-McStas/Linux/src/fetch_install_mcstas-3.0-freebsd-12.sh
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -178,7 +178,7 @@ cd mcstas-tools-python-mcdisplay-pyqtgraph-2.7-src
 =======
 cd mcstas-tools-python-mcdisplay-pyqtgraph-3.0-src
 >>>>>>> e5e92d9ba... Update readme's:INSTALL-McStas/Linux/src/fetch_install_mcstas-3.0-freebsd-12.sh
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -190,7 +190,7 @@ cd mcstas-tools-python-mcplot-pyqtgraph-2.7-src
 =======
 cd mcstas-tools-python-mcplot-pyqtgraph-3.0-src
 >>>>>>> e5e92d9ba... Update readme's:INSTALL-McStas/Linux/src/fetch_install_mcstas-3.0-freebsd-12.sh
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3

@@ -12,7 +12,7 @@ do
     PKG=`basename $TGZ .tar.gz`
     tar xzf $TGZ
     cd $PKG
-    cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+    cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
     make
     sudo make install
     cd -

@@ -24,7 +24,7 @@ endmacro(AppendDefIf)
 
 macro(installMCCODE)
 
-  # Ignore CMake warning when setting "-Denable_mcstas=1"
+  # Ignore CMake warning when setting "-DBUILD_MCSTAS=1"
   option(enable_${FLAVOR} "This option is here for compatibility only." On)
   if (NOT enable_${FLAVOR})
     message(FATAL_ERROR "Cannot deselect ${FLAVOR} flavor.")

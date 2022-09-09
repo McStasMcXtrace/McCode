@@ -19,7 +19,7 @@ LICENSE= GPLv2
 USES= cmake gmake bison:build
 
 #should perhaps use the toolchain file - but remember the arch
-CMAKE_ARGS= "-Denable_mcxtrace=1"
+CMAKE_ARGS= "-DBUILD_MCXTRACE=1"
 
 GNU_CONFIGURE= yes
 #USE_GMAKE= yes

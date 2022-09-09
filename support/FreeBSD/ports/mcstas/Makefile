@@ -13,7 +13,7 @@ COMMENT=	Monte Carlo neutron ray tracing package
 LICENSE=	GPLv2
 
 USES=		bison:build cmake gmake
-CMAKE_ARGS=	"-Denable_mcstas=1"
+CMAKE_ARGS=	"-DBUILD_MCSTAS=1"
 GNU_CONFIGURE=	yes
 
 PLIST_SUB+=	PORTVERSION=${PORTVERSION}
