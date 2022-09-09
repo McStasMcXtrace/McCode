@@ -116,7 +116,7 @@ macro(setupMCCODE FLAVOR)
     message(STATUS "Using provided settings MCCODE_VERSION=${MCCODE_VERSION}, MCCODE_NAME=${MCCODE_NAME}, MCCODE_DATE=${MCCODE_DATE}, MCCODE_STRING=${MCCODE_STRING}, MCCODE_TARNAME=${MCCODE_TARNAME}")
   else()
     ## Set Git-specific version
-    set(MCCODE_VERSION "2.9999-git")
+    set(MCCODE_VERSION "3.9999-git")
     set(MCCODE_NAME "${NAME}")
     set(MCCODE_DATE "git")
     set(MCCODE_STRING "${NAME} ${MCCODE_VERSION}, ${MCCODE_DATE}")
