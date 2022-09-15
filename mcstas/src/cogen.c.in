@@ -104,7 +104,7 @@ int parse_curlybrackets_vector(char* string, double* values) {
 
     // extract a value
     double val = strtod(s, &r);
-    if (!values==NULL) values[vidx] = val;
+    if (values!=NULL) values[vidx] = val;
     ++vidx;
 
     // iterate
@@ -2345,21 +2345,98 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  return rval;");
   cout("}");
   cout("");
-  
+
   liter = list_iterate(instr->user_vars);
   cout("#pragma acc routine");
-  cout("int particle_setvar(_class_particle *, char *, double);");
+  cout("void* particle_getvar_void(_class_particle *p, char *name, int *suc);");
   cout("");
-  cout("int particle_setvar(_class_particle *p, char *name, double value){");
+  cout("#ifdef OPENACC");
+  cout("#pragma acc routine");
+  cout("int str_comp(char *str1, char *str2);");
+  cout("#endif");
+  cout("");
+  cout("void* particle_getvar_void(_class_particle *p, char *name, int *suc){");
+  cout("#ifndef OPENACC");
+  cout("#define str_comp strcmp");
+  cout("#endif");
+  cout("  int s=1;");
+  cout("  void* rval=0;");
+  cout("  if(!str_comp(\"x\",name)) {rval=(void*)&(p->x); s=0;}");
+  cout("  if(!str_comp(\"y\",name)) {rval=(void*)&(p->y); s=0;}");
+  cout("  if(!str_comp(\"z\",name)) {rval=(void*)&(p->z); s=0;}");
+  cout("  if(!str_comp(\"vx\",name)){rval=(void*)&(p->vx);s=0;}");
+  cout("  if(!str_comp(\"vy\",name)){rval=(void*)&(p->vy);s=0;}");
+  cout("  if(!str_comp(\"vz\",name)){rval=(void*)&(p->vz);s=0;}");
+  cout("  if(!str_comp(\"sx\",name)){rval=(void*)&(p->sx);s=0;}");
+  cout("  if(!str_comp(\"sy\",name)){rval=(void*)&(p->sy);s=0;}");
+  cout("  if(!str_comp(\"sz\",name)){rval=(void*)&(p->sz);s=0;}");
+  cout("  if(!str_comp(\"t\",name)) {rval=(void*)&(p->t); s=0;}");
+  cout("  if(!str_comp(\"p\",name)) {rval=(void*)&(p->p); s=0;}");
+//  char *var, *tpe;
+  while((var = list_next(liter))) {
+    coutf("  if(!str_comp(\"%s\",name)){rval=(void*)&(p->%s);s=0;}",var,var);
+  }
+  list_iterate_end(liter);
+  cout("  if (suc!=0x0) {*suc=s;}");
+  cout("  return rval;");
+  cout("}");
+  cout("");
+  
+  liter = list_iterate(instr->user_vars);
+  liter2 = list_iterate(instr->user_vars_types);
+  cout("#pragma acc routine");
+  cout("int particle_setvar_void(_class_particle *, char *, void*);");
+  cout("");
+  cout("int particle_setvar_void(_class_particle *p, char *name, void* value){");
   cout("#ifndef OPENACC");
   cout("#define str_comp strcmp");
   cout("#endif");
   cout("  int rval=1;");
+  cout("  if(!str_comp(\"x\",name)) {memcpy(&(p->x),  value, sizeof(double)); rval=0;}");
+  cout("  if(!str_comp(\"y\",name)) {memcpy(&(p->y),  value, sizeof(double)); rval=0;}");
+  cout("  if(!str_comp(\"z\",name)) {memcpy(&(p->z),  value, sizeof(double)); rval=0;}");
+  cout("  if(!str_comp(\"vx\",name)){memcpy(&(p->vx), value, sizeof(double)); rval=0;}");
+  cout("  if(!str_comp(\"vy\",name)){memcpy(&(p->vy), value, sizeof(double)); rval=0;}");
+  cout("  if(!str_comp(\"vz\",name)){memcpy(&(p->vz), value, sizeof(double)); rval=0;}");
+  cout("  if(!str_comp(\"sx\",name)){memcpy(&(p->sx), value, sizeof(double)); rval=0;}");
+  cout("  if(!str_comp(\"sy\",name)){memcpy(&(p->sy), value, sizeof(double)); rval=0;}");
+  cout("  if(!str_comp(\"sz\",name)){memcpy(&(p->sz), value, sizeof(double)); rval=0;}");
+  cout("  if(!str_comp(\"p\",name)) {memcpy(&(p->p),  value, sizeof(double)); rval=0;}");
+  cout("  if(!str_comp(\"t\",name)) {memcpy(&(p->t),  value, sizeof(double)); rval=0;}");
   char *invar;
   while((invar = list_next(liter))) {
-    coutf("  if(!str_comp(\"%s\",name)){p->%s = value; rval = 0;}",invar,invar);
+    tpe = list_next(liter2);
+    if (!(strstr(tpe, "[") || strstr(tpe, "]") || strstr(tpe, "*"))){
+      // not an array -- we should be able to use memcopy freely
+      coutf("  if(!str_comp(\"%s\",name)){memcpy(&(p->%s), value, sizeof(%s)); rval=0;}", invar, invar, tpe);
+    }
   }
   list_iterate_end(liter);
+  list_iterate_end(liter2);
+  cout("  return rval;");
+  cout("}");
+  cout("");
+
+  liter = list_iterate(instr->user_vars);
+  liter2 = list_iterate(instr->user_vars_types);
+  cout("#pragma acc routine");
+  cout("int particle_setvar_void_array(_class_particle *, char *, void*, int);");
+  cout("");
+  cout("int particle_setvar_void_array(_class_particle *p, char *name, void* value, int elements){");
+  cout("#ifndef OPENACC");
+  cout("#define str_comp strcmp");
+  cout("#endif");
+  cout("  int rval=1;");
+ // char *invar;
+  while((invar = list_next(liter))) {
+    tpe = list_next(liter2);
+    if ((strstr(tpe, "[") || strstr(tpe, "]") || strstr(tpe, "*"))){
+      // an array -- we need to know how many elements we're copying
+      coutf("  if(!str_comp(\"%s\",name)){memcpy(&(p->%s), value, elements * sizeof(%s)); rval=0;}", invar, invar, tpe);
+    }
+  }
+  list_iterate_end(liter);
+  list_iterate_end(liter2);
   cout("  return rval;");
   cout("}");
   cout("");
