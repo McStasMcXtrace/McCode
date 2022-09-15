@@ -159,7 +159,7 @@ compdefs:   /* empty */
     | compdefs compdef
 ;
 
-compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency noacc share declare initialize trace save finally display "END"
+compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency noacc share uservars declare initialize trace save finally display "END"
       {
         struct comp_def *c;
         palloc(c);
@@ -170,12 +170,13 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency noacc share declar
         c->out_par = $4.out;
 	c->flag_noacc=$6;
         c->share_code = $7;
-        c->decl_code = $8;
-        c->init_code = $9;
-        c->trace_code = $10;
-        c->save_code = $11;
-        c->finally_code = $12;
-        c->display_code = $13;
+	c->uservar_code = $8;
+        c->decl_code = $9;
+        c->init_code = $10;
+        c->trace_code = $11;
+        c->save_code = $12;
+        c->finally_code = $13;
+        c->display_code = $14;
         c->flag_defined_structure=0;
         c->flag_defined_share=0;
         c->flag_defined_init=0;
@@ -191,7 +192,7 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency noacc share declar
         symtab_add(read_components, c->name, c);
         if (verbose) fprintf(stderr, "Embedding component %s from file %s\n", c->name, c->source);
       }
-    | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters dependency noacc share declare initialize trace save finally display "END"
+    | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters dependency noacc share uservars declare initialize trace save finally display "END"
       {
         /* create a copy of a comp, and initiate it with given blocks */
         /* all redefined blocks override */
@@ -215,12 +216,13 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency noacc share declar
 	  c->flag_noacc=$8;
 	  
           c->share_code = ($9->linenum ?  $9  : def->share_code);
-          c->decl_code  = ($10->linenum ?  $10  : def->decl_code);
-          c->init_code  = ($11->linenum ?  $11  : def->init_code);
-          c->trace_code = ($12->linenum ? $12 : def->trace_code);
-          c->save_code  = ($13->linenum ? $13 : def->save_code);
-          c->finally_code = ($14->linenum ? $14 : def->finally_code);
-          c->display_code = ($15->linenum ? $15 : def->display_code);
+	  c->uservar_code = ($10->linenum ?  $10  : def->uservar_code);
+          c->decl_code  = ($11->linenum ?  $11  : def->decl_code);
+          c->init_code  = ($12->linenum ?  $12  : def->init_code);
+          c->trace_code = ($13->linenum ? $13 : def->trace_code);
+          c->save_code  = ($14->linenum ? $14 : def->save_code);
+          c->finally_code = ($15->linenum ? $15 : def->finally_code);
+          c->display_code = ($16->linenum ? $16 : def->display_code);
 
           /* Check definition and setting params for uniqueness */
           check_comp_formals(c->def_par, c->set_par, c->name);
