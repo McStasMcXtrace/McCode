@@ -2268,8 +2268,37 @@ cogen_header(struct instr_def *instr, char *output_name)
 
   instr->user_vars = list_create();
   instr->user_vars_types = list_create();
-  if (get_codeblock_vars(instr->vars, instr->user_vars, instr->user_vars_types, "USERVARS", "EXTEND")) {
-    cout("  // user variables:");
+  int uvlist = get_codeblock_vars(instr->vars, instr->user_vars, instr->user_vars_types, "USERVARS", "EXTEND");
+  // Look in comp definitions
+  List_handle liter3;
+  liter3 = list_iterate(instr->complist);
+  List cvars;
+  List ctypes;
+  cvars = list_create();
+  ctypes = list_create();
+  List_handle cliter;
+  List_handle cliter2;
+  while((comp = list_next(liter3)) != NULL) {
+    if (get_codeblock_vars(comp->def->uservar_code, cvars, ctypes, "USERVARS", "EXTEND")) {
+      cliter = list_iterate(cvars);
+      cliter2 = list_iterate(ctypes);
+      char *cvar;
+      char *ctpe;
+      while((cvar = list_next(cliter))) {
+	ctpe = list_next(cliter2);
+	/* We need to attach comp name to cvar */
+	strcat(cvar,"_");
+	strcat(cvar,comp->name);
+	list_add(instr->user_vars, cvar);
+	list_add(instr->user_vars_types, ctpe);
+      }
+      list_iterate_end(cliter);
+      list_iterate_end(cliter2);
+    }
+  }
+  list_iterate_end(liter3);
+  if (list_len(instr->user_vars) > 0) {
+    cout("  // user variables and comp-injections:");
     List_handle liter;
     List_handle liter2;
     liter = list_iterate(instr->user_vars);
@@ -2281,6 +2310,7 @@ cogen_header(struct instr_def *instr, char *output_name)
       coutf("  %s %s;", tpe, var);
     }
     list_iterate_end(liter);
+    list_iterate_end(liter2);
   }
   cout("};");
   cout("typedef struct _struct_particle _class_particle;");
