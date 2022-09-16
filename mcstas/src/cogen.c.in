@@ -2041,8 +2041,12 @@ int cogen_rt_funnel(struct instr_def *instr)
       coutf("      _class_particle* _particle = &particles[pidx];");
       coutf("      _class_particle _particle_save;");
     }
-    coutf("");
     coutf("      // %s", comp->name);
+    // In case we are initiating a GROUP, back up particle before entering.
+    if (comp->group && comp->index == comp->group->first_comp_index) {
+      coutf("      // GROUP start at %s, back up particle ",comp->name);
+      cout( "        _particle_save = *_particle;");
+    }
     coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
     // coordinate transformations (wrt to PREVIOUS)
     coutf("        if (_%s_var._rotation_is_identity)", comp->name);
@@ -2051,7 +2055,8 @@ int cogen_rt_funnel(struct instr_def *instr)
     	"&x, &y, &z);", comp->name);
     cout( "        else");
     coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
-    cout( "        _particle_save = *_particle;");
+    // Only if we are NOT in a group back up particle "internally" in component logic
+    if (!comp->group) cout( "        _particle_save = *_particle;");
 
     // call the component with TRACE and/or EXTEND lines
     if (list_len(comp->def->trace_code->lines) > 0 || list_len(comp->extend->lines) > 0) {
