@@ -23,7 +23,7 @@
 * %D
 * An isotropic sample handling multiple scattering and including as input the
 * dynamic structure factor of the chosen sample (e.g. from Molecular
-* Dynamics). Handles elastic/inelastic, coherent scattering -
+* Dynamics). Handles elastic/inelastic, coherent scattering (Thomson) -
 * depending on the input S(q,w) - with multiple scattering and absorption.
 * Only the norm of q is handled (not the vector), and thus suitable for
 * liquids, gazes, amorphous and powder samples.
@@ -47,10 +47,6 @@
 * An important option to enhance statistics is to set 'p_interact' to, say,
 * 30 percent (0.3) in order to force a fraction of the beam to scatter. This
 * will result on a larger number of scattered events, retaining intensity.
-*
-* If you use this component and produce valuable scientific results, please
-* cite authors with references bellow (in <a href="#links">Links</a>).
-*     E. Farhi et al, J Comp Phys 228 (2009) 5251
 *
 * <b>Sample shape:</b>
 * Sample shape may be a cylinder, a sphere, a box or any other shape
@@ -93,7 +89,7 @@
 *
 * <b>Sqw file format:</b>
 * File format for S(Q,w) (coherent) should contain 3 numerical
-* blocks, defining q axis values (vector), then energy axis values (vector),
+* blocks, defining q axis values (vector), then energy axis values (vector in meV),
 * then a matrix with one line per q axis value, containing Sqw values for
 * each energy axis value. Comments (starting with '#') and non numerical lines
 * are ignored and used to separate blocks. Sampling must be regular.
@@ -121,7 +117,6 @@
 * 0.000000            ... 3.860253
 *
 * See for instance file He4_liq_coh.sqw. Such files may be obtained from e.g. INX,
-* Nathan, Lamp and IDA softwares, as well as Molecular Dynamics (nMoldyn).
 * When the provided S(q,w) data is obtained from the classical correlation function
 * G(r,t), which is real and symmetric in time, the 'classical=1' parameter
 * should be set in order to multiply the file data with exp(hw/2kT). Otherwise,
@@ -192,7 +187,7 @@
 * d_phi: [deg]                scattering vertical angular spreading (usually the height of the next component/detector). Use 0 for full space. This is only relevant for single scattering (order=1).
 * weight: [g/mol]             atomic/molecular weight of material
 * density: [g/cm^3]           density of material. V_rho=density/weight/1e24*N_A
-* sigma_coh: [barns]          Thomson cross-section of the material. For an atom, this is f*0.665 barns, where f is the number of free electrons, f -> atomic number Z.
+* sigma_coh: [barns]          Thomson cross-section of the material. For an atom, this is f*0.665 barns, where f is the number of free electrons, f -> atomic number Z. Default is for a single free electron.
 * threshold: [1]              Value under which S(Q,w) is not accounted for. to set according to the S(Q,w) values, i.e. not too low.
 * p_interact: [1]             Force a given fraction of the beam to scatter, keeping intensity right, to enhance small signals (-1 unactivate).
 * norm: [1]                   Normalize S(q,w) when -1 (default). Use raw data when 1, multiplier for S(q,w) when norm>0.
@@ -215,6 +210,12 @@
 * E. Farhi, V. Hugouvieux, M.R. Johnson, and W. Kob, Journal of Computational Physics 228 (2009) 5251-5261 "Virtual experiments: Combining realistic neutron scattering instrument and sample simulations"
 * %L
 * H. Schober, Collection SFN 10 (2010) 159-336
+* %L
+* Baron, Introduction to High-Resolution Inelastic X-Ray Scattering, 2020 (29b), http://arxiv.org/abs/1504.01098, p13 eq (1)
+* %L
+* Sturm, Z. Naturforsch. 48a, 233-242 (1993), eq (9,10,16).
+* %L
+* Schulke, Electron Dynamics by Inelastic X-ray Scattering, ISBN 978-0-19-851017-8, (2007) eq (1.5)
 *
 * %E
 ***********************************************************/
@@ -287,15 +288,15 @@ struct Sqw_Data_struct /* contains normalized Sqw data for probabilities, coh */
   long  *SW_lookup;
   long **QW_lookup;
   t_Table Sqw; /* S(q,w) rebin from file in range -w_max:w_max and 0:q_max, with exp(-hw/kT) weight */
-  t_Table iqSq;         /* sigma(Ei) = sigma/2/Ki^2 * \int q S(q,w) dq dw up to 2*Ki_max */
+  t_Table iqSq;         /* sigma(Ki) = sigma/2/Ki^2 * \int q S(q,w) dq dw up to 2*q_max */
   long   q_bins;
-  long   w_bins;        /* length of q and w vectors/axes from file */
+  long   w_bins;        /* length of q and w vectors/axes from file, meV */
   double q_max, q_step; /* min=0      */
-  double w_max, w_step; /* min=-w_max */
+  double w_max, w_step; /* min=-w_max, meV */
   long   lookup_length;
   char   filename[80];
   double intensity;
-  double Ei_max;        /* max photon incoming energy for Sigma=iqSq table */
+  double Ei_max;        /* max photon incoming energy for Sigma=iqSq table, keV */
   long   iqSq_length;
   char   type;
   double q_min_file;
@@ -318,7 +319,6 @@ struct Sqw_sample_struct { /* global parameters gathered as a structure */
   double sqw_threshold;       /* options to tune S(q,w) */
   double sqw_classical;
   double sqw_norm;
-  double sqw_K2E;
 
   double barns;               /* for powders */
   double Dd, DWfactor;
@@ -722,30 +722,27 @@ int Sqw_search_Q_proba_per_w(struct Sqw_Data_struct Sqw, double randnum, int ind
 }
 
 /*****************************************************************************
-* compute the effective total cross section \int q S(q,w) dw dq
-* for incoming photon energy 0 < Ei < 2*w_max, and
-* integration range w=-w_max:Ei and q=Q0:Q1 with
+* compute the effective total cross section \int_{0 -> 2Ki} q S(q,w) dw dq
 *
 * The data to use is Sqw_Data->Sqw, and the limits are Sqw_Data->w_max Sqw_Data->q_max
 *   Returns the integral value
 * Used in: Sqw_readfile (1)
 *****************************************************************************/
 #pragma acc routine seq
-double Sqw_integrate_iqSq(struct Sqw_Data_struct *Sqw_Data, double Ei)
+double Sqw_integrate_iqSq(struct Sqw_Data_struct *Sqw_Data, double Ki)
 {
   long   index_w;
   double iqSq = 0;
+  long   index_q;
+  long   index_q_max = Ki/Sqw_Data->q_step;
+  if (index_q_max > Sqw_Data->q_bins) index_q_max = Sqw_Data->q_bins;
+  
   /* w=Ei-Ef q=ki-kf w>0 photon looses energy, Stokes, Ef = Ei-w > 0, Kf =|Ki-q| > 0 */
   for (index_w=0; index_w < Sqw_Data->w_bins; index_w++) {
-    long   index_q;
-    double w = -Sqw_Data->w_max + index_w * Sqw_Data->w_step; /* in the Sqw table */
-    if (w <= Ei) {       /* integration range w=-w_max:Ei, Ef = Ei-w > 0 */
-
-      for (index_q=0; index_q < Sqw_Data->q_bins; index_q++) {
-        double q=(double)index_q * Sqw_Data->q_step;
-        /* add 'pixel' = q S(q,w) */
-        iqSq += q*Table_Index(Sqw_Data->Sqw, index_q, index_w);
-      }
+    for (index_q=0; index_q < index_q_max; index_q++) {
+      double q=(double)index_q * Sqw_Data->q_step;
+      /* add 'pixel' = q S(q,w) */
+      iqSq += q*Table_Index(Sqw_Data->Sqw, index_q, index_w);
     }
   }
   /* multiply by 'pixel' size = dq dw */
@@ -1056,7 +1053,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
   sprintf(c, "%s_%s.sq",    Sqw->compname, "coh");
   Table_Write(Sqw_moments[0], c, "Momentum [Angs-1]","S(q) = int S(q,w) dw", 0,Sqw_Data->q_max,0,0);
   sprintf(c, "%s_%s.sigma", Sqw->compname, "coh");
-  Table_Write(Sqw_Data->iqSq, c, "Energy [meV]", "sigma kf/ki int q S(q,w) dw scattering cross section [barns]", 0,0,0,0);
+  Table_Write(Sqw_Data->iqSq, c, "Momentum [Angs-1]", "sigma/ki^2 int q S(q,w) dw scattering cross section [barns]", 0,0,0,0);
 
   /* free Tables */
   for (index_q=0; index_q < 7; Table_Free(&Sqw_moments[index_q++]));
@@ -1088,11 +1085,11 @@ struct Sqw_Data_struct *Sqw_readfile(
   long   index_q, index_w;
   double q_min_file, q_max_file, q_step_file;
   long   q_bins_file;
-  double w_min_file, w_max_file, w_step_file;
+  double w_min_file, w_max_file, w_step_file; // meV
   long   w_bins_file;
   double q_max, q_step;
   long   q_bins;
-  double w_max, w_step;
+  double w_max, w_step; // meV
   long   w_bins;
 
   double alpha=0;
@@ -1254,14 +1251,14 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   q_min_file  = Table_Array[0].min_x; q_max_file = Table_Array[0].max_x;
   q_step_file = Table_Array[0].step_x ? Table_Array[0].step_x : (q_max_file - q_min_file)/(Table_Array[0].rows*Table_Array[0].columns);
-  w_min_file  = Table_Array[1].min_x; w_max_file = Table_Array[1].max_x;
-  w_step_file = Table_Array[1].step_x;
+  w_min_file  = Table_Array[1].min_x; w_max_file = Table_Array[1].max_x; // meV
+  w_step_file = Table_Array[1].step_x; // meV
 
   /* create a regular extended q,w and Sqw tables applying the exp(-hw/kT) factor */
   q_max  = q_max_file;
   q_bins = (q_step_file ?   q_max/q_step_file : q_bins_file)+1;
   q_step = q_bins-1 > 0 ?   q_max/(q_bins-1) : 1;
-  w_max  = fabs(w_max_file);
+  w_max  = fabs(w_max_file); // meV
   if (fabs(w_min_file) > fabs(w_max_file)) w_max = fabs(w_min_file);
   /* w_min =-w_max */
   w_bins = (w_step_file ? (long)(2*w_max/w_step_file) : 0)+1; /* twice the initial w range */
@@ -1340,7 +1337,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   }
 
   double q_file2full[q_bins];
-  for   (index_q=0; index_q < q_bins; q_file2full[index_q++]=0);
+  for (index_q=0; index_q < q_bins; q_file2full[index_q++]=0);
 
   for (index_q=0; index_q < q_bins; index_q++) {
 
@@ -1629,7 +1626,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   Sqw_Data->lookup_length = Sqw->lookup_length;
   Sqw_Data->iqSq_length   = Sqw->lookup_length;
   /* this length should be greater when w_max=0 for e.g. elastic only */
-  if (w_bins <= 1) Sqw_Data->iqSq_length = q_bins;
+  if (Sqw->lookup_length <= q_bins) Sqw_Data->iqSq_length = q_bins;
 
   if (!Table_Init(&iqSq, Sqw_Data->iqSq_length, 1)) {
     /* from 0 to 2*Ki_max */
@@ -1640,42 +1637,34 @@ struct Sqw_Data_struct *Sqw_readfile(
     return(NULL);
   }
 
-  /* compute the maximum incoming energy that can be handled */
-  Sqw_Data->Ei_max = 2*w_max;
-
-  {
-    double Ei_max_q = q_max*Sqw->sqw_K2E;
-    if (Ei_max_q > Sqw_Data->Ei_max) Sqw_Data->Ei_max = Ei_max_q;
-  }
-
   MPI_MASTER(
   if (Sqw->verbose_output >= 2)
-    printf("Isotropic_Sqw: %s: Creating Sigma(Ei=0:%g [meV]) with %li entries...(%s %s)\n",
-      Sqw->compname, Sqw_Data->Ei_max, Sqw_Data->iqSq_length, file, "coh");
+    printf("Isotropic_Sqw: %s: Creating Sigma(Ei=0:%g [keV], Ki=0:%g [Angs-1]) with %li entries...(%s %s)\n",
+      Sqw->compname, q_max*K2E, q_max, Sqw_Data->iqSq_length, file, "coh");
   );
   Sqw_Data->Sqw  = Sqw_full; /* store the S(q,w) Table (matrix) for Sqw_integrate_iqSq */
 
-  /* this loop takes time: use MPI when available */
+  /* in practice photon Ei is much larger than excitations energy */
+  
+  /* sigma(Ei) = sigma/2/Ki^2 * \int_{0 -> 2 Ki} q S(q,w) dq dw */
+  /* Eq (6) from E. Farhi et al. J. Comp. Phys. 228 (2009) 5251 */
 
-  for (index_w=0; index_w < Sqw_Data->iqSq_length; index_w++) {
+  for (index_q=0; index_q < Sqw_Data->iqSq_length; index_q++) {
 
     /* Ei = energy of incoming photon, typically 0:w_max or 0:2*q_max */
-    double Ei; /* photon energy value in Sqw_full, up to 2*w_max */
     double Ki;
     double Sigma=0;
-    Ei = index_w*Sqw_Data->Ei_max/Sqw_Data->iqSq_length;
-    Ki = Ei/Sqw->sqw_K2E;
-    /* sigma(Ei) = sigma/2/Ki^2 * \int q S(q,w) dq dw */
-    /* Eq (6) from E. Farhi et al. J. Comp. Phys. 228 (2009) 5251 */
+    Ki = index_q*Sqw_Data->q_max/Sqw_Data->iqSq_length;
+    
     Sigma = Ki <= 0 ? 0 : Sqw->s_coh
-                          /2/Ki/Ki * Sqw_integrate_iqSq(Sqw_Data, Ei);
-    Table_SetElement(&iqSq, index_w, 0, Sigma );
+                          /2/Ki/Ki * Sqw_integrate_iqSq(Sqw_Data, Ki);
+    Table_SetElement(&iqSq, index_q, 0, Sigma );
   }
 
   sprintf(iqSq.filename, "[sigma/2Ki^2 int q S(q,w) dq dw] from %s", file);
   iqSq.min_x  = 0;
-  iqSq.max_x  = Sqw_Data->Ei_max;
-  iqSq.step_x = Sqw_Data->Ei_max/Sqw_Data->iqSq_length;
+  iqSq.max_x  = Sqw_Data->q_max;
+  iqSq.step_x = Sqw_Data->q_max/Sqw_Data->iqSq_length;
   iqSq.block_number = 1;
 
   Sqw_Data->iqSq = iqSq;     /* store the sigma(Ei) = \int q S(q,w) dq dw Table (vector) */
@@ -1968,7 +1957,6 @@ INITIALIZE
   VarSqw.photon_exit    = 0;
   VarSqw.mat_rho       = rho;
   VarSqw.sqw_norm  = norm;
-  VarSqw.sqw_K2E   = K2E*1e6; /* E from photon in keV, Sqw in meV */
   VarSqw.mean_scatt= 0;
   VarSqw.psum_scatt= 0;
   VarSqw.single_coh= 0;
@@ -2177,7 +2165,10 @@ do { /* Main interaction loop. Ends with intersect=0 */
         flag_ishollow=1;
     }
     if (!flag_ishollow) l1 = l2 = l3; /* no empty space inside */
-  } else break; /* photon does not hit sample: transmitted  */
+  } else { 
+    break; /* photon does not hit sample: transmitted  */
+    
+  }
 
   if (intersect) { /* the photon hits the sample */
 
@@ -2226,13 +2217,10 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
 
     /* compute total scattering X section */
-    /* \int q S(q) dq /2 /ki^2 sigma  OR  bare Xsection*/
-    /* contains the 4*PI*kf/ki factor */
+    /* \int q S(q) dq /2 /ki^2 sigma */
     coh = VarSqw.s_coh;
     if (k && VarSqw.s_coh>0 && VarSqw.Data_coh.intensity) {
-      double Ei       = VarSqw.sqw_K2E*k;
-      double index_Ei = Ei / (VarSqw.Data_coh.Ei_max/VarSqw.Data_coh.iqSq_length);
-      coh = Table_Value2d(VarSqw.Data_coh.iqSq, index_Ei, 0);
+      coh = Table_Value(VarSqw.Data_coh.iqSq, k, 0);
     }
     if (coh<0) coh=0;
     VarSqw.my_s    =(VarSqw.mat_rho*100*coh);
@@ -2295,7 +2283,9 @@ do { /* Main interaction loop. Ends with intersect=0 */
       break; /* exit main multi scatt while loop */
     }
   } /* end if intersect the photon hits the sample */
-  else break;
+  else {
+    break;
+  }
 
   if (intersect) { /* scattering event */
     double kf=0, kf1, kf2;
@@ -2338,7 +2328,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         /* MC choice: energy transfer w=Ei-Ef in the S(w) = SW */
         omega = 0;
         tmp_rand = rand01();
-        /* energy index for rand > cumul SW */
+        /* energy index for rand > cumul SW. We should choose an energy transfer withing +/- w_max */
         index_w  = Sqw_search_SW(Data_sqw, tmp_rand);
         VarSqw.rw = (double)index_w;
         if (index_w >= 0 && &(Data_sqw.SW[index_w]) != NULL) {
@@ -2420,13 +2410,13 @@ do { /* Main interaction loop. Ends with intersect=0 */
         }
 
         /* Search for length of final wave vector kf */
-        /* photons: hbar*w = E2K*ki- E2K*kf -> kf = k - omega*E2K */
-        kf = k - omega/VarSqw.sqw_K2E;
+        /* photons: hbar*w = E2K*ki- E2K*kf -> kf = k - omega*E2K ~ k */
+        omega /= 1e6; // keV
+        kf = k - omega/K2E;
 
         /* Search of the direction of kf such that : q = ki - kf */
         /* cos theta = (ki2+kf2-q2)/(2ki kf) */
-
-        costheta= (k*k+kf*kf-q*q)/(2*kf*k); /* this is cos(theta) */
+        costheta = k/kf - omega/K2E/kf + (omega*omega/K2E/K2E)/2/kf/k - q*q/2/kf/k;
 
         if (-1 < costheta && costheta < 1) {
           break; /* satisfies q momentum conservation */
@@ -2438,7 +2428,6 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
       if (!index_counter) { /* for loop ended: failure for scattering */
         intersect=0; /* Could not scatter: finish multiple scattering loop */
-        if (VarSqw.verbose_output >= 2 && VarSqw.photon_removed<VarSqw.maxloop)
           printf("Isotropic_Sqw: %s: Warning: No scattering [q,w] conditions\n"
             "               last try (%i): type=%c w=%g q=%g cos(theta)=%g k=%g\n",
           NAME_CURRENT_COMP, VarSqw.maxloop, (type ? type : '-'), omega, q, costheta, k);
@@ -2538,7 +2527,7 @@ if (SCATTERED) {
     VarSqw.dq = sqrt((kf_x-ki_x)*(kf_x-ki_x)
                   +(kf_y-ki_y)*(kf_y-ki_y)
                   +(kf_z-ki_z)*(kf_z-ki_z));
-    VarSqw.dw = VarSqw.sqw_K2E*(kf - ki);
+    VarSqw.dw = 1e6*K2E*(kf - ki);
   } else VarSqw.multi += p;
 
 } else VarSqw.dq=VarSqw.dw=0;
