@@ -441,6 +441,7 @@ struct comp_def
     int  flag_noacc;                /* Component type not available on GPU */
     List def_par, set_par, out_par, decl_par; /* Formal parameters. */
     struct code_block *share_code;  /* Unique Declaration code (shared). */
+    struct code_block *uservar_code; /* To be injected in particlce struct */
     struct code_block *decl_code;   /* Declaration code. */
     struct code_block *init_code;   /* Initializeation code. */
     struct code_block *trace_code;  /* Ray-trace simulation code. */
