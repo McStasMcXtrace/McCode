@@ -13,7 +13,7 @@ from decimal import Decimal
 import sys
 sys.path.append(join(dirname(__file__), '..'))
 from mccodelib import mccode_config
-
+import mccodelib.cflags
 
 from log import getLogger
 LOG = getLogger('mcstas')
@@ -171,7 +171,10 @@ class McStas:
             line = re.sub(r'\\','/', line)
             if re.search('CFLAGS=', line) :
                 label,flags = line.split('=',1)
-                     
+
+                #Support CMD(..) and ENV(..) in cflags:
+                flags = mccodelib.cflags.evaluate_dependency_str( flags )
+
                 flags = re.sub(r'\@MCCODE_LIB\@', re.sub(r'\\','/', MCCODE_LIB), flags)
                 flags = flags.split(' ')
                 cflags += flags
