@@ -17,7 +17,7 @@ find . -name \*tar.gz -exec tar xzf \{\} \;
 * Next, compile the individual packages you want (minimum set is mcxtrace-3.0-src mcxtrace-comps-3.0-src) using e.g.
 ```bash
 cd mcxtrace-3.0-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcxtrace=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCXTRACE=1
 make
 sudo make install
 ```

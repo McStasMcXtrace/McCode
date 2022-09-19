@@ -4,8 +4,8 @@ cmake_minimum_required(VERSION 2.6)
 project(python-tools-mcdisplay C)
 
 # Choose between McStas or McXtrace
-option(enable_mcstas   "Choose the McStas flavor" off)
-option(enable_mcxtrace "Choose the McXtrace flavor (trumps enable_mcstas)" Off)
+option(BUILD_MCSTAS   "Choose the McStas flavor" off)
+option(BUILD_MCXTRACE "Choose the McXtrace flavor (trumps BUILD_MCSTAS)" Off)
 
 # Set module path
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -13,15 +13,15 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/
 # Set McCode values (from mkdist or defaults)
 include(MCUtil)
 
-if (${enable_mcxtrace})
+if (${BUILD_MCXTRACE})
   set(FLAVOR "mcxtrace")
   set(CPACK_PACKAGE_HOMEPAGE_URL "http://mcxtrace.org/")
-elseif(${enable_mcstas})
+elseif(${BUILD_MCSTAS})
   set(FLAVOR "mcstas")
   set(CPACK_PACKAGE_HOMEPAGE_URL "http://mcstas.org/")
 else()
   message(FATAL_ERROR "No flavor specified!\n"
-    "Please use either -Denable_mcstas=1 or -Denable_mcxtrace=1")
+    "Please use either -DBUILD_MCSTAS=1 or -DBUILD_MCXTRACE=1")
 endif()
 
 message("Enabling ${FLAVOR} flavor")

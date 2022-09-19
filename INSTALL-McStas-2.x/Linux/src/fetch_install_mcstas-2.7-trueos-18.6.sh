@@ -20,7 +20,7 @@ find . -name \*tar.gz -exec tar xzf \{\} \;
 
 # Core McStas package:
 cd mcstas-2.7-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 cd ..
@@ -29,7 +29,7 @@ sleep 10
 
 ## McStas components:
 cd mcstas-comps-2.7-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 cd ..
@@ -38,7 +38,7 @@ sleep 10
 
 # McStas Perl commandline tools
 cd mcstas-tools-perl-cmdline-2.7-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 cd ..
@@ -47,7 +47,7 @@ sleep 10
 
 # McStas manuals
 cd mcstas-manuals-2.7-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 cd ..
@@ -55,7 +55,7 @@ cd ..
 
 # McStas Perl gui tools
 cd mcstas-tools-perl-2.7-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 cd ..
@@ -64,7 +64,7 @@ sleep 10
 
 # McStas Python tool lib
 cd mcstas-tools-python-mccodelib-2.7-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -72,7 +72,7 @@ cd ..
 
 # McStas Python mcgui
 cd mcstas-tools-python-mcgui-2.7-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -80,7 +80,7 @@ cd ..
 
 # McStas Python mcrun
 cd mcstas-tools-python-mcrun-2.7-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -88,7 +88,7 @@ cd ..
 
 # McStas Python mcplot-matplotlib
 cd mcstas-tools-python-mcplot-matplotlib-2.7-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -97,7 +97,7 @@ cd ..
 
 # McStas Python mcdisplay-webgl
 cd mcstas-tools-python-mcdisplay-webgl-2.7-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -105,7 +105,7 @@ cd ..
 
 # McStas Python mcdoc
 cd mcstas-tools-python-mcdoc-2.7-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -126,7 +126,7 @@ sudo pkg add py36-pyqtgraph-0.10.0.txz
 
 # McStas Python mcdisplay-pyqgraph
 cd mcstas-tools-python-mcdisplay-pyqtgraph-2.7-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -134,7 +134,7 @@ cd ..
 
 # McStas Python mcdisplay-pyqgraph
 cd mcstas-tools-python-mcplot-pyqtgraph-2.7-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3

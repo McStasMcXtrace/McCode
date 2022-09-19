@@ -1,11 +1,14 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.18.0)
+cmake_policy(VERSION 3.18.0)
 
 # This will install McStas components
 project(legacy-tools-cmdline C)
 
+message(STATUS "Configure ${CMAKE_PROJECT_NAME} ${FLAVOR} ${PROJECT_NAME}")
+
 # Choose between McStas or McXtrace
-option(enable_mcstas   "Choose the McStas flavor" off)
-option(enable_mcxtrace "Choose the McXtrace flavor (trumps enable_mcstas)" Off)
+option(BUILD_MCSTAS   "Choose the McStas flavor" off)
+option(BUILD_MCXTRACE "Choose the McXtrace flavor (trumps BUILD_MCSTAS)" Off)
 
 # Set module path
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -13,16 +16,15 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/
 # Set McCode values (from mkdist or defaults)
 include(MCUtil)
 
-if (${enable_mcxtrace})
+if (${BUILD_MCXTRACE})
   set(FLAVOR "mcxtrace")
-elseif(${enable_mcstas})
+elseif(${BUILD_MCSTAS})
   set(FLAVOR "mcstas")
 else()
   message(FATAL_ERROR "No flavor specified!\n"
-    "Please use either -Denable_mcstas=1 or -Denable_mcxtrace=1")
+    "Please use either -DBUILD_MCSTAS=1 or -DBUILD_MCXTRACE=1")
 endif()
 
-message("Enabling ${FLAVOR} flavor")
 setupMCCODE("${FLAVOR}")
 
 
@@ -88,7 +90,7 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
 # Select prefix
-if(${enable_mcstas})
+if(${BUILD_MCSTAS})
   set(P "mc")
   set(SOURCENAMES doc run display-matlab display-mantid)
 else()

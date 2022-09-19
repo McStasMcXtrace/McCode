@@ -183,11 +183,11 @@ if [ "x${FLAVOR}" = "x" ]; then
     if ( echo ${NAME} | grep '^mcx' ) || ( echo ${NAME} | grep '^mx' ); then
         FLAVOR="mcxtrace";
         MCCODE_NAME="McXtrace";
-        CONFIGURE_FLAGS="-Denable_mcxtrace=1 ${CONFIGURE_FLAGS}";
+        CONFIGURE_FLAGS="-DBUILD_MCXTRACE=1 ${CONFIGURE_FLAGS}";
     else
         FLAVOR="mcstas";
         MCCODE_NAME="McStas";
-        CONFIGURE_FLAGS="-Denable_mcstas=1 ${CONFIGURE_FLAGS}";
+        CONFIGURE_FLAGS="-DBUILD_MCSTAS=1 ${CONFIGURE_FLAGS}";
     fi
 fi
 

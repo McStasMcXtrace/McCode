@@ -24,7 +24,7 @@ find . -name \*tar.gz -exec tar xzf \{\} \;
 
 # Core McXtrace package:
 cd mcxtrace-3.0-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcxtrace=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCXTRACE=1
 make
 sudo make install
 cd ..
@@ -33,7 +33,7 @@ sleep 10
 
 ## McXtrace components:
 cd mcxtrace-comps-3.0-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcxtrace=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCXTRACE=1
 make
 sudo make install
 cd ..
@@ -42,7 +42,7 @@ sleep 10
 
 # McXtrace Perl commandline tools
 cd mcxtrace-tools-perl-cmdline-3.0-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcxtrace=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCXTRACE=1
 make
 sudo make install
 cd ..
@@ -51,7 +51,7 @@ sleep 10
 
 # McXtrace manuals
 cd mcxtrace-manuals-3.0-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcxtrace=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCXTRACE=1
 make
 sudo make install
 cd ..
@@ -59,7 +59,7 @@ cd ..
 
 # McXtrace Perl gui tools
 cd mcxtrace-tools-perl-3.0-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcxtrace=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCXTRACE=1
 make
 sudo make install
 cd ..
@@ -68,7 +68,7 @@ sleep 10
 
 # McXtrace Python tool lib
 cd mcxtrace-tools-python-mccodelib-3.0-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcxtrace=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCXTRACE=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -76,7 +76,7 @@ cd ..
 
 # McXtrace Python mcgui
 cd mcxtrace-tools-python-mcgui-3.0-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcxtrace=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCXTRACE=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -84,7 +84,7 @@ cd ..
 
 # McXtrace Python mcrun
 cd mcxtrace-tools-python-mcrun-3.0-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcxtrace=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCXTRACE=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -92,7 +92,7 @@ cd ..
 
 # McXtrace Python mcplot-matplotlib
 cd mcxtrace-tools-python-mcplot-matplotlib-3.0-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcxtrace=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCXTRACE=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -101,7 +101,7 @@ cd ..
 
 # McXtrace Python mcdisplay-webgl
 cd mcxtrace-tools-python-mcdisplay-webgl-3.0-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcxtrace=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCXTRACE=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -109,7 +109,7 @@ cd ..
 
 # McXtrace Python mcdoc
 cd mcxtrace-tools-python-mcdoc-3.0-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcxtrace=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCXTRACE=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -130,7 +130,7 @@ sudo pkg add py36-pyqtgraph-0.10.0.txz
 
 # McXtrace Python mcdisplay-pyqgraph
 cd mcxtrace-tools-python-mcdisplay-pyqtgraph-3.0-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcxtrace=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCXTRACE=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3
@@ -138,7 +138,7 @@ cd ..
 
 # McXtrace Python mcdisplay-pyqgraph
 cd mcxtrace-tools-python-mcplot-pyqtgraph-3.0-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcxtrace=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCXTRACE=1
 make
 sudo make install
 sudo ln -sf /usr/local/bin/python3.6 /usr/local/bin/python3

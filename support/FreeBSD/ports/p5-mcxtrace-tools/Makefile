@@ -23,7 +23,7 @@ USES= cmake gmake perl5
 # target of install/strip by resetting STRIP
 STRIP= #none
 
-CMAKE_ARGS= "-Denable_mcxtrace=1"
+CMAKE_ARGS= "-DBUILD_MCXTRACE=1"
 
 GNU_CONFIGURE= yes
 #USE_GMAKE= yes

@@ -19,7 +19,7 @@ USES=		cmake gmake
 # is supposed to be stripped, so override the cmake-default install
 # target of install/strip by resetting STRIP
 STRIP=		#none
-CMAKE_ARGS=	"-Denable_mcstas=1"
+CMAKE_ARGS=	"-DBUILD_MCSTAS=1"
 PLIST_SUB+=	PORTVERSION=${PORTVERSION}
 
 .include <bsd.port.mk>

@@ -18,7 +18,7 @@ RUN_DEPENDS=	p5-Tk>0:${PORTSDIR}/x11-toolkits/p5-Tk \
 	 	${LOCALBASE}/mcstas/${PORTVERSION}/bin/mcstas:${PORTSDIR}/science/mcstas
 
 USES=		cmake gmake perl5
-CMAKE_ARGS=	"-Denable_mcstas=1"
+CMAKE_ARGS=	"-DBUILD_MCSTAS=1"
 GNU_CONFIGURE=	yes
 
 SUB_FILES=	pkg-install
