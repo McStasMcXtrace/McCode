@@ -2288,6 +2288,9 @@ cogen_header(struct instr_def *instr, char *output_name)
   }
   cout("  long long _uid;  /* event ID */");
   cout("  long _index;     /* component index where to send this event */");
+  if (SPLITcount) {
+    coutf("  double _index_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
+  }
   /* these are needed for SCATTERED, ABSORB and RESTORE macros */
   cout("  long _absorbed;  /* flag set to TRUE when this event is to be removed/ignored */");
   cout("  long _scattered; /* flag set to TRUE when this event has interacted with the last component instance */");
@@ -2540,6 +2543,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  p->sx = p->sx_SPLIT[index]; p->sy = p->sy_SPLIT[index]; p->sz = p->sz_SPLIT[index];");
   cout("  p->t  = p->t_SPLIT[index];  p->p  = p->p_SPLIT[index];");
   cout("  p->_absorbed=0; p->_restore=0;");
+  cout("  p->_index = p->_index_SPLIT[index];");
   cout("}");
   cout("");
 
@@ -2551,6 +2555,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  p->vx_SPLIT[index] = p->vx; p->vy_SPLIT[index] = p->vy; p->vz_SPLIT[index] = p->vz;");
   cout("  p->sx_SPLIT[index] = p->sx; p->sy_SPLIT[index] = p->sy; p->sz_SPLIT[index] = p->sz;");
   cout("  p->t_SPLIT[index]  = p->t;  p->p_SPLIT[index]  = p->p;");
+  cout("  p->_index_SPLIT[index]  = p->_index;");  
   cout("}");
   cout("");
   coutf("#endif");
