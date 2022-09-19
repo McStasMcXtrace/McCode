@@ -2234,7 +2234,6 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("};");
   list_iterate_end(liter);
   cout("");
-  //x,y,z, ky,ky,kz, phi, Ex, Ey, Ez, phi, t, p
   /* generate particle struct */
   cout("struct _struct_particle {");
   cout("  double x,y,z; /* position [m] */");
