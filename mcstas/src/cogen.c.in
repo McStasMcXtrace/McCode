@@ -667,7 +667,7 @@ static void cogen_comp_init_position(
     coutf("    rot_mul(_%s_var._rotation_absolute, tr1, _%s_var._rotation_relative);", comp->name, comp->name);
   }
   coutf("    _%s_var._rotation_is_identity =  rot_test_identity(_%s_var._rotation_relative);", comp->name, comp->name);
-  
+
   /* Absolute position. */
   x = exp_tostring(comp->pos->place.x);
   y = exp_tostring(comp->pos->place.y);
@@ -855,7 +855,7 @@ int cogen_comp_section_class(
       cout("  if(isnan(t)  ||  isinf(t)) ABSORB;");
       cout("  if(isnan(vx) || isinf(vx)) ABSORB;");
       cout("  if(isnan(vy) || isinf(vy)) ABSORB;");
-      cout("  if(isnan(vy) || isinf(vy)) ABSORB;");
+      cout("  if(isnan(vz) || isinf(vz)) ABSORB;");
       cout("  if(isnan(x)  ||  isinf(x)) ABSORB;");
       cout("  if(isnan(y)  ||  isinf(y)) ABSORB;");
       cout("  if(isnan(z)  ||  isinf(z)) ABSORB;");
@@ -864,7 +864,7 @@ int cogen_comp_section_class(
       cout("  if(isnan(t)  ||  isinf(t)) printf(\"NAN or INF found in t,  %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
       cout("  if(isnan(vx) || isinf(vx)) printf(\"NAN or INF found in vx, %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
       cout("  if(isnan(vy) || isinf(vy)) printf(\"NAN or INF found in vy, %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
-      cout("  if(isnan(vy) || isinf(vy)) printf(\"NAN or INF found in vz, %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
+      cout("  if(isnan(vz) || isinf(vz)) printf(\"NAN or INF found in vz, %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
       cout("  if(isnan(x)  ||  isinf(x)) printf(\"NAN or INF found in x,  %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
       cout("  if(isnan(y)  ||  isinf(y)) printf(\"NAN or INF found in y,  %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
       cout("  if(isnan(z)  ||  isinf(z)) printf(\"NAN or INF found in z,  %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
@@ -1787,7 +1787,7 @@ int cogen_raytrace(struct instr_def *instr)
       else // comp_absorb_sends_to_next
         coutf("      else particle_restore(_particle); // not SCATTERED within GROUP: always tries next");
     }
-    
+
     coutf("      _particle->_index++;");
     coutf("      if (!ABSORBED) DEBUG_STATE();");
     coutf("    } /* end component %s [%i] */", comp->name, comp->index);
@@ -2259,7 +2259,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  long _absorbed;  /* flag set to TRUE when this event is to be removed/ignored */");
   cout("  long _scattered; /* flag set to TRUE when this event has interacted with the last component instance */");
   cout("  long _restore;   /* set to true if neutron event must be restored */");
-  cout("  long flag_nocoordschange;   /* set to true if neutron is jumping */");
+  cout("  long flag_nocoordschange;   /* set to true if particle is jumping */");
   /* Include the struct defined earlier holding information on JUMP logic*/
   cout("  struct particle_logic_struct _logic;");
   /* Append variables from instr USERVARS block to particle struct (user vars,
