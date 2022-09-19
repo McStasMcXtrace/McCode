@@ -2241,7 +2241,10 @@ cogen_header(struct instr_def *instr, char *output_name)
     if (comp->split) SPLITcount++;         // count SPLIT
   }
   list_iterate_end(liter);
-
+  if (!SPLITcount) {
+    cout("// No SPLITS found in instrument");
+    cout("#define NOSPLIT");
+  }
   cout("struct _struct_particle {");
   cout("  double x,y,z; /* position [m] */");
   cout("  double x0,y0,z0; /* position [m] */");
@@ -2527,6 +2530,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("}");
   cout("");
 
+  coutf("#ifndef NOSPLIT");
   cout("#pragma acc routine");
   cout("void particle_SPLIT_restore(_class_particle *p, int index);");
   cout("");
@@ -2549,6 +2553,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  p->t_SPLIT[index]  = p->t;  p->p_SPLIT[index]  = p->p;");
   cout("}");
   cout("");
+  coutf("#endif");
 
   
   liter = list_iterate(instr->user_vars);
