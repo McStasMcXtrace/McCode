@@ -1686,6 +1686,7 @@ int cogen_raytrace(struct instr_def *instr)
 
   /* now we produce the list of statements for each component index, with the attached logic */
   liter = list_iterate(instr->complist);
+  int SPLITcount=0;
   while((comp = list_next(liter)) != NULL) {
     List_handle liter2;
 
@@ -1694,22 +1695,20 @@ int cogen_raytrace(struct instr_def *instr)
       char *exp=exp_tostring(comp->split);
       printf("-> SPLIT N at component %s\n",comp->name);
       coutf("#ifndef NOSPLIT");
-      coutf("    /* start SPLIT at %s */", comp->name);
+      coutf("    /* start SPLIT no. %i at %s */", SPLITcount, comp->name);
       coutf("    if (!ABSORBED) {");
-      coutf("    _class_particle Split_%s_particle=*_particle;", comp->name); // store incoming particle state at SPLIT
+      coutf("    particle_SPLIT_store(_particle,%i);", SPLITcount); // store incoming particle state at SPLIT
       coutf("    int Split_%s_counter;", comp->name);
       coutf("    int SplitS_%s = %s;", comp->name, exp);
       coutf("    for (" "Split_%s_counter = 0; "
                         "Split_%s_counter< SplitS_%s; "
                         "Split_%s_counter++) {",
       comp->name, comp->name, comp->name, comp->name);
-      coutf("      randstate_t randbackup = *_particle->randstate;");
-      coutf("      *_particle=Split_%s_particle;", comp->name); // restore particle for SPLIT loop
-      coutf("      *_particle->randstate = randbackup;");
-      coutf("      srandom(_hash(_particle->_uid* %lu *(1+Split_%s_counter)));", comp->index, comp->name);
+      coutf("    particle_SPLIT_restore(_particle,%i);", SPLITcount); // restore particle for SPLIT loop
       coutf("      p /= SplitS_%s > 0 ? SplitS_%s : 1;", comp->name, comp->name);
       coutf("#endif");
       str_free(exp);
+            SPLITcount++;
     }
     // coordinate transformations (wrt to PREVIOUS)
     coutf("    /* begin component %s=%s() [%i] */", comp->name, comp->def->name, comp->index);
@@ -2234,25 +2233,56 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("");
   
   /* generate particle struct */
+  /* First, figure out if we have SPLIT's and how many */
+  int SPLITcount=0;
+  liter = list_iterate(instr->complist);
+  while((comp = list_next(liter)) != NULL) {
+    index += list_len(comp->jump);    // count JUMP
+    if (comp->split) SPLITcount++;         // count SPLIT
+  }
+  list_iterate_end(liter);
+
   cout("struct _struct_particle {");
   cout("  double x,y,z; /* position [m] */");
   cout("  double x0,y0,z0; /* position [m] */");
+  if (SPLITcount) {
+    coutf("  double x_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
+    coutf("  double y_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
+    coutf("  double z_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
+  }
 #if MCCODE_PROJECT == 1   /* neutron */
   cout("  double vx,vy,vz; /* velocity [m/s] */");
   cout("  double vx0,vy0,vz0; /* velocity [m/s] */");
+  if (SPLITcount) {
+    coutf("  double vx_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
+    coutf("  double vy_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
+    coutf("  double vz_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
+  }
   cout("  double sx,sy,sz; /* spin [0-1] */");
   cout("  double sx0,sy0,sz0; /* spin [0-1] */");
+
+  if (SPLITcount) {
+    coutf("  double sx_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
+    coutf("  double sy_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
+    coutf("  double sz_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
+  }
   cout("  int mcgravitation; /* gravity-state */");
   cout("  void *mcMagnet;    /* precession-state */");
   cout("  int allow_backprop; /* allow backprop */");
 #elif MCCODE_PROJECT == 2 /* xray */
   cout("  double kx,ky,kz; /* wave-vector */");
+  cout("  double kx0,ky0,kz0; /* wave-vector */");
   cout("  double phi, Ex,Ey,Ez; /* phase and electrical field */");
+  cout("  double phi0, Ex0,Ey0,Ez0; /* phase and electrical field */");
 #endif
   //cout("  randstate_t randstate[RANDSTATE_LEN]");
   cout("  unsigned long randstate[7];"); // for the KISS generator
   cout("  double t, p;    /* time, event weight */");
   cout("  double t0, p0;    /* time, event weight */");
+  if (SPLITcount) {
+    coutf("  double t_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
+    coutf("  double p_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
+  }
   cout("  long long _uid;  /* event ID */");
   cout("  long _index;     /* component index where to send this event */");
   /* these are needed for SCATTERED, ABSORB and RESTORE macros */
@@ -2497,6 +2527,30 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("}");
   cout("");
 
+  cout("#pragma acc routine");
+  cout("void particle_SPLIT_restore(_class_particle *p, int index);");
+  cout("");
+  cout("void particle_SPLIT_restore(_class_particle *p, int index) {");
+  cout("  p->x  = p->x_SPLIT[index];  p->y  = p->y_SPLIT[index];  p->z  = p->z_SPLIT[index];");
+  cout("  p->vx = p->vx_SPLIT[index]; p->vy = p->vy_SPLIT[index]; p->vz = p->vz_SPLIT[index];");
+  cout("  p->sx = p->sx_SPLIT[index]; p->sy = p->sy_SPLIT[index]; p->sz = p->sz_SPLIT[index];");
+  cout("  p->t  = p->t_SPLIT[index];  p->p  = p->p_SPLIT[index];");
+  cout("  p->_absorbed=0; p->_restore=0;");
+  cout("}");
+  cout("");
+
+  cout("#pragma acc routine");
+  cout("void particle_SPLIT_store(_class_particle *p, int index);");
+  cout("");
+  cout("void particle_SPLIT_store(_class_particle *p, int index) {");
+  cout("  p->x_SPLIT[index]  = p->x;  p->y_SPLIT[index]  = p->y;  p->z_SPLIT[index]  = p->z;");
+  cout("  p->vx_SPLIT[index] = p->vx; p->vy_SPLIT[index] = p->vy; p->vz_SPLIT[index] = p->vz;");
+  cout("  p->sx_SPLIT[index] = p->sx; p->sy_SPLIT[index] = p->sy; p->sz_SPLIT[index] = p->sz;");
+  cout("  p->t_SPLIT[index]  = p->t;  p->p_SPLIT[index]  = p->p;");
+  cout("}");
+  cout("");
+
+  
   liter = list_iterate(instr->user_vars);
   cout("#pragma acc routine");
   cout("double particle_getuservar_byid(_class_particle *p, int id, int *suc){");
