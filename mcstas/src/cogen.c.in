@@ -2657,6 +2657,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   coutf("char  instrument_source[] = \"%s\";", instr->quoted_source);
   coutf("char *instrument_exe      = NULL; /* will be set to argv[0] in main */");
 
+  index=0;
   /* embed instrument file if requested with --source option */
   if (embed_instrument_file) {
 
