@@ -8,15 +8,16 @@
 * Component: Pol_guide_vmirror
 *
 * %I
-* Written by: Peter Christiansen
-* Date: July 2006
-* Origin: RISOE
+* Written by: Peter Willendrup
+* Date: June 2022
+* Origin: DTU
 *
-* Polarising guide with two supermirros sitting in a v-shape inside.
+* Polarising guide with nvs x 2 supermirrors sitting in v-shapes inside, 
+* upgraded from original single V-cavity.
 *
 * %D
 * Models a rectangular guide with entrance centered on the Z axis and
-* with two supermirros sitting in a v-shape inside.
+* with nvs x two supermirrors sitting in v-shapes inside.
 * The entrance lies in the X-Y plane.  Draws a true depiction
 * of the guide with mirrors, and trajectories.
 * The polarisation is handled similar to in Monochromator_pol.
@@ -47,6 +48,7 @@
 * rDownPar: [1]    Mirror Parameters for rDownFunc
 * useTables: [1]   Parameters are 0: Values, 1: Table names
 * debug: [1]       if debug > 0 print out some internal runtime parameters
+* nvs: [1]         Number of V-cavities across width of guide
 *
 * OUTPUT PARAMETERS:
 *
@@ -68,9 +70,9 @@ rFunc=StdReflecFunc, rUpFunc=StdReflecFunc,
 rDownFunc=StdReflecFunc,
 rPar    ={1.0, 0.0219, 4.07, 3.2, 0.003},
 rUpPar  ={1.0, 0.0219, 4.07, 3.2, 0.003},
-rDownPar={0.1, 0.0219, 4.07, 3.2, 0.003})
-SETTING PARAMETERS (xwidth=0.1, yheight=0.1, length=0.5, int debug=0,
-    useTables=0, allow_inside_start=0)
+rDownPar={0.1, 0.0219, 4.07, 3.2, 0.003}, useTables=0)
+SETTING PARAMETERS (int nvs=1,xwidth=0.1, yheight=0.1, length=0.5, int debug=0,
+    allow_inside_start=0)
 OUTPUT PARAMETERS (localG,
 normalTop, normalBot, normalLeft, normalRight, normalInOut,
 pointTop, pointBot, pointLeft, pointRight,
@@ -90,6 +92,13 @@ Coords localG;
 Coords normalTop, normalBot, normalLeft, normalRight, normalInOut;
 Coords pointTop, pointBot, pointLeft, pointRight, pointIn, pointOut;
 
+Coords* mirrorNormals;
+Coords* mirrorPoints;
+
+double xwhalf;
+double xwfull;
+double norm;
+ 
 #if (useTables)
   t_Table *rParPtr     = 0;
   t_Table *rUpParPtr   = 0;
@@ -99,7 +108,7 @@ Coords pointTop, pointBot, pointLeft, pointRight, pointIn, pointOut;
   double rUpParPtr[]   = (double [])rUpPar;
   double rDownParPtr[] = (double [])rDownPar;
 #endif
-  %}
+%}
 
 INITIALIZE
 %{
@@ -174,16 +183,44 @@ INITIALIZE
   normalRight  = coords_set(1, 0, 0);
   pointRight = coords_set(-xwidth/2, 0, 0);
 
+  
+  mirrorNormals = malloc(2*nvs*sizeof(Coords));
+  mirrorPoints  = malloc(2*nvs*sizeof(Coords));
+
+  /* Split in odd and even nvs cases */
+  xwhalf = xwidth/(2*nvs);
+  xwfull = xwidth/nvs;
+  norm = 1.0/sqrt(xwhalf*xwhalf + length*length);
+
+
+  /* For "all-mirror" solution: */  
+  /* double dx; */
+  /* if (nvs % 2) { */
+  /*   /\* Odd number of cavities *\/ */
+  /*   dx=0; */
+  /* } else { */
+  /*   /\* Even number of cavities *\/ */
+  /*   dx=xwhalf; */
+  /* } */
+
+  /* int counter; */
+  /* for (counter=1; counter <= nvs; counter++)  { */
+  /*   /\* Put in the mirror point locations *\/ */
+  /*   mirrorPoints[2*counter-2] = coords_set(-(dx+counter*xwfull), 0, 0); */
+  /*   mirrorPoints[2*counter-1] = coords_set((dx+counter*xwfull), 0, 0); */
+  /*   normalMirror1  = coords_set(norm*length, 0, -norm*xwhalf); */
+    
+  /* } */
+  
+  
 %}
 
 TRACE
 %{
-  /* time threshold */
-  const double tThreshold = 1e-10/sqrt(vx*vx + vy*vy + vz*vz);
-  const double xwhalf = xwidth/2;
-  const double norm = 1.0/sqrt(xwhalf*xwhalf + length*length);
   double R;
-
+  int sgn, ivs;
+  /* time threshold */
+  double tThreshold = 1e-10/sqrt(vx*vx + vy*vy + vz*vz);
   Coords normalMirror1, pointMirror1;
   Coords normalMirror2, pointMirror2;
   Coords* normalPointer = 0;
@@ -199,19 +236,58 @@ TRACE
   if (!inside_rectangle(x, y, xwidth, yheight))
     ABSORB;
 
-  normalMirror1  = coords_set(norm*length, 0, -norm*xwhalf);
-  pointMirror1 = coords_set(0, 0, 0);
-  normalMirror2  = coords_set(norm*length, 0, norm*xwhalf);
-  pointMirror2 = coords_set(0, 0, 0);
+  if (debug) printf("-........-\n");
   
-
   for(;;) {
     double tLeft, tRight, tTop, tBot, tIn, tOut, tMirror1, tMirror2;
     double tUp, tSide, time, endtime;
     double Q; //, dummy1, dummy2, dummy3;
     Coords vVec, xVec;
     int mirrorReflect;
+    
+    /* Hal parametrization */
+    int N,m,Total;
+    double downmirror,upmirror;
 
+    
+    Total = nvs;
+
+    N = floor(fabs(x)/xwhalf);
+    /* if N == total, exge case ... */
+
+    
+    m = 1 - (Total - floor(Total/2.0)*2);
+    if (debug) printf("Total=%i m=%i",Total,m);
+    if (debug) printf("neutron is in N=%i and m=%i\n",N,m);
+    
+    sgn = x/(fabs(x));
+
+    if (sgn>0) {
+      downmirror = (floor((N+m)/2.0)*xwfull - m * xwhalf)*sgn;
+      upmirror   = ((floor((N+m)/2.0)+1)*xwfull - m * xwhalf)*sgn;
+    } else {
+      upmirror = (floor((N+m)/2.0)*xwfull - m * xwhalf)*sgn;
+      downmirror   = ((floor((N+m)/2.0)+1)*xwfull - m * xwhalf)*sgn;
+    }
+
+    if (debug) printf("Found downmirror=%g , x=%g and upmirror=%g\n",downmirror,x,upmirror);
+    
+    normalMirror1  = coords_set(norm*length, 0, norm*xwhalf);
+    pointMirror1 = coords_set(upmirror, 0, 0);
+    normalMirror2  = coords_set(norm*length, 0, -norm*xwhalf);
+    pointMirror2 = coords_set(downmirror, 0, 0);
+    
+    if (debug) printf("Normal down=%g ,and up=%g with sign=%i\n",norm*xwhalf,-norm*xwhalf,sgn);
+	
+
+    
+    /* ivs = floor(fabs(x)/(2*xwhalf));
+  
+    normalMirror1  = coords_set(norm*length, 0, -norm*xwhalf);
+    pointMirror1 = coords_set(sgn*ivs*xwhalf, 0, 0);
+    normalMirror2  = coords_set(norm*length, 0, norm*xwhalf);
+    pointMirror2 = coords_set(sgn*ivs*xwhalf, 0, 0);*/
+    
     mirrorReflect = 0;
     xVec = coords_set(x, y, z);
     vVec = coords_set(vx, vy, vz);
@@ -392,17 +468,29 @@ TRACE
 
   %}
 
+FINALLY
+%{
+  free(mirrorNormals);
+  free(mirrorPoints);
+%}
+
+
 MCDISPLAY
 %{
   int i, j;
+  
+  double dx = xwidth/(2*nvs);
 
   // draw box
   box(0, 0, length/2.0, xwidth, yheight, length);
 
-  for(i = -1; i<=1; i+=2)
-    for(j = -1; j<=1; j+=2)
-      line(0, j*yheight/2, 0, i*xwidth/2, j*yheight/2, length);
-
+  for(i = -nvs; i<=nvs; i+=2)
+    for(j = -1; j<=1; j+=2) {
+      double dx2 = (i+j)*dx;
+      if (dx2 < -xwidth/2.0) dx2 = -xwidth/2.0;
+      if (dx2 > xwidth/2.0) dx2 = xwidth/2.0;
+      line(dx2, j*yheight/2, 0, i*dx, j*yheight/2, length);
+    }
   %}
 
 END
