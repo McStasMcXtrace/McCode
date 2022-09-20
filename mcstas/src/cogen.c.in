@@ -769,7 +769,6 @@ int cogen_comp_section_class(
       coutf("  , _class_particle *_particle) {",
         comp->def->name, comp->def->name, section_lower, comp->def->name);
       cout("  ABSORBED=SCATTERED=RESTORE=0;");
-      cout("  particle_store(_particle);");
     } else
       cout(") {");
 
@@ -1489,7 +1488,7 @@ void def_trace_section(struct instr_def *instr)
   /* define SCATTERED, ABSORB and RESTORE macros for all TRACE */
   coutf("#define %s (_particle->%s)", "SCATTERED", "_scattered");
   coutf("#define %s (_particle->%s)", "RESTORE"  , "_restore");
-  coutf("#define RESTORE_NEUTRON(...) particle_restore(_particle);");
+  coutf("#define RESTORE_NEUTRON(_index, ...) _particle->_restore = _index;");
   coutf("#define %s (_particle->%s)", "ABSORBED" , "_absorbed");
   /* define mcget_run_num within trace scope to refer to the particle */
   coutf("#define mcget_run_num() _particle->_uid");
@@ -1680,13 +1679,13 @@ int cogen_raytrace(struct instr_def *instr)
   }
 
   cout("  _particle->flag_nocoordschange=0; /* Init */");
+  cout("  _class_particle _particle_save;");
   cout("  /* the main iteration loop for one incoming event */");
   cout("  while (!ABSORBED) { /* iterate event until absorbed */");
   cout("    /* send particle event to component instance, one after the other */");
 
   /* now we produce the list of statements for each component index, with the attached logic */
   liter = list_iterate(instr->complist);
-  int SPLITcount=0;
   while((comp = list_next(liter)) != NULL) {
     List_handle liter2;
 
@@ -1695,9 +1694,9 @@ int cogen_raytrace(struct instr_def *instr)
       char *exp=exp_tostring(comp->split);
       printf("-> SPLIT N at component %s\n",comp->name);
       coutf("#ifndef NOSPLIT");
-      coutf("    /* start SPLIT no. %i at %s */", SPLITcount, comp->name);
+      coutf("    /* start SPLIT at %s */", comp->name);
       coutf("    if (!ABSORBED) {");
-      coutf("    particle_SPLIT_store(_particle,%i);", SPLITcount); // store incoming particle state at SPLIT
+      coutf("    _class_particle Split_%s_particle=*_particle;", comp->name); // store incoming particle state at SPLIT
       coutf("    int Split_%s_counter;", comp->name);
       coutf("    int SplitS_%s = %s;", comp->name, exp);
       coutf("    for (" "Split_%s_counter = 0; "
@@ -1705,13 +1704,12 @@ int cogen_raytrace(struct instr_def *instr)
                         "Split_%s_counter++) {",
       comp->name, comp->name, comp->name, comp->name);
       coutf("      randstate_t randbackup = *_particle->randstate;");
-      coutf("      particle_SPLIT_restore(_particle, %i);", SPLITcount); // restore particle for SPLIT loop
+      coutf("      *_particle=Split_%s_particle;", comp->name); // restore particle for SPLIT loop
       coutf("      *_particle->randstate = randbackup;");
       coutf("      srandom(_hash(_particle->_uid* %lu *(1+Split_%s_counter)));", comp->index, comp->name);
       coutf("      p /= SplitS_%s > 0 ? SplitS_%s : 1;", comp->name, comp->name);
       coutf("#endif");
       str_free(exp);
-            SPLITcount++;
     }
     // coordinate transformations (wrt to PREVIOUS)
     coutf("    /* begin component %s=%s() [%i] */", comp->name, comp->def->name, comp->index);
@@ -1728,6 +1726,12 @@ int cogen_raytrace(struct instr_def *instr)
     cout( "    }");
     coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
     coutf("      _particle->flag_nocoordschange=0; /* Reset if we came here from a JUMP */");
+    if (!comp->group || (comp->group && comp->group->first_comp_index == comp->index)) {
+      cout( "      _particle_save = *_particle;");
+    } else {
+      coutf("      // 2nd or higher GROUP member, \"reuse\" coordinate-changed _particle_save from 1st GROUP element.");
+      coutf("      mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, &_particle_save);", comp->name, comp->name);
+    }
     coutf("      DEBUG_COMP(_%s_var._name);", comp->name);
     cout ("      DEBUG_STATE();");
 
@@ -1745,7 +1749,7 @@ int cogen_raytrace(struct instr_def *instr)
         list_len(comp->extend->lines) ? " /* contains EXTEND code */" : "");
 
       cout( "      if (_particle->_restore)");
-      coutf("        particle_restore(_particle);");
+      coutf("        particle_restore(_particle, &_particle_save);");
     };
 
     /* if we have a JUMP, change the index */
@@ -1787,7 +1791,7 @@ int cogen_raytrace(struct instr_def *instr)
       if (comp->index == comp->group->last_comp_index)
         coutf("      else ABSORB;     // not SCATTERED at end of GROUP: removes left events", comp->group->last_comp);
       else // comp_absorb_sends_to_next
-        coutf("      else particle_restore(_particle); // not SCATTERED within GROUP: always tries next");
+        coutf("      else particle_restore(_particle, &_particle_save); // not SCATTERED in GROUP, restore");
     }
 
     coutf("      _particle->_index++;");
@@ -1818,7 +1822,7 @@ int cogen_raytrace(struct instr_def *instr)
   cout("  } /* while !ABSORBED */");
   cout("");
   cout("  DEBUG_LEAVE()");
-  cout("  particle_restore(_particle);");
+  cout("  particle_restore(_particle, &_particle_save);");
   /* Debugging (final state). */
   cout("  DEBUG_STATE()");
 
@@ -2040,6 +2044,7 @@ int cogen_rt_funnel(struct instr_def *instr)
       }
       coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
       coutf("      _class_particle* _particle = &particles[pidx];");
+      coutf("      _class_particle _particle_save;");
     }
     coutf("");
     coutf("      // %s", comp->name);
@@ -2051,6 +2056,7 @@ int cogen_rt_funnel(struct instr_def *instr)
     	"&x, &y, &z);", comp->name);
     cout( "        else");
     coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
+    cout( "        _particle_save = *_particle;");
 
     // call the component with TRACE and/or EXTEND lines
     if (list_len(comp->def->trace_code->lines) > 0 || list_len(comp->extend->lines) > 0) {
@@ -2067,7 +2073,7 @@ int cogen_rt_funnel(struct instr_def *instr)
       list_len(comp->extend->lines) ? " /* contains EXTEND code */" : "");
 
       cout( "        if (_particle->_restore)");
-      coutf("        particle_restore(_particle);");
+      coutf("        particle_restore(_particle, &_particle_save);");
     };
     // GROUP
     if (comp->group) {
@@ -2236,64 +2242,23 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("");
   
   /* generate particle struct */
-  /* First, figure out if we have SPLIT's and how many */
-  int SPLITcount=0;
-  liter = list_iterate(instr->complist);
-  while((comp = list_next(liter)) != NULL) {
-    index += list_len(comp->jump);    // count JUMP
-    if (comp->split) SPLITcount++;         // count SPLIT
-  }
-  list_iterate_end(liter);
-  if (!SPLITcount) {
-    cout("// No SPLITS found in instrument");
-    cout("#define NOSPLIT");
-  }
   cout("struct _struct_particle {");
   cout("  double x,y,z; /* position [m] */");
-  cout("  double x0,y0,z0; /* position [m] */");
-  if (SPLITcount) {
-    coutf("  double x_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
-    coutf("  double y_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
-    coutf("  double z_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
-  }
 #if MCCODE_PROJECT == 1   /* neutron */
   cout("  double vx,vy,vz; /* velocity [m/s] */");
-  cout("  double vx0,vy0,vz0; /* velocity [m/s] */");
-  if (SPLITcount) {
-    coutf("  double vx_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
-    coutf("  double vy_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
-    coutf("  double vz_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
-  }
   cout("  double sx,sy,sz; /* spin [0-1] */");
-  cout("  double sx0,sy0,sz0; /* spin [0-1] */");
-
-  if (SPLITcount) {
-    coutf("  double sx_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
-    coutf("  double sy_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
-    coutf("  double sz_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
-  }
   cout("  int mcgravitation; /* gravity-state */");
   cout("  void *mcMagnet;    /* precession-state */");
   cout("  int allow_backprop; /* allow backprop */");
 #elif MCCODE_PROJECT == 2 /* xray */
   cout("  double kx,ky,kz; /* wave-vector */");
-  cout("  double kx0,ky0,kz0; /* wave-vector */");
   cout("  double phi, Ex,Ey,Ez; /* phase and electrical field */");
-  cout("  double phi0, Ex0,Ey0,Ez0; /* phase and electrical field */");
 #endif
   //cout("  randstate_t randstate[RANDSTATE_LEN]");
   cout("  unsigned long randstate[7];"); // for the KISS generator
   cout("  double t, p;    /* time, event weight */");
-  cout("  double t0, p0;    /* time, event weight */");
-  if (SPLITcount) {
-    coutf("  double t_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
-    coutf("  double p_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
-  }
   cout("  long long _uid;  /* event ID */");
   cout("  long _index;     /* component index where to send this event */");
-  if (SPLITcount) {
-    coutf("  double _index_SPLIT[%i]; /* SPLIT buffer */",SPLITcount);
-  }
   /* these are needed for SCATTERED, ABSORB and RESTORE macros */
   cout("  long _absorbed;  /* flag set to TRUE when this event is to be removed/ignored */");
   cout("  long _scattered; /* flag set to TRUE when this event has interacted with the last component instance */");
@@ -2514,56 +2479,17 @@ cogen_header(struct instr_def *instr, char *output_name)
 
   /* Function to handle a particle restore of physical particle params */
   cout("#pragma acc routine");
-  cout("void particle_restore(_class_particle *p);");
+  cout("void particle_restore(_class_particle *p, _class_particle *p0);");
   cout("");
-  cout("void particle_restore(_class_particle *p) {");
-  cout("  p->x  = p->x0;  p->y  = p->y0;  p->z  = p->z0;");
-  cout("  p->vx = p->vx0; p->vy = p->vy0; p->vz = p->vz0;");
-  cout("  p->sx = p->sx0; p->sy = p->sy0; p->sz = p->sz0;");
-  cout("  p->t = p->t0;  p->p  = p->p0;");
+  cout("void particle_restore(_class_particle *p, _class_particle *p0) {");
+  cout("  p->x  = p0->x;  p->y  = p0->y;  p->z  = p0->z;");
+  cout("  p->vx = p0->vx; p->vy = p0->vy; p->vz = p0->vz;");
+  cout("  p->sx = p0->sx; p->sy = p0->sy; p->sz = p0->sz;");
+  cout("  p->t = p0->t;  p->p  = p0->p;");
   cout("  p->_absorbed=0; p->_restore=0;");
   cout("}");
   cout("");
 
-  cout("#pragma acc routine");
-  cout("void particle_store(_class_particle *p);");
-  cout("");
-  cout("void particle_store(_class_particle *p) {");
-  cout("  p->x0  = p->x;  p->y0  = p->y;  p->z0  = p->z;");
-  cout("  p->vx0 = p->vx; p->vy0 = p->vy; p->vz0 = p->vz;");
-  cout("  p->sx0 = p->sx; p->sy0 = p->sy; p->sz0 = p->sz;");
-  cout("  p->t0 = p->t;   p->p0  = p->p;");
-  cout("}");
-  cout("");
-
-  coutf("#ifndef NOSPLIT");
-  cout("#pragma acc routine");
-  cout("void particle_SPLIT_restore(_class_particle *p, int index);");
-  cout("");
-  cout("void particle_SPLIT_restore(_class_particle *p, int index) {");
-  cout("  p->x  = p->x_SPLIT[index];  p->y  = p->y_SPLIT[index];  p->z  = p->z_SPLIT[index];");
-  cout("  p->vx = p->vx_SPLIT[index]; p->vy = p->vy_SPLIT[index]; p->vz = p->vz_SPLIT[index];");
-  cout("  p->sx = p->sx_SPLIT[index]; p->sy = p->sy_SPLIT[index]; p->sz = p->sz_SPLIT[index];");
-  cout("  p->t  = p->t_SPLIT[index];  p->p  = p->p_SPLIT[index];");
-  cout("  p->_absorbed=0; p->_restore=0;");
-  cout("  p->_index = p->_index_SPLIT[index];");
-  cout("}");
-  cout("");
-
-  cout("#pragma acc routine");
-  cout("void particle_SPLIT_store(_class_particle *p, int index);");
-  cout("");
-  cout("void particle_SPLIT_store(_class_particle *p, int index) {");
-  cout("  p->x_SPLIT[index]  = p->x;  p->y_SPLIT[index]  = p->y;  p->z_SPLIT[index]  = p->z;");
-  cout("  p->vx_SPLIT[index] = p->vx; p->vy_SPLIT[index] = p->vy; p->vz_SPLIT[index] = p->vz;");
-  cout("  p->sx_SPLIT[index] = p->sx; p->sy_SPLIT[index] = p->sy; p->sz_SPLIT[index] = p->sz;");
-  cout("  p->t_SPLIT[index]  = p->t;  p->p_SPLIT[index]  = p->p;");
-  cout("  p->_index_SPLIT[index]  = p->_index;");  
-  cout("}");
-  cout("");
-  coutf("#endif");
-
-  
   liter = list_iterate(instr->user_vars);
   cout("#pragma acc routine");
   cout("double particle_getuservar_byid(_class_particle *p, int id, int *suc){");
