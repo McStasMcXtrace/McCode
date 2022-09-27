@@ -95,7 +95,7 @@ DEFINE COMPONENT NCrystal_process // Remember to change the name of process here
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(string cfg = "", packing_factor=1, interact_fraction=-1)
 OUTPUT PARAMETERS (This_process, NCrystal_storage, effective_my_scattering, params)
-DEPENDENCY "-Wl,-rpath,@MCCODE_LIB@/libs -L@MCCODE_LIB@/libs -lNCrystal -I@MCCODE_LIB@/include"
+DEPENDENCY "-Wl,-rpath,CMD(ncrystal-config --show libdir) -LCMD(ncrystal-config --show libdir) -lNCrystal -ICMD(ncrystal-config --show includedir)"
 
 SHARE
 %{
