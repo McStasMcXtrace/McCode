@@ -140,9 +140,10 @@ MYSELF        return TOK_MYSELF;        /* extended McXtrace grammar */
 COPY          return TOK_COPY;          /* extended McXtrace grammar */
 SPLIT         return TOK_SPLIT;         /* extended McXtrace grammar */
 REMOVABLE     return TOK_REMOVABLE;     /* extended McXtrace grammar with include */
-CPU           return TOK_CPUONLY;       /* extended McStas grammar with GPU-CPU support */
+CPU           return TOK_CPUONLY;       /* extended McXtrace grammar with GPU-CPU support */
 NOACC         return TOK_NOACC; 
 DEPENDENCY    return TOK_DEPENDENCY;
+SHELL         return TOK_SHELL;         /* extended McXtrace grammar with SHELL commands pre-cogen */
 
 "("|")"|"["|"]"|"{"|"}"|"," return yytext[0]; /* Punctuation. */
 "="|"*"       return yytext[0]; /* Operator. */
