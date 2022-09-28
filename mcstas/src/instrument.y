@@ -111,6 +111,7 @@ int symtab_cat(struct List_header *, struct List_header *);
 %token TOK_CPUONLY    "CPU"   /* extended McStas grammar with GPU-CPU support */
 %token TOK_NOACC      "NOACC"
 %token TOK_DEPENDENCY "DEPENDENCY"
+%token TOK_SHELL    "SHELL" /* pre-cogen commands */
 
 /*******************************************************************************
 * Declarations of terminals and nonterminals.
@@ -159,7 +160,7 @@ compdefs:   /* empty */
     | compdefs compdef
 ;
 
-compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency noacc share uservars declare initialize trace save finally display "END"
+compdef:    "DEFINE" "COMPONENT" TOK_ID parameters shell dependency noacc share uservars declare initialize trace save finally display "END"
       {
         struct comp_def *c;
         palloc(c);
@@ -168,15 +169,15 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency noacc share userva
         c->def_par = $4.def;
         c->set_par = $4.set;
         c->out_par = $4.out;
-	c->flag_noacc=$6;
-        c->share_code = $7;
-	c->uservar_code = $8;
-        c->decl_code = $9;
-        c->init_code = $10;
-        c->trace_code = $11;
-        c->save_code = $12;
-        c->finally_code = $13;
-        c->display_code = $14;
+	c->flag_noacc=$7;
+        c->share_code = $8;
+	c->uservar_code = $9;
+        c->decl_code = $10;
+        c->init_code = $11;
+        c->trace_code = $12;
+        c->save_code = $13;
+        c->finally_code = $14;
+        c->display_code = $15;
         c->flag_defined_structure=0;
         c->flag_defined_share=0;
         c->flag_defined_init=0;
@@ -192,7 +193,7 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency noacc share userva
         symtab_add(read_components, c->name, c);
         if (verbose) fprintf(stderr, "Embedding component %s from file %s\n", c->name, c->source);
       }
-    | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters dependency noacc share uservars declare initialize trace save finally display "END"
+    | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters shell dependency noacc share uservars declare initialize trace save finally display "END"
       {
         /* create a copy of a comp, and initiate it with given blocks */
         /* all redefined blocks override */
@@ -213,16 +214,16 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency noacc share userva
           c->out_par   = list_create(); list_cat(c->out_par, def->out_par);
           if (list_len($6.out)) list_cat(c->out_par,$6.out);
 
-	  c->flag_noacc=$8;
+	  c->flag_noacc=$9;
 	  
-          c->share_code = ($9->linenum ?  $9  : def->share_code);
-	  c->uservar_code = ($10->linenum ?  $10  : def->uservar_code);
-          c->decl_code  = ($11->linenum ?  $11  : def->decl_code);
-          c->init_code  = ($12->linenum ?  $12  : def->init_code);
-          c->trace_code = ($13->linenum ? $13 : def->trace_code);
-          c->save_code  = ($14->linenum ? $14 : def->save_code);
-          c->finally_code = ($15->linenum ? $15 : def->finally_code);
-          c->display_code = ($16->linenum ? $16 : def->display_code);
+          c->share_code = ($10->linenum ?  $10  : def->share_code);
+	  c->uservar_code = ($11->linenum ?  $11  : def->uservar_code);
+          c->decl_code  = ($12->linenum ?  $12  : def->decl_code);
+          c->init_code  = ($13->linenum ?  $13  : def->init_code);
+          c->trace_code = ($14->linenum ? $14 : def->trace_code);
+          c->save_code  = ($15->linenum ? $15 : def->save_code);
+          c->finally_code = ($16->linenum ? $16 : def->finally_code);
+          c->display_code = ($17->linenum ? $17 : def->display_code);
 
           /* Check definition and setting params for uniqueness */
           check_comp_formals(c->def_par, c->set_par, c->name);
@@ -698,18 +699,18 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
           instrument_definition->has_included_instr++;
         }
       }
-      dependency declare uservars initialize instr_trace save finally "END"
+      shell dependency declare uservars initialize instr_trace save finally "END"
       {
-        if (!instrument_definition->decls) instrument_definition->decls = $7;
-        else list_cat(instrument_definition->decls->lines, $7->lines);
-        if (!instrument_definition->vars) instrument_definition->vars = $8;
-        else list_cat(instrument_definition->vars->lines, $8->lines);
-        if (!instrument_definition->inits) instrument_definition->inits = $9;
-        else list_cat(instrument_definition->inits->lines, $9->lines);
-        if (!instrument_definition->saves) instrument_definition->saves = $11;
-        else list_cat(instrument_definition->saves->lines, $11->lines);
-        if (!instrument_definition->finals) instrument_definition->finals = $12;
-        else list_cat(instrument_definition->finals->lines, $12->lines);
+        if (!instrument_definition->decls) instrument_definition->decls = $8;
+        else list_cat(instrument_definition->decls->lines, $8->lines);
+        if (!instrument_definition->vars) instrument_definition->vars = $9;
+        else list_cat(instrument_definition->vars->lines, $9->lines);
+        if (!instrument_definition->inits) instrument_definition->inits = $10;
+        else list_cat(instrument_definition->inits->lines, $10->lines);
+        if (!instrument_definition->saves) instrument_definition->saves = $12;
+        else list_cat(instrument_definition->saves->lines, $12->lines);
+        if (!instrument_definition->finals) instrument_definition->finals = $13;
+        else list_cat(instrument_definition->finals->lines, $13->lines);
         instrument_definition->compmap = comp_instances;
         instrument_definition->groupmap = group_instances;
         instrument_definition->complist = comp_instances_list;
@@ -1342,6 +1343,21 @@ jumpname: "PREVIOUS"
       $$.index = 0;
     }
 ;
+
+shell:
+    {
+    }
+  | "SHELL" TOK_STRING
+    {
+      printf("Executing: %s ... ",$2);
+      int ret_val = system($2);
+      if (ret_val != 0) {
+	printf("FAILED!\n");
+	exit(-1);
+      } else {
+	printf("success!\n");
+      }
+    }
 
 dependency:
     {
