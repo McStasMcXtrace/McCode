@@ -548,6 +548,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
         api.add("SPLIT")
         api.add("REMOVABLE")
         api.add("DEPENDENCY")
+        api.add("SHELL")
         # add components
         for name in all_comp_names:
             api.add(name)
