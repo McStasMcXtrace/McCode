@@ -12,7 +12,7 @@ import numpy as np
 from enum import Enum
 import pathlib
 import PyQt5
-from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
 from pyqtgraph.graphicsItems.LegendItem import LegendItem, ItemSample
 
@@ -223,7 +223,7 @@ def create_help_pltitm():
     return plt
 
 def create_infowindow(comp_colour_pairs):
-    class InfoWindow(QtGui.QMainWindow):
+    class InfoWindow(QtWidgets.QMainWindow):
         ''' infowindow that is designed to be static '''
         class Ui_InfoWindow(object):
             ''' info window widgets (auto-generated code) '''
@@ -231,17 +231,17 @@ def create_infowindow(comp_colour_pairs):
                 MainWindow.setObjectName("MainWindow")
                 MainWindow.resize(259, 395)
                 MainWindow.setStyleSheet("background-color: rgb(0, 0, 0);")
-                self.centralwidget = QtGui.QWidget(MainWindow)
+                self.centralwidget = QtWidgets.QWidget(MainWindow)
                 self.centralwidget.setObjectName("centralwidget")
-                self.verticalLayoutTechnicalReason = QtGui.QVBoxLayout(self.centralwidget)
+                self.verticalLayoutTechnicalReason = QtWidgets.QVBoxLayout(self.centralwidget)
                 self.verticalLayoutTechnicalReason.setObjectName("verticalLayoutTechnicalReason")
-                self.scrollArea = QtGui.QScrollArea(self.centralwidget)
+                self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
                 self.scrollArea.setWidgetResizable(True)
                 self.scrollArea.setObjectName("scrollArea")
-                self.scrollAreaWidgetContents = QtGui.QWidget()
+                self.scrollAreaWidgetContents = QtWidgets.QWidget()
                 self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 239, 375))
                 self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
-                self.vlayout = QtGui.QVBoxLayout(self.scrollAreaWidgetContents)
+                self.vlayout = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
                 self.vlayout.setObjectName("vlayout")
                 MainWindow.setCentralWidget(self.centralwidget)
                 
@@ -249,7 +249,7 @@ def create_infowindow(comp_colour_pairs):
                 self.verticalLayoutTechnicalReason.addWidget(self.scrollArea)
                 
                 self.labels = []
-                self.spacerItem = QtGui.QSpacerItem(20, 448, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+                self.spacerItem = QtWidgets.QSpacerItem(20, 448, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
                 
         def set_components(self, str_colour_pairs):
             ''' colours are tri-tupples of rgb '''
@@ -257,7 +257,7 @@ def create_infowindow(comp_colour_pairs):
                 s = pair[0]
                 c = pair[1]
                 
-                lbl = QtGui.QLabel(self.ui.scrollAreaWidgetContents)
+                lbl = QtWidgets.QLabel(self.ui.scrollAreaWidgetContents)
                 lbl.setText(s)
                 lbl.setStyleSheet("color: rgb(%d, %d, %d);" % c)
                 self.ui.labels.append(lbl)
@@ -287,12 +287,12 @@ class McDisplay2DGui(object):
         #
         # app, scene, plots 
         #
-        self.app = QtGui.QApplication(sys.argv)
+        self.app = QtWidgets.QApplication(sys.argv)
         
-        window = pg.GraphicsWindow()
+        window = pg.GraphicsView()
         window.resize(1000, 600)
         
-        mw = QtGui.QMainWindow()
+        mw = QtWidgets.QMainWindow()
         window.setParent(mw)
         mw.setCentralWidget(window)
         mw.setWindowTitle(title)
@@ -356,7 +356,7 @@ class McDisplay2DGui(object):
             if self.zoomstate == self.ZoomState.ZOOM:
                 self._unzoom()
         if event.key() == 81:                   # q
-            QtGui.QApplication.quit()
+            QtWidgets.QApplication.quit()
         elif event.key() == 80:                 # p
             self._dumpfile(format='png')
         elif event.key() == 83:                 # s
