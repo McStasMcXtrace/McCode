@@ -9,7 +9,7 @@ import numpy as np
 
 import PyQt5
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 from . import utils
 from . import mccode_config
@@ -43,7 +43,7 @@ class McPyqtgraphPlotter():
         self.plot_func = plot_func
         
         # Qt app
-        self.app = QtGui.QApplication(sys.argv)
+        self.app = QtWidgets.QApplication(sys.argv)
         
         if invcanvas:
             # switch to using white background and black foreground
@@ -68,15 +68,15 @@ class McPyqtgraphPlotter():
 def create_plotwindow(title):
     ''' set up and return a plotlayout "window" '''
     
-    window = pg.GraphicsWindow()
+    window = pg.GraphicsView()
     
-    mw = QtGui.QMainWindow()
+    mw = QtWidgets.QMainWindow()
     window.setParent(mw)
     mw.setCentralWidget(window)
     mw.setWindowTitle(title)
     
     # window size
-    rect = QtGui.QApplication.desktop().screenGeometry()
+    rect = QtWidgets.QApplication.desktop().screenGeometry()
     w = int(0.7 * rect.width())
     h = int(0.7 * rect.height())
     mw.resize(w, h)
@@ -219,7 +219,7 @@ def print_help(nogui=False):
             prefix = "mc"
         else:
             prefix = "mx"
-        QtGui.QMessageBox.about(g_window, prefix+'plot-pyqtgraph', '\n'.join(helplines))
+        QtWidgets.QMessageBox.about(g_window, prefix+'plot-pyqtgraph', '\n'.join(helplines))
 
 def set_keyhandler(scene, replot_cb, back_cb, key, modifier, viewmodel):
     ''' sets a clickhadler according to input '''
@@ -227,7 +227,7 @@ def set_keyhandler(scene, replot_cb, back_cb, key, modifier, viewmodel):
     def key_handler(ev, replot_cb, back_cb, savefile_cb, flip_log, flip_legend, inc_cmap, expand_sp, debug=False):
         ''' global keypress handler, replot_cb is a function of log '''
         if ev.key() == 81:                              # q
-            QtGui.QApplication.quit()
+            QtWidgets.QApplication.quit()
         elif ev.key() == 76:                            # l
             flip_log()
             replot_cb()
