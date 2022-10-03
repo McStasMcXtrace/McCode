@@ -13,14 +13,14 @@
     "QSCI": "1"
   },
   "compilation": {
-    "CFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=managed -Minfo=accel -DOPENACC -DUSE_MPI -lmpi -L/opt/nvidia/hpc_sdk/Linux_x86_64/21.7/comm_libs/mpi/lib -I/opt/nvidia/hpc_sdk/Linux_x86_64/21.7/comm_libs/mpi/include",
+    "CFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=managed -Minfo=accel -DOPENACC -DUSE_MPI -lmpi -L/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/lib -I/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/include",
     "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
-    "MPIFLAGS": "-DUSE_MPI -lmpi -L/opt/nvidia/hpc_sdk/Linux_x86_64/21.7/comm_libs/mpi/lib -I/opt/nvidia/hpc_sdk/Linux_x86_64/21.7/comm_libs/mpi/include",
+    "MPIFLAGS": "-DUSE_MPI -lmpi -L/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/lib -I/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/include",
     "OACCFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=managed -DOPENACC",
     "CC": "gcc",
     "OACC": "nvc",
-    "MPICC": "/opt/nvidia/hpc_sdk/Linux_x86_64/21.7/comm_libs/mpi/bin/mpicc'",
-    "MPIRUN": "/opt/nvidia/hpc_sdk/Linux_x86_64/21.7/comm_libs/mpi/bin/mpirun -np 8",
+    "MPICC": "/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/bin/mpicc'",
+    "MPIRUN": "/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/bin/mpirun -np 8",
     "MPINODES": "8"
   },
   "platform": {
