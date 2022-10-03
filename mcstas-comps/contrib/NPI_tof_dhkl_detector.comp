@@ -345,10 +345,12 @@ TRACE
     double th2_min=amin*PI/180;
     double th2_max=amax*PI/180;
     
+    #ifndef OPENACC
     if (dbgn>20) {
       #pragma acc atomic write
       dbg=0;
     }
+    #endif
     /* cross-section with the detector front face. Allow height = yheight+3*res_y to account for a random 
        displacement due to vertical resolution.
     */
@@ -416,12 +418,14 @@ TRACE
 		tc=tof-time0-tref;
 		iref=(int)floor(tc/mod_dt+0.5);
 		dt=iref*mod_dt+time0;
+		#ifndef OPENACC
 		if (iline==0 && dbg) {
 		  #pragma acc atomic
 		  dbgn = dbgn+1;
 		  printf("iref=%d, dt=%g, t=%g, tcor=%g\n",
 			 iref, iref*mod_dt*1000,tc*1000, (tof-tref-dt)*1000);
 		}
+		#endif
 	      }
 	    }
 	    // Normal mode: get indices in the ToF - 2theta grid and accumulate plot data
