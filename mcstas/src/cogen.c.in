@@ -2290,9 +2290,10 @@ cogen_header(struct instr_def *instr, char *output_name)
       char *ctpe;
       while((cvar = list_next(cliter))) {
 	ctpe = list_next(cliter2);
-	/* We need to attach comp name to cvar */
-	strcat(cvar,"_");
-	strcat(cvar,comp->name);
+	/* We need to attach comp index to cvar */
+	char snum[5];
+	sprintf(snum,"_%d",comp->index);
+	strcat(cvar,snum);
 	list_add(instr->user_vars, cvar);
 	list_add(instr->user_vars_types, ctpe);
       }
