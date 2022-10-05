@@ -637,7 +637,7 @@ MCDETECTOR mcdetector_statistics(
   MCDETECTOR detector)
 {
 
-  if (!detector.p1 || !detector.m || !detector.filename)
+  if (!detector.p1 || !detector.m)
     return(detector);
 
   /* compute statistics and update MCDETECTOR structure ===================== */
@@ -844,7 +844,7 @@ MCDETECTOR detector_import(
     }
   }
 
-  m=abs(m); n=abs(n); p=abs(p); /* make sure dimensions are positive */
+  m=labs(m); n=labs(n); p=labs(p); /* make sure dimensions are positive */
   detector.istransposed = istransposed;
 
   /* determine detector rank (dimensionality) */
@@ -2133,7 +2133,7 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
   MCDETECTOR detector;
 
   /* import and perform basic detector analysis (and handle MPI_Reduce) */
-  if (abs(m) == 1) {/* n>1 on Y, m==1 on X: 1D, no X axis*/
+  if (labs(m) == 1) {/* n>1 on Y, m==1 on X: 1D, no X axis*/
     detector = detector_import(mcformat,
       c, (t ? t : MCCODE_STRING " 1D data"),
       n, 1, 1,
@@ -2141,7 +2141,7 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
       yvar, "(I,Ierr)", "I",
       y1, y2, x1, x2, 0, 0, f,
       p0, p1, p2, posa); /* write Detector: line */
-  } else if (abs(n)==1) {/* m>1 on X, n==1 on Y: 1D, no Y axis*/
+  } else if (labs(n)==1) {/* m>1 on X, n==1 on Y: 1D, no Y axis*/
     detector = detector_import(mcformat,
       c, (t ? t : MCCODE_STRING " 1D data"),
       m, 1, 1,
@@ -2189,7 +2189,7 @@ MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
   mcformat = format_new;
 
   detector = mcdetector_out_2D(t, xl, yl,
-                  1,abs(m),1,abs(n),
+                  1,labs(m),1,labs(n),
                   m,n,
                   NULL, p1, NULL, f,
                   c, posa);
