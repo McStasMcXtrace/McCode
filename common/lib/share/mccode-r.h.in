@@ -745,7 +745,7 @@ struct mcdetector_struct {
   char   zvar[CHAR_BUF_LENGTH];       /* Z variable name */
   char   ncount[CHAR_BUF_LENGTH];     /* number of events initially generated */
   char   limits[CHAR_BUF_LENGTH];     /* X Y Z limits, e.g. [xmin xmax ymin ymax zmin zmax] */
-  char   variables[CHAR_BUF_LENGTH];  /* variables written into data block */
+  char   variables[2*CHAR_BUF_LENGTH];  /* variables written into data block */
   char   statistics[CHAR_BUF_LENGTH]; /* center, mean and half width along axis */
   char   signal[CHAR_BUF_LENGTH];     /* min max and mean of signal (data block) */
   char   values[CHAR_BUF_LENGTH];     /* integrated values e.g. [I I_err N] */
