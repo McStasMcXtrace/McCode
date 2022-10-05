@@ -1795,7 +1795,7 @@ int cogen_raytrace(struct instr_def *instr)
     }
 
     coutf("      _particle->_index++;");
-    coutf("      if (!ABSORBED) DEBUG_STATE();");
+    coutf("      if (!ABSORBED) { DEBUG_STATE(); }");
     coutf("    } /* end component %s [%i] */", comp->name, comp->index);
 
   } /* end while comp list (case) */
