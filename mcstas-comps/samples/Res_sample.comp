@@ -67,29 +67,6 @@ SETTING PARAMETERS (thickness=0, radius=0.01, focus_r=0.05, E0=14, dE=2,
   focus_aw=0, focus_ah=0, xwidth=0, yheight=0.05, zdepth=0, int target_index=0)
 OUTPUT PARAMETERS ()
 
-
-/* Until McStas supports adding USERVARS via components, put these in your instrument:
-USERVARS %{
-  // probability
-  double res_pi;
-
-  // k_i
-  double res_ki_x;
-  double res_ki_y;
-  double res_ki_z;
-
-  // k_f
-  double res_kf_x;
-  double res_kf_y;
-  double res_kf_z;
-
-  // pos
-  double res_rx;
-  double res_ry;
-  double res_rz;
-%}*/
-
-
 SHARE %{
   struct res_sample_vars {
     char   isrect;                     /* true when sample is a box */
@@ -99,9 +76,33 @@ SHARE %{
   };
 %}
 
+/* Needed for resoultion calculation */
+USERVARS %{
+  double res_pi;
+  double res_ki_x;
+  double res_ki_y;
+  double res_ki_z;
+  double res_kf_x;
+  double res_kf_y;
+  double res_kf_z;
+  double res_rx;
+  double res_ry;
+  double res_rz;
+%}
 
 DECLARE %{
   struct res_sample_vars vars;
+  char res_pi_var[20];
+  char res_ki_x_var[20];
+  char res_ki_y_var[20];
+  char res_ki_z_var[20];
+  char res_kf_x_var[20];
+  char res_kf_y_var[20];
+  char res_kf_z_var[20];
+  char res_rx_var[20];
+  char res_ry_var[20];
+  char res_rz_var[20];
+  int compindex;
 %}
 
 
@@ -143,6 +144,19 @@ INITIALIZE %{
   if (focus_yh) vars.yhdim = focus_yh;
   if (focus_aw) vars.awdim = DEG2RAD*focus_aw;
   if (focus_ah) vars.ahdim = DEG2RAD*focus_ah;
+
+  /* Initialize uservar strings */
+  sprintf(res_pi_var,"res_pi_%i",_comp->_index);
+  sprintf(res_ki_x_var,"res_ki_x_%i",_comp->_index);
+  sprintf(res_ki_y_var,"res_ki_y_%i",_comp->_index);
+  sprintf(res_ki_z_var,"res_ki_z_%i",_comp->_index);
+  sprintf(res_kf_x_var,"res_kf_x_%i",_comp->_index);
+  sprintf(res_kf_y_var,"res_kf_y_%i",_comp->_index);
+  sprintf(res_kf_z_var,"res_kf_z_%i",_comp->_index);
+  sprintf(res_rx_var,"res_rx_%i",_comp->_index);
+  sprintf(res_ry_var,"res_ry_%i",_comp->_index);
+  sprintf(res_rz_var,"res_rz_%i",_comp->_index);
+  compindex=_comp->_index;
 %}
 
 
@@ -157,6 +171,8 @@ TRACE %{
   double aim_x, aim_y, aim_z;   /* Position of target relative to scattering point */
   double scat_factor;           /* Simple cross-section model */
   int intersect = 0;
+  double kix,kiy,kiz;
+  double kfx,kfy,kfz;
 
   if(vars.isrect)
     intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
@@ -191,13 +207,14 @@ TRACE %{
 
     /* Store initial neutron state. */
     if(p == 0) ABSORB;
-    _particle->res_pi = p;
-    _particle->res_ki_x = V2K*vx;
-    _particle->res_ki_y = V2K*vy;
-    _particle->res_ki_z = V2K*vz;
-    _particle->res_rx = x;
-    _particle->res_ry = y;
-    _particle->res_rz = z;
+    kix=V2K*vx; kiy=V2K*vy; kiz=V2K*vz;
+    particle_setvar_void(_particle, res_pi_var, &p);
+    particle_setvar_void(_particle, res_ki_x_var, &(kix));
+    particle_setvar_void(_particle, res_ki_y_var, &(kiy));
+    particle_setvar_void(_particle, res_ki_z_var, &(kiz));
+    particle_setvar_void(_particle, res_rx_var, &x);
+    particle_setvar_void(_particle, res_ry_var, &y);
+    particle_setvar_void(_particle, res_rz_var, &z);
 
     aim_x = vars.targetx - x;         /* Vector pointing at target (anal./det.) */
     aim_y = vars.targety - y;
@@ -222,10 +239,11 @@ TRACE %{
     vz *= v;
     SCATTER;
 
-     /* Store final neutron state. */
-    _particle->res_kf_x = V2K*vx;
-    _particle->res_kf_y = V2K*vy;
-    _particle->res_kf_z = V2K*vz;
+     /* Store final neutroxn state. */
+    kfx=V2K*vx; kfy=V2K*vy; kfz=V2K*vz;
+    particle_setvar_void(_particle, res_kf_x_var, &(kfx));
+    particle_setvar_void(_particle, res_kf_y_var, &(kfy));
+    particle_setvar_void(_particle, res_kf_z_var, &(kfz));
   }
 %}
 

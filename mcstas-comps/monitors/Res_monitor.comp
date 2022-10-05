@@ -90,6 +90,16 @@ DECLARE%{
 
   tl2_list_type *reso_events;
   tl2_list_type *reso_probabilities;
+  char res_pi_var[20];
+  char res_ki_x_var[20];
+  char res_ki_y_var[20];
+  char res_ki_z_var[20];
+  char res_kf_x_var[20];
+  char res_kf_y_var[20];
+  char res_kf_z_var[20];
+  char res_rx_var[20];
+  char res_ry_var[20];
+  char res_rz_var[20];
 %}
 
 
@@ -145,6 +155,19 @@ INITIALIZE %{
 
   if (filename != NULL)
     strncpy(Vars.Mon_File, filename, 128);
+  /* Initialize uservar strings */
+  int *index_ptr=COMP_GETPAR3(Res_sample, res_sample_comp, compindex);
+  int index = *index_ptr;
+  sprintf(res_pi_var,"res_pi_%i",index);
+  sprintf(res_ki_x_var,"res_ki_x_%i",index);
+  sprintf(res_ki_y_var,"res_ki_y_%i",index);
+  sprintf(res_ki_z_var,"res_ki_z_%i",index);
+  sprintf(res_kf_x_var,"res_kf_x_%i",index);
+  sprintf(res_kf_y_var,"res_kf_y_%i",index);
+  sprintf(res_kf_z_var,"res_kf_z_%i",index);
+  sprintf(res_rx_var,"res_rx_%i",index);
+  sprintf(res_ry_var,"res_ry_%i",index);
+  sprintf(res_rz_var,"res_rz_%i",index);
 %}
 
 
@@ -203,37 +226,37 @@ TRACE %{
         struct Res_sample_struct *s =
           (struct Res_sample_struct *)(COMP_GETPAR3(Res_sample, res_sample_comp, res_struct));*/
 
-      if(_particle->res_pi != 0)
+      if(particle_getvar(_particle,res_pi_var,NULL))
       {
         /* ki */
-        Vars.UserDoubles[0] = _particle->res_ki_x;
-        Vars.UserDoubles[1] = _particle->res_ki_y;
-        Vars.UserDoubles[2] = _particle->res_ki_z;
+        Vars.UserDoubles[0] = particle_getvar(_particle,res_ki_x_var,NULL);
+        Vars.UserDoubles[1] = particle_getvar(_particle,res_ki_y_var,NULL);
+        Vars.UserDoubles[2] = particle_getvar(_particle,res_ki_z_var,NULL);
 
         /* kf */
-        Vars.UserDoubles[3] = _particle->res_kf_x;
-        Vars.UserDoubles[4] = _particle->res_kf_y;
-        Vars.UserDoubles[5] = _particle->res_kf_z;
+        Vars.UserDoubles[3] = particle_getvar(_particle,res_kf_x_var,NULL);
+        Vars.UserDoubles[4] = particle_getvar(_particle,res_kf_y_var,NULL);
+        Vars.UserDoubles[5] = particle_getvar(_particle,res_kf_z_var,NULL);
 
         /* pos */
-        Vars.UserDoubles[6] = _particle->res_rx;
-        Vars.UserDoubles[7] = _particle->res_ry;
-        Vars.UserDoubles[8] = _particle->res_rz;
+        Vars.UserDoubles[6] = particle_getvar(_particle,res_rx_var,NULL);
+        Vars.UserDoubles[7] = particle_getvar(_particle,res_ry_var,NULL);
+        Vars.UserDoubles[8] = particle_getvar(_particle,res_rz_var,NULL);
 
         /* pi and pf */
-        Vars.UserDoubles[9] = _particle->res_pi;
-        Vars.UserDoubles[10] = p / _particle->res_pi;
+        Vars.UserDoubles[9] = particle_getvar(_particle,res_pi_var,NULL);
+        Vars.UserDoubles[10] = Vars.UserDoubles[9];
 
         Monitor_nD_Trace(&DEFS, &Vars, _particle);
 
         /* live calculation */
         if(live_calc) {
           double *reso_event = (double*)malloc(4 * sizeof(double));
-          reso_event[0] = _particle->res_ki_x - _particle->res_kf_x;
-          reso_event[1] = _particle->res_ki_y - _particle->res_kf_y;
-          reso_event[2] = _particle->res_ki_z - _particle->res_kf_z;
-          reso_event[3] = tl2_k_to_E(_particle->res_ki_x, _particle->res_ki_y, _particle->res_ki_z,
-                                     _particle->res_kf_x, _particle->res_kf_y, _particle->res_kf_z);
+          reso_event[0] = Vars.UserDoubles[0] - Vars.UserDoubles[3];
+          reso_event[1] = Vars.UserDoubles[1] - Vars.UserDoubles[4];
+          reso_event[2] = Vars.UserDoubles[2] - Vars.UserDoubles[5];
+          reso_event[3] = tl2_k_to_E(Vars.UserDoubles[0], Vars.UserDoubles[1], Vars.UserDoubles[2],
+                                     Vars.UserDoubles[3], Vars.UserDoubles[4], Vars.UserDoubles[5]);
 
           double *reso_prob = (double*)malloc(sizeof(double));
           *reso_prob = p;
