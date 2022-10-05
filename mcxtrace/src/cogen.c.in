@@ -632,7 +632,10 @@ static void cogen_comp_init_position(
     comp->name, comp->def->name);
   cout("  {");
   coutf("    Coords tc1, tc2;");
+  coutf("    tc1 = coords_set(0,0,0);");
+  coutf("    tc2 = coords_set(0,0,0);");
   coutf("    Rotation tr1;");
+  coutf("    rot_set_rotation(tr1,0,0,0);");
 
   if(relcomp == NULL)
   {                                /* Absolute orientation. */
