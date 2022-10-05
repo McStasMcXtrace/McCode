@@ -125,7 +125,8 @@ double polInterp(double* X,double* Y,int Psize,double Aim)
   */
 {
   double out,errOut;         /* out put variables */
-  double C[Psize],D[Psize];
+  double *C = malloc(Psize*sizeof(double));
+  double *D = malloc(Psize*sizeof(double));
   double testDiff,diff;
 
   double w,den,ho,hp;           /* intermediate variables */
@@ -167,6 +168,8 @@ double polInterp(double* X,double* Y,int Psize,double Aim)
       errOut= (2*(ns+1)<(Psize-m)) ? C[ns+1] : D[ns--];
       out+=errOut;
     }
+  free(C);
+  free(D);
   return out;
 }
 
