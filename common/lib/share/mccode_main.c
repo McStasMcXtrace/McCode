@@ -24,13 +24,13 @@ int mccode_main(int argc, char *argv[])
   MPI_Get_processor_name(mpi_node_name, &mpi_node_name_len);
 #endif /* USE_MPI */
 
-  //ct = clock();    /* we use clock rather than time to set the default seed */
-  //mcseed=(long)ct;
+  ct = clock();
 
   // device and host functional RNG seed
   struct timeval tm;
   gettimeofday(&tm, NULL);
   mcseed = (long) tm.tv_sec*1000000 + tm.tv_usec;
+  mcstartdate = (long)tm.tv_sec;  /* set start date before parsing options and creating sim file */
   // init global _particle.randstate for random number use
   // during init(), finally() and display(). NOTE: during trace, a local
   // "_particle" variable is present and thus used instead.
@@ -62,10 +62,6 @@ int mccode_main(int argc, char *argv[])
   }
 #endif
 #endif
-
-  // COMMON seed - not functional
-  //time_t  t;
-  mcstartdate = (long)t;  /* set start date before parsing options and creating sim file */
 
   /* *** parse options ******************************************************* */
   SIG_MESSAGE("[" __FILE__ "] main START");

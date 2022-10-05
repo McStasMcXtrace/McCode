@@ -57,7 +57,6 @@ int defaultmain  = 0;
 
 static   long mcseed                 = 0; /* seed for random generator */
 #pragma acc declare create ( mcseed )
-static   long mcstartdate            = 0; /* start simulation time */
 static   int  mcdisable_output_files = 0; /* --no-output-files */
 mcstatic int  mcgravitation          = 0; /* use gravitation flag, for PROP macros */
 mcstatic int  mcdotrace              = 0; /* flag for --trace and messages for DISPLAY */
