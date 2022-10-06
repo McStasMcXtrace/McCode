@@ -119,6 +119,64 @@ size_t str_len(const char *s)
 
 
 /* SECTION: Dynamic Arrays ================================================== */
+IArray1d create_iarr1d(int n){
+  IArray1d arr2d;
+  arr2d = calloc(n, sizeof(int));
+  return arr2d;
+}
+void destroy_iarr1d(IArray1d a){
+  free(a);
+}
+
+IArray2d create_iarr2d(int nx, int ny){
+  IArray2d arr2d;
+  arr2d = calloc(nx, sizeof(int *));
+
+  int *p1;
+  p1 = calloc(nx*ny, sizeof(int));
+
+  int i;
+  for (i=0; i<nx; i++){
+    arr2d[i] = &(p1[i*ny]);
+  }
+  return arr2d;
+}
+void destroy_iarr2d(IArray2d a){
+  free(a[0]);
+  free(a);
+}
+
+IArray3d create_iarr3d(int nx, int ny, int nz){
+  IArray3d arr3d;
+  int i, j;
+
+  // 1d
+  arr3d = calloc(nx, sizeof(int **));
+
+  // d2
+  int **p1;
+  p1 = calloc(nx*ny, sizeof(int *));
+
+  for (i=0; i<nx; i++){
+    arr3d[i] = &(p1[i*ny]);
+  }
+
+  // 3d
+  int *p2;
+  p2 = calloc(nx*ny*nz, sizeof(int));
+  for (i=0; i<nx; i++){
+    for (j=0; j<ny; j++){
+      arr3d[i][j] = &(p2[(i*ny+j)*nz]);
+    }
+  }
+  return arr3d;
+}
+
+void destroy_iarr3d(IArray3d a){
+  free(a[0][0]);
+  free(a[0]);
+  free(a);
+}
 
 DArray1d create_darr1d(int n){
   DArray1d arr2d;

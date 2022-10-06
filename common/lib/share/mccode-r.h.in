@@ -218,6 +218,18 @@ extern int traceenabled, defaultmain;
 
 
 /* SECTION: Dynamic Arrays */
+typedef int* IArray1d;
+IArray1d create_iarr1d(int n);
+void destroy_iarr1d(IArray1d a);
+
+typedef int** IArray2d;
+IArray2d create_iarr2d(int nx, int ny);
+void destroy_iarr2d(IArray2d a);
+
+typedef int*** IArray3d;
+IArray3d create_iarr3d(int nx, int ny, int nz);
+void destroy_iarr3d(IArray3d a);
+
 typedef double* DArray1d;
 DArray1d create_darr1d(int n);
 void destroy_darr1d(DArray1d a);
