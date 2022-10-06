@@ -163,7 +163,7 @@ void *Table_File_List_store(t_Table *tab){
 
   FILE *Open_File(char *File, const char *Mode, char *Path)
   {
-    char path[2048];
+    char path[1024];
     FILE *hfile = NULL;
     
     if (!File || File[0]=='\0')                     return(NULL);
@@ -186,7 +186,7 @@ void *Table_File_List_store(t_Table *tab){
           if (path_length) {
             strncpy(dir, instrument_source, path_length);
             dir[path_length] = '\0';
-            snprintf(path, 2048, "%s%c%s", dir, MC_PATHSEP_C, File);
+            snprintf(path, 1024, "%s%c%s", dir, MC_PATHSEP_C, File);
             hfile = fopen(path, Mode);
           }
         }
@@ -201,7 +201,7 @@ void *Table_File_List_store(t_Table *tab){
           if (path_length) {
             strncpy(dir, instrument_exe, path_length);
             dir[path_length] = '\0';
-            snprintf(path, 2048, "%s%c%s", dir, MC_PATHSEP_C, File);
+            snprintf(path, 1024, "%s%c%s", dir, MC_PATHSEP_C, File);
             hfile = fopen(path, Mode);
           }
         }
@@ -209,19 +209,19 @@ void *Table_File_List_store(t_Table *tab){
       if (!hfile) /* search in HOME or . */
       {
         strcpy(dir, getenv("HOME") ? getenv("HOME") : ".");
-        snprintf(path, 2048, "%s%c%s", dir, MC_PATHSEP_C, File);
+        snprintf(path, 1024, "%s%c%s", dir, MC_PATHSEP_C, File);
         hfile = fopen(path, Mode);
       }
       if (!hfile) /* search in MCSTAS/data */
       {
         strcpy(dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
-        snprintf(path, 2048, "%s%c%s%c%s", dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, File);
+        snprintf(path, 1024, "%s%c%s%c%s", dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, File);
         hfile = fopen(path, Mode);
       }
       if (!hfile) /* search in MVCSTAS/contrib */
       {
         strcpy(dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
-        snprintf(path, 2048, "%s%c%s%c%s", dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, File);
+        snprintf(path, 1024, "%s%c%s%c%s", dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, File);
         hfile = fopen(path, Mode);
       }
       if(!hfile)
@@ -230,7 +230,7 @@ void *Table_File_List_store(t_Table *tab){
         return (NULL);
       }
     }
-    if (Path) strncpy(Path, path, 2048);
+    if (Path) strncpy(Path, path, 1024);
     return(hfile);
   } /* end Open_File */
 

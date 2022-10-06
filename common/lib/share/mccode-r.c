@@ -887,9 +887,9 @@ MCDETECTOR detector_import(
   else if (strlen(detector.xvar)) strncpy(c, detector.xvar,32);
 
   if (detector.rank == 1)
-    snprintf(detector.variables, 2*CHAR_BUF_LENGTH, "%s %s %s_err N", detector.xvar, c, c);
+    snprintf(detector.variables, CHAR_BUF_LENGTH, "%s %s %s_err N", detector.xvar, c, c);
   else
-    snprintf(detector.variables, 2*CHAR_BUF_LENGTH, "%s %s_err N", c, c);
+    snprintf(detector.variables, CHAR_BUF_LENGTH, "%s %s_err N", c, c);
 
   /* limits */
   detector.xmin = x1;
