@@ -1,0 +1,82 @@
+/*******************************************************************************
+* Instrument: <instrument name>
+*
+* %I
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Dec '21
+* Origin: DTU Physics
+* %INSTRUMENT_SITE: Tests
+*
+* Unit test instrument for Conics Pairs components
+*
+* %D
+* Example instrument that shows some ways of using Conics_Ph and Conics_EH
+*
+* %Example: Test_Conics_pairs OPTIC=1 Detector: psd_i_I=1.1804e-12
+* %Example: Test_Conics_pairs OPTIC=2 fs=100000 Detector: psd_i_I=4.33428e-21
+*
+* %P
+* <parameter1>: [<unit>] <parameter1 description>
+* OPTIC: [ ]     Flag to choose between 0: no optic, 1: EH pair, 2: PH pair
+* ssize: [m]     Source radius
+* fs: [m]        Distance betwee nsource and optic mid plane
+* fi: [m]        Distance between optics mid plane and focal point.
+*
+* %L
+* <reference/HTML link>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Test_Conics_pairs(int OPTIC=1, ssize=1e-6, fs=10, fi=10)
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+// insert components here (e.g. Insert -> Source -> ...)
+COMPONENT ss = Source_simple(
+    radius=ssize, 
+    focus_xw=0.1, 
+    focus_yh=0.1, 
+    lambda0=5, 
+    dlambda=4.9, dist=fs)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT psd_s = PSD_monitor(xwidth=ssize*2, yheight=ssize*2, filename="psd_s")
+AT(0,0,1e-6) RELATIVE PREVIOUS
+
+COMPONENT psd_o0 = PSD_monitor(xwidth=0.12, yheight=0.12, restore_neutron=1,
+	filename="psd_o0")
+AT(0,0,fs) RELATIVE PREVIOUS
+
+COMPONENT cEH = Conics_EH(
+    nshells=4, focal_length_u=10, focal_length_d=10, rmin=0.0031416, rmax=0.05236, le=0.25, lh=0.25, disk=0
+)
+WHEN(OPTIC==1) AT(0,0,fs) RELATIVE ss
+
+COMPONENT cPH = Conics_PH(
+    nshells=4, focal_length=10, rmin=0.0031416, rmax=0.05236, lp=0.25, lh=0.25, disk=0
+)
+WHEN(OPTIC==2)AT(0,0,fs) RELATIVE ss
+
+COMPONENT psd_o1 = COPY(psd_o0)(filename="psd_o1")
+AT(0,0,0.3+1e-3) RELATIVE PREVIOUS
+
+COMPONENT psd_i = COPY(psd_s)(xwidth=100*ssize, yheight=100*ssize,filename="psd_i")
+AT(0,0,fi) RELATIVE cEH
+
+
+FINALLY
+%{
+%}
+
+END
