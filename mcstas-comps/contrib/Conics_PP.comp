@@ -80,26 +80,11 @@ INITIALIZE
 
 TRACE
 %{
-  Particle pa = makeParticle(x,y,z,vx,vy,vz, t, sx, sy, sz, p);
-  traceSingleNeutron(&pa,s);
+  traceSingleNeutron(_particle,s);
 
-  //Communicate particle state to McStas
-  x = pa._x;
-  y = pa._y;
-  z = pa._z;
-  vx = pa._vx;
-  vy = pa._vy;
-  vz = pa._vz;
-  t = pa._t; 
-  sx = pa._sx;
-  sy = pa._sy;
-  sz = pa._sz;
-  p = pa.w;
-
-  if (pa.absorb) {
-    ABSORB;
+  if (!_particle->_absorbed) {
+    SCATTER;
   }
-  SCATTER;
 %}
 
 FINALLY %{

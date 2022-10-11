@@ -67,7 +67,7 @@ double getRandom() {
 }
  
 //Function to get new particle from source
-Particle generateParticleFromSource(double radius, double div, double Lambda0,
+_class_particle generate_class_particleFromSource(double radius, double div, double Lambda0,
         double num_neutrons) {
 
     double chi = 2*M_PI*(getRandom());
@@ -82,7 +82,7 @@ Particle generateParticleFromSource(double radius, double div, double Lambda0,
     double vz = v/sqrt(1+tan_r*tan_r);
     double vr = tan_r * vz;
 
-    return makeParticle(r*cos(chi),r*sin(chi),0,cos(phi)*vr,sin(phi)*vr,
+    return make_class_particle(r*cos(chi),r*sin(chi),0,cos(phi)*vr,sin(phi)*vr,
                 vz,0,0.0,0.0,0.0,1.0/num_neutrons);
 }
 
@@ -112,7 +112,7 @@ int main() {
     //Raytrace all particles through the Scene
     double i;
     for (i = 0; i < NUM_NEUTRON; i++) {
-        Particle p = generateParticleFromSource(0.005, 0.02422, 4, NUM_NEUTRON);
+        _class_particle p = generate_class_particleFromSource(0.005, 0.02422, 4, NUM_NEUTRON);
         traceSingleNeutron(&p,s);
     }
 
@@ -203,20 +203,20 @@ typedef struct {
 } Vec;
 
 //! Structure to represent a particle
-typedef struct {
-    double _x; //!< x axis position of particle
-    double _y; //!< y axis position of particle
-    double _z; //!< z axis position of particle
-    double _vx; //!< x axis components of velocity
-    double _vy; //!< y axis components of velocity
-    double _vz; //!< z axis components of velocity
-    double _sx; //!< x spin vector components 
-    double _sy; //!< y spin vector components 
-    double _sz; //!< z spin vector components 
-    double w; //!< Weight of particle
-    int absorb; //!< Absorb flag (0 is not absorbed)
-    double _t; //!< Time of flight of particle
-} Particle;
+/* typedef struct { */
+/*     double _x; //!< x axis position of particle */
+/*     double _y; //!< y axis position of particle */
+/*     double _z; //!< z axis position of particle */
+/*     double _vx; //!< x axis components of velocity */
+/*     double _vy; //!< y axis components of velocity */
+/*     double _vz; //!< z axis components of velocity */
+/*     double _sx; //!< x spin vector components  */
+/*     double _sy; //!< y spin vector components  */
+/*     double _sz; //!< z spin vector components  */
+/*     double w; //!< Weight of particle */
+/*     int absorb; //!< Absorb flag (0 is not absorbed) */
+/*     double _t; //!< Time of flight of particle */
+/* } _class_particle; */
 
 /*! \brief Function to make a point
 
@@ -272,40 +272,40 @@ double dotVec(Vec v1, Vec v2) {
 @param sz z-axis component of spin vector
 @param w weight of particle
 */
-Particle makeParticle(double x, double y, double z,
+_class_particle make_class_particle(double x, double y, double z,
     double vx, double vy, double vz, double t,
     double sx, double sy, double sz, double w) {
 
-    Particle pa;
+    _class_particle pa;
 
-    pa._x = x;
-    pa._y = y;
-    pa._z = z;
+    pa.x = x;
+    pa.y = y;
+    pa.z = z;
 
-    pa._vx = vx;
-    pa._vy = vy;
-    pa._vz = vz;
+    pa.vx = vx;
+    pa.vy = vy;
+    pa.vz = vz;
 
-    pa._sx = sx;
-    pa._sy = sy;
-    pa._sz = sz;
+    pa.sx = sx;
+    pa.sy = sy;
+    pa.sz = sz;
 
-    pa.w = w;
+    pa.p = w;
 
-    pa.absorb = 0;
-    pa._t = t;
+    pa._absorbed = 0;
+    pa.t = t;
     
     return pa;
 }
 
 //! Function to get position of particle 
-Point getParticlePos(Particle p) {
-    return makePoint(p._x,p._y,p._z);
+Point get_class_particlePos(_class_particle p) {
+    return makePoint(p.x,p.y,p.z);
 }       
 
 //! Function to get velocity vector of particle 
-Vec getParticleVel(Particle p) {
-  return makeVec(p._vx, p._vy, p._vz);
+Vec get_class_particleVel(_class_particle p) {
+  return makeVec(p.vx, p.vy, p.vz);
 }
 
 /*! \brief Function to move particle a specific time step.
@@ -316,14 +316,14 @@ gravity.
 @param t time step to move particle
 @param p pointer to particle
 */
-void moveParticleT(double t, Particle* p) {
+void move_class_particleT(double t, _class_particle* p) {
     if (t < 0)
         return;
      
-    p->_x = p->_x+p->_vx*t;
-    p->_y = p->_y+p->_vy*t;
-    p->_z = p->_z+p->_vz*t;
-    p->_t = p->_t+t;
+    p->x = p->x+p->vx*t;
+    p->y = p->y+p->vy*t;
+    p->z = p->z+p->vz*t;
+    p->t = p->t+t;
 }
 
 /*! \brief Function to move particle to position z.
@@ -335,9 +335,9 @@ Does not simulate gravity.
 @param z z-position to move particle
 @param p pointer to particle
 */
-void moveParticleZ(double z, Particle* p) {
-    double t = (z-p->_z)/p->_vz;
-    moveParticleT(t, p);
+void move_class_particleZ(double z, _class_particle* p) {
+    double t = (z-p->z)/p->vz;
+    move_class_particleT(t, p);
 }
 
 /*! \brief Function to compute new position of particle
@@ -348,9 +348,9 @@ Will not move particle if t < 0. Does not simulate gravity.
 @param t timestep to move particle
 @param p particle
 */
-Particle copyMoveParticleT(double t, Particle p) {
-    Particle p2 = p;
-    moveParticleT(t,&p2);
+_class_particle copyMove_class_particleT(double t, _class_particle p) {
+    _class_particle p2 = p;
+    move_class_particleT(t,&p2);
     return p2;
 }
                     
@@ -364,9 +364,9 @@ Does not simulate gravity.
 @param z z-position to move particle
 @param p pointer to particle
 */
-Particle copyMoveParticleZ(double z, Particle p) {
-    Particle p2 = p;
-    moveParticleZ(z,&p2);
+_class_particle copyMove_class_particleZ(double z, _class_particle p) {
+    _class_particle p2 = p;
+    move_class_particleZ(z,&p2);
     return p2;
 }
 
@@ -378,30 +378,30 @@ Only computes mathematical reflection.
 @param n Normal vector
 @param p Pointer to particle
 */
-void reflectParticle(Vec n, Particle* p) {
-    double vn = dotVec(getParticleVel(*p),n);
+void reflect_class_particle(Vec n, _class_particle* p) {
+    double vn = dotVec(get_class_particleVel(*p),n);
 
-    p->_vx = p->_vx-2*vn*n.x;
-    p->_vy = p->_vy-2*vn*n.y; 
-    p->_vz = p->_vz-2*vn*n.z; 
+    p->vx = p->vx-2*vn*n.x;
+    p->vy = p->vy-2*vn*n.y; 
+    p->vz = p->vz-2*vn*n.z; 
 }
 
 /*! \brief Function to mark particle as absorbed
 
 @param p Pointer to particle to be absorbed */
-void absorbParticle(Particle* p)  {
-    p->_vx = 0;
-    p->_vy = 0; 
-    p->_vz = 0;
-    p->w = 0;
-    p->absorb = 1;
+void absorb_class_particle(_class_particle* p)  {
+    p->vx = 0;
+    p->vy = 0; 
+    p->vz = 0;
+    p->p = 0;
+    p->_absorbed = 1;
 }
 
 /*! \brief Function to set weight of particle.
 
 Will set the weight of the particle to w.  */
-void setWeightParticle(double w, Particle* pa) {
-    pa->w = w;
+void setWeight_class_particle(double w, _class_particle* pa) {
+    pa->p = w;
 }
 
 /*! \brief Function to solve quadratic equations for smallest positive result.
@@ -540,11 +540,11 @@ typedef struct {
     int num_d;                 //!< Number of Detector in Scene
 
     //! Function called to handle Neutron-Conic Interaction
-    void (*traceNeutronConic)(Particle*,ConicSurf); 
+    void (*traceNeutronConic)(_class_particle*,ConicSurf); 
     //! Function called to handle Neutron-Disk Interaction 
-    void (*traceNeutronDisk)(Particle*,Disk);
+    void (*traceNeutronDisk)(_class_particle*,Disk);
     //! Function called to handle Neutron-Detector Interaction
-    void (*traceNeutronDetector)(Particle*,Detector);
+    void (*traceNeutronDetector)(_class_particle*,Detector);
 
 } Scene;          
 
@@ -636,17 +636,17 @@ Detector* addDetector(double z0, double xmin, double xmax, double ymin, double y
 
 /*! \brief Function to compute time of first collision for a Detector.
 
-@param p Particle to consider
+@param p _class_particle to consider
 @param d Detector to consider
 
 @return Time until the propogation or -1 if particle will not hit detector
 */
-double getTimeOfFirstCollisionDetector(Particle p, Detector d) {
-    double t = (d.z0-p._z)/p._vz;
+double getTimeOfFirstCollisionDetector(_class_particle p, Detector d) {
+    double t = (d.z0-p.z)/p.vz;
     if (t <= 0)
         return -1;
-    Particle p2 = copyMoveParticleT(t,p);
-    if (p2._x > d.xmax || p2._x < d.xmin || p2._y > d.ymax || p2._y < d.ymin)
+    _class_particle p2 = copyMove_class_particleT(t,p);
+    if (p2.x > d.xmax || p2.x < d.xmin || p2.y > d.ymax || p2.y < d.ymin)
         return -1;
     return t;
 }
@@ -656,12 +656,12 @@ double getTimeOfFirstCollisionDetector(Particle p, Detector d) {
 @param p Pointer to particle to be traced
 @param d Detector to be traced
 */
-void traceNeutronDetector(Particle* p, Detector d) {
+void traceNeutronDetector(_class_particle* p, Detector d) {
     double t = getTimeOfFirstCollisionDetector(*p, d);
     if (t < 0)
         return;
-    moveParticleT(t,p);
-    d.data[(int)floor((p->_x-d.xmin)/d.xstep)][(int)floor((p->_y-d.ymin)/d.ystep)] += p->w;
+    move_class_particleT(t,p);
+    d.data[(int)floor((p->x-d.xmin)/d.xstep)][(int)floor((p->y-d.ymin)/d.ystep)] += p->p;
     (*d.num_count)++;
 }
     
@@ -748,18 +748,18 @@ Disk* addDisk(double z0, double r0, double r1, Scene* s) {
 
 /*! \brief Function to compute time of first collision for a disk
 
-@param p Particle to consider
+@param p _class_particle to consider
 @param d Disk to consider
 @return Time until the propogation or -1 if particle will not hit disk
 */
-double getTimeOfFirstCollisionDisk(Particle p, Disk d) {
-    double tz = (d.z0-p._z)/p._vz;
+double getTimeOfFirstCollisionDisk(_class_particle p, Disk d) {
+    double tz = (d.z0-p.z)/p.vz;
     if (tz <= 0)
         return -1;
-    Particle p2 = copyMoveParticleT(tz, p);
-    double rp = sqrt(p2._x*p2._x+p2._y*p2._y);
-    if (rp > d.r0 && rp < d.r1 && fabs(p2._z-d.z0) < 1e-11)
-        return (d.z0-p._z)/p._vz; 
+    _class_particle p2 = copyMove_class_particleT(tz, p);
+    double rp = sqrt(p2.x*p2.x+p2.y*p2.y);
+    if (rp > d.r0 && rp < d.r1 && fabs(p2.z-d.z0) < 1e-11)
+        return (d.z0-p.z)/p.vz; 
     return -1;
 }
 
@@ -768,14 +768,14 @@ double getTimeOfFirstCollisionDisk(Particle p, Disk d) {
 @param p Pointer to particle to be traced
 @param d Disk to be traced
 */
-void traceNeutronDisk(Particle* p, Disk d) {
+void traceNeutronDisk(_class_particle* p, Disk d) {
     double t = getTimeOfFirstCollisionDisk(*p, d);
 
     if (t <= 0)
         return;
 
-    moveParticleT(t, p);
-    absorbParticle(p);
+    move_class_particleT(t, p);
+    absorb_class_particle(p);
 }
 
 /** @} */ //end of diskgroup
@@ -1006,10 +1006,10 @@ ConicSurf* addEllipsoid(double f1, double f2, Point p, double zstart,
 }         
 
 //!TODO
-double getGrazeAngleConic(Particle p, ConicSurf s) {
+double getGrazeAngleConic(_class_particle p, ConicSurf s) {
     /*
-    double v = sqrt(dotVec(getParticleVel(p),getParticleVel(p)));
-    double vn = dotVec(getParticleVel(p),n);
+    double v = sqrt(dotVec(get_class_particleVel(p),get_class_particleVel(p)));
+    double vn = dotVec(get_class_particleVel(p),n);
     return fabs(acos(vn/v)) - M_PI/2;
     */
 }
@@ -1034,27 +1034,27 @@ Vec getNormConic(Point p, ConicSurf s) {
 
 /*! \brief Function to compute time of first collision for a ConicSurf
 
-@param p Particle to consider
+@param p _class_particle to consider
 @param s ConicSurf to consider
 @return Time until the propogation or -1 if particle will not hit disk
 */ 
-double getTimeOfFirstCollisionConic(Particle p, ConicSurf s) {
-    double tz = (s.zs-p._z)/p._vz;
+double getTimeOfFirstCollisionConic(_class_particle p, ConicSurf s) {
+    double tz = (s.zs-p.z)/p.vz;
     if (tz < 0) {
        tz = 0;
-       if (p._z > s.ze)
+       if (p.z > s.ze)
             return -1;
     }
 
-    Particle p2 = copyMoveParticleT(tz,p);
+    _class_particle p2 = copyMove_class_particleT(tz,p);
 
-    double A = p2._vx*p2._vx+p2._vy*p2._vy-s.k3*p2._vz*p2._vz;
-    double B = 2*(p2._vx*p2._x+p2._vy*p2._y-s.k3*p2._vz*p2._z)-s.k2*p2._vz;
-    double C = p2._x*p2._x+p2._y*p2._y-s.k3*p2._z*p2._z-s.k2*p2._z-s.k1;
+    double A = p2.vx*p2.vx+p2.vy*p2.vy-s.k3*p2.vz*p2.vz;
+    double B = 2*(p2.vx*p2.x+p2.vy*p2.y-s.k3*p2.vz*p2.z)-s.k2*p2.vz;
+    double C = p2.x*p2.x+p2.y*p2.y-s.k3*p2.z*p2.z-s.k2*p2.z-s.k1;
     
     double t = solveQuad(A,B,C);
 
-    if (t <= 0 || p2._vz*t+p2._z > s.ze || p2._vz*t+p2._z < s.zs)  
+    if (t <= 0 || p2.vz*t+p2.z > s.ze || p2.vz*t+p2.z < s.zs)  
         return -1;
     return t+tz;
 }                                
@@ -1107,9 +1107,9 @@ before computing reflection
 
 @see traceNeutronConic()
 */
-double reflectNeutronConic(Particle* p, ConicSurf s) {
-    Vec n = getNormConic(getParticlePos(*p),s);
-    Vec pv = getParticleVel(*p);
+double reflectNeutronConic(_class_particle* _particle, ConicSurf s) {
+    Vec n = getNormConic(get_class_particlePos(*_particle),s);
+    Vec pv = get_class_particleVel(*_particle);
 	
 	int disp = 0;
 	if (disp>0) {
@@ -1130,8 +1130,8 @@ double reflectNeutronConic(Particle* p, ConicSurf s) {
 	double phi1, theta1, sigma1;
 	//sigma = 37.7e-6;
 	sigma1 = 1e-6; // sigma1 is half-sigma (unit in rad): sigma1=5e-6 means the FWHM is 23.6 urad
-	phi1 = randgaussian(0.0,sigma1);
-	theta1 = 250*randgaussian(0.0,sigma1);
+	phi1 = sigma1*randnorm();//randgaussian(0.0,sigma1);
+	theta1 = 250*sigma1*randnorm();//randgaussian(0.0,sigma1);
 	if (disp>0) {
 	printf("\n phi and theta %f, %f", phi1, theta1);
 	}
@@ -1154,7 +1154,7 @@ double reflectNeutronConic(Particle* p, ConicSurf s) {
     
     //Hitting shell from outside
     if (vn > 0) {
-        absorbParticle(p);
+        absorb_class_particle(_particle);
         return -1;
     }
 
@@ -1162,17 +1162,17 @@ double reflectNeutronConic(Particle* p, ConicSurf s) {
     double gc = 6.84459399932*s.m/v;
     double ref=1.0;
     if (ga > gc) {
-        absorbParticle(p);
+        absorb_class_particle(_particle);
         return -1;
     }
     else {
-        p->_vx = p->_vx-2*vn*n.x;
-        p->_vy = p->_vy-2*vn*n.y; 
-        p->_vz = p->_vz-2*vn*n.z; 
+        _particle->vx = _particle->vx-2*vn*n.x;
+        _particle->vy = _particle->vy-2*vn*n.y; 
+        _particle->vz = _particle->vz-2*vn*n.z; 
         double q = V2Q*(-2)*vn/sqrt(pv.x*pv.x + pv.y*pv.y + pv.z*pv.z);
         double par[5] = {s.R0, s.Qc, s.alpha, s.m, s.W};
         StdReflecFunc(q, par, &ref);
-	p->w = p->w * ref;
+	_particle->p = _particle->p * ref;
     if (disp>0) {
 		printf("\n pv final = %f, %f, %f",pv.x,pv.y,pv.z);
 	}
@@ -1186,17 +1186,17 @@ double reflectNeutronConic(Particle* p, ConicSurf s) {
 @param c ConicSurf to use
 
 */
-void traceNeutronConic(Particle* p, ConicSurf c) {
+void traceNeutronConic(_class_particle* p, ConicSurf c) {
     double t = getTimeOfFirstCollisionConic(*p, c);
     if (t < 0)
         return;
     else {
-        moveParticleT(t, p);
+        move_class_particleT(t, p);
         double ga = reflectNeutronConic(p, c);
 #if REC_MAX_GA
         if (ga > c.max_ga) {
             c.max_ga = ga;
-            c.max_ga_z0 = p->_z;
+            c.max_ga_z0 = p->z;
         }
 #endif
     }
@@ -1222,11 +1222,7 @@ Scene makeScene() {
     s.num_c = 0;
     s.num_di = 0;
     s.num_d = 0;
-   
-    s.traceNeutronConic = traceNeutronConic;
-    s.traceNeutronDisk = traceNeutronDisk;
-    s.traceNeutronDetector = traceNeutronDetector;
- 
+    
     return s;
 }
 
@@ -1246,7 +1242,7 @@ void initSimulation(Scene* s) {
 @param p Pointer of particle to trace
 @param s Scene to trace
 */
-void traceSingleNeutron(Particle* p, Scene s) {
+void traceSingleNeutron(_class_particle* p, Scene s) {
    
     int contact = 1;
     do {
@@ -1293,19 +1289,19 @@ void traceSingleNeutron(Particle* p, Scene s) {
 
         switch (type) {
             case DETECTOR:
-                s.traceNeutronDetector(p, s.d[index]);
+                traceNeutronDetector(p, s.d[index]);
                 break;
             case DISK:
-                s.traceNeutronDisk(p, s.di[index]);
+                traceNeutronDisk(p, s.di[index]);
                 break;
             case CONIC:
-                s.traceNeutronConic(p, s.c[index]);
+                traceNeutronConic(p, s.c[index]);
                 break;
             default:
                 contact = 0;
                 break;
         }
-    } while (contact && !p->absorb);
+    } while (contact && !p->_absorbed);
 
 }
 

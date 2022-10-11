@@ -67,12 +67,12 @@ COMPONENT psd_o0 = PSD_monitor(xwidth=0.12, yheight=0.12, restore_neutron=1,
 	filename="psd_o0")
 AT(0,0,fs) RELATIVE PREVIOUS
 
-CPU COMPONENT cEH = Conics_EH(R0=R0,alpha=alpha,W=W,m=m,
+COMPONENT cEH = Conics_EH(R0=R0,alpha=alpha,W=W,m=m,
     nshells=nshells, focal_length_u=10, focal_length_d=10, rmin=0.0031416, rmax=0.05236, le=0.25, lh=0.25, disk=1
 )
 WHEN(OPTIC==1) AT(0,0,fs) RELATIVE ss
 
-CPU COMPONENT cPH = Conics_PH(R0=R0,alpha=alpha,W=W,m=m,
+COMPONENT cPH = Conics_PH(R0=R0,alpha=alpha,W=W,m=m,
     nshells=nshells, focal_length=10, rmin=0.0031416, rmax=0.05236, lp=0.25, lh=0.25, disk=0
 )
 WHEN(OPTIC==2)AT(0,0,fs) RELATIVE ss
