@@ -1130,8 +1130,8 @@ double reflectNeutronConic(Particle* p, ConicSurf s) {
 	double phi1, theta1, sigma1;
 	//sigma = 37.7e-6;
 	sigma1 = 1e-6; // sigma1 is half-sigma (unit in rad): sigma1=5e-6 means the FWHM is 23.6 urad
-	phi1 = randgaussian(0.0,sigma1);
-	theta1 = 250*randgaussian(0.0,sigma1);
+	phi1 = sigma1*randnorm();
+	theta1 = 250*sigma1*randnorm();
 	if (disp>0) {
 	printf("\n phi and theta %f, %f", phi1, theta1);
 	}
