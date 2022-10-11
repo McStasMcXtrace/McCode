@@ -72,9 +72,8 @@ COMPONENT cEH = Conics_EH(R0=R0,alpha=alpha,W=W,m=m,
 )
 WHEN(OPTIC==1) AT(0,0,fs) RELATIVE ss
 
-CPU COMPONENT cPH = Conics_PH(R0=R0,alpha=alpha,W=W,m=m,
+COMPONENT cPH = Conics_PH(R0=R0,alpha=alpha,W=W,m=m,
     nshells=nshells, focal_length=10, rmin=0.0031416, rmax=0.05236, lp=0.25, lh=0.25, disk=0
->>>>>>> 9b0f21b35 (Enrich example instrument with reflectivity-handles, add wavelength monitors)
 )
 WHEN(OPTIC==2)AT(0,0,fs) RELATIVE ss
 
