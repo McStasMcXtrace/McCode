@@ -57,7 +57,7 @@ This framework can be used entirely by itself as the following example demonstra
 #include <stdio.h>
 
 #include "conic.h"
-#include "w1_conics.h"
+//#include "w1_conics.h"
 
 #define NUM_NEUTRON 1000000
  
@@ -504,7 +504,11 @@ typedef struct {
     double zs; //!< z-axis position of start of mirror
     double ze; //!< z-axis position of end of mirror
     double m;  //!< m value for mirror (1.0 for Nickel)
-
+    double Qc; //!< m value for mirror (0.0219 AA-1 for Nickel substrate)
+    double R0; //!< R0 reflectivity for mirror (0.99 for Nickel substrate)
+    double alpha; //!< alpha, slope of reflectivity (6.07 AA for m=2 mirror)
+    double W;     //!< Width of supermirror cut-off, 0.003 AA-1 for m=2 mirror
+  
     //Only for reference
     double f1; //!< z-axis position of first focus
     double f2; //!< z-axis position of second focus, for paraboloid this is unassigned
@@ -809,7 +813,7 @@ double rConic(double z, ConicSurf s) {
 @see ConicSurf
 */
 ConicSurf makeHyperboloid(double f1, double f2, Point p,
-   double zstart, double zend, double m) {
+			  double zstart, double zend, double m, double R0, double Qc, double alpha, double W) {
     ConicSurf s;
     s.zs = zstart;
     s.ze = zend;
@@ -825,6 +829,10 @@ ConicSurf makeHyperboloid(double f1, double f2, Point p,
     s.k1 = (s.k3)*(c-f1)*(c-f1)-c*c+a*a;
 
     s.m = m;
+    s.R0 = R0;
+    s.Qc = Qc;
+    s.alpha = alpha;
+    s.W = W;
     s.f1 = f1;
     s.f2 = f2;
     s.a = a;
@@ -852,7 +860,7 @@ ConicSurf makeHyperboloid(double f1, double f2, Point p,
 @see ConicSurf
 */     
 ConicSurf makeEllipsoid(double f1, double f2, Point p, 
-    double zstart, double zend, double m) {
+			double zstart, double zend, double m, double R0, double Qc, double alpha, double W) {
     ConicSurf s;
     s.zs = zstart;
     s.ze = zend;
@@ -868,6 +876,10 @@ ConicSurf makeEllipsoid(double f1, double f2, Point p,
     s.k1 = (s.k3)*(c-f1)*(c-f1)-c*c+a*a;
 
     s.m = m;
+    s.R0 = R0;
+    s.Qc = Qc;
+    s.alpha = alpha;
+    s.W = W;
     s.f1 = f1;
     s.f2 = f2;
     s.a = a;
@@ -894,7 +906,7 @@ ConicSurf makeEllipsoid(double f1, double f2, Point p,
 @see ConicSurf
 */       
 ConicSurf makeParaboloid(double f, Point p, double zstart,
-    double zend, double m) {
+			 double zend, double m, double R0, double Qc, double alpha, double W) {
 
     ConicSurf s;
     s.zs = zstart;
@@ -908,6 +920,10 @@ ConicSurf makeParaboloid(double f, Point p, double zstart,
     s.k1 = s.k2*(a-f);
     
     s.m = m;
+    s.R0 = R0;
+    s.Qc = Qc;
+    s.alpha = alpha;
+    s.W = W;
     s.f1 = f;
     s.a = a;
 
@@ -933,12 +949,12 @@ ConicSurf makeParaboloid(double f, Point p, double zstart,
 @see ConicSurf
 */     
 ConicSurf* addParaboloid(double f1, Point p, double zstart, double zend,
-    double m, Scene* s) {
+			 double m, double R0, double Qc, double alpha, double W, Scene* s) {
     if (s->num_c >= MAX_CONICSURF-1) {
         fprintf(stderr,"TOO MANY CONICSURF IN SCENE");
         exit(-1);
     }
-    s->c[s->num_c] = makeParaboloid(f1,p,zstart,zend,m);
+    s->c[s->num_c] = makeParaboloid(f1,p,zstart,zend,m,R0,Qc,alpha,W);
     s->num_c++; 
     return &s->c[s->num_c-1]; 
 }
@@ -956,12 +972,12 @@ ConicSurf* addParaboloid(double f1, Point p, double zstart, double zend,
 @see ConicSurf
 */ 
 ConicSurf* addHyperboloid(double f1, double f2, Point p, double zstart,
-    double zend, double m, Scene* s) {
+    double zend, double m, double R0, double Qc, double alpha, double W, Scene* s) {
     if (s->num_c >= MAX_CONICSURF-1) {
         fprintf(stderr,"TOO MANY CONICSURF IN SCENE");
         exit(-1);
     }  
-    s->c[s->num_c] = makeHyperboloid(f1,f2,p,zstart,zend,m);
+    s->c[s->num_c] = makeHyperboloid(f1,f2,p,zstart,zend,m,R0,Qc,alpha,W);
     s->num_c++; 
     return &s->c[s->num_c-1];     
 }
@@ -979,12 +995,12 @@ ConicSurf* addHyperboloid(double f1, double f2, Point p, double zstart,
 @see ConicSurf
 */  
 ConicSurf* addEllipsoid(double f1, double f2, Point p, double zstart,
-    double zend, double m, Scene* s) {
+    double zend, double m, double R0, double Qc, double alpha, double W, Scene* s) {
     if (s->num_c >= MAX_CONICSURF-1) {
         fprintf(stderr,"TOO MANY CONICSURF IN SCENE");
         exit(-1);
     }  
-    s->c[s->num_c] = makeEllipsoid(f1,f2,p,zstart,zend,m);
+    s->c[s->num_c] = makeEllipsoid(f1,f2,p,zstart,zend,m,R0,Qc,alpha,W);
     s->num_c++; 
     return &s->c[s->num_c-1];     
 }         
@@ -1144,7 +1160,7 @@ double reflectNeutronConic(Particle* p, ConicSurf s) {
 
     double ga = fabs(acos(vn/v)) - M_PI/2;
     double gc = 6.84459399932*s.m/v;
-
+    double ref=1.0;
     if (ga > gc) {
         absorbParticle(p);
         return -1;
@@ -1153,6 +1169,10 @@ double reflectNeutronConic(Particle* p, ConicSurf s) {
         p->_vx = p->_vx-2*vn*n.x;
         p->_vy = p->_vy-2*vn*n.y; 
         p->_vz = p->_vz-2*vn*n.z; 
+        double q = V2Q*(-2)*vn/sqrt(pv.x*pv.x + pv.y*pv.y + pv.z*pv.z);
+        double par[5] = {s.R0, s.Qc, s.alpha, s.m, s.W};
+        StdReflecFunc(q, par, &ref);
+	p->w = p->w * ref;
     if (disp>0) {
 		printf("\n pv final = %f, %f, %f",pv.x,pv.y,pv.z);
 	}
