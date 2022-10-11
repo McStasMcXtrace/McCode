@@ -27,11 +27,10 @@
 * le: [m]               Paraboloid mirror length.
 * lh: [m]               Hyperboloid mirror length.
 * disk: [ ]             Flag. If nonzero, insert a disk to block the central area within the innermost mirror.
-* Qc: [AA-1]            Critical scattering vector - NOT YET IMPLEMENTED
-* R0: [1]               Reflectivity at Low angles for reflectivity curve approximation - NOT YET IMPLEMENTED
-* alpha: [AA]           Slope of reflectivity for reflectivity curve approximation - NOT YET IMPLEMENTED
-* W: [AA-1]             Width of supermirror cut-off - NOT YET IMPLEMENTED
-* reflect: [str]        Reflectivity file name. Format [q(Angs-1) R(0-1)] - NOT YET IMPLEMENTED
+* Qc: [AA-1]            Critical scattering vector
+* R0: [1]               Reflectivity at Low angles for reflectivity curve approximation
+* alpha: [AA]           Slope of reflectivity for reflectivity curve approximation
+* W: [AA-1]             Width of supermirror cut-off
 * transmit: [1]         Fraction of statistics to assign to transmitted beam - NOT YET IMPLEMENTED
 * mirr_thick: [m]       Thickness of mirror shell surfaces - NOT YET IMPLEMENTED
 * %End
@@ -43,11 +42,12 @@ DEFINITION PARAMETERS()
 SETTING PARAMETERS (
     rmin=0.0031416, rmax=0.05236,focal_length_u=10, focal_length_d=10, le=0.25, lh=0.25,
     int nshells=4, m=1, mirr_thick=0, int disk=1,
-    string reflect="supermirror_m3.rfl", R0 = 0.99, Qc = 0.021, W = 0.003, alpha = 6.07, transmit = 0)
+    R0 = 0.99, Qc = 0.021, W = 0.003, alpha = 6.07, transmit = 0)
 OUTPUT PARAMETERS(pTable, transmit, s)
 
 SHARE
 %{
+    %include "ref-lib"
     %include "conic.h"
     %include "read_table-lib"
 %}
@@ -56,12 +56,6 @@ DECLARE
 %{
     //Scene where all geometry is added to
     Scene s;
-
-    //Variables for Reflectivity from McStas Tables
-    t_Table pTable;
-    
-    //Function to handle Conic-Neutron collisions with reflectivity from McStas Tables
-    void traceNeutronConicWithTables(Particle* p, ConicSurf c);
 %}
 
 INITIALIZE
@@ -69,22 +63,15 @@ INITIALIZE
     ConicSurf *pm;
     double th_c, alpha_p, alpha_h, fp2, dr,rr;
     int i;
-    
-    //Load Reflectivity Data File
-    if (reflect && strlen(reflect)) {
-        if (Table_Read(&pTable, reflect, 1) <= 0){
-          fprintf(stderr, "Can not read file: %s\n", reflect);
-          exit(-1);
-        }
-    }
+
     s=makeScene();
     dr=nshells>1?(rmax-rmin)/(nshells-1):0;
     for (i=0;i<nshells;i++){
       rr=rmax-dr*i;
 
       Point pi = makePoint(0,rr,0);//f-1);
-      pm=addEllipsoid(-focal_length_u,focal_length_d,pi,-le,0,m,&s);
-      addHyperboloid(focal_length_d,focal_length_d*2,pi,0,lh,m,&s);
+      pm=addEllipsoid(-focal_length_u,focal_length_d,pi,-le,0,m,R0,Qc,W,alpha,&s);
+      addHyperboloid(focal_length_d,focal_length_d*2,pi,0,lh,m,R0,Qc,W,alpha,&s);
     }
     if (disk) {
       addDisk(pm->zs,0.0,rConic(pm->ze,*pm),&s);
