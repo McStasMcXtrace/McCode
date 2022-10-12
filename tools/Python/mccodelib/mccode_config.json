@@ -17,7 +17,7 @@
     "CFLAGS": "-g -O2 -lm -std=c99",
     "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
     "MPIFLAGS": "-DUSE_MPI -lmpi",
-    "OACCFLAGS": "-ta:tesla,managed -DOPENACC",
+    "OACCFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=managed -DOPENACC",
     "CC": "gcc",
     "OACC": "nvc",
     "MPICC": "mpicc",
