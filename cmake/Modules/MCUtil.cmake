@@ -1,4 +1,4 @@
-cmake_policy(VERSION 3.18.0)
+cmake_policy(VERSION 3.16.0)
 
 # Install library files into lib/${FLAVOR}, while skipping unneeded files
 macro(installLib path)
