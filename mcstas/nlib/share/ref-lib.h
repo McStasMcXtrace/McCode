@@ -14,6 +14,11 @@
 * Release: McStas 1.10
 * Version: $Revision$
 *
+* Add StdDoubleReflecFunc, ExtendedReflecFunc
+* Date: October, 2022
+* Locale: ESS
+* Release: McStas 2.7x, 3.1x
+*
 * Commonly used reflection functions are declared in this file which
 * are used by some guide and mirror components.
 *
@@ -30,6 +35,8 @@
 
 void StdReflecFunc(double, double*, double*);
 void TableReflecFunc(double, t_Table*, double*);
+void StdDoubleReflecFunc(double, double*, double*);
+void ExtendedReflecFunc(double, double*, double*);
 
 #endif
 
