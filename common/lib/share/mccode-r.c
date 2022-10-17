@@ -258,22 +258,22 @@ static int mpi_node_root = 0;
 /*******************************************************************************
 * mc_MPI_Reduce: Gathers arrays from MPI nodes using Reduce function.
 *******************************************************************************/
-int mc_MPI_Sum(double *sbuf, long count)
+int mc_MPI_Sum(darrbase *sbuf, long count)
 {
   if (!sbuf || count <= 0) return(MPI_SUCCESS); /* nothing to reduce */
   else {
     /* we must cut the buffer into blocks not exceeding the MPI max buffer size of 32000 */
     long   offset=0;
-    double *rbuf=NULL;
+    darrbase *rbuf=NULL;
     int    length=MPI_REDUCE_BLOCKSIZE; /* defined in mccode-r.h */
     int    i=0;
-    rbuf = calloc(count, sizeof(double));
+    rbuf = calloc(count, sizeof(darrbase));
     if (!rbuf)
-      exit(-fprintf(stderr, "Error: Out of memory %li (mc_MPI_Sum)\n", count*sizeof(double)));
+      exit(-fprintf(stderr, "Error: Out of memory %li (mc_MPI_Sum)\n", count*sizeof(darrbase)));
     while (offset < count) {
       if (!length || offset+length > count-1) length=count-offset;
       else length=MPI_REDUCE_BLOCKSIZE;
-      if (MPI_Allreduce((double*)(sbuf+offset), (double*)(rbuf+offset),
+      if (MPI_Allreduce((darrbase*)(sbuf+offset), (darrbase*)(rbuf+offset),
               length, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD) != MPI_SUCCESS)
         return MPI_ERR_COUNT;
       offset += length;
