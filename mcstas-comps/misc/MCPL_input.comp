@@ -28,6 +28,7 @@
 *
 * filename: [str]       Name of neutron mcpl file to read.
 * verbose: [ ]          Print debugging information for first 10 particles read.
+* preload: [ ]          Load particles during INITIALIZE (always set on GPU)
 * polarisationuse: [ ]  If !=0 read polarisation vectors from file.
 * Emin: [meV]           Lower energy bound. Particles found in the MCPL-file below the limit are skipped.
 * Emax: [meV]           Upper energy bound. Particles found in the MCPL-file above the limit are skipped.
@@ -77,7 +78,6 @@ DArray1d P;
 
 INITIALIZE
 %{
-  printf("Initial ncount is %i\n",mcget_ncount());
     char line[256];
     long long ncount;
 
@@ -100,7 +100,6 @@ INITIALIZE
         printf("Message(%s): MCPL file (%s) contains %lu particles.\n",NAME_CURRENT_COMP,filename,(long unsigned)nparticles); 
     }
     mcset_ncount(nparticles);
-    printf("Second nitial ncount is %i\n",mcget_ncount());
 
     if(repeat_count==0) repeat_count=1;
     repeat_cnt = repeat_count;
@@ -207,20 +206,17 @@ INITIALIZE
       }
       printf("Done reading MCPL file, found %ld neutrons\n",(long unsigned)read_neutrons);
       mcpl_close_file(inputfile);
-      fprintf(stdout, "\n\n Warning: You are using MCPL_input with a repeat_count of %lu:\n - Minimum neutron count requested is %lu x %lu <= %lu",
+      fprintf(stdout, "\n\n Warning: You are using MCPL_input with a repeat_count of %lu:\n - Neutron count requested is %lu x %lu <= %lu",
 	      (long unsigned)repeat_count,(long unsigned)read_neutrons,
 	      (long unsigned)repeat_count,(long unsigned)repeat_cnt*read_neutrons);
       fprintf(stdout, " neutrons total\n\n");
     }
     repeat_tot=repeat_cnt*mpi_cnt;
-    printf("Total repeats is %i\n",repeat_tot);
     if (preload) {
       mcset_ncount(repeat_tot*used_neutrons);
     } else {
       mcset_ncount(repeat_tot*nparticles);
     }
-    ncount=mcget_ncount();
-    fprintf(stdout,"Initialize ncount is %lu (repeat_tot=%i x nparticles=%i or used_neutrons=%i)\n",(long unsigned)ncount,repeat_tot,nparticles,used_neutrons);
 %}
 
 TRACE
