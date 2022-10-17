@@ -178,9 +178,15 @@ void destroy_iarr3d(IArray3d a){
   free(a);
 }
 
+#ifdef USEFLOATS
+#define darrbase float
+#else
+#define darrbase double
+#endif
+
 DArray1d create_darr1d(int n){
   DArray1d arr2d;
-  arr2d = calloc(n, sizeof(double));
+  arr2d = calloc(n, sizeof(darrbase));
   return arr2d;
 }
 
@@ -190,10 +196,10 @@ void destroy_darr1d(DArray1d a){
 
 DArray2d create_darr2d(int nx, int ny){
   DArray2d arr2d;
-  arr2d = calloc(nx, sizeof(double *));
+  arr2d = calloc(nx, sizeof(darrbase *));
 
-  double *p1;
-  p1 = calloc(nx*ny, sizeof(double));
+  darrbase *p1;
+  p1 = calloc(nx*ny, sizeof(darrbase));
 
   int i;
   for (i=0; i<nx; i++){
@@ -213,19 +219,19 @@ DArray3d create_darr3d(int nx, int ny, int nz){
   int i, j;
 
   // 1d
-  arr3d = calloc(nx, sizeof(double **));
+  arr3d = calloc(nx, sizeof(darrbase **));
 
   // d2
-  double **p1;
-  p1 = calloc(nx*ny, sizeof(double *));
+  darrbase **p1;
+  p1 = calloc(nx*ny, sizeof(darrbase *));
 
   for (i=0; i<nx; i++){
     arr3d[i] = &(p1[i*ny]);
   }
 
   // 3d
-  double *p2;
-  p2 = calloc(nx*ny*nz, sizeof(double));
+  darrbase *p2;
+  p2 = calloc(nx*ny*nz, sizeof(darrbase));
   for (i=0; i<nx; i++){
     for (j=0; j<ny; j++){
       arr3d[i][j] = &(p2[(i*ny+j)*nz]);
@@ -707,14 +713,14 @@ MCDETECTOR mcdetector_statistics(
   int    i,j;
   char   hasnan=0, hasinf=0;
   char   israw = ((char*)strcasestr(detector.format,"raw") != NULL);
-  double *this_p1=NULL; /* new 1D McCode array [x I E N]. Freed after writing data */
+  darrbase *this_p1=NULL; /* new 1D McCode array [x I E N]. Freed after writing data */
 
   /* if McCode/PGPLOT and rank==1 we create a new m*4 data block=[x I E N] */
   if (detector.rank == 1 && strcasestr(detector.format,"McCode")) {
-    this_p1 = (double *)calloc(detector.m*detector.n*detector.p*4, sizeof(double));
+    this_p1 = (darrbase *)calloc(detector.m*detector.n*detector.p*4, sizeof(darrbase));
     if (!this_p1)
       exit(-fprintf(stderr, "Error: Out of memory creating %li 1D " MCCODE_STRING " data set for file '%s' (detector_import)\n",
-        detector.m*detector.n*detector.p*4*sizeof(double*), detector.filename));
+        detector.m*detector.n*detector.p*4*sizeof(darrbase*), detector.filename));
   }
 
   max_z = min_z = detector.p1[0];
@@ -847,7 +853,7 @@ MCDETECTOR detector_import(
   char *xvar, char *yvar, char *zvar,
   double x1, double x2, double y1, double y2, double z1, double z2,
   char *filename,
-  double *p0, double *p1, double *p2,
+  darrbase *p0, darrbase *p1, darrbase *p2,
   Coords position)
 {
   time_t t;       /* for detector.date */
@@ -1203,7 +1209,7 @@ mcdatainfo_out(char *pre, FILE *f, MCDETECTOR detector)
  *   p: array
  *   f: file handle (already opened)
  */
-static void mcdetector_out_array_ascii(long m, long n, double *p, FILE *f, char istransposed)
+static void mcdetector_out_array_ascii(long m, long n, darrbase *p, FILE *f, char istransposed)
 {
   if(f)
   {
@@ -1890,14 +1896,14 @@ MCDETECTOR mcdetector_out_list_slaves(MCDETECTOR detector)
 
   if (mpi_node_rank == mpi_node_root) {
     for(node_i=0; node_i<mpi_node_count; node_i++) {
-      double *this_p1=NULL;                               /* buffer to hold the list from slaves */
+      darrbase *this_p1=NULL;                               /* buffer to hold the list from slaves */
       int     mnp[3]={0,0,0};  /* size of this buffer */
       if (node_i != mpi_node_root) { /* get data from slaves */
 	if (mc_MPI_Recv(mnp, 3, MPI_INT, node_i) != MPI_SUCCESS)
 	  fprintf(stderr, "Warning: master from proc %i: "
 		  "MPI_Recv mnp list error (mcdetector_write_data)\n", node_i);
 	if (mnp[0]*mnp[1]*mnp[2]) {
-	  this_p1 = (double *)calloc(mnp[0]*mnp[1]*mnp[2], sizeof(double));
+	  this_p1 = (darrbase *)calloc(mnp[0]*mnp[1]*mnp[2], sizeof(darrbase));
 	  if (!this_p1 || mc_MPI_Recv(this_p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, node_i)!= MPI_SUCCESS)
 	    fprintf(stderr, "Warning: master from proc %i: "
 		    "MPI_Recv p1 list error: mnp=%i (mcdetector_write_data)\n", node_i, mnp[0]*mnp[1]*mnp[2]);
@@ -2079,7 +2085,7 @@ void siminfo_close()
 *   Output single detector/monitor data (p0, p1, p2).
 *   Title is t, component name is c.
 *******************************************************************************/
-MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
+MCDETECTOR mcdetector_out_0D(char *t, darrbase p0, darrbase p1, darrbase p2,
                          char *c, Coords posa)
 {
   /* import and perform basic detector analysis (and handle MPI reduce) */
@@ -2128,7 +2134,7 @@ MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
 MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
         char *xvar, double x1, double x2,
         long n,
-        double *p0, double *p1, double *p2, char *f,
+        darrbase *p0, darrbase *p1, darrbase *p2, char *f,
         char *c, Coords posa)
 {
   /* import and perform basic detector analysis (and handle MPI_Reduce) */
@@ -2176,7 +2182,7 @@ MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
 MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
                   double x1, double x2, double y1, double y2,
                   long m, long n,
-                  double *p0, double *p1, double *p2, char *f,
+                  darrbase *p0, darrbase *p1, darrbase *p2, char *f,
                   char *c, Coords posa)
 {
   char xvar[CHAR_BUF_LENGTH];
@@ -2234,7 +2240,7 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
 *******************************************************************************/
 MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
                   long m, long n,
-                  double *p1, char *f,
+                  darrbase *p1, char *f,
                   char *c, Coords posa)
 {
   char       format_new[CHAR_BUF_LENGTH];

@@ -1140,7 +1140,7 @@ int cogen_decls(struct instr_def *instr)
   coutf("  char   _name[256]; /* the name of this instrument e.g. '%s' */", instr->name);
   cout( "/* Counters per component instance */");
   coutf("  double counter_AbsorbProp[%i]; /* absorbed events in PROP routines */", list_len(instr->complist)+2);
-  coutf("  double counter_N[%i], counter_P[%i], counter_P2[%i]; /* event counters after each component instance */",
+  coutf("  darrbase counter_N[%i], counter_P[%i], counter_P2[%i]; /* event counters after each component instance */",
     list_len(instr->complist)+2, list_len(instr->complist)+2, list_len(instr->complist)+2);
   coutf("  _class_particle _trajectory[%i]; /* current trajectory for STORE/RESTORE */", list_len(instr->complist)+2);
   cout( "/* Components position table (absolute and relative coords) */");

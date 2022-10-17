@@ -230,15 +230,21 @@ typedef int*** IArray3d;
 IArray3d create_iarr3d(int nx, int ny, int nz);
 void destroy_iarr3d(IArray3d a);
 
-typedef double* DArray1d;
+#ifdef USEFLOATS
+#define darrbase float
+#else
+#define darrbase double
+#endif
+
+typedef darrbase* DArray1d;
 DArray1d create_darr1d(int n);
 void destroy_darr1d(DArray1d a);
 
-typedef double** DArray2d;
+typedef darrbase** DArray2d;
 DArray2d create_darr2d(int nx, int ny);
 void destroy_darr2d(DArray2d a);
 
-typedef double*** DArray3d;
+typedef darrbase*** DArray3d;
 DArray3d create_darr3d(int nx, int ny, int nz);
 void destroy_darr3d(DArray3d a);
 
@@ -780,7 +786,7 @@ struct mcdetector_struct {
   long   m,n,p;                       /* dimensions of data block and along axes */
   long   date_l;                      /* same as date, but in sec since 1970 */
 
-  double *p0, *p1, *p2;               /* pointers to saved data, NULL when freed */
+  darrbase *p0, *p1, *p2;               /* pointers to saved data, NULL when freed */
   char   format[CHAR_BUF_LENGTH];    /* format for file generation */
 };
 
@@ -806,17 +812,17 @@ mcstatic FILE *siminfo_file        = NULL;
 char *strcasestr(const char *haystack, const char *needle);
 
 /* output functions */
-MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c, Coords pos);
+MCDETECTOR mcdetector_out_0D(char *t, darrbase p0, darrbase p1, darrbase p2, char *c, Coords pos);
 MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
                   char *xvar, double x1, double x2, long n,
-                  double *p0, double *p1, double *p2, char *f, char *c, Coords pos);
+                  darrbase *p0, darrbase *p1, darrbase *p2, char *f, char *c, Coords pos);
 MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
                   double x1, double x2, double y1, double y2, long m,
-                  long n, double *p0, double *p1, double *p2, char *f,
+                  long n, darrbase *p0, darrbase *p1, darrbase *p2, char *f,
                   char *c, Coords pos);
 MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
                   long m, long n,
-                  double *p1, char *f,
+                  darrbase *p1, char *f,
                   char *c, Coords posa);
 
 /* wrappers to output functions, that automatically set NAME and POSITION */
