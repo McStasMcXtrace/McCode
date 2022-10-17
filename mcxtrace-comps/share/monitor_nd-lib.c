@@ -657,12 +657,12 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
      */
     if ((Vars->Flag_Auto_Limits || Vars->Flag_List) && Vars->Coord_Number)
     { /* Dim : (Vars->Coord_Number+1)*Vars->Buffer_Block matrix (for p, dp) */
-      Vars->Mon2D_Buffer = (double *)malloc((Vars->Coord_Number+1)*Vars->Buffer_Block*sizeof(double));
+      Vars->Mon2D_Buffer = (darrbase *)malloc((Vars->Coord_Number+1)*Vars->Buffer_Block*sizeof(darrbase));
       if (Vars->Mon2D_Buffer == NULL)
-      { printf("Monitor_nD: %s cannot allocate Vars->Mon2D_Buffer (%li). No list and auto limits.\n", Vars->compcurname, Vars->Buffer_Block*(Vars->Coord_Number+1)*sizeof(double)); Vars->Flag_List = 0; Vars->Flag_Auto_Limits = 0; }
+      { printf("Monitor_nD: %s cannot allocate Vars->Mon2D_Buffer (%li). No list and auto limits.\n", Vars->compcurname, Vars->Buffer_Block*(Vars->Coord_Number+1)*sizeof(darrbase)); Vars->Flag_List = 0; Vars->Flag_Auto_Limits = 0; }
       else
       {
-        for (i=0; i < (Vars->Coord_Number+1)*Vars->Buffer_Block; Vars->Mon2D_Buffer[i++] = (double)0);
+        for (i=0; i < (Vars->Coord_Number+1)*Vars->Buffer_Block; Vars->Mon2D_Buffer[i++] = (darrbase)0);
       }
       Vars->Buffer_Size = Vars->Buffer_Block;
     }
@@ -670,44 +670,44 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     /* 1D and n1D case : Vars->Flag_Multiple */
     if (Vars->Flag_Multiple && Vars->Coord_NumberNoPixel)
     { /* Dim : Vars->Coord_Number*Vars->Coord_Bin[i] vectors */
-      Vars->Mon2D_N  = (double **)malloc((Vars->Coord_Number)*sizeof(double *));
-      Vars->Mon2D_p  = (double **)malloc((Vars->Coord_Number)*sizeof(double *));
-      Vars->Mon2D_p2 = (double **)malloc((Vars->Coord_Number)*sizeof(double *));
+      Vars->Mon2D_N  = (darrbase **)malloc((Vars->Coord_Number)*sizeof(darrbase *));
+      Vars->Mon2D_p  = (darrbase **)malloc((Vars->Coord_Number)*sizeof(darrbase *));
+      Vars->Mon2D_p2 = (darrbase **)malloc((Vars->Coord_Number)*sizeof(darrbase *));
       if ((Vars->Mon2D_N == NULL) || (Vars->Mon2D_p == NULL) || (Vars->Mon2D_p2 == NULL))
-      { fprintf(stderr,"Monitor_nD: %s n1D cannot allocate Vars->Mon2D_N/p/p2 (%li). Fatal.\n", Vars->compcurname, (Vars->Coord_Number)*sizeof(double *)); exit(-1); }
+      { fprintf(stderr,"Monitor_nD: %s n1D cannot allocate Vars->Mon2D_N/p/p2 (%li). Fatal.\n", Vars->compcurname, (Vars->Coord_Number)*sizeof(darrbase *)); exit(-1); }
       for (i= 1; i <= Vars->Coord_Number; i++)
       {
-        Vars->Mon2D_N[i-1]  = (double *)malloc(Vars->Coord_Bin[i]*sizeof(double));
-        Vars->Mon2D_p[i-1]  = (double *)malloc(Vars->Coord_Bin[i]*sizeof(double));
-        Vars->Mon2D_p2[i-1] = (double *)malloc(Vars->Coord_Bin[i]*sizeof(double));
+        Vars->Mon2D_N[i-1]  = (darrbase *)malloc(Vars->Coord_Bin[i]*sizeof(darrbase));
+        Vars->Mon2D_p[i-1]  = (darrbase *)malloc(Vars->Coord_Bin[i]*sizeof(darrbase));
+        Vars->Mon2D_p2[i-1] = (darrbase *)malloc(Vars->Coord_Bin[i]*sizeof(darrbase));
         if ((Vars->Mon2D_N == NULL) || (Vars->Mon2D_p == NULL) || (Vars->Mon2D_p2 == NULL))
-        { fprintf(stderr,"Monitor_nD: %s n1D cannot allocate %s Vars->Mon2D_N/p/p2[%li] (%li). Fatal.\n", Vars->compcurname, Vars->Coord_Var[i], i, (Vars->Coord_Bin[i])*sizeof(double *)); exit(-1); }
+        { fprintf(stderr,"Monitor_nD: %s n1D cannot allocate %s Vars->Mon2D_N/p/p2[%li] (%li). Fatal.\n", Vars->compcurname, Vars->Coord_Var[i], i, (Vars->Coord_Bin[i])*sizeof(darrbase *)); exit(-1); }
         else
         {
           for (j=0; j < Vars->Coord_Bin[i]; j++ )
-          { Vars->Mon2D_N[i-1][j] = (double)0; Vars->Mon2D_p[i-1][j] = (double)0; Vars->Mon2D_p2[i-1][j] = (double)0; }
+          { Vars->Mon2D_N[i-1][j] = (darrbase)0; Vars->Mon2D_p[i-1][j] = (darrbase)0; Vars->Mon2D_p2[i-1][j] = (darrbase)0; }
         }
       }
     }
     else /* 2D case : Vars->Coord_Number==2 and !Vars->Flag_Multiple and !Vars->Flag_List */
     if ((Vars->Coord_NumberNoPixel == 2) && !Vars->Flag_Multiple)
     { /* Dim : Vars->Coord_Bin[1]*Vars->Coord_Bin[2] matrix */
-      Vars->Mon2D_N  = (double **)malloc((Vars->Coord_Bin[1])*sizeof(double *));
-      Vars->Mon2D_p  = (double **)malloc((Vars->Coord_Bin[1])*sizeof(double *));
-      Vars->Mon2D_p2 = (double **)malloc((Vars->Coord_Bin[1])*sizeof(double *));
+      Vars->Mon2D_N  = (darrbase **)malloc((Vars->Coord_Bin[1])*sizeof(darrbase *));
+      Vars->Mon2D_p  = (darrbase **)malloc((Vars->Coord_Bin[1])*sizeof(darrbase *));
+      Vars->Mon2D_p2 = (darrbase **)malloc((Vars->Coord_Bin[1])*sizeof(darrbase *));
       if ((Vars->Mon2D_N == NULL) || (Vars->Mon2D_p == NULL) || (Vars->Mon2D_p2 == NULL))
-      { fprintf(stderr,"Monitor_nD: %s 2D cannot allocate %s Vars->Mon2D_N/p/p2 (%li). Fatal.\n", Vars->compcurname, Vars->Coord_Var[1], (Vars->Coord_Bin[1])*sizeof(double *)); exit(-1); }
+      { fprintf(stderr,"Monitor_nD: %s 2D cannot allocate %s Vars->Mon2D_N/p/p2 (%li). Fatal.\n", Vars->compcurname, Vars->Coord_Var[1], (Vars->Coord_Bin[1])*sizeof(darrbase *)); exit(-1); }
       for (i= 0; i < Vars->Coord_Bin[1]; i++)
       {
-        Vars->Mon2D_N[i]  = (double *)malloc(Vars->Coord_Bin[2]*sizeof(double));
-        Vars->Mon2D_p[i]  = (double *)malloc(Vars->Coord_Bin[2]*sizeof(double));
-        Vars->Mon2D_p2[i] = (double *)malloc(Vars->Coord_Bin[2]*sizeof(double));
+        Vars->Mon2D_N[i]  = (darrbase *)malloc(Vars->Coord_Bin[2]*sizeof(darrbase));
+        Vars->Mon2D_p[i]  = (darrbase *)malloc(Vars->Coord_Bin[2]*sizeof(darrbase));
+        Vars->Mon2D_p2[i] = (darrbase *)malloc(Vars->Coord_Bin[2]*sizeof(darrbase));
         if ((Vars->Mon2D_N == NULL) || (Vars->Mon2D_p == NULL) || (Vars->Mon2D_p2 == NULL))
-        { fprintf(stderr,"Monitor_nD: %s 2D cannot allocate %s Vars->Mon2D_N/p/p2[%li] (%li). Fatal.\n", Vars->compcurname, Vars->Coord_Var[1], i, (Vars->Coord_Bin[2])*sizeof(double *)); exit(-1); }
+        { fprintf(stderr,"Monitor_nD: %s 2D cannot allocate %s Vars->Mon2D_N/p/p2[%li] (%li). Fatal.\n", Vars->compcurname, Vars->Coord_Var[1], i, (Vars->Coord_Bin[2])*sizeof(darrbase *)); exit(-1); }
         else
         {
           for (j=0; j < Vars->Coord_Bin[2]; j++ )
-          { Vars->Mon2D_N[i][j] = (double)0; Vars->Mon2D_p[i][j] = (double)0; Vars->Mon2D_p2[i][j] = (double)0; }
+          { Vars->Mon2D_N[i][j] = (darrbase)0; Vars->Mon2D_p[i][j] = (darrbase)0; Vars->Mon2D_p2[i][j] = (darrbase)0; }
         }
       }
     }
@@ -809,10 +809,10 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
     }
     else
     {
-      Vars->Mon2D_Buffer  = (double *)realloc(Vars->Mon2D_Buffer, (Vars->Coord_Number+1)*(Vars->Photon_Counter+Vars->Buffer_Block)*sizeof(double));
+      Vars->Mon2D_Buffer  = (darrbase *)realloc(Vars->Mon2D_Buffer, (Vars->Coord_Number+1)*(Vars->Neutron_Counter+Vars->Buffer_Block)*sizeof(darrbase));
       if (Vars->Mon2D_Buffer == NULL)
-            { printf("Monitor_nD: %s cannot reallocate Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", Vars->compcurname, i, (Vars->Photon_Counter+Vars->Buffer_Block)*sizeof(double)); Vars->Flag_List = 1; }
-      else { Vars->Buffer_Counter = 0; Vars->Buffer_Size = Vars->Photon_Counter+Vars->Buffer_Block; }
+            { printf("Monitor_nD: %s cannot reallocate Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", Vars->compcurname, i, (Vars->Neutron_Counter+Vars->Buffer_Block)*sizeof(darrbase)); Vars->Flag_List = 1; }
+      else { Vars->Buffer_Counter = 0; Vars->Buffer_Size = Vars->Neutron_Counter+Vars->Buffer_Block; }
     }
   } /* end if Buffer realloc */
 #endif
@@ -1149,9 +1149,9 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
   {
     char   *fname;
     long    i,j;
-    double *p0m = NULL;
-    double *p1m = NULL;
-    double *p2m = NULL;
+    darrbase *p0m = NULL;
+    darrbase *p1m = NULL;
+    darrbase *p2m = NULL;
     char    Coord_X_Label[CHAR_BUF_LENGTH];
     double  min1d, max1d;
     double  min2d, max2d;
@@ -1363,8 +1363,8 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
             min1d = Vars->Coord_Min[i+1];
             max1d = Vars->Coord_Max[i+1];
             if (min1d == max1d) max1d = min1d+1e-6;
-            p1m = (double *)malloc(Vars->Coord_Bin[i+1]*sizeof(double));
-            p2m = (double *)malloc(Vars->Coord_Bin[i+1]*sizeof(double));
+            p1m = (darrbase *)malloc(Vars->Coord_Bin[i+1]*sizeof(darrbase));
+            p2m = (darrbase *)malloc(Vars->Coord_Bin[i+1]*sizeof(darrbase));
             if (p2m == NULL) /* use Raw Buffer line output */
             {
               if (Vars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for output. Using raw data.\n", Vars->compcurname);
@@ -1440,12 +1440,12 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
       {
         strcpy(fname,Vars->Mon_File);
 
-        p0m = (double *)malloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*sizeof(double));
-        p1m = (double *)malloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*sizeof(double));
-        p2m = (double *)malloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*sizeof(double));
+        p0m = (darrbase *)malloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*sizeof(darrbase));
+        p1m = (darrbase *)malloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*sizeof(darrbase));
+        p2m = (darrbase *)malloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*sizeof(darrbase));
         if (p2m == NULL)
         {
-          if (Vars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for 2D array (%li). Skipping.\n", Vars->compcurname, 3*Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*sizeof(double));
+          if (Vars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for 2D array (%li). Skipping.\n", Vars->compcurname, 3*Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*sizeof(darrbase));
           /* comment out 'free memory' lines to avoid loosing arrays if
                'detector' structure is used by other instrument parts
           if (p0m != NULL) free(p0m);

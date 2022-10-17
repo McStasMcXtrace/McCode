@@ -152,10 +152,10 @@
 
     long long int Nsum;
     double psum, p2sum;
-    double **Mon2D_N;
-    double **Mon2D_p;
-    double **Mon2D_p2;
-    double *Mon2D_Buffer;
+    darrbase **Mon2D_N;
+    darrbase **Mon2D_p;
+    darrbase **Mon2D_p2;
+    darrbase *Mon2D_Buffer;
     unsigned long PixelID;
 
     double mxmin,mxmax,mymin,mymax,mzmin,mzmax;
