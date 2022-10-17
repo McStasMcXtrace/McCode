@@ -169,7 +169,7 @@ INITIALIZE
 		     particle->polarisation[0], particle->polarisation[1], particle->polarisation[2]);
 	    }
 	    /* check energy range*/
-	    if ( particle->ekin>Emin*1e-9 || particle->ekin<Emax*1e-9 ) {
+	    if ( particle->ekin>Emin*1e-9 && particle->ekin<Emax*1e-9 ) {
 	      /* Particle energy in range */
 	      /*positions are in cm*/
 	      X[used_neutrons]=particle->position[0];
