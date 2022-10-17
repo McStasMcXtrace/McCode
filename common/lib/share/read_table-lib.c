@@ -26,6 +26,11 @@
 #include "read_table-lib.h"
 #endif
 
+#ifdef USEFLOATS
+#define darrbase float
+#else
+#define darrbase double
+#endif
 
 /*******************************************************************************
  * void *Table_File_List_Handler(action, item, item_modifier)
@@ -354,7 +359,7 @@ void *Table_File_List_store(t_Table *tab){
     FILE   *hfile;
     char    path[1024];
     struct stat stfile;
-    double *data;
+    darrbase *data;
     long    i;
     long    begin;
 
@@ -386,7 +391,7 @@ void *Table_File_List_store(t_Table *tab){
       nelements = columns*rows;
     else nelements = (long)(filesize/sizeofelement);
     if (!nelements || filesize <= *offset) return(0);
-    data    = (double*)malloc(nelements*sizeofelement);
+    data    = (darrbase*)malloc(nelements*sizeofelement);
     if (!data) {
       if(!(Table->quiet>1))
         fprintf(stderr,"Error: allocating %ld elements for %s file '%s'. Too big (Table_Read_Offset_Binary).\n", nelements, type, File);
@@ -404,14 +409,14 @@ void *Table_File_List_store(t_Table *tab){
     Table->end     = ftell(hfile);
     if (offset) *offset=Table->end;
     fclose(hfile);
-    data = (double*)realloc(data, (double)nelements*sizeofelement);
+    data = (darrbase*)realloc(data, (darrbase)nelements*sizeofelement);
     /* copy file data into Table */
     if (type && !strcmp(type,"double")) Table->data = data;
     else {
       float  *s;
-      double *dataf;
+      darrbase *dataf;
       s     = (float*)data;
-      dataf = (double*)malloc(sizeof(double)*nelements);
+      dataf = (darrbase*)malloc(sizeof(darrbase)*nelements);
       for (i=0; i<nelements; i++)
         dataf[i]=s[i];
       free(data);
@@ -448,7 +453,7 @@ void *Table_File_List_store(t_Table *tab){
   long Table_Read_Handle(t_Table *Table, FILE *hfile,
                          long block_number, long max_rows, char *name)
   { /* reads all/a data block from 'file' handle and returns a Table structure  */
-    double *Data;
+    darrbase *Data;
     char *Header              = NULL;
     long  malloc_size         = CHAR_BUF_LENGTH;
     long  malloc_size_h       = 4096;
@@ -467,7 +472,7 @@ void *Table_File_List_store(t_Table *tab){
        return (-1);
     }
     Header = (char*)  calloc(malloc_size_h, sizeof(char));
-    Data   = (double*)calloc(malloc_size,   sizeof(double));
+    Data   = (darrbase*)calloc(malloc_size,   sizeof(darrbase));
     if ((Header == NULL) || (Data == NULL)) {
        fprintf(stderr, "Error: Could not allocate Table and Header (Table_Read_Handle).\n");
        return (-1);
@@ -552,10 +557,10 @@ void *Table_File_List_store(t_Table *tab){
                   if (count_in_array >= malloc_size) {
                     /* realloc data buffer if necessary */
                     malloc_size = count_in_array*1.5;
-                    Data = (double*) realloc(Data, malloc_size*sizeof(double));
+                    Data = (darrbase*) realloc(Data, malloc_size*sizeof(darrbase));
                     if (Data == NULL) {
                       fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Handle).\n",
-                              malloc_size*sizeof(double));
+                              malloc_size*sizeof(darrbase));
                       return (-1);
                     }
                   }
@@ -616,7 +621,7 @@ void *Table_File_List_store(t_Table *tab){
         count_in_array, Rows, Columns);
       Columns = count_in_array; Rows = 1;
     }
-    Data     = (double*)realloc(Data, count_in_array*sizeof(double));
+    Data     = (darrbase*)realloc(Data, count_in_array*sizeof(darrbase));
     Table->data         = Data;
     Table->rows         = Rows;
     Table->columns      = Columns;
@@ -649,7 +654,7 @@ void *Table_File_List_store(t_Table *tab){
     if (!(Table->constantstep)) /* not already evenly spaced */
     {
       long Length_Table;
-      double *New_Table;
+      darrbase *New_Table;
 
       Length_Table = ceil(fabs(Table->max_x - Table->min_x)/new_step)+1;
       /*return early if the rebinned table will become too large*/
@@ -657,7 +662,7 @@ void *Table_File_List_store(t_Table *tab){
         fprintf(stderr,"WARNING: (Table_Rebin): Rebinning table from %s would exceed 1M rows. Skipping.\n", Table->filename); 
         return(Table->rows*Table->columns);
       }
-      New_Table    = (double*)malloc(Length_Table*Table->columns*sizeof(double));
+      New_Table    = (darrbase*)malloc(Length_Table*Table->columns*sizeof(darrbase));
 
       for (i=0; i < Length_Table; i++)
       {
@@ -967,7 +972,7 @@ double Table_Value2d(t_Table Table, double X, double Y)
 ******************************************************************************/
 long Table_Init(t_Table *Table, long rows, long columns)
 {
-  double *data=NULL;
+  darrbase *data=NULL;
   long   i;
 
   if (!Table) return(0);
@@ -987,7 +992,7 @@ long Table_Init(t_Table *Table, long rows, long columns)
   strcpy(Table->method,"linear");
 
   if (rows*columns >= 1) {
-    data    = (double*)malloc(rows*columns*sizeof(double));
+    data    = (darrbase*)malloc(rows*columns*sizeof(darrbase));
     if (data) for (i=0; i < rows*columns; data[i++]=0);
     else {
       if(Table->quiet<2)

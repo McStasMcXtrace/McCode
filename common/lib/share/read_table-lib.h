@@ -61,12 +61,18 @@
 #include <stdlib.h>
 #include <strings.h>
 
+#ifdef USEFLOATS
+#define darrbase float
+#else
+#define darrbase double
+#endif
+
   typedef struct struct_table
   {
     char    filename[1024];
     long    filesize;
     char   *header;  /* text header, e.g. comments */
-    double *data;    /* vector { x[0], y[0], ... x[n-1], y[n-1]... } */
+    darrbase *data;    /* vector { x[0], y[0], ... x[n-1], y[n-1]... } */
     double  min_x;   /* min value of first column */
     double  max_x;   /* max value of first column */
     double  step_x;  /* minimal step value of first column */
