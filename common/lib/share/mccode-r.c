@@ -180,8 +180,10 @@ void destroy_iarr3d(IArray3d a){
 
 #ifdef USEFLOATS
 #define darrbase float
+#define MPINUM MPI_FLOAT
 #else
 #define darrbase double
+#define MPINUM MPI_DOUBLE
 #endif
 
 DArray1d create_darr1d(int n){
@@ -274,7 +276,7 @@ int mc_MPI_Sum(darrbase *sbuf, long count)
       if (!length || offset+length > count-1) length=count-offset;
       else length=MPI_REDUCE_BLOCKSIZE;
       if (MPI_Allreduce((darrbase*)(sbuf+offset), (darrbase*)(rbuf+offset),
-              length, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD) != MPI_SUCCESS)
+              length, MPINUM, MPI_SUM, MPI_COMM_WORLD) != MPI_SUCCESS)
         return MPI_ERR_COUNT;
       offset += length;
     }
@@ -1886,7 +1888,7 @@ MCDETECTOR mcdetector_out_list_slaves(MCDETECTOR detector)
     if (mc_MPI_Send(mnp, 3, MPI_INT, mpi_node_root)!= MPI_SUCCESS)
       fprintf(stderr, "Warning: proc %i to master: MPI_Send mnp list error (mcdetector_out_list_slaves)\n", mpi_node_rank);
     if (!detector.p1
-     || mc_MPI_Send(detector.p1, mnp[0]*mnp[1]*mnp[2], MPI_DOUBLE, mpi_node_root) != MPI_SUCCESS)
+     || mc_MPI_Send(detector.p1, mnp[0]*mnp[1]*mnp[2], MPINUM, mpi_node_root) != MPI_SUCCESS)
       fprintf(stderr, "Warning: proc %i to master: MPI_Send p1 list error: mnp=%i (mcdetector_out_list_slaves)\n", mpi_node_rank, abs(mnp[0]*mnp[1]*mnp[2]));
     /* slaves are done: sent mnp and p1 */
     return (detector);
@@ -1904,7 +1906,7 @@ MCDETECTOR mcdetector_out_list_slaves(MCDETECTOR detector)
 		  "MPI_Recv mnp list error (mcdetector_write_data)\n", node_i);
 	if (mnp[0]*mnp[1]*mnp[2]) {
 	  this_p1 = (darrbase *)calloc(mnp[0]*mnp[1]*mnp[2], sizeof(darrbase));
-	  if (!this_p1 || mc_MPI_Recv(this_p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, node_i)!= MPI_SUCCESS)
+	  if (!this_p1 || mc_MPI_Recv(this_p1, abs(mnp[0]*mnp[1]*mnp[2]), MPINUM, node_i)!= MPI_SUCCESS)
 	    fprintf(stderr, "Warning: master from proc %i: "
 		    "MPI_Recv p1 list error: mnp=%i (mcdetector_write_data)\n", node_i, mnp[0]*mnp[1]*mnp[2]);
 	  else {

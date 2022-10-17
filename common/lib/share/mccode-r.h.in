@@ -232,8 +232,10 @@ void destroy_iarr3d(IArray3d a);
 
 #ifdef USEFLOATS
 #define darrbase float
+#define MPINUM MPI_FLOAT
 #else
 #define darrbase double
+#define MPINUM MPI_DOUBLE
 #endif
 
 typedef darrbase* DArray1d;
