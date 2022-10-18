@@ -18,7 +18,7 @@
 * Based on a Laue tutorial written by K. Nielsen, Feb 7, 2000.
 *
 * %Example: templateNMX reflections=Rubredoxin.lau Detector: det_I=5.6e3
-* %Example: templateNMX reflections=PPase_D_P1.lau Detector: det_I=29.6512
+* Example: templateNMX reflections=PPase_D_P1.lau Detector: det_I=29.6512
 *
 * %Parameters
 * REPS: []        
