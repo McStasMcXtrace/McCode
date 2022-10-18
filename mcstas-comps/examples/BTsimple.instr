@@ -36,9 +36,9 @@ DEFINE INSTRUMENT BTsimple(lambda=10,dlambda=9.9, maxhd=3, maxvd=3, gw=0.1, gh=0
 DECLARE
 %{	
 	/* Arrays for storing the calculated brilliance transfer */
-	double BT_N[101];
-	double BT_p[101];
-	double BT_p2[101];
+	darrbase BT_N[101];
+	darrbase BT_p[101];
+	darrbase BT_p2[101];
 %}
 
 USERVARS
@@ -139,11 +139,11 @@ FINALLY
 /* This adds another "monitor" that measures BT_out / BT_in */
 /* In MPI-mode renormalisation by mpi_node_count needs doing */
   int j;
-  double* tmpN;
-  double* tmpp1;
-  double* tmpp2;
-  double* tmpd1;
-  double* tmpd2;
+  darrbase* tmpN;
+  darrbase* tmpp1;
+  darrbase* tmpp2;
+  darrbase* tmpd1;
+  darrbase* tmpd2;
   tmpN =COMP_GETPAR(BT_out,L_N);
   tmpp1=COMP_GETPAR(BT_in, L_p);
   tmpp2=COMP_GETPAR(BT_out,L_p);
