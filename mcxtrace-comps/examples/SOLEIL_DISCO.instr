@@ -11,16 +11,24 @@
 * DISCO beam-line at SOLEIL, imaging branch
 *
 * %D
+* DISCO beamline description here: https://hal.archives-ouvertes.fr/hal-01479318/document
+*
+* Example: mxrun SOLEIL_DISCO.instr -N84 x_screw=20,103 scan=1
 *
 * %P
 * grazing_angle_one: [deg]
-* 
+* HFP_shift: [m] z translation from the HFP position (horizontal focal point detector)
+* VFP_shift: [m] z translation from the VFP position (vertical focal point detector)
+* second_HFP_shift: [m] z translation second HFP position
+* x_screw: [mm] length of the screw
+* scan: if there is an x_screw scan [1], calculate the Wavelength(Angstroms) as a function of x_screw(mm)
+*
 * %L
 * https://www.synchrotron-soleil.fr/en/beamlines/disco
 *
 * %E
 *******************************************************************************/
-//DISCO beamline description here: https://hal.archives-ouvertes.fr/hal-01479318/document
+
 //Work in progress.
 //M3 should probably deviate the rays in the other direction, not very important (qualitatively), but something to change later on if so.
 //Check that M53 and M54 should face each other in that fashion. Not sure.
@@ -81,15 +89,14 @@ AT (0, 0, 0) RELATIVE Origin
 //At 4.13 ma trapezoidal diaphragm reshapes thebeam and represents the optical aper-ture with maximum tolerances accom-modating beam position shifts while maintaining a constantbeam shape (dimensions: length 165.8 mm; inner and outerheight of the trapeze shape with respect to the storage ring:45.1 and 38.2 mm, respectively)
 
 //____________________________________________________________  4.975 m : Cold finger  ==> cylindrical sample along x
-//glidcop material, 25 degree angle,
-//to set the tooth-like cold fingerfront-edge facing the beam at a 25deg angle.
+//glidcop material,
+//to set the tooth-like cold fingerfront-edge facing the beam.
 
 /*COMPONENT placeholder_ColdFinger = Arm()
 AT (0,0,4.975) RELATIVE Source*/
 
 COMPONENT ColdFinger = Mask(xwidth=0.3, yheight=7.5e-3,mask="coldfinger.mask") //need to input the proper shape in the mask file
 AT (0,0,4.975) RELATIVE Source
-ROTATED (-25,0,0) RELATIVE PREVIOUS
 /*EXTEND
 %{ 
 	if (SCATTERED) ABSORB;
@@ -536,3 +543,4 @@ FINALLY
 
 
 END
+                  
