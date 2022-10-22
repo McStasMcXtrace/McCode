@@ -1474,9 +1474,17 @@ void def_trace_section(struct instr_def *instr)
   for(i=0; i<NUM_STATE_PARS; i++)
     coutf("#define %s (_particle->%s)", statepars_all[i], statepars_all[i]);
 
+  cout("/* if on GPU, globally nullify sprintf,fprintf,printfs   */");
+  cout("/* (Similar defines are available in each comp trace but */");
+  cout("/*  those are not enough to handle external libs etc. )  */");
   cout("#ifdef OPENACC");
+  cout("#ifndef MULTICORE");
+  cout("#define fprintf(stderr,...) printf(__VA_ARGS__)");
+  cout("#define sprintf(string,...) printf(__VA_ARGS__)");
+  cout("#define exit(...) noprintf()");
   cout("#define strcmp(a,b) str_comp(a,b)");
   cout("#define strlen(a) str_len(a)");
+  cout("#endif");
   cout("#endif");
 
   /* define SCATTERED, ABSORB and RESTORE macros for all TRACE */
