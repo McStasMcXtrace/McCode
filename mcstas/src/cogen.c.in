@@ -1474,6 +1474,11 @@ void def_trace_section(struct instr_def *instr)
   for(i=0; i<NUM_STATE_PARS; i++)
     coutf("#define %s (_particle->%s)", statepars_all[i], statepars_all[i]);
 
+  cout("#ifdef OPENACC");
+  cout("#define strcmp(a,b) str_comp(a,b)");
+  cout("#define strlen(a) str_len(a)");
+  cout("#endif");
+
   /* define SCATTERED, ABSORB and RESTORE macros for all TRACE */
   coutf("#define %s (_particle->%s)", "SCATTERED", "_scattered");
   coutf("#define %s (_particle->%s)", "RESTORE"  , "_restore");
