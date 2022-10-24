@@ -28,7 +28,7 @@
 *
 * filename: [str]       Name of neutron mcpl file to read.
 * verbose: [ ]          Print debugging information for first 10 particles read.
-* preload: [ ]          Load particles during INITIALIZE (always set on GPU)
+* preload: [ ]          Load particles during INITIALIZE. On GPU preload is forced.
 * polarisationuse: [ ]  If !=0 read polarisation vectors from file.
 * Emin: [meV]           Lower energy bound. Particles found in the MCPL-file below the limit are skipped.
 * Emax: [meV]           Upper energy bound. Particles found in the MCPL-file above the limit are skipped.
