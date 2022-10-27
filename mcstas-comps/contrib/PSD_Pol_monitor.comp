@@ -59,7 +59,6 @@ OUTPUT PARAMETERS (PSDpol_N, PSDpol_p, PSDpol_p2, PSDpsum, titlestring)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE %{
-%include "array-lib"
 %}
 
 DECLARE
