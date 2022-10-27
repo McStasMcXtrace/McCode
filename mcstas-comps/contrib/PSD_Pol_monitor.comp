@@ -1,0 +1,182 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: PSD_monitor
+*
+* %I
+* Written by: Alexander Backs, based on PSD_monitor by K. Lefmann
+* Date: 2022
+* Origin: ESS
+*
+* Position-sensitive monitor.
+*
+* %D
+* An (n times m) pixel PSD monitor. This component may also be used as a beam
+* detector.
+*
+* Example: PSD_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, nx=90, ny=90, filename="Output.psd")
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin: [m]             Lower x bound of detector opening
+* xmax: [m]             Upper x bound of detector opening
+* ymin: [m]             Lower y bound of detector opening
+* ymax: [m]             Upper y bound of detector opening
+* xwidth: [m]           Width of detector. Overrides xmin, xmax
+* yheight: [m]          Height of detector. Overrides ymin, ymax
+* nx: [1]               Number of pixel columns
+* ny: [1]               Number of pixel rows
+* filename: [string]    Name of file in which to store the detector image
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* nowritefile: [1]      If set, monitor will skip writing to disk
+* mx: [1]		Define the projection axis along which the polarizatoin is evaluated, x-component
+* my: [1]		Define the projection axis along which the polarizatoin is evaluated, y-component
+* mz: [1]		Define the projection axis along which the polarizatoin is evaluated, z-component
+*
+* OUTPUT PARAMETERS:
+*
+* PSDpol_N: []             Array of neutron counts
+* PSDpol_p: []             Array of neutron weighted polarization
+* PSDpol_p2: []            Array of standard deviation of weighted polarization
+*
+* %E
+*******************************************************************************/
+DEFINE COMPONENT PSD_Pol_monitor
+
+DEFINITION PARAMETERS ()
+
+SETTING PARAMETERS (int nx=90, int ny=90, string filename=0,
+  xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0,
+  restore_neutron=0, int nowritefile=0,
+  mx=0, my=0, mz=0)
+
+OUTPUT PARAMETERS (PSDpol_N, PSDpol_p, PSDpol_p2, PSDpsum, titlestring)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+SHARE %{
+%include "array-lib"
+%}
+
+DECLARE
+%{
+  DArray2d PSDpol_N;
+  DArray2d PSDpol_p;
+  DArray2d PSDpol_p2;
+  DArray2d PSDpsum;
+  char titlestring[128];
+%}
+
+INITIALIZE
+%{
+  // Check that input parameteters makes sense
+  if (mx==0 && my==0 && mz==0) {
+    fprintf(stderr, "Pol_monitor: %s: NULL vector defined!\n"
+      "ERROR      (mx, my, mz). Exiting",
+      NAME_CURRENT_COMP);
+    exit(1);
+  }
+
+  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+  if ((xmin >= xmax) || (ymin >= ymax)){
+    printf("PSD_monitor: %s: Null detection area !\n"
+           "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+    NAME_CURRENT_COMP);
+    exit(-1);
+  }
+
+  sprintf(titlestring, "Polarisation monitor m=(%g %g %g) %s", mx, my, mz, NAME_CURRENT_COMP);
+
+  NORM(mx, my, mz);
+  PSDpol_N = create_darr2d(nx, ny);
+  PSDpol_p = create_darr2d(nx, ny);
+  PSDpol_p2 = create_darr2d(nx, ny);
+  PSDpsum = create_darr2d(nx,ny);
+
+%}
+
+TRACE
+%{
+  PROP_Z0;
+  
+  double pol_proj = mx*sx + my*sy + mz*sz; //scalar_prod(mx, my, mz, sx, sy, sz);
+  
+  if(fabs(pol_proj)>1) {
+        if (fabs(pol_proj)<1+FLT_EPSILON){
+            pol_proj=1;
+        }
+        else{
+            ABSORB;
+        }
+    }
+
+
+  if (x>xmin && x<xmax && y>ymin && y<ymax){
+    int i = floor((x - xmin)*nx/(xmax - xmin));
+    int j = floor((y - ymin)*ny/(ymax - ymin));
+
+    double ppol = p*pol_proj;
+    double ppol2 = ppol*pol_proj;
+    
+    PSDpol_N[i][j] += 1;
+    PSDpol_p[i][j] += ppol;
+    PSDpol_p2[i][j] += ppol2;
+    PSDpsum[i][j] += p;
+    SCATTER;
+  }
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
+
+SAVE
+%{
+  if (!nowritefile) {
+    for (int i=0;i<nx;i++){
+      for (int j=0;j<ny;j++){
+        if (PSDpsum[i][j] && PSDpol_N[i][j]){
+          PSDpol_p[i][j]  /= PSDpsum[i][j];
+#ifdef USE_MPI
+          PSDpol_p[i][j] /= mpi_node_count;
+#endif
+	  PSDpol_p2[i][j] /= PSDpsum[i][j];
+          //PSDpol_p2[i][j] = sqrt(PSDpol_p2[i][j] - PSDpol_p[i][j]*PSDpol_p[i][j]);
+        }
+      }
+    }
+    DETECTOR_OUT_2D(
+        "PSD Pol monitor",
+        "X position [cm]",
+        "Y position [cm]",
+        xmin*100.0, xmax*100.0, ymin*100.0, ymax*100.0,
+        nx, ny,
+        &PSDpol_N[0][0],&PSDpol_p[0][0],&PSDpol_p2[0][0],
+        filename);
+  }
+%}
+
+FINALLY
+%{
+  destroy_darr2d(PSDpol_N);
+  destroy_darr2d(PSDpol_p);
+  destroy_darr2d(PSDpol_p2);
+  destroy_darr2d(PSDpsum);
+%}
+
+MCDISPLAY
+%{
+  multiline(5,
+    (double)xmin, (double)ymin, 0.0,
+    (double)xmax, (double)ymin, 0.0,
+    (double)xmax, (double)ymax, 0.0,
+    (double)xmin, (double)ymax, 0.0,
+    (double)xmin, (double)ymin, 0.0);
+%}
+
+END
