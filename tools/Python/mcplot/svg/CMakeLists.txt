@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.18.0)
-cmake_policy(VERSION 3.18.0)
+cmake_minimum_required(VERSION 3.16.0)
+cmake_policy(VERSION 3.16.0)
 
 # This will install McStas components
 project(python-tools-mcplot-svg C)
