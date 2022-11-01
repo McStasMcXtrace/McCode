@@ -48,6 +48,7 @@
 * zdepth: [m]      Depth of sample (bounding box if off file) 
 * thickness: [m]   Thickness of hollow sample 
 * geometry: [str]  Name of an Object File Format (OFF) file for complex geometry. The OFF file may be generated from XYZ coordinates using qhull/powercrust 
+* center: [1]      Flag to determine if OFF object is centered on its centre of mass.
 *
 * %L
 * Geomview and Object File Format (OFF) <http|://www.geomview.org>
@@ -59,7 +60,7 @@
 
 DEFINE COMPONENT Shape
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string geometry=0, radius=0, xwidth=0, yheight=0, zdepth=0, thickness=0)
+SETTING PARAMETERS (string geometry=0, radius=0, xwidth=0, yheight=0, zdepth=0, thickness=0, int center=1)
 OUTPUT PARAMETERS()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -77,7 +78,7 @@ off_struct offdata;
 INITIALIZE
 %{
 if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
-	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
+	  if (off_init(geometry, xwidth, yheight, zdepth, !center, &offdata)) {
       thickness=0;
     }
   }
