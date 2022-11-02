@@ -15,11 +15,9 @@ ARCH=`arch`
 UNAME=`uname -s`
 if [[ ${UNAME} = Darwin* ]]; then
     OSXVER=`sw_vers -productVersion|cut -f 1 -d.`
-    # Check if we are on macos 10.x or 11.x
-    if [ "$OSXVER" == "10" ];
-    then
-	export PATH=$LIB/../miniconda3/bin:$PATH
-    fi
+
+    export PATH=$LIB/../miniconda3/bin:$PATH
+
 else
     if [ -d "$LIB/../miniconda3" ]; then
 	export PATH=$LIB/../miniconda3/bin:$PATH
