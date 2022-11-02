@@ -24,14 +24,9 @@ UNAME=`uname -s`
 if [[ ${UNAME} = Darwin* ]]; then
     export TMPDIR=/tmp
     OSXVER=`sw_vers -productVersion|cut -f 1 -d.`
-    # Check if we are on macos 10.x or 11.x
-    if [ "$OSXVER" == "10" ] || [ "$OSXVER" == "11" ] || [ "$OSXVER" == "12" ] || [ "$OSXVER" == "13" ];
-    then
-	export PATH=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/miniconda3/bin:$PATH
-    fi
-else
-    export PATH=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/miniconda3/bin:$PATH
 fi
+
+export PATH=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/miniconda3/bin:$PATH
 
 if [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
     # Set up for homebrew in /opt
