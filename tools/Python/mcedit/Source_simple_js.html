@@ -53,7 +53,7 @@ Parameters in <B>boldface</B> are required;
 the others are optional.
 <TABLE BORDER=1>
 <TR><TH>Name</TH>  <TH>Unit</TH>  <TH>Description</TH>
-<TH>Default</TH> <TH><input type="text" value="source_simple" id="instance"></TH></TR>
+<TH>Default</TH> <TH><input type="text" value="Source_simple" id="instance"></TH></TR>
 <TR> <TD>radius</TD>
      <TD>m</TD>
      <TD>Radius of circle in (x,y,0) plane where neutrons are generated.
@@ -121,13 +121,23 @@ the others are optional.
 <TD ALIGN=RIGHT>+1</TD><td><input type="text" value="" id="target_index"></td> </TR>
 </TABLE>
 
-<TABLE BORDER=0 ALIGN=CENTER><TR>
-  <TH>AT (</TH>
-  <td><input type="text" value="0" id="xpos">, </td>
-  <td><input type="text" value="0" id="ypos">, </td>
-  <td><input type="text" value="0" id="zpos"></td>
+<TABLE BORDER=0 ALIGN=CENTER>
+  <TR>
+  <TH align="right">AT (</TH>
+  <td><input type="text" value="0" id="xpos" maxlength="4" size="4">, </td>
+  <td><input type="text" value="0" id="ypos" maxlength="4" size="4">, </td>
+  <td><input type="text" value="0" id="zpos" maxlength="4" size="4"></td>
   <TH>) RELATIVE</TH>
-  <td><input type="text" value="PREVIOUS" id="REF"></td>
+  <td><input type="text" value="PREVIOUS" id="REF"></td></TR>
+  <TR>
+  <TH align="right">ROTATED (</TH>
+  <td><input type="text" value="" id="xrot" maxlength="4" size="4">, </td>
+  <td><input type="text" value="" id="yrot" maxlength="4" size="4">, </td>
+  <td><input type="text" value="" id="zrot" maxlength="4" size="4"></td>
+  <TH>) RELATIVE</TH>
+  <td><input type="text" value="PREVIOUS" id="REF2"></td></TR>
+  <TR>
+  <td colspan=5></td>
   <td>
     <button onclick="comp()">Generate</button>
   </td>
@@ -152,7 +162,7 @@ function parstr(tag,init) {
      if (init==0) {
         str = str + ",\n";
      }
-     str = str + "  " + tag + "= " + val;
+     str = str + "  " + tag + " = " + val;
    }
    return str;
 }
@@ -170,6 +180,25 @@ function addpos() {
    ATpos = ATpos + "\) RELATIVE " ; 
    ATpos = ATpos + " " + REF ;
    return ATpos;
+}
+
+function addrot() {
+   var xrot = getval("xrot");
+   var yrot = getval("yrot");
+   var zrot = getval("zrot");
+   var REF2 = getval("REF2");
+
+   var ATrot = "";
+
+   if (xrot && yrot && zrot) { 
+     ATrot = "\n ROTATED \(";
+     ATrot = ATrot + xrot + ", ";
+     ATrot = ATrot + yrot + ", ";
+     ATrot = ATrot + zrot;
+     ATrot = ATrot + "\) RELATIVE " ; 
+     ATrot = ATrot + " " + REF2 ;
+   }
+   return ATrot;
 }
 
 function compdef(type) {
@@ -201,6 +230,7 @@ function comp() {
   }
  
   Text = Text + addpos(); 
+  Text = Text + addrot(); 
 
   // Copy the text inside the text field
   navigator.clipboard.writeText(Text);
