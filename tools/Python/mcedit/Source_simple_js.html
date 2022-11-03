@@ -53,7 +53,7 @@ Parameters in <B>boldface</B> are required;
 the others are optional.
 <TABLE BORDER=1>
 <TR><TH>Name</TH>  <TH>Unit</TH>  <TH>Description</TH>
-<TH>Default</TH> <TH><input type="text" value="source_simple" id="instance"></TH></TR>
+<TH>Default</TH> <TH><input type="text" value="Source_simple" id="instance"></TH></TR>
 <TR> <TD>radius</TD>
      <TD>m</TD>
      <TD>Radius of circle in (x,y,0) plane where neutrons are generated.
@@ -162,7 +162,7 @@ function parstr(tag,init) {
      if (init==0) {
         str = str + ",\n";
      }
-     str = str + "  " + tag + "= " + val;
+     str = str + "  " + tag + " = " + val;
    }
    return str;
 }
