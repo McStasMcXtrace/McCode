@@ -2,7 +2,7 @@ Code for setting up editors for McStas and McXtrace (Collectively known as McCod
 
 The editor shipped with McStas and McXtrace GUIs has syntax highlighting built-in.
 
-If you prefer or exprience difficulties with th ebuilt in editor any editor of your choice
+If you experience difficulties with the built in editor or simply prefer something else, any editor of your choice
 may be used. Below are instructions for getting McCode-specific syntax highlighting for a few popular choices.
 Note that McStas/McXtrace-syntax is very close to c, so as a fallback a c-mode
 is a good solution.
