@@ -121,13 +121,23 @@ the others are optional.
 <TD ALIGN=RIGHT>+1</TD><td><input type="text" value="" id="target_index"></td> </TR>
 </TABLE>
 
-<TABLE BORDER=0 ALIGN=CENTER><TR>
+<TABLE BORDER=0 ALIGN=CENTER>
+  <TR>
   <TH>AT (</TH>
   <td><input type="text" value="0" id="xpos">, </td>
   <td><input type="text" value="0" id="ypos">, </td>
   <td><input type="text" value="0" id="zpos"></td>
   <TH>) RELATIVE</TH>
-  <td><input type="text" value="PREVIOUS" id="REF"></td>
+  <td><input type="text" value="PREVIOUS" id="REF"></td></TR>
+  <TR>
+  <TH>ROTATED (</TH>
+  <td><input type="text" value="" id="xrot">, </td>
+  <td><input type="text" value="" id="yrot">, </td>
+  <td><input type="text" value="" id="zrot"></td>
+  <TH>) RELATIVE</TH>
+  <td><input type="text" value="PREVIOUS" id="REF2"></td></TR>
+  <TR>
+  <td colspan=5></td>
   <td>
     <button onclick="comp()">Generate</button>
   </td>
@@ -172,6 +182,25 @@ function addpos() {
    return ATpos;
 }
 
+function addrot() {
+   var xrot = getval("xrot");
+   var yrot = getval("yrot");
+   var zrot = getval("zrot");
+   var REF2 = getval("REF2");
+
+   var ATrot = "";
+
+   if (xrot && yrot && zrot) { 
+     ATrot = "\n ROTATED \(";
+     ATrot = ATrot + xrot + ", ";
+     ATrot = ATrot + yrot + ", ";
+     ATrot = ATrot + zrot;
+     ATrot = ATrot + "\) RELATIVE " ; 
+     ATrot = ATrot + " " + REF2 ;
+   }
+   return ATrot;
+}
+
 function compdef(type) {
   var instance = getval("instance");
   var compstr = "COMPONENT " + instance + " = " + type +"\(\n";
@@ -201,6 +230,7 @@ function comp() {
   }
  
   Text = Text + addpos(); 
+  Text = Text + addrot(); 
 
   // Copy the text inside the text field
   navigator.clipboard.writeText(Text);
