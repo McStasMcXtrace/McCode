@@ -1,0 +1,356 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD>
+<TITLE>McStas: Source_simple Component</TITLE>
+<LINK REV="made" HREF="mailto:peter.willendrup@risoe.dk">
+</HEAD>
+
+<BODY>
+
+<P ALIGN=CENTER>
+ [ <A href="#id">Identification</A>
+ | <A href="#desc">Description</A>
+ | <A href="#ipar">Input parameters</A>
+ | <A href="#opar">Output parameters</A>
+ | <A href="#links">Links</A> ]
+</P>
+
+<H1>The <CODE>Source_simple</CODE> Component</H1>
+
+A circular neutron source with flat energy spectrum and arbitrary flux
+
+
+<H2><A NAME=id></A>Identification</H2>
+
+<UL>
+  <LI> <B>Author:</B> Kim Lefmann</B>
+  <LI> <B>Origin:</B> Risoe</B>
+  <LI> <B>Date:</B> October 30, 1997</B>
+  <LI> <B>Version:</B>(Unknown)</B>
+  <LI> <B>Modification history:</B> <UL>
+    <LI>  KL, October 4, 2001
+    <LI>  Emmanuel Farhi, October 30, 2001. Serious bug corrected.
+  </UL>
+</UL>
+<H2><A NAME=desc></A>Description</H2>
+
+<PRE>
+The routine is a circular neutron source, which aims at a square target
+centered at the beam (in order to improve MC-acceptance rate).  The angular
+divergence is then given by the dimensions of the target.
+The neutron energy is uniformly distributed between lambda0-dlambda and
+lambda0+dlambda or between E0-dE and E0+dE.
+The flux unit is specified in n/cm2/s/st/energy unit (meV or Angs).
+
+This component replaces Source_flat, Source_flat_lambda,
+Source_flux and Source_flux_lambda.
+
+Example: Source_simple(radius=0.1, dist=2, focus_xw=.1, focus_yh=.1, E0=14, dE=2)
+
+</PRE>
+
+<H2><A NAME=ipar></A>Input parameters</H2>
+Parameters in <B>boldface</B> are required;
+the others are optional.
+<TABLE BORDER=1>
+<TR><TH>Name</TH>  <TH>Unit</TH>  <TH>Description</TH>
+<TH>Default</TH> <TH><input type="text" value="source_simple" id="instance"></TH></TR>
+<TR> <TD>radius</TD>
+     <TD>m</TD>
+     <TD>Radius of circle in (x,y,0) plane where neutrons are generated.
+</TD>
+<TD ALIGN=RIGHT>0.1</TD><td><input type="text" value="" id="radius"></td></TR>
+<TR> <TD>yheight</TD>
+     <TD>m</TD>
+     <TD>Height of rectangle in (x,y,0) plane where neutrons are generated.
+</TD>
+<TD ALIGN=RIGHT>0</TD><td><input type="text" value="" id="yheight"></td> </TR>
+<TR> <TD>xwidth</TD>
+     <TD>m</TD>
+     <TD>Width of rectangle in (x,y,0) plane where neutrons are generated.
+</TD>
+<TD ALIGN=RIGHT>0</TD><td><input type="text" value="" id="xwidth"></td> </TR>
+<TR> <TD>dist</TD>
+     <TD>m</TD>
+     <TD>Distance to target along z axis.
+</TD>
+<TD ALIGN=RIGHT>0</TD><td><input type="text" value="" id="dist"></td>  </TR>
+<TR> <TD>focus_xw</TD>
+     <TD>m</TD>
+     <TD>Width of target
+</TD>
+<TD ALIGN=RIGHT>.045</TD><td><input type="text" value="" id="focus_xw"></td>  </TR>
+<TR> <TD>focus_yh</TD>
+     <TD>m</TD>
+     <TD>Height of target
+</TD>
+<TD ALIGN=RIGHT>.12</TD><td><input type="text" value="" id="focus_yh"></td>  </TR>
+<TR> <TD>E0</TD>
+     <TD>meV</TD>
+     <TD>Mean energy of neutrons.
+</TD>
+<TD ALIGN=RIGHT>0</TD><td><input type="text" value="" id="E0"></td>  </TR>
+<TR> <TD>dE</TD>
+     <TD>meV</TD>
+     <TD>Energy half spread of neutrons (flat or gaussian sigma).
+</TD>
+<TD ALIGN=RIGHT>0</TD><td><input type="text" value="" id="dE"></td>  </TR>
+<TR> <TD>lambda0</TD>
+     <TD>AA</TD>
+     <TD>Mean wavelength of neutrons.
+</TD>
+<TD ALIGN=RIGHT>0</TD><td><input type="text" value="" id="lambda0"></td> </TR>
+<TR> <TD>dlambda</TD>
+     <TD>AA</TD>
+     <TD>Wavelength half spread of neutrons.
+</TD>
+<TD ALIGN=RIGHT>0</TD><td><input type="text" value="" id="dlambda"></td> </TR>
+<TR> <TD>flux</TD>
+     <TD>1/(s*cm**2*st*energy unit)</TD>
+     <TD>flux per energy unit, Angs or meV if flux=0, the source emits 1 in 4*PI whole space.
+</TD>
+<TD ALIGN=RIGHT>1</TD><td><input type="text" value="" id="flux"></td> </TR>
+<TR> <TD>gauss</TD>
+     <TD>1</TD>
+     <TD>Gaussian (1) or Flat (0) energy/wavelength distribution
+</TD>
+<TD ALIGN=RIGHT>0</TD><td><input type="text" value="" id="gauss"></td> </TR>
+<TR> <TD>target_index</TD>
+     <TD>1</TD>
+     <TD>relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
+</TD>
+<TD ALIGN=RIGHT>+1</TD><td><input type="text" value="" id="target_index"></td> </TR>
+</TABLE>
+
+<TABLE BORDER=0 ALIGN=CENTER><TR>
+  <TH>AT (</TH>
+  <td><input type="text" value="0" id="xpos">, </td>
+  <td><input type="text" value="0" id="ypos">, </td>
+  <td><input type="text" value="0" id="zpos"></td>
+  <TH>) RELATIVE</TH>
+  <td><input type="text" value="PREVIOUS" id="REF"></td>
+  <td>
+    <button onclick="myFunction()">Generate</button>
+  </td>
+  </TR>
+</TABLE>
+
+
+
+<script>
+
+function myFunction() {
+  // Get the text fields
+  var instance = document.getElementById("instance");
+  var radius = document.getElementById("radius");
+  var yheight = document.getElementById("yheight");
+  var xwidth = document.getElementById("xwidth");
+  var dist = document.getElementById("dist");
+  var focus_xw = document.getElementById("focus_xw");
+  var focus_yh = document.getElementById("focus_yh");
+  var E0 = document.getElementById("E0");
+  var dE = document.getElementById("dE");
+  var lambda0 = document.getElementById("lambda0");
+  var dlambda = document.getElementById("dlambda");
+  var flux = document.getElementById("flux");
+  var gauss = document.getElementById("gauss");
+  var target_index = document.getElementById("target_index");
+  var xpos = document.getElementById("xpos");
+  var ypos = document.getElementById("ypos");
+  var zpos = document.getElementById("zpos");
+  var REF = document.getElementById("REF");
+
+  // Select the instance field
+  instance.select();
+  instance.setSelectionRange(0, 99999); // For mobile devices
+
+  var Text = "COMPONENT " + instance.value + " = Source_simple\(\n";
+
+  var init = 1;
+
+  radius.select();
+  radius.setSelectionRange(0, 99999); // For mobile devices
+
+if (radius.value) {
+    if (init==1) {
+        init=0;
+    } else {
+      Text = Text + ",\n ";
+    }
+    Text = Text + "radius = " + radius.value;
+  }
+  yheight.select();
+  yheight.setSelectionRange(0, 99999); // For mobile devices
+if (yheight.value) {
+    if (init==1) {
+        init=0;
+    } else {
+      Text = Text + ",\n ";
+    }
+    Text = Text + "yheight = " + yheight.value;
+  }
+  xwidth.select();
+  xwidth.setSelectionRange(0, 99999); // For mobile devices
+  if (xwidth.value) {
+    if (init==1) {
+        init=0;
+    } else {
+      Text = Text + ",\n ";
+    }
+    Text = Text + "xwidth = " + xwidth.value;
+  }
+  dist.select();
+  dist.setSelectionRange(0, 99999); // For mobile devices
+  if (dist.value) {
+    if (init==1) {
+        init=0;
+    } else {
+      Text = Text + ",\n ";
+    }
+
+Text = Text + "dist = " + dist.value;
+  }
+  focus_xw.select();
+  focus_xw.setSelectionRange(0, 99999); // For mobile devices
+if (focus_xw.value) {
+    if (init==1) {
+        init=0;
+    } else {
+      Text = Text + ",\n ";
+    }
+    Text = Text + "focus_xw = " + focus_xw.value;
+  }
+  focus_yh.select();
+  focus_yh.setSelectionRange(0, 99999); // For mobile devices
+  if (focus_yh.value) {
+    if (init==1) {
+        init=0;
+    } else {
+      Text = Text + ",\n ";
+    }
+    Text = Text + "focus_yh = " + focus_yh.value;
+  }
+  E0.select();
+  E0.setSelectionRange(0, 99999); // For mobile devices
+  if (E0.value) {
+    if (init==1) {
+        init=0;
+    } else {
+      Text = Text + ",\n ";
+    }
+
+    Text = Text + "E0 = " + E0.value;
+  }
+  dE.select();
+  dE.setSelectionRange(0, 99999); // For mobile devices
+  if (dE.value) {
+    if (init==1) {
+        init=0;
+    } else {
+      Text = Text + ",\n ";
+    }
+
+    Text = Text + "dE = " + dE.value;
+  }
+  lambda0.select();
+  lambda0.setSelectionRange(0, 99999); // For mobile devices
+  if (lambda0.value) {
+    if (init==1) {
+        init=0;
+    } else {
+      Text = Text + ",\n ";
+    }
+    Text = Text + "lambda0 = " + lambda0.value;
+  }
+  dlambda.select();
+  dlambda.setSelectionRange(0, 99999); // For mobile devices
+if (dlambda.value) {
+    if (init==1) {
+        init=0;
+    } else {
+      Text = Text + ",\n ";
+    }
+
+    Text = Text + "dlambda = " + dlambda.value;
+  }
+  flux.select();
+  flux.setSelectionRange(0, 99999); // For mobile devices
+if (flux.value) {
+    if (init==1) {
+        init=0;
+    } else {
+      Text = Text + ",\n ";
+    }
+
+    Text = Text + "flux = " + flux.value;
+}
+
+  gauss.select();
+  gauss.setSelectionRange(0, 99999); // For mobile devices
+if (gauss.value) {
+    if (init==1) {
+        init=0;
+    } else {
+      Text = Text + ",\n ";
+    }
+
+    Text = Text + "gauss = " + gauss.value;
+  }
+  target_index.select();
+  target_index.setSelectionRange(0, 99999); // For mobile devices
+if (target_index.value) {
+    if (init==1) {
+        init=0;
+    } else {
+      Text = Text + ",\n ";
+    }
+
+    Text = Text + "target_index = " + target_index.value;
+}
+Text = Text + "\) \n AT \(";
+
+   xpos.select();
+   xpos.setSelectionRange(0, 99999); // For mobile devices
+   Text = Text + xpos.value + ", ";
+
+   ypos.select();
+   ypos.setSelectionRange(0, 99999); // For mobile devices
+   Text = Text + ypos.value + ", ";
+
+   zpos.select();
+   zpos.setSelectionRange(0, 99999); // For mobile devices
+   Text = Text + zpos.value;
+
+
+   Text = Text + "\) RELATIVE " ; 
+  REF.select();
+  REF.setSelectionRange(0, 99999); // For mobile devices
+  Text = Text + " " + REF.value ;
+
+
+  // Copy the text inside the text field
+  navigator.clipboard.writeText(Text);
+  
+  // Alert the copied text
+  alert(Text);
+}
+</script>
+
+<H2><A NAME=links></A>Links</H2>
+
+<UL>
+  <LI> <A HREF="Source_simple.comp">Source code</A> for <CODE>Source_simple.comp</CODE>.
+</UL>
+<HR>
+<P ALIGN=CENTER>
+ [ <A href="#id">Identification</A>
+ | <A href="#desc">Description</A>
+ | <A href="#ipar">Input parameters</A>
+ | <A href="#opar">Output parameters</A>
+ | <A href="#links">Links</A> ]
+</P>
+
+<ADDRESS>
+Generated automatically by McDoc, Peter Willendrup
+&lt;<A HREF="mailto:peter.willendrup@risoe.dk">peter.willendrup@risoe.dk</A>&gt; /
+Thu Nov  3 12:09:33 2022</ADDRESS>
+</BODY></HTML>
