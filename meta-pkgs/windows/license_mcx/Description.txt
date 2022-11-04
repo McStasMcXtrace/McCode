@@ -1,20 +1,21 @@
-﻿Info on install configuration:
+﻿Info on install configuration on Windows:
 
+Dependencies:
+	•	All essential dependencies (also a miniconda3 Python) are included in the meta-package.
+	•	You may optionally also install the Strawberry Perl bundle provided in your downloaded McXtrace archive
 
-For a minimal installation you need:
-* mcxtrace
-* mcxtrace-comps
-
-
-Tools - please choose between Perl, Python or both
-* mcxtrace-tools, Perl-based - requires:
-   * Select Tk and SciPDL also
-* mcxtrace-tools-python-*, Python based - requires:
-   * For mcrun: PyYAML from http://pyyaml.org/download/pyyaml/ (ZIP with manual installation)
-   * Plotting solution a) SciPy super pack available from http://fonnesbeck.github.io/ScipySuperpack/, free
-   * Plotting solution b) Anaconda Python from https://store.continuum.io, free for Academic use
-   * Plotting solution c) Enthought Python from https://www.enthought.com, free for Academic use
-   *    * Post-install configuration
-   * If you install both the Perl- and Python tools, the Python tools will be chosen as default. 
-   * The command-line tool mccode-select can be used to choose perl-based tools instead, e.g.
-   *    * mccode-select mcrun 1.2
+A default installation will bring you:
+	•	mcxtrace (core code-generator)
+	•	mcxtrace-comps (components
+	•	mcxtrace-manuals
+	•	mcxtrace-tools-python-mccodelib
+	•	mcxtrace-tools-python-mxrun (Python-based mxrun tool)
+	•	mcxtrace-tools-python-mxdoc (Python-based mxdoc tool)
+	•	mcxtrace-tools-python-mxplot-pyqtgraph (Python-based mxplot tool)
+	•	mcxtrace-tools-python-mxplot-matplotlib (Python-based mxplot tool)
+	•	mcxtrace-tools-python-mxdisplay-webgl (Python-based mxdisplay tool)
+	•	mcxtrace-tools-python-mxdisplay-pyqtgraph (Python-based mxdisplay tool)
+	•	mcxtrace-tools-python-mxdisplay-matplotlib (Python-based mxdisplay tool)
+	•	mcxtrace-tools-python-mxgui (Python-Qt/Scintilla based mxgui tool)
+	•	mcxtrace-tools-perl-commandline (Legacy set of Perl-based cmdline tools)
+	•	mcxtrace-tools-perl (Legacy set of Perl-based gui tools)
