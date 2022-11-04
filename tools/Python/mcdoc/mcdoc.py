@@ -690,6 +690,12 @@ class InstrDocWriter:
         t = self.tags
         h = self.html
 
+        #some McXtrace specific edits
+        if (mccode_config.get_mccode_prefix() == 'mx'):
+          h = h.replace('McStas','McXtrace')
+          h = h.replace('mcstas','mcxtrace')
+          h = h.replace('MCSTAS','MCXTRACE')
+
         h = h.replace(t[0], i.name)
         h = h.replace(t[1], i.name)
         h = h.replace(t[2], i.short_descr)
@@ -760,7 +766,6 @@ class InstrDocWriter:
  [ <A href="#id">Identification</A>
  | <A href="#desc">Description</A>
  | <A href="#ipar">Input parameters</A>
- | <A href="#opar">Output parameters</A>
  | <A href="#links">Links</A> ]
 </P>
 
@@ -802,7 +807,6 @@ the others are optional.
  [ <A href="#id">Identification</A>
  | <A href="#desc">Description</A>
  | <A href="#ipar">Input parameters</A>
- | <A href="#opar">Output parameters</A>
  | <A href="#links">Links</A> ]
 </P>
 
@@ -850,7 +854,12 @@ class CompDocWriter:
         i = self.info
         t = self.tags
         h = self.html
-        
+        #some McXtrace specific edits
+        if (mccode_config.get_mccode_prefix() == 'mx'):
+          h = h.replace('McStas','McXtrace')
+          h = h.replace('mcstas','mcxtrace')
+          h = h.replace('MCSTAS','MCXTRACE')
+
         h = h.replace(t[0], i.name)
         h = h.replace(t[1], i.name)
         h = h.replace(t[2], i.short_descr)
@@ -861,43 +870,39 @@ class CompDocWriter:
         h = h.replace(t[7], i.description)
 
         h = h.replace(t[8], self.par_header)
+
+        parstr=""
+        first=1
+
         doc_rows_in = ''
-
         for p in i.setparams + i.defparams:
+            if (not first):
+                parstr = parstr + ', "' + p[1] + '"'
+            else:
+                first=0
+                parstr = parstr + '"' + p[1] + '"'
             unit = [pd[1] for pd in i.params_docs if p[1] == pd[0]]
             unit = unit[0] if len(unit) > 0 else ''
             defval = p[2] if p[2] != None else ''
             doc = [pd[2] for pd in i.params_docs if p[1] == pd[0]]
             doc = doc[0] if len(doc) > 0 else ''
             if defval == '':
-                doc_rows_in = doc_rows_in + '\n' + self.par_str_boldface % (p[1], unit, doc, defval)
+                doc_rows_in = doc_rows_in + '\n' + self.par_str_boldface % (p[1], unit, doc, defval, '<input type="text" value="" id="' + p[1] + '">')
             else:
-                doc_rows_in = doc_rows_in + '\n' + self.par_str % (p[1], unit, doc, defval)
+                doc_rows_in = doc_rows_in + '\n' + self.par_str % (p[1], unit, doc, defval, '<input type="text" value="" id="' + p[1] + '">')
         h = h.replace(t[9], doc_rows_in)
+        h = h.replace(t[14],parstr)
 
-        doc_rows_out = ''
-        for p in i.outparams:
-            unit = [pd[1] for pd in i.params_docs if p[1] == pd[0]]
-            unit = unit[0] if len(unit) > 0 else ''
-            defval = p[2] if p[2] != None else ''
-            doc = [pd[2] for pd in i.params_docs if p[1] == pd[0]]
-            doc = doc[0] if len(doc) > 0 else ''
-            if defval == '':
-                doc_rows_out = doc_rows_out + '\n' + self.par_str_boldface % (p[1], unit, doc, defval)
-            else:
-                doc_rows_out = doc_rows_out + '\n' + self.par_str % (p[1], unit, doc, defval)
-        h = h.replace(t[10], doc_rows_out)
-
-        h = h.replace(t[11], i.filepath)
-        h = h.replace(t[12], os.path.basename(i.filepath))
+        h = h.replace(t[10], i.filepath)
+        h = h.replace(t[11], os.path.basename(i.filepath))
 
         # TODO: implement links writing
         lstr = ''
         for l in i.links:
             lstr = lstr + self.lnk_str % l + '\n'
-        h = h.replace(t[13], lstr)
+        h = h.replace(t[12], lstr)
 
-        h = h.replace(t[14], '{0:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
+        h = h.replace(t[13], '{0:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
 
         self.text = h
         return self.text
@@ -912,14 +917,14 @@ class CompDocWriter:
             '%DESCRIPTION%',
             '%T_HEAD%',
             '%T_ROWS_IN%',
-            '%T_ROWS_OUT%',
             '%COMPFILE%',
             '%COMPFILE_BASE%',
             '%LINKS%',
-            '%GENDATE%']
-    par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
-    par_str_boldface = "<TR> <TD><strong>%s</strong></TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
-    par_header = par_str % ('<strong>Name</strong>', '<strong>Unit</strong>', '<strong>Description</strong>', '<strong>Default</strong>')
+            '%GENDATE%',
+            '%PARLIST%']
+    par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
+    par_str_boldface = "<TR> <TD><strong>%s</strong></TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
+    par_header = par_str % ('<strong>Name</strong>', '<strong>Unit</strong>', '<strong>Description</strong>', '<strong>Default</strong>', '<input type="text" value="' + "CompInstanceName" + '" id="instance">')
     lnk_str = "<LI>%s"
     
     
@@ -930,13 +935,110 @@ class CompDocWriter:
 <LINK REV="made" HREF="mailto:pkwi@fysik.dtu.dk">
 </HEAD>
 
+<script>
+
+function getval(tag) {
+  var ret = document.getElementById(tag);
+  var val = "";
+  if (ret) {
+    ret.select();
+    ret.setSelectionRange(0, 99999); // For mobile devices
+    val=ret.value;
+  }
+  return val;
+}
+
+function parstr(tag,init) {
+   var val = getval(tag);
+   var str = "";
+   if (val) {
+     if (init==0) {
+        str = str + ",\\n";
+     }
+     str = str + "  " + tag + " = " + val;
+   }
+   return str;
+}
+
+function addpos() {
+   var xpos = getval("xpos");
+   var ypos = getval("ypos");
+   var zpos = getval("zpos");
+   var REF = getval("REF");
+
+   var ATpos = "\) \\n AT \(";
+   ATpos = ATpos + xpos + ", ";
+   ATpos = ATpos + ypos + ", ";
+   ATpos = ATpos + zpos;
+   ATpos = ATpos + "\) RELATIVE " ; 
+   ATpos = ATpos + " " + REF ;
+   return ATpos;
+}
+
+function addrot() {
+   var xrot = getval("xrot");
+   var yrot = getval("yrot");
+   var zrot = getval("zrot");
+   var REF2 = getval("REF2");
+
+   var ATrot = "";
+
+   if (xrot && yrot && zrot) { 
+     ATrot = "\\n ROTATED \(";
+     ATrot = ATrot + xrot + ", ";
+     ATrot = ATrot + yrot + ", ";
+     ATrot = ATrot + zrot;
+     ATrot = ATrot + "\) RELATIVE " ; 
+     ATrot = ATrot + " " + REF2 ;
+   }
+   return ATrot;
+}
+
+function compdef(type) {
+  var instance = getval("instance");
+  var compstr = "COMPONENT " + instance + " = " + type +"\(\\n";
+  return compstr;
+}
+
+function comp() {
+  // Get the text fields
+
+  var Text = compdef("%COMPNAME%");
+
+  var Add;
+
+  var init = 1;
+
+  const pars = [%PARLIST%];
+
+  let len = pars.length;
+
+  for (var i=0; i<len; i++) {
+    Add = parstr(pars[i],init);
+    if (Add) {
+      init=0;
+      Text = Text + Add;",\\n ";
+    }
+  }
+
+  Text = Text + addpos();
+  Text = Text + addrot();
+
+  // Copy the text inside the text field
+  navigator.clipboard.writeText(Text);
+
+  // Alert the copied text
+  alert(Text);
+}
+</script>
+
+
 <BODY>
 
 <P ALIGN=CENTER>
  [ <A href="#id">Identification</A>
  | <A href="#desc">Description</A>
  | <A href="#ipar">Input parameters</A>
- | <A href="#opar">Output parameters</A>
  | <A href="#links">Links</A> ]
 </P>
 
@@ -967,13 +1069,25 @@ the others are optional.
 %T_ROWS_IN%
 </TABLE>
 
-<H2><A NAME=ipar></A>Output parameters</H2>
-Parameters in <B>boldface</B> are required;
-the others are optional.
-
-<TABLE BORDER=1>
-%T_HEAD%
-%T_ROWS_OUT%
+<TABLE BORDER=0 ALIGN=CENTER>
+  <TR>
+  <TH align="right">AT (</TH>
+  <td><input type="text" value="0" id="xpos" maxlength="4" size="4">, </td>
+  <td><input type="text" value="0" id="ypos" maxlength="4" size="4">, </td>
+  <td><input type="text" value="0" id="zpos" maxlength="4" size="4"></td>
+  <TH>) RELATIVE</TH>
+  <td><input type="text" value="PREVIOUS" id="REF"></td>
+  <td rowspan="2">
+    <button style="height:50px" onclick="comp()"><strong>Generate</strong></button>
+  </td>
+  </TR>
+  <TR>
+  <TH align="right">ROTATED (</TH>
+  <td><input type="text" value="" id="xrot" maxlength="4" size="4">, </td>
+  <td><input type="text" value="" id="yrot" maxlength="4" size="4">, </td>
+  <td><input type="text" value="" id="zrot" maxlength="4" size="4"></td>
+  <TH>) RELATIVE</TH>
+  <td><input type="text" value="PREVIOUS" id="REF2"></td></TR>
 </TABLE>
 
 <H2><A NAME=links></A>Links</H2>
@@ -987,7 +1101,6 @@ the others are optional.
  [ <A href="#id">Identification</A>
  | <A href="#desc">Description</A>
  | <A href="#ipar">Input parameters</A>
- | <A href="#opar">Output parameters</A>
  | <A href="#links">Links</A> ]
 </P>
 
