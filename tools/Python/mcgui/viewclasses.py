@@ -628,6 +628,10 @@ class McStartSimDialog(QtWidgets.QDialog):
         self._last_mcplots = None
         self.ui = Ui_dlgStartSim()
         self.ui.setupUi(self)
+        if not mccode_config.configuration["PARTICLE"] == "neutron":
+            self.ui.lblGravity.setHidden(True)
+            self.ui.cbxGravity.setHidden(True)
+
         self.ui.btnStart.clicked.connect(self.accept)
         self.ui.btnCancel.clicked.connect(self.reject)
         self._set_inspect_visible(False)
