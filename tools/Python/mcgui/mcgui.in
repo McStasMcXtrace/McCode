@@ -30,10 +30,6 @@ else
     fi
 fi
 
-if [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
-    # Set up for homebrew in /opt
-    export PATH=/opt/homebrew/bin:$PATH
-fi
 
 # Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
 if [ -d "$LIB/../miniconda3" ]; then

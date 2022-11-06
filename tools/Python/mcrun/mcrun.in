@@ -11,28 +11,19 @@ else
     LIB=`dirname $0`
 fi
 UNAME=`uname -s`
-if [[ ${UNAME} = Darwin* ]]; then
-    OSXVER=`sw_vers -productVersion|cut -f 1 -d.`
 
-    export PATH=$LIB/../miniconda3/bin:$PATH
+# Check if we are in / - in that case cd to $HOME
+PW==`pwd`
+if [[ ${PWD} = / ]]; then
+    cd $HOME
+fi
 
-    # Check if we are in / - in that case cd to $HOME
-    PW==`pwd`
-    if [[ ${PWD} = / ]]; then
-	cd $HOME
-    fi
-else
-    if [ -d "$LIB/../miniconda3" ]; then
-	PATH=$LIB/../miniconda3/bin:$PATH
-    fi
+if [ -d "$LIB/../miniconda3" ]; then
+    PATH=$LIB/../miniconda3/bin:$PATH
 fi
 
 ARCH=`arch`
 UNAME=`uname -s`
-if [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
-    # Then don't use miniconda, rather set up for homebrew in /opt
-    export PATH=/opt/homebrew/bin:$PATH
-fi
 
 # Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
 if [ -d "$LIB/../miniconda3" ]; then
