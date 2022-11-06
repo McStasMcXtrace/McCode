@@ -28,11 +28,6 @@ fi
 
 export PATH=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/miniconda3/bin:$PATH
 
-if [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
-    # Set up for homebrew in /opt
-    export PATH=/opt/homebrew/bin:$PATH
-fi
-
 export @FLAVOR_UPPER@=$PREFIX/@FLAVOR@/@MCCODE_VERSION@
 export @FLAVOR_UPPER@_TOOLS=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/tools/Perl/
 export PATH=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/bin:$PATH

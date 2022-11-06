@@ -12,21 +12,10 @@ else
 fi
 UNAME=`uname -s`
 ARCH=`arch`
-if [[ ${UNAME} = Darwin* ]]; then
-    OSXVER=`sw_vers -productVersion|cut -f 1 -d.`
 
+if [ -d "$LIB/../miniconda3" ]; then
     export PATH=$LIB/../miniconda3/bin:$PATH
-
-else
-    if [ -d "$LIB/../miniconda3" ]; then
-	export PATH=$LIB/../miniconda3/bin:$PATH
-	export LD_LIBRARY_PATH=$LIB/../miniconda3/lib:$LD_LIBRARY_PATH
-    fi
-fi
-
-if [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
-    # Set up for homebrew in /opt
-    export PATH=/opt/homebrew/bin:$PATH
+    export LD_LIBRARY_PATH=$LIB/../miniconda3/lib:$LD_LIBRARY_PATH
 fi
 
 # Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly

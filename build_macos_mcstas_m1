@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "import os;print(os.cpu_count())")}
 
 if [ "x$1" = "x" ]; then
     # No arguments
@@ -68,8 +69,49 @@ cd $WORK
 rm -rf 3rdparty/ncrystal/build
 
 # Hack to ensure pymcpltool is in place
-ln -s /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/libs/mcpl/pymcpltool /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/bin
+ln -sf /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/libs/mcpl/pymcpltool /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/bin
 
+echo MINICONDA time
+
+if [ ! -f Miniconda3-latest-MacOSX-arm64.sh ]; then
+    # Download and embed a miniconda
+    echo
+    echo "*********************************************************"
+    echo "* Downloading a miniconda3 for your app                 *"
+    echo "*********************************************************"
+    echo
+    sleep 3
+    curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh
+fi
+echo "*********************************************************"
+echo "* Embedding miniconda3 in your app                      *"
+echo "*********************************************************"
+chmod a+x Miniconda3-latest-MacOSX-arm64.sh
+./Miniconda3-latest-MacOSX-arm64.sh -b -p $MCINSTALL_PREFIX/mcstas/$1/miniconda3/
+
+# Run conda to install the dependencies
+echo
+echo "*********************************************************"
+echo "* Downloading python dependencies to embedded miniconda *"
+echo "*********************************************************"
+echo
+export PATHBAK=$PATH
+export PATH=$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin:$PATH
+
+conda update conda -y
+conda install mamba conda-build -y
+mamba install openmpi gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl -y
+mamba clean --all -y
+cd $TMPDIR
+git clone https://github.com/conda-forge/qscintilla2-feedstock.git
+cd qscintilla2-feedstock
+conda-build .
+mamba install qscintilla2 --use-local -y
+mamba clean --all -y
+mamba build purge
+cd $WORK
+
+export PATH=$PATHBAK
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcstas/$1/bin
 
@@ -77,7 +119,10 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 
 cd $WORK
 # Generate mcdoc pages
-python3 $MCINSTALL_PREFIX/mcstas/$1/tools/Python/mcdoc/mcdoc.py -i
+$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/python $MCINSTALL_PREFIX/mcstas/$1/tools/Python/mcdoc/mcdoc.py -i
+
+# Hack to make openmpi from the conda env available on Big Sur and later
+ln -s $MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/mpi* $MCINSTALL_PREFIX/mcstas/$1/bin/
 
 mkdir -p dist
 # Move the App bundle back to the dist - or keep it in /Applications?
@@ -88,7 +133,6 @@ if [ "x$2" = "x" ]; then
     ln -s McStas-$1.app/Contents/Resources/mcstas/$1/environment McStas-$1-environment.command
     cd ..
     cp support/MacOSX/Check-dependencies/* dist
-    cp support/MacOSX/silicon-homebrew-setup/* dist
     mv dist mcstas-$1
     mkdir dist
     tar cfz dist/mcstas-$1_arm64.tgz mcstas-$1

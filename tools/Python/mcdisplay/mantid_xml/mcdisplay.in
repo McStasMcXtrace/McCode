@@ -12,14 +12,12 @@ else
 fi
 ARCH=`arch`
 UNAME=`uname -s`
-if [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
-    # Then don't use miniconda, rather set up for homebrew in /opt
-    PATH=/opt/homebrew/bin:$PATH
-else
-    if [ -d "$LIB/../miniconda3" ]; then
+
+
+if [ -d "$LIB/../miniconda3" ]; then
 	PATH=$LIB/../miniconda3/bin:$PATH
-    fi
 fi
+
 LIB="$LIB/../tools/Python/@P@display/mantid_xml"
 TOOL="@P@display"
 VERS="@MCCODE_VERSION@"
