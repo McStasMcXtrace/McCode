@@ -15,7 +15,7 @@ cd 3rdparty
 
 cd -
 
-./3rdparty/sync.sh  
+./3rdparty/sync.sh
 
 
 for MODULE in `echo $THIRDPARTY`
@@ -31,7 +31,7 @@ done
 WORK=`pwd`
 
 # Workaround for having CRLF linefeeds in a couple of windows packages
-rsync -avz --delete --exclude=".svn/" --exclude="NCrystal_sample.comp" --exclude="NCrystal_example.instr" mcstas-comps/ mcstas-comps-win
+rsync -avz --delete --exclude=".svn/"  mcstas-comps/ mcstas-comps-win
 find mcstas-comps-win -type f -not -name \*.off -exec unix2dos \{\} \;
 rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl/ tools/Legacy-Perl-win
 rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl-cmdline/ tools/Legacy-Perl-cmdline-win
@@ -59,6 +59,7 @@ sed -i 's+@MCCODE_LIB@/miniconda3/+c:\\mcstas-'${1}'\\miniconda3\\Library\\mingw
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" mingw64 "" -- nsis64
+./mkdist mcstas-ncrystal $1 3rdparty/ncrystal "" mingw64 "" -- nsis64
 
 if [ "x$2" != "x" ]; then
     # Build the meta-packages also
