@@ -400,7 +400,7 @@ def main():
         if options.autoplotter is not None:
             autoplotter = options.autoplotter
         if isdir(options.dir):
-            LOG.info('Running plotter %s on dataset %s',mccode_config.configuration['MCPLOT'],options.dir)
+            LOG.info('Running plotter %s on dataset %s',autoplotter,options.dir)
             Process(autoplotter).run([options.dir])
 
 if __name__ == '__main__':
