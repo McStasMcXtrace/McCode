@@ -36,7 +36,3 @@ set(QSCI "1")
 set(PLOTTER "PGPLOT")
 set(PGDEV "/gw")
 set(GNUDEV "windows")
-
-# Suffix for executables
-set(EXE "exe")
-

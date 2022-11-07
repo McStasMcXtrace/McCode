@@ -22,7 +22,3 @@ set(QSCI "1")
 set(PLOTTER "PGPLOT")
 set(PGDEV "/xwin")
 set(GNUDEV "wxt")
-
-# Suffix for executables
-set(EXE "out")
-

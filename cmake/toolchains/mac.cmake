@@ -24,6 +24,3 @@ set(PLOTTER "PGPLOT")
 set(PGDEV "/xserv")
 set(GNUDEV "x11")
 
-# Suffix for executables
-set(EXE "out")
-

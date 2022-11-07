@@ -25,7 +25,7 @@
     "MPINODES": "4"
   },
   "platform": {
-    "EXESUFFIX": "@EXE@"
+    "EXESUFFIX": "@MCCODE_EXECUTABLE_SUFFIX@"
   }
 }
 

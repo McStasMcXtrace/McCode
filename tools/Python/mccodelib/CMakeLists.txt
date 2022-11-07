@@ -92,8 +92,13 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-
 # Configure config file
+if ( NOT CMAKE_EXECUTABLE_SUFFIX )
+  set( MCCODE_EXECUTABLE_SUFFIX "out" )
+else()
+  set( MCCODE_EXECUTABLE_SUFFIX "${CMAKE_EXECUTABLE_SUFFIX}" )
+endif()
+
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mccode_config.py.in" "${WORK}/mccode_config.py" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mccode_config.json.in" "${WORK}/mccode_config.json" @ONLY)
 set(BINS "${WORK}/mccode_config.py" "${WORK}/mccode_config.json")

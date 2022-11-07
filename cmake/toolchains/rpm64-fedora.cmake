@@ -21,8 +21,5 @@ set(PLOTTER "PGPLOT")
 set(PGDEV "/xserv")
 set(GNUDEV "wxt")
 
-# Suffix for executables
-set(EXE "out")
-
 # RPM profile
 set(RPMPROFILE "fedora")
