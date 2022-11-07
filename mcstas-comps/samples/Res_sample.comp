@@ -76,7 +76,7 @@ SHARE %{
   };
 %}
 
-/* Needed for resoultion calculation */
+/* Needed for resolution calculation */
 USERVARS %{
   double res_pi;
   double res_ki_x;

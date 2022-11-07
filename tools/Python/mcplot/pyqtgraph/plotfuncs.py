@@ -23,9 +23,9 @@ def plot(node, i, plt, opts):
     '''
     if type(node) == PNSingle and i != 0:
         raise Exception("inconsistent plot request, idx=%s" % str(i))
-    
+
     data = node.getdata_idx(i)
-    
+
     if type(data) is Data1D:
         view_box = plot_Data1D(data, plt, log=opts['log'], legend=opts['legend'], icolormap=opts['icolormap'],
                                verbose=opts['verbose'], fontsize=opts['fontsize'])
@@ -45,6 +45,7 @@ def plot(node, i, plt, opts):
 
 GlobalColormap='none'
 
+
 class ModLegend(pg.LegendItem):
     """
     Modified LegendItem to remove the ugly / in the label. Also reduces text size and padding.
@@ -52,7 +53,7 @@ class ModLegend(pg.LegendItem):
     def __init__(self, offset, text_size='9pt'):
         self.text_size = text_size
         LegendItem.__init__(self, None, offset)
-    
+
     def addItem(self, item, name):
         label = pg.LabelItem(name, size=self.text_size)
         if isinstance(item, ItemSample):
@@ -64,25 +65,26 @@ class ModLegend(pg.LegendItem):
         self.items.append((sample, label))
         self.layout.addItem(label, row, 1)
         self.updateSize()
-        
+    
     def paint(self, p, *args):
         p.setPen(pg.functions.mkPen(255,255,255,100))
         p.setBrush(pg.functions.mkBrush(0,0,0,100))
         p.drawRect(self.boundingRect())
 
+
 def plot_Data0D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fontsize=10):
     ''' creates an empty plot '''
     plt.setTitle("zero-dim monitor")
     return plt.getViewBox()
+    
 
-        
 def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fontsize=10):
     ''' create a plotItem and populate it with data, Data1D '''
     # data
     x = np.array(data.xvals).astype(np.float)
     y = np.array(data.yvals).astype(np.float)
     e = np.array(data.y_err_vals).astype(np.float)
-    
+
     if log:
         nonzeros=[]
         zeros=[]
@@ -100,7 +102,7 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fo
         plt.setLogMode(y=False)
     
     plt.setXRange(np.min(x), np.max(x), padding=0)
-    
+
     # labels
     plt.setTitle(" ")
     plt.getAxis('bottom').setLabel(data.xlabel)
@@ -111,17 +113,17 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fo
     #axis_style = {'color': '#FFF', 'font-size': '5pt'}
     #plt.setLabel(axis='left', text=data.ylabel, **axis_style)
     #plt.setLabel(axis='bottom', text=data.xlabel, **axis_style)
-    
+
     # error bars
     beam = 0
     if len(x) > 1:
         beam = (x[1]-x[0])*0.5
-    
+
     # TODO: Find solution for adding errorbars in the log case
     if not log:
         err = pg.ErrorBarItem(x=x, y=y, height=e, beam=beam)
         plt.addItem(err)
-    
+
     # commit
     if legend:
         plt.legend = ModLegend(offset=(-1, 1), text_size='%spt' % str(fontsize))
@@ -135,14 +137,15 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fo
             lname1 = '%s<br>[%s]' % (data.component, data.filename)
         if lname1:
             plt.plot([x[0]], [y[0]], name=lname1)
-    
+
     # plots data
     plt.plot(x, y)
-    
+
     plt.setMenuEnabled(False)
     vb = plt.getViewBox()
-    
+
     return vb
+
 
 def get_color_map(idx, pos_min, pos_max):
     # The contents of this function was generated from Matlab using the generate_colormaps.m script
@@ -169,6 +172,7 @@ def get_color_map(idx, pos_min, pos_max):
     idx = idx % len(keys)
     colormap = colormaps[keys[idx]]
     pos = pos_min + (pos_max - pos_min) * np.arange(len(colormap))/(len(colormap)-1)
+    #print(f"colourbar min: {pos_min}, max: {pos_max}, pos: {pos}.")
 
     global GlobalColormap
     if not GlobalColormap == keys[idx]:
@@ -177,6 +181,7 @@ def get_color_map(idx, pos_min, pos_max):
 
     return pg.ColorMap(pos, colormap)
 
+
 def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, fontsize=10, cbmin=None, cbmax=None):
     ''' create a layout and populate a plotItem with data Data2D, adding a color bar '''
     # data
@@ -184,7 +189,7 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
     dataset = np.array(data.zvals)
     dataset = np.transpose(dataset)
     datashape = dataset.shape
-    
+
     ymin = 1e-19
     if log:
         dataset = np.reshape(dataset, (1, datashape[0]*datashape[1]))
@@ -197,7 +202,7 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
         else:
             dataset = np.reshape(dataset, datashape)
     img.setImage(dataset)
-    
+
     # scale(x,y) is in %, translate(x,y) is in the original units
     dx = (data.xlimits[1] - data.xlimits[0])/datashape[0]
     dy = (data.xlimits[3] - data.xlimits[2])/datashape[1]
@@ -209,7 +214,7 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
     # color map (by lookup table)
     cb_pos_min = cbmin if cbmin else np.min(dataset)
     cb_pos_max = cbmax if cbmax else np.max(dataset)
-    
+
     colormap = get_color_map(icolormap, cb_pos_min, cb_pos_max)
     lut = colormap.getLookupTable(cb_pos_min, cb_pos_max, 256)
     img.setLookupTable(lut)
@@ -217,20 +222,20 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
     # graphics layout with a plotitem and a gradienteditoritem
     layout = pg.GraphicsLayout()
     layout.setContentsMargins(0, 0, 20, 5)
-    
+
     # plot area
     layout.addLabel(' ', 0, 0, colspan=2)
     layout.addItem(plt, 1, 0)
     labelStyle = {'color': '#FFF', 'font-size': '%spt' % fontsize}
     plt.getAxis('bottom').setLabel(data.xlabel, **labelStyle)
     plt.getAxis('left').setLabel(data.ylabel, **labelStyle)
-    
+
     plt.setMenuEnabled(False)
-    
+
     if legend:
         plt.legend = ModLegend(offset=(-1, 1), text_size='%spt' % str(fontsize))
         plt.legend.setParentItem(plt.vb)
-        
+
         try:
             lname1 = '<center>%s<br>I = %s</center>' % (data.component, data.values[0])
             if verbose:
@@ -239,20 +244,26 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
             lname1 = '%s<br>[%s]' % (data.component, data.filename)
         if lname1:
             plt.plot([0], [0], name=lname1)
-    
+
+    # add the image item to the plot
     plt.addItem(img)
+
+    # associate the colour bar with the image item
+    cb = pg.ColorBarItem(cmap=colormap, values=(cb_pos_min, cb_pos_max))
+    cb.setImageItem(img)
+
     # Set the x and y ranges correctly
     plt.getViewBox().setXRange(data.xlimits[0], data.xlimits[1], padding=0)
     plt.getViewBox().setYRange(data.xlimits[2], data.xlimits[3], padding=0)
-    
+
     #
     # color bar
     #
     if (fontsize >= 8):
         cbimg = pg.ImageItem()
         numsteps = 100
-        arr_1 = cb_pos_min + (cb_pos_max - cb_pos_min) * np.arange(numsteps)/(numsteps)
-        cbimg.setImage(np.array([arr_1]))
+        cbvals = cb_pos_min + (cb_pos_max - cb_pos_min) * np.arange(numsteps)/(numsteps)
+        cbimg.setImage(np.array([cbvals]))
         # calculate scaling and translation for the y-axis
         dy = (cb_pos_max - cb_pos_min) / numsteps
         # Prevent division by 0
@@ -264,15 +275,13 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
         tr.translate(1,ty)
         cbimg.setTransform(tr)
         #cbimg.translate(ty)
-        
+
         cbimg.setLookupTable(lut)
-        
+
         colorbar = layout.addPlot(1, 1)
         colorbar.addItem(cbimg)
         colorbar.setFixedWidth(40)
-        
-        pg.GradientEditorItem
-        
+
         colorbar.axes['top']['item'].show()
         colorbar.axes['top']['item'].setStyle(showValues=False)
         colorbar.axes['bottom']['item'].show()
@@ -280,12 +289,10 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
         colorbar.axes['left']['item'].show()
         colorbar.axes['left']['item'].setStyle(showValues=False)
         colorbar.axes['right']['item'].show()
-        
+
         colorbar.getViewBox().autoRange(padding=0)
-        
-    
+
     plt.layout_2d = layout
-    
+
     # return layout so it doesn't get garbage collected, but the proper plot viewBox pointer for click events
     return plt.getViewBox(), layout
-

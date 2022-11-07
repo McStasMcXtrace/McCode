@@ -16,7 +16,7 @@
 *
 * This file is used for resolution calculations, it was taken from "tlibs2" and "matrix_calc":
 *   https://code.ill.fr/scientific-software/takin/tlibs2/-/blob/master/libs/mathlib.c
-*   https://github.com/t-weber/matrix_calc/blob/master/src/runtime.c
+*   https://github.com/t-weber/matrix_calc/blob/master/src/libs/runtime.c
 *
 * Usage: within SHARE
 * %include "cov-lib"
