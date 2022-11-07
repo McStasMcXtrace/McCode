@@ -1,17 +1,22 @@
 include(FetchContent)
 
 function(git_fetch package version source required)
-    if (${required})
-        find_package(${package} ${version} REQUIRED)
-    else()
-        find_package(${package} ${version} QUIET)
+    # If provided a bare version number check for if it is already installed locally
+    if (version MATCHES "^[0-9]+\.([0-9]+\.)*[0-9]+$")
+      if (${required})
+          find_package(${package} ${version} REQUIRED)
+      else()
+          find_package(${package} ${version} QUIET)
+      endif()
+      # If not found by find_package, ensure the tag starts with a v for GitHub
+      set(version v${version})
     endif()
-
+   
     if (${${package}_FOUND})
         message(STATUS "Found system ${package}")
     else()
         message(STATUS "Fetch ${package} ${version} from ${source}")
-        FetchContent_Declare(${package} GIT_REPOSITORY ${source} GIT_TAG v${version})
+        FetchContent_Declare(${package} GIT_REPOSITORY ${source} GIT_TAG ${version})
         FetchContent_GetProperties(${package})
         if (NOT "${package}_POPULATED")
             FetchContent_Populate(${package})
