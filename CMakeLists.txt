@@ -6,6 +6,9 @@ project(mccode C)
 
 option(BUILD_MCSTAS "Build McStas" OFF)
 option(BUILD_MCXTRACE "Build McXtrace" OFF)
+option(BUILD_MCPL "Build Third Party code MCPL" ON)
+option(BUILD_NCRYSTAL "Build Third Party code NCrystal" ON)
+
 
 if (${BUILD_MCSTAS} AND ${BUILD_MCXTRACE})
     message(WARNING "Configuration requests building both McStas and McXtrace which is likely to fail.")
@@ -15,6 +18,16 @@ endif()
 
 # Set module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
+
+# Find/Fetch dependencies
+if(NOT ${BUILD_MCPL})
+include(MCPL)
+endif()
+if(NOT ${BUILD_NCRYSTAL})
+include(NCrystal)
+endif()
+
+message(STATUS "Now run into an error?")
 
 # Setup McCode values (from mkdist or defaults)
 include(MCUtil)
