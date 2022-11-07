@@ -18,18 +18,8 @@ include(MinGW)
 # Commands for running various external tools
 set(BROWSER "start")
 set(TERMINAL "start")
-set(VRMLVIEW "start")
 set(TOOLS_CC "gcc")
 set(MPICC "mpicc.bat")
 set(MPIRUN "mpiexec.exe")
 set(MPILIB "msmpi")
-set(PGPLOT "yes") # <- Not actually run, but non-empty indicates available
-set(GNUPLOT "gnuplot.exe")
 set(MCCODE_CFLAGS "-g -O2 -lm -std=c99 -D_POSIX_SOURCE")
-
-# Plotting options
-
-set(PLOTTER "PGPLOT")
-set(PGDEV "/gw")
-set(GNUDEV "windows")
-
