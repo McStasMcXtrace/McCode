@@ -44,5 +44,8 @@ fi
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib 3.x-dev tools/Python/mcplot/matplotlib/ "" deb64 "" -- justinst
 cp tools/other/mcsplit/mcsplit.py $HOME/McXtrace/mcxtrace/3.x-dev/bin/
 
+export MCINSTALL_PREFIX=$HOME/McXtrace/mcxtrace/3.x-dev/
+./mkdist mcxtrace-mcpl 3.x-dev 3rdparty/mcpl "" deb64 "" -- justinst
+
 # Ensure we are configured for 10 node MPI runs
 sed -i s/\'4\'/\'10\'/g $HOME/McXtrace/mcxtrace/3.x-dev/tools/Python/mccodelib/mccode_config.py

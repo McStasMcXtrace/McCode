@@ -36,6 +36,9 @@ export FC=gfortran
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph 1.x-dev tools/Python/mcplot/pyqtgraph/ "" deb64 "" -- justinst
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib 1.x-dev tools/Python/mcplot/matplotlib/ "" deb64 "" -- justinst
 
+export MCINSTALL_PREFIX=$HOME/McXtrace/mcxtrace/1.x-dev/
+./mkdist mcxtrace-mcpl 1.x-dev 3rdparty/mcpl "" deb64 "" -- justinst
+
 # Ensure we are configured for 10 node MPI runs
 sed -i s/\'4\'/\'10\'/g $MCINSTALL_PREFIX/mcxtrace/1.x-dev/tools/Python/mccodelib/mccode_config.py
 
