@@ -55,7 +55,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (int polarisationuse=0, int doubleprec=0, int verbose=0, string userflag="",
   string filename=0, string userflagcomment="", merge_mpi=1, keep_mpi_unmerged=0, buffermax=0)
 OUTPUT PARAMETERS ()
-DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
+DEPENDENCY "-Wl,-rpath,CMD(mcpl-config --show libdir) -LCMD(mcpl-config --show libdir) -lmcpl -ICMD(mcpl-config --show includedir)"
 
 SHARE
 %{
