@@ -69,4 +69,3 @@ else()
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}"
   )
 endif()
-

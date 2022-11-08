@@ -19,13 +19,6 @@ endif()
 # Set module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 
-# Find/Fetch dependencies
-if(NOT ${BUILD_MCPL})
-include(MCPL)
-endif()
-if(NOT ${BUILD_NCRYSTAL})
-include(NCrystal)
-endif()
 
 message(STATUS "Now run into an error?")
 
@@ -46,4 +39,12 @@ if (${BUILD_MCXTRACE})
     add_subdirectory(mcxtrace)
     add_subdirectory(mcxtrace-comps)
     add_subdirectory(tools)
+endif()
+
+# Find/Fetch dependencies
+if( BUILD_MCPL )
+  include(MCPL)
+endif()
+if( BUILD_NCRYSTAL )
+  include(NCrystal)
 endif()
