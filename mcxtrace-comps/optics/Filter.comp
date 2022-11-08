@@ -297,7 +297,7 @@ TRACE
 FINALLY
 %{
   Table_Free(&(prms->table));
-  free(prms);
+  if (prms) { free(prms); prms=NULL; }
 %}
 
 MCDISPLAY
