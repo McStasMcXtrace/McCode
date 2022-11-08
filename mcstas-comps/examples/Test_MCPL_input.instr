@@ -26,7 +26,7 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT Test_MCPL_input(repeat=1,E_smear=0.1,pos_smear=0.001,dir_smear=0.01)
-DEPENDENCY "-DMCPLPATH=@MCCODE_LIB@/libs/mcpl/voutput.mcpl"
+DEPENDENCY "-DMCPLPATH=@MCCODE_LIB@/data/voutput.mcpl"
 
 DECLARE
 %{
