@@ -34,6 +34,7 @@ add_executable(
   cif2hkl
   ${CMAKE_CURRENT_SOURCE_DIR}/libs/cif2hkl/cif2hkl.F90
 )
+target_compile_options(cif2hkl PUBLIC "-ffree-line-length-512")
 
 if (NOT WINDOWS)
   add_library(neutronics "STATIC" libs/neutronics/neutronics-subs.f)
