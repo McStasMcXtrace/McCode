@@ -744,7 +744,8 @@ def load_sweep(args):
 
     # ensure that root, primary and secondary plot items match
     # (e.g., remove superfluous event files from secondary plot items)
-    for plt_idx in range(root_len):
+    plt_idx = 0
+    while plt_idx < root_len:
         if plt_idx >= len(primnodes_lst) or plt_idx >= len(secnodes_lst):
             print("Warning: Too few primary/secondary plot items.")
             break
@@ -773,11 +774,12 @@ def load_sweep(args):
         if remove_secnode:
             secnodes_lst.pop(plt_idx)
             sec_len -= 1
-            plt_idx -= 1
             continue
 
         #print("Plot %d: root: %s, 1st: %s, 2nd: %s." % (plt_idx,
-        #    root_yvar, prim_yvar, sec_prims[0].getdata_idx(0).component))
+        #    root_yvar, prim_yvar, sec_prims[0].getdata_idx(0).filename))
+
+        plt_idx += 1
 
     # remove remaining superfluous secondary plot items
     while sec_len > root_len:
