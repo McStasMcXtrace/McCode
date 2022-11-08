@@ -448,7 +448,7 @@ TRACE
         PROP_DT(t0); /* t0 incoming beam */
       /* Final test if we are on lid / bottom of banana/sphere */
       if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA || abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) {
-        if (fabs(y) >= Vars.Cylinder_Height/2 - FLT_EPSILON) {
+        if (Vars.Cylinder_Height && fabs(y) >= Vars.Cylinder_Height/2 - FLT_EPSILON) {
           intersect=0;
           Flag_Restore=1;
         }
