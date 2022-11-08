@@ -4,12 +4,14 @@ and assembling it in a plot-friendly way.
 '''
 import glob
 import re
+import os
 from os.path import isfile, isdir, join, dirname, basename, splitext, exists
 from os import walk
 from decimal import Decimal
 
 from .flowchart import FCNDecisionBool, FCNDecisionMulti, FCNProcess, FCNTerminal, FlowChartControl
 from .plotgraph import PlotGraphPrint, DataHandle, PNMultiple, PNSingle
+
 
 '''
 McCode simulation output data types.
@@ -23,104 +25,115 @@ class DataMcCode(object):
     def __str__(self, *args, **kwargs):
         return self.title
 
+
 class Data0D(DataMcCode):
     pass
-    
+
+
 class Data1D(DataMcCode):
     ''' 1d plots use this data type '''
     def __init__(self):
         super(Data1D, self).__init__()
-        
+
         self.component = ''
         self.filename = ''
         self.title = ''
         self.xlabel = ''
         self.ylabel = ''
-        
+
         self.xvar = ''
         self.xlimits = () # pair
-        
+
         self.variables = []
-        
+
         self.yvar = () # pair
         self.values = () # triplet
         self.statistics = ''
-        
+
         # data references
         self.xvals = []
         self.yvals = []
         self.y_err_vals = []
         self.Nvals = []
-    
+
+
     def clone(self):
         data = Data1D()
-        
+
         data.filepath = self.filepath
-        
+
         data.component = self.component
         data.filename = self.filename
         data.title = self.title
         data.xlabel = self.xlabel
         data.ylabel = self.ylabel
-        
+
         data.xvar = self.xvar
         data.xlimits = self.xlimits
-        
+
         data.variables = self.variables
-        
+
         data.yvar = self.yvar
         data.values = self.values
         data.statistics = self.statistics
-        
+
         # data references
         data.xvals = self.xvals
         data.yvals = self.yvals
         data.y_err_vals = self.y_err_vals
         data.Nvals = self.Nvals
-        
+
         return data
-        
+
+
     def get_stats_title(self):
         '''I=.... Err=... N=...; X0=...; dX=...;'''
         try:
-            stitle = '%s=%e Err=%e N=%d; %s' % (self.yvar[0], self.values[0], self.values[1], self.values[2], self.statistics)
+            stitle = '%s=%e Err=%e N=%d; %s' % (
+                self.yvar[0], self.values[0], self.values[1],
+                self.values[2], self.statistics)
         except:
             stitle = '%s of %s' % (self.yvar[0], self.xvar)
         return stitle
-    
+
+
     def __str__(self):
         return 'Data1D, ' + self.get_stats_title()
+
 
 class Data2D(DataMcCode):
     ''' PSD data type '''
     def __init__(self):
         super(Data2D, self).__init__()
-        
+
         self.component = ''
         self.filename = ''
         self.title = ''
-        
+
         self.xlabel = ''
         self.ylabel = ''
-        
+
         self.xvar = ''
         self.yvar = ''
         self.zvar = ''
         self.xylimits = () # quadruple
-        
+
         self.values = () # triplet
         self.statistics = '' # quadruple
         self.signal = ''
-        
+
         # data references
         self.zvals = []
         self.counts = []
-    
+
+
     def get_stats_title(self):
         '''I=.... Err=... N=...; X0=...; dX=...;'''
-        stitle = '%s=%e Err=%e N=%d' % (self.zvar, self.values[0], self.values[1], self.values[2])
+        stitle = '%s=%e Err=%e N=%d' % (
+            self.zvar, self.values[0], self.values[1], self.values[2])
         return stitle
-    
+
+
     def __str__(self):
         return 'Data2D, ' + self.get_stats_title()
 
@@ -162,7 +175,7 @@ def _parse_1D_monitor(text):
         '''# yvar: (I,I_err)'''
         m = re.search('\# yvar: \(([\w]+),([\w]+)\)', text)
         data.yvar = (m.group(1), m.group(2))
-        
+
         '''# values: 6.72365e-17 4.07766e-18 4750'''
         m = re.search('\# values: ([\d\-\+\.e]+) ([\d\-\+\.e]+) ([\d\-\+\.e]+)', text)
         data.values = (Decimal(m.group(1)), Decimal(m.group(2)), float(m.group(3)))
@@ -179,23 +192,24 @@ def _parse_1D_monitor(text):
         for l in lines:
             if '#' in l:
                 continue
-            
+
             vals = l.split()
             xvals.append(float(vals[0]))
             yvals.append(float(vals[1]))
             y_err_vals.append(float(vals[2]))
             Nvals.append(float(vals[3]))
-        
+
         data.xvals = xvals
         data.yvals = yvals
         data.y_err_vals = y_err_vals
         data.Nvals = Nvals
-    
+
     except Exception as e:
         print('Data1D load error.')
         raise e
 
     return data
+
 
 def _parse_2D_monitor(text):
     data = Data2D()
@@ -215,21 +229,21 @@ def _parse_2D_monitor(text):
         '''# title: PSD monitor'''
         m = re.search('\# title: (%s)' % freetext_pat, text)
         data.title = m.group(1)
-        
+
         '''# xlabel: X position [cm]'''
         m = re.search('\# xlabel: (%s)' % freetext_pat, text)
         data.xlabel = m.group(1)
         '''# ylabel: Y position [cm]'''
         m = re.search('\# ylabel: (%s)' % freetext_pat, text)
         data.ylabel = m.group(1)
-        
+
         '''# xvar: X'''
         m = re.search('\# xvar: (%s)' % freetext_pat, text)
         data.xvar = m.group(1)
         '''# yvar: Y '''
         m = re.search('\# yvar: (%s)' % freetext_pat, text)
         data.yvar = m.group(1)
-        
+
         '''# zvar: I '''
         m = re.search('\# zvar: (%s)' % freetext_pat, text)
         data.zvar = m.group(1)
@@ -239,18 +253,18 @@ def _parse_2D_monitor(text):
         '''
         m = re.search('\# xylimits: ([\d\.\-\+e]+) ([\d\.\-\+e]+) ([\d\.\-\+e]+) ([\d\.\-\+e]+)([\ \d\.\-\+e]*)', text)
         data.xlimits = (float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4)))
-        
+
         '''# values: 6.72365e-17 4.07766e-18 4750'''
         m = re.search('\# values: ([\d\+\-\.e]+) ([\d\+\-\.e]+) ([\d\+\-\.e]+)', text)
         data.values = (Decimal(m.group(1)), Decimal(m.group(2)), float(m.group(3)))
         '''# statistics: X0=5.99569; dX=0.0266368;'''
         m = re.search('\# statistics: X0=([\d\.\+\-e]+); dX=([\d\.\+\-e]+); Y0=([\d\.\+\-e]+); dY=([\d\.\+\-e]+);', text)
-        
+
         data.statistics = 'X0=%.2E; dX=%.2E; Y0=%.2E; dY=%.2E;' % (Decimal(m.group(1)), Decimal(m.group(2)), Decimal(m.group(3)), Decimal(m.group(4)))
         '''# signal: Min=0; Max=1.20439e-18; Mean=4.10394e-21;'''
         m = re.search('\# signal: Min=([\ \d\.\+\-e]+); Max=([\ \d\.\+\-e]+); Mean=([\ \d\.\+\-e]+);', text)
         data.signal = 'Min=%f; Max=%f; Mean=%f;' % (float(m.group(1)), float(m.group(2)), float(m.group(3)))
-        
+
         '''# Data [detector/PSD.dat] I:'''
         '''# Events [detector/PSD.dat] N:'''
         lines = text.splitlines()
@@ -278,6 +292,7 @@ def _parse_2D_monitor(text):
                     data.zvals.append(vals)
                 except:
                     pass
+
             if events:
                 try:
                     vals = [float(item) for item in l.strip().split()]
@@ -291,6 +306,7 @@ def _parse_2D_monitor(text):
 
     return data
 
+
 def _load_monitor(monitorfile):
     ''' deferred loading: returns a data handle, which the user must call getdata() on to load the actual data '''
     def load(monfile):
@@ -298,7 +314,7 @@ def _load_monitor(monitorfile):
         if not f == 'No file':
             text = open(f).read()
             # determine 1D / 2D data
-            
+
             m = re.search('\# type: (\w+)', text)
             typ = m.group(1)
             if typ == 'array_0d':
@@ -316,12 +332,13 @@ def _load_monitor(monitorfile):
         else:
             return Data0D()
     data = DataHandle(load_fct=lambda m=monitorfile: load(monfile=m))
-    
+
     return data
+
 
 def _get_filenames_from_mccodesim(mccodesim):
     dir = dirname(mccodesim)
-    
+
     text = open(mccodesim).read()
     data_idx = text.find('begin data')
     filenames = []
@@ -337,12 +354,14 @@ def _get_filenames_from_mccodesim(mccodesim):
             filenames.append('No file')
     return filenames
 
+
 def _load_data_from_mcfiles(filenames):
     data_lst = []
     for f in filenames:
         data = _load_monitor(f)
         data_lst.append(data)
     return data_lst
+
 
 def _load_multiplot_1D_lst(f_dat):
     '''
@@ -356,12 +375,12 @@ def _load_multiplot_1D_lst(f_dat):
         header = Data1D()
         header.component = ''
         header.filename = 'mccode.dat'
-        
+
         # NOTE: title this is overwritten below to be equal to yvar
         '''# title: Scan of lambda'''
         m = re.search('\# title: ([\w, ]+)', text)
         header.title = m.group(1)
-        
+
         '''# xlabel: 'lambda\''''
         m = re.search('\# xlabel: ([\w \[\]\/\^\',]+)', text)
         header.xlabel = m.group(1).strip("\'")
@@ -374,15 +393,15 @@ def _load_multiplot_1D_lst(f_dat):
         m = re.search('\# xvars: ([\w, ]+)', text)
         header.xvar = m.group(1).replace(',', '')
         num_xvars = len(header.xvar.split())
-        
+
         '''# xlimits: 6 7'''
         m = re.search('\# xlimits: ([\d\.\-e]+) ([\d\.\-e]+)', text)
         header.xlimits = (float(m.group(1)), float(m.group(2)))
-        
+
         '''# variables: lambda Ldetector_I Ldetector_ERR PSDrad_I PSDrad_ERR PSDrad_I PSDrad_ERR detector_I detector_ERR'''
         m = re.search('\# variables: ([\w ]+)', text)
         variables = m.group(1).split()
-        
+
         '''# yvars: (AutoTOFL0_I,AutoTOFL0_ERR) (AutoTOF0_I,AutoTOF0_ERR) (AutoL0_I,AutoL0_ERR) ...'''
         m = re.search('\# yvars: ([\w \(\)\,]+)', text)
         unsplit = m.group(1)
@@ -390,13 +409,13 @@ def _load_multiplot_1D_lst(f_dat):
         unsplit = unsplit.replace(')', ' ')
         unsplit = unsplit.replace(',', ' ')
         yvars = unsplit.split()
-        
+
         # get x and y values (the latter is a list of a list, the infamous yvals_lst which contains yvals values, which are lists)
         lines = text.splitlines()
         xvals = []
         yvals_lst = []
         yvals_err_lst = []
-        
+
         for l in lines:
             if '#' in l:
                 continue
@@ -408,7 +427,7 @@ def _load_multiplot_1D_lst(f_dat):
                 yvals_lst[i].append(float(l.split()[2*i+num_xvars]))
                 yvals_err_lst[i].append(float(l.split()[2*i+num_xvars+1]))
         header.xvals = xvals
-        
+
         # create a new instance for each y variable
         for i in range(len(yvars)//2):
             data = header.clone()
@@ -425,6 +444,7 @@ def _load_multiplot_1D_lst(f_dat):
 
     return data_handle_lst
 
+
 def _load_sweep_monitors(rootdir):
     '''
     loads the files of a scan sweep into plotable datastructures
@@ -437,7 +457,7 @@ def _load_sweep_monitors(rootdir):
             if f not in mnames and f != 'mccode.sim' and f != 'mcstas.sim':
                 mnames.append(f)
         arg.append(dirsignature)
-    
+
     # get the subdirs somehow
     subdirtuple = []
     for root, dirs, files in walk(top=rootdir):
@@ -446,7 +466,7 @@ def _load_sweep_monitors(rootdir):
     subdirs = [t[0] for t in subdirtuple]
     # get the right order of subdirs by recreating them a little bit
     subdirs = [join(dirname(subdirs[i]), str(i)) for i in range(len(subdirs))] # sortalpha(subdirs)
-    
+
     # get the monitor ordering right by snooping the '  filename:' labels out of the scan point file 0/mccode.sim
     def get_subdir_monitors(subdir):
         mons = []
@@ -471,21 +491,22 @@ def _load_sweep_monitors(rootdir):
                         break
             if not m:
                 mons.append('No file')
-                    
+
         return mons
-   
+
     monitors_by_subdir = []
     for s in subdirs:
         monitors_by_subdir.append(get_subdir_monitors(s))
-    
-    # notice that columns and rows are swapped, so we get to use a list-of-lists data structure, with rows the same monitor
+
+    # notice that columns and rows are swapped, so we get to use a
+    # list-of-lists data structure, with rows the same monitor
     sweep_monitors = [None]*len(monitors_by_subdir[0])
     for i in range(len(monitors_by_subdir[0])):          # N
         mon_lst = [None]*len(monitors_by_subdir)
         for j in range(len(monitors_by_subdir)):
             mon_lst[j] = _load_monitor(monitors_by_subdir[j][i])
         sweep_monitors[i] = mon_lst
-    
+
     return sweep_monitors
 
 
@@ -510,6 +531,7 @@ def is_dat_file(f):
         return True
     return False
 
+
 def has_filename(args):
     f = args['simfile']
     if not isfile(f):
@@ -525,10 +547,12 @@ def has_filename(args):
         args['directory'] = dirname(f)
         return True
 
+
 def is_mccodesim_or_mccodedat(args):
     f = args['simfile']
     f_name = basename(f)
     return (f_name == 'mccode.sim' or f_name == 'mcstas.sim' or f_name == 'mccode.dat') and isfile(f)
+
 
 def is_monitorfile(args):
     f = args['simfile']
@@ -539,6 +563,7 @@ def is_monitorfile(args):
     else:
         return False
 
+
 def is_sweepfolder(args):
     d = args['directory']
 
@@ -548,13 +573,16 @@ def is_sweepfolder(args):
     dotdat = join(d, 'mccode.dat')
     return isfile(dotsim) and isfile(dotdat)
 
+
 def is_broken_sweepfolder(args):
     ''' not implemented (returns trivial answer) '''
     return False
 
+
 def is_sweep_data_present(args):
     ''' not implemented '''
     raise Exception('is_sweep_data_present has not been implemented.')
+
 
 def is_mccodesim_w_monitors(args):
     f = args['simfile']
@@ -580,6 +608,7 @@ def is_mccodesim_w_monitors(args):
         datfiles.remove('mccode.dat')
     return len(datfiles) > 0
 
+
 def has_datfile(args):
     d = args['directory']
     
@@ -600,9 +629,10 @@ def has_datfile(args):
     else:
         return False
 
+
 def has_multiple_datfiles(args):
     d = args['directory']
-    
+
     # look for any "unkonwn" files, could be data files
     datfiles = glob.glob(join(d, '*'))
     if 'mccode.sim' in datfiles:
@@ -616,6 +646,7 @@ def has_multiple_datfiles(args):
             return False
     return len(datfiles) > 1
 
+
 def test_decfuncs(simfile):
     ''' calls all decision functions in the node tree '''
     args = {}
@@ -626,10 +657,12 @@ def test_decfuncs(simfile):
     print('is_monitorfile:            %s' % str(is_monitorfile(args)))
     print('is_sweepfolder:            %s' % str(is_sweepfolder(args)))
     print('is_broken_sweepfolder:     %s' % str(is_broken_sweepfolder(args)))
-    #print('is_sweep_data_present:     %s' % str(is_sweep_data_present(args))) # should not be called until implemented
+    #print('is_sweep_data_present:    %s' % str(is_sweep_data_present(args))) # should not be called until implemented
     print('is_mccodesim_w_monitors:   %s' % str(is_mccodesim_w_monitors(args)))
     print('has_datfile:               %s' % str(has_datfile(args)))
     print('has_multiple_datfiles:     %s' % str(has_multiple_datfiles(args)))
+
+
 
 '''
 Terminal load functions - calls data load utilities, assembles and returns data graph.
@@ -642,6 +675,7 @@ def load_monitor(args):
     root = PNSingle(data)
 
     return root
+
 
 def load_simulation(args):
     # assume simfile is mccode.sim
@@ -667,6 +701,7 @@ def load_simulation(args):
     root.set_secondaries(primnodes) # there is only one way to click here...could also be None
 
     return root
+
 
 def load_sweep(args):
     d = args['directory']
@@ -702,13 +737,73 @@ def load_sweep(args):
         secnodes_lst.append(secnode)
     root.set_secondaries(secnodes_lst)
 
+    # lengths of the root, primary and secondary plot item sets
+    root_len = len(data_handle_lst_sweep1D)
+    prim_len = len(primnodes_lst)
+    sec_len = len(secnodes_lst)
+
+    # ensure that root, primary and secondary plot items match
+    # (e.g., remove superfluous event files from secondary plot items)
+    plt_idx = 0
+    while plt_idx < root_len:
+        if plt_idx >= len(primnodes_lst) or plt_idx >= len(secnodes_lst):
+            print("Warning: Too few primary/secondary plot items.")
+            break
+
+        root_yvar = root.getdata_idx(plt_idx).yvar
+        prim_yvar = primnodes_lst[plt_idx].getdata_idx(0).yvar
+        sec_prims = secnodes_lst[plt_idx].get_primaries()
+
+        # check primary plot items
+        if root_yvar != prim_yvar:
+            print("Warning: Root (%s) and primary (%s) plot items do not match." % (
+		root_yvar, prim_yvar))
+
+        # check secondary plot items
+        remove_secnode = False
+        if len(sec_prims) == 0:
+            remove_secnode = True
+        else:
+            # check if the component name for a secondary plot item corresponds
+            # to the yvar names of the root and primary plot items
+            sec_yvar = sec_prims[0].getdata_idx(0).component
+            if not root_yvar.startswith(sec_yvar):
+                remove_secnode = True
+
+        # remove non-matching secondary plot item
+        if remove_secnode:
+            secnodes_lst.pop(plt_idx)
+            sec_len -= 1
+            continue
+
+        #print("Plot %d: root: %s, 1st: %s, 2nd: %s." % (plt_idx,
+        #    root_yvar, prim_yvar, sec_prims[0].getdata_idx(0).filename))
+
+        plt_idx += 1
+
+    # remove remaining superfluous secondary plot items
+    while sec_len > root_len:
+        secnodes_lst.pop()
+        sec_len -= 1
+
+    # length checks
+    if root_len != prim_len:
+        print("Warning: Unequal number of root (%d) and primary (%d) plot items."
+            % (root_len, prim_len))
+    if root_len != sec_len:
+        print("Warning: Unequal number of root (%d) and secondary (%d) plot items."
+            % (root_len, sec_len))
+
     return root
+
 
 def load_sweep_b(args):
     raise Exception('load_sweep_b is not implemented.')
 
+
 def load_sweep_c(args):
     raise Exception('load_sweep_c is not implemented.')
+
 
 def load_monitor_folder(args):
     # assume simfile is folder with multiple dat files
@@ -729,8 +824,10 @@ def load_monitor_folder(args):
 
     return root
 
+
 def throw_error(args):
     raise Exception('Could not load "%s".' % args['simfile'])
+
 
 class McCodeDataLoader():
     ''' assembly and execution of mccode data loader flowchart '''
@@ -742,35 +839,56 @@ class McCodeDataLoader():
     def load(self):
         ''' loads mccode data and assembles the plotable data graph '''
 
-        # exit terminals
-        exit_error                  = FCNTerminal(key="error",  fct=throw_error)
-        exit_case1                  = FCNTerminal(key="case1",  fct=load_monitor)
-        exit_case2                  = FCNTerminal(key="case2",  fct=load_simulation)
-        exit_case3                  = FCNTerminal(key="case3",  fct=load_sweep)
-        exit_case3b                 = FCNTerminal(key="case3b", fct=throw_error)
-        exit_case3c                 = FCNTerminal(key="case3c", fct=throw_error)
-        exit_case4                  = FCNTerminal(key="case4",  fct=load_monitor_folder)
-        # decision nodes (assembled in backwards order)
-        dec_multiplefiles           = FCNDecisionBool(fct=has_multiple_datfiles,    node_T=exit_case4,              node_F=exit_case1)
-        dec_hasdatfile              = FCNDecisionBool(fct=has_datfile,              node_T=dec_multiplefiles,       node_F=exit_error)
-        dec_ismccodesimwmonitors    = FCNDecisionBool(fct=is_mccodesim_w_monitors,  node_T=exit_case2,              node_F=dec_hasdatfile)
-        dec_datafolderspresent      = FCNDecisionBool(fct=is_sweep_data_present,    node_T=exit_case3b,             node_F=exit_case3c)
-        dec_isbrokensweep           = FCNDecisionBool(fct=is_broken_sweepfolder,    node_T=dec_datafolderspresent,  node_F=dec_ismccodesimwmonitors)
-        dec_issweepfolder           = FCNDecisionBool(fct=is_sweepfolder,           node_T=exit_case3,              node_F=dec_isbrokensweep)
-        dec_ismonitor               = FCNDecisionBool(fct=is_monitorfile,           node_T=exit_case1,              node_F=exit_error)
-        dec_ismccodesimordat        = FCNDecisionBool(fct=is_mccodesim_or_mccodedat, node_T=dec_issweepfolder,      node_F=dec_ismonitor)
-        dec_hasfilename             = FCNDecisionBool(fct=has_filename,             node_T=dec_ismccodesimordat,    node_F=dec_issweepfolder)
-        # enter terminal node
-        enter_simfile               = FCNTerminal(key='enter', node_next=dec_hasfilename)
+        # possible exit terminals
+        exit_term_error  = FCNTerminal(key = "error",  fct = throw_error)
+        exit_term_case1  = FCNTerminal(key = "case1",  fct = load_monitor)
+        exit_term_case2  = FCNTerminal(key = "case2",  fct = load_simulation)
+        exit_term_case3  = FCNTerminal(key = "case3",  fct = load_sweep)
+        exit_term_case3b = FCNTerminal(key = "case3b", fct = throw_error)
+        exit_term_case3c = FCNTerminal(key = "case3c", fct = throw_error)
+        exit_term_case4  = FCNTerminal(key = "case4",  fct = load_monitor_folder)
 
-        # get the "args" which is just the simfile, a string, which may correspond to a file or a folder
+        # decision nodes (assembled in backwards order)
+        dec_multiplefiles        = FCNDecisionBool(fct = has_multiple_datfiles,
+                                                   node_T = exit_term_case4,
+                                                   node_F = exit_term_case1)
+        dec_hasdatfile           = FCNDecisionBool(fct = has_datfile,
+                                                   node_T = dec_multiplefiles,
+                                                   node_F = exit_term_error)
+        dec_ismccodesimwmonitors = FCNDecisionBool(fct = is_mccodesim_w_monitors,
+                                                   node_T = exit_term_case2,
+                                                   node_F = dec_hasdatfile)
+        dec_datafolderspresent   = FCNDecisionBool(fct = is_sweep_data_present,
+                                                   node_T = exit_term_case3b,
+                                                   node_F = exit_term_case3c)
+        dec_isbrokensweep        = FCNDecisionBool(fct = is_broken_sweepfolder,
+                                                   node_T = dec_datafolderspresent,
+                                                   node_F = dec_ismccodesimwmonitors)
+        dec_issweepfolder        = FCNDecisionBool(fct = is_sweepfolder,
+                                                   node_T = exit_term_case3,
+                                                   node_F = dec_isbrokensweep)
+        dec_ismonitor            = FCNDecisionBool(fct = is_monitorfile,
+                                                   node_T = exit_term_case1,
+                                                   node_F = exit_term_error)
+        dec_ismccodesimordat     = FCNDecisionBool(fct = is_mccodesim_or_mccodedat,
+                                                   node_T = dec_issweepfolder,
+                                                   node_F = dec_ismonitor)
+        dec_hasfilename          = FCNDecisionBool(fct = has_filename,
+                                                   node_T = dec_ismccodesimordat,
+                                                   node_F = dec_issweepfolder)
+
+        # enter terminal node
+        enter_term_simfile = FCNTerminal(key = 'enter', node_next = dec_hasfilename)
+
+        # get the "args" which is just the simfile, a string,
+        # which may correspond to a file or a folder
         args = {}
         args['simfile'] = self.simfile
 
         # traverse the flow chart
-        control = FlowChartControl(terminal_enter=enter_simfile)
-        exit_node = control.process(args=args)
+        control = FlowChartControl(terminal_enter = enter_term_simfile)
+        output_node = control.process(args=args)
 
-        self.plot_graph = exit_node.result
-        
+        self.plot_graph = output_node.result
+
         self.directory = args['directory']
