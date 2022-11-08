@@ -55,7 +55,7 @@ DEFINE COMPONENT MCPL_output
 DEFINITION PARAMETERS (polarisationuse=0, doubleprec=0, verbose=0, int userflag=0)
 SETTING PARAMETERS (string filename=0, string userflagcomment="", merge_mpi=1, keep_mpi_unmerged=0)
 OUTPUT PARAMETERS (outputfile,particle,Particle, userflagenabled)
-DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
+DEPENDENCY "-Wl,-rpath,CMD(mcpl-config --show libdir) -ICMD(mcpl-config --show includedir) -LCMD(mcpl-config --show libdir) -lmcpl"
 
 SHARE
 %{
