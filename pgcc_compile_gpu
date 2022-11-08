@@ -1,1 +1,0 @@
-pgcc -ta=tesla,managed,deepcopy -Minfo=accel -DOPENACC -DNOSIGNALS -DRNG_ALG=2
