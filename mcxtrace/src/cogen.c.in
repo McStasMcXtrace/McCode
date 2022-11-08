@@ -2183,26 +2183,6 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#include <string.h>");
   cout("");
 
-  /* Math constants */
-  cout("#define PI 3.14159265358979323846");
-  cout("#ifndef M_PI");
-  cout("#define M_PI PI");
-  cout("#endif");
-  cout("#ifndef M_2_PI");
-  cout("#define M_2_PI 0.63661977236758134308" /* 2/pi */);
-  cout("#endif");
-  cout("#ifndef M_PI_2");
-  cout("#define M_PI_2 1.57079632679489661923  /* pi/2 */");
-  cout("#endif");
-  cout("#ifndef M_SQRT2");
-  cout("#define M_SQRT2 1.4142135623730951  /* sqrt(2) */");
-  cout("#endif");
-  cout("");
-  cout("#ifdef DISABLE_TRACE");
-  cout("#undef MC_TRACE_ENABLED");
-  cout("#endif");
-  cout("");
-
   /* McCode-specific typedefs */
   cout("typedef double MCNUM;");
   cout("typedef struct {MCNUM x, y, z;} Coords;");
