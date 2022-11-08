@@ -117,6 +117,21 @@ size_t str_len(const char *s)
 
 #endif
 
+/* SECTION: Predefine (component) parameters ================================= */
+
+int nans_match(double a, double b){
+  return (*(uint64_t*)&a == *(uint64_t*)&b);
+}
+int is_unset(double x){
+  return nans_match(x, UNSET);
+}
+int is_set(double x){
+  return !nans_match(x, UNSET);
+}
+int is_valid(double x){
+  return !isnan(x)||is_unset(x);
+}
+
 
 /* SECTION: Dynamic Arrays ================================================== */
 IArray1d create_iarr1d(int n){

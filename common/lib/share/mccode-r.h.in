@@ -357,6 +357,13 @@ char  *mcsig_message;
 #define NA       6.02214179e23     /* [#atoms/g .mole] Avogadro's number*/
 
 
+#define UNSET nan("0x6E6F74736574")
+int nans_match(double, double);
+int is_unset(double);
+int is_valid(double);
+int is_set(double);
+
+
 /* wrapper to get absolute and relative position of comp */
 /* mccomp_posa and mccomp_posr are defined in McStas generated C code */
 #define POS_A_COMP_INDEX(index) (instrument->_position_absolute[index])
