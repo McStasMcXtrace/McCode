@@ -571,6 +571,10 @@ class McGuiAppController():
                         s = ' '.join(s)
                         s = s.split('=')
                         params.append(s)
+                    if 'syntax error' in l:
+                        raise Exception("Instrument compile: syntax error")
+                    if 'Errors encountered' in l:
+                        raise Exception("Instrument compile: errors encountered")
 
                 instr_params = params
 
