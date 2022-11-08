@@ -9,13 +9,11 @@
 * Version: $Revision: 0.1 $
 * Origin: ESS DMSC
 *
+* This process dos nothing and is used for testing
 *
 * %D
 *
-* This is a Non for a new contributor to create their own physical process.
-* The comments in this file are meant to teach the user about creating their own 
-*  process file, rather than explaining this one. For comments on how this code works,
-*  look in the Incoherent_process.comp.
+* This process dos nothing and is used for testing
 *
 * Part of the Union components, a set of components that work together and thus
 *  sperates geometry and physics within McStas.

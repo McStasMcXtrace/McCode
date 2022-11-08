@@ -9,6 +9,7 @@
 * Version: $Revision: 0.1 $
 * Origin:
 *
+* Component for simulating textured powder in Union components
 *
 * %D
 *
@@ -28,16 +29,13 @@
 *
 * %P
 * INPUT PARAMETERS:
-* packing_factor [1]      How dense is the material compared to optimal 0-1
-* Interact_fraction [1]   How large a part of the scattering events should use 
-*                         this process 0-1 
-*                         (sum of all processes in material = 1)
-* crystal_fn [s]          Path to a file (.laz) containing crystallographic and physical information
-* fcoef_fn [s]            Path to a text file containing the Fourier coefficients of the ODF.
-*                         It must have five columns: l m n Real(Clmn) Imag(Clmn)
-* lmax [1]                Cut-off for the Fourier series.
-*                         If negative, the program uses all the coefficients provided in the file fcoef_fn
-* maxNeutronSaved [1]     Maximum number of neutron cross sections saved for reusing
+* packing_factor:    [1]      How dense is the material compared to optimal 0-1
+* interact_fraction: [1]      How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
+* crystal_fn:        [s]      Path to a file (.laz) containing crystallographic and physical information
+* fcoef_fn:          [s]      Path to a text file containing the Fourier coefficients of the ODF. It must have five columns: l m n Real(Clmn) Imag(Clmn)
+* lmax_user:         [1]      Cut-off for the Fourier series. If negative, the program uses all the coefficients provided in the file fcoef_fn
+* maxNeutronSaved:   [1]      Maximum number of neutron cross sections saved for reusing
+* init:              [string] Name of Union_init component (typically "init", default)
 *
 * OUTPUT PARAMETERS:
 * Template_storage          // Important to update this output paramter
@@ -53,7 +51,7 @@ DEFINE COMPONENT Texture_process // Remember to change the name of process here
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(string crystal_fn=0, string fcoef_fn=0, int lmax_user=-1,
             barns = 0, order = 0, interact_fraction = -1, packing_factor = 1,
-	    int maxNeutronSaved = 1, string init="init")
+	        int maxNeutronSaved = 1, string init="init")
 OUTPUT PARAMETERS ()
 
 SHARE

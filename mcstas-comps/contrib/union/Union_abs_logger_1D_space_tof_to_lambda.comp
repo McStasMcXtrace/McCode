@@ -9,7 +9,7 @@
 * Version: $Revision: 0.1 $
 * Origin: ESS DMSC
 *
-* A sample component to separate geometry and phsysics
+* A logger of absorption along 1D of space and 1D of tof, but converted to lambda
 *
 * %D
 * Part of the Union components, a set of components that work together and thus
@@ -70,28 +70,29 @@
 *
 * %P
 * INPUT PARAMETERS:
-* ref_component:      [1] Reference component instance index, sample position for distance calculation
-* source_sample_dist: [m] Travel distance between source and sample position, used to calculate total travelled distance
-* yheight:            [m] Height of absorption logger
-* yn:                 [1] number of bins along y axis
-* lambda_min:         [AA] Minimum wavelength recorded (sets both lambda_m_min and lambda_t_min)
-* lambda_max:         [AA] Maximum wavelength recorded (sets both lambda_m_max and lambda_t_max)
-* lambda_bins:        [1] number of wavelength bins
-* lambda_m_min:       [AA] Minimum measured wavelength recorded from tof and travelled distance (overwrites lambda_min)
-* lambda_m_max:       [AA] Maximum measured wavelength recorded from tof and travelled distance (overwrites lambda_max)
-* lambda_m_bins:      [1] number of measured wavelength bins
-* lambda_t_min:       [AA] Minimum measured wavelength recorded from tof and travelled distance (overwrites lambda_min)
-* lambda_t_max:       [AA] Maximum measured wavelength recorded from tof and travelled distance (overwrites lambda_max)
-* lambda_t_bins:      [1] number of true wavelength bins
-* relative_measured:  [1] Default 0, records measured as function of true wavelength, if this is enabled, records measured relative to true wavelength
-* relative_min:       [1] Smallest value of measured / true wavelength in histogram
-* relative_max:       [1] Largest value of measured / true wavelength in histogram
-* relative_bins:      [1] Number of bins on histogram axis with measured divided by true wavelength
+* ref_component:      [1]      Reference component instance index, sample position for distance calculation
+* source_sample_dist: [m]      Travel distance between source and sample position, used to calculate total travelled distance
+* yheight:            [m]      Height of absorption logger
+* yn:                 [1]      Number of bins along y axis
+* lambda_min:         [AA]     Minimum wavelength recorded (sets both lambda_m_min and lambda_t_min)
+* lambda_max:         [AA]     Maximum wavelength recorded (sets both lambda_m_max and lambda_t_max)
+* lambda_bins:        [1]      Number of wavelength bins
+* lambda_m_min:       [AA]     Minimum measured wavelength recorded from tof and travelled distance (overwrites lambda_min)
+* lambda_m_max:       [AA]     Maximum measured wavelength recorded from tof and travelled distance (overwrites lambda_max)
+* lambda_m_bins:      [1]      Number of measured wavelength bins
+* lambda_t_min:       [AA]     Minimum measured wavelength recorded from tof and travelled distance (overwrites lambda_min)
+* lambda_t_max:       [AA]     Maximum measured wavelength recorded from tof and travelled distance (overwrites lambda_max)
+* lambda_t_bins:      [1]      Number of true wavelength bins
+* relative_measured:  [1]      Default 0, records measured as function of true wavelength, if this is enabled, records measured relative to true wavelength
+* relative_min:       [1]      Smallest value of measured / true wavelength in histogram
+* relative_max:       [1]      Largest value of measured / true wavelength in histogram
+* relative_bins:      [1]      Number of bins on histogram axis with measured divided by true wavelength
 * target_geometry:    [string] Comma separated list of geometry names that will be logged, leave empty for all volumes (even not defined yet)
 * filename:           [string] Filename of produced data file
-* order_total:        [1] Only log rays that have scattered n times, -1 for all orders
-* order_volume:       [1] Only log rays that have scattered n times in the same geometry, -1 for all orders
+* order_total:        [1]      Only log rays that have scattered n times, -1 for all orders
+* order_volume:       [1]      Only log rays that have scattered n times in the same geometry, -1 for all orders
 * logger_conditional_extend_index: [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then access logger_conditional_extend[n] if logger_conditional_extend_index is set to n
+* init:               [string] Name of Union_init component (typically "init", default)
 *
 * OUTPUT PARAMETERS:
 *

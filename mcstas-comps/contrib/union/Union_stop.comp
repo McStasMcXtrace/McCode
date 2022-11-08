@@ -9,6 +9,8 @@
 * Version: $Revision: 0.1 $
 * Origin: University of Copenhagen
 *
+* Stop component that must be placed after all Union components for instrument to compile correctly
+*
 * %D
 * Part of the Union components, a set of components that work together and thus
 *  sperates geometry and physics within McStas.

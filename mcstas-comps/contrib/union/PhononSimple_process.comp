@@ -7,14 +7,14 @@
 * Written by: Anders Komar Ravn, based on template by Mads Bertelsen and Phonon_Simple
 * Date: 20.08.15
 * Version: $Revision: 0.1 $
-* Origin:
+* Origin: University of Copenhagen
+*
+* Port of PhononSimple to Union components
 *
 * %D
 *
-* This is a template for a new contributor to create their own physical process.
-* The comments in this file are meant to teach the user about creating their own
-*  process file, rather than explaining this one. For comments on how this code works,
-*  look in the Incoherent_process.comp.
+* Port of the PhononSimple component from the McStas library to the Union
+* components.
 *
 * Part of the Union components, a set of components that work together and thus
 *  sperates geometry and physics within McStas.
@@ -36,12 +36,17 @@
 *
 * %P
 * INPUT PARAMETERS:
-* unit_cell_volume: [AA^3]   Unit cell volume
-* a: [AA]   fcc lattice constant
-* c: [meV*AA]  Velocity of sound
-* M: [unit]  Nucleus atomic mass in units
-* b: [fm] scattring length
-* MC: [1] steps in numerical integral
+* unit_cell_volume:  [AA^3]   Unit cell volume
+* a:                 [AA]     fcc lattice constant
+* c:                 [meV*AA] Velocity of sound
+* M:                 [units]  Nucleus atomic mass in units
+* b:                 [fm]     Scattring length
+* T:                 [K]      Temperature
+* longitudinal:      [0/1]    Simulate longitudinal branches
+* transverse:        [0/1]    Simulate transverse branches
+* packing_factor:    [1]      How dense is the material compared to optimal 0-1
+* interact_fraction: [1]      How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
+* init:              [string] Name of Union_init component (typically "init", default)
 *
 * OUTPUT PARAMETERS:
 * PhononSimple_storage      // Important to update this output paramter

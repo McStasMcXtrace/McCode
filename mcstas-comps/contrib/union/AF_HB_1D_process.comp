@@ -9,13 +9,11 @@
 * Version: $Revision: 0.1 $
 * Origin: University of Copenhagen
 *
+* 1D Antiferromagnetic Heisenberg chain
 *
 * %D
 *
-* This is a template for a new contributor to create their own physical process.
-* The comments in this file are meant to teach the user about creating their own 
-*  process file, rather than explaining this one. For comments on how this code works,
-*  look in the Incoherent_process.comp.
+* 1D Antiferromagnetic Heisenberg chain
 *
 * Part of the Union components, a set of components that work together and thus
 *  sperates geometry and physics within McStas.
@@ -37,11 +35,14 @@
 *
 * %P
 * INPUT PARAMETERS:
-* unit_cell_volume: [AA^3]   Unit cell volume (set either unit_cell_volume or number density)
-* number_density    [1/AA^3] Number of scatteres per volume
-* J_interaction:    [meV]    Exchange constant
-* A_constant        [unitless] constant from Müller paper 1981, probably somewhere between 1 and 1.5
-* atom_distance     [Å] distance between atom's in chain
+* unit_cell_volume:  [AA^3]     Unit cell volume (set either unit_cell_volume or number density)
+* number_density:    [1/AA^3]   Number of scatteres per volume
+* J_interaction:     [meV]      Exchange constant
+* A_constant:        [unitless] Constant from Müller paper 1981, probably somewhere between 1 and 1.5
+* atom_distance:     [AA]       Distance between atom's in chain
+* packing_factor:    [1]        How dense is the material compared to optimal 0-1
+* interact_fraction: [1]        How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
+* init:              [string] name of Union_init component (typically "init", default)
 *
 * OUTPUT PARAMETERS:
 * Template_storage          // Important to update this output paramter

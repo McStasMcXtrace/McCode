@@ -9,7 +9,7 @@
 * Version: $Revision: 0.1 $
 * Origin: University of Copenhagen
 *
-* A sample component to separate geometry and phsysics
+* Three dimensional logger for spatial dimensions
 *
 * %D
 * Part of the Union components, a set of components that work together and thus
@@ -47,24 +47,26 @@
 *
 * %P
 * INPUT PARAMETERS:
-* D_direction_1:   [string] Direction for first axis ("x", "y" or "z")
-* D1_max:          [1] histogram boundery, max position value for first axis
-* D1_min:          [1] histogram boundery, min position value for first axis
-* n1:              [1] number of bins for first axis
-* D_direction_2:   [string] Direction for second axis ("x", "y" or "z")
-* D2_max:          [1] histogram boundery, max position value for second axis
-* D2_min:          [1] histogram boundery, min position value for second axis
-* n2:              [1] number of bins for second axis
-* D_direction_3:   [string] Direction for second axis ("x", "y" or "z")
-* D3_max:          [1] histogram boundery, max position value for third axis
-* D3_min:          [1] histogram boundery, min position value for third axis
-* n3:              [1] number of bins for third axis
-* target_geometry: [string] Comma seperated list of geometry names that will be logged, leave empty for all volumes (even not defined yet)
-* target_process:  [string] Comma seperated names of physical processes, if volumes are selected, one can select Union_process names
-* order_total:     [1] Only log rays that scatter for the n'th time, 0 for all orders
-* order_volume:    [1] Only log rays that scatter for the n'th time in the same geometry
-* order_volume_process [1] Only log rays that scatter for the n'th time in the same geometry, using the same process
-* logger_conditional_extend_index [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
+* D_direction_1:        [string] Direction for first axis ("x", "y" or "z")
+* D1_max:               [m] histogram boundery, max position value for first axis
+* D1_min:               [m] histogram boundery, min position value for first axis
+* n1:                   [1] number of bins for first axis
+* D_direction_2:        [string] Direction for second axis ("x", "y" or "z")
+* D2_max:               [m] histogram boundery, max position value for second axis
+* D2_min:               [m] histogram boundery, min position value for second axis
+* n2:                   [1] number of bins for second axis
+* D_direction_3:        [string] Direction for second axis ("x", "y" or "z")
+* D3_max:               [m] histogram boundery, max position value for third axis
+* D3_min:               [m] histogram boundery, min position value for third axis
+* n3:                   [1] number of bins for third axis
+* filename:             [string] Filename of produced data file
+* target_geometry:      [string] Comma seperated list of geometry names that will be logged, leave empty for all volumes (even not defined yet)
+* target_process:       [string] Comma seperated names of physical processes, if volumes are selected, one can select Union_process names
+* order_total:          [1] Only log rays that scatter for the n'th time, 0 for all orders
+* order_volume:         [1] Only log rays that scatter for the n'th time in the same geometry
+* order_volume_process: [1] Only log rays that scatter for the n'th time in the same geometry, using the same process
+* logger_conditional_extend_index: [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
+* init:                 [string] name of Union_init component (typically "init", default)
 *
 * OUTPUT PARAMETERS:
 *

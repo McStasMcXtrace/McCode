@@ -8,7 +8,7 @@
 * Date: 20.08.15
 * Origin: University of Copenhagen
 *
-* A sample component to separate geometry and phsysics
+* Sphere geometry component for the Union components
 *
 * %D
 * Part of the Union components, a set of components that work together and thus
@@ -33,24 +33,24 @@
 *
 * %P
 * INPUT PARAMETERS:
-* radius: [m]          Radius of sphere
-* material_string: []  material name of this volume, defined using Union_make_material
-* priority   [1]  priotiry of the volume (can not be the same as another volume) A high priority is on top of low.
-* p_interact [1]  probability to interact with this geometry [0-1]
-* visualize  [1]  set to 0 if you wish to hide this geometry in mcdisplay
-* number_of_activations [1]  Number of subsequent Union_master components that will simulate this geometry
-* mask_string: []      Comma seperated list of geometry names which this geometry should mask
-* mask_setting: []     "All" or "Any", should the masked volume be simulated when the ray is in just one mask, or all.
-*
-* Focusing options, if left blank, there will be no focusing.
-* target_x   [m]:
-* target_y   [m]: Position of target to focus at
-* target_z   [m]:
-* focus_aw   [deg] horiz. angular dimension of a rectangular area
-* focus_ah   [deg] vert. angular dimension of a rectangular area
-* focus_xw   [m]   horiz. dimension of a rectangular area
-* focus_xh   [m]   vert. dimension of a rectangular area
-* focus_r    [m]   focusing on circle with this radius
+* radius:                [m]   Radius of sphere
+* material_string:       [string]    material name of this volume, defined using Union_make_material
+* priority:              [1]   priotiry of the volume (can not be the same as another volume) A high priority is on top of low.
+* p_interact:            [1]   probability to interact with this geometry [0-1]
+* visualize:             [1]   set to 0 if you wish to hide this geometry in mcdisplay
+* number_of_activations: [1]   Number of subsequent Union_master components that will simulate this geometry
+* mask_string:           [string]    Comma seperated list of geometry names which this geometry should mask
+* mask_setting:          [string]    "All" or "Any", should the masked volume be simulated when the ray is in just one mask, or all.
+* target_index:          [1]    Focuses on component a component this many steps further in the component sequence
+* target_x:              [m]  X position of target to focus at
+* target_y:              [m]  Y position of target to focus at
+* target_z:              [m]  Z position of target to focus at
+* focus_aw:              [deg] horiz. angular dimension of a rectangular area
+* focus_ah:              [deg] vert. angular dimension of a rectangular area
+* focus_xw:              [m]   horiz. dimension of a rectangular area
+* focus_xh:              [m]   vert. dimension of a rectangular area
+* focus_r:               [m]   focusing on circle with this radius
+* init:                  [string]    name of Union_init component (typically "init", default)
 *
 * OUTPUT PARAMETERS:
 *
