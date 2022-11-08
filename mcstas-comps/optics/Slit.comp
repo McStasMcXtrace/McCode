@@ -103,7 +103,7 @@ TRACE
 MCDISPLAY
 %{
   
-  if (r2 == 0) {
+  if (is_unset(radius)) {
     double xw, yh;
     xw = (xmax - xmin)/2.0;
     yh = (ymax - ymin)/2.0;
