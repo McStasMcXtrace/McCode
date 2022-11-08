@@ -362,6 +362,10 @@ int nans_match(double, double);
 int is_unset(double);
 int is_valid(double);
 int is_set(double);
+int all_unset(int n, ...);
+int all_set(int n, ...);
+int any_unset(int n, ...);
+int any_set(int n, ...);
 
 
 /* wrapper to get absolute and relative position of comp */

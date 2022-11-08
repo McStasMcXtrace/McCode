@@ -131,6 +131,38 @@ int is_set(double x){
 int is_valid(double x){
   return !isnan(x)||is_unset(x);
 }
+int all_unset(int n, ...){
+  va_list ptr;
+  va_start(ptr, n);
+  int ret=1;
+  for (int i=0; i<n; ++i) if(is_set(va_arg(ptr, double))) ret=0;
+  va_end(ptr);
+  return ret;
+}
+int all_set(int n, ...){
+  va_list ptr;
+  va_start(ptr, n);
+  int ret=1;
+  for (int i=0; i<n; ++i) if(is_unset(va_arg(ptr, double))) ret=0;
+  va_end(ptr);
+  return ret;
+}
+int any_unset(int n, ...){
+  va_list ptr;
+  va_start(ptr, n);
+  int ret=0;
+  for (int i=0; i<n; ++i) if(is_unset(va_arg(ptr, double))) ret=1;
+  va_end(ptr);
+  return ret;
+}
+int any_set(int n, ...){
+  va_list ptr;
+  va_start(ptr, n);
+  int ret=0;
+  for (int i=0; i<n; ++i) if(is_set(va_arg(ptr, double))) ret=1;
+  va_end(ptr);
+  return ret;
+}
 
 
 /* SECTION: Dynamic Arrays ================================================== */

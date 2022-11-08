@@ -61,18 +61,16 @@ void slit_warning_if(int condition, char* message, char* component){
 %}
 INITIALIZE
 %{
-r2 = 0;
-
 if (is_unset(radius)){
-  if (is_set(xwidth) && is_set(xmin) && is_set(xmax)){
+  if (all_set(3, xwidth, xmin, xmax)){
     slit_error_if(xwidth != xmax - xmin, "specifying xwidth, xmin and xmax requires consistent parameters", NAME_CURRENT_COMP);
   } else {
-    slit_error_if(is_unset(xwidth) && (is_unset(xmin) || is_unset(xmax)), "specify either xwidth or xmin & xmax", NAME_CURRENT_COMP);
+    slit_error_if(is_unset(xwidth) && any_unset(2, xmin, xmax), "specify either xwidth or xmin & xmax", NAME_CURRENT_COMP);
   }
-  if (is_set(yheight) && is_set(ymin) && is_set(ymax)){
+  if (all_set(3, yheight, ymin, ymax)){
     slit_error_if(yheight != ymax - ymin, "specifying yheight, ymin and ymax requires consistent parameters", NAME_CURRENT_COMP);
   } else {
-    slit_error_if(is_unset(yheight) && (is_unset(ymin) || is_unset(ymax)), "specify either yheight or ymin & ymax", NAME_CURRENT_COMP);
+    slit_error_if(is_unset(yheight) && any_unset(2, ymin, ymax), "specify either yheight or ymin & ymax", NAME_CURRENT_COMP);
   }
   if (is_unset(xmin)) { // xmax also unset but xwidth *is* set
     xmax = xwidth/2;
@@ -84,7 +82,7 @@ if (is_unset(radius)){
   }
   slit_warning_if(xmin == xmax || ymin == ymax, "Running with CLOSED rectangular slit - is this intentional?", NAME_CURRENT_COMP);
 } else {
-  slit_error_if(is_set(xwidth) || is_set(yheight) || is_set(xmin) || is_set(ymin) || is_set(xmax) || is_set(ymax),
+  slit_error_if(any_set(6, xwidth, xmin, xmax, yheight, ymin, ymax), 
                 "specify radius OR width and height parameters", NAME_CURRENT_COMP);
   slit_warning_if(radius == 0., "Running with CLOSED radial slit - is this intentional?", NAME_CURRENT_COMP);
 }
