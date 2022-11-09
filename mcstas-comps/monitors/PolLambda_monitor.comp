@@ -48,7 +48,7 @@
 DEFINE COMPONENT PolLambda_monitor
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth=0.1, yheight=0.1, nL=20, npol=21, restore_neutron=0,
-  string filename, int nowritefile=0, mx=0, my=0, mz=0, Lmin, Lmax)
+  string filename=NAME_CURRENT_COMP, int nowritefile=0, mx=0, my=0, mz=0, Lmin, Lmax)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

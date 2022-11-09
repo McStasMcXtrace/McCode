@@ -51,7 +51,7 @@
 DEFINE COMPONENT PSD_TOF_monitor
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (nx=90, ny=90, nt=10, restore_neutron=0,
-		    string filename, xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0,
+		    string filename=NAME_CURRENT_COMP, xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0,
 		    tmin=0, tmax=0, int nowritefile=0)
 OUTPUT PARAMETERS ()
 

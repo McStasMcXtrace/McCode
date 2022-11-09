@@ -51,7 +51,7 @@
 DEFINE COMPONENT TOF_PSD_monitor_rad
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (nr=100, nt=100, int nowritefile=0,
-  string filename="", string filename_av="", rmax=0.2, tmin, tmax, restore_neutron=0)
+  string filename=NAME_CURRENT_COMP, string filename_av="", rmax=0.2, tmin, tmax, restore_neutron=0)
 OUTPUT PARAMETERS ()
 
 DECLARE

@@ -43,7 +43,7 @@ DEFINE COMPONENT Cyl_monitor_TOF
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (nr=20, string filename=0, yheight=10, radius=1, restore_neutron=0,
+SETTING PARAMETERS (nr=20, string filename=NAME_CURRENT_COMP, yheight=10, radius=1, restore_neutron=0,
 		    thmin=-180, thmax=180, nt=100,tmin,tmax, int nowritefile=0)
 
 OUTPUT PARAMETERS ()

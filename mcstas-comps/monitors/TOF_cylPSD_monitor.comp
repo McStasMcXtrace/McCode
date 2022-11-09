@@ -41,7 +41,7 @@
 
 DEFINE COMPONENT TOF_cylPSD_monitor
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (nt=128, nphi=90, string filename=0, int nowritefile=0, radius=1, yheight=0.3, tmin, tmax, restore_neutron=0)
+SETTING PARAMETERS (nt=128, nphi=90, string filename=NAME_CURRENT_COMP, int nowritefile=0, radius=1, yheight=0.3, tmin, tmax, restore_neutron=0)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
