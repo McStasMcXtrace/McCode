@@ -26,6 +26,8 @@
 * The evolution of the beam is tracked using a series of 2D PSD monitors situated along the beam axis,
 * which points slightly down.
 * In real life the beam axis is parallel to the ground and the source is shining slightly upwards.
+*
+* %Example: Energy=8.05 Detector: detector_I=1.28656e+07
 * 
 *
 * %Parameters
