@@ -224,7 +224,7 @@ AT (0, 0, DistanceToSecondarySlit1) RELATIVE Source
 /* -------------------------------------- Horizontal slit 2 */
 COMPONENT slitSecon2 = Slit(
     xwidth=SecondarySlit2Width, 
-    yheight=SecondarySlit2Height)
+    yheight=2*SecondarySlit2Height) //Temporary fix. The components need to be placed relative previous-ly rather than relative to the Source.
 AT (0, 0, DistanceToSecondarySlit2) RELATIVE Source
 
 /*---------------------------------------- BeamMonitor2 */
