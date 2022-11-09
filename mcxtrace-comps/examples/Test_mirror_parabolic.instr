@@ -55,7 +55,7 @@ ROTATED (-90,0,0) RELATIVE origin
 EXTEND
 %{
   //printf("%g %g\n",focusx,focusz);
-  bounce=mcScattered;
+  bounce=SCATTERED;
 %}
 
 COMPONENT det_a = Arm()
