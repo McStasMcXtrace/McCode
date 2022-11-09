@@ -19,6 +19,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Mo
 #Ensure various variables are set to sensible default values for the target
 #platform (if not already set by a toolchain file):
 
+include(PlatformDefaults)
+
 # Setup McCode values (from mkdist or defaults)
 include(MCUtil)
 

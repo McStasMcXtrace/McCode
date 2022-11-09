@@ -147,6 +147,13 @@ macro(setupMCCODE FLAVOR)
     set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}")
   endif()
 
+  # Helper for adding leading "."
+  macro(addDot name val)
+    if(NOT DEFINED ${name} AND NOT ${val} STREQUAL "")
+      set(${name} ".${val}")
+    endif()
+  endmacro()
+
   # Set instrument suffix (after compilation)
   if(NOT DEFINED OUT_SUFFIX)
     if(DEFINED EXE_SUFFIX)
@@ -156,24 +163,10 @@ macro(setupMCCODE FLAVOR)
     endif()
   endif()
 
-  # Helper for adding leading "."
-  macro(addDot name val)
-    if(NOT DEFINED ${name} AND NOT ${val} STREQUAL "")
-      set(${name} ".${val}")
-    endif()
-  endmacro()
-
-  # Helper for adding leading "-" and trailing "bat"
-  macro(addDashDotBat name val)
-    if(NOT DEFINED ${name} AND NOT ${val} STREQUAL "")
-      set(${name} "-${val}.bat")
-    endif()
-  endmacro()
-  
   # Define suffix-macros that include a leading dot "."
-  addDot(DOT_EXE_SUFFIX "${EXE_SUFFIX}")
+  addDot(DOT_EXE_SUFFIX "${MCCODE_EXE_SUFFIX}")
   addDot(DOT_OUT_SUFFIX "${OUT_SUFFIX}")
-  
+
   addDot(DOT_PYTHON_SUFFIX "${PYTHON_SUFFIX}")
   addDot(DOT_PERL_SUFFIX   "${PERL_SUFFIX}")
 
