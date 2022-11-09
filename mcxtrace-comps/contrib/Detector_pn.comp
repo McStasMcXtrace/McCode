@@ -40,7 +40,7 @@
 *******************************************************************************/
 DEFINE COMPONENT Detector_pn
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string material_datafile="Be.txt",nx=90, ny=90, string filename=NAME_CURRENT_COMP, restore_xray=0,xwidth=1e-2,yheight=1e-2,zdepth=1e-6)
+SETTING PARAMETERS (string material_datafile="Be.txt",nx=90, ny=90, string filename="", restore_xray=0,xwidth=1e-2,yheight=1e-2,zdepth=1e-6)
 OUTPUT PARAMETERS ()
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)*/
 
