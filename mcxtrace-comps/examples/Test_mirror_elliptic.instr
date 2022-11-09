@@ -15,20 +15,14 @@
 * Try distance_from_source = 1 (rays reflected back towards the center)
 *     distance_from_source = 0.5 (rays reflected back in a parallel-like fashion)
 *
+* %Example: distance_from_source=1 Detector: psd_monitor_I=0.0183688
+*
 * %Parameters
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT template_body_simple(distance_from_source=1)
-
-DECLARE
-%{
-%}
-
-INITIALIZE
-%{
-%}
+DEFINE INSTRUMENT Test_mirror_elliptic(distance_from_source=1)
 
 TRACE
 

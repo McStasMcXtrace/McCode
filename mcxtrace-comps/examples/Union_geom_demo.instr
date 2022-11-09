@@ -8,15 +8,14 @@
 * Version: $Revision$
 * %INSTRUMENT_SITE: Templates
 *
-* instrument short description
+* An example using Union with different materials and geometries.
 *
 * %D
-* instrument description
+* An example using Union with different materials and geometries.
 *
-* Example: <parameters=values>
+* %Example: rx=0 Detector: psd1_I=4.91586e+14
 *
 * %P
-* <parameter1>: [<unit>] <parameter1 description>
 * rx [deg]:    sample rotation around the x-axis. Rotations are applied in the order X,Y,Z
 * ry [deg]:    sample rotation around the y-axis. Rotations are applied in the order X,Y,Z
 * rz [deg]:    sample rotation around the z-axis. Rotations are applied in the order X,Y,Z
@@ -43,10 +42,6 @@ DECLARE
   double zd=1e-4;
   double yh=1e-2;
   double xw=1e-2;
-%}
-
-INITIALIZE
-%{
 %}
 
 TRACE

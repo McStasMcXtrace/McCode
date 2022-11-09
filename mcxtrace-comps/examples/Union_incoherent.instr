@@ -8,15 +8,15 @@
 * Version: $Revision$
 * %INSTRUMENT_SITE: Templates
 *
-* instrument short description
+* An example using Union with incoherent scattering
 *
 * %D
-* instrument description
+* An example using Union with incoherent scattering
 *
-* Example: <parameters=values>
+* %Example: E0=12 Detector: emon_sphere_I=4.28512e-09
 *
 * %P
-* <parameter1>: [<unit>] <parameter1 description>
+* E0: [keV] incident energy
 * ...
 * 
 * %L

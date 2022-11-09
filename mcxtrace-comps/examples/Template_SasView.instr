@@ -22,6 +22,8 @@
 * %Description
 * Very simple test instrument for the SasView_model component
 *
+* %Example: lambda=1.54 Detector: detector_I=0.00038775
+*
 * %Parameters
 * INPUT PARAMETERS:
 * lambda:    Mean wavelength of x-rays     [AA]

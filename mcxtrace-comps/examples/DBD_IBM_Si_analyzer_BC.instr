@@ -14,14 +14,13 @@
 *
 * %Description
 * This is a preliminary setup of the DBD with the Ge111 Johansson IBM
-* NIST DBD with IBM
+* NIST DBD with IBM and bent crystal BC monochromator
 *
-* %Example: DBD_IBM_Si_analyzer_BC.instr use_flat_source=0 -n1e7 Detector: lynxeye_I=3.39272e+07
+* %Example: use_flat_source=0 -n1e7 Detector: lynxeye_I=3.39272e+07
 *
 * %Parameters
 * a_distance_error: [m]          Logitudinal offset of source.
 * figure_radius_multiplier: [ ]  Extra multiplicative factor to the crystal curvature.
-* lattice_radius_miltiplier: [ ] Extra factor to the lattice curvature. Currently IGNORED.
 * beam_hor: [m]                  Beam width of source.
 * beam_vert: [m]                 Unscaled Beam height of source. Will be scaled with take_off angle.
 * tails_integral: [ ]            Integrated beam power in the source tails.
@@ -48,8 +47,6 @@
 * <a href="https://tsapps.nist.gov/publication/get_pdf.cfm?<pub_id=927309">"International Tables for Crystallography (2018). Vol. H, Chapter 3.1, pp. 224–251."</a>
 * %End
 *******************************************************************************/
-
-/* Change name of instrument and input parameters with default values */
 
 DEFINE INSTRUMENT DBD_IBM_Si_analyzer_BC(
   a_distance_error=0.0, figure_radius_multiplier=1.0, lattice_radius_multiplier=1.0,
@@ -221,13 +218,6 @@ COMPONENT lynxeye = PSD_monitor(
 AT (0,0,0.217) RELATIVE twotheta_arm
 ROTATED (0,0,0) RELATIVE twotheta_arm
 
-
-/* This section is executed when the simulation ends (C code). Other    */
-/* optional sections are : SAVE                                         */
-FINALLY
-%{
-%}
-/* The END token marks the instrument definition end */
 END
 
 

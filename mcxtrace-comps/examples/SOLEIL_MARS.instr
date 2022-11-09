@@ -24,6 +24,8 @@
 *
 * This model implements the XRD station for powders.
 *
+* %Example: E0=16.99 Detector: displayMonoLenght_I=291.348
+*
 * %P
 * E0: [keV]     Central energy to be emitted by the source
 * dEr: [keV]    Relative half width to emitted by the source, e.g. 1e-4
@@ -127,7 +129,10 @@ AT (0, 0, 0) RELATIVE ABSOLUTE
 COMPONENT Source = Bending_magnet(
     E0=E0,   
     B=1.71,
-    dE = dEr*E0
+    dE = dEr*E0,
+    focus_xw=PrimarySlit1Width,
+    focus_yh=PrimarySlit1Height,
+    dist=DistanceToPrimarySlit1
     )
 AT (0, 0, 0) RELATIVE origin
 /*Longueur d'onde*/
@@ -185,8 +190,8 @@ COMPONENT emon_dcm0 = E_monitor(
 	xwidth=PrimaryBeamMonitorWidth, 
 	yheight=PrimaryBeamMonitorHeight, 
 	filename="emon_dcm0", 
-	Emin=E0-dE*2, 
-	Emax=E0+dE*2, 
+	Emin=E0-dEr*2, 
+	Emax=E0+dEr*2, 
 	nE=101)
 AT(0,0,DistanceToPrimaryBeamMonitor) RELATIVE Source
 /*Visualise*/
@@ -227,8 +232,8 @@ COMPONENT emon_dcm1 = E_monitor(
 	xwidth=SecondaryBeamMonitorWidth, 
 	yheight=SecondaryBeamMonitorHeight, 
 	filename="BeamMonitor2", 
-	Emin=E0-dE*2, 
-	Emax=E0+dE*2, 
+	Emin=E0-dEr*2, 
+	Emax=E0+dEr*2, 
 	nE=101)
 AT(0,0,DistanceToSecondaryBeamMonitor) RELATIVE Source
 

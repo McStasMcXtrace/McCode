@@ -19,6 +19,8 @@
 * other wavelengths present in the beam will not be focussed prefectly and may be
 * by the slit.
 *
+* %Example: L1=10 Detector: psd0_I=24765.9
+*
 * %Parameters
 * L1: [m] Distance between source and lens
 * L2: [m] Distance between lens and and slit
@@ -30,16 +32,6 @@
 *******************************************************************************/
 
 DEFINE INSTRUMENT Be_BM_beamline(L1=10,L2=1,dS=1e-2, N=1)
-
-
-DECLARE
-%{
-%}
-
-
-INITIALIZE
-%{
-%}
 
 TRACE
 
@@ -57,10 +49,10 @@ COMPONENT psd0 = PSD_monitor(filename="psd0.dat",xwidth=0.2,yheight=0.2)
 COMPONENT wavel_mon0=L_monitor(filename="lmon0.dat",Lmin=0,Lmax=1,xwidth=0.5,yheight=0.5,nL=101)
   AT(0,0,0.01) RELATIVE PREVIOUS
 
-COMPONENT Be_lens = Lens_simple(xwidth=10.5,yheight=10.5,N=N)
+COMPONENT Be_lens = Lens_simple(xwidth=10.5,yheight=10.5,N=N,r=0.3e-3)
 AT(0,0,L1) RELATIVE generic_source
 
-COMPONENT Be_lens2 = Lens_simple(xwidth=10.5,yheight=10.5,N=N)
+COMPONENT Be_lens2 = Lens_simple(xwidth=10.5,yheight=10.5,N=N,r=0.3e-3)
 AT(0,0,0.01) RELATIVE PREVIOUS
 ROTATED (0,0,90) RELATIVE PREVIOUS
 

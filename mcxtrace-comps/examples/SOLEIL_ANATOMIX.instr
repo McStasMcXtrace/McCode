@@ -36,6 +36,8 @@
 * The monochromator is an Si(111), the sample is made of Be. The sample is 2 cm
 * wide.
 *
+* Example: -n 1e5 E0=17 Detector: psd_monitor_after_cc_I=1.69616e+0
+*
 * %P
 * E0:    [keV] Energy selected at the Undulator.
 * Emono: [keV] Energy selected at the monochromator. When 0, it is set to E0.

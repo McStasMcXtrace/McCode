@@ -13,6 +13,14 @@
 * %Description
 * Toy model used for testing various sample components for solution-SAXS.
 *
+* %Example: SAMPLE=0 Detector: QMonitor_I=5.86135e-09
+* %Example: SAMPLE=1 Detector: QMonitor_I=6.32492e-09
+* %Example: SAMPLE=4 Detector: QMonitor_I=8.99113e-06
+* %Example: SAMPLE=6 Detector: QMonitor_I=2.57111e-11
+* %Example: -n 1e4 SAMPLE=7 Detector: QMonitor_I=6.99162e-09
+* %Example: SAMPLE=10 Detector: QMonitor_I=2.13354e-11
+* %Example: SAMPLE=11 Detector: QMonitor_I=3.91474e-10
+*
 * %Parameters
 * DistanceFromSourceToFirstPinhole: [m]	 Distance to first pinhole from source.
 * DistanceFromSourceToSecondPinhole: [m] Distance to second pinhole - used for focusing rays.
@@ -21,7 +29,7 @@
 * RadiusOfDetector: [m]                  Radius of the circular detector.
 * Lambda: [AA]                           Wavelength of the rays emitted from source.
 * DLambda: [ ]                           Relative deviation of wavelength of the rays emitted from source.
-* SAMPLE: [ ]                            Index of sample model
+* SAMPLE: [1-11]                            Index of sample model
 * %End
 *******************************************************************************/
 
@@ -33,18 +41,8 @@ DEFINE INSTRUMENT Test_SAXS(
 	RadiusOfDetector = 0.1,
 	Lambda = 1.54,
 	DLambda = 0.01,
-        SAMPLE=0
+  SAMPLE=0
 )
-
-
-DECLARE
-%{
-%}
-
-
-INITIALIZE
-%{
-%}
 
 
 TRACE
@@ -126,7 +124,7 @@ COMPONENT Sample4= SAXSLiposomes(
 )
 WHEN(SAMPLE==4) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
 
-/*
+
 COMPONENT Sample5= SAXSNanodiscs(
 	xwidth = 0.01,
 	yheight = 0.01,
@@ -135,9 +133,9 @@ COMPONENT Sample5= SAXSNanodiscs(
 	DetectorRadius = RadiusOfDetector
 )
 WHEN(SAMPLE==5) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
-*/
 
-/*
+
+
 COMPONENT Sample6= SAXSNanodiscsWithTags(
 	xwidth = 0.01,
 	yheight = 0.01,
@@ -146,7 +144,7 @@ COMPONENT Sample6= SAXSNanodiscsWithTags(
 	DetectorRadius = RadiusOfDetector
 )
 WHEN(SAMPLE==6) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
-*/
+
 
 
 
@@ -158,7 +156,7 @@ COMPONENT Sample7 = SAXSPDB(
 	DetectorRadius = RadiusOfDetector,
 	//PDBFilepath = "1EV3.pdb"
 	//PDBFilepath = "6LYZ.pdb"
-	PDBFilepath = "3V03.pdb"
+	PDBFilepath = "3v03.pdb"
 )
 WHEN(SAMPLE==7) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
 /*
@@ -183,7 +181,7 @@ COMPONENT Sample9 = SAXSNanodiscsFast(
 )
 WHEN(SAMPLE==9) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
 
-/*
+
 COMPONENT Sample10 = SAXSNanodiscsWithTagsFast(
 	xwidth = 0.01,
 	yheight = 0.01,
@@ -192,7 +190,7 @@ COMPONENT Sample10 = SAXSNanodiscsWithTagsFast(
 	DetectorRadius = RadiusOfDetector
 )
 WHEN(SAMPLE=10) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
-*/
+
 
 COMPONENT Sample11 = SAXSPDBFast(
 	xwidth = 0.01,
@@ -200,7 +198,7 @@ COMPONENT Sample11 = SAXSPDBFast(
 	zdepth = 0.01,
 	SampleToDetectorDistance = DistanceFromSampleToDetector,
 	DetectorRadius = RadiusOfDetector,
-	PDBFilepath = "6LYZ.pdb",
+	PDBFilepath = "6lyz.pdb",
     qMax = 0.9
 )
 WHEN(SAMPLE==11) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole

@@ -13,6 +13,8 @@
 *
 * Simply a bending magnet illuminating a reflection grating.
 *
+* %Example: E0=1 Detector: psd_mosnitor_I=4.08363e+12
+*
 * %Parameters
 * E0: [keV] Source's center of emitted energy spectrum
 * dE: [keV] Source's half-width of emitted energy spectrum

@@ -28,6 +28,9 @@
 * This is a simplified model with an Undulator, mirrors, a double crystal 
 * monochromator, a sample stage and a detector.
 *
+* %Example: E0=12.65 sample="Mo.lau" Detector: Eiger9M_I=18.7503
+* %Example: E0=12.65 Eiger9M_I=25096.2
+*
 * %P
 * E0:    [keV] Energy selected at the Undulator.
 * hfm_radius: [m] horizontally focusing mirror radius

@@ -17,7 +17,7 @@
 * Two identical slits are positioned 1m downstream from a point source, The slit
 * width and their separation may be varied. The slit height is set to .8e-6 m.
 *
-* %Example: Template_2Slit_Diff SLITW=1e-6 SLITSEP=4e-6
+* %Example: SLITW=1e-6 SLITSEP=4e-6 Detector: psd0_I=7.07014e-14
 *
 * %Parameters
 * SLITW: [m] Width of the slit in question. The 
@@ -77,11 +77,5 @@ COMPONENT psd0 = PSD_monitor_coh(
     yheight=2e-6, xwidth=200e-6, nx=501, ny=1, filename="psd0")
 AT(0,0,2) RELATIVE source
 
-/* This section is executed when the simulation ends (C code). Other    */
-/* optional sections are : SAVE                                         */
-FINALLY
-%{
-%}
-/* The END token marks the instrument definition end */
 END
 
