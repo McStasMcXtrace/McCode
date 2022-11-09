@@ -747,8 +747,8 @@ int cogen_comp_section_class(
     list_iterate_end(liter);
   }
 
-  // proceed if comp type has trace code or EXTEND */
-  if ((!code || list_len(code->lines) <= 0) && cnt_extend == 0)
+  // proceed if comp type has trace code or EXTEND
+  if ((!code || list_len(code->lines) <= 0) && cnt_extend == 0) //{
     return(0);
 
   /* generate class functions (unless flagged already done) */
@@ -1286,10 +1286,12 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
   /* generate setpos instance functions */
   if (!strcmp(section, "INITIALISE")) {
     liter = list_iterate(instr->complist);
-    while((comp = list_next(liter)) != NULL)
-    {
-      warnings += cogen_comp_setpos(comp, last, instr);
-      last = comp;
+    while((comp = list_next(liter)) != NULL) {
+        warnings += cogen_comp_setpos(comp, last, instr);
+      if (comp->skip_trace == 0) {
+        // Ensure useless components skipped
+        last = comp;
+      }
     }
   }
 
@@ -1625,7 +1627,7 @@ int cogen_raytrace(struct instr_def *instr)
     #endif
     };
   List l;
-
+    
   //
   // write the raytrace function
   //
@@ -1679,6 +1681,7 @@ int cogen_raytrace(struct instr_def *instr)
       list_iterate_end(liter2);
     }
   }
+  list_iterate_end(liter);
 
   cout("  _particle->flag_nocoordschange=0; /* Init */");
   cout("  _class_particle _particle_save;");
@@ -1715,28 +1718,34 @@ int cogen_raytrace(struct instr_def *instr)
     }
     // coordinate transformations (wrt to PREVIOUS)
     coutf("    /* begin component %s=%s() [%i] */", comp->name, comp->def->name, comp->index);
-    cout( "    if (!_particle->flag_nocoordschange) { // flag activated by JUMP to pass coords change");
-    coutf("      if (_%s_var._rotation_is_identity) {", comp->name);
-    coutf("        if(!_%s_var._position_relative_is_zero) {", comp->name);
-    coutf("          coords_get("
-	  "coords_add(coords_set(x,y,z), _%s_var._position_relative),"
-	  "&x, &y, &z);", comp->name);
-    cout( "        }");
-    cout( "      } else {");
-    coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
-    cout( "      }");
-    cout( "    }");
+    if (comp->skip_trace == 0) {
+    //if (1==1) {
+          cout( "    if (!_particle->flag_nocoordschange) { // flag activated by JUMP to pass coords change");
+          coutf("      if (_%s_var._rotation_is_identity) {", comp->name);
+          coutf("        if(!_%s_var._position_relative_is_zero) {", comp->name);
+          coutf("          coords_get("
+                "coords_add(coords_set(x,y,z), _%s_var._position_relative),"
+                "&x, &y, &z);", comp->name);
+          cout( "        }");
+          cout( "      } else {");
+          coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
+          cout( "      }");
+          cout( "    }");
+    }
     coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
     coutf("      _particle->flag_nocoordschange=0; /* Reset if we came here from a JUMP */");
     if (!comp->group || (comp->group && comp->group->first_comp_index == comp->index)) {
-      cout( "      _particle_save = *_particle;");
+        if (comp->skip_trace == 0) {
+            cout( "      _particle_save = *_particle;");
+        }
     } else {
       coutf("      // 2nd or higher GROUP member, \"reuse\" coordinate-changed _particle_save from 1st GROUP element.");
       coutf("      mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, &_particle_save);", comp->name, comp->name);
     }
-    coutf("      DEBUG_COMP(_%s_var._name);", comp->name);
-    cout ("      DEBUG_STATE();");
-
+    if (comp->skip_trace == 0) {
+      coutf("      DEBUG_COMP(_%s_var._name);", comp->name);
+      cout ("      DEBUG_STATE();");
+    }
     /* call the component when there are TRACE and/or EXTEND lines */
     if (list_len(comp->def->trace_code->lines) > 0 || list_len(comp->extend->lines) > 0) {
       // WHEN
@@ -1797,7 +1806,9 @@ int cogen_raytrace(struct instr_def *instr)
     }
 
     coutf("      _particle->_index++;");
-    coutf("      if (!ABSORBED) { DEBUG_STATE(); }");
+    if (comp->skip_trace == 0) {
+      coutf("      if (!ABSORBED) { DEBUG_STATE(); }");
+    }
     coutf("    } /* end component %s [%i] */", comp->name, comp->index);
 
   } /* end while comp list (case) */
@@ -2803,6 +2814,52 @@ int get_codeblock_vars(struct code_block *code, List vars, List types,
 } // get_codeblock_vars
 
 
+void detect_skipable_transforms(struct instr_def *instr) {
+    //
+    // analyze component sequence to find coordinate transformations that can be skipped
+    //
+    List_handle liter;
+    struct comp_inst *comp = NULL;
+    
+    liter = list_iterate_back(instr->complist);
+    while((comp = list_previous(liter)) != NULL) {
+        // proceed if comp type has trace code or EXTEND
+        if ((!comp->def->trace_code || list_len(comp->def->trace_code->lines) <= 0) && list_len(comp->extend->lines) == 0) {
+            comp->has_trace = 0;
+        } else {
+            comp->has_trace = 1;
+        }
+        comp->n_references = 0; // Initialize n_references to 0
+    }
+    list_iterate_end(liter);
+    
+    liter = list_iterate_back(instr->complist);
+    while((comp = list_previous(liter)) != NULL) {
+        // Find pointer to comp for RELATIVE AT
+        if (comp->pos->place_rel != NULL) {
+            // Increment with has_trace + n_references
+            comp->pos->place_rel->n_references += comp->has_trace + comp->n_references;
+        }
+        
+        // Find pointer to comp for RELATIVE ROTATED
+        if (comp->pos->orientation_rel != NULL) {
+            // Increment with has_trace + n_references
+            comp->pos->orientation_rel->n_references += comp->has_trace + comp->n_references;
+        }
+    }
+    list_iterate_end(liter);
+    
+    liter = list_iterate(instr->complist);
+    while((comp = list_next(liter)) != NULL) {
+        if (comp->n_references + comp->has_trace > 0) {
+            comp->skip_trace = 0;
+        } else {
+            comp->skip_trace = 1;
+        }
+    }
+    list_iterate_end(liter);
+}
+    
 /*******************************************************************************
 * cogen: the code generator
 *   Generate the output file (in C).
@@ -2832,6 +2889,7 @@ cogen(char *output_name, struct instr_def *instr)
   /* and we now call the writers */
   cogen_header(instr, output_name);
   warnings += cogen_decls(instr);
+  detect_skipable_transforms(instr);
   warnings += cogen_section(instr, "INITIALISE", "init", instr->inits);
 
   // TRACE section requires a bit more flexibility
