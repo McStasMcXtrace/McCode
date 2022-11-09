@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: czerny_turner
+* Instrument: Czerny_Turner
 *
 * %Identification
 * Written by: Stephane Bac, Antoine Padovani
@@ -9,9 +9,9 @@
 * Origin: Synchrotron Soleil
 * %INSTRUMENT_SITE: BARC
 *
-* Czerny-turner monochromator.
+* Czerny-Turner monochromator.
 *
-* This Czerny-turner monochromator was built from "Design and fabrication of a Czerny-Turner monochromator-cum-spectrograph" by
+* This Czerny-Turner monochromator was built from "Design and fabrication of a Czerny-Turner monochromator-cum-spectrograph" by
 * Murty, M.V.R.K.; Shukla, R.P.; Bhattacharya, S.S.; Krishnamurthy, G. (Bhabha Atomic Research Centre, Bombay (India). Spectroscopy Div.)
 * Bhabha Atomic Research Centre, Bombay (India)
 * 1987
@@ -25,7 +25,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT czerny_turner(x_screw=0, scan=0)
+DEFINE INSTRUMENT Czerny_Turner(x_screw=0, scan=0)
 
 DECLARE
 %{

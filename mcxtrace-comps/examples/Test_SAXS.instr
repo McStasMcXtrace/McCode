@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: TestSAXS
+* Instrument: Test_SAXS
 *
 * %Identification
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk) and Søren Kynde (kynde@nbi.dk)
@@ -25,7 +25,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT TestSAXS(
+DEFINE INSTRUMENT Test_SAXS(
 	DistanceFromSourceToFirstPinhole = 0.05,
 	DistanceFromSourceToSecondPinhole = 0.7,
 	DistanceFromSecondPinholeToSample = 0.6,

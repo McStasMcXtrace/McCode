@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: template_2Slit_Diff
+* Instrument: Template_2Slit_Diff
 *
 * %Identification
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
@@ -17,7 +17,7 @@
 * Two identical slits are positioned 1m downstream from a point source, The slit
 * width and their separation may be varied. The slit height is set to .8e-6 m.
 *
-* %Example: template_2Slit_Diff SLITW=1e-6 SLITSEP=4e-6
+* %Example: Template_2Slit_Diff SLITW=1e-6 SLITSEP=4e-6
 *
 * %Parameters
 * SLITW: [m] Width of the slit in question. The 
@@ -26,7 +26,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT template_2Slit_Diff(SLITW=1e-6, SLITSEP=4e-6)
+DEFINE INSTRUMENT Template_2Slit_Diff(SLITW=1e-6, SLITSEP=4e-6)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
