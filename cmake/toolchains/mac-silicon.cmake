@@ -4,11 +4,11 @@ set(ARCH   "arm64")
 
 # Commands for running various external tools
 set(TOOLS_CC "/usr/bin/gcc")
-set(TERMINAL "open ")
+set(TERMINAL "open")
 set(BROWSER "open")
 set(MPICC "mpicc.silicon")
 set(MPILIB "mpi")
 set(OACCFLAGS "-ta:multicore -DOPENACC")
 set(MPIRUN "mpirun")
-set(MCCODE_CFLAGS "-g -O2 -lm -std=c99 -I/opt/homebrew/include -L/opt/homebrew/lib")
+set(MCCODE_CFLAGS "-g -O2 -lm -DNDEBUG -std=c99 -I/opt/homebrew/include -L/opt/homebrew/lib")
 set(EDITOR "open")

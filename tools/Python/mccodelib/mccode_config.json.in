@@ -14,11 +14,11 @@
   },
   "compilation": {
     "CFLAGS": "@CFLAGS@",
-    "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
-    "MPIFLAGS": "-DUSE_MPI -l@MPILIB@",
-    "OACCFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=managed -DOPENACC",
+    "NEXUSFLAGS": "@NEXUSFLAGS@",
+    "MPIFLAGS": "@MPIFLAGS@",
+    "OACCFLAGS": "@OACCFLAGS",
     "CC": "@TOOLS_CC@",
-    "OACC": "nvc",
+    "OACC": "@OACC@",
     "MPICC": "@MPICC@",
     "MPIRUN": "@MPIRUN@",
     "MPINODES": "4"
