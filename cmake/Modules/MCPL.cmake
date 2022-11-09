@@ -1,7 +1,7 @@
 include(fetcher)
 
-set(MCPL_REPO "https://github.com/mctools/mcpl.git" CACHE STRING "Fallback location (URL or local path) of MCPL sources.")
-set(MCPL_MINIMUM_VERSION 1.5.1 CACHE STRING "Minimum version of MCPL (can use git ref-spec).")
+set( MCPL_REPO "https://github.com/mctools/mcpl.git" CACHE STRING "Fallback location (URL or local path) of MCPL sources.")
+set( MCPL_MINIMUM_VERSION 1.5.1 CACHE STRING "Minimum version of MCPL (can use git ref-spec).")
 option(MCPL_REQUIRE_PREINSTALL "Require pre-installed MCPL (>= MCPL_MINIMUM_VERSION)" OFF)
 
 #Set variables for MCPL config like this, to keep them from poluting the current

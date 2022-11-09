@@ -1,8 +1,8 @@
 include(fetcher)
 
-set(NCRYSTAL_REPO "https://github.com/mctools/ncrystal.git" CACHE STRING "Fallback location (URL or local path) of NCrystal sources.")
-set(NCRYSTAL_MINIMUM_VERSION 3.4.1 CACHE STRING "Minimum version of NCrystal (can use git ref-spec).")
-option(NCRYSTAL_REQUIRE_PREINSTALL "Require pre-installed NCrystal (>= NCRYSTAL_MINIMUM_VERSION)" OFF)
+set( NCRYSTAL_REPO "https://github.com/mctools/ncrystal.git" CACHE STRING "Fallback location (URL or local path) of NCrystal sources." )
+set( NCRYSTAL_MINIMUM_VERSION 3.4.1 CACHE STRING "Minimum version of NCrystal (can use git ref-spec)." )
+option( NCRYSTAL_REQUIRE_PREINSTALL "Require pre-installed NCrystal (>= NCRYSTAL_MINIMUM_VERSION)" OFF )
 
 #Set variables for NCrystal config like this, to keep them from poluting the current
 #scope:
