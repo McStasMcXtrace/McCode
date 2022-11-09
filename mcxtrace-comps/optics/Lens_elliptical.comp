@@ -30,14 +30,14 @@
 * 
 * 
 * attenuation coefficient mu is taken from the NIST database and 
-* Be_data.txt
+* Be.txt
 *
-*
+* %E
 *******************************************************************************/
 
 
 DEFINE COMPONENT Lens_elliptical
-DEFINITION PARAMETERS (string material_datafile="Be_data.txt")
+DEFINITION PARAMETERS (string material_datafile="Be.txt")
 SETTING PARAMETERS (r1=0.42e-3,r2=0.8e-3,w=0.46e-3,d=0.2e-4,T=1,N=1)
 OUTPUT PARAMETERS (prms,Re,Na)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
@@ -182,10 +182,10 @@ INITIALIZE
   t_Table T;
   Table_Read(&T, material_datafile,0);
   char **header_parsed;
-  header_parsed=Table_ParseHeader(T.header,"Z=","Ar=","rho=");
+  header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho");
   prms=calloc(1,sizeof(struct datastruct));
+  if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
   if (!prms->Ar) prms->Ar=strtod(header_parsed[1],NULL);
-  //if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10); - SOMEHOW DOESN'T WORK SO FAR!!!
   if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
   prms->E=malloc(sizeof(double)*(T.rows+1));
   prms->mu=malloc(sizeof(double)*(T.rows+1));
@@ -207,7 +207,6 @@ TRACE
   incom incid,refr,outg;
   lens ellip;
   double k,n,delta,dl,e,beta,mu,E,f;
-  double Z=4.0; // Z-number of electrons for Be, that has to be read from the file, but doesn't work so far
   int i=0,nr;
   
   ellip.constants[0]=r1;
@@ -227,10 +226,10 @@ TRACE
   f=(1-E)*prms->f[i-1]+E*prms->f[i];
   
   //delta=((2.0*M_PI*Re)/pow(k,2))*((Na/prms->Ar)*prms->rho*(prms->Z+f)*1e24); 
-  delta=((2.0*M_PI*Re)/pow(k,2))*((Na/prms->Ar)*prms->rho*(Z+f)*1e-24);
+  delta=((2.0*M_PI*Re)/pow(k,2))*((Na/prms->Ar)*prms->rho*(prms->Z+f)*1e-24);
   beta=mu/(2.0*k*1e10);
-  n=1.0-delta-beta;
-  
+  n=1.0-delta;
+
   incid.k[0]=kx; incid.k[1]=ky; incid.k[2]=kz; 
   incid.coord[0]=x; incid.coord[1]=y; incid.coord[2]=z;
   
