@@ -253,7 +253,7 @@ def set_keyhandler(scene, replot_cb, back_cb, key, modifier, viewmodel):
             replot_cb()
         elif ev.key() == QtCore.Qt.Key_X:               # x
             expand_sp()
-        elif ev.key() == QtCore.Qt.Key_F1 or ev.key() == 72:   # F1 or h
+        elif ev.key() == QtCore.Qt.Key_F1 or ev.key() == QtCore.Qt.Key_H:   # F1 or h
             print_help()
         elif ev.key() == QtCore.Qt.Key_B:               # b
             back_cb()
