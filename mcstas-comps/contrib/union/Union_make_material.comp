@@ -9,6 +9,8 @@
 * Version: $Revision: 0.1 $
 * Origin: University of Copenhagen
 *
+* Component that takes a number of Union processes and constructs a Union material
+*
 * %D
 * Part of the Union components, a set of components that work together and thus
 *  sperates geometry and physics within McStas.
@@ -29,9 +31,10 @@
 *
 * %P
 * INPUT PARAMETERS:
-* process_string:  [string] Comma seperated names of physical processes
-* my_absorption:   [1/m]    Inverse penetration depth from absorption at standard energy
-* absorber:        [0/1]    Control parameter, if set to 1 the material will have no scattering processes
+* process_string: [string] Comma seperated names of physical processes
+* my_absorption:  [1/m]    Inverse penetration depth from absorption at standard energy
+* absorber:       [0/1]    Control parameter, if set to 1 the material will have no scattering processes
+* init:           [string] Name of Union_init component (typically "init", default)
 *
 * OUTPUT PARAMETERS:
 * this_material:            Structure that contains information on this material

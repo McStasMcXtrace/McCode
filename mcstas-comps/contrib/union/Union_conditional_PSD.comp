@@ -9,7 +9,7 @@
 * Version: $Revision: 0.1 $
 * Origin: University of Copenhagen
 *
-* A sample component to separate geometry and phsysics
+* A conditional component in the shape of an area the neutrons must hit
 *
 * %D
 * Part of the Union components, a set of components that work together and thus
@@ -48,14 +48,17 @@
 *
 * %P
 * INPUT PARAMETERS:
-* target_loggers:     [string] Comma seperated list of loggers this conditional should affect
-* master_tagging=0    [1] Apply this conditional to the tagging system in next master
-* tagging_extend_index[1] Not currently used
-* time_min            [s] Min time (on psd), if not set ignored
-* time_max            [s] Max time (on psd), if not set ignored
-* overwrite_logger_weight [1] Default = 0, overwrite = 1
-* end_volume          [1] Not used yet
-* last_volume_index   [1] Not used yet
+* xwidth:               [m]      Width of target area
+* yheight:              [m]      Height of target area
+* target_loggers:       [string] Comma seperated list of loggers this conditional should affect
+* master_tagging:       [1]      Apply this conditional to the tagging system in next master
+* tagging_extend_index: [1]      Not currently used
+* time_min:             [s]      Min time (on psd), if not set ignored
+* time_max:             [s]      Max time (on psd), if not set ignored
+* overwrite_logger_weight: [1]   Default = 0, overwrite = 1
+* end_volume:           [1]      Not used yet
+* last_volume_index:    [1]      Not used yet
+* init:                 [string] Name of Union_init component (typically "init", default)
 *
 * OUTPUT PARAMETERS:
 * this_material:            Structure that contains information on this material

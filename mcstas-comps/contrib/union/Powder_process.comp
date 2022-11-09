@@ -9,6 +9,7 @@
 * Version: $Revision: 0.1 $
 * Origin: University of Copenhagen
 *
+* Port of the PowderN process to the Union components
 *
 * %D
 *
@@ -34,9 +35,19 @@
 *
 * %P
 * INPUT PARAMETERS:
-* Interact_fraction [1]   How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
-* packing_factor [1]      How dense is the material compared to optimal 0-1
-* For rest, see PowderN component which this is based on
+* interact_fraction: [1]         How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
+* packing_factor:    [1]         How dense is the material compared to optimal 0-1
+* reflections:       [string]    Input file for reflections. No scattering if NULL or "" [string]
+* delta_d_d:         [0/1]       Global relative delta_d_d/d broadening when the 'w' column is not available. Use 0 if ideal.
+* Strain:            [ppm]       Global relative delta_d_d/d shift when the 'Strain' column is not available. Use 0 if ideal.
+* format:            [no quotes] Name of the format, or list of column indexes (see Description).
+* barns:             [1]         Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2 (barns=1 for laz, barns=0 for lau type files).
+* Vc:                [AA^3]      Volume of unit cell=nb atoms per cell/density of atoms.
+* DW:                [1]         Global Debye-Waller factor when the 'DW' column is not available. Use 1 if included in F2
+* weight:            [g/mol]     Atomic/molecular weight of material.
+* density:           [g/cm^3]    Density of material. rho=density/weight/1e24*N_A.
+* nb_atoms:          [1]         Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell
+* target_index:      [1]         Relative index of component to focus at, e.g. next is +1
 *
 * OUTPUT PARAMETERS:
 * V_rho:  [AA^-3] Atomic density

@@ -8,7 +8,7 @@
 * Date: 20.08.15
 * Origin: University of Copenhagen
 *
-* A sample component to separate geometry and phsysics
+* A box geometry component for the Union components
 *
 * %D
 * Part of the Union components, a set of components that work together and thus
@@ -36,28 +36,28 @@
 *
 * %P
 * INPUT PARAMETERS:
-* xwidth: [m]          width of the box volume
-* yheight: [m]         height of the box volume
-* zdepth: [m]          depth of the box volume
-* xwidth2: [m]         optional different width at the +z box face
-* yheight2: [m]        optional different height at the +z box face
-* material_string: []  material name of this volume, defined using Union_make_material
-* priority: [1]        priotiry of the volume (can not be the same as another volume) A high priority is on top of low.
-* p_interact [1]  probability to interact with this geometry [0-1]
-* visualize  [1]  set to 0 if you wish to hide this geometry in mcdisplay
-* number_of_activations [1]  Number of subsequent Union_master components that will simulate this geometry
-* mask_string: []      Comma seperated list of geometry names which this geometry should mask
-* mask_setting: []     "All" or "Any", should the masked volume be simulated when the ray is in just one mask, or all.
-*
-* Focusing options, if left blank, there will be no focusing.
-* target_x   [m]:
-* target_y   [m]: Position of target to focus at
-* target_z   [m]:
-* focus_aw   [deg] horiz. angular dimension of a rectangular area
-* focus_ah   [deg] vert. angular dimension of a rectangular area
-* focus_xw   [m]   horiz. dimension of a rectangular area
-* focus_xh   [m]   vert. dimension of a rectangular area
-* focus_r    [m]   focusing on circle with this radius
+* xwidth:                [m]      Width of the box volume
+* yheight:               [m]      Height of the box volume
+* zdepth:                [m]      Depth of the box volume
+* xwidth2:               [m]      Optional different width at the +z box face
+* yheight2:              [m]      Optional different height at the +z box face
+* material_string:       [string] Material name of this volume, defined using Union_make_material
+* priority:              [1]      Priotiry of the volume (can not be the same as another volume) A high priority is on top of low.
+* p_interact:            [1]      Probability to interact with this geometry [0-1]
+* visualize:             [1]      Set to 0 if you wish to hide this geometry in mcdisplay
+* number_of_activations: [1]      Number of subsequent Union_master components that will simulate this geometry
+* mask_string:           [string] Comma seperated list of geometry names which this geometry should mask
+* mask_setting:          [string]  "All" or "Any", should the masked volume be simulated when the ray is in just one mask, or all.
+* target_index:          [string]  Focuses on component a component this many steps further in the component sequence
+* target_x:              [m]      X position of target to focus at
+* target_y:              [m]      Y position of target to focus at
+* target_z:              [m]      Z position of target to focus at
+* focus_aw:              [deg]    Horiz. angular dimension of a rectangular area
+* focus_ah:              [deg]    Vert. angular dimension of a rectangular area
+* focus_xw:              [m]      Horiz. dimension of a rectangular area
+* focus_xh:              [m]      Vert. dimension of a rectangular area
+* focus_r:               [m]      Focusing on circle with this radius
+* init:                  [string] name of Union_init component (typically "init", default)
 * OUTPUT PARAMETERS:
 *
 * %L

@@ -9,7 +9,7 @@
 * Version: $Revision: 0.1 $
 * Origin: University of Copenhagen
 *
-* A sample component to separate geometry and phsysics
+* One dimensional Union logger for several possible variables
 *
 * %D
 * Part of the Union components, a set of components that work together and thus
@@ -46,16 +46,18 @@
 *
 * %P
 * INPUT PARAMETERS:
-* variable:        [string] time for time in seconds, q for magnitude of scattering vector in 1/AA.
-* min_value:       [1] histogram boundery for logged value
-* max_value:       [1] histogram boundery for logged value
-* n1:              [1] Number of bins in histogram
-* target_geometry: [string] Comma seperated list of geometry names that will be logged, leave empty for all volumes (even not defined yet)
-* target_process:  [string] Comma seperated names of physical processes, if volumes are selected, one can select Union_process names
-* order_total:     [1] Only log rays that scatter for the n'th time, 0 for all orders
-* order_volume:    [1] Only log rays that scatter for the n'th time in the same geometry
-* order_volume_process [1] Only log rays that scatter for the n'th time in the same geometry, using the same process
-* logger_conditional_extend_index [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
+* variable:             [string] Time for time in seconds, q for magnitude of scattering vector in 1/AA.
+* min_value:            [1]      Histogram boundery for logged value
+* max_value:            [1]      Histogram boundery for logged value
+* n1:                   [1]      Number of bins in histogram
+* filename:             [string] Filename of produced data file
+* target_geometry:      [string] Comma seperated list of geometry names that will be logged, leave empty for all volumes (even not defined yet)
+* target_process:       [string] Comma seperated names of physical processes, if volumes are selected, one can select Union_process names
+* order_total:          [1]      Only log rays that scatter for the n'th time, 0 for all orders
+* order_volume:         [1]      Only log rays that scatter for the n'th time in the same geometry
+* order_volume_process: [1]      Only log rays that scatter for the n'th time in the same geometry, using the same process
+* logger_conditional_extend_index: [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
+* init:                 [string] Name of Union_init component (typically "init", default)
 *
 * OUTPUT PARAMETERS:
 *

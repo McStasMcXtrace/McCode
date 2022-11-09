@@ -9,6 +9,7 @@
 * Version: $Revision: 0.1 $
 * Origin: University of Copenhagen
 *
+* A template process for building Union processes
 *
 * %D
 *
@@ -37,8 +38,11 @@
 *
 * %P
 * INPUT PARAMETERS:
-* sigma:            [barns]  Scattering cross section
-* unit_cell_volume: [AA^3]   Unit cell volume
+* sigma:             [barns]  Incoherent scattering cross section
+* packing_factor:    [1]      How dense is the material compared to optimal 0-1
+* unit_cell_volume:  [AA^3]   Unit_cell_volume
+* interact_fraction: [1]      How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
+* init:              [string] Name of Union_init component (typically "init", default)
 *
 * OUTPUT PARAMETERS:
 * Template_storage          // Important to update this output paramter

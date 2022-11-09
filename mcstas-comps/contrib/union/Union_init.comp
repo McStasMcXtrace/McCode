@@ -9,6 +9,8 @@
 * Version: $Revision: 0.1 $
 * Origin: ESS DMSC
 *
+* Initialize component that needs to be place before any Union component
+*
 * %D
 * Part of the Union components, a set of components that work together and thus
 *  sperates geometry and physics within McStas.
