@@ -14,8 +14,62 @@ from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 from . import utils
 from . import mccode_config
 from .mcplotloader import McCodeDataLoader, test_decfuncs, PlotGraphPrint
-from .plotgraph import PNMultiple
+from .plotgraph import PNSingle, PNMultiple
 from .mcplotloader import Data2D
+
+
+def get_help_string():
+    if sys.platform == 'darwin':
+        modifier = 'Meta'
+    elif sys.platform == 'win32':
+        modifier = 'alt'
+    else:
+        modifier = 'ctrl'
+
+    helplines = []
+    helplines.append('')
+    helplines.append('q              - quit')
+    helplines.append('p              - save png')
+    if not os.name == 'nt':
+        helplines.append('s              - save svg')
+    helplines.append('l              - log toggle')
+    helplines.append('t              - textinfo toggle')
+    helplines.append('c              - cycle colormap')
+    helplines.append('F1/h           - help')
+    helplines.append('F5             - replot')
+    helplines.append('click          - display subplot')
+    helplines.append('right-click/b  - back')
+    helplines.append('%s + click   - sweep monitors' % modifier)
+    helplines.append('x              - expand subplots')
+    return '\n'.join(helplines)
+
+
+class ViewModel():
+    ''' 
+    It is a kind of viewmodel, originally a log logstate housekeeping object, 
+    extended by various other logstate variables as well.
+    '''
+    def __init__(self, log=False, legend=True, sourcedir=None):
+        self.log = log
+        self.icolormap = 0
+        self.legend = legend
+        self.sourcedir = sourcedir
+    def flip_log(self):
+        self.log = not self.log
+        return self.log
+    def inc_colormap(self):
+        self.icolormap += 1
+    def flip_legend(self):
+        self.legend = not self.legend
+        return self.legend
+    def logstate(self):
+        return self.log
+    def legendstate(self):
+        return self.legend
+    def cmapindex(self):
+        return self.icolormap
+    def get_sourcedir(self):
+        return self.sourcedir
 
 
 class McPyqtgraphPlotter():
@@ -50,366 +104,400 @@ class McPyqtgraphPlotter():
             pg.setConfigOption('background', 'w')
             pg.setConfigOption('foreground', 'k')
 
+
     def runplot(self):
         node = self.graph
 
-        plt_layout = create_plotwindow(title=self.sourcedir+" - Press 'h' for app shortcuts")
+        self.create_plotwindow(title=self.sourcedir+" - Press 'h' for app shortcuts")
 
         # create the logflipper
-        viewmodel = ViewModel(sourcedir=self.sourcedir)
+        self.viewmodel = ViewModel(sourcedir=self.sourcedir)
 
         # initiate event driven plot recursion
-        plot_node(node, self.plot_func, plt_layout, viewmodel)
+        self.plot_node(node)
 
         # start
         sys.exit(self.app.exec_())
 
 
-def create_plotwindow(title):
-    ''' set up and return a plotlayout "window" '''
+    def create_plotwindow(self, title):
+        ''' set up and return a plotlayout "window" '''
 
-    window = pg.GraphicsView()
+        self.statuscoords = QtWidgets.QLabel()
+        self.statuscoords.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        statusbar = QtWidgets.QStatusBar()
+        statusbar.addPermanentWidget(self.statuscoords)
 
-    mw = QtWidgets.QMainWindow()
-    window.setParent(mw)
-    mw.setCentralWidget(window)
-    mw.setWindowTitle(title)
+        self.main_window = QtWidgets.QMainWindow()
+        self.graphics_view = pg.GraphicsView(self.main_window)
+        self.main_window.setCentralWidget(self.graphics_view)
+        self.main_window.setStatusBar(statusbar)
+        self.main_window.setWindowTitle(title)
+        self.main_window.setMouseTracking(True)
 
-    # window size
-    rect = QtWidgets.QApplication.desktop().screenGeometry()
-    w = int(0.7 * rect.width())
-    h = int(0.7 * rect.height())
-    mw.resize(w, h)
+        # window size
+        rect = QtWidgets.QApplication.desktop().screenGeometry()
+        w = int(0.7 * rect.width())
+        h = int(0.7 * rect.height())
+        self.main_window.resize(w, h)
 
-    global g_window
-    g_window = mw
+        self.plot_layout = pg.GraphicsLayout(border=None)
+        self.graphics_view.setCentralItem(self.plot_layout)
+        self.plot_layout.setContentsMargins(2, 2, 2, 2) # outermost margin
 
-    layout = pg.GraphicsLayout(border=None)
-    window.setCentralItem(layout)
-    layout.window = window # keep window to avoid garbage collection
-    layout.setContentsMargins(2, 2, 2, 2) # outermost margin
-    layout.mw = mw
-
-    mw.show()
-    mw.raise_()
-
-    return layout
-
-
-class ViewModel():
-    ''' 
-    It is a kind of viewmodel, originally a log logstate housekeeping object, 
-    extended by various other logstate variables as well.
-    '''
-    def __init__(self, log=False, legend=True, sourcedir=None):
-        self.log = log
-        self.icolormap = 0
-        self.legend = legend
-        self.sourcedir = sourcedir
-    def flip_log(self):
-        self.log = not self.log
-        return self.log
-    def inc_colormap(self):
-        self.icolormap += 1
-    def flip_legend(self):
-        self.legend = not self.legend
-        return self.legend
-    def logstate(self):
-        return self.log
-    def legendstate(self):
-        return self.legend
-    def cmapindex(self):
-        return self.icolormap
-    def get_sourcedir(self):
-        return self.sourcedir
+        self.main_window.show()
+        self.main_window.raise_()
 
 
-def plot_node(node, plot_func, layout, viewmodel, sync_zoom_obj_ids=[]):
-    '''
-    Event driven recursive plot function. Click events are registered with each recursion.
-    '''
-    # First check if we have been called with a meaningful node
-    if node:
-        # init
-        clear_window_and_handlers(layout)
+    def plot_node(self, node, sync_zoom_obj_ids=[]):
+        '''
+        Event driven recursive plot function. Click events are registered with each recursion.
+        '''
 
-        # get references from node
-        parent = node.parent
-        prim_lst = node.primaries
-        sec_lst = node.secondaries
+        def get_modifiers(modname):
+            ''' Get int codes for keyboardmodifiers. WARNING: String codes may be used directly in code. '''
+            if modname == "none":
+                return 0
+            if modname == "ctrl":
+                return QtCore.Qt.ControlModifier
+            if modname == "shft":
+                return QtCore.Qt.ShiftModifier
+            if modname == "ctrl-shft":
+                return QtCore.Qt.ControlModifier | QtCore.Qt.ShiftModifier
+            if modname == "alt":
+                return QtCore.Qt.AltModifier
 
-        # add plot instances and record viewbox results
-        #n = len(data_lst)
-        n = node.getnumdata()
-        viewbox_lst = []
-        for i in range(n):
-            viewbox_lst.append(add_plot(layout, node, plot_func, i, n, viewmodel))
-        if id(node) in sync_zoom_obj_ids:
-            sync_views_zooming(viewbox_lst)
+        # First check if we have been called with a meaningful node
+        if node:
+            # init
+            self.clear_window_and_handlers()
 
-        # set up viewbox - node correspondences for each action (click, right-click, ctrl-click, ...)
-        vn_dict_click = {}
-        vn_dict_rclick = {}
-        vn_dict_ctrlclick = {}
-        # tag sync-zoom node id's (secondaries)
-        sync_zoom_obj_ids = sync_zoom_obj_ids + [id(n) for n in sec_lst]
-        # for each primary node, a click is registered to it
-        for i in range(len(prim_lst)):
-            vn_dict_click[viewbox_lst[i]] = prim_lst[i]
-        # if parent exists, all right-clicks are registered to it
-        if parent:
+            # get references from node
+            parent = node.parent
+            prim_lst = node.primaries
+            sec_lst = node.secondaries
+
+            # add plot instances and record viewbox results
+            n = node.getnumdata()
+            self.viewbox_list = []
             for i in range(n):
-                vn_dict_rclick[viewbox_lst[i]] = parent
-        # for each secondary node, a ctrl-click is registered to it
-        for i in range(len(prim_lst)):
-            vn_dict_ctrlclick[viewbox_lst[i]] = sec_lst[i]
+                self.viewbox_list.append(self.add_plot(node, i, n))
+            if id(node) in sync_zoom_obj_ids:
+                self.sync_views_zooming()
 
-        # set mouse click handlers on the window
-        plot_node_cb = lambda node: plot_node(
-            node, plot_func, layout=layout, viewmodel=viewmodel, sync_zoom_obj_ids=sync_zoom_obj_ids)
-        set_handler(layout.scene(), vn_dict_click, plot_node_cb, "click", get_modifiers("none"))
-        set_handler(layout.scene(), vn_dict_rclick, plot_node_cb, "rclick", get_modifiers("none"))
+            # set up viewbox - node correspondences for each action (click, right-click, ctrl-click, ...)
+            vn_dict_click = {}
+            vn_dict_rclick = {}
+            vn_dict_ctrlclick = {}
 
-        # set modifiers "alt" and "ctrl" for all platforms, since some may not work on win, darwin etc.
-        set_handler(layout.scene(), vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("alt"))
-        set_handler(layout.scene(), vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("ctrl"))        
+            # tag sync-zoom node id's (secondaries)
+            sync_zoom_obj_ids = sync_zoom_obj_ids + [id(n) for n in sec_lst]
 
-        # set keypress handlers 
-        replot_cb = lambda: plot_node(node, plot_func, layout, viewmodel=viewmodel)
-        back_cb = lambda: plot_node(node.parent, plot_func, layout, viewmodel=viewmodel)
-        set_keyhandler(layout.scene(), replot_cb, back_cb, 'l', get_modifiers("none"), viewmodel=viewmodel)
+            # for each primary node, a click is registered to it
+            for i in range(len(prim_lst)):
+                vn_dict_click[self.viewbox_list[i]] = prim_lst[i]
+
+            # if parent exists, all right-clicks are registered to it
+            if parent:
+                for i in range(n):
+                    vn_dict_rclick[self.viewbox_list[i]] = parent
+
+            # for each secondary node, a ctrl-click is registered to it
+            for i in range(len(prim_lst)):
+                vn_dict_ctrlclick[self.viewbox_list[i]] = sec_lst[i]
+
+            # set mouse click handlers on the window
+            plot_node_cb = lambda node: self.plot_node(
+                node, sync_zoom_obj_ids=sync_zoom_obj_ids)
+            self.set_handler(vn_dict_click, plot_node_cb, "click", get_modifiers("none"))
+            self.set_handler(vn_dict_rclick, plot_node_cb, "rclick", get_modifiers("none"))
+
+            # set modifiers "alt" and "ctrl" for all platforms, since some may not work on win, darwin etc.
+            self.set_handler(vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("alt"))
+            self.set_handler(vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("ctrl"))        
+
+            # set keypress handlers 
+            replot_cb = lambda: self.plot_node(node)
+            back_cb = lambda: self.plot_node(parent)
+            self.set_keyhandler(replot_cb, back_cb, 'l', get_modifiers("none"))
 
 
-def get_modifiers(modname):
-    ''' Get int codes for keyboardmodifiers. WARNING: String codes may be used directly in code. '''
-    if modname == "none":
-        return 0
-    if modname == "ctrl":
-        return QtCore.Qt.ControlModifier
-    if modname == "shft":
-        return QtCore.Qt.ShiftModifier
-    if modname == "ctrl-shft":
-        return QtCore.Qt.ControlModifier | QtCore.Qt.ShiftModifier
-    if modname == "alt":
-        return QtCore.Qt.AltModifier
+    def show_help(self):
+        helpstr = get_help_string()
 
-
-def print_help(nogui=False):
-    if sys.platform == 'darwin':
-        modifier = 'Meta'
-    elif sys.platform == 'win32':
-        modifier = 'alt'
-    else:
-        modifier = 'ctrl'
-
-    helplines = []
-    helplines.append('')
-    helplines.append('q              - quit')
-    helplines.append('p              - save png')
-    if not os.name == 'nt':
-        helplines.append('s              - save svg')
-    helplines.append('l              - log toggle')
-    helplines.append('t              - textinfo toggle')
-    helplines.append('c              - cycle colormap')
-    helplines.append('F1/h           - help')
-    helplines.append('F5             - replot')
-    helplines.append('click          - display subplot')
-    helplines.append('right-click/b  - back')
-    helplines.append('%s + click   - sweep monitors' % modifier)
-    helplines.append('x              - expand subplots')
-    print('\n'.join(helplines))
-
-    if not nogui:
         if mccode_config.configuration["MCCODE"] == "mcstas":
             prefix = "mc"
         else:
             prefix = "mx"
-        QtWidgets.QMessageBox.about(g_window, prefix+'plot-pyqtgraph', '\n'.join(helplines))
+        QtWidgets.QMessageBox.about(self.main_window, prefix+'plot-pyqtgraph', helpstr)
 
 
-def set_keyhandler(scene, replot_cb, back_cb, key, modifier, viewmodel):
-    ''' sets a clickhadler according to input '''
+    def set_keyhandler(self, replot_cb, back_cb, key, modifier):
+        ''' sets a clickhadler according to input '''
 
-    def key_handler(ev, replot_cb, back_cb, savefile_cb, flip_log, flip_legend, inc_cmap, expand_sp, debug=False):
-        ''' global keypress handler, replot_cb is a function of log '''
-        if ev.key() == QtCore.Qt.Key_Q:                 # q
-            QtWidgets.QApplication.quit()
-        elif ev.key() == QtCore.Qt.Key_L:               # l
-            flip_log()
-            replot_cb()
-        elif ev.key() == QtCore.Qt.Key_P:               # p
-            savefile_cb(format='png')
-        elif ev.key() == 83:                            # s
-            if not os.name == 'nt':
-                savefile_cb(format='svg')
-        elif ev.key() == QtCore.Qt.Key_T:               # t
-            print("Toggle legend visibility")
-            flip_legend()
-            replot_cb()
-        elif ev.key() == QtCore.Qt.Key_C:               # c
-            inc_cmap()
-            replot_cb()
-        elif ev.key() == QtCore.Qt.Key_F5:              # F5
-            replot_cb()
-        elif ev.key() == QtCore.Qt.Key_X:               # x
-            expand_sp()
-        elif ev.key() == QtCore.Qt.Key_F1 or ev.key() == QtCore.Qt.Key_H:   # F1 or h
-            print_help()
-        elif ev.key() == QtCore.Qt.Key_B:               # b
-            back_cb()
-        # print debug info
-        if debug:
-            print("key code: %s" % str(ev.key()))
+        def key_handler(ev, replot_cb, back_cb, savefile_cb, flip_log, flip_legend, inc_cmap, expand_sp, debug=False):
+            ''' global keypress handler, replot_cb is a function of log '''
+            if ev.key() == QtCore.Qt.Key_Q:                 # q
+                QtWidgets.QApplication.quit()
+            elif ev.key() == QtCore.Qt.Key_L:               # l
+                flip_log()
+                replot_cb()
+            elif ev.key() == QtCore.Qt.Key_P:               # p
+                savefile_cb(format='png')
+            elif ev.key() == 83:                            # s
+                if not os.name == 'nt':
+                    savefile_cb(format='svg')
+            elif ev.key() == QtCore.Qt.Key_T:               # t
+                print("Toggle legend visibility")
+                flip_legend()
+                replot_cb()
+            elif ev.key() == QtCore.Qt.Key_C:               # c
+                inc_cmap()
+                replot_cb()
+            elif ev.key() == QtCore.Qt.Key_F5:              # F5
+                replot_cb()
+            elif ev.key() == QtCore.Qt.Key_X:               # x
+                expand_sp()
+            elif ev.key() == QtCore.Qt.Key_F1 or ev.key() == QtCore.Qt.Key_H:   # F1 or h
+                self.show_help()
+            elif ev.key() == QtCore.Qt.Key_B:               # b
+                back_cb()
+            # print debug info
+            if debug:
+                print("key code: %s" % str(ev.key()))
     
-    savefile_cb = lambda format: utils.dumpfile_pqtg(scene=scene, format=format)
-    expand_sp = lambda : expand_subplots(sourcedir=viewmodel.get_sourcedir())
+        savefile_cb = lambda format: utils.dumpfile_pqtg(scene=self.plot_layout.scene(), format=format)
+        expand_sp = lambda : self.expand_subplots(sourcedir=self.viewmodel.get_sourcedir())
 
-    scene.keyPressEvent = lambda ev: key_handler(ev=ev,
-                                                 replot_cb=replot_cb,
-                                                 savefile_cb=savefile_cb,
-                                                 back_cb=back_cb,
-                                                 flip_log=viewmodel.flip_log,
-                                                 flip_legend=viewmodel.flip_legend,
-                                                 inc_cmap=viewmodel.inc_colormap,
-                                                 expand_sp=expand_sp)
+        self.plot_layout.scene().keyPressEvent = \
+            lambda ev: key_handler(ev = ev,
+                                   replot_cb = replot_cb,
+                                   savefile_cb = savefile_cb,
+                                   back_cb = back_cb,
+                                   flip_log = self.viewmodel.flip_log,
+                                   flip_legend = self.viewmodel.flip_legend,
+                                   inc_cmap = self.viewmodel.inc_colormap,
+                                   expand_sp = expand_sp)
 
 
-def expand_subplots(sourcedir):
-    ''' opens a new process of mcplot-pyqtgraph on each subdir '''
-    # stolen from stack overflow:
-    def get_immediate_subdirectories(a_dir):
-        return [name for name in os.listdir(a_dir)
-                if os.path.isdir(os.path.join(a_dir, name))]
-    def sortalpha(data):
-        return sorted(data, key=lambda item: (
-                                       int(item.partition(' ')[0])
-                                       if item[0].isdigit() else float('inf'), item)
-               )
+    def expand_subplots(self, sourcedir):
+        ''' opens a new process of mcplot-pyqtgraph on each subdir '''
+        # stolen from stack overflow:
+        def get_immediate_subdirectories(a_dir):
+            return [name for name in os.listdir(a_dir)
+                    if os.path.isdir(os.path.join(a_dir, name))]
+        def sortalpha(data):
+            return sorted(data, key =
+                lambda item: (
+                    int(item.partition(' ')[0])
+                    if item[0].isdigit() else float('inf'), item))
 
-    subdirs = sortalpha(get_immediate_subdirectories(sourcedir))
+        subdirs = sortalpha(get_immediate_subdirectories(sourcedir))
     
-    if len(subdirs) == 0:
-        print("no subdirs to plot")
-        return
+        if len(subdirs) == 0:
+            print("no subdirs to plot")
+            return
 
-    for s in subdirs:
-        subprocess.Popen('mcplot-pyqtgraph %s' %
-            os.path.join(sourcedir, s), shell=True, cwd=os.getcwd())
-
-
-def clear_window_and_handlers(rootui):
-    ''' clears all click handlers on "rootui" '''
-    rootui.clear()
-    try:
-        rootui.scene.sigMouseClicked.disconnect()
-    except:
-        # TODO: log.DEBUG("no events to disconnect")
-        pass
+        for s in subdirs:
+            subprocess.Popen('mcplot-pyqtgraph %s' %
+                os.path.join(sourcedir, s), shell=True, cwd=os.getcwd())
 
 
-def set_handler(scene, vn_dict, node_cb, click, modifier):
-    ''' sets a clickhandler according to input '''
+    def clear_window_and_handlers(self):
+        ''' clears all click handlers on "rootui" '''
+        self.plot_layout.clear()
+        try:
+            self.plot_layout.scene().sigMouseClicked.disconnect()
+            self.plot_layout.scene().sigMouseMoved.disconnect()
+        except TypeError:
+            pass
 
-    def click_handler(event, vn_dict, node_cb, click, mod, debug=False):
-        ''' generic conditional-branch-tree, catch-all, mouse click event handler  '''
-        # print debug info
-        if debug:
-            print("click modifier: %s" % str(int(event.modifiers())))
+
+    def set_handler(self, vn_dict, node_cb, click, modifier):
+        ''' sets a clickhandler according to input '''
+
+        def click_handler(event, vn_dict, node_cb, click, mod, debug=False):
+            ''' generic conditional-branch-tree, catch-all, mouse click event handler  '''
+            # print debug info
+            if debug:
+                print("click modifier: %s" % str(int(event.modifiers())))
         
-        # prevent action for modifiers mismatch
-        if int(event.modifiers()) != mod:
+            # prevent action for modifiers mismatch
+            if int(event.modifiers()) != mod:
+                return
+            # prevent action for mouse button mismatch
+            if click == "rclick" and event.button() != 2:
+                return
+            if click == "click" and event.button() != 1:
+                return
+
+            node = vn_dict.get(event.currentItem, None)
+            if node:
+                node_cb(node)
+
+        if len(list(vn_dict)) == 0:
             return
-        # prevent action for mouse button mismatch
-        if click == "rclick" and event.button() != 2:
-            return
-        if click == "click" and event.button() != 1:
-            return
-
-        node = vn_dict.get(event.currentItem, None)
-        if node:
-            node_cb(node)
-
-    if len(list(vn_dict)) == 0:
-        return
-    scene.sigMouseClicked.connect(lambda event: click_handler(
-        event, vn_dict=vn_dict, node_cb=node_cb, click=click, mod=modifier))
+        self.plot_layout.scene().sigMouseClicked.connect(lambda event: click_handler(
+            event, vn_dict=vn_dict, node_cb=node_cb, click=click, mod=modifier))
 
 
-def get_viewbox(plt):
-    ''' returns the viewbox of a plot object '''
-    return plt.getViewBox()
+    def get_plot_func_opts(self, log, legend, icolormap, verbose, fontsize, cbmin=None, cbmax=None):
+        ''' returns a dict for holding the plot options relevant for this plotting frontend '''
+        d = {}
+        d['log'] = log
+        d['legend'] = legend 
+        d['icolormap'] = icolormap 
+        d['verbose'] = verbose
+        d['fontsize'] = fontsize
+        if cbmin != None and cbmax != None:
+            d['cbmin'] = cbmin
+            d['cbmax'] = cbmax
+        return d
 
 
-def get_golden_rowlen(n):
-    ''' find rowlength by golden ratio '''
-    return int(math.sqrt(n*1.61803398875))
+    def get_sweep_multiplot_colorbar_limits(self, node):
+        if type(node) == PNMultiple:
+            cbmin = float("inf")
+            cbmax = float("-inf")
+            monname = None
+            for data in node.getdata_lst():
+                if type(data) != Data2D:
+                    continue
+
+                # make sure all nodes in the multiplot have the same component name
+                # (indicating comparable (sweep) data)
+                if monname == None:
+                    monname = data.component
+                else:
+                    if data.component != monname:
+                        return None, None
+
+                # update min/max values
+                if type(data) == Data2D: 
+                    localmin = np.min(np.array(data.zvals))
+                    localmax = np.max(np.array(data.zvals))
+                    cbmin = min(cbmin, localmin)
+                    cbmax = max(cbmax, localmax)
+            return cbmin, cbmax
+        return None, None
 
 
-def get_plot_func_opts(log, legend, icolormap, verbose, fontsize, cbmin=None, cbmax=None):
-    ''' returns a dict for holding the plot options relevant for this plotting frontend '''
-    d = {}
-    d['log'] = log
-    d['legend'] = legend 
-    d['icolormap'] = icolormap 
-    d['verbose'] = verbose
-    d['fontsize'] = fontsize
-    if cbmin != None and cbmax != None:
-        d['cbmin'] = cbmin
-        d['cbmax'] = cbmax
-    return d
+    def add_plot(self, node, i, n):
+        ''' constructs a plot from data and adds this to layout '''
+
+        def get_golden_rowlen(n):
+            ''' find rowlength by golden ratio '''
+            return int(math.sqrt(n*1.61803398875))
+
+        plt = pg.PlotItem()
+        rowlen = get_golden_rowlen(n)
+
+        verbose = n<=4
+        fontsize = (4, 10, 14)[int(n<=2) + int(n<12)]
+
+        cbmin, cbmax = self.get_sweep_multiplot_colorbar_limits(node)
+        options = self.get_plot_func_opts(
+            self.viewmodel.logstate(), self.viewmodel.legendstate(), self.viewmodel.cmapindex(),
+            verbose, fontsize, cbmin, cbmax)
+        view_box, plt_itm = self.plot_func(node, i, plt, options)
+        if view_box:
+            self.plot_layout.addItem(plt_itm, i // rowlen, i % rowlen)
+
+        # disconnect any old mouse handlers
+        try:
+            self.plot_layout.scene().sigMouseMoved.disconnect()
+        except TypeError:
+            pass
+
+        mouse_func = None
+
+        # if a single plot is visible, add a handler to show the coordinates
+        if isinstance(node, PNSingle):
+            mouse_func = lambda pos: self.single_plot_mouse_moved(plt, node, pos)
+        # else add a handler for multi-plots
+        elif isinstance(node, PNMultiple):
+            mouse_func = lambda pos: self.multi_plot_mouse_moved(plt, node, pos)
+
+        if mouse_func != None:
+            self.plot_layout.scene().sigMouseMoved.connect(mouse_func)
+
+        return view_box
 
 
-def get_sweep_multiplot_colorbar_limits(node):
-    if type(node) == PNMultiple:
-        cbmin = float("inf")
-        cbmax = float("-inf")
-        monname = None
-        for data in node.getdata_lst():
-            if type(data) != Data2D:
-                continue
+    def single_plot_mouse_moved(self, plot, node, pos):
+        ''' shows the mouse coordinates for single plots '''
+        pos = plot.getViewBox().mapSceneToView(pos)
 
-            # make sure all nodes in the multiplot have the same component name
-            # (indicating comparable (sweep) data)
-            if monname == None:
-                monname = data.component
-            else:
-                if data.component != monname:
-                    return None, None
+        # get axis labels
+        xlabel = ""
+        ylabel = ""
+        if node != None:
+            xlabel = node.getdata_idx(0).xlabel
+            ylabel = node.getdata_idx(0).ylabel
+        if xlabel == "":
+            xlabel = "x"
+        if ylabel == "":
+            ylabel = "y"
 
-            # update min/max values
-            if type(data) == Data2D: 
-                localmin = np.min(np.array(data.zvals))
-                localmax = np.max(np.array(data.zvals))
-                cbmin = min(cbmin, localmin)
-                cbmax = max(cbmax, localmax)
-        return cbmin, cbmax
-    return None, None
+        posstr = "Cursor: %s=%g, %s=%g." % (xlabel, pos.x(), ylabel, pos.y())
+        self.statuscoords.setText(posstr)
 
 
-def add_plot(layout, node, plot_node_func, i, n, viewmodel):
-    ''' constructs a plot from data and adds this to layout '''
-    plt = pg.PlotItem()
-    rowlen = get_golden_rowlen(n)
-    
-    verbose = n<=4
-    fontsize = (4, 10, 14)[int(n<=2) + int(n<12)]
-    
-    cbmin, cbmax = get_sweep_multiplot_colorbar_limits(node)
-    options = get_plot_func_opts(
-        viewmodel.logstate(), viewmodel.legendstate(), viewmodel.cmapindex(),
-        verbose, fontsize, cbmin, cbmax)
-    view_box, plt_itm = plot_node_func(node, i, plt, options)
-    if (view_box):
-        layout.addItem(plt_itm, i // rowlen, i % rowlen)
-    
-    return view_box
+    def multi_plot_mouse_moved(self, plot, node, pos):
+        ''' shows information on multi-plots '''
+        prim = node.primaries
+        activeplottext = ""
+
+        # find the plot under the cursor
+        idx = self.get_plot_index(pos)
+        if idx >= 0:
+            # plot found?
+            activeplottext = str(idx+1)
+            if prim != None:
+                activeplottext += " - " + prim[idx].getdata_idx(0).title
+            activeplottext += "."
+
+        # status string
+        num_plots = node.getnumdata()
+        if num_plots == 1:
+            statustext = "Showing 1 plot."
+        else:
+            statustext = "Showing %d plots." % num_plots
+
+        if activeplottext != "":
+            statustext += " Cursor on plot " + activeplottext
+
+        self.statuscoords.setText(statustext)
 
 
-def sync_views_zooming(vb_lst):
-    ''' replace individual viewbox vheel events with a new, global wheel event which calls all of them '''
-    org_wheel_events = [vb.wheelEvent for vb in vb_lst]
-    def modded_wheel_event(ev):
-        for vb in vb_lst:
-            org_wheel_events[vb_lst.index(vb)](ev)
-    for vb in vb_lst:
-        vb.wheelEvent = modded_wheel_event
+    def get_plot_index(self, pos):
+        ''' get the plot index at (cursor) position pos '''
+        if self.viewbox_list == None:
+            return -1
+
+        for idx in range(len(self.viewbox_list)):
+            viewbox = self.viewbox_list[idx]
+            topRight = viewbox.mapViewToScene(viewbox.viewRect().topRight())
+            bottomLeft = viewbox.mapViewToScene(viewbox.viewRect().bottomLeft())
+
+            rect = QtCore.QRectF()
+            rect.setTopRight(topRight)
+            rect.setBottomLeft(bottomLeft)
+
+            # plot found?
+            if rect.contains(pos):
+                return idx
+
+        # plot not found
+        return -1
+
+
+    def sync_views_zooming(self):
+        ''' replace individual viewbox wheel events with a new, global wheel event which calls all of them '''
+        org_wheel_events = [vb.wheelEvent for vb in self.viewbox_list]
+        def modded_wheel_event(ev, axis = None):
+            for vb in self.viewbox_list:
+                org_wheel_events[self.viewbox_list.index(vb)](ev, axis=axis)
+        for vb in self.viewbox_list:
+            vb.wheelEvent = modded_wheel_event
