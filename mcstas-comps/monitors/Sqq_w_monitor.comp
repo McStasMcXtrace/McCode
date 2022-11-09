@@ -66,7 +66,7 @@
 
 DEFINE COMPONENT Sqq_w_monitor
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius=1, yheight=0.05, qax=1,qaz=0,qbx=0,qbz=1,qamin=0,qamax=2,qbmin=0,qbmax=2,Emin=0,Emax=5,int nqa=90, int nqb=90, int nE=10, string filename=NAME_CURRENT_COMP, index=-2, int nowritefile=0, int nosum=0, string vix="", string viy="", string viz="")
+SETTING PARAMETERS (radius=1, yheight=0.05, qax=1,qaz=0,qbx=0,qbz=1,qamin=0,qamax=2,qbmin=0,qbmax=2,Emin=0,Emax=5,int nqa=90, int nqb=90, int nE=10, string filename, index=-2, int nowritefile=0, int nosum=0, string vix="", string viy="", string viz="")
 OUTPUT PARAMETERS ()
 
 DECLARE

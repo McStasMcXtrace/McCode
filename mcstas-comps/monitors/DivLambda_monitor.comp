@@ -55,7 +55,7 @@
 DEFINE COMPONENT DivLambda_monitor
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (nL=20, nh=20, int nowritefile=0,
-  string filename=NAME_CURRENT_COMP, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, maxdiv_h=2, Lmin, Lmax, restore_neutron=0, nx=0, ny=0, nz=1)
+  string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, maxdiv_h=2, Lmin, Lmax, restore_neutron=0, nx=0, ny=0, nz=1)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

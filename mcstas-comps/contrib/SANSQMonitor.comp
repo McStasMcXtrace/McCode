@@ -41,7 +41,7 @@ DEFINE COMPONENT SANSQMonitor
 DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (NumberOfBins = 100,
-  string RFilename = "RDetector", string qFilename = NAME_CURRENT_COMP,
+  string RFilename = "RDetector", string qFilename = "QDetector",
   RadiusDetector, DistanceFromSample, LambdaMin = 1.0, Lambda0 = 0.0, restore_neutron = 0)
 
 OUTPUT PARAMETERS ()
