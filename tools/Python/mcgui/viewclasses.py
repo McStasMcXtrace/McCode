@@ -7,6 +7,11 @@ import re
 from widgets import *
 from PyQt5 import QtWidgets
 
+try:
+    from PyQt5 import Qsci
+except ImportError:
+    Qsci = None
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import mccode_config
 from mccodelib.utils import ComponentParser, ComponentParInfo
@@ -56,7 +61,7 @@ class McView(object):
         self.mw.ui.lblInstrument.setText(labels[0])
         if str(labels[0]) == '':
             self.__ssd = None
-        if (mccode_config.configuration["QSCI"] == '1'):
+        if Qsci:
             self.ew.initCodeEditor(instr)
 
     def updateStatus(self, text=''):
@@ -275,7 +280,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
             self.resize(920, sheight)
 
         # dynamically added widgets
-        if (mccode_config.configuration["QSCI"] == '1'):
+        if Qsci:
             self.__scintilla = None
             self.__edtSearch = None
             self.__initScintilla()
@@ -395,7 +400,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
                 action.h = h
                 action.triggered.connect(h.handle)
 
-        if (mccode_config.configuration["QSCI"] == '1'):
+        if Qsci:
             self.setLexerComps(self.__scintilla.__myApi, all_comp_names)
 
     def initCodeEditor(self, instr):
@@ -468,7 +473,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
 
     def __initScintilla(self):
         # delete text editor placeholder
-        from PyQt5 import Qsci
+        assert Qsci
         scintilla = Qsci.QsciScintilla(self)
 
         ########################
@@ -599,7 +604,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
             self.volatileDataTransition.emit(True)
 
     def __handleSaveAction(self):
-        if (mccode_config.configuration["QSCI"] == '1'):
+        if Qsci:
             if self.volatileDataExists:
                 self.saveRequest.emit(self.__scintilla.text())
 

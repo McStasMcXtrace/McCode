@@ -13,6 +13,11 @@ import time
 import re
 from PyQt5 import QtCore, QtWidgets
 import PyQt5
+try:
+    from PyQt5 import Qsci
+except ImportError:
+    Qsci = None
+
 from viewclasses import McView
 from datetime import datetime
 
@@ -885,7 +890,7 @@ class McGuiAppController():
         mwui.btnRun.clicked.connect(self.handleRunOrInterruptSim)
         mwui.btnPlot.clicked.connect(self.handlePlotResults)
 
-        if mccode_config.configuration["QSCI"] == '1':
+        if Qsci:
             mwui.btnEdit.clicked.connect(self.handleEditInstrument)
         else:
             mwui.btnEdit.clicked.connect(self.handleEditExtInstrument)

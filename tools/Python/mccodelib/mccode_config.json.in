@@ -10,8 +10,7 @@
     "PARTICLE": "@MCCODE_PARTICLE@",
     "BROWSER": "@BROWSER@",
     "GUICOLS": "3",
-    "EDITOR": "@EDITOR@",
-    "QSCI": "@QSCI@"
+    "EDITOR": "@EDITOR@"
   },
   "compilation": {
     "CFLAGS": "@CFLAGS@",
@@ -25,7 +24,7 @@
     "MPINODES": "4"
   },
   "platform": {
-    "EXESUFFIX": "@EXE@"
+    "EXESUFFIX": "@MCCODE_EXECUTABLE_SUFFIX@"
   }
 }
 
