@@ -45,7 +45,7 @@ if( ENSURE_MCPL )
   include( MCPL )
 endif()
 
-if ( BUILD_MCXTRACE )
+if ( BUILD_MCSTAS )
   option( ENSURE_NCRYSTAL "Build Third Party code NCrystal if not already available" ON )
   if( ENSURE_NCRYSTAL )
     include( NCrystal )
