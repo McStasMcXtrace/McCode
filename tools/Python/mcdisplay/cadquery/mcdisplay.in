@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Wrapper script for @P@display-cadquery-py
+
+# First ensure that we follow symlink if needed
+LINK=`readlink $0`
+
+# Am I a symlink?
+if [ "x$LINK" != "x" ]; then
+    LIB=`dirname $LINK`
+else
+    LIB=`dirname $0`
+fi
+
+ARCH=`arch`
+UNAME=`uname -s`
+
+if [ -d "$LIB/../miniconda3" ]; then
+    export PATH=$LIB/../miniconda3/bin:$PATH
+    export LD_LIBRARY_PATH=$LIB/../miniconda3/lib:$LD_LIBRARY_PATH
+fi
+
+# Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
+if [ -d "$LIB/../miniconda3" ]; then
+    if ! [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
+	export PYTHONPATH=$LIB/../miniconda3/lib:$LIB/../miniconda3/lib/python$PYVER/site-packages
+    fi
+fi
+
+LIB="$LIB/../tools/Python/@P@display/cadquery"
+TOOL="@P@display"
+VERS="@MCCODE_VERSION@"
+
+
+canrun() {
+    if ! [ -x ${LIB}/${TOOL}.py ]; then
+        exit 127;
+    fi
+
+    modules="yaml"
+    cmd=""
+    for name in ${modules}; do
+        cmd="${cmd}import ${name}; "
+    done
+    python3 -c "${cmd}"
+}
+
+if ( canrun ); then
+    python3 ${LIB}/${TOOL}.py $*
+else
+    @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
+fi

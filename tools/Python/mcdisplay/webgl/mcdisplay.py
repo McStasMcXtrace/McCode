@@ -4,15 +4,12 @@
 mcdisplay webgl script.
 '''
 import sys
-import os
 import logging
-import argparse
 import json
 import subprocess
-from datetime import datetime
-import pathlib
+from pathlib import Path
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from mccodelib import mccode_config
 from mccodelib.mcdisplayutils import McDisplayReader
@@ -21,7 +18,7 @@ from mccodelib.utils import get_file_text_direct
 
 class SimpleWriter(object):
     ''' a minimal, django-omiting "glue file" writer tightly coupled to some comments in the file template.html '''
-    def __init__(self, templatefile, campos, box, html_filename, invcanvas=False):
+    def __init__(self, templatefile, campos, box, html_filename, invcanvas):
         self.template = templatefile
         self.campos = campos
         self.box = box
@@ -97,50 +94,46 @@ def _write_html(instrument, html_filepath, first=None, last=None, invcanvas=Fals
     campos = Vector3d(x, y, z)
     
     # render html
-    templatefile = os.path.join(os.path.dirname(__file__), "template.html")
+    templatefile = Path(__file__).absolute().parent.joinpath("template.html")
     writer = SimpleWriter(templatefile, campos, box_total, html_filepath, invcanvas)
     writer.write()
 
-def write_browse(instrument, raybundle, dirname, instrname):
+def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first=None, last=None, invcanvas=None, **kwds):
     ''' writes instrument definitions to html/ js '''
-    
-    if not os.path.exists(dirname):
-        os.mkdir(dirname)
-    
-    # write mcdisplay.js
-    mcd_filepath = os.path.join(os.path.dirname(__file__), 'mcdisplay.js')
-    file_save(get_file_text_direct(mcd_filepath), os.path.join(dirname, '_mcdisplay.js'))
+    from shutil import copy as shutil_copy
+    def copy(a, b):
+        shutil_copy(str(a), str(b))
 
-    # write other necessary .js files
-    mcd_filepath = os.path.join(os.path.dirname(__file__), 'three.min.js')
-    file_save(get_file_text_direct(mcd_filepath), os.path.join(dirname, 'three.min.js'))
-    mcd_filepath = os.path.join(os.path.dirname(__file__), 'dat.gui.min.js')
-    file_save(get_file_text_direct(mcd_filepath), os.path.join(dirname, 'dat.gui.min.js'))
-    mcd_filepath = os.path.join(os.path.dirname(__file__), 'OrbitControls.js')
-    file_save(get_file_text_direct(mcd_filepath), os.path.join(dirname, 'OrbitControls.js'))
-    mcd_filepath = os.path.join(os.path.dirname(__file__), 'Lut.js')
-    file_save(get_file_text_direct(mcd_filepath), os.path.join(dirname, 'Lut.js'))
-    mcd_filepath = os.path.join(os.path.dirname(__file__), 'jquery.min.js')
-    file_save(get_file_text_direct(mcd_filepath), os.path.join(dirname, 'jquery.min.js'))
+    source = Path(__file__).absolute().parent
+    dest = Path(dirname)
+    if dest.exists() and not dest.is_dir():
+        raise RuntimeError(f"The specified destination {dirname} exists but is not a directory")
+    if not dest.exists():
+        dest.mkdir(parents=True)
+
+    # copy mcdisplay.js to _mcdisplay.js
+    copy(source.joinpath('mcdisplay.js'), dest.joinpath('_mcdisplay.js'))
+    # copy JavaScript files without name changes
+    for file in ('three.min', 'dat.gui.min', 'OrbitControls', 'Lut', 'jquery.min'):
+        copy(source.joinpath(f'{file}.js'), dest.joinpath(f'{file}.js'))
     
     # write html
-    html_filepath = os.path.join(dirname, 'index.html')
-    _write_html(instrument, html_filepath, first=args.first, last=args.last, invcanvas=args.invcanvas)
+    html_filepath = str(dest.joinpath('index.html'))
+    _write_html(instrument, html_filepath, first=first, last=last, invcanvas=invcanvas)
     
     # write instrument
     json_instr = 'MCDATA_instrdata = %s;' % json.dumps(instrument.jsonize(), indent=0)
-    file_save(json_instr, os.path.join(dirname, '_instr.js'))
+    file_save(json_instr, dest.joinpath('_instr.js'))
     
     # write particles
-    json_neutr = 'MCDATA_particledata = %s;' % json.dumps(raybundle.jsonize(), indent=0)
-    file_save(json_neutr, os.path.join(dirname, '_particles.js'))
+    json_particles = 'MCDATA_particledata = %s;' % json.dumps(raybundle.jsonize(), indent=0)
+    file_save(json_particles, dest.joinpath('_particles.js'))
 
-    # write McCode instrument
-    instr_filepath = instrname
-    file_save(get_file_text_direct(instr_filepath), os.path.join(dirname, instrname))
+    # copy McCode instrument (this *may* be a binary!)
+    shutil_copy(instrname, str(dest.joinpath(instrname)))
     
     # exit if nobrowse flag has been set
-    if args.nobrowse:
+    if nobrowse is not None and nobrowse:
         return
     
     # open a web-browser in a cross-platform way
@@ -149,64 +142,55 @@ def write_browse(instrument, raybundle, dirname, instrname):
     except Exception as e:
         raise Exception('Os-specific open browser: %s' % e.__str__())
     
-def get_datadirname(instrname):
-    ''' returns an mcrun-like name-date-time string '''
-    return "%s_%s" % (instrname, datetime.strftime(datetime.now(), "%Y%m%d_%H%M%S"))
-
 def file_save(data, filename):
     ''' saves data for debug purposes '''
-    f = open(filename, 'w')
-    f.write(data)
-    f.close()
+    with open(filename, 'w') as f:
+        f.write(data)
 
-def main(args):
+def main(instr=None, dirname=None, debug=None, n=None, **kwds):
     logging.basicConfig(level=logging.INFO)
-    debug = args.debug
     
     # output directory
-    dirname = get_datadirname(os.path.splitext(os.path.basename(args.instr))[0])
-    if args.dirname:
-        dirname = args.dirname
+    if dirname is None:
+        from datetime import datetime as dt
+        p = Path(instr).absolute()
+        dirname = str(p.parent.joinpath(f"{p.stem}_{dt.strftime(dt.now(), '%Y%m%d_%H%M%S')}"))
     
     # set up a pipe, read and parse the particle trace
-    reader = McDisplayReader(args, n=300, dir=dirname, debug=debug)
+    reader = McDisplayReader(instr=instr, n=n, dir=dirname, debug=debug, **kwds)
     instrument = reader.read_instrument()
     raybundle = reader.read_particles()
     
     # write output files
-    write_browse(instrument, raybundle, dirname, args.instr)
-    
+    write_browse(instrument, raybundle, dirname, instr, **kwds)
+
     if debug:
         # this should enable template.html to load directly
         jsonized = json.dumps(instrument.jsonize(), indent=0)
         file_save(jsonized, 'jsonized.json')
 
 if __name__ == '__main__':
-    #possibly replace the mc prefix in the description string
-    scriptname=pathlib.Path(__file__).stem
-    prefix=scriptname[:2]
-    parser = argparse.ArgumentParser(description=__doc__.replace('mcdisplay',scriptname))
-    parser.add_argument('instr', help='display this instrument file (.instr or .out)')
-    parser.add_argument('--default', action='store_true', help='automatically use instrument defaults for simulation run')
+    from mccodelib.mcdisplayutils import make_common_parser
+    # Only pre-sets instr, --default, options
+    parser, prefix = make_common_parser(__file__, __doc__)
+    parser.add_argument('--dirname', help='output directory name override')
+    parser.add_argument('--inspect', help='display only particle rays reaching this component')
     parser.add_argument('--nobrowse', action='store_true', help='do not open a webbrowser viewer')
     parser.add_argument('--invcanvas', action='store_true', help='invert canvas background from black to white')
-    parser.add_argument('--dirname', help='name of the output directory requested to %srun' % (prefix))
-    parser.add_argument('--inspect', help='display only particle rays reaching this component passed to %srun' % prefix )
     parser.add_argument('--first', help='zoom range first component')
     parser.add_argument('--last', help='zoom range last component')
-    parser.add_argument('--debug', action='store_true', help='dump debug trace data')
-    parser.add_argument('instr_options', nargs='*', help='simulation options and instrument params')
+    parser.add_argument('-n', '--ncount', dest='n', type=int, default=300, help='Number of particles to simulate')
     
     args, unknown = parser.parse_known_args()
+    # Convert the defined arguments in the args Namespace structure to a dict
+    args = {k: args.__getattribute__(k) for k in dir(args) if k[0] != '_'}
     # if --inspect --first or --last are given after instr, the remaining args become "unknown",
     # but we assume that they are instr_options
-    if len(unknown)>0:
-        args.instr_options = unknown
-    
+    if len(unknown):
+        args['options'] = unknown
+
     try:
-        main(args)
+        main(**args)
     except KeyboardInterrupt:
         print('')
-    except Exception as e:
-        print(e)
 
