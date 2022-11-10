@@ -53,48 +53,44 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" mac "" -- OSXapp
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" mac "" -- OSXapp
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mac "" -- OSXapp
+./mkdist mcstas-mcpl $1 3rdparty/mcpl "" mac "" -- OSXapp
+./mkdist mcstas-ncrystal $1 3rdparty/ncrystal "" mac "" -- OSXapp
 
-WORK=`pwd`
-
-# NCrystal installation:
-rm -rf 3rdparty/ncrystal/build
-mkdir 3rdparty/ncrystal/build
-cd 3rdparty/ncrystal/build
-cmake .. -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/ -DBUILD_G4HOOKS=OFF
-make
-make install
-cd $WORK
-rm -rf 3rdparty/ncrystal/build
 
 # Hack to ensure pymcpltool is in place
 ln -s /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/libs/mcpl/pymcpltool /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/bin
 
-if [ ! -f Miniconda3-py38_4.10.3-MacOSX-x86_64.sh ]; then
+if [ ! -f Miniconda3-latest-MacOSX-x86_64.sh ]; then
     # Download and embed a miniconda
     echo
     echo "*********************************************************"
     echo "* Downloading a miniconda3 for your app                 *"
     echo "*********************************************************"
-    echo   
+    echo
     sleep 3
-    curl -O https://repo.anaconda.com/miniconda/Miniconda3-py38_4.10.3-MacOSX-x86_64.sh
+    curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
 fi
 echo "*********************************************************"
 echo "* Embedding miniconda3 in your app                      *"
 echo "*********************************************************"
-chmod a+x Miniconda3-py38_4.10.3-MacOSX-x86_64.sh
-./Miniconda3-py38_4.10.3-MacOSX-x86_64.sh -b -p $MCINSTALL_PREFIX/mcstas/$1/miniconda3/
+chmod a+x Miniconda3-latest-MacOSX-x86_64.sh
+./Miniconda3-latest-MacOSX-x86_64.sh -b -p $MCINSTALL_PREFIX/mcstas/$1/miniconda3/
 
 # Run conda to install the dependencies
 echo
 echo "*********************************************************"
 echo "* Downloading python dependencies to embedded miniconda *"
 echo "*********************************************************"
-echo 
+echo
 export PATHBAK=$PATH
 export PATH=$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin:$PATH
-$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/conda install openmpi gsl matplotlib nomkl -y
-$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply numpy scipy pillow tornado jinja2 mpld3
+
+conda update conda -y
+conda install mamba conda-build -y
+mamba install openmpi gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 -y
+mamba clean --all -y
+cd $WORK
+
 export PATH=$PATHBAK
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcstas/$1/bin
@@ -105,7 +101,7 @@ cd $WORK
 # Generate mcdoc pages
 $MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/python $MCINSTALL_PREFIX/mcstas/$1/tools/Python/mcdoc/mcdoc.py -i
 
-# Hack to make openmpi from the conda env available on Big Sur
+# Hack to make openmpi from the conda env available on Big Sur and later
 ln -s $MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin/mpi* $MCINSTALL_PREFIX/mcstas/$1/bin/
 
 mkdir -p dist
