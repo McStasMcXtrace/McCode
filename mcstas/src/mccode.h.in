@@ -484,7 +484,7 @@ struct comp_inst
     CExp split;     /* NULL or number of SPLITs as an Expr */
     int removable;  /* this comp is removed when included from an %include "instr" */
     int cpuonly;    /* this comp should be executed CPU only */
-    int skip_trace;   /* if 1 coordinate transform is skipped */
+    int skip_transform;   /* if 1 coordinate transform is skipped */
   };
 
 /* Instrument formal parameters. */
