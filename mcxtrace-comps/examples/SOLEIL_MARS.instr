@@ -24,7 +24,7 @@
 *
 * This model implements the XRD station for powders.
 *
-* %Example: E0=16.99 Detector: displayMonoLenght_I=291.348
+* %Example: E0=16.99 displayMonoLenght1_I=3.91154e-07
 *
 * %P
 * E0: [keV]     Central energy to be emitted by the source
