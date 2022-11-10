@@ -4,8 +4,20 @@ cmake_policy(VERSION 3.16.0)
 # This file will build McStas and/or McXtrace
 project(mccode C)
 
-option(BUILD_MCSTAS "Build McStas" OFF)
-option(BUILD_MCXTRACE "Build McXtrace" OFF)
+# Set module path
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
+
+#Ensure various variables are set to sensible default values for the target
+#platform (if not already set by a toolchain file):
+
+
+# Setup McCode values (from mkdist or defaults)
+include(MCUtil)
+
+
+option( BUILD_MCSTAS "Build McStas" OFF )
+option( BUILD_MCXTRACE "Build McXtrace" OFF )
+option( BUILD_TOOLS "Include tools" ON )
 
 if (${BUILD_MCSTAS} AND ${BUILD_MCXTRACE})
     message(WARNING "Configuration requests building both McStas and McXtrace which is likely to fail.")
@@ -13,23 +25,14 @@ elseif(NOT (${BUILD_MCSTAS} OR ${BUILD_MCXTRACE}))
     message(FATAL_ERROR "Configuration requires building one of McStas or McXtrace via -DBUILD_MCXTRACE=ON or -DBUILD_MCSTAS=ON")
 endif()
 
-# Set module path
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
-
-#Ensure various variables are set to sensible default values for the target
-#platform (if not already set by a toolchain file):
-
-include(PlatformDefaults)
-
-# Setup McCode values (from mkdist or defaults)
-include(MCUtil)
-
 if(${BUILD_MCSTAS})
     setupMCCODE("mcstas")
     message(STATUS "Configuring McStas build ${FLAVOR}")
     add_subdirectory(mcstas)
     add_subdirectory(mcstas-comps)
-    add_subdirectory(tools)
+    if ( BUILD_TOOLS )
+      add_subdirectory(tools)
+    endif()
 endif()
 
 if (${BUILD_MCXTRACE})
@@ -37,7 +40,9 @@ if (${BUILD_MCXTRACE})
     message(STATUS "Configuring McXtrace build ${FLAVOR}")
     add_subdirectory(mcxtrace)
     add_subdirectory(mcxtrace-comps)
-    add_subdirectory(tools)
+    if ( BUILD_TOOLS )
+      add_subdirectory(tools)
+    endif()
 endif()
 
 # Find/Fetch dependencies:
