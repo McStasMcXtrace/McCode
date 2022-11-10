@@ -18,7 +18,7 @@
 * It can be found here: https://inis.iaea.org/collection/NCLCollectionStore/_Public/19/019/19019134.pdf
 * Example: Do a scan (scan parameter =1) from x_screw=20 to 103 mm. The calculated monitor "Wavelength(Ang) as a function of x_screw(mm)" will be a linear function. The monochromator functions properly.
 *
-* %Example: x_screw=20 Detector: w_monitor_I=487924
+* %Example: x_screw=60 Detector: w_monitor_I=1.03695e-06
 *
 * %Parameters
 * x_screw: [mm] Displacement perpendicular to initial position of the lever (sine drive mechanism)
