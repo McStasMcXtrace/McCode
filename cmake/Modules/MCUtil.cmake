@@ -1,5 +1,7 @@
 cmake_policy(VERSION 3.16.0)
 
+include(PlatformDefaults)
+
 # Install library files into lib/${FLAVOR}, while skipping unneeded files
 macro(installLib path)
   if(WINDOWS)

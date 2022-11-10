@@ -108,13 +108,14 @@ class McPyqtgraphPlotter():
     def runplot(self):
         node = self.graph
 
-        self.create_plotwindow(title=self.sourcedir+" - Press 'h' for app shortcuts")
+        self.create_plotwindow(title=self.sourcedir)
 
         # create the logflipper
         self.viewmodel = ViewModel(sourcedir=self.sourcedir)
 
         # initiate event driven plot recursion
         self.plot_node(node)
+        self.update_statusbar(None, node, None)
 
         # start
         sys.exit(self.app.exec_())
@@ -123,11 +124,14 @@ class McPyqtgraphPlotter():
     def create_plotwindow(self, title):
         ''' set up and return a plotlayout "window" '''
 
-        self.statuscoords = QtWidgets.QLabel()
-        self.statuscoords.setSizePolicy(
-            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        helpmessage = QtWidgets.QLabel()
+        helpmessage.setText("Press 'h' for app shortcuts.")
+
+        self.statusmessage = QtWidgets.QLabel()
+
         statusbar = QtWidgets.QStatusBar()
-        statusbar.addPermanentWidget(self.statuscoords)
+        statusbar.addWidget(helpmessage)
+        statusbar.addPermanentWidget(self.statusmessage)
 
         self.main_window = QtWidgets.QMainWindow()
         self.graphics_view = pg.GraphicsView(self.main_window)
@@ -148,6 +152,7 @@ class McPyqtgraphPlotter():
 
         self.main_window.show()
         self.main_window.raise_()
+        self.main_window.activateWindow()
 
 
     def plot_node(self, node, sync_zoom_obj_ids=[]):
@@ -181,8 +186,11 @@ class McPyqtgraphPlotter():
             # add plot instances and record viewbox results
             n = node.getnumdata()
             self.viewbox_list = []
+            self.plot_list = []
             for i in range(n):
-                self.viewbox_list.append(self.add_plot(node, i, n))
+                viewbox, plt = self.add_plot(node, i, n)
+                self.viewbox_list.append(viewbox)
+                self.plot_list.append(plt)
             if id(node) in sync_zoom_obj_ids:
                 self.sync_views_zooming()
 
@@ -224,13 +232,11 @@ class McPyqtgraphPlotter():
 
 
     def show_help(self):
-        helpstr = get_help_string()
-
         if mccode_config.configuration["MCCODE"] == "mcstas":
             prefix = "mc"
         else:
             prefix = "mx"
-        QtWidgets.QMessageBox.about(self.main_window, prefix+'plot-pyqtgraph', helpstr)
+        QtWidgets.QMessageBox.about(self.main_window, prefix+'plot-pyqtgraph', get_help_string())
 
 
     def set_keyhandler(self, replot_cb, back_cb, key, modifier):
@@ -319,6 +325,12 @@ class McPyqtgraphPlotter():
 
         def click_handler(event, vn_dict, node_cb, click, mod, debug=False):
             ''' generic conditional-branch-tree, catch-all, mouse click event handler  '''
+            pos = None
+            try:
+                pos = event.pos()
+            except AttributeError:
+                pass
+
             # print debug info
             if debug:
                 print("click modifier: %s" % str(int(event.modifiers())))
@@ -335,6 +347,8 @@ class McPyqtgraphPlotter():
             node = vn_dict.get(event.currentItem, None)
             if node:
                 node_cb(node)
+
+            self.update_statusbar(None, node, pos)
 
         if len(list(vn_dict)) == 0:
             return
@@ -410,24 +424,27 @@ class McPyqtgraphPlotter():
         except TypeError:
             pass
 
-        mouse_func = None
+        mouse_func = lambda pos: self.update_statusbar(plt, node, pos)
+        self.plot_layout.scene().sigMouseMoved.connect(mouse_func)
 
-        # if a single plot is visible, add a handler to show the coordinates
+        return view_box, plt
+
+
+    def update_statusbar(self, plot, node, pos):
+        # if a single plot is visible, show the coordinates
         if isinstance(node, PNSingle):
-            mouse_func = lambda pos: self.single_plot_mouse_moved(plt, node, pos)
-        # else add a handler for multi-plots
+            if plot == None and len(self.plot_list) == 1:
+                plot = self.plot_list[0]
+            self.single_plot_mouse_moved(plot, node, pos)
+        # else show infos about the plots
         elif isinstance(node, PNMultiple):
-            mouse_func = lambda pos: self.multi_plot_mouse_moved(plt, node, pos)
-
-        if mouse_func != None:
-            self.plot_layout.scene().sigMouseMoved.connect(mouse_func)
-
-        return view_box
+            self.multi_plot_mouse_moved(node, pos)
 
 
     def single_plot_mouse_moved(self, plot, node, pos):
         ''' shows the mouse coordinates for single plots '''
-        pos = plot.getViewBox().mapSceneToView(pos)
+        if plot!=None and pos!=None:
+            pos = plot.getViewBox().mapSceneToView(pos)
 
         # get axis labels
         xlabel = ""
@@ -440,40 +457,40 @@ class McPyqtgraphPlotter():
         if ylabel == "":
             ylabel = "y"
 
-        posstr = "Cursor: %s=%g, %s=%g." % (xlabel, pos.x(), ylabel, pos.y())
-        self.statuscoords.setText(posstr)
+        posstr = "%.24s=%g, %.24s=%g." % (xlabel, pos.x(), ylabel, pos.y())
+        self.statusmessage.setText(posstr)
 
 
-    def multi_plot_mouse_moved(self, plot, node, pos):
+    def multi_plot_mouse_moved(self, node, pos):
         ''' shows information on multi-plots '''
         prim = node.primaries
-        activeplottext = ""
+        num_plots = node.getnumdata()
+        statustext = ""
 
         # find the plot under the cursor
         idx = self.get_plot_index(pos)
         if idx >= 0:
             # plot found?
-            activeplottext = str(idx+1)
+            statustext = "Plot %d/%d" % (idx+1, num_plots)
             if prim != None:
-                activeplottext += " - " + prim[idx].getdata_idx(0).title
-            activeplottext += "."
-
-        # status string
-        num_plots = node.getnumdata()
-        if num_plots == 1:
-            statustext = "Showing 1 plot."
+                title = prim[idx].getdata_idx(0).title
+                # truncate the tile string if it's too long
+                if len(title) > 64:
+                    title = title[0:64] + "..."
+                statustext += ": " + title
+            statustext += "."
         else:
-            statustext = "Showing %d plots." % num_plots
+            if num_plots == 1:
+                statustext = "Showing 1 plot."
+            else:
+                statustext = "Showing %d plots." % num_plots
 
-        if activeplottext != "":
-            statustext += " Cursor on plot " + activeplottext
-
-        self.statuscoords.setText(statustext)
+        self.statusmessage.setText(statustext)
 
 
     def get_plot_index(self, pos):
         ''' get the plot index at (cursor) position pos '''
-        if self.viewbox_list == None:
+        if self.viewbox_list == None or pos == None:
             return -1
 
         for idx in range(len(self.viewbox_list)):
