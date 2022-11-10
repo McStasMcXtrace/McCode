@@ -135,6 +135,16 @@ list_iterate_back(List l)
   return lh;
 }
 
+/*******************************************************************************
+* Access element of list
+*******************************************************************************/
+void *
+list_access(List l, int index)
+{
+    if (index >= l->size)
+        fatal_error("list_access: Accesing beyond size, index (%d) of (%d).", index, l->size);
+    return l->elements[index];
+}
 
 /*******************************************************************************
 * Get the next element during a traversal of a list. Returns NULL when no
@@ -195,7 +205,7 @@ List list_cat(List l1, List l2)
   List_handle liter;
   void*       litem;
   liter = list_iterate(l2);
-  while(litem = list_next(liter))
+  while((litem = list_next(liter)))
     list_add(l1, litem);
   list_iterate_end(liter);
   return(l1);
