@@ -26,7 +26,7 @@
 * the production of energy from renewable sources and in the development of
 * advanced energy storage devices. 
 *
-* %Example: Etohit=17000 cc=2 psd_monitor_I=3.88077e+10
+* %Example: Etohit=17000 cc=2 Detector: psd_monitor_I=1.11079e+06
 *
 * %P
 * Etohit: [eV]   Energy to hit
