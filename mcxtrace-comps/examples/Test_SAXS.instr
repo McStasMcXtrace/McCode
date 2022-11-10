@@ -13,13 +13,13 @@
 * %Description
 * Toy model used for testing various sample components for solution-SAXS.
 *
-* %Example: SAMPLE=0 Detector: QMonitor_I=5.86135e-09
-* %Example: SAMPLE=1 Detector: QMonitor_I=6.32492e-09
-* %Example: SAMPLE=4 Detector: QMonitor_I=8.99113e-06
-* %Example: SAMPLE=6 Detector: QMonitor_I=2.57111e-11
-* %Example: -n 1e4 SAMPLE=7 Detector: QMonitor_I=6.99162e-09
-* %Example: SAMPLE=10 Detector: QMonitor_I=2.13354e-11
-* %Example: SAMPLE=11 Detector: QMonitor_I=3.91474e-10
+* %Example: SAMPLE=0 Detector: Monitor_I=2.87281e-14
+* %Example: SAMPLE=1 Detector: Monitor_I=2.82056e-14
+* %Example: SAMPLE=4 Detector: Monitor_I=1.15047e-10
+* %Example: -n 1e5 SAMPLE=6 Detector: Monitor_I=4.21283e-16
+* %Example: -n 1e4 SAMPLE=7 Detector: Monitor_I=7.22654e-14
+* %Example: SAMPLE=10 Detector: Monitor_I=3.25215e-16
+* %Example: SAMPLE=11 Detector: Monitor_I=5.22684e-15
 *
 * %Parameters
 * DistanceFromSourceToFirstPinhole: [m]	 Distance to first pinhole from source.
@@ -189,7 +189,7 @@ COMPONENT Sample10 = SAXSNanodiscsWithTagsFast(
 	SampleToDetectorDistance = DistanceFromSampleToDetector,
 	DetectorRadius = RadiusOfDetector
 )
-WHEN(SAMPLE=10) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
+WHEN(SAMPLE==10) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
 
 
 COMPONENT Sample11 = SAXSPDBFast(
