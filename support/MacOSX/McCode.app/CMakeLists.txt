@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.16.0)
 
 # This will install the McCode app bundle
-project(mcstas-app NONE)
+project(mcstas-app C)
 
 # Choose between McStas or McXtrace
 option(BUILD_MCSTAS   "Choose the McStas flavor" off)
