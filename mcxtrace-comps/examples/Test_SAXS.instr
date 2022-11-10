@@ -12,17 +12,17 @@
 * %Description
 * Toy model used for testing various sample components for solution-SAXS.
 *
-* %Example: SAMPLE=0 Detector: QMonitor_I=5.86135e-09
-* %Example: SAMPLE=1 Detector: QMonitor_I=6.32492e-09
-* %Example: SAMPLE=2 Detector: QMonitor_I=5.46762e-09
-* %Example: SAMPLE=3 Detector: QMonitor_I=1.76347e-09
-* %Example: SAMPLE=4 Detector: QMonitor_I=8.99113e-06
-* %Example: -n 1e4 SAMPLE=5 Detector: QMonitor_I=7.57873e-10
-* %Example: -n 1e4 SAMPLE=6 Detector: QMonitor_I=1.51975e-09
-* %Example: -n 1e4 SAMPLE=7 Detector: QMonitor_I=1.12235e-08
-* %Example: SAMPLE=9 Detector: QMonitor_I=9.9147e-10
-* %Example: SAMPLE=10 Detector: QMonitor_I=1.07785e-09
-* %Example: SAMPLE=11 Detector: QMonitor_I=9.35544e-09
+* %Example: SAMPLE=0 Detector: Monitor_I=2.93715e-14
+* %Example: SAMPLE=1 Detector: Monitor_I=2.7118e-14
+* %Example: SAMPLE=2 Detector: Monitor_I=2.64954e-14
+* %Example: SAMPLE=3 Detector: Monitor_I=9.77905e-15
+* %Example: SAMPLE=4 Detector: Monitor_I=1.16433e-10
+* %Example: -n 1e4 SAMPLE=5 Detector: Monitor_I=1.2001e-14
+* %Example: -n 1e4 SAMPLE=6 Detector: Monitor_I=1.05945e-14
+* %Example: -n 1e4 SAMPLE=7 Detector: Monitor_I=7.07865e-14
+* %Example: SAMPLE=9 Detector: Monitor_I=9.24687e-15
+* %Example: SAMPLE=10 Detector: Monitor_I=1.02884e-14
+* %Example: SAMPLE=11 Detector: Monitor_I=5.47707e-15
 *
 * %Parameters
 * DistanceFromSourceToFirstPinhole: [m]	 Distance to first pinhole from source.
@@ -196,7 +196,7 @@ COMPONENT Sample11 = SAXSPDBFast(
 	zdepth = 0.01,
 	SampleToDetectorDistance = DistanceFromSampleToDetector,
 	DetectorRadius = RadiusOfDetector,
-	PDBFilepath = "3v03.pdb",
+	PDBFilepath = "6lyz.pdb",
     qMax = 0.9
 )
 WHEN(SAMPLE==11) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
