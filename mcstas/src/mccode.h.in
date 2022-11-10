@@ -143,6 +143,7 @@ typedef struct List_position *List_handle;
 
 List list_create(void);             /* Create list. */
 void list_add(List, void *);        /* Add element at end. */
+void* list_access(List, int);       /* Get element in list. */
 void list_free(List, void (*)(void *)); /* Deallocate a list. */
 int list_len(List l);               /* Get list length. */
 List_handle list_iterate(List);     /* Prepare to traverse list. */
@@ -483,6 +484,7 @@ struct comp_inst
     CExp split;     /* NULL or number of SPLITs as an Expr */
     int removable;  /* this comp is removed when included from an %include "instr" */
     int cpuonly;    /* this comp should be executed CPU only */
+    int skip_transform;   /* if 1 coordinate transform is skipped */
   };
 
 /* Instrument formal parameters. */
