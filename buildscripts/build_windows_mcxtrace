@@ -9,10 +9,26 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
-WORK=`pwd`
 # Ensure our 3rd party modules are in place and updated
+THIRDPARTY=`ls 3rdparty | grep -v patches`
+cd 3rdparty
+
+cd -
 
 ./3rdparty/sync.sh
+
+
+for MODULE in `echo $THIRDPARTY`
+do
+    if [ -d "3rdparty/patches/${MODULE}" ]; then
+	echo Making McCode cmake modules available for $MODULE
+        rsync -avz cmake/ 3rdparty/${MODULE}/
+	echo Applying McCode patches to 3rdparty/${MODULE}
+	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
+    fi
+done
+
+WORK=`pwd`
 
 # Workaround for having CRLF linefeeds in a couple of windows packages
 rsync -avz --delete --exclude=".svn/" mcxtrace-comps/ mcxtrace-comps-win
@@ -40,13 +56,14 @@ find mcxtrace-comps-win -type f -name \*.comp -exec sed -i 's+@MCCODE_LIB@/minic
 ./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" mingw64 "o" -- nsis64
 ./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" mingw64 "" -- nsis64
+./mkdist mcxtrace-mcpl $1 3rdparty/mcpl "" mingw64 "" -- nsis64
 
 if [ "x$2" != "x" ]; then
     # Build the meta-packages also
     cd meta-pkgs/windows/Support
     if [ ! -f Miniconda3-latest-Windows-x86_64.exe ]; then
 	echo Sorry! I need to download a Miniconda3 for embedding - will take some time...
-	wget https://repo.continuum.io/miniconda/Miniconda3-latest-Windows-x86_64.exe
+	wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
     fi
     cd ..
 
