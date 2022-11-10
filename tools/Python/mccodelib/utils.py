@@ -390,6 +390,8 @@ def parse_header(text):
     
     # get author, date, origin, revision
     m1 = re.search('Written by:([^\n]*)\n', bites[0])
+    if not m1:
+      m1 = re.search('Author:([^\n]*)\n', bites[0])
     if m1: info.author = m1.group(1).strip()
     
     m2 = re.search('Date:([^\n]*)\n', bites[0])
@@ -401,28 +403,18 @@ def parse_header(text):
     m4 = re.search('Version:([^\n]*)\n', bites[0])
     if m4: info.version = m4.group(1).strip()
     
-    info.short_descr = ''
     m5 = re.search('\%INSTRUMENT_SITE:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
+    if not m5:
+      m5 = re.search('Origin:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
+    
     if m5:
-        info.short_descr += m5.group(1).strip()
-    
-    # ignore some comments
-    ignorelines = []
-    m6 = re.search('Origin:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
-    if m6:
-        # remove all "Modified by" lines
-        for l in m6.group(1).strip().splitlines():
-            if not re.match('Modified by:', l, flags=re.DOTALL):
-                ignorelines.append(l)
-        
-    m7 = re.search('Based on:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
-    if m7:
-        # remove all "Based on" lines
-        for l in m6.group(1).strip().splitlines():
-            if not re.match('Based on:', l, flags=re.DOTALL):
-                ignorelines.append(l)
-    
-    info.short_descr += '\n'.join(ignorelines).strip()
+      # ignore some comments
+      descrlines = []
+      # remove all "*:" lines
+      for l in m5.group(1).strip().splitlines():
+          if not re.match('[^\n]*:', l, flags=re.DOTALL):
+              descrlines.append(l)
+      info.short_descr = '\n'.join(descrlines).strip()
     
     # description
     descr = bites[1]
