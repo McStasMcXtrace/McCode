@@ -9,13 +9,13 @@
 * Component: Lens_parab_Cyl
 *
 * %I
-*
 * Written by: Jana Baltser and Erik Knudsen
-* 
 * Date: April 2011
 * Version: 1.0
 * Release: McXtrace 0.1
 * Origin: NBI
+*
+* X-ray compound refractive lens (CRL) with a parabolic cylinder shape
 *
 * %D.
 * An X-ray compound refractive lens (CRL) with a parabolic cylinder profile focusing in 1D, i.e. onto a line

@@ -9,13 +9,13 @@
 * Component: Lens_parab
 *
 * %I
-*
 * Written by: Jana Baltser and Erik Knudsen
-* 
 * Date: August 2010
 * Version: 1.0
 * Release: McXtrace 0.1
 * Origin: NBI
+*
+* X-ray compound refractive lens (CRL) with an elliptic profile
 *
 * %D
 * A simple X-ray compound refractive lens (CRL) with an elliptic profile simulates the photons' movement on passing through it.
