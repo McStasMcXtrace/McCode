@@ -88,7 +88,7 @@ if( NOT NCRYSTAL_NOTOUCH_CMAKE_BUILD_TYPE )
 endif()
 
 #Options:
-option( BUILD_EXAMPLES  "Whether to build examples." ON )
+option( BUILD_EXAMPLES  "Whether to build examples." OFF )
 option( BUILD_G4HOOKS   "Whether to build the G4 hooks (requires Geant4 to be available)." OFF )
 option( BUILD_EXTRA     "Obsolete option. For .nxs support use -DBUILTIN_PLUGIN_LIST=mctools:nxslib (not needed for .laz/.lau support)." OFF )
 set( BUILD_STRICT OFF CACHE STRING "Stricter build (primarily for testing). Can optionally select specific C++ standard.")
