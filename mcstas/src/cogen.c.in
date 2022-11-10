@@ -2813,48 +2813,59 @@ int get_codeblock_vars(struct code_block *code, List vars, List types,
   return(ans);
 } // get_codeblock_vars
 
-
+/*******************************************************************************
+* detect_skipable_transforms: Finds components where coordinate transform can be skipped
+*   Checks for trace / extend and if origin or target of a jump.
+*******************************************************************************/
 void detect_skipable_transforms(struct instr_def *instr) {
     //
     // analyze component sequence to find coordinate transformations that can be skipped
     //
     List_handle liter;
     struct comp_inst *comp = NULL;
+    struct comp_inst *target_comp = NULL;
     
-    liter = list_iterate_back(instr->complist);
-    while((comp = list_previous(liter)) != NULL) {
-        // proceed if comp type has trace code or EXTEND
-        if ((!comp->def->trace_code || list_len(comp->def->trace_code->lines) <= 0) && list_len(comp->extend->lines) == 0) {
-            comp->has_trace = 0;
-        } else {
-            comp->has_trace = 1;
-        }
-        comp->n_references = 0; // Initialize n_references to 0
-    }
-    list_iterate_end(liter);
-    
-    liter = list_iterate_back(instr->complist);
-    while((comp = list_previous(liter)) != NULL) {
-        // Find pointer to comp for RELATIVE AT
-        if (comp->pos->place_rel != NULL) {
-            // Increment with has_trace + n_references
-            comp->pos->place_rel->n_references += comp->has_trace + comp->n_references;
-        }
-        
-        // Find pointer to comp for RELATIVE ROTATED
-        if (comp->pos->orientation_rel != NULL) {
-            // Increment with has_trace + n_references
-            comp->pos->orientation_rel->n_references += comp->has_trace + comp->n_references;
-        }
-    }
-    list_iterate_end(liter);
-    
+    // Assume all can be skipped
     liter = list_iterate(instr->complist);
     while((comp = list_next(liter)) != NULL) {
-        if (comp->n_references + comp->has_trace > 0) {
+        comp->skip_trace = 1;
+    }
+    list_iterate_end(liter);
+    
+    // Detect those components that can not
+    liter = list_iterate(instr->complist);
+    while((comp = list_next(liter)) != NULL) {
+
+        if ((comp->def->trace_code && list_len(comp->def->trace_code->lines) > 0) || list_len(comp->extend->lines) > 0) {
+            // If component has trace or extend, do not skip it
             comp->skip_trace = 0;
-        } else {
-            comp->skip_trace = 1;
+        }
+        
+        if(list_len(comp->jump) > 0) {
+            // If this component jumps elsewhere, it can not be skipped
+            comp->skip_trace = 0;
+            
+            // Its target can not be skipped either
+            struct jump_struct *this_jump;
+            List_handle literJ = list_iterate(comp->jump);
+            while (this_jump = list_next(literJ)) {
+                
+                // Find target (not initialized yet)
+                List_handle liter3 = list_iterate(instr->complist);
+                struct comp_inst *target=NULL;
+                while((target = list_next(liter3)) != NULL) {
+                  if (!strcmp(target->name, this_jump->target))
+                    this_jump->target_index = target->index;
+                }
+                list_iterate_end(liter3);
+                if (!this_jump->target_index) /* JUMP e.g. PREVIOUS/NEXT is relative -> absolute */
+                  this_jump->target_index += comp->index;
+
+                // component list is 1 indexed so subtract one from target_index
+                target_comp = list_access(instr->complist, this_jump->target_index - 1);
+                target_comp->skip_trace = 0;
+            }
+            list_iterate_end(literJ);
         }
     }
     list_iterate_end(liter);
