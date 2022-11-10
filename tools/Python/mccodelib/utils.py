@@ -401,19 +401,28 @@ def parse_header(text):
     m4 = re.search('Version:([^\n]*)\n', bites[0])
     if m4: info.version = m4.group(1).strip()
     
+    info.short_descr = ''
     m5 = re.search('\%INSTRUMENT_SITE:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
     if m5:
-        info.short_descr = m5.group(1).strip()
-    else:
-        # component files dont have %INSTRUMENT_SITE tag, this is an alternative
-        m6 = re.search('Origin:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
-        if m6:
-            # remove all "Modified by" lines
-            nomodby = [] 
-            for l in m6.group(1).strip().splitlines():
-                if not re.match('Modified by:', l, flags=re.DOTALL):
-                    nomodby.append(l)
-            info.short_descr = '\n'.join(nomodby).strip()
+        info.short_descr += m5.group(1).strip()
+    
+    # ignore some comments
+    ignorelines = []
+    m6 = re.search('Origin:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
+    if m6:
+        # remove all "Modified by" lines
+        for l in m6.group(1).strip().splitlines():
+            if not re.match('Modified by:', l, flags=re.DOTALL):
+                ignorelines.append(l)
+        
+    m7 = re.search('Based on:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
+    if m7:
+        # remove all "Based on" lines
+        for l in m6.group(1).strip().splitlines():
+            if not re.match('Based on:', l, flags=re.DOTALL):
+                ignorelines.append(l)
+    
+    info.short_descr += '\n'.join(ignorelines).strip()
     
     # description
     descr = bites[1]
@@ -837,4 +846,5 @@ def dumpfile_pqtg(scene, filenamebase='mcplot', format='png'):
 
 def get_datetimestr():
     return datetime.strftime(datetime.now(), "%Y%m%d_%H%M_%S")
+
 
