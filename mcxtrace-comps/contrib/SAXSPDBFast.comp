@@ -52,6 +52,10 @@ DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgs
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
+SHARE %{
+  %include "read_table-lib"; // for Open_File
+%}
+
 DECLARE
 %{
 	// Declarations
@@ -142,12 +146,13 @@ INITIALIZE
 		FILE *PDBFile;
 
 		// I/O
-		PDBFile = fopen(PDBFilepath, "r");
+		/* from read_table-lib: FILE *Open_File(char *name, char *Mode, char *path) */
+		PDBFile = Open_File(PDBFilepath, "r", NULL);
 
 		if (PDBFile == NULL) {
-			printf("Cannot open %s... \n", PDBFilepath);
+			exit(printf("ERROR: Cannot open %s... \n", PDBFilepath));
 		} else {
-			printf(".pdb-file located... \n");
+			printf("%s PDB file located... \n", PDBFilepath);
 		}
 
 		while (fgets(Line, sizeof(Line), PDBFile) != NULL) {
@@ -265,8 +270,8 @@ INITIALIZE
 		const double AS = 16 * 2.82e-13;
 
 		// Program
-		if ((PDBFile = fopen(PDBFilename, "r")) == 0) {
-		    printf("Cannot open file: %s. \n", PDBFilename);
+		if ((PDBFile = Open_File(PDBFilename, "r", NULL)) == 0) {
+		    exit(printf("ERROR: Cannot open file: %s. \n", PDBFilename));
 		}
 
 		Residue[i].NameOfResidue = (char *) calloc(3, sizeof(char));
