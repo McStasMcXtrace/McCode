@@ -16,7 +16,7 @@
     "CFLAGS": "@CFLAGS@",
     "NEXUSFLAGS": "@NEXUSFLAGS@",
     "MPIFLAGS": "@MPIFLAGS@",
-    "OACCFLAGS": "@OACCFLAGS",
+    "OACCFLAGS": "@OACCFLAGS@",
     "CC": "@TOOLS_CC@",
     "OACC": "@OACC@",
     "MPICC": "@MPICC@",
