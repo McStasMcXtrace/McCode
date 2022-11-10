@@ -220,8 +220,9 @@
 ***********************************************************/
 
 DEFINE COMPONENT Isotropic_Sqw
-DEFINITION PARAMETERS (powder_format={0,0,0,0,0,0,0,0,0}, mat_format={0,0,0,0,0})
+DEFINITION PARAMETERS ()
 SETTING PARAMETERS(
+  vector powder_format={0,0,0,0,0,0,0,0,0}, vector mat_format={0,0,0,0,0},
   string Sqw_coh=0, string geometry=0,
   string material="NULL",
   radius=0,thickness=0,
@@ -1884,8 +1885,8 @@ INITIALIZE
   int i;
   /* check for parameters */
   int *powder_columns, *mat_columns;
-  powder_columns = (int[])powder_format; // also in VarSqw.powder_columns_order
-  mat_columns    = (int[])mat_format;
+  powder_columns = (int*)powder_format; // also in VarSqw.powder_columns_order
+  mat_columns    = (int*)mat_format;
   
   for (i=0; i< 4;  i++) {
     VarSqw.mat_columns_order[i] = (int)mat_columns[i];

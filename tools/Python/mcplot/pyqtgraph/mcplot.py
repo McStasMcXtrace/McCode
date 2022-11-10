@@ -23,7 +23,6 @@ def main(args):
     # ensure keyboardinterrupt ctr-c
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-    
     try:
         if len(args.simulation) == 0:
             simfile = ''
@@ -39,15 +38,17 @@ def main(args):
         except Exception as e:
             # invallid input case:
             print('mcplot loader: ' + e.__str__())
-            pqtgfrontend.print_help(nogui=True)
+            print(pqtgfrontend.get_help_string())
             quit()
         graph = loader.plot_graph
         if args.test:
             printer = PlotGraphPrint(graph)
         
         # run pqtg frontend
-        plotter = pqtgfrontend.McPyqtgraphPlotter(graph, sourcedir=loader.directory, plot_func=plotfuncs.plot, invcanvas=args.invcanvas)
-        pqtgfrontend.print_help(nogui=True)
+        plotter = pqtgfrontend.McPyqtgraphPlotter(
+            graph, sourcedir=loader.directory,
+            plot_func=plotfuncs.plot, invcanvas=args.invcanvas)
+        print(pqtgfrontend.get_help_string())
         plotter.runplot()
         
     except KeyboardInterrupt:

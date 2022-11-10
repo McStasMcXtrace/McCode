@@ -22,6 +22,8 @@
 * Thus, the lens has the focal length of f=R/(2*N*&delta) where the x-ray refractive
 * index is written: n = 1 - &delta + i &beta.
 *
+* Example: Lens_simple(xwidth=1e-5, yheight=1e-5, material_datafile="Be.txt",N=100,r=0.3e-3)
+*
 * %P
 * INPUT PARAMETERS
 *
@@ -40,7 +42,7 @@
 *******************************************************************************/
 DEFINE COMPONENT Lens_simple
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xwidth=0,yheight=0,radius=1e-3, T=1 ,r=0, int N=1, int verbose=0, f=0, string material_datafile="Be.txt")
+SETTING PARAMETERS (xwidth=0,yheight=0,radius=1e-3, T=1 ,r=3e-4, int N=1, int verbose=0, f=0, string material_datafile="Be.txt")
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 

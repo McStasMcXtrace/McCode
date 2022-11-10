@@ -15,10 +15,12 @@
 *
 * %Description
 * This is a proof of concept beamline to test an idea of how to build a low-cost
-* monochromtic beamline. Idea is to let a åolychromatic beam impinge on a focusing
+* monochromtic beamline. Idea is to let a polychromatic beam impinge on a focusing
 * Be-lens and put a slit in the focal pt. of the lens for the desired wavelength. Any
 * other wavelengths present in the beam will not be focussed prefectly and may be
 * by the slit.
+*
+* %Example: L1=10 Detector: psd2_I=21256.7
 *
 * %Parameters
 * L1: [m] Distance between source and lens
@@ -58,10 +60,10 @@ COMPONENT psd0 = PSD_monitor(filename="psd0.dat",xwidth=0.2,yheight=0.2)
 COMPONENT wavel_mon0=L_monitor(filename="lmon0.dat",Lmin=0,Lmax=1,xwidth=0.5,yheight=0.5,nL=101)
   AT(0,0,0.01) RELATIVE PREVIOUS
 
-COMPONENT Be_lens = Lens_simple(xwidth=10.5,yheight=10.5,N=N)
+COMPONENT Be_lens = Lens_simple(xwidth=10.5,yheight=10.5,N=N, r=3e-4)
 AT(0,0,L1) RELATIVE generic_source
 
-COMPONENT Be_lens2 = Lens_simple(xwidth=10.5,yheight=10.5,N=N)
+COMPONENT Be_lens2 = Lens_simple(xwidth=10.5,yheight=10.5,N=N, r=3e-4)
 AT(0,0,0.01) RELATIVE PREVIOUS
 ROTATED (0,0,90) RELATIVE PREVIOUS
 

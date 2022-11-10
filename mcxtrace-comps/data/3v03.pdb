@@ -14,6 +14,7 @@ KEYWDS   3 PROTEIN
 EXPDTA    X-RAY DIFFRACTION                                                     
 AUTHOR    K.A.MAJOREK,P.J.POREBSKI,M.CHRUSZCZ,S.C.ALMO,W.MINOR,NEW YORK         
 AUTHOR   2 STRUCTURAL GENOMICS RESEARCH CONSORTIUM (NYSGRC)                     
+REVDAT   3   13-APR-22 3V03    1       AUTHOR JRNL   REMARK LINK                
 REVDAT   2   10-OCT-12 3V03    1       JRNL                                     
 REVDAT   1   04-JAN-12 3V03    0                                                
 JRNL        AUTH   K.A.MAJOREK,P.J.POREBSKI,A.DAYAL,M.D.ZIMMERMAN,K.JABLONSKA,  
@@ -29,7 +30,8 @@ REMARK   2 RESOLUTION.    2.70 ANGSTROMS.
 REMARK   3                                                                      
 REMARK   3 REFINEMENT.                                                          
 REMARK   3   PROGRAM     : REFMAC 5.6.0117                                      
-REMARK   3   AUTHORS     : MURSHUDOV,VAGIN,DODSON                               
+REMARK   3   AUTHORS     : MURSHUDOV,SKUBAK,LEBEDEV,PANNU,STEINER,              
+REMARK   3               : NICHOLLS,WINN,LONG,VAGIN                             
 REMARK   3                                                                      
 REMARK   3    REFINEMENT TARGET : MAXIMUM LIKELIHOOD                            
 REMARK   3                                                                      
@@ -117,8 +119,13 @@ REMARK   3  ISOTROPIC THERMAL FACTOR RESTRAINTS.     COUNT   RMS    WEIGHT
 REMARK   3   MAIN-CHAIN BOND REFINED ATOMS  (A**2):  NULL ;  NULL ;  NULL       
 REMARK   3   MAIN-CHAIN BOND OTHER ATOMS    (A**2):  NULL ;  NULL ;  NULL       
 REMARK   3   MAIN-CHAIN ANGLE REFINED ATOMS (A**2):  NULL ;  NULL ;  NULL       
+REMARK   3   MAIN-CHAIN ANGLE OTHER ATOMS   (A**2):  NULL ;  NULL ;  NULL       
 REMARK   3   SIDE-CHAIN BOND REFINED ATOMS  (A**2):  NULL ;  NULL ;  NULL       
+REMARK   3   SIDE-CHAIN BOND OTHER ATOMS    (A**2):  NULL ;  NULL ;  NULL       
 REMARK   3   SIDE-CHAIN ANGLE REFINED ATOMS (A**2):  NULL ;  NULL ;  NULL       
+REMARK   3   SIDE-CHAIN ANGLE OTHER ATOMS   (A**2):  NULL ;  NULL ;  NULL       
+REMARK   3   LONG RANGE B REFINED ATOMS     (A**2):  NULL ;  NULL ;  NULL       
+REMARK   3   LONG RANGE B OTHER ATOMS       (A**2):  NULL ;  NULL ;  NULL       
 REMARK   3                                                                      
 REMARK   3 ANISOTROPIC THERMAL FACTOR RESTRAINTS.    COUNT   RMS   WEIGHT       
 REMARK   3   RIGID-BOND RESTRAINTS          (A**2):  NULL ;  NULL ;  NULL       
@@ -324,7 +331,7 @@ REMARK   4
 REMARK   4 3V03 COMPLIES WITH FORMAT V. 3.30, 13-JUL-11                         
 REMARK 100                                                                      
 REMARK 100 THIS ENTRY HAS BEEN PROCESSED BY RCSB ON 13-DEC-11.                  
-REMARK 100 THE RCSB ID CODE IS RCSB069425.                                      
+REMARK 100 THE DEPOSITION ID IS D_1000069425.                                   
 REMARK 200                                                                      
 REMARK 200 EXPERIMENTAL DETAILS                                                 
 REMARK 200  EXPERIMENT TYPE                : X-RAY DIFFRACTION                  
@@ -339,7 +346,8 @@ REMARK 200  BEAMLINE                       : 21-ID-G
 REMARK 200  X-RAY GENERATOR MODEL          : NULL                               
 REMARK 200  MONOCHROMATIC OR LAUE    (M/L) : M                                  
 REMARK 200  WAVELENGTH OR RANGE        (A) : 0.9786                             
-REMARK 200  MONOCHROMATOR                  : C(111) DIAMOND LAUE MONOCHROMATOR  
+REMARK 200  MONOCHROMATOR                  : C(111) DIAMOND LAUE                
+REMARK 200                                   MONOCHROMATOR                      
 REMARK 200  OPTICS                         : BERYLLIUM LENS                     
 REMARK 200                                                                      
 REMARK 200  DETECTOR TYPE                  : CCD                                
@@ -370,7 +378,7 @@ REMARK 200  <I/SIGMA(I)> FOR SHELL         : 2.200
 REMARK 200                                                                      
 REMARK 200 DIFFRACTION PROTOCOL: SINGLE WAVELENGTH                              
 REMARK 200 METHOD USED TO DETERMINE THE STRUCTURE: MOLECULAR REPLACEMENT        
-REMARK 200 SOFTWARE USED: HKL-3000: MOLREP                                      
+REMARK 200 SOFTWARE USED: HKL-3000 MOLREP                                       
 REMARK 200 STARTING MODEL: 3V08                                                 
 REMARK 200                                                                      
 REMARK 200 REMARK: NULL                                                         
@@ -636,19 +644,6 @@ REMARK 500    ALA B 309      -48.96   -148.75
 REMARK 500    ALA B 321       57.11   -158.76                                   
 REMARK 500                                                                      
 REMARK 500 REMARK: NULL                                                         
-REMARK 525                                                                      
-REMARK 525 SOLVENT                                                              
-REMARK 525                                                                      
-REMARK 525 THE SOLVENT MOLECULES HAVE CHAIN IDENTIFIERS THAT                    
-REMARK 525 INDICATE THE POLYMER CHAIN WITH WHICH THEY ARE MOST                  
-REMARK 525 CLOSELY ASSOCIATED. THE REMARK LISTS ALL THE SOLVENT                 
-REMARK 525 MOLECULES WHICH ARE MORE THAN 5A AWAY FROM THE                       
-REMARK 525 NEAREST POLYMER CHAIN (M = MODEL NUMBER;                             
-REMARK 525 RES=RESIDUE NAME; C=CHAIN IDENTIFIER; SSEQ=SEQUENCE                  
-REMARK 525 NUMBER; I=INSERTION CODE):                                           
-REMARK 525                                                                      
-REMARK 525  M RES CSSEQI                                                        
-REMARK 525    HOH A 608        DISTANCE =  5.32 ANGSTROMS                       
 REMARK 620                                                                      
 REMARK 620 METAL COORDINATION                                                   
 REMARK 620 (M=MODEL NUMBER; RES=RESIDUE NAME; C=CHAIN IDENTIFIER;               
@@ -657,66 +652,66 @@ REMARK 620
 REMARK 620 COORDINATION ANGLES FOR:  M RES CSSEQI METAL                         
 REMARK 620                              CA A 584  CA                            
 REMARK 620 N RES CSSEQI ATOM                                                    
-REMARK 620 1 HOH A 591   O                                                      
-REMARK 620 2 GLU A 251   OE2  72.9                                              
-REMARK 620 3 HOH A 589   O   106.9 178.9                                        
-REMARK 620 4 ASP A 248   OD2  73.7  88.1  92.9                                  
-REMARK 620 5 GLU A   6   OE2 160.5 101.5  79.1  87.6                            
+REMARK 620 1 GLU A   6   OE2                                                    
+REMARK 620 2 ASP A 248   OD2  87.6                                              
+REMARK 620 3 GLU A 251   OE2 101.5  88.1                                        
+REMARK 620 4 HOH A 589   O    79.1  92.9 178.9                                  
+REMARK 620 5 HOH A 591   O   160.5  73.7  72.9 106.9                            
 REMARK 620 N                    1     2     3     4                             
 REMARK 620                                                                      
 REMARK 620 COORDINATION ANGLES FOR:  M RES CSSEQI METAL                         
 REMARK 620                              CA A 586  CA                            
 REMARK 620 N RES CSSEQI ATOM                                                    
-REMARK 620 1 HOH A 607   O                                                      
-REMARK 620 2 ASP A 254   OD1  92.9                                              
-REMARK 620 3 ASP A  13   OD2  91.8  87.6                                        
-REMARK 620 4 HOH A 605   O   174.8  90.5  92.3                                  
-REMARK 620 5 ASP A 258   OD1  66.5  83.1 155.8 110.0                            
-REMARK 620 6 ASP A 258   OD2 112.7  87.9 155.3  63.4  46.8                      
+REMARK 620 1 ASP A  13   OD2                                                    
+REMARK 620 2 ASP A 254   OD1  87.6                                              
+REMARK 620 3 ASP A 258   OD1 155.8  83.1                                        
+REMARK 620 4 ASP A 258   OD2 155.3  87.9  46.8                                  
+REMARK 620 5 HOH A 605   O    92.3  90.5 110.0  63.4                            
+REMARK 620 6 HOH A 607   O    91.8  92.9  66.5 112.7 174.8                      
 REMARK 620 N                    1     2     3     4     5                       
 REMARK 620                                                                      
 REMARK 620 COORDINATION ANGLES FOR:  M RES CSSEQI METAL                         
 REMARK 620                              CA A 585  CA                            
 REMARK 620 N RES CSSEQI ATOM                                                    
-REMARK 620 1 HOH A 592   O                                                      
-REMARK 620 2 HOH A 604   O   109.8                                              
-REMARK 620 3 SER A 109   O   174.6  75.2                                        
-REMARK 620 4 HOH A 593   O    94.5  62.1  86.0                                  
-REMARK 620 5 ASP A 111   OD2 101.2  83.7  81.2 145.6                            
-REMARK 620 6 SER A 109   OG  115.0 109.7  60.4  63.1 132.5                      
+REMARK 620 1 SER A 109   O                                                      
+REMARK 620 2 SER A 109   OG   60.4                                              
+REMARK 620 3 ASP A 111   OD2  81.2 132.5                                        
+REMARK 620 4 HOH A 592   O   174.6 115.0 101.2                                  
+REMARK 620 5 HOH A 593   O    86.0  63.1 145.6  94.5                            
+REMARK 620 6 HOH A 604   O    75.2 109.7  83.7 109.8  62.1                      
+REMARK 620 N                    1     2     3     4     5                       
+REMARK 620                                                                      
+REMARK 620 COORDINATION ANGLES FOR:  M RES CSSEQI METAL                         
+REMARK 620                              CA B 586  CA                            
+REMARK 620 N RES CSSEQI ATOM                                                    
+REMARK 620 1 ASP B  13   OD2                                                    
+REMARK 620 2 ASP B 254   OD1  80.7                                              
+REMARK 620 3 ASP B 258   OD1 155.9  84.4                                        
+REMARK 620 4 ASP B 258   OD2 150.0  86.6  46.3                                  
+REMARK 620 5 HOH B 593   O    87.3  94.0  74.8 120.8                            
+REMARK 620 6 HOH B 594   O    67.8  92.6 132.1  85.9 152.8                      
 REMARK 620 N                    1     2     3     4     5                       
 REMARK 620                                                                      
 REMARK 620 COORDINATION ANGLES FOR:  M RES CSSEQI METAL                         
 REMARK 620                              CA B 584  CA                            
 REMARK 620 N RES CSSEQI ATOM                                                    
-REMARK 620 1 HOH B 590   O                                                      
-REMARK 620 2 HOH B 589   O    91.8                                              
-REMARK 620 3 SER B 109   O    91.1 157.9                                        
-REMARK 620 4 HOH B 591   O   166.2 100.3  75.3                                  
-REMARK 620 5 HOH B 592   O   118.3  76.7  82.6  59.2                            
-REMARK 620 6 ASP B 111   OD2  88.1 115.9  86.1  92.5 151.3                      
-REMARK 620 7 SER B 109   OG   68.6 102.7  58.3 102.0  56.1 135.5                
+REMARK 620 1 SER B 109   O                                                      
+REMARK 620 2 SER B 109   OG   58.3                                              
+REMARK 620 3 ASP B 111   OD2  86.1 135.5                                        
+REMARK 620 4 HOH B 589   O   157.9 102.7 115.9                                  
+REMARK 620 5 HOH B 590   O    91.1  68.6  88.1  91.8                            
+REMARK 620 6 HOH B 591   O    75.3 102.0  92.5 100.3 166.2                      
+REMARK 620 7 HOH B 592   O    82.6  56.1 151.3  76.7 118.3  59.2                
 REMARK 620 N                    1     2     3     4     5     6                 
-REMARK 620                                                                      
-REMARK 620 COORDINATION ANGLES FOR:  M RES CSSEQI METAL                         
-REMARK 620                              CA B 586  CA                            
-REMARK 620 N RES CSSEQI ATOM                                                    
-REMARK 620 1 HOH B 593   O                                                      
-REMARK 620 2 ASP B  13   OD2  87.3                                              
-REMARK 620 3 HOH B 594   O   152.8  67.8                                        
-REMARK 620 4 ASP B 254   OD1  94.0  80.7  92.6                                  
-REMARK 620 5 ASP B 258   OD1  74.8 155.9 132.1  84.4                            
-REMARK 620 6 ASP B 258   OD2 120.8 150.0  85.9  86.6  46.3                      
-REMARK 620 N                    1     2     3     4     5                       
 REMARK 620                                                                      
 REMARK 620 COORDINATION ANGLES FOR:  M RES CSSEQI METAL                         
 REMARK 620                              CA B 585  CA                            
 REMARK 620 N RES CSSEQI ATOM                                                    
-REMARK 620 1 HOH B 607   O                                                      
-REMARK 620 2 ASP B 248   OD2 172.5                                              
-REMARK 620 3 GLU B 251   OE2  84.0  88.7                                        
-REMARK 620 4 GLU B 243   OE1  93.6  86.6  81.4                                  
-REMARK 620 5 HOH B 606   O    81.5  97.3  91.2 171.6                            
+REMARK 620 1 GLU B 243   OE1                                                    
+REMARK 620 2 ASP B 248   OD2  86.6                                              
+REMARK 620 3 GLU B 251   OE2  81.4  88.7                                        
+REMARK 620 4 HOH B 606   O   171.6  97.3  91.2                                  
+REMARK 620 5 HOH B 607   O    93.6 172.5  84.0  81.5                            
 REMARK 620 N                    1     2     3     4                             
 REMARK 800                                                                      
 REMARK 800 SITE                                                                 
@@ -953,41 +948,41 @@ SSBOND  31 CYS B  460    CYS B  476                          1555   1555  2.02
 SSBOND  32 CYS B  475    CYS B  486                          1555   1555  2.07  
 SSBOND  33 CYS B  513    CYS B  558                          1555   1555  2.02  
 SSBOND  34 CYS B  557    CYS B  566                          1555   1555  2.05  
-LINK        CA    CA A 584                 O   HOH A 591     1555   1555  2.28  
-LINK        CA    CA A 586                 O   HOH A 607     1555   1555  2.34  
-LINK        CA    CA A 585                 O   HOH A 592     1555   1555  2.34  
-LINK        CA    CA B 584                 O   HOH B 590     1555   1555  2.34  
-LINK        CA    CA B 586                 O   HOH B 593     1555   1555  2.35  
-LINK        CA    CA A 585                 O   HOH A 604     1555   1555  2.36  
-LINK        CA    CA B 584                 O   HOH B 589     1555   1555  2.36  
-LINK         O   SER A 109                CA    CA A 585     1555   1555  2.36  
-LINK         OE2 GLU A 251                CA    CA A 584     1555   1555  2.38  
-LINK        CA    CA B 585                 O   HOH B 607     1555   1555  2.38  
-LINK         OD2 ASP B  13                CA    CA B 586     1555   1555  2.39  
-LINK         OD1 ASP A 254                CA    CA A 586     1555   1555  2.40  
+LINK         OE2 GLU A   6                CA    CA A 584     1555   1555  2.51  
 LINK         OD2 ASP A  13                CA    CA A 586     1555   1555  2.40  
-LINK         O   SER B 109                CA    CA B 584     1555   1555  2.40  
-LINK        CA    CA A 585                 O   HOH A 593     1555   1555  2.40  
-LINK        CA    CA B 584                 O   HOH B 591     1555   1555  2.41  
-LINK         OD2 ASP B 248                CA    CA B 585     1555   1555  2.41  
-LINK        CA    CA B 586                 O   HOH B 594     1555   1555  2.42  
-LINK        CA    CA B 584                 O   HOH B 592     1555   1555  2.43  
-LINK         OD1 ASP B 254                CA    CA B 586     1555   1555  2.44  
-LINK         OE2 GLU B 251                CA    CA B 585     1555   1555  2.44  
-LINK        CA    CA A 584                 O   HOH A 589     1555   1555  2.45  
-LINK         OD2 ASP A 248                CA    CA A 584     1555   1555  2.47  
+LINK         O   SER A 109                CA    CA A 585     1555   1555  2.36  
+LINK         OG  SER A 109                CA    CA A 585     1555   1555  2.60  
 LINK         OD2 ASP A 111                CA    CA A 585     1555   1555  2.50  
+LINK         OD2 ASP A 248                CA    CA A 584     1555   1555  2.47  
+LINK         OE2 GLU A 251                CA    CA A 584     1555   1555  2.38  
+LINK         OD1 ASP A 254                CA    CA A 586     1555   1555  2.40  
+LINK         OD1 ASP A 258                CA    CA A 586     1555   1555  2.61  
+LINK         OD2 ASP A 258                CA    CA A 586     1555   1555  2.93  
+LINK        CA    CA A 584                 O   HOH A 589     1555   1555  2.45  
+LINK        CA    CA A 584                 O   HOH A 591     1555   1555  2.28  
+LINK        CA    CA A 585                 O   HOH A 592     1555   1555  2.34  
+LINK        CA    CA A 585                 O   HOH A 593     1555   1555  2.40  
+LINK        CA    CA A 585                 O   HOH A 604     1555   1555  2.36  
+LINK        CA    CA A 586                 O   HOH A 605     1555   1555  2.58  
+LINK        CA    CA A 586                 O   HOH A 607     1555   1555  2.34  
+LINK         OD2 ASP B  13                CA    CA B 586     1555   1555  2.39  
+LINK         O   SER B 109                CA    CA B 584     1555   1555  2.40  
+LINK         OG  SER B 109                CA    CA B 584     1555   1555  2.76  
 LINK         OD2 ASP B 111                CA    CA B 584     1555   1555  2.50  
 LINK         OE1 GLU B 243                CA    CA B 585     1555   1555  2.50  
-LINK         OE2 GLU A   6                CA    CA A 584     1555   1555  2.51  
-LINK        CA    CA B 585                 O   HOH B 606     1555   1555  2.51  
+LINK         OD2 ASP B 248                CA    CA B 585     1555   1555  2.41  
+LINK         OE2 GLU B 251                CA    CA B 585     1555   1555  2.44  
+LINK         OD1 ASP B 254                CA    CA B 586     1555   1555  2.44  
 LINK         OD1 ASP B 258                CA    CA B 586     1555   1555  2.55  
-LINK        CA    CA A 586                 O   HOH A 605     1555   1555  2.58  
-LINK         OG  SER A 109                CA    CA A 585     1555   1555  2.60  
-LINK         OD1 ASP A 258                CA    CA A 586     1555   1555  2.61  
-LINK         OG  SER B 109                CA    CA B 584     1555   1555  2.76  
-LINK         OD2 ASP A 258                CA    CA A 586     1555   1555  2.93  
 LINK         OD2 ASP B 258                CA    CA B 586     1555   1555  2.97  
+LINK        CA    CA B 584                 O   HOH B 589     1555   1555  2.36  
+LINK        CA    CA B 584                 O   HOH B 590     1555   1555  2.34  
+LINK        CA    CA B 584                 O   HOH B 591     1555   1555  2.41  
+LINK        CA    CA B 584                 O   HOH B 592     1555   1555  2.43  
+LINK        CA    CA B 585                 O   HOH B 606     1555   1555  2.51  
+LINK        CA    CA B 585                 O   HOH B 607     1555   1555  2.38  
+LINK        CA    CA B 586                 O   HOH B 593     1555   1555  2.35  
+LINK        CA    CA B 586                 O   HOH B 594     1555   1555  2.42  
 CISPEP   1 GLU A   95    PRO A   96          0        -0.88                     
 CISPEP   2 GLU B   95    PRO B   96          0        -0.60                     
 SITE     1 AC1  5 GLU A   6  ASP A 248  GLU A 251  HOH A 589                    
@@ -18733,5 +18728,5 @@ CONECT 8815 8782
 CONECT 8816 8782                                                                
 CONECT 8828 8781                                                                
 CONECT 8829 8781                                                                
-MASTER      726    0    7   63    0    0   13    6 8810    2  119   90          
+MASTER      720    0    7   63    0    0   13    6 8810    2  119   90          
 END                                                                             

@@ -15,8 +15,8 @@
 * with normal incidence on a parabolic mirror, is reflected to the focal point, and
 * back to flat detector some distance, D, away.
 *
-* %Example: D=0.0025 MM=1 Detector: detBB=1
-* %Example: D=1 MM=1 Detector: detBB=0.104959
+* %Example: D=0.0025 MM=1 Detector: detBB_I=1
+* %Example: D=1 MM=1 Detector: detBB_I=0.104959
 *
 * %P
 * D: [m]   Distance between mirror apex and detector plane.
@@ -28,16 +28,9 @@ DEFINE INSTRUMENT Test_mirror_parabolic(D=1,MM=1)
 
 DECLARE
 %{
+  int bounce;
 %}
 
-USERVARS
-%{
-  double bounce;
-%}
-
-INITIALIZE
-%{
-%}
 
 TRACE
 
@@ -49,6 +42,10 @@ COMPONENT source = Source_div(
     focus_aw=0, focus_ah=0, xwidth=0.1, yheight=0.5e-2,
     E0=12, dE=1)
 AT (0, 0, 0) RELATIVE origin
+EXTEND
+%{
+  //y=mcipYH;
+%}
 
 
 COMPONENT m2 = Mirror_parabolic(
@@ -57,6 +54,7 @@ WHEN(MM==1) AT(0,0,5) RELATIVE origin
 ROTATED (-90,0,0) RELATIVE origin
 EXTEND
 %{
+  //printf("%g %g\n",focusx,focusz);
   bounce=SCATTERED;
 %}
 
