@@ -5,14 +5,13 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: template_SasView
+* Instrument: Template_SasView
 *
 * %Identification
 * Written by: Torben Nielsen 
 * Modified by: Erik b knudsen
 * Date: Jan 2017.
 * Origin: DTU Physics / ESS DMSC
-* Version: $Revision$
 * 
 * %INSTRUMENT_SITE: Tests_samples
 *
@@ -32,7 +31,7 @@
 * %Link
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT template_SasView(lambda=1.54, dlambda=0.05)
+DEFINE INSTRUMENT Template_SasView(lambda=1.54, dlambda=0.05)
 
 TRACE
 

@@ -13,7 +13,7 @@
 * Origin: Risoe
 *
 * A flat rectangular or circular surface emitting x-rays
-
+*
 * %D
 * A circular or rectangular xray source. Spectrum may be either gaussian or uniform around a central wavelength/energy
 * or read from a datafile. Xrays are considered emitted uniformly into 4pi, but a square target retricts the beam to 

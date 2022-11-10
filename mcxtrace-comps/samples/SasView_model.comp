@@ -8,7 +8,7 @@
 * Version: 0.5
 * Origin: SasView, DTU, European Spallation Source ERIC 
 *
-* This SANS sample exposes <a href="http://www.sasview.org">SasView's</a> scattering kernels to McXtrace. In this way SasView's monodisperse scattering kernels can be call from McXtrace.
+* This SANS sample exposes <a href="http://www.sasview.org">SasView's</a> scattering kernels to McXtrace. In this way SasView's monodisperse scattering kernels can be called from McXtrace.
 *
 * %D
 * Sample for use in SANS instruments. The models describe mono disperse particles in thin solution. The sample geometry may have the shape:
@@ -21,7 +21,7 @@
 *
 * Example using spheres in thin solution, with radius=200 AA and a delta_sld=0.6 fm/AA^3:
 *      SasView_model(model_index=47, model_scale=1.0, model_pars={1, 7, 200}, model_abs=0.0,
-                         xwidth=0.01, yheight=0.01, zdepth=0.005,)
+*                        xwidth=0.01, yheight=0.01, zdepth=0.005,)
 * 
 *
 * The algorithm of this component requires use of the ISO C standard c99. You could use MCXTRACE_CFLAGS like MCXTRACE_CFLAGS = -std=c99 -g -O2 -lm. 
