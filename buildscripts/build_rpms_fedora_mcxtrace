@@ -45,6 +45,7 @@ WORK=`pwd`
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" rpm64-fedora "" -- rpm
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" rpm64-fedora "" -- rpm
 ./mkdist mcxtrace-tools-matlab-mxdisplay $1 tools/matlab/mcdisplay/ "" rpm64-fedora "" -- rpm
+./mkdist mcxtrace-mcpl $1 3rdparty/mcpl "" rpm64-fedora "" -- rpm
 
 #build metapackages?
 if [ "x$2" != "x" ]; then

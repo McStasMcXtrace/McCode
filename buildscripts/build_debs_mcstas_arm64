@@ -51,12 +51,7 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" deb64arm "" -- deb
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" deb64arm "" -- deb
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" deb64arm "" -- deb
-
-export MCINSTALL_PREFIX=/usr/share/mcstas/$1/
-./mkdist mcstas-ncrystal $1 3rdparty/ncrystal "" deb64arm "" -- deb
-export MCINSTALL_PREFIX=/usr/share/
-
-
+./mkdist mcstas-mcpl $1 3rdparty/mcpl "" deb64arm "" -- deb
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
