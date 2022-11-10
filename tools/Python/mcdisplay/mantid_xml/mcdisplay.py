@@ -4,13 +4,14 @@
 mcdisplay webgl script.
 '''
 import sys
-import os
 import logging
-import argparse
+import json
+import subprocess
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 import re
 import math
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from mccodelib.instrgeom import DrawMultiline, Vector3d
 from mccodelib.mcdisplayutils import McDisplayReader
@@ -505,41 +506,36 @@ def file_save(data, filename):
     f.close()
 
 
-def main(args):
+def main(instr=None, default=None, options=None):
     ''' script execution '''
     logging.basicConfig(level=logging.INFO)
 
     # inspect is required b McDisplayReader
-    args.inspect = None
-    reader = McDisplayReader(args, n=1, debug=True)
+    reader = McDisplayReader(instr=instr, default=default, n=1, debug=True)
     instrument = reader.read_instrument()
 
     writer = MantidPixelWriter(instrument.components)
     print("assembling mantid xml...")
     text = writer.do_work()
-    filename = args.instr + '.xml'
+    filename = instr + '.xml'
     file_save(text, filename)
     print("saved file %s" % filename)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('instr', help='display this instrument file (.instr or .out)')
-    parser.add_argument('--default', action='store_true',
-                        help='automatically use instrument defaults for simulation run')
-    parser.add_argument('instr_options', nargs='*', help='simulation options and instrument params')
+    from mccodelib.mcdisplayutils import make_common_parser
+    # Only pre-sets instr, --default, options
+    parser, prefix = make_common_parser(__file__, __doc__)
 
     args, unknown = parser.parse_known_args()
     # if --inspect --first or --last are given after instr, the remaining args become "unknown",
     # but we assume that they are instr_options
-    if len(unknown) > 0:
-        args.instr_options = unknown
+    args = {k: args.__getattribute__(k) for k in dir(args) if k[0] != '_'}
+    if len(unknown):
+        args['options'] = unknown
 
     try:
-        main(args)
+        main(**args)
     except KeyboardInterrupt:
         print('')
-    except Exception as e:
-        print(e)
-        raise e
 

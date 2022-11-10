@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+PREFIX="$0"
+
+# Check if we are being called with a non-full path
+if [[ $PREFIX != "/"* ]]; then
+  PREFIX="$PWD/$PREFIX"
+fi
+
+# Iterate down a (possible) chain of symlinks (macOS does not have readlink -f)
+while [ -L "$PREFIX" ];
+do
+   PREFIX=`readlink "$PREFIX"`
+done
+
+PREFIX=`dirname $PREFIX`
+PREFIX=`dirname $PREFIX`
+PREFIX=`dirname $PREFIX`
+
+ARCH=`arch`
+UNAME=`uname -s`
+
+# On macOS, shorten TMPDIR 
+if [[ ${UNAME} = Darwin* ]]; then
+    export TMPDIR=/tmp
+    OSXVER=`sw_vers -productVersion|cut -f 1 -d.`
+fi
+
+export PATH=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/miniconda3/bin:$PATH
+
+export @FLAVOR_UPPER@=$PREFIX/@FLAVOR@/@MCCODE_VERSION@
+export @FLAVOR_UPPER@_TOOLS=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/tools/Perl/
+export PATH=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/bin:$PATH
+# Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
+if [ -d "$@FLAVOR_UPPER@/miniconda3" ]; then
+    PYVER=`$@FLAVOR_UPPER@/miniconda3/bin/python3 --version | cut -f 2 -d\  | cut -f 1-2 -d.`
+    export PYTHONPATH=$@FLAVOR_UPPER@/miniconda3/lib:$@FLAVOR_UPPER@/miniconda3/lib/python$PYVER/site-packages
+fi
+echo
+echo The new shell started here is now set up for running this version of @FLAVOR@:
+echo
+@FLAVOR@ -v
+echo
+echo To end using this version of @FLAVOR@, exit this shell.
+echo
+export PS1='@FLAVOR@-@MCCODE_VERSION@ env \W \$ '
+if [ -x "${SHELL}" ]; then
+  ${SHELL}
+else
+  /bin/sh
+fi
+
