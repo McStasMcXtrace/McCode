@@ -56,6 +56,8 @@ NOACC
 
 SHARE
 %{
+  %include "read_table-lib"; // for Open_File
+  
 	#include <gsl/gsl_sf_legendre.h>
 	#include <gsl/gsl_sf_bessel.h>
 	#include <complex.h>
@@ -205,12 +207,12 @@ SHARE
 		FILE *PDBFile;
 
 		// I/O
-		PDBFile = fopen(PDBFilepath, "r");
+		PDBFile = Open_File(PDBFilepath, "r",NULL);
 
 		if (PDBFile == NULL) {
-			printf("Cannot open %s... \n", PDBFilepath);
+			exit(printf("ERROR: Cannot open %s... \n", PDBFilepath));
 		} else {
-			printf(".pdb-file located... \n");
+			printf("%s PDB file located... \n", PDBFilepath);
 		}
 
 		while (fgets(Line, sizeof(Line), PDBFile) != NULL) {
@@ -286,8 +288,8 @@ SHARE
 		const double AS = 16 * 2.82e-13;
 
 		// Program
-		if ((PDBFile = fopen(PDBFilename, "r")) == 0) {
-		    printf("Cannot open file: %s. \n", PDBFilename);
+		if ((PDBFile = Open_File(PDBFilename, "r",NULL)) == 0) {
+		    exit(printf("ERROR: Cannot open file: %s. \n", PDBFilename));
 		}
 
 		Residue[i].NameOfResidue = (char *) calloc(3, sizeof(char));
