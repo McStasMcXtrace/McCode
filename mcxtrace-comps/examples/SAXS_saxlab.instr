@@ -10,7 +10,9 @@
 * Release : 1.4
 * Version : 1.0
 *
-* Description
+* SAXSLab small-angle scattering (SAXS)
+*
+* %Description
 * The small-angle scattering (SAXS) instrument generally consists of the following parts:
 * the X-ray source ( the system includes rotating copper anode and KB multilayermirrors), 
 * a pinhole collimation system and a detector.

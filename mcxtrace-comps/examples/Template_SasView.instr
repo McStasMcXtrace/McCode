@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: templateSasView
+* Instrument: Template_SasView
 *
 * %Identification
 * Written by: Torben Nielsen 
@@ -43,7 +43,7 @@
 * %Link
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT templateSasView(lambda=1.54, dlambda=0.05, model_index=10, par1=0, par2=0, par3=0, par4=0, par5=0, par6=0, par7=0, par8=0)
+DEFINE INSTRUMENT Template_SasView(lambda=1.54, dlambda=0.05, model_index=10, par1=0, par2=0, par3=0, par4=0, par5=0, par6=0, par7=0, par8=0)
 
 DECLARE %{
   double modelpars[8];

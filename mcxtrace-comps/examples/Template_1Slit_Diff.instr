@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: template_1Slit_Diff
+* Instrument: Template_1Slit_Diff
 *
 * %Identification
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
@@ -27,7 +27,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT template_1Slit_Diff(SLITW=5e-6)
+DEFINE INSTRUMENT Template_1Slit_Diff(SLITW=5e-6)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */

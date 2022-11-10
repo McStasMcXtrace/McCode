@@ -6,10 +6,12 @@
 * %Identification
 * Written by: E. Knudsen (erkn@risoe.dtu.dk)
 * Date: Nov. 26th, 2009
-* Origin: Ris&oslash; DTU
 * Release: McXtrace 0.1_alpha
 * Version: $Revision$
+* Origin: Ris&oslash; DTU
 * %INSTRUMENT_SITE: ESRF
+*
+* Model of the ESRF ID11 Transfocator based beamline.
 *
 * %Description
 * Model of the ESRF ID11 Transfocator based beamline.

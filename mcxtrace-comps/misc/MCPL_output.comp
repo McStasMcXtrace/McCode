@@ -3,7 +3,7 @@
 * McXtrace, xray-tracing package
 *         Copyright (C) 1997-2017, All rights reserved
 *         DTU Physics, Kgs. Lyngby, Denmark
-
+*
 * Component: MCPL_output
 *
 * %I
@@ -11,8 +11,7 @@
 * Date: Aug 2016
 * Origin: DTU Physics
 *
-* Detector-like component that writes photon state parameters into an mcpl-format 
-* binary, virtual-source photon file.
+* Detector-like component that writes photon state parameters into an mcpl-format binary, virtual-source photon file.
 *
 * %D
 * Detector-like component that writes photon state parameters into an mcpl-format 
