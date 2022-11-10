@@ -387,7 +387,7 @@ def main():
         scanner.run()
     else:
         # Only run a simulation if we have a nonzero ncount
-        if not options.ncount == 0.0:
+        if options.ncount != 0.0 or options.trace:
             mcstas.run()
 
     if isdir(options.dir):
