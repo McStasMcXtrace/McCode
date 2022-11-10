@@ -159,6 +159,9 @@ class McPyqtgraphPlotter():
         '''
         Event driven recursive plot function. Click events are registered with each recursion.
         '''
+        # First check if we have been called with a meaningful node
+        if node == None:
+            return
 
         def get_modifiers(modname):
             ''' Get int codes for keyboardmodifiers. WARNING: String codes may be used directly in code. '''
@@ -173,62 +176,58 @@ class McPyqtgraphPlotter():
             if modname == "alt":
                 return QtCore.Qt.AltModifier
 
-        # First check if we have been called with a meaningful node
-        if node:
-            # init
-            self.clear_window_and_handlers()
+        # init
+        self.clear_window_and_handlers()
 
-            # get references from node
-            parent = node.parent
-            prim_lst = node.primaries
-            sec_lst = node.secondaries
+        # get references from node
+        parent = node.parent
+        prim_lst = node.primaries
+        sec_lst = node.secondaries
 
-            # add plot instances and record viewbox results
-            n = node.getnumdata()
-            self.viewbox_list = []
-            self.plot_list = []
+        # add plot instances and record viewbox results
+        n = node.getnumdata()
+        self.viewbox_list = []
+        self.plot_list = []
+        for i in range(n):
+            viewbox, plt = self.add_plot(node, i, n)
+            self.viewbox_list.append(viewbox)
+            self.plot_list.append(plt)
+        if id(node) in sync_zoom_obj_ids:
+            self.sync_views_zooming()
+
+        # set up viewbox - node correspondences for each action (click, right-click, ctrl-click, ...)
+        node_list_click = []
+        node_list_rclick = []
+        node_list_ctrlclick = []
+
+        # tag sync-zoom node id's (secondaries)
+        sync_zoom_obj_ids = sync_zoom_obj_ids + [id(n) for n in sec_lst]
+
+        # for each primary node, a click is registered to it
+        node_list_click = prim_lst
+
+        # if parent exists, all right-clicks are registered to it
+        if parent:
             for i in range(n):
-                viewbox, plt = self.add_plot(node, i, n)
-                self.viewbox_list.append(viewbox)
-                self.plot_list.append(plt)
-            if id(node) in sync_zoom_obj_ids:
-                self.sync_views_zooming()
+                node_list_rclick.append(parent)
 
-            # set up viewbox - node correspondences for each action (click, right-click, ctrl-click, ...)
-            vn_dict_click = {}
-            vn_dict_rclick = {}
-            vn_dict_ctrlclick = {}
+        # for each secondary node, a ctrl-click is registered to it
+        node_list_ctrlclick = sec_lst
 
-            # tag sync-zoom node id's (secondaries)
-            sync_zoom_obj_ids = sync_zoom_obj_ids + [id(n) for n in sec_lst]
+        # set mouse click handlers on the window
+        plot_node_cb = lambda node: self.plot_node(
+            node, sync_zoom_obj_ids=sync_zoom_obj_ids)
+        self.set_handler(node_list_click, plot_node_cb, "click", get_modifiers("none"))
+        self.set_handler(node_list_rclick, plot_node_cb, "rclick", get_modifiers("none"))
 
-            # for each primary node, a click is registered to it
-            for i in range(len(prim_lst)):
-                vn_dict_click[self.viewbox_list[i]] = prim_lst[i]
+        # set modifiers "alt" and "ctrl" for all platforms, since some may not work on win, darwin etc.
+        self.set_handler(node_list_ctrlclick, plot_node_cb, "click", get_modifiers("alt"))
+        self.set_handler(node_list_ctrlclick, plot_node_cb, "click", get_modifiers("ctrl"))
 
-            # if parent exists, all right-clicks are registered to it
-            if parent:
-                for i in range(n):
-                    vn_dict_rclick[self.viewbox_list[i]] = parent
-
-            # for each secondary node, a ctrl-click is registered to it
-            for i in range(len(prim_lst)):
-                vn_dict_ctrlclick[self.viewbox_list[i]] = sec_lst[i]
-
-            # set mouse click handlers on the window
-            plot_node_cb = lambda node: self.plot_node(
-                node, sync_zoom_obj_ids=sync_zoom_obj_ids)
-            self.set_handler(vn_dict_click, plot_node_cb, "click", get_modifiers("none"))
-            self.set_handler(vn_dict_rclick, plot_node_cb, "rclick", get_modifiers("none"))
-
-            # set modifiers "alt" and "ctrl" for all platforms, since some may not work on win, darwin etc.
-            self.set_handler(vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("alt"))
-            self.set_handler(vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("ctrl"))        
-
-            # set keypress handlers 
-            replot_cb = lambda: self.plot_node(node)
-            back_cb = lambda: self.plot_node(parent)
-            self.set_keyhandler(replot_cb, back_cb, 'l', get_modifiers("none"))
+        # set keypress handlers
+        replot_cb = lambda: self.plot_node(node)
+        back_cb = lambda: self.plot_node(parent)
+        self.set_keyhandler(replot_cb, back_cb, 'l', get_modifiers("none"))
 
 
     def show_help(self):
@@ -320,21 +319,25 @@ class McPyqtgraphPlotter():
             pass
 
 
-    def set_handler(self, vn_dict, node_cb, click, modifier):
+    def set_handler(self, node_list, node_cb, click, modifier):
         ''' sets a clickhandler according to input '''
 
-        def click_handler(event, vn_dict, node_cb, click, mod, debug=False):
+        def click_handler(event, node_list, node_cb, click, mod, debug=False):
             ''' generic conditional-branch-tree, catch-all, mouse click event handler  '''
-            pos = None
+            posItem = None
+            posScene = None
+            plotIdx = -1
             try:
-                pos = event.pos()
+                posItem = event.pos()
+                posScene = event.scenePos()
+                plotIdx = self.get_plot_index(posScene)
             except AttributeError:
                 pass
 
             # print debug info
             if debug:
                 print("click modifier: %s" % str(int(event.modifiers())))
-        
+
             # prevent action for modifiers mismatch
             if int(event.modifiers()) != mod:
                 return
@@ -344,16 +347,21 @@ class McPyqtgraphPlotter():
             if click == "click" and event.button() != 1:
                 return
 
-            node = vn_dict.get(event.currentItem, None)
-            if node:
+            if plotIdx >= 0 and plotIdx < len(node_list):
+                node = node_list[plotIdx]
+
+                # replot
                 node_cb(node)
 
-            self.update_statusbar(None, node, pos)
+                # update status message
+                self.update_statusbar(None, node, posItem)
 
-        if len(list(vn_dict)) == 0:
+        if len(list(node_list)) == 0:
             return
-        self.plot_layout.scene().sigMouseClicked.connect(lambda event: click_handler(
-            event, vn_dict=vn_dict, node_cb=node_cb, click=click, mod=modifier))
+
+        self.plot_layout.scene().sigMouseClicked.connect(
+            lambda event: click_handler(
+                event, node_list=node_list, node_cb=node_cb, click=click, mod=modifier))
 
 
     def get_plot_func_opts(self, log, legend, icolormap, verbose, fontsize, cbmin=None, cbmax=None):
@@ -457,7 +465,17 @@ class McPyqtgraphPlotter():
         if ylabel == "":
             ylabel = "y"
 
-        posstr = "%.24s=%g, %.24s=%g." % (xlabel, pos.x(), ylabel, pos.y())
+        if pos != None:
+            x = pos.x()
+            y = pos.y()
+            logstr = ""
+            if self.viewmodel.log:
+                # TODO: do this for non-colourplots:
+                #y = np.power(10., y)
+                logstr = " (log)"
+            posstr = "%.24s=%g, %.24s=%g%s." % (xlabel, x, ylabel, y, logstr)
+        else:
+            posstr = ""
         self.statusmessage.setText(posstr)
 
 
