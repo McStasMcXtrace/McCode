@@ -10,10 +10,10 @@
 *
 * %I
 * Written by: Jana Baltser and Erik Knudsen
-* 
 * Date: January 2012
-* Version: 1.0
 * Origin: NBI
+*
+* A model of a specific kinoform
 *
 * %D
 * KINOFORM. A model of a specific kinoform used by the BNL team during the APS beamtime.
@@ -22,6 +22,10 @@
 *	xmax=0.0002634
 *	y - height of the lens.
 * the principles of the kinoform's operation are described here: http://neutrons.ornl.gov/workshops/nni_05/presentations/min050616_xray_evans-lutterodt_ken_nni05.pdf
+*
+* You may as well model a Kinoform with e.g.:
+*   Kinoform=Lens_parab_Cyl(r=0.5e-3,yheight=1.3e-3,xwidth=1.3e-3,d=.1e-3,
+*     N=21, material_datafile="Be.txt")
 *
 * %P
 * Input parameters:

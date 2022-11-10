@@ -9,11 +9,9 @@
 * %I
 * Written by: Erik B Knudsen 
 * Date: Aug 2016
-* Version: $Revision$
 * Origin: DTU Physics
 *
-* Detector-like component that writes photon state parameters into an mcpl-format 
-* binary, virtual-source photon file.
+* Detector-like component that writes photon state parameters into an mcpl-file
 *
 * %D
 * Detector-like component that writes photon state parameters into an mcpl-format 

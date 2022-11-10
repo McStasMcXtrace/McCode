@@ -8,12 +8,12 @@
 * Component: Source_flat
 *
 * %I
-* Written by:Erik Knudsen
+* Written by: Erik Knudsen
 * Date: September 25, 2009
-* Version: $Revision$
 * Origin: Risoe
 *
 * A flat rectangular or circular surface emitting x-rays
+
 * %D
 * A circular or rectangular xray source. Spectrum may be either gaussian or uniform around a central wavelength/energy
 * or read from a datafile. Xrays are considered emitted uniformly into 4pi, but a square target retricts the beam to 
@@ -23,6 +23,9 @@
 * lines starting with # are considered part of the file header. If a datafile is given, a nonzero E0 value indicates that is is parametrized by energy (in keV)
 * as opposed to wavelength (in AA). Wavelength is the default.
 * Flux is set in the unit photons/s
+*
+* Example: Source_flat( yheight=0.001, xwidth=0.001, lambda0=5, dlambda=1,
+*    dist=1, focus_xw=0.001, focus_yh=0.001)
 *
 * %P
 * radius: [m]   Radius of circle in (x,y,0) plane where x-rays are generated.

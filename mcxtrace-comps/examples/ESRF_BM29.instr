@@ -9,14 +9,15 @@
 * Origin: KU-Science
 * Release: McXtrace 1.7
 * %INSTRUMENT_SITE: ESRF
+* 
+* ESRF BM29 SAXS beamline model
 *
 * %Description
-* Toy model used for testing various sample components for solution-SAXS 
-* mimicking the geometry of the BM29 beamline at ESRF:
+* Simple SAXS BM29 beamline model at ESRF:
 * https://www.esrf.fr/home/UsersAndScience/Experiments/MX/About_our_beamlines/bm29/beamline-specifications.html
 * 
 * Note that this model does not include much of the beamline optics, instead it emulates their effect
-* by settgin relevant beam parameters from a model source.
+* by setting relevant beam parameters from a model source.
 *
 * %Example: ESRF_BM29.instr Lambda=1 Detector: QMonitor_I=5.2e-12 
 *
@@ -41,16 +42,6 @@ DEFINE INSTRUMENT ESRF_BM29(
 	Lambda = 1.00,
 	DLambda = 0.01
 )
-
-
-DECLARE
-%{
-%}
-
-
-INITIALIZE
-%{
-%}
 
 
 TRACE
@@ -111,10 +102,6 @@ COMPONENT QMonitor = SAXSQMonitor(
 )
 AT (0, 0, 0.000001) RELATIVE Beamstop
 
-
-FINALLY
-%{
-%}
 
 END
 

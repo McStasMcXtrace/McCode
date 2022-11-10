@@ -12,7 +12,6 @@
  * Written by: Marcus H Mendenhall, NIST <marcus.mendenhall@nist.gov>
  * Based on: Perfect_crystal.comp written by Anette Vickery, Andrea Prodi, Erik Knudsen
  * Date: December 1, 2016
- * Version: 2.0-a
  * Origin: Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
  *
  * Bent, perfect, reflecting crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
@@ -21,12 +20,15 @@
  * Bragg_crystal_bent_BC.comp is intended to supercede Bragg_crystal_bent.comp.
  *
  * For details see:
- * The optics of focusing bent-crystal monochromators on X-ray powder diffractometers with application to lattice parameter determination and microstructure analysis, 
- * Marcus H. Mendenhall,* David Black and James P. Cline, J. Appl. Cryst. (2019). 52, https://doi.org/10.1107/S1600576719010951
+ * The optics of focusing bent-crystal monochromators on X-ray powder diffractometers
+ *   with application to lattice parameter determination and microstructure analysis, 
+ *   Marcus H. Mendenhall,* David Black and James P. Cline, J. Appl. Cryst. (2019). 52, 
+ *   https://doi.org/10.1107/S1600576719010951
  *
- * NOTE: elliptical coordinate code and documentation taken from Mirror_elliptic.comp distributed in McXtrace v1.2
- * However, the coordinates are rotated to be consistent with Bragg_crystal_flat.comp and Perfect_Crystal.comp.
- * Idealized elliptic mirror with surface ellipse and lattice ellipses independent, to allow construction of
+ * NOTE: elliptical coordinate code and documentation taken from Mirror_elliptic.comp
+ * distributed in McXtrace v1.2. However, the coordinates are rotated to be consistent
+ * with Bragg_crystal_flat.comp and Perfect_Crystal.comp. Idealized elliptic mirror 
+ * with surface ellipse and lattice ellipses independent, to allow construction of
  * Johansson optics, for example.
  * 
  * %P

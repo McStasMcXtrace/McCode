@@ -9,15 +9,15 @@
 * Component: Lens_parab
 *
 * %I
-*
 * Written by: Jana Baltser and Erik Knudsen
-* 
 * Date: August 2010
-* Version: 1.0
 * Origin: NBI
+*
+* A simple X-ray compound refractive lens (CRL)
 *
 * %D
 * A simple X-ray compound refractive lens (CRL) with an elliptic profile simulates the photons' movement on passing through it.
+* Attenuation coefficient mu is taken from the NIST database and Be.txt
 *
 * %P
 * Input parameters:
@@ -27,10 +27,6 @@
 * d: distance between two surfaces of the lens along the propagation axis;
 * N: amount of single lenses in a stack.
 * T: transmission of the lens
-* 
-* 
-* attenuation coefficient mu is taken from the NIST database and 
-* Be.txt
 *
 * %E
 *******************************************************************************/

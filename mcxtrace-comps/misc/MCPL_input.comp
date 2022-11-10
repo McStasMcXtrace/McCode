@@ -9,10 +9,10 @@
 * %I
 * Written by: Erik B Knudsen 
 * Date: Aug 2016
-* Version: $Revision$
 * Origin: DTU Physics
 *
 * Source-like component that reads photon state parameters from an mcpl-file.
+*
 * %D
 * Source-like component that reads photon state parameters from a binary mcpl-file.
 *
