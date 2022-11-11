@@ -60,7 +60,7 @@ void slit_warning_if(int condition, char* message, char* component){
 }
 %}
 DECLARE %{
-  int isradial;
+  char isradial;
 %}
 INITIALIZE
 %{
