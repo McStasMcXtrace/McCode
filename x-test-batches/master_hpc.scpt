@@ -8,7 +8,7 @@
 #BSUB -n 10
 #BSUB -R "span[block=1]"
 ### -- Select the resources: 1 gpu in exclusive process mode --
-#BSUB -W 10:00
+#BSUB -W 15:00
 # request 5GB of system-memory
 #BSUB -R "rusage[mem=5GB]"
 ### -- set the email address --
@@ -21,8 +21,8 @@
 #BSUB -N
 ### -- Specify the output and error file. %J is the job-id --
 ### -- -o and -e mean append, -oo and -eo mean overwrite --
-#BSUB -o gpu-%J.out
-#BSUB -e gpu_%J.err
+#BSUB -o mcxtrace_master_-%J.out
+#BSUB -e mcxtrace_master__%J.err
 # -- end of LSF options --
 
 # Ensure we run with our own miniconda3
