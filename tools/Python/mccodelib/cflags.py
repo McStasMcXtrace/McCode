@@ -3,20 +3,22 @@ Utility function for handling flexible DEPENDENCY lines.
 '''
 import os
 import subprocess
+import pathlib
+from . import mccode_config
 
 def evaluate_dependency_str( depstr, verbose=False ):
-    """Evaluates CMD() and ENV() parts of DEPENDENCY (a.k.a. "CFLAGS")
+    """Evaluates CMD(), ENV() and DATAFILE() parts of DEPENDENCY (a.k.a. "CFLAGS")
     strings.
 
-    If neither "CMD(" or "ENV(" is found in the input string, the input
+    If neither "CMD(", "ENV(" or "DATAFILE(" is found in the input string, the input
     string will always be returned completely unchanged!
 
     Input can either be bytes or str objects, and an object of the same type
     will be returned.
 
     The current implementation does not support usage of parentheses inside the
-    CMD(..) and ENV(..) blocks, nor nesting of these apart from the fact that
-    ENV(..) blocks can be used inside CMD(..) blocks.
+    CMD(..), ENV(..) or DATAFILE(..) blocks, nor nesting of these apart from the fact
+    that ENV(..) and DATAFIFILE(..) blocks can be used inside CMD(..) blocks.
 
     """
     #Make sure we can handle both raw bytes and str objects. We assume utf8 is
@@ -31,8 +33,9 @@ def evaluate_dependency_str( depstr, verbose=False ):
 
     s_ev = to_target_fmt('ENV(')
     s_cmd = to_target_fmt('CMD(')
+    s_df = to_target_fmt('DATAFILE(')
 
-    if not s_ev in depstr and not s_cmd in depstr:
+    if not s_ev in depstr and not s_cmd in depstr and not s_df in depstr:
         return depstr #<--- early exit for most callers
 
     as_str = lambda s : ( s.decode() if hasattr(s,'decode') else s )
@@ -50,6 +53,15 @@ def evaluate_dependency_str( depstr, verbose=False ):
             raise ValueError( f'Must close one "{as_str(startmarker)}..)"'
                               + ' before opening a new one.' )
         return before + evalfct(content) + evalmarker(after,startmarker,evalfct)
+
+    def evalfct_df(s):
+        dfile=as_str(s.strip())
+        fullfile=pathlib.PurePath(mccode_config.configuration['MCCODE_LIB_DIR']).joinpath('data',dfile)
+
+        Path=str(fullfile)
+        if verbose:
+            print(f"   --> pointing datafile {dfile} to {Path}")
+        return to_target_fmt(Path)
 
     def evalfct_env(s):
         ev=as_str(s.strip())
@@ -83,6 +95,7 @@ def evaluate_dependency_str( depstr, verbose=False ):
         return to_target_fmt(lines[0]) if lines else ''
 
     s = evalmarker( depstr, s_ev, evalfct_env )
+    s = evalmarker( s, s_df, evalfct_df )
     s = evalmarker( s, s_cmd, evalfct_cmd )
     assert use_bytes == is_bytes(s)
     return s
