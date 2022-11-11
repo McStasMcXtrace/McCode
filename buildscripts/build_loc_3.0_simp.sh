@@ -51,7 +51,7 @@ fi
 cp tools/other/mcsplit/mcsplit.py $MCINSTALL_PREFIX/mcstas/3.0-dev/bin/
 
 export MCINSTALL_PREFIX=$HOME/McStas/mcstas/3.0-dev/
-#./mkdist mcstas-ncrystal 3.0-dev 3rdparty/ncrystal-patches "" deb64 "" -- justinst
+#./mkdist mcstas-ncrystal 3.0-dev 3rdparty/ncrystal-package "" deb64 "" -- justinst
 
 # Ensure we are configured for 10 node MPI runs
 sed -i s/\'4\'/\'10\'/g $HOME/McStas/mcstas/3.0-dev/tools/Python/mccodelib/mccode_config.py

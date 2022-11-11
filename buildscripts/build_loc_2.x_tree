@@ -44,8 +44,8 @@ export FC=gfortran
 ./mkdist mcstas-tools-python-mcplot-matplotlib 2.x-dev tools/Python/mcplot/matplotlib/ "" deb64 "" -- justinst
 
 export MCINSTALL_PREFIX=$HOME/McStas/mcstas/2.x-dev/
-./mkdist mcstas-ncrystal 2.x-dev 3rdparty/ncrystal-patches "" deb64 "" -- justinst
-./mkdist mcstas-mcpl 2.x-dev 3rdparty/mcpl-patches "" deb64 "" -- justinst
+./mkdist mcstas-ncrystal 2.x-dev 3rdparty/ncrystal-package "" deb64 "" -- justinst
+./mkdist mcstas-mcpl 2.x-dev 3rdparty/mcpl-package "" deb64 "" -- justinst
 export MCINSTALL_PREFIX=$HOME/McStas
 
 # Ensure we are configured for 10 node MPI runs
