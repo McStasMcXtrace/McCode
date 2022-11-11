@@ -46,8 +46,8 @@ WORK=`pwd`
 ./mkdist mcstas-miniconda3 $1 support/rpm/miniconda3/ "" linux64 "" -- src
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" linux64 "" -- src
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" linux64 "" -- src
-./mkdist mcstas-mcpl $1 3rdparty/mcpl "" linux64 "" -- src
-./mkdist mcstas-ncrystal $1 3rdparty/ncrystal "" linux64 "" -- src
+./mkdist mcstas-mcpl $1 3rdparty/mcpl-patches "" linux64 "" -- src
+./mkdist mcstas-ncrystal $1 3rdparty/ncrystal-patches "" linux64 "" -- src
 
 #build metapackages?
 if [ "x$2" != "x" ]; then

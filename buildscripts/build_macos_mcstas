@@ -53,8 +53,8 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" mac "" -- OSXapp
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" mac "" -- OSXapp
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mac "" -- OSXapp
-./mkdist mcstas-mcpl $1 3rdparty/mcpl "" mac "" -- OSXapp
-./mkdist mcstas-ncrystal $1 3rdparty/ncrystal "" mac "" -- OSXapp
+./mkdist mcstas-mcpl $1 3rdparty/mcpl-patches "" mac "" -- OSXapp
+./mkdist mcstas-ncrystal $1 3rdparty/ncrystal-patches "" mac "" -- OSXapp
 
 
 # Hack to ensure pymcpltool is in place

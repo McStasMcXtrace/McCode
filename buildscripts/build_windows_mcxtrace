@@ -56,7 +56,7 @@ find mcxtrace-comps-win -type f -name \*.comp -exec sed -i 's+@MCCODE_LIB@/minic
 ./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" mingw64 "o" -- nsis64
 ./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" mingw64 "" -- nsis64
-./mkdist mcxtrace-mcpl $1 3rdparty/mcpl "" mingw64 "" -- nsis64
+./mkdist mcxtrace-mcpl $1 3rdparty/mcpl-patches "" mingw64 "" -- nsis64
 
 if [ "x$2" != "x" ]; then
     # Build the meta-packages also

@@ -59,8 +59,8 @@ sed -i 's+@MCCODE_LIB@/miniconda3/+c:\\mcstas-'${1}'\\miniconda3\\Library\\mingw
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" mingw64 "" -- nsis64
-./mkdist mcstas-ncrystal $1 3rdparty/ncrystal "" mingw64 "" -- nsis64
-./mkdist mcstas-mcpl $1 3rdparty/mcpl "" mingw64 "" -- nsis64
+./mkdist mcstas-ncrystal $1 3rdparty/ncrystal-patches "" mingw64 "" -- nsis64
+./mkdist mcstas-mcpl $1 3rdparty/mcpl-patches "" mingw64 "" -- nsis64
 
 if [ "x$2" != "x" ]; then
     # Build the meta-packages also
