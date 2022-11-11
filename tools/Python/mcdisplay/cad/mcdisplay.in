@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Wrapper script for @P@display-cadquery-py
+# Wrapper script for @P@display-cad-py
 
 # First ensure that we follow symlink if needed
 LINK=`readlink $0`
@@ -26,7 +26,7 @@ if [ -d "$LIB/../miniconda3" ]; then
     fi
 fi
 
-LIB="$LIB/../tools/Python/@P@display/cadquery"
+LIB="$LIB/../tools/Python/@P@display/cad"
 TOOL="@P@display"
 VERS="@MCCODE_VERSION@"
 
@@ -36,7 +36,7 @@ canrun() {
         exit 127;
     fi
 
-    modules="yaml"
+    modules="cadquery"
     cmd=""
     for name in ${modules}; do
         cmd="${cmd}import ${name}; "

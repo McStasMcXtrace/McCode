@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(VERSION 3.16.0)
 
 # This will install McStas components
-project(python-tools-mcdisplay-cadquery C)
+project(python-tools-mcdisplay-cad C)
 
 # Choose between McStas or McXtrace
 option(BUILD_MCSTAS   "Choose the McStas flavor" off)
@@ -31,7 +31,7 @@ setupMCCODE("${FLAVOR}")
 # Select prefix
 set(P "${MCCODE_PREFIX}")
 
-set(TOOLS_NAME "tools/Python/${P}display/cadquery")
+set(TOOLS_NAME "tools/Python/${P}display/cad")
 
 # Windows needs special handling of this path...
 if(WINDOWS)
@@ -46,7 +46,7 @@ set(CC "${CMAKE_C_COMPILER}")
 set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-cadquery-${MCCODE_VERSION}")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-cad-${MCCODE_VERSION}")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
 set(CPACK_PACKAGE_CONTACT       "gregory.tucker@ess.eu")
 
@@ -56,7 +56,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
 # NSIS
-set(NSIS_NAME "Python/cadquery -based ${P}display (${P}display-cadquery-py), ${MCCODE_STRING}")
+set(NSIS_NAME "Python/cad -based ${P}display (${P}display-cad-py), ${MCCODE_STRING}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
@@ -84,7 +84,7 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-cadquery-py" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-cad-py" @ONLY)
 
 # Program files
 if(WINDOWS)
@@ -114,13 +114,13 @@ if(NOT WINDOWS)
   )
 
   install(
-    PROGRAMS "${WORK}/${P}display-cadquery-py"
+    PROGRAMS "${WORK}/${P}display-cad-py"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}display-cadquery${DOT_PYTHON_SUFFIX}"
+    RENAME "${P}display-cad${DOT_PYTHON_SUFFIX}"
     )
-  # Make cadquery mcdisplay available as mcdisplay/mxdisplay
+  # Make cad mcdisplay available as mcdisplay/mxdisplay
   install(
-    PROGRAMS "${WORK}/${P}display-cadquery-py"
+    PROGRAMS "${WORK}/${P}display-cad-py"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     RENAME "${P}display"
     )

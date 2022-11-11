@@ -158,7 +158,14 @@ def main(instr=None, dirname=None, **kwds):
     
     # Do the conversion to a CadQuery assembly, then save it to the desired location
     assembly = instrument_to_assembly(instrument)
-    assembly.save(str(root.joinpath(f"{Path(instr).stem}.step")))
+    assembly.save(str(root.joinpath(f"{Path(instr).stem}.{kwds.get('format','step')}")))
+
+def output_format(astring):
+    f = astring.lower()
+    if f in ('step', 'stl', 'xml', 'vrml', 'gltf', 'vtkjs'):
+        return f
+    print(f"Unknown file format {astring}. Choose between STEP, STL, VRML, GLTF, VTKJS, and OpenCASCADE Technology XML")
+    return 'step'
 
 
 if __name__ == '__main__':
@@ -168,6 +175,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--dirname', help='output directory name override')
     parser.add_argument('-n', '--ncount', dest='n', type=int, default=0, help='Number of particles to simulate')
+    parser.add_argument('-f', '--format', dest='format', type=output_format, default='step', help='Output CAD file format')
 
     args, unknown = parser.parse_known_args()
     # if --inspect --first or --last are given after instr, the remaining args become "unknown",
