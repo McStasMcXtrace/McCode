@@ -9,7 +9,7 @@ fi
 
 # Ensure our 3rd party modules are in place and updated
 
-./3rdparty/sync.sh  
+./3rdparty/sync.sh
 
 ./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" noarch "o" -- NONE 
 echo

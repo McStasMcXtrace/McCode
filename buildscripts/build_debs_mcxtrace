@@ -9,7 +9,7 @@ fi
 
 # Ensure our 3rd party modules are in place and updated
 
-./3rdparty/sync.sh  
+./3rdparty/sync.sh
 
 WORK=`pwd`
 
@@ -34,6 +34,7 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcxtrace-clusterscripts $1 tools/cluster-scripts/ "" deb64 "" -- deb
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" deb64 "o" -- deb
 ./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" deb64 "" -- deb
+./mkdist mcxtrace-mcpl $1 3rdparty/mcpl-patches "" deb64 "" -- deb
 
 #build metapackages?
 if [ "x$2" != "x" ]; then

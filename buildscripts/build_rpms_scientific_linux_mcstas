@@ -47,10 +47,8 @@ WORK=`pwd`
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" rpm64 "" -- rpm
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" rpm64 "" -- rpm
 ./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" rpm64 "" -- rpm
-
-export MCINSTALL_PREFIX=/usr/local/mcstas/$1/
-./mkdist mcstas-ncrystal $1 3rdparty/ncrystal "" rpm64 "" -- rpm
-export MCINSTALL_PREFIX=/usr/local/
+./mkdist mcstas-mcpl $1 3rdparty/mcpl-patches "" rpm64 "" -- rpm
+./mkdist mcstas-ncrystal $1 3rdparty/ncrystal-patches "" rpm64 "" -- rpm
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
@@ -65,5 +63,5 @@ if [ "x$2" != "x" ]; then
     mv $controlfile.bak $controlfile
   done
   mv $HOME/rpmbuild/RPMS/x86_64/mcstas-suite-*rpm $WORK/dist
-  cp $WORK/INSTALL-McStas-2.x/Linux/centos/README.md $WORK/dist
+  cp $WORK/INSTALL-McStas-3.x/Linux/centos/README.md $WORK/dist
 fi

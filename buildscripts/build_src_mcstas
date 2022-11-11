@@ -13,7 +13,7 @@ cd 3rdparty
 
 cd -
 
-./3rdparty/sync.sh  
+./3rdparty/sync.sh
 
 
 for MODULE in `echo $THIRDPARTY`
@@ -46,12 +46,8 @@ WORK=`pwd`
 ./mkdist mcstas-miniconda3 $1 support/rpm/miniconda3/ "" linux64 "" -- src
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" linux64 "" -- src
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" linux64 "" -- src
-
-export MCINSTALL_PREFIX=/usr/local/mcstas/$1/
-./mkdist mcstas-ncrystal $1 3rdparty/ncrystal "" deb64 "" -- src
-export MCINSTALL_PREFIX=/usr/local/
-
-
+./mkdist mcstas-mcpl $1 3rdparty/mcpl-patches "" linux64 "" -- src
+./mkdist mcstas-ncrystal $1 3rdparty/ncrystal-patches "" linux64 "" -- src
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
@@ -75,5 +71,5 @@ if [ "x$2" != "x" ]; then
   tar -tf $outfile
   gzip $outfile
   rm mcstas-${1}-UNIX-src
-  cp $WORK/INSTALL-McStas-2.x/Linux/src/README.md $WORK/dist
+  cp $WORK/INSTALL-McStas-3.x/Linux/src/README.md $WORK/dist
 fi

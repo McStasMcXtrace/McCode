@@ -34,6 +34,7 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcxtrace-clusterscripts $1 tools/cluster-scripts/ "" deb32 "" -- deb
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" deb32 "o" -- deb
 ./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" deb32 "" -- deb
+./mkdist mcxtrace-mcpl $1 3rdparty/mcpl-patches "" deb32 "" -- deb
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
