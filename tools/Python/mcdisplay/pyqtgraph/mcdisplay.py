@@ -5,8 +5,6 @@ mcdisplay pyqtgraph script.
 '''
 import sys
 import logging
-import json
-import subprocess
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
