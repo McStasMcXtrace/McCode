@@ -39,12 +39,12 @@
 * %E
 ******************************************************************************/
 
-DEFINE COMPONENT Cyl_monitor
+DEFINE COMPONENT Cyl_monitor_TOF
 
 DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (nr=20, string filename=0, yheight=10, radius=1, restore_neutron=0,
-		    thmin=0, thmax=360, int nowritefile=0)
+		    thmin=-180, thmax=180, nt=100,tmin,tmax, int nowritefile=0)
 
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -52,16 +52,16 @@ OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 DECLARE
 %{
   %include "array-lib"
-  DArray1d PSD_N;
-  DArray1d PSD_p;
-  DArray1d PSD_p2;
+  DArray2d PSD_N;
+  DArray2d PSD_p;
+  DArray2d PSD_p2;
 %}
 
 INITIALIZE
 %{
-  PSD_N =  create_darr1d(nr);
-  PSD_p =  create_darr1d(nr);
-  PSD_p2 = create_darr1d(nr);
+  PSD_N =  create_darr2d(nr,nt);
+  PSD_p =  create_darr2d(nr,nt);
+  PSD_p2 = create_darr2d(nr,nt);
 %}
 
 TRACE
@@ -78,17 +78,20 @@ TRACE
 	  phi=atan2(x,z)*RAD2DEG;
 	  
 	  if (phi >= thmin && phi < thmax) {
-	    i=floor((nr) * (phi-thmin)/(thmax-thmin));
-	    
-	    double p2 = p*p;
-            #pragma acc atomic
-	    PSD_N[i] = PSD_N[i]+1;
-	    
-            #pragma acc atomic
-	    PSD_p[i] = PSD_p[i]+p;
-	  
-	    #pragma acc atomic
-	    PSD_p2[i] = PSD_p2[i]+p2;
+	    if (t >= tmin && t < tmax) {
+	      i=floor((nr) * (phi-thmin)/(thmax-thmin));
+	      j=floor((nt) * (t-tmin)/(tmax-tmin));
+	      double p2 = p*p;
+	      
+              #pragma acc atomic
+	      PSD_N[i][j] = PSD_N[i][j]+1;
+      
+              #pragma acc atomic
+	      PSD_p[i][j] = PSD_p[i][j]+p;
+	      
+              #pragma acc atomic
+	      PSD_p2[i][j] = PSD_p2[i][j]+p2;
+	    }
 	  }
 	}
       }
@@ -102,22 +105,21 @@ TRACE
 SAVE
 %{
 if (!nowritefile) {   
-  DETECTOR_OUT_1D(
-      "Cylindrical monitor",
+  DETECTOR_OUT_2D(
+      "Cylindrical TOF monitor",
       "radial position [deg]",
-      "Intensity",
-      "Theta",
-      thmin, thmax, nr, 
-      &PSD_N[0],&PSD_p[0],&PSD_p2[0],
+      "TOF [s]",
+      thmin, thmax, tmin, tmax, nr, nt,
+      &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
       filename);
 }
 %}
 
 FINALLY
 %{
-  destroy_darr1d(PSD_N);
-  destroy_darr1d(PSD_p);
-  destroy_darr1d(PSD_p2);
+  destroy_darr2d(PSD_N);
+  destroy_darr2d(PSD_p);
+  destroy_darr2d(PSD_p2);
 %}
 
 MCDISPLAY
