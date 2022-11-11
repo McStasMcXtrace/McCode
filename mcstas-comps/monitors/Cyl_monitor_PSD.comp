@@ -44,7 +44,7 @@ DEFINE COMPONENT Cyl_monitor_PSD
 DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (nr=20, string filename=0, yheight=10, radius=1, restore_neutron=0,
-		    thmin=0, thmax=360, ny=100, int nowritefile=0
+		    thmin=0, thmax=360, ny=100, int nowritefile=0)
 
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
