@@ -577,7 +577,7 @@ INITIALIZE
     // Certain volumes were selected, find the indicies in the global_geometry_list
     manual_linking_function_abs_logger_volumes(target_geometry, global_geometry_list, &accepted_volumes, NAME_CURRENT_COMP);
     // Add this logger to the global_specific_volumes_logger_list (so that conditionals can affect it)
-    add_element_to_abs_logger_list(&global_specific_volumes_abs_logger_list, abs_logger_list_element);
+    add_element_to_abs_logger_list(global_specific_volumes_abs_logger_list, abs_logger_list_element);
 
     for (loop_index=0;loop_index<accepted_volumes.num_elements;loop_index++) {
       target_volume = global_geometry_list->elements[accepted_volumes.elements[loop_index]].Volume;

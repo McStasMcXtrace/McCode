@@ -17,7 +17,8 @@
 *  Validation of Union single crystal against standard single_crystal.
 *
 * %Example: comp_select=1 Detector: Banana_monitor_I=9.5e5
-* %Example: comp_select=2 Detector: Banana_monitor_I=9.5e5
+* %Example: comp_select=1 Detector: PSDlin_transmission_scattered_I=793256
+* %Example: comp_select=2 Detector: PSDlin_transmission_scattered_I=795548
 *
 * %Parameters
 * comp_select: [1] 1: Union components, 2: Single crystal
@@ -61,13 +62,13 @@ COMPONENT init = Union_init()
 AT (0,0,0) ABSOLUTE
 
 COMPONENT Single_crystal_test_process = Single_crystal_process(
-          delta_d_d=delta_d_d, mosaic = mosaic,
+          delta_d_d=delta_d_d, mosaic=mosaic,
           ax = 3.8186, ay = 0,      az = 0,
           bx = 0,      by = 3.8843, bz = 0,
           cx = 0,      cy = 0,      cz = 11.6777,
-          reflections=material_data_file,barns=0,packing_factor=1,powder=powder,PG=PG)
+          reflections=material_data_file, barns=0, packing_factor=1, powder=powder,PG=PG)
 AT (0,0,0) ABSOLUTE
-ROTATED (x_rotation_process,y_rotation_process,0) ABSOLUTE
+ROTATED (x_rotation_process, y_rotation_process, 0) ABSOLUTE
 
   COMPONENT Incoherent_process = Incoherent_process(sigma=sigma_inc, packing_factor=1, unit_cell_volume=173.28, interact_fraction=-1)
     AT (0,0,0) ABSOLUTE
@@ -128,8 +129,8 @@ else scattered_flag_instr=1;
 %}
 
 COMPONENT sample = Single_crystal(
-          radius=xwidth,yheight=yheight,
-          delta_d_d=delta_d_d, mosaic = mosaic,
+          radius=xwidth, yheight=yheight,
+          delta_d_d=delta_d_d, mosaic=mosaic,
           ax = 3.8186, ay = 0,      az = 0,
           bx = 0,      by = 3.8843, bz = 0,
           cx = 0,      cy = 0,      cz = 11.6777,

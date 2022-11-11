@@ -17,7 +17,9 @@
 * %Description
 *  Validation of Union powder against standard PowderN component. 
 *
-* Example: Banana_monitor_I=20.1897
+* %Example: comp_select=1 Detector: detectors_m4pi_I=67635.2
+* %Example: comp_select=1 Detector: PSDlin_scattering_I=5.79875
+* %Example: comp_select=1 Detector: PSDlin_scattering_2_I=0.0234833
 *
 * %Parameters
 * comp_select: [1] 1: Union components, 2: PowderN
