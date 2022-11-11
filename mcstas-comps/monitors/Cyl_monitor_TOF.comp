@@ -74,10 +74,10 @@ TRACE
       if(t1>0) {
 	PROP_DT(t1);
 	/* Calculate pixel */
-	if (fabs(y) < yheight/2.0) {
+	if (fabs(y) <= yheight/2.0) {
 	  phi=atan2(x,z)*RAD2DEG;
 	  
-	  if (phi >= thmin && phi < thmax) {
+	  if (phi >= thmin && phi <= thmax) {
 	    if (t >= tmin && t < tmax) {
 	      i=floor((nr) * (phi-thmin)/(thmax-thmin));
 	      j=floor((nt) * (t-tmin)/(tmax-tmin));
