@@ -18,5 +18,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 include(MCUtil)
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
+set(BUILD_EXAMPLES OFF)
+
 add_subdirectory(ncrystal)
 
