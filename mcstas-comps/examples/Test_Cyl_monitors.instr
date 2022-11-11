@@ -42,6 +42,7 @@ DECLARE %{
   double mudist=1e-6;
   double V,E,T;
   double xwidth,yheight;
+  int tindex;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -51,21 +52,28 @@ INITIALIZE
   V=K2V*(2*PI/lambda);
   E=VS2E*V*V;
   T=L1/V;
-  sprintf(cylopts,"banana, angle limits=[%g %g] bins=%i",thmin,thmax,bins);
-  sprintf(psdopts,"banana, angle limits=[%g %g] bins=%i, y bins=%i",thmin,thmax,bins,bins);
-  sprintf(tofopts,"banana, angle limits=[%g %g] bins=%i, tof limits=[0 0.03] bins=%i",thmin,thmax,bins,bins);
+  sprintf(cylopts,"banana, theta limits=[%g %g] bins=%i",thmin,thmax,bins);
+  sprintf(psdopts,"banana, theta limits=[%g %g] bins=%i, y bins=%i",thmin,thmax,bins,bins);
+  sprintf(tofopts,"banana, theta limits=[%g %g] bins=%i, tof limits=[0 0.03] bins=%i",thmin,thmax,bins,bins);
 
   if (focus_ah && focus_aw && !focus_yh && !focus_xw) {
     // calculate PSD monitor size
     xwidth = 1.05*sin(DEG2RAD*focus_aw);
     yheight = 1.05*sin(DEG2RAD*focus_ah);
+    tindex=2;
   } else if (!focus_ah && !focus_aw && focus_yh && focus_xw) {
     // just focus to the monitor
     xwidth = 1.05*focus_xw;
     yheight = 1.05*focus_yh;
+    tindex=2;
   } else {
-    fprintf(stderr,"Please use either focus_aw & focus_ah or focus_xw and focus_yh!\n");
-    exit(-1);
+    printf("Running without focusing!\n");
+    focus_xw = 0;
+    focus_yh = 0;
+    focus_aw = 0;
+    focus_ah = 0;
+    xwidth=1; yheight=1;
+    tindex=0;
   }
   printf("Monitor size is %g x %g \n",xwidth,yheight);
   
@@ -92,7 +100,7 @@ COMPONENT mon_cradle = Arm()
 COMPONENT Sample = Incoherent(
   radius = 0.0005,
   yheight = 0.001,
-  target_index = 2,
+  target_index = tindex,
   focus_aw = focus_aw,
   focus_ah = focus_ah,
   focus_xw = focus_xw,
@@ -107,7 +115,7 @@ COMPONENT ScatterArm = Arm()
 ROTATED (0,omega,0) RELATIVE mon_cradle  
 
 COMPONENT PSD = PSD_monitor(xwidth=xwidth, yheight=yheight, filename="PSD", restore_neutron=1)
-   AT (0, 0, 1) RELATIVE  ScatterArm
+  WHEN (tindex) AT (0, 0, 1) RELATIVE  ScatterArm
 
 COMPONENT CylMon = Cyl_monitor(
   thmin=thmin,thmax=thmax, nr = bins,
