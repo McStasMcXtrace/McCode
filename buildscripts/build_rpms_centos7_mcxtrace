@@ -31,7 +31,7 @@ WORK=`pwd`
 ./mkdist mcxtrace-clusterscripts $1 tools/cluster-scripts/ "" rpm64 "" -- rpm
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" rpm64 "" -- rpm
 ./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" rpm64 "" -- rpm
-./mkdist mcxtrace-mcpl $1 3rdparty/mcpl-patches "" rpm64 "" -- rpm
+./mkdist mcxtrace-mcpl $1 3rdparty/mcpl-package "" rpm64 "" -- rpm
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
