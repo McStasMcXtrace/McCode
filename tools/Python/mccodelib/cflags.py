@@ -7,17 +7,17 @@ import pathlib
 from . import mccode_config
 
 def evaluate_dependency_str( depstr, verbose=False ):
-    """Evaluates CMD(), ENV() and DATAFILE() parts of DEPENDENCY (a.k.a. "CFLAGS")
+    """Evaluates CMD(), ENV() and GETPATH() parts of DEPENDENCY (a.k.a. "CFLAGS")
     strings.
 
-    If neither "CMD(", "ENV(" or "DATAFILE(" is found in the input string, the input
+    If neither "CMD(", "ENV(" or "GETPATH(" is found in the input string, the input
     string will always be returned completely unchanged!
 
     Input can either be bytes or str objects, and an object of the same type
     will be returned.
 
     The current implementation does not support usage of parentheses inside the
-    CMD(..), ENV(..) or DATAFILE(..) blocks, nor nesting of these apart from the fact
+    CMD(..), ENV(..) or GETPATH(..) blocks, nor nesting of these apart from the fact
     that ENV(..) and DATAFIFILE(..) blocks can be used inside CMD(..) blocks.
 
     """
@@ -33,7 +33,7 @@ def evaluate_dependency_str( depstr, verbose=False ):
 
     s_ev = to_target_fmt('ENV(')
     s_cmd = to_target_fmt('CMD(')
-    s_df = to_target_fmt('DATAFILE(')
+    s_df = to_target_fmt('GETPATH(')
 
     if not s_ev in depstr and not s_cmd in depstr and not s_df in depstr:
         return depstr #<--- early exit for most callers
@@ -56,7 +56,7 @@ def evaluate_dependency_str( depstr, verbose=False ):
 
     def evalfct_df(s):
         dfile=as_str(s.strip())
-        fullfile=pathlib.PurePath(mccode_config.configuration['MCCODE_LIB_DIR']).joinpath('data',dfile)
+        fullfile=pathlib.Path(mccode_config.configuration['MCCODE_LIB_DIR']).joinpath(dfile).absolute().resolve()
 
         Path=str(fullfile)
         if verbose:
