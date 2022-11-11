@@ -79,7 +79,7 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display" @ONLY)
 
 # Configure internal naming and how we call mcrun/mxrun across systems
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.py" "${CMAKE_CURRENT_SOURCE_DIR}/${P}display.py" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.py" "${WORK}/${P}display.py" @ONLY)
 
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py")
