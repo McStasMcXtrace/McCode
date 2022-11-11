@@ -56,7 +56,7 @@ def evaluate_dependency_str( depstr, verbose=False ):
 
     def evalfct_df(s):
         dfile=as_str(s.strip())
-        fullfile=pathlib.Path(mccode_config.configuration['MCCODE_LIB_DIR']).joinpath(dfile).absolute().resolve()
+        fullfile=pathlib.Path(mccode_config.configuration['MCCODE_LIB_DIR']).joinpath(dfile).absolute().resolve().as_posix()
 
         returnpath=str(fullfile)
         if verbose:
