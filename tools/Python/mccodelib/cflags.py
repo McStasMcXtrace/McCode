@@ -58,10 +58,10 @@ def evaluate_dependency_str( depstr, verbose=False ):
         dfile=as_str(s.strip())
         fullfile=pathlib.Path(mccode_config.configuration['MCCODE_LIB_DIR']).joinpath(dfile).absolute().resolve()
 
-        Path=str(fullfile)
+        returnpath=str(fullfile)
         if verbose:
-            print(f"   --> pointing datafile {dfile} to {Path}")
-        return to_target_fmt(Path)
+            print(f"   --> pointing datafile {dfile} to {returnpath}")
+        return to_target_fmt(returnpath)
 
     def evalfct_env(s):
         ev=as_str(s.strip())
