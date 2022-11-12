@@ -46,6 +46,18 @@ def add_mcrun_options(parser):
         action='store_true',
         help='force rebuilding of instrument')
 
+    add('--D1',
+        metavar='D1',
+        help='set extra -D args (implies -c)')
+
+    add('--D2',
+        metavar='D2',
+        help='set extra -D args (implies -c)')
+
+    add('--D3',
+        metavar='D3',
+        help='set extra -D args (implies -c)')
+
     add('-p', '--param',
         metavar='FILE',
         help='read parameters from file FILE')
