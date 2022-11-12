@@ -43,6 +43,7 @@ DECLARE %{
   double V,E,T;
   double xwidth,yheight;
   int tindex;
+  #pragma acc declare create(tindex)
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -76,7 +77,7 @@ INITIALIZE
     tindex=0;
   }
   printf("Monitor size is %g x %g \n",xwidth,yheight);
-  
+  #pragma acc update device(tindex)
 %}
 
 /* Here comes the TRACE section, where the actual      */
