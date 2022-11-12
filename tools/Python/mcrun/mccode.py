@@ -128,7 +128,16 @@ class McStas:
         existingC = findReusableFile(self.path,
                                      [self.cpath, x_path(self.cpath)])
 
-        if not options.force_compile and not options.no_main and existingC is not None:
+        if self.options.D1 is not None:
+            options.force_compile=True
+
+        if self.options.D2 is not None:
+            options.force_compile=True
+
+        if self.options.D3 is not None:
+            options.force_compile=True
+
+        if not options.force_compile and existingC is not None:
             LOG.info('Using existing c-file: %s', existingC)
             self.cpath = existingC
         else:
@@ -155,7 +164,10 @@ class McStas:
 
         # Setup cflags
         cflags = ['-lm']  # math library
-        cflags += [self.options.mpi and '-DUSE_MPI' or '-UUSE_MPI']  # MPI
+        cflags += [self.options.mpi and mccode_config.compilation['MPIFLAGS'] or '']  # MPI
+        cflags += [self.options.D1 is not None and "-D" + self.options.D1 or ' ']  # DEFINE1
+        cflags += [self.options.D2 is not None and "-D" + self.options.D2 or ' ']  # DEFINE2
+        cflags += [self.options.D3 is not None and "-D" + self.options.D3 or ' ']  # DEFINE3
         cflags += options.no_cflags and ['-O0'] or mccode_config.compilation['CFLAGS'].split()  # cflags
         # Look for CFLAGS in the generated C code
         ccode = open(self.cpath,'rb')
