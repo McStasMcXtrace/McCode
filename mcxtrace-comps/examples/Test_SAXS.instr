@@ -18,8 +18,8 @@
 * %Example: SAMPLE=0 Detector: Monitor_I=2.87281e-14
 * %Example: SAMPLE=1 Detector: Monitor_I=2.82056e-14
 * %Example: SAMPLE=4 Detector: Monitor_I=1.15047e-10
-* %Example: -n 1e5 SAMPLE=6 Detector: Monitor_I=4.21283e-16
-* %Example: -n 1e4 SAMPLE=7 Detector: Monitor_I=7.22654e-14
+* Example: -n 1e5 SAMPLE=6 Detector: Monitor_I=4.21283e-16
+* Example: -n 1e4 SAMPLE=7 Detector: Monitor_I=7.22654e-14
 * %Example: SAMPLE=10 Detector: Monitor_I=3.25215e-16
 * %Example: SAMPLE=11 Detector: Monitor_I=5.22684e-15
 *
