@@ -59,7 +59,7 @@ Roughness = 5.0, Concentration = 0.01, RhoSolvent = 6.4e-14, AbsorptionCrosssect
 xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
 
 OUTPUT PARAMETERS ()
-DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
+DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -Wl,-rpath,@MCCODE_LIB@/miniconda3/lib -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
 NOACC
 
 SHARE
