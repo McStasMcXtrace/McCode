@@ -115,7 +115,7 @@ TRACE
       AreaOfSlice = fabs((cos(2.0 * TwoThetaLow) - cos(2.0 * TwoThetaHigh)) * 2.0 * PI);
 
 #pragma acc atomic
-      NofR[i]++;
+      NofR[i] = NofR[i] + 1;
       double p_A=p/AreaOfSlice;
 #pragma acc atomic
       IofR[i] += p_A;
@@ -137,7 +137,7 @@ TRACE
       AreaOfSlice = fabs((cos(2.0 * TwoThetaLow) - cos(2.0 * TwoThetaHigh)) * 2.0 * PI);
 
 #pragma acc atomic
-      ++Nofq[i];
+      Nofq[i] = Nofq[i] + 1;
       double p_A=p/AreaOfSlice;
 #pragma acc atomic
       Iofq[i] += p_A;
