@@ -270,8 +270,7 @@ FINALLY
 #endif  
         //Adding a legend to the graph would be good, need to find out how to do that at a later date. todo            
         // This set of defines is to avoid getting a '.' in the component name
-	 Coords compcurpos;
-	 mcdetector_out_0D("Wavelength(Ang) as a function of x_screw(mm)", number_events_w_monitor, w_monitor_value, w_monitor_error, "Wavelength", compcurpos);
+	 mcdetector_out_0D("Wavelength(Ang) as a function of x_screw(mm)", number_events_w_monitor, w_monitor_value, w_monitor_error, "Wavelength", coords_set(0,0,0));
 
     }
 %}
