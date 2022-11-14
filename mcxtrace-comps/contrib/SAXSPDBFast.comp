@@ -150,7 +150,7 @@ SHARE
 		gsl_sf_bessel_jl_array(SAXSPDBOrderOfHarmonics, q * Radius, Bessel);
 
 		for (i = 0; i <= SAXSPDBOrderOfHarmonics; ++i) {
-		    gsl_sf_legendre_sphPlm_array(SAXSPDBOrderOfHarmonics, i, cos(Theta), &Legendre[i]);
+		    gsl_sf_legendre_array(SAXSPDBOrderOfHarmonics, i, cos(Theta), &Legendre[i]);
 
 		    for(j = i; j <= SAXSPDBOrderOfHarmonics; ++j) {
 		        Matrix[j][i] += sqrt(4.0 * PI) * cpow(_Complex_I, j) * DeltaRhoProtein * Bessel[j] * Legendre[j] * Polar(1.0, -i * Concentration);

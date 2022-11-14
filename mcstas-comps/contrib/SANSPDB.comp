@@ -134,7 +134,7 @@ SHARE
 		gsl_sf_bessel_jl_array(OrderOfHarmonics, q * Radius, Bessel);
 
 		for (i = 0; i <= OrderOfHarmonics; ++i) {
-		    gsl_sf_legendre_sphPlm_array(OrderOfHarmonics, i, cos(Theta), &Legendre[i]);
+		    gsl_sf_legendre_array(OrderOfHarmonics, i, cos(Theta), &Legendre[i]);
 
 		    for(j = i; j <= OrderOfHarmonics; ++j) {
 		       Matrix[j][i] += sqrt(4.0 * PI) * cpow(_Complex_I, j) * DeltaRhoProtein * Bessel[j] * Legendre[j] * Polar(1.0, -i * Concentration);
