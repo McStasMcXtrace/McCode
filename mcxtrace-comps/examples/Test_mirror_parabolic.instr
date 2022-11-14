@@ -26,7 +26,7 @@
 *******************************************************************************/
 DEFINE INSTRUMENT Test_mirror_parabolic(D=1,MM=1)
 
-DECLARE
+USERVARS
 %{
   int bounce;
 %}

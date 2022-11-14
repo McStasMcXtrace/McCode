@@ -167,16 +167,19 @@ COMPONENT PBD_Rigaku = Source_lab(
 AT (0,source_y, 0) RELATIVE Origin
 ROTATED (source_rotation, 0, 90) RELATIVE Origin
 EXTEND %{
-    if(INSTRUMENT_GETPAR(polarization)[0]=='0') {
+    if(INSTRUMENT_GETPAR(polarization)[0],'0') {
         Ex=0; Ey=0; Ez=0;
     } else if (INSTRUMENT_GETPAR(polarization)[0]=='x') {
         Ex=0; Ey=1; Ez=0; // x & y are reversed by 90 degree rotation of source
     } else if (INSTRUMENT_GETPAR(polarization)[0]=='y') {
         Ex=1; Ey=0; Ez=0; // x & y are reversed by 90 degree rotation of source
-    } else {
+    }
+    #ifndef OPENACC
+    else {
       fprintf(stderr, "ERROR (%s): invalid polarization\n",instrument_name);
       exit(-1);
     }
+    #endif
 %}
 
 COMPONENT mirror_arm = Arm()
