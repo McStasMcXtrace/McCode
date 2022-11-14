@@ -108,11 +108,11 @@ TRACE
         j = floor((v_div + maxdiv_v)*nv/(2.0*maxdiv_v));
         double p2=p*p;
 #pragma acc atomic
-        Div_N[i][j]++;
+        Div_N[i][j] = Div_N[i][j] + 1;
 #pragma acc atomic
-        Div_p[i][j] += p;
+        Div_p[i][j] = Div_p[i][j] + p;
 #pragma acc atomic
-        Div_p2[i][j] += p2;
+        Div_p2[i][j] = Div_p2[i][j] + p2;
         SCATTER;
       }
     }   
