@@ -13,7 +13,7 @@
 *
 * Simply a bending magnet illuminating a reflection grating.
 *
-* %Example: E0=1 Detector: psd_mosnitor_I=4.08363e+12
+* %Example: E0=1 Detector: psd_monitor_I=3.79378e+06
 *
 * %Parameters
 * E0: [keV] Source's center of emitted energy spectrum
@@ -99,7 +99,7 @@ COMPONENT Monitor_location = Arm()
 AT (0,749.1e-3,0) RELATIVE PREVIOUS
 ROTATED (90, 0, 0) RELATIVE PREVIOUS
 
-COMPONENT psd_mosnitor = PSD_monitor(
+COMPONENT psd_monitor = PSD_monitor(
     filename="psd", 
     xmin=-0.01, 
     xmax=0.01,
