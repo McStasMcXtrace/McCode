@@ -109,7 +109,7 @@ TRACE
   
   if(fabs(pol_proj)>1) {
         if (fabs(pol_proj)<1+FLT_EPSILON){
-            pol_proj=1;
+            pol_proj /= fabs(pol_proj);
         }
         else{
             ABSORB;
@@ -137,16 +137,20 @@ TRACE
 
 SAVE
 %{
+#ifdef USE_MPI
+  if (mpi_node_count>1) {
+      mc_MPI_Sum(&PSDpol_p[0][0], (int)nx*ny);
+      mc_MPI_Sum(&PSDpol_p2[0][0], (int)nx*ny);
+      mc_MPI_Sum(&PSDpol_N[0][0], (int)nx*ny);
+      mc_MPI_Sum(&PSDpsum[0][0], (int)nx*ny);
+  }
+#endif /* USE_MPI */
   if (!nowritefile) {
     for (int i=0;i<nx;i++){
       for (int j=0;j<ny;j++){
         if (PSDpsum[i][j] && PSDpol_N[i][j]){
           PSDpol_p[i][j]  /= PSDpsum[i][j];
-#ifdef USE_MPI
-          PSDpol_p[i][j] /= mpi_node_count;
-#endif
-	  PSDpol_p2[i][j] /= PSDpsum[i][j];
-          //PSDpol_p2[i][j] = sqrt(PSDpol_p2[i][j] - PSDpol_p[i][j]*PSDpol_p[i][j]);
+	        PSDpol_p2[i][j] /= PSDpsum[i][j];
         }
       }
     }
