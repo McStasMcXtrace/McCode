@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 # This will install MCPL components
 project(MCPL VERSION 1.5.1 LANGUAGES CXX C)
-set(CPACK_PACKAGE_NAME NCrystal)
+set(CPACK_PACKAGE_NAME MCPL)
 set(CPACK_PACKAGE_CONTACT       "mcpl-developers@cern.ch")
 set(CPACK_PACKAGE_VERSION       "1.5.1")
 set(CPACK_PACKAGE_VERSION_MAJOR "1.5")
