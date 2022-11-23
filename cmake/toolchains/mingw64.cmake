@@ -28,6 +28,7 @@ set(PERL_SUFFIX "pl")
 
 # Set executable extension
 set(EXE_SUFFIX   "exe")
+set(CMAKE_EXECUTABLE_SUFFIX ".exe")
 
 # Commands for running various external tools
 set(BROWSER "start")
