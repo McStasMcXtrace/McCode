@@ -185,7 +185,7 @@ class McStas:
                 label,flags = line.split('=',1)
 
                 #Support CMD(..) and ENV(..) in cflags:
-                flags = mccodelib.cflags.evaluate_dependency_str( flags )
+                flags = mccodelib.cflags.evaluate_dependency_str( flags, options.verbose)
 
                 flags = re.sub(r'\@MCCODE_LIB\@', re.sub(r'\\','/', MCCODE_LIB), flags)
                 flags = flags.split(' ')
