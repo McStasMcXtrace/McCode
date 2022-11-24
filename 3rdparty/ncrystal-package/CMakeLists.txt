@@ -33,5 +33,16 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
+if(WINDOWS)
+  # batch snippets for the Python tools
+  foreach (tool ncrystal-config ncrystal_endf2ncmat ncrystal_hfg2ncmat ncrystal_inspectfile ncrystal_ncmat2cpp ncrystal_ncmat2hkl ncrystal_preparemcstasdir ncrystal_vdos2ncmat ncrystal_verifyatompos)
+    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/batches/${tool}.bat.in" "${WORK}/${tool}.bat" @ONLY)
+    install(
+      PROGRAMS "${WORK}/${tool}.bat"
+      DESTINATION "${bin}"
+      )
+  endforeach()
+endif()
+
 add_subdirectory(ncrystal)
 
