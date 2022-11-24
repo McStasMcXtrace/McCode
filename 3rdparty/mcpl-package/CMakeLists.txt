@@ -42,13 +42,13 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 if(WINDOWS)
   # batch snippets for the Python tools
-  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcpl-config.bat.in" "${WORK}/mcpl-config.bat" @ONLY)
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/batches/mcpl-config.bat.in" "${WORK}/mcpl-config.bat" @ONLY)
   install(
     PROGRAMS "${WORK}/mcpl-config.bat"
     DESTINATION "${bin}/mcpl-config.bat"
     )
 
-  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/pymcpltool.bat.in" "${WORK}/pymcpltool.bat" @ONLY)
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/batches/pymcpltool.bat.in" "${WORK}/pymcpltool.bat" @ONLY)
   install(
     PROGRAMS "${WORK}/pymcpltool.bat"
     DESTINATION "${bin}/pymcpltool.bat"
