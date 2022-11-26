@@ -1959,7 +1959,7 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("  #endif");
   coutf("  #endif");
   coutf("");
-    /* Check if instrument uses JUMPS */
+    /* Check if i7nstrument uses JUMPS */
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL) {
     if (list_len(comp->jump) > 0) { // JUMP ITERATE counters
@@ -2061,15 +2061,17 @@ int cogen_rt_funnel(struct instr_def *instr)
     coutf("");
     coutf("      // %s", comp->name);
     coutf("    if (!ABSORBED && _particle->_index == %i) {", comp->index);
+
     // coordinate transformations (wrt to PREVIOUS)
-    coutf("        if (_%s_var._rotation_is_identity)", comp->name);
-    coutf("          coords_get("
+    if (comp->skip_transform == 0) {
+      coutf("        if (_%s_var._rotation_is_identity)", comp->name);
+      coutf("          coords_get("
     	"coords_add(coords_set(x,y,z), _%s_var._position_relative),"
     	"&x, &y, &z);", comp->name);
-    cout( "        else");
-    coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
-    cout( "        _particle_save = *_particle;");
-
+      cout( "        else");
+      coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
+      cout( "        _particle_save = *_particle;");
+    }
     // call the component with TRACE and/or EXTEND lines
     if (list_len(comp->def->trace_code->lines) > 0 || list_len(comp->extend->lines) > 0) {
       // WHEN
