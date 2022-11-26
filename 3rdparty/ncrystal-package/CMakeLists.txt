@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.17)
 
 # This will install NCrystal components
 project(NCrystal VERSION 3.4.1 LANGUAGES CXX C)

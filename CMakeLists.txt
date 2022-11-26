@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.16.0)
-cmake_policy(VERSION 3.16.0)
+cmake_minimum_required(VERSION 3.17.0)
+cmake_policy(VERSION 3.17.0)
 
 # This file will build McStas and/or McXtrace
 project(mccode C)

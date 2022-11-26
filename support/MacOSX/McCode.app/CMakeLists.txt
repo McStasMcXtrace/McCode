@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16.0)
+cmake_minimum_required(VERSION 3.17.0)
 
 # This will install the McCode app bundle
 project(mcstas-app C)
