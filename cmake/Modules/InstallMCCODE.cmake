@@ -258,7 +258,6 @@ macro(installMCCODE)
     work/src/port.c
     work/src/port.h
     work/src/symtab.c
-    work/src/re.c
 
     # files generated with flex and bison
     work/src/lex.yy.c
