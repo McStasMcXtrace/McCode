@@ -132,7 +132,7 @@ def get_options():
                          prefix+"display"+suffix+" --format=VRML"]
 
  
-    mcrun_lst =     [prefix+"run", prefix+"run --openacc", prefix+"run --autoplot", "mcsub_pbs"+suffix2+" "+prefix+"run", "mcsub_slurm"+suffix2+" "+prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
+    mcrun_lst =     [prefix+"run", prefix+"run --autoplot", "mcsub_pbs"+suffix2+" "+prefix+"run", "mcsub_slurm"+suffix2+" "+prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
         
     mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot-matplotlib",prefix+"plot"+suffix, prefix+"plot"+suffix+" --format=Matlab", prefix+"plot-matlab"]
 
