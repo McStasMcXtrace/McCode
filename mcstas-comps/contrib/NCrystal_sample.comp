@@ -73,7 +73,11 @@ NOACC /* Notice: you must remove this line if using the legacy McStas 2.x branch
 SHARE
 %{
   /* common includes, defines, functions, etc. shared by all instances of this component */
+#ifndef WIN32
 #include "NCrystal/ncrystal.h"
+#else
+#include "NCrystal\\ncrystal.h"
+#endif
 #include "stdio.h"
 #include "stdlib.h"
 #ifndef NCMCERR2
