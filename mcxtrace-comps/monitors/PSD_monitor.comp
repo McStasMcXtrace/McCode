@@ -77,6 +77,9 @@ INITIALIZE
       PSD_p = create_darr2d(1, nr);
       PSD_p2 = create_darr2d(1, nr);
     }
+
+    // Use instance name for monitor output if no input was given
+    if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
 %}
 
 TRACE

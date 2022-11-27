@@ -57,7 +57,7 @@
 
 DEFINE COMPONENT PSD_monitor_coh
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (int nx=90, int ny=90, string filename="", restore_xray=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, ratio=1, int centering=1, int nowritefile=0)
+SETTING PARAMETERS (int nx=90, int ny=90, string filename=0, restore_xray=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, ratio=1, int centering=1, int nowritefile=0)
 OUTPUT PARAMETERS ()
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)*/
 SHARE
@@ -89,6 +89,9 @@ INITIALIZE
     PSD_p2 = create_darr2d(nx,ny);
     PSD_phi_real = create_darr2d(nx,ny);
     PSD_phi_imag = create_darr2d(nx,ny);
+
+    // Use instance name for monitor output if no input was given
+    if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
 %}
 
 TRACE

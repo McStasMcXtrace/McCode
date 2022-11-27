@@ -88,6 +88,9 @@ INITIALIZE
      t_min=0;
      t_max=nt*dt+tmin;
     }
+
+    // Use instance name for monitor output if no input was given
+    if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
   %}
 TRACE
   %{

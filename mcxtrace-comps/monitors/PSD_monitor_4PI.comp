@@ -45,7 +45,7 @@
 
 DEFINE COMPONENT PSD_monitor_4PI
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius=1, restore_xray=0, int nx=90, int ny=90, string filename="")
+SETTING PARAMETERS (radius=1, restore_xray=0, int nx=90, int ny=90, string filename=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -62,6 +62,9 @@ INITIALIZE
   PSD_N = create_darr2d(nx, ny);
   PSD_p = create_darr2d(nx, ny);
   PSD_p2 = create_darr2d(nx, ny);
+
+  // Use instance name for monitor output if no input was given
+  if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
 %}
 TRACE
 %{

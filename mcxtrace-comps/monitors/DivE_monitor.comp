@@ -75,6 +75,9 @@ INITIALIZE
     DivE_p = create_darr2d(nE, nh);
     DivE_p2 = create_darr2d(nE, nh);
     NORM(nx,ny,nz);
+
+    // Use instance name for monitor output if no input was given
+    if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
 %}
 
 TRACE
