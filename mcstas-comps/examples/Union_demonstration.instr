@@ -396,7 +396,7 @@ EXTEND
 
 // Using mcdisplay and -inspect m4pi_two_or_more_samples one can show only
 //  trajectories where the ray scatters from two or more of the samples
-COMPONENT m4pi_two_or_more_samples = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events.dat", restore_neutron=1)
+COMPONENT m4pi_two_or_more_samples = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events2.dat", restore_neutron=1)
 WHEN (scattered_1 + scattered_2 + scattered_3 + scattered_4 > 1)
 AT (0, 0, 0) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center
