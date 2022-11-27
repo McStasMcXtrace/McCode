@@ -51,7 +51,7 @@
 DEFINE COMPONENT TOF_PSD_monitor_rad
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (nr=100, nt=100, int nowritefile=0,
-  string filename="", string filename_av="", rmax=0.2, tmin, tmax, restore_neutron=0)
+  string filename=0, string filename_av=0, rmax=0.2, tmin, tmax, restore_neutron=0)
 OUTPUT PARAMETERS ()
 
 DECLARE
@@ -85,6 +85,12 @@ INITIALIZE
       TOFPSDr_p[i][j] = 0;
       TOFPSDr_p2[i][j] = 0;
     }
+
+  // Use instance name for monitor output if no input was given
+  if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
+
+  // Use instance name for monitor output if no input was given
+  if (!strcmp(filename_av,"\0")) sprintf(filename,NAME_CURRENT_COMP,"_av");
 %}
 
 TRACE

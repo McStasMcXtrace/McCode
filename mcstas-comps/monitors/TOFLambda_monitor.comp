@@ -92,6 +92,9 @@ INITIALIZE
       TOFL_p2[j][i] = 0;
     }
   }
+
+  // Use instance name for monitor output if no input was given
+  if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
 %}
 
 TRACE

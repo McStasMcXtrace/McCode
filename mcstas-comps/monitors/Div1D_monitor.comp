@@ -85,6 +85,9 @@ INITIALIZE
     Div_p[i] = 0;
     Div_p2[i] = 0;
   }
+
+  // Use instance name for monitor output if no input was given
+  if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
 %}
 
 TRACE

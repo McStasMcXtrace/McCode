@@ -57,7 +57,7 @@
 
 DEFINE COMPONENT Sqw_monitor
 DEFINITION PARAMETERS ()
-  SETTING PARAMETERS (qmin=0,qmax=2,Emin=0,Emax=5,int nq=90, int nE=90, string filename, int nowritefile=0, string vix="", string viy="", string viz="", radius=0, yheight=0)
+  SETTING PARAMETERS (qmin=0,qmax=2,Emin=0,Emax=5,int nq=90, int nE=90, string filename=0, int nowritefile=0, string vix="", string viy="", string viz="", radius=0, yheight=0)
 OUTPUT PARAMETERS ()
 
 DECLARE
@@ -76,6 +76,9 @@ INITIALIZE
   M_p2=create_darr2d(nE,nq);
   
   dE=(Emax-Emin)/(1.0*nE-1);
+
+  // Use instance name for monitor output if no input was given
+  if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
 %}
 TRACE
   %{

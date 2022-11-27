@@ -84,6 +84,10 @@ INITIALIZE
     PSDlin_p[i] = 0;
     PSDlin_p2[i] = 0;
   }
+
+  // Use instance name for monitor output if no input was given
+  if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
+  
   sprintf(difilename,"%s_diff",filename);
 %}
 

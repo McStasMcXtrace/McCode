@@ -72,7 +72,7 @@ DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (nlam=101, nt=1001, int nowritefile=0,
   lambda_0=0, lambda_1=20, restore_neutron=0, Freq, int tofcuts=0,
-  int toflambda=0, xwidth = 0.01, yheight=0.01, source_dist=1, string filename,
+  int toflambda=0, xwidth = 0.01, yheight=0.01, source_dist=1, string filename=0,
   t_0=0, t_1=20000, srcarea=1)
 
 OUTPUT PARAMETERS ()
@@ -158,6 +158,8 @@ INITIALIZE
 
   ster = xwidth * yheight/(source_dist*source_dist);
 
+  // Use instance name for monitor output if no input was given
+  if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);  
 %}
 
 TRACE

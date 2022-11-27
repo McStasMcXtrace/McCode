@@ -104,6 +104,10 @@ DECLARE%{
 
 
 INITIALIZE %{
+
+  // Use instance name for monitor output if no input was given
+  if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
+  
   buffer_index = 0;
 
   reso_events = 0;

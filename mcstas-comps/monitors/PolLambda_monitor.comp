@@ -48,7 +48,7 @@
 DEFINE COMPONENT PolLambda_monitor
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth=0.1, yheight=0.1, nL=20, npol=21, restore_neutron=0,
-  string filename, int nowritefile=0, mx=0, my=0, mz=0, Lmin, Lmax)
+  string filename=0, int nowritefile=0, mx=0, my=0, mz=0, Lmin, Lmax)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -92,6 +92,8 @@ INITIALIZE
   PolL_p = create_darr2d(nL, npol);
   PolL_p2 = create_darr2d(nL, npol);
 
+  // Use instance name for monitor output if no input was given
+  if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
 %}
 
 TRACE
