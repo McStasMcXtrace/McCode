@@ -92,6 +92,9 @@ INITIALIZE
     if (verbose) {
       printf("%s: range 2theta=(%g,%g), time(%g,%g)\n",NAME_CURRENT_COMP,amin,amax,tmin/1000,tmax/1000);
     }
+
+    // Use instance name for monitor output if no input was given
+    if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
   %}
 TRACE
   %{
