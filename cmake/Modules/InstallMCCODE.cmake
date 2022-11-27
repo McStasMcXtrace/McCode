@@ -52,7 +52,8 @@ macro(installMCCODE)
   ## NSIS
   set(CPACK_NSIS_PACKAGE_NAME "${MCCODE_STRING}")
   set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING}")
-
+  set(CPACK_NSIS_UNINSTALL_NAME "${FLAVOR}-uninstall")
+  
   include(CPack)
   
   string(TIMESTAMP MCCODE_YEAR "%Y")
