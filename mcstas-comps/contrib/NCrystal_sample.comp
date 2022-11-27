@@ -72,7 +72,11 @@ DEPENDENCY "-Wl,-rpath,CMD(ncrystal-config --show libdir) -LCMD(ncrystal-config 
 SHARE
 %{
   /* common includes, defines, functions, etc. shared by all instances of this component */
+#ifndef WIN32
 #include "NCrystal/ncrystal.h"
+#else
+#include "NCrystal\\ncrystal.h"
+#endif
 #include "stdio.h"
 #include "stdlib.h"
 #ifndef NCMCERR2
