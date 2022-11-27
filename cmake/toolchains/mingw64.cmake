@@ -19,8 +19,8 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
-# Avoid ZLIB
-set(BUILD_WITHZLIB OFF)
+# Fetch ZLIB
+set(DMCPL_ZLIB FETCH)
 
 # Python and Perl suffixes
 set(PYTHON_SUFFIX "py")
@@ -28,6 +28,7 @@ set(PERL_SUFFIX "pl")
 
 # Set executable extension
 set(EXE_SUFFIX   "exe")
+set(CMAKE_EXECUTABLE_SUFFIX ".exe")
 
 # Commands for running various external tools
 set(BROWSER "start")

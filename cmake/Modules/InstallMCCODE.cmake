@@ -9,7 +9,7 @@
 # After doing so (using set()) this module can be included with
 
 macro(AppendDef def)
-    set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} APPEND
       PROPERTY COMPILE_DEFINITIONS
       ${def}
       )
@@ -24,7 +24,7 @@ endmacro(AppendDefIf)
 
 macro(installMCCODE)
 
-  # Ignore CMake warning when setting "-Denable_mcstas=1"
+  # Ignore CMake warning when setting "-DBUILD_MCSTAS=1"
   option(enable_${FLAVOR} "This option is here for compatibility only." On)
   if (NOT enable_${FLAVOR})
     message(FATAL_ERROR "Cannot deselect ${FLAVOR} flavor.")
@@ -47,12 +47,13 @@ macro(installMCCODE)
   set(CPACK_DEBIAN_PACKAGE_DEPENDS       "build-essential, bash")
   set(CPACK_DEBIAN_PACKAGE_RECOMMENDS    "${FLAVOR}-comps-${MCCODE_VERSION}")
   set(CPACK_DEBIAN_PACKAGE_CONFLICTS    "${FLAVOR}-2.1rc1")
-  set(CPACK_DEBIAN_PACKAGE_SUGGESTS      "openmpi-bin, openmpi-dev")
+  set(CPACK_DEBIAN_PACKAGE_SUGGESTS      "openmpi-bin, libopenmpi-dev")
 
   ## NSIS
   set(CPACK_NSIS_PACKAGE_NAME "${MCCODE_STRING}")
   set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING}")
-
+  set(CPACK_NSIS_UNINSTALL_NAME "${FLAVOR}-uninstall")
+  
   include(CPack)
   
   string(TIMESTAMP MCCODE_YEAR "%Y")
@@ -60,11 +61,11 @@ macro(installMCCODE)
   ## Add global definitions
   # set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND PROPERTY COMPILE_DEFINITIONS
   AppendDef(MCCODE_NAME="${MCCODE_NAME}")
-	AppendDef(MCCODE_TARNAME="${MCCODE_TARNAME}")
-	AppendDef(MCCODE_VERSION="${MCCODE_VERSION}")
-	AppendDef(MCCODE_STRING="${MCCODE_STRING}")
-        AppendDef(MCCODE_BUGREPORT="www.${MCCODE_TARNAME}.org")
-	AppendDef(MCCODE_URL="")
+  AppendDef(MCCODE_TARNAME="${MCCODE_TARNAME}")
+  AppendDef(MCCODE_VERSION="${MCCODE_VERSION}")
+  AppendDef(MCCODE_STRING="${MCCODE_STRING}")
+  AppendDef(MCCODE_BUGREPORT="www.${MCCODE_TARNAME}.org")
+  AppendDef(MCCODE_URL="")
 
 	# -DCC_HAS_PROTOS=1
 	# -DSTDC_HEADERS=1
@@ -224,6 +225,7 @@ macro(installMCCODE)
     OUTPUT work/src/lex.yy.c
     COMMAND "${FLEX_EXECUTABLE}" -i "${PROJECT_SOURCE_DIR}/src/instrument.l"
     WORKING_DIRECTORY work/src
+    DEPENDS "${PROJECT_SOURCE_DIR}/src/instrument.l"
   )
 
 
@@ -232,6 +234,7 @@ macro(installMCCODE)
     OUTPUT work/src/instrument.tab.h work/src/instrument.tab.c
     COMMAND "${BISON_EXECUTABLE}" -v -d "${PROJECT_SOURCE_DIR}/src/instrument.y"
     WORKING_DIRECTORY work/src
+    DEPENDS "${PROJECT_SOURCE_DIR}/src/instrument.y" work/src/lex.yy.c
   )
 
   # Handling of system-provided random functions on windows - 
@@ -243,35 +246,26 @@ macro(installMCCODE)
 
   ## Build executable for flavor
   add_executable(
-	  ${FLAVOR}
-	  work/src/cexp.c
-	  work/src/cogen.c
-	  work/src/coords.c
-	  work/src/debug.c
+    ${FLAVOR}
+    work/src/cexp.c
+    work/src/cogen.c
+    work/src/coords.c
+    work/src/debug.c
     work/src/file.c
-	  work/src/list.c
+    work/src/list.c
     work/src/mccode.h
     work/src/memory.c
- 	  work/src/port.c
-	  work/src/port.h
-	  work/src/symtab.c
+    work/src/port.c
+    work/src/port.h
+    work/src/symtab.c
+    work/src/re.c
 
     # files generated with flex and bison
- 	  work/src/lex.yy.c
+    work/src/lex.yy.c
     work/src/instrument.tab.h
     work/src/instrument.tab.c
   )
 
-
-  if (NOT enable_mcxtrace)
-    ## Build McFormat executable
-    add_executable(
-	  "${FLAVOR_FMT}"
-	  work/src/mcformat.c
-    )
-    ## McFormat needs to be linked against m
-    target_link_libraries(${FLAVOR_FMT} m)
-  endif()
 
   ## Add install targets
   include(MCUtil)
@@ -288,13 +282,8 @@ macro(installMCCODE)
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
       DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-      )
-    if (NOT enable_mcxtrace)
-      install (
-        PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
-        DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-      )
-    endif()
+    )
+
     foreach (name environment module)
       configure_file(
 	      cmake/support/run-scripts/${name}.in
@@ -329,15 +318,8 @@ macro(installMCCODE)
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
       DESTINATION ${bin}
-      )
-    
-    if (NOT enable_mcxtrace)    
-      install (
-        PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
-        DESTINATION ${bin}
-      )
-    endif()
-  
+    )
+ 
     install(PROGRAMS
       cmake/support/install-scripts/postsetup.bat
       DESTINATION ${bin}

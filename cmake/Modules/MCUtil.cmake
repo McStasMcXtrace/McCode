@@ -1,3 +1,7 @@
+cmake_policy(VERSION 3.16.0)
+
+include(PlatformDefaults)
+
 # Install library files into lib/${FLAVOR}, while skipping unneeded files
 macro(installLib path)
   if(WINDOWS)
@@ -20,8 +24,8 @@ endmacro()
 
 # Check whether we are being run through mkdist
 macro(isMkDist outvar)
-  string(REPLACE "@" "_" TMP "@MCCODE_NAME@")
-  string(COMPARE NOTEQUAL "${TMP}" "_MCCODE_NAME_" ${outvar})
+  string(CONFIGURE "@MCCODE_NAME@" TMP @ONLY) # TMP is empty unless MCCODE_NAME is set already
+  string(LENGTH "${TMP}" ${outvar})
 endmacro()
 
 
@@ -57,17 +61,17 @@ macro(setupMCCODE FLAVOR)
 
   # Set macros
   if("${FLAVOR}" STREQUAL "mcstas")
+
     set(NAME             "McStas")
 
     set(FLAVOR           "mcstas")
     set(FLAVOR_UPPER     "MCSTAS")
 
-    set(FLAVOR_FMT       "mcformat")
-
     set(FLAVOR_LIB       "nlib")
     set(MCCODE_LIBENV    "${FLAVOR_UPPER}")
 
     set(MCCODE_PARTICLE  "neutron")
+    set(MCCODE_PARTICLE_CODE 2112)
     set(MCCODE_PROJECT    1)
 
     set(MCCODE_PREFIX     "mc")
@@ -79,21 +83,24 @@ macro(setupMCCODE FLAVOR)
     set(FLAVOR           "mcxtrace")
     set(FLAVOR_UPPER     "MCXTRACE")
 
-    set(FLAVOR_FMT       "mxformat")
-
     set(FLAVOR_LIB       "xlib")
     set(MCCODE_LIBENV    "${FLAVOR_UPPER}")
 
     set(MCCODE_PARTICLE "xray")
     set(MCCODE_PROJECT   2)
+    set(MCCODE_PARTICLE_CODE 22)
 
     set(MCCODE_PREFIX     "mx")
   endif()
 
+  # Set fallback "year"
+  if("${MCCODE_YEAR}" STREQUAL "")
+    set(MCCODE_YEAR "2100")
+  endif()
 
-  set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND PROPERTY COMPILE_DEFINITIONS
+  set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} APPEND PROPERTY COMPILE_DEFINITIONS
     NAME="${NAME}" FLAVOR="${FLAVOR}" FLAVOR_UPPER="${FLAVOR_UPPER}"
-    FLAVOR_FMT="${FLAVOR_FMT}" FLAVOR_LIB="${FLAVOR_LIB}"
+    FLAVOR_LIB="${FLAVOR_LIB}"
     MCCODE_LIBENV="${MCCODE_LIBENV}" MCCODE_PARTICLE="${MCCODE_PARTICLE}"
     MCCODE_PROJECT=${MCCODE_PROJECT}
     )
@@ -103,14 +110,15 @@ macro(setupMCCODE FLAVOR)
 
   if(MKDIST)
     ## Set mkdist-provided version
-    set(MCCODE_VERSION "@MCCODE_VERSION@")
-    set(MCCODE_NAME "@MCCODE_NAME@")
-    set(MCCODE_DATE "@MCCODE_DATE@")
-    set(MCCODE_STRING "@MCCODE_STRING@")
-    set(MCCODE_TARNAME "@MCCODE_TARNAME@")
+    string(CONFIGURE "@MCCODE_VERSION@" MCCODE_VERSION @ONLY)
+    string(CONFIGURE "@MCCODE_NAME@" MCCODE_NAME @ONLY)
+    string(CONFIGURE "@MCCODE_DATE@" MCCODE_DATE @ONLY)
+    string(CONFIGURE "@MCCODE_STRIN@" MCCODE_STRING @ONLY)
+    string(CONFIGURE "@MCCODE_TARNAME@" MCCODE_TARNAME @ONLY)
+    message(STATUS "Using provided settings MCCODE_VERSION=${MCCODE_VERSION}, MCCODE_NAME=${MCCODE_NAME}, MCCODE_DATE=${MCCODE_DATE}, MCCODE_STRING=${MCCODE_STRING}, MCCODE_TARNAME=${MCCODE_TARNAME}")
   else()
     ## Set Git-specific version
-    set(MCCODE_VERSION "2.9999-git")
+    set(MCCODE_VERSION "3.9999-git")
     set(MCCODE_NAME "${NAME}")
     set(MCCODE_DATE "git")
     set(MCCODE_STRING "${NAME} ${MCCODE_VERSION}, ${MCCODE_DATE}")
@@ -130,6 +138,8 @@ macro(setupMCCODE FLAVOR)
     set(CMAKE_INSTALL_PREFIX "C://")
     set(CPACK_NSIS_INSTALL_ROOT "C:\\\\${FLAVOR}-${MCCODE_VERSION}")
 
+    set(CPACK_NSIS_UNINSTALL_NAME "${CMAKE_PROJECT_NAME}-uninstall")
+    
     # Set BIN and LIB paths
     set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}${MCCODE_NAME}/${bin}/${FLAVOR}")
     set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}${MCCODE_NAME}/${lib}")
@@ -141,15 +151,6 @@ macro(setupMCCODE FLAVOR)
     set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}")
   endif()
 
-  # Set instrument suffix (after compilation)
-  if(NOT DEFINED OUT_SUFFIX)
-    if(DEFINED EXE_SUFFIX)
-      set(OUT_SUFFIX "${EXE_SUFFIX}")
-    else()
-      set(OUT_SUFFIX "out")
-    endif()
-  endif()
-
   # Helper for adding leading "."
   macro(addDot name val)
     if(NOT DEFINED ${name} AND NOT ${val} STREQUAL "")
@@ -157,17 +158,19 @@ macro(setupMCCODE FLAVOR)
     endif()
   endmacro()
 
-  # Helper for adding leading "-" and trailing "bat"
-  macro(addDashDotBat name val)
-    if(NOT DEFINED ${name} AND NOT ${val} STREQUAL "")
-      set(${name} "-${val}.bat")
+  # Set instrument suffix (after compilation)
+  if(NOT DEFINED MCCODE_EXECUTABLE_SUFFIX)
+    if(DEFINED EXE_SUFFIX)
+      set(MCCODE_EXECUTABLE_SUFFIX "${EXE_SUFFIX}")
+    else()
+      set(MCCODE_EXECUTABLE_SUFFIX "out")
     endif()
-  endmacro()
-  
+  endif()
+
   # Define suffix-macros that include a leading dot "."
-  addDot(DOT_EXE_SUFFIX "${EXE_SUFFIX}")
+  addDot(DOT_EXE_SUFFIX "${MCCODE_EXE_SUFFIX}")
   addDot(DOT_OUT_SUFFIX "${OUT_SUFFIX}")
-  
+
   addDot(DOT_PYTHON_SUFFIX "${PYTHON_SUFFIX}")
   addDot(DOT_PERL_SUFFIX   "${PERL_SUFFIX}")
 
@@ -195,7 +198,7 @@ macro(setupMCCODE FLAVOR)
   else()
 
     # Have CMake respect install prefix
-    message(${CMAKE_INSTALL_PREFIX})
+    message(STATUS "Install prefix -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}")
     set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
     set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 

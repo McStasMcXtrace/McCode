@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8.12)
 
 # This will install McStas components
 project(mcstas-comps C Fortran)
@@ -32,7 +32,7 @@ include(CPack)
 
 add_executable(
   cif2hkl
-  ${CMAKE_SOURCE_DIR}/libs/cif2hkl/cif2hkl.F90
+  ${CMAKE_CURRENT_SOURCE_DIR}/libs/cif2hkl/cif2hkl.F90
 )
 target_compile_options(cif2hkl PUBLIC "-ffree-line-length-512")
 
@@ -50,10 +50,10 @@ foreach(name contrib data examples misc monitors obsolete optics samples share s
 endforeach()
 
 # Include mcstas-comp revision tag file
-configure_file("${CMAKE_SOURCE_DIR}/revision.in" "${WORK}/revision" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/revision.in" "${WORK}/revision" @ONLY)
 
 # copy some descriptory files
-file(COPY "${CMAKE_SOURCE_DIR}/NOMENCLATURE" "${CMAKE_SOURCE_DIR}/README" DESTINATION "${WORK}")
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/NOMENCLATURE" "${CMAKE_CURRENT_SOURCE_DIR}/README.md" DESTINATION "${WORK}")
 
 if(WINDOWS)
   install(
@@ -67,7 +67,7 @@ if(WINDOWS)
   add_library(neutronics "STATIC" libs/neutronics/neutronics-subs.f)
 else()
   install(
-    FILES "${WORK}/revision" "${WORK}/NOMENCLATURE" "${WORK}/README"
+    FILES "${WORK}/revision" "${WORK}/NOMENCLATURE" "${WORK}/README.md"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}"
   )
 endif()
@@ -77,4 +77,3 @@ if (NOT WINDOWS)
 else()
   install(TARGETS neutronics DESTINATION "${lib}/libs/neutronics/")
 endif()
-

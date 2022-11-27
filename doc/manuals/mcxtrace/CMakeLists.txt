@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 # This will install McXtrace user and component manuals.
 set(FLAVOR mcxtrace)
-project(${FLAVOR}_manuals)
+project(${FLAVOR}_manuals C)
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
