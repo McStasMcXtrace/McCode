@@ -81,6 +81,12 @@ mcstatic unsigned long long int mcrun_num            = 0;
 #include "mcstas-globals.h"
 #endif /* !DANSE */
 
+/* SECTION: NeXus compression */
+
+#ifndef NX_COMPRESION
+#define NX_COMPRESSION NX_COMP_NONE
+#endif
+
 /* SECTION: MPI handling ==================================================== */
 
 #ifdef USE_MPI
@@ -1552,7 +1558,7 @@ int mcdetector_out_axis_nexus(NXhandle f, char *label, char *var, int rank, long
       axis[i] = min+(max-min)*(i+0.5)/length;
     /* create the data set */
     strcpy_valid(valid, label);
-    NXcompmakedata(f, valid, NX_FLOAT64, 1, &dim, NX_COMP_LZW, &dim);
+    NXcompmakedata(f, valid, NX_FLOAT64, 1, &dim, NX_COMPRESSION, &dim);
     /* open it */
     if (NXopendata(f, valid) != NX_OK) {
       fprintf(stderr, "Warning: could not open axis rank %i '%s' (NeXus)\n",
@@ -1593,7 +1599,7 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
   
   /* create the data set in NXdata group */
   NXMDisableErrorReporting(); /* unactivate NeXus error messages, as creation may fail */
-  ret = NXcompmakedata(f, part, NX_FLOAT64, detector.rank, fulldims, NX_COMP_LZW, dims);
+  ret = NXcompmakedata(f, part, NX_FLOAT64, detector.rank, fulldims, NX_COMPRESSION, dims);
   if (ret != NX_OK) {
     /* failed: data set already exists */
     int datatype=0;
