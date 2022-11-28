@@ -1580,6 +1580,7 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
 {
   
   int dims[3]={detector.m,detector.n,detector.p};  /* number of elements to write */
+  int fulldims[3]={detector.m,detector.n,detector.p};
   int signal=1;
   int exists=0;
   int current_dims[3]={0,0,0};
@@ -1588,15 +1589,11 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
   if (!f || !data || !detector.m || mcdisable_output_files) return(NX_OK);
   
   /* when this is a list, we set 1st dimension to NX_UNLIMITED for creation */
-  if (strcasestr(detector.format, "list")) dims[0] = NX_UNLIMITED;
+  if (strcasestr(detector.format, "list")) fulldims[0] = NX_UNLIMITED;
   
   /* create the data set in NXdata group */
   NXMDisableErrorReporting(); /* unactivate NeXus error messages, as creation may fail */
-  /* NXcompmakedata fails with NX_UNLIMITED */
-  if (strcasestr(detector.format, "list"))
-    ret = NXmakedata(    f, part, NX_FLOAT64, detector.rank, dims);
-  else
-    ret = NXcompmakedata(f, part, NX_FLOAT64, detector.rank, dims, NX_COMP_LZW, dims);
+  ret = NXcompmakedata(f, part, NX_FLOAT64, detector.rank, fulldims, NX_COMP_LZW, dims);
   if (ret != NX_OK) {
     /* failed: data set already exists */
     int datatype=0;
@@ -1608,7 +1605,6 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
     NXclosedata(f);
   }
   NXMEnableErrorReporting();  /* re-enable NeXus error messages */
-  dims[0] = detector.m; /* restore actual dimension from data writing */
   
   /* open the data set */
   if (NXopendata(f, part) == NX_ERROR) {
@@ -1622,6 +1618,9 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
     if (!exists)
       printf("Events:   \"%s\"\n",  
         strlen(detector.filename) ? detector.filename : detector.component);
+    else
+      printf("Append:   \"%s\"\n",
+	     strlen(detector.filename) ? detector.filename : detector.component);
   } else {
     NXputdata (f, data);
   }
