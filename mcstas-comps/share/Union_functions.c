@@ -1694,15 +1694,15 @@ int clear_intersection_table(struct intersection_time_table_struct *intersection
     return 1;
 };
 
-void print_intersection_table(struct intersection_time_table_struct intersection_time_table) {
+void print_intersection_table(struct intersection_time_table_struct *intersection_time_table) {
     int num_volumes,iterate,solutions;
     int max_number_of_solutions = 0;
     
-    num_volumes = intersection_time_table.num_volumes;
+    num_volumes = intersection_time_table->num_volumes;
     
     for (iterate = 0;iterate < num_volumes;iterate++) {
-        if (max_number_of_solutions < intersection_time_table.n_elements[iterate])
-            max_number_of_solutions = intersection_time_table.n_elements[iterate];
+        if (max_number_of_solutions < intersection_time_table->n_elements[iterate])
+            max_number_of_solutions = intersection_time_table->n_elements[iterate];
     }
     
     printf("------------------ INTERSECTION_TIME_TABLE -----------------");
@@ -1721,14 +1721,14 @@ void print_intersection_table(struct intersection_time_table_struct intersection
     for (iterate = 0;iterate < num_volumes;iterate++){
     // print iterate number
     printf("Volume %d   |",iterate);
-    printf(" ---- %d ---- |",intersection_time_table.calculated[iterate]);
+    printf(" ---- %d ---- |",intersection_time_table->calculated[iterate]);
     
         for (solutions = 0;solutions < max_number_of_solutions;solutions++) {
-          if (intersection_time_table.n_elements[iterate] > solutions && intersection_time_table.calculated[iterate] == 1)
-            if (intersection_time_table.intersection_times[iterate][solutions] > 0)
-             printf("   %1.8f   |",intersection_time_table.intersection_times[iterate][solutions]);
+          if (intersection_time_table->n_elements[iterate] > solutions && intersection_time_table->calculated[iterate] == 1)
+            if (intersection_time_table->intersection_times[iterate][solutions] > 0)
+             printf("   %1.8f   |",intersection_time_table->intersection_times[iterate][solutions]);
             else
-             printf("   %1.7f   |",intersection_time_table.intersection_times[iterate][solutions]);
+             printf("   %1.7f   |",intersection_time_table->intersection_times[iterate][solutions]);
           else
             printf("                |");
         }
@@ -2113,12 +2113,12 @@ int within_which_volume(Coords pos, struct pointer_to_1d_int_list input_list, st
     // low memory version of volume_logic_copy
     for (i=0;i<number_of_volumes;i++) volume_logic_copy[i] = 0;
     for (i=0;i<destinations_list.num_elements;i++) volume_logic_copy[destinations_list.elements[i]] = 1;
-    //printf("within_which_volume debug\n");
+    printf("within_which_volume debug %i\n",input_list.num_elements);
 
     // Does one loop through the algorithm first to set up ListA instead of copying it from input_list, which takes time
     for (i=0;i<input_list.num_elements;i++) {
             if (Volumes[input_list.elements[i]]->geometry.within_function(pos,&Volumes[input_list.elements[i]]->geometry) == 1) {
-                //printf("The position is inside of volume %d\n",input_list.elements[i]);
+                printf("The position is inside of volume %d\n",input_list.elements[i]);
                 if (Volumes[input_list.elements[i]]->geometry.is_masked_volume == 1) {
                     // if the volume is masked, I need to know if it can be a destination volume from the mask_status_list.
                     // if the masked volume is in ANY mode,
