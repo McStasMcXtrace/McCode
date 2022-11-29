@@ -19,7 +19,7 @@
 * It can be found here: https://inis.iaea.org/collection/NCLCollectionStore/_Public/19/019/19019134.pdf
 * Example: Do a scan (scan parameter =1) from x_screw=20 to 103 mm. The calculated monitor "Wavelength(Ang) as a function of x_screw(mm)" will be a linear function. The monochromator functions properly.
 *
-* %Example: x_screw=60 Detector: w_monitor_I=1.03695e-06
+* %Example: x_screw=60 Detector: w_monitor_I=1.10881e-06
 *
 * %Parameters
 * x_screw: [mm] Displacement perpendicular to initial position of the lever (sine drive mechanism)
@@ -148,7 +148,7 @@ COMPONENT Grating_rotation_nine_degrees = Arm()
 AT (0, 0, 0) RELATIVE PREVIOUS	
 ROTATED (-9, 0, 0) RELATIVE PREVIOUS	
 
-COMPONENT reflective_grating = Grating_reflect(
+SPLIT 10 COMPONENT reflective_grating = Grating_reflect(
     d_phi=1,order=order,
     rho_l=number_lines_per_mm,
     zdepth=102e-3,xwidth=102e-3)    
