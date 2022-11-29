@@ -7,6 +7,7 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
+export WORK=`pwd`
 # Ensure our 3rd party modules are in place and updated
 THIRDPARTY=`ls 3rdparty | grep -v patches`
 cd 3rdparty
