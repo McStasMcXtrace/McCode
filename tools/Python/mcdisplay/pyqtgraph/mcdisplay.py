@@ -4,19 +4,20 @@
 mcdisplay pyqtgraph script.
 '''
 import sys
-import os
 import logging
-import argparse
+from pathlib import Path
+import os
 from datetime import datetime
+
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+
 import numpy as np
 from enum import Enum
-import pathlib
 import PyQt5
 from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
 from pyqtgraph.graphicsItems.LegendItem import LegendItem, ItemSample
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from mccodelib import utils
 from mccodelib.mcdisplayutils import McDisplayReader
@@ -195,6 +196,7 @@ class ModLegend(pg.LegendItem):
 
 def get_help_lines():
     ''' print help lines to the console '''
+    import os
     
     helplines = []
     helplines.append('q            - quit')
@@ -521,28 +523,27 @@ def debug_file_save(data, filename):
     f.write(data)
     f.close()
 
-def main(args):
+def main(instr=None, dirname=None, invcanvas=None, tof=None, **kwds):
     ''' script execution '''
     logging.basicConfig(level=logging.INFO)
 
     # output directory
-    dirname = get_datadirname(os.path.splitext(os.path.basename(args.instr))[0])
-    if args.dirname:
-        dirname = args.dirname
+    if dirname is None:
+        dirname = get_datadirname(os.path.splitext(os.path.basename(instr))[0])
 
     # set up a pipe, read and parse the particle trace
-    reader = McDisplayReader(args, n=100, dir=dirname)
+    reader = McDisplayReader(instr=instr, dir=dirname, **kwds)
     instrument = reader.read_instrument()
     raybundle = reader.read_particles()
-
-    if args.invcanvas:
+    
+    if invcanvas is not None and invcanvas:
         ## Switch to using white background and black foreground
         pg.setConfigOption('background', 'w')
         pg.setConfigOption('foreground', 'k')
 
     gui = McDisplay2DGui(title=dirname+" - Press 'h' for comp list")
     try:
-      if not args.tof and not args.TOF and not args.ToF:
+      if tof is None or not tof:
         sys.exit(gui.run_ui(instrument, raybundle.rays))
       else:
         sys.exit(gui.run_ui_tof(instrument, raybundle.rays))
@@ -551,34 +552,31 @@ def main(args):
 
 
 if __name__ == '__main__':
-    scriptname=pathlib.Path(__file__).stem
-    parser = argparse.ArgumentParser(description=__doc__.replace('mcdisplay',scriptname))
-    parser.add_argument('instr', help='display this instrument file (.instr or .out)')
-    parser.add_argument('--default', action='store_true', help='automatically use instrument defaults for simulation run')
+    from mccodelib.mcdisplayutils import make_common_parser
+    # Only pre-sets instr, --default, options
+    parser, prefix = make_common_parser(__file__, __doc__)
+
     #enable tof for mcdisplay (McStas) only
-    if( scriptname.startswith('mc') ):
-      parser.add_argument('--tof', action='store_true', help='enable time-of-flight mode')
-      parser.add_argument('--TOF', action='store_true', help='alternative to --tof')
-      parser.add_argument('--ToF', action='store_true', help='another alternative to --tof')
+    if 'mc' == prefix:
+        parser.add_argument('--tof', '--TOF', '--ToF', dest='tof', action='store_true', help='Enable time-of-flight mode')
     parser.add_argument('--dirname', help='output directory name override')
     parser.add_argument('--inspect', help='display only particle rays reaching this component')
     parser.add_argument('--invcanvas', action='store_true', help='invert canvas background from black to white')
-    parser.add_argument('instr_options', nargs='*', help='simulation options and instrument params')
+    parser.add_argument('-n', '--ncount', dest='n', type=int, default=300, help='Number of particles to simulate')
 
     args, unknown = parser.parse_known_args()
     # if --inspect --first or --last are given after instr, the remaining args become "unknown",
     # but we assume that they are instr_options
-    if len(unknown)>0:
-        args.instr_options = unknown
+    args = {k: args.__getattribute__(k) for k in dir(args) if k[0] != '_'}
+    if len(unknown):
+        args['options'] = unknown
 
     # enable ^C termination
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     try:
-        main(args)
+        main(**args)
     except KeyboardInterrupt:
         print('')
-    except Exception as e:
-        print(e)
 
