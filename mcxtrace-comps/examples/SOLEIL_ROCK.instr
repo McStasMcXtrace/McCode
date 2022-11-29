@@ -31,7 +31,7 @@
 * Manganese and chrome scan: mxrun SOLEIL_ROCK.instr Etohit=5700,6800 scan=1 nbsample=2 sample_file=Mn.txt sample_density=7.21 sample_file_2=Cr.txt sample_density_2=7.15 cc=2 -N100
 * Pretty energy repartition monitor result: mxrun SOLEIL_ROCK.instr Etohit=17000 cc=2 -n1e8
 *
-* %Example: Etohit=17000 cc=2 Detector: psd_monitor_I=25886.5
+* %Example: Etohit=17000 cc=2 n=1E7 Detector: psd_monitor_I=3.62021e+11
 *
 * %P
 * Etohit: [eV]   Energy to hit
@@ -287,8 +287,7 @@ COMPONENT mirror_m2b = Mirror_curved(
     radius=5e3, 
     width=47e-3,
     length=1100e-3,
-    coating=reflec_material_M2A_M2B
-    )          
+    coating=reflec_material_M2A_M2B)
 AT (0, 0, 22.44-21.25) RELATIVE PREVIOUS	
 ROTATED (angle_m2a_m2b*RAD2DEG/2, 0, 90) RELATIVE PREVIOUS
 EXTEND
