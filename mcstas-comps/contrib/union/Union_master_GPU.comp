@@ -140,7 +140,7 @@ DECLARE
   int solutions;
   int max_number_of_processes;
   //int limit;
-  
+  int number_of_solutions_static;
   struct scattering_process_struct *process;
   struct scattering_process_struct *process_start;
   double *my_trace;
@@ -153,23 +153,7 @@ DECLARE
   
   // int done;
   // int current_volume;
-  int ray_sucseeded;
-  int *number_of_solutions;
-  int number_of_solutions_static;
-  int *check;
-  int *start;
   int intersection_with_children;
-  int geometry_output;
-  
-  // For within_which_volume
-  int tree_next_volume;
-  Coords ray_position;
-  Coords ray_velocity;
-  Coords ray_velocity_rotated;
-  Coords ray_velocity_final;
-  Coords wavevector;
-  Coords wavevector_rotated;
-  int volume_0_found;
   
   int *scattered_flag;
   int **scattered_flag_VP;
@@ -265,10 +249,7 @@ INITIALIZE
   
   // Start at 0 error messages, quit after 100.
   //component_error_msg = 0;
-  
-  // For within_which_volume
-  volume_0_found = 0;
-  
+    
   // For tagging
   tagging_leaf_counter=0;
   
@@ -734,8 +715,6 @@ INITIALIZE
   my_trace = malloc(max_number_of_processes*sizeof(double));
   my_trace_fraction_control = malloc(max_number_of_processes*sizeof(double));
   
-  // All geometries can have 2 intersections currently, when this changes the maximum number of solutions need to be reported to the Union_master.
-  number_of_solutions = &number_of_solutions_static;
   //component_error_msg = 0;
   
   
@@ -927,10 +906,30 @@ INITIALIZE
     printf("Union_master component %s initialized sucessfully\n",NAME_CURRENT_COMP);
   )
 
+  number_of_solutions_static=0;
 %}
 
 TRACE
 %{
+  // For within_which_volume
+  int tree_next_volume;
+  Coords ray_position;
+  Coords ray_velocity;
+  Coords ray_velocity_rotated;
+  Coords ray_velocity_final;
+  Coords wavevector;
+  Coords wavevector_rotated;
+  int volume_0_found;
+  // For within_which_volume
+  volume_0_found = 0;
+
+  int ray_sucseeded;
+  int *check;
+  int *start;
+  
+  // All geometries can have 2 intersections currently, when this changes the maximum number of solutions need to be reported to the Union_master.
+  int number_of_solutions;
+
   int my_volume_index;
   int my_process_index;
 
@@ -977,11 +976,18 @@ TRACE
   int current_volume;
   int error_msg = 0;
   int my_iterator;
-
+  int geometry_output;
+  
   double k[3];
   double k_new[3];
   double k_old[3];
   double k_rotated[3];
+
+  k[0]=0;         k[1]=0;         k[2]=0;
+  k_new[0]=0;     k_new[1]=0;     k_new[2]=0;
+  k_old[0]=0;     k_old[1]=0;     k_old[2]=0;
+  k_rotated[0]=0; k_rotated[1]=0; k_rotated[2]=0;
+
   double v_length;
   double my_sum;
   double my_sum_plus_abs;
@@ -1067,6 +1073,8 @@ TRACE
   r_start[0] = x; r_start[1] = y; r_start[2] = z;
   r[0]=x;r[1]=y;r[2]=z;v[0]=vx;v[1]=vy;v[2]=vz; // REVIEW_LINE r and v are bad names
   k[0] = V2K*vx; k[1] = V2K*vy; k[2] = V2K*vz;
+
+  printf("Incoming event: %g %g %g // %g %g %g\n",x,y,z,vx,vy,vz);
   
   ray_position = coords_set(x,y,z);
   ray_velocity = coords_set(vx,vy,vz);
@@ -1138,7 +1146,6 @@ TRACE
   // A single run of the loop will either be a propagation to the next volume along the path of the ray, or a
   //  scattering event at some point along the path of the ray in the current volume.
   int limit = 100000;
-  
   while (done == 0) {
     limit--;
     
@@ -1167,8 +1174,8 @@ TRACE
             // Calculate intersections using intersect function imbedded in the relevant volume structure using parameters that are also imbedded in the structure.
 
             // GPU Flexible intersect_function call
-            geometry_output = intersect_function(my_intersection_time_table->intersection_times[*check], number_of_solutions, r_start, v, &Volumes[*check]->geometry);
-            
+            geometry_output = intersect_function(my_intersection_time_table->intersection_times[*check], &number_of_solutions, r_start, v, &Volumes[*check]->geometry);
+	    printf("geometry_output=%i, *check=%i, number_of_solutions=%i, r_start=[%g %g %g], v=[%g %g %g]\n",geometry_output, *check, number_of_solutions, r_start[0],r_start[1],r_start[2], v[0], v[1], v[2]);
             my_intersection_time_table->calculated[*check] = 1;
         }
     }
@@ -1192,10 +1199,10 @@ TRACE
           // GPU allowed
           int selected_index;
           selected_index = Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator];
-          geometry_output = intersect_function(my_intersection_time_table->intersection_times[selected_index], number_of_solutions, r_start, v, &Volumes[selected_index]->geometry);
+          geometry_output = intersect_function(my_intersection_time_table->intersection_times[selected_index], &number_of_solutions, r_start, v, &Volumes[selected_index]->geometry);
           
           my_intersection_time_table->calculated[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]] = 1;
-          // if printf("succesfully calculated intersection times for volume *check = %d \n",*check);
+          printf("succesfully calculated intersection times for volume *check = %d \n",*check);
         }
       }
     }
@@ -1254,7 +1261,7 @@ TRACE
         #endif
         if (intersection_with_children == 0) {
             // GPU Allowed
-            geometry_output = intersect_function(my_intersection_time_table->intersection_times[current_volume], number_of_solutions, r_start, v, &Volumes[current_volume]->geometry);
+            geometry_output = intersect_function(my_intersection_time_table->intersection_times[current_volume], &number_of_solutions, r_start, v, &Volumes[current_volume]->geometry);
             my_intersection_time_table->calculated[current_volume] = 1;
         }
     }
@@ -1268,22 +1275,35 @@ TRACE
     // Loops are eqvialent to the 3 intersection calculation loops already completed
     
     // First loop for checking intersect_check_list
+    #ifdef Union_trace_verbal_setting
+      min_intersection_time=0;
+      printf("Incoming value of MIN_intersection_time=%g\n",min_intersection_time);
+    #endif
     time_found = 0;
     for (start=check=Volumes[current_volume]->geometry.intersect_check_list.elements;check-start<Volumes[current_volume]->geometry.intersect_check_list.num_elements;check++) {
         for (solution = 0;solution<my_intersection_time_table->n_elements[*check];solution++) {
             if (time_found) {
                 if ((intersection_time = my_intersection_time_table->intersection_times[*check][solution]) > time_propagated_without_scattering &&  intersection_time < min_intersection_time) {
                     min_intersection_time = intersection_time;min_solution = solution;min_volume = *check;
+                   #ifdef Union_trace_verbal_setting
+		    printf("found A at %i x %i\n",*check,solution);
+		    #endif
                 }
             } else {
                 if ((intersection_time = my_intersection_time_table->intersection_times[*check][solution]) > time_propagated_without_scattering) {
                     min_intersection_time = intersection_time;min_solution = solution;min_volume = *check;
                     time_found = 1;
+                    #ifdef Union_trace_verbal_setting
+		     printf("found B at %i x %i\n",*check,solution);
+                    #endif
                 }
             }
         }
     }
-    
+    #ifdef Union_trace_verbal_setting
+    printf("min_intersection_time=%g min_solution=%i\n",min_intersection_time,min_solution);
+    #endif
+
     // Now check the masked_intersect_list, but only the ones that are currently active
     for (mask_iterator=0;mask_iterator<Volumes[current_volume]->geometry.mask_intersect_list.num_elements;mask_iterator++) {
       if (current_mask_intersect_list_status.elements[mask_iterator] == 1) {
@@ -1630,12 +1650,15 @@ TRACE
             } else {
                 ray_velocity_rotated = ray_velocity;
             }
-                
+	    #ifdef Union_trace_verbal_setting
+            printf("Kin: %g %g %g, selected_process: %i %i\n",k[0],k[1],k[2],selected_process,current_volume);
+	    coords_print(Volumes[current_volume]->geometry.focus_data_array.elements[0].Aim);
+            #endif
             // test_physics_scattering(double *k_final, double *k_initial, union data_transfer_union data_transfer) {
             coords_get(coords_scalar_mult(ray_velocity_rotated,V2K), &k[0], &k[1], &k[2]);
             
             // I may replace a intial and final k with one instance that serves as both input and output
-            //process = &Volumes[current_volume]->p_physics->p_scattering_array[selected_process]; // CPU Only
+            process = &Volumes[current_volume]->p_physics->p_scattering_array[selected_process]; // CPU Only
             if (0 == physics_scattering(process->eProcess, k_new, k, &p, process->data_transfer, &Volumes[current_volume]->geometry.focus_data_array.elements[0], _particle)) {
               /*
               // PowderN and Single_crystal requires the option of absorbing the neutron, which is weird. If there is a scattering probability, there should be a new direction.
@@ -1649,7 +1672,9 @@ TRACE
               */
               ABSORB;
             }
-            
+            #ifdef Union_trace_verbal_setting
+            printf("Kout: %g %g %g\n", k_new[0],k_new[1],k_new[2]);
+            #endif
             // Update velocity using k
             ray_velocity_rotated = coords_set(K2V*k_new[0],K2V*k_new[1],K2V*k_new[2]);
             
@@ -1659,7 +1684,9 @@ TRACE
             } else {
                ray_velocity_final = ray_velocity_rotated;
             }
-            
+            #ifdef Union_trace_verbal_setting
+	    printf("Final velocity vector "); coords_print(ray_velocity_final);
+	    #endif
             // Write velocity to global variable (temp, only really necessary at final)
             coords_get(ray_velocity_final, &vx, &vy, &vz);
             
@@ -1701,7 +1728,9 @@ TRACE
               global_all_volume_logger_list_master->elements[log_index].logger->function_pointers.active_record_function(&ray_position, k_new, k_old, p, p_old, t, scattered_flag[current_volume], scattered_flag_VP[current_volume][selected_process], number_of_scattering_events, global_all_volume_logger_list_master->elements[log_index].logger, &loggers_with_data_array);
             }
             #endif
-            
+            #ifdef Union_trace_verbal_setting
+	    printf("Outgoing event: %g %g %g // %g %g %g\n",x,y,z,vx,vy,vz);
+            #endif
             SCATTER;
             #ifndef OPENACC
             ++number_of_scattering_events;
@@ -2163,6 +2192,9 @@ TRACE
     ABSORB; // Absorb rays that didn't exit correctly for whatever reason
     // Could error log here
   }
+  
+  #pragma acc atomic
+  number_of_solutions_static = number_of_solutions_static + number_of_solutions;
   
   // Stores nubmer of scattering events in global master list so that another master with inherit_number_of_scattering_events can continue
   #ifndef OPENACC
