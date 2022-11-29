@@ -12,48 +12,26 @@ from . import mccode_config
 
 class McDisplayReader(object):
     ''' High-level trace manager '''
-    def __init__(self, args, n=None, dir=None, debug=False):
-        '''
-        supported args: 
-            instr 
-            inspect
-            default
-            instr_options
-            
-        NOTE: n is only applied to the command string if neither
-         '-n' nor '--ncount' strings are found in args.instr_options
-        '''
-        if not os.path.exists(args.instr) or not os.path.splitext(args.instr)[1] not in ['instr', 'out']:
-            print("Please supply a valid .instr or .out file.")
+    def __init__(self, instr=None, inspect=None, default=None, n=None, dir=None, debug=False, options=None, **kwds):
+        ext = mccode_config.platform["EXESUFFIX"]
+
+        if instr is None or ('.instr' not in instr and ext not in instr):
+            print(f"A .instr or compiled instrument file ({ext}) is required")
             exit()
         
         # assemble command
-        cmd = mccode_config.configuration["MCRUN"] + ' ' + args.instr + ' --no-output-files --trace'
-        b1 = False
-        b2 = False
-        for o in args.instr_options:
-            b1 = bool(re.search('--ncount', o)) or b1
-            b2 = bool(re.search('-n', o)) or b2
-        if not b1 and not b2:
-            if not n:
-                cmd = cmd + ' --ncount=' + str(300)
-            else:
-                cmd = cmd + ' --ncount=' + str(n)
-        else:
-            n = None
+        cmd = f"{mccode_config.configuration['MCRUN']} {instr} --no-output-files --trace --ncount={300 if n is None else n}"
         
         if dir:
             cmd = cmd + ' --dir=' + dir
-        if args.instr_options:
-            for o in args.instr_options:
-                cmd = cmd + ' ' + o
+        if options is not None:
+            for option in options:
+                cmd = f"{cmd} {option}"
         
-        self.args = args
-        self.n = n
-        self.dir = dir
         self.debug = debug
+        self.count = n
         self.cmd = cmd
-        self.pipeman = McrunPipeMan(cmd, inspect=args.inspect, send_enter=args.default)
+        self.pipeman = McrunPipeMan(cmd, inspect=inspect, send_enter=False if default is None else default)
     
     def read_instrument(self):
         ''' starts a pipe to mcrun given cmd, waits for instdef and reads, returning the parsed instrument '''
@@ -75,17 +53,15 @@ class McDisplayReader(object):
     
     def read_particles(self):
         ''' waits for pipeman object to finish, then read and parse neutron data '''
-        print("reading particle data...")
-        particles = self.pipeman.read_particles()
-
-        print(self.pipeman.read_comments())
-
-        if self.debug:
-            file_save(particles, 'particledata')
-        
-        parser = FlowChartParticleTraceParser()
-        rays = parser.execute(particles)
-        
+        rays = None
+        if self.count > 0:
+            print("reading particle data...")
+            particles = self.pipeman.read_particles()
+            print(self.pipeman.read_comments())
+            if self.debug:
+                file_save(particles, 'particledata')
+            parser = FlowChartParticleTraceParser()
+            rays = parser.execute(particles)
         return rays
 
 def file_save(data, filename):
@@ -93,3 +69,20 @@ def file_save(data, filename):
     f = open(filename, 'w')
     f.write(data)
     f.close()
+
+def make_common_parser(filename, documentation):
+    """ Create an argparse.ArgumentParser with arguments (instr, --default, options)"""
+    from pathlib import Path
+    scriptname = Path(filename).stem
+    #possibly replace the mc prefix in the description string
+    from argparse import ArgumentParser
+
+    ext = mccode_config.platform["EXESUFFIX"]
+    prefix=scriptname[:2]
+
+    parser = ArgumentParser(description=documentation.replace('mcdisplay',scriptname))
+    parser.add_argument('instr', help=f'display this instrument file (.instr or .{ext})')
+    parser.add_argument('--default', action='store_true', help='automatically use instrument defaults for simulation run')
+    parser.add_argument('options', nargs='*', help='simulation options and instrument params')
+
+    return parser, prefix
