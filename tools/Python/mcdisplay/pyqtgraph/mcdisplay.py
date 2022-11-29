@@ -6,6 +6,8 @@ mcdisplay pyqtgraph script.
 import sys
 import logging
 from pathlib import Path
+import os
+from datetime import datetime
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
