@@ -948,6 +948,7 @@ TRACE
   double r_start[3];
   double v[3];
 
+  //printf("incoming event: %g %g %g -> %g %g %g\n",x,y,z,vx,vy,vz);
   int starting_volume_warning=0;
   // Record absorption
   double r_old[3];
@@ -994,16 +995,21 @@ TRACE
   int selected_process;
   int scattering_event;
   double time_propagated_without_scattering;
+
   struct pointer_to_1d_int_list my_mask_status_list;
+  my_mask_status_list.num_elements = mask_status_list.num_elements;
+  if (number_of_masks >0) my_mask_status_list.elements = malloc( number_of_masks * sizeof(int));
+  my_mask_status_list.elements = mask_status_list.elements;
+
   struct intersection_time_table_struct *my_intersection_time_table;
-  int *my_logger_conditional_extend_array = malloc((max_conditional_extend_index + 1)*sizeof(int));
   my_intersection_time_table = malloc(sizeof(struct intersection_time_table_struct));
-  my_mask_status_list = mask_status_list;
   my_intersection_time_table = intersection_time_table;
+
+  int *my_logger_conditional_extend_array = malloc((max_conditional_extend_index + 1)*sizeof(int));
   my_logger_conditional_extend_array = logger_conditional_extend_array;
 
   struct starting_lists_struct my_starting_lists;
-  memcpy(&my_starting_lists, &starting_lists, sizeof(struct intersection_time_table_struct));
+  my_starting_lists=starting_lists;
 
   int *pre_allocated1;
   int *pre_allocated2;
@@ -1083,7 +1089,7 @@ TRACE
   #endif
   
   // Now the initial current_volume can be found, which requires the up to date mask_status_list
-  current_volume = within_which_volume_GPU(ray_position, starting_lists.reduced_start_list, starting_lists.starting_destinations_list, Volumes, &my_mask_status_list, number_of_volumes, pre_allocated1, pre_allocated2, pre_allocated3);
+    current_volume = within_which_volume_GPU(ray_position, starting_lists.reduced_start_list, starting_lists.starting_destinations_list, Volumes, &my_mask_status_list, number_of_volumes, pre_allocated1, pre_allocated2, pre_allocated3);
   
   // Using the mask_status_list and the current volume, the current_mask_intersect_list_status can be made
   //  it contains the effective mask status of all volumes on the current volumes mask intersect list, which needs to be calculated,
