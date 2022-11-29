@@ -15,7 +15,7 @@
 * You may scan the grating monochromator with e.g.:
 *   mxrun -n 1e5 SOLEIL_DISCO.instr -N84 x_screw=20,103 scan=1
 *
-* Example: -n 1e5 grazing_angle_one=22.5 Detector: second_HFP_I=1.71902e+11
+* %Example: grazing_angle_one=22.5 -n 1e5 Detector: second_HFP_I=1.71771e+16
 *
 * %P
 * grazing_angle_one: [deg]
@@ -515,7 +515,7 @@ FINALLY
         //If outside it seems to work. Weird.
         MPI_MASTER(
 #endif
-	 MCDETECTOR w_monitor_var = COMP_GETPAR(w_monitor,detector); // We have to think in terms of wavelength, the sine drive mechanism was built to linearize the wavelength.
+	    MCDETECTOR w_monitor_var = COMP_GETPAR(w_monitor,detector); // We have to think in terms of wavelength, the sine drive mechanism was built to linearize the wavelength.
         w_monitor_value = w_monitor_var.centerX;
         x_screw_var = x_screw;
         w_monitor_error = 0; //Forgot how to get rid of the error bar.  
@@ -528,7 +528,7 @@ FINALLY
 #endif  
         //Adding a legend to the graph would be good, need to find out how to do that at a later date. todo            
         // This set of defines is to avoid getting a '.' in the component name
-	 mcdetector_out_0D("Wavelength(Ang) as a function of x_screw(mm)", number_events_w_monitor, w_monitor_value, w_monitor_error, "Wavelength", coords_set(0,0,0));
+	    mcdetector_out_0D("Wavelength(Ang) as a function of x_screw(mm)", number_events_w_monitor, w_monitor_value, w_monitor_error, "Wavelength", coords_set(0,0,0));
 
     }
 
