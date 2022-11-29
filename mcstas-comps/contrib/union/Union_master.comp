@@ -1104,7 +1104,7 @@ TRACE
     
     #ifdef Union_trace_verbal_setting
       printf("----------- START OF WHILE LOOP --------------------------------------\n");
-      print_intersection_table(intersection_time_table);
+      print_intersection_table(&intersection_time_table);
       printf("current_volume = %d \n",current_volume);
     #endif
     
@@ -1221,29 +1221,42 @@ TRACE
 
     // At this point, intersection_time_table is updated with intersection times of all possible intersections.
     #ifdef Union_trace_verbal_setting
-      print_intersection_table(intersection_time_table);
+      print_intersection_table(&intersection_time_table);
     #endif
     
     // Next task is to find the next intersection time. The next intersection must be greater than the time_propagated_without_scattering (0 at start of loop)
     // Loops are eqvialent to the 3 intersection calculation loops already completed
     
     // First loop for checking intersect_check_list
+    #ifdef Union_trace_verbal_setting
+      min_intersection_time=0;
+      printf("Incoming value of MIN_intersection_time=%g\n",min_intersection_time);
+    #endif
     time_found = 0;
     for (start=check=Volumes[current_volume]->geometry.intersect_check_list.elements;check-start<Volumes[current_volume]->geometry.intersect_check_list.num_elements;check++) {
         for (solution = 0;solution<intersection_time_table.n_elements[*check];solution++) {
             if (time_found) {
                 if ((intersection_time = intersection_time_table.intersection_times[*check][solution]) > time_propagated_without_scattering &&  intersection_time < min_intersection_time) {
                     min_intersection_time = intersection_time;min_solution = solution;min_volume = *check;
+                   #ifdef Union_trace_verbal_setting
+		    printf("found A at %i x %i\n",*check,solution);
+		    #endif
                 }
             } else {
                 if ((intersection_time = intersection_time_table.intersection_times[*check][solution]) > time_propagated_without_scattering) {
                     min_intersection_time = intersection_time;min_solution = solution;min_volume = *check;
                     time_found = 1;
+                    #ifdef Union_trace_verbal_setting
+		     printf("found B at %i x %i\n",*check,solution);
+                    #endif
                 }
             }
         }
     }
-    
+    #ifdef Union_trace_verbal_setting
+    printf("min_intersection_time=%g min_solution=%i\n",min_intersection_time,min_solution);
+    #endif
+
     // Now check the masked_intersect_list, but only the ones that are currently active
     for (mask_iterator=0;mask_iterator<Volumes[current_volume]->geometry.mask_intersect_list.num_elements;mask_iterator++) {
       if (current_mask_intersect_list_status.elements[mask_iterator] == 1) {
@@ -1588,7 +1601,10 @@ TRACE
             } else {
                 ray_velocity_rotated = ray_velocity;
             }
-                
+	    #ifdef Union_trace_verbal_setting
+            printf("Kin: %g %g %g, selected_process: %i %i\n",k[0],k[1],k[2],selected_process,current_volume);
+	    coords_print(Volumes[current_volume]->geometry.focus_data_array.elements[0].Aim);
+            #endif
             // test_physics_scattering(double *k_final, double *k_initial, union data_transfer_union data_transfer) {
             coords_get(coords_scalar_mult(ray_velocity_rotated,V2K), &k[0], &k[1], &k[2]);
             
@@ -1607,7 +1623,9 @@ TRACE
               */
               ABSORB;
             }
-            
+            #ifdef Union_trace_verbal_setting
+            printf("Kout: %g %g %g\n", k_new[0],k_new[1],k_new[2]);
+            #endif
             // Update velocity using k
             ray_velocity_rotated = coords_set(K2V*k_new[0],K2V*k_new[1],K2V*k_new[2]);
             
@@ -1617,7 +1635,9 @@ TRACE
             } else {
                ray_velocity_final = ray_velocity_rotated;
             }
-            
+            #ifdef Union_trace_verbal_setting
+	    printf("Final velocity vector "); coords_print(ray_velocity_final);
+	    #endif
             // Write velocity to global variable (temp, only really necessary at final)
             coords_get(ray_velocity_final, &vx, &vy, &vz);
             
@@ -1655,7 +1675,9 @@ TRACE
               // Could be interesting to have a monitor that just globally measurres the second scattering event in any volume (must be two in the same). Weird but not meaningless.
               global_all_volume_logger_list_master->elements[log_index].logger->function_pointers.active_record_function(&ray_position, k_new, k_old, p, p_old, t, scattered_flag[current_volume], scattered_flag_VP[current_volume][selected_process], number_of_scattering_events, global_all_volume_logger_list_master->elements[log_index].logger, &loggers_with_data_array);
             }
-            
+            #ifdef Union_trace_verbal_setting
+	    printf("Outgoing event: %g %g %g // %g %g %g\n",x,y,z,vx,vy,vz);
+            #endif
             SCATTER;
             ++number_of_scattering_events;
             ++scattered_flag[current_volume];
