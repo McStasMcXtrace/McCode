@@ -86,6 +86,7 @@ export PATHBAK=$PATH
 export PATH=$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin:$PATH
 
 conda update conda -y
+conda config --add channels conda-forge
 conda install mamba conda-build -y
 mamba install openmpi gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 -y
 mamba clean --all -y

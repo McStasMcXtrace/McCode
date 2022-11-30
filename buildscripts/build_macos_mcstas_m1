@@ -59,6 +59,8 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 ./mkdist mcstas-mcpl $1 3rdparty/mcpl-package "" mac-silicon "" -- OSXapp
 ./mkdist mcstas-ncrystal $1 3rdparty/ncrystal-package "" mac-silicon "" -- OSXapp
 
+WORK=`pwd`
+cd $WORK
 
 # Hack to ensure pymcpltool is in place
 ln -sf /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/libs/mcpl/pymcpltool /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/bin
@@ -89,6 +91,7 @@ export PATHBAK=$PATH
 export PATH=$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin:$PATH
 
 conda update conda -y
+conda config --add channels conda-forge
 conda install mamba conda-build -y
 mamba install openmpi gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl -y
 mamba clean --all -y
