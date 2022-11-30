@@ -92,7 +92,7 @@ use Config;
      MATLAB => 'matlab',
      GNUPLOT => '@GNUPLOT@',
      MATLAB_COMMAND => '-nodesktop -nosplash',
-     EXE => '@@MCCODE_EXECUTABLE_SUFFIX@',
+     EXE => '@MCCODE_EXECUTABLE_SUFFIX@',
      HOSTFILE => '',
      MODULES => '',
      CODETEXT => 'no',
