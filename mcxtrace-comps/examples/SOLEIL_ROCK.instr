@@ -31,7 +31,7 @@
 * Manganese and chrome scan: mxrun SOLEIL_ROCK.instr Etohit=5700,6800 scan=1 nbsample=2 sample_file=Mn.txt sample_density=7.21 sample_file_2=Cr.txt sample_density_2=7.15 cc=2 -N100
 * Pretty energy repartition monitor result: mxrun SOLEIL_ROCK.instr Etohit=17000 cc=2 -n1e8
 *
-* %Example: Etohit=17000 cc=2 n=1E7 Detector: psd_monitor_I=1.09554e+13
+* %Example: Etohit=17000 cc=2 -n 1e7 Detector: psd_monitor_I=1.09554e+13
 *
 * %P
 * Etohit: [eV]   Energy to hit
