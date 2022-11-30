@@ -1,7 +1,7 @@
 #!/bin/sh
 ### General options
 ### –- specify queue --
-#BSUB -q gpuv100test
+#BSUB -q gpuv100
 ### -- set the job Name --
 #BSUB -J McStas_test_job
 ### -- ask for number of cores (default: 1) --
