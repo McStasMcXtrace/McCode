@@ -46,7 +46,7 @@ SETTING PARAMETERS (RhoSolvent = 9.4e-14, Concentration = 0.01, AbsorptionCrosss
     qMin = 0.001, qMax = 0.5, string PDBFilepath = "PDBfile.pdb")
 
 OUTPUT PARAMETERS (Absorption,q,NumberDensity,OrderOfHarmonics,qArray,IArray)
-DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas"
+DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -Wl,-rpath,@MCCODE_LIB@/miniconda3/lib -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 

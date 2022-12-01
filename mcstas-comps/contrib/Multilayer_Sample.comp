@@ -54,7 +54,7 @@ DEFINE COMPONENT Multilayer_Sample
 DEFINITION PARAMETERS (sldPar={0.0,2.0e-6,0.0e-6}, dPar={20.0}, sigmaPar={5.0,5.0})
 SETTING PARAMETERS (xwidth = 0.2, zlength = 0.2, nlayer=1, frac_inc=0, ythick=0, mu_inc=5.62, int target_index=0, focus_xw=0, focus_yh=0)
 OUTPUT PARAMETERS (sldParPtr, dParPtr, sigmaParPtr, tx, ty, tz)
-DEPENDENCY "-lgsl -lgslcblas -L@MCCODE_LIB@/miniconda3/lib -I@MCCODE_LIB@/miniconda3/include"
+DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -Wl,-rpath,@MCCODE_LIB@/miniconda3/lib -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
