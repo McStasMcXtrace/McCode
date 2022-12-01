@@ -493,7 +493,7 @@ class McGuiAppController():
         # args - [category, comp_names[], comp_parsers[]]
         args = []
         categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6: 'Union', 7 : 'Obsolete'}
-        dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6: 'contrib/union', 7 : 'obsolete'}
+        dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6: 'union', 7 : 'obsolete'}
         if os.name == 'nt':
             dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6: 'contrib\\\\union', 7 : 'obsolete'}
         i = 0
