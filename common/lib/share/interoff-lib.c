@@ -423,6 +423,101 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
   return t_size;
 } /* off_clip_3D_mod */
 
+// off_clip_3D_mod_grav *************************************************************
+/*******************************************************************************
+version of off_clip_3D_mod_grav
+*******************************************************************************/
+#pragma acc routine seq
+int off_clip_3D_mod_grav(intersection* t, Coords pos, Coords vel, Coords acc,
+  Coords* vtxArray, unsigned long vtxSize, unsigned long* faceArray,
+  unsigned long faceSize, Coords* normalArray, double* DArray)
+{
+  int t_size=0;
+  MCNUM popol[3*CHAR_BUF_LENGTH];
+  double plane_Eq [4];
+  double quadratic [3];
+  unsigned long i=0,indPoly=0;
+  //exploring the polygons :
+  i=indPoly=0;
+  while (i<faceSize)
+  {
+    polygon pol;
+    pol.npol  = faceArray[i];                //nb vertex of polygon
+    pol.p     = popol;
+    pol.normal= coords_set(0,0,1);
+    unsigned long indVertP1=faceArray[++i];  //polygon's first vertex index in vtxTable
+    
+    if (t_size>CHAR_BUF_LENGTH)
+      {
+#ifndef OPENACC
+	fprintf(stderr, "Warning: number of intersection exceeded (%d) (interoff-lib/off_clip_3D_mod)\n", CHAR_BUF_LENGTH);
+#endif
+	return (t_size);
+      }
+    //both planes intersect the polygon, let's find the intersection point
+    //our polygon :
+    int k;
+    for (k=0; k<pol.npol; ++k)
+      {
+	Coords vertPk=vtxArray[faceArray[i+k]];
+	pol.p[3*k]  =vertPk.x;
+	pol.p[3*k+1]=vertPk.y;
+	pol.p[3*k+2]=vertPk.z;
+      }
+    pol.normal=normalArray[indPoly];
+    pol.D=DArray[indPoly];
+    p_to_quadratic(pol.normal, pol.D, acc, pos, vel, quadratic);
+    double x1, x2;
+    int nsol = quadraticSolve(quadratic, &x1, &x2);
+
+    if (nsol >= 1) {
+      double time = 1.0e36;
+      if (x1 < time && x1 > 0.0) {
+	time = x1;
+      }
+      if (nsol == 2 && x2 < time && x2 > 0.0) {
+	time = x2;
+      }
+      if (time != 1.0e36) {
+	intersection inters;
+	double t2 = time * time * 0.5;
+	double tx = pos.x + time * vel.x;
+	if (acc.x != 0.0) {
+	  tx = tx + t2 * acc.x;
+	}
+	double ty = pos.y + time * vel.y;
+	if (acc.y != 0.0) {
+	  ty = ty + t2 * acc.y;
+	}
+	double tz = pos.z + time * vel.z;
+	if (acc.z != 0.0) {
+	  tz = tz + t2 * acc.z;
+	}
+	inters.v = coords_set(tx, ty, tz);
+	Coords tvel = coords_set(vel.x + time * acc.x,
+				 vel.y + time * acc.y,
+				 vel.z + time * acc.z);
+	inters.time = time;
+	inters.normal = pol.normal;
+	inters.index = indPoly;
+	int res=off_pnpoly(pol,inters.v);
+	if (res != 0) {
+	  inters.edge=(res==-1);
+	  MCNUM ndir = scalar_prod(pol.normal.x,pol.normal.y,pol.normal.z,tvel.x,tvel.y,tvel.z);
+	  if (ndir<0) {
+	    inters.in_out=1;  //the negative dot product means we enter the surface
+	  } else {
+	    inters.in_out=-1;
+	  }
+	  t[t_size++]=inters;
+	}
+      }
+    }
+    i += pol.npol;
+    indPoly++;
+  } /* while i<faceSize */
+  return t_size;
+} /* off_clip_3D_mod_grav */
 
 // off_compare *****************************************************************
 #pragma acc routine
@@ -518,6 +613,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   long    vtxSize =0, polySize=0, i=0, ret=0, faceSize=0;
   Coords* vtxArray        =NULL;
   Coords* normalArray     =NULL;
+  double* DArray          =NULL;
   unsigned long* faceArray=NULL;
   FILE*   f               =NULL; /* the FILE with vertices and polygons */
   double minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
@@ -622,7 +718,8 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   );
   normalArray= malloc(polySize*sizeof(Coords));
   faceArray  = malloc(polySize*10*sizeof(unsigned long)); // we assume polygons have less than 9 vertices
-  if (!normalArray || !faceArray) return(0);
+  DArray     = malloc(polySize*sizeof(double));
+  if (!normalArray || !faceArray || !DArray) return(0);
 
   // fill faces
   faceSize=0;
@@ -679,6 +776,9 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
     off_normal(&(p.normal),p);
 
     normalArray[indNormal]=p.normal;
+    p.D = scalar_prod(p.normal.x,p.normal.y,p.normal.z,
+		      vertices[0],vertices[1],vertices[2]);
+    DArray[indNormal]=p.D;
 
     i += nbVertex+1;
     indNormal++;
@@ -703,6 +803,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
 
   data->vtxArray   = vtxArray;
   data->normalArray= normalArray;
+  data->DArray     = DArray;
   data->faceArray  = faceArray;
   data->vtxSize    = vtxSize;
   data->polySize   = polySize;
@@ -816,13 +917,79 @@ void gpusort(intersection *arr, int size)
 #endif
 
 /*******************************************************************************
+void p_to_quadratic(double eq[], Coords acc,
+                    Coords pos, Coords vel,
+                    double* teq)
+* ACTION: define the quadratic for the intersection of a parabola with a plane
+* INPUT: 'eq' plane equation
+*        'acc' acceleration vector
+*        'vel' velocity of the particle
+*        'pos' position of the particle
+*         equation of plane A * x + B * y + C * z - D = 0
+*         eq[0] = (C*az)/2+(B*ay)/2+(A*ax)/2
+*         eq[1] = C*vz+B*vy+A*vx
+*         eq[2] = C*z0+B*y0+A*x0-D
+* RETURN: equation of parabola: teq(0) * t^2 + teq(1) * t + teq(2)
+*******************************************************************************/
+void p_to_quadratic(Coords norm, MCNUM d, Coords acc, Coords pos, Coords vel,
+		    double* teq)
+{
+  teq[0] = scalar_prod(norm.x, norm.y, norm.z, acc.x, acc.y, acc.z) * 0.5;
+  teq[1] = scalar_prod(norm.x, norm.y, norm.z, vel.x, vel.y, vel.z);
+  teq[2] = scalar_prod(norm.x, norm.y, norm.z, pos.x, pos.y, pos.z) - d;
+  return;
+}
+
+/*******************************************************************************
+int quadraticSolve(double eq[], double* x1, double* x2);
+* ACTION: solves the quadratic for the roots x1 and x2 
+*         eq[0] * t^2 + eq[1] * t + eq[2] = 0
+* INPUT: 'eq' the coefficients of the parabola
+* RETURN: roots x1 and x2 and the number of solutions
+*******************************************************************************/
+int quadraticSolve(double* eq, double* x1, double* x2)
+{
+  if (eq[0] == 0.0) { // This is a linear equation
+    if (eq[1] != 0.0) { // one solution
+      *x1 = -eq[2]/eq[1];
+      *x2 = 1.0e36;
+      return 1;
+    }else { // no solutions, 1.0e36 will be ignored.
+      *x1 = 1.0e36;
+      *x2 = 1.0e36;
+      return 0;
+    }
+  }
+  double delta = eq[1]*eq[1]-4.0*eq[0]*eq[2];
+  if (delta < 0.0) { // no solutions, both are imaginary
+    *x1 = 1.0e36;
+    *x2 = 1.0e36;
+    return 0;
+  }
+  double s = 1.0;
+  if (eq[1] < 0) {
+    s = -1.0;
+  }
+  *x1 = (-eq[1] - s * sqrt(delta))/(2.0*eq[0]);
+  if (eq[0] != 0.0) { //two solutions
+    *x2 = eq[2]/(eq[0]*(*x1));
+    return 2;
+  } else { //one solution
+    *x2 = 1.0e36;
+    return 1;
+  }
+}
+
+/*******************************************************************************
 * int off_intersect_all(double* t0, double* t3,
      Coords *n0, Coords *n3,
      double x, double y, double z,
      double vx, double vy, double vz,
+     double ax, double ay, double az,
      off_struct *data )
 * ACTION: computes intersection of neutron trajectory with an object.
 * INPUT:  x,y,z and vx,vy,vz are the position and velocity of the neutron
+*         ax, ay, az are the local acceleration vector
 *         data points to the OFF data structure
 * RETURN: the number of polyhedra which trajectory intersects
 *         t0 and t3 are the smallest incoming and outgoing intersection times
@@ -833,14 +1000,27 @@ int off_intersect_all(double* t0, double* t3,
      Coords *n0, Coords *n3,
      double x,  double y,  double z,
      double vx, double vy, double vz,
+     double ax, double ay, double az,
      off_struct *data )
 {
-    Coords A={x, y, z};
-    Coords B={x+vx, y+vy, z+vz};
 
 #ifdef OFF_LEGACY    
-    int t_size=off_clip_3D_mod(data->intersects, A, B,
-      data->vtxArray, data->vtxSize, data->faceArray, data->faceSize, data->normalArray );
+    if(mcgravitation) {
+      Coords pos={ x,  y,  z};
+      Coords vel={vx, vy, vz};
+      Coords acc={ax, ay, az};
+      t_size=off_clip_3D_mod_grav(data->intersects, pos, vel, acc,
+				  data->vtxArray, data->vtxSize, data->faceArray,
+				  data->faceSize, data->normalArray );
+    } else {
+    ///////////////////////////////////
+    // non-grav
+      Coords A={x, y, z};
+      Coords B={x+vx, y+vy, z+vz};
+      t_size=off_clip_3D_mod(data->intersects, A, B,
+			     data->vtxArray, data->vtxSize, data->faceArray,
+			     data->faceSize, data->normalArray );
+    }
     #ifndef OPENACC
     qsort(data->intersects, t_size, sizeof(intersection),  off_compare);
     #else
@@ -880,9 +1060,22 @@ int off_intersect_all(double* t0, double* t3,
     intersect4[1].time=FLT_MAX;
     intersect4[2].time=FLT_MAX;
     intersect4[3].time=FLT_MAX;
-		
-    int t_size=off_clip_3D_mod(intersect4, A, B,
-      data->vtxArray, data->vtxSize, data->faceArray, data->faceSize, data->normalArray );
+    int t_size = 0;
+    if(mcgravitation) {
+      Coords pos={ x,  y,  z};
+      Coords vel={vx, vy, vz};
+      Coords acc={ax, ay, az};
+      t_size=off_clip_3D_mod_grav(intersect4, pos, vel, acc,
+				  data->vtxArray, data->vtxSize, data->faceArray,
+				  data->faceSize, data->normalArray, data->DArray);
+    } else {
+    ///////////////////////////////////
+    // non-grav
+      Coords A={x, y, z};
+      Coords B={x+vx, y+vy, z+vz};
+      t_size=off_clip_3D_mod(intersect4, A, B,
+	  data->vtxArray, data->vtxSize, data->faceArray, data->faceSize, data->normalArray );
+    }
     if(t_size>0){
       int i=0;
       if (intersect4[0].time == -FLT_MAX) i=1;
@@ -915,9 +1108,10 @@ int off_intersect(double* t0, double* t3,
      Coords *n0, Coords *n3,
      double x,  double y,  double z,
      double vx, double vy, double vz,
+     double ax, double ay, double az,
      off_struct data )
 {
-  return off_intersect_all(t0, t3, n0, n3, x, y, z, vx, vy, vz, &data );
+  return off_intersect_all(t0, t3, n0, n3, x, y, z, vx, vy, vz, ax, ay, az, &data );
 } /* off_intersect */
 
 /*****************************************************************************
@@ -946,7 +1140,7 @@ int off_x_intersect(double *l0,double *l3,
   int n;
   invk=1/sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
   jx=kx*invk;jy=ky*invk;jz=kz*invk;
-  n=off_intersect(l0,l3,n0,n3,x,y,z,jx,jy,jz,data);
+  n=off_intersect(l0,l3,n0,n3,x,y,z,jx,jy,jz,0.0,0.0,0.0,data);
   return n;
 }
 

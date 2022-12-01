@@ -817,7 +817,7 @@ TRACE
     }
     #ifdef USE_OFF
     else if (line_info.shape == 3) {
-      intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, thread_offdata);
+      intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, 0, 0, 0, thread_offdata);
       intersecti = 0;
     }
     #endif
@@ -994,7 +994,7 @@ TRACE
 			}
 			#ifdef USE_OFF
 			else if (line_info.shape == 3) {
-				intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, thread_offdata);
+				intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, 0, 0, 0, thread_offdata);
 				intersecti = 0;
 			}
 			#endif
@@ -1066,7 +1066,7 @@ TRACE
         }
 	#ifdef USE_OFF
 	else if (line_info.shape == 3) {
-          intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, thread_offdata);
+          intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, 0, 0, 0, thread_offdata);
           intersecti = 0;
         }
 	#endif

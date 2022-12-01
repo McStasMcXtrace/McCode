@@ -1165,7 +1165,7 @@ TRACE
     intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
   #ifdef USE_OFF
   else if (hkl_info.shape == 3)
-      intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, thread_offdata );
+      intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, 0, 0, 0, thread_offdata );
   #endif
   if (t2 < 0) intersect=0;  /* we passed sample volume already */
 
@@ -1207,7 +1207,7 @@ TRACE
         intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
       #ifdef USE_OFF
       else if (hkl_info.shape == 3)
-	      intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, thread_offdata );
+	      intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, 0, 0, 0, thread_offdata );
       #endif
       if(!intersect || t2*v < -1e-9 || t1*v > 1e-9)
       {

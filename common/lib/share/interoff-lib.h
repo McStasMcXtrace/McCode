@@ -63,6 +63,7 @@ typedef struct polygon {
   int npol;       //number of vertices
   #pragma acc shape(p[0:npol]) init_needed(npol)
   Coords normal;
+  double D;
 } polygon;
 
 typedef struct off_struct {
@@ -75,6 +76,8 @@ typedef struct off_struct {
     #pragma acc shape(vtxArray[0:faceSize]) init_needed(faceSize)
     unsigned long* faceArray;
     #pragma acc shape(vtxArray[0:faceSize][0:polySize]) init_needed(faceSize,polySize)
+    double* DArray;
+    #pragma acc shape(vtxArray[0:polySize]) init_needed(polySize)
     char *filename;
     int mantidflag;
     long mantidoffset;
@@ -100,9 +103,11 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
      Coords *n0, Coords *n3,
      double x, double y, double z,
      double vx, double vy, double vz,
+     double ax, double ay, double az,
      off_struct *data )
 * ACTION: computes intersection of neutron trajectory with an object.
 * INPUT:  x,y,z and vx,vy,vz are the position and velocity of the neutron
+*         ax, ay, az are the local acceleration vector
 *         data points to the OFF data structure
 * RETURN: the number of polyhedra which trajectory intersects
 *         t0 and t3 are the smallest incoming and outgoing intersection times
@@ -114,6 +119,7 @@ int off_intersect_all(double* t0, double* t3,
      Coords *n0, Coords *n3,
      double x, double y, double z,
      double vx, double vy, double vz,
+     double ax, double ay, double az,
      off_struct *data );
 
 /*******************************************************************************
@@ -121,9 +127,11 @@ int off_intersect_all(double* t0, double* t3,
      Coords *n0, Coords *n3,
      double x, double y, double z,
      double vx, double vy, double vz,
+     double ax, double ay, double az,
      off_struct data )
 * ACTION: computes intersection of neutron trajectory with an object.
 * INPUT:  x,y,z and vx,vy,vz are the position and velocity of the neutron
+*         ax, ay, az are the local acceleration vector
 *         data points to the OFF data structure
 * RETURN: the number of polyhedra which trajectory intersects
 *         t0 and t3 are the smallest incoming and outgoing intersection times
@@ -134,6 +142,7 @@ int off_intersect(double* t0, double* t3,
      Coords *n0, Coords *n3,
      double x, double y, double z,
      double vx, double vy, double vz,
+     double ax, double ay, double az,
      off_struct data );
 
 /*****************************************************************************
@@ -161,6 +170,33 @@ int off_x_intersect(double *l0,double *l3,
 * ACTION: display up to N_VERTEX_DISPLAYED points from the object
 *******************************************************************************/
 void off_display(off_struct);
+
+/*******************************************************************************
+void p_to_quadratic(double eq[], Coords acc,
+                    Coords pos, Coords vel,
+                    double* teq)
+* ACTION: define the quadratic for the intersection of a parabola with a plane
+* INPUT: 'eq' plane equation
+*        'acc' acceleration vector
+*        'vel' velocity of the particle
+*        'pos' position of the particle
+*         equation of plane A * x + B * y + C * z - D = 0
+*         eq[0] = (C*az)/2+(B*ay)/2+(A*ax)/2
+*         eq[1] = C*vz+B*vy+A*vx
+*         eq[2] = C*z0+B*y0+A*x0-D
+* RETURN: equation of parabola: teq(0) * t^2 + teq(1) * t + teq(2)
+*******************************************************************************/
+void p_to_quadratic(Coords norm, MCNUM d, Coords acc, Coords pos, Coords vel,
+		    double* teq);
+
+/*******************************************************************************
+int quadraticSolve(double eq[], double* x1, double* x2);
+* ACTION: solves the quadratic for the roots x1 and x2 
+*         eq[0] * t^2 + eq[1] * t + eq[2] = 0
+* INPUT: 'eq' the coefficients of the parabola
+* RETURN: roots x1 and x2 and the number of solutions
+*******************************************************************************/
+int quadraticSolve(double* eq, double* x1, double* x2);
 
 #endif
 

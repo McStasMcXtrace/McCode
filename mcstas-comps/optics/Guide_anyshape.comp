@@ -123,8 +123,16 @@ TRACE
     double t0=0, t3=0, dt=0;
     Coords n0, n3, n={0,0,0};
     /* determine intersections with object */
+    
+    double mc_gx=0.0, mc_gy=0.0, mc_gz=0.0;
+    if (mcgravitation) {
+       Coords locgrav;
+       locgrav = rot_apply(_comp->_rotation_absolute, coords_set(0,-GRAVITY,0));
+       coords_get(locgrav, &mc_gx, &mc_gy, &mc_gz);
+    }
+    
     intersect = off_intersect(&t0, &t3, &n0, &n3,
-       x,y,z, vx, vy, vz, thread_offdata );
+       x,y,z, vx, vy, vz, mc_gx, mc_gy, mc_gz, thread_offdata );
 
     /* get the smallest positive */
     if (t0 > 0) { dt = t0; n=n0; }
@@ -136,13 +144,13 @@ TRACE
     double nx,ny,nz;
     coords_get(n, &nx, &ny, &nz);
 
+    /* propagate neutron to reflection point, must be before n_dot_v with gravity */
+    PROP_DT(dt);
+
     /* test if the angle is large in case the object has an internal coating */
     double n2      = nx*nx+ny*ny+nz*nz;
     double n_dot_v = scalar_prod(vx,vy,vz,nx,ny,nz);
     double q       = 2*fabs(n_dot_v)*V2K/sqrt(n2);
-
-    /* propagate neutron to reflection point */
-    PROP_DT(dt);
 
     /* handle surface intersection */
     double R=0;
