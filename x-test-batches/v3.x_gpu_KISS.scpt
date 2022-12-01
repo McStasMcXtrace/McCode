@@ -2,6 +2,7 @@
 ### General options
 ### –- specify queue --
 #BSUB -q gpuv100
+#BSUB -R "select[test]"
 #BSUB -R "select[gpu32gb]"
 ### -- set the job Name --
 #BSUB -J McXtrace_test_job
