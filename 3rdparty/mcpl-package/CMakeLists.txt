@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.17)
 
 # This will install MCPL components
-project(MCPL VERSION 1.5.1 LANGUAGES CXX C)
+project(MCPL_wrapper)
 
 message(STATUS "Configure ${CMAKE_PROJECT_NAME} ${FLAVOR} ${PROJECT_NAME}")
 
