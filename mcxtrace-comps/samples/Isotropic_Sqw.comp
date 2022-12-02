@@ -2135,7 +2135,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         intersect=sphere_intersect  (&l0,&l3, x,y,z,kx,ky,kz, radius);
       #ifdef USE_OFF
       else if (VarSqw.shape == 3)
-        intersect=off_intersect(&l0, &l3, NULL, NULL, x, y, z, kx,ky,kz, 0,0,0, thread_offdata );
+        intersect=off_x_intersect(&l0, &l3, NULL, NULL, x, y, z, kx,ky,kz, 0,0,0, thread_offdata );
       #endif
     } else {
       if (VarSqw.shape==0)
