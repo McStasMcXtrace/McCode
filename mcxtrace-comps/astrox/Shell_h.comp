@@ -145,28 +145,39 @@ SHARE
     }
 #endif
 
+struct w_prms_h_struct
+{
+  double e_min;
+  double e_step;
+  double e_max;
+  double theta_min;
+  double theta_step;
+  double theta_max;
+  double dtheta_min;
+  double dtheta_step;
+  double dtheta_max;
+};
+
 %}
 
 DECLARE
 %{
-    struct {
-        double e_min,e_step,e_max,theta_min,theta_step,theta_max,dtheta_min,dtheta_step,dtheta_max;
-    } w_prms;
+    struct w_prms_h_struct w_prms;
     double nExit[3];
     double wExit[3];
     double nEntry[3];
     double wEntry[3];
     double nTop[3];
     double nBottom[3];
-    double alpha;
+    double Alpha;
     double radius_1;
     double radius_2;
-    double e_min[2];
-    double e_step[2];
-    double e_max[2];
-    double theta_min[2];
-    double theta_step[2];
-    double theta_max[2];
+    double E_min[2];
+    double E_step[2];
+    double E_max[2];
+    double Theta_min[2];
+    double Theta_step[2];
+    double Theta_max[2];
 
     double zexit;
 
@@ -198,20 +209,20 @@ INITIALIZE
             if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
                     header_parsed[3] && header_parsed[4] && header_parsed[5])
             {
-                e_min[i]=strtod(header_parsed[0],NULL);
-                e_max[i]=strtod(header_parsed[1],NULL);
-                e_step[i]=strtod(header_parsed[2],NULL);
-                theta_min[i]=strtod(header_parsed[3],NULL);
-                theta_max[i]=strtod(header_parsed[4],NULL);
-                theta_step[i]=strtod(header_parsed[5],NULL);
+                E_min[i]=strtod(header_parsed[0],NULL);
+                E_max[i]=strtod(header_parsed[1],NULL);
+                E_step[i]=strtod(header_parsed[2],NULL);
+                Theta_min[i]=strtod(header_parsed[3],NULL);
+                Theta_max[i]=strtod(header_parsed[4],NULL);
+                Theta_step[i]=strtod(header_parsed[5],NULL);
             } else {
                 exit(fprintf(stderr,"Error (%s): wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, reflec));
             }
-            if (!((int)(e_max[i]-e_min[i]) == (int)((tp->rows-1)*e_step[i])))
+            if (!((int)(E_max[i]-E_min[i]) == (int)((tp->rows-1)*E_step[i])))
             {
                 exit(fprintf(stderr,"Error (%s): e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, reflec));
             }
-            if (!((int)(theta_max[i]-theta_min[i]) == (int)((tp->columns-1)*theta_step[i])))
+            if (!((int)(Theta_max[i]-Theta_min[i]) == (int)((tp->columns-1)*Theta_step[i])))
             {
                 exit(fprintf(stderr,"Error (%s): theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, reflec));
             }
@@ -490,7 +501,7 @@ TRACE
             if(reflec_table==NULL || reflec_table->rows==-1){
                 R=R_d;
             }else{
-                R=Table_Value2d(*reflec_table,(e-e_min[prm_idx])/e_step[prm_idx], (theta-theta_min[prm_idx])/theta_step[prm_idx]);
+                R=Table_Value2d(*reflec_table,(e-E_min[prm_idx])/E_step[prm_idx], (theta-Theta_min[prm_idx])/Theta_step[prm_idx]);
             }
             p*=R;
         }
