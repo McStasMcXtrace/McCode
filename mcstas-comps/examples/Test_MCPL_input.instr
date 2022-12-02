@@ -1,6 +1,7 @@
 /*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
 *
-* Instrument: Test_Sources
+* Instrument: Test_MCPL_input
 *
 * %Identification
 * Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
@@ -56,6 +57,7 @@ TRACE
 COMPONENT Origin = Progress_bar()
   AT (0, 0, 0) ABSOLUTE/* read neutrons from an mcpl file*/
 
+/* read neutrons from an mcpl file*/
 COMPONENT vin = MCPL_input(filename=MCPLFILE,verbose=1,repeat_count=repeat,E_smear=E_smear,pos_smear=pos_smear,dir_smear=dir_smear)
 AT( 0,0,0) RELATIVE PREVIOUS
 
@@ -79,10 +81,10 @@ COMPONENT m4 = Monitor_nD(
   options="E, limits=[0 90] parallel, previous", bins=40
 ) AT (0,0,0) ABSOLUTE
 
-  /*  COMPONENT m5 = Monitor_nD(
+COMPONENT m5 = Monitor_nD(
   xwidth=0.2, yheight=0.2, user1=2112,
   options="parallel, previous, neutron, energy, x, y, z, vx, vy, vz, time, list all neutrons"
-  ) AT (0,0,0) ABSOLUTE*/
+) AT (0,0,0) ABSOLUTE
 
 
 END
