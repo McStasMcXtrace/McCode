@@ -24,7 +24,7 @@
 *
 * This model implements the XRD station for powders.
 *
-* %Example: E0=16.99 displayMonoLenght1_I=3.91154e-07
+* %Example: E0=16.99 emon_dcm1_full_range_I=3.86356e11
 *
 * %P
 * E0: [keV]     Central energy to be emitted by the source
@@ -115,10 +115,25 @@ DECLARE
 	/* Declarations */
 	
 	double M12_width=0.05;
+	
+    double calculated_angle;
+	double z_translation;
 %}
 
 INITIALIZE
 %{
+    calculated_angle=RAD2DEG*asin(12398.42*sqrt(8)/(2*5.4309*(E0*1e3)));
+    fprintf(stdout,"Energie %g / Angle %g", E0, calculated_angle);
+    
+    if(calculated_angle==45){
+        z_translation=0;
+    }else{
+        z_translation=(20e-3)/tan(2*calculated_angle*DEG2RAD);
+    }
+    //could also have done:
+    //if 2*calculated_angle<90 deg, z_translation=(20e-3)/tan(2*calculated_angle*DEG2RAD)
+    //else if 2*calculated_angle>90 deg, z_translation=-(20e-3)/tan(pi-2*calculated_angle*DEG2RAD)    
+    fprintf(stdout,"z translation %g", z_translation);
 %}
 
 TRACE
@@ -135,12 +150,14 @@ COMPONENT Source = Bending_magnet(
     dist=DistanceToPrimarySlit1
     )
 AT (0, 0, 0) RELATIVE origin
-/*Longueur d'onde*/
+
+/*Wavelength*/
 COMPONENT displaySourceLenght = L_monitor(
   xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
   nL=20, filename="Output1.L", Lmin=0.1, Lmax=8
 )
 AT(0,0,2) RELATIVE Source
+
 /*Visualise*/
 COMPONENT displaySource = PSD_monitor(
 	filename="emon_psd1"
@@ -158,33 +175,58 @@ COMPONENT slit2 = Slit(
     xwidth=PrimarySlit2Width, 
     yheight=PrimarySlit2Height)
 AT (0, 0, DistanceToPrimarySlit2) RELATIVE Source
+
 /* -------------------------------------- Mirror M1 */  
+
+COMPONENT M1_arm_translation = Arm()
+AT(0,0,DistanceSourceToM1) RELATIVE Source
+
+
+COMPONENT M1_arm_rotation_1 = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+ROTATED (0,0, -90) RELATIVE PREVIOUS
+
 COMPONENT mirror_M1 = Mirror_curved(
     length = M12_lenght,
     width = M12_width,
     radius = RadiusM1,
     coating=reflec_material_M12)    
-AT (0, 0, DistanceSourceToM1) RELATIVE Source   
-ROTATED (AngleM1,0, -90) RELATIVE PREVIOUS
-/*----------------------------------------Monochromator*/
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0,AngleM1, 0) RELATIVE PREVIOUS
 
+COMPONENT M1_arm_rotation_2 = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+ROTATED (0,AngleM1, 0) RELATIVE PREVIOUS
+
+COMPONENT M1_arm_rotation_2_undo = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+ROTATED (0,0, 90) RELATIVE PREVIOUS
+
+
+COMPONENT beam_arm_before_crystal = Arm()
+AT(0,0,DistanceSourceToDCM-DistanceSourceToM1) RELATIVE PREVIOUS
+
+/*----------------------------------------Monochromator (fixed offset)*/
 COMPONENT dcm_xtal0 = Bragg_crystal(
-    length=0.04, width=0.05, 
-    alpha=alpha, h=2, k=2, l=0, material="Silicon.dat", V=5)
-AT(0,-0.00989,DistanceSourceToDCM) RELATIVE Source
-ROTATED (-AngleDCM,0,0) RELATIVE Source
+    length=0.04, width=0.05,
+    alpha=alpha, h=2, k=2, l=0, material="Si.txt",crystal_type=2)    
+AT(0,0,0) RELATIVE PREVIOUS
+ROTATED (-calculated_angle,0,0) RELATIVE PREVIOUS
 
 COMPONENT dcm0 = Arm()
 AT(0,0,0) RELATIVE dcm_xtal0
-ROTATED (-AngleDCM,0,0) RELATIVE PREVIOUS
+ROTATED (-calculated_angle,0,0) RELATIVE PREVIOUS
 
-COMPONENT dcm_xtal1 = COPY(dcm_xtal0)
-AT(0,0,sqrt(Ts*Ts+Tz*Tz)) RELATIVE dcm0
-ROTATED (AngleDCM,0,0) RELATIVE dcm0
+//this dcm is a fixed offset dcm, the second crystal translates itself
+//The  double  crystal  monochromator  (DCM),  manufactured  by  FMB  Oxford,  is  equipped  with  14 independent motorized stages in order to optimize its alignment and then to assure a fixed exit beam over the entire energy range with a constant upward offset of 20 mm with respect to the primary beam. https://iopscience.iop.org/article/10.1088/1742-6596/190/1/012042/pdf
+COMPONENT dcm_xtal1 = COPY(dcm_xtal0)(length=0.02)
+AT(0,20e-3,z_translation) RELATIVE beam_arm_before_crystal
+ROTATED (calculated_angle,0,0) RELATIVE dcm0
 
 COMPONENT dcm1 =Arm()
 AT(0,0,0) RELATIVE dcm_xtal1
-ROTATED (AngleDCM,0,0) RELATIVE dcm_xtal1 
+ROTATED (calculated_angle,0,0) RELATIVE dcm_xtal1
+
 /*---------------------------------------- BeamMonitor1 */
 COMPONENT emon_dcm0 = E_monitor(
 	xwidth=PrimaryBeamMonitorWidth, 
@@ -193,39 +235,59 @@ COMPONENT emon_dcm0 = E_monitor(
 	Emin=E0-dEr*2, 
 	Emax=E0+dEr*2, 
 	nE=101)
-AT(0,0,DistanceToPrimaryBeamMonitor) RELATIVE Source
+AT(0,20e-3,DistanceToPrimaryBeamMonitor-DistanceSourceToDCM) RELATIVE beam_arm_before_crystal
+
+
 /*Visualise*/
 COMPONENT displayMono = PSD_monitor(
 	filename="emon_psd"
 )
-AT(0,0,DistanceToPrimaryBeamMonitor) RELATIVE Source
-/*Longueur d'onde*/
+AT(0,0,0) RELATIVE PREVIOUS
+
+/*Wavelength*/
 COMPONENT displayMonoLenght = L_monitor(
   xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
   nL=20, filename="Output.L", Lmin=0.1, Lmax=8
 )
-AT(0,0,DistanceToPrimaryBeamMonitor) RELATIVE Source
+AT(0,0,0) RELATIVE PREVIOUS
 
 /* -------------------------------------- Toroidal mirror M2 */   
+COMPONENT M2_arm_translation = Arm()
+AT(0,0,DistanceSourceToM2-DistanceToPrimaryBeamMonitor) RELATIVE PREVIOUS
+
+COMPONENT M2_arm_rotation_1 = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+ROTATED (0,0, 90) RELATIVE PREVIOUS
+
 COMPONENT mirror_M2 = Mirror_curved(
     length = M12_lenght,
     width = M12_width,
     radius = RadiusM2,
     coating=reflec_material_M12)    
-AT (0, 0.02, DistanceSourceToM2) RELATIVE Source   
-ROTATED (AngleM2,0, -90) RELATIVE PREVIOUS
+AT (0, 0, 0) RELATIVE PREVIOUS   
+ROTATED (0,AngleM2, 0) RELATIVE PREVIOUS
+
+
+COMPONENT M2_arm_rotation_2 = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+ROTATED (0,AngleM2, 0) RELATIVE PREVIOUS
+
+COMPONENT M2_arm_rotation_2_undo = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+ROTATED (0,0,-90) RELATIVE PREVIOUS
+
 
 /* ------------------------------------- Vertical slit 2 */
 COMPONENT slitSecon1 = Slit(
     xwidth=SecondarySlit1Width, 
     yheight=SecondarySlit1Height)
-AT (0, 0, DistanceToSecondarySlit1) RELATIVE Source
+AT (0, 0, DistanceToSecondarySlit1-DistanceSourceToM2) RELATIVE PREVIOUS
 
 /* -------------------------------------- Horizontal slit 2 */
 COMPONENT slitSecon2 = Slit(
     xwidth=SecondarySlit2Width, 
-    yheight=2*SecondarySlit2Height) //Temporary fix. The components need to be placed relative previous-ly rather than relative to the Source.
-AT (0, 0, DistanceToSecondarySlit2) RELATIVE Source
+    yheight=SecondarySlit2Height)
+AT (0, 0, DistanceToSecondarySlit2-DistanceToSecondarySlit1) RELATIVE PREVIOUS
 
 /*---------------------------------------- BeamMonitor2 */
 COMPONENT emon_dcm1 = E_monitor(
@@ -235,17 +297,26 @@ COMPONENT emon_dcm1 = E_monitor(
 	Emin=E0-dEr*2, 
 	Emax=E0+dEr*2, 
 	nE=101)
-AT(0,0,DistanceToSecondaryBeamMonitor) RELATIVE Source
+AT(0,0,DistanceToSecondaryBeamMonitor-DistanceToSecondarySlit2) RELATIVE PREVIOUS
+
+//full possible range of energy
+COMPONENT emon_dcm1_full_range = E_monitor(
+	xwidth=SecondaryBeamMonitorWidth, 
+	yheight=SecondaryBeamMonitorHeight, 
+	filename="BeamMonitor2_full_e_range", 
+	Emin=3.5, 
+	Emax=35, 
+	nE=101)
+AT(0,0,0) RELATIVE PREVIOUS
 
 /*Visualise*/
 COMPONENT displaySlit2 = PSD_monitor(
 	filename="emon_psd3"
 )
-AT(0,0,DistanceToSecondaryBeamMonitor) RELATIVE Source
+AT(0,0,0) RELATIVE PREVIOUS
 
 
 /*------------------------------------ Sample */
-
 SPLIT 100 COMPONENT Sample = PowderN(
   reflections = reflections, material="Si.txt",
   xwidth = 0.005,
@@ -253,7 +324,7 @@ SPLIT 100 COMPONENT Sample = PowderN(
   zdepth = 0.0001,
   d_phi=asin(0.02/0.670)*RAD2DEG
 )
-AT (0, 0.020, DistanceToSample) RELATIVE Source
+AT (0, 0, DistanceToSample-DistanceToSecondaryBeamMonitor) RELATIVE PREVIOUS
 
 
 /*------------------------------------- detector */
@@ -265,4 +336,3 @@ AT(0,0,0) RELATIVE Sample
 
 
 END
-
