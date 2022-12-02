@@ -412,6 +412,16 @@ class OverviewDocWriter:
         misc_tab = ''
         for c in misc_lst:
             misc_tab = misc_tab + t % (get_html_filepath(c.filepath), c.name, c.origin, c.author, c.filepath, 'comp', c.short_descr) + '\n'
+        # Union
+        union_lst = [c for c in self.comp_info_lst if c.category=='union']
+        union_tab = ''
+        for c in union_lst:
+            union_tab = union_tab + t % (get_html_filepath(c.filepath), c.name, c.origin, c.author, c.filepath, 'comp', c.short_descr) + '\n'
+        # Astrox
+        astrox_lst = [c for c in self.comp_info_lst if c.category=='astrox']
+        astrox_tab = ''
+        for c in astrox_lst:
+            astrox_tab = astrox_tab + t % (get_html_filepath(c.filepath), c.name, c.origin, c.author, c.filepath, 'comp', c.short_descr) + '\n'
         # Contributed
         contrib_lst = [c for c in self.comp_info_lst if c.category=='contrib']
         contrib_tab = ''
@@ -445,6 +455,8 @@ class OverviewDocWriter:
         text = text.replace('%TAB_LINES_OPTICS%', optics_tab)
         text = text.replace('%TAB_LINES_SAMPLES%', samples_tab)
         text = text.replace('%TAB_LINES_MONITORS%', monitors_tab)
+        text = text.replace('%TAB_LINES_UNION%', union_tab)
+        text = text.replace('%TAB_LINES_ASTROX%', astrox_tab)
         text = text.replace('%TAB_LINES_MISC%', misc_tab)
         text = text.replace('%TAB_LINES_CONTRIB%', contrib_tab)
         text = text.replace('%TAB_LINES_OBSOLETE%', obsolete_tab)
@@ -490,6 +502,8 @@ class OverviewDocWriter:
             '%TAB_LINES_SAMPLES%',
             '%TAB_LINES_MONITORS%',
             '%TAB_LINES_CONTRIB%',
+            '%TAB_LINES_UNION%',
+            '%TAB_LINES_ASTROX%',
             '%TAB_LINES_MISC%',
             '%TAB_LINES_OBSOLETE%',
             '%TAB_LINES_EXAMPLES%',
@@ -511,6 +525,8 @@ class OverviewDocWriter:
  | <A href="#optics">optics</A>
  | <A href="#samples">samples</A>
  | <A href="#monitors">monitors</A>
+ | <A href="#union">union</A>
+ | <A href="#astrox">astrox</A>
  | <A href="#misc">misc</A>
  | <A href="#contrib">contrib</A>
  | <A href="#obsolete">obsolete</A>
@@ -568,6 +584,26 @@ class OverviewDocWriter:
 %TAB_HEAD%
 
 %TAB_LINES_MONITORS%
+
+</TABLE>
+
+<P><A NAME="union"></A>
+<B><FONT COLOR="#FF0000">Union components</FONT></B>
+<TABLE BORDER COLS=5 WIDTH="100%" NOSAVE>
+
+%TAB_HEAD%
+
+%TAB_LINES_UNION%
+
+</TABLE>
+
+<P><A NAME="astrox"></A>
+<B><FONT COLOR="#FF0000">AstroX components</FONT></B>
+<TABLE BORDER COLS=5 WIDTH="100%" NOSAVE>
+
+%TAB_HEAD%
+
+%TAB_LINES_ASTROX%
 
 </TABLE>
 
