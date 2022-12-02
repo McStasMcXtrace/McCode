@@ -14,26 +14,23 @@
 *
 * This is a unit test for the MCPL_output component.
 *
-* %Example: -n1e3 merge=0 Detector: m1_I=7.9657e-08
+* %Example: Ncount=1e3 -n1e3 merge=0 Detector: m1_I=7.9657e-08
 *
 * %Parameters
 * merge: [1]  Flag to indicate if we should merge the output in case of MPI
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_MCPL_output(merge=1)
-
-DECLARE
-%{
-%}
+DEFINE INSTRUMENT Test_MCPL_output(merge=1, Ncount=1e3)
 
 USERVARS
 %{
-  double flag;
+    uint32_t flag;
 %}
 
 INITIALIZE
 %{
+  mcset_ncount((int)ceil(Ncount));
 %}
 
 TRACE
@@ -47,7 +44,7 @@ COMPONENT sa = Source_flat(
 AT(0,0,0) RELATIVE Origin
 EXTEND %{
   t=1e-3*rand01();
-  flag=(double)mcget_run_num();
+  flag=(uint32_t)mcget_run_num();
 %}
 
 /* the output ============================================================== */
@@ -75,12 +72,6 @@ COMPONENT m4 = Monitor_nD(
   options="E, limits=[0 90] parallel, previous", bins=40
 ) AT (0,0,0) ABSOLUTE
 
-/*COMPONENT m5 = Monitor_nD(
-  xwidth=0.2, yheight=0.2, user1=22,
-  options="parallel, photon, user1, energy, x, y, z, vx, vy, vz, time, list all photons"
-) AT (0,0,0) ABSOLUTE*/
-
 
 END
-
 
