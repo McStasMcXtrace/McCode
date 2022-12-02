@@ -1,0 +1,399 @@
+/*****************************************************************************
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*         University of Copenhagen, Copenhagen, Denmark
+*
+* Component: Pore_p
+*
+* %I
+*
+* Written by: Erik B Knudsen and Desiree D. M. Ferreira 
+* Date: Feb. 2016
+* Version: 1.0
+* Release: McXtrace 1.2
+* Origin: DTU Physics, DTU Space
+*
+* Single Pore as part of the Silicon Pore Optics (SPO) as envisioned for the ATHENA+ space telescope.
+*
+* %D
+* A single pore is simulated, which may have thick walls. The top and bottom are curved cylindrically
+* azimuthally, and according to the Wolter I optic lengthwise (sagitally). This is the parabolic part.
+* The azimuthal curvature is defined by the radius parameters. This refers to the center of the pore. I.e the top
+* and bottom plates have radius of curvature <radius+yheight/2> and <radius-yheight/2> respectively.
+* 
+* To intersect the Wolter I plates we take advatage of the azimuthal symmetry and only consider the radial component
+* of the photon's wavevector.
+*
+* %P
+* Input parameters:
+* radius_m: [m] Ring radius of the upper (reflecting) plate of the pore at the intersection with the hyperbolic section.
+* radius_p: [m] Ring radius of the upper (reflecting) plate of the pore at the edge furthest away from the focal point.
+* yheight:  [m] Height of the pore. (Thus the inner radius is radius_{m,h}-yehight.
+* xwidth[m]:  Width of the pore.
+* chamferwidth[m]: Width of side walls.
+* gap[m]: gap between intersection with parabolic section and actual plate.
+* Z0[m]: distance between intersection plane and the focal spot( essentially the focal length).
+* mirror_reflec [ ]: Data file containing reflectivities of the reflector surface (TOP).
+* side_reflec  [ ]:   Data file containing reflectivities of the side walls (LEFT and RIGHT).
+* bottom_reflec [ ]:  Data file containing reflectivities of the bottom surface (BOTTOM).
+* R_d [ ]: Default reflectivity value to use if no reflectivity file is given. Useful f.i. is one surface is reflecting and the others absorbing.
+* 
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Pore_p
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (radius_p, radius_m, Z0, xwidth, yheight, gap=0, chamferwidth=0, zdepth=0, string mirror_reflec="", string bottom_reflec="", string side_reflec="", R_d=1, waviness=0, longw=0)
+OUTPUT PARAMETERS (nLeft, nRight, nExit, nTop, nBottom, wLeft, wRight, wExit, wall, zentry, reflec_top_table, reflec_bottom_table,reflec_side_table,
+        ref_prms)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
+SHARE
+%{
+#ifndef MCSPO_INTERSECT_PARABOLOID
+#define MCSPO_INTERSECT_PARABOLOID 1
+    int intersect_paraboloid(double *l0, double x, double y, double z, double kx, double ky, double kz, double Z0, double radius, double *nx, double *ny, double *nz){
+        /* Intersection routine for a paraboloid as given by the paper by vanspeybroeck and Chase (appl. optics. 1972)*/
+        double alpha,thetap,thetah,P,d,e,C0;
+        alpha=0.25*atan(radius/Z0);
+        thetap=alpha;
+        thetah=alpha*3;
+        P=Z0*tan(4*alpha)*tan(thetap);
+        d=Z0*tan(4*alpha)*tan(4*alpha-thetah);
+        e=cos(4*alpha)*(1+tan(4*alpha)*tan(thetah));
+        C0=4*e*e*P*d/(e*e-1);
+
+        double kxn=kx,kyn=ky,kzn=kz;
+        NORM(kxn,kyn,kzn);
+
+        double A,B,C;
+        A=kxn*kxn + kyn*kyn;
+        B=2*(kxn*x + kyn*y+ P*kzn);
+        C=x*x + y*y -P*P - 2*P*(Z0-z) - C0;
+        int status;
+        double l1;
+        if ( (status=solve_2nd_order(l0,&l1,A,B,C))==0 ){
+            /*note that if l1->NULL only the smallest positive solution is returned*/
+            /*fprintf(stderr,"Error(%s): No solution to second order eq.\n","Pore_p");*/
+            return status;
+        }
+        /*compute normal vector*/
+        x+=kxn* (*l0);
+        y+=kyn* (*l0);
+        z+=kzn* (*l0);
+
+        double delta_y=-P*pow(P*P+2*P*(Z0-z)+C0,-0.5);
+        double rp=sqrt(P*P + 2*P*(Z0-z) + C0);
+
+        /* The tilt of the normal vector perpendicular to the optical axis
+         * depends only on the displacement in x*/
+        *nx=x/rp;
+        *ny=y/rp;
+        *nz = 0 - delta_y + 0;
+        /* the minus sign since a negative slope in rp results in the normal tilting "forward" which
+           corresponds to a positive sign in z*/
+        NORM(*nx,*ny,*nz);
+        return status;
+    }
+#endif
+%}
+
+DECLARE
+%{
+    double nLeft[3],wLeft[3];
+    double nRight[3], wRight[3];
+    double nExit[3], wExit[3];
+    double nEntry[3], wEntry[3];
+    double nTop[3],nBottom[3];
+    struct {
+        double e_min,e_step,e_max,theta_min,theta_step,theta_max;
+    } ref_prms[3];
+    double zentry;
+    t_Table reflec_side_table,reflec_top_table,reflec_bottom_table;
+
+%}
+
+INITIALIZE
+%{
+    char *filenames[]={mirror_reflec,bottom_reflec,side_reflec};
+    t_Table *ref_tables[]={&reflec_top_table,&reflec_bottom_table,&reflec_side_table};
+    int i;
+
+    /*read data from files into tables using read_table-lib*/
+    for (i=0;i<3;i++){
+        char *reflec=filenames[i];
+        t_Table *tp=ref_tables[i];
+        if (reflec && strlen(reflec)) {
+            char **header_parsed;
+
+            /* read 1st block data from file into tp */
+            if (Table_Read(tp, reflec, 1) <= 0)
+            {
+                exit(fprintf(stderr,"Error(%s): can not read file %s\n",NAME_CURRENT_COMP, reflec));
+            }
+            header_parsed = Table_ParseHeader(tp->header,
+                    "e_min=","e_max=","e_step=","theta_min=","theta_max=","theta_step=",NULL);
+            if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
+                    header_parsed[3] && header_parsed[4] && header_parsed[5])
+            {
+                ref_prms[i].e_min=strtod(header_parsed[0],NULL);
+                ref_prms[i].e_max=strtod(header_parsed[1],NULL);
+                ref_prms[i].e_step=strtod(header_parsed[2],NULL);
+                ref_prms[i].theta_min=strtod(header_parsed[3],NULL);
+                ref_prms[i].theta_max=strtod(header_parsed[4],NULL);
+                ref_prms[i].theta_step=strtod(header_parsed[5],NULL);
+            } else {
+                exit(fprintf(stderr,"Error (%s): wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, reflec));
+            }
+            if (!((int)(ref_prms[i].e_max-ref_prms[i].e_min) == (int)((tp->rows-1)*ref_prms[i].e_step)))
+            {
+                exit(fprintf(stderr,"Error (%s): e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, reflec));
+            }
+            if (!((int)(ref_prms[i].theta_max-ref_prms[i].theta_min) == (int)((tp->columns-1)*ref_prms[i].theta_step)))
+            {
+                exit(fprintf(stderr,"Error (%s): theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, reflec));
+            }
+        }else{
+            /*mark the table as unread by setting "rows" to -1
+              This will trigger the default reflectivity.*/
+            tp->rows=-1;
+        }
+    }
+
+    /* compute some pore parameters for the parabolic or hyperbolic equations*/
+    /* the z coordinate of the entry plane*/
+    /*assuming the parameter xi==1*/
+    double alpha,thetap,thetah,P,d,e,C0,Z;
+    alpha=0.25*atan(radius_m/Z0);
+    thetap=alpha;
+    thetah=alpha*3;
+    P=Z0*tan(4*alpha)*tan(thetap);
+    d=Z0*tan(4*alpha)*tan(4*alpha-thetah);
+    e=cos(4*alpha)*(1+tan(4*alpha)*tan(thetah));
+    C0=4*e*e*P*d/(e*e-1);
+
+    /*solve to get the z-coordinate of the entry plane, assuming radius_1 to be bigger*/
+    Z=(pow(radius_p,2.0) - pow(P,2.0)- C0 ) /(2*P);
+    zentry=Z0-Z;
+    double cosa=cos(xwidth/2.0/radius_m);
+    double sina=sin(xwidth/2.0/radius_m);
+    /*side wall, entry, and exit planes*/
+    nLeft[0]= cosa;
+    nLeft[1]=-sina;
+    nLeft[2]=0;
+    wLeft[0]=radius_m*(sina);
+    wLeft[1]=radius_m*(1-cosa);
+    wLeft[2]=0;
+
+    nRight[0]=-cosa;
+    nRight[1]=-sina;
+    nRight[2]=0;
+    wRight[0]=-radius_m*(sina);
+    wRight[1]=-radius_m*(1-cosa);
+    wRight[2]=0;
+
+    nEntry[0]=0;
+    nEntry[1]=0;
+    nEntry[2]=-1;
+    wExit[0]=wExit[1]=0;wExit[2]=zentry;
+
+
+    nExit[0]=0;
+    nExit[1]=0;
+    nExit[2]=1;
+    wExit[0]=wExit[1]=wExit[2]=0;
+
+%}
+
+TRACE
+%{
+    enum {LEFT, RIGHT, TOP, BOTTOM, EXIT, NONE} wall;
+    t_Table *reflec_table=NULL;
+    int hit_pore, hit_chamfer;
+    double R;
+
+    /*first do a test prop to see if the photon will enter the pore*/
+    double tmpt,tmpx,tmpy, dl;
+    tmpt=(zentry-z)/kz;
+    tmpx=x+kx*tmpt;
+    tmpy=y+ky*tmpt;
+
+    double phi_max,phi_min,phi;
+    phi_min=-xwidth*0.5/radius_m;
+    phi_max= xwidth*0.5/radius_m;
+    phi=atan2(tmpx,tmpy+radius_m);
+
+    hit_pore= ( ( tmpx*tmpx + (tmpy+radius_m)*(tmpy+radius_m) < radius_p*radius_p ) && ( tmpx*tmpx + (tmpy+radius_m)*(tmpy+radius_m) >(radius_p-yheight)*(radius_p-yheight) ) && (phi>phi_min && phi<phi_max)) ;
+    hit_chamfer=0;
+
+    if(hit_pore){
+        /*Moving photon to z=zentry. This odd way of writing this, is to handle phase and time automatically.*/
+        z-=zentry;
+        ALLOW_BACKPROP;
+	PROP_Z0;
+        z+=zentry;
+
+        SCATTER;
+        int exit=0;
+        int intersections[5]={0,0,0,0,0};
+        int i_small; 
+        double l[5]={100000.0, 100000.0, 100000.0, 100000.0, 100000.0};
+        double l_small;
+
+        double nx,ny,nz;
+
+        while (!exit){
+            l_small=DBL_MAX;
+            wall=NONE;
+            double nx,ny,nz;
+            double wx,wy,wz;
+            int prm_idx;/*index indicating which table parameter set to choose*/
+            /*left wall*/            
+            intersections[LEFT]=plane_intersect(l+LEFT,x,y,z,kx,ky,kz,nLeft[0],nLeft[1],nLeft[2],wLeft[0],wLeft[1],wLeft[2]);
+            if (intersections[LEFT] && l[LEFT]>DBL_EPSILON && l[LEFT]<l_small) {l_small=l[LEFT];i_small=intersections[LEFT];wall=LEFT;}
+            /*right wall*/            
+            intersections[RIGHT]=plane_intersect(l+RIGHT,x,y,z,kx,ky,kz,nRight[0],nRight[1],nRight[2],wRight[0],wRight[1],wRight[2]);
+            if (intersections[RIGHT] && l[RIGHT]>DBL_EPSILON && l[RIGHT]<l_small) {l_small=l[RIGHT];i_small=intersections[RIGHT];wall=RIGHT;}
+            /*exit plane*/
+            intersections[EXIT]=plane_intersect(l+EXIT,x,y,z,kx,ky,kz,nExit[0],nExit[1],nExit[2],wExit[0],wExit[1],wExit[2]);
+            if (intersections[EXIT] && l[EXIT]>DBL_EPSILON && l[EXIT]<l_small) {l_small=l[EXIT];i_small=intersections[EXIT];wall=EXIT;}
+            /*top surface - the real reflecting surface*/
+            intersections[TOP]=intersect_paraboloid((l+TOP),x,y+radius_m,z,kx,ky,kz,Z0,radius_m,&(nTop[0]),&(nTop[1]),&(nTop[2]));
+            if (intersections[TOP] && l[TOP]>DBL_EPSILON && l[TOP]<l_small) {l_small=l[TOP];i_small=intersections[TOP];wall=TOP;}
+            /*bottom surface*/
+            intersections[BOTTOM]=intersect_paraboloid((l+BOTTOM),x,y+radius_m,z,kx,ky,kz,Z0,radius_m-yheight,&(nBottom[0]),&(nBottom[1]),&(nBottom[2]));
+            if (intersections[BOTTOM] && l[BOTTOM]>DBL_EPSILON && l[BOTTOM]<l_small) {l_small=l[BOTTOM];i_small=intersections[BOTTOM];wall=BOTTOM;}
+
+            /*sort intersections ot find the smallest positive one*/
+            switch (wall){
+                case LEFT:
+                    /*handle left wall "reflection"*/
+                    reflec_table=&reflec_side_table;
+                    nx=nLeft[0];ny=nLeft[1];nz=nLeft[2];
+                    prm_idx=2;
+                    break;
+                case RIGHT:
+                    /*handle right wall "reflection"*/
+                    reflec_table=&reflec_side_table;
+                    nx=nRight[0];ny=nRight[1];nz=nRight[2];
+                    prm_idx=2;
+                    break;
+                case TOP:
+                    /*handle top wall reflection*/
+                    reflec_table=&reflec_top_table;
+                    nx=nTop[0];ny=nTop[1];nz=nTop[2];
+                    prm_idx=0;
+                    break;
+                case BOTTOM:
+                    /*handle bottom wall "reflection"*/
+                    reflec_table=&reflec_bottom_table;
+                    nx=nBottom[0];ny=nBottom[1];nz=nBottom[2];
+                    prm_idx=1;
+                    break;
+                case EXIT:
+                    /*photon will exit pore*/
+                    exit=1;
+                    break;
+            }
+            if(exit){
+                continue;
+            }
+            PROP_DL(l_small);
+
+            double kix=kx,kiy=ky,kiz=kz;
+            double k=sqrt(kx*kx+ ky*ky + kz*kz);
+            double e=K2E*k;
+            double s=scalar_prod(kx,ky,kz,nx,ny,nz);
+            double theta=RAD2DEG*(M_PI_2-acos(s/k)); /*pi_2 since theta is supposed to be the grazing angle*/
+
+            /*if we have waviness alter the normal vector slightly*/
+            if(waviness!=0){
+                /*assuming theta to be small we might disregard atan*/
+                if(longw){
+                    double dtheta;
+                    if(theta<waviness){
+                        dtheta=rand01()*(theta+waviness)-theta;
+                    }else{
+                        dtheta=randpm1()*waviness;
+                    }
+                    double tx,ty,tz;
+                    vec_prod(tx,ty,tz,0,0,1,nx,ny,nz);
+                    rotate(nx,ny,nz, nx,ny,nz, dtheta, tx,ty,tz);
+                }else{
+                    /*waviness is also transversal but isotropic*/
+                    double radius;
+                    if(theta<waviness){
+                        radius=atan(waviness);
+                        randvec_target_circle(&nx,&ny,&nz,NULL,nx,ny,nx,radius);
+                    }else{
+                        radius=(atan(theta)+atan(waviness))/2.0;
+                        randvec_target_circle(&nx,&ny,&nz,NULL,nx,ny,nx+radius-atan(theta),radius);
+                    }
+                    NORM(nx,ny,nz);
+                }
+                /*recompute theta*/
+                theta=RAD2DEG*0.5*acos(scalar_prod(kx,ky,kz,kix,kiy,kiz)/k/k);
+            }
+
+            /*reflect the photon through the surface normal*/
+            if(s!=0){
+                kx-=2*s*nx;
+                ky-=2*s*ny;
+                kz-=2*s*nz;
+            }
+            SCATTER;
+
+            if(reflec_table==NULL || reflec_table->rows==-1){
+                R=R_d;
+            }else{
+                R=Table_Value2d(*reflec_table,(e-ref_prms[prm_idx].e_min)/ref_prms[prm_idx].e_step, (theta-ref_prms[prm_idx].theta_min)/ref_prms[prm_idx].theta_step);
+            }
+            p*=R;
+        }
+    }else if (hit_chamfer){
+        ABSORB;
+    }else{
+        /*no hit*/
+        ABSORB;
+    }
+%}
+
+MCDISPLAY
+%{
+    int k;
+    double dth,theta,t0,t1,inner_m,inner_p;
+    const int N=20;
+
+    theta=xwidth/2.0/radius_m;
+    inner_m=radius_m-yheight;
+    inner_p=radius_p-yheight;
+
+    magnify("");
+    line(0,0,0, 0,radius_p-radius_m,zentry); /*this extra line indicates the reflecting surface*/
+    line( sin(theta)*radius_m, (cos(theta)-1)*radius_m, 0,  sin(theta)*radius_p, cos(theta)*radius_p-radius_m, zentry);
+    line(-sin(theta)*radius_m, (cos(theta)-1)*radius_m, 0, -sin(theta)*radius_p, cos(theta)*radius_p-radius_m, zentry);   
+ 
+    line( sin(theta)*inner_m, cos(theta)*inner_m-radius_m, 0,  sin(theta)*inner_p, cos(theta)*inner_p-radius_m, zentry);
+    line(-sin(theta)*inner_m, cos(theta)*inner_m-radius_m, 0, -sin(theta)*inner_p, cos(theta)*inner_p-radius_m, zentry);
+
+    line( sin(theta)*radius_m, (cos(theta)-1)*radius_m, 0,  sin(theta)*inner_m, cos(theta)*inner_m-radius_m, 0);
+    line(-sin(theta)*radius_m, (cos(theta)-1)*radius_m, 0, -sin(theta)*inner_m, cos(theta)*inner_m-radius_m, 0);
+    line( sin(theta)*radius_p, cos(theta)*radius_p-radius_m, zentry,  sin(theta)*inner_p, cos(theta)*inner_p-radius_m, zentry);
+    line(-sin(theta)*radius_p, cos(theta)*radius_p-radius_m, zentry, -sin(theta)*inner_p, cos(theta)*inner_p-radius_m, zentry);
+
+    dth=2*theta/N;
+    for (k=1;k<N+1;k++){
+        t0=-theta+(k-1)*dth;
+        t1=-theta+k*dth;
+        line( sin(t0)*radius_m, cos(t0)*radius_m-radius_m, 0, sin(t1)*radius_m, cos(t1)*radius_m-radius_m, 0);
+        line( sin(t0)*inner_m, cos(t0)*inner_m-radius_m, 0, sin(t1)*inner_m, cos(t1)*inner_m-radius_m, 0);
+    
+        line( sin(t0)*radius_p, cos(t0)*radius_p-radius_m, zentry, sin(t1)*radius_p, cos(t1)*radius_p-radius_m, zentry);
+        line( sin(t0)*inner_p, cos(t0)*inner_p-radius_m, zentry, sin(t1)*inner_p, cos(t1)*inner_p-radius_m, zentry);
+    }
+
+%}
+
+END

@@ -1,0 +1,233 @@
+/*******************************************************************************
+* Instrument: CXO
+*
+* %I
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Nov '20
+* Origin: DTU Physics
+* Version: 1.0
+* %INSTRUMENT_SITE: AstroX_NASA
+*
+* Chandra X-ray Opbservatory CXO
+*
+* %D
+* Model of the Chandra X-ray Observatory based on the description avaiable
+* in the Chandra Observers' Guide. Fully collimated X-ray light impinges on the
+* optic consisting of 4 mirrors in the true Wolter I configuration.
+*
+* %Example: 
+*
+* %P
+* <parameter1>: [<unit>] <parameter1 description>
+* E0: [keV]     Central eX-ray energy to be simulated.
+* dE: [keV]     Half-width of energy spectrum
+* verbose: [0]  Emit extra information.
+* mcoat: [str]  Filename of file which conatins reflectivity for coating
+* OA_angle: [deg] Off-axis angle. Angle around y-axis at which radiation will hit the optic. 
+* 
+* %L
+* https://cxc.harvard.edu/proposer/POG/html/index.html
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT CXO(E0=1, dE=0.001, verbose=1, string mcoat="Ir_CXO.dat", OA_angle=0)
+
+DECLARE
+%{
+   double Rp[4]={1.23/2.0, 0.99/2.0, 0.87/2.0, 0.65/2.0};
+   double Rm[4];
+   double Rh[4];
+   const double FL=10.070;
+   const double PL=0.84;
+   const double th_c_deg[4]={3.42, 2.75, 2.42, 1.80};
+   double th_c[4];
+
+   const double OD=10;
+   int bounce;
+   char optionstring[]="x auto y auto"; 
+   char optionstring1[128]; 
+   char optionstring2[128]; 
+   double xdiv;
+%}
+
+INITIALIZE
+%{
+   /*compute the midpoint and hyperbolic radii*/
+  double alpha,thetap,thetah,P,d,e,C0;
+  int i;
+  for(i=0;i<4;i++){
+    th_c[i]=th_c_deg[i]*DEG2RAD;
+    Rm[i]=atan(th_c[i])*FL;
+    alpha=th_c[i]/4.0;
+    thetap=alpha;
+    thetah=alpha*3;
+    P=FL*tan(4*alpha)*tan(thetap);
+    d=FL*tan(4*alpha)*tan(4*alpha-thetah);
+    e=cos(4*alpha)*(1+tan(4*alpha)*tan(thetah));
+    C0=4*e*e*P*d/(e*e-1);
+
+    /*RP and RH is assumed given by the length along the axis=0.84*/
+    Rp[i]=sqrt( P*P + 2*P*(PL+FL) + C0);
+    Rh[i]=sqrt( e*e *(d+FL-PL)*(d+FL-PL) - (FL-PL)*(FL-PL));
+    if(verbose){
+      printf("CXO radii (Rp,Rm,Rh): %f %f %f\n",Rp[i],Rm[i],Rh[i]);
+      printf("CXO diam outer  (Dp): %.2f\n",Rp[i]*2);
+      printf("CXO diffs %.2f %.2f %.2f\n",Rp[i]-Rp[i-1], Rm[i]-Rm[i-1], Rh[i]-Rh[i-1]);
+      printf("theta(p,h) = (%g,%g) deg. = (%g,%g) rad.\n",thetap*RAD2DEG,thetah*RAD2DEG,thetap,thetah);
+    } 
+
+  }
+
+  snprintf(optionstring1,127,"xdiv limits -1 1");
+  snprintf(optionstring2,127,"u1 limits -1 1");
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT optics_centre = Arm()
+AT(0,0,OD) RELATIVE origin
+
+COMPONENT optics_entry = Arm()
+AT(0,0,-PL) RELATIVE optics_centre
+
+COMPONENT off_axis = Arm()
+AT(0,0,0) RELATIVE optics_entry
+ROTATED (0,OA_angle,0) RELATIVE optics_entry
+
+COMPONENT src_div = Source_div(xwidth=1.23,yheight=1.23, focus_aw=2*DEG2RAD, focus_ah=1e-9, E0=E0, dE=dE)
+AT(0,0,-OD+PL) RELATIVE off_axis
+
+COMPONENT preOp_emon = E_monitor(nE=201,Emin=0.05, Emax=9.95, filename="preOp_e", xwidth=1.25, yheight=1.25)
+AT(0,0,OD-PL-1e-3) RELATIVE origin
+
+COMPONENT preOp_psd = PSD_monitor(xwidth=1.25, yheight=1.25, nx=201, ny=201, filename="preOp_xy")
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT preOp_div = Monitor_nD(options=optionstring1, bins=101, xwidth=1.25, yheight=1.25,filename="preOp_dx")
+AT(0,0,0) RELATIVE PREVIOUS
+EXTEND
+%{
+  double k=sqrt(kx*kx+ky*ky+kz*kz);
+  xdiv=acos(kz/sqrt(kx*kx+kz*kz));
+  if (kx<0) xdiv=-xdiv;
+  xdiv*=RAD2DEG;
+%}
+
+/*primary optics*/
+
+COMPONENT sh1_p = Shell_p(
+    radius_p=Rp[0], radius_m=Rm[0], mirror_reflec=mcoat, yheight=Rp[0]-Rp[1], Z0=FL, R_d=0)
+AT(0,0,0) RELATIVE optics_centre
+GROUP primary
+EXTEND
+%{
+  bounce=mcScattered;
+%}
+COMPONENT sh3_p = Shell_p(
+    radius_p=Rp[1], radius_m=Rm[1], mirror_reflec=mcoat, yheight=Rp[1]-Rp[2], Z0=FL, R_d=0)
+AT(0,0,0) RELATIVE optics_centre
+GROUP primary
+EXTEND
+%{
+  bounce=mcScattered;
+%}
+
+COMPONENT sh4_p = Shell_p(
+    radius_p=Rp[2], radius_m=Rm[2], mirror_reflec=mcoat, yheight=Rp[2]-Rp[3], Z0=FL, R_d=0)
+AT(0,0,0) RELATIVE optics_centre
+GROUP primary
+EXTEND
+%{
+  bounce=mcScattered;
+%}
+
+COMPONENT sh6_p = Shell_p(
+    radius_p=Rp[3], radius_m=Rm[3], mirror_reflec=mcoat, yheight=0.2, Z0=FL, R_d=0)
+AT(0,0,0) RELATIVE optics_centre
+GROUP primary
+EXTEND
+%{
+  bounce=mcScattered;
+  double ee=sqrt(kx*kx+ky*ky+kz*kz)*K2E;
+%}
+COMPONENT midOp_emon = COPY(preOp_emon)(nE=201, filename="midOp_e")
+WHEN(bounce==2) AT(0,0,0) RELATIVE optics_centre
+
+
+/*secondary optics*/
+
+COMPONENT sh1_h = Shell_h(
+    radius_h=Rh[0], radius_m=Rm[0], mirror_reflec=mcoat, yheight=Rm[0]-Rm[1], Z0=FL, R_d=0)
+AT(0,0,0) RELATIVE optics_centre
+GROUP secondary
+EXTEND
+%{
+  bounce+=mcScattered;
+%}
+
+COMPONENT sh3_h = Shell_h(
+    radius_h=Rh[1], radius_m=Rm[1], mirror_reflec=mcoat, yheight=Rm[1]-Rm[2], Z0=FL, R_d=0)
+AT(0,0,0) RELATIVE optics_centre
+GROUP secondary
+EXTEND
+%{
+  bounce+=mcScattered;
+%}
+
+COMPONENT sh4_h = Shell_h(
+    radius_h=Rh[2], radius_m=Rm[2], mirror_reflec=mcoat, yheight=Rm[2]-Rm[3], Z0=FL, R_d=0)
+AT(0,0,0) RELATIVE optics_centre
+GROUP secondary
+EXTEND
+%{
+  bounce+=mcScattered;
+%}
+
+COMPONENT sh6_h = Shell_h(
+    radius_h=Rh[3], radius_m=Rm[3], mirror_reflec=mcoat, yheight=0.2, Z0=FL, R_d=0)
+AT(0,0,0) RELATIVE optics_centre
+GROUP secondary
+EXTEND
+%{
+  bounce+=mcScattered;
+%}
+
+
+
+COMPONENT postOp_emon = COPY(preOp_emon)(filename="postOp_e")
+WHEN(bounce==4) AT(0,0,PL+1e-3) RELATIVE optics_centre
+
+COMPONENT postOp_psd = COPY(preOp_psd)(filename="postOp_xy")
+WHEN(bounce==4) AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT postOp_div = Monitor_nD(options=optionstring2, user1=xdiv, bins=101, xwidth=1.25, yheight=1.25,filename="postOp_dx")
+WHEN(bounce==4) AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT near_psd = PSD_monitor(filename="near_xy",xwidth=1, yheight=1)
+WHEN(bounce==4) AT(0,0,-3+FL) RELATIVE optics_centre
+
+COMPONENT fp_emon = E_monitor(filename="fp_emon", nE=101, Emin=0, Emax=10, xwidth=1e-6, yheight=1e-6, restore_xray=1)
+WHEN(bounce==4) AT(0,0,FL) RELATIVE optics_centre
+
+COMPONENT fp_psd = PSD_monitor(filename="fp_xy", xwidth=1e-6, yheight=1e-6, restore_xray=1)
+WHEN(bounce==4) AT(0,0,0)RELATIVE PREVIOUS
+
+COMPONENT fp_psd_auto = Monitor_nD(options=optionstring, bins=201, xwidth=1e-1, yheight=1e-1, restore_xray=1)
+WHEN(bounce==4) AT(0,0,0) RELATIVE PREVIOUS
+
+
+COMPONENT far_psd = PSD_monitor(filename="far_xy", xwidth=1, yheight=1)
+WHEN(bounce==4) AT(0,0,FL+3) RELATIVE optics_centre
+
+
+
+
+
+FINALLY
+%{
+%}
+
+END
