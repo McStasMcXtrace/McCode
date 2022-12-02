@@ -210,7 +210,7 @@ EXTEND
 %}
 
 COMPONENT Shell_p_1 = Shell_c(
-        xwidth=1, radius_m=RMP,primary=1,  length=PL, Z0=FL, yheight=PHP, mirror_reflec=coatings[Pcoat], R_d=0)
+        yheight=1, radius_m=RMP,primary=1,  length=PL, Z0=FL, yheight=PHP, mirror_reflec=coatings[Pcoat], R_d=0)
 AT(0,0,-1e-4) RELATIVE misalign
 EXTEND
 %{
@@ -226,7 +226,7 @@ COMPONENT midopdet = PSD_monitor(
 AT(0,0,0) RELATIVE misalign
 
 COMPONENT Shell_h_1 = Shell_c(
-        xwidth=1, radius_m=RMH, primary=0,primary=0,  length=HL, Z0=FL, yheight=PHH, mirror_reflec=coatings[Hcoat], R_d=0)
+        yheight=1, radius_m=RMH, primary=0,primary=0,  length=HL, Z0=FL, yheight=PHH, mirror_reflec=coatings[Hcoat], R_d=0)
 AT(0,0,0) RELATIVE misalign
 GROUP hyperoptics
 EXTEND

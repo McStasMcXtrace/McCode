@@ -208,7 +208,7 @@ AT( 0,-PRM[ROW[porenumber-1]-1],0) RELATIVE misalign_rot_p
 /*GROUP paraoptics*/
 
 COMPONENT mm_p_1 = MM_p(
-        pore_th=0, ring_nr=ROW[porenumber-1], Z0=FL, pore_width=pore_width , yheight=pore_height, mirror_reflec=reflectivity, R_d=0, size_file=ringfile)
+        pore_th=0, ring_nr=ROW[porenumber-1], Z0=FL, pore_width=pore_width , pore_height=pore_height, mirror_reflec=reflectivity, R_d=0, size_file=ringfile)
 WHEN(para) AT(0,0,0) RELATIVE ref_p
 ROTATED (0.0,0.0,0.0) RELATIVE ref_p
 EXTEND
@@ -227,7 +227,7 @@ COMPONENT ref_h = Arm()
 AT( 0,-PRM[ROW[porenumber-1]-1],0) RELATIVE misalign_rot_h
 
 COMPONENT mm_h_1 = MM_h(
-        pore_th=0, ring_nr=ROW[porenumber-1], Z0=FL, pore_width=pore_width, yheight=pore_height, mirror_reflec=reflectivity, R_d=0, size_file=ringfile)
+        pore_th=0, ring_nr=ROW[porenumber-1], Z0=FL, pore_width=pore_width, pore_height=pore_height, mirror_reflec=reflectivity, R_d=0, size_file=ringfile)
 WHEN (hyper) AT(0,0,0) RELATIVE ref_h
 ROTATED (0.0,0.0,0.0) RELATIVE ref_h
 EXTEND
