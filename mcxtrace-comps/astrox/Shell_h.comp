@@ -37,6 +37,27 @@
 * widths (sigmas) are given by the tables in the file "wave_file". If the off-specular case the behaviour is similar
 * to 2D uniform case.
 *
+* In the case of 3, the format of the data file should be:
+* #e_min=0.1
+* #e_max=15
+* #e_step=0.01
+* #theta_min=0.01
+* #theta_max=1.5
+* #theta_step=0.01
+* #dtheta_min=-0.02
+* #dtheta_max=0.02
+* #dtheta_step=0.001
+* 1.0  0.9  0.8  0.75  ...
+* 0.99 0.89 0.79 0.749 ...
+* ...
+*#block 2 (energy data point 2)
+* 1.0  0.9  0.8  0.75  ...
+* 0.99 0.89 0.79 0.749 ...
+* ...
+*
+* I.e. one 2D data block per energy data point where rows represent the steps in nominal incident angle, and columns
+* represent the sampled granularity of the off-specular scattering.
+*
 * %P
 * Input parameters:
 * radius_m [m]:  Ring radius of the upper (reflecting) plate of the pore at the intersection with the parabolic section.
@@ -126,26 +147,31 @@ SHARE
 
 %}
 
-
-
 DECLARE
 %{
-    double nLeft[3],wLeft[3];
-    double nRight[3], wRight[3];
-    double nExit[3], wExit[3];
-    double nEntry[3], wEntry[3];
-    double nTop[3],nBottom[3];
-    struct {
-        double e_min,e_step,e_max,theta_min,theta_step,theta_max;
-    } ref_prms[2];
     struct {
         double e_min,e_step,e_max,theta_min,theta_step,theta_max,dtheta_min,dtheta_step,dtheta_max;
     } w_prms;
-
+    double nExit[3];
+    double wExit[3];
+    double nEntry[3];
+    double wEntry[3];
+    double nTop[3];
+    double nBottom[3];
+    double alpha;
+    double radius_1;
+    double radius_2;
+    double e_min[2];
+    double e_step[2];
+    double e_max[2];
+    double theta_min[2];
+    double theta_step[2];
+    double theta_max[2];
 
     double zexit;
-    
-    t_Table reflec_top_table,reflec_bottom_table;
+
+    t_Table reflec_top_table;
+    t_Table reflec_bottom_table;
     t_Table wave_table[1024];
 %}
 
@@ -172,20 +198,20 @@ INITIALIZE
             if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
                     header_parsed[3] && header_parsed[4] && header_parsed[5])
             {
-                ref_prms[i].e_min=strtod(header_parsed[0],NULL);
-                ref_prms[i].e_max=strtod(header_parsed[1],NULL);
-                ref_prms[i].e_step=strtod(header_parsed[2],NULL);
-                ref_prms[i].theta_min=strtod(header_parsed[3],NULL);
-                ref_prms[i].theta_max=strtod(header_parsed[4],NULL);
-                ref_prms[i].theta_step=strtod(header_parsed[5],NULL);
+                e_min[i]=strtod(header_parsed[0],NULL);
+                e_max[i]=strtod(header_parsed[1],NULL);
+                e_step[i]=strtod(header_parsed[2],NULL);
+                theta_min[i]=strtod(header_parsed[3],NULL);
+                theta_max[i]=strtod(header_parsed[4],NULL);
+                theta_step[i]=strtod(header_parsed[5],NULL);
             } else {
                 exit(fprintf(stderr,"Error (%s): wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, reflec));
             }
-            if (!((int)(ref_prms[i].e_max-ref_prms[i].e_min) == (int)((tp->rows-1)*ref_prms[i].e_step)))
+            if (!((int)(e_max[i]-e_min[i]) == (int)((tp->rows-1)*e_step[i])))
             {
                 exit(fprintf(stderr,"Error (%s): e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, reflec));
             }
-            if (!((int)(ref_prms[i].theta_max-ref_prms[i].theta_min) == (int)((tp->columns-1)*ref_prms[i].theta_step)))
+            if (!((int)(theta_max[i]-theta_min[i]) == (int)((tp->columns-1)*theta_step[i])))
             {
                 exit(fprintf(stderr,"Error (%s): theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, reflec));
             }
@@ -307,9 +333,9 @@ TRACE
     if(hit_shell){
         SCATTER;
         int exit=0;
-        int intersections[5];
-        int i_small; 
-        double l[5];
+        int intersections[5]={0,0,0,0,0};
+        int i_small;
+        double l[5]={100000.0, 100000.0, 100000.0, 100000.0, 100000.0};
         double l_small;
 
         double nx,ny,nz;
@@ -352,7 +378,6 @@ TRACE
             if(exit){
                 continue;
             }
-
             PROP_DL(l_small);
 
             double kix=kx,kiy=ky,kiz=kz;
@@ -459,22 +484,22 @@ TRACE
                 ky-=2*s*ny;
                 kz-=2*s*nz;
             }
-                /*recompute theta*/
+            SCATTER;
+            /*recompute theta*/
             theta=RAD2DEG*0.5*acos(scalar_prod(kx,ky,kz,kix,kiy,kiz)/k/k);
             if(reflec_table==NULL || reflec_table->rows==-1){
                 R=R_d;
             }else{
-                R=Table_Value2d(*reflec_table,(e-ref_prms[prm_idx].e_min)/ref_prms[prm_idx].e_step, (theta-ref_prms[prm_idx].theta_min)/ref_prms[prm_idx].theta_step);
+                R=Table_Value2d(*reflec_table,(e-e_min[prm_idx])/e_step[prm_idx], (theta-theta_min[prm_idx])/theta_step[prm_idx]);
             }
             p*=R;
-            SCATTER;
         }
     }else if (hit_chamfer){
         ABSORB;
     }else{
         /*no hit*/
         ABSORB;
-    } 
+    }
 %}
 
 MCDISPLAY

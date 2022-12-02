@@ -136,25 +136,38 @@ SHARE
 
 DECLARE
 %{
-    double nLeft[3],wLeft[3];
-    double nRight[3], wRight[3];
-    double nExit[3], wExit[3];
-    double nEntry[3], wEntry[3];
-    double nTop[3],nBottom[3];
-    double alpha,radius_1,radius_2;
-    struct {
-        double e_min,e_step,e_max,theta_min,theta_step,theta_max;
-    } ref_prms[3], non_specular_prms;
+    double nExit[3];
+    double wExit[3];
+    double nEntry[3];
+    double wEntry[3];
+    double nTop[3];
+    double nBottom[3];
+    double alpha;
+    double radius_1;
+    double radius_2;
+    double e_min[3];
+    double e_step[3];
+    double e_max[3];
+    double theta_min[3];
+    double theta_step[3];
+    double theta_max[3];
 
-    double zentry,zexit;
-    double *zentry_vec,*zexit_vec, *radius_1_vec, *radius_2_vec;
+    double zentry;
+    double zexit;
+    double *zentry_vec;
+    double *zexit_vec;
+    double *radius_1_vec;
+    double *radius_2_vec;
 
+    t_Table reflec_top_table;
+    t_Table reflec_bottom_table;
+    t_Table reflec_side_table;
+    t_Table size_table;
     // array which stores the pore walls that the ray reflects onto
     unsigned char reflections[16];
+    
     // index of the latest reflection to occur
     char ref_index;
-
-    t_Table reflec_side_table,reflec_top_table,reflec_bottom_table,size_table;
 
     t_Table non_specular_table;
 %}
@@ -183,20 +196,20 @@ INITIALIZE
             if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
                     header_parsed[3] && header_parsed[4] && header_parsed[5])
             {
-                ref_prms[i].e_min=strtod(header_parsed[0],NULL);
-                ref_prms[i].e_max=strtod(header_parsed[1],NULL);
-                ref_prms[i].e_step=strtod(header_parsed[2],NULL);
-                ref_prms[i].theta_min=strtod(header_parsed[3],NULL);
-                ref_prms[i].theta_max=strtod(header_parsed[4],NULL);
-                ref_prms[i].theta_step=strtod(header_parsed[5],NULL);
+                e_min[i]=strtod(header_parsed[0],NULL);
+                e_max[i]=strtod(header_parsed[1],NULL);
+                e_step[i]=strtod(header_parsed[2],NULL);
+                theta_min[i]=strtod(header_parsed[3],NULL);
+                theta_max[i]=strtod(header_parsed[4],NULL);
+                theta_step[i]=strtod(header_parsed[5],NULL);
             } else {
                 exit(fprintf(stderr,"Error (%s): wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, reflec));
             }
-            if (!((int)(ref_prms[i].e_max-ref_prms[i].e_min) == (int)((tp->rows-1)*ref_prms[i].e_step)))
+            if (!((int)(e_max[i]-e_min[i]) == (int)((tp->rows-1)*e_step[i])))
             {
                 exit(fprintf(stderr,"Error (%s): e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, reflec));
             }
-            if (!((int)(ref_prms[i].theta_max-ref_prms[i].theta_min) == (int)((tp->columns-1)*ref_prms[i].theta_step)))
+            if (!((int)(theta_max[i]-theta_min[i]) == (int)((tp->columns-1)*theta_step[i])))
             {
                 exit(fprintf(stderr,"Error (%s): theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, reflec));
             }
@@ -222,7 +235,7 @@ INITIALIZE
 
     double alpha,thetap,thetah,P,d,e,C0,Z;
     double radius_m, radius_1, radius_2;
-   /*There are in general 68 reflecting planes*/
+    /*There are in general 68 reflecting planes*/
     for (i=0;i<size_table.rows;i++){
 
         radius_m = Table_Index(size_table,i,4);
@@ -286,20 +299,20 @@ INITIALIZE
             if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
                 header_parsed[3] && header_parsed[4] && header_parsed[5])
                 {
-                    non_specular_prms.e_min=strtod(header_parsed[0],NULL);
-                    non_specular_prms.e_max=strtod(header_parsed[1],NULL);
-                    non_specular_prms.e_step=strtod(header_parsed[2],NULL);
-                    non_specular_prms.theta_min=strtod(header_parsed[3],NULL);
-                    non_specular_prms.theta_max=strtod(header_parsed[4],NULL);
-                    non_specular_prms.theta_step=strtod(header_parsed[5],NULL);
+                    e_min[2]=strtod(header_parsed[0],NULL);
+                    e_max[2]=strtod(header_parsed[1],NULL);
+                    e_step[2]=strtod(header_parsed[2],NULL);
+                    theta_min[2]=strtod(header_parsed[3],NULL);
+                    theta_max[2]=strtod(header_parsed[4],NULL);
+                    theta_step[2]=strtod(header_parsed[5],NULL);
                 } else {
                     exit(fprintf(stderr,"Error (%s): wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, non_specular_file));
                 }
-                if (!((int)(non_specular_prms.e_max-non_specular_prms.e_min) == (int)((non_specular_table.rows-1)*non_specular_prms.e_step)))
+                if (!((int)(non_specular_prms.e_max-non_specular_prms.e_min) == (int)((non_specular_table.rows-1)*non_specular_prms.e_step[2])))
                 {
                     exit(fprintf(stderr,"Error (%s): e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, non_specular_file));
                 }
-                if (!((int)(non_specular_prms.theta_max-non_specular_prms.theta_min) == (int)((non_specular_table.columns-1)*non_specular_prms.theta_step)))
+                if (!((int)(non_specular_prms.theta_max-non_specular_prms.theta_min) == (int)((non_specular_table.columns-1)*theta_step[2])))
                 {
                     exit(fprintf(stderr,"Error (%s): theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, non_specular_file));
                 }
@@ -334,7 +347,7 @@ TRACE
         /*we are within range for entering the the mirror module - we might still miss due to beam divergence though*/
         hit=0;
         int ii=0;
-        int hit_chamfer;
+        int hit_chamfer=0;
         int upside_down_plate;
         double local_pore_height;
         double radius_entry;
@@ -356,7 +369,8 @@ TRACE
             hit= ( ( x*x + y*y < radius_entry*radius_entry ) && ( x*x + y*y >(radius_entry-local_pore_height)*(radius_entry-local_pore_height) ) ) ;
             ii++;
         }
-        if(!hit){
+        /*if we have missed all plates, terminate the ray*/
+        if (!hit){
             ABSORB;
         }
 
@@ -388,6 +402,7 @@ TRACE
         }
         /*check for side_wall (chamfer) hit (obscuration)*/
         hit_chamfer=0;
+
         if(hit_final_pore && psi > xwidth/2/(radius_entry-local_pore_height) - chamfer_width){
             hit_chamfer=1;
             hit=0;
@@ -397,7 +412,6 @@ TRACE
             hit=0;
             ABSORB;
         }
-        // ===============================
 
         int coatedPlate = Table_Index(size_table, ii, 7);
 
@@ -452,7 +466,7 @@ TRACE
                 intersections[BOTTOM]=intersect_cone((l+BOTTOM),x,y,z,kx,ky,kz,alpha,radius_m-local_pore_height,&(nBottom[0]),&(nBottom[1]),&(nBottom[2]));
                 if (intersections[BOTTOM] && l[BOTTOM]>DBL_EPSILON && l[BOTTOM]<l_small) {l_small=l[BOTTOM];i_small=intersections[BOTTOM];wall=BOTTOM;}
 
-                /*sort intersections ot find the smallest positive one*/
+                /*sort intersections to find the smallest positive one*/
                 switch (wall){
                     case LEFT:
                         /*handle left wall "reflection"*/
@@ -511,7 +525,7 @@ TRACE
                         double dtheta;
                         if(&non_specular_table!=NULL){
                             double lw;
-                            lw = Table_Value2d(non_specular_table, (e-non_specular_prms.e_min)/non_specular_prms.e_step, (theta-non_specular_prms.theta_min)/non_specular_prms.theta_step);
+                            lw = Table_Value2d(non_specular_table, (e-e_min[2])/e_step[2], (theta-theta_min[2])/theta_step[2]);
                             dtheta=lorentzDistribution(0, lw);
                             printf("lorentz dtheta %e\n");
                         } else if(theta<waviness){
@@ -537,6 +551,7 @@ TRACE
                     /*recompute theta*/
                     theta=RAD2DEG*0.5*acos(scalar_prod(kx,ky,kz,kix,kiy,kiz)/k/k);
                 }
+                /*reflect the photon through the surface normal*/
                 if(s!=0){
                     kx-=2*s*nx;
                     ky-=2*s*ny;
@@ -556,7 +571,7 @@ TRACE
                 if(reflec_table==NULL || reflec_table->rows==-1){
                     R=R_d;
                 }else{
-                    R=Table_Value2d(*reflec_table,(e-ref_prms[prm_idx].e_min)/ref_prms[prm_idx].e_step, (theta-ref_prms[prm_idx].theta_min)/ref_prms[prm_idx].theta_step);
+                    R=Table_Value2d(*reflec_table,(e-e_min[prm_idx])/e_step[prm_idx], (theta-theta_min[prm_idx])/theta_step[prm_idx]);
                 }
                 p*=R;
             }

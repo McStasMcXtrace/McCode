@@ -125,40 +125,48 @@ SHARE
 #endif
 %}
 
-
-
 DECLARE
 %{
-    #define MAX_TRACKED_REFLECTIONS 16
-    double nLeft[3],wLeft[3];
-    double nRight[3], wRight[3];
-    double nExit[3], wExit[3];
-    double nEntry[3], wEntry[3];
-    double nTop[3],nBottom[3];
-    struct {
-        double e_min,e_step,e_max,theta_min,theta_step,theta_max;
-    } ref_prms[3], non_specular_prms;
+    double nExit[3];
+    double wExit[3];
+    double nEntry[3];
+    double wEntry[3];
+    double nTop[3];
+    double nBottom[3];
+    double alpha;
+    double radius_1;
+    double radius_2;
+    double e_min[3];
+    double e_step[3];
+    double e_max[3];
+    double theta_min[3];
+    double theta_step[3];
+    double theta_max[3];
+
     double zexit;
     double *zexit_vec;
     double xwidth;
 
+    t_Table reflec_top_table;
+    t_Table reflec_bottom_table;
+    t_Table reflec_side_table;
+    t_Table size_table;
     // array which stores the pore walls that the ray reflects onto
     unsigned char reflections[16];
+
+    double radius_h;
+    double radius_m;
+    double radius_h_2;
+    double radius_m_2;
     // index of the latest reflection to occur
     char ref_index;
 
-    double radius_m,radius_h,radius_m_2,radius_h_2;
-
-    t_Table reflec_side_table,reflec_top_table,reflec_bottom_table,size_table;
-
     t_Table non_specular_table;
-
 %}
 
 INITIALIZE
 %{
-
-    /*read data from files into tables using read_table-lib*/
+    #define MAX_TRACKED_REFLECTIONS 16
     char *filenames[]={mirror_reflec,bottom_reflec,side_reflec};
     t_Table *ref_tables[]={&reflec_top_table,&reflec_bottom_table,&reflec_side_table};
     int i;
@@ -173,29 +181,29 @@ INITIALIZE
             /* read 1st block data from file into tp */
             if (Table_Read(tp, reflec, 1) <= 0)
             {
-                exit(fprintf(stderr,"Error: %s: cannot read file %s\n",NAME_CURRENT_COMP, reflec));
+                exit(fprintf(stderr,"Error(%s): cannot read file %s\n",NAME_CURRENT_COMP, reflec));
             }
             header_parsed = Table_ParseHeader(tp->header,
                     "e_min=","e_max=","e_step=","theta_min=","theta_max=","theta_step=",NULL);
             if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
                     header_parsed[3] && header_parsed[4] && header_parsed[5])
             {
-                ref_prms[i].e_min=strtod(header_parsed[0],NULL);
-                ref_prms[i].e_max=strtod(header_parsed[1],NULL);
-                ref_prms[i].e_step=strtod(header_parsed[2],NULL);
-                ref_prms[i].theta_min=strtod(header_parsed[3],NULL);
-                ref_prms[i].theta_max=strtod(header_parsed[4],NULL);
-                ref_prms[i].theta_step=strtod(header_parsed[5],NULL);
+                e_min[i]=strtod(header_parsed[0],NULL);
+                e_max[i]=strtod(header_parsed[1],NULL);
+                e_step[i]=strtod(header_parsed[2],NULL);
+                theta_min[i]=strtod(header_parsed[3],NULL);
+                theta_max[i]=strtod(header_parsed[4],NULL);
+                theta_step[i]=strtod(header_parsed[5],NULL);
             } else {
-                exit(fprintf(stderr,"Error: %s: wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, reflec));
+                exit(fprintf(stderr,"Error (%s): wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, reflec));
             }
-            if (!((int)(ref_prms[i].e_max-ref_prms[i].e_min) == (int)((tp->rows-1)*ref_prms[i].e_step)))
+            if (!((int)(e_max[i]-e_min[i]) == (int)((tp->rows-1)*e_step[i])))
             {
-                exit(fprintf(stderr,"Error: %s: e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, reflec));
+                exit(fprintf(stderr,"Error (%s): e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, reflec));
             }
-            if (!((int)(ref_prms[i].theta_max-ref_prms[i].theta_min) == (int)((tp->columns-1)*ref_prms[i].theta_step)))
+            if (!((int)(theta_max[i]-theta_min[i]) == (int)((tp->columns-1)*theta_step[i])))
             {
-                exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, reflec));
+                exit(fprintf(stderr,"Error (%s): theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, reflec));
             }
         }else{
             /*mark the table as unread by setting "rows" to -1
@@ -269,20 +277,20 @@ INITIALIZE
             if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
                 header_parsed[3] && header_parsed[4] && header_parsed[5])
                 {
-                    non_specular_prms.e_min=strtod(header_parsed[0],NULL);
-                    non_specular_prms.e_max=strtod(header_parsed[1],NULL);
-                    non_specular_prms.e_step=strtod(header_parsed[2],NULL);
-                    non_specular_prms.theta_min=strtod(header_parsed[3],NULL);
-                    non_specular_prms.theta_max=strtod(header_parsed[4],NULL);
-                    non_specular_prms.theta_step=strtod(header_parsed[5],NULL);
+                    e_min[2]=strtod(header_parsed[0],NULL);
+                    e_max[2]=strtod(header_parsed[1],NULL);
+                    e_step[2]=strtod(header_parsed[2],NULL);
+                    theta_min[2]=strtod(header_parsed[3],NULL);
+                    theta_max[2]=strtod(header_parsed[4],NULL);
+                    theta_step[2]=strtod(header_parsed[5],NULL);
                 } else {
                     exit(fprintf(stderr,"Error (%s): wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, non_specular_file));
                 }
-                if (!((int)(non_specular_prms.e_max-non_specular_prms.e_min) == (int)((non_specular_table.rows-1)*non_specular_prms.e_step)))
+                if (!((int)(non_specular_prms.e_max-non_specular_prms.e_min) == (int)((non_specular_table.rows-1)*non_specular_prms.e_step[2])))
                 {
                     exit(fprintf(stderr,"Error (%s): e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, non_specular_file));
                 }
-                if (!((int)(non_specular_prms.theta_max-non_specular_prms.theta_min) == (int)((non_specular_table.columns-1)*non_specular_prms.theta_step)))
+                if (!((int)(non_specular_prms.theta_max-non_specular_prms.theta_min) == (int)((non_specular_table.columns-1)*theta_step[2])))
                 {
                     exit(fprintf(stderr,"Error (%s): theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, non_specular_file));
                 }
@@ -347,28 +355,27 @@ TRACE
         /*ii-1 is now the number of the hit plate - unless it is outside all of them,
           radius_m and radius_h are the relevant radii for this plate.*/
 
-          /*figure out which pore we hit*/
-          int jj;
-          // Width of the plate in pores
-          double width_pores = (xwidth-chamfer_width)/(pore_width+chamfer_width);
+        /*figure out which pore we hit*/
+        int jj;
+        // Width of the plate in pores
+        double width_pores = (xwidth-chamfer_width)/(pore_width+chamfer_width);
 
-          // photon psi in pores
-          double psi_pores = (psi - (-xwidth*0.5)/(radius_m-local_pore_height)) *(radius_m-local_pore_height)/ ( pore_width+chamfer_width);
-          char hit_final_pore = 0;
-          if(psi_pores >= 0 && psi_pores < width_pores){
-              hit = 1 & hit;
-              jj = (int) floor(psi_pores);
-              //If the pore that is hit is the last pore on the plate, modify the
-              //pore width and chamfer width so it corresponds to the final, larger
-              //pore.
-              if(jj >= floor(width_pores) - 1){
-                  jj = floor(width_pores) - 1;
-                  hit_final_pore = 1;
-              }
-          } else {
-              hit = 0;
-          }
-
+        // photon psi in pores
+        double psi_pores = (psi - (-xwidth*0.5)/(radius_m-local_pore_height)) *(radius_m-local_pore_height)/ ( pore_width+chamfer_width);
+        char hit_final_pore = 0;
+        if(psi_pores >= 0 && psi_pores < width_pores){
+            hit = 1 & hit;
+            jj = (int) floor(psi_pores);
+            //If the pore that is hit is the last pore on the plate, modify the
+            //pore width and chamfer width so it corresponds to the final, larger
+            //pore.
+            if(jj >= floor(width_pores) - 1){
+                jj = floor(width_pores) - 1;
+                hit_final_pore = 1;
+            }
+        } else {
+            hit = 0;
+        }
         /*check for side_wall (chamfer) hit (obscuration)*/
         hit_chamfer=0;
         if(hit_final_pore && psi > xwidth/2/(radius_m-local_pore_height) - chamfer_width){
@@ -478,7 +485,6 @@ TRACE
                 } else if(ref_index < MAX_TRACKED_REFLECTIONS){
                   reflections[ref_index] = wall;
                 }
-
                 PROP_DL(l_small);
 
                 double kix=kx,kiy=ky,kiz=kz;
@@ -515,6 +521,7 @@ TRACE
                     /*recompute theta*/
                     theta=RAD2DEG*0.5*acos(scalar_prod(kx,ky,kz,kix,kiy,kiz)/k/k);
                 }
+                /*reflect the photon through the surface normal*/
                 if(s!=0){
                     kx-=2*s*nx;
                     ky-=2*s*ny;
@@ -534,7 +541,7 @@ TRACE
                 if(reflec_table==NULL || reflec_table->rows==-1){
                     R=R_d;
                 }else{
-                    R=Table_Value2d(*reflec_table,(e-ref_prms[prm_idx].e_min)/ref_prms[prm_idx].e_step, (theta-ref_prms[prm_idx].theta_min)/ref_prms[prm_idx].theta_step);
+                    R=Table_Value2d(*reflec_table,(e-e_min[prm_idx])/e_step[prm_idx], (theta-theta_min[prm_idx])/theta_step[prm_idx]);
                 }
                 p*=R;
             }
@@ -545,7 +552,6 @@ TRACE
             ABSORB;
         }
     }else{
-        /*no hit*/
         ABSORB;
     }
 %}
