@@ -1,0 +1,114 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: ATHENA_1shell
+*
+* %Identification
+* Written by: Erik B Knudsen <erkn@fysik.dtu.dk> & Desiree D. M. Ferreira <desiree@space.dtu.dk> (email)
+* Date: 12/12/2016
+* Origin: DTU Physics/DTU Space
+* Release: McXtrace 1.2
+* Version: 1.0
+* %INSTRUMENT_SITE: AstroX_ESA
+*
+* Single shell model of a true Wolter Type I optic
+*
+* %Description
+* Single shell example telescope using a combinatiopn pf parabolic/hyperbolic shell
+* optical plates covering the full circle. Reflectivity is 1 for all energies.
+*
+* Example: ATHENA_1shell.instr shellnumber=1
+*
+* %Parameters
+* FL: [m]        The focal length of the optical system
+* plate_zdepth: [m]     Plate length.
+* channel_yheight: [m]  Channel height.
+* radius_p: [m]  Radius at the entry to the primary (parabolic) shell.
+* radius_m: [m]  Radius at the optics centre.
+* radius_h: [m]  Radius at the exit of the secondary (hyperbolic) shell.
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT Simple_1shell(FL=12, plate_zdepth=0.5, channel_yheight=1e-2,
+  radius_m=0.534927, radius_p=0.535532 , radius_h=0.533113)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+%}
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding an xray source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+AT (0,0,0) ABSOLUTE
+EXTEND
+%{
+%}
+
+COMPONENT src = Source_div(
+    radius=radius_p,yheight=0, xwidth=0,focus_aw=0,focus_ah=0,E0=5,dE=1)
+AT(0,0,0) RELATIVE Origin
+
+COMPONENT detector_pre_optics = PSD_monitor(restore_xray=1, xwidth=radius_p*2*1.2, yheight=radius_p*2*1.2, nx=101, ny=51, filename="det_preo.dat")
+AT(0,0,1) RELATIVE Origin
+
+COMPONENT optics_centre = Arm()
+AT(0,0,1) RELATIVE Origin
+
+COMPONENT Shell_p_1 = Shell_p(
+    radius_p=radius_p, radius_m=radius_m, zdepth=plate_zdepth, Z0=FL, yheight=channel_yheight, R_d=1)
+AT(0,0,0) RELATIVE optics_centre
+
+COMPONENT midopdet = PSD_monitor(
+    restore_xray=1,xwidth=radius_m*2*1.2,yheight=radius_m*2*1.2,nx=201,ny=201, filename="midop.dat")
+AT(0,0,0) RELATIVE optics_centre
+
+COMPONENT Shell_h_1 = Shell_h(
+    radius_m=radius_m, radius_h=radius_h, zdepth=plate_zdepth, Z0=FL, yheight=channel_yheight, R_d=1)
+  AT(0,0,0) RELATIVE optics_centre
+EXTEND
+%{
+  /*filter off rays wich have not reflected*/
+  if (kx==0 && ky==0){
+    ABSORB;
+  }
+%}
+
+COMPONENT detector_post_optics = PSD_monitor(restore_xray=1,xwidth=radius_h*2*1.2, yheight=radius_h*2*1.2, nx=201, ny=101, filename="det_posto.dat")
+AT(0,0,1) RELATIVE optics_centre
+
+/*soem monitors of varying size to catch the focal plane response*/
+COMPONENT focal_detector = PSD_monitor(restore_xray=1,xwidth=1e-2, yheight=1e-2, nx=201, ny=201, filename="focal_det.dat")
+AT(0,0,FL) RELATIVE optics_centre
+COMPONENT superfocal_detector = PSD_monitor(restore_xray=1,xwidth=1e-6, yheight=1e-6, nx=201, ny=201, filename="superfocal_det.dat")
+AT(0,0,FL) RELATIVE optics_centre
+COMPONENT ultrafocal_detector = PSD_monitor(restore_xray=1,xwidth=1e-12, yheight=1e-12, nx=201, ny=201, filename="ultrafocal_det.dat")
+AT(0,0,FL) RELATIVE optics_centre
+
+COMPONENT FLmond= Monitor_nD(
+        restore_xray=1,filename="FLmond",xwidth=0.1, yheight=0.1, options="x y auto",bins=501)
+AT(0,0,FL) RELATIVE optics_centre
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+

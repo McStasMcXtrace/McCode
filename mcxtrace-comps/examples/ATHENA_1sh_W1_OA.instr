@@ -1,0 +1,183 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: ATHENA_1sh_W1_OA
+*
+* %Identification
+* Written by: Erik B Knudsen <erkn@fysik.dtu.dk> & Desiree D. M. Ferreira <desiree@space.dtu.dk> (email)
+* Date: 12/12/2016
+* Origin: DTU Physics/DTU Space
+* Release: McXtrace 1.2
+* Version: 1.0
+* %INSTRUMENT_SITE: AstroX_ESA
+*
+* Single shell model of the ATHENA SPO-optic in use as telescope.
+*
+* %Description
+* A model of the ATHENA-telescope using just a single shell as optical element.
+* That means to make use of this instrument
+* it is necessary to run a series of simulation while varying the input parameter shellnumber.
+*
+* The model needs as input a file geomfile, which contains (in ascii) tabled details about the geometry of the shells.
+* The data in the geomfile is assumed to be in the format:
+* #row  L/m  rad_h/m  rad_m/m  rad_p/m  width/m
+* ...
+* row: running index for the rows/rings
+* L: The length of the plates for this ring
+* rad_h: The radius at the "hyperbolic" end of the optic. At the detector end.
+* rad_m: The radius at the midpoint of the optic. This is the reference.
+* rad_p: The radius at the "parabolic" and of the optic. At the source end.
+*
+* Example: ATHENA_1shell.instr shellnumber=1
+*
+* %Parameters
+* FL [m] The focal length of the optical system
+* optics_dist [m] The distance between souce and optic. In space this would be quite large :-).
+* offaxis_angle [arcmin] Angle of collimated light from source
+* reflectivity [ ] Data file containing reflectivities (such as from IMD)
+* E0 [keV] Central energy of X-rays
+* dE [keV] Half spread of energy spectrum to be emitted from source
+* shellnumber [ ] The row number for the miror module. This defines the shell.
+* geomfile [ ] File which contains the geometry of the pores (i.e. radii,lengths)
+* XWidth   [m] The width of the user detector default is that of the ATHENA WFI large area detector
+* YHeight  [m] The height of the user detector default is that of the ATHENA WFI large area detector
+* NX       [ ] Number of pixels along X in the user detector
+* NY       [ ] Number of pixels along Y in the user detector.
+*
+* %Link
+* <a href="http://www.cosmos.esa.int/web/athena">The ATHENA web pages @ ESA</a>
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT ATHENA_1shell(FL=12, optics_dist=10,
+        XWidth=0.13312, YHeight=0.13312, NX=1024, NY=1024,
+	offaxis_angle=0,        
+	string reflectivity="mirror_coating_unity.txt", E0=5, dE=0.001, int shellnumber=1,
+	string geomfile="ATHENA_rings_1_20.dat")
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+    int RIDX;
+    double PRP,PRM,PRH,PRL,PRW;
+    double alphax;
+   
+    double pore_height=0.605e-3;
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+
+    if (offaxis_angle){
+        alphax=offaxis_angle * MIN2RAD;
+    }
+
+    int status;
+    t_Table T;
+    status=Table_Read(&T,geomfile,0);
+    if (status<=0){
+        fprintf(stderr,"Error reading file %s\n.",geomfile);
+        exit(-1);
+    }
+    RIDX=(int) Table_Index(T,shellnumber-1,0);
+    PRL=Table_Index(T,shellnumber-1,1);
+    PRH=Table_Index(T,shellnumber-1,2);
+    PRM=Table_Index(T,shellnumber-1,3);
+    PRP=Table_Index(T,shellnumber-1,4);
+    PRW=Table_Index(T,shellnumber-1,5);
+
+%}
+
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding an xray source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+COMPONENT src = Source_div(
+        xwidth=0,yheight=2.0*pore_height,focus_aw=0,focus_ah=0,E0=E0,dE=dE)
+AT(0,PRP-pore_height/2.0,0) RELATIVE Origin
+
+COMPONENT srcradsym = Arm()
+AT(0,0,0) RELATIVE Origin
+EXTEND
+%{
+    do {
+        x=0;
+        double eta=2*M_PI*rand01();
+        rotate(x,y,z, x,y,z, eta, 0,0,1);
+    } while(0);
+%}
+
+COMPONENT srcoffaxis= Arm()
+WHEN(alphax!=0) AT(0,0,0) RELATIVE Origin
+ROTATED (0,0,0) RELATIVE Origin
+EXTEND
+%{
+    do {    
+        rotate(kx,ky,kz, kx,ky,kz, alphax, 0,1,0);
+        x-=mcipoptics_dist*sin(alphax);
+        SCATTER;
+    }while(0);
+%}
+
+COMPONENT detector_pre_optics = PSD_monitor(restore_xray=1, xwidth=2.5, yheight=2.5, nx=101, ny=101, filename="det_preo.dat")
+AT(0,0,optics_dist) RELATIVE Origin
+
+COMPONENT optics_centre = Arm()
+AT(0,0,optics_dist) RELATIVE Origin
+
+COMPONENT Shell_p_1 = Shell_p(
+    radius_p=PRP, radius_m=PRM, zdepth=PRL, Z0=FL, yheight=pore_height, mirror_reflec=reflectivity, R_d=0)
+AT(0,0,0) RELATIVE optics_centre
+
+COMPONENT midopdet = PSD_monitor(restore_xray=1,xwidth=2.5,yheight=2.5,nx=101,ny=101, filename="midop.dat")
+AT(0,0,0) RELATIVE optics_centre
+
+COMPONENT Shell_h_1 = Shell_h(
+    radius_m=PRM, radius_h=PRH, zdepth=PRL, Z0=FL, yheight=pore_height, mirror_reflec=reflectivity, R_d=0)
+AT(0,0,0) RELATIVE optics_centre
+
+COMPONENT detector_post_optics = PSD_monitor(restore_xray=1,xwidth=2.5, yheight=2.5, nx=101, ny=101, filename="det_posto.dat")
+AT(0,0,optics_dist+0.5) RELATIVE Origin
+
+COMPONENT emon_post_optics = E_monitor(restore_xray=1, xwidth=2.5, yheight=2.5, nE=501, Emin=0, Emax=10, filename="emon_post_optic.dat")
+AT(0,0,optics_dist+0.5) RELATIVE Origin
+
+/*a block of three detectors of fixed size*/
+COMPONENT focal_detector = PSD_monitor(restore_xray=1,xwidth=1e-2, yheight=1e-2, nx=201, ny=201, filename="focal_det.dat")
+AT(0,0,FL) RELATIVE optics_centre
+
+COMPONENT superfocal_detector = PSD_monitor(restore_xray=1,xwidth=1e-6, yheight=1e-6, nx=201, ny=201, filename="superfocal_det.dat")
+AT(0,0,FL) RELATIVE optics_centre
+
+COMPONENT ultrafocal_detector = PSD_monitor(restore_xray=1,xwidth=1e-12, yheight=1e-12, nx=201, ny=201, filename="ultrafocal_det.dat")
+AT(0,0,FL) RELATIVE optics_centre
+
+/*A detector that may be changed from outside this file*/
+COMPONENT user_focal_detector = PSD_monitor(restore_xray=1, xwidth=XWidth, yheight=YHeight, nx=((int)NX), ny=((int)NY), filename="user_focal_detector.dat")
+AT(0,0,FL) RELATIVE optics_centre
+
+COMPONENT auto_focal_detector = Monitor_nD(restore_xray=1,xwidth=.2, yheight=.2, options="x bins=256 limits auto, y bins=256 limits auto", filename="auto_focal.dat")
+AT(0,0,FL) RELATIVE optics_centre  
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
