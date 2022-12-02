@@ -27,7 +27,7 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT Test_MCPL_input(repeat=1,E_smear=0.1,pos_smear=0.001,dir_smear=0.01)
-DEPENDENCY "-DMCPLPATH=@MCCODE_LIB@/libs/mcpl/voutput.mcpl"
+DEPENDENCY "-DMCPLPATH=GETPATH(data/voutput.mcpl)"
 
 DECLARE
 %{
@@ -79,10 +79,10 @@ COMPONENT m4 = Monitor_nD(
   options="E, limits=[0 90] parallel, previous", bins=40
 ) AT (0,0,0) ABSOLUTE
 
-/*COMPONENT m5 = Monitor_nD(
+COMPONENT m5 = Monitor_nD(
   xwidth=0.2, yheight=0.2, user1=22,
   options="parallel, photon, user1, energy, x, y, z, vx, vy, vz, time, list all photons"
-) AT (0,0,0) ABSOLUTE*/
+) AT (0,0,0) ABSOLUTE
 
 
 END
