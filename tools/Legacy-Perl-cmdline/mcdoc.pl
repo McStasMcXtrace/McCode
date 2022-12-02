@@ -676,13 +676,15 @@ if ((not $is_single_file) && ($browser ne "text") && ($out_file ne "")) {
 if ($use_local) {
   # define local and lib sections
   @sections = ("sources", "optics", "samples", "monitors",
-               "misc", "contrib", "obsolete","examples","local","data","share","doc");
+               "misc", "contrib", "union","astrox","obsolete","examples","local","data","share","doc");
   %section_headers =
     ("sources" => '<B><FONT COLOR="#FF0000">Sources</FONT></B>',
      "optics" => '<B><FONT COLOR="#FF0000">Optics</FONT></B>',
      "samples" => '<B><FONT COLOR="#FF0000">Samples</FONT></B>',
      "monitors" => '<B><FONT COLOR="#FF0000">Detectors</FONT> and monitors</B>',
      "contrib" => '<B><FONT COLOR="#FF0000">Contributed</FONT> components</B>',
+     "union" => '<B><FONT COLOR="#FF0000">Union</FONT> components</B>',
+     "astrox" => '<B><FONT COLOR="#FF0000">AstroX</FONT> components</B>',
      "misc" => '<B><FONT COLOR="#FF0000">Misc</FONT></B>',
      "obsolete" => '<B><FONT COLOR="#FF0000">Obsolete</FONT> (avoid usage whenever possible)</B>',
      "examples" => '<B><FONT COLOR="#FF0000">Instrument Examples</FONT></B>',
@@ -692,13 +694,15 @@ if ($use_local) {
      "doc"   => '<B><FONT COLOR="#FF0000">Documentation</FONT></B>');
 } else {
   # define lib sections
-  @sections = ("sources", "optics", "samples", "monitors", "misc", "contrib","examples");
+  @sections = ("sources", "optics", "samples", "monitors", "misc", "contrib", "union", "astrox", "examples");
   %section_headers =
     ("sources" => '<B><FONT COLOR="#FF0000">Sources</FONT></B>',
      "optics" => '<B><FONT COLOR="#FF0000">Optics</FONT></B>',
      "samples" => '<B><FONT COLOR="#FF0000">Samples</FONT></B>',
      "monitors" => '<B><FONT COLOR="#FF0000">Detectors</FONT> and monitors</B>',
      "contrib" => '<B><FONT COLOR="#FF0000">Contributed</FONT> components</B>',
+     "union" => '<B><FONT COLOR="#FF0000">Union</FONT> components</B>',
+     "astrox" => '<B><FONT COLOR="#FF0000">AstroX</FONT> components</B>',
      "misc" => '<B><FONT COLOR="#FF0000">Misc</FONT></B>',
      "obsolete" => '<B><FONT COLOR="#FF0000">Obsolete</FONT> (avoid usage whenever possible)</B>',
      "examples" => '<B><FONT COLOR="#FF0000">Instrument Examples</FONT></B>',);
