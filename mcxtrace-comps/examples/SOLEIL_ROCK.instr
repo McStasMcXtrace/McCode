@@ -31,7 +31,7 @@
 * Manganese and chrome scan: mxrun SOLEIL_ROCK.instr Etohit=5700,6800 scan=1 nbsample=2 sample_file=Mn.txt sample_density=7.21 sample_file_2=Cr.txt sample_density_2=7.15 cc=2 -N100
 * Pretty energy repartition monitor result: mxrun SOLEIL_ROCK.instr Etohit=17000 cc=2 -n1e8
 *
-* %Example: Etohit=17000 cc=2 -n 1e7 Detector: psd_monitor_I=3.62021e+4
+* %Example: Etohit=17000 cc=2 -n 1e7 Detector: psd_monitor_I=74259
 *
 * %P
 * Etohit: [eV]   Energy to hit
@@ -192,7 +192,7 @@ COMPONENT slit2 = Slit(
 AT (0, 0, 8.6486-8.5336) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- Toroidal mirror M1 */   
-COMPONENT mirror_m1 = Mirror_toroid(
+COMPONENT mirror_m1 = Mirror_toroid_pothole(
     xwidth = 0.015,
     zdepth = 1.1,
     radius=0.0317, 
@@ -352,8 +352,8 @@ AT (0,0,0.5) RELATIVE PREVIOUS
 
 COMPONENT psd_monitor = PSD_monitor(
     filename="psd", 
-    xmin=-0.01, 
-    xmax=0.01,
+    xmin=-0.002, 
+    xmax=0.002,
     ymin=-0.01, 
     ymax=0.01,             
     nx=100,
