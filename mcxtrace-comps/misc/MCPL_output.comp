@@ -55,7 +55,7 @@ DEFINE COMPONENT MCPL_output
 DEFINITION PARAMETERS (polarisationuse=0, doubleprec=0, verbose=0, int userflag=0)
 SETTING PARAMETERS (string filename=0, string userflagcomment="", merge_mpi=1, keep_mpi_unmerged=0)
 OUTPUT PARAMETERS (outputfile,particle,Particle, userflagenabled)
-DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
+DEPENDENCY "-Wl,-rpath,CMD(mcpl-config --show libdir) -ICMD(mcpl-config --show includedir) -LCMD(mcpl-config --show libdir) -lmcpl"
 
 SHARE
 %{
@@ -81,7 +81,7 @@ INITIALIZE
     char *myfilename,*stripext;
 
     /*strip extension from filename*/
-    if ((stripext=strrchr(filename,'.'))){
+    if (stripext=strrchr(filename,'.')){
 #if defined (USE_MPI)
         MPI_MASTER(
             fprintf(stdout, "WARNING: (%s): the \"%s\" file extension will be overwritten by \".mcpl\"\n",NAME_CURRENT_COMP,stripext);
@@ -119,7 +119,7 @@ INITIALIZE
     /*also add the instrument file and the command line as blobs*/
     FILE *fp;
     if( (fp=fopen(mcinstrument_source,"rb"))!=NULL){
-        char *buffer;
+        unsigned char *buffer;
         int size,status;
         /*find the file size by seeking to end, "tell" the position, and then go back again*/
         fseek(fp, 0L, SEEK_END);
@@ -127,11 +127,14 @@ INITIALIZE
         fseek(fp, 0L, SEEK_SET); // seek back to beginning of file
         if ( size && (buffer=malloc(size))!=NULL){
             if (size!=(fread(buffer,1,size,fp))){
-	      fprintf(stderr,"Warning (%s): Source instrument file not read cleanly\n", NAME_CURRENT_COMP);
+	      fprintf(stderr,"\nWarning (%s): Source instrument file not read cleanly\n", NAME_CURRENT_COMP);
             }
             mcpl_hdr_add_data(outputfile, "mccode_instr_file", size, buffer);
             free(buffer);
         }
+	fclose(fp);
+    } else {
+      fprintf(stderr,"\nWarning (%s): Source instrument file (%s) not found, hence not embedded.\n", NAME_CURRENT_COMP, mcinstrument_source);
     }
     fclose(fp);
 
