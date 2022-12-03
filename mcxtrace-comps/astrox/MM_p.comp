@@ -35,16 +35,16 @@
 *
 * %P
 * Input parameters:
-* radius_m [m]:  Ring radius of the upper (reflecting) plate of the pore at the intersection with the hyperbolic section.
-* radius_p [m]:  Ring radius of the upper (reflecting) plate of the pore at the edge furthest away from the focal point.
-* pore_height[m]: Height of the pore.
-* chamfer_width[m]: Width of side walls.
-* gap[m]: Gap between the plate and the intersection plane with the hyperbolic section.
-* Z0[m]: Distance between optics centre plane and focal spot (essentially focal length).
-* mirror_reflec [ ]: Data file containing reflectivities of the reflector surface (TOP).
-* side_reflec  [ ]:   Data file containing reflectivities of the side walls (LEFT and RIGHT).
-* bottom_reflec [ ]:  Data file containing reflectivities of the bottom surface (BOTTOM).
-* R_d [ ]: Default reflectivity value to use if no reflectivity file is given. Useful f.i. is one surface is reflecting and the others absorbing.
+* radius_m: [m]  Ring radius of the upper (reflecting) plate of the pore at the intersection with the hyperbolic section.
+* radius_p: [m]  Ring radius of the upper (reflecting) plate of the pore at the edge furthest away from the focal point.
+* pore_height: [m] Height of the pore.
+* chamfer_width: [m] Width of side walls.
+* gap: [m] Gap between the plate and the intersection plane with the hyperbolic section.
+* Z0: [m] Distance between optics centre plane and focal spot (essentially focal length).
+* mirror_reflec: [ ] Data file containing reflectivities of the reflector surface (TOP).
+* side_reflec:  [ ]   Data file containing reflectivities of the side walls (LEFT and RIGHT).
+* bottom_reflec: [ ]  Data file containing reflectivities of the bottom surface (BOTTOM).
+* R_d: [ ] Default reflectivity value to use if no reflectivity file is given. Useful f.i. is one surface is reflecting and the others absorbing.
 *
 * %E
 *******************************************************************************/
