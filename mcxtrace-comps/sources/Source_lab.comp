@@ -39,6 +39,8 @@
 * %P
 * width:      [m]    Width of electron beam impinging on the anode.
 * height:     [m]    Height of electron beam impinging on the anode.
+* xwidth:     [m]    Width of the anode material slab.
+* yheight:    [m]    Height of the anode material slab.
 * thickness:  [m]    Thickness of the anode material slab.
 * take_off:   [deg]  Take off angle of beam centre.
 * dist:       [m]    Distance between centre of illuminated target and exit window.
@@ -51,6 +53,7 @@
 * frac:       [ ]    Fraction of statistic to use for Bremsstrahlung.
 * material_datafile: [ ] Name of datafile which describes the target material.
 * lorentzian: [ ]    If nonzero Lorentzian (more correct) line profiles are used.
+* exit_window_refpt: [m] If set, the AT position and exit window will coincide (legacy behaviour).
 *
 * %E
 *************************************************************************/
