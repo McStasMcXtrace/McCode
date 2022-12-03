@@ -30,7 +30,7 @@
 * Nper:   [ ] Number of magnetic periods in the undulator.
 * lu:     [m] Magnetic period length of the undulator.
 * K:      [ ] Dimensionless undulator parameter.
-* gap_min [m] Minimum Undulator gap. The gap for which B (or K) is specified.
+* gap_min: [m] Minimum Undulator gap. The gap for which B (or K) is specified.
 * gap:    [m] Undulator gap. If > gap_min the actual magnetic field strength is < B. Currently ignored.
 * sigex:  [m] Electron ring beam size in horizontal plane (rms).
 * sigey:  [m] Electron ring beam size in vertical plane (rms).
