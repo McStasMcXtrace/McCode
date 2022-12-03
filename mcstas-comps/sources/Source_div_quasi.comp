@@ -40,14 +40,17 @@
 * focus_xw: [m]   Width of sampling window
 * focus_yh: [m]   Height of sampling window
 * dist: [m]       Downstream distance to place sampling target window
-
 * E0: [meV]       Mean energy of neutrons.
 * dE: [meV]       Energy spread of neutrons.
 * lambda0: [AA]   Mean wavelength of neutrons (only relevant for E0=0)
 * dlambda: [AA]   Wavelength half spread of neutrons.
-* gauss: [1]      Criterion: 0: uniform, 1: Gaussian divergence/energy distributions
+* gauss: [1]      Criterion: 0: uniform, 1: Gaussian distribution of energy/wavelength
+* gauss_a: [1]    Criterion: 0: uniform, 1: Gaussian divergence distribution
 * flux: [1/(s*cm**2*st*energy unit)] Flux per energy unit, Angs or meV
 * verbose: [ ]    Generate more output on the console.
+* spectrum_file: [ ] File from which to read the spectral intensity profile
+* phase:         [ ] Set to finite value to define X-ray phase (0:2 pi)
+* randomphase:   [ ] When=1, the X-ray phase is randomised 
 * %E
 *******************************************************************************/
 
