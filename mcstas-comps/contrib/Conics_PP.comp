@@ -22,8 +22,8 @@
 * rmin: [m]             Midoptic plane radius of innermost mirror pair.
 * rmax: [m]             Midoptic plane radius of outermost mirror pair.
 * m: [1]                Critical angle of mirrors as multiples of Ni.
-* focal_length_u [m]    Focal length of upstream mirror.
-* focal_length_d [m]    Focal length of downstream mirror.
+* focal_length_u: [m]    Focal length of upstream mirror.
+* focal_length_d: [m]    Focal length of downstream mirror.
 * lp1: [m]              Upstream paraboloid mirror length.
 * lp2: [m]              Downstream paraboloid mirror length.
 * disk: [ ]             Flag. If nonzero, insert a disk to block the central area within the innermost mirror.
