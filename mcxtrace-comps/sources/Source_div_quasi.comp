@@ -28,7 +28,7 @@
 * The phase space sapnned by the generated X-rays is sampled by means of Halton-sequences, instead of regular
 * pseudo random numbers. This ensures that samples are evenly distributed within the phase space region of interest.
 *
-* Example: Source_div(xwidth=0.1, yheight=0.1, focus_aw=2, focus_ah=2, E0=14, dE=2, gauss=0)
+* Example: Source_div_quasi(xwidth=0.1, yheight=0.1, focus_aw=2, focus_ah=2, E0=14, dE=2, gauss=0)
 *
 * %VALIDATION
 *
@@ -50,13 +50,10 @@
 * gauss_a: [1]    Criterion: 0: uniform, 1: Gaussian divergence distribution
 * flux: [1/(s*cm**2*st*energy unit)] Flux per energy unit, Angs or meV
 * verbose: [ ]    Generate more output on the console.
-* OUTPUT PARAMETERS:
-* sigmah:  (rad) parameter 'sigma' of the Gaussian distribution for horizontal divergence
-* sigmav:  (rad) parameter 'sigma' of the Gaussian distribution for vertical divergence
-* p_init:   (-)  normalisation factor 1/'photon_count'
-*
+* spectrum_file: [ ] File from which to read the spectral intensity profile
 * %E
 *******************************************************************************/
+
 
 DEFINE COMPONENT Source_div_quasi
 DEFINITION PARAMETERS (string spectrum_file=NULL)
