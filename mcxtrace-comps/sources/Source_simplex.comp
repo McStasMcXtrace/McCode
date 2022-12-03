@@ -34,6 +34,8 @@
 * s0: [m] back end of pulse time sampling windows scaled by c^-1. 
 * s1: [m] front end of pulse time sampling window scaled by c^-1.
 * focus_a: [rad] mean divergence angle.
+* nslices: [1] Number of slices simulated.
+* flux: [1] Flux-multiplier
 *
 * %L
 * Tanaka, Journal of Synchrotron Radiation 22, 1319 (2015) http://journals.iucr.org/s/issues/2015/05/00/gb5029/
