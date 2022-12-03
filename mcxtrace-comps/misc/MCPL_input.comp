@@ -44,7 +44,7 @@ DEFINE COMPONENT MCPL_input
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0, polarisationuse=1,verbose=1, Emin=0, Emax=FLT_MAX, int repeat_count=1, E_smear=0, pos_smear=0, dir_smear=0)
 OUTPUT PARAMETERS (inputfile,nparticles,read_photons,used_photons,inactive)
-DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
+DEPENDENCY "-Wl,-rpath,CMD(mcpl-config --show libdir) -ICMD(mcpl-config --show includedir) -LCMD(mcpl-config --show libdir) -lmcpl"
 
 SHARE
 %{
