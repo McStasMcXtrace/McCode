@@ -61,9 +61,6 @@ DECLARE
     double RP,RMP,PL,RH,RMH,HL,PHP,PHH;
     int Pcoat,Hcoat;
 
-    double hyperref,pararef;
-    int parascatter,hyperscatter;
-
     double alphax,alphay;
 
     double pore_width=0.83e-3;
@@ -88,6 +85,13 @@ DECLARE
         "mirror_coating_unity.txt"
     };
 
+%}
+
+USERVARS %{
+  int parascatter;
+  int hyperscatter;
+  double pararef;
+  double hyperref;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -167,7 +171,7 @@ EXTEND
 %{
     do {    
         rotate(kx,ky,kz, kx,ky,kz, alphax, 0,1,0);
-        x-=mcipoptics_dist*sin(alphax);
+        x-=INSTRUMENT_GETPAR(optics_dist)*sin(alphax);
         SCATTER;
     }while(0);
 %}
@@ -188,7 +192,7 @@ AT(0,0,-1e-4) RELATIVE misalign
 EXTEND
 %{
     if (SCATTERED){
-        parascatter=mcScattered;
+        parascatter=SCATTERED;
     }
 %}
 
@@ -203,7 +207,7 @@ GROUP hyperoptics
 EXTEND
 %{
     if (SCATTERED){
-        hyperscatter=mcScattered;
+        hyperscatter=SCATTERED;
     }
 %}
 

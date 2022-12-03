@@ -65,19 +65,22 @@ DECLARE
     int IDX[2014],ROW[2014], RIDX[1024];
     double PRP[1024],PRM[1024],PRH[1024],PRL[1024],PRW[1024];
 
-    double hyperref,pararef;
-    int parascatter,hyperscatter;
-
     double src_pos_x;
     double src_pos_y;
     double alphax,alphay;
-    double pstore;
-    long long nid;
 
     double pore_width=0.83e-3;
     double pore_height=0.605e-3;
 %}
 
+USERVARS %{
+  double hyperref;
+  double pararef;
+  int parascatter;
+  double hyperscatter;
+  double pstore;
+  long long nid;
+%}
 /* The INITIALIZE section is executed when the simulation starts     */
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
@@ -153,7 +156,7 @@ EXTEND
 %{
     do {    
         rotate(kx,ky,kz, kx,ky,kz, alphax, 0,1,0);
-        x-=mcipoptics_dist*sin(alphax);
+        x-=INSTRUMENT_GETPAR(optics_dist)*sin(alphax);
         SCATTER;
     }while(0);
 %}
@@ -174,7 +177,7 @@ AT(0,0,0) RELATIVE optics_centre
 EXTEND
 %{
     if (SCATTERED){
-        parascatter=mcScattered;
+        parascatter=SCATTERED;
         pararef=p/pstore;
     }
 %}
@@ -189,7 +192,7 @@ AT(0,0,0) RELATIVE optics_centre
 EXTEND
 %{
     if (SCATTERED){
-        hyperscatter=mcScattered;
+        hyperscatter=SCATTERED;
         hyperref=p/(pstore*pararef);
     }
 %}

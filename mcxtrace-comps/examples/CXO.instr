@@ -43,11 +43,14 @@ DECLARE
    double th_c[4];
 
    const double OD=10;
-   int bounce;
    char optionstring[]="x auto y auto"; 
    char optionstring1[128]; 
    char optionstring2[128]; 
    double xdiv;
+%}
+
+USERVARS %{
+  int bounce;
 %}
 
 INITIALIZE
@@ -124,7 +127,7 @@ AT(0,0,0) RELATIVE optics_centre
 GROUP primary
 EXTEND
 %{
-  bounce=mcScattered;
+  bounce=SCATTERED;
 %}
 COMPONENT sh3_p = Shell_p(
     radius_p=Rp[1], radius_m=Rm[1], mirror_reflec=mcoat, yheight=Rp[1]-Rp[2], Z0=FL, R_d=0)
@@ -132,7 +135,7 @@ AT(0,0,0) RELATIVE optics_centre
 GROUP primary
 EXTEND
 %{
-  bounce=mcScattered;
+  bounce=SCATTERED;
 %}
 
 COMPONENT sh4_p = Shell_p(
@@ -141,7 +144,7 @@ AT(0,0,0) RELATIVE optics_centre
 GROUP primary
 EXTEND
 %{
-  bounce=mcScattered;
+  bounce=SCATTERED;
 %}
 
 COMPONENT sh6_p = Shell_p(
@@ -150,7 +153,7 @@ AT(0,0,0) RELATIVE optics_centre
 GROUP primary
 EXTEND
 %{
-  bounce=mcScattered;
+  bounce=SCATTERED;
   double ee=sqrt(kx*kx+ky*ky+kz*kz)*K2E;
 %}
 COMPONENT midOp_emon = COPY(preOp_emon)(nE=201, filename="midOp_e")
@@ -165,7 +168,7 @@ AT(0,0,0) RELATIVE optics_centre
 GROUP secondary
 EXTEND
 %{
-  bounce+=mcScattered;
+  bounce+=SCATTERED;
 %}
 
 COMPONENT sh3_h = Shell_h(
@@ -174,7 +177,7 @@ AT(0,0,0) RELATIVE optics_centre
 GROUP secondary
 EXTEND
 %{
-  bounce+=mcScattered;
+  bounce+=SCATTERED;
 %}
 
 COMPONENT sh4_h = Shell_h(
@@ -183,7 +186,7 @@ AT(0,0,0) RELATIVE optics_centre
 GROUP secondary
 EXTEND
 %{
-  bounce+=mcScattered;
+  bounce+=SCATTERED;
 %}
 
 COMPONENT sh6_h = Shell_h(
@@ -192,7 +195,7 @@ AT(0,0,0) RELATIVE optics_centre
 GROUP secondary
 EXTEND
 %{
-  bounce+=mcScattered;
+  bounce+=SCATTERED;
 %}
 
 

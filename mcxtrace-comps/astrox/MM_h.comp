@@ -133,7 +133,7 @@ DECLARE
     double wEntry[3];
     double nTop[3];
     double nBottom[3];
-    double alpha;
+    double Alpha;
     double radius_1;
     double radius_2;
     double e_min[3];
@@ -286,11 +286,11 @@ INITIALIZE
                 } else {
                     exit(fprintf(stderr,"Error (%s): wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, non_specular_file));
                 }
-                if (!((int)(non_specular_prms.e_max-non_specular_prms.e_min) == (int)((non_specular_table.rows-1)*non_specular_prms.e_step[2])))
+                if (!((int)(e_max[2]-e_min[2]) == (int)((non_specular_table.rows-1)*e_step[2])))
                 {
                     exit(fprintf(stderr,"Error (%s): e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, non_specular_file));
                 }
-                if (!((int)(non_specular_prms.theta_max-non_specular_prms.theta_min) == (int)((non_specular_table.columns-1)*theta_step[2])))
+                if (!((int)(theta_max[2]-theta_min[2]) == (int)((non_specular_table.columns-1)*theta_step[2])))
                 {
                     exit(fprintf(stderr,"Error (%s): theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, non_specular_file));
                 }
@@ -529,7 +529,7 @@ TRACE
                 }
 
                 if(&non_specular_table!=NULL){
-                    double lw = Table_Value2d(non_specular_table, (e-non_specular_prms.e_min)/non_specular_prms.e_step, (theta-non_specular_prms.theta_min)/non_specular_prms.theta_step);
+                    double lw = Table_Value2d(non_specular_table, (e-e_min[2])/e_step[2], (theta-theta_min[2])/theta_step[2]);
                     double dtheta=lorentzDistribution(0, lw)*M_PI/180;
                     double tx,ty,tz;
                     vec_prod(tx,ty,tz,0,0,1,nx,ny,nz);

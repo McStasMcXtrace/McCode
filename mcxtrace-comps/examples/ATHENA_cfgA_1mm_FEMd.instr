@@ -86,14 +86,9 @@ DEFINE INSTRUMENT ATHENA_cfgA_1mm_FEMd(FL=12, optics_dist=10,
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
-    double hyperref,pararef;
-    int parascatter,hyperscatter;
-
     double src_pos_x;
     double src_pos_y;
     double alphax,alphay;
-    double pstore;
-    long long nid;
 
     double pore_width=0.83e-3;
     double pore_height=0.605e-3;
@@ -106,6 +101,15 @@ DECLARE
     int disp_row,DD;
     const int disp_col_offset=5;/*displacements start at this column*/
 
+%}
+
+USERVARS %{
+  double hyperref;
+  double pararef;
+  int parascatter;
+  double hyperscatter;
+  double pstore;
+  long long nid;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -182,7 +186,7 @@ EXTEND
 %{
     do {    
         rotate(kx,ky,kz, kx,ky,kz, alphax, 0,1,0);
-        x-=mcipoptics_dist*sin(alphax);
+        x-=INSTRUMENT_GETPAR(optics_dist)*sin(alphax);
         SCATTER;
     }while(0);
 %}
@@ -224,7 +228,7 @@ ROTATED (0.0,0.0,0.0) RELATIVE ref_p
 EXTEND
 %{
     if (SCATTERED){
-        parascatter=mcScattered;
+        parascatter=SCATTERED;
         pararef=p/pstore;
     }
 %}
@@ -249,7 +253,7 @@ ROTATED (0.0,0.0,0.0) RELATIVE ref_h
 EXTEND
 %{
     if (SCATTERED){
-        hyperscatter=mcScattered;
+        hyperscatter=SCATTERED;
         hyperref=p/(pstore*pararef);
     }
 %}

@@ -62,14 +62,9 @@ DECLARE
     double RP,RMP,PL,RH,RMH,HL,PHP,PHH, AP, AH;
     int Pcoat,Hcoat;
 
-    double hyperref,pararef;
-    int parascatter,hyperscatter;
-
     double src_pos_x;
     double src_pos_y;
     double alphax,alphay;
-    double pstore;
-    long long nid;
 
     double pore_width=0.83e-3;
 
@@ -95,6 +90,15 @@ DECLARE
 
 %}
 
+USERVARS %{
+  int parascatter;
+  int hyperscatter;
+  double pararef;
+  double hyperref;
+  long long nid;
+  double pstore;
+%}
+
 /* The INITIALIZE section is executed when the simulation starts     */
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
@@ -105,7 +109,6 @@ INITIALIZE
         alphax=offaxis_angle * MIN2RAD;
     }
     alphay=(src_pos_y)/optics_dist;
-    nid=0;
 
     t_Table tpa,tph;
     int status=0;    
@@ -185,7 +188,7 @@ EXTEND
 %{
     do {    
         rotate(kx,ky,kz, kx,ky,kz, alphax, 0,1,0);
-        x-=mcipoptics_dist*sin(alphax);
+        x-=INSTRUMENT_GETPAR(optics_dist)*sin(alphax);
         SCATTER;
     }while(0);
 %}
@@ -215,7 +218,7 @@ AT(0,0,-1e-4) RELATIVE misalign
 EXTEND
 %{
     if (SCATTERED){
-        parascatter=mcScattered;
+        parascatter=SCATTERED;
         pararef=p/pstore;
     }
     //printf("1: %g %g %g\n",alpha,radius_1,radius_2);
@@ -232,7 +235,7 @@ GROUP hyperoptics
 EXTEND
 %{
     if (SCATTERED){
-        hyperscatter=mcScattered;
+        hyperscatter=SCATTERED;
         hyperref=p/(pstore*pararef);
     }
     //printf("2: %g %g %g\n",alpha,radius_1,radius_2);
@@ -245,12 +248,12 @@ COMPONENT detector_post_optics = PSD_monitor(restore_xray=1,xwidth=.45, yheight=
 AT(0,0,optics_dist+0.5) RELATIVE Origin
 
 COMPONENT paramon = Monitor_nD(
-        restore_xray=1,filename="paramond",xwidth=3, yheight=1.5, options="list=2000 user1,user2,user3", user1=nid,user2=parascatter,user3=pararef, 
+        restore_xray=1,filename="paramond",xwidth=3, yheight=1.5, options="list=2000 user1,user2,user3", user1="nid",user2="parascatter",user3="pararef", 
         username1="ray_id",username2="parabolic_shell_id",username3="parabolic_reflectivity")
 AT(0,0,optics_dist+0.5) RELATIVE Origin
 
 COMPONENT hypermon = Monitor_nD(
-        restore_xray=1,filename="hypermond",xwidth=3, yheight=1.5, options="list=2000 user1,user2,user3", user1=nid,user2=hyperscatter,user3=hyperref, 
+        restore_xray=1,filename="hypermond",xwidth=3, yheight=1.5, options="list=2000 user1,user2,user3", user1="nid",user2="hyperscatter",user3="hyperref", 
         username1="ray_id",username2="hyperbolic_shell_id",username3="hyperbolic_reflectivity")
 AT(0,0,optics_dist+0.5) RELATIVE Origin
 
@@ -269,7 +272,7 @@ COMPONENT ultrafocal_detector = PSD_monitor(restore_xray=1,xwidth=1e-12, yheight
 AT(0,0,FLd) RELATIVE optics_centre
 
 COMPONENT FLmond= Monitor_nD(
-        restore_xray=1,filename="FLmond",xwidth=0.1, yheight=.1, options="list=all user1 x y k E", user1=nid,
+        restore_xray=1,filename="FLmond",xwidth=0.1, yheight=.1, options="list=all user1 x y k E", user1="nid",
         username1="ray_id")
 AT(0,0,FLd) RELATIVE optics_centre
 /* This section is executed when the simulation ends (C code). Other    */
