@@ -39,17 +39,17 @@
 *
 * %P
 * Input parameters:
-* radius_m [m]:  Ring radius of the upper (reflecting) plate of the pore at the intersection with the parabolic section.
-* radius_h [m]:  Ring radius of the upper (reflecting) plate of the pore at the edge closest to the focal point.
-* yheight[m]: Height of the pore. (Thus the inner radius is radius_{m,h}-yehight
-* xwidth[m]:  Width of the pore.
-* chamferwidth[m]: Width of side walls.
-* gap[m]: gap between intersection with parabolic section and actual plate.
-* Z0[m]: distance between intersection plane and the focal spot( essentially the focal length).  
-* mirror_reflec [ ]: Data file containing reflectivities of the reflector surface (TOP).
-* bottom_reflec [ ]:  Data file containing reflectivities of the bottom surface (BOTTOM).
-* R_d [ ]: Default reflectivity value to use if no reflectivity file is given. Useful f.i. is one surface is reflecting and the others absorbing.
-* wave_model [ ]: Flag to choose waviness model. 1. longitudinal uniform, 2. 2D-uniform, 3. lorentzian sagittal, 4. double gaussian sagittal. See above for details.
+* radius_m: [m]  Ring radius of the upper (reflecting) plate of the pore at the intersection with the parabolic section.
+* radius_h: [m]  Ring radius of the upper (reflecting) plate of the pore at the edge closest to the focal point.
+* yheight: [m] Height of the pore. (Thus the inner radius is radius_{m,h}-yehight
+* xwidth: [m]  Width of the pore.
+* chamferwidth: [m] Width of side walls.
+* gap: [m] gap between intersection with parabolic section and actual plate.
+* Z0: [m] distance between intersection plane and the focal spot( essentially the focal length).  
+* mirror_reflec: [ ] Data file containing reflectivities of the reflector surface (TOP).
+* bottom_reflec: [ ]  Data file containing reflectivities of the bottom surface (BOTTOM).
+* R_d: [ ] Default reflectivity value to use if no reflectivity file is given. Useful f.i. is one surface is reflecting and the others absorbing.
+* wave_model: [ ] Flag to choose waviness model. 1. longitudinal uniform, 2. 2D-uniform, 3. lorentzian sagittal, 4. double gaussian sagittal. See above for details.
 * waviness: [rad] Waviness of the pore reflecting surface. The slope error is assumed to be uniformly distributed in the interval [-waviness:waviness].
 * verbose:  [ ]   If !=0 output extra info during simulation.
 * %E
