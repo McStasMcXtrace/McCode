@@ -27,10 +27,6 @@
 * 
 * Example: Source_div(xwidth=0.1, yheight=0.1, focus_aw=2, focus_ah=2, E0=14, dE=2, gauss=0)
 *
-* %VALIDATION
-*
-* %BUGS
-*
 * %P
 * xwidth:   [m]  Width of source.
 * yheight:  [m]  Height of source.
@@ -41,15 +37,17 @@
 * dist: [m]      Downstream distance to place sampling target window
 * E0:      [keV] Mean energy of X-rays.
 * dE:      [keV] Energy half spread of X-rays. If gauss==0 dE is the half-spread, i.e. E\in[E0-dE,E0+dE], if gauss!=0 it's interpreted as the standard dev. 
-* lambda0: [AA]  Mean wavelength of X-rays (only relevant for E0=0).
-* dlambda: [AA]  Wavelength half spread of X-rays.
-* gauss: [1]     Criterion: 0: uniform, 1: Gaussian distribution of energy/wavelength.
-* gauss_a: [1]   Criterion: 0: uniform, 1: Gaussian divergence distribution.
-* flux:   [1/(s * mm**2 *mrad**2 * energy unit]) flux per energy unit, Angs or keV.
-* randomphase [1] If !=0 the photon phase is chosen randomly.
-* phase [ ] Value of the photon phase (if randomphase==0).
-* spectrum_file: [ ] File from which to read the spectral intensity profile.
-* verbose: [1]  Output more information runtime.
+* lambda0: [AA] Mean wavelength of X-rays (only relevant for E0=0).
+* dlambda: [AA] Wavelength half spread of X-rays.
+* gauss:  [1]  Criterion: 0: uniform, 1: Gaussian distribution of energy/wavelength.
+* gauss_a:   [1] Criterion: 0: uniform, 1: Gaussian divergence distribution.
+* flux:   [1/(s * mm**2 *mrad**2 * energy unit)] flux per energy unit, Angs or keV.
+* randomphase: [1] If !=0 the photon phase is chosen randomly.
+* phase: [1] Value of the photon phase (if randomphase==0).
+* spectrum_file: [ ] File from which to read the spectral intensity profile
+* focus_ar: [rd] Standard deviation (Gaussian) or maximal (uniform) radial divergence.
+* radius: [m] Radius of circular source
+>>>>>>> 046b969b0 (Fix source documentation headers)
 *
 * OUTPUT PARAMETERS:
 *
