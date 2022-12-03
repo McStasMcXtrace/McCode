@@ -42,7 +42,6 @@
 * focus_xw: [m]   Width of sampling window
 * focus_yh: [m]   Height of sampling window
 * dist: [m]     Downstream distance to place sampling target window
-
 * E0: [keV]       Mean energy of X-rays.
 * dE: [keV]       Energy spread of X-rays.
 * lambda0: [AA]   Mean wavelength of X-rays (only relevant for E0=0)
@@ -52,6 +51,9 @@
 * flux: [1/(s*cm**2*st*energy unit)] Flux per energy unit, Angs or meV
 * verbose: [ ]    Generate more output on the console.
 * spectrum_file: [ ] File from which to read the spectral intensity profile
+* phase:         [ ] Set to finite value to define X-ray phase (0:2 pi)
+* randomphase:   [ ] When=1, the X-ray phase is randomised 
+*
 * %E
 *******************************************************************************/
 
