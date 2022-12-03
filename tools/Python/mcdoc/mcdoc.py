@@ -448,7 +448,28 @@ class OverviewDocWriter:
             local_instr_tab = local_instr_tab + t % (get_html_filepath(i.filepath), i.name, i.origin, i.author, i.filepath, 'instr', i.short_descr) + '\n'
 
         text = self.html
-        
+
+        # First, check if this is McXtrace (including AstroX) or McStas
+        if (mccode_config.get_mccode_prefix() == 'mx'):
+            astrox_hdr = ''' | <A href="#astrox">astrox</A>'''
+            astrox_table = '''
+<P><A NAME="astrox"></A>
+<B><FONT COLOR="#FF0000">AstroX components</FONT></B>
+<TABLE BORDER COLS=5 WIDTH="100%" NOSAVE>
+
+%TAB_HEAD%
+
+%TAB_LINES_ASTROX%
+
+</TABLE>
+'''
+            text = text.replace('%HDR_ASTROX%', astrox_hdr)
+            text = text.replace('%TABLE_ASTROX%', astrox_table)
+            text = text.replace('%TAB_LINES_ASTROX%', astrox_tab)
+        else:
+            text = text.replace('%HDR_ASTROX%', '')
+            text = text.replace('%TABLE_ASTROX%', '')
+
         text = text.replace('%MCCODE_LIBDIR%', self.mccode_libdir)
         text = text.replace('%TAB_HEAD%', self.tab_header)
         text = text.replace('%TAB_LINES_SOURCES%', sources_tab)
@@ -456,7 +477,6 @@ class OverviewDocWriter:
         text = text.replace('%TAB_LINES_SAMPLES%', samples_tab)
         text = text.replace('%TAB_LINES_MONITORS%', monitors_tab)
         text = text.replace('%TAB_LINES_UNION%', union_tab)
-        text = text.replace('%TAB_LINES_ASTROX%', astrox_tab)
         text = text.replace('%TAB_LINES_MISC%', misc_tab)
         text = text.replace('%TAB_LINES_CONTRIB%', contrib_tab)
         text = text.replace('%TAB_LINES_OBSOLETE%', obsolete_tab)
@@ -496,6 +516,7 @@ class OverviewDocWriter:
 </TR>
 '''
     tags = ['%MCCODE_LIBDIR%',
+            '%HDR_ASTROX%'
             '%TAB_HEAD%',
             '%TAB_LINES_SOURCES%',
             '%TAB_LINES_OPTICS%',
@@ -503,7 +524,7 @@ class OverviewDocWriter:
             '%TAB_LINES_MONITORS%',
             '%TAB_LINES_CONTRIB%',
             '%TAB_LINES_UNION%',
-            '%TAB_LINES_ASTROX%',
+            '%TABLE_ASTROX%',
             '%TAB_LINES_MISC%',
             '%TAB_LINES_OBSOLETE%',
             '%TAB_LINES_EXAMPLES%',
@@ -526,7 +547,7 @@ class OverviewDocWriter:
  | <A href="#samples">samples</A>
  | <A href="#monitors">monitors</A>
  | <A href="#union">union</A>
- | <A href="#astrox">astrox</A>
+%HDR_ASTROX%
  | <A href="#misc">misc</A>
  | <A href="#contrib">contrib</A>
  | <A href="#obsolete">obsolete</A>
@@ -597,16 +618,7 @@ class OverviewDocWriter:
 
 </TABLE>
 
-<P><A NAME="astrox"></A>
-<B><FONT COLOR="#FF0000">AstroX components</FONT></B>
-<TABLE BORDER COLS=5 WIDTH="100%" NOSAVE>
-
-%TAB_HEAD%
-
-%TAB_LINES_ASTROX%
-
-</TABLE>
-
+%TABLE_ASTROX%
 
 <P><A NAME="misc"></A>
 <B><FONT COLOR="#FF0000">Misc</FONT></B>
