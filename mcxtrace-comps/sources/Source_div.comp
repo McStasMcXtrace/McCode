@@ -47,7 +47,6 @@
 * spectrum_file: [ ] File from which to read the spectral intensity profile
 * focus_ar: [rd] Standard deviation (Gaussian) or maximal (uniform) radial divergence.
 * radius: [m] Radius of circular source
->>>>>>> 046b969b0 (Fix source documentation headers)
 *
 * OUTPUT PARAMETERS:
 *
