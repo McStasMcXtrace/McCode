@@ -135,12 +135,8 @@
 * xwidth: [m]          Horiz. dimension of sample, as a width
 * yheight: [m]         Height of sample y direction
 * zdepth: [m]          Depth of box sample
-* thickness: []        Thickness of hollow sample.
-*                Negative value extends the hollow volume outside of the box/cylinder. [m]
-* reflections: []      Input file for reflections.
-*                Use only incoherent scattering if NULL or "" [string]
-*
-* Optional parameters:
+* thickness: []        Thickness of hollow sample. Negative value extends the hollow volume outside of the box/cylinder.
+* reflections: [string] Input file for reflections. Use only incoherent scattering if NULL or "" 
 * d_phi: [deg]         Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
 * d_omega: [deg]       Horizontal focus range (only for incoherent scattering), 0 for no focusing.
 * tth_sign: [1]        Sign of the scattering angle. If 0, the sign is chosen randomly.

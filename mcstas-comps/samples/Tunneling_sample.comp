@@ -45,9 +45,6 @@
 * thickness: [m]     Thickness of cylindrical sample in (x,z) plane
 * focus_r: [m]       Radius of disk containing target. Use 0 for full space
 * target_index: [1]  relative index of component to focus at, e.g. next is +1
-*
-
-* Optional parameters
 * xwidth:   horiz. dimension of sample, as a width [m]
 * zdepth:   depth of sample [m]
 * focus_xw: horiz. dimension of a rectangular area [m]
