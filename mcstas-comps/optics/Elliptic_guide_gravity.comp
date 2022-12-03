@@ -155,8 +155,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Elliptic_guide_gravity
-SETTING PARAMETERS (l,
-	xwidth = 0,yheight = 0,
+SETTING PARAMETERS (xwidth = 0,yheight = 0,l,
 	linxw = 0,loutxw = 0,
 	linyh = 0,loutyh = 0,
 	majorAxisxw = 0,minorAxisxw = 0,
@@ -170,7 +169,7 @@ SETTING PARAMETERS (l,
 	alphaleft=-1,   mleft=-1,
 	alphatop=-1,    mtop=-1,
 	alphabottom=-1, mbottom=-1,
-	string verbose = "on", // on or off
+	string verbose = "on",
 	enableGravity = 1.0,
 	curvature=0,
 	nSegments=-1,
