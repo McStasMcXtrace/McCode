@@ -194,8 +194,7 @@
 *****************************************************************************/
 DEFINE COMPONENT PowderN
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (
-  string reflections="NULL", string geometry="NULL",
+SETTING PARAMETERS (string reflections="NULL", string geometry="NULL",
   vector format={0, 0, 0, 0, 0, 0, 0, 0, 0},
   radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
   pack=1, Vc=0, sigma_abs=0, sigma_inc=0, delta_d_d=0, p_inc=0.1, p_transmit=0.1,
