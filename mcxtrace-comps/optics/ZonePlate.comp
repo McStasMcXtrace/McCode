@@ -20,7 +20,10 @@
 * and then by means of Monte Carlo sampling, evaluating the Fresnel-Kirchhoff integral
 * implicitly by resampling the beam in a window defined by the focus_xw,focus_yh parameters.
 * 
-* Caveat emptor: this is a computationally heavy component to run. 
+* Caveat emptor I: this is a computationally heavy component to run. 
+* Caveat emptor II: for correct modelling of phase-interference phenomena, detectors used after the ZonePlate 
+* should be of the <strong>"PSD_monitor_coh"</strong> type.
+*
 * The zone plate can be iether circular or linear. In the linear case, the "slits" are
 * along the x-axis.
 *
