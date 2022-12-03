@@ -49,7 +49,7 @@
  * length:        [m] zdepth (length) of the crystal.
  * thickness:     [m] thickness of crystal (along y-axis, the surface normal)
  * material:      [ ] Si ("Si.txt"), Ge ("Ge.txt")
- * form_factors   [ ] "FormFactors.txt" from McXtrace install, usually
+ * form_factors:   [ ] "FormFactors.txt" from McXtrace install, usually
  * V:             [AA^3] unit cell volume
  * h:             [ ] 1st Miller index of reflection
  * k:             [ ] 2nd Miller index of reflection
