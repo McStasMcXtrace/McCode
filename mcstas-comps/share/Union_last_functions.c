@@ -105,6 +105,11 @@ int physics_scattering(enum process choice, double *k_final, double *k_initial, 
             output = IncoherentPhonon_physics_scattering(k_final, k_initial, weight, data_transfer, focus_data, _particle);
             break;
         #endif
+        #ifdef PROCESS_NCRYSTAL_DETECTOR
+        case NCrystal:
+            output = NCrystal_physics_scattering(k_final, k_initial, weight, data_transfer, focus_data, _particle);
+            break;
+        #endif
         #ifdef PROCESS_TEMPLATE_DETECTOR
         case Template:
             output = Incoherent_physics_scattering(k_final, k_initial, weight, data_transfer, focus_data, _particle);
