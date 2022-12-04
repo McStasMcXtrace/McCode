@@ -9,7 +9,6 @@
 *
 * %I
 * Written by: Erik B Knudsen
-* Based on neutron component by Kristian Nielsen
 * Date: Jun. 2016
 * Version: $Revision$
 * Origin: DTU Physics
@@ -19,6 +18,8 @@
 * %Description
 * 2D detector for intensity as a function of both horizontal divergence
 * and Energy.
+*
+* Based on neutron component by Kristian Nielsen
 *
 * Example: DivE_monitor(nE=20, nh=20, filename="Output.div",
 *           xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,

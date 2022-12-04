@@ -1,0 +1,260 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Source_extended
+*
+* %I
+* Written by:Arne 'S Jegers
+* Date: May 6, 2019
+* Origin: Technical University of Denmark
+* Release: McXtrace 1.4
+*
+* A plane source emitting x-rays to emulate a distant extended source, such as a
+* nebula or galaxy
+* %D
+* A rectangular x-ray source that samples ray intensity from an image, and
+* deflects the emitted ray to reflect having been emitted from the sampled part
+* of the extended source. Rays that are sampled from the same point on the image
+* are collimated, but can be emitted from anywhere on the rectangular source.
+* The image should be provided as a 2D-ascii table, whose header includes the
+* following entries:
+*
+* w_pixels and h_pixels: The width and height of the image in pixels
+* x_ref and y_ref: x and y reference values of the FITS image
+* r_max: The maximum distance from the point (x_ref, y_ref) to any corner of the image
+* iCD11, iCD12, iCD21 and iCD22: The values of the FITS image's CD matrix
+*
+* %P
+* yheight [m]   Height of rectangle in (x,y,0) plane where x-rays
+*               are generated.
+* xwidth  [m]   Width of rectangle in (x,y,0) plane where x-rays
+*               are generated. Overrides xmin and xmax.
+* xmax    [m]   upper bound of x-interval where photons are generated.
+* xmin    [m]   Lower bound of x-interval where photons are generated.
+* E0:     [keV] Mean energy of xrays.
+* dE:     [keV] Energy half spread of x-rays (flat or gaussian sigma).
+* lambda0:[AA]  Mean wavelength of x-rays.
+* dlambda:[AA]  Wavelength half spread of x-rays.
+* gauss:  [1]   Gaussian (1) or Flat (0) energy/wavelength distribution
+* flux: [pht/s] total flux radiated from the source
+* incoherent: [] Source is fully incoherent
+* phase: [] Set phase to something given.
+* image_path: [string] Path to file containing the heat map of the source 
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Source_extended
+DEFINITION PARAMETERS (string spectrum_file=NULL)
+SETTING PARAMETERS (yheight=0, xwidth=0,
+  dist=0, E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,incoherent=1,phase=0, string image_path="")
+OUTPUT PARAMETERS (prms,square)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
+
+SHARE
+%{
+  %include "read_table-lib"
+%}
+
+DECLARE
+%{
+  double pmul, srcArea;
+  int square;
+  struct {
+    double l0,dl;
+    double pmul,pint;
+    t_Table T;
+  } prms;
+
+  struct {
+      double xref, yref, rmax;
+      int pw, ph;
+      t_Table data;
+      double iCD[2][2];
+  } extendedParams;
+
+  double* sphericalToCartesian(double r, double theta, double phi, double* cartesian){
+    cartesian[0] = r*cos(theta)*cos(phi);
+    cartesian[1] = r*cos(theta)*sin(phi);
+    cartesian[2] = r*sin(theta);
+  }
+
+  double* cartesianToSpherical(double x, double y, double z, double* spherical){
+    spherical[0] = sqrt(x*x + y*y + z*z);
+    spherical[1] = atan2(z, sqrt(x*x + y*y));
+    spherical[2] = atan2(y, x);
+  }
+%}
+
+INITIALIZE
+%{
+    square = 0;srcArea=0;
+    square = 1;
+    srcArea = xwidth * yheight;
+
+  if (srcArea <= 0) {
+    printf("Source_flat: %s: Source area is <= 0 !\n ERROR - Exiting\n",
+           NAME_CURRENT_COMP);
+    exit(0);
+  }
+
+  int status = 0;
+  if (status=Table_Read(&(extendedParams.data), image_path, 0)==-1){
+      fprintf(stderr,"Source_extended(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,image_path?image_path:"");
+      exit(-1);
+  }
+
+  char** header_parsed = Table_ParseHeader(extendedParams.data.header,
+          "w_pixels=","h_pixels=", "x_ref=", "y_ref=", "r_max=", "iCD11=", "iCD12=", "iCD21=", "iCD22=", NULL);
+  if (header_parsed[0] && header_parsed[1] && header_parsed[2] && header_parsed[3] &&
+      header_parsed[4] && header_parsed[5] && header_parsed[6] && header_parsed[7])
+  {
+      printf(header_parsed[0]);printf("\n");
+      extendedParams.pw=strtod(header_parsed[0],NULL);
+      extendedParams.ph=strtod(header_parsed[1],NULL);
+      extendedParams.xref=strtod(header_parsed[2],NULL);
+      extendedParams.yref=strtod(header_parsed[3],NULL);
+      extendedParams.rmax=strtod(header_parsed[4],NULL);
+      extendedParams.iCD[0][0] = strtod(header_parsed[5], NULL);
+      extendedParams.iCD[0][1] = strtod(header_parsed[6], NULL);
+      extendedParams.iCD[1][0] = strtod(header_parsed[7], NULL);
+      extendedParams.iCD[1][1] = strtod(header_parsed[8], NULL);
+  }
+
+  if (spectrum_file){
+    /*read spectrum from file*/
+    int status=0;
+    if ( (status=Table_Read(&(prms.T),spectrum_file,0))==-1){
+      fprintf(stderr,"Source_extended(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,spectrum_file?spectrum_file:"");
+      exit(-1);
+    }
+    /*data is now in table t*/
+    /*integrate to get total flux, assuming raw numbers have been corrected for measuring aperture*/
+    int i;
+    prms.pint=0;
+    t_Table *T=&(prms.T);
+    for (i=0;i<prms.T.rows-1;i++){
+      prms.pint+=((T->data[i*T->columns+1]+T->data[(i+1)*T->columns+1])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]);
+    }
+    printf("Source_flat(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
+    if(E0) printf("Source_flat(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
+  }else if ( !E0 && !lambda0){
+    fprintf(stderr,"Source_flat(%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
+    exit(0);
+  }
+  /*calculate the X-ray weight from the flux*/
+  if (flux){
+    prms.pmul=flux;
+  }else{
+    prms.pmul=1;
+  }
+  prms.pmul*=1.0/((double) mcget_ncount());
+%}
+
+
+TRACE
+%{
+  double chi,e,k,l,r, pdir;
+
+  phi=0;
+  z=0;
+  if (square == 1) {
+    x = xwidth * (rand01() - 0.5);
+    y = yheight * (rand01() - 0.5);
+  }
+
+  /*pdir contains the unnormalized solid angle weighting */
+  p = 1;
+
+  if (spectrum_file){
+    double pp=0;
+    //while (pp<=0){
+    l=prms.T.data[0]+ (prms.T.data[(prms.T.rows-1)*prms.T.columns] -prms.T.data[0])*rand01();
+    pp=Table_Value(prms.T,l,1);
+    //}
+    p*=pp;
+    /*if E0!=0 convert the tabled value to wavelength*/
+  }else if (E0){
+    if(!dE){
+      e=E0;
+    }else if (gauss){
+      e=E0+dE*randnorm();
+    }else{
+      e=randpm1()*dE*0.5 + E0;
+    }
+    k=E2K*e;
+  }else if (lambda0){
+    if (!dlambda){
+      l=lambda0;
+    }else if (gauss){
+      l=lambda0+dlambda*randnorm();
+    }else{
+      l=randpm1()*dlambda*0.5 + lambda0;
+    }
+    k=(2*M_PI/l);
+  }
+
+  // ===========================================================================
+  //  This section randomly picks a direction to emit a ray to, and samples the
+  //  source image for an intensity at the appropriate point
+  char done = 0;
+  double xpix, ypix, theta, phi;
+  while(!done){
+      theta = sqrt(rand01())*extendedParams.rmax/180*M_PI; //normalized
+      phi = rand01()*2*M_PI;
+
+      double xDeg = tan(theta)*cos(phi)*180/M_PI;
+      double yDeg = tan(theta)*sin(phi)*180/M_PI;
+
+      double xRel = extendedParams.iCD[0][0]*xDeg + extendedParams.iCD[0][1]*yDeg;
+      double yRel = extendedParams.iCD[1][0]*xDeg + extendedParams.iCD[1][1]*yDeg;
+
+      xpix = xRel + extendedParams.xref;
+      ypix = yRel + extendedParams.yref;
+
+      if(xpix > 0 && xpix < extendedParams.pw && ypix > 0 && ypix < extendedParams.ph){
+        done = 1;
+      }
+  }
+  //Both are inverted because, relative to the spherical coordinate system of
+  //theta and phi, the rays are emitted 'backwards'
+  kx = -sin(theta)*cos(phi)*k;
+  ky = -sin(theta)*sin(phi)*k;
+
+  kz = cos(theta)*k;
+
+  p = Table_Value2d(extendedParams.data, ypix, xpix);
+
+  /*randomly pick phase or set to something real*/
+  if (incoherent){
+    phi=rand01()*2*M_PI;
+  }else{
+    phi=phase;
+  }
+
+  /*set polarization vector*/
+  Ex=0;Ey=0;Ez=0;
+%}
+
+FINALLY
+%{
+  if(prms.T){
+    Table_Free(&(prms.T));
+  }
+  if(extendedParams.data){
+    Table_Free(&(extendedParams.data));
+  }
+%}
+
+MCDISPLAY
+%{
+  if (square == 1) {
+    magnify("xy");
+    rectangle("xy",0,0,0,xwidth,yheight);
+  }
+%}
+
+END

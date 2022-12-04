@@ -1,0 +1,282 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: ATHENA_1shell
+*
+* %Identification
+* Written by: Erik B Knudsen <erkn@fysik.dtu.dk> & Desiree D. M. Ferreira <desiree@space.dtu.dk> (email)
+* Date: 12/12/2016
+* Origin: DTU Physics/DTU Space
+* Release: McXtrace 1.2
+* Version: 1.0
+* %INSTRUMENT_SITE: AstroX_ESA
+*
+* Single shell model of the NuSTAR-optic in use as telescope.
+*
+* %Description
+* A model of the NuSTAR-telescope using just a single shell as optical element.
+* That means to make use of this instrument
+* it is necessary to run a series of simulation while varying the input parameter shellnumber.
+*
+* The model needs as input a file geomfile, which contains (in ascii) tabled details about the geometry of the shells.
+* The data in the geomfile is assumed to be in the format:
+* #row  L/m  rad_h/m  rad_m/m  rad_p/m  width/m
+* ...
+* row: running index for the rows/rings
+* L: The length of the plates for this ring
+* rad_h: The radius at the "hyperbolic" end of the optic. At the detector end.
+* rad_m: The radius at the midpoint of the optic. This is the reference.
+* rad_p: The radius at the "parabolic" and of the optic. At the source end.
+* width: pore width ?
+*
+* Example: ATHENA_1shell.instr shellnumber=1
+*
+* %Parameters
+* FL [m] The focal length of the optical system
+* optics_dist [m] The distance between souce and optic. In space this would be quite large :-).
+* SRC_POS_X [m] Displacement of source along X
+* SRC_POS_Y [m] Displacement of source along Y
+* offaxis_angle [arcmin] Angle of collimated light from source
+* reflectivity [ ] Data file containing reflectivities (such as from IMD)
+* E0 [keV] Central energy of X-rays
+* dE [keV] Half spread of energy spectrum to be emitted from source
+* shellnumber [ ] The row number for the miror module. This defines the shell.
+* geomfile [ ] File which contains the geometry of the pores (i.e. radii,lengths)
+*
+* %Link
+* <a href="http://www.cosmos.esa.int/web/athena">The ATHENA web pages @ ESA</a>
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT NuSTAR_1shell(FL=10.12,FLd=0, optics_dist=10,
+        SRC_POS_X=0, SRC_POS_Y=0, offaxis_angle=0, drx=0,dry=0,drz=0 ,
+        string reflectivity="mirror_coating_unity.txt", E0=5, dE=0.001, int shellnumber=0,
+        string parabolic_datafile="om_con_1a_110901_t1.txt", string hyperbolic_datafile="om_con_3a_110901_t1.txt")
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+    double RP,RMP,PL,RH,RMH,HL,PHP,PHH, AP, AH;
+    int Pcoat,Hcoat;
+
+    double hyperref,pararef;
+    int parascatter,hyperscatter;
+
+    double src_pos_x;
+    double src_pos_y;
+    double alphax,alphay;
+    double pstore;
+    long long nid;
+
+    double pore_width=0.83e-3;
+
+    char *coatings[]={
+        "mirror_coating_unity.txt",
+        "mirror_coating_unity.txt",
+        "mirror_coating_unity.txt",
+        "mirror_coating_unity.txt",
+        "mirror_coating_unity.txt",
+        "mirror_coating_unity.txt",
+        "mirror_coating_unity.txt",
+        "mirror_coating_unity.txt",
+        "mirror_coating_unity.txt",
+        "mirror_coating_unity.txt",
+        "mirror_coating_unity.txt",
+        "mirror_coating_unity.txt",
+        "mirror_coating_unity.txt",
+        "mirror_coating_unity.txt",
+        "mirror_coating_unity.txt",
+        "mirror_coating_unity.txt",
+        "mirror_coating_unity.txt"
+    };
+
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+    src_pos_x=SRC_POS_X;
+    src_pos_y=SRC_POS_Y;
+    if (offaxis_angle){
+        alphax=offaxis_angle * MIN2RAD;
+    }
+    alphay=(src_pos_y)/optics_dist;
+    nid=0;
+
+    t_Table tpa,tph;
+    int status=0;    
+    if( (status=Table_Read(&tpa,parabolic_datafile,0))<1){
+        fprintf(stderr,"Error: Could not open/parse file %s\n",parabolic_datafile);
+        exit(-1);
+    } 
+    if( (status=Table_Read(&tph,hyperbolic_datafile,0))<1){
+        fprintf(stderr,"Error: Could not open/parse file %s\n",hyperbolic_datafile);
+        exit(-1);
+    } 
+
+    /*extract relevant numbers from the tables*/
+    RP=Table_Index(tpa,shellnumber,0)*1e-3;
+    RMP=Table_Index(tpa,shellnumber,1)*1e-3;
+    AP=Table_Index(tpa,shellnumber,4);
+    PL=Table_Index(tpa,shellnumber,5)*1e-3;
+    Pcoat=Table_Index(tpa,shellnumber,7);
+    RH=Table_Index(tph,shellnumber,1)*1e-3;
+    RMH=Table_Index(tph,shellnumber,0)*1e-3;
+    AH=Table_Index(tph,shellnumber,4);
+    HL=Table_Index(tph,shellnumber,5)*1e-3;
+    Hcoat=Table_Index(tph,shellnumber,7);
+    PHH=(Table_Index(tph,shellnumber,9)-Table_Index(tph,shellnumber,8))*1e-3;
+    PHP=(Table_Index(tpa,shellnumber,9)-Table_Index(tpa,shellnumber,8))*1e-3;
+
+    if (RMH!=RMP){
+        printf("aaargh %g %g   %g %g \n",RP, RMP,RMH, RH);
+        //exit(-1);
+    }
+    if(!FLd){
+        FLd=FL;
+    }
+    printf("fff: %g %g\n",FL,FLd);
+%}
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding an xray source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+AT (0,0,0) ABSOLUTE
+EXTEND
+%{
+    parascatter=0;
+    hyperscatter=0;
+    nid++;
+    hyperref=1;
+    pararef=1;
+%}
+
+COMPONENT src = Source_div(
+        xwidth=0,yheight=2.0*PHP,focus_aw=0,focus_ah=0,E0=E0,dE=dE)
+AT(0,RP-PHP/2.0,0) RELATIVE Origin
+
+COMPONENT srcradsym = Arm()
+AT(0,0,0) RELATIVE Origin
+EXTEND
+%{
+    do {
+        x=0;
+        double eta=2*M_PI*rand01();
+        rotate(x,y,z, x,y,z, eta, 0,0,1);
+    } while(0);
+%}
+
+
+COMPONENT srcoffaxis= Arm()
+WHEN(alphax!=0) AT(0,0,0) RELATIVE Origin
+ROTATED (0,0,0) RELATIVE Origin
+EXTEND
+%{
+    do {    
+        rotate(kx,ky,kz, kx,ky,kz, alphax, 0,1,0);
+        x-=mcipoptics_dist*sin(alphax);
+        SCATTER;
+    }while(0);
+%}
+
+COMPONENT detector_pre_optics = PSD_monitor(restore_xray=1, xwidth=3, yheight=1.5, nx=101, ny=51, filename="det_preo.dat")
+AT(0,0,optics_dist) RELATIVE Origin
+
+COMPONENT optics_centre = Arm()
+AT(0,0,optics_dist) RELATIVE Origin
+EXTEND
+%{
+    pstore=p;
+%}
+
+COMPONENT misalign = Arm()
+AT(0,0,0) RELATIVE optics_centre
+ROTATED (drx/3600.0, dry/3600.0, drz/3600.0) RELATIVE optics_centre
+EXTEND
+%{
+    //printf("%ld %g %g \n",nid,RP,RMP);
+    //printf("%ld %g %g \n",nid,RH,RMH);
+%}
+
+COMPONENT Shell_p_1 = Shell_c(
+        yheight=1, radius_m=RMP,primary=1,  length=PL, Z0=FL, yheight=PHP, mirror_reflec=coatings[Pcoat], R_d=0)
+AT(0,0,-1e-4) RELATIVE misalign
+EXTEND
+%{
+    if (SCATTERED){
+        parascatter=mcScattered;
+        pararef=p/pstore;
+    }
+    //printf("1: %g %g %g\n",alpha,radius_1,radius_2);
+%}
+
+COMPONENT midopdet = PSD_monitor(
+        restore_xray=1,xwidth=3,yheight=1.5,nx=201,ny=101, filename="midop.dat")
+AT(0,0,0) RELATIVE misalign
+
+COMPONENT Shell_h_1 = Shell_c(
+        yheight=1, radius_m=RMH, primary=0,primary=0,  length=HL, Z0=FL, yheight=PHH, mirror_reflec=coatings[Hcoat], R_d=0)
+AT(0,0,0) RELATIVE misalign
+GROUP hyperoptics
+EXTEND
+%{
+    if (SCATTERED){
+        hyperscatter=mcScattered;
+        hyperref=p/(pstore*pararef);
+    }
+    //printf("2: %g %g %g\n",alpha,radius_1,radius_2);
+%}
+
+//COMPONENT fourpi = PSD_monitor_4PI(restore_xray=1,filename="sphere.dat", radius=2, nx=51,ny=51)
+//AT(0,0,0) RELATIVE optics_centre 
+
+COMPONENT detector_post_optics = PSD_monitor(restore_xray=1,xwidth=.45, yheight=0.45, nx=501, ny=501, filename="det_posto.dat")
+AT(0,0,optics_dist+0.5) RELATIVE Origin
+
+COMPONENT paramon = Monitor_nD(
+        restore_xray=1,filename="paramond",xwidth=3, yheight=1.5, options="list=2000 user1,user2,user3", user1=nid,user2=parascatter,user3=pararef, 
+        username1="ray_id",username2="parabolic_shell_id",username3="parabolic_reflectivity")
+AT(0,0,optics_dist+0.5) RELATIVE Origin
+
+COMPONENT hypermon = Monitor_nD(
+        restore_xray=1,filename="hypermond",xwidth=3, yheight=1.5, options="list=2000 user1,user2,user3", user1=nid,user2=hyperscatter,user3=hyperref, 
+        username1="ray_id",username2="hyperbolic_shell_id",username3="hyperbolic_reflectivity")
+AT(0,0,optics_dist+0.5) RELATIVE Origin
+
+
+
+COMPONENT big_detector = PSD_monitor(restore_xray=1, xwidth=0.4, yheight=0.4, nx=201, ny=201, filename="bigdet.dat")
+AT(0,0,FLd) RELATIVE optics_centre
+COMPONENT medium_detectpr = PSD_monitor(restore_xray=1, xwidth=0.05, yheight=0.05, nx=201, ny=201, filename="meddet.dat")
+AT(0,0,FLd) RELATIVE optics_centre
+
+COMPONENT focal_detector = PSD_monitor(restore_xray=1,xwidth=2e-3, yheight=2e-3, nx=801, ny=801, filename="focal_det.dat")
+AT(0,0,FLd) RELATIVE optics_centre
+COMPONENT superfocal_detector = PSD_monitor(restore_xray=1,xwidth=1e-6, yheight=1e-6, nx=201, ny=201, filename="superfocal_det.dat")
+AT(0,0,FLd) RELATIVE optics_centre
+COMPONENT ultrafocal_detector = PSD_monitor(restore_xray=1,xwidth=1e-12, yheight=1e-12, nx=201, ny=201, filename="ultrafocal_det.dat")
+AT(0,0,FLd) RELATIVE optics_centre
+
+COMPONENT FLmond= Monitor_nD(
+        restore_xray=1,filename="FLmond",xwidth=0.1, yheight=.1, options="list=all user1 x y k E", user1=nid,
+        username1="ray_id")
+AT(0,0,FLd) RELATIVE optics_centre
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+

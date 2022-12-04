@@ -1,0 +1,73 @@
+/*******************************************************************************
+* Instrument: Union_incoherent
+*
+* %I
+* Written by: E. B. Knudsen (erkn@fysik.dtu.dk)
+* Date: Aug 13th 2021
+* Origin: Riso DTU
+* Version: $Revision$
+* %INSTRUMENT_SITE: Templates
+*
+* An example using Union with incoherent scattering
+*
+* %D
+* An example using Union with incoherent scattering
+*
+* %Example: E0=12 Detector: emon_sphere_I=4.28512e-09
+*
+* %P
+* E0: [keV] incident energy
+* ...
+* 
+* %L
+* <reference/HTML link>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Union_incoherent(E0=12)
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+// insert components here (e.g. Insert -> Source -> ...)
+COMPONENT s = Source_pt(
+	E0=E0,dE=0,focus_xw=1e-3,focus_yh=1e-3, dist=2)
+AT(0,0,0) RELATIVE origin
+
+COMPONENT sp = Arm()
+AT(0,0,2) RELATIVE s
+
+COMPONENT vinc = Incoherent_process(sigma=5.08, f_QE=0.9, gamma=0.0001)
+AT(0,0,0) RELATIVE sp
+
+COMPONENT V = Union_make_material(process_string="vinc", material_string="V.txt", my_absorption=0)
+AT(0,0,0) RELATIVE sp
+
+COMPONENT vsphere = Union_sphere(radius=0.5e-3, material_string="V",priority=1)
+AT(0,0,0) RELATIVE sp
+
+COMPONENT master = Union_master()
+AT(0,0,0) RELATIVE sp
+
+COMPONENT fpi = PSD_monitor_4PI(radius=0.25, nx=101, ny=101, filename="fpi")
+AT(0,0,0) RELATIVE sp
+
+COMPONENT emon_sphere = Monitor_nD(radius=0.251,yheight=0.01, filename="emons",options="banana e limits 11.9 12.1", bins=2000)
+AT(0,0,0) RELATIVE sp
+
+
+FINALLY
+%{
+%}
+
+END

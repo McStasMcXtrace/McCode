@@ -6,50 +6,9 @@ import sys
 Dynamic vs static LIBDIR location
 '''
 LIBDIR = os.path.join(os.path.dirname(__file__),"..","..","..")
-LIBDIR_FALLBACK = '/usr/share/mcstas/2.6.1/'
+LIBDIR_FALLBACK = '/Applications/McStas-2.7.1beta.app/Contents/Resources/mcstas/2.7.1beta/'
 if sys.platform == 'darwin':
     LIBDIR = LIBDIR_FALLBACK
-    
-'''
-mcstas/mcxtrace configuration.
-'''
-configuration = {
-    "MCCODE_VERSION": '2.6.1',
-    "MCCODE_LIB_DIR": '/usr/share/mcstas/2.6.1/',
-    "TERMINAL": 'x-terminal-emulator -e',
-    "MCCODE": 'mcstas',
-    "MCRUN": 'mcrun',
-    "MCPLOT": 'mcplot-pyqtgraph',
-    "MCDISPLAY": 'mcdisplay-webgl',
-    "TOOL_NAME": 'mcgui',
-    "PARTICLE": 'neutron',
-    "BROWSER": 'xdg-open',
-    "GUICOLS": '3',
-}
-
-# Set environment variables according to the above
-os.environ["MCSTAS"] = configuration["MCCODE_LIB_DIR"]
-os.environ["PATH"] = os.path.join(configuration["MCCODE_LIB_DIR"],"bin") + os.pathsep + os.environ["PATH"]
-
-'''
-Compilation, parallelisation etc.
-'''
-compilation = {
-    "CFLAGS": '-g -lm -O2',
-    "NEXUSFLAGS": '-DUSE_NEXUS -lNeXus',
-    "MPIFLAGS": '-DUSE_MPI -lmpi',
-    "CC": 'gcc',
-    "MPICC": 'mpicc',
-    "MPIRUN": 'mpirun',
-    "MPINODES": '4',
-}
-
-'''
-Platform settings
-'''
-platform = {
-    "EXESUFFIX": 'out',
-}
 
 def check_env_vars():
     ''' checks the OS environment variables '''
@@ -69,31 +28,44 @@ def check_env_vars():
     if not os.getenv('MCSTAS_MPICC_OVERRIDE') is None:
         compilation['MPICC'] = os.getenv('MCSTAS_MPICC_OVERRIDE')
 
-def load_user_config():
+def load_config(path=None):
     ''' loads a json user config to the dictionaries in this module '''
     global configuration
     global compilation
     global platform
+
+    if path==None:
+        level="system"
+        userconfig = os.path.join(os.path.dirname(__file__),"mccode_config.json")
+        info=""
+    elif path=="user":
+        level="user"
+        if os.name == 'nt':
+            userdir =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",configuration['MCCODE'],configuration['MCCODE_VERSION'])
+        else:
+            userdir =  os.path.join(os.path.expandvars("$HOME"),"." + configuration['MCCODE'],configuration['MCCODE_VERSION'])
+        userconfig = os.path.join(userdir,"mccode_config.json")
+        info = " from " + userconfig
     
-    if os.name == 'nt':
-        userdir =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",configuration['MCCODE'],configuration['MCCODE_VERSION'])
+        if not os.path.isfile(userconfig):
+            return
     else:
-        userdir =  os.path.join(os.path.expandvars("$HOME"),"." + configuration['MCCODE'],configuration['MCCODE_VERSION'])
-    userconfig = os.path.join(userdir,"mccode_config.json")
+        level="override"
+        userconfig= os.path.join(path,"mccode_config.json")
+        info = " from " + userconfig
     
-    if not os.path.isfile(userconfig):
-        return
-    
-    print("loading user configuration from " + userconfig)
+    print("loading " + level + " configuration" + info )
     text = open(userconfig).read()
     obj = json.loads(text)
     configuration = obj['configuration']
     compilation = obj['compilation']
     platform = obj['platform']
+    # Finally, fill in the location of MCCODE_LIB_DIR based on location of Python script
+    configuration["MCCODE_LIB_DIR"]=LIBDIR
 
 def save_user_config():
     ''' attempts to save the current values to a local .json file '''
-    text = json.dumps({'configuration' : configuration, 'compilation' : compilation, 'platform' : platform})
+    text = json.dumps({'configuration' : configuration, 'compilation' : compilation, 'platform' : platform}, indent=2)
 
     if os.name == 'nt':
         homedirconf =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",configuration['MCCODE'])
@@ -149,17 +121,16 @@ def get_options():
         prefix = "mx"
         mcdisplay_lst = [prefix+"display-webgl",
                          prefix+"display-pyqtgraph",
-                         prefix+"display-pyqtgraph --tof",
                          prefix+"display"+suffix,
                          prefix+"display"+suffix+" -m", 
                          prefix+"display"+suffix+" --format=Matlab",
                          prefix+"display"+suffix+" --format=VRML"]
 
  
-    mcrun_lst =     [prefix+"run", "mcsub_pbs"+suffix2+" "+prefix+"run", "mcsub_slurm"+suffix2+" "+prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
+
+    mcrun_lst =     [prefix+"run", prefix+"run --autoplot", "mcsub_pbs"+suffix2+" "+prefix+"run", "mcsub_slurm"+suffix2+" "+prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
         
-    mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot-matplotlib",prefix+"plot"+suffix, prefix+"plot"+suffix+" --format=Gnuplot", prefix+"plot"+suffix+" --format=Matlab",
-                     prefix+"plot-matlab"]
+    mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot-matplotlib",prefix+"plot"+suffix, prefix+"plot"+suffix+" --format=Matlab", prefix+"plot-matlab"]
 
     return mcrun_lst, mcplot_lst, mcdisplay_lst
 
@@ -169,3 +140,28 @@ def get_mccode_prefix():
         return "mc"
     else:
         return "mx"
+
+'''
+mcstas/mcxtrace configuration.
+'''
+configuration = {
+}
+
+'''
+Compilation, parallelisation etc.
+'''
+compilation = {
+}
+
+'''
+Platform settings
+'''
+platform = {
+}
+
+load_config()
+    
+# Set environment variables according to the above
+os.environ[configuration["MCCODE"].upper()] = configuration["MCCODE_LIB_DIR"]
+os.environ["PATH"] = os.path.join(configuration["MCCODE_LIB_DIR"],"bin") + os.pathsep + os.environ["PATH"]
+

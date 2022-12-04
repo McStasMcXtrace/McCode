@@ -1,0 +1,243 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*         University of Copenhagen, Copenhagen, Denmark
+*
+* Component: Mirror_toroid_pothole
+*
+* %I
+* Written by: Erik B Knudsen 
+* Date: Jul 2016
+* Origin: DTU Physics
+* Modified by: Padovani Antoine, 5th August 2022.
+*
+* Toroidal shape mirror
+*
+* %D
+* This is an implementation of a toroidal mirror which may be curved in two dimensions.
+* To avoid solving quartic equations, the intersection is computed as a combination of 
+* two intersections. First, the ray is intersected with a cylinder to catch (almost) the small
+* radius curvature. Secondly, the ray is the intersected with an ellipsoid, with the curvatures
+* matching that of the torus. 
+*
+* The first incarnation (Mirror_toroid.comp) the mirror curves outwards (a bump), but this incarnation (Mirror_toroid_pothole) curves inwards (a pothole).
+*
+* %P
+* Input parameters:
+*
+* (none)
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Mirror_toroid_pothole
+DEFINITION PARAMETERS ( string reflec="")
+SETTING PARAMETERS (zdepth=0.1, xwidth=0.01, radius, radius_o,R0=0)
+OUTPUT PARAMETERS (reflec_table, prms)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
+SHARE
+%{
+  #include <complex.h>
+  %include "read_table-lib" 
+  %include "reflectivity-lib"
+%}
+
+DECLARE
+%{  
+    struct {
+        double e_min,e_max,e_step,theta_min,theta_max,theta_step;
+        int use_reflec_table;
+    } prms;
+    t_Table reflec_table;
+    t_Reflec re;
+%}
+
+INITIALIZE
+%{
+    if (reflec && strlen(reflec)){
+        char **header_parsed;
+        t_Table *tp=&reflec_table;
+        /* read 1st block data from file into tp */
+        if (Table_Read(tp, reflec, 1) <= 0)
+        {
+            exit(fprintf(stderr,"Error: %s: cannot read file %s\n",NAME_CURRENT_COMP, reflec));
+        }
+        header_parsed = Table_ParseHeader(tp->header,
+                "e_min=","e_max=","e_step=","theta_min=","theta_max=","theta_step=",NULL);
+        if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
+                header_parsed[3] && header_parsed[4] && header_parsed[5])
+        {
+            prms.e_min=strtod(header_parsed[0],NULL);
+            prms.e_max=strtod(header_parsed[1],NULL);
+            prms.e_step=strtod(header_parsed[2],NULL);
+            prms.theta_min=strtod(header_parsed[3],NULL);
+            prms.theta_max=strtod(header_parsed[4],NULL);
+            prms.theta_step=strtod(header_parsed[5],NULL);
+        } else {
+            exit(fprintf(stderr,"Error: %s: wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, reflec));
+        }	
+        if (((tp->rows-2)*prms.e_step) > (prms.e_max-prms.e_min))
+        {   
+            exit(fprintf(stderr,"Error: %s: e_step does not match e_min and e_max in file %s (<)\n",NAME_CURRENT_COMP, reflec));    
+        }
+        if ((prms.e_max-prms.e_min) > ((tp->rows)*prms.e_step))
+        {
+            exit(fprintf(stderr,"Error: %s: e_step does not match e_min and e_max in file %s (>)\n",NAME_CURRENT_COMP, reflec));
+        }        
+        if (((tp->columns-2)*prms.theta_step) > (prms.theta_max-prms.theta_min))  
+        {
+            exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s (<)\n",NAME_CURRENT_COMP,reflec));
+        }
+        if ((prms.theta_max-prms.theta_min) > ((tp->columns)*prms.theta_step))
+        {
+            exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s (>)\n",NAME_CURRENT_COMP,reflec));
+        }
+        prms.use_reflec_table=1;
+    }else{
+        prms.use_reflec_table=0;
+    }
+%}
+
+TRACE
+%{
+    int status;
+    double l0,l1,l2,l3,tx,ty,tz;
+    
+    do {
+        /*TODO check the permutation of coordinates and the actual position of the cylinder.*/
+        status= cylinder_intersect(&l0,&l1,x,z,y-radius,kx,kz,ky, radius, zdepth);
+        if (!status) break; /* no interaction with the cylinder*/
+        //if(status & (02|04)) break; /*we exit the top/bottom of the cylinder*/        
+        if(status & (24)) break;
+        //if(status & (8|16)) break; /*we exit the top/bottom of the cylinder*/ 
+        /*if the first intersection is behind the particle - this means the ray is on the wrong side of the mirror*/
+        if(l1<0) break; 
+        do {
+            /*this to do a test propagation*/
+            double op[12];
+            mcstore_xray(op,0, x,y,z, kx,ky,kz, phi, t, Ex,Ey,Ez, p);
+            mcPROP_DL(l1);
+            (tx)=x;(ty)=y; (tz)=z;
+            mcrestore_xray(op,0, &x,&y,&z, &kx,&ky,&kz, &phi, &t, &Ex,&Ey,&Ez, &p);
+        }while(0);
+        /*check mirror limits of intersectio point.*/
+        if(tz<-zdepth/2.0 || tz>zdepth/2.0) break;
+        /*check if the width is OK*/
+        double xmax=acos(xwidth/(2.0*radius))*radius;
+        if(tx<-xmax || tx>xmax) break;
+        
+        status=ellipsoid_intersect(&l2,&l3,x,y-radius,z,kx,ky,kz,radius,radius,radius_o+radius,NULL);
+        if (!status) break;
+        if(l3<0) break; /*This shouldn't be possible*/        
+        /*the mirror is indeed hit*/
+        PROP_DL(l3);
+        SCATTER;
+        
+        double nx,ny,nz;
+        nx=2*x/(radius*radius);
+        ny=2*(y-radius)/(radius*radius);/*ellipsoid is displaced to put Origin on the surface*/
+        nz=2*z/((radius+radius_o)*(radius+radius_o));
+        NORM(nx,ny,nz);
+
+        /*By definition the normal vector points out from the ellipsoid*/
+        double s=scalar_prod(kx,ky,kz,nx,ny,nz);
+        double k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); 
+         
+        kx=kx-2*s*nx;
+        ky=ky-2*s*ny;
+        kz=kz-2*s*nz;
+
+        /*find energy, and glancing angle*/ 
+        if (prms.use_reflec_table){
+            /*the get ref. by call to Table_value2d*/
+            double R;
+            double theta=RAD2DEG*(acos(s/k)-M_PI_2);
+            double e=K2E*k;
+            R=Table_Value2d(reflec_table,(e-prms.e_min)/prms.e_step, ((theta-prms.theta_min)/prms.theta_step));
+            p*=R;
+            /*update phase - as an approximation turn by 180 deg.*/
+	    phi+=M_PI;
+        }else{
+            p*=R0;
+        }
+    }while(0);
+%}
+
+
+
+
+MCDISPLAY
+%{
+  //See parametric equation used for the 3D view here: https://en.wikipedia.org/wiki/Torus#Geometry or here:https://web.maths.unsw.edu.au/~rsw/Torus/index.php
+  //Because the code above doesn't actually reproduce a torus exactly but uses a cylinder and an ellipsoid to construct the toroidal mirror (to avoid solving quartic equations),
+  //there's a slight mismatch between the 3D view (exact torus) and the actual toroidal mirror coded above.
+  
+  double x0,y0,z0,x1,y1,z1,theta,phi,phi_total,theta_total,theta_beginning,phi_beginning,theta_end,phi_end;
+  //int N=50; too many points, makes the 3D matlab viewer bug
+  int N=10;     
+  
+  phi_total = RAD2DEG*(zdepth/(radius+radius_o));//degrees
+  theta_total = RAD2DEG*(xwidth/radius);
+  
+  //fix theta=0 and phi=180 degrees respectively
+  theta=0;
+  phi=180;
+  
+  //then start at the beginning of the theta or phi range in order to map the flat surface (xwidth, zdepth) on the torus.
+  theta_beginning=theta-(theta_total/2);
+  phi_beginning=phi-(phi_total/2);
+   
+  theta_end = theta+(theta_total/2);
+  phi_end = phi+(phi_total/2);
+  
+  theta = theta_beginning;
+  phi = phi_beginning;  
+  
+  while (theta<=theta_end){
+      phi=180-(phi_total/2);
+      x0=radius*sin(DEG2RAD*theta);
+      y0=(radius_o+radius*cos(DEG2RAD*theta))*cos(DEG2RAD*phi)+(radius_o+radius);
+      z0=(radius_o+radius*cos(DEG2RAD*theta))*sin(DEG2RAD*phi);
+      while (phi<=phi_end){
+          x1=radius*sin(DEG2RAD*theta);
+          y1=(radius_o+radius*cos(DEG2RAD*theta))*cos(DEG2RAD*phi)+(radius_o+radius);
+          z1=(radius_o+radius*cos(DEG2RAD*theta))*sin(DEG2RAD*phi);      
+          line(x0,y0,z0,x1,y1,z1);   
+          x0=x1;
+          y0=y1; 
+          z0=z1; 
+          phi+=phi_total/N;
+          
+      }
+      theta+=theta_total/N;
+  }  
+   
+  theta = theta_beginning;
+  phi = phi_beginning;  
+  
+  while (phi<=phi_end){
+      theta=-(theta_total/2);
+      x0=radius*sin(DEG2RAD*theta);
+      y0=(radius_o+radius*cos(DEG2RAD*theta))*cos(DEG2RAD*phi)+(radius_o+radius);
+      z0=(radius_o+radius*cos(DEG2RAD*theta))*sin(DEG2RAD*phi);
+      while (theta<=theta_end){
+          x1=radius*sin(DEG2RAD*theta);
+          y1=(radius_o+radius*cos(DEG2RAD*theta))*cos(DEG2RAD*phi)+(radius_o+radius);
+          z1=(radius_o+radius*cos(DEG2RAD*theta))*sin(DEG2RAD*phi);      
+          line(x0,y0,z0,x1,y1,z1);   
+          x0=x1;
+          y0=y1; 
+          z0=z1; 
+          theta+=theta_total/N;
+      }
+      phi+=phi_total/N;
+  }
+   
+%}
+
+
+END

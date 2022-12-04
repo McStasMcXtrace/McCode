@@ -1,0 +1,150 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Test Monitor_nD against basic monitors
+*
+* %Identification
+* Written by: P. Willendrup
+* Date: 30. September 2020
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests
+*
+* Test Monitor_nD against basic monitor
+*
+* %Description
+* A test instrument to compare Monitor_nD output against basic 1D and 2D monitors.
+*
+*
+* %Parameters
+* lambda: [Angs]  Wavelength at monochromator, computed from DM and THETA_M if left as 0.
+* DM: [Angs]      d-spacing of monochromator, computed from lambda and THETA_M if left as 0.
+* THETA_M: [deg]  Monochromator take-off angle, computed from lambda and DM if left as 0.
+* RV: [m]         Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* L1: [m]         Source-Monochromator distance
+* L2: [m]         Monochromator-Sample distance
+* L3: [m]         Sample-Detector distance
+* ALPHA1: [min]   Horizontal collimator divergence for L1 arm (before monochromator)
+* ALPHA2: [min]   Horizontal collimator divergence for L2 arm (monochromator-sample)
+* ALPHA3: [min]   Horizontal collimator divergence for L3 arm (sample-detector)
+* ETA: [min]      Monochromator horizontal mosaic (gaussian)
+* Powder: [str]   File name for powder description
+* verbose: [int]  Print DIF configuration. 0 to be quiet
+* SM: [int]       Scattering sense of beam from Monochromator. 1:left, -1:right
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_Cyl_monitors(lambda=5, L1=10, int bins=100, xw=0.11, yh=0.16, hdiv=2, vdiv=2,omega=90, thmin=-180,thmax=180,focus_aw=10,focus_ah=2,focus_xw=0,focus_yh=0)
+
+DECLARE %{
+  char cylopts[128];
+  char psdopts[128];
+  char tofopts[128];
+  double mudist=1e-6;
+  double V,E,T;
+  double xwidth,yheight;
+  int tindex;
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+  V=K2V*(2*PI/lambda);
+  E=VS2E*V*V;
+  T=L1/V;
+  sprintf(cylopts,"banana, theta limits=[%g %g] bins=%i",thmin,thmax,bins);
+  sprintf(psdopts,"banana, theta limits=[%g %g] bins=%i, y bins=%i",thmin,thmax,bins,bins);
+  sprintf(tofopts,"banana, theta limits=[%g %g] bins=%i, tof limits=[0 0.03] bins=%i",thmin,thmax,bins,bins);
+
+  if (focus_ah && focus_aw && !focus_yh && !focus_xw) {
+    // calculate PSD monitor size
+    xwidth = 1.05*sin(DEG2RAD*focus_aw);
+    yheight = 1.05*sin(DEG2RAD*focus_ah);
+    tindex=2;
+  } else if (!focus_ah && !focus_aw && focus_yh && focus_xw) {
+    // just focus to the monitor
+    xwidth = 1.05*focus_xw;
+    yheight = 1.05*focus_yh;
+    tindex=2;
+  } else {
+    printf("Running without focusing!\n");
+    focus_xw = 0;
+    focus_yh = 0;
+    focus_aw = 0;
+    focus_ah = 0;
+    xwidth=1; yheight=1;
+    tindex=0;
+  }
+  printf("Monitor size is %g x %g \n",xwidth,yheight);
+  
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+REMOVABLE COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+/* source with constant flux */
+REMOVABLE COMPONENT Source = Source_gen(
+    radius = 0.11, dist = L1, focus_xw = 0.001, focus_yh = 0.001,
+    lambda0 = lambda, dlambda = lambda*0.99,
+    T1=229.6,I1=5.32e13,T2=1102, I2=4.37e12, T3=437.1,I3=3.84e13)
+  AT (0, 0, 0) RELATIVE Origin
+
+/* TIP: monochromator cradle */ 
+COMPONENT mon_cradle = Arm()
+  AT (0, 0, L1) RELATIVE PREVIOUS
+  
+COMPONENT Sample = Incoherent(
+  radius = 0.0005,
+  yheight = 0.001,
+  target_index = tindex,
+  focus_aw = focus_aw,
+  focus_ah = focus_ah,
+  focus_xw = focus_xw,
+  focus_yh = focus_yh) 
+ AT (0, 0, 0) RELATIVE  mon_cradle
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT ScatterArm = Arm()
+ AT (0, 0, 0) RELATIVE  mon_cradle
+ROTATED (0,omega,0) RELATIVE mon_cradle  
+
+COMPONENT PSD = PSD_monitor(xwidth=xwidth, yheight=yheight, filename="PSD", restore_neutron=1)
+  WHEN (tindex) AT (0, 0, 1) RELATIVE  ScatterArm
+
+COMPONENT CylMon = Cyl_monitor(
+  thmin=thmin,thmax=thmax, nr = bins,
+  filename = "Cyl_mon",
+  yheight = 0.2, restore_neutron=1) 
+ AT (0, 0, 0) RELATIVE  mon_cradle
+
+COMPONENT CylMonPSD = Cyl_monitor_PSD(
+  thmin=thmin,thmax=thmax, nr = bins, ny=bins,
+  filename = "Cyl_mon_PSD",
+  yheight = 0.2, restore_neutron=1) 
+ AT (0, 0, 0) RELATIVE  mon_cradle
+
+COMPONENT CylMonTOF = Cyl_monitor_TOF(
+  thmin=thmin,thmax=thmax, nr = bins, nt=bins,
+  filename = "Cyl_mon_TOF",tmin=0,tmax=0.03,
+  yheight = 0.2, restore_neutron=1) 
+AT (0, 0, 0) RELATIVE  mon_cradle
+
+COMPONENT NDcyl = Monitor_nD(filename="NCyl",xwidth=2.0,yheight=0.2, options=cylopts, restore_neutron=1)
+AT (0, 0, 0) RELATIVE  mon_cradle
+
+COMPONENT NDcylPSD = Monitor_nD(filename="NCylPSD",xwidth=2.0,yheight=0.2, options=psdopts, restore_neutron=1)
+AT (0, 0, 0) RELATIVE  mon_cradle
+
+COMPONENT NDcylTOF = Monitor_nD(filename="NCylTOF",xwidth=2.0,yheight=0.2, options=tofopts, restore_neutron=1)
+AT (0, 0, 0) RELATIVE  mon_cradle
+
+
+  
+/* The END token marks the instrument definition end */
+END

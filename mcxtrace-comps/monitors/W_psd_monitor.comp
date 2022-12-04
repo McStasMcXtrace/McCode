@@ -52,11 +52,15 @@ SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yhei
 OUTPUT PARAMETERS (PSD_N, PSD_W, PSD_W2)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
+SHARE %{
+  %include "array-lib"
+%}
+
 DECLARE
   %{
-    double PSD_N[nx][ny];
-    double PSD_W[nx][ny];
-    double PSD_W2[nx][ny];
+  DArray2d PSD_N;
+  DArray2d PSD_W;
+  DArray2d PSD_W2;
   %}
 INITIALIZE
   %{
@@ -70,15 +74,14 @@ INITIALIZE
       exit(-1);
     }
 
-    for (i=0; i<nx; i++){
-      memset(PSD_N[i],0,sizeof(double)*ny);
-      memset(PSD_W[i],0,sizeof(double)*ny);
-      memset(PSD_W2[i],0,sizeof(double)*ny);
-    }
+    PSD_N = create_darr2d(nx, ny);
+    PSD_W = create_darr2d(nx, ny);
+    PSD_W2 = create_darr2d(nx, ny);
   %}
 TRACE
   %{
     int i,j;
+    double W1,W2;
 
     PROP_Z0;
     if (x>xmin && x<xmax && y>ymin && y<ymax)
@@ -86,9 +89,14 @@ TRACE
       i = floor((x - xmin)*nx/(xmax - xmin));
       j = floor((y - ymin)*ny/(ymax - ymin));
       double k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
-      PSD_N[i][j]++;
-      PSD_W[i][j] += p*k*K2E*1.6022e-16;
-      PSD_W2[i][j] += (p*k*K2E*1.6022e-16)*(p*k*K2E*1.6022e-16);
+#pragma acc atomic
+      PSD_N[i][j] += 1;
+      W1=p*k*K2E*1.6022e-16;
+#pragma acc atomic
+      PSD_W[i][j] += W1;
+      W2=(p*k*K2E*1.6022e-16)*(p*k*K2E*1.6022e-16);
+#pragma acc atomic
+      PSD_W2[i][j] += W2;
       SCATTER;
     }
     if (restore_xray) {

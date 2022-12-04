@@ -23,12 +23,12 @@
 * %P
 * INPUT PARAMETERS
 *
-* dist [m] : distance to target
-* focus_xw [m]: x-width of target
-* focus_yh [m]: y-height of target
-* focus_x0 [m]: x-center of target
-* focus_y0 [m]: y-center of target
-* focus_absolute [ ]: Flag - if non-zero, focus_x0 and focus_y0 are in absolute (lab) coordinates.
+* dist: [m] distance to target
+* focus_xw: [m] x-width of target
+* focus_yh: [m] y-height of target
+* focus_x0: [m] x-center of target
+* focus_y0: [m] y-center of target
+* focus_absolute: [ ] Flag - if non-zero, focus_x0 and focus_y0 are in absolute (lab) coordinates.
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Focus

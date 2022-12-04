@@ -10,9 +10,7 @@
 * %I
 * Written by: Erik Knudsen
 * Date: Jan 24, 2011
-* Version: $Revision$
 * Origin: DTU Physics
-* Release: McXtrace 1.1
 *
 * Blocks of attenuating material in off format
 * 
@@ -29,8 +27,9 @@
 * Be.txt  cube.off  0 0.01 0    0 0 0
 * Rh.txt  chess.off 0 -0.01 0   0 0 0
 *
-* A xwidth etc of zero means use whatever dimensions are in the off/ply file. If xwidth (or yheight or zdepth)
-* is nonzero, the component tries to scale the object to fill that dimension. This is an experimental option. 
+* A xwidth etc of zero means use whatever dimensions are in the off/ply file. 
+* If xwidth (or yheight or zdepth) is nonzero, the component tries to scale the 
+* object to fill that dimension. This is an experimental option. 
 *
 * %P
 * INPUT PARAMETERS
@@ -41,7 +40,7 @@
 *******************************************************************************/
 DEFINE COMPONENT Abs_objects
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (int refraction=1, string objects="input_small.dat", string geometry=0) 
+SETTING PARAMETERS (int refraction=1, string objects="input_abs_objects_template.dat", string geometry=0) 
 OUTPUT PARAMETERS (object_data,objectsc)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -54,7 +53,7 @@ SHARE
     int mu_c;
     double Z,Ar, rho;
     double delta_prefactor,betafact;
-    double xx,obj_xwidth,yy,obj_yheight,zz,obj_zdepth;
+    double xx,xwidth,yy,yheight,zz,zdepth;
     t_Table table;
     off_struct offdata;
   };
@@ -104,22 +103,40 @@ INITIALIZE
 %{
   int status=0;
 
-  FILE *fp=fopen(objects,"r");
+  FILE *fp=Open_File(objects,"r",NULL);
+  if (fp == NULL) {
+    fprintf(stderr,"Error: %s: Could not open file \"%s\"\n", NAME_CURRENT_COMP, objects);
+    exit(-1);
+  }
   char line[512];
   fgets(line,512,fp);
   objectsc=atoi(line);
+  if (objectsc <1) {
+      fprintf(stderr,"Error: %s: Invalid number of lines %i in file \"%s\" \n",NAME_CURRENT_COMP, objectsc, objects);
+      exit(-1);
+    }
   prms=calloc(objectsc,sizeof(struct _abs_object_data_struct));
+  if (prms == NULL) exit(-fprintf(stderr,"Error: %s: Could not allocate %i objects\n", NAME_CURRENT_COMP, objectsc));
   
   int i;
   for (i=0;i<objectsc;i++){
     fgets(line,512,fp);
     char off_fn[512],mat_fn[512];
+    float xx,yy,zz,xwidth,yheight,zdepth;
     int status;
-    sscanf(line,"%s %s \n", mat_fn,off_fn);
-   /*sscanf(line,"%s %s %f %f %f %f %f %f\n", mat_fn,off_fn,prms[i].xx,prms[i].yy,prms[i].zz,prms[i].xwidth,prms[i].yheight,prms[i].zdepth);*/
- 
-    if ( (status=Table_Read(&(prms[i].table),mat_fn,0))==-1){
-      fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",mat_fn,NAME_CURRENT_COMP);
+    //sscanf(line,"%s %s \n", mat_fn,off_fn);
+    status=sscanf(line,"%s %s %g %g %g %g %g %g\n",
+      mat_fn,off_fn, &xx,&yy,&zz,&xwidth,&yheight,&zdepth);
+    if (status < 8) {
+      fprintf(stderr,"Error: %s: Invalid line %i in file \"%s\"\n",
+        NAME_CURRENT_COMP, i+1, objects);
+      exit(-1);
+    }
+    prms[i].xx=xx;         prms[i].yy=yy;           prms[i].zz=zz;
+    prms[i].xwidth=xwidth; prms[i].yheight=yheight; prms[i].zdepth=zdepth;
+    if ( (status=Table_Read(&(prms[i].table),mat_fn,0))==-1) {
+      fprintf(stderr,"Error: %s: Could not parse file \"%s\"\n",
+        NAME_CURRENT_COMP, mat_fn);
       exit(-1);
     }
     char **header_parsed;
@@ -127,7 +144,11 @@ INITIALIZE
     if (header_parsed[0]){prms[i].Z=strtod(header_parsed[0],NULL);}
     if (header_parsed[1]){prms[i].Ar=strtod(header_parsed[1],NULL);}
     if (header_parsed[2]){prms[i].rho=strtod(header_parsed[2],NULL);}
-    else{fprintf(stderr,"Warning(%s): %s not found in header of %s, set to 1\n",NAME_CURRENT_COMP,"rho",mat_fn);prms[i].rho=1;}
+    else {
+      fprintf(stderr,"Warning: %s: %s not found in header of %s. Setting to 1\n",
+        NAME_CURRENT_COMP,"rho", mat_fn);
+      prms[i].rho=1;
+    }
     /*which columns holds the mus*/
     prms[i].mu_c=5;
     if (prms[i].table.columns==3) {
@@ -138,11 +159,13 @@ INITIALIZE
       prms[i].delta_prefactor= NA*(prms[i].rho*1e-24)/prms[i].Ar * 2.0*M_PI*RE;
     }
     /*read in the off/ply data from file. The literal 1 is to not center the object in local (0,0,0)*/ 
-    if (!off_init(off_fn, prms[i].obj_xwidth, prms[i].obj_yheight, prms[i].obj_zdepth, 1, &(prms[i].offdata))) {
-      fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",off_fn,NAME_CURRENT_COMP);
+    if (!off_init(off_fn, prms[i].xwidth, prms[i].yheight, prms[i].zdepth, 1, &(prms[i].offdata))) {
+      fprintf(stderr,"Error: %s: Could not parse file \"%s\"\n",
+        NAME_CURRENT_COMP, off_fn);
       exit(-1);
     }
-    printf("i=%d, mfn=%s, ofn=%s\n",i,mat_fn,off_fn);  
+    printf("%s: Volume[%d], material='%s' geometry='%s'\n", 
+      NAME_CURRENT_COMP, i+1,mat_fn,off_fn);
   }
   fclose(fp);
 %}
@@ -204,7 +227,8 @@ TRACE
         double f;
         f=Table_Value(prms[i].table,e,1);
         intersections[j].delta = f/(k*k) * prms[i].delta_prefactor;
-        intersections[j].mu0=Table_Value(prms[i].table,e,prms[i].mu_c)*prms[i].rho*1e2;
+        intersections[j].mu0= 
+          Table_Value(prms[i].table,e,prms[i].mu_c)*prms[i].rho*1e2;
         intersections[j].beta = mu0/(2*k);
         /*change k we're now inside some material*/
         intersections[j].kx=kx_vac*(1.0-intersections[j].delta);

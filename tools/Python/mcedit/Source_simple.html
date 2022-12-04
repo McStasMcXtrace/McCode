@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD>
+<TITLE>McStas: Source_simple Component</TITLE>
+<LINK REV="made" HREF="mailto:peter.willendrup@risoe.dk">
+</HEAD>
+
+<BODY>
+
+<P ALIGN=CENTER>
+ [ <A href="#id">Identification</A>
+ | <A href="#desc">Description</A>
+ | <A href="#ipar">Input parameters</A>
+ | <A href="#opar">Output parameters</A>
+ | <A href="#links">Links</A> ]
+</P>
+
+<H1>The <CODE>Source_simple</CODE> Component</H1>
+
+A circular neutron source with flat energy spectrum and arbitrary flux
+
+
+<H2><A NAME=id></A>Identification</H2>
+
+<UL>
+  <LI> <B>Author:</B> Kim Lefmann</B>
+  <LI> <B>Origin:</B> Risoe</B>
+  <LI> <B>Date:</B> October 30, 1997</B>
+  <LI> <B>Version:</B>(Unknown)</B>
+  <LI> <B>Modification history:</B> <UL>
+    <LI>  KL, October 4, 2001
+    <LI>  Emmanuel Farhi, October 30, 2001. Serious bug corrected.
+  </UL>
+</UL>
+<H2><A NAME=desc></A>Description</H2>
+
+<PRE>
+The routine is a circular neutron source, which aims at a square target
+centered at the beam (in order to improve MC-acceptance rate).  The angular
+divergence is then given by the dimensions of the target.
+The neutron energy is uniformly distributed between lambda0-dlambda and
+lambda0+dlambda or between E0-dE and E0+dE.
+The flux unit is specified in n/cm2/s/st/energy unit (meV or Angs).
+
+This component replaces Source_flat, Source_flat_lambda,
+Source_flux and Source_flux_lambda.
+
+Example: Source_simple(radius=0.1, dist=2, focus_xw=.1, focus_yh=.1, E0=14, dE=2)
+
+</PRE>
+
+<H2><A NAME=ipar></A>Input parameters</H2>
+Parameters in <B>boldface</B> are required;
+the others are optional.
+<TABLE BORDER=1>
+<TR><TH>Name</TH>  <TH>Unit</TH>  <TH>Description</TH> <TH>Default</TH></TR>
+<TR> <TD>radius</TD>
+     <TD>m</TD>
+     <TD>Radius of circle in (x,y,0) plane where neutrons are generated.
+</TD>
+<TD ALIGN=RIGHT>0.1</TD> </TR>
+<TR> <TD>yheight</TD>
+     <TD>m</TD>
+     <TD>Height of rectangle in (x,y,0) plane where neutrons are generated.
+</TD>
+<TD ALIGN=RIGHT>0</TD> </TR>
+<TR> <TD>xwidth</TD>
+     <TD>m</TD>
+     <TD>Width of rectangle in (x,y,0) plane where neutrons are generated.
+</TD>
+<TD ALIGN=RIGHT>0</TD> </TR>
+<TR> <TD>dist</TD>
+     <TD>m</TD>
+     <TD>Distance to target along z axis.
+</TD>
+<TD ALIGN=RIGHT>0</TD> </TR>
+<TR> <TD>focus_xw</TD>
+     <TD>m</TD>
+     <TD>Width of target
+</TD>
+<TD ALIGN=RIGHT>.045</TD> </TR>
+<TR> <TD>focus_yh</TD>
+     <TD>m</TD>
+     <TD>Height of target
+</TD>
+<TD ALIGN=RIGHT>.12</TD> </TR>
+<TR> <TD>E0</TD>
+     <TD>meV</TD>
+     <TD>Mean energy of neutrons.
+</TD>
+<TD ALIGN=RIGHT>0</TD> </TR>
+<TR> <TD>dE</TD>
+     <TD>meV</TD>
+     <TD>Energy half spread of neutrons (flat or gaussian sigma).
+</TD>
+<TD ALIGN=RIGHT>0</TD> </TR>
+<TR> <TD>lambda0</TD>
+     <TD>AA</TD>
+     <TD>Mean wavelength of neutrons.
+</TD>
+<TD ALIGN=RIGHT>0</TD> </TR>
+<TR> <TD>dlambda</TD>
+     <TD>AA</TD>
+     <TD>Wavelength half spread of neutrons.
+</TD>
+<TD ALIGN=RIGHT>0</TD> </TR>
+<TR> <TD>flux</TD>
+     <TD>1/(s*cm**2*st*energy unit)</TD>
+     <TD>flux per energy unit, Angs or meV if flux=0, the source emits 1 in 4*PI whole space.
+</TD>
+<TD ALIGN=RIGHT>1</TD> </TR>
+<TR> <TD>gauss</TD>
+     <TD>1</TD>
+     <TD>Gaussian (1) or Flat (0) energy/wavelength distribution
+</TD>
+<TD ALIGN=RIGHT>0</TD> </TR>
+<TR> <TD>target_index</TD>
+     <TD>1</TD>
+     <TD>relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
+</TD>
+<TD ALIGN=RIGHT>+1</TD> </TR>
+</TABLE>
+
+
+<H2><A NAME=links></A>Links</H2>
+
+<UL>
+  <LI> <A HREF="Source_simple.comp">Source code</A> for <CODE>Source_simple.comp</CODE>.
+</UL>
+<HR>
+<P ALIGN=CENTER>
+ [ <A href="#id">Identification</A>
+ | <A href="#desc">Description</A>
+ | <A href="#ipar">Input parameters</A>
+ | <A href="#opar">Output parameters</A>
+ | <A href="#links">Links</A> ]
+</P>
+
+<ADDRESS>
+Generated automatically by McDoc, Peter Willendrup
+&lt;<A HREF="mailto:peter.willendrup@risoe.dk">peter.willendrup@risoe.dk</A>&gt; /
+Thu Nov  3 15:46:32 2022</ADDRESS>
+</BODY></HTML>

@@ -249,9 +249,6 @@ vertex* kdtree_nearestNeighbour(vertex* v, treeNode *tree) {
  * begin interpolator section
  ******************************************************************************/
  
-#define INTERPOLATOR_DIMENSIONS 10
-
-
 /******************************************************************************/
 /* interpolator_double_vector_compare: comparator for double qsort */
 int interpolator_double_vector_compare(void const *a, void const *b) {
@@ -460,7 +457,7 @@ struct interpolator_struct *interpolator_load(char *filename,
       }
       interpolator->grid[dim] = array;
     } // end for dim(field)
-  } 
+  } else
 
   /* assign interpolation technique: kd-tree (when nearest direct indexing fails) */
   if (!strcmp(interpolator->method, "kdtree")) {
@@ -576,5 +573,4 @@ double *interpolator_interpolate3_3(struct interpolator_struct *interpolator,
   return(ret);
 } /* interpolator_interpolate3_3 */
 
-#undef INTERPOLATOR_DIMENSIONS
 

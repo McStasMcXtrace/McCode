@@ -18,8 +18,11 @@ Proof of concept solution for calling a C++ library from McStas/McXtrace:
    
    b) Compile libhellowrap.so via
       g++ -fpic -shared hellowrap.cpp -L. -lhello -o libhellowrap.so
+      
+   c) You may need to add . to your linker path
+      export LD_LIBRARY_PATH=.
 
-   c) Compile the instrument via (e.g.)
+   d) Compile the instrument via (e.g.)
       mcrun.pl -c Test_CppWrap.instr
 
 

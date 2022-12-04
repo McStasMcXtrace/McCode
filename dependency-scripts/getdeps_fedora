@@ -1,0 +1,9 @@
+#!/bin/sh
+echo 
+echo DNF\'ing runtime dependencies using sudo:
+echo
+
+sudo dnf -y groupinstall 'Development Tools'
+sudo dnf install -y gcc-gfortran gsl-devel 
+sudo dnf install -y cmake3
+

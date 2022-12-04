@@ -1,103 +1,84 @@
-
-
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
 * Instrument: Test_PowderN
 *
 * %Identification
-* Written by: Your name (email)
-* Date: Current Date
-* Origin: Your institution
-* Version: 0.2
-* %INSTRUMENT_SITE: Tests
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: 2009
+* Origin: DTU Physics
+* Version: 1.0
+* %INSTRUMENT_SITE: Tests_samples
 *
 * Unit-test instrument for the PowderN sample component.
 *
 * Simply a model source illuminating a powder sample.
 * The sample itself is an Fe-powder.
 *
-* %Example: Test_PowderN.instr -n1e7 TTH=13.4 Detector: detector2_I=2.49827e-16
+* %Example: Test_PowderN.instr reflections="Fe_bcc229_lt13deg.dat" -n1e7 TTH=13.4 d_phi=45 frac_i=0 Detector: detector2_I=2.49827e-16
+* %Example: Test_PowderN.instr E0=15 Detector: Sph_mon_I=6.24257e-12
+* %Example: Test_PowderN.instr E0=15 d_phi=10 Detector: Sph_mon_I=6.59782e-13
+* %Example: Test_PowderN.instr E0=15 directbeam=1 SPLITS=2 Detector: Sph_mon_I=7.94366e-10
+* %Example: Test_PowderN.instr E0=15 directbeam=1 SPLITS=5 Detector: Sph_mon_I=7.94366e-10
+* %Example: Test_PowderN.instr E0=15 directbeam=1 SPLITS=10 Detector: Sph_mon_I=7.94366e-10
+* %Example: Test_PowderN.instr E0=15 directbeam=1 SPLITS=20 Detector: Sph_mon_I=7.94366e-10
 *
 * %Parameters
-* TTH: [deg.] Two theta rotation. Only places the last detector (does not touch the sample).
+* lambda: [Angs]  Wavelength emitted from source, 1% wl-interval around.
+* L1: [m]         Source-sample distance
+* directbeam: [1] Suppress direct beam or not
+* reflections: [str] List of powder reflections
+* SPLITS: [1] Number of SPLIT's before sample
+* frac_c: [1] Fraction of stats assigned to coherent scattering
+* frac_i: [1] Fraction of stats assigned to incoherent scattering
+* frac_t: [1] Fraction of stats assigned to unscattered, "direct beam"
+* TTH: [deg]  Rotation of secondary detector arm.
 *
 * %End
 *******************************************************************************/
+DEFINE INSTRUMENT Test_PowderN(E0=45, L1=10, int directbeam=0, string reflections="LaB6_660b_AVID2.hkl", int SPLITS=1, frac_c=0.8, frac_i=0.1, frac_t=0.1, d_phi=0, TTH=0)
 
-/* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Test_PowderN(TTH=13.4)
-
-/* The DECLARE section allows us to declare variables or  small      */
-/* functions in C syntax. These may be used in the whole instrument. */
-DECLARE
-%{
-%}
-
-/* The INITIALIZE section is executed when the simulation starts     */
-/* (C code). You may use them as component parameter values.         */
-INITIALIZE
-%{
-%}
-
-/* Here comes the TRACE section, where the actual      */
-/* instrument is defined as a sequence of components.  */
 TRACE
 
-/* The Arm() class component defines reference points and orientations  */
-/* in 3D space. Every component instance must have a unique name. Here, */
-/* Origin is used. This Arm() component is set to define the origin of  */
-/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
-/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
-/* EXTEND GROUP PREVIOUS. Also think about adding an xray source !    */
-/* Progress_bar is an Arm displaying simulation progress.               */
-COMPONENT Origin = Progress_bar()
+REMOVABLE COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT src = Source_flat(
     yheight = 1e-3, xwidth = 1e-3, dist = 10, focus_xw = 1e-3,
-    focus_yh = 1e-3, E0 = 45, dE = 1)
+    focus_yh = 1e-3, E0 = E0, dE = 1)
   AT (0, 0, 0) RELATIVE Origin
 
-COMPONENT psd0 = PSD_monitor(
-    nx = 100, ny = 100, filename = "psd0", xwidth = 2e-3,
-    yheight = 2e-3)
-  AT (0, 0, 1e-9) RELATIVE src
+COMPONENT sample_cradle = Arm()
+  AT (0, 0, L1) RELATIVE PREVIOUS
 
-COMPONENT sample = PowderN(
-    reflections = "Fe_bcc229_lt13deg.dat", format=Crystallographica, material = "Fe.txt",
-    radius = .5e-4, yheight = 1e-3, pack = 0.5, Vc = 123,
-    p_inc = 0, p_transmit = 0.1, DW = 0, d_phi = 45)
-  AT (0, 0, 10) RELATIVE PREVIOUS
-EXTEND
-%{
-  if(!SCATTERED) ABSORB;
+SPLIT SPLITS COMPONENT Pow = PowderN(
+    radius=0.5e-4, yheight=1e-3, reflections=reflections,format=Crystallographica,
+    p_inc=frac_i, p_transmit=frac_t, p_interact=frac_c,
+    d_phi=d_phi, pack = 0.5, Vc = 123)
+AT (0, 0, 0) RELATIVE sample_cradle
+EXTEND %{
+  if(mcipdirectbeam == 0) {
+    if (!SCATTERED) {
+      ABSORB;
+    }
+  }
 %}
 
-COMPONENT psd4pi = PSD_monitor_4PI(
-    nx = 180, ny = 180, filename = "psd4pi", radius = 0.1,
-    restore_xray = 1)
-  AT (0, 0, 0) RELATIVE sample
-
-
-COMPONENT detector = PSD_monitor(
-    nx=200, ny=200, xwidth=0.1, yheight=0.1, filename="psd1",restore_xray=1
-)
-AT(0,0,0.1) RELATIVE sample
+COMPONENT Sph_mon = PSD_monitor_4PI(nx=200,ny=200, radius=1, restore_xray=1, filename="Sphere")
+  AT (0, 0, 0) RELATIVE PREVIOUS
 
 COMPONENT ttharm= Arm()
-AT(0,0,0) RELATIVE sample
-ROTATED (0,TTH,0) RELATIVE sample
+AT(0,0,0) RELATIVE Pow
+ROTATED (0,TTH,0) RELATIVE Pow
 
 COMPONENT detector2 = PSD_monitor(
     nx=200, ny=200, xwidth=2e-3, yheight=1e-2, filename="psd2",restore_xray=1
 )
 AT(0,0,0.1) RELATIVE ttharm
 
-/* This section is executed when the simulation ends (C code). Other    */
-/* optional sections are : SAVE                                         */
-FINALLY
-%{
-%}
-/* The END token marks the instrument definition end */
+// ideal "banana" detector
+COMPONENT det_angle = Monitor_nD(options="abs theta limits=[5 90]",
+  radius=0.6, yheight=1e-2, bins=10000)
+AT (0,0,0) RELATIVE Pow
+
 END

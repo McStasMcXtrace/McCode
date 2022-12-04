@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Wrapper script for @P@run-py
 
 # First ensure that we follow symlink if needed
@@ -11,26 +11,26 @@ else
     LIB=`dirname $0`
 fi
 UNAME=`uname -s`
-if [[ ${UNAME} = Darwin* ]]; then
-    OSXVER=`sw_vers -productVersion|cut -f 1 -d.`
-    # Check if we are on macos 10.x or 11.x
-    if [ "$OSXVER" == "10" ];
-    then
-	PATH=$LIB/../miniconda3/bin:$PATH
-    fi
-    # Check if we are in / - in that case cd to $HOME
-    PW==`pwd`
-    if [[ ${PWD} = / ]]; then
-	cd $HOME
-    fi
-else
+
+# Check if we are in / - in that case cd to $HOME
+PW==`pwd`
+if [[ ${PWD} = / ]]; then
+    cd $HOME
+fi
+
+if [ -d "$LIB/../miniconda3" ]; then
     PATH=$LIB/../miniconda3/bin:$PATH
 fi
 
+ARCH=`arch`
+UNAME=`uname -s`
+
 # Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
 if [ -d "$LIB/../miniconda3" ]; then
-    PYVER=`$LIB/../miniconda3/bin/python3 --version | cut -f 2 -d\  | cut -f 1-2 -d.`
-    export PYTHONPATH=$LIB/../miniconda3/lib:$LIB/../miniconda3/lib/python$PYVER/site-packages
+    if ! [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
+	PYVER=`$LIB/../miniconda3/bin/python3 --version | cut -f 2 -d\  | cut -f 1-2 -d.`
+	export PYTHONPATH=$LIB/../miniconda3/lib:$LIB/../miniconda3/lib/python$PYVER/site-packages
+    fi
 fi
 
 LIB="$LIB/../tools/Python/@P@run"
@@ -52,7 +52,7 @@ canrun() {
 }
 
 if ( canrun ); then
-    python3 ${LIB}/${TOOL}.py $*
+    python3 -u ${LIB}/${TOOL}.py $*
 else
     @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
 fi

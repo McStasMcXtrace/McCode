@@ -1,1 +1,89 @@
-../../3rdparty/ncrystal/ncrystal_mcstas/NCrystal_example.instr
+
+/******************************************************************************/
+/*                                                                            */
+/*  This file is part of NCrystal (see https://mctools.github.io/ncrystal/)   */
+/*                                                                            */
+/*  Copyright 2015-2022 NCrystal developers                                   */
+/*                                                                            */
+/*  Licensed under the Apache License, Version 2.0 (the "License");           */
+/*  you may not use this file except in compliance with the License.          */
+/*  You may obtain a copy of the License at                                   */
+/*                                                                            */
+/*      http://www.apache.org/licenses/LICENSE-2.0                            */
+/*                                                                            */
+/*  Unless required by applicable law or agreed to in writing, software       */
+/*  distributed under the License is distributed on an "AS IS" BASIS,         */
+/*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  */
+/*  See the License for the specific language governing permissions and       */
+/*  limitations under the License.                                            */
+/*                                                                            */
+/******************************************************************************/
+
+// %INSTRUMENT_SITE: NCrystal 
+// %Example: sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat;density=0.6x" Detector: powder_pattern_detc_I=2.21958e-10 
+DEFINE INSTRUMENT NCrystal_example(string sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat;density=0.6x")
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+/* Example instrument in which two NCrystal_sample component instances are used
+ to model respectively a Ge-511 monochromator and secondly an Yttrium-Oxide
+ powder sample. Source and detectors are deliberately kept very simple.
+
+ The orientation of the monochromator and the value of the central wavelength,
+ lambda0, is set up in order for the neutrons at lambda0 to experience a 90 degree
+ Bragg reflection (thetaBragg=45 degree) on the Ge511 plane, directing the reflected
+ neutrons towards the sample (the d-spacing of Ge511 is 1.08876Aa):
+
+           lambda = sin(45degree)*2*1.08876Aa = 1.539739Aa
+
+ Note that the d-spacing, 1.08876Aa, of Ge511 can be found by the command:
+
+    ncrystal_inspectfile --dump  "Ge_sg227.ncmat"
+
+ Alternatively, it could have been extracted programatically here in the instrument file with:
+
+  #include "NCrystal/ncrystal.h"
+  ncrystal_info_t monochromator_info = ncrystal_create_info("Ge_sg227.ncmat");
+  double dspacing_Ge511 = ncrystal_info_dspacing_from_hkl( monochromator_info, 5,1,1 );
+  ncrystal_unref(&monochromator_info);
+
+*/
+
+COMPONENT origin = Progress_bar()
+  AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT source =   Source_div(lambda0=1.539739, dlambda=0.01, xwidth=0.001, yheight=0.001, focus_aw=1, focus_ah=1)
+  AT (0, 0, 0.3) RELATIVE origin
+
+COMPONENT mono_arm = Arm()
+  AT (0, 0, 0.5) RELATIVE source ROTATED (0, 45 , 0) RELATIVE source
+
+/* Make a 3mm thick Ge-511 monochromator box with 0.3 degree mosaicity (FWHM) */
+COMPONENT monochromator = NCrystal_sample(xwidth=0.05,yheight=0.05,zdepth=0.003,
+                                          cfg="Ge_sg227.ncmat;mos=0.3deg;incoh_elas=0;inelas=0"
+                                          ";dir1=@crys_hkl:5,1,1@lab:0,0,1"
+                                          ";dir2=@crys_hkl:0,1,-1@lab:0,1,0")
+  AT (0, 0, 0) RELATIVE mono_arm
+
+COMPONENT mono_out = Arm()
+  AT (0, 0, 0) RELATIVE mono_arm ROTATED (0, -90, 0) RELATIVE source
+
+/* Make a cylindrical sample of loosely packed Y2O3 powder (packing factor of 60%) */
+COMPONENT powder_sample = NCrystal_sample(yheight=0.01, radius=0.01,
+                                          cfg=sample_cfg)
+  AT (0, 0, 0.4) RELATIVE mono_out
+
+COMPONENT powder_pattern_detc = Monitor_nD(
+    options = "banana, angle limits=[10 170], bins=500",
+    radius = 0.05, yheight = 0.1)
+  AT (0, 0, 0) RELATIVE powder_sample
+
+END

@@ -1,9 +1,8 @@
 /*******************************************************************************
 *
-* McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+* McXtrace, xray-tracing package
+*         Copyright (C) 1997-2017, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
 *
 * Component: PreMonitor_nD
 *
@@ -12,7 +11,6 @@
 * Modified for xrays by Erik B Knudsen
 * Date: 01st Nov 2011.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Version: $Revision$
 *
 * Xray parameters spatial cross-correlation monitor.
 *

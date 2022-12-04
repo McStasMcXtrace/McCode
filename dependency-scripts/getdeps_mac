@@ -1,0 +1,51 @@
+#!/bin/sh
+
+DLDIR=$PWD 
+
+# Check if we have cmake...
+if [ ! -f cmake-3.24.0-macos-universal.tar.gz ]; then
+  # Get and install cmake
+  echo
+  echo Downloading CMake...
+  echo
+  curl -O https://cmake.org/files/v3.24/cmake-3.24.0-macos-universal.tar.gz
+fi
+echo 
+echo Unpacking Cmake ...
+echo
+tar xzf cmake-3.24.0-macos-universal.tar.gz
+if [ ! -d /Applications/CMake.app/ ]; then
+  mv cmake-3.24.0-macos-universal/CMake.app /Applications
+fi
+
+cd /usr/local
+echo
+echo Please give your password to mkdir /usr/local/bin if needed:
+echo
+sudo mkdir -p bin
+cd bin
+
+echo 
+echo Please give your password to put cmake links in /usr/local/bin if needed:
+echo
+sudo ln -sf /Applications/CMake.app/Contents/bin/* .
+cd $DLDIR
+
+if [ ! -f gfortran-8.1-bin.tar.gz ]; then
+  echo
+  echo Downloading gfortran...
+  echo
+  curl -O https://datapacket.dl.sourceforge.net/project/hpc/hpc/g95/gfortran-8.1-bin.tar.gz
+fi
+
+cd /
+echo
+echo Please give your password for the installation of gfortran if needed:
+echo
+sudo tar zxf $DLDIR/gfortran-8.1-bin.tar.gz
+
+echo
+echo Spawning installation of xcode if needed...
+echo
+# Ensure that compilers, git etc. are in place
+xcode-select --install

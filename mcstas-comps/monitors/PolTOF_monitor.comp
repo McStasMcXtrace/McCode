@@ -1,0 +1,156 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2006, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: PolTOF_monitor
+*
+* %I
+* Written by: Erik B Knudsen
+* Date: Apr 2021
+* Origin: DTU Physics
+*
+* Polarisation and time of flight sensitive monitor.
+*
+* %D A square single monitor that measures the projection of the
+* polarisation along a given normalized m-vector (mx, my, mz) as a
+* function of time of flight.
+*
+* Example: PolTOF_monitor(tmin=1e-3, tmax=2e-3, nt=20, xwidth=0.1, yheight=0.1, npol=11, mx=0, my=1, mz=0, filename="polTOFMon.data")
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xwidth: [m]           Width of detector 
+* yheight: [m]          Height of detector 
+* mx: [1]               X-component of monitor vector (can be negative) 
+* my: [1]               Y-component of monitor vector (can be negative) 
+* mz: [1]               Z-component of monitor vector (can be negative) 
+* nL: [1]               Number of bins in wavelength 
+* npol: [1]             Number of bins in Pol 
+* nt: [1]               Number of time bins
+* dt: [s]               Length of each time bin
+* tmin: [s]             Lower time limit 
+* tmax: [s]             Upper time limit
+* filename: [string]    Name of file in which to store the data 
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state 
+* nowritefile: [1]      If set, monitor will skip writing to disk
+*
+* OUTPUT PARAMETERS:
+*
+* PolL_N: []            Array of neutron counts
+* PolL_p: []            Array of neutron weight counts
+* PolL_p2: []           Array of second moments
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT PolTOF_monitor
+DEFINITION PARAMETERS (nt=20, npol=21)
+SETTING PARAMETERS (xwidth=0.1, yheight=0.1, string filename="", mx=0, my=0, mz=0,
+    tmin=0, tmax=0 ,dt=1.0e-6, restore_neutron=0, int nowritefile=0)
+OUTPUT PARAMETERS (PolL_N, PolL_p, PolL_p2)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+DECLARE
+%{
+double Polt_N[nt][npol];
+double Polt_p[nt][npol];
+double Polt_p2[nt][npol];
+double t_min, t_max, delta_t;
+%}
+
+INITIALIZE
+%{
+  int i, j;
+
+  // Check that input parameteters makes sense
+
+  if (tmax!=0)
+  {
+    t_max=tmax;
+    t_min=tmin;
+    delta_t=(t_max-t_min)/nt;
+  } else {
+    delta_t=dt;
+    t_min=0;
+    t_max=nt*dt+tmin;
+  }
+
+  if (mx==0 && my==0 && mz==0) {
+    fprintf(stderr, "Error (%s): NULL reference vector defined (mx, my, mz) = (%g %g %g). Aborting\n",
+        NAME_CURRENT_COMP,mx,my,mz);
+    exit(1);
+  }
+
+  if ((xwidth<=0) || (yheight <= 0)) {
+    fprintf(stderr, "Error (%s): Null detection area (xwidth, yheight) = (%g %g %g). Aborting\n",
+        NAME_CURRENT_COMP,xwidth,yheight);
+    exit(1);
+  }
+
+  // Initialize variables
+
+  NORM(mx, my, mz);
+
+  for (j=0; j<nt; j++) {
+    for (i=0; i<npol; i++) {
+      Polt_N[j][i] = 0;
+      Polt_p[j][i] = 0;
+      Polt_p2[j][i] = 0;
+    }
+  }
+%}
+
+TRACE
+%{
+  int i, j;
+  double pol_proj;
+  double tt;
+
+  PROP_Z0;
+
+  if (inside_rectangle(x, y, xwidth, yheight)){
+    j = floor((t-t_min)/delta_t); /* Bin number */
+
+    pol_proj = scalar_prod(mx, my, mz, sx, sy, sz);
+    /*protect from rounding errors introduced by trig functions*/
+    if (fabs(pol_proj-1)<FLT_EPSILON){
+      i = npol-1;
+    } else if (fabs(pol_proj+1.0)<FLT_EPSILON){
+      i=0;
+    } else {
+      i = floor((pol_proj+1.0)*npol/2.0);
+    }
+
+    Polt_N[j][i]++;
+    Polt_p[j][i] += p;
+    Polt_p2[j][i] += p*p;
+    SCATTER;
+  }
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
+
+SAVE
+%{
+    if (!nowritefile) {
+  DETECTOR_OUT_2D("Pol-TOF monitor",
+		  "TOF [s]", "Polarisation projection",
+		  tmin, tmax, -1.0, 1.0,
+		  nt, npol,
+		  &Polt_N[0][0],&Polt_p[0][0],&Polt_p2[0][0],
+		  filename);
+    }
+%}
+
+MCDISPLAY
+%{
+  
+  rectangle("xy", 0, 0, 0, xwidth, yheight);
+%}
+
+END

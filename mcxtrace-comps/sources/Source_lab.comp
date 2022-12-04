@@ -32,17 +32,15 @@
 * Tables of Crystallography C 4.1
 * Characteristic radiation is modelled by Lorentzian (default) or Gaussian energy profiles with
 * line-energies from Bearden (1967), widths from Krause (1979) and intensity from Honkimäki (1990) and x-ray data booklet.
-* Absoprtion of emitted x-rays while travelling through the target anode is included.
-* 
-* The reference point of the component is the centre of the electron beam hitting the anode, with the optical'axis pointing towards
-* the centre of the exit window (focus_xw,focus_yh). Users preferring the legacy behaviour with the reference point in the exit window,
-* may set the parameter exit_window_refpt.
+* Absoprtion of emitted x-rays while travelling through the target anode is included. 
 * 
 * Example: Source_lab(material_datafile="Cu.txt",Emin=1, E0=80)
 *
 * %P
 * width:      [m]    Width of electron beam impinging on the anode.
 * height:     [m]    Height of electron beam impinging on the anode.
+* xwidth:     [m]    Width of the anode material slab.
+* yheight:    [m]    Height of the anode material slab.
 * thickness:  [m]    Thickness of the anode material slab.
 * take_off:   [deg]  Take off angle of beam centre.
 * dist:       [m]    Distance between centre of illuminated target and exit window.
@@ -55,7 +53,7 @@
 * frac:       [ ]    Fraction of statistic to use for Bremsstrahlung.
 * material_datafile: [ ] Name of datafile which describes the target material.
 * lorentzian: [ ]    If nonzero Lorentzian (more correct) line profiles are used.
-* exit_window_refpt: [ ] If non-zero the reference point is the exit window centre.
+* exit_window_refpt: [m] If set, the AT position and exit window will coincide (legacy behaviour).
 *
 * %E
 *************************************************************************/
@@ -81,6 +79,8 @@ SHARE
     double w[6];/*natural width of line FWHM*/
     double i[6];/*relative intensity*/
   } xray_mat_data[]={
+    {24, 5.989 ,0.265, 3, {5.41472,5.40551,5.94671,0,0,0}, {1.97e-3,2.39e-3,3.05e-3,0,0,0}, {100,50,15,0,0,0}},
+    {27, 7.709 ,0.391, 3, {6.93032,6.9153,7.6494,0,0,0}, {2.26e-3,3.08e-3,4.36e-3,0,0,0}, {100,51,17,0,0,0}},
     {29, 8.979 ,0.407,2,{8.02783,8.04778,0,0,0,0},{2.11e-3,2.17e-3,0,0,0,0},{0.51,1.0,0,0,0,0}},
     {31, 10.367,0.0  ,2,{9.22482,9.25174,0,0,0,0},{2.59e-3,2.66e-3,0,0,0,0},{0.51,1.0,0,0,0,0}},
     {42, 20.00 ,0.770,5,{17.3743,17.47934,19.5903, 19.6083, 19.965,0},{6.31e-3,6.49e-3,12e-3, 12e-3, 12e-3,0},{0.52,1.0,0.08,0.15,0.03,0}},

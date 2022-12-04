@@ -34,7 +34,7 @@
 * phase:  [ ] Initial phase of radiation.
 * randomphase: [ ] If !=0 phase will be random (I.e. the emitted radiation is completely incoherent)
 * focus_xw: [m] Width of target window
-* focus yh: [m] Height of traget window
+* focus_yh: [m] Height of target window
 * dist: [m] Distance from source plane to target window along the optical axis
 * gauss_t: [ ] if 0 the target window will be sampled uniformly and the weight adjusted accordingly, otherwise we will use a gaussian sampling scheme.
 * E0: [keV] Center of emitted energy spectrum (overrides lambda0)
@@ -90,6 +90,7 @@ DECLARE
   /*fine structure constant from CODATA*/
   const double alpha=7.2973525698e-3;
   const double MELE=9.10938291e-31;
+  double p0;
 %}
 
 
@@ -133,7 +134,7 @@ INITIALIZE
   /*We normally do computations in k so use that for transfer*/
   prms.kc=E2K*Ec;
 
-
+  p0 = 1.0/mcget_ncount();
 %}
 
 
@@ -153,7 +154,7 @@ TRACE
   z=(rand01()-0.5)*length;
 
   // Gaussian distribution at origin
-  p=1;/*initial weight is 1*/
+  p=p0;/*initial weight is p0*/
   if (E0){
     if(!dE){
       e=E0;

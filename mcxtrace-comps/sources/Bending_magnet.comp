@@ -86,6 +86,7 @@ DECLARE
   /*fine structure constant from CODATA*/
   const double alpha=7.2973525698e-3;
   const double MELE=9.10938291e-31;
+  double p0;
 %}
 
 
@@ -122,7 +123,7 @@ INITIALIZE
 
   prms.s1x=sqrt(sigex*sigex + prms.igamma*prms.igamma*dist*dist);
   prms.s1y=sqrt(sigey*sigey + prms.igamma*prms.igamma*dist*dist);
-
+  p0=1.0/mcget_ncount();
 %}
 
 
@@ -142,7 +143,7 @@ TRACE
   z=0;
 
   // Gaussian distribution at origin
-  p=1;/*initial weight is 1*/
+  p=p0;/*initial weight is p0*/
   if (E0){
     if(!dE){
       e=E0;

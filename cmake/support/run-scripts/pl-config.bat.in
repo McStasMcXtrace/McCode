@@ -1,0 +1,2 @@
+@python @CPACK_NSIS_INSTALL_ROOT@\\bin\\mcpl-config %*
+

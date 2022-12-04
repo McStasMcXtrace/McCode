@@ -1,0 +1,8 @@
+# e_min=0.0
+# e_max=10000.0
+# e_step=10000.0
+# theta_min=0.0
+# theta_max=180.0
+# theta_step=180.0
+0.0 0.0
+0.0 0.0

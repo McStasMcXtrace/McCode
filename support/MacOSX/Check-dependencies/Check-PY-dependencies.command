@@ -72,6 +72,18 @@ else
     echo Xcode commandline tools is already installed!
 fi
 
+# homebrew Arm on mac?
+if [ -d /opt/homebrew/share/gtksourceview-4/language-specs/ ];
+then
+    find /Applications/${NEWESTAPP} -name mccode.lang -exec ln -sf \{\} /opt/homebrew/share/gtksourceview-4/language-specs/ \;
+fi
+# homebrew Intel on mac?
+if [ -d /usr/local/share/gtksourceview-4/language-specs/ ];
+then
+    find /Applications/${NEWESTAPP} -name mccode.lang -exec ln -sf \{\} /usr/local/share/gtksourceview-4/language-specs/ \;
+fi
+
+
 ENVSCRIPT=`ls /Applications/$NEWESTAPP/Contents/Resources/mc*/*/environment`
 if [ -f $ENVSCRIPT ]; then
     echo $ENVSCRIPT

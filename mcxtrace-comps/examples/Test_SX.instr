@@ -8,9 +8,11 @@
 * Date: Sept 26th 2019
 * Origin: Synchrotron Soleil
 * Version: 0.2
-* %INSTRUMENT_SITE: Tests
+* %INSTRUMENT_SITE: Tests_samples
 *
 * Unit-test instrument for the Single_crystal sample component.
+*
+* %Example: TTH=13.4 Detector: psd4pi_I=1.01814e-17
 *
 * Simply a model source illuminating a SX sample.
 * The sample itself is a Mo bulk crystal.

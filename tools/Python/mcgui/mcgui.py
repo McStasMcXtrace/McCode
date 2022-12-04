@@ -13,6 +13,11 @@ import time
 import re
 from PyQt5 import QtCore, QtWidgets
 import PyQt5
+try:
+    from PyQt5 import Qsci
+except ImportError:
+    Qsci = None
+
 from viewclasses import McView
 from datetime import datetime
 
@@ -487,16 +492,23 @@ class McGuiAppController():
         # load installed mcstas components:
         # args - [category, comp_names[], comp_parsers[]]
         args = []
-        categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6: 'Union', 7 : 'Obsolete'}
-        dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6: 'contrib/union', 7 : 'obsolete'}
+
+        if mccode_config.configuration["MCCODE"]=="mcstas":
+            categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6: 'Union', 7 : 'Obsolete'}
+            dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6: 'union', 7 : 'obsolete'}
+            numcat=7
+        if mccode_config.configuration["MCCODE"]=="mcxtrace":
+            categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6: 'Union', 7: 'AstroX', 8 : 'Obsolete'}
+            dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6: 'union', 7: 'astrox', 8 : 'obsolete'}
+            numcat=8
         i = 0
-        while i < 8:
+        while i < numcat+1:
             arg = [] # arg - category, comp_names[], comp_parsers[]
             compnames = []
             parsers = []
             
             for f in files_comp:
-                if i==6:
+                if i==numcat-1:
                     if re.search(dirnames[i], os.path.dirname(f)):
                         compnames.append(os.path.splitext(os.path.basename(f))[0]) # get filename without extension - this is the component name
                         parsers.append(ComponentParser(f)) # append a parser, for ease of parsing on-the-fly
@@ -569,6 +581,10 @@ class McGuiAppController():
                         s = ' '.join(s)
                         s = s.split('=')
                         params.append(s)
+                    if 'syntax error' in l:
+                        raise Exception("Instrument compile: syntax error")
+                    if 'Errors encountered' in l:
+                        raise Exception("Instrument compile: errors encountered")
 
                 instr_params = params
 
@@ -687,12 +703,12 @@ class McGuiAppController():
     def handleHelpPdf(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ..)
         mcman = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "doc", "manuals", mccode_config.configuration["MCCODE"]+"-manual.pdf")
-        webbrowser.open_new_tab(mcman)
+        webbrowser.open_new_tab("file://" + mcman)
     
     def handleHelpPdfComponents(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ...)
         mcman = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "doc", "manuals", mccode_config.configuration["MCCODE"]+"-components.pdf")
-        webbrowser.open_new_tab(mcman)
+        webbrowser.open_new_tab("file://" + mcman)
     
     def handleHelpAbout(self):
         # get mcstas version using 'mcstas/mcxtrace -v'
@@ -710,7 +726,17 @@ class McGuiAppController():
         instr = self.state.getInstrumentFile()
         self.view.showCodeEditorWindow(instr)
         self.emitter.status("Editing instrument: " + os.path.basename(str(instr)))
-    
+
+    def handleEditExtInstrument(self):
+        instr = self.state.getInstrumentFile()
+        process = subprocess.Popen(mccode_config.configuration["EDITOR"] + ' ' + os.path.basename(str(instr)), 
+                                   stdout=subprocess.PIPE, 
+                                   stderr=subprocess.STDOUT,
+                                   shell=True,
+                                   universal_newlines=True)
+        self.emitter.status("Editing instrument: " + os.path.basename(str(instr)))
+
+
     def handleCloseInstrument(self):
         if self.view.closeCodeEditorWindow():
             self.state.unloadInstrument()
@@ -850,6 +876,7 @@ class McGuiAppController():
         mwui.actionOpen_instrument.triggered.connect(self.handleOpenInstrument)
         mwui.actionClose_Instrument.triggered.connect(self.handleCloseInstrument)
         mwui.actionEdit_Instrument.triggered.connect(self.handleEditInstrument)
+        mwui.actionEditExt_Instrument.triggered.connect(self.handleEditExtInstrument)
         mwui.actionSave_As.triggered.connect(self.handleSaveAs)
         mwui.actionNew_Instrument.triggered.connect(self.handleNewInstrument)
         mwui.actionConfiguration.triggered.connect(self.handleConfiguration)
@@ -867,7 +894,11 @@ class McGuiAppController():
             self.view.mw.add_conf_menu('Set as default').triggered.connect(self.handleDefault)
         mwui.btnRun.clicked.connect(self.handleRunOrInterruptSim)
         mwui.btnPlot.clicked.connect(self.handlePlotResults)
-        mwui.btnEdit.clicked.connect(self.handleEditInstrument)
+
+        if Qsci:
+            mwui.btnEdit.clicked.connect(self.handleEditInstrument)
+        else:
+            mwui.btnEdit.clicked.connect(self.handleEditExtInstrument)
         mwui.btnOpenInstrument.clicked.connect(self.handleOpenInstrument)
 
         mwui.actionCompile_Instrument.triggered.connect(self.state.compile)
@@ -911,7 +942,7 @@ def main():
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     try:
-        mccode_config.load_user_config()
+        mccode_config.load_config("user")
         mccode_config.check_env_vars()
 
         mcguiApp = PyQt5.QtWidgets.QApplication(sys.argv)

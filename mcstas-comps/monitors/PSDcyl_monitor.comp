@@ -28,6 +28,7 @@
 * ny: [1]               Number of pixel rows
 * filename: [string]    Name of file in which to store the detector image
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* nowritefile: [1]      If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -42,7 +43,8 @@ DEFINE COMPONENT PSDcyl_monitor
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (nr=20, ny=20, string filename=0, yheight=0.3, radius=1, restore_neutron=0, thmin=0, thmax=360)
+SETTING PARAMETERS (nr=20, ny=20, string filename=0, yheight=0.3, radius=1,
+		    restore_neutron=0, thmin=0, thmax=360, int nowritefile=0)
 
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -105,6 +107,7 @@ TRACE
 
 SAVE
 %{
+if (!nowritefile) {
   DETECTOR_OUT_2D(
       "PSD cylindrical monitor",
       "radial position [deg]",
@@ -113,6 +116,7 @@ SAVE
       nr, ny,
       &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
       filename);
+}
 %}
 
 FINALLY

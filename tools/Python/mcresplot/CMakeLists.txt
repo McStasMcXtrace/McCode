@@ -1,15 +1,19 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.17.0)
+cmake_policy(VERSION 3.17.0)
 
 # This will install McStas mcresplot
 project(python-tools-mcresplot)
 
+message(STATUS "Configure ${CMAKE_PROJECT_NAME} ${FLAVOR} ${PROJECT_NAME}")
+
 # Set module path
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 
 # Set McCode values (from mkdist or defaults)
 include(MCUtil)
 
 set(FLAVOR "mcstas")
+set(CPACK_PACKAGE_HOMEPAGE_URL "http://mcstas.org/")
 setupMCCODE("${FLAVOR}")
 
 # Select prefix
@@ -22,7 +26,7 @@ set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-mcresplot-${MCCODE_VERSI
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
-set(CPACK_PACKAGE_VERSION       "1.0")
+set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
 
@@ -31,14 +35,25 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 set(NSIS_NAME "Python-based mcresplot, ${MCCODE_STRING}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 # Debian
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3-matplotlib, python3-numpy")
 
 # RPM
+if (RPMPROFILE)
+   if (RPMPROFILE STREQUAL "fedora")
+        set(PYDEPS "python3-matplotlib, python3-numpy")
+   else()
+	set(PYDEPS ${FLAVOR}-miniconda3-${MCCODE_VERSION})
+   endif()
+else()
+	set(PYDEPS ${FLAVOR}-miniconda3-${MCCODE_VERSION})
+endif()
+
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-miniconda3-${MCCODE_VERSION}"
-  )
+  "${FLAVOR}-${MCCODE_VERSION}, ${PYDEPS}"
+)
 
 
 include(CPack)
@@ -53,7 +68,7 @@ else()
 endif()
 
 # Configure fallback script
-configure_file("${CMAKE_SOURCE_DIR}/mcresplot.in" "${WORK}/mcresplot" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcresplot.in" "${WORK}/mcresplot" @ONLY)
 
 if(WINDOWS)
   install(
@@ -82,7 +97,7 @@ if(NOT WINDOWS)
   endforeach()
   
   add_custom_target(
-    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/mcresplot"
+    "CREATE_${PROJECT_NAME}_SYMLINK" ALL DEPENDS "${WORK}/mcresplot"
     )
 
   install(

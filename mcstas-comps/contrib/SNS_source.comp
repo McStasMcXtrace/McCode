@@ -278,7 +278,7 @@ double integ1(double (*func)(double),double low, double high, double err)
 }
 /*---------------------------------------------------------------------------
    Routine for finding zeros.
-  Modified version of rtbis from "Numerical Recipes in C: pg 354
+  Algorithm equivalent to rtbis from "Numerical Recipes in C: pg 354
  -----------------------------------------------------------------------------*/
 
 double zero_find(double (*func)(double, double),double yval,double xmin,double xmax, double tol)

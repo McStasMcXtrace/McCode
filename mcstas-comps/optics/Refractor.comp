@@ -151,65 +151,10 @@ OUTPUT PARAMETERS (rho, bc, offdata, theta1, theta2, mean_n, events)
 
 SHARE
 %{
+
 %include "read_table-lib"
 %include "interoff-lib"
 %include "ref-lib"
-
-// two sphere separated with a given thickness
-int lens_sphere_intersect_n(double *t0, double *t1,
-double x, double y, double z,
-double vx, double vy, double vz,
-double r, double dz,
-double *nx, double *ny, double *nz) {
-    /* two spherical lenses, concave, with given radius, thickness=zdepth at meniscus,
-       plus cross section=xwidth*yheight */
-    int    intersect1 = 0, intersect2 = 0;
-    double nx1=0,nx2=0,ny1=0,ny2=0,nz1=0,nz2=0;
-    double t2=0,t3=0;
-
-    *t0=*t1=0;
-
-    intersect1 = sphere_intersect_n(t0, t1, x,y,z+r+dz/2,
-      vx,vy,vz, -r, &nx1,&ny1,&nz1); /* -r: use the further intersection with sphere */
-
-    intersect2 = sphere_intersect_n(&t2, &t3, x,y,z-r-dz/2,
-      vx,vy,vz, r, &nx2,&ny2,&nz2);
-
-    /* usual case with 4 intersections: return t1 and t2 */
-    if (intersect1 || intersect2) {
-      if (intersect1) *t0=*t1;
-      if (intersect2) *t1= t2;
-    }
-
-    if (!intersect1 && !intersect2)
-      return(0);
-
-    if (!intersect1 || !intersect2) {
-      if (!intersect1) {
-        /* intersection with the 2st sphere: return t2 and some other external
-           intersection (container box entrance) t0 */
-        intersect1 = box_intersect_n(t0,&t3, x,y,z, vx,vy,vz,
-          2*r, 2*r, 2*r+dz, &nx1,&ny1,&nz1);
-      } else {
-        /* intersection with the 1st sphere: return t1 and some other external
-           intersection (container box exit) t3 */
-        intersect2 = box_intersect_n(&t2,t1, x,y,z, vx,vy,vz,
-          2*r, 2*r, 2*r+dz, &nx2,&ny2,&nz2);
-      }
-    }
-
-    /* the normal vector corresponds to the first forward intersection */
-    if (intersect1 || intersect2) {
-      if (*t0 < 0) {
-        *nx = nx2; *ny = ny2; *nz = nz2;
-      } else {
-        *nx = nx1; *ny = ny1; *nz = nz1;
-      }
-    }
-
-    /* no intersection: use intersection with container box */
-    return(intersect1+intersect2);
-  } // lens_sphere_intersect_n
 
   /* wrappers to intersection routines which also return the normal vector */
   int box_intersect_n(double *t0, double *t1,
@@ -286,6 +231,63 @@ double *nx, double *ny, double *nz) {
     }
     return(intersect);
   } // cylinder_intersect_n
+
+
+// two sphere separated with a given thickness
+int lens_sphere_intersect_n(double *t0, double *t1,
+double x, double y, double z,
+double vx, double vy, double vz,
+double r, double dz,
+double *nx, double *ny, double *nz) {
+    /* two spherical lenses, concave, with given radius, thickness=zdepth at meniscus,
+       plus cross section=xwidth*yheight */
+    int    intersect1 = 0, intersect2 = 0;
+    double nx1=0,nx2=0,ny1=0,ny2=0,nz1=0,nz2=0;
+    double t2=0,t3=0;
+
+    *t0=*t1=0;
+
+    intersect1 = sphere_intersect_n(t0, t1, x,y,z+r+dz/2,
+      vx,vy,vz, -r, &nx1,&ny1,&nz1); /* -r: use the further intersection with sphere */
+
+    intersect2 = sphere_intersect_n(&t2, &t3, x,y,z-r-dz/2,
+      vx,vy,vz, r, &nx2,&ny2,&nz2);
+
+    /* usual case with 4 intersections: return t1 and t2 */
+    if (intersect1 || intersect2) {
+      if (intersect1) *t0=*t1;
+      if (intersect2) *t1= t2;
+    }
+
+    if (!intersect1 && !intersect2)
+      return(0);
+
+    if (!intersect1 || !intersect2) {
+      if (!intersect1) {
+        /* intersection with the 2st sphere: return t2 and some other external
+           intersection (container box entrance) t0 */
+        intersect1 = box_intersect_n(t0,&t3, x,y,z, vx,vy,vz,
+          2*r, 2*r, 2*r+dz, &nx1,&ny1,&nz1);
+      } else {
+        /* intersection with the 1st sphere: return t1 and some other external
+           intersection (container box exit) t3 */
+        intersect2 = box_intersect_n(&t2,t1, x,y,z, vx,vy,vz,
+          2*r, 2*r, 2*r+dz, &nx2,&ny2,&nz2);
+      }
+    }
+
+    /* the normal vector corresponds to the first forward intersection */
+    if (intersect1 || intersect2) {
+      if (*t0 < 0) {
+        *nx = nx2; *ny = ny2; *nz = nz2;
+      } else {
+        *nx = nx1; *ny = ny1; *nz = nz1;
+      }
+    }
+
+    /* no intersection: use intersection with container box */
+    return(intersect1+intersect2);
+  } // lens_sphere_intersect_n
 
   /* Surface_wavyness: function to rotate normal vector around axis for roughness
    *                 with specified tilt angle (rad)

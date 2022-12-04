@@ -10,7 +10,6 @@
  * %I
  * Written by: Marcus H Mendenhall, NIST <marcus.mendenhall@nist.gov>
  * Date: June, 2017
- * Version: 1.0
  * Origin: Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
  *
  * Perfect, laue crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
@@ -50,7 +49,7 @@
  * length:        [m] zdepth (length) of the crystal.
  * thickness:     [m] thickness of crystal (along y-axis, the surface normal)
  * material:      [ ] Si ("Si.txt"), Ge ("Ge.txt")
- * form_factors   [ ] "FormFactors.txt" from McXtrace install, usually
+ * form_factors:   [ ] "FormFactors.txt" from McXtrace install, usually
  * V:             [AA^3] unit cell volume
  * h:             [ ] 1st Miller index of reflection
  * k:             [ ] 2nd Miller index of reflection
@@ -73,7 +72,7 @@
  * %E
  *******************************************************************************/
 
-DEFINE COMPONENT Laue_Crystal_BC
+DEFINE COMPONENT Laue_crystal_BC
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (length=0.05, width=0.02, thickness=1e-4,
 	V=160.1826, string form_factors="FormFactors.txt", string material="Si.txt",

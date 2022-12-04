@@ -3,6 +3,7 @@ Analysis tools for mcstas component files and instrument files.
 '''
 import re
 import os
+from os.path import splitext, join
 import subprocess
 from datetime import datetime
 
@@ -125,9 +126,15 @@ class ComponentParser(object):
         
         # get setting parameters
         result_2 = []
-        re_out = re.search(r'SETTING\s+PARAMETERS\s*\([-+.\w\s=,/*\"]+\)', text)
+        re_out = re.search(r'SETTING\s+PARAMETERS\s*\([-+.\w\s=,/*{}\"]+\)', text)
         if re_out:
-            result_2 = ComponentParser.__parseParLine(re_out.group(0))
+            result_sub, substituted_text = ComponentParser.__substituteCurlyPars(re_out.group(0))
+            result_2 = ComponentParser.__parseParLine(substituted_text)
+            # restitute curly pars default values
+            for r in result_2:
+                for s in result_sub:
+                    if r.par_name == s.par_name:
+                        r.default_value = s.default_value
         
         return result_1 + result_2
     
@@ -383,6 +390,8 @@ def parse_header(text):
     
     # get author, date, origin, revision
     m1 = re.search('Written by:([^\n]*)\n', bites[0])
+    if not m1:
+      m1 = re.search('Author:([^\n]*)\n', bites[0])
     if m1: info.author = m1.group(1).strip()
     
     m2 = re.search('Date:([^\n]*)\n', bites[0])
@@ -395,18 +404,17 @@ def parse_header(text):
     if m4: info.version = m4.group(1).strip()
     
     m5 = re.search('\%INSTRUMENT_SITE:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
+    if not m5:
+      m5 = re.search('Origin:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
+    
     if m5:
-        info.short_descr = m5.group(1).strip()
-    else:
-        # component files dont have %INSTRUMENT_SITE tag, this is an alternative
-        m6 = re.search('Origin:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
-        if m6:
-            # remove all "Modified by" lines
-            nomodby = [] 
-            for l in m6.group(1).strip().splitlines():
-                if not re.match('Modified by:', l, flags=re.DOTALL):
-                    nomodby.append(l)
-            info.short_descr = '\n'.join(nomodby).strip()
+      # ignore some comments
+      descrlines = []
+      # remove all "*:" lines
+      for l in m5.group(1).strip().splitlines():
+          if not re.match('[^\n]*:', l, flags=re.DOTALL):
+              descrlines.append(l)
+      info.short_descr = '\n'.join(descrlines).strip()
     
     # description
     descr = bites[1]
@@ -497,7 +505,7 @@ def get_comp_category(filepath):
     head = os.path.split(filepath)[0]
     firstdir = os.path.split(head)[1]
     # handle special case - sub folder of "contrib" folder
-    if firstdir not in ('sources', 'optics', 'samples', 'monitors', 'misc', 'contrib', 'obsolete'):
+    if firstdir not in ('sources', 'optics', 'samples', 'monitors', 'misc', 'contrib', 'union','astrox','obsolete'):
         head2 = os.path.split(head)[0]
         seconddir = os.path.split(head2)[1]
         return seconddir
@@ -643,20 +651,39 @@ def get_instr_site(instr_file):
         
     return site
 
-def get_instr_comp_files(mydir, recursive=True):
+def get_instr_comp_files(mydir, recursive=True, instrfilter=None, compfilter=None):
     ''' returns list of filename with path of all .instr and .comp recursively from dir "mydir"
-    
-    181211: added recursive dir search, defaults to True to preserve backwards compatibility
-    ''' 
+
+    181211: added recursive, defaults to True to preserve backwards compatibility
+    191114: added instrfilter and compfilter, which filters results based on filename (before the dot)
+    '''
+    instrreg = None
+    if instrfilter:
+        instrreg = re.compile(instrfilter)
+    compreg = None
+    if compfilter:
+        compreg = re.compile(compfilter)
+
     files_instr = [] 
     files_comp = []
-    
-    for (dirpath, dirname, files) in os.walk(mydir):
+
+    for (dirpath, _, files) in os.walk(mydir):
         for f in files:
-            if os.path.splitext(f)[1] == '.instr':
-                files_instr.append(dirpath + '/' + f)
+            # get instr files
+            if splitext(f)[1] == '.instr':
+                if instrfilter is not None:
+                    if instrreg.match(splitext(f)[0]):
+                        files_instr.append(join(dirpath, f))
+                else:
+                    files_instr.append(join(dirpath, f))
+
+            # get comp files
             if os.path.splitext(f)[1] == '.comp':
-                files_comp.append(dirpath + '/' + f)
+                if compfilter is not None:
+                    if compreg.match(splitext(f)[0]):
+                        files_comp.append(join(dirpath, f))
+                else:
+                    files_comp.append(join(dirpath, f))
         if not recursive:
             break
     
@@ -697,6 +724,25 @@ def get_file_contents(filepath):
     else:
         return ''
 
+def run_subtool_noread(cmd, cwd=None):
+    ''' run subtool to completion in a excessive pipe-output robust way (millions of lines) '''
+    if not cwd:
+        cwd = os.getcwd()
+    try:
+        process = subprocess.Popen(cmd,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   stdin=subprocess.PIPE,
+                                   shell=True,
+                                   universal_newlines=True,
+                                   cwd=cwd)
+        process.communicate()
+        return process.returncode
+    except Exception as e:
+        ''' unicode read error safe-guard '''
+        print("run_subtool_noread (cmd=%s) error: %s" % (cmd, str(e)))
+        return -1
+
 def run_subtool_to_completion(cmd, cwd=None, stdout_cb=None, stderr_cb=None):
     '''
     Synchronous run subprocess.popen with pipe buffer reads, 
@@ -711,8 +757,8 @@ def run_subtool_to_completion(cmd, cwd=None, stdout_cb=None, stderr_cb=None):
 
     try:
         # open the process with all bells & whistles
-        process = subprocess.Popen(cmd, 
-                                   stdout=subprocess.PIPE, 
+        process = subprocess.Popen(cmd,
+                                   stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,
                                    stdin=subprocess.PIPE,
                                    shell=True,
@@ -792,4 +838,5 @@ def dumpfile_pqtg(scene, filenamebase='mcplot', format='png'):
 
 def get_datetimestr():
     return datetime.strftime(datetime.now(), "%Y%m%d_%H%M_%S")
+
 

@@ -24,7 +24,7 @@
 *
 * %P
 * MapFile:                   []     File describing, which orientation is found in which voxel
-* OrientationsFile;          []     File describing the different orientations
+* OrientationsFile:          []     File describing the different orientations
 * ReflectionsDatafile:       []     File describing the reflections in the relevant lattice (usually in .lau-format)
 * MaterialDatafile:          []     File describing the scattering and absorbtion properties of the material
 * xwidth:                    [m]    Width of the sample

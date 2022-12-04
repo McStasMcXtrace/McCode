@@ -7,6 +7,7 @@
 *
 * Component: Source_genesis
 *
+* %I
 * Written by: Erik B Knudsen
 * Date: Aug. 10th, 2014
 * Version: $Revision$
@@ -22,7 +23,7 @@
 * the performance of Free-Electron Lasers (FEL), where the kinetic energy of 
 * electrons is transferred into a tunable, high-brightness radiation source (DESY,PSI).
 * 
-* Example: Source_genesis13(dist=1)
+* Example: Source_genesis13(flux=1)
 *
 * %P
 * focus_xw:[m]  Width of target.
@@ -34,6 +35,8 @@
 * s0: [m] back end of pulse time sampling windows scaled by c^-1. 
 * s1: [m] front end of pulse time sampling window scaled by c^-1.
 * focus_a: [rad] mean divergence angle.
+* nslices: [1] Number of slices simulated
+* flux: [1] Flux-multiplier
 *
 * %L
 * http://genesis.web.psi.ch
@@ -43,7 +46,7 @@
 
 DEFINE COMPONENT Source_genesis13
 DEFINITION PARAMETERS (gridpoints=101)
-SETTING PARAMETERS (string fname="template.out",focus_xw=0,focus_yh=0,dist=1,E0=0, dE=0, 
+SETTING PARAMETERS (string fname="template.out",focus_xw=0,focus_yh=0,E0=0, 
     meshsize=1e-5, nslices=102, s0=-2e-3,s1=2e-3,flux=1.0, focus_a=0.1)
 OUTPUT PARAMETERS (prms,e,l)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 

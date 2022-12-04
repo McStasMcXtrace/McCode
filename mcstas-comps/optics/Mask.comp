@@ -1,0 +1,271 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Mask
+*
+* %I
+*
+* Written by: Erik Knudsen 
+* Date: March 2014
+* Version: 1.0
+* Origin: DTU Physics
+*
+* A masking image object
+*
+* %D
+* The Mask component takes an image as input either as an standard image file in png or pnm format, or as an ascii file (see below for format),
+* and uses the image as a mask. For instance as a manner of measuring resolution for imaging applications.
+* If the image is supplied as a png or pnm file, they interpretation of the pixels varies depending on the file. If the image is grayscale the pixel values are directly mapped
+* to opacity (or transparency if invert is set) values in the range [0..1]. If the image has RGB channels the R channel is considered most significant, the B channel least significant.
+* The resulting number, e.g. R*255^2 + G*255 + B, is then mapped to a real valued opacity.
+* Additionally png images may have an alpha channel - which is then considered the least significant channel. Palette mapped pngs are as of yet _not_ supported.
+* A regular ascii file may be supplied - in which case the file is like the one below
+* #any initial line starting with a hash is silently ignored
+* 0.0 1.0 0.0 1.0 0.0
+* 0.5 0.0 0.5 0.0 0.5  
+* 0.0 0.25 0.0 0.25 0.0
+* 0.75 0.0 0.75 0.0 0.75
+* 1.0 0.0 1.0 0.0 1.0
+* 
+* ...which defines a 5x5 mask with a kind of checkerboard pattern-  
+* 
+* N.b. If you want to use the png-option of the component you must have libpng installed _and_ link your compiled instrument to it. Assuming libpng is installed you may do this
+* by adding "-DUSE_PNG=1 -lpng" to 1) the MCXTRACE_CFLAGS environment variable or 2) to the compiler flags textbox in the GUI. Open File->Configuration and edit the textbox. 
+*
+* The virtual option of the Mask, is intended as a help to use a png-image as a grayscale distribution. If the virtual flag is set, rays are porpagated to the mask plane
+* and the pixel value at the intersection point is read, but the rays reamin unaffected. By extracting the output parameter masking it can subsequently be used. 
+* 
+* %P
+* Input parameters:
+* xwidth: [m]   Width of the masking object
+* yheight:[m]   Height of the masking object
+* mask:   [ ]   Name of file containing the masking image
+* invert: [ ]   By default the values from the masking image are interepreted as opacity (1 is fully blocking). If invert is nonzero this is inverted and the values are considered as transparency (1 is fully transmissive)
+* virtual:[ ]   Mask does not affect the neutron, but does read the pixel value of the pixel hit. Could be useful to have as a packing factor for a crystal .
+* Output parameters:
+* masking: [ ]  Opacity/transmission value. If virtual==0, each ray is downweighted according to the masking value.
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Mask
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xwidth, yheight, string mask, invert=0, virtual=0)
+OUTPUT PARAMETERS (prms,masking,filter_row)
+//DEPENDENCY "-lpng -DUSE_PNG"
+
+SHARE
+%{
+  %include "read_table-lib"
+#if USE_PNG
+#include <png.h>
+#endif 
+  
+%}
+
+DECLARE
+%{
+  struct {
+    t_Table table;
+    int ny,nx;
+    double xmin,ymin;
+    double xmax,ymax;
+  } prms;
+  int filter_row;
+  double masking;
+
+%}
+
+
+INITIALIZE
+%{
+  
+  /*do some checks on input parameters*/
+  if (invert){
+    /*invert should be either 0 or one*/
+    invert=1;
+  }
+
+  do{
+#if USE_PNG
+    if (strstr(mask+strlen(mask)-4,".png")!=NULL){
+      /*filename ends with .png - use libpng to read the mask*/
+      /*read file and insert mask values into table*/
+      /*copied form libpng docs*/
+      int is_png=0;
+      const int number=1;
+      char header[8];
+      const int ERROR=1;
+      const int NOT_PNG=2;
+
+      FILE *fp = fopen(mask, "rb");
+      if (!fp){
+        fprintf(stderr,"Error(%s): cant open file %s for reading\n", NAME_CURRENT_COMP,mask); 
+        exit(1);
+      }
+      fread(header, 1, number, fp);
+      is_png = !png_sig_cmp(header, 0, number);
+
+      if (!is_png){
+        fprintf(stderr,"Error(%s): %s does not appear to be a png file\n", NAME_CURRENT_COMP,mask); 
+        exit(1);
+      }
+
+      //png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, (png_voidp)user_error_ptr,user_error_fn, user_warning_fn);
+      png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+      /*last two arguments are error handling functions*/
+
+      if (!png_ptr){
+        fprintf(stderr,"Error(%s): Could not set up the png reading buffer structure\n", NAME_CURRENT_COMP); 
+        exit(1);
+      }
+
+      png_init_io(png_ptr,fp);
+      /*we used number bytes of the png file to indentify it as being png*/
+      png_set_sig_bytes(png_ptr, number);
+
+      png_infop info_ptr = png_create_info_struct(png_ptr);
+      if (!info_ptr){
+        png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+        exit(1);
+      }
+
+      /*do read the image using the high level interface and apply the transform 
+       * toexpand 1, 2, and 4 bits to bytes*/
+      png_read_png(png_ptr,info_ptr, PNG_TRANSFORM_PACKING|PNG_TRANSFORM_EXPAND, NULL);
+      /*image is now available in png_ptr - extfact dimensions*/
+      int height=png_get_image_height(png_ptr,info_ptr);
+      int width=png_get_image_width(png_ptr,info_ptr);
+      int bd=png_get_bit_depth(png_ptr,info_ptr);
+      if(bd<8){
+        bd=8;
+      }
+      unsigned int ct=png_get_color_type(png_ptr,info_ptr);
+
+      Table_Init(&(prms.table),height,width);
+
+      png_bytep *row_pointers=png_get_rows(png_ptr,info_ptr);
+      printf("I just read a png image with size %d by %d, bit depth %d, and color type %d\n",width, height, bd, ct);
+      fclose(fp);
+
+      int j,r,c,tuplelen;
+      unsigned long tuple_normalizer;
+      switch (ct){
+        case PNG_COLOR_TYPE_GRAY:
+          if(bd==8){
+            tuplelen=1;
+            tuple_normalizer=0xFF;
+          }else if(bd==16){
+            tuplelen=2;
+            tuple_normalizer=0xFFFF;
+          }
+          break;
+        case PNG_COLOR_TYPE_GRAY_ALPHA:
+          if(bd==8){
+            tuplelen=2;
+            tuple_normalizer=0xFFFF;
+          }else if(bd==16){
+            tuplelen=2;
+            tuple_normalizer=0xFFFFFFFF;
+          }
+          break;
+        case PNG_COLOR_TYPE_RGB:
+          if(bd==8){
+            tuplelen=3;
+            tuple_normalizer=0xFFFFFF;
+          }else if(bd==16){
+            tuplelen=3;
+            tuple_normalizer=0xFFFFFFFFFFFF;
+          }
+          break;
+        case PNG_COLOR_TYPE_RGB_ALPHA:
+          if(bd==8){
+            tuplelen=4;
+            tuple_normalizer=0xFFFFFFFF;
+          }else if (bd==16){
+            tuplelen=4;
+            tuple_normalizer=0xFFFFFFFFFFFFFFFF;
+          }
+          break;
+        default:
+          fprintf(stderr,"Error (%s): Unsupported type of png image (allowed are GRAY, GRAY_ALPHA, RGB, RGB_ALPHA)\n","NAME_CURRENT_COMP");
+          exit(1);
+      }
+      for (r=0;r<height;r++){
+        for (c=0;c<width;c++){
+          unsigned long pixel=0;
+          for (j=0;j<tuplelen;j++){
+            pixel |= (row_pointers[r][c*tuplelen+j]<<8*j);
+          }
+          /*Data table should contain opacity values. Possibly invert the image*/
+          /*Also png images are stored top-to-bottom, i.e. the first stored row corresponds to y=-yheight/2. Hence, switch the order.*/
+          prms.table.data[(height-r-1)*width+c]=((double)pixel)/tuple_normalizer;
+        }
+      }
+      break;
+    }
+#endif
+#if USEPBM
+    if ( 
+        (strstr(mask+strlen(mask)-4,".pnm")!=NULL) ||
+        (strstr(mask+strlen(mask)-4,".pam")!=NULL) ||
+        (strstr(mask+strlen(mask)-4,".pbm")!=NULL)
+       ){
+      /*filename ends with .pnm, .pam, or .pbm - its a pnm file*/
+      fprintf(stderr,"Many apologies(%s): pnm formats are not supported yet\n");
+      exit(1); 
+    }
+#endif
+  /*read the masking file*/ 
+    int status;
+    if ( (status=Table_Read(&(prms.table),mask,0))==-1){
+      fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",mask,NAME_CURRENT_COMP);
+      exit(-1);
+    }
+  }while(0);/*this is to allow breaking out so .png and .pnm will take precedence*/
+
+  /*set some image vals*/
+  prms.xmax= xwidth/2.0;
+  prms.xmin=-xwidth/2.0;
+  prms.ymax= yheight/2.0;
+  prms.ymin=-yheight/2.0;
+  prms.nx=prms.table.columns;
+  prms.ny=prms.table.rows;
+
+%}
+
+TRACE
+%{
+  int i,j;
+
+
+  PROP_Z0;
+  if (x>prms.xmin && x<prms.xmax && y>prms.ymin && y<prms.ymax){
+    i = floor((x - prms.xmin)*prms.nx/(xwidth));
+    j = floor((y - prms.ymin)*prms.ny/(yheight));
+    if (invert){  
+      masking=Table_Index(prms.table,j,i);
+    }else{
+      masking=1.0-Table_Index(prms.table,j,i);
+    }
+    if(!virtual){
+        p*=masking;
+    }
+    SCATTER;
+  }
+
+
+
+%}
+
+MCDISPLAY
+%{
+  /* A bit ugly; hard-coded dimensions. */
+  
+  rectangle("xy",0,0,0,xwidth,yheight);
+%}
+
+END

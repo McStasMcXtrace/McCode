@@ -81,6 +81,12 @@ mcstatic unsigned long long int mcrun_num            = 0;
 #include "mcstas-globals.h"
 #endif /* !DANSE */
 
+/* SECTION: NeXus compression */
+
+#ifndef NX_COMPRESION
+#define NX_COMPRESSION NX_COMP_NONE
+#endif
+
 /* SECTION: MPI handling ==================================================== */
 
 #ifdef USE_MPI
@@ -1552,7 +1558,7 @@ int mcdetector_out_axis_nexus(NXhandle f, char *label, char *var, int rank, long
       axis[i] = min+(max-min)*(i+0.5)/length;
     /* create the data set */
     strcpy_valid(valid, label);
-    NXcompmakedata(f, valid, NX_FLOAT64, 1, &dim, NX_COMP_LZW, &dim);
+    NXcompmakedata(f, valid, NX_FLOAT64, 1, &dim, NX_COMPRESSION, &dim);
     /* open it */
     if (NXopendata(f, valid) != NX_OK) {
       fprintf(stderr, "Warning: could not open axis rank %i '%s' (NeXus)\n",
@@ -1580,6 +1586,7 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
 {
   
   int dims[3]={detector.m,detector.n,detector.p};  /* number of elements to write */
+  int fulldims[3]={detector.m,detector.n,detector.p};
   int signal=1;
   int exists=0;
   int current_dims[3]={0,0,0};
@@ -1588,15 +1595,11 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
   if (!f || !data || !detector.m || mcdisable_output_files) return(NX_OK);
   
   /* when this is a list, we set 1st dimension to NX_UNLIMITED for creation */
-  if (strcasestr(detector.format, "list")) dims[0] = NX_UNLIMITED;
+  if (strcasestr(detector.format, "list")) fulldims[0] = NX_UNLIMITED;
   
   /* create the data set in NXdata group */
   NXMDisableErrorReporting(); /* unactivate NeXus error messages, as creation may fail */
-  /* NXcompmakedata fails with NX_UNLIMITED */
-  if (strcasestr(detector.format, "list"))
-    ret = NXmakedata(    f, part, NX_FLOAT64, detector.rank, dims);
-  else
-    ret = NXcompmakedata(f, part, NX_FLOAT64, detector.rank, dims, NX_COMP_LZW, dims);
+  ret = NXcompmakedata(f, part, NX_FLOAT64, detector.rank, fulldims, NX_COMPRESSION, dims);
   if (ret != NX_OK) {
     /* failed: data set already exists */
     int datatype=0;
@@ -1608,7 +1611,6 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
     NXclosedata(f);
   }
   NXMEnableErrorReporting();  /* re-enable NeXus error messages */
-  dims[0] = detector.m; /* restore actual dimension from data writing */
   
   /* open the data set */
   if (NXopendata(f, part) == NX_ERROR) {
@@ -1622,6 +1624,9 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
     if (!exists)
       printf("Events:   \"%s\"\n",  
         strlen(detector.filename) ? detector.filename : detector.component);
+    else
+      printf("Append:   \"%s\"\n",
+	     strlen(detector.filename) ? detector.filename : detector.component);
   } else {
     NXputdata (f, data);
   }
@@ -1757,7 +1762,7 @@ MCDETECTOR mcdetector_out_0D_nexus(MCDETECTOR detector)
   );
   
   return(detector);
-} /* mcdetector_out_0D_ascii */
+} /* mcdetector_out_0D_nexus */
 
 MCDETECTOR mcdetector_out_1D_nexus(MCDETECTOR detector_inc)
 {
@@ -1767,7 +1772,7 @@ MCDETECTOR mcdetector_out_1D_nexus(MCDETECTOR detector_inc)
   mcdetector_out_data_nexus(nxhandle, detector);
   );
   return(detector);
-} /* mcdetector_out_1D_ascii */
+} /* mcdetector_out_1D_nexus */
 
 MCDETECTOR mcdetector_out_2D_nexus(MCDETECTOR detector_inc)
 {
@@ -2604,6 +2609,35 @@ rot_transpose(Rotation src, Rotation dst)
   dst[2][2] = src[2][2];
 }
 
+/*******************************************************************************
+* rot_invert: Matrix inversion, in case a Rotatoin is used to represent a
+* a general non-orthonormal matrix.
+*******************************************************************************/
+void
+rot_invert(Rotation t1, Rotation t2)
+{
+  Rotation cofactors;
+  int r,c;
+  double det=0;
+  for (r=0;r<3;r++){
+    for (c=0;c<3;c++){
+      /*this algorithm automatically takes care of the sign changes in computing cofactors*/
+      cofactors[r][c]=t1[(r+1) % 3][(c+1) % 3]*t1[(r+2) % 3][(c+2) % 3] - t1[(r+2) % 3][(c+1) % 3]*t1[(r+1) % 3][(c +2) % 3] ;
+    }
+  }
+  det=t1[0][0]*cofactors[0][0] + t1[0][1]*cofactors[0][1] + t1[0][2]*cofactors[0][2];
+  if(det==0){
+    fprintf(stderr,"Warning: matrix not invertable\n");
+  }
+  rot_transpose(cofactors,t2);
+
+  /*the adjoint matrix should now be scaled by 1/det to get the inverse*/
+  for (r=0;r<3;r++){
+    for (c=0;c<3;c++){
+      t2[r][c]=t2[r][c]/det;
+    }
+  }
+}
 /*******************************************************************************
 * rot_apply: returns t*a
 *******************************************************************************/

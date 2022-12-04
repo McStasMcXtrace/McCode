@@ -1,0 +1,79 @@
+/*******************************************************************************
+ * Instrument: Test_grating_trans
+*
+* %I
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Aug 21
+* Origin: DTU Physics
+* Version: 1.0
+* %INSTRUMENT_SITE: Tests_optics
+*
+* Template/test instrument for Grating_trans
+*
+* %D
+* A simple test insrument for the transmission grating component. Two examples
+* of gratings are included matching those in the Chandra X-ray Observatory
+*
+* %Example: Test_grating_trans.instr E0=1.2 dE=0.01 GD=3 MEG=0 Detector: psd_giant_I=0.0269197
+* %Example: Test_grating_trans.instr E0=1.2 dE=0.01 GD=3 MEG=1 Detector: psd_giant_I=0.0573462
+*
+* %P
+* E0: [keV]        Central energy to emit from the source.
+* dE: [kEV]        Half energy spread of source.
+* GD: [m]          Distance from grating to detector.
+* Rx: [deg]        Rotation of grating around the X-axis.
+* Ry: [deg]        Rotation of grating around the Y-axis.
+* Rz: [deg]        Rotation of grating around the Z-axis.
+* MEG: [ ]         Flag to chosse between the two included gratings. 1: medium energy grating (MEG), 0: high energy grating (HEG).
+*
+* %L
+* https://cxc.harvard.edu/proposer/POG/html/chap8.html#tb:hetg-params
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Test_grating_trans(E0=1, dE=0.001, GD=1, Rx=0, Ry=0,Rz=0, int MEG=0)
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+// insert components here (e.g. Insert -> Source -> ...)
+COMPONENT src_div = Source_div(xwidth=2e-8,yheight=25e-3, focus_aw=0.001, focus_ah=0, E0=E0, dE=dE)
+AT(0,0,0) RELATIVE origin
+
+
+
+COMPONENT MEG_1a = Arm()
+AT(0,0,1) RELATIVE origin
+
+COMPONENT MEG_1 = Grating_trans(
+    xwidth=25e-3, yheight=25e-3, gamma=0.3, period=4000e-10, zdepth=3600e-10, max_order=3, material="Au.txt"
+)
+WHEN(MEG) AT(0,0,0) RELATIVE MEG_1a
+ROTATED (Rx,Ry,Rz) RELATIVE origin
+
+COMPONENT HEG4 = Grating_trans(
+    xwidth=25e-3, yheight=25e-3, gamma=0.4, period=2000e-10, zdepth=5100e-10, max_order=3, material="Au.txt"
+)
+WHEN(!MEG) AT(0,0,0) RELATIVE MEG_1a
+ROTATED(Rx,Ry,Rz) RELATIVE origin
+
+COMPONENT psd_giant = PSD_monitor(xwidth=0.2, yheight=1e-2, filename="psd_giant",ny=1,nx=2001)
+AT(0,0,GD) RELATIVE MEG_1a
+
+
+
+FINALLY
+%{
+%}
+
+END

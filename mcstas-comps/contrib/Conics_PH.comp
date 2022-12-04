@@ -1,0 +1,163 @@
+/*******************************************************************************
+*
+* Component: Conics_PH
+*
+* %Identification
+* Written by: Peter Wilendrup and Erik Knudsen <br>(derived from Giacomo Resta skeleton-component)
+* Origin: DTU
+* Release: McStas 2.7
+* Date: September 2021
+*
+* %Description
+* Implements a set of nshells Wolter I Paraboloid/Hyperboloid pairs using conics.h from ConicTracer.
+* The shell are evenly spaced between rmin and rmax (inclusive). The mirrors are assumed to be touching
+* at the mid-optic plane, i.e. there is no gap between primary and secondary mirror.
+* By definition the ratio between primary and secondary mirror glancing angles is 1/3.
+* At present a single m-value is used for all mirrors.  
+*
+* %Parameters
+*
+* Input parameters:
+* nshells: [1]          Number of nested shells to expect
+* rmin: [m]             Midoptic plane radius of innermost mirror pair.
+* rmax: [m]             Midoptic plane radius of outermost mirror pair.
+* m: [1]                Critical angle of mirrors as multiples of Ni.
+* focal_length: [m]      Focal length of the mirror pairs.
+* lp: [m]               Paraboloid mirror length.
+* lh: [m]               Hyperboloid mirror length.
+* disk: [ ]             Flag. If nonzero, insert a disk to block the central area within the innermost mirror.
+* Qc: [AA-1]            Critical scattering vector
+* R0: [1]               Reflectivity at Low angles for reflectivity curve approximation
+* alpha: [AA]           Slope of reflectivity for reflectivity curve approximation
+* W: [AA-1]             Width of supermirror cut-off
+* transmit: [1]         Fraction of statistics to assign to transmitted beam - NOT YET IMPLEMENTED
+* mirr_thick: [m]       Thickness of mirror shell surfaces - NOT YET IMPLEMENTED
+* %End
+*
+*******************************************************************************/
+     
+DEFINE COMPONENT Conics_PH
+DEFINITION PARAMETERS()
+SETTING PARAMETERS (
+    rmin=0.65/2.0,rmax=1.23/2.0, focal_length=10.070, lp=0.84, lh=0.84,
+    int nshells=4, m=1, mirr_thick=0, mmin=1, mmax=1, int disk=1, 
+    R0 = 0.99, Qc = 0.021, W = 0.003, alpha = 6.07, transmit = 0)
+OUTPUT PARAMETERS(pTable, s)
+
+SHARE
+%{
+    %include "ref-lib"
+    %include "conic.h"
+    %include "read_table-lib"
+%}
+
+DECLARE
+%{
+    //Scene where all geometry is added to
+    Scene s;
+%}
+
+INITIALIZE
+%{
+    ConicSurf *pm;
+    double th_c, alpha_p, alpha_h, fp2, dr,rr;
+    int i;
+    
+    s=makeScene();
+    dr=nshells>1?(rmax-rmin)/(nshells-1):0;
+    for (i=0;i<nshells;i++){
+      rr=rmax-dr*i;
+
+      th_c=tan(rr/focal_length);
+      alpha_p = th_c/4.0;
+      alpha_h = 3*alpha_p;
+      
+      Point pi = makePoint(0,rr,0);//f-1);
+      pm=addParaboloid(focal_length,pi,-lp,0,m,R0,Qc,W,alpha,&s);
+      addHyperboloid(focal_length,focal_length*2,pi,0,lh,m,R0,Qc,W,alpha,&s);
+    }
+    if (disk) {
+      addDisk(pm->zs,0.0,rConic(pm->ze,*pm),&s);
+    }
+
+%}                            
+
+TRACE
+%{
+  Particle pa = makeParticle(x,y,z,vx,vy,vz, t, sx, sy, sz, p);
+  traceSingleNeutron(&pa,s);
+
+  //Communicate particle state to McStas
+  x = pa._x;
+  y = pa._y;
+  z = pa._z;
+  vx = pa._vx;
+  vy = pa._vy;
+  vz = pa._vz;
+  t = pa._t; 
+  sx = pa._sx;
+  sy = pa._sy;
+  sz = pa._sz;
+  p = pa.w;
+
+  if (pa.absorb) {
+    ABSORB;
+  }
+  SCATTER;
+%}
+
+FINALLY %{
+    //Mainly Writes Inline Detector Data
+    finishSimulation(&s);
+%}
+
+MCDISPLAY
+%{
+   double zz = 0;
+    //Enlarge xy-plane when mcdisplay is ran with --zoom
+    magnify("xy");
+
+    //Draw xy-axis contour for Conic Surfaces
+    int i;
+    for (i = 0; i < s.num_c; i++) {
+        double step = (s.c[i].ze-s.c[i].zs)/100;
+        double cz;
+	int draw=-1;
+        for (cz = s.c[i].zs+step; cz <= s.c[i].ze; cz+= step) {
+	    draw++;
+            double rp = rConic(cz-step,s.c[i]);
+            double rc = rConic(cz, s.c[i]);
+	    double rx,ry;
+	    int j;
+	    double theta;
+	    for (j = 0; j < 12; j++) {
+	      theta = 2.0*PI*j/12.0;
+	      rx = rp*cos(theta);
+	      ry = rp*sin(theta);
+	      line(rx,ry,cz-step-zz,rx,ry,cz-zz);
+	    }
+	    if (draw==0) {
+              circle("xy", 0, 0, cz-step-zz, rp);
+            }
+	    if (draw==19) draw=-1;
+        }
+    }
+
+    //Draw xy-axis cross hairs for Disks
+    //Local variables to control maximal display-size of cross-hairs
+    for (i = 0; i < s.num_di; i++) {
+        double r0=s.di[i].r0;
+	double r1=s.di[i].r1;
+	double z0=s.di[i].z0;
+	if (r0>1.0) r0=1.0;
+	if (r1>1.0) r1=1.0;
+        line(r0, 0, z0-zz, r1, 0, z0-zz);
+        line(-r0, 0, z0-zz, -r1, 0, z0-zz);
+        line(0, r0, z0-zz, 0, r1,z0-zz);
+        line(0, -r0, z0-zz, 0, -r1,z0-zz);
+    }
+         
+%}
+	
+END
+

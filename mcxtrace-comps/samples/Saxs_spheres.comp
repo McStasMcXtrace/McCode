@@ -47,7 +47,7 @@
 * target_y:   position of target to focus at [m]
 * target_z:
 * sphere_mtrl: [] Material datafile from which to find absorption. If none is given absorption is neglected. 
-* mu_c: [5] Column of the datafiel which contains absorption coefficients.
+* mu_c: [5] Column of the datafile which contains absorption coefficients.
 *
 *
 * %Link
@@ -134,7 +134,7 @@ TRACE
   double f, solid_angle, kx_i, ky_i, kz_i, k, q, qx, qy, qz;
   char   intersect=0;
 
-  /* Intersection neutron trajectory / sample (sample surface) */
+  /* Intersection photon trajectory / sample (sample surface) */
   if (shape == 0)
     intersect = cylinder_intersect(&l0, &l1, x, y, z, kx, ky, kz, radius, yheight);
   else if (shape == 1)

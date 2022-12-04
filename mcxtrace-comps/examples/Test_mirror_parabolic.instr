@@ -6,7 +6,7 @@
 * Date: Jan '21
 * Origin: DTU Physics
 * Version: 1.0
-* %INSTRUMENT_SITE: Tests
+* %INSTRUMENT_SITE: Tests_optics
 *
 * Unit test instrument for Mirror_parabolic
 *
@@ -15,8 +15,8 @@
 * with normal incidence on a parabolic mirror, is reflected to the focal point, and
 * back to flat detector some distance, D, away.
 *
-* %Example: D=0.0025 MM=1 Detector: detBB=1
-* %Example: D=1 MM=1 Detector: detBB=0.104959
+* %Example: D=0.0025 MM=1 Detector: detBB_I=1
+* %Example: D=1 MM=1 Detector: detBB_I=0.104959
 *
 * %P
 * D: [m]   Distance between mirror apex and detector plane.
@@ -24,16 +24,13 @@
 * 
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT template_body_simple(D=1,MM=1)
+DEFINE INSTRUMENT Test_mirror_parabolic(D=1,MM=1)
 
 DECLARE
 %{
   int bounce;
 %}
 
-INITIALIZE
-%{
-%}
 
 TRACE
 
@@ -58,7 +55,7 @@ ROTATED (-90,0,0) RELATIVE origin
 EXTEND
 %{
   //printf("%g %g\n",focusx,focusz);
-  bounce=mcScattered;
+  bounce=SCATTERED;
 %}
 
 COMPONENT det_a = Arm()

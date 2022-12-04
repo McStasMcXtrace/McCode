@@ -1,6 +1,7 @@
 /*******************************************************************************
+*         McStas instrument definition URL=http://mcstas.risoe.dk
 *
-* Instrument: Test_Sources
+* Instrument: Test_MCPL_output
 *
 * %Identification
 * Written by: Erik B Knudsen <erkn@fysik.dtu.dk>

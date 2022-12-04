@@ -20,6 +20,12 @@
 *
 *******************************************************************************/
 
+%{
+int yylex();
+int yyerror(char *s);
+int list_cat(struct List_header *, struct List_header *);
+int symtab_cat(struct List_header *, struct List_header *);
+%}
 
 %{
 #include <math.h>
@@ -1541,7 +1547,8 @@ print_version(void)
 {
   printf(MCCODE_NAME " version " MCCODE_VERSION " (" MCCODE_DATE ")\n"
     "Copyright (C) DTU Physics, 1997-" MCCODE_YEAR "\n"
-    "Additions (C) Institut Laue Langevin, 2003-" MCCODE_YEAR "\n"
+    "Additions (C) Institut Laue Langevin, 2003-2019\n"
+    "Additions (C) Synchrotron SOLEIL, 2019-" MCCODE_YEAR "\n"
     "All rights reserved\n");
   exit(0);
 }

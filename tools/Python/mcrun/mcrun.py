@@ -46,6 +46,18 @@ def add_mcrun_options(parser):
         action='store_true',
         help='force rebuilding of instrument')
 
+    add('--D1',
+        metavar='D1',
+        help='set extra -D args (implies -c)')
+
+    add('--D2',
+        metavar='D2',
+        help='set extra -D args (implies -c)')
+
+    add('--D3',
+        metavar='D3',
+        help='set extra -D args (implies -c)')
+
     add('-p', '--param',
         metavar='FILE',
         help='read parameters from file FILE')
@@ -94,6 +106,10 @@ def add_mcrun_options(parser):
         action='store_true', default=False,
         help='disable optimising compiler flags for faster compilation')
 
+    add('--no-main',
+        action='store_true', default=False,
+        help='do not generate a main(), e.g. for use with mcstas2vitess.pl. Implies -c')
+
     add('--verbose',
         action='store_true', default=False,
         help='enable verbose output')
@@ -101,6 +117,10 @@ def add_mcrun_options(parser):
     add('--write-user-config',
         action='store_true', default=False,
         help='generate a user config file')
+
+    add('--override-config',
+        metavar='PATH', default=False,
+        help='Load config file from specific dir')
 
     parser.add_option_group(opt)
 
@@ -270,6 +290,11 @@ def main():
         mccode_config.save_user_config()
         quit()
 
+    # Override system and user level config files if prompted
+    if options.override_config:
+        mccode_config.load_config(options.override_config)
+        mccode_config.check_env_vars()
+        
     
     # Extract instrument and parameters
     if len(args) == 0:
@@ -317,7 +342,6 @@ def main():
     LOG.info('===')
 
     if options.info:
-        print('info!')
         mcstas.run(override_mpi=False)
         exit()
 
@@ -375,7 +399,7 @@ def main():
         scanner.run()
     else:
         # Only run a simulation if we have a nonzero ncount
-        if not options.ncount == 0.0:
+        if options.ncount != 0.0 or options.trace:
             mcstas.run()
 
     if isdir(options.dir):
@@ -388,12 +412,12 @@ def main():
         if options.autoplotter is not None:
             autoplotter = options.autoplotter
         if isdir(options.dir):
-            LOG.info('Running plotter %s on dataset %s',mccode_config.configuration['MCPLOT'],options.dir)
+            LOG.info('Running plotter %s on dataset %s',autoplotter,options.dir)
             Process(autoplotter).run([options.dir])
 
 if __name__ == '__main__':
     try:
-        mccode_config.load_user_config()
+        mccode_config.load_config("user")
         mccode_config.check_env_vars()
         
         main()

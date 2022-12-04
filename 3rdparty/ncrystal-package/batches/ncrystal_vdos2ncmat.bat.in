@@ -1,0 +1,1 @@
+@python @CPACK_NSIS_INSTALL_ROOT@\\bin\\ncrystal_vdos2ncmat %*

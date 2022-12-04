@@ -1,0 +1,113 @@
+/*******************************************************************************
+* Instrument: Union_geom_demo
+*
+* %I
+* Written by: E. B. Knudsen (erkn@fysik.dtu.dk)
+* Date: Aug 13th 2021
+* Origin: Riso DTU
+* Version: $Revision$
+* %INSTRUMENT_SITE: Templates
+*
+* An example using Union with different materials and geometries.
+*
+* %D
+* An example using Union with different materials and geometries.
+*
+* %Example: rx=0 Detector: psd1_I=4.91586e+14
+*
+* %P
+* rx [deg]:    sample rotation around the x-axis. Rotations are applied in the order X,Y,Z
+* ry [deg]:    sample rotation around the y-axis. Rotations are applied in the order X,Y,Z
+* rz [deg]:    sample rotation around the z-axis. Rotations are applied in the order X,Y,Z
+* dx [m]:      sample displacement along the x-axis
+* dy [m]:      sample displacement along the y-axis
+* dz [m]:      sample displacement along the z-axis
+* sx [ ]:      source size and psd[01]s scaling factor in x. The source width will be sx*xw where xw is the width of the sample.  
+* sy [ ]:      source size ans psd[01]s scaling factor in y. The source height will be sy*yh where yh is the height of the sample.  
+* e0 [keV]:    energy emitted by the source
+* matfile1:    material data file name for the box
+* matfile2:    material data file name for the sphere (top)
+* matfile3:    mtaerial data file name for the cylinder(stick)
+*  
+* %L
+* <reference/HTML link>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Union_geom_demo(rx=0, ry=0, rz=0, dx=0, dy=0, dz=0, sx=1,sy=1,
+    e0=12.3984, string matfile1="Al.txt", string matfile2="Pb.txt", string matfile3="W.txt")
+
+DECLARE
+%{
+  double zd=1e-4;
+  double yh=1e-2;
+  double xw=1e-2;
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT source = Source_flat(xwidth=xw*sx, yheight=yh*sy, focus_xw=xw, focus_yh=yh, dist=1, E0=e0, dE=0)
+AT(0,0,0) RELATIVE origin
+EXTEND
+%{
+	do {
+		double IkI=sqrt(kx*kx + ky*ky + kz*kz);
+		kx=ky=0;
+		kz=IkI;
+                p*=1e20;
+        }while(0);
+%}
+
+COMPONENT sample_pos=Arm()
+AT(0,0,1) RELATIVE source
+
+COMPONENT matbox = Union_make_material(material_string=matfile1,process_string="NULL",absorber=1,my_absorption=0)
+AT(0,0,0) ABSOLUTE
+
+COMPONENT mattop = Union_make_material(material_string=matfile2,process_string="NULL",absorber=1,my_absorption=0)
+AT(0,0,0) ABSOLUTE
+
+COMPONENT matstick = Union_make_material(material_string=matfile3,process_string="NULL",absorber=1,my_absorption=0)
+AT(0,0,0) ABSOLUTE
+
+COMPONENT sample_mnt = Arm()
+AT(dx,dy,dz) RELATIVE sample_pos
+ROTATED (rx,ry,rz) RELATIVE sample_pos
+
+COMPONENT box = Union_box(
+    material_string="matbox", priority=100, zdepth=zd, xwidth=xw,  yheight=yh)
+AT(0,0,0) RELATIVE sample_mnt
+
+COMPONENT top= Union_sphere(
+    material_string="mattop", priority=120, radius=zd/4.0)
+AT(0,0,0) RELATIVE sample_mnt
+
+COMPONENT stick = Union_cylinder(
+    material_string="matstick", priority=110, radius=xw/8.0, yheight=yh/2.0)
+AT(-xw/4,-yh/4.0,0) RELATIVE sample_mnt
+
+COMPONENT psd0s = PSD_monitor(restore_xray=1,xwidth=xw*sx, yheight=yh*sy, nx=201, ny=201, filename="psd0s")
+AT(0,0,1) RELATIVE sample_pos
+
+COMPONENT psd0 = PSD_monitor(restore_xray=1, xwidth=xw,yheight=yh, nx=201, ny=201, filename="psd0")
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT umaster = Union_master()
+AT(0,0,0) RELATIVE sample_mnt
+
+COMPONENT psd1s = COPY(psd0s)(filename="psd1s")
+AT(0,0,1) RELATIVE sample_pos
+
+COMPONENT psd1 = COPY(psd0)(filename="psd1")
+AT(0,0,0) RELATIVE PREVIOUS
+
+
+
+FINALLY
+%{
+%}
+
+END

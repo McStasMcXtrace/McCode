@@ -1,0 +1,297 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: ATHENA_cfgA_1mm_FEMd
+*
+* %Identification
+* Written by: Erik B Knudsen <erkn@fysik.dtu.dk> & Desiree D. M. Ferreira <desiree@space.dtu.dk> (email)
+* Date: 12/12/2016
+* Origin: DTU Physics/DTU Space
+* Release: McXtrace 1.2
+* Version: 1.0
+* %INSTRUMENT_SITE: AstroX_ESA
+*
+* Single pore version of the ATHENA SPO-optic in use as telescope.
+*
+* %Description
+* A model of the ATHENA-telescope using just a single mirror module as optical element. That means to make use of this instrument
+* it is necessary to run a series of simulation while varying the input parameter porenumber.
+* At present, the porenumber really means mirror module number.
+*
+* The model needs as input a set of files: A Mirror Module definition file and a ring definition file.
+* The former contains overall definitions of mirror modules and their positions - the latter contains details about each plate.
+* There is some redundancy between the two files. The latter will be rendered unnecessary in a later version. 
+* An example of mmdef_file is "MM_Definitions-1.csv" which is distributed by ESA.
+* An example of ringfile is "ref_design.dat" which is taken from the ATHENA_reference design white-paper.
+* In addition A displacement data file may be specified. 
+*
+* Reflectivity may be modelled using a datafile. In this telscope model only the top (intentionally reflecting) surface
+* is given a data-file. However, the MM-components can cope with non-zero reflectivity for side-walls and bottom surfaces.
+* The reflectivity datafile follows a simple ascii-format with 6 header lines the define the ranges in energy E and grazing
+* angle theta, followed by a 2D-data block with reflectivity numbers. This is expected to be substituted for a 1D-parametrization '
+* in q, to avoid overly lagre data-files. 
+*
+* Example: ATHENA_cfgA_1mm.instr porenumber=3
+*
+* %Parameters
+* FL [m] The focal length of the optical system
+* optics_dist [m] The distance between souce and optic. In space this would be quite large :-).
+* offaxis_angle [arcmin] Angle of collimated light from source
+* reflectivity [ ] Data file containing reflectivities (such as from IMD)
+* E0 [keV] Central energy of X-rays
+* dE [keV] Half spread of energy spectrum to be emitted from source
+* mmdef_file [ ] File containing the positions and overall geometry of Mirror Modules.
+* ringfile   [ ] File which contains deatiled plate descriptions.
+* disp_file  [ ] Fiel that conatins mirror module displacements
+* porenumber [ ] Actually the mirror module number.
+* dPx:      [m] Offset/displacement of parabolic pore along x from its theoretical position.
+* dPy:      [m] Offset/displacement of parabolic pore along y from its theoretical position.
+* dPz:      [m] Offset/displacement of parabolic pore along z from its theoretical position.
+* dPrx:     [arcsec] Rotational misalignment of parabolic pore around x.
+* dPry:     [arcsec] Rotational misalignment of parabolic pore around y.
+* dPrz:     [arcsec] Rotational misalignment of parabolic pore around z.
+* dHx:      [m] Offset/displacement of hyperbolic pore along x from its theoretical position.
+* dHy:      [m] Offset/displacement of hyperbolic pore along y from its theoretical position.
+* dHz:      [m] Offset/displacement of hyperbolic pore along z from its theoretical position.
+* dHrx:     [arcsec] Rotational misalignment of hyperbolic pore around x.
+* dHry:     [arcsec] Rotational misalignment of hyperbolic pore around y.
+* dHrz:     [arcsec] Rotational misalignment of hyperbolic pore around z.
+* XWidth   [m] The width of the user detector default is that of the ATHENA WFI large area detector
+* YHeight  [m] The height of the user detector default is that of the ATHENA WFI large area detector
+* NX       [ ] Number of pixels along X in the user detector
+* NY       [ ] Number of pixels along Y in the user detector.
+* hyper    [ ] If non-zero the secondary mirror (hyperbolic) is active. Useful for debugging.
+* para     [ ] If non-zero the primary mirror is acive (parabolic) is active. Useful for debugging.
+* lists    [ ] If non-zero drop event mode monitr are active. Turn-off to save disk-space.
+*
+* %Link
+* <a href="http://www.cosmos.esa.int/web/athena">The ATHENA web pages @ ESA</a>
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT ATHENA_cfgA_1mm_FEMd(FL=12, optics_dist=10,
+        XWidth=0.13312, YHeight=0.13312, NX=1024, NY=1024,
+        offaxis_angle=0, 
+	dPx=0,dPy=0,dPz=0, dPrx=0, dPry=0, dPrz=0,
+        dHx=0,dHy=0,dHz=0, dHrx=0, dHry=0, dHrz=0,
+        string reflectivity="mirror_coating_unity.txt",default_reflec=0,
+        E0=5, dE=0.001, int porenumber=1,
+        string mmdef_file="MM_Definitions-1.csv", string ringfile="ref_design_breaks.txt", 
+        string disp_file="none",int disp_type=0,
+        int hyper=1, int para=1, int lists=0)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+    double hyperref,pararef;
+    int parascatter,hyperscatter;
+
+    double src_pos_x;
+    double src_pos_y;
+    double alphax,alphay;
+    double pstore;
+    long long nid;
+
+    double pore_width=0.83e-3;
+    double pore_height=0.605e-3;
+    double pore_wall=0.17e-3;
+
+    t_Table MM_def,displacements;
+    int row,idx,node_id;
+    double PR, PA, PL, PRH, PW, PZ;
+
+    int disp_row,DD;
+    const int disp_col_offset=5;/*displacements start at this column*/
+
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+    if (offaxis_angle){
+        alphax=offaxis_angle * MIN2RAD;
+    }
+    nid=0;
+
+    int status;
+    status=Table_Read(&MM_def, mmdef_file, 0);
+    if(status<=0){
+        fprintf(stderr,"Error reading file %s\n",mmdef_file);
+        exit(-1);
+    }
+
+    row=(int)Table_Index(MM_def,porenumber,1);
+    idx=(int)Table_Index(MM_def,porenumber,0);
+    node_id=(int)Table_Index(MM_def,porenumber,3);
+    PR=Table_Index(MM_def,porenumber,6);
+    PA=Table_Index(MM_def,porenumber,7);
+    PL=Table_Index(MM_def,porenumber,9);
+    PW=Table_Index(MM_def,porenumber,10);
+    PZ=Table_Index(MM_def,porenumber,8);
+
+    /*read the displacement file if it exists*/
+    if(disp_file && strlen(disp_file) && (status=Table_Read(&displacements, disp_file, 0))>=0){
+        /*search for the node_id in the deisplacement_file*/
+        disp_row=idx-1;/*-1 since MMs are numbered starting at 1 whereas tables are 0-indexed*/
+        DD=1;
+        
+        fprintf(stdout,"Found node id %d at row %d\n",node_id,disp_row); 
+        fprintf(stdout,"Dr=( %g %g %g ) Drot=( %g %g %g )\n",DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6), DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+1), DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+2),DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+3), DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+4), DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+5) ); 
+    }else{
+        DD=0;
+        disp_row=0;
+    }
+%}
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding an xray source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+AT (0,0,0) ABSOLUTE
+EXTEND
+%{
+    parascatter=0;
+    hyperscatter=0;
+    nid++;
+    hyperref=1;
+    pararef=1;
+    %}
+
+COMPONENT srca = Arm()
+AT(0,0,0) RELATIVE Origin
+ROTATED(0,0,-90+PA) RELATIVE Origin
+
+COMPONENT src = Source_div(
+        xwidth=200.0*pore_width,yheight=200.0*pore_height,focus_aw=0,focus_ah=0,E0=E0,dE=dE)
+AT(0,PR,0) RELATIVE srca
+
+COMPONENT srcoffaxis= Arm()
+AT(0,0,0) RELATIVE Origin
+ROTATED (0,0,0) RELATIVE Origin
+EXTEND
+%{
+    do {    
+        rotate(kx,ky,kz, kx,ky,kz, alphax, 0,1,0);
+        x-=mcipoptics_dist*sin(alphax);
+        SCATTER;
+    }while(0);
+%}
+
+COMPONENT detector_pre_optics = PSD_monitor(restore_xray=1, xwidth=2.5, yheight=2.5, nx=201, ny=201, filename="det_preo.dat")
+AT(0,0,optics_dist) RELATIVE Origin
+
+COMPONENT emon_preoptics = E_monitor(restore_xray=1, xwidth=3, yheight=3, nE=201, filename="emon_prep.dat", Emin=0.1, Emax=12)
+AT(0,0,optics_dist) RELATIVE Origin
+
+COMPONENT optics_centre = Arm()
+AT(0,0,optics_dist) RELATIVE Origin
+EXTEND
+%{
+    pstore=p;
+%}
+
+COMPONENT displacement_a = Arm()
+AT(DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6), DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+1), DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+2)) RELATIVE optics_centre
+ROTATED (DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+3)*RAD2DEG, DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+4)*RAD2DEG, DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+5)*RAD2DEG) RELATIVE optics_centre
+
+COMPONENT a_1 = Arm()
+AT(0,0,0) RELATIVE displacement_a
+ROTATED (0,0,-90+PA) RELATIVE displacement_a
+
+COMPONENT misalign_rot_p = Arm()
+AT(dPx,dPy+PR,dPz) RELATIVE a_1
+ROTATED (dPrx/3600.0,dPry/3600.0,dPrz/3600.0) RELATIVE a_1
+
+COMPONENT ref_p = Arm()
+AT( 0,-PR,0) RELATIVE misalign_rot_p
+
+/*GROUP paraoptics*/
+
+COMPONENT mm_p_1 = MM_p(
+        pore_th=0, ring_nr=row, Z0=FL, pore_width=pore_width , pore_height=pore_height, chamfer_width=pore_wall, mirror_reflec=reflectivity, R_d=default_reflec, size_file=ringfile)
+WHEN(para) AT(0,0,0) RELATIVE ref_p
+ROTATED (0.0,0.0,0.0) RELATIVE ref_p
+EXTEND
+%{
+    if (SCATTERED){
+        parascatter=mcScattered;
+        pararef=p/pstore;
+    }
+%}
+
+COMPONENT det_mid_optics= COPY(detector_pre_optics)(filename="det_mido.dat")
+AT(0,0,0) RELATIVE optics_centre
+
+COMPONENT emon_mid_optics=COPY(emon_preoptics)(filename="emon_mido.dat")
+AT(0,0,0) RELATIVE optics_centre
+
+COMPONENT misalign_rot_h = Arm()
+AT(dHx,dHy+PR,dHz) RELATIVE a_1
+ROTATED (dHrx/3600.0,dHry/3600.0,dHrz/3600.0) RELATIVE a_1
+
+COMPONENT ref_h = Arm()
+AT( 0,-PR,0) RELATIVE misalign_rot_h
+
+COMPONENT mm_h_1 = MM_h(
+        pore_th=0, ring_nr=row, Z0=FL, pore_width=pore_width, pore_height=pore_height, chamfer_width=pore_wall, mirror_reflec=reflectivity, R_d=default_reflec, size_file=ringfile)
+WHEN (hyper) AT(0,0,0) RELATIVE ref_h
+ROTATED (0.0,0.0,0.0) RELATIVE ref_h
+EXTEND
+%{
+    if (SCATTERED){
+        hyperscatter=mcScattered;
+        hyperref=p/(pstore*pararef);
+    }
+%}
+
+COMPONENT detector_post_optics = PSD_monitor(restore_xray=1,xwidth=2.5, yheight=2.5, nx=201, ny=201, filename="det_posto.dat")
+AT(0,0,optics_dist+0.5) RELATIVE Origin
+
+COMPONENT det_post_op_dblscat = COPY(detector_post_optics)(filename="det_post_dbl.dat")
+WHEN( hyperscatter==2 && parascatter==2) AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT emon_post_optics=COPY(emon_preoptics)(filename="emon_posto.dat")
+AT(0,0,optics_dist+0.5) RELATIVE Origin
+
+COMPONENT emon_post_optics_dblscat=COPY(emon_post_optics)(filename="emon_posto_dbl.dat")
+WHEN( hyperscatter==2 && parascatter==2) AT(0,0,0) RELATIVE PREVIOUS
+
+/*a block of three detectors of fixed size*/
+COMPONENT focal_detector = PSD_monitor(restore_xray=1,xwidth=1e-2, yheight=1e-2, nx=201, ny=201, filename="focal_det.dat")
+AT(0,0,FL) RELATIVE optics_centre
+
+COMPONENT superfocal_detector = PSD_monitor(restore_xray=1,xwidth=1e-6, yheight=1e-6, nx=201, ny=201, filename="superfocal_det.dat")
+AT(0,0,FL) RELATIVE optics_centre
+
+COMPONENT ultrafocal_detector = PSD_monitor(restore_xray=1,xwidth=1e-12, yheight=1e-12, nx=201, ny=201, filename="ultrafocal_det.dat")
+AT(0,0,FL) RELATIVE optics_centre
+
+/*A detector that may be changed from outside this file*/
+COMPONENT user_focal_detector = PSD_monitor(restore_xray=1, xwidth=XWidth, yheight=YHeight, nx=((int)NX), ny=((int)NY), filename="user_focal_detector.dat")
+AT(0,0,FL) RELATIVE optics_centre
+
+COMPONENT auto_focal_detector = Monitor_nD(restore_xray=1,xwidth=.2, yheight=.2, options="x bins=256 limits auto, y bins=256 limits auto", filename="auto_focal.dat")
+AT(0,0,FL) RELATIVE optics_centre  
+
+COMPONENT FLmond= Monitor_nD(
+        restore_xray=1,filename="FLmond",xwidth=0.1, yheight=.1, options="list=5000 user1 x y kx ky kz E", user1=nid, 
+        username1="ray_id")
+WHEN(lists) AT(0,0,FL) RELATIVE optics_centre
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+

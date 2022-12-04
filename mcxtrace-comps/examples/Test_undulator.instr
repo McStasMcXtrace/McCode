@@ -6,14 +6,14 @@
 * Date: Aug 2016
 * Origin: DTU Physics
 * Version: 1.0
-* %INSTRUMENT_SITE: Tests
+* %INSTRUMENT_SITE: Tests_sources
 *
 *  Unit test instrument for the Undulator component
 *
 * %D
 * A simple undulator with parameters as in Kim, 1989 (sec. 4).
 *
-* %Example: Test_undulator.instr minh=1 maxh=2 FAST=1 Detector: e_monitor1_I=2.34947e+14
+* %Example: Test_undulator.instr minh=1 maxh=2 FAST=1 Detector: e_monitor1_I=2e+14
 *
 * %P
 * minh: [ ] lowest harmonic to include in the simulation

@@ -141,7 +141,7 @@ int reflec_Init_File(t_Reflec *R, char *filename){
 
       case BARE:
         {
-          char** header_parsed=Table_ParseHeader(table->header,"#material=", "#d=", NULL);
+          char** header_parsed=Table_ParseHeader(table->header,"material", "d", NULL);
           if(!header_parsed[0] || !header_parsed[1] ){
             fprintf(stderr,"Error (%s) Error: Could not parse file \"%s\"\n",__FILE__,filename);
             exit(-1);
@@ -153,15 +153,14 @@ int reflec_Init_File(t_Reflec *R, char *filename){
 
       case COATING:
         {
-          char **header_parsed=Table_ParseHeader(table->header, "#material=", "#Z=", "#A[r]=", "#rho=", "#d=", NULL);
-          if(!(header_parsed[0] && header_parsed[1] && header_parsed[2] && header_parsed[3] && header_parsed[4])){
+          char **header_parsed=Table_ParseHeader(table->header, "material", "Z", "A[r]", "rho", "d", NULL);
+          if(!(header_parsed[1] && header_parsed[2] && header_parsed[3])){
             fprintf(stderr,"Error (%s) Error: Could not parse file \"%s\"\n",__FILE__,filename);
             exit(-1);
           } else {
             R->prms.rc.matrl=header_parsed[0];
             R->prms.rc.T = table;
-            R->prms.rc.d = malloc(sizeof(double));
-            *(R->prms.rc.d) = strtod(header_parsed[4], NULL);
+            R->prms.rc.d = strtod(header_parsed[4], NULL);
             R->prms.rc.rho=strtod(header_parsed[3],NULL);
             R->prms.rc.Z=strtod(header_parsed[1],NULL);
             R->prms.rc.At=strtod(header_parsed[2],NULL);
@@ -180,7 +179,7 @@ int reflec_Init_File(t_Reflec *R, char *filename){
 
       case PARRATT:
         {
-          char **header_parsed = Table_ParseHeader(table->header, "#N=", "#d=", "#delta=", "#beta=", NULL);
+          char **header_parsed = Table_ParseHeader(table->header, "N", "d", "delta", "beta", NULL);
           if (! (header_parsed[0] && header_parsed[1] && header_parsed[2] && header_parsed[3])){
             fprintf(stderr,"Error (%s) Error: Could not parse file \"%s\"\n",__FILE__,filename);
             exit(-1);
@@ -257,12 +256,19 @@ int reflec_Init_File(t_Reflec *R, char *filename){
 }
 
 enum reflec_Type get_table_reflec_type(t_Table *t){
-    printf("header: %s\n", t->header);
     char **header_parsed = Table_ParseHeader(t->header,"param=",NULL);
     char *type = header_parsed[0];
     if(!type){
-        printf("Couldn't read type from reflectivity table file.");
-        exit(-1);
+      /*type of reflectivity file is not specified - try to guess instead*/
+      header_parsed = Table_ParseHeader(t->header,"Z",NULL);
+      long Z = strtol(header_parsed[0],NULL,0);
+      if(Z >0 && Z<116){
+        /*this appears to be a coating file similar to Pt.txt and Be.txt (in the mcxtrace data library*/
+        printf("INFO (%s): Datafile type not explicit in reflectivity file. Inferring type COATING from datafile.\n",__FILE__);
+        return COATING;
+      }else{
+        fprintf(stderr,"ERROR (%s): Could not determine reflectivity type from file.\n",__FILE__);
+      }
     }
     /*for this to work well we need to trim the type string*/
     while (isspace(*type)){

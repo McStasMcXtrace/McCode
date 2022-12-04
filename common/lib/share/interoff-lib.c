@@ -76,37 +76,35 @@ int off_pnpoly(polygon p, Coords v)
 {
   int i=0, c = 0;
   MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
-  MCNUM rangex=0,rangey=0,rangez=0;
+  MCNUM areax=0,areay=0,areaz=0;
 
   int pol2dx=0,pol2dy=1;          //2d restriction of the poly
   MCNUM x=v.x,y=v.y;
 
+  /*areax: projected area with x-scratched = |v1_yz x v2_yz|, where v1=(x1-x0,0,z1-z0) & v2=(x2-x0,0,z2-z0).*/
+  /* In principle, if polygon is triangle area should be scaled by 1/2, but this is irrelevant for finding the maximum area.*/
+  /* Similarly for y and z scratched.*/
+  areax=coords_len(coords_xp(
+        coords_set(0,p.p[3*1+1]-p.p[0+1],p.p[3*1+2]-p.p[0+2]),
+        coords_set(0,p.p[3*2+1]-p.p[0+1],p.p[3*2+2]-p.p[0+2])));
+  areay=coords_len(coords_xp(
+        coords_set(p.p[3*1+0]-p.p[0+0],0,p.p[3*1+2]-p.p[0+2]),
+        coords_set(p.p[3*2+0]-p.p[0+0],0,p.p[3*2+2]-p.p[0+2])));
+  areaz=coords_len(coords_xp(
+        coords_set(p.p[3*1+0]-p.p[0+0],p.p[3*1+1]-p.p[0+1],0),
+        coords_set(p.p[3*2+0]-p.p[0+0],p.p[3*2+1]-p.p[0+1],0)));
 
-  //take the most relevant 2D projection (prevent from instability)
-  for (i=0; i<p.npol; ++i)
-  {
-    if (p.p[3*i]<minx)   minx=p.p[3*i];
-    if (p.p[3*i]>maxx)   maxx=p.p[3*i];
-    if (p.p[3*i+1]<miny) miny=p.p[3*i+1];
-    if (p.p[3*i+1]>maxy) maxy=p.p[3*i+1];
-    if (p.p[3*i+2]<minz) minz=p.p[3*i+2];
-    if (p.p[3*i+2]>maxz) maxz=p.p[3*i+2];
-  }
-  rangex=maxx-minx;
-  rangey=maxy-miny;
-  rangez=maxz-minz;
-
-  if (rangex<rangez)
-  {
-    if (rangex<rangey) {
-      pol2dx=2;
-      x=v.z;
-    } else {
+  if(areaz<areax){
+    if(areax<areay){
+      /*pick areay - i.e. scratch y*/
       pol2dy=2;
       y=v.z;
+    }else{
+      /*scratch x*/
+      pol2dx=2;
+      x=v.z;
     }
-  }
-  else if (rangey<rangez) {
+  }else if (areaz<areay){
     pol2dy=2;
     y=v.z;
   }
@@ -358,9 +356,9 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
       }
       if (j<pol.npol)
       {
-        if (t_size>CHAR_BUF_LENGTH)
+        if (t_size>OFF_INTERSECT_MAX)
         {
-          fprintf(stderr, "Warning: number of intersection exceeded (%d) (interoff-lib/off_clip_3D_mod)\n", CHAR_BUF_LENGTH);
+          fprintf(stderr, "Warning: number of intersection exceeded (%d) (interoff-lib/off_clip_3D_mod)\n", OFF_INTERSECT_MAX);
             return (t_size);
         }
         //both planes intersect the polygon, let's find the intersection point

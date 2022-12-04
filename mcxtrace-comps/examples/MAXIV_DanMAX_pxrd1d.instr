@@ -18,7 +18,7 @@
 * This early version uses a Gaussian approximation source, and a simple bandpass filter
 * as the multilayer.
 *
-* %Example: MAXIV_DanMAX_pxrd1d.instr -c -n1e6 E0=15 PXRD_SIMPLE=1 Detector: dm_strip_banana_I=0.00151938
+* %Example: MAXIV_DanMAX_pxrd1d.instr -c -n1e6 E0=15 PXRD_SIMPLE=1 Detector: dm_strip_banana_I=0.00081782
 *
 * %Parameters
 * E0: [keV]        The central energy to sample from source model.
@@ -55,8 +55,9 @@ DEFINE INSTRUMENT MAXIV_DanMAX_pxrd1d(E0=35,DE=0.05,undK=0,undDetune=4,
         DCM=1, DMM=0,
         OH_2DCRL_N=11,EH_2DCRL_N=0, D_EH_2DCRL=0,
         PXRD_SIMPLE=1, sample_radius=100e-6,
-        pxrd_strip_tth0=0, 
-        debugMon=1, beamStop=0)
+        pxrd_strip_tth0=0, string reflections="LaB6_660b_AVID2.hkl", string material="lab6.abs",
+        pack = 0.6, Vc=71.830, density = 4.72, Absorb=0, p_interact=0.8, p_inc=0.1,p_transmit=0.1,
+	debugMon=1, beamStop=0, int SPLITS=1410)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -250,7 +251,7 @@ TRACE
 /* Origin is used. This Arm() component is set to define the origin of  */
 /* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
 /* for further RELATIVE reference, Other useful keywords are : ROTATED  */
-/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* EXTEND GROUP PREVIOUS. Also think about adding a photon source !    */
 /* Progress_bar is an Arm displaying simulation progress.               */
 
 COMPONENT Origin = Progress_bar( )
@@ -487,14 +488,16 @@ AT(0,0,0) RELATIVE pxrd_1d_pt
 COMPONENT pxrd1_e = COPY(src_e)(filename="pxrd1.e")
 AT(0,0,0) RELATIVE pxrd_1d_pt
 
-SPLIT 1410 COMPONENT powdern = PowderN(
-    reflections="LaB6_660b_AVID2.hkl",
-    material="lab6.abs",
-    radius=sample_radius,
-    yheight=10e-3, d_phi = 1,
-    pack = 0.6, Vc=71.830, density = 4.72)
+SPLIT SPLITS COMPONENT powdern = PowderN(
+    reflections=reflections,material=material,
+    radius=sample_radius, yheight=10e-3, d_phi = 1,
+    p_interact=p_interact, p_inc=p_inc,p_transmit=p_transmit,
+    pack=pack, Vc=Vc, density=density)
 AT (0, 0, 0) RELATIVE pxrd_1d_pt
 ROTATED (0,0,90) RELATIVE pxrd_1d_pt
+/*EXTEND %{
+  if(mcipAbsorb && !SCATTERED) ABSORB; 
+%}*/
 
 COMPONENT beamstop1 = Beamstop(radius = 1e-3)
 WHEN(beamStop) AT(0,0,150e-3) RELATIVE pxrd_1d_pt

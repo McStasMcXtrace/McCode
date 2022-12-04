@@ -3,6 +3,7 @@
 * McStas, neutron ray-tracing package
 *         Copyright (C) 1997-2017, All rights reserved
 *         DTU Physics, Kgs. Lyngby, Denmark
+
 * Component: MCPL_output
 *
 * %I
@@ -55,11 +56,12 @@ DEFINE COMPONENT MCPL_output
 DEFINITION PARAMETERS (polarisationuse=0, doubleprec=0, verbose=0, int userflag=0)
 SETTING PARAMETERS (string filename=0, string userflagcomment="", merge_mpi=1, keep_mpi_unmerged=0)
 OUTPUT PARAMETERS (outputfile,particle,Particle, userflagenabled)
-DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
+DEPENDENCY "-Wl,-rpath,CMD(mcpl-config --show libdir) -ICMD(mcpl-config --show includedir) -LCMD(mcpl-config --show libdir) -lmcpl"
 
 SHARE
 %{
 #include <mcpl.h>
+#include <sys/stat.h>
   int mcpl_file_exist (char *filename)
   {
     struct stat   buffer;
@@ -131,11 +133,10 @@ INITIALIZE
             mcpl_hdr_add_data(outputfile, "mccode_instr_file", size, buffer);
             free(buffer);
         }
-	fclose(fp);
     } else {
       fprintf(stderr,"\nWarning (%s): Source instrument file (%s) not found, hence not embedded.\n", NAME_CURRENT_COMP, mcinstrument_source);
     }
-
+    fclose(fp);
 
     int ii;
     char *clr,clbuf[CHAR_BUF_LENGTH];

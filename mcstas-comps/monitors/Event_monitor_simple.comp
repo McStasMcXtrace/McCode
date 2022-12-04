@@ -28,7 +28,7 @@
 DEFINE COMPONENT Event_monitor_simple
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (nevents=1e6)
-OUTPUT PARAMETERS (Events)
+OUTPUT PARAMETERS (Events,fullfile)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{

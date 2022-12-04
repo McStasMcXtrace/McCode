@@ -1,0 +1,97 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Test_Absorption
+*
+* %Identification
+* Written by: E. Farhi (emmanuel.farhi@synchrotron-soleil.fr)
+* Date: March '21
+* Origin: Synchrotron SOLEIL
+* Release: McXtrace 1.7
+* Version: $Revision$
+* %INSTRUMENT_SITE: Tests_samples
+*
+* Example instrument to compare material absorption components.
+* 
+* %Description
+* This instrument simply has a lab source, a few monitors and a set of components
+* to model material absorption. Material is chosen to be Mn (K-edge 6.5 keV).
+*
+* 
+* %Example: Test_Absorption.instr -n1e5 index=1 Detector: emon_I=8.25376e-12
+* %Example: Test_Absorption.instr -n1e5 index=2 Detector: emon_I=8.24127e-12
+* %Example: Test_Absorption.instr -n1e5 index=3 Detector: emon_I=8.28866e-12
+*
+* %Parameters
+* index:    [1]    Index of the absorption component to use in 1-3
+* material: [str]  Material file to use, e.g. Mn.txt
+* E0:       [keV]  Mean photon energy
+* dE:       [keV]  Photon energy spread, half width
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Test_Absorption(int index=1, string material="Mn.txt", E0=6.5, dE=1)
+
+DECLARE %{
+  #ifndef WIN32
+  #include <unistd.h>
+  #else
+  #ifdef WIN32
+  #include <io.h>
+  #define F_OK 0
+  #define access _access
+  #endif
+  #endif
+%}
+
+INITIALIZE %{
+// create a material/off file for Abs_objects
+MPI_MASTER(
+  if (!(access("input_small.dat", F_OK)==0)) {
+    FILE *fp = fopen("input_small.dat", "w");
+    if (fp == NULL) exit(fprintf(stderr, "ERROR: can not open file for Abs_objects\n"));
+    fprintf(fp, "1\n");
+    fprintf(fp, "%s cube.off -0.0005 -0.0005 -0.0005 0.001 0.001 0.0001\n\n", material);
+    fclose(fp);
+  }
+);
+#ifdef USE_MPI
+MPI_Barrier(MPI_COMM_WORLD);
+#endif
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar(percent=1)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT source1 =  Source_flat(E0=E0, dE=dE, xwidth=1e-3, yheight=1e-3, focus_xw=0.0015, focus_yh=0.0015, dist=3)
+AT(0,0,0) RELATIVE Origin
+
+COMPONENT sample_mount_point = Arm()
+AT(0,0,3) RELATIVE Origin
+
+COMPONENT sample_scan1=Filter(material_datafile=material, refraction=0, 
+  xwidth=0.001,yheight=0.001,zdepth=0.0001)
+WHEN(index==1)
+AT (0,0,0) RELATIVE sample_mount_point
+
+COMPONENT sample_scan2=Absorption_sample(material_datafile_o=material,
+  xwidth_o=0.001,yheight_o=0.001,zdepth_o=0.0001)
+WHEN(index==2)
+AT (0,0,0) RELATIVE sample_mount_point
+
+COMPONENT sample_scan3=Abs_objects(objects="input_small.dat", refraction=0)
+WHEN(index==3)
+AT (0,0,0) RELATIVE sample_mount_point
+
+COMPONENT emon = E_monitor(restore_xray=1,nE=101,Emin=E0-dE, Emax=E0+dE, 
+  filename="emon.dat",xwidth=0.0005, yheight=0.0005)
+AT(0,0,0.1) RELATIVE PREVIOUS
+
+COMPONENT psd = PSD_monitor(xwidth=0.0015, yheight=0.0015, nx=100, ny=100, filename="psd.dat")
+AT(0,0,0.1) RELATIVE PREVIOUS
+
+
+END

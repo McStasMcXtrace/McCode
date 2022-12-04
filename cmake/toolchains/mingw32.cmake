@@ -5,32 +5,37 @@ SET(ARCH   "i386")
 # which compilers to use for C and C++
 SET(CMAKE_C_COMPILER i686-w64-mingw32-gcc)
 SET(CMAKE_CXX_COMPILER i686-w64-mingw32-g++)
+set(CMAKE_CXX_FLAGS "-fpermissive")
 SET(CMAKE_RC_COMPILER i686-w64-mingw32-windres)
 SET(CMAKE_Fortran_COMPILER i686-w64-mingw32-gfortran)
 
 # here is the target environment located
 SET(CMAKE_FIND_ROOT_PATH  /usr/i686-w64-mingw32)
 
-# include general MinGW module
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
-include(MinGW)
+# adjust the default behaviour of the FIND_XXX() commands:
+# search headers and libraries in the target environment, search
+# programs in the host environment
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+
+# Avoid ZLIB
+set(BUILD_WITHZLIB OFF)
+
+# Python and Perl suffixes
+set(PYTHON_SUFFIX "py")
+set(PERL_SUFFIX "pl")
+
+# Set executable extension
+set(EXE_SUFFIX   "exe")
 
 # Commands for running various external tools
 set(BROWSER "start")
 set(TERMINAL "start")
-set(VRMLVIEW "start")
 set(TOOLS_CC "gcc")
+set(OACCFLAGS "-ta:multicore -DOPENACC")
 set(MPICC "mpicc.bat")
 set(MPIRUN "mpiexec.exe")
-set(PGPLOT "yes") # <- Not actually run, but non-empty indicates available
-set(GNUPLOT "gnuplot.exe")
-
-# Plotting options
-
-set(PLOTTER "PGPLOT")
-set(PGDEV "/gw")
-set(GNUDEV "windows")
-
-# Suffix for executables
-set(EXE "exe")
-
+set(MPILIB "msmpi")
+set(MCCODE_CFLAGS "-g -O2 -DNDEBUG -lm -std=c99 -D_POSIX_SOURCE")
+set(EDITOR "start")

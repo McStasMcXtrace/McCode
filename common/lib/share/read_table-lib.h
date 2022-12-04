@@ -59,6 +59,7 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
 
   typedef struct struct_table
   {

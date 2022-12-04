@@ -31,8 +31,8 @@
 * incoherent contributions you should e.g. use 'Sqw_coh' and set 'sigma_coh'
 * to the total scattering cross section. Set sigma_coh and sigma_inc to -1 to unactivate.
 *
-* The implementation will automatically nornalise S(q,w) so that S(q) -> 1 at 
-* large q (parameter norm=-1). Alternatively, the S(q,w) data will be multiplied 
+* The implementation will automatically nornalise S(q,w) so that S(q) -> 1 at
+* large q (parameter norm=-1). Alternatively, the S(q,w) data will be multiplied
 * by 'norm' for positive values. Use norm=0 or 1 to use the raw data as input.
 *
 * The material temperature can be defined in the S(q,w) data files (see below)
@@ -41,7 +41,7 @@
 * which must then be non-classical and extend on both energy sides (+/-).
 * To use the S(q,w) data as is, without temperature effect, set T=-1 and norm=1.
 *
-* Both non symmetric (quantum) and classical S(q,w) data sets can be given by mean 
+* Both non symmetric (quantum) and classical S(q,w) data sets can be given by mean
 * of the 'classical' parameter (see below).
 *
 * Additionally, for single order scattering (order=1), you may restrict the
@@ -437,7 +437,7 @@ double Sqw_powder_gauss(double x, double mean, double rms) {
 *
 * Return the 'quantum correction factor Q so that:
 *
-*   S(q, w) = Q(w) S*(q,w) 
+*   S(q, w) = Q(w) S*(q,w)
 *   S(q,-w) = exp(-hw/kT) S(q,w)
 *   S(q, w) = exp( hw/kT) S(q,-w)
 *
@@ -459,20 +459,20 @@ double Sqw_powder_gauss(double x, double mean, double rms) {
 *  L. Frommhold. Collision-induced absorption in gases, 1 st ed., Cambridge
 *    Monographs on Atomic, Molecular, and Chemical Physics, Vol. 2,
 *    Cambridge Univ. Press: London (1993).
-        
+
  */
 double Sqw_quantum_correction(double hw, double T, char *type) {
   double Q   = 1;
   double kT  = T/11.605;  /* [K] -> [meV = 1000*KB/e] */
   if (!hw || !T) return 1;
-  if (type == NULL || !strcmp(type, "standard") 
+  if (type == NULL || !strcmp(type, "standard")
                    || !strcmp(type, "Frommhold") || !strcmp(type, "default"))
     Q = 2/(1+exp(-hw/kT));
   if (!strcmp(type, "Schofield") || !strcmp(type, "Boltzmann"))
     Q = exp(hw/kT/2);
   if (!strcmp(type, "harmonic") || !strcmp(type, "Bader"))
     Q = hw/kT/(1-exp(-hw/kT));
-    
+
   return Q;
 }
 
@@ -547,7 +547,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
         DWfactor = Table_Index(sqwTable, i, Sqw->column_order[3]-1);
       if (Sqw->column_order[4]>0)
         w = Table_Index(sqwTable, i, Sqw->column_order[4]-1);
-      if (Sqw->column_order[5]>0)  {
+      if (Sqw->column_order[5]>0 && !(Sqw->column_order[1]>0))  {
         d = Table_Index(sqwTable, i, Sqw->column_order[5]-1); if (d) d = 1/d/2; }
       if (Sqw->column_order[6]>0)
         q = Table_Index(sqwTable, i, Sqw->column_order[6]-1);
@@ -1533,14 +1533,14 @@ struct Sqw_Data_struct *Sqw_readfile(
     }
   }
   if (Sqw->sqw_classical < 0) Sqw->sqw_classical=1; /* default when quantum/classical choice is not set */
-  
+
   /* (5b) set temperature. Temperatures defined are:
   *   T_file:           temperature read from the .sqw file
   *   T:                temperature computed from the quantum Sqw using detailed balance
   *   Sqw->Temperature: temperature defined by user, or read from file when not set
   */
- 
-  
+
+
   /* display some warnings about the computed temperature */
   if (T > 3000) T=0; /* unrealistic */
   if (!T_file && T) {
@@ -1551,7 +1551,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     );
     }
   }
-  
+
   if (Sqw->Temperature == 0) {
     Sqw->Temperature = T_file ? T_file : T; /* 0:  not set: we use file value, else computed */
   } else if (Sqw->Temperature ==-1) {
@@ -1559,7 +1559,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   } else if (Sqw->Temperature ==-2) {
     Sqw->Temperature = T ? T : T_file;      /* -2: use guessed value when available */
   } /* else let value as it is (e.g. >0) */
-  
+
   if (Sqw->verbose_output > 0 && Sqw->Temperature) {
     MPI_MASTER(
     printf(  "Isotropic_Sqw: %s: Temperature set to T=%g [K]\n", Sqw->compname, Sqw->Temperature);
@@ -1575,7 +1575,7 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   /* (6) apply detailed balance on Sqw_full for classical or quantum S(q,w) */
   /* compute the \int q^2 S(q) for normalisation */
-  
+
   MPI_MASTER(
   if (Sqw->sqw_classical && Sqw->verbose_output > 0 && Sqw->Temperature > 0)
     printf("Isotropic_Sqw: %s: Applying exp(hw/2kT) factor with T=%g [K] on %s file (classical/symmetric) using '%s' quantum correction\n",
@@ -1590,7 +1590,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       double sqw_full  = Table_Index(Sqw_full, index_q, index_w);
 
       /* do we use a symmetric S(q,w) from real G(r,t) from e.g. MD ? */
-      
+
       if (Sqw->sqw_classical && Sqw->Temperature > 0) /* data is symmetric, we apply Bose factor */
         /* un-symmetrize Sqw(file) * exp(hw/kT/2) on both sides */
         balance = Sqw_quantum_correction(w, Sqw->Temperature, Sqw->Q_correction);
@@ -1608,7 +1608,7 @@ struct Sqw_Data_struct *Sqw_readfile(
           balance *= exp( w/(Sqw->Temperature*Sqw->T2E)/2); /* then apply Bose to requested temperature */
         }
       }
-      
+
       /* update Sqw value */
       sqw_full = fabs(sqw_full)*balance;
       Table_SetElement(&Sqw_full, index_q, index_w, sqw_full);
@@ -2095,7 +2095,7 @@ INITIALIZE
   VarSqw.lookup_length=100;
   VarSqw.mat_weight    = weight;
   VarSqw.mat_density   = density;
-  if (quantum_correction && strlen(quantum_correction)) 
+  if (quantum_correction && strlen(quantum_correction))
     strncpy(VarSqw.Q_correction, quantum_correction, 256);
   else
     strncpy(VarSqw.Q_correction, "default", 256);
@@ -2560,7 +2560,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         if (!solve_2nd_order(&kf1, &kf2, 1, 0, -k*k + VarSqw.sqSE2K*omega)) {
           if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
             printf("Isotropic_Sqw: %s: Warning: imaginary root for w=%g q=%g Ei=%g (triangle can not close)\n",
-            NAME_CURRENT_COMP, omega, q, Ei);
+              NAME_CURRENT_COMP, omega, q, Ei);
           VarSqw.neutron_removed++;
           continue; /* all roots are imaginary */
         }
@@ -2586,7 +2586,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         intersect=0; /* Could not scatter: finish multiple scattering loop */
         if (VarSqw.verbose_output >= 2 && VarSqw.neutron_removed<VarSqw.maxloop)
           printf("Isotropic_Sqw: %s: Warning: No scattering [q,w] conditions\n"
-               "               last try (%i): type=%c w=%g q=%g cos(theta)=%g k=%g\n",
+            "               last try (%i): type=%c w=%g q=%g cos(theta)=%g k=%g\n",
           NAME_CURRENT_COMP, VarSqw.maxloop, (VarSqw.type ? VarSqw.type : '-'), omega, q, costheta, k);
         VarSqw.neutron_removed++;
         if (order && SCATTERED != order) ABSORB;
@@ -2758,7 +2758,7 @@ FINALLY
 MCDISPLAY
 %{
   if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0) {
-    
+
     if(VarSqw.shape==1)
     {
       double xmin = -0.5*xwidth;

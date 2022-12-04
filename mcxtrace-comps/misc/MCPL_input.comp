@@ -9,15 +9,15 @@
 * %I
 * Written by: Erik B Knudsen 
 * Date: Aug 2016
-* Version: $Revision$
 * Origin: DTU Physics
 *
 * Source-like component that reads photon state parameters from an mcpl-file.
+*
 * %D
 * Source-like component that reads photon state parameters from a binary mcpl-file.
 *
 * MCPL is short for Monte Carlo Particle List, and is a new format for sharing events
-* between e.g. MCNP(X), Geant-4 and McXtrace .
+* between e.g. MCNP(X), Geant4 and McXtrace .
 *
 * When used with MPI, the --ncount given on the commandline is overwritten by 
 * #MPI nodes x #events in the file.
@@ -27,20 +27,24 @@
 * %P
 * INPUT PARAMETERS
 *
-* filename: [str] Name of photon mcpl file to read.
-* verbose:  [ ]   Print debugging information for first 10 particles read. 
-* polarisationuse: [ ] If !=0 read polarisation vectors from file.
-* Emin: [keV] Lower energy bound. Particles found in the MCPL-file below the limit are skipped.
-* Emax: [keV] Upper energy bound. Particles found in the MCPL-file above the limit are skipped.
+* filename: [str]       Name of photon mcpl file to read.
+* verbose: [ ]          Print debugging information for first 10 particles read.
+* polarisationuse: [ ]  If !=0 read polarisation vectors from file.
+* Emin: [keV]           Lower energy bound. Particles found in the MCPL-file below the limit are skipped.
+* Emax: [keV]           Upper energy bound. Particles found in the MCPL-file above the limit are skipped.
+* repeat_count: [1]     Repeat contents of the MCPL file this number of times. NB: When running MPI, repeating is implicit and is taken into account by integer division. Should be combined sith the _smear options!
+* E_smear: [1]          When repeating events, make a Gaussian MC choice within E_smear*E around particle energy E
+* pos_smear: [m]        When repeating events, make a flat MC choice of position within pos_smear around particle starting position
+* dir_smear: [deg]      When repeating events, make a Gaussian MC choice of direction within dir_smear around particle direction
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT MCPL_input
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string filename=0, polarisationuse=1,verbose=1, Emin=0, Emax=FLT_MAX)
-OUTPUT PARAMETERS (inputfile,nparticles,read_photons,used_photons)
-DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
+SETTING PARAMETERS (string filename=0, polarisationuse=1,verbose=1, Emin=0, Emax=FLT_MAX, int repeat_count=1, E_smear=0, pos_smear=0, dir_smear=0)
+OUTPUT PARAMETERS (inputfile,nparticles,read_photons,used_photons,inactive)
+DEPENDENCY "-Wl,-rpath,CMD(mcpl-config --show libdir) -ICMD(mcpl-config --show includedir) -LCMD(mcpl-config --show libdir) -lmcpl"
 
 SHARE
 %{
@@ -54,14 +58,20 @@ DECLARE
     long long nparticles;
     long long read_photons;
     long long used_photons;
-
+    int repeat_cnt;
+    int repeating;
+    int ismpislave;
+    int inactive;
 %}
 
 INITIALIZE
 %{
-    char line[256];
-    long long ncount;
+  char line[256];
+  long long ncount;
 
+  if (filename && strlen(filename) && strcmp(filename, "NULL") && strcmp(filename,"0") && repeat_count>0) {
+    /* We got a proper filename, do the rest of the work */
+    inactive=0;
     if(Emax<Emin){
         fprintf(stderr,"Warning(%s): Nonsensical energy interval: E=[%g,%g]. Aborting.\n",NAME_CURRENT_COMP,Emin,Emax);
         exit(-1);
@@ -70,7 +80,6 @@ INITIALIZE
      * abort internally if it cannot open the file.*/
     inputfile = mcpl_open_file(filename);
 
-    ncount=mcget_ncount();
     if ( !(nparticles=mcpl_hdr_nparticles(inputfile)) ) {
         fprintf(stderr,"Warning(%s): MCPL-file reports no present particles. Foolishly trying to go on.\n",NAME_CURRENT_COMP);
         nparticles=ncount;
@@ -78,38 +87,72 @@ INITIALIZE
         printf("Message(%s): MCPL file (%s) produced with %s.\n",NAME_CURRENT_COMP,filename,mcpl_hdr_srcname(inputfile));
         printf("Message(%s): MCPL file (%s) contains %lld particles.\n",NAME_CURRENT_COMP,filename,nparticles); 
     }
-
+    repeat_cnt = repeat_count;
+    ismpislave=0;
 #if defined (USE_MPI)
-    mcset_ncount(mpi_node_count*nparticles);
-    MPI_MASTER(fprintf(stdout, "\n\n Warning: You are using MCPL_input with MPI, hence your ncount is now redefined to:\n   %lld events at each of the %i MPI nodes = %lld events\n\n",nparticles,mpi_node_count,mpi_node_count*nparticles); );
+    repeat_cnt = ceil(1.0*repeat_cnt/mpi_node_count);
+    ismpislave = mpi_node_rank;
+    MPI_MASTER(
+#endif
+      fprintf(stdout, "\n\n Warning: You are using MCPL_input with a repeat_count of %i:\n - Minimum photon count requested is %ld x %i <= %ld",repeat_count,nparticles,repeat_count,repeat_cnt*nparticles);
+#if defined (USE_MPI)
+      fprintf(stdout, " x %i MPI nodes = %ld photons total\n",mpi_node_count,mpi_node_count*repeat_cnt*nparticles);
+    );
+    mcset_ncount(mpi_node_count*repeat_cnt*nparticles);
+#else
+    fprintf(stdout, " photons total\n\n");
+    mcset_ncount(repeat_cnt*nparticles);
 #endif
 
+    ncount=mcget_ncount();
     read_photons=0;
     used_photons=0;
 
  #if defined (USE_MPI)   
     MPI_MASTER(
 #endif
-
       if (verbose==1) {
         printf("MCPL_input verbose mode - outputting data on the 10 first read photons in MCPL units:\n");
       }
-
 #if defined (USE_MPI) 
     );
 #endif
-
-
-
+    repeating = 0;
+  } else {
+    /* Not presented with a reasonable filename, skip further action */
+    inactive=1;
+    fprintf(stderr,"INFO(%s): filename is NULL or empty, skipping init and reads\n", NAME_CURRENT_COMP);
+  }
 %}
 
 TRACE
 %{
-    double nrm;
-    const mcpl_particle_t *particle;// = (mcpl_particle_t *) calloc(sizeof(mcpl_particle_t),1);
+  long long ncount;
+
+  double nrm;
+  const mcpl_particle_t *particle;// = (mcpl_particle_t *) calloc(sizeof(mcpl_particle_t),1);
+  if(!inactive) {
     particle = mcpl_read(inputfile);
-    
-    if (!particle || particle->pdgcode!=22) {
+
+    ncount=mcget_ncount();
+    // fprintf(stdout,"Trace ncount is %ld\n",ncount);
+    if (!particle) {
+      if(repeat_cnt>1) {
+	/* Trigger rewind of the file and ABSORB to get the first photon "again" */
+	repeating++;
+	mcpl_rewind(inputfile);
+	particle = mcpl_read(inputfile);
+#if defined (USE_MPI)
+	MPI_MASTER(
+#endif
+       printf("MCPL inputfile %s rewound %i time(s)\n",filename,repeating);
+#if defined (USE_MPI)
+    );
+#endif
+      } else
+	ABSORB;
+    }
+    if (particle->pdgcode!=22) {
         /*Either no particle read, particle is not a photon, or it has invalid energy - terminate to trigger next ray*/
        ABSORB;
     }
@@ -121,15 +164,13 @@ TRACE
         ABSORB;
     }
     used_photons++;
-
-
-
+    SCATTER;
 #if defined (USE_MPI)   
   MPI_MASTER(
 #endif
 
     if (verbose && used_photons<11) {
-      printf("id=%lld\tpdg=22\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
+      printf("id=%"PRIu64" pdg=22\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
 	     read_photons, particle->ekin, particle->position[0], particle->position[1], particle->position[2],
 	     particle->direction[0], particle->direction[1], particle->direction[2], particle->time, particle->weight,
 	     particle->polarisation[0], particle->polarisation[1], particle->polarisation[2]);
@@ -144,36 +185,69 @@ TRACE
     y=particle->position[1]/100;
     z=particle->position[2]/100;
 
+    if (ismpislave || repeating) {
+      double tmpx,tmpy,tmpz;
+      // Position-MC:
+      randvec_target_circle(&tmpx, &tmpy, &tmpz, NULL, 0, 0, 1, 0);
+      NORM(tmpx,tmpy,tmpz);
+      tmpx *= pos_smear*rand01(); tmpy *= pos_smear*rand01(); tmpz *= pos_smear*rand01();
+      x+=tmpx; y+=tmpy; z+=tmpz;
+    }
+
     if(polarisationuse){
         Ex=particle->polarisation[0];
         Ey=particle->polarisation[1];
         Ez=particle->polarisation[2];
+    }else{
+        Ex=Ey=Ez=0;
     }
 
     nrm = particle->ekin *1e3*E2K;
+    if (ismpislave || repeating) {
+      // Energy-MC:
+      double tmp=(1.0+E_smear*randpm1());
+      //printf("Adjusting energy from %g to",nrm);
+      nrm *= (1+E_smear*randpm1());
+      //printf(" to %g\n",nrm);
+    }
+    double d0=particle->direction[0],d1=particle->direction[1],d2=particle->direction[2];
+
+    if (ismpislave || repeating) {
+      // Direction-MC:
+      double tmpx,tmpy,tmpz;
+      // Position-MC, only in case of non-zero dir_smear):
+      if (dir_smear) {
+	randvec_target_circle(&d0, &d1, &d2, NULL, particle->direction[0], particle->direction[1], particle->direction[2], sin(dir_smear*DEG2RAD));
+	NORM(d0,d1,d2);
+      }
+    }
+
     kx=particle->direction[0]*nrm;
     ky=particle->direction[1]*nrm;
     kz=particle->direction[2]*nrm;
+
     /*time in ms:*/
     t=particle->time*1e-3;
     /*weight in unspecified units:*/
     p=particle->weight;
-    
-#if defined USE_MPI
-      /* We always repeat by the number of nodes in an MPI run */
-      p /= mpi_node_count;
-#endif
 
+    /* Correct for repetition, by repeat_count and/or MPI */
+    p /= repeat_cnt;
+#if defined (USE_MPI)
+    p /= mpi_node_count;
+#endif
     SCATTER;
+  }
 %}
 
 SAVE
 %{
-    mcpl_close_file(inputfile);  
+  if(!inactive) mcpl_close_file(inputfile);
 %}
 
 FINALLY
 %{
+  if(!inactive) {
     long long ncount;
 
     ncount=mcget_ncount();
@@ -184,8 +258,7 @@ FINALLY
         fprintf(stderr,"Warning (%s): You requested %lld photons from a file which contains %lld particles in general, of which only %lld are photons (within the wanted energy interval).\n"
                 "Please examine the recorded intensities carefully.\n",NAME_CURRENT_COMP,ncount,nparticles,used_photons);
     }
-
-
+  }
 %}
 
 MCDISPLAY

@@ -16,6 +16,7 @@ from mccodelib.mcplotloader import McCodeDataLoader, Data1D, Data2D
 from mccodelib.plotgraph import PNSingle, PNMultiple
 from mccodelib import mccode_config
 from shutil import copyfile
+from PIL import Image
 
 WIDTH = 700
 HEIGHT = 480
@@ -126,7 +127,7 @@ def get_params_str_2D(data):
             img[i,j,:] = color
 
     # encode png as base64 string
-    image = scipy.misc.toimage(np.flipud(img))
+    image = Image.fromarray(np.flipud(img).astype(np.uint8))
     output = io.BytesIO()
     image.save(output, format="png")
     contents = output.getvalue()
@@ -151,7 +152,7 @@ def get_params_str_2D(data):
                 print(e)
 
     # encode png as base64 string
-    image_log= scipy.misc.toimage(np.flipud(img_log))
+    image_log = Image.fromarray(img_log.astype(np.uint8))
     output = io.BytesIO()
     image_log.save(output, format="png")
     encoded_2d_data_log = str(base64.b64encode(output.getvalue())).lstrip('b').strip("\'")
@@ -162,7 +163,7 @@ def get_params_str_2D(data):
     for i in range(256):
         color = lookup(cm, i/255)
         img[255-i, 0] = color
-    cb_img = scipy.misc.toimage(img)
+    cb_img = Image.fromarray(img.astype(np.uint8))
     output = io.BytesIO()
     cb_img.save(output, format='png')
     contents = output.getvalue()
@@ -174,7 +175,7 @@ def get_params_str_2D(data):
     for i in range(256):
         color = lookup(cm, i/255)
         tmpimg[255-i, 0] = color
-    cb_img_log = scipy.misc.toimage(tmpimg)
+    cb_img_log = Image.fromarray(tmpimg.astype(np.uint8))
     output = io.BytesIO()
     cb_img_log.save(output, format='png')
     encoded_cb_log = str(base64.b64encode(output.getvalue())).lstrip('b').strip("\'")

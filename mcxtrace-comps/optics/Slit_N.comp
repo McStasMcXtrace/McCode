@@ -32,7 +32,7 @@
 * radius: Radius of slit in the z=0 plane, centered at Origo (m)
 * xwidth: Width of slit. Overrides xmin,xmax. (m)
 * yheight: Height of slit. Overrides ymin,ymax. (m)
-* N; number of slit openings (1)
+* N: number of slit openings (1)
 * d: separation of slits (m)
 *
 * Optional parameters:

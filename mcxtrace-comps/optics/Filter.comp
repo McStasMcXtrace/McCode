@@ -49,7 +49,10 @@ SHARE
   %include "read_table-lib"
   %include "interoff-lib"
 
+  #ifndef SHAPES_T
+  #define SHAPES_T
   enum shapes_t {NONE=-1,SPHERE, CYLINDER, CUBE, ELLIPSOID, ANY};
+  #endif
 
   int filter_refract(double *kx, double *ky, double *kz, double nx, double ny, double nz, double delta0, double delta1){
     const double n2=scalar_prod(nx,ny,nz, nx,ny,nz);
@@ -294,7 +297,7 @@ TRACE
 FINALLY
 %{
   Table_Free(&(prms->table));
-  free(prms);
+  if (prms) { free(prms); prms=NULL; }
 %}
 
 MCDISPLAY

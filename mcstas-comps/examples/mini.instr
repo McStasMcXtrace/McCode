@@ -1,4 +1,5 @@
 /*
+* %INSTRUMENT_SITE: Templates
 * %Example: mini.instr dummy=0 Detector: detector_I=345.995
 */
 DEFINE INSTRUMENT Minimal(dummy=0)

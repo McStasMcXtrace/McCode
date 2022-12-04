@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Wrapper script for @P@display-pyqtgraph-py
 
 # First ensure that we follow symlink if needed
@@ -10,22 +10,20 @@ if [ "x$LINK" != "x" ]; then
 else
     LIB=`dirname $0`
 fi
+
+ARCH=`arch`
 UNAME=`uname -s`
-if [[ ${UNAME} = Darwin* ]]; then
-    OSXVER=`sw_vers -productVersion|cut -f 1 -d.`
-    # Check if we are on macos 10.x or 11.x
-    if [ "$OSXVER" == "10" ];
-    then
-	PATH=$LIB/../miniconda3/bin:$PATH
-    fi
-else
-    PATH=$LIB/../miniconda3/bin:$PATH
+
+if [ -d "$LIB/../miniconda3" ]; then
+    export PATH=$LIB/../miniconda3/bin:$PATH
+    export LD_LIBRARY_PATH=$LIB/../miniconda3/lib:$LD_LIBRARY_PATH
 fi
 
 # Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
 if [ -d "$LIB/../miniconda3" ]; then
-    PYVER=`$LIB/../miniconda3/bin/python3 --version | cut -f 2 -d\  | cut -f 1-2 -d.`
-    export PYTHONPATH=$LIB/../miniconda3/lib:$LIB/../miniconda3/lib/python$PYVER/site-packages
+    if ! [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
+	export PYTHONPATH=$LIB/../miniconda3/lib:$LIB/../miniconda3/lib/python$PYVER/site-packages
+    fi
 fi
 
 LIB="$LIB/../tools/Python/@P@display/pyqtgraph"

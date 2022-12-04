@@ -8,13 +8,12 @@
 *
 * Component: Lens_Kinoform
 *
-* %
-*
+* %I
 * Written by: Jana Baltser and Erik Knudsen
-* 
 * Date: January 2012
-* Version: 1.0
 * Origin: NBI
+*
+* A model of a specific kinoform
 *
 * %D
 * KINOFORM. A model of a specific kinoform used by the BNL team during the APS beamtime.
@@ -24,6 +23,10 @@
 *	y - height of the lens.
 * the principles of the kinoform's operation are described here: http://neutrons.ornl.gov/workshops/nni_05/presentations/min050616_xray_evans-lutterodt_ken_nni05.pdf
 *
+* You may as well model a Kinoform with e.g.:
+*   Kinoform=Lens_parab_Cyl(r=0.5e-3,yheight=1.3e-3,xwidth=1.3e-3,d=.1e-3,
+*     N=21, material_datafile="Be.txt")
+*
 * %P
 * Input parameters:
 * 
@@ -32,8 +35,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Lens_Kinoform
-DEFINITION PARAMETERS (string datafile="kinoform.txt", material_datafile="Si.txt",Re=2.8179402894e-5,Na=6.02214179e23)
-SETTING PARAMETERS (yheight=1e-2,xwidth=5.268e-4,deltaN=0)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (yheight=1e-2,xwidth=5.268e-4,deltaN=0,string datafile="kinoform.txt", string material_datafile="Si.txt",Re=2.8179402894e-5,Na=6.02214179e23)
 OUTPUT PARAMETERS (prms,mat_data)
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 

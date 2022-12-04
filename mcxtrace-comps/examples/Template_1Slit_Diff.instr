@@ -1,0 +1,80 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Template_1Slit_Diff
+*
+* %Identification
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Jan 2014
+* Origin: DTU Physics
+* Version: 1.0
+* %INSTRUMENT_SITE: Templates
+*
+* An example instrument showing single slit diffraction
+*
+* %Description
+* A template instrument that shows how single slit diffraction works.
+* The slit is positioned 1m downstream from a point source. The slit
+* width may be varied. The slit height is set to .8e-6 m.
+*
+* %Example: SLITW=5e-6 Detector: psd0_I=9.89638e-14
+*
+* %Parameters
+* SLITW: [m] Width of the slit in question. The 
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT Template_1Slit_Diff(SLITW=5e-6)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding an xray source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source=Source_pt(
+    focus_xw=6e-6, focus_yh=0.8e-6, dist=1, lambda0=2.0, dE=0, gauss=1, randomphase=0)
+AT(0,0,0) RELATIVE Origin
+
+COMPONENT s1 = Slit(
+    xwidth=SLITW, yheight=0.8e-6, dist=1,
+    focus_xw=200e-6,focus_yh=2e-6,
+    focus_x0=0.0,focus_y0=0.0
+)
+AT(0,0,1) RELATIVE source
+GROUP slits
+
+COMPONENT psd0 = PSD_monitor_coh(
+    yheight=2e-6, xwidth=200e-6, nx=501, ny=1, filename="psd0")
+AT(0,0,2) RELATIVE source
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+

@@ -190,6 +190,7 @@ def get_UB(B, orient1_rlu, orient2_rlu, orientup_rlu):
 
 
 # a3 & a4 angles
+# see https://dx.doi.org/10.1107/S0021889805004875
 def get_a3a4(ki, kf, Q_rlu, orient_rlu, orient_up_rlu, B, sense_sample=1., a3_offs=np.pi):
 	metric = get_metric(B)
 
@@ -217,6 +218,8 @@ def get_a3a4(ki, kf, Q_rlu, orient_rlu, orient_up_rlu, B, sense_sample=1., a3_of
 	return [a3, a4, dist_Q_plane]
 
 
+# (hkl) position
+# see https://dx.doi.org/10.1107/S0021889805004875
 def get_hkl(ki, kf, a3, Qlen, orient_rlu, orient_up_rlu, B, sense_sample=1., a3_offs=np.pi):
 	B_inv = la.inv(B)
 

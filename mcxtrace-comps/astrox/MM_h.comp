@@ -1,0 +1,609 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*         University of Copenhagen, Copenhagen, Denmark
+*
+* Component: MM_h
+*
+* %I
+*
+* Written by: Erik B Knudsen and Desiree D. M. Ferreira
+* Date: Feb. 2016
+* Version: 1.0
+* Release: McXtrace 1.2
+* Origin: DTU Physics, DTU Space
+* Modified by: Søren Jeppesen
+* Date: Feb. 2017
+* Version: 1.1
+* Release: McXtrace 1.2
+* Origin: DTU Physics, DTU Space
+*
+* Single Pore as part of the Silicon Pore Optics (SPO) as envisioned for the ATHENA+ space telescope.
+*
+* %D
+* A single pore is simulated, which may have thick walls. The top and bottom are curved cylindrically
+* azimuthally, and according to the Wolter I optic lengthwise (sagitally). This is the hyperbolic part.
+* The azimuthal curvature is defined by the radius parameters.
+*
+* To intersect the Wolter I plates we take advatage of the azimuthal symmetry and only consider the radial component
+* of the photon's wavevector.
+*
+* %P
+* Input parameters:
+* radius_m: [m]  Ring radius of the upper (reflecting) plate of the pore at the intersection with the parabolic section.
+* radius_h: [m]  Ring radius of the upper (reflecting) plate of the pore at the edge closest to the focal point.
+* pore_height: [m] Height of the pore. (Hence the inner radii are radius_{m,h}-pore_height)
+* xwidth: [m]  Width of the pore.
+* chamferwidth: [m] Width of side walls.
+* gap: [m] Gap between intersection with parabolic section and actual plate.
+* Z0: [m] Distance between intersection plane and the focal spot (essentially focal length).
+* mirror_reflec: [ ] Data file containing reflectivities of the reflector surface (TOP).
+* side_reflec: [ ]   Data file containing reflectivities of the side walls (LEFT and RIGHT).
+* bottom_reflec: [ ]  Data file containing reflectivities of the bottom surface (BOTTOM).
+* R_d: [ ] Default reflectivity value to use if no reflectivity file is given. Useful f.i. is one surface is reflecting and the others absorbing.
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT MM_h
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (pore_th, int ring_nr, Z0, pore_height, pore_width, chamfer_width=0, gap=0, zdepth=0, string mirror_reflec="", string bottom_reflec="", string side_reflec="", string size_file="", string non_specular_file="", R_d=1, waviness=0, longw=0)
+OUTPUT PARAMETERS (nLeft, nRight, nExit, nTop, nBottom, wLeft, wRight, wExit, wall, zexit, zexit_vec, xwidth, reflec_top_table, reflec_bottom_table,
+        ref_prms,radius_h,radius_m,size_table, non_specular_prms)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
+
+SHARE
+%{
+#ifndef MCSPO_INTERSECT_HYPERBOLOID
+#define MCSPO_INTERSECT_HYPERBOLOID 1
+    int intersect_hyperboloid(double *l0, double x, double y, double z, double kx, double ky, double kz, double Z0, double radius, double *nx, double *ny, double *nz){
+        double alpha,thetap,thetah,P,d,e,C0;
+        alpha=0.25*atan(radius/Z0);
+        thetap=alpha;
+        thetah=alpha*3;
+        P=Z0*tan(4*alpha)*tan(thetap);
+        d=Z0*tan(4*alpha)*tan(4*alpha-thetah);
+        e=cos(4*alpha)*(1+tan(4*alpha)*tan(thetah));
+        C0=4*e*e*P*d/(e*e-1);
+
+        double kxn=kx,kyn=ky,kzn=kz;
+        NORM(kxn,kyn,kzn);
+        double A,B,C,Z;
+        Z=Z0-z;
+        /* A=kxn*kxn + kyn*kyn + kzn*kzn - e^2 kzn*kzn = 1 - e^2 kzn^2*/
+        A=1-e*e*kzn*kzn;
+        B=2*kxn*x + 2*kyn*y+ 2*e*e*(d+Z)*kzn - 2*kzn*(Z);
+        C=x*x + y*y + Z*Z - e*e*(d+Z)*(d+Z);
+
+        int status;
+        double l1;
+        if ( (status=solve_2nd_order(l0,&l1,A,B,C))==0 ){
+            /*note that if l1->NULL only the smallest positive solution is returned*/
+            /*This shouldn't happen*/
+            //fprintf(stderr,"MM_h: No solution %g %g %g  %g %g %g\n ",x,y,z, kx,ky,kz);
+            return status;
+        }
+        /*compute normal vector*/
+        x+=kxn* (*l0);
+        y+=kyn* (*l0);
+        z+=kzn* (*l0);
+
+        Z=Z0-z;
+        double delta_y=-0.5 * pow( e*e*(d+Z)*(d+Z) - Z*Z,-0.5) * ( 2*e*e*(d+Z) - 2*Z);
+        double rh=sqrt(e*e * (d+Z0-z)*(d+Z0-z) -(Z0-z)*(Z0-z));
+
+        /* The tilt of the normal vector perpendicular to the optical axis
+         * depends only on the displacement in x*/
+        *nx=x/rh;
+        *ny=y/rh;
+        *nz = 0 - delta_y + 0;
+        /* the minus sign since a negative slope in rh results in the normal tilting "forward" which
+           corresponds to a positive sign in z*/
+        NORM(*nx,*ny,*nz);
+        return status;
+    }
+#endif
+
+#ifndef DISTRIBUTIONS
+#define DISTRIBUTIONS
+    double laplaceDistribution(double mean, double width){
+        double sample = rand01();
+        if(sample <= 0.5){
+            return mean + width*log(2*sample);
+        } else {
+            return mean - width*log(2-2*sample);
+        }
+    }
+
+    double lorentzDistribution(double mean, double width){
+        double sample = rand01();
+        return mean + width*tan(M_PI*(sample-0.5));
+    }
+#endif
+%}
+
+
+
+DECLARE
+%{
+    #define MAX_TRACKED_REFLECTIONS 16
+    double nLeft[3],wLeft[3];
+    double nRight[3], wRight[3];
+    double nExit[3], wExit[3];
+    double nEntry[3], wEntry[3];
+    double nTop[3],nBottom[3];
+    struct {
+        double e_min,e_step,e_max,theta_min,theta_step,theta_max;
+    } ref_prms[3], non_specular_prms;
+    double zexit;
+    double *zexit_vec;
+    double xwidth;
+
+    // array which stores the pore walls that the ray reflects onto
+    unsigned char reflections[16];
+    // index of the latest reflection to occur
+    char ref_index;
+
+    double radius_m,radius_h,radius_m_2,radius_h_2;
+
+    t_Table reflec_side_table,reflec_top_table,reflec_bottom_table,size_table;
+
+    t_Table non_specular_table;
+
+%}
+
+INITIALIZE
+%{
+
+    /*read data from files into tables using read_table-lib*/
+    char *filenames[]={mirror_reflec,bottom_reflec,side_reflec};
+    t_Table *ref_tables[]={&reflec_top_table,&reflec_bottom_table,&reflec_side_table};
+    int i;
+
+    /*read data from files into tables using read_table-lib*/
+    for (i=0;i<3;i++){
+        char *reflec=filenames[i];
+        t_Table *tp=ref_tables[i];
+        if (reflec && strlen(reflec)) {
+            char **header_parsed;
+
+            /* read 1st block data from file into tp */
+            if (Table_Read(tp, reflec, 1) <= 0)
+            {
+                exit(fprintf(stderr,"Error: %s: cannot read file %s\n",NAME_CURRENT_COMP, reflec));
+            }
+            header_parsed = Table_ParseHeader(tp->header,
+                    "e_min=","e_max=","e_step=","theta_min=","theta_max=","theta_step=",NULL);
+            if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
+                    header_parsed[3] && header_parsed[4] && header_parsed[5])
+            {
+                ref_prms[i].e_min=strtod(header_parsed[0],NULL);
+                ref_prms[i].e_max=strtod(header_parsed[1],NULL);
+                ref_prms[i].e_step=strtod(header_parsed[2],NULL);
+                ref_prms[i].theta_min=strtod(header_parsed[3],NULL);
+                ref_prms[i].theta_max=strtod(header_parsed[4],NULL);
+                ref_prms[i].theta_step=strtod(header_parsed[5],NULL);
+            } else {
+                exit(fprintf(stderr,"Error: %s: wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, reflec));
+            }
+            if (!((int)(ref_prms[i].e_max-ref_prms[i].e_min) == (int)((tp->rows-1)*ref_prms[i].e_step)))
+            {
+                exit(fprintf(stderr,"Error: %s: e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, reflec));
+            }
+            if (!((int)(ref_prms[i].theta_max-ref_prms[i].theta_min) == (int)((tp->columns-1)*ref_prms[i].theta_step)))
+            {
+                exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, reflec));
+            }
+        }else{
+            /*mark the table as unread by setting "rows" to -1
+              This will trigger the default reflectivity.*/
+            tp->rows=-1;
+        }
+    }
+
+    /* Read table with mirror module parameters*/
+
+    if(size_file){
+    	Table_Read(&(size_table), size_file, ring_nr);
+    }
+
+    zexit_vec=calloc(size_table.rows,sizeof(double));
+    /*all the plates in 1 ring are identical - i.e. we can set the plate xwidth once and for all.*/
+    xwidth=Table_Index(size_table,0,6);
+
+    double alpha,thetap,thetah,P,d,e,C0;
+    /*There are in general 68 reflecting planes*/
+    for (i=0;i<size_table.rows;i++){
+
+        radius_m = Table_Index(size_table,i,4);
+        radius_h = Table_Index(size_table,i,3);
+
+        /* compute some pore parameters for the parabolic or hyperbolic equations*/
+        /* the z coordinate of the entry plane*/
+
+    	/*assuming the parameter xi==1*/
+        alpha=0.25*atan(radius_m/Z0);
+        thetap=alpha;
+        thetah=alpha*3;
+        P=Z0*tan(4*alpha)*tan(thetap);
+        d=Z0*tan(4*alpha)*tan(4*alpha-thetah);
+        e=cos(4*alpha)*(1+tan(4*alpha)*tan(thetah));
+        C0=4*e*e*P*d/(e*e-1);
+
+        /*now solve to get the z-coordinate of the exit plane, assuming radius_m to be bigger.
+          from v. speybroeck and Chase: rh^2 = e^2 (d+Z)^2 - Z^2, where z_{mcxtrace}=Z0-Z, since we assume z=0 at the entry of the pore*/
+        double A,B,C;
+        A=e*e-1;
+        B=2*d*e*e;
+        C=e*e*d*d -radius_h*radius_h;
+        int status=solve_2nd_order(&zexit,NULL,A,B,C);
+        if(zexit<0 || !status){
+            fprintf(stderr,"couldn't figure out the length of the hyperbolic_pore\n");
+            exit(-1);
+        }
+
+        /*go to mcxtrace coordinate*/
+        zexit=Z0-zexit;
+
+        zexit_vec[i] = zexit;
+    }
+
+    nEntry[0]=0;
+    nEntry[1]=0;
+    nEntry[2]=1;
+    wEntry[0]=wEntry[1]=wEntry[2]=0;
+
+    nExit[0]=0;
+    nExit[1]=0;
+    nExit[2]=1;
+    wExit[0]=wExit[1]=0;
+    wExit[2]=zexit;
+
+    if(non_specular_file && strlen(non_specular_file)){
+        Table_Read(&(non_specular_table), non_specular_file, 0);
+        char** header_parsed = Table_ParseHeader(non_specular_table.header,
+            "e_min=","e_max=","e_step=","theta_min=","theta_max=","theta_step=",NULL);
+            if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
+                header_parsed[3] && header_parsed[4] && header_parsed[5])
+                {
+                    non_specular_prms.e_min=strtod(header_parsed[0],NULL);
+                    non_specular_prms.e_max=strtod(header_parsed[1],NULL);
+                    non_specular_prms.e_step=strtod(header_parsed[2],NULL);
+                    non_specular_prms.theta_min=strtod(header_parsed[3],NULL);
+                    non_specular_prms.theta_max=strtod(header_parsed[4],NULL);
+                    non_specular_prms.theta_step=strtod(header_parsed[5],NULL);
+                } else {
+                    exit(fprintf(stderr,"Error (%s): wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, non_specular_file));
+                }
+                if (!((int)(non_specular_prms.e_max-non_specular_prms.e_min) == (int)((non_specular_table.rows-1)*non_specular_prms.e_step)))
+                {
+                    exit(fprintf(stderr,"Error (%s): e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, non_specular_file));
+                }
+                if (!((int)(non_specular_prms.theta_max-non_specular_prms.theta_min) == (int)((non_specular_table.columns-1)*non_specular_prms.theta_step)))
+                {
+                    exit(fprintf(stderr,"Error (%s): theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, non_specular_file));
+                }
+    }
+%}
+
+TRACE
+%{
+    ref_index = -1;
+    double r_m_min,r_m_max,r2;
+    int hit=0;
+    int hit_chamfer=0;
+    double psi_max,psi_min,psi;
+
+    /*assuming the table to be sorted*/
+    ALLOW_BACKPROP;
+    PROP_Z0;
+
+    r_m_min = Table_Index(size_table,0,4);
+    r_m_max = Table_Index(size_table,size_table.rows-1,4);
+    r2 = (x*x + y*y);
+
+    //bounds of the module as a whole
+    psi_min=-xwidth*0.5/(r_m_min-pore_height);
+    psi_max= xwidth*0.5/(r_m_min-pore_height);
+    psi=atan2(x,y);
+
+    hit = ( ( r2 > ( r_m_min-pore_height )*( r_m_min-pore_height ) ) && ( r2 < ( r_m_max )*( r_m_max ) )
+            && (psi>psi_min && psi<psi_max) );
+    if(!hit) ABSORB;
+
+    if (hit){
+        /*we are within range for entering the the mirror module - we might still miss due to beam divergence though*/
+        int ii=0;
+        int hit_chamfer;
+        int upside_down_plate;
+        double local_pore_height;
+
+        hit=0;
+        while( ii<size_table.rows){
+            radius_m = Table_Index(size_table,ii,4);
+
+            radius_h = Table_Index(size_table,ii,3);
+
+            upside_down_plate = Table_Index(size_table, ii, 8);
+            if(upside_down_plate){
+                local_pore_height = 2*pore_height;
+            } else {
+                local_pore_height = pore_height;
+            }
+
+            if( ( x*x + y*y < radius_m*radius_m ) && ( x*x + y*y >(radius_m-local_pore_height)*(radius_m-local_pore_height) ) ) {
+                hit=1;
+                break;
+            }
+            ii++;
+        }
+        /*if we have missed all plates, terminate the ray*/
+        if (!hit){
+            ABSORB;
+        }
+        /*ii-1 is now the number of the hit plate - unless it is outside all of them,
+          radius_m and radius_h are the relevant radii for this plate.*/
+
+          /*figure out which pore we hit*/
+          int jj;
+          // Width of the plate in pores
+          double width_pores = (xwidth-chamfer_width)/(pore_width+chamfer_width);
+
+          // photon psi in pores
+          double psi_pores = (psi - (-xwidth*0.5)/(radius_m-local_pore_height)) *(radius_m-local_pore_height)/ ( pore_width+chamfer_width);
+          char hit_final_pore = 0;
+          if(psi_pores >= 0 && psi_pores < width_pores){
+              hit = 1 & hit;
+              jj = (int) floor(psi_pores);
+              //If the pore that is hit is the last pore on the plate, modify the
+              //pore width and chamfer width so it corresponds to the final, larger
+              //pore.
+              if(jj >= floor(width_pores) - 1){
+                  jj = floor(width_pores) - 1;
+                  hit_final_pore = 1;
+              }
+          } else {
+              hit = 0;
+          }
+
+        /*check for side_wall (chamfer) hit (obscuration)*/
+        hit_chamfer=0;
+        if(hit_final_pore && psi > xwidth/2/(radius_m-local_pore_height) - chamfer_width){
+            hit_chamfer=1;
+            hit=0;
+            ABSORB;
+        } else if ( (psi - (-xwidth/2.0 + jj*(pore_width+chamfer_width))/(radius_m-local_pore_height)) <chamfer_width/(radius_m-local_pore_height) ){
+            hit_chamfer=1;
+            hit=0;
+            ABSORB;
+        }
+
+        int coatedPlate = Table_Index(size_table, ii, 7);
+
+        enum {LEFT, RIGHT, TOP, BOTTOM, EXIT, NONE} wall;
+        t_Table *reflec_table=NULL;
+        double R;
+
+        if(hit){
+            SCATTER;
+            int exit=0;
+            int intersections[5];
+            int i_small;
+            double l[5];
+            double l_small;
+
+            double nx,ny,nz;
+
+            psi_min=( -xwidth/2.0 + jj*(pore_width+chamfer_width) + chamfer_width)/(radius_m-local_pore_height);
+            if (hit_final_pore){
+                psi_max = (xwidth/2.0-chamfer_width)/(radius_m-local_pore_height);
+            } else {
+                psi_max=( -xwidth/2.0 + (jj+1)*(pore_width+chamfer_width))/(radius_m-local_pore_height);
+            }
+
+            /*TODO side wall planes*/
+            nLeft[0]=cos(psi_min); nLeft[1]=-sin(psi_min); nLeft[2]=0;
+            wLeft[0]=radius_m*sin(psi_min); wLeft[1]=radius_m*cos(psi_min); wLeft[2]=0;
+
+            nRight[0]=cos(psi_max); nRight[1]=-sin(psi_max); nRight[2]=0;
+            wRight[0]=radius_m*sin(psi_max); wRight[1]=radius_m*cos(psi_max); wRight[2]=0;
+
+            while (!exit){
+                l_small=DBL_MAX;
+                wall=NONE;
+                double nx,ny,nz;
+                double wx,wy,wz;
+                int prm_idx;/*index indicating which table parameter set to choose*/
+
+                /*left wall*/
+                intersections[LEFT]=plane_intersect(l+LEFT,x,y,z,kx,ky,kz,nLeft[0],nLeft[1],nLeft[2],wLeft[0],wLeft[1],wLeft[2]);
+                if (intersections[LEFT] && l[LEFT]>DBL_EPSILON && l[LEFT]<l_small) {l_small=l[LEFT];i_small=intersections[LEFT];wall=LEFT;}
+                /*right wall*/
+                intersections[RIGHT]=plane_intersect(l+RIGHT,x,y,z,kx,ky,kz,nRight[0],nRight[1],nRight[2],wRight[0],wRight[1],wRight[2]);
+                if (intersections[RIGHT] && l[RIGHT]>DBL_EPSILON && l[RIGHT]<l_small) {l_small=l[RIGHT];i_small=intersections[RIGHT];wall=RIGHT;}
+                /*exit plane*/
+                intersections[EXIT]=plane_intersect(l+EXIT,x,y,z,kx,ky,kz,nExit[0],nExit[1],nExit[2],wExit[0],wExit[1],zexit_vec[ii]);
+                if (intersections[EXIT] && l[EXIT]>DBL_EPSILON && l[EXIT]<l_small) {l_small=l[EXIT];i_small=intersections[EXIT];wall=EXIT;}
+                /*top surface - the real reflecting surface*/
+                intersections[TOP]=intersect_hyperboloid((l+TOP),x,y,z,kx,ky,kz,Z0,radius_m,&(nTop[0]),&(nTop[1]),&(nTop[2]));
+                if (intersections[TOP] && l[TOP]>DBL_EPSILON && l[TOP]<l_small) {l_small=l[TOP];i_small=intersections[TOP];wall=TOP;}
+                /*bottom surface*/
+                intersections[BOTTOM]=intersect_hyperboloid((l+BOTTOM),x,y,z,kx,ky,kz,Z0,radius_m-local_pore_height,&(nBottom[0]),&(nBottom[1]),&(nBottom[2]));
+                if (intersections[BOTTOM] && l[BOTTOM]>DBL_EPSILON && l[BOTTOM]<l_small) {l_small=l[BOTTOM];i_small=intersections[BOTTOM];wall=BOTTOM;}
+
+                /*sort intersections ot find the smallest positive one*/
+                switch (wall){
+                    case LEFT:
+                        /*handle left wall "reflection"*/
+                        reflec_table=&reflec_side_table;
+                        nx=nLeft[0];ny=nLeft[1];nz=nLeft[2];
+                        prm_idx=2;
+                        break;
+                    case RIGHT:
+                        /*handle right wall "reflection"*/
+                        reflec_table=&reflec_side_table;
+                        nx=nRight[0];ny=nRight[1];nz=nRight[2];
+                        prm_idx=2;
+                        break;
+                    case TOP:
+                        /*handle top wall reflection*/
+                        if(coatedPlate){
+                            reflec_table=&reflec_top_table;
+                            prm_idx=0;
+                        } else {
+                            reflec_table=&reflec_bottom_table;
+                            prm_idx=1;
+                        }
+                        nx=nTop[0];ny=nTop[1];nz=nTop[2];
+                        break;
+                    case BOTTOM:
+                        /*handle bottom wall "reflection"*/
+                        reflec_table=&reflec_bottom_table;
+                        nx=nBottom[0];ny=nBottom[1];nz=nBottom[2];
+                        prm_idx=1;
+                        break;
+                    case EXIT:
+                        /*photon will exit pore*/
+                        exit=1;
+                        break;
+                }
+
+                ref_index++;
+
+                if(exit){
+                    break;
+                } else if(ref_index < MAX_TRACKED_REFLECTIONS){
+                  reflections[ref_index] = wall;
+                }
+
+                PROP_DL(l_small);
+
+                double kix=kx,kiy=ky,kiz=kz;
+                double k=sqrt(kx*kx+ ky*ky + kz*kz);
+                double e=K2E*k;
+                double s=scalar_prod(kx,ky,kz,nx,ny,nz);
+                double theta=RAD2DEG*(M_PI_2-acos(s/k)); /*pi_2 since theta is supposed to be the grazing angle*/
+
+                /*if we have waviness alter the normal vector slightly*/
+                if(waviness!=0){
+                    /*assuming theta to be small we might disregard atan*/
+                    if(longw){
+                        double dtheta;
+                        if(theta<waviness){
+                            dtheta=rand01()*(theta+waviness)-theta;
+                        } else {
+                            dtheta=randpm1()*waviness;
+                        }
+                        double tx,ty,tz;
+                        vec_prod(tx,ty,tz,0,0,1,nx,ny,nz);
+                        rotate(nx,ny,nz, nx,ny,nz, dtheta, tx,ty,tz);
+                    }else{
+                        /*waviness is also transversal but isotropic*/
+                        double radius;
+                        if(theta<waviness){
+                            radius=atan(waviness);
+                            randvec_target_circle(&nx,&ny,&nz,NULL,nx,ny,nx,radius);
+                        }else{
+                            radius=(atan(theta)+atan(waviness))/2.0;
+                            randvec_target_circle(&nx,&ny,&nz,NULL,nx,ny,nx+radius-atan(theta),radius);
+                        }
+                        NORM(nx,ny,nz);
+                    }/*reflect the photon through the surface normal*/
+                    /*recompute theta*/
+                    theta=RAD2DEG*0.5*acos(scalar_prod(kx,ky,kz,kix,kiy,kiz)/k/k);
+                }
+                if(s!=0){
+                    kx-=2*s*nx;
+                    ky-=2*s*ny;
+                    kz-=2*s*nz;
+                }
+
+                if(&non_specular_table!=NULL){
+                    double lw = Table_Value2d(non_specular_table, (e-non_specular_prms.e_min)/non_specular_prms.e_step, (theta-non_specular_prms.theta_min)/non_specular_prms.theta_step);
+                    double dtheta=lorentzDistribution(0, lw)*M_PI/180;
+                    double tx,ty,tz;
+                    vec_prod(tx,ty,tz,0,0,1,nx,ny,nz);
+                    rotate(kx, ky, kz, kx, ky, kz, dtheta, tx,ty,tz);
+                }
+
+                SCATTER;
+
+                if(reflec_table==NULL || reflec_table->rows==-1){
+                    R=R_d;
+                }else{
+                    R=Table_Value2d(*reflec_table,(e-ref_prms[prm_idx].e_min)/ref_prms[prm_idx].e_step, (theta-ref_prms[prm_idx].theta_min)/ref_prms[prm_idx].theta_step);
+                }
+                p*=R;
+            }
+        }else if (hit_chamfer){
+            ABSORB;
+        }else{
+            /*no hit*/
+            ABSORB;
+        }
+    }else{
+        /*no hit*/
+        ABSORB;
+    }
+%}
+
+FINALLY
+%{
+    free(zexit_vec);
+%}
+
+MCDISPLAY
+%{
+    magnify("");
+   /*this bit comes from MM_p*/
+    int k,j;
+    double dth,theta,t0,t1,inner_m,inner_h;
+    double r_h[3],r_m[3],w[3],yh[2];
+    const int N=20;
+
+    r_h[0] = Table_Index(size_table,size_table.rows,3);
+    r_h[1] = Table_Index(size_table,size_table.rows/2,3);
+    r_h[2] = Table_Index(size_table,0,3);
+    yh[0]=r_h[0]-r_h[2];
+    yh[1]=pore_height;
+
+    r_m[0] = Table_Index(size_table,size_table.rows,4);
+    r_m[1] = Table_Index(size_table,size_table.rows/2,4);
+    r_m[2] = Table_Index(size_table,0,4);
+
+    w[0]=w[2]=xwidth;w[1]=pore_width;
+
+    for (j=0;j<2;j++){
+        theta=w[j]/2.0/r_m[j];
+        inner_m=r_m[j]-yh[j];
+        inner_h=r_h[j]-yh[j];
+
+        line(0,0+r_m[j],0, 0,r_h[j]-r_m[j]+r_m[j],zexit); /*this extra line indicates the reflecting surface*/
+        line( sin(theta)*r_m[j], (cos(theta)-1)*r_m[j]+r_m[j], 0,  sin(theta)*r_h[j], cos(theta)*r_h[j]-r_m[j]+r_m[j], zexit);
+        line(-sin(theta)*r_m[j], (cos(theta)-1)*r_m[j]+r_m[j], 0, -sin(theta)*r_h[j], cos(theta)*r_h[j]-r_m[j]+r_m[j], zexit);
+
+        line( sin(theta)*inner_m, cos(theta)*inner_m-r_m[j]+r_m[j], 0,  sin(theta)*inner_h, cos(theta)*inner_h-r_m[j]+r_m[j], zexit);
+        line(-sin(theta)*inner_m, cos(theta)*inner_m-r_m[j]+r_m[j], 0, -sin(theta)*inner_h, cos(theta)*inner_h-r_m[j]+r_m[j], zexit);
+
+        line( sin(theta)*r_m[j], (cos(theta)-1)*r_m[j]+r_m[j], 0,  sin(theta)*inner_m, cos(theta)*inner_m-r_m[j]+r_m[j], 0);
+        line(-sin(theta)*r_m[j], (cos(theta)-1)*r_m[j]+r_m[j], 0, -sin(theta)*inner_m, cos(theta)*inner_m-r_m[j]+r_m[j], 0);
+        line( sin(theta)*r_h[j], cos(theta)*r_h[j]-r_m[j]+r_m[j], zexit,  sin(theta)*inner_h, cos(theta)*inner_h-r_m[j]+r_m[j], zexit);
+        line(-sin(theta)*r_h[j], cos(theta)*r_h[j]-r_m[j]+r_m[j], zexit, -sin(theta)*inner_h, cos(theta)*inner_h-r_m[j]+r_m[j], zexit);
+
+        dth=2*theta/N;
+        for (k=1;k<N+1;k++){
+            t0=-theta+(k-1)*dth;
+            t1=-theta+k*dth;
+            line( sin(t0)*r_m[j], cos(t0)*r_m[j]-r_m[j]+r_m[j], 0, sin(t1)*r_m[j], cos(t1)*r_m[j]-r_m[j]+r_m[j], 0);
+            line( sin(t0)*inner_m, cos(t0)*inner_m-r_m[j]+r_m[j], 0, sin(t1)*inner_m, cos(t1)*inner_m-r_m[j]+r_m[j], 0);
+
+            line( sin(t0)*r_h[j], cos(t0)*r_h[j]-r_m[j]+r_m[j], zexit, sin(t1)*r_h[j], cos(t1)*r_h[j]-r_m[j]+r_m[j], zexit);
+            line( sin(t0)*inner_h, cos(t0)*inner_h-r_m[j]+r_m[j], zexit, sin(t1)*inner_h, cos(t1)*inner_h-r_m[j]+r_m[j], zexit);
+        }
+    }
+%}
+
+END

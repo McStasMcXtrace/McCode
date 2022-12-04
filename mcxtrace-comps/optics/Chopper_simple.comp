@@ -31,7 +31,7 @@
 * t0:    [s] Initial delay of the opening time
 * T:     [s] Period of the chopper
 * tau:   [s] Opening time of the chopper 
-* t_rise [s] Rise time of the chopper pulse.
+* t_rise: [s] Rise time of the chopper pulse.
 * xwidth:[m] height of the chopper opening
 * yheight:[m] width of the chopeper opening
 * isfirst: [ ] is the chopper the first chopper on a continous source.

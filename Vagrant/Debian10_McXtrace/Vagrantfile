@@ -46,11 +46,11 @@ Vagrant.configure("2") do |config|
   # Use 4. 
 
   # 1.
-  config.vm.provision "shell", path: "provision/bootstrap.sh"
+  #config.vm.provision "shell", path: "provision/bootstrap.sh"
   # 2.
-  config.vm.provision "shell", path: "provision/developer.sh"
+  #config.vm.provision "shell", path: "provision/developer.sh"
   # 3. 
   #config.vm.provision "shell", path: "provision/deps.sh"  
   # 4.
-  #config.vm.provision "shell", path: "provision/mcxtrace.sh"
+  config.vm.provision "shell", path: "provision/mcxtrace.sh"
 end

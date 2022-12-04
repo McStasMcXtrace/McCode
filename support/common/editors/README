@@ -1,24 +1,22 @@
-McStas 2.0, code for setting up editors for McStas syntax highlighting
-The editor shipped with McStas McGUI has syntax highlighting built-in.
+Code for setting up editors for McStas and McXtrace (Collectively known as McCode) syntax highlighting
+
+The editor shipped with McStas and McXtrace GUIs has syntax highlighting built-in.
+
+If you experience difficulties with the built in editor or simply prefer something else, any editor of your choice
+may be used. Below are instructions for getting McCode-specific syntax highlighting for a few popular choices.
+Note that McStas/McXtrace-syntax is very close to c, so as a fallback a c-mode
+is a good solution.
 
 NEDIT:
 nedit should be copied to a .nedit file in your home directory
 
-KATE (KDE):
-mcstas.xml is for usage with the excellent kate editor of KDE. Copy the 
-file to e.g. (Correct path on a Debian system)
-  mcstas.xml -> /usr/share/apps/katepart/syntax/ 
-
 GEDIT (Gnome):
-mcstas1.lang and mcstas2.lang are for usage under Gnome. Gedit uses gtksourceview. The 
-syntax definition file should be copied in e.g. (Correct path on a Debian system)
-  mcstas1.lang -> /usr/share/gtksourceview-1.0/language-specs/ 
-  mcstas2.lang -> /usr/share/gtksourceview-2.0/language-specs/
-  mcstas3.lang -> /usr/share/gtksourceview-3.0/language-specs/ 
+Gedit uses gtksourceview. The syntax definition file should be copied in e.g. (Correct path on a Debian system)
+  mccode3.lang -> /usr/share/gtksourceview-3.0/language-specs/ 
 
 (X)EMACS:
-McStas is not C only, but quite close. The contents of the provided emacs
-file should be entered in your .emacs file, setting font-lock-mode by
-default and using the standard c-mode for McStas .instr files.
+As noted McStas/McXtrace is not C only, but quite close. The contents of the 
+provided emacs file should be entered in your .emacs file, setting font-lock-mode by
+default and using the standard c-mode for McCode .instr files.
 Note: Works also on Win32, copy the .emacs file to c:\ :-)
 

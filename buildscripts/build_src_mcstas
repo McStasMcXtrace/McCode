@@ -1,0 +1,75 @@
+#!/bin/sh
+export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "import os;print(os.cpu_count())")}
+
+if [ "x$1" = "x" ]; then
+    # No arguments
+    echo Please provide one argument,e.g : $0 2.0
+    exit 1;
+fi
+
+# Ensure our 3rd party modules are in place and updated
+THIRDPARTY=`ls 3rdparty | grep -v patches`
+cd 3rdparty
+
+cd -
+
+./3rdparty/sync.sh
+
+
+for MODULE in `echo $THIRDPARTY`
+do
+    if [ -d "3rdparty/patches/${MODULE}" ]; then
+	echo Making McCode cmake modules available for $MODULE
+        rsync -avz cmake/ 3rdparty/${MODULE}/cmake
+	echo Applying McCode patches to 3rdparty/${MODULE}
+	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
+    fi
+done
+WORK=`pwd`
+
+# 64-bit
+./mkdist mcstas $1 "" "" linux64 "" -- src
+./mkdist mcstas-comps $1 "" "" linux64 "" -- src
+./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" linux64 "" -- src
+./mkdist mcstas-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" linux64 "" -- src
+./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" linux64 "" -- src
+./mkdist mcstas-tools-python-mcplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" linux64 "" -- src
+./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 "" -- src
+./mkdist mcstas-tools-python-mcplot-svg $1 tools/Python/mcplot/svg/ "" linux64 "" -- src
+./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" linux64 "" -- src
+./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" linux64 "" -- src
+./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" linux64 "" -- src
+./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" linux64 "" -- src
+./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" linux64 "" -- src
+./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" linux64 "" -- src
+./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" linux64 "" -- src
+./mkdist mcstas-miniconda3 $1 support/rpm/miniconda3/ "" linux64 "" -- src
+./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" linux64 "" -- src
+./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" linux64 "" -- src
+./mkdist mcstas-mcpl $1 3rdparty/mcpl-package "" linux64 "" -- src
+./mkdist mcstas-ncrystal $1 3rdparty/ncrystal-package "" linux64 "" -- src
+
+#build metapackages?
+if [ "x$2" != "x" ]; then
+  cd meta-pkgs/src
+
+  outfile=mcstas-${1}-UNIX-src.tar
+  if [ -e $outfile ]; then
+    rm $outfile;
+  fi
+  if [ -e ${outfile}.gz ]; then
+    rm ${outfile}.gz;
+  fi
+
+  ln -s ../../dist ${outfile%.tar}
+  echo  ${outfile%.tar}
+
+  for subpkg in `ls ${outfile%.tar}/mcstas*-${1}-src.tar.gz`
+  do
+    tar -h -rf $outfile $subpkg
+  done
+  tar -tf $outfile
+  gzip $outfile
+  rm mcstas-${1}-UNIX-src
+  cp $WORK/INSTALL-McStas-3.x/Linux/src/README.md $WORK/dist
+fi

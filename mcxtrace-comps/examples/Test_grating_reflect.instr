@@ -1,0 +1,121 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Test_grating_reflect
+*
+* %Identification
+* Written by: Stephane Bac, Antoine Padovani
+* Date: Jul 21st 2022
+* Origin: Synchrotron Soleil
+* %INSTRUMENT_SITE: Tests
+*
+* Unit-test instrument for the Grating reflect component.
+*
+* Simply a bending magnet illuminating a reflection grating.
+*
+* %Example: E0=1 Detector: psd_monitor_I=3.74341e+06
+*
+* %Parameters
+* E0: [keV] Source's center of emitted energy spectrum
+* dE: [keV] Source's half-width of emitted energy spectrum
+* angle_grating_norm: [deg.] Angle between the norm of the grating and the incident ray
+* number_lines_per_mm: Number of lines pr mm of the grating
+* order: The target order of the grating 
+* dphi: [deg.] Range of diffraction angle that is to be simulated -d_phi/2 ; d_phi/2
+*
+* %End
+*******************************************************************************/
+//n=1e8 rays is good for default values
+//Only for the trace viewer, (because one would need to change the monitors dimensions,dphi for a simulation to see the different orders) one can also try an angle_grating_norm of 8.6833 and -8.6833 with E0=0.00248, dE=0, number_lines_per_mm=1200, and order = 0, 1 or -1. These values are relevant for the czerny_turner monochromator
+DEFINE INSTRUMENT Test_grating_reflect(E0=1, dE=0.1, angle_grating_norm=88, number_lines_per_mm=100, order=0, dphi=1)
+
+DECLARE
+%{
+
+double period;
+double angle_order_grating;
+double sign;
+double angle_grating_norm_pos;
+
+%}
+
+INITIALIZE
+%{
+
+sign=1; //sign is here to take into account the ray arriving on the other side of the norm. Test angle_grating_norm=-88 for example.
+
+period = 1/(1e3*number_lines_per_mm);
+fprintf(stdout,"Grating period: %g \n", period);
+
+angle_grating_norm_pos = angle_grating_norm;
+
+if(angle_grating_norm<0){
+  angle_grating_norm_pos = -angle_grating_norm;
+  sign=-1;
+}
+
+angle_order_grating = RAD2DEG*asin(-(12.39842/(E0))/1e10*order/period+sin(DEG2RAD*angle_grating_norm_pos));
+fprintf(stdout,"Angle for order %g is %g degrees \n", order, angle_order_grating);
+
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT Source = Bending_magnet(
+    E0=E0,   
+    dE = dE,
+    B=1.72,
+    Ee=2.75
+    )
+AT (0, 0, 0) RELATIVE origin
+
+COMPONENT Grating_position = Arm()
+AT (0, 0, 844e-3) RELATIVE PREVIOUS	
+
+COMPONENT Grating_rotation = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS	
+ROTATED (-(90-angle_grating_norm), 0, 0) RELATIVE PREVIOUS	
+
+COMPONENT reflective_grating = Grating_reflect(
+    d_phi=dphi,order=order,
+    rho_l=number_lines_per_mm,
+    zdepth=102e-3,xwidth=102e-3)    
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0, 0, 0) RELATIVE PREVIOUS
+
+//4PI monitor for debugging purposes
+/*COMPONENT psd_monitor_4pi = PSD_monitor_4PI(
+filename="3D.dat",restore_xray=1)
+AT (0, 0, 0) RELATIVE PREVIOUS*/
+
+COMPONENT Mgrating_arm_back = Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (sign*angle_order_grating, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT Monitor_location = Arm()
+AT (0,749.1e-3,0) RELATIVE PREVIOUS
+ROTATED (90, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT psd_monitor = PSD_monitor(
+    filename="psd", 
+    xmin=-0.01, 
+    xmax=0.01,
+    ymin=-0.01, 
+    ymax=0.01,             
+    nx=100,
+    ny=100,
+    restore_xray = 1
+    )
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT psd_giant = PSD_monitor(xwidth=0.02, yheight=0.02, filename="psd_giant",ny=2000,nx=1)
+AT(0,0,0) RELATIVE PREVIOUS
+
+FINALLY
+%{
+%}
+
+END

@@ -1,80 +1,85 @@
- /*******************************************************************************
- *
- * McXtrace, X-ray tracing package
- *         Copyright, All rights reserved
- *         Risoe National Laboratory, Roskilde, Denmark
- *         Institut Laue Langevin, Grenoble, France
- *         University of Copenhagen, Copenhagen, Denmark
- *
- * Component: Bragg_crystal_bent
- * 
- * %I
- * Written by: Marcus H Mendenhall, NIST <marcus.mendenhall@nist.gov>
- * Based on: Perfect_crystal.comp written by Anette Vickery, Andrea Prodi, Erik Knudsen
- * Date: December 1, 2016
- * Version: 2.0-a
- * Origin: NIST, Gaithersburg, MD, USA
- *
- * Bent, perfect, reflecting crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
- *
- * %D
- * Bragg_crystal_bent.comp supercedes Perfect_Crystal_bent.comp with major edits and corrections.
- *
- * For details see:
- * The optics of focusing bent-crystal monochromators on X-ray powder diffractometers with application to lattice parameter determination and microstructure analysis, 
- * Marcus H. Mendenhall,* David Black and James P. Cline, J. Appl. Cryst. (2019). 52, https://doi.org/10.1107/S1600576719010951
- *
- * Reads atomic formfactors from a data input file.
- *
- * The crystal code reflects ray in an ideal geometry, does not include surface imperfections or mosaicity
- * The crystal planes from which the reflection is made lies in the X-Z plane on the unbent crystal rotated
- * by an angle alpha about the Y axis with respect to the crystal surface.
- *
- * The external geometry of the crystal follows that of Elliptic_mirror.comp.
- * I.e. the crystal is positioned such that the a-axis of the ellipsoid is on the
- * z-axis, the b-axis is along the y-axis and the c is along the x-axis.
- * The reference point of the crystal is the ellipsoid centre, offset by one half-axis along the y-axis.
- * (See the component manual for Elliptic_mirror for a drawing).
- *
- * Notation follows Tadashi Matsushita and Hiro-O Hashizume, X-RAY MONOCHROMATORS. Handbook on Synchrotron Radiation,North-Holland Publishing Company, 1:263–274, 1983.
- *
- * Non-copyright notice:
- * Contributed by the National Institute of Standards and Technology; not subject to copyright in the United States. 
- * This is not an official contribution, in that the results are in no way certified by NIST.
- *
- * NOTE: elliptical coordinate code and documentation taken from Mirror_elliptic.comp distributed in McXtrace v1.2
- * However, the coordinates are rotated to be consistent with Bragg_crystal_flat.comp and Perfect_Crystal.comp.
- * Idealized elliptic mirror with surface ellipse and lattice ellipses independent, to allow construction of
- * Johansson optics, for example.
- * 
- * %P
- * INPUT PARAMETERS
- * x_a:     [m]    1st short half axis (along x). Commonly set to zero, which really implies infinite value, so crystal is an elliptic cylinder.
- * y_b:     [m]    2nd short half axis (along y), which is also the presumed near-normal direction, reflection near the y-z plane.
- * z_c:     [m]    long  half axis (along z). Commonly a=0. b=c, which creates a circular cylindrical surface.
- * width:   [m]    x width of the crystal.
- * length:  [m]    z depth (length) of the crystal.
- * lattice_x_a: [m] curvature matrix for underlying lattice, for bent/ground/rebent crystals THERE HAS BEEN NO TESTING for the case in which lattice_x_a != x_a.
- * lattice_y_b: [m] curvature matrix for underlying lattice, for bent/ground/rebent crystals
- * lattice_z_c: [m] curvature matrix for underlying lattice, for bent/ground/rebent crystals
- * material: [ ]   Si, Ge (maybe also GaAs?)
- * V:       [AA^3] unit cell volume
- * h:       [ ]    Miller index of reflection
- * k:       [ ]    Miller index of reflection
- * l:       [ ]    Miller index of reflection
- * alpha:   [rad]  asymmetry angle (alpha=0 for symmetric reflection, ie the Bragg planes are parallel to the crystal surface)
- *    alpha is defined so that positive alpha reduces the Bragg angle to the plane i.e. alpha=Thetain grazes the planes.
- *    if alpha!=0,  one should restrict to rays which have small kx values, since otherwise the alpha rotation is not
- *    around the diffraction axis.
- * R0:      [ ]    Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging.
- * debye_waller_B: [AA^2]	Debye-Waller temperature factor, M=B*(sin(theta)/lambda)^2*(2/3), default=silicon at room temp.
- * crystal_type: [ ] 1 => Mx_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i,
- *      2 => Mx_crystal_diamond: diamond
- *      3 => Mx_crystal_fcc: fcc
- *      4 => Mx_crystal_fcc: bcc
- *
- * %E
- *******************************************************************************/
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*         University of Copenhagen, Copenhagen, Denmark
+*
+* Component: Bragg_crystal_bent
+* 
+* %I
+* Written by: Marcus H Mendenhall, NIST <marcus.mendenhall@nist.gov>
+* Based on: Perfect_crystal.comp written by Anette Vickery, Andrea Prodi, Erik Knudsen
+* Date: December 1, 2016
+* Origin: NIST, Gaithersburg, MD, USA
+*
+* Bent, perfect, reflecting crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
+*
+* %D
+* Bragg_crystal_bent.comp supercedes Perfect_Crystal_bent.comp with major edits
+* and corrections.
+* 
+* Reads atomic formfactors from a data input file.
+* 
+* The crystal code reflects ray in an ideal geometry, does not include surface
+* imperfections or mosaicity The crystal planes from which the reflection is made
+* lies in the X-Z plane on the unbent crystal rotated by an angle alpha about the
+* Y axis with respect to the crystal surface.
+* 
+* The external geometry of the crystal follows that of Elliptic_mirror.comp. I.e.
+* the crystal is positioned such that the a-axis of the ellipsoid is on the
+* z-axis, the b-axis is along the y-axis and the c is along the x-axis. The
+* reference point of the crystal is the ellipsoid centre, offset by one half-axis
+* along the y-axis. (See the component manual for Elliptic_mirror for a drawing).
+* 
+* Notation follows Tadashi Matsushita and Hiro-O Hashizume, X-RAY MONOCHROMATORS. 
+* Handbook on Synchrotron Radiation,North-Holland Publishing Company, 1:263–274, 1983.
+* 
+* Non-copyright notice: Contributed by the National Institute of Standards and
+* Technology; not subject to copyright in the United States. This is not an
+* official contribution, in that the results are in no way certified by NIST.
+* 
+* NOTE: elliptical coordinate code and documentation taken from
+* Mirror_elliptic.comp distributed in McXtrace v1.2 However, the coordinates are
+* rotated to be consistent with Bragg_crystal_flat.comp and Perfect_Crystal.comp.
+* Idealized elliptic mirror with surface ellipse and lattice ellipses
+* independent, to allow construction of Johansson optics, for example.
+*
+* Example: Bragg_crystal_bent(length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alpha=0)
+*
+* For details see:
+*   The optics of focusing bent-crystal monochromators on X-ray powder diffractometers with application to lattice parameter determination and microstructure analysis, 
+*   Marcus H. Mendenhall,David Black and James P. Cline, J. Appl. Cryst. (2019). 52, https://doi.org/10.1107/S1600576719010951
+* 
+* %P
+* INPUT PARAMETERS
+* x_a:     [m]    1st short half axis (along x). Commonly set to zero, which really implies infinite value, so crystal is an elliptic cylinder.
+* y_b:     [m]    2nd short half axis (along y), which is also the presumed near-normal direction, reflection near the y-z plane.
+* z_c:     [m]    long  half axis (along z). Commonly a=0. b=c, which creates a circular cylindrical surface.
+* width:   [m]    x width of the crystal.
+* length:  [m]    z depth (length) of the crystal.
+* lattice_x_a: [m] curvature matrix for underlying lattice, for bent/ground/rebent crystals THERE HAS BEEN NO TESTING for the case in which lattice_x_a != x_a.
+* lattice_y_b: [m] curvature matrix for underlying lattice, for bent/ground/rebent crystals
+* lattice_z_c: [m] curvature matrix for underlying lattice, for bent/ground/rebent crystals
+* material: [ ]   Si, Ge (maybe also GaAs?)
+* V:       [AA^3] unit cell volume
+* h:       [ ]    Miller index of reflection
+* k:       [ ]    Miller index of reflection
+* l:       [ ]    Miller index of reflection
+* alpha:   [rad]  asymmetry angle (alpha=0 for symmetric reflection, ie the Bragg planes are parallel to the crystal surface)
+*    alpha is defined so that positive alpha reduces the Bragg angle to the plane i.e. alpha=Thetain grazes the planes.
+*    if alpha!=0,  one should restrict to rays which have small kx values, since otherwise the alpha rotation is not
+*    around the diffraction axis.
+* R0:      [ ]    Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging.
+* debye_waller_B: [AA^2]	Debye-Waller temperature factor, M=B*(sin(theta)/lambda)^2*(2/3), default=silicon at room temp.
+* crystal_type: [ ] 1 => Mx_crystal_explicit: provide explicit real and imaginary form factor multipliers structure_factor_scale_r, structure_factor_scale_i,
+*      2 => Mx_crystal_diamond: diamond
+*      3 => Mx_crystal_fcc: fcc
+*      4 => Mx_crystal_fcc: bcc
+*
+* %E
+*******************************************************************************/
 
 DEFINE COMPONENT Bragg_crystal_bent
 DEFINITION PARAMETERS ()
@@ -266,6 +271,9 @@ TRACE
 #endif
 
             double sth=sin(Theta0+Thetah), cth=cos(Theta0+Thetah);
+            if(sig_x*pi_y*pi_z > 0) { /* backwards hit, rotate the other way */
+                sth=-sth;
+            }            
             double sx2=sig_x*sig_x, sy2=sig_y*sig_y, sz2=sig_z*sig_z, r2=sig_x*sig_x+sig_y*sig_y;
 
             /* initialize a rotation matrix by the appropriate angle around the sigma axis, this from Mathematica RotationMatrix[] */

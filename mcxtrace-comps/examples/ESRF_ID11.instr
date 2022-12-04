@@ -7,13 +7,14 @@
 * Written by: E. B. Knudsen (erkn@fysik.dtu.dk)
 * Date: Nov. 26th, 2009
 * Origin: Ris&oslash; DTU
-* Version: $Revision$
 * %INSTRUMENT_SITE: ESRF
+*
+* Model of the ESRF ID11 Transfocator based beamline.
 *
 * %Description
 * Model of the ESRF ID11 Transfocator based beamline.
 *
-* %Example: ESRF_ID11.instr ANGLE=0 Detector: psd_eh3_sample_I=0.117986
+* %Example: ESRF_ID11.instr ANGLE=0 Detector: psd_eh3_sample_I=0.284963
 *
 * %Parameters
 * ANGLE [deg] Rotation (misalignment) of first transfocator 

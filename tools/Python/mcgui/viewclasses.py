@@ -5,7 +5,12 @@ import sys
 import os
 import re
 from widgets import *
-from PyQt5 import Qsci, QtWidgets
+from PyQt5 import QtWidgets
+
+try:
+    from PyQt5 import Qsci
+except ImportError:
+    Qsci = None
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import mccode_config
@@ -56,7 +61,8 @@ class McView(object):
         self.mw.ui.lblInstrument.setText(labels[0])
         if str(labels[0]) == '':
             self.__ssd = None
-        self.ew.initCodeEditor(instr)
+        if Qsci:
+            self.ew.initCodeEditor(instr)
 
     def updateStatus(self, text=''):
         self.mw.ui.statusbar.showMessage(text)
@@ -106,6 +112,7 @@ class McView(object):
         ui.actionNew_Instrument.setEnabled(True)
         ui.menuNew_From_Template.setEnabled(True)
         ui.actionEdit_Instrument.setEnabled(enableRun)
+        ui.actionEditExt_Instrument.setEnabled(enableRun)
         ui.actionCompile_Instrument.setEnabled(enableRun)
         ui.actionCompile_Instrument_MPI.setEnabled(enableRun)
 
@@ -273,11 +280,12 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
             self.resize(920, sheight)
 
         # dynamically added widgets
-        self.__scintilla = None
-        self.__edtSearch = None
-        self.__initScintilla()
-        self.__initCallbacks()
-        self.__initSearchbar()
+        if Qsci:
+            self.__scintilla = None
+            self.__edtSearch = None
+            self.__initScintilla()
+            self.__initCallbacks()
+            self.__initSearchbar()
 
     def __initSearchbar(self):
         ''' set focus, search action events '''
@@ -392,11 +400,12 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
                 action.h = h
                 action.triggered.connect(h.handle)
 
-        self.setLexerComps(self.__scintilla.__myApi, all_comp_names)
+        if Qsci:
+            self.setLexerComps(self.__scintilla.__myApi, all_comp_names)
 
     def initCodeEditor(self, instr):
         if instr != '':
-            self.__scintilla.setText(open(instr, encoding='utf-8').read())
+            self.__scintilla.setText(open(instr, encoding='utf-8', errors='ignore').read())
         else:
             self.__scintilla.setText('')
         self.setWindowTitle(mccode_config.configuration["MCCODE"] + ": " + instr)
@@ -464,6 +473,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
 
     def __initScintilla(self):
         # delete text editor placeholder
+        assert Qsci
         scintilla = Qsci.QsciScintilla(self)
 
         ########################
@@ -543,6 +553,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
         api.add("SPLIT")
         api.add("REMOVABLE")
         api.add("DEPENDENCY")
+        api.add("SHELL")
         # add components
         for name in all_comp_names:
             api.add(name)
@@ -593,8 +604,10 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
             self.volatileDataTransition.emit(True)
 
     def __handleSaveAction(self):
-        if self.volatileDataExists:
-            self.saveRequest.emit(self.__scintilla.text())
+        if Qsci:
+            if self.volatileDataExists:
+                self.saveRequest.emit(self.__scintilla.text())
+
 
     def __handleVolatileDataPresent(self, volatileDataExists=False):
         if volatileDataExists:
@@ -621,6 +634,10 @@ class McStartSimDialog(QtWidgets.QDialog):
         self._last_mcplots = None
         self.ui = Ui_dlgStartSim()
         self.ui.setupUi(self)
+        if not mccode_config.configuration["PARTICLE"] == "neutron":
+            self.ui.lblGravity.setHidden(True)
+            self.ui.cbxGravity.setHidden(True)
+
         self.ui.btnStart.clicked.connect(self.accept)
         self.ui.btnCancel.clicked.connect(self.reject)
         self._set_inspect_visible(False)
@@ -782,7 +799,7 @@ class McStartSimDialog(QtWidgets.QDialog):
 
             i = i + 1
             x = i % (int(mccode_config.configuration["GUICOLS"])*2)
-            y = i / (int(mccode_config.configuration["GUICOLS"])*2)
+            y = i // (int(mccode_config.configuration["GUICOLS"])*2)
 
             lbl = QtWidgets.QLabel(self.ui.gbxGrid)
             lbl.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
@@ -1127,6 +1144,10 @@ class McConfigDialog(QtWidgets.QDialog):
         self.ui.edtNumCols.setText(mccode_config.configuration["GUICOLS"])
         self.ui.edtNumCols.conf_var = "GUICOLS"
 
+        self.ui.editor.setText(mccode_config.configuration["EDITOR"])
+        self.ui.editor.conf_var = "EDITOR"
+
+
     def __pullValuesTo_mccode_config(self):
         # mcrun combobox
         i = self.ui.cbxMcrun.currentIndex()
@@ -1147,6 +1168,7 @@ class McConfigDialog(QtWidgets.QDialog):
         mccode_config.compilation[str(self.ui.edtMPIrun.conf_var)] = str(self.ui.edtMPIrun.text())
         mccode_config.compilation[str(self.ui.edtNumNodes.conf_var)] = str(self.ui.edtNumNodes.text())
         mccode_config.configuration[str(self.ui.edtNumCols.conf_var)] = str(self.ui.edtNumCols.text())
+        mccode_config.configuration[str(self.ui.editor.conf_var)] = str(self.ui.editor.text())
         # Export selected variables to the system / mcrun
         target_mccode=mccode_config.configuration["MCCODE"].upper()
         # CFLAGS and CC:

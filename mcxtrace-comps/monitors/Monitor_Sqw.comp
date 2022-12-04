@@ -1,0 +1,306 @@
+/*******************************************************************************
+*
+* McXtrace, xray-tracing package
+*         Copyright (C) 1997-2022, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
+*
+* Component: Monitor_Sqw
+*
+* %Identification
+* Written by: <a href="mailto:emmanuel.farhi@synchrotron-soleil.fr">Emmanuel Farhi</a>
+* Date: Aug 2022
+* Origin: SOLEIL
+*
+* This component is a Sqw Monitor that records the dynamic structure factor S(q,w)
+* from a scattering location, seen from a detector location.
+*
+* %Description
+* This component is a specialized Monitor_nD variation, which records the S(q,w)
+* scattering law. It accepts about the same parameters as the Monitor_nD, but makes
+* use of the 'q' and 'w' user variables. The photons are restored in their previous
+* state after neing detected (restore_photon=1).
+*
+* The monitor records the intensity as a function of q=kf-ki and w=Ef-Ei were the
+* 'f' refers to the component location, and the 'i' refers to the component located
+* at 'index' relative to the component location.
+*
+* The component uses automatic limits, and is thus not recommended with MPI/multiprocessing.
+* In this case, the limits should be set manually, e.g. user1=q and user2=w
+*   options="user1 limits=[0 10] bins=100, user2 limits=[-50 50] bins=200"
+*
+* A usage example is for instance:
+*   COMPONENT sample = Isotropic_Sqw(...)
+*
+*   COMPONENT sqw = Monitor_Sqw(index=-1, radius=2, yheight=2, bins=128)
+*
+* This component can be used to generate dynamic structure factors comvolved with
+* the instrument response, and compare with molecular dynamics results (using e.g. nMoldyn).
+* The incoming beam (e.g. at the sample) must be monochromatic.
+*
+* %Parameters
+* INPUT PARAMETERS:
+*
+* xwidth: [m]      Width of detector.
+* yheight: [m]     Height of detector.
+* zdepth: [m]      Thickness of detector (z).
+* radius: [m]      Radius of sphere/banana shape monitor
+* options: [str]   String that specifies the configuration of the monitor The general syntax is "[x] options..." (see <b>Descr.</b>).
+* index: [1]       Index of the component where scattering occurs with respect to the location of the Monitor_Sqw location in the instrument description. The index is usually negative, and should point to e.g. a  Isotropic_Sqw, , PowderN, or Single_crystal instance. index=-1 for the previous component.
+*
+* Optional input parameters (override xwidth yheight zdepth):
+* xmin: [m]        Lower x bound of opening
+* xmax: [m]        Upper x bound of opening
+* ymin: [m]        Lower y bound of opening
+* ymax: [m]        Upper y bound of opening
+* zmin: [m]        Lower z bound of opening
+* zmax: [m]        Upper z bound of opening
+* filename: [str]  Output file name. If not set an automatic file name is used.
+* bins: [1]        Number of bins to force for all variables. Use 'bins' keyword in 'options' for heterogeneous bins
+* geometry: [str]  Name of an OFF file to specify a complex geometry detector
+* nowritefile: [1]      If set, monitor will skip writing to disk
+*
+* OUTPUT PARAMETERS:
+*
+* DEFS: [struct]   structure containing Monitor_nD Defines 
+* Vars: [struct]   structure containing Monitor_nD variables 
+*
+* %Link
+* <a href="Monitor_nD.html">Monitor_nD</a>
+* <a href="../examples/Test_Monitor_Sqw.html">Test_Monitor_Sqw</a>
+* <a href="http://forge.ill.fr/projects/nmoldyn/">nMoldyn</a>
+*
+* %End
+******************************************************************************/
+DEFINE COMPONENT Monitor_Sqw
+DEFINITION PARAMETERS ( user3=FLT_MAX)
+SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0,
+  xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, radius=0,
+  bins=0, min=-1e40, max=1e40,
+  int index=-1,string options=0, string filename=0,
+  string geometry=0,string username3=0, int nowritefile=0)
+/* these are protected C variables */
+OUTPUT PARAMETERS (DEFS, Vars, detector, mean_kx, mean_ky, mean_kz, sum_p, offdata)
+
+SHARE
+%{
+%include "monitor_nd-lib"
+%}
+
+DECLARE
+%{
+MonitornD_Defines_type DEFS;
+MonitornD_Variables_type Vars;
+MCDETECTOR detector;
+off_struct offdata;
+double mean_kx, mean_ky, mean_kz, sum_p;
+%}
+
+INITIALIZE
+%{
+char tmp[CHAR_BUF_LENGTH];
+strcpy(Vars.compcurname, NAME_CURRENT_COMP);
+  if (options != NULL)
+    strncpy(Vars.option, options, CHAR_BUF_LENGTH);
+  if (!strstr(Vars.option, "user1"))
+    strncat(Vars.option," user1", CHAR_BUF_LENGTH);
+  if (!strstr(Vars.option, "user2"))
+    strncat(Vars.option," user2", CHAR_BUF_LENGTH);
+  if (!strstr(Vars.option, "limits") && !strstr(Vars.option, "auto"))
+    strncat(Vars.option," all auto", CHAR_BUF_LENGTH);
+  strncat(Vars.option," borders", CHAR_BUF_LENGTH);
+  Vars.compcurpos = POS_A_CURRENT_COMP;
+
+  if (bins && !strstr(Vars.option, "bins")) {
+    sprintf(tmp, " all bins=%ld ", (long)bins); strncat(Vars.option, tmp, CHAR_BUF_LENGTH);
+  }
+  if (min > -FLT_MAX && max < FLT_MAX && !strstr(Vars.option, "limits")) {
+    sprintf(tmp, " all limits=[%g %g]", min, max); strncat(Vars.option, tmp, CHAR_BUF_LENGTH);
+  }
+  else if (min > -FLT_MAX) {
+    sprintf(tmp, " all min=%g", min); strncat(Vars.option, tmp, CHAR_BUF_LENGTH);
+  }
+  else if (max <  FLT_MAX) {
+    sprintf(tmp, " all max=%g", max); strncat(Vars.option, tmp, CHAR_BUF_LENGTH);
+  }
+
+  strcpy(Vars.UserName1, "Momentum transfer Q [Angs-1]");
+  strcpy(Vars.UserName2, "Energy transfer w [meV]");
+  strncpy(Vars.UserName3, username3 && strlen(username3) ? username3 : "", 128);
+  if (radius) {
+    xwidth = zdepth = 2*radius;
+    if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana"))
+      strncat(Vars.option, " banana", CHAR_BUF_LENGTH);
+    else if (!yheight && !strstr(Vars.option ,"sphere")) {
+      strncat(Vars.option, " sphere", CHAR_BUF_LENGTH);
+      yheight=2*radius;
+    }
+  }
+  int offflag=0;
+  if (geometry && strlen(geometry) && strcmp(geometry,"NULL") && strcmp(geometry,"0"))
+    if (!off_init(  geometry, xwidth, yheight, zdepth, 0, &offdata )) {
+      printf("Monitor_Sqw: %s could not initiate the OFF geometry. \n"
+             "            Defaulting to normal Monitor dimensions.\n", NAME_CURRENT_COMP);
+      strcpy(geometry, "");
+    } else {
+      offflag=1;
+    }
+
+  if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax && !strstr(Vars.option, "previous") && (!geometry || !strlen(geometry)))
+    exit(printf("Monitor_Sqw: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth, previous, geometry).\n", NAME_CURRENT_COMP));
+
+  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax,offflag);
+
+  if (filename && strlen(filename) && strcmp(filename,"NULL") && strcmp(filename,"0"))
+    strncpy(Vars.Mon_File, filename, 128);
+
+  Vars.Flag_parallel=1;
+  detector.m = 0;
+
+  mean_kx=0; mean_ky=0; mean_kz=0; sum_p=0;
+%}
+
+TRACE
+%{
+  double  XY=0;
+  double  l0 = 0;
+  double  l1 = 0;
+  double  pp;
+  int     intersect   = 0;
+
+  if (user3 != FLT_MAX) Vars.UserVariable3 = user3;
+
+  if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
+  {
+    /* determine intersections with object */
+    intersect = off_x_intersect(&l0, &l1, NULL, NULL,
+       x,y,z, kx, ky, kz, offdata );
+  }
+  else if ( (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE)
+         || (abs(Vars.Flag_Shape) == DEFS.SHAPE_DISK) ) /* square xy or disk xy */
+  {
+    // propagate to xy plane and find intersection
+    // make sure the event is recoverable afterwards
+    l0 = z;
+    ALLOW_BACKPROP;
+    PROP_Z0;
+    if ( (z>=l0) && (z*copysign(z,1.0)<=DBL_EPSILON) ) // forward propagation to xy plane was successful
+    {
+      if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE)
+      {
+        // square xy
+        intersect = (x>=Vars.mxmin && x<=Vars.mxmax && y>=Vars.mymin && y<=Vars.mymax);
+      }
+      else
+      {
+        // disk xy
+        intersect = (SQR(x) + SQR(y)) <= SQR(Vars.Sphere_Radius);
+      }
+    }
+    else intersect=0;
+  }
+  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) /* sphere */
+  {
+    intersect = sphere_intersect(&l0, &l1, x, y, z, kx, ky, kz, Vars.Sphere_Radius);
+  /*      intersect = (intersect && t0 > 0); */
+  }
+  else if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)) /* cylinder */
+  {
+    intersect = cylinder_intersect(&l0, &l1, x, y, z, kx, ky, kz, Vars.Sphere_Radius, Vars.Cylinder_Height);
+  }
+  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) /* box */
+  {
+    intersect = box_intersect(&l0, &l1, x, y, z, kx, ky, kz, 
+                              fabs(Vars.mxmax-Vars.mxmin), fabs(Vars.mymax-Vars.mymin), fabs(Vars.mzmax-Vars.mzmin));
+  }
+  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_PREVIOUS) /* previous comp */
+  { intersect = 1; }
+
+  if (intersect)
+  {
+    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) 
+     || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)
+     || (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL")) )
+    {
+      /* check if we have to remove the top/bottom with BANANA shape */
+      if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) {
+        double y0,y1;
+        /* propagate to intersection point as temporary variable to check top/bottom */
+        y0 = y+l0; 
+        y1 = y+l1;
+        if (fabs(y0) >= Vars.Cylinder_Height/2*0.99) l0 = l1;
+        if (fabs(y1) >= Vars.Cylinder_Height/2*0.99) l1 = l0;
+      }
+      if (l0 < 0 && l1 > 0)
+        l0 = 0;  /* photon was already inside ! */
+      if (l1 < 0 && l0 > 0) /* photon exit before entering !! */
+        l1 = 0;
+      /* t0 is now time of incoming intersection with the sphere. */
+      if ((Vars.Flag_Shape < 0) && (l1 > 0))
+        PROP_DL(l1); /* l1 outgoing beam */
+      else
+        PROP_DL(l0); /* l0 incoming beam */
+      /* Final test if we are on lid / bottom of banana/sphere */
+      if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA || abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) {
+        if (fabs(y) >= Vars.Cylinder_Height/2*0.99) {
+          intersect=0;
+        }
+      }
+    }
+  }
+  
+  if (intersect) {
+
+    double rx,ry,rz,rkx,rky,rkz,rt,rEx,rEy,rEz,rp,rphi;
+    double Ei, Ef;
+
+    SCATTER;
+
+    Ef = K2E*sqrt(kx*kx + ky*ky + kz*kz);
+
+    /* get incoming beam velocity in 'initial' coordinate frame */
+    RESTORE_XRAY(INDEX_CURRENT_COMP+index,
+      rx,ry,rz,rkx,rky,rkz,rphi,rt,rEx,rEy,rEz,rp);
+    
+    mean_kx += rkx*rp; mean_ky += rky*rp; mean_kz += rkz*rp;
+    sum_p   += rp;
+
+    /* compute mean incoming energy and mean beam direction */
+    rkx = mean_kx/sum_p; rky = mean_ky/sum_p; rkz = mean_kz/sum_p;
+    Ei = K2E*sqrt(rkx*rkx + rky*rky + rkz*rkz);
+
+    Vars.UserVariable1=sqrt( (kx-rkx)*(kx-rkx)
+                            +(ky-rky)*(ky-rky)
+                            +(kz-rkz)*(kz-rkz) ); // Q = |Kf - Ki| with left/right sign
+    Vars.UserVariable1 *= (x >= 0 ? 1 : -1);
+    Vars.UserVariable2  = Ef-Ei;                      // E = Ef-Ei
+
+    /* send current photon state to Monitor_nD_Trace */
+    Vars.cp  = p;
+    Vars.cx  = x;
+    Vars.ckx = kx;
+    Vars.cEx = Ex;
+    Vars.cy  = y;
+    Vars.cky = ky;
+    Vars.cEy = Ey;
+    Vars.cz  = z;
+    Vars.ckz = kz;
+    Vars.cEz = Ez;
+    Vars.ct  = t;
+    Vars.cphi= phi;
+
+    pp = Monitor_nD_Trace(&DEFS, &Vars);
+    SCATTER;
+
+  } /* end if intersection */
+
+  RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
+%}
+
+SAVE COPY Monitor_nD
+
+FINALLY COPY Monitor_nD
+
+MCDISPLAY COPY Monitor_nD
+
+END

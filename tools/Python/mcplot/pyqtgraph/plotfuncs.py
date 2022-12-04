@@ -5,6 +5,7 @@ import os
 import sys
 import numpy as np
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui
 
 from pyqtgraph.graphicsItems.LegendItem import LegendItem, ItemSample
 
@@ -22,9 +23,9 @@ def plot(node, i, plt, opts):
     '''
     if type(node) == PNSingle and i != 0:
         raise Exception("inconsistent plot request, idx=%s" % str(i))
-    
+
     data = node.getdata_idx(i)
-    
+
     if type(data) is Data1D:
         view_box = plot_Data1D(data, plt, log=opts['log'], legend=opts['legend'], icolormap=opts['icolormap'],
                                verbose=opts['verbose'], fontsize=opts['fontsize'])
@@ -44,6 +45,7 @@ def plot(node, i, plt, opts):
 
 GlobalColormap='none'
 
+
 class ModLegend(pg.LegendItem):
     """
     Modified LegendItem to remove the ugly / in the label. Also reduces text size and padding.
@@ -51,7 +53,7 @@ class ModLegend(pg.LegendItem):
     def __init__(self, offset, text_size='9pt'):
         self.text_size = text_size
         LegendItem.__init__(self, None, offset)
-    
+
     def addItem(self, item, name):
         label = pg.LabelItem(name, size=self.text_size)
         if isinstance(item, ItemSample):
@@ -63,25 +65,26 @@ class ModLegend(pg.LegendItem):
         self.items.append((sample, label))
         self.layout.addItem(label, row, 1)
         self.updateSize()
-        
+    
     def paint(self, p, *args):
         p.setPen(pg.functions.mkPen(255,255,255,100))
         p.setBrush(pg.functions.mkBrush(0,0,0,100))
         p.drawRect(self.boundingRect())
 
+
 def plot_Data0D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fontsize=10):
     ''' creates an empty plot '''
     plt.setTitle("zero-dim monitor")
     return plt.getViewBox()
+    
 
-        
 def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fontsize=10):
     ''' create a plotItem and populate it with data, Data1D '''
     # data
     x = np.array(data.xvals).astype(np.float)
     y = np.array(data.yvals).astype(np.float)
     e = np.array(data.y_err_vals).astype(np.float)
-    
+
     if log:
         nonzeros=[]
         zeros=[]
@@ -99,7 +102,7 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fo
         plt.setLogMode(y=False)
     
     plt.setXRange(np.min(x), np.max(x), padding=0)
-    
+
     # labels
     plt.setTitle(" ")
     plt.getAxis('bottom').setLabel(data.xlabel)
@@ -110,17 +113,17 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fo
     #axis_style = {'color': '#FFF', 'font-size': '5pt'}
     #plt.setLabel(axis='left', text=data.ylabel, **axis_style)
     #plt.setLabel(axis='bottom', text=data.xlabel, **axis_style)
-    
+
     # error bars
     beam = 0
     if len(x) > 1:
         beam = (x[1]-x[0])*0.5
-    
+
     # TODO: Find solution for adding errorbars in the log case
     if not log:
         err = pg.ErrorBarItem(x=x, y=y, height=e, beam=beam)
         plt.addItem(err)
-    
+
     # commit
     if legend:
         plt.legend = ModLegend(offset=(-1, 1), text_size='%spt' % str(fontsize))
@@ -134,14 +137,15 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fo
             lname1 = '%s<br>[%s]' % (data.component, data.filename)
         if lname1:
             plt.plot([x[0]], [y[0]], name=lname1)
-    
+
     # plots data
     plt.plot(x, y)
-    
+
     plt.setMenuEnabled(False)
     vb = plt.getViewBox()
-    
+
     return vb
+
 
 def get_color_map(idx, pos_min, pos_max):
     # The contents of this function was generated from Matlab using the generate_colormaps.m script
@@ -149,7 +153,7 @@ def get_color_map(idx, pos_min, pos_max):
     # < Paste from next line >
     colormaps={
         'jet'  : np.array([[  0,   0, 143, 255], [  0,   0, 159, 255], [  0,   0, 175, 255], [  0,   0, 191, 255], [  0,   0, 207, 255], [  0,   0, 223, 255], [  0,   0, 239, 255], [  0,   0, 255, 255], [  0,  16, 255, 255], [  0,  32, 255, 255], [  0,  48, 255, 255], [  0,  64, 255, 255], [  0,  80, 255, 255], [  0,  96, 255, 255], [  0, 112, 255, 255], [  0, 128, 255, 255], [  0, 143, 255, 255], [  0, 159, 255, 255], [  0, 175, 255, 255], [  0, 191, 255, 255], [  0, 207, 255, 255], [  0, 223, 255, 255], [  0, 239, 255, 255], [  0, 255, 255, 255], [ 16, 255, 239, 255], [ 32, 255, 223, 255], [ 48, 255, 207, 255], [ 64, 255, 191, 255], [ 80, 255, 175, 255], [ 96, 255, 159, 255], [112, 255, 143, 255], [128, 255, 128, 255], [143, 255, 112, 255], [159, 255,  96, 255], [175, 255,  80, 255], [191, 255,  64, 255], [207, 255,  48, 255], [223, 255,  32, 255], [239, 255,  16, 255], [255, 255,   0, 255], [255, 239,   0, 255], [255, 223,   0, 255], [255, 207,   0, 255], [255, 191,   0, 255], [255, 175,   0, 255], [255, 159,   0, 255], [255, 143,   0, 255], [255, 128,   0, 255], [255, 112,   0, 255], [255,  96,   0, 255], [255,  80,   0, 255], [255,  64,   0, 255], [255,  48,   0, 255], [255,  32,   0, 255], [255,  16,   0, 255], [255,   0,   0, 255], [239,   0,   0, 255], [223,   0,   0, 255], [207,   0,   0, 255], [191,   0,   0, 255], [175,   0,   0, 255], [159,   0,   0, 255], [143,   0,   0, 255], [128,   0,   0, 255]], dtype=np.ubyte),
-        'autumn'  : np.array([[255,   0,   0, 255], [255,   4,   0, 255], [255,   8,   0, 255], [255,  12,   0, 255], [255,  16,   0, 255], [255,  20,   0, 255], [255,  24,   0, 255], [255,  28,   0, 255], [255,  32,   0, 255], [255,  36,   0, 255], [255,  40,   0, 255], [255,  45,   0, 255], [255,  49,   0, 255], [255,  53,   0, 255], [255,  57,   0, 255], [255,  61,   0, 255], [255,  65,   0, 255], [255,  69,   0, 255], [255,  73,   0, 255], [255,  77,   0, 255], [255,  81,   0, 255], [255,  85,   0, 255], [255,  89,   0, 255], [255,  93,   0, 255], [255,  97,   0, 255], [255, 101,   0, 255], [255, 105,   0, 255], [255, 109,   0, 255], [255, 113,   0, 255], [255, 117,   0, 255], [255, 121,   0, 255], [255, 125,   0, 255], [255, 130,   0, 255], [255, 134,   0, 255], [255, 138,   0, 255], [255, 142,   0, 255], [255, 146,   0, 255], [255, 150,   0, 255], [255, 154,   0, 255], [255, 158,   0, 255], [255, 162,   0, 255], [255, 166,   0, 255], [255, 170,   0, 255], [255, 174,   0, 255], [255, 178,   0, 255], [255, 182,   0, 255], [255, 186,   0, 255], [255, 190,   0, 255], [255, 194,   0, 255], [255, 198,   0, 255], [255, 202,   0, 255], [255, 206,   0, 255], [255, 210,   0, 255], [255, 215,   0, 255], [255, 219,   0, 255], [255, 223,   0, 255], [255, 227,   0, 255], [255, 231,   0, 255], [255, 235,   0, 255], [255, 239,   0, 255], [255, 243,   0, 255], [255, 247,   0, 255], [255, 251,   0, 255], [255, 255,   0, 255]], dtype=np.ubyte),
+        'autumn'  : np.array([[255,   0,   0, 255], [255,   4,   0, 255], [255,   8,   0, 255], [255,  12,   0, 255], [255,  16,   0, 255], [255,  20,   0, 255], [255,  24,   0, 255], [255,  28,   0, 255], [255,  32,   0, 255], [255,  36,   0, 255], [255,  40,   0, 255], [255,  45,   0, 255], [255,  49,   0, 255], [255,  53,   0, 255], [255,  57,   0, 255], [255,  61,   0, 255], [255,  65,   0, 255], [255,  69,   0, 255], [255,  73,   0, 255], [255,  77,   0, 255] , [255,  81,   0, 255], [255,  85,   0, 255], [255,  89,   0, 255], [255,  93,   0, 255], [255,  97,   0, 255], [255, 101,   0, 255], [255, 105,   0, 255], [255, 109,   0, 255], [255, 113,   0, 255], [255, 117,   0, 255], [255, 121,   0, 255], [255, 125,   0, 255], [255, 130,   0, 255], [255, 134,   0, 255], [255, 138,   0, 255], [255, 142,   0, 255], [255, 146,   0, 255], [255, 150,   0, 255], [255, 154,   0, 255], [255, 158,   0, 255], [255, 162,   0, 255], [255, 166,   0, 255], [255, 170,   0, 255], [255, 174,   0, 255], [255, 178,   0, 255], [255, 182,   0, 255], [255, 186,   0, 255], [255, 190,   0, 255], [255, 194,   0, 255], [255, 198,   0, 255], [255, 202,   0, 255], [255, 206,   0, 255], [255, 210,   0, 255], [255, 215,   0, 255], [255, 219,   0, 255], [255, 223,   0, 255], [255, 227,   0, 255], [255, 231,   0, 255], [255, 235,   0, 255], [255, 239,   0, 255], [255, 243,   0, 255], [255, 247,   0, 255], [255, 251,   0, 255], [255, 255,   0, 255]], dtype=np.ubyte),
         'bone'  : np.array([[  0,   0,   1, 255], [  4,   4,   6, 255], [  7,   7,  11, 255], [ 11,  11,  16, 255], [ 14,  14,  21, 255], [ 18,  18,  26, 255], [ 21,  21,  31, 255], [ 25,  25,  35, 255], [ 28,  28,  40, 255], [ 32,  32,  45, 255], [ 35,  35,  50, 255], [ 39,  39,  55, 255], [ 43,  43,  60, 255], [ 46,  46,  65, 255], [ 50,  50,  70, 255], [ 53,  53,  74, 255], [ 57,  57,  79, 255], [ 60,  60,  84, 255], [ 64,  64,  89, 255], [ 67,  67,  94, 255], [ 71,  71,  99, 255], [ 74,  74, 104, 255], [ 78,  78, 108, 255], [ 81,  81, 113, 255], [ 85,  86, 117, 255], [ 89,  91, 120, 255], [ 92,  96, 124, 255], [ 96, 101, 128, 255], [ 99, 106, 131, 255], [103, 111, 135, 255], [106, 116, 138, 255], [110, 120, 142, 255], [113, 125, 145, 255], [117, 130, 149, 255], [120, 135, 152, 255], [124, 140, 156, 255], [128, 145, 159, 255], [131, 150, 163, 255], [135, 155, 166, 255], [138, 159, 170, 255], [142, 164, 174, 255], [145, 169, 177, 255], [149, 174, 181, 255], [152, 179, 184, 255], [156, 184, 188, 255], [159, 189, 191, 255], [163, 193, 195, 255], [166, 198, 198, 255], [172, 202, 202, 255], [178, 205, 205, 255], [183, 209, 209, 255], [189, 213, 213, 255], [194, 216, 216, 255], [200, 220, 220, 255], [205, 223, 223, 255], [211, 227, 227, 255], [216, 230, 230, 255], [222, 234, 234, 255], [227, 237, 237, 255], [233, 241, 241, 255], [238, 244, 244, 255], [244, 248, 248, 255], [249, 251, 251, 255], [255, 255, 255, 255]], dtype=np.ubyte),
         'colorcube'  : np.array([[ 85,  85,   0, 255], [ 85, 170,   0, 255], [ 85, 255,   0, 255], [170,  85,   0, 255], [170, 170,   0, 255], [170, 255,   0, 255], [255,  85,   0, 255], [255, 170,   0, 255], [255, 255,   0, 255], [  0,  85, 128, 255], [  0, 170, 128, 255], [  0, 255, 128, 255], [ 85,   0, 128, 255], [ 85,  85, 128, 255], [ 85, 170, 128, 255], [ 85, 255, 128, 255], [170,   0, 128, 255], [170,  85, 128, 255], [170, 170, 128, 255], [170, 255, 128, 255], [255,   0, 128, 255], [255,  85, 128, 255], [255, 170, 128, 255], [255, 255, 128, 255], [  0,  85, 255, 255], [  0, 170, 255, 255], [  0, 255, 255, 255], [ 85,   0, 255, 255], [ 85,  85, 255, 255], [ 85, 170, 255, 255], [ 85, 255, 255, 255], [170,   0, 255, 255], [170,  85, 255, 255], [170, 170, 255, 255], [170, 255, 255, 255], [255,   0, 255, 255], [255,  85, 255, 255], [255, 170, 255, 255], [ 43,   0,   0, 255], [ 85,   0,   0, 255], [128,   0,   0, 255], [170,   0,   0, 255], [213,   0,   0, 255], [255,   0,   0, 255], [  0,  43,   0, 255], [  0,  85,   0, 255], [  0, 128,   0, 255], [  0, 170,   0, 255], [  0, 213,   0, 255], [  0, 255,   0, 255], [  0,   0,  43, 255], [  0,   0,  85, 255], [  0,   0, 128, 255], [  0,   0, 170, 255], [  0,   0, 213, 255], [  0,   0, 255, 255], [  0,   0,   0, 255], [ 36,  36,  36, 255], [ 73,  73,  73, 255], [109, 109, 109, 255], [146, 146, 146, 255], [182, 182, 182, 255], [219, 219, 219, 255], [255, 255, 255, 255]], dtype=np.ubyte),
         'cool'  : np.array([[  0, 255, 255, 255], [  4, 251, 255, 255], [  8, 247, 255, 255], [ 12, 243, 255, 255], [ 16, 239, 255, 255], [ 20, 235, 255, 255], [ 24, 231, 255, 255], [ 28, 227, 255, 255], [ 32, 223, 255, 255], [ 36, 219, 255, 255], [ 40, 215, 255, 255], [ 45, 210, 255, 255], [ 49, 206, 255, 255], [ 53, 202, 255, 255], [ 57, 198, 255, 255], [ 61, 194, 255, 255], [ 65, 190, 255, 255], [ 69, 186, 255, 255], [ 73, 182, 255, 255], [ 77, 178, 255, 255], [ 81, 174, 255, 255], [ 85, 170, 255, 255], [ 89, 166, 255, 255], [ 93, 162, 255, 255], [ 97, 158, 255, 255], [101, 154, 255, 255], [105, 150, 255, 255], [109, 146, 255, 255], [113, 142, 255, 255], [117, 138, 255, 255], [121, 134, 255, 255], [125, 130, 255, 255], [130, 125, 255, 255], [134, 121, 255, 255], [138, 117, 255, 255], [142, 113, 255, 255], [146, 109, 255, 255], [150, 105, 255, 255], [154, 101, 255, 255], [158,  97, 255, 255], [162,  93, 255, 255], [166,  89, 255, 255], [170,  85, 255, 255], [174,  81, 255, 255], [178,  77, 255, 255], [182,  73, 255, 255], [186,  69, 255, 255], [190,  65, 255, 255], [194,  61, 255, 255], [198,  57, 255, 255], [202,  53, 255, 255], [206,  49, 255, 255], [210,  45, 255, 255], [215,  40, 255, 255], [219,  36, 255, 255], [223,  32, 255, 255], [227,  28, 255, 255], [231,  24, 255, 255], [235,  20, 255, 255], [239,  16, 255, 255], [243,  12, 255, 255], [247,   8, 255, 255], [251,   4, 255, 255], [255,   0, 255, 255]], dtype=np.ubyte),
@@ -168,6 +172,7 @@ def get_color_map(idx, pos_min, pos_max):
     idx = idx % len(keys)
     colormap = colormaps[keys[idx]]
     pos = pos_min + (pos_max - pos_min) * np.arange(len(colormap))/(len(colormap)-1)
+    #print(f"colourbar min: {pos_min}, max: {pos_max}, pos: {pos}.")
 
     global GlobalColormap
     if not GlobalColormap == keys[idx]:
@@ -176,6 +181,7 @@ def get_color_map(idx, pos_min, pos_max):
 
     return pg.ColorMap(pos, colormap)
 
+
 def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, fontsize=10, cbmin=None, cbmax=None):
     ''' create a layout and populate a plotItem with data Data2D, adding a color bar '''
     # data
@@ -183,7 +189,7 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
     dataset = np.array(data.zvals)
     dataset = np.transpose(dataset)
     datashape = dataset.shape
-    
+
     ymin = 1e-19
     if log:
         dataset = np.reshape(dataset, (1, datashape[0]*datashape[1]))
@@ -196,18 +202,19 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
         else:
             dataset = np.reshape(dataset, datashape)
     img.setImage(dataset)
-    
+
     # scale(x,y) is in %, translate(x,y) is in the original units
     dx = (data.xlimits[1] - data.xlimits[0])/datashape[0]
     dy = (data.xlimits[3] - data.xlimits[2])/datashape[1]
-    img.scale(dx,dy)
+    tr = QtGui.QTransform()
+    tr.scale(dx,dy)
+    tr.translate(data.xlimits[0]/dx,data.xlimits[2]/dy)
     # Calculate translation in original pixel units
-    img.translate(data.xlimits[0]/dx,data.xlimits[2]/dy)
-    
+    img.setTransform(tr)
     # color map (by lookup table)
     cb_pos_min = cbmin if cbmin else np.min(dataset)
     cb_pos_max = cbmax if cbmax else np.max(dataset)
-    
+
     colormap = get_color_map(icolormap, cb_pos_min, cb_pos_max)
     lut = colormap.getLookupTable(cb_pos_min, cb_pos_max, 256)
     img.setLookupTable(lut)
@@ -215,20 +222,20 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
     # graphics layout with a plotitem and a gradienteditoritem
     layout = pg.GraphicsLayout()
     layout.setContentsMargins(0, 0, 20, 5)
-    
+
     # plot area
     layout.addLabel(' ', 0, 0, colspan=2)
     layout.addItem(plt, 1, 0)
     labelStyle = {'color': '#FFF', 'font-size': '%spt' % fontsize}
     plt.getAxis('bottom').setLabel(data.xlabel, **labelStyle)
     plt.getAxis('left').setLabel(data.ylabel, **labelStyle)
-    
+
     plt.setMenuEnabled(False)
-    
+
     if legend:
         plt.legend = ModLegend(offset=(-1, 1), text_size='%spt' % str(fontsize))
         plt.legend.setParentItem(plt.vb)
-        
+
         try:
             lname1 = '<center>%s<br>I = %s</center>' % (data.component, data.values[0])
             if verbose:
@@ -237,37 +244,44 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
             lname1 = '%s<br>[%s]' % (data.component, data.filename)
         if lname1:
             plt.plot([0], [0], name=lname1)
-    
+
+    # add the image item to the plot
     plt.addItem(img)
+
+    # associate the colour bar with the image item
+    cb = pg.ColorBarItem(cmap=colormap, values=(cb_pos_min, cb_pos_max))
+    cb.setImageItem(img)
+
     # Set the x and y ranges correctly
     plt.getViewBox().setXRange(data.xlimits[0], data.xlimits[1], padding=0)
     plt.getViewBox().setYRange(data.xlimits[2], data.xlimits[3], padding=0)
-    
+
     #
     # color bar
     #
     if (fontsize >= 8):
         cbimg = pg.ImageItem()
         numsteps = 100
-        arr_1 = cb_pos_min + (cb_pos_max - cb_pos_min) * np.arange(numsteps)/(numsteps)
-        cbimg.setImage(np.array([arr_1]))
+        cbvals = cb_pos_min + (cb_pos_max - cb_pos_min) * np.arange(numsteps)/(numsteps)
+        cbimg.setImage(np.array([cbvals]))
         # calculate scaling and translation for the y-axis
         dy = (cb_pos_max - cb_pos_min) / numsteps
         # Prevent division by 0
         if (dy==0):
             dy=1;
         ty = (cb_pos_min) / dy
-        cbimg.scale(1, dy)
-        cbimg.translate(0,ty)
-        
+        tr = QtGui.QTransform()
+        tr.scale(dx,dy)
+        tr.translate(1,ty)
+        cbimg.setTransform(tr)
+        #cbimg.translate(ty)
+
         cbimg.setLookupTable(lut)
-        
+
         colorbar = layout.addPlot(1, 1)
         colorbar.addItem(cbimg)
         colorbar.setFixedWidth(40)
-        
-        pg.GradientEditorItem
-        
+
         colorbar.axes['top']['item'].show()
         colorbar.axes['top']['item'].setStyle(showValues=False)
         colorbar.axes['bottom']['item'].show()
@@ -275,12 +289,10 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
         colorbar.axes['left']['item'].show()
         colorbar.axes['left']['item'].setStyle(showValues=False)
         colorbar.axes['right']['item'].show()
-        
+
         colorbar.getViewBox().autoRange(padding=0)
-        
-    
+
     plt.layout_2d = layout
-    
+
     # return layout so it doesn't get garbage collected, but the proper plot viewBox pointer for click events
     return plt.getViewBox(), layout
-

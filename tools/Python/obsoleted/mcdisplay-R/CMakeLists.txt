@@ -4,8 +4,8 @@ cmake_minimum_required(VERSION 2.6)
 project(python-tools-mcdisplay C)
 
 # Choose between McStas or McXtrace
-option(enable_mcstas   "Choose the McStas flavor" off)
-option(enable_mcxtrace "Choose the McXtrace flavor (trumps enable_mcstas)" Off)
+option(BUILD_MCSTAS   "Choose the McStas flavor" off)
+option(BUILD_MCXTRACE "Choose the McXtrace flavor (trumps BUILD_MCSTAS)" Off)
 
 # Set module path
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -13,13 +13,15 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/
 # Set McCode values (from mkdist or defaults)
 include(MCUtil)
 
-if (${enable_mcxtrace})
+if (${BUILD_MCXTRACE})
   set(FLAVOR "mcxtrace")
-elseif(${enable_mcstas})
+  set(CPACK_PACKAGE_HOMEPAGE_URL "http://mcxtrace.org/")
+elseif(${BUILD_MCSTAS})
   set(FLAVOR "mcstas")
+  set(CPACK_PACKAGE_HOMEPAGE_URL "http://mcstas.org/")
 else()
   message(FATAL_ERROR "No flavor specified!\n"
-    "Please use either -Denable_mcstas=1 or -Denable_mcxtrace=1")
+    "Please use either -DBUILD_MCSTAS=1 or -DBUILD_MCXTRACE=1")
 endif()
 
 message("Enabling ${FLAVOR} flavor")
@@ -48,7 +50,7 @@ set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-r-${MCCODE_V
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
-set(CPACK_PACKAGE_VERSION       "1.0")
+set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
 
@@ -57,6 +59,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 set(NSIS_NAME "Python and R based mcdisplay (mcdisplay-r-py), ${MCCODE_STRING}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 # Debian
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python, r-base, r-cran-rgl")

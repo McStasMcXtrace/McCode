@@ -1,16 +1,10 @@
-﻿Welcome to the McXtrace installer
+﻿Welcome to the McXtrace installer on Windows
 
-This installer allows you to install McXtrace and wanted Perl- and Python-based tools, as well as prebuilt Perl-Tk, PDL, and PGPLOT.
-
-For the tool layer you need
-* Perl tools:
-   * Perl-Tk, PDL, and PGPLOT (these included in this package)
-* Python tools:
-   * PyYAML from http://www.pyyaml.org for the Python mcrun
-   * For the Python mcplot packages either
-      * Anaconda Python from https://store.continuum.io, free for Academic use
-      * Enthought Python from https://www.enthought.com, free for Academic use
-   * For the Python mxdisplay package you need an X3D viewer, we recommend InstantPlayer, see below
+This installer allows you to install essential McXtrace and Python-based tools, plus a miniconda3 python including a compiler.
 
 Other recommended software is
-* InstantPlayer X3D/VRML viewer from http://www.instantreality.org/downloads/
+	•	NeXus and MPI binaries from the ‘extras’ folder of the McXtrace download page
+	•	iFit from http://ifit.neutroncode.org
+	•	InstantPlayer X3D/VRML viewer from http://www.instantreality.org/downloads/
+
+

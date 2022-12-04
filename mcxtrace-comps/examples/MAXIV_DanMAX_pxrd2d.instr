@@ -18,7 +18,7 @@
 * This early version uses a Gaussian approximation source, and a simple bandpass filter
 * as the multilayer.
 *
-* %Example: MAXIV_DanMAX_pxrd2d.instr -c -n1e6 E0=15 Detector: Pilatus_2M_I=0.00033782
+* %Example: MAXIV_DanMAX_pxrd2d.instr -c -n1e6 E0=15 Detector: Pilatus_2M_I=8.10837e-05
 *
 * %Parameters
 * E0: [keV]        The central energy to sample from source model.
@@ -203,11 +203,6 @@ INITIALIZE
     eh_2dcrl_N=EH_2DCRL_N;
     d_eh_2dcrl=D_EH_2DCRL;
 
-/*    dm_strip_deth=1280*50e-6;*/
-/*    dm_strip_detw=8e-3;*/
-/*    dm_strip_tthc=4.8220595;*/
-/*    dm_strip_tthg=0.5279405;*/
-/*    dm_strip_tth0=pxrd_strip_tth0;//tth_offset, 0 is when the first module is perpendicular to the beam*/
 
     pxrd_sampleap_h=PXRDsampleap_h;
     pxrd_sampleap_w=PXRDsampleap_w;
@@ -241,7 +236,7 @@ TRACE
 /* Origin is used. This Arm() component is set to define the origin of  */
 /* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
 /* for further RELATIVE reference, Other useful keywords are : ROTATED  */
-/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* EXTEND GROUP PREVIOUS. Also think about adding a photon source !    */
 /* Progress_bar is an Arm displaying simulation progress.               */
 
 COMPONENT Origin = Progress_bar( )

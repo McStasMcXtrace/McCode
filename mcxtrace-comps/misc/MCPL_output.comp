@@ -9,11 +9,9 @@
 * %I
 * Written by: Erik B Knudsen 
 * Date: Aug 2016
-* Version: $Revision$
 * Origin: DTU Physics
 *
-* Detector-like component that writes photon state parameters into an mcpl-format 
-* binary, virtual-source photon file.
+* Detector-like component that writes photon state parameters into an mcpl-file
 *
 * %D
 * Detector-like component that writes photon state parameters into an mcpl-format 
@@ -43,7 +41,7 @@
 * INPUT PARAMETERS
 *
 * filename:        [str] Name of photon file to write. Default is standard output [string]. If not given, a unique name will be used.
-* verbose:         [1]   If 1) Print summary information for created MCPL file. 2) Also print summary of first 10 particles information stored in the MCPL file. >2) Also print information for first 10 particles as they are being stored by McStas.
+* verbose:         [1]   If 1) Print summary information for created MCPL file. 2) Also print summary of first 10 particles information stored in the MCPL file. >2) Also print information for first 10 particles as they are being stored by McXtrace.
 * polarisationuse: [1]   Enable storing the polarisation state of the photon.
 * doubleprec:      [1]   Use double precision storage
 * userflag:        [1]   Extra variable to attach to each photon. The value of this variable will be packed into a 32 bit integer.
@@ -57,11 +55,12 @@ DEFINE COMPONENT MCPL_output
 DEFINITION PARAMETERS (polarisationuse=0, doubleprec=0, verbose=0, int userflag=0)
 SETTING PARAMETERS (string filename=0, string userflagcomment="", merge_mpi=1, keep_mpi_unmerged=0)
 OUTPUT PARAMETERS (outputfile,particle,Particle, userflagenabled)
-DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
+DEPENDENCY "-Wl,-rpath,CMD(mcpl-config --show libdir) -ICMD(mcpl-config --show includedir) -LCMD(mcpl-config --show libdir) -lmcpl"
 
 SHARE
 %{
 #include <mcpl.h>
+#include <sys/stat.h>
   int mcpl_file_exist (char *filename)
   {
     struct stat   buffer;
@@ -82,7 +81,7 @@ INITIALIZE
     char *myfilename,*stripext;
 
     /*strip extension from filename*/
-    if ((stripext=strrchr(filename,'.'))){
+    if (stripext=strrchr(filename,'.')){
 #if defined (USE_MPI)
         MPI_MASTER(
             fprintf(stdout, "WARNING: (%s): the \"%s\" file extension will be overwritten by \".mcpl\"\n",NAME_CURRENT_COMP,stripext);
@@ -120,7 +119,7 @@ INITIALIZE
     /*also add the instrument file and the command line as blobs*/
     FILE *fp;
     if( (fp=fopen(mcinstrument_source,"rb"))!=NULL){
-        char *buffer;
+        unsigned char *buffer;
         int size,status;
         /*find the file size by seeking to end, "tell" the position, and then go back again*/
         fseek(fp, 0L, SEEK_END);
@@ -128,11 +127,13 @@ INITIALIZE
         fseek(fp, 0L, SEEK_SET); // seek back to beginning of file
         if ( size && (buffer=malloc(size))!=NULL){
             if (size!=(fread(buffer,1,size,fp))){
-	      fprintf(stderr,"Warning (%s): Source instrument file not read cleanly\n", NAME_CURRENT_COMP);
+	      fprintf(stderr,"\nWarning (%s): Source instrument file not read cleanly\n", NAME_CURRENT_COMP);
             }
             mcpl_hdr_add_data(outputfile, "mccode_instr_file", size, buffer);
             free(buffer);
         }
+    } else {
+      fprintf(stderr,"\nWarning (%s): Source instrument file (%s) not found, hence not embedded.\n", NAME_CURRENT_COMP, mcinstrument_source);
     }
     fclose(fp);
 

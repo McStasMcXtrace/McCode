@@ -14,7 +14,9 @@
 *
 * %Description
 * This a a skeleton version of the FemtoMAX short-pulse facility at MAXIV
+* N.b. This model is out of date with the present day instrumentation of FemtoMAX.
 *
+* %Example: DXUS=1e-2 Detector: EXAFS_I=1.34947e-13
 *
 * %Parameters
 * DXUS: [m] Horizontal opening of the user slit. 
@@ -33,7 +35,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT MAXIV_FemtoMAX( DXUS=1e-2,DYUS=1e-2, MONO=1, MLMONO=0, int U2SRC=1, int U3SRC=0,
+DEFINE INSTRUMENT MAXIV_FemtoMAX( DXUS=1e-2,DYUS=1e-2, MONO=1, MLMONO=1, int U2SRC=1, int U3SRC=0,
     RX=0, RY=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
@@ -69,9 +71,11 @@ INITIALIZE
   dxs2=1e-3;
   dys2=1e-3;
 
-  dxs3=1e-3;
-  dys3=1e-3;
+  dxs3=1e-2;
+  dys3=1e-2;
 
+  Ls_ml=1e3;
+  Ld_ml=1e3;
 
 %}
 
@@ -153,7 +157,7 @@ COMPONENT focus_mirror_exit1 = Arm()
 AT(0,0,0) RELATIVE PREVIOUS
 ROTATED (-90,0,0) RELATIVE PREVIOUS
 
-COMPONENT emon_mono = Monitor_nD(radius=1, restore_xray=1, options="sphere e limits 0 20", bins=200,filename="emon_probe")
+COMPONENT emon_mono = Monitor_nD(radius=0.11, restore_xray=1, options="e limits 0 20", bins=200,filename="emon_probe")
 AT(0,0,0) RELATIVE PREVIOUS
 
 
@@ -163,7 +167,6 @@ AT(0,0,1.2) RELATIVE focus_mirror_exit1
 
 COMPONENT popin_yag2 = COPY(popin_yag1)(yheight=1e-2,filename="popin_yag2")
 AT(0,0,0.4) RELATIVE slit2
-
 
 COMPONENT mono = Bragg_crystal(
     material = "Si.txt", length = 0.8, width = 0.01,
@@ -185,15 +188,21 @@ COMPONENT multilayer_mono = Multilayer_elliptic(
     theta = gamma_mlmono, s1 = Ls_ml, s2 = Ld_ml, length = 0.4,
     width = 0.2, Emin=7, Estep=0.05, Emax=10)
 WHEN (MLMONO) AT (0, 0, 0.4) RELATIVE PREVIOUS
-ROTATED (0,gamma_mlmono,0) RELATIVE PREVIOUS
+ROTATED (gamma_mlmono,0,0) RELATIVE PREVIOUS
 
 COMPONENT multilayer_mono_exit = Arm()
 WHEN(MLMONO) AT(0,0,0) RELATIVE multilayer_mono
-ROTATED (0,gamma_mlmono,0) RELATIVE multilayer_mono
+ROTATED (gamma_mlmono,0,0) RELATIVE multilayer_mono
+
+COMPONENT fpi= PSD_monitor_4PI(radius=0.5, filename="fpi",nx=41,ny=41, restore_xray=1)
+AT(0,0,0) RELATIVE PREVIOUS
 
 COMPONENT slit3 = Slit(
-	xwidth=dxs3, yheight=dys3)
-  AT(0,0,0.4) RELATIVE focus_mirror_exit1
+    xwidth=dxs3*1e2, yheight=dys3*1e2)
+AT(0,0,0.4) RELATIVE multilayer_mono_exit
+
+COMPONENT fpi2 = PSD_monitor(xwidth=0.05, yheight=0.05, nx=101,ny=101,filename="fpi2")
+AT(0,0,1e-3) RELATIVE PREVIOUS
 
 COMPONENT Be_lenses = Lens_parab_Cyl(
     material_datafile = "Be.txt", r = 0.5e-3, yheight = 100e-6,

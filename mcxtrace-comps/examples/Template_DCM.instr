@@ -6,7 +6,7 @@
 * Date: Jan '21
 * Origin: DTU Physics
 * Version: 1.0
-* %INSTRUMENT_SITE: Templates
+* %INSTRUMENT_SITE: Tests_optics
 *
 * Template for a vertically defleting DCM
 *
@@ -17,7 +17,7 @@
 * 90 and -90 deg. respectively around the z-axis.
 * The crystal is illuminated by a model point source.
 *
-* %Example: tth=9.17, alpha=0.01 Detector: emon_dcm1_I=8.83566e-21
+* %Example: TTH=9.17 alpha=0.01 Detector: emon_dcm1_I=8.83566e-21
 *
 * %P
 * E0: [keV]     Central energy to be emitted by the source

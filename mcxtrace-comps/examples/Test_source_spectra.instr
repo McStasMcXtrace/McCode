@@ -1,0 +1,105 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Test_source_spectra
+*
+* %Identification
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Aug. 10th, 2014
+* Origin: DTU Physics
+* Release: McXtrace 1.2
+* Version: 1.0
+* %INSTRUMENT_SITE: Tests_sources
+*
+* Test instrument for the Source_spectra component 
+*
+* %Description
+* A unit test instrument for the Source component that can take input from a SPECTRA-simulation
+* of an undulator/wiggler etc. and input it into McXtrace.
+*
+* %Example: Test_source_spectra.instr flag4d=0 E0=12.4 dE=0.001 stemx=sp8LU_x stemy=sp8LU_y Detector: psd2_I=1.42775e+11
+* %Example: Test_source_spectra.instr flag4d=1 E0=12.4 dE=0.001 stem4d=sp8LU_xy Detector: psd2_I=3.53418e-06
+*
+*
+* %Parameters
+* E0: [keV]   Central wavelength for sampling
+* dE: [keV]   Halfwidth of sampleing window (in energy)
+* stemx: [ ]  Filename stem for the x-projection data files coming from SPECTRA.
+* stemy: [ ]  Filename stem for the y-projection data files coming from SPECTRA
+* stem4d: [ ] Filename stem for 4D-datafiles from SPECTRA.
+* flag4d: [ ] If zero use projection datafiles, else use 4D.
+*
+* %Link
+* A reference/HTML link for more information
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT Test_source_spectra(E0=12.5, dE=1,string stem4d="sp8LU_xy",flag4d=0, 
+    string stemx="sp8LU_x", string stemy="sp8LU_y")
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding an xray source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT ss= Source_spectra(
+    spectra_stem_x=stemx,spectra_stem_y=stemy,
+    E0=E0,dE=dE,Emin=6.2,Emax=18.6,nE=5,
+    symmetricx=1,symmetricy=1)
+WHEN (flag4d==0) AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT ss4d= Source_spectra(
+    spectra_stem=stem4d,flag4d=1,
+    E0=E0,dE=dE,Emin=6.2,Emax=18.6,nE=5,
+    symmetricx=1,symmetricy=1, verbose=1)
+WHEN (flag4d==1) AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT psd0 = PSD_monitor(
+    filename="psd0",xwidth=1.4e-3,yheight=0.4e-3
+)
+AT(0,0,0.01) RELATIVE origin
+
+COMPONENT emon0 = E_monitor(
+    filename="emon0",xwidth=1.4e-3,nE=101,yheight=0.4e-3,Emin=E0-1.1*dE, Emax=E0+1.1*dE)
+AT(0,0,0.01) RELATIVE origin
+
+COMPONENT psd1 = PSD_monitor(
+    filename="psd1",xwidth=1.4e-3, yheight=0.4e-3
+)
+AT(0,0,0.1) RELATIVE origin
+
+COMPONENT psd2 = PSD_monitor(
+    filename="psd2",xwidth=1.4e-3, yheight=0.4e-3
+)
+AT(0,0,1) RELATIVE origin
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+

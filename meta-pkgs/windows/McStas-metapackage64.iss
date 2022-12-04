@@ -21,7 +21,7 @@ AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 CreateAppDir=no
-LicenseFile=license_etc\COPYING.rtf
+LicenseFile=license_etc\COPYING.txt
 InfoBeforeFile=license_etc\Description.rtf
 InfoAfterFile=license_etc\Description.rtf
 OutputBaseFilename=setup
@@ -32,7 +32,6 @@ SolidCompression=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "postsetup.bat"; DestDir: "{tmp}"
 Source: "python-install.bat"; DestDir: "{tmp}"
 Source: "docupdate.bat"; DestDir: "{tmp}"
 Source: "Support\unzip.exe"; DestDir: "{tmp}"
@@ -41,7 +40,6 @@ Source: "Support\Tk-CodeText-0.3.4.zip"; DestDir: "{tmp}"
 Source: "dist\mcstas-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-comps-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-manuals-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
-Source: "dist\mcstas-tools-perl-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-perl-cmdline-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcrun-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcresplot-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
@@ -54,18 +52,16 @@ Source: "dist\mcstas-tools-python-mcdisplay-webgl-NSIS64-@VERSION@-mingw64.exe";
 Source: "dist\mcstas-tools-python-mcdisplay-pyqtgraph-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcdisplay-mantid-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcdoc-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
+Source: "dist\mcstas-mcpl-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
+Source: "dist\mcstas-ncrystal-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "Support\Miniconda3-latest-Windows-x86_64.exe"; DestDir: "{tmp}"
 
 [Run]
 Filename: "{tmp}\python-install.bat"
-Filename: "{tmp}\postsetup.bat"
 Filename: "{tmp}\mcstas-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-comps-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
-Filename: "c:\mcstas-@VERSION@\lib\libs\libnxs\compile.bat"
-Filename: "c:\mcstas-@VERSION@\lib\libs\mcpl\compile.bat"
 Filename: "c:\mcstas-@VERSION@\lib\libs\neutronics\compile.bat"
 Filename: "{tmp}\mcstas-manuals-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
-Filename: "{tmp}\mcstas-tools-perl-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-perl-cmdline-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcrun-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcresplot-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
@@ -78,8 +74,8 @@ Filename: "{tmp}\mcstas-tools-python-mcdisplay-webgl-NSIS64-@VERSION@-mingw64.ex
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-pyqtgraph-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-mantid-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcdoc-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
+Filename: "{tmp}\mcstas-mcpl-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
+Filename: "{tmp}\mcstas-ncrystal-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\docupdate.bat";
-
-; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files

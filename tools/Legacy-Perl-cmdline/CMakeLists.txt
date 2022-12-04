@@ -1,11 +1,14 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.17.0)
+cmake_policy(VERSION 3.17.0)
 
 # This will install McStas components
 project(legacy-tools-cmdline C)
 
+message(STATUS "Configure ${CMAKE_PROJECT_NAME} ${FLAVOR} ${PROJECT_NAME}")
+
 # Choose between McStas or McXtrace
-option(enable_mcstas   "Choose the McStas flavor" off)
-option(enable_mcxtrace "Choose the McXtrace flavor (trumps enable_mcstas)" Off)
+option(BUILD_MCSTAS   "Choose the McStas flavor" off)
+option(BUILD_MCXTRACE "Choose the McXtrace flavor (trumps BUILD_MCSTAS)" Off)
 
 # Set module path
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -13,16 +16,15 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/
 # Set McCode values (from mkdist or defaults)
 include(MCUtil)
 
-if (${enable_mcxtrace})
+if (${BUILD_MCXTRACE})
   set(FLAVOR "mcxtrace")
-elseif(${enable_mcstas})
+elseif(${BUILD_MCSTAS})
   set(FLAVOR "mcstas")
 else()
   message(FATAL_ERROR "No flavor specified!\n"
-    "Please use either -Denable_mcstas=1 or -Denable_mcxtrace=1")
+    "Please use either -DBUILD_MCSTAS=1 or -DBUILD_MCXTRACE=1")
 endif()
 
-message("Enabling ${FLAVOR} flavor")
 setupMCCODE("${FLAVOR}")
 
 
@@ -32,9 +34,9 @@ find_program(AT at)
 # Set some extra options for mccode_config
 set(CC "${CMAKE_C_COMPILER}")
 if (APPLE)
-  set(CFLAGS "-g -O2 -lm -std=c99 -headerpad_max_install_names ${CMAKE_C_FLAGS}")
+  set(CFLAGS "${MCCODE_CFLAGS} -headerpad_max_install_names ${CMAKE_C_FLAGS}")
 else()
-  set(CFLAGS "-g -O2 -std=c99 -lm ${CMAKE_C_FLAGS}")
+  set(CFLAGS "${MCCODE_CFLAGS} ${CMAKE_C_FLAGS}")
 endif()
 
 
@@ -44,16 +46,17 @@ set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-perl-cmdline-${MCCODE_VERSION}"
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../COPYING")
 set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
 
-set(CPACK_PACKAGE_VERSION       "1.0")
+set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 set(TOOLS_NAME "tools/Perl")
 
 # NSIS
-set(NSIS_NAME "Perl Tools, ${MCCODE_VERSION}")
+set(NSIS_NAME "Perl core Tools, ${MCCODE_VERSION}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 
 if(WINDOWS)
@@ -87,12 +90,12 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
 # Select prefix
-if(${enable_mcstas})
+if(${BUILD_MCSTAS})
   set(P "mc")
-  set(SOURCENAMES doc run )
+  set(SOURCENAMES doc run display-matlab display-mantid)
 else()
   set(P "mx")
-  set(SOURCENAMES doc run )
+  set(SOURCENAMES doc run display-matlab)
 endif()
 
 # Include mcstas-comp files

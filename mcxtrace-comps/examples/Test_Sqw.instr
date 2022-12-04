@@ -1,0 +1,58 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Test Isotropic_Sqw output
+*
+* %Identification
+* Written by: E. Farhi
+* Date: Sept 21st 2022
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests_samples
+*
+* Test output of Isotropic_Sqw on a spherical monitor.
+*
+* %Description
+* A test instrument for testing Isotropic_Sqw output on a spherical monitor.
+*
+* %Example: E0=12 Detector: Sph_mon_I=1.31767e-21
+*
+* %Parameters
+* E0:      [keV]  Energy emitted from source
+* dE:      [keV]  Energy spread at the source
+* L1:      [m]    Source-sample distance
+* sqw_coh: [str]  Sqw material definition
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_Sqw(E0=12.0, dE=1e-6, L1=10, 
+  string sqw_coh="Rb_liq_coh.sqw")
+
+TRACE
+
+REMOVABLE COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+/* source with constant flux */
+REMOVABLE COMPONENT Source = Source_flat(
+    radius = 1e-7, dist = L1, focus_xw = 1e-7, focus_yh = 1e-7,
+    E0=E0, dE=dE)
+  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT sample_cradle = Arm()
+  AT (0, 0, L1) RELATIVE PREVIOUS
+
+/* The inelastic sample */
+COMPONENT Sqw = Isotropic_Sqw(radius=0.0005, yheight=0.001, Sqw_coh=sqw_coh,
+  verbose=3, p_interact=0.95)
+  AT (0, 0, 0) RELATIVE sample_cradle
+  EXTEND %{
+    if (!SCATTERED) ABSORB;
+  %}
+
+COMPONENT Sph_mon = PSD_monitor_4PI(nx=100,ny=100, radius=1, filename="Sphere")
+  AT (0, 0, 0) RELATIVE PREVIOUS
+  
+COMPONENT Sqw_mon = Monitor_Sqw(index=-2, radius=2, yheight=2, bins=128)
+  AT (0, 0, 0) RELATIVE PREVIOUS
+
+END

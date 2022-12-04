@@ -1,0 +1,40 @@
+#!/bin/sh
+# Wrapper script for @P@display-matplotlib-py
+
+# First ensure that we follow symlink if needed
+LINK=`readlink $0`
+
+# Am I a symlink?
+if [ "x$LINK" != "x" ]; then
+    LIB=`dirname $LINK`
+else
+    LIB=`dirname $0`
+fi
+LIB="$LIB/../tools/Python/@P@display/matplotlib"
+TOOL="@P@display"
+VERS="@MCCODE_VERSION@"
+
+
+canrun() {
+    if ! [ -x ${LIB}/${TOOL}.py ]; then
+        exit 127;
+    fi
+
+    modules="yaml"
+    cmd=""
+    for name in ${modules}; do
+        cmd="${cmd}import ${name}; "
+    done
+    python3 -c "${cmd}"
+}
+
+if ( canrun ); then
+    mcrun  $* --trace --no-output-files -n1e2 | python3 ${LIB}/${TOOL}.py 
+else
+    echo ":: Failed to run Python ${TOOL}, trying old Perl version."
+    echo ":: If this fails too, consider reinstalling ${TOOL}."
+    echo ""
+
+    # Try old Perl-version of mcplot if Python version cannot run
+    ${TOOL} $*
+fi

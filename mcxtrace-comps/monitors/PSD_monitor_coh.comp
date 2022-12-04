@@ -10,7 +10,6 @@
 * %I
 * Written by: Erik Knudsen
 * Date: March 13, 2010
-* Version: $Revision$
 * Origin: Risoe
 *
 * Position-sensitive monitor with phase intergration.
@@ -27,24 +26,24 @@
 * center. This behaves as if ratio -> 0, but at no cost in statistics.
 *
 * Example: PSD_monitor_coh(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
-            nx=90, ny=90, filename="Output.psd")
+*            nx=90, ny=90, filename="Output.psd")
 *
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     [m] Lower x bound of detector opening.
-* xmax:     [m] Upper x bound of detector opening.
-* ymin:     [m] Lower y bound of detector opening.
-* ymax:     [m] Upper y bound of detector opening.
-* xwidth:   [m] Width of detector. Overrides xmin,xmax.
-* yheight:  [m] Height of detector. Overrides ymin,ymax.
-* nx:       [m] Number of pixel columns.
-* ny:       [m] Number of pixel rows.
-* filename: [m] Name of file in which to store the detector images (the suffixes .abs and .arg will be added).
-* restore_xray: If set, the monitor does not influence the xray state.
-* ratio     [ ] ratio between pixel area and effective pixel area.
-* centering [ ] Treat all rays as if they hit the center of the pixel.
-* nowritefile: [1]      If set, monitor will skip writing to disk
+* xmin:         [m] Lower x bound of detector opening.
+* xmax:         [m] Upper x bound of detector opening.
+* ymin:         [m] Lower y bound of detector opening.
+* ymax:         [m] Upper y bound of detector opening.
+* xwidth:       [m] Width of detector. Overrides xmin,xmax.
+* yheight:      [m] Height of detector. Overrides ymin,ymax.
+* nx:           [ ] Number of pixel columns.
+* ny:           [ ] Number of pixel rows.
+* filename:     [m] Name of file in which to store the detector images - the suffixes .abs and .arg will be added.
+* restore_xray: [ ] If set, the monitor does not influence the xray state.
+* ratio:        [ ] ratio between pixel area and effective pixel area.
+* centering:    [ ] Treat all rays as if they hit the center of the pixel.
+* nowritefile:  [1] If set, monitor will skip writing to disk
 *
 * OUTPUT PARAMETERS:
 *
@@ -54,9 +53,8 @@
 *
 * %E
 *******************************************************************************/
-
 DEFINE COMPONENT PSD_monitor_coh
-DEFINITION PARAMETERS (nx=90, ny=90)
+DEFINITION PARAMETERS (int nx=90, int ny=90)
   SETTING PARAMETERS (string filename=0, restore_xray=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, ratio=1, int centering=1, int nowritefile=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p2,PSD_phi)
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)*/

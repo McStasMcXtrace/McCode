@@ -1,0 +1,201 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Scatter_logger.comp
+*
+* %I
+*
+* Written by: Erik B Knudsen, Peter K Willendrup & Esben Klinkby
+* Date: January 2013
+* Version: $Revision: 1.12 $
+* Release: McXtrace 1.7
+* Origin: DTU Physics / DTU Nutech
+*
+* Logging iteractions of photons with components
+*
+* %D
+* Start of the trace-region in which SCATTER events should be logged.
+* Whenever a SCATTER occurs in components between this one and its counterpart Scatter_logger_stop the photon state is logged.
+* The log is kept in memory - but only for one single
+* photon ray at a time, so there should be no real danger of memory overrun.
+*
+* %P
+* Input parameters:
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Scatter_logger
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS ()
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
+SHARE
+  %{
+  struct Generalized_State_t {
+    double _x,_y,_z,_kx,_ky,_kz;
+    double _p,_t,_phi,_Ex,_Ey,_Ez;
+    long long int _pid;
+    int _comp, _idx, _abs;
+  };
+
+#define SCATTER_LOG do { \
+    if (bounce_store_index<BOUNCE_LOG_SIZE-1){\
+      struct Generalized_State_t *bp=&(Bounce_store[bounce_store_index]);\
+      if( (bp-1)->_p!=p || (bp-1)->_kx!=kx || (bp-1)->_ky!=ky || (bp-1)->_kz!=kz ){\
+        Coords ctmp=POS_A_CURRENT_COMP;\
+        Coords _r = coords_set(x,y,z);\
+        Coords _k = coords_set(kx,ky,kz);\
+        Coords _E = coords_set(Ex,Ey,Ez);\
+        Coords _rg,_kg,_Eg;\
+        Rotation _Rt;\
+        rot_transpose(ROT_A_CURRENT_COMP,_Rt);\
+        _rg=coords_add(rot_apply(_Rt,_r),ctmp);\
+        _kg=rot_apply(_Rt,_k);\
+        _Eg=rot_apply(_Rt,_E);\
+        coords_get(_rg,&(bp->_x),&(bp->_y),&(bp->_z));\
+        coords_get(_kg,&(bp->_kx),&(bp->_ky),&(bp->_kz));\
+        coords_get(_Eg,&(bp->_Ex),&(bp->_Ey),&(bp->_Ez));\
+        bp->_t=t;\
+        bp->_phi=phi;\
+        bp->_p=p;\
+        bp->_pid=mcget_run_num();\
+        bp->_comp=INDEX_CURRENT_COMP;\
+        bp->_idx=bounce_store_index;\
+        bp->_abs=0;\
+        bounce_store_index++;\
+      }\
+    }else if(bounce_store_index==(BOUNCE_LOG_SIZE-1) && !bounce_store_overrun){\
+      printf("Warning (%s): Scatter_log overrun at %llu - not logging any more events\n",NAME_CURRENT_COMP,mcget_run_num());\
+      bounce_store_overrun=1;\
+    }\
+    do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlkx, mcnlky, mcnlkz, \
+        mcnlt,mcnlphi,mcnlEx,mcnlEy,mcnlEz, mcnlp); mcScattered++;} while(0);\
+} while(0)
+
+#define ABSORB_LOG do { /*printf("DOING ABSORB_LOG\n");*/ \
+    if (bounce_store_index<BOUNCE_LOG_SIZE-1){\
+      struct Generalized_State_t *bp=&(Bounce_store[bounce_store_index]);\
+      {\
+        Coords ctmp=POS_A_CURRENT_COMP;\
+        Coords _r = coords_set(x,y,z);\
+        Coords _k = coords_set(kx,ky,kz);\
+        Coords _E = coords_set(Ex,Ey,Ez);\
+        Coords _rg,_kg,_Eg;\
+        Rotation _Rt;\
+        rot_transpose(ROT_A_CURRENT_COMP,_Rt);\
+        _rg=coords_add(rot_apply(_Rt,_r),ctmp);\
+        _kg=rot_apply(_Rt,_k);\
+        _Eg=rot_apply(_Rt,_E);\
+        coords_get(_rg,&(bp->_x),&(bp->_y),&(bp->_z));\
+        coords_get(_kg,&(bp->_kx),&(bp->_ky),&(bp->_kz));\
+        /*bp->_kx=0.; bp->_ky=0.; bp->_kz=0.;*/\
+        /*kx=0; ky=0;kz=0;*/\
+        coords_get(_Eg,&(bp->_Ex),&(bp->_Ey),&(bp->_Ez));\
+        bp->_t=t;\
+        bp->_phi=phi;\
+        bp->_p=0;\
+        bp->_pid=mcget_run_num();\
+        bp->_comp=INDEX_CURRENT_COMP;\
+        bp->_idx=bounce_store_index;\
+        bp->_abs=1;\
+        /* printf("Recording absorption event, writing state (%d) to the buffer, r: %g %g %g v: %g %g %g p:%g\n",\
+                bounce_store_index, bp->_x, bp->_y, bp->_z, bp->_kx, bp->_ky, bp->_kz, bp->_p);*/\
+        bounce_store_index++;\
+      }\
+    }else if(bounce_store_index==(BOUNCE_LOG_SIZE-1) && !bounce_store_overrun){\
+      printf("Warning (%s): Scatter_log overrun at %llu - not logging any more events\n",NAME_CURRENT_COMP,mcget_run_num());\
+      bounce_store_overrun=1;\
+    }\
+  do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlkx, mcnlky, mcnlkz, \
+      mcnlt,mcnlphi,mcnlEx,mcnlEy,mcnlEz, mcnlp); mcDEBUG_ABSORB(); MAGNET_OFF; goto mcabsorb;} while(0);\
+} while(0)
+
+
+#define SCATTER0\
+    do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlkx, mcnlky, mcnlkz, \
+        mcnlt,mcnlphi,mcnlEx,mcnlEy,mcnlEz, mcnlp); mcScattered++;} while(0)
+
+#define ABSORB0\
+    do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlkx, mcnlky, mcnlkz, \
+        mcnlt,mcnlphi,mcnlEx,mcnlEy,mcnlEz, mcnlp); mcDEBUG_ABSORB(); MAGNET_OFF; goto mcabsorb;} while(0)
+
+
+
+  const int BOUNCE_LOG_SIZE=10000000;
+  struct Generalized_State_t *Bounce_store;
+
+%}
+
+DECLARE
+%{
+  int bounce_store_index;
+  int bounce_store_overrun;
+  int absorbed_in_optics;
+%}
+
+INITIALIZE
+%{
+  bounce_store_index=0;
+  absorbed_in_optics=0;
+  if ( (Bounce_store=malloc(sizeof(struct Generalized_State_t)*BOUNCE_LOG_SIZE))==NULL){
+    fprintf(stderr,"ERROR: (%s): Cannot allocate memory for %d Generalized_State_ts of size %d bytes\n",NAME_CURRENT_COMP,BOUNCE_LOG_SIZE,sizeof(*Bounce_store));
+    exit(-1);
+  }
+  Bounce_store[BOUNCE_LOG_SIZE-1]._p=-1;
+%}
+
+
+TRACE
+%{
+#undef SCATTER
+#define SCATTER SCATTER_LOG
+
+#undef ABSORB
+#define ABSORB ABSORB_LOG
+
+#undef mcabsorb
+#define mcabsorb scatter_logger_stop
+  bounce_store_index=0;/*we are now starting logging for this ray so we should start afresh*/
+  absorbed_in_optics=0;
+
+  if (bounce_store_index<BOUNCE_LOG_SIZE){
+    struct Generalized_State_t *bp=&(Bounce_store[bounce_store_index]);
+    Coords ctmp=POS_A_CURRENT_COMP;
+    Coords r = coords_set(x,y,z);
+    Coords k = coords_set(kx,ky,kz);
+    Coords E = coords_set(Ex,Ey,Ez);
+
+    Coords rg,kg,Eg;
+
+    Rotation Rt;
+    rot_transpose(ROT_A_CURRENT_COMP,Rt);
+    rg=coords_add(rot_apply(Rt,r),ctmp);
+    kg=rot_apply(Rt,k);
+    Eg=rot_apply(Rt,E);
+    coords_get(rg,&(bp->_x),&(bp->_y),&(bp->_z));
+    coords_get(kg,&(bp->_kx),&(bp->_ky),&(bp->_kz));
+    coords_get(Eg,&(bp->_Ex),&(bp->_Ey),&(bp->_Ez));
+    bp->_t=t;
+    bp->_phi=phi;
+    bp->_p=p;
+    bp->_pid=mcget_run_num();
+    bp->_comp=INDEX_CURRENT_COMP;
+    bp->_idx=bounce_store_index;
+    bounce_store_index++;
+  }else if(bounce_store_index==BOUNCE_LOG_SIZE && !bounce_store_overrun){
+    printf("Warning (%s): Scatter_log overrun - not logging any more SCATTER events\n",NAME_CURRENT_COMP);
+    bounce_store_overrun=1;
+  }
+%}
+
+FINALLY
+%{
+%}
+
+END

@@ -20,8 +20,8 @@
 * \Delta\theta is the value specified by the parameter waviness.
 * 
 * %P
-* radius: [m]   Radius of curvature.
-* length: [m]   Length of the unbent mirror.
+* radius: [m]   Radius of the capillary.
+* length: [m]   Length of the capillary.
 * coating: []   Name of file containing the material data (i.e. f1 and f2) for the coating
 * R0: [ ] Fixed constant reflectivity
 * rtable: [ ] if nonzero, the coating file contains an E,theta paramterized matrix of raw reflectivities.
