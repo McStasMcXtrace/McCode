@@ -133,7 +133,6 @@ INITIALIZE
             mcpl_hdr_add_data(outputfile, "mccode_instr_file", size, buffer);
             free(buffer);
         }
-	fclose(fp);
     } else {
       fprintf(stderr,"\nWarning (%s): Source instrument file (%s) not found, hence not embedded.\n", NAME_CURRENT_COMP, mcinstrument_source);
     }
