@@ -233,12 +233,12 @@ TRACE
     tmpx=x+kx*tmpt;
     tmpy=y+ky*tmpt;
 
-    double phi_max,phi_min,phi;
-    phi_min=-xwidth*0.5/radius_m;
-    phi_max= xwidth*0.5/radius_m;
-    phi=atan2(tmpx,tmpy+radius_m);
+    double psi_max,psi_min,psi;
+    psi_min=-xwidth*0.5/radius_m;
+    psi_max= xwidth*0.5/radius_m;
+    psi=atan2(tmpx,tmpy+radius_m);
 
-    hit_pore= ( ( tmpx*tmpx + (tmpy+radius_m)*(tmpy+radius_m) < radius_p*radius_p ) && ( tmpx*tmpx + (tmpy+radius_m)*(tmpy+radius_m) >(radius_p-yheight)*(radius_p-yheight) ) && (phi>phi_min && phi<phi_max)) ;
+    hit_pore= ( ( tmpx*tmpx + (tmpy+radius_m)*(tmpy+radius_m) < radius_p*radius_p ) && ( tmpx*tmpx + (tmpy+radius_m)*(tmpy+radius_m) >(radius_p-yheight)*(radius_p-yheight) ) && (psi>psi_min && psi<psi_max)) ;
     hit_chamfer=0;
 
     if(hit_pore){
