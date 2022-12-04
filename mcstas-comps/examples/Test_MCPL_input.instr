@@ -82,8 +82,8 @@ COMPONENT m4 = Monitor_nD(
 ) AT (0,0,0) ABSOLUTE
 
 COMPONENT m5 = Monitor_nD(
-  xwidth=0.2, yheight=0.2, user1=2112,
-  options="parallel, previous, neutron, energy, x, y, z, vx, vy, vz, time, list all neutrons"
+  xwidth=0.2, yheight=0.2, user1="2112", username1="neutrons",
+  options="parallel, previous, neutron, user1, energy, x, y, z, vx, vy, vz, time, list all neutrons"
 ) AT (0,0,0) ABSOLUTE
 
 
