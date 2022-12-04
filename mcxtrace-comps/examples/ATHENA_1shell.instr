@@ -90,7 +90,6 @@ INITIALIZE
         alphax=offaxis_angle * MIN2RAD;
     }
     alphay=(src_pos_y)/optics_dist;
-    nid=0;
     
     FILE *fp=fopen(geomfile,"rb");
     if (fp==NULL){
@@ -205,12 +204,12 @@ COMPONENT detector_post_optics = PSD_monitor(restore_xray=1,xwidth=1.5, yheight=
 AT(0,0,optics_dist+0.5) RELATIVE Origin
 
 COMPONENT paramon = Monitor_nD(
-        restore_xray=1,filename="paramond",xwidth=3, yheight=1.5, options="list=2000 user1,user2,user3", user1=nid,user2=parascatter,user3=pararef, 
+        restore_xray=1,filename="paramond",xwidth=3, yheight=1.5, options="list=2000 user1,user2,user3", user1="nid",user2="parascatter",user3="pararef",
         username1="ray_id",username2="parabolic_shell_id",username3="parabolic_reflectivity")
 AT(0,0,optics_dist+0.5) RELATIVE Origin
 
 COMPONENT hypermon = Monitor_nD(
-        restore_xray=1,filename="hypermond",xwidth=3, yheight=1.5, options="list=2000 user1,user2,user3", user1=nid,user2=hyperscatter,user3=hyperref, 
+        restore_xray=1,filename="hypermond",xwidth=3, yheight=1.5, options="list=2000 user1,user2,user3", user1="nid",user2="hyperscatter",user3="hyperref",
         username1="ray_id",username2="hyperbolic_shell_id",username3="hyperbolic_reflectivity")
 AT(0,0,optics_dist+0.5) RELATIVE Origin
 
@@ -225,7 +224,7 @@ COMPONENT ultrafocal_detector = PSD_monitor(restore_xray=1,xwidth=1e-12, yheight
 AT(0,0,FL) RELATIVE optics_centre
 
 COMPONENT FLmond= Monitor_nD(
-        restore_xray=1,filename="FLmond",xwidth=0.1, yheight=.1, options="list=all user1 x y k E", user1=nid,
+        restore_xray=1,filename="FLmond",xwidth=0.1, yheight=.1, options="list=all user1 x y k E", user1="nid",
         username1="ray_id")
 AT(0,0,FL) RELATIVE optics_centre
 /* This section is executed when the simulation ends (C code). Other    */
