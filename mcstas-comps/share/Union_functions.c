@@ -467,6 +467,7 @@ union data_transfer_union{
     struct MagnonSimple_physics_storage_struct *pointer_to_a_MagnonSimple_storage_struct;
     struct Sans_spheres_physics_storage_struct *pointer_to_a_Sans_spheres_physics_storage_struct;
     struct Texture_physics_storage_struct *pointer_to_a_Texture_physics_storage_struct;
+    struct NCrystal_physics_storage_struct *pointer_to_a_NCrystal_physics_storage_struct;
     struct Non_physics_storage_struct *pointer_to_a_Non_physics_storage_struct;
     struct Template_physics_storage_struct *pointer_to_a_Template_physics_storage_struct;
     // possible to add as many structs as wanted, without increasing memory footprint.
