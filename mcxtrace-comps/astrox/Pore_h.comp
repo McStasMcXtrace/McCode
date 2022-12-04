@@ -111,7 +111,10 @@ DECLARE
     double wEntry[3];
     double nTop[3];
     double nBottom[3];
-    double alpha;
+    double nRight[3];
+    double wRight[3];
+    double nLeft[3];
+    double wLeft[3];
     double radius_1;
     double radius_2;
     double e_min[3];
@@ -125,6 +128,7 @@ DECLARE
 
     t_Table reflec_top_table;
     t_Table reflec_bottom_table;
+    t_Table reflec_side_table;
     t_Table wave_table[1024];
 %}
 
