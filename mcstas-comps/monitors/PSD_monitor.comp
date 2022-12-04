@@ -116,6 +116,12 @@ SAVE
     }
   %}
 
+FINALLY %{
+  destroy_darr2d(PSD_N);
+  destroy_darr2d(PSD_p);
+  destroy_darr2d(PSD_p2);
+%}
+
 MCDISPLAY
 %{
   
