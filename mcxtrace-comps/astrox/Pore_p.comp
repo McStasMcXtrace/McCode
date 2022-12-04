@@ -251,7 +251,7 @@ TRACE
         SCATTER;
         int exit=0;
         int intersections[5]={0,0,0,0,0};
-        int i_small; 
+        int i_small;
         double l[5]={100000.0, 100000.0, 100000.0, 100000.0, 100000.0};
         double l_small;
 
