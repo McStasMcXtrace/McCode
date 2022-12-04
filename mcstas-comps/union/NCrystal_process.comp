@@ -220,7 +220,13 @@ int NCrystal_physics_my(double *my, double *k_initial, union data_transfer_union
     // double my = data_transfer.pointer_to_a_NCrystal_physics_storage_struct->my_scattering;
     // One can assume that if the scattering function is running, the my fuction was
     //  executed just before and for the same k_initial.
-    
+#ifndef PROCESS_DETECTOR
+    #define PROCESS_DETECTOR dummy
+#endif
+
+#ifndef PROCESS_NCRYSTAL_DETECTOR
+    #define PROCESS_NCRYSTAL_DETECTOR dummy
+#endif
 };
 
 %}

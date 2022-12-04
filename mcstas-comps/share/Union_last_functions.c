@@ -46,6 +46,11 @@ int physics_my(enum process choice, double *my,double *k_initial, union data_tra
             output = IncoherentPhonon_physics_my(my, k_initial, data_transfer, focus_data, _particle);
             break;
         #endif
+        #ifdef PROCESS_NCRYSTAL_DETECTOR
+        case NCrystal:
+            output = NCrystal_physics_my(my, k_initial, data_transfer, focus_data, _particle);
+            break;
+        #endif
         #ifdef PROCESS_TEMPLATE_DETECTOR
         case Template:
             output = Template_physics_my(my, k_initial, data_transfer, focus_data, _particle);
