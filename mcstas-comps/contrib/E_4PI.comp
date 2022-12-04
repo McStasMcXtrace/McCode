@@ -1,0 +1,123 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2006, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: E_4PI
+*
+* %I
+* Written by: Duc Le
+* Date: 2000s
+* Origin: ISIS
+*
+* Spherical Energy-sensitive detector  
+*
+* %D
+*
+* Example: E_4PI(filename="e4pi.dat",ne=200,Emin=0,Emax=E*2)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* radius: [m]  Radius of detector (m)
+* ne: [1]      Number of energy bins
+* Emin: [meV]  Minimum energy measured
+* Emax: [meV]  Maximum energy measured
+* filename: [string] Name of file in which to store the output data
+* restore_neutron: [1] If set, the monitor does not influence the neutron state
+*
+* OUTPUT PARAMETERS:
+*
+* PSD_N:    Array of neutron counts
+* PSD_p:    Array of neutron weight counts
+* PSD_p2:   Array of second moments
+*
+* %L
+* <A HREF="http://neutron.risoe.dk/mcstas/components/tests/powder/">Test
+* results</A> (not up-to-date).
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT E_4PI
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (int ne=50, Emin=0, Emax=5, string filename=0, radius=1, restore_neutron=0)
+OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+
+DECLARE
+%{
+  DArray1d PSD_N;
+  DArray1d PSD_p;
+  DArray1d PSD_p2;
+%}
+INITIALIZE
+%{
+
+  PSD_N = create_darr1d(ne);
+  PSD_p = create_darr1d(ne);
+  PSD_p2 = create_darr1d(ne);
+  
+  // Use instance name for monitor output if no input was given
+  if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
+%}
+TRACE
+%{
+  double t0, t1, phi, theta, E;
+  int i,j,k;
+
+  if(sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius) && t1 > 0)
+  {
+    if(t0 < 0)
+      t0 = t1;
+    /* t0 is now time of intersection with the sphere. */
+    PROP_DT(t0);
+
+    E=VS2E*(vx*vx+vy*vy+vz*vz);
+    if(E<=Emax && E>=Emin) {
+      k = floor((E - Emin)*ne/(Emax - Emin));
+      double p2 = p*p;
+      #pragma acc atomic
+      PSD_N[k] = PSD_N[k] + 1;
+      #pragma acc atomic
+      PSD_p[k] = PSD_p[k] + p;
+      #pragma acc atomic
+      PSD_p2[k] = PSD_p2[k] + p2;
+    }
+    SCATTER;
+  }
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
+
+SAVE
+%{
+  DETECTOR_OUT_1D(
+    "4Pi Energy monitor",
+    "E_F [meV]","Intensity","E",
+    Emin, Emax,
+    ne,
+    &PSD_N[0],&PSD_p[0],&PSD_p2[0],
+    filename);
+%}
+
+FINALLY %{
+  destroy_darr1d(PSD_N);
+  destroy_darr1d(PSD_p);
+  destroy_darr1d(PSD_p2);
+%}
+
+MCDISPLAY
+%{
+  magnify("");
+  circle("xy",0,0,0,radius);
+  circle("xz",0,0,0,radius);
+  circle("yz",0,0,0,radius);
+%}
+
+END
+
