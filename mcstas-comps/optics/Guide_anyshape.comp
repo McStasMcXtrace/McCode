@@ -131,7 +131,7 @@ TRACE
        coords_get(locgrav, &mc_gx, &mc_gy, &mc_gz);
     }
     
-    intersect = off_intersect(&t0, &t3, &n0, &n3, NULL, NULL, x,y,z, vx, vy, vz, mc_gx, mc_gy, mc_gz, thread_offdata );
+    intersect = off_intersect(&t0, &t3, &n0, &n3, x,y,z, vx, vy, vz, mc_gx, mc_gy, mc_gz, thread_offdata );
 
     /* get the smallest positive */
     if (t0 > 0) { dt = t0; n=n0; }
