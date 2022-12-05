@@ -120,7 +120,6 @@ DECLARE
     double wEntry[3];
     double nTop[3];
     double nBottom[3];
-    double alpha;
     double radius_1;
     double radius_2;
     double e_min[2];

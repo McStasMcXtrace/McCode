@@ -169,9 +169,6 @@ DECLARE
     double wEntry[3];
     double nTop[3];
     double nBottom[3];
-    double Alpha;
-    double radius_1;
-    double radius_2;
     double E_min[2];
     double E_step[2];
     double E_max[2];
