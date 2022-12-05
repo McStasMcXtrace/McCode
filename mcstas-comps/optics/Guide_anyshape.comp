@@ -115,10 +115,20 @@ TRACE
   /* main loop for multiple reflections */
   do {
     double t0=0, t3=0, dt=0;
+    unsigned long faceindex0=0, faceindex3=0, fi=0;
     Coords n0, n3, n={0,0,0};
     /* determine intersections with object */
-    intersect = off_intersect(&t0, &t3, &n0, &n3,
-       x,y,z, vx, vy, vz, offdata );
+
+    double mc_gx=0.0, mc_gy=0.0, mc_gz=0.0;
+    if (mcgravitation) {
+       Coords locgrav;
+       locgrav = rot_apply(ROT_A_COMP(mccompcurname), coords_set(0,-GRAVITY,0));
+       coords_get(locgrav, &mc_gx, &mc_gy, &mc_gz);
+    }
+
+    intersect = off_intersect(&t0, &t3, &n0, &n3, &faceindex0, &faceindex3,
+				x,y,z, vx, vy, vz, mc_gx, mc_gy, mc_gz, offdata );
+
 
     /* get the smallest positive */
     if (t0 > 0) { dt = t0; n=n0; }
