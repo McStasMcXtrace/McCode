@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: ATHENA_1shell
+* Instrument: NuSTAR_1shell_con
 *
 * %Identification
 * Written by: Erik B Knudsen <erkn@fysik.dtu.dk> & Desiree D. M. Ferreira <desiree@space.dtu.dk> (email)
@@ -29,7 +29,7 @@
 * rad_p: The radius at the "parabolic" and of the optic. At the source end.
 * width: pore width ?
 *
-* Example: ATHENA_1shell.instr shellnumber=1
+* Example: NuSTAR_1shell_con.instr shellnumber=1
 *
 * %Parameters
 * FL [m] The focal length of the optical system
@@ -50,7 +50,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT NuSTAR_1shell(FL=10.12,FLd=0, optics_dist=10,
+DEFINE INSTRUMENT NuSTAR_1shell_con(FL=10.12,FLd=0, optics_dist=10,
         SRC_POS_X=0, SRC_POS_Y=0, offaxis_angle=0, drx=0,dry=0,drz=0 ,
         string reflectivity="mirror_coating_unity.txt", E0=5, dE=0.001, int shellnumber=0,
         string parabolic_datafile="om_con_1a_110901_t1.txt", string hyperbolic_datafile="om_con_3a_110901_t1.txt")
