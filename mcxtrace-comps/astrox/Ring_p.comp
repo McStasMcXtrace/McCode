@@ -79,7 +79,7 @@ SHARE
         double l1;
         if ( (status=solve_2nd_order(l0,&l1,A,B,C))==0 ){
             /*note that if l1->NULL only the smallest positive solution is returned*/
-/*            fprintf(stderr,"Ring_p: No solution %g %g %g   %g %g %g\n",x,y,z, kx,ky,kz);*/
+            /*fprintf(stderr,"Ring_p: No solution %g %g %g   %g %g %g\n",x,y,z, kx,ky,kz);*/
             return status;
         }
         /*compute normal vector*/
@@ -125,9 +125,8 @@ DECLARE
     double wEntry[3];
     double nTop[3];
     double nBottom[3];
-    double alpha;
-    double radius_1;
-    double radius_2;
+    double radius_p;
+    double radius_m;
     double e_min[2];
     double e_step[2];
     double e_max[2];
@@ -364,7 +363,7 @@ TRACE
                             randvec_target_circle(&nx,&ny,&nz,NULL,nx,ny,nx+radius-atan(theta),radius);
                         }
                         NORM(nx,ny,nz);
-                    }/*reflect the photon through the surface normal*/
+                    }
                     /*recompute theta*/
                     theta=RAD2DEG*0.5*acos(scalar_prod(kx,ky,kz,kix,kiy,kiz)/k/k);
                 }
