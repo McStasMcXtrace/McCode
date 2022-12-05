@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: ATHENA_1shell
+* Instrument: Simple_1shell
 *
 * %Identification
 * Written by: Erik B Knudsen <erkn@fysik.dtu.dk> & Desiree D. M. Ferreira <desiree@space.dtu.dk> (email)
@@ -17,7 +17,7 @@
 * Single shell example telescope using a combinatiopn pf parabolic/hyperbolic shell
 * optical plates covering the full circle. Reflectivity is 1 for all energies.
 *
-* Example: ATHENA_1shell.instr shellnumber=1
+* Example: Simple_1shell.instr FL=12
 *
 * %Parameters
 * FL: [m]        The focal length of the optical system
