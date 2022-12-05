@@ -100,20 +100,23 @@ SHARE
 
         return status;
     }
+#endif
 
+#ifndef PROP_Z
 #define PROP_Z(zz)\
-    mcPROP_P(z,zz)
+    mcPROP_Z(zz)
+#endif
 
-#define mcPROP_P(P,xi) \
+#ifndef mcPROP_Z
+#define mcPROP_Z(zz) \
   do { \
     MCNUM mc_dl,mc_k; \
-    if(k ## P == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
-    mc_k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));\
-      mc_dl= ((xi) -  ## P) * mc_k / k ## P;\
-    if(mc_dl<0 && mcallowbackprop==0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; };\
-    PROP_DL(mc_dl);\
+    if(kz == 0) { ABSORB; }; \
+    mc_k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); \
+    mc_dl= ((zz)-z) * mc_k / kz; \
+    if(mc_dl<0 && mcallowbackprop==0) { ABSORB; };\
+    PROP_DL(mc_dl); \
   } while(0)
-
 #endif
 
 #ifndef DISTRIBUTIONS
