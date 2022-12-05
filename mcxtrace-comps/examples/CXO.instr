@@ -206,7 +206,7 @@ WHEN(bounce==4) AT(0,0,PL+1e-3) RELATIVE optics_centre
 COMPONENT postOp_psd = COPY(preOp_psd)(filename="postOp_xy")
 WHEN(bounce==4) AT(0,0,0) RELATIVE PREVIOUS
 
-COMPONENT postOp_div = Monitor_nD(options=optionstring2, user1=xdiv, bins=101, xwidth=1.25, yheight=1.25,filename="postOp_dx")
+COMPONENT postOp_div = Monitor_nD(options=optionstring2, user1="xdiv", bins=101, xwidth=1.25, yheight=1.25,filename="postOp_dx")
 WHEN(bounce==4) AT(0,0,0) RELATIVE PREVIOUS
 
 COMPONENT near_psd = PSD_monitor(filename="near_xy",xwidth=1, yheight=1)
