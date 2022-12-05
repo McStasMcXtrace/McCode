@@ -31,7 +31,9 @@
 /*  limitations under the License.                                            */
 /*                                                                            */
 /******************************************************************************/
+
 // %INSTRUMENT_SITE: NCrystal 
+
 DEFINE INSTRUMENT Union_NCrystal_mix_example()
 
 DECLARE

@@ -32,6 +32,8 @@
 /*                                                                            */
 /******************************************************************************/
 
+// %INSTRUMENT_SITE: NCrystal
+
 DEFINE INSTRUMENT Union_NCrystal_example()
 
 DECLARE
