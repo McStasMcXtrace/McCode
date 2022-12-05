@@ -79,6 +79,7 @@ void off_normal(Coords* n, polygon p)
 int off_pnpoly(polygon p, Coords v)
 {
   int i=0, c = 0;
+  MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
   MCNUM areax=0,areay=0,areaz=0;
 
   int pol2dx=0,pol2dy=1;          //2d restriction of the poly
@@ -320,8 +321,13 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
   off_init_planes(a, b, &A1, &C1, &D1, &A2, &B2, &C2, &D2);
 
   int t_size=0;
+  char sg[vtxSize];  //array telling if vertex is left or right of the plane
   MCNUM popol[3*4]; /*3 dimensions and max 4 vertices to form a polygon*/
   unsigned long i=0,indPoly=0;
+  for (i=0; i < vtxSize; ++i)
+  {
+    sg[i]=off_sign(off_F(vtxArray[i].x,vtxArray[i].y,vtxArray[i].z,A1,0,C1,D1));
+  }
 
   //exploring the polygons :
   i=indPoly=0;

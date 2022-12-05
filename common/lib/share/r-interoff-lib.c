@@ -448,7 +448,7 @@ int r_off_clip_3D_mod_grav(r_intersection* t, Coords pos, Coords vel, Coords acc
   i=indPoly=0;
   while (i<faceSize)
   {
-    polygon pol;
+    r_polygon pol;
     pol.npol  = faceArray[i];                //nb vertex of polygon
     pol.p     = popol;
     pol.normal= coords_set(0,0,1);
@@ -473,7 +473,7 @@ int r_off_clip_3D_mod_grav(r_intersection* t, Coords pos, Coords vel, Coords acc
       }
     pol.normal=normalArray[indPoly];
     pol.D=DArray[indPoly];
-    p_to_quadratic(pol.normal, pol.D, acc, pos, vel, quadratic);
+    r_p_to_quadratic(pol.normal, pol.D, acc, pos, vel, quadratic);
     double x1, x2;
     int nsol = r_quadraticSolve(quadratic, &x1, &x2);
 
@@ -507,7 +507,7 @@ int r_off_clip_3D_mod_grav(r_intersection* t, Coords pos, Coords vel, Coords acc
 	inters.time = time;
 	inters.normal = pol.normal;
 	inters.index = indPoly;
-	int res=off_pnpoly(pol,inters.v);
+	int res=r_off_pnpoly(pol,inters.v);
 	if (res != 0) {
 	  inters.edge=(res==-1);
 	  MCNUM ndir = scalar_prod(pol.normal.x,pol.normal.y,pol.normal.z,tvel.x,tvel.y,tvel.z);
@@ -1020,6 +1020,7 @@ int r_quadraticSolve(double* eq, double* x1, double* x2)
      unsigned long *faceindex0, unsigned long *faceindex3,
      double x, double y, double z,
      double vx, double vy, double vz,
+     double ax, double ay, double az,
      r_off_struct *data )
 * ACTION: computes intersection of neutron trajectory with an object.
 * INPUT:  x,y,z and vx,vy,vz are the position and velocity of the neutron
