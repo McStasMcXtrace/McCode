@@ -76,9 +76,15 @@ typedef struct r_off_struct {
     #pragma acc shape(vtxArray[0:faceSize]) init_needed(faceSize)
     unsigned long* faceArray;
     #pragma acc shape(vtxArray[0:faceSize][0:polySize]) init_needed(faceSize,polySize)
-    unsigned long* facepropsArray;
+    // GM: Additions to store floating point based values for m, alpha and W, for each polygon face
+    double* face_m_Array;
+    #pragma acc shape(face_m_Array[0:faceSize]) init_needed(faceSize)
+    double* face_alpha_Array;
+    #pragma acc shape(face_alpha_Array[0:faceSize]) init_needed(faceSize)
+    double* face_W_Array;
     double* DArray;
-    #pragma acc shape(facepropsArray[0:faceSize]) init_needed(faceSize)
+    #pragma acc shape(face_W_Array[0:faceSize]) init_needed(faceSize)
+
     char *filename;
     int mantidflag;
     long mantidoffset;

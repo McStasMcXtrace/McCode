@@ -14,13 +14,14 @@
 * Release: $Revision$
 * Version: McStas X.Y
 *
-* Revision to read optional face color values from off files
-* by: Peter Link
-* Date: Mar 10, 2017
+* Revision of the version of Peter Link to read floating point m-, alpha- and W-values
+* for each face from OFF files
+* by: Peter Link / Gaetano Mangiapia
+* Date: Mar 10, 2017 / May 30, 2022
 *  
-* Object File Format intersection library for McStas. Requires the qsort function.
+* Modified Object File Format intersection library for McStas. Requires the qsort function.
 *
-* Such files may be obtained with e.g.
+* Standard .OFF files may be obtained with e.g.
 *   qhull < points.xyz Qx Qv Tv o > points.off
 * where points.xyz has format (it supports comments):
 *   3
@@ -33,6 +34,9 @@
 *   powercrust -i points.xyz
 * which will generate a 'pc.off' file to be renamed as suited.
 *
+* The OFF file trated here is modified, since the second portion of it, where the sequence
+* of vertices composing each face is listed, contains also the following float-based parameters:
+* m, alpha and W values, **** IN THIS ORDER ****
 *******************************************************************************/
 
 #ifndef R_INTEROFF_LIB_H
@@ -611,7 +615,12 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   Coords* normalArray     =NULL;
   double* DArray          =NULL;
   unsigned long* faceArray=NULL;
-  unsigned long* facepropsArray=NULL;  /* PL: added to hold keys to the table of supermirror m-values */
+
+  // GM: Additions for floating (double precision) values of m, alpha and W
+  double* face_m_Array = NULL;  /* PL: added to hold keys to the table of supermirror m-values */
+  double* face_alpha_Array = NULL;
+  double* face_W_Array = NULL;
+
   FILE*   f               =NULL; /* the FILE with vertices and polygons */
   double minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
 
@@ -715,9 +724,12 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   );
   normalArray= malloc(polySize*sizeof(Coords));
   faceArray  = malloc(polySize*10*sizeof(unsigned long)); // we assume polygons have less than 9 vertices
-  facepropsArray = malloc(polySize*sizeof(unsigned long)); // array to hold the index of the face properties table
-  DArray     = malloc(polySize*sizeof(double));
-  if (!normalArray || !faceArray || !DArray) return(0);
+  face_m_Array = malloc(polySize*sizeof(double)); // array to hold the index of the face properties table
+  face_alpha_Array = malloc(polySize*sizeof(double));
+  face_W_Array = malloc(polySize*sizeof(double));
+
+
+  if (!normalArray || !faceArray) return(0);
 
   // fill faces
   faceSize=0;
@@ -748,14 +760,19 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
       fscanf(f, "%lg", &vtx);
       faceArray[faceSize++] = vtx;   // add vertices index after length of polygon
     }
-    /* PL: to add the mirror properties use the optional color map index of the faces in the off-file definition,
-       i.e. read one more integer on the line!
-       this way will not work for files which do not have exactly this format
-       it would be better to replace the original fscanf by reading the full line and interpreting it afterwards. 
-     */  
-    int mirrorprops=0;
-    fscanf(f, "%d", &mirrorprops);
-    facepropsArray[i] = mirrorprops;
+    // GM: Modification of the revision of Peter Link to add m, alpha and W
+
+    float mirrorprops = 0.0;
+    float alphaprops = 0.0;
+    float Wprops = 0.0;
+
+    fscanf(f, "%f", &mirrorprops);
+    face_m_Array[i] = (double)mirrorprops;
+    fscanf(f, "%f", &alphaprops);
+    face_alpha_Array[i] = (double)alphaprops;
+    fscanf(f, "%f", &Wprops);
+    face_W_Array[i] = (double)Wprops;
+
     i++;
   }
 
@@ -811,7 +828,9 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   data->normalArray= normalArray;
   data->DArray     = DArray;
   data->faceArray  = faceArray;
-  data->facepropsArray  = facepropsArray;
+  data->face_m_Array  = face_m_Array;
+  data->face_alpha_Array  = face_alpha_Array;
+  data->face_W_Array  = face_W_Array;
   data->vtxSize    = vtxSize;
   data->polySize   = polySize;
   data->faceSize   = faceSize;
@@ -1012,6 +1031,8 @@ int r_off_intersect_all(double* t0, double* t3,
      double ax, double ay, double az,
      r_off_struct *data )
 {
+    Coords A={x, y, z};
+    Coords B={x+vx, y+vy, z+vz};
 
 #ifdef OFF_LEGACY    
     if(mcgravitation) {
@@ -1098,6 +1119,12 @@ int r_off_intersect_all(double* t0, double* t3,
       if (n0) *n0 = intersect4[i].normal;
       if (t3) *t3 = intersect4[i+1].time;
       if (n3) *n3 = intersect4[i+1].normal;
+
+      // Lines added, from Gaetano Mangiapia, Helmholtz-Zentrum Hereon
+      // see https://github.com/McStasMcXtrace/McCode/issues/1250
+      if (faceindex0) *faceindex0 = intersect4[i].index;
+      if (faceindex3) *faceindex3 = intersect4[i+1].index;
+
       /* should also return t[0].index and t[i].index as polygon ID */
       return t_size;
     }
