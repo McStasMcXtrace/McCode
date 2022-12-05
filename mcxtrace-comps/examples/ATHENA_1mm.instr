@@ -82,6 +82,7 @@ DEFINE INSTRUMENT ATHENA_1mm(FL=12, optics_dist=10,
         string reflectivity="mirror_coating_unity.txt", 
         E0=5, dE=0.001, int porenumber=1,string ringfile="ref_design_breaks.txt", 
         string positionfile="ATHENA_mm_1petal.dat", string geomfile="ATHENA_rings_1_20.dat", int hyper=1, int para=1)
+DEPENDENCY "-DDATPATH=GETPATH(data/)"
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -97,6 +98,18 @@ DECLARE
     
     double pore_width=0.83e-3;
     double pore_height=0.605e-3;
+
+    #define QUOTE(name) #name
+    #define STR(macro) QUOTE(macro)
+
+    #ifndef DATPATH
+    #define DATPATH=/usr/share/mcxtrace/3.1/data/
+    #endif
+
+    #define DATAPATH STR(DATPATH)
+
+    char fullpath_positionfile[128];
+    char fullpath_geomfile[128];
 %}
 
 USERVARS %{
@@ -118,10 +131,12 @@ INITIALIZE
         alphax=offaxis_angle * MIN2RAD;
     }
     alphay=(src_pos_y)/optics_dist;
-    
-    FILE *fp=fopen(positionfile,"rb");
+
+    sprintf(fullpath_positionfile,"%s/%s",DATAPATH,positionfile);
+
+    FILE *fp=fopen(fullpath_positionfile,"rb");
     if (fp==NULL){
-        fprintf(stderr,"Error: Cannot open file \'%s\'. Aborting.",positionfile);
+        fprintf(stderr,"Error: Cannot open file \'%s\'. Aborting.\n",fullpath_positionfile);
         exit(-1);
     }
     int ii=0;
@@ -133,9 +148,11 @@ INITIALIZE
     }
     fclose(fp);
 
-    fp=fopen(geomfile,"rb");
+    sprintf(fullpath_geomfile,"%s/%s",DATAPATH,geomfile);
+
+    fp=fopen(fullpath_geomfile,"rb");
     if (fp==NULL){
-        fprintf(stderr,"Error: Cannot open file \'%s\'. Aborting.",geomfile);
+        fprintf(stderr,"Error: Cannot open file \'%s\'. Aborting.",fullpath_geomfile);
         exit(-1);
     }
     fgets(line,1023,fp);
