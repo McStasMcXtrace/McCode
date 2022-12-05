@@ -189,7 +189,7 @@ FILE *off_getBlocksIndex(char* filename, long* vtxSize, long* polySize )
 {
   FILE* f = Open_File(filename,"r", NULL); /* from read_table-lib: FILE *Open_File(char *name, char *Mode, char *path) */
   if (!f) return (f);
-  
+
   char line[CHAR_BUF_LENGTH];
   char *ret=0;
   *vtxSize = *polySize = 0;
@@ -207,8 +207,9 @@ FILE *off_getBlocksIndex(char* filename, long* vtxSize, long* polySize )
   }
   if (strlen(line)>5)
   {
-      fprintf(stderr,"Error: First line in %s is too long (=%lu). Possibly the line is not terminated by '\\n'.\n" 
-              "       The first line is required to be exactly 'OFF', '3' or 'ply'.\n",filename,strlen(line));
+      fprintf(stderr,"Error: First line in %s is too long (=%lu). Possibly the line is not terminated by '\\n'.\n"
+              "       The first line is required to be exactly 'OFF', '3' or 'ply'.\n",
+              filename,(long unsigned)strlen(line));
       fclose(f);
       return(NULL);
   }
@@ -253,7 +254,7 @@ FILE *off_getBlocksIndex(char* filename, long* vtxSize, long* polySize )
           filename, line));
     } while (strncmp(line,"end_header",10));
   }
-  
+
   /* The FILE is left opened ready to read 'vtxSize' vertices (vtxSize *3 numbers)
      and then polySize polygons (rows) */
 
@@ -314,7 +315,7 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
 
   int t_size=0;
   char sg[vtxSize];  //array telling if vertex is left or right of the plane
-  MCNUM popol[3*CHAR_BUF_LENGTH];
+  MCNUM popol[3*4]; /*3 dimensions and max 4 vertices to form a polygon*/
   unsigned long i=0,indPoly=0;
   for (i=0; i < vtxSize; ++i)
   {
@@ -609,16 +610,16 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
 
   // get the indexes
   if (!data) return(0);
-  
+
   MPI_MASTER(
   printf("Loading geometry file (OFF/PLY): %s\n", offfile);
   );
-  
+
   f=off_getBlocksIndex(offfile,&vtxSize,&polySize);
   if (!f) return(0);
-  
+
   // read vertex table = [x y z | x y z | ...] =================================
-  // now we read the vertices as 'vtxSize*3' numbers and store it in vtxArray 
+  // now we read the vertices as 'vtxSize*3' numbers and store it in vtxArray
   MPI_MASTER(
   printf("  Number of vertices: %ld\n", vtxSize);
   );
@@ -629,7 +630,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   {
     double x,y,z;
     ret=fscanf(f, "%lg%lg%lg", &x,&y,&z);
-    if (!ret) { 
+    if (!ret) {
       // invalid line: we skip it (probably a comment)
       char line[CHAR_BUF_LENGTH];
       char *s=fgets(line, CHAR_BUF_LENGTH, f);
@@ -700,7 +701,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
     vtxArray[i].y=(vtxArray[i].y-centery)*ratioy+(!notcenter ? 0 : centery);
     vtxArray[i].z=(vtxArray[i].z-centerz)*ratioz+(!notcenter ? 0 : centerz);
   }
-  
+
   // read face table = [nbvertex v1 v2 vn | nbvertex v1 v2 vn ...] =============
   MPI_MASTER(
   printf("  Number of polygons: %ld\n", polySize);
@@ -717,7 +718,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
     int  nbVertex=0, j=0;
     // read the length of this polygon
     ret=fscanf(f, "%d", &nbVertex);
-    if (!ret) { 
+    if (!ret) {
       // invalid line: we skip it (probably a comment)
       char line[CHAR_BUF_LENGTH];
       char *s=fgets(line, CHAR_BUF_LENGTH, f);
@@ -773,7 +774,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
     indNormal++;
 
   }
-  
+
   MPI_MASTER(
   if (ratiox!=ratioy || ratiox!=ratioz || ratioy!=ratioz)
     printf("Warning: Aspect ratio of the geometry %s was modified.\n"
@@ -781,7 +782,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
            offfile);
   if ( xwidth==0 && yheight==0 && zdepth==0 ) {
     printf("Warning: Neither xwidth, yheight or zdepth are defined.\n"
-	   "           The file-defined (non-scaled) geometry the OFF geometry %s will be applied!\n", 
+	   "           The file-defined (non-scaled) geometry the OFF geometry %s will be applied!\n",
            offfile);
   }
   printf("  Bounding box dimensions for geometry %s:\n", offfile);
