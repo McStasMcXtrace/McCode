@@ -313,7 +313,6 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
   off_init_planes(a, b, &A1, &C1, &D1, &A2, &B2, &C2, &D2);
 
   int t_size=0;
-  //unsigned long vtxSize=vtxTable.rows, faceSize=faceTable.columns;  //Size of the corresponding tables
   char sg[vtxSize];  //array telling if vertex is left or right of the plane
   MCNUM popol[3*CHAR_BUF_LENGTH];
   unsigned long i=0,indPoly=0;
@@ -986,7 +985,6 @@ int off_intersect_all(double* t0, double* t3,
 *******************************************************************************/
 int off_intersect(double* t0, double* t3,
      Coords *n0, Coords *n3,
-     unsigned long *faceindex0, unsigned long *faceindex3,
      double x,  double y,  double z,
      double vx, double vy, double vz,
      double ax, double ay, double az,
@@ -998,7 +996,6 @@ int off_intersect(double* t0, double* t3,
 /*****************************************************************************
 * int off_x_intersect(double* l0, double* l3,
      Coords *n0, Coords *n3,
-     unsigned long *faceindex0, unsigned long *faceindex3,
      double x, double y, double z,
      double kx, double ky, double kz,
      off_struct data )
@@ -1011,7 +1008,6 @@ int off_intersect(double* t0, double* t3,
 *******************************************************************************/
 int off_x_intersect(double *l0,double *l3,
      Coords *n0, Coords *n3,
-     unsigned long *faceindex0, unsigned long *faceindex3,
      double x,  double y,  double z,
      double kx, double ky, double kz,
      off_struct data )
@@ -1023,7 +1019,7 @@ int off_x_intersect(double *l0,double *l3,
   int n;
   invk=1/sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
   jx=kx*invk;jy=ky*invk;jz=kz*invk;
-  n=off_intersect(l0,l3,n0,n3,faceindex0,faceindex3,x,y,z,jx,jy,jz,0.0,0.0,0.0,data);
+  n=off_intersect(l0,l3,n0,n3,x,y,z,jx,jy,jz,0.0,0.0,0.0,data);
   return n;
 }
 
