@@ -312,8 +312,7 @@ INITIALIZE
     nEntry[0]=0;
     nEntry[1]=0;
     nEntry[2]=-1;
-    wExit[0]=wExit[1]=0;wExit[2]=zentry;
-
+    wEntry[0]=wEntry[1]=0;wEntry[2]=zentry;
 
     nExit[0]=0;
     nExit[1]=0;
