@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: ATHENA_1shell
+* Instrument: ATHENA_1sh_conical
 *
 * %Identification
 * Written by: Erik B Knudsen <erkn@fysik.dtu.dk> & Desiree D. M. Ferreira <desiree@space.dtu.dk> (email)
@@ -28,7 +28,7 @@
 * rad_m: The radius at the midpoint of the optic. This is the reference.
 * rad_p: The radius at the "parabolic" and of the optic. At the source end.
 *
-* Example: ATHENA_1shell.instr shellnumber=1
+* Example: ATHENA_1sh_conical.instr shellnumber=1
 *
 * %Parameters
 * FL [m] The focal length of the optical system
@@ -51,7 +51,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT ATHENA_1shell(FL=12, optics_dist=10,
+DEFINE INSTRUMENT ATHENA_1sh_conical(FL=12, optics_dist=10,
         XWidth=0.13312, YHeight=0.13312, NX=1024, NY=1024,
         string reflectivity="mirror_coating_unity.txt", E0=5, dE=0.001, int shellnumber=1,
 	string geomfile="ATHENA_rings_1_20.dat")
