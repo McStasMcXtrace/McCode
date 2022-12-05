@@ -606,7 +606,7 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   Coords* normalArray     =NULL;
   double* DArray          =NULL;
   unsigned long* faceArray=NULL;
-  
+
   // GM: Additions for floating (double precision) values of m, alpha and W
   double* face_m_Array = NULL;  /* PL: added to hold keys to the table of supermirror m-values */
   double* face_alpha_Array = NULL;
