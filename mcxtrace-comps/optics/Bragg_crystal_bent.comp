@@ -257,6 +257,9 @@ TRACE
 #endif
 
             double sth=sin(Theta0+Thetah), cth=cos(Theta0+Thetah);
+            if(sig_x*pi_y*pi_z > 0) { /* backwards hit, rotate the other way */
+                sth=-sth;
+            }
             double sx2=sig_x*sig_x, sy2=sig_y*sig_y, sz2=sig_z*sig_z, r2=sig_x*sig_x+sig_y*sig_y;
 
             /* initialize a rotation matrix by the appropriate angle around the sigma axis, this from Mathematica RotationMatrix[] */
