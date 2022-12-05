@@ -6,6 +6,7 @@
 * %Identification
 * Date: Dec 5th 2022
 * Origin: Synchrotron Soleil
+* %INSTRUMENT_SITE: SOLEIL
 *
 * Simulating the beamline 11-2 of SSRL to reproduce their glitches database.
 *
