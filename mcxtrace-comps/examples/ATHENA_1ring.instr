@@ -97,7 +97,7 @@ INITIALIZE
 
     /* read 1st block data from file into tp */
     if (Table_Read(&tp, geomfile, 1) <= 0) {
-        exit(fprintf(stderr,"Error(%s): can not read file %s\n",NAME_CURRENT_COMP, geomfile));
+      exit(fprintf(stderr,"Error(%s): can not read file %s\n", instrument_name, geomfile));
     }
 
     for (ii=0;ii<tp.rows;ii++){
