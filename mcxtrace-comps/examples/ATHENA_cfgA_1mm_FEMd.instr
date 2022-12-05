@@ -119,7 +119,6 @@ INITIALIZE
     if (offaxis_angle){
         alphax=offaxis_angle * MIN2RAD;
     }
-    nid=0;
 
     int status;
     status=Table_Read(&MM_def, mmdef_file, 0);
@@ -288,7 +287,7 @@ COMPONENT auto_focal_detector = Monitor_nD(restore_xray=1,xwidth=.2, yheight=.2,
 AT(0,0,FL) RELATIVE optics_centre  
 
 COMPONENT FLmond= Monitor_nD(
-        restore_xray=1,filename="FLmond",xwidth=0.1, yheight=.1, options="list=5000 user1 x y kx ky kz E", user1=nid, 
+        restore_xray=1,filename="FLmond",xwidth=0.1, yheight=.1, options="list=5000 user1 x y kx ky kz E", user1="nid",
         username1="ray_id")
 WHEN(lists) AT(0,0,FL) RELATIVE optics_centre
 /* This section is executed when the simulation ends (C code). Other    */

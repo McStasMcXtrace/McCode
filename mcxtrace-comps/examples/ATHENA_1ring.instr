@@ -91,14 +91,13 @@ INITIALIZE
         alphax=offaxis_angle * MIN2RAD;
     }
     alphay=(src_pos_y)/optics_dist;
-    nid=0;
    
     t_Table tp;
     int ii;
 
     /* read 1st block data from file into tp */
     if (Table_Read(&tp, geomfile, 1) <= 0) {
-        exit(fprintf(stderr,"Error(%s): can not read file %s\n",NAME_CURRENT_COMP, geomfile));
+      exit(fprintf(stderr,"Error(%s): can not read file %s\n", instrument_name, geomfile));
     }
 
     for (ii=0;ii<tp.rows;ii++){
@@ -201,12 +200,12 @@ COMPONENT detector_post_optics = PSD_monitor(restore_xray=1,xwidth=3, yheight=3,
 AT(0,0,optics_dist+0.5) RELATIVE Origin
 
 COMPONENT paramon = Monitor_nD(
-        restore_xray=1,filename="paramond",xwidth=3, yheight=1.5, options="list=2000 user1,user2,user3", user1=nid,user2=parascatter,user3=pararef, 
+        restore_xray=1,filename="paramond",xwidth=3, yheight=1.5, options="list=2000 user1,user2,user3", user1="nid",user2="parascatter",user3="pararef",
         username1="ray_id",username2="parabolic_ring_id",username3="parabolic_reflectivity")
 AT(0,0,optics_dist+0.5) RELATIVE Origin
 
 COMPONENT hypermon = Monitor_nD(
-        restore_xray=1,filename="hypermond",xwidth=3, yheight=1.5, options="list=2000 user1,user2,user3", user1=nid,user2=hyperscatter,user3=hyperref, 
+        restore_xray=1,filename="hypermond",xwidth=3, yheight=1.5, options="list=2000 user1,user2,user3", user1="nid",user2="hyperscatter",user3="hyperref",
         username1="ray_id",username2="hyperbolic_ring_id",username3="hyperbolic_reflectivity")
 AT(0,0,optics_dist+0.5) RELATIVE Origin
 
@@ -221,7 +220,7 @@ COMPONENT ultrafocal_detector = PSD_monitor(restore_xray=1,xwidth=1e-12, yheight
 AT(0,0,FL) RELATIVE optics_centre
 
 COMPONENT FLmond= Monitor_nD(
-        restore_xray=1,filename="FLmond",xwidth=0.1, yheight=.1, options="list=all user1 x y k E", user1=nid, 
+        restore_xray=1,filename="FLmond",xwidth=0.1, yheight=.1, options="list=all user1 x y k E", user1="nid",
         username1="ray_id")
 AT(0,0,FL) RELATIVE optics_centre
 /* This section is executed when the simulation ends (C code). Other    */

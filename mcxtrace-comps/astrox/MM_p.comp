@@ -83,7 +83,6 @@ SHARE
         if ( (status=solve_2nd_order(l0,&l1,A,B,C))==0 ){
             /*note that if l1->NULL only the smallest positive solution is returned*/
             /*This shouldn't happen*/
-            //fprintf(stderr,"MM_p: No solution %g %g %g   %g %g %g\n",x,y,z, kx,ky,kz);
             return status;
         }
         /*compute normal vector*/
@@ -104,20 +103,23 @@ SHARE
         NORM(*nx,*ny,*nz);
         return status;
     }
+#endif
 
+#ifndef PROP_Z
 #define PROP_Z(zz)\
-    mcPROP_P(z,zz)
+    mcPROP_Z(zz)
+#endif
 
-#define mcPROP_P(P,xi) \
+#ifndef mcPROP_Z
+#define mcPROP_Z(zz) \
   do { \
     MCNUM mc_dl,mc_k; \
-    if(k ## P == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
-    mc_k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));\
-      mc_dl= ((xi) -  ## P) * mc_k / k ## P;\
-    if(mc_dl<0 && mcallowbackprop==0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; };\
-    PROP_DL(mc_dl);\
+    if(kz == 0) { ABSORB; }; \
+    mc_k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); \
+    mc_dl= ((zz)-z) * mc_k / kz; \
+    if(mc_dl<0 && mcallowbackprop==0) { ABSORB; };\
+    PROP_DL(mc_dl); \
   } while(0)
-
 #endif
 
 #ifndef DISTRIBUTIONS
@@ -146,15 +148,24 @@ DECLARE
     double wEntry[3];
     double nTop[3];
     double nBottom[3];
-    double Alpha;
-    double radius_1;
-    double radius_2;
+    double nRight[3];
+    double wRight[3];
+    double nLeft[3];
+    double wLeft[3];
     double e_min[3];
     double e_step[3];
     double e_max[3];
     double theta_min[3];
     double theta_step[3];
     double theta_max[3];
+
+    double e_min_nonspec;
+    double e_max_nonspec;
+    double e_step_nonspec;
+    double theta_min_nonspec;
+    double theta_max_nonspec;
+    double theta_step_nonspec;
+
 
     double zentry;
     double *zentry_vec;
@@ -279,6 +290,7 @@ INITIALIZE
     nExit[1]=0;
     nExit[2]=1;
     wExit[0]=wExit[1]=wExit[2]=0;
+
     if(non_specular_file && strlen(non_specular_file)){
         Table_Read(&(non_specular_table), non_specular_file, 0);
         char** header_parsed = Table_ParseHeader(non_specular_table.header,
@@ -286,20 +298,20 @@ INITIALIZE
             if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
                 header_parsed[3] && header_parsed[4] && header_parsed[5])
                 {
-                    e_min[2]=strtod(header_parsed[0],NULL);
-                    e_max[2]=strtod(header_parsed[1],NULL);
-                    e_step[2]=strtod(header_parsed[2],NULL);
-                    theta_min[2]=strtod(header_parsed[3],NULL);
-                    theta_max[2]=strtod(header_parsed[4],NULL);
-                    theta_step[2]=strtod(header_parsed[5],NULL);
+                    e_min_nonspec=strtod(header_parsed[0],NULL);
+                    e_max_nonspec=strtod(header_parsed[1],NULL);
+                    e_step_nonspec=strtod(header_parsed[2],NULL);
+                    theta_min_nonspec=strtod(header_parsed[3],NULL);
+                    theta_max_nonspec=strtod(header_parsed[4],NULL);
+                    theta_step_nonspec=strtod(header_parsed[5],NULL);
                 } else {
                     exit(fprintf(stderr,"Error (%s): wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, non_specular_file));
                 }
-                if (!((int)(e_max[2]-e_min[2]) == (int)((non_specular_table.rows-1)*e_step[2])))
+                if (!((int)(e_max_nonspec-e_min_nonspec) == (int)((non_specular_table.rows-1)*e_step_nonspec)))
                 {
                     exit(fprintf(stderr,"Error (%s): e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, non_specular_file));
                 }
-                if (!((int)(theta_max[2]-theta_min[2]) == (int)((non_specular_table.columns-1)*theta_step[2])))
+                if (!((int)(theta_max_nonspec-theta_min_nonspec) == (int)((non_specular_table.columns-1)*theta_step_nonspec)))
                 {
                     exit(fprintf(stderr,"Error (%s): theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, non_specular_file));
                 }
@@ -451,7 +463,7 @@ TRACE
                 intersections[BOTTOM]=intersect_paraboloid((l+BOTTOM),x,y,z,kx,ky,kz,Z0,radius_m-local_pore_height,&(nBottom[0]),&(nBottom[1]),&(nBottom[2]));
                 if (intersections[BOTTOM] && l[BOTTOM]>DBL_EPSILON && l[BOTTOM]<l_small) {l_small=l[BOTTOM];i_small=intersections[BOTTOM];wall=BOTTOM;}
 
-                /*sort intersections ot find the smallest positive one*/
+                /*sort intersections to find the smallest positive one*/
                 switch (wall){
                     case LEFT:
                         /*handle left wall "reflection"*/
@@ -508,7 +520,12 @@ TRACE
                     /*assuming theta to be small we might disregard atan*/
                     if(longw){
                         double dtheta;
-                        if(theta<waviness){
+                        if(&non_specular_table!=NULL){
+                            double lw;
+                            lw = Table_Value2d(non_specular_table, (e-e_min[2])/e_step[2], (theta-theta_min[2])/theta_step[2]);
+                            dtheta=lorentzDistribution(0, lw);
+                            printf("lorentz dtheta %e\n");
+                        } else if(theta<waviness){
                             dtheta=rand01()*(theta+waviness)-theta;
                         } else {
                             dtheta=randpm1()*waviness;
@@ -539,7 +556,7 @@ TRACE
                 }
 
                 if(&non_specular_table!=NULL){
-                    double lw = Table_Value2d(non_specular_table, (e-e_min[2])/e_step[2], (theta-theta_min[2])/theta_step[2]);
+                    double lw = Table_Value2d(non_specular_table, (e-e_min_nonspec)/e_step_nonspec, (theta-theta_min_nonspec)/theta_step_nonspec);
                     double dtheta=lorentzDistribution(0, lw)*M_PI/180;
                     double tx,ty,tz;
                     vec_prod(tx,ty,tz,0,0,1,nx,ny,nz);

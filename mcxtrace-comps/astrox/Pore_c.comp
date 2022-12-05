@@ -75,10 +75,10 @@ SHARE
         double l1;
         if ( (status=solve_2nd_order(l0,&l1,A,B,C))==0 ){
             /*note that if l1->NULL only the smallest positive solution is returned*/
-            //fprintf(stderr,"Error(%s): No solution to second order eq.\n","Pore_c");
+            /*fprintf(stderr,"Error(%s): No solution to second order eq.\n","Pore_c");*/
             return status;
         }
-        /*compute normal vector here*/
+        /*compute normal vector*/
         x+=kxn* (*l0);
         y+=kyn* (*l0);
         z+=kzn* (*l0);
@@ -100,17 +100,16 @@ SHARE
 
 DECLARE
 %{
-    double nLeft[3];
-    double wLeft[3];
-    double nRight[3];
-    double wRight[3];
     double nExit[3];
     double wExit[3];
     double nEntry[3];
     double wEntry[3];
     double nTop[3];
     double nBottom[3];
-    double alpha;
+    double nRight[3];
+    double wRight[3];
+    double nLeft[3];
+    double wLeft[3];
     double radius_1;
     double radius_2;
     double e_min[3];
@@ -120,6 +119,13 @@ DECLARE
     double theta_step[3];
     double theta_max[3];
 
+    double zentry;
+    double zexit;
+
+    t_Table reflec_top_table;
+    t_Table reflec_bottom_table;
+    t_Table reflec_side_table;
+    t_Table wave_table[1024];
 %}
 
 INITIALIZE
@@ -134,7 +140,6 @@ INITIALIZE
         t_Table *tp=ref_tables[i];
         if (reflec && strlen(reflec)) {
             char **header_parsed;
-
             /* read 1st block data from file into tp */
             if (Table_Read(tp, reflec, 1) <= 0)
             {
@@ -170,7 +175,7 @@ INITIALIZE
     }
 
     /* compute some pore parameters*/
-    alpha=0.25*atan(radius_m/Z0);
+    double alpha=0.25*atan(radius_m/Z0);
 
     double D,Z0p;
     if (primary){
@@ -207,11 +212,16 @@ INITIALIZE
     wRight[1]=-radius_m*(1-cosa);
     wRight[2]=0;
 
-    nEntry[0]=0; nEntry[1]=0; nEntry[2]=-1;
-    wEntry[0]=wEntry[1]=0; wEntry[2]=zentry;
+    nEntry[0]=0;
+    nEntry[1]=0;
+    nEntry[2]=-1;
+    wExit[0]=wExit[1]=0;wExit[2]=zentry;
 
-    nExit[0]=0; nExit[1]=0; nExit[2]=1;
-    wExit[0]=wExit[1]; wExit[2]=zexit;
+    nExit[0]=0;
+    nExit[1]=0;
+    nExit[2]=1;
+    wExit[0]=wExit[1]=wExit[2]=0;
+
 %}
 
 TRACE
@@ -259,7 +269,6 @@ TRACE
             double nx,ny,nz;
             double wx,wy,wz;
             int prm_idx;/*index indicating which table parameter set to choose*/
-            double angle;
             /*left wall*/            
             intersections[LEFT]=plane_intersect(l+LEFT,x,y,z,kx,ky,kz,nLeft[0],nLeft[1],nLeft[2],wLeft[0],wLeft[1],wLeft[2]);
             if (intersections[LEFT] && l[LEFT]>DBL_EPSILON && l[LEFT]<l_small) {l_small=l[LEFT];i_small=intersections[LEFT];wall=LEFT;}
@@ -276,6 +285,7 @@ TRACE
             intersections[BOTTOM]=intersect_cone((l+BOTTOM),x,y+radius_m,z,kx,ky,kz,alpha,radius_m-yheight,&(nBottom[0]),&(nBottom[1]),&(nBottom[2]));
             if (intersections[BOTTOM] && l[BOTTOM]>DBL_EPSILON && l[BOTTOM]<l_small) {l_small=l[BOTTOM];i_small=intersections[BOTTOM];wall=BOTTOM;}
 
+            /*sort intersections ot find the smallest positive one*/
             switch (wall){
                 case LEFT:
                     /*handle left wall "reflection"*/
@@ -352,7 +362,6 @@ TRACE
                 kz-=2*s*nz;
             }
             SCATTER;
-
             if(reflec_table==NULL || reflec_table->rows==-1){
                 R=R_d;
             }else{

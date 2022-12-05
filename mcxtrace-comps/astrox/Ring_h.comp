@@ -114,9 +114,8 @@ DECLARE
     double wEntry[3];
     double nTop[3];
     double nBottom[3];
-    double alpha;
-    double radius_1;
-    double radius_2;
+    double radius_m;
+    double radius_h;
     double e_min[2];
     double e_step[2];
     double e_max[2];
@@ -257,7 +256,7 @@ TRACE
         int ii=0;
         int hit_chamfer;
 
-        while( !hit && ii<size_table.rows){ 
+        while( !hit && ii<size_table.rows){
             radius_m = Table_Index(size_table,ii,3);
             radius_h = Table_Index(size_table,ii,2);
 

@@ -83,7 +83,6 @@ SHARE
         if ( (status=solve_2nd_order(l0,&l1,A,B,C))==0 ){
             /*note that if l1->NULL only the smallest positive solution is returned*/
             /*This shouldn't happen*/
-            //fprintf(stderr,"MM_h: No solution %g %g %g  %g %g %g\n ",x,y,z, kx,ky,kz);
             return status;
         }
         /*compute normal vector*/
@@ -133,15 +132,23 @@ DECLARE
     double wEntry[3];
     double nTop[3];
     double nBottom[3];
-    double Alpha;
-    double radius_1;
-    double radius_2;
+    double nRight[3];
+    double wRight[3];
+    double nLeft[3];
+    double wLeft[3];
     double e_min[3];
     double e_step[3];
     double e_max[3];
     double theta_min[3];
     double theta_step[3];
     double theta_max[3];
+
+    double e_min_nonspec;
+    double e_max_nonspec;
+    double e_step_nonspec;
+    double theta_min_nonspec;
+    double theta_max_nonspec;
+    double theta_step_nonspec;
 
     double zexit;
     double *zexit_vec;
@@ -277,20 +284,20 @@ INITIALIZE
             if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
                 header_parsed[3] && header_parsed[4] && header_parsed[5])
                 {
-                    e_min[2]=strtod(header_parsed[0],NULL);
-                    e_max[2]=strtod(header_parsed[1],NULL);
-                    e_step[2]=strtod(header_parsed[2],NULL);
-                    theta_min[2]=strtod(header_parsed[3],NULL);
-                    theta_max[2]=strtod(header_parsed[4],NULL);
-                    theta_step[2]=strtod(header_parsed[5],NULL);
+                    e_min_nonspec=strtod(header_parsed[0],NULL);
+                    e_max_nonspec=strtod(header_parsed[1],NULL);
+                    e_step_nonspec=strtod(header_parsed[2],NULL);
+                    theta_min_nonspec=strtod(header_parsed[3],NULL);
+                    theta_max_nonspec=strtod(header_parsed[4],NULL);
+                    theta_step_nonspec=strtod(header_parsed[5],NULL);
                 } else {
                     exit(fprintf(stderr,"Error (%s): wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, non_specular_file));
                 }
-                if (!((int)(e_max[2]-e_min[2]) == (int)((non_specular_table.rows-1)*e_step[2])))
+                if (!((int)(e_max_nonspec-e_min_nonspec) == (int)((non_specular_table.rows-1)*e_step_nonspec)))
                 {
                     exit(fprintf(stderr,"Error (%s): e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, non_specular_file));
                 }
-                if (!((int)(theta_max[2]-theta_min[2]) == (int)((non_specular_table.columns-1)*theta_step[2])))
+                if (!((int)(theta_max_nonspec-theta_min_nonspec) == (int)((non_specular_table.columns-1)*theta_step_nonspec)))
                 {
                     exit(fprintf(stderr,"Error (%s): theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, non_specular_file));
                 }
@@ -529,7 +536,7 @@ TRACE
                 }
 
                 if(&non_specular_table!=NULL){
-                    double lw = Table_Value2d(non_specular_table, (e-e_min[2])/e_step[2], (theta-theta_min[2])/theta_step[2]);
+                    double lw = Table_Value2d(non_specular_table, (e-e_min_nonspec)/e_step_nonspec, (theta-theta_min_nonspec)/theta_step_nonspec);
                     double dtheta=lorentzDistribution(0, lw)*M_PI/180;
                     double tx,ty,tz;
                     vec_prod(tx,ty,tz,0,0,1,nx,ny,nz);

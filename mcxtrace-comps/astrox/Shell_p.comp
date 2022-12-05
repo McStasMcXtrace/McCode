@@ -169,9 +169,6 @@ DECLARE
     double wEntry[3];
     double nTop[3];
     double nBottom[3];
-    double Alpha;
-    double radius_1;
-    double radius_2;
     double E_min[2];
     double E_step[2];
     double E_max[2];
@@ -312,8 +309,7 @@ INITIALIZE
     nEntry[0]=0;
     nEntry[1]=0;
     nEntry[2]=-1;
-    wExit[0]=wExit[1]=0;wExit[2]=zentry;
-
+    wEntry[0]=wEntry[1]=0;wEntry[2]=zentry;
 
     nExit[0]=0;
     nExit[1]=0;
