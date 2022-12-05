@@ -91,6 +91,7 @@ conda update conda -y
 conda install mamba conda-build -y
 mamba install openmpi gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl -y
 mamba clean --all -y
+pip3 install McStasScript guide_bot
 cd $TMPDIR
 git clone https://github.com/conda-forge/qscintilla2-feedstock.git
 cd qscintilla2-feedstock
