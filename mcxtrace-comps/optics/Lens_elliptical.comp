@@ -26,7 +26,7 @@
 * w: parabola parameter, constraining it along the propagation axis;
 * d: distance between two surfaces of the lens along the propagation axis;
 * N: amount of single lenses in a stack.
-* T: transmission of the lens
+* Transmission: transmission of the lens
 *
 * %E
 *******************************************************************************/
@@ -34,7 +34,7 @@
 
 DEFINE COMPONENT Lens_elliptical
 DEFINITION PARAMETERS (string material_datafile="Be.txt")
-SETTING PARAMETERS (r1=0.42e-3,r2=0.8e-3,w=0.46e-3,d=0.2e-4,T=1,N=1)
+SETTING PARAMETERS (r1=0.42e-3,r2=0.8e-3,w=0.46e-3,d=0.2e-4,Transmission=1,N=1)
 OUTPUT PARAMETERS (prms,Re,Na)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -253,11 +253,11 @@ TRACE
     incid=outg;
   }
    // transmission calculation
-   if (T==0)
+   if (Transmission==0)
       ABSORB;
       else 
-	T=exp(-mu*d*N); 
-	p*=T;
+	Transmission=exp(-mu*d*N); 
+	p*=Transmission;
 %}
 
 MCDISPLAY
