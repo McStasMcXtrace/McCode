@@ -87,6 +87,7 @@ void r_off_normal(Coords* n, r_polygon p)
 int r_off_pnpoly(r_polygon p, Coords v)
 {
   int i=0, c = 0;
+  MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
   MCNUM areax=0,areay=0,areaz=0;
 
   int pol2dx=0,pol2dy=1;          //2d restriction of the poly
@@ -320,8 +321,14 @@ int r_off_clip_3D_mod(r_intersection* t, Coords a, Coords b,
   r_off_init_planes(a, b, &A1, &C1, &D1, &A2, &B2, &C2, &D2);
 
   int t_size=0;
-  MCNUM popol[3*4]; /*3 dimensions and max 4 vertices to form a polygon*/
+  //unsigned long vtxSize=vtxTable.rows, faceSize=faceTable.columns;  //Size of the corresponding tables
+  char sg[vtxSize];  //array telling if vertex is left or right of the plane
+  MCNUM popol[3*CHAR_BUF_LENGTH];
   unsigned long i=0,indPoly=0;
+  for (i=0; i < vtxSize; ++i)
+  {
+    sg[i]=r_off_sign(r_off_F(vtxArray[i].x,vtxArray[i].y,vtxArray[i].z,A1,0,C1,D1));
+  }
 
   //exploring the polygons :
   i=indPoly=0;
