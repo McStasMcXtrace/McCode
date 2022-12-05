@@ -32,6 +32,7 @@ enum process {
   PhononSimple,
   Texture,
   IncoherentPhonon,
+  NCrystal,
   Template
 };
 
