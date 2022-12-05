@@ -116,7 +116,6 @@ int off_intersect_all(double* t0, double* t3,
 /*******************************************************************************
 * int off_intersect(double* t0, double* t3,
      Coords *n0, Coords *n3,
-     unsigned long *faceindex0, unsigned long *faceindex3,
      double x, double y, double z,
      double vx, double vy, double vz,
      double ax, double ay, double az,
@@ -132,7 +131,6 @@ int off_intersect_all(double* t0, double* t3,
 #pragma acc routine
 int off_intersect(double* t0, double* t3,
      Coords *n0, Coords *n3,
-     unsigned long *faceindex0, unsigned long *faceindex3,
      double x, double y, double z,
      double vx, double vy, double vz,
      double ax, double ay, double az,
@@ -153,7 +151,6 @@ int off_intersect(double* t0, double* t3,
 *******************************************************************************/
 int off_x_intersect(double *l0,double *l3,
      Coords *n0, Coords *n3,
-     unsigned long *faceindex0, unsigned long *faceindex3,
      double x,  double y,  double z,
      double kx, double ky, double kz,
      off_struct data );
