@@ -314,14 +314,8 @@ int r_off_clip_3D_mod(r_intersection* t, Coords a, Coords b,
   r_off_init_planes(a, b, &A1, &C1, &D1, &A2, &B2, &C2, &D2);
 
   int t_size=0;
-  //unsigned long vtxSize=vtxTable.rows, faceSize=faceTable.columns;  //Size of the corresponding tables
-  char sg[vtxSize];  //array telling if vertex is left or right of the plane
-  MCNUM popol[3*CHAR_BUF_LENGTH];
+  MCNUM popol[3*4]; /*3 dimensions and max 4 vertices to form a polygon*/
   unsigned long i=0,indPoly=0;
-  for (i=0; i < vtxSize; ++i)
-  {
-    sg[i]=r_off_sign(r_off_F(vtxArray[i].x,vtxArray[i].y,vtxArray[i].z,A1,0,C1,D1));
-  }
 
   //exploring the polygons :
   i=indPoly=0;
@@ -829,103 +823,6 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   data->filename   = offfile;
   return(polySize);
 } /* r_off_init */
-
-int r_Min_int(int x, int y) {
-  return (x<y)? x :y;
-}
-
-#ifdef OFF_LEGACY
- 
-#pragma acc routine
-void r_merge(r_intersection *arr, int l, int m, int r)
-{
-int i, j, k;
-int n1 = m - l + 1;
-int n2 =  r - m;
-
-/* create temp arrays */
-r_intersection *L, *R;
- L = (r_intersection *)malloc(sizeof(r_intersection) * n1);
- R = (r_intersection *)malloc(sizeof(r_intersection) * n2);
-/* Copy data to temp arrays L[] and R[] */
- #pragma acc loop independent
-for (i = 0; i < n1; i++)
-    L[i] = arr[l + i];
- #pragma acc loop independent
-for (j = 0; j < n2; j++)
-    R[j] = arr[m + 1+ j];
-
-/* Merge the temp arrays back into arr[l..r]*/
-i = 0;
-j = 0;
-k = l;
-
-while (i < n1 && j < n2)
-{
-    if (L[i].time <= R[j].time)
-    {
-        arr[k] = L[i];
-        i++;
-    }
-    else
-    {
-        arr[k] = R[j];
-        j++;
-    }
-    k++;
-}
-
-/* Copy the remaining elements of L[], if there are any */
-
-while (i < n1)
-{
-    arr[k] = L[i];
-    i++;
-    k++;
-}
-
-/* Copy the remaining elements of R[], if there are any */
-while (j < n2)
-{
-    arr[k] = R[j];
-    j++;
-    k++;
-}
-free(L);
-free(R);
-}
-#endif
-
-#ifdef USE_OFF
-#ifdef OFF_LEGACY
-#pragma acc routine
-void r_gpusort(r_intersection *arr, int size)
-{
-  int curr_size;  // For current size of subarrays to be merged
-  // curr_size varies from 1 to n/2
-  int left_start; // For picking starting index of left subarray
-  // to be merged
-  // pcopying (R[0:n2])
-  {
-    for (curr_size=1; curr_size<=size-1; curr_size = 2*curr_size)
-      {
-	// Pick starting point of different subarrays of current size
-	for (left_start=0; left_start<size-1; left_start += 2*curr_size)
-	  {
-	    // Find ending point of left subarray. mid+1 is starting
-	    // point of right
-	    int mid = left_start + curr_size - 1;
-
-	    int right_end = r_Min_int(left_start + 2*curr_size - 1, size-1);
-
-	    // Merge Subarrays arr[left_start...mid] & arr[mid+1...right_end]
-	    if (mid < right_end) r_merge(arr, left_start, mid, right_end);
-	  }
-      }
-  }
-}
-#endif
-#endif
 
 /*******************************************************************************
 void r_p_to_quadratic(double eq[], Coords acc,
