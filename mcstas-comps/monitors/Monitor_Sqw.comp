@@ -173,7 +173,7 @@ TRACE
   {
     /* determine intersections with object */
     intersect = off_intersect(&t0, &t1, NULL, NULL,
-       x,y,z, vx, vy, vz, offdata );
+			      x,y,z, vx, vy, vz, 0,0,0, offdata );
   }
   else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE) /* square xy */
   {

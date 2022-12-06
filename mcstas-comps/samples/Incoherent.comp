@@ -255,7 +255,7 @@ TRACE
     else if (VarsInc.shape == 2)
       intersect = sphere_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius);
     else if (VarsInc.shape == 3)
-      intersect = off_intersect(&t0, &t3, NULL, NULL, x, y, z, vx, vy, vz, offdata );
+      intersect = off_intersect(&t0, &t3, NULL, NULL, x, y, z, vx, vy, vz, 0,0,0, offdata );
     if (intersect) {
       int flag_ishollow = 0;
       if (thickness>0) {

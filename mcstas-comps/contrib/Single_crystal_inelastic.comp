@@ -721,7 +721,7 @@ TRACE
   else if (hkl_info.shape == 2)
     intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
   else if (hkl_info.shape == 3)
-    intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, offdata );
+    intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, 0,0,0, offdata );
 
   if (t2 < 0) intersect=0; /* we passed sample volume already */
 
@@ -754,7 +754,7 @@ TRACE
       else if (hkl_info.shape == 2)
         intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
       else if (hkl_info.shape == 3)
-        intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, offdata );
+        intersect = off_intersect(&t1, &t2, NULL, NULL, x, y, z, vx, vy, vz, 0,0,0, offdata );
       if(!intersect || t2*v < -1e-9 || t1*v > 1e-9)
       {
         /* neutron is leaving the sample */

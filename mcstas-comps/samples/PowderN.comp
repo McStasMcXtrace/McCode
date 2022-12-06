@@ -789,7 +789,7 @@ TRACE
       intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
       intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
     } else if (line_info.shape == 3) {
-      intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
+      intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, 0,0,0, offdata);
       intersecti = 0;
     }
   }
@@ -959,7 +959,7 @@ TRACE
 				intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
 				intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
 			} else if (line_info.shape == 3) {
-				intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
+				intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, 0,0,0, offdata);
 				intersecti = 0;
 			}
 
@@ -1028,7 +1028,7 @@ TRACE
           intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
           intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
         } else if (line_info.shape == 3) {
-          intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
+          intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, 0,0,0, offdata);
           intersecti = 0;
         }
 
