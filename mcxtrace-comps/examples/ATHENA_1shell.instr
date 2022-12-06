@@ -54,6 +54,7 @@ DEFINE INSTRUMENT ATHENA_1shell(FL=12, optics_dist=10,
         SRC_POS_X=0, SRC_POS_Y=0, offaxis_angle=0, drx=0,dry=0,drz=0 ,
         string reflectivity="mirror_coating_unity.txt", E0=5, dE=0.001, int shellnumber=1,
 	string geomfile="ATHENA_rings_1_20.dat")
+DEPENDENCY "-DDATPATH=GETPATH(data/)"
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -70,6 +71,17 @@ DECLARE
 
     double pore_width=0.83e-3;
     double pore_height=0.605e-3;
+
+    #define QUOTE(name) #name
+    #define STR(macro) QUOTE(macro)
+
+    #ifndef DATPATH
+    #define DATPATH=/usr/share/mcxtrace/3.1/data/
+    #endif
+
+    #define DATAPATH STR(DATPATH)
+
+    char fullpath_geomfile[128];
 %}
 
 USERVARS %{
@@ -91,10 +103,12 @@ INITIALIZE
         alphax=offaxis_angle * MIN2RAD;
     }
     alphay=(src_pos_y)/optics_dist;
-    
-    FILE *fp=fopen(geomfile,"rb");
+
+    sprintf(fullpath_geomfile,"%s/%s",DATAPATH,geomfile);
+
+    FILE *fp=fopen(fullpath_geomfile,"rb");
     if (fp==NULL){
-        fprintf(stderr,"Error: Cannot open file \'%s\'. Aborting.",geomfile);
+        fprintf(stderr,"Error: Cannot open file \'%s\'. Aborting.\n",fullpath_geomfile);
         exit(-1);
     }
     int ii=0;
