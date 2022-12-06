@@ -321,14 +321,8 @@ int r_off_clip_3D_mod(r_intersection* t, Coords a, Coords b,
   r_off_init_planes(a, b, &A1, &C1, &D1, &A2, &B2, &C2, &D2);
 
   int t_size=0;
-  //unsigned long vtxSize=vtxTable.rows, faceSize=faceTable.columns;  //Size of the corresponding tables
-  char sg[vtxSize];  //array telling if vertex is left or right of the plane
-  MCNUM popol[3*CHAR_BUF_LENGTH];
+  MCNUM popol[3*4]; /*3 dimensions and max 4 vertices to form a polygon*/
   unsigned long i=0,indPoly=0;
-  for (i=0; i < vtxSize; ++i)
-  {
-    sg[i]=r_off_sign(r_off_F(vtxArray[i].x,vtxArray[i].y,vtxArray[i].z,A1,0,C1,D1));
-  }
 
   //exploring the polygons :
   i=indPoly=0;
@@ -858,7 +852,6 @@ int r_Min_int(int x, int y) {
   return (x<y)? x :y;
 }
 
-#ifdef OFF_LEGACY
  
 #pragma acc routine
 void r_merge(r_intersection *arr, int l, int m, int r)
@@ -918,10 +911,9 @@ while (j < n2)
 free(L);
 free(R);
 }
-#endif
+
 
 #ifdef USE_OFF
-#ifdef OFF_LEGACY
 #pragma acc routine
 void r_gpusort(r_intersection *arr, int size)
 {
@@ -948,7 +940,6 @@ void r_gpusort(r_intersection *arr, int size)
       }
   }
 }
-#endif
 #endif
 
 /*******************************************************************************
