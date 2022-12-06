@@ -637,14 +637,14 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   {
     double x,y,z;
     ret=fscanf(f, "%lg%lg%lg", &x,&y,&z);
-    if (!ret) { 
+    if (!ret) {
       // invalid line: we skip it (probably a comment)
       char line[CHAR_BUF_LENGTH];
-      fgets(line, CHAR_BUF_LENGTH, f);
-      continue; 
+      char *s=fgets(line, CHAR_BUF_LENGTH, f);
+      continue;
     }
     if (ret != 3) {
-      fprintf(stderr, "Error: can not read [xyz] coordinates for vertex %li in file %s (interoff/off_init). Read %i values.\n", 
+      fprintf(stderr, "Error: can not read [xyz] coordinates for vertex %li in file %s (interoff/off_init). Read %li values.\n",
         i, offfile, ret);
       exit(2);
     }
@@ -708,19 +708,20 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
     vtxArray[i].y=(vtxArray[i].y-centery)*ratioy+(!notcenter ? 0 : centery);
     vtxArray[i].z=(vtxArray[i].z-centerz)*ratioz+(!notcenter ? 0 : centerz);
   }
-  
+
   // read face table = [nbvertex v1 v2 vn | nbvertex v1 v2 vn ...] =============
   MPI_MASTER(
   printf("  Number of polygons: %ld\n", polySize);
   );
   normalArray= malloc(polySize*sizeof(Coords));
   faceArray  = malloc(polySize*10*sizeof(unsigned long)); // we assume polygons have less than 9 vertices
+  DArray     = malloc(polySize*sizeof(double));
   face_m_Array = malloc(polySize*sizeof(double)); // array to hold the index of the face properties table
   face_alpha_Array = malloc(polySize*sizeof(double));
   face_W_Array = malloc(polySize*sizeof(double));
 
 
-  if (!normalArray || !faceArray) return(0);
+  if (!normalArray || !faceArray || !DArray) return(0);
 
   // fill faces
   faceSize=0;
@@ -729,26 +730,26 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
     int  nbVertex=0, j=0;
     // read the length of this polygon
     ret=fscanf(f, "%d", &nbVertex);
-    if (!ret) { 
+    if (!ret) {
       // invalid line: we skip it (probably a comment)
       char line[CHAR_BUF_LENGTH];
-      fgets(line, CHAR_BUF_LENGTH, f);
-      continue; 
+      char *s=fgets(line, CHAR_BUF_LENGTH, f);
+      continue;
     }
     if (ret != 1) {
-      fprintf(stderr, "Error: can not read polygon %i length in file %s (interoff/off_init)\n", 
+      fprintf(stderr, "Error: can not read polygon %li length in file %s (interoff/off_init)\n",
         i, offfile);
       exit(3);
     }
     if (faceSize > polySize*10) {
-      fprintf(stderr, "Error: %li exceeded allocated polygon array[%li] in file %s (interoff/off_init)\n", 
+      fprintf(stderr, "Error: %li exceeded allocated polygon array[%li] in file %s (interoff/off_init)\n",
         faceSize, polySize*10, offfile);
     }
     faceArray[faceSize++] = nbVertex; // length of the polygon/face
     // then read the vertex ID's
     for (j=0; j<nbVertex; j++) {
       double vtx=0;
-      fscanf(f, "%lg", &vtx);
+      ret=fscanf(f, "%lg", &vtx);
       faceArray[faceSize++] = vtx;   // add vertices index after length of polygon
     }
     // GM: Modification of the revision of Peter Link to add m, alpha and W
