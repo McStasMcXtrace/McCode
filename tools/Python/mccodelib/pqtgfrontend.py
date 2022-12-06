@@ -45,8 +45,8 @@ def get_help_string():
 
 
 class ViewModel():
-    ''' 
-    It is a kind of viewmodel, originally a log logstate housekeeping object, 
+    '''
+    It is a kind of viewmodel, originally a log logstate housekeeping object,
     extended by various other logstate variables as well.
     '''
     def __init__(self, log=False, legend=True, sourcedir=None):
@@ -87,9 +87,9 @@ class McPyqtgraphPlotter():
                 plt      - pqtg plot object
                 opts     - (dict, see code)))
 
-            returns: 
+            returns:
                 view_box - the click-able view box of the constructed plot object
-                plt      - the plot object to be added to the pqtg window 
+                plt      - the plot object to be added to the pqtg window
         inv_canvas: inverts background from black to white
         '''
         self.graph = plotgraph
@@ -271,7 +271,7 @@ class McPyqtgraphPlotter():
             # print debug info
             if debug:
                 print("key code: %s" % str(ev.key()))
-    
+
         savefile_cb = lambda format: utils.dumpfile_pqtg(scene=self.plot_layout.scene(), format=format)
         expand_sp = lambda : self.expand_subplots(sourcedir=self.viewmodel.get_sourcedir())
 
@@ -299,7 +299,7 @@ class McPyqtgraphPlotter():
                     if item[0].isdigit() else float('inf'), item))
 
         subdirs = sortalpha(get_immediate_subdirectories(sourcedir))
-    
+
         if len(subdirs) == 0:
             print("no subdirs to plot")
             return
@@ -368,8 +368,8 @@ class McPyqtgraphPlotter():
         ''' returns a dict for holding the plot options relevant for this plotting frontend '''
         d = {}
         d['log'] = log
-        d['legend'] = legend 
-        d['icolormap'] = icolormap 
+        d['legend'] = legend
+        d['icolormap'] = icolormap
         d['verbose'] = verbose
         d['fontsize'] = fontsize
         if cbmin != None and cbmax != None:
@@ -396,7 +396,7 @@ class McPyqtgraphPlotter():
                         return None, None
 
                 # update min/max values
-                if type(data) == Data2D: 
+                if type(data) == Data2D:
                     localmin = np.min(np.array(data.zvals))
                     localmax = np.max(np.array(data.zvals))
                     cbmin = min(cbmin, localmin)
