@@ -60,7 +60,7 @@ DECLARE
 %{
     double RP,RMP,PL,RH,RMH,HL,PHP,PHH;
     int Pcoat,Hcoat;
-
+    #pragma acc declare create(alphax)
     double alphax,alphay;
 
     double pore_width=0.83e-3;
@@ -128,7 +128,7 @@ INITIALIZE
     if(!FLd){
         FLd=FL;
     }
-
+    #pragma acc update device(alphax)
 %}
 /* instrument is defined as a sequence of components.  */
 TRACE

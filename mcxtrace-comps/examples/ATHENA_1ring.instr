@@ -67,6 +67,7 @@ DECLARE
 
     double src_pos_x;
     double src_pos_y;
+    #pragma acc declare create(alphax)
     double alphax,alphay;
 
     double pore_width=0.83e-3;
@@ -108,7 +109,7 @@ INITIALIZE
         PRP[ii]=Table_Index(tp,ii,4);
         PRW[ii]=Table_Index(tp,ii,5);
     }
-    
+    #pragma acc update device(alphax)
 //        fscanf(fp,"%d %lf %lf %lf %lf %lf\n",RIDX+ii,PRL+ii, PRH+ii, PRM+ii, PRP+ii, PRW+ii);
 %}
 /* instrument is defined as a sequence of components.  */

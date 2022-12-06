@@ -45,11 +45,11 @@ DECLARE
    char optionstring[]="x auto y auto"; 
    char optionstring1[128]; 
    char optionstring2[128]; 
-   double xdiv;
 %}
 
 USERVARS %{
   int bounce;
+  double xdiv;
 %}
 
 INITIALIZE
