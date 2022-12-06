@@ -65,7 +65,7 @@ class ModLegend(pg.LegendItem):
         self.items.append((sample, label))
         self.layout.addItem(label, row, 1)
         self.updateSize()
-    
+
     def paint(self, p, *args):
         p.setPen(pg.functions.mkPen(255,255,255,100))
         p.setBrush(pg.functions.mkBrush(0,0,0,100))
@@ -76,7 +76,7 @@ def plot_Data0D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fo
     ''' creates an empty plot '''
     plt.setTitle("zero-dim monitor")
     return plt.getViewBox()
-    
+
 
 def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fontsize=10):
     ''' create a plotItem and populate it with data, Data1D '''
@@ -100,7 +100,7 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fo
             plt.setLogMode(y=False)
     else:
         plt.setLogMode(y=False)
-    
+
     plt.setXRange(np.min(x), np.max(x), padding=0)
 
     # labels
@@ -149,7 +149,7 @@ def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fo
 
 def get_color_map(idx, pos_min, pos_max):
     # The contents of this function was generated from Matlab using the generate_colormaps.m script
-    # 
+    #
     # < Paste from next line >
     colormaps={
         'jet'  : np.array([[  0,   0, 143, 255], [  0,   0, 159, 255], [  0,   0, 175, 255], [  0,   0, 191, 255], [  0,   0, 207, 255], [  0,   0, 223, 255], [  0,   0, 239, 255], [  0,   0, 255, 255], [  0,  16, 255, 255], [  0,  32, 255, 255], [  0,  48, 255, 255], [  0,  64, 255, 255], [  0,  80, 255, 255], [  0,  96, 255, 255], [  0, 112, 255, 255], [  0, 128, 255, 255], [  0, 143, 255, 255], [  0, 159, 255, 255], [  0, 175, 255, 255], [  0, 191, 255, 255], [  0, 207, 255, 255], [  0, 223, 255, 255], [  0, 239, 255, 255], [  0, 255, 255, 255], [ 16, 255, 239, 255], [ 32, 255, 223, 255], [ 48, 255, 207, 255], [ 64, 255, 191, 255], [ 80, 255, 175, 255], [ 96, 255, 159, 255], [112, 255, 143, 255], [128, 255, 128, 255], [143, 255, 112, 255], [159, 255,  96, 255], [175, 255,  80, 255], [191, 255,  64, 255], [207, 255,  48, 255], [223, 255,  32, 255], [239, 255,  16, 255], [255, 255,   0, 255], [255, 239,   0, 255], [255, 223,   0, 255], [255, 207,   0, 255], [255, 191,   0, 255], [255, 175,   0, 255], [255, 159,   0, 255], [255, 143,   0, 255], [255, 128,   0, 255], [255, 112,   0, 255], [255,  96,   0, 255], [255,  80,   0, 255], [255,  64,   0, 255], [255,  48,   0, 255], [255,  32,   0, 255], [255,  16,   0, 255], [255,   0,   0, 255], [239,   0,   0, 255], [223,   0,   0, 255], [207,   0,   0, 255], [191,   0,   0, 255], [175,   0,   0, 255], [159,   0,   0, 255], [143,   0,   0, 255], [128,   0,   0, 255]], dtype=np.ubyte),
@@ -168,10 +168,10 @@ def get_color_map(idx, pos_min, pos_max):
         'winter'  : np.array([[  0,   0, 255, 255], [  0,   4, 253, 255], [  0,   8, 251, 255], [  0,  12, 249, 255], [  0,  16, 247, 255], [  0,  20, 245, 255], [  0,  24, 243, 255], [  0,  28, 241, 255], [  0,  32, 239, 255], [  0,  36, 237, 255], [  0,  40, 235, 255], [  0,  45, 233, 255], [  0,  49, 231, 255], [  0,  53, 229, 255], [  0,  57, 227, 255], [  0,  61, 225, 255], [  0,  65, 223, 255], [  0,  69, 221, 255], [  0,  73, 219, 255], [  0,  77, 217, 255], [  0,  81, 215, 255], [  0,  85, 213, 255], [  0,  89, 210, 255], [  0,  93, 208, 255], [  0,  97, 206, 255], [  0, 101, 204, 255], [  0, 105, 202, 255], [  0, 109, 200, 255], [  0, 113, 198, 255], [  0, 117, 196, 255], [  0, 121, 194, 255], [  0, 125, 192, 255], [  0, 130, 190, 255], [  0, 134, 188, 255], [  0, 138, 186, 255], [  0, 142, 184, 255], [  0, 146, 182, 255], [  0, 150, 180, 255], [  0, 154, 178, 255], [  0, 158, 176, 255], [  0, 162, 174, 255], [  0, 166, 172, 255], [  0, 170, 170, 255], [  0, 174, 168, 255], [  0, 178, 166, 255], [  0, 182, 164, 255], [  0, 186, 162, 255], [  0, 190, 160, 255], [  0, 194, 158, 255], [  0, 198, 156, 255], [  0, 202, 154, 255], [  0, 206, 152, 255], [  0, 210, 150, 255], [  0, 215, 148, 255], [  0, 219, 146, 255], [  0, 223, 144, 255], [  0, 227, 142, 255], [  0, 231, 140, 255], [  0, 235, 138, 255], [  0, 239, 136, 255], [  0, 243, 134, 255], [  0, 247, 132, 255], [  0, 251, 130, 255], [  0, 255, 128, 255]], dtype=np.ubyte),
     }
     # < To this line >
+
     keys=['jet','autumn','bone','colorcube','cool','copper','gray','hot','hsv','parula','pink','spring','summer','winter']
     idx = idx % len(keys)
     colormap = colormaps[keys[idx]]
-    pos = pos_min + (pos_max - pos_min) * np.arange(len(colormap))/(len(colormap)-1)
     #print(f"colourbar min: {pos_min}, max: {pos_max}, pos: {pos}.")
 
     global GlobalColormap
@@ -179,6 +179,7 @@ def get_color_map(idx, pos_min, pos_max):
         print('Active colormap: ' + keys[idx])
         GlobalColormap=keys[idx]
 
+    pos = pos_min + (pos_max - pos_min) * np.arange(len(colormap))/(len(colormap)-1)
     return pg.ColorMap(pos, colormap)
 
 
@@ -215,8 +216,8 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
     cb_pos_min = cbmin if cbmin else np.min(dataset)
     cb_pos_max = cbmax if cbmax else np.max(dataset)
 
-    colormap = get_color_map(icolormap, cb_pos_min, cb_pos_max)
-    lut = colormap.getLookupTable(cb_pos_min, cb_pos_max, 256)
+    colormap = get_color_map(icolormap, 0., 1.)
+    lut = colormap.getLookupTable(0., 1., 256)
     img.setLookupTable(lut)
 
     # graphics layout with a plotitem and a gradienteditoritem
@@ -249,7 +250,7 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
     plt.addItem(img)
 
     # associate the colour bar with the image item
-    cb = pg.ColorBarItem(cmap=colormap, values=(cb_pos_min, cb_pos_max))
+    cb = pg.ColorBarItem(cmap=colormap, values=(cb_pos_min, cb_pos_max), interactive=False)
     cb.setImageItem(img)
 
     # Set the x and y ranges correctly
@@ -269,7 +270,7 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
         # Prevent division by 0
         if (dy==0):
             dy=1;
-        ty = (cb_pos_min) / dy
+        ty = cb_pos_min / dy
         tr = QtGui.QTransform()
         tr.scale(dx,dy)
         tr.translate(1,ty)
