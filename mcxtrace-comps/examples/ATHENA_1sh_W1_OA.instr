@@ -63,9 +63,13 @@ DECLARE
 %{
     int RIDX;
     double PRP,PRM,PRH,PRL,PRW;
+    #pragma acc declare create(alphax)
     double alphax;
    
     double pore_height=0.605e-3;
+%}
+
+USERVARS %{
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -90,7 +94,7 @@ INITIALIZE
     PRM=Table_Index(T,shellnumber-1,3);
     PRP=Table_Index(T,shellnumber-1,4);
     PRW=Table_Index(T,shellnumber-1,5);
-
+    #pragma acc update device(alphax)
 %}
 
 /* instrument is defined as a sequence of components.  */

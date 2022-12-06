@@ -108,7 +108,7 @@ SHARE
 
 #ifndef DISTRIBUTIONS
 #define DISTRIBUTIONS
-    double laplaceDistribution(double mean, double width){
+    double laplaceDistribution(double mean, double width, _class_particle* _particle){
         double sample = rand01();
         if(sample <= 0.5){
             return mean + width*log(2*sample);
@@ -117,7 +117,7 @@ SHARE
         }
     }
 
-    double lorentzDistribution(double mean, double width){
+    double lorentzDistribution(double mean, double width, _class_particle* _particle){
         double sample = rand01();
         return mean + width*tan(M_PI*(sample-0.5));
     }
@@ -537,7 +537,7 @@ TRACE
 
                 if(&non_specular_table!=NULL){
                     double lw = Table_Value2d(non_specular_table, (e-e_min_nonspec)/e_step_nonspec, (theta-theta_min_nonspec)/theta_step_nonspec);
-                    double dtheta=lorentzDistribution(0, lw)*M_PI/180;
+                    double dtheta=lorentzDistribution(0, lw, _particle)*M_PI/180;
                     double tx,ty,tz;
                     vec_prod(tx,ty,tz,0,0,1,nx,ny,nz);
                     rotate(kx, ky, kz, kx, ky, kz, dtheta, tx,ty,tz);

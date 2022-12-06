@@ -94,6 +94,7 @@ DECLARE
     
     double src_pos_x;
     double src_pos_y;
+    #pragma acc declare create(alphax)
     double alphax,alphay;
 
     double pore_width=0.83e-3;
@@ -146,6 +147,7 @@ INITIALIZE
         ii++;
     }
     fclose(fp);
+    #pragma acc update device(alphax)
 %}
 /* instrument is defined as a sequence of components.  */
 TRACE
