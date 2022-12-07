@@ -1,4 +1,4 @@
-# Installation of McStas 3.1 on Windows 64 bit systems
+# Installation of McStas 3.2 on Windows 64 bit systems
 
 
 ## IMPORTANT A:
@@ -12,13 +12,13 @@
 in a cmd.exe shell and start the Perl and McStas installers from there
 	
 ##  IMPORTANT B:
-* Please install [strawberry-perl-5.26.3.1-64bit.msi](https://download.mcstas.org/mcstas-3.1/windows/strawberry-perl-5.26.3.1-64bit.msi)
+* Please install [strawberry-perl-5.26.3.2-64bit.msi](https://download.mcstas.org/mcstas-3.2/windows/strawberry-perl-5.26.3.2-64bit.msi)
 BEFORE  attempting to install the McStas metapackage!!!
 
 ## IMPORTANT C:
-* Please install the [McStas 3.1 metapackage](https://download.mcstas.org/mcstas-3.1/windows/McStas-Metapackage-3.1-win64.exe)
+* Please install the [McStas 3.2 metapackage](https://download.mcstas.org/mcstas-3.2/windows/McStas-Metapackage-3.2-win64.exe)
 
-* The [extras](https://download.mcstas.org/mcstas-3.1/windows/extras)
+* The [extras](https://download.mcstas.org/mcstas-3.2/windows/extras)
   folder provides binaries for Microsoft MPI and NeXus, which can be utilised by the McStas metapackage installation
 
 
