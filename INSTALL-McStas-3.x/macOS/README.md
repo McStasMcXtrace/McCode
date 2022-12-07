@@ -39,7 +39,7 @@
 * Once the app and dependencies have been installed on your harddrive, optionally use the gui to make your McCode
 the default mcstas/mcxtrace on your machine:
  * mcgui    (python) - Use "File -> Set as default"
- * Furhter menu points in the same place allows to configure the app to run the perl or python UI
+ * Further menu points in the same place allows to configure the app to run the perl or python UI
 
 * If you need support for NeXus output, please follow the instructions
   at https://github.com/McStasMcXtrace/McCode/wiki/McStas-and-Mantid#install-nexus
