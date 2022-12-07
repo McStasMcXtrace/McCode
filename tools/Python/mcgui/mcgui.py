@@ -489,10 +489,9 @@ class McGuiAppController():
         # hand on for menu generation
         self.view.initMainWindowDynamicElements(args, self.handleNewFromTemplate)
         
-        # load installed mcstas components:
+        # load installed mcstas/mcxtrace components:
         # args - [category, comp_names[], comp_parsers[]]
         args = []
-
         if mccode_config.configuration["MCCODE"]=="mcstas":
             categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6: 'Union', 7 : 'Obsolete'}
             dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6: 'union', 7 : 'obsolete'}
