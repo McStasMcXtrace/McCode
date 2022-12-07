@@ -20,16 +20,16 @@
 *
 * The model needs as input a set of files: A Mirror Module definition file and a ring definition file.
 * The former contains overall definitions of mirror modules and their positions - the latter contains details about each plate.
-* There is some redundancy between the two files. The latter will be rendered unnecessary in a later version. 
-* An example of mmdef_file is "MM_Definitions-1.csv" which is distributed by ESA.
+* There is some redundancy between the two files. The latter will be rendered unnecessary in a later version.
+* An example of mmdef_file is "MM_Definitions-cfgA.csv" which is distributed by ESA.
 * An example of ringfile is "ref_design.dat" which is taken from the ATHENA_reference design white-paper.
-* In addition A displacement data file may be specified. 
+* In addition A displacement data file may be specified.
 *
 * Reflectivity may be modelled using a datafile. In this telscope model only the top (intentionally reflecting) surface
 * is given a data-file. However, the MM-components can cope with non-zero reflectivity for side-walls and bottom surfaces.
 * The reflectivity datafile follows a simple ascii-format with 6 header lines the define the ranges in energy E and grazing
 * angle theta, followed by a 2D-data block with reflectivity numbers. This is expected to be substituted for a 1D-parametrization '
-* in q, to avoid overly lagre data-files. 
+* in q, to avoid overly lagre data-files.
 *
 * Example: ATHENA_cfgA_1mm.instr porenumber=3
 *
@@ -73,12 +73,12 @@
 /* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT ATHENA_cfgA_1mm_FEMd(FL=12, optics_dist=10,
         XWidth=0.13312, YHeight=0.13312, NX=1024, NY=1024,
-        offaxis_angle=0, 
+        offaxis_angle=0,
 	dPx=0,dPy=0,dPz=0, dPrx=0, dPry=0, dPrz=0,
         dHx=0,dHy=0,dHz=0, dHrx=0, dHry=0, dHrz=0,
         string reflectivity="mirror_coating_unity.txt",default_reflec=0,
         E0=5, dE=0.001, int porenumber=1,
-        string mmdef_file="MM_Definitions-1.csv", string ringfile="ref_design_breaks.txt", 
+        string mmdef_file="MM_Definitions-cfgA.csv", string ringfile="ref_design_breaks.txt",
         string disp_file="none",int disp_type=0,
         int hyper=1, int para=1, int lists=0)
 
@@ -141,9 +141,9 @@ INITIALIZE
         /*search for the node_id in the deisplacement_file*/
         disp_row=idx-1;/*-1 since MMs are numbered starting at 1 whereas tables are 0-indexed*/
         DD=1;
-        
-        fprintf(stdout,"Found node id %d at row %d\n",node_id,disp_row); 
-        fprintf(stdout,"Dr=( %g %g %g ) Drot=( %g %g %g )\n",DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6), DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+1), DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+2),DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+3), DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+4), DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+5) ); 
+
+        fprintf(stdout,"Found node id %d at row %d\n",node_id,disp_row);
+        fprintf(stdout,"Dr=( %g %g %g ) Drot=( %g %g %g )\n",DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6), DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+1), DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+2),DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+3), DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+4), DD*Table_Index(displacements,disp_row,disp_col_offset+disp_type*6+5) );
     }else{
         DD=0;
         disp_row=0;
@@ -183,7 +183,7 @@ AT(0,0,0) RELATIVE Origin
 ROTATED (0,0,0) RELATIVE Origin
 EXTEND
 %{
-    do {    
+    do {
         rotate(kx,ky,kz, kx,ky,kz, alphax, 0,1,0);
         x-=INSTRUMENT_GETPAR(optics_dist)*sin(alphax);
         SCATTER;
@@ -284,7 +284,7 @@ COMPONENT user_focal_detector = PSD_monitor(restore_xray=1, xwidth=XWidth, yheig
 AT(0,0,FL) RELATIVE optics_centre
 
 COMPONENT auto_focal_detector = Monitor_nD(restore_xray=1,xwidth=.2, yheight=.2, options="x bins=256 limits auto, y bins=256 limits auto", filename="auto_focal.dat")
-AT(0,0,FL) RELATIVE optics_centre  
+AT(0,0,FL) RELATIVE optics_centre
 
 COMPONENT FLmond= Monitor_nD(
         restore_xray=1,filename="FLmond",xwidth=0.1, yheight=.1, options="list=5000 user1 x y kx ky kz E", user1="nid",
@@ -297,4 +297,3 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
-
