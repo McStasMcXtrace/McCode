@@ -549,7 +549,7 @@ def parse_params(params_line):
         try:
             # handle parameter sections including curly bracket default values (case 2)
             m1 = re.match('([^,{]+),(.*)', substr) # not comma or curl, then a comma
-            m2 = re.match('([^,{]+\{[^}]*\}\s*),(.*)', substr) # not comma or curl, then not a right curl, then a rigt curlt, then a comma
+            m2 = re.match('([^,{]+\{[^}]*\}\s*),(.*)', substr) # not comma or curl, then not a right curl, then a right curlt, then a comma
     
             if m1:
                 lst.append(m1.group(1)) 
@@ -581,6 +581,9 @@ def parse_params(params_line):
         tpe = None
         dval = None
         name = None
+
+        if re.search(r'^ ', part):
+            part = part[1:]
         if re.match('double ', part):
             part = part.replace('double ', '').strip()
         if re.match('string ', part):
