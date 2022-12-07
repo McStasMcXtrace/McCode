@@ -580,15 +580,16 @@ class McGuiAppController():
                         s = ' '.join(s)
                         s = s.split('=')
                         params.append(s)
-                    if 'syntax error' in l:
-                        raise Exception("Instrument compile: syntax error")
+                    if 'syntax error' in l and not 'potential syntax error' in l:
+                        self.emitter.status("!!! Instrument syntax error !!!")
+                        return
                     if 'Errors encountered' in l:
-                        raise Exception("Instrument compile: errors encountered")
+                        self.emitter.status("!!! Instrument compile: errors encountered !!!")
 
                 instr_params = params
 
             except:
-                self.emitter.status("Instrument compile error")
+                self.emitter.status("!!! Instrument compile error !!!")
                 raise
             finally:
                 QtWidgets.QApplication.restoreOverrideCursor()
