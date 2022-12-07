@@ -589,6 +589,9 @@ def parse_params(params_line):
         if re.match('string ', part):
             tpe = 'string'
             part = part.replace('string ', '').strip()
+        if re.match('vector ', part):
+            tpe = 'vector'
+            part = part.replace('vector ', '').strip()
         if re.match('int ', part):
             tpe = 'int'
             part = part.replace('int ', '').strip()
