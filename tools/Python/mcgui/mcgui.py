@@ -661,7 +661,6 @@ class McGuiAppController():
             self._runthread.cmd = cmd
             self._runthread.cwd = cwd
             self._runthread.finished.connect(lambda: None)
-            self._runthread.terminated.connect(lambda: None)
             self._runthread.thread_exception.connect(handleExceptionMsg)
             self._runthread.error.connect(lambda msg: self.emitter.message(msg, err_msg=True))
             self._runthread.message.connect(lambda msg: self.emitter.message(msg))
