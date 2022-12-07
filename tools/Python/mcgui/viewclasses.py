@@ -316,7 +316,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
             elif event.type() == QtCore.QEvent.KeyPress:
                 # return & enter
                 if event.key() in [0x01000004, 0x01000005]:
-                    self.__search(subject.text())
+                    self.__search(subject.text().casefold())
                 # escape
                 elif event.key() == 0x01000000:
                     subject.setText('')
@@ -348,7 +348,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
         curs = self.__scintilla.positionFromLineIndex(i, j)
 
         # get match position after cursor
-        text = self.__scintilla.text()
+        text = self.__scintilla.text().casefold()
         pos = str(text)[curs:].find(search)
 
         # get match position before cursor
