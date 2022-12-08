@@ -21,7 +21,7 @@
 * The model needs as input a set of files: A Mirror Module definition file and a ring definition file.
 * The former contains overall definitions of mirror modules and their positions - the latter contains details about each plate.
 * There is some redundancy between the two files. The latter will be rendered unnecessary in a later version.
-* An example of mmdef_file is "MM_Definitions-1.csv" which is distributed by ESA.
+* An example of mmdef_file is "MM_Definitions-cfgA.csv" which is distributed by ESA.
 * An example of ringfile is "ref_design.dat" which is taken from the ATHENA_reference design white-paper.
 *
 * Reflectivity may be modelled using a datafile. In this telscope model only the top (intentionally reflecting) surface
@@ -76,7 +76,7 @@ DEFINE INSTRUMENT ATHENA_1mm(FL=12, optics_dist=10,
         dHx=0,dHy=0,dHz=0, dHrx=0, dHry=0, dHrz=0,
         string reflectivity="mirror_coating_unity.txt",default_reflec=0,
         E0=5, dE=0.001, int porenumber=1,
-        string mmdef_file="MM_Definitions-1.csv", string ringfile="ref_design_breaks.txt",
+        string mmdef_file="MM_Definitions-cfgA.csv", string ringfile="ref_design_breaks.txt",
         int hyper=1, int para=1, int lists=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
@@ -159,7 +159,7 @@ AT(0,0,0) RELATIVE Origin
 ROTATED (0,0,0) RELATIVE Origin
 EXTEND
 %{
-    do {    
+    do {
         rotate(kx,ky,kz, kx,ky,kz, alphax, 0,1,0);
         x-=mcipoptics_dist*sin(alphax);
         SCATTER;
@@ -269,4 +269,3 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
-
