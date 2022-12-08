@@ -26,7 +26,7 @@
 * The assumption is that the "current" neutron represents the final state, whereas the incoming state
 * is found by restoring the neutron state "index" components earlier.
 *
-* Example: Sqq_w_monitor(filename="output",radius=1, yheight=0.05, Emin=0,Emax=5,nE=11,nqa=100,nqb=100,qamin=1,qamax=10,qbmin=1qbmax=10,index=-2)
+* Example: Sqq_w_monitor(filename="output",radius=1, yheight=0.05, Emin=0,Emax=5,nE=11,nqa=100,nqb=100,qamin=1,qamax=10,qbmin=1qbmax=10, vix="vix", viy="viy", viz="viz")
 *          AT (0,0,0) RELATIVE sample
 *
 * %P
@@ -47,6 +47,9 @@
 * Emin:    [meV]     Defines the energy-transfer [Emin,Emax] window to monitor in nE bins
 * Emax:    [meV]     Defines the energy-transfer [Emax,Emax] window to monitor in nE bins
 * nE:    [int]       Number of energy slices
+* vix:   [string]    Points to instrument-level USERVAR for reading an earlier x-velocity     
+* viy:   [string]    Points to instrument-level USERVAR for reading an earlier y-velocity     
+* viz:   [string]    Points to instrument-level USERVAR for reading an earlier z-velocity     
 * filename: [string] Base filename to use, nE+1 files will be output
 * nowritefile: [1]   If set, monitor will skip writing to disk
 * nosum: [1]         If set, monitor will skip writing the energy-summed array to disk
@@ -66,7 +69,7 @@
 
 DEFINE COMPONENT Sqq_w_monitor
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius=1, yheight=0.05, qax=1,qaz=0,qbx=0,qbz=1,qamin=0,qamax=2,qbmin=0,qbmax=2,Emin=0,Emax=5,int nqa=90, int nqb=90, int nE=10, string filename=0, index=-2, int nowritefile=0, int nosum=0, string vix="", string viy="", string viz="")
+SETTING PARAMETERS (radius=1, yheight=0.05, qax=1,qaz=0,qbx=0,qbz=1,qamin=0,qamax=2,qbmin=0,qbmax=2,Emin=0,Emax=5,int nqa=90, int nqb=90, int nE=10, string filename=0, int nowritefile=0, int nosum=0, string vix="", string viy="", string viz="")
 OUTPUT PARAMETERS ()
 
 DECLARE
@@ -124,7 +127,6 @@ TRACE
 	rvy = particle_getvar(_particle,viy,&fail); if(fail) rvy=0;
 	rvz = particle_getvar(_particle,viz,&fail); if(fail) rvz=0;
 
-	//RESTORE_NEUTRON(INDEX_CURRENT_COMP+index, rx,ry,rz,rvx,rvy,rvz,rt,rsx,rsy,rsz,rp);
 	/* Calculate energy transfer */
   	Ei = VS2E*(rvx*rvx + rvy*rvy + rvz*rvz);
 	Ef = VS2E*(  vx*vx +  vy*vy +    vz*vz);
