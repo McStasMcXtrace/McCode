@@ -29,8 +29,8 @@
 *
 * R: [AA]            Radius of scattering hard spheres 
 * Phi: [1]           Particle volume fraction 
-* Delta_rho: Excess scattering length density [fm/AA^3]
-* sigma_abs: Absorption cross section density at 2200 m/s [m^-1]
+* Delta_rho: [fm/AA^3] Excess scattering length density 
+* sigma_abs: [m^-1] Absorption cross section density at 2200 m/s
 * radius: [m]        Outer radius of sample in (x,z) plane for cylinder/sphere 
 * xwidth: [m]        horiz. dimension of sample, as a width 
 * yheight: [m]       vert . dimension of sample, as a height for cylinder/box 
