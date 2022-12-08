@@ -49,7 +49,7 @@
 * length: [m]      length of guide
 * rData: [str]     Guide Reflectivity data file
 * rPar: [1]        Guide Parameters for standard reflectivity function
-* rUpdata: [str]   Mirror Reflectivity data file for spin up
+* rUpData: [str]   Mirror Reflectivity data file for spin up
 * rUpPar: [1]      Mirror Parameters for spin up standard reflectivity function
 * rDownData: [str] Mirror Reflectivity data file for spin down
 * rDownPar: [1]    Mirror Parameters for spin down standard reflectivity function
