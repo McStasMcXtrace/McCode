@@ -36,15 +36,19 @@ export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
 ./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mac-silicon "" -- OSXapp
 ./mkdist mcxtrace-clusterscripts $1 tools/cluster-scripts/ "" mac-silicon "" -- OSXapp
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-mcpl $1 3rdparty/mcpl-package "" mac-silicon "" -- OSXapp
 
 WORK=`pwd`
+
+cd 3rdparty/mcpl
+if [ -d build ]; then
+    rm -rf build
+fi
+mkdir -p build; cd build
+cmake -DCMAKE_INSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/mcstas/$1/ ..
+make install
 cd $WORK
 
-# Hack to ensure pymcpltool is in place
-ln -s /Applications/McXtrace-$1.app/Contents/Resources/mcxtrace/$1/libs/mcpl/pymcpltool /Applications/McXtrace-$1.app/Contents/Resources/mcxtrace/$1/bin
-
-if [ ! -f Miniconda3-latest-MacOSX-arm64.sh ]; then
+if [ ! -f Mambaforge-$(uname)-$(uname -m).sh ]; then
     # Download and embed a miniconda
     echo
     echo "*********************************************************"
@@ -52,13 +56,13 @@ if [ ! -f Miniconda3-latest-MacOSX-arm64.sh ]; then
     echo "*********************************************************"
     echo
     sleep 3
-    curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh
+    curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
 fi
 echo "*********************************************************"
 echo "* Embedding miniconda3 in your app                      *"
 echo "*********************************************************"
-chmod a+x Miniconda3-latest-MacOSX-arm64.sh
-./Miniconda3-latest-MacOSX-arm64.sh -b -p $MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/
+chmod a+x Mambaforge-$(uname)-$(uname -m).sh
+./Mambaforge-$(uname)-$(uname -m).sh -b -p $MCINSTALL_PREFIX/mcstas/$1/miniconda3/
 
 # Run conda to install the dependencies
 echo
@@ -105,7 +109,6 @@ if [ "x$2" = "x" ]; then
     ln -s McXtrace-$1.app/Contents/Resources/mcxtrace/$1/environment McXtrace-$1-environment.command
     cd ..
     cp support/MacOSX/Check-dependencies/* dist
-    cp support/MacOSX/silicon-homebrew-setup/* dist
     mv dist mcxtrace-$1
     mkdir dist
     tar cfz dist/mcxtrace-$1_arm64.tgz mcxtrace-$1
