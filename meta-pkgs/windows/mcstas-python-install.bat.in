@@ -5,12 +5,11 @@
 @echo WARNING: Please wait, process may take several minutes to complete!
 @echo  (Pressing [enter] a few times to ensure something is happening is OK)
 @echo ...
-@start /wait "" Miniconda3-latest-Windows-x86_64.exe /S /AddToPath=0 /D=c:\@FLAVOR@-@VERSION@\miniconda3
-@echo Miniconda install completed, proceeding with McCode dependencies...
+@start /wait "" Mambaforge-Windows-x86_64.exe /S /AddToPath=0 /D=c:\@FLAVOR@-@VERSION@\miniconda3
+@echo Mambaforge install completed, proceeding with McCode dependencies...
 @SET PATH=c:\\@FLAVOR@-@VERSION@\\bin;c:\\@FLAVOR@-@VERSION@\\miniconda3;c:\\@FLAVOR@-@VERSION@\\miniconda3\\Scripts\\;c:\\@FLAVOR@-@VERSION@\\miniconda3\\Library\\bin;c:\\@FLAVOR@-@VERSION@\\miniconda3\\Library\\mingw-w64\\bin;%PATH%
 @REM update conda and install mamba
-@conda update conda -y
-@conda install mamba -y
+@mamba update mamba -y
 @REM pick dependencies from the default channel and clean up
 @mamba install m2-msys2-runtime m2w64-gcc m2w64-gsl mpld3 pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph qscintilla2 nomkl typing -y
 @mamba clean --all -y
