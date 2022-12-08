@@ -31,6 +31,8 @@
 /*                                                                            */
 /******************************************************************************/
 
+// %INSTRUMENT_SITE: NCrystal
+
 DEFINE INSTRUMENT Union_NCrystal_example()
 
 DECLARE
@@ -79,7 +81,7 @@ COMPONENT NCrystal_mono_material = Union_make_material(process_string="NCrystal_
                                                        my_absorption=100*2.2/181.067)
 AT (0,0,0) ABSOLUTE
 
-COMPONENT NCrystal_sample = NCrystal_process(cfg="Y2O3_sg206_Yttrium_Oxide.ncmat;packfact=0.6")
+COMPONENT NCrystal_sample = NCrystal_process(cfg="Y2O3_sg206_Yttrium_Oxide.ncmat;density=0.6x")
 AT (0,0,0) ABSOLUTE
 
 COMPONENT NCrystal_sample_material = Union_make_material(process_string="NCrystal_sample",

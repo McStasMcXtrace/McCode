@@ -11,15 +11,14 @@
 * %I
 * Written by: Jana Baltser and Erik Knudsen
 * Date: August 2010
-* Version: 1.0
-* Release: McXtrace 0.1
 * Origin: NBI
 *
 * X-ray compound refractive lens (CRL) with an elliptic profile
 *
 * %D
 * A simple X-ray compound refractive lens (CRL) with an elliptic profile simulates the photons' movement on passing through it.
-*
+* Attenuation coefficient mu is taken from the NIST database and Be.txt
+* 
 * %P
 * Input parameters:
 * r1 - radius of the profile along the X axis;
@@ -27,19 +26,15 @@
 * w - parabola parameter, constraining it along the propagation axis;
 * d - distance between two surfaces of the lens along the propagation axis;
 * N - amount of single lenses in a stack.
-* T - transmission of the lens
-* 
-* 
-* attenuation coefficient mu is taken from the NIST database and 
-* Be_data.txt
+* Transmission - transmission of the lens
 *
-*
+* %E
 *******************************************************************************/
 
 
 DEFINE COMPONENT Lens_elliptical
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string material_datafile="Be_data.txt",r1=0.42e-3,r2=0.8e-3,w=0.46e-3,d=0.2e-4,T=1,N=1)
+SETTING PARAMETERS (string material_datafile="Be.txt",r1=0.42e-3,r2=0.8e-3,w=0.46e-3,d=0.2e-4,Transmission=1,N=1)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -181,9 +176,9 @@ INITIALIZE
   t_Table T;
   Table_Read(&T, material_datafile,0);
   char **header_parsed;
-  header_parsed=Table_ParseHeader(T.header,"Z=","Ar=","rho=");
+  header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho");
+  if (!Z) Z=strtol(header_parsed[0],NULL,10);  
   if (!Ar) Ar=strtod(header_parsed[1],NULL);
-  if (!Z) Z=strtol(header_parsed[0],NULL,10);
   if (!rho) rho=strtod(header_parsed[2],NULL);
   E=malloc(sizeof(double)*(T.rows+1));
   Mu=malloc(sizeof(double)*(T.rows+1));
@@ -225,7 +220,7 @@ TRACE
   
   delta=((2.0*M_PI*RE)/pow(k,2))*((NA/Ar)*rho*(Z+f)*1e-24);
   beta=mu/(2.0*k*1e10);
-  n=1.0-delta-beta;
+  n=1.0-delta;
   
   incid.k[0]=kx; incid.k[1]=ky; incid.k[2]=kz; 
   incid.coord[0]=x; incid.coord[1]=y; incid.coord[2]=z;
@@ -254,11 +249,11 @@ TRACE
     incid=outg;
   }
    // transmission calculation
-   if (T==0){
+   if (Transmission==0){
       ABSORB;
    }else{ 
-     T=exp(-mu*d*N); 
-     p*=T;
+     Transmission=exp(-mu*d*N); 
+     p*=Transmission;
    }
 %}
 

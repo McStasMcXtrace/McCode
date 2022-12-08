@@ -69,7 +69,7 @@ if [ "x$2" != "x" ]; then
 
     rm -f python-install.bat.in.2 python-install.bat docupdate.bat.in.2 docupdate.bat
     
-    sed s/@VERSION@/${1}/g python-install.bat.in > python-install.bat.in.2
+    sed s/@VERSION@/${1}/g mcxtrace-python-install.bat.in > python-install.bat.in.2
     sed s/@FLAVOR@/mcxtrace/g python-install.bat.in.2 > python-install.bat
     sed s/@VERSION@/${1}/g docupdate.bat.in > docupdate.bat.in.2
     sed s/@P@/mx/g docupdate.bat.in.2 >docupdate.bat.in.3

@@ -580,15 +580,16 @@ class McGuiAppController():
                         s = ' '.join(s)
                         s = s.split('=')
                         params.append(s)
-                    if 'syntax error' in l:
-                        raise Exception("Instrument compile: syntax error")
+                    if 'syntax error' in l and not 'potential syntax error' in l:
+                        self.emitter.status("!!! Instrument syntax error !!!")
+                        return
                     if 'Errors encountered' in l:
-                        raise Exception("Instrument compile: errors encountered")
+                        self.emitter.status("!!! Instrument compile: errors encountered !!!")
 
                 instr_params = params
 
             except:
-                self.emitter.status("Instrument compile error")
+                self.emitter.status("!!! Instrument compile error !!!")
                 raise
             finally:
                 QtWidgets.QApplication.restoreOverrideCursor()
@@ -659,7 +660,6 @@ class McGuiAppController():
             self._runthread.cmd = cmd
             self._runthread.cwd = cwd
             self._runthread.finished.connect(lambda: None)
-            self._runthread.terminated.connect(lambda: None)
             self._runthread.thread_exception.connect(handleExceptionMsg)
             self._runthread.error.connect(lambda msg: self.emitter.message(msg, err_msg=True))
             self._runthread.message.connect(lambda msg: self.emitter.message(msg))

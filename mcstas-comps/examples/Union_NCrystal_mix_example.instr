@@ -32,6 +32,8 @@
 /*                                                                            */
 /******************************************************************************/
 
+// %INSTRUMENT_SITE: NCrystal
+
 DEFINE INSTRUMENT Union_NCrystal_mix_example()
 
 DECLARE
@@ -100,7 +102,7 @@ COMPONENT mono_out = Arm()
 
 /* Make a cylindrical sample of loosely packed Y2O3 powder */
 COMPONENT powder_sample = NCrystal_sample(yheight=0.01, radius=0.01,
-                                          cfg="Y2O3_sg206_Yttrium_Oxide.ncmat;packfact=0.6")
+                                          cfg="Y2O3_sg206_Yttrium_Oxide.ncmat;density=0.6x")
   AT (0, 0, 0.4) RELATIVE mono_out
 
 COMPONENT powder_pattern_detc = Monitor_nD(

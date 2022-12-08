@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: ATHENA_1shell
+* Instrument: Test_shells
 *
 * %Identification
 * Written by: Erik B Knudsen <erkn@fysik.dtu.dk> & Desiree D. M. Ferreira <desiree@space.dtu.dk> (email)
@@ -17,7 +17,7 @@
 * Single shell example telescope using a combinatiopn pf parabolic/hyperbolic shell
 * optical plates covering the full circle. Reflectivity is 1 for all energies.
 *
-* Example: ATHENA_1shell.instr shellnumber=1
+* Example: Test_shells.instr shell_type=1
 *
 * %Parameters
 * FL: [m]        The focal length of the optical system
@@ -31,7 +31,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Simple_1shell(FL=12, plate_zdepth=0.5, channel_yheight=1e-2, radiusin=0.535532 , radiusout=0.533113, shell_type=1)
+DEFINE INSTRUMENT Test_shells(FL=12, plate_zdepth=0.5, channel_yheight=1e-2, radiusin=0.535532 , radiusout=0.533113, shell_type=1)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */

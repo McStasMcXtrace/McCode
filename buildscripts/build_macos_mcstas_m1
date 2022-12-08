@@ -56,10 +56,25 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" mac-silicon "" -- OSXapp
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" mac-silicon "" -- OSXapp
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mac-silicon "" -- OSXapp
-./mkdist mcstas-mcpl $1 3rdparty/mcpl-package "" mac-silicon "" -- OSXapp
-./mkdist mcstas-ncrystal $1 3rdparty/ncrystal-package "" mac-silicon "" -- OSXapp
 
 WORK=`pwd`
+
+cd 3rdparty/mcpl
+if [ -d build ]; then
+    rm -rf build
+fi
+mkdir -p build; cd build
+cmake -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/ ..
+make install
+cd $WORK
+
+cd 3rdparty/ncrystal
+if [ -d build ]; then
+    rm -rf build
+fi
+mkdir -p build; cd build
+cmake -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/ ..
+make install
 cd $WORK
 
 # Hack to ensure pymcpltool is in place

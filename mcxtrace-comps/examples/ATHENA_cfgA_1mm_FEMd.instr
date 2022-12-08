@@ -31,7 +31,7 @@
 * angle theta, followed by a 2D-data block with reflectivity numbers. This is expected to be substituted for a 1D-parametrization '
 * in q, to avoid overly lagre data-files.
 *
-* Example: ATHENA_cfgA_1mm.instr porenumber=3
+* Example: ATHENA_cfgA_1mm_FEMd.instr porenumber=3
 *
 * %Parameters
 * FL [m] The focal length of the optical system
@@ -88,6 +88,7 @@ DECLARE
 %{
     double src_pos_x;
     double src_pos_y;
+    #pragma acc declare create(alphax)
     double alphax,alphay;
 
     double pore_width=0.83e-3;
@@ -148,6 +149,7 @@ INITIALIZE
         DD=0;
         disp_row=0;
     }
+    #pragma acc update device(alphax)
 %}
 /* instrument is defined as a sequence of components.  */
 TRACE

@@ -28,7 +28,7 @@
 * rad_m: The radius at the midpoint of the optic. This is the reference.
 * rad_p: The radius at the "parabolic" and of the optic. At the source end.
 *
-* Example: ATHENA_1shell.instr shellnumber=1
+* Example: ATHENA_1sh_W1_OA.instr shellnumber=1
 *
 * %Parameters
 * FL [m] The focal length of the optical system
@@ -51,7 +51,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT ATHENA_1shell(FL=12, optics_dist=10,
+DEFINE INSTRUMENT ATHENA_1sh_W1_OA(FL=12, optics_dist=10,
         XWidth=0.13312, YHeight=0.13312, NX=1024, NY=1024,
 	offaxis_angle=0,        
 	string reflectivity="mirror_coating_unity.txt", E0=5, dE=0.001, int shellnumber=1,
@@ -63,9 +63,13 @@ DECLARE
 %{
     int RIDX;
     double PRP,PRM,PRH,PRL,PRW;
+    #pragma acc declare create(alphax)
     double alphax;
    
     double pore_height=0.605e-3;
+%}
+
+USERVARS %{
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -90,7 +94,7 @@ INITIALIZE
     PRM=Table_Index(T,shellnumber-1,3);
     PRP=Table_Index(T,shellnumber-1,4);
     PRW=Table_Index(T,shellnumber-1,5);
-
+    #pragma acc update device(alphax)
 %}
 
 /* instrument is defined as a sequence of components.  */

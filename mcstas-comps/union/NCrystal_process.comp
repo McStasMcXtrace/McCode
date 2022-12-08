@@ -94,7 +94,7 @@
 
 DEFINE COMPONENT NCrystal_process // Remember to change the name of process here
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS(string cfg = "", packing_factor=1, interact_fraction=-1)
+SETTING PARAMETERS(string cfg = "", packing_factor=1, interact_fraction=-1, string init="init")
 OUTPUT PARAMETERS (This_process, NCrystal_storage, effective_my_scattering, params)
 DEPENDENCY "-Wl,-rpath,CMD(ncrystal-config --show libdir) -LCMD(ncrystal-config --show libdir) -lNCrystal -ICMD(ncrystal-config --show includedir)"
 
@@ -377,6 +377,9 @@ INITIALIZE
   // Need to specify if this process is isotropic
   //This_process.non_isotropic_rot_index = -1; // Yes (powder)
   This_process.non_isotropic_rot_index =  1;  // No (single crystal)
+    
+  // The type of the process must be saved in the global enum process
+  This_process.eProcess = NCrystal;
 
   // Packing the data into a structure that is transported to the main component
   This_process.data_transfer.pointer_to_a_NCrystal_physics_storage_struct = &NCrystal_storage;
@@ -392,7 +395,7 @@ INITIALIZE
   global_process_element.p_scattering_process = &This_process;
   
   struct pointer_to_global_process_list *global_process_list = COMP_GETPAR3(Union_init, init, global_process_list);
-  add_element_to_process_list(&global_process_list,global_process_element);
+  add_element_to_process_list(global_process_list, global_process_element);
  %}
 
 TRACE

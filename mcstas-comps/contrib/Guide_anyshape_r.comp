@@ -8,28 +8,33 @@
 * Component: Guide
 *
 * %I
-* Written by: Emmanuel Farhi, adapted by Peter Link
-* Date: August 4th 2010
+* Written by: Emmanuel Farhi, adapted by Peter Link and Gaetano Mangiapia
+* Original Date: August 4th 2010
+* Revised for McStas 3.1 on: May 31st 2022
 * Origin: ILL/MLZ
 *
 * Reflecting surface (guide and mirror) with any shape, defined from an OFF file
-* and a patch to allow reflectivites added per polygon face. Derived from Guide_anyshape.
+* and a patch to allow m-, alpha- and W-values added per polygon face.
+* Derived from Guide_anyshape / Guide_anyshape_r .
 *
 * %D
 *
 * This is a reflecting object component, derived from Guide_anyshape.
-* Its shape (and optionally m-value pr. surface) is defined from an OFF file,
-* given with its file name. The object size is set as given from the file, where
+* Its shape, as well as m-, alpha- and W-values (IN THIS ORDER) for each face, are defined from
+* an OFF file, given with its file name. The object size is set as given from the file, where
 * dimensions should be in meters. The bounding box may be re-scaled by specifying
 * xwidth,yheight,zdepth parameters. The object may optionally be centered when
 * using 'center=1'.
 *
-* The reflectivity is specified either from the usual parametric description
-* R0,Qc,alpha,W,m, or by defning an m-value for each face present in the OFF file.
+* If in input only the values of R0 and Qc are specified, leaving m, alpha and W all null, then
+* Guide_anyshape_g will use the values of these last three parameters that are specified in the OFF
+* file for each face: floating point based values may be provided for them.
+* In case at least one among m, alpha and W is not null, then Guide_anyshape_g will use these
+* values as input (common for all the faces), ignoring those specified in the OFF file
 *
 * The complex OFF/PLY geometry option handles any closed non-convex polyhedra.
 *   It supports the OFF and NOFF file format but not COFF (colored faces).
-*   Such files may be generated from XYZ data using:
+*   Standard .OFF files may be generated from XYZ data using:
 *     qhull < coordinates.xyz Qx Qv Tv o > geomview.off
 *   or
 *     powercrust coordinates.xyz
@@ -91,7 +96,7 @@ SHARE
 DECLARE
 %{
 r_off_struct offdata;
-int use_file_coatings;
+int use_file_coatings; // Flag to specify whether to use (1) or not (0) the mirror parameters given in the .OFF file
 %}
 
 INITIALIZE
@@ -103,7 +108,7 @@ INITIALIZE
     use_file_coatings = 1;
     printf("Guide_anyshape_r: %s: All of m, alpha, W assigned 0: \n - We are using H. Jacobsen reflectivity model if m-values are given in %s\n", NAME_CURRENT_COMP, geometry);
   } else {
-    printf("Guide_anyshape_r: %s:At least one of alpha, W assigned 0: \n m-values are given in %s will be ignored!\n", NAME_CURRENT_COMP, geometry);
+    printf("Guide_anyshape_r: %s: alpha / m / W values provided in input: \n The corresponding values specified in %s will be ignored!\n", NAME_CURRENT_COMP, geometry);
     use_file_coatings = 0;
   }
 %}
@@ -155,10 +160,15 @@ TRACE
     /* handle surface intersection */
     double R=0;
     double m_value = m;
+    double alpha_value = alpha;
+    double W_value = W;
+
     if (use_file_coatings == 1) {
-      m_value = offdata.facepropsArray[fi];
+      m_value = offdata.face_m_Array[fi];
+      alpha_value = offdata.face_alpha_Array[fi];
+      W_value = offdata.face_W_Array[fi];
     }
-    double par[] = {R0, Qc, alpha, m_value, W};
+    double par[] = {R0, Qc, alpha_value, m_value, W_value};
     StdReflecFunc(q, par, &R);
     
 

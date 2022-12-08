@@ -85,6 +85,7 @@ DECLARE
 %{
     double src_pos_x;
     double src_pos_y;
+    #pragma acc declare create(alphax)
     double alphax,alphay;
 
     double pore_width=0.83e-3;
@@ -127,6 +128,7 @@ INITIALIZE
     PL=Table_Index(MM_def,porenumber,9);
     PW=Table_Index(MM_def,porenumber,10);
     PZ=Table_Index(MM_def,porenumber,8);
+    #pragma acc update device(alphax)
 %}
 /* instrument is defined as a sequence of components.  */
 TRACE

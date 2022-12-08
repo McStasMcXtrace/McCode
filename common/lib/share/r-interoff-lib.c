@@ -14,13 +14,14 @@
 * Release: $Revision$
 * Version: McStas X.Y
 *
-* Revision to read optional face color values from off files
-* by: Peter Link
-* Date: Mar 10, 2017
+* Revision of the version of Peter Link to read floating point m-, alpha- and W-values
+* for each face from OFF files
+* by: Peter Link / Gaetano Mangiapia
+* Date: Mar 10, 2017 / May 30, 2022
 *  
-* Object File Format intersection library for McStas. Requires the qsort function.
+* Modified Object File Format intersection library for McStas. Requires the qsort function.
 *
-* Such files may be obtained with e.g.
+* Standard .OFF files may be obtained with e.g.
 *   qhull < points.xyz Qx Qv Tv o > points.off
 * where points.xyz has format (it supports comments):
 *   3
@@ -33,6 +34,9 @@
 *   powercrust -i points.xyz
 * which will generate a 'pc.off' file to be renamed as suited.
 *
+* The OFF file trated here is modified, since the second portion of it, where the sequence
+* of vertices composing each face is listed, contains also the following float-based parameters:
+* m, alpha and W values, **** IN THIS ORDER ****
 *******************************************************************************/
 
 #ifndef R_INTEROFF_LIB_H
@@ -83,6 +87,7 @@ void r_off_normal(Coords* n, r_polygon p)
 int r_off_pnpoly(r_polygon p, Coords v)
 {
   int i=0, c = 0;
+  MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
   MCNUM areax=0,areay=0,areaz=0;
 
   int pol2dx=0,pol2dy=1;          //2d restriction of the poly
@@ -437,7 +442,7 @@ int r_off_clip_3D_mod_grav(r_intersection* t, Coords pos, Coords vel, Coords acc
   i=indPoly=0;
   while (i<faceSize)
   {
-    polygon pol;
+    r_polygon pol;
     pol.npol  = faceArray[i];                //nb vertex of polygon
     pol.p     = popol;
     pol.normal= coords_set(0,0,1);
@@ -462,7 +467,7 @@ int r_off_clip_3D_mod_grav(r_intersection* t, Coords pos, Coords vel, Coords acc
       }
     pol.normal=normalArray[indPoly];
     pol.D=DArray[indPoly];
-    p_to_quadratic(pol.normal, pol.D, acc, pos, vel, quadratic);
+    r_p_to_quadratic(pol.normal, pol.D, acc, pos, vel, quadratic);
     double x1, x2;
     int nsol = r_quadraticSolve(quadratic, &x1, &x2);
 
@@ -496,7 +501,7 @@ int r_off_clip_3D_mod_grav(r_intersection* t, Coords pos, Coords vel, Coords acc
 	inters.time = time;
 	inters.normal = pol.normal;
 	inters.index = indPoly;
-	int res=off_pnpoly(pol,inters.v);
+	int res=r_off_pnpoly(pol,inters.v);
 	if (res != 0) {
 	  inters.edge=(res==-1);
 	  MCNUM ndir = scalar_prod(pol.normal.x,pol.normal.y,pol.normal.z,tvel.x,tvel.y,tvel.z);
@@ -611,7 +616,12 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   Coords* normalArray     =NULL;
   double* DArray          =NULL;
   unsigned long* faceArray=NULL;
-  unsigned long* facepropsArray=NULL;  /* PL: added to hold keys to the table of supermirror m-values */
+
+  // GM: Additions for floating (double precision) values of m, alpha and W
+  double* face_m_Array = NULL;  /* PL: added to hold keys to the table of supermirror m-values */
+  double* face_alpha_Array = NULL;
+  double* face_W_Array = NULL;
+
   FILE*   f               =NULL; /* the FILE with vertices and polygons */
   double minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
 
@@ -637,14 +647,14 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   {
     double x,y,z;
     ret=fscanf(f, "%lg%lg%lg", &x,&y,&z);
-    if (!ret) { 
+    if (!ret) {
       // invalid line: we skip it (probably a comment)
       char line[CHAR_BUF_LENGTH];
-      fgets(line, CHAR_BUF_LENGTH, f);
-      continue; 
+      char *s=fgets(line, CHAR_BUF_LENGTH, f);
+      continue;
     }
     if (ret != 3) {
-      fprintf(stderr, "Error: can not read [xyz] coordinates for vertex %li in file %s (interoff/off_init). Read %i values.\n", 
+      fprintf(stderr, "Error: can not read [xyz] coordinates for vertex %li in file %s (interoff/off_init). Read %li values.\n",
         i, offfile, ret);
       exit(2);
     }
@@ -708,15 +718,19 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
     vtxArray[i].y=(vtxArray[i].y-centery)*ratioy+(!notcenter ? 0 : centery);
     vtxArray[i].z=(vtxArray[i].z-centerz)*ratioz+(!notcenter ? 0 : centerz);
   }
-  
+
   // read face table = [nbvertex v1 v2 vn | nbvertex v1 v2 vn ...] =============
   MPI_MASTER(
   printf("  Number of polygons: %ld\n", polySize);
   );
   normalArray= malloc(polySize*sizeof(Coords));
   faceArray  = malloc(polySize*10*sizeof(unsigned long)); // we assume polygons have less than 9 vertices
-  facepropsArray = malloc(polySize*sizeof(unsigned long)); // array to hold the index of the face properties table
   DArray     = malloc(polySize*sizeof(double));
+  face_m_Array = malloc(polySize*sizeof(double)); // array to hold the index of the face properties table
+  face_alpha_Array = malloc(polySize*sizeof(double));
+  face_W_Array = malloc(polySize*sizeof(double));
+
+
   if (!normalArray || !faceArray || !DArray) return(0);
 
   // fill faces
@@ -726,36 +740,41 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
     int  nbVertex=0, j=0;
     // read the length of this polygon
     ret=fscanf(f, "%d", &nbVertex);
-    if (!ret) { 
+    if (!ret) {
       // invalid line: we skip it (probably a comment)
       char line[CHAR_BUF_LENGTH];
-      fgets(line, CHAR_BUF_LENGTH, f);
-      continue; 
+      char *s=fgets(line, CHAR_BUF_LENGTH, f);
+      continue;
     }
     if (ret != 1) {
-      fprintf(stderr, "Error: can not read polygon %i length in file %s (interoff/off_init)\n", 
+      fprintf(stderr, "Error: can not read polygon %li length in file %s (interoff/off_init)\n",
         i, offfile);
       exit(3);
     }
     if (faceSize > polySize*10) {
-      fprintf(stderr, "Error: %li exceeded allocated polygon array[%li] in file %s (interoff/off_init)\n", 
+      fprintf(stderr, "Error: %li exceeded allocated polygon array[%li] in file %s (interoff/off_init)\n",
         faceSize, polySize*10, offfile);
     }
     faceArray[faceSize++] = nbVertex; // length of the polygon/face
     // then read the vertex ID's
     for (j=0; j<nbVertex; j++) {
       double vtx=0;
-      fscanf(f, "%lg", &vtx);
+      ret=fscanf(f, "%lg", &vtx);
       faceArray[faceSize++] = vtx;   // add vertices index after length of polygon
     }
-    /* PL: to add the mirror properties use the optional color map index of the faces in the off-file definition,
-       i.e. read one more integer on the line!
-       this way will not work for files which do not have exactly this format
-       it would be better to replace the original fscanf by reading the full line and interpreting it afterwards. 
-     */  
-    int mirrorprops=0;
-    fscanf(f, "%d", &mirrorprops);
-    facepropsArray[i] = mirrorprops;
+    // GM: Modification of the revision of Peter Link to add m, alpha and W
+
+    float mirrorprops = 0.0;
+    float alphaprops = 0.0;
+    float Wprops = 0.0;
+
+    fscanf(f, "%f", &mirrorprops);
+    face_m_Array[i] = (double)mirrorprops;
+    fscanf(f, "%f", &alphaprops);
+    face_alpha_Array[i] = (double)alphaprops;
+    fscanf(f, "%f", &Wprops);
+    face_W_Array[i] = (double)Wprops;
+
     i++;
   }
 
@@ -811,7 +830,9 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   data->normalArray= normalArray;
   data->DArray     = DArray;
   data->faceArray  = faceArray;
-  data->facepropsArray  = facepropsArray;
+  data->face_m_Array  = face_m_Array;
+  data->face_alpha_Array  = face_alpha_Array;
+  data->face_W_Array  = face_W_Array;
   data->vtxSize    = vtxSize;
   data->polySize   = polySize;
   data->faceSize   = faceSize;
@@ -831,7 +852,6 @@ int r_Min_int(int x, int y) {
   return (x<y)? x :y;
 }
 
-#ifdef OFF_LEGACY
  
 #pragma acc routine
 void r_merge(r_intersection *arr, int l, int m, int r)
@@ -891,10 +911,9 @@ while (j < n2)
 free(L);
 free(R);
 }
-#endif
+
 
 #ifdef USE_OFF
-#ifdef OFF_LEGACY
 #pragma acc routine
 void r_gpusort(r_intersection *arr, int size)
 {
@@ -921,7 +940,6 @@ void r_gpusort(r_intersection *arr, int size)
       }
   }
 }
-#endif
 #endif
 
 /*******************************************************************************
@@ -994,6 +1012,7 @@ int r_quadraticSolve(double* eq, double* x1, double* x2)
      unsigned long *faceindex0, unsigned long *faceindex3,
      double x, double y, double z,
      double vx, double vy, double vz,
+     double ax, double ay, double az,
      r_off_struct *data )
 * ACTION: computes intersection of neutron trajectory with an object.
 * INPUT:  x,y,z and vx,vy,vz are the position and velocity of the neutron
@@ -1012,6 +1031,8 @@ int r_off_intersect_all(double* t0, double* t3,
      double ax, double ay, double az,
      r_off_struct *data )
 {
+    Coords A={x, y, z};
+    Coords B={x+vx, y+vy, z+vz};
 
 #ifdef OFF_LEGACY    
     if(mcgravitation) {
@@ -1098,6 +1119,12 @@ int r_off_intersect_all(double* t0, double* t3,
       if (n0) *n0 = intersect4[i].normal;
       if (t3) *t3 = intersect4[i+1].time;
       if (n3) *n3 = intersect4[i+1].normal;
+
+      // Lines added, from Gaetano Mangiapia, Helmholtz-Zentrum Hereon
+      // see https://github.com/McStasMcXtrace/McCode/issues/1250
+      if (faceindex0) *faceindex0 = intersect4[i].index;
+      if (faceindex3) *faceindex3 = intersect4[i+1].index;
+
       /* should also return t[0].index and t[i].index as polygon ID */
       return t_size;
     }
