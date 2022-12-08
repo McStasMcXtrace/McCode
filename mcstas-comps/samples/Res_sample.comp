@@ -42,9 +42,9 @@
 * radius: [m]        Outer radius of hollow cylinder 
 * yheight: [m]       vert. dimension of sample, as a height 
 * focus_r: [m]       Radius of sphere containing target. 
-* target_x: []       
-* target_y: [m]      position of target to focus at 
-* target_z: []       
+* target_x: [m]       X-position of target to focus at [m]
+* target_y: [m]      Y-position of target to focus at 
+* target_z: [m]       Z-position of target to focus at [m]
 * E0: [meV]          Center of scattered energy range 
 * dE: [meV]          half width of scattered energy range 
 *

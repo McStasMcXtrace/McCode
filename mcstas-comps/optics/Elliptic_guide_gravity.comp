@@ -100,6 +100,8 @@
 *							ellipse and the guide entrance
 * verbose: [bool]           Give extra information about calculations
 * curvature: [m]            Simulate horizontal radius of curvature by centripetal force added to the gravity. Note: Does not curve the guide in mcdisplay but "curves the neutron". Has opposite sign definition of Guide_curved.
+* nSegments: [m]            Can optionally be used to specify number of guide segments (especially useful in GPU settings).
+* enableGravity: [m]        Flag to select propagation with gravity.
 *
 * OUTPUT PARAMETERS
 * guideInfo: [1]            structure containing internal variables

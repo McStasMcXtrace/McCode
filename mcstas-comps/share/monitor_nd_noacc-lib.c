@@ -869,7 +869,7 @@ int Monitor_nd_noaccTrace(Monitornd_noaccDefines_type *DEFS, Monitornd_noaccVari
     {
       Vars->Mon2D_Buffer  = (double *)realloc(Vars->Mon2D_Buffer, (Vars->Coord_Number+1)*(Vars->Neutron_Counter+Vars->Buffer_Block)*sizeof(double));
       if (Vars->Mon2D_Buffer == NULL)
-            { printf("Monitor_nD: %s cannot reallocate Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", Vars->compcurname, i, (Vars->Neutron_Counter+Vars->Buffer_Block)*sizeof(double)); Vars->Flag_List = 1; }
+            { printf("Monitor_nD: %s cannot reallocate Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", Vars->compcurname, i, (long int)(Vars->Neutron_Counter+Vars->Buffer_Block)*sizeof(double)); Vars->Flag_List = 1; }
       else { Vars->Buffer_Counter = 0; Vars->Buffer_Size = Vars->Neutron_Counter+Vars->Buffer_Block; }
     }
   } /* end if Buffer realloc */
@@ -1430,7 +1430,7 @@ MCDETECTOR Monitor_nd_noaccSave(Monitornd_noaccDefines_type *DEFS, Monitornd_noa
           if (strchr(Vars->Mon_File,'.') == NULL)
           { strcat(fname, "."); strcat(fname, Vars->Coord_Var[i]); }
         }
-        if (Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", Vars->compcurname, fname,Vars->Neutron_Counter,Vars->Coord_Number);
+        if (Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", Vars->compcurname, fname,(long int)Vars->Neutron_Counter,Vars->Coord_Number);
 
         /* handle the type of list output */
         strcpy(label, Vars->Monitor_Label);
