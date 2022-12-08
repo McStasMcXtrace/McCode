@@ -26,6 +26,8 @@
 * radius: [m]           Radius of detector
 * nr: [1]               Number of pixel (radial) columns
 * ny: [1]               Number of pixel rows
+* thmin: [deg]          Minimum angle covered/measured
+* thmax: [deg]          Maximum angle covered/measured
 * filename: [string]    Name of file in which to store the detector image
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
 * nowritefile: [1]      If set, monitor will skip writing to disk
