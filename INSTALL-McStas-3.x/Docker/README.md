@@ -1,6 +1,8 @@
 # Running McStas 3.2 in Docker
 
-McStas 2.7.1 and 3.2 are available on Dockerhub. To use, simply
+!! Pending release !!
+
+McStas 2.7.2 and 3.2 are available on Dockerhub. To use, simply
 
 * Install docker on your machine
 * run the command
