@@ -122,6 +122,6 @@ if(NOT WINDOWS)
   install(
     PROGRAMS "${WORK}/${P}display-cad-py"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}display"
+    RENAME "${P}display-cad"
     )
 endif()
