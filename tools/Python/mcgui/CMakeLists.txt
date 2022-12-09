@@ -149,7 +149,7 @@ if(NOT WINDOWS)
     )
 
   install(
-    FILES "${WORK}/${NAME}-${MCCODE_VERSION}-py.desktop" "${FLAVOR}-py.png"
+    FILES "${WORK}/${MCCODE_NAME}-${MCCODE_VERSION}-py.desktop" "${FLAVOR}-py.png"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/launchers/"
   )
 
