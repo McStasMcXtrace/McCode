@@ -48,6 +48,7 @@
 * density:           [g/cm^3]    Density of material. rho=density/weight/1e24*N_A.
 * nb_atoms:          [1]         Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell
 * target_index:      [1]         Relative index of component to focus at, e.g. next is +1
+* d_phi: [deg]         Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
 *
 * OUTPUT PARAMETERS:
 * V_rho:  [AA^-3] Atomic density

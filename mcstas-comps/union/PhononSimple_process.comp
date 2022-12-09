@@ -47,7 +47,7 @@
 * packing_factor:    [1]      How dense is the material compared to optimal 0-1
 * interact_fraction: [1]      How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
 * init:              [string] Name of Union_init component (typically "init", default)
-*
+* DW:                [1]      Debye-Waller factor
 * OUTPUT PARAMETERS:
 * PhononSimple_storage      // Important to update this output paramter
 * effective_my_scattering   // Variable used in initialize

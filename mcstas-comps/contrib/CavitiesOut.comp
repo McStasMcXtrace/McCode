@@ -25,6 +25,8 @@
 *
 * xw: []  width in X-dir (m) (full width, might be larger for trumpets)
 * yw: []  width in Y-dir (m) (full width, might be larger for trumpets)
+* xc: []  Number of x-channels
+* yc: []  Number of y-channels
 *
 *
 * %E

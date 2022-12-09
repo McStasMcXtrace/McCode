@@ -16,7 +16,6 @@
 * At present a single m-value is used for all mirrors.  
 *
 * %Parameters
-*
 * Input parameters:
 * nshells: [1]          Number of nested shells to expect
 * rmin: [m]             Midoptic plane radius of innermost mirror pair.
@@ -38,9 +37,8 @@
      
 DEFINE COMPONENT Conics_PH
 DEFINITION PARAMETERS()
-SETTING PARAMETERS (
-    rmin=0.65/2.0,rmax=1.23/2.0, focal_length=10.070, lp=0.84, lh=0.84,
-    int nshells=4, m=1, mirr_thick=0, mmin=1, mmax=1, int disk=1, 
+SETTING PARAMETERS (rmin=0.325,rmax=0.615, focal_length=10.070, lp=0.84, lh=0.84,
+    int nshells=4, m=1, mirr_thick=0, int disk=1, 
     R0 = 0.99, Qc = 0.021, W = 0.003, alpha = 6.07, transmit = 0)
 OUTPUT PARAMETERS(pTable, s)
 

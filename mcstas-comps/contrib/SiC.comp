@@ -22,7 +22,7 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xlenght: [m]  length of SiC plate
+* xlength: [m]  length of SiC plate
 * yheight: [m]  height of SiC plate
 *
 * %E

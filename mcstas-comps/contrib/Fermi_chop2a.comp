@@ -4,15 +4,18 @@
 *          
 *          
 *
-*  Component: Fermi_chop2 
+* Component: Fermi_chop2a
 *
 * %Identification
 * Written by: Garrett Granroth
 * Date: 6 Feb 2005
 * Origin: SNS Oak Ridge,TN
 * 
+* %D
+* Models an SNS Fermic Chopper, used in the SNS_ARCS instrument model.
+*
 * %Parameters
-*  Input Parameters:
+* nput Parameters:
 *  
 * len: [m]      slit package length
 * w: [m]        slit package width
@@ -23,7 +26,6 @@
 * ymax: [m]     Upper y bound
 * nchan: [1]    number of channels in chopper
 * bw: [m]       blade width
-*
 * blader: [m]   blade radius
 *
 *

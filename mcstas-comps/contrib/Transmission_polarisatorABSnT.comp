@@ -38,6 +38,7 @@
 * mtop: [1]         m-value of material for top.    horz. mirror of the outer guide
 * mbottom: [1]      m-value of material for bottom. horz. mirror of the outer guide
 * waferD: [m]       Thickness of Si wafer
+* FeD: [m]          Thickness of Fe wafer
 * Si_i: [barns]     Scattering cross section per atom (barns)
 * Si_a: [barns]     Absorption cross section per atom (barns) at 2200m/s
 * R0_up: [1]        Low-angle reflectivity of the Fe/Si-wafer for spin up neutrons
