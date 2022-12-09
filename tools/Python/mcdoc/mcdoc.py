@@ -1175,6 +1175,10 @@ def parse_and_filter(indir, namefilter=None, recursive=False, printlog=False):
     instr_files, comp_files = utils.get_instr_comp_files(indir, recursive)
     print("parsing root folder:", indir)
     comp_info_lst = []
+
+    comp_files=sorted(comp_files)
+    instr_files=sorted(instr_files)
+
     for f in comp_files:
         try:
             if printlog:
