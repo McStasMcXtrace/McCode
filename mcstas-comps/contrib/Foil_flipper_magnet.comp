@@ -40,7 +40,9 @@
 * Bx: [T]        Parameter used for x composant of field.
 * By: [T]        Parameter used for y composant of field.
 * Bz: [T]        Parameter used for z composant of field.
-* fieldFunction: [pointer] Function describing the magnetic field.
+* stray_field: [ ] Toggle for modelling of stray fields.
+* verbose: [ ]   Toggle verbose mode
+* foil_in: [ ]   Toggle for optional foil in the flipper.
 *
 * %LINKS
 *

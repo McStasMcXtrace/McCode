@@ -36,6 +36,8 @@
 * lmax_user:         [1]      Cut-off for the Fourier series. If negative, the program uses all the coefficients provided in the file fcoef_fn
 * maxNeutronSaved:   [1]      Maximum number of neutron cross sections saved for reusing
 * init:              [string] Name of Union_init component (typically "init", default)
+* barns:             [1]      Flag to indicate if |F|^2 from 'crystal_fn' is in barns or fm^2. barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), barns=0 for lau type files
+* order:             [1]      Limit scattering to this order
 *
 * OUTPUT PARAMETERS:
 * Template_storage          // Important to update this output paramter

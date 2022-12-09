@@ -54,6 +54,7 @@
 * xwidth: [m]    Width of crystal.
 * yheight: [m]   Height of crystal.
 * zdepth: [m]    Depth of crystal (no extinction simulated)
+* sqw:    [string]   Name of a 4d S(q,w) file - example.sqw4 is included in your installation
 * geometry: [string]   Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust.
 * delta_d_d: [1] Lattice spacing variance, gaussian RMS.
 * mosaic: [arcmin]   Isotropic crystal mosaic, gaussian RMS. Puts the crystal in the isotropic mosaic model state, thus disregarding other mosaicity parameters.

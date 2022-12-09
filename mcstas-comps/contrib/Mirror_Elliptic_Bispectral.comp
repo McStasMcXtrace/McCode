@@ -20,10 +20,14 @@
 * %P
 * INPUT PARAMETERS:
 *
-* focus_s: [m]                 first focal point of ellipse in ABSOLUTE COORDINATES
-* focus_e: [m]                 second focal point of ellipse in ABSOLUTE COORDINATES
+* focus_start_w: [m]           Horizontal position of first focal point of ellipse in ABSOLUTE COORDINATES
+* focus_start_h: [m]           Vertical position of first focal point of ellipse in ABSOLUTE COORDINATES
+* focus_end_w: [m]             Horizontal position of second focal point of ellipse in ABSOLUTE COORDINATES
+* focus_end_h: [m]             VErtical position of second focal point of ellipse in ABSOLUTE COORDINATES
 * mirror_start: [m]            start of mirror in ABSOLUTE COORDINATES
 * guide_start: [m]             start of guide in ABSOLUTE COORDINATES
+* smallaxis_w: [m]             Small-axis dimension of horizontal ellipse
+* smallaxis_h: [m]             Small-axis dimension of vertical ellipse
 * yheight: [m]                 the height of the mirror when not in the guide
 * smallaxis: [m]               the smallaxis of the guide
 * length: [m]                  the length of the mirror

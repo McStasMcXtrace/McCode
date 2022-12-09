@@ -20,18 +20,14 @@
 * of monodisperse, spherical particles.
 *
 * %P
-* RadiusDetector	: [m]	Radius of the detector (in the xy-plane).
+* RadiusDetector: [m]	Radius of the detector (in the xy-plane).
 * DistanceFromSample: [m]  Distance from the sample to this component.
-* LambdaMin  		: [AA]	Max sensitivity in lambda - used to compute the
-*							highest possible value of momentum transfer, q.
-* NumberOfBins      : []	Number of bins in the r (and q).
-* RFilename	        : []	File used for storing I(r).
-* qFilename         : [] 	File used for storing I(q).
-* Lambda0			: []	If lambda is given, the momentum transfers of all
-*							rays are computed from this value. Otherwise,
-*							instrumental effects are negated.
-* restore_xray      : []	If set to 1, the component restores the original
-*							x-ray.
+* LambdaMin: [AA]	Max sensitivity in lambda - used to compute the highest possible value of momentum transfer, q.
+* NumberOfBins: []	Number of bins in the r (and q).
+* RFilename: []	File used for storing I(r).
+* qFilename: [] 	File used for storing I(q).
+* Lambda0: []	If lambda is given, the momentum transfers of all rays are computed from this value. Otherwise, instrumental effects are neglected.
+* restore_neutron: []	If set to 1, the component restores the original neutron.
 *
 * %E
 *******************************************************************************/

@@ -24,14 +24,14 @@
 * %P
 * INPUT PARAMETERS:
 *
-* radius:   Radius of detector (m)
-* nx:       Number of pixel columns (1)
-* ny:       Number of pixel rows (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_neutron: If set, the monitor does not influence the neutron state (1)
-* mx:       x-component of spin reference-vector (1)
-* my:       y-component of spin reference-vector (1)
-* mz:       z-component of spin reference-vector (1)
+* radius:          [m] Radius of detector 
+* nx:              [1] Number of pixel columns
+* ny:              [1] Number of pixel rows
+* filename:      [str] Name of file in which to store the detector image
+* restore_neutron: [1] If set, the monitor does not influence the neutron state x
+* mx:              [1] x-component of spin reference-vector
+* my:              [1] y-component of spin reference-vector
+* mz:              [1] z-component of spin reference-vector
 *
 * OUTPUT PARAMETERS:
 *

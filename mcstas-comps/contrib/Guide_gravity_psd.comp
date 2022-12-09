@@ -72,7 +72,12 @@
 * W: [AA-1]         Width of supermirror cut-off
 * d: [m]            Thickness of subdividing walls
 * nslit: [1]        Number of vertical channels in the guide (>= 1) (nslit-1 vertical dividing walls).
-*
+* nxpsd: [1]        Number of bins in the built-in mirror parallel monitors
+* filenameT: [str]  Filename for top-mirror-monitor
+* filenameB: [str]  Filename for bottom-mirror-monitor
+* filenameL: [str]  Filename for left-mirror-monitor
+* filenameR: [str]  Filename for right-mirror-monitor
+* 
 * Optional input parameters: (different ways for m-specifications)
 *
 * mleft: [1]        m-value of material for left.   vert. mirror

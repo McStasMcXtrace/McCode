@@ -59,9 +59,9 @@
 * f_tun:    Fraction of tunneling scattering (f_QE+f_tun < 1) [1]
 * gamma:    Lorentzian width of quasielastic broadening (HWHM) [meV]
 * E_tun:    Tunneling energy [meV]
-* target_x:
-* target_y: position of target to focus at [m]
-* target_z:
+* target_x: X-position of target to focus at [m]
+* target_y: Y-position of target to focus at [m]
+* target_z: Z-position of target to focus at [m]
 *
 * Variables calculated in the component
 *

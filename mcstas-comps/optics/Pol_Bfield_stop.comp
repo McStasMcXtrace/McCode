@@ -45,6 +45,12 @@
 *
 * %P
 * INPUT PARAMETERS:
+* geometry: [str] Name of an Object File Format (OFF) or PLY file for complex field-geometry.
+* xwidth: [m]               Width of opening.
+* yheight: [m]              Height of opening.
+* zdepth: [m]               Length of field.
+* radius: [m]               Radius of field if it is cylindrical or spherical.
+
 *
 * %E
 ****************************************************************************/

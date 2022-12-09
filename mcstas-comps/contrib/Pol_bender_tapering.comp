@@ -56,12 +56,13 @@
 * d_substrate: [m]   Thickness of the substrate.
 * entry_radius: [m]  Radius of curvature of the entrance window.
 * radius: [m]        Curvature of a single plate/polarizer. +:curve left/-:right
-* nslits: [1]        Number of slits in the bender
+* nslit:  [1]        Number of slits in the bender
 * channel_file: [ ]  File name of file containing channel data. such as spacer widths etc. (see above for format)
 * reflect_file: [ ]  File name of file containing reflectivity data parametrized either by q or m.
 * sigma_abs: [barn]  Absorption per unit cell at v=2200 m/s of spacers. Defaults to literature value for Al.
 * V0: [AA^3]         Volume of unit cell for spacers. Defaults to Al.
 * nspacer: [ ]       Number of spacers per channel.
+* G:     [m/s^2]     Magnitude of gravitation.
 * debug: [ ]         If > 0 print out some internal parameters.
 *
 * %L

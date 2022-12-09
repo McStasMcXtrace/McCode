@@ -26,19 +26,15 @@
 *
 * radius:  [m]       Cylinder radius (optional)
 * yheight: [m]       Cylinder height  (optional)
-* qax:     [1]       x-component of 1st q-vector
-* qaz:     [1]       z-component of 1st q-vector
-* qbx:     [1]       x-component of 2nd q-vector
-* qbz:     [1]       z-component of 2nd q-vector
-* qamin:   [AA^-1]   Defines interval (qamin,qamax) where monitor measures in nqa bins
-* qamax:   [AA^-1]   Defines interval (qamin,qamax) where monitor measures in nqa bins
-* qbmin:   [AA^-1]   Defines interval (qbmin,qbmax) where monitor measures in nqb bins
-* qbmax:   [AA^-1]   Defines interval (qbmin,qbmax) where monitor measures in nqb bins
-* nqa:     [int]     Number of bins along qa direction
-* nqb:     [int]     Number of bins along qb direction
+* qmin:   [AA^-1]   Defines interval (qmin,qmax) where monitor measures in nq bins
+* qmax:   [AA^-1]   Defines interval (qmin,qmax) where monitor measures in nq bins
+* nq:     [int]     Number of bins in q
 * Emin:    [meV]     Defines the energy-transfer [Emin,Emax] window to monitor in nE bins
 * Emax:    [meV]     Defines the energy-transfer [Emax,Emax] window to monitor in nE bins
 * nE:    [int]       Number of energy slices
+* vix:   [string]    Points to instrument-level USERVAR for reading an earlier x-velocity     
+* viy:   [string]    Points to instrument-level USERVAR for reading an earlier y-velocity     
+* viz:   [string]    Points to instrument-level USERVAR for reading an earlier z-velocity
 * filename: [string] Base filename to use, nE+1 files will be output
 * nowritefile: [1]   If set, monitor will skip writing to disk
 *
