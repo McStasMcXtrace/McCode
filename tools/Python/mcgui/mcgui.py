@@ -891,6 +891,7 @@ class McGuiAppController():
         # If not on Windows add menu point to make current mccode the system default
         if not sys.platform == 'win32':
             self.view.mw.add_conf_menu('Set as default').triggered.connect(self.handleDefault)
+        mwui.btnDoc.clicked.connect(self.handleMcdoc)
         mwui.btnRun.clicked.connect(self.handleRunOrInterruptSim)
         mwui.btnPlot.clicked.connect(self.handlePlotResults)
 
