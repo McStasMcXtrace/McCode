@@ -56,6 +56,7 @@ sed -i 's+@MCCODE_LIB@/miniconda3/+c:\\mcstas-'${1}'\\miniconda3\\Library\\mingw
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-python-mcdisplay-cad $1 tools/Python/mcdisplay/cad/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" mingw64 "" -- nsis64
@@ -65,9 +66,9 @@ sed -i 's+@MCCODE_LIB@/miniconda3/+c:\\mcstas-'${1}'\\miniconda3\\Library\\mingw
 if [ "x$2" != "x" ]; then
     # Build the meta-packages also
     cd meta-pkgs/windows/Support
-    if [ ! -f Miniconda3-latest-Windows-x86_64.exe ]; then
+    if [ ! -f Mambaforge-Windows-x86_64.exe ]; then
 	echo Sorry! I need to download a Miniconda3 for embedding - will take some time...
-	wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
+	wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Windows-x86_64.exe
     fi
     cd ..
 

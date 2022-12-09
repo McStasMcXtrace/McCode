@@ -53,6 +53,7 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mac-silicon "" -- OSXapp
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac-silicon "" -- OSXapp
 ./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" mac-silicon "" -- OSXapp
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" mac-silicon "" -- OSXapp
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" mac-silicon "" -- OSXapp
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mac-silicon "" -- OSXapp
@@ -77,10 +78,8 @@ cmake -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcst
 make install
 cd $WORK
 
-# Hack to ensure pymcpltool is in place
-ln -sf /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/libs/mcpl/pymcpltool /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/bin
 
-if [ ! -f Miniconda3-latest-MacOSX-arm64.sh ]; then
+if [ ! -f Mambaforge-$(uname)-$(uname -m).sh ]; then
     # Download and embed a miniconda
     echo
     echo "*********************************************************"
@@ -88,13 +87,13 @@ if [ ! -f Miniconda3-latest-MacOSX-arm64.sh ]; then
     echo "*********************************************************"
     echo
     sleep 3
-    curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh
+    curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
 fi
 echo "*********************************************************"
 echo "* Embedding miniconda3 in your app                      *"
 echo "*********************************************************"
-chmod a+x Miniconda3-latest-MacOSX-arm64.sh
-./Miniconda3-latest-MacOSX-arm64.sh -b -p $MCINSTALL_PREFIX/mcstas/$1/miniconda3/
+chmod a+x Mambaforge-$(uname)-$(uname -m).sh
+./Mambaforge-$(uname)-$(uname -m).sh -b -p $MCINSTALL_PREFIX/mcstas/$1/miniconda3/
 
 # Run conda to install the dependencies
 echo
@@ -105,9 +104,8 @@ echo
 export PATHBAK=$PATH
 export PATH=$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin:$PATH
 
-conda update conda -y
-conda config --add channels conda-forge
-conda install mamba conda-build -y
+mamba update mamba -y
+mamba install mamba conda-build -y
 mamba install openmpi gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl -y
 mamba clean --all -y
 cd $TMPDIR
@@ -144,7 +142,7 @@ if [ "x$2" = "x" ]; then
     mv dist mcstas-$1
     mkdir dist
     tar cfz dist/mcstas-$1_arm64.tgz mcstas-$1
-    cp INSTALL-McStas-3.x/macOS/README.md dist
+    cp INSTALL-McStas-2.x/macOS/README.md dist
     echo A tgz of your app is now located in the dist folder
     rm -rf mcstas-$1
 else
