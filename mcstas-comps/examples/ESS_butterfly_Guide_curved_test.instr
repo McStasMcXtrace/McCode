@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Instrument: ESS_butterfly_MCPL_test
+* Instrument: ESS_butterfly_Guide_curved_test
 *
 * %I
 * Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
@@ -34,7 +34,7 @@
 * Benchmarking website available at <a href="http://ess_butterfly.mcstas.org">http://ess_butterfly.mcstas.org</a>
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT ESS_butterfly_test(string sector="N",
+DEFINE INSTRUMENT ESS_butterfly_Guide_curved_test(string sector="N",
   int beamline=1,Lmin=0.2,Lmax=20,c_performance=1,t_performance=1,
   int index=25,dist=0,cold=1,Yheight=0.03,delta=0,thres=0.003,repeat=1,
   E_smear=0.1,pos_smear=0.01,dir_smear=0.01)

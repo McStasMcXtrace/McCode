@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Instrument: ESS_butterfly_test
+* Instrument: ESS_butterfly_tfocus_test
 *
 * %I
 * Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
@@ -36,7 +36,7 @@
 * Benchmarking website available at <a href="http://ess_butterfly.mcstas.org">http://ess_butterfly.mcstas.org</a>
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT ESS_butterfly_test(string sector="N",beamline=1,Lmin=0.2,Lmax=20,c_performance=1,t_performance=1,int index=0,dist=100,cold=0.5,Yheight=0.03,delta=0,tfocus_dist=10,tfocus_time=0.01,tfocus_width=0.001)
+DEFINE INSTRUMENT ESS_butterfly_tfocus_test(string sector="N",beamline=1,Lmin=0.2,Lmax=20,c_performance=1,t_performance=1,int index=0,dist=100,cold=0.5,Yheight=0.03,delta=0,tfocus_dist=10,tfocus_time=0.01,tfocus_width=0.001)
 
 DECLARE
 %{
