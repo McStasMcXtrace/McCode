@@ -28,7 +28,7 @@
 * %Parameters
 * PHM: [deg]  Monochromator arm angle, aka A1
 * TTM: [deg]  Monochromator take-off angle, aka A2
-* C1: []      
+* C1: [arcmin] C1 collimation      
 *
 * %Link
 * The McStas User manual

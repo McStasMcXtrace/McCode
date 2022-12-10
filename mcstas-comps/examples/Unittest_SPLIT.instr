@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Instrument: Unittest_JUMP_WHEN
+* Instrument: Unittest_SPLIT
 *
 * %I
 * Written by: Peter Willendrup
@@ -28,7 +28,7 @@
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT Unittest_JUMP_WHEN(int SPLITS=10, Pp0=1)
+DEFINE INSTRUMENT Unittest_SPLIT(int SPLITS=10, Pp0=1)
 
 DECLARE
 %{

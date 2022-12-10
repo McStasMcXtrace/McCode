@@ -1,5 +1,6 @@
-
 /*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
 * Instrument: ESS_Testbeamline_HZB_V20
 *
 * %I
@@ -55,7 +56,7 @@
 * %E
 *******************************************************************************/
 /* instrument definition: name, parameters & default values */
-DEFINE INSTRUMENT ESS_Testbeamline_HZB_V20( lambda_min=1, lambda_max=15,frequency=14,Choppers_WFM1_in=1,Choppers_WFM2_in=1,Choppers_FOC1_in=1, Choppers_FOC2_in=1,
+DEFINE INSTRUMENT ESS_Testbeamline_HZB_V20(lambda_min=1, lambda_max=15,frequency=14,Choppers_WFM1_in=1,Choppers_WFM2_in=1,Choppers_FOC1_in=1, Choppers_FOC2_in=1,
 						s1_x=0.05, s1_y=0.1, s2_x=0.02, s2_y=0.04, s3_x=0.0138, s3_y=0.033, Offset_deg_SC1=0,Offset_deg_SC2=0,Offset_deg_BC1=-25,
 						Offset_deg_BC2=57,Offset_deg_WFM1=47.1,Offset_deg_WFM2=76.76,Offset_deg_FOC1=62.4,Offset_deg_FOC2=12.27,
 			     Z=0.28, sp=50.6, npulses=1, emulate_reactor_emmision=0)
