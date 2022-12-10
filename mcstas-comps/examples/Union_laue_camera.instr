@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Union_manual_example
+* Instrument: Union_laue_camera
 *
 * %Identification
 * Written by: Mads Bertelsen
@@ -21,24 +21,24 @@
 * %Example: mosaic=5 Detector: PSDlin_transmission_transmitted_I=2.30318e+08
 *
 * %Parameters
-* delta_d_d: []               
-* mosaic: []                  
-* lam0: []                    
-* dlam: []                    
-* radius: []                  
-* height: []                  
-* x_rotation_geometry: []  rotates union geometry component
-* y_rotation_geometry: []     
-* x_rotation_geometry_ref: [] rotates reference component
-* y_rotation_geometry_ref: [] 
-* x_rotation_process: [] rotates powder process (crystal orientation)
-* y_rotation_process: []      
-* z_rotation_process: []      
-* geometry_interact: []       
+* delta_d_d:                  [ ] Lattice spacing variation in sample
+* mosaic:                [arcmin] Sample mosaicity
+* lam0:                      [AA] Source mean wavelength
+* dlam:                      [AA] Source wavelength spread
+* radius:                     [m] Sample radius
+* height:                     [m] Sample height   
+* x_rotation_geometry:      [deg] Rotates union geometry component around x
+* y_rotation_geometry:      [deg] Rotates union geometry component around y
+* x_rotation_geometry_ref:  [deg] Rotates reference component around x
+* y_rotation_geometry_ref:  [deg] Rotates reference component around y
+* x_rotation_process:       [deg] Rotates crystal process (crystal orientation), x
+* y_rotation_process:       [deg] Rotates crystal process (crystal orientation), y
+* z_rotation_process:       [deg] Rotates crystal process (crystal orientation), z  
+* geometry_interact:          [ ] p_interact of Union sample       
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Union_laue_camera(delta_d_d=1e-4, mosaic=5, lam0=7, dlam=5, radius = 0.01, height=0.01,
+DEFINE INSTRUMENT Union_laue_camera(delta_d_d=1e-4, mosaic=5, lam0=7, dlam=5, radius=0.01, height=0.01,
    x_rotation_geometry=0, y_rotation_geometry=0,
    x_rotation_geometry_ref=0, y_rotation_geometry_ref=0,
    x_rotation_process=0, y_rotation_process=0, z_rotation_process=0,

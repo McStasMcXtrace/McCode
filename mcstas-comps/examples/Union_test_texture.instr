@@ -20,10 +20,18 @@
 * %Description
 * simple test instrument for texture sample component.
 *
-* 3.112614E-322nd
+* %P
+* lmax: [AA] Maximum wavelength treated by texture process
+* crystal_fn: [string] Crystal structure file name
+* fcoef_fn: [string] Fourier component file name
+* barns: [ ] Flag to indicate if |F 2| from "crystal_fn" is in barns or fm2 (barns = 1 for laz, barns = 0 for lau type files).
+*
+* %L
+*
+* %E
 *******************************************************************************/
 
-DEFINE INSTRUMENT SNR_texture(lmax=0,
+DEFINE INSTRUMENT Union_test_texture(lmax=0,
       string crystal_fn="Zr.laz",
       string fcoef_fn="coef_Four_L2.txt",barns=1)
 DECLARE

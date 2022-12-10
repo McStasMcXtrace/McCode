@@ -22,28 +22,27 @@
 *
 * %Parameters
 * comp_select: [1] 1: Union components, 2: Single crystal
-* string material_data_file:
-* sigma_inc: []               
-* my_absorption_union: []     
-* delta_d_d: []               
-* mosaic: []                  
-* lam0: []                    
-* dlam: []                    
-* xwidth: []                  
-* yheight: []                 
-* zdepth: []                  
-* unit_cell_volume: []        
-* sigma_abs_sc: []            
-* sigma_inc: []               
-* x_rotation_geometry: []     
-* y_rotation_geometry: []     
-* x_rotation_geometry_ref: [] 
-* y_rotation_geometry_ref: [] 
-* x_rotation_process: []      
-* y_rotation_process: []      
-* geometry_interact: []       
-* PG: []                      
-* powder: []                  
+* material_data_file: [string] Sample material defintion
+* sigma_inc: [barns] Sample incoherent cross-section       
+* my_absorption_union: [m^-1] Sample mass-absorption coefficient     
+* delta_d_d: [] Sample latttice spacing variation
+* mosaic: [arcmin] Sample mosaicity 
+* lam0: [AA] Source mean wavelength                    
+* dlam: [AA] Source wavelength spread
+* xwidth: [m] Sample x-dimension 
+* yheight: [m] Sample y-dimension       
+* zdepth: [m] Sample z-dimension                  
+* unit_cell_volume: [AA] Sample unit cell volume       
+* sigma_abs_sc: [banrs] Sample absorption cross-section
+* x_rotation_geometry: [deg] Rotates union geometry component around x
+* y_rotation_geometry: [deg] Rotates union geometry component around y
+* x_rotation_geometry_ref: [deg] Rotates reference component around x
+* y_rotation_geometry_ref: [deg] Rotates reference component around y
+* x_rotation_process: [deg] Rotates crystal process (crystal orientation), x    
+* y_rotation_process: [deg] Rotates crystal process (crystal orientation), y
+* geometry_interact: [deg] Rotates crystal process (crystal orientation), z
+* PG: [ ] Sample PG-mode                      
+* powder: [] Sample powder-mode      
 *
 * %End
 *******************************************************************************/
