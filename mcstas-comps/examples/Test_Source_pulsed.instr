@@ -25,7 +25,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_Sources(int source=1, Lmin=0.1, Lmax=10.1)
+DEFINE INSTRUMENT Test_Source_pulsed(int source=1, Lmin=0.1, Lmax=10.1)
 
 DECLARE
 %{

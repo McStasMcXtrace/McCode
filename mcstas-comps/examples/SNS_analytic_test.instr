@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: SNS_test
+* Instrument: SNS_analytic_test
 *
 * %Identification
 * Written by: G. Granroth
@@ -31,7 +31,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT SNS_test(string filename="a1Gw2-5-f5_fit_fit.dat")
+DEFINE INSTRUMENT SNS_analytic_test(string filename="a1Gw2-5-f5_fit_fit.dat")
 
 TRACE
 COMPONENT mod=SNS_source_analytic(filename=filename,

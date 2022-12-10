@@ -5,7 +5,6 @@
 * Written by: Tobias Weber (tweber@ill.fr)
 * Date: 3-Feb-2018
 * Origin: ILL
-* License: GNU GPLv3
 * 
 * %INSTRUMENT_SITE: Tests_optics
 *
@@ -19,21 +18,19 @@
 * for horizontal and vertical focusing, respectively.
 * For mono_curvh=0, mono_curvv=0 the monochromator is flat.
 * For mono_curvh=-1, mono_curvv=-1 optimal horizontal and vertical focusing is chosen.
+* 
+* %Parameters 
+* src_lam:     [AA] Source mean wavelength
+* dsrc_lam:    [AA] Source wavelength spread
+* mono_ideal:  [ ]  Selection of mono-model 0=Single_crystql, 1=Monochromator_curved
+* mono_curvh:  [m]  Monochromator horizontal curvature. -1: optimal, 0: flat 
+* mono_curvv:  [m]  Monochromator vertical curvature -1: optimal, 0: flat 
 *
 * %End
 *******************************************************************************/
 
-
-DEFINE INSTRUMENT Test_focus(
-	/* wavelength */
-	double src_lam = 4.5, double src_dlam = 1.0,
-
-	/* 0: use Single_crystal, 1: use Monochromator_curved */
-	int mono_ideal = 0,
-
-	/* horizontal and vertical curvatures, -1: optimal, 0: flat */
-	double mono_curvh = -1, double mono_curvv = -1
-)
+DEFINE INSTRUMENT Test_focus(src_lam = 4.5, src_dlam = 1.0,
+	int mono_ideal = 0, mono_curvh = -1, mono_curvv = -1)
 
 
 DECLARE

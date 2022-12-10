@@ -5,7 +5,7 @@
 *         DTU Physics, Kongens Lyngby, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: SNS_ARCS
+* Instrument: SNS_ARCS_Mantid
 *
 * %Identification
 * Written by: G. Granroth
@@ -45,7 +45,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT SNS_ARCS(Fermi_nu=420,T0_nu=90,nrad=0.58,nchans=40,Edes=50,Et=25,ttheta=25,T0_off=0,sxmin=-0.04,sxmax=0.04,symin=-0.04,symax=0.04,run_num=1)
+DEFINE INSTRUMENT SNS_ARCS_Mantid(Fermi_nu=420,T0_nu=90,nrad=0.58,nchans=40,Edes=50,Et=25,ttheta=25,T0_off=0,sxmin=-0.04,sxmax=0.04,symin=-0.04,symax=0.04,run_num=1)
 DECLARE
 %{
    double Emin,Emax;
