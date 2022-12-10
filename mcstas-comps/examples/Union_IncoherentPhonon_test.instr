@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: incoherent_validation
+* Instrument: Union_IncoherentPhonon_test
 *
 * %Identification
 * Written by: Mads Bertelsen
@@ -19,14 +19,14 @@
 * Example: Detector: Banana_monitor_I=18.4632
 *
 * %Parameters
-* comp_select: [] 1: Union components, 2: Incoherent
-* sample_radius: []      
-* sample_height: []      
-* pack: []               
-* sigma_inc_vanadium: [] 
-* sigma_abs_vanadium: [] 
-* Vc_vanadium: []        
-* geometry_interact: []  
+* comp_select:             [] 1: Union components, 2: Incoherent
+* sample_radius:          [m] Radius of sample   
+* sample_height:          [m] Height of sample     
+* pack:                   [ ] Packing factor         
+* sigma_inc_vanadium: [barns] Incoherent cross-section
+* sigma_abs_vanadium: [barns] Absorption cross-section
+* Vc_vanadium:         [AA^3] Unit cell volume
+* geometry_interact:      [ ] p_interact for the Union sample
 *
 *
 * %End
