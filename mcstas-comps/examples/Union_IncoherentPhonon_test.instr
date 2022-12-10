@@ -14,7 +14,8 @@
 * %INSTRUMENT_SITE: Union_demos
 *
 * %Description
-* Validation of Union components against incoherent scattering component
+* Test instrument for the IncoherentPhonon_process physics process from
+* V. Laliena, Uni Zaragoza.
 *
 * Example: Detector: Banana_monitor_I=18.4632
 *
@@ -32,7 +33,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_incoherent_validation(int comp_select=1,sample_radius=0.01,sample_height=0.03,pack=1,
+DEFINE INSTRUMENT Union_IncoherentPhonon_test(int comp_select=1,sample_radius=0.01,sample_height=0.03,pack=1,
 sigma_inc_vanadium=5.08,sigma_abs_vanadium=5.08,Vc_vanadium=13.827,geometry_interact=0.5,
 int nphe_exact=1,int nphe_approx=0,int approx=0,int mph_resum=0,
 T=294,density=6.0,M=50.94,sigmaCoh=0.0184,sigmaInc=5.08,string dosfn="dos_meV.txt",nxs=1000,kabsmin=0.1,kabsmax=25,
