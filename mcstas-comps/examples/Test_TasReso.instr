@@ -6,6 +6,7 @@
 * Written by: Tobias Weber (tweber@ill.fr)
 * Date: 30-Mar-2019
 * Origin: ILL
+*
 * %INSTRUMENT_SITE: Templates
 *
 * Testing the triple-axis resolution, use "reso.dat" output with mcresplot.py
@@ -33,10 +34,12 @@
 *
 * %Parameters 
 * src_lam:     [AA] Source mean wavelength
-* dsrc_lam:    [AA] Source wavelength spread
+* src_dlam:    [AA] Source wavelength spread
 * mono_ideal:  [ ]  Selection of mono-model 0=Single_crystal, 1=Monochromator_curved
 * mono_curvh:  [m]  Monochromator horizontal curvature. -1: optimal, 0: flat 
 * mono_curvv:  [m]  Monochromator vertical curvature -1: optimal, 0: flat 
+* ana_curvh:   [m]  Analyzer horizontal curvature. -1: optimal, 0: flat 
+* ana_curvv:   [m]  Analyzer vertical curvature -1: optimal, 0: flat 
 * sample_num:  [ ]  Selection of sample-model 0=vanadium, 1=single crystal, 2=resolution
 * ki:      [AA^-1]  Monochromator ki
 * kf:      [AA^-1]  Analyser kf
@@ -49,14 +52,14 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Test_TasReso(src_lam = 4.5, src_dlam = 1.0,
-	ki = -1, kf = -1,
-	int sample_num = 2,
-	mono_curvh = -1, mono_curvv = -1,
-	ana_curvh = -1, ana_curvv = -1,
-	coll_presample_div = 30.0,
-	coll_postsample_div = 30.0,
-	k_filter_cutoff = 1.6)
+DEFINE INSTRUMENT Test_TasReso(src_lam=4.5, src_dlam=1.0,
+	ki=-1, kf=-1,
+	int sample_num=2,
+	mono_curvh=-1, mono_curvv=-1,
+	ana_curvh=-1, ana_curvv=-1,
+	coll_presample_div=30.0,
+	coll_postsample_div=30.0,
+	k_filter_cutoff=1.6)
 
 
 DECLARE

@@ -1,11 +1,12 @@
 /*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
 * Instrument: Test_focus
 *
 * %Identification
 * Written by: Tobias Weber (tweber@ill.fr)
 * Date: 3-Feb-2018
 * Origin: ILL
-* 
+*
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Focus testing, comparing Single_crystal and Monochromator_curved
@@ -21,16 +22,16 @@
 * 
 * %Parameters 
 * src_lam:     [AA] Source mean wavelength
-* dsrc_lam:    [AA] Source wavelength spread
-* mono_ideal:  [ ]  Selection of mono-model 0=Single_crystql, 1=Monochromator_curved
+* src_dlam:    [AA] Source wavelength spread
+* mono_ideal:  [ ]  Selection of mono-model 0=Single_crystal, 1=Monochromator_curved
 * mono_curvh:  [m]  Monochromator horizontal curvature. -1: optimal, 0: flat 
 * mono_curvv:  [m]  Monochromator vertical curvature -1: optimal, 0: flat 
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Test_focus(src_lam = 4.5, src_dlam = 1.0,
-	int mono_ideal = 0, mono_curvh = -1, mono_curvv = -1)
+DEFINE INSTRUMENT Test_focus(src_lam=4.5, src_dlam=1.0,
+	int mono_ideal=0, mono_curvh=-1, mono_curvv=-1)
 
 
 DECLARE
