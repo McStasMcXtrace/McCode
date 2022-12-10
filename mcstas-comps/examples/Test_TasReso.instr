@@ -1,4 +1,5 @@
 /*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
 * Instrument: Test_TasReso 
 *
 * %Identification
@@ -6,6 +7,8 @@
 * Date: 30-Mar-2019
 * Origin: ILL
 * %INSTRUMENT_SITE: Templates
+*
+* Testing the triple-axis resolution, use "reso.dat" output with mcresplot.py
 *
 * %Description
 * Testing the triple-axis resolution, use "reso.dat" output with mcresplot.py
@@ -31,7 +34,7 @@
 * %Parameters 
 * src_lam:     [AA] Source mean wavelength
 * dsrc_lam:    [AA] Source wavelength spread
-* mono_ideal:  [ ]  Selection of mono-model 0=Single_crystql, 1=Monochromator_curved
+* mono_ideal:  [ ]  Selection of mono-model 0=Single_crystal, 1=Monochromator_curved
 * mono_curvh:  [m]  Monochromator horizontal curvature. -1: optimal, 0: flat 
 * mono_curvv:  [m]  Monochromator vertical curvature -1: optimal, 0: flat 
 * sample_num:  [ ]  Selection of sample-model 0=vanadium, 1=single crystal, 2=resolution
