@@ -48,8 +48,8 @@
 * DM: [Angs]        d-spacing of monochromator. Use DM=0 to compute the values from the requested wavelength.
 * powder: [str]     File name for powder sample description
 * container: [str]  File name for container decription in Al cryostat/furnace
-* dlambda: []
-* RV: []
+* dlambda: [Angs]   Wavelength-spread around lambda at source
+* RV: [m]           Radius of vertical focussing. flat for 0	
 *
 * %End
 *******************************************************************************/

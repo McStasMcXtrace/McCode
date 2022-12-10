@@ -7,6 +7,7 @@
 * Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
 * Date: May 29,2013
 * Origin: DTU Physics
+*
 * %INSTRUMENT_SITE: SNS
 *
 * Simple instrumentfile for estimating SNS brilliance, moderator is a the Granroth SNS_source applying linear interpolation in MCNPX tables.
@@ -16,8 +17,8 @@
 * Simple instrumentfile for estimating SNS brilliance, moderator is a the Granroth SNS_source applying linear interpolation in MCNPX tables.
 *
 * %Parameters
-* Lambda_min: [AA]  
-* Lambda_max: [AA]  
+* Lambda_min: [AA] Minimum wavelength produced at source
+* Lambda_max: [AA] Maximum wavelength produced at source
 *
 * %Link
 *

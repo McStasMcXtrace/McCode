@@ -21,8 +21,8 @@
 * %Example: guideLength=10 Detector: psdGuide_I=0.0022
 *
 * %Parameters
-* guideLength: [] 
-* guideRadius: [] 
+* guideLength: [m] Bender/Guide length 
+* guideRadius: [m] Bender/Guide radius
 *
 * %Link
 * A reference/HTML link for more information

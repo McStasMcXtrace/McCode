@@ -42,7 +42,7 @@
 * s2_y:	                    [m] slit 1 height
 * s3_x:                     [m] slit 1 width
 * s3_y:	                    [m] slit 1 height
-* sp                        [m] sample position
+* sp:                       [m] sample position
 * npulses:                  [1] Number of pulses to simulate
 * Choppers_WFM1_in:         [1] Flag to indicate if WFM1 is active
 * Choppers_WFM2_in:         [1] Flag to indicate if WFM2 is active

@@ -34,6 +34,7 @@
 * lambda:    [AA]  mean incident wavelength.
 * dlambda:   [AA]  wavelength full width.
 * crystal:   [str] File name for crystal description (LAU)
+* container: [str] File name for sample-container material description
 * verbose:   [1]   Print DIF configuration. 0 to be quiet
 *
 * %End

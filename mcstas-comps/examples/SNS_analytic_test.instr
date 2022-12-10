@@ -22,7 +22,7 @@
 * Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
 *
 * %Parameters
-* filename: [] 
+* filename: [string] Source file 
 *
 * %Link
 * Written by G. Granroth

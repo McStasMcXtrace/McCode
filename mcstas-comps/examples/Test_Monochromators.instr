@@ -24,16 +24,12 @@
 * Example: Mono=6 Detector: psd1_I=9.21295e-05
 *
 * %Parameters
-* Mono: []              Choice of Monochromator component to use, with 1=Monochromator_flat 2=Monochromator_pol 3=Monochromator_pol (forcing 1% events to be reflected) 4=Monochromator_curved (in flat mode) 5=Monochromator_2foc (contrib, flat mode) 6=Single_crystal
-* lambda: [Angs]      Source wavelength
-* Moz: [Arc minutes]  Mosaicity
-* Mono: []
-* PG: []
-* powder: []
-* order: []
-* PG: []
-* powder: []
-* order: []
+* Mono:       [] Choice of Monochromator component to use, with 1=Monochromator_flat 2=Monochromator_pol 3=Monochromator_pol (forcing 1% events to be reflected) 4=Monochromator_curved (in flat mode) 5=Monochromator_2foc (contrib, flat mode) 6=Single_crystal
+* lambda: [Angs] Source wavelength
+* Moz:  [arcmin] Mosaicity
+* PG:         [] PG-mode for Single_crystal 
+* powder:     [] Powder-mode for Single_crystal
+* order:      [] Maximum order of scattering in Single_crystal
 *
 * %Link
 *

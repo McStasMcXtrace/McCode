@@ -26,25 +26,25 @@
 * KI: [Angs-1]  central wavevector for incoming neutrons
 * QM: [Angs-1]  wavevector transfer modulus at the sample
 * EN: [meV]     energy transfer at the sample
-* verbose: []
-* WM: []
-* HM: []
-* NHM: []
-* NVM: []
-* RMV: []
-* WA: []
-* HA: []
-* NHA: []
-* NVA: []
-* RAV: []
-* RAH: []
-* SM: []
-* SS: []
-* SA: []
-* L1: []
-* L2: []
-* L3: []
-* L4: []
+* verbose: []   toggle verbose mode
+* WM: [m]       Width of monochromator
+* HM: [m]       Height of monochromator
+* NHM: [1]      Number of vertical slabs composing the monochromator
+* NVM: [1]      Number of horizontal slabs composing the monochromator
+* RMV: [m]      Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* WA: [m]       Width of analyzer
+* HA: [m]       Height of analyzer
+* NVA: [1]      Number of vertical slabs composing the analyzer
+* NHA: [1]      Number of horizontal slabs composing the analyzer
+* RAH: [m]      Analyzer horizontal curvature, 0 for flat, -1 for automatic setting
+* RAV: [m]                Analyzer vertical curvature, 0 for flat, -1 for automatic setting
+* SM: [1:left, -1:right]  Scattering sense of beam from Monochromator
+* SS: [1:left, -1:right]  Scattering sense of beam from Sample
+* SA: [1:left, -1:right]  Scattering sense of beam from Analyzer
+* L1: [m]                 Source-Monochromator distance. Contains 1st Collimator 
+* L2: [m]       Monochromator-Sample distance. Contains 2nd Collimator
+* L3: [m]       Sample-Analyzer distance. Contains 3rd Collimator
+* L4: [m]       Analyzer-detector distance. Contains 4th Collimator
 *
 * %Link
 * The <a href="http://www.ill.fr/in22">IN22 TAS</a> at the ILL

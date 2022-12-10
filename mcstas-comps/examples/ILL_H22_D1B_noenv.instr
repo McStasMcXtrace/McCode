@@ -58,8 +58,8 @@
 * TILT: [deg]      Monochromator additional tilt, for rocking curves
 * TRAS_X: [m]      Additional monochromator translation along X, left/righ w.r.t beam
 * TRAS_Z: [m]      Additional monochromator translation along Z, along guide
-* DM: []
-* THETA_M: []
+* DM: [AA]         Mono lattice spacing
+* THETA_M: [deg]   Mono takeoff angle
 *
 * %End
 *******************************************************************************/

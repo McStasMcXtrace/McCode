@@ -39,7 +39,7 @@
 *
 * %End
 ***************************************************/
-DEFINE INSTRUMENT PSI_source(lambda = 2.5666, R = 0.87, R_curve = 0.87, string filename="Na2Ca3Al2F14.laz",D_PHI=6, SHIFT=0, PACK=0.7, Dw=0.8, BARNS=1)
+DEFINE INSTRUMENT PSI_source(lambda=2.5666, R=0.87, R_curve=0.87, string filename="Na2Ca3Al2F14.laz",D_PHI=6, SHIFT=0, PACK=0.7, Dw=0.8, BARNS=1)
 
 DECLARE
 %{

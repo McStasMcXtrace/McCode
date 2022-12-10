@@ -39,7 +39,7 @@
 
 *******************************************************************************/
 
-DEFINE INSTRUMENT ISIS_IMAT(src=0, l_min=1, l_max=10, t_min=0, t_max=0.2, theta=90)
+DEFINE INSTRUMENT ISIS_IMAT(l_min=1, l_max=10, t_min=0, t_max=0.2, theta=90)
 
 DECLARE
 %{ 

@@ -27,7 +27,9 @@
 *    McStas for completeness.
 *
 * %Parameters
-*
+* LAMBDA:           [AA] Mean wavelength at source
+* DLAMBDA:          [AA] Wavelength spread at source
+* GUIDEREFLECTIVITY: [1] R0-reflectivity of guide
 * %Link
 *
 * %End

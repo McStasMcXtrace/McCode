@@ -3,7 +3,7 @@
 *
 * Instrument: Granroth_SNS_decoupled_poisoned.instr
 *
-* %I
+* %Identification
 * Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
 * Date: May 29,2013
 * Origin: DTU Physics
@@ -12,12 +12,15 @@
 *
 * Simple instrumentfile for estimating SNS brilliance, moderator is a the Gallmeier SNS_source_analytic applying Ikeda-Carpenter vs. Pade function fits to MCNPX tables.
 *
-* %D
+* %Description
+*
 * Simple instrumentfile for estimating SNS brilliance, moderator is a the Gallmeier SNS_source_analytic applying Ikeda-Carpenter vs. Pade function fits to MCNPX tables.
 *
-* %P
-* Lambda_min: [AA]
-* Lambda_max: [AA]
+* %Parameters
+* Lambda_min: [AA] Minimum wavelength produced at source
+* Lambda_max: [AA] Maximum wavelength produced at source
+*
+* %Link
 *
 * %End
 *******************************************************************************/

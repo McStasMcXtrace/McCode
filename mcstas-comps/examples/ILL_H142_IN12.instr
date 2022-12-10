@@ -22,20 +22,20 @@
 * KI: [Angs-1]  central wavevector for incoming neutrons
 * QM: [Angs-1]  wavevector transfer modulus at the sample
 * EN: [meV]     energy transfer at the sample
-* verbose: []
-* WM: []
-* HM: []
-* NHM: []
-* NVM: []
-* RMV: []
-* WA: []
-* HA: []
-* NHA: []
-* NVA: []
-* RAH: []
-* L2: []
-* L3: []
-* L4: []
+* verbose: []   verbose-mode toggle
+* WM: [m]       Width of monochromator
+* HM: [m]       Height of monochromator
+* NHM: [1]      Number of vertical slabs composing the monochromator
+* NVM: [1]      Number of horizontal slabs composing the monochromator
+* RMV: [m]      Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* WA: [m]       Width of analyzer
+* HA: [m]       Height of analyzer
+* NVA: [1]      Number of vertical slabs composing the analyzer
+* NHA: [1]      Number of horizontal slabs composing the analyzer
+* RAH: [m]      Analyzer horizontal curvature, 0 for flat, -1 for automatic setting
+* L2: [m]       Monochromator-Sample distance. Contains 2nd Collimator
+* L3: [m]       Sample-Analyzer distance. Contains 3rd Collimator
+* L4: [m]       Analyzer-detector distance. Contains 4th Collimator
 *
 * %Link
 * The <a href="http://www.ill.fr/in12">IN12 TAS</a> at the ILL

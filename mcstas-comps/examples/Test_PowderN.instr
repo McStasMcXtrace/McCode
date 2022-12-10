@@ -22,14 +22,15 @@
 * %Example: lambda=1 directbeam=1 SPLITS=20 Detector: Sph_mon_I=4.77847e+09
 *
 * %Parameters
-* lambda: [Angs]  Wavelength emitted from source, 1% wl-interval around.
-* L1: [m]         Source-sample distance
-* directbeam: [1] Suppress direct beam or not
+* lambda:     [Angs] Wavelength emitted from source, 1% wl-interval around.
+* L1:            [m] Source-sample distance
+* directbeam:    [1] Suppress direct beam or not
 * reflections: [str] List of powder reflections
-* SPLITS: [1] Number of SPLIT's before sample
-* frac_c: [1] Fraction of stats assigned to coherent scattering 
-* frac_i: [1] Fraction of stats assigned to incoherent scattering
-* frac_t: [1] Fraction of stats assigned to unscattered, "direct beam"
+* SPLITS:        [1] Number of SPLIT's before sample
+* frac_c:        [1] Fraction of stats assigned to coherent scattering 
+* frac_i:        [1] Fraction of stats assigned to incoherent scattering
+* frac_t:        [1] Fraction of stats assigned to unscattered, "direct beam"
+* d_phi:       [deg] d_phi focusing setting in PowderN
 *
 * %End
 *******************************************************************************/
