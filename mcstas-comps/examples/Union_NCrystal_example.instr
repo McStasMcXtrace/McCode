@@ -1,38 +1,47 @@
 /*******************************************************************************
-* Modified NCrystal_example to use the Union components with an NCrystal       *
-* process instead of their stand alone component.                              *
-* Changes by Mads Bertelsen, 13/8 2020.                                        *
-*                                                                              *
-* NB: This instrument requires that the below commands are run prior to        *
-*     compilation with mcrun or mcgui                                          *
-* 1) source $MCSTAS/ncrystal/setup.sh                                          *
-* 2) mcstas-comps/examples/Union_IncoherentPhonon_test.instr                   *
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Union_NCrystal_example
+*
+* %Identification
+* Written by: NCrystal developers, Mads Bertelsen
+* Date: 2020
+* Origin: ESS
+* %INSTRUMENT_SITE: NCrystal
+*
+* Example instrument for use of NCrystal_sample in Union
+*
+* %Description
+* This instrument examplifies how NCrystal may be used in Union constructions
+*
+*
+*  This file is originally part of NCrystal (see https://mctools.github.io/ncrystal/)   
+*                                                                            
+*  Copyright 2015-2022 NCrystal developers                                   
+*                                                                            
+*  Licensed under the Apache License, Version 2.0 (the "License");           
+*  you may not use this file except in compliance with the License.          
+*  You may obtain a copy of the License at                                   
+*                                                                            
+*      http://www.apache.org/licenses/LICENSE-2.0                            
+*                                                                            
+*  Unless required by applicable law or agreed to in writing, software       
+*  distributed under the License is distributed on an "AS IS" BASIS,         
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  
+*  See the License for the specific language governing permissions and       
+*  limitations under the License.                                            
+*                                                                            
+*
+* Example: sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat;density=0.6x" Detector: powder_pattern_detc_I=2.21958e-10 
+*
+* %Parameters
+* sample_cfg: [string] Material string for the 
+*
+* %Link
+* A reference/HTML link for more information
+*
+* %End
 *******************************************************************************/
-
-/******************************************************************************/
-/* The original code contained the following license/copyright statement:     */
-/******************************************************************************/
-/*                                                                            */
-/*  This file is part of NCrystal (see https://mctools.github.io/ncrystal/)   */
-/*                                                                            */
-/*  Copyright 2015-2019 NCrystal developers                                   */
-/*                                                                            */
-/*  Licensed under the Apache License, Version 2.0 (the "License");           */
-/*  you may not use this file except in compliance with the License.          */
-/*  You may obtain a copy of the License at                                   */
-/*                                                                            */
-/*      http://www.apache.org/licenses/LICENSE-2.0                            */
-/*                                                                            */
-/*  Unless required by applicable law or agreed to in writing, software       */
-/*  distributed under the License is distributed on an "AS IS" BASIS,         */
-/*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  */
-/*  See the License for the specific language governing permissions and       */
-/*  limitations under the License.                                            */
-/*                                                                            */
-/******************************************************************************/
-
-// %INSTRUMENT_SITE: NCrystal
-
 DEFINE INSTRUMENT Union_NCrystal_example()
 
 DECLARE
