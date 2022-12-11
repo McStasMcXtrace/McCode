@@ -20,6 +20,7 @@
 * %Example: templateLaue reflections=leucine.lau Detector: det_I=4.63548e+08
 *
 * %Parameters
+* reflections: [string] Single crystal reflection list
 *
 * %End
 *******************************************************************************/

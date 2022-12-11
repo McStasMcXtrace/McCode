@@ -21,8 +21,8 @@
 * Example: templateNMX reflections=PPase_D_P1.lau Detector: det_I=29.6512
 *
 * %Parameters
-* REPS: []        
-* reflections: [] 
+* REPS: [ ] Number of SPLIT repetitions        
+* reflections: [string] MX crystal reflection list 
 *
 * %End
 *******************************************************************************/

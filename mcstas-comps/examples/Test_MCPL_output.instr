@@ -17,7 +17,8 @@
 * %Example: Ncount=1e3 merge=0 Detector: m1_I=2.42284e+11
 *
 * %Parameters
-* merge: [1]  Flag to indicate if we should merge the output in case of MPI
+* merge:  [1]  Flag to indicate if we should merge the output in case of MPI
+* Ncount: [1]  Ncount defined via input parameter 
 *
 * %End
 *******************************************************************************/

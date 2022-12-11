@@ -27,7 +27,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT test(SX=0, SY=1, SZ=0)
+DEFINE INSTRUMENT Test_Pol_SF_ideal(SX=0, SY=1, SZ=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */

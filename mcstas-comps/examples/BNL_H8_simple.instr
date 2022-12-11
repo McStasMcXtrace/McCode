@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: BNL_H8
+* Instrument: BNL_H8_simple
 *
 * %Identification
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
@@ -33,7 +33,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT BNL_H8(lambda=2.36)
+DEFINE INSTRUMENT BNL_H8_simple(lambda=2.36)
 
 DECLARE
 %{

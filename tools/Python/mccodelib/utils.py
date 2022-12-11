@@ -597,8 +597,8 @@ def parse_params(params_line):
             part = part.replace('int ', '').strip()
         if re.search('=', part):
             m = re.match("(.*)=(.*)", part)
-            dval = m.group(2)
-            name = m.group(1)
+            dval = m.group(2).strip()
+            name = m.group(1).strip()
         else:
             name = part.strip()
         if name not in (None, "", ):
@@ -611,7 +611,7 @@ def parse_define_instr(text):
     Not robust to "junk" in the input string.
     '''
     try:
-        m = re.match('DEFINE[ \t]+INSTRUMENT[ \t]+(\w+)\s*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
+        m = re.match('DEFINE[ \t]+INSTRUMENT[ \t]+(\w+)\s*\(([\w\,\"\s\n\t\r\.\+:;\-=]*)\)', text)
         name = m.group(1)
         params = m.group(2).replace('\n', '').strip()
     except:

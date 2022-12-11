@@ -28,7 +28,7 @@
 *
 * %End
 ******************************************************************************/
-DEFINE INSTRUMENT Test_Pol_Mirror(int mirrorOption = 1)
+DEFINE INSTRUMENT Test_Pol_Mirror(int mirrorOption=1)
 
 USERVARS
 %{

@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Union_sample_picture_replica
+* Instrument: Union_logger_test
 *
 * %Identification
 * Written by: Mads Bertelsen
@@ -26,7 +26,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_sample_picture_replica()
+DEFINE INSTRUMENT Union_logger_test()
 
 DECLARE
 %{

@@ -45,6 +45,8 @@
 * rpm: [rpm]       disk chopper rotation speed, setting the resolution, Hz=rpm/60.
 * coh: [str]       sample coherent S(q,w) file name. Use LAZ/LAU or SQW file
 * inc: [str]       sample incoherent S(q,w) file name. Use NULL to scatter incoherently
+* tmin: [s]        Minimum ToF measured
+* tmax: [s]        Maximum ToF measured
 *
 * %Link
 * <a href="http://www.helmholtz-berlin.de/user/neutrons/instrumentation/neutron-instruments/v3/index_en.html">NEAT at HZB/BENSC</a>

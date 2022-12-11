@@ -19,7 +19,7 @@
 * %Example: polariserIn=2 Detector: psdPolGuide_I=4.29664e+12
 *
 * %Parameters
-* polariserIn: [] 
+* polariserIn: [] Flag to select between 1:POLguidevmirror and 2:POLguidemirror
 *
 * %Link
 *

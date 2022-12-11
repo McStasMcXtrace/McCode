@@ -16,18 +16,17 @@
 * Example: Test_Magnon_bcc_TAS.instr hw=0,1 -N21
 * 
 * %P 
-* hw:   [meV]   Neutron energy transfer
-* Ef:   [meV]   Final neutron energy
-* A3:   [deg]   sample rotation around a vertical axis
-* A3auto[1]     Flag for selecting automatic setting of A3 to have q-vector along [h 0 0] (0=manual; 1=auto)
-* aa    [Å]     lattice parameter for cubic system (passed on to the sample component)
-* qh    [1]     Length of the q-vector in r.l.u., sets the value of scattering angle A4. 
-*               If A3auto=1, then A3 is set to q=[qh 0 0]
-* highres [1]   Flag for setting unrealistic high resolution (used for fine testing) (0=standard TAS / RITA2; 1=high resolution TAS)
-* sample_J [meV] Nearest Neighbor magnetic interaction in sample
-* FerroMagnet: Flag: 1 if ferromagnet, 0 if AFM    
-* TT: [K] temperature 
-* Verbose [1]   Flag for printing of test statements from magnon component (0=silent, 1=print) 
+* hw:        [meV] Neutron energy transfer
+* Ef:        [meV] Final neutron energy
+* A3auto:      [1] Flag for selecting automatic setting of A3 to have q-vector along [h 0 0] (0=manual; 1=auto)
+* A3offset:  [deg] sample rotation around a vertical axis
+* aa:         [AA] lattice parameter for cubic system (passed on to the sample component)
+* qh:          [1] Length of the q-vector in r.l.u., sets the value of scattering angle A4. If A3auto=1, then A3 is set to q=[qh 0 0]
+* highres:     [1] Flag for setting unrealistic high resolution (used for fine testing) (0=standard TAS / RITA2; 1=high resolution TAS)
+* sample_J:  [meV] Nearest Neighbor magnetic interaction in sample
+* FerroMagnet: [ ] Flag: 1 if ferromagnet, 0 if AFM    
+* TT:          [K] temperature 
+* Verbose:     [1] Flag for printing of test statements from magnon component (0=silent, 1=print) 
 * 
 *   
 * %L  

@@ -22,7 +22,7 @@
 *
 * %P
 * Ncount: [1] Specify statistics
-* seed:   [1] Specify RNG seed
+* jumps:  [1] Number of jumps
 *
 * %L
 * <reference/HTML link>

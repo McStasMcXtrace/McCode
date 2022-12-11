@@ -21,7 +21,7 @@
 * %Example: stick_displacement=0 Detector: detector_I=189.144
 *
 * %Parameters
-* stick_displacement: [] 
+* stick_displacement: [m] height displacement of sample stick
 *
 * %End
 *******************************************************************************/

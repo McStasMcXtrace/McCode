@@ -26,9 +26,9 @@
 * %Example: OPTION=-1 Detector: pollambdaMonitorDet_I=5.63101e-12
 *
 * %Parameters
-* OPTION  : See above           [1]
-* LAMBDA  : Source wavelength   [Angs]
-* MOZ     : Mosaicity           [Arc minutes]
+* OPTION:        [1] See above           
+* LAMBDA:     [Angs] Source wavelength   
+* MOZ: [Arc minutes] Mosaicity           
 *
 * %Link
 *

@@ -26,16 +26,15 @@
 *
 * %Example: PHM=-37.077 Detector: sng_I=1.95173e-09
 *
-
 * %Parameters
-* PHM: [deg] Monochromator arm angle, aka A1
-* TTM: [deg] Monochromator take-off angle, aka A2
-* TT:  [deg] Take-off angle at the sample position, aka A4
-* TTA: [deg] Take-off angle at the analyzer position, aka A6
-* C1:  [min] Collimator 1 aperture (mono-sample arm)
-* OMC1:[deg] Tilt angle of the Collimator 1
-* C2:  [min] Collimator 2 aperture (sample-ana arm)
-* C3:  [min] Collimator 3 aperture (ana-detector arm)
+* PHM:  [deg] Monochromator arm angle, aka A1
+* TTM:  [deg] Monochromator take-off angle, aka A2
+* TT:   [deg] Take-off angle at the sample position, aka A4
+* TTA:  [deg] Take-off angle at the analyzer position, aka A6
+* C1:   [min] Collimator 1 aperture (mono-sample arm)
+* OMC1: [deg] Tilt angle of the Collimator 1
+* C2:   [min] Collimator 2 aperture (sample-ana arm)
+* C3:   [min] Collimator 3 aperture (ana-detector arm)
 *
 * %Link
 * The McStas User manual

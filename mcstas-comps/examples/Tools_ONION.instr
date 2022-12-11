@@ -33,7 +33,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Tools_ONION (double divergence = 0.4, double distance = 32)
+DEFINE INSTRUMENT Tools_ONION (double divergence=0.4, double distance=32)
 
 DECLARE
 %{

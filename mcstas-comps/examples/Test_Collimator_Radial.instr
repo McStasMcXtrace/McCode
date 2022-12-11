@@ -23,7 +23,7 @@
 *
 * %Parameters
 * Collimator: [1]  Choice of radial collimator component to test, with 1=Collimator_Radial, 2=Collimator_ROC, 3=Exact_radial_coll.
-* Powder: []
+* Powder: [string] Reflection list for powder-sample
 *
 * %End
 *******************************************************************************/

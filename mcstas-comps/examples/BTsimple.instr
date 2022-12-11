@@ -1,5 +1,6 @@
-
 /*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
 * Instrument: BTsimple.instr
 *
 * %I
@@ -31,7 +32,7 @@
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT BTsimple(lambda=10,dlambda=9.9, maxhd=3, maxvd=3, gw=0.1, gh=0.1, gL=50, gm=6, delta1=0, delta2=0)
+DEFINE INSTRUMENT BTsimple(lambda=10, dlambda=9.9, maxhd=3, maxvd=3, gw=0.1, gh=0.1, gL=50, gm=6, delta1=0, delta2=0)
 
 DECLARE
 %{	

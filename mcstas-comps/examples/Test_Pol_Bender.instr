@@ -18,12 +18,12 @@
 * %Example: GUIDELENGTH=1 Detector: psdBender_I=0.703658
 *
 * %Parameters
-* GUIDELENGTH: [] 
-* GUIDERADIUS: [] 
-* ENDOPTION: []   
-* NSLITS: []      
-* WSPACER: []     
-* DRAWOPTION: []  
+* GUIDELENGTH: [m] Length of bender
+* GUIDERADIUS: [m] Radius of curvature of bender
+* ENDOPTION:    [] Setting for parallel start/end planes of bender 
+* NSLITS:       [] Number of channels in bender 
+* WSPACER:     [m] Spacer dimension  
+* DRAWOPTION:   [] Bender drawing option 1: fine(all slits/90 points per arc), 2: normal (max 20/40), 3: rough (max 5/10) 
 *
 * %Link
 *

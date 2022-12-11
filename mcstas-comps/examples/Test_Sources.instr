@@ -30,10 +30,8 @@
 *
 * %Parameters
 * source: [1]  selection of the source to use in 1=Source_adapt, 2=Source_div, 3=Source_simple, 4=Source_gen (simple), 5=Source_gen, 6=Source_Maxwell_3, 7=ESS_butterfly, 8=Moderator
-* Lmin: []
-* Lmax: []
-* Lmin: []
-* Lxax: []
+* Lmin: [AA] Minimum wavelength produced at source
+* Lmax: [AA] Maximum wavelength produced at source
 *
 * %End
 *******************************************************************************/

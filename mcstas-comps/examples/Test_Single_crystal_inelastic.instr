@@ -1,20 +1,43 @@
-/* 
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: test (rename also the example and DEFINE lines below)
+*
 * %Identification
 * Written by: <a href="mailto:duc.le@stfc.ac.uk">Duc Le</a>
 * Date: Feb 2015
-* Origin: 
-* 
+* Origin: ISIS
 * %INSTRUMENT_SITE:Tests_samples
+*
+* Test instrument for the Single_crystal_inelastic component.
 *
 * %Description
 * Simple test instrument for Single_crystal_inelastic in Horace mode
-* 
+*
 * Example: mcrun Test_Single_crystal_inelastic.instr
+*
+* once your instrument is written and functional:
+* - replace INSTRUMENT_SITE entry above with your Institution name as a single word
+* - rename the instrument name after DEFINE INSTRUMENT below
+* - update the parameter help in the following Parameters section
+* - update the instrument description, and better add a usage example with a
+*     sensible parameter set.
+*
+* %Parameters
+* E:    [meV] Mean energy produced at the source
+* DE:   [meV] Energy spread produced at the source
+* HDIV: [deg] Horizontal divergence from the source
+* VDIV: [deg] Vertical divergence from the source
+* OM:   [deg] Sample orientation around y
+* TH:   [deg] Sample orientation around x
+* FI:   [deg] Sample orientation around z
+* SQW:  [str] 4D Sqw input file
 *
 * %Link
 * Duc Le (2015) - duc.le@stfc.ac.uk
+*
 * %End
-*/
+*******************************************************************************/
 DEFINE INSTRUMENT Test_Single_crystal_inelastic(E=10, DE=0.1, HDIV=0.5, VDIV=0.5, OM=0, TH=0, FI=0, string SQW="example.sqw4")
 DECLARE
 %{
