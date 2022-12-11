@@ -43,11 +43,159 @@
 * Modified by: PW December 2020: version 3.0
 * Modified by: PW September-October 2021: version 2.7.1
 * Modified by: PW September-November 2021: version 3.1
+* Modified by: PW December 2022: version 3.2
 *
-* This file is part of McStas 3.1, released November 24th 2021.
+* This file is part of McStas 3.2, released December 12th 2022.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas 3.2, December 12th, 2022
+
+ McStas 3.2 is the third official release in the 3.x series, with a modernised 
+ code-generator and support for GPU acceleration on NVIDIA cards.
+ 
+ Thanks:
+ - Thanks to all members of the joint McStas-McXtrace team, you guys ROCK!
+ - Our joint hackathon in November brought lots of goodies to our user base!
+
+ Fixes of issues from last 3.x release:
+ - A large number of issues from 3.1 were addressed, see the relevant GitHub issues for details:
+   - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-3.1
+
+ Documentation & guides:
+ - All 3.2 component and instrument headers have been given an overhaul and should
+   render correctly in mcdoc / your browser.
+ - The component pages now include an extra column in the parameter-table. When filling in
+   this column with wanted values, plus filling the entry-boxes for AT, ROTATED and instance
+   name, pressing "Generate" will put a code-snipet for your component instance directly on
+   your computer clipboard, for easy transfer to the mcgui editor or any other editor of choice!
+ - mcdoc has been made "less picky" wrt. component and instrument structure for a more robust
+   experience.
+ - mcgui has a new "Docs" button for easier access to the generated mcdoc pages (that give easy
+   access to components, instruments, manuals, datafiles and more.
+   
+ Installation:
+ - As usual, our install docs are available on the McCode GitHub page at
+   https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+ - The meta-packages for Debian/Ubuntu and RedHat/Centos/Fedora are named e.g.
+   mcstas-suite-python-ng for 'next generation' for coexistance with the 2.x
+   series packages
+ - OpenACC GPU (and CPU multicore) acceleration is at the time of release still ONLY
+   supported on Linux systems, as this is the only platform targeted by the NVIDIA
+   HPC package. Versions 20.x, 21.x and 22.x should all work. On Windows 64bit systems,
+   support is expected to arrive "later", but you may run on your GPU via the so-called
+   "Windows Subsystem for Linux" (WSL). macOS is unfortunately not supported
+   by NVIDIA HPC acceleration.
+
+ McStas 3.2 enables further components and instruments GPU. A very limited instruments using
+ the "scatter logger" mechanism are still only available on 2.x.
+
+ Interoperability with other codes:
+ - We have worked on the interfaces with MCPL and NCrystal and a mechanism was developed
+   to automatically detect their location using the mcpl-config and ncrystal-config utils.
+   In practice this happens prior/during to the code-generation step, see below under mcrun.
+   Thanks to Thomas Kittelmann (ESS) for your help in this area.
+
+ Tools:
+ - mcrun has a new solution to support 3 new keywords CMD(), ENV() and GETPATH() through the
+   DEPENDENCY line as collected by the code-generator.
+   * CMD() is used to call mcpl-config and ncrystal-config to probe lib and include-paths and
+     use them in compiler-directives.
+     (Examples available in MCPL_input.comp and MCPL_output.comp)
+   * ENV() may evaluate an evironment variable
+     (No specific example available yet)
+   * GETPATH() can be used to locate the absolute path to e.g. an input file in the $MCSTAS
+     folder hierachy. Component writers may use this mechanism for a low-barrier and platform-
+     independent way to access inputfiles.
+     (Examples available in Test_MCPL_input.instr and ESS_BEER_MCPL.instr)
+ - mcdoc has been made "less picky" wrt. component and instrument structure for a more robust
+   experience. Also, rendered component pages now include an extra column in the parameter-table.
+   When filling in this column with wanted parameter-values, plus filling the entry-boxes for
+   AT, ROTATED and instance name, pressing "Generate" will put a code-snipet for your component
+   instance directly on your computer clipboard, for easy transfer to the mcgui editor or any
+   other editor of choice!
+ - mcplot (-pyqtgraph) has received a nice update with an infobar at the bottom of the window.
+   The infobar is updated with coordinates of the cursor on the active plot, meaning that you
+   can easily determine the coordinates of e.g. a peak. The code has also received a number of
+   bugfixes relating to colorbars, the order of monitor output in overviews etc.
+   Thanks to Tobias Weber (ILL) for your work on mcplot.
+ - The new mcdisplay-cad variant has come along, and is currently included in the form of a
+   technology-preview. The code uses the Python module cadquery (https://github.com/CadQuery/cadquery)
+   and is able to write e.g. STEP or STL output. For now, resolving the required dependencies is
+   left to the user, but we foresee that this tool will mature over the coming releases.
+   Thanks to Greg Tyler (ESS) for contributing this tool.
+
+ Core simulation framework / code-generator:
+ - Previously, any component present in a McStas instrument would trigger the transformation of
+   every neutron to its local coordinate system, even in the case of an Arm() (empty TRACE) without
+   an EXTEND block. We now instead detect components with an empty TRACE that have no EXTEND block
+   and are able to completely skip these in the calculation. This results in a speedup in case of
+   instruments with many "empty" components, such as big Union assemblies.
+   Thanks to Mads Bertelsen (ESS) for investigating the problem and finding a good solution.
+ - A new syntax called SHELL has been added to the grammar, allowing users to run a system command
+   prior to code-generation. This may for instance be used to generate an instrument-snippet that
+   you may %include in the instrument (think for-loops of an assembly of identical components).
+   One could also imagine compilation of a needed library, wget of a data file etc.
+   The synax is SHELL "command-to-execute" and it should be placed directly after a DEPENDENCY line
+   within an instrument or component. We expect that applications and examples will come in the
+   next couple of releases.
+
+ Libraries and other runtime code:
+ - The (r-)interoff-lib.c family of codes have received multiple updates, thanks to McStas users
+   Kyle Grammer (ORNL) and Gaetano Mangiapia (HZH):
+   * The intersection routines now work correctly with gravity
+     (see https://github.com/McStasMcXtrace/McCode/issues/1248)
+   * The r-interoff-lib (and the related Guide_anyshape_r component) now support specifying
+     a "full" reflectivity curve pr. OFF face, columns of m, alpha and W values should be
+     added in this order to the OFF face. See example input file data/Guide_r.off.
+     (see https://github.com/McStasMcXtrace/McCode/issues/1250)
+ - A flaw was spotted in our NeXus implementation in the case of event lists: A small chunk-size
+   of (1,6) was used, leading to slow I/O and lots of size-overhead. Our new NeXus files are
+   generally a factor of (at least) 2-3 smaller and load much faster in e.g. Mantid.
+ - A correction to ref-lib.c was recieved from Gaetano Mangiapia (HZH), allowing closer
+   correspondance between simulated and measured mirror-reflectivities.
+   (see https://github.com/McStasMcXtrace/McCode/issues/1247)
+ - Updated version 3.5.1 NCrystal library from T. Kittelmann (ESS) and X.X. Cai (CSNS), distributed
+   with McStas on Unix platforms only. (Now also cross-compiles for Windows, but still needs work
+   for "production" availability.)
+ - MCPL library from the same authors now included at v. 1.6.1
+   
+ Please start your migration to 3.x:
+ - Following the release of 3.2, we will also release a "last update" to te 2.x series in the form
+   of McStas 2.7.2 that share a subset of tool features with McStas 3.2.
+ - The Wiki has a dedicated section on McStas 2.x -> McStas 3.x conversion that includes:
+   * A nomenclature list containing short descriptions of new concepts and important keywords
+     in McStas 3.x and OpenACC / CUDA code in general.
+   * A document outlining the most importand differences between 2.x and 3.x.
+   * A guide for 2.x -> 3.x instrument conversion.
+   * A guide for 2.x -> 3.x component conversion.
+ - If you are still in trouble, please write us a GitHub issue or an email to mcstas-users@mcstas.org
+ - Known limitations in the GPU-implementation:
+   * The Union subsystem still works on CPU only, but can be used in the mixed GPU/CPU funnnel
+     mode as mentioned above. Union_master is a NOACC component. We expect Union_master to receive
+     GPU suport within 2023.
+   * The same solution is applied in use of the NCrystal_sample that uses a non-accelerated library
+     without the needed #pragma's included. Several other "complicated" components such as
+     Single_crystal_inelastic are included the same way.
+   * Special NOACC versions of Monitor_nD and MCPL_output are included. These may be used in the case
+     of large event datasets, allowing more than 2e9 events to be stored.
+   
+ Platforms:
+  - We still support 64bit Windows 10/11 on Intel, all recent 64bit macOS including 13.0 Ventura on
+   both Intel and Apple Silicon/M1 processors. Debian-based distros on Intel and Arm, Fedora on Intel.
+  - On macOS and Windows we now bundle a Mambaforge Python with the installation.
+  - On Windows, the McStasScript and guide_bot codes are as an experimental solution installed in our
+    Python using pip. We will work on a solution for the other platforms during the spring of 2023.
+
+ Infrastructure:
+  - During the last McStas-McXtrace hackathon we worked on "standardizing" our CMake code, which will
+    mean smoother integration with other codes and easier configuration and build of our code for
+    various platforms. Try it out if you like, directly from the McCode repo.
+    (https://github.com/McStasMcXtrace/McCode/)
+
+We hope you will enjoy this new release!!!
+
+
 Changes in McStas 3.1, November 24th, 2021
 
  McStas 3.1 is the second official release in the 3.x series, with a modernised 
