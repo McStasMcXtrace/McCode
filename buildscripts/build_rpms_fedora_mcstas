@@ -43,7 +43,6 @@ WORK=`pwd`
 ./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" rpm64-fedora "" -- rpm
-./mkdist mcstas-tools-python-mcdisplay-cad $1 tools/Python/mcdisplay/cad/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" rpm64-fedora "" -- rpm
