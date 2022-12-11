@@ -581,7 +581,6 @@ def parse_params(params_line):
         tpe = None
         dval = None
         name = None
-
         if re.search(r'^ ', part):
             part = part[1:]
         if re.match('double ', part):
@@ -595,7 +594,11 @@ def parse_params(params_line):
         if re.match('int ', part):
             tpe = 'int'
             part = part.replace('int ', '').strip()
-        if re.search('=', part):
+        if re.search('"', part):
+            m=re.match('(.*)\s*=\s*"(.*)"', part)
+            dval = '"' + m.group(2) + '"'
+            name = m.group(1).strip()
+        elif re.search('=', part):
             m = re.match("(.*)=(.*)", part)
             dval = m.group(2).strip()
             name = m.group(1).strip()
