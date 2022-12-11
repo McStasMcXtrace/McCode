@@ -108,6 +108,9 @@ Changes in McStas 3.2, December 12th, 2022
      folder hierachy. Component writers may use this mechanism for a low-barrier and platform-
      independent way to access inputfiles.
      (Examples available in Test_MCPL_input.instr and ESS_BEER_MCPL.instr)
+ - mcrun has a new triplet of switches (D1/D2/D3) that can be used to easily set defines from
+   the commandline. For instance --D1=SOMETHING will mean -DSOMETHING when compiling. Note that
+   setting these --D flags implies recompilation (-c).
  - mcdoc has been made "less picky" wrt. component and instrument structure for a more robust
    experience. Also, rendered component pages now include an extra column in the parameter-table.
    When filling in this column with wanted parameter-values, plus filling the entry-boxes for
@@ -125,6 +128,30 @@ Changes in McStas 3.2, December 12th, 2022
    left to the user, but we foresee that this tool will mature over the coming releases.
    Thanks to Greg Tyler (ESS) for contributing this tool.
 
+ Components and Instruments:
+ - The Union framework is now considered a fully "official" part of McStas and is hence now found
+   in the $MCSTAS/union folder. Union_master is a still a NOACC component when running on GPU
+   (i.e. performs its calculations on CPU in FUNNEL mode). We expect Union_master to receive
+   full GPU suport within 2023. The NCrystal_process.comp is back in Union - will work only in
+   a NOACC/CPU COMPONENT setting.
+ - By popular demand, the ConicTracer code for simulating Wolter optics from Boris Khaykovich et. al. (MIT)
+   has been included. The main "library" code is conic.h found in $MCSTAS/share and is used from
+   3 different example Wolter optic components: Conics_EH.comp, Conics_PH.comp, Conics_PP.comp.
+   The illustrate how to mplement Elliptic-Hyperbolic, Parabolic-Hyperbolic and Parabolic-Parabolic
+   Wolter mirrors, and two of these are used in the Test_Conics_pairs.instr instrument.
+ - Most of the standard monitors will now fill in their own "instance name" as filename in case
+   a filename was not defined. A small but very useful convenience.
+ - Source_div_quasi.comp allows to sample source phase-space using Halton-sequences, which proves
+   to be a very effective way to ensure an evenly distributed phase space region of interest, e.g.
+   for imaging/SANS settings where a very low-divergent beam is relevant. This contribution is from 
+   Mads Carlsen and Erik B. Knudsen (DTU) and was originally developed for McXtrace.
+ - PSD_Pol_monitor.comp measures (local) polarisation over the (x,y) cross-section of a beam. Contributed
+   by Alexander Backs (LU/ESS).
+ - Single_crystal_inelastic.comp (NOACC), Single_magnetic_crystal.comp (NOACC), SANS_benchmark2.comp and
+   Guide_multichannel are now all available in the McStas 3 series.
+ - The Fermi_chop2a.comp and Vertical_T0a.comp chopppers from Garrett Granroth (SNS) have received
+   a GPU-oriented update.
+   
  Core simulation framework / code-generator:
  - Previously, any component present in a McStas instrument would trigger the transformation of
    every neutron to its local coordinate system, even in the case of an Arm() (empty TRACE) without
@@ -139,6 +166,11 @@ Changes in McStas 3.2, December 12th, 2022
    The synax is SHELL "command-to-execute" and it should be placed directly after a DEPENDENCY line
    within an instrument or component. We expect that applications and examples will come in the
    next couple of releases.
+ - Components may from McStas 3.2 request USERVARS that become part of the particle struct.
+   (For the time being only in the form of basic C types like double, int etc. and corresponding
+   arrays / pointers.) This will mean that e.g. the optimisations in Single_crystal and PowderN
+   in SPLIT scenarios can be introduced also in GPU settings.
+   The first component to make use of this mechanism is Res_monitor.comp as used in Test_TasReso.instr.
 
  Libraries and other runtime code:
  - The (r-)interoff-lib.c family of codes have received multiple updates, thanks to McStas users
