@@ -304,6 +304,8 @@ Changes in McStas 2,7.2, December 12th, 2022
 
  Components and Instruments:
  - Minor updates only, most are adjustments to align with McStas 3.x features
+ - Update to Pol_guide_vmirror.comp to allow multiple V-cavities "side by side". Developed with
+   Wai Tung (Hal) Lee and Damian Martin Rodriguez (ESS).
  - The Union framework is now considered a fully "official" part of McStas and is hence now found
    in the $MCSTAS/union folder. 
  - By popular demand, the ConicTracer code for simulating Wolter optics from Boris Khaykovich et. al. (MIT)
