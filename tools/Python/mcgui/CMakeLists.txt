@@ -93,7 +93,7 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcgui.in" "${WORK}/${P}gui" @ONLY)
 
 # Configure launcher
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/McCode-py.desktop.in" "work/${NAME}-${MCCODE_VERSION}-py.desktop")
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/McCode-py.desktop.in" "work/${FLAVOR}-${MCCODE_VERSION}-py.desktop")
 
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py")
@@ -149,7 +149,7 @@ if(NOT WINDOWS)
     )
 
   install(
-    FILES "${WORK}/${NAME}-${MCCODE_VERSION}-py.desktop" "${FLAVOR}-py.png"
+    FILES "${WORK}/${FLAVOR}-${MCCODE_VERSION}-py.desktop" "${FLAVOR}-py.png"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/launchers/"
   )
 
