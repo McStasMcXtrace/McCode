@@ -59,7 +59,8 @@ void StdReflecFunc(double mc_pol_q, double *mc_pol_par, double *mc_pol_r) {
     double beta  = 0;
     mc_pol_q     = fabs(mc_pol_q);
     double arg;
-        
+    double m_corr;
+
     /* Simpler parametrization from Henrik Jacobsen uses these values that depend on m only.
        double m_value=m*0.9853+0.1978;
        double W=-0.0002*m_value+0.0022;
@@ -70,14 +71,16 @@ void StdReflecFunc(double mc_pol_q, double *mc_pol_par, double *mc_pol_r) {
        arg = R0*0.5*(1-tanh(arg))*(1-alpha*(q-Qc)+beta*(q-Qc)*(q-Qc));
     */  
     if (W==0 && alpha==0) {
-      m=m*0.9853+0.1978;
-      W=-0.0002*m+0.0022;
-      alpha=0.2304*m+5.0944;
-      beta=-7.6251*m+68.1137;
-      if (m<=3) {
-	alpha=m;
-	beta=0;
+      m = m * 0.9853 + 0.1978;
+      m_corr = m * 0.9853 - 0.7875;
+      W = -0.0002 * m_corr + 0.0022;
+      alpha = 0.2304 * m_corr + 5.0944;
+      beta = -7.6251 * m_corr + 68.1137;
+      if (m==3) {
+	alpha = m_corr;
+	beta = 0;
       }
+      arg = (mc_pol_q - m*Qc)/W; // <--- here m, not m_corr!!
     }
     
     arg = W > 0 ? (mc_pol_q - m*Qc)/W : 11;
