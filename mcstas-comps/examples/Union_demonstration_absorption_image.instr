@@ -22,7 +22,7 @@
 * %Example: stick_displacement=0 Detector: screen_I=0.0111929
 *
 * %Parameters
-* stick_displacement: [] 
+* stick_displacement: [m] height displacement of sample stick
 *
 * %End
 *******************************************************************************/

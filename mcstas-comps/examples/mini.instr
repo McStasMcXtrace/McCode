@@ -1,8 +1,30 @@
-/*
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: mini
+*
+* %Identification
+* Written by: Jakob Garde
+* Date: 2017
+* Origin: DTU
 * %INSTRUMENT_SITE: Templates
+*
+* Minimalistic instrument for testing GPU implementation
+*
+* %Description
+* Minimalistic instrument for testing GPU implementation
+*
 * %Example: mini.instr dummy=0 Detector: detector_I=345.995
-*/
-DEFINE INSTRUMENT Minimal(dummy=0)
+*
+* %Parameters
+* dummy: [ ] Dummy input parameter
+*
+* %Link
+* A reference/HTML link for more information
+*
+* %End
+********************************************************************************/
+DEFINE INSTRUMENT mini(dummy=0)
 
 TRACE
 

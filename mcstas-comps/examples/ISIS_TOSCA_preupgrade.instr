@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Instrument: ISIS_TOSCA_preupgrade_Mantid
+* Instrument: ISIS_TOSCA_preupgrade
 *
 * %I
 * Written by: Peter Willendrup (DTU/ESS), Sanghamitra Mukhopadhyay (ISIS STFC)
@@ -35,7 +35,7 @@
 * <a href="https://http://mdanse2018.essworkshop.org">MDANSE 2018 school webpage</a>
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT ISIS_TOSCA_preupgrade_Mantid(string inc="Benzene_inc_CASTEP_MDANSE2018.sqw", zdepth = 0.002, Emin=0.01, Emax=500)
+DEFINE INSTRUMENT ISIS_TOSCA_preupgrade(string inc="Benzene_inc_CASTEP_MDANSE2018.sqw", zdepth=0.002, Emin=0.01, Emax=500)
 
 DECLARE %{ 
 double v_foc, c_h1, c_h2, slit_curv, num_slits; 

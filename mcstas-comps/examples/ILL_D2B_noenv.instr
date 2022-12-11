@@ -67,7 +67,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT ILL_D2B(lambda=1.594, DM=0, string Powder="Na2Ca3Al2F14.laz",
+DEFINE INSTRUMENT ILL_D2B_noenv(lambda=1.594, DM=0, string Powder="Na2Ca3Al2F14.laz",
 	RV=-1, L1=16.05, L2=2.645, L3=1.3, verbose=1, ALPHA1=18,ALPHA2=11,ALPHA3=5,
 	ETA=12, THETA_M=67.5, TILT=0, SM=1, Dheight=0.3,coating=0)
 

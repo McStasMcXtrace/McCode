@@ -25,10 +25,10 @@
 * %Example: Emin=443 Detector: cyl_I=235837
 *
 * %Parameters
-* Emin  : lowest energy sampled      [meV]
-* Emax  : highest energy sampled     [meV]
-* nu_chop : frequency of chopper rotation [Hz]
-* type : chopper package - sloppy chopper = 1, B chopper = 2
+* Emin:   [meV] lowest energy sampled      
+* Emax:   [meV] highest energy sampled     
+* nu_chop: [Hz] frequency of chopper rotation 
+* type:     [ ] chopper package - sloppy chopper = 1, B chopper = 2
 *
 * %End
 ********************************************************************************/

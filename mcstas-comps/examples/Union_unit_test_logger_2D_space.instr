@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Union_unit_test_base
+* Instrument: Union_unit_test_logger_2D_space
 *
 * %Identification
 * Written by: Mads Bertelsen
@@ -21,7 +21,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_test_box()
+DEFINE INSTRUMENT Union_unit_test_logger_2D_space()
 
 DECLARE
 %{

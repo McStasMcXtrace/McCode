@@ -1,6 +1,28 @@
-/*
- * %INSTRUMENT_SITE: Mantid
- */
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: test (rename also the example and DEFINE lines below)
+*
+* %Identification
+* Written by: Anders Markvardsen and Peter Willendrup
+* Date: 201x
+* Origin: ISIS
+* %INSTRUMENT_SITE: Mantid
+*
+* Instrument demonstrating how to bring multiple scattering information from
+* a McStas simulation to Mantid (using NeXus output).
+*
+* %Description
+* Instrument demonstrating how to bring multiple scattering information from
+* a McStas simulation to Mantid (using NeXus output).
+*
+* %Parameters
+*
+* %Link
+* A reference/HTML link for more information
+*
+* %End
+*******************************************************************************/
 
 DEFINE INSTRUMENT templateVanadiumMultipleScat_Mantid()
 

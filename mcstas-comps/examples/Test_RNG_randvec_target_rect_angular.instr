@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Instrument: Test_RNG_randvec_target_circle
+* Instrument: Test_RNG_randvec_target_rect_angular
 *
 * %I
 * Written by: Peter Willendrup
@@ -21,16 +21,17 @@
 * %Example: Ncount=1000000 Detector: Div_I=1
 *
 * %P
-* Ncount: [1] Specify statistics
-* seed:   [1] Specify RNG seed
-* dist:   [m] Distance between synthetic point-source and monitor
+* Ncount:  [1] Specify statistics
+* seed:    [1] Specify RNG seed
+* dist:    [m] Distance between synthetic point-source and monitor
+* angle: [deg] Angular focusing settin 
 *
 * %L
 * <reference/HTML link>
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT Test_RNG_randvec_target_circle(Ncount=1000000,int seed=0, angle=45)
+DEFINE INSTRUMENT Test_RNG_randvec_target_rect_angular(Ncount=1000000,int seed=0, angle=45)
 
 DECLARE
 %{

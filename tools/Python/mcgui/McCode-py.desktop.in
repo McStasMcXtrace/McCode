@@ -2,7 +2,7 @@
 
 [Desktop Entry]
 Comment=Monte-Carlo @MCCODE_PARTICLE@ instrument simulation (@FLAVOR@.org)
-Exec=@MCCODE_PREFIX@gui %F
+Exec=@CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/bin/@MCCODE_PREFIX@gui %F
 Icon=/usr/share/pixmaps/@FLAVOR@-py.png
 MimeType=text/plain;text/x-csrc;
 Name=@MCCODE_NAME@ @MCCODE_VERSION@ py-gui (@FLAVOR@.org)
@@ -18,7 +18,7 @@ Actions=Help
 
 [Desktop Action Help]
 Name=Open @FLAVOR@ Help
-Exec=@MCCODE_PREFIX@doc
+Exec=@CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/bin/@MCCODE_PREFIX@doc
 OnlyShowIn=Unity;Gnome;
 
 

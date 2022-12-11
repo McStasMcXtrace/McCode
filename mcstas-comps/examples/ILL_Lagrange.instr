@@ -46,7 +46,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT ILL_Lagrange(lambda=0.897, DM = 1.807, RV = -1, string coh = "Rb_liq_coh.sqw", string inc = "Rb_liq_inc.sqw", L1 = 6.35, L2 = 2.55, L3=0.901, verbose=1)
+DEFINE INSTRUMENT ILL_Lagrange(lambda=0.897, DM=1.807, RV=-1, string coh="Rb_liq_coh.sqw", string inc="Rb_liq_inc.sqw", L1=6.35, L2=2.55, L3=0.901, verbose=1)
 
 
 /* The DECLARE section allows us to declare variables or  small      */

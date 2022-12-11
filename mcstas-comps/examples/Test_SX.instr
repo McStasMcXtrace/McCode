@@ -22,12 +22,17 @@
 * %Example: lambda=5 order=1 directbeam=0 SPLITS=10 Detector: Sph_mon_I=7.2e+7
 *
 * %Parameters
-* lambda: [Angs]  Central wavelength emitted from source
-* dlambda: [Angs] Witdth of wavelength spectrom emitted from source
-* L1: [m]         Source-sample distance
-* directbeam: [1] Suppress direct beam or not
-* reflections: [str]   File name for reflection list
-* SPLITS: [1] Number of SPLIT's before sample
+* lambda:     [Angs] Central wavelength emitted from source
+* dlambda:    [Angs] Witdth of wavelength spectrom emitted from source
+* L1:            [m] Source-sample distance
+* directbeam:    [1] Suppress direct beam or not
+* reflections: [str] File name for reflection list
+* SPLITS:        [1] Number of SPLIT's before sample
+* order:         [ ] Maximum order of multiple scattering, Single_crystal
+* inc:       [barns] Incoherent cross-section
+* trans:         [ ] Fraction of statistics assigned to transmitted beam
+* omega:       [deg] Rotation angle of sample
+* beamstop:      [ ] Toggle beamstop
 *
 * %End
 *******************************************************************************/

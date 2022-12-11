@@ -26,7 +26,7 @@
 * %Example: stick_displacement=0 Detector: m4pi_two_or_more_samples_I=0.0820905
 *
 * %Parameters
-* stick_displacement [m] height displacement of sample stick
+* stick_displacement: [m] height displacement of sample stick
 *
 * %End
 *******************************************************************************/

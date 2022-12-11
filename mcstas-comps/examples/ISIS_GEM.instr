@@ -27,10 +27,10 @@
 * %Example: sample="Y2O3.laz" Detector: monzns_I=52.689
 *
 * %Parameters:
-* l_min: []  
-* l_max: []  
-* dist: []   
-* sample: [] 
+* l_min: [AA] Minimum wavelength produced at source
+* l_max: [AA] Maximum wavelength produced at source  
+* dist: [m] Sample-detector distance (detector radius)  
+* sample: [string] Reflection list for powder sample  
 *
 * %Link
 * The <a href="http://essworkshop.org">ESS Instrument workshops</a> website.

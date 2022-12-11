@@ -16,6 +16,7 @@
 * Simple test instrument for the Virtual_output component
 *
 * %Parameters
+* Voutfile: [string] Output filename for vout file
 *
 * %Link
 * A reference/HTML link for more information

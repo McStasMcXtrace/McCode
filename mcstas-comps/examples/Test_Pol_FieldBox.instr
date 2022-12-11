@@ -18,6 +18,7 @@
 *
 * %P
 * pihalfturns: [ ] beam polarization (for the cetral wavelength) is rotated pihalfturns by the field
+* BOX:         [ ] flag to select between 0:Pol_FieldBox and 1:Pol_constBfield
 *
 * %E
 *******************************************************************************/

@@ -37,6 +37,15 @@
 * %Parameters
 * lambda: [AA]   Mean wavelength of neutrons
 * dlambda: [AA]  Wavelength spread of neutrons
+* model_index: [ ] SASmodels model index (see SasView_model.comp mcdoc page)
+* par1: [ ] Slot 1 in SASmodel parameter vector
+* par2: [ ] Slot 2 in SASmodel parameter vector
+* par3: [ ] Slot 3 in SASmodel parameter vector
+* par4: [ ] Slot 4 in SASmodel parameter vector
+* par5: [ ] Slot 5 in SASmodel parameter vector
+* par6: [ ] Slot 6 in SASmodel parameter vector
+* par7: [ ] Slot 7 in SASmodel parameter vector
+* par8: [ ] Slot 8 in SASmodel parameter vector
 *
 * %Link
 * %End

@@ -1,7 +1,7 @@
 /*******************************************************************************
 * McStas instrument definition URL=http://mcstas.risoe.dk
 *
-* Instrument: ILL_H22_D1B
+* Instrument: ILL_H22_D1B_noenv
 *
 * %Identification
 * Written by: FARHI Emmanuel (farhi@ill.fr) and SANCHEZ Javier (sanchez-montero@ill.fr)
@@ -58,12 +58,12 @@
 * TILT: [deg]      Monochromator additional tilt, for rocking curves
 * TRAS_X: [m]      Additional monochromator translation along X, left/righ w.r.t beam
 * TRAS_Z: [m]      Additional monochromator translation along Z, along guide
-* DM: []
-* THETA_M: []
+* DM: [AA]         Mono lattice spacing
+* THETA_M: [deg]   Mono takeoff angle
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT ILL_H22_D1B(lambda=2.52, dlambda=0.03, DM=0, string Powder="Na2Ca3Al2F14.laz", RV=2.2, L1=0.25, L2=3.0, L3=1.500, TRAS_X=-0, TRAS_Z=0, TILT=0, THETA_M=22.11, R_pitch=.42, R_ri=0.324, R_ro=0.419, R_h=0.090, R_ttmin=-130, R_ttmax=-2, R_present=1, verbose=1, Inc_Cryo=0.02, Trans_Cryo=0.85, Trans_Spl=0.2, Inc_Spl=0.05)
+DEFINE INSTRUMENT ILL_H22_D1B_noenv(lambda=2.52, dlambda=0.03, DM=0, string Powder="Na2Ca3Al2F14.laz", RV=2.2, L1=0.25, L2=3.0, L3=1.500, TRAS_X=-0, TRAS_Z=0, TILT=0, THETA_M=22.11, R_pitch=.42, R_ri=0.324, R_ro=0.419, R_h=0.090, R_ttmin=-130, R_ttmax=-2, R_present=1, verbose=1, Inc_Cryo=0.02, Trans_Cryo=0.85, Trans_Spl=0.2, Inc_Spl=0.05)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */

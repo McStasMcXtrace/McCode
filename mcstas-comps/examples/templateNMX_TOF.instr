@@ -23,14 +23,14 @@
 * Based on a Laue tutorial written by K. Nielsen, Feb 7, 2000.
 *
 * %Parameters
-* REPS: []        
-* reflections: [] 
-* theta: []       
-* phi: []         
-* xw: []          
-* yh: []          
-* tmin: []        
-* tmax: []        
+* REPS: [ ] Number of SPLIT repetitions        
+* reflections: [string] MX crystal reflection list 
+* theta: [deg] Rotation of sample around y (1st rotation)
+* phi: [deg] Rotation of sample around x (2nd rotation)
+* xw: [m] Width of final monitors
+* yh: [m] Height of final monitors     
+* tmin: [mu-s] Minimum ToF to record
+* tmax: [mu-s] Maximum ToF to record
 *
 * %End
 *******************************************************************************/

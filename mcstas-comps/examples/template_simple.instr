@@ -1,22 +1,21 @@
 /*******************************************************************************
-* Instrument: <instrument name>
+* Instrument: template_simple
 *
 * %I
-* Written by: <your name (email)>
-* Date: <current date>
-* Origin: <your institution>
+* Written by: your name (email)
+* Date: current date
+* Origin: your institution
 * %INSTRUMENT_SITE: Templates
 *
-* <instrument short description>
+* instrument short description
 *
 * %D
-* <instrument description>
+* instrument description
 *
-* Example: <parameters=values>
+* Example: parameters=values
 *
 * %P
-* <parameter1>: [<unit>] <parameter1 description>
-* ...
+* Par1: [unit] Parameter1 description
 *
 * %L
 * <reference/HTML link>

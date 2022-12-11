@@ -64,7 +64,7 @@
 
 /* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT SNS_BASIS(
-	Lam=6.4, Lambda_min=5, Lambda_max=7, RadCurv=1000, omega1=60, omega2=60, omega3=60, ch1_open=51.4,  ch2_open=57.6, ch3_open=171.1, ROT1=90, AN_ROT=2, TOTAL_LENGTH = 84, dROT=11)
+	Lam=6.4, Lambda_min=5, Lambda_max=7, RadCurv=1000, omega1=60, omega2=60, omega3=60, ch1_open=51.4,  ch2_open=57.6, ch3_open=171.1, ROT1=90, AN_ROT=2, TOTAL_LENGTH=84, dROT=11)
 
 //BASIS SNS 84m chopper settings (paper):7 m 9.25m and 50 m ch1_open=51.4,  ch2_open=57.6, ch3_open=171.1 freq= 60Hz
 //BASIS ESS 84m chopper settings: (Ruep+Heloisa) ch1_open=11.99,  ch2_open=13.44, ch3_open=39.92 freq=14Hz

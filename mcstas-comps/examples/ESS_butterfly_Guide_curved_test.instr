@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Instrument: ESS_butterfly_MCPL_test
+* Instrument: ESS_butterfly_Guide_curved_test
 *
 * %I
 * Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
@@ -13,7 +13,7 @@
 * Test instrument for the updated BF1 butterfly moderator design.
 *
 * The below example gives a 50-50 (statistics-wise) cold/thermal beam at beamline N10.
-* %Example: ESS_butterfly_MCPL_test.instr sector=N beamline=10 cold=0.5 Detector: Monitor2_xy1_I=4.4e+11
+* %Example: sector=N beamline=10 cold=0.5 Detector: Monitor2_xy1_I=4.4e+11
 *
 *
 * %P
@@ -28,13 +28,18 @@
 * cold:          [1]    Defines the statistical fraction of events emitted from the cold part of the moderator
 * Yheight:       [m]    Defines the moderator height. Valid values are 0.03 m and 0.06 m
 * delta:         [m]    Parameter that allows to scan "collimator" position
+* thres:         [ ]    Weight-threshold, neutrons with higher weight are absorbed
+* repeat:        [ ]    Number of MCPL file repetitions
+* E_smear:       [1]    When repeating events, make a Gaussian MC choice within E_smear*E around particle energy E
+* pos_smear:     [m]    When repeating events, make a flat MC choice of position within pos_smear around particle starting position 
+* dir_smear:     [deg]  When repeating events, make a Gaussian MC choice of direction within dir_smear around particle direction
 *
 * %L
 * <reference/HTML link>
 * Benchmarking website available at <a href="http://ess_butterfly.mcstas.org">http://ess_butterfly.mcstas.org</a>
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT ESS_butterfly_test(string sector="N",
+DEFINE INSTRUMENT ESS_butterfly_Guide_curved_test(string sector="N",
   int beamline=1,Lmin=0.2,Lmax=20,c_performance=1,t_performance=1,
   int index=25,dist=0,cold=1,Yheight=0.03,delta=0,thres=0.003,repeat=1,
   E_smear=0.1,pos_smear=0.01,dir_smear=0.01)
