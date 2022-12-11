@@ -597,8 +597,8 @@ def parse_params(params_line):
             part = part.replace('int ', '').strip()
         if re.search('=', part):
             m = re.match("(.*)=(.*)", part)
-            dval = m.group(2)
-            name = m.group(1)
+            dval = m.group(2).strip()
+            name = m.group(1).strip()
         else:
             name = part.strip()
         if name not in (None, "", ):
