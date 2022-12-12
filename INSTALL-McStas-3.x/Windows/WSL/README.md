@@ -12,7 +12,7 @@
 * Let the machine reboot if necessary
 * Open the Windows store
 * Search for Ubuntu
-* Install Ubuntu 16.04 LTS or 18.04 LTS (other Linuxes are also
+* Install e.g. Ubuntu 22.04 LTS (other Linuxes are also
 available, but we recommend Ubuntu)
 * Click Launch to run the app and follow on-screen instructions
 * To open it again later, simply issue bash in a terminal or through
@@ -21,7 +21,7 @@ the start menu
 ## Install the McStas 3.2 Debian packages
 * Follow the
   [normal Debian installation instructions](../../Linux/debian/README.md)
-  - essentially a matter of sudo apt-get install mcstas-suite-python mcstas-suite-perl
+  - essentially a matter of sudo apt-get install mcstas-suite-python mcstas-suite-python-ng
 
 ##  Install Xming or another X11 server application
 * Download and install Xming via https://sourceforge.net/projects/xming/
@@ -39,6 +39,12 @@ user name
 cd /mnt/c/Users/pwill
 # Add the DISPLAY variable to talk to Xming
 export DISPLAY=:0.0
+```
+if you installed wsl version 2 your ubuntu session has a unique ip
+```
+# Add the DISPLAY variable to talk to Xming for wsl version 2
+export DISPLAY=$(awk '/nameserver / {print $2; exit}' /etc/resolv.conf 2>/dev/null):0
+export LIBGL_ALWAYS_INDIRECT=1
 ```
 
 ## Start mcgui
