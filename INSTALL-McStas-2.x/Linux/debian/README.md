@@ -36,7 +36,7 @@ allows you to install mcstas 2.7.2 with one or both sets of tools (mcrun/mcplot 
 ```bash
 sudo apt-get install mcstas-suite-python
 ```
-The -suite packages ingluding 'ng' in the package name will install the
+The -suite packages including 'ng' in the package name will install the
 latest McStas 3.x package
 
 # Using mcdoc on modern Ubuntu systems
