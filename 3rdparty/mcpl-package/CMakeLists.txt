@@ -24,7 +24,7 @@ else()
 endif()
 setupMCCODE("${FLAVOR}")
 
-set(CPACK_PACKAGE_NAME "${FLAVOR}-mcpl")
+set(CPACK_PACKAGE_NAME "${FLAVOR}-mcpl-${MCCODE_VERSION}")
 set(CPACK_PACKAGE_CONTACT       "mcpl-developers@cern.ch")
 set(CPACK_PACKAGE_VERSION       "1.5.1")
 set(CPACK_PACKAGE_VERSION_MAJOR "1.5")
