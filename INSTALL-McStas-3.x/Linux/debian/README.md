@@ -31,13 +31,48 @@ mcstas-tools-python-mcgui-3.2 - python-tools-mcgui built using CMake
 mcstas-tools-python-mcplot-pyqtgraph-3.2 - python-tools-mcplot-pyqtgraph built using CMake
 mcstas-tools-python-mcrun-3.2 - python-tools-mcrun built using CMake
 ```
-The meta-packages mcstas-suite-perl-ng and mcstas-suite-pytho-ng
+The meta-package mcstas-suite-pytho-ng
 allows you to install mcstas 3.2 with one or both sets of tools (mcrun/mcplot etc.) by simple apt-get commands like
 ```bash
 sudo apt-get install mcstas-suite-python-ng
 ```
 The -suite packages without 'ng' in the package name will install the
 latest McStas 2.x package
+
+# Using mcdoc on modern Ubuntu systems
+Ubuntu is shipping its browsers as "snap" packages, meaning that they
+are blocked from accessing e.g. the McStas html snippets in
+/usr/share/mcstas/3.2/.
+
+To fix this we propose to switch your browser to a proper apt based
+installation, in this example firefox:
+
+Remove the snap-based firefox:
+```
+sudo snap remove firefox
+```
+Add the official mozilla-built firefox instead:
+```
+sudo add-apt-repository ppa:mozillateam/ppa
+```
+Set priorities to always prefer this firefox package:
+```
+echo '
+Package: *
+Pin: release o=LP-PPA-mozillateam
+Pin-Priority: 1001
+' | sudo tee /etc/apt/preferences.d/mozilla-firefox
+```
+Set up unattended upgrades of firefox
+```
+echo 'Unattended-Upgrade::Allowed-Origins::
+"LP-PPA-mozillateam:${distro_codename}";' | sudo tee
+/etc/apt/apt.conf.d/51unattended-upgrades-firefox
+```
+Finally, install firefox from the mozilla-channels
+```
+sudo apt install firefox
+```
 
 # Optionals
 Optionally install iFit to visualize results using a Matlab environment (for free, no license needed).
