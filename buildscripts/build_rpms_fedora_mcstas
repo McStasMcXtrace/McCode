@@ -34,20 +34,22 @@ WORK=`pwd`
 ./mkdist mcstas-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-matlab-mcdisplay $1 tools/matlab/mcdisplay/ "" rpm64-fedora "" -- rpm
+./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-python-mcplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-python-mcplot-svg $1 tools/Python/mcplot/svg/ "" rpm64-fedora "" -- rpm
-./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-python-mcresplot $1 tools/Python/mcresplot/ "" rpm64-fedora "" -- rpm
+./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" rpm64-fedora "" -- rpm
-./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" rpm64-fedora "" -- rpm
+./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-python-mcdisplay-cad $1 tools/Python/mcdisplay/cad/ "" rpm64-fedora "" -- rpm
-./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" rpm64-fedora "" -- rpm
-./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" rpm64-fedora "" -- rpm
+./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" rpm64-fedora "" -- rpm
+
+export MCINSTALL_PREFIX=/usr/local/mcstas/$1
 ./mkdist mcstas-mcpl $1 3rdparty/mcpl-package "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-ncrystal $1 3rdparty/ncrystal-package "" rpm64-fedora "" -- rpm
 
