@@ -17,7 +17,7 @@ include(MCUtil)
 set(FLAVOR "mcstas")
 setupMCCODE("${FLAVOR}")
 
-set(CPACK_PACKAGE_NAME "${FLAVOR}-NCrystal")
+set(CPACK_PACKAGE_NAME "${FLAVOR}-NCrystal-${MCCODE_VERSION}")
 set(CPACK_PACKAGE_CONTACT       "ncrystal-developers@cern.ch")
 set(CPACK_PACKAGE_VERSION       "3.4.1")
 set(CPACK_PACKAGE_VERSION_MAJOR "3.4")
