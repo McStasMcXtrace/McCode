@@ -578,7 +578,8 @@ class McGuiAppController():
                         s = l.split()
                         s[0]=""
                         s = ' '.join(s)
-                        s = s.split('=')
+                        # Split on first = occurence only, there may be strings including = on the right...
+                        s = s.split('=', 1)
                         params.append(s)
                     if 'syntax error' in l and not 'potential syntax error' in l:
                         self.emitter.status("!!! Instrument syntax error !!!")
