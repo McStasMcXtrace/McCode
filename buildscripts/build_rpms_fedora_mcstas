@@ -64,5 +64,5 @@ if [ "x$2" != "x" ]; then
     mv $controlfile.bak $controlfile
   done
   mv $HOME/rpmbuild/RPMS/x86_64/mcstas-suite-*rpm $WORK/dist
-  cp $WORK/INSTALL-McStas-3.x/Linux/centos/README.md $WORK/dist
+  cp $WORK/INSTALL-McStas-3.x/Linux/fedora/README.md $WORK/dist
 fi
