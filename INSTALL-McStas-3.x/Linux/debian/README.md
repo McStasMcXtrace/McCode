@@ -1,4 +1,5 @@
 ## Install McStas 3.2 On Debian class systems (including Ubuntu, mint etc.):
+The packages have been tested to work correctly on Ubuntu 22.04 and Debian 11.
 
 # Add the McCode repository
 After following the below steps your package manager should now be aware of mcstas
