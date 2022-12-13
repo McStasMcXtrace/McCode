@@ -1,4 +1,4 @@
-# Install McXtrace 1.7 on Linux and Unix.
+# Install McXtrace 1.7.1 on Linux and Unix.
 
 * We provide Debian packages and RedHat packages.
 
