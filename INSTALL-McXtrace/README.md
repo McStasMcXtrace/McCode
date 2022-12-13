@@ -1,10 +1,8 @@
-# Installation instructions for McXtrace 1.7
-Please consult the individual pages for your platform of choice. 
+# Installation instructions for McXtrace
 
-- [Linux](Linux/README.md)
-- [Windows 10 64 bit](Windows/README.md)
-- [Mac OSX](macOS/README.md)
-- [Docker image](Docker/README.md)
-- [In your browser via Binder, no installation](Binder/README.md)
+Please consult the individual instructions for either McXtrace 1.x
+or 3.x found in 
 
-*If your platform is not listed here, we can probably help you anyway. Please write to the user mailing list [mcxtrace-users](mailto:"mcxtrace-users@mcxtrace.org).
+* [McXtrace 3.x (ng)](../INSTALL-McXtrace-3.x/README.md)
+* [McXtrace 1.x (classic)](../INSTALL-McXtrace-1.x/README.md)
+

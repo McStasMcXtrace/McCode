@@ -1,4 +1,4 @@
-# Installation of McXtrace 3.0 on macOS 
+# Installation of McXtrace 3.1 on macOS 
 
 ## Supported macOS releases
 * macOS 11.x and 12.x (Big Sur and Monterey) both fully supported python tool set, partially
@@ -13,14 +13,14 @@
 ## Steps to perform
 
 * Download the Intel package:
-  [McXtrace 3.0 for macOS on Intel](http://download.mcxtrace.org/mcxtrace-3.0/mac/mcxtrace-mac_x86_64/mcxtrace-3.0_x86_64.tgz)
+  [McXtrace 3.1 for macOS on Intel](http://download.mcxtrace.org/mcxtrace-3.1/mac/mcxtrace-mac_x86_64/mcxtrace-3.1_x86_64.tgz)
   or M1 package:
-  [McXtrace 3.0 for macOS on Apple Silicon / M1 ](http://download.mcxtrace.org/mcxtrace-3.0/mac/mcxtrace-mac_arm64/mcxtrace-3.0_arm64.tgz)
+  [McXtrace 3.1 for macOS on Apple Silicon / M1 ](http://download.mcxtrace.org/mcxtrace-3.1/mac/mcxtrace-mac_arm64/mcxtrace-3.1_arm64.tgz)
   and unpack it (e.g. double-clicking should work)
 
 * Open the resulting folder
 
-* Drag the McXtrace-3.0.app and the McXtrace-3.0-environment.command to
+* Drag the McXtrace-3.1.app and the McXtrace-3.1-environment.command to
 /Applications
 
 * Run the Check-PY-dependencies.command script to check for / install

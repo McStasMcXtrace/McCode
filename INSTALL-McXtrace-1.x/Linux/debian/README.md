@@ -1,4 +1,4 @@
-## Install McXtrace 3.1 On Debian class systems (including Ubuntu, mint etc.):
+## Install McXtrace 1.7.1 On Debian class systems (including Ubuntu, mint etc.):
 The packages have been tested to work correctly on Ubuntu 22.04 and Debian 11.
 
 # Add the McCode repository
@@ -17,32 +17,32 @@ The meta-package *mcxtrace-suite-python* will allow you to install mcxtrace with
 ```bash
 sudo apt-get install mcxtrace-suite-python
 ```
-The -suite packages without 'ng' in the package name will install the
-latest McXtrace 1.x package
+The -suite packages including 'ng' in the package name will install the
+latest McXtrace 3.x package
 
 # Look for McXtrace packages to install
 ```bash
-mcxtrace@debian:~$ apt-cache search mcxtrace | grep 3.1
-mcxtrace-3.1 - mcxtrace built using CMake
-mcxtrace-comps-3.1 - mcxtrace-comps built using CMake
-mcxtrace-manuals-3.1 - mcxtrace_manuals built using CMake
+mcxtrace@debian:~$ apt-cache search mcxtrace | grep 1.7.1
+mcxtrace-1.7.1 - mcxtrace built using CMake
+mcxtrace-comps-1.7.1 - mcxtrace-comps built using CMake
+mcxtrace-manuals-1.7.1 - mcxtrace_manuals built using CMake
 mcxtrace-suite - A metapackage for McStas + perl and python tools
 mcxtrace-suite-perl - A metapackage for McStas + perl tools
 mcxtrace-suite-python - A metapackage for McStas + python tools
-mcxtrace-tools-matlab-mxplot-3.1 - matlab-tools-mcplot built using CMake
-mcxtrace-tools-perl-3.1 - legacy-tools built using CMake
-mcxtrace-tools-perl-cmdline-3.1 - legacy-tools-cmdline built using CMake
-mcxtrace-tools-python-mxcodelib-3.1 - python-tools-mccodelib built using CMake
-mcxtrace-tools-python-mxdisplay-pyqtgraph-3.1 - python-tools-mxdisplay-pyqtgraph built using CMake
-mcxtrace-tools-python-mxdisplay-webgl-3.1 - python-tools-mxdisplay-webgl built using CMake
-mcxtrace-tools-python-mxgui-3.1 - python-tools-mxgui built using CMake
-mcxtrace-tools-python-mxplot-pyqtgraph-3.1 - python-tools-mxplot-pyqtgraph built using CMake
-mcxtrace-tools-python-mxrun-3.1 - python-tools-mxrun built using CMake
+mcxtrace-tools-matlab-mxplot-1.7.1 - matlab-tools-mcplot built using CMake
+mcxtrace-tools-perl-1.7.1 - legacy-tools built using CMake
+mcxtrace-tools-perl-cmdline-1.7.1 - legacy-tools-cmdline built using CMake
+mcxtrace-tools-python-mxcodelib-1.7.1 - python-tools-mccodelib built using CMake
+mcxtrace-tools-python-mxdisplay-pyqtgraph-1.7.1 - python-tools-mxdisplay-pyqtgraph built using CMake
+mcxtrace-tools-python-mxdisplay-webgl-1.7.1 - python-tools-mxdisplay-webgl built using CMake
+mcxtrace-tools-python-mxgui-1.7.1 - python-tools-mxgui built using CMake
+mcxtrace-tools-python-mxplot-pyqtgraph-1.7.1 - python-tools-mxplot-pyqtgraph built using CMake
+mcxtrace-tools-python-mxrun-1.7.1 - python-tools-mxrun built using CMake
 ```
 # Using mxdoc on modern Ubuntu systems
 Ubuntu is shipping its browsers as "snap" packages, meaning that they
 are blocked from accessing e.g. the McStas html snippets in
-/usr/share/mcxtrace/3.1/.
+/usr/share/mcxtrace/1.7.1/.
 
 To fix this we propose to switch your browser to a proper apt based
 installation, in this example firefox:
@@ -82,7 +82,7 @@ Please report any trouble with the repository to [mcxtrace-users](mailto:mcxtrac
 
 # Installing without adding the repo
 If you want to attempt installing our debian packages manually via
-dpkg, the packages are available for download at http://download.mcxtrace.org/current/linux/mcxtrace-3.1-deb64/
+dpkg, the packages are available for download at http://download.mcxtrace.org/current/linux/mcxtrace-1.7.1-deb64/
 (available for multiple processor architectures).
 
 ## In case of issues
