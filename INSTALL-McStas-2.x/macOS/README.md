@@ -25,8 +25,7 @@
 
 * Run the Check-PY-dependencies.command script to check for / install
   basic compiler support and  Python tool dependencies (right-click and "open"). Please follow
-  on-screen instructions. The Silicon / M1 version requires the Arm
-  version of Homebrew installed in /opt.
+  on-screen instructions. 
 
 * In case you have trouble accessing instrument files in certain areas
   of your disk, please give the McStas bundle "Full Disk Access"
@@ -39,7 +38,6 @@
 * Once the app and dependencies have been installed on your harddrive, optionally use the gui to make your McCode
 the default mcstas/mcxtrace on your machine:
  * mcgui    (python) - Use "File -> Set as default"
- * Further menu points in the same place allows to configure the app to run the perl or python UI
 
 * If you need support for NeXus output, please follow the instructions
   at https://github.com/McStasMcXtrace/McCode/wiki/McStas-and-Mantid#install-nexus
