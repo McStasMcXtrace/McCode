@@ -116,7 +116,7 @@ if [ "x$2" = "x" ]; then
     cp support/MacOSX/Check-dependencies/* dist
     mv dist mcxtrace-$1
     mkdir dist
-    tar cfz dist/mcxtrace-$1.tgz mcxtrace-$1
+    tar cfz dist/mcxtrace-$1_x86_64.tgz mcxtrace-$1
     cp INSTALL-McXtrace-1.x/macOS/README.md dist
     echo A tgz of your app is now located in the dist folder
     rm -rf mcxtrace-$1
