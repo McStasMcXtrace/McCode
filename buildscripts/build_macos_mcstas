@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "import os;print(os.cpu_count())")}
 
 if [ "x$1" = "x" ]; then
