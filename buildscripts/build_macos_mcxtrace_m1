@@ -60,7 +60,7 @@ if [ -d build ]; then
     rm -rf build
 fi
 mkdir -p build; cd build
-cmake -DCMAKE_INSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/mcstas/$1/ ..
+cmake -DCMAKE_INSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/mcxtrace/$1/ ..
 make install
 cd $WORK
 
@@ -78,7 +78,7 @@ echo "*********************************************************"
 echo "* Embedding miniconda3 in your app                      *"
 echo "*********************************************************"
 chmod a+x Mambaforge-$(uname)-$(uname -m).sh
-./Mambaforge-$(uname)-$(uname -m).sh -b -p $MCINSTALL_PREFIX/mcstas/$1/miniconda3/
+./Mambaforge-$(uname)-$(uname -m).sh -b -p $MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/
 
 # Run conda to install the dependencies
 echo
