@@ -82,8 +82,8 @@ if [ "x$2" != "x" ]; then
     cp MSMPI/*.* dist/extras
     cp NeXus/*.* dist/extras
     cp Perl/*.msi dist/
-    # Needs creation : cp $WORK/INSTALL-McXtrace-3.x/Windows/README.md dist/
+    cp $WORK/INSTALL-McXtrace-1.x/Windows/README.md dist/
     mkdir dist/single-packages
     mv dist/mcxtrace-* dist/single-packages
-    # Needs creation : cp INSTALL-McXtrace-3.x/Windows/README.md dist
+    cp INSTALL-McXtrace-1.x/Windows/README.md dist
 fi
