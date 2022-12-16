@@ -73,5 +73,5 @@ if [ "x$2" != "x" ]; then
   tar -tf $outfile
   gzip $outfile
   rm mcxtrace-${1}-UNIX-src
-  cp $WORK/INSTALL-McXtrace-3.x/Linux/src/README.md $WORK/dist
+  cp $WORK/INSTALL-McXtrace-1.x/Linux/src/README.md $WORK/dist
 fi
