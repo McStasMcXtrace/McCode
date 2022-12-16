@@ -87,6 +87,9 @@ CHANGES in 3.1
    Thanks to Greg Tyler (ESS) for contributing this tool.
 
  Components and Instruments:
+ - The Isotropic_Sqw sample which can be used to model structure and dynamics in isotropic
+   materials, such as powders and liquids has been added. The component is developed by
+   Emmanuel Farhi and also exists in the McStas code.
  - Multiple new SOLEIL instruments have been added, thanks to lots of work from Antoine Pado,
    Stephane Bac and Emmanuel Farhi:
    * SOLEIL_ANATOMIX.instr tomography beam-line
