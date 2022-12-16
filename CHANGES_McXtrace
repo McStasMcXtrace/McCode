@@ -101,6 +101,12 @@ CHANGES in 3.1
    perfect in all cases.
  - Most of the standard monitors will now fill in their own "instance name" as filename in case
    a filename was not defined. A small but very useful convenience.
+ - Lens_elliptical.comp fixed
+ - Grating_reflect.comp fixed, and created a test for it.
+ - Udated/fixed Mirror_elliptic.comp and created a test for it.
+ - Beamline ssrl 11-2 (in it's unfocused and uncollimated mode) added (related to work done on glitches). 
+ - Czerny_Turner instrument created.
+ - Single_crystal component, corrected absorption cross-section.
    
  Core simulation framework / code-generator:
  - Previously, any component present in a McXtrace instrument would trigger the transformation of
@@ -237,6 +243,9 @@ CHANGES in 1.7.1
    Thanks to Greg Tyler (ESS) for contributing this tool.
 
  Components and Instruments:
+ - The Isotropic_Sqw sample which can be used to model structure and dynamics in isotropic
+   materials, such as powders and liquids has been added. The component is developed by
+   Emmanuel Farhi and also exists in the McStas code.
  - Multiple new SOLEIL instruments have been added, thanks to lots of work from Antoine Pado,
    Stephane Bac and Emmanuel Farhi:
    * SOLEIL_ANATOMIX.instr tomography beam-line
@@ -245,6 +254,12 @@ CHANGES in 1.7.1
    * SOLEIL_PX2a.instr protein crystallography beam-line
  - The AstroX toolbox for simulating X-ray telescopes has been included as a special component
    category. 
+ - Lens_elliptical.comp fixed
+ - Grating_reflect.comp fixed, and created a test for it.
+ - Udated/fixed Mirror_elliptic.comp and created a test for it.
+ - Beamline ssrl 11-2 (in it's unfocused and uncollimated mode) added (related to work done on glitches). 
+ - Czerny_Turner instrument created.
+ - Single_crystal component, corrected absorption cross-section. 
 
  Libraries and other runtime code:
  - A flaw was spotted in our NeXus implementation in the case of event lists: A small chunk-size
