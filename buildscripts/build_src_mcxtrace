@@ -8,9 +8,23 @@ if [ "x$1" = "x" ]; then
 fi
 
 # Ensure our 3rd party modules are in place and updated
+THIRDPARTY=`ls 3rdparty | grep -v patches`
+cd 3rdparty
+
+cd -
 
 ./3rdparty/sync.sh
 
+
+for MODULE in `echo $THIRDPARTY`
+do
+    if [ -d "3rdparty/patches/${MODULE}" ]; then
+	echo Making McCode cmake modules available for $MODULE
+        rsync -avz cmake/ 3rdparty/${MODULE}/cmake
+	echo Applying McCode patches to 3rdparty/${MODULE}
+	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
+    fi
+done
 WORK=`pwd`
 
 # 64-bit
@@ -19,18 +33,23 @@ WORK=`pwd`
 ./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" linux64 "" -- src
 ./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" linux64 "" -- src
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" linux64 "" -- src
+./mkdist mcxtrace-tools-matlab-mxdisplay $1 tools/matlab/mcdisplay/ "" linux64 "" -- src
 ./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" linux64 "" -- src
-./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 "" -- src
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" linux64 "" -- src
+./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 "" -- src
+./mkdist mcxtrace-tools-python-mxplot-svg $1 tools/Python/mcplot/svg/ "" linux64 "" -- src
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" linux64 "" -- src
 ./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" linux64 "" -- src
 ./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" linux64 "" -- src
 ./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" linux64 "" -- src
-./mkdist mcxtrace-miniconda3 $1 support/rpm/miniconda3/ "" linux64 "" -- src
+./mkdist mcxtrace-tools-python-mxdisplay-cad $1 tools/Python/mcdisplay/cad/ "" linux64 "" -- src
 ./mkdist mcxtrace-clusterscripts $1 tools/cluster-scripts/ "" linux64 "" -- src
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" linux64 "" -- src
 ./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" linux64 "" -- src
+
+export MCINSTALL_PREFIX=/usr/local/mcxtrace/$1
 ./mkdist mcxtrace-mcpl $1 3rdparty/mcpl-package "" linux64 "" -- src
+./mkdist mcxtrace-ncrystal $1 3rdparty/ncrystal-package "" linux64 "" -- src
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
@@ -54,5 +73,5 @@ if [ "x$2" != "x" ]; then
   tar -tf $outfile
   gzip $outfile
   rm mcxtrace-${1}-UNIX-src
-  cp $WORK/INSTALL-McXtrace/Linux/src/README.md $WORK/dist
+  cp $WORK/INSTALL-McXtrace-1.x/Linux/src/README.md $WORK/dist
 fi
