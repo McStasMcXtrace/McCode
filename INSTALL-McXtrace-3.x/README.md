@@ -3,7 +3,7 @@
 Please consult the individual platform instructions:
 
 * [Windows 10 64bit](Windows/README.md)
-* [macOS 10.9-10.15, 11.x and 12.x 64bit](macOS/README.md)
+* [macOS 10.9-10.15, 11.x, 12.x, 13.x 64bit](macOS/README.md)
 * [Linux (Debian/Ubuntu/Fedora via repo)](Linux/README.md)
 * [Unix (source code)](Linux/src/README.md)
 * [Docker image](Docker/README.md)
