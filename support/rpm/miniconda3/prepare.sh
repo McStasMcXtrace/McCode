@@ -5,13 +5,12 @@
 
 # Download the installer
 cd `dirname $0`
-wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
-chmod a+x Miniconda3-latest-Linux-x86_64.sh
-./Miniconda3-latest-Linux-x86_64.sh -b -p $PWD/miniconda3/
+wget "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
+chmod a+x Mambaforge-$(uname)-$(uname -m).sh
+./Mambaforge-$(uname)-$(uname -m).sh -b -p $PWD/miniconda3/
 export PATHBAK=$PATH
 export PATH=$PWD/miniconda3/bin:$PATH
-$PWD/miniconda3/bin/conda install libxkbcommon gsl
-$PWD/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply matplotlib numpy tornado scipy pillow jinja2 mpld3
+$PWD/miniconda3/bin/mamba install gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 -y
 export PATH=$PATHBAK
 #pick a flavor
 if [ "mcxtrace" == "$2" ]; then
