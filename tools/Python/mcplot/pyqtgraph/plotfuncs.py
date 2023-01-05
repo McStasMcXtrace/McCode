@@ -81,9 +81,9 @@ def plot_Data0D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fo
 def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fontsize=10):
     ''' create a plotItem and populate it with data, Data1D '''
     # data
-    x = np.array(data.xvals).astype(np.float)
-    y = np.array(data.yvals).astype(np.float)
-    e = np.array(data.y_err_vals).astype(np.float)
+    x = np.array(data.xvals).astype(float)
+    y = np.array(data.yvals).astype(float)
+    e = np.array(data.y_err_vals).astype(float)
 
     if log:
         nonzeros=[]
