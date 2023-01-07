@@ -1,0 +1,53 @@
+/*******************************************************************************
+* Instrument: vinput2mcpl
+*
+* %I
+* Written by: Peter Willendrup
+* Date: Jan 7th 2023
+* Origin: DTU
+* %INSTRUMENT_SITE: Tools
+*
+* Instrument for conversion of Virtual input files to MCPL.
+*
+* %D
+* Instrument for conversion of Virtual input files to MCPL.
+*
+* Example: vinput2mcpl inputfile=C8_L214.dat outputfile=C8_L214.mcpl,gz
+*
+* %P
+* input:  [str] Filename for Virtual_input read
+* output: [str] Filename for MCPL_output write
+*
+* %L
+* <reference/HTML link>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT vinput2mcpl(string inputfile="input", string outputfile="output")
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT virtual_output = Virtual_input(
+    filename=inputfile)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT mcpl_output = MCPL_output(
+    filename=outputfile)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+FINALLY
+%{
+%}
+
+END
