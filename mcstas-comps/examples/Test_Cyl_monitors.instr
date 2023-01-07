@@ -14,6 +14,21 @@
 * %Description
 * A test instrument to compare Monitor_nD output against basic 1D and 2D monitors.
 *
+* %Example: Test_Cyl_monitors.instr lambda=5 Detector: PSD_I=4825.57
+* %Example: Test_Cyl_monitors.instr lambda=5 Detector: CylMon_I=4825.57
+* %Example: Test_Cyl_monitors.instr lambda=5 Detector: CylMonPSD_I=4825.57
+* %Example: Test_Cyl_monitors.instr lambda=5 Detector: CylMonTOF_I=4825.57
+* %Example: Test_Cyl_monitors.instr lambda=5 Detector: NDcyl_I=4825.57
+* %Example: Test_Cyl_monitors.instr lambda=5 Detector: NDcylPSD_I=4825.57
+* %Example: Test_Cyl_monitors.instr lambda=5 Detector: NDcylTOF_I=4825.57
+* %Example: Test_Cyl_monitors.instr lambda=5 tz=0.05 Detector: PSD_I=2921.65
+* %Example: Test_Cyl_monitors.instr lambda=5 tz=0.05 Detector: CylMon_I=2921.65
+* %Example: Test_Cyl_monitors.instr lambda=5 tz=0.05 Detector: CylMonPSD_I=2921.65
+* %Example: Test_Cyl_monitors.instr lambda=5 tz=0.05 Detector: CylMonTOF_I=2921.65
+* %Example: Test_Cyl_monitors.instr lambda=5 tz=0.05 Detector: NDcyl_I=2921.65
+* %Example: Test_Cyl_monitors.instr lambda=5 tz=0.05 Detector: NDcylPSD_I=2921.65
+* %Example: Test_Cyl_monitors.instr lambda=5 tz=0.05 Detector: NDcylTOF_I=2921.65
+*
 * %Parameters
 * lambda:  [Angs] Wavelength at monochromator, computed from DM and THETA_M if left as 0.
 * L1:         [m] Source-sample distance
@@ -28,7 +43,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_Cyl_monitors(lambda=5, L1=10, int bins=100, omega=90, thmin=-180,thmax=180,focus_aw=10,focus_ah=2,focus_xw=0,focus_yh=0)
+DEFINE INSTRUMENT Test_Cyl_monitors(lambda=5, L1=10, int bins=100, omega=90, thmin=-180,thmax=180,focus_aw=10,focus_ah=2,focus_xw=0,focus_yh=0,tx=0,tz=0)
 
 DECLARE %{
   char cylopts[128];
@@ -101,7 +116,7 @@ COMPONENT Sample = Incoherent(
   focus_ah = focus_ah,
   focus_xw = focus_xw,
   focus_yh = focus_yh) 
- AT (0, 0, 0) RELATIVE  mon_cradle
+ AT (tx, 0, tz) RELATIVE  mon_cradle
 EXTEND %{
   if (!SCATTERED) ABSORB;
 %}
