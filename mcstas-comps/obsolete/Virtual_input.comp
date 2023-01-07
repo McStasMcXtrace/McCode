@@ -201,7 +201,6 @@ TRACE
     while (read_block && !end_reading) {
       /* read block and increase Offset for next reading */
       nrows = Virtual_input_Read_Input(filename, &rTable, &Offset);
-
       if (!nrows) { /* nrows is 0 if end of filename/no filename */
         if (!filename_ncount) {
           filename_ncount = (double)mcget_run_num();  /* ncount in filename */
@@ -230,10 +229,18 @@ TRACE
 
       /* &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz */
     if (!end_reading) {
-      /* BEWARE! This is a non-standard way of using mcrestore_neutron, order of 
-         parameters MUST be &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy,  &sz
-         to match the data format from the Virtual_input files */
-      //mcrestore_neutron(rTable.data,pos, &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy,  &sz);
+      double *dptr = &rTable.data[11*pos];
+      p  =  *dptr++;
+      x  =  *dptr++;
+      y  =  *dptr++;
+      z =  *dptr++;
+      vx =  *dptr++;
+      vy =  *dptr++;
+      vz  =  *dptr++;
+      t =  *dptr++;
+      sx =  *dptr++;
+      sy =  *dptr++;
+      sz  =  *dptr;
 
       if (first_block) {
         double v;
