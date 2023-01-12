@@ -122,7 +122,7 @@ if [ -d build ]; then
     rm -rf build
 fi
 mkdir -p build; cd build
-cmake -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/ -DHDF5_ROOT=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/miniconda3/ ..
+cmake -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/ -DHDF5_ROOT=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/miniconda3/ -DCMAKE_MACOSX_RPATH=ON -DCMAKE_INSTALL_RPATH=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/lib  ..
 make install
 cd $WORK
 
