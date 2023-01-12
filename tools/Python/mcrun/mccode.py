@@ -164,9 +164,10 @@ class McStas:
 
         # Setup cflags
         cflags = ['-lm']  # math library
-        cflags += [self.options.mpi and mccode_config.compilation['MPIFLAGS'] or '']  # MPI
-        cflags += [self.options.openacc and mccode_config.compilation['OACCFLAGS']  or ' ']  # OpenACC
-        cflags += [self.options.format.lower() == 'nexus' and mccode_config.compilation['NEXUSFLAGS'] or ' '] # NeXus
+        # Parse for instances of CMD() ENV() GETPATH() in the loaded CFLAG entries
+        cflags += [self.options.mpi and mccodelib.cflags.evaluate_dependency_str(mccode_config.compilation['MPIFLAGS'], options.verbose) or '']  # MPI
+        cflags += [self.options.openacc and mccodelib.cflags.evaluate_dependency_str(mccode_config.compilation['OACCFLAGS'], options.verbose)  or ' ']  # OpenACC
+        cflags += [self.options.format.lower() == 'nexus' and mccodelib.cflags.evaluate_dependency_str(mccode_config.compilation['NEXUSFLAGS'], options.verbose) or ' '] # NeXus
         cflags += [self.options.funnel and '-DFUNNEL'  or ' ']  # Funneling
         cflags += [self.options.D1 is not None and "-D" + self.options.D1 or ' ']  # DEFINE1
         cflags += [self.options.D2 is not None and "-D" + self.options.D2 or ' ']  # DEFINE2
