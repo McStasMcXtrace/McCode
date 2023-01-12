@@ -504,13 +504,14 @@ def file_save(data, filename):
     f.close()
 
 
-def main(instr=None, default=None, options=None):
+def main(instr=None, dirname=None, default=None, **kwds):
     ''' script execution '''
     logging.basicConfig(level=logging.INFO)
 
     # inspect is required b McDisplayReader
-    reader = McDisplayReader(instr=instr, default=default, n=1, debug=True)
+    reader = McDisplayReader(instr=instr, dir=None, **kwds)
     instrument = reader.read_instrument()
+    raybundle = reader.read_particles()
 
     writer = MantidPixelWriter(instrument.components)
     print("assembling mantid xml...")
@@ -525,7 +526,14 @@ if __name__ == '__main__':
     # Only pre-sets instr, --default, options
     parser, prefix = make_common_parser(__file__, __doc__)
 
+    parser.add_argument('--dirname', help='output directory name override')
+    parser.add_argument('-n', '--ncount', dest='n', type=float, default=1, help='Number of particles to simulate')
+
     args, unknown = parser.parse_known_args()
+
+    # Suppress ncount > 1, we don't do anything with such particles
+    if (args.n>1):
+        args.n=1
     # if --inspect --first or --last are given after instr, the remaining args become "unknown",
     # but we assume that they are instr_options
     args = {k: args.__getattribute__(k) for k in dir(args) if k[0] != '_'}
