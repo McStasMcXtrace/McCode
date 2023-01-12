@@ -100,6 +100,12 @@ function( detect_platform_variables resultvarname )
   else()
     set(NEXUSFLAGS "-DUSE_NEXUS -lNeXus")
   endif()
+  if ( NEXUSLIB )
+    set(NEXUSFLAGS "${NEXUSFLAGS} -L${NEXUSLIB}")
+  endif()
+  if ( NEXUSINCLUDE )
+    set(NEXUSFLAGS "${NEXUSFLAGS} -I${NEXUSINCLUDE}")
+  endif()
   provide_var( NEXUSFLAGS )
 
   #C flags:
