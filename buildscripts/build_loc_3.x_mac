@@ -52,6 +52,7 @@ cp tools/other/mcsplit/mcsplit.py $MCINSTALL_PREFIX/mcstas/3.x-dev/bin/
 export MCINSTALL_PREFIX=$HOME/McStas/mcstas/3.x-dev/
 ./mkdist mcstas-ncrystal 3.x-dev 3rdparty/ncrystal-package "" mac "" -- justinst
 ./mkdist mcstas-mcpl 3.x-dev 3rdparty/mcpl-package "" mac "" -- justinst
+./mkdist mcstas-nexus 3.x-dev 3rdparty/nexus-package "" mac "" -- justinst
 
 
 # Ensure we are configured for 10 node MPI runs
