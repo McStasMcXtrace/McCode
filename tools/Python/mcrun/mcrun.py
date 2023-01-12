@@ -185,8 +185,15 @@ def add_mcstas_options(parser):
 
     add('--format',
         metavar='FORMAT', default='McCode',
-        help='output data files using format FORMAT '
+        help='output data files using format FORMAT, usually McCode or NeXus '
              '(format list obtained from <instr>.%s -h)' % mccode_config.platform["EXESUFFIX"])
+
+    # --IDF-option only makes sense in McStas case
+    if (mccode_config.configuration["MCCODE"]=='mcstas'):
+        add('--IDF',
+            action='store_true', default=False,
+            help='Flag to attempt inclusion of XML-based IDF when --format=NeXus '
+                '(format list obtained from <instr>.%s -h)' % mccode_config.platform["EXESUFFIX"])
 
     add('--vecsize',
         metavar='VECSIZE', default='',
