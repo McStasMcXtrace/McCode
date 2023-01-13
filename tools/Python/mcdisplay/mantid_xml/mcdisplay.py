@@ -337,17 +337,17 @@ class MantidPixelWriter:
         return '\n\n'.join(text)
 
     banana_monitor = '''
-    <component type="MonNDtype-0" name="MONITOR_NAME" idlist="MonNDtype-0-list">
+    <component type="MonNDtype-IDX_MONITOR" name="MONITOR_NAME" idlist="MonNDtype-0-list">
         <locations x="X_LOC" y="Y_MIN" y-end="Y_MAX" n-elements="Y_NUM" z="Z_LOC" rot="ROT_ANGLE" axis-x="ROT_X" axis-y="ROT_Y" axis-z="ROT_Z"/> 
     </component>
 
-    <type name="MonNDtype-0">
+    <type name="MonNDtype-IDX_MONITOR-arch">
     <component type="pixel-0">
         <locations r="RADIUS" t="T_MIN" t-end="T_MAX" n-elements="T_NUM" rot="T_MIN" rot-end="T_MAX" axis-x="0.0" axis-y="1.0" axis-z="0.0"/>
     </component>
     </type>
 
-    <type is="detector" name="pixel-0">
+    <type is="detector" name="pixel-IDX_MONITOR">
         <cuboid id="pixel-shape-0">
             <left-front-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
             <left-front-top-point x="X_STP_HALF" y="Y_STP_HALF" z="0.00005" />
@@ -357,7 +357,7 @@ class MantidPixelWriter:
         <algebra val="pixel-shape-0"/>
     </type>
 
-    <idlist idname="MonNDtype-0-list">
+    <idlist idname="MonNDtype-IDX_MONITOR-list">
         <id start="PIXEL_MIN" end="PIXEL_MAX"/></idlist>
 
     <type name="in5_t-type">
@@ -385,6 +385,8 @@ class MantidPixelWriter:
             y_step_half = y_step / 2
 
             s = self.banana_monitor
+            idx_monitor = re.search('nD_Mantid_([0-9]+)', m.name).group(1)
+            s = s.replace('IDX_MONITOR', idx_monitor)
             s = s.replace('MONITOR_NAME', m.name)
             s = s.replace('X_LOC', str(m.pos.x))
             s = s.replace('Y_LOC', str(m.pos.y))
