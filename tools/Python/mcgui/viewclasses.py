@@ -719,6 +719,14 @@ class McStartSimDialog(QtWidgets.QDialog):
             p4 = ClusteringEnum.MPI
         if self.ui.cbxClustering.currentIndex() == 2:
             p4 = ClusteringEnum.MPI_RC
+        if self.ui.cbxClustering.currentIndex() == 3:
+            p4 = ClusteringEnum.OACC
+        if self.ui.cbxClustering.currentIndex() == 4:
+            p4 = ClusteringEnum.OACC_RC
+        if self.ui.cbxClustering.currentIndex() == 5:
+            p4 = ClusteringEnum.OACC_MPI
+        if self.ui.cbxClustering.currentIndex() == 6:
+            p4 = ClusteringEnum.OACC_MPI_RC
         
         # clustring option
         p5 = self.ui.edtNodes.text()
@@ -830,7 +838,10 @@ class ClusteringEnum:
     SINGLE = 0
     MPI = 1
     MPI_RC = 2
-
+    OACC = 3
+    OACC_RC = 4
+    OACC_MPI = 5
+    OACC_MPI_RC = 6
 
 ''' Start simulation widgets wrapper class
 Programatically alters the dialog to match current instrument.
