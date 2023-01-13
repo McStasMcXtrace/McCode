@@ -269,15 +269,15 @@ AT(0,0,LS)  RELATIVE mod
 COMPONENT sampleMantid = Spot_sample(radius_o=0.01, h=0.05, pack = 1,xwidth=0, yheight=0, zthick=0, Eideal=Edes,w=Et,two_theta=ttheta,n_spots=4)
 AT (0.0,0.0,0.0) RELATIVE Sample_Arm
 
-  COMPONENT  t_mon_detB= Monitor_nD(xwidth=5.9817,yheight=3.2,restore_neutron=1, filename="this",
+COMPONENT  nD_Mantid_0= Monitor_nD(xwidth=5.9817,yheight=3.2,restore_neutron=1, filename="this",
                           options="mantid banana, theta limits=[-28.0 135.38] bins=389 ,y limits=[-0.550 0.450] bins=128, neutron pixel min=0 t, list all neutrons", restore_neutron=1)
 AT (0,0,0.00005) RELATIVE Sample_Arm
 
-COMPONENT  t_mon_detA= Monitor_nD(xwidth=6.26,yheight=3.2,restore_neutron=1,filename="this",
+COMPONENT  nD_Mantid_1= Monitor_nD(xwidth=6.26,yheight=3.2,restore_neutron=1,filename="this",
                           options="mantid banana, theta limits=[-28.0 135.38] bins=389 ,y limits=[-1.600 -0.600] bins=128, neutron pixel min=50000 t, list all neutrons", restore_neutron=1)
 AT (0,0,0.00005) RELATIVE Sample_Arm
 
-COMPONENT  t_mon_detC= Monitor_nD(xwidth=6.626,yheight=3.2,restore_neutron=1,filename="this",
+COMPONENT  nD_Mantid_2= Monitor_nD(xwidth=6.626,yheight=3.2,restore_neutron=1,filename="this",
                           options="mantid banana, theta limits=[-28.0 135.38] bins=389, y limits=[0.495 1.495] bins=128, neutron pixel min=100000 t, list all neutrons",  restore_neutron=1)
 AT (0,0,0.00005) RELATIVE Sample_Arm
 
