@@ -248,6 +248,11 @@ class McStas:
         binpath = self.binpath
         myformat = self.options.format
 
+        # If this is McStas, if format is NeXus and --IDF requested, call the XML-generator
+        if (mccode_config.configuration["MCCODE"]=='mcstas'):
+            if self.options.format.lower() == 'nexus' and self.options.IDF:
+                Process("mcdisplay-mantid " + self.path).run(args, pipe=pipe)
+
         mpi = self.options.use_mpi
         if override_mpi or override_mpi is None and mpi:
             LOG.debug('Running via MPI: %s', self.binpath)
@@ -264,11 +269,6 @@ class McStas:
             if self.options.openacc and not os.name == 'nt':
                 mpi_flags = mpi_flags + [mccode_config.configuration['MCCODE_LIB_DIR'] +'/bin/acc_gpu_bind']
             args = mpi_flags + [self.binpath] + args
-
-        # If this is McStas, if format is NeXus and --IDF requested, call the XML-generator
-        if (mccode_config.configuration["MCCODE"]=='mcstas'):
-            if self.options.format.lower() == 'nexus' and self.options.IDF:
-                Process("mcdisplay-mantid " + self.path).run(args, pipe=pipe)
 
         return Process(binpath).run(args, pipe=pipe)
 
