@@ -86,9 +86,10 @@ double XRMC_CrossSections(int Z, double E0, double *xs_interaction) {
   // loop on possible fluorescence lines
   for (i_line=0; i_line<XRAYLIB_LINES_MAX; i_line++) { 
     // cumulative sum of the line cross sections
-    xs[FLUORESCENCE] += CSb_FluorLine(Z, -i_line, E0, &error); /* XRayLib */
-    if (error != NULL)
-      exit(fprintf(stderr, "ERROR: %s: %s\n", "Fluorescence/XRMC_CrossSections", error->message));
+    error = NULL;
+    double this_xs = CSb_FluorLine(Z, -i_line, E0, &error); /* XRayLib */
+    if (error == NULL)
+      xs[FLUORESCENCE] += this_xs;
   }
 
   // coherent and incoherent cross sections
@@ -230,7 +231,8 @@ INITIALIZE %{
   cum_massFractions[0]     = 0;
   
   for (i=0; i< compound->nElements; i++) {
-    double Z      = compound->Elements[i];
+    int    Z      = compound->Elements[i];
+    error = NULL;
     double Z_dens = ElementDensity(Z, &error);
     if (error != NULL)
       exit(fprintf(stderr, "ERROR: %s: %s\n", NAME_CURRENT_COMP, error->message));
@@ -251,7 +253,7 @@ INITIALIZE %{
   if (!rho) rho = density/weight/1e24*NA; // atom density
   MPI_MASTER(
     printf("%s: Material %s M=%g [g/mol] density=%g [g/cm3] rho=%g [at/Angs-3]",
-      material, weight, density, rho);
+      NAME_CURRENT_COMP, material, weight, density, rho);
     if (fabs(packing_factor-1) > 1e-2)
       printf(" packing_factor=%g", packing_factor);
     printf("\n");
@@ -512,7 +514,7 @@ if (intersect) { /* scattering event */
   kx = kf*kf_x;
   ky = kf*kf_y;
   kz = kf*kf_z;
-  
+  SCATTER;
   
       
  
