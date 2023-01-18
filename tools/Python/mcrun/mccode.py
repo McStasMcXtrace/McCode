@@ -249,7 +249,7 @@ class McStas:
         myformat = self.options.format
 
         # If this is McStas, if format is NeXus and --IDF requested, call the XML-generator
-        if (mccode_config.configuration["MCCODE"]=='mcstas'):
+        if (mccode_config.configuration["MCCODE"]=='mcstas' and not self.options.info):
             if self.options.format.lower() == 'nexus' and self.options.IDF:
                 Process("mcdisplay-mantid " + self.path).run(args, pipe=pipe)
 
