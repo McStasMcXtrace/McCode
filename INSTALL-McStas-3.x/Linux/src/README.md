@@ -17,7 +17,7 @@ find . -name \*tar.gz -exec tar xzf \{\} \;
 * Next, compile the individual packages you want (minimum set is mcstas-3.2-src mcstas-comps-3.2-src) using e.g.
 ```bash
 cd mcstas-3.2-src
-cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -Denable_mcstas=1
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
 ```

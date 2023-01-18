@@ -1,3 +1,3 @@
 [submodule "tools/mxoptim"]
-	path = tools/mxoptim
+	path = tools/Python/mxoptim
 	url = https://gitlab.com/soleil-data-treatment/soleil-software-projects/mxoptim.git
