@@ -347,7 +347,7 @@ class MantidPixelWriter:
     </type>
 
     <type name="MonNDtype-IDX_MONITOR">
-    <component type="pixel-0">
+    <component type="pixel-IDX_MONITOR">
         <locations r="RADIUS" t="T_MIN" t-end="T_MAX" n-elements="T_NUM" rot="T_MIN" rot-end="T_MAX" axis-x="0.0" axis-y="1.0" axis-z="0.0"/>
     </component>
     </type>
