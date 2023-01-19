@@ -11,6 +11,8 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 import re
 import math
 
+from datetime import datetime
+
 from mccodelib.instrgeom import DrawMultiline, Vector3d
 from mccodelib.mcdisplayutils import McDisplayReader
 from mccodelib.instrparser import InstrTraceParser, InstrObjectConstructor, MantidPixelLine, \
@@ -19,8 +21,9 @@ from mccodelib.fcparticleparser import FlowChartParticleTraceParser
 
 
 class MantidPixelWriter:
-    def __init__(self, components):
+    def __init__(self, components,instr):
         self.components = components
+        self.instr = instr
         self.monitors = []
         for c in self.components:
             if re.search('nD_Mantid', c.name):
@@ -421,8 +424,8 @@ class MantidPixelWriter:
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- IDF generated using McStas McDisplay and the Mantid backend -->
 <!-- For help on the notation used to specify an Instrument Definition File see http://www.mantidproject.org/IDF -->
-<instrument name="single_nD.out" valid-from   ="1900-01-31 23:59:59"
-valid-to     ="2100-01-31 23:59:59" last-modified="Thu Feb 16 16:37:46 2017">
+<instrument name="INSTRUMENT" valid-from   ="1900-01-31 23:59:59"
+valid-to     ="2100-01-31 23:59:59" last-modified="DATE">
 <defaults>
     <length unit="meter"/>
     <angle unit="degree"/>
@@ -447,8 +450,14 @@ valid-to     ="2100-01-31 23:59:59" last-modified="Thu Feb 16 16:37:46 2017">
         pixmonitors = self._get_mantid_pixels_monitors()
         rectmonitor = self._get_mantid_rectangular_monitor()
         bananamonitor = self._get_mantid_banana_monitor()
+        instr = self.instr
+        now = datetime.now() # current date and time
 
-        return '\n\n'.join([self.header, source, sample, pixmonitors, rectmonitor, bananamonitor, self.footer]).strip()
+        s = self.header
+        s = s.replace('INSTRUMENT', instr)
+        s = s.replace('DATE', now.strftime("%m/%d/%Y, %H:%M:%S"))
+
+        return '\n\n'.join([s, source, sample, pixmonitors, rectmonitor, bananamonitor, self.footer]).strip()
 
 
 class MantidPixel:
@@ -520,7 +529,7 @@ def main(instr=None, dirname=None, default=None, **kwds):
     instrument = reader.read_instrument()
     raybundle = reader.read_particles()
 
-    writer = MantidPixelWriter(instrument.components)
+    writer = MantidPixelWriter(instrument.components,instr)
     print("assembling mantid xml...")
     text = writer.do_work()
     filename = instr + '.xml'
