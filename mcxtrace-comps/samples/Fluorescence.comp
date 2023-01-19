@@ -142,7 +142,9 @@ SHARE %{
  * /usr/include/xraylib/xraylib.h             for XS
  */
 
-/* https://github.com/golosio/xrmc src/photon/photon.cpp (c) Bruno Golosio    */
+/* inspired from:
+ * https://github.com/golosio/xrmc src/photon/photon.cpp (c) Bruno Golosio    
+ */
   
 /* XRMC_CrossSections: Compute interaction cross sections in [barn/atom]
  * Return total cross section, given Z and E0:
@@ -156,8 +158,7 @@ double XRMC_CrossSections(int Z, double E0, double *xs) {
   // loop on possible fluorescence lines
   for (i_line=0; i_line<XRAYLIB_LINES_MAX; i_line++) { 
     // cumulative sum of the line cross sections
-    double this_xs = CSb_FluorLine(Z, -i_line, E0, NULL); /* XRayLib */
-    xs[FLUORESCENCE] += this_xs;
+    xs[FLUORESCENCE] += CSb_FluorLine(Z, -i_line, E0, NULL); /* XRayLib */
   }
 
   // coherent and incoherent cross sections
@@ -241,6 +242,9 @@ double XRMC_SelectFluorescenceEnergy(int Z, double E0)
 DECLARE %{
   struct   compoundData *compound;
   DArray1d cum_massFractions;
+  DArray1d cum_xs_fluo;
+  DArray1d cum_xs_compton;
+  DArray1d cum_xs_rayleigh;
   int  type;
   int  shape;
   off_struct offdata;
@@ -299,6 +303,9 @@ INITIALIZE %{
   double mat_density       = 0; /* g/cm3 */
   double sum_massFractions = 0;
   cum_massFractions        = create_darr1d(compound->nElements+1);
+  cum_xs_fluo              = create_darr1d(compound->nElements+1);
+  cum_xs_compton           = create_darr1d(compound->nElements+1);
+  cum_xs_rayleigh          = create_darr1d(compound->nElements+1);
   cum_massFractions[0]     = 0;
   
   /* print material information, and check for elements */
@@ -308,8 +315,8 @@ INITIALIZE %{
     double Z_dens = ElementDensity(Z, &error);
     if (error != NULL)
       exit(fprintf(stderr, "ERROR: %s: Z=%i %s\n", NAME_CURRENT_COMP, Z, error->message));
-    mat_density += compound->massFractions[i]*Z_dens;
-    sum_massFractions += compound->massFractions[i];
+    mat_density           += compound->massFractions[i]*Z_dens;
+    sum_massFractions     += compound->massFractions[i];
     cum_massFractions[i+1] = sum_massFractions;
     MPI_MASTER(
       printf("  | %6.2g %%: Z=%3i %3s %8.3g [g/mol] %8.3g [g/cm3]\n",
@@ -323,7 +330,7 @@ INITIALIZE %{
   
   /* molar volume [cm^3/mol] = weight [g/mol] / density [g/cm^3] */
   /* atom density per Angs^3 = [mol/cm^3] * N_Avogadro *(1e-8)^3 */
-  if (!rho) rho = density/weight/1e24*NA; // atom density
+  if (!rho) rho = density/weight/1e24*NA; // atom density [at/Angs-3]
   MPI_MASTER(
     printf("%s: Material %s M=%g [g/mol] density=%g [g/cm3] rho=%g [at/Angs-3]",
       NAME_CURRENT_COMP, material, weight, density, rho);
@@ -491,16 +498,21 @@ if (intersect) {
   /* compute total scattering cross section for incoming photon energy Ei */
   /* compute each contribution XS */
   xs[FLUORESCENCE]=xs[COMPTON]=xs[RAYLEIGH]=xs[3]=sigma_barn=0;
+  cum_xs_fluo[0] = cum_xs_compton[0] = cum_xs_rayleigh[0] = 0;
   for (i_Z=0; i_Z< compound->nElements; i_Z++) {
-    int    Z = compound->Elements[i_Z];
+    int    Z   = compound->Elements[i_Z];
+    double frac= compound->massFractions[i_Z];
     double xs_Z[3];
 
-    sigma_barn      += XRMC_CrossSections(Z, Ei, xs_Z); // [barn/atom]
-    for (i=0; i<3; i++) { xs[i] += xs_Z[i]; }
+    sigma_barn            += frac*XRMC_CrossSections(Z, Ei, xs_Z); // [barn/atom]
+    cum_xs_fluo[i_Z+1]     = cum_xs_fluo[i_Z]    +frac*xs_Z[FLUORESCENCE];
+    cum_xs_compton[i_Z+1]  = cum_xs_compton[i_Z] +frac*xs_Z[COMPTON];
+    cum_xs_rayleigh[i_Z+1] = cum_xs_rayleigh[i_Z]+frac*xs_Z[RAYLEIGH];
+    for (i=0; i<3; i++) { xs[i] += frac*xs_Z[i]; }
   } // for Z in compound
   
   /* probability to absorb/scatter */
-  my_s   = rho*100*sigma_barn; /* mu, 100: convert from barns to fm^2 */
+  my_s   = rho*100*sigma_barn; /* mu, 100: convert from barns to fm^2. my_s in [1/m] */
   d_path = ( dl0 +dl2 );  /* total path lenght in sample */
   
   /* Proba of transmission/interaction along length d_path */    
@@ -542,15 +554,29 @@ if (intersect) {
 } /* if intersect (propagate) */
 
 if (intersect) { /* scattering event */
-
-  /* choose process from cross sections 'xs': fluo, Compton, Rayleigh */
-  type = XRMC_SelectInteraction(xs);
-  
-  /* choose Z (element) */
-  int    i_Z = XRMC_SelectFromDistribution(cum_massFractions, compound->nElements+1);
-  int    Z   = compound->Elements[i_Z];
+  int    i_Z, Z;
   double solid_angle;
   double theta, dsigma;
+
+  /* MC choose process from cross sections 'xs': fluo, Compton, Rayleigh */
+  type = XRMC_SelectInteraction(xs);
+  
+  /* choose Z (element) on associated XS, taking into account mass-fractions */
+  switch (type) {
+    case FLUORESCENCE:
+      i_Z = XRMC_SelectFromDistribution(cum_xs_fluo,     compound->nElements+1);
+      break;
+    case RAYLEIGH:
+      i_Z = XRMC_SelectFromDistribution(cum_xs_rayleigh, compound->nElements+1);
+      break;
+    case COMPTON:
+      i_Z = XRMC_SelectFromDistribution(cum_xs_compton,  compound->nElements+1);
+      break;
+    default:
+      printf("%s: WARNING: process %i unknown. Absorb.\n", NAME_CURRENT_COMP, type);
+      ABSORB;
+  }
+  Z   = compound->Elements[i_Z];
   
   /* select outgoing vector */
   if ((target_x || target_y || target_z)) {
@@ -590,10 +616,6 @@ if (intersect) { /* scattering event */
       n_compton++;
       p_compton += p;
       break;
-      
-    default:
-      printf("%s: WARNING: process %i unknown. Absorb.\n", NAME_CURRENT_COMP, type);
-      ABSORB;
   }
   Ef = K2E*kf;
   
