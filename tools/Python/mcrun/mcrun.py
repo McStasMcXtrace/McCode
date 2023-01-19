@@ -195,6 +195,10 @@ def add_mcstas_options(parser):
             help='Flag to attempt inclusion of XML-based IDF when --format=NeXus '
                 '(format list obtained from <instr>.%s -h)' % mccode_config.platform["EXESUFFIX"])
 
+    add('--bufsiz',
+        metavar='BUFSIZ', default='',
+        help='Monitor_nD list/buffer-size (defaults to 1000000)')
+
     add('--vecsize',
         metavar='VECSIZE', default='',
         help='vector length in OpenACC parallel scenarios')
