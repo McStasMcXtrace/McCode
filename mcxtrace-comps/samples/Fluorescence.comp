@@ -165,7 +165,7 @@ double XRMC_CrossSections(int Z, double E0, double *xs) {
   xs[RAYLEIGH] = CSb_Rayl( Z, E0, NULL);
   xs[COMPTON]  = CSb_Compt(Z, E0, NULL);
   
-  // total interaction cross section
+  // total interaction cross section, should converge to CSb_Total(Z, E0, NULL)
   return xs[FLUORESCENCE] + xs[RAYLEIGH] + xs[COMPTON];
 } // XRMC_CrossSections
 
@@ -504,7 +504,9 @@ if (intersect) {
     double frac= compound->massFractions[i_Z];
     double xs_Z[3];
 
-    sigma_barn            += frac*XRMC_CrossSections(Z, Ei, xs_Z); // [barn/atom]
+    // get Fluorescence xs
+    XRMC_CrossSections(Z, Ei, xs_Z); // [barn/atom]
+    sigma_barn            += frac*CSb_Total(Z, Ei, NULL); // Photo+Compton+Rayleigh
     cum_xs_fluo[i_Z+1]     = cum_xs_fluo[i_Z]    +frac*xs_Z[FLUORESCENCE];
     cum_xs_compton[i_Z+1]  = cum_xs_compton[i_Z] +frac*xs_Z[COMPTON];
     cum_xs_rayleigh[i_Z+1] = cum_xs_rayleigh[i_Z]+frac*xs_Z[RAYLEIGH];
@@ -516,7 +518,8 @@ if (intersect) {
   d_path = ( dl0 +dl2 );  /* total path lenght in sample */
   
   /* Proba of transmission/interaction along length d_path */    
-  p_trans = exp(-my_s*d_path); /* probability to not-interact (left) */
+  p_trans = exp(-my_s*d_path); /* probability to not-interact (transmit) */
+  //printf("sigma_barn=%g p_trans=%g\n", sigma_barn, p_trans);
   p_scatt = 1 - p_trans;       /* portion of beam which scatters */
   
   /* force a given fraction of the beam to scatter */
@@ -528,10 +531,10 @@ if (intersect) {
     mc_trans = p_trans; /* 1 - p_scatt */
   }
   mc_scatt = 1 - mc_trans; /* portion of beam to scatter (or force to) */
+  if (mc_scatt <= 0) ABSORB;
   
   if (mc_scatt > 0 && (mc_scatt >= 1 || rand01() < mc_scatt)) { 
     /* we "scatter" with one of the interaction processes */
-    if (!mc_scatt) ABSORB;
       
     dl = -log(1 - rand0max((1 - exp(-my_s*d_path)))) / my_s; /* length */
 
@@ -593,28 +596,31 @@ if (intersect) { /* scattering event */
   } else {
     randvec_target_circle(&kf_x, &kf_y, &kf_z, &solid_angle, aim_x, aim_y, aim_z, focus_r);
   }
-  p /= 4*PI/solid_angle;
+  p *= solid_angle/(4*PI); // correct for selected solid-angle
   
   // determine final energy
   switch (type) {
     case FLUORESCENCE: /* 0 Fluo: choose line */
-      kf   = XRMC_SelectFluorescenceEnergy(Z, Ei)*E2K;
       n_fluo++;
       p_fluo += p;
+      kf      = XRMC_SelectFluorescenceEnergy(Z, Ei)*E2K;
       break;
       
     case RAYLEIGH:     /* 1 Rayleigh: Coherent, elastic    */
       n_rayleigh++;
       p_rayleigh += p;
+      theta      = acos(scalar_prod(kf_x,kf_y, kf_z,ki_x, ki_y,ki_z)/ki);
+      dsigma     = DCSb_Rayl(Z,  Ei, theta, NULL); // [barn/at/st]
+      p         *= dsigma/xs[RAYLEIGH];
       break;
     
     case COMPTON:      /* 2 Compton: Incoherent: choose final energy */
-      theta  = acos(scalar_prod(kf_x,kf_y, kf_z,ki_x, ki_y,ki_z)/ki);
-      dsigma = DCS_Compt(Z,  Ei, theta, NULL);
-      kf     = ComptonEnergy(Ei, theta, NULL)*E2K; /* XRayLib */
-      p     *= dsigma/xs[COMPTON];
       n_compton++;
       p_compton += p;
+      theta      = acos(scalar_prod(kf_x,kf_y, kf_z,ki_x, ki_y,ki_z)/ki);
+      dsigma     = DCS_Compt(Z,  Ei, theta, NULL); // [barn/at/st]
+      kf         = ComptonEnergy(Ei, theta, NULL)*E2K; /* XRayLib */
+      p         *= dsigma/xs[COMPTON];
       break;
   }
   Ef = K2E*kf;

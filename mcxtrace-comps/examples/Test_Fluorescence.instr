@@ -19,17 +19,17 @@
 * Material is chosen to be Mn (K-edge 6.5 keV).
 *
 * 
-* %Example: Test_Fluorescence.instr -n1e5 Detector: emon_I=8.25376e-12
+* %Example: Test_Fluorescence.instr -n1e5 Detector: emon_I=1.4453e-14
 *
 * %Parameters
-* material: [str]  Material file to use, e.g. chemical formulae "Mn"
+* material: [str]  Material file to use, e.g. chemical formulae "Pb2SnO4"
 * E0:       [keV]  Mean photon energy
 * dE:       [keV]  Photon energy spread, half width
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Test_Fluorescence(string material="Mn", E0=30.5, dE=1)
+DEFINE INSTRUMENT Test_Fluorescence(string material="LaB6", E0=6.7, dE=0.1)
 
 DECLARE %{
   #ifndef WIN32
@@ -43,15 +43,12 @@ DECLARE %{
   #endif
 %}
 
-INITIALIZE %{
-%}
-
 TRACE
 
 COMPONENT Origin = Progress_bar(percent=1)
 AT (0,0,0) ABSOLUTE
 
-COMPONENT source1 =  Source_flat(E0=E0, dE=dE, xwidth=1e-3, yheight=1e-3, focus_xw=0.0015, focus_yh=0.0015, dist=3)
+COMPONENT source1 =  Source_flat(E0=E0, dE=dE, xwidth=1e-3, yheight=1e-3, focus_xw=0.001, focus_yh=0.001, dist=3)
 AT(0,0,0) RELATIVE Origin
 
 COMPONENT sample_mount_point = Arm()
@@ -60,17 +57,25 @@ AT(0,0,3) RELATIVE Origin
 
 COMPONENT sample=Fluorescence(material=material,
   xwidth=0.001,yheight=0.001,zdepth=0.0001, p_interact=0.99,
-  target_index=1, focus_xw=0.0015, focus_yh=0.0015)
+  target_index=1, focus_xw=0.0005, focus_yh=0.0005)
 AT (0,0,0) RELATIVE sample_mount_point
 EXTEND %{
   if (!SCATTERED) ABSORB;
 %}
 
-COMPONENT emon = E_monitor(restore_xray=1,nE=1001,Emin=0, Emax=E0+dE, 
+COMPONENT emon = E_monitor(restore_xray=1,nE=1001,Emin=0, Emax=2*E0, 
   filename="emon.dat",xwidth=0.0005, yheight=0.0005)
 AT(0,0,0.1) RELATIVE PREVIOUS
 
 COMPONENT psd = PSD_monitor(xwidth=0.0015, yheight=0.0015, nx=100, ny=100, filename="psd.dat")
+AT(0,0,0.1) RELATIVE PREVIOUS
+
+COMPONENT emon_compton = COPY(emon)(filename="compton.dat")
+WHEN (COMP_GETPAR(sample, type) == 2)
+AT(0,0,0.1) RELATIVE PREVIOUS
+
+COMPONENT emon_rayleigh = COPY(emon)(filename="rayleigh.dat")
+WHEN (COMP_GETPAR(sample, type) == 1)
 AT(0,0,0.1) RELATIVE PREVIOUS
 
 
