@@ -106,7 +106,7 @@ function( detect_platform_variables resultvarname )
   if ( NOT WINDOWS )
     set(NEXUSFLAGS "-DUSE_NEXUS -lNeXus")#?? should probably have another value
   else()
-    set(NEXUSFLAGS "-DUSE_NEXUS -lNeXus")
+    set(NEXUSFLAGS "-DUSE_NEXUS -lNeXus-0")
   endif()
   if ( NEXUSLIB )
     set(NEXUSFLAGS "-Wl,-rpath,${NEXUSLIB} -L${NEXUSLIB} ${NEXUSFLAGS}")
