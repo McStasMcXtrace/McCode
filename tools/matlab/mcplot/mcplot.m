@@ -117,7 +117,7 @@ function data = mcplot(varargin)
   if exist ('OCTAVE_VERSION', 'builtin')
     if ~isempty(data)
       if nargin==0 || nargin==1
-	display("Pausing --> Please press a key in the octave terminal to continue");
+	display('Pausing --> Please press a key in the octave terminal to continue');
 	pause();
       end
     end
