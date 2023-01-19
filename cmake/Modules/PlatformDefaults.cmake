@@ -72,6 +72,14 @@ function( detect_platform_variables resultvarname )
   endif()
   provide_var( EDITOR )
 
+  #idf-generator:
+  if ( BUILD_MCSTAS )
+    set( IDFGEN mcdisplay-mantid )
+  else()
+    set( IDFGEN "" )
+  endif()
+  provide_var( IDFGEN )
+
   #C compiler:
   set( TOOLS_CC "${CMAKE_C_COMPILER}" )
   provide_var( TOOLS_CC )

@@ -251,7 +251,7 @@ class McStas:
         # If this is McStas, if format is NeXus and --IDF requested, call the XML-generator
         if (mccode_config.configuration["MCCODE"]=='mcstas' and not self.options.info):
             if self.options.format.lower() == 'nexus' and self.options.IDF:
-                Process("mcdisplay-mantid " + self.path).run(args, pipe=pipe)
+                Process(mccode_config.configuration['IDFGEN'] + " " + self.path).run(args, pipe=pipe)
 
         mpi = self.options.use_mpi
         if override_mpi or override_mpi is None and mpi:
