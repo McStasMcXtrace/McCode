@@ -11,6 +11,8 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 import re
 import math
 
+from datetime import datetime
+
 from mccodelib.instrgeom import DrawMultiline, Vector3d
 from mccodelib.mcdisplayutils import McDisplayReader
 from mccodelib.instrparser import InstrTraceParser, InstrObjectConstructor, MantidPixelLine, \
@@ -19,8 +21,9 @@ from mccodelib.fcparticleparser import FlowChartParticleTraceParser
 
 
 class MantidPixelWriter:
-    def __init__(self, components):
+    def __init__(self, components,instr):
         self.components = components
+        self.instr = instr
         self.monitors = []
         for c in self.components:
             if re.search('nD_Mantid', c.name):
@@ -336,31 +339,36 @@ class MantidPixelWriter:
         return '\n\n'.join(text)
 
     banana_monitor = '''
-    <component type="MonNDtype-IDX_MONITOR" name="MONITOR_NAME" idlist="MonNDtype-0-list">
-        <locations x="X_LOC" y="Y_MIN" y-end="Y_MAX" n-elements="Y_NUM" z="Z_LOC" rot="ROT_ANGLE" axis-x="ROT_X" axis-y="ROT_Y" axis-z="ROT_Z"/> 
-    </component>
+<component type="MonNDtype-IDX_MONITOR_origin" name="MONITOR_NAME" idlist="MonNDtype-IDX_MONITOR-list">
+	<location x="X_LOC" y="Y_LOC" z="Z_LOC"  /> 
+</component>
 
-    <type name="MonNDtype-IDX_MONITOR-arch">
-    <component type="pixel-0">
-        <locations r="RADIUS" t="T_MIN" t-end="T_MAX" n-elements="T_NUM" rot="T_MIN" rot-end="T_MAX" axis-x="0.0" axis-y="1.0" axis-z="0.0"/>
-    </component>
-    </type>
+<type name="MonNDtype-IDX_MONITOR_origin">
+	<component type="MonNDtype-IDX_MONITOR" >
+		<locations x="0.0" y="Y_MIN" y-end="Y_MAX" n-elements="Y_NUM" z="0.0" axis-x="0.0" axis-y="1.0" axis-z="0.0" /> 
+	</component>
+</type>
 
-    <type is="detector" name="pixel-IDX_MONITOR">
-        <cuboid id="pixel-shape-0">
-            <left-front-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
-            <left-front-top-point x="X_STP_HALF" y="Y_STP_HALF" z="0.00005" />
-            <left-back-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
-            <right-front-bottom-point x="-X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
-        </cuboid>
-        <algebra val="pixel-shape-0"/>
-    </type>
+<type name="MonNDtype-IDX_MONITOR">
+	<component type="pixel-IDX_MONITOR">
+		<locations r="RADIUS" t="T_MIN" t-end="T_MAX" n-elements="T_NUM" rot="T_MIN" rot-end="T_MAX" axis-x="0.0" axis-y="1.0" axis-z="0.0"/>
+	</component>
 
-    <idlist idname="MonNDtype-IDX_MONITOR-list">
-        <id start="PIXEL_MIN" end="PIXEL_MAX"/></idlist>
+</type>
 
-    <type name="in5_t-type">
-    </type>'''
+<type is="detector" name="pixel-IDX_MONITOR">
+	<cuboid id="pixel-shape-IDX_MONITOR">
+		<left-front-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
+		<left-front-top-point x="X_STP_HALF" y="Y_STP_HALF" z="0.0" />
+		<left-back-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.00005" />
+		<right-front-bottom-point x="-X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
+	</cuboid>
+	<algebra val="pixel-shape-IDX_MONITOR" />
+</type>
+
+<idlist idname="MonNDtype-IDX_MONITOR-list">
+	<id start="PIXEL_MIN" end="PIXEL_MAX"/></idlist>
+    '''
 
     def _get_mantid_banana_monitor(self):
         text = []
@@ -416,8 +424,8 @@ class MantidPixelWriter:
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- IDF generated using McStas McDisplay and the Mantid backend -->
 <!-- For help on the notation used to specify an Instrument Definition File see http://www.mantidproject.org/IDF -->
-<instrument name="single_nD.out" valid-from   ="1900-01-31 23:59:59"
-valid-to     ="2100-01-31 23:59:59" last-modified="Thu Feb 16 16:37:46 2017">
+<instrument name="INSTRUMENT" valid-from   ="1900-01-31 23:59:59"
+valid-to     ="2100-01-31 23:59:59" last-modified="DATE">
 <defaults>
     <length unit="meter"/>
     <angle unit="degree"/>
@@ -442,8 +450,14 @@ valid-to     ="2100-01-31 23:59:59" last-modified="Thu Feb 16 16:37:46 2017">
         pixmonitors = self._get_mantid_pixels_monitors()
         rectmonitor = self._get_mantid_rectangular_monitor()
         bananamonitor = self._get_mantid_banana_monitor()
+        instr = self.instr
+        now = datetime.now() # current date and time
 
-        return '\n\n'.join([self.header, source, sample, pixmonitors, rectmonitor, bananamonitor, self.footer]).strip()
+        s = self.header
+        s = s.replace('INSTRUMENT', instr)
+        s = s.replace('DATE', now.strftime("%m/%d/%Y, %H:%M:%S"))
+
+        return '\n\n'.join([s, source, sample, pixmonitors, rectmonitor, bananamonitor, self.footer]).strip()
 
 
 class MantidPixel:
@@ -506,15 +520,16 @@ def file_save(data, filename):
     f.close()
 
 
-def main(instr=None, default=None, options=None):
+def main(instr=None, dirname=None, default=None, **kwds):
     ''' script execution '''
     logging.basicConfig(level=logging.INFO)
 
     # inspect is required b McDisplayReader
-    reader = McDisplayReader(instr=instr, default=default, n=1, debug=True)
+    reader = McDisplayReader(instr=instr, dir=None, **kwds)
     instrument = reader.read_instrument()
+    raybundle = reader.read_particles()
 
-    writer = MantidPixelWriter(instrument.components)
+    writer = MantidPixelWriter(instrument.components,instr)
     print("assembling mantid xml...")
     text = writer.do_work()
     filename = instr + '.xml'
@@ -527,7 +542,14 @@ if __name__ == '__main__':
     # Only pre-sets instr, --default, options
     parser, prefix = make_common_parser(__file__, __doc__)
 
+    parser.add_argument('--dirname', help='output directory name override')
+    parser.add_argument('-n', '--ncount', dest='n', type=float, default=1, help='Number of particles to simulate')
+
     args, unknown = parser.parse_known_args()
+
+    # Suppress ncount > 1, we don't do anything with such particles
+    if (args.n>1):
+        args.n=1
     # if --inspect --first or --last are given after instr, the remaining args become "unknown",
     # but we assume that they are instr_options
     args = {k: args.__getattribute__(k) for k in dir(args) if k[0] != '_'}

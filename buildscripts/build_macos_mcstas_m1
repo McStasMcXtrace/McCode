@@ -78,7 +78,6 @@ cmake -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcst
 make install
 cd $WORK
 
-
 if [ ! -f Mambaforge-$(uname)-$(uname -m).sh ]; then
     # Download and embed a miniconda
     echo
@@ -104,9 +103,10 @@ echo
 export PATHBAK=$PATH
 export PATH=$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin:$PATH
 
+
 mamba update mamba -y
 mamba install mamba conda-build -y
-mamba install openmpi gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl -y
+mamba install openmpi gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl nexusformat nexpy hdf5 -y
 mamba clean --all -y
 cd $TMPDIR
 git clone https://github.com/conda-forge/qscintilla2-feedstock.git
@@ -115,6 +115,15 @@ conda-build .
 mamba install qscintilla2 --use-local -y
 mamba clean --all -y
 mamba build purge
+cd $WORK
+
+cd 3rdparty/nexus-code
+if [ -d build ]; then
+    rm -rf build
+fi
+mkdir -p build; cd build
+cmake -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/ -DHDF5_ROOT=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/miniconda3/ -DCMAKE_MACOSX_RPATH=ON -DCMAKE_INSTALL_RPATH=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/lib  ..
+make install
 cd $WORK
 
 export PATH=$PATHBAK

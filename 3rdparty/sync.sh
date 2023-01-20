@@ -27,4 +27,14 @@ else
     git clone https://github.com/mctools/ncrystal.git
 fi
 
+if [ -d nexus-code ]; then
+    echo Updating existing NeXus clone
+    cd nexus-code
+    git pull
+    cd ..
+else
+    echo Cloning NeXus
+    git clone https://github.com/nexusformat/code nexus-code
+fi
+
 cd $BASEDIR

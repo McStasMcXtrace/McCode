@@ -68,6 +68,9 @@ int vecsize = 128;
 int numgangs = 7813;
 long gpu_innerloop = 2147483647;
 
+/* Monitor_nD list/buffer-size default */
+long MONND_BUFSIZ = 1000000;
+
 /* Number of particle histories to simulate. */
 #ifdef NEUTRONICS
 mcstatic unsigned long long int mcncount             = 1;
@@ -3887,6 +3890,8 @@ mchelp(char *pgmname)
 "                             kernel run (default: 2147483647)\n"
 "\n"
 #endif
+"\n"
+"  --bufsiz                   Monitor_nD list/buffer-size (default: 1000000)\n"
 "  --format=FORMAT            Output data files using FORMAT="
    FLAVOR_UPPER
 #ifdef USE_NEXUS
@@ -4143,6 +4148,9 @@ mcparseoptions(int argc, char *argv[])
     }    
     else if(!strcmp("--vecsize", argv[i]) && (i + 1) < argc) {
       vecsize=atoi(argv[++i]);
+    }
+    else if(!strcmp("--bufsiz", argv[i]) && (i + 1) < argc) {
+      MONND_BUFSIZ=atoi(argv[++i]);
     }
     else if(!strncmp("--numgangs=", argv[i], 11)) {
       numgangs=atoi(&argv[i][11]);

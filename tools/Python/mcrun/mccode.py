@@ -164,9 +164,10 @@ class McStas:
 
         # Setup cflags
         cflags = ['-lm']  # math library
-        cflags += [self.options.mpi and mccode_config.compilation['MPIFLAGS'] or '']  # MPI
-        cflags += [self.options.openacc and mccode_config.compilation['OACCFLAGS']  or ' ']  # OpenACC
-        cflags += [self.options.format.lower() == 'nexus' and mccode_config.compilation['NEXUSFLAGS'] or ' '] # NeXus
+        # Parse for instances of CMD() ENV() GETPATH() in the loaded CFLAG entries
+        cflags += [self.options.mpi and mccodelib.cflags.evaluate_dependency_str(mccode_config.compilation['MPIFLAGS'], options.verbose) or '']  # MPI
+        cflags += [self.options.openacc and mccodelib.cflags.evaluate_dependency_str(mccode_config.compilation['OACCFLAGS'], options.verbose)  or ' ']  # OpenACC
+        cflags += [self.options.format.lower() == 'nexus' and mccodelib.cflags.evaluate_dependency_str(mccode_config.compilation['NEXUSFLAGS'], options.verbose) or ' '] # NeXus
         cflags += [self.options.funnel and '-DFUNNEL'  or ' ']  # Funneling
         cflags += [self.options.D1 is not None and "-D" + self.options.D1 or ' ']  # DEFINE1
         cflags += [self.options.D2 is not None and "-D" + self.options.D2 or ' ']  # DEFINE2
@@ -216,7 +217,7 @@ class McStas:
         options = self.options
 
         # Handle proxy options with values
-        proxy_opts_val = ['seed', 'ncount', 'dir', 'format','vecsize','numgangs','gpu_innerloop']
+        proxy_opts_val = ['seed', 'ncount', 'dir', 'format','vecsize','numgangs','gpu_innerloop','bufsiz']
         for opt in proxy_opts_val:
             # try extra_opts before options
             default = getattr(options, opt.replace('-', '_'))
@@ -245,6 +246,13 @@ class McStas:
     def runMPI(self, args, pipe=False, override_mpi=None):
         """ Run McStas, possibly via mpi """
         binpath = self.binpath
+        myformat = self.options.format
+
+        # If this is McStas, if format is NeXus and --IDF requested, call the XML-generator
+        if (mccode_config.configuration["MCCODE"]=='mcstas' and not self.options.info):
+            if self.options.format.lower() == 'nexus' and self.options.IDF:
+                Process(mccode_config.configuration['IDFGEN'] + " " + self.path).run(args, pipe=pipe)
+
         mpi = self.options.use_mpi
         if override_mpi or override_mpi is None and mpi:
             LOG.debug('Running via MPI: %s', self.binpath)
@@ -261,6 +269,7 @@ class McStas:
             if self.options.openacc and not os.name == 'nt':
                 mpi_flags = mpi_flags + [mccode_config.configuration['MCCODE_LIB_DIR'] +'/bin/acc_gpu_bind']
             args = mpi_flags + [self.binpath] + args
+
         return Process(binpath).run(args, pipe=pipe)
 
     def get_info(self):
