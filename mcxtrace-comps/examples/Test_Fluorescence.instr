@@ -70,11 +70,11 @@ COMPONENT psd = PSD_monitor(xwidth=0.0015, yheight=0.0015, nx=100, ny=100, filen
 AT(0,0,0.1) RELATIVE PREVIOUS
 
 COMPONENT emon_Compton = COPY(emon)(filename="Compton.dat")
-WHEN (COMP_GETPAR(sample, type) == 2)
+WHEN (COMP_GETPAR(sample, type) == COMPTON)
 AT(0,0,0.1) RELATIVE PREVIOUS
 
 COMPONENT emon_Rayleigh = COPY(emon)(filename="Rayleigh.dat")
-WHEN (COMP_GETPAR(sample, type) == 1)
+WHEN (COMP_GETPAR(sample, type) == RAYLEIGH)
 AT(0,0,0.1) RELATIVE PREVIOUS
 
 
