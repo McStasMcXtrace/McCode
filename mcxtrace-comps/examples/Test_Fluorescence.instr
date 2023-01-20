@@ -15,11 +15,10 @@
 * 
 * %Description
 * This instrument simply has a lab source, a few monitors and a sample 
-* to model material fluorescence, Compton and Rayleigh. 
-* Material is chosen to be Mn (K-edge 6.5 keV).
+* to model material fluorescence, Compton and Rayleigh scattering. 
 *
 * 
-* %Example: Test_Fluorescence.instr -n1e5 Detector: emon_I=1.4453e-14
+* %Example: Test_Fluorescence.instr -n1e5 Detector: emon_I=8.17009e-15
 *
 * %Parameters
 * material: [str]  Material file to use, e.g. chemical formulae "Pb2SnO4"
@@ -29,7 +28,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Test_Fluorescence(string material="LaB6", E0=6.7, dE=0.1)
+DEFINE INSTRUMENT Test_Fluorescence(string material="LaB6", E0=39, dE=0.06)
 
 DECLARE %{
   #ifndef WIN32
@@ -70,11 +69,11 @@ AT(0,0,0.1) RELATIVE PREVIOUS
 COMPONENT psd = PSD_monitor(xwidth=0.0015, yheight=0.0015, nx=100, ny=100, filename="psd.dat")
 AT(0,0,0.1) RELATIVE PREVIOUS
 
-COMPONENT emon_compton = COPY(emon)(filename="compton.dat")
+COMPONENT emon_Compton = COPY(emon)(filename="Compton.dat")
 WHEN (COMP_GETPAR(sample, type) == 2)
 AT(0,0,0.1) RELATIVE PREVIOUS
 
-COMPONENT emon_rayleigh = COPY(emon)(filename="rayleigh.dat")
+COMPONENT emon_Rayleigh = COPY(emon)(filename="Rayleigh.dat")
 WHEN (COMP_GETPAR(sample, type) == 1)
 AT(0,0,0.1) RELATIVE PREVIOUS
 

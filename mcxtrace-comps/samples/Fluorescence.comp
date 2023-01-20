@@ -243,17 +243,17 @@ DECLARE %{
   struct   compoundData *compound;
   DArray1d cum_massFractions;
   DArray1d cum_xs_fluo;
-  DArray1d cum_xs_compton;
-  DArray1d cum_xs_rayleigh;
+  DArray1d cum_xs_Compton;
+  DArray1d cum_xs_Rayleigh;
   int  type;
   int  shape;
   off_struct offdata;
   int  n_fluo;
-  int  n_compton;
-  int  n_rayleigh;
+  int  n_Compton;
+  int  n_Rayleigh;
   double p_fluo;
-  double p_compton;
-  double p_rayleigh;
+  double p_Compton;
+  double p_Rayleigh;
 %}
 
 INITIALIZE %{
@@ -304,8 +304,8 @@ INITIALIZE %{
   double sum_massFractions = 0;
   cum_massFractions        = create_darr1d(compound->nElements+1);
   cum_xs_fluo              = create_darr1d(compound->nElements+1);
-  cum_xs_compton           = create_darr1d(compound->nElements+1);
-  cum_xs_rayleigh          = create_darr1d(compound->nElements+1);
+  cum_xs_Compton           = create_darr1d(compound->nElements+1);
+  cum_xs_Rayleigh          = create_darr1d(compound->nElements+1);
   cum_massFractions[0]     = 0;
   
   /* print material information, and check for elements */
@@ -355,8 +355,8 @@ INITIALIZE %{
     );
   }
   
-  n_fluo = n_compton = n_rayleigh = 0;
-  p_fluo = p_compton = p_rayleigh = 0;
+  n_fluo = n_Compton = n_Rayleigh = 0;
+  p_fluo = p_Compton = p_Rayleigh = 0;
 %}
 
 TRACE %{
@@ -498,7 +498,7 @@ if (intersect) {
   /* compute total scattering cross section for incoming photon energy Ei */
   /* compute each contribution XS */
   xs[FLUORESCENCE]=xs[COMPTON]=xs[RAYLEIGH]=xs[3]=sigma_barn=0;
-  cum_xs_fluo[0] = cum_xs_compton[0] = cum_xs_rayleigh[0] = 0;
+  cum_xs_fluo[0] = cum_xs_Compton[0] = cum_xs_Rayleigh[0] = 0;
   for (i_Z=0; i_Z< compound->nElements; i_Z++) {
     int    Z   = compound->Elements[i_Z];
     double frac= compound->massFractions[i_Z];
@@ -508,8 +508,8 @@ if (intersect) {
     XRMC_CrossSections(Z, Ei, xs_Z); // [barn/atom]
     sigma_barn            += frac*CSb_Total(Z, Ei, NULL); // Photo+Compton+Rayleigh
     cum_xs_fluo[i_Z+1]     = cum_xs_fluo[i_Z]    +frac*xs_Z[FLUORESCENCE];
-    cum_xs_compton[i_Z+1]  = cum_xs_compton[i_Z] +frac*xs_Z[COMPTON];
-    cum_xs_rayleigh[i_Z+1] = cum_xs_rayleigh[i_Z]+frac*xs_Z[RAYLEIGH];
+    cum_xs_Compton[i_Z+1]  = cum_xs_Compton[i_Z] +frac*xs_Z[COMPTON];
+    cum_xs_Rayleigh[i_Z+1] = cum_xs_Rayleigh[i_Z]+frac*xs_Z[RAYLEIGH];
     for (i=0; i<3; i++) { xs[i] += frac*xs_Z[i]; }
   } // for Z in compound
   
@@ -560,6 +560,10 @@ if (intersect) { /* scattering event */
   int    i_Z, Z;
   double solid_angle;
   double theta, dsigma;
+  
+  /* correct for XS total(photo+Compton+Rayleigh) > sum(fluo+Compton+Rayleigh) */
+  dsigma = (xs[FLUORESCENCE]+xs[RAYLEIGH]+xs[COMPTON])/sigma_barn;
+  if (dsigma < 1) p *= dsigma; // < 1
 
   /* MC choose process from cross sections 'xs': fluo, Compton, Rayleigh */
   type = XRMC_SelectInteraction(xs);
@@ -570,10 +574,10 @@ if (intersect) { /* scattering event */
       i_Z = XRMC_SelectFromDistribution(cum_xs_fluo,     compound->nElements+1);
       break;
     case RAYLEIGH:
-      i_Z = XRMC_SelectFromDistribution(cum_xs_rayleigh, compound->nElements+1);
+      i_Z = XRMC_SelectFromDistribution(cum_xs_Rayleigh, compound->nElements+1);
       break;
     case COMPTON:
-      i_Z = XRMC_SelectFromDistribution(cum_xs_compton,  compound->nElements+1);
+      i_Z = XRMC_SelectFromDistribution(cum_xs_Compton,  compound->nElements+1);
       break;
     default:
       printf("%s: WARNING: process %i unknown. Absorb.\n", NAME_CURRENT_COMP, type);
@@ -607,20 +611,20 @@ if (intersect) { /* scattering event */
       break;
       
     case RAYLEIGH:     /* 1 Rayleigh: Coherent, elastic    */
-      n_rayleigh++;
-      p_rayleigh += p;
+      n_Rayleigh++;
+      p_Rayleigh += p;
       theta      = acos(scalar_prod(kf_x,kf_y, kf_z,ki_x, ki_y,ki_z)/ki);
       dsigma     = DCSb_Rayl(Z,  Ei, theta, NULL); // [barn/at/st]
-      p         *= dsigma/xs[RAYLEIGH];
+      p         *= 4*PI*dsigma/xs[RAYLEIGH];
       break;
     
     case COMPTON:      /* 2 Compton: Incoherent: choose final energy */
-      n_compton++;
-      p_compton += p;
+      n_Compton++;
+      p_Compton += p;
       theta      = acos(scalar_prod(kf_x,kf_y, kf_z,ki_x, ki_y,ki_z)/ki);
       dsigma     = DCS_Compt(Z,  Ei, theta, NULL); // [barn/at/st]
       kf         = ComptonEnergy(Ei, theta, NULL)*E2K; /* XRayLib */
-      p         *= dsigma/xs[COMPTON];
+      p         *= 4*PI*dsigma/xs[COMPTON];
       break;
   }
   Ef = K2E*kf;
@@ -638,7 +642,7 @@ if (intersect) { /* scattering event */
 FINALLY %{
   FreeCompoundData(compound);
   printf("%s: scattered intensity: fluo=%g Compton=%g Rayleigh=%g\n", 
-    NAME_CURRENT_COMP, p_fluo, p_compton, p_rayleigh);
+    NAME_CURRENT_COMP, p_fluo, p_Compton, p_Rayleigh);
 %}
 
 END
