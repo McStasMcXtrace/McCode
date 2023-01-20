@@ -156,17 +156,18 @@ class McView(object):
         if dlg.exec_():
             return dlg.selectedFiles()[0]
 
-    def showStartSimDialog(self, params, comps, mcdisplays, mcplots):
+    def showStartSimDialog(self, params, comps, mcdisplays, mcplots, formats):
         if self.__ssd == None:
             self.__ssd = McStartSimDialog()
         self.__ssd.createParamsWidgets(params)
         self.__ssd.set_components(comps)
         self.__ssd.set_mcdisplays(mcdisplays)
         self.__ssd.set_mcplots(mcplots)
+        self.__ssd.set_formats(formats)
         if self.__ssd.exec_():
             return self.__ssd.getValues()
         else:
-            return None, None, None, None, None
+            return None, None, None, None, None, None
 
     def showNewInstrDialog(self, lookdir):
         dlg = QtWidgets.QFileDialog()
@@ -632,6 +633,7 @@ class McStartSimDialog(QtWidgets.QDialog):
         self._last_inspect_compnames = None
         self._last_mcdisplays = None
         self._last_mcplots = None
+        self._last_formats = None
         self.ui = Ui_dlgStartSim()
         self.ui.setupUi(self)
         if not mccode_config.configuration["PARTICLE"] == "neutron":
@@ -669,6 +671,14 @@ class McStartSimDialog(QtWidgets.QDialog):
         for m in mcplots:
             self.ui.cbxAutoPlotters.addItem(m)
 
+    def set_formats(self, formats):
+        if formats == self._last_formats:
+            return
+        self._last_formats = formats
+        self.ui.cbxFormats.clear()
+        for f in formats:
+            self.ui.cbxFormats.addItem(f)
+            
     def _set_inspect_visible(self, sim_run_idx):
         visible = False
         if sim_run_idx == 1:
@@ -679,7 +689,9 @@ class McStartSimDialog(QtWidgets.QDialog):
         self.ui.cbxMcdisplays.setVisible(visible)
         self.ui.lblAutoPlot.setVisible(not visible)
         self.ui.cbxAutoPlotters.setVisible(not visible)
-
+        self.ui.lblFormat.setVisible(not visible)
+        self.ui.cbxFormats.setVisible(not visible)
+        
     def getValues(self):
         ''' Return values:
 
@@ -692,6 +704,8 @@ class McStartSimDialog(QtWidgets.QDialog):
                 5 - clustering # nodes (int)
                 6 - random seed (int)
                 7 - output directory (str)
+                8 - autoplotter
+                9 - format
             params[]:
                 [<par_name>, <value>] pairs
         '''
@@ -743,8 +757,15 @@ class McStartSimDialog(QtWidgets.QDialog):
         p8 = idx > 0
         if idx > 0:
             mcplot = self._last_mcplots[idx-1]
+
+        # format
+        Format = None
+        idx = self.ui.cbxFormats.currentIndex()
+        p9 = idx > 0
+        if idx > 0:
+            Format = self._last_formats[idx]
         
-        fixed_params =[p0, p1, p2, p3, p4, p5, p6, p7, p8]
+        fixed_params =[p0, p1, p2, p3, p4, p5, p6, p7, p8, p9]
         
         # get dynamic params
         params = []
@@ -764,7 +785,7 @@ class McStartSimDialog(QtWidgets.QDialog):
         if p0 == SimTraceEnum.TRACE:
             mcdisplay = self._last_mcdisplays[idx]
         
-        return fixed_params, params, inspect, mcdisplay, mcplot
+        return fixed_params, params, inspect, mcdisplay, mcplot, Format
 
     _wParams = []
     __oldParams = []
@@ -1098,7 +1119,7 @@ class McConfigDialog(QtWidgets.QDialog):
         
     def initConfigData(self, args):
         # comboboxes
-        mcrun_lst, mcplot_lst, mcdisplay_lst = mccode_config.get_options()
+        mcrun_lst, mcplot_lst, mcdisplay_lst, format_lst = mccode_config.get_options()
 
         # mcrun combobox
         selected_val = mccode_config.configuration["MCRUN"]
@@ -1136,6 +1157,18 @@ class McConfigDialog(QtWidgets.QDialog):
         self.ui.cbxMcdisplay.conf_org_value = mccode_config.configuration["MCDISPLAY"]
         self.ui.cbxMcdisplay.conf_options_lst = mcdisplay_lst
 
+        # format combobox
+        selected_val = mccode_config.configuration["FORMAT"]
+        i = 0
+        for val in format_lst:
+            self.ui.cbxFormats.addItem(val)
+            if val == selected_val:
+                self.ui.cbxFormats.setCurrentIndex(i)
+            i += 1
+        self.ui.cbxFormats.conf_var = "FORMAT"
+        self.ui.cbxFormats.conf_org_value = mccode_config.configuration["FORMAT"]
+        self.ui.cbxFormats.conf_options_lst = format_lst
+        
         # line edits
         self.ui.edtCC.setText(mccode_config.compilation["CC"])
         self.ui.edtCC.conf_var = "CC"
@@ -1164,11 +1197,11 @@ class McConfigDialog(QtWidgets.QDialog):
         i = self.ui.cbxMcrun.currentIndex()
         mccode_config.configuration["MCRUN"] = self.ui.cbxMcrun.conf_options_lst[i]
 
-        # mcrun combobox
+        # mcplot combobox
         i = self.ui.cbxMcPlot.currentIndex()
         mccode_config.configuration["MCPLOT"] = self.ui.cbxMcPlot.conf_options_lst[i]
 
-        # mcrun combobox
+        # mcdisplay combobox
         i = self.ui.cbxMcdisplay.currentIndex()
         mccode_config.configuration["MCDISPLAY"] = self.ui.cbxMcdisplay.conf_options_lst[i]
 

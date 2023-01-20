@@ -309,6 +309,8 @@ class McGuiState(QtCore.QObject):
                 5 - clustering # nodes (int)
                 6 - random seed (int)
                 7 - output directory (str)
+                8 - autoplotter
+                9 - format
             params[]:
                 [<par_name>, <value>] pairs
         '''
@@ -317,6 +319,7 @@ class McGuiState(QtCore.QObject):
         # mpi-related
         clustering = fixed_params[4]
         mpicount = fixed_params[5]
+        Format = fixed_params[9]
         if mpicount == '':
             mpicount = '2'
         if clustering == 1:
@@ -377,6 +380,12 @@ class McGuiState(QtCore.QObject):
         autoplot = fixed_params[8]
         if autoplot and simtrace == 0:
             runstr = runstr + ' --autoplot' +  ' --autoplotter=' + mccode_config.configuration["MCPLOT"]
+
+        # format
+        Format = fixed_params[9]
+        if Format and simtrace == 0:
+            print("REDEFINING FORMAT: " + mccode_config.configuration["FORMAT"])
+            runstr = runstr + ' --format=' + mccode_config.configuration["FORMAT"]
         
         # parse instrument params
         for p in params:
@@ -615,10 +624,13 @@ class McGuiAppController():
                 return comps
 
             comps = get_compnames(text=open(self.state.getInstrumentFile(), 'rb').read().decode())
-            _a, mcplots, mcdisplays = mccode_config.get_options()
-            fixed_params, new_instr_params, inspect, mcdisplay, autoplotter = self.view.showStartSimDialog(
-                instr_params, comps, mcdisplays, mcplots)
+            _a, mcplots, mcdisplays, formats = mccode_config.get_options()
+            fixed_params, new_instr_params, inspect, mcdisplay, autoplotter, Format = self.view.showStartSimDialog(
+                instr_params, comps, mcdisplays, mcplots, formats)
 
+            if Format != None:
+                print("SETTING FORMAT: " + Format)
+                mccode_config.configuration["FORMAT"] = Format
             if mcdisplay != None:
                 mccode_config.configuration["MCDISPLAY"] = mcdisplay
             if autoplotter != None:

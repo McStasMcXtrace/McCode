@@ -11,7 +11,8 @@
     "PARTICLE": "@MCCODE_PARTICLE@",
     "BROWSER": "@BROWSER@",
     "GUICOLS": "3",
-    "EDITOR": "@EDITOR@"
+    "EDITOR": "@EDITOR@",
+    "FORMAT": "McCode"
   },
   "compilation": {
     "CFLAGS": "@CFLAGS@",

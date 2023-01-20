@@ -114,18 +114,19 @@ def get_options():
                          prefix+"display-mantid",
                          prefix+"display-matlab"+suffix+" --format=Matlab"]
         mcrun_lst =     [prefix+"run", prefix+"run --format=NeXus", prefix+"run --format=NeXus --IDF"]
+        format_lst =    ["McCode", "NeXus", "NeXus --IDF", "NeXus -c", "NeXus --IDF -c"]
     else:
         prefix = "mx"
         mcdisplay_lst = [prefix+"display-webgl",
                          prefix+"display-pyqtgraph",
                          prefix+"display-matlab"+suffix+" --format=Matlab"]
         mcrun_lst =     [prefix+"run", prefix+"run --format=NeXus"]
- 
+        format_lst =    ["McCode", "NeXus", "NeXus -c"]
 
         
     mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot-matplotlib", prefix+"plot-matlab"]
 
-    return mcrun_lst, mcplot_lst, mcdisplay_lst
+    return mcrun_lst, mcplot_lst, mcdisplay_lst, format_lst
 
 def get_mccode_prefix():
     ''' returns 'mc' or 'mx' depending on system configuration '''
