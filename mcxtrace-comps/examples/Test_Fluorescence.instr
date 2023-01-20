@@ -69,6 +69,10 @@ AT(0,0,0.1) RELATIVE PREVIOUS
 COMPONENT psd = PSD_monitor(xwidth=0.0015, yheight=0.0015, nx=100, ny=100, filename="psd.dat")
 AT(0,0,0.1) RELATIVE PREVIOUS
 
+COMPONENT emon_fluo = COPY(emon)(filename="Fluorescence.dat")
+WHEN (COMP_GETPAR(sample, type) == FLUORESCENCE)
+AT(0,0,0.1) RELATIVE PREVIOUS
+
 COMPONENT emon_Compton = COPY(emon)(filename="Compton.dat")
 WHEN (COMP_GETPAR(sample, type) == COMPTON)
 AT(0,0,0.1) RELATIVE PREVIOUS
