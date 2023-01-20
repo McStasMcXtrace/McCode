@@ -67,7 +67,7 @@
 * The computation is made via the XRayLib (apt install libxrl-dev).
 *
 * %Parameters
-* material:  [str]    Chemical formulae, e.g. "LaB6", "PbSnO4".
+* material:  [str]    Chemical formulae, e.g. "LaB6", "Pb2SnO4".
 * weight:    [g/mol]  Atomic/molecular weight of material.
 * density:   [g/cm^3] Density of material. V_rho=density/weight/1e24*N_A.
 * rho:       [AA-3]   Density of scattering elements (nb atoms/unit cell V_0).
