@@ -4,7 +4,7 @@ export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "im
 # rapid-build script for mcstas-kernel dev:
 
 
-#git checkout mccode-3
+git checkout mccode-3
 git pull
 
 # Ensure our 3rd party modules are in place and updated
