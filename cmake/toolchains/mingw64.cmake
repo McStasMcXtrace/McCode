@@ -40,3 +40,7 @@ set(MPIRUN "mpiexec.exe")
 set(MPILIB "msmpi")
 set(MCCODE_CFLAGS "-g -O2 -DNDEBUG -lm -std=c99 -D_POSIX_SOURCE")
 set(EDITOR "start")
+
+# NeXus location defaults
+set(NEXUSINCLUDE "\\\"C:/Program Files/NeXus Data Format/include/nexus\\\"")
+set(NEXUSLIB "\\\"C:/Program Files/NeXus Data Format/bin\\\"")

@@ -45,6 +45,7 @@ fi
 ./mkdist mcstas-tools-python-mcdisplay-webgl 3.x-dev tools/Python/mcdisplay/webgl/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcdisplay-cad 3.x-dev tools/Python/mcdisplay/cad/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-pyqtgraph 3.x-dev tools/Python/mcplot/pyqtgraph/ "" mac "" -- justinst
+./mkdist mcstas-tools-python-mcdisplay-mantid 3.x-dev tools/Python/mcdisplay/mantid_xml/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-svg 3.x-dev tools/Python/mcplot/svg/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-matplotlib 3.x-dev tools/Python/mcplot/matplotlib/ "" mac "" -- justinst
 cp tools/other/mcsplit/mcsplit.py $MCINSTALL_PREFIX/mcstas/3.x-dev/bin/
@@ -52,6 +53,7 @@ cp tools/other/mcsplit/mcsplit.py $MCINSTALL_PREFIX/mcstas/3.x-dev/bin/
 export MCINSTALL_PREFIX=$HOME/McStas/mcstas/3.x-dev/
 ./mkdist mcstas-ncrystal 3.x-dev 3rdparty/ncrystal-package "" mac "" -- justinst
 ./mkdist mcstas-mcpl 3.x-dev 3rdparty/mcpl-package "" mac "" -- justinst
+./mkdist mcstas-nexus 3.x-dev 3rdparty/nexus-package "" mac "" -- justinst
 
 
 # Ensure we are configured for 10 node MPI runs

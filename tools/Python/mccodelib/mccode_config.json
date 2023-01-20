@@ -6,6 +6,7 @@
     "MCRUN": "mcrun",
     "MCPLOT": "mcplot-pyqtgraph",
     "MCDISPLAY": "mcdisplay-webgl",
+    "IDFGEN": "mcdisplay-mantid",
     "TOOL_NAME": "mcgui",
     "PARTICLE": "neutron",
     "BROWSER": "xdg-open",

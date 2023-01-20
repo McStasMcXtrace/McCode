@@ -4,7 +4,7 @@ export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "im
 # rapid-build script for mcstas-kernel dev:
 
 
-git checkout mccode-3
+#git checkout mccode-3
 git pull
 
 # Ensure our 3rd party modules are in place and updated
@@ -49,6 +49,7 @@ fi
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph 3.x-dev tools/Python/mcdisplay/pyqtgraph/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcdisplay-webgl 3.x-dev tools/Python/mcdisplay/webgl/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcdisplay-cad 3.x-dev tools/Python/mcdisplay/cad/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mcdisplay-mantid 3.x-dev tools/Python/mcdisplay/mantid_xml/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-pyqtgraph 3.x-dev tools/Python/mcplot/pyqtgraph/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-svg 3.x-dev tools/Python/mcplot/svg/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-matplotlib 3.x-dev tools/Python/mcplot/matplotlib/ "" deb64 "" -- justinst
