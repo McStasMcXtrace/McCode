@@ -45,9 +45,12 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT SNS_ARCS_Mantid(Fermi_nu=420,T0_nu=90,nrad=0.58,nchans=40,Edes=50,Et=25,ttheta=25,T0_off=0,sxmin=-0.04,sxmax=0.04,symin=-0.04,symax=0.04,run_num=1)
-DECLARE
-%{
+DEFINE INSTRUMENT SNS_ARCS_Mantid(string filename="source_sct521_bu_17_1.dat",Fermi_nu=420,T0_nu=90,nrad=0.58,nchans=40,Edes=50,Et=25,ttheta=25,T0_off=0,sxmin=-0.04,sxmax=0.04,symin=-0.04,symax=0.04,run_num=1)
+DEPENDENCY " -DLOADPATH=GETPATH(data) "
+
+DECLARE %{
+   char fullfile[256];
+   
    double Emin,Emax;
    /* guide reflectivity profile parameters */
    double Gu_m, Gu_R, Gu_alpha, Gu_Qc, Gu_W;
@@ -72,6 +75,17 @@ DECLARE
 %}
 INITIALIZE
 %{
+#define QUOTE(name) #name
+#define STR(macro) QUOTE(macro)
+
+#ifndef LOADPATH
+#define LOADPATH=/usr/share/mcstas/3.1/data
+#endif
+
+#define LOADPATH_ STR(LOADPATH)
+   sprintf(fullfile,"%s/%s",LOADPATH_,filename);
+   printf("Using the input file: %s\n", fullfile);
+  
    detoptstr=malloc(150*sizeof(char));
    tfilename=malloc(50*sizeof(char));
    detsampoptstr=malloc(200*sizeof(char));
@@ -108,7 +122,7 @@ INITIALIZE
    sprintf(v_fname,"virt_src_ARCS_E%1.2f_F_nu_%g_T0_nu_%g_%g.dat",Edes,Fermi_nu,T0_nu,run_num);
   %}
 TRACE
-COMPONENT mod=SNS_source(filename="source_sct521_bu_17_1.dat",
+COMPONENT mod=SNS_source(filename=fullfile,
                          xwidth=0.1,
                          yheight=0.12,
                          dist=2.5,
