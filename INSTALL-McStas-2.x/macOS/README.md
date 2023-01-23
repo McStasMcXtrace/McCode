@@ -5,11 +5,6 @@
   supported perl tool set). Supported on both Intel and Apple Silicon,
   via separate installation bundles.
 
-* macOS 10.9-10.15 (Maverics, Yosemite, El Capitan, Sierra, High
-  Sierra, Mojave, Catalina) Fully supported, both perl and python tool sets
-
-* Mac OS X 10.8 (Partially supported, perl tool set works and python might...)
-
 ## Steps to perform
 
 * Download the Intel package:

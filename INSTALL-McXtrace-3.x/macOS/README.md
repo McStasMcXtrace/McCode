@@ -1,14 +1,9 @@
 # Installation of McXtrace 3.1 on macOS 
 
 ## Supported macOS releases
-* macOS 11.x and 12.x (Big Sur and Monterey) both fully supported python tool set, partially
+* macOS 11.x-13.x (Big Sur and later) are fully supported python tool set, partially
   supported perl tool set). Supported on both Intel and Apple Silicon,
   via separate installation bundles.
-
-* macOS 10.9-10.15 (Maverics, Yosemite, El Capitan, Sierra, High
-  Sierra, Mojave, Catalina) Fully supported, both perl and python tool sets
-
-* Mac OS X 10.8 (Partially supported, perl tool set works and python might...)
 
 ## Steps to perform
 
