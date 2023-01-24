@@ -1,0 +1,85 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Test_Fluorescence
+*
+* %Identification
+* Written by: E. Farhi (emmanuel.farhi@synchrotron-soleil.fr)
+* Date: March '21
+* Origin: Synchrotron SOLEIL
+* Release: McXtrace 1.7
+* Version: $Revision$
+* %INSTRUMENT_SITE: Tests_samples
+*
+* Example instrument to test the Fluorescence sample.
+* 
+* %Description
+* This instrument simply has a lab source, a few monitors and a sample 
+* to model material fluorescence, Compton and Rayleigh scattering. 
+*
+* 
+* %Example: Test_Fluorescence.instr -n1e5 Detector: emon_I=8.17009e-15
+*
+* %Parameters
+* material: [str]  Material file to use, e.g. chemical formulae "Pb2SnO4"
+* E0:       [keV]  Mean photon energy
+* dE:       [keV]  Photon energy spread, half width
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Test_Fluorescence(string material="LaB6", E0=39, dE=0.06)
+
+DECLARE %{
+  #ifndef WIN32
+  #include <unistd.h>
+  #else
+  #ifdef WIN32
+  #include <io.h>
+  #define F_OK 0
+  #define access _access
+  #endif
+  #endif
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar(percent=1)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT source1 =  Source_flat(E0=E0, dE=dE, xwidth=1e-3, yheight=1e-3, focus_xw=0.001, focus_yh=0.001, dist=3)
+AT(0,0,0) RELATIVE Origin
+
+COMPONENT sample_mount_point = Arm()
+AT(0,0,3) RELATIVE Origin
+
+
+COMPONENT sample=Fluorescence(material=material,
+  xwidth=0.001,yheight=0.001,zdepth=0.0001, p_interact=0.99,
+  target_index=1, focus_xw=0.0005, focus_yh=0.0005)
+AT (0,0,0) RELATIVE sample_mount_point
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT emon = E_monitor(restore_xray=1,nE=1001,Emin=0, Emax=2*E0, 
+  filename="emon.dat",xwidth=0.0005, yheight=0.0005)
+AT(0,0,0.1) RELATIVE PREVIOUS
+
+COMPONENT psd = PSD_monitor(xwidth=0.0015, yheight=0.0015, nx=100, ny=100, filename="psd.dat")
+AT(0,0,0.1) RELATIVE PREVIOUS
+/*
+COMPONENT emon_fluo = COPY(emon)(filename="Fluorescence.dat")
+WHEN (COMP_GETPAR(sample, type) == FLUORESCENCE)
+AT(0,0,0.1) RELATIVE PREVIOUS
+
+COMPONENT emon_Compton = COPY(emon)(filename="Compton.dat")
+WHEN (COMP_GETPAR(sample, type) == COMPTON)
+AT(0,0,0.1) RELATIVE PREVIOUS
+
+COMPONENT emon_Rayleigh = COPY(emon)(filename="Rayleigh.dat")
+WHEN (COMP_GETPAR(sample, type) == RAYLEIGH)
+AT(0,0,0.1) RELATIVE PREVIOUS
+*/
+
+END
