@@ -83,7 +83,7 @@ DEFINE COMPONENT Guide_anyshape_r
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, center=0, transmit=0,
 R0=0.99, Qc=0.0219, alpha=0, m=0, W=0, string geometry=0)
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (offdata)
 DEPENDENCY " -DUSE_OFF "
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
