@@ -250,8 +250,11 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
     plt.addItem(img)
 
     # associate the colour bar with the image item
-    cb = pg.ColorBarItem(cmap=colormap, values=(cb_pos_min, cb_pos_max), interactive=False)
-    cb.setImageItem(img)
+    try:
+      cb = pg.ColorBarItem(cmap=colormap, values=(cb_pos_min, cb_pos_max), interactive=False)
+      cb.setImageItem(img)
+    except:
+      cb = None
 
     # Set the x and y ranges correctly
     plt.getViewBox().setXRange(data.xlimits[0], data.xlimits[1], padding=0)
