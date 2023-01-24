@@ -61,6 +61,7 @@ static   long mcstartdate            = 0; /* start simulation time */
 static   int  mcdisable_output_files = 0; /* --no-output-files */
 mcstatic int  mcgravitation          = 0; /* use gravitation flag, for PROP macros */
 mcstatic int  mcdotrace              = 0; /* flag for --trace and messages for DISPLAY */
+#pragma acc declare create ( mcdotrace )
 int      mcallowbackprop             = 0;         /* flag to enable negative/backprop */
 
 /* OpenACC-related segmentation parameters: */
@@ -3961,10 +3962,10 @@ mcusage(char *pgmname)
 static void
 mcenabletrace(void)
 {
- if(traceenabled)
+ if(traceenabled) {
   mcdotrace = 1;
- else
- {
+  #pragma acc update device ( mcdotrace )
+ } else {
    fprintf(stderr,
            "Error: trace not enabled (mcenabletrace)\n"
            "Please re-run the " MCCODE_NAME " compiler "

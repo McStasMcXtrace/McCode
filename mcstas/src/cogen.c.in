@@ -2200,11 +2200,6 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#define MCCODE_BASE_TYPES");
   cout("");
 
-  cout("#ifdef OPENACC");
-  cout("#undef MC_TRACE_ENABLED");
-  cout("#endif");
-  cout("");
-
   /* the max number of user variables*/
   cout("#ifndef MC_NUSERVAR");
   cout("#define MC_NUSERVAR 10");
