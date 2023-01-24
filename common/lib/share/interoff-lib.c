@@ -1149,7 +1149,6 @@ int off_x_intersect(double *l0,double *l3,
 *******************************************************************************/
 void off_display(off_struct data)
 {
-#ifndef OPENACC
   unsigned int i;
   double ratio=(double)(N_VERTEX_DISPLAYED)/(double)data.faceSize;
   unsigned int pixel=0;
@@ -1196,7 +1195,6 @@ void off_display(off_struct data)
     }
     i += nbVertex;
   }
-#endif
 } /* off_display */
 
 /* end of interoff-lib.c */
