@@ -1,6 +1,7 @@
 {
   "configuration": {
     "MCCODE_VERSION": "3.x-dev",
+    "TERMINAL": "x-terminal-emulator -e",
     "MCCODE": "mcstas",
     "MCRUN": "mcrun --openacc",
     "MCPLOT": "mcplot-pyqtgraph",
@@ -10,11 +11,13 @@
     "BROWSER": "xdg-open",
     "GUICOLS": "3",
     "EDITOR": "xdg-open",
-    "QSCI": "1"
+    "QSCI": "1",
+    "FORMAT": "McCode",
+    "IDFGEN": "mcdisplay-mantid"      
   },
   "compilation": {
     "CFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=managed -Minfo=accel -DOPENACC -DUSE_MPI -lmpi -L/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/lib -I/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/include",
-    "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
+    "NEXUSFLAGS": "-Wl,-rpath,GETPATH(lib) -LGETPATH(lib) -DUSE_NEXUS -lNeXus -IGETPATH(include/nexus)",
     "MPIFLAGS": "-DUSE_MPI -lmpi -L/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/lib -I/opt/nvidia/hpc_sdk/Linux_x86_64/22.7/comm_libs/mpi/include",
     "OACCFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=managed -DOPENACC",
     "CC": "gcc",
