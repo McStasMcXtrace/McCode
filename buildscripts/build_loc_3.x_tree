@@ -9,22 +9,8 @@ git pull
 
 # Ensure our 3rd party modules are in place and updated
 THIRDPARTY=`ls 3rdparty | grep -v patches`
-cd 3rdparty
-
-cd -
 
 ./3rdparty/sync.sh
-
-
-for MODULE in `echo $THIRDPARTY`
-do
-    if [ -d "3rdparty/patches/${MODULE}" ]; then
-	echo Making McCode cmake modules available for $MODULE
-        rsync -avz cmake/ 3rdparty/${MODULE}/cmake
-	echo Applying McCode patches to 3rdparty/${MODULE}
-	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
-    fi
-done
 
 WORK=`pwd`
 
