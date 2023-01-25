@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<meta charset="utf-8"/>
+<head>
+<style>
+.headercell { padding:5px }
+.state_one { padding:5px; background-color:green; color:white; }
+.state_two { padding:5px; background-color:red; color:white; }
+.state_three { padding:5px; background-color:gray; color:white; }
+.state_four { padding:5px; color:black; }
+.vertical { writing-mode:vertical-rl; text-orientation:mixed; }
+a:link { color: white; background-color: transparent; text-decoration: none; }
+a:visited { color: lightgrey; background-color: transparent; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<fieldset>
+  <table>
+    <tr>
+      <td class=state_one>ctime<br>rtime<br>detval<br>acc. ok</td>
+      <td class=state_two>ctime<br>rutime<br>detval<br>acc. error</td>
+      <td class=state_three>ctime</td>
+    </tr>
+  </table>
+</fieldset>
+
+<fieldset style="margin-top:5px;">
+<legend>test results</legend>
+{%- if header is not none -%}
+<table>
+  <tr><td>ref user:</td><td>{{ header.3 }}</td></tr>
+</table>
+{%- endif -%}
+<table border=1 bordercolor="#dddddd">
+<tr>
+  <th></th>
+  {# table upper-left corner #}
+  {%- for h in hrow -%}
+  <th>{{ h }}</th>
+  {%- endfor -%}
+</tr>
+
+{# ROW: state, ctime, rtime, testval, reference-percentage #}
+{% for row in rows %}
+<tr>
+  <td>{{ row.0 }}</td>
+  {%- for c in row %}
+    {%- if loop.index0 > 0 %}
+      {%- if c.0 == 1 %}
+  <td class=state_one><a href={{ c.5 }} >C:{{ c.1 }}/<strong>R:{{ c.2 }}</strong><br><strong>I={{ c.3 }}</strong> ({{ c.4 }})</a></td>
+      {%- elif c.0 == 2 %}
+  <td class=state_two><a href={{ c.5 }} >C:{{ c.1 }}/<strong>R:{{ c.2 }}</strong><br><strong>I={{ c.3 }}</strong> ({{ c.4 }})</a></td>
+      {%- elif c.0 == 3 %}
+  <td class=state_three><a href={{ c.5 }} >C:{{ c.1 }}</a></td>
+      {%- else %}
+  <td class=state_four>
+    <a href={{ c.5 }} ><font color="black">{{ c.1}}</font></a>
+  </td>
+      {%- endif %}
+    {%- endif -%}
+  {%- endfor %}
+</tr>
+{%- endfor %}
+</table>
+</fieldset>
+
+</body>
+</html>
