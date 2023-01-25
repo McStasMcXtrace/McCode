@@ -22,7 +22,9 @@ export FC=gfortran
 
 if [[ -d $HOME/McStas/mcstas/3.x-dev ]]
 then
-    ls $HOME/McStas/mcstas/3.x-dev/ | grep -v miniconda3 | xargs -n1 rm -rf 
+    cd $HOME/McStas/mcstas/3.x-dev
+    ls | grep -v miniconda3 | xargs -n1 echo rm -rf 
+    cd -
 fi
 
 if [ ! -f Mambaforge-$(uname)-$(uname -m).sh ]; then
