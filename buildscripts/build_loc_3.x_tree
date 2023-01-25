@@ -23,7 +23,7 @@ export FC=gfortran
 if [[ -d $HOME/McStas/mcstas/3.x-dev ]]
 then
     cd $HOME/McStas/mcstas/3.x-dev
-    ls | grep -v miniconda3 | xargs -n1 echo rm -rf 
+    ls | grep -v miniconda3 | xargs -n1 rm -rf 
     cd -
 fi
 
