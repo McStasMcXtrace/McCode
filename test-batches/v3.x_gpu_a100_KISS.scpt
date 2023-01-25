@@ -28,7 +28,7 @@
 # -- end of LSF options --
 
 # Ensure we run with our own miniconda3
-PATH=${HOME}/miniconda3/bin:$PATH
+PATH=${HOME}/McStas/mcstas/3.x/miniconda3/bin:$PATH
 
 DATE=`date +%F`
 mkdir -p $HOME/TESTS/
