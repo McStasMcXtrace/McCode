@@ -29,13 +29,14 @@ done
 WORK=`pwd`
 
 export MCINSTALL_PREFIX=$HOME/McStas
+export CONDALOCATION=$MCINSTALL_PREFIX/mcstas/3.x/miniconda3
 export CC=gcc
 export CXX=c++
 export FC=gfortran
 
 if [[ -d $HOME/McStas/mcstas/3.x-dev ]]
 then
-    rm -rf $HOME/McStas/mcstas/3.x-dev/*
+    ls $HOME/McStas/mcstas/3.x-dev/ | grep -v miniconda3 | xargs -n1 rm -rf 
 fi
 
 if [ ! -f Mambaforge-$(uname)-$(uname -m).sh ]; then
@@ -48,26 +49,24 @@ if [ ! -f Mambaforge-$(uname)-$(uname -m).sh ]; then
     sleep 3
     curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
 fi
-echo "*********************************************************"
-echo "* Embedding miniconda3 in your app                      *"
-echo "*********************************************************"
-chmod a+x Mambaforge-$(uname)-$(uname -m).sh
-echo $MCINSTALL_PREFIX/mcstas/3.x-dev/miniconda3/
-./Mambaforge-$(uname)-$(uname -m).sh -b -p $MCINSTALL_PREFIX/mcstas/3.x-dev/miniconda3/
 
-# Run conda to install the dependencies
-echo
-echo "*********************************************************"
-echo "* Downloading python dependencies to embedded miniconda *"
-echo "*********************************************************"
-echo
-export PATHBAK=$PATH
-export PATH=$MCINSTALL_PREFIX/mcstas/3.x-dev/miniconda3/bin:$PATH
-ls 
-mamba update mamba -y
-mamba install gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 -y
-mamba clean --all -y
-
+if [[ !  -d $CONDALOCATION ]]; then
+    echo "*********************************************************"
+    echo "* Embedding miniconda3 in your app                      *"
+    echo "*********************************************************"
+    chmod a+x Mambaforge-$(uname)-$(uname -m).sh
+    ./Mambaforge-$(uname)-$(uname -m).sh -b -p $CONDALOCATION
+    # Run conda to install the dependencies
+    echo
+    echo "*********************************************************"
+    echo "* Downloading python dependencies to embedded miniconda *"
+    echo "*********************************************************"
+    echo
+    export PATH=$CONDALOCATION/bin:$PATH 
+    mamba update mamba -y
+    mamba install gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 -y
+    mamba clean --all -y
+fi
 
 ./mkdist mcstas 3.x-dev "" "" deb64 "" -- justinst
 ./mkdist mcstas-comps 3.x-dev "" "" deb64 "" -- justinst
