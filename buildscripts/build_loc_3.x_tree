@@ -68,9 +68,6 @@ if [[ !  -d $CONDALOCATION ]]; then
     mamba clean --all -y
 fi
 
-echo DONE
-exit
-
 ./mkdist mcstas 3.x-dev "" "" deb64 "" -- justinst
 ./mkdist mcstas-comps 3.x-dev "" "" deb64 "" -- justinst
 # can be out-commented after the first build iteration:
