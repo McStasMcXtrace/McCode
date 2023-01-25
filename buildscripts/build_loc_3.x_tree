@@ -29,7 +29,7 @@ done
 WORK=`pwd`
 
 export MCINSTALL_PREFIX=$HOME/McStas
-export CONDALOCATION=$MCINSTALL_PREFIX/mcstas/3.x/miniconda3
+export CONDALOCATION=$MCINSTALL_PREFIX/mcstas/3.x-dev/miniconda3
 export CC=gcc
 export CXX=c++
 export FC=gfortran
@@ -67,6 +67,9 @@ if [[ !  -d $CONDALOCATION ]]; then
     mamba install gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 -y
     mamba clean --all -y
 fi
+
+echo DONE
+exit
 
 ./mkdist mcstas 3.x-dev "" "" deb64 "" -- justinst
 ./mkdist mcstas-comps 3.x-dev "" "" deb64 "" -- justinst
