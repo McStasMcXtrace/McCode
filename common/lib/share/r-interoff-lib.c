@@ -328,13 +328,13 @@ int r_off_clip_3D_mod(r_intersection* t, Coords a, Coords b,
     unsigned long indVertP1=faceArray[++i];  //polygon's first vertex index in vtxTable
     int j=1;
     /*check whether vertex is left or right of plane*/
-    char sg0=off_sign(off_F(vtxArray[indVertP1].x,vtxArray[indVertP1].y,vtxArray[indVertP1].z,A1,0,C1,D1));
+    char sg0=r_off_sign(r_off_F(vtxArray[indVertP1].x,vtxArray[indVertP1].y,vtxArray[indVertP1].z,A1,0,C1,D1));
     while (j<pol.npol)
     {
       //polygon's j-th vertex index in vtxTable
       unsigned long indVertP2=faceArray[i+j];
       /*check whether vertex is left or right of plane*/
-      char sg1=off_sign(off_F(vtxArray[indVertP2].x,vtxArray[indVertP2].y,vtxArray[indVertP2].z,A1,0,C1,D1));
+      char sg1=r_off_sign(r_off_F(vtxArray[indVertP2].x,vtxArray[indVertP2].y,vtxArray[indVertP2].z,A1,0,C1,D1));
       if (sg0!=sg1) //if the plane intersect the polygon
         break;
 
