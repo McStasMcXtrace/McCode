@@ -110,11 +110,10 @@ end data
     lst = intervals[list(params)[0]]
     xmin = min(lst)
     xmax = max(lst)
-    N = len(lst)
 
     # TODO: figure out correct scan type
     title = 'Scan of %s' % xvars
-    scantype = 'multiarray_1d(%d)' % N
+    scantype = 'multiarray_1d(%d)' % options.numpoints
 
     variables = list(params)
     for detector in detectors:
@@ -129,7 +128,7 @@ end data
         'date': date,
 
         'ncount': options.ncount,
-        'scanpoints': N,
+        'scanpoints': options.numpoints,
 
         'params': ', '.join('%s = %s' % (xvar, intervals[xvar][i]) for xvar in params for i in range(len(intervals[xvar]))),
         'type': scantype,
