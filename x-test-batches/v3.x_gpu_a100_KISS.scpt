@@ -30,7 +30,7 @@
 # -- end of LSF options --
 
 # Ensure we run with our own miniconda3
-PATH=${HOME}/McXtrace/mcxtrace/3.x-dev/miniconda3/bin:$PATH
+PATH=${HOME}/McXtrace/mcxtrace/3.x-dev-dev/miniconda3/bin:$PATH
 
 DATE=`date +%F`
 mkdir -p $HOME/xTESTS/
