@@ -49,6 +49,7 @@
 * %E
 ************************************************************************/
 DEFINE INSTRUMENT ILL_H16_IN5_Mantid(lambda=4.5, dlambda=0.09)
+DEPENDENCY " -Wl,-rpath,GETPATH(lib) -LGETPATH(lib) -DUSE_NEXUS -lNeXus -IGETPATH(include/nexus) "
 
 TRACE
 

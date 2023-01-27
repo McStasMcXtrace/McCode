@@ -41,6 +41,7 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT templateSasView_Mantid(lambda=6, dlambda=0.05)
+DEPENDENCY " -Wl,-rpath,GETPATH(lib) -LGETPATH(lib) -DUSE_NEXUS -lNeXus -IGETPATH(include/nexus) "
 
 DECLARE %{
 %}
