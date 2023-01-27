@@ -25,6 +25,7 @@
 *******************************************************************************/
 
 DEFINE INSTRUMENT templateVanadiumMultipleScat_Mantid()
+DEPENDENCY " @NEXUSFLAGS@ "
 
 USERVARS
 %{

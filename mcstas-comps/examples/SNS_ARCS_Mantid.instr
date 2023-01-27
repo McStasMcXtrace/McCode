@@ -46,7 +46,7 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT SNS_ARCS_Mantid(string filename="source_sct521_bu_17_1.dat",Fermi_nu=420,T0_nu=90,nrad=0.58,nchans=40,Edes=50,Et=25,ttheta=25,T0_off=0,sxmin=-0.04,sxmax=0.04,symin=-0.04,symax=0.04,run_num=1)
-DEPENDENCY " -DLOADPATH=GETPATH(data) "
+DEPENDENCY " -DLOADPATH=GETPATH(data) @NEXUSFLAGS@ "
 
 DECLARE %{
    char fullfile[256];

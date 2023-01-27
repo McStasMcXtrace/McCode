@@ -41,7 +41,7 @@
 * %E
 *******************************************************************************/
 DEFINE INSTRUMENT ISIS_TOSCA_preupgrade_Mantid(string inc="Benzene_inc_CASTEP_MDANSE2018.sqw", zdepth=0.002, Emin=0.01, Emax=500, eventmode=0)
-DEPENDENCY " -Wl,-rpath,GETPATH(lib) -LGETPATH(lib) -DUSE_NEXUS -lNeXus -IGETPATH(include/nexus) "
+DEPENDENCY " @NEXUSFLAGS@ "
 
 DECLARE %{ 
 double v_foc, c_h1, c_h2, slit_curv, num_slits; 
