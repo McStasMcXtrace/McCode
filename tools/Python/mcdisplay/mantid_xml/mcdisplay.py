@@ -544,15 +544,19 @@ if __name__ == '__main__':
 
     parser.add_argument('--dirname', help='output directory name override')
     parser.add_argument('-n', '--ncount', dest='n', type=float, default=1, help='Number of particles to simulate')
+    parser.add_argument('--mpi', dest='nodes', type=int, default=None, help='Number of particles to simulate')
 
     args, unknown = parser.parse_known_args()
 
     # Suppress ncount > 1, we don't do anything with such particles
     if (args.n>1):
         args.n=1
+    if (args.nodes):
+        args.nodes=1
     # if --inspect --first or --last are given after instr, the remaining args become "unknown",
     # but we assume that they are instr_options
     args = {k: args.__getattribute__(k) for k in dir(args) if k[0] != '_'}
+
     if len(unknown):
         args['options'] = unknown
 
