@@ -36,7 +36,7 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT templateSANS2_Mantid(lambda=6, dlambda=0.05, r=150, PHI=1e-3, Delta_Rho=6e10, frac_dir=0.03, frac_inc=0.01)
-DEPENDENCY " -Wl,-rpath,GETPATH(lib) -LGETPATH(lib) -DUSE_NEXUS -lNeXus -IGETPATH(include/nexus) -D__GNUC__"
+DEPENDENCY " -Wl,-rpath,GETPATH(lib) -LGETPATH(lib) -DUSE_NEXUS -lNeXus -IGETPATH(include/nexus) "
 
 USERVARS %{
   int was_scattered;
