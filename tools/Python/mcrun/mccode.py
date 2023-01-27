@@ -201,6 +201,11 @@ class McStas:
             if (counter > 20):
                 break
 
+        if any("OPENACC" in cf for cf in cflags):
+            if any("NeXus" in cf for cf in cflags):
+                cflags += ['-D__GNUC__']
+
+
         # Compiler optimisation
         args = ['-o', self.binpath, self.cpath] + cflags
         Process(options.cc).run(args)
