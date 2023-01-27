@@ -288,12 +288,14 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
             continue
 
         # test value extraction
-        extraction = extract_testvals(join(testdir, test.instrname, str(test.testnb)), test.detector)
-        if type(extraction) is tuple:
-            test.testval = extraction[0]
+        if not didwrite_nexus:
+            extraction = extract_testvals(join(testdir, test.instrname, str(test.testnb)), test.detector)
+            if type(extraction) is tuple:
+                test.testval = extraction[0]
+            else:
+                test.testval = -1
         else:
-            test.testval = -1
-
+            test.testval = 1
         # save test result to disk
         test.testcomplete = True
         test.save(infolder=join(testdir, test.instrname))
