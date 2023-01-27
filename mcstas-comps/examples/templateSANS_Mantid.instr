@@ -42,7 +42,7 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT templateSANS_Mantid(lambda=6, dlambda=0.05, r=150, PHI=1e-3, Delta_Rho=0.6, sigma_abs=0.0)
-DEPENDENCY " -Wl,-rpath,GETPATH(lib) -LGETPATH(lib) -DUSE_NEXUS -lNeXus -IGETPATH(include/nexus) "
+DEPENDENCY " -Wl,-rpath,GETPATH(lib) -LGETPATH(lib) -DUSE_NEXUS -lNeXus -IGETPATH(include/nexus) -D__GNUC__"
 
 DECLARE %{
 %}
