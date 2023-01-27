@@ -160,6 +160,9 @@ size_t str_len(const char *s);
 #  ifndef NOSIGNALS
 #    define NOSIGNALS 1
 #  endif
+#  ifdef USE_NEXUS /* Workaround for issue in napi.h */
+#    define __GNU_C__
+#  endif
 #endif
 
 #ifndef OPENACC
