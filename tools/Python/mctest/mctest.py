@@ -273,7 +273,8 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
         retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
         t2 = time.time()
         didwrite = os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.sim"))
-        test.didrun = retcode != 0 or didwrite
+        didwrite_nexus = os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.h5"))
+        test.didrun = retcode != 0 or didwrite or didwrite_nexus
         test.runtime = t2 - t1
 
         # log to terminal
