@@ -294,8 +294,14 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
                 test.testval = extraction[0]
             else:
                 test.testval = -1
+        # Look for detector output in run_stdout
         else:
-            test.testval = 1
+            metalog = LineLogger()
+            resfile = join(testdir,test.instrname,"run_stdout_%d.txt" % (test.testnb))
+            cmd = "grep %s_I= %s | head -1 | cut -f2- -d= | cut -f1 -d\ " %(test.detector, resfile)
+            utils.run_subtool_to_completion(cmd, stdout_cb=metalog.logline)
+            test.testval=float(metalog.lst[0])
+                       
         # save test result to disk
         test.testcomplete = True
         test.save(infolder=join(testdir, test.instrname))
