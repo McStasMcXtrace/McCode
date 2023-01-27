@@ -49,6 +49,7 @@ DEFINE INSTRUMENT MCPL2Mantid_flat(string MCPLfile="my.mcpl.gz", sourceX=0, sour
 				     detectorX=0, detectorY=0, detectorZ=6,
 				     detrotX=0, detrotY=0, detrotZ=0,
 				     xwidth=0.6, yheight=0.6, int xbins=128, int ybins=128)
+DEPENDENCY " @NEXUSFLAGS@ "
 
 DECLARE
 %{
