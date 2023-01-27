@@ -190,10 +190,15 @@ class McStas:
             if re.search('CFLAGS=', line) :
                 label,flags = line.split('=',1)
 
-                #Support CMD(..) and ENV(..) in cflags:
+                # Insert NEXUSFLAGS if instrument/comps request this
+                flags = re.sub(r'\@NEXUSFLAGS\@', mccode_config.compilation['NEXUSFLAGS'], flags)
+
+                # Support for legacy @MCCODE_LIB@ symbol, with Unix-slashes
+                flags = re.sub(r'\@MCCODE_LIB\@', re.sub(r'\\','/', MCCODE_LIB), flags)
+
+                # Support CMD(..) and ENV(..) in cflags:
                 flags = mccodelib.cflags.evaluate_dependency_str( flags, options.verbose)
 
-                flags = re.sub(r'\@MCCODE_LIB\@', re.sub(r'\\','/', MCCODE_LIB), flags)
                 flags = flags.split(' ')
                 cflags += flags
 
