@@ -32,7 +32,7 @@
 *******************************************************************************/
 
 DEFINE INSTRUMENT SNS_test(string filename="source_sct091_tu_02_1.dat")
-DEPENDENCY " -DLOADPATH=@MCCODE_LIB@/data "
+DEPENDENCY " -DLOADPATH=GETPATH(data) "
 
 DECLARE %{
   char fullfile[256];
