@@ -1083,7 +1083,7 @@ TRACE
   double Ival,Tval,Eval;
   double Ddist;   /* Temp versions of dist */
 
-
+  #pragma acc atomic
   Ncount++;
 
   p=p_in;
@@ -1113,7 +1113,8 @@ TRACE
   getPoint(&Tval,&Eval,&rtE0,&rtE1, TS, _particle);
 
   //fprintf(stderr,"outside %g mev\n", TS.Total );
-  if(Eval>rtE1 || Eval<rtE0)
+  if(verbose)
+    if(Eval>rtE1 || Eval<rtE0)
       fprintf(stderr,"outside %g mev\n", Eval );
 
   Ival=TS.Total*3.744905847e14*1.1879451;  /* ( of proton in 60uAmp) * (1-cos(30))*2*Pi  */
