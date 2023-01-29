@@ -26,8 +26,8 @@
 * been created with transmitting rather than reflecting analysers, and the detectors are hence
 * also positioned differently than in the physical instrument.
 *
-* %Example: ISIS_TOSCA_preupgrade_Mantid.instr inc=Benzene_inc_CASTEP_MDANSE2018.sqw eventmode=1 Detector: Sphere_I=0.686792
-* %Example: ISIS_TOSCA_preupgrade_Mantid.instr inc=Benzene_inc_CASTEP_MDANSE2018.sqw eventmode=1 --format=NeXus Detector: Sphere_I=0.686792 
+* Example: ISIS_TOSCA_preupgrade_Mantid.instr inc=Benzene_inc_CASTEP_MDANSE2018.sqw eventmode=1 Detector: Sphere_I=0.686792
+* Example: ISIS_TOSCA_preupgrade_Mantid.instr inc=Benzene_inc_CASTEP_MDANSE2018.sqw eventmode=1 --format=NeXus Detector: Sphere_I=0.686792 
 *
 * %P
 * inc:       [filename] Incoherent scattering model to use
