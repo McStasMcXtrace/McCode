@@ -463,8 +463,8 @@ INITIALIZE
   if (bufsize > 0) sprintf(this_abs_storage.Vars.option, "list=%g borders", bufsize);
   else strcpy(this_abs_storage.Vars.option, "list all borders");
 
-  //strcat(this_abs_storage.Vars.option,", x y z vx vy vz t sx sy sz");
-  strcat(this_abs_storage.Vars.option,", y t");
+  strcat(this_abs_storage.Vars.option,", x y z vx vy vz t");
+  //strcat(this_abs_storage.Vars.option,", y t");
   Monitor_nD_Init(&this_abs_storage.DEFS, &this_abs_storage.Vars, 0.1, 0.1, 0, 0,0,0,0,0,0,0); /* dims for mcdisplay */
   this_abs_storage.Vars.compcurpos = POS_A_CURRENT_COMP;
 
