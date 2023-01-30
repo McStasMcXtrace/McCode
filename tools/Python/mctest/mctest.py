@@ -300,8 +300,11 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
             resfile = join(testdir,test.instrname,"run_stdout_%d.txt" % (test.testnb))
             cmd = "grep %s_I= %s | head -1 | cut -f2- -d= | cut -f1 -d\ " %(test.detector, resfile)
             utils.run_subtool_to_completion(cmd, stdout_cb=metalog.logline)
-            test.testval=float(metalog.lst[0])
-                       
+            try:
+                test.testval=float(metalog.lst[0])
+            except:
+                test.testval=-1
+
         # save test result to disk
         test.testcomplete = True
         test.save(infolder=join(testdir, test.instrname))
