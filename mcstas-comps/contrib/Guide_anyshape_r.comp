@@ -89,6 +89,7 @@ DEPENDENCY " -DUSE_OFF "
 
 SHARE
 %{
+%include "read_table-lib"
 %include "r-interoff-lib"
 %include "ref-lib"
 %}
