@@ -1,6 +1,0 @@
-<pkgref spec="1.12" uuid="B4BEAE13-56D0-4CE6-A531-2B2419DE053C"><config><identifier>com.Humanity.mcstas-tools-python-mcdisplay-vtk-@VERSION@</identifier><version>1.0</version><description>DESCRIPTION
-===========
-
-This is an installer created using CPack (http://www.cmake.org). No additional installation instructions provided.
-
-</description><post-install type="none"/><requireAuthorization/><installTo relocatable="true">/</installTo><flags><followSymbolicLinks/><overwriteDirectoryPermissions/></flags><packageStore type="internal"></packageStore><mod>installTo</mod><mod>parent</mod></config><scripts><scripts-dir>@DISTDIR@/mcstas-tools-python-mcdisplay-vtk-OSXpkg-@VERSION@-mac_yosemite-10.10.pkg/Contents/Resources</scripts-dir></scripts><contents><file-list>14mcstas-contents.xml</file-list><filter>/CVS$</filter><filter>/\.svn$</filter><filter>/\.cvsignore$</filter><filter>/\.cvspass$</filter><filter>/\.DS_Store$</filter></contents><extra><packagePath>@DISTDIR@/mcstas-tools-python-mcdisplay-vtk-OSXpkg-@VERSION@-mac_yosemite-10.10.pkg</packagePath><title>mcstas-tools-python-mcdisplay-vtk-@VERSION@</title></extra></pkgref>

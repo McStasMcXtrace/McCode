@@ -1,6 +1,0 @@
-<pkgref spec="1.12" uuid="96CCBC39-AB3A-4186-A543-37B78D2F2F99"><config><identifier>com.Humanity.mcstas-tools-python-mcdisplay-matplotlib-@VERSION@</identifier><version>1.0</version><description>DESCRIPTION
-===========
-
-This is an installer created using CPack (https://cmake.org). No additional installation instructions provided.
-
-</description><post-install type="none"/><requireAuthorization/><installTo relocatable="true">/</installTo><flags><followSymbolicLinks/><overwriteDirectoryPermissions/></flags><packageStore type="internal"></packageStore><mod>installTo</mod><mod>parent</mod></config><scripts><scripts-dir>@DISTDIR@/mcstas-tools-python-mcdisplay-matplotlib-OSXpkg-@VERSION@-mac_el_capitan-10.11.pkg/Contents/Resources</scripts-dir></scripts><extra><packagePath>@DISTDIR@/mcstas-tools-python-mcdisplay-matplotlib-OSXpkg-@VERSION@-mac_el_capitan-10.11.pkg</packagePath><title>mcstas-tools-python-mcdisplay-matplotlib-@VERSION@</title></extra></pkgref>
