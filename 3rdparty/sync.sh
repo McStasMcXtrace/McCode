@@ -43,10 +43,10 @@ if [ -d xraylib ]; then
     git pull
     cd ..
 else
-    echo Cloning xraylib (release 4.1.3)
+    echo Cloning xraylib \(release 4.1.3\)
     git clone https://github.com/tschoonj/xraylib
     cd xraylib
-    git checkout xraylib-4.1.3
+    git checkout -b build xraylib-4.1.3
     git pull
 fi
 
