@@ -37,4 +37,17 @@ else
     git clone https://github.com/nexusformat/code nexus-code
 fi
 
+if [ -d xraylib ]; then
+    echo Updating existing xraylib clone
+    cd xraylib
+    git pull
+    cd ..
+else
+    echo Cloning xraylib (release 4.1.3)
+    git clone https://github.com/tschoonj/xraylib
+    cd xraylib
+    git checkout xraylib-4.1.3
+    git pull
+fi
+
 cd $BASEDIR
