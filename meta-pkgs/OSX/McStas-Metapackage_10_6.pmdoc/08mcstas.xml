@@ -1,6 +1,0 @@
-<pkgref spec="1.12" uuid="51B74578-D946-4505-825D-CF2455840BC9"><config><identifier>com.Humanity.mcstas-tools-python-mcplot-matplotlib-@VERSION@</identifier><version>1.0</version><description>DESCRIPTION
-===========
-
-This is an installer created using CPack (http://www.cmake.org). No additional installation instructions provided.
-
-</description><post-install type="none"/><requireAuthorization/><installTo relocatable="true">/</installTo><flags><followSymbolicLinks/><overwriteDirectoryPermissions/></flags><packageStore type="internal"></packageStore><mod>installTo</mod><mod>parent</mod></config><scripts><scripts-dir>@DISTDIR@/mcstas-tools-python-mcplot-matplotlib-OSXpkg-@VERSION@-mac_SL-10.6.pkg/Contents/Resources</scripts-dir></scripts><contents><file-list>08mcstas-contents.xml</file-list><filter>/CVS$</filter><filter>/\.svn$</filter><filter>/\.cvsignore$</filter><filter>/\.cvspass$</filter><filter>/\.DS_Store$</filter></contents><extra><packagePath>@DISTDIR@/mcstas-tools-python-mcplot-matplotlib-OSXpkg-@VERSION@-mac_SL-10.6.pkg</packagePath><title>mcstas-tools-python-mcplot-matplotlib-@VERSION@</title></extra></pkgref>
