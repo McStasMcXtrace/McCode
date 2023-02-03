@@ -93,6 +93,16 @@ mamba update mamba -y
 mamba install mamba conda-build -y
 mamba install openmpi gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph qscintilla2 pyqt nomkl nexusformat nexpy hdf5 -y
 mamba clean --all -y
+
+cd $WORK
+
+cd 3rdparty/nexus-code
+if [ -d build ]; then
+    rm -rf build
+fi
+mkdir -p build; cd build
+cmake -DCMAKE_INSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/mcxtrace/$1/ -DHDF5_ROOT=/Applications/McXtrace-$1.app/Contents/Resources/mcxtrace/$1/miniconda3/ -DCMAKE_MACOSX_RPATH=ON -DCMAKE_INSTALL_RPATH=/Applications/McXtrace-$1.app/Contents/Resources/mcxtrace/$1/lib  ..
+make install
 cd $WORK
 
 export PATH=$PATHBAK
