@@ -1,7 +1,0 @@
-#!/bin/sh
-
-while true
- do
-  echo "Something to..\n\tSay?"
-  sleep 1
- done
