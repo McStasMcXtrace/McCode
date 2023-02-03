@@ -1,6 +1,0 @@
-<pkgref spec="1.12" uuid="0E223993-5FCB-4F1F-9512-B4EF22D73909"><config><identifier>com.Humanity.mcxtrace-tools-python-mxdisplay-x3d-@VERSION@</identifier><version>1.0</version><description>DESCRIPTION
-===========
-
-This is an installer created using CPack (http://www.cmake.org). No additional installation instructions provided.
-
-</description><post-install type="none"/><requireAuthorization/><installTo relocatable="true">/</installTo><flags><followSymbolicLinks/><overwriteDirectoryPermissions/></flags><packageStore type="internal"></packageStore><mod>installTo</mod><mod>parent</mod></config><scripts><scripts-dir>@DISTDIR@/mcxtrace-tools-python-mxdisplay-x3d-OSXpkg-@VERSION@-mac-10.10.pkg/Contents/Resources</scripts-dir></scripts><extra><packagePath>@DISTDIR@/mcxtrace-tools-python-mxdisplay-x3d-OSXpkg-@VERSION@-mac-10.10.pkg</packagePath><title>mcxtrace-tools-python-mxdisplay-x3d-@VERSION@</title></extra></pkgref>
