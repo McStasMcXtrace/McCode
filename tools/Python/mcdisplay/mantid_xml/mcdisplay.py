@@ -340,7 +340,7 @@ class MantidPixelWriter:
 
     banana_monitor = '''
 <component type="MonNDtype-IDX_MONITOR_origin" name="MONITOR_NAME" idlist="MonNDtype-IDX_MONITOR-list">
-	<location x="X_LOC" y="Y_LOC" z="Z_LOC"  /> 
+	<location x="X_LOC" y="Y_LOC" z="Z_LOC" rot="ROT_ANGLE" axis-x="ROT_X" axis-y="ROT_Y" axis-z="ROT_Z" /> 
 </component>
 
 <type name="MonNDtype-IDX_MONITOR_origin">
