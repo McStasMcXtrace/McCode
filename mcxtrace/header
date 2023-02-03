@@ -1,7 +1,9 @@
-    This file is part of the McStas neutron ray-trace simulation package
-    Copyright (C) 1997-2004, All rights reserved
+
+    This file is part of the McXtrace neutron ray-trace simulation package
+    Copyright (C) 1997-2023, All rights reserved
     Risoe National Laborartory, Roskilde, Denmark
-    Institut Laue Langevin, Grenoble, France
+    Technical University of Denmark, Lyngby, Denmark
+    Synchrotron SOLEIL, Saint-Aubin, France
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
