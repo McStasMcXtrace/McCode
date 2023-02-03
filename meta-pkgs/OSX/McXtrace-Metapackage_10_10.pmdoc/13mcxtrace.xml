@@ -1,6 +1,0 @@
-<pkgref spec="1.12" uuid="40CAE8B5-68B6-4FCA-8215-0A82AE4A2ADE"><config><identifier>com.Humanity.mcxtrace-tools-python-mxdisplay-matplotlib-@VERSION@</identifier><version>1.0</version><description>DESCRIPTION
-===========
-
-This is an installer created using CPack (http://www.cmake.org). No additional installation instructions provided.
-
-</description><post-install type="none"/><requireAuthorization/><installTo relocatable="true">/</installTo><flags><followSymbolicLinks/><overwriteDirectoryPermissions/></flags><packageStore type="internal"></packageStore><mod>installTo</mod><mod>parent</mod></config><scripts><scripts-dir>@DISTDIR@/mcxtrace-tools-python-mxdisplay-matplotlib-OSXpkg-@VERSION@-mac-10.10.pkg/Contents/Resources</scripts-dir></scripts><extra><packagePath>@DISTDIR@/mcxtrace-tools-python-mxdisplay-matplotlib-OSXpkg-@VERSION@-mac-10.10.pkg</packagePath><title>mcxtrace-tools-python-mxdisplay-matplotlib-@VERSION@</title></extra></pkgref>
