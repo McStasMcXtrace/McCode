@@ -1156,19 +1156,7 @@ class McConfigDialog(QtWidgets.QDialog):
         self.ui.cbxMcdisplay.conf_var = "MCDISPLAY"
         self.ui.cbxMcdisplay.conf_org_value = mccode_config.configuration["MCDISPLAY"]
         self.ui.cbxMcdisplay.conf_options_lst = mcdisplay_lst
-
-        # format combobox
-        selected_val = mccode_config.configuration["FORMAT"]
-        i = 0
-        for val in format_lst:
-            self.ui.cbxFormats.addItem(val)
-            if val == selected_val:
-                self.ui.cbxFormats.setCurrentIndex(i)
-            i += 1
-        self.ui.cbxFormats.conf_var = "FORMAT"
-        self.ui.cbxFormats.conf_org_value = mccode_config.configuration["FORMAT"]
-        self.ui.cbxFormats.conf_options_lst = format_lst
-        
+      
         # line edits
         self.ui.edtCC.setText(mccode_config.compilation["CC"])
         self.ui.edtCC.conf_var = "CC"
