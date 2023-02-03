@@ -337,31 +337,36 @@ class MantidPixelWriter:
         return '\n\n'.join(text)
 
     banana_monitor = '''
-    <component type="MonNDtype-IDX_MONITOR" name="MONITOR_NAME" idlist="MonNDtype-0-list">
-        <locations x="X_LOC" y="Y_MIN" y-end="Y_MAX" n-elements="Y_NUM" z="Z_LOC" rot="ROT_ANGLE" axis-x="ROT_X" axis-y="ROT_Y" axis-z="ROT_Z"/> 
-    </component>
+<component type="MonNDtype-IDX_MONITOR_origin" name="MONITOR_NAME" idlist="MonNDtype-IDX_MONITOR-list">
+	<location x="X_LOC" y="Y_LOC" z="Z_LOC" rot="ROT_ANGLE" axis-x="ROT_X" axis-y="ROT_Y" axis-z="ROT_Z" /> 
+</component>
 
-    <type name="MonNDtype-IDX_MONITOR-arch">
-    <component type="pixel-0">
-        <locations r="RADIUS" t="T_MIN" t-end="T_MAX" n-elements="T_NUM" rot="T_MIN" rot-end="T_MAX" axis-x="0.0" axis-y="1.0" axis-z="0.0"/>
-    </component>
-    </type>
+<type name="MonNDtype-IDX_MONITOR_origin">
+	<component type="MonNDtype-IDX_MONITOR" >
+		<locations x="0.0" y="Y_MIN" y-end="Y_MAX" n-elements="Y_NUM" z="0.0" axis-x="0.0" axis-y="1.0" axis-z="0.0" /> 
+	</component>
+</type>
 
-    <type is="detector" name="pixel-IDX_MONITOR">
-        <cuboid id="pixel-shape-0">
-            <left-front-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
-            <left-front-top-point x="X_STP_HALF" y="Y_STP_HALF" z="0.00005" />
-            <left-back-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
-            <right-front-bottom-point x="-X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
-        </cuboid>
-        <algebra val="pixel-shape-0"/>
-    </type>
+<type name="MonNDtype-IDX_MONITOR">
+	<component type="pixel-IDX_MONITOR">
+		<locations r="RADIUS" t="T_MIN" t-end="T_MAX" n-elements="T_NUM" rot="T_MIN" rot-end="T_MAX" axis-x="0.0" axis-y="1.0" axis-z="0.0"/>
+	</component>
 
-    <idlist idname="MonNDtype-IDX_MONITOR-list">
-        <id start="PIXEL_MIN" end="PIXEL_MAX"/></idlist>
+</type>
 
-    <type name="in5_t-type">
-    </type>'''
+<type is="detector" name="pixel-IDX_MONITOR">
+	<cuboid id="pixel-shape-IDX_MONITOR">
+		<left-front-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
+		<left-front-top-point x="X_STP_HALF" y="Y_STP_HALF" z="0.0" />
+		<left-back-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.00005" />
+		<right-front-bottom-point x="-X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
+	</cuboid>
+	<algebra val="pixel-shape-IDX_MONITOR" />
+</type>
+
+<idlist idname="MonNDtype-IDX_MONITOR-list">
+	<id start="PIXEL_MIN" end="PIXEL_MAX"/></idlist>
+    '''
 
     def _get_mantid_banana_monitor(self):
         text = []
