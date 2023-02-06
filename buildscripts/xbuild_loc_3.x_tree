@@ -74,7 +74,7 @@ export MCINSTALL_PREFIX=$HOME/McXtrace/mcxtrace/3.x-dev/
 
 cd 3rdparty/xraylib
 autoreconf -i
-./configure --prefix=$MCINSTALL_PREFIX/mcxtrace/3.x-dev/
+./configure --prefix=$MCINSTALL_PREFIX
 make install
 cd $WORK
 
