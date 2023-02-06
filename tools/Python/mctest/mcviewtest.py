@@ -16,7 +16,10 @@ def run_normal_mode(testdir, reflabel):
     ''' load test data and print to html label '''
 
     def get_col_header(label, meta):
-        return "<br>".join((label + " - " + meta.get("ncount", ""), meta.get("hostname", ""), meta.get("cpu_type", ""), meta.get("gpu_type", ""), meta.get("date", "")))
+        try:
+            return "<br>".join((label + " - " + meta.get("ncount", ""), meta.get("hostname", ""), meta.get("cpu_type", ""), meta.get("gpu_type", ""), meta.get("date", "")))
+        except:
+            return "<br>UNDEFINED"
 
     def get_header_lst(meta):
         ''' composes an easily-templatable list fom a "_meta" test header object '''
