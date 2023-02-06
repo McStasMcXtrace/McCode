@@ -73,6 +73,7 @@ export MCINSTALL_PREFIX=$HOME/McXtrace/mcxtrace/3.x-dev/
 ./mkdist mcxtrace-mcpl 3.x-dev 3rdparty/mcpl-package "" deb64 "" -- justinst
 
 cd 3rdparty/xraylib
+make distclean
 autoreconf -i
 ./configure --prefix=$MCINSTALL_PREFIX
 make install
