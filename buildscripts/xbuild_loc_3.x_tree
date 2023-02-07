@@ -71,6 +71,7 @@ cp tools/other/mcsplit/mcsplit.py $HOME/McXtrace/mcxtrace/3.x-dev/bin/
 
 export MCINSTALL_PREFIX=$HOME/McXtrace/mcxtrace/3.x-dev/
 ./mkdist mcxtrace-mcpl 3.x-dev 3rdparty/mcpl-package "" deb64 "" -- justinst
+./mkdist mcxtrace-nexus 3.x-dev 3rdparty/nexus-package "" deb64 "" -- justinst
 
 cd 3rdparty/xraylib
 make distclean
