@@ -69,7 +69,7 @@ class MantidPixelWriter:
                         pass
                 s = self.source_type.replace('X_LOC', str(c.pos.x))
                 s = s.replace('Y_LOC', str(c.pos.y))
-                s = s.replace('Z_LOC', str(c.pos.z-self._sample_Z()))
+                s = s.replace('Z_LOC', str(c.pos.z))
                 break
         return '\n'.join([s, self.source_header, self.source_footer])
 
@@ -110,7 +110,7 @@ class MantidPixelWriter:
 
                 h = self.sample.replace('X_COORD', str(c.pos.x))
                 h = h.replace('Y_COORD', str(c.pos.y))
-                h = h.replace('Z_COORD', str(c.pos.z-self._sample_Z()))
+                h = h.replace('Z_COORD', str(c.pos.z))
                 break
         return '\n\n'.join([h, self.sample_type, self.sample_footer])
 
@@ -189,7 +189,7 @@ class MantidPixelWriter:
                 mt = mt.replace('MONITOR_NAME', m.name)
                 mt = mt.replace('X_LOC', str(m.pos.x))
                 mt = mt.replace('Y_LOC', str(m.pos.y))
-                mt = mt.replace('Z_LOC', str(m.pos.z-self._sample_Z()))
+                mt = mt.replace('Z_LOC', str(m.pos.z))
 
                 s1_s = []
                 s2_s = []
@@ -301,7 +301,7 @@ class MantidPixelWriter:
                 s = s.replace('MONITOR_NAME', m.name)
                 s = s.replace('X_LOC', str(m.pos.x))
                 s = s.replace('Y_LOC', str(m.pos.y))
-                s = s.replace('Z_LOC', str(m.pos.z-self._sample_Z()))
+                s = s.replace('Z_LOC', str(m.pos.z))
                 s = s.replace('ROT_ANGLE', str(alpha))
                 s = s.replace('ROT_X', str(rot_vector.x))
                 s = s.replace('ROT_Y', str(rot_vector.y))
@@ -398,7 +398,7 @@ class MantidPixelWriter:
                 s = s.replace('MONITOR_NAME', m.name)
                 s = s.replace('X_LOC', str(m.pos.x))
                 s = s.replace('Y_LOC', str(m.pos.y))
-                s = s.replace('Z_LOC', str(m.pos.z-self._sample_Z()))
+                s = s.replace('Z_LOC', str(m.pos.z))
                 s = s.replace('ROT_ANGLE', str(alpha))
                 s = s.replace('ROT_X', str(rot_vector.x))
                 s = s.replace('ROT_Y', str(rot_vector.y))
