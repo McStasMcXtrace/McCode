@@ -54,6 +54,16 @@ class MantidPixelWriter:
 
     source_footer = '''</type>'''
 
+    def _sample_X(self):
+        for c in self.components:
+            if c.name == 'sampleMantid':
+                return (c.pos.x)
+
+    def _sample_Y(self):
+        for c in self.components:
+            if c.name == 'sampleMantid':
+                return (c.pos.y)
+
     def _sample_Z(self):
         for c in self.components:
             if c.name == 'sampleMantid':
@@ -69,9 +79,9 @@ class MantidPixelWriter:
                     if type(d) == DrawMultiline:
                         # TODO: implement source drawing
                         pass
-                s = self.source_type.replace('X_LOC', str(c.pos.x))
-                s = s.replace('Y_LOC', str(c.pos.y))
-                s = s.replace('Z_LOC', str(c.pos.z))
+                s = self.source_type.replace('X_LOC', str(c.pos.x-self._sample_X()))
+                s = s.replace('Y_LOC', str(c.pos.y-self._sample_Y()))
+                s = s.replace('Z_LOC', str(c.pos.z-self._sample_Z()))
                 break
         return '\n'.join([s, self.source_header, self.source_footer])
 
@@ -110,9 +120,9 @@ class MantidPixelWriter:
                         # TODO: implement sample drawing
                         pass
 
-                h = self.sample.replace('X_COORD', str(c.pos.x))
-                h = h.replace('Y_COORD', str(c.pos.y))
-                h = h.replace('Z_COORD', str(c.pos.z))
+                h = self.sample.replace('X_COORD', str(0))
+                h = h.replace('Y_COORD', str(0))
+                h = h.replace('Z_COORD', str(0))
                 break
         return '\n\n'.join([h, self.sample_type, self.sample_footer])
 
@@ -134,7 +144,7 @@ class MantidPixelWriter:
 
     pixels_s1 = '''
 <type name="MonNDtype-IDX_MONITOR-pix-IDX_PIXEL" is="detector">
-    <hexahedron id="hexapix-1009">
+    <hexahedron id="hexapix-IDX-PIXEL">
         <left-back-bottom-point  x="x_1" y="y_1" z="z_1"/>
         <left-front-bottom-point  x="x_2" y="y_2" z="z_2"/>
         <right-front-bottom-point  x="x_3" y="y_3" z="z_3"/>
@@ -149,9 +159,10 @@ class MantidPixelWriter:
         <x-max val="x_bb_max"/>
         <y-min val="y_bb_min"/>
         <y-max val="y_bb_max"/>
-        <z-min val="y_bb_min"/>
+        <z-min val="z_bb_min"/>
         <z-max val="z_bb_max"/>
     </bounding-box>
+	<algebra val="hexapix-IDX-PIXEL" />
 </type>'''
 
     pixels_s2 = '''
@@ -189,9 +200,9 @@ class MantidPixelWriter:
                 mt = mt.replace('IDX_PIX_START', pixels[0][1])
                 mt = mt.replace('IDX_PIX_END', pixels[0][2])
                 mt = mt.replace('MONITOR_NAME', m.name)
-                mt = mt.replace('X_LOC', str(m.pos.x))
-                mt = mt.replace('Y_LOC', str(m.pos.y))
-                mt = mt.replace('Z_LOC', str(m.pos.z))
+                mt = mt.replace('X_LOC', str(m.pos.x-self._sample_X()))
+                mt = mt.replace('Y_LOC', str(m.pos.y-self._sample_Y()))
+                mt = mt.replace('Z_LOC', str(m.pos.z-self._sample_Z()))
 
                 s1_s = []
                 s2_s = []
@@ -202,10 +213,10 @@ class MantidPixelWriter:
 
                     pix = MantidPixel(line, m.transform)
 
-                    x = [pix.p1.x, pix.p2.x, pix.p3.x, pix.p4.x]
-                    y = [pix.p1.y, pix.p2.y, pix.p3.y, pix.p4.y]
-                    z = [pix.p1.z, pix.p2.z, pix.p3.z, pix.p4.z]
-                    z_PLUS = [pix.p1.z + 0.001, pix.p2.z + 0.001, pix.p3.z + 0.001, pix.p4.z + 0.001]
+                    x = [pix.p1.x-self._sample_X(), pix.p2.x-self._sample_X(), pix.p3.x-self._sample_X(), pix.p4.x-self._sample_X()]
+                    y = [pix.p1.y-self._sample_Y(), pix.p2.y-self._sample_Y(), pix.p3.y-self._sample_Y(), pix.p4.y-self._sample_Y()]
+                    z = [pix.p1.z-self._sample_Z(), pix.p2.z-self._sample_Z(), pix.p3.z-self._sample_Z(), pix.p4.z-self._sample_Z()]
+                    z_PLUS = [pix.p1.z-self._sample_Z() + 0.001, pix.p2.z-self._sample_Z() + 0.001, pix.p3.z-self._sample_Z() + 0.001, pix.p4.z-self._sample_Z() + 0.001]
 
                     s1 = s1.replace('x_1', str(x[0]))
                     s1 = s1.replace('x_2', str(x[1]))
@@ -232,7 +243,7 @@ class MantidPixelWriter:
                     s1 = s1.replace('y_bb_min', str(min(y)))
                     s1 = s1.replace('y_bb_max', str(max(y)))
                     s1 = s1.replace('z_bb_min', str(min(z)))
-                    s1 = s1.replace('z_bb_max', str(max(z_PLUS)))
+                    s1 = s1.replace('z_bb_max', str(max(z)))
                     s1_s.append(s1)
 
                     s2 = self.pixels_s2.replace('IDX_PIXEL', idx_pix)
@@ -301,9 +312,9 @@ class MantidPixelWriter:
                 p_type = self.rect_monitor_pixel
 
                 s = s.replace('MONITOR_NAME', m.name)
-                s = s.replace('X_LOC', str(m.pos.x))
-                s = s.replace('Y_LOC', str(m.pos.y))
-                s = s.replace('Z_LOC', str(m.pos.z))
+                s = s.replace('X_LOC', str(m.pos.x-self._sample_X()))
+                s = s.replace('Y_LOC', str(m.pos.y-self._sample_Y()))
+                s = s.replace('Z_LOC', str(m.pos.z-self._sample_Z()))
                 s = s.replace('ROT_ANGLE', str(alpha))
                 s = s.replace('ROT_X', str(rot_vector.x))
                 s = s.replace('ROT_Y', str(rot_vector.y))
@@ -398,9 +409,9 @@ class MantidPixelWriter:
                 idx_monitor = re.search('nD_Mantid_([0-9]+)', m.name).group(1)
                 s = s.replace('IDX_MONITOR', idx_monitor)
                 s = s.replace('MONITOR_NAME', m.name)
-                s = s.replace('X_LOC', str(m.pos.x))
-                s = s.replace('Y_LOC', str(m.pos.y))
-                s = s.replace('Z_LOC', str(m.pos.z))
+                s = s.replace('X_LOC', str(m.pos.x-self._sample_X()))
+                s = s.replace('Y_LOC', str(m.pos.y-self._sample_Y()))
+                s = s.replace('Z_LOC', str(m.pos.z-self._sample_Z()))
                 s = s.replace('ROT_ANGLE', str(alpha))
                 s = s.replace('ROT_X', str(rot_vector.x))
                 s = s.replace('ROT_Y', str(rot_vector.y))
