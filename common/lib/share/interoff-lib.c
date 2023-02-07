@@ -497,7 +497,34 @@ int off_clip_3D_mod_grav(intersection* t, Coords pos, Coords vel, Coords acc,
 	  } else {
 	    inters.in_out=-1;
 	  }
-	  t[t_size++]=inters;
+#ifdef OFF_LEGACY
+          t[t_size++]=inters;
+#else
+    /* Check against our 4 existing times, starting from [-FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX] */
+    /* Case 1, negative time? */
+    if (t_size < 4) t_size++;
+    if (inters.time < 0) {
+      if (inters.time > t[0].time) {
+        t[0]=inters;
+      }
+    } else {
+      /* Case 2, positive time */
+      intersection xtmp;
+      if (inters.time < t[3].time) {
+      t[3]=inters;
+        if (t[3].time < t[2].time) {
+    xtmp = t[2];
+    t[2] = t[3];
+    t[3] = xtmp;
+        }
+        if (t[2].time < t[1].time) {
+    xtmp = t[1];
+    t[1] = t[2];
+    t[2] = xtmp;
+        }
+      }
+    }
+#endif
 	}
       }
     }
