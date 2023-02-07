@@ -510,7 +510,34 @@ int r_off_clip_3D_mod_grav(r_intersection* t, Coords pos, Coords vel, Coords acc
 	  } else {
 	    inters.in_out=-1;
 	  }
-	  t[t_size++]=inters;
+#ifdef OFF_LEGACY
+          t[t_size++]=inters;
+#else
+    /* Check against our 4 existing times, starting from [-FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX] */
+    /* Case 1, negative time? */
+    if (t_size < 4) t_size++;
+    if (inters.time < 0) {
+      if (inters.time > t[0].time) {
+        t[0]=inters;
+      }
+    } else {
+      /* Case 2, positive time */
+      r_intersection xtmp;
+      if (inters.time < t[3].time) {
+      t[3]=inters;
+        if (t[3].time < t[2].time) {
+    xtmp = t[2];
+    t[2] = t[3];
+    t[3] = xtmp;
+        }
+        if (t[2].time < t[1].time) {
+    xtmp = t[1];
+    t[1] = t[2];
+    t[2] = xtmp;
+        }
+      }
+    }
+#endif
 	}
       }
     }
@@ -1016,6 +1043,7 @@ int r_quadraticSolve(double* eq, double* x1, double* x2)
      r_off_struct *data )
 * ACTION: computes intersection of neutron trajectory with an object.
 * INPUT:  x,y,z and vx,vy,vz are the position and velocity of the neutron
+*         ax, ay, az are the local acceleration vector
 *         data points to the OFF data structure
 * RETURN: the number of polyhedra which trajectory intersects
 *         t0 and t3 are the smallest incoming and outgoing intersection times
