@@ -18,7 +18,7 @@
 * to model material fluorescence, Compton and Rayleigh scattering. 
 *
 * 
-* %Example: Test_Fluorescence.instr -n1e5 Detector: emon_I=8.17009e-15
+* %Example: Test_Fluorescence.instr material=LaB6 -n1e5 Detector: emon_I=8.17009e-15
 *
 * %Parameters
 * material: [str]  Material file to use, e.g. chemical formulae "Pb2SnO4"
