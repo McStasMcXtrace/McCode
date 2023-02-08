@@ -223,8 +223,8 @@ macro(setupMCCODE FLAVOR)
     set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postrm;")
 
     # Define dependencies for gcc and the like
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS "build-essential")
-    set(CPACK_RPM_PACKAGE_REQUIRES "gcc")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "build-essential, libopenmpi-dev")
+    set(CPACK_RPM_PACKAGE_REQUIRES "gcc, openmpi-devel")
     
     # Generate postinst and postrm scripts
     configure_file(

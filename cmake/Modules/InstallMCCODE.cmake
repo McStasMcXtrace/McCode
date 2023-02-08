@@ -44,10 +44,10 @@ macro(installMCCODE)
   set(CPACK_PACKAGE_VERSION_MINOR "${MINOR}")
 
   ## Debian
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS       "build-essential, bash")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS       "build-essential, libopenmpi-dev, bash")
   set(CPACK_DEBIAN_PACKAGE_RECOMMENDS    "${FLAVOR}-comps-${MCCODE_VERSION}")
-  set(CPACK_DEBIAN_PACKAGE_CONFLICTS    "${FLAVOR}-2.1rc1")
-  set(CPACK_DEBIAN_PACKAGE_SUGGESTS      "openmpi-bin, libopenmpi-dev")
+  set(CPACK_DEBIAN_PACKAGE_CONFLICTS     "${FLAVOR}-2.1rc1")
+  set(CPACK_DEBIAN_PACKAGE_SUGGESTS      "")
 
   ## NSIS
   set(CPACK_NSIS_PACKAGE_NAME "${MCCODE_STRING}")
