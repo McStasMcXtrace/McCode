@@ -1,3 +1,5 @@
+!! compile with: gfortran -ffree-line-length-512 cif2hkl.F90; rm *.mod
+
 !!-------------------------------------------------------
 !!---- Crystallographic Fortran Modules Library (CrysFML)
 !!-------------------------------------------------------
@@ -83587,7 +83589,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
 !   cif2hkl 1.4.2 (Sept 21st 2022) by [emmanuel.farhi@synchrotron-soleil.fr]
 !     Farhi E. using crysFML <https://code.ill.fr/scientific-software/crysfml/>
 !   Copyright (C) 2009-2019 Institut Laue Langevin, EUPL
-!   Copyright (C) 2020-     Synchrotron Soleil,     GPL2.
+!   Copyright (C) 2020-     Synchrotron Soleil,     GPL3.
 !   This is free software; see the source for copying conditions.
 !   There is NO warranty; not even for MERCHANTABILITY or FITNESS
 !   FOR A PARTICULAR PURPOSE.
@@ -83628,7 +83630,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
 
 ! ==============================================================================
 
-! cif2hkl is available under the GPL2 license (see below). It uses CrysFML which
+! cif2hkl is available under the GPL3 license (see below). It uses CrysFML which
 ! is a LGPL library. 
  
 ! ==============================================================================
@@ -84200,7 +84202,7 @@ subroutine print_version(pgmname,message)
   
   message = trim(pgmname)//" "//trim(VERSION)//" ("//trim(DATE)//") by "//trim(AUTHOR)//eol//&
    "  Copyright (C) 2009-2019 Institut Laue Langevin, EUPL."//eol//&
-   "  Copyright (C) 2020-     Synchrotron Soleil,     GPL2."//eol//&
+   "  Copyright (C) 2020-     Synchrotron Soleil,     GPL3."//eol//&
    "  This is free software; see the source for copying conditions."//eol//&
    "  There is NO warranty; not even for MERCHANTABILITY or FITNESS"//eol//&
    "  FOR A PARTICULAR PURPOSE."//eol
