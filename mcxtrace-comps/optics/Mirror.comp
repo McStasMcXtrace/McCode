@@ -18,7 +18,10 @@
 * Perfectly flat mirror
 *
 * %D
-* This is a simple implementation of a perfectly flat mirror. The mirror plane is in the XZ-plane.
+* This is a simple implementation of a perfectly flat mirror. The mirror plane is in the XZ-plane. Reflectivity may be specified either as a number (R0)
+* or by means of a material datafile.
+* The material datafile may be specified as a coating or as relfectivity - either parameterized by q or E,theta.
+* If the datafile is identified as a coating recipe, an ab-initio reflectivity calculation is triggered.
 *
 * %P
 * Input parameters:
@@ -26,8 +29,7 @@
 * zdepth:  [m] The length of the mirror
 * yheight: [m] The height of the mirror. This overrides xwidth and puts the mirror in the yz-plane. 
 * R0:      [ ] Constant reflectivity
-* reflectivity: [ ] Filename containing reflectivities.
-* rtype:   [ ] Type of reflectivity parametrization. 0 means to infer the kind from the reflectivity file.
+* reflectivity: [ ] Filename containing reflectivities (or coating).
 *
 * (none)
 *
@@ -36,8 +38,8 @@
 
 DEFINE COMPONENT Mirror
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string reflec="", string reflectivity=0, zdepth=0.1, xwidth=0.01, yheight=0, R0=0, rtype=0)
-OUTPUT PARAMETERS (reflec_table, prms, re)
+SETTING PARAMETERS (string reflectivity="", zdepth=0.1, xwidth=0.01, yheight=0, R0=0)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -48,28 +50,18 @@ SHARE
 
 DECLARE
 %{  
-    struct {
-        double e_min,e_max,e_step,theta_min,theta_max,theta_step;
-        int use_reflec_table;
-    } prms;
-    t_Table reflec_table;
-    t_Reflec re;
-
+  t_Reflec re;
 %}
 
 INITIALIZE
 %{
     int status;
 
-    if (reflec && strlen(reflec)){
-      fprintf(stderr,"WARNING (%s): You have specified the reflec parameter. This is deprecated - please use \'reflectivity\' instead\n", NAME_CURRENT_COMP);
-    }
-
-    if (reflectivity && strlen(reflectivity)) {
-      status=reflec_Init(&re,COATING_UNDEFINED,reflectivity);
+    if (reflectivity && strlen(reflectivity) && strcmp(reflectivity,"NULL") ) {
+      status=reflec_Init(&re,COATING_UNDEFINED,reflectivity,NULL);
     }else{
       /*assume a constant reflectivity*/
-      status=reflec_Init(&re,CONSTANT,R0);
+      status=reflec_Init_const(&re,R0);
     }
 
     if(status!=0){
@@ -84,7 +76,8 @@ TRACE
     int status,hit;
     double l0,l1,l2,l3,tx,ty,tz;
     double nx,ny,nz;
-    
+    double s,k,q,R;
+
     hit=1;
     if(yheight){
         PROP_X0;
@@ -106,15 +99,15 @@ TRACE
         }
     }
     if(hit){
-        double s=scalar_prod(kx,ky,kz,nx,ny,nz);
-        double k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); 
+        s=scalar_prod(kx,ky,kz,nx,ny,nz);
+        k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
          
         kx=kx-2*s*nx;
         ky=ky-2*s*ny;
         kz=kz-2*s*nz;
         SCATTER;
-        double q=2.0*s;
-        double R=reflecq(&re,q,0,k*K2E,fabs(90-acos(s/k)*RAD2DEG));
+        q=2.0*s;
+        R=reflecq(re,q,0.0,k,fabs(90-acos(s/k)*RAD2DEG));
         p*=R;
         /*update phase - as an approximation turn by 180 deg.*/;
         phi+=M_PI;
