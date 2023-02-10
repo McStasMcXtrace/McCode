@@ -481,7 +481,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
         # setup scintilla
         # set default font
         font = QtGui.QFont()
-        font.setFamily('Deja Vu Sans Mono')
+        font.setFamily('DejaVu Sans Mono')
         font.setFixedPitch(True)
         font.setPointSize(11)
 
