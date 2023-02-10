@@ -425,7 +425,7 @@ TRACE
 				  x,y,z, vx, vy, vz, 0, 0, 0, &thread_offdata );
     if (Vars.Flag_mantid) {
       if(intersect) {
-        Vars.OFF_polyidx=(thread_offdata.intersects[thread_offdata.nextintersect]).index;
+        Vars.OFF_polyidx=thread_offdata.nextintersect;
       } else {
         Vars.OFF_polyidx=-1;
       }
