@@ -3,20 +3,19 @@
 * %I
 * Written by: Erik Knudsen
 * Date: September 25th, 2009
-* Version: $Revision$
 * Origin: Risoe
 *
-* A cylindrically curved mirror
+* A curved mirror
 *
 * %D
-* Model of a cylindrically curved mirror. Mirror is in the yz-plane curved towards positive x if radius is positive
+* mirror is in the yz-plane curved towards positive x if radius is positive
 * 
 * %P
 * radius: [m]   Radius of curvature.
 * length: [m]   Length of the unbent mirror.
 * coating: []   Name of file containing the material data (i.e. f1 and f2) for the coating
-* width: [m]    width of the mirror
-* R0: [ ]       Constant reflectivity instead of datafile/reflectivity calculations.
+* width: [m]    Width of the mirror
+* R0: [ ]       Constant reflectivity value (mostly relevant for debugging).
 *
 * %E
 ***********************************************************************/
@@ -24,7 +23,7 @@
 DEFINE COMPONENT Mirror_curved
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius=1, length=0.2, width=0.2, R0=1, string coating="Be.txt")
-OUTPUT PARAMETERS(prms,prmsp)
+OUTPUT PARAMETERS()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -38,11 +37,11 @@ SHARE
 
 DECLARE
 %{
-  struct {
-    int Z;
-    double At, rho;
-    t_Table T;
-  } prms,*prmsp;
+  int Z;
+  double At;
+  double rho;
+  t_Table T;
+  int constant_R;
   t_Reflec re;
 %}
 
@@ -50,14 +49,14 @@ INITIALIZE
 %{
   int status;
 
-    if (coating && strlen(coating)) {
-      status=reflec_Init(&re,COATING_UNDEFINED,coating);
-      prmsp=&prms;
-    }else{
-      /*assume a constant reflectivity*/
-      status=reflec_Init(&re,CONSTANT,R0);
-      prmsp=NULL;
-    }
+  if (coating && strlen(coating)) {
+    status=reflec_Init(&re,COATING_UNDEFINED,coating,NULL);
+    constant_R=0;
+  }else{
+    /*assume a constant reflectivity*/
+    status=reflec_Init(&re,CONSTANT,NULL, &(R0));
+    constant_R=1;
+  }
 %}
 
 TRACE
@@ -111,9 +110,9 @@ TRACE
       double Q;
       /*length of wavevector transfer may be compute from s and n_ above*/
       Q=fabs(2*s*sqrt(nx*nx+nz*nz));
-      double complex R=refleccq(&re,Q,0,k);
-      p*=cabs(R);
-      phi+=carg(R);
+      double complex R=refleccq(re,Q,0,k,fabs(90-acos(s/k)*RAD2DEG));
+      p*=sqrt(creal(R*conj(R)));
+      phi+=atan2(cimag(R),creal(R));
     }
   }else if(fabs(kx)<DBL_EPSILON && fabs(kz)<DBL_EPSILON && ky!=0){
     /*This to catch the extreme case where k//y.*/
