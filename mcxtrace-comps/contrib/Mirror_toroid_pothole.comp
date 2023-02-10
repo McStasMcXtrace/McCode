@@ -9,8 +9,10 @@
 * Component: Mirror_toroid_pothole
 *
 * %I
+*
 * Written by: Erik B Knudsen 
 * Date: Jul 2016
+* Version: 1.0
 * Origin: DTU Physics
 * Modified by: Padovani Antoine, 5th August 2022.
 *
@@ -34,8 +36,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Mirror_toroid_pothole
-DEFINITION PARAMETERS ( string reflec="")
-SETTING PARAMETERS (zdepth=0.1, xwidth=0.01, radius, radius_o,R0=0)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (zdepth=0.1, xwidth=0.01, radius, radius_o,R0=0,string reflec="")
 OUTPUT PARAMETERS (reflec_table, prms)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -44,14 +46,15 @@ SHARE
   #include <complex.h>
   %include "read_table-lib" 
   %include "reflectivity-lib"
+  struct potholestruct {
+        double e_min,e_max,e_step,theta_min,theta_max,theta_step;
+        int use_reflec_table;
+  };
 %}
 
 DECLARE
 %{  
-    struct {
-        double e_min,e_max,e_step,theta_min,theta_max,theta_step;
-        int use_reflec_table;
-    } prms;
+    struct potholestruct prms;
     t_Table reflec_table;
     t_Reflec re;
 %}
@@ -119,10 +122,10 @@ TRACE
         do {
             /*this to do a test propagation*/
             double op[12];
-            mcstore_xray(op,0, x,y,z, kx,ky,kz, phi, t, Ex,Ey,Ez, p);
+	    op[0]=x; op[1]=y; op[2]=z; op[3]=kx; op[4]=ky; op[5]=kz; op[6]=phi; op[7]=t; op[8]=Ex; op[9]=Ey; op[10]=Ez; op[12]=p;
             mcPROP_DL(l1);
             (tx)=x;(ty)=y; (tz)=z;
-            mcrestore_xray(op,0, &x,&y,&z, &kx,&ky,&kz, &phi, &t, &Ex,&Ey,&Ez, &p);
+	    x=op[0]; y=op[1]; z=op[2]; kx=op[3]; ky=op[4]; kz=op[5]; phi=op[6]; t=op[7]; Ex=op[8]; Ey=op[9]; Ez=op[10]; p=op[12];
         }while(0);
         /*check mirror limits of intersectio point.*/
         if(tz<-zdepth/2.0 || tz>zdepth/2.0) break;
@@ -157,7 +160,7 @@ TRACE
             double R;
             double theta=RAD2DEG*(acos(s/k)-M_PI_2);
             double e=K2E*k;
-            R=Table_Value2d(reflec_table,(e-prms.e_min)/prms.e_step, ((theta-prms.theta_min)/prms.theta_step));
+            R=Table_Value2d(reflec_table,fabs((e-prms.e_min)/prms.e_step), fabs(((theta-prms.theta_min)/prms.theta_step)));
             p*=R;
             /*update phase - as an approximation turn by 180 deg.*/
 	    phi+=M_PI;
