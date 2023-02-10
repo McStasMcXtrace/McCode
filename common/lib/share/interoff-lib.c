@@ -912,14 +912,16 @@ int off_intersect_all(double* t0, double* t3,
      off_struct *data )
 {
 
-#ifdef OFF_LEGACY    
+    int t_size = 0;
+#ifdef OFF_LEGACY
+
     if(mcgravitation) {
       Coords pos={ x,  y,  z};
       Coords vel={vx, vy, vz};
       Coords acc={ax, ay, az};
       t_size=off_clip_3D_mod_grav(data->intersects, pos, vel, acc,
 				  data->vtxArray, data->vtxSize, data->faceArray,
-				  data->faceSize, data->normalArray );
+				  data->faceSize, data->normalArray, data->DArray );
     } else {
     ///////////////////////////////////
     // non-grav
@@ -954,6 +956,7 @@ int off_intersect_all(double* t0, double* t3,
 	      if (n0) *n0 = data->intersects[0].normal;
       }
       /* should also return t[0].index and t[i].index as polygon ID */
+      data->nextintersect=(data->intersects[data->nextintersect]).index;
       return t_size;
     }
 #else
@@ -962,7 +965,6 @@ int off_intersect_all(double* t0, double* t3,
     intersect4[1].time=FLT_MAX;
     intersect4[2].time=FLT_MAX;
     intersect4[3].time=FLT_MAX;
-    int t_size = 0;
     if(mcgravitation) {
       Coords pos={ x,  y,  z};
       Coords vel={vx, vy, vz};
@@ -987,6 +989,7 @@ int off_intersect_all(double* t0, double* t3,
       if (t3) *t3 = intersect4[i+1].time;
       if (n3) *n3 = intersect4[i+1].normal;
       /* should also return t[0].index and t[i].index as polygon ID */
+      data->nextintersect=(int)intersect4[i].index;
       return t_size;
     }
 #endif
