@@ -26,8 +26,8 @@
 * tbunch: [s] Bunch length. 0 means continous source.
 * t0:     [s] Delay of the first bunch from t=0
 * B:      [T] Magnet field strength
-* sigex:  [ ] Electron ring beam size in horizontal plane (rms) 
-* sigey:  [ ] Electron ring beam size in vertical plane (rms)
+* sigex:  [m] Electron ring beam size in horizontal plane (rms) 
+* sigey:  [m] Electron ring beam size in vertical plane (rms)
 * phase:  [ ] Initial phase of radiation.
 * randomphase: [ ] If !=0 phase will be random (I.e. the emitted radiation is completely incoherent)
 * focus_xw: [m] Width of target window
