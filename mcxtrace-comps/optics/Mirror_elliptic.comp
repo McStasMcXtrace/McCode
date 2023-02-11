@@ -150,7 +150,7 @@ TRACE
             /*adjust weight of ray*/
 
             double q=2.0*kdotn;
-            double R=reflecq(re,q,0,K*K2E,fabs(90-acos(kdotn/K)*RAD2DEG));
+            double R=reflecq(re,q,0,K,fabs(90-acos(kdotn/K)*RAD2DEG));
             p*=R;
             /*update phase - as an approximation turn by 180 deg.*/;
             phi+=M_PI; 

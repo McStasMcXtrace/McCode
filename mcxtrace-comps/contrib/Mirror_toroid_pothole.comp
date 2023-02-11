@@ -160,7 +160,7 @@ TRACE
             double R;
             double theta=RAD2DEG*(acos(s/k)-M_PI_2);
             double e=K2E*k;
-            R=Table_Value2d(reflec_table,(e-prms.e_min)/prms.e_step, ((theta-prms.theta_min)/prms.theta_step));
+            R=Table_Value2d(reflec_table,fabs((e-prms.e_min)/prms.e_step), fabs(((theta-prms.theta_min)/prms.theta_step)));
             p*=R;
             /*update phase - as an approximation turn by 180 deg.*/
 	    phi+=M_PI;
