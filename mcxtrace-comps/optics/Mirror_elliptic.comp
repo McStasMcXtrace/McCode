@@ -67,10 +67,10 @@ INITIALIZE
   int status;
 
   if (coating && strlen(coating)) {
-    status=reflec_Init(&re,COATING_UNDEFINED,coating);
+    status=reflec_Init(&re,COATING_UNDEFINED,coating,NULL);
   }else{
     /*assume a constant reflectivity*/
-    status=reflec_Init(&re,CONSTANT,R0);
+    status=reflec_Init(&re,CONSTANT,NULL, &(R0));
   }
 
     a2inv=(x_a)?1/(x_a*x_a):0; /* 0 really means infinity for x direction */
@@ -148,7 +148,8 @@ TRACE
             /*adjust weight of ray*/
 
             double q=2.0*kdotn;
-            double R=reflecq(&re,q,0,K*K2E,fabs(90-acos(kdotn/K)*RAD2DEG));
+            //double R=reflecq(re,q,0,K*K2E,fabs(90-acos(kdotn/K)*RAD2DEG));
+            double R=reflecq(re,q,0,K,fabs(90-acos(kdotn/K)*RAD2DEG));
             p*=R;
             /*update phase - as an approximation turn by 180 deg.*/;
             phi+=M_PI; 

@@ -20,6 +20,20 @@
 *
 *******************************************************************************/
 
+#ifndef STRACPY
+/* this is a replacement to strncpy, but ensures that the copy ends with NULL */
+/* http://stracpy.blogspot.fr/2011/04/stracpy-strncpy-replacement.html */
+#define STRACPY
+char *stracpy(char *destination, const char *source, size_t amount)
+{
+        if (!destination || !source || !amount) return(NULL);
+        while(amount--)
+          if((*destination++ = *source++) == '\0') break;
+        *destination = '\0';
+        return destination;
+}
+#endif
+
 #ifndef MCXTRACE_H
 
 /*******************************************************************************

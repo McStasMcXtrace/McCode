@@ -45,13 +45,15 @@
 * Emin: [keV] Lower limit of energy interval in datafile. Overrides what's written in the datafile header.
 * Emax: [keV] Upper limit of energy interval in datafile. Overrides what's written in the datafile header.
 * Estep: [keV] Step between energy sample points in datafile. Overrides what's written in the datafile header.
+* R0: [1] Maximal reflectivity
 * %E
 *******************************************************************************/
-
+//Warning, reflectivities need to be checked to see if they work properly in this component
 DEFINE COMPONENT Multilayer_elliptic
-DEFINITION PARAMETERS (string reflectivity_datafile="reflectivity.txt")
-SETTING PARAMETERS (theta=1.2,s1,s2,length=0.5,width=0.2,R0=1, Emin=-1, Emax=-1, Estep=-1, Gamma=0, Lambda=0, rho_AB=0, int N=0)
-OUTPUT PARAMETERS (prms_m, a,b,c,M,Z0,Y0,xi,cost0)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string reflectivity_datafile="reflectivity.txt",
+    theta=1.2,s1=0,s2=0,length=0.5,width=0.2,R0=1, Emin=-1, Emax=-1, Estep=-1, Gamma=0, Lambda=0, rho_AB=0, int N=0)
+OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE 
@@ -61,6 +63,7 @@ SHARE
   %include "reflectivity-lib"
   /*something that would be relevant for ALL elliptical mirrors*/
   /* coordinate transformation McXtrace-Ellipse (ME) and Ellipse-McXtrace(EM) functions */
+
   void CoordTransME(double *x_el, double *y_el, double *z_el, 
 		    double x0, double y0, double z0, double Zmir, double Ymir, double xi_mir)
   {
@@ -68,7 +71,8 @@ SHARE
    *y_el=cos(xi_mir)*y0+sin(xi_mir)*z0+Ymir;
    *z_el=-sin(xi_mir)*y0+cos(xi_mir)*z0+Zmir;
   }
-  
+
+
   void CoordTransEM(double *x_gen, double *y_gen,double *z_gen,
 		    double x0, double y0, double z0, double Zmir, double Ymir,double xi_mir)
   {
@@ -81,17 +85,16 @@ SHARE
 
 DECLARE
 %{
-  double a,b,c,M,Z0,Y0,xi,cost0;
-  struct {
-     double *Q;
-     double **R; //reflectivity
-     double E_min,E_max,E_step;
-     int nE,nQ;
-     int kinematical;
-     double Lambda,Gamma;
-    t_Reflec re;
-  } *prms_m;
-    
+  double a;
+  double b;
+  double c;
+  double M;
+  double Z0;
+  double Y0;
+  double xi;
+  double cost0;
+  int kinematical;
+  t_Reflec re;
 %}
 
 INITIALIZE
@@ -109,17 +112,16 @@ INITIALIZE
   Y0 = b*sin(acos(cost0)); 
   xi = -atan((Z0*b*b)/(Y0*a*a)); 
 
-  prms_m=malloc(sizeof(*prms_m));
-
   int status=0;
   if(!Gamma && !Lambda){
     /*refrain from using kinematical approximation - instead use reflectivity datafile*/
-    prms_m->kinematical = 0;
+    kinematical = 0;
     /* reflectivity datafile parsing COATING_UNDEFINED - means set the type according to what is found in the file*/
-    status=reflec_Init(&(prms_m->re),COATING_UNDEFINED,reflectivity_datafile);
+    status=reflec_Init(&re,COATING_UNDEFINED,reflectivity_datafile, NULL);
   }else{
-    prms_m->kinematical = 1;
-    status=reflec_Init(&(prms_m->re), KINEMATIC, N, Gamma, Lambda, rho_AB);/*number of layers, ratio of high e-density material in layer, thickness of layer, e-density contrast*/
+    kinematical = 1;
+    re.type=KINEMATIC;
+    status=reflec_Init_kinematic(&(re), N, Gamma, Lambda, rho_AB);/*number of layers, ratio of high e-density material in layer, thickness of layer, e-density contrast*/
   }
 %}
 
@@ -129,15 +131,13 @@ TRACE
   double x_el,y_el,z_el;	// beginning coordinates transformed into the ellipse system
   double kx_el,ky_el,kz_el;	// kvector transformed into the ellipse system, hence 
   
-  double A,B,C,D,t0,t1,t;
+  double A,B,C,D,t0,t1;
   double x_int,y_int,z_int,dist;	// intersection with the elliptical surface
   double nx,ny,nz;
   double kxn,kyn,kzn;		// reflected ray's kvector
   
-  
   /* get the photon's coordinates and kvector in the ellipse frame */
   K=sqrt(kx*kx+ky*ky+kz*kz);
-  
   
   CoordTransME(&x_el,&y_el,&z_el,x,y,z,Z0,Y0,xi);
   CoordTransME(&kx_el,&ky_el,&kz_el,kx,ky,kz,0,0,xi);
@@ -152,15 +152,14 @@ TRACE
   if (D>=0){
     t0=(-B-sqrt(D))/(2*A);
     t1=(-B+sqrt(D))/(2*A);
-    if (t0>=0) { 
-	t=t0;
-    } else if (t1>=0){
-	t=t1;
+    if (t0<0 && t1>=0) {
+	double ttmp=t0;
+        t0=t1; t1=ttmp;
     }
     /* check whether our intersection lies within the boundaries of the mirror*/
-    x_int=x_el+kx_el*t;
-    y_int=y_el+ky_el*t;
-    z_int=z_el+kz_el*t;
+    x_int=x_el+kx_el*t0;
+    y_int=y_el+ky_el*t0;
+    z_int=z_el+kz_el*t0;
     
     if (y_int>=0 && fabs(x_int)<=width/2){
 	dist=sqrt((x_el-x_int)*(x_el-x_int)+(y_el-y_int)*(y_el-y_int)+(z_el-z_int)*(z_el-z_int));
@@ -190,26 +189,24 @@ TRACE
 	  ky=K*ky;
 	  kz=K*kz;
 	  	  
-	  double Q,E,Ref;
-	  Q=sqrt((kx-kxo)*(kx-kxo)+(ky-kyo)*(ky-kyo)+(kz-kzo)*(kz-kzo)); 
-	  E=K*K2E; 
+	  double QQ,EE,Ref;
+	  QQ=sqrt((kx-kxo)*(kx-kxo)+(ky-kyo)*(ky-kyo)+(kz-kzo)*(kz-kzo)); 
+	  EE=K*K2E; 
 
-          if(prms_m->kinematical){
+          if(kinematical){
             /*
              * \Lambda: thickness of bilayer - following notation in Als-Nielsen/McMorrow
              * \Gamma:  \Gamma*\Lambda thickness of high electron density material.
              * r1(zeta) = 2 i r_0 \rho_{AB} \left(\frac{\Lambda^2 \Gamma}{\zeta}\right) \frac{\sin\left(\pi\Gamma\zeta\right)}{\pi\Gamma\zeta);
              */
-            double complex rN;
-            rN=refleccq(&(prms_m->re),Q,0);
-            Ref=cabs(rN);
+            Ref=reflecq(re,QQ,0,0,0);
             if (Ref>1){
               /*Reflectivity can't be >1*/
               Ref=1.0;
             }
           }else{
             /*interpolate in table*/
-            Ref=reflecq(&(prms_m->re),Q,0);
+            Ref=reflecq(re,QQ,0,0,0);
           }
 	  
 	  /* apply reflectivity */
@@ -225,27 +222,26 @@ TRACE
 %}
 FINALLY
 %{
-    free(prms_m);
 %}
 
 MCDISPLAY
 %{
   /*
   rectangle("xz",0,0,0,width,length); */
-  int i,j,N=10;
+  int i,j,NN=10;
   double x0,y0,z0;
   double x1,y1,z1,z_el,y_el;
   
   x0=-width/2.0;
     
-  for (i=0;i<=N;i++){
+  for (i=0;i<=NN;i++){
     z0=-length/2.0; 
     z_el=cos(xi)*z0+Z0; //transformation to EL reference frame
     y_el=b*sqrt(1.0-((z_el*z_el)/(a*a)));
     y0=cos(xi)*(y_el-Y0)-sin(xi)*(z_el-Z0);
     line(-width/2,y0,z0,width/2,y0,z0);
-    for (j=0;j<=N;j++){
-      z1=z0+length/N;
+    for (j=0;j<=NN;j++){
+      z1=z0+length/NN;
       z_el=cos(xi)*z1+Z0;
       y_el=b*sqrt(1.0-((z_el*z_el)/(a*a))); 
       y1=cos(xi)*(y_el-Y0)-sin(xi)*(z_el-Z0); 
@@ -254,7 +250,7 @@ MCDISPLAY
       z0=z1;
       line(-width/2,y1,z1,width/2,y1,z1);
     }
-    x0=x0+width/N;
+    x0=x0+width/NN;
   }   
  
 %}
