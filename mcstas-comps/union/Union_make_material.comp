@@ -202,8 +202,14 @@ INITIALIZE
     printf("ERROR, Union make material named %s have a negative absorption cross section!.\n",NAME_CURRENT_COMP);
     exit(1);
   }
-  
-  struct pointer_to_global_process_list *global_process_list = COMP_GETPAR3(Union_init, init, global_process_list);
+
+if (_getcomp_index(init) < 0) {
+fprintf(stderr,"Union_make_material:%s: Error identifying Union_init component, %s is not a known component name.\n",
+NAME_CURRENT_COMP, init);
+exit(-1);
+}
+
+struct pointer_to_global_process_list *global_process_list = COMP_GETPAR3(Union_init, init, global_process_list);
   struct pointer_to_global_material_list *global_material_list = COMP_GETPAR3(Union_init, init, global_material_list);
   
   if (absorber == 0) {

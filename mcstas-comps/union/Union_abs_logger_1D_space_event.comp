@@ -481,7 +481,13 @@ INITIALIZE
 
   sprintf(this_abs_storage.Vars.option, "mantid square x limits=[-0.0005,0.0005] bins=3 y limits=[%f %f] bins=%i", -0.5*yheight, 0.5*yheight, n);
 
-  // Need to tell the monitor from what integer its pixel id range starts, and it necessary to avoid overlaps.
+if (_getcomp_index(init) < 0) {
+fprintf(stderr,"Union_abs_logger_1D_space_event:%s: Error identifying Union_init component, %s is not a known component name.\n",
+NAME_CURRENT_COMP, init);
+exit(-1);
+}
+
+// Need to tell the monitor from what integer its pixel id range starts, and it necessary to avoid overlaps.
   // global_mantid_min_pixel_id is initialized as 0, and each monitor adds its number of pixels to avoid overlap.
   int global_mantid_min_pixel_id = COMP_GETPAR3(Union_init, init, global_mantid_min_pixel_id);
   sprintf(option_string_part,", neutron pixel min=%i t, list all neutrons", global_mantid_min_pixel_id);

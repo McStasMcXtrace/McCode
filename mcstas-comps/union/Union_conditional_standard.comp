@@ -317,8 +317,14 @@ INITIALIZE
   }
   this_conditional_data.Total_scat_max = total_order_max;
   this_conditional_data.Total_scat_min = total_order_min;
-  
-  struct global_positions_to_transform_list_struct *global_positions_to_transform_list = COMP_GETPAR3(Union_init, init, global_positions_to_transform_list);
+
+if (_getcomp_index(init) < 0) {
+fprintf(stderr,"Union_conditional_standard:%s: Error identifying Union_init component, %s is not a known component name.\n",
+NAME_CURRENT_COMP, init);
+exit(-1);
+}
+
+struct global_positions_to_transform_list_struct *global_positions_to_transform_list = COMP_GETPAR3(Union_init, init, global_positions_to_transform_list);
   struct global_rotations_to_transform_list_struct *global_rotations_to_transform_list = COMP_GETPAR3(Union_init, init, global_rotations_to_transform_list);
   // Test position and rotation stored in a data storage, and pointers assigned to transform lists
   this_conditional_data.test_position = POS_A_CURRENT_COMP;

@@ -295,6 +295,11 @@ DECLARE
 
 INITIALIZE
 %{
+if (_getcomp_index(init) < 0) {
+fprintf(stderr,"Union_master:%s: Error identifying Union_init component, %s is not a known component name.\n",
+NAME_CURRENT_COMP, init);
+exit(-1);
+}
   // Unpack global lists
   global_positions_to_transform_list_master = COMP_GETPAR3(Union_init, init, global_positions_to_transform_list);
   global_rotations_to_transform_list_master = COMP_GETPAR3(Union_init, init, global_rotations_to_transform_list);
