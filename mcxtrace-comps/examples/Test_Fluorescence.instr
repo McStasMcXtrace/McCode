@@ -62,7 +62,7 @@ EXTEND %{
   if (!SCATTERED) ABSORB;
 %}
 
-COMPONENT emon = E_monitor(restore_xray=1,nE=1001,Emin=0, Emax=2*E0, 
+COMPONENT emon = E_monitor(restore_xray=1,nE=2001,Emin=0, Emax=1.2*E0, 
   filename="emon.dat",xwidth=0.0005, yheight=0.0005)
 AT(0,0,0.1) RELATIVE PREVIOUS
 
