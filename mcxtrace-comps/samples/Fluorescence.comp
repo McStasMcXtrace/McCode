@@ -199,7 +199,7 @@ int XRMC_SelectFromDistribution(double x_arr[], int N)
  * Return the interaction type from a random choice within cross sections 'xs'
  *   type = XRMC_SelectInteraction(xs[3]);
  * 'xs' is computed with XRMC_CrossSections.
- * type is one of FLUORESCENCE | RAYLEIGH | COMPONENT
+ * type is one of FLUORESCENCE | RAYLEIGH | COMPTON
  */
 int XRMC_SelectInteraction(double *xs)
 {
@@ -215,9 +215,9 @@ int XRMC_SelectInteraction(double *xs)
 } // XRMC_SelectInteraction
 
 /* XRMC_SelectFluorescenceEnergy: select outgoing fluo photon energy, when incoming with 'E0'
- *   Ef = XRMC_SelectFluorescenceEnergy(Z, E0);
+ *   Ef = XRMC_SelectFluorescenceEnergy(Z, E0, &dE);
  */
-double XRMC_SelectFluorescenceEnergy(int Z, double E0)
+double XRMC_SelectFluorescenceEnergy(int Z, double E0, double *dE)
 {
   int i_line;
   double sum_xs, cum_xs_lines[XRAYLIB_LINES_MAX+1];
@@ -232,6 +232,8 @@ double XRMC_SelectFluorescenceEnergy(int Z, double E0)
   }
   // select randomly one of these lines
   i_line = XRMC_SelectFromDistribution(cum_xs_lines, XRAYLIB_LINES_MAX); // extract a line
+  // get the K shell line width as approximation of fluorescence line width
+  if (dE) *dE = AtomicLevelWidth(Z, K_SHELL);
 
   return LineEnergy(Z, -i_line, NULL); // fluorescent line energy
 } // XRMC_SelectFluorescenceEnergy
@@ -561,6 +563,7 @@ if (intersect) { /* scattering event */
   int    i_Z, Z;
   double solid_angle;
   double theta, dsigma;
+  double Ef, dE;
   
   /* correct for XS total(photo+Compton+Rayleigh) > sum(fluo+Compton+Rayleigh) */
   dsigma = (xs[FLUORESCENCE]+xs[RAYLEIGH]+xs[COMPTON])/sigma_barn;
@@ -608,7 +611,10 @@ if (intersect) { /* scattering event */
     case FLUORESCENCE: /* 0 Fluo: choose line */
       n_fluo++;
       p_fluo += p;
-      kf      = XRMC_SelectFluorescenceEnergy(Z, Ei)*E2K;
+      Ef      = XRMC_SelectFluorescenceEnergy(Z, Ei, &dE);
+      if (dE)     dE  = 1+dE*randnorm();
+      if (dE > 0) Ef *= dE;
+      kf      = Ef*E2K;
       break;
       
     case RAYLEIGH:     /* 1 Rayleigh: Coherent, elastic    */
