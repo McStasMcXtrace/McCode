@@ -144,6 +144,7 @@ CPU           return TOK_CPUONLY;       /* extended McStas grammar with GPU-CPU 
 NOACC         return TOK_NOACC; 
 DEPENDENCY    return TOK_DEPENDENCY;
 SHELL         return TOK_SHELL;         /* extended McStas grammar with SHELL commands pre-cogen */
+SEARCH        return TOK_SEARCH;        /* additional Instrument/Component search directories */
 
 "("|")"|"["|"]"|"{"|"}"|"," return yytext[0]; /* Punctuation. */
 "="|"*"       return yytext[0]; /* Operator. */
