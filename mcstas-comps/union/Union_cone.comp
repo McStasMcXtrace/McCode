@@ -236,6 +236,12 @@ if (yheight <= 0) {
   exit(1);
 }
 
+if (_getcomp_index(init) < 0) {
+fprintf(stderr,"Union_cone:%s: Error identifying Union_init component, %s is not a known component name.\n",
+NAME_CURRENT_COMP, init);
+exit(-1);
+}
+
 struct pointer_to_global_material_list *global_material_list = COMP_GETPAR3(Union_init, init, global_material_list);
 // Use sanitation
 #ifdef MATERIAL_DETECTOR

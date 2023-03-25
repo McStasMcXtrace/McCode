@@ -432,6 +432,11 @@ focus_initialize(&this_mesh_volume.geometry, POS_A_COMP_INDEX(INDEX_CURRENT_COMP
 
 
 
+if (_getcomp_index(init) < 0) {
+fprintf(stderr,"Union_mesh:%s: Error identifying Union_init component, %s is not a known component name.\n",
+NAME_CURRENT_COMP, init);
+exit(-1);
+}
 struct pointer_to_global_material_list *global_material_list = COMP_GETPAR3(Union_init, init, global_material_list);
 // Use sanitation
 #ifdef MATERIAL_DETECTOR
