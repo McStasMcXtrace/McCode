@@ -10,7 +10,8 @@
 *
 * %Description
 * Implements a set of nshells Wolter Ellipsoid/Hyperboloid pairs using conics.h from ConicTracer.
-* The shell are evenly spaced between rmin and rmax (inclusive). The mirrors are assumed to be touching
+* The shell radii are defined using the radii vector, parametrized from largest to smalles radius.
+* The vector length should match 'nshells'. The mirrors are assumed to be touching
 * at the mid-optic plane, i.e. there is no gap between primary and secondary mirror.
 * By definition the ratio between primary and secondary mirror glancing angles is 1/3.
 * At present a single m-value is used for all mirrors.  
@@ -19,8 +20,7 @@
 *
 * Input parameters:
 * nshells: [1]          Number of nested shells to expect
-* rmin: [m]             Midoptic plane radius of innermost mirror pair.
-* rmax: [m]             Midoptic plane radius of outermost mirror pair.
+* radii: [m]            Vector of radii (length should match nshells)
 * m: [1]                Critical angle of mirrors as multiples of Ni_c.
 * focal_length_u: [m]   Focal length (upstream) of the mirror pairs.
 * focal_length_d: [m]   Focal length (downstream) of the mirror pairs.
@@ -38,9 +38,9 @@
 *******************************************************************************/
      
 DEFINE COMPONENT Conics_EH
-DEFINITION PARAMETERS()
+DEFINITION PARAMETERS(radii)
 SETTING PARAMETERS (
-    rmin=0.0031416, rmax=0.05236,focal_length_u=10, focal_length_d=10, le=0.25, lh=0.25,
+    focal_length_u=10, focal_length_d=10, le=0.25, lh=0.25,
     int nshells=4, m=1, mirr_thick=0, int disk=1,
     R0 = 0.99, Qc = 0.021, W = 0.003, alpha = 6.07, transmit = 0)
 OUTPUT PARAMETERS(pTable, transmit, s)
@@ -61,13 +61,12 @@ DECLARE
 INITIALIZE
 %{
     ConicSurf *pm;
-    double th_c, alpha_p, alpha_h, fp2, dr,rr;
+    double th_c, alpha_p, alpha_h, fp2, rr;
     int i;
 
     s=makeScene();
-    dr=nshells>1?(rmax-rmin)/(nshells-1):0;
     for (i=0;i<nshells;i++){
-      rr=rmax-dr*i;
+      rr=radii[i];
 
       Point pi = makePoint(0,rr,0);//f-1);
       pm=addEllipsoid(-focal_length_u,focal_length_d,pi,-le,0,m,R0,Qc,W,alpha,&s);
