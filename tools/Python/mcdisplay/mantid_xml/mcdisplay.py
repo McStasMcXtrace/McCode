@@ -142,7 +142,7 @@ class MantidPixelWriter:
 
     pixels_s1 = '''
 <type name="MonNDtype-IDX_MONITOR-pix-IDX_PIXEL" is="detector">
-    <hexahedron id="hexapix-IDX-PIXEL">
+    <hexahedron id="hexapix-IDX_PIXEL">
         <left-back-bottom-point  x="x_1" y="y_1" z="z_1"/>
         <left-front-bottom-point  x="x_2" y="y_2" z="z_2"/>
         <right-front-bottom-point  x="x_3" y="y_3" z="z_3"/>
@@ -160,7 +160,7 @@ class MantidPixelWriter:
         <z-min val="z_bb_min"/>
         <z-max val="z_bb_max"/>
     </bounding-box>
-	<algebra val="hexapix-IDX-PIXEL" />
+	<algebra val="hexapix-IDX_PIXEL" />
 </type>'''
 
     pixels_s2 = '''
@@ -211,10 +211,10 @@ class MantidPixelWriter:
 
                     pix = MantidPixel(line, m.transform)
 
-                    x = [pix.p1.x-self._sample_X(), pix.p2.x-self._sample_X(), pix.p3.x-self._sample_X(), pix.p4.x-self._sample_X()]
-                    y = [pix.p1.y-self._sample_Y(), pix.p2.y-self._sample_Y(), pix.p3.y-self._sample_Y(), pix.p4.y-self._sample_Y()]
-                    z = [pix.p1.z-self._sample_Z(), pix.p2.z-self._sample_Z(), pix.p3.z-self._sample_Z(), pix.p4.z-self._sample_Z()]
-                    z_PLUS = [pix.p1.z-self._sample_Z() + 0.001, pix.p2.z-self._sample_Z() + 0.001, pix.p3.z-self._sample_Z() + 0.001, pix.p4.z-self._sample_Z() + 0.001]
+                    x = [pix.p1.x, pix.p2.x, pix.p3.x, pix.p4.x]
+                    y = [pix.p1.y, pix.p2.y, pix.p3.y, pix.p4.y]
+                    z = [pix.p1.z, pix.p2.z, pix.p3.z, pix.p4.z]
+                    z_PLUS = [pix.p1.z + 0.001, pix.p2.z + 0.001, pix.p3.z + 0.001, pix.p4.z + 0.001]
 
                     s1 = s1.replace('x_1', str(x[0]))
                     s1 = s1.replace('x_2', str(x[1]))
@@ -469,11 +469,11 @@ valid-to     ="2100-01-31 23:59:59" last-modified="Thu Feb 16 16:37:46 2017">
 class MantidPixel:
     def __init__(self, pixel_line_lst, transform):
         l = pixel_line_lst
-        self.p_cp = transform.apply(Vector3d(float(l[4]), float(l[5]), float(l[6])))
-        self.p1 = transform.apply(Vector3d(float(l[7]), float(l[8]), float(l[9])))
-        self.p2 = transform.apply(Vector3d(float(l[10]), float(l[11]), float(l[12])))
-        self.p3 = transform.apply(Vector3d(float(l[13]), float(l[14]), float(l[15])))
-        self.p4 = transform.apply(Vector3d(float(l[16]), float(l[17]), float(l[18])))
+        self.p_cp = Vector3d(float(l[4]), float(l[5]), float(l[6]))
+        self.p1 = Vector3d(float(l[7]), float(l[8]), float(l[9]))
+        self.p2 = Vector3d(float(l[10]), float(l[11]), float(l[12]))
+        self.p3 = Vector3d(float(l[13]), float(l[14]), float(l[15]))
+        self.p4 = Vector3d(float(l[16]), float(l[17]), float(l[18]))
 
 
 class MantidRectangularDetector:
