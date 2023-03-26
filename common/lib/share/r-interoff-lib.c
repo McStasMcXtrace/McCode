@@ -1150,6 +1150,11 @@ int r_off_intersect_all(double* t0, double* t3,
       if (t3) *t3 = intersect4[i+1].time;
       if (n3) *n3 = intersect4[i+1].normal;
 
+      if (intersect4[1].time == FLT_MAX)
+      {
+        if (t3) *t3 = 0.0;
+      }
+
       // Lines added, from Gaetano Mangiapia, Helmholtz-Zentrum Hereon
       // see https://github.com/McStasMcXtrace/McCode/issues/1250
       if (faceindex0) *faceindex0 = intersect4[i].index;

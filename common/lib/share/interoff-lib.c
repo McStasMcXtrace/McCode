@@ -1111,6 +1111,12 @@ int off_intersect_all(double* t0, double* t3,
       if (n0) *n0 = intersect4[i].normal;
       if (t3) *t3 = intersect4[i+1].time;
       if (n3) *n3 = intersect4[i+1].normal;
+
+      if (intersect4[1].time == FLT_MAX)
+      {
+        if (t3) *t3 = 0.0;
+      }
+
       /* should also return t[0].index and t[i].index as polygon ID */
       data->nextintersect=(int)intersect4[i].index;
       return t_size;
