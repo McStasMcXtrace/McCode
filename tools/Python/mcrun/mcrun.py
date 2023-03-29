@@ -46,6 +46,10 @@ def add_mcrun_options(parser):
         action='store_true',
         help='force rebuilding of instrument')
 
+    add('-I',
+        metavar='I',
+        help='Append to McCode search path (implies -c)')
+
     add('--D1',
         metavar='D1',
         help='set extra -D args (implies -c)')
