@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Set environment constants
 TOP="`pwd`"
@@ -205,6 +205,19 @@ echo "=== Picked flavor: ${FLAVOR}"
 echo ""
 
 
+# Check if we are on macOS and conda is available
+UNAME=`uname`
+if [ "${UNAME}" = "Darwin" ]; then
+    if [ -f "${MCINSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/miniconda3/bin/conda" ]; then
+      source ${MCINSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/miniconda3/bin/activate base
+      echo CMAKE_ARGS are:
+      echo ${CMAKE_ARGS}
+    fi
+fi
+
+
+
+
 MCCODE_TARNAME="${FLAVOR}"
 MCCODE_DATE="${MONTH}. ${DAY}, ${YEAR}";
 MCCODE_STRING="${MCCODE_NAME} ${MCCODE_VERSION} - ${MCCODE_DATE}";
@@ -296,7 +309,7 @@ build_mccode() {
     # ./configure $1 &&
     # make
     mkdir build && cd build;
-    cmake $1 ..
+    cmake ${CMAKE_ARGS} $1 ..
 }
 
 
@@ -338,8 +351,8 @@ prepare_cpack() {
         cd "${DEST}";
 
         TOOLCHAIN_FILE="${TOP}/cmake/toolchains/${CHAIN}.cmake"
-	echo "mkdist: prepare_cpack: cmake ${CONFIGURE_FLAGS} -DCMAKE_INSTALL_PREFIX=${MCINSTALL_PREFIX} -DNO_ALTERNATIVES=${MCNO_ALTERNATIVES} -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} ${CMAKE_SRC}"
-        cmake ${CONFIGURE_FLAGS} \
+	echo "mkdist: prepare_cpack: cmake ${CMAKE_ARGS} ${CONFIGURE_FLAGS} -DCMAKE_INSTALL_PREFIX=${MCINSTALL_PREFIX} -DNO_ALTERNATIVES=${MCNO_ALTERNATIVES} -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} ${CMAKE_SRC}"
+        cmake ${CMAKE_ARGS} ${CONFIGURE_FLAGS} \
               -DCMAKE_INSTALL_PREFIX=${MCINSTALL_PREFIX} \
               -DNO_ALTERNATIVES=${MCNO_ALTERNATIVES} \
               -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} \
