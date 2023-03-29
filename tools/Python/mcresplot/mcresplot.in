@@ -11,7 +11,7 @@ else
     LIB=`dirname $0`
 fi
 if [ -d "$LIB/../miniconda3" ]; then
-    PATH=$LIB/../miniconda3/bin:$PATH
+    source $LIB/../miniconda3/bin/activate base
 fi
 LIB="$LIB/../tools/Python/mcresplot"
 TOOL="mcresplot"

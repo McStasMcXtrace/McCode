@@ -15,7 +15,7 @@ UNAME=`uname -s`
 
 
 if [ -d "$LIB/../miniconda3" ]; then
-	PATH=$LIB/../miniconda3/bin:$PATH
+    source $LIB/../miniconda3/bin/activate base
 fi
 
 LIB="$LIB/../tools/Python/@P@display/mantid_xml"

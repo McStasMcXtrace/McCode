@@ -15,15 +15,7 @@ ARCH=`arch`
 UNAME=`uname -s`
 
 if [ -d "$LIB/../miniconda3" ]; then
-    export PATH=$LIB/../miniconda3/bin:$PATH
-    export LD_LIBRARY_PATH=$LIB/../miniconda3/lib:$LD_LIBRARY_PATH
-fi
-
-# Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
-if [ -d "$LIB/../miniconda3" ]; then
-    if ! [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
-	export PYTHONPATH=$LIB/../miniconda3/lib:$LIB/../miniconda3/lib/python$PYVER/site-packages
-    fi
+    source $LIB/../miniconda3/bin/activate base
 fi
 
 LIB="$LIB/../tools/Python/@P@display/pyqtgraph"
