@@ -1263,7 +1263,8 @@ INITIALIZE
 		guideInfo.enableSegments = 1;
 
 		if (nSegments == -1) {
-         		guideInfo.numberOfSegments = sizeof(mvaluesright)/sizeof(mvaluesright[0]);
+		  printf("\nError: vector-specifcation of coating used, but nSegments=%i.\n  Please give provide nSegments = length of coating segment-arrays!\n", nSegments);
+		  exit(-1);
 		} else {
 		  guideInfo.numberOfSegments = (int)nSegments;
 		}
