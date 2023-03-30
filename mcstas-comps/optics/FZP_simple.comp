@@ -1,0 +1,132 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: FZP_simple
+*
+* %I
+* Written by: A Komar Ravn, and Erik B Knudsen
+* Date: Aug, 2015
+* Origin: NBI/DTU
+*
+* Fresnel zone-plate as a thin object approximation.
+*
+* %D
+* A simple phenomenological thin-object approximation of a Fresnel Zone Plate.
+* This component was adapted for neutrons from the original component
+* written for helium scattering.
+* The focal length of the Zone Plate is determined by the formula:
+* \[f = 2*r*dr/(lambda)\]
+* If a diffraction order other than 1 is wanted the focal distance is scaled accordingly.
+* 
+* %P
+* INPUT PARAMETERS:
+* 
+* rad:          [m] Radius of  the zone-plate.
+* dr:           [m] Width of the outermost ring-slit.
+* bs0rad:       [m] Radius of the central blocking zone.
+* order:        [m] Use this diffaction order.
+* eta:          [ ] Efficiency of the FZP. For neutrons and (order==1) typically {5...30}%. Overrides the sigma_x cross sections. 
+* sigma_abs: [barn] 2200 m/s absorption cross section. 
+* sigma_inc: [barn] Incoherent scattering cross section. 
+* sigma_coh: [barn] Coherent scattering cross section. 
+* thickness:    [m] Thickness of the FZP. Note that the FZP still is modelled as a thin object. The thickness is used in conjunction with the sigma_x cross sections.
+* gamma:        [ ] Duty cycle of the Zone plate - used merely for absorption estimation.
+*
+* %E
+********************************************************************************/
+
+DEFINE COMPONENT FZP_simple
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (rad, dr, bs0rad = 0, order=1, eta=0.1, sigma_abs=0, sigma_inc=0, sigma_coh=0, rho=1, thickness=0, gamma=0.5)
+OUTPUT PARAMETERS ()
+
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+    if (rad<=bs0rad){
+        fprintf(stderr,"Error(%s): Radius of Zone Plate must be > radius of central blocking zone\n",NAME_CURRENT_COMP);
+        exit(-1);
+    }
+    if (eta<0 ||eta>1){
+        fprintf(stderr,"Error(%s): Efficiency (eta) of zone late must be in [0:1]\n",NAME_CURRENT_COMP);
+        exit(-1);
+    }
+    if(!eta){
+        if(!thickness){
+            fprintf(stderr,"Warning(%s): Efficiency (eta) and thickness of FZP is 0. No absorption is modelled\n",NAME_CURRENT_COMP);
+        }else if ( !(sigma_abs || sigma_inc || sigma_coh)  ){
+            fprintf(stderr,"Warning(%s): (sigma_abs,sigma_inc,sigma_coh)==0. No absorption is modelled\n",NAME_CURRENT_COMP);
+        }
+    }
+%}
+
+TRACE
+%{
+  int ord;
+  double focal_point,lambda,vel,theta_inx,theta_iny,theta_outx,theta_outy;
+
+  PROP_Z0;
+  if ((bs0rad != 0) && (x*x + y*y < bs0rad*bs0rad)){
+      ABSORB;
+  } else if (x*x + y*y < rad*rad) {
+      /*pick a diffraction order, and efficiency*/
+      ord=floor(rand01()*(order*2+1))-order;
+      SCATTER;
+      vel=sqrt(vx*vx+vy*vy+vz*vz);
+      if(ord){
+          int nn;
+          if(ord>0){
+              nn=((abs(ord)-1)*2 + 1);
+          }else{
+              nn=-((abs(ord)-1)*2 + 1);
+          }
+          lambda = 2*PI/(V2K*1e10*vel); // A factor of 10^10 to go from Å to m
+          focal_point = 2*rad*dr/lambda/nn;//-dr*dr/lambda; //add this to calculate w/ spherical aberration
+          /*check for negative focal pt. what happens?*/
+          theta_inx = atan2(vx,vz);
+          theta_iny = atan2(vy,vz);
+          theta_outx = theta_inx - x/focal_point;
+          theta_outy = theta_iny - y/focal_point;
+          // printf ("x: %G theta inx: %G theta outx: %G\n",x,theta_inx,theta_outx);
+          // printf("y: %G theta_iny: %G theta_outy: %G\n",y,theta_iny,theta_outy);
+          vx = vel*sin(theta_outx);
+          vy = vel*sin(theta_outy);
+          vz = vel*sqrt(cos(theta_outx)*cos(theta_outx)-sin(theta_outy)*sin(theta_outy));
+      }
+      /*if given use an external efficiency, else use diffraction theory*/
+      if(eta){
+          p *= eta;
+      }else{
+          /*the relative strength of diffraction orders == the probability of scattering into that order.*/
+          double etan;
+          int nn;
+          if (ord){
+              nn=((abs(ord)-1)*2 + 1);
+              etan=2.0/(M_PI*M_PI * nn*nn);//(1.0/(nn*nn))/ 2.0 * 4/(M_PI*M_PI);
+          }else{
+              etan=0.5;
+          }
+          /*weight by real prob / mc prob*/
+          p*=etan/(1.0/(2.0*order+1));
+      }
+      if (thickness){
+          /* Add absorption to target efficiency. We approximate this by using a mean absorption,
+           * weighted by the diffraction angle, for half the distance travelled through the FZP.*/
+          double inv_cth=vel/vz;/* theta=acos(v.[0,0,1] /|v|)*/
+          double l_full=0.5*thickness *(1.0+inv_cth);
+          double mu=gamma * rho*100.0*( sigma_abs*(2200.0/vel) + sigma_inc + sigma_coh);
+          p*=exp(-l_full*mu);
+      }
+  }
+%}
+
+END
