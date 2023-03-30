@@ -25,10 +25,18 @@
 
 #ifndef ESS_BUTTERFLY_LIB_H
 #define ESS_BUTTERFLY_LIB_H 0.1
-#define ESS_SOURCE_DURATION 2.857e-3
-#define ESS_SOURCE_FREQUENCY 14
-#define ESS_SOURCE_POWER 5
 
+#ifndef ESS_SOURCE_DURATION
+#define ESS_SOURCE_DURATION 2.857e-3
+#endif
+
+#ifndef ESS_SOURCE_FREQUENCY
+#define ESS_SOURCE_FREQUENCY 14
+#endif
+
+#ifndef ESS_SOURCE_POWER
+#define ESS_SOURCE_POWER 5
+#endif
 
 /* Struct for extra source parameters - for future geometrical adjustments */
 struct ess_struct {
