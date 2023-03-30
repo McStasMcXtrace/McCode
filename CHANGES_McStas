@@ -120,6 +120,11 @@ Changes in McStas 3.3, March 31st, 2023
    without setting the nSegments input.
  - The multi-v-cavity support from the McStas 2.x version of Pol_guide_vmirror has been ported to 3.x.
    Thanks to Damian Rodriguez and Hal Lee (ESS) for interactions on this component.
+ - By popular demand, certain characteristics of the ESS_butterfly component may be modified using
+   compile-time re-definition. Defaults are ESS_SOURCE_DURATION 2.857e-3, ESS_SOURCE_FREQUENCY 14,
+   ESS_SOURCE_POWER 5. (Use e.g. mcrun --D1=ESS_SOURCE_DURATION=1.0e-3 to simulate a 1 ms pulse.)
+ - Similarly, the precession-algorithm constants of pol-lib may also be redefined at compile-time,
+   defaults are: MCMAGNET_STACKSIZE 12, mc_pol_angular_accuracy (1.0*DEG2RAD), mc_pol_initial_timestep 1e-5.
 
  Core simulation framework / code-generator:
  - A new syntax called SEARCH has been added to the grammar, allowing users to run append a directory
