@@ -16,38 +16,71 @@
 * Very simple setup to compare intensities diffracted by Monochromators.
 * It shows that implementations are equivalent.
 *
-* %Example: Mono=1 Detector: psd1_I=8.97959e-05
-* %Example: Mono=2 Detector: psd1_I=8.96391e-05
-* %Example: Mono=3 Detector: psd1_I=8.95371e-05
-* %Example: Mono=4 Detector: psd1_I=8.95851e-05
-* %Example: Mono=5 Detector: psd1_I=8.98186e-05
-* Example: Mono=6 Detector: psd1_I=9.21295e-05
+* PG 002 oriented examples:
+* %Example: Mono=1 Detector: psd1_I=8.9e-05
+* %Example: Mono=2 Detector: psd1_I=8.9e-05
+* %Example: Mono=3 Detector: psd1_I=8.9e-05
+* %Example: Mono=4 Detector: psd1_I=8.9e-05
+* %Example: Mono=5 Detector: psd1_I=8.9e-05
+* %Example: Mono=6 Detector: psd1_I=1.0e-04
+* %Example: Mono=6 PG=0.15 Detector: psd1_I=2.8e-05
+* %Example: Mono=6 ay=2.13389 az=-1.232 bz=2.464 cx=6.711 Detector: psd1_I=1.0e-04
+* %Example: Mono=6 ay=2.94447 by=1.47224 bz=2.54999 cx=0.936252 recip=1 Detector: psd1_I=1.0e-04
+* %Example: Mono=7 ay=2.94447 by=1.47224 bz=2.54999 cx=0.936252 recip=1 Detector: psd1_I=9.6e-05
+* SiO2 lattice orientation examples:
+* Example: Mono=1 DM=4.25504 lmin=0.1 lmax=7.0 lambda=6.0
+* Example: Mono=6 DM=4.25504 lmin=0.1 lmax=7.0 lambda=6.0 reflections=SiO2_quartza.lau  ax=4.3271 az=-2.49825 bz=4.9965 cy=-5.4543
+* Example: Mono=6 DM=4.25504 lmin=0.1 lmax=7.0 lambda=6.0 reflections=SiO2_quartza.lau recip=1 ax=1.45205 bx=0.726027 bz=1.25752 cy=-1.15197
+* Example: Mono=7 DM=4.25504 lmin=0.1 lmax=7.0 lambda=6.0 NXrefs=SiO2-alpha_sg154_AlphaQuartz.ncmat recip=1 ax=1.45205 bx=0.726027 bz=1.25752 cy=-1.15197
 *
 * %Parameters
-* Mono:       [] Choice of Monochromator component to use, with 1=Monochromator_flat 2=Monochromator_pol 3=Monochromator_pol (forcing 1% events to be reflected) 4=Monochromator_curved (in flat mode) 5=Monochromator_2foc (contrib, flat mode) 6=Single_crystal
-* lambda: [Angs] Source wavelength
-* Moz:  [arcmin] Mosaicity
-* PG:         [] PG-mode for Single_crystal 
-* powder:     [] Powder-mode for Single_crystal
-* order:      [] Maximum order of scattering in Single_crystal
+* Mono:            [1] Choice of Monochromator component to use, with 1=Monochromator_flat 2=Monochromator_pol 3=Monochromator_pol (forcing 1% events to be reflected) 4=Monochromator_curved (in flat mode) 5=Monochromator_2foc (contrib, flat mode) 6=Single_crystal 7=NCrystal
+* lambda:       [Angs] Target mochromator wavelength
+* DM:           [Angs] Mono lattice spacing (should be chosen compatible with file-unput when Mono=6/7
+* lmin:         [Angs] Minimum wavelength produced from source
+* lmax:         [Angs] Maximum wavelength produced from source
+* Moz:        [arcmin] Mosaicity
+* PG:              [1] PG-mode for Single_crystal (range 0-1)
+* powder:          [1] Powder-mode for Single_crystal
+* order:           [1] Maximum order of scattering in Single_crystal
+* p_transmit:      [1] Probability of transmission in Single_crystal Mono=6 case
+* reflections:   [str] input-file for Single_crystal (Mono=6)
+* NXrefs:        [str] input-file for NCrystal (Mono=7)
+* ax: [Angs or 1/Angs] x-coordinate of 1st direct/recip lattice unit cell vector (depends on recip setting)
+* ay: [Angs or 1/Angs] y-coordinate of 1st direct/recip lattice unit cell vector (depends on recip setting)
+* az: [Angs or 1/Angs] z-coordinate of 1st direct/recip lattice unit cell vector (depends on recip setting)
+* bx: [Angs or 1/Angs] x-coordinate of 2nd direct/recip lattice unit cell vector (depends on recip setting)
+* by: [Angs or 1/Angs] y-coordinate of 2nd direct/recip lattice unit cell vector (depends on recip setting)
+* bz: [Angs or 1/Angs] z-coordinate of 2nd direct/recip lattice unit cell vector (depends on recip setting)
+* cx: [Angs or 1/Angs] x-coordinate of 3rd direct/recip lattice unit cell vector (depends on recip setting)
+* cy: [Angs or 1/Angs] y-coordinate of 3rd direct/recip lattice unit cell vector (depends on recip setting)
+* cz: [Angs or 1/Angs] x-coordinate of 3rd direct/recip lattice unit cell vector (depends on recip setting)
+* recip:           [1] Flag to indicate if ax/y/z, bx/y/z, cx/y/z lattice corrdinates are in direct (=0) or reciprocal space units
+* dthick:          [m] Thickness of mono slab in Mono=6/7 cases
+*
 *
 * %Link
 *
 * %End
 ****************************************************************************/
-DEFINE INSTRUMENT Test_Monochromators(int Mono=1, lambda=2.0, Moz=40, PG=0, powder=0, order=1)
+DEFINE INSTRUMENT Test_Monochromators(int Mono=1, lmin=1.6, lmax=2.4, Moz=40, string reflections="C_graphite.lau", string NXrefs="C_sg194_pyrolytic_graphite.ncmat", DM=3.3539, PG=0, powder=0, order=0, ax=0, ay=0, az=0, bx=0, by=0, bz=0, cx=0, cy=0, cz=0, recip=0, dthick=0.0015, p_transmit=0.001, double lambda=2.0)
 
 DECLARE
 %{
-  double DM  = 3.3539; /* Monochromator d-spacing in Angs */
-                       /* PG002 Orders : 1st 3.355 2e 1.6775, 3e 1.1183 */
-
   /* to compute */
   double A1,A2;
   double mono_q;
 
   /* This variable helps us switch on and off the different setups*/
   double filterProb;
+  double NXmoz;
+
+  char NXcfg[256];
+  char tofopts[256];
+  double vmin;
+  double vmax;
+  double tmin;
+  double tmax;
 %}
 /* end of DECLARE */
 
@@ -69,23 +102,42 @@ INITIALIZE
   A2 *= SM;   /* A1 : mono theta (crystal) */
   A1 = A2/2;  /* A2 : mono 2 theta (arm to sample) */
 
-  printf("\n%s: ", NAME_INSTRUMENT);
-  if (Mono==1) {
-    printf("Using Monochromator_flat\n");
-  } else if (Mono==2) {	 
-    printf("Using Monochromator_pol\n");
-  } else if (Mono==3) {
-    printf("Using Monochromator_pol (with 1%% events reflected)\n");
-  } else if (Mono==4) {
-    printf("Using Monochromator_curved (flat mode)\n");
-  } else if (Mono==5) {
-    printf("Using Monochromator_2foc (contrib, flat mode)\n");
-  } else if (Mono==6) {
-    printf("Using Single_crystal\n");
-  } else {
-    fprintf(stderr,"Mono choice not implemented!\n");
-    exit(-1);
+  vmax = (2*PI/V2K)/lmin;
+  vmin = (2*PI/V2K)/lmax;
+  tmin = 1.5/vmax;
+  tmax = 1.5/vmin;
+
+  printf("\n%s: ", instrument_name);
+
+  /* Fallback NXcfg string for non-NCrystal cases below */
+  sprintf(NXcfg,"void.ncmat");
+
+  NXmoz = Moz/60.0;
+
+  switch (Mono) {
+  case 1:
+    printf("Using Monochromator_flat\n"); break;
+  case 2:
+    printf("Using Monochromator_pol\n"); break;
+  case 3:
+    printf("Using Monochromator_pol (with 1%% events reflected)\n"); break;
+  case 4:
+    printf("Using Monochromator_curved (flat mode)\n"); break;
+  case 5:
+    printf("Using Monochromator_2foc (contrib, flat mode)\n"); break;
+  case 6:
+    printf("Using Single_crystal\n"); break;
+  case 7:
+    printf("Using NCrystal\n");
+    sprintf(NXcfg,"%s;mos=%fdeg;incoh_elas=0;inelas=0"
+	    ";dir1=@crys_hkl:1,0,0@lab:%f,%f,%f"
+	    ";dir2=@crys_hkl:0,0,1@lab:%f,%f,%f",NXrefs,NXmoz,ax,ay,az,cx,cy,cz);
+    break;
   }
+
+  sprintf(tofopts,"t limits=[%g %g] bins=256",tmin,tmax);
+
+  printf("Geometry of scattering: A1 %g A2 %g\n",A1,A2);
   %}
 /* end of INITIALIZE */
 
@@ -99,7 +151,7 @@ COMPONENT Origin = Progress_bar()
 COMPONENT Source =
 Source_simple(radius  = 0.01, dist = 1.0,
 	      focus_xw = 0.02, focus_yh = 0.02,
-	      lambda0 = lambda, dlambda = 0.2*lambda)
+	      lambda0 = (lmax+lmin)/2.0, dlambda = (lmax-lmin)/2.0)
      AT (0,0,0) RELATIVE Origin
 
 COMPONENT lamStart =
@@ -145,29 +197,56 @@ Monochromator_2foc(width = 0.10, height = 0.10,
      WHEN (Mono == 5) AT (0, 0, 0) RELATIVE Mono_Arm
 
 COMPONENT Mono6 = Single_crystal(
-  xwidth = 0.002, yheight = 0.1, zdepth = 0.1,
-  mosaic = Moz, delta_d_d=1e-2, reflections = "C_graphite.lau", barns=0,
-  ax=0,      ay=2.14,   az=-1.24,
-  bx = 0,    by = 0,    bz =  2.47,
-  cx = 6.71, cy = 0,    cz =  0,
-  sigma_abs = 0.014, sigma_inc = 0.004, order=order, powder=powder, PG=PG)
+  p_transmit=p_transmit,
+  xwidth = dthick, yheight = 0.1, zdepth = 0.1,
+  mosaic = Moz, delta_d_d=1e-2, reflections = reflections, barns=0,
+  ax=ax, ay=ay, az=az,
+  bx = bx, by = by, bz = bz,
+  cx = cx, cy = cy, cz = cz,
+  recip_cell=recip,
+  order=order, powder=powder, PG=PG)
      WHEN (Mono == 6) AT (0, 0, 0) RELATIVE Mono_Arm
 EXTEND %{
   if(!SCATTERED) ABSORB;
 %}
 
+COMPONENT Mono7 = NCrystal_sample(xwidth=dthick,yheight=0.1,zdepth=0.1,
+                                          cfg=NXcfg)
+WHEN (Mono == 7) AT (0, 0, 0) RELATIVE Mono_Arm
+
 COMPONENT Sphere1 = PSD_monitor_4PI(filename="sphere", radius=1, restore_neutron=1)
 AT (0, 0, 0) RELATIVE Mono_Out
 
+
 COMPONENT lam1 =
 L_monitor(nL = 200, filename = "lambda1.dat", xwidth = 0.10,
-	  yheight = 0.10, Lmin = 0.7*lambda, Lmax = 1.3*lambda)
+	  yheight = 0.10, Lmin = 0.7*lambda, Lmax = 1.3*lambda, restore_neutron=1)
   AT (0, 0, 0.25) RELATIVE Mono_Out
 
 
 COMPONENT psd1 =
 PSD_monitor(xwidth = 0.10, yheight = 0.10,
-	    nx=20, ny=20, filename="psd1.dat")
+	    nx=20, ny=20, filename="psd1.dat", restore_neutron=1)
+  AT (0, 0, 0.5) RELATIVE Mono_Out
+
+COMPONENT psd2 =
+PSD_monitor(xwidth = 1, yheight = 1,
+	    nx=128, ny=128, filename="psd2.dat", restore_neutron=1)
+  AT (0, 0, 0.5) RELATIVE Mono_Out
+
+COMPONENT psd3 =
+PSD_monitor(xwidth = 1, yheight = 1,
+	    nx=128, ny=128, filename="psd3.dat", restore_neutron=1)
+  AT (0, 0, 0.5) RELATIVE Mono_Out
+
+COMPONENT L3 =
+  L_monitor(xwidth = 0.1, yheight = 0.1, Lmin=lmin, Lmax=lmax,
+	    nL=128, filename="L3.dat", restore_neutron=1)
+  AT (0, 0, 0.5) RELATIVE Mono_Out
+
+COMPONENT T3 =
+  Monitor_nD(xwidth =0.1, yheight = 0.1, options=tofopts,
+	     filename="T3.dat", restore_neutron=1)
   AT (0, 0, 0.5) RELATIVE Mono_Out
 
 END
