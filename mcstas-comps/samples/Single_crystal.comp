@@ -1201,7 +1201,7 @@ TRACE
         randrotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
       }
       if (PG) { /* orientation of crystallite is random along <c> axis */
-	Alpha = rand01()*2*PI*PG;
+	Alpha = randpm1()*PI*PG;
 	PGrotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
       }
 
@@ -1325,7 +1325,7 @@ TRACE
           randderotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
         }
         if (PG) { /* orientation of crystallite is longer random */
-          PGderotate(&vx, &vy, &vz, Alpha, hkl_info.m_cx, hkl_info.m_cz, hkl_info.m_cz);
+          PGderotate(&vx, &vy, &vz, Alpha, hkl_info.m_cx, hkl_info.m_cy, hkl_info.m_cz);
         }
 
 	type = 't';
