@@ -5,9 +5,9 @@
 * Written by: Peter Willendrup (DTU/ESS), Sanghamitra Mukhopadhyay (ISIS STFC)
 * Date: September 2018
 * Origin: DTU/ESS/ISIS
-* %INSTRUMENT_SITE: ISIS
+* %INSTRUMENT_SITE: Mantid
 *
-* TOSCA (pre-upgrade) at ISIS with MAntid support.
+* TOSCA (pre-upgrade) at ISIS with Mantid support.
 *
 * %D
 * The model at hand is adapted from an earlier model by M.Zanetti and represents the

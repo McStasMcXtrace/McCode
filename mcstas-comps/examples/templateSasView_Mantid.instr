@@ -12,7 +12,7 @@
 * Date: 25 Jan 2016
 * Origin: DTU, European Spallation Source ERIC
 * Modified by: Based on templatesSANS.instr by Kim Lefmann
-* %INSTRUMENT_SITE: Templates
+* %INSTRUMENT_SITE: Mantid
 *
 * Test instrument for the SasView_model component generating event data for Mantid. No guide / velocity selector
 * etc.

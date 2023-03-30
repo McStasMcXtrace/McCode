@@ -5,13 +5,13 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: templateSANS
+* Instrument: templateSANS2_Mantid
 *
 * %Identification
 * Written by: Peter Willendrup, Wim G. Bouwman
 * Date: Dec 20190
 * Origin: <a href="http://www.fysik.dtu.dk">DTU</a>
-* %INSTRUMENT_SITE: Templates
+* %INSTRUMENT_SITE: Mantid
 *
 * Test instrument for the SANS_spheres2 component. No guide / velocity selector.
 *

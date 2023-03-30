@@ -11,9 +11,9 @@
 * Written by: G. Granroth
 * Date: Nov 2014
 * Origin: SNS
-* %INSTRUMENT_SITE:Mantid
+* %INSTRUMENT_SITE: Mantid
 *
-* Model of the ARCS spectrometer from SNS.
+* Model of the ARCS spectrometer from SNS with Mantid support.
 *
 * %Description
 * When using this ARCS instrument model, please reference
