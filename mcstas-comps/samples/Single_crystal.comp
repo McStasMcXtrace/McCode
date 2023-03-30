@@ -489,6 +489,7 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
     /* when lengths a,b,c + angles are given (instead of vectors a,b,c) */
     if (info->m_aa && info->m_bb && info->m_cc)
     {
+      printf("Mode: lengths and angles\n");
       double as,bs,cs;
       if (info->m_a) as = info->m_a;
       else as = sqrt(info->m_ax*info->m_ax+info->m_ay*info->m_ay+info->m_az*info->m_az);
@@ -510,11 +511,13 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
         (flag ? "INC" : SC_file), as, bs, cs, info->m_aa, info->m_bb, info->m_cc);
     } else {
       if (!info->recip) {
+	printf("Mode: Direct mode lattice\n");
         printf("Single_crystal: %s structure a=[%g,%g,%g] b=[%g,%g,%g] c=[%g,%g,%g] ",
 	       (flag ? "INC" : SC_file), info->m_ax ,info->m_ay ,info->m_az,
 	       info->m_bx ,info->m_by ,info->m_bz,
 	       info->m_cx ,info->m_cy ,info->m_cz);
       } else {
+	printf("Mode: Reciprocal mode lattice\n");
         printf("Single_crystal: %s structure a*=[%g,%g,%g] b*=[%g,%g,%g] c*=[%g,%g,%g] ",
 	       (flag ? "INC" : SC_file), info->m_ax ,info->m_ay ,info->m_az,
 	       info->m_bx ,info->m_by ,info->m_bz,
@@ -1073,6 +1076,14 @@ INITIALIZE
     order=1;
   }
 
+  printf("Direct space lattice orientation:\n");
+  printf("  a = [%g %g %g]\n", hkl_info.m_ax, hkl_info.m_ay, hkl_info.m_az);
+  printf("  b = [%g %g %g]\n", hkl_info.m_bx, hkl_info.m_by, hkl_info.m_bz);
+  printf("  c = [%g %g %g]\n", hkl_info.m_cx, hkl_info.m_cy, hkl_info.m_cz);
+  printf("Reciprocal space lattice orientation:\n");
+  printf("  a* = [%g %g %g]\n", hkl_info.asx, hkl_info.asy, hkl_info.asz);
+  printf("  b* = [%g %g %g]\n", hkl_info.bsx, hkl_info.bsy, hkl_info.bsz);
+  printf("  c* = [%g %g %g]\n", hkl_info.csx, hkl_info.csy, hkl_info.csz);
 
 %}
 
@@ -1325,7 +1336,7 @@ TRACE
           randderotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
         }
         if (PG) { /* orientation of crystallite is longer random */
-          PGderotate(&vx, &vy, &vz, Alpha, hkl_info.m_cx, hkl_info.m_cy, hkl_info.m_cz);
+          PGderotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
         }
 
 	type = 't';
