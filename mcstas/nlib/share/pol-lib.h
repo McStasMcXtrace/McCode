@@ -28,9 +28,14 @@
 #ifndef POL_LIB_H
 #define POL_LIB_H "$Revision: 4382 $"
 
-// Constant used 
+// Constant used
+#ifndef mc_pol_omegaL
 #define mc_pol_omegaL (-2 * PI * 29.16e6) /* MHz*rad/Tesla */
+#endif
+
+#ifndef mc_pol_mu0
 #define mc_pol_mu0 (4*M_PI*1e-7)
+#endif
 
 /*example field functions should have a variable set of arguments*/
 #include <stdarg.h>
