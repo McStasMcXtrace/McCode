@@ -112,6 +112,9 @@ Changes in McStas 3.3, March 31st, 2023
    of by Rose Robledo FZJ.
 
  Components and Instruments:
+ - FZP_simple model of Fresnel Zone-Plate (phenomenologic/closed-form thin-plate approximation) added
+   along with test instrument Test_FZP_simple, work by Anders Komar Ravn (NBI), and Erik B Knudsen
+   (DTU, now Copenhagen Atomics)
  - The 3 example ConicTracer interface-component codes Conics_EH.comp, Conics_PH.comp, Conics_PP.comp
    have been updated to allow specifying non-equidistant radii of the nested optical shells. Please
    use vector radii={a,b,c,d,e} or initialization via an instrument-based array and use a compatible
