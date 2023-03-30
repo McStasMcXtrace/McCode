@@ -57,7 +57,7 @@ export MCINSTALL_PREFIX=/usr/local/mcstas/$1
 if [ "x$2" != "x" ]; then
   cd meta-pkgs/rpm
 
-  for controlfile in `ls mcstas-suite-python.spec`
+  for controlfile in `ls mcstas-suite-python-ng.spec`
   do
     sed -i.bak s/@VERSION@/${1}/g $controlfile
     rpmbuild -bb --target x86_64 $controlfile
