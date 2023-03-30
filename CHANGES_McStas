@@ -98,7 +98,7 @@ Changes in McStas 3.3, March 31st, 2023
    and nD_Mantid_xx found in
    https://github.com/McStasMcXtrace/McCode/wiki/McStas-and-Mantid#mcstas-mantid-workflow
    to succesfully generate your IDF. Please also inspire from the example instruments in the 'Mantid'
-   category.
+   category, see mcgui -> File -> New from template -> Mantid .
  - mcrun now forwards the -I input to the code-generator, which allows you to add a chosen folder
    with extra components etc. to your search path. Setting the -I flag implies recompilation (-c).
    (Please also note the related SEARCH grammar below which allows working on the component search
