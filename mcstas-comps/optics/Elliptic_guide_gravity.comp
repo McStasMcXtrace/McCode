@@ -75,6 +75,7 @@
 * for(iter=0; iter < 50; iter++){ marray[iter] = 2; }
 * And Declared as
 * double mValues[50];
+* If you are using the array-based coating-specification, you **must** give nSegments a compatible value.
 *
 * %P
 * INPUT PARAMETERS:
@@ -113,7 +114,7 @@
 * majorAxisoffsetyh: [m]    direct defination of the guide geometry, distance between the center of the vertical ellipse and the guide entrance
 * verbose: [bool]           Give extra information about calculations
 * curvature: [m]            Simulate horizontal radius of curvature by centripetal force added to the gravity. Note: Does not curve the guide in mcdisplay but "curves the neutron". Has opposite sign definition of Guide_curved.
-* nSegments: [m]            Can optionally be used to specify number of guide segments (especially useful in GPU settings).
+* nSegments: [m]            Must be used to specify number of guide segments, i.e. when giving inputs mvaluesright ... etc.
 * enableGravity: [m]        Flag to select propagation with gravity.
 *
 * OUTPUT PARAMETERS
