@@ -135,9 +135,16 @@ Changes in McStas 3.3, March 31st, 2023
  - A new syntax called SEARCH has been added to the grammar, allowing users to run append a directory
    to the mcstas search path when looking for components. The syntax may be given in two forms in the
    instrument- or component-header directly after a SHELL token and before the DEPENDENCY, DECLARE
-   tokens. SEARCH comes in two variants:
+   tokens:
       SEARCH "/the/path/to/add/"
       SEARCH SHELL "the_executable --and --some --options"
+   But you may also the same two SEARCH forms in connection with a component instance in TRACE, e.g.:
+      TRACE
+      ...
+      SEARCH SHELL "readout-config --show compdir"
+      COMPONENT readout = Readout(ring="RING", fen="FEN", tube="TUBE", a="left", b="right", ...)
+      AT (0, 0, 0) ABSOLUTE
+      ...
    Thanks to Gregory S. Tucker (ESS) for contributing this grammar enhancement!
 
  Libraries and other runtime code:
