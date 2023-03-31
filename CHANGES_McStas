@@ -56,7 +56,7 @@ Changes in McStas 3.3, March 31st, 2023
  code-generator and support for GPU acceleration on NVIDIA cards.
 
  3.3 could have been considered a 'minor' update, but new built-in support for NeXus
- on all platforms and new  grammar warrant the .x increment.
+ on all platforms and new SEARCH grammar warrant the .x increment.
 
  Thanks:
  - Thanks to all members of the joint McStas-McXtrace team and input from our
