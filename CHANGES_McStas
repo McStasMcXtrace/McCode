@@ -44,7 +44,7 @@
 * Modified by: PW September-October 2021: version 2.7.1
 * Modified by: PW September-November 2021: version 3.1
 * Modified by: PW December 2022: versions 3.2 and 2.7.2
-* Modified by: PW March 2023: versions 3.3
+* Modified by: PW March 2023: version 3.3
 *
 * This file is part of McStas 3.3, released March 31st 2023.
 * It gives a 'changes' list from the beginning of the project
@@ -56,7 +56,7 @@ Changes in McStas 3.3, March 31st, 2023
  code-generator and support for GPU acceleration on NVIDIA cards.
 
  3.3 could have been considered a 'minor' update, but new built-in support for NeXus
- on all platforms and new  grammar warrant the .x increment.
+ on all platforms and new SEARCH grammar warrant the .x increment.
 
  Thanks:
  - Thanks to all members of the joint McStas-McXtrace team and input from our
@@ -91,7 +91,7 @@ Changes in McStas 3.3, March 31st, 2023
 
  Tools:
  - mcrun now automatically adds NeXus support to your binary if --format=NeXus is given on the
-   commandline.
+   commandline (or if DEPENDENCY " @NEXUSFLAGS@ " is included in your instrument or component file).
  - The new input flag --IDF will run an IDF generator (i.e. mcdisplay-mantid) prior to performing
    a NeXus-based simulation, i.e. for "one-click" support of output in Mantid-compatible NeXus
    format with an embedded IDF. Please consult the naming-conventions for sourceMantid, sampleMantid
@@ -135,9 +135,16 @@ Changes in McStas 3.3, March 31st, 2023
  - A new syntax called SEARCH has been added to the grammar, allowing users to run append a directory
    to the mcstas search path when looking for components. The syntax may be given in two forms in the
    instrument- or component-header directly after a SHELL token and before the DEPENDENCY, DECLARE
-   tokens. SEARCH comes in two variants:
+   tokens:
       SEARCH "/the/path/to/add/"
       SEARCH SHELL "the_executable --and --some --options"
+   But you may also apply the same two SEARCH forms in connection with a component instance in TRACE, e.g.:
+      TRACE
+      ...
+      SEARCH SHELL "readout-config --show compdir"
+      COMPONENT readout = Readout(ring="RING", fen="FEN", tube="TUBE", a="left", b="right", ...)
+      AT (0, 0, 0) ABSOLUTE
+      ...
    Thanks to Gregory S. Tucker (ESS) for contributing this grammar enhancement!
 
  Libraries and other runtime code:
