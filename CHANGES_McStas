@@ -91,7 +91,7 @@ Changes in McStas 3.3, March 31st, 2023
 
  Tools:
  - mcrun now automatically adds NeXus support to your binary if --format=NeXus is given on the
-   commandline.
+   commandline (or if DEPENDENCY " @NEXUSFLAGS@ " is included in your instrument or component file).
  - The new input flag --IDF will run an IDF generator (i.e. mcdisplay-mantid) prior to performing
    a NeXus-based simulation, i.e. for "one-click" support of output in Mantid-compatible NeXus
    format with an embedded IDF. Please consult the naming-conventions for sourceMantid, sampleMantid
