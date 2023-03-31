@@ -138,7 +138,7 @@ Changes in McStas 3.3, March 31st, 2023
    tokens:
       SEARCH "/the/path/to/add/"
       SEARCH SHELL "the_executable --and --some --options"
-   But you may also the same two SEARCH forms in connection with a component instance in TRACE, e.g.:
+   But you may also apply the same two SEARCH forms in connection with a component instance in TRACE, e.g.:
       TRACE
       ...
       SEARCH SHELL "readout-config --show compdir"
