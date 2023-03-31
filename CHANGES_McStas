@@ -44,11 +44,138 @@
 * Modified by: PW September-October 2021: version 2.7.1
 * Modified by: PW September-November 2021: version 3.1
 * Modified by: PW December 2022: versions 3.2 and 2.7.2
+* Modified by: PW March 2023: version 3.3
 *
-* This file is part of McStas 3.2, released December 12th 2022.
+* This file is part of McStas 3.3, released March 31st 2023.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas 3.3, March 31st, 2023
+
+ McStas 3.3 is the fourth official release in the 3.x series, with a modernised 
+ code-generator and support for GPU acceleration on NVIDIA cards.
+
+ 3.3 could have been considered a 'minor' update, but new built-in support for NeXus
+ on all platforms and new SEARCH grammar warrant the .x increment.
+
+ Thanks:
+ - Thanks to all members of the joint McStas-McXtrace team and input from our
+   users via emails and GitHub issues alike!
+
+ Fixes of issues from last 3.x release:
+ - A number of issues from 3.2 were addressed, see the relevant GitHub issues for details:
+   - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-3.2
+
+ Installation:
+ - As usual, our install docs are available on the McCode GitHub page at
+   https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+ - The meta-packages for Debian/Ubuntu and RedHat/Centos/Fedora are named e.g.
+   mcstas-suite-python-ng for 'next generation' for coexistance with the 2.x
+   series packages
+ - OpenACC GPU (and CPU multicore) acceleration is at the time of release still ONLY
+   supported on Linux systems, as this is the only platform targeted by the NVIDIA
+   HPC package. Versions 20.x, 21.x, 22.x and 23.x should all work. On Windows 64bit systems,
+   support is expected to arrive "later", but you may run on your GPU via the so-called
+   "Windows Subsystem for Linux" (WSL). macOS is unfortunately not supported
+   by NVIDIA HPC acceleration.
+ - McStas 3.3 comes with embedded NeXus support on macOS and on Debian/Ubuntu NeXus is pulled
+   as a package dependency. On Windows, please install NeXus from the extras/ folder alongside
+   your McStas bundle.
+ - The build process for macOS has been overhauled and is now performed with the embedded
+   conda environment. Further, the macOS builds should be more robust wrt. added, surrounding
+   non-standard Python environments on the target machine.
+
+ McStas 3.3 enables most components and instruments on GPU. A very limited instruments using
+ the "scatter logger" mechanism are still only available on 2.x and key components (e.g. Union
+ and NCrystal) compute only on CPU.
+
+ Tools:
+ - mcrun now automatically adds NeXus support to your binary if --format=NeXus is given on the
+   commandline (or if DEPENDENCY " @NEXUSFLAGS@ " is included in your instrument or component file).
+ - The new input flag --IDF will run an IDF generator (i.e. mcdisplay-mantid) prior to performing
+   a NeXus-based simulation, i.e. for "one-click" support of output in Mantid-compatible NeXus
+   format with an embedded IDF. Please consult the naming-conventions for sourceMantid, sampleMantid
+   and nD_Mantid_xx found in
+   https://github.com/McStasMcXtrace/McCode/wiki/McStas-and-Mantid#mcstas-mantid-workflow
+   to succesfully generate your IDF. Please also inspire from the example instruments in the 'Mantid'
+   category, see mcgui -> File -> New from template -> Mantid .
+ - mcrun now forwards the -I input to the code-generator, which allows you to add a chosen folder
+   with extra components etc. to your search path. Setting the -I flag implies recompilation (-c).
+   (Please also note the related SEARCH grammar below which allows working on the component search
+   path directly via the instrument or component grammar.)
+ - The mcgui run dialogue now allows to directly specify --format=NeXus and --format=NeXus --IDF
+   when starting a simulation.
+ - mcdisplay-mantid has been given a good overhaul and now works properly with all of the supported
+   mantid-event-detector geometries of Monitor_nD: rectangular, cylindrical/banana and OFF-file based.
+   Thanks to Torben R. Nielsen and Celine Durniak (ESS) for repeated testing.
+ - An mcplot (-pyqtgraph) and numpy related bug was quickly spotted and ironed out with the help
+   of by Rose Robledo FZJ.
+
+ Components and Instruments:
+ - FZP_simple model of Fresnel Zone-Plate (phenomenologic/closed-form thin-plate approximation) added
+   along with test instrument Test_FZP_simple, work by Anders Komar Ravn (NBI), and Erik B Knudsen
+   (DTU, now Copenhagen Atomics)
+ - Test_Monochromators.instr has been updated to include NCrystal_sample as a monochromator, plus
+   includes multiple ways of parametrizing Single_crystal lattice orientation.
+ - The 3 example ConicTracer interface-component codes Conics_EH.comp, Conics_PH.comp, Conics_PP.comp
+   have been updated to allow specifying non-equidistant radii of the nested optical shells. Please
+   use vector radii={a,b,c,d,e} or initialization via an instrument-based array and use a compatible
+   setting of nshells.
+ - The Elliptical_guide_gravity will now complain if you are using arrays for specifying varied coating
+   without setting the nSegments input.
+ - The multi-v-cavity support from the McStas 2.x version of Pol_guide_vmirror has been ported to 3.x.
+   Thanks to Damian Rodriguez and Hal Lee (ESS) for interactions on this component.
+ - By popular demand, certain characteristics of the ESS_butterfly component may be modified using
+   compile-time re-definition. Defaults are ESS_SOURCE_DURATION 2.857e-3, ESS_SOURCE_FREQUENCY 14,
+   ESS_SOURCE_POWER 5. (Use e.g. mcrun --D1=ESS_SOURCE_DURATION=1.0e-3 to simulate a 1 ms pulse.)
+ - Similarly, the precession-algorithm constants of pol-lib may also be redefined at compile-time,
+   defaults are: MCMAGNET_STACKSIZE 12, mc_pol_angular_accuracy (1.0*DEG2RAD), mc_pol_initial_timestep 1e-5.
+
+ Core simulation framework / code-generator:
+ - A new syntax called SEARCH has been added to the grammar, allowing users to run append a directory
+   to the mcstas search path when looking for components. The syntax may be given in two forms in the
+   instrument- or component-header directly after a SHELL token and before the DEPENDENCY, DECLARE
+   tokens. SEARCH comes in two variants:
+      SEARCH "/the/path/to/add/"
+      SEARCH SHELL "the_executable --and --some --options"
+   Thanks to Gregory S. Tucker (ESS) for contributing this grammar enhancement!
+
+ Libraries and other runtime code:
+ - The (r-)interoff-lib.c family of codes have again received a couple of updates, thanks to McStas user
+   Richard Wagner (ILL).
+ - NCrystal library version 3.5.1 from T. Kittelmann (ESS) and X.X. Cai (CSNS), distributed
+   with McStas on Unix platforms only. (Cross-compiles for Windows, but still needs work
+   for "production" availability.)
+ - MCPL library from the same authors included at v. 1.6.1
+
+ Please start your migration to 3.x:
+ - Following the release of 3.3, we will also release a "VERY last update" to the 2.x series in the form
+   of McStas 2.7.3 that share a subset of tool features with McStas 3.3.
+ - The Wiki has a dedicated section on McStas 2.x -> McStas 3.x conversion that includes:
+   * A nomenclature list containing short descriptions of new concepts and important keywords
+     in McStas 3.x and OpenACC / CUDA code in general.
+   * A document outlining the most importand differences between 2.x and 3.x.
+   * A guide for 2.x -> 3.x instrument conversion.
+   * A guide for 2.x -> 3.x component conversion.
+ - If you are still in trouble, please write us a GitHub issue or an email to mcstas-users@mcstas.org
+ - Known limitations in the GPU-implementation:
+   * The Union subsystem still works on CPU only, but can be used in the mixed GPU/CPU funnnel
+     mode as mentioned above. Union_master is a NOACC component. We expect Union_master to receive
+     GPU suport later in 2023.
+   * The same solution is applied in use of the NCrystal_sample that uses a non-accelerated library
+     without the needed #pragma's included. Several other "complicated" components such as
+     Single_crystal_inelastic are included the same way.
+   * Special NOACC versions of Monitor_nD and MCPL_output are included. These may be used in the case
+     of large event datasets, allowing more than 2e9 events to be stored.
+
+ Platforms:
+  - We still support 64bit Windows 10/11 on Intel, three most recent 64bit macOS (11 Big Sur -> 13 Ventura)
+    on both Intel and Apple Silicon/M1 processors. Debian-based distros on Intel and Arm, Fedora on Intel.
+  - On macOS and Windows we bundle a Mambaforge Python with the installation.
+
+We hope you will enjoy this new release!!!
+
+
 Changes in McStas 3.2, December 12th, 2022
 
  McStas 3.2 is the third official release in the 3.x series, with a modernised 
@@ -228,7 +355,7 @@ Changes in McStas 3.2, December 12th, 2022
 We hope you will enjoy this new release!!!
 
 
-Changes in McStas 2,7.2, December 12th, 2022
+Changes in McStas 2.7.2, December 12th, 2022
 
  McStas 2.7.2 is the 12th release in the 2.x series, provides minor incremental
  improvements and fixes various minor issues with McStas 2.7.1. McStas 2.7.2 is meant
