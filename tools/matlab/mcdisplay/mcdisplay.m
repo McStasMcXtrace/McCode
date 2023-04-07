@@ -224,7 +224,7 @@ function [comps, fig] = mcdisplay(varargin)
   daspect([1 1 1]);
   box on;
   a0 = gca;
-  if exist ("OCTAVE_VERSION", "builtin")
+  if exist ('OCTAVE_VERSION', 'builtin')
     legend show
   end
 
@@ -380,7 +380,7 @@ function plot_contextmenu(a, name, pars)
   uimenu(uicm, 'Label','Toggle grid', 'Callback','grid');
   uimenu(uicm, 'Label','Toggle aspect ratio','Callback','if all(daspect == 1) daspect(''auto''); else daspect([ 1 1 1 ]); end');
   uimenu(uicm, 'Label','Toggle Perspective','Callback', 'if strcmp(get(gca,''Projection''),''orthographic'')  set(gca,''Projection'',''perspective''); else set(gca,''Projection'',''orthographic''); end');
-  if exist ("OCTAVE_VERSION", "builtin")
+  if exist ('OCTAVE_VERSION', 'builtin')
   uimenu(uicm, 'Label','Toggle legend','Callback','legend(''toggle'');');
   else
   uimenu(uicm, 'Label','Toggle legend','Callback','tmp_h=legend(''toggle''); set(tmp_h,''Interpreter'',''None''); if strcmp(get(tmp_h,''Visible''),''off''), legend(gca,''off''); end; clear tmp_h;');
@@ -406,7 +406,7 @@ function plot_contextmenu(a, name, pars)
       if ndims(a) >= 2
         uimenu(uicmf, 'Label', 'Rotate on/off', 'Callback','rotate3d');
       end
-      if exist ("OCTAVE_VERSION", "builtin")
+      if exist ('OCTAVE_VERSION', 'builtin')
       uimenu(uicmf, 'Label','Legend on/off', 'Callback','legend(''toggle'');');
       else
       uimenu(uicmf, 'Label','Legend on/off', 'Callback','legend(gca, ''toggle'',''Location'',''Best'');');
