@@ -7,7 +7,7 @@
 * Written by: Richard Heenan with edits by Peter Willendrup
 * Date: 2014
 * Origin: ISIS, DTU Fysik
-* %INSTRUMENT_SITE: ISIS
+* %INSTRUMENT_SITE: Mantid
 *
 * This instrument models the ISIS TS2 SANS2d instrument.
 *

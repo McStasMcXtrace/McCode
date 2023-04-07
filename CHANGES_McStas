@@ -44,7 +44,7 @@
 * Modified by: PW September-October 2021: version 2.7.1
 * Modified by: PW September-November 2021: version 3.1
 * Modified by: PW December 2022: versions 3.2 and 2.7.2
-* Modified by: PW March 2023: versions 3.3
+* Modified by: PW March 2023: version 3.3
 *
 * This file is part of McStas 3.3, released March 31st 2023.
 * It gives a 'changes' list from the beginning of the project
@@ -91,14 +91,14 @@ Changes in McStas 3.3, March 31st, 2023
 
  Tools:
  - mcrun now automatically adds NeXus support to your binary if --format=NeXus is given on the
-   commandline.
+   commandline (or if DEPENDENCY " @NEXUSFLAGS@ " is included in your instrument or component file).
  - The new input flag --IDF will run an IDF generator (i.e. mcdisplay-mantid) prior to performing
    a NeXus-based simulation, i.e. for "one-click" support of output in Mantid-compatible NeXus
    format with an embedded IDF. Please consult the naming-conventions for sourceMantid, sampleMantid
    and nD_Mantid_xx found in
    https://github.com/McStasMcXtrace/McCode/wiki/McStas-and-Mantid#mcstas-mantid-workflow
    to succesfully generate your IDF. Please also inspire from the example instruments in the 'Mantid'
-   category.
+   category, see mcgui -> File -> New from template -> Mantid .
  - mcrun now forwards the -I input to the code-generator, which allows you to add a chosen folder
    with extra components etc. to your search path. Setting the -I flag implies recompilation (-c).
    (Please also note the related SEARCH grammar below which allows working on the component search
@@ -115,6 +115,8 @@ Changes in McStas 3.3, March 31st, 2023
  - FZP_simple model of Fresnel Zone-Plate (phenomenologic/closed-form thin-plate approximation) added
    along with test instrument Test_FZP_simple, work by Anders Komar Ravn (NBI), and Erik B Knudsen
    (DTU, now Copenhagen Atomics)
+ - Test_Monochromators.instr has been updated to include NCrystal_sample as a monochromator, plus
+   includes multiple ways of parametrizing Single_crystal lattice orientation.
  - The 3 example ConicTracer interface-component codes Conics_EH.comp, Conics_PH.comp, Conics_PP.comp
    have been updated to allow specifying non-equidistant radii of the nested optical shells. Please
    use vector radii={a,b,c,d,e} or initialization via an instrument-based array and use a compatible
@@ -133,9 +135,17 @@ Changes in McStas 3.3, March 31st, 2023
  - A new syntax called SEARCH has been added to the grammar, allowing users to run append a directory
    to the mcstas search path when looking for components. The syntax may be given in two forms in the
    instrument- or component-header directly after a SHELL token and before the DEPENDENCY, DECLARE
-   tokens. SEARCH comes in two variants:
+   tokens:
       SEARCH "/the/path/to/add/"
       SEARCH SHELL "the_executable --and --some --options"
+   But you may also apply the same two SEARCH forms in connection with a component instance in TRACE, e.g.:
+      TRACE
+      ...
+      SEARCH SHELL "readout-config --show compdir"
+      COMPONENT readout = Readout(ring="RING", fen="FEN", tube="TUBE", a="left", b="right", ...)
+      AT (0, 0, 0) ABSOLUTE
+      ...
+   Thanks to Gregory S. Tucker (ESS) for contributing this grammar enhancement!
 
  Libraries and other runtime code:
  - The (r-)interoff-lib.c family of codes have again received a couple of updates, thanks to McStas user

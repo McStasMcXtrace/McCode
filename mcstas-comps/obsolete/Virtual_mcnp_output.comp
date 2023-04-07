@@ -54,7 +54,7 @@ DEFINE COMPONENT Virtual_mcnp_output
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0)
 OUTPUT PARAMETERS ()
-DEPENDENCY "@MCCODE_LIB@/libs/neutronics/neutronics-subs.o -lgfortran"
+DEPENDENCY "@MCCODE_LIB@/libs/neutronics/neutronics-subs.o -Wl,-rpath,@MCCODE_LIB@/miniconda3/lib -lgfortran -L@MCCODE_LIB@/miniconda3/lib -I@MCCODE_LIB@/miniconda3/include"
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

@@ -1,4 +1,4 @@
-# Installation of McStas 3.2 on macOS 
+# Installation of McStas 3.3 on macOS 
 
 ## Supported macOS releases
 * macOS 11-13 (Big Sur and later, Fully supported python tool set, partially
@@ -8,14 +8,14 @@
 ## Steps to perform
 
 * Download the Intel package:
-  [McStas 3.2 for macOS on Intel](https://download.mcstas.org/mcstas-3.2/mac/x86_64/mcstas-3.2_x86_64.tgz)
+  [McStas 3.3 for macOS on Intel](https://download.mcstas.org/mcstas-3.3/mac/x86_64/mcstas-3.3_x86_64.tgz)
   or M1 package:
-  [McStas 3.2 for macOS on Apple Silicon / M1](https://download.mcstas.org/mcstas-3.2/mac/arm64/mcstas-3.2_arm64.tgz)
+  [McStas 3.3 for macOS on Apple Silicon / M1](https://download.mcstas.org/mcstas-3.3/mac/arm64/mcstas-3.3_arm64.tgz)
  and unpack it (e.g. double-clicking should work)
 
 * Open the resulting folder
 
-* Drag the McStas-3.2.app and the McStas-3.2-environment.command to
+* Drag the McStas-3.3.app and the McStas-3.3-environment.command to
 /Applications
 
 * Run the Check-PY-dependencies.command script to check for / install
