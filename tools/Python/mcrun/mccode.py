@@ -250,7 +250,7 @@ class McStas:
            proxy_opts_flags.append('gravitation')
 
         for opt in proxy_opts_flags:
-            # try extra_opts before optionts
+            # try extra_opts before options
             default = getattr(options, opt.replace('-', '_'))
             val = extra_opts.get(opt, default)
             if val:
