@@ -7,7 +7,7 @@ from decimal import Decimal, InvalidOperation
 from datetime import datetime
 
 from mccode import McStas, Process
-from optimisation import Scanner, LinearInterval, MultiInterval
+from optimisation import Scanner, LinearInterval, MultiInterval, Optimizer
 
 #import config
 import sys
@@ -21,6 +21,12 @@ LOG = getLogger('main')
 
 # File path friendly date format (avoid ':' and white space)
 DATE_FORMAT_PATH = "%Y%m%d_%H%M%S"
+
+# list of scipy default optimizers
+# see: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
+MINIMIZE_METHODS = ['powell',   'nelder-mead',   'cg',    'bfgs', 'newton-cg',
+                    'l-bfgs-b', 'tnc', 'cobyla', 'slsqp', 'trust-constr',
+                    'dogleg',   'trust-ncg',     'trust-exact', 'trust-krylov']
 
 # Helper functions
 def build_checker(accept, msg='Invalid value'):
@@ -52,79 +58,131 @@ def add_mcrun_options(parser):
 
     add('--D1',
         metavar='D1',
-        help='set extra -D args (implies -c)')
+        help='Set extra -D args (implies -c)')
 
     add('--D2',
         metavar='D2',
-        help='set extra -D args (implies -c)')
+        help='Set extra -D args (implies -c)')
 
     add('--D3',
         metavar='D3',
-        help='set extra -D args (implies -c)')
+        help='Set extra -D args (implies -c)')
 
     add('-p', '--param',
         metavar='FILE',
-        help='read parameters from file FILE')
+        help='Read parameters from file FILE')
 
     add('-N', '--numpoints',
         type=int, metavar='NP',
-        help='set number of scan points')
+        help='Set number of scan points')
 
     add('-L', '--list',
         action='store_true',
-        help='use a fixed list of points for linear scanning')
+        help='Use a fixed list of points for linear scanning')
 
     add('-M', '--multi',
         action='store_true',
-        help='run a multi-dimensional scan')
+        help='Run a multi-dimensional scan')
 
     add('--autoplot',
         action='store_true',
-        help='open plotter on generated dataset')
+        help='Open plotter on generated dataset')
     
     add('--autoplotter',
         action='store',
         type=str,
-        help='specify the plotter used with --autoplot')
+        help='Specify the plotter used with --autoplot')
 
     add('--embed',
         action='store_true', default=True,
-        help='store copy of instrument file in output directory')
+        help='Store copy of instrument file in output directory')
     
     # Multiprocessing
     add('--mpi',
         metavar='NB_CPU',
-        help='spread simulation over NB_CPU machines using MPI')
+        help='Spread simulation over NB_CPU machines using MPI')
     
     add('--machines',
         metavar='machines',
-        help='defines path of MPI machinefile to use in parallel mode')
+        help='Defines path of MPI machinefile to use in parallel mode')
 
     # Optimisation
     add('--optimise-file',
         metavar='FILE',
-        help='store scan results in FILE '
+        help='Store scan results in FILE '
              '(defaults to: "mccode.dat")')
 
     add('--no-cflags',
         action='store_true', default=False,
-        help='disable optimising compiler flags for faster compilation')
+        help='Disable optimising compiler flags for faster compilation')
 
     add('--no-main',
         action='store_true', default=False,
-        help='do not generate a main(), e.g. for use with mcstas2vitess.pl. Implies -c')
+        help='Do not generate a main(), e.g. for use with mcstas2vitess.pl. Implies -c')
 
     add('--verbose',
         action='store_true', default=False,
-        help='enable verbose output')
+        help='Enable verbose output')
 
     add('--write-user-config',
         action='store_true', default=False,
-        help='generate a user config file')
+        help='Generate a user config file')
 
     add('--override-config',
         metavar='PATH', default=False,
         help='Load config file from specific dir')
+
+    add('--optimize',
+        action='store_true', default=False,
+        help='Optimize instrument variable parameters to maximize monitors')
+
+    add(
+        "--optimize-maxiter",
+        metavar="optimize_maxiter",
+        type=int,
+        help="Maximum number of optimization iterations to perform",
+        nargs=1,
+    )
+    add(
+        "--optimize-tol",
+        metavar="optimize_tol",
+        type=float,
+        help="Tolerance for optimization termination. When optimize-tol is specified, the selected optimization algorithm sets some relevant solver-specific tolerance(s) equal to optimize-tol",
+        nargs=1,
+    )
+    add(
+        "--optimize-method",
+        metavar='optimize_method',
+        type=str,
+        help='Optimization solver in ' + str(MINIMIZE_METHODS) + '\n' +
+        '(default: ' + MINIMIZE_METHODS[0] + ')' + '\n' +
+        'You can use your custom method method(fun, x0, args, **kwargs, **options). Please refer to scipy documentation for proper use of it:' + '\n' +
+        'https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html?highlight=minimize',
+        nargs=1,
+        default=MINIMIZE_METHODS[0],
+    )
+    add(
+        "--optimize-minimize",
+        action='store_true',
+        help='Choose to minimize the monitors instead of maximize',
+    )
+    add(
+        "--optimize-monitor",
+        metavar="optimize_monitor",
+        type=str,
+        help="Name of a single monitor to optimize (default is to use all)",
+        nargs=1,
+        default="",
+    )
+
+#    --optimize-maxiter maxiter  max iter of optimization
+#    --tol tol          tolerance criteria to end the optimization
+#    --method method    Method to maximize the intensity in ['nelder-mead', 'powell', 'cg', 'bfgs', 'newton-cg', 'l-bfgs-b', 'tnc', 'cobyla', 'slsqp', 'trust-constr', 'dogleg', 'trust-ncg', 'trust-exact', 'trust-krylov']
+#                       (default: nelder-mead)
+#                       You can use your own method by entering something else, it will add it as a librairy. Please refer to scipy documentation for proper use of it:
+#                       https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html?highlight=minimize
+#    --minimize         choose to minimize the function if needed
+#    --monitor monitor  monitor name
 
     parser.add_option_group(opt)
 
@@ -141,19 +199,20 @@ def add_mcstas_options(parser):
 
     add('-s', '--seed',
         metavar='SEED', type=int, action='callback', callback=check_seed,
-        help='set random seed (must be: SEED != 0)')
+        help='Set random seed (must be: SEED != 0)')
 
     add('-n', '--ncount',
         metavar='COUNT', type=float, default=1000000,
-        help='set number of %s to simulate' % (mccode_config.configuration["PARTICLE"]) )
+        help='Set number of %s to simulate' % (mccode_config.configuration["PARTICLE"]) )
 
     add('-t', '--trace',
         action='store_true', default=False,
-        help='enable trace of %s through instrument' % (mccode_config.configuration["PARTICLE"]) )
+        help='Enable trace of %s through instrument' % (mccode_config.configuration["PARTICLE"]) )
+
     if (mccode_config.configuration["MCCODE"]=='mcstas'):
         add('-g', '--gravitation', '--gravity',
             action='store_true', default=False,
-            help='enable gravitation for all trajectories')
+            help='Enable gravitation for all trajectories')
 
     # Data options
     dir_exists = lambda path: isdir(abspath(path))
@@ -175,11 +234,11 @@ def add_mcstas_options(parser):
     add('-d', '--dir',
         metavar='DIR', type=str,
         action='callback', callback=check_file(exist=False),
-        help='put all data files in directory DIR')
+        help='Put all data files in directory DIR')
 
     add('--format',
         metavar='FORMAT', default='McCode',
-        help='output data files using format FORMAT '
+        help='Output data files using format FORMAT '
              '(format list obtained from <instr>.%s -h)' % mccode_config.platform["EXESUFFIX"])
 
     add('--no-output-files',
@@ -223,6 +282,8 @@ def expand_options(options):
     if options.optimise_file is None:
         # use mccode.dat when unspecified
         options.optimise_file = '%s/mccode.dat' % options.dir
+    if options.optimize:
+        options.optimize_methods = MINIMIZE_METHODS
 
 
 def is_decimal(string):
@@ -247,7 +308,7 @@ def get_parameters(options):
             if len(interval) == 1:
                 fixed_params[key] = value
             else:
-                LOG.debug('interval: %s', interval)
+                LOG.debug('interval[%s]: %s', key, interval)
                 intervals[key] = interval
         else:
             LOG.warning('Ignoring invalid parameter: "%s"', param)
@@ -400,11 +461,16 @@ def main():
         scanner.set_points(interval_points)
         if (not options.dir == ''):
             mkdir(options.dir)
-        scanner.run()
+        scanner.run()    # in optimisation.py
+    elif options.optimize:
+        optimizer = Optimizer(mcstas, intervals)
+        if (not options.dir == ''):
+            mkdir(options.dir)
+        optimizer.run()    # in optimisation.py
     else:
         # Only run a simulation if we have a nonzero ncount
         if options.ncount != 0.0 or options.trace:
-            mcstas.run()
+            mcstas.run() # in mccode.py
 
     if isdir(options.dir):
         LOG.info('Placing instr file copy %s in dataset %s',options.instr,options.dir)
