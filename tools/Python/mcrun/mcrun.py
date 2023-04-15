@@ -131,7 +131,7 @@ def add_mcrun_options(parser):
     add('--override-config',
         metavar='PATH', default=False,
         help='Load config file from specific dir')
-        
+
     add('--optimize',
         action='store_true', default=False,
         help='Optimize instrument variable parameters to maximize monitors')
@@ -173,8 +173,8 @@ def add_mcrun_options(parser):
         help="Name of a single monitor to optimize (default is to use all)",
         nargs=1,
         default="",
-    )   
-        
+    )
+
 #    --optimize-maxiter maxiter  max iter of optimization
 #    --tol tol          tolerance criteria to end the optimization
 #    --method method    Method to maximize the intensity in ['nelder-mead', 'powell', 'cg', 'bfgs', 'newton-cg', 'l-bfgs-b', 'tnc', 'cobyla', 'slsqp', 'trust-constr', 'dogleg', 'trust-ncg', 'trust-exact', 'trust-krylov']
@@ -208,7 +208,7 @@ def add_mcstas_options(parser):
     add('-t', '--trace',
         action='store_true', default=False,
         help='Enable trace of %s through instrument' % (mccode_config.configuration["PARTICLE"]) )
-        
+
     if (mccode_config.configuration["MCCODE"]=='mcstas'):
         add('-g', '--gravitation', '--gravity',
             action='store_true', default=False,
