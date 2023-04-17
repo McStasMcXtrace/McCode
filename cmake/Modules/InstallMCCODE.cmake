@@ -237,6 +237,14 @@ macro(installMCCODE)
     DEPENDS "${PROJECT_SOURCE_DIR}/src/instrument.y" work/src/lex.yy.c
   )
 
+  ## Generate instrument.tab.{h,c} with bison
+  add_custom_command(
+    OUTPUT work/src/py-instrument.tab.h work/src/py-instrument.tab.c
+    COMMAND "${BISON_EXECUTABLE}" -v -d "${PROJECT_SOURCE_DIR}/src/py-instrument.y"
+    WORKING_DIRECTORY work/src
+    DEPENDS "${PROJECT_SOURCE_DIR}/src/py-instrument.y" work/src/lex.yy.c
+  )
+
   # Handling of system-provided random functions on windows - 
   # needed only in the link step for mccode and -format
   if(WINDOWS)
@@ -266,6 +274,26 @@ macro(installMCCODE)
     work/src/instrument.tab.c
   )
 
+  add_executable(
+    mcpygen
+    work/src/cexp.c
+    work/src/pygen.c
+    work/src/coords.c
+    work/src/debug.c
+    work/src/file.c
+    work/src/list.c
+    work/src/mccode-pygen.h
+    work/src/memory.c
+    work/src/port.c
+    work/src/port.h
+    work/src/symtab.c
+    work/src/re.c
+
+    # files generated with flex and bison
+    work/src/lex.yy.c
+    work/src/py-instrument.tab.h
+    work/src/py-instrument.tab.c
+  )
 
   ## Add install targets
   include(MCUtil)
