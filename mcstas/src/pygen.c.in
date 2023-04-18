@@ -1132,7 +1132,18 @@ int cogen_decls(struct instr_def *instr)
     while((i_formal = list_next(liter)))
     {
       if (i_formal->id && strlen(i_formal->id)) {
-	coutf("%s = instr.add_parameter(\"%s\", value=%s, comment=\"Input parameter added by mcpygen\")", i_formal->id, i_formal->id, exp_tostring(i_formal->default_value));
+	char* type;
+	if (i_formal->type == instr_type_string)
+	  type="string";
+	else if (i_formal->type == instr_type_int)
+	  type="int";
+	else if (i_formal->type == instr_type_double)
+	  type="double";
+	else
+	  type="";
+	
+	coutf("%s = instr.add_parameter('%s', '%s', value='%s', comment='Input parameter added by mcpygen')", i_formal->id, type, i_formal->id, exp_tostring(i_formal->default_value));
+	
         numipar++;
       }
     }
@@ -1529,6 +1540,23 @@ int cogen_raytrace(struct instr_def *instr)
     if (comp->split) {
       coutf("# SPLIT %s times at %s", exp_tostring(comp->split) ,comp->name);
       coutf("%s.set_SPLIT('%s')",comp->name, exp_tostring(comp->split));
+    }
+
+    /* if (comp->jump) { */
+    /*   coutf("# JUMP %s at %s", exp_tostring(comp->jump) ,comp->name); */
+    /*   coutf("%s.set_JUMP('%s')",comp->name, exp_tostring(comp->jump)); */
+    /* } */
+
+    /* if (comp->when) { */
+    /*   coutf("# WHEN %s at %s", exp_tostring(comp->jump) ,comp->name); */
+    /*   coutf("%s.set_WHEN('%s')",comp->name, exp_tostring(comp->when)); */
+    /* } */
+
+    if (list_len(comp->extend->lines) > 0) {
+      coutf("# EXTEND at %s", comp->name);
+      coutf("%s.append_EXTEND(r'''",comp->name);
+      codeblock_out(comp->extend);
+      cout("''')\n\n");
     }
     
     cout("");
