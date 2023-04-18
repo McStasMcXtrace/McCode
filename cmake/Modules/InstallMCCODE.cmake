@@ -276,7 +276,7 @@ macro(installMCCODE)
 
   add_executable(
     mcpygen
-    work/src/cexp.c
+    work/src/py-cexp.c
     work/src/pygen.c
     work/src/coords.c
     work/src/debug.c
