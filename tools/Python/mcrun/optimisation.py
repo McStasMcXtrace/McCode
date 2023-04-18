@@ -52,7 +52,7 @@ def build_header(options, params, intervals, detectors):
         title = 'Optimization of %s' % xvars
     else:
         title = 'Scan of %s' % xvars
-
+    
     scantype = 'multiarray_1d(%d)' % N
 
     variables = list(params)
@@ -130,7 +130,7 @@ end data
     else:
         numpoints = options.numpoints
         title = 'Scan of %s' % xvars
-
+        
     scantype = 'multiarray_1d(%d)' % numpoints
     variables = list(params)
     for detector in detectors:
@@ -210,7 +210,6 @@ class MultiInterval:
 class InvalidInterval(McRunException):
     pass
 
-
 class Scanner:
     """ Perform a series of simulation steps along a given set of points """
     def __init__(self, mcstas, intervals):
@@ -278,10 +277,10 @@ class Scanner:
         
         fid.close()
         mccodesim.close()
-
+        
 class Optimizer:
     """ Optimize monitors by varying the parameters within interval """
-
+    
     def __init__(self, mcstas, intervals):
         self.mcstas       = mcstas
         self.intervals    = intervals
@@ -292,56 +291,68 @@ class Optimizer:
         self.wrote_header = False
         self.parsHistory  = []
         self.criteriaHistory = []
-
+        
     def run(self):
         """ Optimization procedure """
-
+        
         LOG.info('Running Optimizer, result file is "%s"' % self.outfile)
-
+        
         if len(self.intervals) == 0:
             raise InvalidInterval('No interval range specified')
-
+        
         # determine starting parameter set
         pars_start, bounds = self.get_start()
-
+        
         # handle options
         options={'disp':True}
         if self.mcstas.options.optimize_maxiter:
             options["maxiter"] = self.mcstas.options.optimize_maxiter
         if self.mcstas.options.optimize_tol:
             options["tol"] = self.mcstas.options.optimize_tol
+        
+        if self.mcstas.options.optimize_method and self.mcstas.options.optimize_method not in self.mcstas.options.optimize_methods:
+            try:
+                """
+                import pyswarms
+                from pyswarms.utils.functions import single_obj as fx
+                optimizer = pyswarms.single.GlobalBestPSO(n_particles=10,dimensions=2,options={"c1":0.5,"c2":0.3,"w":0.9})
+                print(callable(optimizer.optimize(fx.sphere, iters=100)))
+                """
+                
+                import importlib
+                p, m = self.mcstas.options.optimize_method.split('.', 1) # split text with each "."
+                exec('import ' +  p)
+                self.mcstas.options.optimize_method = eval(self.mcstas.options.optimize_method)
+                LOG.info('Using custom optimizer %s' % self.mcstas.options.optimize_method)
+            except Exception as e:
+                LOG.info("Import custom module error:", e)
+                exit(-1)
 
         # call scipy.optimize.minimize
         try:
             result = minimize(
                 McCode_runner, pars_start,
                 args   = self,
-                method = self.mcstas.options.optimize_method,
+                method = self.mcstas.options.optimize_method, 
                 bounds = bounds,
                 options= options)
         except (NameError,ImportError) as err:
             print("ERROR: mcrun --optimize is not available as scipy is not installed.")
             raise err
-
+            
         # estimate uncertainties
-        if 'hess_inv' in result:
-            uncertainties = self.estimate_error_hess(result)
-            print("Parameter uncertainties (Hessian):\n")
-            for i,key in enumerate(args.intervals):
-                print('%s = %f ± %f'% (key, result.x[i], uncertainties[i]))
-
         uncertainties = self.estimate_error_history(self.criteriaHistory, result.x, self.parsHistory)
-
-        print("Parameter uncertainties (history):\n")
+        
+        LOG.info("Parameter uncertainties: optimum criteria=%g" % (result.fun))
         for i,key in enumerate(self.intervals):
-            print('%s = %f ± %f'% (key, result.x[i], uncertainties[i]))
-
+            LOG.info('  %s = %f ± %f'% (key, result.x[i], uncertainties[i]))
+    
     def get_start(self):
         """ Get starting parameters from the instrument parameters intervals """
-
+        
         pars_start = []
         bounds     = []
-
+        
         # we iterate on intervals.keys() and .values()
         for key in self.intervals:
             values=self.intervals[key]
@@ -357,81 +368,66 @@ class Optimizer:
             else:
                 raise InvalidInterval('Optimization interval for %s must be min,max or min,start,max' % key)
             bounds.append( (par_min,par_max) )
-
+                
         return pars_start, bounds
 
-    def estimate_error_hess(self, res):
-        """ Estimate errors from the Optimization results """
-        # https://stackoverflow.com/questions/43593592/errors-to-fit-parameters-of-scipy-optimize
-
-        ftol  = 2.220446049250313e-09
-        tmp_i = zeros(len(res.x))
-        uncertainties = []
-        for i in range(len(res.x)):
-            tmp_i[i]   = 1.0
-            hess_inv_i = res.hess_inv(tmp_i)[i]
-            tmp_i[i]   = 0.0
-            uncertainties.append( sqrt(max(1, abs(res.fun)) * ftol * hess_inv_i) )
-
-        uncertainties = [float(d) for d in uncertainties]
-        return uncertainties
-
+        
     def estimate_error_history(self, criteriaHistory, parsBest, parsHistory):
         """ Estimate errors from the history """
-
+        
         criteriaHistory        = [float(x) for x in criteriaHistory]
         parsHistoryUncertainty = parsBest*0
         parsWeightSum          = 0
         minCriteria            = min(criteriaHistory)
-
+        
         for index in range(len(parsHistory)):
             # difference of parameters around optimum
             delta_pars    = parsHistory[index] - parsBest
-
+          
             # Gaussian weighting for the parameter set
             weight_pars   = exp(-((criteriaHistory[index]-minCriteria))**2 / 8)
             parsWeightSum = parsWeightSum+weight_pars
-
+          
             parsHistoryUncertainty = parsHistoryUncertainty + (delta_pars*delta_pars*weight_pars)
-
+        
         # sqrt(sum(delta_pars.*delta_pars.*weight_pars)./sum(weight_pars))
         parsHistoryUncertainty = sqrt(parsHistoryUncertainty/parsWeightSum)
-
+        
         return parsHistoryUncertainty
 
 # ------------------------------------------------------------------------------
 def McCode_runner(x, args):
     """ Launch a single optimization step, calling McStas.run() """
-
+   
     # Change sub-directory as an extra option (dir/1 -> dir/2)
     # each run will be in "dir/1", "dir/2", ...
     mcstas_dir = args.mcstas.options.dir
     if mcstas_dir == '':
         mcstas_dir ='.'
     current_dir = '%s/%i' % (mcstas_dir, args.iterations)
-
+    
     # must now set instrument parameters to 'x'
     for index,key in enumerate(args.intervals):
         args.mcstas.set_parameter(key, x[index])
-
+   
     args.parsHistory.append(x)
     # open output files
     if not args.wrote_header:
         mode = 'w'
     else:
         mode = 'a'
-    fid       = open(args.outfile, mode)
+    fid       = open(args.outfile, mode)        
     mccodesim = open(args.simfile, mode)
-
+    
     out = args.mcstas.run(pipe=True, extra_opts={'dir': current_dir})
-
+    
     # track iteration number
     args.iterations = args.iterations+1
-
+   
     # get monitors out, compute criteria
     dets   = McStasResult(out).get_detectors()
     values = []
-
+    
     # add monitors that match a given name
     for d in dets:
         if d.name in args.mcstas.options.optimize_monitor:
@@ -440,9 +436,9 @@ def McCode_runner(x, args):
     if len(values) == 0:
         for d in dets:
             values.append(d.intensity)
-
+            
     values = [float(d) for d in values]
-
+    
     # output files (close)
     if not args.wrote_header:
             fid.write(build_header(args.mcstas.options,
@@ -452,12 +448,12 @@ def McCode_runner(x, args):
                args.intervals.keys(), args.intervals,
                [det.name for det in dets], version=args.mcstas.version))
             args.wrote_header = True
-
+    
     dets_vals = ['%s %s' % (d.intensity, d.error) for d in dets]
     line = '%s %s\n' % (' '.join(map(str, x)), ' '.join(dets_vals))
     fid.write(line)
     fid.flush()
-
+        
     fid.close()
     mccodesim.close()
 
