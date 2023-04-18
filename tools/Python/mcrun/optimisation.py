@@ -324,17 +324,11 @@ class Optimizer:
             raise err
 
         # estimate uncertainties
-        if 'hess_inv' in result:
-            uncertainties = self.estimate_error_hess(result)
-            print("Parameter uncertainties (Hessian):\n")
-            for i,key in enumerate(args.intervals):
-                print('%s = %f ± %f'% (key, result.x[i], uncertainties[i]))
-
         uncertainties = self.estimate_error_history(self.criteriaHistory, result.x, self.parsHistory)
 
-        print("Parameter uncertainties (history):\n")
+        LOG.info("Parameter uncertainties:\n")
         for i,key in enumerate(self.intervals):
-            print('%s = %f ± %f'% (key, result.x[i], uncertainties[i]))
+            LOG.info('%s = %f ± %f'% (key, result.x[i], uncertainties[i]))
 
     def get_start(self):
         """ Get starting parameters from the instrument parameters intervals """
@@ -359,22 +353,6 @@ class Optimizer:
             bounds.append( (par_min,par_max) )
 
         return pars_start, bounds
-
-    def estimate_error_hess(self, res):
-        """ Estimate errors from the Optimization results """
-        # https://stackoverflow.com/questions/43593592/errors-to-fit-parameters-of-scipy-optimize
-
-        ftol  = 2.220446049250313e-09
-        tmp_i = zeros(len(res.x))
-        uncertainties = []
-        for i in range(len(res.x)):
-            tmp_i[i]   = 1.0
-            hess_inv_i = res.hess_inv(tmp_i)[i]
-            tmp_i[i]   = 0.0
-            uncertainties.append( sqrt(max(1, abs(res.fun)) * ftol * hess_inv_i) )
-
-        uncertainties = [float(d) for d in uncertainties]
-        return uncertainties
 
     def estimate_error_history(self, criteriaHistory, parsBest, parsHistory):
         """ Estimate errors from the history """
