@@ -1542,15 +1542,27 @@ int cogen_raytrace(struct instr_def *instr)
       coutf("%s.set_SPLIT('%s')",comp->name, exp_tostring(comp->split));
     }
 
-    /* if (comp->jump) { */
-    /*   coutf("# JUMP %s at %s", exp_tostring(comp->jump) ,comp->name); */
-    /*   coutf("%s.set_JUMP('%s')",comp->name, exp_tostring(comp->jump)); */
-    /* } */
+    if (list_len(comp->jump) > 0) {
+      coutf("# JUMP at %s\n", comp->name);
+      coutf("# %s\n", comp->jump);
 
-    /* if (comp->when) { */
-    /*   coutf("# WHEN %s at %s", exp_tostring(comp->jump) ,comp->name); */
-    /*   coutf("%s.set_WHEN('%s')",comp->name, exp_tostring(comp->when)); */
-    /* } */
+      struct jump_struct *this_jump;
+      List_handle literJ = list_iterate(comp->jump);
+      while((this_jump = list_next(literJ))) {
+        char *exp = exp_tostring(this_jump->condition);
+	if(this_jump->iterate) {
+	  coutf("%s.set_JUMP('%s ITERATE %s')",comp->name,this_jump->target,exp);
+	} else {
+	  coutf("%s.set_JUMP('%s WHEN %s')",comp->name,this_jump->target,exp);
+	}
+      }
+      list_iterate_end(literJ);
+    }
+
+    if (comp->when) {
+      coutf("# WHEN %s at %s", exp_tostring(comp->when) ,comp->name);
+      coutf("%s.set_WHEN('%s')",comp->name, exp_tostring(comp->when));
+    }
 
     if (list_len(comp->extend->lines) > 0) {
       coutf("# EXTEND at %s", comp->name);
