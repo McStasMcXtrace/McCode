@@ -201,6 +201,49 @@ codeblock_out(struct code_block *code)
   code_reset_source();
 }
 
+static void
+codeblock_declare_add(struct code_block *code)
+{
+  List_handle liter;                /* For list iteration. */
+  char *line;                       /* Single code line. */
+
+  if(list_len(code->lines) <= 0)
+    return;
+  
+  fprintf(output_handle,"instr.append_declare('''\n");
+  while((line = list_next(liter)))
+  {
+    fprintf(output_handle, "%s", line);
+    num_next_output_line++;
+  }
+  list_iterate_end(liter);  
+  code_set_source(code->quoted_filename, code->linenum + 1);
+  fprintf(output_handle,"\n''')\n");
+  code_reset_source();
+}
+
+static void
+codeblock_initialize_add(struct code_block *code)
+{
+  List_handle liter;                /* For list iteration. */
+  char *line;                       /* Single code line. */
+
+  if(list_len(code->lines) <= 0)
+    return;
+  
+  fprintf(output_handle,"instr.append_initialize('''\n");
+  while((line = list_next(liter)))
+  {
+    fprintf(output_handle, "%s", line);
+    num_next_output_line++;
+  }
+  list_iterate_end(liter);  
+  code_set_source(code->quoted_filename, code->linenum + 1);
+  fprintf(output_handle,"\n''')\n");
+  code_reset_source();
+}
+
+
 /*******************************************************************************
 * Output a list of lines of code, embraced in { ... }
 *******************************************************************************/
@@ -1126,9 +1169,13 @@ int cogen_decls(struct instr_def *instr)
   /* /\* 6. User's declarations from the instrument definition file. *\/ */
   /* cout("/\* User declarations from instrument definition. Can define functions. *\/"); */
   
-  /* codeblock_out(instr->decls); */
-  //codeblock_out(instr->decls);
+  cout("instr.append_declare(r'''");
+  codeblock_out(instr->decls);
+  cout("''')\n\n");
+  cout("instr.append_initialize(r'''");
   codeblock_out(instr->inits);
+  cout("''')\n\n");
+  
   /* /\* undefines *\/ */
   /* coutf("#undef compcurname"); */
   /* coutf("#undef compcurtype"); */
@@ -1440,9 +1487,44 @@ int cogen_raytrace(struct instr_def *instr)
 
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL) {
+    
+    char *x, *y, *z, *rx, *ry, *rz;
+    char *poslabel, *rotlabel;
+    struct comp_inst *relposcomp = comp->pos->place_rel;  /* Component relative to. */
+    struct comp_inst *relrotcomp = comp->pos->orientation_rel;  /* Component relative to. */
+    if(relposcomp == NULL) {                                 /* Absolute position. */
+      poslabel = "ABSOLUTE";
+    } else {
+      poslabel = relposcomp->name;
+    }
+    x = exp_tostring(comp->pos->place.x);
+    y = exp_tostring(comp->pos->place.y);
+    z = exp_tostring(comp->pos->place.z);
+
+    if(relrotcomp == NULL) {                              /* Absolute orientation. */
+      rotlabel = "ABSOLUTE";
+    } else {
+      rotlabel = relrotcomp->name;
+    }
+    rx = exp_tostring(comp->pos->orientation.x);
+    ry = exp_tostring(comp->pos->orientation.y);
+    rz = exp_tostring(comp->pos->orientation.z);
+    
     coutf("# Comp instance %s, placement and parameters", comp->name);
-    coutf("%s = instr.add_component(\"%s\",\"%s\")",
-	  comp->name, comp->name, comp->def->name);
+    /* Case 1, both AT and ROTATED in absolute coordinates */
+    if (!strcmp(poslabel, "ABSOLUTE") && !strcmp(rotlabel, "ABSOLUTE")) {
+      coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], ROTATED=['%s', '%s', '%s'])",
+	    comp->name, comp->name, comp->def->name, x, y, z, rx, ry, rz);
+    } else if (!strcmp(poslabel, "ABSOLUTE")) {
+      coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], ROTATED=['%s', '%s', '%s'], ROTATED_RELATIVE='%s')",
+	    comp->name, comp->name, comp->def->name, x, y, z, rx, ry, rz, rotlabel);
+    } else if (!strcmp(rotlabel, "ABSOLUTE")) {
+      coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], AT_RELATIVE='%s', ROTATED=['%s', '%s', '%s'])",
+	    comp->name, comp->name, comp->def->name, x, y, z, poslabel, rx, ry, rz);
+    } else {
+      coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], AT_RELATIVE='%s', ROTATED=['%s', '%s', '%s'], ROTATED_RELATIVE='%s')",
+	    comp->name, comp->name, comp->def->name, x, y, z, poslabel, rx, ry, rz, rotlabel);
+    }
     cout("");
     List_handle piter;
     struct comp_iformal *par;
@@ -1457,31 +1539,7 @@ int cogen_raytrace(struct instr_def *instr)
     }
     list_iterate_end(piter);
     cout("");
-    
-    char *x, *y, *z;
-    char *rellabel;
-    struct comp_inst *relposcomp = comp->pos->place_rel;  /* Component relative to. */
-    struct comp_inst *relrotcomp = comp->pos->orientation_rel;  /* Component relative to. */
-    if(relposcomp == NULL) {                                 /* Absolute position. */
-      rellabel = "ABSOLUTE";
-    } else {
-      rellabel = relposcomp->name;
-    }
-    x = exp_tostring(comp->pos->place.x);
-    y = exp_tostring(comp->pos->place.y);
-    z = exp_tostring(comp->pos->place.z);
-    coutf("%s.set_AT([%s, %s, %s], RELATIVE=\"%s\")", comp->name, x, y, z, rellabel);
-    if(relrotcomp == NULL) {                              /* Absolute orientation. */
-      rellabel = "ABSOLUTE";
-    } else {
-      rellabel = relrotcomp->name;
-    }
-    x = exp_tostring(comp->pos->orientation.x);
-    y = exp_tostring(comp->pos->orientation.y);
-    z = exp_tostring(comp->pos->orientation.z);
-    coutf("%s.set_ROTATED([%s, %s, %s], RELATIVE=\"%s\")", comp->name, x, y, z, rellabel);
-    cout("");
-    cout("");
+
   }
   list_iterate_end(liter);
 
@@ -1740,7 +1798,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("import mcstasscript as ms");
   cout("");
   cout("# Python McStas instrument description");
-  coutf("instr = ms.McStas_instr(\"%s_generated\",\n\t\tauthor = \"McPygen\",\n\t\torigin = \"ESS DMSC\")",instr->name);
+  coutf("instr = ms.McStas_instr(\"%s_generated\", author = \"McPygen\", origin = \"ESS DMSC\")",instr->name);
   /* handles Windows '\' chararcters for embedding sys_dir into source code */
   if (MC_PATHSEP_C != '\\') strcpy(pathsep, MC_PATHSEP_S);
   else strcpy(pathsep, "\\\\");
@@ -2060,33 +2118,11 @@ cogen(char *output_name, struct instr_def *instr)
   cogen_header(instr, output_name);
 
   warnings += cogen_decls(instr);
-  /* detect_skipable_transforms(instr); */
 
   def_uservars(instr);
-  warnings += cogen_section(instr, "INITIALISE", "init", instr->inits);
 
-  /* // TRACE section requires a bit more flexibility */
-  def_trace_section(instr); 
-  /* warnings += cogen_trace_functions(instr); */
-  
   warnings += cogen_raytrace(instr); 
-  /* warnings += cogen_rt_funnel(instr); */
-  /* undef_uservars(instr); */
 
-  /* warnings += cogen_section(instr, "SAVE", "save", instr->saves); */
-  /* warnings += cogen_section(instr, "FINALLY", "finally", instr->finals); */
-  /* warnings += cogen_section(instr, "DISPLAY", "display", NULL); */
-
-  /* // API macro support functions */
-  /* cogen_getvarpars_fct(instr); */
-  /* cogen_getparticlevar_fct(instr); */
-  /* cogen_getcompindex_fct(instr); */
-
-  /* embed_file("mccode_main.c"); */
-
-  /* if (verbose && warnings) */
-  /*   fprintf(stderr,"Warning: The build of the instrument '%s' has %i warnings/errors.\n", */
-  /*       	instr->name, warnings); */
   cout("instr.settings(checks=False)");
   cout("data = instr.backengine()");
   coutf("# end of generated Python code %s ", output_name);
