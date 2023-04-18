@@ -1525,6 +1525,12 @@ int cogen_raytrace(struct instr_def *instr)
       coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], AT_RELATIVE='%s', ROTATED=['%s', '%s', '%s'], ROTATED_RELATIVE='%s')",
 	    comp->name, comp->name, comp->def->name, x, y, z, poslabel, rx, ry, rz, rotlabel);
     }
+    
+    if (comp->split) {
+      coutf("# SPLIT %s times at %s", exp_tostring(comp->split) ,comp->name);
+      coutf("%s.set_SPLIT('%s')",comp->name, exp_tostring(comp->split));
+    }
+    
     cout("");
     List_handle piter;
     struct comp_iformal *par;
