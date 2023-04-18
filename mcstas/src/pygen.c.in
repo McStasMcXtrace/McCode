@@ -1543,8 +1543,7 @@ int cogen_raytrace(struct instr_def *instr)
     }
 
     if (list_len(comp->jump) > 0) {
-      coutf("# JUMP at %s\n", comp->name);
-      coutf("# %s\n", comp->jump);
+      coutf("# JUMP at %s", comp->name);
 
       struct jump_struct *this_jump;
       List_handle literJ = list_iterate(comp->jump);
