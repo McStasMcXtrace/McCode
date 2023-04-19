@@ -327,6 +327,7 @@ int cogen_decls(struct instr_def *instr)
     {
       if (i_formal->id && strlen(i_formal->id)) {
 	char* type;
+	char* pyid;
 	if (i_formal->type == instr_type_string)
 	  type="string";
 	else if (i_formal->type == instr_type_int)
@@ -335,8 +336,21 @@ int cogen_decls(struct instr_def *instr)
 	  type="double";
 	else
 	  type="";
+
+	if (!strcmp(i_formal->id,"lambda")) {
+	  fprintf(stderr,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	  fprintf(stderr,"!!! WARNING: Your instrument file uses an input-parameter named !!!\n");
+	  fprintf(stderr,"!!!         \"lambda\" - which is a reserved word in Python       !!!\n");
+	  fprintf(stderr,"!!! As a workaround the variable has been named \"Lambda\" in     !!!\n");
+	  fprintf(stderr,"!!! the output python script.                                   !!!\n");
+	  fprintf(stderr,"!!! PLEASE consider renaming lambda->Lambda in the .instr file  !!!\n");
+	  fprintf(stderr,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	  pyid="Lambda";
+	} else {
+	  pyid=i_formal->id;
+	}
 	
-	coutf("%s = instr.add_parameter('%s', '%s', value='%s', comment='Input parameter added by mcpygen')", i_formal->id, type, i_formal->id, exp_tostring(i_formal->default_value));
+	coutf("%s = instr.add_parameter('%s', '%s', value='%s', comment='Input parameter added by mcpygen')", pyid, type, i_formal->id, exp_tostring(i_formal->default_value));
 	
         numipar++;
       }
