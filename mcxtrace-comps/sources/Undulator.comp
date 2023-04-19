@@ -18,18 +18,18 @@
 * %D
 * A undulator source model based on the derivation by K.J. Kim, AIP, conf. proc., 184, 1989. doi:10.1063/1.38046.
 *
-*
+* Example: SOLEIL_PX2a U24: Undulator( E0=12.65, dE=1, Ee=2.75, dEe=0.001, Ie=0.5, K=1.788, Nper=80, 
+*   lu=24e-3, sigey=9.3e-6, sigex=215.7e-6, sigepx=29.3e-6, sigepy=4.2e-6, 
+*   focus_xw=1e-4, focus_yh=1e-4, dist=29.5, E1st=12.400 )
 *
 * %P
 * Ee:    [GeV] Storage ring electron energy [typically a few GeV).
 * dEe:    [ ] Relative electron energy beam spread (sigma/Ee).
 * Ie:     [A]   Ring current.
-* tbunch: [s] Bunch length. 0 means continous source.
-* t0:     [s] Delay of the first bunch from t=0.
 * B:      [T] Peak magnet field strength. Overrides K.
 * Nper:   [ ] Number of magnetic periods in the undulator.
 * lu:     [m] Magnetic period length of the undulator aka lambda_u.
-* K:      [ ] Dimensionless undulator parameter. When K >> 1 (ie B*lu is large) you get a wiggler.
+* K:      [ ] Dimensionless deflection undulator parameter. When K >> 1 (ie B*lu is large) you get a wiggler.
 * sigex:  [m] Electron ring beam size in horizontal plane (rms). Blurring from emittance on X.
 * sigey:  [m] Electron ring beam size in vertical plane (rms). Blurring from emittance on Y.
 * sigepx: [rad] Electron ring beam horizontal divergence (rms).
@@ -39,7 +39,7 @@
 * focus_xw: [m] Width of target window.
 * focus_yh: [m] Height of target window.
 * dist: [m] Distance from source plane to target window along the optical axis.
-* E0: [keV] Center of emitted energy spectrum (overrides lambda0).
+* E0: [keV] Center of emitted energy spectrum.
 * dE: [keV] Half-width of emitted energy spectrum.
 * E1st: [keV] Energy of the fundmental (1st) undulator harmonic.
 * verbose: [ ] if nonzero, output extra information.
@@ -52,7 +52,7 @@
 
 DEFINE COMPONENT Undulator
 DEFINITION PARAMETERS (verbose=0)
-SETTING PARAMETERS (E0=0, dE=0, phase=0, randomphase=1, Ee=2.4, dEe=0, Ie=0.4, tbunch=0, t0=0, B=0, K=0,
+SETTING PARAMETERS (E0=0, dE=0, phase=0, randomphase=1, Ee=2.4, dEe=0, Ie=0.4, B=0, K=0,
         int Nper=1, lu=16e-3, sigey=0, sigex=0, sigepx=0, sigepy=0, focus_xw=0, focus_yh=0, dist=1, quick_integ=0,
         E1st=0)
 OUTPUT PARAMETERS (prms,alpha,MELE)
@@ -157,7 +157,7 @@ INITIALIZE
   }
   
   /* compute gap estimate */
-  double Br=1.35; // rather usual for Nd2Fe14B
+  double Br=1.35; // remanent field, rather usual for Nd2Fe14B
   double a=0.55*Br +2.835;
   double b=-1.95*Br+7.22;
   double c=-1.3*Br +2.97;
