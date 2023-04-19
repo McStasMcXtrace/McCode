@@ -226,7 +226,20 @@ macro(installMCCODE)
     COMMAND "${FLEX_EXECUTABLE}" -i "${PROJECT_SOURCE_DIR}/src/instrument.l"
     WORKING_DIRECTORY work/src
     DEPENDS "${PROJECT_SOURCE_DIR}/src/instrument.l"
+
+    OUTPUT work/src/py-lex.yy.c
+    COMMAND "${FLEX_EXECUTABLE}" -i "${PROJECT_SOURCE_DIR}/src/py-instrument.l"
+    WORKING_DIRECTORY work/src
+    DEPENDS "${PROJECT_SOURCE_DIR}/src/py-instrument.l"
   )
+
+  # ## Generate lex.yy.c with flex
+  # add_custom_command(
+  #   OUTPUT work/src/py-lex.yy.c
+  #   COMMAND "${FLEX_EXECUTABLE}" -i "${PROJECT_SOURCE_DIR}/src/py-instrument.l"
+  #   WORKING_DIRECTORY work/src
+  #   DEPENDS "${PROJECT_SOURCE_DIR}/src/py-instrument.l"
+  # )
 
 
   ## Generate instrument.tab.{h,c} with bison
@@ -235,15 +248,21 @@ macro(installMCCODE)
     COMMAND "${BISON_EXECUTABLE}" -v -d "${PROJECT_SOURCE_DIR}/src/instrument.y"
     WORKING_DIRECTORY work/src
     DEPENDS "${PROJECT_SOURCE_DIR}/src/instrument.y" work/src/lex.yy.c
-  )
 
-  ## Generate instrument.tab.{h,c} with bison
-  add_custom_command(
     OUTPUT work/src/py-instrument.tab.h work/src/py-instrument.tab.c
     COMMAND "${BISON_EXECUTABLE}" -v -d "${PROJECT_SOURCE_DIR}/src/py-instrument.y"
     WORKING_DIRECTORY work/src
     DEPENDS "${PROJECT_SOURCE_DIR}/src/py-instrument.y" work/src/lex.yy.c
   )
+
+  # ## Generate instrument.tab.{h,c} with bison
+  # add_custom_command(
+  #   OUTPUT work/src/py-instrument.tab.h work/src/py-instrument.tab.c
+  #   COMMAND "${BISON_EXECUTABLE}" -v -d "${PROJECT_SOURCE_DIR}/src/py-instrument.y"
+  #   WORKING_DIRECTORY work/src
+  #   DEPENDS "${PROJECT_SOURCE_DIR}/src/py-instrument.y" work/src/py-lex.yy.c
+  # )
+
 
   # Handling of system-provided random functions on windows - 
   # needed only in the link step for mccode and -format
@@ -275,7 +294,7 @@ macro(installMCCODE)
   )
 
   add_executable(
-    mcpygen
+    ${FLAVOR}-pygen
     work/src/py-cexp.c
     work/src/pygen.c
     work/src/coords.c
@@ -309,6 +328,11 @@ macro(installMCCODE)
     # Binaries
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
+      DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+    )
+
+    install (
+      PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}-pygen${DOT_EXE_SUFFIX}"
       DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     )
 
@@ -347,7 +371,13 @@ macro(installMCCODE)
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
       DESTINATION ${bin}
     )
- 
+
+    # Binaries
+    install (
+      PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}-pygen${DOT_EXE_SUFFIX}"
+      DESTINATION ${bin}
+    )
+
     install(PROGRAMS
       cmake/support/install-scripts/postsetup.bat
       DESTINATION ${bin}
