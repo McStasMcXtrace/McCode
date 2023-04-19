@@ -18,16 +18,18 @@
 * %D
 * A source model based on the derivation from B.D. Patterson, Am. J. Phys. 79, 1046 (2011); doi: 10.1119/1.3614033
 *
+* Example: Wiggler(
+*   E0 = e0, dE = de, phase = 0, randomphase = 1, Ee = 2.4,
+*   Ie = 0.4, B = 1.6, K=10, Nper=41, sigey=9.3e-6, sigex=215.7e-6)
+*
 * %P
 * Input Parameters:
-* Ee: [GeV] Storage ring electron energy (typically a few GeV)
-* Ie: [A]   Ring current
-* tbunch: [s] Bunch length. 0 means continous source.
-* t0:     [s] Delay of the first bunch from t=0
+* Ee:    [GeV] Storage ring electron energy (typically a few GeV)
+* Ie:     [A]   Ring current
 * B:      [T] Peak magnet field strength
 * Nper:   [ ] Number of magnetic periods in the wiggler
 * length: [m] Length of the Wiggler.
-* K:      [ ] Dimensionless undulator parameter. overrides B.
+* K:      [ ] Dimensionless undulator parameter, e.g. K >> 1. overrides B.
 * gap:    [m] Wiggler gap.
 * sigex:  [ ] Electron ring beam size in horizontal plane (rms) 
 * sigey:  [ ] Electron ring beam size in vertical plane (rms)
@@ -35,10 +37,10 @@
 * randomphase: [ ] If !=0 phase will be random (I.e. the emitted radiation is completely incoherent)
 * focus_xw: [m] Width of target window
 * focus_yh: [m] Height of target window
-* dist: [m] Distance from source plane to target window along the optical axis
+* dist:    [m] Distance from source plane to target window along the optical axis
 * gauss_t: [ ] if 0 the target window will be sampled uniformly and the weight adjusted accordingly, otherwise we will use a gaussian sampling scheme.
-* E0: [keV] Center of emitted energy spectrum (overrides lambda0)
-* dE: [keV] Half-width of emitted energy spectrum
+* E0:      [keV] Center of emitted energy spectrum (overrides lambda0)
+* dE:      [keV] Half-width of emitted energy spectrum
 * lambda0: [AA] Center of emitted wavelength spectrum
 * dlambda: [AA] Half-width of emitted wavelength spectrum
 * verbose: [ ] if nonzero, output extra information
@@ -47,8 +49,8 @@
 
 DEFINE COMPONENT Wiggler
 DEFINITION PARAMETERS (verbose=0)
-SETTING PARAMETERS (E0=0, dE=0, lambda0=0,dlambda=-1, phase=0, randomphase=1, Ee=2.4, Ie=0.4, tbunch=0, t0=0, B=1.6, K=3,
-    gap=1e-3, int Nper=1, length=1, sigey=0, sigex=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0)
+SETTING PARAMETERS (E0=0, dE=0, lambda0=0,dlambda=0, phase=0, randomphase=1, Ee=2.4, Ie=0.4, B=1.6, K=3,
+    int Nper=1, length=1, sigey=0, sigex=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0, Br=1.35)
 OUTPUT PARAMETERS (prms,alpha,MELE)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -86,6 +88,7 @@ DECLARE
     double kc; /*characteristic wavenumber of radiation from bending magnet*/
     double s1x,s1y; /*beam's size at dist (convolution of sigex/sigey and igamma)*/
     double lu; /*undulator wavelenght*/
+    double gap;
   } prms;
   /*fine structure constant from CODATA*/
   const double alpha=7.2973525698e-3;
@@ -96,21 +99,20 @@ DECLARE
 
 INITIALIZE
 %{
-  fprintf(stderr,"Warning (%s): Wiggler is an experimental component - testing is ongoing\n",NAME_CURRENT_COMP);
-  
-  prms.lu=length/Nper;
+  // fprintf(stderr,"Warning (%s): Wiggler is an experimental component - testing is ongoing\n",NAME_CURRENT_COMP);
 
-  if( (!K && B<=0) || Ee<=0 || Ie<=0 ){
-    fprintf(stderr, "Error (%s): K, B, Ee, and Ie do not have a consistent set of values. Found (%g %g %g %g). Aborting.\n",NAME_CURRENT_COMP,K,B,Ee,Ie);
+  if( K<=0 || B<=0 || Ee<=0 || Ie<=0 || E0<=0 || length<=0 || Nper <=0){
+    fprintf(stderr, "Wiggler Error (%s): (K, B, Ee, Ie, E0, length, Nper) do not have a sane set of values. Found (%g %g %g %g %g). Aborting.\n",
+    NAME_CURRENT_COMP,K,B,Ee,Ie,E0);
     exit(1);
   }
+
+  prms.lu=length/Nper;
   
   if(K){
     B=2*M_PI*MELE*M_C*K/CELE/prms.lu;
-    if (verbose) printf("Wiggler (%s) B=f(K=%g)= %g\n",NAME_CURRENT_COMP,K,B);
   }else if (B>0){
     K=CELE*B*prms.lu/(2*M_PI*MELE*M_C);
-    if (verbose) printf("Wiggler (%s) K=f(B=%g)= %g\n",NAME_CURRENT_COMP,B,K);
   }
 
   if (sigex <0 || sigey<0){
@@ -133,6 +135,18 @@ INITIALIZE
   //double Ec=1.5*prms.gamma2*HBAR*CELE*B/MELE *1e-3; /*check units on this one. The 1e-3 factor is because energy is assumed to be in keV*/
   /*We normally do computations in k so use that for transfer*/
   prms.kc=E2K*Ec;
+  
+  /* compute gap estimate */
+  if (Br >= B) {
+    double a=0.55*Br +2.835;
+    double b=-1.95*Br+7.22;
+    double c=-1.3*Br +2.97;
+    prms.gap = -log(B/a)*prms.lu/b;
+  } else prms.gap = 3e-3;
+  
+  if (verbose) 
+    printf("Wiggler (%s): K=%g B=%g[T] lambda_u=%g[m]  E0=%g[keV]\n",
+      NAME_CURRENT_COMP, K,B,prms.lu,E0);
 
   p0 = 1.0/mcget_ncount();
 %}
@@ -239,8 +253,8 @@ MCDISPLAY
   dz=prms.lu/2.0;
 
   while (zz<=(length-prms.lu)/2.0){
-    box(0.0,gap/2.0+5e-4,zz,xwidth,1e-3,prms.lu/2.0);
-    box(0.0,-gap/2.0-5e-4,zz,xwidth,1e-3,prms.lu/2.0);
+    box(0.0, prms.gap/2.0+5e-4,zz,xwidth,1e-3,prms.lu/2.0);
+    box(0.0,-prms.gap/2.0-5e-4,zz,xwidth,1e-3,prms.lu/2.0);
     zz+=dz;
   }
 
