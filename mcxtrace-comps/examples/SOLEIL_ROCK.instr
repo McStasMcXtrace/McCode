@@ -172,10 +172,8 @@ AT (0, 0, 0) ABSOLUTE
 
 /* -------------------------------------------------- Source */
 COMPONENT Source = Bending_magnet(
-    E0=22,   
-    Ee = 2.75,
-    B=1.72,
-    dE = 18
+    E0=22, dE = 18,
+    Ee = 2.75, Ie = 0.5, B = 1.72, sigey=9.3e-6, sigex=215.7e-6
     )
 AT (0, 0, 0) RELATIVE Origin
 
