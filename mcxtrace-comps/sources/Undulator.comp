@@ -23,26 +23,26 @@
 *   focus_xw=1e-4, focus_yh=1e-4, dist=29.5, E1st=12.400 )
 *
 * %P
-* Ee:    [GeV] Storage ring electron energy [typically a few GeV).
-* dEe:    [ ] Relative electron energy beam spread (sigma/Ee).
-* Ie:     [A]   Ring current.
-* B:      [T] Peak magnet field strength. Overrides K.
-* Nper:   [ ] Number of magnetic periods in the undulator.
-* lu:     [m] Magnetic period length of the undulator aka lambda_u.
-* K:      [ ] Dimensionless deflection undulator parameter. When K >> 1 (ie B*lu is large) you get a wiggler.
-* sigex:  [m] Electron ring beam size in horizontal plane (rms). Blurring from emittance on X.
-* sigey:  [m] Electron ring beam size in vertical plane (rms). Blurring from emittance on Y.
-* sigepx: [rad] Electron ring beam horizontal divergence (rms).
-* sigepy: [rad] Electron ring beam vertical divergence (rms).
-* phase:  [ ] Initial phase of radiation.
+* Ee:       [GeV] Storage ring electron energy [typically a few GeV).
+* dEe:      [ ] Relative electron energy beam spread (sigma/Ee).
+* Ie:       [A] Ring current.
+* B:        [T] Peak magnet field strength. Overrides K.
+* Nper:     [ ] Number of magnetic periods in the undulator.
+* lu:       [m] Magnetic period length of the undulator aka lambda_u.
+* K:        [ ] Dimensionless deflection undulator parameter. When K >> 1 (ie B*lu is large) you get a wiggler.
+* sigex:    [m] Electron ring beam size in horizontal plane (rms).
+* sigey:    [m] Electron ring beam size in vertical plane (rms).
+* sigepx:   [rad] Electron ring beam horizontal divergence (rms).
+* sigepy:   [rad] Electron ring beam vertical divergence (rms).
+* phase:    [ ] Initial phase of radiation.
 * randomphase: [ ] If !=0 phase will be random (I.e. the emitted radiation is completely incoherent).
 * focus_xw: [m] Width of target window.
 * focus_yh: [m] Height of target window.
-* dist: [m] Distance from source plane to target window along the optical axis.
-* E0: [keV] Center of emitted energy spectrum.
-* dE: [keV] Half-width of emitted energy spectrum.
-* E1st: [keV] Energy of the fundmental (1st) undulator harmonic.
-* verbose: [ ] if nonzero, output extra information.
+* dist:     [m] Distance from source plane to target window along the optical axis.
+* E0:       [keV] Center of emitted energy spectrum.
+* dE:       [keV] Half-width of emitted energy spectrum.
+* E1st:     [keV] Energy of the fundmental (1st) undulator harmonic.
+* verbose:  [ ] if nonzero, output extra information.
 * quick_integ: [ ] if nonzero, use faster (but less accurate) integration scheme.
 *
 * OUTPUT PARAMETERS:
@@ -54,7 +54,7 @@ DEFINE COMPONENT Undulator
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (E0=0, dE=0, phase=0, randomphase=1, Ee=2.4, dEe=0, Ie=0.4, B=0, K=0,
         int Nper=1, lu=16e-3, sigey=0, sigex=0, sigepx=0, sigepy=0, focus_xw=0, focus_yh=0, dist=1, quick_integ=0,
-        E1st=0, int verbose=0)
+        E1st=0, int verbose=0, Br=1.35)
 OUTPUT PARAMETERS ()
 DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -Wl,-rpath,@MCCODE_LIB@/miniconda3/lib -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
@@ -165,11 +165,12 @@ INITIALIZE
   }
   
   /* compute gap estimate */
-  double Br=1.35; // remanent field, rather usual for Nd2Fe14B
-  double a=0.55*Br +2.835;
-  double b=-1.95*Br+7.22;
-  double c=-1.3*Br +2.97;
-  gap = -log(B/a)*lu/b;
+  if (Br > B) { // remanent field, rather usual for Nd2Fe14B
+    double a=0.55*Br +2.835;
+    double b=-1.95*Br+7.22;
+    double c=-1.3*Br +2.97;
+    gap = -log(B/a)*lu/b;
+  } else gap=3e-3;
   
   if (verbose) 
     printf("Undulator (%s) K=%g B=%g[T] lu=%g[m] E1st=%g[keV] E0=%g[keV] gap=%g[m]\n",
