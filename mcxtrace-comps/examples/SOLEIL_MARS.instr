@@ -142,11 +142,10 @@ COMPONENT origin = Progress_bar()
 AT (0, 0, 0) RELATIVE ABSOLUTE
 
 COMPONENT Source = Bending_magnet(
-    E0=E0,   
-    B=1.71,
-    dE = dEr*E0,
     focus_xw=PrimarySlit1Width,
     focus_yh=PrimarySlit1Height,
+    E0=E0, dE = dEr*E0,
+    Ee = 2.75, Ie = 0.5, B = 1.71, sigey=9.3e-6, sigex=215.7e-6
     dist=DistanceToPrimarySlit1
     )
 AT (0, 0, 0) RELATIVE origin
