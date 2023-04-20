@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/arch -arm64 /bin/bash
 export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "import os;print(os.cpu_count())")}
 
 if [ "x$1" = "x" ]; then
@@ -7,25 +7,9 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
-export WORK=`pwd`
-# Ensure our 3rd party modules are in place and updated
-THIRDPARTY=`ls 3rdparty | grep -v patches`
-cd 3rdparty
 
-cd -
 
 ./3rdparty/sync.sh
-
-
-for MODULE in `echo $THIRDPARTY`
-do
-    if [ -d "3rdparty/patches/${MODULE}" ]; then
-	echo Making McCode cmake modules available for $MODULE
-        rsync -avz cmake/ 3rdparty/${MODULE}/cmake
-	echo Applying McCode patches to 3rdparty/${MODULE}
-	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
-    fi
-done
 
 # This is an app bundle being built, but non-relocatable.
 export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/
@@ -36,33 +20,7 @@ sed -i.bak s+/bin/bash+/usr/bin/arch\ -arm64\ /bin/bash+ $MCINSTALL_PREFIX/Conte
 # For the actual mcxtrace part, the packages need a 'deep' PREFIX
 export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
 # 64-bit Mac OS
-./mkdist mcxtrace $1 "" "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-comps $1 "" "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-matlab-mxdisplay $1 tools/matlab/mcdisplay/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mcodelib $1 tools/Python/mccodelib/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-clusterscripts $1 tools/cluster-scripts/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" mac-silicon "" -- OSXapp
-
 WORK=`pwd`
-
-cd 3rdparty/mcpl
-if [ -d build ]; then
-    rm -rf build
-fi
-mkdir -p build; cd build
-cmake -DCMAKE_INSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/mcxtrace/$1/ ..
-make install
-cd $WORK
 
 if [ ! -f Mambaforge-$(uname)-$(uname -m).sh ]; then
     # Download and embed a miniconda
@@ -91,18 +49,42 @@ export PATH=$MCINSTALL_PREFIX/mcxtrace/$1/miniconda3/bin:$PATH
 
 mamba update mamba -y
 mamba install mamba conda-build -y
-mamba install openmpi gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl -y
+mamba install cmake openmpi compilers gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 -y
 mamba clean --all -y
-cd $TMPDIR
-git clone https://github.com/conda-forge/qscintilla2-feedstock.git
-cd qscintilla2-feedstock
-conda-build .
-mamba install qscintilla2 --use-local -y
-mamba clean --all -y
-mamba build purge
 cd $WORK
 
-export PATH=$PATHBAK
+./mkdist mcxtrace $1 "" "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-comps $1 "" "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-matlab-mxdisplay $1 tools/matlab/mcdisplay/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mcodelib $1 tools/Python/mccodelib/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-clusterscripts $1 tools/cluster-scripts/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" mac-silicon "" -- OSXapp
+
+cd 3rdparty/mcpl
+if [ -d build ]; then
+    rm -rf build
+fi
+mkdir -p build; cd build
+cmake -DCMAKE_INSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/mcxtrace/$1/ ..
+make install
+cd $WORK
+
+cd 3rdparty/xraylib
+autoreconf -i
+./configure --prefix=/Applications/McXtrace-$1.app/Contents/Resources/mcxtrace/$1/
+make install
+cd $WORK
+
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcxtrace/$1/bin
 
