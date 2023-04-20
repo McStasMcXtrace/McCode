@@ -56,6 +56,8 @@ DEFINE INSTRUMENT SOLEIL_PX2a(
 DECLARE
 %{
     double calculated_angle;
+    int    flag_hfm;
+    int    flag_vfm;
 %}
 
 INITIALIZE
@@ -77,9 +79,9 @@ AT (0,0,0) ABSOLUTE
 COMPONENT undulator = Undulator(
     E0=E0, 
     dE=1, 
-    Ee=8, 
+    Ee=2.75, 
     dEe=0.001, 
-    Ie=0.1, 
+    Ie=0.5, 
     K=1.788, 
     Nper=80, 
     lu=2.4e-2, 
@@ -87,8 +89,6 @@ COMPONENT undulator = Undulator(
     sigex=215.7e-6, 
     sigepx=29.3e-6, 
     sigepy=4.2e-6, 
-    focus_xw=1e-4, 
-    focus_yh=1e-4, 
     dist=29.5, 
     E1st=12.400)
 AT (0, 0, 0) RELATIVE PREVIOUS
@@ -143,8 +143,9 @@ ROTATED (0, 2*mirror_grazing_angle, 0) RELATIVE hpm_location
 // incidence angle 4 mrad
 
 // KB 1st mirror (XZ plane) at 1.6m from sample
-COMPONENT vfm_location = Arm()
-AT (0,0,33.9-32.1) RELATIVE hpm_takeoff
+// must be shifted by -2 mm  on Y else beam flies underneath the mirror.
+COMPONENT vfm_location = Monitor_nD(xwidth=0.01, yheight=0.01, options="x y", bins=100)
+AT (0,-1.9e-3,33.9-32.1) RELATIVE hpm_takeoff
 
 COMPONENT vfm_in_xz_plane = Arm()
 AT (0,0,0) RELATIVE vfm_location
@@ -153,38 +154,58 @@ ROTATED(0,0,-90) RELATIVE vfm_location // YZ -> XZ
 COMPONENT vfm = Mirror_curved(
   coating="Rh.txt",
   length=450e-3,
+  width=0.1,
   radius=vfm_radius)
 AT (0,0,0) RELATIVE vfm_location
 ROTATED(0,-mirror_grazing_angle,0) RELATIVE vfm_in_xz_plane
+EXTEND %{
+  flag_vfm=SCATTERED;
+%}
 
-COMPONENT vfm_takeoff = Arm()
+COMPONENT vfm_takeoff = COPY(vfm_location)
 AT (0,0,0) RELATIVE vfm_in_xz_plane
 ROTATED (-2*mirror_grazing_angle, 0, 0) RELATIVE vfm_location
 
 // KB 2nd mirror (YZ) at 1m from sample, shift height=4.8 mm 
-COMPONENT hfm_location = Arm()
+COMPONENT hfm_location = COPY(vfm_location)
 AT (0,0,34.5-33.9) RELATIVE vfm_takeoff
 
 // 859 m tangential; sagital > 1 km, in YZ plane
 COMPONENT hfm = Mirror_curved(
   coating="Rh.txt",
   length=450e-3,
+  width=0.1,
   radius=hfm_radius)
 AT (0,0,0) RELATIVE hfm_location
 ROTATED (0,-mirror_grazing_angle,0) RELATIVE hfm_location
+EXTEND %{
+  flag_hfm=SCATTERED;
+%}
 
-COMPONENT hfm_takeoff = Arm()
+COMPONENT hfm_takeoff = COPY(vfm_location)
 AT (0,0,0) RELATIVE hfm_location
 ROTATED (0,-2*mirror_grazing_angle,0) RELATIVE hfm_location
 
 // Sample -----------------------------------------------------------------
+// we centre the beam after the KB.
 COMPONENT sample_stage = Arm()
-AT (0,0,1) RELATIVE hfm_takeoff
+AT (1e-3,-1.1e-3,1) RELATIVE hfm_takeoff
+EXTEND %{
+  if (!flag_hfm || !flag_vfm) ABSORB;
+%}
 
 COMPONENT sample_monitor = Monitor_nD(
   xwidth = 0.01, yheight = 0.01,
   options = "x y", bins=100)
   AT (0, 0, 0) RELATIVE sample_stage
+  
+COMPONENT sample_monitor_hfm=COPY(PREVIOUS)
+WHEN (flag_hfm)
+AT (0, 0, 0) RELATIVE sample_stage
+
+COMPONENT sample_monitor_vfm=COPY(PREVIOUS)
+WHEN (flag_vfm)
+AT (0, 0, 0) RELATIVE sample_stage
 
 SPLIT COMPONENT sample = Single_crystal(reflections=sample, 
   radius = .5e-4, yheight = 5e-3, p_transmit = 0, mosaic=0.1)
