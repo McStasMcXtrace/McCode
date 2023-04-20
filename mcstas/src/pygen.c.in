@@ -558,8 +558,13 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("");
   cout("import mcstasscript as ms");
   cout("");
+#if MCCODE_PROJECT == 1     /* neutron */
   cout("# Python McStas instrument description");
   coutf("instr = ms.McStas_instr(\"%s_generated\", author = \"McPygen\", origin = \"ESS DMSC\")",instr->name);
+#elif MCCODE_PROJECT == 2   /* xray */
+  cout("# Python McXtrace instrument description");
+  coutf("instr = ms.McXtrace_instr(\"%s_generated\", author = \"McPygen\", origin = \"ESS DMSC\")",instr->name);
+#endif
   /* handles Windows '\' chararcters for embedding sys_dir into source code */
   if (MC_PATHSEP_C != '\\') strcpy(pathsep, MC_PATHSEP_S);
   else strcpy(pathsep, "\\\\");
