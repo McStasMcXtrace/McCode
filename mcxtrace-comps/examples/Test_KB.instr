@@ -1,0 +1,109 @@
+/*******************************************************************************
+* Instrument: Test_KB.instr
+*
+* %I
+* Written by: Antoine Padovani
+* Date: March 2022
+* Origin: SOLEIL
+* Version: 1.0
+* %INSTRUMENT_SITE: Test_optics
+*
+* Test of Kirkpatrick Baez (KB) mirrors
+*
+* %D
+* Two curved mirrors in a Kirkpatrick Baez geometry. Default parameters
+* are set for a focusing f_m = 10 m.
+*
+* Example: Test_KB L=12
+*
+* %P
+* L:     [m] Distance to the PSD detector
+* theta: [deg] Mirror glancing angle satisfying f_m = R sin(θ/2)
+* radus: [m] Mirror curvature radius
+* 
+* %L
+* https://github.com/McStasMcXtrace/Schools/tree/master/2023/SOLEIL_May_2023/Day2_Wednesday_May_10th/5_Optics/2_KB_mirrors
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Test_KB(L=12,theta=0.003,radius=6.66e3)
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+// insert components here (e.g. Insert -> Source -> ...)
+COMPONENT source_gaussian = Source_gaussian(
+    sig_x=48.2e-6, 
+    sig_y=9.5e-6, 
+    sigPr_x=100e-6, 
+    sigPr_y=4.3e-6, 
+    dist=31.5, 
+    focus_xw=0.001,
+    focus_yh=0.001,
+    gauss=1, 
+    E0=23.32, 
+    dE=1)
+AT (0, 0, 0) RELATIVE origin
+
+COMPONENT mirror_curved = Mirror_curved(
+    radius=radius,
+    //radius=0.001,
+    length=1,
+    width=1)
+AT (0, 0, 31.5) RELATIVE PREVIOUS
+ROTATED (0, RAD2DEG*theta, 0) RELATIVE PREVIOUS
+EXTEND
+%{ 
+	if (!SCATTERED) ABSORB; 
+%}
+
+COMPONENT arm = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0, RAD2DEG*theta, 0) RELATIVE PREVIOUS
+
+COMPONENT arm_2 = Arm()
+AT (0, 0, 1.5) RELATIVE PREVIOUS
+ROTATED (0, 0, 90) RELATIVE PREVIOUS
+
+COMPONENT mirror_2 = Mirror_curved(
+    radius=radius,   
+    length=1,
+    width=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0, RAD2DEG*theta, 0) RELATIVE PREVIOUS
+EXTEND
+%{ 
+	if (!SCATTERED) ABSORB; 
+%}
+
+COMPONENT arm_3 = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0, RAD2DEG*theta, 0) RELATIVE PREVIOUS
+
+
+COMPONENT slit = Slit(
+    radius=0.0001)
+    //radius=0.0001)
+AT (0, 0, 0.5 + L) RELATIVE PREVIOUS
+
+COMPONENT psd_monitor = PSD_monitor(
+    filename="psd.dat", 
+    xwidth=0.01, 
+    yheight=0.01
+    )
+AT (0, 0, 0.001) RELATIVE PREVIOUS
+
+
+COMPONENT e_monitor = E_monitor(
+    filename="energy.dat", 
+    xwidth=0.01, 
+    yheight=0.01,     
+    Emin=23.32-1, 
+    Emax=23.32+1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+
+END
+
