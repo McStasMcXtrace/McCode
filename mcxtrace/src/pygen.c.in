@@ -201,9 +201,6 @@ codeblock_out(struct code_block *code)
   code_reset_source();
 }
 
-/*******************************************************************************
-* Output a list of lines of code, embraced in { ... }
-*******************************************************************************/
 static void
 codeblock_declare_add(struct code_block *code)
 {
