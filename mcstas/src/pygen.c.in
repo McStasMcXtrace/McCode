@@ -545,6 +545,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   if (strlen(date)) date[strlen(date)-1] = '\0';
 
   /* the file header */
+  cout("#!/usr/bin/env python3");
   cout("# Automatically generated file. ");
   cout("# Format:    Python script code");
 #if MCCODE_PROJECT == 1     /* neutron */
