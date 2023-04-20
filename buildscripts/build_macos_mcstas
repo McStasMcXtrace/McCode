@@ -52,7 +52,6 @@ mamba install cmake openmpi compilers gsl pyaml ply matplotlib numpy tornado sci
 mamba clean --all -y
 cd $WORK
 
-
 ./mkdist mcstas $1 "" "" mac "" -- OSXapp
 ./mkdist mcstas-comps $1 "" "" mac "" -- OSXapp
 ./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" mac "" -- OSXapp
