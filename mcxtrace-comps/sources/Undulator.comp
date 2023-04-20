@@ -20,30 +20,30 @@
 *
 * Example: SOLEIL_PX2a U24: Undulator( E0=12.65, dE=1, Ee=2.75, dEe=0.001, Ie=0.5, K=1.788, Nper=80, 
 *   lu=24e-3, sigey=9.3e-6, sigex=215.7e-6, sigepx=29.3e-6, sigepy=4.2e-6, 
-*   focus_xw=1e-4, focus_yh=1e-4, dist=29.5, E1st=12.400 )
+*   dist=29.5, E1st=12.400 )
 *
 * %P
-* Ee:    [GeV] Storage ring electron energy [typically a few GeV).
-* dEe:    [ ] Relative electron energy beam spread (sigma/Ee).
-* Ie:     [A]   Ring current.
-* B:      [T] Peak magnet field strength. Overrides K.
-* Nper:   [ ] Number of magnetic periods in the undulator.
-* lu:     [m] Magnetic period length of the undulator aka lambda_u.
-* K:      [ ] Dimensionless deflection undulator parameter. When K >> 1 (ie B*lu is large) you get a wiggler.
-* sigex:  [m] Electron ring beam size in horizontal plane (rms). Blurring from emittance on X.
-* sigey:  [m] Electron ring beam size in vertical plane (rms). Blurring from emittance on Y.
-* sigepx: [rad] Electron ring beam horizontal divergence (rms).
-* sigepy: [rad] Electron ring beam vertical divergence (rms).
-* phase:  [ ] Initial phase of radiation.
+* Ee:       [GeV] Storage ring electron energy [typically a few GeV).
+* dEe:      [ ] Relative electron energy beam spread (sigma/Ee).
+* Ie:       [A] Ring current.
+* B:        [T] Peak magnet field strength. Overrides K.
+* Nper:     [ ] Number of magnetic periods in the undulator.
+* lu:       [m] Magnetic period length of the undulator aka lambda_u.
+* K:        [ ] Dimensionless deflection undulator parameter. When K >> 1 (ie B*lu is large) you get a wiggler.
+* sigex:    [m] Electron ring beam size in horizontal plane (rms). Blurring from emittance on X.
+* sigey:    [m] Electron ring beam size in vertical plane (rms). Blurring from emittance on Y.
+* sigepx:   [rad] Electron ring beam horizontal divergence (rms).
+* sigepy:   [rad] Electron ring beam vertical divergence (rms).
+* phase:    [ ] Initial phase of radiation.
 * randomphase: [ ] If !=0 phase will be random (I.e. the emitted radiation is completely incoherent).
 * focus_xw: [m] Width of target window.
 * focus_yh: [m] Height of target window.
 * dist:     [m] Distance from source plane to target window along the optical axis.
-* E0:     [keV] Center of emitted energy spectrum.
-* dE:     [keV] Half-width of emitted energy spectrum.
-* E1st:   [keV] Energy of the fundmental (1st) undulator harmonic.
-* Br:     [T]   Remanent magnet field to compute the gap (1.35 for Nd2Fe14B)
-* verbose:[ ] if nonzero, output extra information.
+* E0:       [keV] Center of emitted energy spectrum.
+* dE:       [keV] Half-width of emitted energy spectrum.
+* E1st:     [keV] Energy of the fundmental (1st) undulator harmonic.
+* Br:       [T]   Remanent magnet field to compute the gap (1.35 for Nd2Fe14B)
+* verbose:  [ ] if nonzero, output extra information.
 * quick_integ: [ ] if nonzero, use faster (but less accurate) integration scheme.
 *
 * OUTPUT PARAMETERS:
@@ -173,8 +173,8 @@ INITIALIZE
    fprintf(stderr, "Error (%s): sigex (= %g) and sigey (= %g) must both be >= 0. Negative beam size isn't meaningful. Aborting.\n",NAME_CURRENT_COMP,sigex,sigey);
     exit(1);
   }
-  if (dist<=0 || focus_xw <= 0 || focus_yh <= 0){
-    fprintf(stderr,"Error (%s): Target undefined. Set dist, focus_xw and focus_yh.\n",NAME_CURRENT_COMP);
+  if (dist<=0 || focus_xw < 0 || focus_yh < 0){
+    fprintf(stderr,"Error (%s): Target undefined. Set dist.\n",NAME_CURRENT_COMP);
     exit(1);
   }
 
