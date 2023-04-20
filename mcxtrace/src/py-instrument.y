@@ -28,7 +28,7 @@ int symtab_cat(struct List_header *, struct List_header *);
 %}
 
 %{
-  
+
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -111,7 +111,8 @@ int symtab_cat(struct List_header *, struct List_header *);
 %token TOK_CPUONLY    "CPU"   /* extended McStas grammar with GPU-CPU support */
 %token TOK_NOACC      "NOACC"
 %token TOK_DEPENDENCY "DEPENDENCY"
-%token TOK_SHELL    "SHELL" /* pre-cogen commands */
+%token TOK_SHELL      "SHELL" /* pre-cogen commands */
+%token TOK_SEARCH     "SEARCH" /* Additonal include directory for instrument/component file(s) */
 
 /*******************************************************************************
 * Declarations of terminals and nonterminals.
@@ -160,7 +161,7 @@ compdefs:   /* empty */
     | compdefs compdef
 ;
 
-compdef:    "DEFINE" "COMPONENT" TOK_ID parameters shell dependency noacc share uservars declare initialize trace save finally display "END"
+compdef:    "DEFINE" "COMPONENT" TOK_ID parameters shell search dependency noacc share uservars declare initialize trace save finally display "END"
       {
         struct comp_def *c;
         palloc(c);
@@ -169,15 +170,15 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters shell dependency noacc share 
         c->def_par = $4.def;
         c->set_par = $4.set;
         c->out_par = $4.out;
-	c->flag_noacc=$7;
-        c->share_code = $8;
-	c->uservar_code = $9;
-        c->decl_code = $10;
-        c->init_code = $11;
-        c->trace_code = $12;
-        c->save_code = $13;
-        c->finally_code = $14;
-        c->display_code = $15;
+	c->flag_noacc=$8;
+        c->share_code = $9;
+	c->uservar_code = $10;
+        c->decl_code = $11;
+        c->init_code = $12;
+        c->trace_code = $13;
+        c->save_code = $14;
+        c->finally_code = $15;
+        c->display_code = $16;
         c->flag_defined_structure=0;
         c->flag_defined_share=0;
         c->flag_defined_init=0;
@@ -699,18 +700,18 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
           instrument_definition->has_included_instr++;
         }
       }
-      shell dependency declare uservars initialize instr_trace save finally "END"
+      shell search dependency declare uservars initialize instr_trace save finally "END"
       {
-        if (!instrument_definition->decls) instrument_definition->decls = $8;
-        else list_cat(instrument_definition->decls->lines, $8->lines);
-        if (!instrument_definition->vars) instrument_definition->vars = $9;
-        else list_cat(instrument_definition->vars->lines, $9->lines);
-        if (!instrument_definition->inits) instrument_definition->inits = $10;
-        else list_cat(instrument_definition->inits->lines, $10->lines);
-        if (!instrument_definition->saves) instrument_definition->saves = $12;
-        else list_cat(instrument_definition->saves->lines, $12->lines);
-        if (!instrument_definition->finals) instrument_definition->finals = $13;
-        else list_cat(instrument_definition->finals->lines, $13->lines);
+        if (!instrument_definition->decls) instrument_definition->decls = $9;
+        else list_cat(instrument_definition->decls->lines, $9->lines);
+        if (!instrument_definition->vars) instrument_definition->vars = $10;
+        else list_cat(instrument_definition->vars->lines, $10->lines);
+        if (!instrument_definition->inits) instrument_definition->inits = $11;
+        else list_cat(instrument_definition->inits->lines, $11->lines);
+        if (!instrument_definition->saves) instrument_definition->saves = $13;
+        else list_cat(instrument_definition->saves->lines, $13->lines);
+        if (!instrument_definition->finals) instrument_definition->finals = $14;
+        else list_cat(instrument_definition->finals->lines, $14->lines);
         instrument_definition->compmap = comp_instances;
         instrument_definition->groupmap = group_instances;
         instrument_definition->complist = comp_instances_list;
@@ -923,6 +924,10 @@ complist:   /* empty */
     | complist instrument
     {
       /* included instrument */
+    }
+    | complist search
+    {
+      /* extend the search path inside of trace */
     }
 ;
 
@@ -1357,6 +1362,38 @@ shell:
       } else {
 	printf("success!\n");
       }
+    }
+
+search:
+    {
+    }
+  | "SEARCH" TOK_STRING
+    {
+      add_search_dir($2);
+    }
+  | "SEARCH" "SHELL" TOK_STRING
+    {
+      FILE *sfp;
+      char svalue[1025];
+      sfp = popen($3, "r");
+      if (sfp == NULL) {
+        printf("FAILED to run search path command\n");
+        exit(-1);
+      }
+      while (fgets(svalue, sizeof(svalue), sfp) != NULL){
+        // Make a copy of the char array -- We can't free this memory until the program is done, so we're going to leak it :/
+        char * path = calloc(strlen(svalue)+1, sizeof(char));
+	strcpy(path, svalue);
+        // Remove the trailing newline (and/or carriage return) which is almost-certainly present
+        path[strcspn(path, "\r\n")] = 0;
+        // Ensure the path specification *ends* in a PATHSEP character
+        char * last = strrchr(path, MC_PATHSEP_S[0]);
+        unsigned int last_sep = last - path + 1;
+        if ((last - path) < strlen(path)) strcat(path, MC_PATHSEP_S);
+        // Add the specified path to the search list
+        add_search_dir(path);
+      }
+      pclose(sfp);
     }
 
 dependency:
