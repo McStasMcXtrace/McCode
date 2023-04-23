@@ -17,13 +17,18 @@
 * This instrument simply has a lab source, a few monitors and a set of components
 * to model material absorption. Material is chosen to be Mn (K-edge 6.5 keV).
 *
+*   index=1:  Filter
+*   index=2:  Absorption_sample
+*   index=3:  Abs_objects
+*   index=4:  Fluorescence
+*
 * 
 * %Example: Test_Absorption.instr -n1e5 index=1 Detector: emon_I=8.25376e-12
 * %Example: Test_Absorption.instr -n1e5 index=2 Detector: emon_I=8.24127e-12
 * %Example: Test_Absorption.instr -n1e5 index=3 Detector: emon_I=8.28866e-12
 *
 * %Parameters
-* index:    [1]    Index of the absorption component to use in 1-3
+* index:    [1]    Index of the absorption component to use in 1-4
 * material: [str]  Material file to use, e.g. Mn.txt
 * E0:       [keV]  Mean photon energy
 * dE:       [keV]  Photon energy spread, half width
@@ -84,6 +89,12 @@ AT (0,0,0) RELATIVE sample_mount_point
 
 COMPONENT sample_scan3=Abs_objects(objects="input_small.dat", refraction=0)
 WHEN(index==3)
+AT (0,0,0) RELATIVE sample_mount_point
+
+COMPONENT sample_scan4=Fluorescence(material="Mn", 
+  xwidth=0.001,yheight=0.001,zdepth=0.0001, p_interact=0.9, 
+  target_index=1, focus_xw=0.0005, focus_yh=0.0005)
+WHEN(index==4)
 AT (0,0,0) RELATIVE sample_mount_point
 
 COMPONENT emon = E_monitor(restore_xray=1,nE=101,Emin=E0-dE, Emax=E0+dE, 
