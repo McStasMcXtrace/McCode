@@ -123,7 +123,7 @@ SETTING PARAMETERS(
   focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0, int target_index=0)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
-DEPENDENCY "-Wl,-rpath,GETPATH(lib) -LGETPATH(lib) -lxrl -IGETPATH(include)"
+DEPENDENCY "-Wl,-rpath,GETPATH(lib) -LGETPATH(lib) -lxrl -IGETPATH(include) -DUSE_OFF"
 NOACC
 
 /* ========================================================================== */
