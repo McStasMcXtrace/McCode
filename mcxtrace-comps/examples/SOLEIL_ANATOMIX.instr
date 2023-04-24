@@ -33,7 +33,7 @@
 *
 * This is a simplified model with an Undulator, a double channel-cut monochromator,
 * a sample stage and a detector. It models a parallel beam full field tomograph.
-* The monochromator is an Si(111), the sample is made of Be. The sample is 2 cm
+* The monochromator is an Si(111), the sample is made of Ge. The sample is 2 cm
 * wide.
 *
 * %Example: -n 1e5 E0=17 Detector: psd_monitor_after_cc_I=1.6e+08
@@ -50,7 +50,7 @@
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT SOLEIL_ANATOMIX(E0=17, Emono=0, dE=1, ANGLE=0, string sample="wire.ply")
+DEFINE INSTRUMENT SOLEIL_ANATOMIX(E0=11, Emono=0, dE=1, ANGLE=0, string sample="wire.ply")
 
 DECLARE
 %{
@@ -140,7 +140,7 @@ COMPONENT sample_rotation_stage = Arm()
 AT (0, 0, 150) RELATIVE PREVIOUS
 
 // sample at about 200 m from Undulator
-COMPONENT sample = Filter(material_datafile="Be.txt",
+COMPONENT sample = Filter(material_datafile="Ge.txt",
     geometry=sample,xwidth=0.02,yheight=0,zdepth=0)
 AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (0,ANGLE,0) RELATIVE PREVIOUS
