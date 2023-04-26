@@ -44,18 +44,18 @@
 *   hollow cylinder: radius x yheight and thickness>0
 *   sphere:          radius (yheight=0 thickness=0)
 *   hollow sphere:   radius and thickness>0 (yheight=0)
-*   any shape:       geometry=OFF_file
+*   any shape:       geometry=PLY/OFF file
 *
 *   The complex geometry option handles any closed non-convex polyhedra.
 *   It computes the intersection points of the xray with the object
 *   transparently, so that it can be used like a regular sample object.
-*   It supports the OFF and NOFF file format but not COFF (colored faces).
+*   It supports the PLY, OFF and NOFF file format but not COFF (colored faces).
 *   Such files may be generated from XYZ data using:
 *     qhull < coordinates.xyz Qx Qv Tv o > geomview.off
 *   or
 *     powercrust coordinates.xyz
 *   and viewed with geomview or java -jar jroff.jar (see below).
-*   The default size of the object depends of the OFF file data, but its
+*   The default size of the object depends of the PLY/OFF file data, but its
 *   bounding box may be resized using xwidth,yheight and zdepth.
 *
 * If you use this component and produce valuable scientific results, please
@@ -125,7 +125,7 @@
 *
 * (The second instance of the cryostat component can also be written out completely
 *  using PowderN(...). In both cases, this second instance needs concentric = 0.)
-* The concentric arrangment can not be used with OFF geometry specification.
+* The concentric arrangment can not be used with OFF/PLY geometry specification.
 *
 * %P
 * INPUT PARAMETERS

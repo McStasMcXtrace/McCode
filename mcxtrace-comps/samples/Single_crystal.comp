@@ -117,11 +117,6 @@
 *           cx = 0, cy = 0, cz = 11.6777,
 *           reflections="YBaCuO.lau")
 *
-* Vanadium incoherent elastic scattering with multiple scattering
-* Single_crystal(xwidth=0.01, yheight=0.01, zdepth=0.01,
-*           reflections="", sigma_abs=5.08, sigma_inc=4.935,
-*           ax=3.0282, by=3.0282, cz=3.0282/2)
-*
 * Also, always use a non-zero value of delta_d_d.
 *
 * %VALIDATION:
