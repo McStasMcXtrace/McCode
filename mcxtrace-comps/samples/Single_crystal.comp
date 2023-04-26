@@ -64,16 +64,16 @@
 *   box/plate:       xwidth x yheight x zdepth
 *   cylinder:        radius x yheight
 *   sphere:          radius (yheight=0)
-*   any shape:       geometry=OFF file
+*   any shape:       geometry=OFF/PLY file
 *
 *   The complex geometry option handles any closed non-convex polyhedra.
 *   It computes the intersection points of the x-ray with the object  
 *   transparently, so that it can be used like a regular sample object.
-*   It supports the OFF and NOFF file format but not COFF (colored faces). 
+*   It supports the PLY, OFF and NOFF file format but not COFF (colored faces). 
 *   Such files may be generated from XYZ data using:
 *     qhull < coordinates.xyz Qx Qv Tv o > geomview.off 
 *   and viewed with geomview or java -jar jroff.jar (see below).
-*   The default size of the object depends of the OFF file data, but its 
+*   The default size of the object depends of the OFF/PLY file data, but its 
 *   bounding box may be resized using xwidth,yheight and zdepth.
 *
 * <b>Crystal definition file format</b>
@@ -133,8 +133,8 @@
 * xwidth:    Width of crystal [m]
 * yheight:   Height of crystal [m]
 * zdepth:    Depth of crystal (no extinction simulated) [m]
-* geometry:   Name of an Object File Format (OFF) file for complex geometry. 
-*               The OFF file may be generated from XYZ coordinates using qhull/powercrust [str]
+* geometry:   Name of an Object File Format (OFF/PLY) file for complex geometry. 
+*               The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust [str]
 * delta_d_d: Lattice spacing variance, gaussian RMS [1]
 * mosaic:    Crystal mosaic (isotropic), gaussian RMS. Puts the crystal in the 
 *            isotropic mosaic model state, thus disregarding other mosaicity parameters. [arc minutes]
