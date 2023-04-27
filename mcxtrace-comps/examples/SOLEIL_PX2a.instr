@@ -85,10 +85,10 @@ COMPONENT undulator = Undulator(
     K=1.788, 
     Nper=80, 
     lu=2.4e-2, 
-    sigey=9.3e-6, 
-    sigex=215.7e-6, 
-    sigepx=29.3e-6, 
-    sigepy=4.2e-6, 
+    sigey=9.8e-6, 
+    sigex=219.1e-6, 
+    sigepx=31.6e-6, 
+    sigepy=3.7e-6, 
     dist=29.5, 
     E1st=12.400)
 AT (0, 0, 0) RELATIVE PREVIOUS
