@@ -19,8 +19,8 @@
 * A source model based on the derivation from B.D. Patterson, Am. J. Phys. 79, 1046 (2011); doi: 10.1119/1.3614033
 *
 * Example: Wiggler(
-*   E0 = e0, dE = de, phase = 0, randomphase = 1, Ee = 2.4,
-*   Ie = 0.4, B = 1.6, K=10, Nper=41, sigey=9.3e-6, sigex=215.7e-6)
+*   E0 = e0, dE = de, 
+*   Ee = 2.75, Ie = 0.5, B = 2.1, K=10, Nper=41, sigey=9.3e-6, sigex=215.7e-6)
 *
 * %P
 * Input Parameters:
