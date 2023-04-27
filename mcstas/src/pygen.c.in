@@ -566,6 +566,8 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("# Python McXtrace instrument description");
   coutf("instr = ms.McXtrace_instr(\"%s_generated\", author = \"McPygen\", origin = \"ESS DMSC\")",instr->name);
 #endif
+  cout("\n# Add collected DEPENDENCY strings");
+  coutf("instr.set_dependency('%s')",instr->dependency);
   /* handles Windows '\' chararcters for embedding sys_dir into source code */
   if (MC_PATHSEP_C != '\\') strcpy(pathsep, MC_PATHSEP_S);
   else strcpy(pathsep, "\\\\");
