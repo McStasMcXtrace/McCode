@@ -17,29 +17,38 @@
 * 90 and -90 deg. respectively around the z-axis.
 * The crystal is illuminated by a model point source.
 *
-* %Example: TTH=9.17 alpha=0.01 Detector: emon_dcm1_I=8.83566e-21
+* %Example: theta=9.17 Detector: emon_dcm1_I=6.14859e-10
 *
 * %P
-* E0: [keV]     Central energy to be emitted by the source
-* dEr: [keV]    Relative half width to emitted by the source
-* TH: [deg]     Rotation angle of the crystals. 
-* alpha: [deg]  Asymmetry angle for the crystals.
+* E0:    [keV] Central energy to be emitted by the source. 0=set from theta.
+* dE:    [keV] Half width to be emitted by the source
+* theta: [deg] Rotation angle of the crystals. 0=set from E0.
 * 
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT Template_DCM(E0=12.3984, dEr=1e-3,TTH=9.18,alpha=0)
+DEFINE INSTRUMENT Template_DCM(E0=0, dE=0.2,theta=9.17)
 
 DECLARE
 %{
   double dcm_gap;
-  double TTH;
-  double dE;
 %}
 
 INITIALIZE
 %{
-   dcm_gap=0.02;
-   dE=dEr*E0;
+   double DM= 5.4909;     // Si d-spacing
+   double d = DM/sqrt(3); // <111> reflection |<111>|=3
+   dcm_gap  = 0.02;       // gap between the 2 monochromator crystals
+   
+   if (!theta && E0) {
+     // n.lambda = 2 d sin(theta) = 2*PI/E2K / E0 with n=ORDER=1
+     double sin_theta = 2*PI/E2K/E0 / 2 / d;
+     if (fabs(sin_theta) < 1)
+       theta = asin(sin_theta)*RAD2DEG;
+   } else if (theta && !E0)
+     E0 = 2*PI/E2K / (2*d*sin(theta*DEG2RAD));
+   if (!theta || !E0 || dE <=0)
+     exit(fprintf(stderr, "%s: ERROR: Monochromator can not reflect E0=%g +/- %g [keV]. Aborting.\n", __FILE__, E0, dE));
+   printf("%s: Monochromator theta=%g [deg] E0=%g [keV]\n", __FILE__, theta, E0);
 %}
 
 TRACE
@@ -59,27 +68,23 @@ AT(0,0,1) RELATIVE PREVIOUS
 
 COMPONENT dcm_xtal0 = Bragg_crystal(
     length=0.04, width=0.04, 
-    alpha=alpha, h=1, k=1, l=1, material="Si.txt", V=160.1826)
+    h=1, k=1, l=1, material="Si.txt", V=160.1826)
 AT(0,0,0.02) RELATIVE PREVIOUS
-ROTATED (-TTH,0,0) RELATIVE PREVIOUS
+ROTATED (-theta,0,0) RELATIVE PREVIOUS
 
 COMPONENT dcm0 = Arm()
 AT(0,0,0) RELATIVE dcm_xtal0
-ROTATED (-TTH,0,0) RELATIVE PREVIOUS
+ROTATED (-theta,0,0) RELATIVE PREVIOUS
 
 COMPONENT dcm_xtal1 = COPY(dcm_xtal0)
 AT(0,0,dcm_gap) RELATIVE dcm0
-ROTATED (TTH,0,0) RELATIVE dcm0
+ROTATED (theta,0,0) RELATIVE dcm0
 
 COMPONENT dcm1 =Arm()
 AT(0,0,0) RELATIVE dcm_xtal1
-ROTATED (TTH,0,0) RELATIVE dcm_xtal1 
+ROTATED (theta,0,0) RELATIVE dcm_xtal1 
 
 COMPONENT emon_dcm1 = COPY(emon_dcm0)(filename="emon_dcm1")
 AT(0,0,0.02) RELATIVE dcm1 
-
-FINALLY
-%{
-%}
 
 END
