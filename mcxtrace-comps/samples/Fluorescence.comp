@@ -133,6 +133,7 @@ SHARE %{
   #define FLUORESCENCE 0  // Fluo
   #define RAYLEIGH     1  // Coherent
   #define COMPTON      2  // Incoherent
+  #define TRANSMISSION 3
   #include <xraylib/xraylib.h>
   #endif
   %include "interoff-lib" // for OFF/PLY geometry
@@ -554,11 +555,12 @@ if (intersect) {
     
   } else {
     /* we go through the material without interaction, and exit */
-    type = 3; // 3 transmission
+    type = TRANSMISSION; // 3 transmission
     intersect = 0;
     PROP_DL(dl0+dl2);
     /* attenuate beam by portion which is scattered (and left along) */
-    p *= fabs(p_trans/mc_trans);
+    p *= p_trans;
+    if (p_interact>0 && p_interact<=1) p /= mc_trans;
   }
   
 } /* if intersect (propagate) */
