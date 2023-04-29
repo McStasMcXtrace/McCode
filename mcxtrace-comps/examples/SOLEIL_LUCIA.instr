@@ -1,0 +1,148 @@
+/*******************************************************************************
+* Instrument: SOLEIL_LUCIA
+*
+* %I
+* Written by: <your name (email)>
+* Date: <current date>
+* Origin: SOLEIL
+* Version: <instrument version>
+* %INSTRUMENT_SITE: SOLEIL
+*
+* A simple model for LUCIA at SOLEIL.
+*
+* %D
+* The HU52 undulator, a DCM, a fluorescence sample, and monitors.
+*
+* %P
+* E0: [keV] Nominal energy at the Wiggler.
+* dE: [keV] Energy half-bandwidth at the Wiggler
+* sample_material: [str] Absorption data file for the sample
+* sample_geometry: [str] OFF/PLY file name for sample 3D geometry, or emty for a box
+* dcm_theta: [deg] Rotation angle of the DCM. 0=set from energy E0
+* 
+* %L
+* <reference/HTML link>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT SOLEIL_LUCIA(E0=3, dE=0.1, dcm_theta=0, 
+  string sample_material="CaCO3Ti", string sample_geometry="wire.ply")
+
+DECLARE
+%{
+  double dcm_gap;
+%}
+
+INITIALIZE
+%{
+  double DM= 5.4909;     // Si d-spacing
+  double d = DM/sqrt(3); // <111> reflection |<111>|=3
+  dcm_gap  = 0.02;       // gap between the 2 monochromator crystals
+   
+  if (!dcm_theta && E0) {
+    // n.lambda = 2 d sin(dcm_theta) = 2*PI/E2K / E0 with n=ORDER=1
+    double sin_theta = 2*PI/E2K/E0 / 2 / d;
+    if (fabs(sin_theta) < 1)
+      dcm_theta = asin(sin_theta)*RAD2DEG;
+  } else if (dcm_theta && !E0)
+    E0 = 2*PI/E2K / (2*d*sin(dcm_theta*DEG2RAD));
+  if (!dcm_theta || !E0 || dE <=0)
+    exit(fprintf(stderr, "%s: ERROR: Monochromator can not reflect E0=%g +/- %g [keV]. Aborting.\n", __FILE__, E0, dE));
+  printf("%s: E0=%g [keV] Monochromator dcm_theta=%g [deg] \n", __FILE__, E0, dcm_theta);
+  if (fabs(dE/E0)>0.1) dE = 3e-2*E0;
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+// the photon source -----------------------------------------------------------
+COMPONENT source = Undulator(
+  E0     = E0,
+  dE     = dE,
+  Ee     = 2.75,
+  dEe    = 0.001,
+  Ie     = 0.5,
+  B      = 0.42, // for a 15.5 mm gap
+  Nper   = 32,
+  lu     = 52.4e-3,
+  sigex  = 218.2e-6,
+  sigey  = 8.2e-6,
+  sigepx = 30e-6,
+  sigepy = 3.7e-6) 
+AT (0,0,0) RELATIVE origin
+
+COMPONENT mon_src_xy = Monitor_nD(
+  options="x y", xwidth=2e-3, yheight=2e-3, bins=128)
+AT (0,0,13.3) RELATIVE source
+
+COMPONENT mon_src_e = Monitor_nD(options="energy", xwidth=2e-3, yheight=2e-3, bins=128,
+  min=E0-dE*1.1, max=E0+dE*1.1)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT slit = Slit(xwidth=0.5e-3, yheight=0.5e-3)
+AT (0,0,0.1) RELATIVE PREVIOUS
+
+COMPONENT slit_mon_xy = COPY(mon_src_xy)
+AT (0,0,0) RELATIVE PREVIOUS
+
+// The double monochromator ----------------------------------------------------
+COMPONENT DCM_location = Arm()
+AT (0,0,20.5) RELATIVE source
+
+COMPONENT dcm_xtal0 = Bragg_crystal(
+    length=0.04, width=0.04, 
+    h=1, k=1, l=1, material="Si.txt", V=160.1826)
+AT(0,0,0)          RELATIVE PREVIOUS
+ROTATED (-dcm_theta,0,0) RELATIVE PREVIOUS
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT dcm0      = Arm()
+AT(0,0,0)          RELATIVE PREVIOUS
+ROTATED (-dcm_theta,0,0) RELATIVE PREVIOUS
+
+COMPONENT dcm_xtal1 = COPY(dcm_xtal0)
+AT(0,0,dcm_gap)    RELATIVE PREVIOUS
+ROTATED (dcm_theta,0,0)  RELATIVE PREVIOUS
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT dcm1      = Arm()
+AT(0,0,0)          RELATIVE PREVIOUS
+ROTATED (dcm_theta,0,0)  RELATIVE PREVIOUS 
+
+COMPONENT mon_dcm_e = COPY(mon_src_e)
+AT (0,0,0.5) RELATIVE PREVIOUS
+
+COMPONENT mon_dcm_xy = COPY(mon_src_xy)
+AT (0,0,0) RELATIVE PREVIOUS
+
+// The sample area -------------------------------------------------------------
+COMPONENT sample_stage = COPY(mon_src_xy)
+AT (0,0,8.13) RELATIVE PREVIOUS
+
+COMPONENT fluo_rotated = Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (0,30,0) RELATIVE PREVIOUS
+
+COMPONENT sample = Fluorescence(
+  xwidth=0.001, yheight=0.001, zdepth=0.5e-3,
+  material=sample_material, geometry=sample_geometry, p_interact=0.8,
+  target_index=1, focus_xw=0.1, focus_yh=0.1)
+AT (0,0,0) RELATIVE sample_stage
+
+COMPONENT mon_spl_fluo = Monitor_nD(options="energy", 
+  xwidth=0.1, yheight=0.1, bins=1000,
+  min=0, max=E0+dE*1.1)
+AT (0,0,0.1) RELATIVE fluo_rotated
+  
+
+FINALLY
+%{
+%}
+
+END
