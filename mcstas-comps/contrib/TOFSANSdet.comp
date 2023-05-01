@@ -69,13 +69,13 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (
   Nq=100,
   plength=0.00286, ssdist=27.0, coldis = 20.0, Sthckn = 0.1,
-  ds1=1.0,  xw1=0.0, yh1=0.0, hl1=0.0,                /* first one switched off */
+  ds1=1.0,  xw1=0.0, yh1=0.0, hl1=0.0,
   ds2=5.0,  xw2=1.0, yh2=1.0, hl2=0.2,
   ds3=20.0, xw3=1.0, yh3=1.0, hl3=0.04,
   vx3=0.0,
   tmin=0.005, tmax=0.15,
-  Nx=128.0, Ny=128.0, Nt=500.0,                       /* be cautious with large numbers */
-  qmin=0.0005, qmax=0.11, // Nq=500.0, <<<<<<<<<<<<<<<<< defined above
+  Nx=128.0, Ny=128.0, Nt=500.0,
+  qmin=0.0005, qmax=0.11,
   rstneu = 0.0,
   centol = 0.1, inttol = 0.0001, qcal=1,
   string fname=0)
