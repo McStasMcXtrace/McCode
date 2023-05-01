@@ -76,7 +76,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Samples_Incoherent(L_min=0.5, L_max=7, SAMPLE, STOP=0, Order=0, INC=5.08, ABS=5.08, DB=0, string ISISFACE="hydrogen")
+DEFINE INSTRUMENT Samples_Incoherent(L_min=0.5, L_max=7, int SAMPLE=1, STOP=0, Order=0, INC=5.08, ABS=5.08, DB=0, string ISISFACE="hydrogen")
 DEPENDENCY " -DUSE_OFF "
 
 DECLARE %{

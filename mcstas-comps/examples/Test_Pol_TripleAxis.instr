@@ -35,7 +35,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Test_Pol_TripleAxis(OPTION, LAMBDA=2.0, MOZ=40)
+DEFINE INSTRUMENT Test_Pol_TripleAxis(int OPTION=0, LAMBDA=2.0, MOZ=40)
 
 DECLARE
 %{
