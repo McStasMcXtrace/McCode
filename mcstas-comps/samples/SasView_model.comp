@@ -2159,7 +2159,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (
   model_index=21,
   model_scale=1.0,
-  vector model_pars={60,0,0,0,0,0,0,0},
+  vector model_pars={60,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
   model_abs=0.5,
   xwidth=0,
   yheight=0,
@@ -2188,7 +2188,7 @@ DECLARE
 %{
   double shape;
   double my_a_v;
-  double modelpars[8];
+  double modelpars[15];
 %}
 
 INITIALIZE
@@ -2202,7 +2202,9 @@ int chosen=model_index;
   if (!(SASmodel_index==model_index)) {
       exit(fprintf(stderr, "SasView_model: %s: Your instrument was compiled with -DSASmodel_index=%i \n"
 		   "ERROR Please recompile your instrument with -DSASmodel_index=%i to enable model_index=%i\n", NAME_CURRENT_COMP, SASmodel_index, chosen, chosen));
-  }
+
+// int SASmodel_index=model_index;  
+}
 #endif
   
 shape=-1;  /* -1:no shape, 0:cyl, 1:box, 2:sphere  */
@@ -2234,9 +2236,11 @@ if (xwidth && yheight && zdepth)
 
   my_a_v = model_abs*2200*100; /* Is not yet divided by v. 100: Convert barns -> fm^2 */
   int j;
-  for(j=0;j<8;j++){
+  for(j=0;j<15;j++){
     modelpars[j]=model_pars[j];
   }
+
+
 %}
 
 TRACE
