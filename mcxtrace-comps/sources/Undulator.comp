@@ -138,7 +138,7 @@ INITIALIZE
   }
 
   /*compute gamma*/
-  gamma=(Ee*1e9)/(MELE/CELE*M_C*M_C);mcxtrace-comps/sources/Wiggler.comp/*the extra CELE is to convert to eV*/
+  gamma=(Ee*1e9)/(MELE/CELE*M_C*M_C); /*the extra CELE is to convert to eV*/
   gamma2=gamma*gamma;
   igamma=1.0/gamma;
 
