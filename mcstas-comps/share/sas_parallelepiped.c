@@ -1,688 +1,701 @@
-// GENERATED CODE --- DO NOT EDIT ---
-// Code is produced by sasmodels.gen from sasmodels/models/MODEL.c
+#define HAS_Iqabc
+#define HAS_FQ
+#define FORM_VOL
+#line 1 "../kernel_header.c"
 
 #ifdef __OPENCL_VERSION__
 # define USE_OPENCL
+#elif defined(__CUDACC__)
+# define USE_CUDA
+#elif defined(_OPENMP)
+# define USE_OPENMP
 #endif
 
-#define USE_KAHAN_SUMMATION 0
+// Use SAS_DOUBLE to force the use of double even for float kernels
+#define SAS_DOUBLE double
 
 // If opencl is not available, then we are compiling a C function
 // Note: if using a C++ compiler, then define kernel as extern "C"
-#ifndef USE_OPENCL
-#  ifdef __cplusplus
-     #include <cstdio>
-     #include <cmath>
-     using namespace std;
-     #if defined(_MSC_VER)
-     #   define kernel extern "C" __declspec( dllexport )
-         inline float trunc(float x) { return x>=0?floor(x):-floor(-x); }
-	 inline float fmin(float x, float y) { return x>y ? y : x; }
-	 inline float fmax(float x, float y) { return x<y ? y : x; }
+#ifdef USE_OPENCL
+
+   #define USE_GPU
+   #define pglobal global
+   #define pconstant constant
+
+   typedef int int32_t;
+
+   #if defined(USE_SINCOS)
+   #  define SINCOS(angle,svar,cvar) svar=sincos(angle,&cvar)
+   #else
+   #  define SINCOS(angle,svar,cvar) do {const double _t_=angle; svar=sin(_t_);cvar=cos(_t_);} while (0)
+   #endif
+   // Intel CPU on Mac gives strange values for erf(); on the verified
+   // platforms (intel, nvidia, amd), the cephes erf() is significantly
+   // faster than that available in the native OpenCL.
+   #define NEED_ERF
+   // OpenCL only has type generic math
+   #define expf exp
+   #ifndef NEED_ERF
+   #  define erff erf
+   #  define erfcf erfc
+   #endif
+
+#elif defined(USE_CUDA)
+
+   #define USE_GPU
+   #define local __shared__
+   #define pglobal
+   #define constant __constant__
+   #define pconstant const
+   #define kernel extern "C" __global__
+
+   // OpenCL powr(a,b) = C99 pow(a,b), b >= 0
+   // OpenCL pown(a,b) = C99 pow(a,b), b integer
+   #define powr(a,b) pow(a,b)
+   #define pown(a,b) pow(a,b)
+   //typedef int int32_t;
+   #if defined(USE_SINCOS)
+   #  define SINCOS(angle,svar,cvar) sincos(angle,&svar,&cvar)
+   #else
+   #  define SINCOS(angle,svar,cvar) do {const double _t_=angle; svar=sin(_t_);cvar=cos(_t_);} while (0)
+   #endif
+
+#else // !USE_OPENCL && !USE_CUDA
+
+   #define local
+   #define pglobal
+   #define constant const
+   #define pconstant const
+
+   #ifdef __cplusplus
+      #include <cstdio>
+      #include <cmath>
+      using namespace std;
+      #if defined(_MSC_VER)
+         #include <limits>
+         #include <float.h>
+         #define kernel extern "C" __declspec( dllexport )
+         inline double trunc(double x) { return x>=0?floor(x):-floor(-x); }
+         inline double fmin(double x, double y) { return x>y ? y : x; }
+         inline double fmax(double x, double y) { return x<y ? y : x; }
+         #define isnan(x) _isnan(x)
+         #define isinf(x) (!_finite(x))
+         #define isfinite(x) _finite(x)
+         #define NAN (std::numeric_limits<double>::quiet_NaN()) // non-signalling NaN
+         #define INFINITY (std::numeric_limits<double>::infinity())
+         #define NEED_ERF
+         #define NEED_EXPM1
+         #define NEED_TGAMMA
      #else
-     #   define kernel extern "C"
+         #define kernel extern "C"
+         #include <cstdint>
      #endif
-     inline void SINCOS(float angle, float &svar, float &cvar) { svar=sin(angle); cvar=cos(angle); }
-#  else
+     inline void SINCOS(double angle, double &svar, double &cvar) { svar=sin(angle); cvar=cos(angle); }
+   #else // !__cplusplus
+     #include <inttypes.h>  // C99 guarantees that int32_t types is here
      #include <stdio.h>
-     #include <tgmath.h> // C99 type-generic math, so sin(float) => sinf
+     #if defined(__TINYC__)
+         typedef int int32_t;
+         #include <math.h>
+         // TODO: check isnan is correct
+         inline double _isnan(double x) { return x != x; } // hope this doesn't optimize away!
+         #undef isnan
+         #define isnan(x) _isnan(x)
+         // Defeat the double->float conversion since we don't have tgmath
+         inline SAS_DOUBLE trunc(SAS_DOUBLE x) { return x>=0?floor(x):-floor(-x); }
+         inline SAS_DOUBLE fmin(SAS_DOUBLE x, SAS_DOUBLE y) { return x>y ? y : x; }
+         inline SAS_DOUBLE fmax(SAS_DOUBLE x, SAS_DOUBLE y) { return x<y ? y : x; }
+         #define NEED_ERF
+         #define NEED_EXPM1
+         #define NEED_TGAMMA
+         #define NEED_CBRT
+         // expf missing from windows?
+         #define expf exp
+     #else
+         #include <tgmath.h> // C99 type-generic math, so sin(float) => sinf
+     #endif
      // MSVC doesn't support C99, so no need for dllexport on C99 branch
      #define kernel
-     #define SINCOS(angle,svar,cvar) do {const float _t_=angle; svar=sin(_t_);cvar=cos(_t_);} while (0)
-#  endif
-#  define global
-#  define local
-#  define constant const
-// OpenCL powr(a,b) = C99 pow(a,b), b >= 0
-// OpenCL pown(a,b) = C99 pow(a,b), b integer
-#  define powr(a,b) pow(a,b)
-#  define pown(a,b) pow(a,b)
-#else
-#  ifdef USE_SINCOS
-#    define SINCOS(angle,svar,cvar) svar=sincos(angle,&cvar)
-#  else
-#    define SINCOS(angle,svar,cvar) do {const float _t_=angle; svar=sin(_t_);cvar=cos(_t_);} while (0)
-#  endif
+     #define SINCOS(angle,svar,cvar) do {const double _t_=angle; svar=sin(_t_);cvar=cos(_t_);} while (0)
+   #endif  // !__cplusplus
+   // OpenCL powr(a,b) = C99 pow(a,b), b >= 0
+   // OpenCL pown(a,b) = C99 pow(a,b), b integer
+   #define powr(a,b) pow(a,b)
+   #define pown(a,b) pow(a,b)
+
+#endif // !USE_OPENCL
+
+#if defined(NEED_CBRT)
+   #define cbrt(_x) pow(_x, 0.33333333333333333333333)
+#endif
+
+#if defined(NEED_EXPM1)
+   // TODO: precision is a half digit lower than numpy on mac in [1e-7, 0.5]
+   // Run "explore/precision.py sas_expm1" to see this (may have to fiddle
+   // the xrange for log to see the complete range).
+   static SAS_DOUBLE expm1(SAS_DOUBLE x_in) {
+      double x = (double)x_in;  // go back to float for single precision kernels
+      // Adapted from the cephes math library.
+      // Copyright 1984 - 1992 by Stephen L. Moshier
+      if (x != x || x == 0.0) {
+         return x; // NaN and +/- 0
+      } else if (x < -0.5 || x > 0.5) {
+         return exp(x) - 1.0;
+      } else {
+         const double xsq = x*x;
+         const double p = (((
+            +1.2617719307481059087798E-4)*xsq
+            +3.0299440770744196129956E-2)*xsq
+            +9.9999999999999999991025E-1);
+         const double q = ((((
+            +3.0019850513866445504159E-6)*xsq
+            +2.5244834034968410419224E-3)*xsq
+            +2.2726554820815502876593E-1)*xsq
+            +2.0000000000000000000897E0);
+         double r = x * p;
+         r =  r / (q - r);
+         return r+r;
+       }
+   }
 #endif
 
 // Standard mathematical constants:
 //   M_E, M_LOG2E, M_LOG10E, M_LN2, M_LN10, M_PI, M_PI_2=pi/2, M_PI_4=pi/4,
 //   M_1_PI=1/pi, M_2_PI=2/pi, M_2_SQRTPI=2/sqrt(pi), SQRT2, SQRT1_2=sqrt(1/2)
-// OpenCL defines M_constant_F for float constants, and nothing if float
+// OpenCL defines M_constant_F for float constants, and nothing if double
 // is not enabled on the card, which is why these constants may be missing
 #ifndef M_PI
-#  define M_PI 3.141592653589793f
+#  define M_PI 3.141592653589793
 #endif
 #ifndef M_PI_2
-#  define M_PI_2 1.570796326794897f
+#  define M_PI_2 1.570796326794897
 #endif
 #ifndef M_PI_4
-#  define M_PI_4 0.7853981633974483f
+#  define M_PI_4 0.7853981633974483
+#endif
+#ifndef M_E
+#  define M_E 2.718281828459045091
+#endif
+#ifndef M_SQRT1_2
+#  define M_SQRT1_2 0.70710678118654746
 #endif
 
-// Non-standard pi/180, used for converting between degrees and radians
+// Non-standard function library
+// pi/180, used for converting between degrees and radians
+// 4/3 pi for computing sphere volumes
+// square and cube for computing squares and cubes
 #ifndef M_PI_180
-#  define M_PI_180 0.017453292519943295f
+#  define M_PI_180 0.017453292519943295
+#endif
+#ifndef M_4PI_3
+#  define M_4PI_3 4.18879020478639
+#endif
+double square(double x) { return x*x; }
+double cube(double x) { return x*x*x; }
+double sas_sinx_x(double x) { return x==0 ? 1.0 : sin(x)/x; }
+
+// CRUFT: support old style models with orientation received qx, qy and angles
+
+// To rotate from the canonical position to theta, phi, psi, first rotate by
+// psi about the major axis, oriented along z, which is a rotation in the
+// detector plane xy. Next rotate by theta about the y axis, aligning the major
+// axis in the xz plane. Finally, rotate by phi in the detector plane xy.
+// To compute the scattering, undo these rotations in reverse order:
+//     rotate in xy by -phi, rotate in xz by -theta, rotate in xy by -psi
+// The returned q is the length of the q vector and (xhat, yhat, zhat) is a unit
+// vector in the q direction.
+// To change between counterclockwise and clockwise rotation, change the
+// sign of phi and psi.
+
+#if 1
+//think cos(theta) should be sin(theta) in new coords, RKH 11Jan2017
+#define ORIENT_SYMMETRIC(qx, qy, theta, phi, q, sn, cn) do { \
+    SINCOS(phi*M_PI_180, sn, cn); \
+    q = sqrt(qx*qx + qy*qy); \
+    cn  = (q==0. ? 1.0 : (cn*qx + sn*qy)/q * sin(theta*M_PI_180));  \
+    sn = sqrt(1 - cn*cn); \
+    } while (0)
+#else
+// SasView 3.x definition of orientation
+#define ORIENT_SYMMETRIC(qx, qy, theta, phi, q, sn, cn) do { \
+    SINCOS(theta*M_PI_180, sn, cn); \
+    q = sqrt(qx*qx + qy*qy);\
+    cn = (q==0. ? 1.0 : (cn*cos(phi*M_PI_180)*qx + sn*qy)/q); \
+    sn = sqrt(1 - cn*cn); \
+    } while (0)
 #endif
 
+#if 1
+#define ORIENT_ASYMMETRIC(qx, qy, theta, phi, psi, q, xhat, yhat, zhat) do { \
+    q = sqrt(qx*qx + qy*qy); \
+    const double qxhat = qx/q; \
+    const double qyhat = qy/q; \
+    double sin_theta, cos_theta; \
+    double sin_phi, cos_phi; \
+    double sin_psi, cos_psi; \
+    SINCOS(theta*M_PI_180, sin_theta, cos_theta); \
+    SINCOS(phi*M_PI_180, sin_phi, cos_phi); \
+    SINCOS(psi*M_PI_180, sin_psi, cos_psi); \
+    xhat = qxhat*(-sin_phi*sin_psi + cos_theta*cos_phi*cos_psi) \
+         + qyhat*( cos_phi*sin_psi + cos_theta*sin_phi*cos_psi); \
+    yhat = qxhat*(-sin_phi*cos_psi - cos_theta*cos_phi*sin_psi) \
+         + qyhat*( cos_phi*cos_psi - cos_theta*sin_phi*sin_psi); \
+    zhat = qxhat*(-sin_theta*cos_phi) \
+         + qyhat*(-sin_theta*sin_phi); \
+    } while (0)
+#else
+// SasView 3.x definition of orientation
+#define ORIENT_ASYMMETRIC(qx, qy, theta, phi, psi, q, cos_alpha, cos_mu, cos_nu) do { \
+    q = sqrt(qx*qx + qy*qy); \
+    const double qxhat = qx/q; \
+    const double qyhat = qy/q; \
+    double sin_theta, cos_theta; \
+    double sin_phi, cos_phi; \
+    double sin_psi, cos_psi; \
+    SINCOS(theta*M_PI_180, sin_theta, cos_theta); \
+    SINCOS(phi*M_PI_180, sin_phi, cos_phi); \
+    SINCOS(psi*M_PI_180, sin_psi, cos_psi); \
+    cos_alpha = cos_theta*cos_phi*qxhat + sin_theta*qyhat; \
+    cos_mu = (-sin_theta*cos_psi*cos_phi - sin_psi*sin_phi)*qxhat + cos_theta*cos_psi*qyhat; \
+    cos_nu = (-cos_phi*sin_psi*sin_theta + sin_phi*cos_psi)*qxhat + sin_psi*cos_theta*qyhat; \
+    } while (0)
+#endif
 
-#define VOLUME_PARAMETERS a_side,b_side,c_side
-#define VOLUME_WEIGHT_PRODUCT a_side_w*b_side_w*c_side_w
-#define IQ_KERNEL_NAME parallelepiped_Iq
-#define IQ_PARAMETERS sld, solvent_sld, a_side, b_side, c_side
-#define IQ_FIXED_PARAMETER_DECLARATIONS const float scale, \
-    const float background, \
-    const float sld, \
-    const float solvent_sld
-#define IQ_WEIGHT_PRODUCT a_side_w*b_side_w*c_side_w
-#define IQ_DISPERSION_LENGTH_DECLARATIONS const int Na_side, \
-    const int Nb_side, \
-    const int Nc_side
-#define IQ_DISPERSION_LENGTH_SUM Na_side+Nb_side+Nc_side
-#define IQ_OPEN_LOOPS     for (int a_side_i=0; a_side_i < Na_side; a_side_i++) { \
-      const float a_side = loops[2*(a_side_i)]; \
-      const float a_side_w = loops[2*(a_side_i)+1]; \
-      for (int b_side_i=0; b_side_i < Nb_side; b_side_i++) { \
-        const float b_side = loops[2*(b_side_i+Na_side)]; \
-        const float b_side_w = loops[2*(b_side_i+Na_side)+1]; \
-        for (int c_side_i=0; c_side_i < Nc_side; c_side_i++) { \
-          const float c_side = loops[2*(c_side_i+Na_side+Nb_side)]; \
-          const float c_side_w = loops[2*(c_side_i+Na_side+Nb_side)+1];
-#define IQ_CLOSE_LOOPS         } \
-      } \
-    }
-#define IQXY_KERNEL_NAME parallelepiped_Iqxy
-#define IQXY_PARAMETERS sld, solvent_sld, a_side, b_side, c_side, theta, phi, psi
-#define IQXY_FIXED_PARAMETER_DECLARATIONS const float scale, \
-    const float background, \
-    const float sld, \
-    const float solvent_sld
-#define IQXY_WEIGHT_PRODUCT a_side_w*b_side_w*c_side_w*theta_w*phi_w*psi_w
-#define IQXY_DISPERSION_LENGTH_DECLARATIONS const int Na_side, \
-    const int Nb_side, \
-    const int Nc_side, \
-    const int Ntheta, \
-    const int Nphi, \
-    const int Npsi
-#define IQXY_DISPERSION_LENGTH_SUM Na_side+Nb_side+Nc_side+Ntheta+Nphi+Npsi
-#define IQXY_OPEN_LOOPS     for (int a_side_i=0; a_side_i < Na_side; a_side_i++) { \
-      const float a_side = loops[2*(a_side_i)]; \
-      const float a_side_w = loops[2*(a_side_i)+1]; \
-      for (int b_side_i=0; b_side_i < Nb_side; b_side_i++) { \
-        const float b_side = loops[2*(b_side_i+Na_side)]; \
-        const float b_side_w = loops[2*(b_side_i+Na_side)+1]; \
-        for (int c_side_i=0; c_side_i < Nc_side; c_side_i++) { \
-          const float c_side = loops[2*(c_side_i+Na_side+Nb_side)]; \
-          const float c_side_w = loops[2*(c_side_i+Na_side+Nb_side)+1]; \
-          for (int theta_i=0; theta_i < Ntheta; theta_i++) { \
-            const float theta = loops[2*(theta_i+Na_side+Nb_side+Nc_side)]; \
-            const float theta_w = loops[2*(theta_i+Na_side+Nb_side+Nc_side)+1]; \
-            for (int phi_i=0; phi_i < Nphi; phi_i++) { \
-              const float phi = loops[2*(phi_i+Na_side+Nb_side+Nc_side+Ntheta)]; \
-              const float phi_w = loops[2*(phi_i+Na_side+Nb_side+Nc_side+Ntheta)+1]; \
-              for (int psi_i=0; psi_i < Npsi; psi_i++) { \
-                const float psi = loops[2*(psi_i+Na_side+Nb_side+Nc_side+Ntheta+Nphi)]; \
-                const float psi_w = loops[2*(psi_i+Na_side+Nb_side+Nc_side+Ntheta+Nphi)+1];
-#define IQXY_CLOSE_LOOPS               } \
-            } \
-          } \
-        } \
-      } \
-    }
-#define IQXY_HAS_THETA 1
+//# Beginning of rotational operation definitions
 
-float J1(float x);
-float J1(float x)
+typedef struct {
+          double R31, R32;
+      } QACRotation;
+
+typedef struct {
+    double R11, R12;
+    double R21, R22;
+    double R31, R32;
+} QABCRotation;
+
+// Fill in the rotation matrix R from the view angles (theta, phi) and the
+// jitter angles (dtheta, dphi).  This matrix can be applied to all of the
+// (qx, qy) points in the image to produce R*[qx,qy]' = [qa,qc]'
+static void
+qac_rotation(
+    QACRotation *rotation,
+    double theta, double phi,
+    double dtheta, double dphi)
 {
-  const float ax = fabs(x);
-  if (ax < 8.0f) {
-    const float y = x*x;
-    const float ans1 = x*(72362614232.0f
-              + y*(-7895059235.0f
-              + y*(242396853.1f
-              + y*(-2972611.439f
-              + y*(15704.48260f
-              + y*(-30.16036606f))))));
-    const float ans2 = 144725228442.0f
-              + y*(2300535178.0f
-              + y*(18583304.74f
-              + y*(99447.43394f
-              + y*(376.9991397f
-              + y))));
-    return ans1/ans2;
-  } else {
-    const float y = 64.0f/(ax*ax);
-    const float xx = ax - 2.356194491f;
-    const float ans1 = 1.0f
-              + y*(0.183105e-2f
-              + y*(-0.3516396496e-4f
-              + y*(0.2457520174e-5f
-              + y*-0.240337019e-6f)));
-    const float ans2 = 0.04687499995f
-              + y*(-0.2002690873e-3f
-              + y*(0.8449199096e-5f
-              + y*(-0.88228987e-6f
-              + y*0.105787412e-6f)));
-    float sn,cn;
-    SINCOS(xx, sn, cn);
-    const float ans = sqrt(0.636619772f/ax) * (cn*ans1 - (8.0f/ax)*sn*ans2);
-    return (x < 0.0f) ? -ans : ans;
-  }
+    double sin_theta, cos_theta;
+    double sin_phi, cos_phi;
+
+    // reverse view matrix
+    SINCOS(theta*M_PI_180, sin_theta, cos_theta);
+    SINCOS(phi*M_PI_180, sin_phi, cos_phi);
+    const double V11 = cos_phi*cos_theta;
+    const double V12 = sin_phi*cos_theta;
+    const double V21 = -sin_phi;
+    const double V22 = cos_phi;
+    const double V31 = sin_theta*cos_phi;
+    const double V32 = sin_phi*sin_theta;
+
+    // reverse jitter matrix
+    SINCOS(dtheta*M_PI_180, sin_theta, cos_theta);
+    SINCOS(dphi*M_PI_180, sin_phi, cos_phi);
+    const double J31 = sin_theta;
+    const double J32 = -sin_phi*cos_theta;
+    const double J33 = cos_phi*cos_theta;
+
+    // reverse matrix
+    rotation->R31 = J31*V11 + J32*V21 + J33*V31;
+    rotation->R32 = J31*V12 + J32*V22 + J33*V32;
 }
 
+// Apply the rotation matrix returned from qac_rotation to the point (qx,qy),
+// returning R*[qx,qy]' = [qa,qc]'
+static void
+qac_apply(
+    QACRotation *rotation,
+    double qx, double qy,
+    double *qab_out, double *qc_out)
+{
+    // Indirect calculation of qab, from qab^2 = |q|^2 - qc^2
+    const double dqc = rotation->R31*qx + rotation->R32*qy;
+    const double dqab_sq = -dqc*dqc + qx*qx + qy*qy;
+    //*qab_out = sqrt(fabs(dqab_sq));
+    *qab_out = dqab_sq > 0.0 ? sqrt(dqab_sq) : 0.0;
+    *qc_out = dqc;
+}
 
-/*
- *  GaussWeights.c
- *  SANSAnalysis
- *
- *  Created by Andrew Jackson on 4/23/07.f
- *  Copyright 2007 __MyCompanyName__. All rights reserved.
- *
- */
+// Fill in the rotation matrix R from the view angles (theta, phi, psi) and the
+// jitter angles (dtheta, dphi, dpsi).  This matrix can be applied to all of the
+// (qx, qy) points in the image to produce R*[qx,qy]' = [qa,qb,qc]'
+static void
+qabc_rotation(
+    QABCRotation *rotation,
+    double theta, double phi, double psi,
+    double dtheta, double dphi, double dpsi)
+{
+    double sin_theta, cos_theta;
+    double sin_phi, cos_phi;
+    double sin_psi, cos_psi;
+
+    // reverse view matrix
+    SINCOS(theta*M_PI_180, sin_theta, cos_theta);
+    SINCOS(phi*M_PI_180, sin_phi, cos_phi);
+    SINCOS(psi*M_PI_180, sin_psi, cos_psi);
+    const double V11 = -sin_phi*sin_psi + cos_phi*cos_psi*cos_theta;
+    const double V12 = sin_phi*cos_psi*cos_theta + sin_psi*cos_phi;
+    const double V21 = -sin_phi*cos_psi - sin_psi*cos_phi*cos_theta;
+    const double V22 = -sin_phi*sin_psi*cos_theta + cos_phi*cos_psi;
+    const double V31 = sin_theta*cos_phi;
+    const double V32 = sin_phi*sin_theta;
+
+    // reverse jitter matrix
+    SINCOS(dtheta*M_PI_180, sin_theta, cos_theta);
+    SINCOS(dphi*M_PI_180, sin_phi, cos_phi);
+    SINCOS(dpsi*M_PI_180, sin_psi, cos_psi);
+    const double J11 = cos_psi*cos_theta;
+    const double J12 = sin_phi*sin_theta*cos_psi + sin_psi*cos_phi;
+    const double J13 = sin_phi*sin_psi - sin_theta*cos_phi*cos_psi;
+    const double J21 = -sin_psi*cos_theta;
+    const double J22 = -sin_phi*sin_psi*sin_theta + cos_phi*cos_psi;
+    const double J23 = sin_phi*cos_psi + sin_psi*sin_theta*cos_phi;
+    const double J31 = sin_theta;
+    const double J32 = -sin_phi*cos_theta;
+    const double J33 = cos_phi*cos_theta;
+
+    // reverse matrix
+    rotation->R11 = J11*V11 + J12*V21 + J13*V31;
+    rotation->R12 = J11*V12 + J12*V22 + J13*V32;
+    rotation->R21 = J21*V11 + J22*V21 + J23*V31;
+    rotation->R22 = J21*V12 + J22*V22 + J23*V32;
+    rotation->R31 = J31*V11 + J32*V21 + J33*V31;
+    rotation->R32 = J31*V12 + J32*V22 + J33*V32;
+}
+
+// Apply the rotation matrix returned from qabc_rotation to the point (qx,qy),
+// returning R*[qx,qy]' = [qa,qb,qc]'
+static void
+qabc_apply(
+    QABCRotation *rotation,
+    double qx, double qy,
+    double *qa_out, double *qb_out, double *qc_out)
+{
+    *qa_out = rotation->R11*qx + rotation->R12*qy;
+    *qb_out = rotation->R21*qx + rotation->R22*qy;
+    *qc_out = rotation->R31*qx + rotation->R32*qy;
+}
+
+// ##### End of rotation operation definitions ######
+
+#line 1 ".././models/lib/gauss76.c"
+
+// Created by Andrew Jackson on 4/23/07
+
+ #ifdef GAUSS_N
+ # undef GAUSS_N
+ # undef GAUSS_Z
+ # undef GAUSS_W
+ #endif
+ #define GAUSS_N 76
+ #define GAUSS_Z Gauss76Z
+ #define GAUSS_W Gauss76Wt
 
 // Gaussians
-constant float Gauss76Wt[]={
-	.00126779163408536f,		//0
-	.00294910295364247f,
-	.00462793522803742f,
-	.00629918049732845f,
-	.00795984747723973f,
-	.00960710541471375f,
-	.0112381685696677f,
-	.0128502838475101f,
-	.0144407317482767f,
-	.0160068299122486f,
-	.0175459372914742f,		//10
-	.0190554584671906f,
-	.020532847967908f,
-	.0219756145344162f,
-	.0233813253070112f,
-	.0247476099206597f,
-	.026072164497986f,
-	.0273527555318275f,
-	.028587223650054f,
-	.029773487255905f,
-	.0309095460374916f,		//20
-	.0319934843404216f,
-	.0330234743977917f,
-	.0339977794120564f,
-	.0349147564835508f,
-	.0357728593807139f,
-	.0365706411473296f,
-	.0373067565423816f,
-	.0379799643084053f,
-	.0385891292645067f,
-	.0391332242205184f,		//30
-	.0396113317090621f,
-	.0400226455325968f,
-	.040366472122844f,
-	.0406422317102947f,
-	.0408494593018285f,
-	.040987805464794f,
-	.0410570369162294f,
-	.0410570369162294f,
-	.040987805464794f,
-	.0408494593018285f,		//40
-	.0406422317102947f,
-	.040366472122844f,
-	.0400226455325968f,
-	.0396113317090621f,
-	.0391332242205184f,
-	.0385891292645067f,
-	.0379799643084053f,
-	.0373067565423816f,
-	.0365706411473296f,
-	.0357728593807139f,		//50
-	.0349147564835508f,
-	.0339977794120564f,
-	.0330234743977917f,
-	.0319934843404216f,
-	.0309095460374916f,
-	.029773487255905f,
-	.028587223650054f,
-	.0273527555318275f,
-	.026072164497986f,
-	.0247476099206597f,		//60
-	.0233813253070112f,
-	.0219756145344162f,
-	.020532847967908f,
-	.0190554584671906f,
-	.0175459372914742f,
-	.0160068299122486f,
-	.0144407317482767f,
-	.0128502838475101f,
-	.0112381685696677f,
-	.00960710541471375f,		//70
-	.00795984747723973f,
-	.00629918049732845f,
-	.00462793522803742f,
-	.00294910295364247f,
-	.00126779163408536f		//75 (indexed from 0)
+constant double Gauss76Wt[76] = {
+	.00126779163408536,		//0
+	.00294910295364247,
+	.00462793522803742,
+	.00629918049732845,
+	.00795984747723973,
+	.00960710541471375,
+	.0112381685696677,
+	.0128502838475101,
+	.0144407317482767,
+	.0160068299122486,
+	.0175459372914742,		//10
+	.0190554584671906,
+	.020532847967908,
+	.0219756145344162,
+	.0233813253070112,
+	.0247476099206597,
+	.026072164497986,
+	.0273527555318275,
+	.028587223650054,
+	.029773487255905,
+	.0309095460374916,		//20
+	.0319934843404216,
+	.0330234743977917,
+	.0339977794120564,
+	.0349147564835508,
+	.0357728593807139,
+	.0365706411473296,
+	.0373067565423816,
+	.0379799643084053,
+	.0385891292645067,
+	.0391332242205184,		//30
+	.0396113317090621,
+	.0400226455325968,
+	.040366472122844,
+	.0406422317102947,
+	.0408494593018285,
+	.040987805464794,
+	.0410570369162294,
+	.0410570369162294,
+	.040987805464794,
+	.0408494593018285,		//40
+	.0406422317102947,
+	.040366472122844,
+	.0400226455325968,
+	.0396113317090621,
+	.0391332242205184,
+	.0385891292645067,
+	.0379799643084053,
+	.0373067565423816,
+	.0365706411473296,
+	.0357728593807139,		//50
+	.0349147564835508,
+	.0339977794120564,
+	.0330234743977917,
+	.0319934843404216,
+	.0309095460374916,
+	.029773487255905,
+	.028587223650054,
+	.0273527555318275,
+	.026072164497986,
+	.0247476099206597,		//60
+	.0233813253070112,
+	.0219756145344162,
+	.020532847967908,
+	.0190554584671906,
+	.0175459372914742,
+	.0160068299122486,
+	.0144407317482767,
+	.0128502838475101,
+	.0112381685696677,
+	.00960710541471375,		//70
+	.00795984747723973,
+	.00629918049732845,
+	.00462793522803742,
+	.00294910295364247,
+	.00126779163408536		//75 (indexed from 0)
 };
 
-#pragma acc declare create ( Gauss76Wt )
-
-constant float Gauss76Z[]={
-	-.999505948362153f,		//0
-	-.997397786355355f,
-	-.993608772723527f,
-	-.988144453359837f,
-	-.981013938975656f,
-	-.972229228520377f,
-	-.961805126758768f,
-	-.949759207710896f,
-	-.936111781934811f,
-	-.92088586125215f,
-	-.904107119545567f,		//10
-	-.885803849292083f,
-	-.866006913771982f,
-	-.844749694983342f,
-	-.822068037328975f,
-	-.7980001871612f,
-	-.77258672828181f,
-	-.74587051350361f,
-	-.717896592387704f,
-	-.688712135277641f,
-	-.658366353758143f,		//20
-	-.626910417672267f,
-	-.594397368836793f,
-	-.560882031601237f,
-	-.526420920401243f,
-	-.491072144462194f,
-	-.454895309813726f,
-	-.417951418780327f,
-	-.380302767117504f,
-	-.342012838966962f,
-	-.303146199807908f,		//30
-	-.263768387584994f,
-	-.223945802196474f,
-	-.183745593528914f,
-	-.143235548227268f,
-	-.102483975391227f,
-	-.0615595913906112f,
-	-.0205314039939986f,
-	.0205314039939986f,
-	.0615595913906112f,
-	.102483975391227f,			//40
-	.143235548227268f,
-	.183745593528914f,
-	.223945802196474f,
-	.263768387584994f,
-	.303146199807908f,
-	.342012838966962f,
-	.380302767117504f,
-	.417951418780327f,
-	.454895309813726f,
-	.491072144462194f,		//50
-	.526420920401243f,
-	.560882031601237f,
-	.594397368836793f,
-	.626910417672267f,
-	.658366353758143f,
-	.688712135277641f,
-	.717896592387704f,
-	.74587051350361f,
-	.77258672828181f,
-	.7980001871612f,	//60
-	.822068037328975f,
-	.844749694983342f,
-	.866006913771982f,
-	.885803849292083f,
-	.904107119545567f,
-	.92088586125215f,
-	.936111781934811f,
-	.949759207710896f,
-	.961805126758768f,
-	.972229228520377f,		//70
-	.981013938975656f,
-	.988144453359837f,
-	.993608772723527f,
-	.997397786355355f,
-	.999505948362153f		//75
+constant double Gauss76Z[76] = {
+	-.999505948362153,		//0
+	-.997397786355355,
+	-.993608772723527,
+	-.988144453359837,
+	-.981013938975656,
+	-.972229228520377,
+	-.961805126758768,
+	-.949759207710896,
+	-.936111781934811,
+	-.92088586125215,
+	-.904107119545567,		//10
+	-.885803849292083,
+	-.866006913771982,
+	-.844749694983342,
+	-.822068037328975,
+	-.7980001871612,
+	-.77258672828181,
+	-.74587051350361,
+	-.717896592387704,
+	-.688712135277641,
+	-.658366353758143,		//20
+	-.626910417672267,
+	-.594397368836793,
+	-.560882031601237,
+	-.526420920401243,
+	-.491072144462194,
+	-.454895309813726,
+	-.417951418780327,
+	-.380302767117504,
+	-.342012838966962,
+	-.303146199807908,		//30
+	-.263768387584994,
+	-.223945802196474,
+	-.183745593528914,
+	-.143235548227268,
+	-.102483975391227,
+	-.0615595913906112,
+	-.0205314039939986,
+	.0205314039939986,
+	.0615595913906112,
+	.102483975391227,			//40
+	.143235548227268,
+	.183745593528914,
+	.223945802196474,
+	.263768387584994,
+	.303146199807908,
+	.342012838966962,
+	.380302767117504,
+	.417951418780327,
+	.454895309813726,
+	.491072144462194,		//50
+	.526420920401243,
+	.560882031601237,
+	.594397368836793,
+	.626910417672267,
+	.658366353758143,
+	.688712135277641,
+	.717896592387704,
+	.74587051350361,
+	.77258672828181,
+	.7980001871612,	//60
+	.822068037328975,
+	.844749694983342,
+	.866006913771982,
+	.885803849292083,
+	.904107119545567,
+	.92088586125215,
+	.936111781934811,
+	.949759207710896,
+	.961805126758768,
+	.972229228520377,		//70
+	.981013938975656,
+	.988144453359837,
+	.993608772723527,
+	.997397786355355,
+	.999505948362153		//75
 };
 
-#pragma acc declare create ( Gauss76Z )
 
-float form_volume(float a_side, float b_side, float c_side);
-float Iq(float q, float sld, float solvent_sld, float a_side, float b_side, float c_side);
-float Iqxy(float qx, float qy, float sld, float solvent_sld,
-    float a_side, float b_side, float c_side, float theta, float phi, float psi);
+#pragma acc declare copyin(Gauss76Wt[0:76], Gauss76Z[0:76])
 
-// From Igor library
-float _pkernel(float a, float b,float c, float ala, float alb, float alc);
-float _pkernel(float a, float b,float c, float ala, float alb, float alc){
-    float argA,argB,argC,tmp1,tmp2,tmp3;
-    //handle arg=0 separately, as sin(t)/t -> 1 as t->0
-    argA = a*ala/2.0f;
-    argB = b*alb/2.0f;
-    argC = c*alc/2.0f;
-    if(argA==0.0f) {
-        tmp1 = 1.0f;
-    } else {
-        tmp1 = sin(argA)*sin(argA)/argA/argA;
-    }
-    if (argB==0.0f) {
-        tmp2 = 1.0f;
-    } else {
-        tmp2 = sin(argB)*sin(argB)/argB/argB;
-    }
-    if (argC==0.0f) {
-        tmp3 = 1.0f;
-    } else {
-        tmp3 = sin(argC)*sin(argC)/argC/argC;
-    }
-    return (tmp1*tmp2*tmp3);
+#line 1 ".././models/parallelepiped.c"
 
+static double
+form_volume(double length_a, double length_b, double length_c)
+{
+    return length_a * length_b * length_c;
 }
 
-float form_volume(float a_side, float b_side, float c_side)
+static double
+radius_from_excluded_volume(double length_a, double length_b, double length_c)
 {
-    return a_side * b_side * c_side;
+    double r_equiv, length;
+    double lengths[3] = {length_a, length_b, length_c};
+    double lengthmax = fmax(lengths[0],fmax(lengths[1],lengths[2]));
+    double length_1 = lengthmax;
+    double length_2 = lengthmax;
+    double length_3 = lengthmax;
+
+    for(int ilen=0; ilen<3; ilen++) {
+        if (lengths[ilen] < length_1) {
+            length_2 = length_1;
+            length_1 = lengths[ilen];
+            } else {
+                if (lengths[ilen] < length_2) {
+                        length_2 = lengths[ilen];
+                }
+            }
+    }
+    if(length_2-length_1 > length_3-length_2) {
+        r_equiv = sqrt(length_2*length_3/M_PI);
+        length  = length_1;
+    } else  {
+        r_equiv = sqrt(length_1*length_2/M_PI);
+        length  = length_3;
+    }
+
+    return 0.5*cbrt(0.75*r_equiv*(2.0*r_equiv*length + (r_equiv + length)*(M_PI*r_equiv + length)));
 }
 
-float Iq(float q,
-    float sld,
-    float solvent_sld,
-    float a_side,
-    float b_side,
-    float c_side)
+static double
+radius_effective(int mode, double length_a, double length_b, double length_c)
 {
-    float tmp1, tmp2, yyy;
-    
-    float mu = q * b_side;
-    
+    switch (mode) {
+    default:
+    case 1: // equivalent cylinder excluded volume
+        return radius_from_excluded_volume(length_a,length_b,length_c);
+    case 2: // equivalent volume sphere
+        return cbrt(length_a*length_b*length_c/M_4PI_3);
+    case 3: // half length_a
+        return 0.5 * length_a;
+    case 4: // half length_b
+        return 0.5 * length_b;
+    case 5: // half length_c
+        return 0.5 * length_c;
+    case 6: // equivalent circular cross-section
+        return sqrt(length_a*length_b/M_PI);
+    case 7: // half ab diagonal
+        return 0.5*sqrt(length_a*length_a + length_b*length_b);
+    case 8: // half diagonal
+        return 0.5*sqrt(length_a*length_a + length_b*length_b + length_c*length_c);
+    }
+}
+
+static void
+Fq(double q,
+    double *F1,
+    double *F2,
+    double sld,
+    double solvent_sld,
+    double length_a,
+    double length_b,
+    double length_c)
+{
+    const double mu = 0.5 * q * length_b;
+
     // Scale sides by B
-    float a_scaled = a_side / b_side;
-    float c_scaled = c_side / b_side;
-    
-    // outer integral (with 76 gauss points), integration limits = 0, 1
-    float summ = 0; //initialize integral
+    const double a_scaled = length_a / length_b;
+    const double c_scaled = length_c / length_b;
 
-    for( int i=0; i<76; i++) {
-		
-        // inner integral (with 76 gauss points), integration limits = 0, 1
-	
-        float summj = 0.0f;
-	float sigma = 0.5f * ( Gauss76Z[i] + 1.0f );		
-		
-	for(int j=0; j<76; j++) {
+    // outer integral (with gauss points), integration limits = 0, 1
+    double outer_total_F1 = 0.0; //initialize integral
+    double outer_total_F2 = 0.0; //initialize integral
+    for( int i=0; i<GAUSS_N; i++) {
+        const double sigma = 0.5 * ( GAUSS_Z[i] + 1.0 );
+        const double mu_proj = mu * sqrt(1.0-sigma*sigma);
 
-            float uu = 0.5f * ( Gauss76Z[j] + 1.0f );
-            float mudum = mu * sqrt(1.0f-sigma*sigma);
-	    float arg1 = 0.5f * mudum * cos(0.5f*M_PI*uu);
-	    float arg2 = 0.5f * mudum * a_scaled * sin(0.5f*M_PI*uu);
-            if(arg1==0.0f) {
-	        tmp1 = 1.0f;
-            } else {
-                tmp1 = sin(arg1)*sin(arg1)/arg1/arg1;
-            }
-            if (arg2==0.0f) {
-                tmp2 = 1.0f;
-            } else {
-                tmp2 = sin(arg2)*sin(arg2)/arg2/arg2;
-            }
-            yyy = Gauss76Wt[j] * tmp1 * tmp2;
-
-            summj += yyy;
+        // inner integral (with gauss points), integration limits = 0, 1
+        // corresponding to angles from 0 to pi/2.
+        double inner_total_F1 = 0.0;
+        double inner_total_F2 = 0.0;
+        for(int j=0; j<GAUSS_N; j++) {
+            const double uu = 0.5 * ( GAUSS_Z[j] + 1.0 );
+            double sin_uu, cos_uu;
+            SINCOS(M_PI_2*uu, sin_uu, cos_uu);
+            const double si1 = sas_sinx_x(mu_proj * sin_uu * a_scaled);
+            const double si2 = sas_sinx_x(mu_proj * cos_uu);
+            const double fq = si1 * si2;
+            inner_total_F1 += GAUSS_W[j] * fq;
+            inner_total_F2 += GAUSS_W[j] * fq * fq;
         }
-		
-        // value of the inner integral
-        float answer = 0.5f * summj;
+        // now complete change of inner integration variable (1-0)/(1-(-1))= 0.5
+        inner_total_F1 *= 0.5;
+        inner_total_F2 *= 0.5;
 
-        float arg = 0.5f * mu * c_scaled * sigma;
-        if ( arg == 0.0f ) {
-            answer *= 1.0f;
-        } else {
-            answer *= sin(arg)*sin(arg)/arg/arg;
-        }
-		
-	// sum of outer integral
-	yyy = Gauss76Wt[i] * answer;
-        summ += yyy;
-        
-    }	
-   
-    const float vd = (sld-solvent_sld) * form_volume(a_side, b_side, c_side);
-    return 1.0e-4f * 0.5f * vd * vd * summ;
-    
+        const double si = sas_sinx_x(mu * c_scaled * sigma);
+        outer_total_F1 += GAUSS_W[i] * inner_total_F1 * si;
+        outer_total_F2 += GAUSS_W[i] * inner_total_F2 * si * si;
+    }
+    // now complete change of outer integration variable (1-0)/(1-(-1))= 0.5
+    outer_total_F1 *= 0.5;
+    outer_total_F2 *= 0.5;
+
+    // Multiply by contrast^2 and convert from [1e-12 A-1] to [cm-1]
+    const double V = form_volume(length_a, length_b, length_c);
+    const double contrast = (sld-solvent_sld);
+    const double s = contrast * V;
+    *F1 = 1.0e-2 * s * outer_total_F1;
+    *F2 = 1.0e-4 * s * s * outer_total_F2;
 }
 
-
-float Iqxy(float qx, float qy,
-    float sld,
-    float solvent_sld,
-    float a_side,
-    float b_side,
-    float c_side,
-    float theta,
-    float phi,
-    float psi)
+static double
+Iqabc(double qa, double qb, double qc,
+    double sld,
+    double solvent_sld,
+    double length_a,
+    double length_b,
+    double length_c)
 {
-    float q = sqrt(qx*qx+qy*qy);
-    float qx_scaled = qx/q;
-    float qy_scaled = qy/q;
-
-    // Convert angles given in degrees to radians
-    theta *= M_PI_180;
-    phi   *= M_PI_180;
-    psi   *= M_PI_180;
-    
-    // Parallelepiped c axis orientation
-    float cparallel_x = cos(theta) * cos(phi);
-    float cparallel_y = sin(theta);
-    
-    // Compute angle between q and parallelepiped axis
-    float cos_val_c = cparallel_x*qx_scaled + cparallel_y*qy_scaled;// + cparallel_z*qz;
-
-    // Parallelepiped a axis orientation
-    float parallel_x = -cos(phi)*sin(psi) * sin(theta)+sin(phi)*cos(psi);
-    float parallel_y = sin(psi)*cos(theta);
-    float cos_val_a = parallel_x*qx_scaled + parallel_y*qy_scaled;
-
-    // Parallelepiped b axis orientation
-    float bparallel_x = -sin(theta)*cos(psi)*cos(phi)-sin(psi)*sin(phi);
-    float bparallel_y = cos(theta)*cos(psi);
-    float cos_val_b = bparallel_x*qx_scaled + bparallel_y*qy_scaled;
-
-    // The following tests should always pass
-    if (fabs(cos_val_c)>1.0f) {
-      //printf("parallel_ana_2D: Unexpected error: cos(alpha)>1\n");
-      cos_val_c = 1.0f;
-    }
-    if (fabs(cos_val_a)>1.0f) {
-      //printf("parallel_ana_2D: Unexpected error: cos(alpha)>1\n");
-      cos_val_a = 1.0f;
-    }
-    if (fabs(cos_val_b)>1.0f) {
-      //printf("parallel_ana_2D: Unexpected error: cos(alpha)>1\n");
-      cos_val_b = 1.0f;
-    }
-    
-    // Call the IGOR library function to get the kernel
-    float form = _pkernel( q*a_side, q*b_side, q*c_side, cos_val_a, cos_val_b, cos_val_c);
-  
-    // Multiply by contrast^2
-    const float vd = (sld - solvent_sld) * form_volume(a_side, b_side, c_side);
-    return 1.0e-4f * vd * vd * form;
+    const double siA = sas_sinx_x(0.5*length_a*qa);
+    const double siB = sas_sinx_x(0.5*length_b*qb);
+    const double siC = sas_sinx_x(0.5*length_c*qc);
+    const double V = form_volume(length_a, length_b, length_c);
+    const double drho = (sld - solvent_sld);
+    const double form = V * drho * siA * siB * siC;
+    // Square and convert from [1e-12 A-1] to [cm-1]
+    return 1.0e-4 * form * form;
 }
 
 
-/*
-    ##########################################################
-    #                                                        #
-    #   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #
-    #   !!                                              !!   #
-    #   !!  KEEP THIS CODE CONSISTENT WITH KERNELPY.PY  !!   #
-    #   !!                                              !!   #
-    #   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #
-    #                                                        #
-    ##########################################################
-*/
-
-#ifdef IQ_KERNEL_NAME
-kernel void IQ_KERNEL_NAME(
-    global const float *q,
-    global float *result,
-    const int Nq,
-#ifdef IQ_OPEN_LOOPS
-  #ifdef USE_OPENCL
-    global float *loops_g,
-  #endif
-    local float *loops,
-    const float cutoff,
-    IQ_DISPERSION_LENGTH_DECLARATIONS,
-#endif
-    IQ_FIXED_PARAMETER_DECLARATIONS
-    )
-{
-#ifdef USE_OPENCL
-  #ifdef IQ_OPEN_LOOPS
-  // copy loops info to local memory
-  event_t e = async_work_group_copy(loops, loops_g, (IQ_DISPERSION_LENGTH_SUM)*2, 0);
-  wait_group_events(1, &e);
-  #endif
-
-  int i = get_global_id(0);
-  if (i < Nq)
-#else
-  #pragma omp parallel for
-  for (int i=0; i < Nq; i++)
-#endif
-  {
-    const float qi = q[i];
-#ifdef IQ_OPEN_LOOPS
-    float ret=0.0f, norm=0.0f;
-  #ifdef VOLUME_PARAMETERS
-    float vol=0.0f, norm_vol=0.0f;
-  #endif
-    IQ_OPEN_LOOPS
-    //for (int radius_i=0; radius_i < Nradius; radius_i++) {
-    //  const float radius = loops[2*(radius_i)];
-    //  const float radius_w = loops[2*(radius_i)+1];
-
-    const float weight = IQ_WEIGHT_PRODUCT;
-    if (weight > cutoff) {
-      const float scattering = Iq(qi, IQ_PARAMETERS);
-      // allow kernels to exclude invalid regions by returning NaN
-      if (!isnan(scattering)) {
-        ret += weight*scattering;
-        norm += weight;
-      #ifdef VOLUME_PARAMETERS
-        const float vol_weight = VOLUME_WEIGHT_PRODUCT;
-        vol += vol_weight*form_volume(VOLUME_PARAMETERS);
-        norm_vol += vol_weight;
-      #endif
-      }
-    //else { printf("exclude qx,qy,I:%g,%g,%g\n",qi,scattering); }
-    }
-    IQ_CLOSE_LOOPS
-  #ifdef VOLUME_PARAMETERS
-    if (vol*norm_vol != 0.0f) {
-      ret *= norm_vol/vol;
-    }
-  #endif
-    result[i] = scale*ret/norm+background;
-#else
-    result[i] = scale*Iq(qi, IQ_PARAMETERS) + background;
-#endif
-  }
-}
-#endif
-
-
-#ifdef IQXY_KERNEL_NAME
-kernel void IQXY_KERNEL_NAME(
-    global const float *qx,
-    global const float *qy,
-    global float *result,
-    const int Nq,
-#ifdef IQXY_OPEN_LOOPS
-  #ifdef USE_OPENCL
-    global float *loops_g,
-  #endif
-    local float *loops,
-    const float cutoff,
-    IQXY_DISPERSION_LENGTH_DECLARATIONS,
-#endif
-    IQXY_FIXED_PARAMETER_DECLARATIONS
-    )
-{
-#ifdef USE_OPENCL
-  #ifdef IQXY_OPEN_LOOPS
-  // copy loops info to local memory
-  event_t e = async_work_group_copy(loops, loops_g, (IQXY_DISPERSION_LENGTH_SUM)*2, 0);
-  wait_group_events(1, &e);
-  #endif
-
-  int i = get_global_id(0);
-  if (i < Nq)
-#else
-  #pragma omp parallel for
-  for (int i=0; i < Nq; i++)
-#endif
-  {
-    const float qxi = qx[i];
-    const float qyi = qy[i];
-    #if USE_KAHAN_SUMMATION
-    float accumulated_error = 0.0f;
-    #endif
-#ifdef IQXY_OPEN_LOOPS
-    float ret=0.0f, norm=0.0f;
-    #ifdef VOLUME_PARAMETERS
-    float vol=0.0f, norm_vol=0.0f;
-    #endif
-    IQXY_OPEN_LOOPS
-    //for (int radius_i=0; radius_i < Nradius; radius_i++) {
-    //  const float radius = loops[2*(radius_i)];
-    //  const float radius_w = loops[2*(radius_i)+1];
-
-    const float weight = IQXY_WEIGHT_PRODUCT;
-    if (weight > cutoff) {
-
-      const float scattering = Iqxy(qxi, qyi, IQXY_PARAMETERS);
-      if (!isnan(scattering)) { // if scattering is bad, exclude it from sum
-      //if (scattering >= 0.0f) { // scattering cannot be negative
-        // TODO: use correct angle for spherical correction
-        // Definition of theta and phi are probably reversed relative to the
-        // equation which gave rise to this correction, leading to an
-        // attenuation of the pattern as theta moves through pi/2.f  Either
-        // reverse the meanings of phi and theta in the forms, or use phi
-        // rather than theta in this correction.  Current code uses cos(theta)
-        // so that values match those of sasview.
-      #if defined(IQXY_HAS_THETA) // && 0
-        const float spherical_correction
-          = (Ntheta>1 ? fabs(cos(M_PI_180*theta))*M_PI_2:1.0f);
-        const float next = spherical_correction * weight * scattering;
-      #else
-        const float next = weight * scattering;
-      #endif
-      #if USE_KAHAN_SUMMATION
-        const float y = next - accumulated_error;
-        const float t = ret + y;
-        accumulated_error = (t - ret) - y;
-        ret = t;
-      #else
-        ret += next;
-      #endif
-        norm += weight;
-      #ifdef VOLUME_PARAMETERS
-        const float vol_weight = VOLUME_WEIGHT_PRODUCT;
-        vol += vol_weight*form_volume(VOLUME_PARAMETERS);
-      #endif
-        norm_vol += vol_weight;
-      }
-      //else { printf("exclude qx,qy,I:%g,%g,%g\n",qi,scattering); }
-    }
-    IQXY_CLOSE_LOOPS
-  #ifdef VOLUME_PARAMETERS
-    if (vol*norm_vol != 0.0f) {
-      ret *= norm_vol/vol;
-    }
-  #endif
-    result[i] = scale*ret/norm+background;
-#else
-    result[i] = scale*Iqxy(qxi, qyi, IQXY_PARAMETERS) + background;
-#endif
-  }
-}
-#endif

@@ -1,330 +1,474 @@
-// GENERATED CODE --- DO NOT EDIT ---
-// Code is produced by sasmodels.gen from sasmodels/models/MODEL.c
+#define HAS_Iq
+#line 1 "../kernel_header.c"
 
 #ifdef __OPENCL_VERSION__
 # define USE_OPENCL
+#elif defined(__CUDACC__)
+# define USE_CUDA
+#elif defined(_OPENMP)
+# define USE_OPENMP
 #endif
 
-#define USE_KAHAN_SUMMATION 0
+// Use SAS_DOUBLE to force the use of double even for float kernels
+#define SAS_DOUBLE double
 
 // If opencl is not available, then we are compiling a C function
 // Note: if using a C++ compiler, then define kernel as extern "C"
-#ifndef USE_OPENCL
-#  ifdef __cplusplus
-     #include <cstdio>
-     #include <cmath>
-     using namespace std;
-     #if defined(_MSC_VER)
-     #   define kernel extern "C" __declspec( dllexport )
-         inline float trunc(float x) { return x>=0?floor(x):-floor(-x); }
-	 inline float fmin(float x, float y) { return x>y ? y : x; }
-	 inline float fmax(float x, float y) { return x<y ? y : x; }
+#ifdef USE_OPENCL
+
+   #define USE_GPU
+   #define pglobal global
+   #define pconstant constant
+
+   typedef int int32_t;
+
+   #if defined(USE_SINCOS)
+   #  define SINCOS(angle,svar,cvar) svar=sincos(angle,&cvar)
+   #else
+   #  define SINCOS(angle,svar,cvar) do {const double _t_=angle; svar=sin(_t_);cvar=cos(_t_);} while (0)
+   #endif
+   // Intel CPU on Mac gives strange values for erf(); on the verified
+   // platforms (intel, nvidia, amd), the cephes erf() is significantly
+   // faster than that available in the native OpenCL.
+   #define NEED_ERF
+   // OpenCL only has type generic math
+   #define expf exp
+   #ifndef NEED_ERF
+   #  define erff erf
+   #  define erfcf erfc
+   #endif
+
+#elif defined(USE_CUDA)
+
+   #define USE_GPU
+   #define local __shared__
+   #define pglobal
+   #define constant __constant__
+   #define pconstant const
+   #define kernel extern "C" __global__
+
+   // OpenCL powr(a,b) = C99 pow(a,b), b >= 0
+   // OpenCL pown(a,b) = C99 pow(a,b), b integer
+   #define powr(a,b) pow(a,b)
+   #define pown(a,b) pow(a,b)
+   //typedef int int32_t;
+   #if defined(USE_SINCOS)
+   #  define SINCOS(angle,svar,cvar) sincos(angle,&svar,&cvar)
+   #else
+   #  define SINCOS(angle,svar,cvar) do {const double _t_=angle; svar=sin(_t_);cvar=cos(_t_);} while (0)
+   #endif
+
+#else // !USE_OPENCL && !USE_CUDA
+
+   #define local
+   #define pglobal
+   #define constant const
+   #define pconstant const
+
+   #ifdef __cplusplus
+      #include <cstdio>
+      #include <cmath>
+      using namespace std;
+      #if defined(_MSC_VER)
+         #include <limits>
+         #include <float.h>
+         #define kernel extern "C" __declspec( dllexport )
+         inline double trunc(double x) { return x>=0?floor(x):-floor(-x); }
+         inline double fmin(double x, double y) { return x>y ? y : x; }
+         inline double fmax(double x, double y) { return x<y ? y : x; }
+         #define isnan(x) _isnan(x)
+         #define isinf(x) (!_finite(x))
+         #define isfinite(x) _finite(x)
+         #define NAN (std::numeric_limits<double>::quiet_NaN()) // non-signalling NaN
+         #define INFINITY (std::numeric_limits<double>::infinity())
+         #define NEED_ERF
+         #define NEED_EXPM1
+         #define NEED_TGAMMA
      #else
-     #   define kernel extern "C"
+         #define kernel extern "C"
+         #include <cstdint>
      #endif
-     inline void SINCOS(float angle, float &svar, float &cvar) { svar=sin(angle); cvar=cos(angle); }
-#  else
+     inline void SINCOS(double angle, double &svar, double &cvar) { svar=sin(angle); cvar=cos(angle); }
+   #else // !__cplusplus
+     #include <inttypes.h>  // C99 guarantees that int32_t types is here
      #include <stdio.h>
-     #include <tgmath.h> // C99 type-generic math, so sin(float) => sinf
+     #if defined(__TINYC__)
+         typedef int int32_t;
+         #include <math.h>
+         // TODO: check isnan is correct
+         inline double _isnan(double x) { return x != x; } // hope this doesn't optimize away!
+         #undef isnan
+         #define isnan(x) _isnan(x)
+         // Defeat the double->float conversion since we don't have tgmath
+         inline SAS_DOUBLE trunc(SAS_DOUBLE x) { return x>=0?floor(x):-floor(-x); }
+         inline SAS_DOUBLE fmin(SAS_DOUBLE x, SAS_DOUBLE y) { return x>y ? y : x; }
+         inline SAS_DOUBLE fmax(SAS_DOUBLE x, SAS_DOUBLE y) { return x<y ? y : x; }
+         #define NEED_ERF
+         #define NEED_EXPM1
+         #define NEED_TGAMMA
+         #define NEED_CBRT
+         // expf missing from windows?
+         #define expf exp
+     #else
+         #include <tgmath.h> // C99 type-generic math, so sin(float) => sinf
+     #endif
      // MSVC doesn't support C99, so no need for dllexport on C99 branch
      #define kernel
-     #define SINCOS(angle,svar,cvar) do {const float _t_=angle; svar=sin(_t_);cvar=cos(_t_);} while (0)
-#  endif
-#  define global
-#  define local
-#  define constant const
-// OpenCL powr(a,b) = C99 pow(a,b), b >= 0
-// OpenCL pown(a,b) = C99 pow(a,b), b integer
-#  define powr(a,b) pow(a,b)
-#  define pown(a,b) pow(a,b)
-#else
-#  ifdef USE_SINCOS
-#    define SINCOS(angle,svar,cvar) svar=sincos(angle,&cvar)
-#  else
-#    define SINCOS(angle,svar,cvar) do {const float _t_=angle; svar=sin(_t_);cvar=cos(_t_);} while (0)
-#  endif
+     #define SINCOS(angle,svar,cvar) do {const double _t_=angle; svar=sin(_t_);cvar=cos(_t_);} while (0)
+   #endif  // !__cplusplus
+   // OpenCL powr(a,b) = C99 pow(a,b), b >= 0
+   // OpenCL pown(a,b) = C99 pow(a,b), b integer
+   #define powr(a,b) pow(a,b)
+   #define pown(a,b) pow(a,b)
+
+#endif // !USE_OPENCL
+
+#if defined(NEED_CBRT)
+   #define cbrt(_x) pow(_x, 0.33333333333333333333333)
+#endif
+
+#if defined(NEED_EXPM1)
+   // TODO: precision is a half digit lower than numpy on mac in [1e-7, 0.5]
+   // Run "explore/precision.py sas_expm1" to see this (may have to fiddle
+   // the xrange for log to see the complete range).
+   static SAS_DOUBLE expm1(SAS_DOUBLE x_in) {
+      double x = (double)x_in;  // go back to float for single precision kernels
+      // Adapted from the cephes math library.
+      // Copyright 1984 - 1992 by Stephen L. Moshier
+      if (x != x || x == 0.0) {
+         return x; // NaN and +/- 0
+      } else if (x < -0.5 || x > 0.5) {
+         return exp(x) - 1.0;
+      } else {
+         const double xsq = x*x;
+         const double p = (((
+            +1.2617719307481059087798E-4)*xsq
+            +3.0299440770744196129956E-2)*xsq
+            +9.9999999999999999991025E-1);
+         const double q = ((((
+            +3.0019850513866445504159E-6)*xsq
+            +2.5244834034968410419224E-3)*xsq
+            +2.2726554820815502876593E-1)*xsq
+            +2.0000000000000000000897E0);
+         double r = x * p;
+         r =  r / (q - r);
+         return r+r;
+       }
+   }
 #endif
 
 // Standard mathematical constants:
 //   M_E, M_LOG2E, M_LOG10E, M_LN2, M_LN10, M_PI, M_PI_2=pi/2, M_PI_4=pi/4,
 //   M_1_PI=1/pi, M_2_PI=2/pi, M_2_SQRTPI=2/sqrt(pi), SQRT2, SQRT1_2=sqrt(1/2)
-// OpenCL defines M_constant_F for float constants, and nothing if float
+// OpenCL defines M_constant_F for float constants, and nothing if double
 // is not enabled on the card, which is why these constants may be missing
 #ifndef M_PI
-#  define M_PI 3.141592653589793f
+#  define M_PI 3.141592653589793
 #endif
 #ifndef M_PI_2
-#  define M_PI_2 1.570796326794897f
+#  define M_PI_2 1.570796326794897
 #endif
 #ifndef M_PI_4
-#  define M_PI_4 0.7853981633974483f
+#  define M_PI_4 0.7853981633974483
+#endif
+#ifndef M_E
+#  define M_E 2.718281828459045091
+#endif
+#ifndef M_SQRT1_2
+#  define M_SQRT1_2 0.70710678118654746
 #endif
 
-// Non-standard pi/180, used for converting between degrees and radians
+// Non-standard function library
+// pi/180, used for converting between degrees and radians
+// 4/3 pi for computing sphere volumes
+// square and cube for computing squares and cubes
 #ifndef M_PI_180
-#  define M_PI_180 0.017453292519943295f
+#  define M_PI_180 0.017453292519943295
+#endif
+#ifndef M_4PI_3
+#  define M_4PI_3 4.18879020478639
+#endif
+double square(double x) { return x*x; }
+double cube(double x) { return x*x*x; }
+double sas_sinx_x(double x) { return x==0 ? 1.0 : sin(x)/x; }
+
+// CRUFT: support old style models with orientation received qx, qy and angles
+
+// To rotate from the canonical position to theta, phi, psi, first rotate by
+// psi about the major axis, oriented along z, which is a rotation in the
+// detector plane xy. Next rotate by theta about the y axis, aligning the major
+// axis in the xz plane. Finally, rotate by phi in the detector plane xy.
+// To compute the scattering, undo these rotations in reverse order:
+//     rotate in xy by -phi, rotate in xz by -theta, rotate in xy by -psi
+// The returned q is the length of the q vector and (xhat, yhat, zhat) is a unit
+// vector in the q direction.
+// To change between counterclockwise and clockwise rotation, change the
+// sign of phi and psi.
+
+#if 1
+//think cos(theta) should be sin(theta) in new coords, RKH 11Jan2017
+#define ORIENT_SYMMETRIC(qx, qy, theta, phi, q, sn, cn) do { \
+    SINCOS(phi*M_PI_180, sn, cn); \
+    q = sqrt(qx*qx + qy*qy); \
+    cn  = (q==0. ? 1.0 : (cn*qx + sn*qy)/q * sin(theta*M_PI_180));  \
+    sn = sqrt(1 - cn*cn); \
+    } while (0)
+#else
+// SasView 3.x definition of orientation
+#define ORIENT_SYMMETRIC(qx, qy, theta, phi, q, sn, cn) do { \
+    SINCOS(theta*M_PI_180, sn, cn); \
+    q = sqrt(qx*qx + qy*qy);\
+    cn = (q==0. ? 1.0 : (cn*cos(phi*M_PI_180)*qx + sn*qy)/q); \
+    sn = sqrt(1 - cn*cn); \
+    } while (0)
 #endif
 
-
-#define VOLUME_PARAMETERS effect_radius
-#define VOLUME_WEIGHT_PRODUCT effect_radius_w
-#define VOLUME_PARAMETER_DECLARATIONS float effect_radius
-#define IQ_KERNEL_NAME hardsphere_Iq
-#define IQ_PARAMETERS effect_radius, volfraction
-#define IQ_FIXED_PARAMETER_DECLARATIONS const float scale, \
-    const float background, \
-    const float volfraction
-#define IQ_WEIGHT_PRODUCT effect_radius_w
-#define IQ_DISPERSION_LENGTH_DECLARATIONS const int Neffect_radius
-#define IQ_DISPERSION_LENGTH_SUM Neffect_radius
-#define IQ_OPEN_LOOPS     for (int effect_radius_i=0; effect_radius_i < Neffect_radius; effect_radius_i++) { \
-      const float effect_radius = loops[2*(effect_radius_i)]; \
-      const float effect_radius_w = loops[2*(effect_radius_i)+1];
-#define IQ_CLOSE_LOOPS     }
-#define IQ_PARAMETER_DECLARATIONS float effect_radius, float volfraction
-#define IQXY_KERNEL_NAME hardsphere_Iqxy
-#define IQXY_PARAMETERS effect_radius, volfraction
-#define IQXY_FIXED_PARAMETER_DECLARATIONS const float scale, \
-    const float background, \
-    const float volfraction
-#define IQXY_WEIGHT_PRODUCT effect_radius_w
-#define IQXY_DISPERSION_LENGTH_DECLARATIONS const int Neffect_radius
-#define IQXY_DISPERSION_LENGTH_SUM Neffect_radius
-#define IQXY_OPEN_LOOPS     for (int effect_radius_i=0; effect_radius_i < Neffect_radius; effect_radius_i++) { \
-      const float effect_radius = loops[2*(effect_radius_i)]; \
-      const float effect_radius_w = loops[2*(effect_radius_i)+1];
-#define IQXY_CLOSE_LOOPS     }
-#define IQXY_PARAMETER_DECLARATIONS float effect_radius, float volfraction
-
-float form_volume(VOLUME_PARAMETER_DECLARATIONS);
-float form_volume(VOLUME_PARAMETER_DECLARATIONS) {
-    
-    return 1.0f;
-    
-}
-
-
-float Iq(float q, IQ_PARAMETER_DECLARATIONS);
-float Iq(float q, IQ_PARAMETER_DECLARATIONS) {
-    
-    float denom,dnum,alpha,beta,gamm,a,asq,ath,afor,rca,rsa;
-    float calp,cbeta,cgam,prefac,c,vstruc;
-    float struc;
-
-    //  compute constants
-    denom = pow((1.0f-volfraction),4);
-    dnum = pow((1.0f + 2.0f*volfraction),2);
-    alpha = dnum/denom;
-    beta = -6.0f*volfraction*pow((1.0f + volfraction/2.0f),2)/denom;
-    gamm = 0.50f*volfraction*dnum/denom;
-    //
-    //  calculate the structure factor
-    //
-    a = 2.0f*q*effect_radius;
-    asq = a*a;
-    ath = asq*a;
-    afor = ath*a;
-    SINCOS(a,rsa,rca);
-    //rca = cos(a);
-    //rsa = sin(a);
-    calp = alpha*(rsa/asq - rca/a);
-    cbeta = beta*(2.0f*rsa/asq - (asq - 2.0f)*rca/ath - 2.0f/ath);
-    cgam = gamm*(-rca/a + (4.0f/a)*((3.0f*asq - 6.0f)*rca/afor + (asq - 6.0f)*rsa/ath + 6.0f/afor));
-    prefac = -24.0f*volfraction/a;
-    c = prefac*(calp + cbeta + cgam);
-    vstruc = 1.0f/(1.0f-c);
-    struc = vstruc;
-
-    return(struc);
-   
-}
-
-
-float Iqxy(float qx, float qy, IQXY_PARAMETER_DECLARATIONS);
-float Iqxy(float qx, float qy, IQXY_PARAMETER_DECLARATIONS) {
-    
-    // never called since no orientation or magnetic parameters.
-    return Iq(sqrt(qx*qx+qy*qy), IQ_PARAMETERS);
-    
-}
-
-
-/*
-    ##########################################################
-    #                                                        #
-    #   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #
-    #   !!                                              !!   #
-    #   !!  KEEP THIS CODE CONSISTENT WITH KERNELPY.PY  !!   #
-    #   !!                                              !!   #
-    #   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #
-    #                                                        #
-    ##########################################################
-*/
-
-#ifdef IQ_KERNEL_NAME
-kernel void IQ_KERNEL_NAME(
-    global const float *q,
-    global float *result,
-    const int Nq,
-#ifdef IQ_OPEN_LOOPS
-  #ifdef USE_OPENCL
-    global float *loops_g,
-  #endif
-    local float *loops,
-    const float cutoff,
-    IQ_DISPERSION_LENGTH_DECLARATIONS,
+#if 1
+#define ORIENT_ASYMMETRIC(qx, qy, theta, phi, psi, q, xhat, yhat, zhat) do { \
+    q = sqrt(qx*qx + qy*qy); \
+    const double qxhat = qx/q; \
+    const double qyhat = qy/q; \
+    double sin_theta, cos_theta; \
+    double sin_phi, cos_phi; \
+    double sin_psi, cos_psi; \
+    SINCOS(theta*M_PI_180, sin_theta, cos_theta); \
+    SINCOS(phi*M_PI_180, sin_phi, cos_phi); \
+    SINCOS(psi*M_PI_180, sin_psi, cos_psi); \
+    xhat = qxhat*(-sin_phi*sin_psi + cos_theta*cos_phi*cos_psi) \
+         + qyhat*( cos_phi*sin_psi + cos_theta*sin_phi*cos_psi); \
+    yhat = qxhat*(-sin_phi*cos_psi - cos_theta*cos_phi*sin_psi) \
+         + qyhat*( cos_phi*cos_psi - cos_theta*sin_phi*sin_psi); \
+    zhat = qxhat*(-sin_theta*cos_phi) \
+         + qyhat*(-sin_theta*sin_phi); \
+    } while (0)
+#else
+// SasView 3.x definition of orientation
+#define ORIENT_ASYMMETRIC(qx, qy, theta, phi, psi, q, cos_alpha, cos_mu, cos_nu) do { \
+    q = sqrt(qx*qx + qy*qy); \
+    const double qxhat = qx/q; \
+    const double qyhat = qy/q; \
+    double sin_theta, cos_theta; \
+    double sin_phi, cos_phi; \
+    double sin_psi, cos_psi; \
+    SINCOS(theta*M_PI_180, sin_theta, cos_theta); \
+    SINCOS(phi*M_PI_180, sin_phi, cos_phi); \
+    SINCOS(psi*M_PI_180, sin_psi, cos_psi); \
+    cos_alpha = cos_theta*cos_phi*qxhat + sin_theta*qyhat; \
+    cos_mu = (-sin_theta*cos_psi*cos_phi - sin_psi*sin_phi)*qxhat + cos_theta*cos_psi*qyhat; \
+    cos_nu = (-cos_phi*sin_psi*sin_theta + sin_phi*cos_psi)*qxhat + sin_psi*cos_theta*qyhat; \
+    } while (0)
 #endif
-    IQ_FIXED_PARAMETER_DECLARATIONS
-    )
+
+//# Beginning of rotational operation definitions
+
+typedef struct {
+          double R31, R32;
+      } QACRotation;
+
+typedef struct {
+    double R11, R12;
+    double R21, R22;
+    double R31, R32;
+} QABCRotation;
+
+// Fill in the rotation matrix R from the view angles (theta, phi) and the
+// jitter angles (dtheta, dphi).  This matrix can be applied to all of the
+// (qx, qy) points in the image to produce R*[qx,qy]' = [qa,qc]'
+static void
+qac_rotation(
+    QACRotation *rotation,
+    double theta, double phi,
+    double dtheta, double dphi)
 {
-#ifdef USE_OPENCL
-  #ifdef IQ_OPEN_LOOPS
-  // copy loops info to local memory
-  event_t e = async_work_group_copy(loops, loops_g, (IQ_DISPERSION_LENGTH_SUM)*2, 0);
-  wait_group_events(1, &e);
-  #endif
+    double sin_theta, cos_theta;
+    double sin_phi, cos_phi;
 
-  int i = get_global_id(0);
-  if (i < Nq)
-#else
-  #pragma omp parallel for
-  for (int i=0; i < Nq; i++)
-#endif
-  {
-    const float qi = q[i];
-#ifdef IQ_OPEN_LOOPS
-    float ret=0.0f, norm=0.0f;
-  #ifdef VOLUME_PARAMETERS
-    float vol=0.0f, norm_vol=0.0f;
-  #endif
-    IQ_OPEN_LOOPS
-    //for (int radius_i=0; radius_i < Nradius; radius_i++) {
-    //  const float radius = loops[2*(radius_i)];
-    //  const float radius_w = loops[2*(radius_i)+1];
+    // reverse view matrix
+    SINCOS(theta*M_PI_180, sin_theta, cos_theta);
+    SINCOS(phi*M_PI_180, sin_phi, cos_phi);
+    const double V11 = cos_phi*cos_theta;
+    const double V12 = sin_phi*cos_theta;
+    const double V21 = -sin_phi;
+    const double V22 = cos_phi;
+    const double V31 = sin_theta*cos_phi;
+    const double V32 = sin_phi*sin_theta;
 
-    const float weight = IQ_WEIGHT_PRODUCT;
-    if (weight > cutoff) {
-      const float scattering = Iq(qi, IQ_PARAMETERS);
-      // allow kernels to exclude invalid regions by returning NaN
-      if (!isnan(scattering)) {
-        ret += weight*scattering;
-        norm += weight;
-      #ifdef VOLUME_PARAMETERS
-        const float vol_weight = VOLUME_WEIGHT_PRODUCT;
-        vol += vol_weight*form_volume(VOLUME_PARAMETERS);
-        norm_vol += vol_weight;
-      #endif
-      }
-    //else { printf("exclude qx,qy,I:%g,%g,%g\n",qi,scattering); }
-    }
-    IQ_CLOSE_LOOPS
-  #ifdef VOLUME_PARAMETERS
-    if (vol*norm_vol != 0.0f) {
-      ret *= norm_vol/vol;
-    }
-  #endif
-    result[i] = scale*ret/norm+background;
-#else
-    result[i] = scale*Iq(qi, IQ_PARAMETERS) + background;
-#endif
-  }
+    // reverse jitter matrix
+    SINCOS(dtheta*M_PI_180, sin_theta, cos_theta);
+    SINCOS(dphi*M_PI_180, sin_phi, cos_phi);
+    const double J31 = sin_theta;
+    const double J32 = -sin_phi*cos_theta;
+    const double J33 = cos_phi*cos_theta;
+
+    // reverse matrix
+    rotation->R31 = J31*V11 + J32*V21 + J33*V31;
+    rotation->R32 = J31*V12 + J32*V22 + J33*V32;
 }
-#endif
 
-
-#ifdef IQXY_KERNEL_NAME
-kernel void IQXY_KERNEL_NAME(
-    global const float *qx,
-    global const float *qy,
-    global float *result,
-    const int Nq,
-#ifdef IQXY_OPEN_LOOPS
-  #ifdef USE_OPENCL
-    global float *loops_g,
-  #endif
-    local float *loops,
-    const float cutoff,
-    IQXY_DISPERSION_LENGTH_DECLARATIONS,
-#endif
-    IQXY_FIXED_PARAMETER_DECLARATIONS
-    )
+// Apply the rotation matrix returned from qac_rotation to the point (qx,qy),
+// returning R*[qx,qy]' = [qa,qc]'
+static void
+qac_apply(
+    QACRotation *rotation,
+    double qx, double qy,
+    double *qab_out, double *qc_out)
 {
-#ifdef USE_OPENCL
-  #ifdef IQXY_OPEN_LOOPS
-  // copy loops info to local memory
-  event_t e = async_work_group_copy(loops, loops_g, (IQXY_DISPERSION_LENGTH_SUM)*2, 0);
-  wait_group_events(1, &e);
-  #endif
-
-  int i = get_global_id(0);
-  if (i < Nq)
-#else
-  #pragma omp parallel for
-  for (int i=0; i < Nq; i++)
-#endif
-  {
-    const float qxi = qx[i];
-    const float qyi = qy[i];
-    #if USE_KAHAN_SUMMATION
-    float accumulated_error = 0.0f;
-    #endif
-#ifdef IQXY_OPEN_LOOPS
-    float ret=0.0f, norm=0.0f;
-    #ifdef VOLUME_PARAMETERS
-    float vol=0.0f, norm_vol=0.0f;
-    #endif
-    IQXY_OPEN_LOOPS
-    //for (int radius_i=0; radius_i < Nradius; radius_i++) {
-    //  const float radius = loops[2*(radius_i)];
-    //  const float radius_w = loops[2*(radius_i)+1];
-
-    const float weight = IQXY_WEIGHT_PRODUCT;
-    if (weight > cutoff) {
-
-      const float scattering = Iqxy(qxi, qyi, IQXY_PARAMETERS);
-      if (!isnan(scattering)) { // if scattering is bad, exclude it from sum
-      //if (scattering >= 0.0f) { // scattering cannot be negative
-        // TODO: use correct angle for spherical correction
-        // Definition of theta and phi are probably reversed relative to the
-        // equation which gave rise to this correction, leading to an
-        // attenuation of the pattern as theta moves through pi/2.f  Either
-        // reverse the meanings of phi and theta in the forms, or use phi
-        // rather than theta in this correction.  Current code uses cos(theta)
-        // so that values match those of sasview.
-      #if defined(IQXY_HAS_THETA) // && 0
-        const float spherical_correction
-          = (Ntheta>1 ? fabs(cos(M_PI_180*theta))*M_PI_2:1.0f);
-        const float next = spherical_correction * weight * scattering;
-      #else
-        const float next = weight * scattering;
-      #endif
-      #if USE_KAHAN_SUMMATION
-        const float y = next - accumulated_error;
-        const float t = ret + y;
-        accumulated_error = (t - ret) - y;
-        ret = t;
-      #else
-        ret += next;
-      #endif
-        norm += weight;
-      #ifdef VOLUME_PARAMETERS
-        const float vol_weight = VOLUME_WEIGHT_PRODUCT;
-        vol += vol_weight*form_volume(VOLUME_PARAMETERS);
-      #endif
-        norm_vol += vol_weight;
-      }
-      //else { printf("exclude qx,qy,I:%g,%g,%g\n",qi,scattering); }
-    }
-    IQXY_CLOSE_LOOPS
-  #ifdef VOLUME_PARAMETERS
-    if (vol*norm_vol != 0.0f) {
-      ret *= norm_vol/vol;
-    }
-  #endif
-    result[i] = scale*ret/norm+background;
-#else
-    result[i] = scale*Iqxy(qxi, qyi, IQXY_PARAMETERS) + background;
-#endif
-  }
+    // Indirect calculation of qab, from qab^2 = |q|^2 - qc^2
+    const double dqc = rotation->R31*qx + rotation->R32*qy;
+    const double dqab_sq = -dqc*dqc + qx*qx + qy*qy;
+    //*qab_out = sqrt(fabs(dqab_sq));
+    *qab_out = dqab_sq > 0.0 ? sqrt(dqab_sq) : 0.0;
+    *qc_out = dqc;
 }
-#endif
+
+// Fill in the rotation matrix R from the view angles (theta, phi, psi) and the
+// jitter angles (dtheta, dphi, dpsi).  This matrix can be applied to all of the
+// (qx, qy) points in the image to produce R*[qx,qy]' = [qa,qb,qc]'
+static void
+qabc_rotation(
+    QABCRotation *rotation,
+    double theta, double phi, double psi,
+    double dtheta, double dphi, double dpsi)
+{
+    double sin_theta, cos_theta;
+    double sin_phi, cos_phi;
+    double sin_psi, cos_psi;
+
+    // reverse view matrix
+    SINCOS(theta*M_PI_180, sin_theta, cos_theta);
+    SINCOS(phi*M_PI_180, sin_phi, cos_phi);
+    SINCOS(psi*M_PI_180, sin_psi, cos_psi);
+    const double V11 = -sin_phi*sin_psi + cos_phi*cos_psi*cos_theta;
+    const double V12 = sin_phi*cos_psi*cos_theta + sin_psi*cos_phi;
+    const double V21 = -sin_phi*cos_psi - sin_psi*cos_phi*cos_theta;
+    const double V22 = -sin_phi*sin_psi*cos_theta + cos_phi*cos_psi;
+    const double V31 = sin_theta*cos_phi;
+    const double V32 = sin_phi*sin_theta;
+
+    // reverse jitter matrix
+    SINCOS(dtheta*M_PI_180, sin_theta, cos_theta);
+    SINCOS(dphi*M_PI_180, sin_phi, cos_phi);
+    SINCOS(dpsi*M_PI_180, sin_psi, cos_psi);
+    const double J11 = cos_psi*cos_theta;
+    const double J12 = sin_phi*sin_theta*cos_psi + sin_psi*cos_phi;
+    const double J13 = sin_phi*sin_psi - sin_theta*cos_phi*cos_psi;
+    const double J21 = -sin_psi*cos_theta;
+    const double J22 = -sin_phi*sin_psi*sin_theta + cos_phi*cos_psi;
+    const double J23 = sin_phi*cos_psi + sin_psi*sin_theta*cos_phi;
+    const double J31 = sin_theta;
+    const double J32 = -sin_phi*cos_theta;
+    const double J33 = cos_phi*cos_theta;
+
+    // reverse matrix
+    rotation->R11 = J11*V11 + J12*V21 + J13*V31;
+    rotation->R12 = J11*V12 + J12*V22 + J13*V32;
+    rotation->R21 = J21*V11 + J22*V21 + J23*V31;
+    rotation->R22 = J21*V12 + J22*V22 + J23*V32;
+    rotation->R31 = J31*V11 + J32*V21 + J33*V31;
+    rotation->R32 = J31*V12 + J32*V22 + J33*V32;
+}
+
+// Apply the rotation matrix returned from qabc_rotation to the point (qx,qy),
+// returning R*[qx,qy]' = [qa,qb,qc]'
+static void
+qabc_apply(
+    QABCRotation *rotation,
+    double qx, double qy,
+    double *qa_out, double *qb_out, double *qc_out)
+{
+    *qa_out = rotation->R11*qx + rotation->R12*qy;
+    *qb_out = rotation->R21*qx + rotation->R22*qy;
+    *qc_out = rotation->R31*qx + rotation->R32*qy;
+}
+
+// ##### End of rotation operation definitions ######
+
+#line 1 ".././models/hardsphere.c"
+
+double Iq(double q, double radius_effective, double volfraction)
+{
+      double D,A,B,G,X,X2,X4,S,C,FF,HARDSPH;
+      // these are c compiler instructions, can also put normal code inside the "if else" structure
+      #if FLOAT_SIZE > 4
+      // double precision
+      // orig had 0.2, don't call the variable cutoff as PAK already has one called that!
+      // Must use UPPERCASE name please.
+      // 0.05 better, 0.1 OK
+      #define CUTOFFHS 0.05
+      #else
+      // 0.1 bad, 0.2 OK, 0.3 good, 0.4 better, 0.8 no good
+      #define CUTOFFHS 0.4
+      #endif
+
+      if(fabs(radius_effective) < 1.E-12) {
+               HARDSPH=1.0;
+//printf("HS1 %g: %g\n",q,HARDSPH);
+               return(HARDSPH);
+      }
+      // removing use of pow(xxx,2) and rearranging the calcs
+      // of A, B & G cut ~40% off execution time ( 0.5 to 0.3 msec)
+      X = 1.0/( 1.0 -volfraction);
+      D= X*X;
+      A= (1.+2.*volfraction)*D;
+      A *=A;
+      X=fabs(q*radius_effective*2.0);
+
+      if(X < 5.E-06) {
+                 HARDSPH=1./A;
+//printf("HS2 %g: %g\n",q,HARDSPH);
+                 return(HARDSPH);
+      }
+      X2 =X*X;
+      B = (1.0 +0.5*volfraction)*D;
+      B *= B;
+      B *= -6.*volfraction;
+      G=0.5*volfraction*A;
+
+      if(X < CUTOFFHS) {
+      // RKH Feb 2016, use Taylor series expansion for small X
+      // else no obvious way to rearrange the equations to avoid
+      // needing a very high number of significant figures.
+      // Series expansion found using Mathematica software. Numerical test
+      // in .xls showed terms to X^2 are sufficient
+      // for 5 or 6 significant figures, but I put the X^4 one in anyway
+            //FF = 8*A +6*B + 4*G - (0.8*A +2.0*B/3.0 +0.5*G)*X2 +(A/35. +B/40. +G/50.)*X4;
+            // refactoring the polynomial makes it very slightly faster (0.5 not 0.6 msec)
+            //FF = 8*A +6*B + 4*G + ( -0.8*A -2.0*B/3.0 -0.5*G +(A/35. +B/40. +G/50.)*X2)*X2;
+
+            FF = 8.0*A +6.0*B + 4.0*G + ( -0.8*A -B/1.5 -0.5*G +(A/35. +0.0125*B +0.02*G)*X2)*X2;
+
+            // combining the terms makes things worse at smallest Q in single precision
+            //FF = (8-0.8*X2)*A +(3.0-X2/3.)*2*B + (4+0.5*X2)*G +(A/35. +B/40. +G/50.)*X4;
+            // note that G = -volfraction*A/2, combining this makes no further difference at smallest Q
+            //FF = (8 +2.*volfraction + ( volfraction/4. -0.8 +(volfraction/100. -1./35.)*X2 )*X2 )*A  + (3.0 -X2/3. +X4/40.)*2.*B;
+            HARDSPH= 1./(1. + volfraction*FF );
+//printf("HS3 %g: %g\n",q,HARDSPH);
+            return(HARDSPH);
+      }
+      X4=X2*X2;
+      SINCOS(X,S,C);
+
+// RKH Feb 2016, use version FISH code as is better than original sasview one
+// at small Q in single precision, and more than twice as fast in double.
+      //FF=A*(S-X*C)/X + B*(2.*X*S -(X2-2.)*C -2.)/X2 + G*( (4.*X2*X -24.*X)*S -(X4 -12.*X2 +24.)*C +24. )/X4;
+      // refactoring the polynomial here & above makes it slightly faster
+
+      FF=  (( G*( (4.*X2 -24.)*X*S -(X4 -12.*X2 +24.)*C +24. )/X2 + B*(2.*X*S -(X2-2.)*C -2.) )/X + A*(S-X*C))/X ;
+      HARDSPH= 1./(1. + 24.*volfraction*FF/X2 );
+
+      // changing /X and /X2 to *MX1 and *MX2, no significantg difference?
+      //MX=1.0/X;
+      //MX2=MX*MX;
+      //FF=  (( G*( (4.*X2 -24.)*X*S -(X4 -12.*X2 +24.)*C +24. )*MX2 + B*(2.*X*S -(X2-2.)*C -2.) )*MX + A*(S-X*C)) ;
+      //HARDSPH= 1./(1. + 24.*volfraction*FF*MX2*MX );
+
+// grouping the terms, was about same as sasmodels for single precision issues
+//     FF=A*(S/X-C) + B*(2.*S/X - C +2.0*(C-1.0)/X2) + G*( (4./X -24./X3)*S -(1.0 -12./X2 +24./X4)*C +24./X4 );
+//     HARDSPH= 1./(1. + 24.*volfraction*FF/X2 );
+// remove 1/X2 from final line, take more powers of X inside the brackets, stil bad
+//      FF=A*(S/X3-C/X2) + B*(2.*S/X3 - C/X2 +2.0*(C-1.0)/X4) + G*( (4./X -24./X3)*S -(1.0 -12./X2 +24./X4)*C +24./X4 )/X2;
+//      HARDSPH= 1./(1. + 24.*volfraction*FF );
+//printf("HS4 %g: %g\n",q,HARDSPH);
+      return(HARDSPH);
+}
+
