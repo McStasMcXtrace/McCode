@@ -163,7 +163,7 @@ INITIALIZE
     double b=-1.95*Br+7.22;
     double c=-1.3*Br +2.97;
     prms.gap = -log(B/a)*lu/b;
-  else prms.gap=3e-3;
+  } else prms.gap=3e-3;
   
   if (verbose) 
     printf("Undulator (%s): K=%g B=%g[T] lu=%g[m] E1st=%g[keV] E0=%g[keV] gap=%g[m]\n",
