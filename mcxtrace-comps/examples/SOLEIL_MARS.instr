@@ -145,7 +145,7 @@ COMPONENT Source = Bending_magnet(
     focus_xw=PrimarySlit1Width,
     focus_yh=PrimarySlit1Height,
     E0=E0, dE = dEr*E0,
-    Ee = 2.75, Ie = 0.5, B = 1.71, sigex=79.6e-6, sigey=25.3e-6
+    Ee = 2.75, Ie = 0.5, B = 1.71, sigex=79.6e-6, sigey=25.3e-6,
     dist=DistanceToPrimarySlit1
     )
 AT (0, 0, 0) RELATIVE origin
