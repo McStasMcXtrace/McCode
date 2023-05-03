@@ -60,7 +60,7 @@ AT (0, 0, 0) RELATIVE ABSOLUTE
 
 
 /*Undulator is set to have 5th harmonic at 15 keV*/
-COMPONENT src1 = Undulator(Ee=1.5, K=1, E0=ee0, dE=dde, Ie=0.4, B=0, gap=4.2,
+COMPONENT src1 = Undulator(Ee=1.5, K=1, E0=ee0, dE=dde, Ie=0.4, B=0,
 	Nper=134, lu=3.65e-2, sigex=0.05367e-3, sigey=0.004e-3, focus_xw=10e-3,focus_yh=10e-3, dist=20,
         quick_integ=FAST)
 AT(0,0,0) RELATIVE Origin
