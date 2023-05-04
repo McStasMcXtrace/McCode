@@ -135,9 +135,10 @@ INITIALIZE
   prms.igamma=1.0/prms.gamma;
      
   // make sure K is defined
-  if(E1st && lu){
+  if(E1st && lu && !K){
       /*compute K and B from desired target energy*/
-      K=sqrt(2*(4*M_PI*prms.gamma2/(E2K*E1st*lu*1e10) -1));
+      K=2*(4*M_PI*prms.gamma2/(E2K*E1st*lu*1e10) -1);
+      if (K>0) K=sqrt(K) else K=0;
   } else if (!lu && E1st && K) {
       lu=4*M_PI*prms.gamma2/(K*K/2+1)/(E2K*E1st*1e10);
   }
