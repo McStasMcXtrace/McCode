@@ -1,12 +1,13 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: bl_11_2
+* Instrument: bl_11_2_white_src
 *
 * %Identification
+* Written by: Stephane Bac, Antoine Padovani
 * Date: Dec 5th 2022
 * Origin: Synchrotron Soleil
-* %INSTRUMENT_SITE: SOLEIL
+* %INSTRUMENT_SITE: SSRL
 *
 * Simulating the beamline 11-2 of SSRL to reproduce their glitches database.
 *
@@ -33,7 +34,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT glitches_energy(Etohit=6900,h=2,k=2,l=0,fwhm=0.1,detuning_percentage=0,detuning_rockingcurve=0)
+DEFINE INSTRUMENT bl_11_2_white_src(Etohit=6900,h=2,k=2,l=0,fwhm=0.1,detuning_percentage=0,detuning_rockingcurve=0)
 
 
 DECLARE

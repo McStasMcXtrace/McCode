@@ -7,7 +7,7 @@
 * Written by: Stephane Bac, Antoine Padovani
 * Date: Jul 21st 2022
 * Origin: Synchrotron Soleil
-* %INSTRUMENT_SITE: Tests
+* %INSTRUMENT_SITE: Tests_optics
 *
 * Unit-test instrument for the Grating reflect component.
 *

@@ -6,7 +6,7 @@
 * %Identification
 * Date: May 9th 2022
 * Origin: Synchrotron Soleil
-* %INSTRUMENT_SITE: Tests
+* %INSTRUMENT_SITE: Tests_optics
 *
 * Unit-test instrument for the Mirror_elliptic component.
 *

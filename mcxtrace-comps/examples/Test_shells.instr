@@ -14,7 +14,7 @@
 * Single shell model of a true Wolter Type I optic
 *
 * %Description
-* Single shell example telescope using a combinatiopn pf parabolic/hyperbolic shell
+* Single shell example telescope using a combinatiopn of parabolic/hyperbolic shell
 * optical plates covering the full circle. Reflectivity is 1 for all energies.
 *
 * Example: Test_shells.instr shell_type=1
