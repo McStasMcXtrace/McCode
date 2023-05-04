@@ -8,10 +8,12 @@
 * Version: <instrument version>
 * %INSTRUMENT_SITE: SOLEIL
 *
-* A simple model for LUCIA at SOLEIL.
+* A simple model for LUCIA at SOLEIL (fluorescence).
 *
 * %D
 * The HU52 undulator, a DCM, a fluorescence sample, and monitors.
+*
+* %Example: E0=3 Detector: mon_spl_fluo_I=3.51526e+14
 *
 * %P
 * E0: [keV] Nominal energy at the Wiggler.
