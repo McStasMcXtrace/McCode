@@ -1,14 +1,16 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: bl_11_2_white_src
+* Instrument: SSRL_bl_11_2_not_white_src
 *
 * %Identification
+* Written by: Stephane Bac, Antoine Padovani
 * Date: Dec 5th 2022
 * Origin: Synchrotron Soleil
 * %INSTRUMENT_SITE: SOLEIL
 *
 * Simulating the beamline 11-2 of SSRL to reproduce their glitches database.
+* The source is chosen to not be white in this instrument to increase the detected photons, another .instr has a white source.
 *
 * %D
 * BL 11-2 beamline description here: https://www-ssrl.slac.stanford.edu/mes/11-2/manual.php
@@ -17,30 +19,26 @@
 * Documentation and results of the .instr here: https://gitlab.synchrotron-soleil.fr/grades/beamlines/-/tree/main/glitches
 * A jupyter notebook will soon be available regrouping everything.
 * You may scan like so for example:
-*   mxrun -n 1e7 bl_11_2_white_src.instr -N601 Etohit=6900,7500 detuning_percentage=40
+*   mxrun -n 1e7 SSRL_bl_11_2_not_white_src.instr -N601 Etohit=6900,7500
 *
-* %Example: Etohit=6900 Detector: EnergyMonitor_first_I=9.51972e+09
+* %Example: Etohit=6900 Detector: EnergyMonitor_first_I=5.22652e+12
 *
 * %Parameters
 * Etohit: [eV.] Energy used to calculate the bragg angle the monochromator is put at. This is the energy we select.
 * h: [] Miller indices.
 * k: [] Miller indices.
 * l: [] Miller indices.
-* fwhm: [deg.] Full width half maximum of the second crystals's rocking curve.
-* detuning_percentage: [%.] Percentage of the rocking curve fwhm to detune the second crystal by.
-* detuning_rockingcurve: [deg.] Degrees to detune the second crystal by. Used to find the 2nd xtal's rocking curve. Leave at 0 otherwise.
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT bl_11_2_white_src(Etohit=6900,h=2,k=2,l=0,fwhm=0.1,detuning_percentage=0,detuning_rockingcurve=0)
+DEFINE INSTRUMENT SSRL_bl_11_2_not_white_src(Etohit=6900,h=2,k=2,l=0)
 
 
 DECLARE
 %{
     double calculated_angle;
-    double n;
-    double theta_detuning;    
+    double n; 
 %}
 
 INITIALIZE
@@ -49,11 +47,7 @@ INITIALIZE
     fprintf(stdout,"n %g \n", n);
     calculated_angle=RAD2DEG*asin(12398.4198*sqrt(n)/(2*5.43096*Etohit));
     fprintf(stdout,"Energy eV %g / Angle deg %g \n", Etohit, calculated_angle);
-       
-    //the fwhm is 0.1 degrees by default, the value for the for 6900-7500 eV range. For other ranges find it by doing a scan with the detuning_rockingcurve parameter.
-    theta_detuning=(detuning_percentage/100)*fwhm;
-    fprintf(stdout,"theta_detuning degrees %g \n", theta_detuning);
-      
+        
 %}
 
 TRACE
@@ -63,8 +57,8 @@ COMPONENT Origin = Progress_bar(
 AT (0, 0, 0) ABSOLUTE
 
 COMPONENT src = Wiggler(
-    E0=22, 
-    dE=18, 
+    E0=Etohit/1000, 
+    dE=100/1000, 
     B=2,
     Nper=13,
     Ie=0.1,
@@ -101,7 +95,7 @@ COMPONENT center_of_rotation= Arm()
 AT(0,0,0.004) RELATIVE PREVIOUS //0.006 works too though
 ROTATED (0,calculated_angle,0) RELATIVE PREVIOUS 
 
-SPLIT 10 COMPONENT bragg_crystal_split = Single_crystal(reflections="Si.lau", material="Si.txt",
+COMPONENT bragg_crystal_no_split = Single_crystal(reflections="Si.lau", material="Si.txt",
     xwidth=76.2e-3, yheight = 41.275e-3, zdepth=0.001, p_transmit = -1, order = 1, mosaic=1, barns =1,
     
     ax=5.43096*0.40824829,
@@ -124,19 +118,18 @@ EXTEND %{
 COMPONENT mono_loc_2= Arm()
 AT(-0.09525/2, 0, 0.006/2+(0.001/2)) RELATIVE center_of_rotation
 
-//counter clock wise detuning
+//no need for detuning here because source is not white
 COMPONENT detuning_rotation = Arm()
 AT(0,0, 0) RELATIVE PREVIOUS
-ROTATED(0,detuning_rockingcurve+theta_detuning, 0) RELATIVE PREVIOUS //use one or the other, not both.
+ROTATED(0,0,0) RELATIVE PREVIOUS
 
-SPLIT 10 COMPONENT bragg_crystal_two_split = COPY(bragg_crystal_split)(
+COMPONENT bragg_crystal_two_no_split = COPY(bragg_crystal_no_split)(
     xwidth=95.25e-3)
 AT (0,0 ,0) RELATIVE PREVIOUS
 ROTATED (0,0,0) RELATIVE PREVIOUS    
 EXTEND %{
   if(!SCATTERED) ABSORB;
 %}
-
 
 /* -------------------------------------------------------------------------- Energy monitors */ 
 COMPONENT EnergyMonitor_first = Monitor_nD(    
