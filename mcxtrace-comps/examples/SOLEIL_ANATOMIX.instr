@@ -162,7 +162,7 @@ COMPONENT sample_rotation_stage = Arm()
 AT (0, 0, 150) RELATIVE PREVIOUS
 
 // sample at about 200 m from Undulator
-COMPONENT sample = Filter(material_datafile="ge.txt",
+COMPONENT sample = Filter(material_datafile="Ge.txt",
     geometry=sample,xwidth=0.02,yheight=0,zdepth=0)
 AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (0,ANGLE,0) RELATIVE PREVIOUS
