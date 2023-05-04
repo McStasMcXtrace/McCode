@@ -22,7 +22,7 @@
 *
 * The sample handles absorption, with edge contrast, as well as fluorescence.
 *
-* %Example: -n 1e5 E0=31  dE=1  sample_material="Ag0.6In0.2Sn0.2" Detector: mon_spl_xy_I=2.13259e+14
+* %Example: -n 1e5 E0=25 sample_material="Ag0.6In0.2Sn0.2" Detector: mon_spl_xy_I=7.8513e+14
 *
 * %P
 * E0: [keV] Nominal energy at the Wiggler. Sets the monochromator angle when DCM_present

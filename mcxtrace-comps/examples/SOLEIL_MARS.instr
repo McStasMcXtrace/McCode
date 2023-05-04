@@ -24,7 +24,7 @@
 *
 * This model implements the XRD station for powders.
 *
-* %Example: E0=16.99 Detector: emon_dcm1_full_range_I=2.50688e11
+* %Example: E0=16.99 Detector: displayMonoLength1_I=1.54236e+09
 *
 * %P
 * E0: [keV]     Central energy to be emitted by the source
