@@ -1,9 +1,10 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: bl_11_2
+* Instrument: SSRL_bl_11_2_not_white_src
 *
 * %Identification
+* Written by: Stephane Bac, Antoine Padovani
 * Date: Dec 5th 2022
 * Origin: Synchrotron Soleil
 * %INSTRUMENT_SITE: SOLEIL
@@ -18,7 +19,7 @@
 * Documentation and results of the .instr here: https://gitlab.synchrotron-soleil.fr/grades/beamlines/-/tree/main/glitches
 * A jupyter notebook will soon be available regrouping everything.
 * You may scan like so for example:
-*   mxrun -n 1e7 bl_11_2_not_white_src.instr -N601 Etohit=6900,7500
+*   mxrun -n 1e7 SSRL_bl_11_2_not_white_src.instr -N601 Etohit=6900,7500
 *
 * %Example: Etohit=6900 Detector: EnergyMonitor_first_I=5.22652e+12
 *
@@ -31,7 +32,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT glitches_energy(Etohit=6900,h=2,k=2,l=0)
+DEFINE INSTRUMENT SSRL_bl_11_2_not_white_src(Etohit=6900,h=2,k=2,l=0)
 
 
 DECLARE
