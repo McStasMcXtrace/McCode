@@ -98,7 +98,7 @@ TRACE
 
       if (div < maxdiv_h && div > -maxdiv_h)
       {
-        i = floor((lambda - Lmin)*nL/(Lmax - Lmin));
+        i = floor((e -Emin)*nE/(Emax - Emin));
         j = floor((div + maxdiv_h)*nh/(2.0*maxdiv_h));
         DivE_N[i][j]++;
         DivE_p[i][j] += p;
@@ -118,7 +118,7 @@ SAVE
         "Energy-divergence monitor",
         "Energy [keV]",
         "divergence [deg]",
-        Lmin, Lmax, -maxdiv_h, maxdiv_h,
+        Emin, Emax, -maxdiv_h, maxdiv_h,
         nE, nh,
         &DivE_N[0][0],&DivE_p[0][0],&DivE_p2[0][0],
         filename);
