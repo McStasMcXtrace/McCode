@@ -18,7 +18,7 @@
 * Example showing the use of the "number_of_activations" parameter to include
 *  an external component into an ensamle of Union components
 *
-* %Example: stick_displacement=0 Detector: detector_I=189.144
+* Example: stick_displacement=0 Detector: detector_I=189.144
 *
 * %Parameters
 * stick_displacement: [m] height displacement of sample stick
