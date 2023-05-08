@@ -770,6 +770,7 @@ instr_formal:   TOK_ID TOK_ID
           formal->type = instr_type_double;
         }
         formal->id = $2;
+        formal->hasunit = 0;
         $$ = formal;
       }
     | TOK_ID '*' TOK_ID
@@ -786,6 +787,7 @@ instr_formal:   TOK_ID TOK_ID
           formal->type = instr_type_double;
         }
         formal->id = $3;
+        formal->hasunit = 0;
         $$ = formal;
       }
     | TOK_ID  /* Default type is "double" */
@@ -795,6 +797,7 @@ instr_formal:   TOK_ID TOK_ID
         formal->type = instr_type_double;
         formal->id = $1;
         formal->isoptional = 0; /* No default value */
+        formal->hasunit = 0;
         $$ = formal;
       }
     | TOK_ID '=' exp
@@ -805,6 +808,7 @@ instr_formal:   TOK_ID TOK_ID
         formal->isoptional = 1; /* Default value available */
         formal->default_value = $3;
         formal->type = instr_type_double;
+        formal->hasunit = 0;
         $$ = formal;
       }
     | TOK_ID TOK_ID '=' exp
@@ -825,6 +829,7 @@ instr_formal:   TOK_ID TOK_ID
         formal->id = $2;
         formal->isoptional = 1; /* Default value available */
         formal->default_value = $4;
+        formal->hasunit = 0;
         $$ = formal;
       }
     | TOK_ID '*' TOK_ID '=' exp
@@ -842,7 +847,112 @@ instr_formal:   TOK_ID TOK_ID
           print_error("ERROR: Illegal type %s* for instrument "
           "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
           formal->type = instr_type_double;
+          formal->hasunit = 0;
         }
+        $$ = formal;
+      }
+    |
+   TOK_ID TOK_ID '(' TOK_STRING ')'
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        if(!strcmp($1, "double")) {
+          formal->type = instr_type_double;
+        } else if(!strcmp($1, "int")) {
+          formal->type = instr_type_int;
+        } else if(!strcmp($1, "string")) {
+          formal->type = instr_type_string;
+        } else {
+          print_error("ERROR: Illegal type %s for instrument "
+          "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
+          formal->type = instr_type_double;
+        }
+        formal->id = $2;
+        formal->hasunit = 1;
+        formal->unit = $4;
+        $$ = formal;
+      }
+    | TOK_ID '*' TOK_ID '(' TOK_STRING ')'
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        if(!strcmp($1, "char")) {
+          formal->type = instr_type_string;
+        } else if(!strcmp($1, "double")) {
+          formal->type = instr_type_vector;
+        } else {
+          print_error("ERROR: Illegal type $s* for instrument "
+          "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
+          formal->type = instr_type_double;
+        }
+        formal->id = $3;
+        formal->hasunit = 1;
+        formal->unit = $5;
+        $$ = formal;
+      }
+    | TOK_ID '(' TOK_STRING ')'
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        formal->type = instr_type_double;
+        formal->id = $1;
+        formal->isoptional = 0; /* No default value */
+        formal->hasunit = 1;
+        formal->unit = $3;
+        $$ = formal;
+      }
+    | TOK_ID '(' TOK_STRING ')' '=' exp
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        formal->id = $1;
+        formal->isoptional = 1; /* Default value available */
+        formal->default_value = $6;
+        formal->type = instr_type_double;
+        formal->hasunit = 1;
+        formal->unit = $3;
+        $$ = formal;
+      }
+    | TOK_ID TOK_ID '(' TOK_STRING ')' '=' exp
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        if(!strcmp($1, "double")) {
+          formal->type = instr_type_double;
+        } else if(!strcmp($1, "int")) {
+          formal->type = instr_type_int;
+        } else if(!strcmp($1, "string")) {
+          formal->type = instr_type_string;
+        } else {
+          print_error("ERROR: Illegal type %s for instrument "
+          "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
+          formal->type = instr_type_double;
+        }
+        formal->id = $2;
+        formal->isoptional = 1; /* Default value available */
+        formal->default_value = $7;
+        formal->hasunit = 1;
+        formal->unit = $4;
+        $$ = formal;
+      }
+    | TOK_ID '*' TOK_ID '(' TOK_STRING ')' '=' exp
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        formal->id = $3;
+        formal->isoptional = 1; /* Default value available */
+        formal->default_value = $8;
+        if(!strcmp($1, "char")) {
+          formal->type = instr_type_string;
+        } else if(!strcmp($1, "double")) {
+          formal->type = instr_type_vector;
+        } else {
+          print_error("ERROR: Illegal type %s* for instrument "
+          "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
+          formal->type = instr_type_double;
+        }
+        formal->hasunit = 1;
+        formal->unit = $5;
         $$ = formal;
       }
 ;

@@ -494,6 +494,8 @@ struct instr_formal
     char *id;                     /* Parameter name */
     int isoptional;               /* True if default value is available */
     CExp default_value;           /* Default value if isoptional is true */
+    int hasunit;                  /* Flag to indicate if unit was provided */
+    char *unit;                   /* (Informational) parameter unit */
   };
 
 /* Instrument definition. */

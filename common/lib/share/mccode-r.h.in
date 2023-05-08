@@ -191,6 +191,7 @@ struct mcinputtable_struct { /* defines instrument parameters */
   void *par;  /* pointer to instrument parameter (variable) */
   enum instr_formal_types type;
   char *val;  /* default value */
+  char *unit; /* expected unit for parameter; informational only */
 };
 
 #ifndef MCCODE_BASE_TYPES
