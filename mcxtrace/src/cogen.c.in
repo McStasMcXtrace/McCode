@@ -1168,13 +1168,15 @@ int cogen_decls(struct instr_def *instr)
     if (strlen(i_formal->id)) {
       if (i_formal->isoptional  // needed to avoid double quotes in strings
           && !strcmp(instr_formal_type_names[i_formal->type],"instr_type_string"))
-        coutf("  \"%s\", &(_instrument_var._parameters.%s), %s, %s, ", i_formal->id,
+        coutf("  \"%s\", &(_instrument_var._parameters.%s), %s, %s, \"%s\",", i_formal->id,
               i_formal->id, instr_formal_type_names[i_formal->type],
-              exp_tostring(i_formal->default_value));
+              exp_tostring(i_formal->default_value),
+              i_formal->hasunit ? i_formal->unit : "");
       else
-        coutf("  \"%s\", &(_instrument_var._parameters.%s), %s, \"%s\", ", i_formal->id,
+        coutf("  \"%s\", &(_instrument_var._parameters.%s), %s, \"%s\", \"%s\",", i_formal->id,
               i_formal->id, instr_formal_type_names[i_formal->type],
-              i_formal->isoptional ? exp_tostring(i_formal->default_value) : "");
+              i_formal->isoptional ? exp_tostring(i_formal->default_value) : "",
+              i_formal->hasunit ? i_formal->unit : "");
     }
   }
   list_iterate_end(liter);
