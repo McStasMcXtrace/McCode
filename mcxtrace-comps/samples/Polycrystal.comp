@@ -275,7 +275,8 @@ SHARE
         }
 
         if (!FlagMissingFile) {
-            Table_Read(&sTable, ReflectionsDatafile, 1);
+            if (Table_Read(&sTable, ReflectionsDatafile, 1) <= 0)
+              exit(fprintf(stderr, "Error (%s): Could not read %s. Aborting.\n",NAME_CURRENT_COMP, ReflectionsDatafile));
 
             if (sTable.columns < 4) {
                 fprintf(stderr, "%s: Error: The number of columns in %s should be at least %d for [h, k, l, F2]\n", NAME_CURRENT_COMP, ReflectionsDatafile, 4);

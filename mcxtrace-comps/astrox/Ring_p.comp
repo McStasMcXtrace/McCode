@@ -184,7 +184,8 @@ INITIALIZE
     /* Read table with the individual shell size parameters */
 
     if(size_file){
-    	Table_Read(&(size_table), size_file, ring_nr);
+    	if (Table_Read(&(size_table), size_file, ring_nr) <=0)
+    	  exit(fprintf(stderr, "Error (%s): Could not read %s. Aborting.\n",NAME_CURRENT_COMP, size_file));
     }
 
     zentry_vec=calloc(size_table.rows,sizeof(double));

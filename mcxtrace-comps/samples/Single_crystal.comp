@@ -350,7 +350,8 @@ SHARE
       flag=1;
     }
     if (!flag) {
-      Table_Read(&sTable, SC_file, 1); /* read 1st block data from SC_file into sTable*/
+      if (Table_Read(&sTable, SC_file, 1) <= 0) /* read 1st block data from SC_file into sTable*/
+        exit(fprintf(stderr, "Error (%s): Could not read %s. Aborting.\n",NAME_CURRENT_COMP, SC_file));
       if (sTable.columns < 4) {
         fprintf(stderr, "Single_crystal: Error: The number of columns in %s should be at least %d for [h,k,l,F2]\n", SC_file, 4);
         return(0);
