@@ -306,7 +306,8 @@ INITIALIZE
     nExit[2]=1;
     wExit[0]=wExit[1]=0;wExit[2]=zexit;
     if(non_specular_file && strlen(non_specular_file)){
-        Table_Read(&(non_specular_table), non_specular_file, 0);
+        if (Table_Read(&(non_specular_table), non_specular_file, 0) <= 0)
+          exit(fprintf(stderr, "Error (%s): Could not read %s. Aborting.\n",NAME_CURRENT_COMP, non_specular_file));
         char** header_parsed = Table_ParseHeader(non_specular_table.header,
             "e_min=","e_max=","e_step=","theta_min=","theta_max=","theta_step=",NULL);
             if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
