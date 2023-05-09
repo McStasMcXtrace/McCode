@@ -975,12 +975,13 @@ INITIALIZE
     flag=1;
   }
   if (!flag) {
-    Table_Read(&sTable, reflections, 1); /* read 1st block data from "reflections" file into sTable*/
+    if (Table_Read(&sTable, reflections, 1) <= 0) /* read 1st block data from "reflections" file into sTable*/
+      exit(fprintf(stderr,"Error(%s): can not read file %s\n",NAME_CURRENT_COMP, reflections));
   }
 
   /*allocate hkl_list here perhaps - remember to pragma update but try with a static thing to begin with.*/
-  if( (hkl_list=calloc(sTable.rows,sizeof(struct hkl_data)))==NULL){
-    fprintf(stderr,"Error (%s): Could not allocate memory for reflection list. Aborting.\n",NAME_CURRENT_COMP);
+  if((hkl_list=calloc(sTable.rows,sizeof(struct hkl_data)))==NULL){
+    fprintf(stderr,"Error (%s): Could not allocate memory for reflection list %s. Aborting.\n",NAME_CURRENT_COMP, reflections);
     exit(-1);
   };
 

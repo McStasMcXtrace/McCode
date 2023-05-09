@@ -55,7 +55,7 @@
 * EH3             | 165.7-174.1 | Guard slits; TXM sample stage and zone-plate table;  microtomography sample stage; detector table | EH3
 * EH4             | 197.2-208.5 | Guard slits; microtomography sample stage; detector table; X-ray grating interferometer | EH4
 *
-* %Example: -n 1e5 E0=17 Detector: psd_monitor_after_cc_I=5.44443e+07
+* %Example: -n 1e5 E0=17 Detector: psd_monitor_after_cc_I=1.14076e+18
 *
 * %P
 * E0:    [keV] Energy selected at the Undulator.
