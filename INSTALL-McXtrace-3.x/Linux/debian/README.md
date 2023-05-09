@@ -13,9 +13,9 @@ sudo apt-get update
 On Debian you will further have to install the non-free repository to have access to all McXtrace tool parts. See https://wiki.debian.org/SourcesList
 
 # The easiest way:
-The meta-package *mcxtrace-suite-python* will allow you to install mcxtrace with the recommended set of python-tools (mcrun/mcplot etc.) by a simple apt-get command like
+The meta-package *mcxtrace-suite-python-ng* will allow you to install mcxtrace with the recommended set of python-tools (mcrun/mcplot etc.) by a simple apt-get command like
 ```bash
-sudo apt-get install mcxtrace-suite-python
+sudo apt-get install mcxtrace-suite-python-ng
 ```
 The -suite packages without 'ng' in the package name will install the
 latest McXtrace 1.x package
@@ -26,9 +26,7 @@ mcxtrace@debian:~$ apt-cache search mcxtrace | grep 3.1
 mcxtrace-3.1 - mcxtrace built using CMake
 mcxtrace-comps-3.1 - mcxtrace-comps built using CMake
 mcxtrace-manuals-3.1 - mcxtrace_manuals built using CMake
-mcxtrace-suite - A metapackage for McStas + perl and python tools
-mcxtrace-suite-perl - A metapackage for McStas + perl tools
-mcxtrace-suite-python - A metapackage for McStas + python tools
+mcxtrace-suite-python-ng - A metapackage for McStas + python tools
 mcxtrace-tools-matlab-mxplot-3.1 - matlab-tools-mcplot built using CMake
 mcxtrace-tools-perl-3.1 - legacy-tools built using CMake
 mcxtrace-tools-perl-cmdline-3.1 - legacy-tools-cmdline built using CMake
