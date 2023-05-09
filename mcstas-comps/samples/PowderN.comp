@@ -309,7 +309,11 @@ long   xs_compute, xs_reuse, xs_calls;
       info->count = 0;
       return(0);
     }
-    Table_Read(&sTable, SC_file, 1); /* read 1st block data from SC_file into sTable*/
+    long retval = Table_Read(&sTable, SC_file, 1); /* read 1st block data from SC_file into sTable*/
+    if (retval<0) {
+      fprintf(stderr,"PowderN: Could not open file %s - exiting!\n",SC_file);
+      exit(-1);
+    }
 
     /* parsing of header */
     parsing = Table_ParseHeader(sTable.header,
