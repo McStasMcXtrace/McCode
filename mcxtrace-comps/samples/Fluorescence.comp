@@ -123,7 +123,7 @@ SETTING PARAMETERS(
   focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0, int target_index=0)
 OUTPUT PARAMETERS (compound, cum_massFractions, cum_xs_fluo, cum_xs_Compton, cum_xs_Rayleigh, type, shape, offdata, n_fluo, n_Compton, n_Rayleigh, p_fluo, p_Compton, p_Rayleigh)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
-DEPENDENCY "-lxrl -DUSE_OFF"
+DEPENDENCY "-Wl,-rpath,GETPATH(lib) -LGETPATH(lib) -lxrl -IGETPATH(include) -DUSE_OFF"
 
 /* ========================================================================== */
 
