@@ -43,6 +43,8 @@
 * phi0: [deg]    Target angle to center d_phi. If this is set to 0 the 0th (or any other chosen by the parameter order) order line will be used.
 * verbose: [ ]   If non-zero, more information will be displayed. Nb. generates much output.
 *
+*
+* %E
 *******************************************************************************/
 
 DEFINE COMPONENT Grating_reflect
