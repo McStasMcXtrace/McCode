@@ -11,11 +11,11 @@
 * mirror is in the yz-plane curved towards positive x if radius is positive
 * 
 * %P
-* radius: [m]   Radius of curvature.
-* length: [m]   Length of the unbent mirror.
+* radius: [m]   Radius of curvature, along Z.
+* length: [m]   Length of the unbent mirror along Z.
 * coating: []   Name of file containing the material data (i.e. f1 and f2) for the coating
-* width: [m]    Width of the mirror
-* R0: [ ]       Constant reflectivity value (mostly relevant for debugging).
+* width:  [m]   Width of the mirror along Y.
+* R0:     [ ]   Constant reflectivity value (mostly relevant for debugging).
 *
 * %E
 ***********************************************************************/
@@ -57,6 +57,7 @@ INITIALIZE
     status=reflec_Init(&re,CONSTANT,NULL, &(R0));
     constant_R=1;
   }
+  if (!radius) radius=1e6;
 %}
 
 TRACE
