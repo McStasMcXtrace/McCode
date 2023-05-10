@@ -59,7 +59,7 @@
 *   COMPONENT Grating_lamellar = Reflective_grating(
 *   blazed=0,display=0,zdepth=0.015, xwidth=0.136,d_phi=2, R0=1, r_rho =1200,b=0,N_slits=0,d=0,cff=0,blazed_angle=0)
 *
-*
+* %E
 *******************************************************************************/
 
 DEFINE COMPONENT Reflective_grating
