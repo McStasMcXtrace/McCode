@@ -99,6 +99,8 @@ INITIALIZE
       *PSD_p=calloc(nr,sizeof(double));
       *PSD_p2=calloc(nr,sizeof(double));
     }
+    // Use instance name for monitor output if no input was given
+    if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
 %}
 
 TRACE
