@@ -18,7 +18,7 @@
 * to model material fluorescence, Compton and Rayleigh scattering. 
 *
 * 
-* %Example: Test_Fluorescence.instr -n1e5 Detector: emon_I=8.17009e-15
+* %Example: Test_Fluorescence.instr material=LaB6 -n1e5 Detector: emon_I=8.17009e-15
 *
 * %Parameters
 * material: [str]  Material file to use, e.g. chemical formulae "Pb2SnO4"
@@ -68,7 +68,7 @@ AT(0,0,0.1) RELATIVE PREVIOUS
 
 COMPONENT psd = PSD_monitor(xwidth=0.0015, yheight=0.0015, nx=100, ny=100, filename="psd.dat")
 AT(0,0,0.1) RELATIVE PREVIOUS
-/*
+
 COMPONENT emon_fluo = COPY(emon)(filename="Fluorescence.dat")
 WHEN (COMP_GETPAR(sample, type) == FLUORESCENCE)
 AT(0,0,0.1) RELATIVE PREVIOUS
@@ -80,6 +80,6 @@ AT(0,0,0.1) RELATIVE PREVIOUS
 COMPONENT emon_Rayleigh = COPY(emon)(filename="Rayleigh.dat")
 WHEN (COMP_GETPAR(sample, type) == RAYLEIGH)
 AT(0,0,0.1) RELATIVE PREVIOUS
-*/
+
 
 END
