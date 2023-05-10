@@ -47,8 +47,8 @@ INITIALIZE
    } else if (theta && !E0)
      E0 = 2*PI/E2K / (2*d*sin(theta*DEG2RAD));
    if (!theta || !E0 || dE <=0)
-     exit(fprintf(stderr, "%s: ERROR: Monochromator can not reflect E0=%g +/- %g [keV]. Aborting.\n", __FILE__, E0, dE));
-   printf("%s: Monochromator theta=%g [deg] E0=%g [keV]\n", __FILE__, theta, E0);
+     exit(fprintf(stderr, "%s: ERROR: Monochromator can not reflect E0=%g +/- %g [keV]. Aborting.\n", NAME_INSTRUMENT, E0, dE));
+   printf("%s: Monochromator theta=%g [deg] E0=%g [keV]\n", NAME_INSTRUMENT, theta, E0);
 %}
 
 TRACE

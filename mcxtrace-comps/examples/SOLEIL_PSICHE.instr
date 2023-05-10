@@ -65,12 +65,12 @@ INITIALIZE
      } else if (dcm_theta && !E0)
        E0 = 2*PI/E2K / (2*d*sin(dcm_theta*DEG2RAD));
      if (!dcm_theta || !E0 || dE <=0)
-       exit(fprintf(stderr, "%s: ERROR: Monochromator can not reflect E0=%g +/- %g [keV]. Aborting.\n", __FILE__, E0, dE));
-     printf("%s: E0=%g [keV] Monochromator dcm_theta=%g [deg] \n", __FILE__, E0, dcm_theta);
+       exit(fprintf(stderr, "%s: ERROR: Monochromator can not reflect E0=%g +/- %g [keV]. Aborting.\n", NAME_INSTRUMENT, E0, dE));
+     printf("%s: E0=%g [keV] Monochromator dcm_theta=%g [deg] \n", NAME_INSTRUMENT, E0, dcm_theta);
      if (fabs(dE/E0)>0.1) dE = 3e-2*E0;
    } else {
      dcm_gap=dcm_theta=0;
-     printf("%s: E0=%g [keV] Monochromator OFF\n", __FILE__, E0);
+     printf("%s: E0=%g [keV] Monochromator OFF\n", NAME_INSTRUMENT, E0);
    }
 %}
 
