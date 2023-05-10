@@ -1,5 +1,0 @@
-\.(bso?|old|bak|out|hide)$
-\.(exists|gdbinit|mirror)$
-Makefile$
-%$
-

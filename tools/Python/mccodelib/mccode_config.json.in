@@ -6,11 +6,13 @@
     "MCRUN": "@MCCODE_PREFIX@run",
     "MCPLOT": "@MCCODE_PREFIX@plot-pyqtgraph",
     "MCDISPLAY": "@MCCODE_PREFIX@display-webgl",
+    "IDFGEN": "@IDFGEN@",
     "TOOL_NAME": "@MCCODE_PREFIX@gui",
     "PARTICLE": "@MCCODE_PARTICLE@",
     "BROWSER": "@BROWSER@",
     "GUICOLS": "3",
-    "EDITOR": "@EDITOR@"
+    "EDITOR": "@EDITOR@",
+    "FORMAT": "McCode"
   },
   "compilation": {
     "CFLAGS": "@CFLAGS@",

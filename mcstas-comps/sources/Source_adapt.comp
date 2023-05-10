@@ -58,6 +58,8 @@
 * xmax: [m]           Right edge
 * ymin: [m]           Lower edge
 * ymax: [m]           Upper edge
+* xwidth: [m]         Width of source
+* yheight: [m]        Height of source
 * target_index: [1]   relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
 * dist: [m]           Distance to target rectangle along z axis
 * focus_xw: [m]       Width of target

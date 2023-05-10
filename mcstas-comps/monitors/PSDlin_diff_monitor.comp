@@ -56,7 +56,6 @@ DECLARE
   DArray1d PSDdiff_p;
   DArray1d PSDdiff_p2;
   char difilename[128];
-  int i;
 %}
 
 INITIALIZE
@@ -77,13 +76,6 @@ INITIALIZE
   PSDdiff_N = create_darr1d(nx-1);
   PSDdiff_p = create_darr1d(nx-1);
   PSDdiff_p2 = create_darr1d(nx-1);
-
-  for (i=0; i<nx; i++)
-  {
-    PSDlin_N[i] = 0;
-    PSDlin_p[i] = 0;
-    PSDlin_p2[i] = 0;
-  }
 
   // Use instance name for monitor output if no input was given
   if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
@@ -117,6 +109,7 @@ TRACE
 
 SAVE
 %{
+int i;
 if (!nowritefile) {
   double mean;
   for (i=0; i<nx-1; i++) {
@@ -152,7 +145,7 @@ if (!nowritefile) {
 
 FINALLY
 %{
-  destroy_darr1d(PSDlin_N;
+  destroy_darr1d(PSDlin_N);
   destroy_darr1d(PSDlin_p);
   destroy_darr1d(PSDlin_p2);
   destroy_darr1d(PSDdiff_N);

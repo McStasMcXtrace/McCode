@@ -19,19 +19,11 @@ if [[ ${PWD} = / ]]; then
 fi
 
 if [ -d "$LIB/../miniconda3" ]; then
-    PATH=$LIB/../miniconda3/bin:$PATH
+    source $LIB/../miniconda3/bin/activate base
 fi
 
 ARCH=`arch`
 UNAME=`uname -s`
-
-# Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
-if [ -d "$LIB/../miniconda3" ]; then
-    if ! [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
-	PYVER=`$LIB/../miniconda3/bin/python3 --version | cut -f 2 -d\  | cut -f 1-2 -d.`
-	export PYTHONPATH=$LIB/../miniconda3/lib:$LIB/../miniconda3/lib/python$PYVER/site-packages
-    fi
-fi
 
 LIB="$LIB/../tools/Python/@P@run"
 TOOL="@P@run"
@@ -52,7 +44,7 @@ canrun() {
 }
 
 if ( canrun ); then
-    python3 -u ${LIB}/${TOOL}.py $*
+    python3 -u ${LIB}/${TOOL}.py "$@"
 else
     @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
 fi

@@ -510,7 +510,34 @@ int off_clip_3D_mod_grav(intersection* t, Coords pos, Coords vel, Coords acc,
 	  } else {
 	    inters.in_out=-1;
 	  }
-	  t[t_size++]=inters;
+#ifdef OFF_LEGACY
+          t[t_size++]=inters;
+#else
+    /* Check against our 4 existing times, starting from [-FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX] */
+    /* Case 1, negative time? */
+    if (t_size < 4) t_size++;
+    if (inters.time < 0) {
+      if (inters.time > t[0].time) {
+        t[0]=inters;
+      }
+    } else {
+      /* Case 2, positive time */
+      intersection xtmp;
+      if (inters.time < t[3].time) {
+      t[3]=inters;
+        if (t[3].time < t[2].time) {
+    xtmp = t[2];
+    t[2] = t[3];
+    t[3] = xtmp;
+        }
+        if (t[2].time < t[1].time) {
+    xtmp = t[1];
+    t[1] = t[2];
+    t[2] = xtmp;
+        }
+      }
+    }
+#endif
 	}
       }
     }
@@ -1002,14 +1029,16 @@ int off_intersect_all(double* t0, double* t3,
      off_struct *data )
 {
 
-#ifdef OFF_LEGACY    
+    int t_size = 0;
+#ifdef OFF_LEGACY
+
     if(mcgravitation) {
       Coords pos={ x,  y,  z};
       Coords vel={vx, vy, vz};
       Coords acc={ax, ay, az};
       t_size=off_clip_3D_mod_grav(data->intersects, pos, vel, acc,
 				  data->vtxArray, data->vtxSize, data->faceArray,
-				  data->faceSize, data->normalArray );
+				  data->faceSize, data->normalArray, data->DArray );
     } else {
     ///////////////////////////////////
     // non-grav
@@ -1050,6 +1079,7 @@ int off_intersect_all(double* t0, double* t3,
 	      if (n0) *n0 = data->intersects[0].normal;
       }
       /* should also return t[0].index and t[i].index as polygon ID */
+      data->nextintersect=(data->intersects[data->nextintersect]).index;
       return t_size;
     }
 #else
@@ -1058,7 +1088,6 @@ int off_intersect_all(double* t0, double* t3,
     intersect4[1].time=FLT_MAX;
     intersect4[2].time=FLT_MAX;
     intersect4[3].time=FLT_MAX;
-    int t_size = 0;
     if(mcgravitation) {
       Coords pos={ x,  y,  z};
       Coords vel={vx, vy, vz};
@@ -1082,7 +1111,14 @@ int off_intersect_all(double* t0, double* t3,
       if (n0) *n0 = intersect4[i].normal;
       if (t3) *t3 = intersect4[i+1].time;
       if (n3) *n3 = intersect4[i+1].normal;
+
+      if (intersect4[1].time == FLT_MAX)
+      {
+        if (t3) *t3 = 0.0;
+      }
+
       /* should also return t[0].index and t[i].index as polygon ID */
+      data->nextintersect=(int)intersect4[i].index;
       return t_size;
     }
 #endif
@@ -1149,7 +1185,6 @@ int off_x_intersect(double *l0,double *l3,
 *******************************************************************************/
 void off_display(off_struct data)
 {
-#ifndef OPENACC
   unsigned int i;
   double ratio=(double)(N_VERTEX_DISPLAYED)/(double)data.faceSize;
   unsigned int pixel=0;
@@ -1196,7 +1231,6 @@ void off_display(off_struct data)
     }
     i += nbVertex;
   }
-#endif
 } /* off_display */
 
 /* end of interoff-lib.c */

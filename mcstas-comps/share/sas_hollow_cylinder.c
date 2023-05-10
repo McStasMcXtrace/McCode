@@ -1,664 +1,1015 @@
-// GENERATED CODE --- DO NOT EDIT ---
-// Code is produced by sasmodels.gen from sasmodels/models/MODEL.c
+#define HAS_Iqac
+#define HAS_FQ
+#define FORM_VOL
+#line 1 "../kernel_header.c"
 
 #ifdef __OPENCL_VERSION__
 # define USE_OPENCL
+#elif defined(__CUDACC__)
+# define USE_CUDA
+#elif defined(_OPENMP)
+# define USE_OPENMP
 #endif
 
-#define USE_KAHAN_SUMMATION 0
+// Use SAS_DOUBLE to force the use of double even for float kernels
+#define SAS_DOUBLE double
 
 // If opencl is not available, then we are compiling a C function
 // Note: if using a C++ compiler, then define kernel as extern "C"
-#ifndef USE_OPENCL
-#  ifdef __cplusplus
-     #include <cstdio>
-     #include <cmath>
-     using namespace std;
-     #if defined(_MSC_VER)
-     #   define kernel extern "C" __declspec( dllexport )
-         inline float trunc(float x) { return x>=0?floor(x):-floor(-x); }
-	 inline float fmin(float x, float y) { return x>y ? y : x; }
-	 inline float fmax(float x, float y) { return x<y ? y : x; }
+#ifdef USE_OPENCL
+
+   #define USE_GPU
+   #define pglobal global
+   #define pconstant constant
+
+   typedef int int32_t;
+
+   #if defined(USE_SINCOS)
+   #  define SINCOS(angle,svar,cvar) svar=sincos(angle,&cvar)
+   #else
+   #  define SINCOS(angle,svar,cvar) do {const double _t_=angle; svar=sin(_t_);cvar=cos(_t_);} while (0)
+   #endif
+   // Intel CPU on Mac gives strange values for erf(); on the verified
+   // platforms (intel, nvidia, amd), the cephes erf() is significantly
+   // faster than that available in the native OpenCL.
+   #define NEED_ERF
+   // OpenCL only has type generic math
+   #define expf exp
+   #ifndef NEED_ERF
+   #  define erff erf
+   #  define erfcf erfc
+   #endif
+
+#elif defined(USE_CUDA)
+
+   #define USE_GPU
+   #define local __shared__
+   #define pglobal
+   #define constant __constant__
+   #define pconstant const
+   #define kernel extern "C" __global__
+
+   // OpenCL powr(a,b) = C99 pow(a,b), b >= 0
+   // OpenCL pown(a,b) = C99 pow(a,b), b integer
+   #define powr(a,b) pow(a,b)
+   #define pown(a,b) pow(a,b)
+   //typedef int int32_t;
+   #if defined(USE_SINCOS)
+   #  define SINCOS(angle,svar,cvar) sincos(angle,&svar,&cvar)
+   #else
+   #  define SINCOS(angle,svar,cvar) do {const double _t_=angle; svar=sin(_t_);cvar=cos(_t_);} while (0)
+   #endif
+
+#else // !USE_OPENCL && !USE_CUDA
+
+   #define local
+   #define pglobal
+   #define constant const
+   #define pconstant const
+
+   #ifdef __cplusplus
+      #include <cstdio>
+      #include <cmath>
+      using namespace std;
+      #if defined(_MSC_VER)
+         #include <limits>
+         #include <float.h>
+         #define kernel extern "C" __declspec( dllexport )
+         inline double trunc(double x) { return x>=0?floor(x):-floor(-x); }
+         inline double fmin(double x, double y) { return x>y ? y : x; }
+         inline double fmax(double x, double y) { return x<y ? y : x; }
+         #define isnan(x) _isnan(x)
+         #define isinf(x) (!_finite(x))
+         #define isfinite(x) _finite(x)
+         #define NAN (std::numeric_limits<double>::quiet_NaN()) // non-signalling NaN
+         #define INFINITY (std::numeric_limits<double>::infinity())
+         #define NEED_ERF
+         #define NEED_EXPM1
+         #define NEED_TGAMMA
      #else
-     #   define kernel extern "C"
+         #define kernel extern "C"
+         #include <cstdint>
      #endif
-     inline void SINCOS(float angle, float &svar, float &cvar) { svar=sin(angle); cvar=cos(angle); }
-#  else
+     inline void SINCOS(double angle, double &svar, double &cvar) { svar=sin(angle); cvar=cos(angle); }
+   #else // !__cplusplus
+     #include <inttypes.h>  // C99 guarantees that int32_t types is here
      #include <stdio.h>
-     #include <tgmath.h> // C99 type-generic math, so sin(float) => sinf
+     #if defined(__TINYC__)
+         typedef int int32_t;
+         #include <math.h>
+         // TODO: check isnan is correct
+         inline double _isnan(double x) { return x != x; } // hope this doesn't optimize away!
+         #undef isnan
+         #define isnan(x) _isnan(x)
+         // Defeat the double->float conversion since we don't have tgmath
+         inline SAS_DOUBLE trunc(SAS_DOUBLE x) { return x>=0?floor(x):-floor(-x); }
+         inline SAS_DOUBLE fmin(SAS_DOUBLE x, SAS_DOUBLE y) { return x>y ? y : x; }
+         inline SAS_DOUBLE fmax(SAS_DOUBLE x, SAS_DOUBLE y) { return x<y ? y : x; }
+         #define NEED_ERF
+         #define NEED_EXPM1
+         #define NEED_TGAMMA
+         #define NEED_CBRT
+         // expf missing from windows?
+         #define expf exp
+     #else
+         #include <tgmath.h> // C99 type-generic math, so sin(float) => sinf
+     #endif
      // MSVC doesn't support C99, so no need for dllexport on C99 branch
      #define kernel
-     #define SINCOS(angle,svar,cvar) do {const float _t_=angle; svar=sin(_t_);cvar=cos(_t_);} while (0)
-#  endif
-#  define global
-#  define local
-#  define constant const
-// OpenCL powr(a,b) = C99 pow(a,b), b >= 0
-// OpenCL pown(a,b) = C99 pow(a,b), b integer
-#  define powr(a,b) pow(a,b)
-#  define pown(a,b) pow(a,b)
-#else
-#  ifdef USE_SINCOS
-#    define SINCOS(angle,svar,cvar) svar=sincos(angle,&cvar)
-#  else
-#    define SINCOS(angle,svar,cvar) do {const float _t_=angle; svar=sin(_t_);cvar=cos(_t_);} while (0)
-#  endif
+     #define SINCOS(angle,svar,cvar) do {const double _t_=angle; svar=sin(_t_);cvar=cos(_t_);} while (0)
+   #endif  // !__cplusplus
+   // OpenCL powr(a,b) = C99 pow(a,b), b >= 0
+   // OpenCL pown(a,b) = C99 pow(a,b), b integer
+   #define powr(a,b) pow(a,b)
+   #define pown(a,b) pow(a,b)
+
+#endif // !USE_OPENCL
+
+#if defined(NEED_CBRT)
+   #define cbrt(_x) pow(_x, 0.33333333333333333333333)
+#endif
+
+#if defined(NEED_EXPM1)
+   // TODO: precision is a half digit lower than numpy on mac in [1e-7, 0.5]
+   // Run "explore/precision.py sas_expm1" to see this (may have to fiddle
+   // the xrange for log to see the complete range).
+   static SAS_DOUBLE expm1(SAS_DOUBLE x_in) {
+      double x = (double)x_in;  // go back to float for single precision kernels
+      // Adapted from the cephes math library.
+      // Copyright 1984 - 1992 by Stephen L. Moshier
+      if (x != x || x == 0.0) {
+         return x; // NaN and +/- 0
+      } else if (x < -0.5 || x > 0.5) {
+         return exp(x) - 1.0;
+      } else {
+         const double xsq = x*x;
+         const double p = (((
+            +1.2617719307481059087798E-4)*xsq
+            +3.0299440770744196129956E-2)*xsq
+            +9.9999999999999999991025E-1);
+         const double q = ((((
+            +3.0019850513866445504159E-6)*xsq
+            +2.5244834034968410419224E-3)*xsq
+            +2.2726554820815502876593E-1)*xsq
+            +2.0000000000000000000897E0);
+         double r = x * p;
+         r =  r / (q - r);
+         return r+r;
+       }
+   }
 #endif
 
 // Standard mathematical constants:
 //   M_E, M_LOG2E, M_LOG10E, M_LN2, M_LN10, M_PI, M_PI_2=pi/2, M_PI_4=pi/4,
 //   M_1_PI=1/pi, M_2_PI=2/pi, M_2_SQRTPI=2/sqrt(pi), SQRT2, SQRT1_2=sqrt(1/2)
-// OpenCL defines M_constant_F for float constants, and nothing if float
+// OpenCL defines M_constant_F for float constants, and nothing if double
 // is not enabled on the card, which is why these constants may be missing
 #ifndef M_PI
-#  define M_PI 3.141592653589793f
+#  define M_PI 3.141592653589793
 #endif
 #ifndef M_PI_2
-#  define M_PI_2 1.570796326794897f
+#  define M_PI_2 1.570796326794897
 #endif
 #ifndef M_PI_4
-#  define M_PI_4 0.7853981633974483f
+#  define M_PI_4 0.7853981633974483
+#endif
+#ifndef M_E
+#  define M_E 2.718281828459045091
+#endif
+#ifndef M_SQRT1_2
+#  define M_SQRT1_2 0.70710678118654746
 #endif
 
-// Non-standard pi/180, used for converting between degrees and radians
+// Non-standard function library
+// pi/180, used for converting between degrees and radians
+// 4/3 pi for computing sphere volumes
+// square and cube for computing squares and cubes
 #ifndef M_PI_180
-#  define M_PI_180 0.017453292519943295f
+#  define M_PI_180 0.017453292519943295
+#endif
+#ifndef M_4PI_3
+#  define M_4PI_3 4.18879020478639
+#endif
+double square(double x) { return x*x; }
+double cube(double x) { return x*x*x; }
+double sas_sinx_x(double x) { return x==0 ? 1.0 : sin(x)/x; }
+
+// CRUFT: support old style models with orientation received qx, qy and angles
+
+// To rotate from the canonical position to theta, phi, psi, first rotate by
+// psi about the major axis, oriented along z, which is a rotation in the
+// detector plane xy. Next rotate by theta about the y axis, aligning the major
+// axis in the xz plane. Finally, rotate by phi in the detector plane xy.
+// To compute the scattering, undo these rotations in reverse order:
+//     rotate in xy by -phi, rotate in xz by -theta, rotate in xy by -psi
+// The returned q is the length of the q vector and (xhat, yhat, zhat) is a unit
+// vector in the q direction.
+// To change between counterclockwise and clockwise rotation, change the
+// sign of phi and psi.
+
+#if 1
+//think cos(theta) should be sin(theta) in new coords, RKH 11Jan2017
+#define ORIENT_SYMMETRIC(qx, qy, theta, phi, q, sn, cn) do { \
+    SINCOS(phi*M_PI_180, sn, cn); \
+    q = sqrt(qx*qx + qy*qy); \
+    cn  = (q==0. ? 1.0 : (cn*qx + sn*qy)/q * sin(theta*M_PI_180));  \
+    sn = sqrt(1 - cn*cn); \
+    } while (0)
+#else
+// SasView 3.x definition of orientation
+#define ORIENT_SYMMETRIC(qx, qy, theta, phi, q, sn, cn) do { \
+    SINCOS(theta*M_PI_180, sn, cn); \
+    q = sqrt(qx*qx + qy*qy);\
+    cn = (q==0. ? 1.0 : (cn*cos(phi*M_PI_180)*qx + sn*qy)/q); \
+    sn = sqrt(1 - cn*cn); \
+    } while (0)
 #endif
 
+#if 1
+#define ORIENT_ASYMMETRIC(qx, qy, theta, phi, psi, q, xhat, yhat, zhat) do { \
+    q = sqrt(qx*qx + qy*qy); \
+    const double qxhat = qx/q; \
+    const double qyhat = qy/q; \
+    double sin_theta, cos_theta; \
+    double sin_phi, cos_phi; \
+    double sin_psi, cos_psi; \
+    SINCOS(theta*M_PI_180, sin_theta, cos_theta); \
+    SINCOS(phi*M_PI_180, sin_phi, cos_phi); \
+    SINCOS(psi*M_PI_180, sin_psi, cos_psi); \
+    xhat = qxhat*(-sin_phi*sin_psi + cos_theta*cos_phi*cos_psi) \
+         + qyhat*( cos_phi*sin_psi + cos_theta*sin_phi*cos_psi); \
+    yhat = qxhat*(-sin_phi*cos_psi - cos_theta*cos_phi*sin_psi) \
+         + qyhat*( cos_phi*cos_psi - cos_theta*sin_phi*sin_psi); \
+    zhat = qxhat*(-sin_theta*cos_phi) \
+         + qyhat*(-sin_theta*sin_phi); \
+    } while (0)
+#else
+// SasView 3.x definition of orientation
+#define ORIENT_ASYMMETRIC(qx, qy, theta, phi, psi, q, cos_alpha, cos_mu, cos_nu) do { \
+    q = sqrt(qx*qx + qy*qy); \
+    const double qxhat = qx/q; \
+    const double qyhat = qy/q; \
+    double sin_theta, cos_theta; \
+    double sin_phi, cos_phi; \
+    double sin_psi, cos_psi; \
+    SINCOS(theta*M_PI_180, sin_theta, cos_theta); \
+    SINCOS(phi*M_PI_180, sin_phi, cos_phi); \
+    SINCOS(psi*M_PI_180, sin_psi, cos_psi); \
+    cos_alpha = cos_theta*cos_phi*qxhat + sin_theta*qyhat; \
+    cos_mu = (-sin_theta*cos_psi*cos_phi - sin_psi*sin_phi)*qxhat + cos_theta*cos_psi*qyhat; \
+    cos_nu = (-cos_phi*sin_psi*sin_theta + sin_phi*cos_psi)*qxhat + sin_psi*cos_theta*qyhat; \
+    } while (0)
+#endif
 
-#define VOLUME_PARAMETERS radius,core_radius,length
-#define VOLUME_WEIGHT_PRODUCT radius_w*core_radius_w*length_w
-#define IQ_KERNEL_NAME hollow_cylinder_Iq
-#define IQ_PARAMETERS radius, core_radius, length, sld, solvent_sld
-#define IQ_FIXED_PARAMETER_DECLARATIONS const float scale, \
-    const float background, \
-    const float sld, \
-    const float solvent_sld
-#define IQ_WEIGHT_PRODUCT radius_w*core_radius_w*length_w
-#define IQ_DISPERSION_LENGTH_DECLARATIONS const int Nradius, \
-    const int Ncore_radius, \
-    const int Nlength
-#define IQ_DISPERSION_LENGTH_SUM Nradius+Ncore_radius+Nlength
-#define IQ_OPEN_LOOPS     for (int radius_i=0; radius_i < Nradius; radius_i++) { \
-      const float radius = loops[2*(radius_i)]; \
-      const float radius_w = loops[2*(radius_i)+1]; \
-      for (int core_radius_i=0; core_radius_i < Ncore_radius; core_radius_i++) { \
-        const float core_radius = loops[2*(core_radius_i+Nradius)]; \
-        const float core_radius_w = loops[2*(core_radius_i+Nradius)+1]; \
-        for (int length_i=0; length_i < Nlength; length_i++) { \
-          const float length = loops[2*(length_i+Nradius+Ncore_radius)]; \
-          const float length_w = loops[2*(length_i+Nradius+Ncore_radius)+1];
-#define IQ_CLOSE_LOOPS         } \
-      } \
-    }
-#define IQXY_KERNEL_NAME hollow_cylinder_Iqxy
-#define IQXY_PARAMETERS radius, core_radius, length, sld, solvent_sld, theta, phi
-#define IQXY_FIXED_PARAMETER_DECLARATIONS const float scale, \
-    const float background, \
-    const float sld, \
-    const float solvent_sld
-#define IQXY_WEIGHT_PRODUCT radius_w*core_radius_w*length_w*theta_w*phi_w
-#define IQXY_DISPERSION_LENGTH_DECLARATIONS const int Nradius, \
-    const int Ncore_radius, \
-    const int Nlength, \
-    const int Ntheta, \
-    const int Nphi
-#define IQXY_DISPERSION_LENGTH_SUM Nradius+Ncore_radius+Nlength+Ntheta+Nphi
-#define IQXY_OPEN_LOOPS     for (int radius_i=0; radius_i < Nradius; radius_i++) { \
-      const float radius = loops[2*(radius_i)]; \
-      const float radius_w = loops[2*(radius_i)+1]; \
-      for (int core_radius_i=0; core_radius_i < Ncore_radius; core_radius_i++) { \
-        const float core_radius = loops[2*(core_radius_i+Nradius)]; \
-        const float core_radius_w = loops[2*(core_radius_i+Nradius)+1]; \
-        for (int length_i=0; length_i < Nlength; length_i++) { \
-          const float length = loops[2*(length_i+Nradius+Ncore_radius)]; \
-          const float length_w = loops[2*(length_i+Nradius+Ncore_radius)+1]; \
-          for (int theta_i=0; theta_i < Ntheta; theta_i++) { \
-            const float theta = loops[2*(theta_i+Nradius+Ncore_radius+Nlength)]; \
-            const float theta_w = loops[2*(theta_i+Nradius+Ncore_radius+Nlength)+1]; \
-            for (int phi_i=0; phi_i < Nphi; phi_i++) { \
-              const float phi = loops[2*(phi_i+Nradius+Ncore_radius+Nlength+Ntheta)]; \
-              const float phi_w = loops[2*(phi_i+Nradius+Ncore_radius+Nlength+Ntheta)+1];
-#define IQXY_CLOSE_LOOPS             } \
-          } \
-        } \
-      } \
-    }
-#define IQXY_HAS_THETA 1
+//# Beginning of rotational operation definitions
 
-float J1(float x);
-float J1(float x)
+typedef struct {
+          double R31, R32;
+      } QACRotation;
+
+typedef struct {
+    double R11, R12;
+    double R21, R22;
+    double R31, R32;
+} QABCRotation;
+
+// Fill in the rotation matrix R from the view angles (theta, phi) and the
+// jitter angles (dtheta, dphi).  This matrix can be applied to all of the
+// (qx, qy) points in the image to produce R*[qx,qy]' = [qa,qc]'
+static void
+qac_rotation(
+    QACRotation *rotation,
+    double theta, double phi,
+    double dtheta, double dphi)
 {
-  const float ax = fabs(x);
-  if (ax < 8.0f) {
-    const float y = x*x;
-    const float ans1 = x*(72362614232.0f
-              + y*(-7895059235.0f
-              + y*(242396853.1f
-              + y*(-2972611.439f
-              + y*(15704.48260f
-              + y*(-30.16036606f))))));
-    const float ans2 = 144725228442.0f
-              + y*(2300535178.0f
-              + y*(18583304.74f
-              + y*(99447.43394f
-              + y*(376.9991397f
-              + y))));
-    return ans1/ans2;
-  } else {
-    const float y = 64.0f/(ax*ax);
-    const float xx = ax - 2.356194491f;
-    const float ans1 = 1.0f
-              + y*(0.183105e-2f
-              + y*(-0.3516396496e-4f
-              + y*(0.2457520174e-5f
-              + y*-0.240337019e-6f)));
-    const float ans2 = 0.04687499995f
-              + y*(-0.2002690873e-3f
-              + y*(0.8449199096e-5f
-              + y*(-0.88228987e-6f
-              + y*0.105787412e-6f)));
-    float sn,cn;
-    SINCOS(xx, sn, cn);
-    const float ans = sqrt(0.636619772f/ax) * (cn*ans1 - (8.0f/ax)*sn*ans2);
-    return (x < 0.0f) ? -ans : ans;
-  }
+    double sin_theta, cos_theta;
+    double sin_phi, cos_phi;
+
+    // reverse view matrix
+    SINCOS(theta*M_PI_180, sin_theta, cos_theta);
+    SINCOS(phi*M_PI_180, sin_phi, cos_phi);
+    const double V11 = cos_phi*cos_theta;
+    const double V12 = sin_phi*cos_theta;
+    const double V21 = -sin_phi;
+    const double V22 = cos_phi;
+    const double V31 = sin_theta*cos_phi;
+    const double V32 = sin_phi*sin_theta;
+
+    // reverse jitter matrix
+    SINCOS(dtheta*M_PI_180, sin_theta, cos_theta);
+    SINCOS(dphi*M_PI_180, sin_phi, cos_phi);
+    const double J31 = sin_theta;
+    const double J32 = -sin_phi*cos_theta;
+    const double J33 = cos_phi*cos_theta;
+
+    // reverse matrix
+    rotation->R31 = J31*V11 + J32*V21 + J33*V31;
+    rotation->R32 = J31*V12 + J32*V22 + J33*V32;
+}
+
+// Apply the rotation matrix returned from qac_rotation to the point (qx,qy),
+// returning R*[qx,qy]' = [qa,qc]'
+static void
+qac_apply(
+    QACRotation *rotation,
+    double qx, double qy,
+    double *qab_out, double *qc_out)
+{
+    // Indirect calculation of qab, from qab^2 = |q|^2 - qc^2
+    const double dqc = rotation->R31*qx + rotation->R32*qy;
+    const double dqab_sq = -dqc*dqc + qx*qx + qy*qy;
+    //*qab_out = sqrt(fabs(dqab_sq));
+    *qab_out = dqab_sq > 0.0 ? sqrt(dqab_sq) : 0.0;
+    *qc_out = dqc;
+}
+
+// Fill in the rotation matrix R from the view angles (theta, phi, psi) and the
+// jitter angles (dtheta, dphi, dpsi).  This matrix can be applied to all of the
+// (qx, qy) points in the image to produce R*[qx,qy]' = [qa,qb,qc]'
+static void
+qabc_rotation(
+    QABCRotation *rotation,
+    double theta, double phi, double psi,
+    double dtheta, double dphi, double dpsi)
+{
+    double sin_theta, cos_theta;
+    double sin_phi, cos_phi;
+    double sin_psi, cos_psi;
+
+    // reverse view matrix
+    SINCOS(theta*M_PI_180, sin_theta, cos_theta);
+    SINCOS(phi*M_PI_180, sin_phi, cos_phi);
+    SINCOS(psi*M_PI_180, sin_psi, cos_psi);
+    const double V11 = -sin_phi*sin_psi + cos_phi*cos_psi*cos_theta;
+    const double V12 = sin_phi*cos_psi*cos_theta + sin_psi*cos_phi;
+    const double V21 = -sin_phi*cos_psi - sin_psi*cos_phi*cos_theta;
+    const double V22 = -sin_phi*sin_psi*cos_theta + cos_phi*cos_psi;
+    const double V31 = sin_theta*cos_phi;
+    const double V32 = sin_phi*sin_theta;
+
+    // reverse jitter matrix
+    SINCOS(dtheta*M_PI_180, sin_theta, cos_theta);
+    SINCOS(dphi*M_PI_180, sin_phi, cos_phi);
+    SINCOS(dpsi*M_PI_180, sin_psi, cos_psi);
+    const double J11 = cos_psi*cos_theta;
+    const double J12 = sin_phi*sin_theta*cos_psi + sin_psi*cos_phi;
+    const double J13 = sin_phi*sin_psi - sin_theta*cos_phi*cos_psi;
+    const double J21 = -sin_psi*cos_theta;
+    const double J22 = -sin_phi*sin_psi*sin_theta + cos_phi*cos_psi;
+    const double J23 = sin_phi*cos_psi + sin_psi*sin_theta*cos_phi;
+    const double J31 = sin_theta;
+    const double J32 = -sin_phi*cos_theta;
+    const double J33 = cos_phi*cos_theta;
+
+    // reverse matrix
+    rotation->R11 = J11*V11 + J12*V21 + J13*V31;
+    rotation->R12 = J11*V12 + J12*V22 + J13*V32;
+    rotation->R21 = J21*V11 + J22*V21 + J23*V31;
+    rotation->R22 = J21*V12 + J22*V22 + J23*V32;
+    rotation->R31 = J31*V11 + J32*V21 + J33*V31;
+    rotation->R32 = J31*V12 + J32*V22 + J33*V32;
+}
+
+// Apply the rotation matrix returned from qabc_rotation to the point (qx,qy),
+// returning R*[qx,qy]' = [qa,qb,qc]'
+static void
+qabc_apply(
+    QABCRotation *rotation,
+    double qx, double qy,
+    double *qa_out, double *qb_out, double *qc_out)
+{
+    *qa_out = rotation->R11*qx + rotation->R12*qy;
+    *qb_out = rotation->R21*qx + rotation->R22*qy;
+    *qc_out = rotation->R31*qx + rotation->R32*qy;
+}
+
+// ##### End of rotation operation definitions ######
+
+#line 1 ".././models/lib/polevl.c"
+
+/*							polevl.c
+ *							p1evl.c
+ *
+ *	Evaluate polynomial
+ *
+ *
+ *
+ * SYNOPSIS:
+ *
+ * int N;
+ * double x, y, coef[N+1], polevl[];
+ *
+ * y = polevl( x, coef, N );
+ *
+ *
+ *
+ * DESCRIPTION:
+ *
+ * Evaluates polynomial of degree N:
+ *
+ *                     2          N
+ * y  =  C  + C x + C x  +...+ C x
+ *        0    1     2          N
+ *
+ * Coefficients are stored in reverse order:
+ *
+ * coef[0] = C  , ..., coef[N] = C  .
+ *            N                   0
+ *
+ * The function p1evl() assumes that C_N = 1.0 and is
+ * omitted from the array.  Its calling arguments are
+ * otherwise the same as polevl().
+ *
+ *
+ * SPEED:
+ *
+ * In the interest of speed, there are no checks for out
+ * of bounds arithmetic.  This routine is used by most of
+ * the functions in the library.  Depending on available
+ * equipment features, the user may wish to rewrite the
+ * program in microcode or assembly language.
+ *
+ */
+
+
+/*
+Cephes Math Library Release 2.1:  December, 1988
+Copyright 1984, 1987, 1988 by Stephen L. Moshier
+Direct inquiries to 30 Frost Street, Cambridge, MA 02140
+*/
+#pragma acc routine seq
+static
+double polevl( double x, pconstant double *coef, int N )
+{
+
+    int i = 0;
+    double ans = coef[i];
+
+    while (i < N) {
+        i++;
+        ans = ans * x + coef[i];
+    }
+
+    return ans;
+}
+
+/*							p1evl()	*/
+/*                                          N
+ * Evaluate polynomial when coefficient of x  is 1.0.
+ * Otherwise same as polevl.
+ */
+#pragma acc routine seq
+static
+double p1evl( double x, pconstant double *coef, int N )
+{
+    int i=0;
+    double ans = x+coef[i];
+
+    while (i < N-1) {
+        i++;
+        ans = ans*x + coef[i];
+    }
+
+    return ans;
 }
 
 
-/*
- *  GaussWeights.c
- *  SANSAnalysis
+#line 1 ".././models/lib/sas_J1.c"
+
+/*							j1.c
  *
- *  Created by Andrew Jackson on 4/23/07.f
- *  Copyright 2007 __MyCompanyName__. All rights reserved.
+ *	Bessel function of order one
+ *
+ *
+ *
+ * SYNOPSIS:
+ *
+ * double x, y, j1();
+ *
+ * y = j1( x );
+ *
+ *
+ *
+ * DESCRIPTION:
+ *
+ * Returns Bessel function of order one of the argument.
+ *
+ * The domain is divided into the intervals [0, 8] and
+ * (8, infinity). In the first interval a 24 term Chebyshev
+ * expansion is used. In the second, the asymptotic
+ * trigonometric representation is employed using two
+ * rational functions of degree 5/5.
+ *
+ *
+ *
+ * ACCURACY:
+ *
+ *                      Absolute error:
+ * arithmetic   domain      # trials      peak         rms
+ *    DEC       0, 30       10000       4.0e-17     1.1e-17
+ *    IEEE      0, 30       30000       2.6e-16     1.1e-16
+ *
  *
  */
 
-// Gaussians
-constant float Gauss76Wt[]={
-	.00126779163408536f,		//0
-	.00294910295364247f,
-	.00462793522803742f,
-	.00629918049732845f,
-	.00795984747723973f,
-	.00960710541471375f,
-	.0112381685696677f,
-	.0128502838475101f,
-	.0144407317482767f,
-	.0160068299122486f,
-	.0175459372914742f,		//10
-	.0190554584671906f,
-	.020532847967908f,
-	.0219756145344162f,
-	.0233813253070112f,
-	.0247476099206597f,
-	.026072164497986f,
-	.0273527555318275f,
-	.028587223650054f,
-	.029773487255905f,
-	.0309095460374916f,		//20
-	.0319934843404216f,
-	.0330234743977917f,
-	.0339977794120564f,
-	.0349147564835508f,
-	.0357728593807139f,
-	.0365706411473296f,
-	.0373067565423816f,
-	.0379799643084053f,
-	.0385891292645067f,
-	.0391332242205184f,		//30
-	.0396113317090621f,
-	.0400226455325968f,
-	.040366472122844f,
-	.0406422317102947f,
-	.0408494593018285f,
-	.040987805464794f,
-	.0410570369162294f,
-	.0410570369162294f,
-	.040987805464794f,
-	.0408494593018285f,		//40
-	.0406422317102947f,
-	.040366472122844f,
-	.0400226455325968f,
-	.0396113317090621f,
-	.0391332242205184f,
-	.0385891292645067f,
-	.0379799643084053f,
-	.0373067565423816f,
-	.0365706411473296f,
-	.0357728593807139f,		//50
-	.0349147564835508f,
-	.0339977794120564f,
-	.0330234743977917f,
-	.0319934843404216f,
-	.0309095460374916f,
-	.029773487255905f,
-	.028587223650054f,
-	.0273527555318275f,
-	.026072164497986f,
-	.0247476099206597f,		//60
-	.0233813253070112f,
-	.0219756145344162f,
-	.020532847967908f,
-	.0190554584671906f,
-	.0175459372914742f,
-	.0160068299122486f,
-	.0144407317482767f,
-	.0128502838475101f,
-	.0112381685696677f,
-	.00960710541471375f,		//70
-	.00795984747723973f,
-	.00629918049732845f,
-	.00462793522803742f,
-	.00294910295364247f,
-	.00126779163408536f		//75 (indexed from 0)
-};
-
-#pragma acc declare create ( Gauss76Wt )
-
-constant float Gauss76Z[]={
-	-.999505948362153f,		//0
-	-.997397786355355f,
-	-.993608772723527f,
-	-.988144453359837f,
-	-.981013938975656f,
-	-.972229228520377f,
-	-.961805126758768f,
-	-.949759207710896f,
-	-.936111781934811f,
-	-.92088586125215f,
-	-.904107119545567f,		//10
-	-.885803849292083f,
-	-.866006913771982f,
-	-.844749694983342f,
-	-.822068037328975f,
-	-.7980001871612f,
-	-.77258672828181f,
-	-.74587051350361f,
-	-.717896592387704f,
-	-.688712135277641f,
-	-.658366353758143f,		//20
-	-.626910417672267f,
-	-.594397368836793f,
-	-.560882031601237f,
-	-.526420920401243f,
-	-.491072144462194f,
-	-.454895309813726f,
-	-.417951418780327f,
-	-.380302767117504f,
-	-.342012838966962f,
-	-.303146199807908f,		//30
-	-.263768387584994f,
-	-.223945802196474f,
-	-.183745593528914f,
-	-.143235548227268f,
-	-.102483975391227f,
-	-.0615595913906112f,
-	-.0205314039939986f,
-	.0205314039939986f,
-	.0615595913906112f,
-	.102483975391227f,			//40
-	.143235548227268f,
-	.183745593528914f,
-	.223945802196474f,
-	.263768387584994f,
-	.303146199807908f,
-	.342012838966962f,
-	.380302767117504f,
-	.417951418780327f,
-	.454895309813726f,
-	.491072144462194f,		//50
-	.526420920401243f,
-	.560882031601237f,
-	.594397368836793f,
-	.626910417672267f,
-	.658366353758143f,
-	.688712135277641f,
-	.717896592387704f,
-	.74587051350361f,
-	.77258672828181f,
-	.7980001871612f,	//60
-	.822068037328975f,
-	.844749694983342f,
-	.866006913771982f,
-	.885803849292083f,
-	.904107119545567f,
-	.92088586125215f,
-	.936111781934811f,
-	.949759207710896f,
-	.961805126758768f,
-	.972229228520377f,		//70
-	.981013938975656f,
-	.988144453359837f,
-	.993608772723527f,
-	.997397786355355f,
-	.999505948362153f		//75
-};
-
-#pragma acc declare create ( Gauss76Z )
-
-static float _hollow_cylinder_kernel(float q, float core_radius, float radius, 
-	float length, float dum);
-static float hollow_cylinder_analytical_2D_scaled(float q, float q_x, float q_y, float radius, float core_radius, float length, float sld,
-	float solvent_sld, float theta, float phi);
-static float hollow_cylinder_scaling(float integrand, float delrho, float volume);
-	
-float form_volume(float radius, float core_radius, float length);
-
-float Iq(float q, float radius, float core_radius, float length, float sld,
-	float solvent_sld);
-float Iqxy(float qx, float qy, float radius, float core_radius, float length, float sld,
-	float solvent_sld, float theta, float phi);
-
-// From Igor library
-static float _hollow_cylinder_kernel(float q, float core_radius, float radius, 
-	float length, float dum)
-{
-    float gamma,arg1,arg2,lam1,lam2,psi,sinarg,t2,retval;		//local variables
-    
-    gamma = core_radius/radius;
-    arg1 = q*radius*sqrt(1.0f-dum*dum);		//1=shell (outer radius)
-    arg2 = q*core_radius*sqrt(1.0f-dum*dum);			//2=core (inner radius)
-    if (arg1 == 0.0f){
-    	lam1 = 1.0f;
-    }else{
-    	lam1 = 2.0f*J1(arg1)/arg1;
-    }
-    if (arg2 == 0.0f){
-    	lam2 = 1.0f;
-    }else{
-    	lam2 = 2.0f*J1(arg2)/arg2;
-    }
-    //Todo: Need to check psi behavior as gamma goes to 1.f
-    psi = (lam1 -  gamma*gamma*lam2)/(1.0f-gamma*gamma);		//SRK 10/19/00
-    sinarg = q*length*dum/2.0f;
-    if (sinarg == 0.0f){
-    	t2 = 1.0f;
-    }else{
-    	t2 = sin(sinarg)/sinarg;
-    }
-
-    retval = psi*psi*t2*t2;
-    
-    return(retval);
-}
-static float hollow_cylinder_analytical_2D_scaled(float q, float q_x, float q_y, float radius, float core_radius, float length, float sld,
-	float solvent_sld, float theta, float phi) {
-	float cyl_x, cyl_y; //, cyl_z
-	//float q_z;
-	float vol, cos_val, delrho;
-	float answer;
-	//convert angle degree to radian
-	float pi = 4.0f*atan(1.0f);
-	theta = theta * pi/180.0f;
-	phi = phi * pi/180.0f;
-	delrho = solvent_sld - sld;
-
-	// Cylinder orientation
-	cyl_x = cos(theta) * cos(phi);
-	cyl_y = sin(theta);
-	//cyl_z = -cos(theta) * sin(phi);
-
-	// q vector
-	//q_z = 0;
-
-	// Compute the angle btw vector q and the
-	// axis of the cylinder
-	cos_val = cyl_x*q_x + cyl_y*q_y;// + cyl_z*q_z;
-
-	// The following test should always pass
-	if (fabs(cos_val)>1.0f) {
-		//printf("core_shell_cylinder_analytical_2D: Unexpected error: cos(alpha)=%g\n", cos_val);
-		return NAN;
-	}
-
-	answer = _hollow_cylinder_kernel(q, core_radius, radius, length, cos_val);
-
-	vol = form_volume(radius, core_radius, length);
-	answer = hollow_cylinder_scaling(answer, delrho, vol);
-
-	return answer;
-}
-static float hollow_cylinder_scaling(float integrand, float delrho, float volume)
-{
-	float answer;
-	// Multiply by contrast^2
-	answer = integrand*delrho*delrho;
-
-	//normalize by cylinder volume
-	answer *= volume*volume;
-
-	//convert to [cm-1]
-	answer *= 1.0e-4f;
-	
-	return answer;
-}
-
-
-float form_volume(float radius, float core_radius, float length)
-{
-	float pi = 4.0f*atan(1.0f);
-	float v_shell = pi*length*(radius*radius-core_radius*core_radius);
-	return(v_shell);
-}
-
-
-float Iq(float q, float radius, float core_radius, float length, float sld,
-	float solvent_sld)
-{
-    int i;
-	int nord=76;			//order of integration
-	float lower,upper,zi, inter;		//upper and lower integration limits
-	float summ,answer,delrho;			//running tally of integration
-	float norm,volume;	//final calculation variables
-	
-	if (core_radius >= radius || radius >= length) {
-		return NAN;
-	}
-	
-	delrho = solvent_sld - sld;
-	lower = 0.0f;
-	upper = 1.0f;		//limits of numerical integral
-
-	summ = 0.0f;			//initialize intergral
-	for(i=0;i<nord;i++) {
-		zi = ( Gauss76Z[i] * (upper-lower) + lower + upper )/2.0f;
-		inter = Gauss76Wt[i] * _hollow_cylinder_kernel(q, core_radius, radius, length, zi);
-		summ += inter;
-	}
- 	
-	norm = summ*(upper-lower)/2.0f;
-	volume = form_volume(radius, core_radius, length);
-	answer = hollow_cylinder_scaling(norm, delrho, volume);
-	
-	return(answer);
-}
-
-float Iqxy(float qx, float qy, float radius, float core_radius, float length, float sld,
-	float solvent_sld, float theta, float phi)
-{
-	float q;
-	q = sqrt(qx*qx+qy*qy);
-	return hollow_cylinder_analytical_2D_scaled(q, qx/q, qy/q, radius, core_radius, length, sld, solvent_sld, theta, phi);
-}
-
 /*
-    ##########################################################
-    #                                                        #
-    #   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #
-    #   !!                                              !!   #
-    #   !!  KEEP THIS CODE CONSISTENT WITH KERNELPY.PY  !!   #
-    #   !!                                              !!   #
-    #   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #
-    #                                                        #
-    ##########################################################
+Cephes Math Library Release 2.8:  June, 2000
+Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
 */
 
-#ifdef IQ_KERNEL_NAME
-kernel void IQ_KERNEL_NAME(
-    global const float *q,
-    global float *result,
-    const int Nq,
-#ifdef IQ_OPEN_LOOPS
-  #ifdef USE_OPENCL
-    global float *loops_g,
-  #endif
-    local float *loops,
-    const float cutoff,
-    IQ_DISPERSION_LENGTH_DECLARATIONS,
-#endif
-    IQ_FIXED_PARAMETER_DECLARATIONS
-    )
+#if FLOAT_SIZE>4
+//Cephes double pression function
+
+constant double RPJ1[8] = {
+    -8.99971225705559398224E8,
+    4.52228297998194034323E11,
+    -7.27494245221818276015E13,
+    3.68295732863852883286E15,
+    0.0,
+    0.0,
+    0.0,
+    0.0 };
+
+constant double RQJ1[8] = {
+    6.20836478118054335476E2,
+    2.56987256757748830383E5,
+    8.35146791431949253037E7,
+    2.21511595479792499675E10,
+    4.74914122079991414898E12,
+    7.84369607876235854894E14,
+    8.95222336184627338078E16,
+    5.32278620332680085395E18
+    };
+
+constant double PPJ1[8] = {
+    7.62125616208173112003E-4,
+    7.31397056940917570436E-2,
+    1.12719608129684925192E0,
+    5.11207951146807644818E0,
+    8.42404590141772420927E0,
+    5.21451598682361504063E0,
+    1.00000000000000000254E0,
+    0.0} ;
+
+
+constant double PQJ1[8] = {
+    5.71323128072548699714E-4,
+    6.88455908754495404082E-2,
+    1.10514232634061696926E0,
+    5.07386386128601488557E0,
+    8.39985554327604159757E0,
+    5.20982848682361821619E0,
+    9.99999999999999997461E-1,
+    0.0 };
+
+constant double QPJ1[8] = {
+    5.10862594750176621635E-2,
+    4.98213872951233449420E0,
+    7.58238284132545283818E1,
+    3.66779609360150777800E2,
+    7.10856304998926107277E2,
+    5.97489612400613639965E2,
+    2.11688757100572135698E2,
+    2.52070205858023719784E1 };
+
+constant double QQJ1[8] = {
+    7.42373277035675149943E1,
+    1.05644886038262816351E3,
+    4.98641058337653607651E3,
+    9.56231892404756170795E3,
+    7.99704160447350683650E3,
+    2.82619278517639096600E3,
+    3.36093607810698293419E2,
+    0.0 };
+
+#pragma acc declare copyin( RPJ1[0:8], RQJ1[0:8], PPJ1[0:8], PQJ1[0:8], QPJ1[0:8], QQJ1[0:8])
+
+#pragma acc routine seq
+static
+double cephes_j1(double x)
 {
-#ifdef USE_OPENCL
-  #ifdef IQ_OPEN_LOOPS
-  // copy loops info to local memory
-  event_t e = async_work_group_copy(loops, loops_g, (IQ_DISPERSION_LENGTH_SUM)*2, 0);
-  wait_group_events(1, &e);
-  #endif
 
-  int i = get_global_id(0);
-  if (i < Nq)
-#else
-  #pragma omp parallel for
-  for (int i=0; i < Nq; i++)
-#endif
-  {
-    const float qi = q[i];
-#ifdef IQ_OPEN_LOOPS
-    float ret=0.0f, norm=0.0f;
-  #ifdef VOLUME_PARAMETERS
-    float vol=0.0f, norm_vol=0.0f;
-  #endif
-    IQ_OPEN_LOOPS
-    //for (int radius_i=0; radius_i < Nradius; radius_i++) {
-    //  const float radius = loops[2*(radius_i)];
-    //  const float radius_w = loops[2*(radius_i)+1];
+    double w, z, p, q, abs_x, sign_x;
 
-    const float weight = IQ_WEIGHT_PRODUCT;
-    if (weight > cutoff) {
-      const float scattering = Iq(qi, IQ_PARAMETERS);
-      // allow kernels to exclude invalid regions by returning NaN
-      if (!isnan(scattering)) {
-        ret += weight*scattering;
-        norm += weight;
-      #ifdef VOLUME_PARAMETERS
-        const float vol_weight = VOLUME_WEIGHT_PRODUCT;
-        vol += vol_weight*form_volume(VOLUME_PARAMETERS);
-        norm_vol += vol_weight;
-      #endif
-      }
-    //else { printf("exclude qx,qy,I:%g,%g,%g\n",qi,scattering); }
+    const double Z1 = 1.46819706421238932572E1;
+    const double Z2 = 4.92184563216946036703E1;
+
+    // 2017-05-18 PAK - mathematica and mpmath use J1(-x) = -J1(x)
+    if (x < 0) {
+        abs_x = -x;
+        sign_x = -1.0;
+    } else {
+        abs_x = x;
+        sign_x = 1.0;
     }
-    IQ_CLOSE_LOOPS
-  #ifdef VOLUME_PARAMETERS
-    if (vol*norm_vol != 0.0f) {
-      ret *= norm_vol/vol;
+
+    if( abs_x <= 5.0 ) {
+        z = abs_x * abs_x;
+        w = polevl( z, RPJ1, 3 ) / p1evl( z, RQJ1, 8 );
+        w = w * abs_x * (z - Z1) * (z - Z2);
+        return( sign_x * w );
     }
-  #endif
-    result[i] = scale*ret/norm+background;
+
+    w = 5.0/abs_x;
+    z = w * w;
+    p = polevl( z, PPJ1, 6)/polevl( z, PQJ1, 6 );
+    q = polevl( z, QPJ1, 7)/p1evl( z, QQJ1, 7 );
+
+    // 2017-05-19 PAK improve accuracy using trig identies
+    // original:
+    //    const double THPIO4 =  2.35619449019234492885;
+    //    const double SQ2OPI = 0.79788456080286535588;
+    //    double sin_xn, cos_xn;
+    //    SINCOS(abs_x - THPIO4, sin_xn, cos_xn);
+    //    p = p * cos_xn - w * q * sin_xn;
+    //    return( sign_x * p * SQ2OPI / sqrt(abs_x) );
+    // expanding p*cos(a - 3 pi/4) - wq sin(a - 3 pi/4)
+    //    [ p(sin(a) - cos(a)) + wq(sin(a) + cos(a)) / sqrt(2)
+    // note that sqrt(1/2) * sqrt(2/pi) = sqrt(1/pi)
+    const double SQRT1_PI = 0.56418958354775628;
+    double sin_x, cos_x;
+    SINCOS(abs_x, sin_x, cos_x);
+    p = p*(sin_x - cos_x) + w*q*(sin_x + cos_x);
+    return( sign_x * p * SQRT1_PI / sqrt(abs_x) );
+}
+
 #else
-    result[i] = scale*Iq(qi, IQ_PARAMETERS) + background;
-#endif
-  }
+//Single precission version of cephes
+
+constant float JPJ1[8] = {
+    -4.878788132172128E-009,
+    6.009061827883699E-007,
+    -4.541343896997497E-005,
+    1.937383947804541E-003,
+    -3.405537384615824E-002,
+    0.0,
+    0.0,
+    0.0
+    };
+
+constant float MO1J1[8] = {
+    6.913942741265801E-002,
+    -2.284801500053359E-001,
+    3.138238455499697E-001,
+    -2.102302420403875E-001,
+    5.435364690523026E-003,
+    1.493389585089498E-001,
+    4.976029650847191E-006,
+    7.978845453073848E-001
+    };
+
+constant float PH1J1[8] = {
+    -4.497014141919556E+001,
+    5.073465654089319E+001,
+    -2.485774108720340E+001,
+    7.222973196770240E+000,
+    -1.544842782180211E+000,
+    3.503787691653334E-001,
+    -1.637986776941202E-001,
+    3.749989509080821E-001
+    };
+
+#pragma acc declare copyin( JPJ1[0:8], MO1J1[0:8], PH1J1[0:8])
+
+#pragma acc routine seq
+static
+float cephes_j1f(float xx)
+{
+
+    float x, w, z, p, q, xn;
+
+    const float Z1 = 1.46819706421238932572E1;
+
+
+    // 2017-05-18 PAK - mathematica and mpmath use J1(-x) = -J1(x)
+    x = xx;
+    if( x < 0 )
+        x = -xx;
+
+    if( x <= 2.0 ) {
+        z = x * x;
+        p = (z-Z1) * x * polevl( z, JPJ1, 4 );
+        return( xx < 0. ? -p : p );
+    }
+
+    q = 1.0/x;
+    w = sqrt(q);
+
+    p = w * polevl( q, MO1J1, 7);
+    w = q*q;
+    // 2017-05-19 PAK improve accuracy using trig identies
+    // original:
+    //    const float THPIO4F =  2.35619449019234492885;    /* 3*pi/4 */
+    //    xn = q * polevl( w, PH1J1, 7) - THPIO4F;
+    //    p = p * cos(xn + x);
+    //    return( xx < 0. ? -p : p );
+    // expanding cos(a + b - 3 pi/4) is
+    //    [sin(a)sin(b) + sin(a)cos(b) + cos(a)sin(b)-cos(a)cos(b)] / sqrt(2)
+    xn = q * polevl( w, PH1J1, 7);
+    float cos_xn, sin_xn;
+    float cos_x, sin_x;
+    SINCOS(xn, sin_xn, cos_xn);  // about xn and 1
+    SINCOS(x, sin_x, cos_x);
+    p *= M_SQRT1_2*(sin_xn*(sin_x+cos_x) + cos_xn*(sin_x-cos_x));
+
+    return( xx < 0. ? -p : p );
 }
 #endif
 
-
-#ifdef IQXY_KERNEL_NAME
-kernel void IQXY_KERNEL_NAME(
-    global const float *qx,
-    global const float *qy,
-    global float *result,
-    const int Nq,
-#ifdef IQXY_OPEN_LOOPS
-  #ifdef USE_OPENCL
-    global float *loops_g,
-  #endif
-    local float *loops,
-    const float cutoff,
-    IQXY_DISPERSION_LENGTH_DECLARATIONS,
+#if FLOAT_SIZE>4
+#define sas_J1 cephes_j1
+#else
+#define sas_J1 cephes_j1f
 #endif
-    IQXY_FIXED_PARAMETER_DECLARATIONS
-    )
+
+//Finally J1c function that equals 2*J1(x)/x
+    
+#pragma acc routine seq
+static
+double sas_2J1x_x(double x)
 {
-#ifdef USE_OPENCL
-  #ifdef IQXY_OPEN_LOOPS
-  // copy loops info to local memory
-  event_t e = async_work_group_copy(loops, loops_g, (IQXY_DISPERSION_LENGTH_SUM)*2, 0);
-  wait_group_events(1, &e);
-  #endif
-
-  int i = get_global_id(0);
-  if (i < Nq)
-#else
-  #pragma omp parallel for
-  for (int i=0; i < Nq; i++)
-#endif
-  {
-    const float qxi = qx[i];
-    const float qyi = qy[i];
-    #if USE_KAHAN_SUMMATION
-    float accumulated_error = 0.0f;
-    #endif
-#ifdef IQXY_OPEN_LOOPS
-    float ret=0.0f, norm=0.0f;
-    #ifdef VOLUME_PARAMETERS
-    float vol=0.0f, norm_vol=0.0f;
-    #endif
-    IQXY_OPEN_LOOPS
-    //for (int radius_i=0; radius_i < Nradius; radius_i++) {
-    //  const float radius = loops[2*(radius_i)];
-    //  const float radius_w = loops[2*(radius_i)+1];
-
-    const float weight = IQXY_WEIGHT_PRODUCT;
-    if (weight > cutoff) {
-
-      const float scattering = Iqxy(qxi, qyi, IQXY_PARAMETERS);
-      if (!isnan(scattering)) { // if scattering is bad, exclude it from sum
-      //if (scattering >= 0.0f) { // scattering cannot be negative
-        // TODO: use correct angle for spherical correction
-        // Definition of theta and phi are probably reversed relative to the
-        // equation which gave rise to this correction, leading to an
-        // attenuation of the pattern as theta moves through pi/2.f  Either
-        // reverse the meanings of phi and theta in the forms, or use phi
-        // rather than theta in this correction.  Current code uses cos(theta)
-        // so that values match those of sasview.
-      #if defined(IQXY_HAS_THETA) // && 0
-        const float spherical_correction
-          = (Ntheta>1 ? fabs(cos(M_PI_180*theta))*M_PI_2:1.0f);
-        const float next = spherical_correction * weight * scattering;
-      #else
-        const float next = weight * scattering;
-      #endif
-      #if USE_KAHAN_SUMMATION
-        const float y = next - accumulated_error;
-        const float t = ret + y;
-        accumulated_error = (t - ret) - y;
-        ret = t;
-      #else
-        ret += next;
-      #endif
-        norm += weight;
-      #ifdef VOLUME_PARAMETERS
-        const float vol_weight = VOLUME_WEIGHT_PRODUCT;
-        vol += vol_weight*form_volume(VOLUME_PARAMETERS);
-      #endif
-        norm_vol += vol_weight;
-      }
-      //else { printf("exclude qx,qy,I:%g,%g,%g\n",qi,scattering); }
-    }
-    IQXY_CLOSE_LOOPS
-  #ifdef VOLUME_PARAMETERS
-    if (vol*norm_vol != 0.0f) {
-      ret *= norm_vol/vol;
-    }
-  #endif
-    result[i] = scale*ret/norm+background;
-#else
-    result[i] = scale*Iqxy(qxi, qyi, IQXY_PARAMETERS) + background;
-#endif
-  }
+    return (x != 0.0 ) ? 2.0*sas_J1(x)/x : 1.0;
 }
-#endif
+
+
+#line 1 ".././models/lib/gauss76.c"
+
+// Created by Andrew Jackson on 4/23/07
+
+ #ifdef GAUSS_N
+ # undef GAUSS_N
+ # undef GAUSS_Z
+ # undef GAUSS_W
+ #endif
+ #define GAUSS_N 76
+ #define GAUSS_Z Gauss76Z
+ #define GAUSS_W Gauss76Wt
+
+// Gaussians
+constant double Gauss76Wt[76] = {
+	.00126779163408536,		//0
+	.00294910295364247,
+	.00462793522803742,
+	.00629918049732845,
+	.00795984747723973,
+	.00960710541471375,
+	.0112381685696677,
+	.0128502838475101,
+	.0144407317482767,
+	.0160068299122486,
+	.0175459372914742,		//10
+	.0190554584671906,
+	.020532847967908,
+	.0219756145344162,
+	.0233813253070112,
+	.0247476099206597,
+	.026072164497986,
+	.0273527555318275,
+	.028587223650054,
+	.029773487255905,
+	.0309095460374916,		//20
+	.0319934843404216,
+	.0330234743977917,
+	.0339977794120564,
+	.0349147564835508,
+	.0357728593807139,
+	.0365706411473296,
+	.0373067565423816,
+	.0379799643084053,
+	.0385891292645067,
+	.0391332242205184,		//30
+	.0396113317090621,
+	.0400226455325968,
+	.040366472122844,
+	.0406422317102947,
+	.0408494593018285,
+	.040987805464794,
+	.0410570369162294,
+	.0410570369162294,
+	.040987805464794,
+	.0408494593018285,		//40
+	.0406422317102947,
+	.040366472122844,
+	.0400226455325968,
+	.0396113317090621,
+	.0391332242205184,
+	.0385891292645067,
+	.0379799643084053,
+	.0373067565423816,
+	.0365706411473296,
+	.0357728593807139,		//50
+	.0349147564835508,
+	.0339977794120564,
+	.0330234743977917,
+	.0319934843404216,
+	.0309095460374916,
+	.029773487255905,
+	.028587223650054,
+	.0273527555318275,
+	.026072164497986,
+	.0247476099206597,		//60
+	.0233813253070112,
+	.0219756145344162,
+	.020532847967908,
+	.0190554584671906,
+	.0175459372914742,
+	.0160068299122486,
+	.0144407317482767,
+	.0128502838475101,
+	.0112381685696677,
+	.00960710541471375,		//70
+	.00795984747723973,
+	.00629918049732845,
+	.00462793522803742,
+	.00294910295364247,
+	.00126779163408536		//75 (indexed from 0)
+};
+
+constant double Gauss76Z[76] = {
+	-.999505948362153,		//0
+	-.997397786355355,
+	-.993608772723527,
+	-.988144453359837,
+	-.981013938975656,
+	-.972229228520377,
+	-.961805126758768,
+	-.949759207710896,
+	-.936111781934811,
+	-.92088586125215,
+	-.904107119545567,		//10
+	-.885803849292083,
+	-.866006913771982,
+	-.844749694983342,
+	-.822068037328975,
+	-.7980001871612,
+	-.77258672828181,
+	-.74587051350361,
+	-.717896592387704,
+	-.688712135277641,
+	-.658366353758143,		//20
+	-.626910417672267,
+	-.594397368836793,
+	-.560882031601237,
+	-.526420920401243,
+	-.491072144462194,
+	-.454895309813726,
+	-.417951418780327,
+	-.380302767117504,
+	-.342012838966962,
+	-.303146199807908,		//30
+	-.263768387584994,
+	-.223945802196474,
+	-.183745593528914,
+	-.143235548227268,
+	-.102483975391227,
+	-.0615595913906112,
+	-.0205314039939986,
+	.0205314039939986,
+	.0615595913906112,
+	.102483975391227,			//40
+	.143235548227268,
+	.183745593528914,
+	.223945802196474,
+	.263768387584994,
+	.303146199807908,
+	.342012838966962,
+	.380302767117504,
+	.417951418780327,
+	.454895309813726,
+	.491072144462194,		//50
+	.526420920401243,
+	.560882031601237,
+	.594397368836793,
+	.626910417672267,
+	.658366353758143,
+	.688712135277641,
+	.717896592387704,
+	.74587051350361,
+	.77258672828181,
+	.7980001871612,	//60
+	.822068037328975,
+	.844749694983342,
+	.866006913771982,
+	.885803849292083,
+	.904107119545567,
+	.92088586125215,
+	.936111781934811,
+	.949759207710896,
+	.961805126758768,
+	.972229228520377,		//70
+	.981013938975656,
+	.988144453359837,
+	.993608772723527,
+	.997397786355355,
+	.999505948362153		//75
+};
+
+
+#pragma acc declare copyin(Gauss76Wt[0:76], Gauss76Z[0:76])
+
+#line 1 ".././models/hollow_cylinder.c"
+
+static double
+shell_volume(double radius, double thickness, double length)
+{
+    return M_PI*length*(square(radius+thickness) - radius*radius);
+}
+
+static double
+form_volume(double radius, double thickness, double length)
+{
+    return M_PI*length*square(radius+thickness);
+}
+
+static double
+radius_from_excluded_volume(double radius, double thickness, double length)
+{
+    const double radius_tot = radius + thickness;
+    return 0.5*cbrt(0.75*radius_tot*(2.0*radius_tot*length + (radius_tot + length)*(M_PI*radius_tot + length)));
+}
+
+static double
+radius_from_volume(double radius, double thickness, double length)
+{
+    const double volume_outer_cyl = M_PI*square(radius + thickness)*length;
+    return cbrt(volume_outer_cyl/M_4PI_3);
+}
+
+static double
+radius_from_diagonal(double radius, double thickness, double length)
+{
+    return sqrt(square(radius + thickness) + 0.25*square(length));
+}
+
+static double
+radius_effective(int mode, double radius, double thickness, double length)
+{
+    switch (mode) {
+    default:
+    case 1: // excluded volume
+        return radius_from_excluded_volume(radius, thickness, length);
+    case 2: // equivalent volume sphere
+        return radius_from_volume(radius, thickness, length);
+    case 3: // outer radius
+        return radius + thickness;
+    case 4: // half length
+        return 0.5*length;
+    case 5: // half outer min dimension
+        return (radius + thickness < 0.5*length ? radius + thickness : 0.5*length);
+    case 6: // half outer max dimension
+        return (radius + thickness > 0.5*length ? radius + thickness : 0.5*length);
+    case 7: // half outer diagonal
+        return radius_from_diagonal(radius,thickness,length);
+    }
+}
+
+static double
+_fq(double qab, double qc,
+    double radius, double thickness, double length)
+{
+    const double lam1 = sas_2J1x_x((radius+thickness)*qab);
+    const double lam2 = sas_2J1x_x(radius*qab);
+    const double gamma_sq = square(radius/(radius+thickness));
+    //Note: lim_{thickness -> 0} psi = sas_J0(radius*qab)
+    //Note: lim_{radius -> 0} psi = sas_2J1x_x(thickness*qab)
+    const double psi = (lam1 - gamma_sq*lam2)/(1.0 - gamma_sq);    //SRK 10/19/00
+    const double t2 = sas_sinx_x(0.5*length*qc);
+    return psi*t2;
+}
+
+static void
+Fq(double q, double *F1, double *F2, double radius, double thickness, double length,
+    double sld, double solvent_sld)
+{
+    const double lower = 0.0;
+    const double upper = 1.0;        //limits of numerical integral
+
+    double total_F1 = 0.0;            //initialize intergral
+    double total_F2 = 0.0;
+    for (int i=0;i<GAUSS_N;i++) {
+        const double cos_theta = 0.5*( GAUSS_Z[i] * (upper-lower) + lower + upper );
+        const double sin_theta = sqrt(1.0 - cos_theta*cos_theta);
+        const double form = _fq(q*sin_theta, q*cos_theta,
+                                radius, thickness, length);
+        total_F1 += GAUSS_W[i] * form;
+        total_F2 += GAUSS_W[i] * form * form;
+    }
+    total_F1 *= 0.5*(upper-lower);
+    total_F2 *= 0.5*(upper-lower);
+    const double s = (sld - solvent_sld) * shell_volume(radius, thickness, length);
+    *F1 = 1e-2 * s * total_F1;
+    *F2 = 1e-4 * s*s * total_F2;
+}
+
+
+static double
+Iqac(double qab, double qc,
+    double radius, double thickness, double length,
+    double sld, double solvent_sld)
+{
+    const double form = _fq(qab, qc, radius, thickness, length);
+    const double s = (sld - solvent_sld) * shell_volume(radius, thickness, length);
+    return 1.0e-4*square(s * form);
+}
+
+

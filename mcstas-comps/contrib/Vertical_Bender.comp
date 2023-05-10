@@ -1,0 +1,575 @@
+/****************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2003, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Vertical_Bender_Down
+*
+* %I
+* Written by: Andrew Jackson, Richard Heenan
+* Date: August 2016, June 2017
+* Version: $Revision$
+* Origin: ESS
+* Release: McStas 2.4
+*
+* Multi-channel bender curving vertically down.
+*
+* %D
+* Based on Pol_bender written by Peter Christiansen
+* Models a rectangular curved guide with entrance on Z axis.
+* Entrance is on the X-Y plane. Draws a correct depiction of
+* the guide with multiple channels - i.e. following components need to be
+* displaced.
+* Guide can contain multiple channels using horizontal blades
+* Reflectivity modeled using StdReflecFunc and {R0, Qc, alpha, m, W} can be set
+* for top (outside of curve), bottom (inside of curve) and sides
+* (both sides equal), blades reflectivities match top and bottom (each channel is
+* like a "mini guide").
+* Neutrons are tracked, with gravity, inside the wall of a cylinder using distance 
+* steps of diststep1. Upon crossing the inner or outer wall, the final step is 
+* repeated using steps of diststep2, thus checking more 
+* closely for the first crossing of either wall. If diststep1 is too
+* large than a "grazing incidence reflection" may be missed altogether. 
+* If diststep1 is too small, then the code will run slower!
+* Exact intersection tmes with the flat sides and ends of the bender channel are calculated
+* first in order to limit the time spent tracking curved trajectories.
+* Turning gravity off will not make this run any faster, as the same method is used.
+*
+* 28/06/2017 still need validation against other codes (e.g. for gravity off case)
+*
+* Example:
+* Vertical_Bender(xwidth = 0.05, yheight = 0.05, length = 3.0,
+*              radius = 70.0, nslit = 5, d=0.0005, diststep1=0.020, diststep2=0.002,
+*              rTopPar={0.99, 0.219, 6.07, 3.0, 0.003},
+*              rBottomPar={0.99, 0.219, 6.07, 2.0, 0.003},
+*              rSidesPar={0.99, 0.219, 6.07, 2.0, 0.003},
+*
+* See example instrument Test_Vert_Bender
+*
+* %BUGS
+* Original code did not work with rotation about axes and gravity.
+* This tedious tracking method should work (28/6/17 still under test) for a vertical bender, with optional
+* rotation about x axis and gravity (and likely rotation about y axis but needs testing, 
+* and even perhaps rotation about z axis as in rotated local frame Gx then is non zero but the edge solver still works).
+* Would also need test the drawing in trace mode).
+*
+* GRAVITY : Yes, when component is not rotated
+*
+* %P
+* INPUT PARAMETERS:
+* xwidth:       Width at the guide entry (m)
+* yheight:      Height at the guide entry (m)
+* length:       length of guide along center (m)
+* radius:       Radius of curvature of the guide (+:curve up/-:curve down) (m)
+* nchan:        Number of channels (1)
+* d:            Width of spacers (subdividing absorbing walls) (m)
+* endFlat:      If endflat>0 then entrance and exit planes are parallel. (1)
+* rTopPar:      Parameters for reflectivity of bender top surface
+* rBottomPar:   Parameters for reflectivity of bender bottom surface
+* rSidesPar:    Parameters for reflectivity of bender sides surface
+* diststep1:    inital collision search steps for trajectory in cylinder when gravity is non zero ( 0.020 m)
+* diststep2:    final steps for trajectory in cylinder                  ( 0.002 m)
+* debug:        0 to 10 for zero to maximum print out - reduce number of neutrons to run !
+* alwaystrack   default 0,  1 to force tracking even when gravity is off
+*
+* OUTPUT PARAMETERS:
+*
+* localG:       Gravity vector in guide reference system (m/s/s)
+* normalXXX:    Several normal vector used for defining the geometry (1)
+* pointXXX:     Several points used for defining the geometry (1)
+* rXXXParPtr:   Pointers to reflection parameters used with ref. functions.
+* i_bounce      number of SCATTER events
+*
+* %L
+*
+* %E
+****************************************************************************/
+DEFINE COMPONENT Vertical_Bender
+DEFINITION PARAMETERS (
+)
+SETTING PARAMETERS (
+  vector rTopPar={0.99, 0.219, 6.07, 0.0, 0.003},
+  vector rBottomPar={0.99, 0.219, 6.07, 0.0, 0.003},
+  vector rSidesPar={0.99, 0.219, 6.07, 0.0, 0.003},
+  xwidth, yheight, length, radius, G=9.8, int nchan=1, d=0.0,
+  int debug=0, int endFlat=0, int drawOption=1, int alwaystrack=0, diststep1=0.020, diststep2=0.002
+)
+OUTPUT PARAMETERS()
+/* Neutron parameters : (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+SHARE
+%{
+  %include "ref-lib"
+
+
+  /******************************************************************************
+   * horiz_tube_intersect: compute intersection with a horizontal tube, allowing for gravity
+   * i.e. one with length along x axis
+   * returns 0 when no intersection is found
+   * Written by: RKH 19/6/17 experimental routine!
+   * track neutron in small time segments, until it either exits bender channel, or hits top or bottom
+   * curved surface. The max time to track to, tMax, is already found by separately looking for hits with the side walls
+   * This is treated purely as 2d in y & z directions, not 3d, so no x coordinates are used.
+   * Compute R^2 for the neutron, at small time steps, in the local coordinate sytems, which has the
+   * the curved channel wall radii measured from the origin. Thus y and/or z may need to be adjusted before
+   * passing to this routine. Compare Rneutron^2 to Rtop^2 and Rbottom^2 to see if it has hit the channel wall.
+   * Here Rtop > Rbottom, regardless of which way up the bend is.
+   * idown = 1 for a downhill bender, where radius is negative, idown =0 for uphill bender, with radius positive
+   * Find a crossing using tstep1, then go back to start of that step and check with smaller steps, tstep2.
+   * NOTE we need the first of possibly two wall crossings that may be very close together, so have to go 
+   * to start of previous step, then forwards again with smaller steps (i.e. cannot do a classic Newton-Raphson search here).
+   * If tstep1 is too large we may miss one or even two collisions with a wall.
+   * 8/8/17 makes sure that t11 cannot return zero, else can get stuck in infinite loop, so aim for mid point of the crossing step
+   *
+   * The search here amounts to finding the smallest positive root of a quartic, there is a routine here we could test:
+   * https://uk.mathworks.com/matlabcentral/fileexchange/59484-smallest-positive-real-root-of-a-quartic-equation?focused=6924415&tab=function
+   * though it is partly from a certain copyright book ...
+   * see also comments here http://people.csail.mit.edu/enikolova/project275.html  and https://en.wikipedia.org/wiki/Quartic_function
+   *
+   *
+   *******************************************************************************/
+  
+ // RKH need a c++ expert to check which variables should be passed by reference (or not) etc for greater efficiancy 
+ // the original code passed *t11
+ int
+  horiz_tube_intersect(double *t11, double tStep1, double tStep2, double tMax, double y, double z,
+                       double vy, double vz, double Rtop, double Rbottom, double Gy, double Gz, int idown, int debug )
+   {
+    double t, t2, Rtop2, Rbottom2, znew, ynew, Rneutron2;
+    if(debug>5)printf("hti  Gy: %f,tStep1: %f,tStep2: %f,tMax: %f,y: %f, z: %f,vy: %f,vz: %f\n",Gy,tStep1,tStep2,tMax,y,z,vy,vz);
+    *t11 = 0.0;
+    t = 0.0;
+    Rtop2 = Rtop * Rtop;
+    Rbottom2 = Rbottom * Rbottom;
+    do{
+    t += tStep1;
+    t2 = 0.5*t*t;
+    znew = z + vz*t +Gz*t2;
+    ynew = y + vy*t +Gy*t2;
+    Rneutron2 =  znew*znew + ynew*ynew;
+    if(debug>9)printf("t1: %f, z: %f, y: %f, r: %f\n",t, znew, ynew, sqrt(Rneutron2));
+    
+    if ((Rneutron2 > Rtop2) || (Rneutron2 < Rbottom2)) {
+    t-=tStep1;
+        do {
+          t += tStep2;
+          t2 = 0.5*t*t;
+          znew = z + vz*t + Gz*t2;
+          ynew = y + vy*t + Gy*t2;
+          Rneutron2 =  znew*znew + ynew*ynew;
+          if(debug>9)printf("t2: %f, z: %f, y: %f, r: %f\n",t, znew, ynew, sqrt(Rneutron2));
+            if (Rneutron2 > Rtop2){
+             *t11 = t - tStep2*0.5;  // 8/8/17 subtract only half the step here, so t11 is never zero
+             return idown + 1; }  //  2 for downhill, hit top; 1 for uphill hit bottom
+            else if (Rneutron2 < Rbottom2) {
+             *t11 = t - tStep2*0.5;  // 8/8/17 subtract only half the step here, so t11 is never zero
+             return 2 - idown; }  //  1 for downhill, hit bottom; 2 for uphill hit top
+        } while (t < tMax);      //  tMax limit is excessive here, but will guarantee success
+    }                            // end of IF
+    } while (t < tMax);
+    
+    return 0;                     // escape without collision
+   /* horiz_tube_intersect */
+   }
+%}
+
+DECLARE
+%{
+  Coords localG;
+  Coords normSides;
+  Coords normIn;
+  Coords normOut;
+  Coords pointLeft;
+  Coords pointRight;
+  Coords pointIn;
+  Coords pointOut;  
+%}
+
+INITIALIZE%{
+  double angle;
+
+  if ((xwidth<=0) || (yheight <= 0) || (length <=0) || (radius == 0) || (diststep1 <=0) || (diststep2 <=0) ){
+    fprintf(stderr, "Vertical_Bender: %s: NULL or negative length scale!\n"
+      "ERROR    (xwidth, yheight, length, radius, diststep1, diststep2). Exiting\n",
+      NAME_CURRENT_COMP);
+    exit(1);
+  }
+
+  if (drawOption<1 || drawOption>3) {
+    fprintf(stderr, "Vertical_Bender: %s: drawOption %ld not supported. Exiting.\n",
+	    NAME_CURRENT_COMP, drawOption);
+    exit(1);
+  }
+
+  if (mcgravitation) {
+
+    localG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0));
+    fprintf(stdout,"Vertical_Bender %s: Gravity is on, using local step by step tracking! Gxyz: %f,  %f,  %f\n",
+	    NAME_CURRENT_COMP, localG.x, localG.y, localG.z);
+//    if (localG.x!=0 )
+//      fprintf(stderr,"WARNING: Vertical_Bender: %s: "
+//	      "This component likely does not work with Gx component,\n",
+//	      NAME_CURRENT_COMP);
+
+  } else
+    fprintf(stdout,"Vertical_Bender %s: Gravity is off!\n",NAME_CURRENT_COMP);
+    localG = coords_set(0, 0, 0);
+
+    // To be able to handle the situation properly where a component of
+    // the gravity is along the z-axis we also define entrance (in) and
+    // exit (out) planes
+
+
+    //AJJ - do these need to be rotated so that ingoing frame is correct?
+    // Don't know, but see RKH's test 3b where vertical bender arm rotated 90deg so is sideways,
+    // arm rotation of -90 after bender needed to get 2d plots correct
+    angle = length/radius;
+    normIn    = coords_set(0, 0, 1);
+    if (endFlat)
+      normOut   = coords_set(0, 0, 1);
+    else
+      normOut   = coords_set(0, sin(angle), cos(angle));
+    pointIn   = coords_set(0, 0, 0);
+    pointOut  = coords_set(0, radius-radius*cos(angle), radius*sin(angle));
+
+    // Top and bot plane (+y dir) can be spanned by (1, 0, 0) & (0, 0, 1)
+    // and the top point (0, yheight/2, 0) and bot point (0, -yheight/2, 0)
+    // A normal vector is (0, 1, 0)
+    normSides  = coords_set(1, 0, 0);
+    pointLeft = coords_set(xwidth/2, 0, 0);
+    pointRight = coords_set(-xwidth/2, 0, 0);
+
+
+%}
+
+TRACE
+%{
+ // RKH there is no "stuck in infinite loop" checking here ...
+ // RKH not used    const double whalf = 0.5*xwidth; /* half width of guide */
+  double Gx, Gy, Gz;
+  const double hhalf = 0.5*yheight; /* half height of guide */
+// RKH, not used      const double z_off = radius*sin(length/radius); /* z-comp of guide length */
+  const double dThreshold = 1e-10; /* distance threshold */
+  const double tThreshold = dThreshold/sqrt(vx*vx + vy*vy + vz*vz);
+  double angle_z_vout; /* angle between z-axis and v_out */
+
+  //Variables for multiple slits
+  const double channelWidth = yheight/nchan; // slitWidth
+  const double bladeHalf = 0.5*d; /* half width of spacers */
+  int channelHit;    // decide which channel is hit
+  double posInChannel; // position in channel
+
+  double t11, theta, alpha, endtime, phi;
+  double weight;
+
+  double Rtop; /* larger radius of channel */
+  double Rbottom; /* smaller radius of channel */
+  double absR = fabs(radius);
+  int i_bounce = 0;
+
+  if (mcgravitation) {
+     coords_get(localG, &Gx, &Gy, &Gz);
+  }
+  else
+    Gy = Gz =0;
+
+//  are we tracking the neutron inside the cylindrical cross section or not 
+  int itrack = 0;
+  if (Gy != 0 || Gz != 0 ) itrack = 1;
+  if (alwaystrack == 1 ) itrack = 1;
+
+  int idown = 0;
+  if (radius<0)
+    idown = 1;
+
+  /* Propagate neutron to entrance */
+  PROP_Z0;
+  if (!inside_rectangle(x, y, xwidth, yheight))
+    ABSORB;
+
+  if (nchan>1){
+    // check if neutron gets absorbed in spacers
+    posInChannel = fmod(y+hhalf, channelWidth);
+    if(posInChannel <= bladeHalf ||
+       posInChannel >= channelWidth-bladeHalf)
+      ABSORB;
+
+    // determine which channel neutron enters, (don't really need channelHit, but its nice to know it, there may be a more elegant way here still)
+    if (idown == 1) 
+       channelHit = (int)((y+hhalf)/channelWidth);  // downhill, channels 0,1,2,3 from bottom to top
+    else
+       channelHit = (int)((hhalf-y)/channelWidth);  //   uphill, channels 0,1,2,3 from top to bottom
+
+    // Modify radii according to the channel entered, Rtop is always the larger here (could have renamed it)
+    Rtop = absR - hhalf +(channelHit+1)*channelWidth - bladeHalf;
+    Rbottom = absR - hhalf + channelHit*channelWidth + bladeHalf;
+
+    if(debug > 0)
+      printf("\nchannelHit: %d/%f, idown:%i, Rtop: %f, Rbottom: %f\n",
+      channelHit, (y+hhalf)/channelWidth, idown, Rtop, Rbottom);
+   } else { // only 1 slit
+
+     Rtop = absR + hhalf;
+     Rbottom = absR - hhalf;
+
+   }
+
+  for(;;) {
+
+    double tLeft, tRight, tTop, tBot, tIn, tOut, tMirror;
+    double tUp, tSide, time, endtime;
+    double R, Q;
+    Coords vVec, xVec;
+    double vel_yz;
+    int ibend, ibendnew;                     // 1 bottom, 2 top, 3 left, 4 right, 5 exit, 6 entrance, 0 no collision
+    double tStep1, tStep2, tMax; // long & short time step (calc from diststep1 & diststep2); longest time to track until in top/bottom of bender channel
+    tMax=0;
+
+    xVec = coords_set(x, y, z);
+    vVec = coords_set(vx, vy, vz);
+    
+    // RKH has simplified the logic of the original here, to use ibend integer to keep up with the fate of the neutron, 
+    // and to avoid repeatedly comparing double precision time values
+    ibend = 0;
+
+    //solve for transport to flat sides of bender, 
+    // could assume we can only hit either right or left depending on vx <0 or >0, but not both, however a VERY slow neutron in a narrow channel
+    // could hit both sides in a horizontal bender, so check both separately, note these have gravity.
+    // solve_2nd_order is in mccode-r.c, with 2nd param NULL it finds the smallest positve solution to A.t^2 + B.t + C = 0
+    solve_2nd_order(&tLeft, NULL, 0.5*coords_sp(normSides,localG),
+      coords_sp(normSides, vVec),
+      coords_sp(normSides, coords_sub(xVec, pointLeft)));
+      if(tLeft>tThreshold){ tMax = tLeft;
+      ibend = 3;}
+     
+    solve_2nd_order(&tRight, NULL, 0.5*coords_sp(normSides,localG),
+       coords_sp(normSides, vVec),
+       coords_sp(normSides, coords_sub(xVec, pointRight)) );
+      if ( (tRight > tThreshold) && ( (tRight < tMax) || ibend == 0)) {tMax = tRight;
+      ibend =4; }
+      
+   // solve transport for entrance & exit planes of bender
+    solve_2nd_order(&tIn, NULL, 0.5*coords_sp(normIn,localG),
+		    coords_sp(normIn, vVec),
+		    coords_sp(normIn, coords_sub(xVec, pointIn)));
+            if( (tIn>tThreshold ) && (tIn < tMax || ibend ==0)){ tMax = tIn;
+            ibend = 6;}
+
+    solve_2nd_order(&tOut, NULL, 0.5*coords_sp(normOut,localG),
+		    coords_sp(normOut, vVec),
+		    coords_sp(normOut, coords_sub(xVec, pointOut)));
+            if( (tOut>tThreshold) && (tOut < tMax || ibend ==0)){ tMax = tOut;
+            ibend = 5;}
+            
+    tStep1 = diststep1/coords_len(vVec);   // could just use vz, but would come unstuck if vz=0, so play safe here
+    tStep2 = tStep1*diststep2/diststep1;
+    
+    /* Find intersection points with top and bottom (curved) guide walls */
+
+    if(debug>4)printf("get1 Gy: %f,tStep1: %f,tStep2: %f,tMax: %f\n",Gy,tStep1,tStep2,tMax);
+
+    // adjust y so centre of bender arcs are at origin
+    double yshift = y - radius;
+    
+    // either track in steps
+    // RKH 08/08/17 oops, issue here, getting stuck when returning t11 = 0 
+    if ( itrack == 1){
+      ibendnew = horiz_tube_intersect(&t11, tStep1, tStep2, tMax, yshift, z, vy, vz, 
+            Rtop, Rbottom, Gy, Gz, idown, debug);
+    
+      if(debug > 3)
+        printf("ibend: %i, ibendnew: %i, tLeft: %f,tRight: %f,tIn: %f,tOut: %f,t11: %f\n",
+        ibend,ibendnew,tLeft,tRight,tIn,tOut,t11);
+      
+      if (ibendnew != 0 ) { ibend = ibendnew;   
+        tMax = t11;}                            // by definition here, t11  <= tMax
+    }
+    else{
+    // or if no gravity, solve straight line intersecting circles
+      double AA = (vy*vy + vz*vz);
+      double BB = 2.0*( z*vz + yshift*vy);
+      double CC = z*z + yshift*yshift;
+      solve_2nd_order(&t11, NULL, AA, BB, (CC - Rtop*Rtop));
+            if( (t11>tThreshold) && (t11 < tMax || ibend ==0)){ tMax = t11;
+            ibend = idown + 1;}
+   
+      solve_2nd_order(&t11, NULL, AA, BB, (CC - Rbottom*Rbottom));
+            if( (t11>tThreshold) && (t11 < tMax || ibend ==0)){ tMax = t11;
+            ibend = 2 - idown;}
+    }
+    if(debug > 3)
+      printf("Rtop: %f, Rbottom: %f, yshift: %f, z: %f, vy: %f, vz: %f t11: %f, Gy: %f, Gz: %f\n",
+      Rtop, Rbottom, y-radius, z, vy, vz, t11, Gy, Gz);
+
+    // RKH at this point ibend should not be zero ! - but it often is....  Also why won't ABSORB work here?
+    if (ibend == 0){
+      printf("ERROR? ibend: %i, ibendnew: %i, tLeft: %f,tRight: %f,tIn: %f,tOut: %f,t11: %f\n",
+      ibend,ibendnew,tLeft,tRight,tIn,tOut,t11);
+      break;
+      }
+      
+    // Has the neutron left the guide?  Note we pass put the number pf bounces.
+    // RKH - presume that somewhere else the neutron is propagated into next component??
+    if (ibend > 4 ) break;
+
+    if (mcgravitation) {
+//      coords_get(localG, &Gx, &Gy, &Gz);                // RKH works fine with this commented out
+      if(debug>4)printf("get2 Gxyz: %f,%f,%f\n",Gx,Gy,Gz);
+      PROP_GRAV_DT(tMax,Gx,Gy,Gz);                  // this is in PSI_DMC.c, updates mcnlx, mcnvx etc.
+    }
+    else
+      PROP_DT(tMax);                               // this actually checks for gravity, but repeats component gravity vector rotation
+
+// RKH depending how well we found the intersection, the neutron may not be exactly at the top or bottom wall.
+// The reflection angle is being calculated for the wall using new z value.
+    SCATTER;
+
+    i_bounce += 1;
+    /* Find reflection surface */
+    if(ibend == 1 || ibend ==2) { /* bottom or top surface */
+      if(ibend == 2){
+         if(idown == 1)
+          R = -Rtop;
+         else
+          R = Rbottom;}
+      else
+         {if(idown == 1)
+          R = -Rbottom;
+         else
+          R = Rtop;}
+
+      phi = atan(vy/vz); /* angle of neutron trajectory */
+      alpha = asin(z/R); /* angle of guide wall */
+      theta = fabs(phi-alpha); /* angle of reflection */
+      angle_z_vout = 2.0*alpha - phi;
+
+      vel_yz = sqrt(vy*vy + vz*vz); /* in plane velocity */
+      vz = vel_yz*cos(angle_z_vout);
+      vy = vel_yz*sin(angle_z_vout);
+
+    } else { /* left or right walls */
+      theta = fabs(atan(vx/vz));
+      vx = -vx;
+    }
+
+    /* Let's compute reflectivity! */
+    Q = 2.0*sin(theta)*sqrt(vx*vx + vy*vy + vz*vz)*V2K;
+
+    /* and the probability ... */
+    if (ibend == 2) {
+      StdReflecFunc(Q, rTopPar, &weight);
+      if (debug > 0) fprintf(stdout, "\tTop hit:\n");
+    } else if (ibend == 1) {
+      StdReflecFunc(Q, rBottomPar, &weight);
+      if (debug > 0) fprintf(stdout, "\tBottom hit:\n");
+    } else if (ibend == 4) {
+      StdReflecFunc(Q, rSidesPar, &weight);
+      if (debug > 0) fprintf(stdout, "\tRight hit:\n");
+    } else if (ibend == 3) {
+      StdReflecFunc(Q, rSidesPar, &weight);
+      if (debug > 0) fprintf(stdout, "\tLeft hit:\n");
+    }
+
+    /* Check that weight is meaningful. If not force it.*/
+    if (weight <= 0) ABSORB;
+    if (weight > 1) weight = 1;
+
+    /* Twiddle the neutron weight */
+    p *= weight;
+
+    if(p == 0) {
+      // Neutron is dead. Kill it!
+      ABSORB;
+      break;
+    }
+
+  }
+
+%}
+
+MCDISPLAY
+%{
+  double y1, y2, z1, z2;
+  const int n = 90;
+  double yplot[n], zplot[n];
+  int ns = 0;
+  int j = 1;
+  const double lengthOfGuide = sin(length/radius)*radius;
+  const double channelWidth = yheight/nchan;
+  double R = 0; /* radius of arc */
+  int nChansMax = nchan;
+  int nMax      = n;
+
+  if (lengthOfGuide<=0)
+    exit(fprintf(stdout,"Vertical_bender: %s: Negative guide length ! lengthOfGuide=%g\n",
+	    NAME_CURRENT_COMP, lengthOfGuide));
+
+  if (drawOption==2) {
+
+    if(nChansMax>20)
+      nChansMax = 20;
+    nMax = 40;
+  } else if (drawOption==3) {
+
+    if(nChansMax>5)
+      nChansMax = 5;
+    nMax = 10;
+  }
+
+  magnify("xy");
+
+  // draw opening
+  rectangle("xy", 0, 0, 0, xwidth, yheight);
+
+  for(ns=0; ns < nChansMax+1; ns++) {
+
+    // to make sure the sides are drawn properly
+    if(ns==nChansMax && nChansMax<nchan)
+      ns=nchan;
+
+    // calculate x for this R
+    R = radius - 0.5*yheight + ns*channelWidth;
+
+    for(j=0; j<nMax; j++) {
+
+      if(endFlat) {
+
+	if(ns==0)  // only calculate once
+	  zplot[j] = j*lengthOfGuide/(double)(nMax-1);
+      } else
+	zplot[j] = R*sin(length/radius * (double)j/(double)(nMax-1));
+
+      if(radius>0)
+	yplot[j] = radius - sqrt(R*R - zplot[j]*zplot[j]);
+      else
+	yplot[j] = radius + sqrt(R*R - zplot[j]*zplot[j]);
+    }
+
+    // To be able to draw end we store some of the point values
+    if(ns==0) { // first wall
+
+      y1 = yplot[nMax-1];
+      z1 = zplot[nMax-1];
+    } else if(ns==nchan) { //last wall
+
+      y2 = yplot[nMax-1];
+      z2 = zplot[nMax-1];
+    }
+
+    for(j=0; j<nMax-1; j++) {
+      line(0.5*xwidth, yplot[j], zplot[j], 0.5*xwidth, yplot[j+1], zplot[j+1]);
+      line(-0.5*xwidth, yplot[j], zplot[j], -0.5*xwidth, yplot[j+1], zplot[j+1]);
+
+    }
+  }
+
+  // draw end gap
+  line(0.5*xwidth, y1, z1, 0.5*xwidth, y2, z2);
+  line(0.5*xwidth, y1, z1, -0.5*xwidth, y1, z1);
+  line(-0.5*xwidth, y2, z2, 0.5*xwidth, y2, z2);
+  line(-0.5*xwidth, y1, z1, -0.5*xwidth, y2, z2);
+
+%}
+
+END

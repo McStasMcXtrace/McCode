@@ -18,33 +18,31 @@
 * %D
 * A undulator source model based on the derivation by K.J. Kim, AIP, conf. proc., 184, 1989. doi:10.1063/1.38046.
 *
-*
+* Example: SOLEIL_PX2a U24: Undulator( E0=12.65, dE=1, Ee=2.75, dEe=0.001, Ie=0.5, K=1.788, Nper=80, 
+*   lu=24e-3, sigey=9.3e-6, sigex=215.7e-6, sigepx=29.3e-6, sigepy=4.2e-6, 
+*   dist=29.5, E1st=12.400 )
 *
 * %P
-* Ee: [GeV] Storage ring electron energy [typically a few GeV).
-* dEe: [ ] Relative electron energy beam spread (sigma/Ee).
-* Ie: [A]   Ring current.
-* tbunch: [s] Bunch length. 0 means continous source.
-* t0:     [s] Delay of the first bunch from t=0.
-* B:      [T] Peak magnet field strength. Overrides K.
-* Nper:   [ ] Number of magnetic periods in the undulator.
-* lu:     [m] Magnetic period length of the undulator.
-* K:      [ ] Dimensionless undulator parameter.
-* gap_min: [m] Minimum Undulator gap. The gap for which B (or K) is specified.
-* gap:    [m] Undulator gap. If > gap_min the actual magnetic field strength is < B. Currently ignored.
-* sigex:  [m] Electron ring beam size in horizontal plane (rms).
-* sigey:  [m] Electron ring beam size in vertical plane (rms).
-* sigepx: [rad] Electron ring beam horizontal divergence (rms).
-* sigepy: [rad] Electron ring beam vertical divergence (rms).
-* phase:  [ ] Initial phase of radiation.
+* Ee:       [GeV] Storage ring electron energy [typically a few GeV).
+* dEe:      [ ] Relative electron energy beam spread (sigma/Ee).
+* Ie:       [A] Ring current.
+* B:        [T] Peak magnet field strength. Overrides K.
+* Nper:     [ ] Number of magnetic periods in the undulator.
+* lu:       [m] Magnetic period length of the undulator aka lambda_u.
+* K:        [ ] Dimensionless deflection undulator parameter. When K >> 1 (ie B*lu is large) you get a wiggler.
+* sigex:    [m] Electron ring beam size in horizontal plane (rms).
+* sigey:    [m] Electron ring beam size in vertical plane (rms).
+* sigepx:   [rad] Electron ring beam horizontal divergence (rms).
+* sigepy:   [rad] Electron ring beam vertical divergence (rms).
+* phase:    [ ] Initial phase of radiation.
 * randomphase: [ ] If !=0 phase will be random (I.e. the emitted radiation is completely incoherent).
 * focus_xw: [m] Width of target window.
 * focus_yh: [m] Height of target window.
-* dist: [m] Distance from source plane to target window along the optical axis.
-* E0: [keV] Center of emitted energy spectrum (overrides lambda0).
-* dE: [keV] Half-width of emitted energy spectrum.
-* E1st: [keV] Energy of the fundmental (1st) undulator harmonic.
-* verbose: [ ] if nonzero, output extra information.
+* dist:     [m] Distance from source plane to target window along the optical axis.
+* E0:       [keV] Center of emitted energy spectrum.
+* dE:       [keV] Half-width of emitted energy spectrum.
+* E1st:     [keV] Energy of the fundmental (1st) undulator harmonic.
+* verbose:  [ ] if nonzero, output extra information.
 * quick_integ: [ ] if nonzero, use faster (but less accurate) integration scheme.
 *
 * OUTPUT PARAMETERS:
@@ -54,9 +52,9 @@
 
 DEFINE COMPONENT Undulator
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (E0=0, dE=0, phase=0, randomphase=1, Ee=2.4, dEe=0, Ie=0.4, tbunch=0, t0=0, B=0, K=0,
-        gap=1e-3, int Nper=1, lu=16e-3, sigey=0, sigex=0, sigepx=0, sigepy=0, focus_xw=0, focus_yh=0, dist=1, quick_integ=0,
-        E1st=0, int verbose=0)
+SETTING PARAMETERS (E0=0, dE=0, phase=0, randomphase=1, Ee=2.4, dEe=0, Ie=0.4, B=0, K=0,
+        int Nper=1, lu=16e-3, sigey=0, sigex=0, sigepx=0, sigepy=0, focus_xw=0, focus_yh=0, dist=1, quick_integ=0,
+        E1st=0, int verbose=0, Br=1.35)
 OUTPUT PARAMETERS ()
 DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -Wl,-rpath,@MCCODE_LIB@/miniconda3/lib -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
@@ -112,6 +110,7 @@ DECLARE
   double length; /*undulator magnetic length*/
   double kc; /*undulator kritical wavenumber*/
   double pmul; /*initial photon weight*/
+  double gap;     /* gap estimate */
   gsl_function Bsig;
   gsl_function Bpi;
   gsl_integration_workspace *gsl_int_ws;
@@ -139,29 +138,52 @@ INITIALIZE
   }
 
   /*compute gamma*/
-  gamma=(Ee*1e9)/(MELE/CELE*M_C*M_C);/*the extra CELE is to convert to eV*/
+  gamma=(Ee*1e9)/(MELE/CELE*M_C*M_C); /*the extra CELE is to convert to eV*/
   gamma2=gamma*gamma;
   igamma=1.0/gamma;
 
-  if(E1st){
+  
+  if(E1st && lu && !K){
       /*compute K and B from desired target energy*/
-      K=sqrt(2*(4*M_PI*gamma2/(E2K*E1st*lu*1e10) -1));
-      B=2*M_PI*MELE*M_C*K/CELE/lu;
-      if (verbose) printf("Undulator (%s) (K,B)=f(E1st=%g)= (%g , %g)\n",NAME_CURRENT_COMP,E1st,K,B);
-  }else if(B>0){
-    K=CELE*B*lu/(2*M_PI*MELE*M_C);
-    if (verbose) printf("Undulator (%s) K=f(B=%g)= %g\n",NAME_CURRENT_COMP,B,K);
-  }else if (K){
-    B=2*M_PI*MELE*M_C*K/CELE/lu;
-    if (verbose) printf("Undulator (%s) B=f(K=%g)= %g\n",NAME_CURRENT_COMP,K,B);
+      K=2*(4*M_PI*gamma2/(E2K*E1st*lu*1e10) -1);
+      if (K>0) K=sqrt(K); else K=0;
+  } else if (!lu && E1st && K) {
+      lu=4*M_PI*gamma2/(K*K/2+1)/(E2K*E1st*1e10);
   }
+  if(!K && B && lu) {
+    K=CELE*B*lu/(2*M_PI*MELE*M_C);
+  } else if (!B && K && lu) {
+    B=2*M_PI*MELE*M_C*K/CELE/lu;
+  }
+  if (!E1st && K && lu) {
+      E1st=4*M_PI*gamma2/(K*K/2+1)/(E2K*lu*1e10);
+  }
+  if (!E0 && E1st) E0=E1st;
+  
+  if( E1st<=0 || K<=0 || B<=0 || Ee<=0 || Ie<=0 || lu<=0 || E0<=0){
+    fprintf(stderr, "Error (%s): (E1st, K, B, Ee, Ie, lu, E0) do not have a sane set of values. Found (%g %g %g %g %g %g %g). Aborting.\n",
+    NAME_CURRENT_COMP,E1st,K,B,Ee,Ie,lu,E0);
+    exit(1);
+  }
+  
+  /* compute gap estimate */
+  if (Br > B) { // remanent field, rather usual for Nd2Fe14B
+    double a=0.55*Br +2.835;
+    double b=-1.95*Br+7.22;
+    double c=-1.3*Br +2.97;
+    gap = -log(B/a)*lu/b;
+  } else gap=3e-3;
+  
+  if (verbose) 
+    printf("Undulator (%s) K=%g B=%g[T] lu=%g[m] E1st=%g[keV] E0=%g[keV] gap=%g[m]\n",
+      NAME_CURRENT_COMP, K,B,lu,E1st,E0,gap);
 
   if (sigex <0 || sigey<0){
    fprintf(stderr, "Error (%s): sigex (= %g) and sigey (= %g) must both be >= 0. Negative beam size isn't meaningful. Aborting.\n",NAME_CURRENT_COMP,sigex,sigey);
     exit(1);
   }
   if (dist<=0 || focus_xw < 0 || focus_yh < 0){
-    fprintf(stderr,"Error (%s): Target undefined.\n",NAME_CURRENT_COMP);
+    fprintf(stderr,"Error (%s): Target undefined. Set dist, focus_xw and focus_yh.\n",NAME_CURRENT_COMP);
     exit(1);
   }
 

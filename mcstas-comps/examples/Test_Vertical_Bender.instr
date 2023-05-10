@@ -1,0 +1,114 @@
+/*******************************************************************************
+* Instrument: Test_Vertical_Bender
+*
+* %I
+* Written by: Peter Willendrup
+* Date: January 2023
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests
+*
+* Quick and dirty test instrument write-up for Vertical_Bender.
+*
+* %D
+* Quick and dirty test instrument write-up for Vertical_Bender.
+*
+* %Example: Test_Vertical_Bender.instr -g curvature=10000 Detector: Pout_I=0.00134901
+*
+* %P
+* Lmin:     [AA] Minimum wavelength from source
+* Lmax:     [AA] Maximum wavelength from source
+* curvature: [m] Radius of curvature of vertical bender
+* length:    [m] Length of vertical bender
+* xwidth:    [m] Width of vertical bender
+* yheight:   [m] Height of vertical bender
+* nchan:     [1] Number of channels in vertical bender
+* d:         [m] Channel-spacer width
+*
+* %L
+* <reference/HTML link>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Test_Vertical_Bender(Lmin=9.9,Lmax=10.1,curvature=10000,length=10,xwidth=0.1,yheight=0.1,nchan=1,d=0)
+
+DECLARE
+%{
+  double calcAlpha(double length, double radius) {
+    // calculate angle of arm after curved guide
+    return RAD2DEG * length/radius;
+  }
+
+  double calcY(double length, double radius) {
+    // calculate position and angle of arm after curved guide
+    double alpha = DEG2RAD * calcAlpha(length, radius);
+    return radius*(1.0-cos(alpha));
+  }
+
+  double calcZ(double length, double radius) {
+    // calculate position and angle of arm after curved guide
+    double alpha = DEG2RAD * calcAlpha(length, radius);
+    return radius*sin(alpha);
+  }
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+// insert components here (e.g. Insert -> Source -> ...)
+
+COMPONENT source = Source_simple(
+  yheight = 0.1,
+  xwidth = 0.1,
+  dist = 2,
+  focus_xw = xwidth,
+  focus_yh = yheight,
+  lambda0 = (Lmin+Lmax)/2.0,
+  dlambda = (Lmax-Lmin)/2.0) 
+ AT (0, 0, 0) RELATIVE origin
+
+COMPONENT Lin = L_monitor(
+  nL = 100,
+  Lmin = Lmin-0.1,
+  Lmax = Lmax+0.1,
+  xwidth=xwidth*1.01,
+  yheight=yheight*1.01,
+  filename="Lin", restore_neutron=1) 
+ AT (0, 0, 0.01) RELATIVE  source
+
+COMPONENT Pin = PSD_monitor(
+  nx = 100, ny=100,
+  xwidth=xwidth*1.01,
+  yheight=yheight*1.01,
+  filename="Pin", restore_neutron=1) 
+ AT (0, 0, 0.01) RELATIVE source
+  
+COMPONENT VBender = Vertical_Bender(
+  xwidth = xwidth,
+  yheight = yheight,
+  length = length,
+  radius = curvature,
+  nchan=nchan, d=d) 
+ AT (0, 0, 2) RELATIVE  source
+
+COMPONENT PostBender = Arm()
+  AT (0,calcY(length, curvature),calcZ(length, curvature)) RELATIVE VBender
+  ROTATED (-calcAlpha(length,curvature),0,0) RELATIVE VBender
+  
+COMPONENT Lout = COPY(Lin)(filename="Lout") 
+  AT (0, 0, 0.01) RELATIVE PostBender
+
+COMPONENT Pout = COPY(Pin)(filename="Pout") 
+  AT (0, 0, 0.01) RELATIVE PostBender
+
+  
+FINALLY
+%{
+%}
+
+END

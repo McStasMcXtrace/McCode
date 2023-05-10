@@ -81,9 +81,9 @@ def plot_Data0D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fo
 def plot_Data1D(data, plt, log=False, legend=True, icolormap=0, verbose=True, fontsize=10):
     ''' create a plotItem and populate it with data, Data1D '''
     # data
-    x = np.array(data.xvals).astype(np.float)
-    y = np.array(data.yvals).astype(np.float)
-    e = np.array(data.y_err_vals).astype(np.float)
+    x = np.array(data.xvals).astype(float)
+    y = np.array(data.yvals).astype(float)
+    e = np.array(data.y_err_vals).astype(float)
 
     if log:
         nonzeros=[]
@@ -250,8 +250,12 @@ def plot_Data2D(data, plt, log=False, legend=True, icolormap=0, verbose=False, f
     plt.addItem(img)
 
     # associate the colour bar with the image item
-    cb = pg.ColorBarItem(cmap=colormap, values=(cb_pos_min, cb_pos_max), interactive=False)
-    cb.setImageItem(img)
+    try:
+      # appeared in pyqtgraph >= 0.12.4
+      cb = pg.ColorBarItem(cmap=colormap, values=(cb_pos_min, cb_pos_max), interactive=False)
+      cb.setImageItem(img)
+    except:
+      cb = None
 
     # Set the x and y ranges correctly
     plt.getViewBox().setXRange(data.xlimits[0], data.xlimits[1], padding=0)

@@ -69,13 +69,14 @@
 * INC: [barns]        Incoherent scattering cross section
 * ABS: [barns]        Absorption cross section
 * ISISFACE: [string]  ISIS moderator face to look at
+* SAMPLE: [ ]         Sample choice, 1:Incoherent, 2:PowderN, 3:Single_crystal, 4:Isotropic_Sqw, 5:Incoherent with multiple scattering, 6:PowderN with OFF geometry, 7:Single_crystal with OFF geometry, 8:Isotropic_Sqw with OFF geometry, 9:Incoherent with OFF geometry, 10:Isotropic_Sqw with .laz input
 *
 * %Link
 * Validation of Single_crystal is now in progress!
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Samples_Incoherent(L_min=0.5, L_max=7, SAMPLE, STOP=0, Order=0, INC=5.08, ABS=5.08, DB=0, string ISISFACE="hydrogen")
+DEFINE INSTRUMENT Samples_Incoherent(L_min=0.5, L_max=7, int SAMPLE=1, STOP=0, Order=0, INC=5.08, ABS=5.08, DB=0, string ISISFACE="hydrogen")
 DEPENDENCY " -DUSE_OFF "
 
 DECLARE %{

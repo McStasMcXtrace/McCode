@@ -72,6 +72,14 @@ function( detect_platform_variables resultvarname )
   endif()
   provide_var( EDITOR )
 
+  #idf-generator:
+  if ( BUILD_MCSTAS )
+    set( IDFGEN mcdisplay-mantid )
+  else()
+    set( IDFGEN "" )
+  endif()
+  provide_var( IDFGEN )
+
   #C compiler:
   set( TOOLS_CC "${CMAKE_C_COMPILER}" )
   provide_var( TOOLS_CC )
@@ -98,7 +106,13 @@ function( detect_platform_variables resultvarname )
   if ( NOT WINDOWS )
     set(NEXUSFLAGS "-DUSE_NEXUS -lNeXus")#?? should probably have another value
   else()
-    set(NEXUSFLAGS "-DUSE_NEXUS -lNeXus")
+    set(NEXUSFLAGS "-DUSE_NEXUS -lNeXus-0")
+  endif()
+  if ( NEXUSLIB )
+    set(NEXUSFLAGS "-Wl,-rpath,${NEXUSLIB} -L${NEXUSLIB} ${NEXUSFLAGS}")
+  endif()
+  if ( NEXUSINCLUDE )
+    set(NEXUSFLAGS "${NEXUSFLAGS} -I${NEXUSINCLUDE}")
   endif()
   provide_var( NEXUSFLAGS )
 

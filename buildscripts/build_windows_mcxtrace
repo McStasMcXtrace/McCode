@@ -61,9 +61,9 @@ find mcxtrace-comps-win -type f -name \*.comp -exec sed -i 's+@MCCODE_LIB@/minic
 if [ "x$2" != "x" ]; then
     # Build the meta-packages also
     cd meta-pkgs/windows/Support
-    if [ ! -f Miniconda3-latest-Windows-x86_64.exe ]; then
+    if [ ! -f Mambaforge-Windows-x86_64.exe ]; then
 	echo Sorry! I need to download a Miniconda3 for embedding - will take some time...
-	wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
+	wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Windows-x86_64.exe
     fi
     cd ..
 
@@ -82,8 +82,8 @@ if [ "x$2" != "x" ]; then
     cp MSMPI/*.* dist/extras
     cp NeXus/*.* dist/extras
     cp Perl/*.msi dist/
-    # Needs creation : cp $WORK/INSTALL-McXtrace-3.x/Windows/README.md dist/
+    cp $WORK/INSTALL-McXtrace-3.x/Windows/README.md dist/
     mkdir dist/single-packages
     mv dist/mcxtrace-* dist/single-packages
-    # Needs creation : cp INSTALL-McXtrace-3.x/Windows/README.md dist
+    cp INSTALL-McXtrace-3.x/Windows/README.md dist
 fi

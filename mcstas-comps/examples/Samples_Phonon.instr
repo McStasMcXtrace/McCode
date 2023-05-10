@@ -20,13 +20,13 @@
 * %Example: E=10 -n 1e5 Detector: mon1_I=1.80177e-22
 *
 * %Parameters
-* E: []    
-* DE: []   
-* HDIV: [] 
-* VDIV: [] 
-* TT: []   
-* OM: []   
-* C: []    
+* E:    [meV] Mean energy at source   
+* DE:   [meV] Energy spread at source 
+* HDIV: [deg] Horizontal divergence produced from source
+* VDIV: [deg] Vertical divergence produced from source
+* TT:   [deg] Two-theta detetector-angle
+* OM:   [deg] Sample rotation angle
+* C:    [meV/AA^(-1)] Sample velocity of sound
 *
 * %End
 ******************************************************************************/

@@ -33,13 +33,15 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Tools_ONION (double divergence = 0.4, double distance = 32)
+DEFINE INSTRUMENT Tools_ONION (double divergence=0.4, double distance=32, string filename="source_sct521_bu_08_1.dat")
+DEPENDENCY " -DLOADPATH=GETPATH(data) @NEXUSFLAGS@ "
 
 DECLARE
 %{
 double samplewidth, sampleheight;
 double sourcewidth, sourceheight;
 double div_rad;
+char fullfile[256];
 %}
 
 INITIALIZE
@@ -51,6 +53,16 @@ sourcewidth = 2*distance*tan(div_rad);
 sourceheight = 0.01;
 samplewidth = 0.01;
 sampleheight = sourceheight;
+#define QUOTE(name) #name
+#define STR(macro) QUOTE(macro)
+
+#ifndef LOADPATH
+#define LOADPATH=/usr/share/mcstas/3.1/data
+#endif
+
+#define LOADPATH_ STR(LOADPATH)
+sprintf(fullfile,"%s/%s",LOADPATH_,filename);
+printf("Using the input file: %s\n", fullfile);
 %}
 
 TRACE
@@ -65,7 +77,7 @@ COMPONENT Origin = Progress_bar()
 
 
 COMPONENT sourceMantid = SNS_source(
-	filename = "/usr/share/mcstas/3.0/data/source_sct521_bu_08_1.dat", 
+	filename = fullfile, 
 	xwidth = sourcewidth, yheight = sourceheight,
 	dist = distance, focus_xw = samplewidth, focus_yh = sampleheight,
 	Emin = 0.001, Emax = 1000)

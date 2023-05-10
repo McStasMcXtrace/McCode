@@ -22,7 +22,8 @@
 * Example: dummy=1 Detector: test_logger_2D_space_zx_con_PSD_I=387.97
 *
 * %Parameters
-*
+* dummy: [ ] Dummy input parameter
+* 
 * %End
 *******************************************************************************/
 

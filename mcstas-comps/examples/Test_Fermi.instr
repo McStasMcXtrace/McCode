@@ -31,8 +31,9 @@
 * d_SF: [m]       distance from Source to FC center
 * d_FD: [m]       distance from FC center to Detector
 * phase: [deg]    FC phase. Use -0 for automatic
-* lambda: []      
-* Nslit_FC: []    
+* lambda: [AA]    Mean wavelength from source
+* Nslit_FC: []    Number of slits in FC slit package
+* time_to_arrival:  
 *
 * %End
 *******************************************************************************/

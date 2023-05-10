@@ -28,7 +28,14 @@
 # -- end of LSF options --
 
 # Ensure we run with our own miniconda3
-PATH=${HOME}/miniconda3/bin:$PATH
+PATH=${HOME}/McStas/mcstas/3.x-dev/miniconda3/bin:$PATH
+
+module load cmake/3.18.2 
+module load nvhpc/22.7-nompi
+module load cuda/11.7.1
+module load mpi/4.1.1-gcc-10.3.0-binutils-2.36.1
+module load hdf5/1.12.1-gcc-10.3.0
+
 
 DATE=`date +%F`
 mkdir -p $HOME/TESTS/

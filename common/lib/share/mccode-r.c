@@ -61,12 +61,16 @@ static   long mcstartdate            = 0; /* start simulation time */
 static   int  mcdisable_output_files = 0; /* --no-output-files */
 mcstatic int  mcgravitation          = 0; /* use gravitation flag, for PROP macros */
 mcstatic int  mcdotrace              = 0; /* flag for --trace and messages for DISPLAY */
+#pragma acc declare create ( mcdotrace )
 int      mcallowbackprop             = 0;         /* flag to enable negative/backprop */
 
 /* OpenACC-related segmentation parameters: */
 int vecsize = 128;
 int numgangs = 7813;
 long gpu_innerloop = 2147483647;
+
+/* Monitor_nD list/buffer-size default */
+long MONND_BUFSIZ = 1000000;
 
 /* Number of particle histories to simulate. */
 #ifdef NEUTRONICS
@@ -3887,6 +3891,8 @@ mchelp(char *pgmname)
 "                             kernel run (default: 2147483647)\n"
 "\n"
 #endif
+"\n"
+"  --bufsiz                   Monitor_nD list/buffer-size (default: 1000000)\n"
 "  --format=FORMAT            Output data files using FORMAT="
    FLAVOR_UPPER
 #ifdef USE_NEXUS
@@ -3956,10 +3962,10 @@ mcusage(char *pgmname)
 static void
 mcenabletrace(void)
 {
- if(traceenabled)
+ if(traceenabled) {
   mcdotrace = 1;
- else
- {
+  #pragma acc update device ( mcdotrace )
+ } else {
    fprintf(stderr,
            "Error: trace not enabled (mcenabletrace)\n"
            "Please re-run the " MCCODE_NAME " compiler "
@@ -4143,6 +4149,9 @@ mcparseoptions(int argc, char *argv[])
     }    
     else if(!strcmp("--vecsize", argv[i]) && (i + 1) < argc) {
       vecsize=atoi(argv[++i]);
+    }
+    else if(!strcmp("--bufsiz", argv[i]) && (i + 1) < argc) {
+      MONND_BUFSIZ=atoi(argv[++i]);
     }
     else if(!strncmp("--numgangs=", argv[i], 11)) {
       numgangs=atoi(&argv[i][11]);

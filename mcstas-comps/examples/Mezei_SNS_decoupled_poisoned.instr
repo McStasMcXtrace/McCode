@@ -17,8 +17,8 @@
 * Simple instrumentfile for estimating SNS brilliance, moderator is a rescaled ESS short-pulsed Mezei description.
 *
 * %Parameters
-* Lambda_min: [AA]  
-* Lambda_max: [AA]  
+* Lambda_min: [AA] Minimum wavelength produced at source
+* Lambda_max: [AA] Maximum wavelength produced at source
 *
 * %Link
 *

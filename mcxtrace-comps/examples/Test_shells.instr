@@ -14,7 +14,7 @@
 * Single shell model of a true Wolter Type I optic
 *
 * %Description
-* Single shell example telescope using a combinatiopn pf parabolic/hyperbolic shell
+* Single shell example telescope using a combinatiopn of parabolic/hyperbolic shell
 * optical plates covering the full circle. Reflectivity is 1 for all energies.
 *
 * Example: Test_shells.instr shell_type=1
@@ -35,7 +35,7 @@ DEFINE INSTRUMENT Test_shells(FL=12, plate_zdepth=0.5, channel_yheight=1e-2, rad
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
-DECLARE
+USERVARS
 %{
   int interacted;
 %}

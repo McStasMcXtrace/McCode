@@ -29,14 +29,46 @@ done
 WORK=`pwd`
 
 export MCINSTALL_PREFIX=$HOME/McStas
-export CC=/usr/bin/gcc
-export CXX=/usr/bin/c++
-export FC=/usr/bin/gfortran
+export CC=gcc
+export CXX=c++
+export FC=gfortran
 
 if [[ -d $HOME/McStas/mcstas/3.x-dev ]]
 then
     rm -rf $HOME/McStas/mcstas/3.x-dev/*
 fi
+
+if [ ! -f Mambaforge-$(uname)-$(uname -m).sh ]; then
+    # Download and embed a miniconda
+    echo
+    echo "*********************************************************"
+    echo "* Downloading a miniconda3 for your app                 *"
+    echo "*********************************************************"
+    echo
+    sleep 3
+    curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
+fi
+echo "*********************************************************"
+echo "* Embedding miniconda3 in your app                      *"
+echo "*********************************************************"
+chmod a+x Mambaforge-$(uname)-$(uname -m).sh
+echo $MCINSTALL_PREFIX/mcstas/3.x-dev/miniconda3/
+./Mambaforge-$(uname)-$(uname -m).sh -b -p $MCINSTALL_PREFIX/mcstas/3.x-dev/miniconda3/
+
+# Run conda to install the dependencies
+echo
+echo "*********************************************************"
+echo "* Downloading python dependencies to embedded miniconda *"
+echo "*********************************************************"
+echo
+export PATHBAK=$PATH
+export PATH=$MCINSTALL_PREFIX/mcstas/3.x-dev/miniconda3/bin:$PATH
+ls 
+mamba update mamba -y
+mamba install gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 -y
+mamba clean --all -y
+
+
 ./mkdist mcstas 3.x-dev "" "" deb64 "" -- justinst
 ./mkdist mcstas-comps 3.x-dev "" "" deb64 "" -- justinst
 # can be out-commented after the first build iteration:
@@ -44,8 +76,12 @@ fi
 ./mkdist mcstas-tools-perl 3.x-dev tools/Legacy-Perl/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcgui 3.x-dev tools/Python/mcgui/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcrun 3.x-dev tools/Python/mcrun/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mcdoc 3.x-dev tools/Python/mcdoc/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mccodelib 3.x-dev tools/Python/mccodelib/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph 3.x-dev tools/Python/mcdisplay/pyqtgraph/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mcdisplay-webgl 3.x-dev tools/Python/mcdisplay/webgl/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mcdisplay-cad 3.x-dev tools/Python/mcdisplay/cad/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mcdisplay-mantid 3.x-dev tools/Python/mcdisplay/mantid_xml/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-pyqtgraph 3.x-dev tools/Python/mcplot/pyqtgraph/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-svg 3.x-dev tools/Python/mcplot/svg/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-matplotlib 3.x-dev tools/Python/mcplot/matplotlib/ "" deb64 "" -- justinst
@@ -54,6 +90,8 @@ cp tools/other/mcsplit/mcsplit.py $HOME/McStas/mcstas/3.x-dev/bin/
 export MCINSTALL_PREFIX=$HOME/McStas/mcstas/3.x-dev/
 ./mkdist mcstas-ncrystal 3.x-dev 3rdparty/ncrystal-package "" deb64 "" -- justinst
 ./mkdist mcstas-mcpl 3.x-dev 3rdparty/mcpl-package "" deb64 "" -- justinst
+./mkdist mcstas-nexus 3.x-dev 3rdparty/nexus-package "" deb64 "" -- justinst
 
 # Ensure we are configured for 10 node MPI runs
 sed -i s/\'4\'/\'10\'/g $HOME/McStas/mcstas/3.x-dev/tools/Python/mccodelib/mccode_config.py
+$HOME/McStas/mcstas/3.x-dev/bin/mcdoc -i

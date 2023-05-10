@@ -1,15 +1,19 @@
 /*******************************************************************************
-* Instrument: Testing the triple-axis resolution,
-*             use "reso.dat" output with mcresplot.py
+*         McStas instrument definition URL=http://www.mcstas.org
+* Instrument: Test_TasReso 
 *
 * %Identification
 * Written by: Tobias Weber (tweber@ill.fr)
 * Date: 30-Mar-2019
 * Origin: ILL
-* License: GNU GPLv3
+*
 * %INSTRUMENT_SITE: Templates
 *
+* Testing the triple-axis resolution, use "reso.dat" output with mcresplot.py
+*
 * %Description
+* Testing the triple-axis resolution, use "reso.dat" output with mcresplot.py
+*
 * Triple-axis resolution test instrument,
 * forked from the Hercules McStas course:
 * https://code.ill.fr/tweber/hercules
@@ -24,37 +28,38 @@
 * GNU General Public License for more details.
 *
 * You should have received a copy of the GNU General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* along with this program.  If not, see http://www.gnu.org/licenses/.
 *
 * %Example: src_lam=4.5 Detector: emon_I=887.137
+*
+* %Parameters 
+* src_lam:     [AA] Source mean wavelength
+* src_dlam:    [AA] Source wavelength spread
+* mono_ideal:  [ ]  Selection of mono-model 0=Single_crystal, 1=Monochromator_curved
+* mono_curvh:  [m]  Monochromator horizontal curvature. -1: optimal, 0: flat 
+* mono_curvv:  [m]  Monochromator vertical curvature -1: optimal, 0: flat 
+* ana_curvh:   [m]  Analyzer horizontal curvature. -1: optimal, 0: flat 
+* ana_curvv:   [m]  Analyzer vertical curvature -1: optimal, 0: flat 
+* sample_num:  [ ]  Selection of sample-model 0=vanadium, 1=single crystal, 2=resolution
+* ki:      [AA^-1]  Monochromator ki
+* kf:      [AA^-1]  Analyser kf
+* coll_presample_div:  [arcmin] Collimation before sample
+* coll_postsample_div: [arcmin] Collimation after sample
+* k_filter_cutoff: [AA^-1] Filter cutoff
+*
+* %L
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT TasResoTest
-(
-	/* source wavelength */
-	double src_lam = 4.5, double src_dlam = 1.0,
-
-	/* monochormator */
-	double ki = -1,
-
-	/* analyser */
-	double kf = -1,
-
-	/* choose a sample: 0=vanadium, 1=single crystal, 2=resolution*/
-	int sample_num = 2,
-
-	/* horizontal and vertical curvatures, -1: optimal, 0: flat */
-	double mono_curvh = -1, double mono_curvv = -1,
-	double ana_curvh = -1, double ana_curvv = -1,
-
-	/* collimator divergences */
-	double coll_presample_div = 30.0,
-	double coll_postsample_div = 30.0,
-
-	double k_filter_cutoff = 1.6
-)
+DEFINE INSTRUMENT Test_TasReso(src_lam=4.5, src_dlam=1.0,
+	ki=-1, kf=-1,
+	int sample_num=2,
+	mono_curvh=-1, mono_curvv=-1,
+	ana_curvh=-1, ana_curvv=-1,
+	coll_presample_div=30.0,
+	coll_postsample_div=30.0,
+	k_filter_cutoff=1.6)
 
 
 DECLARE

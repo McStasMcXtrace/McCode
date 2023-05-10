@@ -1,0 +1,900 @@
+/*******************************************************************************
+*
+* McCode system component cogen.c.in:
+* McStas/McXtrace, neutron/xray ray-tracing package
+*         Copyright (C) 1997-2020, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
+*         Copenhagen University, Copenhagen, Denmark
+*
+* Kernel: cogen.c
+*
+* %Identification
+* Written by: K.N.
+* Modified for X-rays by E.K.
+* Modified for cogen3 by E.F. 2017-18
+* Modified for o.o. approach by J.G. 2018-19
+* Date: Jan 2020
+* Origin: DTU
+* Release: McStas 3.0
+* Version: $Revision$
+*
+* Code generation from instrument definition.
+*
+*******************************************************************************/
+
+#include <stdarg.h>
+#include <string.h>
+#include <stdio.h>
+#include "mccode.h"
+
+
+/*******************************************************************************
+* General comments on code generation.
+*
+* Code is output in the form of strings using the following functions:
+*   cout();                        (one line at a time)
+*   coutf();                       (with printf-style formatting)
+*
+* The type of numbers used in the generated code is given by the macro MCNUM
+* (defined in mccode-r.h).
+*
+* Symbols.
+*
+* Symbols are exposed using defines around sections or functions, e.g.
+*   #define x _particle->x
+* where _particle is a local variable in a trace function.
+*
+* Generic symbols beside _particle are _comp (also local) and instrument, a
+* global. The global _particle is used for RNG during the init stage - as the
+* rand state is now tied to a particle instance - but otherwise overridden by
+* the local version. A few other variables carry meta information.
+*
+* Generation of declarations.
+*
+* The following declarations are generated:
+* 1. Header file #include - mccode-r.h/c and mcstas/mcxtrace-r.c/h for
+*    declarations for the mcstas runtime. The former contains geometry, I/O and
+*    other generic functionality, while mcstas/mcxtrace-r.c/h contains nautron
+*    or x-ray specific propagation functionality and data structures.
+* 2. Declarations of global variables to hold instrument state. This is
+*    organized as a generic struct, a parameters-struct, and associated
+*    variables.
+* 3. User declarations copied verbatim from the instrument definition file.
+* 4. User-vars declarations copied to the particle struct definition.
+* 5. Declarations and global variables for the component types. This uses
+*    a generic struct containing index, pos/rot and more, and a parameter
+*    struct for every component type. A variable is written for every
+*    component instance, named _<compname>.
+* 6. Setpos functions for every component instance.
+* 7. Init, trace, save, finally and display class functions for every component
+*    type (when defined in the component). The TRACE functions contain
+*    additions for any EXTEND blocks, which uses a comp index switch. Iterative
+*    functions that call these, are also generated.
+* 8. Raytrace funtions for propagating the instrument.
+* 9. Additional code bits for macro support.
+*******************************************************************************/
+
+/* PROJECT=1 for McStas, 2 for McXtrace. Now using @MCCODE_PARTICLE@ @MCCODE_NAME@ */
+#ifndef MCCODE_PROJECT
+#define MCCODE_PROJECT @MCCODE_PROJECT@
+#endif
+
+#ifndef MCCODE_LIBENV
+#define MCCODE_LIBENV @MCCODE_LIBENV@
+#endif
+
+int get_codeblock_vars_allcustom(struct code_block *code, List custom_vars,
+   char* block_name, char* movetoblock_name);
+
+int get_codeblock_vars(struct code_block *code, List vars, List types,
+         char* block_name, char* movetoblock_name);
+
+int parse_curlybrackets_vector(char* string, double* values) {
+  char* s = string;
+  int vidx = 0;
+  char* r;
+  while(*s != '\0') {
+    // jump to a non-trivial position
+    if (*s == ' ' || *s == ',' || *s == '{') {
+      ++s;
+      continue;
+    }
+    if (*s == '}') return vidx;
+
+    // extract a value
+    double val = strtod(s, &r);
+    if (values!=NULL) values[vidx] = val;
+    ++vidx;
+
+    // iterate
+    if (*r == '\0') return vidx;
+    s = r + 1;
+  }
+  return vidx;
+}
+
+/* Functions for outputting code. */
+
+/* Handle for output file. */
+static FILE *output_handle           = NULL;  /* Handle for output file. */
+static int   num_next_output_line    = 1;     /* Line number for next output line. */
+static char *quoted_output_file_name = NULL;  /* str_quote()'ed name of output file. */
+
+/* Convert instrument formal parameter type numbers to their enum name. */
+char *instr_formal_type_names[] =
+  { "instr_type_int", "instr_type_string", "instr_type_char", "instr_type_vector", "instr_type_double", "instr_type_symbol" };
+
+/* 'char' and 'MCNUM' are for static array allocations */
+char *instr_formal_type_names_real[] =
+  { "long", "char*", "char", "MCNUM", "MCNUM", "double"};
+
+/*******************************************************************************
+* Output a single line of code
+* Assumes that the output does not contain newlines.
+*******************************************************************************/
+static void
+cout(char *s)
+{
+  fprintf(output_handle, "%s\n", s);
+  num_next_output_line++;
+}
+
+/*******************************************************************************
+* Output a single line of code using printf-style format string.
+* Assumes that the output does not contain newlines.
+*******************************************************************************/
+static void
+coutf(char *format, ...)
+{
+  va_list ap;
+
+  va_start(ap, format);
+  vfprintf(output_handle, format, ap);
+  va_end(ap);
+  fprintf(output_handle, "\n");
+  num_next_output_line++;
+}
+
+/*******************************************************************************
+* Output #line directive to handle code coming from a different file.
+* The filename is assumed to be already properly quoted for special chars.
+*******************************************************************************/
+static void
+code_set_source(char *filename, int linenum)
+{
+  // jg-20190307: We have disabled line pragmas for now
+  //if(linenum > 0)
+  //  coutf("#line %d \"%s\"", linenum, filename);
+}
+
+/*******************************************************************************
+* Output #line directive to reset back to the generated output C file.
+*******************************************************************************/
+static void
+code_reset_source(void)
+{
+  // jg-20190307: We have disabled line pragmas for now
+  /* Note: the number after #line refers to the line AFTER the directive. */
+  //coutf("//#line %d \"%s\"", num_next_output_line + 1, quoted_output_file_name);
+}
+
+/*******************************************************************************
+* Output a list of lines of code
+*******************************************************************************/
+static void
+codeblock_out(struct code_block *code)
+{
+  List_handle liter;                /* For list iteration. */
+  char *line;                       /* Single code line. */
+
+  if(list_len(code->lines) <= 0)
+    return;
+  code_set_source(code->quoted_filename, code->linenum + 1);
+  liter = list_iterate(code->lines);
+  while((line = list_next(liter)))
+  {
+    fprintf(output_handle, "%s", line);
+    num_next_output_line++;
+  }
+  list_iterate_end(liter);
+  code_reset_source();
+}
+
+static void
+codeblock_declare_add(struct code_block *code)
+{
+  List_handle liter;                /* For list iteration. */
+  char *line;                       /* Single code line. */
+
+  if(list_len(code->lines) <= 0)
+    return;
+  
+  fprintf(output_handle,"instr.append_declare('''\n");
+  while((line = list_next(liter)))
+  {
+    fprintf(output_handle, "%s", line);
+    num_next_output_line++;
+  }
+  list_iterate_end(liter);  
+  code_set_source(code->quoted_filename, code->linenum + 1);
+  fprintf(output_handle,"\n''')\n");
+  code_reset_source();
+}
+
+static void
+codeblock_initialize_add(struct code_block *code)
+{
+  List_handle liter;                /* For list iteration. */
+  char *line;                       /* Single code line. */
+
+  if(list_len(code->lines) <= 0)
+    return;
+  
+  fprintf(output_handle,"instr.append_initialize('''\n");
+  while((line = list_next(liter)))
+  {
+    fprintf(output_handle, "%s", line);
+    num_next_output_line++;
+  }
+  list_iterate_end(liter);  
+  code_set_source(code->quoted_filename, code->linenum + 1);
+  fprintf(output_handle,"\n''')\n");
+  code_reset_source();
+}
+
+
+
+/*******************************************************************************
+* Create an empty code list
+*******************************************************************************/
+struct code_block *
+codeblock_new(void)
+{
+  struct code_block *cb;
+
+  palloc(cb);
+  cb->filename = NULL;
+  cb->quoted_filename = NULL;
+  cb->linenum  = -1;
+  cb->lines    = list_create();
+  return cb;
+}
+
+
+/* *****************************************************************************
+* Looks for comp_iformal id (varname) matches, assumes lst elements are of this
+* type.
+***************************************************************************** */
+int var_in_list(List lst, struct comp_iformal* var) {
+  int retval = 0;
+  List_handle liter;
+  liter = list_iterate(lst);
+  struct comp_iformal* lst_var;
+  while((lst_var = list_next(liter))) {
+    if (!strcmp(lst_var->id, var->id)) {
+      retval = 1;
+      break;
+    }
+  }
+  list_iterate_end(liter);
+  return retval;
+}
+
+
+/*******************************************************************************
+* cogen_decls: write the declaration part from the instrument description
+*   that is the particle definition, the instrument parameters, the DECLARE part,
+*   and all SHARE sections from components.
+* input:  an instrument definition structure
+* output: number of warnings/errors to fix.
+*
+* code is generated at root level of C file: only C definitions, no initialisers !
+* calls: cogen_comp_declare
+*******************************************************************************/
+int cogen_decls(struct instr_def *instr)
+{
+  List_handle liter;             /* For list iteration. */
+  struct comp_inst *comp;        /* Component instance. */
+  struct instr_formal *i_formal; /* Name of instrument formal parameter. */
+  long index = 0;
+  int  warnings = 0;
+
+  /* a previous call to cogen_header writes the file header */
+
+  if (verbose) fprintf(stderr, "Writing instrument '%s' and components DECLARE\n", instr->name);
+
+  cout("");
+  cout("# *****************************************************************************");
+  coutf("# * instrument '%s' and components DECLARE", instr->name);
+  cout("# *****************************************************************************");
+  cout("");
+
+  /* 1. particle definition */
+  /* moved to cogen_header, as this is needed in mccode-r */
+
+  /* 2. Global variables for instrument parameters. */
+  cout("# Instrument parameters:");
+  cout("");
+
+  int numipar=0;
+
+  if (!list_len(instr->formals)) {
+    coutf("# Instrument %s has_no_parameters!", instr->name);
+  } else {
+    liter = list_iterate(instr->formals);
+    while((i_formal = list_next(liter)))
+    {
+      if (i_formal->id && strlen(i_formal->id)) {
+	char* type;
+	char* pyid;
+	if (i_formal->type == instr_type_string)
+	  type="string";
+	else if (i_formal->type == instr_type_int)
+	  type="int";
+	else if (i_formal->type == instr_type_double)
+	  type="double";
+	else
+	  type="";
+
+	if (!strcmp(i_formal->id,"lambda")) {
+	  fprintf(stderr,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	  fprintf(stderr,"!!! WARNING: Your instrument file uses an input-parameter named !!!\n");
+	  fprintf(stderr,"!!!         \"lambda\" - which is a reserved word in Python       !!!\n");
+	  fprintf(stderr,"!!! As a workaround the variable has been named \"Lambda\" in     !!!\n");
+	  fprintf(stderr,"!!! the output python script.                                   !!!\n");
+	  fprintf(stderr,"!!! PLEASE consider renaming lambda->Lambda in the .instr file  !!!\n");
+	  fprintf(stderr,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	  pyid="Lambda";
+	} else {
+	  pyid=i_formal->id;
+	}
+	
+	coutf("%s = instr.add_parameter('%s', '%s', value='%s', comment='Input parameter added by mcpygen')", pyid, type, i_formal->id, exp_tostring(i_formal->default_value));
+	
+        numipar++;
+      }
+    }
+    list_iterate_end(liter);
+  }
+  cout("");
+
+  cout("instr.append_declare(r'''");
+  codeblock_out(instr->decls);
+  cout("''')\n\n");
+  cout("instr.append_initialize(r'''");
+  codeblock_out(instr->inits);
+  cout("''')\n\n");
+
+  return(warnings);
+} /* cogen_decls */
+
+/*******************************************************************************
+* undef_uservars: #define symbols for particle struct USERVARS.
+*******************************************************************************/
+void def_uservars(struct instr_def *instr)
+{
+  List liter = list_iterate(instr->user_vars);
+  List liter2 = list_iterate(instr->user_vars_types);
+  char *var;
+  char *tpe;
+  while((var = list_next(liter))) {
+    tpe = list_next(liter2);
+    coutf("uv_%s = instr.add_user_var(\"%s\", \"%s\", comment=\"USERVAR added by mcpygen\")",var,tpe,var);
+  }
+  list_iterate_end(liter);
+  list_iterate_end(liter2);
+}
+
+/* *****************************************************************************
+* cogen_raytrace: Generate the main raytrace function.
+* Extended Grammar:
+*   WHEN: the trace section of comp is embraced in a: if (when) { ...  }
+*   GROUP: defines a global Group_<name> flag which gets true when one of the
+*          comps SCATTER. Rest of GROUP is then skipped.
+*          ABSORB _particle are sent to label absorbComp at the end of component
+*          and next comp in GROUP is tested.
+*   JUMP:  sends _particle to the JumpTrace labels, either with condition
+*          or condition is (counter < iterations)
+*   SPLIT: loops from comp/group TRACE to END, incrementing mcrun_num
+***************************************************************************** */
+int cogen_raytrace(struct instr_def *instr)
+{
+  List_handle liter;
+  struct comp_inst *comp = NULL;
+  int warnings = 0;
+  int i = 0;
+  int split_counts = 0;
+  static char *statepars_all[] =
+    { /* particle state parameter names are used for defines */
+    #if MCCODE_PROJECT == 1     /* neutron */
+    #define NUM_STATE_PARS 14
+            "x", "y", "z", "vx", "vy", "vz",
+            "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop"
+    #elif MCCODE_PROJECT == 2   /* xray */
+    #define NUM_STATE_PARS 12
+            "x", "y", "z", "kx", "ky", "kz",
+            "phi", "t", "Ex", "Ey","Ez", "p"
+    #endif
+    };
+  List l;
+    
+  //
+  // write the raytrace function
+  //
+
+  cout("# *****************************************************************************");
+  coutf("# * instrument '%s' %s", instr->name, "TRACE");
+  cout("# *****************************************************************************");
+  cout("");
+
+  liter = list_iterate(instr->complist);
+  while((comp = list_next(liter)) != NULL) {
+    
+    char *x, *y, *z, *rx, *ry, *rz;
+    char *poslabel, *rotlabel;
+    struct comp_inst *relposcomp = comp->pos->place_rel;  /* Component relative to. */
+    struct comp_inst *relrotcomp = comp->pos->orientation_rel;  /* Component relative to. */
+    if(relposcomp == NULL) {                                 /* Absolute position. */
+      poslabel = "ABSOLUTE";
+    } else {
+      poslabel = relposcomp->name;
+    }
+    x = exp_tostring(comp->pos->place.x);
+    y = exp_tostring(comp->pos->place.y);
+    z = exp_tostring(comp->pos->place.z);
+
+    if(relrotcomp == NULL) {                              /* Absolute orientation. */
+      rotlabel = "ABSOLUTE";
+    } else {
+      rotlabel = relrotcomp->name;
+    }
+    rx = exp_tostring(comp->pos->orientation.x);
+    ry = exp_tostring(comp->pos->orientation.y);
+    rz = exp_tostring(comp->pos->orientation.z);
+    
+    coutf("# Comp instance %s, placement and parameters", comp->name);
+    /* Case 1, both AT and ROTATED in absolute coordinates */
+    if (!strcmp(poslabel, "ABSOLUTE") && !strcmp(rotlabel, "ABSOLUTE")) {
+      coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], ROTATED=['%s', '%s', '%s'])",
+	    comp->name, comp->name, comp->def->name, x, y, z, rx, ry, rz);
+    } else if (!strcmp(poslabel, "ABSOLUTE")) {
+      coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], ROTATED=['%s', '%s', '%s'], ROTATED_RELATIVE='%s')",
+	    comp->name, comp->name, comp->def->name, x, y, z, rx, ry, rz, rotlabel);
+    } else if (!strcmp(rotlabel, "ABSOLUTE")) {
+      coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], AT_RELATIVE='%s', ROTATED=['%s', '%s', '%s'])",
+	    comp->name, comp->name, comp->def->name, x, y, z, poslabel, rx, ry, rz);
+    } else {
+      coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], AT_RELATIVE='%s', ROTATED=['%s', '%s', '%s'], ROTATED_RELATIVE='%s')",
+	    comp->name, comp->name, comp->def->name, x, y, z, poslabel, rx, ry, rz, rotlabel);
+    }
+    
+    if (comp->split) {
+      coutf("# SPLIT %s times at %s", exp_tostring(comp->split) ,comp->name);
+      coutf("%s.set_SPLIT('%s')",comp->name, exp_tostring(comp->split));
+    }
+
+    if (list_len(comp->jump) > 0) {
+      coutf("# JUMP at %s", comp->name);
+
+      struct jump_struct *this_jump;
+      List_handle literJ = list_iterate(comp->jump);
+      while((this_jump = list_next(literJ))) {
+        char *exp = exp_tostring(this_jump->condition);
+	if(this_jump->iterate) {
+	  coutf("%s.set_JUMP('%s ITERATE %s')",comp->name,this_jump->target,exp);
+	} else {
+	  coutf("%s.set_JUMP('%s WHEN %s')",comp->name,this_jump->target,exp);
+	}
+      }
+      list_iterate_end(literJ);
+    }
+
+    if (comp->when) {
+      coutf("# WHEN %s at %s", exp_tostring(comp->when) ,comp->name);
+      coutf("%s.set_WHEN('%s')",comp->name, exp_tostring(comp->when));
+    }
+
+    if (list_len(comp->extend->lines) > 0) {
+      coutf("# EXTEND at %s", comp->name);
+      coutf("%s.append_EXTEND(r'''",comp->name);
+      codeblock_out(comp->extend);
+      cout("''')\n\n");
+    }
+    
+    cout("");
+    List_handle piter;
+    struct comp_iformal *par;
+    struct Symtab_entry *entry;
+    char *val=NULL;
+    piter = list_iterate(comp->def->set_par);
+    while((par = list_next(piter)) != NULL) {
+      // get parameter value from component parameters name-value structure
+      entry = symtab_lookup(comp->setpar, par->id);
+      val = exp_tostring(entry->val);
+      coutf("%s.%s = '%s'",comp->name, par->id, val);
+    }
+    list_iterate_end(piter);
+    cout("");
+
+  }
+  list_iterate_end(liter);
+
+  return(warnings);
+} /* cogen_raytrace */
+
+/*******************************************************************************
+* Output code for the mcstas runtime system. Default is to copy the runtime
+* code into the generated executable, to minimize problems with finding the
+* right files during compilation and linking, but this may be changed using
+* the --no-runtime compiler switch.
+*******************************************************************************/
+static void
+cogen_header(struct instr_def *instr, char *output_name)
+{
+  char *sysdir_orig;
+  char *sysdir_new;
+  char  pathsep[3];
+  int   i,j=0;
+  time_t t;
+  char  date[128];
+  long  index=0;
+
+  time(&t);
+  strcpy(date, ctime(&t));
+  if (strlen(date)) date[strlen(date)-1] = '\0';
+
+  /* the file header */
+  cout("#!/usr/bin/env python3");
+  cout("# Automatically generated file. ");
+  cout("# Format:    Python script code");
+#if MCCODE_PROJECT == 1     /* neutron */
+  cout("# McStas <http://www.mcstas.org>");
+#elif MCCODE_PROJECT == 2   /* xray */
+  cout("# Creator:    McXtrace <http://www.mcxtrace.org>");
+#endif
+  coutf("# Instrument: %s (%s)", instr->source, instr->name);
+  coutf("# Date:       %s", date);
+  coutf("# File:       %s", output_name);
+  cout("");
+  cout("import mcstasscript as ms");
+  cout("");
+#if MCCODE_PROJECT == 1     /* neutron */
+  cout("# Python McStas instrument description");
+  coutf("instr = ms.McStas_instr(\"%s_generated\", author = \"McPygen\", origin = \"ESS DMSC\")",instr->name);
+#elif MCCODE_PROJECT == 2   /* xray */
+  cout("# Python McXtrace instrument description");
+  coutf("instr = ms.McXtrace_instr(\"%s_generated\", author = \"McPygen\", origin = \"ESS DMSC\")",instr->name);
+#endif
+  cout("\n# Add collected DEPENDENCY strings");
+  coutf("instr.set_dependency('%s')",instr->dependency);
+  /* handles Windows '\' chararcters for embedding sys_dir into source code */
+  if (MC_PATHSEP_C != '\\') strcpy(pathsep, MC_PATHSEP_S);
+  else strcpy(pathsep, "\\\\");
+
+  sysdir_orig = get_sys_dir();
+  sysdir_new  = (char *)mem(2*strlen(sysdir_orig));
+  for (i=0; i < strlen(sysdir_orig); i++)
+  {
+    if (sysdir_orig[i] == '\\')
+    { sysdir_new[j] = '\\'; j++; sysdir_new[j] = '\\'; }
+    else sysdir_new[j] = sysdir_orig[i];
+    j++;
+  }
+  sysdir_new[j] = '\0';
+
+  instr->user_vars = list_create();
+  instr->user_vars_types = list_create();
+  int uvlist = get_codeblock_vars(instr->vars, instr->user_vars, instr->user_vars_types, "USERVARS", "EXTEND");
+  
+  cout("");
+  cout("# *****************************************************************************");
+  coutf("# * Start of instrument '%s' generated code", instr->name);
+  cout("# *****************************************************************************");
+  coutf("# " MCCODE_LIBENV " system dir is \"%s%s\"", sysdir_new,pathsep);
+
+  cout("");
+
+} /* cogen_header */
+
+
+/*******************************************************************************
+* var_is_in_codeblock: Checks if variabe of name var and type tpe is in code block
+*   code. Filters out comment sections.
+*
+* code:     code block containing var, or not
+* varname:  variable declaration id
+*
+* returns: char 0 if not, 1 otherwise
+*******************************************************************************/
+char varname_is_in_codeblock(struct code_block* code, char* varname) {
+  char flag_is_in_codeblock = 0;
+
+  if(list_len(code->lines) > 0) {
+    List_handle liter = list_iterate(code->lines);
+    char *line;                /* Single code line. */
+    char *comment_start= NULL; /* this is the C style comment start */
+    char *comment_end  = NULL; /* this is the C style comment end */
+    char *comment_toend= NULL; /* this is the C++ style comment start (to end of line) */
+
+    // iterate declare code
+    while((line = list_next(liter)))
+    {
+      char *subline = line;
+      char *p       = NULL;
+
+      /* search for comments */
+      if (comment_start)       /* continuation from a previous line */
+        comment_start = line;
+      else if (!comment_start) /* start of a new comment ? */
+        comment_start = strstr(line, "/*");
+      comment_end   = strstr(line, "*/");
+      if (comment_end && comment_end+2 < line+strlen(line))
+        comment_end += 2;
+      comment_toend = strstr(line, "//");
+
+      if (comment_start && comment_end) { /* a full C-style comment on a line (or continuation to end) */
+        for (p=comment_start; p<comment_end; p++) *p=' ';
+        comment_start = comment_end = NULL; /* reset locations for next comment */
+      }
+      if (comment_start && !comment_end) { /* the start of a multiline C-style comment (or continuation) */
+        for (p=comment_start; p<line+strlen(line)-1; p++) *p=' ';
+      }
+      if (comment_toend) {
+        for (p=comment_toend; p<line+strlen(line)-1; p++) *p=' ';
+      }
+
+      while ((p=strstr(subline, varname))) {
+        /* the parameter name appears in code block */
+        int char_before=0;
+        int char_after=0;
+        if (p > line)
+          char_before=*(p-1); /* char before the match */
+        if (p+strlen(varname) <= line+strlen(line))
+          char_after=*(p+strlen(varname)); /* char after the match */
+        /* check if appears as a single word */
+        if ( (!char_before || (char_before && strchr(" ,\t*",  char_before))) &&
+             (!char_after  || (char_after  && strchr(" ,\t;[=", char_after ))) )
+          flag_is_in_codeblock++;
+        else subline = p+strlen(varname);
+        if (flag_is_in_codeblock) break;
+        if (p+strlen(varname) >= line+strlen(line)) break;
+      } /* while in declare code */
+      if (flag_is_in_codeblock) break;
+
+    } /* while line */
+    list_iterate_end(liter);
+  }
+
+  return flag_is_in_codeblock;
+} // varname_is_in_codeblock
+
+/*******************************************************************************
+* get_codeblock_vars_allcustom: See get_codeblock_vars.
+*   Fills out a single list of comp_iformal (not instr_iformal) and applies the
+*   found types as the custom value, and that instr_formal_types is also
+*   "custom".
+*
+* custom_vars: a list which gains comp_iformal entries
+*******************************************************************************/
+int get_codeblock_vars_allcustom(struct code_block *code, List custom_vars,
+  char* block_name, char* movetoblock_name) {
+
+  List vars;
+  List types;
+  vars = list_create();
+  types = list_create();
+  int retval;
+  retval = get_codeblock_vars(code, vars, types, block_name, movetoblock_name);
+
+  List_handle liter;
+  List_handle liter2;
+  liter = list_iterate(vars);
+  liter2 = list_iterate(types);
+  char *var;
+  char *tpe;
+  while((var = list_next(liter))) {
+    tpe = list_next(liter2);
+
+    struct comp_iformal* cvar;
+    cvar = malloc(sizeof(struct comp_iformal));
+    cvar->type = instr_type_custom;
+    cvar->type_custom = tpe;
+    cvar->id = var;
+    cvar->isoptional = 0;
+    list_add(custom_vars, cvar);
+  }
+  list_iterate_end(liter);
+  list_iterate_end(liter2);
+
+  // NOTE: free lists vars and types with an empty "freer" to preserve element strings
+
+  return retval;
+}
+
+/*******************************************************************************
+* get_codeblock_vars: Extracts variable declaration statements from a code block
+*   and adds their varnames and types to lists.
+*
+* code: code block containing variable declaration statements
+* vars: variable name strings are added to this list
+* types: the string(s) preceding the variable name in the user decl. are added
+*
+* returns: the number of vars added
+*******************************************************************************/
+int get_codeblock_vars(struct code_block *code, List vars, List types,
+  char* block_name, char* movetoblock_name) {
+
+  if(list_len(code->lines) <= 0)
+    return(0);
+
+  List_handle myiter;
+  myiter = list_iterate(code->lines);
+
+  char *l;
+  int idx = -1;
+  int pos = -1;
+  int len = -1;
+  int ans = 0;
+
+  while((l = list_next(myiter))) {
+    do {
+      // line must match this format
+      pos = re_match("\\w[\\s\\w\\*]+\\s+\\**\\w+\\[?\\w*\\]?\\[?\\w*\\]?;", l); // match general var decl pattern
+
+      if (pos <= -1) {
+        // skip
+      }
+      else {
+        char* tpe;
+        char* vn;
+
+        // extract the type
+        len = re_match("\\w+\\[?\\w*\\]?\\[?\\w*\\]?;", l+pos); // end of type string
+        tpe = (char*) malloc((len + 1) * sizeof(char)); // new location
+        *(tpe+len) = '\0'; // null terminate
+        if (len > -1) {
+          strncpy(tpe, l+pos, len);
+        }
+
+        // extract the varname
+        pos = re_match("\\w+\\[?\\w*\\]?\\[?\\w*\\]?;", l); // match start of varname
+        if (pos > -1) {
+          len = re_match(";", l+pos); // match end of varname
+
+          if (len > -1) {
+            vn = (char*) malloc((len + 1) * sizeof(char)); // new location
+            *(vn+len) = '\0'; // null terminate
+
+            strncpy(vn, l+pos, len);
+            l = l + pos + len + 1; // inc line to pos after scolon
+            ans++;
+          }
+        }
+
+        // check that symbol was not found inside a comment block
+        if (varname_is_in_codeblock(code, vn)) {
+          list_add(types, tpe);
+          list_add(vars, vn);
+        }
+      }
+    } while(idx > -1);
+  }
+
+  // print a warning if code block contains '=' char
+  int warnings = 0;
+  if(list_len(code->lines) > 0) {
+    List_handle liter;
+    char *line;
+    liter = list_iterate(code->lines);
+    while((line = list_next(liter)))
+      if (strchr(line, '=')) warnings++;
+    list_iterate_end(liter);
+  }
+  if (warnings)
+    fprintf(stderr,"Warning: %s block contains %i assignments (= sign).\n"
+                   "         Move them into an %s section. May fail at compile.\n"
+                   , block_name, warnings, movetoblock_name);
+
+  return(ans);
+} // get_codeblock_vars
+
+/*******************************************************************************
+* detect_skipable_transforms: Finds components where coordinate transform can be skipped
+*   Checks for trace / extend and if origin or target of a jump.
+*******************************************************************************/
+void detect_skipable_transforms(struct instr_def *instr) {
+    //
+    // analyze component sequence to find coordinate transformations that can be skipped
+    //
+    List_handle liter;
+    struct comp_inst *comp = NULL;
+    struct comp_inst *target_comp = NULL;
+    
+    // Assume all can be skipped
+    liter = list_iterate(instr->complist);
+    while((comp = list_next(liter)) != NULL) {
+        comp->skip_transform = 1;
+    }
+    list_iterate_end(liter);
+    
+    // Detect those components that can not
+    liter = list_iterate(instr->complist);
+    while((comp = list_next(liter)) != NULL) {
+
+        if ((comp->def->trace_code && list_len(comp->def->trace_code->lines) > 0) || list_len(comp->extend->lines) > 0) {
+            // If component has trace or extend, do not skip it
+            comp->skip_transform = 0;
+        }
+        
+        if(list_len(comp->jump) > 0) {
+            // If this component jumps elsewhere, it can not be skipped
+            comp->skip_transform = 0;
+            
+            // Its target can not be skipped either
+            struct jump_struct *this_jump;
+            List_handle literJ = list_iterate(comp->jump);
+            while (this_jump = list_next(literJ)) {
+                
+                // Find target (not initialized yet)
+                List_handle liter3 = list_iterate(instr->complist);
+                struct comp_inst *target=NULL;
+                while((target = list_next(liter3)) != NULL) {
+                  if (!strcmp(target->name, this_jump->target))
+                    this_jump->target_index = target->index;
+                }
+                list_iterate_end(liter3);
+                if (!this_jump->target_index) /* JUMP e.g. PREVIOUS/NEXT is relative -> absolute */
+                  this_jump->target_index += comp->index;
+
+                // component list is 1 indexed so subtract one from target_index
+                target_comp = list_access(instr->complist, this_jump->target_index - 1);
+                target_comp->skip_transform = 0;
+            }
+            list_iterate_end(literJ);
+        }
+    }
+    list_iterate_end(liter);
+}
+    
+/*******************************************************************************
+* cogen: the code generator
+*   Generate the output file (in C).
+*******************************************************************************/
+void
+cogen(char *output_name, struct instr_def *instr)
+{
+  int warnings = 0;
+
+  /* INITIALISE output file. */
+  if(!output_name || !output_name[0] || !strcmp(output_name, "-"))
+  {
+    output_handle = fdopen(1, "w");
+    quoted_output_file_name = str_dup("<stdout>");
+  }
+  else
+  {
+    output_handle = fopen(output_name, "w");
+    quoted_output_file_name = str_quote(output_name);
+  }
+
+  num_next_output_line = 1;
+  if(output_handle == NULL)
+    fatal_error("Error opening output file '%s'\n", output_name);
+
+
+  /* and we now call the writers */
+  cogen_header(instr, output_name);
+
+  warnings += cogen_decls(instr);
+
+  def_uservars(instr);
+
+  warnings += cogen_raytrace(instr); 
+
+  cout("instr.settings(checks=False)");
+  cout("data = instr.backengine()");
+  coutf("# end of generated Python code %s ", output_name);
+
+  fclose(output_handle);
+} /* cogen */

@@ -34,7 +34,7 @@ function data = mcplot(varargin)
 %
 %   This program is free software; you can redistribute it and/or modify
 %   it under the terms of the GNU General Public License as published by
-%   the Free Software Foundation; version 2 of the License.
+%   the Free Software Foundation; version 3 of the License.
 %
 %   This program is distributed in the hope that it will be useful,
 %   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -117,7 +117,7 @@ function data = mcplot(varargin)
   if exist ('OCTAVE_VERSION', 'builtin')
     if ~isempty(data)
       if nargin==0 || nargin==1
-	display("Pausing --> Please press a key in the octave terminal to continue");
+	display('Pausing --> Please press a key in the octave terminal to continue');
 	pause();
       end
     end

@@ -32,8 +32,9 @@
 * yheight: [m]              Height of opening.
 * zdepth: [m]               Length of field.
 * radius: [m]               Radius of field if it is cylindrical or spherical.
-* filename: [ ]             File where the magnetic field is tabulated.
-* interpol_method: [ ]      Choice of interpolation method "kdtree" (default on CPU) / "regular" (default on GPU)
+* filename: [str]           File where the magnetic field is tabulated.
+* geometry: [str]           Name of an Object File Format (OFF) or PLY file for complex field-geometry.
+* interpol_method: [str]    Choice of interpolation method "kdtree" (default on CPU) / "regular" (default on GPU)
 *
 * OUTPUT PARAMETERS:
 * %E

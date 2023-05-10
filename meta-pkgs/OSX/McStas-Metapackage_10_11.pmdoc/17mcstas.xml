@@ -1,6 +1,0 @@
-<pkgref spec="1.12" uuid="1A973E33-34B6-435A-9337-E7B70CEF53EF"><config><identifier>com.Humanity.mcstas-tools-matlab-mcplot-@VERSION@</identifier><version>1.0</version><description>DESCRIPTION
-===========
-
-This is an installer created using CPack (https://cmake.org). No additional installation instructions provided.
-
-</description><post-install type="none"/><requireAuthorization/><installTo relocatable="true">/</installTo><flags><followSymbolicLinks/><overwriteDirectoryPermissions/></flags><packageStore type="internal"></packageStore><mod>parent</mod><mod>installTo</mod></config><scripts><scripts-dir>@DISTDIR@/mcstas-tools-matlab-mcplot-OSXpkg-@VERSION@-mac_el_capitan-10.11.pkg/Contents/Resources</scripts-dir></scripts><extra><packagePath>@DISTDIR@/mcstas-tools-matlab-mcplot-OSXpkg-@VERSION@-mac_el_capitan-10.11.pkg</packagePath><title>mcstas-tools-matlab-mcplot-@VERSION@</title></extra></pkgref>

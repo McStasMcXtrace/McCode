@@ -27,4 +27,27 @@ else
     git clone https://github.com/mctools/ncrystal.git
 fi
 
+if [ -d nexus-code ]; then
+    echo Updating existing NeXus clone
+    cd nexus-code
+    git pull
+    cd ..
+else
+    echo Cloning NeXus
+    git clone https://github.com/nexusformat/code nexus-code
+fi
+
+if [ -d xraylib ]; then
+    echo Updating existing xraylib clone
+    cd xraylib
+    git pull
+    cd ..
+else
+    echo Cloning xraylib \(release 4.1.3\)
+    git clone https://github.com/tschoonj/xraylib
+    cd xraylib
+    git checkout -b build xraylib-4.1.3
+    git pull
+fi
+
 cd $BASEDIR

@@ -124,6 +124,8 @@ DECLARE
   double ki_x, ki_y, ki_z;
   double kf_x, kf_y, kf_z;
   double dq, dw, vf;
+  char optL[256];
+  char optT[256];
   char opt1[256]; /* options for Monitor_nD */
   char opt2[256];
   char opt3[256];
@@ -273,7 +275,9 @@ INITIALIZE
   (Ei-20 < 0 ? 0 : Ei-20), Ei+20);
 
   sprintf(opt3,"user1 limits=[0.5,3.5] bins=9, lambda limits=[%g %g] bins=20, square, per cm2",0.97*lambda,1.03*lambda);
-  
+
+  sprintf(optL,"lambda limits=[%g %g] bins=50",lambda-dlambda,lambda+dlambda);
+  sprintf(optT,"t slit limits=[%g %g]",tmin, tmax);
 %}
 
 /* -------------------------------- TRACE -------------------------------- */
@@ -360,12 +364,12 @@ AT (0,0,LME-LCE-LCC) RELATIVE mono_out
 
 COMPONENT Mon_SuppInL = Monitor_nD(
   xwidth = 0.052, yheight = 0.098,
-  options="lambda limits=[4.075 4.22] bins=50")
+  options=optL)
 AT (0,0,-0.07-0.002) RELATIVE SuppPos
 
 COMPONENT Mon_SuppInT = Monitor_nD(
   xwidth = 0.052, yheight = 0.098,
-  options="t slit limits=[0.0042 0.0045]", bins=iTOF_CHA_RESOL)
+  options=optT, bins=iTOF_CHA_RESOL)
 AT (0,0,-0.07-0.001) RELATIVE SuppPos
 EXTEND
 %{

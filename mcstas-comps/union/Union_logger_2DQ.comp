@@ -567,8 +567,14 @@ INITIALIZE
   sprintf(logger_list_element.name,NAME_CURRENT_COMP);
   logger_list_element.component_index = INDEX_CURRENT_COMP;
   logger_list_element.logger = &this_logger;
-  
-  // In order to run the logger at the right times, pointers to this logger is stored in each volume it logs,
+
+if (_getcomp_index(init) < 0) {
+fprintf(stderr,"Union_logger_2DQ:%s: Error identifying Union_init component, %s is not a known component name.\n",
+NAME_CURRENT_COMP, init);
+exit(-1);
+}
+
+// In order to run the logger at the right times, pointers to this logger is stored in each volume it logs,
   //  and additionally for each avaiable process. If a process is not logged, the pointer is simply not stored.
   struct pointer_to_global_geometry_list *global_geometry_list = COMP_GETPAR3(Union_init, init, global_geometry_list);
   struct pointer_to_global_logger_list *global_specific_volumes_logger_list = COMP_GETPAR3(Union_init, init, global_specific_volumes_logger_list);

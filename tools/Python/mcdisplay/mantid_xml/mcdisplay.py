@@ -11,6 +11,8 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 import re
 import math
 
+from datetime import datetime
+
 from mccodelib.instrgeom import DrawMultiline, Vector3d
 from mccodelib.mcdisplayutils import McDisplayReader
 from mccodelib.instrparser import InstrTraceParser, InstrObjectConstructor, MantidPixelLine, \
@@ -19,8 +21,9 @@ from mccodelib.fcparticleparser import FlowChartParticleTraceParser
 
 
 class MantidPixelWriter:
-    def __init__(self, components):
+    def __init__(self, components,instr):
         self.components = components
+        self.instr = instr
         self.monitors = []
         for c in self.components:
             if re.search('nD_Mantid', c.name):
@@ -51,6 +54,16 @@ class MantidPixelWriter:
 
     source_footer = '''</type>'''
 
+    def _sample_X(self):
+        for c in self.components:
+            if c.name == 'sampleMantid':
+                return (c.pos.x)
+
+    def _sample_Y(self):
+        for c in self.components:
+            if c.name == 'sampleMantid':
+                return (c.pos.y)
+
     def _sample_Z(self):
         for c in self.components:
             if c.name == 'sampleMantid':
@@ -66,8 +79,8 @@ class MantidPixelWriter:
                     if type(d) == DrawMultiline:
                         # TODO: implement source drawing
                         pass
-                s = self.source_type.replace('X_LOC', str(c.pos.x))
-                s = s.replace('Y_LOC', str(c.pos.y))
+                s = self.source_type.replace('X_LOC', str(c.pos.x-self._sample_X()))
+                s = s.replace('Y_LOC', str(c.pos.y-self._sample_Y()))
                 s = s.replace('Z_LOC', str(c.pos.z-self._sample_Z()))
                 break
         return '\n'.join([s, self.source_header, self.source_footer])
@@ -107,9 +120,9 @@ class MantidPixelWriter:
                         # TODO: implement sample drawing
                         pass
 
-                h = self.sample.replace('X_COORD', str(c.pos.x))
-                h = h.replace('Y_COORD', str(c.pos.y))
-                h = h.replace('Z_COORD', str(c.pos.z-self._sample_Z()))
+                h = self.sample.replace('X_COORD', str(0))
+                h = h.replace('Y_COORD', str(0))
+                h = h.replace('Z_COORD', str(0))
                 break
         return '\n\n'.join([h, self.sample_type, self.sample_footer])
 
@@ -131,7 +144,7 @@ class MantidPixelWriter:
 
     pixels_s1 = '''
 <type name="MonNDtype-IDX_MONITOR-pix-IDX_PIXEL" is="detector">
-    <hexahedron id="hexapix-1009">
+    <hexahedron id="hexapix-IDX_PIXEL">
         <left-back-bottom-point  x="x_1" y="y_1" z="z_1"/>
         <left-front-bottom-point  x="x_2" y="y_2" z="z_2"/>
         <right-front-bottom-point  x="x_3" y="y_3" z="z_3"/>
@@ -146,9 +159,10 @@ class MantidPixelWriter:
         <x-max val="x_bb_max"/>
         <y-min val="y_bb_min"/>
         <y-max val="y_bb_max"/>
-        <z-min val="y_bb_min"/>
+        <z-min val="z_bb_min"/>
         <z-max val="z_bb_max"/>
     </bounding-box>
+	<algebra val="hexapix-IDX_PIXEL" />
 </type>'''
 
     pixels_s2 = '''
@@ -178,64 +192,68 @@ class MantidPixelWriter:
                     pixels.append(d.line)
 
             if len(pixels) == 0:
-                return ''
+                pass
+            else:
 
-            idx_monitor = re.search('nD_Mantid_([0-9]+)', m.name).group(1)
-            mt = self.pixels_monitor_type.replace('IDX_MONITOR', idx_monitor)
-            mt = mt.replace('IDX_PIX_START', pixels[0][1])
-            mt = mt.replace('IDX_PIX_END', pixels[0][2])
-            mt = mt.replace('MONITOR_NAME', m.name)
+                idx_monitor = re.search('nD_Mantid_([0-9]+)', m.name).group(1)
+                mt = self.pixels_monitor_type.replace('IDX_MONITOR', idx_monitor)
+                mt = mt.replace('IDX_PIX_START', pixels[0][1])
+                mt = mt.replace('IDX_PIX_END', pixels[0][2])
+                mt = mt.replace('MONITOR_NAME', m.name)
+                mt = mt.replace('X_LOC', str(m.pos.x-self._sample_X()))
+                mt = mt.replace('Y_LOC', str(m.pos.y-self._sample_Y()))
+                mt = mt.replace('Z_LOC', str(m.pos.z-self._sample_Z()))
 
-            s1_s = []
-            s2_s = []
-            for line in pixels:
-                idx_pix = line[0]
-                s1 = self.pixels_s1.replace('IDX_PIXEL', idx_pix)
-                s1 = s1.replace('IDX_MONITOR', idx_monitor)
+                s1_s = []
+                s2_s = []
+                for line in pixels:
+                    idx_pix = line[0]
+                    s1 = self.pixels_s1.replace('IDX_PIXEL', idx_pix)
+                    s1 = s1.replace('IDX_MONITOR', idx_monitor)
 
-                pix = MantidPixel(line, m.transform)
+                    pix = MantidPixel(line, m.transform)
 
-                x = [pix.p1.x, pix.p2.x, pix.p3.x, pix.p4.x]
-                y = [pix.p1.y, pix.p2.y, pix.p3.y, pix.p4.y]
-                z = [pix.p1.z, pix.p2.z, pix.p3.z, pix.p4.z]
-                z_PLUS = [pix.p1.z + 0.001, pix.p2.z + 0.001, pix.p3.z + 0.001, pix.p4.z + 0.001]
+                    x = [pix.p1.x, pix.p2.x, pix.p3.x, pix.p4.x]
+                    y = [pix.p1.y, pix.p2.y, pix.p3.y, pix.p4.y]
+                    z = [pix.p1.z, pix.p2.z, pix.p3.z, pix.p4.z]
+                    z_PLUS = [pix.p1.z + 0.001, pix.p2.z + 0.001, pix.p3.z + 0.001, pix.p4.z + 0.001]
 
-                s1 = s1.replace('x_1', str(x[0]))
-                s1 = s1.replace('x_2', str(x[1]))
-                s1 = s1.replace('x_3', str(x[2]))
-                s1 = s1.replace('x_4', str(x[3]))
+                    s1 = s1.replace('x_1', str(x[0]))
+                    s1 = s1.replace('x_2', str(x[1]))
+                    s1 = s1.replace('x_3', str(x[2]))
+                    s1 = s1.replace('x_4', str(x[3]))
 
-                s1 = s1.replace('y_1', str(y[0]))
-                s1 = s1.replace('y_2', str(y[1]))
-                s1 = s1.replace('y_3', str(y[2]))
-                s1 = s1.replace('y_4', str(y[3]))
+                    s1 = s1.replace('y_1', str(y[0]))
+                    s1 = s1.replace('y_2', str(y[1]))
+                    s1 = s1.replace('y_3', str(y[2]))
+                    s1 = s1.replace('y_4', str(y[3]))
 
-                s1 = s1.replace('z_1', str(z[0]))
-                s1 = s1.replace('z_2', str(z[1]))
-                s1 = s1.replace('z_3', str(z[2]))
-                s1 = s1.replace('z_4', str(z[3]))
+                    s1 = s1.replace('z_1', str(z[0]))
+                    s1 = s1.replace('z_2', str(z[1]))
+                    s1 = s1.replace('z_3', str(z[2]))
+                    s1 = s1.replace('z_4', str(z[3]))
 
-                s1 = s1.replace('z_PLUS_1', str(z_PLUS[0]))
-                s1 = s1.replace('z_PLUS_2', str(z_PLUS[1]))
-                s1 = s1.replace('z_PLUS_3', str(z_PLUS[2]))
-                s1 = s1.replace('z_PLUS_4', str(z_PLUS[3]))
+                    s1 = s1.replace('z_PLUS_1', str(z_PLUS[0]))
+                    s1 = s1.replace('z_PLUS_2', str(z_PLUS[1]))
+                    s1 = s1.replace('z_PLUS_3', str(z_PLUS[2]))
+                    s1 = s1.replace('z_PLUS_4', str(z_PLUS[3]))
 
-                s1 = s1.replace('x_bb_min', str(min(x)))
-                s1 = s1.replace('x_bb_max', str(max(x)))
-                s1 = s1.replace('y_bb_min', str(min(y)))
-                s1 = s1.replace('y_bb_max', str(max(y)))
-                s1 = s1.replace('z_bb_min', str(min(z)))
-                s1 = s1.replace('z_bb_max', str(max(z_PLUS)))
-                s1_s.append(s1)
+                    s1 = s1.replace('x_bb_min', str(min(x)))
+                    s1 = s1.replace('x_bb_max', str(max(x)))
+                    s1 = s1.replace('y_bb_min', str(min(y)))
+                    s1 = s1.replace('y_bb_max', str(max(y)))
+                    s1 = s1.replace('z_bb_min', str(min(z)))
+                    s1 = s1.replace('z_bb_max', str(max(z)))
+                    s1_s.append(s1)
 
-                s2 = self.pixels_s2.replace('IDX_PIXEL', idx_pix)
-                s2 = s2.replace('IDX_MONITOR', idx_monitor)
-                s2 = s2.replace('x_cp', str(pix.p_cp.x))
-                s2 = s2.replace('y_cp', str(pix.p_cp.y))
-                s2_s.append(s2)
+                    s2 = self.pixels_s2.replace('IDX_PIXEL', idx_pix)
+                    s2 = s2.replace('IDX_MONITOR', idx_monitor)
+                    s2 = s2.replace('x_cp', str(pix.p_cp.x))
+                    s2 = s2.replace('y_cp', str(pix.p_cp.y))
+                    s2_s.append(s2)
 
-            mon_txt_blocks.append('\n\n'.join(
-                [mt, join_s1_block(s1_s), wrap_join_s2_block(s2_s, monitor_name=m.name, idx_monitor=idx_monitor)]))
+                mon_txt_blocks.append('\n\n'.join(
+                    [mt, join_s1_block(s1_s), wrap_join_s2_block(s2_s, monitor_name=m.name, idx_monitor=idx_monitor)]))
 
         return '\n\n'.join(mon_txt_blocks)
 
@@ -276,91 +294,95 @@ class MantidPixelWriter:
                     rec = MantidRectangularDetector(d.line)
 
             if not rec:
-                return ''
+                pass
+            else:
 
-            rot_vector, alpha = m.transform.get_rotvector_alpha(deg=True)
+                rot_vector, alpha = m.transform.get_rotvector_alpha(deg=True)
 
-            print ('alpha', alpha)
-            if alpha ==0.0:
-                rot_vector.y = 1
-                print('rot_vector_y', rot_vector.y)
+                if alpha ==0.0:
+                    rot_vector.y = 1
 
-            x_step = (float(rec.xmax) - float(rec.xmin)) / float(rec.nx)
-            y_step = (float(rec.ymax) - float(rec.ymin)) / float(rec.ny)
-            x_step_half = x_step / 2
-            y_step_half = y_step / 2
+                x_step = (float(rec.xmax) - float(rec.xmin)) / float(rec.nx)
+                y_step = (float(rec.ymax) - float(rec.ymin)) / float(rec.ny)
+                x_step_half = x_step / 2
+                y_step_half = y_step / 2
 
-            s = self.rect_monitor
-            s_type = self.rect_monitor_type
-            p_type = self.rect_monitor_pixel
+                s = self.rect_monitor
+                s_type = self.rect_monitor_type
+                p_type = self.rect_monitor_pixel
 
-            s = s.replace('MONITOR_NAME', m.name)
-            s = s.replace('X_LOC', str(m.pos.x))
-            s = s.replace('Y_LOC', str(m.pos.y))
-            s = s.replace('Z_LOC', str(m.pos.z-self._sample_Z()))
-            s = s.replace('ROT_ANGLE', str(alpha))
-            s = s.replace('ROT_X', str(rot_vector.x))
-            s = s.replace('ROT_Y', str(rot_vector.y))
-            s = s.replace('ROT_Z', str(rot_vector.z))
-            s_type = s_type.replace('X_MIN', rec.xmin)
-            s_type = s_type.replace('X_STEP', str(x_step))
-            s_type = s_type.replace('Y_MIN', rec.ymin)
-            s_type = s_type.replace('Y_STEP', str(y_step))
-            s_type = s_type.replace('X_NUM', rec.nx)
-            s_type = s_type.replace('Y_NUM', rec.ny)
-            s = s.replace('PIXEL_MIN', rec.pixelmin)
-            s = s.replace('X_NUM', rec.nx)
-            p_type = p_type.replace('X_STP_HALF', str(x_step_half))
-            p_type = p_type.replace('Y_STP_HALF', str(y_step_half))
+                s = s.replace('MONITOR_NAME', m.name)
+                s = s.replace('X_LOC', str(m.pos.x-self._sample_X()))
+                s = s.replace('Y_LOC', str(m.pos.y-self._sample_Y()))
+                s = s.replace('Z_LOC', str(m.pos.z-self._sample_Z()))
+                s = s.replace('ROT_ANGLE', str(alpha))
+                s = s.replace('ROT_X', str(rot_vector.x))
+                s = s.replace('ROT_Y', str(rot_vector.y))
+                s = s.replace('ROT_Z', str(rot_vector.z))
+                s_type = s_type.replace('X_MIN', rec.xmin)
+                s_type = s_type.replace('X_STEP', str(x_step))
+                s_type = s_type.replace('Y_MIN', rec.ymin)
+                s_type = s_type.replace('Y_STEP', str(y_step))
+                s_type = s_type.replace('X_NUM', rec.nx)
+                s_type = s_type.replace('Y_NUM', rec.ny)
+                s = s.replace('PIXEL_MIN', rec.pixelmin)
+                s = s.replace('X_NUM', rec.nx)
+                p_type = p_type.replace('X_STP_HALF', str(x_step_half))
+                p_type = p_type.replace('Y_STP_HALF', str(y_step_half))
 
-            if rec.nx not in rec_nx_to_type:
-                monitor_type_id += 1  #
+                if rec.nx not in rec_nx_to_type:
+                    monitor_type_id += 1  #
 
-                s_type = s_type.replace('MonNDtype', 'MonNDtype{}'.format(monitor_type_id))
-                s_type = s_type.replace('rectangular_det_type', 'rectangular_det_type{}'.format(monitor_type_id))
-                text.append(s_type)
-                rec_nx_to_type[rec.nx] = monitor_type_id
+                    s_type = s_type.replace('MonNDtype', 'MonNDtype{}'.format(monitor_type_id))
+                    s_type = s_type.replace('rectangular_det_type', 'rectangular_det_type{}'.format(monitor_type_id))
+                    text.append(s_type)
+                    rec_nx_to_type[rec.nx] = monitor_type_id
 
-            if rec.xmin not in rec_xmin:
-                det_num = det_num + 1
-                p_type = p_type.replace('rectangular_det_type', 'rectangular_det_type{}'.format(det_num))
-                text.append(p_type)
+                if rec.xmin not in rec_xmin:
+                    det_num = det_num + 1
+                    p_type = p_type.replace('rectangular_det_type', 'rectangular_det_type{}'.format(det_num))
+                    text.append(p_type)
 
-            s = s.replace('MonNDtype', 'MonNDtype{}'.format(rec_nx_to_type[rec.nx]))
+                s = s.replace('MonNDtype', 'MonNDtype{}'.format(rec_nx_to_type[rec.nx]))
 
-            text.append(s)
+                text.append(s)
 
-            rec_xmin.append(rec.xmin)
-            rec_xmax.append(rec.xmax)
+                rec_xmin.append(rec.xmin)
+                rec_xmax.append(rec.xmax)
 
         return '\n\n'.join(text)
 
     banana_monitor = '''
-    <component type="MonNDtype-0" name="MONITOR_NAME" idlist="MonNDtype-0-list">
-        <locations x="X_LOC" y="Y_MIN" y-end="Y_MAX" n-elements="Y_NUM" z="Z_LOC" rot="ROT_ANGLE" axis-x="ROT_X" axis-y="ROT_Y" axis-z="ROT_Z"/> 
-    </component>
+<component type="MonNDtype-IDX_MONITOR_origin" name="MONITOR_NAME" idlist="MonNDtype-IDX_MONITOR-list">
+	<location x="X_LOC" y="Y_LOC" z="Z_LOC" rot="ROT_ANGLE" axis-x="ROT_X" axis-y="ROT_Y" axis-z="ROT_Z" /> 
+</component>
 
-    <type name="MonNDtype-0">
-    <component type="pixel-0">
-        <locations r="RADIUS" t="T_MIN" t-end="T_MAX" n-elements="T_NUM" rot="T_MIN" rot-end="T_MAX" axis-x="0.0" axis-y="1.0" axis-z="0.0"/>
-    </component>
-    </type>
+<type name="MonNDtype-IDX_MONITOR_origin">
+	<component type="MonNDtype-IDX_MONITOR" >
+		<locations x="0.0" y="Y_MIN" y-end="Y_MAX" n-elements="Y_NUM" z="0.0" axis-x="0.0" axis-y="1.0" axis-z="0.0" /> 
+	</component>
+</type>
 
-    <type is="detector" name="pixel-0">
-        <cuboid id="pixel-shape-0">
-            <left-front-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
-            <left-front-top-point x="X_STP_HALF" y="Y_STP_HALF" z="0.00005" />
-            <left-back-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
-            <right-front-bottom-point x="-X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
-        </cuboid>
-        <algebra val="pixel-shape-0"/>
-    </type>
+<type name="MonNDtype-IDX_MONITOR">
+	<component type="pixel-IDX_MONITOR">
+		<locations r="RADIUS" t="T_MIN" t-end="T_MAX" n-elements="T_NUM" rot="T_MIN" rot-end="T_MAX" axis-x="0.0" axis-y="1.0" axis-z="0.0"/>
+	</component>
 
-    <idlist idname="MonNDtype-0-list">
-        <id start="PIXEL_MIN" end="PIXEL_MAX"/></idlist>
+</type>
 
-    <type name="in5_t-type">
-    </type>'''
+<type is="detector" name="pixel-IDX_MONITOR">
+	<cuboid id="pixel-shape-IDX_MONITOR">
+		<left-front-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
+		<left-front-top-point x="X_STP_HALF" y="Y_STP_HALF" z="0.0" />
+		<left-back-bottom-point x="X_STP_HALF" y="-Y_STP_HALF" z="0.00005" />
+		<right-front-bottom-point x="-X_STP_HALF" y="-Y_STP_HALF" z="0.0" />
+	</cuboid>
+	<algebra val="pixel-shape-IDX_MONITOR" />
+</type>
+
+<idlist idname="MonNDtype-IDX_MONITOR-list">
+	<id start="PIXEL_MIN" end="PIXEL_MAX"/></idlist>
+    '''
 
     def _get_mantid_banana_monitor(self):
         text = []
@@ -373,40 +395,42 @@ class MantidPixelWriter:
                     ban = MantidBananaDetector(d.line)
 
             if not ban:
-                return ''
+                pass
+            else:
 
-            rot_vector, alpha = m.transform.get_rotvector_alpha(deg=True)
+                rot_vector, alpha = m.transform.get_rotvector_alpha(deg=True)
 
-            t_step = (float(ban.tmax) - float(ban.tmin)) / float(ban.nt)
-            y_step = (float(ban.ymax) - float(ban.ymin)) / float(ban.ny)
-            x_step_half = 2 * math.pi / 360 * float(ban.radius) * (float(ban.tmax) - float(ban.tmin)) / float(
-                ban.nt) / 2
-            y_step_half = y_step / 2
+                t_step = (float(ban.tmax) - float(ban.tmin)) / float(ban.nt)
+                y_step = (float(ban.ymax) - float(ban.ymin)) / float(ban.ny)
+                x_step_half = 2 * math.pi / 360 * float(ban.radius) * (float(ban.tmax) - float(ban.tmin)) / float(ban.nt) / 2
+                y_step_half = y_step / 2
 
-            s = self.banana_monitor
-            s = s.replace('MONITOR_NAME', m.name)
-            s = s.replace('X_LOC', str(m.pos.x))
-            s = s.replace('Y_LOC', str(m.pos.y))
-            s = s.replace('Z_LOC', str(m.pos.z-self._sample_Z()))
-            s = s.replace('ROT_ANGLE', str(alpha))
-            s = s.replace('ROT_X', str(rot_vector.x))
-            s = s.replace('ROT_Y', str(rot_vector.y))
-            s = s.replace('ROT_Z', str(rot_vector.z))
-            s = s.replace('RADIUS', ban.radius)
-            s = s.replace('T_MIN', ban.tmin)
-            s = s.replace('T_MAX', ban.tmax)
-            s = s.replace('T_STEP', str(t_step))
-            s = s.replace('Y_MIN', ban.ymin)
-            s = s.replace('Y_MAX', ban.ymax)
-            s = s.replace('Y_STEP', str(y_step))
-            s = s.replace('T_NUM', ban.nt)
-            s = s.replace('Y_NUM', ban.ny)
-            s = s.replace('PIXEL_MIN', ban.pixelmin)
-            s = s.replace('PIXEL_MAX', str(int(float(ban.pixelmin) + float(ban.nt) * float(ban.ny)) - 1))
-            s = s.replace('X_STP_HALF', str(x_step_half))
-            s = s.replace('Y_STP_HALF', str(y_step_half))
+                s = self.banana_monitor
+                idx_monitor = re.search('nD_Mantid_([0-9]+)', m.name).group(1)
+                s = s.replace('IDX_MONITOR', idx_monitor)
+                s = s.replace('MONITOR_NAME', m.name)
+                s = s.replace('X_LOC', str(m.pos.x-self._sample_X()))
+                s = s.replace('Y_LOC', str(m.pos.y-self._sample_Y()))
+                s = s.replace('Z_LOC', str(m.pos.z-self._sample_Z()))
+                s = s.replace('ROT_ANGLE', str(alpha))
+                s = s.replace('ROT_X', str(rot_vector.x))
+                s = s.replace('ROT_Y', str(rot_vector.y))
+                s = s.replace('ROT_Z', str(rot_vector.z))
+                s = s.replace('RADIUS', ban.radius)
+                s = s.replace('T_MIN', ban.tmin)
+                s = s.replace('T_MAX', ban.tmax)
+                s = s.replace('T_STEP', str(t_step))
+                s = s.replace('Y_MIN', ban.ymin)
+                s = s.replace('Y_MAX', ban.ymax)
+                s = s.replace('Y_STEP', str(y_step))
+                s = s.replace('T_NUM', ban.nt)
+                s = s.replace('Y_NUM', ban.ny)
+                s = s.replace('PIXEL_MIN', ban.pixelmin)
+                s = s.replace('PIXEL_MAX', str(int(float(ban.pixelmin) + float(ban.nt) * float(ban.ny)) - 1))
+                s = s.replace('X_STP_HALF', str(x_step_half))
+                s = s.replace('Y_STP_HALF', str(y_step_half))
 
-            text.append(s)
+                text.append(s)
 
         return '\n\n'.join(text)
 
@@ -414,8 +438,8 @@ class MantidPixelWriter:
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- IDF generated using McStas McDisplay and the Mantid backend -->
 <!-- For help on the notation used to specify an Instrument Definition File see http://www.mantidproject.org/IDF -->
-<instrument name="single_nD.out" valid-from   ="1900-01-31 23:59:59"
-valid-to     ="2100-01-31 23:59:59" last-modified="Thu Feb 16 16:37:46 2017">
+<instrument name="INSTRUMENT" valid-from   ="1900-01-31 23:59:59"
+valid-to     ="2100-01-31 23:59:59" last-modified="DATE">
 <defaults>
     <length unit="meter"/>
     <angle unit="degree"/>
@@ -440,18 +464,24 @@ valid-to     ="2100-01-31 23:59:59" last-modified="Thu Feb 16 16:37:46 2017">
         pixmonitors = self._get_mantid_pixels_monitors()
         rectmonitor = self._get_mantid_rectangular_monitor()
         bananamonitor = self._get_mantid_banana_monitor()
+        instr = self.instr
+        now = datetime.now() # current date and time
 
-        return '\n\n'.join([self.header, source, sample, pixmonitors, rectmonitor, bananamonitor, self.footer]).strip()
+        s = self.header
+        s = s.replace('INSTRUMENT', instr)
+        s = s.replace('DATE', now.strftime("%m/%d/%Y, %H:%M:%S"))
+
+        return '\n\n'.join([s, source, sample, pixmonitors, rectmonitor, bananamonitor, self.footer]).strip()
 
 
 class MantidPixel:
     def __init__(self, pixel_line_lst, transform):
         l = pixel_line_lst
-        self.p_cp = transform.apply(Vector3d(float(l[4]), float(l[5]), float(l[6])))
-        self.p1 = transform.apply(Vector3d(float(l[7]), float(l[8]), float(l[9])))
-        self.p2 = transform.apply(Vector3d(float(l[10]), float(l[11]), float(l[12])))
-        self.p3 = transform.apply(Vector3d(float(l[13]), float(l[14]), float(l[15])))
-        self.p4 = transform.apply(Vector3d(float(l[16]), float(l[17]), float(l[18])))
+        self.p_cp = Vector3d(float(l[4]), float(l[5]), float(l[6]))
+        self.p1 = Vector3d(float(l[7]), float(l[8]), float(l[9]))
+        self.p2 = Vector3d(float(l[10]), float(l[11]), float(l[12]))
+        self.p3 = Vector3d(float(l[13]), float(l[14]), float(l[15]))
+        self.p4 = Vector3d(float(l[16]), float(l[17]), float(l[18]))
 
 
 class MantidRectangularDetector:
@@ -504,15 +534,16 @@ def file_save(data, filename):
     f.close()
 
 
-def main(instr=None, default=None, options=None):
+def main(instr=None, dirname=None, default=None, **kwds):
     ''' script execution '''
     logging.basicConfig(level=logging.INFO)
 
     # inspect is required b McDisplayReader
-    reader = McDisplayReader(instr=instr, default=default, n=1, debug=True)
+    reader = McDisplayReader(instr=instr, dir=None, **kwds)
     instrument = reader.read_instrument()
+    raybundle = reader.read_particles()
 
-    writer = MantidPixelWriter(instrument.components)
+    writer = MantidPixelWriter(instrument.components,instr)
     print("assembling mantid xml...")
     text = writer.do_work()
     filename = instr + '.xml'
@@ -525,10 +556,21 @@ if __name__ == '__main__':
     # Only pre-sets instr, --default, options
     parser, prefix = make_common_parser(__file__, __doc__)
 
+    parser.add_argument('--dirname', help='output directory name override')
+    parser.add_argument('-n', '--ncount', dest='n', type=float, default=1, help='Number of particles to simulate')
+    parser.add_argument('--mpi', dest='nodes', type=int, default=None, help='Number of particles to simulate')
+
     args, unknown = parser.parse_known_args()
+
+    # Suppress ncount > 1, we don't do anything with such particles
+    if (args.n>1):
+        args.n=1
+    if (args.nodes):
+        args.nodes=1
     # if --inspect --first or --last are given after instr, the remaining args become "unknown",
     # but we assume that they are instr_options
     args = {k: args.__getattribute__(k) for k in dir(args) if k[0] != '_'}
+
     if len(unknown):
         args['options'] = unknown
 

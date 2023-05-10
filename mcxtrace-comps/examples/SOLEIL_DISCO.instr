@@ -15,7 +15,7 @@
 * You may scan the grating monochromator with e.g.:
 *   mxrun -n 1e5 SOLEIL_DISCO.instr -N84 x_screw=20,103 scan=1
 *
-* %Example: grazing_angle_one=22.5 -n 1e5 Detector: second_HFP_I=1.71771e+11
+* %Example: grazing_angle_one=22.5 -n 1e5 Detector: second_HFP_I=2.08292e+11
 *
 * %P
 * grazing_angle_one: [deg]
@@ -80,10 +80,8 @@ AT (0, 0, 0) ABSOLUTE
 
 /* -------------------------------------------------- Source */
 COMPONENT Source = Bending_magnet(
-    E0=E0,   
-    dE = dE,
-    B=1.71,
-    Ee=2.75
+    E0=E0, dE = dE,
+    Ee = 2.75, Ie = 0.5, B = 1.72, sigex=45.5e-6, sigey=18.4e-6
     )
 AT (0, 0, 0) RELATIVE Origin
 

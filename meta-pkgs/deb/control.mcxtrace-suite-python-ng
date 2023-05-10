@@ -3,7 +3,7 @@ Version: @VERSION@
 Section: main
 Priority: optional
 Architecture: all
-Depends: mcxtrace-@VERSION@, mcxtrace-comps-@VERSION@, mcxtrace-tools-python-mxplot-pyqtgraph-@VERSION@, mcxtrace-tools-python-mxplot-matplotlib-@VERSION@, mcxtrace-tools-python-mxdisplay-pyqtgraph-@VERSION@, mcxtrace-tools-python-mxdisplay-webgl-@VERSION@, mcxtrace-tools-python-mxrun-@VERSION@, mcxtrace-tools-perl-cmdline-@VERSION@, mcxtrace-tools-python-mccodelib-@VERSION@, mcxtrace-tools-python-mxgui-@VERSION@, mcxtrace-manuals-@VERSION@
+Depends: mcxtrace-@VERSION@, mcxtrace-comps-@VERSION@, mcxtrace-tools-python-mxplot-pyqtgraph-@VERSION@, mcxtrace-tools-python-mxplot-matplotlib-@VERSION@, mcxtrace-tools-python-mxdisplay-pyqtgraph-@VERSION@, mcxtrace-tools-python-mxdisplay-webgl-@VERSION@, mcxtrace-tools-python-mxrun-@VERSION@, mcxtrace-tools-python-mxdoc-@VERSION@, mcxtrace-tools-perl-cmdline-@VERSION@, mcxtrace-tools-python-mccodelib-@VERSION@, mcxtrace-tools-python-mxgui-@VERSION@, mcxtrace-manuals-@VERSION@, mcxtrace-mcpl-@VERSION@
 Installed-Size:
 Maintainer: Erik B Knudsen <erkn@fysik.dtu.dk>
 Description: A metapackage for McXtrace + python tools

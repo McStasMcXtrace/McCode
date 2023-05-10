@@ -12,44 +12,45 @@
 * Date: May, 2013.
 * Version: 1.0
 * Origin: DTU Physics
-* Release: McXtrace 1.2
 *
 * Model of a wiggler source
 * 
 * %D
 * A source model based on the derivation from B.D. Patterson, Am. J. Phys. 79, 1046 (2011); doi: 10.1119/1.3614033
 *
+* Example: Wiggler(
+*   E0 = e0, dE = de, 
+*   Ee = 2.75, Ie = 0.5, B = 2.1, K=10, Nper=41, sigey=9.3e-6, sigex=215.7e-6)
+*
 * %P
 * Input Parameters:
-* Ee: [GeV] Storage ring electron energy (typically a few GeV)
-* Ie: [A]   Ring current
-* tbunch: [s] Bunch length. 0 means continous source.
-* t0:     [s] Delay of the first bunch from t=0
-* B:      [T] Peak magnet field strength
-* Nper:   [ ] Number of magnetic periods in the wiggler
-* length: [m] Length of the Wiggler.
-* K:      [ ] Dimensionless undulator parameter. overrides B.
-* gap:    [m] Wiggler gap.
-* sigex:  [ ] Electron ring beam size in horizontal plane (rms) 
-* sigey:  [ ] Electron ring beam size in vertical plane (rms)
-* phase:  [ ] Initial phase of radiation.
+* Ee:       [GeV] Storage ring electron energy (typically a few GeV)
+* Ie:       [A] Ring current
+* B:        [T] Peak magnet field strength
+* Nper:     [ ] Number of magnetic periods in the wiggler
+* length:   [m] Length of the Wiggler.
+* K:        [ ] Dimensionless undulator parameter, e.g. K >> 1. overrides B.
+* gap:      [m] Wiggler gap.
+* sigex:    [ ] Electron ring beam size in horizontal plane (rms) 
+* sigey:    [ ] Electron ring beam size in vertical plane (rms)
+* phase:    [ ] Initial phase of radiation.
 * randomphase: [ ] If !=0 phase will be random (I.e. the emitted radiation is completely incoherent)
 * focus_xw: [m] Width of target window
 * focus_yh: [m] Height of target window
-* dist: [m] Distance from source plane to target window along the optical axis
-* gauss_t: [ ] if 0 the target window will be sampled uniformly and the weight adjusted accordingly, otherwise we will use a gaussian sampling scheme.
-* E0: [keV] Center of emitted energy spectrum (overrides lambda0)
-* dE: [keV] Half-width of emitted energy spectrum
-* lambda0: [AA] Center of emitted wavelength spectrum
-* dlambda: [AA] Half-width of emitted wavelength spectrum
-* verbose: [ ] if nonzero, output extra information
+* dist:     [m] Distance from source plane to target window along the optical axis
+* gauss_t:  [ ] if 0 the target window will be sampled uniformly and the weight adjusted accordingly, otherwise we will use a gaussian sampling scheme.
+* E0:       [keV] Center of emitted energy spectrum (overrides lambda0)
+* dE:       [keV] Half-width of emitted energy spectrum
+* lambda0:  [AA] Center of emitted wavelength spectrum
+* dlambda:  [AA] Half-width of emitted wavelength spectrum
+* verbose:  [ ] if nonzero, output extra information
 * %E
 ***************************************************************************/
 
 DEFINE COMPONENT Wiggler
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (E0=0, dE=0, lambda0=0,dlambda=-1, phase=0, randomphase=1, Ee=2.4, Ie=0.4, tbunch=0, t0=0, B=1.6, K=3,
-    gap=1e-3, int Nper=1, length=1, sigey=0, sigex=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0, int verbose=0)
+SETTING PARAMETERS (E0=0, dE=0, lambda0=0,dlambda=0, phase=0, randomphase=1, Ee=2.4, Ie=0.4, B=1.6, K=3,
+    int Nper=1, length=1, sigey=0, sigex=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0, int verbose=0, Br=1.35)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -96,31 +97,31 @@ DECLARE
   double s1x;
   double s1y; /*beam's size at dist (convolution of sigex/sigey and igamma)*/
   double lu; /*wiggler magnetic period*/
+  double gap;
   double p0;
 %}
 
 
 INITIALIZE
 %{
-  fprintf(stderr,"Warning (%s): Wiggler is an experimental component - testing is ongoing\n",NAME_CURRENT_COMP);
+  // fprintf(stderr,"Warning (%s): Wiggler is an experimental component - testing is ongoing\n",NAME_CURRENT_COMP);
   
   lu=length/Nper;
 
-  if( (!K && B<=0) || Ee<=0 || Ie<=0 ){
-    fprintf(stderr, "Error (%s): K, B, Ee, and Ie do not have a consistent set of values. Found (%g %g %g %g). Aborting.\n",NAME_CURRENT_COMP,K,B,Ee,Ie);
+  if( K<=0 || B<=0 || Ee<=0 || Ie<=0 || E0<=0 || length<=0 || Nper <=0){
+    fprintf(stderr, "Wiggler Error (%s): (K, B, Ee, Ie, E0, length, Nper) do not have a sane set of values. Found (%g %g %g %g %g). Aborting.\n",
+    NAME_CURRENT_COMP,K,B,Ee,Ie,E0);
     exit(1);
   }
   
   if(K){
     B=2*M_PI*MELECTRON*M_C*K/CELE/lu;
-    if (verbose) printf("Wiggler (%s) B=f(K=%g)= %g\n",NAME_CURRENT_COMP,K,B);
   }else if (B>0){
     K=CELE*B*lu/(2*M_PI*MELECTRON*M_C);
-    if (verbose) printf("Wiggler (%s) K=f(B=%g)= %g\n",NAME_CURRENT_COMP,B,K);
   }
 
   if (sigex <0 || sigey<0){
-    fprintf(stderr, "Error (%s): sigex and sigey must be > 0. Negative beam size isn't meaningful. Aborting.\n",NAME_CURRENT_COMP,sigex,sigey);
+    fprintf(stderr, "Error (%s): sigex and sigey must be > 0. Negative beam size isn't meaningful. Aborting.\n",NAME_CURRENT_COMP);
     exit(1);
   }
   if (dist<=0){
@@ -139,6 +140,18 @@ INITIALIZE
   //double Ec=1.5*gamma2*HBAR*CELE*B/MELE *1e-3; /*check units on this one. The 1e-3 factor is because energy is assumed to be in keV*/
   /*We normally do computations in k so use that for transfer*/
   kc=E2K*Ec;
+
+   /* compute gap estimate */
+  if (Br > B) {
+    double a=0.55*Br +2.835;
+    double b=-1.95*Br+7.22;
+    double c=-1.3*Br +2.97;
+    gap = -log(B/a)*lu/b;
+  } else gap = 3e-3;
+
+  if (verbose) 
+    printf("Wiggler (%s): K=%g B=%g[T] lambda_u=%g[m] E0=%g[keV]\n",
+      NAME_CURRENT_COMP, K,B,lu,E0);
 
   p0 = 1.0/mcget_ncount();
 %}

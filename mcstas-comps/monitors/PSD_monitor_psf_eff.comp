@@ -35,7 +35,7 @@
 * filename: [string]    Name of file in which to store the detector image
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
 * psf: [m]              Point spread function, ray (x,y) coordinate randomized by gaussion of sigma psf
-* k0: Numerator in k0/k weighting [AA^-1]
+* k0:  [AA^-1]          Numerator in k0/k weighting 
 * eff: [1]              Detector efficiency
 * nowritefile: [1]      If set, monitor will skip writing to disk
 *

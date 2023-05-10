@@ -1,9 +1,9 @@
-# Running McStas 2.7.1 in Docker
+# Running McStas 2.7.2 in Docker
 
-McStas 2.7.1 and 3.1 are available on Dockerhub. To use, simply
+McStas 2.7.2 and 3.2 are available on Dockerhub. To use, simply
 
 * Install docker on your machine
 * run the command
-```docker run -p 8888:8888 docker.io/mccode/mcstas-2.7.1-3.1:1.0```
+```docker run -p8888:8888 docker.io/mccode/mcstas-2.7.2-3.2-mcstasscript-guidebot:1.1```
 * Connect your browser to the URL communicated by the docker command
 

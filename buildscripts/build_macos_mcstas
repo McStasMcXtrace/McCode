@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/arch -x86_64 /bin/bash
 export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "import os;print(os.cpu_count())")}
 
 if [ "x$1" = "x" ]; then
@@ -7,24 +7,9 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
-# Ensure our 3rd party modules are in place and updated
-THIRDPARTY=`ls 3rdparty | grep -v patches`
-cd 3rdparty
 
-cd -
 
 ./3rdparty/sync.sh
-
-
-for MODULE in `echo $THIRDPARTY`
-do
-    if [ -d "3rdparty/patches/${MODULE}" ]; then
-	echo Making McCode cmake modules available for $MODULE
-        rsync -avz cmake/ 3rdparty/${MODULE}/cmake
-	echo Applying McCode patches to 3rdparty/${MODULE}
-	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
-    fi
-done
 
 # This is an app bundle being built, but non-relocatable.
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/
@@ -33,6 +18,40 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/
 # For the actual mcstas part, the packages need a 'deep' PREFIX
 export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 # 64-bit Mac OS
+WORK=`pwd`
+
+if [ ! -f Mambaforge-$(uname)-$(uname -m).sh ]; then
+    # Download and embed a miniconda
+    echo
+    echo "*********************************************************"
+    echo "* Downloading a miniconda3 for your app                 *"
+    echo "*********************************************************"
+    echo
+    sleep 3
+    curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
+fi
+echo "*********************************************************"
+echo "* Embedding miniconda3 in your app                      *"
+echo "*********************************************************"
+chmod a+x Mambaforge-$(uname)-$(uname -m).sh
+./Mambaforge-$(uname)-$(uname -m).sh -b -p $MCINSTALL_PREFIX/mcstas/$1/miniconda3/
+
+# Run conda to install the dependencies
+echo
+echo "*********************************************************"
+echo "* Downloading python dependencies to embedded miniconda *"
+echo "*********************************************************"
+echo
+
+export PATH=$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin:$PATH
+
+
+mamba update mamba -y
+mamba install mamba conda-build -y
+mamba install cmake openmpi compilers gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 -y
+mamba clean --all -y
+cd $WORK
+
 ./mkdist mcstas $1 "" "" mac "" -- OSXapp
 ./mkdist mcstas-comps $1 "" "" mac "" -- OSXapp
 ./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" mac "" -- OSXapp
@@ -50,11 +69,10 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" mac "" -- OSXapp
+./mkdist mcstas-tools-python-mcdisplay-cad $1 tools/Python/mcdisplay/cad/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" mac "" -- OSXapp
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" mac "" -- OSXapp
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mac "" -- OSXapp
-
-WORK=`pwd`
 
 cd 3rdparty/mcpl
 if [ -d build ]; then
@@ -74,42 +92,15 @@ cmake -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcst
 make install
 cd $WORK
 
-# Hack to ensure pymcpltool is in place
-ln -s /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/libs/mcpl/pymcpltool /Applications/McStas-$1.app/Contents/Resources/mcstas/$1/bin
-
-if [ ! -f Miniconda3-latest-MacOSX-x86_64.sh ]; then
-    # Download and embed a miniconda
-    echo
-    echo "*********************************************************"
-    echo "* Downloading a miniconda3 for your app                 *"
-    echo "*********************************************************"
-    echo
-    sleep 3
-    curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+cd 3rdparty/nexus-code
+if [ -d build ]; then
+    rm -rf build
 fi
-echo "*********************************************************"
-echo "* Embedding miniconda3 in your app                      *"
-echo "*********************************************************"
-chmod a+x Miniconda3-latest-MacOSX-x86_64.sh
-./Miniconda3-latest-MacOSX-x86_64.sh -b -p $MCINSTALL_PREFIX/mcstas/$1/miniconda3/
-
-# Run conda to install the dependencies
-echo
-echo "*********************************************************"
-echo "* Downloading python dependencies to embedded miniconda *"
-echo "*********************************************************"
-echo
-export PATHBAK=$PATH
-export PATH=$MCINSTALL_PREFIX/mcstas/$1/miniconda3/bin:$PATH
-
-conda update conda -y
-conda config --add channels conda-forge
-conda install mamba conda-build -y
-mamba install openmpi gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 -y
-mamba clean --all -y
+mkdir -p build; cd build
+cmake -DCMAKE_INSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/ -DHDF5_ROOT=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/miniconda3/ -DCMAKE_MACOSX_RPATH=ON -DCMAKE_INSTALL_RPATH=/Applications/McStas-$1.app/Contents/Resources/mcstas/$1/lib  ..
+make install
 cd $WORK
 
-export PATH=$PATHBAK
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcstas/$1/bin
 

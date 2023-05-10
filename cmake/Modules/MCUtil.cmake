@@ -61,9 +61,6 @@ macro(setupMCCODE FLAVOR)
 
   # Set macros
   if("${FLAVOR}" STREQUAL "mcstas")
-
-    set(NAME             "McStas")
-
     set(FLAVOR           "mcstas")
     set(FLAVOR_UPPER     "MCSTAS")
 
@@ -78,8 +75,6 @@ macro(setupMCCODE FLAVOR)
   endif()
 
   if("${FLAVOR}" STREQUAL "mcxtrace")
-    set(NAME             "McXtrace")
-
     set(FLAVOR           "mcxtrace")
     set(FLAVOR_UPPER     "MCXTRACE")
 
@@ -99,7 +94,7 @@ macro(setupMCCODE FLAVOR)
   endif()
 
   set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} APPEND PROPERTY COMPILE_DEFINITIONS
-    NAME="${NAME}" FLAVOR="${FLAVOR}" FLAVOR_UPPER="${FLAVOR_UPPER}"
+    FLAVOR="${FLAVOR}" FLAVOR_UPPER="${FLAVOR_UPPER}"
     FLAVOR_LIB="${FLAVOR_LIB}"
     MCCODE_LIBENV="${MCCODE_LIBENV}" MCCODE_PARTICLE="${MCCODE_PARTICLE}"
     MCCODE_PROJECT=${MCCODE_PROJECT}
@@ -119,7 +114,7 @@ macro(setupMCCODE FLAVOR)
   else()
     ## Set Git-specific version
     set(MCCODE_VERSION "3.9999-git")
-    set(MCCODE_NAME "${NAME}")
+    set(MCCODE_NAME "${MCCODE_NAME}")
     set(MCCODE_DATE "git")
     set(MCCODE_STRING "${NAME} ${MCCODE_VERSION}, ${MCCODE_DATE}")
     set(MCCODE_TARNAME "${FLAVOR}")
@@ -228,8 +223,8 @@ macro(setupMCCODE FLAVOR)
     set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postrm;")
 
     # Define dependencies for gcc and the like
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS "build-essential")
-    set(CPACK_RPM_PACKAGE_REQUIRES "gcc")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "build-essential, libopenmpi-dev")
+    set(CPACK_RPM_PACKAGE_REQUIRES "gcc, openmpi-devel")
     
     # Generate postinst and postrm scripts
     configure_file(

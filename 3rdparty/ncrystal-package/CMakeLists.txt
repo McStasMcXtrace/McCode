@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.17)
 project(NCrystal_wrapper)
 
 message(STATUS "Configure ${CMAKE_PROJECT_NAME} ${FLAVOR} ${PROJECT_NAME}")
-set(BUILD_EXAMPLES OFF)
+set(NCRYSTAL_ENABLE_EXAMPLES OFF)
 
 # To be built with/for McStas
 set(BUILD_MCSTAS   "Choose the McStas flavor" on)
@@ -17,7 +17,7 @@ include(MCUtil)
 set(FLAVOR "mcstas")
 setupMCCODE("${FLAVOR}")
 
-set(CPACK_PACKAGE_NAME "${FLAVOR}-NCrystal")
+set(CPACK_PACKAGE_NAME "${FLAVOR}-NCrystal-${MCCODE_VERSION}")
 set(CPACK_PACKAGE_CONTACT       "ncrystal-developers@cern.ch")
 set(CPACK_PACKAGE_VERSION       "3.4.1")
 set(CPACK_PACKAGE_VERSION_MAJOR "3.4")

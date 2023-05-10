@@ -27,6 +27,9 @@ class DataMcCode(object):
 
 
 class Data0D(DataMcCode):
+    # Bring back empty 'component' field, courtesy
+    # of the scan plotter (otherwise we fail abrubtly)
+    DataMcCode.component=''
     pass
 
 

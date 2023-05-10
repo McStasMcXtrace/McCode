@@ -1,56 +1,63 @@
-# Installing McXtrace 3.0 on Fedora 33
+# Installing McXtrace 3.1 on CentOS
 
-## Add the rpmfusion repo
-Follow the instructions at https://rpmfusion.org/Configuration
+McXtrace provides a package repository for use with RedHat-based
+distributions, such as Fedora 37 or newer. To allow automatic update
+of your mcxtrace, mcxtrace-components and tools when new revisions are
+relased, follow the below instruction. **PLEASE NOTE** that our
+repo-based RPM packages are built on Fedora 37 and will require a
+reasonably new glibc!
 
-## Install dependencies
+An alternative solution for you may be, to build yourself using the [repo build instructions](https://github.com/McXtraceMcXtrace/McCode/wiki/Building-McStas-McXtrace)
+
+
+## Add the McCode repo to your system
 ```bash
-sudo yum install pgplot perl-PGPLOT perl-Tk perl-PDL perl python2
+cd /etc/yum.repos.d
+sudo wget http://packages.mccode.org/rpm-fedora/mccode-fedora.repo
+sudo yum update
 ```
 
-## Install the remaining packages manually
-<<<<<<< HEAD
-* Download the [all-rpms](http://download.mcxtrace.org/mcxtrace-3.0/linux/fedora/all-rpms.tgz)
-=======
-* Download the [all-rpms](http://download.mcxtrace.org/current/linux/mcxtrace-3.0-rpm64-Fedora33/all-rpms.tgz)
->>>>>>> b2c46b000... Put in dedicated folder structure
-* Unpack the archive
-* Install the libtk-codetext-perl-0.3.4-2.noarch.rpm
+## Look for the packages descriptions on your system
+After following the above steps your package manager should now be aware of mcxtrace
 ```bash
-sudo rpm -i libtk-codetext-perl-0.3.4-2.noarch.rpm
+yum search mcxtrace* |grep -v 1.5 |grep -v 1.4 |grep -v 1.2 |grep -v 1.1
+Last metadata expiration check: 0:00:59 ago on Fri 13 Aug 2021 13:30:41 UTC.
+====================== Name & Summary Matched: mcxtrace* =======================
+mcxtrace-3.1.x86_64 : mcxtrace built using CMake
+mcxtrace-comps-3.1.x86_64 : mcxtrace-comps built using CMake
+mcxtrace-manuals-3.1.x86_64 : mcxtrace_manuals built using CMake
+=========================== Name Matched: mcxtrace* ============================
+mcxtrace-clustertools-3.1.x86_64 : perl-cluster-tools built using CMake
+mcxtrace-miniconda3-3.1.x86_64 : miniconda3 built using CMake
+mcxtrace-suite.x86_64 : A metapackage for McXtrace + perl and python tools
+mcxtrace-suite-perl.x86_64 : A metapackage for McXtrace + perl tools
+mcxtrace-suite-python.x86_64 : A metapackage for McXtrace + python tools
+mcxtrace-tools-matlab-mxplot-3.1.x86_64 : matlab-tools-mcplot built using CMake
+mcxtrace-tools-perl-3.1.x86_64 : legacy-tools built using CMake
+mcxtrace-tools-perl-cmdline-3.1.x86_64 : legacy-tools-cmdline built using CMake
+mcxtrace-tools-python-mccodelib-3.1.x86_64 : python-tools-mccodelib built using CMake
+mcxtrace-tools-python-mxdisplay-pyqtgraph-3.1.x86_64 : python-tools-mcdisplay-pyqtgraph built using CMake
+mcxtrace-tools-python-mxdisplay-webgl-3.1.x86_64 : python-tools-mcdisplay-webgl built using CMake
+mcxtrace-tools-python-mxdoc-3.1.x86_64 : python-tools-mcdoc built using CMake
+mcxtrace-tools-python-mxgui-3.1.x86_64 : python-tools-mcgui built using CMake
+mcxtrace-tools-python-mxplot-matplotlib-3.1.x86_64 : python-tools-mcplot built using CMake
+mcxtrace-tools-python-mxplot-pyqtgraph-3.1.x86_64 : python-tools-mcplot-pyqtgraph built using CMake
+mcxtrace-tools-python-mxplot-svg-3.1.x86_64 : python-tools-mcplot-svg built using CMake
+mcxtrace-tools-python-mxrun-3.1.x86_64 : python-tools-mcrun built using CMake
 ```
-* Afterwards you can install the wanted packages, i.e for McXtrace + python
-tools:
-```bash
-sudo rpm -i mcxtrace-3.0-rpm64.rpm mcxtrace-comps-3.0-rpm64.rpm \
-mcxtrace-manuals-3.0-rpm64.rpm mcxtrace-miniconda3-3.0-rpm64.rpm \
-mcxtrace-tools-perl-cmdline-3.0-rpm64.rpm \
-mcxtrace-tools-python-mccodelib-3.0-rpm64.rpm \
-mcxtrace-tools-python-mcdisplay-mantid-3.0-rpm64.rpm \
-mcxtrace-tools-python-mcdisplay-pyqtgraph-3.0-rpm64.rpm \
-mcxtrace-tools-python-mcdisplay-webgl-3.0-rpm64.rpm \
-mcxtrace-tools-python-mcdoc-3.0-rpm64.rpm \
-mcxtrace-tools-python-mcgui-3.0-rpm64.rpm \
-mcxtrace-tools-python-mcplot-matplotlib-3.0-rpm64.rpm \
-mcxtrace-tools-python-mcplot-pyqtgraph-3.0-rpm64.rpm \
-mcxtrace-tools-python-mcrun-3.0-rpm64.rpm
 ```
-<<<<<<< HEAD
+The meta-package *mcxtrace-suite-python-ng* allows you to install
+mcxtrace with the recommended set of python tools (mxrun/mxplot etc.)
+by a simple yum command:
 
-* Optionally you can install the mcxtrace-tools-perl pakage which provides the **legacy** perl based gui/graphics tools:
 ```bash
-sudo rpm -i mcxtrace-tools-perl-3.0-rpm64.rpm
+sudo yum install mcxtrace-suite-python-ng
 ```
-* Dependencies can likely be resolved via https://rmpfusion.org (untested)
-=======
-* And add this extra package to also install the legacy perl based gui/graphics tools:
-```bash
-sudo rpm -i mcxtrace-tools-perl-3.0-rpm64.rpm
-```
->>>>>>> b2c46b000... Put in dedicated folder structure
-* (there are also other packages available that are optional, but
-  whose dependencies are not easy to resolve)
+Choosing mcxtrace-suite-python (without -ng) will similarly install the latest 1.x release
+
+## Install without repo use
+If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at http://download.mcxtrace.org/current/linux/mcxtrace-rpm64_x86_64_fedora
 
 ## In case of issues
-Please report any trouble with the repository to [mcxtrace-users](mailto:mcxtrace-users@mcxtrace.org)
+Please report any trouble with the repository to [mcxtrace-users](mailto:mcstas-users@mcxtrace.org)
 

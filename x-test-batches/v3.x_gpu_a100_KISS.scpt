@@ -2,6 +2,7 @@
 ### General options
 ### –- specify queue --
 #BSUB -q gpua100
+#BSUB -R "select[test]"
 ### -- set the job Name --
 #BSUB -J McXtrace_test_job
 ### -- ask for number of cores (default: 1) --
@@ -29,7 +30,7 @@
 # -- end of LSF options --
 
 # Ensure we run with our own miniconda3
-PATH=${HOME}/miniconda3/bin:$PATH
+PATH=${HOME}/McXtrace/mcxtrace/3.x-dev-dev/miniconda3/bin:$PATH
 
 DATE=`date +%F`
 mkdir -p $HOME/xTESTS/

@@ -418,8 +418,15 @@ INITIALIZE
   // Added 17/11/2016, allocating some elements in initialize makes code during trace simpler
   this_abs_storage.temp_1D_abs_data.allocated_elements = 10;
   this_abs_storage.temp_1D_abs_data.elements = malloc(this_abs_storage.temp_1D_abs_data.allocated_elements*sizeof(struct temp_1D_abs_data_element_struct));
-  
-  struct global_positions_to_transform_list_struct *global_positions_to_transform_list = COMP_GETPAR3(Union_init, init, global_positions_to_transform_list);
+
+if (_getcomp_index(init) < 0) {
+fprintf(stderr,"Union_abs_logger_1D_space:%s: Error identifying Union_init component, %s is not a known component name.\n",
+NAME_CURRENT_COMP, init);
+exit(-1);
+}
+
+
+struct global_positions_to_transform_list_struct *global_positions_to_transform_list = COMP_GETPAR3(Union_init, init, global_positions_to_transform_list);
   struct global_rotations_to_transform_list_struct *global_rotations_to_transform_list = COMP_GETPAR3(Union_init, init, global_rotations_to_transform_list);
   // Test position and rotation stored in a data storage, and pointers assigned to transform lists
   this_abs_logger.position = POS_A_CURRENT_COMP;

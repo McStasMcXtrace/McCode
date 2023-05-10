@@ -36,6 +36,8 @@
 *  enter a different tube are absorbed). This model does not include the H16 guide.
 *
 * %Example: lambda=4.5 Detector: Det_PSD_I=1.3e6
+* %Example: lambda=4.5 --format=NeXus Detector: Det_PSD_I=1.3e6
+
 *
 * %Parameters
 * lambda: [AA]       mean incident wavelength

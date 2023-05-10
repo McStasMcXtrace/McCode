@@ -24,7 +24,7 @@
 *
 * This model implements the XRD station for powders.
 *
-* %Example: E0=16.99 Detector: emon_dcm1_full_range_I=2.50688e11
+* %Example: E0=16.99 Detector: displayMonoLength1_I=1.54236e+09
 *
 * %P
 * E0: [keV]     Central energy to be emitted by the source
@@ -53,7 +53,7 @@ DECLARE
 	//Mirror M1
 	double DistanceSourceToM1 = 12.784;
 	double M12_depth = 0.06;
-	double M12_lenght = 2.1;
+	double M12_length = 2.1;
 	double AngleM1 = 0.0031*RAD2DEG;
 
 	//DCM
@@ -142,17 +142,16 @@ COMPONENT origin = Progress_bar()
 AT (0, 0, 0) RELATIVE ABSOLUTE
 
 COMPONENT Source = Bending_magnet(
-    E0=E0,   
-    B=1.71,
-    dE = dEr*E0,
     focus_xw=PrimarySlit1Width,
     focus_yh=PrimarySlit1Height,
+    E0=E0, dE = dEr*E0,
+    Ee = 2.75, Ie = 0.5, B = 1.71, sigex=79.6e-6, sigey=25.3e-6,
     dist=DistanceToPrimarySlit1
     )
 AT (0, 0, 0) RELATIVE origin
 
 /*Wavelength*/
-COMPONENT displaySourceLenght = L_monitor(
+COMPONENT displaySourceLength = L_monitor(
   xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
   nL=20, filename="Output1.L", Lmin=0.1, Lmax=8
 )
@@ -187,7 +186,7 @@ AT(0,0,0) RELATIVE PREVIOUS
 ROTATED (0,0, -90) RELATIVE PREVIOUS
 
 COMPONENT mirror_M1 = Mirror_curved(
-    length = M12_lenght,
+    length = M12_length,
     width = M12_width,
     radius = RadiusM1,
     coating=reflec_material_M12)    
@@ -245,7 +244,7 @@ COMPONENT displayMono = PSD_monitor(
 AT(0,0,0) RELATIVE PREVIOUS
 
 /*Wavelength*/
-COMPONENT displayMonoLenght = L_monitor(
+COMPONENT displayMonoLength = L_monitor(
   xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
   nL=20, filename="Output.L", Lmin=0.1, Lmax=8
 )
@@ -260,7 +259,7 @@ AT(0,0,0) RELATIVE PREVIOUS
 ROTATED (0,0, 90) RELATIVE PREVIOUS
 
 COMPONENT mirror_M2 = Mirror_curved(
-    length = M12_lenght,
+    length = M12_length,
     width = M12_width,
     radius = RadiusM2,
     coating=reflec_material_M12)    
@@ -328,7 +327,7 @@ AT (0, 0, DistanceToSample-DistanceToSecondaryBeamMonitor) RELATIVE PREVIOUS
 
 
 /*------------------------------------- detector */
-COMPONENT displayMonoLenght1 = Monitor_nD(
+COMPONENT displayMonoLength1 = Monitor_nD(
   bins=90000, options="abs theta",
   min=5,max=90, radius= 0.670, yheight = 0.02
 )

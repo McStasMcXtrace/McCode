@@ -1,0 +1,127 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2023, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: templateSANS
+*
+* %Identification
+* Written by: Peter Willendrup
+* Date: April 2023
+* Origin: <a href="http://www.ess.eu">ESS</a>
+* %INSTRUMENT_SITE: Templates
+*
+* Test instrument for the SANS_benchmark2 component. No guide / velocity selector.
+*
+* %Description
+* Very simple test instrument for the SANS_benchmark2 component from H. Frielinghaus.
+*
+* %Example: modnum=1  Detector: detectorSANS_I=0.0123201 
+* %Example: modnum=2  Detector: detectorSANS_I=0.00635726 
+* %Example: modnum=3  Detector: detectorSANS_I=18.8412 
+* %Example: modnum=4  Detector: detectorSANS_I=0.00600315 
+* %Example: modnum=5  Detector: detectorSANS_I=0.0310337 
+* %Example: modnum=6  Detector: detectorSANS_I=0.660282 
+* %Example: modnum=7  Detector: detectorSANS_I=0.776435 
+* %Example: modnum=8  Detector: detectorSANS_I=3.89201 
+* %Example: modnum=9  Detector: detectorSANS_I=0.0427871 
+* %Example: modnum=10 Detector: detectorSANS_I=0.0234776 
+* %Example: modnum=11 Detector: detectorSANS_I=0.229431 
+* %Example: modnum=12 Detector: detectorSANS_I=0.0026947 
+* %Example: modnum=13 Detector: detectorSANS_I=0.00269978 
+* %Example: modnum=14 Detector: detectorSANS_I=0.002694 
+* %Example: modnum=15 Detector: detectorSANS_I=0.200408 
+*
+* %Parameters
+* lambda:       [AA]  Mean wavelength of neutrons
+* dlambda:      [AA]  Wavelength spread of neutrons
+* r:            [AA]  Radius of scattering hard spheres
+* PHI:           [1]  Particle volume fraction
+* Delta_Rho: [cm^-2]  Scattering length density
+* frac_dir:      [1]  Fraction of statistics for direct beam
+* frac_inc:      [1]  Fraction of statistics for incoherent scattering in scattered beam
+* modnum:      [int]  Sample "modle number" from SANS_benchmark2
+*
+* %Link
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Unittest_SANS_benchmark2(lambda=6, dlambda=0.05, r=150, PHI=1e-3, Delta_Rho=6e10, frac_dir=0.03, frac_inc=0.01, modnum=1)
+
+USERVARS %{
+  int was_scattered;
+%}
+  
+TRACE
+
+COMPONENT a1 = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT arm = Arm()
+  AT (0, 0, 0) ABSOLUTE
+
+COMPONENT source = Source_simple(
+    radius = 0.02, dist = 6, focus_xw = 0.01, focus_yh = 0.01,
+    lambda0 = lambda, dlambda = dlambda, flux = 1e8)
+  AT (0, 0, 0) RELATIVE arm
+
+COMPONENT coll1 = Slit(
+    radius = 0.005)
+  AT (0, 0, 3) RELATIVE arm
+
+COMPONENT coll2 = Slit(
+    radius = 0.005)
+  AT (0, 0, 6) RELATIVE arm
+
+COMPONENT sample_position = Arm()
+AT (0,0,0.2) RELATIVE coll2
+
+COMPONENT Sample_in = PSD_monitor(xwidth=0.02,yheight=0.02, filename="SamplePos",restore_neutron=1)
+  AT(0,0,0) RELATIVE PREVIOUS  
+
+  //SPLIT COMPONENT sample_benchmark = SANS_spheres2(xwidth=0.02, yheight=0.02, zthick=0.001, sc_aim=(1-frac_dir), sans_aim=(1-frac_inc), R=r)
+SPLIT COMPONENT sample = SANS_benchmark2(xwidth=0.02, yheight=0.02, zthick=0.001, model=modnum, dsdw_inc=frac_inc, sc_aim=0.90, sans_aim=0.95, singlesp = 1.0)
+AT (0,0,0.2) RELATIVE coll2
+EXTEND %{
+  was_scattered=SCATTERED;
+%}
+
+/* PSD, scattered and direct beam */
+COMPONENT detector = PSD_monitor(
+    nx = 128, ny = 128, filename = "PSD.dat", xmin = -0.3,
+    xmax = 0.3, ymin = -0.3, ymax = 0.3)
+  AT (0, 0, 3) RELATIVE sample_position
+
+/* PSD, scattered beam only */
+COMPONENT detectorSANS = PSD_monitor(
+    nx = 128, ny = 128, filename = "SANS.dat", xmin = -0.3,
+    xmax = 0.3, ymin = -0.3, ymax = 0.3)
+  WHEN (was_scattered)  AT (0, 0, 3) RELATIVE sample_position
+  
+/* PSD, direct beam only */
+COMPONENT detectorDB = PSD_monitor(
+    nx = 128, ny = 128, filename = "Direct.dat", xmin = -0.3,
+    xmax = 0.3, ymin = -0.3, ymax = 0.3)
+  WHEN (!was_scattered)  AT (0, 0, 3) RELATIVE sample_position
+
+/* WL monitor */
+COMPONENT Ldetector = L_monitor(
+    nL = 1000, filename = "Edet.dat", xmin = -0.3,
+    xmax = 0.3, ymin = -0.3, ymax = 0.3, Lmin = 5.5,
+    Lmax = 6.5)
+  AT (0, 0, 3.01) RELATIVE sample_position
+
+/* Radial average, scattered beam only */
+COMPONENT PSDrad = PSD_monitor_rad(
+    filename = "psd2.dat", filename_av = "psd2_av.dat", rmax = 0.3)
+  WHEN(was_scattered)  AT (0, 0, 3.02) RELATIVE sample_position
+
+/* Radial average, scattered and direct beam */
+COMPONENT PSDrad_full = PSD_monitor_rad(
+    filename = "psd2_full.dat", filename_av = "psd2_av_full.dat", rmax = 0.3)
+  AT (0, 0, 3.02) RELATIVE sample_position
+
+
+END

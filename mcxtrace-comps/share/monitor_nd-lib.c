@@ -367,7 +367,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
         if ((!strcmp(token, "p") || !strcmp(token, "i") || !strcmp(token, "intensity") || !strcmp(token, "flux")))
           { Set_Vars_Coord_Type = DEFS->COORD_P;
             strcpy(Set_Vars_Coord_Label,"Intensity");
-            strncat(Set_Vars_Coord_Label, " [n/s", 30);
+            strncat(Set_Vars_Coord_Label, " [p/s", 30);
             if (Vars->Flag_per_cm2) strncat(Set_Vars_Coord_Label, "/cm2", 30);
             if (XY > 1 && Vars->Coord_Number)
               strncat(Set_Vars_Coord_Label, "/bin", 30);
@@ -599,7 +599,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     } /* end for Short_Label */
 
     if ((Vars->Coord_Type[0] & (DEFS->COORD_LOG-1)) == DEFS->COORD_P) {
-      strncat(Vars->Coord_Label[0], " [n/s", 30);
+      strncat(Vars->Coord_Label[0], " [p/s", 30);
       if (Vars->Flag_per_cm2) strncat(Vars->Coord_Label[0], "/cm2", 30);
 
       if (XY > 1 && Vars->Coord_Number)

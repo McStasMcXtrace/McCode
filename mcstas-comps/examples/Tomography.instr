@@ -35,15 +35,14 @@
 * source_h: [m]       Source height
 * det_w: [m]          Detector width
 * det_h: [m]          Detector height
-* opts80 y bins40":
-* opts80 y bins40":
+* opts: [string]      Monitor_nD options string
 *
 * %Link
 * http://shape.cs.princeton.edu/benchmark/documentation/off_format.html
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Tomography(string geometry="socket.off", omega = 0, sigma_abs=100, frac_scatt = 0, div_v = 1e-4, div_h = 1e-4, source_w = 0.4, source_h = 0.2, det_w = 0.4, det_h = 0.2, string opts="x bins=80 y bins=40")
+DEFINE INSTRUMENT Tomography(string geometry="socket.off", omega=0, sigma_abs=100, frac_scatt=0, div_v=1e-4, div_h=1e-4, source_w=0.4, source_h=0.2, det_w=0.4, det_h=0.2, string opts="x bins=80 y bins=40")
 DEPENDENCY " -DUSE_OFF "
 
 TRACE

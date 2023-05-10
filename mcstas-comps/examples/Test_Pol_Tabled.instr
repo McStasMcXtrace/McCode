@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McStas instrument definition URL=http://www.mcstas.org
 *
-* Instrument: test (rename also the example and DEFINE lines below)
+* Instrument: Test_Pol_Tabled (rename also the example and DEFINE lines below)
 *
 * %Identification
 * Written by: Your name (email)
@@ -20,13 +20,16 @@
 * %Example: -n1e4 MF=constfield.dat Detector: polx_6_I=0.05
 *
 * %Parameters
+* MF:              [string] Field definition file
+* zdepth:               [m] Z-dimension of field
+* interpol_method: [string] Choice of interpolation method "kdtree" (default on CPU) / "regular" (default on GPU)
 *
 * %Link
 * A reference/HTML link for more information
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_pol_tabled(string MF="flipfield.dat", zdepth=1, string interpol_method="default")
+DEFINE INSTRUMENT Test_Pol_Tabled(string MF="flipfield.dat", zdepth=1, string interpol_method="default")
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */

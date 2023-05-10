@@ -6,12 +6,13 @@
     "MCRUN": "mcrun",
     "MCPLOT": "mcplot-pyqtgraph",
     "MCDISPLAY": "mcdisplay-webgl",
+    "IDFGEN": "mcdisplay-mantid",
     "TOOL_NAME": "mcgui",
     "PARTICLE": "neutron",
     "BROWSER": "xdg-open",
     "GUICOLS": "3",
     "EDITOR": "open",
-    "QSCI": "1"
+    "FORMAT": "McCode"
   },
   "compilation": {
     "CFLAGS": "-g -O2 -lm -std=c99",
@@ -28,3 +29,4 @@
     "EXESUFFIX": "out"
   }
 }
+

@@ -112,32 +112,21 @@ def get_options():
                          prefix+"display-pyqtgraph",
                          prefix+"display-pyqtgraph --tof",
                          prefix+"display-mantid",
-                         prefix+"display-matlab",
-                         prefix+"display-octave",
-                         prefix+"display"+suffix,
-                         prefix+"display"+suffix+" -m",
-                         prefix+"display"+suffix+" --format=Matlab",
-                         prefix+"display"+suffix+" --format=VRML", 
-                         prefix+"display"+suffix+" --format=Mantid"]
+                         prefix+"display-matlab"+suffix+" --format=Matlab"]
+        mcrun_lst =     [prefix+"run", prefix+"run --format=NeXus", prefix+"run --format=NeXus --IDF"]
+        format_lst =    ["McCode", "NeXus", "NeXus --IDF", "NeXus -c", "NeXus --IDF -c"]
     else:
         prefix = "mx"
         mcdisplay_lst = [prefix+"display-webgl",
                          prefix+"display-pyqtgraph",
-                         prefix+"display-matlab",
-                         prefix+"display-octave",
-                         prefix+"display"+suffix,
-                         prefix+"display"+suffix+" -m", 
-                         prefix+"display"+suffix+" --format=Matlab",
-                         prefix+"display"+suffix+" --format=VRML",
-                         prefix+"display"+suffix+" --format=VRML"]
+                         prefix+"display-matlab"+suffix+" --format=Matlab"]
+        mcrun_lst =     [prefix+"run", prefix+"run --format=NeXus"]
+        format_lst =    ["McCode", "NeXus", "NeXus -c"]
 
- 
-
-    mcrun_lst =     [prefix+"run", prefix+"run --openacc", prefix+"run --autoplot", "mcsub_pbs"+suffix2+" "+prefix+"run", "mcsub_slurm"+suffix2+" "+prefix+"run", prefix+"run --format=NeXus", prefix+"run"+suffix, prefix+"run"+suffix+" --format=NeXus"]
         
-    mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot-matplotlib",prefix+"plot"+suffix, prefix+"plot"+suffix+" --format=Matlab", prefix+"plot-matlab"]
+    mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot-matplotlib", prefix+"plot-matlab"]
 
-    return mcrun_lst, mcplot_lst, mcdisplay_lst
+    return mcrun_lst, mcplot_lst, mcdisplay_lst, format_lst
 
 def get_mccode_prefix():
     ''' returns 'mc' or 'mx' depending on system configuration '''

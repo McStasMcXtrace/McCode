@@ -49,12 +49,12 @@ Source: "dist\mcstas-tools-python-mcplot-pyqtgraph-NSIS64-@VERSION@-mingw64.exe"
 Source: "dist\mcstas-tools-python-mcplot-matplotlib-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-matlab-mcplot-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcdisplay-webgl-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
+Source: "dist\mcstas-tools-python-mcdisplay-cad-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcdisplay-pyqtgraph-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcdisplay-mantid-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-python-mcdoc-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-mcpl-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
-Source: "dist\mcstas-ncrystal-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
-Source: "Support\Miniconda3-latest-Windows-x86_64.exe"; DestDir: "{tmp}"
+Source: "Support\Mambaforge-Windows-x86_64.exe"; DestDir: "{tmp}"
 
 [Run]
 Filename: "{tmp}\python-install.bat"
@@ -71,11 +71,11 @@ Filename: "{tmp}\mcstas-tools-python-mcplot-pyqtgraph-NSIS64-@VERSION@-mingw64.e
 Filename: "{tmp}\mcstas-tools-python-mcplot-matplotlib-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-matlab-mcplot-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-webgl-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
+Filename: "{tmp}\mcstas-tools-python-mcdisplay-cad-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-pyqtgraph-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-mantid-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcdoc-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-mcpl-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
-Filename: "{tmp}\mcstas-ncrystal-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\docupdate.bat";
 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files

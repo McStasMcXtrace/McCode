@@ -25,7 +25,7 @@
 # -- end of LSF options --
 
 # Ensure we run with our own miniconda3
-PATH=${HOME}/miniconda3/bin:$PATH
+PATH=${HOME}/McXtrace/mcxtrace/3.x-dev-dev/miniconda3/bin:$PATH
 
 module list
 which mpicc

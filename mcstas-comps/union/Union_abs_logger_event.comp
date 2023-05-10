@@ -463,8 +463,8 @@ INITIALIZE
   if (bufsize > 0) sprintf(this_abs_storage.Vars.option, "list=%g borders", bufsize);
   else strcpy(this_abs_storage.Vars.option, "list all borders");
 
-  //strcat(this_abs_storage.Vars.option,", x y z vx vy vz t sx sy sz");
-  strcat(this_abs_storage.Vars.option,", y t");
+  strcat(this_abs_storage.Vars.option,", x y z vx vy vz t");
+  //strcat(this_abs_storage.Vars.option,", y t");
   Monitor_nD_Init(&this_abs_storage.DEFS, &this_abs_storage.Vars, 0.1, 0.1, 0, 0,0,0,0,0,0,0); /* dims for mcdisplay */
   this_abs_storage.Vars.compcurpos = POS_A_CURRENT_COMP;
 
@@ -485,8 +485,14 @@ INITIALIZE
   
   this_abs_storage.temp_abs_event_data.allocated_elements = 10;
   this_abs_storage.temp_abs_event_data.elements = malloc(this_abs_storage.temp_abs_event_data.allocated_elements*sizeof(struct temp_abs_event_data_element_struct));
-  
-  struct global_positions_to_transform_list_struct *global_positions_to_transform_list = COMP_GETPAR3(Union_init, init, global_positions_to_transform_list);
+
+if (_getcomp_index(init) < 0) {
+fprintf(stderr,"Union_abs_logger_event:%s: Error identifying Union_init component, %s is not a known component name.\n",
+NAME_CURRENT_COMP, init);
+exit(-1);
+}
+
+struct global_positions_to_transform_list_struct *global_positions_to_transform_list = COMP_GETPAR3(Union_init, init, global_positions_to_transform_list);
   struct global_rotations_to_transform_list_struct *global_rotations_to_transform_list = COMP_GETPAR3(Union_init, init, global_rotations_to_transform_list);
   // Test position and rotation stored in a data storage, and pointers assigned to transform lists
   this_abs_logger.position = POS_A_CURRENT_COMP;

@@ -76,6 +76,9 @@
 * inc: [str]        Sample incoherent specification (use laz, lau or Sqw file, or NULL to scatter isotropically, using cross sections read from the coherent file)
 * container: [str]  sample container material. Thickness is .2 mm. Use NULL, Al or Nb.
 * LSD: [m]          Distance sample-detector
+* Frequency: [Hz]   Disk-chopper frequency
+* LCC:       [m]    Distance between the Disk-chopper and the Fermi-chopper
+* DELAY:     [s]    Fermi phase wrt. Disk-chopper opening
 *
 * %Link
 * The BRISP spectrometer at the ILL <a href="www.ill.fr/brisp">BRISP</a>

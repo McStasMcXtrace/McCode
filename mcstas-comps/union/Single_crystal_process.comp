@@ -62,7 +62,11 @@
 * bb: [deg]                                               Beta angle
 * cc: [deg]                                               Gamma angle
 * barns: [1]                                              Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), barns=0 for lau type files
-
+* RX: [m]                                                 Radius of lattice curvature along X. flat when 0.
+* RY: [m]                                                 Radius of lattice curvature along Y. flat when 0.
+* RZ: [m]                                                 Radius of lattice curvature along Z. flat when 0.
+* powder: [1]                                             Flag to indicate powder mode, for simulation of Debye-Scherrer cones via random crystallite orientation. A powder texture can be approximated with 0
+* PG: [1]                                                 Flag to indicate "Pyrolytic Graphite" mode, only meaningful with choice of Graphite.lau, models PG crystal. A powder texture can be approximated with 0
 *
 * OUTPUT PARAMETERS:
 * Template_storage          // Important to update this output paramter
@@ -81,9 +85,8 @@ SETTING PARAMETERS(string reflections=0, delta_d_d=1e-4,
             ax = 0, ay = 0, az = 0,
             bx = 0, by = 0, bz = 0,
             cx = 0, cy = 0, cz = 0,
-            //p_transmit = -1, sigma_abs = 0, sigma_inc = 0, // handled elsewhere
-		   aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0, powder=0, PG=0,
-           interact_fraction=-1, packing_factor=1, string init="init")
+	    aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0, powder=0, PG=0,
+            interact_fraction=-1, packing_factor=1, string init="init")
 OUTPUT PARAMETERS ()
 
 SHARE
@@ -1092,8 +1095,15 @@ INITIALIZE
   sprintf(global_process_element.name,NAME_CURRENT_COMP);
   global_process_element.component_index = INDEX_CURRENT_COMP;
   global_process_element.p_scattering_process = &This_process;
-  
-  struct pointer_to_global_process_list *global_process_list = COMP_GETPAR3(Union_init, init, global_process_list);
+
+if (_getcomp_index(init) < 0) {
+fprintf(stderr,"Single_crystal_process:%s: Error identifying Union_init component, %s is not a known component name.\n",
+NAME_CURRENT_COMP, init);
+exit(-1);
+}
+
+
+struct pointer_to_global_process_list *global_process_list = COMP_GETPAR3(Union_init, init, global_process_list);
   add_element_to_process_list(global_process_list, global_process_element);
   
  %}

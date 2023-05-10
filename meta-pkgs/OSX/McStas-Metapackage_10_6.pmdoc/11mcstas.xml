@@ -1,6 +1,0 @@
-<pkgref spec="1.12" uuid="414797F5-C5A8-4632-9386-3F076A3EEA15"><config><identifier>com.Humanity.mcstas-tools-python-mcdisplay-@VERSION@</identifier><version>1.0</version><description>DESCRIPTION
-===========
-
-This is an installer created using CPack (http://www.cmake.org). No additional installation instructions provided.
-
-</description><post-install type="none"/><requireAuthorization/><installTo relocatable="true">/</installTo><flags><followSymbolicLinks/><overwriteDirectoryPermissions/></flags><packageStore type="internal"></packageStore><mod>installTo</mod><mod>parent</mod></config><scripts><scripts-dir>@DISTDIR@/mcstas-tools-python-mcdisplay-OSXpkg-@VERSION@-mac_SL-10.6.pkg/Contents/Resources</scripts-dir></scripts><contents><file-list>11mcstas-contents.xml</file-list><filter>/CVS$</filter><filter>/\.svn$</filter><filter>/\.cvsignore$</filter><filter>/\.cvspass$</filter><filter>/\.DS_Store$</filter></contents><extra><packagePath>@DISTDIR@/mcstas-tools-python-mcdisplay-OSXpkg-@VERSION@-mac_SL-10.6.pkg</packagePath><title>mcstas-tools-python-mcdisplay-@VERSION@</title></extra></pkgref>

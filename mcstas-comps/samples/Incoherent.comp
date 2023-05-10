@@ -75,7 +75,7 @@
 * focus_ah: [deg]     vert.  angular dimension of a rectangular area 
 * sigma_abs: [barns]  Absorption cross section pr. unit cell at 2200 m/s 
 * sigma_inc: [barns]  Incoherent scattering cross section pr. unit cell 
-* Vc:         Unit cell volume [AA^3]
+* Vc: [AA^3]          Unit cell volume
 * f_QE: [1]           Fraction of quasielastic scattering (rest is elastic) 
 * gamma: [1]          Lorentzian width of quasielastic broadening (HWHM) 
 * Etrans: [meV]       Global energy-transfer, for use in inelastic settings

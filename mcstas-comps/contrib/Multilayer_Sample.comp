@@ -37,12 +37,14 @@
 * ythick: [m]     Thickness of substrate
 * mu_inc: [m^-1]  Incoherent scattering length
 * frac_inc: [1]   Fraction of statistics to assign to incoherent scattering
-* V0: [AA^3]      Unit cell volume, substrate
 * pack: [1]       Substrate packing factor
 * nlayer: [1]     Number of film layers
-* sldPar: [1]     (Angstoms ^-2) Scattering length Density's of layers
-* dPar: [1]       (Angstroms) Thicknesses of film layers
-* sigmaPar: [1]   (Angstroms) r.m.s roughnesses of the interfaces
+* sldPar: [AA^-2] Scattering length Density's of layers
+* dPar: [AA]      Thicknesses of film layers
+* sigmaPar: [AA]  r.m.s roughnesses of the interfaces
+* target_index: [1] Used in combination with focus_xw and focus_yh to indicate solid angle for incoherent scattering.
+* focus_xw: [m] Used in combination with target_index and focus_yh to indicate solid angle for incoherent scattering.
+* focus_yh: [m] Used in combination with focus_xw and target_index to indicate solid angle for incoherent scattering.
 *
 * %E
 *******************************************************************************/

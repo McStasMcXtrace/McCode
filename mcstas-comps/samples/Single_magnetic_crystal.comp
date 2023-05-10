@@ -75,11 +75,11 @@
 * cx:        
 * cy:        Coordinates of third (direct/recip) unit cell vector [AA or AA^-1]
 * cz:        
+* mx:        
+* my:        Coordinates of vector defining the SF/NSF direction [1]
+* mz:        
 * na:
-* nb:        Unit cell multipliers. The specified unit cell vectors are scaled by these factors.
-*             Note that the mulitpliers are applied directly to the raw input data. I.e. if recip. cell vectors
-*             are given, multipliers should be <1 (= 1/n). F.i. used to specify a magnetic unit cell which
-*             is larger than the chemical unit cell. 
+* nb:        Unit cell multipliers. The specified unit cell vectors are scaled by these factors. Note that the mulitpliers are applied directly to the raw input data. I.e. if recip. cell vectors  are given, multipliers should be <1 (= 1/n). F.i. used to specify a magnetic unit cell which is larger than the chemical unit cell. 
 * nc:
 * atom_sites: File name containing the atoms present in the unit cell. Use
 *              empty ("") or NULL for sigma_inc scattering only [string]

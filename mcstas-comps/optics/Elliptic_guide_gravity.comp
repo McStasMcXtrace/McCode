@@ -31,6 +31,52 @@
 * Furthermore the m-value can be specified for user defined segments
 * of the guide.
 *
+* <b>Example 1, Elliptical definition using focal points:</b>
+*
+* Elliptic_guide_gravity(
+* &emsp;&emsp;&emsp;&emsp;l=50,
+* &emsp;&emsp;&emsp;&emsp;linxw=5,linyh=5,loutxw=10,loutyh=10,
+* &emsp;&emsp;&emsp;&emsp;xwidth=0.05,yheight=0.05,
+* &emsp;&emsp;&emsp;&emsp;R0=0.99,Qc=0.0219,alpha=6.07,m=1.0,W=0.003
+* )
+*
+* <b>Example 2: Half elliptical definition:</b>
+*
+* Elliptic_guide_gravity(
+* &emsp;&emsp;&emsp;&emsp;l=50,
+* &emsp;&emsp;&emsp;&emsp;linxw=5,linyh=5,loutxw=10,loutyh=10,
+* &emsp;&emsp;&emsp;&emsp;xwidth=0.1,yheight=0.1,
+* &emsp;&emsp;&emsp;&emsp;R0=0.99,Qc=0.0219,alpha=6.07,m=1.0,W=0.003,
+* &emsp;&emsp;&emsp;&emsp;option = "halfEllipse",
+* &emsp;&emsp;&emsp;&emsp;dimensionsAt = "entrance"
+* )
+*
+* <b>Example 3: Parabolic approximation:</b>
+*
+* Elliptic_guide_gravity(
+* &emsp;&emsp;&emsp;&emsp;l=50,
+* &emsp;&emsp;&emsp;&emsp;linxw=5,linyh=5,loutxw=1e6,loutyh=1e6, // values larger than 1e8 may cause erroneous results
+* &emsp;&emsp;&emsp;&emsp;xwidth=0.1,yheight=0.1,
+* &emsp;&emsp;&emsp;&emsp;R0 = 0.99,Qc=0.0219,alpha=6.07,m=1.0,W=0.003,
+* &emsp;&emsp;&emsp;&emsp;dimensionsAt = "exit"
+* )
+*
+* <b>Example 4: Elliptical definition with varying m-values:</b>
+*
+* Elliptic_guide_gravity(
+* &emsp;&emsp;&emsp;&emsp;l=50,
+* &emsp;&emsp;&emsp;&emsp;linxw=5,linyh=5,loutxw=10,loutyh=10,
+* &emsp;&emsp;&emsp;&emsp;xwidth=0.1,yheight=0.1,
+* &emsp;&emsp;&emsp;&emsp;R0 = 0.99,Qc=0.0219,alpha=6.07,m=1.0,W=0.003,
+* &emsp;&emsp;&emsp;&emsp;mvaluesright=marray,mvaluesleft=marray,mvaluestop=marray,mvaluesbottom=marray
+* )
+*
+* where marray is initialized as
+* for(iter=0; iter < 50; iter++){ marray[iter] = 2; }
+* And Declared as
+* double mValues[50];
+* If you are using the array-based coating-specification, you **must** give nSegments a compatible value.
+*
 * %P
 * INPUT PARAMETERS:
 * mvaluesright: [pointer]   Pointer to array of m-values, right mirror
@@ -39,117 +85,39 @@
 * mvaluesbottom: [pointer]  - same, bottom mirror
 * seglength: [pointer]      Pointer to array of segment lengths for discrete mirror description
 * l: [m]                    length of the guide
-*
-* linxw: [m]                distance from 1st focal point to guide entrance
-*			- left and right horizontal mirrors
-* loutxw: [m]               distance from 2nd focal point to guide exit
-*			- left and right horizontal mirrors
-* linyh: [m]                distance from 1st focal point to guide entrance
-*		- top and bottom vertical mirrors
-* loutyh: [m]               distance from 2nd focal point to guide exit
-*		- top and bottom vertical mirrors
+* linxw: [m]                distance from 1st focal point to guide entrance - left and right horizontal mirrors
+* loutxw: [m]               distance from 2nd focal point to guide exit - left and right horizontal mirrors
+* linyh: [m]                distance from 1st focal point to guide entrance - top and bottom vertical mirrors
+* loutyh: [m]               distance from 2nd focal point to guide exit - top and bottom vertical mirrors
 * xwidth: [m]               width at the guide entry, mid or exit (see dimensionsAt)
 * yheight: [m]              height at the guide entry, mid or exit (see dimensionsAt)
 * R0: [1]                   Low-angle reflectivity
 * Qc: [AA-1]                Critical scattering vector
 * alpha: [AA]               Slope of reflectivity
-* m: [1]                    m-value of material for all mirrors,
-*					zero means complete absorption.
+* m: [1]                    m-value of material for all mirrors, zero means complete absorption.
 * W: [AA-1]                 Width of supermirror cut-off
-*
-* alphatop: [AA]            Slope of reflectivity for top horizontal mirror,
-*						overwrites alpha
-* mtop: [1]                 m-value of material for top horizontal mirror,
-*						overwrites m
-*
+* alphatop: [AA]            Slope of reflectivity for top horizontal mirror, overwrites alpha
+* mtop: [1]                 m-value of material for top horizontal mirror, overwrites m
 * alphabottom: [AA]         Slope of reflectivity for bottom horizontal mirror
 * mbottom: [1]              m-value of material for bottom horizontal mirror
-*
 * alpharight: [AA]          Slope of reflectivity for right vertical mirror
 * mright: [1]               m-value of material for right vertical mirror
-*
 * alphaleft: [AA]           Slope of reflectivity for left vertical mirror
 * mleft: [1]                m-value of material for left vertical mirror
-*
-* option: [string]          options are 'ellipse' and 'halfEllipse'. Ellipse is defined by
-*					both the focal points, while halfEllipse locked the center
-*					of the ellipse either the entrance or exit of the guide, and
-*					use the focal point of the other end to define the ellipse
-*
-* dimensionsAt: [string]    define whether xwidth and yheight sets the size of
-*						he opening, minor axis or the end of the guide.
-*
-* majorAxisxw: [m]          direct defination of the guide geometry, will ignore
-*					  w,h lin and lout parameters if this is nonzero. Length of
-*					  the axis parallel to the z for the horizontal ellipse
-* minorAxisxw: [m]          direct defination of the guide geometry, will ignore
-*					  w,h lin and lout parameters if this is nonzero. Length of
-*					  the axis Perpendicular to the z for the horizontal ellipse
-* majorAxisyh: [m]          direct defination of the guide geometry, will ignore
-*					  w,h lin and lout parameters if this is nonzero. Length of
-*					  the axis parallel to the z for the vertical ellipse
-* minorAxisyh: [m]          direct defination of the guide geometry, will ignore
-*					  w,h lin and lout parameters if this is nonzero. Length of
-*					  the axis Perpendicular to the z for the vertical ellipse
-*
-* majorAxisoffsetxw: [m]    direct defination of the guide geometry,
-*							distance between the center of the horizontal
-*							ellipse and the guide entrance
-* majorAxisoffsetyh: [m]    direct defination of the guide geometry,
-*							distance between the center of the vertical
-*							ellipse and the guide entrance
+* option: [string]          options are 'ellipse' and 'halfEllipse'. Ellipse is defined by both the focal points, while halfEllipse locked the center of the ellipse either the entrance or exit of the guide, and use the focal point of the other end to define the ellipse
+* dimensionsAt: [string]    define whether xwidth and yheight sets the size of the opening, minor axis or the end of the guide.
+** majorAxisxw: [m]          direct defination of the guide geometry, will ignore w,h lin and lout parameters if this is nonzero. Length of the axis parallel to the z for the horizontal ellipse
+* minorAxisxw: [m]          direct defination of the guide geometry, will ignore w,h lin and lout parameters if this is nonzero. Length of the axis Perpendicular to the z for the horizontal ellipse
+* majorAxisyh: [m]          direct defination of the guide geometry, will ignore w,h lin and lout parameters if this is nonzero. Length of the axis parallel to the z for the vertical ellipse
+* minorAxisyh: [m]          direct defination of the guide geometry, will ignore w,h lin and lout parameters if this is nonzero. Length of the axis Perpendicular to the z for the vertical ellipse
+* majorAxisoffsetxw: [m]    direct defination of the guide geometry, distance between the center of the horizontal ellipse and the guide entrance
+* majorAxisoffsetyh: [m]    direct defination of the guide geometry, distance between the center of the vertical ellipse and the guide entrance
 * verbose: [bool]           Give extra information about calculations
 * curvature: [m]            Simulate horizontal radius of curvature by centripetal force added to the gravity. Note: Does not curve the guide in mcdisplay but "curves the neutron". Has opposite sign definition of Guide_curved.
+* nSegments: [m]            Must be used to specify number of guide segments, i.e. when giving inputs mvaluesright ... etc.
+* enableGravity: [m]        Flag to select propagation with gravity.
 *
 * OUTPUT PARAMETERS
-* guideInfo: [1]            structure containing internal variables
-* Gx: []                    x-component of (m/s^2) local gravity vector
-* Gy: []                    y-component of (m/s^2) local gravity vector
-* Gz: []                    z-component of (m/s^2) local gravity vector
-* dynamicalSegLength: [1]   automatic generate length of specific m-value segments
-*					  if no seglength is given
-*
-* %D
-*
-* Example 1, Elliptical definition using focal points:
-* Elliptic_guide_gravity(
-* 	l=50,
-* 	linxw=5,linyh=5,loutxw=10,loutyh=10,
-* 	xwidth=0.05,yheight=0.05,
-* 	R0=0.99,Qc=0.0219,alpha=6.07,m=1.0,W=0.003
-* )
-*
-* Example 2: Half elliptical definition:
-* Elliptic_guide_gravity(
-* 	l=50,
-* 	linxw=5,linyh=5,loutxw=10,loutyh=10,
-* 	xwidth=0.1,yheight=0.1,
-* 	R0=0.99,Qc=0.0219,alpha=6.07,m=1.0,W=0.003,
-* 	option = "halfEllipse",
-* 	dimensionsAt = "entrance"
-* )
-*
-* Example 3: Parabolic approximation:
-* Elliptic_guide_gravity(
-* 	l=50,
-* 	linxw=5,linyh=5,loutxw=1e6,loutyh=1e6, // values larger than 1e8 may cause erroneous results
-* 	xwidth=0.1,yheight=0.1,
-* 	R0 = 0.99,Qc=0.0219,alpha=6.07,m=1.0,W=0.003,
-* 	dimensionsAt = "exit"
-* )
-*
-* Example 4: Elliptical definition with varying m-values:
-* Elliptic_guide_gravity(
-* 	l=50,
-* 	linxw=5,linyh=5,loutxw=10,loutyh=10,
-* 	xwidth=0.1,yheight=0.1,
-* 	R0 = 0.99,Qc=0.0219,alpha=6.07,m=1.0,W=0.003,
-* 	mvaluesright=marray,mvaluesleft=marray,mvaluestop=marray,mvaluesbottom=marray
-* )
-* where marray is initialized as
-* for(iter=0; iter < 50; iter++){ marray[iter] = 2; }
-* And Declared as
-* double mValues[50];
 *
 * %E
 *******************************************************************************/
@@ -1296,7 +1264,8 @@ INITIALIZE
 		guideInfo.enableSegments = 1;
 
 		if (nSegments == -1) {
-         		guideInfo.numberOfSegments = sizeof(mvaluesright)/sizeof(mvaluesright[0]);
+		  printf("\nError: vector-specifcation of coating used, but nSegments=%i.\n  Please give provide nSegments = length of coating segment-arrays!\n", nSegments);
+		  exit(-1);
 		} else {
 		  guideInfo.numberOfSegments = (int)nSegments;
 		}

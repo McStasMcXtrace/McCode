@@ -34,15 +34,21 @@
 %include "read_table-lib"
 %include "interpolation-lib"
 
-#define MCMAGNET_STACKSIZE 12
 /*definition of the magnetic stack*/
+#ifndef MCMAGNET_STACKSIZE
+#define MCMAGNET_STACKSIZE 12
+#endif
 
 /*Threshold below which two magnetic fields are considered to be
  * in the same direction.*/
+#ifndef mc_pol_angular_accuracy
 #define mc_pol_angular_accuracy (1.0*DEG2RAD)
+#endif
 
 /*The maximal timestep taken by neutrons in a const field*/
+#ifndef mc_pol_initial_timestep
 #define mc_pol_initial_timestep 1e-5;
+#endif
 
 #ifdef PROP_MAGNET
 #undef PROP_MAGNET

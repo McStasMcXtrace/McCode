@@ -12,39 +12,40 @@
 * Date: May, 2013.
 * Version: 1.0
 * Origin: DTU Physics
-* Release: McXtrace 1.2
 *
 * Model of a bending magnet source
 * 
 * %D
 * A source model based on the derivation from B.D. Patterson, Am. J. Phys. 79, 1046 (2011); doi: 10.1119/1.3614033
 *
+* Example: Bending_magnet(
+*   E0 = e0, dE = de, Ee = 2.75,
+*   Ie = 0.5, B = 1.72, sigey=9.3e-6, sigex=215.7e-6)
+*
 * %P
 * Input Parameters:
-* Ee: [GeV] Storage ring electron energy (typically a few GeV)
-* Ie: [A]   Ring current
-* tbunch: [s] Bunch length. 0 means continous source.
-* t0:     [s] Delay of the first bunch from t=0
-* B:      [T] Magnet field strength
-* sigex:  [ ] Electron ring beam size in horizontal plane (rms) 
-* sigey:  [ ] Electron ring beam size in vertical plane (rms)
-* phase:  [ ] Initial phase of radiation.
+* Ee:       [GeV] Storage ring electron energy (typically a few GeV)
+* Ie:       [A] Ring current
+* B:        [T] Magnet field strength
+* sigex:    [m] Electron ring beam size in horizontal plane (rms) 
+* sigey:    [m] Electron ring beam size in vertical plane (rms)
+* phase:    [ ] Initial phase of radiation.
 * randomphase: [ ] If !=0 phase will be random (I.e. the emitted radiation is completely incoherent)
 * focus_xw: [m] Width of target window
 * focus yh: [m] Height of traget window
-* dist: [m] Distance from source plane to target window along the optical axis
-* gauss_t: [ ] if 0 the target window will be sampled uniformly and the weight adjusted accordingly, otherwise we will use a gaussian sampling scheme.
-* E0: [keV] Center of emitted energy spectrum (overrides lambda0)
-* dE: [keV] Half-width of emitted energy spectrum
-* lambda0: [AA] Center of emitted wavelength spectrum
-* dlambda: [AA] Half-width of emitted wavelength spectrum
+* dist:     [m] Distance from source plane to target window along the optical axis
+* gauss_t:  [ ] if 0 the target window will be sampled uniformly and the weight adjusted accordingly, otherwise we will use a gaussian sampling scheme.
+* E0:       [keV] Center of emitted energy spectrum (overrides lambda0)
+* dE:       [keV] Half-width of emitted energy spectrum
+* lambda0:  [AA] Center of emitted wavelength spectrum
+* dlambda:  [AA] Half-width of emitted wavelength spectrum
 * 
 * %E
 **********************/
 
 DEFINE COMPONENT Bending_magnet
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (E0=0, dE=0, lambda0=0,dlambda=-1, phase=0, randomphase=1, Ee=2.4, Ie=0.4, tbunch=0, t0=0, B=1.6, sigey=0, sigex=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0)
+SETTING PARAMETERS (E0=0, dE=0, lambda0=0,dlambda=0, phase=0, randomphase=1, Ee=2.4, Ie=0.4, B=1.6, sigey=0, sigex=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -99,7 +100,7 @@ DECLARE
 INITIALIZE
 %{
 
-  fprintf(stderr,"Warning (%s): Bending_magnet is an experimental component - testing is ongoing\n",NAME_CURRENT_COMP);
+  // fprintf(stderr,"Warning (%s): Bending_magnet is an experimental component - testing is ongoing\n",NAME_CURRENT_COMP);
 
   if(B<=0 || Ee<=0 || Ie<=0 ){
     fprintf(stderr, "Error (%s): B, Ee, and Ie must all be >= 0. Found (%g %g %g). Aborting.\n",NAME_CURRENT_COMP,B,Ee,Ie);
@@ -107,7 +108,7 @@ INITIALIZE
   }
 
   if (sigex <0 || sigey<0){
-    fprintf(stderr, "Error (%s): sigex and sigey must be > 0. Negative beam size isn't meaningful. Aborting.\n",NAME_CURRENT_COMP,sigex,sigey);
+    fprintf(stderr, "Error (%s): sigex and sigey must be > 0. Negative beam size isn't meaningful. Aborting.\n",NAME_CURRENT_COMP);
     exit(1);
   }
   if (dist<=0){

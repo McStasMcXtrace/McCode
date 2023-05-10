@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: SNS_test
+* Instrument: SNS_analytic_test
 *
 * %Identification
 * Written by: G. Granroth
@@ -22,7 +22,7 @@
 * Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
 *
 * %Parameters
-* filename: [] 
+* filename: [string] Source file 
 *
 * %Link
 * Written by G. Granroth
@@ -31,10 +31,29 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT SNS_test(string filename="a1Gw2-5-f5_fit_fit.dat")
+DEFINE INSTRUMENT SNS_analytic_test(string filename="a1Gw2-5-f5_fit_fit.dat")
+DEPENDENCY " -DLOADPATH=GETPATH(data) "
+
+DECLARE %{
+  char fullfile[256];
+%}
+
+INITIALIZE %{
+#define QUOTE(name) #name
+#define STR(macro) QUOTE(macro)
+
+#ifndef LOADPATH
+#define LOADPATH=/usr/share/mcstas/3.1/data
+#endif
+
+#define LOADPATH_ STR(LOADPATH)
+  sprintf(fullfile,"%s/%s",LOADPATH_,filename);
+printf("Using the input file: %s\n", fullfile);
+  
+%}
 
 TRACE
-COMPONENT mod=SNS_source_analytic(filename=filename,
+COMPONENT mod=SNS_source_analytic(filename=fullfile,
   xwidth=0.1, yheight=0.12,
   dist=1, focus_xw=0.10, focus_yh=0.24,
   Emin=1.0,Emax=10.0)

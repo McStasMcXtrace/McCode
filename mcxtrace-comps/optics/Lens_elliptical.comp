@@ -174,7 +174,8 @@ DECLARE
 INITIALIZE 
 %{
   t_Table T;
-  Table_Read(&T, material_datafile,0);
+  if (Table_Read(&T, material_datafile,0) <= 0)
+    exit(fprintf(stderr, "Error (%s): Could not read %s. Aborting.\n",NAME_CURRENT_COMP, material_datafile));
   char **header_parsed;
   header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho");
   if (!Z) Z=strtol(header_parsed[0],NULL,10);  

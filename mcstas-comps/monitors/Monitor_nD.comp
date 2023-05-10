@@ -139,24 +139,34 @@
 *     previous                  The monitor uses PREVIOUS component as detector surface. Or use 'geometry' parameter to specify any PLY/OFF geometry file.
 *
 * <b>EXAMPLES:</b>
-* MyMon = Monitor_nD(
-*   xwidth = 0.1, yheight = 0.1, zdepth = 0,
-*   options = "intensity per cm2 angle,limits=[-5 5] bins=10,with
-*              borders, file = mon1");
+* <ul>
+* <li>MyMon = Monitor_nD(xwidth = 0.1, yheight = 0.1, zdepth = 0,
+* &emsp;&emsp;options = "intensity per cm2 angle,limits=[-5 5] bins=10,with
+* &emsp;&emsp;borders, file = mon1");
 *                  will monitor neutron angle from [z] axis, between -5
 *                  and 5 degrees, in 10 bins, into "mon1.A" output 1D file
-*   options = "sphere theta phi outgoing"  for a sphere PSD detector (out
-*                  beam)  and saves into file "MyMon_[Date_ID].th_ph"
-*   options = "banana, theta limits=[10,130], bins=120, y" a theta/height banana detector
-*   options = "angle radius all auto"   is a 2D monitor with automatic limits
-*   options = "list=1000 kx ky kz energy" records 1000 neutron event in a file
-*   options = "multiple kx ky kz, auto abs log t, and list all neutrons"
+*
+*  <li> options = "sphere theta phi outgoing"  
+*       for a sphere PSD detector (out beam)  and saves into file "MyMon_[Date_ID].th_ph"
+*
+*  <li> options = "banana, theta limits=[10,130], bins=120, y" 
+*       a theta/height banana detector
+*
+*  <li> options = "angle radius all auto" 
+*       is a 2D monitor with automatic limits
+*
+*  <li> options = "list=1000 kx ky kz energy" 
+*       records 1000 neutron event in a file
+*
+*  <li> options = "multiple kx ky kz, auto abs log t, and list all neutrons"
 *        makes 4 output 1D files and produces a complete list for all neutrons
 *        and monitor log(abs(tof)) within automatic limits (for t)
-*   options = "theta y, sphere, pixel min=100"
+*
+*  <li> options = "theta y, sphere, pixel min=100"
 *        a 4pi detector which outputs an event list with pixelID from the actual
 *        detector surface, starting from index 100.
 *
+* </ul>
 * To dynamically define a number of bins, or limits:
 *   Use in DECLARE:    char op[256];
 *   Use in INITIALIZE: sprintf(op, "lambda limits=[%g %g], bins=%i", lmin, lmax, lbin);
@@ -415,7 +425,7 @@ TRACE
 				  x,y,z, vx, vy, vz, 0, 0, 0, &thread_offdata );
     if (Vars.Flag_mantid) {
       if(intersect) {
-        Vars.OFF_polyidx=(thread_offdata.intersects[thread_offdata.nextintersect]).index;
+        Vars.OFF_polyidx=thread_offdata.nextintersect;
       } else {
         Vars.OFF_polyidx=-1;
       }
@@ -473,23 +483,53 @@ TRACE
      || (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL")) )
     {
       /* check if we have to remove the top/bottom with BANANA shape */
-      if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) {
-        double y0,y1;
-        /* propagate to intersection point as temporary variable to check top/bottom */
-        y0 = y+t0*vy;
-        y1 = y+t1*vy;
-        if (fabs(y0) >= Vars.Cylinder_Height/2) t0 = t1;
-        if (fabs(y1) >= Vars.Cylinder_Height/2) t1 = t0;
-      }
-      if (t0 < 0 && t1 > 0)
-        t0 = t;  /* neutron was already inside ! */
-      if (t1 < 0 && t0 > 0) /* neutron exit before entering !! */
-        t1 = t;
-      /* t0 is now time of incoming intersection with the detection area */
-      if ((Vars.Flag_Shape < 0) && (t1 > 0))
-        PROP_DT(t1); /* t1 outgoing beam */
-      else
-        PROP_DT(t0); /* t0 incoming beam */
+        if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) {
+            if (intersect == 1) { // Entered and left through sides
+                if (t0 < 0 && t1 > 0) {
+                    t0 = t;  /* neutron was already inside ! */
+                }
+                if (t1 < 0 && t0 > 0) { /* neutron exit before entering !! */
+                    t1 = t;
+                }
+                /* t0 is now time of incoming intersection with the detection area */
+                if ((Vars.Flag_Shape < 0) && (t1 > 0)) {
+                    PROP_DT(t1); /* t1 outgoing beam */
+                } else {
+                    PROP_DT(t0); /* t0 incoming beam */
+                }
+            } else if (intersect == 3 || intersect == 5) { // Entered from top or bottom, left through side
+                if ((Vars.Flag_Shape < 0) && (t1 > 0)) {
+                    PROP_DT(t1); /* t1 outgoing beam */
+                } else {
+                    intersect=0;
+                    Flag_Restore=1;
+                }
+            } else if (intersect == 9 || intersect == 17) { // Entered through side, left from top or bottom
+                if ((Vars.Flag_Shape < 0) && (t1 > 0)) {
+                    intersect=0;
+                    Flag_Restore=1;
+                } else {
+                    PROP_DT(t0); /* t0 incoming beam */
+                }
+            } else if (intersect == 13 || intersect == 19) { // Went through top/bottom on entry and exit
+                intersect=0;
+                Flag_Restore=1;
+            } else {
+                printf("Cylinder_intersect returned unexpected value %l\n", intersect);
+            }
+        } else {
+            // All other shapes than the BANANA 
+            if (t0 < 0 && t1 > 0)
+              t0 = t;  /* neutron was already inside ! */
+            if (t1 < 0 && t0 > 0) /* neutron exit before entering !! */
+              t1 = t;
+            /* t0 is now time of incoming intersection with the detection area */
+            if ((Vars.Flag_Shape < 0) && (t1 > 0))
+              PROP_DT(t1); /* t1 outgoing beam */
+            else
+              PROP_DT(t0); /* t0 incoming beam */
+        }
+      
       /* Final test if we are on lid / bottom of banana/sphere */
       if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA || abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) {
         if (Vars.Cylinder_Height && fabs(y) >= Vars.Cylinder_Height/2 - FLT_EPSILON) {

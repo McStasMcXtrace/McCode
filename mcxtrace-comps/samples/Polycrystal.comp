@@ -273,9 +273,8 @@ SHARE
         }
 
         if (!FlagMissingFile) {
-            Table_Read(&sTable, ReflectionsDatafile, 1);
-
-            if (sTable.columns < 4) {
+            if (Table_Read(&sTable, ReflectionsDatafile, 1) <= 0 
+               || sTable.columns < 4) {
               fprintf(stderr, "Error (%s): The number of columns in %s should be at least %d for [h, k, l, F2]\n", "ReadReflectionData", ReflectionsDatafile, 4);
               return(-1);
             }

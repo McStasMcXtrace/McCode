@@ -10,3 +10,7 @@
 *~
 \#*\#
 .\#*
+
+3rdparty/
+Mambaforge-Linux-x86_64.sh
+dist/

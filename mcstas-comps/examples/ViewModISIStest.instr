@@ -18,6 +18,9 @@
 *
 * %Example: dummy=1 Detector: lam1_I=1.2551e+12
 *
+* %P
+* dummy: [ ] Dummy input parameter
+*
 * %Link
 * Written by D. Champion <D.Champion@rl.ac.uk> ISIS, Feb 2004
 * %End

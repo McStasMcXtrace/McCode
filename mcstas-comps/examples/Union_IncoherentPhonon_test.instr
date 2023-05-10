@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: incoherent_validation
+* Instrument: Union_IncoherentPhonon_test
 *
 * %Identification
 * Written by: Mads Bertelsen
@@ -14,25 +14,26 @@
 * %INSTRUMENT_SITE: Union_demos
 *
 * %Description
-* Validation of Union components against incoherent scattering component
+* Test instrument for the IncoherentPhonon_process physics process from
+* V. Laliena, Uni Zaragoza.
 *
 * Example: Detector: Banana_monitor_I=18.4632
 *
 * %Parameters
-* comp_select: [] 1: Union components, 2: Incoherent
-* sample_radius: []      
-* sample_height: []      
-* pack: []               
-* sigma_inc_vanadium: [] 
-* sigma_abs_vanadium: [] 
-* Vc_vanadium: []        
-* geometry_interact: []  
+* comp_select:             [] 1: Union components, 2: Incoherent
+* sample_radius:          [m] Radius of sample   
+* sample_height:          [m] Height of sample     
+* pack:                   [ ] Packing factor         
+* sigma_inc_vanadium: [barns] Incoherent cross-section
+* sigma_abs_vanadium: [barns] Absorption cross-section
+* Vc_vanadium:         [AA^3] Unit cell volume
+* geometry_interact:      [ ] p_interact for the Union sample
 *
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_incoherent_validation(int comp_select=1,sample_radius=0.01,sample_height=0.03,pack=1,
+DEFINE INSTRUMENT Union_IncoherentPhonon_test(int comp_select=1,sample_radius=0.01,sample_height=0.03,pack=1,
 sigma_inc_vanadium=5.08,sigma_abs_vanadium=5.08,Vc_vanadium=13.827,geometry_interact=0.5,
 int nphe_exact=1,int nphe_approx=0,int approx=0,int mph_resum=0,
 T=294,density=6.0,M=50.94,sigmaCoh=0.0184,sigmaInc=5.08,string dosfn="dos_meV.txt",nxs=1000,kabsmin=0.1,kabsmax=25,
@@ -48,7 +49,7 @@ COMPONENT init = Union_init()
 AT (0,0,0) ABSOLUTE
 
 COMPONENT V_phonon = IncoherentPhonon_process(nphe_exact=nphe_exact, nphe_approx=nphe_approx ,approx=approx, mph_resum=mph_resum,
-T=T,density=density,M=M,sigmaCoh=sigmaCoh,sigmaInc=sigmaInc,dosfn=dosfn,nxs=nxs,kabsmin=kabsmin,kabsmax=kabsmax,interact_fraction=-1)
+T=T,density=density,M=M,sigmaCoh=sigmaCoh,sigmaInc=sigmaInc,DOSfn=dosfn,nxs=nxs,kabsmin=kabsmin,kabsmax=kabsmax,interact_fraction=-1)
 AT (0,0,0) ABSOLUTE
 
 COMPONENT V = Union_make_material(my_absorption=0,process_string="V_phonon")

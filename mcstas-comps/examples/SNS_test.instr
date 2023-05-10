@@ -21,6 +21,9 @@
 *
 * %Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
 *
+* %Parameters
+* filename: [string] Source input file
+*
 * %Link
 * Written by G. Granroth
 * SNS_source component
@@ -29,7 +32,7 @@
 *******************************************************************************/
 
 DEFINE INSTRUMENT SNS_test(string filename="source_sct091_tu_02_1.dat")
-DEPENDENCY " -DLOADPATH=@MCCODE_LIB@/data "
+DEPENDENCY " -DLOADPATH=GETPATH(data) "
 
 DECLARE %{
   char fullfile[256];

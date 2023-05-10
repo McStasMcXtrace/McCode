@@ -6,7 +6,7 @@
 * %I
 * Written by: Victor Laliena
 * Date: 06.11.2018
-* Origin: 
+* Origin: University of Zaragoza
 *
 * A component to simulate inelastic scattering in the incoherent approximation
 * Takes into account one, two, and three phonon scattering explicitly,
@@ -34,7 +34,7 @@
 * M:                 [amu]    ion mass
 * sigmaCoh:          [barns]  Coherent scattering cross section
 * sigmaInc:          [barns]  Incoherent scattering cross section
-* dosfn:             [string] Path to the file that contains the DoS
+* DOSfn:             [string] Path to the file that contains the DoS
 * nxs:               [1]      Number of energy points at which the total cross sections are precomputed
 * nphe_exact:        [1]      Number of terms in the phonon expansion taken exact. Has to be between 1 and 3.
 * nphe_approx:       [1]      Number of terms in the phonon expansion taken approximate.
@@ -60,7 +60,7 @@ DEFINITION PARAMETERS ()
 // default parameters for vanadium
 SETTING PARAMETERS(double T=394, double density=6.0, double M=50.94,
 		   double sigmaCoh=0.0184, double sigmaInc=5.08,
-                   char *dosfn=NULL,
+                  string DOSfn=NULL,
 		   int nphe_exact=1, int nphe_approx=0, int approx=0, int mph_resum=0, 
 		   int nxs=1000, double kabsmin=0.1, double kabsmax=25,
 		   int interact_fraction=-1, string init="init")
@@ -4645,7 +4645,7 @@ INITIALIZE
   setParams(&IncoherentPhonon_storage,
             nphe_exact, nphe_approx, approx, mph_resum,
             T,density,M,sigmaCoh,sigmaInc,kabsmin,kabsmax,nxs,
-             dosfn,ntsp,ximin,ximax,filelog);
+             DOSfn,ntsp,ximin,ximax,filelog);
 
   fprintf(IncoherentPhonon_storage.filep,"setParams done\n");
   fflush(IncoherentPhonon_storage.filep);
@@ -4669,8 +4669,15 @@ INITIALIZE
   sprintf(global_process_element.name,NAME_CURRENT_COMP);
   global_process_element.component_index = INDEX_CURRENT_COMP;
   global_process_element.p_scattering_process = &This_process;
-  
-  struct pointer_to_global_process_list *global_process_list = COMP_GETPAR3(Union_init, init, global_process_list);
+
+  if (_getcomp_index(init) < 0) {
+  fprintf(stderr,"IncoherentPhonon_process:%s: Error identifying Union_init component, %s is not a known component name.\n",
+  NAME_CURRENT_COMP, init);
+  exit(-1);
+  }
+
+
+struct pointer_to_global_process_list *global_process_list = COMP_GETPAR3(Union_init, init, global_process_list);
   add_element_to_process_list(global_process_list,global_process_element);
 
   fprintf(IncoherentPhonon_storage.filep,"Initialization done\n");

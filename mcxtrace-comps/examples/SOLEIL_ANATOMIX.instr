@@ -33,10 +33,29 @@
 *
 * This is a simplified model with an Undulator, a double channel-cut monochromator,
 * a sample stage and a detector. It models a parallel beam full field tomograph.
-* The monochromator is an Si(111), the sample is made of Be. The sample is 2 cm
+* The monochromator is an Si(111), the sample is made of Ge. The sample is 2 cm
 * wide.
 *
-* %Example: -n 1e5 E0=17 Detector: psd_monitor_after_cc_I=5.44443e+07
+* List of important beamline elements. Distances are given from the center of the undulator.
+*
+* Element | Distance (m) | Description  |Hutch
+* --------|--------------|--------------|-------------------
+* Diaphragm       | 22.7 | Rectangular aperture | 2.5 × 2 mm2 (h×v). | OH1
+* Vertical slit   | 23.2 | Horizontal aperture 100. . .300 μm, removable. Increases horizontal transverse coherence where needed. |
+* Primary slits   | 25.9 | Define footprint on mirror and other optics. |
+* Attenuators     | 34.6 | Protect transfocator and other downstream elements. | OH3
+* Mirror M1       | 35.3 | Horiz. deflection. Useful length 400 mm. Bender for horiz. focusing (focal length 3.5 m). Coatings: B4C, Rh, Pt. Grazing angle ≈ 3 mrad. |
+* Mirror M2       | 36.3 | Horiz. deflection. Plane mirror, steers beam back into direction parallel to direct beam, offset 5 mm. Same length, angle and coatings as M1. |
+* Transfocator    | 37.7 | Beryllium lenses. |
+* Vertical slit   | 38.8 | Defines horizontal secondary source when mirror is used. |
+* Secondary slits | 48.4 | Define footprint on monochromators. | OH4
+* Attenuators     | 48.8 | Filter out low energies, especially when using DMM. |
+* DMM             | 49.8 | Under design. Vertical deflection, beam offset 20 mm. Tentative specs: two strips Ru/B4C, Ir/B4C, d = 2.4 nm. 400-mm substrates. |
+* DCM             | 52.7 | Vertical deflection, beam offset 20 mm. Si(111), LN2-cooled. |
+* EH3             | 165.7-174.1 | Guard slits; TXM sample stage and zone-plate table;  microtomography sample stage; detector table | EH3
+* EH4             | 197.2-208.5 | Guard slits; microtomography sample stage; detector table; X-ray grating interferometer | EH4
+*
+* %Example: -n 1e5 E0=17 Detector: psd_monitor_after_cc_I=1.14076e+18
 *
 * %P
 * E0:    [keV] Energy selected at the Undulator.
@@ -47,10 +66,12 @@
 * 
 * %L
 * https://www.synchrotron-soleil.fr/en/beamlines/anatomix
+* %L
+* T Weitkamp et al 2017 J. Phys.: Conf. Ser. 849 012037 DOI: 10.1088/1742-6596/849/1/012037
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT SOLEIL_ANATOMIX(E0=17, Emono=0, dE=1, ANGLE=0, string sample="wire.ply")
+DEFINE INSTRUMENT SOLEIL_ANATOMIX(E0=11, Emono=0, dE=1, ANGLE=0, string sample="wire.ply")
 
 DECLARE
 %{
@@ -59,15 +80,17 @@ DECLARE
 
 INITIALIZE
 %{
-    double arg=12398.42*sqrt(3)/(2*5.4309*E0*1e3);
-    if (fabs(arg) > 1)
-      exit(printf("%s: ERROR: Monochromator can not reach this energy.\n",
-        NAME_INSTRUMENT));
-    calculated_angle = RAD2DEG*asin(arg);
-    
     if (Emono==0) Emono=E0;
-    printf("%s: Monochromator energy=%g [keV], angle=%g [deg]\n", 
-      NAME_INSTRUMENT, Emono, calculated_angle);
+    
+    if (E0-dE < Emono && Emono < E0+dE) {
+    
+      double arg=12398.42*sqrt(3)/(2*5.4309*Emono*1e3);
+      if (fabs(arg) > 1)
+        exit(printf("%s: ERROR: Monochromator can not reach this energy.\n", __FILE__));
+      calculated_angle = RAD2DEG*asin(arg);
+    } else {
+      exit(printf("%s: ERROR: Monochromator energy is outside the Undulator bandwidth.\n", __FILE__));
+    }
 %}
 
 TRACE
@@ -75,12 +98,12 @@ TRACE
 COMPONENT origin = Progress_bar()
 AT (0, 0, 0) RELATIVE ABSOLUTE
 
-// Undulator U20 - this model is not exact.
+// Undulator U18
 COMPONENT source=Undulator(
- E0=E0, dE=dE, Ee=8, dEe=0.001, Ie=0.1, 
- K=1.03118, Nper=140, lu=3.2e-2, sigey=6.17e-6, 
- sigex=0.29979e-3, sigepx=0.01226e-3, sigepy=1.1e-6, 
- focus_xw=1e-4, focus_yh=1e-4, dist=50, E1st=12.400)
+ E0=E0, dE=dE, Ee=2.75, dEe=0.001, Ie=0.5, 
+ K=1.03118, Nper=140, lu=3.2e-2, 
+ sigex=267.9e-6, sigey=8.4e-6, sigepx=30.1e-6, sigepy=3.9e-6, 
+ dist=50, E1st=12.400)
 AT (0, 0, 0) RELATIVE PREVIOUS
 
 COMPONENT e_repartition_before_cc = Monitor_nD(
@@ -141,7 +164,7 @@ COMPONENT sample_rotation_stage = Arm()
 AT (0, 0, 150) RELATIVE PREVIOUS
 
 // sample at about 200 m from Undulator
-COMPONENT sample = Filter(material_datafile="Be.txt",
+COMPONENT sample = Filter(material_datafile="Ge.txt",
     geometry=sample,xwidth=0.02,yheight=0,zdepth=0)
 AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (0,ANGLE,0) RELATIVE PREVIOUS

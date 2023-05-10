@@ -10,6 +10,11 @@ if [ "x$LINK" != "x" ]; then
 else
     LIB=`dirname $0`
 fi
+
+if [ -d "$LIB/../miniconda3" ]; then
+    source $LIB/../miniconda3/bin/activate base
+fi
+
 LIB="$LIB/../tools/Python/@P@display/matplotlib"
 TOOL="@P@display"
 VERS="@MCCODE_VERSION@"

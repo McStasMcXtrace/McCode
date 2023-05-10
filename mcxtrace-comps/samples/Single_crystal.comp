@@ -64,18 +64,18 @@
 *   box/plate:       xwidth x yheight x zdepth
 *   cylinder:        radius x yheight
 *   sphere:          radius (yheight=0)
-*   any shape:       geometry=OFF file
+*   any shape:       geometry=OFF/PLY file
 *
 *   The complex geometry option handles any closed non-convex polyhedra.
 *   It computes the intersection points of the x-ray with the object
 *   transparently, so that it can be used like a regular sample object.
-*   It supports the OFF and NOFF file format but not COFF (colored faces).
+*   It supports the PLY, OFF and NOFF file format but not COFF (colored faces).
 *   Such files may be generated from XYZ data using:
 *     qhull < coordinates.xyz Qx Qv Tv o > geomview.off
 *   or
 *     powercrust coordinates.xyz
 *   and viewed with geomview or java -jar jroff.jar (see below).
-*   The default size of the object depends on the OFF file data, but its
+*   The default size of the object depends on the OFF/PLY file data, but its
 *   bounding box may be resized using xwidth,yheight and zdepth.
 *
 * <b>Crystal definition file format</b>
@@ -118,11 +118,6 @@
 *           bx = 0, by = 3.8843, bz = 0,
 *           cx = 0, cy = 0, cz = 11.6777,
 *           reflections="YBaCuO.lau")
-*
-* Vanadium incoherent elastic scattering with multiple scattering
-* Single_crystal(xwidth=0.01, yheight=0.01, zdepth=0.01,
-*           reflections="", sigma_abs=5.08, sigma_inc=4.935,
-*           ax=3.0282, by=3.0282, cz=3.0282/2)
 *
 * Also, always use a non-zero value of delta_d_d.
 *
@@ -980,12 +975,13 @@ INITIALIZE
     flag=1;
   }
   if (!flag) {
-    Table_Read(&sTable, reflections, 1); /* read 1st block data from "reflections" file into sTable*/
+    if (Table_Read(&sTable, reflections, 1) <= 0) /* read 1st block data from "reflections" file into sTable*/
+      exit(fprintf(stderr,"Error(%s): can not read file %s\n",NAME_CURRENT_COMP, reflections));
   }
 
   /*allocate hkl_list here perhaps - remember to pragma update but try with a static thing to begin with.*/
-  if( (hkl_list=calloc(sTable.rows,sizeof(struct hkl_data)))==NULL){
-    fprintf(stderr,"Error (%s): Could not allocate memory for reflection list. Aborting.\n",NAME_CURRENT_COMP);
+  if((hkl_list=calloc(sTable.rows,sizeof(struct hkl_data)))==NULL){
+    fprintf(stderr,"Error (%s): Could not allocate memory for reflection list %s. Aborting.\n",NAME_CURRENT_COMP, reflections);
     exit(-1);
   };
 

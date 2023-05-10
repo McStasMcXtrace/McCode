@@ -16,27 +16,14 @@ UNAME=`uname -s`
 if [[ ${UNAME} = Darwin* ]]; then
     OSXVER=`sw_vers -productVersion|cut -f 1 -d.`
 
-    export PATH=$LIB/../miniconda3/bin:$PATH
-
     # Check if we are in / - in that case cd to $HOME
     PW==`pwd`
     if [[ ${PWD} = / ]]; then
 	cd $HOME
     fi
-else
-    if [ -d "$LIB/../miniconda3" ]; then
-	export PATH=$LIB/../miniconda3/bin:$PATH
-	export LD_LIBRARY_PATH=$LIB/../miniconda3/lib:$LD_LIBRARY_PATH
-    fi
 fi
-
-
-# Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
 if [ -d "$LIB/../miniconda3" ]; then
-    if ! [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
-	PYVER=`$LIB/../miniconda3/bin/python3 --version | cut -f 2 -d\  | cut -f 1-2 -d.`
-	export PYTHONPATH=$LIB/../miniconda3/lib:$LIB/../miniconda3/lib/python$PYVER/site-packages
-    fi
+    source $LIB/../miniconda3/bin/activate base
 fi
 
 LIB="$LIB/../tools/Python/@P@gui"

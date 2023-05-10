@@ -7,7 +7,7 @@
 * Written by: Richard Heenan with edits by Peter Willendrup
 * Date: 2014
 * Origin: ISIS, DTU Fysik
-* %INSTRUMENT_SITE: ISIS
+* %INSTRUMENT_SITE: Mantid
 *
 * This instrument models the ISIS TS2 SANS2d instrument.
 *
@@ -30,6 +30,9 @@
 * In reality spectra and backgrounds will vary, fast background is likely much higher on ZOOM(E1) than SANS2d (E2)
 * <p>RKH 2014
 *
+* %Example: L1=3.926 Detector: detector_I=6871.7
+* %Example: L1=3.926 --format=NeXus Detector: detector_I=6871.7
+*
 * %Parameters
 * L1: [m]       Variable distance from 1st to 2nd variable slit
 * S6: [m]       Radius of slit S6 (last of the optis slits)
@@ -45,6 +48,8 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT ISIS_SANS2d_Mantid(L1=3.926, A1w=0.030, A1h=0.02, S6=0.006, A2=0.006, Lmin=1, Lmax=14, model_nr=15.0)
+DEPENDENCY " @NEXUSFLAGS@ "
+
 /* F2409w3p5, cf run 5226, L1=4m, A1=30x20, S6=12, A2=12, 1.75-16.5 ang */
 DECLARE
 %{

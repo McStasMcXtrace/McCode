@@ -19,7 +19,7 @@
 #
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation; version 2 of the License.
+#   the Free Software Foundation; version 3 of the License.
 #
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -1107,6 +1107,7 @@ undef $sim;
 undef $TOF;
 undef $tmax;
 undef $keep;
+my $ncount=1000;
 my $STDIN=0;
 $complete=0;
 undef $PGINIT;
@@ -1122,6 +1123,9 @@ $plotter = "Mantid";
 for($i = 0; $i < @ARGV; $i++) {
     if($ARGV[$i] =~ /--help|-h$/) {
         $show_help=1;
+    } elsif(($ARGV[$i] =~ /^-n([a-zA-Z0-9_]+)$/) ||
+            ($ARGV[$i] =~ /^--ncount=([a-zA-Z0-9_]+)$/)) {
+        $ncount = $1;
     } elsif(($ARGV[$i] =~ /^-i([a-zA-Z0-9_]+)$/) ||
             ($ARGV[$i] =~ /^--inspect=([a-zA-Z0-9_]+)$/)) {
         $inspect = $1;
@@ -1231,6 +1235,14 @@ if ($plotter =~ /mantid/i && not $file_output) {
   $file_output="$sim.instr.xml";
   print STDERR "Outputting to file $file_output\n";
 }
+
+if ($plotter =~ /mantid/i) {
+  $ncount="0";
+}
+
+
+push(@cmdline,'-n',$ncount);
+print(@cmdline);
 
 
 # Final PLOTTER check, is PGPLOT wanted?

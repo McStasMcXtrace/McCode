@@ -162,12 +162,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->Coord_Number      = 0;   /* total number of variables to monitor, plus intensity (0) */
     Vars->Coord_NumberNoPixel=0;   /* same but without counting PixelID */
 
-/* Allow to specify size of Monitor_nD buffer via a define*/
-#ifndef MONND_BUFSIZ
-    Vars->Buffer_Block      = 100000;     /* Buffer size for list or auto limits */
-#else
-	Vars->Buffer_Block      = MONND_BUFSIZ;     /* Buffer size for list or auto limits */	
-#endif
+    Vars->Buffer_Block      = MONND_BUFSIZ;     /* Buffer size for list or auto limits */	
     Vars->Neutron_Counter   = -1;   /* event counter, simulation total counts is mcget_ncount() */
     Vars->Buffer_Counter    = 0;   /* index in Buffer size (for realloc) */
     Vars->Buffer_Size       = 0;
@@ -861,7 +856,7 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
     {
       Vars->Mon2D_Buffer  = (double *)realloc(Vars->Mon2D_Buffer, (Vars->Coord_Number+1)*(Vars->Neutron_Counter+Vars->Buffer_Block)*sizeof(double));
       if (Vars->Mon2D_Buffer == NULL)
-            { printf("Monitor_nD: %s cannot reallocate Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", Vars->compcurname, i, (Vars->Neutron_Counter+Vars->Buffer_Block)*sizeof(double)); Vars->Flag_List = 1; }
+            { printf("Monitor_nD: %s cannot reallocate Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", Vars->compcurname, i, (long int)(Vars->Neutron_Counter+Vars->Buffer_Block)*sizeof(double)); Vars->Flag_List = 1; }
       else { Vars->Buffer_Counter = 0; Vars->Buffer_Size = Vars->Neutron_Counter+Vars->Buffer_Block; }
     }
   } /* end if Buffer realloc */
@@ -1422,7 +1417,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
           if (strchr(Vars->Mon_File,'.') == NULL)
           { strcat(fname, "."); strcat(fname, Vars->Coord_Var[i]); }
         }
-        if (Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", Vars->compcurname, fname,Vars->Neutron_Counter,Vars->Coord_Number);
+        if (Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", Vars->compcurname, fname,(long int)Vars->Neutron_Counter,Vars->Coord_Number);
 
         /* handle the type of list output */
         strcpy(label, Vars->Monitor_Label);
@@ -1793,13 +1788,11 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
         }
       if (Vars->Flag_mantid) {
 	/* First define the base pixel type */
-	#ifndef OPENACC
 	double dt, dy;
 	dt = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
 	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
 	printf("MANTID_BANANA_DET:  %g, %g, %g, %g, %g, %li, %li, %g\n", radius, 
 	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2], Vars->Coord_Min[4]); 
-	#endif
       }
     }
     /* disk (circle) */
@@ -1821,14 +1814,12 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
              (double)xmin, (double)ymin, 0.0);
       
       if (Vars->Flag_mantid) {
-	#ifndef OPENACC
 	/* First define the base pixel type */
 	double dx, dy;
 	dx = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
 	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
 	printf("MANTID_RECTANGULAR_DET:  %g, %g, %g, %g, %li, %li, %g\n", 
 	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2], Vars->Coord_Min[4]);
-	#endif
       }
     }
     /* full cylinder/banana */

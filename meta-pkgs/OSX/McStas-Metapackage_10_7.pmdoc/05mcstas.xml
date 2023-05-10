@@ -1,6 +1,0 @@
-<pkgref spec="1.12" uuid="80787BC6-4A58-41F9-8DCD-6314D4759F6C"><config><identifier>com.Humanity.mcstas-tools-perl-@VERSION@</identifier><version>1.0</version><description>DESCRIPTION
-===========
-
-This is an installer created using CPack (http://www.cmake.org). No additional installation instructions provided.
-
-</description><post-install type="none"/><requireAuthorization/><installTo relocatable="true">/</installTo><flags><followSymbolicLinks/><overwriteDirectoryPermissions/></flags><packageStore type="internal"/><mod>parent</mod><mod>installTo</mod></config><scripts><scripts-dir>mcstas-tools-perl-OSXpkg-@VERSION@-mac-10.7.pkg/Contents/Resources</scripts-dir></scripts><contents><file-list>05mcstas-contents.xml</file-list><filter>/CVS$</filter><filter>/\.svn$</filter><filter>/\.cvsignore$</filter><filter>/\.cvspass$</filter><filter>/\.DS_Store$</filter></contents><extra><packagePath>mcstas-tools-perl-OSXpkg-@VERSION@-mac-10.7.pkg</packagePath><title>mcstas-tools-perl-@VERSION@</title></extra></pkgref>

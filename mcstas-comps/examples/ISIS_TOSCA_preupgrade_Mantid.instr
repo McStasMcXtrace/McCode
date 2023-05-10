@@ -5,9 +5,9 @@
 * Written by: Peter Willendrup (DTU/ESS), Sanghamitra Mukhopadhyay (ISIS STFC)
 * Date: September 2018
 * Origin: DTU/ESS/ISIS
-* %INSTRUMENT_SITE: ISIS
+* %INSTRUMENT_SITE: Mantid
 *
-* TOSCA (pre-upgrade) at ISIS with MAntid support.
+* TOSCA (pre-upgrade) at ISIS with Mantid support.
 *
 * %D
 * The model at hand is adapted from an earlier model by M.Zanetti and represents the
@@ -26,7 +26,8 @@
 * been created with transmitting rather than reflecting analysers, and the detectors are hence
 * also positioned differently than in the physical instrument.
 *
-* Example: ISIS_TOSCA_preupgrade_Mantid.instr inc=Benzene_inc_CASTEP_MDANSE2018.sqw eventmode=1 --format=NeXus -n1e7
+* Example: ISIS_TOSCA_preupgrade_Mantid.instr inc=Benzene_inc_CASTEP_MDANSE2018.sqw eventmode=1 Detector: Sphere_I=0.686792
+* Example: ISIS_TOSCA_preupgrade_Mantid.instr inc=Benzene_inc_CASTEP_MDANSE2018.sqw eventmode=1 --format=NeXus Detector: Sphere_I=0.686792 
 *
 * %P
 * inc:       [filename] Incoherent scattering model to use
@@ -40,7 +41,8 @@
 * <a href="https://http://mdanse2018.essworkshop.org">MDANSE 2018 school webpage</a>
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT ISIS_TOSCA_preupgrade_Mantid(string inc="Benzene_inc_CASTEP_MDANSE2018.sqw", zdepth = 0.002, Emin=0.01, Emax=500, eventmode=0)
+DEFINE INSTRUMENT ISIS_TOSCA_preupgrade_Mantid(string inc="Benzene_inc_CASTEP_MDANSE2018.sqw", zdepth=0.002, Emin=0.01, Emax=500, eventmode=0)
+DEPENDENCY " @NEXUSFLAGS@ "
 
 DECLARE %{ 
 double v_foc, c_h1, c_h2, slit_curv, num_slits; 

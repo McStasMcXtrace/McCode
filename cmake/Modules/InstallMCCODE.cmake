@@ -44,10 +44,10 @@ macro(installMCCODE)
   set(CPACK_PACKAGE_VERSION_MINOR "${MINOR}")
 
   ## Debian
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS       "build-essential, bash")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS       "build-essential, libopenmpi-dev, bash")
   set(CPACK_DEBIAN_PACKAGE_RECOMMENDS    "${FLAVOR}-comps-${MCCODE_VERSION}")
-  set(CPACK_DEBIAN_PACKAGE_CONFLICTS    "${FLAVOR}-2.1rc1")
-  set(CPACK_DEBIAN_PACKAGE_SUGGESTS      "openmpi-bin, libopenmpi-dev")
+  set(CPACK_DEBIAN_PACKAGE_CONFLICTS     "${FLAVOR}-2.1rc1")
+  set(CPACK_DEBIAN_PACKAGE_SUGGESTS      "")
 
   ## NSIS
   set(CPACK_NSIS_PACKAGE_NAME "${MCCODE_STRING}")
@@ -226,7 +226,20 @@ macro(installMCCODE)
     COMMAND "${FLEX_EXECUTABLE}" -i "${PROJECT_SOURCE_DIR}/src/instrument.l"
     WORKING_DIRECTORY work/src
     DEPENDS "${PROJECT_SOURCE_DIR}/src/instrument.l"
+
+    OUTPUT work/src/py-lex.yy.c
+    COMMAND "${FLEX_EXECUTABLE}" -i "${PROJECT_SOURCE_DIR}/src/py-instrument.l"
+    WORKING_DIRECTORY work/src
+    DEPENDS "${PROJECT_SOURCE_DIR}/src/py-instrument.l"
   )
+
+  # ## Generate lex.yy.c with flex
+  # add_custom_command(
+  #   OUTPUT work/src/py-lex.yy.c
+  #   COMMAND "${FLEX_EXECUTABLE}" -i "${PROJECT_SOURCE_DIR}/src/py-instrument.l"
+  #   WORKING_DIRECTORY work/src
+  #   DEPENDS "${PROJECT_SOURCE_DIR}/src/py-instrument.l"
+  # )
 
 
   ## Generate instrument.tab.{h,c} with bison
@@ -235,7 +248,21 @@ macro(installMCCODE)
     COMMAND "${BISON_EXECUTABLE}" -v -d "${PROJECT_SOURCE_DIR}/src/instrument.y"
     WORKING_DIRECTORY work/src
     DEPENDS "${PROJECT_SOURCE_DIR}/src/instrument.y" work/src/lex.yy.c
+
+    OUTPUT work/src/py-instrument.tab.h work/src/py-instrument.tab.c
+    COMMAND "${BISON_EXECUTABLE}" -v -d "${PROJECT_SOURCE_DIR}/src/py-instrument.y"
+    WORKING_DIRECTORY work/src
+    DEPENDS "${PROJECT_SOURCE_DIR}/src/py-instrument.y" work/src/lex.yy.c
   )
+
+  # ## Generate instrument.tab.{h,c} with bison
+  # add_custom_command(
+  #   OUTPUT work/src/py-instrument.tab.h work/src/py-instrument.tab.c
+  #   COMMAND "${BISON_EXECUTABLE}" -v -d "${PROJECT_SOURCE_DIR}/src/py-instrument.y"
+  #   WORKING_DIRECTORY work/src
+  #   DEPENDS "${PROJECT_SOURCE_DIR}/src/py-instrument.y" work/src/py-lex.yy.c
+  # )
+
 
   # Handling of system-provided random functions on windows - 
   # needed only in the link step for mccode and -format
@@ -266,6 +293,26 @@ macro(installMCCODE)
     work/src/instrument.tab.c
   )
 
+  add_executable(
+    ${FLAVOR}-pygen
+    work/src/py-cexp.c
+    work/src/pygen.c
+    work/src/coords.c
+    work/src/debug.c
+    work/src/file.c
+    work/src/list.c
+    work/src/mccode-pygen.h
+    work/src/memory.c
+    work/src/port.c
+    work/src/port.h
+    work/src/symtab.c
+    work/src/re.c
+
+    # files generated with flex and bison
+    work/src/lex.yy.c
+    work/src/py-instrument.tab.h
+    work/src/py-instrument.tab.c
+  )
 
   ## Add install targets
   include(MCUtil)
@@ -281,6 +328,11 @@ macro(installMCCODE)
     # Binaries
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
+      DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+    )
+
+    install (
+      PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}-pygen${DOT_EXE_SUFFIX}"
       DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     )
 
@@ -319,7 +371,13 @@ macro(installMCCODE)
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
       DESTINATION ${bin}
     )
- 
+
+    # Binaries
+    install (
+      PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}-pygen${DOT_EXE_SUFFIX}"
+      DESTINATION ${bin}
+    )
+
     install(PROGRAMS
       cmake/support/install-scripts/postsetup.bat
       DESTINATION ${bin}

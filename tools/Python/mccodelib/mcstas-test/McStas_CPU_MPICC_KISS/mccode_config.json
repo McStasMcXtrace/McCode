@@ -11,11 +11,13 @@
     "BROWSER": "xdg-open",
     "GUICOLS": "3",
     "EDITOR": "xdg-open",
-    "QSCI": "1"
+    "QSCI": "1",
+    "FORMAT": "McCode",
+    "IDFGEN": "mcdisplay-mantid"      
   },
   "compilation": {
     "CFLAGS": "-g -lm -O2 -DUSE_MPI -lmpi -std=c99 -D_POSIX_SOURCE",
-    "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
+    "NEXUSFLAGS": "-Wl,-rpath,GETPATH(lib) -LGETPATH(lib) -DUSE_NEXUS -lNeXus -IGETPATH(include/nexus)",
     "MPIFLAGS": "-DUSE_MPI -lmpi",
     "OACCFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=managed -DOPENACC",
     "CC": "mpicc",

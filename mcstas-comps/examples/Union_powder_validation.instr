@@ -23,22 +23,22 @@
 *
 * %Parameters
 * comp_select: [1] 1: Union components, 2: PowderN
-* material_data_file: []  
-* E0: []                  
-* dE: []                  
-* sample_radius: []       
-* sample_height: []       
-* pack: []                
-* sigma_inc: []           
-* sigma_abs: []           
-* Vc: []                  
-* geometry_interact: []   
-* incoherent_fraction: [] 
+* material_data_file: [string] Powder sample definition  
+* E0: [meV] Source mean energy            
+* dE: [meV] Source energy spread
+* sample_radius: [m] Sample radius      
+* sample_height: [m] Sample height
+* pack: [ ] Sample packing factor                
+* sigma_inc: [barns] Sample incoherent cross-section          
+* sigma_abs: [barns] Sample absorption cross-section  
+* Vc: [AA] Sample unit cell volume           
+* geometry_interact: [ ] p_interact for the sample
+* incoherent_fraction: [ ] Fraction of statistics assigned for incoherent scattering
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_powder_validation(int comp_select=1, string material_data_file = "Al.laz",E0 = 100,dE = 2,sample_radius=0.01,sample_height=0.01,pack=1,sigma_inc=0.0328,sigma_abs=0.924,Vc=66.4,geometry_interact=0.5,incoherent_fraction=0.2)
+DEFINE INSTRUMENT Union_powder_validation(int comp_select=1, string material_data_file="Al.laz",E0=100,dE=2,sample_radius=0.01,sample_height=0.01,pack=1,sigma_inc=0.0328,sigma_abs=0.924,Vc=66.4,geometry_interact=0.5,incoherent_fraction=0.2)
 
 USERVARS
 %{

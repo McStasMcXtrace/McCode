@@ -1713,7 +1713,9 @@ int cogen_raytrace(struct instr_def *instr)
       coutf("      randstate_t randbackup = *_particle->randstate;");
       coutf("      *_particle=Split_%s_particle;", comp->name); // restore particle for SPLIT loop
       coutf("      *_particle->randstate = randbackup;");
-      coutf("      srandom(_hash(_particle->_uid* %lu *(1+Split_%s_counter)));", comp->index, comp->name);
+      // Experimentally taking out the following line of code following discussions with Milan Klausz:
+      // It seems that especially for the _uid=0 particle we get strange repetitions in the rng.
+      // coutf("      srandom(_hash(_particle->_uid* %lu *(1+Split_%s_counter)));", comp->index, comp->name);
       coutf("      p /= SplitS_%s > 0 ? SplitS_%s : 1;", comp->name, comp->name);
       coutf("#endif");
       str_free(exp);
@@ -2200,11 +2202,6 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("typedef struct {MCNUM x, y, z;} Coords;");
   cout("typedef MCNUM Rotation[3][3];");
   cout("#define MCCODE_BASE_TYPES");
-  cout("");
-
-  cout("#ifdef OPENACC");
-  cout("#undef MC_TRACE_ENABLED");
-  cout("#endif");
   cout("");
 
   /* the max number of user variables*/

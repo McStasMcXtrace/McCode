@@ -309,6 +309,8 @@ class McGuiState(QtCore.QObject):
                 5 - clustering # nodes (int)
                 6 - random seed (int)
                 7 - output directory (str)
+                8 - autoplotter
+                9 - format
             params[]:
                 [<par_name>, <value>] pairs
         '''
@@ -317,13 +319,22 @@ class McGuiState(QtCore.QObject):
         # mpi-related
         clustering = fixed_params[4]
         mpicount = fixed_params[5]
+        Format = fixed_params[9]
         if mpicount == '':
             mpicount = '2'
         if clustering == 1:
             mcrunparms = ' --mpi=' + mpicount + ' '
         elif clustering == 2:
             mcrunparms = ' -c --mpi=' + mpicount + ' '
-        
+        elif clustering == 3:
+            mcrunparms = ' --openacc '
+        elif clustering == 4:
+            mcrunparms = ' -c --openacc '
+        elif clustering == 5:
+            mcrunparms = ' --openacc --mpi=' + mpicount + ' '
+        elif clustering == 6:
+            mcrunparms = ' -c --openacc --mpi=' + mpicount + ' '
+
         # sim/trace and output directory
         simtrace = fixed_params[0]
         if simtrace == 0:
@@ -369,6 +380,12 @@ class McGuiState(QtCore.QObject):
         autoplot = fixed_params[8]
         if autoplot and simtrace == 0:
             runstr = runstr + ' --autoplot' +  ' --autoplotter=' + mccode_config.configuration["MCPLOT"]
+
+        # format
+        Format = fixed_params[9]
+        if Format and simtrace == 0:
+            print("REDEFINING FORMAT: " + mccode_config.configuration["FORMAT"])
+            runstr = runstr + ' --format=' + mccode_config.configuration["FORMAT"]
         
         # parse instrument params
         for p in params:
@@ -578,7 +595,8 @@ class McGuiAppController():
                         s = l.split()
                         s[0]=""
                         s = ' '.join(s)
-                        s = s.split('=')
+                        # Split on first = occurence only, there may be strings including = on the right...
+                        s = s.split('=', 1)
                         params.append(s)
                     if 'syntax error' in l and not 'potential syntax error' in l:
                         self.emitter.status("!!! Instrument syntax error !!!")
@@ -606,10 +624,13 @@ class McGuiAppController():
                 return comps
 
             comps = get_compnames(text=open(self.state.getInstrumentFile(), 'rb').read().decode())
-            _a, mcplots, mcdisplays = mccode_config.get_options()
-            fixed_params, new_instr_params, inspect, mcdisplay, autoplotter = self.view.showStartSimDialog(
-                instr_params, comps, mcdisplays, mcplots)
+            _a, mcplots, mcdisplays, formats = mccode_config.get_options()
+            fixed_params, new_instr_params, inspect, mcdisplay, autoplotter, Format = self.view.showStartSimDialog(
+                instr_params, comps, mcdisplays, mcplots, formats)
 
+            if Format != None:
+                print("SETTING FORMAT: " + Format)
+                mccode_config.configuration["FORMAT"] = Format
             if mcdisplay != None:
                 mccode_config.configuration["MCDISPLAY"] = mcdisplay
             if autoplotter != None:
@@ -891,6 +912,7 @@ class McGuiAppController():
         # If not on Windows add menu point to make current mccode the system default
         if not sys.platform == 'win32':
             self.view.mw.add_conf_menu('Set as default').triggered.connect(self.handleDefault)
+        mwui.btnDoc.clicked.connect(self.handleMcdoc)
         mwui.btnRun.clicked.connect(self.handleRunOrInterruptSim)
         mwui.btnPlot.clicked.connect(self.handlePlotResults)
 

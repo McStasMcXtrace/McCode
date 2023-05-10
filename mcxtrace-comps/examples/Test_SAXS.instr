@@ -12,17 +12,17 @@
 * %Description
 * Toy model used for testing various sample components for solution-SAXS.
 *
-* %Example: SAMPLE=0 Detector: Monitor_I=2.93715e-14
-* %Example: SAMPLE=1 Detector: Monitor_I=2.7118e-14
-* %Example: SAMPLE=2 Detector: Monitor_I=2.64954e-14
-* %Example: SAMPLE=3 Detector: Monitor_I=9.77905e-15
-* %Example: SAMPLE=4 Detector: Monitor_I=1.16433e-10
-* Example: -n 1e4 SAMPLE=5 Detector: Monitor_I=1.2001e-14
-* Example: -n 1e4 SAMPLE=6 Detector: Monitor_I=1.05945e-14
-* Example: -n 1e4 SAMPLE=7 Detector: Monitor_I=7.07865e-14
-* %Example: SAMPLE=9 Detector: Monitor_I=9.24687e-15
-* %Example: SAMPLE=10 Detector: Monitor_I=1.02884e-14
-* %Example: SAMPLE=11 Detector: Monitor_I=5.47707e-15
+* %Example: SAMPLE=0 Detector: PSDMonitor_I=2.93715e-14
+* %Example: SAMPLE=1 Detector: PSDMonitor_I=2.7118e-14
+* %Example: SAMPLE=2 Detector: PSDMonitor_I=2.64954e-14
+* %Example: SAMPLE=3 Detector: PSDMonitor_I=9.77905e-15
+* %Example: SAMPLE=4 Detector: PSDMonitor_I=1.16433e-10
+* Example: -n 1e4 SAMPLE=5 Detector: PSDMonitor_I=1.2001e-14
+* Example: -n 1e4 SAMPLE=6 Detector: PSDMonitor_I=1.05945e-14
+* Example: -n 1e4 SAMPLE=7 Detector: PSDMonitor_I=7.07865e-14
+* %Example: SAMPLE=9 Detector: PSDMonitor_I=9.24687e-15
+* %Example: SAMPLE=10 Detector: PSDMonitor_I=1.02884e-14
+* Example: SAMPLE=11 Detector: PSDMonitor_I=5.47707e-15
 *
 * %Parameters
 * DistanceFromSourceToFirstPinhole: [m]	 Distance to first pinhole from source.
@@ -152,15 +152,15 @@ COMPONENT Sample6= SAXSNanodiscsWithTags(
 )
 WHEN(SAMPLE==6) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
 
-COMPONENT Sample7 = SAXSPDB(
-	xwidth = 0.01,
-	yheight = 0.01,
-	zdepth = 0.01,
-	SampleToDetectorDistance = DistanceFromSampleToDetector,
-	DetectorRadius = RadiusOfDetector,
-	PDBFilepath = "3v03.pdb"
-)
-WHEN(SAMPLE==7) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
+/* COMPONENT Sample7 = SAXSPDB( */
+/* 	xwidth = 0.01, */
+/* 	yheight = 0.01, */
+/* 	zdepth = 0.01, */
+/* 	SampleToDetectorDistance = DistanceFromSampleToDetector, */
+/* 	DetectorRadius = RadiusOfDetector, */
+/* 	PDBFilepath = "3v03.pdb" */
+/* ) */
+/* WHEN(SAMPLE==7) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole */
 
 //COMPONENT Sample8 = SAXSCurve(
 //	FileWithCurve = "Curve.mcp",
@@ -190,16 +190,16 @@ COMPONENT Sample10 = SAXSNanodiscsWithTagsFast(
 )
 WHEN(SAMPLE==10) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
 
-COMPONENT Sample11 = SAXSPDBFast(
-	xwidth = 0.01,
-	yheight = 0.01,
-	zdepth = 0.01,
-	SampleToDetectorDistance = DistanceFromSampleToDetector,
-	DetectorRadius = RadiusOfDetector,
-	PDBFilepath = "6lyz.pdb",
-    qMax = 0.9
-)
-WHEN(SAMPLE==11) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
+/* COMPONENT Sample11 = SAXSPDBFast( */
+/* 	xwidth = 0.01, */
+/* 	yheight = 0.01, */
+/* 	zdepth = 0.01, */
+/* 	SampleToDetectorDistance = DistanceFromSampleToDetector, */
+/* 	DetectorRadius = RadiusOfDetector, */
+/* 	PDBFilepath = "6lyz.pdb", */
+/*     qMax = 0.9 */
+/* ) */
+/* WHEN(SAMPLE==11) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole */
 
 COMPONENT Beamstop = Beamstop(
 	radius = 0.001
@@ -207,7 +207,7 @@ COMPONENT Beamstop = Beamstop(
 AT (0, 0, DistanceFromSampleToDetector - 0.000001) RELATIVE Sample0
 
 
-COMPONENT Monitor = PSD_monitor(
+COMPONENT PSDMonitor = PSD_monitor(
 	filename = "PSDMonitor",
 	xwidth = 2.0 * RadiusOfDetector / sqrt(2.0), 
 	yheight = 2.0 * RadiusOfDetector / sqrt(2.0),

@@ -1,15 +1,16 @@
 /********************************************************************
 *
-* Instrument: ILL_H16_IN5
+* Instrument: ILL_IN5_Spots
 *
 * %Identification
-* Written by: E. Farhi, J. Ollivier, Celia Castan Guerrero
+* Written by: E. Farhi, J. Ollivier, Celia Castan Guerrero, edits by P. Willendrup
 * Date: September 2018
 * Origin: ILL
 *
 * %INSTRUMENT_SITE: ILL
 *
-*   The IN5B instrument: chopper system + sample + PSD and tof detector, with special resolution options
+*   The IN5B instrument: chopper system + sample + PSD and tof detector, with special resolution options.
+*   In this version equipped with the Spot_sample from SNS, useful for resolution considerations.
 *
 * %Description
 *
@@ -41,7 +42,7 @@
 *
 * %E
 ************************************************************************/
-DEFINE INSTRUMENT ILL_IN5(lambda=4.5,dlambda=0.05,speed=8500, ratio=0.5, string housing="Fe.laz", string coh="Y3Fe5O12_YIG.laz", string inc="NULL", thickness=0, height=0.025, radius=0.005, order=0, wspot=1,ttspot=45,nspots=0,RESO=1)
+DEFINE INSTRUMENT ILL_IN5_Spots(lambda=4.5,dlambda=0.05,speed=8500, ratio=0.5, string housing="Fe.laz", string coh="Y3Fe5O12_YIG.laz", string inc="NULL", thickness=0, height=0.025, radius=0.005, order=0, wspot=1,ttspot=45,nspots=0,RESO=1)
 DECLARE
 %{
 

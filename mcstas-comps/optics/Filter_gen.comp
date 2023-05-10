@@ -65,6 +65,7 @@
 * ymax:    [m] dimension of filter
 * xwidth:  [m] Width/diameter of filter). Overrides xmin,xmax.
 * yheight: [m] Height of filter. Overrides ymin,ymax.
+* verbose: [1] Flag to select verbose output.
 *
 * %L
 * <a href="../data/HOPG.trm">HOPG.trm</a> filename as an example.

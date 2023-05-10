@@ -27,7 +27,6 @@
 * lambda0: [AA]           Target wavelength for the monochromating crystal
 * Pulse_width: [s]        Length of the long pulse. Default to 2 ms.
 * Num_pulses: [1]         Number of pulses to simulate. Default 1.
-*
 * GUI_start: [m]          Distance from moderator to guide start
 * FO1_DIST: [m]           Distance from moderator to FO1 chopper
 * L_ballistic_begin: [m]  Length of expanding ballistic section in the beginning of the guide
@@ -35,7 +34,6 @@
 * Length: [m]             Total length of spectrometer (moderator to F2)
 * SAMPLE_DIST: [m]        Distance from F2 to sample
 * DETECTOR_DIST: [m]      Length sample-detector
-*
 * GUI_h: [m]              Height of guide opening at entry
 * GUI_w: [m]              Width of guide opening at entry
 * H1: [m]                 Height of guide elements
@@ -63,16 +61,14 @@
 * FO3: [1]                Inverse frequency of FO3 chopper (if 1, same as F2; if 2, half of F2, etc.)
 * THETA_fast1: [deg]      Opening angle of the F1 chopper
 * FAST_THETA: [deg]       Opening angle of the F2 chopper
-*
 * Gamma: [meV]            Width of sample quasielastic scattering (0=elastic)
 * Etun: [meV]             Tunneling energy
 * V_HOLE: [m]             Radius of hole in V sample (must be smaller than the outer radius: 0.01)
 * FRAC_QUASIEL: [1]       Fraction of the sample that scatters quasielastically
 * TT: [deg]               2Theta (or a4) scattering angle
 * RES_DE: [meV]           Adjustable zoom for energy monitor at detector position
-* FRAC_TUNNEL: []         
-* port: []                
-* cold: []                
+* FRAC_TUNNEL: [ ]        Fraction of the sample that scatters on the tunneling peaks   
+* cold: [ ]               Fraction of neutrons emitted from the cold moderatorx
 *
 * %Link
 * The <a href="http://wwwold.ill.fr/Computing/links/meetings/ESS-LP/">ESS-Rencurel</a> website.
@@ -81,7 +77,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT ESS_IN5_reprate(Lmin=4.9, Lmax=5.1, lambda0=5, Pulse_width=2.857e-3, Num_pulses=1, GUI_start=2.0,  FO1_DIST=6, L_ballistic_begin=19.5, L_ballistic_end=17, Length=100, SAMPLE_DIST=1.2,  DETECTOR_DIST=4, GUI_h=0.105, GUI_w=0.1, GUI_GAP=0.05, H1=0.167, W1=0.116, H2=0.185, W2=0.15, H3=0.19, W3=0.15, H4=0.213, W4=0.14, H_chop=0.075, W_chop=0.03, H_end=0.042,  W_end=0.0215, ALPHA=3.4, M=3.5, F_slow1=16.6667, F_slow2=0, F_fast1=0, F_fast2=200,  N_fast=1, SLOW1_THETA=120, FO3=1, THETA_fast1=180, FAST_THETA=5, Gamma=0, Etun=1,  V_HOLE=0, FRAC_QUASIEL=0, FRAC_TUNNEL=0, TT=50, RES_DE=0.5, port=30, cold=0.95)
+DEFINE INSTRUMENT ESS_IN5_reprate(Lmin=4.9, Lmax=5.1, lambda0=5, Pulse_width=2.857e-3, Num_pulses=1, GUI_start=2.0,  FO1_DIST=6, L_ballistic_begin=19.5, L_ballistic_end=17, Length=100, SAMPLE_DIST=1.2,  DETECTOR_DIST=4, GUI_h=0.105, GUI_w=0.1, GUI_GAP=0.05, H1=0.167, W1=0.116, H2=0.185, W2=0.15, H3=0.19, W3=0.15, H4=0.213, W4=0.14, H_chop=0.075, W_chop=0.03, H_end=0.042,  W_end=0.0215, ALPHA=3.4, M=3.5, F_slow1=16.6667, F_slow2=0, F_fast1=0, F_fast2=200,  N_fast=1, SLOW1_THETA=120, FO3=1, THETA_fast1=180, FAST_THETA=5, Gamma=0, Etun=1,  V_HOLE=0, FRAC_QUASIEL=0, FRAC_TUNNEL=0, TT=50, RES_DE=0.5, cold=0.95)
 
 DECLARE
 %{

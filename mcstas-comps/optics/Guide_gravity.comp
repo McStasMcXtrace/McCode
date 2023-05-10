@@ -361,7 +361,7 @@ INITIALIZE
   { fprintf(stderr,"Guide_gravity: %s: input window is closed (w1=h1=0).\n", NAME_CURRENT_COMP);
     exit(-1); }
 
-  if (d*nslit > w1) exit(fprintf(stderr, "Guide_gravity: %s: absorbing walls fill input window. No space left for transmission (d*nslit > w1).\n", NAME_CURRENT_COMP));
+  if (d*(nslit-1) > w1) exit(fprintf(stderr, "Guide_gravity: %s: absorbing walls fill input window. No space left for transmission (d*(nslit-1) > w1).\n", NAME_CURRENT_COMP));
 
   if (!w2) w2=w1;
   if (!h2) h2=h1;

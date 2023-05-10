@@ -273,7 +273,8 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
         retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
         t2 = time.time()
         didwrite = os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.sim"))
-        test.didrun = retcode != 0 or didwrite
+        didwrite_nexus = os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.h5"))
+        test.didrun = retcode != 0 or didwrite or didwrite_nexus
         test.runtime = t2 - t1
 
         # log to terminal
@@ -287,11 +288,22 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
             continue
 
         # test value extraction
-        extraction = extract_testvals(join(testdir, test.instrname, str(test.testnb)), test.detector)
-        if type(extraction) is tuple:
-            test.testval = extraction[0]
+        if not didwrite_nexus:
+            extraction = extract_testvals(join(testdir, test.instrname, str(test.testnb)), test.detector)
+            if type(extraction) is tuple:
+                test.testval = extraction[0]
+            else:
+                test.testval = -1
+        # Look for detector output in run_stdout
         else:
-            test.testval = -1
+            metalog = LineLogger()
+            resfile = join(testdir,test.instrname,"run_stdout_%d.txt" % (test.testnb))
+            cmd = "grep %s_I= %s | head -1 | cut -f2- -d= | cut -f1 -d\ " %(test.detector, resfile)
+            utils.run_subtool_to_completion(cmd, stdout_cb=metalog.logline)
+            try:
+                test.testval=float(metalog.lst[0])
+            except:
+                test.testval=-1
 
         # save test result to disk
         test.testcomplete = True
