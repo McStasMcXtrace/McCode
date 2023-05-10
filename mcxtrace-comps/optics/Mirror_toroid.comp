@@ -121,8 +121,70 @@ TRACE
 
 MCDISPLAY
 %{
-  /* A bit ugly; hard-coded dimensions. */
+  //See parametric equation used for the 3D view here: https://en.wikipedia.org/wiki/Torus#Geometry or here:https://web.maths.unsw.edu.au/~rsw/Torus/index.php
+  //Because the code above doesn't actually reproduce a torus exactly but uses a cylinder and an ellipsoid to construct the toroidal mirror (to avoid solving quartic equations),
+  //there's a slight mismatch between the 3D view (exact torus) and the actual toroidal mirror coded above.
   
+  double x0,y0,z0,x1,y1,z1,theta,phi,phi_total,theta_total,theta_beginning,phi_beginning,theta_end,phi_end;
+  //int N=50; too many points, makes the 3D matlab viewer bug
+  int N=10;     
+  
+  phi_total = RAD2DEG*(zdepth/(radius+radius_o));//degrees
+  theta_total = RAD2DEG*(xwidth/radius);
+  
+  //fix theta=0 and phi=180 degrees respectively
+  theta=0;
+  phi=180;
+  
+  //then start at the beginning of the theta or phi range in order to map the flat surface (xwidth, zdepth) on the torus.
+  theta_beginning=theta-(theta_total/2);
+  phi_beginning=phi-(phi_total/2);
+   
+  theta_end = theta+(theta_total/2);
+  phi_end = phi+(phi_total/2);
+  
+  theta = theta_beginning;
+  phi = phi_beginning;  
+  
+  while (theta<=theta_end){
+      phi=180-(phi_total/2);
+      x0=radius*sin(DEG2RAD*theta);
+      y0=(radius_o+radius*cos(DEG2RAD*theta))*cos(DEG2RAD*phi)+(radius_o+radius);
+      z0=(radius_o+radius*cos(DEG2RAD*theta))*sin(DEG2RAD*phi);
+      while (phi<=phi_end){
+          x1=radius*sin(DEG2RAD*theta);
+          y1=(radius_o+radius*cos(DEG2RAD*theta))*cos(DEG2RAD*phi)+(radius_o+radius);
+          z1=(radius_o+radius*cos(DEG2RAD*theta))*sin(DEG2RAD*phi);      
+          line(x0,y0,z0,x1,y1,z1);   
+          x0=x1;
+          y0=y1; 
+          z0=z1; 
+          phi+=phi_total/N;
+          
+      }
+      theta+=theta_total/N;
+  }  
+   
+  theta = theta_beginning;
+  phi = phi_beginning;  
+  
+  while (phi<=phi_end){
+      theta=-(theta_total/2);
+      x0=radius*sin(DEG2RAD*theta);
+      y0=(radius_o+radius*cos(DEG2RAD*theta))*cos(DEG2RAD*phi)+(radius_o+radius);
+      z0=(radius_o+radius*cos(DEG2RAD*theta))*sin(DEG2RAD*phi);
+      while (theta<=theta_end){
+          x1=radius*sin(DEG2RAD*theta);
+          y1=(radius_o+radius*cos(DEG2RAD*theta))*cos(DEG2RAD*phi)+(radius_o+radius);
+          z1=(radius_o+radius*cos(DEG2RAD*theta))*sin(DEG2RAD*phi);      
+          line(x0,y0,z0,x1,y1,z1);   
+          x0=x1;
+          y0=y1; 
+          z0=z1; 
+          theta+=theta_total/N;
+      }
+      phi+=phi_total/N;
+  }
   line(-xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0,-zdepth/2.0);
   line(-xwidth/2.0,0, zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
   line(-xwidth/2.0,0,-zdepth/2.0,-xwidth/2.0,0, zdepth/2.0);
