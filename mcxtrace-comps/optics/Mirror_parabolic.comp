@@ -12,10 +12,10 @@
 * Date: Feb 11, 2010
 * Origin: Risoe
 *
-* Idealized parabolic mirror
+* Idealized parabolic mirror (in XZ)
 * 
 * %D
-* Takes a reflectivity (default=1) as input and reflects rays in a ideal geometry
+* Takes a reflectivity as input and reflects rays in a ideal geometry
 * parabolic mirror. The mirror is positioned in the zx-plane curving towards positive y.
 * I.e. the focal point is (0,0,f(a,b))
 * The geometry of the paraboloid is governed by the equation: y = x^2 / a^2 + z^2 / b^2
@@ -23,50 +23,48 @@
 *
 * %P
 * INPUT PARAMETERS
-* R: [1]       Reflectivity of mirror.
-* a: [sqrt(m)] Transverse curvature scale, if zero - the mirror is flat along x.
-* b: [sqrt(m)] Longitudinal curvature scale, if zero, flat along z.
+* R0:     [1]  Reflectivity of mirror.
 * xwidth: [m]  Width of mirror.
 * zdepth: [m]  Length of mirror.
-* yheight: [m] Thickness of mirror. If 0 (the default) the mirror is mathemticlly thin. Only has an effect for hitting the mirror from the side.
+* yheight:[m]  Thickness of mirror. If 0 (the default) the mirror is mathemticlly thin. Only has an effect for hitting the mirror from the side.
+* focusx: [m]  Transverse focal length along X. Sets a.
+* focusz: [m]  Longitudinal focal length along Z. Sets b.
+* radius: [m]  Focal length. Sets focusx and focusz.
+* a: [sqrt(m)] Transverse curvature scale, if zero - the mirror is flat along x.
+* b: [sqrt(m)] Longitudinal curvature scale, if zero, flat along z.
 * 
 * OUTPUT PARAMETERS
 * xmax: [m]     Mirrors' extent along x.
 * zmax: [m]     Mirrors' extent along z.
 * a2inv: [m^-2] Inverse of a^2.
 * b2inv: [m^-2] Inverse of b^2.
-* focusx:[m]    Focal length wrt x = f(a).
-* focusz:[m]    Focal length wrt z = f(b).
 * %E
 *******************************************************************************/
 
 
 DEFINE COMPONENT Mirror_parabolic
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (R=1, a=1, b=1, xwidth=0.1, zdepth=0.1, yheight=0)
+SETTING PARAMETERS (R0=1, a=1, b=1, xwidth=0.1, zdepth=0.1, yheight=0,
+  focusx=0, focusz=0, radius=0)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
-
-SHARE
-%{
-
-%}
-
 
 DECLARE
 %{
   double a2inv;
   double b2inv;
-  double focusx;
-  double focusz;
 %}
 
 INITIALIZE
 %{
+  if (radius>0) focusx=focusz=radius;
+  if (focusx>0) a=2*sqrt(focusx); else focusx=a*a/4.0;
+  if (focusz>0) b=2*sqrt(focusz); else focusz=b*b/4.0;
+  
   a2inv=(a!=0)?(1.0/(a*a)):0; /* if a==0, it is really infinity */
   b2inv=(b!=0)?(1.0/(b*b)):0; /* if b==0, it is really infinity */
-  focusx=a*a/4.0;
-  focusz=b*b/4.0;
+  
+  
 %}
 
 TRACE
@@ -140,7 +138,7 @@ TRACE
         }
         SCATTER;
 
-        p*=R;
+        p*=R0;
         /*update phase - as an approximation turn by 180 deg.*/
         phi+=M_PI;
         first=0;
@@ -187,8 +185,15 @@ MCDISPLAY
 
   double dx=xwidth/(Ni);
   double dz=zdepth/(Nj);
-  double x0,x1,z0,z1,y[4],xmax,zmax;
+  double x0,x1,z0,z1,y[4],xmin,xmax,zmin,zmax;
   int i,j;
+  
+  magnify("");
+               
+  line(-xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0,-zdepth/2.0);
+  line(-xwidth/2.0,0, zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
+  line(-xwidth/2.0,0,-zdepth/2.0,-xwidth/2.0,0, zdepth/2.0);
+  line( xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
 
   /*find the limits in x and z*/  
   x0=0;x1=xwidth/2.0;

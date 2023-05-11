@@ -15,7 +15,7 @@
 * Version: 1.0
 * Origin: NBI
 *
-* Elliptic multilayer mirror
+* Elliptic multilayer mirror (in XZ)
 * 
 * %D
 * Reads reflectivity values from a data input file (Ref.dat) for a Si/W multilayer.
@@ -30,29 +30,36 @@
 * incident angle), the intersection point is then defined. A new, reflected photon is then starting at the  
 * point of intersection.
 *
+* Example: Multilayer_elliptic(
+*   coating = "Ref_W_B4C.txt", theta = 1.2,
+*   s1 = 1, s2 = 2, length = 0.1, width = 0.1, R0 = 1,
+*   Emin=7, Emax=10, Estep=0.05)
+*
 * %P
 * Input parameters:
-* theta: [deg.] Design angle of incidence.
-* s1: [m] Design distance from the source to the multilayer.
-* s2: [m] Design focusing distance of the multilayer.
-* length: [m] Length of the mirror.
-* width: [m] Width of the mirror along x-axis.
-* Gamma: [ ] High electron density fraction of bilayer (in kinematical appr.).
-* Lambda: [m] Thickness of bilayer (in kinematical appr.).
-* rho_AB: [ ] Number electron density constrast in bilayer (in kinematical appr.).
-* N: [ ] Number of bilayers (in kinematical appr.).
-* reflectivity_datafile: [ ] Datafile containing reflectivity values as a function of q and E.
-* Emin: [keV] Lower limit of energy interval in datafile. Overrides what's written in the datafile header.
-* Emax: [keV] Upper limit of energy interval in datafile. Overrides what's written in the datafile header.
+* theta: [deg] Design angle of incidence.
+* s1:    [m]   Design distance from the source to the multilayer.
+* s2:    [m]   Design focusing distance of the multilayer.
+* zdepth:[m]   Length of the mirror along Z.
+* xwidth:[m]   Width of the mirror along X-axis.
+* Gamma: [ ]   High electron density fraction of bilayer (in kinematical appr.).
+* Lambda:[m]   Thickness of bilayer (in kinematical appr.).
+* rho_AB:[ ]   Number electron density constrast in bilayer (in kinematical appr.).
+* N:     [ ]   Number of bilayers (in kinematical appr.).
+* coating: [ ] Datafile containing reflectivity values as a function of q and E.
+* Emin:  [keV] Lower limit of energy interval in datafile. Overrides what's written in the datafile header.
+* Emax:  [keV] Upper limit of energy interval in datafile. Overrides what's written in the datafile header.
 * Estep: [keV] Step between energy sample points in datafile. Overrides what's written in the datafile header.
-* R0: [1] Maximal reflectivity
+* R0:    [1]   Maximal reflectivity
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Multilayer_elliptic
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string reflectivity_datafile="reflectivity.txt",
-    theta=1.2,s1=0,s2=0,length=0.5,width=0.2,R0=1, Emin=-1, Emax=-1, Estep=-1, Gamma=0, Lambda=0, rho_AB=0, int N=0)
+SETTING PARAMETERS (string coating="Ref_W_B4C.txt",
+    theta=1.2,s1=0,s2=0,length=0.5,width=0.2,R0=1, 
+    Emin=-1, Emax=-1, Estep=-1, Gamma=0, Lambda=0, rho_AB=0, int N=0,
+    xwidth=0, zdepth=0)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -103,6 +110,9 @@ INITIALIZE
   ellipse major axis a/2, minor axis b/2, M-magnification factor, Z0&Y0 - position of the mirror centre in the elliptical coordinate system.*/
   double Theta=DEG2RAD*theta;
   
+  if (xwidth) width=xwidth;
+  if (zdepth) length=zdepth;
+  
   M=s2/s1;
   cost0 = (1-M)/sqrt(1-2*M + M*M + 4*M*(cos(Theta)*cos(Theta)));
   a = (s1*sqrt(1-cost0*cost0+cos(Theta)*cos(Theta)*cost0*cost0))/(cost0*cos(Theta)+sqrt(1-cost0*cost0+ (cos(Theta)*cos(Theta))*cost0*cost0));
@@ -117,7 +127,7 @@ INITIALIZE
     /*refrain from using kinematical approximation - instead use reflectivity datafile*/
     kinematical = 0;
     /* reflectivity datafile parsing COATING_UNDEFINED - means set the type according to what is found in the file*/
-    status=reflec_Init(&re,COATING_UNDEFINED,reflectivity_datafile, NULL);
+    status=reflec_Init(&re,COATING_UNDEFINED,coating, NULL);
   }else{
     kinematical = 1;
     re.type=KINEMATIC;
@@ -219,9 +229,6 @@ TRACE
     }
   }
   
-%}
-FINALLY
-%{
 %}
 
 MCDISPLAY

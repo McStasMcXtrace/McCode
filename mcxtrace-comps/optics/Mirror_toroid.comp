@@ -15,7 +15,7 @@
 * Version: 1.0
 * Origin: DTU Physics
 *
-* Toroidal shape mirror
+* Toroidal shape mirror (in XZ)
 *
 * %D
 * This is an implementation of a toroidal mirror which may be curved in two dimensions.
@@ -36,7 +36,7 @@
 
 DEFINE COMPONENT Mirror_toroid
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string reflec="", zdepth=0.1, xwidth=0.01, radius, radius_o,R0=0)
+SETTING PARAMETERS (string coating="", zdepth=0.1, xwidth=0.01, radius, radius_o,R0=0)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -54,8 +54,8 @@ DECLARE
 INITIALIZE
 %{
   int status;
-  if (reflec && strlen(reflec) && strcmp(reflec,"NULL") ) {
-    status=reflec_Init(&re,COATING_UNDEFINED,reflec,NULL);
+  if (coating && strlen(coating) && strcmp(coating,"NULL") ) {
+    status=reflec_Init(&re,COATING_UNDEFINED,coating,NULL);
   }else{
     status=reflec_Init_const(&re,R0);
   }

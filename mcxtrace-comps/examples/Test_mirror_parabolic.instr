@@ -49,7 +49,7 @@ EXTEND
 
 
 COMPONENT m2 = Mirror_parabolic(
-    b=0.1, a=0, xwidth=0.2, zdepth=0.01, R=1)
+    b=0.1, a=0, xwidth=0.2, zdepth=0.01, R0=1)
 WHEN(MM==1) AT(0,0,5) RELATIVE origin
 ROTATED (-90,0,0) RELATIVE origin
 EXTEND

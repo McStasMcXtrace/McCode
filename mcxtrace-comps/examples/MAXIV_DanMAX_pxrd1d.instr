@@ -366,13 +366,13 @@ ROTATED (0,DMM_theta,0) RELATIVE oh0
 
 /* if only DMM is used the first mirror is toroidal due to the heat bump */
 COMPONENT DMM0a = Mirror_toroid(
-  xwidth=45e-3, zdepth=200e-3, reflec="w_b4c_si_3AArghn.dat", radius=DMM_rsag, radius_o=DMM_rmer)
+  xwidth=45e-3, zdepth=200e-3, coating="w_b4c_si_3AArghn.dat", radius=DMM_rsag, radius_o=DMM_rmer)
 WHEN( (DCM==0) && (DMM!=0) ) AT (0,0,0) RELATIVE DMM0_a0
 ROTATED (0,0,-90) RELATIVE DMM0_a0
 
 /* if both monos are used, the first ML mirror is flat, no heat bump on it */
 COMPONENT DMM0b = Mirror(
-  xwidth=45e-3, zdepth=200e-3, reflectivity="w_b4c_si_3AArghn.dat")
+  xwidth=45e-3, zdepth=200e-3, coating="w_b4c_si_3AArghn.dat")
 WHEN ( (DCM!=0) && (DMM!=0) ) AT (0,0,0) RELATIVE DMM0_a0
 ROTATED (0,0,-90) RELATIVE DMM0_a0
 
@@ -385,7 +385,7 @@ AT(0,0,DMM_d) RELATIVE DMM0_a1
 ROTATED(0,-DMM_theta,0) RELATIVE DMM0_a1
 
 COMPONENT DMM1 = Mirror(
-  xwidth=45e-3, zdepth=200e-3, reflectivity="w_b4c_si_3AArghn.dat")
+  xwidth=45e-3, zdepth=200e-3, coating="w_b4c_si_3AArghn.dat")
 WHEN (DMM!=0) AT (0,0,0) RELATIVE PREVIOUS
 ROTATED (0,0,90) RELATIVE PREVIOUS
 

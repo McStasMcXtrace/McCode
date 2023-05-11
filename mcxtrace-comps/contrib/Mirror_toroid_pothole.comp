@@ -16,7 +16,7 @@
 * Origin: DTU Physics
 * Modified by: Padovani Antoine, 5th August 2022.
 *
-* Toroidal shape mirror
+* Toroidal shape mirror (in XZ)
 *
 * %D
 * This is an implementation of a toroidal mirror which may be curved in two dimensions.
@@ -37,7 +37,7 @@
 
 DEFINE COMPONENT Mirror_toroid_pothole
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (zdepth=0.1, xwidth=0.01, radius, radius_o,R0=0,string reflec="")
+SETTING PARAMETERS (zdepth=0.1, xwidth=0.01, radius, radius_o,R0=0,string coating="")
 OUTPUT PARAMETERS (reflec_table, prms)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -61,13 +61,13 @@ DECLARE
 
 INITIALIZE
 %{
-    if (reflec && strlen(reflec)){
+    if (coating && strlen(coating)){
         char **header_parsed;
         t_Table *tp=&reflec_table;
         /* read 1st block data from file into tp */
-        if (Table_Read(tp, reflec, 1) <= 0)
+        if (Table_Read(tp, coating, 1) <= 0)
         {
-            exit(fprintf(stderr,"Error: %s: cannot read file %s\n",NAME_CURRENT_COMP, reflec));
+            exit(fprintf(stderr,"Error: %s: cannot read file %s\n",NAME_CURRENT_COMP, coating));
         }
         header_parsed = Table_ParseHeader(tp->header,
                 "e_min=","e_max=","e_step=","theta_min=","theta_max=","theta_step=",NULL);
@@ -81,23 +81,23 @@ INITIALIZE
             prms.theta_max=strtod(header_parsed[4],NULL);
             prms.theta_step=strtod(header_parsed[5],NULL);
         } else {
-            exit(fprintf(stderr,"Error: %s: wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, reflec));
+            exit(fprintf(stderr,"Error: %s: wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, coating));
         }	
         if (((tp->rows-2)*prms.e_step) > (prms.e_max-prms.e_min))
         {   
-            exit(fprintf(stderr,"Error: %s: e_step does not match e_min and e_max in file %s (<)\n",NAME_CURRENT_COMP, reflec));    
+            exit(fprintf(stderr,"Error: %s: e_step does not match e_min and e_max in file %s (<)\n",NAME_CURRENT_COMP, coating));    
         }
         if ((prms.e_max-prms.e_min) > ((tp->rows)*prms.e_step))
         {
-            exit(fprintf(stderr,"Error: %s: e_step does not match e_min and e_max in file %s (>)\n",NAME_CURRENT_COMP, reflec));
+            exit(fprintf(stderr,"Error: %s: e_step does not match e_min and e_max in file %s (>)\n",NAME_CURRENT_COMP, coating));
         }        
         if (((tp->columns-2)*prms.theta_step) > (prms.theta_max-prms.theta_min))  
         {
-            exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s (<)\n",NAME_CURRENT_COMP,reflec));
+            exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s (<)\n",NAME_CURRENT_COMP,coating));
         }
         if ((prms.theta_max-prms.theta_min) > ((tp->columns)*prms.theta_step))
         {
-            exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s (>)\n",NAME_CURRENT_COMP,reflec));
+            exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s (>)\n",NAME_CURRENT_COMP,coating));
         }
         prms.use_reflec_table=1;
     }else{

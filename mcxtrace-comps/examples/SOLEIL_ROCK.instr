@@ -194,7 +194,7 @@ COMPONENT mirror_m1 = Mirror_toroid_pothole(
     xwidth = 0.015,
     zdepth = 1.1,
     radius=0.0317, 
-    radius_o=9.02e3,reflec=reflec_material_M1)    
+    radius_o=9.02e3,coating=reflec_material_M1)    
 AT (0, 0, 10.15-8.6486) RELATIVE PREVIOUS	
 ROTATED (-0.0045*RAD2DEG/2, 0, 0) RELATIVE PREVIOUS
 EXTEND

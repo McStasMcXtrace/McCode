@@ -1,0 +1,131 @@
+/*******************************************************************************
+  if(      McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Test_Mirrors
+*
+* %Identification
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Jul 16
+* Origin: DTU Physics
+* Version: 1.0
+* %INSTRUMENT_SITE: Tests_optics
+*
+* Unit test instrument to check that Mirrors are working
+*
+* %Description
+* A mere unit test instrument. Also includes a perfectly flat Mirror as reference.
+* The choice of the Mirror to test is set with "index"
+*    index=0: Mirror
+*    index=1: Mirror_elliptic
+*    index=2: Mirror_parabolic
+*    index=3: Mirror_curved
+*    index=4: Mirror_toroid
+*    index=5: Mirror_toroid_pothole
+*    index=6: Multilayer_elliptic
+*
+* %Example: Test_Mirrors.instr gamma=5 Detector: psd3_I=7.21499e-08
+*
+* %Parameters		
+* gamma: [deg] Nominal glancing angle of mirror
+* index: [1]   Index of the Mirror component to test
+* L:     [m]   Distance source-mirror and mirror-detector
+* radius:[m]   Radius of curvature
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT Test_Mirrors(gamma=0.5, int index=1, L=2, radius=1000, E0=12.5)
+
+INITIALIZE %{
+  switch (index) {
+    case 0: printf("Using Mirror\n"); break; // OK
+    case 1: printf("Using Mirror_elliptic\n"); break; // OK
+    case 2: printf("Using Mirror_parabolic\n"); break;      // not OK: beam UP
+    case 3: printf("Using Mirror_curved\n"); break; // OK
+    case 4: printf("Using Mirror_toroid\n"); break;         // OK
+    case 5: printf("Using Mirror_toroid_pothole\n"); break; // OK
+    case 6: printf("Using Multilayer_elliptic\n"); break; // OK
+    default: exit(fprintf(stderr, "Unknown Mirror index\n"));
+  }
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT src = Source_flat(
+        radius = 1e-4, dist = L, focus_xw = 1e-3, focus_yh = 1e-3, E0=E0, dE=1, gauss=1)
+  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT psd0 = PSD_monitor(filename="psd0", xwidth=1e-2, yheight=1e-2, nx=200, ny=200)
+AT(0,0,1e-3) RELATIVE PREVIOUS
+
+COMPONENT mirror_stage = Arm() // at distance L
+AT(0,0,L) RELATIVE Origin
+ROTATED (gamma, 0, 0) RELATIVE Origin
+
+// -----------------------------------------------------------------------------
+
+COMPONENT mt0_flat = Mirror(            // default in XZ
+   xwidth=5e-2, zdepth=2e-1, R0=1, coating="")
+WHEN (index==0) 
+AT(0,0,0) RELATIVE mirror_stage
+ROTATED (0, 0, 0) RELATIVE mirror_stage
+
+COMPONENT mt1_ellip = Mirror_elliptic(  // default in XZ
+   xwidth=5e-2, zdepth=2e-1, R0=1, radius=radius, coating="")
+WHEN (index==1) 
+AT(0,0,0) RELATIVE mirror_stage
+ROTATED (0, 0, 0) RELATIVE mirror_stage
+
+COMPONENT mt2_parab = Mirror_parabolic(  // default in XZ
+   xwidth=5e-2, zdepth=2e-1, R0=1, radius=radius)
+WHEN (index==2) 
+AT(0,0,0) RELATIVE mirror_stage
+ROTATED (0, 0, 0) RELATIVE mirror_stage
+
+COMPONENT mt3_curved = Mirror_curved(   // default in YZ: WARNING: need 90 deg rotation
+   yheight=5e-2, zdepth=2e-1, R0=1, radius=radius, coating="")
+WHEN (index==3) 
+AT(0,0,0) RELATIVE mirror_stage
+ROTATED (0, 0, 90) RELATIVE mirror_stage
+
+COMPONENT mt4_toroid = Mirror_toroid(   // default in XZ
+   radius=0.1, radius_o=radius, xwidth=5e-2, zdepth=2e-1,R0=1, coating="")
+WHEN (index==4) 
+AT(0,0,0) RELATIVE mirror_stage
+ROTATED (0, 0, 180) RELATIVE mirror_stage
+
+COMPONENT mt5_toroid_pot = Mirror_toroid_pothole( // default in XZ
+   radius=0.1, radius_o=radius, xwidth=5e-2, zdepth=2e-1,R0=1, coating="")
+WHEN (index==5) 
+AT(0,0,0) RELATIVE mirror_stage
+ROTATED (0, 0, 180) RELATIVE mirror_stage
+
+COMPONENT mt6_multilayer = Multilayer_elliptic( // default in XZ
+    coating = "Ref_W_B4C.txt", theta = gamma,
+    s1 = L, s2 = L, length = 0.2, width = 0.05, R0 = 1,
+    Emin=E0-1, Emax=E0+1, Estep=0.05)
+WHEN (index==6) 
+AT(0,0,0) RELATIVE mirror_stage
+ROTATED (0, 0, 0) RELATIVE mirror_stage
+
+// -----------------------------------------------------------------------------
+
+COMPONENT mirror_out = Arm()
+AT(0,0,0) RELATIVE mirror_stage
+ROTATED (gamma,0,0) RELATIVE mirror_stage
+
+COMPONENT psd1 = PSD_monitor(xwidth=0.1, yheight=0.1, filename="psd1", nx=200, ny=200)
+AT(0,0,L) RELATIVE mirror_out
+
+COMPONENT psd2 = COPY(psd1)(filename="psd2")
+AT(0,0,1) RELATIVE PREVIOUS
+
+COMPONENT psd3 = COPY(psd1)(filename="psd3")
+AT(0,0,1) RELATIVE PREVIOUS
+
+END
+

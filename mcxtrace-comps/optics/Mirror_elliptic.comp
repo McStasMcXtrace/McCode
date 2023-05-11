@@ -17,24 +17,25 @@
 * Idealized elliptic mirror.
 * 
 * %D
-* Takes a reflectivity (default=1) as input and reflects rays in a ideal geometry
+* Takes a reflectivity as input and reflects rays in a ideal geometry
 * elliptic mirror.
 * The mirror is positioned such that the a-axis of the mirror ellipsoid is on the
 * x-axis, the b-axis is along the y-axis and the c is along the z-axis.
-* The reference point of the mirror is the ellipsoid centre, offset by one half-axis along the y-axis.
-* (See the component manual for a drawing). 
-* This means that to position the mirror correctly.
+* The reference point of the mirror is the ellipsoid centre, offset by one 
+* half-axis along the y-axis (See the component manual for a drawing). 
+* This means that to position the mirror correctly,
 * the user positions the ellipsoid governing the mirror shape, not the mirror itself.
 * 
 * %P
 * INPUT PARAMETERS
-* x_a:     [m]    1st short half axis (along x). Commonly set to zero, which really implies infinite value, so crystal is an elliptic cylinder.
-* y_b:     [m]    2nd short half axis (along y), which is also the presumed near-normal direction, reflection near the y-z plane.
-* z_c:     [m]    long  half axis (along z). Commonly a=0. b=c, which creates a circular cylindrical surface.
-* width:   [m]    x width of the crystal.
-* length:  [m]    z depth (length) of the crystal.
-* R0: [1]         Reflectivity of mirror.
+* x_a:     [m]   1st short half axis (along x). Commonly set to zero, which really implies infinite value, so crystal is an elliptic cylinder.
+* y_b:     [m]   2nd short half axis (along y), which is also the presumed near-normal direction, reflection near the y-z plane.
+* z_c:     [m]   long  half axis (along z). Commonly a=0. b=c, which creates a circular cylindrical surface.
+* xwidth:  [m]   Width of the mirror along X.
+* zdepth:  [m]   Depth (length) of the mirror along Z.
 * coating: [str] Datafile containing either mirror material constants or reflectivity  numbers.
+* R0:      [1]   Reflectivity of mirror (mostly relevant for debugging, when coating="")
+* radius:  [m]   Spherical radius, Sets x_a=y_b=z_c=radius
 *
 * %E
 *******************************************************************************/
@@ -42,8 +43,9 @@
 DEFINE COMPONENT Mirror_elliptic
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (x_a=0, y_b=1.0, z_c=1.0, 
-        length=0.05, width=0.02,   
-        R0=1,string coating="")
+        zdepth=0.2,  xwidth=0.2,  
+        R0=1,string coating="Be.txt",
+        length=0,    width=0, radius=0)
 OUTPUT PARAMETERS (a2inv,b2inv,c2inv)
 DEPENDENCY "-std=c99"
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
@@ -67,6 +69,8 @@ DECLARE
 INITIALIZE
 %{
   int status;
+  
+  if (radius) x_a=y_b=z_c=radius;
 
   if (coating && strlen(coating)) {
     status=reflec_Init(&re,COATING_UNDEFINED,coating,NULL);
@@ -75,13 +79,17 @@ INITIALIZE
     status=reflec_Init(&re,CONSTANT,NULL, &(R0));
   }
 
-    a2inv=(x_a)?1/(x_a*x_a):0; /* 0 really means infinity for x direction */
-    b2inv=(y_b)?1/(y_b*y_b):0;
-    c2inv=(z_c)?1/(z_c*z_c):0;
+  a2inv=(x_a)?1/(x_a*x_a):0; /* 0 really means infinity for x direction */
+  b2inv=(y_b)?1/(y_b*y_b):0;
+  c2inv=(z_c)?1/(z_c*z_c):0;
 
-    printf("Component %s: initialized\n",NAME_CURRENT_COMP);
+  printf("Component %s: initialized\n",NAME_CURRENT_COMP);
 
-    fflush(NULL); // put diagnostics in order!
+  fflush(NULL); // put diagnostics in order!
+  
+  // compatibility with older use
+  if (zdepth)  length=zdepth;
+  if (xwidth)  width =xwidth;
 %}
 
 TRACE
@@ -168,10 +176,6 @@ MCDISPLAY
 %{
   int i,j,N=12;
   double t,xx,yy,zz,xx0,yy0,zz0;
-  double xwidth;
-  double zdepth;
-  zdepth=length;
-  xwidth=width;  
   double a2,b2,c2; 
   a2=1.0/a2inv;
   b2=1.0/b2inv;

@@ -157,7 +157,7 @@ COMPONENT M2 = Mirror_toroid_pothole(
     zdepth = 0.19,
     radius = 2.56, 
     radius_o = 21.04,
-    reflec="Si_disco.dat")
+    coating="Si_disco.dat")
 AT (0,0,0) RELATIVE PREVIOUS
 ROTATED (0, 0, 0) RELATIVE PREVIOUS
 EXTEND
@@ -322,7 +322,7 @@ COMPONENT M53 = Mirror_toroid_pothole(
     zdepth = 130e-3,
     radius = 0.714,
     radius_o=4.75,
-    reflec="AlMgF2_disco.dat")
+    coating="AlMgF2_disco.dat")
 AT (0,0,0) RELATIVE PREVIOUS
 ROTATED (-22.5, 0, 0) RELATIVE PREVIOUS
 EXTEND
@@ -348,7 +348,7 @@ COMPONENT M54 = Mirror_toroid_pothole(
     zdepth = 110e-3,
     radius = 1.12,
     radius_o=7.8,
-    reflec="AlMgF2_disco.dat")    
+    coating="AlMgF2_disco.dat")    
 AT (0,0,0) RELATIVE PREVIOUS
 ROTATED (-22.5, 0, 0) RELATIVE PREVIOUS
 EXTEND

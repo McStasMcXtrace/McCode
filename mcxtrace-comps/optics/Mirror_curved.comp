@@ -5,24 +5,28 @@
 * Date: September 25th, 2009
 * Origin: Risoe
 *
-* A curved mirror
+* A cylindrically curved mirror (in YZ)
 *
 * %D
-* mirror is in the yz-plane curved towards positive x if radius is positive
+* mirror is in the YZ-plane curved towards positive X if radius is positive
 * 
 * %P
 * radius: [m]   Radius of curvature, along Z.
-* length: [m]   Length of the unbent mirror along Z.
-* coating: []   Name of file containing the material data (i.e. f1 and f2) for the coating
-* width:  [m]   Width of the mirror along Y.
-* R0:     [ ]   Constant reflectivity value (mostly relevant for debugging).
+* yheight:[m]   Width of the mirror along Y.
+* zdepth: [m]   Length of the unbent mirror along Z.
+* coating:[str] Name of file containing the material data (i.e. f1 and f2) for the coating
+* R0:     [1]   Constant reflectivity value (mostly relevant for debugging, when coating="").
+* width:  [m]   Width of the mirror along Y = yheight
+* length: [m]   Length of the unbent mirror along Z = zdepth
 *
 * %E
 ***********************************************************************/
 
 DEFINE COMPONENT Mirror_curved
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius=1, length=0.2, width=0.2, R0=1, string coating="Be.txt")
+SETTING PARAMETERS (radius=1, R0=1, string coating="Be.txt",
+  zdepth=0.2, yheight=0.2, 
+  length=0, width=0)
 OUTPUT PARAMETERS()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -33,15 +37,12 @@ SHARE
   %include "reflectivity-lib"
 %}
 
-
-
 DECLARE
 %{
   int Z;
   double At;
   double rho;
   t_Table T;
-  int constant_R;
   t_Reflec re;
 %}
 
@@ -51,13 +52,14 @@ INITIALIZE
 
   if (coating && strlen(coating)) {
     status=reflec_Init(&re,COATING_UNDEFINED,coating,NULL);
-    constant_R=0;
   }else{
     /*assume a constant reflectivity*/
     status=reflec_Init(&re,CONSTANT,NULL, &(R0));
-    constant_R=1;
   }
   if (!radius) radius=1e6;
+  // compatibility with older use
+  if (length) zdepth =length;
+  if (width)  yheight=width;
 %}
 
 TRACE
@@ -76,7 +78,7 @@ TRACE
     }else if(l1<0 && l0>0){
       dl=l0;
     }else if( l0>0 && l1>0){
-      if (fabs(z+knz*l0) <length/2.0  && fabs(x+knx*l0)<fabs(radius)) {
+      if (fabs(z+knz*l0) <zdepth/2.0  && fabs(x+knx*l0)<fabs(radius)) {
       /*this means that the first positive match is on the mirror z-wise
         - this should be picked. This would work even if mirror is hit from behind*/
         dl=l0;
@@ -93,7 +95,7 @@ TRACE
 
     PROP_DL(dl);
     alpha=asin(z/radius);
-    if ( (length<radius*alpha) || (fabs(y)>width/2.0)) {
+    if ( (zdepth<radius*alpha) || (fabs(y)>yheight/2.0)) {
       RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
     }else{
       SCATTER;
@@ -130,15 +132,15 @@ MCDISPLAY
   double x0,y0,z0,x1,y1,z1,alpha;
   int N=20;
 
-  y0=width/2.0;
+  y0=yheight/2.0;
   y1=-y0;
 
-  alpha=-(length/2.0)/fabs(radius);
+  alpha=-(zdepth/2.0)/fabs(radius);
   x0=radius*(1-cos(alpha));
   z0=radius*sin(alpha);
   line(x0,y0,z0,x0,y1,z0);
-  while (alpha<(length/2.0/fabs(radius))){
-    alpha+=length/N/fabs(radius);
+  while (alpha<(zdepth/2.0/fabs(radius))){
+    alpha+=zdepth/N/fabs(radius);
     x1=radius*(1-cos(alpha));
     z1=radius*sin(alpha);
     line(x0,y0,z0,x1,y0,z1);

@@ -19,7 +19,7 @@
 * 
 * %D
 * Models a Montel optic, or Twin Kirkpatrick Baez mirror optic (hence the component name).
-* The mirror are cfully abutting, i.e. there's is no gap between them, and perfectly elliptic.
+* The mirror are fully abutting, i.e. there's is no gap between them, and perfectly elliptic.
 *
 * Reads reflectivity values from a data input file for a W/B4C multilayer.
 * The multilayer code reflects ray in an ideal geometry, the reflectivity datafile accounts for surface roughness, sigma.

@@ -186,7 +186,7 @@ COMPONENT mirror_arm = Arm()
 AT (0,0,mirror_center_distance+mirror_focal_error) RELATIVE Origin
 ROTATED (0,0,90) RELATIVE Origin
 
-COMPONENT mirror = Mirror_parabolic(R=1, a=mirror_a, b=0,
+COMPONENT mirror = Mirror_parabolic(R0=1, a=mirror_a, b=0,
     xwidth=0.02, yheight=0, zdepth=mirror_length) WHEN use_mirror!=0
 AT (0,0,0) RELATIVE mirror_arm
 ROTATED (-mirror_rotation_angle,0,0) RELATIVE mirror_arm

@@ -613,7 +613,7 @@ INITIALIZE
   line_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
     #ifndef USE_OFF
-    fprintf(stderr,"Error: You are attempting to use an OFF geometry without -DUSE_OFF. You will need to recompile with that define set!\n");
+    fprintf(stderr,"PowderN: %s: Error: You are attempting to use an OFF geometry without -DUSE_OFF. You will need to recompile with that define set!\n", NAME_CURRENT_COMP);
     exit(-1);
     #else
     if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
@@ -632,14 +632,14 @@ INITIALIZE
     if (radius && (radius < fabs(thickness))) {
       MPI_MASTER(
       printf("PowderN: %s: hollow sample thickness is larger than its volume (sphere/cylinder).\n"
-                     "WARNING  Please check parameter values. Using bulk sample (thickness=0).\n", NAME_CURRENT_COMP);
+             "WARNING  Please check parameter values. Using bulk sample (thickness=0).\n", NAME_CURRENT_COMP);
       );
       thickness=0;
     }
     else if (!radius && (xwidth < 2*fabs(thickness) || yheight < 2*fabs(thickness) || zdepth < 2*fabs(thickness))) {
       MPI_MASTER(
       printf("PowderN: %s: hollow sample thickness is larger than its volume (box).\n"
-                     "WARNING  Please check parameter values.\n", NAME_CURRENT_COMP);
+             "WARNING  Please check parameter values.\n", NAME_CURRENT_COMP);
       );
     }
   }
@@ -681,15 +681,15 @@ INITIALIZE
   }
 
   if (!p_interact){
-    fprintf(stderr,"WARNING(%s): p_interact=0, adjusting to 0.01, to avoid algorithm instability\n",NAME_CURRENT_COMP);
+    fprintf(stderr,"PowderN: %s: WARNING: p_interact=0, adjusting to 0.01, to avoid algorithm instability\n",NAME_CURRENT_COMP);
     p_interact=1e-2;
   }
   if (!p_inc){
-    fprintf(stderr,"WARNING(%s): p_inc=0, adjusting to 0.01, to avoid algorithm instability\n",NAME_CURRENT_COMP);
+    fprintf(stderr,"PowderN: %s: WARNING: p_inc=0, adjusting to 0.01, to avoid algorithm instability\n",NAME_CURRENT_COMP);
     p_inc     =1e-2;
   }
   if (!p_transmit){
-    fprintf(stderr,"WARNING(%s): p_transmit=0, adjusting to 0.01, to avoid algorithm instability\n",NAME_CURRENT_COMP);
+    fprintf(stderr,"PowderN: %s: WARNING: p_transmit=0, adjusting to 0.01, to avoid algorithm instability\n",NAME_CURRENT_COMP);
     p_transmit=1e-2;
   }
   double p_sum=p_interact+p_inc+p_transmit;

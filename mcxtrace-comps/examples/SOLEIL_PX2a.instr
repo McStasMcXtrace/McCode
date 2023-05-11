@@ -126,7 +126,7 @@ AT (0,0,0) RELATIVE hpm_location
 ROTATED (0,0,90) RELATIVE hpm_location
 
 COMPONENT hpm = Mirror_toroid(
-  reflec   = "Ir.dat", //This needs to be Rh.dat, will need to generate the file with xraydb
+  coating   = "Ir.dat", //This needs to be Rh.dat, will need to generate the file with xraydb
   zdepth   = 150e-3,
   xwidth   = 15e-3,
   radius   = 495,
