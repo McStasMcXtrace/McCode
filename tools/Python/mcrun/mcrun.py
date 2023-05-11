@@ -283,6 +283,9 @@ def add_mcstas_options(parser):
         action='store_true', default=False,
         help='Detailed instrument information')
 
+    add('--list-parameters', action='store_true', default=False,
+        help='Print the instrument parameters to standard out')
+
     parser.add_option_group(opt)
 
 
@@ -449,7 +452,7 @@ def main():
     # Indicate end of setup / start of computations
     LOG.info('===')
 
-    if options.info:
+    if options.info or options.list_parameters:
         mcstas.run(override_mpi=False)
         exit()
 
@@ -530,6 +533,7 @@ def main():
 
 if __name__ == '__main__':
     try:
+
         mccode_config.load_config("user")
         mccode_config.check_env_vars()
         

@@ -3948,6 +3948,7 @@ mchelp(char *pgmname)
 "  --no-output-files          Do not write any data files.\n"
 "  -h        --help           Show this help message.\n"
 "  -i        --info           Detailed instrument information.\n"
+"  --list-parameters          Print the instrument parameters to standard out\n"
 "  --source                   Show the instrument code which was compiled.\n"
 #ifdef OPENACC
 "\n"
@@ -4196,7 +4197,7 @@ mcparseoptions(int argc, char *argv[])
     }
     else if(!strcmp("--info", argv[i]))
       mcinfo();
-    else if (!strcmp("-p", argv[i]) || !strcmp("--params", argv[i]))
+    else if (!strcmp("--list-parameters", argv[i]))
       mcparameterinfo();
     else if(!strcmp("-t", argv[i]))
       mcenabletrace();
