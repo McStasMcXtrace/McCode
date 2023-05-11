@@ -84,11 +84,11 @@ INITIALIZE
     
     double arg=12398.42*sqrt(3)/(2*5.4309*Emono*1e3);
     if (fabs(arg) > 1)
-      exit(printf("%s: ERROR: Monochromator can not reach this energy.\n", NAME_INSTRUMENT));
+      exit(printf("%s: ERROR: Monochromator can not reach this energy.\n", NAME_CURRENT_COMP));
     calculated_angle = RAD2DEG*asin(arg);
     
     printf("%s: Monochromator energy=%g [keV], angle=%g [deg]\n", 
-      NAME_INSTRUMENT, Emono, calculated_angle);
+      NAME_CURRENT_COMP, Emono, calculated_angle);
 %}
 
 TRACE
