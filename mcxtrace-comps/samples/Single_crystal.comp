@@ -1165,19 +1165,27 @@ TRACE
 
       /* in case we use 'SPLIT' then consecutive photons can be identical when entering here
          and we may skip the hkl_search call */
-/*      if ( fabs(kix - hkl_info.kix) < 1e-6
+#ifndef OPENACC
+      if (order==1 && fabs(kix - hkl_info.kix) < 1e-6
         && fabs(kiy - hkl_info.kiy) < 1e-6
         && fabs(kiz - hkl_info.kiz) < 1e-6) {
         hkl_info.nb_reuses++;
+        
+        /* Restore in case of matching event (e.g. SPLIT) */
+        coh_refl = hkl_info.coh_refl;
+        coh_xsect = hkl_info.coh_xsect;
+        tau_count = hkl_info.tau_count;
       } else {
-*/        /* Max possible tau for this ki with 5*sigma delta-d/d cutoff. */
+#endif
+        /* Max possible tau for this ki with 5*sigma delta-d/d cutoff. */
         double tau_max   = 2*ki/(1 - 5*hkl_info.m_delta_d_d);
         double coh_xsect = 0, coh_refl = 0;
   
-      /*call hkl search*/
-          tau_count = hkl_search(L, T, hkl_info.count, hkl_info.V0,
+        /*call hkl search*/
+        tau_count = hkl_search(L, T, hkl_info.count, hkl_info.V0,
               kix, kiy, kiz, tau_max,
               &coh_refl, &coh_xsect);
+
         /* store ki so that we can check for further SPLIT iterations */
 #ifndef OPENACC
         if (tau_count>hkl_info.max_tau_count){
@@ -1187,15 +1195,14 @@ TRACE
           hkl_info.kix = kix;
           hkl_info.kiy = kiy;
           hkl_info.kiz = kiz;
+        
+          hkl_info.coh_refl  = coh_refl;
+          hkl_info.coh_xsect = coh_xsect;
+          hkl_info.nb_refl += tau_count;
+          hkl_info.nb_refl_count++;
         }
-
-        hkl_info.coh_refl  = coh_refl;
-        hkl_info.coh_xsect = coh_xsect;
-        hkl_info.nb_refl += tau_count;
-        hkl_info.nb_refl_count++;
+      }
 #endif
-/*      }
-*/
       /* (3). Probabilities of the different possible interactions. */
       tot_xsect = abs_xsect + inc_xsect + coh_xsect;
       /* Cross-sections are in barns = 10**-28 m**2, and unit cell volumes are
