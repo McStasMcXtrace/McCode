@@ -1304,7 +1304,8 @@ TRACE
         kfy *= adjust;
         kfz *= adjust;
         /* Adjust photon weight (see manual for explanation). */
-        p *= T[j].xsect*coh_refl/(coh_xsect*T[j].refl);
+        double pmul = T[j].xsect*coh_refl/(coh_xsect*T[j].refl);
+        if (!isnan(pmul)) p *= pmul;
         kx = L[i].u1x*kfx + L[i].u2x*kfy + L[i].u3x*kfz;
         ky = L[i].u1y*kfx + L[i].u2y*kfy + L[i].u3y*kfz;
         kz = L[i].u1z*kfx + L[i].u2z*kfy + L[i].u3z*kfz;
