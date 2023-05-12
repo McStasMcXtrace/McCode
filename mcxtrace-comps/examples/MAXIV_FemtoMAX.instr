@@ -184,7 +184,7 @@ AT(0,0,0.6) RELATIVE PREVIOUS
 
 
 COMPONENT multilayer_mono = Multilayer_elliptic(
-    reflectivity_datafile = "Ref_W_Si.txt",
+    coating = "Ref_W_Si.txt",
     theta = gamma_mlmono, s1 = Ls_ml, s2 = Ld_ml, length = 0.4,
     width = 0.2, Emin=7, Estep=0.05, Emax=10)
 WHEN (MLMONO) AT (0, 0, 0.4) RELATIVE PREVIOUS

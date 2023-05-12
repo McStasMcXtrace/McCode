@@ -215,7 +215,7 @@ AT (0, 0, 11.6905-10.15) RELATIVE PREVIOUS
 /* -------------------------------------------------- M2a mirror */
 COMPONENT mirror_m2a = Mirror(
     xwidth=47e-3,
-    zdepth=1100e-3,reflectivity=reflec_material_M2A_M2B)
+    zdepth=1100e-3,coating=reflec_material_M2A_M2B)
 AT (0, 0, (16.82-11.6905)) RELATIVE PREVIOUS	
 ROTATED (-angle_m2a_m2b*RAD2DEG/2, 0, 0) RELATIVE PREVIOUS
 EXTEND

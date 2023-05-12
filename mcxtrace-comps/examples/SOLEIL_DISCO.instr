@@ -214,7 +214,7 @@ AT (0,0,0.2) RELATIVE PREVIOUS
 COMPONENT M4 = Mirror(
     xwidth=30e-3,
     zdepth=240e-3,
-    reflectivity="Si_disco.dat")
+    coating="Si_disco.dat")
 AT (0, 0, 0) RELATIVE PREVIOUS	
 ROTATED ( -22.5, 0, 0) RELATIVE PREVIOUS
 EXTEND
