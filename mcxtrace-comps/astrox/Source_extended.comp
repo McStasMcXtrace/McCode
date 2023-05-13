@@ -32,9 +32,7 @@
 * yheight [m]   Height of rectangle in (x,y,0) plane where x-rays
 *               are generated.
 * xwidth  [m]   Width of rectangle in (x,y,0) plane where x-rays
-*               are generated. Overrides xmin and xmax.
-* xmax    [m]   upper bound of x-interval where photons are generated.
-* xmin    [m]   Lower bound of x-interval where photons are generated.
+*               are generated.
 * E0:     [keV] Mean energy of xrays.
 * dE:     [keV] Energy half spread of x-rays (flat or gaussian sigma).
 * lambda0:[AA]  Mean wavelength of x-rays.

@@ -24,7 +24,7 @@
 * Caveat emptor II: for correct modelling of phase-interference phenomena, detectors used after the ZonePlate 
 * should be of the <strong>"PSD_monitor_coh"</strong> type.
 *
-* The zone plate can be iether circular or linear. In the linear case, the "slits" are
+* The zone plate can be either circular or linear. In the linear case, the "slits" are
 * along the x-axis.
 *
 * %P
