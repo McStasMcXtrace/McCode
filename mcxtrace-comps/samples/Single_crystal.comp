@@ -57,7 +57,12 @@
 *     mosaic_AB = {mos_a, mos_b, a_h, a_k, a_l, b_h, b_k, b_l}, a set of 
 *     microscopic mosaicities as in b) are estimated (internally) and applied.
 *     (Also known as "phenomenological mosaicity".)
-*     
+* 
+* <b>Powder-mode</b>
+* When this mode is used (powder=1), a randomised transformation
+* of the particle direction is made before and after scattering, thereby letting 
+* the single crystal behave as a crystallite of a powder (crystallite
+* orientation fully randomised).    
 * 
 * <b>Sample shape:</b>
 * Sample shape may be a cylinder, a sphere, a box or any other shape
@@ -150,6 +155,8 @@
 * cz: []            c on z-axis
 * reflections: [str] File name containing structure factors of reflections. Use empty ("") or "NULL" for incoherent scattering only
 * order: [1]        Limit multiple scattering up to given order (0: all, 1: first, 2: second, ...)
+* powder: [1]        Flag to indicate powder mode, for simulation of Debye-Scherrer cones via random crystallite orientation. A powder texture can be approximated with 0<powder<1
+
 *
 * Optional input parameters
 *
@@ -244,7 +251,7 @@ ax = 0, ay = 0, az = 0,
 bx = 0, by = 0, bz = 0,
 cx = 0, cy = 0, cz = 0,
 p_transmit = -1, sigma_abs = 0, sigma_inc = 0,
-aa=0, bb=0, cc=0, order=0)
+aa=0, bb=0, cc=0, order=0, powder=0)
 OUTPUT PARAMETERS()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 SHARE
@@ -881,6 +888,24 @@ int hkl_search(struct hkl_data *L, void *TT, int count, double V0,
       }
       return j;
     }
+    
+  /* Functions for "reorientation", powder mode */
+    /* Powder, forward */
+#pragma acc routine
+  void randrotate(double *nx, double *ny, double *nz, double a, double b, double c) {
+      double x1, y1, z1, x2, y2, z2;
+      rotate(x1, y1, z1, *nx,*ny,*nz, a, 1, 0, 0); /* <1> = rot(<n>,a) */
+      rotate(x2, y2, z2,  x1, y1, z1, b, 0, 1, 0); /* <2> = rot(<1>,b) */
+      rotate(*nx,*ny,*nz, x2, y2, z2, c, 0, 0, 1); /* <n> = rot(<2>,c) */
+  }
+  /* Powder, back */
+#pragma acc routine
+  void randderotate(double *nx, double *ny, double *nz, double a, double b, double c) {
+      double x1, y1, z1, x2, y2, z2;
+      rotate(x1, y1, z1, *nx,*ny,*nz, -c, 0,0,1);
+      rotate(x2, y2, z2,  x1, y1, z1, -b, 0,1,0);
+      rotate(*nx,*ny,*nz, x2, y2, z2, -a, 1,0,0);
+  }
 
   int sx_read_abs_data(char *ABS_file, struct sx_abs_data *abs){
     int status;
@@ -1022,10 +1047,27 @@ INITIALIZE
   //if (!sx_read_abs_data(material,&abs_info)){
   //  fprintf(stderr,"Single_crystal: %s Cannot read absorption data from file %s - will proceed without absorption.\n",NAME_CURRENT_COMP,material);
  // }
-
+ 
+  if (powder && !(order==1)) {
+    fprintf(stderr,"Single_crystal: %s: powder mode means implicit choice of no multiple scattering!\n"
+            "WARNING setting order=1\n", NAME_CURRENT_COMP);
+    order=1;
+  }
+  
+  MPI_MASTER(
   printf("Single_crystal: %s: Vc=%g [Angs] sigma_abs= (mu/rho)*%g [barn] sigma_inc=%g [barn] reflections=%s\n",
       NAME_CURRENT_COMP, hkl_info.V0, hkl_info.sigma_a, hkl_info.sigma_i, reflections && strlen(reflections) ? reflections : "NULL");
-
+  
+  printf("Direct space lattice orientation:\n");
+  printf("  a = [%g %g %g]\n", hkl_info.m_ax, hkl_info.m_ay, hkl_info.m_az);
+  printf("  b = [%g %g %g]\n", hkl_info.m_bx, hkl_info.m_by, hkl_info.m_bz);
+  printf("  c = [%g %g %g]\n", hkl_info.m_cx, hkl_info.m_cy, hkl_info.m_cz);
+  printf("Reciprocal space lattice orientation:\n");
+  printf("  a* = [%g %g %g]\n", hkl_info.asx, hkl_info.asy, hkl_info.asz);
+  printf("  b* = [%g %g %g]\n", hkl_info.bsx, hkl_info.bsy, hkl_info.bsz);
+  printf("  c* = [%g %g %g]\n", hkl_info.csx, hkl_info.csy, hkl_info.csz);
+  ); // MPI_MASTER
+  
 %}
 
 TRACE
@@ -1128,6 +1170,8 @@ TRACE
 #endif
 
     do {  /* Loop over multiple scattering events */
+      /* Angles for powder randomization */
+      double Alpha, Beta, Gamma;
     
       if (hkl_info.shape == 0)
         intersect = cylinder_intersect(&l1, &l2, x, y, z, kx, ky, kz, radius, yheight);
@@ -1156,6 +1200,12 @@ TRACE
       l_full = l2;
 
       /* (1). Copy incoming wave vector ki */
+      if (powder) { /* powder mode: orientation of crystallite is random */
+        Alpha = randpm1()*PI*powder;
+        Beta  = randpm1()*PI/2;
+        Gamma = randpm1()*PI;
+        randrotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
+      }
       
       kix = kx;
       kiy = ky;
@@ -1229,15 +1279,21 @@ TRACE
       {
         p *= p_trans/mc_trans;
         intersect=0;
-	break;
+        if (powder) { /* orientation of crystallite is no longer random */
+          randderotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
+        }
+        break;
       }
       if(tot_xlen <= 0){
         ABSORB;
       }
       if(mc_interact <= 0)        /* Protect against rounding errors */
         { intersect=0;
-	  break;
-	}
+          if (powder) { /* orientation of crystallite is no longer random */
+            randderotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
+          }
+          break;
+        }
 
       if (!event_counter) p =  p * fabs(1 - p_trans)/mc_interact;
       /* Select a point at which to scatter the x-ray, taking
@@ -1318,6 +1374,9 @@ TRACE
 
       }
       SCATTER;
+      if (powder) { /* orientation of crystallite is no longer random */
+        randderotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
+      }
       /* exit if multiple scattering order has been reached */
       if (order && event_counter >= order) { intersect=0; break; }
       /* Repeat loop for next scattering event. */
