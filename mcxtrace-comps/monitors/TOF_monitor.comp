@@ -21,12 +21,8 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width of detector. Overrides xmin,xmax. (m)
-* yheight:  Height of detector. Overrides ymin,ymax. (m)
+* xwidth:   Width of detector. (m)
+* yheight:  Height of detector. (m)
 * nt:       Number of time bins (1)
 * dt:       Length of each time bin (mu-s)
 * tmin:     Lower time limit (mu-s)
@@ -45,8 +41,8 @@
 
 DEFINE COMPONENT TOF_monitor
 DEFINITION PARAMETERS (nt=20)
-SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
-    xwidth=0, yheight=0, tmin=0, tmax=0, dt=1.0, restore_xray=0)
+SETTING PARAMETERS (string filename=0, 
+    xwidth=0.1, yheight=0.1, tmin=0, tmax=0, dt=1.0, restore_xray=0)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2, t_min, t_max, delta_t)
 
 DECLARE
@@ -57,13 +53,14 @@ DECLARE
     double t_min;
     double t_max;
     double delta_t;
+    double xmin,xmax,ymin,ymax;
   %}
 INITIALIZE
   %{
     int i;
 
-    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
-    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+    xmax = xwidth/2;  xmin = -xmax;
+    ymax = yheight/2; ymin = -ymax;
 
     if ((xmin >= xmax) || (ymin >= ymax)) {
             printf("TOF_monitor: %s: Null detection area !\n"

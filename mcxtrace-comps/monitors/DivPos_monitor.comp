@@ -22,17 +22,13 @@
 * eg. to investigate beam profiles in neutron guides.
 *
 * Example: DivPos_monitor(nh=20, ndiv=20, filename="Output.dip",
-*           xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, maxdiv_h=2)
+*           xwidth=0.1, yheight=0.1, maxdiv_h=2)
 *
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width of detector. Overrides xmin,xmax. (m)
-* yheight:  Height of detector. Overrides ymin,ymax. (m)
+* xwidth:   Width of detector. (m)
+* yheight:  Height of detector. (m)
 * nh:       Number of bins in position (1)
 * ndiv:     Number of bins in divergence (1)
 * nx:       (1)
@@ -54,8 +50,8 @@
 
 DEFINE COMPONENT DivPos_monitor
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (int nh=20 , int ndiv=20, string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
-  xwidth=0, yheight=0, maxdiv_h=2, restore_xray=0, nx=0, ny=0, nz=1, int nowritefile=0)
+SETTING PARAMETERS (int nh=20 , int ndiv=20, string filename=0, 
+  xwidth=0.1, yheight=0.1, maxdiv_h=2, restore_xray=0, nx=0, ny=0, nz=1, int nowritefile=0)
 OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
 /* X-ray  parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -64,14 +60,15 @@ DECLARE
   DArray2d Div_N;
   DArray2d Div_p;
   DArray2d Div_p2;
+  double xmin,xmax,ymin,ymax;
 %}
 
 INITIALIZE
 %{
     int i,j;
 
-    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
-    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+    xmax = xwidth/2;  xmin = -xmax;
+    ymax = yheight/2; ymin = -ymax;
 
     if ((xmin >= xmax) || (ymin >= ymax)) {
             printf("DivPos_monitor: %s: Null detection area !\n"

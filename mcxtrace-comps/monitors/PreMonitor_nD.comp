@@ -33,8 +33,7 @@
 * ...some optics....
 *
 * MyMonitor = Monitor_nD(
-*   xmin = -0.1, xmax = 0.1,
-*   ymin = -0.1, ymax = 0.1,
+*   xwidth = 0.1, yheight = 0.1,
 *   options = "hdiv x, auto, use premonitor");
 *
 * %Parameters

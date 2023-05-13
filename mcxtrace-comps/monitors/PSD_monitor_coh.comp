@@ -25,18 +25,14 @@
 * If the centering flag is set - the monitor will treat all rays as if they hit a pixel
 * center. This behaves as if ratio -> 0, but at no cost in statistics.
 *
-* Example: PSD_monitor_coh(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
+* Example: PSD_monitor_coh(xwidth=0.1, yheight=0.1,
 *            nx=90, ny=90, filename="Output.psd")
 *
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:         [m] Lower x bound of detector opening.
-* xmax:         [m] Upper x bound of detector opening.
-* ymin:         [m] Lower y bound of detector opening.
-* ymax:         [m] Upper y bound of detector opening.
-* xwidth:       [m] Width of detector. Overrides xmin,xmax.
-* yheight:      [m] Height of detector. Overrides ymin,ymax.
+* xwidth:       [m] Width of detector. 
+* yheight:      [m] Height of detector.
 * nx:           [ ] Number of pixel columns.
 * ny:           [ ] Number of pixel rows.
 * filename:     [m] Name of file in which to store the detector images - the suffixes .abs and .arg will be added.
@@ -56,7 +52,8 @@
 
 DEFINE COMPONENT PSD_monitor_coh
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (int nx=90, int ny=90, string filename=0, restore_xray=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, ratio=1, int centering=1, int nowritefile=0)
+SETTING PARAMETERS (int nx=90, int ny=90, string filename=0, restore_xray=0, 
+  xwidth=0.05, yheight=0.05, ratio=1, int centering=1, int nowritefile=0)
 OUTPUT PARAMETERS ()
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)*/
 SHARE
@@ -70,14 +67,15 @@ DECLARE
     DArray2d PSD_p2;
     DArray2d PSD_phi_real;
     DArray2d PSD_phi_imag;
+    double xmin,xmax,ymin,ymax;
 %}
 
 INITIALIZE
   %{
     int i,j;
 
-    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
-    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+    xmax = xwidth/2;  xmin = -xmax;
+    ymax = yheight/2; ymin = -ymax;
 
     if ((xmin >= xmax) || (ymin >= ymax)) {
       fprintf(stderr,"ERROR (%s): Null detection area! Aborting.\n",NAME_CURRENT_COMP);

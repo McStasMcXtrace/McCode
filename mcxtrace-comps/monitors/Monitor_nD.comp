@@ -188,12 +188,6 @@
 * options: [str]  String that specifies the configuration of the monitor. The general syntax is "[x] options..." (see <b>Descr.</b>).
 *
 * Optional input parameters (override xwidth yheight zdepth):
-* xmin:   [m]    Lower x bound of opening
-* xmax:   [m]    Upper x bound of opening
-* ymin:   [m]    Lower y bound of opening
-* ymax:   [m]    Upper y bound of opening
-* zmin:   [m]    Lower z bound of opening
-* zmax:   [m]    Upper z bound of opening
 * filename: [str] Output file name (overrides file=XX option).
 * bins:   [1]    Number of bins to force for all variables. Use 'bins' keyword in 'options' for heterogeneous bins
 * min:    [u]    Minimum range value to force for all variables. Use 'min' or 'limits' keyword in 'options' for other limits
@@ -223,7 +217,6 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (
   string user1="", string user2="", string user3="",
   xwidth=0, yheight=0, zdepth=0,
-  xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0,
   bins=0, min=-1e40, max=1e40, restore_xray=0, radius=0,
   string options="NULL", string filename="NULL",string geometry="NULL", int nowritefile=0,
   string username1="NULL", string username2="NULL", string username3="NULL"
@@ -347,11 +340,11 @@ INITIALIZE
     }
     #endif
   }
-  if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax &&
+  if (!radius && !xwidth && !yheight && !zdepth &&
     !strstr(Vars.option, "previous") && (!geometry || !strlen(geometry)))
     exit(printf("Monitor_nD: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth, previous, geometry).\n", NAME_CURRENT_COMP));
 
-  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax,offflag);
+  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, 0,0,0,0,0,0,offflag);
 
 
   if (filename && strlen(filename) && strcmp(filename,"NULL") && strcmp(filename,"0"))
