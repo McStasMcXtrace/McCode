@@ -1204,7 +1204,7 @@ TRACE
         Alpha = randpm1()*PI*powder;
         Beta  = randpm1()*PI/2;
         Gamma = randpm1()*PI;
-        randrotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
+        randrotate(&kx, &ky, &kz, Alpha, Beta, Gamma);
       }
       
       kix = kx;
@@ -1280,7 +1280,7 @@ TRACE
         p *= p_trans/mc_trans;
         intersect=0;
         if (powder) { /* orientation of crystallite is no longer random */
-          randderotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
+          randderotate(&kx, &ky, &kz, Alpha, Beta, Gamma);
         }
         break;
       }
@@ -1290,7 +1290,7 @@ TRACE
       if(mc_interact <= 0)        /* Protect against rounding errors */
         { intersect=0;
           if (powder) { /* orientation of crystallite is no longer random */
-            randderotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
+            randderotate(&kx, &ky, &kz, Alpha, Beta, Gamma);
           }
           break;
         }
@@ -1375,7 +1375,7 @@ TRACE
       }
       SCATTER;
       if (powder) { /* orientation of crystallite is no longer random */
-        randderotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
+        randderotate(&kx, &ky, &kz, Alpha, Beta, Gamma);
       }
       /* exit if multiple scattering order has been reached */
       if (order && event_counter >= order) { intersect=0; break; }
