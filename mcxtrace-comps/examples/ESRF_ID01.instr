@@ -262,10 +262,8 @@ AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - DistanceOSAT
 /* Pre-sample monitors */
 /***********************/
 COMPONENT DivergenceMonitor = Divergence_monitor(
-        xmin         = -2.0 * OSARadius, 
-        xmax         =  2.0 * OSARadius, 
-        ymin         = -2.0 * OSARadius, 
-        ymax         =  2.0 * OSARadius,
+        xwidth       = 4.0 * OSARadius, 
+        yheight      = 4.0 * OSARadius, 
         nx           = 200, 
         ny           = 200, 
         filename     = "DivMonitor",
@@ -276,10 +274,8 @@ AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - 0.003) RELAT
 
 
 COMPONENT EnergyMonitor = E_monitor(
-        xmin         = -2.0 * OSARadius, 
-        xmax         =  2.0 * OSARadius, 
-        ymin         = -2.0 * OSARadius, 
-        ymax         =  2.0 * OSARadius,
+        xwidth       = 4.0 * OSARadius, 
+        yheight      = 4.0 * OSARadius, 
         Emin         = 0.95 * NominalEnergy, 
         Emax         = 1.05 * NominalEnergy, 
         nE           = 200, 
@@ -290,10 +286,8 @@ AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - 0.002) RELAT
 
 
 COMPONENT PSDMonitor = PSD_monitor(
-        xmin         = -2.0 * OSARadius, 
-        xmax         =  2.0 * OSARadius, 
-        ymin         = -2.0 * OSARadius, 
-        ymax         =  2.0 * OSARadius,
+        xwidth       = 4.0 * OSARadius, 
+        yheight      = 4.0 * OSARadius, 
         nx           = 100, 
         ny           = 100, 
         filename     = "PSDMonitor",

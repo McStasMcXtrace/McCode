@@ -74,19 +74,18 @@ DEFINE INSTRUMENT PBD_BT(source_y=0.0, source_rotation=0.0, beam_vert=0.002, bea
   int use_3_bounce=1, string run_setup="nosetup",
   string polarization="0")
 
-
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
-#define inch 0.0254
-#define crystal_1_back_length (1.895*inch)
-#define crystal_1_front_length (0.960*inch)
-#define crystal_1_channel_width (0.628*inch)
-#define crystal_2_back_length (3.141*inch)
-#define crystal_2_front_length  (1.583*inch)
-#define crystal_2_channel_width (1.047*inch)
-    const double debye_waller_B=0.4632;
+    double inch;
+    double crystal_1_back_length;
+    double crystal_1_front_length;
+    double crystal_1_channel_width;
+    double crystal_2_back_length;
+    double crystal_2_front_length;
+    double crystal_2_channel_width;
+    double debye_waller_B;
 
     /* set up the parameters for the focusing mirror..
        note that the Mirror_parabolic.comp has a mirror with surface y=x^2/a^2 + z^2 / b^2 = z^2/(4 p)+x^2/a^2
@@ -105,13 +104,13 @@ DECLARE
     double mirror_vertex_x, mirror_vertex_z;
     double mirror_a, mirror_face_offset;
 
-    const double mono_channel_width=0.37*inch; /* from Albert MONO.dwg */
+    double mono_channel_width; /* from Albert MONO.dwg */
     double mono_misalignment_angle;
 
-    const double mono_face_length=1.08*inch; /* ditto */
-    const double silicon_lattice_V=160.19329232; /* Angstroms^3 */
-    const int mono_hh=2, mono_kk=2, mono_ll=0;
-    const double mono_center_wavelength=1.5405925; /* kalpha 1,1 from Cu Kalpha paper */
+    double mono_face_length; /* ditto */
+    double silicon_lattice_V; /* Angstroms^3 */
+    int mono_hh, mono_kk, mono_ll;
+    double mono_center_wavelength; /* kalpha 1,1 from Cu Kalpha paper */
     double mono_omega_deg, mono_alpha_deg, mono_lattice_d, mono_dhkl;
     double alphax, alphay, alphaz; /* monochromator asymmetry vector */
 %}
@@ -120,6 +119,19 @@ DECLARE
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
+    inch=0.0254;
+    crystal_1_back_length=(1.895*inch);
+    crystal_1_front_length=(0.960*inch);
+    crystal_1_channel_width=(0.628*inch);
+    crystal_2_back_length=(3.141*inch);
+    crystal_2_front_length=(1.583*inch);
+    crystal_2_channel_width=(1.047*inch);
+    debye_waller_B=0.4632;
+    mono_channel_width=0.37*inch; /* from Albert MONO.dwg */
+    mono_face_length=1.08*inch; /* ditto */
+    silicon_lattice_V=160.19329232; /* Angstroms^3 */
+    mono_hh=2; mono_kk=2; mono_ll=0;
+    mono_center_wavelength=1.5405925; /* kalpha 1,1 from Cu Kalpha paper */
     double theta_m_rad=mirror_full_deflection_angle/2.0*DEG2RAD;
     double sth=sin(theta_m_rad);
     mirror_focal_length=mirror_center_distance*sth*sth;

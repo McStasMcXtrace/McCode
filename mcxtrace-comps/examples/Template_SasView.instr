@@ -92,13 +92,11 @@ EXTEND %{
 %}
 
 COMPONENT detector = PSD_monitor(
-    nx = 128, ny = 128, filename = "PSD.dat", xmin = -0.3,
-    xmax = 0.3, ymin = -0.3, ymax = 0.3)
+    nx = 128, ny = 128, filename = "PSD.dat", xwidth = 0.6, yheight=0.6)
   AT (0, 0, 3) RELATIVE sample
 
 COMPONENT Ldetector = L_monitor(
-    nL = 1000, filename = "Edet.dat", xmin = -0.3,
-    xmax = 0.3, ymin = -0.3, ymax = 0.3, Lmin = 0.5,
+    nL = 1000, filename = "Edet.dat", xwidth = 0.6, yheight=0.6, Lmin = 0.5,
     Lmax = 2.5)
   AT (0, 0, 3.01) RELATIVE sample
 

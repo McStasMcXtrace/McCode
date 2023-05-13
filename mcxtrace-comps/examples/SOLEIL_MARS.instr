@@ -152,7 +152,7 @@ AT (0, 0, 0) RELATIVE origin
 
 /*Wavelength*/
 COMPONENT displaySourceLength = L_monitor(
-  xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
+  xwidth=0.2, yheight=0.2,
   nL=20, filename="Output1.L", Lmin=0.1, Lmax=8
 )
 AT(0,0,2) RELATIVE Source
@@ -245,7 +245,7 @@ AT(0,0,0) RELATIVE PREVIOUS
 
 /*Wavelength*/
 COMPONENT displayMonoLength = L_monitor(
-  xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
+  xwidth=0.2, yheight=0.2,
   nL=20, filename="Output.L", Lmin=0.1, Lmax=8
 )
 AT(0,0,0) RELATIVE PREVIOUS

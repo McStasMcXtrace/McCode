@@ -467,14 +467,6 @@ AT(0,0,0) RELATIVE Imaging
 COMPONENT pxrd_2d_pt = Arm()
 AT(0,0,5.3) RELATIVE eh0
 
-/* COMPONENT 3x3mu_pxrd2 = E_monitor(nE=200, xmin=-1.5e-6, xmax=1.5e-6, ymin=-1.5e-6, */
-/*         ymax=1.5e-6, Emin=Efull_min,Emax=Efull_max, restore_xray=1,filename="pxrd2_3x3mu.emon") */
-/* AT (0, 0, -0.00002) RELATIVE pxrd_2d_pt */
-
-/* COMPONENT 10x10mu_pxrd2 = E_monitor(nE=200, xmin=-5e-6, xmax=5e-6, ymin=-5e-6, */
-/*         ymax=5e-6, Emin=Efull_min,Emax=Efull_max, restore_xray=1,filename="pxrd2_10x10mu.emon") */
-/* AT (0, 0, -0.00001) RELATIVE pxrd_2d_pt*/
-
 COMPONENT pxrd2_slit = Slit(xwidth=pxrd_sampleap_w,yheight=pxrd_sampleap_h)
 AT(0,0,-0.2) RELATIVE pxrd_2d_pt
 

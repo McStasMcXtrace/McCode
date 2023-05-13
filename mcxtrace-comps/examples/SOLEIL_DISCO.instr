@@ -480,10 +480,8 @@ AT (0, 0, 0) RELATIVE PREVIOUS
 
 COMPONENT psd_monitor = PSD_monitor(
     filename="psd", 
-    xmin=-0.001, 
-    xmax=0.001,
-    ymin=-0.01, 
-    ymax=0.01,             
+    xwidth=0.002, 
+    yheight=0.02,             
     nx=100,
     ny=100,
     restore_xray = 1
