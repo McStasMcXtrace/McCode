@@ -60,6 +60,10 @@ DECLARE
     DArray2d Div_N;
     DArray2d Div_p;
     DArray2d Div_p2;
+    double xmin;
+    double xmax;
+    double ymin;
+    double ymax;
   %}
 INITIALIZE
   %{

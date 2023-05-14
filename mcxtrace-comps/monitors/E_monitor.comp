@@ -55,7 +55,10 @@ DECLARE
   DArray1d E_N;
   DArray1d E_p;
   DArray1d E_p2;
-  double xmin,xmax,ymin,ymax;
+  double xmin;
+  double xmax;
+  double ymin;
+  double ymax;
 %}
 
 INITIALIZE

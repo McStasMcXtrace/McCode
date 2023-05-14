@@ -67,7 +67,10 @@ DECLARE
     DArray2d PSD_p2;
     DArray2d PSD_phi_real;
     DArray2d PSD_phi_imag;
-    double xmin,xmax,ymin,ymax;
+    double xmin;
+    double xmax;
+    double ymin;
+    double ymax;
 %}
 
 INITIALIZE

@@ -49,7 +49,10 @@ DECLARE
   double Nsum;
   double psum;
   double p2sum;
-  double xmin,xmax,ymin,ymax;
+  double xmin;
+  double xmax;
+  double ymin;
+  double ymax;
 %}
 
 INITIALIZE

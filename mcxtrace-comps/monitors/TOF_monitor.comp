@@ -53,7 +53,10 @@ DECLARE
     double t_min;
     double t_max;
     double delta_t;
-    double xmin,xmax,ymin,ymax;
+    double xmin;
+    double xmax;
+    double ymin;
+    double ymax;
   %}
 INITIALIZE
   %{

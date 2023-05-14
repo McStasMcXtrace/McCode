@@ -55,7 +55,10 @@ DECLARE
     DArray2d PSD_N_s;
     DArray2d PSD_p_s;
     DArray2d PSD_p2_s;
-    double xmin,xmax,ymin,ymax;
+    double xmin;
+    double xmax;
+    double ymin;
+    double ymax;
 %}
 
 INITIALIZE
