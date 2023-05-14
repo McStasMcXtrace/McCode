@@ -300,7 +300,7 @@ ROTATED (angle_m2a_m2b*RAD2DEG, 0, 0) RELATIVE arm_crystal2
 /* -------------------------------------------------- E monitor */ 
 COMPONENT EnergyMonitor_before_sample = Monitor_nD(  
     xwidth =0.2 , 
-    yheigh =0.2 ,
+    yheight =0.2 ,
     min=Etohitkev-(0.005+(Etohitkev-Eminkev)*incr), 
     max=Etohitkev+(0.005+(Etohitkev-Eminkev)*incr), 
     bins=500,
@@ -311,7 +311,7 @@ COMPONENT EnergyMonitor_before_sample = Monitor_nD(
 AT (0,0,10) RELATIVE PREVIOUS
 
 COMPONENT e_repartition_after_m2b = Monitor_nD(
-  xwidth =0.02 , yheigh =0.02, options=e_repartition_options, filename="e_repartition_after_m2b",restore_xray = 1) 
+  xwidth =0.02 , yheight =0.02, options=e_repartition_options, filename="e_repartition_after_m2b",restore_xray = 1) 
 AT (0,0,0) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- sample */
@@ -349,7 +349,7 @@ AT (0,0,0.5) RELATIVE PREVIOUS
 COMPONENT psd_monitor = PSD_monitor(
     filename="psd", 
     xwidth=0.004, 
-    yheigh=0.004,            
+    yheight=0.004,            
     nx=100,
     ny=100,
     restore_xray = 1
