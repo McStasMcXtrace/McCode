@@ -456,14 +456,30 @@ int cogen_raytrace(struct instr_def *instr)
     coutf("# Comp instance %s, placement and parameters", comp->name);
     /* Case 1, both AT and ROTATED in absolute coordinates */
     if (!strcmp(poslabel, "ABSOLUTE") && !strcmp(rotlabel, "ABSOLUTE")) {
-      coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], ROTATED=['%s', '%s', '%s'])",
-	    comp->name, comp->name, comp->def->name, x, y, z, rx, ry, rz);
+      if (strcmp(rx,"0.0") || strcmp(ry,"0.0") || strcmp(rz,"0.0")) {
+	coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], ROTATED=['%s', '%s', '%s'])",
+	      comp->name, comp->name, comp->def->name, x, y, z, rx, ry, rz);
+      } else if (strcmp(x,"0") || strcmp(y,"0") || strcmp(z,"0")) {
+	coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'])", comp->name, comp->name, comp->def->name, x, y, z);
+      } else {
+	coutf("%s = instr.add_component('%s','%s')", comp->name, comp->name, comp->def->name);
+      }
     } else if (!strcmp(poslabel, "ABSOLUTE")) {
-      coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], ROTATED=['%s', '%s', '%s'], ROTATED_RELATIVE='%s')",
-	    comp->name, comp->name, comp->def->name, x, y, z, rx, ry, rz, rotlabel);
+      if (strcmp(rx,"0.0") || strcmp(ry,"0.0") || strcmp(rz,"0.0")) {
+	coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], ROTATED=['%s', '%s', '%s'], ROTATED_RELATIVE='%s')",
+	      comp->name, comp->name, comp->def->name, x, y, z, rx, ry, rz, rotlabel);
+      } else if (strcmp(x,"0") || strcmp(y,"0") || strcmp(z,"0")) {
+	coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'])", comp->name, comp->name, comp->def->name, x, y, z);
+      } else {
+	coutf("%s = instr.add_component('%s','%s')", comp->name, comp->name, comp->def->name);
+      }
     } else if (!strcmp(rotlabel, "ABSOLUTE")) {
-      coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], AT_RELATIVE='%s', ROTATED=['%s', '%s', '%s'])",
-	    comp->name, comp->name, comp->def->name, x, y, z, poslabel, rx, ry, rz);
+      if (strcmp(rx,"0.0") || strcmp(ry,"0.0") || strcmp(rz,"0.0")) {
+	coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], AT_RELATIVE='%s', ROTATED=['%s', '%s', '%s'])",
+	      comp->name, comp->name, comp->def->name, x, y, z, poslabel, rx, ry, rz);
+      } else {
+	coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], AT_RELATIVE='%s',)", comp->name, comp->name, comp->def->name, x, y, z, poslabel);
+      }
     } else {
       coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], AT_RELATIVE='%s', ROTATED=['%s', '%s', '%s'], ROTATED_RELATIVE='%s')",
 	    comp->name, comp->name, comp->def->name, x, y, z, poslabel, rx, ry, rz, rotlabel);
@@ -892,9 +908,30 @@ cogen(char *output_name, struct instr_def *instr)
 
   warnings += cogen_raytrace(instr); 
 
+  cout("# Instruct McStasscript not to 'check everythng'");
   cout("instr.settings(checks=False)");
+  cout("# Generate a dataset with default parameters.");
+  cout("# (This is where one can add e.g. ncount=1e7, mpi=8, openacc=True etc.)");
   cout("data = instr.backengine()");
-  coutf("# end of generated Python code %s ", output_name);
+  cout("# Overview plot:");
+  cout("ms.make_sub_plot(data)");
+  cout("\n\n# Other useful commands follow...");
+  cout("\n# One plot pr. window");
+  cout("#ms.make_plot(data)");
+  cout("#Adjusting a specific plot");
+  cout("#ms.name_plot_options(\"PSD_4PI\", data, log=1, colormap=\"hot\", orders_of_mag=5)");
+  cout("\n\n# Bring up the 'interface' - only relevant in Jupyter");
+  cout("#%matplotlib widget");
+  cout("#import mcstasscript.jb_interface as ms_widget");
+  cout("#ms_widget.show(data)");  
+  cout("\n\n# Bring up the simulation 'interface' - only relevant in Jupyter");
+  cout("#%matplotlib widget");
+  cout("#import mcstasscript.jb_interface as ms_widget");
+  cout("#ms_widget.show(instr)");
+  cout("#sim_widget = ms_widget.SimInterface(instr)");
+  cout("#sim_widget.show_interface()");
+  cout("#data = sim_widget.get_data()");
+  coutf("\n\n# end of generated Python code %s ", output_name);
 
   fclose(output_handle);
 } /* cogen */
