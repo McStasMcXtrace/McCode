@@ -456,14 +456,30 @@ int cogen_raytrace(struct instr_def *instr)
     coutf("# Comp instance %s, placement and parameters", comp->name);
     /* Case 1, both AT and ROTATED in absolute coordinates */
     if (!strcmp(poslabel, "ABSOLUTE") && !strcmp(rotlabel, "ABSOLUTE")) {
-      coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], ROTATED=['%s', '%s', '%s'])",
-	    comp->name, comp->name, comp->def->name, x, y, z, rx, ry, rz);
+      if (strcmp(rx,"0.0") || strcmp(ry,"0.0") || strcmp(rz,"0.0")) {
+	coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], ROTATED=['%s', '%s', '%s'])",
+	      comp->name, comp->name, comp->def->name, x, y, z, rx, ry, rz);
+      } else if (strcmp(x,"0") || strcmp(y,"0") || strcmp(z,"0")) {
+	coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'])", comp->name, comp->name, comp->def->name, x, y, z);
+      } else {
+	coutf("%s = instr.add_component('%s','%s')", comp->name, comp->name, comp->def->name);
+      }
     } else if (!strcmp(poslabel, "ABSOLUTE")) {
-      coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], ROTATED=['%s', '%s', '%s'], ROTATED_RELATIVE='%s')",
-	    comp->name, comp->name, comp->def->name, x, y, z, rx, ry, rz, rotlabel);
+      if (strcmp(rx,"0.0") || strcmp(ry,"0.0") || strcmp(rz,"0.0")) {
+	coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], ROTATED=['%s', '%s', '%s'], ROTATED_RELATIVE='%s')",
+	      comp->name, comp->name, comp->def->name, x, y, z, rx, ry, rz, rotlabel);
+      } else if (strcmp(x,"0") || strcmp(y,"0") || strcmp(z,"0")) {
+	coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'])", comp->name, comp->name, comp->def->name, x, y, z);
+      } else {
+	coutf("%s = instr.add_component('%s','%s')", comp->name, comp->name, comp->def->name);
+      }
     } else if (!strcmp(rotlabel, "ABSOLUTE")) {
-      coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], AT_RELATIVE='%s', ROTATED=['%s', '%s', '%s'])",
-	    comp->name, comp->name, comp->def->name, x, y, z, poslabel, rx, ry, rz);
+      if (strcmp(rx,"0.0") || strcmp(ry,"0.0") || strcmp(rz,"0.0")) {
+	coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], AT_RELATIVE='%s', ROTATED=['%s', '%s', '%s'])",
+	      comp->name, comp->name, comp->def->name, x, y, z, poslabel, rx, ry, rz);
+      } else {
+	coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], AT_RELATIVE='%s',)", comp->name, comp->name, comp->def->name, x, y, z, poslabel);
+      }
     } else {
       coutf("%s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], AT_RELATIVE='%s', ROTATED=['%s', '%s', '%s'], ROTATED_RELATIVE='%s')",
 	    comp->name, comp->name, comp->def->name, x, y, z, poslabel, rx, ry, rz, rotlabel);
