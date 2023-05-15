@@ -908,9 +908,29 @@ cogen(char *output_name, struct instr_def *instr)
 
   warnings += cogen_raytrace(instr); 
 
+  cout("# Instruct McStasscript not to 'check everythng'");
   cout("instr.settings(checks=False)");
+  cout("# Generate a dataset with default parameters");
   cout("data = instr.backengine()");
-  coutf("# end of generated Python code %s ", output_name);
+  cout("# Overview plot:");
+  cout("ms.make_sub_plot(data)");
+  cout("\n\n# Other useful commands follow...");
+  cout("# One plot pr. window");
+  cout("# ms.make_plot(data)");
+  cout("# Adjusting a specific plot");
+  cout("# ms.name_plot_options(\"PSD_4PI\", data, log=1, colormap=\"hot\", orders_of_mag=5)");
+  cout("\n\n# Bring up the 'interface' - only relevant in Jupyter");
+  cout("#%matplotlib widget");
+  cout("#import mcstasscript.jb_interface as ms_widget");
+  cout("#ms_widget.show(data)");  
+  cout("\n\n# Bring up the simulation 'interface' - only relevant in Jupyter");
+  cout("#%matplotlib widget");
+  cout("#import mcstasscript.jb_interface as ms_widget");
+  cout("#ms_widget.show(instr)");
+  cout("#sim_widget = ms_widget.SimInterface(instr)");
+  cout("#sim_widget.show_interface()");
+  cout("#data = sim_widget.get_data()");
+  coutf("\n\n# end of generated Python code %s ", output_name);
 
   fclose(output_handle);
 } /* cogen */
