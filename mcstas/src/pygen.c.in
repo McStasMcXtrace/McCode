@@ -923,8 +923,7 @@ cogen(char *output_name, struct instr_def *instr)
   cout("#%matplotlib widget");
   cout("#import mcstasscript.jb_interface as ms_widget");
   cout("#ms_widget.show(data)");  
-  cout("\n\n
-# Bring up the simulation 'interface' - only relevant in Jupyter");
+  cout("\n\n# Bring up the simulation 'interface' - only relevant in Jupyter");
   cout("#%matplotlib widget");
   cout("#import mcstasscript.jb_interface as ms_widget");
   cout("#ms_widget.show(instr)");
