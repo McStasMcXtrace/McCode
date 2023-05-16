@@ -333,7 +333,7 @@ if(@ARGV == 0 || @ARGV > 2) {
     print STDERR "       Further, the '.vif' file may be used to define the parameter letters used in the \n";
     print STDERR "       resulting Vitess module.\n";
     print STDERR "\n";
-    print STDERR "          example content of a .vif file:";
+    print STDERR "          example content of a .vif file:\n";
     print STDERR "            sector -S string\n";
     print STDERR "            beamline -B double\n";
     print STDERR "\n";
