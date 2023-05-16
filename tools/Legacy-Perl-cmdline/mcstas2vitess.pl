@@ -314,6 +314,7 @@ sub print_usage {
 my $issourcemodule = 0;
 
 if(@ARGV == 0 || @ARGV > 2) {
+    print STDERR "\n";
     print STDERR "Usage: mcstas2vitess Component.comp [assource]\n";
     print STDERR "\n";
     print STDERR "  1st argument: local component-file \n";
