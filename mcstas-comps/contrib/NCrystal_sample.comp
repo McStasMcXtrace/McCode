@@ -65,7 +65,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT NCrystal_sample
-SETTING PARAMETERS (string cfg, absorptionmode = 1, multscat = 1, xwidth = 0, yheight = 0, zdepth = 0, radius = 0 )
+SETTING PARAMETERS (string cfg="void", absorptionmode=1, multscat=1, xwidth=0, yheight=0, zdepth=0, radius=0 )
 OUTPUT PARAMETERS (params, geoparams)/*not really intended for output, but here for multi-instance support*/
 DEPENDENCY "-Wl,-rpath,CMD(ncrystal-config --show libdir) -LCMD(ncrystal-config --show libdir) -lNCrystal -ICMD(ncrystal-config --show includedir)"
 NOACC /* Notice: you must remove this line if using the legacy McStas 2.x branch. */
