@@ -258,7 +258,7 @@ sub print_usage {
     my ($par, $d) = @_;
 
     print "\n";
-    print "Usage table for Vitess module McStas_", lc($d->{'name'}), ":\n";
+    print "Module usage table for Vitess module McStas_", lc($d->{'name'}), ":\n";
 
     my $dsc = $d->{'identification'}{'short'};
     chomp $dsc;
@@ -325,6 +325,20 @@ if(@ARGV == 0 || @ARGV > 2) {
     print STDERR "\n";
     print STDERR "       If further components are added, these may also be internal to the module\n";
     print STDERR "\n";
+    print STDERR "       Supported input arguments are currently of these types only:\n";
+    print STDERR "         double, int etc. -> all mapped to float in Vitess (default type)\n";
+    print STDERR "         string -> mapped to char* in Vitess\n";
+    print STDERR "\n";
+    print STDERR "       If the component uses any \"string\" inputs, these MUST be specified in a '.vif file.'\n";
+    print STDERR "       Further, the '.vif' file may be used to define the parameter letters used in the \n";
+    print STDERR "       resulting Vitess module.\n";
+    print STDERR "\n";
+    print STDERR "          example content of a .vif file:";
+    print STDERR "            sector -S string\n";
+    print STDERR "            beamline -B double\n";
+    print STDERR "\n";
+    print STDERR "       - defines that McStas parameter 'sector' is a string that will use Vitess parameter -S\n";
+    print STDERR "       - defines that McStas parameter 'beamline' is a double that will use Vitess parameter -B\n";
     print STDERR "\n";
     print STDERR "       Component string parameters should be declared\n";
     print STDERR "       as 'char*' setting parameters. Default values are allowed.\n";
