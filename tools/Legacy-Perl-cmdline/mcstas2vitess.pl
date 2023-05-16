@@ -331,6 +331,7 @@ if(@ARGV == 0 || @ARGV > 2) {
     print STDERR "         string -> mapped to char* in Vitess\n";
     print STDERR "\n";
     print STDERR "       If the component uses any \"string\" inputs, these MUST be specified in a '.vif file.'\n";
+    print STDERR "       Also, \"string\" currently MUST have default values provided in the comp.'\n";
     print STDERR "       Further, the '.vif' file may be used to define the parameter letters used in the \n";
     print STDERR "       resulting Vitess module.\n";
     print STDERR "\n";
@@ -433,7 +434,9 @@ close($TCL);
 print_usage(\@param, $data);
 print "\nWrote Vitess Module Tcl GUI file '$tcl_name' for inclusion in your vitess/GUI/usermodule.tcl script.\n\n";
 print "mcstas2vitess: Construction of .instr was been performed.\n";
-print "\nPlease:\n1) use mcrun -c --no-main McStas_${compname}.instr -n0 to compile\n2) move to executable name mcstas_\$SYSNAME_${compname}[.exe]\n\n";
+print "\nPlease:\n1) use mcrun -c --no-main McStas_${compname}.instr -n0 to compile\n";
+print "2) move resulting executable to mcstas_".lc(${compname})_\$SYSNAME."[.exe]\n";
+print "  (\$SYSNAME includes output of `uname` and ` uname -m`, i.e. something like Darwin_arm64)\n";
 
 
 exit 0;
