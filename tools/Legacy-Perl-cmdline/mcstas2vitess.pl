@@ -315,21 +315,22 @@ my $issourcemodule = 0;
 
 if(@ARGV == 0 || @ARGV > 2) {
     print STDERR "\n";
-    print STDERR "Usage: mcstas2vitess Component.comp [assource]\n";
+    print STDERR "Usage: mcstas2vitess.pl Component.comp [assource]\n";
     print STDERR "\n";
     print STDERR "  1st argument: local component-file \n";
     print STDERR "  2nd argument: [optional] indicate component is a source (i.e. first in Vitess).\n";
     print STDERR "\n";
     print STDERR "       This tool enables to convert a McStas component into\n";
-    print STDERR "       an instrument that can be compiled as a  Vitess module. \n ";
+    print STDERR "       an instrument that can be compiled into a Vitess module using mcrun --no-main. \n ";
     print STDERR "\n";
-    print STDERR "       If furtner components are added, these may also be internal to the module\n";
+    print STDERR "       If further components are added, these may also be internal to the module\n";
     print STDERR "\n";
     print STDERR "\n";
     print STDERR "       Component string parameters should be declared\n";
     print STDERR "       as 'char*' setting parameters. Default values are allowed.\n";
-    print STDERR "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
-    print STDERR "DOC:      Please visit http://www.mcstas.org\n";
+    print STDERR "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess.pl\n";
+    print STDERR "DOC:      Please visit https://www.mcstas.org\n";
+    print STDERR "\n";
     exit 1;
 } elsif (@ARGV == 1) {
     print "Processing component as NON-source module $ARGV[0] for Vitess\n";
