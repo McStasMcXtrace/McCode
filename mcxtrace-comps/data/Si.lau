@@ -10,8 +10,18 @@
 #
 # Physical parameters:
 # density           2.32912 in [g/cm^3]
-# weight          224.68401 in [g/mol]
 # Vc              160.18796 volume of unit cell in [A^3]
+# lattice_a         5.43096 lattice parameter a in [Angs]
+# density           2.33    in [g/cm^3]
+# weight           28.08    in [g/mol]
+# multiplicity      8       in [atoms/unit cell]
+# Vc              160.15    volume of unit cell in [A^3]
+# v_sound        2200       in [m/s]
+# T_m            1687       melting temperature in [K]
+# T_b            3173       boiling temperature in [K]
+# At_number        14       atomic number Z
+# lattice_a        5.43053 lattice parameter a in [Angs]
+#
 # STRUCTURE FACTORS(X-RAYS)
 #
 # Format parameters: Crystallographica format
