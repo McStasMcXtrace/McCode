@@ -435,7 +435,7 @@ print_usage(\@param, $data);
 print "\nWrote Vitess Module Tcl GUI file '$tcl_name' for inclusion in your vitess/GUI/usermodule.tcl script.\n\n";
 print "mcstas2vitess: Construction of .instr was been performed.\n";
 print "\nPlease:\n1) use mcrun -c --no-main McStas_${compname}.instr -n0 to compile\n";
-print "2) move resulting executable to mcstas_".lc(${compname})_\$SYSNAME."[.exe]\n";
+print "2) move resulting executable to mcstas_".lc(${compname})."_\$SYSNAME[.exe]\n";
 print "  (\$SYSNAME includes output of `uname` and ` uname -m`, i.e. something like Darwin_arm64)\n";
 
 
