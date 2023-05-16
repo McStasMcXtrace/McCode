@@ -323,7 +323,8 @@ if(@ARGV == 0 || @ARGV > 2) {
     print STDERR "       This tool enables to convert a McStas component into\n";
     print STDERR "       an instrument that can be compiled into a Vitess module using mcrun --no-main. \n ";
     print STDERR "\n";
-    print STDERR "       If further components are added, these may also provide functionality to the instr/module.\n";
+    print STDERR "       If further components are added, these may also provide functionality to the\n";
+    print STDERR "       instr/module.\n";
     print STDERR "\n";
     print STDERR "       Supported input arguments are currently of these types only:\n";
     print STDERR "         double, int etc. -> all mapped to float in Vitess (default type)\n";
