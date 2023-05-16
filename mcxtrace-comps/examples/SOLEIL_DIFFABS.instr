@@ -1,0 +1,208 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: SOLEIL_DIFFABS
+*
+* %Identification
+* Written by: E. Farhi and D. Thiaudiere
+* Date: May 2023
+* Origin: SOLEIL
+* Release: McXtrace 3.2
+* Version: 0.2
+* %INSTRUMENT_SITE: SOLEIL
+*
+* SOLEIL DIFFABS: Combining X‐ray diffraction and absorption to study a large variety of materials
+*
+* %Description
+* This is model of thr DIFFABS beam-line at synchrotron SOLEIL, combining diffraction and absorption.
+*
+* Position | Element
+* ---------|--------------------------------------------------------------------
+* 0        | the BM D13-1 Bender B=1.71 T in range 3-23 keV, e-beam cross-section 55.1x20.6 µm2 123.7x1.6 µrad. Other specs give 60.1x24.9 µm and 134.8x2.1 µrad. Critical energy 8.6 keV.
+* 11.85    | primary slit
+* 14.92    | M1 bent mirror with Rh/Si coating. Reduces the vertical divergence. length 1300 mm, width 100 mm. 2.4 mrad incidence above 19 keV, 3 mrad in 12.5-19 keV, and 5 mrad in 6.5-12.5 keV, and 6 mrad below.
+* 17.462   | a Si(111) DCM. First crystal is 200x100 mm flat at 2.54 m from M1; 2nd is bent 70x100 mm to reduce the horizontal divergence (perp. to beam). See the practical 5 "Optics". 
+* 19.28    | M2 bent mirror with Rh coating, 1300x100 mm. Focuses horizontally the beam, and increases the divergence. At 1.817 from DCM.
+* 27.752   | _secondary slits when using the KB. We ignore them here_.
+* 31.227   | _a KB mirror set M3/M4 for micro focusing. Optional, see the practical 5 "Optics"._
+* 31.45    | sample stage with e.g. Fluorescence and/or PowderN components. At 13.99 from DCM.
+* 32.09    | a set of detectors (transmission, XRD and XRF), radius 654 mm
+*
+* %Parameters
+* E0:       [keV]  Central energy of the interval to be looked at
+* dE:       [keV]  Half-width of energy interval
+* M1_angle: [mrad] Rotation angle of M1 mirror. When left as 0, it is set automatically from E0.
+* M1_radius:[m]    Curvature radius of M1 mirror (Rh, 1300x100). Positive=mirror is convex/defocusing.
+* DCM_theta:[deg]  Rotation angle of DCM crystals. When left as 0, it is set automatically from E0.
+* DCM_C0:   [m]    Curvature radius of the 2nd (upper) DCM crystal along the Y-axis.
+* M2_radius:[m]    Curvature radius of M2 mirror (Rh, 1300x100). Positive=mirror is convex/defocusing.
+*
+* %Link
+* https://www.synchrotron-soleil.fr/en/beamlines/diffabs
+* %L
+* Gallard, PhD, (2019) https://www.theses.fr/2019AIXM0037.pdf
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT SOLEIL_DIFFABS(E0=13,dE=1, 
+  M1_angle=0, M1_radius=14.92, 
+  DCM_theta=0, DCM_C0=1,
+  M2_radius=14.92)
+
+DECLARE
+%{
+  double dcm_gap;
+%}
+
+INITIALIZE
+%{
+  
+  // DCM
+  double DM= 5.4909;     // Si d-spacing
+  double d = DM/sqrt(3); // <111> reflection |<111>|=3
+  dcm_gap  = 0.02;       // gap between the 2 monochromator crystals
+
+  if (!DCM_theta && E0) {
+  // n.lambda = 2 d sin(theta) = 2*PI/E2K / E0 with n=ORDER=1
+  double sin_theta = 2*PI/E2K/E0 / 2 / d;
+  if (fabs(sin_theta) < 1)
+    DCM_theta = asin(sin_theta)*RAD2DEG;
+  } else if (DCM_theta && !E0)
+    E0 = 2*PI/E2K / (2*d*sin(DCM_theta*DEG2RAD));
+    
+  // M1 mirror
+  if (!M1_angle) {
+    if (19   <= E0)               M1_angle=2.4;
+    if (12.5 <= E0 && E0 < 19)    M1_angle=3;
+    if (6.5  <= E0 && E0 < 12.5)  M1_angle=5;
+    if (E0   < 6.5)               M1_angle=6;
+    printf("%s: E0=%g [keV] M1_angle=%g [mrad]\n", NAME_INSTRUMENT, E0, M1_angle);
+  }
+  
+  if (!DCM_theta || !E0 || dE <=0)
+     exit(fprintf(stderr, "%s: ERROR: Monochromator can not reflect E0=%g +/- %g [keV]. Aborting.\n", NAME_INSTRUMENT, E0, dE));
+  printf("%s: Monochromator theta=%g [deg]\n", 
+    NAME_INSTRUMENT, DCM_theta);
+%}
+
+// -----------------------------------------------------------------------------
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+// the BM D13-1 Bender B=1.71 T in range 3-23 keV
+// e-beam cross-section 60.1x24.9 µm and 134.8x2.1 µrad. Critical energy 8.6 keV.
+COMPONENT BM_D13_1 = Bending_magnet(
+    E0 = E0, dE = dE, Ee = 2.75,
+    Ie = 0.5, B = 1.71, sigex=60.1e-6, sigey=24.9e-6,
+    focus_xw=3e-2, focus_yh=1e-2, dist=11.85)
+AT (0, 0, 0) RELATIVE origin
+
+// 11.85    | primary slit
+COMPONENT primary_slit = Slit(
+    xwidth = 0.03, yheight = 0.01)
+AT (0, 0, 11.85) RELATIVE origin
+
+// -----------------------------------------------------------------------------
+// 14.92    | M1 bent mirror with Rh/Si coating. Reduces the vertical divergence. 
+// length 1300 mm, width 100 mm. 
+// 2.4 mrad incidence above 19 keV, 3 mrad in 12.5-19 keV, and 5 mrad in 6.5-12.5 keV, and 6 mrad below.
+COMPONENT M1_location = Arm()
+AT(0,0,14.92) RELATIVE origin
+
+COMPONENT M1_rotated = Arm()  // rotation of the mirror
+AT(0,0,0)                      RELATIVE M1_location
+ROTATED (-M1_angle*RAD2DEG/1000,0,0) RELATIVE M1_location
+
+// should image the slit to get a parallel beam.
+COMPONENT M1 = Mirror_curved( // 90 deg brings it from YZ (vert) to XZ (horiz)
+    length=1.3, width=0.1,
+    coating="Rh.txt", radius=M1_radius)
+AT(0,0,0)          RELATIVE M1_rotated
+ROTATED (0, 0, -90) RELATIVE M1_rotated
+
+COMPONENT M1_out = Arm()      // 2-theta direction
+AT(0,0,0) RELATIVE M1_rotated
+ROTATED (-M1_angle*RAD2DEG/1000,0,0) RELATIVE M1_rotated
+
+// -----------------------------------------------------------------------------
+// 17.462   | a Si(111) DCM. First crystal is 200x100 mm flat at 2.54 m from M1
+// 2nd is bent 70x100 mm to reduce the horizontal divergence (perp. to beam).
+COMPONENT DCM_location = Monitor_nD(
+  xwidth = 5e-2, yheight=5e-2,
+  options="x y", bins=128)
+AT (0,0,2.54) RELATIVE M1_out
+
+// the M1 mirror should reduce the divergence so that the beam is parallel
+// when hitting the monochromators, to reduce the energy spread
+COMPONENT DCM_monitor_div = COPY(DCM_location)(
+  options="dx limits=[-0.5 0.5], dy limits=[-0.5 0.5]")
+AT (0,0,0) RELATIVE DCM_location
+
+COMPONENT dcm_xtal0 = Bragg_crystal(
+    length=0.2, width=0.1, 
+    h=1, k=1, l=1, material="Si.txt", V=160.1826)
+AT(0,0,0.02) RELATIVE PREVIOUS
+ROTATED (-DCM_theta,0,0) RELATIVE PREVIOUS
+
+COMPONENT dcm0 = Arm()
+AT(0,0,0) RELATIVE dcm_xtal0
+ROTATED (-DCM_theta,0,0) RELATIVE PREVIOUS
+
+// Bent version does not seem to really work ??
+COMPONENT dcm_xtal1 = Bragg_crystal(
+    length=0.2, width=0.1, 
+    h=1, k=1, l=1, material="Si.txt", V=160.1826)
+AT(0,dcm_gap,0.07) RELATIVE dcm0
+ROTATED (DCM_theta,0,0) RELATIVE dcm0
+
+COMPONENT dcm1 =Arm()
+AT(0,0,0) RELATIVE dcm_xtal1
+ROTATED (DCM_theta,0,0) RELATIVE dcm_xtal1 
+
+// -----------------------------------------------------------------------------
+// 19.28    | M2 bent mirror with Rh coating, 1300x100 mm. Focuses horizontally the beam, and increases the divergence. At 1.817 from DCM.
+COMPONENT M2_location = COPY(DCM_location)
+AT (0,0,1.818) RELATIVE dcm1
+ 
+COMPONENT M2_monitor_ediv = COPY(DCM_location)
+  (options="dx limits=[-0.5 0.5], auto energy")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT M2_rotated = Arm()  // rotation of the mirror
+AT(0,0,0)                      RELATIVE M2_location
+ROTATED (M1_angle*RAD2DEG/1000,0,0) RELATIVE M2_location
+
+COMPONENT M2_rotx = Arm()
+AT(0,0,0)                      RELATIVE M2_rotated
+ROTATED (90,0,0) RELATIVE M2_rotated
+
+COMPONENT M2_roty = Arm()
+AT(0,0,0)                      RELATIVE M2_rotx
+ROTATED (0,90,0) RELATIVE M2_rotx
+
+COMPONENT M2 = Mirror_curved( // bring it to XZ (horiz)
+    length=.1, width=1.3,
+    coating="Rh.txt", radius=M2_radius)
+AT(0,0,0)          RELATIVE M2_roty
+ROTATED (0, 0, 0) RELATIVE M2_roty
+
+COMPONENT M2_out = Arm()      // 2-theta direction
+AT(0,0,0) RELATIVE M2_rotated
+ROTATED (M1_angle*RAD2DEG/1000,0,0) RELATIVE M2_rotated  
+
+// -----------------------------------------------------------------------------
+// 31.45    | sample stage with e.g. Fluorescence and/or PowderN components. At 13.99 from DCM, 12.17 from M2
+COMPONENT sample_stage = COPY(DCM_location)
+AT (0,0,12.17) RELATIVE M2_out
+
+// -----------------------------------------------------------------------------
+// 32.09    | a set of detectors (transmission, XRD and XRF), radius 654 mm
+COMPONENT xpad = Monitor_nD(radius=.645, yheight = 0.05,
+  options="theta bins=512 limits=[-90 90], y bins=128")
+AT (0,0,0) RELATIVE sample_stage
+END
+

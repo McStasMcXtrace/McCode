@@ -25,7 +25,9 @@
 * 5: Bragg_crystal_simple - a simple mono with a static (flat) Darwin width.
 *
 * %Example: Test_Mono.instr Mono=1 Detector: emon_I=5.39036e-17
+* %Example: Test_Mono.instr Mono=2 Detector: emon_I=5.41029e-17
 * %Example: Test_Mono.instr Mono=3 Detector: emon_I=5.33687e-17
+* %Example: Test_Mono.instr Mono=4 Detector: emon_I=5.33687e-17
 * %Example: Test_Mono.instr Mono=5 Detector: emon_I=5.33687e-17
 *
 * %Parameters
@@ -48,12 +50,8 @@ DEFINE INSTRUMENT Test_Mono(int Mono=1, lambda=1.0, L1=10.0,OMM=14.2208,TTM=28.4
 DECLARE
 %{
   double DM  = 3.1356 ; /* Monochromator d-spacing in Angs */
-			/* Si(111): 3.1356 */
-                       /* PG002 Orders : 1st 3.355 2e 1.6775, 3e 1.1183 */
-  
-  /* to compute */
-  double A1,A2;
-  double mono_q;
+			/* Si(111):           3.1356 */
+      /* PG002 Orders : 1st 3.355 2e 1.6775, 3e 1.1183 */
   
   /* This variable helps us switch on and off the different setups*/
   double filterProb;
@@ -63,25 +61,20 @@ DECLARE
 INITIALIZE
 %{
   int    ORDER = 1;
-  double Ki;
-  int    SM;
+  double Ki, mono_q, SM;
   
   /* SM : scattering at mono to the right (-1)/left(+1) */
-  SM = 1;
+  SM = -1;
   
   mono_q = 2*PI*ORDER/DM;  /* Q mono in Angs-1 */
 
   Ki = 2*PI/lambda; 
-  /* Ki = 2*PI/12.398; */
   
-  A2 = asin(mono_q/2/Ki)*RAD2DEG*2;
-  
-  A2 *= SM;   /* A1 : mono theta (crystal) */
-  A1 = A2/2;  /* A2 : mono 2 theta (arm to sample) */
-
- /*  printf("lambda for Mono angle calculation is: %g: \n", lambda);
-   printf("Bragg angle for Mono is: %g: \n", A1);
-   printf("2theta angle for Mono is: %g: \n", A2);*/
+  if (!TTM)
+    TTM = asin(mono_q/2/Ki)*RAD2DEG*2*SM;
+    
+  if (!OMM)
+    OMM = TTM/2;
 
 %}
 /* end of INITIALIZE */
@@ -112,7 +105,10 @@ AT (0, 0, 0.6) RELATIVE generic_source
 COMPONENT Mono_Arm = Arm()
 AT (0, 0, L1) RELATIVE generic_source
 ROTATED (-OMM, 0, 0) RELATIVE generic_source
-  
+
+% ------------------------------------------------------------------------------
+% rotation along X, monochromator surface is in the XZ plane
+
 COMPONENT Mono_obso = Perfect_crystal(
         length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alpha=0)
 WHEN Mono==0 AT (0, 0, 0) RELATIVE Mono_Arm
@@ -134,9 +130,17 @@ COMPONENT MonoBCb = Bragg_crystal_bent_BC(
 WHEN Mono==4 AT (0, 0, 0) RELATIVE Mono_Arm
 
 COMPONENT MonoBCs = Bragg_crystal_simple(
-    yheight=0.05, xwidth=0.02, DM=3.1355, err_Q= 0.000075, r0=1.0)
+    yheight=0.05, xwidth=0.02, DM=DM, err_Q= 0.000075, r0=1.0)
 WHEN Mono==5 AT (0,0,0) RELATIVE Mono_Arm
 ROTATED(90,0,0) RELATIVE Mono_Arm
+
+COMPONENT MonoBCsx = Single_crystal(xwidth=0.02, yheight=0.0001, zdepth=0.05,
+      delta_d_d=1e-4, mosaic = 5,
+      reflections="Si.lau")
+WHEN Mono==6 AT (0,0,0) RELATIVE Mono_Arm
+ROTATED(0,0,0) RELATIVE Mono_Arm
+
+% ------------------------------------------------------------------------------
 
 COMPONENT Mono_Out = Arm()
 AT (0, 0, 0) RELATIVE Mono_Arm

@@ -525,7 +525,7 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
       info->V0 = 1/fabs(scalar_prod(info->asx/(2*PI), info->asy/(2*PI), info->asz/(2*PI), tmp_x, tmp_y, tmp_z));
       printf("V0=%g\n", info->V0);
 
-      /*compute the direct cell parameters, ofr completeness*/
+      /*compute the direct cell parameters, for completeness*/
       info->m_ax = tmp_x*info->V0;
       info->m_ay = tmp_y*info->V0;
       info->m_az = tmp_z*info->V0;
