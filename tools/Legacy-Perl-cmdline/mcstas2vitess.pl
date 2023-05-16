@@ -342,8 +342,6 @@ if(@ARGV == 0 || @ARGV > 2) {
     print STDERR "       - defines that McStas parameter 'sector' is a string that will use Vitess parameter -S\n";
     print STDERR "       - defines that McStas parameter 'beamline' is a double that will use Vitess parameter -B\n";
     print STDERR "\n";
-    print STDERR "       Component string parameters should be declared\n";
-    print STDERR "       as 'char*' setting parameters. Default values are allowed.\n";
     print STDERR "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess.pl\n";
     print STDERR "DOC:      Please visit https://www.mcstas.org\n";
     print STDERR "\n";
