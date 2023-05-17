@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w
+#! /usr/bin/perl
 #
 # Converts McStas instruments to Vitess equivalents. Has not been tested
 # with current versions of Vitess (20031128)
@@ -10,7 +10,7 @@
 #
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation; version 3 of the License.
+#   the Free Software Foundation; version 2 of the License.
 #
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -254,24 +254,102 @@ sub make_tcl_file {
     print $F "}\n";
 }
 
+sub print_usage {
+    my ($par, $d) = @_;
+
+    print "\n";
+    print "Module usage table for Vitess module McStas_", lc($d->{'name'}), ":\n";
+
+    my $dsc = $d->{'identification'}{'short'};
+    chomp $dsc;
+    $dsc =~ s/\n/\\n/g;
+    print "Description: \n\"$dsc\"\n\n";
+    print "____________________________________________________________\n";
+    print "McStasid, type, default-value, unit, Vitess var, description\n";
+    print "____________________________________________________________\n";
+    if ($d->{'isasource'} == 1) {
+      print "  ncount, float, 1e6, [1], n, Defines number of trajectories to generate\n";
+    }
+    
+    for (@$par) {
+        my ($p, $let, $typ) = @$_;
+        print "  $p, ";
+        if($typ eq 'double') {
+            print "float, ";
+            if($d->{'parhelp'}{$p}{'default'}) {
+                print " $d->{'parhelp'}{$p}{'default'}";
+            } else {
+                print " \"\"";
+            }
+        } elsif($typ eq 'string') {
+            print "string, ";
+            if($d->{'parhelp'}{$p}{'default'}) {
+                print " $d->{'parhelp'}{$p}{'default'}";
+            } else {
+                print " \"\"";
+            }
+        } else {
+            die "Internal: print_usage()";
+	}
+	print ", [$d->{'parhelp'}{$p}{'unit'}]" if $d->{'parhelp'}{$p}{'unit'};
+        print ", ";
+	print " $let, ";
+	
+        if($d->{'parhelp'}{$p}{'text'}) {
+            my $txt =  $d->{'parhelp'}{$p}{'text'};
+            $txt =~ s/\s+$//;
+            $txt =~ s/\n/\\n/g;
+	    $txt =~ s/\"//g;
+            print $txt;
+        }
+	print "\n";
+    }
+    print "  xpos, float, 0, [m], x, X position of module\n";
+    print "  ypos, float, 0, [m], y, Y position of module\n";
+    print "  zpos, float, 0, [m], z, Z position of module\n";
+    print "____________________________________________________________\n";
+}
+
+
 my $issourcemodule = 0;
 
 if(@ARGV == 0 || @ARGV > 2) {
-    print STDERR "Usage: mcstas2vitess component [assource]\n";
-    print STDERR "       This tool enables to convert a single McStas component into\n";
-    print STDERR "       a Vitess module. \n ";
-    print STDERR "       If a second input parameter to this script is defined, the component\n";
-    print STDERR "       will be for insertion as first module in Vitess, i.e. a source module.\n";
     print STDERR "\n";
-    print STDERR "       Component string parameters should be declared\n";
-    print STDERR "       as 'char*' setting parameters. Default values are allowed.\n";
-    print STDERR "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
-    print STDERR "DOC:      Please visit http://www.mcstas.org\n";
+    print STDERR "Usage: mcstas2vitess.pl Component.comp [assource]\n";
+    print STDERR "\n";
+    print STDERR "  1st argument: local component-file \n";
+    print STDERR "  2nd argument: [optional] indicate component is a source (i.e. first in Vitess).\n";
+    print STDERR "\n";
+    print STDERR "       This tool enables to convert a McStas component into\n";
+    print STDERR "       an instrument that can be compiled into a Vitess module using mcrun --no-main. \n ";
+    print STDERR "\n";
+    print STDERR "       If further components are added, these may also provide functionality to the\n";
+    print STDERR "       instr/module.\n";
+    print STDERR "\n";
+    print STDERR "       Supported input arguments are currently of these types only:\n";
+    print STDERR "         double, int etc. -> all mapped to float in Vitess (default type)\n";
+    print STDERR "         string -> mapped to char* in Vitess\n";
+    print STDERR "\n";
+    print STDERR "       If the component uses any \"string\" inputs, these MUST be specified in a '.vif file.'\n";
+    print STDERR "       Also, \"string\" currently MUST have default values provided in the comp.'\n";
+    print STDERR "       Further, the '.vif' file may be used to define the parameter letters used in the \n";
+    print STDERR "       resulting Vitess module.\n";
+    print STDERR "\n";
+    print STDERR "          example content of a .vif file:\n";
+    print STDERR "            sector -S string\n";
+    print STDERR "            beamline -B double\n";
+    print STDERR "\n";
+    print STDERR "       - defines that McStas parameter 'sector' is a string that will use Vitess parameter -S\n";
+    print STDERR "       - defines that McStas parameter 'beamline' is a double that will use Vitess parameter -B\n";
+    print STDERR "\n";
+    print STDERR "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess.pl\n";
+    print STDERR "DOC:      Please visit https://www.mcstas.org\n";
+    print STDERR "\n";
     exit 1;
 } elsif (@ARGV == 1) {
-    print "Processing component as non-source module for Vitess\n";
+    print "Processing component as NON-source module $ARGV[0] for Vitess\n";
 } elsif (@ARGV == 2) {
-    print "Processing component as source module for Vitess\n";
+    print "Processing component as source module $ARGV[0] for Vitess\n";
     $issourcemodule = 1;
 }
 
@@ -336,47 +414,13 @@ for $p (@{$data->{'inputpar'}}) {
 print "mcstas2vitess: Converting McStas component ${compname} into Vitess Module 'McStas_${compname}'\n";
 # Output the .instr file.
 my $INSTR = new FileHandle;
-my $instr_name = lc("McStas_${compname}.instr");
-my $c_name = lc("McStas_${compname}.c");
-my $out_name1 = lc("McStas_${compname}.out");
-if (!($Config{'osname'} eq 'MSWin32')) {
-  $out_name1 = lc("McStas_${compname}.exe");
-}
-
+my $instr_name = "McStas_${compname}.instr";
+my $c_name = "McStas_${compname}.c";
 open($INSTR, ">$instr_name") ||
     die "Could not open output Vitess Module instrument file '$instr_name'.";
 make_instr_file($INSTR, \@param, $data);
 close($INSTR);
 print "Wrote Vitess Module instrument file '$instr_name'.\n";
-
-my @mcstas_cmd = ("${MCSTAS::sys_dir}/bin/mcrun", "--no-main", $instr_name,"-n0");
-print join(" ", @mcstas_cmd), "\n";
-if(system(@mcstas_cmd)) {
-    print "*** Error exit ***\n";
-    print STDERR "McStas compilation failed.\n";
-    exit 1;
-}
-print "Wrote C file '$c_name'.\n";
-
-my $out_name = "McStas_${compname}";
-$out_name = lc($out_name);
-my @uname = uname(); 
-if (!($Config{'osname'} eq 'MSWin32')) {
-  $out_name = "${out_name}_".$uname[0]."_".$uname[4];
-} else {
-  $out_name = "${out_name}.exe";
-}
-
-my @mv_cmd = ('mv', $out_name1, $out_name);
-
-print join(" ", @mv_cmd), "\n";
-if(system(@mv_cmd)) {
-    print "*** Error exit ***\n";
-    print STDERR "Final rename failed, C compilation likely also failed.\n";
-    exit 1;
-}
-
-print "\nGenerated executable Vitess Module file '$out_name' for placement in your vitess/MODULES folder.\n\n";
 
 # Output the .tcl file for the VITESS gui.
 my $TCL = new FileHandle;
@@ -385,7 +429,12 @@ open($TCL, ">$tcl_name") ||
     die "Could not open output Vitess Module Tcl file '$tcl_name'.";
 make_tcl_file($TCL, \@param, $data);
 close($TCL);
+print_usage(\@param, $data);
 print "\nWrote Vitess Module Tcl GUI file '$tcl_name' for inclusion in your vitess/GUI/usermodule.tcl script.\n\n";
-print "mcstas2vitess: Conversion has been performed\n";
+print "mcstas2vitess: Construction of McStas_${compname}.instr completed.\n";
+print "\nPlease:\n1) use mcrun -c --no-main McStas_${compname}.instr -n0 to compile\n";
+print "2) move resulting executable to mcstas_".lc(${compname})."_\$SYSNAME[.exe]\n";
+print "  (\$SYSNAME includes output of `uname` and ` uname -m`, i.e. something like Darwin_arm64)\n";
+
 
 exit 0;
