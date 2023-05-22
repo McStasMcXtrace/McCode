@@ -37,7 +37,7 @@
 * %P
 * INPUT PARAMETERS
 *
-* filename: [str]         Name of neutron file to write. Default is standard output [string]. If not given, a unique name will be used.
+* filename: [str]         Name of neutron file to write. If not given, the component name will be used.
 * verbose: [1]            If 1) Print summary information for created MCPL file. 2) Also print summary of first 10 particles information stored in the MCPL file. >2) Also print information for first 10 particles as they are being stored by McStas.
 * polarisationuse: [1]    Enable storing the polarisation state of the neutron.
 * doubleprec: [1]         Use double precision storage
@@ -92,6 +92,9 @@ INITIALIZE
 %{
     char extension[128]="";
     char *myfilename;
+    
+    // Use instance name for base output if no input was given
+    if (!strcmp(filename,"\0")) sprintf(filename, NAME_CURRENT_COMP);
 
 #if defined (USE_MPI)
   /* In case of MPI, simply redefine the filename used by each node */
