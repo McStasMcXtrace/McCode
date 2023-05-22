@@ -45,7 +45,7 @@ if (NOT WINDOWS)
 endif()
 
 # Include mcstas-comp files
-foreach(name contrib data examples misc monitors obsolete optics samples share sources union editors libs)
+foreach(name contrib data examples misc monitors obsolete optics samples share sources union sasmodels editors libs)
   installLib("${PROJECT_SOURCE_DIR}/${name}")
 endforeach()
 
