@@ -493,8 +493,8 @@ class McGuiAppController():
         # args - [category, comp_names[], comp_parsers[]]
         args = []
         if mccode_config.configuration["MCCODE"]=="mcstas":
-            categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6: 'Union', 7 : 'SASmodels', 7 : 'Obsolete'}
-            dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6: 'union', 7 : 'sasmodels', 7 : 'obsolete'}
+            categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6: 'Union', 7 : 'Obsolete'}
+            dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6: 'union', 7 : 'obsolete'}
             numcat=7
         if mccode_config.configuration["MCCODE"]=="mcxtrace":
             categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6: 'Union', 7: 'AstroX', 8 : 'Obsolete'}
