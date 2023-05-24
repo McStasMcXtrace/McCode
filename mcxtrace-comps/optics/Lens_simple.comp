@@ -31,12 +31,15 @@
 * yheight: [m] Height of lens aperture.
 * radius:  [m] Radius of lens aperture (overrides xwidth & yheight).
 * f:       [m] Focal length - overrides the material_datafile - and diregards chromatic aberration.
-* material_datafile: [ ] File where the material parameters for the lens may be found. Format is similar to what may be found off the NISP website.
+* material_datafile: [ ] File where the material parameters for the lens may be found. Format is similar to what may be found off the NIST website.
 * N:       [ ] The number of successive lenses in the stack.
-* r:       [ ] The radius of curvature of the lens.
+* r:       [m] The radius of curvature of the lens.
 * Optional parameters:
 * T:       [ ] Transmission efficiency of the lens.
 * verbose: [ ] Extra information for debugging. 
+*
+* %L
+* material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
 *
 * %E
 *******************************************************************************/

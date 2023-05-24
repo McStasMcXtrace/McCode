@@ -1,5 +1,7 @@
 X-ray scattering datafiles (This process MUST be automated in the future! ;) )
 
+Obtained from NIST: http://physics.nist.gov/cgi-bin/ffast/ffast.pl
+
 1) Use the tool get_xray_db_data - requires bash and wget, e.g.:
 
 ./get_xray_db_data Mo Mo.txt

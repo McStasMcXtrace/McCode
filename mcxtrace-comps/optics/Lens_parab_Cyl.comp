@@ -26,6 +26,10 @@
 * with a distance d between them. The reference point of the component is at the bottom of the first parabolic
 * surface.
 *
+* Example for a kinoform lens:
+*   Lens_parab_Cyl(r=.5e-3,yheight=1.3e-3,xwidth=1.3e-3,d=.1e-3,N=21,
+*     material_datafile="Be.txt")
+*
 * %P
 * Input parameters:
 * r:        [m] Radius of curvature (circular approximation at the tip of the profile).

@@ -72,6 +72,9 @@
  *      3 => Bragg_crystal_fcc: fcc
  *      4 => Bragg_crystal_fcc: bcc
  *
+ * %L
+* material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
+ *
  * %E
  *******************************************************************************/
 

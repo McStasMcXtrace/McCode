@@ -1,6 +1,7 @@
 /*****************************************************************************
 * McXtrace, x-ray tracing package
 *         Copyright (C) Risoe National Laboratory, Roskilde, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: PowderN
 *
@@ -306,7 +307,7 @@ SHARE
       "column_inv2d", "column_1/2d", "column_sintheta/lambda",
       "column_q", /* 10 */
       "DW", "Debye_Waller",
-      "delta_d_d/d",
+      "delta_d/d",
       "column_F ",
       "V_rho",
       "density",
@@ -550,7 +551,7 @@ int calc_inc_xsect(double k, double *inc, struct line_info_struct *line_info){
             correction=line_info->my_s_k2_sum/(k*k);
             break;
         case 4:
-            /*inc is given as total attenuation = inc+ćoh+abs in column i*/
+            /*inc is given as total attenuation = inc+coh+abs in column i*/
             correction=line_info->my_s_k2_sum/(k*k) + line_info->my_a;
             break;
         case 5:

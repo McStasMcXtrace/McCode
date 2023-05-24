@@ -25,7 +25,7 @@
 * xwidth:[m]        Width of block.
 * yheight: [m]      Height of block.
 * zdepth: [m]       Thickness of block.
-* material_datafile: [str]   File where the material parameters for the scintillator may be found. Format is similar to what may be found off the NISP website.
+* material_datafile: [str]   File where the material parameters for the scintillator may be found. Format is similar to what may be found off the NIST website.
 * nx: [m]           Number of pixel columns.
 * ny: [m]           Number of pixel rows.
 * filename: [str]   Name of file in which to store the detector image.
@@ -36,6 +36,9 @@
 * PSD_N:    Array of xray counts
 * PSD_p:    Array of xray weight counts
 * PSD_p2:   Array of second moments
+*
+* %L
+* material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Detector_pn

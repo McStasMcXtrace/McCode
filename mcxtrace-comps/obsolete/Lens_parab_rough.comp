@@ -17,21 +17,23 @@
 * Origin: NBI
 *
 * %D
-* A simple X-ray compound refractive lens (CRL) with a profile of the parabola in rotation simulates the photons' movement on passing through it. The CRL focuses in 2D
+* A simple X-ray compound refractive lens (CRL) with a profile of the parabola in
+* rotation simulates the photons' movement on passing through it. The CRL focuses in 2D. 
 *
 * %P
 * Input parameters:
-* r - raduis of curvature (circular approximation at the tip of the profile) [mm];
-* yheight - the CRL's dimensions along Y, aka aperture[mm];
-* xwidth - the CRL's dimensions along X [mm];
-* d - distance between two surfaces of the lens along the propagation axis;
-* N - amount of single lenses in a stack.
-* T - transmission of the lens
-* rough_xy [rms] - waviness along x and y
-* rough_z [rms] -waviness along z
-* 
-* attenuation coefficient mu is taken from the NIST database and 
-* Be.txt
+* r: raduis of curvature (circular approximation at the tip of the profile) [mm];
+* yheight: the CRL's dimensions along Y, aka aperture[mm];
+* xwidth: the CRL's dimensions along X [mm];
+* d: distance between two surfaces of the lens along the propagation axis;
+* N: amount of single lenses in a stack.
+* T: transmission of the lens
+* rough_xy: [rms] waviness along x and y
+* rough_z: [rms] waviness along z
+* material_datafile:     File where the material parameters for the filter may be found. Format is similar to what may be found off the NIST website. [Be.txt]
+*
+* %L
+* material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
 *
 * %E
 *******************************************************************************/

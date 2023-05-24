@@ -13,7 +13,7 @@
  * Version: 1.0
  * Origin: NIST
  *
- * Perfect, laue crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
+ * Perfect, Laue crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
  * 
  * %D
  * NIST_Laue_crystal_BC.comp is written by Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
@@ -34,7 +34,7 @@
  * This displacement is only exact for symmetrical Laue; asymmetrical computation requires more effort,
  * and is probably not worth it.
  * The sampling of these processes are controlled by the 3 variables transmission_sampling, forward_diffraction_sampling,
- * and laue_sampling. Since 99% of uses of this will have the transmitted beam turned off, and use laue diffraction mode,
+ * and Laue_sampling. Since 99% of uses of this will have the transmitted beam turned off, and use Laue diffraction mode,
  * the values should be just 0,0,1. If the general behavior of the transmitted beams
  * is interesting, use 1,1,1 which samples all beams equally.  Results weights are adjusted for this,
  * so computed intensities won't be affected.
@@ -66,8 +66,10 @@
  * structure_factor_scale_i: [ ] imaginary part of complex explicit override of structure factor multiplier for crystal structure if Bragg_crystal_explicit
  * transmission_sampling:    [ ] enable sampling of transmission diffraction mode.
  * forward_diffraction_sampling:  [ ]  enable sampling of forward diffraftion mode.
- * laue_sampling:            [ ] enable sampling of laue diffraction mode.
+ * laue_sampling:            [ ] enable sampling of Laue diffraction mode.
  *
+ * %L
+ * material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
  *
  * %E
  *******************************************************************************/

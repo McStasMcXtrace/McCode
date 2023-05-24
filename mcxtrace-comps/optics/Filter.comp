@@ -33,7 +33,7 @@
 * yheight: Height of block. (m)
 * zdepth:  Thickness of block. (m)
 * radius:  Radius of cylinder or sphere. (m)
-* material_datafile: File where the material parameters for the filter may be found. Format is similar to what may be found off the NISP website. [Be.txt]
+* material_datafile: File where the material parameters for the filter may be found. Format is similar to what may be found off the NIST website. [Be.txt]
 * geometry: File containing the polygon definition of a general shape object. When xwidth is also given, the object is rescaled accordingly (OFF/PLY)
 * fixed_delta: Use a fixed delta to compute refraction - useful for debugging. ( ) 
 * refraction: If nonzero, refraction is enabled. (0/1) 
@@ -48,6 +48,8 @@
 * qhull <http://qhull.org>
 * %Link
 * Powercrust https://www.cs.ucdavis.edu/~amenta/powercrust.html
+* %L
+* material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Filter

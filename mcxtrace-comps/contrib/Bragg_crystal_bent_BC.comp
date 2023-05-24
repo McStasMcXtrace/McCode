@@ -77,6 +77,9 @@
  *      3 => Mx_crystal_fcc: fcc
  *      4 => Mx_crystal_fcc: bcc
  * verbose [ ]     if non-zero: Output more information (warnings and messages) to the console.
+ *
+* %L
+* material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
  * %E
  *******************************************************************************/
 

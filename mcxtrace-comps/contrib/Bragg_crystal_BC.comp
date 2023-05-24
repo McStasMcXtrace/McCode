@@ -21,7 +21,7 @@
  *
  * For details see:
  * The optics of focusing bent-crystal monochromators on X-ray powder diffractometers with application to lattice parameter determination and microstructure analysis, 
- * Marcus H. Mendenhall,* David Black and James P. Cline, J. Appl. Cryst. (2019). 52, https://doi.org/10.1107/S1600576719010951
+ * Marcus H. Mendenhall, David Black and James P. Cline, J. Appl. Cryst. (2019). 52, https://doi.org/10.1107/S1600576719010951
  *
  * Reads atomic formfactors from a data input file.
  * The Bragg_Crystal code reflects ray in an ideal geometry, does not include surface imperfections or mosaicity
@@ -64,6 +64,9 @@
  *      3 => Mx_crystal_fcc: fcc
  *      4 => Mx_crystal_fcc: bcc
  * verbose [ ]     if non-zero: Output more information (warnings and messages) to the console.
+ *
+* %L
+* material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
  * %E
  *******************************************************************************/
 

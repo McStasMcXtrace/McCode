@@ -22,7 +22,6 @@
 * 	z: [0 0.002033m]
 *	xmin=-0.0002634
 *	xmax=0.0002634
-*	y - height of the lens.
 * the principles of the kinoform's operation are described here: http://neutrons.ornl.gov/workshops/nni_05/presentations/min050616_xray_evans-lutterodt_ken_nni05.pdf
 *
 * You may as well use a kinoform with:
@@ -31,7 +30,8 @@
 *
 * %P
 * Input parameters:
-* 
+*	yheight: [m] height of the lens.
+* xwidth: [m] width of the lens
 *
 * %E
 *******************************************************************************/
@@ -119,7 +119,8 @@ TRACE
   while (e>E[i]){
     i++; 
     if (E[i]==-1){
-      fprintf(stderr,"Photon energy (%g keV) is outside of the kinoform's material data\n",k); ABSORB;
+      fprintf(stderr,"Lens_Kinoform: %s: Photon energy (%g keV) is outside of the kinoform's material data\n",
+        NAME_CURRENT_COMP, k); ABSORB;
     }
   } 
   EE=(e-E[i-1])/(E[i]-E[i-1]); 
@@ -144,7 +145,8 @@ TRACE
 	    if (nr<=1) nr=1;
 	    if (nr>=1345) nr=1345;
 	    if (x_KL[nr]==-1){
-		fprintf(stderr,"An error with parsing the kinoform dimensions' file\n"); ABSORB;
+        fprintf(stderr,"Lens_Kinoform: %s: An error with parsing the kinoform dimensions' file\n", 
+          NAME_CURRENT_COMP); ABSORB;
 	    }
 	}
     x_tmp=x_KL[nr];z_int=z_KL[nr];

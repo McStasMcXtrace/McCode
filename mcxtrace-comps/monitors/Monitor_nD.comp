@@ -4,6 +4,7 @@
 *         Copyright 1997-2002, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Monitor_nD
 *
@@ -34,8 +35,6 @@
 * The 'cylinder' and 'banana' option will change that for a banana shape
 * The 'sphere' option simulates spherical detector. The 'box' is a box.
 * The cylinder, sphere and banana should be centered on the scattering point.
-* The monitored flux may be per monitor unit area, and weighted by
-* a lambda/lambda(2200m/s) factor to obtain standard integrated capture flux.
 * In normal configuration, the Monitor_nD measures the current parameters
 * of the photon that is beeing detected. But a PreMonitor_nD component can
 * be used in order to study correlations between a photon being detected in
