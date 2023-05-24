@@ -31,6 +31,8 @@
 * (elliptical parameters are calculated according to the mirror's position and its focusing distances and the  * incident angle), the intersection point is then defined. A new, reflected photon is then starting at the  
 * point of intersection.
 *
+* Example: TwinKB_ML( theta=1.2, s1=.045 , s2=.9 , length=0.06 , width=0.2 , R0=0 , reflectivity_datafile="Ref_W_B4C.txt")
+*
 * %P
 * Input parameters:
 * theta: [deg] Incident angle

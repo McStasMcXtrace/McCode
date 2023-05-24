@@ -21,6 +21,8 @@
 * The geometry of the paraboloid is governed by the equation: y = x^2 / a^2 + z^2 / b^2
 * Hence, the focal length for the 'x' curve is f=a^2 / 4, and analogous for z.
 *
+* Example: Mirror_parabolic(R0=1, a=1, b=0, xwidth=0.02, yheight=0, zdepth=0.05)
+*
 * %P
 * INPUT PARAMETERS
 * R0:     [1]  Reflectivity of mirror.

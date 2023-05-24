@@ -18,6 +18,9 @@
 * $\theta' = \theta + \delta \theta \in [-min(theta,\Delta\theta,\Delta\theta]$
 * This ensures that reflected rays will never be scattered into the capillary.
 * \Delta\theta is the value specified by the parameter waviness.
+*
+* Example: Capillary(
+*       radius=1e-4,length=0.1, R0=0, coating="Rh.txt")
 * 
 * %P
 * radius: [m]   Radius of curvature.

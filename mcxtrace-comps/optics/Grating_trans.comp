@@ -26,6 +26,9 @@
 *
 * This  component is currently undergoing validation.
 *
+* Example: Grating_trans(
+*   xwidth=25e-3, yheight=25e-3, gamma=0.4, period=2000e-10, zdepth=5100e-10, max_order=3, material="Au.txt")
+*
 * %P
 * Input parameters:
 * period: [m]      Distance between grating grooves.

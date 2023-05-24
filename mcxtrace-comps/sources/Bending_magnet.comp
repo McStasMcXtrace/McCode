@@ -19,7 +19,7 @@
 * A source model based on the derivation from B.D. Patterson, Am. J. Phys. 79, 1046 (2011); doi: 10.1119/1.3614033
 *
 * Example: Bending_magnet(
-*   E0 = e0, dE = de, Ee = 2.75,
+*   E0 = 14, dE = 7, Ee = 2.75,
 *   Ie = 0.5, B = 1.72, sigey=9.3e-6, sigex=215.7e-6)
 *
 * %P

@@ -26,8 +26,7 @@
 * with a distance d between them. The reference point of the component is at the bottom of the first parabolic
 * surface.
 *
-* Example for a kinoform lens:
-*   Lens_parab_Cyl(r=.5e-3,yheight=1.3e-3,xwidth=1.3e-3,d=.1e-3,N=21,
+* Example: Lens_parab_Cyl(r=.5e-3,yheight=1.3e-3,xwidth=1.3e-3,d=.1e-3,N=21,
 *     material_datafile="Be.txt")
 *
 * %P
@@ -39,6 +38,7 @@
 * N:        [ ] Number of single lenses in a stack.
 * rough_xy: [rad] RMS value of random slope along x and y.
 * rough_z:  [rad] RMS value of random slope along z.
+* material_datafile: [str]   Datafile containing f1 constants
 *
 * %E
 *******************************************************************************/

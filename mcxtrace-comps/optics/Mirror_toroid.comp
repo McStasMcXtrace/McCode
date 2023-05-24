@@ -26,10 +26,16 @@
 *
 * In the first incarnation we assume the mirror to be curving outwards (a bump).
 *
+* Example: Mirror_toroid(zdepth=0.340,xwidth=0.020,radius=246.9254,radius_o=246.9254,R0=1)
+*
 * %P
 * Input parameters:
-*
-* (none)
+* R0:      [1]  Reflectivity of mirror.
+* xwidth:  [m]  Width of mirror.
+* zdepth:  [m]  Length of mirror.
+* coating: [str] Datafile containing either mirror material constants or reflectivity  numbers.
+* radius:  [m] Curvature radius
+* radius_o:[m] Curvature radius, outwards
 *
 * %E
 *******************************************************************************/

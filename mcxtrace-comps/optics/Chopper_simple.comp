@@ -25,6 +25,10 @@
 * by the chopper. In other words no photons are absorbed, the photon time is merely sampled within the chopper window.
 * t_rise is the rise-time of the chopper opening giving a trapezoidal shape.
 * Limitations: this component does not take chopper geometry into account. If isfirst only samples in the first chopper opening window.
+*
+* Example: Chopper_simple(
+* t0 = -0.5/M_C, T = 20e-6, tau = 100e-12, xwidth = 1e-4,
+* yheight = 1e-4, isfirst = 1)
 * 
 *
 * %P

@@ -25,6 +25,8 @@
 * half-axis along the y-axis (See the component manual for a drawing). 
 * This means that to position the mirror correctly,
 * the user positions the ellipsoid governing the mirror shape, not the mirror itself.
+*
+* Example: Mirror_elliptic( length=150e-3, width=150e-3, x_a=1.025, y_b=1.025, z_c=1.025)
 * 
 * %P
 * INPUT PARAMETERS

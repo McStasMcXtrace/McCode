@@ -24,6 +24,8 @@
 * as opposed to wavelength (in AA). Wavelength is the default.
 * Flux is set in the unit photons/s
 *
+* Example: Source_flat(xwidth=1e-3,yheight=1e-3, focus_xw=0.5e-2, focus_yh=0.45e-2,dist=1, E0=E0, dE=DE)
+*
 * %P
 * radius: [m]   Radius of circle in (x,y,0) plane where x-rays are generated.
 * yheight: [m]   Height of rectangle in (x,y,0) plane where x-rays are generated.

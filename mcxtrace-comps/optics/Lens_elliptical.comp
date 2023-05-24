@@ -23,10 +23,9 @@
 * Input parameters:
 * r1: radius of the profile along the X axis [m]
 * r2: radius of the profile along the Y axis [m]
-* w: parabola parameter, constraining it along the propagation axis;
-* d: distance between two surfaces of the lens along the propagation axis;
-* N: amount of single lenses in a stack.
-* Transmission: transmission of the lens
+* w: parabola parameter, constraining it along the propagation axis [m]
+* d: distance between two surfaces of the lens along the propagation axis [m]
+* N: amount of single lenses in a stack [1]
 * material_datafile:     File where the material parameters for the filter may be found. Format is similar to what may be found off the NIST website. [Be.txt]
 * 
 * %L
@@ -253,13 +252,8 @@ TRACE
     kx=outg.k[0]; ky=outg.k[1]; kz=outg.k[2];
     incid=outg;
   }
-   // transmission calculation
-   if (Transmission==0){
-      ABSORB;
-   }else{ 
-     Transmission=exp(-mu*d*N); 
-     p*=Transmission;
-   }
+  // transmission calculation
+  p*=exp(-mu*d*N);
 %}
 
 MCDISPLAY

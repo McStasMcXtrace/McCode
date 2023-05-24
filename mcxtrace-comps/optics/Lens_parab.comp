@@ -20,6 +20,8 @@
 * %D
 * A simple X-ray compound refractive lens (CRL) with a profile of the parabola in rotation simulates the photons' movement on passing through it. The CRL focuses in 2D
 *
+* Example: Lens_parab(material_datafile = "Be.txt", r=200e-6, r_ap=0.5e-3, d=50e-6, N=16)
+*
 * %P
 * Input parameters:
 * r:        [m] Radius of curvature (circular approximation at the tip of the profile).
@@ -28,13 +30,14 @@
 * N:        [m] Number of single lenses in a stack.
 * rough_xy: [rad] RMS value of random slope error along x and y.
 * rough_z:  [rad] RMS value of random slope error along z.
+* material_datafile: [str]   Datafile containing f1 constants
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Lens_parab
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string material_datafile="Be.txt", r=0.5e-3, r_ap=1.4e-3, yheight=0, d=.1e-3, int N=1, rough_z=0, rough_xy=0, T=1)
+SETTING PARAMETERS (string material_datafile="Be.txt", r=0.5e-3, r_ap=1.4e-3, d=.1e-3, int N=1, rough_z=0, rough_xy=0)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 

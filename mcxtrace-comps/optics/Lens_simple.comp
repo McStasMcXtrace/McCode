@@ -35,7 +35,7 @@
 * N:       [ ] The number of successive lenses in the stack.
 * r:       [m] The radius of curvature of the lens.
 * Optional parameters:
-* T:       [ ] Transmission efficiency of the lens.
+* T:       [0-1] Transmission efficiency of the lens.
 * verbose: [ ] Extra information for debugging. 
 *
 * %L
@@ -150,6 +150,8 @@ TRACE
 
   /*set the phase shift*/
   phi+=k*1e10*((x*x+y*y)/2*F); /*k in AA⁻1 but x,y and f are in m. conversion factor.*/
+  
+  p *= T;
 %}
 
 FINALLY

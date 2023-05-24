@@ -19,12 +19,12 @@
 * Based on Slit-comp by Kim Lefmann and Henrik Roennow
 * A simple rectangular or circular slit. You may either
 * specify the radius (circular shape), which takes precedence,
-* or the rectangular bounds.
+* or the rectangular bounds. The slits are separated with 'd', and arranged along X.
 * No transmission around the slit is allowed.
 * If cutting option is used, low-weight x-rays are ABSORBED
 *
-* Example: Slit(xmin=-0.01, xmax=0.01, ymin=-0.01, ymax=0.01)
-*          Slit(radius=0.01, cut=1e-10)
+* Example: Slit_N(xwidth=0.01, yheight=0.01, d=0.02)
+*          Slit_N(radius=0.01, cut=1e-10, d=0.03)
 *
 * %P
 * INPUT PARAMETERS
@@ -32,7 +32,7 @@
 * radius: Radius of slit in the z=0 plane, centered at Origo (m)
 * xwidth: Width of slit. Overrides xmin,xmax. (m)
 * yheight: Height of slit. Overrides ymin,ymax. (m)
-* N: number of slit openings (1)
+* N: number of slit openings along X (1)
 * d: separation of slits (m)
 *
 * Optional parameters:

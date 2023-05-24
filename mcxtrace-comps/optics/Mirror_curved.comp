@@ -9,6 +9,8 @@
 *
 * %D
 * mirror is in the YZ-plane curved towards positive X if radius is positive
+*
+* Example: Mirror_curved( radius=2, length=20e-3, width=40e-3, coating="AlMgF2_disco.dat")
 * 
 * %P
 * radius: [m]   Radius of curvature, along Z.

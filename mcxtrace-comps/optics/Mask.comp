@@ -42,8 +42,9 @@
 * by adding "-DUSE_PNG=1 -lpng" to 1) the MCXTRACE_CFLAGS environment variable or 2) to the compiler flags textbox in the GUI. Open File->Configuration and edit the textbox. 
 *
 * The virtual option of the Mask, is intended as a help to use a png-image as a grayscale distribution. If the virtual flag is set, rays are propagated to the mask plane
-* and the pixel value at the intersection point is read, but the rays remain unaffected. The pixel value is stored in the variable named in the string maskvar. This should be
-* a USERVAR set from the instrument file.
+* and the pixel value at the intersection point is read, but the rays remain unaffected. The pixel value is stored in the variable named in the string maskvar. This should be a USERVAR set from the instrument file.
+*
+* Example: Mask(xwidth=0.1, yheight=0.1, mask=Test_Mask_input_file.mask)
 * 
 * %P
 * Input parameters:
@@ -59,7 +60,7 @@
 
 DEFINE COMPONENT Mask
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xwidth, yheight, string mask, invert=0, virtual=0)
+SETTING PARAMETERS (xwidth=0.1, yheight=0.1, string mask="Test_Mask_input_file.mask", invert=0, virtual=0)
 OUTPUT PARAMETERS ()
 //DEPENDENCY "-lpng -DUSE_PNG"
 

@@ -26,12 +26,14 @@
 * The material datafile may be specified as a coating or as relfectivity - either parameterized by q or E,theta.
 * If the datafile is identified as a coating recipe, an ab-initio reflectivity calculation is triggered.
 *
+* Example: Mirror(xwidth=5e-2, zdepth=2e-1, R0=1, coating="B4C.dat")
+*
 * %P
 * Input parameters:
 * xwidth:  [m] The width of the mirror
 * zdepth:  [m] The length of the mirror
 * yheight: [m] The height of the mirror. This overrides xwidth and puts the mirror in the yz-plane. 
-* R0:      [ ] Constant reflectivity
+* R0:      [0-1] Constant reflectivity
 * coating: [ ] Filename containing reflectivities (or coating).
 * geometry:[str] Filename of an OFF/PLY geometry providing a polygonal surface. When xwidth/yheight/zdepth are also given, the object is rescaled accordingly.
 *

@@ -18,7 +18,8 @@
 * %D
 * A undulator source model based on the derivation by K.J. Kim, AIP, conf. proc., 184, 1989. doi:10.1063/1.38046.
 *
-* Example: SOLEIL_PX2a U24: Undulator( E0=12.65, dE=1, Ee=2.75, dEe=0.001, Ie=0.5, K=1.788, Nper=80, 
+* SOLEIL_PX2a U24
+* Example: Undulator( E0=12.65, dE=1, Ee=2.75, dEe=0.001, Ie=0.5, K=1.788, Nper=80, 
 *   lu=24e-3, sigey=9.3e-6, sigex=215.7e-6, sigepx=29.3e-6, sigepy=4.2e-6, 
 *   dist=29.5, E1st=12.400 )
 *

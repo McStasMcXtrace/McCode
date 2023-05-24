@@ -29,6 +29,9 @@
 * 
 * In an upcoming release this grating model will also include a blazed grating.
 *
+* Example: Grating_reflect(
+*   d_phi=1,order=0,rho_l=100,zdepth=102e-3,xwidth=102e-3) 
+*
 * %P
 * Input parameters:
 * xwidth: [m]    The width of the grating.

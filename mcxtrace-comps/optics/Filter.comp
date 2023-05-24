@@ -26,6 +26,9 @@
 *   sphere:          radius
 *   any shape:       geometry=OFF/PLY_file
 *
+* Example: Filter(material_datafile="Ge.txt",
+*   geometry="wire.ply",xwidth=0.02,yheight=0,zdepth=0)
+*
 * %P
 * INPUT PARAMETERS
 *

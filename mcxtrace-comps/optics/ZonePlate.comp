@@ -27,6 +27,8 @@
 * The zone plate can be either circular or linear. In the linear case, the "slits" are
 * along the x-axis.
 *
+* Example: ZonePlate(radius=0.00015, L=0.15, lambda0=1, focus_xw=300e-9, focus_yh = 300e-9, focus_x0 = 0.0, focus_y0 = 0.0, dist=1)
+*
 * %P
 * radius:     [m]  The outer radius of the zone plate. Triggers a circular zone plate. Takes precedence over xwidth,yheight.
 * xwidth:     [m]  Width of linear zone plate. 
