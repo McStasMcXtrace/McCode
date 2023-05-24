@@ -33,6 +33,8 @@
 * If xwidth (or yheight or zdepth) is nonzero, the component scales the object 
 * to fill that dimension. The xyz coordinates indicate the object shift.
 *
+* Example: Abs_objects(objects="input_abs_objects_template.dat")
+*
 * %P
 * INPUT PARAMETERS
 * objects: [ ]     Input file where the off-shapes are defined.

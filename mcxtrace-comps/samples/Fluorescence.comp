@@ -66,6 +66,10 @@
 *
 * The computation is made via the XRayLib (apt install libxrl-dev).
 *
+* Example: Fluorescence(material="LaB6",
+*  xwidth=0.001,yheight=0.001,zdepth=0.0001, p_interact=0.99,
+*  target_index=1, focus_xw=0.0005, focus_yh=0.0005)
+*
 * %Parameters
 * material:  [str]    Chemical formulae, e.g. "LaB6", "Pb2SnO4".
 * weight:    [g/mol]  Atomic/molecular weight of material.

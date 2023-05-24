@@ -23,6 +23,12 @@
 * initial unit cell and a list correlating each voxel of the polycrystal to an entry in the list of rotations
 * and stretches.
 *
+* Example: Polycrystal( MapFile= "polycrystal_1layer_2orts.map", OrientationsFile= "stretch_2orts.orts", 
+*   ReflectionsDatafile= "GeReduced.lau", xwidth= 200e-6, yheight= 200e-6, zdepth = 50e-6, 
+*   DeltadOverd = 0.001, Mosaicity = 1, SigmaAbsorbtion  = 0.0, SigmaIncoherent = 0.0, 
+*   MaxNumberOfReflections    = 1, ProbabilityOfTransmission = 0.5, 
+*   ax = 5.6579, ay = 0.0000, az = 0.0000, bx = 0.0000, by = 5.6579, bz = 0.0000, cx = 0.0000, cy = 0.0000, cz = 5.6579 )
+*
 * %P
 * MapFile:                   []     File describing, which orientation is found in which voxel
 * OrientationsFile:          []     File describing the different orientations

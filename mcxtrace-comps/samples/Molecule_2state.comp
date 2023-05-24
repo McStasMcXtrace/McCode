@@ -29,6 +29,10 @@
 * To improve statistics, scattering may be limited to a "forward" cone with opening angle in [psimin, psimax].
 * Furthermore, scattering may be restricted to the azimuthal segment between [etamin,etamax].
 * 
+* Example: Molecule_2state(
+*  nq=512,state_0_file="Fe_bpy_GS_DFT.txt",state_1_file="Fe_bpy_ES_DFT.txt",radius=0.01,
+*  psimin=0, psimax=15*DEG2RAD, etamin=-1*DEG2RAD,etamax=1*DEG2RAD,
+*  t_relax=600e-12, delta_t=100e-9, excitation_yield=0.2)
 *
 * %P
 * Input parameters:

@@ -28,6 +28,8 @@
 *   sphere:          radius (yheight=0)
 *   any shape:       geometry=OFF/PLY file
 *
+* Example: Absorption_sample( material_datafile_o="Mn.txt", xwidth_o = 0.5, yheight_o = 0.5, zdepth_o = 0.0001, rho_o=7.15 )
+*
 * %P
 * Input parameters: 
 * radius_o: [m] Radius of "outer" enclosing material cylinder (0)

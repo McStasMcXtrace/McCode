@@ -28,26 +28,26 @@
 *
 * INPUT PARAMETERS
 *
-* R:         Radius of scattering hard spheres (AA)
-* Phi:       Particle volume fraction (1)
-* Delta_rho: Excess scattering length density (fm/AA^3)
-* radius:    Outer radius of sample in (x,z) plane for cylinder/sphere [m]
-* xwidth:    horiz. dimension of sample, as a width (m)
-* yheight:   vert . dimension of sample, as a height for cylinder/box (m)
-* zdepth:    depth of sample (m)
-* target_index: Relative index of component to focus at, e.g. next is +1 [1]
-* focus_xw:  horiz. dimension of a rectangular area [m]
-* focus_yh:  vert.  dimension of a rectangular area [m]
-* focus_aw:  horiz. angular dimension of a rectangular area [deg]
-* focus_ah:  vert.  angular dimension of a rectangular area [deg]
-* focus_r:   Detector (disk-shaped) radius (m)
+* R:        [AA] Radius of scattering hard spheres 
+* Phi:      [1] Particle volume fraction
+* Delta_rho: [fm/AA^3] Excess scattering length density 
+* radius:   [m] Outer radius of sample in (x,z) plane for cylinder/sphere
+* xwidth:   [m] horiz. dimension of sample, as a width
+* yheight:  [m] vert . dimension of sample, as a height for cylinder/box
+* zdepth:   [m] depth of sample
+* target_index: [1] Relative index of component to focus at, e.g. next is +1
+* focus_xw: [m] horiz. dimension of a rectangular area
+* focus_yh: [m] vert.  dimension of a rectangular area
+* focus_aw: [deg] horiz. angular dimension of a rectangular area
+* focus_ah: [deg] vert.  angular dimension of a rectangular area
+* focus_r:  [m] Detector (disk-shaped) radius
 *
 * Optional parameters:
-* target_x:
-* target_y:   position of target to focus at [m]
-* target_z:
+* target_x: [m]
+* target_y: [m] position of target to focus at 
+* target_z: [m]
 * sphere_mtrl: [] Material datafile from which to find absorption. If none is given absorption is neglected. 
-* mu_c: [5] Column of the datafiel which contains absorption coefficients.
+* mu_c: [5] Column of the datafile which contains absorption coefficients.
 *
 *
 * %Link

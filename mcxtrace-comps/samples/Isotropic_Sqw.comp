@@ -160,8 +160,7 @@
 * for which column 1 is 'q' and column 2 is 'S(q)'.
 *
 * <b>Examples:</b>
-* 1- liq-4He parameters
-*   Isotropic_Sqw(..., Sqw_coh="He4_liq_coh.sqw", T=10, p_interact=0.3)
+* Isotropic_Sqw(radius=0.0005, yheight=0.001, Sqw_coh="Rb_liq_coh.sqw",verbose=3, p_interact=0.95)
 *
 * 2- powder sample
 *  Isotropic_Sqw(..., Sqw_coh="Al.laz")
