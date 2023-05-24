@@ -417,6 +417,11 @@ class OverviewDocWriter:
         union_tab = ''
         for c in union_lst:
             union_tab = union_tab + t % (get_html_filepath(c.filepath), c.name, c.origin, c.author, c.filepath, 'comp', c.short_descr) + '\n'
+        # SASmodels
+        sasmodels_lst = [c for c in self.comp_info_lst if c.category=='sasmodels']
+        sasmodels_tab = ''
+        for c in sasmodels_lst:
+            sasmodels_tab = sasmodels_tab + t % (get_html_filepath(c.filepath), c.name, c.origin, c.author, c.filepath, 'comp', c.short_descr) + '\n'
         # Astrox
         astrox_lst = [c for c in self.comp_info_lst if c.category=='astrox']
         astrox_tab = ''
@@ -477,6 +482,7 @@ class OverviewDocWriter:
         text = text.replace('%TAB_LINES_SAMPLES%', samples_tab)
         text = text.replace('%TAB_LINES_MONITORS%', monitors_tab)
         text = text.replace('%TAB_LINES_UNION%', union_tab)
+        text = text.replace('%TAB_LINES_SASMODELS%', sasmodels_tab)
         text = text.replace('%TAB_LINES_MISC%', misc_tab)
         text = text.replace('%TAB_LINES_CONTRIB%', contrib_tab)
         text = text.replace('%TAB_LINES_OBSOLETE%', obsolete_tab)
@@ -524,6 +530,7 @@ class OverviewDocWriter:
             '%TAB_LINES_MONITORS%',
             '%TAB_LINES_CONTRIB%',
             '%TAB_LINES_UNION%',
+            '%TAB_LINES_SASMODELS%',
             '%TABLE_ASTROX%',
             '%TAB_LINES_MISC%',
             '%TAB_LINES_OBSOLETE%',
@@ -547,6 +554,7 @@ class OverviewDocWriter:
  | <A href="#samples">samples</A>
  | <A href="#monitors">monitors</A>
  | <A href="#union">union</A>
+ | <A href="#sasmodels">sasmodels</A>
 %HDR_ASTROX%
  | <A href="#misc">misc</A>
  | <A href="#contrib">contrib</A>
@@ -615,6 +623,16 @@ class OverviewDocWriter:
 %TAB_HEAD%
 
 %TAB_LINES_UNION%
+
+</TABLE>
+
+<P><A NAME="sasmodels"></A>
+<B><FONT COLOR="#FF0000">SASmodels components</FONT></B>
+<TABLE BORDER COLS=5 WIDTH="100%" NOSAVE>
+
+%TAB_HEAD%
+
+%TAB_LINES_SASMODELS%
 
 </TABLE>
 

@@ -27,8 +27,9 @@
 static List search_list = NULL;
 /* MOD: E. Farhi, Oct 2nd, 2001: add obsolete dir. Aug 27th, 2002: added share+contrib */
 /* MOD: P. Willendrup, Oct 11 2016: Add contrib subdir "union" */
+/* MOD: P. Willendrup, May 22 2023: Add contrib subdir "sasmodels" */
 static char *sys_subdir_table[] =
-  { "samples", "monitors", "sources", "optics", "misc" , "obsolete", "contrib", "union", "astrox", "share", "examples" };
+  { "samples", "monitors", "sources", "optics", "misc" , "obsolete", "contrib", "union", "sasmodels", "astrox", "share", "examples" };
 
 /* Attempt to open FILE in directory DIR (or current directory if DIR is
    NULL). */

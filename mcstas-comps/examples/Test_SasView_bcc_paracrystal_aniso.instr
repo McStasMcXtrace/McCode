@@ -1,0 +1,139 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: test_SasView_bcc_paracrystal
+*
+* %Identification
+* Written by: Jose Robledo
+* Origin: FZJ / DTU / ESS DMSC
+* 
+*
+* %INSTRUMENT_SITE: Templates
+*
+* Test instrument for the SasView bcc_paracrystal model component as sample description.
+*
+* %Description
+*
+* Very simple test instrument for the SasView_bcc_paracrystal component
+*
+*
+* Example: model_scale=1 Detector: detector_I=83.8252
+*
+* %Parameters
+* dnn: ([-inf, inf]) Nearest neighbour distance.
+* d_factor: ([-inf, inf]) Paracrystal distortion factor.
+* radius: ([0, inf]) Particle radius.
+* sld: ([-inf, inf]) Particle scattering length density.
+* sld_solvent: ([-inf, inf]) Solvent scattering length density.
+* lambda: [AA]   Mean wavelength of neutrons.
+* dlambda: [AA]  Wavelength spread of neutrons.
+* model_abs: [ ] Absorption cross section density at 2200 m/s.
+* model_scale: [ ] Global scale factor for scattering kernel. For systems without inter-particle interference, the form factors can be related to the scattering intensity by the particle volume fraction.
+* xwidth: [m] ([-inf, inf]) Horiz. dimension of sample, as a width.
+* yheight: [m] ([-inf, inf]) vert . dimension of sample, as a height for cylinder/box
+* zdepth: [m] ([-inf, inf]) depth of sample
+* R: [m] Outer radius of sample in (x,z) plane for cylinder/sphere.
+* target_x: [m] relative focus target position.
+* target_y: [m] relative focus target position.
+* target_z: [m] relative focus target position.
+* target_index: [ ] Relative index of component to focus at, e.g. next is +1.
+* focus_xw: [m] horiz. dimension of a rectangular area.
+* focus_yh: [m], vert. dimension of a rectangular area.
+* focus_aw: [deg], horiz. angular dimension of a rectangular area.
+* focus_ah: [deg], vert. angular dimension of a rectangular area.
+* focus_r: [] 
+*
+* %Link
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT test_SasView_bcc_paracrystal(
+      lambda=6,
+      dlambda=0.05,
+      
+      dnn=220,
+      d_factor=0.06,
+      radius=40,
+      sld=4,
+      sld_solvent=1,
+
+      theta=60,
+      phi=60,
+      Psi=60,
+
+      model_scale=1.0,
+      model_abs=0.0,
+      xwidth=0.01,
+      yheight=0.01,
+      zdepth=0.005,  
+      R=0,
+      int target_index=1,
+      target_x=0,
+      target_y=0,
+      target_z=1,
+      focus_xw=0.5,
+      focus_yh=0.5,
+      focus_aw=0,
+      focus_ah=0,
+      focus_r=0)
+      
+DECLARE %{
+%}
+
+INITIALIZE %{
+%}
+
+TRACE
+
+COMPONENT a1 = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT arm = Arm(
+    )
+  AT (0, 0, 0) ABSOLUTE
+COMPONENT source = Source_simple(
+    radius = 0.02, dist = 3, focus_xw = 0.01, focus_yh = 0.01,
+    lambda0 = lambda, dlambda = dlambda, flux = 1e10)
+  AT (0, 0, 0) RELATIVE arm
+
+COMPONENT coll1 = Slit(
+    radius = 0.005)
+  AT (0, 0, 3) RELATIVE arm
+
+COMPONENT coll2 = Slit(
+    radius = 0.005)
+  AT (0, 0, 6) RELATIVE arm
+
+COMPONENT sample_arm = Arm()
+AT (0,0,target_z) RELATIVE coll2
+
+
+SPLIT COMPONENT sample = SasView_bcc_paracrystal_aniso(
+        dnn=dnn, d_factor=d_factor, radius=radius, sld=sld, sld_solvent=sld_solvent, theta=theta, phi=phi, Psi=Psi,
+        model_scale=model_scale, model_abs=model_abs, xwidth=xwidth,
+        yheight=yheight, zdepth=zdepth, R=R, target_x=target_x,
+        target_y=target_y, target_z=target_z, target_index=target_index,
+        focus_xw=focus_xw, focus_yh=focus_yh, focus_aw=focus_aw, focus_ah=focus_ah,focus_r=focus_r)
+AT (0,0,0) RELATIVE sample_arm
+EXTEND %{
+       if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT detector = PSD_monitor(
+    nx = 128, ny = 128, filename = "PSD.dat", xwidth=focus_xw, yheight=focus_yh)
+  AT (target_x, target_y, target_z) RELATIVE sample_arm
+
+COMPONENT Ldetector = L_monitor(
+    nL = 200, filename = "Edet.dat", xwidth=focus_xw, yheight=focus_yh,
+    Lmin = lambda-dlambda*lambda,
+    Lmax = lambda+dlambda*lambda)
+  AT (target_x, target_y, target_z) RELATIVE sample_arm
+
+COMPONENT PSDrad = PSD_monitor_rad(
+    filename = "psd2.dat", filename_av = "psd2_av.dat", rmax = focus_xw)
+  AT (target_x, target_y, target_z) RELATIVE sample_arm
+
+END
