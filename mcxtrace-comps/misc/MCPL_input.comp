@@ -1,18 +1,20 @@
 /*******************************************************************************
 *
-* McXtrace, xray-tracing package
-*         Copyright (C) 1997-2017, All rights reserved
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
 *         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: MCPL_input
 *
-* %I
+* %Identification
 * Written by: Erik B Knudsen
 * Date: Aug 2016
 * Origin: DTU Physics
 *
 * Source-like component that reads photon state parameters from an mcpl-file.
-* %D
+*
+* %Description
 * Source-like component that reads photon state parameters from a binary mcpl-file.
 *
 * MCPL is short for Monte Carlo Particle List, and is a new format for sharing events
@@ -23,9 +25,7 @@
 *
 * Example: MCPL_input(filename=voutput.mcpl,verbose=1,repeat_count=1,E_smear=0.1,pos_smear=0.001,dir_smear=0.01)
 *
-* %BUGS
-*
-* %P
+* %Parameters
 * INPUT PARAMETERS
 *
 * filename: [str]       Name of photon mcpl file to read.
@@ -38,7 +38,7 @@
 * pos_smear: [m]        When repeating events, make a flat MC choice of position within pos_smear around particle starting position
 * dir_smear: [deg]      When repeating events, make a Gaussian MC choice of direction within dir_smear around particle direction
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT MCPL_input

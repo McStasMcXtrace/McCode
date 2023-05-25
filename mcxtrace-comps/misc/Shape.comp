@@ -1,13 +1,13 @@
 /*******************************************************************************
 *
-* McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2008, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Shape
 *
-* %I
+* %Identification
 * Written by: E. Farhi
 * Date: June 23rd 2009
 * Origin: ILL
@@ -15,7 +15,7 @@
 *
 * A geometric shape without effect on neutron, for instrument display purpose.
 *
-* %D
+* %Description
 * An inactive geometrical shape, for drawing purposes only.
 * It does not propagate neutron, nor interact.
 * <b>Shape:</b>
@@ -40,7 +40,7 @@
 * Example: Shape(radius=0.05, yheight=0.1)
 *          Shape(geometry="socket.off")
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS:
 * radius: [m]      Outer radius of sample in (x,z) plane 
 * xwidth: [m]      Horiz. dimension of sample (bounding box if off file), as a width 
@@ -50,12 +50,12 @@
 * geometry: [str]  Name of an Object File Format (OFF) file for complex geometry. The OFF file may be generated from XYZ coordinates using qhull/powercrust 
 * center: [1]      Flag to determine if OFF object is centered on its centre of mass.
 *
-* %L
+* %Link
 * Geomview and Object File Format (OFF) <http|://www.geomview.org>
-* %L
+* %Link
 * Powercrust/qhull <http://www.cs.utexas.edu/users/amenta/powercrust>
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Shape

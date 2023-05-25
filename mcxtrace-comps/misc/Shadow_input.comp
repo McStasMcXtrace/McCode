@@ -1,13 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
-*         Copyright (C), All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Shadow_input
 *
-* %I
+* %Identification
 * Written by: Andrea Prodi
 * Date: November 21, 2011
 * Origin: Risoe/ILL
@@ -15,14 +15,14 @@
 *
 * Read x-ray state parameters from SHADOW x-ray event file.
 *
-* %D
+* %Description
 * Source-like component reading x-ray state parameters from a
 * SHADOW x-ray event file. Used to interface McXtrace components or
 * simulations into SHADOW. 
 *
 * Example: Shadow_input(file="MySource.00", bufsize = 10000, repeat_count = 2)
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS
 *
 * file:         Filename of x-ray file to read. Default (NULL) is
@@ -34,7 +34,7 @@
 *
 * finished:     Set to 1 when the last x-ray has been read [int]
 *
-* %E
+* %End
 *******************************************************************************/
 
 

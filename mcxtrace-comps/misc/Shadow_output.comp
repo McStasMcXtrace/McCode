@@ -1,13 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
-*         Copyright (C), All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Shadow_output
 *
-* %I
+* %Identification
 * Written by: Andrea Prodi
 * Date: November 21, 2011
 * Origin: Risoe/ILL
@@ -15,7 +15,7 @@
 *
 * Write x-ray state parameters to SHADOW x-ray event file.
 *
-* %D
+* %Description
 * Detector-like component writing x-ray state parameters to a
 * SHADOW x-ray file. Used to interface McXtrace components or
 * simulations into SHADOW. Each photon is 104 bytes.
@@ -27,7 +27,7 @@
 *
 * Example: Shadow_output(file="MySource.vit", bufsize = 10000, progress = 1)
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS
 *
 * file:     Filename of x-ray file to write. Default is standard
@@ -35,7 +35,7 @@
 * bufsize:  Size of x-ray output buffer [records]
 * progress: If not zero, output dots as progress indicator [flag]
 *
-* %E
+* %End
 *******************************************************************************/
 
 

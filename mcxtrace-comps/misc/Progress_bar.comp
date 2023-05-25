@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Progress_bar
 *
-* %I
+* %Identification
 * Written by: Emmanuel Farhi
 * Modified by: Erik Knudsen
 * Date: 2009
@@ -17,7 +16,7 @@
 *
 * A simulation progress bar
 *
-* %D
+* %Description
 * An indicator of the progress of the simulation, monitoring
 * the Init, Trace with the achieved percentage, and the Finally section.
 * Intermediate savings (e.g. triggered by USR2 signal) are also shown.
@@ -27,14 +26,14 @@
 *
 * Example: Progress_bar(percent=10,flag_save=1) AT (0,0,0)
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS:
 * percent: [0-100]  percentage interval between updates. Default is 10%.
 * minutes: [min]    time in minutes between updates (Overrides percent flag).
 * flag_save: [0|1]  flag to enable intermediate saving for all monitors
 * profile: [str]    file name to save the simulation profile in. If set to "", it is set to the name of the instrument.
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Progress_bar

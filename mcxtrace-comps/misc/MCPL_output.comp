@@ -1,19 +1,20 @@
 /*******************************************************************************
 *
-* McXtrace, xray-tracing package
-*         Copyright (C) 1997-2017, All rights reserved
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
 *         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: MCPL_output
 *
-* %I
+* %Identification
 * Written by: Erik B Knudsen 
 * Date: Aug 2016
 * Origin: DTU Physics
 *
 * Detector-like component that writes photon state parameters into an mcpl-format binary, virtual-source photon file.
 *
-* %D
+* %Description
 * Detector-like component that writes photon state parameters into an mcpl-format 
 * binary, virtual-source photon file.
 *
@@ -34,9 +35,7 @@
 *
 * Example: MCPL_output( filename="voutput", verbose=1, userflag="flag", userflagcomment="Photon Id", merge_mpi=1)
 *
-* %BUGS
-*
-* %P
+* %Parameters
 * INPUT PARAMETERS
 *
 * filename:        [str] Name of photon file to write. Default is standard output [string]. If not given, a unique name will be used.
@@ -48,7 +47,7 @@
 * merge_mpi:       [1]   Flag to indicate if output should be merged in case of MPI.
 * keep_mpi_unmerged: [1] Flag to indicate if original unmerged mcpl-files should be kept (or deleted).
 * buffermax: [1]         Maximal number of events to save ( <= MAXINT), GPU/OpenACC only.
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT MCPL_output

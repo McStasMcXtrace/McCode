@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, Xray-tracing package
-*         Copyright 1997-2003, All rights reserved
-*         Technical University of Denmark, Kgs. Lyngby, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Air
 *
-* %I
+* %Identification
 * Written by: M. B. Nielsen
 * Date: 05.02.2015
 * Origin: DTU Fysik, NBI
@@ -16,7 +15,7 @@
 *
 * Component simulating atmospheric air.
 *
-* %D
+* %Description
 * The component simulates air and can be inserted as if it was just some extra sample placed somewhere in the beam line.
 * The air component is intended to be used in all kinds of setups where air may introduce background.
 * Code structure in this component is based on the component Saxs_spheres.
@@ -38,7 +37,7 @@
 *    focus_xw = 0.5, focus_yh = 0.5)
 *  AT (0, 0, 15) RELATIVE Origin
 *
-* %P
+* %Parameters
 *
 * xwidth:  [m] Width of the air volume.
 * yheight: [m] Height of the air volume. 
@@ -57,8 +56,7 @@
 * pressure:      total pressure of the air gas [Pa]
 * temperature:   absolute temperature [K]
 * 
-* %Link
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Air

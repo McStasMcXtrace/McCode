@@ -1,13 +1,13 @@
 /*****************************************************************************
 *
-* McXtrace, X-ray tracing package
-*         Copyright 1997-2002, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Focus
 *
-* %I
+* %Identification
 * Written by: Carsten Detlefs, hacked from slit.comp
 * Date: November 6, 2013
 * Origin: ESRF
@@ -15,12 +15,13 @@
 *
 * Turn a photon into a Huygens wavelet. To be used with the SPLIT keyword.
 * 
-* %D
+* %Description
 * Changes direction of the photon to a random direction
 * towards the specified target area.
 * To be used in coherent simulations, preferably with
 * the SPLIT keyword.
-* %P
+*
+* %Parameters
 * INPUT PARAMETERS
 *
 * dist: [m] distance to target
@@ -29,7 +30,7 @@
 * focus_x0: [m] x-center of target
 * focus_y0: [m] y-center of target
 * focus_absolute: [ ] Flag - if non-zero, focus_x0 and focus_y0 are in absolute (lab) coordinates.
-* %E
+* %End
 *******************************************************************************/
 DEFINE COMPONENT Focus
 SETTING PARAMETERS (dist=0.0, focus_xw=0.0, focus_yh=0.0, focus_x0=0.0, focus_y0=0.0, int focus_absolute=1) 
