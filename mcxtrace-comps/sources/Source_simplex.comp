@@ -1,13 +1,14 @@
 /************************************************************************
 * 
-* McXtrace X-ray tracing software
-* Copyright, All Rights Reserved
-* Risoe-DTU, Roskilde, Denmark
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 *
 * Component: Source_genesis
 *
-* %I
+* %Identification
 * Written by: Erik B Knudsen
 * Date: Aug. 10th, 2014
 * Origin: Risoe
@@ -15,11 +16,11 @@
 *
 * Interface source for importing Simplex generated X-ray pulses into McXtrace
 * 
-* %D
+* %Description
 * This source model reads the dumped radiation field output from Simplex and samples it to be used
 * in McXtrace.
 * 
-* %P
+* %Parameters
 * focus_xw:[m]  Width of target.
 * focus_yh:[m]  Height of target.
 * E0:     [keV] Mean energy of xrays.
@@ -32,11 +33,11 @@
 * nslices: [1] Number of slices simulated.
 * flux: [1] Flux-multiplier
 *
-* %L
+* %Link
 * Tanaka, Journal of Synchrotron Radiation 22, 1319 (2015) http://journals.iucr.org/s/issues/2015/05/00/gb5029/
 * http://radiant.harima.riken.go.jp/simplex/
 * 
-* %E
+* %End
 *****************************************************************************/
 
 DEFINE COMPONENT Source_simplex

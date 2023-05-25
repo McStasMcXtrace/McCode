@@ -2,19 +2,20 @@
 *
 * McXtrace, X-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Source_flat
 *
-* %I
+* %Identification
 * Written by:Erik Knudsen
 * Date: September 25, 2009
 * Origin: Risoe
 * Release: McXtrace 0.1_alpha
 *
 * A flat rectangular or circular surface emitting x-rays
-* %D
+*
+* %Description
 * A circular or rectangular xray source. Spectrum may be either gaussian or uniform around a central wavelength/energy
 * or read from a datafile. Xrays are considered emitted uniformly into 4pi, but a square target retricts the beam to 
 * that window and scales the beam intensity accordingly.
@@ -26,7 +27,7 @@
 *
 * Example: Source_flat(xwidth=1e-3,yheight=1e-3, focus_xw=0.5e-2, focus_yh=0.45e-2,dist=1, E0=E0, dE=DE)
 *
-* %P
+* %Parameters
 * radius: [m]   Radius of circle in (x,y,0) plane where x-rays are generated.
 * yheight: [m]   Height of rectangle in (x,y,0) plane where x-rays are generated.
 * xwidth:  [m]   Width of rectangle in (x,y,0) plane where x-rays are generated. Overrides xmin and xmax.
@@ -44,7 +45,7 @@
 * randomphase: [ ] If nonzero, the phase of the emotted photon is random, i.e. source is fully incoherent. otherwise the value of phase is used.
 * phase: [ ] Set phase to something given. 
 * spectrum_file: [string] Filename for optional spectrum-file 
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Source_flat

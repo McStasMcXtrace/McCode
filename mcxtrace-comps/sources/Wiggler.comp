@@ -1,13 +1,13 @@
 /************************************************************************
-* 
-* McXtrace X-ray tracing software
-* Copyright, All Rights Reserved
-* Risoe-DTU, Roskilde, Denmark
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 *
 * Component: Wiggler
 *
-* %I
+* %Identification
 * Written by: Erik B. Knudsen
 * Date: May, 2013.
 * Version: 1.0
@@ -15,14 +15,14 @@
 *
 * Model of a wiggler source
 * 
-* %D
+* %Description
 * A source model based on the derivation from B.D. Patterson, Am. J. Phys. 79, 1046 (2011); doi: 10.1119/1.3614033
 *
 * Example: Wiggler(
 *   E0 = 14, dE = 12, 
 *   Ee = 2.75, Ie = 0.5, B = 2.1, K=10, Nper=41, sigey=9.3e-6, sigex=215.7e-6)
 *
-* %P
+* %Parameters
 * Input Parameters:
 * Ee:       [GeV] Storage ring electron energy (typically a few GeV)
 * Ie:       [A] Ring current
@@ -44,7 +44,7 @@
 * lambda0:  [AA] Center of emitted wavelength spectrum
 * dlambda:  [AA] Half-width of emitted wavelength spectrum
 * verbose:  [ ] if nonzero, output extra information
-* %E
+* %End
 ***************************************************************************/
 
 DEFINE COMPONENT Wiggler

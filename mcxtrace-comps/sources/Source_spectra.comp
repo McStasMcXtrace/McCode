@@ -2,13 +2,12 @@
 *
 * McXtrace, X-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         University of Copenhagen, Denmark
-*         Institut Laue Langevin, Grenoble, France
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Source_spectra
 *
-* %I
+* %Identification
 * Written by: Erik Knudsen 
 * Date: November 11, 2019
 * Origin: Risoe
@@ -16,7 +15,7 @@
 *
 * Specialized X-ray source for reading in SPECTRA 10 source definitions
 *
-* %D
+* %Description
 *
 * This is a source component for connecting SPECTRA 10-output files with McXtrace.
 * json-style SPECTRA 11 output files are not yet supported.
@@ -35,12 +34,10 @@
 * calculations by only including one half-plane or quadrant. The other side/quadrants will then
 * be mirrored by McXtrace.
 *
-* %VALIDATION
-*
 * %BUGS
 * Absolute intensity of 4D (x,y,x',y') is nor correctly normalized.
 *
-* %P
+* %Parameters
 * E0: [keV]         Mean energy of X-rays.
 * dE: [keV]         Energy spread of X-rays.
 * Emin: [keV]       Energy of low end of the Spectra-calculated data.
@@ -65,11 +62,11 @@
 *
 * OUTPUT PARAMETERS:
 *
-* %L
+* %Link
 * Tanaka, J. Synchrotron Rad. (2001). 8, 1221-1228. https://doi.org/10.1107/S090904950101425X
 * http://spectrax.org/spectra/
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Source_spectra

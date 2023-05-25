@@ -1,13 +1,14 @@
 /************************************************************************
 * 
-* McXtrace X-ray tracing software
-* Copyright, All Rights Reserved
-* Risoe-DTU, Roskilde, Denmark
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 *
 * Component: Source_genesis
 *
-* %I
+* %Identification
 * Written by: Erik B Knudsen
 * Date: Aug. 10th, 2014
 * Origin: Risoe
@@ -15,15 +16,13 @@
 *
 * Interface source for importing GENESIS 1.3 generated X-ray pulses into McXtrace
 * 
-* %D
+* %Description
 * This source model reads the dumped radiation field output from GENESIS 1.3 and samples it to be used
 * in McXtrace.
 * 
-* 
 * Example: Source_pt(dist=1,focus_xw=0.1,focus_yh=0.1, lamda=0.231, dlambda=0.002)
 *
-*
-* %P
+* %Parameters
 * focus_xw:[m]  Width of target.
 * focus_yh:[m]  Height of target.
 * E0:     [keV] Mean energy of xrays.
@@ -36,7 +35,7 @@
 * nslices: [1] Number of slices simulated
 * flux: [1] Flux-multiplier
 *
-* %E
+* %End
 ***********************************************************************/
 
 DEFINE COMPONENT Source_genesis13

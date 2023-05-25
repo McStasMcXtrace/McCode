@@ -2,13 +2,12 @@
 *
 * McXtrace, X-ray tracing package
 *         Copyright, All rights reserved
-*         Technical University of Denmark, Kgs. Lyngby, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Source_lab
 *
-* %I
+* %Identification
 * Written by: Erik Bergbaeck Knudsen 
 * Date: May 2012
 * Version: 1.0
@@ -16,7 +15,7 @@
 *
 * Laboratory x-ray source.
 *
-* %D
+* %Description
 * Model of a laboratory x-ray tube, generating x-rays by bombarding a target by electrons.
 * Given a input energy E0 of the electron beam, x-rays are emitted from the accessible emission lines
 * The geometry of the tube is assumed to be:
@@ -36,7 +35,7 @@
 * 
 * Example: Source_lab(material_datafile="Cu.txt",Emin=1, E0=80)
 *
-* %P
+* %Parameters
 * width:      [m]    Width of electron beam impinging on the anode.
 * height:     [m]    Height of electron beam impinging on the anode.
 * xwidth:     [m]    Width of the anode material slab.
@@ -55,7 +54,7 @@
 * lorentzian: [ ]    If nonzero Lorentzian (more correct) line profiles are used.
 * exit_window_refpt: [m] If set, the AT position and exit window will coincide (legacy behaviour).
 *
-* %E
+* %End
 *************************************************************************/
 
 DEFINE COMPONENT Source_lab

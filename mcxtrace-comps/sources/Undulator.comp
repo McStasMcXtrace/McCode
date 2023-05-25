@@ -1,13 +1,14 @@
 /************************************************************************
 *
-* McXtrace X-ray tracing software
-* Copyright, All Rights Reserved
-* Risoe-DTU, Roskilde, Denmark
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 *
 * Component: Undulator
 *
-* %I
+* %Identification
 * Written by: Erik B. Knudsen
 * Date: May, 2013.
 * Version: 1.0
@@ -15,7 +16,7 @@
 *
 * Model of an undulator source
 *
-* %D
+* %Description
 * A undulator source model based on the derivation by K.J. Kim, AIP, conf. proc., 184, 1989. doi:10.1063/1.38046.
 *
 * SOLEIL_PX2a U24
@@ -23,7 +24,7 @@
 *   lu=24e-3, sigey=9.3e-6, sigex=215.7e-6, sigepx=29.3e-6, sigepy=4.2e-6, 
 *   dist=29.5, E1st=12.400 )
 *
-* %P
+* %Parameters
 * Ee:       [GeV] Storage ring electron energy [typically a few GeV).
 * dEe:      [ ] Relative electron energy beam spread (sigma/Ee).
 * Ie:       [A] Ring current.
@@ -46,9 +47,7 @@
 * verbose:  [ ] if nonzero, output extra information.
 * quick_integ: [ ] if nonzero, use faster (but less accurate) integration scheme.
 *
-* OUTPUT PARAMETERS:
-*
-* %E
+* %End
 *****************************************************************/
 
 DEFINE COMPONENT Undulator

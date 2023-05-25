@@ -2,13 +2,12 @@
 *
 * McXtrace, X-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         University of Copenhagen, Denmark
-*         Institut Laue Langevin, Grenoble, France
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Source_div_quasi
 *
-* %I
+* %Identification
 * Written by: Mads Carlsen and Erik Bergbäck Knudsen (erkn@fysik.dtu.dk)
 * Date: Apr 21
 * Origin: DTU Physics
@@ -16,7 +15,7 @@
 *
 * Quasi-stochastic X-ray source with Gaussian or uniform divergence
 *
-* %D
+* %Description
 * A flat rectangular surface source with uniform or Gaussian divergence profile and focussing.
 * If the parametere gauss is not set (the default) the divergence profile is flat
 * in the range [-focus_ax,focus_ay]. If gauss is set, the focux_ax,focus_ay is considered
@@ -30,11 +29,7 @@
 *
 * Example: Source_div_quasi(xwidth=0.1, yheight=0.1, focus_aw=2, focus_ah=2, E0=14, dE=2, gauss=0)
 *
-* %VALIDATION
-*
-* %BUGS
-*
-* %P
+* %Parameters
 * xwidth: [m]     Width of source
 * yheight: [m]    Height of source
 * focus_aw: [rad] Std. dev. (Gaussian) or maximal (uniform) horz. width divergence
@@ -54,7 +49,7 @@
 * phase:         [ ] Set to finite value to define X-ray phase (0:2 pi)
 * randomphase:   [ ] When=1, the X-ray phase is randomised 
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Source_div_quasi

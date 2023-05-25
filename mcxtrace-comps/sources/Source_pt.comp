@@ -1,13 +1,14 @@
 /************************************************************************
 * 
-* McXtrace X-ray tracing software
-* Copyright, All Rights Reserved
-* Risoe-DTU, Roskilde, Denmark
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 *
 * Component: Source_pt
 *
-* %I
+* %Identification
 * Written by: Erik Knudsen
 * Date: June 29th, 2009
 * Origin: Risoe
@@ -15,7 +16,7 @@
 *
 * An x-ray point source
 * 
-* %D
+* %Description
 * A simple source model emitting photons from a point source uniformly into 4pi. A square target centered
 * on the Z-axis restricts the beam to that aperture.
 * If an input spectrum datafile (spectrum_file) is not specified, the beam is restricted to emit photons between E0+-dE keV, or lambda0+-dlambda AA, whichever is given.
@@ -26,8 +27,7 @@
 * 
 * Example: Source_pt(dist=1,focus_xw=0.1,focus_yh=0.1, lamda=0.231, dlambda=0.002)
 *
-*
-* %P
+* %Parameters
 * focus_xw:[m]  Width of target
 * focus_yh:[m]  Height of target
 * focus_x0:[m]  x-cocordinate of target centre.
@@ -44,7 +44,7 @@
 * spectrum_file: [ ]  File from which to read an input spectrum.
 * verbose: [1]  Output more information runtime.
 *
-* %E
+* %End
 ******************************************************************/
 
 DEFINE COMPONENT Source_pt

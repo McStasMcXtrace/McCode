@@ -1,13 +1,14 @@
 /************************************************************************
 * 
-* McXtrace X-ray tracing software
-* Copyright, All Rights Reserved
-* Risoe-DTU, Roskilde, Denmark
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 *
 * Component: Source_gaussian
 *
-* %I
+* %Identification
 * Written by: Jana Baltser & Erik Knudsen
 * Date: April, 2011.
 * Version: 1.0 
@@ -15,7 +16,7 @@
 *
 * Gaussian cross-section source 
 * 
-* %D
+* %Description
 * A simple source model emitting photons from a gaussian distribution in the X-Y plane with the specified
 * standard deviations and divergence. A square target centered on the beam (Z-axis)
 * may be used to restrict the beam to that aperture. If no target aperture is given the full gaussian cross-section is used.
@@ -24,7 +25,7 @@
 * 
 * Example: Source_gaussian(sig_x=10e-6,sig_y=10e-6,dist=15,sigPr_x=9e-6, sigPr_y=9e-6,E0=12.5, dE=0.1)
 *  
-* %P
+* %Parameters
 * Input Parameters:
 * sig_x: [m] Horizontal standard deviation of source (rms source size).
 * sig_y: [m] Vertical standard deviation of source (rms source size).
@@ -45,7 +46,7 @@
 * gauss: [ ] Gaussian (1) or uniform (0) spectrum profile. 
 * randomphase: [ ] If nonzero phase is random (incoherent radiation), otherwise it is set to the value of phase 
 *
-* %E
+* %End
 *****************************************/
 
 DEFINE COMPONENT Source_gaussian
