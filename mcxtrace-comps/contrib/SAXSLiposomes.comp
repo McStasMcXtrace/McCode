@@ -1,25 +1,25 @@
 /*******************************************************************************
-* McXtrace, X-ray tracing package
-*           Copyright, All rights reserved
-*           Risoe National Laboratory, Roskilde, Denmark
-*           Institut Laue Langevin, Grenoble, France
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: SAXSLiposomes
 *
-* %I
+* %Identification
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
 * Date: May 2, 2012
 * Origin: KU-Science
 *
 * A sample of polydisperse liposomes in solution (water).
 *
-* %D
+* %Description
 * A component simulating the scattering from a box-shaped, thin solution (water)
 * of liposomes described by a pentuple-shell model.
 *
 * Example: SAXSLiposomes( xwidth = 0.01, yheight = 0.01, zdepth = 0.01, SampleToDetectorDistance = 0.48, DetectorRadius = 0.1 )
 *
-* %P
+* %Parameters
 * Radius: [AA]      Average thickness of the liposomes.
 * Thickness: [AA]   Thickness of the bilayer.
 * SigmaRadius: []   Relative Gaussian deviation of the radius in the distribution of liposomes.
@@ -38,7 +38,7 @@
 * SampleToDetectorDistance: [m]     Distance from sample to detector (for focusing the scattered x-rays).
 * DetectorRadius: [m]  Radius of the detector (for focusing the scattered x-rays).
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT SAXSLiposomes

@@ -1,12 +1,12 @@
 /*******************************************************************************
-* McXtrace, X-ray tracing package
-*           Copyright, All rights reserved
-*           Risoe National Laboratory, Roskilde, Denmark
-*           Institut Laue Langevin, Grenoble, France
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: SAXSQMonitor
 *
-* %I
+* %Identification
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
 * Based on a SANS-component in McStas by Søren Kynde
 * Date: May 2, 2012
@@ -16,13 +16,13 @@
 * A circular detector measuring the radial average of intensity as a function 
 * of the momentum transform in the sample.
 *
-* %D
+* %Description
 * A circular detector measuring the radial average of intensity as a function 
 * of the momentum transform in the sample.
 *
 * Example: SAXSQMonitor( RadiusDetector = 0.1, DistanceFromSample = 0.5, LambdaMin = 1, Lambda0 = 1.54, NumberOfBins = 2000 )
 *
-* %P
+* %Parameters
 * RadiusDetector: [m]     Radius of the detector (in the xy-plane).
 * DistanceFromSample: [m] Distance from the sample to this component.
 * LambdaMin: [AA]         Max sensitivity in lambda - used to compute the highest possible value of momentum transfer, q.
@@ -32,7 +32,7 @@
 * Lambda0: []      If lambda is given, the momentum transfers of all rays are computed from this value. Otherwise, instrumental effects are negated.
 * restore_xray: [] If set to 1, the component restores the original x-ray.
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT SAXSQMonitor

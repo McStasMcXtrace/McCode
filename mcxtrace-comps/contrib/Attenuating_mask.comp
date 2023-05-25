@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Attenuating_mask
 *
-* %I
+* %Identification
 *
 * Written by: Matteo Busi, Erik B Knudsen
 * Date: November 2017
@@ -18,14 +17,14 @@
 *
 * Attenuating_mask
 *
-* %D
+* %Description
 * This component models a mask of energy dependent attenuation. This consists of a rectangular grid of size
 * "xwidth*yheight", composed of multiple disks of finite thickness "zdepth" of an attenuating material "att_file", 
 * width "blocks_width" and period "blocks_dist"(i.e. distance between the center of each disk). 
 * If holed_mask mode is turned the model of the component is the opposite, i.e. the mask is composed of an 
 * attenuating slab of finite thickness and of size "xwidth*yheight", with apertures of desired width and period.
 *
-* %P
+* %Parameters
 * Input parameters:
 * att_file : [".txt"] File that contains the object information. (Default: "W.txt")
 * xwidth: [m] Horizontal width of the mask. (Default: 1e-1)
@@ -37,7 +36,7 @@
 * blocks_ydist: [m] Distance between absorbing blocks in the y-direction. (Default: 10e-3)
 * holed_mask: [1] Set to 1 if the mask is a holed grid. (Default: 0)
 *  
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Attenuating_mask

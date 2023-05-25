@@ -1,13 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
 *         DTU Physics, Kgs. Lyngby, Denmark
-*         Institut Laue Langevin, Grenoble, France
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Laue_crystal_BC
 *
-* %I
+* %Identification
 * Written by: Marcus H Mendenhall, NIST <marcus.mendenhall@nist.gov>
 * Date: June, 2017
 * Version: 1.0
@@ -15,7 +15,7 @@
 *
 * Perfect, Laue crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
 * 
-* %D
+* %Description
 * NIST_Laue_crystal_BC.comp is written by Marcus H. Mendenhall, NIST, Gaithersburg, MD, USA
 * It is based on the full vector math and exact solution  of the dispersion relation in
 * Batterman and Cole, Reviews of Modern Physics 36 number 3, page 681, July 1964
@@ -43,7 +43,7 @@
 * Contributed by the National Institute of Standards and Technology; not subject to copyright in the United States.
 * This is not an official contribution, in that the results are in no way certified by NIST.
 *
-* %P
+* %Parameters
 * Input parameters:
 * width:         [m] width of the crystal.
 * length:        [m] zdepth (length) of the crystal.
@@ -68,10 +68,10 @@
 * forward_diffraction_sampling:  [ ]  enable sampling of forward diffraftion mode.
 * laue_sampling:            [ ] enable sampling of Laue diffraction mode.
 *
-* %L
+* %Link
 * material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Laue_crystal_BC

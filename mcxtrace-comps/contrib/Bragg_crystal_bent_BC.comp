@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
 *         DTU Physics, Kgs. Lyngby, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Bragg_crystal_bent_BC
 *
-* %I
+* %Identification
 * Written by: Marcus H Mendenhall, NIST <marcus.mendenhall@nist.gov>
 * Date: Dec 2016
 * Version: 2.0a
@@ -17,7 +16,7 @@
 *
 * Bent, perfect crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
 *
-* %D
+* %Description
 * Bragg_crystal_bent_BC.com is intended to supercede Bragg_Crystal_bent.comp
 * For details see:
 * The optics of focusing bent-crystal monochromators on X-ray powder diffractometers with application to lattice parameter determination and microstructure analysis, 
@@ -55,7 +54,7 @@
 *
 * Example: Bragg_crystal_bent_BC( length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alpha=0)
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS
 * width:   [m]    x width of the crystal.
 * length:  [m]    z depth (length) of the crystal.
@@ -80,9 +79,9 @@
 *      4 => Mx_crystal_fcc: bcc
 * verbose [ ]     if non-zero: Output more information (warnings and messages) to the console.
 *
-* %L
+* %Link
 * material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Bragg_crystal_bent_BC

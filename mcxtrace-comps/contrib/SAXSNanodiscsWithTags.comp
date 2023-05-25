@@ -1,12 +1,12 @@
 /*******************************************************************************
-* McXtrace, X-ray tracing package
-*           Copyright, All rights reserved
-*           Risoe National Laboratory, Roskilde, Denmark
-*           Institut Laue Langevin, Grenoble, France
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: SAXSNanodiscsWithTags
 *
-* %I
+* %Identification
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
 * Date: May 2, 2012
 * Origin: KU-Science
@@ -14,14 +14,14 @@
 * A sample of monodisperse phospholipid bilayer nanodiscs in solution (water) - with
 * histidine tag still on the belt proteins.
 *
-* %D
+* %Description
 * A component simulating the scattering from a box-shaped, thin solution (water)
 * of monodisperse phospholipid bilayer nanodiscs - with histidine tags still
 * on the belt proteins.
 *
 * Example: SAXSNanodiscsWithTags( xwidth = 0.01, yheight = 0.01, zdepth = 0.01, SampleToDetectorDistance = 0.48, DetectorRadius = 0.1 )
 *
-* %P
+* %Parameters
 * AxisRatio: []         Axis ratio of the bilayer patch.
 * NumberOfLipids: []    Number of lipids per nanodisc.
 * AreaPerLipidHeadgroup: [AA^2]   Area per lipid headgroup - default is POPC.
@@ -45,7 +45,7 @@
 * SampleToDetectorDistance: [m] Distance from sample to detector (for focusing the scattered x-rays).
 * DetectorRadius: [m]   Radius of the detector (for focusing the scattered x-rays).
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT SAXSNanodiscsWithTags

@@ -1,12 +1,12 @@
 /*******************************************************************************
-* McXtrace, X-ray tracing package
-*           Copyright, All rights reserved
-*           Risoe National Laboratory, Roskilde, Denmark
-*           Institut Laue Langevin, Grenoble, France
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: SAXSNanodiscsFast
 *
-* %I
+* %Identification
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
 * Date: May 2, 2012
 * Origin: KU-Science
@@ -14,14 +14,14 @@
 *
 * A sample of monodisperse phospholipid bilayer nanodiscs in solution (water).
 *
-* %D
+* %Description
 * A component very similar to SAXSNanodiscs.comp - however, the scattering
 * profile is only computed once, and linear interpolation is then used to
 * simulate the instrument.
 *
 * Example: SAXSNanodiscsFast( xwidth = 0.01, yheight = 0.01, zdepth = 0.01, SampleToDetectorDistance = 0.48, DetectorRadius = 0.1 )
 *
-* %P
+* %Parameters
 * AxisRatio: []         Axis ratio of the bilayer patch.
 * NumberOfLipids: []    Number of lipids per nanodisc.
 * AreaPerLipidHeadgroup: [AA^2] Area per lipid headgroup - default is POPC.
@@ -46,7 +46,7 @@
 * qMax: [AA^-1]         Highest q-value, for which a point is generated in the scattering profile
 * NumberOfQBins: []     Number of points generated in inital scattering profile.
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT SAXSNanodiscsFast

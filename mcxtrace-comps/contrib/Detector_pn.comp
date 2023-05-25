@@ -1,13 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
-*         Copyright 1997-2014, All rights reserved
-*         DTU Physics, Denmark
-*         NBI, Denmark
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Detector_pn.comp
 *
-* %I
+* %Identification
 * Written by: Maria Thomsen (mariath@fys.ku.dk)
 * Date: Jan 24, 2011
 * Origin: NBI, KU
@@ -15,14 +15,14 @@
 *
 * Block of a attenuating material
 * 
-* %D
+* %Description
 * A scintillator detector model taking photoabsorption efficiency into account. As such it consitututes a
 * more physical version of the PSD_monitor. Only direct absorption is taken into account.
 *
 * Example: Detector_pn(restore_xray=restore_flag,filename="detector_Si", material_datafile="Si.txt", xwidth=1e-2, yheight=1e-2,zdepth=1e-5)
 AT(0,0,0.1) RELATIVE psrc
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS
 *
 * xwidth:[m]        Width of block.
@@ -40,9 +40,9 @@ AT(0,0,0.1) RELATIVE psrc
 * PSD_p:    Array of xray weight counts
 * PSD_p2:   Array of second moments
 *
-* %L
+* %Link
 * material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
-* %E
+* %End
 *******************************************************************************/
 DEFINE COMPONENT Detector_pn
 DEFINITION PARAMETERS ()

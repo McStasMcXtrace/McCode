@@ -1,10 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, xray ray-tracing package
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Bragg_crystal_simple
 *
-* %I
+* %Identification
 *
 * Written by: Jose I. Robledo
 * Date: February 2016
@@ -14,7 +17,7 @@
 *
 * Perfect Bragg reflecting slab
 *
-* %D
+* %Description
 *
 * Rectangle of matter perfectly reflecting the incident X-ray beam
 * that fulfills Bragg's law for a set of scattering vectors in the
@@ -23,7 +26,7 @@
 *
 * Example: Bragg_crystal_simple( yheight=0.05, xwidth=0.02, DM=3.1356, err_Q= 0.000075, r0=1.0)
 *
-* %P
+* %Parameters
 * Input parameters:
 * xwidth: [m]    Width in the x direction
 * yheight: [m]   Height in the y direction
@@ -31,7 +34,7 @@
 * DM: [AA⁻1]     d-spacing of the crystal
 * err_Q: [ ]     dQ/Q relative error of the modulus of Q vector. Approximates the Darwin width of the crystal.
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Bragg_crystal_simple

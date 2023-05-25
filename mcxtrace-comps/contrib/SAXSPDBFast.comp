@@ -1,12 +1,12 @@
 /*******************************************************************************
-* McXtrace, X-ray tracing package
-*           Copyright, All rights reserved
-*           Risoe National Laboratory, Roskilde, Denmark
-*           Institut Laue Langevin, Grenoble, France
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: SAXSPDBFast
 *
-* %I
+* %Identification
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk) and Søren Kynde (kynde@nbi.dk)
 * Date: May 2, 2012
 * Origin: KU-Science
@@ -16,13 +16,13 @@
 * to increase computational speed. This components must be compiled with the
 * -lgsl and -lgslcblas flags (and possibly linked to the appropriate libraries).
 *
-* %D
+* %Description
 * This components expands the formfactor amplitude of the protein on spherical
 * harmonics and computes the scattering profile using these. The expansion is
 * done on amino-acid level and does not take hydration layer into account.
 * The component must have a valid .pdb-file as an argument.
 *
-* %P
+* %Parameters
 * RhoSolvent: [AA]    Scattering length density of the buffer.
 * Concentration: [mM] Concentration of sample.
 * AbsorptionCrosssection: [1/m] Absorption cross section of the sample.
@@ -36,7 +36,7 @@
 * NumberOfQBins: []   Number of points generated in inital scattering profile.
 * PDBFilepath: []     Path to the file describing the high resolution structure of the protein.
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT SAXSPDBFast

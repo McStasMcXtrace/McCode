@@ -1,12 +1,12 @@
 /*******************************************************************************
-* McXtrace, X-ray tracing package
-*           Copyright, All rights reserved
-*           Risoe National Laboratory, Roskilde, Denmark
-*           Institut Laue Langevin, Grenoble, France
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: SAXSCurve
 *
-* %I
+* %Identification
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
 * Based on a SANS-component in McStas by Søren Kynde
 * Date: May 2, 2012
@@ -15,12 +15,12 @@
 * A component mimicking the scattering from a given I(q)-curve by using
 * linear interpolation between the given points.
 *
-* %D
+* %Description
 * A box-shaped component simulating the scattering from any given I(q)-curve.
 * The component uses linear interpolation to generate the points necessary to
 * compute the scattering of any given photon.
 *
-* %P
+* %Parameters
 * DeltaRho:       [cm/AA^3]	Excess scattering length density of the particles.
 * Volume:         [AA^3]	Volume of the particles.
 * Concentration:  [mM]		Concentration of sample.
@@ -32,7 +32,7 @@
 * DetectorRadius: [m] 		Radius of the detector (for focusing the scattered x-rays).
 * FileWithCurve:  []		Datafile with the given I(q).
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT SAXSCurve
