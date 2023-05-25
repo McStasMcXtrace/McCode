@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: test (rename also the example and DEFINE lines below)
+* Instrument: XFEL_SPB (rename also the example and DEFINE lines below)
 *
 * %Identification
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
@@ -23,14 +23,12 @@
 * L0: [AA]     The central wavelength to be simulated.
 * DL: [AA]     Half width of energy ointerval to be simulated
 * offset_omega_rad: [rad]  Incidence angle of the upstream offset mirror.
-* offset2_rad: [m]       Radius of curvature of 2nd offset mirror.
-* preCRL: [ ]            Flag to choose whether pre-focusing CRLs are active.
-* R1:  [m]               Radius of curvature of 1st focusing mirror.
-* R2:  [m]               Radius of curvature of 2nd focusing mirror.
-* FXE: [ ]               Flag to enable the FXE distribution mirror. Useful for debugging.
-*
-* %Link
-* A reference/HTML link for more information
+* offset2_rad: [m] Radius of curvature of 2nd offset mirror.
+* preCRL: [0/1]    Flag to choose whether pre-focusing CRLs are active.
+* R1:  [m]         Radius of curvature of 1st focusing mirror.
+* R2:  [m]         Radius of curvature of 2nd focusing mirror.
+* FXE: [0/1]       Flag to enable the FXE distribution mirror. Useful for debugging.
+* D:   [m]         Sample to detector distance   
 *
 * %End
 *******************************************************************************/

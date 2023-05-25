@@ -13,13 +13,14 @@
 * Test instrument for checking the Filter.comp component 
 *
 * %Description
-*
+* Test instrument for checking the Filter.comp component 
 *
 * %Parameters
-* filter_mat: [] Chemical symbol of the filter material
-* thickness: [m] thickness of the filter block
-* L0: [AA] centre wavlength of the source
-* DL:  [AA] half width of the (uniform) wavelength distribution
+* filter_mat: []   Chemical symbol of the filter material
+* thickness:  [m]  thickness of the filter block
+* L0:         [AA] centre wavlength of the source
+* DL:         [AA] half width of the (uniform) wavelength distribution
+* F2:         [1]  add a 2nd filter component further away
 *
 * %Example: DL=4.9 L0=5 filter_mat="Si.txt" Detector: l_mon1_I=1.31502e-07
 * %Example: DL=4.9 L0=5 filter_mat="Rh.txt" Detector: l_mon1_I=4.04921e-29
@@ -28,9 +29,6 @@
 * %Example: DL=4.9 L0=5 filter_mat="Glass.dat" Detector: l_mon1_I=1.645e-06
 * %Example: DL=4.9 L0=5 filter_mat="Be.txt" Detector: l_mon1_I=0.000412661
 * %Example: DL=4.9 L0=5 filter_mat="FilterAir_1mm.dat" Detector: l_mon1_I=4.96145e-05
-*
-* %Link
-* A reference/HTML link for more information
 *
 * %End
 *******************************************************************************/

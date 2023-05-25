@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Instrument: SOLEIL_PX2a
 *
-* %I
+* %Identification
 * Written by: M. Savko and E. Farhi
 * Date: 2022-03-23
 * Origin: Synchrotron SOLEIL
@@ -9,7 +9,7 @@
 *
 * The PROXIMA-2a MX beam-line at Synchrotron SOLEIL.
 *
-* %D
+* %Description
 * PROXIMA 2A (PX2-A) is a microfocus beamline dedicated to biological
 * crystallography and innovative micro-beam methodologies. Opened to the
 * scientific community since 2013, the topics treated on the beamline go beyond
@@ -31,7 +31,7 @@
 * %Example: -n 1e7 E0=12.65 sample="Mo.lau" Detector: Eiger9M_I=28.0701
 * %Example: -n 1e7 E0=12.65 Detector: Eiger9M_I=42980.3
 *
-* %P
+* %Parameters
 * E0:    [keV] Energy selected at the Undulator.
 * hfm_radius: [m] horizontally focusing mirror radius
 * vfm_radius: [m] vertically focusing mirror radius
@@ -41,10 +41,10 @@
 * rotY:  [deg] Sample rtation around Y
 * rotZ:  [deg] Sample rtation around Z
 * 
-* %L
+* %Link
 * https://www.synchrotron-soleil.fr/en/beamlines/proxima-2a
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE INSTRUMENT SOLEIL_PX2a(

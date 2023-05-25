@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Instrument: Test_KB.instr
 *
-* %I
+* %Identification
 * Written by: Antoine Padovani
 * Date: March 2022
 * Origin: SOLEIL
@@ -10,22 +10,22 @@
 *
 * Test of Kirkpatrick Baez (KB) mirrors
 *
-* %D
+* %Description
 * Two curved mirrors in a Kirkpatrick Baez geometry. Default parameters
 * are set for a focusing f_m=f_s= 10 m.
 * The KB should satisfy f_m=R.sin(theta/2) and f_s=R/2.sin(theta)
 *
 * Example: Test_KB L=12
 *
-* %P
+* %Parameters
 * L:     [m]   Distance to the PSD detector, with a shift by 1.5 m
 * theta: [rad] Mirror glancing angle 
 * R:     [m]   Mirror curvature radius
 * 
-* %L
+* %Link
 * https://github.com/McStasMcXtrace/Schools/tree/master/2023/SOLEIL_May_2023/Day2_Wednesday_May_10th/5_Optics/2_KB_mirrors
 *
-* %E
+* %End
 *******************************************************************************/
 DEFINE INSTRUMENT Test_KB(L=12,theta=0.003,R=6.66e3)
 

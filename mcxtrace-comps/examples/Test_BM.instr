@@ -22,10 +22,7 @@
 * %Parameters
 * e0: [keV] Central energy of the interval to be looked at
 * de: [keV] Half-width of energy interval
-* 
-*
-* %Link
-* A reference/HTML link for more information
+* SOURCE: [0/1] select a BM (0) or a Wiggler (1) source.
 *
 * %End
 *******************************************************************************/

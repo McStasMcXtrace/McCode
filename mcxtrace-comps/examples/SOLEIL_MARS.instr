@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Instrument: SOLEIL_MARS
 *
-* %I
+* %Identification
 * Written by: IGUILIZ Salah-Eddine, MENUT Denis and FARHI Emmanuel.
 * Date: July 2022
 * Origin: SOLEIL
@@ -10,7 +10,7 @@
 *
 * The MARS beam-line at Synchrotron SOLEIL.
 *
-* %D
+* %Description
 * MARS beamline is aiming to extend the research capabilities on radioactive
 * matter towards the use of synchrotron radiation in multidisciplinary fields
 * biology, chemistry, physics) with respect to national and European safety law*.
@@ -26,14 +26,17 @@
 *
 * %Example: E0=16.99 Detector: displayMonoLength1_I=1.54236e+09
 *
-* %P
+* %Parameters
 * E0: [keV]     Central energy to be emitted by the source
 * dEr: [keV]    Relative half width to emitted by the source, e.g. 1e-4
 * alpha: [deg]  Asymmetry angle for the crystals.
 * reflections: [str] List of powder reflections, obtained with e.g. cif2hkl
 * reflec_material_M12: [str] reflecting coating on curved mirrors, e.g. Pt
+*
+* %Link
+* https://www.synchrotron-soleil.fr/en/beamlines/mars
 * 
-* %E
+* %End
 *******************************************************************************/
 DEFINE INSTRUMENT SOLEIL_MARS(E0=16.99,
   string reflec_material_M12="Pt.dat",

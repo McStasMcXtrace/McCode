@@ -23,9 +23,9 @@
 * FL: [m]        The focal length of the optical system
 * plate_zdepth: [m]     Plate length.
 * channel_yheight: [m]  Channel height.
-* radius_p: [m]  Radius at the entry to the primary (parabolic) shell.
-* radius_m: [m]  Radius at the optics centre.
-* radius_h: [m]  Radius at the exit of the secondary (hyperbolic) shell.
+* radiusin: [m]  Radius at the entry to the primary (parabolic) shell.
+* radiusout: [m]  Radius at the optics centre and at the exit of the secondary (hyperbolic) shell.
+* shell_type: [1] Shell type 0=parabolic; 1=hyperbolic; 2=conical
 *
 * %End
 *******************************************************************************/

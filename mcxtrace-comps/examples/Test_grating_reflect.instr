@@ -11,6 +11,8 @@
 *
 * Unit-test instrument for the Grating reflect component.
 *
+* %Description
+*
 * Simply a bending magnet illuminating a reflection grating.
 *
 * %Example: E0=1 Detector: psd_monitor_I=3.79378e+06

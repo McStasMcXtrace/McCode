@@ -29,9 +29,6 @@
 * stem4d: [ ] Filename stem for 4D-datafiles from SPECTRA.
 * flag4d: [ ] If zero use projection datafiles, else use 4D.
 *
-* %Link
-* A reference/HTML link for more information
-*
 * %End
 *******************************************************************************/
 

@@ -16,7 +16,7 @@
 * Very simple setup to compare intensities diffracted by Monochromators. 
 * It shows that implementations are equivalent.
 *
-* The inpout parameter Mono chooses which model to use:
+* The input parameter 'Mono' chooses which model to use:
 * 0: Obsolete Perfect_crystal
 * 1: Bragg_crystal - validated component
 * 2: Bragg_crystal_bent - bent version of the above
@@ -39,8 +39,6 @@
 * TTM:    [deg] Scattering angle at which to put the detector.
 * BEND:   [m]   Curvature radius of the monochromator crystal lattice. Only relevant for Mono==2.
 * monsiz: [m]   Size (h and w) of PSD measuring diffracted beam.
-*
-* %Link
 *
 * %End
 ****************************************************************************/

@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Instrument: <instrument name>
 *
-* %I
+* %Identification
 * Written by: <your name (email)>
 * Date: <current date>
 * Origin: <your institution>
@@ -9,19 +9,19 @@
 *
 * <instrument short description>
 *
-* %D
+* %Description
 * <instrument description>
 *
 * Example: <parameters=values>
 *
-* %P
+* %Parameters
 * <parameter1>: [<unit>] <parameter1 description>
 * ...
 *
 * %L
 * <reference/HTML link>
 *
-* %E
+* %End
 *******************************************************************************/
 DEFINE INSTRUMENT template_simple(Par1=1)
 

@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Instrument: Test_mirror_parabolic
 *
-* %I
+* %Identification
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
 * Date: Jan '21
 * Origin: DTU Physics
@@ -10,7 +10,7 @@
 *
 * Unit test instrument for Mirror_parabolic
 *
-* %D
+* %Description
 * This is a test instrument for Mirror parabolic. A collimated beam impinges on a
 * with normal incidence on a parabolic mirror, is reflected to the focal point, and
 * back to flat detector some distance, D, away.
@@ -18,11 +18,11 @@
 * %Example: D=0.0025 MM=1 Detector: detBB_I=1
 * %Example: D=1 MM=1 Detector: detBB_I=0.104959
 *
-* %P
+* %Parameters
 * D: [m]   Distance between mirror apex and detector plane.
 * MM: [ ]  Flag to deactivate the mirror.
 * 
-* %E
+* %End
 *******************************************************************************/
 DEFINE INSTRUMENT Test_mirror_parabolic(D=1,MM=1)
 

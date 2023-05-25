@@ -1,22 +1,22 @@
 /*******************************************************************************
 * Instrument: CXO
 *
-* %I
+* %Identification
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
 * Date: Nov '20
 * Origin: DTU Physics
 * Version: 1.0
 * %INSTRUMENT_SITE: AstroX_NASA
 *
-* Chandra X-ray Opbservatory CXO
+* Chandra X-ray Observatory CXO
 *
-* %D
+* %Description
 * Model of the Chandra X-ray Observatory based on the description avaiable
 * in the Chandra Observers' Guide. Fully collimated X-ray light impinges on the
 * optic consisting of 4 mirrors in the true Wolter I configuration.
 *
 *
-* %P
+* %Parameters
 * <parameter1>: [<unit>] <parameter1 description>
 * E0: [keV]     Central eX-ray energy to be simulated.
 * dE: [keV]     Half-width of energy spectrum
@@ -24,10 +24,10 @@
 * mcoat: [str]  Filename of file which conatins reflectivity for coating
 * OA_angle: [deg] Off-axis angle. Angle around y-axis at which radiation will hit the optic. 
 * 
-* %L
+* %Link
 * https://cxc.harvard.edu/proposer/POG/html/index.html
 *
-* %E
+* %End
 *******************************************************************************/
 DEFINE INSTRUMENT CXO(E0=1, dE=0.001, verbose=1, string mcoat="Ir_CXO.dat", OA_angle=0)
 

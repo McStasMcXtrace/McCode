@@ -1,20 +1,20 @@
 /*******************************************************************************
 * Instrument: Test_Air
 *
-* %I
+* %Identification
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
 * Origin: DTU Physics
 * %INSTRUMENT_SITE: Tests_samples
 *
 * Unit test for the Air component
 *
-* %D
+* %Description
 * This instrument checks whether the Air component works as intended.
 * A point source illuminates  the central part of a rectangular volume of air ( 0.02 x 0.02 x Lair  m^3 ).
 * 
 * %Example: Test_Air.instr AIR=1 E0=7 Lair=0.01 Detector: fpi_scat_I=7.94701e-15
 *
-* %P
+* %Parameters
 * FRAC: [ ]     Fraction of statistics to use for Air-scatter.
 * E0: [keV]     Central energy to be emitted from the source.
 * dE_E: [ ]     Relative full bandwidth of the source.
@@ -22,7 +22,7 @@
 * MXDIV: [ ]    Maximal divergence to allow in divergence monitors.
 * AIR: [ ]      Flag to enable (nonzero) / disable (0) the block of Air. 
 *
-* %E
+* %End
 *******************************************************************************/
 DEFINE INSTRUMENT Test_Air(FRAC=0.5,E0=12.3984,dE_E=0.1, Lair=1, MXDIV=1, int AIR=0)
 

@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: test (rename also the example and DEFINE lines below)
+* Instrument: NBI_Lab_TOMO (rename also the example and DEFINE lines below)
 *
 * %Identification
 * Written by: Erik B Knudsen and M Thomsen 
@@ -22,20 +22,20 @@
 *
 * %Parameters
 * fname: [] filename which contains the emission spectrum for the source
-* d_source_det: [m] distance between the source and the detector
+* d_sample_det: [m] distance between the sample and the detector
 * d_source_sample. [m] distance between source adn sample
 * Omega: [deg] rotation angle of sample (around y-axis)
 * detw: [m] Detector width
 * deth: [m] Height of detector
-*
-* %Link
-* A reference/HTML link for more information
+* rx: [deg] Rotation of the sample around the X-axis
+* ry: [deg] Rotation of the sample around the Y-axis
+* rz: [deg] Rotation of the sample around the Z-axis
 *
 * %End
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT NBI_Lab_TOMO(string fname="spectrumU50_th5.dat",d_sample_det=.790, d_source_sample=1.1450,Omega=0,detw=.0351,deth=.0334, MONO=0, Energy=50, deltaE=1, rx=-80, ry=0, rz=0)
+DEFINE INSTRUMENT NBI_Lab_TOMO(string fname="spectrumU50_th5.dat",d_sample_det=.790, d_source_sample=1.1450,Omega=0,detw=.0351,deth=.0334, rx=-80, ry=0, rz=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -70,7 +70,7 @@ AT (0,0,0) ABSOLUTE
 
 COMPONENT source=Source_pt(spectrum_file=fname,E0=1,
     dist=d_source_sample+d_sample_det,focus_xw=detw,focus_yh=deth, flux=1e6)
-WHEN(!MONO)  AT (0,0,0) ABSOLUTE
+AT (0,0,0) ABSOLUTE
 
 /*COMPONENT filter_Be_inverse=Filter(*/
 /*    material_datafile="Beryllium_inverse.dat",xwidth=detw,yheight=deth,zdepth=400e-6)*/

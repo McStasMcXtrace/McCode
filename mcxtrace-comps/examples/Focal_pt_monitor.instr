@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Instrument: Focal_pt_monitor
 *
-* %I
+* %Identification
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
 * Date: Aug. 21
 * Origin: DTU Physics
@@ -10,7 +10,7 @@
 *
 * Template for creating a focal point monitor.
 *
-* %D
+* %Description
 * A template instrument shows how to create a focal point monitor with an
 * instance of Monitor_nD and an EXTEND block on a preceeding Arm.
 * The instrument uses a point source and a thin lens to create a focus.
@@ -26,10 +26,10 @@
 * 
 * %Example: Focal_pt_monitor Rcurve=100e-6 Detector: fpt_I=1.9805e-16
 *
-* %P
+* %Parameters
 * Rcurve: [m]          Radius of curvature of the lens at the apex.
 *
-* %E
+* %End
 *******************************************************************************/
 DEFINE INSTRUMENT Focal_pt_monitor(Rcurve=100e-6)
 

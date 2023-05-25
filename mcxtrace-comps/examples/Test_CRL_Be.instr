@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Instrument: Test_CRL_Be
 *
-* %I
+* %Identification
 * Written by: Antoine Padovani
 * Date: March 2022
 * Origin: SOLEIL
@@ -10,18 +10,18 @@
 *
 * Test of a compound refractive lenses
 *
-* %D
+* %Description
 * Test of a compound refractive lenses using the Lens_parab component.
 *
 * Example: Test_CRL_Be L=14
 *
-* %P
+* %Parameters
 * L: [m] Position of the detector for the focusing
 * 
-* %L
+* %Link
 * https://github.com/antoinepado/Corrections_School_March_2022/tree/master/DAY_2/5_Optics/1_CRLs/Be
 *
-* %E
+* %End
 *******************************************************************************/
 DEFINE INSTRUMENT Test_CRL_Be(L=14)
 

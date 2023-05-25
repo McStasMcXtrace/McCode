@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: test (rename also the example and DEFINE lines below)
+* Instrument: Test_ML_elliptic (rename also the example and DEFINE lines below)
 *
 * %Identification
 * Written by: Your name (email)
@@ -22,13 +22,12 @@
 * %Example: Test_ML_elliptic.instr S1=1 S2=2 gamma=1.2 fromfile=1 fxw=2e-2 fyh=1e-3 Detector: emon1_I=9.22372e-08
 *
 * %Parameters
-* s1: [m] Distance from source focus to multilayer centre.
-* s1: [m] Distance from multilayer centre to focal point
+* S1: [m] Distance from source focus to multilayer centre.
+* S1: [m] Distance from multilayer centre to focal point
 * gamma: [deg] Design glancing angle at centre.
 * fromfile: [ ] If nonzero read reflectivity number from a datafile ("reflectivity.txt")
-* 
-* %Link
-* A reference/HTML link for more information
+* fxw: [m] width of the beam
+* fxh: [m] height of the beam
 *
 * %End
 *******************************************************************************/

@@ -12,6 +12,7 @@
 *
 * Unit-test instrument for the PowderN sample component.
 *
+* %Description
 * Simply a model source illuminating a powder sample.
 * The sample itself is an Fe-powder.
 *
@@ -24,6 +25,7 @@
 * %Example: Test_PowderN.instr E0=15 directbeam=1 SPLITS=20 Detector: Sph_mon_I=7.94366e-10
 *
 * %Parameters
+* E0: [keV] Source energy (width 1 keV)
 * lambda: [Angs]  Wavelength emitted from source, 1% wl-interval around.
 * L1: [m]         Source-sample distance
 * directbeam: [1] Suppress direct beam or not

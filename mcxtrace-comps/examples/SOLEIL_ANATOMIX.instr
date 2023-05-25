@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Instrument: SOLEIL_ANATOMIX
 *
-* %I
+* %Identification
 * Written by: J. Perrin and E. Farhi
 * Date: 2022-03-23
 * Origin: Synchrotron SOLEIL
@@ -9,12 +9,12 @@
 *
 * The ANATOMIX tomography beam-line at Synchrotron SOLEIL.
 *
-* %D
+* %Description
 * The beamline ANATOMIX (Advanced Nanotomography and Imaging with coherent X rays)
 * works at photon energies between 5 and 50 keV. It is dedicated to full-field
 * radiography and tomography in absorption and phase contrast, with pixel sizes
 * from 20 nm to 20 µm.
-
+*
 * ANATOMIX is a beamline for X-ray tomography on the micro- and nanoscale, in
 * absorption and phase contrast. It operates in the energy range from 5 keV upward
 * and allows its users to obtain two- and three-dimensional radiographic images of
@@ -23,7 +23,7 @@
 * achieved. Real-time studies are possible at speeds of currently up to one
 * microtomography scan per second; higher speeds up to 20 volume scans per second
 * (50 ms per scan) have been demonstrated.
-
+*
 * A flexible sample interface enables in situ and/or operando studies under
 * conditions similar to the natural or working environment of the samples
 * (temperature, humidity, mechanical load, transport processes). Biological
@@ -57,16 +57,16 @@
 *
 * %Example: -n 1e5 E0=17 Detector: psd_monitor_after_cc_I=1.14076e+18
 *
-* %P
+* %Parameters
 * E0:    [keV] Energy selected at the Undulator.
 * Emono: [keV] Energy selected at the monochromator. When 0, it is set to E0.
 * dE:    [keV] Energy spread at the Undulator.
 * ANGLE: [deg] Rotation angle of the sample stage.
 * sample:[str] Sample geometry file, OFF/PLY format.
 * 
-* %L
+* %Link
 * https://www.synchrotron-soleil.fr/en/beamlines/anatomix
-* %L
+* %Link
 * T Weitkamp et al 2017 J. Phys.: Conf. Ser. 849 012037 DOI: 10.1088/1742-6596/849/1/012037
 *
 * %E

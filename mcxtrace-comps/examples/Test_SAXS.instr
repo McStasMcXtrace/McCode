@@ -12,6 +12,20 @@
 * %Description
 * Toy model used for testing various sample components for solution-SAXS.
 *
+* The following SAXS samples are handled:
+* SAXSSpheres               SAMPLE=0
+* SAXSShells                SAMPLE=1
+* SAXSCylinders             SAMPLE=2
+* SAXSEllipticCylinders     SAMPLE=3
+* SAXSLiposomes             SAMPLE=4
+* SAXSNanodiscs             SAMPLE=5
+* SAXSNanodiscsWithTags     SAMPLE=6
+* SAXSPDB                   SAMPLE=7 (inactivated)
+* SAXSCurve                 SAMPLE=8 (inactivated)
+* SAXSNanodiscsFast         SAMPLE=9
+* SAXSNanodiscsWithTagsFast SAMPLE=10
+* SAXSPDBFast               SAMPLE=11 (inactivated)
+*
 * %Example: SAMPLE=0 Detector: PSDMonitor_I=2.93715e-14
 * %Example: SAMPLE=1 Detector: PSDMonitor_I=2.7118e-14
 * %Example: SAMPLE=2 Detector: PSDMonitor_I=2.64954e-14
@@ -33,6 +47,7 @@
 * Lambda: [AA]                           Wavelength of the rays emitted from source.
 * DLambda: [ ]                           Relative deviation of wavelength of the rays emitted from source.
 * SAMPLE: [ ]                            Index of sample model
+*
 * %End
 *******************************************************************************/
 

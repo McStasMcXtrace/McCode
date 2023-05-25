@@ -19,13 +19,13 @@
 * %Example: ESRF_ID11.instr ANGLE=0 Detector: psd_eh3_sample_I=0.284963
 *
 * %Parameters
-* ANGLE [deg] Rotation (misalignment) of first transfocator 
-* SOURCE [ ] 1) Choose rectangular source with defined divergence. 2) Choose Gaussian cross-section source
-* T1_N [ ] Number of Be lenses in 1st IVT transfocator @31.5m
-* T2_N [ ] Number of Al lenses in 1st IVT transfocator @31.5m _currently deactivated by default_
-* T3_N [ ] Number of Al lenses in 2nd IVT transfocator @92.25 m
-* SI_N [ ] Number of Si lenses in Si microfocus chip transfocator @94 m
-* IVT1BE [ ] If nonzero the set of Be-lenses is chosen for the IVT @31.5m. If 0 the Al set is active.
+* ANGLE: [deg] Rotation (misalignment) of first transfocator 
+* SOURCE: [ ] 1) Choose rectangular source with defined divergence. 2) Choose Gaussian cross-section source
+* T1_N: [ ] Number of Be lenses in 1st IVT transfocator @31.5m
+* T2_N: [ ] Number of Al lenses in 1st IVT transfocator @31.5m _currently deactivated by default_
+* T3_N: [ ] Number of Al lenses in 2nd IVT transfocator @92.25 m
+* SI_N: [ ] Number of Si lenses in Si microfocus chip transfocator @94 m
+* IVT1BE: [ ] If nonzero the set of Be-lenses is chosen for the IVT @31.5m. If 0 the Al set is active.
 * 
 * %Link
 * http://www.esrf.eu/UsersAndScience/Experiments/StructMaterials/ID11/ID11Source

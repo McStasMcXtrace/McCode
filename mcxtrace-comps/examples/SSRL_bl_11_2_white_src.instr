@@ -11,7 +11,7 @@
 *
 * Simulating the beamline 11-2 of SSRL to reproduce their glitches database.
 *
-* %D
+* %Description
 * BL 11-2 beamline description here: https://www-ssrl.slac.stanford.edu/mes/11-2/manual.php
 * https://www-ssrl.slac.stanford.edu/mes/Glitch_Curves/ , the instrument is the BL in the unfocussed and uncollimated mode
 * SSRL glitch database found here: https://www-ssrl.slac.stanford.edu/smbin/dataextractnew.pl
@@ -24,9 +24,9 @@
 *
 * %Parameters
 * Etohit: [eV.] Energy used to calculate the bragg angle the monochromator is put at. This is the energy we select.
-* h: [] Miller indices.
-* k: [] Miller indices.
-* l: [] Miller indices.
+* h: [1] Miller indices.
+* k: [1] Miller indices.
+* l: [1] Miller indices.
 * fwhm: [deg.] Full width half maximum of the second crystals's rocking curve.
 * detuning_percentage: [%.] Percentage of the rocking curve fwhm to detune the second crystal by.
 * detuning_rockingcurve: [deg.] Degrees to detune the second crystal by. Used to find the 2nd xtal's rocking curve. Leave at 0 otherwise.

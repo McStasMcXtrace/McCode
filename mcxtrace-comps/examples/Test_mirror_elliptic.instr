@@ -4,12 +4,14 @@
 * Instrument: Test_mirror_elliptic
 *
 * %Identification
+* Written by: A. Padovani
 * Date: May 9th 2022
 * Origin: Synchrotron Soleil
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Unit-test instrument for the Mirror_elliptic component.
 *
+* %Description
 * Simply a flat source illuminating an elliptical mirror.
 *
 * Try distance_from_source = 1 (rays reflected back towards the center)
@@ -18,6 +20,7 @@
 * %Example: distance_from_source=1 Detector: psd_monitor_I=0.0183688
 *
 * %Parameters
+* distance_from_source: [m] source-mirror distance
 *
 * %End
 *******************************************************************************/

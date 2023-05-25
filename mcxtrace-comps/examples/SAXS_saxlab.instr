@@ -32,7 +32,6 @@
 *
 * %Example: Energy=8.05 Detector: detector_I=1.28656e+07
 * 
-*
 * %Parameters
 * Gamma:    [deg] Nominal mirror glancing  angle
 * S1:       [m]   Distance from the source to the multilayer's surface

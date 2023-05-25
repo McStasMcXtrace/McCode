@@ -20,11 +20,9 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-* TR [m] radius of capillary tube
-* TL [m] length of capillary tube
-* L1 [m] disatnce from source to capillary tube entrance
-*
-* %Link
+* TR: [m] radius of capillary tube
+* TL: [m] length of capillary tube
+* L1: [m] disatnce from source to capillary tube entrance
 *
 * %End
 ****************************************************************************/

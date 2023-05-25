@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Instrument: <instrument name>
 *
-* %I
+* %Identification
 * Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
 * Date: Apr 20
 * Origin: DTU Physics
@@ -10,7 +10,7 @@
 *
 * Unit test for Detector_pn
 *
-* %D
+* %Description
 * A simple unit test instrument for the Detector_pn component. It consists merely of
 * two sets of monitor each with: 
 *  1 regular PSD_monitor and 2 instances of Detector_pn with a scinitillator screen of
@@ -21,12 +21,12 @@
 *
 * %Example: Test_Detector_pn restore_flag=1 Detector: detap2_I=1.02182e-06
 *
-* %P
+* %Parameters
 * restore_flag: [ ]   Should the monitor/detector instances restore the x-ray to its pre-detector state
 * E0:           [keV] The central simulation energy to use. A 1% BW will be added. 
 * DE:           [keV] Half energy width of the simulation energy.
 * 
-* %E
+* %End
 *******************************************************************************/
 DEFINE INSTRUMENT Test_Detector_pn(restore_flag=0, E0=12.4, DE=0.124)
 

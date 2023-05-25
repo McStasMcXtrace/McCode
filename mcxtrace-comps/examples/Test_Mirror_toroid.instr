@@ -19,6 +19,7 @@
 *
 * %Parameters		
 * gamma: [deg] Nominal glancing angle of mirror
+* Tor: [0/1]   Uses a toroidal mirror (1) or a flat mirror (0).
 *
 * %End
 *******************************************************************************/

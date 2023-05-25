@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Instrument: SOLEIL_PSICHE
 *
-* %I
+* %Identification
 * Written by: Emmanuel FARHI <emmanuel.farhi@synchrotron-soleil.fr>
 * Date: Apr 26th 2023
 * Origin: SOLEIL
@@ -9,7 +9,7 @@
 *
 * A simple model of the PSICHE tomography/diffraction beam-line at Synchrotron SOLEIL.
 *
-* %D
+* %Description
 * 
 * The PSICHÉ beamline is installed on a short straight section of the SOLEIL
 * (I03c), The source is a under vacuum multi-pole wiggler (2.1 T) which delivers
@@ -24,7 +24,7 @@
 *
 * %Example: -n 1e5 E0=25 sample_material="Ag0.6In0.2Sn0.2" Detector: mon_spl_xy_I=7.8513e+14
 *
-* %P
+* %Parameters
 * E0: [keV] Nominal energy at the Wiggler. Sets the monochromator angle when DCM_present
 * dE: [keV] Energy half-bandwidth at the Wiggler
 * DCM_present: [1] Allow the monochromator in place (1) or removed (0, white beam)
@@ -33,12 +33,12 @@
 * sample_geometry: [str] OFF/PLY file name for sample 3D geometry, or emty for a box
 * dcm_theta: [deg] Rotation angle of the DCM. 0=set from energy E0
 *
-* %L
+* %Link
 * https://www.synchrotron-soleil.fr/en/beamlines/psiche
-* %L
+* %Link
 * A. King et al, Rev Sci Instrum 87, 093704 (2016), DOI: 10.1063/1.4961365
 *
-* %E
+* %End
 *******************************************************************************/
 DEFINE INSTRUMENT SOLEIL_PSICHE(E0=31, dE=1, DCM_present=0, sample_theta=0, 
   string sample_material="Ag", string sample_geometry="wire.ply", dcm_theta=0)

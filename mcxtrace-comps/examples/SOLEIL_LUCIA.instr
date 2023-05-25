@@ -1,31 +1,31 @@
 /*******************************************************************************
 * Instrument: SOLEIL_LUCIA
 *
-* %I
-* Written by: <your name (email)>
-* Date: <current date>
+* %Identification
+* Written by: E. Farhi
+* Date: 2023
 * Origin: SOLEIL
-* Version: <instrument version>
+* Version: 0.1
 * %INSTRUMENT_SITE: SOLEIL
 *
 * A simple model for LUCIA at SOLEIL (fluorescence).
 *
-* %D
+* %Description
 * The HU52 undulator, a DCM, a fluorescence sample, and monitors.
 *
 * %Example: E0=3 Detector: mon_spl_fluo_I=3.66859e+14
 *
-* %P
+* %Parameters
 * E0: [keV] Nominal energy at the Wiggler.
 * dE: [keV] Energy half-bandwidth at the Wiggler
 * sample_material: [str] Absorption data file for the sample
 * sample_geometry: [str] OFF/PLY file name for sample 3D geometry, or emty for a box
 * dcm_theta: [deg] Rotation angle of the DCM. 0=set from energy E0
-* 
-* %L
-* <reference/HTML link>
 *
-* %E
+* %Link
+* https://www.synchrotron-soleil.fr/en/beamlines/lucia
+*
+* %End
 *******************************************************************************/
 DEFINE INSTRUMENT SOLEIL_LUCIA(E0=3, dE=0.1, dcm_theta=0, 
   string sample_material="CaCO3Ti", string sample_geometry="wire.ply")

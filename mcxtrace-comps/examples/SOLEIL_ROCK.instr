@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Instrument: ROCK beam-line at SOLEIL
 *
-* %I
+* %Identification
 * Written by: Stephane Bac, Antoine Padovani, Emmanuel Farhi
 * Date: 23/02/2022
 * Origin: SOLEIL
@@ -10,7 +10,7 @@
 *
 * ROCK beam-line at SOLEIL
 *
-* %D
+* %Description
 * ROCK : Rocking Optics for Chemical Kinetics ROCK time-resolved X-ray
 *
 * absorption spectroscopy (XAS) beamline Energy range 4 - 40 keV The ROCK
@@ -33,7 +33,7 @@
 *
 * %Example: Etohit=17000 cc=2 -n 1e7 Detector: psd_monitor_I=2.4278e+6
 *
-* %P
+* %Parameters
 * Etohit: [eV]   Energy to hit
 * scan: 0 no energy scan, 1 energy scan
 * angle_m2a_m2b: [rad]   M2A/M2B mirror's deviation angle, can vary from 0.0035 to 0.0104
@@ -49,10 +49,10 @@
       2 for Si 111 short 3446.94-18914.3 eV/6-35 deg (hittable:5323-18914 ev/6-21.8 deg), 
       3 changes cc dynamically
 * 
-* %L
+* %Link
 * https://www.synchrotron-soleil.fr/en/beamlines/rock
 *
-* %E
+* %End
 *******************************************************************************/
 DEFINE INSTRUMENT SOLEIL_ROCK (Etohit=15918,
     scan=0, 

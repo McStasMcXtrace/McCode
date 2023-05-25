@@ -20,8 +20,9 @@
 * %Example: Test_source_lab.instr Emax=40 Detector: emon2_I=1.17e+15
 *
 * %Parameters
-*
-* %Link
+* Emin: [keV] minimal energy of the photons at the source
+* Emax: [keV] maximal energy of the photons at the source
+* LO:   [0/1] activate Lorentzian line profile at the source
 *
 * %End
 *******************************************************************************/

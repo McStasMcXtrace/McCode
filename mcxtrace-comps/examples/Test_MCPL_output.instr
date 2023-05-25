@@ -18,6 +18,7 @@
 *
 * %Parameters
 * merge: [1]  Flag to indicate if we should merge the output in case of MPI
+* Ncount:[1]  Override the number of rays to simulate.
 *
 * %End
 *******************************************************************************/

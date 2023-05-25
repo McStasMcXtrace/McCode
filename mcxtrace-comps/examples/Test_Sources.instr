@@ -14,7 +14,17 @@
 * Test instrument to show that the source components work
 *
 * %Description
-* This instrument is a unit test for the source components
+* This instrument is a unit test for the source components.
+*
+* The following sources are handled:
+* Source_gaussian SRC=0 (with gauss=0)
+* Source_gaussian SRC=1
+* Source_pt       SRC=2
+* Source_pt       SRC=3
+* Source_flat     SRC=4
+* Source_flat     SRC=5
+* Source_div      SRC=6
+* Source_div      SRC=7
 *
 * %Example: Test_Sources.instr SRC=0 Detector: emon_I=1.99918
 * %Example: Test_Sources.instr SRC=1 Detector: psd_I=1.59652

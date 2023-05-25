@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Instrument: Test_GROUP
 *
-* %I
+* %Identification
 * Written by: Erik Knudsen, Peter Willendrup
 * Date: 2021/09/30
 * Origin: DTU
@@ -9,19 +9,17 @@
 *
 * Tests that GROUP logic works as expected
 *
-* %D
+* %Description
 * Unit test for the GROUP logic
 *
 * %Example: SIGNI=1  Detector: psd00_I=7.9e-8
 * %Example: SIGNI=-1 Detector: psd00_I=7.9e-8
 *
-* %P
+* %Parameters
 * SLITW: [m] Width of the GROUP'ed slits
 * SIGNI: [1] Which slit should be hit (left or right)
 *
-* %L
-*
-* %E
+* %End
 *******************************************************************************/
 DEFINE INSTRUMENT Test_GROUP(SLITW=1e-6,SIGNI=1)
 

@@ -32,16 +32,16 @@
 * Example: NuSTAR_1shell_con.instr shellnumber=1
 *
 * %Parameters
-* FL [m] The focal length of the optical system
-* optics_dist [m] The distance between souce and optic. In space this would be quite large :-).
-* SRC_POS_X [m] Displacement of source along X
-* SRC_POS_Y [m] Displacement of source along Y
-* offaxis_angle [arcmin] Angle of collimated light from source
-* reflectivity [ ] Data file containing reflectivities (such as from IMD)
-* E0 [keV] Central energy of X-rays
-* dE [keV] Half spread of energy spectrum to be emitted from source
-* shellnumber [ ] The row number for the miror module. This defines the shell.
-* geomfile [ ] File which contains the geometry of the pores (i.e. radii,lengths)
+* FL: [m] The focal length of the optical system
+* optics_dist: [m] The distance between souce and optic. In space this would be quite large :-).
+* SRC_POS_X: [m] Displacement of source along X
+* SRC_POS_Y: [m] Displacement of source along Y
+* offaxis_angle: [arcmin] Angle of collimated light from source
+* reflectivity: [ ] Data file containing reflectivities (such as from IMD)
+* E0: [keV] Central energy of X-rays
+* dE: [keV] Half spread of energy spectrum to be emitted from source
+* shellnumber: [ ] The row number for the miror module. This defines the shell.
+* geomfile: [ ] File which contains the geometry of the pores (i.e. radii,lengths)
 *
 * %Link
 * <a href="http://www.cosmos.esa.int/web/athena">The ATHENA web pages @ ESA</a>

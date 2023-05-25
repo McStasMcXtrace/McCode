@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Instrument: Template_DCM
 *
-* %I
+* %Identification
 * Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
 * Date: Jan '21
 * Origin: DTU Physics
@@ -10,7 +10,7 @@
 *
 * Template for a vertically defleting DCM
 *
-* %D
+* %Description
 * Simple skeleton instrument showing a vertically deflecting
 * double crystal monochromator. To instead make it horizontally deflecting
 * simply add Arms before and after the crystal assembly that rotate by 
@@ -19,12 +19,12 @@
 *
 * %Example: theta=9.17 Detector: emon_dcm1_I=6.14859e-10
 *
-* %P
+* %Parameters
 * E0:    [keV] Central energy to be emitted by the source. 0=set from theta.
 * dE:    [keV] Half width to be emitted by the source
 * theta: [deg] Rotation angle of the crystals. 0=set from E0.
 * 
-* %E
+* %End
 *******************************************************************************/
 DEFINE INSTRUMENT Template_DCM(E0=0, dE=0.2,theta=9.17)
 

@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Instrument: DISCO beam-line at SOLEIL
 *
-* %I
+* %Identification
 * Written by: Stephane Bac, Emmanuel Farhi, Antoine Padovani
 * Date: 01/08/2022
 * Origin: SOLEIL
@@ -10,14 +10,14 @@
 *
 * DISCO beam-line at SOLEIL, imaging branch
 *
-* %D
+* %Description
 * DISCO beamline description here: https://hal.archives-ouvertes.fr/hal-01479318/document
 * You may scan the grating monochromator with e.g.:
 *   mxrun -n 1e5 SOLEIL_DISCO.instr -N84 x_screw=20,103 scan=1
 *
 * %Example: grazing_angle_one=22.5 -n 1e5 Detector: second_HFP_I=2.08292e+11
 *
-* %P
+* %Parameters
 * grazing_angle_one: [deg]
 * HFP_shift: [m] z translation from the HFP position (horizontal focal point detector)
 * VFP_shift: [m] z translation from the VFP position (vertical focal point detector)
@@ -25,10 +25,10 @@
 * x_screw: [mm] length of the screw
 * scan: [] if there is an x_screw scan [1], calculate the Wavelength(Angstroms) as a function of x_screw(mm)
 *
-* %L
+* %Link
 * https://www.synchrotron-soleil.fr/en/beamlines/disco
 *
-* %E
+* %End
 *******************************************************************************/
 
 //Work in progress.

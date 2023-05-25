@@ -27,7 +27,6 @@
 * L2: [m] Distance between lens and and slit
 * dS: [m] Slit opening. Slit opening is quadratic.
 * N:  [1] NUmber of Lenses in the compund lens arrangement
- %Link
 *
 * %End
 *******************************************************************************/

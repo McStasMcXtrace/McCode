@@ -37,10 +37,18 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-* lambda:    Mean wavelength of x-rays     [AA]
-* dlambda:   Wavelength spread of x-rays    [AA]
+* lambda:   [AA] Mean wavelength of x-rays     
+* dlambda:  [AA] Wavelength spread of x-rays
+* model_index: SASmodel index, as listed in the SasView component.
+* par1: SasView model parameters
+* par2:
+* par3:
+* par4:
+* par5:
+* par6:
+* par7:
+* par8:
 *
-* %Link
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT Template_SasView(lambda=1.54, dlambda=0.05, model_index=10, par1=0, par2=0, par3=0, par4=0, par5=0, par6=0, par7=0, par8=0)

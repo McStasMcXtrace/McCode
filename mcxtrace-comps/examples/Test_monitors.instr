@@ -24,9 +24,6 @@
 * %Parameters
 * monitor_no: [ ] Pick a monitor to test - causes the others not to write any data files.
 *
-* %Link
-* A reference/HTML link for more information
-*
 * %End
 *******************************************************************************/
 

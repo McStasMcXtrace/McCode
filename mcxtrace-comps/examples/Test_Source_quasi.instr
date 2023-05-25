@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: test (rename also the example and DEFINE lines below)
+* Instrument: Test_Source_quasi (rename also the example and DEFINE lines below)
 *
 * %Identification
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
@@ -20,7 +20,7 @@
 * %Example: Test_Source_quasi.instr SRC=1 Detector: psd_I=1
 *
 * %Parameters
-* SRC: [ ] Integer parameter picks a source model. 0 normal Source_div, Quasi-stochastic 
+* SRC: [ ] Integer parameter picks a source model. 0=normal Source_div, 1=Quasi-stochastic
 *
 * %End
 *******************************************************************************/

@@ -51,12 +51,10 @@
 * theta_mirror4: [deg]  glancing angle of mirror4.
 * R0_M4: [ ]            Constant relectivity of Mirror4 [0;1].
 *  
-* %L
-* Bloch_MAX IV description:
-* https://www.maxiv.lu.se/accelerators-beamlines/beamlines/bloch/
-* McXtrace komponent definition:
-* http://www.mcxtrace.org
-* Further reading:
+* %Link
+* Bloch_MAX IV description: https://www.maxiv.lu.se/accelerators-beamlines/beamlines/bloch/
+* %Link
+* McXtrace komponent definition: http://www.mcxtrace.org
 *
 * %End
 *******************************************************************************/
