@@ -1,9 +1,11 @@
 /*******************************************************************************
 *
-*  McXtrace, x-ray ray-tracing package
-*  Copyright(C) 2007 Risoe National Laboratory.
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
-* %I
+* %Identification
 * Written by: Mads Bertelsen and Erik B Knudsen
 * Date: 20.08.15
 * Version: $Revision: 0.1 $
@@ -11,7 +13,7 @@
 *
 * A sample component to separate geometry and phsysics
 *
-* %D
+* %Description
 *
 * This Union_process is based on the Incoherent.comp component originally written
 *  by Kim Lefmann and Kristian Nielsen
@@ -33,7 +35,7 @@
 * Algorithm:
 * Described elsewhere
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS:
 * sigma: [barns]          Incoherent scattering cross section
 * f_QE: [1]               Fraction of quasielastic scattering (rest is elastic)
@@ -44,10 +46,10 @@
 *
 * OUTPUT PARAMETERS:
 *
-* %L
+* %Link
 * The test/example instrument <a href="../examples/Test_Phonon.instr">Test_Phonon.instr</a>.
 *
-* %E
+* %End
 ******************************************************************************/
 
 DEFINE COMPONENT Incoherent_process
