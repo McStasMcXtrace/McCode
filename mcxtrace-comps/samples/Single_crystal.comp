@@ -1,13 +1,13 @@
 /*******************************************************************************
 *
-* McStas, photon ray-tracing package
+* McXtrace, X-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
 *         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Single_crystal
 *
-* %I
+* %Identification
 * Written by: Kristian Nielsen
 * Date: December 1999
 * Origin: Risoe
@@ -24,7 +24,7 @@
 * Mosaic single crystal with multiple scattering vectors, optimised for speed
 * with large crystals and many reflections.
 *
-* %D
+* %Description
 * Single crystal with mosaic. Delta-D/D option for finite-size effects.
 * Rectangular geometry. Multiple scattering and secondary extinction included.
 * The mosaic may EITHER be specified isotropic by setting the mosaic input
@@ -138,10 +138,7 @@
 *
 * Also, always use a non-zero value of delta_d_d.
 *
-* %VALIDATION:
-* This component has been validated.
-*
-* %P
+* %Parameters
 * INPUT PARAMETERS
 * radius: [m]             Outer radius of sample in (x,z) plane
 * xwidth: [m]             Width of crystal
@@ -190,26 +187,26 @@
 * hkl_info.k:    wavevector indices of last coherent scattering event [Angs-1]
 * hkl_info.l:
 *
-* %L
+* %Link
 * See <a href="http://icsd.ill.fr">ICSD</a> Inorganic Crystal Structure Database
-* %L
+* %Link
 * <a href="http://www.webelements.com/">Web Elements</a>
-* %L
+* %Link
 * <a href="http://www.ill.eu/sites/fullprof/index.html">Fullprof</a> powder refinement
-* %L
+* %Link
 * <a href="http://www.crystallographica.com/">Crystallographica</a> software
-* %L
+* %Link
 * <a href="http://www.geomview.org">Geomview and Object File Format (OFF)</a>
-* %L
+* %Link
 * Java version of Geomview (display only) <a href="http://www.holmes3d.net/graphics/roffview/">jroff.jar</a>
-* %L
+* %Link
 * <a href="http://qhull.org">qhull</a>
-* %L
+* %Link
 * <a href="http://www.cs.ucdavis.edu/~amenta/powercrust.html">powercrust</a>
-* %L
+* %Link
 * material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
 *
-* %E
+* %End
 ****************************************************************************/
 
 /*

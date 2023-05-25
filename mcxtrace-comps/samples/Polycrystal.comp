@@ -1,13 +1,13 @@
 /**********************************************************************************************************************************
 *
-* McXtrace, x-ray tracing package
+* McXtrace, X-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Polycrystal
 *
-* %I
+* %Identification
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
 *
 * Based on code by: Erik Knudsen, Kenichi Oikawa, and Alberto Cereser
@@ -17,7 +17,7 @@
 *
 * Polycrystal made from single crystal-like voxels
 *
-* %D
+* %Description
 * The component creates a threedimensional grid of cubic instances of the Single_crystal-component,through
 * which the rays are propagated. The component relies on a list of possible orientations and stretches of the
 * initial unit cell and a list correlating each voxel of the polycrystal to an entry in the list of rotations
@@ -29,7 +29,7 @@
 *   MaxNumberOfReflections    = 1, ProbabilityOfTransmission = 0.5, 
 *   ax = 5.6579, ay = 0.0000, az = 0.0000, bx = 0.0000, by = 5.6579, bz = 0.0000, cx = 0.0000, cy = 0.0000, cz = 5.6579 )
 *
-* %P
+* %Parameters
 * MapFile:                   []     File describing, which orientation is found in which voxel
 * OrientationsFile:          []     File describing the different orientations
 * ReflectionsDatafile:       []     File describing the reflections in the relevant lattice (usually in .lau-format)
@@ -60,7 +60,7 @@
 * Reciprocal:                []     If this parameter is set to 0, then the lattice vectors should be given in real space.
 *                                   Anything else implies that the vectors are given in reciprocal space.
 * verbose:                   []     If nonzero - output more info to the console.
-* %E
+* %End
 ***********************************************************************************************************************************/
 
 DEFINE COMPONENT Polycrystal

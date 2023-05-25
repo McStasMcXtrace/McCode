@@ -1,13 +1,13 @@
 /*****************************************************************************
 *
 * McXtrace, X-ray tracing package
-*         Copyright 1997-2022, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
 *         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Isotropic_Sqw
 *
-* %I
+* %Identification
 * Written by: E. Farhi, V. Hugouvieux
 * Date: March 2022
 * Origin:  Synchrotron SOLEIL
@@ -20,7 +20,7 @@
 * Isotropic sample handling multiple scattering and absorption for a general
 * S(q,w) (coherent)
 *
-* %D
+* %Description
 * An isotropic sample handling multiple scattering and including as input the
 * dynamic structure factor of the chosen sample (e.g. from Molecular
 * Dynamics). Handles elastic/inelastic, coherent scattering -
@@ -169,7 +169,7 @@
 * When used in concentric mode, multiple bouncing scattering
 * (traversing the hollow part) is not taken into account.
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS:
 * Sqw_coh: [str]              Name of the file containing the values of Q, w and S(Q,w) Coherent part; Q in Angs-1, E in meV, S(q,w) in meV-1. Use 0, NULL or "" to disable.
 * material: [str]             Absorption file.
@@ -212,10 +212,10 @@
 * %Link
 * Atomic form factors f http://lampx.tugraz.at/~hadley/ss1/crystaldiffraction/atomicformfactors/formfactors.php
 * E. Farhi, V. Hugouvieux, M.R. Johnson, and W. Kob, Journal of Computational Physics 228 (2009) 5251-5261 "Virtual experiments: Combining realistic neutron scattering instrument and sample simulations"
-* %L
+* %Link
 * H. Schober, Collection SFN 10 (2010) 159-336
 *
-* %E
+* %End
 ***********************************************************/
 
 DEFINE COMPONENT Isotropic_Sqw

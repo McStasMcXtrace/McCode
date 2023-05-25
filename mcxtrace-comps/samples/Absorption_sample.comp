@@ -2,13 +2,12 @@
 *
 * McXtrace, X-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
 *         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Absorption_sample
 *
-* %I
+* %Identification
 *
 * Written by:Erik B Knudsen
 * Date: March 2011
@@ -17,7 +16,7 @@
 *
 * Sample component with absorbing materials.
 *
-* %D
+* %Description
 * A sample component consisting of a volume of one material and volume of another 
 * material inside. This is useful as a phantom for simulating tomography experiments.
 * The inner material can be left unset (all 0), to only have one volume.
@@ -50,17 +49,17 @@
 * geometry_o: [str] Name of the outer Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust
 * geometry_i: [str] Name of an inner Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust [str]
 *
-* %L
+* %Link
 * Meshlab https://www.meshlab.net/
-* %L
+* %Link
 * Geomview and Object File Format (OFF) <http://www.geomview.org>
-* %L
+* %Link
 * Java version of Geomview (display only) jroff.jar <http://www.holmes3d.net/graphics/roffview/> 
-* %L
+* %Link
 * qhull <http://qhull.org>
 * %Link
 * Powercrust https://www.cs.ucdavis.edu/~amenta/powercrust.html
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Absorption_sample

@@ -1,8 +1,13 @@
 /*******************************************************************************
 *
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
+*
 * Component: SasView_model
 *
-* %I
+* %Identification
 * Written by: Jakob Garde, Torben Nielsen, Peter Willendrup
 * Date: 03.02.2016
 * Version: 0.5
@@ -12,7 +17,7 @@
 * This SANS sample exposes <a href="http://www.sasview.org">SasView's</a> scattering kernels to McXtrace. 
 * In this way SasView's monodisperse scattering kernels can be call from McXtrace.
 *
-* %D
+* %Description
 * Sample for use in SANS instruments. The models describe mono disperse particles in thin solution. The sample geometry may have the shape:
 *
 * Shape:        - A filled box with dimensions xwidth, yheight and zdepth. 
@@ -78,7 +83,7 @@
 *   36 - triaxial_ellipsoid_xy  (sld, solvent_sld, req_minor, req_major, rpolar, theta, phi, psi)
 * MDOC_END
 * 
-* %P
+* %Parameters
 * Definition parameters:
 * 
 * model_index:  Index of the applied sasview model. Recompile instrument for changes to take effect.
@@ -113,7 +118,7 @@
 * %Link
 * http://www.sasview.org/sasview/user/models/model_functions.html
 * 
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT SasView_model

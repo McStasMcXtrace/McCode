@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, Xray-tracing package
-*         Copyright 1997-2003, All rights reserved
-*         Technical University of Denmark, Kgs. Lyngby, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Saxs_spheres
 *
-* %I
+* %Identification
 * Written by: E. B. Knudsen, P. Willendrup, K. Lefmann, L. Arleth
 * Date: 28.10.2010
 * Origin: DTU Fysik
@@ -16,7 +15,7 @@
 *
 * Sample for Small Angle X-ray Scattering - hard spheres in thin solution, mono disperse.
 *
-* %D
+* %Description
 * Sample for use in a SAXS instrument, models hard, monodisperse spheres in thin solution.
 *   The shape of the sample may be a filled box with dimensions 
 *   xwidth, yheight, zdepth, a cylinder with dimensions radius and yheight,
@@ -24,7 +23,7 @@
 *
 * Example: Saxs_spheres(R = 20, Phi = 1e-3, Delta_rho = 0.6, sigma_abs = 50, xwidth=0.01, yheight=0.01, zdepth=0.005)
 *
-* %P
+* %Parameters
 *
 * INPUT PARAMETERS
 *
@@ -49,9 +48,7 @@
 * sphere_mtrl: [] Material datafile from which to find absorption. If none is given absorption is neglected. 
 * mu_c: [5] Column of the datafile which contains absorption coefficients.
 *
-*
-* %Link
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Saxs_spheres

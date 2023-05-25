@@ -1,13 +1,13 @@
 /*******************************************************************************
 *
 * McXtrace, X-ray tracing package
-*         Copyright 1997-2002, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
 *         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Abs_objects
 *
-* %I
+* %Identification
 * Written by: Erik Knudsen
 * Date: Jan 24, 2011
 * Version: $Revision$
@@ -16,7 +16,7 @@
 *
 * Blocks of attenuating material in off format
 *
-* %D
+* %Description
 *
 * This component is a model of 1 or more off-shaped blocks attenuating the x-ray beam.
 * Which shapes are present and their relative positions are described in a file of the follwing format:
@@ -35,12 +35,12 @@
 *
 * Example: Abs_objects(objects="input_abs_objects_template.dat")
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS
 * objects: [ ]     Input file where the off-shapes are defined.
 * refraction: [ ]  Flag to enable refraction at interfaces.
 *
-* %E
+* %End
 *******************************************************************************/
 DEFINE COMPONENT Abs_objects
 DEFINITION PARAMETERS ()

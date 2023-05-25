@@ -1,20 +1,20 @@
 /*****************************************************************************
 *
 * McXtrace, X-ray tracing package
-*         Copyright 1997-2022, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
 *         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Fluorescence
 *
-* %I
+* %Identification
 * Written by: E. Farhi
 * Date:       March 2022
 * Origin:     Synchrotron SOLEIL
 *
 * Sample model handling absorption, fluorescence, Compton and Rayleigh scattering.
 *
-* %D
+* %Description
 * Sample that models many photon-matter interactions:
 * - absorption (photon excites an electron and creates a hole)
 * - fluorescence (excited electrons emit light while falling into lower states)
@@ -99,17 +99,17 @@
 *
 * %Link
 * The XRayLib https://github.com/tschoonj/xraylib
-* %L
+* %Link
 * Fluorescence https://en.wikipedia.org/wiki/Fluorescence
-* %L
+* %Link
 * Rayleigh https://en.wikipedia.org/wiki/Rayleigh_scattering
-* %L
+* %Link
 * Compton https://en.wikipedia.org/wiki/Compton_scattering
-* %L
+* %Link
 * X-ray absorption edges http://skuld.bmsc.washington.edu/scatter/AS_periodic.html
-* %L
+* %Link
 * X-ray fluorescence spectra http://www.xrfresearch.com/xrf-spectra/
-* %L
+* %Link
 * X-ray edges and fluo lines https://physics.nist.gov/PhysRefData/XrayTrans/Html/search.html
 *
 * %E

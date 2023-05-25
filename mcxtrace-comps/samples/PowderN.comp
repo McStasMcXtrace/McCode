@@ -1,11 +1,12 @@
 /*****************************************************************************
-* McXtrace, x-ray tracing package
-*         Copyright (C) Risoe National Laboratory, Roskilde, Denmark
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
 *         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: PowderN
 *
-* %I
+* %Identification
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
 * Origin: McXtrace release 1.2
@@ -21,7 +22,7 @@
 *
 * General powder sample (N lines, single scattering, incoherent scattering)
 *
-* %D
+* %Description
 * General powder sample with
 *         many scattering vectors
 *         possibility for intrinsic line broadening
@@ -121,7 +122,7 @@
 *  using PowderN(...). In both cases, this second instance needs concentric = 0.)
 * The concentric arrangment can not be used with OFF geometry specification.
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS
 * radius: [m]          Outer radius of sample in (x,z) plane
 * xwidth: [m]          Horiz. dimension of sample, as a width
@@ -157,30 +158,30 @@
 * line_info.type: [char]  Interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent
 * line_info.dq: [Angs^-1] Wavevector transfer of last coherent scattering event.
 *
-* %L
+* %Link
 * See also: Single_crystal
-* %L
+* %Link
 * See <a href="http://icsd.ill.fr">ICSD</a> Inorganic Crystal Structure Database
-* %L
+* %Link
 * <a href="http://www.ncnr.nist.gov/resources/n-lengths/">Cross sections for single elements</a>
-* %L
+* %Link
 * <a href="http://www.ncnr.nist.gov/resources/sldcalc.html>Cross sections for compounds</a>
-* %L
+* %Link
 * <a href="http://www.webelements.com/">Web Elements</a>
-* %L
+* %Link
 * <a href="http://www.ill.eu/sites/fullprof/index.html">Fullprof</a> powder refinement
-* %L
+* %Link
 * <a href="http://www.crystallographica.com/">Crystallographica</a> software (free license)
-* %L
+* %Link
 * <a href="http://www.geomview.org">Geomview and Object File Format (OFF)</a>
-* %L
+* %Link
 * Java version of Geomview (display only) <a href="http://www.holmes3d.net/graphics/roffview/">jroff.jar</a>
-* %L
+* %Link
 * <a href="http://qhull.org">qhull</a>
-* %L
+* %Link
 * <a href="http://www.cs.ucdavis.edu/~amenta/powercrust.html">powercrust</a>
 *
-* %E
+* %End
 *****************************************************************************/
 DEFINE COMPONENT PowderN
 DEFINITION PARAMETERS ()

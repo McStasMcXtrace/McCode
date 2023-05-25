@@ -2,13 +2,12 @@
 *
 * McXtrace, X-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Molecule_2state
 *
-* %I
+* %Identification
 *
 * Written by: Erik B Knudsen
 * Date: October 2012
@@ -18,7 +17,7 @@
 *
 * Disordered optical-excitable molecule sample.
 *
-* %D
+* %Description
 * A sample model for pump probe experiments which models disordered molecules in a volume (rectangular,
 * cylindrical, or spherical). Molecules can be in one of two states (0 and 1).
 * Scattering is either specified through F vs. q scattering curves or as a set of atom positions from which
@@ -34,7 +33,7 @@
 *  psimin=0, psimax=15*DEG2RAD, etamin=-1*DEG2RAD,etamax=1*DEG2RAD,
 *  t_relax=600e-12, delta_t=100e-9, excitation_yield=0.2)
 *
-* %P
+* %Parameters
 * Input parameters:
 * initial_state: ( ) Which state is Molecule_2state in for t<delta_t? Useful for modelling something that changes state slowly.
 * form_factors:  ( ) File from which to read atomic form factors. Defualt amounts to use the one shipped with McXtrace.
@@ -58,7 +57,7 @@
 * q_parametric:   ( ) 0: Assume that datafiles contains atom positions. 1: datafiles contains F vs. q data.
 * Emax:           ( ) Maximal energy for which scattering factors are computed. Must be larger than the maximal impinging energy.
 *  
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Molecule_2state
