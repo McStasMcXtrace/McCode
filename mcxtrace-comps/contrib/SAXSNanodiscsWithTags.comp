@@ -19,6 +19,8 @@
 * of monodisperse phospholipid bilayer nanodiscs - with histidine tags still
 * on the belt proteins.
 *
+* Example: SAXSNanodiscsWithTags( xwidth = 0.01, yheight = 0.01, zdepth = 0.01, SampleToDetectorDistance = 0.48, DetectorRadius = 0.1 )
+*
 * %P
 * AxisRatio: []         Axis ratio of the bilayer patch.
 * NumberOfLipids: []    Number of lipids per nanodisc.

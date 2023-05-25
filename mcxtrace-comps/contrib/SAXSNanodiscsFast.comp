@@ -15,9 +15,11 @@
 * A sample of monodisperse phospholipid bilayer nanodiscs in solution (water).
 *
 * %D
-* A component very similar to EmptyNanodiscs.comp - however, the scattering
-* profile is only computed once, and linear interpolation is the used to
+* A component very similar to SAXSNanodiscs.comp - however, the scattering
+* profile is only computed once, and linear interpolation is then used to
 * simulate the instrument.
+*
+* Example: SAXSNanodiscsFast( xwidth = 0.01, yheight = 0.01, zdepth = 0.01, SampleToDetectorDistance = 0.48, DetectorRadius = 0.1 )
 *
 * %P
 * AxisRatio: []         Axis ratio of the bilayer patch.

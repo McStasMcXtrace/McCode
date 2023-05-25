@@ -33,6 +33,8 @@
 * To intersect the Wolter I plates we take advatage of the azimuthal symmetry and only consider the radial component
 * of the photon's wavevector.
 *
+* Example: MM_p( pore_th=0, ring_nr=1, Z0=12, pore_width=0.83e-3 , pore_height=0.605e-3, mirror_reflec="mirror_coating_unity.txt", R_d=0, size_file="ref_design_breaks.txt")
+*
 * %P
 * Input parameters:
 * radius_m: [m]  Ring radius of the upper (reflecting) plate of the pore at the intersection with the hyperbolic section.

@@ -19,6 +19,9 @@
 * A scintillator detector model taking photoabsorption efficiency into account. As such it consitututes a
 * more physical version of the PSD_monitor. Only direct absorption is taken into account.
 *
+* Example: Detector_pn(restore_xray=restore_flag,filename="detector_Si", material_datafile="Si.txt", xwidth=1e-2, yheight=1e-2,zdepth=1e-5)
+AT(0,0,0.1) RELATIVE psrc
+*
 * %P
 * INPUT PARAMETERS
 *

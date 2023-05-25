@@ -27,6 +27,8 @@
 * A stack of conical shells is simulated. Parabolic version.
 * To intersect the Wolter I plates we take advatage of the azimuthal symmetry and only consider the radial component
 * of the photon's wavevector.
+*
+* Example: Ring_p( pore_th=0, ring_nr=3, Z0=FL, yheight=0.605e-3, mirror_reflec="mirror_coating_unity.txt", R_d=0, size_file="ref_design_breaks.txt")
 * 
 * %P
 * Input parameters:

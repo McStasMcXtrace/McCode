@@ -28,6 +28,8 @@
 * To intersect the Wolter I plates we take advatage of the azimuthal symmetry and only consider the radial component
 * of the photon's wavevector.
 *
+* Example: Shell_c( radius_m=0.535532,Z0=12,yheight=1e-2,length=0.5,primary=0, R_d=1)
+*
 * %P
 * Input parameters:
 * radius_m: [m] Ring radius of the upper (reflecting) plate of the shell at the optic centre.

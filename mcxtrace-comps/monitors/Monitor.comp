@@ -26,9 +26,9 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:   Width of detector. (m)
-* yheight:  Height of detector. (m)
-* restore_xray: If set, the monitor does not influence the xray state (1)
+* xwidth:   [m] Width of detector.
+* yheight:  [m] Height of detector.
+* restore_xray: [m] If set, the monitor does not influence the xray state
 *
 * OUTPUT PARAMETERS:
 *

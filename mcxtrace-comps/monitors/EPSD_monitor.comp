@@ -21,7 +21,7 @@
 * If nE>1 the component will output nE detector files + one which is integrated over the full energy interval.
 *
 * Example: EPSD_monitor(xwidth=0.1, yheight=0.1,
-            nx=90, ny=90, filename="Output.psd")
+*           nx=90, ny=90, filename="Output.psd")
 *
 * %P
 * INPUT PARAMETERS:
@@ -30,12 +30,12 @@
 * Emax: [keV]       Upper bound of energy interval.
 * xwidth: [m]       Width of detector. 
 * yheight: [m]      Height of detector. 
-* nx: [ ]           Number of pixel columns.
-* ny: [ ]           Number of pixel rows.
-* nE: [ ]           Number of energy bins.
+* nx: [1]           Number of pixel columns.
+* ny: [1]           Number of pixel rows.
+* nE: [1]           Number of energy bins.
 * filename: [str]   Name of file in which to store the detector image.
-* restore_xray: [ ] If set, the monitor does not influence the xray state.
-* nowritefile: [1]      If set, monitor will skip writing to disk
+* restore_xray: [1] If set, the monitor does not influence the xray state.
+* nowritefile: [1]  If set, monitor will skip writing to disk
 *
 * %E
 *******************************************************************************/

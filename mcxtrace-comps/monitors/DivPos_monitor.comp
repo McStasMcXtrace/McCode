@@ -27,16 +27,16 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:   Width of detector. (m)
-* yheight:  Height of detector. (m)
-* nh:       Number of bins in position (1)
-* ndiv:     Number of bins in divergence (1)
-* nx:       (1)
-* ny:       Vector definition of "forward" direction wrt. divergence, to be used e.g. when the monitor is rotated into the horizontal plane.(1)
-* nz:       (1)
-* maxdiv_h: Maximal horizontal divergence detected (degrees)
-* filename: Name of file in which to store the detector image (string)
-* restore_xray: If set, the monitor does not influence the photon state (1)
+* xwidth:  [m] Width of detector.
+* yheight: [m] Height of detector.
+* nh:      [1] Number of bins in position
+* ndiv:    [1] Number of bins in divergence
+* nx:      [1]
+* ny:      [1] Vector definition of "forward" direction wrt. divergence, to be used e.g. when the monitor is rotated into the horizontal plane
+* nz:      [1]
+* maxdiv_h: [deg] Maximal horizontal divergence detected
+* filename: [str] Name of file in which to store the detector image
+* restore_xray: [1] If set, the monitor does not influence the photon state
 * nowritefile: [1]  If set, monitor will skip writing to disk.
 *
 * OUTPUT PARAMETERS:

@@ -21,6 +21,8 @@
 * vicinity of the theoretical Q given a d-spacing.
 * The rectangle is in the x-y plane.
 *
+* Example: Bragg_crystal_simple( yheight=0.05, xwidth=0.02, DM=3.1356, err_Q= 0.000075, r0=1.0)
+*
 * %P
 * Input parameters:
 * xwidth: [m]    Width in the x direction

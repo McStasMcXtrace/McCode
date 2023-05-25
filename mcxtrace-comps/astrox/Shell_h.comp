@@ -58,6 +58,8 @@
 * I.e. one 2D data block per energy data point where rows represent the steps in nominal incident angle, and columns
 * represent the sampled granularity of the off-specular scattering.
 *
+* Example: Shell_h( radius_m=0.535532, radius_h=0.533113, zdepth=0.5, Z0=FL, yheight=1e-2, R_d=1)
+*
 * %P
 * Input parameters:
 * radius_m: [m]  Ring radius of the upper (reflecting) plate of the pore at the intersection with the parabolic section.

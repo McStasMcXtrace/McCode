@@ -27,6 +27,8 @@
 *
 * The first incarnation (Mirror_toroid.comp) the mirror curves outwards (a bump), but this incarnation (Mirror_toroid_pothole) curves inwards (a pothole).
 *
+* Example: Mirror_toroid_pothole( radius=0.1, radius_o=1000, xwidth=5e-2, zdepth=2e-1,R0=1, coating="")
+*
 * %P
 * Input parameters:
 *

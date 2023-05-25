@@ -21,7 +21,7 @@
 * and integrates circularly (caking).
 *
 * Example: PSD_monitor(xwidth=0.1, yheight=0.1,
-            nx=90, ny=90, filename="Output.psd")
+*          nx=90, ny=90, filename="Output.psd")
 *
 * %P
 * INPUT PARAMETERS:
@@ -32,7 +32,7 @@
 * nx: [1]               Number of pixel columns.
 * ny: [1]               Number of pixel rows.
 * nr: [1]               Number of radial pixels.
-* filename: [1]         Name of file in which to store the detector image.
+* filename: [str]       Name of file in which to store the detector image.
 * restore_xray: [1]     If set, the monitor does not influence the xray state.
 * nowritefile: [1]      If set, monitor will skip writing to disk
 *

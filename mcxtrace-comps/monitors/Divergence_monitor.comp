@@ -17,7 +17,7 @@
 * Horizontal+vertical divergence monitor.
 *
 * %D
-* A divergence sensitive monitor. The counts are distributed in
+* A 2D divergence sensitive monitor. The counts are distributed in
 * (n times m) pixels.
 *
 * Example: Divergence_monitor(nh=20, nv=20, filename="Output.pos",
@@ -36,7 +36,7 @@
 * nz: [1]               
 * maxdiv_v: [degrees]   Maximal vertical divergence detected 
 * maxdiv_h: [degrees]   Maximal horizontal divergence detected 
-* filename: []          Name of file in which to store the detector image text
+* filename: [str]          Name of file in which to store the detector image text
 * restore_xray: [1]     If set, the monitor does not influence the photon state 
 * rad:  [1]             If set - divergence will be measured in radians.
 * nowritefile: [1]      If set, monitor will skip writing to disk

@@ -16,19 +16,20 @@
 * Rectangular Time-of-flight monitor.
 *
 * %D
-* Rectangular Time-of-flight monitor.
+* Rectangular Time-of-flight monitor. You may either give the time-step or the 
+* time range.
 *
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:   Width of detector. (m)
-* yheight:  Height of detector. (m)
-* nt:       Number of time bins (1)
-* dt:       Length of each time bin (mu-s)
-* tmin:     Lower time limit (mu-s)
-* tmax:     Upper time limit (mu-s)
-* filename: Name of file in which to store the detector image (text)
-* restore_xray: If set, the monitor does not influence the xray state (1)
+* xwidth:   [m] Width of detector.
+* yheight:  [m] Height of detector.
+* nt:       [1] Number of time bins
+* dt:       [mu-s] Length of each time bin
+* tmin:     [mu-s] Lower time limit
+* tmax:     [mu-s] Upper time limit. When left as 0, use dt to compute tmax.
+* filename: [str] Name of file in which to store the detector image
+* restore_xray: [1] If set, the monitor does not influence the xray state 
 *
 * OUTPUT PARAMETERS:
 *
@@ -67,7 +68,7 @@ INITIALIZE
 
     if ((xmin >= xmax) || (ymin >= ymax)) {
             printf("TOF_monitor: %s: Null detection area !\n"
-                   "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+                   "ERROR        (xwidth,yheight). Exiting",
            NAME_CURRENT_COMP);
       exit(0);
     }

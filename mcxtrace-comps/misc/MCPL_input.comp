@@ -21,6 +21,8 @@
 * When used with MPI, the --ncount given on the commandline is overwritten by 
 * #MPI nodes x #events in the file.
 *
+* Example: MCPL_input(filename=voutput.mcpl,verbose=1,repeat_count=1,E_smear=0.1,pos_smear=0.001,dir_smear=0.01)
+*
 * %BUGS
 *
 * %P

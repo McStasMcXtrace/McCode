@@ -17,8 +17,10 @@
 * of the momentum transform in the sample.
 *
 * %D
-* A simple component simulating the scattering from a box-shaped, thin solution
-* of monodisperse, spherical particles.
+* A circular detector measuring the radial average of intensity as a function 
+* of the momentum transform in the sample.
+*
+* Example: SAXSQMonitor( RadiusDetector = 0.1, DistanceFromSample = 0.5, LambdaMin = 1, Lambda0 = 1.54, NumberOfBins = 2000 )
 *
 * %P
 * RadiusDetector: [m]     Radius of the detector (in the xy-plane).

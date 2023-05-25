@@ -21,15 +21,15 @@
 * Mostly for test and debugging purposes.
 *
 * Example: PSD_monitor_4PI(radius=0.1,
-            nx=90, ny=90, filename="Output.psd")
+*           nx=90, ny=90, filename="Output.psd")
 *
 * %P
 * INPUT PARAMETERS:
-* radius:   Radius of detector (m)
-* nx:       Number of pixel columns (1)
-* ny:       Number of pixel rows (1)
-* filename: Name of file in which to store the detector image (text)
-* restore_xray: If set, the monitor does not influence the xray state (1)
+* radius:   [m] Radius of detector
+* nx:       [1] Number of pixel columns
+* ny:       [1] Number of pixel rows
+* filename: [str] Name of file in which to store the detector image
+* restore_xray: [1] If set, the monitor does not influence the xray state
 *
 * OUTPUT PARAMETERS:
 *

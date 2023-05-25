@@ -18,6 +18,8 @@
 * A simple component simulating the scattering from a box-shaped, thin solution
 * of monodisperse, spherical particles.
 *
+* Example: SAXSSpheres( xwidth = 0.01, yheight = 0.01, zdepth = 0.01, R = 50.0, SampleToDetectorDistance = 0.5, DetectorRadius = 0.1 )
+*
 * %P
 * R: [AA]        Radius of the spherical particles.
 * Concentration	: [mM]   Concentration of sample.

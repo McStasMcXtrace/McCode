@@ -45,8 +45,7 @@
 * side_reflec:   [ ]   Data file containing reflectivities of the side walls (LEFT and RIGHT).
 * bottom_reflec: [ ]  Data file containing reflectivities of the bottom surface (BOTTOM).
 * R_d:      [ ] Default reflectivity value to use if no reflectivity file is given. Useful f.i. is one surface is reflecting and the others absorbing.
-* primary:  [ ] If non-zero, the pore is considered a primary reflector, and extends towards negative z. I.e. the entry plane is behind the z=0-plane. If zero, the pore is considered secondary
-*               and extends from the z=0-plane and towards positive z.
+* primary:  [ ] If non-zero, the pore is considered a primary reflector, and extends towards negative z. I.e. the entry plane is behind the z=0-plane. If zero, the pore is considered secondary and extends from the z=0-plane and towards positive z.
 * dalpha:   [deg] Offset to the alpha angle computed from the focal length. Useful for targeting the modified conical geometry (currently ignored).
 * waviness: [rad] Waviness of the reflecting surface. The slope error is assumed to be uniformly distributed in the interval [-waviness:waviness].
 * longw:    [ ] If non-zero, waviness is 1D and along the pore axis.

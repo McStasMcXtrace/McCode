@@ -18,6 +18,8 @@
 * A component simulating the scattering from a box-shaped, thin solution
 * of monodisperse, cylindrical particles with elliptic cross section.
 *
+* Example: SAXSEllipticCylinders( xwidth = 0.01, yheight = 0.01, zdepth = 0.01, SampleToDetectorDistance = 0.48, DetectorRadius = 0.1 )
+*
 * %P
 * R1; [AA]              First semiaxis of the cross section of the elliptic cylinder.
 * R2; [AA]              Second semiaxis of the cross section of the elliptic cylinder.
