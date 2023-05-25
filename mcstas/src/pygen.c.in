@@ -920,8 +920,10 @@ cogen(char *output_name, struct instr_def *instr)
 
   cout("# Instruct McStasscript not to 'check everythng'");
   cout("instr.settings(checks=False)");
-  cout("# (also, this is where one can add e.g. seed=1000, ncount=1e7, mpi=8, openacc=True etc.)");
-  cout("\n# Generate a dataset with default parameters.");
+  cout("# (also, this is where one can add e.g. seed=1000, ncount=1e7, mpi=8, openacc=True, force_compile=False etc.)");
+  cout("\n\n# Visualise with default parameters.");
+  cout("instr.show_instrument()");
+  cout("\n\n# Generate a dataset with default parameters.");
   cout("data = instr.backengine()");
   cout("\n# Overview plot:");
   cout("ms.make_sub_plot(data)");
