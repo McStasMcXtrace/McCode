@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Shell_p
 *
-* %I
+* %Identification
 *
 * Written by: Erik B Knudsen and Desiree D. M. Ferreira
 * Date: Feb. 2016
@@ -18,7 +17,7 @@
 *
 * Single parabolic shell as part of a Wolter optic.
 *
-* %D
+* %Description
 * A single shell is simulated. The top and bottom are curved cylindrically
 * azimuthally. The sagital profile is defined by a parabola, which passes through the radii raidus_m 
 * at z=0, and radius_p at zentry (<0).
@@ -60,7 +59,7 @@
 *
 * Example: Shell_p( radius_p=0.535532, radius_m=0.533113, zdepth=0.5, Z0=12, yheight=1e-2, R_d=1)
 * 
-* %P
+* %Parameters
 * Input parameters:
 * radius_m: [m]  Ring radius of the upper (reflecting) plate of the shell at the intersection with the hyperbolic section.
 * radius_p: [m]  Ring radius of the upper (reflecting) plate of the shell at the edge furthest away from the focal point.
@@ -75,7 +74,7 @@
 * wave_model: [ ] Flag to choose waviness model. 1. longitudinal uniform, 2. 2D-uniform, 3. lorentzian sagittal, 4. double gaussian sagittal. See above for details.
 * waviness: [rad] Waviness of the pore reflecting surface. The slope error is assumed to be uniformly distributed in the interval "[-waviness:waviness]".
 * verbose:  [ ]   If !=0 output extra info during simulation.
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Shell_p

@@ -1,13 +1,12 @@
 /*****************************************************************************
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Pore_h
 *
-* %I
+* %Identification
 *
 * Written by: Erik B Knudsen and Desiree D. M. Ferreira 
 * Date: Feb. 2016
@@ -17,7 +16,7 @@
 *
 * Single Pore as part of the Silicon Pore Optics (SPO) as envisioned for the ATHENA+ space telescope.
 *
-* %D
+* %Description
 * A single pore is simulated, which may have thick walls. The top and bottom are curved cylindrically
 * azimuthally, and according to the Wolter I optic lengthwise (sagitally). This is the hyperbolic part.
 * The azimuthal curvature is defined by the radius parameters. This refers to the center of the pore. I.e the top
@@ -28,7 +27,7 @@
 *
 * Example: Pore_h( radius_m=0.286148, radius_h=0.284333, zdepth=0.101504, Z0=12, xwidth=0.83e-3, yheight=0.605e-3, mirror_reflec="mirror_coating_unity.txt", R_d=0)
 *
-* %P
+* %Parameters
 * Input parameters:
 * radius_m: [m] Ring radius of the upper (reflecting) plate of the pore at the intersection with the parabolic section.
 * radius_h: [m] Ring radius of the upper (reflecting) plate of the pore at the edge closest to the focal point.
@@ -42,7 +41,7 @@
 * bottom_reflec: [ ]  Data file containing reflectivities of the bottom surface (BOTTOM).
 * R_d: [ ] Default reflectivity value to use if no reflectivity file is given. Useful f.i. is one surface is reflecting and the others absorbing.
 * 
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Pore_h

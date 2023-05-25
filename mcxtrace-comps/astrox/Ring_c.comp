@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Ring_c
 *
-* %I
+* %Identification
 *
 * Written by: Erik B Knudsen and Desiree D. M. Ferreira
 * Date: Feb. 2016
@@ -23,12 +22,12 @@
 *
 * Stack of conical shells as part of a Wolter optic.
 *
-* %D
+* %Description
 * A stack of conical shells is simulated. 
 * To intersect the Wolter I plates we take advatage of the azimuthal symmetry and only consider the radial component
 * of the photon's wavevector.
 * 
-* %P
+* %Parameters
 * Input parameters:
 * radius_m: [m] Ring radius of the upper (reflecting) plate of the shell at the optic centre. 
 * yheight:  [m] Height of the shell.
@@ -43,7 +42,7 @@
 * dalpha:   [deg] Offset to the alpha angle computed from the focal length. Useful for targeting the modified conical geometry (currently ignored).
 * waviness: [rad] Waviness of the shell reflecting surface. The slope error is assumed to be uniformly distributed in the interval [-waviness:waviness].
 * longw:    [ ] If non-zero, waviness is 1D and along the shell axis.
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Ring_c

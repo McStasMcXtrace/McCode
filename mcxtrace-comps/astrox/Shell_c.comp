@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Shell_c
 *
-* %I
+* %Identification
 *
 * Written by: Erik B Knudsen and Desiree D. M. Ferreira
 * Date: Feb. 2016
@@ -18,7 +17,7 @@
 *
 * Single conical shell as part of a Wolter optic.
 *
-* %D
+* %Description
 * A single shell is simulated. The top and bottom are curved cylindrically
 * azimuthally, whereas they are straight sagitally. The primary parameter specifies whether this is a
 * primary or secondary mirror.
@@ -30,7 +29,7 @@
 *
 * Example: Shell_c( radius_m=0.535532,Z0=12,yheight=1e-2,length=0.5,primary=0, R_d=1)
 *
-* %P
+* %Parameters
 * Input parameters:
 * radius_m: [m] Ring radius of the upper (reflecting) plate of the shell at the optic centre.
 * yheight:  [m] Height of the shell.
@@ -45,7 +44,7 @@
 * dalpha:   [deg] Offset to the alpha angle computed from the focal length. Useful for targeting the modified conical geometry (currently ignored).
 * waviness: [rad] Waviness of the shell reflecting surface. The slope error is assumed to be uniformly distributed in the interval [-waviness:waviness].
 * longw:    [ ] If non-zero, waviness is 1D and along the shell axis.
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Shell_c

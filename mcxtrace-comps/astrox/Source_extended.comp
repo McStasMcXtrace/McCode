@@ -1,13 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Source_extended
 *
-* %I
+* %Identification
 * Written by:Arne 'S Jegers
 * Date: May 6, 2019
 * Origin: Technical University of Denmark
@@ -15,7 +15,8 @@
 *
 * A plane source emitting x-rays to emulate a distant extended source, such as a
 * nebula or galaxy
-* %D
+*
+* %Description
 * A rectangular x-ray source that samples ray intensity from an image, and
 * deflects the emitted ray to reflect having been emitted from the sampled part
 * of the extended source. Rays that are sampled from the same point on the image
@@ -28,7 +29,7 @@
 * r_max: The maximum distance from the point (x_ref, y_ref) to any corner of the image
 * iCD11, iCD12, iCD21 and iCD22: The values of the FITS image's CD matrix
 *
-* %P
+* %Parameters
 * yheight [m]   Height of rectangle in (x,y,0) plane where x-rays
 *               are generated.
 * xwidth  [m]   Width of rectangle in (x,y,0) plane where x-rays
@@ -42,7 +43,7 @@
 * incoherent: [] Source is fully incoherent
 * phase: [] Set phase to something given.
 * image_path: [string] Path to file containing the heat map of the source 
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Source_extended
