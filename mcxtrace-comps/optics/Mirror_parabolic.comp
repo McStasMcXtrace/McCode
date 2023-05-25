@@ -1,20 +1,20 @@
 /*******************************************************************************
 *
-* McXtrace, xray-tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Mirror_parabolic
 *
-* %I
+* %Identification
 * Written by: Erik Knudsen
 * Date: Feb 11, 2010
 * Origin: Risoe
 *
 * Idealized parabolic mirror (in XZ)
 * 
-* %D
+* %Description
 * Takes a reflectivity as input and reflects rays in a ideal geometry
 * parabolic mirror. The mirror is positioned in the zx-plane curving towards positive y.
 * I.e. the focal point is (0,0,f(a,b))
@@ -23,7 +23,7 @@
 *
 * Example: Mirror_parabolic(R0=1, a=1, b=0, xwidth=0.02, yheight=0, zdepth=0.05)
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS
 * R0:     [1]  Reflectivity of mirror.
 * xwidth: [m]  Width of mirror.
@@ -40,7 +40,7 @@
 * zmax: [m]     Mirrors' extent along z.
 * a2inv: [m^-2] Inverse of a^2.
 * b2inv: [m^-2] Inverse of b^2.
-* %E
+* %End
 *******************************************************************************/
 
 

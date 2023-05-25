@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Arm
 *
-* %I
+* %Identification
 *
 * Written by: Erik Knudsen 
 * Date: Jan '21 
@@ -17,7 +16,7 @@
 *
 * 1D CRL stack based on RTM formalism
 *
-* %D
+* %Description
 * A CRL stack component based on the formalism presented by Simons et.al. J. Synch. Rad.
 * 2017, vol. 24.
 * We model a 1D lens stack focusing in the y-direction. I.e. invariant along x.
@@ -25,7 +24,7 @@
 * Example: Lens_CRL_RTM(
 *   r=0.5e-3, N=10, fast=1, yheight=0, d=0.1e-3,xwidth=1e-4, zdepth=4e-4)
 *   
-* %P
+* %Parameters
 * Input parameters:
 *
 * r: [m]          Radius of curavature at the lens apex.
@@ -36,7 +35,7 @@
 * zdepth: [m]     Thickness of a single lenslet.
 * material: [str]   Datafile containing f1 constants
 * fast: [m]       Use fast calculation - should be off for better display with mxdisplay
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Lens_CRL_RTM

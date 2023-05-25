@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Bragg_crystal
 * 
-* %I
+* %Identification
 * Written by: Marcus H Mendenhall, NIST <marcus.mendenhall@nist.gov>
 * Based on: Perfect_crystal.comp written by Anette Vickery, Andrea Prodi, Erik Knudsen
 * Date: December 1, 2016
@@ -17,7 +16,7 @@
 *
 * Perfect, reflecting crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
 *
-* %D
+* %Description
 * Bragg_crystal.comp supercedes Perfect_Crystal.comp with major edits and corrections.
 *
 * For details see:
@@ -54,7 +53,7 @@
 * Example: Bragg_crystal(
 *       length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alpha=0)
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS
 * width:   [m]    x width of the crystal.
 * length:  [m]    z depth (length) of the crystal.
@@ -74,7 +73,7 @@
 *      3 => Mx_crystal_fcc: fcc
 *      4 => Mx_crystal_fcc: bcc
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Bragg_crystal

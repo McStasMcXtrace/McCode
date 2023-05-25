@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Grating_reflect
 *
-* %I
+* %Identification
 *
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk), Kristian Sorensen and Philip Smith
 * Date: June 2021
@@ -17,7 +16,7 @@
 *
 * A reflective grating.
 *
-* %D
+* %Description
 * A reflective grating that diffracts incident photons. 
 * The grating is in the XZ-plane. It then reflects the incoming photon using a MC picked angle, 
 * where the angle is picked from a uniform distribution of width d_phi, i.e. U[-d_phi/2,d_phi/2]
@@ -32,7 +31,7 @@
 * Example: Grating_reflect(
 *   d_phi=1,order=0,rho_l=100,zdepth=102e-3,xwidth=102e-3) 
 *
-* %P
+* %Parameters
 * Input parameters:
 * xwidth: [m]    The width of the grating.
 * zdepth: [m]    The length of the grating.
@@ -47,7 +46,7 @@
 * verbose: [ ]   If non-zero, more information will be displayed. Nb. generates much output.
 *
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Grating_reflect

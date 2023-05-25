@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Mirror_toroid
 *
-* %I
+* %Identification
 *
 * Written by: Erik B Knudsen
 * Date: Jul 2016
@@ -17,7 +16,7 @@
 *
 * Toroidal shape mirror (in XZ)
 *
-* %D
+* %Description
 * This is an implementation of a toroidal mirror which may be curved in two dimensions.
 * To avoid solving quartic equations, the intersection is compited as a combination of 
 * two intersections. First, the ray is intersected with a cylinder to catch (almost) the small
@@ -28,7 +27,7 @@
 *
 * Example: Mirror_toroid(zdepth=0.340,xwidth=0.020,radius=246.9254,radius_o=246.9254,R0=1)
 *
-* %P
+* %Parameters
 * Input parameters:
 * R0:      [1]  Reflectivity of mirror.
 * xwidth:  [m]  Width of mirror.
@@ -37,7 +36,7 @@
 * radius:  [m] Curvature radius
 * radius_o:[m] Curvature radius, outwards
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Mirror_toroid

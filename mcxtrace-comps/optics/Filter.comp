@@ -1,13 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
-*         Copyright 1997-2022, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
 *         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Filter
 *
-* %I
+* %Identification
 * Written by: Erik Knudsen
 * Date: Jan 24, 2011
 * Origin: DTU Physics
@@ -15,7 +15,7 @@
 *
 * Block of an attenuating material
 * 
-* %D
+* %Description
 * A chunk of attenuating material. Attenuation is computed through
 * the effective length travelled within the material. 
 * No scattering is modelled at present.
@@ -29,7 +29,7 @@
 * Example: Filter(material_datafile="Ge.txt",
 *   geometry="wire.ply",xwidth=0.02,yheight=0,zdepth=0)
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS
 *
 * xwidth:  Width of block. (m) 
@@ -41,19 +41,19 @@
 * fixed_delta: Use a fixed delta to compute refraction - useful for debugging. ( ) 
 * refraction: If nonzero, refraction is enabled. (0/1) 
 *
-* %L
-* Meshlab https://www.meshlab.net/
-* %L
-* Geomview and Object File Format (OFF) <http://www.geomview.org>
-* %L
-* Java version of Geomview (display only) jroff.jar <http://www.holmes3d.net/graphics/roffview/> 
-* %L
-* qhull <http://qhull.org>
 * %Link
+* Meshlab https://www.meshlab.net/
+* %Link
+* Geomview and Object File Format (OFF) <http://www.geomview.org>
+* %Link
+* Java version of Geomview (display only) jroff.jar <http://www.holmes3d.net/graphics/roffview/> 
+* %Link
+* qhull <http://qhull.org>
+* %Linkink
 * Powercrust https://www.cs.ucdavis.edu/~amenta/powercrust.html
-* %L
+* %Link
 * material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
-* %E
+* %End
 *******************************************************************************/
 DEFINE COMPONENT Filter
 DEFINITION PARAMETERS ()

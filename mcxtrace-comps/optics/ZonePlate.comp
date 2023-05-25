@@ -7,7 +7,7 @@
 *
 * Component: ZonePlate
 *
-* %I
+* %Identification
 * Written by: Erik B Knudsen
 * Date: June 16, 2009
 * Origin: DTU Physics
@@ -15,7 +15,7 @@
 *
 * Zone plate based on Monte Carlo sampling of the Fresnel-Kirchhoff integral
 *
-* %D
+* %Description
 * A component which models a zone plate by consierding the plate a secondary source
 * and then by means of Monte Carlo sampling, evaluating the Fresnel-Kirchhoff integral
 * implicitly by resampling the beam in a window defined by the focus_xw,focus_yh parameters.
@@ -29,7 +29,7 @@
 *
 * Example: ZonePlate(radius=0.00015, L=0.15, lambda0=1, focus_xw=300e-9, focus_yh = 300e-9, focus_x0 = 0.0, focus_y0 = 0.0, dist=1)
 *
-* %P
+* %Parameters
 * radius:     [m]  The outer radius of the zone plate. Triggers a circular zone plate. Takes precedence over xwidth,yheight.
 * xwidth:     [m]  Width of linear zone plate. 
 * yheight:    [m]  Height of linear zone plate
@@ -41,7 +41,7 @@
 * focus_x0:   [m]  Offset of resampling window along the x-axis.
 * focus_y0:   [m]  Offset of resampling window along the y-axis.
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT ZonePlate

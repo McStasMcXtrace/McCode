@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Lens_parab
 *
-* %I
+* %Identification
 * Written by: Jana Baltser and Erik Knudsen
 * Date: August 2010, modified July 2011
 * Version: 1.0
@@ -17,12 +16,12 @@
 *
 * X-ray compound refractive lens (CRL) with a profile of the parabola
 *
-* %D
+* %Description
 * A simple X-ray compound refractive lens (CRL) with a profile of the parabola in rotation simulates the photons' movement on passing through it. The CRL focuses in 2D
 *
 * Example: Lens_parab(material_datafile = "Be.txt", r=200e-6, r_ap=0.5e-3, d=50e-6, N=16)
 *
-* %P
+* %Parameters
 * Input parameters:
 * r:        [m] Radius of curvature (circular approximation at the tip of the profile).
 * r_ap:     [m] Radius of circular aperture, which also defines the depth of the lens profile.
@@ -32,7 +31,7 @@
 * rough_z:  [rad] RMS value of random slope error along z.
 * material_datafile: [str]   Datafile containing f1 constants
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Lens_parab

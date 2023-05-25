@@ -1,13 +1,13 @@
 /*******************************************************************************
 *
-* McXrace, xray-tracing package
-*         Copyright. All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Beamstop
 *
-* %ID
+* %Identification
 *
 * Written by: Kristian Nielsen
 * Modified by Erik Bergbäck Knudsen
@@ -17,7 +17,7 @@
 *
 * Rectangular/circular beam stop.
 *
-* %D
+* %Description
 * A simple rectangular or circular beam stop.
 * Infinitely thin and infinitely absorbing.
 * The beam stop is by default rectangular. You may either
@@ -26,7 +26,7 @@
 * Example: Beamstop(xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05)
 *          Beamstop(radius=0.1)
 *
-* %PAR
+* %Parameters
 *
 * INPUT PARAMETERS
 *

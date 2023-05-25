@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Mask
 *
-* %I
+* %Identification
 *
 * Written by: Erik Knudsen 
 * Date: March  2014
@@ -18,7 +17,7 @@
 *
 * A masking image object
 *
-* %D
+* %Description
 * The Mask component takes an image as input either as an standard image file in png or pnm format, or as an ascii file (see below for format),
 * and uses the image as a mask. For instance as a manner of measuring resolution for imaging applications.
 * If the image is supplied as a png or pnm file, they interpretation of the pixels varies depending on the file. If the image is grayscale the pixel values are directly mapped
@@ -46,7 +45,7 @@
 *
 * Example: Mask(xwidth=0.1, yheight=0.1, mask=Test_Mask_input_file.mask)
 * 
-* %P
+* %Parameters
 * Input parameters:
 * xwidth: [m]   Width of the masking object
 * yheight:[m]   Height of the masking object
@@ -55,7 +54,7 @@
 * virtual:[ ]   Mask does not affect the x-ray, but does still read the pixel value of the pixel hit and stores it in masking.
 * Output parameters:
 * maskvar: [ ]  Opacity/transmission value.
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Mask

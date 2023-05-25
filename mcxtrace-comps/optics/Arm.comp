@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Arm
 *
-* %I
+* %Identification
 *
 * Written by: Kim Lefmann and Kristian Nielsen
 * Modified by: Erik Knudsen 
@@ -19,18 +18,18 @@
 *
 * Arm/optical bench
 *
-* %D
+* %Description
 * An arm does not actually do anything, it is just there to set
 * up a new coordinate system.
 *
 * Example: Arm()
 *
-* %P
+* %Parameters
 * Input parameters:
 *
 * (none)
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Arm

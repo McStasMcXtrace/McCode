@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Lens_parab_Cyl
 *
-* %I
+* %Identification
 * Written by: Jana Baltser and Erik Knudsen
 * Date: April 2011
 * Version: 1.0
@@ -17,7 +16,7 @@
 *
 * X-ray compound refractive lens (CRL) with a parabolic cylinder shape
 *
-* %D.
+* %Description
 * An X-ray compound refractive lens (CRL) with a parabolic cylinder profile focusing in 1D, i.e. onto a line
 * 
 * The lens is invariant along the x-axis and has a parabolic profile along the y-axis defined as z/c = y^2/b^2.
@@ -29,7 +28,7 @@
 * Example: Lens_parab_Cyl(r=.5e-3,yheight=1.3e-3,xwidth=1.3e-3,d=.1e-3,N=21,
 *     material_datafile="Be.txt")
 *
-* %P
+* %Parameters
 * Input parameters:
 * r:        [m] Radius of curvature (circular approximation at the tip of the profile).
 * yheight:  [m] The CRL's aperture along Y.
@@ -40,7 +39,7 @@
 * rough_z:  [rad] RMS value of random slope along z.
 * material_datafile: [str]   Datafile containing f1 constants
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Lens_parab_Cyl

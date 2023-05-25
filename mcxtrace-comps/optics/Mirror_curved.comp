@@ -1,18 +1,22 @@
 /************************************************
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
-* %I
+* %Identification
 * Written by: Erik Knudsen
 * Date: September 25th, 2009
 * Origin: Risoe
 *
 * A cylindrically curved mirror (in YZ)
 *
-* %D
+* %Description
 * mirror is in the YZ-plane curved towards positive X if radius is positive
 *
 * Example: Mirror_curved( radius=2, length=20e-3, width=40e-3, coating="AlMgF2_disco.dat")
 * 
-* %P
+* %Parameters
 * radius: [m]   Radius of curvature, along Z.
 * yheight:[m]   Width of the mirror along Y.
 * zdepth: [m]   Length of the unbent mirror along Z.
@@ -21,7 +25,7 @@
 * width:  [m]   Width of the mirror along Y = yheight
 * length: [m]   Length of the unbent mirror along Z = zdepth
 *
-* %E
+* %End
 ***********************************************************************/
 
 DEFINE COMPONENT Mirror_curved

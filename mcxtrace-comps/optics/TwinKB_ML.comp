@@ -8,7 +8,7 @@
 *
 * Component: TwinKB_ML
 *
-* %I
+* %Identification
 *
 * Written by: Jana Baltser, Peter Willendrup, Anette Vickery, Andrea Prodi, Erik Knudsen, Jesper Buch Jensen
 * Date: May 2012
@@ -17,7 +17,7 @@
 *
 * Montel optic model (aka side-by-side Kirkpatrick Baez)
 * 
-* %D
+* %Description
 * Models a Montel optic, or Twin Kirkpatrick Baez mirror optic (hence the component name).
 * The mirror are fully abutting, i.e. there's is no gap between them, and perfectly elliptic.
 *
@@ -33,7 +33,7 @@
 *
 * Example: TwinKB_ML( theta=1.2, s1=.045 , s2=.9 , length=0.06 , width=0.2 , R0=0 , reflectivity_datafile="Ref_W_B4C.txt")
 *
-* %P
+* %Parameters
 * Input parameters:
 * theta: [deg] Incident angle
 * s1: [m]      Distance from the source to the multilayer
@@ -43,7 +43,7 @@
 * R0: [ ]      Constant reflectivity, R0=1 for an ideal situation. If R0=0, the code reads the reflectivity from the datafile
 * reflectivity_datafile: [str] File which contains reflectivities as a function of q.
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT TwinKB_ML

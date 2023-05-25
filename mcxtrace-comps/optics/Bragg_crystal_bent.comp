@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Bragg_crystal_bent
 * 
-* %I
+* %Identification
 * Written by: Marcus H Mendenhall, NIST <marcus.mendenhall@nist.gov>
 * Based on: Perfect_crystal.comp written by Anette Vickery, Andrea Prodi, Erik Knudsen
 * Date: December 1, 2016
@@ -18,7 +17,7 @@
 *
 * Bent, perfect, reflecting crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
 *
-* %D
+* %Description
 * Bragg_crystal_bent.comp supercedes Perfect_Crystal_bent.comp with major edits and corrections.
 *
 * Reads atomic formfactors from a data input file.
@@ -49,7 +48,7 @@
 * Example: Bragg_crystal_bent(
 *       length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alpha=0,y_b=1, lattice_y_b=1, z_c=1, lattice_z_c=1)
 * 
-* %P
+* %Parameters
 * INPUT PARAMETERS
 * x_a:     [m]    1st short half axis (along x). Commonly set to zero, which really implies infinite value, so crystal is an elliptic cylinder.
 * y_b:     [m]    2nd short half axis (along y), which is also the presumed near-normal direction, reflection near the y-z plane.
@@ -75,10 +74,10 @@
 *      3 => Bragg_crystal_fcc: fcc
 *      4 => Bragg_crystal_fcc: bcc
 *
-* %L
+* %Link
 * material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Bragg_crystal_bent

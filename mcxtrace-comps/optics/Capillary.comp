@@ -1,6 +1,11 @@
 /************************************************
 *
-* %I
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
+*
+* %Identification
 * Written by: Erik B Knudsen
 * Date: July 2015
 * Origin: DTU Physics
@@ -8,7 +13,7 @@
 *
 * A capillary tube
 *
-* %D
+* %Description
 *
 * A Capillary tube allowing for reflections along the tube. A material coating can be applied. Multilayer
 * coatings may be handled by generating a reflectivity file (e.g. by IMD) and setting rtable=1.
@@ -22,7 +27,7 @@
 * Example: Capillary(
 *       radius=1e-4,length=0.1, R0=0, coating="Rh.txt")
 * 
-* %P
+* %Parameters
 * radius: [m]   Radius of curvature.
 * length: [m]   Length of the unbent mirror.
 * coating: []   Name of file containing the material data (i.e. f1 and f2) for the coating
@@ -30,7 +35,7 @@
 * rtable: [ ] if nonzero, the coating file contains an E,theta paramterized matrix of raw reflectivities.
 * waviness: [rad]  The momentaneous waviness is uniformly distributed in the range [-waviness,waviness].
 * longw: [ ] If non-zero, waviness is purely longitudinal in its nature.
-* %E
+* %End
 ***********************************************************************/
 
 DEFINE COMPONENT Capillary

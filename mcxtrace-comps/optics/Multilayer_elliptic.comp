@@ -17,7 +17,7 @@
 *
 * Elliptic multilayer mirror (in XZ)
 * 
-* %D
+* %Description
 * Reads reflectivity values from a data input file (Ref.dat) for a Si/W multilayer.
 * The multilayer code reflects ray in an ideal geometry, does not include surface imperfections
 *
@@ -35,7 +35,7 @@
 *   s1 = 1, s2 = 2, length = 0.1, width = 0.1, R0 = 1,
 *   Emin=7, Emax=10, Estep=0.05)
 *
-* %P
+* %Parameters
 * Input parameters:
 * theta: [deg] Design angle of incidence.
 * s1:    [m]   Design distance from the source to the multilayer.
@@ -51,7 +51,7 @@
 * Emax:  [keV] Upper limit of energy interval in datafile. Overrides what's written in the datafile header.
 * Estep: [keV] Step between energy sample points in datafile. Overrides what's written in the datafile header.
 * R0:    [1]   Maximal reflectivity
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Multilayer_elliptic

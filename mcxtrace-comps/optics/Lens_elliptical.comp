@@ -1,25 +1,24 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Lens_parab
 *
-* %I
+* %Identification
 * Written by: Jana Baltser and Erik Knudsen
 * Date: August 2010
 * Origin: NBI
 *
 * X-ray compound refractive lens (CRL) with an elliptic profile
 *
-* %D
+* %Description
 * A simple X-ray compound refractive lens (CRL) with an elliptic profile simulates the photons' movement on passing through it.
 * Attenuation coefficient mu is taken from the NIST database and Be.txt
 * 
-* %P
+* %Parameters
 * Input parameters:
 * r1: radius of the profile along the X axis [m]
 * r2: radius of the profile along the Y axis [m]
@@ -28,10 +27,10 @@
 * N: amount of single lenses in a stack [1]
 * material_datafile:     File where the material parameters for the filter may be found. Format is similar to what may be found off the NIST website. [Be.txt]
 * 
-* %L
+* %Link
 * material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
 *
-* %E
+* %End
 *******************************************************************************/
 
 

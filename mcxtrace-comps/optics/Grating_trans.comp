@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
+* McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
 *         DTU Physics, Kgs. Lyngby, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         University of Copenhagen, Copenhagen, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Grating_trans
 *
-* %I
+* %Identification
 *
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk) 
 * Date: December 2016
@@ -18,7 +17,7 @@
 *
 * Transmission grating
 *
-* %D
+* %Description
 * Model of a 1D rectangular transmission grating based on the theory developed in Schnopper et. al., Applied Optics, 1977.
 * The grating lines are assumed to be vertical. Within each period a fraction gamma is the "open" fraction. 
 * (I.e. 1 is completely open). At present only absorption in the substrate (modelled by the thickness sdepth) 
@@ -29,7 +28,7 @@
 * Example: Grating_trans(
 *   xwidth=25e-3, yheight=25e-3, gamma=0.4, period=2000e-10, zdepth=5100e-10, max_order=3, material="Au.txt")
 *
-* %P
+* %Parameters
 * Input parameters:
 * period: [m]      Distance between grating grooves.
 * zdepth: [m]      Depth of grooves.
@@ -41,7 +40,7 @@
 * substrate: [str] Data file containing material data for the substrate.
 * fixed_dalte: [ ] Set delta to the given constant. Useful for debugging.
 * 
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Grating_trans
