@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
-*         Copyright (C), All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         Copenhagen Univeristy, Copenhagen, Denmark
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Monitor
 *
-* %I
+* %Identification
 * Written by: Erik Knudsen
 * Based on neutron component written by Kristian Nielsen and Kim Lefmann
 *
@@ -18,12 +17,12 @@
 *
 * Energy-sensitive monitor.
 *
-* %D
+* %Description
 * A square single monitor that measures the intergated intensity of the incoming x-rays.
 *
 * Example: Monitor(xwidth=0.1, yheight=0.1)
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS:
 *
 * xwidth:   [m] Width of detector.
@@ -36,7 +35,7 @@
 * p:      Array of x-ray weight counts
 * p2:     Array of second moments
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT Monitor

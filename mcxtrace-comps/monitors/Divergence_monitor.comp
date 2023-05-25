@@ -1,13 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, xray-tracing package
-*         Copyright 1997-2016, All rights reserved
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
 *         DTU Physics, Kgs. Lyngby, Denmark
-*         Institut Laue Langevin, Grenoble, France
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Divergence_monitor
 *
-* %I
+* %Identification
 * Written by: Erik B Knudsen
 * Based on neutron component by Kim Lefmann
 * Date: Jun. '16
@@ -16,7 +16,7 @@
 *
 * Horizontal+vertical divergence monitor.
 *
-* %D
+* %Description
 * A 2D divergence sensitive monitor. The counts are distributed in
 * (n times m) pixels.
 *
@@ -24,7 +24,7 @@
 *           xwidth=0.1, yheight=0.1,
 *           maxdiv_h=2, maxdiv_v=2)
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS:
 *
 * xwidth: [m]           Width of detector. 
@@ -47,7 +47,7 @@
 * Div_p:    Array of photon weight counts
 * Div_p2:   Array of second moments
 *
-* %E
+* %End
 *******************************************************************************/
 DEFINE COMPONENT Divergence_monitor
 DEFINITION PARAMETERS ()

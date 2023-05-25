@@ -1,13 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, xray-tracing package
-*         Copyright 1997-2002, All rights reserved
-*        DTU Physics, 
-*         Institut Laue Langevin, Grenoble, France
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: DivPos_monitor
 *
-* %I
+* %Identification
 * Written by: Erik B Knudsen
 * Based on neutron component by Kim Lefmann
 * Date: Jun. 16
@@ -16,7 +16,7 @@
 *
 * Divergence/position monitor (acceptance diagram).
 *
-* %D
+* %Description
 * 2D detector for intensity as a function of both horizontal position
 * and wavelength. This gives information similar to an aceptance diagram used
 * eg. to investigate beam profiles in neutron guides.
@@ -24,7 +24,7 @@
 * Example: DivPos_monitor(nh=20, ndiv=20, filename="Output.dip",
 *           xwidth=0.1, yheight=0.1, maxdiv_h=2)
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS:
 *
 * xwidth:  [m] Width of detector.
@@ -45,7 +45,7 @@
 * Div_p:    Array of photon weight counts
 * Div_p2:   Array of second moments
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT DivPos_monitor

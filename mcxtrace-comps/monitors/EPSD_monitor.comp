@@ -1,13 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
-*         Copyright (C), All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: EPSD_monitor
 *
-* %I
+* %Identification
 * Written by: Erik B Knudsen
 * Date: June 22, 2009
 * Release: McXtrace 1.5
@@ -15,7 +15,7 @@
 *
 * Position-sensitive monitor.
 *
-* %D
+* %Description
 * An nx times ny pixel energy resolved PSD monitor, which only counts photons with energy in an interval
 * given by Emin and Emax in nE energy bins. The default energy interval is (almost) infinite, with a single bin.
 * If nE>1 the component will output nE detector files + one which is integrated over the full energy interval.
@@ -23,7 +23,7 @@
 * Example: EPSD_monitor(xwidth=0.1, yheight=0.1,
 *           nx=90, ny=90, filename="Output.psd")
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS:
 *
 * Emin: [keV]       Lower bound of energy interval.
@@ -37,7 +37,7 @@
 * restore_xray: [1] If set, the monitor does not influence the xray state.
 * nowritefile: [1]  If set, monitor will skip writing to disk
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT EPSD_monitor

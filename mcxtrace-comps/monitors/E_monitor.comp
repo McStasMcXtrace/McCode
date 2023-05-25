@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
-*         Copyright (C), All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
-*         Copenhagen Univeristy, Copenhagen, Denmark
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: E_monitor
 *
-* %I
+* %Identification
 * Written by: Erik Knudsen
 * Based on neutron component written by Kristian Nielsen and Kim Lefmann
 *
@@ -18,13 +17,13 @@
 *
 * Energy-sensitive monitor.
 *
-* %D
+* %Description
 * A square single monitor that measures the energy of the incoming x-rays.
 *
 * Example: E_monitor(xwidth=0.1, yheight=0.1,
 *                 Emin=1, Emax=50, nE=20, filename="Output.nrj")
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS:
 *
 * xwidth: [m]  Width of detector. 
@@ -41,7 +40,7 @@
 * E_p:      Array of x-ray weight counts
 * E_p2:     Array of second moments
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT E_monitor

@@ -1,13 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
-*         Copyright (C), All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: L_monitor
 *
-* %I
+* %Identification
 * Written by: Kristian Nielsen and Kim Lefmann
 * Modified for X-ray use by Erik Knudsen
 * Date: June 22, 2009
@@ -16,14 +16,14 @@
 *
 * Wavelength-sensitive monitor.
 *
-* %D
+* %Description
 * A square single monitor that measures the wavelength of the incoming
 * xray.
 *
 * Example: L_monitor(xmin=-0.1, xwidth=0.1, yheight=0.1,
 *           nL=20, filename="Output.L", Lmin=0.1, Lmax=1)
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS:
 *
 * xwidth: [m]  Width of detector. 
@@ -40,7 +40,7 @@
 * L_p:      Array of x-ray weight counts
 * L_p2:     Array of second moments
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT L_monitor

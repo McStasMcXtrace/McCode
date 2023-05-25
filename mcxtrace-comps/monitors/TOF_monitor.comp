@@ -1,13 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
-*         Copyright 1997-2014, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: TOF_monitor
 *
-* %I
+* %Identification
 * Written by: Erik B Knudsen
 * Date: Aug. 2014
 * Origin: British Airways
@@ -15,11 +15,11 @@
 *
 * Rectangular Time-of-flight monitor.
 *
-* %D
+* %Description
 * Rectangular Time-of-flight monitor. You may either give the time-step or the 
 * time range.
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS:
 *
 * xwidth:   [m] Width of detector.
@@ -37,7 +37,7 @@
 * TOF_p:    Array of xray weight counts
 * TOF_p2:   Array of second moments
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT TOF_monitor

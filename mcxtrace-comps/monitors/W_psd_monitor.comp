@@ -1,13 +1,13 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
-*         Copyright (C), All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: PSD_monitor
 *
-* %I
+* %Identification
 * Written by: Erik Knudsen
 * Date: June 22, 2009
 * Origin: Risoe
@@ -15,7 +15,7 @@
 *
 * Position-sensitive wattage monitor.
 *
-* %D
+* %Description
 * Based on neutron PSD component written by Kim Lefmann
 * An n times m pixel PSD wattage monitor. This component may also be used as a beam
 * detector.
@@ -23,7 +23,7 @@
 * Example: PSD_monitor(xwidth=0.1, yheight=0.1,
 *           nx=90, ny=90, filename="Output.psd")
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS:
 *
 * xwidth:   [m] Width of detector.
@@ -39,7 +39,7 @@
 * PSD_W:    Array of xray weight counts
 * PSD_W2:   Array of second moments
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT W_psd_monitor

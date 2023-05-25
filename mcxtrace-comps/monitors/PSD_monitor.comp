@@ -1,20 +1,20 @@
 /*******************************************************************************
 *
-* McXtrace, X-ray tracing package
-*         Copyright (C), All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: PSD_monitor
 *
-* %I
+* %Identification
 * Written by: Erik B Knudsen
 * Date: June 22, 2009
 * Origin: Risoe
 *
 * Position-sensitive monitor.
 *
-* %D
+* %Description
 * Based on neutron component written by Kim Lefmann
 * An (nx times ny) pixel PSD monitor. This component may also be used as a beam
 * detector. If instead of xwidth, yheight a radius is given, the component has a circular footprint
@@ -23,7 +23,7 @@
 * Example: PSD_monitor(xwidth=0.1, yheight=0.1,
 *          nx=90, ny=90, filename="Output.psd")
 *
-* %P
+* %Parameters
 * INPUT PARAMETERS:
 *
 * xwidth: [m]           Width of detector.
@@ -36,7 +36,7 @@
 * restore_xray: [1]     If set, the monitor does not influence the xray state.
 * nowritefile: [1]      If set, monitor will skip writing to disk
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT PSD_monitor
