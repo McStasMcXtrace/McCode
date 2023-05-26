@@ -35,7 +35,7 @@ COMPONENT psd0 = PSD_monitor(
     nx = 100, ny = 100, filename = "psd0", xwidth = 2e-3, yheight = 2e-3)
 AT (0, 0, 1e-9) RELATIVE src
 
-COMPONENT sample = Single_crystal(reflections="Mo.lau", material="NULL", 
+COMPONENT sample = Single_crystal(reflections="Mo.lau", material_datafile="NULL", 
     radius = .5e-4, yheight = 1e-3,mosaic=1e-4)
 AT (0, 0, 10) RELATIVE PREVIOUS
 ROTATED (0,0,0) RELATIVE PREVIOUS

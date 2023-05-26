@@ -82,7 +82,7 @@ COMPONENT crl1dsimple = Lens_simple(
 WHEN LENS==2 AT (0, 0, 0) RELATIVE crlplace
 
 COMPONENT crl2d = Lens_parab(
-    material_datafile = "Be.txt", r = 0.5e-3, yheight = 2e-4,
+    material_datafile = "Be.txt", r = 0.5e-3, r_ap = 2e-4,
     d = 0.1e-3, N = 10)
 WHEN LENS==1 AT (0, 0, 0) RELATIVE crlplace
 

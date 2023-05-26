@@ -95,7 +95,7 @@ COMPONENT center_of_rotation= Arm()
 AT(0,0,0.004) RELATIVE PREVIOUS //0.006 works too though
 ROTATED (0,calculated_angle,0) RELATIVE PREVIOUS 
 
-COMPONENT bragg_crystal_no_split = Single_crystal(reflections="Si.lau", material="Si.txt",
+COMPONENT bragg_crystal_no_split = Single_crystal(reflections="Si.lau", material_datafile="Si.txt",
     xwidth=76.2e-3, yheight = 41.275e-3, zdepth=0.001, p_transmit = -1, order = 1, mosaic=1, barns =1,
     
     ax=5.43096*0.40824829,
