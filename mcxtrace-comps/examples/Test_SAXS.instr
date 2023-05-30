@@ -36,7 +36,7 @@
 * Example: -n 1e4 SAMPLE=7 Detector: PSDMonitor_I=7.07865e-14
 * %Example: SAMPLE=9 Detector: PSDMonitor_I=9.24687e-15
 * %Example: SAMPLE=10 Detector: PSDMonitor_I=1.02884e-14
-* Example: SAMPLE=11 Detector: PSDMonitor_I=5.47707e-15
+* %Example: SAMPLE=11 Detector: PSDMonitor_I=5.47707e-15
 *
 * %Parameters
 * DistanceFromSourceToFirstPinhole: [m]	 Distance to first pinhole from source.
@@ -205,16 +205,16 @@ COMPONENT Sample10 = SAXSNanodiscsWithTagsFast(
 )
 WHEN(SAMPLE==10) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
 
-/* COMPONENT Sample11 = SAXSPDBFast( */
-/* 	xwidth = 0.01, */
-/* 	yheight = 0.01, */
-/* 	zdepth = 0.01, */
-/* 	SampleToDetectorDistance = DistanceFromSampleToDetector, */
-/* 	DetectorRadius = RadiusOfDetector, */
-/* 	PDBFilepath = "6lyz.pdb", */
-/*     qMax = 0.9 */
-/* ) */
-/* WHEN(SAMPLE==11) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole */
+COMPONENT Sample11 = SAXSPDBFast(
+ 	xwidth = 0.01,
+ 	yheight = 0.01,
+ 	zdepth = 0.01,
+ 	SampleToDetectorDistance = DistanceFromSampleToDetector,
+ 	DetectorRadius = RadiusOfDetector, 
+ 	PDBFilepath = "6lyz.pdb",
+     qMax = 0.9
+ )
+WHEN(SAMPLE==11) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
 
 COMPONENT Beamstop = Beamstop(
 	radius = 0.001
