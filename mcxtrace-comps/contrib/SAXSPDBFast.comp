@@ -22,6 +22,8 @@
 * done on amino-acid level and does not take hydration layer into account.
 * The component must have a valid .pdb-file as an argument.
 *
+* This is fast implementation of the SAXSPDB sample component.
+*
 * %P
 * RhoSolvent: [AA]    Scattering length density of the buffer.
 * Concentration: [mM] Concentration of sample.
@@ -372,8 +374,8 @@ INITIALIZE
   // initialize the protein from the PDB
 	ReadAminoPDB(PDBFilepath, &Protein);
 	MPI_MASTER(
-	printf("SAXSPDBFast: %s: Scattering from %s with %d residues\n", 
-	  NAME_CURRENT_COMP, PDBFilepath, Protein.NumberOfResidues);
+	printf("SAXSPDBFast: %s: Initializing scattering from %s with %d residues on %d Q-values\n", 
+	  NAME_CURRENT_COMP, PDBFilepath, Protein.NumberOfResidues, NumberOfQBins);
   );
 
 	// Computing scattering profile I(q)
@@ -437,6 +439,9 @@ INITIALIZE
 		  }
 		  // printf("I(q=%g) = %g\n", q, IArray[qbin]);
 	} // for qbin
+	MPI_MASTER(
+  	printf("SAXSPDBFast: %s: %s initialization I(q) done\n", NAME_CURRENT_COMP, PDBFilepath);
+  );
 
 %}
 
@@ -467,12 +472,12 @@ TRACE
 	int i;
 
 	// Computation
-        Intersect = box_intersect(&l0, &l1, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
+  Intersect = box_intersect(&l0, &l1, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
     
 	if (Intersect) {
 
 		if (l0 < 0.0) {
-			fprintf(stderr, "Photon already inside sample %s - absorbing...\n", NAME_CURRENT_COMP);
+			fprintf(stderr, "SAXSPDBFast: %s: Photon already inside sample - absorbing...\n", NAME_CURRENT_COMP);
 			ABSORB;
                 }
 

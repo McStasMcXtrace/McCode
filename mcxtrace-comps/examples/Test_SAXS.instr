@@ -20,11 +20,11 @@
 * SAXSLiposomes             SAMPLE=4
 * SAXSNanodiscs             SAMPLE=5
 * SAXSNanodiscsWithTags     SAMPLE=6
-* SAXSPDB                   SAMPLE=7 (inactivated)
+* SAXSPDB                   SAMPLE=7
 * SAXSCurve                 SAMPLE=8 (inactivated)
 * SAXSNanodiscsFast         SAMPLE=9
 * SAXSNanodiscsWithTagsFast SAMPLE=10
-* SAXSPDBFast               SAMPLE=11 (inactivated)
+* SAXSPDBFast               SAMPLE=11
 *
 * %Example: SAMPLE=0 Detector: PSDMonitor_I=2.93715e-14
 * %Example: SAMPLE=1 Detector: PSDMonitor_I=2.7118e-14
@@ -167,15 +167,15 @@ COMPONENT Sample6= SAXSNanodiscsWithTags(
 )
 WHEN(SAMPLE==6) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
 
-/* COMPONENT Sample7 = SAXSPDB( */
-/* 	xwidth = 0.01, */
-/* 	yheight = 0.01, */
-/* 	zdepth = 0.01, */
-/* 	SampleToDetectorDistance = DistanceFromSampleToDetector, */
-/* 	DetectorRadius = RadiusOfDetector, */
-/* 	PDBFilepath = "3v03.pdb" */
-/* ) */
-/* WHEN(SAMPLE==7) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole */
+COMPONENT Sample7 = SAXSPDB(
+	xwidth = 0.01,
+ 	yheight = 0.01,
+ 	zdepth = 0.01,
+ 	SampleToDetectorDistance = DistanceFromSampleToDetector,
+ 	DetectorRadius = RadiusOfDetector,
+ 	PDBFilepath = "3v03.pdb"
+ )
+WHEN(SAMPLE==7) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
 
 //COMPONENT Sample8 = SAXSCurve(
 //	FileWithCurve = "Curve.mcp",
@@ -211,7 +211,7 @@ COMPONENT Sample11 = SAXSPDBFast(
  	zdepth = 0.01,
  	SampleToDetectorDistance = DistanceFromSampleToDetector,
  	DetectorRadius = RadiusOfDetector, 
- 	PDBFilepath = "6lyz.pdb",
+ 	PDBFilepath = "6lyz.pdb", NumberOfQBins=2000,
      qMax = 0.9
  )
 WHEN(SAMPLE==11) AT(0, 0, DistanceFromSampleToDetector) RELATIVE SecondPinhole
