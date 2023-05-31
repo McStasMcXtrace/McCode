@@ -36,6 +36,12 @@ if [ -d "$@FLAVOR_UPPER@/miniconda3" ]; then
     PYVER=`$@FLAVOR_UPPER@/miniconda3/bin/python3 --version | cut -f 2 -d\  | cut -f 1-2 -d.`
     export PYTHONPATH=$@FLAVOR_UPPER@/miniconda3/lib:$@FLAVOR_UPPER@/miniconda3/lib/python$PYVER/site-packages
 fi
+
+ 
+if [ -d "$@FLAVOR_UPPER@/share/NCrystal/python/" ]; then
+    export PYTHONPATH=$@FLAVOR_UPPER@/share/NCrystal/python/:$PYTHONPATH
+fi
+
 echo
 echo The new shell started here is now set up for running this version of @FLAVOR@:
 echo

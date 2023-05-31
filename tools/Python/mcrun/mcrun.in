@@ -22,6 +22,10 @@ if [ -d "$LIB/../miniconda3" ]; then
     PATH=$LIB/../miniconda3/bin:$PATH
 fi
 
+if [ -d "$LIB/share/NCrystal/python/" ]; then
+    export PYTHONPATH=$LIB/share/NCrystal/python/:$PYTHONPATH
+fi
+
 ARCH=`arch`
 UNAME=`uname -s`
 
