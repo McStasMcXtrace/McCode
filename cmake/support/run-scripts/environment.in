@@ -35,6 +35,12 @@ export PATH=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/bin:$PATH
 if [ -d "$@FLAVOR_UPPER@/miniconda3" ]; then
     source $@FLAVOR_UPPER@/miniconda3/bin/activate base
 fi
+
+ 
+if [ -d "$@FLAVOR_UPPER@/share/NCrystal/python/" ]; then
+    export PYTHONPATH=$@FLAVOR_UPPER@/share/NCrystal/python/:$PYTHONPATH
+fi
+
 echo
 echo The new shell started here is now set up for running this version of @FLAVOR@:
 echo
