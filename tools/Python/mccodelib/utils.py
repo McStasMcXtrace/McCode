@@ -363,29 +363,33 @@ def parse_header(text):
     new_lines = []
     for i in range(len(lines)):
         l = lines[i]
-        new_lines.append(l.lstrip('*').strip())
+        new_lines.append(l.lstrip('* ').strip())
     text = '\n'.join(new_lines)
     
     # get tag indices, and deal with cases of missing tags
-    lst = [text.find('%I'), text.find('%D'), text.find('%E'), text.find('%P'), text.find('%L')]
-    # missing %E tag
-    if lst[2] == -1:
-        lst[2] = lst[3]
+    tag_I=0
+    tag_D=1
+    tag_P=2
+    tag_L=3
+    tag_E=4
+    lst = [text.find('%I'), text.find('%D'), text.find('%P'), text.find('%L'), text.find('%E')]
+    # missing %E tag (do not misbehave with %Example). We use end of header.
+    if lst[tag_E] == -1:
+        lst[tag_E] = len(text)
+    else:
+        lst[tag_E] = max(lst) # must be the last token
     # existing %I tag with missing %D tag handled like this
-    if lst[0] > lst[1] and lst[2] > lst[1]: 
-        lst[1] = lst[2]
-    # if %E is actually %End:
-    if lst[2] > lst[3] and lst[3] != -1:
-        lst[2] = lst[3]
+    if lst[tag_I] > lst[tag_D] and lst[tag_E] > lst[tag_D]: 
+        lst[tag_D] = lst[tag_E] # no description. Merge with %E
     for i in range(len(lst)-1):
         if lst[i] > lst[i+1]:
             lst[i+1] = lst[i]
-    if lst[4] == lst[3]:
-        lst[4] = len(text)
+    if lst[tag_L] == lst[tag_P]:
+        lst[tag_L] = len(text)
     
     # cut header into some sections
     bites = [text[lst[i]:lst[i+1]].strip() for i in range(len(lst)-1)]
-    bites.append(text[lst[4]:])
+    bites.append(text[lst[tag_L]:])
     info = InstrCompHeaderInfo()
     
     # get author, date, origin, revision
