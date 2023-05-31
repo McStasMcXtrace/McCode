@@ -11,6 +11,8 @@
 * Release: McXtrace 1.0
 * %INSTRUMENT_SITE: ESRF
 *
+* A simple BM29 model at ESRF.
+*
 * %Description
 * Toy model used for testing various sample components for solution-SAXS 
 * mimicking the geometry of the BM29 beamline at ESRF:

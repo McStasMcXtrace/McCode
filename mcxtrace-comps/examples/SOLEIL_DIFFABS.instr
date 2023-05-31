@@ -11,10 +11,10 @@
 * Version: 0.2
 * %INSTRUMENT_SITE: SOLEIL
 *
-* SOLEIL DIFFABS: Combining X‐ray diffraction and absorption to study a large variety of materials
+* SOLEIL DIFFABS Combining X‐ray diffraction and absorption to study a large variety of materials
 *
 * %Description
-* This is model of thr DIFFABS beam-line at synchrotron SOLEIL, combining diffraction and absorption.
+* This is model of the DIFFABS beam-line at synchrotron SOLEIL, combining diffraction and absorption.
 *
 * Position | Element
 * ---------|--------------------------------------------------------------------

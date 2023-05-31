@@ -9,6 +9,8 @@
 * Origin: KU-Science
 * %INSTRUMENT_SITE: Tests_samples
 *
+* Toy model used for testing various sample components for solution-SAXS.
+*
 * %Description
 * Toy model used for testing various sample components for solution-SAXS.
 *
@@ -20,7 +22,7 @@
 * SAXSLiposomes             SAMPLE=4
 * SAXSNanodiscs             SAMPLE=5
 * SAXSNanodiscsWithTags     SAMPLE=6
-* SAXSPDB                   SAMPLE=7
+* SAXSPDB                   SAMPLE=7 (very slow, rather use SAXSPDBFast)
 * SAXSCurve                 SAMPLE=8 (inactivated)
 * SAXSNanodiscsFast         SAMPLE=9
 * SAXSNanodiscsWithTagsFast SAMPLE=10
