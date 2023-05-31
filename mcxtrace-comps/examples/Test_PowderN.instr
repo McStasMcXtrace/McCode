@@ -14,7 +14,8 @@
 *
 * %Description
 * Simply a model source illuminating a powder sample.
-* The sample itself is an Fe-powder.
+* The default sample itself is an LaB6-powder. 
+* Alternatively, the Single_crystal component can also be tested in powder mode.
 *
 * %Example: Test_PowderN.instr reflections="Fe_bcc229_lt13deg.dat" -n1e7 TTH=13.4 d_phi=45 frac_i=0 Detector: detector2_I=2.49827e-16
 * %Example: Test_PowderN.instr E0=15 Detector: Sph_mon_I=6.24257e-12
@@ -25,21 +26,22 @@
 * %Example: Test_PowderN.instr E0=15 directbeam=1 SPLITS=20 Detector: Sph_mon_I=7.94366e-10
 *
 * %Parameters
-* E0: [keV] Source energy (width 1 keV)
-* lambda: [Angs]  Wavelength emitted from source, 1% wl-interval around.
-* L1: [m]         Source-sample distance
-* directbeam: [1] Suppress direct beam or not
-* reflections: [str] List of powder reflections
-* SPLITS: [1] Number of SPLIT's before sample
-* frac_c: [1] Fraction of stats assigned to coherent scattering
-* frac_i: [1] Fraction of stats assigned to incoherent scattering
-* frac_t: [1] Fraction of stats assigned to unscattered, "direct beam"
-* TTH: [deg]  Rotation of secondary detector arm.
-* d_phi:  [deg] Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
+* E0:          [keV]  Source energy (width 1 keV)
+* L1:          [m]    Source-sample distance
+* directbeam:  [1]    Suppress direct beam (0) or not (1)
+* reflections: [str]  List of powder reflections
+* SPLITS:      [1]    Number of SPLIT's before sample
+* frac_c:      [1]    Fraction of stats assigned to coherent scattering
+* frac_i:      [1]    Fraction of stats assigned to incoherent scattering
+* frac_t:      [1]    Fraction of stats assigned to unscattered, "direct beam"
+* TTH:         [deg]  Rotation of secondary detector arm.
+* d_phi:       [deg]  Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
+* index:       [1]    Index of the sample component to use. 1=PowderN, 2=Single_crystal
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_PowderN(E0=45, L1=10, int directbeam=0, string reflections="LaB6_660b_AVID2.hkl", int SPLITS=1, frac_c=0.8, frac_i=0.1, frac_t=0.1, d_phi=0, TTH=0)
+DEFINE INSTRUMENT Test_PowderN(E0=15, L1=10, int directbeam=0, string reflections="LaB6_660b_AVID2.hkl", 
+  int SPLITS=1, frac_c=0.8, frac_i=0.1, frac_t=0.1, d_phi=0, TTH=0, int index=1)
 
 TRACE
 
@@ -51,13 +53,14 @@ COMPONENT src = Source_flat(
     focus_yh = 1e-3, E0 = E0, dE = 1)
   AT (0, 0, 0) RELATIVE Origin
 
-COMPONENT sample_cradle = Arm()
+SPLIT SPLITS COMPONENT sample_cradle = Arm()
   AT (0, 0, L1) RELATIVE PREVIOUS
 
-SPLIT SPLITS COMPONENT Pow = PowderN(
+COMPONENT Pow = PowderN(
     radius=0.5e-4, yheight=1e-3, reflections=reflections,format={ 4,5,7,0,0,0,0,0 },
     p_inc=frac_i, p_transmit=frac_t, p_interact=frac_c,
     d_phi=d_phi, pack = 0.5, Vc = 123)
+WHEN (index == 1)
 AT (0, 0, 0) RELATIVE sample_cradle
 EXTEND %{
   if(INSTRUMENT_GETPAR(directbeam) == 0) {
@@ -66,6 +69,20 @@ EXTEND %{
     }
   }
 %}
+
+COMPONENT SX = Single_crystal(
+    radius=0.5e-4, yheight=1e-3, reflections=reflections,powder=1,
+    p_transmit=frac_t, mosaic=5, sigma_inc=-1)
+WHEN (index == 2)
+AT (0, 0, 0) RELATIVE sample_cradle
+EXTEND %{
+  if(INSTRUMENT_GETPAR(directbeam) == 0) {
+    if (!SCATTERED) {
+      ABSORB;
+    }
+  }
+%}
+
 
 COMPONENT Sph_mon = PSD_monitor_4PI(nx=200,ny=200, radius=1, restore_xray=1, filename="Sphere")
   AT (0, 0, 0) RELATIVE PREVIOUS

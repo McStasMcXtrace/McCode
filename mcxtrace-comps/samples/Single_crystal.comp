@@ -168,14 +168,14 @@
 * Optional input parameters
 *
 * p_transmit: [1]        Monte Carlo probability for photons to be transmitted without any scattering. Used to improve statistics from weak reflections
-* sigma_inc: [barns]     Incoherent scattering cross-section per unit cell (uniform). Use 0 to unactivate
+* sigma_inc: [barns]     Incoherent scattering cross-section per unit cell (uniform). Use -1 to unactivate
 * aa: [deg]              Unit cell angles alpha, beta and gamma. Then uses norms of vectors a,b and c as lattice parameters
 * bb: [deg]              Beta angle
 * cc: [deg]              Gamma angle
 * barns: [1]             Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), barns=0 for lau type files
 * RX: [m]                Radius of horizontal along X lattice curvature. flat for 0
 * RY: [m]                Radius of vertical   along Y lattice curvature. flat for 0
-* powder: [1]            Flag to indicate powder mode, for simulation of Debye-Scherrer cones via random crystallite orientation. A powder texture can be approximated with 0<powder<1
+* powder: [1]            Flag to indicate powder mode, for simulation of Debye-Scherrer cones via random crystallite orientation. A powder texture can be approximated with powder within 0-1
 * deltak: [AA-1]         Equality-threshold for use in SPLIT settings. If difference between all ki_{x,y,z} are less than deltak from previous particle, the two are considered alike enough to jump directly to the MC choice between 'active' reflections 
 * material_datafile:     File where the material parameters for the filter may be found. Format is similar to what may be found off the NIST website. [Be.txt]
 *
@@ -1053,7 +1053,7 @@ INITIALIZE
   double* mosaic_ABin = mosaic_AB;
   /* Read in structure factors, and do some pre-calculations. */
   if (!read_hkl_data(reflections, &hkl_info, &hkl_list, mosaic, mosaic_a, mosaic_b, mosaic_c, mosaic_ABin)) {
-    printf("Single_crystal: %s: Error: can not set crystal structure. Aborting.\n", NAME_CURRENT_COMP);
+    printf("Single_crystal: %s: Error: can not set crystal structure. Check file and mosaic. Aborting.\n", NAME_CURRENT_COMP);
     exit(-1);
   }
 
