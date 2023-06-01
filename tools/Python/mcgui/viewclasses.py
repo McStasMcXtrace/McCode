@@ -681,7 +681,7 @@ class McStartSimDialog(QtWidgets.QDialog):
             
     def _set_inspect_visible(self, sim_run_idx):
         visible = False
-        if sim_run_idx == 1:
+        if sim_run_idx == 1 or sim_run_idx == 2:
             visible = True
         self.ui.lblInspect.setVisible(visible)
         self.ui.cbxInspect.setVisible(visible)
@@ -691,13 +691,16 @@ class McStartSimDialog(QtWidgets.QDialog):
         self.ui.cbxAutoPlotters.setVisible(not visible)
         self.ui.lblFormat.setVisible(not visible)
         self.ui.cbxFormats.setVisible(not visible)
+        if sim_run_idx == 2:
+            self.ui.lblMcdisplays.setVisible(False)
+            self.ui.cbxMcdisplays.setVisible(False)
         
     def getValues(self):
         ''' Return values:
 
             fixed_params[]:
                 0 - simulation = 0, trace = 1
-                1 - neutron count (int)
+                1 - neutron/photon count (int)
                 2 - steps count (int)
                 3 - gravity (bool)
                 4 - clustering 0/1/2 (single/MPI/MPIrecompile) (int)
@@ -709,14 +712,18 @@ class McStartSimDialog(QtWidgets.QDialog):
             params[]:
                 [<par_name>, <value>] pairs
         '''
-        # simulation or trace option
+        # simulation, trace or optimize option
         p0 = None
         if self.ui.cbxSimTrace.currentIndex() == 0:
             p0 = SimTraceEnum.SIM
-        else:
+        elif self.ui.cbxSimTrace.currentIndex() == 1:
             p0 = SimTraceEnum.TRACE
+        elif self.ui.cbxSimTrace.currentIndex() == 2:
+            p0 = SimTraceEnum.OPTIMIZE
+        else:
+            raise Exception('simdialog.getValues: invalid execution mode (simulate/trace/optimize).')
 
-        # neutron count
+        # neutron/photon count
         p1 = self.ui.edtNeutronCnt.text()
 
         # steps
@@ -854,6 +861,7 @@ class McStartSimDialog(QtWidgets.QDialog):
 class SimTraceEnum:
     SIM = 0
     TRACE = 1
+    OPTIMIZE = 2
 
 class ClusteringEnum:
     SINGLE = 0

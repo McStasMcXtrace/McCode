@@ -301,8 +301,8 @@ class McGuiState(QtCore.QObject):
     
     def run(self, fixed_params, params, inspect=None):
         ''' fixed_params[]:
-                0 - simulation = 0, trace = 1
-                1 - neutron count (int)
+                0 - simulation = 0, trace = 1, optimize=2
+                1 - neutron/photon count (int)
                 2 - steps count (int)
                 3 - gravity (bool)
                 4 - clustering 0/1/2 (single/MPI/MPIrecompile) (int)
@@ -337,7 +337,7 @@ class McGuiState(QtCore.QObject):
 
         # sim/trace and output directory
         simtrace = fixed_params[0]
-        if simtrace == 0:
+        if simtrace == 0 or simtrace == 2: # simulate/optimize (mcrun)
             output_dir = str(fixed_params[7])
             if output_dir == '':
                 DATE_FORMAT_PATH = "%Y%m%d_%H%M%S"
@@ -346,14 +346,20 @@ class McGuiState(QtCore.QObject):
                                datetime.strftime(datetime.now(), DATE_FORMAT_PATH))
                 
             runstr = mccode_config.configuration["MCRUN"] + mcrunparms + os.path.basename(self.__instrFile) + ' -d ' + output_dir
+            if simtrace == 2:
+                runstr = runstr + ' --optimize '
+                if inspect:
+                    runstr = runstr + ' --optimize-monitor=' + inspect
             self.__dataDir = output_dir
-        else:
+        elif simtrace == 1: # trace (mcdisplay)
             if inspect:
                 runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + os.path.basename(self.__instrFile) + ' --no-output-files' + ' --inspect=' + inspect
             else:
                 runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + os.path.basename(self.__instrFile) + ' --no-output-files'
+        else:
+            raise Exception('mcgui.run: invalid execution mode (simulate/trace/optimize).')
         
-        # neutron count
+        # neutron/photon count
         ncount = fixed_params[1]
         if int(float(ncount)) > 0:
             runstr = runstr + ' -n ' + str(ncount)

@@ -95,6 +95,11 @@
             <string>Trace</string>
            </property>
           </item>
+          <item>
+           <property name="text">
+            <string>Optimize</string>
+           </property>
+          </item>
          </widget>
         </item>
         <item row="7" column="2">
