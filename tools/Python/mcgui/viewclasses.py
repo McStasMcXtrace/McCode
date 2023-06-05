@@ -67,7 +67,10 @@ class McView(object):
     def updateStatus(self, text=''):
         self.mw.ui.statusbar.showMessage(text)
 
-    def updateLog(self, text='', error=False, gui=False):
+    def updateLog(self, text='', error=False, gui=False, clear=False):
+    
+        if clear:
+            self.mw.ui.txtbrwMcgui.setText('Cleared messages.')
         if error:
             self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('red'))
         elif gui:
@@ -130,7 +133,7 @@ class McView(object):
             ui.menuNew_From_Template.setEnabled(False)
         else:
             ui.btnRun.setText('Run...')
-            ui.btnRun.setToolTip('')
+            ui.btnRun.setToolTip('Compile and Run the current instrument')
 
     ''' UI actions
     '''

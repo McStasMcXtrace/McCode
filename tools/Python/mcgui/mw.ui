@@ -186,6 +186,7 @@
     <addaction name="separator"/>
     <addaction name="actionConfiguration"/>
     <addaction name="separator"/>
+    <addaction name="actionClear_Console"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuSimulation">
@@ -326,6 +327,14 @@
    </property>
    <property name="toolTip">
     <string>mccode configuration</string>
+   </property>
+  </action>
+  <action name="actionClear_Console">
+   <property name="text">
+    <string>Clear Messages</string>
+   </property>
+   <property name="toolTip">
+    <string>gui clear the log/console</string>
    </property>
   </action>
   <action name="actionCompile_Instrument_MPI">

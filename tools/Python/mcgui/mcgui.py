@@ -32,7 +32,8 @@ class McMessageEmitter(QtCore.QObject):
     statusUpdate = QtCore.pyqtSignal(str)
     __statusLog = []
     
-    logMessageUpdate = QtCore.pyqtSignal(str, bool, bool)
+    # logMessageUpdate(msg, flag_err_red, flag_gui_blue, flag_clear)
+    logMessageUpdate = QtCore.pyqtSignal(str, bool, bool, bool)
     __msgLog = []
     
     def status(self, status):
@@ -45,17 +46,20 @@ class McMessageEmitter(QtCore.QObject):
         self.__statusLog.append(status)
         
     
-    def message(self, msg, err_msg=False, gui=False):
+    def message(self, msg, err_msg=False, gui=False, clear=False):
         ''' message log messages (simulation progress etc.)
         '''
         if msg == None:
             return
         
-        self.logMessageUpdate.emit(msg, err_msg, gui)
+        self.logMessageUpdate.emit(msg, err_msg, gui, clear)
         self.__msgLog.append(msg)
         # NOTE: calling processEvents too often can lead to some sort of stack overflow, but side effects are to be investigated
         #QtWidgets.QApplication.processEvents()
 
+    def clear(self, msg):
+        '''clear Log/History'''
+        self.logMessageUpdate.emit(msg, False, True, True)
 
 ''' Asynchronous process execution QThread
 '''
@@ -459,6 +463,7 @@ class McGuiAppController():
                                    universal_newlines=True)
 
         (stdoutdata, stderrdata) = process.communicate()
+        self.emitter.message(str(datetime.now()), gui=True)
         self.emitter.message(stdoutdata.rstrip('\n'))
         self.emitter.message(stderrdata.rstrip('\n'))
         # Print MCCODE revision data if these exist
@@ -658,6 +663,9 @@ class McGuiAppController():
     def handleExit(self):
         if self.view.closeCodeEditorWindow():
             sys.exit()
+            
+    def clearConsole(self):
+        self.emitter.clear(str(datetime.now()))
     
     def handlePlotResults(self):
         self.emitter.status('')
@@ -899,6 +907,7 @@ class McGuiAppController():
 
         mwui = self.view.mw.ui
         mwui.actionQuit.triggered.connect(self.handleExit)
+        mwui.actionClear_Console.triggered.connect(self.clearConsole)
         mwui.actionOpen_instrument.triggered.connect(self.handleOpenInstrument)
         mwui.actionClose_Instrument.triggered.connect(self.handleCloseInstrument)
         mwui.actionEdit_Instrument.triggered.connect(self.handleEditInstrument)
