@@ -13,9 +13,9 @@
 * %Description
 * ROCK : Rocking Optics for Chemical Kinetics ROCK time-resolved X-ray
 *
-* absorption spectroscopy (XAS) beamline Energy range 4 - 40 keV The ROCK
-* beamline (ROCK being the acronym for Rocking Optics for Chemical Kinetics) is
-* devoted to the study of fast kinetic processes in nanomaterials used in
+* Absorption spectroscopy (XAS) beamline Energy range 4 - 40 keV 
+* The ROCK beamline (ROCK being the acronym for Rocking Optics for Chemical Kinetics)
+* is devoted to the study of fast kinetic processes in nanomaterials used in
 * catalysis and batteries. The objective is to contribute to the development of
 * more efficient catalysts and batteries which should find successful industrial
 * applications in the field of energy generation and storage in compliance with
@@ -27,48 +27,53 @@
 * advanced energy storage devices. 
 *
 * Examples:
-* Copper scan: mxrun SOLEIL_ROCK.instr Etohit=8500,9500 scan=1 nbsample=1 cc=2 -N100
-* Manganese and chrome scan: mxrun SOLEIL_ROCK.instr Etohit=5700,6800 scan=1 nbsample=2 sample_file=Mn.txt sample_density=7.21 sample_file_2=Cr.txt sample_density_2=7.15 cc=2 -N100
-* Pretty energy repartition monitor result: mxrun SOLEIL_ROCK.instr Etohit=17000 cc=2 -n1e8
+* Copper scan: mxrun SOLEIL_ROCK.instr E0=8.500,9.500 scan=1 nbsample=1 cc=2 -N100
+* Manganese and chrome scan: mxrun SOLEIL_ROCK.instr E0=5.700,6.800 scan=1 nbsample=2 sample_file=Mn.txt sample_density=7.21 sample_file_2=Cr.txt sample_density_2=7.15 cc=2 -N100
+* Pretty energy repartition monitor result: mxrun SOLEIL_ROCK.instr E0=17.000 cc=2 -n1e8
 *
-* %Example: Etohit=17000 cc=2 -n 1e7 Detector: psd_monitor_I=2.4278e+6
+* %Example: E0=17.000 cc=2 -n 1e7 Detector: psd_monitor_I=2.4278e+6
 *
 * %Parameters
-* Etohit: [eV]   Energy to hit
-* scan: 0 no energy scan, 1 energy scan
-* angle_m2a_m2b: [rad]   M2A/M2B mirror's deviation angle, can vary from 0.0035 to 0.0104
-* nbsample: []   Number of sample(s)
-* sample_file: [string]   sample file name
-* sample_density: [g/cm^3]   sample density
-* sample_file_2: [string]   sample two file name
-* sample_density_2: [g/cm^3]   sample two density
-* reflec_material_M1: [string]   material reflectivity file name for M1 mirror
-* reflec_material_M2A_M2B: [string]   material reflectivity file name for M2A and M2B mirror
-* cc: [] 0 for Si 220 with an energy range of  5628.83-46283.4 eV/4-35 deg (hittable:11752-34055 ev/5.44-15.94 deg); 1 for Si 111 long 3446.94-28342.7 eV/4-35 deg (hittable:7196-20854 ev/5.44-15.94 deg); 2 for Si 111 short 3446.94-18914.3 eV/6-35 deg (hittable:5323-18914 ev/6-21.8 deg); 3 changes cc dynamically
+* E0:               [keV]    Energy to hit, i.e. selected by the channel-cut monochromator
+* dE:               [keV]    Energy spread at the source
+* cc:               [0-3]    Channel-cut monochromator type. 0 for Si 220 with an energy range of  5.62883-46.2834 eV/4-35 deg (hit-table:11.752-34.055 ev/5.44-15.94 deg); 1 for Si 111 long 3.44694-28.3427 eV/4-35 deg (hit-table:7.196-20.854 ev/5.44-15.94 deg); 2 for Si 111 short 3.44694-18.914.3 eV/6-35 deg (hittable:5.323-18.914 ev/6-21.8 deg); 3 changes cc dynamically
+* scan:             [0-1]    0 no energy scan, 1 energy scan
+* angle_m2a_m2b:    [rad]    M2A/M2B mirror's deviation angle, can vary from 0.0035 to 0.0104
+* angle_m1:         [rad]    M1 mirror's deviation angle
+* nbsample:         [1-2]    Number of sample(s)
+* sample_file:      [string] Sample file name
+* sample_density:   [g/cm^3] Sample density
+* sample_file_2:    [string] Sample two file name
+* sample_density_2: [g/cm^3] Sample two density
+* reflec_material_M1:      [str] Material reflectivity file name for M1 mirror, e.g. "Ir.dat"
+* reflec_material_M2A_M2B: [str] Material reflectivity file name for M2A and M2B mirror. Use NULL for automatic setting.
+
 * 
 * %Link
 * https://www.synchrotron-soleil.fr/en/beamlines/rock
+* %Link
+* https://gitlab.synchrotron-soleil.fr/grades/mcxtrace-rock
+* %Link
+* https://github.com/antoinepado/glitch_runner_rock
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT SOLEIL_ROCK (Etohit=15918,
+DEFINE INSTRUMENT SOLEIL_ROCK (E0=15.918, dE=1,
     scan=0, 
     angle_m2a_m2b=0.008, 
+    angle_m1=0.0045,
     nbsample = 1, 
     string sample_file="Cu.txt", 
     sample_density=8.96, 
     string sample_file_2="Mo.txt", 
     sample_density_2=10.28, 
     string reflec_material_M1="Ir.dat",
-    string reflec_material_M2A_M2B="B4C.dat",
-    cc=0)
+    string reflec_material_M2A_M2B="NULL",
+    int cc=0)
 
 DECLARE
 %{
-    double dE;
-    double AngleMonochromator;    
     double calculated_angle;
-    double Etohitkev;
     double Eminkev;
     double Emaxkev;
     double incr;
@@ -94,14 +99,14 @@ INITIALIZE
     i_k=1;
     i_l=1;
     
-    if(cc>=3){ //automatically select the right cc for the energy Etohit
-        if(Etohit<=15516){ 
+    if(cc>=3){ //automatically select the right cc for the energy E0
+        if(E0<=15.516){ 
             cc = 2;
         }
-        else if (Etohit<=17439){
+        else if (E0<=17.439){
             cc = 1;
         }
-        else if (Etohit<=34055){
+        else if (E0<=34.055){
             cc = 0;	
         }
     }
@@ -143,22 +148,29 @@ INITIALIZE
         center_to_c_mono_angle=0.1651;
     }
 
-    calculated_angle=RAD2DEG*asin(12398.42*sqrt(n)/(2*5.4309*Etohit));
-    Etohitkev=Etohit*(1/1e3);
-    fprintf(stdout,"Energie %g / Angle %g", Etohitkev, calculated_angle);
+    calculated_angle=RAD2DEG*asin(12.39842*sqrt(n)/(2*5.4309*E0));
+    
+    if (!reflec_material_M2A_M2B || !strlen(reflec_material_M2A_M2B) 
+        || !strcmp(reflec_material_M2A_M2B, "NULL") || !strcmp(reflec_material_M2A_M2B, "0")) {
 
-    if(Etohitkev<=7.98){
-        reflec_material_M2A_M2B="B4C.dat";
+      if(E0<=7.98){
+          reflec_material_M2A_M2B="B4C.dat";
+      }
+      else if (E0<=16.46){
+          reflec_material_M2A_M2B="Pd.dat";
+      }
+      else if (E0>16.46){
+          reflec_material_M2A_M2B="Pt.dat";
+      }
     }
-    else if (Etohitkev<=16.46){
-        reflec_material_M2A_M2B="Pd.dat";
-    }
-    else if (Etohitkev>16.46){
-        reflec_material_M2A_M2B="Pt.dat";
-    }
+    
+    MPI_MASTER(
+    fprintf(stdout,"%s: Energy=%g [keV]\n\tM2 mirror=%s\n\tMonochromator Si<%i %i %i> angle %g [deg], config=%i\n", 
+      NAME_INSTRUMENT, E0, reflec_material_M2A_M2B, i_h,i_k,i_l, calculated_angle, cc);
+    );
 
-    sprintf(e_repartition_options,"energy  bins=500 limits=[%g %g],  y  bins=500",
-        Etohitkev-0.02*Etohitkev, Etohitkev+0.02*Etohitkev);  
+    sprintf(e_repartition_options,"energy limits=[%g %g], y",
+        E0-0.02*E0, E0+0.02*E0);  
 %}
 
 TRACE
@@ -169,7 +181,7 @@ AT (0, 0, 0) ABSOLUTE
 
 /* -------------------------------------------------- Source */
 COMPONENT Source = Bending_magnet(
-    E0=Etohitkev, dE = 3,
+    E0=E0, dE = dE,
     Ee = 2.75, Ie = 0.5, B = 1.72, sigex=54.9e-6, sigey=20.2e-6
     )
 AT (0, 0, 0) RELATIVE Origin
@@ -187,23 +199,27 @@ COMPONENT slit2 = Slit(
 AT (0, 0, 8.6486-8.5336) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- Toroidal mirror M1 */   
-COMPONENT mirror_m1 = Mirror_toroid_pothole(
+COMPONENT mirror_m1 = Mirror_toroid(
     xwidth = 0.015,
     zdepth = 1.1,
     radius=0.0317, 
     radius_o=9.02e3,coating=reflec_material_M1)    
 AT (0, 0, 10.15-8.6486) RELATIVE PREVIOUS	
-ROTATED (-0.0045*RAD2DEG/2, 0, 0) RELATIVE PREVIOUS
+ROTATED (-angle_m1*RAD2DEG/2, 0, 0) RELATIVE PREVIOUS
 EXTEND
 %{ 
 	if (!SCATTERED) ABSORB;
 %}
 
-COMPONENT arm_m1 = Arm()
+COMPONENT arm_m1 = PSD_monitor(xwidth=0.02, yheight=0.01)
 AT (0, 0, 0) RELATIVE PREVIOUS
-ROTATED (-0.0045*RAD2DEG, 0, 0) RELATIVE Source
+ROTATED (-angle_m1*RAD2DEG, 0, 0) RELATIVE Source
+
+COMPONENT arm_m1_div = Divergence_monitor(maxdiv_h=0.05, maxdiv_v=0.05, nh=128, nv=128)
+AT (0, 0, 0) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- Horizontal slit  3 */
+
 COMPONENT slit3 = Slit(
     xwidth=0.02, 
     yheight=0.01)
@@ -220,17 +236,34 @@ EXTEND
 	if (!SCATTERED) ABSORB;
 %}
 
-COMPONENT arm_m2a = Arm()
+COMPONENT arm_m2a = COPY(arm_m1)
 AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (-angle_m2a_m2b*RAD2DEG/2, 0, 0) RELATIVE PREVIOUS
 
+COMPONENT arm_m2a_div = COPY(arm_m1_div) // beam divY exits at -0.458 deg == -angle_m2a_m2b
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (angle_m2a_m2b*RAD2DEG, 0, 0) RELATIVE PREVIOUS
+
 /* -------------------------------------------------- Horizontal slit 4 */
+
+COMPONENT arm_slit4a = COPY(arm_m1)
+AT (0, 0, 18.1512-16.82) RELATIVE PREVIOUS
+
 COMPONENT slit4 = Slit(
     xwidth=0.02, 
-    yheight=0.01)
-AT (0, 0, 18.1512-16.82) RELATIVE PREVIOUS	
+    yheight=0.02)
+AT (0, 0, 0) RELATIVE PREVIOUS	
+
+COMPONENT arm_slit4b = COPY(arm_m1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT arm_slit4b_div = COPY(arm_m1_div)
+AT (0, 0, 0) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- CC crystal 1 */
+COMPONENT arm_crystal0 = COPY(arm_m1)
+AT (0, 0, center_first_crystal-18.1512) RELATIVE PREVIOUS
+
 COMPONENT bragg_crystal = Bragg_crystal(
     length=length_first_crystal, 
     width=25e-3,
@@ -240,14 +273,14 @@ COMPONENT bragg_crystal = Bragg_crystal(
     l = i_l,
     crystal_type = 2
 )
-AT (0, 0, center_first_crystal-18.1512) RELATIVE PREVIOUS	
+AT (0, 0, 0) RELATIVE PREVIOUS	
 ROTATED (-calculated_angle, 0, 0) RELATIVE PREVIOUS
 EXTEND
 %{ 
 	if (!SCATTERED) ABSORB;
 %}
 
-COMPONENT arm_crystal1 = Arm()
+COMPONENT arm_crystal1 = COPY(arm_m1)
 AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (-calculated_angle, 0, 0) RELATIVE PREVIOUS
 
@@ -261,15 +294,25 @@ EXTEND
 	if (!SCATTERED) ABSORB;
 %}
 
-COMPONENT arm_crystal2 = Arm()
+COMPONENT arm_crystal2 = COPY(arm_m1)(yheight=0.05)
 AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (calculated_angle, 0, 0) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- Horizontal slit 5 */
+// the beam is positioned at Y=+dy*sin(2*calculated_angle*DEG2RAD)/sin(calculated_angle*DEG2RAD) 
+// with dy=0.01 (CC gap) wrt the CC entry
 COMPONENT slit5 = Slit(
     xwidth=0.02, 
     yheight=0.01)
-AT (0, (0.01*2*cos(DEG2RAD*calculated_angle)-dist_center_to_center*sin(center_to_c_mono_angle+DEG2RAD*calculated_angle)), (21.135-(center_first_crystal+cos(0.0045+angle_m2a_m2b+DEG2RAD*calculated_angle*2)*dist_center_to_center))/cos(0.0045+angle_m2a_m2b)) RELATIVE PREVIOUS
+AT (0, 0.01*sin(2*calculated_angle*DEG2RAD)/sin(calculated_angle*DEG2RAD), 21.135 - center_first_crystal) RELATIVE arm_crystal0
+
+
+//COMPONENT slit5 = Slit(
+//    xwidth=0.02, 
+//    yheight=0.01)
+//AT (0, 
+//   (0.01*2*cos(DEG2RAD*calculated_angle)-dist_center_to_center*sin(center_to_c_mono_angle+DEG2RAD*calculated_angle)), 
+//   (21.135-(center_first_crystal+cos(angle_m1+angle_m2a_m2b+DEG2RAD*calculated_angle*2)*dist_center_to_center))/cos(angle_m1+angle_m2a_m2b)) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- Vertical slit 6 */
 COMPONENT slit6 = Slit(
@@ -298,8 +341,8 @@ ROTATED (angle_m2a_m2b*RAD2DEG, 0, 0) RELATIVE arm_crystal2
 COMPONENT EnergyMonitor_before_sample = Monitor_nD(  
     xwidth =0.2 , 
     yheight =0.2 ,
-    min=Etohitkev-(0.005+(Etohitkev-Eminkev)*incr), 
-    max=Etohitkev+(0.005+(Etohitkev-Eminkev)*incr), 
+    min=E0-(0.005+(E0-Eminkev)*incr), 
+    max=E0+(0.005+(E0-Eminkev)*incr), 
     bins=500,
     options="energy",
     filename="EnergyMonitor_before_sample",
@@ -308,7 +351,10 @@ COMPONENT EnergyMonitor_before_sample = Monitor_nD(
 AT (0,0,10) RELATIVE PREVIOUS
 
 COMPONENT e_repartition_after_m2b = Monitor_nD(
-  xwidth =0.02 , yheight =0.02, options=e_repartition_options, filename="e_repartition_after_m2b",restore_xray = 1) 
+  xwidth =0.02 , yheight =0.02, 
+  options=e_repartition_options, bins=500,
+  filename="e_repartition_after_m2b",
+  restore_xray = 1) 
 AT (0,0,0) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- sample */
@@ -334,7 +380,7 @@ COMPONENT absorption_sample_2 = Absorption_sample(
     yheight_i = 0.5,
     zdepth_i = 0.00005   
     )
-WHEN(nbsample==2)
+WHEN(nbsample>1)
 AT (0, 0, 0.5) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- E monitor */
