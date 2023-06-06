@@ -363,53 +363,54 @@ def parse_header(text):
     new_lines = []
     for i in range(len(lines)):
         l = lines[i]
-        new_lines.append(l.strip().lstrip('*')) # strip spaces then left stars
+        new_lines.append(l.strip('*').strip()) # strip spaces then left stars
     text = '\n'.join(new_lines)
     
     # get tag indices, and deal with cases of missing tags
     tag_I=0
     tag_D=1
-    tag_P=2
-    tag_L=3
-    tag_E=4
-    lst = [text.find('%I'), text.find('%D'), text.find('%P'), text.find('%L'), text.find('%E')]
-    # missing %E tag (do not misbehave with %Example). We use end of header.
+    tag_E=2
+    tag_P=3
+    tag_L=4
+    lst = [text.find('%I'), text.find('%D'), text.find('%Ex'), text.find('%P'), text.find('%L')]
+    # missing %Example tag
     if lst[tag_E] == -1:
-        lst[tag_E] = len(text)
-    else:
-        lst[tag_E] = max(lst) # must be the last token
+        lst[tag_E] = lst[tag_P]
     # existing %I tag with missing %D tag handled like this
     if lst[tag_I] > lst[tag_D] and lst[tag_E] > lst[tag_D]: 
-        lst[tag_D] = lst[tag_E] # no description. Merge with %E
+        lst[tag_D] = lst[tag_E]
+    # if %E is actually %End:
+    if lst[tag_E] > lst[tag_P] and lst[tag_P] != -1:
+        lst[tag_E] = lst[tag_P]
     for i in range(len(lst)-1):
         if lst[i] > lst[i+1]:
             lst[i+1] = lst[i]
     if lst[tag_L] == lst[tag_P]:
         lst[tag_L] = len(text)
-    
+
     # cut header into some sections
     bites = [text[lst[i]:lst[i+1]].strip() for i in range(len(lst)-1)]
     bites.append(text[lst[tag_L]:])
     info = InstrCompHeaderInfo()
     
     # get author, date, origin, revision
-    m1 = re.search('Written by:([^\n]*)\n', bites[0])
+    m1 = re.search('Written by:([^\n]*)\n', bites[tag_I])
     if not m1:
-      m1 = re.search('Author:([^\n]*)\n', bites[0])
+      m1 = re.search('Author:([^\n]*)\n', bites[tag_I])
     if m1: info.author = m1.group(1).strip()
     
-    m2 = re.search('Date:([^\n]*)\n', bites[0])
+    m2 = re.search('Date:([^\n]*)\n', bites[tag_I])
     if m2: info.date = m2.group(1).strip()
     
-    m3 = re.search('Origin:([^\n]*)\n', bites[0])
+    m3 = re.search('Origin:([^\n]*)\n', bites[tag_I])
     if m3: info.origin = m3.group(1).strip()
     
-    m4 = re.search('Version:([^\n]*)\n', bites[0])
+    m4 = re.search('Version:([^\n]*)\n', bites[tag_I])
     if m4: info.version = m4.group(1).strip()
     
-    m5 = re.search('\%INSTRUMENT_SITE:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
+    m5 = re.search('\%INSTRUMENT_SITE:[^\n]*\n(.*)', bites[tag_I], flags=re.DOTALL)
     if not m5:
-      m5 = re.search('Origin:[^\n]*\n(.*)', bites[0], flags=re.DOTALL)
+      m5 = re.search('Origin:[^\n]*\n(.*)', bites[tag_I], flags=re.DOTALL)
     
     if m5:
       # ignore some comments
@@ -421,7 +422,7 @@ def parse_header(text):
       info.short_descr = '\n'.join(descrlines).strip()
     
     # description
-    descr = bites[1]
+    descr = bites[tag_D]
     if re.match('\%Description', descr):
         descr = descr.replace('%Description', '').strip()
     elif re.match('\%D', descr):
@@ -429,12 +430,12 @@ def parse_header(text):
     info.description = descr
     
     # test / example
-    tst = bites[2]
+    tst = bites[tag_E]
     info.test = tst
     
     # params
     par_doc = None
-    for l in bites[3].splitlines():
+    for l in bites[tag_P].splitlines():
         m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^\|\{\};\*]*)\][ \t]*(.*)', l)
         par_doc = (None, None, None)
         if m:
@@ -447,7 +448,7 @@ def parse_header(text):
                 info.params_docs.append(par_doc)
     
     # links
-    for l in bites[4].splitlines():
+    for l in bites[tag_L].splitlines():
         if re.match('\s*%', l) or l.strip() == '' or re.match('\/', l):
             continue
         info.links.append(l)

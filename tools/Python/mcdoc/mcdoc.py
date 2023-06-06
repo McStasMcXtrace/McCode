@@ -1042,7 +1042,7 @@ if __name__ == '__main__':
     parser.add_argument('--manual','-m', action='store_true', help='open the system manual')
     parser.add_argument('--comps','-c', action='store_true', help='open the component manual')
     parser.add_argument('--web','-w', action='store_true', help='open the '+mccode_config.configuration['MCCODE']+' website')
-    parser.add_argument('--verbose','-b', action='store_true', help='prints a parsing log during execution')
+    parser.add_argument('--verbose','-v', action='store_true', help='prints a parsing log during execution')
     
     
     args = parser.parse_args()
