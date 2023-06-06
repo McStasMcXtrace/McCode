@@ -22,15 +22,15 @@
 *
 * %P
 * Input parameters:
-* r: raduis of curvature (circular approximation at the tip of the profile) [mm];
-* yheight: the CRL's dimensions along Y, aka aperture[mm];
-* xwidth: the CRL's dimensions along X [mm];
-* d: distance between two surfaces of the lens along the propagation axis;
-* N: amount of single lenses in a stack.
-* T: transmission of the lens
+* r: [m] radius of curvature (circular approximation at the tip of the profile)
+* yheight: [m] the CRL's dimensions along Y, aka aperture
+* xwidth: [m] the CRL's dimensions along X
+* d: [m] distance between two surfaces of the lens along the propagation axis;
+* N: [1] amount of single lenses in a stack.
+* T: [1] transmission of the lens
 * rough_xy: [rms] waviness along x and y
 * rough_z: [rms] waviness along z
-* material_datafile:     File where the material parameters for the filter may be found. Format is similar to what may be found off the NIST website. [Be.txt]
+* material_datafile: [Be.txt] File where the material parameters for the filter may be found. Format is similar to what may be found off the NIST website. 
 *
 * %L
 * material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl

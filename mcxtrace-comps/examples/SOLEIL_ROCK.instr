@@ -44,10 +44,7 @@
 * sample_density_2: [g/cm^3]   sample two density
 * reflec_material_M1: [string]   material reflectivity file name for M1 mirror
 * reflec_material_M2A_M2B: [string]   material reflectivity file name for M2A and M2B mirror
-* cc: 0 for Si 220 with an energy range of  5628.83-46283.4 eV/4-35 deg (hittable:11752-34055 ev/5.44-15.94 deg), 
-      1 for Si 111 long 3446.94-28342.7 eV/4-35 deg (hittable:7196-20854 ev/5.44-15.94 deg), 
-      2 for Si 111 short 3446.94-18914.3 eV/6-35 deg (hittable:5323-18914 ev/6-21.8 deg), 
-      3 changes cc dynamically
+* cc: [] 0 for Si 220 with an energy range of  5628.83-46283.4 eV/4-35 deg (hittable:11752-34055 ev/5.44-15.94 deg); 1 for Si 111 long 3446.94-28342.7 eV/4-35 deg (hittable:7196-20854 ev/5.44-15.94 deg); 2 for Si 111 short 3446.94-18914.3 eV/6-35 deg (hittable:5323-18914 ev/6-21.8 deg); 3 changes cc dynamically
 * 
 * %Link
 * https://www.synchrotron-soleil.fr/en/beamlines/rock
