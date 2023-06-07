@@ -165,7 +165,9 @@ INITIALIZE
     }
     
     MPI_MASTER(
-    fprintf(stdout,"%s: Energy=%g [keV]\n\tM2 mirror=%s\n\tMonochromator Si<%i %i %i> angle %g [deg], config=%i\n", 
+    fprintf(stdout,"%s: Energy=%g [keV]\n"
+      "\tM2 mirror=%s\n"
+      "\tMonochromator Si<%i %i %i> angle %g [deg], config=%i\n", 
       NAME_INSTRUMENT, E0, reflec_material_M2A_M2B, i_h,i_k,i_l, calculated_angle, cc);
     );
 
@@ -261,8 +263,13 @@ COMPONENT arm_slit4b_div = COPY(arm_m1_div)
 AT (0, 0, 0) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- CC crystal 1 */
+// we shift the channel-cut by 0.001 upwards (+Y) to match the mirror output beam
 COMPONENT arm_crystal0 = COPY(arm_m1)
-AT (0, 0, center_first_crystal-18.1512) RELATIVE PREVIOUS
+AT (0, 0.001, center_first_crystal-18.1512) RELATIVE PREVIOUS
+
+COMPONENT bragg_crystal_psd =PSD_monitor(xwidth=0.1, yheight=2)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (90,0,0) RELATIVE PREVIOUS
 
 COMPONENT bragg_crystal = Bragg_crystal(
     length=length_first_crystal, 
@@ -273,8 +280,8 @@ COMPONENT bragg_crystal = Bragg_crystal(
     l = i_l,
     crystal_type = 2
 )
-AT (0, 0, 0) RELATIVE PREVIOUS	
-ROTATED (-calculated_angle, 0, 0) RELATIVE PREVIOUS
+AT (0, 0, 0) RELATIVE arm_crystal0	
+ROTATED (-calculated_angle, 0, 0) RELATIVE arm_crystal0
 EXTEND
 %{ 
 	if (!SCATTERED) ABSORB;

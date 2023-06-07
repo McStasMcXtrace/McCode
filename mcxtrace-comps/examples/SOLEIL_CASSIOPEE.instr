@@ -1,0 +1,285 @@
+/*******************************************************************************
+* Instrument: CASSIOPEE beamline at SOLEIL
+*
+* %Identification
+* Written by: François Bertran
+* Date: 11/03/2022
+* Origin: SOLEIL
+* Version: 0.2
+* %INSTRUMENT_SITE: SOLEIL
+*
+* CASSIOPEE beamline at SOLEIL
+*
+* %Description
+* CASSIOPEE : Combined Angle- and Spin-resolved SpectroscopIes Of PhotoEmitted Electrons
+*
+* The CASSIOPEE beamline is dedicated to photoemission experiments in the 8 eV -
+* 1500 eV photon energy range. The beamline uses two undulators, and the main
+* optical elements are the entrance optics and the monochromator. After the
+* monochromator, the beamline is divided into two branches, supplying photons to
+* two endstations (Spin-resolved Photoemission, and High Resolution Angle-resolved
+* Photoemission), both connected to a Molecular Beam Epitaxy chamber.
+*
+* Position | Element
+* ---------|--------------------------------------------------------------------
+* 0        | Undulator HU60 / HU256
+* 21.83    | Plane mirror M1a
+* 22.18    | Spherical mirror M1b
+* 28.83    | Plane grating (reflection)
+* 29.02    | Plane mirror M2
+* 30.83    | Slit
+*
+* %Parameters
+* E0:              [keV] Undulator emission energy, e.g. 40e-3 or 300e-3 keV. 0=auto
+* lambda:          [Ang] Undulator emission wavelength. Used when E0=0.
+* dE:              [keV] Undulator energy bandwidth, e.g. 1e-3.
+* mirror_material: [str] Mirror M1 coating (e.g. Pt.dat)
+* undulator_index: [1-2] Undulator 1=HU60; 2=HU256
+* M1_angle:        [deg] M1 mirror angle. 0=auto
+* PG_angle:        [deg] Reflective grating monochromator. 0=auto
+* PM_angle:        [deg] M2 mirror angle. 0=auto
+* beta_mono:       [deg] Monochromator angle. 0=auto
+* r_rho:           [/mm] Grating number of lines/mm. 0=auto.
+* 
+* %L
+* https://www.synchrotron-soleil.fr/en/beamlines/cassiopee
+* %Link
+* https://www.researchgate.net/deref/https%3A%2F%2Ftel.archives-ouvertes.fr%2Ftel-01064523
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT SOLEIL_CASSIOPEE (
+  string mirror_material = "Pt.dat", 
+  int undulator_index =1, 
+  M1_angle = 0,
+  PG_angle = 0, 
+  PM_angle = 0, 
+  E0 = 0, dE=1e-3,
+  lambda = 0, 
+  beta_mono = 0, 
+  r_rho = 0)
+
+DECLARE
+%{
+  double c=0.2;
+%}
+
+INITIALIZE
+%{
+#define sqr(x) ((x)*(x))
+
+// source choice
+if (!E0 && !lambda) {
+  if (undulator_index == 1)      E0 = 300e-3;
+  else if (undulator_index == 2) E0 = 40e-3;
+}
+
+if (lambda && !E0) E0     = 1.24125e-6/lambda;
+else if (!lambda && E0) lambda = 1.24125e-6/E0;
+
+if (!M1_angle) M1_angle = (undulator_index == 1 ? 2.44:5.02);
+if (!r_rho)    r_rho    = (undulator_index == 1 ? 1600:400);
+
+/*
+beta_mono = RAD2DEG*acos(((-r_rho*lambda + sqrt((c*r_rho*lambda)^2 + (1 - c^2)^2))/(1 - c^2)) + r_rho*lambda);
+if (PG_angle == 0) PG_angle = RAD2DEG*acos((-r_rho*lambda + sqrt((c*r_rho*lambda)^2 + (1 - c^2)^2))/(1 - c^2));
+*/
+if (!beta_mono)
+  beta_mono = RAD2DEG*acos(((-r_rho*lambda + sqrt( sqr(c*r_rho*lambda) + sqr(1 - sqr(c)) ))/(1 - sqr(c) )) + r_rho*lambda);
+  
+if (!PG_angle) 
+  PG_angle = RAD2DEG*acos((-r_rho*lambda + sqrt( sqr(c*r_rho*lambda) + sqr(1 - sqr(c) ) ))/(1 - sqr(c) ));
+
+if (!PM_angle) 
+  PM_angle = (PG_angle + beta_mono)/2;
+
+MPI_MASTER(
+printf("%s: Undulator %s E0=%g [eV] lambda=%g [Angs]\n", 
+  NAME_INSTRUMENT,
+  undulator_index == 1 ? "HU60":"HU256",
+  E0, lambda);
+);
+
+%}
+
+
+TRACE
+
+COMPONENT Origin = Progress_bar() 
+AT (0, 0, 0) ABSOLUTE
+
+/* -------------------------------------------------- Source HU60 */
+COMPONENT Source_HU60 = Undulator(
+    E0 = E0,
+    dE = 1e-3,
+    Ee = 2.75,
+    Ie = 0.5,
+    K = 5,
+    sigey = 1e-9,
+    sigex = 1e-9,
+    sigepx = 1e-9,
+    sigepy = 1e-9,
+    focus_xw = 1e-5,
+    focus_yh = 1e-5,
+    dist = 10)
+WHEN undulator_index == 1
+AT (0, 0, 0) RELATIVE Origin
+
+
+
+/* -------------------------------------------------- Source HU256 */
+
+COMPONENT Source_HU256 = Undulator(
+    E0 = E0,
+    dE = 1e-3,
+    Ee = 2.75,
+    Ie = 0.5,
+    K = 5,
+    sigey = 1e-9,
+    sigex = 1e-9,
+    sigepx = 1e-9,
+    sigepy = 1e-9,
+    focus_xw = 1e-5,
+    focus_yh = 1e-5,
+    dist = 10)
+WHEN undulator_index == 2
+AT (0, 0, 2.727) RELATIVE Origin
+
+
+
+/* -------------------------------------------------- Plane mirror M1a */
+/* dimensions 130x25 mm (e=60 mm) */
+
+COMPONENT M1a = Mirror(
+  reflectivity = mirror_material,
+  zdepth = 0.130,
+  yheight = 0.025
+)
+AT (0, 0, 21.83) RELATIVE Origin
+ROTATED (0, M1_angle, 0) RELATIVE Origin
+
+/* -------------------------------------------------- Spherical mirror M1b */
+/* dimensions 150x25 mm (e=60 mm)
+/* rayon 108.4 m */
+
+COMPONENT M1b = Mirror_curved(
+    coating = mirror_material,
+    radius = -108.4,
+    length = 0.150,
+    width = 0.025
+)    
+WHEN undulator_index == 2
+AT (-0.031, 0, 0.352) RELATIVE PREVIOUS
+
+
+/* -------------------------------------------------- Spherical mirror M1c */
+/* dimensions 160x25 mm (e=60 mm)
+/* rayon 120 m */
+
+COMPONENT M1c = Mirror_curved(
+    coating = mirror_material,
+    radius = -120,
+    length = 0.160,
+    width = 0.025
+)  
+WHEN undulator_index == 1  
+AT (0, 0, 0.357) RELATIVE PREVIOUS	
+
+
+COMPONENT Arm1 = Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED(0, -M1_angle, 0) RELATIVE PREVIOUS
+
+/* --------------------------------------------------- Grating 1
+/* dimensions 95x40 mm, 400 lines/mm
+/* horizontal, 6 m de M1a */
+
+COMPONENT  PG_location = Arm()
+AT (0,0, 6 - 0.352 - 0.357) RELATIVE Arm1
+
+/*
+COMPONENT PG400 = Reflective_grating(
+   blazed = 0,
+   zdepth = 0.095,
+   xwidth = 0.040,
+   d_phi = 2,
+   r_rho = 400
+)
+WHEN undulator_index == 2
+AT (0,0, 0) RELATIVE PG_location
+ROTATED (PG_angle, 0, 0) RELATIVE PG_location
+
+*/
+
+/* --------------------------------------------------- Grating 2
+/* dimensions 95x40 mm, 800 lines/mm
+/* horizontal, 6 m de M1a */
+
+/* --------------------------------------------------- Grating 3
+/* dimensions 95x40 mm, 1600 lines/mm
+/* horizontal, 6 m de M1a */
+/*
+COMPONENT PG1600 = COPY(PG400)(
+   r_rho = 1600
+)
+WHEN undulator_index == 1
+AT (0,0, 0) RELATIVE PG_location
+ROTATED (PG_angle, 0, 0) RELATIVE PG_location
+*/
+/* -------------------------------------------------- Plane mirror M2 */
+/* dimensions 320x30 mm (e=60 mm)
+/* l'axe de rotation est 10 mm sous celui du réseau, 20 mm sous la surface du miroir
+/* (qui est face vers le bas) et 190 mm en amont du centre du miroir 
+/* => le faisceau est dévié de 20 mm vers le haut */
+
+COMPONENT M2_rotation_axis = Arm()
+AT (0, -0.01, 0) RELATIVE PG_location
+
+COMPONENT M2 = Mirror(
+reflectivity = mirror_material,
+zdepth = 0.320,
+xwidth = 0.030
+    )
+AT (0, 0.02, .190) RELATIVE M2_rotation_axis
+ROTATED (-PM_angle, 0, 0) RELATIVE M2_rotation_axis
+
+COMPONENT PM_takeoff = Arm()
+AT (0,0,0) RELATIVE M2
+ROTATED (0,0,0) RELATIVE Origin
+
+/* -------------------------------------------------- Horizontal slit */
+/* ouverture de 2 microns à 2 mm
+/* située à 3 m du réseau, soit 9 m de M1a */
+
+COMPONENT slit = Slit(
+    )
+AT (-0.062, 0, 30.83) RELATIVE Origin	
+
+/* Refocalisation branche 1 */
+
+/* --------------------------------------------------- Toroidal mirror M3 */
+/* dimensions 300x35 mm (e=60 mm)
+/* situé à 3 m après la fente et à 7.5 m du point expérimental CX1
+/* R = 180 m, r = 0.15 m, déviation 4° */
+
+
+/* Refocalisation branche 2 */
+
+/* ---------------------------------------------------- Spherical mirror M4 */
+/* dimensions 320x35 mm (e=40 mm)
+/* situé à 7 m après la fente
+/* rayon = 94.88 m, déviation 5.8° */
+
+COMPONENT M4 = Mirror_curved(
+    coating = mirror_material)    
+AT (0, 0, 0) RELATIVE PREVIOUS	
+ROTATED (0, 0, 0) RELATIVE Origin
+
+/* -------------------------------------------------- Toroidal mirror M5 */
+/* dimensions 300x35 mm (e=40 mm)
+/* situé à 0.4 m de M4 et à 2 m du point expérimental CX2
+/* R = 263.65 m, r = 0.165 m, deviation 6° */
+
+
+
+END
