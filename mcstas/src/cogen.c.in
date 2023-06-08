@@ -947,6 +947,7 @@ int cogen_comp_setpos(
   coutf("  stracpy(_%s_var._name, \"%s\", 16384);", comp->name, comp->name);
   coutf("  stracpy(_%s_var._type, \"%s\", 16384);", comp->name, comp->def->name);
   coutf("  _%s_var._index=%i;", comp->name, comp->index);
+  coutf("  int current_setpos_index = %d;", comp->index);
 
   /* setting & output parameters of the component */
   cogen_comp_init_par(comp, instr, "SETTING");  // specific to each instance
@@ -1016,6 +1017,38 @@ void cogen_getcompindex_fct(struct instr_def *instr){
   }
   cout("  return -1;");
   cout("}");
+  cout("");
+}
+
+void cogen_getdistance_fct(){
+  cout("double index_getdistance(int first_index, int second_index)");
+  cout("/* Calculate the distance two components from their indexes*/");
+  cout("{");
+  cout("  return coords_len(coords_sub(POS_A_COMP_INDEX(first_index), POS_A_COMP_INDEX(second_index)));");
+  cout("}");
+  cout("");
+
+  cout("double getdistance(char* first_component, char* second_component)");
+  cout("/* Calculate the distance between two named components */");
+  cout("{");
+  cout("  int first_index = _getcomp_index(first_component);");
+  cout("  int second_index = _getcomp_index(second_component);");
+  cout("  return index_getdistance(first_index, second_index);");
+  cout("}");
+  cout("");
+
+  cout("double checked_setpos_getdistance(int current_index, char* first_component, char* second_component)");
+  cout("/* Calculate the distance between two named components at *_setpos() time, with component index checking */");
+  cout("{");
+  cout("  int first_index = _getcomp_index(first_component);");
+  cout("  int second_index = _getcomp_index(second_component);");
+  cout("  if (first_index >= current_index || second_index >= current_index) {");
+  cout("    printf(\"setpos_getdistance can only be used with the names of components before the current one!\\n\");");
+  cout("    return 0;");
+  cout("  }");
+  cout("  return index_getdistance(first_index, second_index);");
+  cout("}");
+  cout("#define setpos_getdistance(first, second) checked_setpos_getdistance(current_setpos_index, first, second)");
   cout("");
 }
 
@@ -1287,6 +1320,8 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
 
   /* generate setpos instance functions */
   if (!strcmp(section, "INITIALISE")) {
+    cogen_getdistance_fct();
+
     liter = list_iterate(instr->complist);
     while((comp = list_next(liter)) != NULL) {
       warnings += cogen_comp_setpos(comp, last, instr);
@@ -2896,11 +2931,11 @@ cogen(char *output_name, struct instr_def *instr)
   if(output_handle == NULL)
     fatal_error("Error opening output file '%s'\n", output_name);
 
-
   /* and we now call the writers */
   cogen_header(instr, output_name);
   warnings += cogen_decls(instr);
   detect_skipable_transforms(instr);
+
   warnings += cogen_section(instr, "INITIALISE", "init", instr->inits);
 
   // TRACE section requires a bit more flexibility
@@ -2919,6 +2954,8 @@ cogen(char *output_name, struct instr_def *instr)
   // API macro support functions
   cogen_getvarpars_fct(instr);
   cogen_getparticlevar_fct(instr);
+
+
   cogen_getcompindex_fct(instr);
 
   embed_file("mccode_main.c");
