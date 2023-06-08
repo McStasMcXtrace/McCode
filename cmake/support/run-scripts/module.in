@@ -20,3 +20,8 @@ setenv        @FLAVOR_UPPER@_TOOLS @CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSI
 prepend-path  PATH          @CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/bin
 prepend-path  MANPATH       @CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/doc/man
 
+# Define PYTHONPATH to pick up NCrystal if McStas
+if { "@FLAVOR@" == "mcstas"  } {
+    prepend-path PYTHONPATH     @CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/share/NCrystal/python/
+}
+
