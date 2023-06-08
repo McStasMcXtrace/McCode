@@ -26,12 +26,25 @@
 * the production of energy from renewable sources and in the development of
 * advanced energy storage devices. 
 *
+* Position | Element
+* ---------|--------------------------------------------------------------------
+* 0        | Bending_magnet 1.72 T
+* 8.5336   | Slit 1/2
+* 10.15    | Toroidal mirror M1
+* 11.69    | Slit 3
+* 16.82    | Mirror M2a
+* 18.15    | Slit 4
+* 19       | Channel-cut Si monochromator at 20 (Si220), 18.92 or 19.25 m (Si111)
+* 21.13    | Slit 5/6
+* 22.44    | Mirror M2b
+* 32.44    | Sample
+*
 * Examples:
 * Copper scan: mxrun SOLEIL_ROCK.instr E0=8.500,9.500 scan=1 nbsample=1 cc=2 -N100
-* Manganese and chrome scan: mxrun SOLEIL_ROCK.instr E0=5.700,6.800 scan=1 nbsample=2 sample_file=Mn.txt sample_density=7.21 sample_file_2=Cr.txt sample_density_2=7.15 cc=2 -N100
+* Manganese and chrome scan: mxrun SOLEIL_ROCK.instr E0=5.700,6.800 scan=1 sample_file=MnCr cc=2 -N100
 * Pretty energy repartition monitor result: mxrun SOLEIL_ROCK.instr E0=17.000 cc=2 -n1e8
 *
-* %Example: E0=17.000 cc=2 -n 1e7 Detector: psd_monitor_I=2.4278e+6
+* %Example: E0=15.918 Detector: psd_monitor_I=1.02541e+06
 *
 * %Parameters
 * E0:               [keV]    Energy to hit, i.e. selected by the channel-cut monochromator
@@ -40,14 +53,9 @@
 * scan:             [0-1]    0 no energy scan, 1 energy scan
 * angle_m2a_m2b:    [rad]    M2A/M2B mirror's deviation angle, can vary from 0.0035 to 0.0104
 * angle_m1:         [rad]    M1 mirror's deviation angle
-* nbsample:         [1-2]    Number of sample(s)
-* sample_file:      [string] Sample file name
-* sample_density:   [g/cm^3] Sample density
-* sample_file_2:    [string] Sample two file name
-* sample_density_2: [g/cm^3] Sample two density
+* sample_file:      [string] Sample chemical formulae
 * reflec_material_M1:      [str] Material reflectivity file name for M1 mirror, e.g. "Ir.dat"
 * reflec_material_M2A_M2B: [str] Material reflectivity file name for M2A and M2B mirror. Use NULL for automatic setting.
-
 * 
 * %Link
 * https://www.synchrotron-soleil.fr/en/beamlines/rock
@@ -63,10 +71,7 @@ DEFINE INSTRUMENT SOLEIL_ROCK (E0=15.918, dE=1,
     angle_m2a_m2b=0.008, 
     angle_m1=0.0045,
     nbsample = 1, 
-    string sample_file="Cu.txt", 
-    sample_density=8.96, 
-    string sample_file_2="Mo.txt", 
-    sample_density_2=10.28, 
+    string sample_file="CuMo", 
     string reflec_material_M1="Ir.dat",
     string reflec_material_M2A_M2B="NULL",
     int cc=0)
@@ -267,7 +272,7 @@ AT (0, 0, 0) RELATIVE PREVIOUS
 COMPONENT arm_crystal0 = COPY(arm_m1)
 AT (0, 0.001, center_first_crystal-18.1512) RELATIVE PREVIOUS
 
-COMPONENT bragg_crystal_psd =PSD_monitor(xwidth=0.1, yheight=2)
+COMPONENT bragg_crystal_psd =PSD_monitor(xwidth=25e-3, yheight=length_first_crystal)
 AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (90,0,0) RELATIVE PREVIOUS
 
@@ -292,10 +297,11 @@ AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (-calculated_angle, 0, 0) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- CC crystal 2 */
+// gap btw crystals is 1 cm. We shit the 2nd blade so that it is centred wrt reflection.
 COMPONENT bragg_crystal_two = COPY(bragg_crystal)(
     length=length_second_crystal) 
-AT (0, 0.01, (length_first_crystal/2)+(length_second_crystal/2)) RELATIVE bragg_crystal
-ROTATED (calculated_angle, 0, 0) RELATIVE PREVIOUS
+AT (0, 0.01, 0.01/tan(calculated_angle*DEG2RAD)) RELATIVE bragg_crystal
+ROTATED (calculated_angle, 0, 0) RELATIVE arm_crystal1
 EXTEND
 %{ 
 	if (!SCATTERED) ABSORB;
@@ -311,7 +317,7 @@ ROTATED (calculated_angle, 0, 0) RELATIVE PREVIOUS
 COMPONENT slit5 = Slit(
     xwidth=0.02, 
     yheight=0.01)
-AT (0, 0.01*sin(2*calculated_angle*DEG2RAD)/sin(calculated_angle*DEG2RAD), 21.135 - center_first_crystal) RELATIVE arm_crystal0
+AT (0, 0, 21.135 - center_first_crystal) RELATIVE arm_crystal2
 
 
 //COMPONENT slit5 = Slit(
@@ -357,38 +363,27 @@ COMPONENT EnergyMonitor_before_sample = Monitor_nD(
     ) 
 AT (0,0,10) RELATIVE PREVIOUS
 
+
+
+/* -------------------------------------------------- sample */
+// this is the sample stage
 COMPONENT e_repartition_after_m2b = Monitor_nD(
   xwidth =0.02 , yheight =0.02, 
   options=e_repartition_options, bins=500,
   filename="e_repartition_after_m2b",
   restore_xray = 1) 
+AT (0,0,0.5) RELATIVE PREVIOUS
+
+SPLIT COMPONENT absorption_sample = Fluorescence(
+  material=sample_file,
+  xwidth = 0.5,
+  yheight = 0.5,
+  zdepth = 0.0001)
+AT (0, 0, 0) RELATIVE e_repartition_after_m2b
+
+COMPONENT fluo_monitor = Monitor_nD(
+  radius=0.2, options="energy", bins=1024, min=0, max=E0*1.2)
 AT (0,0,0) RELATIVE PREVIOUS
-
-/* -------------------------------------------------- sample */
-COMPONENT absorption_sample = Absorption_sample(
-    material_datafile_o=sample_file, 
-    xwidth_o = 0.5,
-    yheight_o = 0.5,
-    zdepth_o = 0.0001,
-    rho_o=sample_density
-    )
-WHEN(nbsample==1)
-AT (0, 0, 0.5) RELATIVE PREVIOUS
-
-COMPONENT absorption_sample_2 = Absorption_sample(    
-    material_datafile_o=sample_file, 
-    xwidth_o = 0.5,
-    yheight_o = 0.5,
-    zdepth_o = 0.0001,
-    rho_o=sample_density,
-    rho_i=sample_density_2,
-    material_datafile_i=sample_file_2, 
-    xwidth_i = 0.5,
-    yheight_i = 0.5,
-    zdepth_i = 0.00005   
-    )
-WHEN(nbsample>1)
-AT (0, 0, 0.5) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- E monitor */
 COMPONENT EnergyMonitor_after_sample = COPY(EnergyMonitor_before_sample)(
@@ -406,8 +401,6 @@ COMPONENT psd_monitor = PSD_monitor(
     )
 AT (0, 0, 0) RELATIVE PREVIOUS
 
-SAVE %{
-%}
 
 FINALLY
 %{
