@@ -2236,10 +2236,16 @@ MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
 
 #ifdef USE_NEXUS
   if (strcasestr(detector.format, "NeXus"))
-    return(mcdetector_out_1D_nexus(detector));
+    detector = mcdetector_out_1D_nexus(detector);
   else
 #endif
-    return(mcdetector_out_1D_ascii(detector));
+    detector = mcdetector_out_1D_ascii(detector);
+  if (detector.p1 != p1 && detector.p1) {
+    // mcdetector_statistics allocated memory but it hasn't been freed.
+    free(detector.p1);
+    detector.p1 = p1;
+  }
+  return detector;
 
 } /* mcdetector_out_1D */
 
