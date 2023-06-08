@@ -700,7 +700,7 @@ double guide_elliptical_handleReflection(double x0, double y0, double z0,
 					);
     }
 	else{
-    	int currentSegment;
+    	int currentSegment = -1;
     	double combinedLength = 0;
     	int i;
     	for(i=0; i < sgi->numberOfSegments; i++){
@@ -708,6 +708,10 @@ double guide_elliptical_handleReflection(double x0, double y0, double z0,
     		if(z0 < combinedLength)	{
     			currentSegment = i; break;
     		}
+    	}
+    	if (currentSegment < 0) {
+    	  printf("Elliptic_guide_gravity: Error indexing guide segment\n");
+    	  return 0;
     	}
 
 		if(cc->side == RightSide)
