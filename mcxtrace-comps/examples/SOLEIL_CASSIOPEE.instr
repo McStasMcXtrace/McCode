@@ -151,7 +151,7 @@ AT (0, 0, 2.727) RELATIVE Origin
 /* dimensions 130x25 mm (e=60 mm) */
 
 COMPONENT M1a = Mirror(
-  reflectivity = mirror_material,
+  coating = mirror_material,
   zdepth = 0.130,
   yheight = 0.025
 )
@@ -236,7 +236,7 @@ COMPONENT M2_rotation_axis = Arm()
 AT (0, -0.01, 0) RELATIVE PG_location
 
 COMPONENT M2 = Mirror(
-reflectivity = mirror_material,
+coating = mirror_material,
 zdepth = 0.320,
 xwidth = 0.030
     )
