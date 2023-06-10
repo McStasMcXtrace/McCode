@@ -91,7 +91,7 @@ mcstatic unsigned long long int mcrun_num            = 0;
 #include "mcstas-globals.h"
 #endif /* !DANSE */
 
-#ifndef NX_COMPRESION
+#ifndef NX_COMPRESSION
 #define NX_COMPRESSION NX_COMP_NONE
 #endif
 
