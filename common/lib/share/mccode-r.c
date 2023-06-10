@@ -83,7 +83,7 @@ mcstatic unsigned long long int mcrun_num            = 0;
 
 /* SECTION: NeXus compression */
 
-#ifndef NX_COMPRESION
+#ifndef NX_COMPRESSION
 #define NX_COMPRESSION NX_COMP_NONE
 #endif
 
