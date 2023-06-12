@@ -1,7 +1,7 @@
 #define HAS_Iq
 #define FORM_VOL
 #line 1 "../kernel_header.c"
-
+#define FLOAT_SIZE 8
 #ifdef __OPENCL_VERSION__
 # define USE_OPENCL
 #elif defined(__CUDACC__)
@@ -383,9 +383,7 @@ qabc_apply(
 }
 
 // ##### End of rotation operation definitions ######
-
 #line 1 ".././models/lib/polevl.c"
-
 /*							polevl.c
  *							p1evl.c
  *
@@ -472,9 +470,7 @@ double p1evl( double x, pconstant double *coef, int N )
     return ans;
 }
 
-
 #line 1 ".././models/lib/sas_J1.c"
-
 /*							j1.c
  *
  *	Bessel function of order one
@@ -730,9 +726,7 @@ double sas_2J1x_x(double x)
     return (x != 0.0 ) ? 2.0*sas_J1(x)/x : 1.0;
 }
 
-
 #line 1 ".././models/lib/wrc_cyl.c"
-
 /*
     Functions for WRC implementation of flexible cylinders. See
     W R Chen, P D Butler and L J Magid,
@@ -967,9 +961,7 @@ Sk_WR(double q, double L, double b)
     return ans;
 }
 
-
 #line 1 ".././models/flexible_cylinder.c"
-
 static double
 form_volume(double length, double kuhn_length, double radius)
 {

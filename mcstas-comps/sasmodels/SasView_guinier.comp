@@ -1,3 +1,51 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: SasView_guinier
+*
+* %Identification
+* Written by: Jose Robledo
+* Based on sasmodels from SasView
+* Origin: FZJ / DTU / ESS DMSC
+*
+*
+* SasView guinier model component as sample description.
+*
+* %Description
+*
+* SasView_guinier component, generated from guinier.c in sasmodels.
+*
+* Example: SasView_guinier(rg, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
+        pd_rg=0.0)
+*
+* %Parameters
+* INPUT PARAMETERS:
+* rg: [Ang] ([-inf, inf]) Radius of Gyration.
+* Optional parameters:
+* model_abs: [ ] Absorption cross section density at 2200 m/s.
+* model_scale: [ ] Global scale factor for scattering kernel. For systems without inter-particle interference, the form factors can be related to the scattering intensity by the particle volume fraction.
+* xwidth: [m] ([-inf, inf]) Horiz. dimension of sample, as a width.
+* yheight: [m] ([-inf, inf]) vert . dimension of sample, as a height for cylinder/box
+* zdepth: [m] ([-inf, inf]) depth of sample
+* R: [m] Outer radius of sample in (x,z) plane for cylinder/sphere.
+* target_x: [m] relative focus target position.
+* target_y: [m] relative focus target position.
+* target_z: [m] relative focus target position.
+* target_index: [ ] Relative index of component to focus at, e.g. next is +1.
+* focus_xw: [m] horiz. dimension of a rectangular area.
+* focus_yh: [m], vert. dimension of a rectangular area.
+* focus_aw: [deg], horiz. angular dimension of a rectangular area.
+* focus_ah: [deg], vert. angular dimension of a rectangular area.
+* focus_r: [m] case of circular focusing, focusing radius.
+* pd_rg: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable
+*
+* %Link
+* %End
+*******************************************************************************/
 DEFINE COMPONENT SasView_guinier
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (
@@ -6,7 +54,7 @@ SETTING PARAMETERS (
         model_abs=0.0,
         xwidth=0.01,
         yheight=0.01,
-        zdepth=0.005,  
+        zdepth=0.005,
         R=0,
         target_x=0,
         target_y=0,
@@ -16,13 +64,14 @@ SETTING PARAMETERS (
         focus_yh=0.5,
         focus_aw=0,
         focus_ah=0,
-        focus_r=0)
+        focus_r=0,
+        pd_rg=0.0)
 
 
 SHARE %{
     %include "sas_guinier.c"
 %}
-DECLARE
+    DECLARE
 %{
   double shape;
   double my_a_v;
@@ -58,7 +107,7 @@ if (xwidth && yheight && zdepth)
   }
 
   my_a_v = model_abs*2200*100; /* Is not yet divided by v. 100: Convert barns -> fm^2 */
-  
+
 %}
 
 
@@ -114,14 +163,22 @@ TRACE
     qy = V2K*(vy_i-vy);
     qz = V2K*(vz_i-vz);
     q = sqrt(qx*qx+qy*qy+qz*qz);
+    
+    double trace_rg=rg;
+    if ( pd_rg!=0.0 ){
+    trace_rg = (randnorm()*pd_rg+1.0)*rg;
+    }
+
+        
+
 
     // Sample dependent. Retrieved from SasView./////////////////////
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, rg=rg);
+    Iq_out = Iq(q, trace_rg);
 
-        
+
     float vol;
     vol = 1;
 

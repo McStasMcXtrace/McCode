@@ -1,6 +1,6 @@
 #define HAS_Iq
 #line 1 "../kernel_header.c"
-
+#define FLOAT_SIZE 8
 #ifdef __OPENCL_VERSION__
 # define USE_OPENCL
 #elif defined(__CUDACC__)
@@ -382,9 +382,7 @@ qabc_apply(
 }
 
 // ##### End of rotation operation definitions ######
-
 #line 1 ".././models/lib/sas_3j1x_x.c"
-
 /**
 * Spherical Bessel function 3*j1(x)/x
 *
@@ -443,9 +441,7 @@ double sas_3j1x_x(double q)
     }
 }
 
-
 #line 1 ".././models/polymer_micelle.c"
-
 double Iq(double q,
         double ndensity,
         double v_core,

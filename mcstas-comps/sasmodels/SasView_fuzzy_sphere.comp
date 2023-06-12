@@ -1,3 +1,54 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: SasView_fuzzy_sphere
+*
+* %Identification
+* Written by: Jose Robledo
+* Based on sasmodels from SasView
+* Origin: FZJ / DTU / ESS DMSC
+*
+*
+* SasView fuzzy_sphere model component as sample description.
+*
+* %Description
+*
+* SasView_fuzzy_sphere component, generated from fuzzy_sphere.c in sasmodels.
+*
+* Example: SasView_fuzzy_sphere(sld, sld_solvent, radius, fuzziness, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
+        pd_radius=0.0)
+*
+* %Parameters
+* INPUT PARAMETERS:
+* sld: [1e-6/Ang^2] ([-inf, inf]) Particle scattering length density.
+* sld_solvent: [1e-6/Ang^2] ([-inf, inf]) Solvent scattering length density.
+* radius: [Ang] ([0, inf]) Sphere radius.
+* fuzziness: [Ang] ([0, inf]) std deviation of Gaussian convolution for interface (must be << radius).
+* Optional parameters:
+* model_abs: [ ] Absorption cross section density at 2200 m/s.
+* model_scale: [ ] Global scale factor for scattering kernel. For systems without inter-particle interference, the form factors can be related to the scattering intensity by the particle volume fraction.
+* xwidth: [m] ([-inf, inf]) Horiz. dimension of sample, as a width.
+* yheight: [m] ([-inf, inf]) vert . dimension of sample, as a height for cylinder/box
+* zdepth: [m] ([-inf, inf]) depth of sample
+* R: [m] Outer radius of sample in (x,z) plane for cylinder/sphere.
+* target_x: [m] relative focus target position.
+* target_y: [m] relative focus target position.
+* target_z: [m] relative focus target position.
+* target_index: [ ] Relative index of component to focus at, e.g. next is +1.
+* focus_xw: [m] horiz. dimension of a rectangular area.
+* focus_yh: [m], vert. dimension of a rectangular area.
+* focus_aw: [deg], horiz. angular dimension of a rectangular area.
+* focus_ah: [deg], vert. angular dimension of a rectangular area.
+* focus_r: [m] case of circular focusing, focusing radius.
+* pd_radius: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable
+*
+* %Link
+* %End
+*******************************************************************************/
 DEFINE COMPONENT SasView_fuzzy_sphere
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (
@@ -9,7 +60,7 @@ SETTING PARAMETERS (
         model_abs=0.0,
         xwidth=0.01,
         yheight=0.01,
-        zdepth=0.005,  
+        zdepth=0.005,
         R=0,
         target_x=0,
         target_y=0,
@@ -19,13 +70,14 @@ SETTING PARAMETERS (
         focus_yh=0.5,
         focus_aw=0,
         focus_ah=0,
-        focus_r=0)
+        focus_r=0,
+        pd_radius=0.0)
 
 
 SHARE %{
     %include "sas_fuzzy_sphere.c"
 %}
-DECLARE
+    DECLARE
 %{
   double shape;
   double my_a_v;
@@ -61,7 +113,7 @@ if (xwidth && yheight && zdepth)
   }
 
   my_a_v = model_abs*2200*100; /* Is not yet divided by v. 100: Convert barns -> fm^2 */
-  
+
 %}
 
 
@@ -117,18 +169,26 @@ TRACE
     qy = V2K*(vy_i-vy);
     qz = V2K*(vz_i-vz);
     q = sqrt(qx*qx+qy*qy+qz*qz);
+    
+    double trace_radius=radius;
+    if ( pd_radius!=0.0 ){
+    trace_radius = (randnorm()*pd_radius+1.0)*radius;
+    }
+
+        
+
 
     // Sample dependent. Retrieved from SasView./////////////////////
     float Iq_out;
     Iq_out = 1;
 
     double F1=0.0, F2=0.0;
-    Fq(q, &F1, &F2, sld=sld, sld_solvent=sld_solvent, radius=radius, fuzziness=fuzziness);
+    Fq(q, &F1, &F2, sld, sld_solvent, trace_radius, fuzziness);
     Iq_out = F2;
 
-        
+
     float vol;
-    vol = form_volume(radius=radius, fuzziness=fuzziness);
+    vol = form_volume(trace_radius, fuzziness);
 
     // Scale by 1.0E2 [SasView: 1/cm  ->   McStas: 1/m]
     Iq_out = model_scale*Iq_out / vol * 1.0E2;

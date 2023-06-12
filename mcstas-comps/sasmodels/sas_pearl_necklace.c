@@ -1,7 +1,7 @@
 #define HAS_Iq
 #define FORM_VOL
 #line 1 "../kernel_header.c"
-
+#define FLOAT_SIZE 8
 #ifdef __OPENCL_VERSION__
 # define USE_OPENCL
 #elif defined(__CUDACC__)
@@ -383,9 +383,7 @@ qabc_apply(
 }
 
 // ##### End of rotation operation definitions ######
-
 #line 1 ".././models/lib/sas_Si.c"
-
 // integral of sin(x)/x Taylor series approximated to w/i 0.1%
 double sas_Si(double x);
 
@@ -414,9 +412,7 @@ double sas_Si(double x)
     }
 }
 
-
 #line 1 ".././models/lib/sas_3j1x_x.c"
-
 /**
 * Spherical Bessel function 3*j1(x)/x
 *
@@ -475,9 +471,7 @@ double sas_3j1x_x(double q)
     }
 }
 
-
 #line 1 ".././models/pearl_necklace.c"
-
 double form_volume(double radius, double edge_sep,
     double thick_string, double fp_num_pearls);
 double Iq(double q, double radius, double edge_sep,
