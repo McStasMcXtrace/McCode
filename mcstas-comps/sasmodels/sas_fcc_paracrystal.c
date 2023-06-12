@@ -2,7 +2,7 @@
 #define HAS_Iq
 #define FORM_VOL
 #line 1 "../kernel_header.c"
-
+#define FLOAT_SIZE 8
 #ifdef __OPENCL_VERSION__
 # define USE_OPENCL
 #elif defined(__CUDACC__)
@@ -384,9 +384,7 @@ qabc_apply(
 }
 
 // ##### End of rotation operation definitions ######
-
 #line 1 ".././models/lib/sas_3j1x_x.c"
-
 /**
 * Spherical Bessel function 3*j1(x)/x
 *
@@ -445,9 +443,7 @@ double sas_3j1x_x(double q)
     }
 }
 
-
 #line 1 ".././models/lib/gauss150.c"
-
 // Created by Andrew Jackson on 4/23/07
 
  #ifdef GAUSS_N
@@ -773,9 +769,7 @@ constant double Gauss150Wt[152]={
 };
 
 #pragma acc declare copyin( Gauss150Wt[0:150], Gauss150Z[0:150] )
-
 #line 1 ".././models/lib/sphere_form.c"
-
 double sphere_volume(double radius);
 double sphere_form(double q, double radius, double sld, double solvent_sld);
 
@@ -795,9 +789,7 @@ double sphere_form(double q, double radius, double sld, double solvent_sld)
 }
 
 
-
 #line 1 ".././models/fcc_paracrystal.c"
-
 static double
 fcc_Zq(double qa, double qb, double qc, double dnn, double d_factor)
 {

@@ -2,7 +2,7 @@
 #define HAS_FQ
 #define FORM_VOL
 #line 1 "../kernel_header.c"
-
+#define FLOAT_SIZE 8
 #ifdef __OPENCL_VERSION__
 # define USE_OPENCL
 #elif defined(__CUDACC__)
@@ -384,9 +384,7 @@ qabc_apply(
 }
 
 // ##### End of rotation operation definitions ######
-
 #line 1 ".././models/lib/sas_Si.c"
-
 // integral of sin(x)/x Taylor series approximated to w/i 0.1%
 double sas_Si(double x);
 
@@ -415,9 +413,7 @@ double sas_Si(double x)
     }
 }
 
-
 #line 1 ".././models/lib/polevl.c"
-
 /*							polevl.c
  *							p1evl.c
  *
@@ -504,9 +500,7 @@ double p1evl( double x, pconstant double *coef, int N )
     return ans;
 }
 
-
 #line 1 ".././models/lib/sas_J1.c"
-
 /*							j1.c
  *
  *	Bessel function of order one
@@ -762,9 +756,7 @@ double sas_2J1x_x(double x)
     return (x != 0.0 ) ? 2.0*sas_J1(x)/x : 1.0;
 }
 
-
 #line 1 ".././models/lib/gauss76.c"
-
 // Created by Andrew Jackson on 4/23/07
 
  #ifdef GAUSS_N
@@ -937,9 +929,7 @@ constant double Gauss76Z[76] = {
 
 
 #pragma acc declare copyin(Gauss76Wt[0:76], Gauss76Z[0:76])
-
 #line 1 ".././models/core_shell_bicelle_elliptical_belt_rough.c"
-
 // NOTE that "length" here is the full height of the core!
 static double
 form_volume(double r_minor,

@@ -1,6 +1,6 @@
 #define HAS_Iq
 #line 1 "../kernel_header.c"
-
+#define FLOAT_SIZE 8
 #ifdef __OPENCL_VERSION__
 # define USE_OPENCL
 #elif defined(__CUDACC__)
@@ -382,9 +382,7 @@ qabc_apply(
 }
 
 // ##### End of rotation operation definitions ######
-
 #line 1 ".././models/teubner_strey.c"
-
 #include <math.h>
 
 #define PI 3.14159265358979323846

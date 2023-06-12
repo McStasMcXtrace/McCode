@@ -1,6 +1,6 @@
 #define HAS_Iq
 #line 1 "../kernel_header.c"
-
+#define FLOAT_SIZE 8
 #ifdef __OPENCL_VERSION__
 # define USE_OPENCL
 #elif defined(__CUDACC__)
@@ -382,9 +382,7 @@ qabc_apply(
 }
 
 // ##### End of rotation operation definitions ######
-
 #line 1 ".././models/correlation_length.c"
-
 #include <math.h>
 
 double Iq(double q, double lorentz_scale, double porod_scale, double cor_length, double porod_exp, double lorentz_exp);

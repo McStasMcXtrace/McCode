@@ -1,3 +1,65 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: SasView_triaxial_ellipsoid
+*
+* %Identification
+* Written by: Jose Robledo
+* Based on sasmodels from SasView
+* Origin: FZJ / DTU / ESS DMSC
+*
+*
+* SasView triaxial_ellipsoid model component as sample description.
+*
+* %Description
+*
+* SasView_triaxial_ellipsoid component, generated from triaxial_ellipsoid.c in sasmodels.
+*
+* Example: SasView_triaxial_ellipsoid_aniso(sld, sld_solvent, radius_equat_minor, radius_equat_major, radius_polar, theta, phi, Psi, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
+        pd_radius_equat_minor=0.0,
+        pd_radius_equat_major=0.0,
+        pd_radius_polar=0.0,
+        pd_theta=0.0,
+        pd_phi=0.0,
+        pd_Psi=0.0)
+*
+* %Parameters
+* INPUT PARAMETERS:
+* sld: [1e-6/Ang^2] ([-inf, inf]) Ellipsoid scattering length density.
+* sld_solvent: [1e-6/Ang^2] ([-inf, inf]) Solvent scattering length density.
+* radius_equat_minor: [Ang] ([0, inf]) Minor equatorial radius, Ra.
+* radius_equat_major: [Ang] ([0, inf]) Major equatorial radius, Rb.
+* radius_polar: [Ang] ([0, inf]) Polar radius, Rc.
+* Optional parameters:
+* model_abs: [ ] Absorption cross section density at 2200 m/s.
+* model_scale: [ ] Global scale factor for scattering kernel. For systems without inter-particle interference, the form factors can be related to the scattering intensity by the particle volume fraction.
+* xwidth: [m] ([-inf, inf]) Horiz. dimension of sample, as a width.
+* yheight: [m] ([-inf, inf]) vert . dimension of sample, as a height for cylinder/box
+* zdepth: [m] ([-inf, inf]) depth of sample
+* R: [m] Outer radius of sample in (x,z) plane for cylinder/sphere.
+* target_x: [m] relative focus target position.
+* target_y: [m] relative focus target position.
+* target_z: [m] relative focus target position.
+* target_index: [ ] Relative index of component to focus at, e.g. next is +1.
+* focus_xw: [m] horiz. dimension of a rectangular area.
+* focus_yh: [m], vert. dimension of a rectangular area.
+* focus_aw: [deg], horiz. angular dimension of a rectangular area.
+* focus_ah: [deg], vert. angular dimension of a rectangular area.
+* focus_r: [m] case of circular focusing, focusing radius.
+* pd_radius_equat_minor: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
+* pd_radius_equat_major: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
+* pd_radius_polar: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
+* pd_theta: [] (0,360) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
+* pd_phi: [] (0,360) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
+* pd_Psi: [] (0,360) defined as (dx/x), where x is de mean value and dx the standard devition of the variable
+*
+* %Link
+* %End
+*******************************************************************************/
 DEFINE COMPONENT SasView_triaxial_ellipsoid_aniso
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (
@@ -13,7 +75,7 @@ SETTING PARAMETERS (
         model_abs=0.0,
         xwidth=0.01,
         yheight=0.01,
-        zdepth=0.005,  
+        zdepth=0.005,
         R=0,
         target_x=0,
         target_y=0,
@@ -23,13 +85,19 @@ SETTING PARAMETERS (
         focus_yh=0.5,
         focus_aw=0,
         focus_ah=0,
-        focus_r=0)
+        focus_r=0,
+        pd_radius_equat_minor=0.0,
+        pd_radius_equat_major=0.0,
+        pd_radius_polar=0.0,
+        pd_theta=0.0,
+        pd_phi=0.0,
+        pd_Psi=0.0)
 
 
 SHARE %{
     %include "sas_triaxial_ellipsoid.c"
 %}
-DECLARE
+    DECLARE
 %{
   double shape;
   double my_a_v;
@@ -65,7 +133,7 @@ if (xwidth && yheight && zdepth)
   }
 
   my_a_v = model_abs*2200*100; /* Is not yet divided by v. 100: Convert barns -> fm^2 */
-  
+
 %}
 
 
@@ -121,6 +189,29 @@ TRACE
     qy = V2K*(vy_i-vy);
     qz = V2K*(vz_i-vz);
     q = sqrt(qx*qx+qy*qy+qz*qz);
+    
+    double trace_radius_equat_minor=radius_equat_minor;
+    double trace_radius_equat_major=radius_equat_major;
+    double trace_radius_polar=radius_polar;
+    if ( pd_radius_equat_minor!=0.0 || pd_radius_equat_major!=0.0 || pd_radius_polar!=0.0 ){
+    trace_radius_equat_minor = (randnorm()*pd_radius_equat_minor+1.0)*radius_equat_minor;
+    trace_radius_equat_major = (randnorm()*pd_radius_equat_major+1.0)*radius_equat_major;
+    trace_radius_polar = (randnorm()*pd_radius_polar+1.0)*radius_polar;
+    }
+
+        
+    double trace_theta=theta, dtheta=0.0;
+    double trace_phi=phi, dphi=0.0;
+    double trace_Psi=Psi, dPsi=0.0;
+    if ( pd_theta!=0.0 || pd_phi!=0.0 || pd_Psi!=0.0 ){
+    trace_theta = ((rand01()-0.5)*pd_theta + 1.0)*theta;
+    dtheta = trace_theta-theta;
+    trace_phi = ((rand01()-0.5)*pd_phi + 1.0)*phi;
+    dphi = trace_phi-phi;
+    trace_Psi = ((rand01()-0.5)*pd_Psi + 1.0)*Psi;
+    dPsi = trace_Psi-Psi;
+    }
+
 
     // Sample dependent. Retrieved from SasView./////////////////////
     float Iq_out;
@@ -128,17 +219,14 @@ TRACE
 
     double qa=0.0, qb=0.0, qc=0.0;
     QABCRotation rotation;
-    
-    theta *= M_PI_180;
-    phi *= M_PI_180;
-    Psi *= M_PI_180;
-    qabc_rotation(&rotation, theta, phi, Psi, 0, 0, 0);
-    qabc_apply(&rotation, qx, qy, &qa, &qb, &qc);
-    Iq_out = Iqabc(qa, qb, qc, sld=sld, sld_solvent=sld_solvent, radius_equat_minor=radius_equat_minor, radius_equat_major=radius_equat_major, radius_polar=radius_polar  );
 
-        
+    qabc_rotation(&rotation, trace_theta, trace_phi, trace_Psi, dtheta, dphi, dPsi);
+    qabc_apply(&rotation, qx, qy, &qa, &qb, &qc);
+    Iq_out = Iqabc(qa, qb, qc, sld, sld_solvent, trace_radius_equat_minor, trace_radius_equat_major, trace_radius_polar  );
+
+
     float vol;
-    vol = form_volume(radius_equat_minor=radius_equat_minor, radius_equat_major=radius_equat_major, radius_polar=radius_polar);
+    vol = form_volume(trace_radius_equat_minor, trace_radius_equat_major, trace_radius_polar);
 
     // Scale by 1.0E2 [SasView: 1/cm  ->   McStas: 1/m]
     Iq_out = model_scale*Iq_out / vol * 1.0E2;

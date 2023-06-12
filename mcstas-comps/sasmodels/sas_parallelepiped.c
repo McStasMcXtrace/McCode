@@ -2,7 +2,7 @@
 #define HAS_FQ
 #define FORM_VOL
 #line 1 "../kernel_header.c"
-
+#define FLOAT_SIZE 8
 #ifdef __OPENCL_VERSION__
 # define USE_OPENCL
 #elif defined(__CUDACC__)
@@ -384,9 +384,7 @@ qabc_apply(
 }
 
 // ##### End of rotation operation definitions ######
-
 #line 1 ".././models/lib/gauss76.c"
-
 // Created by Andrew Jackson on 4/23/07
 
  #ifdef GAUSS_N
@@ -559,9 +557,7 @@ constant double Gauss76Z[76] = {
 
 
 #pragma acc declare copyin(Gauss76Wt[0:76], Gauss76Z[0:76])
-
 #line 1 ".././models/parallelepiped.c"
-
 static double
 form_volume(double length_a, double length_b, double length_c)
 {

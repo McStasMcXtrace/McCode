@@ -1,7 +1,7 @@
 #define HAS_Iq
 #define FORM_VOL
 #line 1 "../kernel_header.c"
-
+#define FLOAT_SIZE 8
 #ifdef __OPENCL_VERSION__
 # define USE_OPENCL
 #elif defined(__CUDACC__)
@@ -383,9 +383,7 @@ qabc_apply(
 }
 
 // ##### End of rotation operation definitions ######
-
 #line 1 ".././models/star_polymer.c"
-
 double form_volume(void);
 
 double Iq(double q, double radius2, double arms);

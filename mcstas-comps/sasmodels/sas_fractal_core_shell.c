@@ -1,7 +1,7 @@
 #define HAS_Iq
 #define FORM_VOL
 #line 1 "../kernel_header.c"
-
+#define FLOAT_SIZE 8
 #ifdef __OPENCL_VERSION__
 # define USE_OPENCL
 #elif defined(__CUDACC__)
@@ -383,9 +383,7 @@ qabc_apply(
 }
 
 // ##### End of rotation operation definitions ######
-
 #line 1 ".././models/lib/sas_3j1x_x.c"
-
 /**
 * Spherical Bessel function 3*j1(x)/x
 *
@@ -444,9 +442,7 @@ double sas_3j1x_x(double q)
     }
 }
 
-
 #line 1 ".././models/lib/sas_gamma.c"
-
 /*
 The wrapper for gamma function from OpenCL and standard libraries
 The OpenCL gamma function fails miserably on values lower than 1.0
@@ -602,9 +598,7 @@ inline double sas_gamma(double x)
     return (x<0. ? M_PI/tgamma(1.-x)/sin(M_PI*x) : tgamma(x+1)/x);
 }
 
-
 #line 1 ".././models/lib/core_shell.c"
-
 /*******************************************************************
 
 core_shell_kernel
@@ -651,9 +645,7 @@ double core_shell_kernel(double q,
     return 1.0e-4 * fq*fq;
 }
 
-
 #line 1 ".././models/lib/fractal_sq.c"
-
 #pragma acc routine seq
 static double
 fractal_sq(double q, double radius, double fractal_dim, double cor_length)
@@ -684,9 +676,7 @@ fractal_sq(double q, double radius, double fractal_dim, double cor_length)
     return 1.0 + term;
 }
 
-
 #line 1 ".././models/fractal_core_shell.c"
-
 static double
 form_volume(double radius, double thickness)
 {
