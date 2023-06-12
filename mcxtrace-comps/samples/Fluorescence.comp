@@ -262,6 +262,19 @@ DECLARE %{
   double p_fluo;
   double p_Compton;
   double p_Rayleigh;
+  
+  // cached values for SPLIT
+  int    reuse_nb;
+  int    reuse_intersect;
+  double reuse_ki;
+  double reuse_l0;
+  double reuse_l1;
+  double reuse_l2;
+  double reuse_l3;
+  double reuse_sigma_barn;
+  DArray1d reuse_cum_xs_fluo;
+  DArray1d reuse_cum_xs_Compton;
+  DArray1d reuse_cum_xs_Rayleigh;
 %}
 
 INITIALIZE %{
@@ -365,11 +378,19 @@ INITIALIZE %{
   
   n_fluo = n_Compton = n_Rayleigh = 0;
   p_fluo = p_Compton = p_Rayleigh = 0;
+  
+  // cached variables set to 0 (for SPLIT)
+  reuse_nb=0;
+  reuse_ki=reuse_l0=reuse_l3=0;
+  reuse_cum_xs_fluo              = create_darr1d(compound->nElements+1);
+  reuse_cum_xs_Compton           = create_darr1d(compound->nElements+1);
+  reuse_cum_xs_Rayleigh          = create_darr1d(compound->nElements+1);
 %}
 
 TRACE %{
 
-int    intersect=0;     /* flag to continue/stop */
+int    intersect=0;       /* flag to continue/stop */
+int    reuse=0;
 double l0,  l1,  l2,  l3; /* times for intersections */
 double dl0, dl1, dl2, dl; /* time intervals */
 int    flag_concentric = 0;
@@ -397,6 +418,19 @@ ki   = sqrt(kx*kx+ky*ky+kz*kz); //  Angs-1
 kf   = ki;
 Ei   = K2E*ki; // keV
 
+// test for a SPLIT event (same particle comes in)
+if (fabs(reuse_ki - ki) < 1e-15) {
+  reuse     = 1;
+  reuse_nb++;
+  // use cached values and skip actual computation
+  intersect = reuse_intersect;
+  l0        = reuse_l0;
+  l1        = reuse_l1;
+  l2        = reuse_l2;
+  l3        = reuse_l3;
+} else {
+  // we have a different event: compute intersection lengths
+  
 /* ========================================================================== */
 /*                                   GEOMETRY                                 */
 /* ========================================================================== */
@@ -456,6 +490,17 @@ if (intersect && p_interact >= 0) {
   if (!flag_ishollow) l1 = l2 = l3; /* no empty space inside */
 } /* if intersect */
 
+
+// store values for potential next SPLIT
+reuse           = 0;
+reuse_intersect = intersect;
+reuse_l0        = l0;
+reuse_l1        = l1;
+reuse_l2        = l2;
+reuse_l3        = l3;
+reuse_ki        = ki;
+} // if !reuse (SPLIT)
+
 if (intersect) { /* the photon hits the sample */
 
   if (l0 > 0) {  /* we are before the sample */
@@ -505,21 +550,43 @@ if (intersect) {
   
   /* compute total scattering cross section for incoming photon energy Ei */
   /* compute each contribution XS */
-  xs[FLUORESCENCE]=xs[COMPTON]=xs[RAYLEIGH]=xs[3]=sigma_barn=0;
+  xs[FLUORESCENCE]=xs[COMPTON]=xs[RAYLEIGH]=xs[TRANSMISSION]=sigma_barn=0;
   cum_xs_fluo[0] = cum_xs_Compton[0] = cum_xs_Rayleigh[0] = 0;
-  for (i_Z=0; i_Z< compound->nElements; i_Z++) {
-    int    Z   = compound->Elements[i_Z];
-    double frac= compound->massFractions[i_Z];
-    double xs_Z[3];
+  if (!reuse) {
+    for (i_Z=0; i_Z< compound->nElements; i_Z++) {
+      int    Z   = compound->Elements[i_Z];
+      double frac= compound->massFractions[i_Z];
+      double xs_Z[3];
 
-    // get Fluorescence xs
-    XRMC_CrossSections(Z, Ei, xs_Z); // [barn/atom]
-    sigma_barn            += frac*CSb_Total(Z, Ei, NULL); // Photo+Compton+Rayleigh
-    cum_xs_fluo[i_Z+1]     = cum_xs_fluo[i_Z]    +frac*xs_Z[FLUORESCENCE];
-    cum_xs_Compton[i_Z+1]  = cum_xs_Compton[i_Z] +frac*xs_Z[COMPTON];
-    cum_xs_Rayleigh[i_Z+1] = cum_xs_Rayleigh[i_Z]+frac*xs_Z[RAYLEIGH];
-    for (i=0; i<3; i++) { xs[i] += frac*xs_Z[i]; }
-  } // for Z in compound
+      // get Fluorescence xs
+      XRMC_CrossSections(Z, Ei, xs_Z); // [barn/atom]
+      sigma_barn            += frac*CSb_Total(Z, Ei, NULL); // Photo+Compton+Rayleigh
+      cum_xs_fluo[i_Z+1]     = cum_xs_fluo[i_Z]    +frac*xs_Z[FLUORESCENCE];
+      cum_xs_Compton[i_Z+1]  = cum_xs_Compton[i_Z] +frac*xs_Z[COMPTON];
+      cum_xs_Rayleigh[i_Z+1] = cum_xs_Rayleigh[i_Z]+frac*xs_Z[RAYLEIGH];
+      for (i=0; i<3; i++) { xs[i] += frac*xs_Z[i]; }
+    } // for Z in compound
+    
+    // store values into cache for SPLIT
+    for (i_Z=0; i_Z< compound->nElements; i_Z++) {
+      reuse_cum_xs_fluo[i_Z+1]     = cum_xs_fluo[i_Z+1];
+      reuse_cum_xs_Compton[i_Z+1]  = cum_xs_Compton[i_Z+1];
+      reuse_cum_xs_Rayleigh[i_Z+1] = cum_xs_Rayleigh[i_Z+1];
+    }
+    reuse_sigma_barn = sigma_barn;
+  } else {
+    // reuse cached values (SPLIT)
+    for (i_Z=0; i_Z< compound->nElements; i_Z++) {
+      cum_xs_fluo[i_Z+1]     = reuse_cum_xs_fluo[i_Z+1];
+      cum_xs_Compton[i_Z+1]  = reuse_cum_xs_Compton[i_Z+1];
+      cum_xs_Rayleigh[i_Z+1] = reuse_cum_xs_Rayleigh[i_Z+1];
+      xs[FLUORESCENCE]      += reuse_cum_xs_fluo[i_Z+1];
+      xs[COMPTON]           += reuse_cum_xs_Compton[i_Z+1];
+      xs[RAYLEIGH]          += reuse_cum_xs_Rayleigh[i_Z+1];
+    }
+    
+    sigma_barn = reuse_sigma_barn;
+  }
   
   /* probability to absorb/scatter */
   my_s   = rho*100*sigma_barn; /* mu, 100: convert from barns to fm^2. my_s in [1/m] */
