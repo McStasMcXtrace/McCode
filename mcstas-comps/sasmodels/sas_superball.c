@@ -2,7 +2,7 @@
 #define HAS_FQ
 #define FORM_VOL
 #line 1 "../kernel_header.c"
-
+#define FLOAT_SIZE 8
 #ifdef __OPENCL_VERSION__
 # define USE_OPENCL
 #elif defined(__CUDACC__)
@@ -384,9 +384,7 @@ qabc_apply(
 }
 
 // ##### End of rotation operation definitions ######
-
 #line 1 ".././models/lib/gauss20.c"
-
 // Created by Andrew Jackson on 4/23/07
 
  #ifdef GAUSS_N
@@ -446,9 +444,7 @@ constant double Gauss20Z[20]={
 };
 
 #pragma acc declare copyin( Gauss20Wt[0:20], Gauss20Z[0:20] )
-
 #line 1 ".././models/lib/sas_gamma.c"
-
 /*
 The wrapper for gamma function from OpenCL and standard libraries
 The OpenCL gamma function fails miserably on values lower than 1.0
@@ -604,9 +600,7 @@ inline double sas_gamma(double x)
     return (x<0. ? M_PI/tgamma(1.-x)/sin(M_PI*x) : tgamma(x+1)/x);
 }
 
-
 #line 1 ".././models/superball.c"
-
 static double
 form_volume(double length_a, double exponent_p)
 {

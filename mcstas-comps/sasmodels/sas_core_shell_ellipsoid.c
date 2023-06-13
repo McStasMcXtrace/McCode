@@ -2,7 +2,7 @@
 #define HAS_FQ
 #define FORM_VOL
 #line 1 "../kernel_header.c"
-
+#define FLOAT_SIZE 8
 #ifdef __OPENCL_VERSION__
 # define USE_OPENCL
 #elif defined(__CUDACC__)
@@ -384,9 +384,7 @@ qabc_apply(
 }
 
 // ##### End of rotation operation definitions ######
-
 #line 1 ".././models/lib/sas_3j1x_x.c"
-
 /**
 * Spherical Bessel function 3*j1(x)/x
 *
@@ -445,9 +443,7 @@ double sas_3j1x_x(double q)
     }
 }
 
-
 #line 1 ".././models/lib/gauss76.c"
-
 // Created by Andrew Jackson on 4/23/07
 
  #ifdef GAUSS_N
@@ -620,9 +616,7 @@ constant double Gauss76Z[76] = {
 
 
 #pragma acc declare copyin(Gauss76Wt[0:76], Gauss76Z[0:76])
-
 #line 1 ".././models/core_shell_ellipsoid.c"
-
 
 // Converted from Igor function gfn4, using the same pattern as ellipsoid
 // for evaluating the parts of the integral.
