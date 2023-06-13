@@ -282,6 +282,7 @@ SHARE
     double q_count=0, j_count=0, F2_count=0;
     char **parsing;
     int    list_count=0;
+    double sum_F2=0;
 
     if (!SC_file || !strlen(SC_file) || !strcmp(SC_file, "NULL")) {
       MPI_MASTER(
@@ -416,6 +417,7 @@ SHARE
       list[list_count].DWfactor = DWfactor;
       list[list_count].w = w;
       list[list_count].F2= F2;
+      sum_F2 += F2;
 
       /* adjust multiplicity if j-column + multiple d-spacing lines */
       /* if  d = previous d, increase line duplication index */
@@ -454,6 +456,13 @@ SHARE
     } /* end for */
 
     Table_Free(&sTable);
+    
+    if (!sum_F2) {
+      MPI_MASTER(
+      exit(fprintf(stderr, "PowderN: %s: ERROR: all %i structure factors in file '%s' are null. Check the reflection list.\n",
+        info->compname, list_count, SC_file));
+      );
+    }
 
     /* sort the list with increasing q */
     qsort(list, list_count, sizeof(struct line_data),  PN_list_compare);

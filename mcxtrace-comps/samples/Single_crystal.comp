@@ -365,13 +365,14 @@ SHARE
       double SC_mosaic, double SC_mosaic_a, double SC_mosaic_b, double SC_mosaic_c, double *SC_mosaic_AB)
   {
     struct hkl_data *list = NULL;
-    int size = 0;
+    int    size = 0;
     t_Table sTable; /* sample data table structure from SC_file */
-    int i=0;
+    int    i=0;
     double tmp_x, tmp_y, tmp_z;
     char **parsing;
-    char flag=0;
+    char   flag=0;
     double nb_atoms=1;
+    double sum_F2=0;
 
     if (!SC_file || !strlen(SC_file) || !strcmp(SC_file,"NULL") || !strcmp(SC_file,"0"))
       return(0);
@@ -602,6 +603,7 @@ SHARE
       list[i].k = k;
       list[i].l = l;
       list[i].F2 = F2;
+      sum_F2    += F2;
 
       /* Precompute some values */
       list[i].tau_x = h*info->asx + k*info->bsx + l*info->csx;
@@ -772,6 +774,13 @@ SHARE
           list[i].cutoff = 5*sig3;
     } // for i
     Table_Free(&sTable);
+    
+    if (!sum_F2) {
+      MPI_MASTER(
+      exit(fprintf(stderr, "Single_crystal: %s: ERROR: all %i structure factors in file '%s' are null. Check the reflection list.\n",
+        __FILE__, i, SC_file));
+      );
+    }
 
     /* sort the list with increasing tau */
     qsort(list, i, sizeof(struct hkl_data),  SX_list_compare);
