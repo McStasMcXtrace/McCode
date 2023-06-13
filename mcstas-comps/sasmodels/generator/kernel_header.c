@@ -1,3 +1,5 @@
+#ifndef SAS_KERNEL_HDR
+#define SAS_KERNEL_HDR
 #define FLOAT_SIZE 8
 #ifdef __OPENCL_VERSION__
 # define USE_OPENCL
@@ -380,3 +382,4 @@ qabc_apply(
 }
 
 // ##### End of rotation operation definitions ######
+#endif
