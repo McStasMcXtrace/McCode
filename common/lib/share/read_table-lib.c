@@ -455,6 +455,7 @@ void *Table_File_List_store(t_Table *tab){
     long  Rows = 0,   Columns = 0;
     long  count_in_array      = 0;
     long  count_in_header     = 0;
+    long  count_invalid       = 0;
     long  block_Current_index = 0;
     char  flag_End_row_loop   = 0;
 
@@ -499,6 +500,12 @@ void *Table_File_List_store(t_Table *tab){
             flag_End_row_loop = 1;
           }
 
+          /* Continue with next line */
+          continue;
+        }
+        if (strstr(line, "***"))
+        {
+          count_invalid++;
           /* Continue with next line */
           continue;
         }
@@ -615,6 +622,13 @@ void *Table_File_List_store(t_Table *tab){
         (!block_number ? " catenated" : ""),
         count_in_array, Rows, Columns);
       Columns = count_in_array; Rows = 1;
+    }
+    if (count_invalid)
+    {
+      fprintf(stderr,"Warning: Read_Table :%s %s Data has %i invalid lines (*****). Ignored.\n",
+      (Table->filename[0] != '\0' ? Table->filename : ""),
+        (!block_number ? " catenated" : ""),
+        count_invalid);
     }
     Data     = (double*)realloc(Data, count_in_array*sizeof(double));
     Table->data         = Data;
