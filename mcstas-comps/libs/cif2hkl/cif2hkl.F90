@@ -83586,7 +83586,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
 !
 !   cif2hkl: convert a CIF or CFL crystal structure file into a PowderN reflection list.
 !
-!   cif2hkl 1.4.2 (Sept 21st 2022) by [emmanuel.farhi@synchrotron-soleil.fr]
+!   cif2hkl 1.4.3 (June 14th 2023) by [emmanuel.farhi@synchrotron-soleil.fr]
 !     Farhi E. using crysFML <https://code.ill.fr/scientific-software/crysfml/>
 !   Copyright (C) 2009-2019 Institut Laue Langevin, EUPL
 !   Copyright (C) 2020-     Synchrotron Soleil,     GPL3.
@@ -84170,7 +84170,7 @@ subroutine CFML_cif2hkl(file_in, file_out, lambda, powxtal, verbose, message, mo
     do i=1,hkl%Nref
       F    = hkl%ref(i)%Fc
       if ((F+1.0) .ne. F) then ! except for NaN's
-        write(unit=lun,fmt="(3(i4,1x),i5,1x,2(f13.5,1x),f25.5)") &
+        write(unit=lun,fmt="(3(i4,1x),i5,1x,f13.5,e20.8)") &
         hkl%ref(i)%h, hkl%ref(i)%mult, &
         0.5/hkl%ref(i)%S, hkl%ref(i)%Fc*hkl%ref(i)%Fc
       end if
@@ -84196,8 +84196,8 @@ subroutine print_version(pgmname,message)
   eol=char(13)//char(10)
   
   AUTHOR ="Farhi E. [emmanuel.farhi@synchrotron-soleil.fr]"//eol//"  using crysFML <https://code.ill.fr/scientific-software/crysfml/>"
-  DATE   ="Sept 21st 2022"
-  VERSION="1.4.2"
+  DATE   ="June 14th 2023"
+  VERSION="1.4.3"
   
   
   message = trim(pgmname)//" "//trim(VERSION)//" ("//trim(DATE)//") by "//trim(AUTHOR)//eol//&
