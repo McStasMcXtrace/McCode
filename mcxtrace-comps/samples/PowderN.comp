@@ -19,6 +19,7 @@
 * Modified by: EF,    17.10.08   (added any shape sample geometry)
 * Modified by: EK,    28.10.10   (for X-ray use)
 * Modified by: EK,               (Added options for incoherent scattering)
+* Modified by: EF, June 2023     (can now read CIF files)
 *
 * General powder sample (N lines, single scattering, incoherent scattering)
 *
@@ -101,6 +102,10 @@
 *   #column_inv2d <index of the 1/2d=sin(theta)/lambda 'inv2d' column>
 *   #column_q     <index of the scattering wavevector 'q' column [Angs-1]>
 *
+* Last, CIF, FullProf and ShelX files can be read, and converted to F2(hkl) lists
+* if 'cif2hkl' is installed. The CIF2HKL env variable can be used to point to a
+* proper executable, else the McCode, then the system installed versions are used.
+*
 * <b>Concentricity</b>
 *
 * PowderN assumes 'concentric' shape, i.e. can contain other components inside its
@@ -122,16 +127,19 @@
 *  using PowderN(...). In both cases, this second instance needs concentric = 0.)
 * The concentric arrangment can not be used with OFF geometry specification.
 *
+* This sample component can advantageously benefit from the SPLIT feature, e.g.
+* SPLIT COMPONENT pow = PowderN(...)
+*
 * %Parameters
 * INPUT PARAMETERS
 * radius: [m]          Outer radius of sample in (x,z) plane
 * xwidth: [m]          Horiz. dimension of sample, as a width
 * yheight: [m]         Height of sample y direction
 * zdepth: [m]          Depth of box sample
-* thickness: []        Thickness of hollow sample.
-*                Negative value extends the hollow volume outside of the box/cylinder. [m]
-* reflections: []      Input file for reflections.
-*                Use only incoherent scattering if NULL or "" [string]
+* thickness: [m]        Thickness of hollow sample.
+*                Negative value extends the hollow volume outside of the box/cylinder.
+* reflections: [str]      Input file for reflections (HKL CIF, FullProf, ShelX).
+*                Use only incoherent scattering if NULL or ""
 *
 * Optional parameters:
 * d_phi: [deg]      Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
@@ -149,9 +157,10 @@
 * barns:   [1]      Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2, (barns=1 for laz, barns=0 for lau type files).
 * Vc:      [AA^3]   Volume of unit cell=nb atoms per cell/density of atoms.
 * DW:      [1]      Global Debye-Waller factor when the 'DW' column is not available. Use 1 if included in F2.
-* weight:  [g/mol]  Atomic/molecular weight of material [g/mol]
+* weight:  [g/mol]  Atomic/molecular weight of material
 * density: [g/cm^3] Density of material. rho=density/weight/1e24*N_A.
 * nb_atoms:[1]      Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell.
+* material: [Be.txt] File where the material parameters for the absorption may be found. Format is similar to what may be found off the NIST website. 
 *
 * OUTPUT PARAMETERS:
 * line_info: [struct]     Internal structure containing many members/info
@@ -162,11 +171,6 @@
 * See also: Single_crystal
 * %Link
 * See <a href="http://icsd.ill.fr">ICSD</a> Inorganic Crystal Structure Database
-* %Link
-* <a href="http://www.ncnr.nist.gov/resources/n-lengths/">Cross sections for single elements</a>
-* %Link
-* <a href="http://www.ncnr.nist.gov/resources/sldcalc.html>Cross sections for compounds</a>
-* %Link
 * <a href="http://www.webelements.com/">Web Elements</a>
 * %Link
 * <a href="http://www.ill.eu/sites/fullprof/index.html">Fullprof</a> powder refinement
@@ -180,6 +184,10 @@
 * <a href="http://qhull.org">qhull</a>
 * %Link
 * <a href="http://www.cs.ucdavis.edu/~amenta/powercrust.html">powercrust</a>
+* %Link
+* cif2hkl https://gitlab.com/soleil-data-treatment/soleil-software-projects/cif2hkl
+* %Link
+* material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
 *
 * %End
 *****************************************************************************/
@@ -202,7 +210,7 @@ SHARE
 /* Declare structures and functions only once in each instrument. */
 #ifndef POWDERN_DECL
 #define POWDERN_DECL
-
+  // single reflection data
   struct line_data
     {
       double F2;                  /* Value of structure factor */
@@ -211,7 +219,7 @@ SHARE
       double DWfactor;            /* Debye-Waller factor */
       double w;                   /* Intrinsic line width */
     };
-
+  // absorption data
   struct abs_data
   {
     double E;       /*energy (in keV)*/
@@ -220,6 +228,7 @@ SHARE
     double mu;      /*absoprtion coefficient for the energy E*/
     double cohinc;  /*coherent +incoherent scattering coefficient*/
   };
+  // component data
   struct line_info_struct
   {
       struct line_data *list;     /* Reflection array */
@@ -256,11 +265,17 @@ SHARE
       long   xs_compute, xs_reuse, xs_calls;
       t_Table mat_table;
       int mat_column_order[5]; /*column signification for the coeff. in material data file*/
+      char  *filename;
   };
 
   off_struct offdata;
-  // PN_list_compare *****************************************************************
-
+  
+  // shared functions **********************************************************
+  
+  // sign = PN_list_compare(a,b) 
+  //   used for qsort, to sort reflections
+  // input:  a,b: two 'line_data' reflection pointers.
+  // output: -1,0,1 for a<b, a=b, a>b
   int PN_list_compare (void const *a, void const *b)
   {
      struct line_data const *pa = a;
@@ -270,7 +285,77 @@ SHARE
      if (!s) return 0;
      else    return (s < 0 ? -1 : 1);
   } /* PN_list_compare */
+  
+#ifndef CIF2HKL
+#define CIF2HKL
+  // hkl_filename = cif2hkl(file, options)
+  //   used to convert CIF/CFL/INS file into F2(hkl)
+  //   the CIF2HKL env var can point to a cif2hkl executable
+  //   else the McCode binary is attempted, then the system.
+  char *cif2hkl(const char *infile, const char *options) {
+    char cmd[1024];
+    int  ret = 0;
+    int  found = 0;
+    char *OUTFILE;
+    
+    // get filename extension
+    const char *ext = strrchr(infile, '.');
+    if(!ext || ext == infile) return infile;
+    else ext++;
+    
+    // return input when no extension or not a CIF/FullProf/ShelX file
+    if ( strcasecmp(ext, "cif") 
+      && strcasecmp(ext, "pcr")
+      && strcasecmp(ext, "cfl")
+      && strcasecmp(ext, "shx")
+      && strcasecmp(ext, "ins")
+      && strcasecmp(ext, "res")) return infile;
+      
+    OUTFILE = malloc(1024);
+    if (!OUTFILE) return infile;
+    
+    strncpy(OUTFILE, tmpnam(NULL), 1024); // create an output temporary file name
+    
+    // try in order the CIF2HKL env var, then the system cif2hkl, then the McCode one
+    if (!found && getenv("CIF2HKL")) {
+      snprintf(cmd,  1024, "%s -o %s %s %s",
+        getenv("CIF2HKL"),
+        OUTFILE, options, infile);
+      ret = system(cmd);
+      if (ret != -1 && ret != 127) found = 1;
+    }
+    if (!found) {
+      snprintf(cmd,  1024, "%s%c%s%c%s -o %s %s %s",
+        getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS,
+        MC_PATHSEP_C, "bin", MC_PATHSEP_C, "cif2hkl",
+        OUTFILE, options, infile);
+      ret = system(cmd);
+      if (ret != -1 && ret != 127) found = 1;
+    }
+    // ret = -1:  child process could not be created
+    // ret = 127: shell could not be executed in the child process
+    if (!found) {
+      // try with any cif2hkl command from the system
+      snprintf(cmd,  1024, "%s -o %s %s %s",
+        "cif2hkl", OUTFILE, options, infile);
+      ret = system(cmd);
+    }
+      
+    if (ret == -1 || ret == 127) return(NULL);
+      
+    // test if the result file has been created
+    FILE *file = fopen(OUTFILE,"r");
+    if (!file) return(NULL);     
+    printf("%s: INFO: converting %s into F2(HKL) list %s\n", 
+      __FILE__, infile, OUTFILE);
+      printf ("%s\n",cmd);
+    fflush(NULL);
+    return(OUTFILE);
+  } // cif2hkl
+#endif
 
+  // count = read_line_data(filename, &info)
+  //   read the given file to store F2(HKL) reflections and metadata.
   int read_line_data(char *SC_file, struct line_info_struct *info)
   {
     struct line_data *list = NULL;
@@ -292,9 +377,10 @@ SHARE
       info->count = 0;
       return(0);
     }
-    long retval = Table_Read(&sTable, SC_file, 1); /* read 1st block data from SC_file into sTable*/
+    info->filename = cif2hkl(SC_file, "--mode XRA");
+    long retval = Table_Read(&sTable, info->filename, 1); /* read 1st block data from SC_file into sTable*/
     if (retval<0) {
-      fprintf(stderr,"PowderN: Could not open file %s - exiting!\n",SC_file);
+      fprintf(stderr,"PowderN: Could not open file %s - exiting!\n", info->filename);
       exit(-1);
     }
 
@@ -459,9 +545,10 @@ SHARE
     
     if (!sum_F2) {
       MPI_MASTER(
-      exit(fprintf(stderr, "PowderN: %s: ERROR: all %i structure factors in file '%s' are null. Check the reflection list.\n",
-        info->compname, list_count, SC_file));
+      fprintf(stderr, "PowderN: %s: ERROR: all %i structure factors in file '%s' are null. Check the reflection list.\n",
+        info->compname, list_count, SC_file);
       );
+      return(0);
     }
 
     /* sort the list with increasing q */
@@ -479,7 +566,7 @@ SHARE
   } /* read_line_data */
 
 
-/* computes the number of possible reflections (return value), and the total xsection 'sum' */
+/* calc_xsect: computes the number of possible reflections (return value), and the total xsection 'sum' */
 /* this routine looks for a pre-computed value in the Nq and sum cache tables               */
 /* when found, the earch starts from the corresponding lower element in the table           */
 #pragma acc routine
@@ -1190,6 +1277,9 @@ FINALLY
   free(line_info.q);
   free(line_info.w);
   free(line_info.my_s_k2);
+  if (line_info.filename != reflections)
+    unlink(line_info.filename);
+
   MPI_MASTER(
   if (line_info.flag_warning)
     printf("PowderN: %s: Error messages were repeated %i times with absorbed xrays.\n",

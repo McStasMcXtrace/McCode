@@ -20,6 +20,7 @@
 * Modified by: PW, June 2017: Doc updates
 * Modified by: PW, Feb 2018: GPU edits
 * Modified by: EF, May 2023: (re)port from n to X
+* Modified by: EF, June 2023: can now read CIF files
 *
 * Mosaic single crystal with multiple scattering vectors, optimised for speed
 * with large crystals and many reflections.
@@ -122,6 +123,10 @@
 *    #lattice_bb <value of the beta  lattice angle [deg]>
 *    #lattice_cc <value of the gamma lattice angle [deg]>
 *
+* Last, CIF, FullProf and ShelX files can be read, and converted to F2(hkl) lists
+* if 'cif2hkl' is installed. The CIF2HKL env variable can be used to point to a
+* proper executable, else the McCode, then the system installed versions are used.
+*
 * Example: Single_crystal(xwidth=0.01, yheight=0.01, zdepth=0.01, mosaic = 5, 
 *   reflections="Si.lau")
 *
@@ -137,6 +142,9 @@
 *     mosaic = 5, reflections="adrenaline.lau")
 *
 * Also, always use a non-zero value of delta_d_d.
+*
+* This sample component can advantageously benefit from the SPLIT feature, e.g.
+* SPLIT COMPONENT sx = Single_crystal(...)
 *
 * %Parameters
 * INPUT PARAMETERS
@@ -177,7 +185,7 @@
 * RY: [m]                Radius of vertical   along Y lattice curvature. flat for 0
 * powder: [1]            Flag to indicate powder mode, for simulation of Debye-Scherrer cones via random crystallite orientation. A powder texture can be approximated with powder within 0-1
 * deltak: [AA-1]         Equality-threshold for use in SPLIT settings. If difference between all ki_{x,y,z} are less than deltak from previous particle, the two are considered alike enough to jump directly to the MC choice between 'active' reflections 
-* material_datafile:     File where the material parameters for the filter may be found. Format is similar to what may be found off the NIST website. [Be.txt]
+* material_datafile: [Be.txt] File where the material parameters for the absorption may be found. Format is similar to what may be found off the NIST website. 
 *
 * OUTPUT PARAMETERS:
 *
@@ -205,6 +213,8 @@
 * <a href="http://www.cs.ucdavis.edu/~amenta/powercrust.html">powercrust</a>
 * %Link
 * material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
+* %Link
+* cif2hkl https://gitlab.com/soleil-data-treatment/soleil-software-projects/cif2hkl
 *
 * %End
 ****************************************************************************/
@@ -346,9 +356,14 @@ SHARE
       double kix, kiy, kiz;       /* last incoming photon ki */
       int    nb_reuses, nb_refl, nb_refl_count;
       int    max_tau_count;
+      char  *filename;
     };
     
 #pragma acc routine
+  // sign = SX_list_compare(a,b) 
+  //   used for qsort, to sort reflections
+  // input:  a,b: two 'line_data' reflection pointers.
+  // output: -1,0,1 for a<b, a=b, a>b
   int SX_list_compare (void const *a, void const *b)
   {
      struct hkl_data const *pa = a;
@@ -358,8 +373,79 @@ SHARE
      if (!s) return 0;
      else    return (s < 0 ? -1 : 1);
   } /* SX_list_compare */
+  
+#ifndef CIF2HKL
+#define CIF2HKL
+  // hkl_filename = cif2hkl(file, options)
+  //   used to convert CIF/CFL/INS file into F2(hkl)
+  //   the CIF2HKL env var can point to a cif2hkl executable
+  //   else the McCode binary is attempted, then the system.
+  char *cif2hkl(const char *infile, const char *options) {
+    char cmd[1024];
+    int  ret = 0;
+    int  found = 0;
+    char *OUTFILE;
+    
+    // get filename extension
+    const char *ext = strrchr(infile, '.');
+    if(!ext || ext == infile) return infile;
+    else ext++;
+    
+    // return input when no extension or not a CIF/FullProf/ShelX file
+    if ( strcasecmp(ext, "cif") 
+      && strcasecmp(ext, "pcr")
+      && strcasecmp(ext, "cfl")
+      && strcasecmp(ext, "shx")
+      && strcasecmp(ext, "ins")
+      && strcasecmp(ext, "res")) return infile;
+      
+    OUTFILE = malloc(1024);
+    if (!OUTFILE) return infile;
+    
+    strncpy(OUTFILE, tmpnam(NULL), 1024); // create an output temporary file name
+    
+    // try in order the CIF2HKL env var, then the system cif2hkl, then the McCode one
+    if (!found && getenv("CIF2HKL")) {
+      snprintf(cmd,  1024, "%s -o %s %s %s",
+        getenv("CIF2HKL"),
+        OUTFILE, options, infile);
+      ret = system(cmd);
+      if (ret != -1 && ret != 127) found = 1;
+    }
+    if (!found) {
+      snprintf(cmd,  1024, "%s%c%s%c%s -o %s %s %s",
+        getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS,
+        MC_PATHSEP_C, "bin", MC_PATHSEP_C, "cif2hkl",
+        OUTFILE, options, infile);
+      ret = system(cmd);
+      if (ret != -1 && ret != 127) found = 1;
+    }
+    // ret = -1:  child process could not be created
+    // ret = 127: shell could not be executed in the child process
+    if (!found) {
+      // try with any cif2hkl command from the system
+      snprintf(cmd,  1024, "%s -o %s %s %s",
+        "cif2hkl", OUTFILE, options, infile);
+      ret = system(cmd);
+    }
+      
+    if (ret == -1 || ret == 127) return(NULL);
+      
+    // test if the result file has been created
+    FILE *file = fopen(OUTFILE,"r");
+    if (!file) return(NULL);     
+    printf("%s: INFO: converting %s into F2(HKL) list %s\n", 
+      __FILE__, infile, OUTFILE);
+      printf ("%s\n",cmd);
+    fflush(NULL);
+    return(OUTFILE);
+  } // cif2hkl
+#endif
 
   /* ------------------------------------------------------------------------ */
+  
+  // count = read_hkl_data(filename, &info)
+  //   read the given file to store F2(HKL) reflections and metadata.
   int
   read_hkl_data(char *SC_file, struct hkl_info_struct *info, struct hkl_data **hkl_list,
       double SC_mosaic, double SC_mosaic_a, double SC_mosaic_b, double SC_mosaic_c, double *SC_mosaic_AB)
@@ -376,8 +462,10 @@ SHARE
 
     if (!SC_file || !strlen(SC_file) || !strcmp(SC_file,"NULL") || !strcmp(SC_file,"0"))
       return(0);
+      
+    info->filename = cif2hkl(SC_file, "--xtal --mode XRA");
     
-    if (Table_Read(&sTable, SC_file, 1) < 0) return(0);
+    if (Table_Read(&sTable, info->filename, 1) < 0) return(0);
     
     if (sTable.columns < 4) {
       fprintf(stderr, "Single_crystal: %s: Error: The number of columns in %s should be at least %d for [h,k,l,F2]\n", __FILE__, SC_file, 4);
