@@ -1655,6 +1655,9 @@ FINALLY
     }
   }
   );
+  // remove temporary F2(hkl) file when giving CFL/CIF/ShelX file
+  if (hkl_info.filename != reflections)
+    unlink(hkl_info.filename);
 %}
 
 MCDISPLAY

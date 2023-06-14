@@ -1277,6 +1277,7 @@ FINALLY
   free(line_info.q);
   free(line_info.w);
   free(line_info.my_s_k2);
+  // remove temporary F2(hkl) file when giving CFL/CIF/ShelX file
   if (line_info.filename != reflections)
     unlink(line_info.filename);
 
