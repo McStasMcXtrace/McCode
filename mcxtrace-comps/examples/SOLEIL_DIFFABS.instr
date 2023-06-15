@@ -33,9 +33,9 @@
 * ---------|--------------------------------------------------------------------
 * 0        | the BM D13-1 Bender B=1.71 T in range 3-23 keV, e-beam cross-section 55.1x20.6 µm2 123.7x1.6 µrad. Other specs give 60.1x24.9 µm and 134.8x2.1 µrad. Critical energy 8.6 keV.
 * 11.85    | primary slit
-* 14.92    | M1 bent mirror with Rh/Si coating. Reduces the vertical divergence. length 1300 mm, width 100 mm. 2.4 mrad incidence above 19 keV, 3 mrad in 12.5-19 keV, and 5 mrad in 6.5-12.5 keV, and 6 mrad below.
-* 17.462   | a Si(111) DCM. First crystal is 200x100 mm flat at 2.54 m from M1; 2nd is bent 70x100 mm to reduce the horizontal divergence (perp. to beam). See the practical 5 "Optics". 
-* 19.28    | M2 bent mirror with Rh coating, 1300x100 mm. Focuses horizontally the beam, and increases the divergence. At 1.817 from DCM.
+* 14.92    | M1 bent mirror with Rh/Si coating. Focuses vertically the beam on the DCM. length 1300 mm, width 100 mm. 2.4 mrad incidence above 19 keV, 3 mrad in 12.5-19 keV, and 5 mrad in 6.5-12.5 keV, and 6 mrad below.
+* 17.462   | a Si(111) DCM. First crystal is 200x100 mm flat at 2.54 m from M1; 2nd is bent 70x100 mm to focus the beam horizontally. See the practical 5 "Optics". 
+* 19.28    | M2 bent mirror with Rh coating, 1300x100 mm. Focuses vertically the beam. At 1.817 from DCM.
 * 27.752   | _secondary slits when using the KB. We ignore them here_.
 * 31.227   | _a KB mirror set M3/M4 for micro focusing. Optional, see the practical 5 "Optics"._
 * 31.45    | sample stage with e.g. Fluorescence and/or PowderN components. At 13.99 from DCM.
@@ -47,8 +47,8 @@
 * E0:       [keV]  Central energy of the interval to be looked at
 * dE:       [keV]  Half-width     of the energy interval
 * M1_angle: [mrad] Rotation angle of M1/M2 mirrors. When left as 0, it is set automatically from E0.
-* M1_radius:[m]    Curvature radius of M1 mirror (Rh, 1300x100) longitudinal. Positive=mirror is convex/defocusing. 0=flat.
-* M2_radius:[m]    Curvature radius of M2 mirror (Rh, 1300x100) sagittal. Positive=mirror is convex/defocusing. 0=flat.
+* M1_radius:[m]    Curvature radius of M1 mirror (Rh, 1300x100) longitudinal. Positive=mirror is focusing. 0=flat.
+* M2_radius:[m]    Curvature radius of M2 mirror (Rh, 1300x100) sagittal. Positive=mirror is focusing. 0=flat.
 * DCM_theta:[deg]  Rotation angle of DCM crystals. When left as 0, it is set automatically from E0.
 *
 * %Link
@@ -60,7 +60,7 @@
 *******************************************************************************/
 
 DEFINE INSTRUMENT SOLEIL_DIFFABS(E0=13,dE=1, 
-  M1_angle=0, M1_radius=0, M2_radius=0,
+  M1_angle=0, M1_radius=1400, M2_radius=1400,
   DCM_theta=0,
   string sample="LaB6_660b_AVID2.hkl")
 
@@ -138,7 +138,7 @@ COMPONENT M1 = Mirror_curved( // 90 deg brings it from YZ (vert) to XZ (horiz)
     length=1.3, width=0.1,
     coating="Rh.txt", radius=M1_radius)
 AT(0,0,0)           RELATIVE M1_rotated
-ROTATED (0, 0, -90) RELATIVE M1_rotated
+ROTATED (0, 0, 90) RELATIVE M1_rotated
 EXTEND %{
   if (!SCATTERED) ABSORB;
 %}
@@ -230,19 +230,11 @@ COMPONENT M2_rotated = Arm()  // rotation of the mirror
 AT(0,0,0)                      RELATIVE M2_location
 ROTATED (M1_angle,0,0) RELATIVE M2_location
 
-COMPONENT M2_rotx = Arm()
-AT(0,0,0)                      RELATIVE M2_rotated
-ROTATED (90,0,0) RELATIVE M2_rotated
-
-COMPONENT M2_roty = Arm()
-AT(0,0,0)                      RELATIVE M2_rotx
-ROTATED (0,90,0) RELATIVE M2_rotx
-
-COMPONENT M2 = Mirror_curved( // bring it to XZ (horiz)
-    length=.1, width=1.3,
+COMPONENT M2 = Mirror_curved( // bring it from YZ to XZ (horiz)
+    length=1.3, width=.1,
     coating="Rh.txt", radius=M2_radius)
-AT(0,0,0)         RELATIVE M2_roty
-ROTATED (0, 0, 0) RELATIVE M2_roty
+AT(0,0,0)         RELATIVE M2_rotated
+ROTATED (0, 0, -90) RELATIVE M2_rotated
 EXTEND %{
   if (!SCATTERED) ABSORB;
 %}
