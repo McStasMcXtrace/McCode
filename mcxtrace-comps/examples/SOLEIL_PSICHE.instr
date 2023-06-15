@@ -83,7 +83,7 @@ AT (0, 0, 0) RELATIVE ABSOLUTE
 
 COMPONENT source = Wiggler(E0 = E0, dE = dE, phase = 0, randomphase = 1, Ee = 2.4,
    Ie = 0.5, B = 2.1, Nper=41, sigey=9.3e-6, sigex=215.7e-6, length=38*50e-3, verbose=1,
-   focus_xw=1e-2, focus_yh=0.6e-2, dist=17.5, K=10)
+   K=10)
 AT (0,0,0) RELATIVE origin
 
 COMPONENT mon_src_e = Monitor_nD(xwidth=1e-2, yheight=1e-2, 
@@ -113,7 +113,7 @@ ROTATED (-dcm_theta,0,0) RELATIVE PREVIOUS
 
 COMPONENT dcm_xtal1 = COPY(dcm_xtal0)
 WHEN (DCM_present)
-AT(0,dcm_gap,0.03)    RELATIVE PREVIOUS
+AT(0,dcm_gap, dcm_theta ? dcm_gap/tan(dcm_theta*DEG2RAD) : 0)    RELATIVE dcm_xtal0
 ROTATED (dcm_theta,0,0)  RELATIVE PREVIOUS
 EXTEND %{
   if (dcm_scatter && !SCATTERED) ABSORB;

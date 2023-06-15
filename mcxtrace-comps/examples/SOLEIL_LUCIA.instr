@@ -107,7 +107,7 @@ AT(0,0,0)          RELATIVE PREVIOUS
 ROTATED (-dcm_theta,0,0) RELATIVE PREVIOUS
 
 COMPONENT dcm_xtal1 = COPY(dcm_xtal0)
-AT(0,0,dcm_gap)    RELATIVE PREVIOUS
+AT(0,dcm_gap, dcm_theta ? dcm_gap/tan(dcm_theta*DEG2RAD) : 0)    RELATIVE dcm_xtal0
 ROTATED (dcm_theta,0,0)  RELATIVE PREVIOUS
 EXTEND %{
   if (!SCATTERED) ABSORB;

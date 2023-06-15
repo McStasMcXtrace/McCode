@@ -192,7 +192,7 @@ ROTATED (-DCM_theta, 0, 0) RELATIVE PREVIOUS
 /* -------------------------------------------------- CC crystal 2 */
 COMPONENT bragg_crystal_two = COPY(bragg_crystal)(
     length=0.2) 
-AT (0, dcm_gap, dcm_gap/tan(DCM_theta*DEG2RAD)) RELATIVE bragg_crystal
+AT (0, dcm_gap, DCM_theta ? dcm_gap/tan(DCM_theta*DEG2RAD) : 0) RELATIVE bragg_crystal
 ROTATED (DCM_theta, 0, 0) RELATIVE arm_crystal1
 EXTEND
 %{ 

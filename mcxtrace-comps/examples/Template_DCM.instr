@@ -77,7 +77,7 @@ AT(0,0,0) RELATIVE dcm_xtal0
 ROTATED (-theta,0,0) RELATIVE PREVIOUS
 
 COMPONENT dcm_xtal1 = COPY(dcm_xtal0)
-AT(0,0,dcm_gap) RELATIVE dcm0
+AT(0,dcm_gap, dcm_gap/tan(theta*DEG2RAD)) RELATIVE dcm_xtal0
 ROTATED (theta,0,0) RELATIVE dcm0
 
 COMPONENT dcm1 =Arm()

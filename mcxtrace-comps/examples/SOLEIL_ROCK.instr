@@ -300,7 +300,7 @@ ROTATED (-calculated_angle, 0, 0) RELATIVE PREVIOUS
 // gap btw crystals is 1 cm. We shit the 2nd blade so that it is centred wrt reflection.
 COMPONENT bragg_crystal_two = COPY(bragg_crystal)(
     length=length_second_crystal) 
-AT (0, 0.01, 0.01/tan(calculated_angle*DEG2RAD)) RELATIVE bragg_crystal
+AT (0, 0.01, calculated_angle ? 0.01/tan(calculated_angle*DEG2RAD) : 0) RELATIVE bragg_crystal
 ROTATED (calculated_angle, 0, 0) RELATIVE arm_crystal1
 EXTEND
 %{ 

@@ -132,7 +132,7 @@ ROTATED (-calculated_angle, 0, 0) RELATIVE PREVIOUS
 
 COMPONENT bragg_crystal_two = Bragg_crystal(
     crystal_type=2)
-AT (0, 0.01, 0.1) RELATIVE bragg_crystal
+AT (0, 0.01, calculated_angle ? 0.01/tan(calculated_angle*DEG2RAD) : 0) RELATIVE bragg_crystal
 ROTATED (calculated_angle, 0, 0) RELATIVE PREVIOUS
 
 COMPONENT arm_two = Arm()

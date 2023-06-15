@@ -16,7 +16,7 @@
 * biology, chemistry, physics) with respect to national and European safety law*.
 *
 * The design of MARS beamline (infrastructure and optics) is also optimized to
-* alternatively run two experimental stations in order to perform
+* alternatively run two experimental stations in orlder to perform
 * characterizations with transmission and high resolution X-ray powder-diffraction
 * (XRD), Wide Angle X-ray Scattering (WAXS), Small Angle X-ray scattering (SAXS),
 * standard and high resolution X-ray absorption spectroscopy (XANES, EXAFS and
@@ -28,7 +28,7 @@
 *
 * %Parameters
 * E0: [keV]     Central energy to be emitted by the source
-* dEr: [keV]    Relative half width to emitted by the source, e.g. 1e-4
+* dEr: [1]    Relative half width to emitted by the source, e.g. 1e-4
 * alpha: [deg]  Asymmetry angle for the crystals.
 * reflections: [str] List of powder reflections, obtained with e.g. cif2hkl
 * reflec_material_M12: [str] reflecting coating on curved mirrors, e.g. Pt
@@ -118,25 +118,14 @@ DECLARE
 	/* Declarations */
 	
 	double M12_width=0.05;
-
-    double calculated_angle;
-	double z_translation;	
+  double calculated_angle;
 %}
 
 INITIALIZE
 %{
     calculated_angle=RAD2DEG*asin(12398.42*sqrt(8)/(2*5.4309*(E0*1e3)));
-    fprintf(stdout,"Energie %g / Angle %g", E0, calculated_angle);
+    fprintf(stdout,"%s: Energy %g [keV] Mono Angle %g [deg]", NAME_INSTRUMENT, E0, calculated_angle);
     
-    if(calculated_angle==45){
-        z_translation=0;
-    }else{
-        z_translation=(20e-3)/tan(2*calculated_angle*DEG2RAD);
-    }
-    //could also have done:
-    //if 2*calculated_angle<90 deg, z_translation=(20e-3)/tan(2*calculated_angle*DEG2RAD)
-    //else if 2*calculated_angle>90 deg, z_translation=-(20e-3)/tan(pi-2*calculated_angle*DEG2RAD)    
-    fprintf(stdout,"z translation %g", z_translation);
 %}
 
 TRACE
@@ -154,9 +143,9 @@ COMPONENT Source = Bending_magnet(
 AT (0, 0, 0) RELATIVE origin
 
 /*Wavelength*/
-COMPONENT displaySourceLength = L_monitor(
-  xwidth=0.2, yheight=0.2,
-  nL=20, filename="Output1.L", Lmin=0.1, Lmax=8
+COMPONENT displaySourceLength = Monitor_nD(
+  xwidth=0.2, yheight=0.2, options="energy",
+  bins=512, min=E0*(1-dEr), max=E0*(1+dEr)
 )
 AT(0,0,2) RELATIVE Source
 
@@ -222,7 +211,7 @@ ROTATED (-calculated_angle,0,0) RELATIVE PREVIOUS
 //this dcm is a fixed offset dcm, the second crystal translates itself
 //The  double  crystal  monochromator  (DCM),  manufactured  by  FMB  Oxford,  is  equipped  with  14 independent motorized stages in order to optimize its alignment and then to assure a fixed exit beam over the entire energy range with a constant upward offset of 20 mm with respect to the primary beam. https://iopscience.iop.org/article/10.1088/1742-6596/190/1/012042/pdf
 COMPONENT dcm_xtal1 = COPY(dcm_xtal0)(length=0.02)
-AT(0,20e-3,z_translation) RELATIVE beam_arm_before_crystal
+AT(0,20e-3, calculated_angle ? 20e-3/tan(calculated_angle*DEG2RAD) : 0) RELATIVE dcm_xtal0
 ROTATED (calculated_angle,0,0) RELATIVE dcm0
 
 COMPONENT dcm1 =Arm()
@@ -234,10 +223,10 @@ COMPONENT emon_dcm0 = E_monitor(
 	xwidth=PrimaryBeamMonitorWidth, 
 	yheight=PrimaryBeamMonitorHeight, 
 	filename="emon_dcm0", 
-	Emin=E0-dEr*2, 
-	Emax=E0+dEr*2, 
+	Emin=E0-dEr*E0, 
+	Emax=E0+dEr*E0, 
 	nE=101)
-AT(0,20e-3,DistanceToPrimaryBeamMonitor-DistanceSourceToDCM) RELATIVE beam_arm_before_crystal
+AT(0,0,DistanceToPrimaryBeamMonitor-DistanceSourceToDCM) RELATIVE dcm1
 
 
 /*Visualise*/
@@ -247,9 +236,9 @@ COMPONENT displayMono = PSD_monitor(
 AT(0,0,0) RELATIVE PREVIOUS
 
 /*Wavelength*/
-COMPONENT displayMonoLength = L_monitor(
+COMPONENT displayMonoLength = E_monitor(
   xwidth=0.2, yheight=0.2,
-  nL=20, filename="Output.L", Lmin=0.1, Lmax=8
+  nE=512, filename="Output.E", Emin=E0*(1-dEr), Emax=E0*(1+dEr)
 )
 AT(0,0,0) RELATIVE PREVIOUS
 
@@ -296,20 +285,10 @@ COMPONENT emon_dcm1 = E_monitor(
 	xwidth=SecondaryBeamMonitorWidth, 
 	yheight=SecondaryBeamMonitorHeight, 
 	filename="BeamMonitor2", 
-	Emin=E0-dEr*2, 
-	Emax=E0+dEr*2, 
+	Emin=E0-dEr*E0, 
+	Emax=E0+dEr*E0, 
 	nE=101)
 AT(0,0,DistanceToSecondaryBeamMonitor-DistanceToSecondarySlit2) RELATIVE PREVIOUS
-
-//full possible range of energy
-COMPONENT emon_dcm1_full_range = E_monitor(
-	xwidth=SecondaryBeamMonitorWidth, 
-	yheight=SecondaryBeamMonitorHeight, 
-	filename="BeamMonitor2_full_e_range", 
-	Emin=3.5, 
-	Emax=35, 
-	nE=101)
-AT(0,0,0) RELATIVE PREVIOUS
 
 /*Visualise*/
 COMPONENT displaySlit2 = PSD_monitor(
@@ -319,12 +298,13 @@ AT(0,0,0) RELATIVE PREVIOUS
 
 
 /*------------------------------------ Sample */
-SPLIT 100 COMPONENT Sample = PowderN(
+SPLIT 10 COMPONENT Sample = PowderN(
   reflections = reflections, material="Si.txt",
   xwidth = 0.005,
   yheight = 0.05,
   zdepth = 0.0001,
-  d_phi=asin(0.02/0.670)*RAD2DEG
+  d_phi=asin(0.02/0.670)*RAD2DEG,
+  p_interact=0.01
 )
 AT (0, 0, DistanceToSample-DistanceToSecondaryBeamMonitor) RELATIVE PREVIOUS
 
