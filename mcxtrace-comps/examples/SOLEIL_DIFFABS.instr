@@ -251,12 +251,22 @@ ROTATED (0,0,90) RELATIVE M2_out
 
 SPLIT COMPONENT powder = PowderN(reflections=sample, 
   xwidth = 0.001, yheight=0.01, zdepth=5e-6,
-  p_interact=1,
+  p_interact=0.5,
   d_phi=5)
 AT (0,0,0) RELATIVE sample_stage
-EXTEND %{
-  if (!SCATTERED) ABSORB;
-%}
+GROUP samples
+
+COMPONENT fluo = Fluorescence(
+  material=sample,
+  xwidth = 0.001, yheight=0.01, zdepth=5e-6,
+  p_interact=1)
+AT (0,0,0) RELATIVE sample_stage
+GROUP samples
+
+// 4pi energy monitor
+COMPONENT fluo_monitor = Monitor_nD(
+  radius=0.2, options="energy", bins=1024, min=0, max=E0*1.2)
+AT (0,0,0) RELATIVE PREVIOUS
 
 // ideal "banana" detector
 COMPONENT det_angle = Monitor_nD(options="abs theta limits=[2 90]",

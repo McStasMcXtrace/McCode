@@ -25,6 +25,10 @@
 * 30 percent (0.3) in order to force a fraction of the beam to scatter. This
 * will result on a larger number of scattered events, retaining intensity.
 *
+* The 'material' specification is given as a chemical formulae, e.g. "LaB6". It
+* may also be given as a file name (CIF/LAU/LAZ/FullProf format) in which case 
+* the formulae is guessed (but may be approximative).
+*
 * <b>Sample shape:</b>
 * Sample shape may be a cylinder, a sphere, a box or any other shape
 *   box/plate:       xwidth x yheight x zdepth (thickness=0)
@@ -71,7 +75,7 @@
 *  target_index=1, focus_xw=0.0005, focus_yh=0.0005)
 *
 * %Parameters
-* material:  [str]    Chemical formulae, e.g. "LaB6", "Pb2SnO4".
+* material:  [str]    Chemical formulae, e.g. "LaB6", "Pb2SnO4". If may also be a CIF/LAZ/LAU file.
 * weight:    [g/mol]  Atomic/molecular weight of material.
 * density:   [g/cm^3] Density of material. V_rho=density/weight/1e24*N_A.
 * rho:       [AA-3]   Density of scattering elements (nb atoms/unit cell V_0).
@@ -141,6 +145,7 @@ SHARE %{
   #define TRANSMISSION 3
   #include <xraylib/xraylib.h>
   #endif
+  %include "read_table-lib"
   %include "interoff-lib" // for OFF/PLY geometry
   
 /* See XrayLib code (c) T. Schoonjans
@@ -243,6 +248,120 @@ double XRMC_SelectFluorescenceEnergy(int Z, double E0, double *dE)
   return LineEnergy(Z, -i_line, NULL); // fluorescent line energy
 } // XRMC_SelectFluorescenceEnergy
 
+#ifndef CIF2HKL
+#define CIF2HKL
+  // hkl_filename = cif2hkl(file, options)
+  //   used to convert CIF/CFL/INS file into F2(hkl)
+  //   the CIF2HKL env var can point to a cif2hkl executable
+  //   else the McCode binary is attempted, then the system.
+  char *cif2hkl(const char *infile, const char *options) {
+    char cmd[1024];
+    int  ret = 0;
+    int  found = 0;
+    char *OUTFILE;
+    
+    // get filename extension
+    const char *ext = strrchr(infile, '.');
+    if(!ext || ext == infile) return infile;
+    else ext++;
+    
+    // return input when no extension or not a CIF/FullProf/ShelX file
+    if ( strcasecmp(ext, "cif") 
+      && strcasecmp(ext, "pcr")
+      && strcasecmp(ext, "cfl")
+      && strcasecmp(ext, "shx")
+      && strcasecmp(ext, "ins")
+      && strcasecmp(ext, "res")) return infile;
+      
+    OUTFILE = malloc(1024);
+    if (!OUTFILE) return infile;
+    
+    strncpy(OUTFILE, tmpnam(NULL), 1024); // create an output temporary file name
+    
+    // try in order the CIF2HKL env var, then the system cif2hkl, then the McCode one
+    if (!found && getenv("CIF2HKL")) {
+      snprintf(cmd,  1024, "%s -o %s %s %s",
+        getenv("CIF2HKL"),
+        OUTFILE, options, infile);
+      ret = system(cmd);
+      if (ret != -1 && ret != 127) found = 1;
+    }
+    if (!found) {
+      snprintf(cmd,  1024, "%s%c%s%c%s -o %s %s %s",
+        getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS,
+        MC_PATHSEP_C, "bin", MC_PATHSEP_C, "cif2hkl",
+        OUTFILE, options, infile);
+      ret = system(cmd);
+      if (ret != -1 && ret != 127) found = 1;
+    }
+    // ret = -1:  child process could not be created
+    // ret = 127: shell could not be executed in the child process
+    if (!found) {
+      // try with any cif2hkl command from the system
+      snprintf(cmd,  1024, "%s -o %s %s %s",
+        "cif2hkl", OUTFILE, options, infile);
+      ret = system(cmd);
+    }
+      
+    if (ret == -1 || ret == 127) return(NULL);
+      
+    // test if the result file has been created
+    FILE *file = fopen(OUTFILE,"r");
+    if (!file) return(NULL);     
+    printf("%s: INFO: converting %s into F2(HKL) list %s\n", 
+      __FILE__, infile, OUTFILE);
+      printf ("%s\n",cmd);
+    fflush(NULL);
+    return(OUTFILE);
+  } // cif2hkl
+#endif
+
+  // ok = fluo_get_material(material, formula)
+  // extracts material atoms from file header
+  // the result is concatenated into 'formula'
+  int fluo_get_material(char *filename, char *formula) {
+  
+    int  ret = 0;
+    char Line[65535];
+    FILE *file = Open_File(filename, "r",NULL);
+    if (!file)
+      exit(fprintf(stderr, "%s: ERROR: can not open file %s\n", 
+      __FILE__, filename));
+    
+    // Read the file, and search tokens in rows
+    while (fgets(Line, sizeof(Line), file) != NULL) {
+      char *token = NULL;
+      // CIF: _chemical_formula_structural 'chemical_formulae'
+      // CIF: _chemical_formula_sum 'chemical_formulae'
+      // LAZ/LAU: # ATOM <at> <trailing>
+      // LAZ/LAU: # Atom <at> <trailing>
+      // LAZ/LAU: # TITLE <at> <at> ... [ trailing...]
+      // CFL: Title <chemical_formulae>
+      // CFL: Atom <at> <trailing>
+      if (!strncasecmp(Line, "_chemical_formula_structural", 28))
+        token = Line+29;
+      else if (!strncasecmp(Line, "_chemical_formula_sum", 21))
+        token = Line+21;
+      else if (!strncasecmp(Line, "# Atom", 6))
+        token = Line+6;
+      else if (!strncasecmp(Line, "Atom", 4))
+        token = Line+4;
+      else if (!strncasecmp(Line, "Title", 5))
+        token = Line+7;
+      else if (!strncasecmp(Line, "# TITLE", 7))
+        token = Line+7;
+      if (!token) continue;
+      // extract the following word
+      char *first_non_space = strtok(token, " \t");
+      if (!first_non_space) continue;
+      char *next_non_space  = strtok(NULL,  " \t");
+      if (!next_non_space)  next_non_space = Line+strlen(Line);
+      strncat(formula, first_non_space, next_non_space-first_non_space);
+      ret++;
+    }
+    fclose(file);
+    return(ret);
+  } // fluo_get_material
 %}
 
 /* ========================================================================== */
@@ -275,6 +394,7 @@ DECLARE %{
   DArray1d reuse_cum_xs_fluo;
   DArray1d reuse_cum_xs_Compton;
   DArray1d reuse_cum_xs_Rayleigh;
+  char *filename;
 %}
 
 INITIALIZE %{
@@ -306,12 +426,39 @@ INITIALIZE %{
                         "ERROR       Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
   
   if (!material || !strlen(material) || !strcmp(material, "NULL") || !strcmp(material, "0")) 
-    exit(fprintf(stderr, "ERROR: %s: Null material specification\n", NAME_CURRENT_COMP));
+    exit(fprintf(stderr, "Fluorescence: ERROR: %s: Null material specification\n", NAME_CURRENT_COMP));
+    
+  // test if the material is given as a file
+  char path[1024];
+  char formula[65536];
+  sprintf(formula, "");
+  FILE *file = Open_File(material, "r", path);
+  if (file != NULL) {
+    fclose(file);
+    // handle case when file is a CIF/FullProf/ShelX 
+    filename = cif2hkl(material, "--mode XRA");
+    // open the material structure file (laz/lau/cif...)
+    // search (case sensitive) along lines
+    if (!fluo_get_material(material, formula))
+      exit(fprintf(stderr, "ERROR: %s: file %s does not contain material formulae.\n", NAME_CURRENT_COMP, material));
+    
+    fprintf(stderr, "Fluorescence: INFO: %s: found material %s from file %s\n", NAME_CURRENT_COMP, formula, material);
+    strcpy(material, formula);
+    // CIF: _chemical_formula_structural 'chemical_formulae'
+    // CIF: _chemical_formula_sum 'chemical_formulae'
+    // LAZ/LAU: # ATOM <at> <trailing>
+    // LAZ/LAU: # Atom <at> <trailing>
+    // LAZ/LAU: # TITLE <at> <at> ... [ trailing...]
+    // CFL: Title <chemical_formulae>
+    // CFL: Atom <at> <trailing>
+    
+  } else filename = NULL;
     
   compound = CompoundParser(material, &error); /* XRayLib */
-  if (error != NULL) 
+  if (error != NULL) {
     exit(fprintf(stderr, "ERROR: %s: Invalid material %s: %s\n",
       NAME_CURRENT_COMP, material, error->message));
+  }
   xrl_error_free(error);
   
   /* compute total density for raw material and display information ========= */  
@@ -721,6 +868,8 @@ if (intersect) { /* scattering event */
 
 FINALLY %{
   FreeCompoundData(compound);
+  if (filename && filename != material)
+    unlink(filename);
   printf("%s: scattered intensity: fluo=%g Compton=%g Rayleigh=%g\n", 
     NAME_CURRENT_COMP, p_fluo, p_Compton, p_Rayleigh);
 %}
