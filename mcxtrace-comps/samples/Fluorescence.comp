@@ -248,73 +248,26 @@ double XRMC_SelectFluorescenceEnergy(int Z, double E0, double *dE)
   return LineEnergy(Z, -i_line, NULL); // fluorescent line energy
 } // XRMC_SelectFluorescenceEnergy
 
-#ifndef CIF2HKL
-#define CIF2HKL
-  // hkl_filename = cif2hkl(file, options)
-  //   used to convert CIF/CFL/INS file into F2(hkl)
-  //   the CIF2HKL env var can point to a cif2hkl executable
-  //   else the McCode binary is attempted, then the system.
-  char *cif2hkl(const char *infile, const char *options) {
-    char cmd[1024];
-    int  ret = 0;
-    int  found = 0;
-    char *OUTFILE;
-    
-    // get filename extension
-    const char *ext = strrchr(infile, '.');
-    if(!ext || ext == infile) return infile;
-    else ext++;
-    
-    // return input when no extension or not a CIF/FullProf/ShelX file
-    if ( strcasecmp(ext, "cif") 
-      && strcasecmp(ext, "pcr")
-      && strcasecmp(ext, "cfl")
-      && strcasecmp(ext, "shx")
-      && strcasecmp(ext, "ins")
-      && strcasecmp(ext, "res")) return infile;
+  // Funtion removing spaces from string
+  char * removeSpacesFromStr(char *string)
+  {
+      // non_space_count to keep the frequency of non space characters
+      int non_space_count = 0;
+   
+      //Traverse a string and if it is non space character then, place it at index non_space_count
+      for (int i = 0; string[i] != '\0'; i++)
+      {
+          if (string[i] != ' ')
+          {
+              string[non_space_count] = string[i];
+              non_space_count++;//non_space_count incremented
+          }    
+      }
       
-    OUTFILE = malloc(1024);
-    if (!OUTFILE) return infile;
-    
-    strncpy(OUTFILE, tmpnam(NULL), 1024); // create an output temporary file name
-    
-    // try in order the CIF2HKL env var, then the system cif2hkl, then the McCode one
-    if (!found && getenv("CIF2HKL")) {
-      snprintf(cmd,  1024, "%s -o %s %s %s",
-        getenv("CIF2HKL"),
-        OUTFILE, options, infile);
-      ret = system(cmd);
-      if (ret != -1 && ret != 127) found = 1;
-    }
-    if (!found) {
-      snprintf(cmd,  1024, "%s%c%s%c%s -o %s %s %s",
-        getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS,
-        MC_PATHSEP_C, "bin", MC_PATHSEP_C, "cif2hkl",
-        OUTFILE, options, infile);
-      ret = system(cmd);
-      if (ret != -1 && ret != 127) found = 1;
-    }
-    // ret = -1:  child process could not be created
-    // ret = 127: shell could not be executed in the child process
-    if (!found) {
-      // try with any cif2hkl command from the system
-      snprintf(cmd,  1024, "%s -o %s %s %s",
-        "cif2hkl", OUTFILE, options, infile);
-      ret = system(cmd);
-    }
-      
-    if (ret == -1 || ret == 127) return(NULL);
-      
-    // test if the result file has been created
-    FILE *file = fopen(OUTFILE,"r");
-    if (!file) return(NULL);     
-    printf("%s: INFO: converting %s into F2(HKL) list %s\n", 
-      __FILE__, infile, OUTFILE);
-      printf ("%s\n",cmd);
-    fflush(NULL);
-    return(OUTFILE);
-  } // cif2hkl
-#endif
+      //Finally placing final character at the string end
+      string[non_space_count] = '\0';
+      return string;
+  }
 
   // ok = fluo_get_material(material, formula)
   // extracts material atoms from file header
@@ -329,8 +282,12 @@ double XRMC_SelectFluorescenceEnergy(int Z, double E0, double *dE)
       __FILE__, filename));
     
     // Read the file, and search tokens in rows
+    formula[0]=0;
     while (fgets(Line, sizeof(Line), file) != NULL) {
       char *token = NULL;
+      int   flag_exit=0;
+      char *first_non_space=NULL;
+      char *next_non_space =NULL;
       // CIF: _chemical_formula_structural 'chemical_formulae'
       // CIF: _chemical_formula_sum 'chemical_formulae'
       // LAZ/LAU: # ATOM <at> <trailing>
@@ -342,24 +299,36 @@ double XRMC_SelectFluorescenceEnergy(int Z, double E0, double *dE)
         token = Line+29;
       else if (!strncasecmp(Line, "_chemical_formula_sum", 21))
         token = Line+21;
+      else if (!strncasecmp(Line, "# TITLE", 7) && strchr(Line, '['))
+        token = Line+7;
       else if (!strncasecmp(Line, "# Atom", 6))
         token = Line+6;
       else if (!strncasecmp(Line, "Atom", 4))
         token = Line+4;
       else if (!strncasecmp(Line, "Title", 5))
         token = Line+7;
-      else if (!strncasecmp(Line, "# TITLE", 7))
-        token = Line+7;
       if (!token) continue;
-      // extract the following word
-      char *first_non_space = strtok(token, " \t");
-      if (!first_non_space) continue;
-      char *next_non_space  = strtok(NULL,  " \t");
-      if (!next_non_space)  next_non_space = Line+strlen(Line);
+      if (!strncasecmp(Line, "# TITLE", 7)) {
+        first_non_space = Line+7;
+        next_non_space  = strchr(Line+7, '[');
+        if (next_non_space) {
+          ret++;
+          flag_exit = 1;
+        }
+      } else {
+        // extract the following word
+        first_non_space = strtok(token, " \t");
+        if (!first_non_space) continue;
+        next_non_space  = strtok(NULL,  " \t"); // end of formulae
+        if (!next_non_space)  next_non_space = Line+strlen(Line);
+      }
+      // remove spaces
       strncat(formula, first_non_space, next_non_space-first_non_space);
       ret++;
+      if (flag_exit) break;
     }
     fclose(file);
+    removeSpacesFromStr(formula);
     return(ret);
   } // fluo_get_material
 %}
@@ -431,12 +400,10 @@ INITIALIZE %{
   // test if the material is given as a file
   char path[1024];
   char formula[65536];
-  sprintf(formula, "");
+  formula[0]='\0';
   FILE *file = Open_File(material, "r", path);
   if (file != NULL) {
     fclose(file);
-    // handle case when file is a CIF/FullProf/ShelX 
-    filename = cif2hkl(material, "--mode XRA");
     // open the material structure file (laz/lau/cif...)
     // search (case sensitive) along lines
     if (!fluo_get_material(material, formula))
