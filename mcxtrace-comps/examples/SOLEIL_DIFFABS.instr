@@ -259,7 +259,7 @@ GROUP samples
 COMPONENT fluo = Fluorescence(
   material=sample,
   xwidth = 0.001, yheight=0.01, zdepth=5e-6,
-  p_interact=1)
+  p_interact=1, target_z=1, focus_aw=90, focus_ah=5)
 AT (0,0,0) RELATIVE sample_stage
 GROUP samples
 
