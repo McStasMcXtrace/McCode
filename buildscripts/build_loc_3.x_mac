@@ -1,37 +1,61 @@
 #!/bin/bash
+export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "import os;print(os.cpu_count())")}
 
-# rappid-build script for mcstas-kernel dev:
+# rapid-build script for mcstas-kernel dev:
+
+
+git checkout mccode-3
+git pull
 
 # Ensure our 3rd party modules are in place and updated
 THIRDPARTY=`ls 3rdparty | grep -v patches`
-cd 3rdparty
-
-cd -
 
 ./3rdparty/sync.sh
-
-
-for MODULE in `echo $THIRDPARTY`
-do
-    if [ -d "3rdparty/patches/${MODULE}" ]; then
-	echo Making McCode cmake modules available for $MODULE
-        rsync -avz cmake/ 3rdparty/${MODULE}/cmake
-	echo Applying McCode patches to 3rdparty/${MODULE}
-	cp -rp 3rdparty/patches/${MODULE}/* 3rdparty/${MODULE}/
-    fi
-done
-
-#git checkout mcstas-3.x
-#git pull
 
 WORK=`pwd`
 
 export MCINSTALL_PREFIX=$HOME/McStas
+export CONDALOCATION=$MCINSTALL_PREFIX/mcstas/3.x-dev/miniconda3
 
 if [[ -d $HOME/McStas/mcstas/3.x-dev ]]
 then
-    rm -rf $HOME/McStas/mcstas/3.x-dev/*
+    cd $HOME/McStas/mcstas/3.x-dev
+    ls | grep -v miniconda3 | xargs -n1 rm -rf 
+    cd -
 fi
+
+if [ ! -f Mambaforge-$(uname)-$(uname -m).sh ]; then
+    # Download and embed a miniconda
+    echo
+    echo "*********************************************************"
+    echo "* Downloading a miniconda3 for your app                 *"
+    echo "*********************************************************"
+    echo
+    sleep 3
+    curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
+fi
+
+if [[ !  -d $CONDALOCATION ]]; then
+    echo "*********************************************************"
+    echo "* Embedding miniconda3 in your app                      *"
+    echo "*********************************************************"
+    chmod a+x Mambaforge-$(uname)-$(uname -m).sh
+    ./Mambaforge-$(uname)-$(uname -m).sh -b -p $CONDALOCATION
+    # Run conda to install the dependencies
+    echo
+    echo "*********************************************************"
+    echo "* Downloading python dependencies to embedded miniconda *"
+    echo "*********************************************************"
+    echo
+    export PATH=$CONDALOCATION/bin:$PATH 
+    mamba update mamba -y
+    mamba install cmake compilers gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 -y
+    #mamba install gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 -y
+    mamba clean --all -y
+fi
+
+export PATH=$CONDALOCATION/bin:$PATH
+
 ./mkdist mcstas 3.x-dev "" "" mac "" -- justinst
 ./mkdist mcstas-comps 3.x-dev "" "" mac "" -- justinst
 # can be out-commented after the first build iteration:
@@ -55,9 +79,6 @@ export MCINSTALL_PREFIX=$HOME/McStas/mcstas/3.x-dev/
 ./mkdist mcstas-mcpl 3.x-dev 3rdparty/mcpl-package "" mac "" -- justinst
 ./mkdist mcstas-nexus 3.x-dev 3rdparty/nexus-package "" mac "" -- justinst
 
-
 # Ensure we are configured for 10 node MPI runs
-sed -i.bak s/\'4\'/\'10\'/g $HOME/McStas/mcstas/3.x-dev/tools/Python/mccodelib/mccode_config.json
-
-ln -sf  /Applications/McStas-3.x.app/Contents/Resources/mcstas/3.x/miniconda3 $MCINSTALL_PREFIX/miniconda3
-/Applications/McStas-3.x.app/Contents/Resources/mcstas/3.x/bin/mcdoc -i
+sed -i.bak s/\'4\'/\'10\'/g $HOME/McStas/mcstas/3.x-dev/tools/Python/mccodelib/mccode_config.py
+$HOME/McStas/mcstas/3.x-dev/bin/mcdoc -i
