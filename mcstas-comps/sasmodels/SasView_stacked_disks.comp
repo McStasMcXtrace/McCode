@@ -19,10 +19,12 @@
 *
 * SasView_stacked_disks component, generated from stacked_disks.c in sasmodels.
 *
-* Example: SasView_stacked_disks(thick_core, thick_layer, radius, n_stacking, sigma_d, sld_core, sld_layer, sld_solvent, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_thick_core=0.0,
-        pd_thick_layer=0.0,
-        pd_radius=0.0)
+* Example: 
+*  SasView_stacked_disks(thick_core, thick_layer, radius, n_stacking, sigma_d, sld_core, sld_layer, sld_solvent, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_thick_core=0.0, pd_thick_layer=0.0, pd_radius=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:

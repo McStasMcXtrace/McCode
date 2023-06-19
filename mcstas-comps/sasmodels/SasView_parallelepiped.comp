@@ -19,10 +19,12 @@
 *
 * SasView_parallelepiped component, generated from parallelepiped.c in sasmodels.
 *
-* Example: SasView_parallelepiped(sld, sld_solvent, length_a, length_b, length_c, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_length_a=0.0,
-        pd_length_b=0.0,
-        pd_length_c=0.0)
+* Example: 
+*  SasView_parallelepiped(sld, sld_solvent, length_a, length_b, length_c, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_length_a=0.0, pd_length_b=0.0, pd_length_c=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
