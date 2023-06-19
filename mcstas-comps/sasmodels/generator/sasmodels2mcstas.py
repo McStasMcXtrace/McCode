@@ -375,6 +375,11 @@ END\n\n"""
                 pd_init = pd_init[:-2]
                 pd_condition_ang = pd_condition_ang[:-2] + "){\n"
 
+                pd_oneliner = ''.join(pd_init)
+                pd_oneliner = pd_oneliner.replace("\n", "")
+                pd_oneliner = pd_oneliner.replace("\t", " ")
+                pd_oneliner = pd_oneliner.replace(" ", "")
+                pd_oneliner = pd_oneliner.replace(",", ", ")
                 # Add model header.
                 content_func[
                     ftype
@@ -399,7 +404,12 @@ END\n\n"""
 *
 * SasView_{MODELS[i]} component, generated from {MODELS[i]}.c in sasmodels.
 *
-* Example: SasView_{MODELS[i]}{suffix}({func_param_str[2:]}, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,{pd_init})
+* Example: 
+*  SasView_{MODELS[i]}{suffix}({func_param_str[2:]}, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     {pd_oneliner})
 *
 * %Parameters
 * INPUT PARAMETERS:
