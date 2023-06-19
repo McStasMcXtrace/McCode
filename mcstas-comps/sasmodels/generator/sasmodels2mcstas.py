@@ -303,7 +303,7 @@ END\n\n"""
     for i in range(len(MODELS)):
         with open("generated_mcstas_models/sas_" + MODELS[i] + ".c", "r") as fcode:
             lines = fcode.readlines()
-            total_content = "\n".join(lines)
+            total_content = "".join(lines)
             vol_pars = __getFormVolumeSign(total_content)
             _funcs, names = search_functions(total_content)
             params, angles, metadata = get_params(MODELS[i])
@@ -499,7 +499,9 @@ SETTING PARAMETERS (\n"""
                 content_func[
                     ftype
                 ] += f"""\nSHARE %{{
-    %include "sas_{MODELS[i]}.c"
+/* BEGIN Required header for SASmodel {MODELS[i]} */
+{total_content}
+/* END Required header for SASmodel {MODELS[i]} */
 %}}
     """
                 content_func[
@@ -919,11 +921,6 @@ END\n"""
                     "w",
                 ) as outfile:
                     outfile.writelines(content_func[ftype])
-
-                shutil.copy2(
-                    f"{OUTPUT_DIR}/sas_{MODELS[i]}.c",
-                    f"{append_to_save}{MODELS[i]}{suffix}/",
-                )
 
                 shutil.copy2(
                     f"indiv_comps/SasView_{MODELS[i]}{suffix}.comp",
