@@ -30,7 +30,6 @@ import shutil
 
 # Define where to find everything needed.
 DATA_PATH = sys.argv[1]
-KERNEL_PATH = os.path.join(DATA_PATH, "kernel_header.c")
 MODELS_PATH = os.path.join(DATA_PATH, "models")
 OTHER_MODELS_PATH = os.path.join(DATA_PATH, "other_models")
 
@@ -83,7 +82,6 @@ def _clean_source_filename(path):
     Remove the common start of the file path (if there is one), yielding
     the path relative to this file, such as:
 
-     - ./kernel_iq.c
      - ./models/sphere.c
      - ./models/lib/sas_J0.c
 
@@ -204,14 +202,13 @@ def generate_mcstas_models():
     for model_name in MODELS:
         if model_name[0] != "_":
             source_files = get_source_files(model_name)
-            kernel_header = load_template(KERNEL_PATH)
             user_code = [
                 load_template(os.path.join(MODELS_PATH, model_code))
                 for model_code in source_files[model_name]
             ]
 
             source = []
-            _add_source(source, kernel_header[0], KERNEL_PATH)
+
             for ucode, loc_ucode in user_code:
                 _add_source(source, ucode, loc_ucode)
                 code = "\n".join(source)
@@ -509,6 +506,8 @@ SETTING PARAMETERS (\n"""
                 content_func[
                     ftype
                 ] += f"""\nSHARE %{{
+%include "sas_kernel_header.c"
+
 /* BEGIN Required header for SASmodel {MODELS[i]} */
 {total_content}
 /* END Required header for SASmodel {MODELS[i]} */
