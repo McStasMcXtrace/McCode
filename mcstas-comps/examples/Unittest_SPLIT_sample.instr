@@ -1,0 +1,97 @@
+/*******************************************************************************
+* Instrument: Unittest_SPLIT
+*
+* %I
+* Written by: Peter Willendrup
+* Date: Oct 28th, 2021
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests_grammar
+*
+* SPLIT unittest including samples
+*
+* %D
+* SPLIT unittest.
+* 
+* One unit of intensity is emitted from a 1x1 m.
+*
+*
+* %Example: SAMPLE=1 SPLITS=1 Detector: PSD_I=1
+* %Example: SAMPLE=1 SPLITS=10 Detector: PSD_I=10
+* %Example: SAMPLE_1 SPLITS=100 Detector: PSD_I=100
+* %Example: SAMPLE=2 SPLITS=1 Detector: PSD_I=196000
+* %Example: SAMPLE=2 SPLITS=10 Detector: PSD_I=196000
+* %Example: SAMPLE_2 SPLITS=100 Detector: PSD_I=196000
+* %Example: SAMPLE=3 SPLITS=1 Detector: PSD_I=5400
+* %Example: SAMPLE=3 SPLITS=10 Detector: PSD_I=5400
+* %Example: SAMPLE_3 SPLITS=100 Detector: PSD_I=5400
+*
+* %P
+* SPLITS: [1] Number of SPLIT to do
+* Pp0:   [1] Dummy input parameter used internally
+*
+* %L
+* <reference/HTML link>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Unittest_SPLIT_sample(int SAMPLE=1, int SPLITS=10, Pp0=1)
+
+DECLARE
+%{
+%}
+
+USERVARS
+%{
+%}
+
+INITIALIZE
+%{
+  Pp0=1.0/mcget_ncount();
+%}
+
+TRACE
+
+COMPONENT Arm = Arm()
+  AT (0,0,0) ABSOLUTE
+EXTEND %{
+  // position x in one of 100 bins
+  x = randpm1()*0.0005;
+  y = randpm1()*0.0005;
+  if ( INSTRUMENT_GETPAR(SAMPLE) == 3) {
+    vz=200+rand01()*4400;
+  } else
+    vz= 2200;
+  p = 1; 
+%}
+
+SPLIT SPLITS COMPONENT Slit = Arm()
+  AT (0,0,0) ABSOLUTE
+ 
+
+COMPONENT Incoh = Incoherent(radius=0.01,focus_r=1, target_z=1)
+  WHEN (SAMPLE==1) AT (0,0,0.1) RELATIVE Slit
+EXTEND %{
+  p = INSTRUMENT_GETPAR(Pp0);
+%}
+
+COMPONENT Powder = PowderN(radius=0.01,reflections="Al.lau",p_inc=0.01,p_transmit=0.1)
+  WHEN (SAMPLE==2) AT (0,0,0.1) RELATIVE Slit
+EXTEND %{
+  if(!SCATTERED) ABSORB;
+%}
+
+COMPONENT SX = Single_crystal(radius=0.01,reflections="Al.lau",mosaic=20)
+  WHEN (SAMPLE==3) AT (0,0,0.1) RELATIVE Slit
+EXTEND %{
+  if(!SCATTERED) ABSORB;
+%}
+
+
+COMPONENT PSD = PSD_monitor_4PI(radius=1, filename="splits", nx=100, ny=100)
+ AT (0,0,0) RELATIVE Incoh
+  
+FINALLY
+%{
+%}
+
+END
