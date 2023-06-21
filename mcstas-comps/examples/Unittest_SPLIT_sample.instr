@@ -17,13 +17,13 @@
 *
 * %Example: SAMPLE=1 SPLITS=1 Detector: PSD_I=1
 * %Example: SAMPLE=1 SPLITS=10 Detector: PSD_I=10
-* %Example: SAMPLE_1 SPLITS=100 Detector: PSD_I=100
+* %Example: SAMPLE=1 SPLITS=100 Detector: PSD_I=100
 * %Example: SAMPLE=2 SPLITS=1 Detector: PSD_I=196000
 * %Example: SAMPLE=2 SPLITS=10 Detector: PSD_I=196000
-* %Example: SAMPLE_2 SPLITS=100 Detector: PSD_I=196000
+* %Example: SAMPLE=2 SPLITS=100 Detector: PSD_I=196000
 * %Example: SAMPLE=3 SPLITS=1 Detector: PSD_I=5400
 * %Example: SAMPLE=3 SPLITS=10 Detector: PSD_I=5400
-* %Example: SAMPLE_3 SPLITS=100 Detector: PSD_I=5400
+* %Example: SAMPLE=3 SPLITS=100 Detector: PSD_I=5400
 *
 * %P
 * SPLITS: [1] Number of SPLIT to do
