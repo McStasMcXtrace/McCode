@@ -64,8 +64,7 @@
 * cite authors with references bellow (in <a href="#links">Links</a>).
 *
 * Example: PowderN(reflections = "c60.lau", d_phi = 15 , radius = 0.01,
-*   yheight = 0.05, Vc = 1076.89, delta_d_d=0, DW=1,
-*   format=Crystallographica)
+*   yheight = 0.05, Vc = 1076.89, delta_d_d=0, DW=1)
 *
 * <b>Powder definition file format</b>
 * Powder structure is specified with an ascii data file 'reflections'.
@@ -88,7 +87,6 @@
 *   Crystallographica={ 4,5,7,0,0,0,0,0 }
 *   Fullprof         ={ 4,0,8,0,0,5,0,0 }
 *   Lazy             ={17,6,0,0,0,0,0,13}
-* Here again, NO quotes should be around the 'format' value.
 *
 * At last, the format may be overridden by direct definition of the
 * column indexes in the file itself by using the following keywords
@@ -138,7 +136,7 @@
 * zdepth: [m]          Depth of box sample
 * thickness: [m]        Thickness of hollow sample.
 *                Negative value extends the hollow volume outside of the box/cylinder.
-* reflections: [str]      Input file for reflections (HKL CIF, FullProf, ShelX).
+* reflections: [str]      Input file for reflections (LAZ LAU CIF, FullProf, ShelX).
 *                Use only incoherent scattering if NULL or ""
 *
 * Optional parameters:
@@ -265,7 +263,6 @@ SHARE
       long   xs_compute, xs_reuse, xs_calls;
       t_Table mat_table;
       int mat_column_order[5]; /*column signification for the coeff. in material data file*/
-      char  *filename;
   };
 
   off_struct offdata;
@@ -368,6 +365,7 @@ SHARE
     char **parsing;
     int    list_count=0;
     double sum_F2=0;
+    char  *filename=NULL;
 
     if (!SC_file || !strlen(SC_file) || !strcmp(SC_file, "NULL")) {
       MPI_MASTER(
@@ -377,10 +375,10 @@ SHARE
       info->count = 0;
       return(0);
     }
-    info->filename = cif2hkl(SC_file, "--mode XRA");
-    long retval = Table_Read(&sTable, info->filename, 1); /* read 1st block data from SC_file into sTable*/
+    filename = cif2hkl(SC_file, "--mode XRA");
+    long retval = Table_Read(&sTable, filename, 1); /* read 1st block data from SC_file into sTable*/
     if (retval<0) {
-      fprintf(stderr,"PowderN: Could not open file %s - exiting!\n", info->filename);
+      fprintf(stderr,"PowderN: Could not open file %s - exiting!\n", filename);
       exit(-1);
     }
 
@@ -558,6 +556,9 @@ SHARE
     printf("PowderN: %s: Read %i reflections from file '%s'\n",
       info->compname, list_count, SC_file);
     );
+    // remove temporary F2(hkl) file when giving CFL/CIF/ShelX file
+    if (filename && filename != SC_file)
+      unlink(filename);
 
     info->list  = list;
     info->count = list_count;
@@ -812,7 +813,7 @@ INITIALIZE
     i = read_line_data(reflections, &line_info);
     if (i == 0)
       exit(fprintf(stderr,"PowderN: %s: reflection file %s is not valid.\n"
-                          "ERROR    Please check file format (laz or lau).\n", NAME_CURRENT_COMP, reflections));
+                          "ERROR    Please check file format.\n", NAME_CURRENT_COMP, reflections));
   }
 
   /* compute the scattering unit density from material weight and density */
@@ -1277,9 +1278,6 @@ FINALLY
   free(line_info.q);
   free(line_info.w);
   free(line_info.my_s_k2);
-  // remove temporary F2(hkl) file when giving CFL/CIF/ShelX file
-  if (line_info.filename != reflections)
-    unlink(line_info.filename);
 
   MPI_MASTER(
   if (line_info.flag_warning)

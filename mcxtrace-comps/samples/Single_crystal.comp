@@ -170,7 +170,7 @@
 * cx: [AA or AA^-1]      Coordinates of third (direct/recip) unit cell vector
 * cy: []                 c on y axis
 * cz: []                 c on z axis
-* reflections: [string]  File name containing structure factors of reflections. Use empty ("") or NULL for incoherent scattering only
+* reflections: [string]  File name containing structure factors of reflections (LAZ LAU CIF, FullProf, ShelX). Use empty ("") or NULL for incoherent scattering only
 * order: [1]             Limit multiple scattering up to given order (0: all, 1: first, 2: second, ...)
 *
 * Optional input parameters
@@ -356,7 +356,6 @@ SHARE
       double kix, kiy, kiz;       /* last incoming photon ki */
       int    nb_reuses, nb_refl, nb_refl_count;
       int    max_tau_count;
-      char  *filename;
     };
     
 #pragma acc routine
@@ -459,13 +458,14 @@ SHARE
     char   flag=0;
     double nb_atoms=1;
     double sum_F2=0;
+    char  *filename=NULL;
 
     if (!SC_file || !strlen(SC_file) || !strcmp(SC_file,"NULL") || !strcmp(SC_file,"0"))
       return(0);
       
-    info->filename = cif2hkl(SC_file, "--xtal --mode XRA");
+    filename = cif2hkl(SC_file, "--xtal --mode XRA");
     
-    if (Table_Read(&sTable, info->filename, 1) < 0) return(0);
+    if (!filename || Table_Read(&sTable, filename, 1) < 0) return(0);
     
     if (sTable.columns < 4) {
       fprintf(stderr, "Single_crystal: %s: Error: The number of columns in %s should be at least %d for [h,k,l,F2]\n", __FILE__, SC_file, 4);
@@ -869,6 +869,10 @@ SHARE
         __FILE__, i, SC_file));
       );
     }
+    
+    // remove temporary F2(hkl) file when giving CFL/CIF/ShelX file
+    if (filename != SC_file)
+      unlink(filename);
 
     /* sort the list with increasing tau */
     qsort(list, i, sizeof(struct hkl_data),  SX_list_compare);
@@ -1655,9 +1659,6 @@ FINALLY
     }
   }
   );
-  // remove temporary F2(hkl) file when giving CFL/CIF/ShelX file
-  if (hkl_info.filename != reflections)
-    unlink(hkl_info.filename);
 %}
 
 MCDISPLAY

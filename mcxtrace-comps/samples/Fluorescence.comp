@@ -74,6 +74,9 @@
 *  xwidth=0.001,yheight=0.001,zdepth=0.0001, p_interact=0.99,
 *  target_index=1, focus_xw=0.0005, focus_yh=0.0005)
 *
+* This sample component can advantageously benefit from the SPLIT feature, e.g.
+* SPLIT COMPONENT pow = Fluorescence(...)
+*
 * %Parameters
 * material:  [str]    Chemical formulae, e.g. "LaB6", "Pb2SnO4". If may also be a CIF/LAZ/LAU file.
 * weight:    [g/mol]  Atomic/molecular weight of material.
