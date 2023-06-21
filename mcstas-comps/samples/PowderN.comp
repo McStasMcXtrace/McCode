@@ -17,6 +17,7 @@
 * Modified by: EF,    17.10.08   (added any shape sample geometry)
 * Modified by: MB,    25.07.18   (fixed indexing bug in calc_xsect)
 * Modified by: Jan Saroun(JS) '17(added target_index, d_omega, tth_sign)
+* Modified by: EF, June 2023     (can now read CIF files)
 *
 * General powder sample (N lines, single scattering, incoherent scattering)
 *
@@ -66,8 +67,7 @@
 * cite authors with references bellow (in <a href="#links">Links</a>).
 *
 * Example: PowderN(reflections = "c60.lau", d_phi = 15 , radius = 0.01,
-*   yheight = 0.05, Vc = 1076.89, sigma_abs = 0, delta_d_d=0, DW=1,
-*   format=Crystallographica)
+*   yheight = 0.05, Vc = 1076.89, sigma_abs = 0, delta_d_d=0, DW=1))
 *
 * <b>Powder definition file format</b>
 * Powder structure is specified with an ascii data file 'reflections'.
@@ -93,7 +93,6 @@
 *   Crystallographica={ 4,5,7,0,0,0,0,0,0 }
 *   Fullprof         ={ 4,0,8,0,0,5,0,0,0 }
 *   Lazy             ={17,6,0,0,0,0,0,13,0}
-* Here again, NO quotes should be around the 'format' value.
 *
 * At last, the format may be overridden by direct definition of the
 * column indexes in the file itself by using the following keywords
@@ -107,6 +106,10 @@
 *   #column_inv2d <index of the 1/2d=sin(theta)/lambda 'inv2d' column>
 *   #column_q     <index of the scattering wavevector 'q' column [Angs-1]>
 *   #column_strain <index of the strain line shift Delta/d [ppm]>
+*
+* Last, CIF, FullProf and ShelX files can be read, and converted to F2(hkl) lists
+* if 'cif2hkl' is installed. The CIF2HKL env variable can be used to point to a
+* proper executable, else the McCode, then the system installed versions are used.
 *
 * <b>Concentricity</b>
 *
@@ -129,6 +132,9 @@
 *  using PowderN(...). In both cases, this second instance needs concentric = 0.)
 * The concentric arrangment can not be used with OFF geometry specification.
 *
+* This sample component can advantageously benefit from the SPLIT feature, e.g.
+* SPLIT COMPONENT pow = PowderN(...)
+*
 * %P
 * INPUT PARAMETERS
 * radius: [m]          Outer radius of sample in (x,z) plane
@@ -136,7 +142,7 @@
 * yheight: [m]         Height of sample y direction
 * zdepth: [m]          Depth of box sample
 * thickness: []        Thickness of hollow sample. Negative value extends the hollow volume outside of the box/cylinder.
-* reflections: [string] Input file for reflections. Use only incoherent scattering if NULL or "" 
+* reflections: [string] Input file for reflections (LAZ LAU CIF, FullProf, ShelX). Use only incoherent scattering if NULL or "" 
 * d_phi: [deg]         Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
 * d_omega: [deg]       Horizontal focus range (only for incoherent scattering), 0 for no focusing.
 * tth_sign: [1]        Sign of the scattering angle. If 0, the sign is chosen randomly.
@@ -270,6 +276,74 @@ struct line_info_struct
      if (!s) return 0;
      else    return (s < 0 ? -1 : 1);
   } /* PN_list_compare */
+  
+#ifndef CIF2HKL
+#define CIF2HKL
+  // hkl_filename = cif2hkl(file, options)
+  //   used to convert CIF/CFL/INS file into F2(hkl)
+  //   the CIF2HKL env var can point to a cif2hkl executable
+  //   else the McCode binary is attempted, then the system.
+  char *cif2hkl(const char *infile, const char *options) {
+    char cmd[1024];
+    int  ret = 0;
+    int  found = 0;
+    char *OUTFILE;
+    
+    // get filename extension
+    const char *ext = strrchr(infile, '.');
+    if(!ext || ext == infile) return infile;
+    else ext++;
+    
+    // return input when no extension or not a CIF/FullProf/ShelX file
+    if ( strcasecmp(ext, "cif") 
+      && strcasecmp(ext, "pcr")
+      && strcasecmp(ext, "cfl")
+      && strcasecmp(ext, "shx")
+      && strcasecmp(ext, "ins")
+      && strcasecmp(ext, "res")) return infile;
+      
+    OUTFILE = malloc(1024);
+    if (!OUTFILE) return infile;
+    
+    strncpy(OUTFILE, tmpnam(NULL), 1024); // create an output temporary file name
+    
+    // try in order the CIF2HKL env var, then the system cif2hkl, then the McCode one
+    if (!found && getenv("CIF2HKL")) {
+      snprintf(cmd,  1024, "%s -o %s %s %s",
+        getenv("CIF2HKL"),
+        OUTFILE, options, infile);
+      ret = system(cmd);
+      if (ret != -1 && ret != 127) found = 1;
+    }
+    if (!found) {
+      snprintf(cmd,  1024, "%s%c%s%c%s -o %s %s %s",
+        getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS,
+        MC_PATHSEP_C, "bin", MC_PATHSEP_C, "cif2hkl",
+        OUTFILE, options, infile);
+      ret = system(cmd);
+      if (ret != -1 && ret != 127) found = 1;
+    }
+    // ret = -1:  child process could not be created
+    // ret = 127: shell could not be executed in the child process
+    if (!found) {
+      // try with any cif2hkl command from the system
+      snprintf(cmd,  1024, "%s -o %s %s %s",
+        "cif2hkl", OUTFILE, options, infile);
+      ret = system(cmd);
+    }
+      
+    if (ret == -1 || ret == 127) return(NULL);
+      
+    // test if the result file has been created
+    FILE *file = fopen(OUTFILE,"r");
+    if (!file) return(NULL);     
+    printf("%s: INFO: converting %s into F2(HKL) list %s\n", 
+      __FILE__, infile, OUTFILE);
+      printf ("%s\n",cmd);
+    fflush(NULL);
+    return(OUTFILE);
+  } // cif2hkl
+#endif
 
   int read_line_data(char *SC_file, struct line_info_struct *info)
   {
@@ -282,6 +356,7 @@ struct line_info_struct
     double q_count=0, j_count=0, F2_count=0;
     char **parsing;
     int    list_count=0;
+    char  *filename=NULL;
 
     if (!SC_file || !strlen(SC_file) || !strcmp(SC_file, "NULL")) {
       MPI_MASTER(
@@ -291,7 +366,8 @@ struct line_info_struct
       info->count = 0;
       return(0);
     }
-    long retval = Table_Read(&sTable, SC_file, 1); /* read 1st block data from SC_file into sTable*/
+    filename = cif2hkl(SC_file, "--mode NUC");
+    long retval = Table_Read(&sTable, filename, 1); /* read 1st block data from SC_file into sTable*/
     if (retval<0) {
       fprintf(stderr,"PowderN: Could not open file %s - exiting!\n",SC_file);
       exit(-1);
@@ -478,6 +554,10 @@ struct line_info_struct
     printf("PowderN: %s: Read %i reflections from file '%s'\n",
       info->compname, list_count, SC_file);
     );
+    
+    // remove temporary F2(hkl) file when giving CFL/CIF/ShelX file
+    if (filename != SC_file)
+      unlink(filename); 
 
     info->list  = list;
     info->count = list_count;

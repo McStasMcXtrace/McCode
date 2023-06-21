@@ -17,7 +17,8 @@
 * Modified by: EF, PW, 2015: powder/PG and texture mode
 * Modified by: PW, May 2017: Remove statement about being under validation
 * Modified by: PW, June 2017: Doc updates
-* Modified by: PW, Feb 2018: GPU edits
+* Modified by: PW, Feb 2018:  GPU edits
+* Modified by: EF, June 2023: can now read CIF files
 *
 * Mosaic single crystal with multiple scattering vectors, optimised for speed
 * with large crystals and many reflections.
@@ -122,6 +123,10 @@
 *    #lattice_bb <value of the beta  lattice angle [deg]>
 *    #lattice_cc <value of the gamma lattice angle [deg]>
 *
+* Last, CIF, FullProf and ShelX files can be read, and converted to F2(hkl) lists
+* if 'cif2hkl' is installed. The CIF2HKL env variable can be used to point to a
+* proper executable, else the McCode, then the system installed versions are used.
+*
 * See the Component Manual for more defails.
 *
 * Example: Single_crystal(xwidth=0.01, yheight=0.01, zdepth=0.01, mosaic = 5, reflections="YBaCuO.lau")
@@ -147,6 +152,9 @@
 * %VALIDATION:
 * This component has been validated.
 *
+* This sample component can advantageously benefit from the SPLIT feature, e.g.
+* SPLIT COMPONENT sx = Single_crystal(...)
+*
 * %P
 * INPUT PARAMETERS
 * radius: [m]                                             Outer radius of sample in (x,z) plane
@@ -171,7 +179,7 @@
 * cx: [AA or AA^-1]                                       Coordinates of third (direct/recip) unit cell vector
 * cy: []                                                  c on y axis
 * cz: []                                                  c on z axis
-* reflections: [string]                                   File name containing structure factors of reflections. Use empty ("") or NULL for incoherent scattering only
+* reflections: [string]                                   File name containing structure factors of reflections (LAZ LAU CIF, FullProf, ShelX). Use empty ("") or NULL for incoherent scattering only
 * order: [1]                                              Limit multiple scattering up to given order (0: all, 1: first, 2: second, ...)
 *
 * Optional input parameters
@@ -372,6 +380,75 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
      if (!s) return 0;
      else    return (s < 0 ? -1 : 1);
   } /* PN_list_compare */
+  
+   
+#ifndef CIF2HKL
+#define CIF2HKL
+  // hkl_filename = cif2hkl(file, options)
+  //   used to convert CIF/CFL/INS file into F2(hkl)
+  //   the CIF2HKL env var can point to a cif2hkl executable
+  //   else the McCode binary is attempted, then the system.
+  char *cif2hkl(const char *infile, const char *options) {
+    char cmd[1024];
+    int  ret = 0;
+    int  found = 0;
+    char *OUTFILE;
+    
+    // get filename extension
+    const char *ext = strrchr(infile, '.');
+    if(!ext || ext == infile) return infile;
+    else ext++;
+    
+    // return input when no extension or not a CIF/FullProf/ShelX file
+    if ( strcasecmp(ext, "cif") 
+      && strcasecmp(ext, "pcr")
+      && strcasecmp(ext, "cfl")
+      && strcasecmp(ext, "shx")
+      && strcasecmp(ext, "ins")
+      && strcasecmp(ext, "res")) return infile;
+      
+    OUTFILE = malloc(1024);
+    if (!OUTFILE) return infile;
+    
+    strncpy(OUTFILE, tmpnam(NULL), 1024); // create an output temporary file name
+    
+    // try in order the CIF2HKL env var, then the system cif2hkl, then the McCode one
+    if (!found && getenv("CIF2HKL")) {
+      snprintf(cmd,  1024, "%s -o %s %s %s",
+        getenv("CIF2HKL"),
+        OUTFILE, options, infile);
+      ret = system(cmd);
+      if (ret != -1 && ret != 127) found = 1;
+    }
+    if (!found) {
+      snprintf(cmd,  1024, "%s%c%s%c%s -o %s %s %s",
+        getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS,
+        MC_PATHSEP_C, "bin", MC_PATHSEP_C, "cif2hkl",
+        OUTFILE, options, infile);
+      ret = system(cmd);
+      if (ret != -1 && ret != 127) found = 1;
+    }
+    // ret = -1:  child process could not be created
+    // ret = 127: shell could not be executed in the child process
+    if (!found) {
+      // try with any cif2hkl command from the system
+      snprintf(cmd,  1024, "%s -o %s %s %s",
+        "cif2hkl", OUTFILE, options, infile);
+      ret = system(cmd);
+    }
+      
+    if (ret == -1 || ret == 127) return(NULL);
+      
+    // test if the result file has been created
+    FILE *file = fopen(OUTFILE,"r");
+    if (!file) return(NULL);     
+    printf("%s: INFO: converting %s into F2(HKL) list %s\n", 
+      __FILE__, infile, OUTFILE);
+      printf ("%s\n",cmd);
+    fflush(NULL);
+    return(OUTFILE);
+  } // cif2hkl
+#endif
 
   /* ------------------------------------------------------------------------ */
   int
@@ -386,13 +463,15 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
     char **parsing;
     char flag=0;
     double nb_atoms=1;
+    char  *filename=NULL;
 
     if (!SC_file || !strlen(SC_file) || !strcmp(SC_file,"NULL") || !strcmp(SC_file,"0")) {
       info->count = 0;
       flag=1;
     }
     if (!flag) {
-      Table_Read(&sTable, SC_file, 1); /* read 1st block data from SC_file into sTable*/
+      filename = cif2hkl(SC_file, "--xtal --mode NUC");
+      Table_Read(&sTable, filename, 1); /* read 1st block data from SC_file into sTable*/
       if (sTable.columns < 4) {
         fprintf(stderr, "Single_crystal: Error: The number of columns in %s should be at least %d for [h,k,l,F2]\n", SC_file, 4);
         return(0);
@@ -782,6 +861,10 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
 
     *hkl_list = list;
     info->count = i;
+    
+    // remove temporary F2(hkl) file when giving CFL/CIF/ShelX file
+    if (filename != SC_file)
+      unlink(filename); 
     
     return(info->count);
   } /* read_hkl_data */
