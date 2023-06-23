@@ -19,7 +19,7 @@
 * off/ply-files a scene is put together which may be used for tomography style
 * simulations. The default input file contains a single object: a mechanical socket.
 * 
-* %Example: Airport_scannerII.instr -n1e5 posX=-0.25 posY=-0.3 Detector: psd2_I=0.000629398
+* %Example: Airport_scannerII.instr -n1e5 Ncount=1e4 posX=-0.25 posY=-0.3 Detector: psd2_I=0.000629398
 *
 * %Parameters
 * SFILE: [ ]    Name of file that contains the off/ply parameters for the scene
@@ -32,7 +32,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Airp_scannerII(string SFILE="input_abs_objects_template.dat",ANGLE=0,posX=0,posY=0,posZ=0)
+DEFINE INSTRUMENT Airp_scannerII(string SFILE="input_abs_objects_template.dat",ANGLE=0,posX=0,posY=0,posZ=0, Ncount=0)
 DEPENDENCY " -DLOADPATH=@MCCODE_LIB@/data "
 
 DECLARE
@@ -57,6 +57,9 @@ INITIALIZE
 
   deth=s*dNy*2e-3;//7.0/6.0*troh;
   detw=s*dNx*2e-3;//7.0/6.0*trow;
+  
+  if (Ncount>0)
+    mcset_ncount(Ncount);
   
 %}
 
