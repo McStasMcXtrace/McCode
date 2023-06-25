@@ -105,9 +105,6 @@ SHARE %{
 #define SAS_HAVE_sas_3j1x_x
 
 #line 1 "sas_3j1x_x"
-#ifndef SAS_3J1X_HDR
-#define SAS_3J1X_HDR
-
 /**
 * Spherical Bessel function 3*j1(x)/x
 *
@@ -166,8 +163,6 @@ double sas_3j1x_x(double q)
     }
 }
 
-#endif // SAS_3J1X_HDR
-
 
 #endif // SAS_HAVE_sas_3j1x_x
 
@@ -176,9 +171,6 @@ double sas_3j1x_x(double q)
 #define SAS_HAVE_gauss76
 
 #line 1 "gauss76"
-#ifndef GAUSS76
-#define GAUSS76
-
 // Created by Andrew Jackson on 4/23/07
 
  #ifdef GAUSS_N
@@ -351,9 +343,6 @@ constant double Gauss76Z[76] = {
 
 
 #pragma acc declare copyin(Gauss76Wt[0:76], Gauss76Z[0:76])
-
-#endif // GAUSS76
-
 
 #endif // SAS_HAVE_gauss76
 

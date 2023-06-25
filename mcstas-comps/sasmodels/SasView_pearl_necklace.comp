@@ -97,9 +97,6 @@ SHARE %{
 #define SAS_HAVE_sas_Si
 
 #line 1 "sas_Si"
-#ifndef SAS_SI_HDR
-#define SAS_SI_HDR
-
 // integral of sin(x)/x Taylor series approximated to w/i 0.1%
 double sas_Si(double x);
 
@@ -128,8 +125,6 @@ double sas_Si(double x)
     }
 }
 
-#endif // SAS_SI_HDR
-
 
 #endif // SAS_HAVE_sas_Si
 
@@ -138,9 +133,6 @@ double sas_Si(double x)
 #define SAS_HAVE_sas_3j1x_x
 
 #line 1 "sas_3j1x_x"
-#ifndef SAS_3J1X_HDR
-#define SAS_3J1X_HDR
-
 /**
 * Spherical Bessel function 3*j1(x)/x
 *
@@ -198,8 +190,6 @@ double sas_3j1x_x(double q)
         return 3.0*(sin_q/q - cos_q)/(q*q);
     }
 }
-
-#endif // SAS_3J1X_HDR
 
 
 #endif // SAS_HAVE_sas_3j1x_x

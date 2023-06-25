@@ -101,9 +101,6 @@ SHARE %{
 #define SAS_HAVE_sas_3j1x_x
 
 #line 1 "sas_3j1x_x"
-#ifndef SAS_3J1X_HDR
-#define SAS_3J1X_HDR
-
 /**
 * Spherical Bessel function 3*j1(x)/x
 *
@@ -162,8 +159,6 @@ double sas_3j1x_x(double q)
     }
 }
 
-#endif // SAS_3J1X_HDR
-
 
 #endif // SAS_HAVE_sas_3j1x_x
 
@@ -172,8 +167,6 @@ double sas_3j1x_x(double q)
 #define SAS_HAVE_sas_gamma
 
 #line 1 "sas_gamma"
-#ifndef SAS_GAMMA_HDR
-#define SAS_GAMMA_HDR
 /*
 The wrapper for gamma function from OpenCL and standard libraries
 The OpenCL gamma function fails miserably on values lower than 1.0
@@ -329,8 +322,6 @@ inline double sas_gamma(double x)
     return (x<0. ? M_PI/tgamma(1.-x)/sin(M_PI*x) : tgamma(x+1)/x);
 }
 
-#endif // SAS_GAMMA_HDR
-
 
 #endif // SAS_HAVE_sas_gamma
 
@@ -346,9 +337,6 @@ core_shell_kernel
 Form factor used in core_shell and fractal_core_shell
 
 ********************************************************************/
-#ifndef CORE_SHELL_KERNEL
-#define CORE_SHELL_KERNEL
-
 #pragma acc routine seq
 static
 double core_shell_fq(double q,
@@ -388,8 +376,6 @@ double core_shell_kernel(double q,
     return 1.0e-4 * fq*fq;
 }
 
-#endif // CORE_SHELL_KERNEL
-
 
 #endif // SAS_HAVE_core_shell
 
@@ -398,9 +384,6 @@ double core_shell_kernel(double q,
 #define SAS_HAVE_fractal_sq
 
 #line 1 "fractal_sq"
-#ifndef FRACTAL_SQ
-#define FRACTAL_SQ
-
 #pragma acc routine seq
 static double
 fractal_sq(double q, double radius, double fractal_dim, double cor_length)
@@ -430,8 +413,6 @@ fractal_sq(double q, double radius, double fractal_dim, double cor_length)
     }
     return 1.0 + term;
 }
-
-#endif // FRACTAL_SQ
 
 
 #endif // SAS_HAVE_fractal_sq

@@ -93,9 +93,6 @@ SHARE %{
 #define SAS_HAVE_sas_3j1x_x
 
 #line 1 "sas_3j1x_x"
-#ifndef SAS_3J1X_HDR
-#define SAS_3J1X_HDR
-
 /**
 * Spherical Bessel function 3*j1(x)/x
 *
@@ -154,8 +151,6 @@ double sas_3j1x_x(double q)
     }
 }
 
-#endif // SAS_3J1X_HDR
-
 
 #endif // SAS_HAVE_sas_3j1x_x
 
@@ -171,9 +166,6 @@ core_shell_kernel
 Form factor used in core_shell and fractal_core_shell
 
 ********************************************************************/
-#ifndef CORE_SHELL_KERNEL
-#define CORE_SHELL_KERNEL
-
 #pragma acc routine seq
 static
 double core_shell_fq(double q,
@@ -212,8 +204,6 @@ double core_shell_kernel(double q,
     const double fq = core_shell_fq(q, radius, thickness, core_sld, shell_sld, solvent_sld);
     return 1.0e-4 * fq*fq;
 }
-
-#endif // CORE_SHELL_KERNEL
 
 
 #endif // SAS_HAVE_core_shell

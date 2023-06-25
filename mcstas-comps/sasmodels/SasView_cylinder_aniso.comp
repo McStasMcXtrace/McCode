@@ -98,9 +98,6 @@ SHARE %{
 #define SAS_HAVE_polevl
 
 #line 1 "polevl"
-#ifndef POLEVL_HDR
-#define POLEVL_HDR
-
 /*							polevl.c
  *							p1evl.c
  *
@@ -187,8 +184,6 @@ double p1evl( double x, pconstant double *coef, int N )
     return ans;
 }
 
-#endif // POLEVL_HDR
-
 
 #endif // SAS_HAVE_polevl
 
@@ -197,9 +192,6 @@ double p1evl( double x, pconstant double *coef, int N )
 #define SAS_HAVE_sas_J1
 
 #line 1 "sas_J1"
-#ifndef SAS_J1_HDR
-#define SAS_J1_HDR
-
 /*							j1.c
  *
  *	Bessel function of order one
@@ -455,8 +447,6 @@ double sas_2J1x_x(double x)
     return (x != 0.0 ) ? 2.0*sas_J1(x)/x : 1.0;
 }
 
-#endif // SAS_J1_HDR
-
 
 #endif // SAS_HAVE_sas_J1
 
@@ -465,9 +455,6 @@ double sas_2J1x_x(double x)
 #define SAS_HAVE_gauss76
 
 #line 1 "gauss76"
-#ifndef GAUSS76
-#define GAUSS76
-
 // Created by Andrew Jackson on 4/23/07
 
  #ifdef GAUSS_N
@@ -640,9 +627,6 @@ constant double Gauss76Z[76] = {
 
 
 #pragma acc declare copyin(Gauss76Wt[0:76], Gauss76Z[0:76])
-
-#endif // GAUSS76
-
 
 #endif // SAS_HAVE_gauss76
 
