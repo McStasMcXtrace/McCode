@@ -19,8 +19,12 @@
 *
 * SasView_mono_gauss_coil component, generated from mono_gauss_coil.c in sasmodels.
 *
-* Example: SasView_mono_gauss_coil(i_zero, rg, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_rg=0.0)
+* Example: 
+*  SasView_mono_gauss_coil(i_zero, rg, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_rg=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -71,7 +75,79 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_mono_gauss_coil.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel mono_gauss_coil */
+#define HAS_Iq
+#define FORM_VOL
+#line 1 ".././models/mono_gauss_coil.c"
+static double
+form_volume_mono_gauss_coil(double rg)
+{
+    return 1.0;
+}
+
+static double
+radius_effective_mono_gauss_coil(int mode, double rg)
+{
+    switch (mode) {
+    default:
+    case 1: // R_g
+        return rg;
+    case 2: // 2R_g
+        return 2.0*rg;
+    case 3: // 3R_g
+        return 3.0*rg;
+    case 4: // (5/3)^0.5*R_g
+        return sqrt(5.0/3.0)*rg;
+    }
+}
+
+static double
+gauss_coil(double qr)
+{
+    const double x = qr*qr;
+
+    // Use series expansion at low q for higher accuracy. We could use
+    // smaller polynomials if we sacrifice some digits of precision or
+    // introduce an additional series expansion around x == 1.
+    // See explore/precision.py, gauss_coil function.
+#if FLOAT_SIZE>4 // DOUBLE_PRECISION
+    // For double precision: use O(5) Pade with 0.5 cutoff (10 mad + 1 divide)
+    if (x < 0.5) {
+        // PadeApproximant[2*Exp[-x^2] + x^2-1)/x^4, {x, 0, 8}]
+        const double A1=1./12., A2=2./99., A3=1./2640., A4=1./23760., A5=-1./1995840.;
+        const double B1=5./12., B2=5./66., B3=1./132., B4=1./2376., B5=1./95040.;
+        return (((((A5*x + A4)*x + A3)*x + A2)*x + A1)*x + 1.)
+                / (((((B5*x + B4)*x + B3)*x + B2)*x + B1)*x + 1.);
+    }
+#else
+    // For single precision: use O(7) Taylor with 0.8 cutoff (7 mad)
+    if (x < 0.8) {
+        const double C0 = +1.;
+        const double C1 = -1./3.;
+        const double C2 = +1./12.;
+        const double C3 = -1./60.;
+        const double C4 = +1./360.;
+        const double C5 = -1./2520.;
+        const double C6 = +1./20160.;
+        const double C7 = -1./181440.;
+        return ((((((C7*x + C6)*x + C5)*x + C4)*x + C3)*x + C2)*x + C1)*x + C0;
+    }
+#endif
+
+    return 2.0 * (expm1(-x) + x)/(x*x);
+}
+
+static double
+Iq_mono_gauss_coil(double q, double i_zero, double rg)
+{
+    return i_zero * gauss_coil(q*rg);
+}
+
+
+
+/* END Required header for SASmodel mono_gauss_coil */
 %}
     DECLARE
 %{
@@ -178,11 +254,11 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, i_zero, trace_rg);
+    Iq_out = Iq_mono_gauss_coil(q, i_zero, trace_rg);
 
 
     float vol;
-    vol = form_volume(trace_rg);
+    vol = 1;
 
     // Scale by 1.0E2 [SasView: 1/cm  ->   McStas: 1/m]
     Iq_out = model_scale*Iq_out / vol * 1.0E2;

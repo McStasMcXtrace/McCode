@@ -19,9 +19,12 @@
 *
 * SasView_lamellar_hg component, generated from lamellar_hg.c in sasmodels.
 *
-* Example: SasView_lamellar_hg(length_tail, length_head, sld, sld_head, sld_solvent, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_length_tail=0.0,
-        pd_length_head=0.0)
+* Example: 
+*  SasView_lamellar_hg(length_tail, length_head, sld, sld_head, sld_solvent, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_length_tail=0.0, pd_length_head=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -80,7 +83,32 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_lamellar_hg.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel lamellar_hg */
+#define HAS_Iq
+#line 1 ".././models/lamellar_hg.c"
+double Iq_lamellar_hg(double q, double length_tail, double length_head, double sld, double sld_head, double sld_solvent)
+{
+    const double qsq = q*q;
+    const double drh = sld_head - sld_solvent;
+    const double drt = sld - sld_solvent;    //correction 13FEB06 by L.Porcar
+    const double qT = q*length_tail;
+    double Pq, inten;
+    Pq = drh*(sin(q*(length_head+length_tail))-sin(qT)) + drt*sin(qT);
+    Pq *= Pq;
+    Pq *= 4.0/(qsq);
+
+    inten = 2.0e-4*M_PI*Pq/qsq;
+
+    // normalize by the bilayer thickness
+    inten /= 2.0*(length_head+length_tail);
+
+    return inten;
+}
+
+
+/* END Required header for SASmodel lamellar_hg */
 %}
     DECLARE
 %{
@@ -189,7 +217,7 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, trace_length_tail, trace_length_head, sld, sld_head, sld_solvent);
+    Iq_out = Iq_lamellar_hg(q, trace_length_tail, trace_length_head, sld, sld_head, sld_solvent);
 
 
     float vol;

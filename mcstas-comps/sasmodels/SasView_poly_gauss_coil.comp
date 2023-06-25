@@ -19,8 +19,12 @@
 *
 * SasView_poly_gauss_coil component, generated from poly_gauss_coil.c in sasmodels.
 *
-* Example: SasView_poly_gauss_coil(i_zero, rg, polydispersity, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_rg=0.0)
+* Example: 
+*  SasView_poly_gauss_coil(i_zero, rg, polydispersity, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_rg=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -73,7 +77,44 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_poly_gauss_coil.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel poly_gauss_coil */
+#define HAS_Iq
+#line 1 ".././models/poly_gauss_coil.c"
+    
+double Iq_poly_gauss_coil(double q, double i_zero, double rg, double polydispersity);
+
+#pragma acc routine seq
+double Iq_poly_gauss_coil(double q, double i_zero, double rg, double polydispersity) {
+    double u = polydispersity - 1.0;
+    double z = q * q * (rg * rg / (1.0 + 2.0 * u));
+
+    // need to trap the case of the polydispersity being 1 (ie, monodisperse!)
+    double result;
+    if (polydispersity == 1.0) {
+        if (q == 0.0) {
+            result = 1.0;
+        } else {
+            result = 2.0 * (expm1(-z) + z) / (q * q);
+        }
+    } else {
+        // Taylor series around z=0 of (2*(1+uz)^(-1/u) + z - 1) / (z^2(u+1))
+        double p[3] = {(+1 + 5 * u + 6 * u * u) / 12.0, (-1 - 2 * u) / 3.0, (+1)};
+        result = 2.0 * (pow(1.0 + u * z, -1.0 / u) + z - 1.0) / (1.0 + u);
+        if (z > 1e-4) {
+            result /= (q * q * z * z);
+        } else {
+            result = p[0] * z * z + p[1] * z + p[2];
+        }
+    }
+    return i_zero * result;
+}
+
+
+
+
+/* END Required header for SASmodel poly_gauss_coil */
 %}
     DECLARE
 %{
@@ -180,7 +221,7 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, i_zero, trace_rg, polydispersity);
+    Iq_out = Iq_poly_gauss_coil(q, i_zero, trace_rg, polydispersity);
 
 
     float vol;

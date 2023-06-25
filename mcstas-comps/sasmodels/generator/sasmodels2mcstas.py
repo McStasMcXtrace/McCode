@@ -30,7 +30,6 @@ import shutil
 
 # Define where to find everything needed.
 DATA_PATH = sys.argv[1]
-KERNEL_PATH = os.path.join(DATA_PATH, "kernel_header.c")
 MODELS_PATH = os.path.join(DATA_PATH, "models")
 OTHER_MODELS_PATH = os.path.join(DATA_PATH, "other_models")
 
@@ -38,20 +37,6 @@ OTHER_MODELS_PATH = os.path.join(DATA_PATH, "other_models")
 OUTPUT_DIR = "generated_mcstas_models"
 append_to_save = "tests/test_"
 
-# Add other models to models directory. Includes pure python module
-# to C version.
-if os.path.isdir(OTHER_MODELS_PATH):
-    models = os.listdir(MODELS_PATH)
-    other_models = os.listdir(OTHER_MODELS_PATH)
-    for new_model in other_models:
-        if new_model not in models:
-            shutil.copy(os.path.join(OTHER_MODELS_PATH, new_model), MODELS_PATH)
-
-shutil.copytree(
-    os.path.join(OTHER_MODELS_PATH, "lib"),
-    os.path.join(MODELS_PATH, "lib"),
-    dirs_exist_ok=True,
-)
 
 # Get model names to be used globaly in this script
 MODELS = [fname.split(".c")[0] for fname in os.listdir(MODELS_PATH) if ".c" in fname]
@@ -83,7 +68,6 @@ def _clean_source_filename(path):
     Remove the common start of the file path (if there is one), yielding
     the path relative to this file, such as:
 
-     - ./kernel_iq.c
      - ./models/sphere.c
      - ./models/lib/sas_J0.c
 
@@ -204,14 +188,13 @@ def generate_mcstas_models():
     for model_name in MODELS:
         if model_name[0] != "_":
             source_files = get_source_files(model_name)
-            kernel_header = load_template(KERNEL_PATH)
             user_code = [
                 load_template(os.path.join(MODELS_PATH, model_code))
                 for model_code in source_files[model_name]
             ]
 
             source = []
-            _add_source(source, kernel_header[0], KERNEL_PATH)
+
             for ucode, loc_ucode in user_code:
                 _add_source(source, ucode, loc_ucode)
                 code = "\n".join(source)
@@ -220,20 +203,55 @@ def generate_mcstas_models():
             status = 0
             if "form_volume(" in code:
                 code = "\n".join(["#define FORM_VOL", code])
+                code = code.replace('form_volume(', 'form_volume_' + model_name + '(')
             if ("Fq(" in code) and ("Iq(" in code):
+                code = code.replace('Fq(', 'Fq_' + model_name + '(')
+                code = code.replace('Iq(', 'Iq_' + model_name + '(')
                 pass
             elif ("Fq(" in code) and ("Iq(" not in code):
                 code = "\n".join(["#define HAS_FQ", code])
+                code = code.replace('Fq(', 'Fq_' + model_name + '(')
                 status = "Fq"
             if "Iq(" in code:
                 code = "\n".join(["#define HAS_Iq", code])
+                code = code.replace('Iq(', 'Iq_' + model_name + '(')
                 status = "Iq"
             if "Iqac(" in code:
                 code = "\n".join(["#define HAS_Iqac", code])
+                code = code.replace('Iqac(', 'Iqac_' + model_name + '(')
                 status = "Iqac"
             if "Iqabc(" in code:
                 code = "\n".join(["#define HAS_Iqabc", code])
+                code = code.replace('Iqabc(', 'Iqabc_' + model_name + '(')
                 status = "Iqabc"
+
+            if "radius_effective(" in code:
+                code = code.replace('radius_effective(', 'radius_effective_' + model_name + '(')
+
+            if "radius_from_crosssection(" in code:
+                code = code.replace('radius_from_crosssection(', 'radius_from_crosssection_' + model_name + '(')
+
+            if "radius_from_curvature(" in code:
+                code = code.replace('radius_from_curvature(', 'radius_from_curvature_' + model_name + '(')
+
+            if "radius_from_diagonal(" in code:
+                code = code.replace('radius_from_diagonal(', 'radius_from_diagonal_' + model_name + '(')
+
+            if "radius_from_excluded_volume(" in code:
+                code = code.replace('radius_from_excluded_volume(', 'radius_from_excluded_volume_' + model_name + '(')
+
+            if "radius_from_max_dimension(" in code:
+                code = code.replace('radius_from_max_dimension(', 'radius_from_max_dimension_' + model_name + '(')
+
+            if "radius_from_min_dimension(" in code:
+                code = code.replace('radius_from_min_dimension(', 'radius_from_min_dimension_' + model_name + '(')
+
+            if "radius_from_totallength(" in code:
+                code = code.replace('radius_from_totallength(', 'radius_from_totallength_' + model_name + '(')
+
+            if "radius_from_volume(" in code:
+                code = code.replace('radius_from_volume(', 'radius_from_volume_' + model_name + '(')
+
             if not os.path.isdir("generated_mcstas_models"):
                 os.mkdir("generated_mcstas_models")
             with open("_".join(["generated_mcstas_models/sas", fname]), "w") as f:
@@ -296,7 +314,7 @@ END\n\n"""
     for i in range(len(MODELS)):
         with open("generated_mcstas_models/sas_" + MODELS[i] + ".c", "r") as fcode:
             lines = fcode.readlines()
-            total_content = "\n".join(lines)
+            total_content = "".join(lines)
             vol_pars = __getFormVolumeSign(total_content)
             _funcs, names = search_functions(total_content)
             params, angles, metadata = get_params(MODELS[i])
@@ -368,6 +386,11 @@ END\n\n"""
                 pd_init = pd_init[:-2]
                 pd_condition_ang = pd_condition_ang[:-2] + "){\n"
 
+                pd_oneliner = ''.join(pd_init)
+                pd_oneliner = pd_oneliner.replace("\n", "")
+                pd_oneliner = pd_oneliner.replace("\t", " ")
+                pd_oneliner = pd_oneliner.replace(" ", "")
+                pd_oneliner = pd_oneliner.replace(",", ", ")
                 # Add model header.
                 content_func[
                     ftype
@@ -392,7 +415,12 @@ END\n\n"""
 *
 * SasView_{MODELS[i]} component, generated from {MODELS[i]}.c in sasmodels.
 *
-* Example: SasView_{MODELS[i]}{suffix}({func_param_str[2:]}, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,{pd_init})
+* Example: 
+*  SasView_{MODELS[i]}{suffix}({func_param_str[2:]}, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     {pd_oneliner})
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -463,7 +491,7 @@ SETTING PARAMETERS (\n"""
 
                 if len(vol_par_str) > 0:
                     vol_par_str = ", ".join(vol_par_str)
-                    content_vol = f"    vol = form_volume({vol_par_str});\n"
+                    content_vol = f"    vol = form_volume_{MODELS[i]}({vol_par_str});\n"
                 else:
                     content_vol = "    vol = 1;\n"
 
@@ -492,7 +520,11 @@ SETTING PARAMETERS (\n"""
                 content_func[
                     ftype
                 ] += f"""\nSHARE %{{
-    %include "sas_{MODELS[i]}.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel {MODELS[i]} */
+{total_content}
+/* END Required header for SASmodel {MODELS[i]} */
 %}}
     """
                 content_func[
@@ -644,10 +676,10 @@ TRACE
                 # Check function type and add corresponding rotation.
                 if ftype == "Fq":  # TODO
                     content_func[ftype] += "    double F1=0.0, F2=0.0;\n"
-                    content_func[ftype] += f"    Fq(q, &F1, &F2{func_param_str});\n"
+                    content_func[ftype] += f"    Fq_{MODELS[i]}(q, &F1, &F2{func_param_str});\n"
                     content_func[ftype] += "    Iq_out = F2;\n"
                 elif ftype == "Iq":
-                    content_func[ftype] += f"    Iq_out = Iq(q{func_param_str});\n"
+                    content_func[ftype] += f"    Iq_out = Iq_{MODELS[i]}(q{func_param_str});\n"
                 elif ftype == "Iqac":
                     content_func[
                         ftype
@@ -661,7 +693,7 @@ TRACE
                     func_param_str = func_param_str = func_param_str.replace("phi", "")
                     content_func[
                         ftype
-                    ] += f"    Iq_out = Iqac(qab, qc{func_param_str});\n"
+                    ] += f"    Iq_out = Iqac_{MODELS[i]}(qab, qc{func_param_str});\n"
                 elif ftype == "Iqabc":
                     content_func[
                         ftype
@@ -676,7 +708,7 @@ TRACE
                     func_param_str = func_param_str.replace("Psi", "")
                     content_func[
                         ftype
-                    ] += f"    Iq_out = Iqabc(qa, qb, qc{func_param_str});\n"
+                    ] += f"    Iq_out = Iqabc_{MODELS[i]}(qa, qb, qc{func_param_str});\n"
 
                 # Add volume function and multiply by scaling factor and volume.
                 content_func[
@@ -912,11 +944,6 @@ END\n"""
                     "w",
                 ) as outfile:
                     outfile.writelines(content_func[ftype])
-
-                shutil.copy2(
-                    f"{OUTPUT_DIR}/sas_{MODELS[i]}.c",
-                    f"{append_to_save}{MODELS[i]}{suffix}/",
-                )
 
                 shutil.copy2(
                     f"indiv_comps/SasView_{MODELS[i]}{suffix}.comp",

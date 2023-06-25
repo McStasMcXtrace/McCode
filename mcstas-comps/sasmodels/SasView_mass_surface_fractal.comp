@@ -19,9 +19,12 @@
 *
 * SasView_mass_surface_fractal component, generated from mass_surface_fractal.c in sasmodels.
 *
-* Example: SasView_mass_surface_fractal(fractal_dim_mass, fractal_dim_surf, rg_cluster, rg_primary, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_rg_cluster=0.0,
-        pd_rg_primary=0.0)
+* Example: 
+*  SasView_mass_surface_fractal(fractal_dim_mass, fractal_dim_surf, rg_cluster, rg_primary, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_rg_cluster=0.0, pd_rg_primary=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -78,7 +81,32 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_mass_surface_fractal.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel mass_surface_fractal */
+#define HAS_Iq
+#line 1 ".././models/mass_surface_fractal.c"
+static double
+Iq_mass_surface_fractal(double q,
+          double fractal_dim_mass,
+          double fractal_dim_surf,
+          double rg_cluster,
+          double rg_primary)
+{
+     //computation
+    const double Dm = 0.5*fractal_dim_mass;
+    const double Dt = 0.5*(6.0 - (fractal_dim_mass + fractal_dim_surf));
+
+    const double t1 = Dm==0. ? 1.0 : pow(1.0 + square(q*rg_cluster)/(3.0*Dm), -Dm);
+    const double t2 = Dt==0. ? 1.0 : pow(1.0 + square(q*rg_primary)/(3.0*Dt), -Dt);
+    const double form = t1*t2;
+
+    return form;
+}
+
+
+
+/* END Required header for SASmodel mass_surface_fractal */
 %}
     DECLARE
 %{
@@ -187,7 +215,7 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, fractal_dim_mass, fractal_dim_surf, trace_rg_cluster, trace_rg_primary);
+    Iq_out = Iq_mass_surface_fractal(q, fractal_dim_mass, fractal_dim_surf, trace_rg_cluster, trace_rg_primary);
 
 
     float vol;

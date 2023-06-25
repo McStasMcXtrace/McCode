@@ -19,8 +19,12 @@
 *
 * SasView_lorentz component, generated from lorentz.c in sasmodels.
 *
-* Example: SasView_lorentz(cor_length, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_cor_length=0.0)
+* Example: 
+*  SasView_lorentz(cor_length, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_cor_length=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -69,7 +73,19 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_lorentz.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel lorentz */
+#define HAS_Iq
+#line 1 ".././models/lorentz.c"
+double Iq_lorentz(double q, double cor_length)
+{
+    double denominator = 1 + (q*cor_length)*(q*cor_length);
+    return 1/denominator;
+}
+
+
+/* END Required header for SASmodel lorentz */
 %}
     DECLARE
 %{
@@ -176,7 +192,7 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, trace_cor_length);
+    Iq_out = Iq_lorentz(q, trace_cor_length);
 
 
     float vol;

@@ -19,8 +19,12 @@
 *
 * SasView_guinier_porod component, generated from guinier_porod.c in sasmodels.
 *
-* Example: SasView_guinier_porod(rg, s, porod_exp, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_rg=0.0)
+* Example: 
+*  SasView_guinier_porod(rg, s, porod_exp, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_rg=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -73,7 +77,40 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_guinier_porod.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel guinier_porod */
+#define HAS_Iq
+#line 1 ".././models/guinier_porod.c"
+#include <math.h>
+
+double Iq_guinier_porod(double q, double rg, double s, double porod_exp);
+
+#pragma acc routine seq
+double Iq_guinier_porod(double q, double rg, double s, double porod_exp) {
+    double n = 3.0 - s;
+    double ms = 0.5 * (porod_exp - s);  // =(n-3+porod_exp)/2
+    double iq = 0.0;
+
+    // Take care of the singular points
+    if (rg <= 0.0 || ms <= 0.0) {
+        return iq;
+    }
+
+    // Do the calculation and return the function value
+    if (q < sqrt(n * ms) / rg) {
+        iq = pow(q, -s) * exp(-pow(q * rg, 2) / n);
+    } else {
+        iq = pow(q, -porod_exp) * (exp(-ms) * pow(n * ms / pow(rg, 2), ms));
+    }
+
+    return iq;
+}
+
+
+
+
+/* END Required header for SASmodel guinier_porod */
 %}
     DECLARE
 %{
@@ -180,7 +217,7 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, trace_rg, s, porod_exp);
+    Iq_out = Iq_guinier_porod(q, trace_rg, s, porod_exp);
 
 
     float vol;

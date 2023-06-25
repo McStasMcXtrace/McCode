@@ -19,8 +19,12 @@
 *
 * SasView_star_polymer component, generated from star_polymer.c in sasmodels.
 *
-* Example: SasView_star_polymer(rg_squared, arms, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_rg_squared=0.0)
+* Example: 
+*  SasView_star_polymer(rg_squared, arms, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_rg_squared=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -71,7 +75,42 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_star_polymer.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel star_polymer */
+#define HAS_Iq
+#define FORM_VOL
+#line 1 ".././models/star_polymer.c"
+double form_volume_star_polymer(void);
+
+double Iq_star_polymer(double q, double radius2, double arms);
+
+static double star_polymer_kernel(double q, double radius2, double arms)
+{
+
+    double u_2 = radius2 * q * q;
+    double v = u_2 * arms / (3.0 * arms - 2.0);
+
+    double term1 = v + expm1(-v);
+    double term2 = ((arms - 1.0)/2.0) * square(expm1(-v));
+
+    return (2.0 * (term1 + term2)) / (arms * v * v);
+
+}
+
+double form_volume_star_polymer(void)
+{
+    return 1.0;
+}
+
+double Iq_star_polymer(double q, double radius2, double arms)
+{
+    return star_polymer_kernel(q, radius2, arms);
+}
+
+
+
+/* END Required header for SASmodel star_polymer */
 %}
     DECLARE
 %{
@@ -178,7 +217,7 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, trace_rg_squared, arms);
+    Iq_out = Iq_star_polymer(q, trace_rg_squared, arms);
 
 
     float vol;

@@ -1,3 +1,6 @@
+#ifndef SAS_J1_HDR
+#define SAS_J1_HDR
+
 /*							j1.c
  *
  *	Bessel function of order one
@@ -252,3 +255,5 @@ double sas_2J1x_x(double x)
 {
     return (x != 0.0 ) ? 2.0*sas_J1(x)/x : 1.0;
 }
+
+#endif SAS_J1_HDR

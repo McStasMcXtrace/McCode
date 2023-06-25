@@ -19,9 +19,12 @@
 *
 * SasView_lamellar_hg_stack_caille component, generated from lamellar_hg_stack_caille.c in sasmodels.
 *
-* Example: SasView_lamellar_hg_stack_caille(length_tail, length_head, Nlayers, d_spacing, Caille_parameter, sld, sld_head, sld_solvent, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_length_tail=0.0,
-        pd_length_head=0.0)
+* Example: 
+*  SasView_lamellar_hg_stack_caille(length_tail, length_head, Nlayers, d_spacing, Caille_parameter, sld, sld_head, sld_solvent, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_length_tail=0.0, pd_length_head=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -86,7 +89,72 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_lamellar_hg_stack_caille.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel lamellar_hg_stack_caille */
+#define HAS_Iq
+#line 1 ".././models/lamellar_hg_stack_caille.c"
+/*	LamellarCailleHG kernel - allows for name changes of passed parameters ...
+    Maths identical to LamellarCaille apart from the line for P(Q)
+*/
+
+static double
+Iq_lamellar_hg_stack_caille(double qval,
+   double length_tail,
+   double length_head,
+   double fp_Nlayers,
+   double dd,
+   double Cp,
+   double tail_sld,
+   double head_sld,
+   double solvent_sld)
+{
+  int Nlayers = (int)(fp_Nlayers+0.5);    //cast to an integer for the loop
+  double inten,Pq,Sq,alpha,temp,t2;
+  //double dQ, dQDefault, t1, t3;
+  // from wikipedia 0.577215664901532860606512090082402431042159335
+  const double Euler = 0.577215664901533;   // Euler's constant, increased sig figs for new models Feb 2015
+  //dQDefault = 0.0;    //[=] 1/A, q-resolution, default value
+  //dQ = dQDefault; // REMOVED UNUSED dQ calculations for new models Feb 2015
+
+  Pq = (head_sld-solvent_sld)*(sin(qval*(length_head+length_tail))-sin(qval*length_tail))
+       + (tail_sld-solvent_sld)*sin(qval*length_tail);
+  Pq *= Pq;
+  Pq *= 4.0/(qval*qval);
+
+  Sq = 0.0;
+  for(int ii=1; ii < Nlayers; ii++) {
+    temp = 0.0;
+    alpha = Cp/4.0/M_PI/M_PI*(log(M_PI*ii) + Euler);
+    //t1 = 2.0*dQ*dQ*dd*dd*alpha;
+    t2 = 2.0*qval*qval*dd*dd*alpha;
+    //t3 = dQ*dQ*dd*dd*ii*ii;
+
+    temp = 1.0-(double)ii/(double)Nlayers;
+    //temp *= cos(dd*qval*ii/(1.0+t1));
+    temp *= cos(dd*qval*ii);
+    //if (temp < 0) printf("q=%g: ii=%d, cos(dd*q*ii)=cos(%g) < 0\n",qval,ii,dd*qval*ii);
+    //temp *= exp(-1.0*(t2 + t3)/(2.0*(1.0+t1)) );
+    temp *= exp(-t2/2.0);
+    //temp /= sqrt(1.0+t1);
+
+    Sq += temp;
+  }
+
+  Sq *= 2.0;
+  Sq += 1.0;
+
+  //if (Sq < 0) printf("q=%g: S(q) =%g\n", qval, Sq);
+
+  inten = 2.0*M_PI*Pq*Sq/(dd*qval*qval);
+
+  inten *= 1.0e-04;   // 1/A to 1/cm
+  return inten;
+}
+
+
+
+/* END Required header for SASmodel lamellar_hg_stack_caille */
 %}
     DECLARE
 %{
@@ -195,7 +263,7 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, trace_length_tail, trace_length_head, Nlayers, d_spacing, Caille_parameter, sld, sld_head, sld_solvent);
+    Iq_out = Iq_lamellar_hg_stack_caille(q, trace_length_tail, trace_length_head, Nlayers, d_spacing, Caille_parameter, sld, sld_head, sld_solvent);
 
 
     float vol;

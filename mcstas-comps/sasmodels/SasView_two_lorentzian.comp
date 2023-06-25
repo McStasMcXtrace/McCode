@@ -19,9 +19,12 @@
 *
 * SasView_two_lorentzian component, generated from two_lorentzian.c in sasmodels.
 *
-* Example: SasView_two_lorentzian(lorentz_scale_1, lorentz_length_1, lorentz_exp_1, lorentz_scale_2, lorentz_length_2, lorentz_exp_2, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_lorentz_length_1=0.0,
-        pd_lorentz_length_2=0.0)
+* Example: 
+*  SasView_two_lorentzian(lorentz_scale_1, lorentz_length_1, lorentz_exp_1, lorentz_scale_2, lorentz_length_2, lorentz_exp_2, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_lorentz_length_1=0.0, pd_lorentz_length_2=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -82,7 +85,38 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_two_lorentzian.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel two_lorentzian */
+#define HAS_Iq
+#line 1 ".././models/two_lorentzian.c"
+#include <math.h>
+
+double Iq_two_lorentzian(double q,
+          double lorentz_scale_1,
+          double lorentz_length_1,
+          double lorentz_exp_1,
+          double lorentz_scale_2,
+          double lorentz_length_2,
+          double lorentz_exp_2);
+
+#pragma acc routine seq
+double Iq_two_lorentzian(double q,
+          double lorentz_scale_1,
+          double lorentz_length_1,
+          double lorentz_exp_1,
+          double lorentz_scale_2,
+          double lorentz_length_2,
+          double lorentz_exp_2) {
+    double intensity = lorentz_scale_1 / (1.0 + pow(q * lorentz_length_1, lorentz_exp_1));
+    intensity += lorentz_scale_2 / (1.0 + pow(q * lorentz_length_2, lorentz_exp_2));
+    return intensity;
+}
+
+
+
+
+/* END Required header for SASmodel two_lorentzian */
 %}
     DECLARE
 %{
@@ -191,7 +225,7 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, lorentz_scale_1, trace_lorentz_length_1, lorentz_exp_1, lorentz_scale_2, trace_lorentz_length_2, lorentz_exp_2);
+    Iq_out = Iq_two_lorentzian(q, lorentz_scale_1, trace_lorentz_length_1, lorentz_exp_1, lorentz_scale_2, trace_lorentz_length_2, lorentz_exp_2);
 
 
     float vol;

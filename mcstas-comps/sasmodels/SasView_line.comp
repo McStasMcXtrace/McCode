@@ -19,7 +19,12 @@
 *
 * SasView_line component, generated from line.c in sasmodels.
 *
-* Example: SasView_line(intercept, slope, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,)
+* Example: 
+*  SasView_line(intercept, slope, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     )
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -69,7 +74,25 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_line.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel line */
+#define HAS_Iq
+#line 1 ".././models/line.c"
+#include <math.h>
+
+double Iq_line(double q, double intercept, double slope);
+
+#pragma acc routine seq
+double Iq_line(double q, double intercept, double slope) {
+    double inten = intercept + slope * q;
+    return inten;
+}
+
+
+
+
+/* END Required header for SASmodel line */
 %}
     DECLARE
 %{
@@ -170,7 +193,7 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, intercept, slope);
+    Iq_out = Iq_line(q, intercept, slope);
 
 
     float vol;

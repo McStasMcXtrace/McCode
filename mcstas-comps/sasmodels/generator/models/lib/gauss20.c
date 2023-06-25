@@ -1,3 +1,6 @@
+#ifndef GAUSS20
+#define GAUSS20
+
 // Created by Andrew Jackson on 4/23/07
 
  #ifdef GAUSS_N
@@ -57,3 +60,5 @@ constant double Gauss20Z[20]={
 };
 
 #pragma acc declare copyin( Gauss20Wt[0:20], Gauss20Z[0:20] )
+
+#endif // GAUSS20

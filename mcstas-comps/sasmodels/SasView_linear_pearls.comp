@@ -19,8 +19,12 @@
 *
 * SasView_linear_pearls component, generated from linear_pearls.c in sasmodels.
 *
-* Example: SasView_linear_pearls(radius, edge_sep, num_pearls, sld, sld_solvent, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_radius=0.0)
+* Example: 
+*  SasView_linear_pearls(radius, edge_sep, num_pearls, sld, sld_solvent, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_radius=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -77,7 +81,156 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_linear_pearls.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel linear_pearls */
+#define HAS_Iq
+#define FORM_VOL
+#line 1 ".././models/lib/sas_3j1x_x.c"
+#ifndef SAS_3J1X_HDR
+#define SAS_3J1X_HDR
+
+/**
+* Spherical Bessel function 3*j1(x)/x
+*
+* Used for low q to avoid cancellation error.
+* Note that the values differ from sasview ~ 5e-12 rather than 5e-14, but
+* in this case it is likely cancellation errors in the original expression
+* using double precision that are the source.
+*/
+double sas_3j1x_x(double q);
+
+// The choice of the number of terms in the series and the cutoff value for
+// switching between series and direct calculation depends on the numeric
+// precision.
+//
+// Point where direct calculation reaches machine precision:
+//
+//   single machine precision eps 3e-8 at qr=1.1 **
+//   double machine precision eps 4e-16 at qr=1.1
+//
+// Point where Taylor series reaches machine precision (eps), where taylor
+// series matches direct calculation (cross) and the error at that point:
+//
+//   prec   n eps  cross  error
+//   single 3 0.28  0.4   6.2e-7
+//   single 4 0.68  0.7   2.3e-7
+//   single 5 1.18  1.2   7.5e-8
+//   double 3 0.01  0.03  2.3e-13
+//   double 4 0.06  0.1   3.1e-14
+//   double 5 0.16  0.2   5.0e-15
+//
+// ** Note: relative error on single precision starts increase on the direct
+// method at qr=1.1, rising from 3e-8 to 5e-5 by qr=1e3.  This should be
+// safe for the sans range, with objects of 100 nm supported to a q of 0.1
+// while maintaining 5 digits of precision.  For usans/sesans, the objects
+// are larger but the q is smaller, so again it should be fine.
+//
+// See explore/sph_j1c.py for code to explore these ranges.
+
+// Use 4th order series
+#if FLOAT_SIZE>4
+#define SPH_J1C_CUTOFF 0.1
+#else
+#define SPH_J1C_CUTOFF 0.7
+#endif
+#pragma acc routine seq
+double sas_3j1x_x(double q)
+{
+    // 2017-05-18 PAK - support negative q
+    if (fabs(q) < SPH_J1C_CUTOFF) {
+        const double q2 = q*q;
+        return (1.0 + q2*(-3./30. + q2*(3./840. + q2*(-3./45360.))));// + q2*(3./3991680.)))));
+    } else {
+        double sin_q, cos_q;
+        SINCOS(q, sin_q, cos_q);
+        return 3.0*(sin_q/q - cos_q)/(q*q);
+    }
+}
+
+#endif // SAS_3J1X_HDR
+
+#line 1 ".././models/linear_pearls.c"
+double form_volume_linear_pearls(double radius, double num_pearls);
+
+double Iq_linear_pearls(double q,
+            double radius,
+            double edge_sep,
+            double fp_num_pearls,
+            double pearl_sld,
+            double solvent_sld);
+
+double linear_pearls_kernel(double q,
+            double radius,
+            double edge_sep,
+            int num_pearls,
+            double pearl_sld,
+            double solvent_sld);
+
+
+double form_volume_linear_pearls(double radius, double fp_num_pearls)
+{
+    int num_pearls = (int)(fp_num_pearls + 0.5);
+    // Pearl volume
+    double pearl_vol = M_4PI_3 * cube(radius);
+    // Return total volume
+    return num_pearls * pearl_vol;;
+}
+
+double linear_pearls_kernel(double q,
+            double radius,
+            double edge_sep,
+            int num_pearls,
+            double pearl_sld,
+            double solvent_sld)
+{
+    //relative sld
+    double contrast_pearl = pearl_sld - solvent_sld;
+    //each volume
+    double pearl_vol = M_4PI_3 * cube(radius);
+    //total volume
+    double tot_vol = num_pearls * pearl_vol;
+    //mass
+    double m_s = contrast_pearl * pearl_vol;
+    //center to center distance between the neighboring pearls
+    double separation = edge_sep + 2.0 * radius;
+
+    //sine functions of a pearl
+    double psi = sas_3j1x_x(q * radius);
+
+    // N pearls interaction terms
+    double structure_factor = (double)num_pearls;
+    for(int num=1; num<num_pearls; num++) {
+        structure_factor += 2.0*(num_pearls-num)*sas_sinx_x(q*separation*num);
+    }
+    // form factor for num_pearls
+    double form_factor = 1.0e-4 * structure_factor * square(m_s*psi) / tot_vol;
+
+    return form_factor;
+}
+
+double Iq_linear_pearls(double q,
+            double radius,
+            double edge_sep,
+            double fp_num_pearls,
+            double pearl_sld,
+            double solvent_sld)
+{
+
+    int num_pearls = (int)(fp_num_pearls + 0.5);
+	double result = linear_pearls_kernel(q,
+                    radius,
+                    edge_sep,
+                    num_pearls,
+                    pearl_sld,
+                    solvent_sld);
+
+	return result;
+}
+
+
+
+/* END Required header for SASmodel linear_pearls */
 %}
     DECLARE
 %{
@@ -184,11 +337,11 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, trace_radius, edge_sep, num_pearls, sld, sld_solvent);
+    Iq_out = Iq_linear_pearls(q, trace_radius, edge_sep, num_pearls, sld, sld_solvent);
 
 
     float vol;
-    vol = form_volume(trace_radius, num_pearls);
+    vol = 1;
 
     // Scale by 1.0E2 [SasView: 1/cm  ->   McStas: 1/m]
     Iq_out = model_scale*Iq_out / vol * 1.0E2;

@@ -19,8 +19,12 @@
 *
 * SasView_correlation_length component, generated from correlation_length.c in sasmodels.
 *
-* Example: SasView_correlation_length(lorentz_scale, porod_scale, cor_length, porod_exp, lorentz_exp, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_cor_length=0.0)
+* Example: 
+*  SasView_correlation_length(lorentz_scale, porod_scale, cor_length, porod_exp, lorentz_exp, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_cor_length=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -77,7 +81,30 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_correlation_length.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel correlation_length */
+#define HAS_Iq
+#line 1 ".././models/correlation_length.c"
+#include <math.h>
+
+double Iq_correlation_length(double q, double lorentz_scale, double porod_scale, double cor_length, double porod_exp, double lorentz_exp);
+
+#pragma acc routine seq
+double Iq_correlation_length(double q, double lorentz_scale, double porod_scale, double cor_length, double porod_exp, double lorentz_exp) {
+    double porod, lorentz, inten;
+
+    porod = porod_scale / pow(q, porod_exp);
+    lorentz = lorentz_scale / (1.0 + pow(q * cor_length, lorentz_exp));
+    inten = porod + lorentz;
+
+    return inten;
+}
+
+
+
+
+/* END Required header for SASmodel correlation_length */
 %}
     DECLARE
 %{
@@ -184,7 +211,7 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, lorentz_scale, porod_scale, trace_cor_length, porod_exp, lorentz_exp);
+    Iq_out = Iq_correlation_length(q, lorentz_scale, porod_scale, trace_cor_length, porod_exp, lorentz_exp);
 
 
     float vol;

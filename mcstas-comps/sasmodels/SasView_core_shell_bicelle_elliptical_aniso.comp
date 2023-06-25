@@ -19,14 +19,12 @@
 *
 * SasView_core_shell_bicelle_elliptical component, generated from core_shell_bicelle_elliptical.c in sasmodels.
 *
-* Example: SasView_core_shell_bicelle_elliptical_aniso(radius, x_core, thick_rim, thick_face, length, sld_core, sld_face, sld_rim, sld_solvent, theta, phi, Psi, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_radius=0.0,
-        pd_thick_rim=0.0,
-        pd_thick_face=0.0,
-        pd_length=0.0,
-        pd_theta=0.0,
-        pd_phi=0.0,
-        pd_Psi=0.0)
+* Example: 
+*  SasView_core_shell_bicelle_elliptical_aniso(radius, x_core, thick_rim, thick_face, length, sld_core, sld_face, sld_rim, sld_solvent, theta, phi, Psi, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_radius=0.0, pd_thick_rim=0.0, pd_thick_face=0.0, pd_length=0.0, pd_theta=0.0, pd_phi=0.0, pd_Psi=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -106,7 +104,738 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_core_shell_bicelle_elliptical.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel core_shell_bicelle_elliptical */
+#define HAS_Iqabc
+#define HAS_FQ
+#define FORM_VOL
+#line 1 ".././models/lib/sas_Si.c"
+#ifndef SAS_SI_HDR
+#define SAS_SI_HDR
+
+// integral of sin(x)/x Taylor series approximated to w/i 0.1%
+double sas_Si(double x);
+
+    
+#pragma acc routine seq
+double sas_Si(double x)
+{
+    if (x >= M_PI*6.2/4.0) {
+        const double xxinv = 1./(x*x);
+        // Explicitly writing factorial values triples the speed of the calculation
+        const double out_cos = (((-720.*xxinv + 24.)*xxinv - 2.)*xxinv + 1.)/x;
+        const double out_sin = (((-5040.*xxinv + 120.)*xxinv - 6.)*xxinv + 1)*xxinv;
+
+        double sin_x, cos_x;
+        SINCOS(x, sin_x, cos_x);
+        return M_PI_2 - cos_x*out_cos - sin_x*out_sin;
+    } else {
+        const double xx = x*x;
+        // Explicitly writing factorial values triples the speed of the calculation
+        return (((((-1./439084800.*xx
+            + 1./3265920.)*xx
+            - 1./35280.)*xx
+            + 1./600.)*xx
+            - 1./18.)*xx
+            + 1.)*x;
+    }
+}
+
+#endif // SAS_SI_HDR
+
+#line 1 ".././models/lib/polevl.c"
+#ifndef POLEVL_HDR
+#define POLEVL_HDR
+
+/*							polevl.c
+ *							p1evl.c
+ *
+ *	Evaluate polynomial
+ *
+ *
+ *
+ * SYNOPSIS:
+ *
+ * int N;
+ * double x, y, coef[N+1], polevl[];
+ *
+ * y = polevl( x, coef, N );
+ *
+ *
+ *
+ * DESCRIPTION:
+ *
+ * Evaluates polynomial of degree N:
+ *
+ *                     2          N
+ * y  =  C  + C x + C x  +...+ C x
+ *        0    1     2          N
+ *
+ * Coefficients are stored in reverse order:
+ *
+ * coef[0] = C  , ..., coef[N] = C  .
+ *            N                   0
+ *
+ * The function p1evl() assumes that C_N = 1.0 and is
+ * omitted from the array.  Its calling arguments are
+ * otherwise the same as polevl().
+ *
+ *
+ * SPEED:
+ *
+ * In the interest of speed, there are no checks for out
+ * of bounds arithmetic.  This routine is used by most of
+ * the functions in the library.  Depending on available
+ * equipment features, the user may wish to rewrite the
+ * program in microcode or assembly language.
+ *
+ */
+
+
+/*
+Cephes Math Library Release 2.1:  December, 1988
+Copyright 1984, 1987, 1988 by Stephen L. Moshier
+Direct inquiries to 30 Frost Street, Cambridge, MA 02140
+*/
+#pragma acc routine seq
+static
+double polevl( double x, pconstant double *coef, int N )
+{
+
+    int i = 0;
+    double ans = coef[i];
+
+    while (i < N) {
+        i++;
+        ans = ans * x + coef[i];
+    }
+
+    return ans;
+}
+
+/*							p1evl()	*/
+/*                                          N
+ * Evaluate polynomial when coefficient of x  is 1.0.
+ * Otherwise same as polevl.
+ */
+#pragma acc routine seq
+static
+double p1evl( double x, pconstant double *coef, int N )
+{
+    int i=0;
+    double ans = x+coef[i];
+
+    while (i < N-1) {
+        i++;
+        ans = ans*x + coef[i];
+    }
+
+    return ans;
+}
+
+#endif // POLEVL_HDR
+
+#line 1 ".././models/lib/sas_J1.c"
+#ifndef SAS_J1_HDR
+#define SAS_J1_HDR
+
+/*							j1.c
+ *
+ *	Bessel function of order one
+ *
+ *
+ *
+ * SYNOPSIS:
+ *
+ * double x, y, j1();
+ *
+ * y = j1( x );
+ *
+ *
+ *
+ * DESCRIPTION:
+ *
+ * Returns Bessel function of order one of the argument.
+ *
+ * The domain is divided into the intervals [0, 8] and
+ * (8, infinity). In the first interval a 24 term Chebyshev
+ * expansion is used. In the second, the asymptotic
+ * trigonometric representation is employed using two
+ * rational functions of degree 5/5.
+ *
+ *
+ *
+ * ACCURACY:
+ *
+ *                      Absolute error:
+ * arithmetic   domain      # trials      peak         rms
+ *    DEC       0, 30       10000       4.0e-17     1.1e-17
+ *    IEEE      0, 30       30000       2.6e-16     1.1e-16
+ *
+ *
+ */
+
+/*
+Cephes Math Library Release 2.8:  June, 2000
+Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
+*/
+
+#if FLOAT_SIZE>4
+//Cephes double pression function
+
+constant double RPJ1[8] = {
+    -8.99971225705559398224E8,
+    4.52228297998194034323E11,
+    -7.27494245221818276015E13,
+    3.68295732863852883286E15,
+    0.0,
+    0.0,
+    0.0,
+    0.0 };
+
+constant double RQJ1[8] = {
+    6.20836478118054335476E2,
+    2.56987256757748830383E5,
+    8.35146791431949253037E7,
+    2.21511595479792499675E10,
+    4.74914122079991414898E12,
+    7.84369607876235854894E14,
+    8.95222336184627338078E16,
+    5.32278620332680085395E18
+    };
+
+constant double PPJ1[8] = {
+    7.62125616208173112003E-4,
+    7.31397056940917570436E-2,
+    1.12719608129684925192E0,
+    5.11207951146807644818E0,
+    8.42404590141772420927E0,
+    5.21451598682361504063E0,
+    1.00000000000000000254E0,
+    0.0} ;
+
+
+constant double PQJ1[8] = {
+    5.71323128072548699714E-4,
+    6.88455908754495404082E-2,
+    1.10514232634061696926E0,
+    5.07386386128601488557E0,
+    8.39985554327604159757E0,
+    5.20982848682361821619E0,
+    9.99999999999999997461E-1,
+    0.0 };
+
+constant double QPJ1[8] = {
+    5.10862594750176621635E-2,
+    4.98213872951233449420E0,
+    7.58238284132545283818E1,
+    3.66779609360150777800E2,
+    7.10856304998926107277E2,
+    5.97489612400613639965E2,
+    2.11688757100572135698E2,
+    2.52070205858023719784E1 };
+
+constant double QQJ1[8] = {
+    7.42373277035675149943E1,
+    1.05644886038262816351E3,
+    4.98641058337653607651E3,
+    9.56231892404756170795E3,
+    7.99704160447350683650E3,
+    2.82619278517639096600E3,
+    3.36093607810698293419E2,
+    0.0 };
+
+#pragma acc declare copyin( RPJ1[0:8], RQJ1[0:8], PPJ1[0:8], PQJ1[0:8], QPJ1[0:8], QQJ1[0:8])
+
+#pragma acc routine seq
+static
+double cephes_j1(double x)
+{
+
+    double w, z, p, q, abs_x, sign_x;
+
+    const double Z1 = 1.46819706421238932572E1;
+    const double Z2 = 4.92184563216946036703E1;
+
+    // 2017-05-18 PAK - mathematica and mpmath use J1(-x) = -J1(x)
+    if (x < 0) {
+        abs_x = -x;
+        sign_x = -1.0;
+    } else {
+        abs_x = x;
+        sign_x = 1.0;
+    }
+
+    if( abs_x <= 5.0 ) {
+        z = abs_x * abs_x;
+        w = polevl( z, RPJ1, 3 ) / p1evl( z, RQJ1, 8 );
+        w = w * abs_x * (z - Z1) * (z - Z2);
+        return( sign_x * w );
+    }
+
+    w = 5.0/abs_x;
+    z = w * w;
+    p = polevl( z, PPJ1, 6)/polevl( z, PQJ1, 6 );
+    q = polevl( z, QPJ1, 7)/p1evl( z, QQJ1, 7 );
+
+    // 2017-05-19 PAK improve accuracy using trig identies
+    // original:
+    //    const double THPIO4 =  2.35619449019234492885;
+    //    const double SQ2OPI = 0.79788456080286535588;
+    //    double sin_xn, cos_xn;
+    //    SINCOS(abs_x - THPIO4, sin_xn, cos_xn);
+    //    p = p * cos_xn - w * q * sin_xn;
+    //    return( sign_x * p * SQ2OPI / sqrt(abs_x) );
+    // expanding p*cos(a - 3 pi/4) - wq sin(a - 3 pi/4)
+    //    [ p(sin(a) - cos(a)) + wq(sin(a) + cos(a)) / sqrt(2)
+    // note that sqrt(1/2) * sqrt(2/pi) = sqrt(1/pi)
+    const double SQRT1_PI = 0.56418958354775628;
+    double sin_x, cos_x;
+    SINCOS(abs_x, sin_x, cos_x);
+    p = p*(sin_x - cos_x) + w*q*(sin_x + cos_x);
+    return( sign_x * p * SQRT1_PI / sqrt(abs_x) );
+}
+
+#else
+//Single precission version of cephes
+
+constant float JPJ1[8] = {
+    -4.878788132172128E-009,
+    6.009061827883699E-007,
+    -4.541343896997497E-005,
+    1.937383947804541E-003,
+    -3.405537384615824E-002,
+    0.0,
+    0.0,
+    0.0
+    };
+
+constant float MO1J1[8] = {
+    6.913942741265801E-002,
+    -2.284801500053359E-001,
+    3.138238455499697E-001,
+    -2.102302420403875E-001,
+    5.435364690523026E-003,
+    1.493389585089498E-001,
+    4.976029650847191E-006,
+    7.978845453073848E-001
+    };
+
+constant float PH1J1[8] = {
+    -4.497014141919556E+001,
+    5.073465654089319E+001,
+    -2.485774108720340E+001,
+    7.222973196770240E+000,
+    -1.544842782180211E+000,
+    3.503787691653334E-001,
+    -1.637986776941202E-001,
+    3.749989509080821E-001
+    };
+
+#pragma acc declare copyin( JPJ1[0:8], MO1J1[0:8], PH1J1[0:8])
+
+#pragma acc routine seq
+static
+float cephes_j1f(float xx)
+{
+
+    float x, w, z, p, q, xn;
+
+    const float Z1 = 1.46819706421238932572E1;
+
+
+    // 2017-05-18 PAK - mathematica and mpmath use J1(-x) = -J1(x)
+    x = xx;
+    if( x < 0 )
+        x = -xx;
+
+    if( x <= 2.0 ) {
+        z = x * x;
+        p = (z-Z1) * x * polevl( z, JPJ1, 4 );
+        return( xx < 0. ? -p : p );
+    }
+
+    q = 1.0/x;
+    w = sqrt(q);
+
+    p = w * polevl( q, MO1J1, 7);
+    w = q*q;
+    // 2017-05-19 PAK improve accuracy using trig identies
+    // original:
+    //    const float THPIO4F =  2.35619449019234492885;    /* 3*pi/4 */
+    //    xn = q * polevl( w, PH1J1, 7) - THPIO4F;
+    //    p = p * cos(xn + x);
+    //    return( xx < 0. ? -p : p );
+    // expanding cos(a + b - 3 pi/4) is
+    //    [sin(a)sin(b) + sin(a)cos(b) + cos(a)sin(b)-cos(a)cos(b)] / sqrt(2)
+    xn = q * polevl( w, PH1J1, 7);
+    float cos_xn, sin_xn;
+    float cos_x, sin_x;
+    SINCOS(xn, sin_xn, cos_xn);  // about xn and 1
+    SINCOS(x, sin_x, cos_x);
+    p *= M_SQRT1_2*(sin_xn*(sin_x+cos_x) + cos_xn*(sin_x-cos_x));
+
+    return( xx < 0. ? -p : p );
+}
+#endif
+
+#if FLOAT_SIZE>4
+#define sas_J1 cephes_j1
+#else
+#define sas_J1 cephes_j1f
+#endif
+
+//Finally J1c function that equals 2*J1(x)/x
+    
+#pragma acc routine seq
+static
+double sas_2J1x_x(double x)
+{
+    return (x != 0.0 ) ? 2.0*sas_J1(x)/x : 1.0;
+}
+
+#endif SAS_J1_HDR
+
+#line 1 ".././models/lib/gauss76.c"
+#ifndef GAUSS76
+#define GAUSS76
+
+// Created by Andrew Jackson on 4/23/07
+
+ #ifdef GAUSS_N
+ # undef GAUSS_N
+ # undef GAUSS_Z
+ # undef GAUSS_W
+ #endif
+ #define GAUSS_N 76
+ #define GAUSS_Z Gauss76Z
+ #define GAUSS_W Gauss76Wt
+
+// Gaussians
+constant double Gauss76Wt[76] = {
+	.00126779163408536,		//0
+	.00294910295364247,
+	.00462793522803742,
+	.00629918049732845,
+	.00795984747723973,
+	.00960710541471375,
+	.0112381685696677,
+	.0128502838475101,
+	.0144407317482767,
+	.0160068299122486,
+	.0175459372914742,		//10
+	.0190554584671906,
+	.020532847967908,
+	.0219756145344162,
+	.0233813253070112,
+	.0247476099206597,
+	.026072164497986,
+	.0273527555318275,
+	.028587223650054,
+	.029773487255905,
+	.0309095460374916,		//20
+	.0319934843404216,
+	.0330234743977917,
+	.0339977794120564,
+	.0349147564835508,
+	.0357728593807139,
+	.0365706411473296,
+	.0373067565423816,
+	.0379799643084053,
+	.0385891292645067,
+	.0391332242205184,		//30
+	.0396113317090621,
+	.0400226455325968,
+	.040366472122844,
+	.0406422317102947,
+	.0408494593018285,
+	.040987805464794,
+	.0410570369162294,
+	.0410570369162294,
+	.040987805464794,
+	.0408494593018285,		//40
+	.0406422317102947,
+	.040366472122844,
+	.0400226455325968,
+	.0396113317090621,
+	.0391332242205184,
+	.0385891292645067,
+	.0379799643084053,
+	.0373067565423816,
+	.0365706411473296,
+	.0357728593807139,		//50
+	.0349147564835508,
+	.0339977794120564,
+	.0330234743977917,
+	.0319934843404216,
+	.0309095460374916,
+	.029773487255905,
+	.028587223650054,
+	.0273527555318275,
+	.026072164497986,
+	.0247476099206597,		//60
+	.0233813253070112,
+	.0219756145344162,
+	.020532847967908,
+	.0190554584671906,
+	.0175459372914742,
+	.0160068299122486,
+	.0144407317482767,
+	.0128502838475101,
+	.0112381685696677,
+	.00960710541471375,		//70
+	.00795984747723973,
+	.00629918049732845,
+	.00462793522803742,
+	.00294910295364247,
+	.00126779163408536		//75 (indexed from 0)
+};
+
+constant double Gauss76Z[76] = {
+	-.999505948362153,		//0
+	-.997397786355355,
+	-.993608772723527,
+	-.988144453359837,
+	-.981013938975656,
+	-.972229228520377,
+	-.961805126758768,
+	-.949759207710896,
+	-.936111781934811,
+	-.92088586125215,
+	-.904107119545567,		//10
+	-.885803849292083,
+	-.866006913771982,
+	-.844749694983342,
+	-.822068037328975,
+	-.7980001871612,
+	-.77258672828181,
+	-.74587051350361,
+	-.717896592387704,
+	-.688712135277641,
+	-.658366353758143,		//20
+	-.626910417672267,
+	-.594397368836793,
+	-.560882031601237,
+	-.526420920401243,
+	-.491072144462194,
+	-.454895309813726,
+	-.417951418780327,
+	-.380302767117504,
+	-.342012838966962,
+	-.303146199807908,		//30
+	-.263768387584994,
+	-.223945802196474,
+	-.183745593528914,
+	-.143235548227268,
+	-.102483975391227,
+	-.0615595913906112,
+	-.0205314039939986,
+	.0205314039939986,
+	.0615595913906112,
+	.102483975391227,			//40
+	.143235548227268,
+	.183745593528914,
+	.223945802196474,
+	.263768387584994,
+	.303146199807908,
+	.342012838966962,
+	.380302767117504,
+	.417951418780327,
+	.454895309813726,
+	.491072144462194,		//50
+	.526420920401243,
+	.560882031601237,
+	.594397368836793,
+	.626910417672267,
+	.658366353758143,
+	.688712135277641,
+	.717896592387704,
+	.74587051350361,
+	.77258672828181,
+	.7980001871612,	//60
+	.822068037328975,
+	.844749694983342,
+	.866006913771982,
+	.885803849292083,
+	.904107119545567,
+	.92088586125215,
+	.936111781934811,
+	.949759207710896,
+	.961805126758768,
+	.972229228520377,		//70
+	.981013938975656,
+	.988144453359837,
+	.993608772723527,
+	.997397786355355,
+	.999505948362153		//75
+};
+
+
+#pragma acc declare copyin(Gauss76Wt[0:76], Gauss76Z[0:76])
+
+#endif // GAUSS76
+
+#line 1 ".././models/core_shell_bicelle_elliptical.c"
+// NOTE that "length" here is the full height of the core!
+static double
+form_volume_core_shell_bicelle_elliptical(double r_minor,
+    double x_core,
+    double thick_rim,
+    double thick_face,
+    double length)
+{
+    return M_PI*(r_minor+thick_rim)*(r_minor*x_core+thick_rim)*(length+2.0*thick_face);
+}
+
+static double
+radius_from_excluded_volume_core_shell_bicelle_elliptical(double r_minor, double x_core, double thick_rim, double thick_face, double length)
+{
+    const double r_equiv     = sqrt((r_minor + thick_rim)*(r_minor*x_core + thick_rim));
+    const double length_tot  = length + 2.0*thick_face;
+    return 0.5*cbrt(0.75*r_equiv*(2.0*r_equiv*length_tot + (r_equiv + length_tot)*(M_PI*r_equiv + length_tot)));
+}
+
+static double
+radius_from_volume_core_shell_bicelle_elliptical(double r_minor, double x_core, double thick_rim, double thick_face, double length)
+{
+    const double volume_bicelle = form_volume_core_shell_bicelle_elliptical(r_minor, x_core, thick_rim,thick_face,length);
+    return cbrt(volume_bicelle/M_4PI_3);
+}
+
+static double
+radius_from_diagonal_core_shell_bicelle_elliptical(double r_minor, double x_core, double thick_rim, double thick_face, double length)
+{
+    const double radius_max = (x_core < 1.0 ? r_minor : x_core*r_minor);
+    const double radius_max_tot = radius_max + thick_rim;
+    const double length_tot = length + 2.0*thick_face;
+    return sqrt(radius_max_tot*radius_max_tot + 0.25*length_tot*length_tot);
+}
+
+static double
+radius_effective_core_shell_bicelle_elliptical(int mode, double r_minor, double x_core, double thick_rim, double thick_face, double length)
+{
+    switch (mode) {
+    default:
+    case 1: // equivalent cylinder excluded volume
+        return radius_from_excluded_volume_core_shell_bicelle_elliptical(r_minor, x_core, thick_rim, thick_face, length);
+    case 2: // equivalent volume sphere
+        return radius_from_volume_core_shell_bicelle_elliptical(r_minor, x_core, thick_rim, thick_face, length);
+    case 3: // outer rim average radius
+        return 0.5*r_minor*(1.0 + x_core) + thick_rim;
+    case 4: // outer rim min radius
+        return (x_core < 1.0 ? x_core*r_minor+thick_rim : r_minor+thick_rim);
+    case 5: // outer max radius
+        return (x_core > 1.0 ? x_core*r_minor+thick_rim : r_minor+thick_rim);
+    case 6: // half outer thickness
+        return 0.5*length + thick_face;
+    case 7: // half diagonal
+        return radius_from_diagonal_core_shell_bicelle_elliptical(r_minor,x_core,thick_rim,thick_face,length);
+    }
+}
+
+static void
+Fq_core_shell_bicelle_elliptical(double q,
+    double *F1,
+    double *F2,
+    double r_minor,
+    double x_core,
+    double thick_rim,
+    double thick_face,
+    double length,
+    double sld_core,
+    double sld_face,
+    double sld_rim,
+    double sld_solvent)
+{
+     // core_shell_bicelle_elliptical, RKH Dec 2016, based on elliptical_cylinder and core_shell_bicelle
+     // tested against limiting cases of cylinder, elliptical_cylinder, stacked_discs, and core_shell_bicelle
+    const double halfheight = 0.5*length;
+    const double r_major = r_minor * x_core;
+    const double r2A = 0.5*(square(r_major) + square(r_minor));
+    const double r2B = 0.5*(square(r_major) - square(r_minor));
+    const double vol1 = M_PI*r_minor*r_major*(2.0*halfheight);
+    const double vol2 = M_PI*(r_minor+thick_rim)*(r_major+thick_rim)*2.0*(halfheight+thick_face);
+    const double vol3 = M_PI*r_minor*r_major*2.0*(halfheight+thick_face);
+    const double dr1 = vol1*(sld_core-sld_face);
+    const double dr2 = vol2*(sld_rim-sld_solvent);
+    const double dr3 = vol3*(sld_face-sld_rim);
+
+    //initialize integral
+    double outer_total_F1 = 0.0;
+    double outer_total_F2 = 0.0;
+    for(int i=0;i<GAUSS_N;i++) {
+        //setup inner integral over the ellipsoidal cross-section
+        //const double cos_theta = ( GAUSS_Z[i]*(vb-va) + va + vb )/2.0;
+        const double cos_theta = ( GAUSS_Z[i] + 1.0 )/2.0;
+        const double sin_theta = sqrt(1.0 - cos_theta*cos_theta);
+        const double qab = q*sin_theta;
+        const double qc = q*cos_theta;
+        const double si1 = sas_sinx_x(halfheight*qc);
+        const double si2 = sas_sinx_x((halfheight+thick_face)*qc);
+        double inner_total_F1 = 0;
+        double inner_total_F2 = 0;
+        for(int j=0;j<GAUSS_N;j++) {
+            //76 gauss points for the inner integral (WAS 20 points,so this may make unecessarily slow, but playing safe)
+            //const double beta = ( GAUSS_Z[j]*(vbj-vaj) + vaj + vbj )/2.0;
+            const double beta = ( GAUSS_Z[j] +1.0)*M_PI_2;
+            const double rr = sqrt(r2A - r2B*cos(beta));
+            const double be1 = sas_2J1x_x(rr*qab);
+            const double be2 = sas_2J1x_x((rr+thick_rim)*qab);
+            const double f = dr1*si1*be1 + dr2*si2*be2 + dr3*si2*be1;
+
+            inner_total_F1 += GAUSS_W[j] * f;
+            inner_total_F2 += GAUSS_W[j] * f * f;
+        }
+        //now calculate outer integral
+        outer_total_F1 += GAUSS_W[i] * inner_total_F1;
+        outer_total_F2 += GAUSS_W[i] * inner_total_F2;
+    }
+    // now complete change of integration variables (1-0)/(1-(-1))= 0.5
+    outer_total_F1 *= 0.25;
+    outer_total_F2 *= 0.25;
+
+    //convert from [1e-12 A-1] to [cm-1]
+    *F1 = 1e-2*outer_total_F1;
+    *F2 = 1e-4*outer_total_F2;
+}
+
+static double
+Iqabc_core_shell_bicelle_elliptical(double qa, double qb, double qc,
+    double r_minor,
+    double x_core,
+    double thick_rim,
+    double thick_face,
+    double length,
+    double sld_core,
+    double sld_face,
+    double sld_rim,
+    double sld_solvent)
+{
+    const double dr1 = sld_core-sld_face;
+    const double dr2 = sld_rim-sld_solvent;
+    const double dr3 = sld_face-sld_rim;
+    const double r_major = r_minor*x_core;
+    const double halfheight = 0.5*length;
+    const double vol1 = M_PI*r_minor*r_major*length;
+    const double vol2 = M_PI*(r_minor+thick_rim)*(r_major+thick_rim)*2.0*(halfheight+thick_face);
+    const double vol3 = M_PI*r_minor*r_major*2.0*(halfheight+thick_face);
+
+    // Compute effective radius in rotated coordinates
+    const double qr_hat = sqrt(square(r_major*qb) + square(r_minor*qa));
+    const double qrshell_hat = sqrt(square((r_major+thick_rim)*qb)
+                                   + square((r_minor+thick_rim)*qa));
+    const double be1 = sas_2J1x_x( qr_hat );
+    const double be2 = sas_2J1x_x( qrshell_hat );
+    const double si1 = sas_sinx_x( halfheight*qc );
+    const double si2 = sas_sinx_x( (halfheight + thick_face)*qc );
+    const double fq = vol1*dr1*si1*be1 + vol2*dr2*si2*be2 +  vol3*dr3*si2*be1;
+    return 1.0e-4 * fq*fq;
+}
+
+
+
+/* END Required header for SASmodel core_shell_bicelle_elliptical */
 %}
     DECLARE
 %{
@@ -235,11 +964,11 @@ TRACE
 
     qabc_rotation(&rotation, trace_theta, trace_phi, trace_Psi, dtheta, dphi, dPsi);
     qabc_apply(&rotation, qx, qy, &qa, &qb, &qc);
-    Iq_out = Iqabc(qa, qb, qc, trace_radius, x_core, trace_thick_rim, trace_thick_face, trace_length, sld_core, sld_face, sld_rim, sld_solvent  );
+    Iq_out = Iqabc_core_shell_bicelle_elliptical(qa, qb, qc, trace_radius, x_core, trace_thick_rim, trace_thick_face, trace_length, sld_core, sld_face, sld_rim, sld_solvent  );
 
 
     float vol;
-    vol = form_volume(R, x_core, trace_thick_rim, trace_thick_face, trace_length);
+    vol = 1;
 
     // Scale by 1.0E2 [SasView: 1/cm  ->   McStas: 1/m]
     Iq_out = model_scale*Iq_out / vol * 1.0E2;

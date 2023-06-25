@@ -1,3 +1,6 @@
+#ifndef SAS_SPHERE_HDR
+#define SAS_SPHERE_HDR
+
 double sphere_volume(double radius);
 double sphere_form(double q, double radius, double sld, double solvent_sld);
 
@@ -16,3 +19,4 @@ double sphere_form(double q, double radius, double sld, double solvent_sld)
     return 1.0e-4*square(contrast * fq);
 }
 
+#endif // SAS_SPHERE_HDR

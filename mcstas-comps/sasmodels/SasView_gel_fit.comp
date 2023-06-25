@@ -19,9 +19,12 @@
 *
 * SasView_gel_fit component, generated from gel_fit.c in sasmodels.
 *
-* Example: SasView_gel_fit(guinier_scale, lorentz_scale, rg, fractal_dim, cor_length, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_rg=0.0,
-        pd_cor_length=0.0)
+* Example: 
+*  SasView_gel_fit(guinier_scale, lorentz_scale, rg, fractal_dim, cor_length, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_rg=0.0, pd_cor_length=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -80,7 +83,37 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_gel_fit.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel gel_fit */
+#define HAS_Iq
+#line 1 ".././models/gel_fit.c"
+static double Iq_gel_fit(double q,
+          double guinier_scale,
+          double lorentz_scale,
+          double rg,
+          double fractal_dim,
+          double cor_length)
+{
+    // Lorentzian Term
+    ////////////////////////double a(x[i]*x[i]*zeta*zeta);
+    double lorentzian_term = square(q*cor_length);
+    lorentzian_term = 1.0 + ((fractal_dim + 1.0)/3.0)*lorentzian_term;
+    lorentzian_term = pow(lorentzian_term, fractal_dim/2.0 );
+
+    // Exponential Term
+    ////////////////////////double d(x[i]*x[i]*rg*rg);
+    double exp_term = square(q*rg);
+    exp_term = exp(-exp_term/3.0);
+
+    // Scattering Law
+    double result = lorentz_scale/lorentzian_term + guinier_scale*exp_term;
+    return result;
+}
+
+
+
+/* END Required header for SASmodel gel_fit */
 %}
     DECLARE
 %{
@@ -189,7 +222,7 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, guinier_scale, lorentz_scale, trace_rg, fractal_dim, trace_cor_length);
+    Iq_out = Iq_gel_fit(q, guinier_scale, lorentz_scale, trace_rg, fractal_dim, trace_cor_length);
 
 
     float vol;

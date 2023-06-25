@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Component: SasView_mass_fractal
+* Component: SasView_onion
 *
 * %Identification
 * Written by: Jose Robledo
@@ -13,24 +13,29 @@
 * Origin: FZJ / DTU / ESS DMSC
 *
 *
-* SasView mass_fractal model component as sample description.
+* SasView onion model component as sample description.
 *
 * %Description
 *
-* SasView_mass_fractal component, generated from mass_fractal.c in sasmodels.
+* SasView_onion component, generated from onion.c in sasmodels.
 *
 * Example: 
-*  SasView_mass_fractal(radius, fractal_dim_mass, cutoff_length, 
+*  SasView_onion(sld_core, radius_core, sld_solvent, n_shells, sld_in[n_shells], sld_out[n_shells], thickness[n_shells], A[n_shells], 
 *     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
 *     int target_index=1, target_x=0, target_y=0, target_z=1,
 *     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
-*     pd_radius=0.0, pd_cutoff_length=0.0)
+*     pd_radius_core=0.0, pd_thickness[n_shells]=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
-* radius: [Ang] ([0.0, inf]) Particle radius.
-* fractal_dim_mass: [] ([1.0, 6.0]) Mass fractal dimension.
-* cutoff_length: [Ang] ([0.0, inf]) Cut-off length.
+* sld_core: [1e-6/Ang^2] ([-inf, inf]) Core scattering length density.
+* radius_core: [Ang] ([0, inf]) Radius of the core.
+* sld_solvent: [1e-6/Ang^2] ([-inf, inf]) Solvent scattering length density.
+* n_shells: [] ([0, 10]) number of shells (must be integer).
+* sld_in[n_shells]: [1e-6/Ang^2] ([-inf, inf]) scattering length density at the inner radius of shell k.
+* sld_out[n_shells]: [1e-6/Ang^2] ([-inf, inf]) scattering length density at the outer radius of shell k.
+* thickness[n_shells]: [Ang] ([0, inf]) Thickness of shell k.
+* A[n_shells]: [] ([-inf, inf]) Decay rate of shell k.
 * Optional parameters:
 * model_abs: [ ] Absorption cross section density at 2200 m/s.
 * model_scale: [ ] Global scale factor for scattering kernel. For systems without inter-particle interference, the form factors can be related to the scattering intensity by the particle volume fraction.
@@ -47,18 +52,23 @@
 * focus_aw: [deg], horiz. angular dimension of a rectangular area.
 * focus_ah: [deg], vert. angular dimension of a rectangular area.
 * focus_r: [m] case of circular focusing, focusing radius.
-* pd_radius: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
-* pd_cutoff_length: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable
+* pd_radius_core: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
+* pd_thickness[n_shells]: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable
 *
 * %Link
 * %End
 *******************************************************************************/
-DEFINE COMPONENT SasView_mass_fractal
+DEFINE COMPONENT SasView_onion
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (
-        radius=10.0,
-        fractal_dim_mass=1.9,
-        cutoff_length=100.0,
+        sld_core=1.0,
+        radius_core=200.0,
+        sld_solvent=6.4,
+        n_shells=1,
+        vector sld_in[n_shells]={1.7},
+        vector sld_out[n_shells]={2.0},
+        vector thickness[n_shells]={40.0},
+        vector A[n_shells]={1.0},
         model_scale=1.0,
         model_abs=0.0,
         xwidth=0.01,
@@ -74,15 +84,16 @@ SETTING PARAMETERS (
         focus_aw=0,
         focus_ah=0,
         focus_r=0,
-        pd_radius=0.0,
-        pd_cutoff_length=0.0)
+        pd_radius_core=0.0,
+        pd_thickness[n_shells]=0.0)
 
 
 SHARE %{
 %include "sas_kernel_header.c"
 
-/* BEGIN Required header for SASmodel mass_fractal */
-#define HAS_Iq
+/* BEGIN Required header for SASmodel onion */
+#define HAS_FQ
+#define FORM_VOL
 #line 1 ".././models/lib/sas_3j1x_x.c"
 #ifndef SAS_3J1X_HDR
 #define SAS_3J1X_HDR
@@ -147,200 +158,84 @@ double sas_3j1x_x(double q)
 
 #endif // SAS_3J1X_HDR
 
-#line 1 ".././models/lib/sas_gamma.c"
-#ifndef SAS_GAMMA_HDR
-#define SAS_GAMMA_HDR
-/*
-The wrapper for gamma function from OpenCL and standard libraries
-The OpenCL gamma function fails miserably on values lower than 1.0
-while works fine on larger values.
-We use gamma definition Gamma(t + 1) = t * Gamma(t) to compute
-to function for values lower than 1.0. Namely Gamma(t) = 1/t * Gamma(t + 1)
-For t < 0, we use Gamma(t) = pi / ( Gamma(1 - t) * sin(pi * t) )
-*/
+#line 1 ".././models/onion.c"
 
-#if defined(NEED_TGAMMA)
-#pragma acc routine seq
-static double cephes_stirf(double x)
-{
-	const double MAXSTIR=143.01608;
-	const double SQTPI=2.50662827463100050242E0;
-	double y, w, v;
-
-	w = 1.0 / x;
-
-	w = ((((
-		7.87311395793093628397E-4*w
-		- 2.29549961613378126380E-4)*w
-		- 2.68132617805781232825E-3)*w
-		+ 3.47222221605458667310E-3)*w
-		+ 8.33333333333482257126E-2)*w
-		+ 1.0;
-	y = exp(x);
-	if (x > MAXSTIR)
-	{ /* Avoid overflow in pow() */
-		v = pow(x, 0.5 * x - 0.25);
-		y = v * (v / y);
-	}
-	else
-	{
-		y = pow(x, x - 0.5) / y;
-	}
-	y = SQTPI * y * w;
-	return(y);
-}
-
-#pragma acc routine seq
-static double tgamma(double x) {
-	double p, q, z;
-	int sgngam;
-	int i;
-
-	sgngam = 1;
-	if (isnan(x))
-		return(x);
-	q = fabs(x);
-
-	if (q > 33.0)
-	{
-		if (x < 0.0)
-		{
-			p = floor(q);
-			if (p == q)
-			{
-				return (NAN);
-			}
-			i = p;
-			if ((i & 1) == 0)
-				sgngam = -1;
-			z = q - p;
-			if (z > 0.5)
-			{
-				p += 1.0;
-				z = q - p;
-			}
-			z = q * sin(M_PI * z);
-			if (z == 0.0)
-			{
-				return(NAN);
-			}
-			z = fabs(z);
-			z = M_PI / (z * cephes_stirf(q));
-		}
-		else
-		{
-			z = cephes_stirf(x);
-		}
-		return(sgngam * z);
-	}
-
-	z = 1.0;
-	while (x >= 3.0)
-	{
-		x -= 1.0;
-		z *= x;
-	}
-
-	while (x < 0.0)
-	{
-		if (x > -1.E-9)
-			goto small;
-		z /= x;
-		x += 1.0;
-	}
-
-	while (x < 2.0)
-	{
-		if (x < 1.e-9)
-			goto small;
-		z /= x;
-		x += 1.0;
-	}
-
-	if (x == 2.0)
-		return(z);
-
-	x -= 2.0;
-	p = (((((
-		+1.60119522476751861407E-4*x
-		+ 1.19135147006586384913E-3)*x
-		+ 1.04213797561761569935E-2)*x
-		+ 4.76367800457137231464E-2)*x
-		+ 2.07448227648435975150E-1)*x
-		+ 4.94214826801497100753E-1)*x
-		+ 9.99999999999999996796E-1;
-	q = ((((((
-		-2.31581873324120129819E-5*x
-		+ 5.39605580493303397842E-4)*x
-		- 4.45641913851797240494E-3)*x
-		+ 1.18139785222060435552E-2)*x
-		+ 3.58236398605498653373E-2)*x
-		- 2.34591795718243348568E-1)*x
-		+ 7.14304917030273074085E-2)*x
-		+ 1.00000000000000000320E0;
-	return(z * p / q);
-
-small:
-	if (x == 0.0)
-	{
-		return (NAN);
-	}
-	else
-		return(z / ((1.0 + 0.5772156649015329 * x) * x));
-}
-#endif // NEED_TGAMMA
-
-#pragma acc routine seq
-inline double sas_gamma(double x)
-{
-    // Note: the builtin tgamma can give slow and unreliable results for x<1.
-    // The following transform extends it to zero and to negative values.
-    // It should return NaN for zero and negative integers but doesn't.
-    // The accuracy is okay but not wonderful for negative numbers, maybe
-    // one or two digits lost in the calculation. If higher accuracy is
-    // needed, you could test the following loop:
-    //    double norm = 1.;
-    //    while (x<1.) { norm*=x; x+=1.; }
-    //    return tgamma(x)/norm;
-    return (x<0. ? M_PI/tgamma(1.-x)/sin(M_PI*x) : tgamma(x+1)/x);
-}
-
-#endif // SAS_GAMMA_HDR
-
-#line 1 ".././models/mass_fractal.c"
 static double
-Iq_mass_fractal(double q, double radius, double fractal_dim_mass, double cutoff_length)
+f_exp(double q, double r, double sld_in, double sld_out,
+    double thickness, double A, double side)
 {
-    //calculate P(q)
-    const double pq = square(sas_3j1x_x(q*radius));
+  const double vol = M_4PI_3 * cube(r);
+  const double qr = q * r;
+  const double bes = sas_3j1x_x(qr);
+  const double alpha = A * r/thickness;
+  double result;
+  if (qr == 0.0) {
+    result = 1.0;
+  } else if (fabs(A) > 0.0) {
+    const double qrsq = qr * qr;
+    const double alphasq = alpha * alpha;
+    const double sumsq = alphasq + qrsq;
+    double sinqr, cosqr;
+    SINCOS(qr, sinqr, cosqr);
+    const double t1 = (alphasq - qrsq)*sinqr/qr - 2.0*alpha*cosqr;
+    const double t2 = alpha*sinqr/qr - cosqr;
+    const double fun = -3.0*(t1/sumsq - t2)/sumsq;
+    const double slope = (sld_out - sld_in)/expm1(A);
+    const double contrast = slope*exp(A*side);
+    result = contrast*fun + (sld_in-slope)*bes;
+  } else {
+    result = sld_in*bes;
+  }
+  return vol * result;
+}
 
-    //calculate S(q)
-    // S(q) = gamma(D-1) sin((D-1)atan(q c))/q c^(D-1) (1+(q c)^2)^(-(D-1)/2)
-    // lim D->1 [gamma(D-1) sin((D-1) a)] = a
-    // lim q->0 [sin((D-1) atan(q c))/q] = (D-1) c
-    // lim q,D->0,1 [gamma(D-1) sin((D-1)atan(q c))/q] = c
-    double sq;
-    if (q > 0. && fractal_dim_mass > 1.) {
-        const double Dm1 = fractal_dim_mass - 1.0;
-        const double t1 = sas_gamma(Dm1)*sin(Dm1*atan(q*cutoff_length));
-        const double t2 = pow(cutoff_length, Dm1);
-        const double t3 = pow(1.0 + square(q*cutoff_length), -0.5*Dm1);
-        sq = t1 * t2 * t3 / q;
-    } else if (q > 0.) {
-        sq = atan(q*cutoff_length)/q;
-    } else if (fractal_dim_mass > 1.) {
-        const double D = fractal_dim_mass;
-        sq = pow(cutoff_length, D) * sas_gamma(D);
-    } else {
-        sq = cutoff_length;
-    }
+static double
+outer_radius(double radius_core, double n_shells, double thickness[])
+{
+  int n = (int)(n_shells+0.5);
+  double r = radius_core;
+  for (int i=0; i < n; i++) {
+    r += thickness[i];
+  }
+  return r;
+}
 
-    return pq * sq;
+static double
+form_volume_onion(double radius_core, double n_shells, double thickness[])
+{
+  return M_4PI_3*cube(outer_radius(radius_core, n_shells, thickness));
+}
+
+static double
+radius_effective_onion(int mode, double radius_core, double n_shells, double thickness[])
+{
+  // case 1: outer radius
+  return outer_radius(radius_core, n_shells, thickness);
+}
+
+static void
+Fq_onion(double q, double *F1, double *F2, double sld_core, double radius_core, double sld_solvent,
+    double n_shells, double sld_in[], double sld_out[], double thickness[],
+    double A[])
+{
+  int n = (int)(n_shells+0.5);
+  double r_out = radius_core;
+  double f = f_exp(q, r_out, sld_core, 0.0, 0.0, 0.0, 0.0);
+  for (int i=0; i < n; i++){
+    const double r_in = r_out;
+    r_out += thickness[i];
+    f -= f_exp(q, r_in, sld_in[i], sld_out[i], thickness[i], A[i], 0.0);
+    f += f_exp(q, r_out, sld_in[i], sld_out[i], thickness[i], A[i], 1.0);
+  }
+  f -= f_exp(q, r_out, sld_solvent, 0.0, 0.0, 0.0, 0.0);
+
+  *F1 = 1e-2 * f;
+  *F2 = 1e-4 * f * f;
 }
 
 
 
-/* END Required header for SASmodel mass_fractal */
+/* END Required header for SASmodel onion */
 %}
     DECLARE
 %{
@@ -435,11 +330,11 @@ TRACE
     qz = V2K*(vz_i-vz);
     q = sqrt(qx*qx+qy*qy+qz*qz);
     
-    double trace_radius=radius;
-    double trace_cutoff_length=cutoff_length;
-    if ( pd_radius!=0.0 || pd_cutoff_length!=0.0 ){
-    trace_radius = (randnorm()*pd_radius+1.0)*radius;
-    trace_cutoff_length = (randnorm()*pd_cutoff_length+1.0)*cutoff_length;
+    double trace_radius_core=radius_core;
+    double trace_thickness[n_shells]=thickness[n_shells];
+    if ( pd_radius_core!=0.0 || pd_thickness[n_shells]!=0.0 ){
+    trace_radius_core = (randnorm()*pd_radius_core+1.0)*radius_core;
+    trace_thickness[n_shells] = (randnorm()*pd_thickness[n_shells]+1.0)*thickness[n_shells];
     }
 
         
@@ -449,7 +344,9 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq_mass_fractal(q, trace_radius, fractal_dim_mass, trace_cutoff_length);
+    double F1=0.0, F2=0.0;
+    Fq_onion(q, &F1, &F2, sld_core, trace_radius_core, sld_solvent, n_shells, sld_in[n_shells], sld_out[n_shells], trace_thickness[n_shells], A[n_shells]);
+    Iq_out = F2;
 
 
     float vol;

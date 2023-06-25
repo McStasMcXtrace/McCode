@@ -19,9 +19,12 @@
 *
 * SasView_gauss_lorentz_gel component, generated from gauss_lorentz_gel.c in sasmodels.
 *
-* Example: SasView_gauss_lorentz_gel(gauss_scale, cor_length_static, lorentz_scale, cor_length_dynamic, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_cor_length_static=0.0,
-        pd_cor_length_dynamic=0.0)
+* Example: 
+*  SasView_gauss_lorentz_gel(gauss_scale, cor_length_static, lorentz_scale, cor_length_dynamic, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_cor_length_static=0.0, pd_cor_length_dynamic=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -78,7 +81,30 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_gauss_lorentz_gel.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel gauss_lorentz_gel */
+#define HAS_Iq
+#line 1 ".././models/gauss_lorentz_gel.c"
+    
+double Iq_gauss_lorentz_gel(double q, double gauss_scale, double cor_length_static, double lorentz_scale, double cor_length_dynamic);
+
+#pragma acc routine seq
+double Iq_gauss_lorentz_gel(double q, double gauss_scale, double cor_length_static, double lorentz_scale, double cor_length_dynamic) {
+    // Calculate the Gaussian and Lorentzian terms separately
+    double term1 = gauss_scale * exp(-q * q * cor_length_static * cor_length_static / 2.0);
+    double term2 = lorentz_scale / (1.0 + q * q * cor_length_dynamic * cor_length_dynamic);
+
+    // Return the sum of the two terms
+    return term1 + term2;
+}
+
+
+
+
+
+
+/* END Required header for SASmodel gauss_lorentz_gel */
 %}
     DECLARE
 %{
@@ -187,7 +213,7 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, gauss_scale, trace_cor_length_static, lorentz_scale, trace_cor_length_dynamic);
+    Iq_out = Iq_gauss_lorentz_gel(q, gauss_scale, trace_cor_length_static, lorentz_scale, trace_cor_length_dynamic);
 
 
     float vol;

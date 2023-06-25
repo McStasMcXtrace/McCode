@@ -1,5 +1,5 @@
-#define HAS_Iq
-#line 1 "../kernel_header.c"
+#ifndef SAS_KERNEL_HDR
+#define SAS_KERNEL_HDR
 #define FLOAT_SIZE 8
 #ifdef __OPENCL_VERSION__
 # define USE_OPENCL
@@ -382,11 +382,5 @@ qabc_apply(
 }
 
 // ##### End of rotation operation definitions ######
-#line 1 ".././models/guinier.c"
-double Iq(double q, double rg)
-{
-    double exponent = fabs(rg)*rg*q*q/3.0;
-    double value = exp(-exponent);
-    return value;
-}
 
+#endif // SAS_KERNEL_HDR

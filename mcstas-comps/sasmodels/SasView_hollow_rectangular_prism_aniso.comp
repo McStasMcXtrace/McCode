@@ -19,12 +19,12 @@
 *
 * SasView_hollow_rectangular_prism component, generated from hollow_rectangular_prism.c in sasmodels.
 *
-* Example: SasView_hollow_rectangular_prism_aniso(sld, sld_solvent, length_a, b2a_ratio, c2a_ratio, thickness, theta, phi, Psi, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_length_a=0.0,
-        pd_thickness=0.0,
-        pd_theta=0.0,
-        pd_phi=0.0,
-        pd_Psi=0.0)
+* Example: 
+*  SasView_hollow_rectangular_prism_aniso(sld, sld_solvent, length_a, b2a_ratio, c2a_ratio, thickness, theta, phi, Psi, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_length_a=0.0, pd_thickness=0.0, pd_theta=0.0, pd_phi=0.0, pd_Psi=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -94,7 +94,368 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_hollow_rectangular_prism.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel hollow_rectangular_prism */
+#define HAS_Iqabc
+#define HAS_FQ
+#define FORM_VOL
+#line 1 ".././models/lib/gauss76.c"
+#ifndef GAUSS76
+#define GAUSS76
+
+// Created by Andrew Jackson on 4/23/07
+
+ #ifdef GAUSS_N
+ # undef GAUSS_N
+ # undef GAUSS_Z
+ # undef GAUSS_W
+ #endif
+ #define GAUSS_N 76
+ #define GAUSS_Z Gauss76Z
+ #define GAUSS_W Gauss76Wt
+
+// Gaussians
+constant double Gauss76Wt[76] = {
+	.00126779163408536,		//0
+	.00294910295364247,
+	.00462793522803742,
+	.00629918049732845,
+	.00795984747723973,
+	.00960710541471375,
+	.0112381685696677,
+	.0128502838475101,
+	.0144407317482767,
+	.0160068299122486,
+	.0175459372914742,		//10
+	.0190554584671906,
+	.020532847967908,
+	.0219756145344162,
+	.0233813253070112,
+	.0247476099206597,
+	.026072164497986,
+	.0273527555318275,
+	.028587223650054,
+	.029773487255905,
+	.0309095460374916,		//20
+	.0319934843404216,
+	.0330234743977917,
+	.0339977794120564,
+	.0349147564835508,
+	.0357728593807139,
+	.0365706411473296,
+	.0373067565423816,
+	.0379799643084053,
+	.0385891292645067,
+	.0391332242205184,		//30
+	.0396113317090621,
+	.0400226455325968,
+	.040366472122844,
+	.0406422317102947,
+	.0408494593018285,
+	.040987805464794,
+	.0410570369162294,
+	.0410570369162294,
+	.040987805464794,
+	.0408494593018285,		//40
+	.0406422317102947,
+	.040366472122844,
+	.0400226455325968,
+	.0396113317090621,
+	.0391332242205184,
+	.0385891292645067,
+	.0379799643084053,
+	.0373067565423816,
+	.0365706411473296,
+	.0357728593807139,		//50
+	.0349147564835508,
+	.0339977794120564,
+	.0330234743977917,
+	.0319934843404216,
+	.0309095460374916,
+	.029773487255905,
+	.028587223650054,
+	.0273527555318275,
+	.026072164497986,
+	.0247476099206597,		//60
+	.0233813253070112,
+	.0219756145344162,
+	.020532847967908,
+	.0190554584671906,
+	.0175459372914742,
+	.0160068299122486,
+	.0144407317482767,
+	.0128502838475101,
+	.0112381685696677,
+	.00960710541471375,		//70
+	.00795984747723973,
+	.00629918049732845,
+	.00462793522803742,
+	.00294910295364247,
+	.00126779163408536		//75 (indexed from 0)
+};
+
+constant double Gauss76Z[76] = {
+	-.999505948362153,		//0
+	-.997397786355355,
+	-.993608772723527,
+	-.988144453359837,
+	-.981013938975656,
+	-.972229228520377,
+	-.961805126758768,
+	-.949759207710896,
+	-.936111781934811,
+	-.92088586125215,
+	-.904107119545567,		//10
+	-.885803849292083,
+	-.866006913771982,
+	-.844749694983342,
+	-.822068037328975,
+	-.7980001871612,
+	-.77258672828181,
+	-.74587051350361,
+	-.717896592387704,
+	-.688712135277641,
+	-.658366353758143,		//20
+	-.626910417672267,
+	-.594397368836793,
+	-.560882031601237,
+	-.526420920401243,
+	-.491072144462194,
+	-.454895309813726,
+	-.417951418780327,
+	-.380302767117504,
+	-.342012838966962,
+	-.303146199807908,		//30
+	-.263768387584994,
+	-.223945802196474,
+	-.183745593528914,
+	-.143235548227268,
+	-.102483975391227,
+	-.0615595913906112,
+	-.0205314039939986,
+	.0205314039939986,
+	.0615595913906112,
+	.102483975391227,			//40
+	.143235548227268,
+	.183745593528914,
+	.223945802196474,
+	.263768387584994,
+	.303146199807908,
+	.342012838966962,
+	.380302767117504,
+	.417951418780327,
+	.454895309813726,
+	.491072144462194,		//50
+	.526420920401243,
+	.560882031601237,
+	.594397368836793,
+	.626910417672267,
+	.658366353758143,
+	.688712135277641,
+	.717896592387704,
+	.74587051350361,
+	.77258672828181,
+	.7980001871612,	//60
+	.822068037328975,
+	.844749694983342,
+	.866006913771982,
+	.885803849292083,
+	.904107119545567,
+	.92088586125215,
+	.936111781934811,
+	.949759207710896,
+	.961805126758768,
+	.972229228520377,		//70
+	.981013938975656,
+	.988144453359837,
+	.993608772723527,
+	.997397786355355,
+	.999505948362153		//75
+};
+
+
+#pragma acc declare copyin(Gauss76Wt[0:76], Gauss76Z[0:76])
+
+#endif // GAUSS76
+
+#line 1 ".././models/hollow_rectangular_prism.c"
+static double
+shell_volume(double length_a, double b2a_ratio, double c2a_ratio, double thickness)
+{
+    const double length_b = length_a * b2a_ratio;
+    const double length_c = length_a * c2a_ratio;
+    const double form_volume = length_a * length_b * length_c;
+    const double a_core = length_a - 2.0*thickness;
+    const double b_core = length_b - 2.0*thickness;
+    const double c_core = length_c - 2.0*thickness;
+    const double core_volume = a_core * b_core * c_core;
+    return form_volume - core_volume;
+}
+
+static double
+form_volume_hollow_rectangular_prism(double length_a, double b2a_ratio, double c2a_ratio, double thickness)
+{
+    const double length_b = length_a * b2a_ratio;
+    const double length_c = length_a * c2a_ratio;
+    const double form_volume = length_a * length_b * length_c;
+    return form_volume;
+}
+
+static double
+radius_from_excluded_volume_hollow_rectangular_prism(double length_a, double b2a_ratio, double c2a_ratio)
+{
+    const double r_equiv = sqrt(length_a*length_a*b2a_ratio/M_PI);
+    const double length_c = length_a*c2a_ratio;
+    return 0.5*cbrt(0.75*r_equiv*(2.0*r_equiv*length_c + (r_equiv + length_c)*(M_PI*r_equiv + length_c)));
+}
+
+static double
+radius_effective_hollow_rectangular_prism(int mode, double length_a, double b2a_ratio, double c2a_ratio, double thickness)
+// NOTE length_a is external dimension!
+{
+    switch (mode) {
+    default:
+    case 1: // equivalent cylinder excluded volume
+        return radius_from_excluded_volume_hollow_rectangular_prism(length_a, b2a_ratio, c2a_ratio);
+    case 2: // equivalent outer volume sphere
+        return cbrt(cube(length_a)*b2a_ratio*c2a_ratio/M_4PI_3);
+    case 3: // half length_a
+        return 0.5 * length_a;
+    case 4: // half length_b
+        return 0.5 * length_a*b2a_ratio;
+    case 5: // half length_c
+        return 0.5 * length_a*c2a_ratio;
+    case 6: // equivalent outer circular cross-section
+        return length_a*sqrt(b2a_ratio/M_PI);
+    case 7: // half ab diagonal
+        return 0.5*sqrt(square(length_a) * (1.0 + square(b2a_ratio)));
+    case 8: // half diagonal
+        return 0.5*sqrt(square(length_a) * (1.0 + square(b2a_ratio) + square(c2a_ratio)));
+    }
+}
+
+static void
+Fq_hollow_rectangular_prism(double q,
+    double *F1,
+    double *F2,
+    double sld,
+    double solvent_sld,
+    double length_a,
+    double b2a_ratio,
+    double c2a_ratio,
+    double thickness)
+{
+    const double length_b = length_a * b2a_ratio;
+    const double length_c = length_a * c2a_ratio;
+    const double a_half = 0.5 * length_a;
+    const double b_half = 0.5 * length_b;
+    const double c_half = 0.5 * length_c;
+    const double vol_total = length_a * length_b * length_c;
+    const double vol_core = 8.0 * (a_half-thickness) * (b_half-thickness) * (c_half-thickness);
+
+    //Integration limits to use in Gaussian quadrature
+    const double v1a = 0.0;
+    const double v1b = M_PI_2;  //theta integration limits
+    const double v2a = 0.0;
+    const double v2b = M_PI_2;  //phi integration limits
+
+    double outer_sum_F1 = 0.0;
+    double outer_sum_F2 = 0.0;
+    for(int i=0; i<GAUSS_N; i++) {
+
+        const double theta = 0.5 * ( GAUSS_Z[i]*(v1b-v1a) + v1a + v1b );
+        double sin_theta, cos_theta;
+        SINCOS(theta, sin_theta, cos_theta);
+
+        const double termC1 = sas_sinx_x(q * c_half * cos(theta));
+        const double termC2 = sas_sinx_x(q * (c_half-thickness)*cos(theta));
+
+        double inner_sum_F1 = 0.0;
+        double inner_sum_F2 = 0.0;
+        for(int j=0; j<GAUSS_N; j++) {
+
+            const double phi = 0.5 * ( GAUSS_Z[j]*(v2b-v2a) + v2a + v2b );
+            double sin_phi, cos_phi;
+            SINCOS(phi, sin_phi, cos_phi);
+
+            // Amplitude AP from eqn. (13), rewritten to avoid round-off effects when arg=0
+
+            const double termA1 = sas_sinx_x(q * a_half * sin_theta * sin_phi);
+            const double termA2 = sas_sinx_x(q * (a_half-thickness) * sin_theta * sin_phi);
+
+            const double termB1 = sas_sinx_x(q * b_half * sin_theta * cos_phi);
+            const double termB2 = sas_sinx_x(q * (b_half-thickness) * sin_theta * cos_phi);
+
+            const double AP1 = vol_total * termA1 * termB1 * termC1;
+            const double AP2 = vol_core * termA2 * termB2 * termC2;
+
+            inner_sum_F1 += GAUSS_W[j] * (AP1-AP2);
+            inner_sum_F2 += GAUSS_W[j] * square(AP1-AP2);
+        }
+        inner_sum_F1 *= 0.5 * (v2b-v2a);
+        inner_sum_F2 *= 0.5 * (v2b-v2a);
+
+        outer_sum_F1 += GAUSS_W[i] * inner_sum_F1 * sin(theta);
+        outer_sum_F2 += GAUSS_W[i] * inner_sum_F2 * sin(theta);
+    }
+    outer_sum_F1 *= 0.5*(v1b-v1a);
+    outer_sum_F2 *= 0.5*(v1b-v1a);
+
+    // Normalize as in Eqn. (15) without the volume factor (as cancels with (V*DelRho)^2 normalization)
+    // The factor 2 is due to the different theta integration limit (pi/2 instead of pi)
+    const double form_avg = outer_sum_F1/M_PI_2;
+    const double form_squared_avg = outer_sum_F2/M_PI_2;
+
+    // Multiply by contrast^2. Factor corresponding to volume^2 cancels with previous normalization.
+    const double contrast = sld - solvent_sld;
+
+    // Convert from [1e-12 A-1] to [cm-1]
+    *F1 = 1.0e-2 * contrast * form_avg;
+    *F2 = 1.0e-4 * contrast * contrast * form_squared_avg;
+}
+
+static double
+Iqabc_hollow_rectangular_prism(double qa, double qb, double qc,
+    double sld,
+    double solvent_sld,
+    double length_a,
+    double b2a_ratio,
+    double c2a_ratio,
+    double thickness)
+{
+    const double length_b = length_a * b2a_ratio;
+    const double length_c = length_a * c2a_ratio;
+    const double a_half = 0.5 * length_a;
+    const double b_half = 0.5 * length_b;
+    const double c_half = 0.5 * length_c;
+    const double vol_total = length_a * length_b * length_c;
+    const double vol_core = 8.0 * (a_half-thickness) * (b_half-thickness) * (c_half-thickness);
+
+    // Amplitude AP from eqn. (13)
+
+    const double termA1 = sas_sinx_x(qa * a_half);
+    const double termA2 = sas_sinx_x(qa * (a_half-thickness));
+
+    const double termB1 = sas_sinx_x(qb * b_half);
+    const double termB2 = sas_sinx_x(qb * (b_half-thickness));
+
+    const double termC1 = sas_sinx_x(qc * c_half);
+    const double termC2 = sas_sinx_x(qc * (c_half-thickness));
+
+    const double AP1 = vol_total * termA1 * termB1 * termC1;
+    const double AP2 = vol_core * termA2 * termB2 * termC2;
+
+    // Multiply by contrast^2. Factor corresponding to volume^2 cancels with previous normalization.
+    const double delrho = sld - solvent_sld;
+
+    // Convert from [1e-12 A-1] to [cm-1]
+    return 1.0e-4 * square(delrho * (AP1-AP2));
+}
+
+
+
+/* END Required header for SASmodel hollow_rectangular_prism */
 %}
     DECLARE
 %{
@@ -219,11 +580,11 @@ TRACE
 
     qabc_rotation(&rotation, trace_theta, trace_phi, trace_Psi, dtheta, dphi, dPsi);
     qabc_apply(&rotation, qx, qy, &qa, &qb, &qc);
-    Iq_out = Iqabc(qa, qb, qc, sld, sld_solvent, trace_length_a, b2a_ratio, c2a_ratio, trace_thickness  );
+    Iq_out = Iqabc_hollow_rectangular_prism(qa, qb, qc, sld, sld_solvent, trace_length_a, b2a_ratio, c2a_ratio, trace_thickness  );
 
 
     float vol;
-    vol = form_volume(trace_length_a, b2a_ratio, c2a_ratio, trace_thickness);
+    vol = 1;
 
     // Scale by 1.0E2 [SasView: 1/cm  ->   McStas: 1/m]
     Iq_out = model_scale*Iq_out / vol * 1.0E2;

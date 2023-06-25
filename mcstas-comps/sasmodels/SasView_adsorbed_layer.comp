@@ -19,8 +19,12 @@
 *
 * SasView_adsorbed_layer component, generated from adsorbed_layer.c in sasmodels.
 *
-* Example: SasView_adsorbed_layer(second_moment, adsorbed_amount, density_shell, radius, volfraction, sld_shell, sld_solvent, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_radius=0.0)
+* Example: 
+*  SasView_adsorbed_layer(second_moment, adsorbed_amount, density_shell, radius, volfraction, sld_shell, sld_solvent, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_radius=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -81,7 +85,44 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_adsorbed_layer.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel adsorbed_layer */
+#define HAS_Iq
+#line 1 ".././models/adsorbed_layer.c"
+#include <math.h>
+
+double Iq_adsorbed_layer(
+    double q,
+    double second_moment,
+    double adsorbed_amount,
+    double density_shell,
+    double radius,
+    double volfraction,
+    double sld_shell,
+    double sld_solvent
+);
+
+#pragma acc routine seq
+double Iq_adsorbed_layer(
+    double q,
+    double second_moment,
+    double adsorbed_amount,
+    double density_shell,
+    double radius,
+    double volfraction,
+    double sld_shell,
+    double sld_solvent
+) {
+    double aa = ((sld_shell - sld_solvent) / density_shell * adsorbed_amount) / q;
+    double bb = q * second_moment;
+    double inten = 6.0e-02 * PI * volfraction * pow(aa, 2) * exp(-pow(bb, 2)) / radius;
+    return inten;
+}
+
+
+
+/* END Required header for SASmodel adsorbed_layer */
 %}
     DECLARE
 %{
@@ -188,7 +229,7 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, second_moment, adsorbed_amount, density_shell, trace_radius, volfraction, sld_shell, sld_solvent);
+    Iq_out = Iq_adsorbed_layer(q, second_moment, adsorbed_amount, density_shell, trace_radius, volfraction, sld_shell, sld_solvent);
 
 
     float vol;

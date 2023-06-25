@@ -19,11 +19,12 @@
 *
 * SasView_core_shell_ellipsoid component, generated from core_shell_ellipsoid.c in sasmodels.
 *
-* Example: SasView_core_shell_ellipsoid_aniso(radius_equat_core, x_core, thick_shell, x_polar_shell, sld_core, sld_shell, sld_solvent, theta, phi, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_radius_equat_core=0.0,
-        pd_thick_shell=0.0,
-        pd_theta=0.0,
-        pd_phi=0.0)
+* Example: 
+*  SasView_core_shell_ellipsoid_aniso(radius_equat_core, x_core, thick_shell, x_polar_shell, sld_core, sld_shell, sld_solvent, theta, phi, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_radius_equat_core=0.0, pd_thick_shell=0.0, pd_theta=0.0, pd_phi=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -92,7 +93,415 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_core_shell_ellipsoid.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel core_shell_ellipsoid */
+#define HAS_Iqac
+#define HAS_FQ
+#define FORM_VOL
+#line 1 ".././models/lib/sas_3j1x_x.c"
+#ifndef SAS_3J1X_HDR
+#define SAS_3J1X_HDR
+
+/**
+* Spherical Bessel function 3*j1(x)/x
+*
+* Used for low q to avoid cancellation error.
+* Note that the values differ from sasview ~ 5e-12 rather than 5e-14, but
+* in this case it is likely cancellation errors in the original expression
+* using double precision that are the source.
+*/
+double sas_3j1x_x(double q);
+
+// The choice of the number of terms in the series and the cutoff value for
+// switching between series and direct calculation depends on the numeric
+// precision.
+//
+// Point where direct calculation reaches machine precision:
+//
+//   single machine precision eps 3e-8 at qr=1.1 **
+//   double machine precision eps 4e-16 at qr=1.1
+//
+// Point where Taylor series reaches machine precision (eps), where taylor
+// series matches direct calculation (cross) and the error at that point:
+//
+//   prec   n eps  cross  error
+//   single 3 0.28  0.4   6.2e-7
+//   single 4 0.68  0.7   2.3e-7
+//   single 5 1.18  1.2   7.5e-8
+//   double 3 0.01  0.03  2.3e-13
+//   double 4 0.06  0.1   3.1e-14
+//   double 5 0.16  0.2   5.0e-15
+//
+// ** Note: relative error on single precision starts increase on the direct
+// method at qr=1.1, rising from 3e-8 to 5e-5 by qr=1e3.  This should be
+// safe for the sans range, with objects of 100 nm supported to a q of 0.1
+// while maintaining 5 digits of precision.  For usans/sesans, the objects
+// are larger but the q is smaller, so again it should be fine.
+//
+// See explore/sph_j1c.py for code to explore these ranges.
+
+// Use 4th order series
+#if FLOAT_SIZE>4
+#define SPH_J1C_CUTOFF 0.1
+#else
+#define SPH_J1C_CUTOFF 0.7
+#endif
+#pragma acc routine seq
+double sas_3j1x_x(double q)
+{
+    // 2017-05-18 PAK - support negative q
+    if (fabs(q) < SPH_J1C_CUTOFF) {
+        const double q2 = q*q;
+        return (1.0 + q2*(-3./30. + q2*(3./840. + q2*(-3./45360.))));// + q2*(3./3991680.)))));
+    } else {
+        double sin_q, cos_q;
+        SINCOS(q, sin_q, cos_q);
+        return 3.0*(sin_q/q - cos_q)/(q*q);
+    }
+}
+
+#endif // SAS_3J1X_HDR
+
+#line 1 ".././models/lib/gauss76.c"
+#ifndef GAUSS76
+#define GAUSS76
+
+// Created by Andrew Jackson on 4/23/07
+
+ #ifdef GAUSS_N
+ # undef GAUSS_N
+ # undef GAUSS_Z
+ # undef GAUSS_W
+ #endif
+ #define GAUSS_N 76
+ #define GAUSS_Z Gauss76Z
+ #define GAUSS_W Gauss76Wt
+
+// Gaussians
+constant double Gauss76Wt[76] = {
+	.00126779163408536,		//0
+	.00294910295364247,
+	.00462793522803742,
+	.00629918049732845,
+	.00795984747723973,
+	.00960710541471375,
+	.0112381685696677,
+	.0128502838475101,
+	.0144407317482767,
+	.0160068299122486,
+	.0175459372914742,		//10
+	.0190554584671906,
+	.020532847967908,
+	.0219756145344162,
+	.0233813253070112,
+	.0247476099206597,
+	.026072164497986,
+	.0273527555318275,
+	.028587223650054,
+	.029773487255905,
+	.0309095460374916,		//20
+	.0319934843404216,
+	.0330234743977917,
+	.0339977794120564,
+	.0349147564835508,
+	.0357728593807139,
+	.0365706411473296,
+	.0373067565423816,
+	.0379799643084053,
+	.0385891292645067,
+	.0391332242205184,		//30
+	.0396113317090621,
+	.0400226455325968,
+	.040366472122844,
+	.0406422317102947,
+	.0408494593018285,
+	.040987805464794,
+	.0410570369162294,
+	.0410570369162294,
+	.040987805464794,
+	.0408494593018285,		//40
+	.0406422317102947,
+	.040366472122844,
+	.0400226455325968,
+	.0396113317090621,
+	.0391332242205184,
+	.0385891292645067,
+	.0379799643084053,
+	.0373067565423816,
+	.0365706411473296,
+	.0357728593807139,		//50
+	.0349147564835508,
+	.0339977794120564,
+	.0330234743977917,
+	.0319934843404216,
+	.0309095460374916,
+	.029773487255905,
+	.028587223650054,
+	.0273527555318275,
+	.026072164497986,
+	.0247476099206597,		//60
+	.0233813253070112,
+	.0219756145344162,
+	.020532847967908,
+	.0190554584671906,
+	.0175459372914742,
+	.0160068299122486,
+	.0144407317482767,
+	.0128502838475101,
+	.0112381685696677,
+	.00960710541471375,		//70
+	.00795984747723973,
+	.00629918049732845,
+	.00462793522803742,
+	.00294910295364247,
+	.00126779163408536		//75 (indexed from 0)
+};
+
+constant double Gauss76Z[76] = {
+	-.999505948362153,		//0
+	-.997397786355355,
+	-.993608772723527,
+	-.988144453359837,
+	-.981013938975656,
+	-.972229228520377,
+	-.961805126758768,
+	-.949759207710896,
+	-.936111781934811,
+	-.92088586125215,
+	-.904107119545567,		//10
+	-.885803849292083,
+	-.866006913771982,
+	-.844749694983342,
+	-.822068037328975,
+	-.7980001871612,
+	-.77258672828181,
+	-.74587051350361,
+	-.717896592387704,
+	-.688712135277641,
+	-.658366353758143,		//20
+	-.626910417672267,
+	-.594397368836793,
+	-.560882031601237,
+	-.526420920401243,
+	-.491072144462194,
+	-.454895309813726,
+	-.417951418780327,
+	-.380302767117504,
+	-.342012838966962,
+	-.303146199807908,		//30
+	-.263768387584994,
+	-.223945802196474,
+	-.183745593528914,
+	-.143235548227268,
+	-.102483975391227,
+	-.0615595913906112,
+	-.0205314039939986,
+	.0205314039939986,
+	.0615595913906112,
+	.102483975391227,			//40
+	.143235548227268,
+	.183745593528914,
+	.223945802196474,
+	.263768387584994,
+	.303146199807908,
+	.342012838966962,
+	.380302767117504,
+	.417951418780327,
+	.454895309813726,
+	.491072144462194,		//50
+	.526420920401243,
+	.560882031601237,
+	.594397368836793,
+	.626910417672267,
+	.658366353758143,
+	.688712135277641,
+	.717896592387704,
+	.74587051350361,
+	.77258672828181,
+	.7980001871612,	//60
+	.822068037328975,
+	.844749694983342,
+	.866006913771982,
+	.885803849292083,
+	.904107119545567,
+	.92088586125215,
+	.936111781934811,
+	.949759207710896,
+	.961805126758768,
+	.972229228520377,		//70
+	.981013938975656,
+	.988144453359837,
+	.993608772723527,
+	.997397786355355,
+	.999505948362153		//75
+};
+
+
+#pragma acc declare copyin(Gauss76Wt[0:76], Gauss76Z[0:76])
+
+#endif // GAUSS76
+
+#line 1 ".././models/core_shell_ellipsoid.c"
+
+// Converted from Igor function gfn4, using the same pattern as ellipsoid
+// for evaluating the parts of the integral.
+//     FUNCTION gfn4:    CONTAINS F(Q,A,B,MU)**2  AS GIVEN
+//                       BY (53) & (58-59) IN CHEN AND
+//                       KOTLARCHYK REFERENCE
+//
+//       <OBLATE ELLIPSOID>
+static double
+_cs_ellipsoid_kernel(double qab, double qc,
+    double equat_core, double polar_core,
+    double equat_shell, double polar_shell,
+    double sld_core_shell, double sld_shell_solvent)
+{
+    const double qr_core = sqrt(square(equat_core*qab) + square(polar_core*qc));
+    const double si_core = sas_3j1x_x(qr_core);
+    const double volume_core = M_4PI_3*equat_core*equat_core*polar_core;
+    const double fq_core = si_core*volume_core*sld_core_shell;
+
+    const double qr_shell = sqrt(square(equat_shell*qab) + square(polar_shell*qc));
+    const double si_shell = sas_3j1x_x(qr_shell);
+    const double volume_shell = M_4PI_3*equat_shell*equat_shell*polar_shell;
+    const double fq_shell = si_shell*volume_shell*sld_shell_solvent;
+
+    return fq_core + fq_shell;
+}
+
+static double
+form_volume_core_shell_ellipsoid(double radius_equat_core,
+    double x_core,
+    double thick_shell,
+    double x_polar_shell)
+{
+    const double equat_shell = radius_equat_core + thick_shell;
+    const double polar_shell = radius_equat_core*x_core + thick_shell*x_polar_shell;
+    double vol = M_4PI_3*equat_shell*equat_shell*polar_shell;
+    return vol;
+}
+
+static double
+radius_from_volume_core_shell_ellipsoid(double radius_equat_core, double x_core, double thick_shell, double x_polar_shell)
+{
+    const double volume_ellipsoid = form_volume_core_shell_ellipsoid(radius_equat_core, x_core, thick_shell, x_polar_shell);
+    return cbrt(volume_ellipsoid/M_4PI_3);
+}
+
+static double
+radius_from_curvature_core_shell_ellipsoid(double radius_equat_core, double x_core, double thick_shell, double x_polar_shell)
+{
+    // Trivial cases
+    if (1.0 == x_core && 1.0 == x_polar_shell) return radius_equat_core + thick_shell;
+    if ((radius_equat_core + thick_shell)*(radius_equat_core*x_core + thick_shell*x_polar_shell) == 0.)  return 0.;
+
+    // see equation (26) in A.Isihara, J.Chem.Phys. 18(1950)1446-1449
+    const double radius_equat_tot = radius_equat_core + thick_shell;
+    const double radius_polar_tot = radius_equat_core*x_core + thick_shell*x_polar_shell;
+    const double ratio = (radius_polar_tot < radius_equat_tot
+                          ? radius_polar_tot / radius_equat_tot
+                          : radius_equat_tot / radius_polar_tot);
+    const double e1 = sqrt(1.0 - ratio*ratio);
+    const double b1 = 1.0 + asin(e1) / (e1 * ratio);
+    const double bL = (1.0 + e1) / (1.0 - e1);
+    const double b2 = 1.0 + 0.5 * ratio * ratio / e1 * log(bL);
+    const double delta = 0.75 * b1 * b2;
+    const double ddd = 2.0 * (delta + 1.0) * radius_polar_tot * radius_equat_tot * radius_equat_tot;
+    return 0.5 * cbrt(ddd);
+}
+
+static double
+radius_effective_core_shell_ellipsoid(int mode, double radius_equat_core, double x_core, double thick_shell, double x_polar_shell)
+{
+    const double radius_equat_tot = radius_equat_core + thick_shell;
+    const double radius_polar_tot = radius_equat_core*x_core + thick_shell*x_polar_shell;
+
+    switch (mode) {
+    default:
+    case 1: // average outer curvature
+        return radius_from_curvature_core_shell_ellipsoid(radius_equat_core, x_core, thick_shell, x_polar_shell);
+    case 2: // equivalent volume sphere
+        return radius_from_volume_core_shell_ellipsoid(radius_equat_core, x_core, thick_shell, x_polar_shell);
+    case 3: // min outer radius
+        return (radius_polar_tot < radius_equat_tot ? radius_polar_tot : radius_equat_tot);
+    case 4: // max outer radius
+        return (radius_polar_tot > radius_equat_tot ? radius_polar_tot : radius_equat_tot);
+    }
+}
+
+static void
+Fq_core_shell_ellipsoid(double q,
+    double *F1,
+    double *F2,
+    double radius_equat_core,
+    double x_core,
+    double thick_shell,
+    double x_polar_shell,
+    double core_sld,
+    double shell_sld,
+    double solvent_sld)
+{
+    const double sld_core_shell = core_sld - shell_sld;
+    const double sld_shell_solvent = shell_sld - solvent_sld;
+
+    const double polar_core = radius_equat_core*x_core;
+    const double equat_shell = radius_equat_core + thick_shell;
+    const double polar_shell = radius_equat_core*x_core + thick_shell*x_polar_shell;
+
+    // translate from [-1, 1] => [0, 1]
+    const double m = 0.5;
+    const double b = 0.5;
+    double total_F1 = 0.0;     //initialize intergral
+    double total_F2 = 0.0;     //initialize intergral
+    for(int i=0;i<GAUSS_N;i++) {
+        const double cos_theta = GAUSS_Z[i]*m + b;
+        const double sin_theta = sqrt(1.0 - cos_theta*cos_theta);
+        double fq = _cs_ellipsoid_kernel(q*sin_theta, q*cos_theta,
+            radius_equat_core, polar_core,
+            equat_shell, polar_shell,
+            sld_core_shell, sld_shell_solvent);
+        total_F1 += GAUSS_W[i] * fq;
+        total_F2 += GAUSS_W[i] * fq * fq;
+    }
+    total_F1 *= m;
+    total_F2 *= m;
+
+    // convert to [cm-1]
+    *F1 = 1.0e-2 * total_F1;
+    *F2 = 1.0e-4 * total_F2;
+}
+
+
+static double
+Iqac_core_shell_ellipsoid(double qab, double qc,
+    double radius_equat_core,
+    double x_core,
+    double thick_shell,
+    double x_polar_shell,
+    double core_sld,
+    double shell_sld,
+    double solvent_sld)
+{
+    const double sld_core_shell = core_sld - shell_sld;
+    const double sld_shell_solvent = shell_sld - solvent_sld;
+
+    const double polar_core = radius_equat_core*x_core;
+    const double equat_shell = radius_equat_core + thick_shell;
+    const double polar_shell = radius_equat_core*x_core + thick_shell*x_polar_shell;
+
+    double fq = _cs_ellipsoid_kernel(qab, qc,
+                  radius_equat_core, polar_core,
+                  equat_shell, polar_shell,
+                  sld_core_shell, sld_shell_solvent);
+
+    //convert to [cm-1]
+    return 1.0e-4 * fq * fq;
+}
+
+
+
+/* END Required header for SASmodel core_shell_ellipsoid */
 %}
     DECLARE
 %{
@@ -214,11 +623,11 @@ TRACE
 
     qac_rotation(&rotation, trace_theta, trace_phi, dtheta, dphi);
     qac_apply(&rotation, qx, qy, &qab, &qc);
-    Iq_out = Iqac(qab, qc, trace_radius_equat_core, x_core, trace_thick_shell, x_polar_shell, sld_core, sld_shell, sld_solvent );
+    Iq_out = Iqac_core_shell_ellipsoid(qab, qc, trace_radius_equat_core, x_core, trace_thick_shell, x_polar_shell, sld_core, sld_shell, sld_solvent );
 
 
     float vol;
-    vol = form_volume(trace_radius_equat_core, x_core, trace_thick_shell, x_polar_shell);
+    vol = 1;
 
     // Scale by 1.0E2 [SasView: 1/cm  ->   McStas: 1/m]
     Iq_out = model_scale*Iq_out / vol * 1.0E2;

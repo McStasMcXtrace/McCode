@@ -19,8 +19,12 @@
 *
 * SasView_polymer_excl_volume component, generated from polymer_excl_volume.c in sasmodels.
 *
-* Example: SasView_polymer_excl_volume(rg, porod_exp, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,
-        pd_rg=0.0)
+* Example: 
+*  SasView_polymer_excl_volume(rg, porod_exp, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_rg=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -71,7 +75,56 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_polymer_excl_volume.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel polymer_excl_volume */
+#define HAS_Iq
+#line 1 ".././models/polymer_excl_volume.c"
+#include <math.h>
+#define NEED_TGAMMA
+
+double tgammainc(double a, double x);
+double Iq_polymer_excl_volume(double q, double rg, double porod_exp);
+
+#pragma acc routine seq
+double tgammainc(double a, double x)
+{
+    const double eps = 1e-14;  // desired precision
+
+    // Initialize the result and the current term
+    double result = 0.0;
+    double term = pow(x, a) * exp(-x) / tgamma(a + 1.0);
+    int n = 1;
+
+    // Sum terms until convergence or maximum number of iterations
+    while (fabs(term) > eps && n <= 1000) {
+        result += term;
+        term = pow(x, a + n) * exp(-x) / tgamma(a + n + 1.0);
+        n++;
+    }
+
+    return result;
+}
+    
+#pragma acc routine seq
+double Iq_polymer_excl_volume(double q, double rg, double porod_exp) {
+    double usub = pow(q * rg, 2) * (2.0 / porod_exp + 1.0) * (2.0 / porod_exp + 2.0) / 6.0;
+    double upow = pow(usub, -0.5 * porod_exp);
+    double gamma_1 = tgamma(0.5 * porod_exp);
+    double gamma_2 = tgamma(porod_exp);
+    double gammainc_1 = tgammainc(0.5 * porod_exp, usub);
+    double gammainc_2 = tgammainc(porod_exp, usub);
+    double result = porod_exp * upow * (gamma_1 * gammainc_1 - upow * gamma_2 * gammainc_2);
+    if (q <= 0) {
+        result = 1.0;
+    }
+    return result;
+}
+
+
+
+
+/* END Required header for SASmodel polymer_excl_volume */
 %}
     DECLARE
 %{
@@ -178,7 +231,7 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, trace_rg, porod_exp);
+    Iq_out = Iq_polymer_excl_volume(q, trace_rg, porod_exp);
 
 
     float vol;

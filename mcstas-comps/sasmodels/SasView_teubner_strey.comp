@@ -19,7 +19,12 @@
 *
 * SasView_teubner_strey component, generated from teubner_strey.c in sasmodels.
 *
-* Example: SasView_teubner_strey(volfraction_a, sld_a, sld_b, d, xi, model_scale=1.0,model_abs=0.0,xwidth=0.01,yheight=0.01,zdepth=0.005,R=0,int target_index=1,target_x=0,target_y=0,target_z=1,focus_xw=0.5,focus_yh=0.5,focus_aw=0,focus_ah=0,focus_r=0,)
+* Example: 
+*  SasView_teubner_strey(volfraction_a, sld_a, sld_b, d, xi, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     )
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -75,7 +80,32 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-    %include "sas_teubner_strey.c"
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel teubner_strey */
+#define HAS_Iq
+#line 1 ".././models/teubner_strey.c"
+#include <math.h>
+
+#define PI 3.14159265358979323846
+
+double Iq_teubner_strey(double q, double volfraction_a, double sld_a, double sld_b, double d, double xi);
+
+#pragma acc routine seq
+double Iq_teubner_strey(double q, double volfraction_a, double sld_a, double sld_b, double d, double xi) {
+    double drho = sld_a - sld_b;
+    double k = 2.0 * PI * xi / d;
+    double a2 = pow(1.0 + k * k, 2.0);
+    double c1 = 2.0 * xi * xi * (1.0 - k * k);
+    double c2 = xi * xi * xi * xi;
+    double prefactor = 8.0 * PI * volfraction_a * (1.0 - volfraction_a) * drho * drho * c2 / xi;
+    return 1.0e-4 * prefactor / (c2 * q * q + c1 * q + a2);
+}
+
+
+
+
+/* END Required header for SASmodel teubner_strey */
 %}
     DECLARE
 %{
@@ -176,7 +206,7 @@ TRACE
     float Iq_out;
     Iq_out = 1;
 
-    Iq_out = Iq(q, volfraction_a, sld_a, sld_b, d, xi);
+    Iq_out = Iq_teubner_strey(q, volfraction_a, sld_a, sld_b, d, xi);
 
 
     float vol;
