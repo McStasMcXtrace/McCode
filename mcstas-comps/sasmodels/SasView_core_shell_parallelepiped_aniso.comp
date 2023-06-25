@@ -118,7 +118,11 @@ SHARE %{
 #define HAS_Iqabc
 #define HAS_FQ
 #define FORM_VOL
-#line 1 ".././models/lib/gauss76.c"
+
+#ifndef SAS_HAVE_gauss76
+#define SAS_HAVE_gauss76
+
+#line 1 "gauss76"
 #ifndef GAUSS76
 #define GAUSS76
 
@@ -297,7 +301,14 @@ constant double Gauss76Z[76] = {
 
 #endif // GAUSS76
 
-#line 1 ".././models/core_shell_parallelepiped.c"
+
+#endif // SAS_HAVE_gauss76
+
+
+#ifndef SAS_HAVE_core_shell_parallelepiped
+#define SAS_HAVE_core_shell_parallelepiped
+
+#line 1 "core_shell_parallelepiped"
 // Set OVERLAPPING to 1 in order to fill in the edges of the box, with
 // c endcaps and b overlapping a.  With the proper choice of parameters,
 // (setting rim slds to sld, core sld to solvent, rim thickness to thickness
@@ -527,6 +538,9 @@ Iqabc_core_shell_parallelepiped(double qa, double qb, double qc,
 
     return 1.0e-4 * f * f;
 }
+
+
+#endif // SAS_HAVE_core_shell_parallelepiped
 
 
 

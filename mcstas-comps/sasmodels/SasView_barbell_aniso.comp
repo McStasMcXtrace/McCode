@@ -97,7 +97,11 @@ SHARE %{
 #define HAS_Iqac
 #define HAS_FQ
 #define FORM_VOL
-#line 1 ".././models/lib/polevl.c"
+
+#ifndef SAS_HAVE_polevl
+#define SAS_HAVE_polevl
+
+#line 1 "polevl"
 #ifndef POLEVL_HDR
 #define POLEVL_HDR
 
@@ -189,7 +193,14 @@ double p1evl( double x, pconstant double *coef, int N )
 
 #endif // POLEVL_HDR
 
-#line 1 ".././models/lib/sas_J1.c"
+
+#endif // SAS_HAVE_polevl
+
+
+#ifndef SAS_HAVE_sas_J1
+#define SAS_HAVE_sas_J1
+
+#line 1 "sas_J1"
 #ifndef SAS_J1_HDR
 #define SAS_J1_HDR
 
@@ -448,9 +459,16 @@ double sas_2J1x_x(double x)
     return (x != 0.0 ) ? 2.0*sas_J1(x)/x : 1.0;
 }
 
-#endif SAS_J1_HDR
+#endif // SAS_J1_HDR
 
-#line 1 ".././models/lib/gauss76.c"
+
+#endif // SAS_HAVE_sas_J1
+
+
+#ifndef SAS_HAVE_gauss76
+#define SAS_HAVE_gauss76
+
+#line 1 "gauss76"
 #ifndef GAUSS76
 #define GAUSS76
 
@@ -629,7 +647,14 @@ constant double Gauss76Z[76] = {
 
 #endif // GAUSS76
 
-#line 1 ".././models/barbell.c"
+
+#endif // SAS_HAVE_gauss76
+
+
+#ifndef SAS_HAVE_barbell
+#define SAS_HAVE_barbell
+
+#line 1 "barbell"
 //barbell kernel - same as dumbbell
 static double
 _bell_kernel(double qab, double qc, double h, double radius_bell,
@@ -780,6 +805,9 @@ Iqac_barbell(double qab, double qc,
     const double s = (sld - solvent_sld);
     return 1.0e-4 * square(s * Aq);
 }
+
+
+#endif // SAS_HAVE_barbell
 
 
 

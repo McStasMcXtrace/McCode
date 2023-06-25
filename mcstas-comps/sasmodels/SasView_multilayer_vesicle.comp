@@ -94,7 +94,11 @@ SHARE %{
 /* BEGIN Required header for SASmodel multilayer_vesicle */
 #define HAS_FQ
 #define FORM_VOL
-#line 1 ".././models/lib/sas_3j1x_x.c"
+
+#ifndef SAS_HAVE_sas_3j1x_x
+#define SAS_HAVE_sas_3j1x_x
+
+#line 1 "sas_3j1x_x"
 #ifndef SAS_3J1X_HDR
 #define SAS_3J1X_HDR
 
@@ -158,7 +162,14 @@ double sas_3j1x_x(double q)
 
 #endif // SAS_3J1X_HDR
 
-#line 1 ".././models/multilayer_vesicle.c"
+
+#endif // SAS_HAVE_sas_3j1x_x
+
+
+#ifndef SAS_HAVE_multilayer_vesicle
+#define SAS_HAVE_multilayer_vesicle
+
+#line 1 "multilayer_vesicle"
 static double
 form_volume_multilayer_vesicle(double radius,
           double thick_shell,
@@ -239,6 +250,9 @@ Fq_multilayer_vesicle(double q,
     *F2 = 1.0e-4 * volfraction*fq*fq;
 }
 
+
+
+#endif // SAS_HAVE_multilayer_vesicle
 
 
 

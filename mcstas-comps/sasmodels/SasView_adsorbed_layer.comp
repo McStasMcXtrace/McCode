@@ -89,7 +89,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel adsorbed_layer */
 #define HAS_Iq
-#line 1 ".././models/adsorbed_layer.c"
+
+#ifndef SAS_HAVE_adsorbed_layer
+#define SAS_HAVE_adsorbed_layer
+
+#line 1 "adsorbed_layer"
 #include <math.h>
 
 double Iq_adsorbed_layer(
@@ -119,6 +123,9 @@ double Iq_adsorbed_layer(
     double inten = 6.0e-02 * PI * volfraction * pow(aa, 2) * exp(-pow(bb, 2)) / radius;
     return inten;
 }
+
+
+#endif // SAS_HAVE_adsorbed_layer
 
 
 

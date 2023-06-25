@@ -87,7 +87,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel lamellar_hg */
 #define HAS_Iq
-#line 1 ".././models/lamellar_hg.c"
+
+#ifndef SAS_HAVE_lamellar_hg
+#define SAS_HAVE_lamellar_hg
+
+#line 1 "lamellar_hg"
 double Iq_lamellar_hg(double q, double length_tail, double length_head, double sld, double sld_head, double sld_solvent)
 {
     const double qsq = q*q;
@@ -106,6 +110,9 @@ double Iq_lamellar_hg(double q, double length_tail, double length_head, double s
 
     return inten;
 }
+
+#endif // SAS_HAVE_lamellar_hg
+
 
 
 /* END Required header for SASmodel lamellar_hg */

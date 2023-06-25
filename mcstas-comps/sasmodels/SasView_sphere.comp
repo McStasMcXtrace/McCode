@@ -82,7 +82,11 @@ SHARE %{
 /* BEGIN Required header for SASmodel sphere */
 #define HAS_FQ
 #define FORM_VOL
-#line 1 ".././models/lib/sas_3j1x_x.c"
+
+#ifndef SAS_HAVE_sas_3j1x_x
+#define SAS_HAVE_sas_3j1x_x
+
+#line 1 "sas_3j1x_x"
 #ifndef SAS_3J1X_HDR
 #define SAS_3J1X_HDR
 
@@ -146,7 +150,14 @@ double sas_3j1x_x(double q)
 
 #endif // SAS_3J1X_HDR
 
-#line 1 ".././models/sphere.c"
+
+#endif // SAS_HAVE_sas_3j1x_x
+
+
+#ifndef SAS_HAVE_sphere
+#define SAS_HAVE_sphere
+
+#line 1 "sphere"
 static double form_volume_sphere(double radius)
 {
     return M_4PI_3*cube(radius);
@@ -167,6 +178,9 @@ static void Fq_sphere(double q, double *f1, double *f2, double sld, double sld_s
     *f1 = 1.0e-2*form;
     *f2 = 1.0e-4*form*form;
 }
+
+
+#endif // SAS_HAVE_sphere
 
 
 

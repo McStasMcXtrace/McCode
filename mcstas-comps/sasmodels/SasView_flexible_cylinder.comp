@@ -90,7 +90,11 @@ SHARE %{
 /* BEGIN Required header for SASmodel flexible_cylinder */
 #define HAS_Iq
 #define FORM_VOL
-#line 1 ".././models/lib/polevl.c"
+
+#ifndef SAS_HAVE_polevl
+#define SAS_HAVE_polevl
+
+#line 1 "polevl"
 #ifndef POLEVL_HDR
 #define POLEVL_HDR
 
@@ -182,7 +186,14 @@ double p1evl( double x, pconstant double *coef, int N )
 
 #endif // POLEVL_HDR
 
-#line 1 ".././models/lib/sas_J1.c"
+
+#endif // SAS_HAVE_polevl
+
+
+#ifndef SAS_HAVE_sas_J1
+#define SAS_HAVE_sas_J1
+
+#line 1 "sas_J1"
 #ifndef SAS_J1_HDR
 #define SAS_J1_HDR
 
@@ -441,9 +452,16 @@ double sas_2J1x_x(double x)
     return (x != 0.0 ) ? 2.0*sas_J1(x)/x : 1.0;
 }
 
-#endif SAS_J1_HDR
+#endif // SAS_J1_HDR
 
-#line 1 ".././models/lib/wrc_cyl.c"
+
+#endif // SAS_HAVE_sas_J1
+
+
+#ifndef SAS_HAVE_wrc_cyl
+#define SAS_HAVE_wrc_cyl
+
+#line 1 "wrc_cyl"
 #ifndef SAS_WRC_CYL_HDR
 #define SAS_WRC_CYL_HDR
 
@@ -683,7 +701,14 @@ Sk_WR(double q, double L, double b)
 
 #endif // SAS_WRC_CYL_HDR
 
-#line 1 ".././models/flexible_cylinder.c"
+
+#endif // SAS_HAVE_wrc_cyl
+
+
+#ifndef SAS_HAVE_flexible_cylinder
+#define SAS_HAVE_flexible_cylinder
+
+#line 1 "flexible_cylinder"
 static double
 form_volume_flexible_cylinder(double length, double kuhn_length, double radius)
 {
@@ -704,6 +729,9 @@ Iq_flexible_cylinder(double q,
     const double flex = Sk_WR(q, length, kuhn_length);
     return 1.0e-4 * volume * square(contrast*cross_section) * flex;
 }
+
+
+#endif // SAS_HAVE_flexible_cylinder
 
 
 

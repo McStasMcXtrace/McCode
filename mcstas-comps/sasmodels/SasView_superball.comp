@@ -85,7 +85,11 @@ SHARE %{
 #define HAS_Iqabc
 #define HAS_FQ
 #define FORM_VOL
-#line 1 ".././models/lib/gauss20.c"
+
+#ifndef SAS_HAVE_gauss20
+#define SAS_HAVE_gauss20
+
+#line 1 "gauss20"
 #ifndef GAUSS20
 #define GAUSS20
 
@@ -151,7 +155,14 @@ constant double Gauss20Z[20]={
 
 #endif // GAUSS20
 
-#line 1 ".././models/lib/sas_gamma.c"
+
+#endif // SAS_HAVE_gauss20
+
+
+#ifndef SAS_HAVE_sas_gamma
+#define SAS_HAVE_sas_gamma
+
+#line 1 "sas_gamma"
 #ifndef SAS_GAMMA_HDR
 #define SAS_GAMMA_HDR
 /*
@@ -311,7 +322,14 @@ inline double sas_gamma(double x)
 
 #endif // SAS_GAMMA_HDR
 
-#line 1 ".././models/superball.c"
+
+#endif // SAS_HAVE_sas_gamma
+
+
+#ifndef SAS_HAVE_superball
+#define SAS_HAVE_superball
+
+#line 1 "superball"
 static double
 form_volume_superball(double length_a, double exponent_p)
 {
@@ -474,6 +492,9 @@ Iqabc_superball(double qa, double qb, double qc,
   // Square and convert from [1e-12 A-1] to [cm-1]
   return 1.0e-4 * form;
 }
+
+
+#endif // SAS_HAVE_superball
 
 
 

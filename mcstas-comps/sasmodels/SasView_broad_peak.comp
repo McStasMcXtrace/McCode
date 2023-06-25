@@ -89,7 +89,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel broad_peak */
 #define HAS_Iq
-#line 1 ".././models/broad_peak.c"
+
+#ifndef SAS_HAVE_broad_peak
+#define SAS_HAVE_broad_peak
+
+#line 1 "broad_peak"
 #include <math.h>
 
 double Iq_broad_peak(double q, double porod_scale, double porod_exp, double peak_scale,
@@ -106,6 +110,9 @@ double Iq_broad_peak(double q, double porod_scale, double porod_exp, double peak
 }
 
 
+
+
+#endif // SAS_HAVE_broad_peak
 
 
 

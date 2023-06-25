@@ -93,7 +93,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel lamellar_hg_stack_caille */
 #define HAS_Iq
-#line 1 ".././models/lamellar_hg_stack_caille.c"
+
+#ifndef SAS_HAVE_lamellar_hg_stack_caille
+#define SAS_HAVE_lamellar_hg_stack_caille
+
+#line 1 "lamellar_hg_stack_caille"
 /*	LamellarCailleHG kernel - allows for name changes of passed parameters ...
     Maths identical to LamellarCaille apart from the line for P(Q)
 */
@@ -151,6 +155,9 @@ Iq_lamellar_hg_stack_caille(double qval,
   inten *= 1.0e-04;   // 1/A to 1/cm
   return inten;
 }
+
+
+#endif // SAS_HAVE_lamellar_hg_stack_caille
 
 
 

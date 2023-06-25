@@ -89,7 +89,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel two_lorentzian */
 #define HAS_Iq
-#line 1 ".././models/two_lorentzian.c"
+
+#ifndef SAS_HAVE_two_lorentzian
+#define SAS_HAVE_two_lorentzian
+
+#line 1 "two_lorentzian"
 #include <math.h>
 
 double Iq_two_lorentzian(double q,
@@ -113,6 +117,9 @@ double Iq_two_lorentzian(double q,
     return intensity;
 }
 
+
+
+#endif // SAS_HAVE_two_lorentzian
 
 
 

@@ -98,7 +98,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel rpa */
 #define HAS_Iq
-#line 1 ".././models/rpa.c"
+
+#ifndef SAS_HAVE_rpa
+#define SAS_HAVE_rpa
+
+#line 1 "rpa"
 double Iq_rpa(double q, double fp_case_num,
     double N[], double Phi[], double v[], double L[], double b[],
     double Kab, double Kac, double Kad,
@@ -714,6 +718,9 @@ switch(icase){
   return result;
 */
 }
+
+
+#endif // SAS_HAVE_rpa
 
 
 

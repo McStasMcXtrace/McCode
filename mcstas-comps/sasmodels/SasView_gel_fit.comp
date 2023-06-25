@@ -87,7 +87,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel gel_fit */
 #define HAS_Iq
-#line 1 ".././models/gel_fit.c"
+
+#ifndef SAS_HAVE_gel_fit
+#define SAS_HAVE_gel_fit
+
+#line 1 "gel_fit"
 static double Iq_gel_fit(double q,
           double guinier_scale,
           double lorentz_scale,
@@ -110,6 +114,9 @@ static double Iq_gel_fit(double q,
     double result = lorentz_scale/lorentzian_term + guinier_scale*exp_term;
     return result;
 }
+
+
+#endif // SAS_HAVE_gel_fit
 
 
 

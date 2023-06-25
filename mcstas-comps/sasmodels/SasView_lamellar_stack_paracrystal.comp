@@ -87,7 +87,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel lamellar_stack_paracrystal */
 #define HAS_Iq
-#line 1 ".././models/lamellar_stack_paracrystal.c"
+
+#ifndef SAS_HAVE_lamellar_stack_paracrystal
+#define SAS_HAVE_lamellar_stack_paracrystal
+
+#line 1 "lamellar_stack_paracrystal"
 /*	Lamellar_ParaCrystal - Pedersen's model
 
 */
@@ -161,6 +165,9 @@ paraCryst_an(double ww, double qval, double davg, int Nlayers) {
 	return an;
 }
 
+
+
+#endif // SAS_HAVE_lamellar_stack_paracrystal
 
 
 

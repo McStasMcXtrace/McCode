@@ -99,7 +99,11 @@ SHARE %{
 #define HAS_Iqac
 #define HAS_FQ
 #define FORM_VOL
-#line 1 ".././models/lib/sas_3j1x_x.c"
+
+#ifndef SAS_HAVE_sas_3j1x_x
+#define SAS_HAVE_sas_3j1x_x
+
+#line 1 "sas_3j1x_x"
 #ifndef SAS_3J1X_HDR
 #define SAS_3J1X_HDR
 
@@ -163,7 +167,14 @@ double sas_3j1x_x(double q)
 
 #endif // SAS_3J1X_HDR
 
-#line 1 ".././models/lib/gauss76.c"
+
+#endif // SAS_HAVE_sas_3j1x_x
+
+
+#ifndef SAS_HAVE_gauss76
+#define SAS_HAVE_gauss76
+
+#line 1 "gauss76"
 #ifndef GAUSS76
 #define GAUSS76
 
@@ -342,7 +353,14 @@ constant double Gauss76Z[76] = {
 
 #endif // GAUSS76
 
-#line 1 ".././models/core_shell_ellipsoid.c"
+
+#endif // SAS_HAVE_gauss76
+
+
+#ifndef SAS_HAVE_core_shell_ellipsoid
+#define SAS_HAVE_core_shell_ellipsoid
+
+#line 1 "core_shell_ellipsoid"
 
 // Converted from Igor function gfn4, using the same pattern as ellipsoid
 // for evaluating the parts of the integral.
@@ -498,6 +516,9 @@ Iqac_core_shell_ellipsoid(double qab, double qc,
     //convert to [cm-1]
     return 1.0e-4 * fq * fq;
 }
+
+
+#endif // SAS_HAVE_core_shell_ellipsoid
 
 
 

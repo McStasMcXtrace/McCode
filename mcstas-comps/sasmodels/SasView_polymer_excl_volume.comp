@@ -79,7 +79,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel polymer_excl_volume */
 #define HAS_Iq
-#line 1 ".././models/polymer_excl_volume.c"
+
+#ifndef SAS_HAVE_polymer_excl_volume
+#define SAS_HAVE_polymer_excl_volume
+
+#line 1 "polymer_excl_volume"
 #include <math.h>
 #define NEED_TGAMMA
 
@@ -121,6 +125,9 @@ double Iq_polymer_excl_volume(double q, double rg, double porod_exp) {
     return result;
 }
 
+
+
+#endif // SAS_HAVE_polymer_excl_volume
 
 
 

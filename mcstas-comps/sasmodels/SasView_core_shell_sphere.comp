@@ -88,7 +88,11 @@ SHARE %{
 /* BEGIN Required header for SASmodel core_shell_sphere */
 #define HAS_FQ
 #define FORM_VOL
-#line 1 ".././models/lib/sas_3j1x_x.c"
+
+#ifndef SAS_HAVE_sas_3j1x_x
+#define SAS_HAVE_sas_3j1x_x
+
+#line 1 "sas_3j1x_x"
 #ifndef SAS_3J1X_HDR
 #define SAS_3J1X_HDR
 
@@ -152,7 +156,14 @@ double sas_3j1x_x(double q)
 
 #endif // SAS_3J1X_HDR
 
-#line 1 ".././models/lib/core_shell.c"
+
+#endif // SAS_HAVE_sas_3j1x_x
+
+
+#ifndef SAS_HAVE_core_shell
+#define SAS_HAVE_core_shell
+
+#line 1 "core_shell"
 /*******************************************************************
 
 core_shell_kernel
@@ -204,7 +215,14 @@ double core_shell_kernel(double q,
 
 #endif // CORE_SHELL_KERNEL
 
-#line 1 ".././models/core_shell_sphere.c"
+
+#endif // SAS_HAVE_core_shell
+
+
+#ifndef SAS_HAVE_core_shell_sphere
+#define SAS_HAVE_core_shell_sphere
+
+#line 1 "core_shell_sphere"
 static double
 form_volume_core_shell_sphere(double radius, double thickness)
 {
@@ -235,6 +253,9 @@ Fq_core_shell_sphere(double q, double *F1, double *F2, double radius,
     *F1 = 1.0e-2*form;
     *F2 = 1.0e-4*form*form;
 }
+
+
+#endif // SAS_HAVE_core_shell_sphere
 
 
 

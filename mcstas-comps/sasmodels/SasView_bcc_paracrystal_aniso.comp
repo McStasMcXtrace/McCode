@@ -96,7 +96,11 @@ SHARE %{
 #define HAS_Iqabc
 #define HAS_Iq
 #define FORM_VOL
-#line 1 ".././models/lib/sas_3j1x_x.c"
+
+#ifndef SAS_HAVE_sas_3j1x_x
+#define SAS_HAVE_sas_3j1x_x
+
+#line 1 "sas_3j1x_x"
 #ifndef SAS_3J1X_HDR
 #define SAS_3J1X_HDR
 
@@ -160,7 +164,14 @@ double sas_3j1x_x(double q)
 
 #endif // SAS_3J1X_HDR
 
-#line 1 ".././models/lib/gauss150.c"
+
+#endif // SAS_HAVE_sas_3j1x_x
+
+
+#ifndef SAS_HAVE_gauss150
+#define SAS_HAVE_gauss150
+
+#line 1 "gauss150"
 #ifndef GAUSS150
 #define GAUSS150
 
@@ -492,7 +503,14 @@ constant double Gauss150Wt[152]={
 
 #endif // GAUSS150
 
-#line 1 ".././models/lib/sphere_form.c"
+
+#endif // SAS_HAVE_gauss150
+
+
+#ifndef SAS_HAVE_sphere_form
+#define SAS_HAVE_sphere_form
+
+#line 1 "sphere_form"
 #ifndef SAS_SPHERE_HDR
 #define SAS_SPHERE_HDR
 
@@ -516,7 +534,14 @@ double sphere_form(double q, double radius, double sld, double solvent_sld)
 
 #endif // SAS_SPHERE_HDR
 
-#line 1 ".././models/bcc_paracrystal.c"
+
+#endif // SAS_HAVE_sphere_form
+
+
+#ifndef SAS_HAVE_bcc_paracrystal
+#define SAS_HAVE_bcc_paracrystal
+
+#line 1 "bcc_paracrystal"
 static double
 bcc_Zq(double qa, double qb, double qc, double dnn, double d_factor)
 {
@@ -640,6 +665,9 @@ static double Iqabc_bcc_paracrystal(double qa, double qb, double qc,
     const double Pq = sphere_form(q, radius, sld, solvent_sld);
     return bcc_volume_fraction(radius, dnn) * Pq * Zq;
 }
+
+
+#endif // SAS_HAVE_bcc_paracrystal
 
 
 

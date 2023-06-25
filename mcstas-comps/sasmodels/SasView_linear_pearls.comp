@@ -86,7 +86,11 @@ SHARE %{
 /* BEGIN Required header for SASmodel linear_pearls */
 #define HAS_Iq
 #define FORM_VOL
-#line 1 ".././models/lib/sas_3j1x_x.c"
+
+#ifndef SAS_HAVE_sas_3j1x_x
+#define SAS_HAVE_sas_3j1x_x
+
+#line 1 "sas_3j1x_x"
 #ifndef SAS_3J1X_HDR
 #define SAS_3J1X_HDR
 
@@ -150,7 +154,14 @@ double sas_3j1x_x(double q)
 
 #endif // SAS_3J1X_HDR
 
-#line 1 ".././models/linear_pearls.c"
+
+#endif // SAS_HAVE_sas_3j1x_x
+
+
+#ifndef SAS_HAVE_linear_pearls
+#define SAS_HAVE_linear_pearls
+
+#line 1 "linear_pearls"
 double form_volume_linear_pearls(double radius, double num_pearls);
 
 double Iq_linear_pearls(double q,
@@ -227,6 +238,9 @@ double Iq_linear_pearls(double q,
 
 	return result;
 }
+
+
+#endif // SAS_HAVE_linear_pearls
 
 
 

@@ -77,13 +77,20 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel guinier */
 #define HAS_Iq
-#line 1 ".././models/guinier.c"
+
+#ifndef SAS_HAVE_guinier
+#define SAS_HAVE_guinier
+
+#line 1 "guinier"
 double Iq_guinier(double q, double rg)
 {
     double exponent = fabs(rg)*rg*q*q/3.0;
     double value = exp(-exponent);
     return value;
 }
+
+#endif // SAS_HAVE_guinier
+
 
 
 /* END Required header for SASmodel guinier */

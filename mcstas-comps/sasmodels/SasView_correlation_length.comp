@@ -85,7 +85,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel correlation_length */
 #define HAS_Iq
-#line 1 ".././models/correlation_length.c"
+
+#ifndef SAS_HAVE_correlation_length
+#define SAS_HAVE_correlation_length
+
+#line 1 "correlation_length"
 #include <math.h>
 
 double Iq_correlation_length(double q, double lorentz_scale, double porod_scale, double cor_length, double porod_exp, double lorentz_exp);
@@ -101,6 +105,9 @@ double Iq_correlation_length(double q, double lorentz_scale, double porod_scale,
     return inten;
 }
 
+
+
+#endif // SAS_HAVE_correlation_length
 
 
 

@@ -77,12 +77,19 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel lorentz */
 #define HAS_Iq
-#line 1 ".././models/lorentz.c"
+
+#ifndef SAS_HAVE_lorentz
+#define SAS_HAVE_lorentz
+
+#line 1 "lorentz"
 double Iq_lorentz(double q, double cor_length)
 {
     double denominator = 1 + (q*cor_length)*(q*cor_length);
     return 1/denominator;
 }
+
+#endif // SAS_HAVE_lorentz
+
 
 
 /* END Required header for SASmodel lorentz */

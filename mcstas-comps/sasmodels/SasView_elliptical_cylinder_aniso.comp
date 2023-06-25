@@ -98,7 +98,11 @@ SHARE %{
 #define HAS_Iqabc
 #define HAS_FQ
 #define FORM_VOL
-#line 1 ".././models/lib/polevl.c"
+
+#ifndef SAS_HAVE_polevl
+#define SAS_HAVE_polevl
+
+#line 1 "polevl"
 #ifndef POLEVL_HDR
 #define POLEVL_HDR
 
@@ -190,7 +194,14 @@ double p1evl( double x, pconstant double *coef, int N )
 
 #endif // POLEVL_HDR
 
-#line 1 ".././models/lib/sas_J1.c"
+
+#endif // SAS_HAVE_polevl
+
+
+#ifndef SAS_HAVE_sas_J1
+#define SAS_HAVE_sas_J1
+
+#line 1 "sas_J1"
 #ifndef SAS_J1_HDR
 #define SAS_J1_HDR
 
@@ -449,9 +460,16 @@ double sas_2J1x_x(double x)
     return (x != 0.0 ) ? 2.0*sas_J1(x)/x : 1.0;
 }
 
-#endif SAS_J1_HDR
+#endif // SAS_J1_HDR
 
-#line 1 ".././models/lib/gauss76.c"
+
+#endif // SAS_HAVE_sas_J1
+
+
+#ifndef SAS_HAVE_gauss76
+#define SAS_HAVE_gauss76
+
+#line 1 "gauss76"
 #ifndef GAUSS76
 #define GAUSS76
 
@@ -630,7 +648,14 @@ constant double Gauss76Z[76] = {
 
 #endif // GAUSS76
 
-#line 1 ".././models/elliptical_cylinder.c"
+
+#endif // SAS_HAVE_gauss76
+
+
+#ifndef SAS_HAVE_elliptical_cylinder
+#define SAS_HAVE_elliptical_cylinder
+
+#line 1 "elliptical_cylinder"
 static double
 form_volume_elliptical_cylinder(double radius_minor, double r_ratio, double length)
 {
@@ -769,6 +794,9 @@ Iqabc_elliptical_cylinder(double qa, double qb, double qc,
     const double volume = form_volume_elliptical_cylinder(radius_minor, r_ratio, length);
     return 1.0e-4 * square(contrast * volume * fq);
 }
+
+
+#endif // SAS_HAVE_elliptical_cylinder
 
 
 

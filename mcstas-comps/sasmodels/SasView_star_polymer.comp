@@ -80,7 +80,11 @@ SHARE %{
 /* BEGIN Required header for SASmodel star_polymer */
 #define HAS_Iq
 #define FORM_VOL
-#line 1 ".././models/star_polymer.c"
+
+#ifndef SAS_HAVE_star_polymer
+#define SAS_HAVE_star_polymer
+
+#line 1 "star_polymer"
 double form_volume_star_polymer(void);
 
 double Iq_star_polymer(double q, double radius2, double arms);
@@ -107,6 +111,9 @@ double Iq_star_polymer(double q, double radius2, double arms)
 {
     return star_polymer_kernel(q, radius2, arms);
 }
+
+
+#endif // SAS_HAVE_star_polymer
 
 
 

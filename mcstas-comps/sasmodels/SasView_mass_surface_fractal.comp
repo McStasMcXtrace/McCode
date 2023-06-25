@@ -85,7 +85,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel mass_surface_fractal */
 #define HAS_Iq
-#line 1 ".././models/mass_surface_fractal.c"
+
+#ifndef SAS_HAVE_mass_surface_fractal
+#define SAS_HAVE_mass_surface_fractal
+
+#line 1 "mass_surface_fractal"
 static double
 Iq_mass_surface_fractal(double q,
           double fractal_dim_mass,
@@ -103,6 +107,9 @@ Iq_mass_surface_fractal(double q,
 
     return form;
 }
+
+
+#endif // SAS_HAVE_mass_surface_fractal
 
 
 

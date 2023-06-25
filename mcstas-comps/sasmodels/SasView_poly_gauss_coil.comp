@@ -81,7 +81,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel poly_gauss_coil */
 #define HAS_Iq
-#line 1 ".././models/poly_gauss_coil.c"
+
+#ifndef SAS_HAVE_poly_gauss_coil
+#define SAS_HAVE_poly_gauss_coil
+
+#line 1 "poly_gauss_coil"
     
 double Iq_poly_gauss_coil(double q, double i_zero, double rg, double polydispersity);
 
@@ -111,6 +115,9 @@ double Iq_poly_gauss_coil(double q, double i_zero, double rg, double polydispers
     return i_zero * result;
 }
 
+
+
+#endif // SAS_HAVE_poly_gauss_coil
 
 
 

@@ -78,7 +78,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel line */
 #define HAS_Iq
-#line 1 ".././models/line.c"
+
+#ifndef SAS_HAVE_line
+#define SAS_HAVE_line
+
+#line 1 "line"
 #include <math.h>
 
 double Iq_line(double q, double intercept, double slope);
@@ -89,6 +93,9 @@ double Iq_line(double q, double intercept, double slope) {
     return inten;
 }
 
+
+
+#endif // SAS_HAVE_line
 
 
 

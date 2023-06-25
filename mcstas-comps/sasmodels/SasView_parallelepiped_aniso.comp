@@ -100,7 +100,11 @@ SHARE %{
 #define HAS_Iqabc
 #define HAS_FQ
 #define FORM_VOL
-#line 1 ".././models/lib/gauss76.c"
+
+#ifndef SAS_HAVE_gauss76
+#define SAS_HAVE_gauss76
+
+#line 1 "gauss76"
 #ifndef GAUSS76
 #define GAUSS76
 
@@ -279,7 +283,14 @@ constant double Gauss76Z[76] = {
 
 #endif // GAUSS76
 
-#line 1 ".././models/parallelepiped.c"
+
+#endif // SAS_HAVE_gauss76
+
+
+#ifndef SAS_HAVE_parallelepiped
+#define SAS_HAVE_parallelepiped
+
+#line 1 "parallelepiped"
 static double
 form_volume_parallelepiped(double length_a, double length_b, double length_c)
 {
@@ -415,6 +426,9 @@ Iqabc_parallelepiped(double qa, double qb, double qc,
     // Square and convert from [1e-12 A-1] to [cm-1]
     return 1.0e-4 * form * form;
 }
+
+
+#endif // SAS_HAVE_parallelepiped
 
 
 

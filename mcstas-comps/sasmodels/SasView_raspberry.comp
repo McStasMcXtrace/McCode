@@ -96,7 +96,11 @@ SHARE %{
 /* BEGIN Required header for SASmodel raspberry */
 #define HAS_Iq
 #define FORM_VOL
-#line 1 ".././models/lib/sas_3j1x_x.c"
+
+#ifndef SAS_HAVE_sas_3j1x_x
+#define SAS_HAVE_sas_3j1x_x
+
+#line 1 "sas_3j1x_x"
 #ifndef SAS_3J1X_HDR
 #define SAS_3J1X_HDR
 
@@ -160,7 +164,14 @@ double sas_3j1x_x(double q)
 
 #endif // SAS_3J1X_HDR
 
-#line 1 ".././models/raspberry.c"
+
+#endif // SAS_HAVE_sas_3j1x_x
+
+
+#ifndef SAS_HAVE_raspberry
+#define SAS_HAVE_raspberry
+
+#line 1 "raspberry"
 double form_volume_raspberry(double radius_lg, double radius_sm, double penetration);
 
 double Iq_raspberry(double q,
@@ -257,6 +268,9 @@ double Iq_raspberry(double q,
 
     return f2;
 }
+
+
+#endif // SAS_HAVE_raspberry
 
 
 

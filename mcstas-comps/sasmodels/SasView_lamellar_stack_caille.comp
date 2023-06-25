@@ -87,7 +87,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel lamellar_stack_caille */
 #define HAS_Iq
-#line 1 ".././models/lamellar_stack_caille.c"
+
+#ifndef SAS_HAVE_lamellar_stack_caille
+#define SAS_HAVE_lamellar_stack_caille
+
+#line 1 "lamellar_stack_caille"
 /*	LamellarCaille kernel - allows for name changes of passed parameters ...
 
 */
@@ -141,6 +145,9 @@ Iq_lamellar_stack_caille(double qval,
 
   return(inten);
 }
+
+
+#endif // SAS_HAVE_lamellar_stack_caille
 
 
 

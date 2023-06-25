@@ -78,7 +78,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel spinodal */
 #define HAS_Iq
-#line 1 ".././models/spinodal.c"
+
+#ifndef SAS_HAVE_spinodal
+#define SAS_HAVE_spinodal
+
+#line 1 "spinodal"
     
 double Iq_spinodal(double q, double gamma, double q_0);
 
@@ -89,6 +93,9 @@ double Iq_spinodal(double q, double gamma, double q_0) {
     return inten;
 }
 
+
+
+#endif // SAS_HAVE_spinodal
 
 
 

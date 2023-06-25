@@ -86,7 +86,11 @@ SHARE %{
 /* BEGIN Required header for SASmodel hollow_rectangular_prism_thin_walls */
 #define HAS_FQ
 #define FORM_VOL
-#line 1 ".././models/lib/gauss76.c"
+
+#ifndef SAS_HAVE_gauss76
+#define SAS_HAVE_gauss76
+
+#line 1 "gauss76"
 #ifndef GAUSS76
 #define GAUSS76
 
@@ -265,7 +269,14 @@ constant double Gauss76Z[76] = {
 
 #endif // GAUSS76
 
-#line 1 ".././models/hollow_rectangular_prism_thin_walls.c"
+
+#endif // SAS_HAVE_gauss76
+
+
+#ifndef SAS_HAVE_hollow_rectangular_prism_thin_walls
+#define SAS_HAVE_hollow_rectangular_prism_thin_walls
+
+#line 1 "hollow_rectangular_prism_thin_walls"
 static double
 shell_volume(double length_a, double b2a_ratio, double c2a_ratio)
 {
@@ -397,6 +408,9 @@ Fq_hollow_rectangular_prism_thin_walls(double q,
     *F1 = 1e-2 * contrast * form_avg;
     *F2 = 1e-4 * contrast * contrast * form_squared_avg;
 }
+
+
+#endif // SAS_HAVE_hollow_rectangular_prism_thin_walls
 
 
 

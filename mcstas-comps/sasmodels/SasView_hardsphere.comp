@@ -79,7 +79,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel hardsphere */
 #define HAS_Iq
-#line 1 ".././models/hardsphere.c"
+
+#ifndef SAS_HAVE_hardsphere
+#define SAS_HAVE_hardsphere
+
+#line 1 "hardsphere"
 double Iq_hardsphere(double q, double radius_effective, double volfraction)
 {
       double D,A,B,G,X,X2,X4,S,C,FF,HARDSPH;
@@ -166,6 +170,9 @@ double Iq_hardsphere(double q, double radius_effective, double volfraction)
 //printf("HS4 %g: %g\n",q,HARDSPH);
       return(HARDSPH);
 }
+
+#endif // SAS_HAVE_hardsphere
+
 
 
 /* END Required header for SASmodel hardsphere */

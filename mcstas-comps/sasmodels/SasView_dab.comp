@@ -77,7 +77,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel dab */
 #define HAS_Iq
-#line 1 ".././models/dab.c"
+
+#ifndef SAS_HAVE_dab
+#define SAS_HAVE_dab
+
+#line 1 "dab"
 double Iq_dab(double q, double cor_length)
 {
     double numerator   = cube(cor_length);
@@ -85,6 +89,9 @@ double Iq_dab(double q, double cor_length)
 
     return numerator / denominator ;
 }
+
+#endif // SAS_HAVE_dab
+
 
 
 /* END Required header for SASmodel dab */

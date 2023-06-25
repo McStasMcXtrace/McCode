@@ -90,7 +90,11 @@ SHARE %{
 /* BEGIN Required header for SASmodel pringle */
 #define HAS_Iq
 #define FORM_VOL
-#line 1 ".././models/lib/polevl.c"
+
+#ifndef SAS_HAVE_polevl
+#define SAS_HAVE_polevl
+
+#line 1 "polevl"
 #ifndef POLEVL_HDR
 #define POLEVL_HDR
 
@@ -182,7 +186,14 @@ double p1evl( double x, pconstant double *coef, int N )
 
 #endif // POLEVL_HDR
 
-#line 1 ".././models/lib/sas_J0.c"
+
+#endif // SAS_HAVE_polevl
+
+
+#ifndef SAS_HAVE_sas_J0
+#define SAS_HAVE_sas_J0
+
+#line 1 "sas_J0"
 #ifndef SAS_J0_HDR
 #define SAS_J0_HDR
 /*							j0.c
@@ -458,7 +469,14 @@ float cephes_j0f(float x)
 
 #endif // SAS_J0_HDR
 
-#line 1 ".././models/lib/sas_J1.c"
+
+#endif // SAS_HAVE_sas_J0
+
+
+#ifndef SAS_HAVE_sas_J1
+#define SAS_HAVE_sas_J1
+
+#line 1 "sas_J1"
 #ifndef SAS_J1_HDR
 #define SAS_J1_HDR
 
@@ -717,9 +735,16 @@ double sas_2J1x_x(double x)
     return (x != 0.0 ) ? 2.0*sas_J1(x)/x : 1.0;
 }
 
-#endif SAS_J1_HDR
+#endif // SAS_J1_HDR
 
-#line 1 ".././models/lib/sas_JN.c"
+
+#endif // SAS_HAVE_sas_J1
+
+
+#ifndef SAS_HAVE_sas_JN
+#define SAS_HAVE_sas_JN
+
+#line 1 "sas_JN"
 #ifndef SAS_JN_HDR
 #define SAS_JN_HDR
 /*							jn.c
@@ -932,7 +957,14 @@ float cephes_jnf(int n, float x)
 
 #endif // SAS_JN_HDR
 
-#line 1 ".././models/lib/gauss76.c"
+
+#endif // SAS_HAVE_sas_JN
+
+
+#ifndef SAS_HAVE_gauss76
+#define SAS_HAVE_gauss76
+
+#line 1 "gauss76"
 #ifndef GAUSS76
 #define GAUSS76
 
@@ -1111,7 +1143,14 @@ constant double Gauss76Z[76] = {
 
 #endif // GAUSS76
 
-#line 1 ".././models/pringle.c"
+
+#endif // SAS_HAVE_gauss76
+
+
+#ifndef SAS_HAVE_pringle
+#define SAS_HAVE_pringle
+
+#line 1 "pringle"
 double form_volume_pringle(double radius, double thickness, double alpha, double beta);
 
 double Iq_pringle(double q,
@@ -1251,6 +1290,9 @@ double Iq_pringle(
     double volume = M_PI*radius*radius*thickness;
     return 1.0e-4*form * square(contrast * volume);
 }
+
+
+#endif // SAS_HAVE_pringle
 
 
 

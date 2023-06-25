@@ -84,7 +84,11 @@ SHARE %{
 /* BEGIN Required header for SASmodel surface_fractal */
 #define HAS_Iq
 #define FORM_VOL
-#line 1 ".././models/lib/sas_3j1x_x.c"
+
+#ifndef SAS_HAVE_sas_3j1x_x
+#define SAS_HAVE_sas_3j1x_x
+
+#line 1 "sas_3j1x_x"
 #ifndef SAS_3J1X_HDR
 #define SAS_3J1X_HDR
 
@@ -148,7 +152,14 @@ double sas_3j1x_x(double q)
 
 #endif // SAS_3J1X_HDR
 
-#line 1 ".././models/lib/sas_gamma.c"
+
+#endif // SAS_HAVE_sas_3j1x_x
+
+
+#ifndef SAS_HAVE_sas_gamma
+#define SAS_HAVE_sas_gamma
+
+#line 1 "sas_gamma"
 #ifndef SAS_GAMMA_HDR
 #define SAS_GAMMA_HDR
 /*
@@ -308,7 +319,14 @@ inline double sas_gamma(double x)
 
 #endif // SAS_GAMMA_HDR
 
-#line 1 ".././models/surface_fractal.c"
+
+#endif // SAS_HAVE_sas_gamma
+
+
+#ifndef SAS_HAVE_surface_fractal
+#define SAS_HAVE_surface_fractal
+
+#line 1 "surface_fractal"
 
 double form_volume_surface_fractal(double radius);
 
@@ -356,6 +374,9 @@ double Iq_surface_fractal(double q,
 {
     return _surface_fractal_kernel(q, radius, fractal_dim_surf, cutoff_length);
 }
+
+
+#endif // SAS_HAVE_surface_fractal
 
 
 

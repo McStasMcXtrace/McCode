@@ -97,7 +97,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel polymer_micelle */
 #define HAS_Iq
-#line 1 ".././models/lib/sas_3j1x_x.c"
+
+#ifndef SAS_HAVE_sas_3j1x_x
+#define SAS_HAVE_sas_3j1x_x
+
+#line 1 "sas_3j1x_x"
 #ifndef SAS_3J1X_HDR
 #define SAS_3J1X_HDR
 
@@ -161,7 +165,14 @@ double sas_3j1x_x(double q)
 
 #endif // SAS_3J1X_HDR
 
-#line 1 ".././models/polymer_micelle.c"
+
+#endif // SAS_HAVE_sas_3j1x_x
+
+
+#ifndef SAS_HAVE_polymer_micelle
+#define SAS_HAVE_polymer_micelle
+
+#line 1 "polymer_micelle"
 double Iq_polymer_micelle(double q,
         double ndensity,
         double v_core,
@@ -249,6 +260,9 @@ double Iq_polymer_micelle(double q,
             d_penetration,
             n_aggreg);
 }
+
+
+#endif // SAS_HAVE_polymer_micelle
 
 
 

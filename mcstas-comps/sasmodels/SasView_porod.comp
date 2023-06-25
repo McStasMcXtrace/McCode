@@ -74,7 +74,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel porod */
 #define HAS_Iq
-#line 1 ".././models/porod.c"
+
+#ifndef SAS_HAVE_porod
+#define SAS_HAVE_porod
+
+#line 1 "porod"
 #include <math.h>
   
 double Iq_porod(double q);
@@ -84,6 +88,9 @@ double Iq_porod(double q) {
     return pow(q, -4);
 }
 
+
+
+#endif // SAS_HAVE_porod
 
 
 

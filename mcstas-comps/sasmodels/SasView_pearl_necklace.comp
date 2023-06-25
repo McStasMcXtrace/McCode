@@ -92,7 +92,11 @@ SHARE %{
 /* BEGIN Required header for SASmodel pearl_necklace */
 #define HAS_Iq
 #define FORM_VOL
-#line 1 ".././models/lib/sas_Si.c"
+
+#ifndef SAS_HAVE_sas_Si
+#define SAS_HAVE_sas_Si
+
+#line 1 "sas_Si"
 #ifndef SAS_SI_HDR
 #define SAS_SI_HDR
 
@@ -126,7 +130,14 @@ double sas_Si(double x)
 
 #endif // SAS_SI_HDR
 
-#line 1 ".././models/lib/sas_3j1x_x.c"
+
+#endif // SAS_HAVE_sas_Si
+
+
+#ifndef SAS_HAVE_sas_3j1x_x
+#define SAS_HAVE_sas_3j1x_x
+
+#line 1 "sas_3j1x_x"
 #ifndef SAS_3J1X_HDR
 #define SAS_3J1X_HDR
 
@@ -190,7 +201,14 @@ double sas_3j1x_x(double q)
 
 #endif // SAS_3J1X_HDR
 
-#line 1 ".././models/pearl_necklace.c"
+
+#endif // SAS_HAVE_sas_3j1x_x
+
+
+#ifndef SAS_HAVE_pearl_necklace
+#define SAS_HAVE_pearl_necklace
+
+#line 1 "pearl_necklace"
 double form_volume_pearl_necklace(double radius, double edge_sep,
     double thick_string, double fp_num_pearls);
 double Iq_pearl_necklace(double q, double radius, double edge_sep,
@@ -295,6 +313,9 @@ double Iq_pearl_necklace(double q, double radius, double edge_sep,
 
     return form;
 }
+
+
+#endif // SAS_HAVE_pearl_necklace
 
 
 

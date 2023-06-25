@@ -83,7 +83,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel squarewell */
 #define HAS_Iq
-#line 1 ".././models/squarewell.c"
+
+#ifndef SAS_HAVE_squarewell
+#define SAS_HAVE_squarewell
+
+#line 1 "squarewell"
 double Iq_squarewell(double q, double radius_effective, double volfraction, double welldepth, double wellwidth)
 {
 
@@ -130,6 +134,9 @@ double Iq_squarewell(double q, double radius_effective, double volfraction, doub
 
 	return(struc);
 }
+
+#endif // SAS_HAVE_squarewell
+
 
 
 /* END Required header for SASmodel squarewell */

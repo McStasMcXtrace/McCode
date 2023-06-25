@@ -85,7 +85,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel gauss_lorentz_gel */
 #define HAS_Iq
-#line 1 ".././models/gauss_lorentz_gel.c"
+
+#ifndef SAS_HAVE_gauss_lorentz_gel
+#define SAS_HAVE_gauss_lorentz_gel
+
+#line 1 "gauss_lorentz_gel"
     
 double Iq_gauss_lorentz_gel(double q, double gauss_scale, double cor_length_static, double lorentz_scale, double cor_length_dynamic);
 
@@ -101,6 +105,9 @@ double Iq_gauss_lorentz_gel(double q, double gauss_scale, double cor_length_stat
 
 
 
+
+
+#endif // SAS_HAVE_gauss_lorentz_gel
 
 
 

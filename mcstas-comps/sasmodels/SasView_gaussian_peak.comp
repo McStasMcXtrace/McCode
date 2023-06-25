@@ -78,12 +78,19 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel gaussian_peak */
 #define HAS_Iq
-#line 1 ".././models/gaussian_peak.c"
+
+#ifndef SAS_HAVE_gaussian_peak
+#define SAS_HAVE_gaussian_peak
+
+#line 1 "gaussian_peak"
 double Iq_gaussian_peak(double q, double peak_pos, double sigma)
 {
     double scaled_dq = (q - peak_pos)/sigma;
     return exp(-0.5*scaled_dq*scaled_dq); //sqrt(2*M_PI*sigma*sigma);
 }
+
+#endif // SAS_HAVE_gaussian_peak
+
 
 
 /* END Required header for SASmodel gaussian_peak */

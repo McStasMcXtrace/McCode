@@ -78,7 +78,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel peak_lorentz */
 #define HAS_Iq
-#line 1 ".././models/peak_lorentz.c"
+
+#ifndef SAS_HAVE_peak_lorentz
+#define SAS_HAVE_peak_lorentz
+
+#line 1 "peak_lorentz"
 #include <math.h>
     
 double Iq_peak_lorentz(double q, double peak_pos, double peak_hwhm);
@@ -89,6 +93,9 @@ double Iq_peak_lorentz(double q, double peak_pos, double peak_hwhm) {
     return inten;
 }
 
+
+
+#endif // SAS_HAVE_peak_lorentz
 
 
 

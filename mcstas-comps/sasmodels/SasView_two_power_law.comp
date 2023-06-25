@@ -82,7 +82,11 @@ SHARE %{
 
 /* BEGIN Required header for SASmodel two_power_law */
 #define HAS_Iq
-#line 1 ".././models/two_power_law.c"
+
+#ifndef SAS_HAVE_two_power_law
+#define SAS_HAVE_two_power_law
+
+#line 1 "two_power_law"
 #include <math.h>
 #include <stdio.h>
     
@@ -100,6 +104,9 @@ double Iq_two_power_law(double q, double coefficent_1, double crossover, double 
     return result;
 }
 
+
+
+#endif // SAS_HAVE_two_power_law
 
 
 
