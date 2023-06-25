@@ -19,36 +19,29 @@
 * Test instrument for the SasView_model component. No optics.
 * etc. 
 *
-* Example: --D1=SASmodel_index=1 model_index=1 par1=4 par2=1 par3=40 par4=20 par5=400
-* Example: --D1=SASmodel_index=2 model_index=2 par1=4 par2=1 par3=40 par4=20 par5=400 par6=60 par7=60
-* Example: --D1=SASmodel_index=3 model_index=3 par1=220 par2=0.06 par3=40 par4=4 par5=1
-* Example: --D1=SASmodel_index=4 model_index=4 par1=4 parX=2 par3=20 par4=20 par5=400 par6=60 par7=60
-* Example: --D1=SASmodel_index=5 model_index=5 par1=4 parX=1 par2=20 par3=20 par4=400
-* Example: --D1=SASmodel_index=6 model_index=6 par1=4 par2=1 par3=20 par4=20 par5=400 par6=0 par7=0
-* Example: --D1=SASmodel_index=6 model_index=6 par1=4 par2=1 par3=20 par4=20 par5=400 par6=60 par7=60
-* Example: --D1=SASmodel_index=10 model_index=10 par1=4 par2=1 par3=20 par4=400 par5=60 par6=60
-* Example: --D1=SASmodel_index=21 model_index=21 par1=60
-* Example: --D1=SASmodel_index=47 model_index=47 par1=4 parX=2 par3=35 par4=75 par5=400
-* Example: --D1=SASmodel_index=48 model_index=48 par1=4 parX=1 par2=35 par3=75 par4=400 par5=60 par6=60 par7=60
-* Example: --D1=SASmodel_index=55 model_index=55 par1=50.0 par2=0.2 par3=0.05 par4=0.2
 *
 * %Description
+*
 * Very simple test instrument for the SasView_model component
 *
-* %Parameters
-* INPUT PARAMETERS:
-* lambda:   [AA] Mean wavelength of x-rays     
-* dlambda:  [AA] Wavelength spread of x-rays
-* model_index: SASmodel index, as listed in the SasView component.
-* par1: SasView model parameters
-* par2:
-* par3:
-* par4:
-* par5:
-* par6:
-* par7:
-* par8:
+* %Example: model_index=1 par1=4 par2=1 par3=40 par4=20 par5=400 Detector: detector_I=0.0932944
+* %Example: model_index=3 par1=220 par2=0.06 par3=40 par4=4 par5=1 Detector: detector_I=1313.65
+* %Example: model_index=47 par1=4 par2=2 par3=35 par4=75 par5=400 Detector: detector_I=3349.25
 *
+* %Parameters
+* lambda: [AA]   Mean wavelength of neutrons
+* dlambda: [AA]  Wavelength spread of neutrons
+* model_index: [ ] SASmodels model index (see SasView_model.comp mcdoc page)
+* par1: [ ] Slot 1 in SASmodel parameter vector
+* par2: [ ] Slot 2 in SASmodel parameter vector
+* par3: [ ] Slot 3 in SASmodel parameter vector
+* par4: [ ] Slot 4 in SASmodel parameter vector
+* par5: [ ] Slot 5 in SASmodel parameter vector
+* par6: [ ] Slot 6 in SASmodel parameter vector
+* par7: [ ] Slot 7 in SASmodel parameter vector
+* par8: [ ] Slot 8 in SASmodel parameter vector
+*
+* %Link
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT Template_SasView(lambda=1.54, dlambda=0.05, model_index=10, par1=0, par2=0, par3=0, par4=0, par5=0, par6=0, par7=0, par8=0)
@@ -91,10 +84,29 @@ COMPONENT coll2 = Slit(
   AT (0, 0, 6) RELATIVE arm
 
 // Example sphere
-SPLIT COMPONENT sample = SasView_model(model_index=model_index, model_scale=1, model_pars=modelpars,
-model_abs=0.0,
-  xwidth=0.01, yheight=0.01, zdepth=0.005, focus_xw=3.6, focus_yh=3.6, target_index=1)
-   AT (0,0,0.2) RELATIVE coll2
+SPLIT COMPONENT sample = Arm()
+  AT (0, 0, 0) RELATIVE coll2
+
+COMPONENT sample1= SasView_barbell(model_scale=1,model_abs=0.0,
+				   sld=par1,sld_solvent=par2,radius_bell=par3,radius=par4,length=par5,
+				      xwidth=0.01, yheight=0.01, zdepth=0.005,focus_xw=0.6, focus_yh=0.6, target_index=1)
+WHEN (model_index==1) AT (0,0,0.2) RELATIVE coll2
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT sample3= SasView_bcc_paracrystal(model_scale=1,model_abs=0.0,
+					   dnn=par1, d_factor=par2, radius=par3, sld=par4, sld_solvent=par5,
+				      xwidth=0.01, yheight=0.01, zdepth=0.005,focus_xw=0.6, focus_yh=0.6, target_index=1)
+WHEN (model_index==3) AT (0,0,0.2) RELATIVE coll2
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT sample47= SasView_parallelepiped(model_scale=1,model_abs=0.0,
+				      sld=par1,sld_solvent=par2,length_a=par3,length_b=par4,length_c=par5,
+				      xwidth=0.01, yheight=0.01, zdepth=0.005,focus_xw=0.6, focus_yh=0.6, target_index=1)
+WHEN (model_index==47) AT (0,0,0.2) RELATIVE coll2
 EXTEND %{
   if (!SCATTERED) ABSORB;
 %}
