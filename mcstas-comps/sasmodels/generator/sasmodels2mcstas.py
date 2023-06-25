@@ -62,7 +62,7 @@ def load_template(filename):
 
 def _clean_source_filename(path):
     # type: (str) -> str
-    """TODO: FIX. This isn't really being used.
+    """
     Make the source filename into a canonical, relative form if possible
 
     Remove the common start of the file path (if there is one), yielding
@@ -77,10 +77,9 @@ def _clean_source_filename(path):
     the source was unpacked for compilation is not included in pre-compiled
     models.
     """
-    base = ""  # dirname(__file__).replace('\\', '/')
-    path = path.replace("\\", "/")
-    new_name = path.replace(DATA_PATH, ".")
-    return path.replace(base, ".", 1) if path.startswith(base) else new_name
+    base = os.path.basename(path)
+    (base, ext) = os.path.splitext(base)
+    return base
 
 
 def _add_source(source, code, path, lineno=1):
@@ -88,8 +87,11 @@ def _add_source(source, code, path, lineno=1):
     Add a file to the list of source code chunks, tagged with path and line.
     """
     path = _clean_source_filename(path)
+    source.append('\n#ifndef SAS_HAVE_%s' % path)
+    source.append('#define SAS_HAVE_%s\n' % path)
     source.append('#line %d "%s"' % (lineno, path))
     source.append(code)
+    source.append('\n#endif // SAS_HAVE_%s\n' % path)
 
 
 def get_source_files(module_name):
