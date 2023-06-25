@@ -37,20 +37,6 @@ OTHER_MODELS_PATH = os.path.join(DATA_PATH, "other_models")
 OUTPUT_DIR = "generated_mcstas_models"
 append_to_save = "tests/test_"
 
-# Add other models to models directory. Includes pure python module
-# to C version.
-if os.path.isdir(OTHER_MODELS_PATH):
-    models = os.listdir(MODELS_PATH)
-    other_models = os.listdir(OTHER_MODELS_PATH)
-    for new_model in other_models:
-        if new_model not in models:
-            shutil.copy(os.path.join(OTHER_MODELS_PATH, new_model), MODELS_PATH)
-
-shutil.copytree(
-    os.path.join(OTHER_MODELS_PATH, "lib"),
-    os.path.join(MODELS_PATH, "lib"),
-    dirs_exist_ok=True,
-)
 
 # Get model names to be used globaly in this script
 MODELS = [fname.split(".c")[0] for fname in os.listdir(MODELS_PATH) if ".c" in fname]
