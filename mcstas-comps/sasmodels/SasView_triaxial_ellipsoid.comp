@@ -92,6 +92,9 @@ SHARE %{
 #define HAS_FQ
 #define FORM_VOL
 #line 1 ".././models/lib/sas_3j1x_x.c"
+#ifndef SAS_3J1X_HDR
+#define SAS_3J1X_HDR
+
 /**
 * Spherical Bessel function 3*j1(x)/x
 *
@@ -150,7 +153,12 @@ double sas_3j1x_x(double q)
     }
 }
 
+#endif // SAS_3J1X_HDR
+
 #line 1 ".././models/lib/gauss76.c"
+#ifndef GAUSS76
+#define GAUSS76
+
 // Created by Andrew Jackson on 4/23/07
 
  #ifdef GAUSS_N
@@ -323,6 +331,9 @@ constant double Gauss76Z[76] = {
 
 
 #pragma acc declare copyin(Gauss76Wt[0:76], Gauss76Z[0:76])
+
+#endif // GAUSS76
+
 #line 1 ".././models/triaxial_ellipsoid.c"
 static double
 form_volume_triaxial_ellipsoid(double radius_equat_minor, double radius_equat_major, double radius_polar)

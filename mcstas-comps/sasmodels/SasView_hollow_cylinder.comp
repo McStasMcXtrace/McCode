@@ -92,6 +92,9 @@ SHARE %{
 #define HAS_FQ
 #define FORM_VOL
 #line 1 ".././models/lib/polevl.c"
+#ifndef POLEVL_HDR
+#define POLEVL_HDR
+
 /*							polevl.c
  *							p1evl.c
  *
@@ -178,7 +181,12 @@ double p1evl( double x, pconstant double *coef, int N )
     return ans;
 }
 
+#endif // POLEVL_HDR
+
 #line 1 ".././models/lib/sas_J1.c"
+#ifndef SAS_J1_HDR
+#define SAS_J1_HDR
+
 /*							j1.c
  *
  *	Bessel function of order one
@@ -434,7 +442,12 @@ double sas_2J1x_x(double x)
     return (x != 0.0 ) ? 2.0*sas_J1(x)/x : 1.0;
 }
 
+#endif SAS_J1_HDR
+
 #line 1 ".././models/lib/gauss76.c"
+#ifndef GAUSS76
+#define GAUSS76
+
 // Created by Andrew Jackson on 4/23/07
 
  #ifdef GAUSS_N
@@ -607,6 +620,9 @@ constant double Gauss76Z[76] = {
 
 
 #pragma acc declare copyin(Gauss76Wt[0:76], Gauss76Z[0:76])
+
+#endif // GAUSS76
+
 #line 1 ".././models/hollow_cylinder.c"
 static double
 shell_volume(double radius, double thickness, double length)

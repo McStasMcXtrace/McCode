@@ -111,6 +111,9 @@ SHARE %{
 #define HAS_FQ
 #define FORM_VOL
 #line 1 ".././models/lib/sas_Si.c"
+#ifndef SAS_SI_HDR
+#define SAS_SI_HDR
+
 // integral of sin(x)/x Taylor series approximated to w/i 0.1%
 double sas_Si(double x);
 
@@ -139,7 +142,12 @@ double sas_Si(double x)
     }
 }
 
+#endif // SAS_SI_HDR
+
 #line 1 ".././models/lib/polevl.c"
+#ifndef POLEVL_HDR
+#define POLEVL_HDR
+
 /*							polevl.c
  *							p1evl.c
  *
@@ -226,7 +234,12 @@ double p1evl( double x, pconstant double *coef, int N )
     return ans;
 }
 
+#endif // POLEVL_HDR
+
 #line 1 ".././models/lib/sas_J1.c"
+#ifndef SAS_J1_HDR
+#define SAS_J1_HDR
+
 /*							j1.c
  *
  *	Bessel function of order one
@@ -482,7 +495,12 @@ double sas_2J1x_x(double x)
     return (x != 0.0 ) ? 2.0*sas_J1(x)/x : 1.0;
 }
 
+#endif SAS_J1_HDR
+
 #line 1 ".././models/lib/gauss76.c"
+#ifndef GAUSS76
+#define GAUSS76
+
 // Created by Andrew Jackson on 4/23/07
 
  #ifdef GAUSS_N
@@ -655,6 +673,9 @@ constant double Gauss76Z[76] = {
 
 
 #pragma acc declare copyin(Gauss76Wt[0:76], Gauss76Z[0:76])
+
+#endif // GAUSS76
+
 #line 1 ".././models/core_shell_bicelle_elliptical.c"
 // NOTE that "length" here is the full height of the core!
 static double

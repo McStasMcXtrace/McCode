@@ -97,6 +97,9 @@ SHARE %{
 #define HAS_Iq
 #define FORM_VOL
 #line 1 ".././models/lib/sas_3j1x_x.c"
+#ifndef SAS_3J1X_HDR
+#define SAS_3J1X_HDR
+
 /**
 * Spherical Bessel function 3*j1(x)/x
 *
@@ -155,7 +158,12 @@ double sas_3j1x_x(double q)
     }
 }
 
+#endif // SAS_3J1X_HDR
+
 #line 1 ".././models/lib/gauss150.c"
+#ifndef GAUSS150
+#define GAUSS150
+
 // Created by Andrew Jackson on 4/23/07
 
  #ifdef GAUSS_N
@@ -481,7 +489,13 @@ constant double Gauss150Wt[152]={
 };
 
 #pragma acc declare copyin( Gauss150Wt[0:150], Gauss150Z[0:150] )
+
+#endif // GAUSS150
+
 #line 1 ".././models/lib/sphere_form.c"
+#ifndef SAS_SPHERE_HDR
+#define SAS_SPHERE_HDR
+
 double sphere_volume(double radius);
 double sphere_form(double q, double radius, double sld, double solvent_sld);
 
@@ -500,6 +514,7 @@ double sphere_form(double q, double radius, double sld, double solvent_sld)
     return 1.0e-4*square(contrast * fq);
 }
 
+#endif // SAS_SPHERE_HDR
 
 #line 1 ".././models/fcc_paracrystal.c"
 static double
