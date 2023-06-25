@@ -269,19 +269,19 @@ double form_volume_pearl_necklace(double radius, double edge_sep, double thick_s
 }
 
 static double
-radius_from_volume(double radius, double edge_sep, double thick_string, double fp_num_pearls)
+radius_from_volume_pearl_necklace(double radius, double edge_sep, double thick_string, double fp_num_pearls)
 {
     const double vol_tot = form_volume_pearl_necklace(radius, edge_sep, thick_string, fp_num_pearls);
     return cbrt(vol_tot/M_4PI_3);
 }
 
 static double
-radius_effective(int mode, double radius, double edge_sep, double thick_string, double fp_num_pearls)
+radius_effective_pearl_necklace(int mode, double radius, double edge_sep, double thick_string, double fp_num_pearls)
 {
     switch (mode) {
     default:
     case 1:
-        return radius_from_volume(radius, edge_sep, thick_string, fp_num_pearls);
+        return radius_from_volume_pearl_necklace(radius, edge_sep, thick_string, fp_num_pearls);
     }
 }
 

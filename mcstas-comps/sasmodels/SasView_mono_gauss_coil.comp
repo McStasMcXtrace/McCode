@@ -88,7 +88,7 @@ form_volume_mono_gauss_coil(double rg)
 }
 
 static double
-radius_effective(int mode, double rg)
+radius_effective_mono_gauss_coil(int mode, double rg)
 {
     switch (mode) {
     default:

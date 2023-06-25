@@ -643,34 +643,34 @@ form_volume_hollow_cylinder(double radius, double thickness, double length)
 }
 
 static double
-radius_from_excluded_volume(double radius, double thickness, double length)
+radius_from_excluded_volume_hollow_cylinder(double radius, double thickness, double length)
 {
     const double radius_tot = radius + thickness;
     return 0.5*cbrt(0.75*radius_tot*(2.0*radius_tot*length + (radius_tot + length)*(M_PI*radius_tot + length)));
 }
 
 static double
-radius_from_volume(double radius, double thickness, double length)
+radius_from_volume_hollow_cylinder(double radius, double thickness, double length)
 {
     const double volume_outer_cyl = M_PI*square(radius + thickness)*length;
     return cbrt(volume_outer_cyl/M_4PI_3);
 }
 
 static double
-radius_from_diagonal(double radius, double thickness, double length)
+radius_from_diagonal_hollow_cylinder(double radius, double thickness, double length)
 {
     return sqrt(square(radius + thickness) + 0.25*square(length));
 }
 
 static double
-radius_effective(int mode, double radius, double thickness, double length)
+radius_effective_hollow_cylinder(int mode, double radius, double thickness, double length)
 {
     switch (mode) {
     default:
     case 1: // excluded volume
-        return radius_from_excluded_volume(radius, thickness, length);
+        return radius_from_excluded_volume_hollow_cylinder(radius, thickness, length);
     case 2: // equivalent volume sphere
-        return radius_from_volume(radius, thickness, length);
+        return radius_from_volume_hollow_cylinder(radius, thickness, length);
     case 3: // outer radius
         return radius + thickness;
     case 4: // half length
@@ -680,7 +680,7 @@ radius_effective(int mode, double radius, double thickness, double length)
     case 6: // half outer max dimension
         return (radius + thickness > 0.5*length ? radius + thickness : 0.5*length);
     case 7: // half outer diagonal
-        return radius_from_diagonal(radius,thickness,length);
+        return radius_from_diagonal_hollow_cylinder(radius,thickness,length);
     }
 }
 

@@ -647,7 +647,7 @@ form_volume_core_shell_cylinder(double radius, double thickness, double length)
 }
 
 static double
-radius_from_excluded_volume(double radius, double thickness, double length)
+radius_from_excluded_volume_core_shell_cylinder(double radius, double thickness, double length)
 {
     const double radius_tot = radius + thickness;
     const double length_tot = length + 2.0*thickness;
@@ -655,14 +655,14 @@ radius_from_excluded_volume(double radius, double thickness, double length)
 }
 
 static double
-radius_from_volume(double radius, double thickness, double length)
+radius_from_volume_core_shell_cylinder(double radius, double thickness, double length)
 {
     const double volume_outer_cyl = form_volume_core_shell_cylinder(radius,thickness,length);
     return cbrt(volume_outer_cyl/M_4PI_3);
 }
 
 static double
-radius_from_diagonal(double radius, double thickness, double length)
+radius_from_diagonal_core_shell_cylinder(double radius, double thickness, double length)
 {
     const double radius_outer = radius + thickness;
     const double length_outer = length + 2.0*thickness;
@@ -670,14 +670,14 @@ radius_from_diagonal(double radius, double thickness, double length)
 }
 
 static double
-radius_effective(int mode, double radius, double thickness, double length)
+radius_effective_core_shell_cylinder(int mode, double radius, double thickness, double length)
 {
     switch (mode) {
     default:
     case 1: //cylinder excluded volume
-        return radius_from_excluded_volume(radius, thickness, length);
+        return radius_from_excluded_volume_core_shell_cylinder(radius, thickness, length);
     case 2: // equivalent volume sphere
-        return radius_from_volume(radius, thickness, length);
+        return radius_from_volume_core_shell_cylinder(radius, thickness, length);
     case 3: // outer radius
         return radius + thickness;
     case 4: // half outer length
@@ -687,7 +687,7 @@ radius_effective(int mode, double radius, double thickness, double length)
     case 6: // half max outer length
         return (radius > 0.5*length ? radius + thickness : 0.5*length + thickness);
     case 7: // half outer diagonal
-        return radius_from_diagonal(radius,thickness,length);
+        return radius_from_diagonal_core_shell_cylinder(radius,thickness,length);
     }
 }
 

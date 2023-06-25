@@ -224,6 +224,34 @@ def generate_mcstas_models():
                 code = "\n".join(["#define HAS_Iqabc", code])
                 code = code.replace('Iqabc(', 'Iqabc_' + model_name + '(')
                 status = "Iqabc"
+
+            if "radius_effective(" in code:
+                code = code.replace('radius_effective(', 'radius_effective_' + model_name + '(')
+
+            if "radius_from_crosssection(" in code:
+                code = code.replace('radius_from_crosssection(', 'radius_from_crosssection_' + model_name + '(')
+
+            if "radius_from_curvature(" in code:
+                code = code.replace('radius_from_curvature(', 'radius_from_curvature_' + model_name + '(')
+
+            if "radius_from_diagonal(" in code:
+                code = code.replace('radius_from_diagonal(', 'radius_from_diagonal_' + model_name + '(')
+
+            if "radius_from_excluded_volume(" in code:
+                code = code.replace('radius_from_excluded_volume(', 'radius_from_excluded_volume_' + model_name + '(')
+
+            if "radius_from_max_dimension(" in code:
+                code = code.replace('radius_from_max_dimension(', 'radius_from_max_dimension_' + model_name + '(')
+
+            if "radius_from_min_dimension(" in code:
+                code = code.replace('radius_from_min_dimension(', 'radius_from_min_dimension_' + model_name + '(')
+
+            if "radius_from_totallength(" in code:
+                code = code.replace('radius_from_totallength(', 'radius_from_totallength_' + model_name + '(')
+
+            if "radius_from_volume(" in code:
+                code = code.replace('radius_from_volume(', 'radius_from_volume_' + model_name + '(')
+
             if not os.path.isdir("generated_mcstas_models"):
                 os.mkdir("generated_mcstas_models")
             with open("_".join(["generated_mcstas_models/sas", fname]), "w") as f:

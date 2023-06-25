@@ -321,7 +321,7 @@ form_volume_superball(double length_a, double exponent_p)
 }
 
 static double
-radius_from_excluded_volume(double length_a, double exponent_p)
+radius_from_excluded_volume_superball(double length_a, double exponent_p)
 {
   double g1 = sas_gamma(1.0 / (2.0 * exponent_p));
   double g3 = sas_gamma(3.0 / (2.0 * exponent_p));
@@ -332,14 +332,14 @@ radius_from_excluded_volume(double length_a, double exponent_p)
 
 static double
 
-radius_effective(int mode, double length_a, double exponent_p)
+radius_effective_superball(int mode, double length_a, double exponent_p)
 
 {
   switch (mode)
   {
   default:
   case 1: // radius of gyration
-    return radius_from_excluded_volume(length_a, exponent_p);
+    return radius_from_excluded_volume_superball(length_a, exponent_p);
   case 2: // equivalent volume sphere
     return cbrt(form_volume_superball(length_a, exponent_p) / M_4PI_3);
   case 3: // half length_a

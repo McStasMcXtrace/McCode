@@ -182,7 +182,7 @@ form_volume_core_multi_shell(double core_radius, double fp_n, double thickness[]
 }
 
 static double
-radius_effective(int mode, double core_radius, double fp_n, double thickness[])
+radius_effective_core_multi_shell(int mode, double core_radius, double fp_n, double thickness[])
 {
   switch (mode) {
   default:

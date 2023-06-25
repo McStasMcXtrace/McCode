@@ -383,14 +383,14 @@ form_volume_core_shell_ellipsoid(double radius_equat_core,
 }
 
 static double
-radius_from_volume(double radius_equat_core, double x_core, double thick_shell, double x_polar_shell)
+radius_from_volume_core_shell_ellipsoid(double radius_equat_core, double x_core, double thick_shell, double x_polar_shell)
 {
     const double volume_ellipsoid = form_volume_core_shell_ellipsoid(radius_equat_core, x_core, thick_shell, x_polar_shell);
     return cbrt(volume_ellipsoid/M_4PI_3);
 }
 
 static double
-radius_from_curvature(double radius_equat_core, double x_core, double thick_shell, double x_polar_shell)
+radius_from_curvature_core_shell_ellipsoid(double radius_equat_core, double x_core, double thick_shell, double x_polar_shell)
 {
     // Trivial cases
     if (1.0 == x_core && 1.0 == x_polar_shell) return radius_equat_core + thick_shell;
@@ -412,7 +412,7 @@ radius_from_curvature(double radius_equat_core, double x_core, double thick_shel
 }
 
 static double
-radius_effective(int mode, double radius_equat_core, double x_core, double thick_shell, double x_polar_shell)
+radius_effective_core_shell_ellipsoid(int mode, double radius_equat_core, double x_core, double thick_shell, double x_polar_shell)
 {
     const double radius_equat_tot = radius_equat_core + thick_shell;
     const double radius_polar_tot = radius_equat_core*x_core + thick_shell*x_polar_shell;
@@ -420,9 +420,9 @@ radius_effective(int mode, double radius_equat_core, double x_core, double thick
     switch (mode) {
     default:
     case 1: // average outer curvature
-        return radius_from_curvature(radius_equat_core, x_core, thick_shell, x_polar_shell);
+        return radius_from_curvature_core_shell_ellipsoid(radius_equat_core, x_core, thick_shell, x_polar_shell);
     case 2: // equivalent volume sphere
-        return radius_from_volume(radius_equat_core, x_core, thick_shell, x_polar_shell);
+        return radius_from_volume_core_shell_ellipsoid(radius_equat_core, x_core, thick_shell, x_polar_shell);
     case 3: // min outer radius
         return (radius_polar_tot < radius_equat_tot ? radius_polar_tot : radius_equat_tot);
     case 4: // max outer radius

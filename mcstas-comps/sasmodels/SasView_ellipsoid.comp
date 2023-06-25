@@ -338,13 +338,13 @@ form_volume_ellipsoid(double radius_polar, double radius_equatorial)
 }
 
 static double
-radius_from_volume(double radius_polar, double radius_equatorial)
+radius_from_volume_ellipsoid(double radius_polar, double radius_equatorial)
 {
     return cbrt(radius_polar*radius_equatorial*radius_equatorial);
 }
 
 static double
-radius_from_curvature(double radius_polar, double radius_equatorial)
+radius_from_curvature_ellipsoid(double radius_polar, double radius_equatorial)
 {
     // Trivial cases
     if (radius_polar == radius_equatorial) return radius_polar;
@@ -364,14 +364,14 @@ radius_from_curvature(double radius_polar, double radius_equatorial)
 }
 
 static double
-radius_effective(int mode, double radius_polar, double radius_equatorial)
+radius_effective_ellipsoid(int mode, double radius_polar, double radius_equatorial)
 {
     switch (mode) {
     default:
     case 1: // average curvature
-        return radius_from_curvature(radius_polar, radius_equatorial);
+        return radius_from_curvature_ellipsoid(radius_polar, radius_equatorial);
     case 2: // equivalent volume sphere
-        return radius_from_volume(radius_polar, radius_equatorial);
+        return radius_from_volume_ellipsoid(radius_polar, radius_equatorial);
     case 3: // min radius
         return (radius_polar < radius_equatorial ? radius_polar : radius_equatorial);
     case 4: // max radius

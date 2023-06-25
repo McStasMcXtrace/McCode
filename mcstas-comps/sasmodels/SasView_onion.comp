@@ -207,7 +207,7 @@ form_volume_onion(double radius_core, double n_shells, double thickness[])
 }
 
 static double
-radius_effective(int mode, double radius_core, double n_shells, double thickness[])
+radius_effective_onion(int mode, double radius_core, double n_shells, double thickness[])
 {
   // case 1: outer radius
   return outer_radius(radius_core, n_shells, thickness);

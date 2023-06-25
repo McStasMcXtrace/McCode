@@ -690,7 +690,7 @@ form_volume_capped_cylinder(double radius, double radius_cap, double length)
 }
 
 static double
-radius_from_excluded_volume(double radius, double radius_cap, double length)
+radius_from_excluded_volume_capped_cylinder(double radius, double radius_cap, double length)
 {
     const double h = -sqrt(square(radius_cap) - square(radius));
     const double length_tot = length + 2.0*(radius_cap + h);
@@ -701,14 +701,14 @@ radius_from_excluded_volume(double radius, double radius_cap, double length)
 }
 
 static double
-radius_from_volume(double radius, double radius_cap, double length)
+radius_from_volume_capped_cylinder(double radius, double radius_cap, double length)
 {
     const double vol_cappedcyl = form_volume_capped_cylinder(radius,radius_cap,length);
     return cbrt(vol_cappedcyl/M_4PI_3);
 }
 
 static double
-radius_from_totallength(double radius, double radius_cap, double length)
+radius_from_totallength_capped_cylinder(double radius, double radius_cap, double length)
 {
     const double h = -sqrt(square(radius_cap) - square(radius));
     const double half_length = 0.5*length;
@@ -716,20 +716,20 @@ radius_from_totallength(double radius, double radius_cap, double length)
 }
 
 static double
-radius_effective(int mode, double radius, double radius_cap, double length)
+radius_effective_capped_cylinder(int mode, double radius, double radius_cap, double length)
 {
     switch (mode) {
     default:
     case 1: // equivalent cylinder excluded volume
-        return radius_from_excluded_volume(radius, radius_cap, length);
+        return radius_from_excluded_volume_capped_cylinder(radius, radius_cap, length);
     case 2: // equivalent volume sphere
-        return radius_from_volume(radius, radius_cap, length);
+        return radius_from_volume_capped_cylinder(radius, radius_cap, length);
     case 3: // radius
         return radius;
     case 4: // half length
         return 0.5*length;
     case 5: // half total length
-        return radius_from_totallength(radius, radius_cap,length);
+        return radius_from_totallength_capped_cylinder(radius, radius_cap,length);
     }
 }
 

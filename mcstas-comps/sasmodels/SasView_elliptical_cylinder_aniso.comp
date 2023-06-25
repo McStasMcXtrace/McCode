@@ -638,49 +638,49 @@ form_volume_elliptical_cylinder(double radius_minor, double r_ratio, double leng
 }
 
 static double
-radius_from_excluded_volume(double radius_minor, double r_ratio, double length)
+radius_from_excluded_volume_elliptical_cylinder(double radius_minor, double r_ratio, double length)
 {
     const double r_equiv = sqrt(radius_minor*radius_minor*r_ratio);
     return 0.5*cbrt(0.75*r_equiv*(2.0*r_equiv*length + (r_equiv + length)*(M_PI*r_equiv + length)));
 }
 
 static double
-radius_from_volume(double radius_minor, double r_ratio, double length)
+radius_from_volume_elliptical_cylinder(double radius_minor, double r_ratio, double length)
 {
     const double volume_ellcyl = form_volume_elliptical_cylinder(radius_minor,r_ratio,length);
     return cbrt(volume_ellcyl/M_4PI_3);
 }
 
 static double
-radius_from_min_dimension(double radius_minor, double r_ratio, double hlength)
+radius_from_min_dimension_elliptical_cylinder(double radius_minor, double r_ratio, double hlength)
 {
     const double rad_min = (r_ratio > 1.0 ? radius_minor : r_ratio*radius_minor);
     return (rad_min < hlength ? rad_min : hlength);
 }
 
 static double
-radius_from_max_dimension(double radius_minor, double r_ratio, double hlength)
+radius_from_max_dimension_elliptical_cylinder(double radius_minor, double r_ratio, double hlength)
 {
     const double rad_max = (r_ratio < 1.0 ? radius_minor : r_ratio*radius_minor);
     return (rad_max > hlength ? rad_max : hlength);
 }
 
 static double
-radius_from_diagonal(double radius_minor, double r_ratio, double length)
+radius_from_diagonal_elliptical_cylinder(double radius_minor, double r_ratio, double length)
 {
     const double radius_max = (r_ratio > 1.0 ? radius_minor*r_ratio : radius_minor);
     return sqrt(radius_max*radius_max + 0.25*length*length);
 }
 
 static double
-radius_effective(int mode, double radius_minor, double r_ratio, double length)
+radius_effective_elliptical_cylinder(int mode, double radius_minor, double r_ratio, double length)
 {
     switch (mode) {
     default:
     case 1: // equivalent cylinder excluded volume
-        return radius_from_excluded_volume(radius_minor, r_ratio, length);
+        return radius_from_excluded_volume_elliptical_cylinder(radius_minor, r_ratio, length);
     case 2: // equivalent volume sphere
-        return radius_from_volume(radius_minor, r_ratio, length);
+        return radius_from_volume_elliptical_cylinder(radius_minor, r_ratio, length);
     case 3: // average radius
         return 0.5*radius_minor*(1.0 + r_ratio);
     case 4: // min radius
@@ -692,11 +692,11 @@ radius_effective(int mode, double radius_minor, double r_ratio, double length)
     case 7: // half length
         return 0.5*length;
     case 8: // half min dimension
-        return radius_from_min_dimension(radius_minor,r_ratio,0.5*length);
+        return radius_from_min_dimension_elliptical_cylinder(radius_minor,r_ratio,0.5*length);
     case 9: // half max dimension
-        return radius_from_max_dimension(radius_minor,r_ratio,0.5*length);
+        return radius_from_max_dimension_elliptical_cylinder(radius_minor,r_ratio,0.5*length);
     case 10: // half diagonal
-        return radius_from_diagonal(radius_minor,r_ratio,length);
+        return radius_from_diagonal_elliptical_cylinder(radius_minor,r_ratio,length);
     }
 }
 

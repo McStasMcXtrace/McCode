@@ -686,7 +686,7 @@ form_volume_barbell(double radius_bell,
 }
 
 static double
-radius_from_excluded_volume(double radius_bell, double radius, double length)
+radius_from_excluded_volume_barbell(double radius_bell, double radius, double length)
 {
     const double h = sqrt(square(radius_bell) - square(radius));
     const double length_tot = length + 2.0*(radius + h);
@@ -697,14 +697,14 @@ radius_from_excluded_volume(double radius_bell, double radius, double length)
 }
 
 static double
-radius_from_volume(double radius_bell, double radius, double length)
+radius_from_volume_barbell(double radius_bell, double radius, double length)
 {
     const double vol_barbell = form_volume_barbell(radius_bell,radius,length);
     return cbrt(vol_barbell/M_4PI_3);
 }
 
 static double
-radius_from_totallength(double radius_bell, double radius, double length)
+radius_from_totallength_barbell(double radius_bell, double radius, double length)
 {
     const double h = sqrt(square(radius_bell) - square(radius));
     const double half_length = 0.5*length;
@@ -712,20 +712,20 @@ radius_from_totallength(double radius_bell, double radius, double length)
 }
 
 static double
-radius_effective(int mode, double radius_bell, double radius, double length)
+radius_effective_barbell(int mode, double radius_bell, double radius, double length)
 {
     switch (mode) {
     default:
     case 1: // equivalent cylinder excluded volume
-        return radius_from_excluded_volume(radius_bell, radius , length);
+        return radius_from_excluded_volume_barbell(radius_bell, radius , length);
     case 2: // equivalent volume sphere
-        return radius_from_volume(radius_bell, radius , length);
+        return radius_from_volume_barbell(radius_bell, radius , length);
     case 3: // radius
         return radius;
     case 4: // half length
         return 0.5*length;
     case 5: // half total length
-        return radius_from_totallength(radius_bell,radius,length);
+        return radius_from_totallength_barbell(radius_bell,radius,length);
     }
 }
 

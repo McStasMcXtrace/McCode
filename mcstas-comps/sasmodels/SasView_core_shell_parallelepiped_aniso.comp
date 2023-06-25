@@ -327,7 +327,7 @@ form_volume_core_shell_parallelepiped(double length_a, double length_b, double l
 }
 
 static double
-radius_from_excluded_volume(double length_a, double length_b, double length_c,
+radius_from_excluded_volume_core_shell_parallelepiped(double length_a, double length_b, double length_c,
                    double thick_rim_a, double thick_rim_b, double thick_rim_c)
 {
     double r_equiv, length;
@@ -359,7 +359,7 @@ radius_from_excluded_volume(double length_a, double length_b, double length_c,
 }
 
 static double
-radius_from_volume(double length_a, double length_b, double length_c,
+radius_from_volume_core_shell_parallelepiped(double length_a, double length_b, double length_c,
                    double thick_rim_a, double thick_rim_b, double thick_rim_c)
 {
     const double volume = form_volume_core_shell_parallelepiped(length_a, length_b, length_c, thick_rim_a, thick_rim_b, thick_rim_c);
@@ -367,22 +367,22 @@ radius_from_volume(double length_a, double length_b, double length_c,
 }
 
 static double
-radius_from_crosssection(double length_a, double length_b, double thick_rim_a, double thick_rim_b)
+radius_from_crosssection_core_shell_parallelepiped(double length_a, double length_b, double thick_rim_a, double thick_rim_b)
 {
     const double area_xsec_paral = length_a*length_b + 2.0*thick_rim_a*length_b + 2.0*thick_rim_b*length_a;
     return sqrt(area_xsec_paral/M_PI);
 }
 
 static double
-radius_effective(int mode, double length_a, double length_b, double length_c,
+radius_effective_core_shell_parallelepiped(int mode, double length_a, double length_b, double length_c,
                  double thick_rim_a, double thick_rim_b, double thick_rim_c)
 {
     switch (mode) {
     default:
     case 1: // equivalent cylinder excluded volume
-        return radius_from_excluded_volume(length_a, length_b, length_c, thick_rim_a, thick_rim_b, thick_rim_c);
+        return radius_from_excluded_volume_core_shell_parallelepiped(length_a, length_b, length_c, thick_rim_a, thick_rim_b, thick_rim_c);
     case 2: // equivalent volume sphere
-        return radius_from_volume(length_a, length_b, length_c, thick_rim_a, thick_rim_b, thick_rim_c);
+        return radius_from_volume_core_shell_parallelepiped(length_a, length_b, length_c, thick_rim_a, thick_rim_b, thick_rim_c);
     case 3: // half outer length a
         return 0.5 * length_a + thick_rim_a;
     case 4: // half outer length b
@@ -390,7 +390,7 @@ radius_effective(int mode, double length_a, double length_b, double length_c,
     case 5: // half outer length c
         return 0.5 * length_c + thick_rim_c;
     case 6: // equivalent circular cross-section
-        return radius_from_crosssection(length_a, length_b, thick_rim_a, thick_rim_b);
+        return radius_from_crosssection_core_shell_parallelepiped(length_a, length_b, thick_rim_a, thick_rim_b);
     case 7: // half outer ab diagonal
         return 0.5*sqrt(square(length_a+ 2.0*thick_rim_a) + square(length_b+ 2.0*thick_rim_b));
     case 8: // half outer diagonal

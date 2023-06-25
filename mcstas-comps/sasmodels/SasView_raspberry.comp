@@ -177,7 +177,7 @@ double form_volume_raspberry(double radius_lg, double radius_sm, double penetrat
 }
 
 static double
-radius_effective(int mode, double radius_lg, double radius_sm, double penetration)
+radius_effective_raspberry(int mode, double radius_lg, double radius_sm, double penetration)
 {
     switch (mode) {
     default:

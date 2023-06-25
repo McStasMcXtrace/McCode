@@ -155,7 +155,7 @@ static double form_volume_fuzzy_sphere(double radius, double fuzziness)
 }
 
 static double
-radius_effective(int mode, double radius, double fuzziness)
+radius_effective_fuzzy_sphere(int mode, double radius, double fuzziness)
 {
     switch (mode) {
     default:

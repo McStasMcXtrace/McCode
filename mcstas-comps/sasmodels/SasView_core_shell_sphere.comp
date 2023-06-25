@@ -212,7 +212,7 @@ form_volume_core_shell_sphere(double radius, double thickness)
 }
 
 static double
-radius_effective(int mode, double radius, double thickness)
+radius_effective_core_shell_sphere(int mode, double radius, double thickness)
 {
     switch (mode) {
     default:

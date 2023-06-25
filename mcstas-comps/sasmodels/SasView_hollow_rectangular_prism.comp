@@ -294,7 +294,7 @@ form_volume_hollow_rectangular_prism(double length_a, double b2a_ratio, double c
 }
 
 static double
-radius_from_excluded_volume(double length_a, double b2a_ratio, double c2a_ratio)
+radius_from_excluded_volume_hollow_rectangular_prism(double length_a, double b2a_ratio, double c2a_ratio)
 {
     const double r_equiv = sqrt(length_a*length_a*b2a_ratio/M_PI);
     const double length_c = length_a*c2a_ratio;
@@ -302,13 +302,13 @@ radius_from_excluded_volume(double length_a, double b2a_ratio, double c2a_ratio)
 }
 
 static double
-radius_effective(int mode, double length_a, double b2a_ratio, double c2a_ratio, double thickness)
+radius_effective_hollow_rectangular_prism(int mode, double length_a, double b2a_ratio, double c2a_ratio, double thickness)
 // NOTE length_a is external dimension!
 {
     switch (mode) {
     default:
     case 1: // equivalent cylinder excluded volume
-        return radius_from_excluded_volume(length_a, b2a_ratio, c2a_ratio);
+        return radius_from_excluded_volume_hollow_rectangular_prism(length_a, b2a_ratio, c2a_ratio);
     case 2: // equivalent outer volume sphere
         return cbrt(cube(length_a)*b2a_ratio*c2a_ratio/M_4PI_3);
     case 3: // half length_a

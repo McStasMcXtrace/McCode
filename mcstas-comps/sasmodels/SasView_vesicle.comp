@@ -167,7 +167,7 @@ form_volume_vesicle(double radius, double thickness)
 
 
 static double
-radius_effective(int mode, double radius, double thickness)
+radius_effective_vesicle(int mode, double radius, double thickness)
 {
     // case 1: outer radius
     return radius + thickness;

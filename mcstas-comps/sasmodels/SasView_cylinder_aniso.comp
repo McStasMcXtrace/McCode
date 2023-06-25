@@ -639,33 +639,33 @@ _fq(double qab, double qc, double radius, double length)
 }
 
 static double
-radius_from_excluded_volume(double radius, double length)
+radius_from_excluded_volume_cylinder(double radius, double length)
 {
     return 0.5*cbrt(0.75*radius*(2.0*radius*length
            + (radius + length)*(M_PI*radius + length)));
 }
 
 static double
-radius_from_volume(double radius, double length)
+radius_from_volume_cylinder(double radius, double length)
 {
     return cbrt(M_PI*radius*radius*length/M_4PI_3);
 }
 
 static double
-radius_from_diagonal(double radius, double length)
+radius_from_diagonal_cylinder(double radius, double length)
 {
     return sqrt(radius*radius + 0.25*length*length);
 }
 
 static double
-radius_effective(int mode, double radius, double length)
+radius_effective_cylinder(int mode, double radius, double length)
 {
     switch (mode) {
     default:
     case 1:
-        return radius_from_excluded_volume(radius, length);
+        return radius_from_excluded_volume_cylinder(radius, length);
     case 2:
-        return radius_from_volume(radius, length);
+        return radius_from_volume_cylinder(radius, length);
     case 3:
         return radius;
     case 4:
@@ -675,7 +675,7 @@ radius_effective(int mode, double radius, double length)
     case 6:
         return (radius > 0.5*length ? radius : 0.5*length);
     case 7:
-        return radius_from_diagonal(radius,length);
+        return radius_from_diagonal_cylinder(radius,length);
     }
 }
 

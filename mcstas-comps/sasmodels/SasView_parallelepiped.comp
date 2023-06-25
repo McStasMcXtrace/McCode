@@ -278,7 +278,7 @@ form_volume_parallelepiped(double length_a, double length_b, double length_c)
 }
 
 static double
-radius_from_excluded_volume(double length_a, double length_b, double length_c)
+radius_from_excluded_volume_parallelepiped(double length_a, double length_b, double length_c)
 {
     double r_equiv, length;
     double lengths[3] = {length_a, length_b, length_c};
@@ -309,12 +309,12 @@ radius_from_excluded_volume(double length_a, double length_b, double length_c)
 }
 
 static double
-radius_effective(int mode, double length_a, double length_b, double length_c)
+radius_effective_parallelepiped(int mode, double length_a, double length_b, double length_c)
 {
     switch (mode) {
     default:
     case 1: // equivalent cylinder excluded volume
-        return radius_from_excluded_volume(length_a,length_b,length_c);
+        return radius_from_excluded_volume_parallelepiped(length_a,length_b,length_c);
     case 2: // equivalent volume sphere
         return cbrt(length_a*length_b*length_c/M_4PI_3);
     case 3: // half length_a

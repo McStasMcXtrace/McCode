@@ -683,7 +683,7 @@ form_volume_core_shell_bicelle_elliptical_belt_rough(double r_minor,
 }
 
 static double
-radius_from_excluded_volume(double r_minor, double x_core, double thick_rim, double thick_face, double length)
+radius_from_excluded_volume_core_shell_bicelle_elliptical_belt_rough(double r_minor, double x_core, double thick_rim, double thick_face, double length)
 {
     const double r_equiv     = sqrt((r_minor + thick_rim)*(r_minor*x_core + thick_rim));
     const double length_tot  = length + 2.0*thick_face;
@@ -691,14 +691,14 @@ radius_from_excluded_volume(double r_minor, double x_core, double thick_rim, dou
 }
 
 static double
-radius_from_volume(double r_minor, double x_core, double thick_rim, double thick_face, double length)
+radius_from_volume_core_shell_bicelle_elliptical_belt_rough(double r_minor, double x_core, double thick_rim, double thick_face, double length)
 {
     const double volume_bicelle = form_volume_core_shell_bicelle_elliptical_belt_rough(r_minor, x_core, thick_rim,thick_face,length);
     return cbrt(volume_bicelle/M_4PI_3);
 }
 
 static double
-radius_from_diagonal(double r_minor, double x_core, double thick_rim, double thick_face, double length)
+radius_from_diagonal_core_shell_bicelle_elliptical_belt_rough(double r_minor, double x_core, double thick_rim, double thick_face, double length)
 {
     const double radius_max = (x_core < 1.0 ? r_minor : x_core*r_minor);
     const double radius_max_tot = radius_max + thick_rim;
@@ -707,14 +707,14 @@ radius_from_diagonal(double r_minor, double x_core, double thick_rim, double thi
 }
 
 static double
-radius_effective(int mode, double r_minor, double x_core, double thick_rim, double thick_face, double length)
+radius_effective_core_shell_bicelle_elliptical_belt_rough(int mode, double r_minor, double x_core, double thick_rim, double thick_face, double length)
 {
     switch (mode) {
     default:
     case 1: // equivalent cylinder excluded volume
-        return radius_from_excluded_volume(r_minor, x_core, thick_rim, thick_face, length);
+        return radius_from_excluded_volume_core_shell_bicelle_elliptical_belt_rough(r_minor, x_core, thick_rim, thick_face, length);
     case 2: // equivalent sphere
-        return radius_from_volume(r_minor, x_core, thick_rim, thick_face, length);
+        return radius_from_volume_core_shell_bicelle_elliptical_belt_rough(r_minor, x_core, thick_rim, thick_face, length);
     case 3: // outer rim average radius
         return 0.5*r_minor*(1.0 + x_core) + thick_rim;
     case 4: // outer rim min radius
@@ -725,7 +725,7 @@ radius_effective(int mode, double r_minor, double x_core, double thick_rim, doub
         return 0.5*length + thick_face;
     case 7: // half diagonal (this ignores the missing "corners", so may give unexpected answer if thick_face
             //  or thick_rim is extremely large)
-        return radius_from_diagonal(r_minor,x_core,thick_rim,thick_face,length);
+        return radius_from_diagonal_core_shell_bicelle_elliptical_belt_rough(r_minor,x_core,thick_rim,thick_face,length);
     }
 }
 

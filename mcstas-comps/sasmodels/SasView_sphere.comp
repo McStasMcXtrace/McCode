@@ -153,7 +153,7 @@ static double form_volume_sphere(double radius)
 }
 
 static double
-radius_effective(int mode, double radius)
+radius_effective_sphere(int mode, double radius)
 {
     // case 1: radius
     return radius;
