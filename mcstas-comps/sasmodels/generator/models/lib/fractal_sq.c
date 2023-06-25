@@ -1,6 +1,3 @@
-#ifndef FRACTAL_SQ
-#define FRACTAL_SQ
-
 #pragma acc routine seq
 static double
 fractal_sq(double q, double radius, double fractal_dim, double cor_length)
@@ -30,5 +27,3 @@ fractal_sq(double q, double radius, double fractal_dim, double cor_length)
     }
     return 1.0 + term;
 }
-
-#endif // FRACTAL_SQ

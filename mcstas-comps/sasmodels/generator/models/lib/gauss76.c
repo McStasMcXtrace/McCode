@@ -1,6 +1,3 @@
-#ifndef GAUSS76
-#define GAUSS76
-
 // Created by Andrew Jackson on 4/23/07
 
  #ifdef GAUSS_N
@@ -173,5 +170,3 @@ constant double Gauss76Z[76] = {
 
 
 #pragma acc declare copyin(Gauss76Wt[0:76], Gauss76Z[0:76])
-
-#endif // GAUSS76

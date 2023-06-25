@@ -1,6 +1,3 @@
-#ifndef GFN_HDR
-#define GFN_HDR
-
 //
 //     FUNCTION gfn4:    CONTAINS F(Q,A,B,MU)**2  AS GIVEN
 //                       BY (53) & (58-59) IN CHEN AND
@@ -37,5 +34,3 @@ gfn4(double xx, double crmaj, double crmin, double trmaj, double trmin, double d
 
     return result;
 }
-
-#endif GFN_HDR

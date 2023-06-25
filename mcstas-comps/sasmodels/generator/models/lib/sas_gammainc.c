@@ -1,6 +1,3 @@
-#ifndef SAS_GAMMAINC_HDR
-#define SAS_GAMMAINC_HDR
-
 #if FLOAT_SIZE>4  // double precision
 // based on cephes/double/igam.c
 double gammaln(double x);
@@ -469,5 +466,3 @@ float cephes_lgam2f(float x)
 #define sas_gammainc gammaincf
 #define sas_gammaincc gammainccf
 #endif
-
-#endif // SAS_GAMMAINC_HDR

@@ -1,6 +1,3 @@
-#ifndef SAS_WRC_CYL_HDR
-#define SAS_WRC_CYL_HDR
-
 /*
     Functions for WRC implementation of flexible cylinders. See
     W R Chen, P D Butler and L J Magid,
@@ -234,5 +231,3 @@ Sk_WR(double q, double L, double b)
 
     return ans;
 }
-
-#endif // SAS_WRC_CYL_HDR

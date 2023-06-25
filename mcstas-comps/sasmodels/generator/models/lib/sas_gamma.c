@@ -1,5 +1,3 @@
-#ifndef SAS_GAMMA_HDR
-#define SAS_GAMMA_HDR
 /*
 The wrapper for gamma function from OpenCL and standard libraries
 The OpenCL gamma function fails miserably on values lower than 1.0
@@ -154,5 +152,3 @@ inline double sas_gamma(double x)
     //    return tgamma(x)/norm;
     return (x<0. ? M_PI/tgamma(1.-x)/sin(M_PI*x) : tgamma(x+1)/x);
 }
-
-#endif // SAS_GAMMA_HDR

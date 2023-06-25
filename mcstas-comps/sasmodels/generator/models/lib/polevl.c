@@ -1,6 +1,3 @@
-#ifndef POLEVL_HDR
-#define POLEVL_HDR
-
 /*							polevl.c
  *							p1evl.c
  *
@@ -86,5 +83,3 @@ double p1evl( double x, pconstant double *coef, int N )
 
     return ans;
 }
-
-#endif // POLEVL_HDR

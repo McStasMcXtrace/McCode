@@ -5,9 +5,6 @@ core_shell_kernel
 Form factor used in core_shell and fractal_core_shell
 
 ********************************************************************/
-#ifndef CORE_SHELL_KERNEL
-#define CORE_SHELL_KERNEL
-
 #pragma acc routine seq
 static
 double core_shell_fq(double q,
@@ -46,5 +43,3 @@ double core_shell_kernel(double q,
     const double fq = core_shell_fq(q, radius, thickness, core_sld, shell_sld, solvent_sld);
     return 1.0e-4 * fq*fq;
 }
-
-#endif // CORE_SHELL_KERNEL

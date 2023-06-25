@@ -1,6 +1,3 @@
-#ifndef GAUSS150
-#define GAUSS150
-
 // Created by Andrew Jackson on 4/23/07
 
  #ifdef GAUSS_N
@@ -326,5 +323,3 @@ constant double Gauss150Wt[152]={
 };
 
 #pragma acc declare copyin( Gauss150Wt[0:150], Gauss150Z[0:150] )
-
-#endif // GAUSS150
