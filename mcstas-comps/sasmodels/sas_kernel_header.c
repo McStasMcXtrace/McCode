@@ -382,4 +382,5 @@ qabc_apply(
 }
 
 // ##### End of rotation operation definitions ######
-#endif
+
+#endif // SAS_KERNEL_HDR
