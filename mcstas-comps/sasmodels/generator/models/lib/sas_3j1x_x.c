@@ -1,3 +1,6 @@
+#ifndef SAS_3J1X_HDR
+#define SAS_3J1X_HDR
+
 /**
 * Spherical Bessel function 3*j1(x)/x
 *
@@ -55,3 +58,5 @@ double sas_3j1x_x(double q)
         return 3.0*(sin_q/q - cos_q)/(q*q);
     }
 }
+
+#endif // SAS_3J1X_HDR

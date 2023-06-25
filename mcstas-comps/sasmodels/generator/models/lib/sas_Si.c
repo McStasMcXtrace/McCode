@@ -1,3 +1,6 @@
+#ifndef SAS_SI_HDR
+#define SAS_SI_HDR
+
 // integral of sin(x)/x Taylor series approximated to w/i 0.1%
 double sas_Si(double x);
 
@@ -25,3 +28,5 @@ double sas_Si(double x)
             + 1.)*x;
     }
 }
+
+#endif // SAS_SI_HDR

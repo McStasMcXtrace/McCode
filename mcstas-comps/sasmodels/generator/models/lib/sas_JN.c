@@ -1,3 +1,5 @@
+#ifndef SAS_JN_HDR
+#define SAS_JN_HDR
 /*							jn.c
  *
  *	Bessel function of integer order
@@ -205,3 +207,5 @@ float cephes_jnf(int n, float x)
 #else
 #define sas_JN cephes_jnf
 #endif
+
+#endif // SAS_JN_HDR

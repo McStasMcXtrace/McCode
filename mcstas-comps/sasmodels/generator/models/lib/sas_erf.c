@@ -1,4 +1,5 @@
-
+#ifndef SAS_ERF_HDR
+#define SAS_ERF_HDR
 /*
  * Cephes Math Library Release 2.2:  June, 1992
  * Copyright 1984, 1987, 1988, 1992 by Stephen L. Moshier
@@ -359,3 +360,5 @@ float cephes_erff(float x)
 #define sas_erfc erfcf
 #endif
 #endif // !NEED_ERF
+
+#endif // SAS_ERF_HDR

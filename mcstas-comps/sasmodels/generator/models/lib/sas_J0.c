@@ -1,3 +1,5 @@
+#ifndef SAS_J0_HDR
+#define SAS_J0_HDR
 /*							j0.c
  *
  *	Bessel function of order zero
@@ -268,3 +270,5 @@ float cephes_j0f(float x)
 #else
 #define sas_J0 cephes_j0f
 #endif
+
+#endif // SAS_J0_HDR
