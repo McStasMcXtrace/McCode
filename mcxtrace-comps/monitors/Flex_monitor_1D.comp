@@ -1,0 +1,133 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Flex_monitor_1D
+*
+* %I
+* Written by: Erik B Knudsen & Peter Willendrup
+* Date: Oct '20
+* Origin: DTU Physics
+*
+* Flexible monitor.
+*
+* %D
+* A square 1D single monitor that measures intensity (or something else) as a function of some variable or parameter.
+*
+* Example: Flex_monitor_1D(nU=20, filename="Output", ustring="x", Umin=-.1, Umax=.1)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* Umin: []              Minimum U to detect
+* Umax: []              Maximum U to detect
+* nU: [1]               Number of U channels
+* filename: [string]    Name of file in which to store the detector image
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* uid: [1]              Integer index of uservar to be monitored. Overrides ustring.
+* ustring: [string]     Name of variable (user or neutron state parameter as a string) to be monitored.  
+* signal: [string]      Name of variable to be used as an additive signal to be monitored. Default is intensity.
+* nowritefile: [1]      Flag to indicate if monitor should not save any data.
+*
+* OUTPUT PARAMETERS:
+*
+* U_N: []               Array of neutron counts
+* U_p: []               Array of neutron weight counts
+* U_p2: []              Array of second moments
+*
+* %E
+*******************************************************************************/
+DEFINE COMPONENT Flex_monitor_1D
+
+DEFINITION PARAMETERS ()
+
+SETTING PARAMETERS (nU=20, string filename=0,
+  Umin, Umax, uid=-1, string ustring="", restore_neutron=0, string signal="p", int nowritefile=0)
+
+OUTPUT PARAMETERS ()
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+DECLARE
+%{
+  DArray1d U_N;
+  DArray1d U_p;
+  DArray1d U_p2;
+
+  char username[128];
+  char signalname[128];
+%}
+
+INITIALIZE
+%{
+
+  U_N = create_darr1d(nU);
+  U_p = create_darr1d(nU);
+  U_p2 = create_darr1d(nU);
+
+  if(uid!=-1){
+    snprintf(username,127,"uservar%d",uid);
+  }else{
+    snprintf(username,127,"%s",ustring);
+  }
+  snprintf(signalname,127,"%s",signal);
+
+  // Use instance name for monitor output if no input was given
+  if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
+%}
+
+TRACE
+%{
+  double U;
+  int suc;
+  if(uid!=-1){
+    U = particle_getuservar_byid(_particle,uid,&suc);
+  }else{
+    U = particle_getvar(_particle,ustring,&suc);
+  }
+  int i = floor((U-Umin)*nU/(Umax-Umin));
+  if(!suc && i >= 0 && i < nU)
+    {
+      double pp=particle_getvar(_particle,signal,&suc);
+      double p2 = pp*pp;
+      #pragma acc atomic
+      U_N[i] = U_N[i] +1;
+      #pragma acc atomic
+      U_p[i] = U_p[i] + pp;
+      #pragma acc atomic
+      U_p2[i] = U_p2[i] + p2;
+      SCATTER;
+    }
+  
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
+
+SAVE
+%{
+  if (!nowritefile) {
+    DETECTOR_OUT_1D(
+      "Flex monitor 1D",
+      username,
+      signalname,
+      username, Umin, Umax, nU,
+      &U_N[0],&U_p[0],&U_p2[0],
+      filename);
+  }
+%}
+
+FINALLY
+%{
+  destroy_darr1d(U_N);
+  destroy_darr1d(U_p);
+  destroy_darr1d(U_p2);
+%}
+
+MCDISPLAY
+%{
+%}
+
+END
