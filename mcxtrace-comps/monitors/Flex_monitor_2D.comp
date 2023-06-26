@@ -1,9 +1,9 @@
 /*******************************************************************************
 *
-* McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Flex_monitor_2D
 *
@@ -49,7 +49,6 @@ SETTING PARAMETERS (nU1=20, nU2=20, string filename=0,
 		    Umin1, Umax1, uid1=-1, string ustring1="", Umin2, Umax2, uid2=-1, string ustring2="",restore_neutron=0, string signal="p", int nowritefile=0)
 
 OUTPUT PARAMETERS ()
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
 %{
@@ -120,7 +119,7 @@ TRACE
     }
   
   if (restore_neutron) {
-    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+    RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
   }
 %}
 
