@@ -1,0 +1,145 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
+*
+* Component: PSD_monitor_rad
+*
+* %Identification
+* Written by: Henrich Frielinghaus
+* Date:       Sept 2004
+* Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
+* Modified by:   Kim Lefmann, 7 June 2005
+*
+* Position-sensitive monitor with radially averaging.
+*
+* %D
+* Radial monitor that allows for radial averaging.
+* Comment: The intensity is given as two files:
+*          1) a radial sum
+*          2) a radial average (i.e. intensity per area)
+*
+* Example: PSD_monitor_rad(rmax=0.2, nr=100, filename="Output.psd", filename_av="Output_av.psd")
+*
+* %P
+* INPUT PARAMETERS:
+*
+* rmax: [m]            Outer radius of detector
+* nr: [1]              Number of concentric circles
+* filename: [text]     Name of file in which to store the detector image
+* filename_av: [text]  Name of file in which to store the averaged detector image
+*
+* OUTPUT PARAMETERS:
+*
+* PSDr_N: []           Array of neutron counts
+* PSDr_p: []           Array of neutron weight counts
+* PSDr_p2: []          Array of second moments
+* PSDr_av_N: []        Array of neutron counts, averaged
+* PSDr_av_p: []        Array of neutron weight counts, averaged
+* PSDr_av_p2: []       Array of second moments, averaged
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT PSD_monitor_rad
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (nr=100, string filename=0, string filename_av=0, rmax=0.2)
+OUTPUT PARAMETERS ()
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+DECLARE
+%{
+  DArray1d PSDr_N;
+  DArray1d PSDr_p;
+  DArray1d PSDr_p2;
+  DArray1d PSDr_av_p;
+  DArray1d PSDr_av_p2;
+%}
+
+INITIALIZE
+%{
+  int i;
+
+  PSDr_N = create_darr1d(nr);
+  PSDr_p = create_darr1d(nr);
+  PSDr_p2 = create_darr1d(nr);
+  PSDr_av_p = create_darr1d(nr);
+  PSDr_av_p2 = create_darr1d(nr);
+
+  for (i=0; i<nr; i++)
+  {
+    PSDr_N[i]  = 0;
+    PSDr_p[i]  = 0;
+    PSDr_p2[i] = 0;
+  }
+
+  // Use instance name for monitor output if no input was given
+  if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
+
+  // Use instance name for monitor output if no input was given
+  if (!strcmp(filename_av,"\0")) sprintf(filename_av,NAME_CURRENT_COMP,"_avg");
+%}
+
+TRACE
+%{
+  int i;
+  double radpos;
+
+  PROP_Z0;
+
+  radpos = sqrt(x*x+y*y);
+
+  if (radpos < rmax) {
+    i = floor(nr*radpos/rmax);
+    double p2 = p*p;
+    #pragma acc atomic
+    PSDr_N[i] = PSDr_N[i]+1;
+    #pragma acc atomic
+    PSDr_p[i] = PSDr_p[i]+p;
+    #pragma acc atomic
+    PSDr_p2[i] = PSDr_p2[i] + p2;
+    SCATTER;
+  }
+%}
+
+SAVE
+%{
+  int i;
+  for(i=0; i<nr; i++) {
+    PSDr_av_p[i]  = PSDr_p[i]  / (PI*rmax*rmax/(nr*nr)*(2*i+1.0));
+    PSDr_av_p2[i] = PSDr_p2[i]
+      / (PI*rmax*rmax/(nr*nr)*(2*i+1.0)) / (PI*rmax*rmax/(nr*nr)*(2*i+1.0));
+  }
+  DETECTOR_OUT_1D(
+    "PSD monitor radial sum",
+    "Radius [m]",
+    "Intensity",
+    "r", 0.5*rmax/nr, rmax+0.5*rmax/nr, nr,
+    &PSDr_N[0],&PSDr_p[0],&PSDr_p2[0],
+    filename);
+  DETECTOR_OUT_1D(
+    "PSD monitor radial average",
+    "Radius [m]",
+    "Intensity/m^2",
+    "r", 0.5*rmax/nr, rmax+0.5*rmax/nr, nr,
+    &PSDr_N[0],&PSDr_av_p[0],&PSDr_av_p2[0],
+    filename_av);
+%}
+
+FINALLY
+%{
+  destroy_darr1d(PSDr_N);
+  destroy_darr1d(PSDr_p);
+  destroy_darr1d(PSDr_p2);
+  destroy_darr1d(PSDr_av_p);
+  destroy_darr1d(PSDr_av_p2);
+%}
+
+MCDISPLAY
+%{
+  circle("xy",0,0,0,rmax);
+%}
+
+END
