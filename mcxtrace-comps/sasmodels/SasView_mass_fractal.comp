@@ -399,19 +399,18 @@ if (xwidth && yheight && zdepth)
 TRACE
 %{
   double l0=0,l1=0;
-  double k, l_full, l, l_1, dl, d_phi, my_s;
+  double k, l_full, l, l_1, dl, d_Phi, my_s;
   double aim_x=0, aim_y=0, aim_z=1, axis_x, axis_y, axis_z;
-  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
   double f, solid_angle, kx_i, ky_i, kz_i, q, qx, qy, qz;
   char intersect=0;
 
   /* Intersection photon trajectory / sample (sample surface) */
   if (shape == 0){
-    intersect = cylinder_intersect(&l0, &l1, x, y, z, vx, vy, vz, R, yheight);}
+    intersect = cylinder_intersect(&l0, &l1, x, y, z, kx, ky, kz, R, yheight);}
   else if (shape == 1){
-    intersect = box_intersect(&l0, &l1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);}
+    intersect = box_intersect(&l0, &l1, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);}
   else if (shape == 2){
-    intersect = sphere_intersect(&l0, &l1, x, y, z, vx, vy, vz, R);}
+    intersect = sphere_intersect(&l0, &l1, x, y, z, kx, ky, kz, R);}
   if(intersect)
   {
     if(l0 < 0)
@@ -421,7 +420,7 @@ TRACE
     k = sqrt(kx*kx + ky*ky + kz*kz);
     l_full = (l1 - l0);          /* Length of full path through sample */
     dl = rand01()*(l1 - l0) + l0;    /* Point of scattering */
-    PROP_DT(dl);                     /* Point of scattering */
+    PROP_DL(dl);                     /* Point of scattering */
     l = (dl-l0);                   /* Penetration in sample */
 
     kx_i=kx;
@@ -474,7 +473,7 @@ TRACE
     Iq_out = model_scale*Iq_out / vol * 1.0E2;
 
     l_1 = l1;
-    p *= l_full*solid_angle/(4*PI)*my_s_pre*Iq_out*exp(-my_a_v*(l+l_1)/v);
+    p *= l_full*solid_angle/(4*PI)*my_s_pre*Iq_out*exp(-my_a_v*(l+l_1)/k);
     SCATTER;
   }
 %}

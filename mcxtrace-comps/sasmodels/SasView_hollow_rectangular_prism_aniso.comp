@@ -20,11 +20,11 @@
 * SasView_hollow_rectangular_prism component, generated from hollow_rectangular_prism.c in sasmodels.
 *
 * Example: 
-*  SasView_hollow_rectangular_prism_aniso(sld, sld_solvent, length_a, b2a_ratio, c2a_ratio, thickness, theta, phi, Psi, 
+*  SasView_hollow_rectangular_prism_aniso(sld, sld_solvent, length_a, b2a_ratio, c2a_ratio, thickness, theta, Phi, Psi, 
 *     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
 *     int target_index=1, target_x=0, target_y=0, target_z=1,
 *     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
-*     pd_length_a=0.0, pd_thickness=0.0, pd_theta=0.0, pd_phi=0.0, pd_Psi=0.0)
+*     pd_length_a=0.0, pd_thickness=0.0, pd_theta=0.0, pd_Phi=0.0, pd_Psi=0.0)
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -53,7 +53,7 @@
 * pd_length_a: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
 * pd_thickness: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
 * pd_theta: [] (0,360) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
-* pd_phi: [] (0,360) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
+* pd_Phi: [] (0,360) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
 * pd_Psi: [] (0,360) defined as (dx/x), where x is de mean value and dx the standard devition of the variable
 *
 * %Link
@@ -69,7 +69,7 @@ SETTING PARAMETERS (
         c2a_ratio=1,
         thickness=1,
         theta=0,
-        phi=0,
+        Phi=0,
         Psi=0,
         model_scale=1.0,
         model_abs=0.0,
@@ -89,7 +89,7 @@ SETTING PARAMETERS (
         pd_length_a=0.0,
         pd_thickness=0.0,
         pd_theta=0.0,
-        pd_phi=0.0,
+        pd_Phi=0.0,
         pd_Psi=0.0)
 
 
@@ -510,19 +510,18 @@ if (xwidth && yheight && zdepth)
 TRACE
 %{
   double l0=0,l1=0;
-  double k, l_full, l, l_1, dl, d_phi, my_s;
+  double k, l_full, l, l_1, dl, d_Phi, my_s;
   double aim_x=0, aim_y=0, aim_z=1, axis_x, axis_y, axis_z;
-  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
   double f, solid_angle, kx_i, ky_i, kz_i, q, qx, qy, qz;
   char intersect=0;
 
   /* Intersection photon trajectory / sample (sample surface) */
   if (shape == 0){
-    intersect = cylinder_intersect(&l0, &l1, x, y, z, vx, vy, vz, R, yheight);}
+    intersect = cylinder_intersect(&l0, &l1, x, y, z, kx, ky, kz, R, yheight);}
   else if (shape == 1){
-    intersect = box_intersect(&l0, &l1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);}
+    intersect = box_intersect(&l0, &l1, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);}
   else if (shape == 2){
-    intersect = sphere_intersect(&l0, &l1, x, y, z, vx, vy, vz, R);}
+    intersect = sphere_intersect(&l0, &l1, x, y, z, kx, ky, kz, R);}
   if(intersect)
   {
     if(l0 < 0)
@@ -532,7 +531,7 @@ TRACE
     k = sqrt(kx*kx + ky*ky + kz*kz);
     l_full = (l1 - l0);          /* Length of full path through sample */
     dl = rand01()*(l1 - l0) + l0;    /* Point of scattering */
-    PROP_DT(dl);                     /* Point of scattering */
+    PROP_DL(dl);                     /* Point of scattering */
     l = (dl-l0);                   /* Penetration in sample */
 
     kx_i=kx;
@@ -570,13 +569,13 @@ TRACE
 
         
     double trace_theta=theta, dtheta=0.0;
-    double trace_phi=phi, dphi=0.0;
+    double trace_Phi=Phi, dPhi=0.0;
     double trace_Psi=Psi, dPsi=0.0;
-    if ( pd_theta!=0.0 || pd_phi!=0.0 || pd_Psi!=0.0 ){
+    if ( pd_theta!=0.0 || pd_Phi!=0.0 || pd_Psi!=0.0 ){
     trace_theta = ((rand01()-0.5)*pd_theta + 1.0)*theta;
     dtheta = trace_theta-theta;
-    trace_phi = ((rand01()-0.5)*pd_phi + 1.0)*phi;
-    dphi = trace_phi-phi;
+    trace_Phi = ((rand01()-0.5)*pd_Phi + 1.0)*Phi;
+    dPhi = trace_Phi-Phi;
     trace_Psi = ((rand01()-0.5)*pd_Psi + 1.0)*Psi;
     dPsi = trace_Psi-Psi;
     }
@@ -589,7 +588,7 @@ TRACE
     double qa=0.0, qb=0.0, qc=0.0;
     QABCRotation rotation;
 
-    qabc_rotation(&rotation, trace_theta, trace_phi, trace_Psi, dtheta, dphi, dPsi);
+    qabc_rotation(&rotation, trace_theta, trace_Phi, trace_Psi, dtheta, dPhi, dPsi);
     qabc_apply(&rotation, qx, qy, &qa, &qb, &qc);
     Iq_out = Iqabc_hollow_rectangular_prism(qa, qb, qc, sld, sld_solvent, trace_length_a, b2a_ratio, c2a_ratio, trace_thickness  );
 
@@ -601,7 +600,7 @@ TRACE
     Iq_out = model_scale*Iq_out / vol * 1.0E2;
 
     l_1 = l1;
-    p *= l_full*solid_angle/(4*PI)*my_s_pre*Iq_out*exp(-my_a_v*(l+l_1)/v);
+    p *= l_full*solid_angle/(4*PI)*my_s_pre*Iq_out*exp(-my_a_v*(l+l_1)/k);
     SCATTER;
   }
 %}
