@@ -1,0 +1,1127 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
+*
+* Component: SasView_flexible_cylinder_elliptical
+*
+* %Identification
+* Written by: Jose Robledo
+* Based on sasmodels from SasView
+* Origin: FZJ / DTU / ESS DMSC
+*
+*
+* SasView flexible_cylinder_elliptical model component as sample description.
+*
+* %Description
+*
+* SasView_flexible_cylinder_elliptical component, generated from flexible_cylinder_elliptical.c in sasmodels.
+*
+* Example: 
+*  SasView_flexible_cylinder_elliptical(length, kuhn_length, radius, axis_ratio, sld, sld_solvent, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_length=0.0, pd_kuhn_length=0.0, pd_radius=0.0)
+*
+* %Parameters
+* INPUT PARAMETERS:
+* length: [Ang] ([0, inf]) Length of the flexible cylinder.
+* kuhn_length: [Ang] ([0, inf]) Kuhn length of the flexible cylinder.
+* radius: [Ang] ([1, inf]) Radius of the flexible cylinder.
+* axis_ratio: [] ([0, inf]) Axis_ratio (major_radius/minor_radius.
+* sld: [1e-6/Ang^2] ([-inf, inf]) Cylinder scattering length density.
+* sld_solvent: [1e-6/Ang^2] ([-inf, inf]) Solvent scattering length density.
+* Optional parameters:
+* model_abs: [ ] Absorption cross section density at 2200 m/s.
+* model_scale: [ ] Global scale factor for scattering kernel. For systems without inter-particle interference, the form factors can be related to the scattering intensity by the particle volume fraction.
+* xwidth: [m] ([-inf, inf]) Horiz. dimension of sample, as a width.
+* yheight: [m] ([-inf, inf]) vert . dimension of sample, as a height for cylinder/box
+* zdepth: [m] ([-inf, inf]) depth of sample
+* R: [m] Outer radius of sample in (x,z) plane for cylinder/sphere.
+* target_x: [m] relative focus target position.
+* target_y: [m] relative focus target position.
+* target_z: [m] relative focus target position.
+* target_index: [ ] Relative index of component to focus at, e.g. next is +1.
+* focus_xw: [m] horiz. dimension of a rectangular area.
+* focus_yh: [m], vert. dimension of a rectangular area.
+* focus_aw: [deg], horiz. angular dimension of a rectangular area.
+* focus_ah: [deg], vert. angular dimension of a rectangular area.
+* focus_r: [m] case of circular focusing, focusing radius.
+* pd_length: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
+* pd_kuhn_length: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
+* pd_radius: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable
+*
+* %Link
+* %End
+*******************************************************************************/
+DEFINE COMPONENT SasView_flexible_cylinder_elliptical
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (
+        length=1000.0,
+        kuhn_length=100.0,
+        radius=20.0,
+        axis_ratio=1.5,
+        sld=1.0,
+        sld_solvent=6.3,
+        model_scale=1.0,
+        model_abs=0.0,
+        xwidth=0.01,
+        yheight=0.01,
+        zdepth=0.005,
+        R=0,
+        target_x=0,
+        target_y=0,
+        target_z=1,
+        int target_index=1,
+        focus_xw=0.5,
+        focus_yh=0.5,
+        focus_aw=0,
+        focus_ah=0,
+        focus_r=0,
+        pd_length=0.0,
+        pd_kuhn_length=0.0,
+        pd_radius=0.0)
+
+
+SHARE %{
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel flexible_cylinder_elliptical */
+#define HAS_Iq
+#define FORM_VOL
+
+#ifndef SAS_HAVE_polevl
+#define SAS_HAVE_polevl
+
+#line 1 "polevl"
+/*							polevl.c
+ *							p1evl.c
+ *
+ *	Evaluate polynomial
+ *
+ *
+ *
+ * SYNOPSIS:
+ *
+ * int N;
+ * double x, y, coef[N+1], polevl[];
+ *
+ * y = polevl( x, coef, N );
+ *
+ *
+ *
+ * DESCRIPTION:
+ *
+ * Evaluates polynomial of degree N:
+ *
+ *                     2          N
+ * y  =  C  + C x + C x  +...+ C x
+ *        0    1     2          N
+ *
+ * Coefficients are stored in reverse order:
+ *
+ * coef[0] = C  , ..., coef[N] = C  .
+ *            N                   0
+ *
+ * The function p1evl() assumes that C_N = 1.0 and is
+ * omitted from the array.  Its calling arguments are
+ * otherwise the same as polevl().
+ *
+ *
+ * SPEED:
+ *
+ * In the interest of speed, there are no checks for out
+ * of bounds arithmetic.  This routine is used by most of
+ * the functions in the library.  Depending on available
+ * equipment features, the user may wish to rewrite the
+ * program in microcode or assembly language.
+ *
+ */
+
+
+/*
+Cephes Math Library Release 2.1:  December, 1988
+Copyright 1984, 1987, 1988 by Stephen L. Moshier
+Direct inquiries to 30 Frost Street, Cambridge, MA 02140
+*/
+#pragma acc routine seq
+static
+double polevl( double x, pconstant double *coef, int N )
+{
+
+    int i = 0;
+    double ans = coef[i];
+
+    while (i < N) {
+        i++;
+        ans = ans * x + coef[i];
+    }
+
+    return ans;
+}
+
+/*							p1evl()	*/
+/*                                          N
+ * Evaluate polynomial when coefficient of x  is 1.0.
+ * Otherwise same as polevl.
+ */
+#pragma acc routine seq
+static
+double p1evl( double x, pconstant double *coef, int N )
+{
+    int i=0;
+    double ans = x+coef[i];
+
+    while (i < N-1) {
+        i++;
+        ans = ans*x + coef[i];
+    }
+
+    return ans;
+}
+
+
+#endif // SAS_HAVE_polevl
+
+
+#ifndef SAS_HAVE_sas_J1
+#define SAS_HAVE_sas_J1
+
+#line 1 "sas_J1"
+/*							j1.c
+ *
+ *	Bessel function of order one
+ *
+ *
+ *
+ * SYNOPSIS:
+ *
+ * double x, y, j1();
+ *
+ * y = j1( x );
+ *
+ *
+ *
+ * DESCRIPTION:
+ *
+ * Returns Bessel function of order one of the argument.
+ *
+ * The domain is divided into the intervals [0, 8] and
+ * (8, infinity). In the first interval a 24 term Chebyshev
+ * expansion is used. In the second, the asymptotic
+ * trigonometric representation is employed using two
+ * rational functions of degree 5/5.
+ *
+ *
+ *
+ * ACCURACY:
+ *
+ *                      Absolute error:
+ * arithmetic   domain      # trials      peak         rms
+ *    DEC       0, 30       10000       4.0e-17     1.1e-17
+ *    IEEE      0, 30       30000       2.6e-16     1.1e-16
+ *
+ *
+ */
+
+/*
+Cephes Math Library Release 2.8:  June, 2000
+Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
+*/
+
+#if FLOAT_SIZE>4
+//Cephes double pression function
+
+constant double RPJ1[8] = {
+    -8.99971225705559398224E8,
+    4.52228297998194034323E11,
+    -7.27494245221818276015E13,
+    3.68295732863852883286E15,
+    0.0,
+    0.0,
+    0.0,
+    0.0 };
+
+constant double RQJ1[8] = {
+    6.20836478118054335476E2,
+    2.56987256757748830383E5,
+    8.35146791431949253037E7,
+    2.21511595479792499675E10,
+    4.74914122079991414898E12,
+    7.84369607876235854894E14,
+    8.95222336184627338078E16,
+    5.32278620332680085395E18
+    };
+
+constant double PPJ1[8] = {
+    7.62125616208173112003E-4,
+    7.31397056940917570436E-2,
+    1.12719608129684925192E0,
+    5.11207951146807644818E0,
+    8.42404590141772420927E0,
+    5.21451598682361504063E0,
+    1.00000000000000000254E0,
+    0.0} ;
+
+
+constant double PQJ1[8] = {
+    5.71323128072548699714E-4,
+    6.88455908754495404082E-2,
+    1.10514232634061696926E0,
+    5.07386386128601488557E0,
+    8.39985554327604159757E0,
+    5.20982848682361821619E0,
+    9.99999999999999997461E-1,
+    0.0 };
+
+constant double QPJ1[8] = {
+    5.10862594750176621635E-2,
+    4.98213872951233449420E0,
+    7.58238284132545283818E1,
+    3.66779609360150777800E2,
+    7.10856304998926107277E2,
+    5.97489612400613639965E2,
+    2.11688757100572135698E2,
+    2.52070205858023719784E1 };
+
+constant double QQJ1[8] = {
+    7.42373277035675149943E1,
+    1.05644886038262816351E3,
+    4.98641058337653607651E3,
+    9.56231892404756170795E3,
+    7.99704160447350683650E3,
+    2.82619278517639096600E3,
+    3.36093607810698293419E2,
+    0.0 };
+
+#pragma acc declare copyin( RPJ1[0:8], RQJ1[0:8], PPJ1[0:8], PQJ1[0:8], QPJ1[0:8], QQJ1[0:8])
+
+#pragma acc routine seq
+static
+double cephes_j1(double x)
+{
+
+    double w, z, p, q, abs_x, sign_x;
+
+    const double Z1 = 1.46819706421238932572E1;
+    const double Z2 = 4.92184563216946036703E1;
+
+    // 2017-05-18 PAK - mathematica and mpmath use J1(-x) = -J1(x)
+    if (x < 0) {
+        abs_x = -x;
+        sign_x = -1.0;
+    } else {
+        abs_x = x;
+        sign_x = 1.0;
+    }
+
+    if( abs_x <= 5.0 ) {
+        z = abs_x * abs_x;
+        w = polevl( z, RPJ1, 3 ) / p1evl( z, RQJ1, 8 );
+        w = w * abs_x * (z - Z1) * (z - Z2);
+        return( sign_x * w );
+    }
+
+    w = 5.0/abs_x;
+    z = w * w;
+    p = polevl( z, PPJ1, 6)/polevl( z, PQJ1, 6 );
+    q = polevl( z, QPJ1, 7)/p1evl( z, QQJ1, 7 );
+
+    // 2017-05-19 PAK improve accuracy using trig identies
+    // original:
+    //    const double THPIO4 =  2.35619449019234492885;
+    //    const double SQ2OPI = 0.79788456080286535588;
+    //    double sin_xn, cos_xn;
+    //    SINCOS(abs_x - THPIO4, sin_xn, cos_xn);
+    //    p = p * cos_xn - w * q * sin_xn;
+    //    return( sign_x * p * SQ2OPI / sqrt(abs_x) );
+    // expanding p*cos(a - 3 pi/4) - wq sin(a - 3 pi/4)
+    //    [ p(sin(a) - cos(a)) + wq(sin(a) + cos(a)) / sqrt(2)
+    // note that sqrt(1/2) * sqrt(2/pi) = sqrt(1/pi)
+    const double SQRT1_PI = 0.56418958354775628;
+    double sin_x, cos_x;
+    SINCOS(abs_x, sin_x, cos_x);
+    p = p*(sin_x - cos_x) + w*q*(sin_x + cos_x);
+    return( sign_x * p * SQRT1_PI / sqrt(abs_x) );
+}
+
+#else
+//Single precission version of cephes
+
+constant float JPJ1[8] = {
+    -4.878788132172128E-009,
+    6.009061827883699E-007,
+    -4.541343896997497E-005,
+    1.937383947804541E-003,
+    -3.405537384615824E-002,
+    0.0,
+    0.0,
+    0.0
+    };
+
+constant float MO1J1[8] = {
+    6.913942741265801E-002,
+    -2.284801500053359E-001,
+    3.138238455499697E-001,
+    -2.102302420403875E-001,
+    5.435364690523026E-003,
+    1.493389585089498E-001,
+    4.976029650847191E-006,
+    7.978845453073848E-001
+    };
+
+constant float PH1J1[8] = {
+    -4.497014141919556E+001,
+    5.073465654089319E+001,
+    -2.485774108720340E+001,
+    7.222973196770240E+000,
+    -1.544842782180211E+000,
+    3.503787691653334E-001,
+    -1.637986776941202E-001,
+    3.749989509080821E-001
+    };
+
+#pragma acc declare copyin( JPJ1[0:8], MO1J1[0:8], PH1J1[0:8])
+
+#pragma acc routine seq
+static
+float cephes_j1f(float xx)
+{
+
+    float x, w, z, p, q, xn;
+
+    const float Z1 = 1.46819706421238932572E1;
+
+
+    // 2017-05-18 PAK - mathematica and mpmath use J1(-x) = -J1(x)
+    x = xx;
+    if( x < 0 )
+        x = -xx;
+
+    if( x <= 2.0 ) {
+        z = x * x;
+        p = (z-Z1) * x * polevl( z, JPJ1, 4 );
+        return( xx < 0. ? -p : p );
+    }
+
+    q = 1.0/x;
+    w = sqrt(q);
+
+    p = w * polevl( q, MO1J1, 7);
+    w = q*q;
+    // 2017-05-19 PAK improve accuracy using trig identies
+    // original:
+    //    const float THPIO4F =  2.35619449019234492885;    /* 3*pi/4 */
+    //    xn = q * polevl( w, PH1J1, 7) - THPIO4F;
+    //    p = p * cos(xn + x);
+    //    return( xx < 0. ? -p : p );
+    // expanding cos(a + b - 3 pi/4) is
+    //    [sin(a)sin(b) + sin(a)cos(b) + cos(a)sin(b)-cos(a)cos(b)] / sqrt(2)
+    xn = q * polevl( w, PH1J1, 7);
+    float cos_xn, sin_xn;
+    float cos_x, sin_x;
+    SINCOS(xn, sin_xn, cos_xn);  // about xn and 1
+    SINCOS(x, sin_x, cos_x);
+    p *= M_SQRT1_2*(sin_xn*(sin_x+cos_x) + cos_xn*(sin_x-cos_x));
+
+    return( xx < 0. ? -p : p );
+}
+#endif
+
+#if FLOAT_SIZE>4
+#define sas_J1 cephes_j1
+#else
+#define sas_J1 cephes_j1f
+#endif
+
+//Finally J1c function that equals 2*J1(x)/x
+    
+#pragma acc routine seq
+static
+double sas_2J1x_x(double x)
+{
+    return (x != 0.0 ) ? 2.0*sas_J1(x)/x : 1.0;
+}
+
+
+#endif // SAS_HAVE_sas_J1
+
+
+#ifndef SAS_HAVE_gauss76
+#define SAS_HAVE_gauss76
+
+#line 1 "gauss76"
+// Created by Andrew Jackson on 4/23/07
+
+ #ifdef GAUSS_N
+ # undef GAUSS_N
+ # undef GAUSS_Z
+ # undef GAUSS_W
+ #endif
+ #define GAUSS_N 76
+ #define GAUSS_Z Gauss76Z
+ #define GAUSS_W Gauss76Wt
+
+// Gaussians
+constant double Gauss76Wt[76] = {
+	.00126779163408536,		//0
+	.00294910295364247,
+	.00462793522803742,
+	.00629918049732845,
+	.00795984747723973,
+	.00960710541471375,
+	.0112381685696677,
+	.0128502838475101,
+	.0144407317482767,
+	.0160068299122486,
+	.0175459372914742,		//10
+	.0190554584671906,
+	.020532847967908,
+	.0219756145344162,
+	.0233813253070112,
+	.0247476099206597,
+	.026072164497986,
+	.0273527555318275,
+	.028587223650054,
+	.029773487255905,
+	.0309095460374916,		//20
+	.0319934843404216,
+	.0330234743977917,
+	.0339977794120564,
+	.0349147564835508,
+	.0357728593807139,
+	.0365706411473296,
+	.0373067565423816,
+	.0379799643084053,
+	.0385891292645067,
+	.0391332242205184,		//30
+	.0396113317090621,
+	.0400226455325968,
+	.040366472122844,
+	.0406422317102947,
+	.0408494593018285,
+	.040987805464794,
+	.0410570369162294,
+	.0410570369162294,
+	.040987805464794,
+	.0408494593018285,		//40
+	.0406422317102947,
+	.040366472122844,
+	.0400226455325968,
+	.0396113317090621,
+	.0391332242205184,
+	.0385891292645067,
+	.0379799643084053,
+	.0373067565423816,
+	.0365706411473296,
+	.0357728593807139,		//50
+	.0349147564835508,
+	.0339977794120564,
+	.0330234743977917,
+	.0319934843404216,
+	.0309095460374916,
+	.029773487255905,
+	.028587223650054,
+	.0273527555318275,
+	.026072164497986,
+	.0247476099206597,		//60
+	.0233813253070112,
+	.0219756145344162,
+	.020532847967908,
+	.0190554584671906,
+	.0175459372914742,
+	.0160068299122486,
+	.0144407317482767,
+	.0128502838475101,
+	.0112381685696677,
+	.00960710541471375,		//70
+	.00795984747723973,
+	.00629918049732845,
+	.00462793522803742,
+	.00294910295364247,
+	.00126779163408536		//75 (indexed from 0)
+};
+
+constant double Gauss76Z[76] = {
+	-.999505948362153,		//0
+	-.997397786355355,
+	-.993608772723527,
+	-.988144453359837,
+	-.981013938975656,
+	-.972229228520377,
+	-.961805126758768,
+	-.949759207710896,
+	-.936111781934811,
+	-.92088586125215,
+	-.904107119545567,		//10
+	-.885803849292083,
+	-.866006913771982,
+	-.844749694983342,
+	-.822068037328975,
+	-.7980001871612,
+	-.77258672828181,
+	-.74587051350361,
+	-.717896592387704,
+	-.688712135277641,
+	-.658366353758143,		//20
+	-.626910417672267,
+	-.594397368836793,
+	-.560882031601237,
+	-.526420920401243,
+	-.491072144462194,
+	-.454895309813726,
+	-.417951418780327,
+	-.380302767117504,
+	-.342012838966962,
+	-.303146199807908,		//30
+	-.263768387584994,
+	-.223945802196474,
+	-.183745593528914,
+	-.143235548227268,
+	-.102483975391227,
+	-.0615595913906112,
+	-.0205314039939986,
+	.0205314039939986,
+	.0615595913906112,
+	.102483975391227,			//40
+	.143235548227268,
+	.183745593528914,
+	.223945802196474,
+	.263768387584994,
+	.303146199807908,
+	.342012838966962,
+	.380302767117504,
+	.417951418780327,
+	.454895309813726,
+	.491072144462194,		//50
+	.526420920401243,
+	.560882031601237,
+	.594397368836793,
+	.626910417672267,
+	.658366353758143,
+	.688712135277641,
+	.717896592387704,
+	.74587051350361,
+	.77258672828181,
+	.7980001871612,	//60
+	.822068037328975,
+	.844749694983342,
+	.866006913771982,
+	.885803849292083,
+	.904107119545567,
+	.92088586125215,
+	.936111781934811,
+	.949759207710896,
+	.961805126758768,
+	.972229228520377,		//70
+	.981013938975656,
+	.988144453359837,
+	.993608772723527,
+	.997397786355355,
+	.999505948362153		//75
+};
+
+
+#pragma acc declare copyin(Gauss76Wt[0:76], Gauss76Z[0:76])
+
+#endif // SAS_HAVE_gauss76
+
+
+#ifndef SAS_HAVE_wrc_cyl
+#define SAS_HAVE_wrc_cyl
+
+#line 1 "wrc_cyl"
+/*
+    Functions for WRC implementation of flexible cylinders. See
+    W R Chen, P D Butler and L J Magid,
+    Incorporating Intermicellar Interactions in the Fitting of
+    SANS Data from Cationic Wormlike Micelles.
+    Langmuir, 22(15) 2006 6539-6548
+*/
+    
+#pragma acc routine seq
+static double
+Rgsquare(double L, double b)
+{
+    const double x = L/b;
+    // Use Horner's method to evaluate Pedersen eq 15:
+    //     alpha^2 = [1.0 + (x/3.12)^2 + (x/8.67)^3] ^ (0.176/3)
+    const double alphasq =
+        pow(1.0 + x*x*(1.027284681130835e-01 + 1.534414548417740e-03*x),
+            5.866666666666667e-02);
+    return alphasq*L*b/6.0;
+}
+    
+#pragma acc routine seq
+static double
+Rgsquareshort(double L, double b)
+{
+    const double r = b/L;  // = 1/n_b in Pedersen ref.
+    return Rgsquare(L, b) * (1.0 + r*(-1.5 + r*(1.5 + r*0.75*expm1(-2.0/r))));
+}
+    
+#pragma acc routine seq
+static double
+w_WR(double x)
+{
+    // Pedersen eq. 16:
+    //    w = [1 + tanh((x-C4)/C5)]/2
+    const double C4 = 1.523;
+    const double C5 = 0.1477;
+    return 0.5 + 0.5*tanh((x - C4)/C5);
+}
+    
+#pragma acc routine seq
+static double
+Sdebye(double qsq)
+{
+#if FLOAT_SIZE>4
+#  define DEBYE_CUTOFF 0.25  // 1e-15 error
+#else
+#  define DEBYE_CUTOFF 1.0  // 4e-7 error
+#endif
+
+    if (qsq < DEBYE_CUTOFF) {
+        const double x = qsq;
+        // mathematica: PadeApproximant[2*Exp[-x^2] + x^2-1)/x^4, {x, 0, 8}]
+        const double A1=1./15., A2=1./60, A3=0., A4=1./75600.;
+        const double B1=2./5., B2=1./15., B3=1./180., B4=1./5040.;
+        return ((((A4*x + A3)*x + A2)*x + A1)*x + 1.)
+             / ((((B4*x + B3)*x + B2)*x + B1)*x + 1.);
+    } else {
+        return 2.*(expm1(-qsq) + qsq)/(qsq*qsq);
+    }
+}
+    
+#pragma acc routine seq
+static double
+a_long(double q, double L, double b/*, double p1, double p2, double q0*/)
+{
+    const double p1 = 4.12;
+    const double p2 = 4.42;
+    const double q0 = 3.1;
+
+    // Constants C1, ..., C5 derived from least squares fit (Pedersen, eq 13,16)
+    const double C1 = 1.22;
+    const double C2 = 0.4288;
+    const double C3 = -1.651;
+    const double C4 = 1.523;
+    const double C5 = 0.1477;
+    const double miu = 0.585;
+
+    const double C = (L/b>10.0 ? 3.06*pow(L/b, -0.44) : 1.0);
+    //printf("branch B-%d q=%g L=%g b=%g\n", C==1.0, q, L, b);
+    const double r2 = Rgsquare(L,b);
+    const double r = sqrt(r2);
+    const double qr_b = q0*r/b;
+    const double qr_b_sq = qr_b*qr_b;
+    const double qr_b_4 = qr_b_sq*qr_b_sq;
+    const double qr_b_miu = pow(qr_b, -1.0/miu);
+    const double em1_qr_b_sq = expm1(-qr_b_sq);
+    const double sech2 = 1.0/square(cosh((qr_b-C4)/C5));
+    const double w = w_WR(qr_b);
+
+    const double t1 = pow(q0, 1.0 + p1 + p2)/(b*(p1-p2));
+    const double t2 = C/(15.0*L) * (
+        + 14.0*b*b*em1_qr_b_sq/(q0*qr_b_sq)
+        + 2.0*q0*r2*exp(-qr_b_sq)*(11.0 + 7.0/qr_b_sq));
+    const double t11 = ((C3*qr_b_miu + C2)*qr_b_miu + C1)*qr_b_miu;
+    const double t3 = r*sech2/(2.*C5)*t11;
+    const double t4 = r*(em1_qr_b_sq + qr_b_sq)*sech2 / (C5*qr_b_4);
+    const double t5 = -4.0*r*qr_b*em1_qr_b_sq/qr_b_4 * (1.0 - w);
+    const double t10 = 2.0*(em1_qr_b_sq + qr_b_sq)/qr_b_4 * (1.0 - w); //=Sdebye*(1-w)
+    const double t6 = 4.0*b/q0 * t10;
+    const double t7 = r*((-3.0*C3*qr_b_miu -2.0*C2)*qr_b_miu -1.0*C1)*qr_b_miu/(miu*qr_b);
+    const double t9 = C*b/L * (4.0 - exp(-qr_b_sq) * (11.0 + 7.0/qr_b_sq) + 7.0/qr_b_sq)/15.0;
+    const double t12 = b*b*M_PI/(L*q0*q0) + t2 + t3 - t4 + t5 - t6 + t7*w;
+    const double t13 = -b*M_PI/(L*q0) + t9 + t10 + t11*w;
+
+    const double a1 = pow(q0,p1)*t13 - t1*pow(q0,-p2)*(t12 + b*p1/q0*t13);
+    const double a2 = t1*pow(q0,-p1)*(t12 + b*p1/q0*t13);
+
+    const double ans = a1*pow(q*b, -p1) + a2*pow(q*b, -p2) + M_PI/(q*L);
+    return ans;
+}
+    
+#pragma acc routine seq
+static double
+_short(double r2, double exp_qr_b, double L, double b, double p1short,
+        double p2short, double q0)
+{
+    const double qr2 = q0*q0 * r2;
+    const double b3 = b*b*b;
+    const double q0p = pow(q0, -4.0 + p1short);
+
+    double yy = 1.0/(L*r2*r2) * b/exp_qr_b*q0p
+        * (8.0*b3*L
+           - 8.0*b3*exp_qr_b*L
+           + 2.0*b3*exp_qr_b*L*p2short
+           - 2.0*b*exp_qr_b*L*p2short*qr2
+           + 4.0*b*exp_qr_b*L*qr2
+           - 2.0*b3*L*p2short
+           + 4.0*b*L*qr2
+           - M_PI*exp_qr_b*qr2*q0*r2
+           + M_PI*exp_qr_b*p2short*qr2*q0*r2);
+
+    return yy;
+}
+    
+#pragma acc routine seq
+static double
+a_short(double qp, double L, double b
+        /*double p1short, double p2short*/, double q0)
+{
+    const double p1short = 5.36;
+    const double p2short = 5.62;
+
+    const double r2 = Rgsquareshort(L,b);
+    const double exp_qr_b = exp(r2*square(q0/b));
+    const double pdiff = p1short - p2short;
+    const double a1 = _short(r2,exp_qr_b,L,b,p1short,p2short,q0)/pdiff;
+    const double a2= -_short(r2,exp_qr_b,L,b,p2short,p1short,q0)/pdiff;
+    const double ans = a1*pow(qp*b, -p1short) + a2*pow(qp*b, -p2short) + M_PI/(qp*L);
+    return ans;
+}
+    
+#pragma acc routine seq
+static double
+Sexv(double q, double L, double b)
+{
+    // Pedersen eq 13, corrected by Chen eq A.5, swapping w and 1-w
+    const double C1=1.22;
+    const double C2=0.4288;
+    const double C3=-1.651;
+    const double miu = 0.585;
+    const double qr = q*sqrt(Rgsquare(L,b));
+    const double qr_miu = pow(qr, -1.0/miu);
+    const double w = w_WR(qr);
+    const double t10 = Sdebye(qr*qr)*(1.0 - w);
+    const double t11 = ((C3*qr_miu + C2)*qr_miu + C1)*qr_miu;
+
+    return t10 + w*t11;
+}
+    
+#pragma acc routine seq
+// Modified by Yun on Oct. 15,
+static double
+Sexv_new(double q, double L, double b)
+{
+    const double qr = q*sqrt(Rgsquare(L,b));
+    const double qr2 = qr*qr;
+    const double C = (L/b > 10.0) ? 3.06*pow(L/b, -0.44) : 1.0;
+    const double t9 = C*b/L * (4.0 - exp(-qr2) * (11.0 + 7.0/qr2) + 7.0/qr2)/15.0;
+
+    const double Sexv_orig = Sexv(q, L, b);
+
+    // calculating the derivative to decide on the correction (cutoff) term?
+    // Note: this is modified from WRs original code
+    const double del=1.05;
+    const double qdel = (Sexv(q*del,L,b) - Sexv_orig)/(q*(del - 1.0));
+
+    if (qdel < 0) {
+        //printf("branch A1-%d q=%g L=%g b=%g\n", C==1.0, q, L, b);
+        return t9 + Sexv_orig;
+    } else {
+        //printf("branch A2-%d q=%g L=%g b=%g\n", C==1.0, q, L, b);
+        const double w = w_WR(qr);
+        const double t10 = Sdebye(qr*qr)*(1.0 - w);
+        return t9 + t10;
+    }
+}
+
+    
+#pragma acc routine seq
+static double
+Sk_WR(double q, double L, double b)
+{
+    const double Rg_short = sqrt(Rgsquareshort(L, b));
+    double q0short = fmax(1.9/Rg_short, 3.0);
+    double ans;
+
+
+    if( L > 4*b ) { // L > 4*b : Longer Chains
+        if (q*b <= 3.1) {
+            ans = Sexv_new(q, L, b);
+        } else { //q(i)*b > 3.1
+            ans = a_long(q, L, b /*, p1, p2, q0*/);
+        }
+    } else { // L <= 4*b : Shorter Chains
+        if (q*b <= q0short) { // q*b <= fmax(1.9/Rg_short, 3)
+            //printf("branch C-%d q=%g L=%g b=%g\n", square(q*Rg_short)<DEBYE_CUTOFF, q, L, b);
+            // Note that q0short is usually 3, but it will be greater than 3
+            // small enough b, depending on the L/b ratio:
+            //     L/b == 1 => b < 2.37
+            //     L/b == 2 => b < 1.36
+            //     L/b == 3 => b < 1.00
+            //     L/b == 4 => b < 0.816
+            // 2017-10-01 pkienzle: moved low q approximation into Sdebye()
+            ans = Sdebye(square(q*Rg_short));
+        } else {  // q*b > max(1.9/Rg_short, 3)
+            //printf("branch D q=%g L=%g b=%g\n", q, L, b);
+            ans = a_short(q, L, b /*, p1short, p2short*/, q0short);
+        }
+    }
+
+    return ans;
+}
+
+
+#endif // SAS_HAVE_wrc_cyl
+
+
+#ifndef SAS_HAVE_flexible_cylinder_elliptical
+#define SAS_HAVE_flexible_cylinder_elliptical
+
+#line 1 "flexible_cylinder_elliptical"
+double form_volume_flexible_cylinder_elliptical(double length, double kuhn_length, double radius);
+double Iq_flexible_cylinder_elliptical(double q, double length, double kuhn_length, double radius,
+          double axis_ratio, double sld, double solvent_sld);
+double flexible_cylinder_ex_kernel(double q, double length, double kuhn_length,
+                                double radius, double axis_ratio, double sld,
+                                double solvent_sld);
+double elliptical_crosssection(double q, double a, double b);
+
+double form_volume_flexible_cylinder_elliptical(double length, double kuhn_length, double radius)
+{
+    return 1.0;
+}
+
+double
+elliptical_crosssection(double q, double a, double b)
+{
+    double sum=0.0;
+
+    for(int i=0;i<GAUSS_N;i++) {
+        const double zi = ( GAUSS_Z[i] + 1.0 )*M_PI_4;
+        double sn, cn;
+        SINCOS(zi, sn, cn);
+        const double arg = q*sqrt(a*a*sn*sn + b*b*cn*cn);
+        const double yyy = sas_2J1x_x(arg);
+        sum += GAUSS_W[i] * yyy * yyy;
+    }
+    sum *= 0.5;
+    return(sum);
+
+}
+
+double flexible_cylinder_ex_kernel(double q,
+          double length,
+          double kuhn_length,
+          double radius,
+          double axis_ratio,
+          double sld,
+          double solvent_sld)
+{
+
+    double flex,crossSect, cont;
+
+    cont = sld - solvent_sld;
+    crossSect = elliptical_crosssection(q,radius,(radius*axis_ratio));
+
+    flex = Sk_WR(q,length,kuhn_length);
+    flex *= crossSect;
+    flex *= M_PI*radius*radius*axis_ratio*axis_ratio*length;
+    flex *= cont*cont;
+    flex *= 1.0e-4;
+
+    return flex;
+}
+
+double Iq_flexible_cylinder_elliptical(double q,
+          double length,
+          double kuhn_length,
+          double radius,
+          double axis_ratio,
+          double sld,
+          double solvent_sld)
+{
+
+    double result = flexible_cylinder_ex_kernel(q,
+                    length,
+                    kuhn_length,
+                    radius,
+                    axis_ratio,
+                    sld,
+                    solvent_sld);
+
+    return result;
+}
+
+
+#endif // SAS_HAVE_flexible_cylinder_elliptical
+
+
+
+/* END Required header for SASmodel flexible_cylinder_elliptical */
+%}
+    DECLARE
+%{
+  double shape;
+  double my_s_pre;
+  double my_a_v;
+%}
+
+INITIALIZE
+%{
+shape=-1;  /* -1:no shape, 0:cyl, 1:box, 2:sphere  */
+if (xwidth && yheight && zdepth)
+    shape=1;
+  else if (R > 0 && yheight)
+    shape=0;
+  else if (R > 0 && !yheight)
+    shape=2;
+  if (shape < 0)
+    exit(fprintf(stderr, "SasView_model: %s: sample has invalid dimensions.\n"
+                         "ERROR     Please check parameter values.\n", NAME_CURRENT_COMP));
+
+  /* now compute target coords if a component index is supplied */
+  if (!target_index && !target_x && !target_y && !target_z) target_index=1;
+  if (target_index)
+  {
+    Coords ToTarget;
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &target_x, &target_y, &target_z);
+  }
+
+  if (!(target_x || target_y || target_z)) {
+    printf("SasView_model: %s: The target is not defined. Using direct beam (Z-axis).\n",
+      NAME_CURRENT_COMP);
+    target_z=1;
+  }
+
+  my_s_pre = model_abs;
+  my_a_v = 0; // NEEDS FIXING
+
+%}
+
+
+TRACE
+%{
+  double l0=0,l1=0;
+  double k, l_full, l, l_1, dl, d_phi, my_s;
+  double aim_x=0, aim_y=0, aim_z=1, axis_x, axis_y, axis_z;
+  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
+  double f, solid_angle, kx_i, ky_i, kz_i, q, qx, qy, qz;
+  char intersect=0;
+
+  /* Intersection photon trajectory / sample (sample surface) */
+  if (shape == 0){
+    intersect = cylinder_intersect(&l0, &l1, x, y, z, vx, vy, vz, R, yheight);}
+  else if (shape == 1){
+    intersect = box_intersect(&l0, &l1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);}
+  else if (shape == 2){
+    intersect = sphere_intersect(&l0, &l1, x, y, z, vx, vy, vz, R);}
+  if(intersect)
+  {
+    if(l0 < 0)
+      ABSORB;
+
+    /* Photon enters at l0. */
+    k = sqrt(kx*kx + ky*ky + kz*kz);
+    l_full = (l1 - l0);          /* Length of full path through sample */
+    dl = rand01()*(l1 - l0) + l0;    /* Point of scattering */
+    PROP_DT(dl);                     /* Point of scattering */
+    l = (dl-l0);                   /* Penetration in sample */
+
+    kx_i=kx;
+    ky_i=ky;
+    kz_i=kz;
+    if ((target_x || target_y || target_z)) {
+      aim_x = target_x-x;            /* Vector pointing at target (anal./det.) */
+      aim_y = target_y-y;
+      aim_z = target_z-z;
+    }
+    if(focus_aw && focus_ah) {
+      randvec_target_rect_angular(&kx, &ky, &kz, &solid_angle,
+        aim_x, aim_y, aim_z, focus_aw, focus_ah, ROT_A_CURRENT_COMP);
+    } else if(focus_xw && focus_yh) {
+      randvec_target_rect(&kx, &ky, &kz, &solid_angle,
+        aim_x, aim_y, aim_z, focus_xw, focus_yh, ROT_A_CURRENT_COMP);
+    } else {
+      randvec_target_circle(&kx, &ky, &kz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
+    }
+    NORM(kx, ky, kz);
+    kx *= k;
+    ky *= k;
+    kz *= k;
+    qx = (kx_i-kx);
+    qy = (ky_i-ky);
+    qz = (kz_i-kz);
+    q = sqrt(qx*qx+qy*qy+qz*qz);
+    
+    double trace_length=length;
+    double trace_kuhn_length=kuhn_length;
+    double trace_radius=radius;
+    if ( pd_length!=0.0 || pd_kuhn_length!=0.0 || pd_radius!=0.0 ){
+    trace_length = (randnorm()*pd_length+1.0)*length;
+    trace_kuhn_length = (randnorm()*pd_kuhn_length+1.0)*kuhn_length;
+    trace_radius = (randnorm()*pd_radius+1.0)*radius;
+    }
+
+        
+
+
+    // Sample dependent. Retrieved from SasView./////////////////////
+    float Iq_out;
+    Iq_out = 1;
+
+    Iq_out = Iq_flexible_cylinder_elliptical(q, trace_length, trace_kuhn_length, trace_radius, axis_ratio, sld, sld_solvent);
+
+
+    float vol;
+    vol = 1;
+
+    // Scale by 1.0E2 [SasView: 1/cm  ->   McXtrace: 1/m]
+    Iq_out = model_scale*Iq_out / vol * 1.0E2;
+
+    l_1 = l1;
+    p *= l_full*solid_angle/(4*PI)*my_s_pre*Iq_out*exp(-my_a_v*(l+l_1)/v);
+    SCATTER;
+  }
+%}
+
+MCDISPLAY
+%{
+
+  if (shape == 0) {	/* cylinder */
+    circle("xz", 0,  yheight/2.0, 0, R);
+    circle("xz", 0, -yheight/2.0, 0, R);
+    line(-R, -yheight/2.0, 0, -R, +yheight/2.0, 0);
+    line(+R, -yheight/2.0, 0, +R, +yheight/2.0, 0);
+    line(0, -yheight/2.0, -R, 0, +yheight/2.0, -R);
+    line(0, -yheight/2.0, +R, 0, +yheight/2.0, +R);
+  }
+  else if (shape == 1) { 	/* box */
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zdepth;
+    double zmax =  0.5*zdepth;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
+  else if (shape == 2) {	/* sphere */
+    circle("xy", 0,  0.0, 0, R);
+    circle("xz", 0,  0.0, 0, R);
+    circle("yz", 0,  0.0, 0, R);
+  }
+%}
+END
+

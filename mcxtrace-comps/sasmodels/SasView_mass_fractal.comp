@@ -1,0 +1,522 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
+*
+* Component: SasView_mass_fractal
+*
+* %Identification
+* Written by: Jose Robledo
+* Based on sasmodels from SasView
+* Origin: FZJ / DTU / ESS DMSC
+*
+*
+* SasView mass_fractal model component as sample description.
+*
+* %Description
+*
+* SasView_mass_fractal component, generated from mass_fractal.c in sasmodels.
+*
+* Example: 
+*  SasView_mass_fractal(radius, fractal_dim_mass, cutoff_length, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_radius=0.0, pd_cutoff_length=0.0)
+*
+* %Parameters
+* INPUT PARAMETERS:
+* radius: [Ang] ([0.0, inf]) Particle radius.
+* fractal_dim_mass: [] ([1.0, 6.0]) Mass fractal dimension.
+* cutoff_length: [Ang] ([0.0, inf]) Cut-off length.
+* Optional parameters:
+* model_abs: [ ] Absorption cross section density at 2200 m/s.
+* model_scale: [ ] Global scale factor for scattering kernel. For systems without inter-particle interference, the form factors can be related to the scattering intensity by the particle volume fraction.
+* xwidth: [m] ([-inf, inf]) Horiz. dimension of sample, as a width.
+* yheight: [m] ([-inf, inf]) vert . dimension of sample, as a height for cylinder/box
+* zdepth: [m] ([-inf, inf]) depth of sample
+* R: [m] Outer radius of sample in (x,z) plane for cylinder/sphere.
+* target_x: [m] relative focus target position.
+* target_y: [m] relative focus target position.
+* target_z: [m] relative focus target position.
+* target_index: [ ] Relative index of component to focus at, e.g. next is +1.
+* focus_xw: [m] horiz. dimension of a rectangular area.
+* focus_yh: [m], vert. dimension of a rectangular area.
+* focus_aw: [deg], horiz. angular dimension of a rectangular area.
+* focus_ah: [deg], vert. angular dimension of a rectangular area.
+* focus_r: [m] case of circular focusing, focusing radius.
+* pd_radius: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
+* pd_cutoff_length: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable
+*
+* %Link
+* %End
+*******************************************************************************/
+DEFINE COMPONENT SasView_mass_fractal
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (
+        radius=10.0,
+        fractal_dim_mass=1.9,
+        cutoff_length=100.0,
+        model_scale=1.0,
+        model_abs=0.0,
+        xwidth=0.01,
+        yheight=0.01,
+        zdepth=0.005,
+        R=0,
+        target_x=0,
+        target_y=0,
+        target_z=1,
+        int target_index=1,
+        focus_xw=0.5,
+        focus_yh=0.5,
+        focus_aw=0,
+        focus_ah=0,
+        focus_r=0,
+        pd_radius=0.0,
+        pd_cutoff_length=0.0)
+
+
+SHARE %{
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel mass_fractal */
+#define HAS_Iq
+
+#ifndef SAS_HAVE_sas_3j1x_x
+#define SAS_HAVE_sas_3j1x_x
+
+#line 1 "sas_3j1x_x"
+/**
+* Spherical Bessel function 3*j1(x)/x
+*
+* Used for low q to avoid cancellation error.
+* Note that the values differ from sasview ~ 5e-12 rather than 5e-14, but
+* in this case it is likely cancellation errors in the original expression
+* using double precision that are the source.
+*/
+double sas_3j1x_x(double q);
+
+// The choice of the number of terms in the series and the cutoff value for
+// switching between series and direct calculation depends on the numeric
+// precision.
+//
+// Point where direct calculation reaches machine precision:
+//
+//   single machine precision eps 3e-8 at qr=1.1 **
+//   double machine precision eps 4e-16 at qr=1.1
+//
+// Point where Taylor series reaches machine precision (eps), where taylor
+// series matches direct calculation (cross) and the error at that point:
+//
+//   prec   n eps  cross  error
+//   single 3 0.28  0.4   6.2e-7
+//   single 4 0.68  0.7   2.3e-7
+//   single 5 1.18  1.2   7.5e-8
+//   double 3 0.01  0.03  2.3e-13
+//   double 4 0.06  0.1   3.1e-14
+//   double 5 0.16  0.2   5.0e-15
+//
+// ** Note: relative error on single precision starts increase on the direct
+// method at qr=1.1, rising from 3e-8 to 5e-5 by qr=1e3.  This should be
+// safe for the sans range, with objects of 100 nm supported to a q of 0.1
+// while maintaining 5 digits of precision.  For usans/sesans, the objects
+// are larger but the q is smaller, so again it should be fine.
+//
+// See explore/sph_j1c.py for code to explore these ranges.
+
+// Use 4th order series
+#if FLOAT_SIZE>4
+#define SPH_J1C_CUTOFF 0.1
+#else
+#define SPH_J1C_CUTOFF 0.7
+#endif
+#pragma acc routine seq
+double sas_3j1x_x(double q)
+{
+    // 2017-05-18 PAK - support negative q
+    if (fabs(q) < SPH_J1C_CUTOFF) {
+        const double q2 = q*q;
+        return (1.0 + q2*(-3./30. + q2*(3./840. + q2*(-3./45360.))));// + q2*(3./3991680.)))));
+    } else {
+        double sin_q, cos_q;
+        SINCOS(q, sin_q, cos_q);
+        return 3.0*(sin_q/q - cos_q)/(q*q);
+    }
+}
+
+
+#endif // SAS_HAVE_sas_3j1x_x
+
+
+#ifndef SAS_HAVE_sas_gamma
+#define SAS_HAVE_sas_gamma
+
+#line 1 "sas_gamma"
+/*
+The wrapper for gamma function from OpenCL and standard libraries
+The OpenCL gamma function fails miserably on values lower than 1.0
+while works fine on larger values.
+We use gamma definition Gamma(t + 1) = t * Gamma(t) to compute
+to function for values lower than 1.0. Namely Gamma(t) = 1/t * Gamma(t + 1)
+For t < 0, we use Gamma(t) = pi / ( Gamma(1 - t) * sin(pi * t) )
+*/
+
+#if defined(NEED_TGAMMA)
+#pragma acc routine seq
+static double cephes_stirf(double x)
+{
+	const double MAXSTIR=143.01608;
+	const double SQTPI=2.50662827463100050242E0;
+	double y, w, v;
+
+	w = 1.0 / x;
+
+	w = ((((
+		7.87311395793093628397E-4*w
+		- 2.29549961613378126380E-4)*w
+		- 2.68132617805781232825E-3)*w
+		+ 3.47222221605458667310E-3)*w
+		+ 8.33333333333482257126E-2)*w
+		+ 1.0;
+	y = exp(x);
+	if (x > MAXSTIR)
+	{ /* Avoid overflow in pow() */
+		v = pow(x, 0.5 * x - 0.25);
+		y = v * (v / y);
+	}
+	else
+	{
+		y = pow(x, x - 0.5) / y;
+	}
+	y = SQTPI * y * w;
+	return(y);
+}
+
+#pragma acc routine seq
+static double tgamma(double x) {
+	double p, q, z;
+	int sgngam;
+	int i;
+
+	sgngam = 1;
+	if (isnan(x))
+		return(x);
+	q = fabs(x);
+
+	if (q > 33.0)
+	{
+		if (x < 0.0)
+		{
+			p = floor(q);
+			if (p == q)
+			{
+				return (NAN);
+			}
+			i = p;
+			if ((i & 1) == 0)
+				sgngam = -1;
+			z = q - p;
+			if (z > 0.5)
+			{
+				p += 1.0;
+				z = q - p;
+			}
+			z = q * sin(M_PI * z);
+			if (z == 0.0)
+			{
+				return(NAN);
+			}
+			z = fabs(z);
+			z = M_PI / (z * cephes_stirf(q));
+		}
+		else
+		{
+			z = cephes_stirf(x);
+		}
+		return(sgngam * z);
+	}
+
+	z = 1.0;
+	while (x >= 3.0)
+	{
+		x -= 1.0;
+		z *= x;
+	}
+
+	while (x < 0.0)
+	{
+		if (x > -1.E-9)
+			goto small;
+		z /= x;
+		x += 1.0;
+	}
+
+	while (x < 2.0)
+	{
+		if (x < 1.e-9)
+			goto small;
+		z /= x;
+		x += 1.0;
+	}
+
+	if (x == 2.0)
+		return(z);
+
+	x -= 2.0;
+	p = (((((
+		+1.60119522476751861407E-4*x
+		+ 1.19135147006586384913E-3)*x
+		+ 1.04213797561761569935E-2)*x
+		+ 4.76367800457137231464E-2)*x
+		+ 2.07448227648435975150E-1)*x
+		+ 4.94214826801497100753E-1)*x
+		+ 9.99999999999999996796E-1;
+	q = ((((((
+		-2.31581873324120129819E-5*x
+		+ 5.39605580493303397842E-4)*x
+		- 4.45641913851797240494E-3)*x
+		+ 1.18139785222060435552E-2)*x
+		+ 3.58236398605498653373E-2)*x
+		- 2.34591795718243348568E-1)*x
+		+ 7.14304917030273074085E-2)*x
+		+ 1.00000000000000000320E0;
+	return(z * p / q);
+
+small:
+	if (x == 0.0)
+	{
+		return (NAN);
+	}
+	else
+		return(z / ((1.0 + 0.5772156649015329 * x) * x));
+}
+#endif // NEED_TGAMMA
+
+#pragma acc routine seq
+inline double sas_gamma(double x)
+{
+    // Note: the builtin tgamma can give slow and unreliable results for x<1.
+    // The following transform extends it to zero and to negative values.
+    // It should return NaN for zero and negative integers but doesn't.
+    // The accuracy is okay but not wonderful for negative numbers, maybe
+    // one or two digits lost in the calculation. If higher accuracy is
+    // needed, you could test the following loop:
+    //    double norm = 1.;
+    //    while (x<1.) { norm*=x; x+=1.; }
+    //    return tgamma(x)/norm;
+    return (x<0. ? M_PI/tgamma(1.-x)/sin(M_PI*x) : tgamma(x+1)/x);
+}
+
+
+#endif // SAS_HAVE_sas_gamma
+
+
+#ifndef SAS_HAVE_mass_fractal
+#define SAS_HAVE_mass_fractal
+
+#line 1 "mass_fractal"
+static double
+Iq_mass_fractal(double q, double radius, double fractal_dim_mass, double cutoff_length)
+{
+    //calculate P(q)
+    const double pq = square(sas_3j1x_x(q*radius));
+
+    //calculate S(q)
+    // S(q) = gamma(D-1) sin((D-1)atan(q c))/q c^(D-1) (1+(q c)^2)^(-(D-1)/2)
+    // lim D->1 [gamma(D-1) sin((D-1) a)] = a
+    // lim q->0 [sin((D-1) atan(q c))/q] = (D-1) c
+    // lim q,D->0,1 [gamma(D-1) sin((D-1)atan(q c))/q] = c
+    double sq;
+    if (q > 0. && fractal_dim_mass > 1.) {
+        const double Dm1 = fractal_dim_mass - 1.0;
+        const double t1 = sas_gamma(Dm1)*sin(Dm1*atan(q*cutoff_length));
+        const double t2 = pow(cutoff_length, Dm1);
+        const double t3 = pow(1.0 + square(q*cutoff_length), -0.5*Dm1);
+        sq = t1 * t2 * t3 / q;
+    } else if (q > 0.) {
+        sq = atan(q*cutoff_length)/q;
+    } else if (fractal_dim_mass > 1.) {
+        const double D = fractal_dim_mass;
+        sq = pow(cutoff_length, D) * sas_gamma(D);
+    } else {
+        sq = cutoff_length;
+    }
+
+    return pq * sq;
+}
+
+
+#endif // SAS_HAVE_mass_fractal
+
+
+
+/* END Required header for SASmodel mass_fractal */
+%}
+    DECLARE
+%{
+  double shape;
+  double my_s_pre;
+  double my_a_v;
+%}
+
+INITIALIZE
+%{
+shape=-1;  /* -1:no shape, 0:cyl, 1:box, 2:sphere  */
+if (xwidth && yheight && zdepth)
+    shape=1;
+  else if (R > 0 && yheight)
+    shape=0;
+  else if (R > 0 && !yheight)
+    shape=2;
+  if (shape < 0)
+    exit(fprintf(stderr, "SasView_model: %s: sample has invalid dimensions.\n"
+                         "ERROR     Please check parameter values.\n", NAME_CURRENT_COMP));
+
+  /* now compute target coords if a component index is supplied */
+  if (!target_index && !target_x && !target_y && !target_z) target_index=1;
+  if (target_index)
+  {
+    Coords ToTarget;
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &target_x, &target_y, &target_z);
+  }
+
+  if (!(target_x || target_y || target_z)) {
+    printf("SasView_model: %s: The target is not defined. Using direct beam (Z-axis).\n",
+      NAME_CURRENT_COMP);
+    target_z=1;
+  }
+
+  my_s_pre = model_abs;
+  my_a_v = 0; // NEEDS FIXING
+
+%}
+
+
+TRACE
+%{
+  double l0=0,l1=0;
+  double k, l_full, l, l_1, dl, d_phi, my_s;
+  double aim_x=0, aim_y=0, aim_z=1, axis_x, axis_y, axis_z;
+  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
+  double f, solid_angle, kx_i, ky_i, kz_i, q, qx, qy, qz;
+  char intersect=0;
+
+  /* Intersection photon trajectory / sample (sample surface) */
+  if (shape == 0){
+    intersect = cylinder_intersect(&l0, &l1, x, y, z, vx, vy, vz, R, yheight);}
+  else if (shape == 1){
+    intersect = box_intersect(&l0, &l1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);}
+  else if (shape == 2){
+    intersect = sphere_intersect(&l0, &l1, x, y, z, vx, vy, vz, R);}
+  if(intersect)
+  {
+    if(l0 < 0)
+      ABSORB;
+
+    /* Photon enters at l0. */
+    k = sqrt(kx*kx + ky*ky + kz*kz);
+    l_full = (l1 - l0);          /* Length of full path through sample */
+    dl = rand01()*(l1 - l0) + l0;    /* Point of scattering */
+    PROP_DT(dl);                     /* Point of scattering */
+    l = (dl-l0);                   /* Penetration in sample */
+
+    kx_i=kx;
+    ky_i=ky;
+    kz_i=kz;
+    if ((target_x || target_y || target_z)) {
+      aim_x = target_x-x;            /* Vector pointing at target (anal./det.) */
+      aim_y = target_y-y;
+      aim_z = target_z-z;
+    }
+    if(focus_aw && focus_ah) {
+      randvec_target_rect_angular(&kx, &ky, &kz, &solid_angle,
+        aim_x, aim_y, aim_z, focus_aw, focus_ah, ROT_A_CURRENT_COMP);
+    } else if(focus_xw && focus_yh) {
+      randvec_target_rect(&kx, &ky, &kz, &solid_angle,
+        aim_x, aim_y, aim_z, focus_xw, focus_yh, ROT_A_CURRENT_COMP);
+    } else {
+      randvec_target_circle(&kx, &ky, &kz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
+    }
+    NORM(kx, ky, kz);
+    kx *= k;
+    ky *= k;
+    kz *= k;
+    qx = (kx_i-kx);
+    qy = (ky_i-ky);
+    qz = (kz_i-kz);
+    q = sqrt(qx*qx+qy*qy+qz*qz);
+    
+    double trace_radius=radius;
+    double trace_cutoff_length=cutoff_length;
+    if ( pd_radius!=0.0 || pd_cutoff_length!=0.0 ){
+    trace_radius = (randnorm()*pd_radius+1.0)*radius;
+    trace_cutoff_length = (randnorm()*pd_cutoff_length+1.0)*cutoff_length;
+    }
+
+        
+
+
+    // Sample dependent. Retrieved from SasView./////////////////////
+    float Iq_out;
+    Iq_out = 1;
+
+    Iq_out = Iq_mass_fractal(q, trace_radius, fractal_dim_mass, trace_cutoff_length);
+
+
+    float vol;
+    vol = 1;
+
+    // Scale by 1.0E2 [SasView: 1/cm  ->   McXtrace: 1/m]
+    Iq_out = model_scale*Iq_out / vol * 1.0E2;
+
+    l_1 = l1;
+    p *= l_full*solid_angle/(4*PI)*my_s_pre*Iq_out*exp(-my_a_v*(l+l_1)/v);
+    SCATTER;
+  }
+%}
+
+MCDISPLAY
+%{
+
+  if (shape == 0) {	/* cylinder */
+    circle("xz", 0,  yheight/2.0, 0, R);
+    circle("xz", 0, -yheight/2.0, 0, R);
+    line(-R, -yheight/2.0, 0, -R, +yheight/2.0, 0);
+    line(+R, -yheight/2.0, 0, +R, +yheight/2.0, 0);
+    line(0, -yheight/2.0, -R, 0, +yheight/2.0, -R);
+    line(0, -yheight/2.0, +R, 0, +yheight/2.0, +R);
+  }
+  else if (shape == 1) { 	/* box */
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zdepth;
+    double zmax =  0.5*zdepth;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
+  else if (shape == 2) {	/* sphere */
+    circle("xy", 0,  0.0, 0, R);
+    circle("xz", 0,  0.0, 0, R);
+    circle("yz", 0,  0.0, 0, R);
+  }
+%}
+END
+

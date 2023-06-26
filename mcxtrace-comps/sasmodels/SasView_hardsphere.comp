@@ -1,0 +1,343 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
+*
+* Component: SasView_hardsphere
+*
+* %Identification
+* Written by: Jose Robledo
+* Based on sasmodels from SasView
+* Origin: FZJ / DTU / ESS DMSC
+*
+*
+* SasView hardsphere model component as sample description.
+*
+* %Description
+*
+* SasView_hardsphere component, generated from hardsphere.c in sasmodels.
+*
+* Example: 
+*  SasView_hardsphere(radius_effective, volfraction, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_radius_effective=0.0)
+*
+* %Parameters
+* INPUT PARAMETERS:
+* radius_effective: [Ang] ([0, inf]) effective radius of hard sphere.
+* volfraction: [] ([0, 0.74]) volume fraction of hard spheres.
+* Optional parameters:
+* model_abs: [ ] Absorption cross section density at 2200 m/s.
+* model_scale: [ ] Global scale factor for scattering kernel. For systems without inter-particle interference, the form factors can be related to the scattering intensity by the particle volume fraction.
+* xwidth: [m] ([-inf, inf]) Horiz. dimension of sample, as a width.
+* yheight: [m] ([-inf, inf]) vert . dimension of sample, as a height for cylinder/box
+* zdepth: [m] ([-inf, inf]) depth of sample
+* R: [m] Outer radius of sample in (x,z) plane for cylinder/sphere.
+* target_x: [m] relative focus target position.
+* target_y: [m] relative focus target position.
+* target_z: [m] relative focus target position.
+* target_index: [ ] Relative index of component to focus at, e.g. next is +1.
+* focus_xw: [m] horiz. dimension of a rectangular area.
+* focus_yh: [m], vert. dimension of a rectangular area.
+* focus_aw: [deg], horiz. angular dimension of a rectangular area.
+* focus_ah: [deg], vert. angular dimension of a rectangular area.
+* focus_r: [m] case of circular focusing, focusing radius.
+* pd_radius_effective: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable
+*
+* %Link
+* %End
+*******************************************************************************/
+DEFINE COMPONENT SasView_hardsphere
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (
+        radius_effective=50.0,
+        volfraction=0.2,
+        model_scale=1.0,
+        model_abs=0.0,
+        xwidth=0.01,
+        yheight=0.01,
+        zdepth=0.005,
+        R=0,
+        target_x=0,
+        target_y=0,
+        target_z=1,
+        int target_index=1,
+        focus_xw=0.5,
+        focus_yh=0.5,
+        focus_aw=0,
+        focus_ah=0,
+        focus_r=0,
+        pd_radius_effective=0.0)
+
+
+SHARE %{
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel hardsphere */
+#define HAS_Iq
+
+#ifndef SAS_HAVE_hardsphere
+#define SAS_HAVE_hardsphere
+
+#line 1 "hardsphere"
+double Iq_hardsphere(double q, double radius_effective, double volfraction)
+{
+      double D,A,B,G,X,X2,X4,S,C,FF,HARDSPH;
+      // these are c compiler instructions, can also put normal code inside the "if else" structure
+      #if FLOAT_SIZE > 4
+      // double precision
+      // orig had 0.2, don't call the variable cutoff as PAK already has one called that!
+      // Must use UPPERCASE name please.
+      // 0.05 better, 0.1 OK
+      #define CUTOFFHS 0.05
+      #else
+      // 0.1 bad, 0.2 OK, 0.3 good, 0.4 better, 0.8 no good
+      #define CUTOFFHS 0.4
+      #endif
+
+      if(fabs(radius_effective) < 1.E-12) {
+               HARDSPH=1.0;
+//printf("HS1 %g: %g\n",q,HARDSPH);
+               return(HARDSPH);
+      }
+      // removing use of pow(xxx,2) and rearranging the calcs
+      // of A, B & G cut ~40% off execution time ( 0.5 to 0.3 msec)
+      X = 1.0/( 1.0 -volfraction);
+      D= X*X;
+      A= (1.+2.*volfraction)*D;
+      A *=A;
+      X=fabs(q*radius_effective*2.0);
+
+      if(X < 5.E-06) {
+                 HARDSPH=1./A;
+//printf("HS2 %g: %g\n",q,HARDSPH);
+                 return(HARDSPH);
+      }
+      X2 =X*X;
+      B = (1.0 +0.5*volfraction)*D;
+      B *= B;
+      B *= -6.*volfraction;
+      G=0.5*volfraction*A;
+
+      if(X < CUTOFFHS) {
+      // RKH Feb 2016, use Taylor series expansion for small X
+      // else no obvious way to rearrange the equations to avoid
+      // needing a very high number of significant figures.
+      // Series expansion found using Mathematica software. Numerical test
+      // in .xls showed terms to X^2 are sufficient
+      // for 5 or 6 significant figures, but I put the X^4 one in anyway
+            //FF = 8*A +6*B + 4*G - (0.8*A +2.0*B/3.0 +0.5*G)*X2 +(A/35. +B/40. +G/50.)*X4;
+            // refactoring the polynomial makes it very slightly faster (0.5 not 0.6 msec)
+            //FF = 8*A +6*B + 4*G + ( -0.8*A -2.0*B/3.0 -0.5*G +(A/35. +B/40. +G/50.)*X2)*X2;
+
+            FF = 8.0*A +6.0*B + 4.0*G + ( -0.8*A -B/1.5 -0.5*G +(A/35. +0.0125*B +0.02*G)*X2)*X2;
+
+            // combining the terms makes things worse at smallest Q in single precision
+            //FF = (8-0.8*X2)*A +(3.0-X2/3.)*2*B + (4+0.5*X2)*G +(A/35. +B/40. +G/50.)*X4;
+            // note that G = -volfraction*A/2, combining this makes no further difference at smallest Q
+            //FF = (8 +2.*volfraction + ( volfraction/4. -0.8 +(volfraction/100. -1./35.)*X2 )*X2 )*A  + (3.0 -X2/3. +X4/40.)*2.*B;
+            HARDSPH= 1./(1. + volfraction*FF );
+//printf("HS3 %g: %g\n",q,HARDSPH);
+            return(HARDSPH);
+      }
+      X4=X2*X2;
+      SINCOS(X,S,C);
+
+// RKH Feb 2016, use version FISH code as is better than original sasview one
+// at small Q in single precision, and more than twice as fast in double.
+      //FF=A*(S-X*C)/X + B*(2.*X*S -(X2-2.)*C -2.)/X2 + G*( (4.*X2*X -24.*X)*S -(X4 -12.*X2 +24.)*C +24. )/X4;
+      // refactoring the polynomial here & above makes it slightly faster
+
+      FF=  (( G*( (4.*X2 -24.)*X*S -(X4 -12.*X2 +24.)*C +24. )/X2 + B*(2.*X*S -(X2-2.)*C -2.) )/X + A*(S-X*C))/X ;
+      HARDSPH= 1./(1. + 24.*volfraction*FF/X2 );
+
+      // changing /X and /X2 to *MX1 and *MX2, no significantg difference?
+      //MX=1.0/X;
+      //MX2=MX*MX;
+      //FF=  (( G*( (4.*X2 -24.)*X*S -(X4 -12.*X2 +24.)*C +24. )*MX2 + B*(2.*X*S -(X2-2.)*C -2.) )*MX + A*(S-X*C)) ;
+      //HARDSPH= 1./(1. + 24.*volfraction*FF*MX2*MX );
+
+// grouping the terms, was about same as sasmodels for single precision issues
+//     FF=A*(S/X-C) + B*(2.*S/X - C +2.0*(C-1.0)/X2) + G*( (4./X -24./X3)*S -(1.0 -12./X2 +24./X4)*C +24./X4 );
+//     HARDSPH= 1./(1. + 24.*volfraction*FF/X2 );
+// remove 1/X2 from final line, take more powers of X inside the brackets, stil bad
+//      FF=A*(S/X3-C/X2) + B*(2.*S/X3 - C/X2 +2.0*(C-1.0)/X4) + G*( (4./X -24./X3)*S -(1.0 -12./X2 +24./X4)*C +24./X4 )/X2;
+//      HARDSPH= 1./(1. + 24.*volfraction*FF );
+//printf("HS4 %g: %g\n",q,HARDSPH);
+      return(HARDSPH);
+}
+
+#endif // SAS_HAVE_hardsphere
+
+
+
+/* END Required header for SASmodel hardsphere */
+%}
+    DECLARE
+%{
+  double shape;
+  double my_s_pre;
+  double my_a_v;
+%}
+
+INITIALIZE
+%{
+shape=-1;  /* -1:no shape, 0:cyl, 1:box, 2:sphere  */
+if (xwidth && yheight && zdepth)
+    shape=1;
+  else if (R > 0 && yheight)
+    shape=0;
+  else if (R > 0 && !yheight)
+    shape=2;
+  if (shape < 0)
+    exit(fprintf(stderr, "SasView_model: %s: sample has invalid dimensions.\n"
+                         "ERROR     Please check parameter values.\n", NAME_CURRENT_COMP));
+
+  /* now compute target coords if a component index is supplied */
+  if (!target_index && !target_x && !target_y && !target_z) target_index=1;
+  if (target_index)
+  {
+    Coords ToTarget;
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &target_x, &target_y, &target_z);
+  }
+
+  if (!(target_x || target_y || target_z)) {
+    printf("SasView_model: %s: The target is not defined. Using direct beam (Z-axis).\n",
+      NAME_CURRENT_COMP);
+    target_z=1;
+  }
+
+  my_s_pre = model_abs;
+  my_a_v = 0; // NEEDS FIXING
+
+%}
+
+
+TRACE
+%{
+  double l0=0,l1=0;
+  double k, l_full, l, l_1, dl, d_phi, my_s;
+  double aim_x=0, aim_y=0, aim_z=1, axis_x, axis_y, axis_z;
+  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
+  double f, solid_angle, kx_i, ky_i, kz_i, q, qx, qy, qz;
+  char intersect=0;
+
+  /* Intersection photon trajectory / sample (sample surface) */
+  if (shape == 0){
+    intersect = cylinder_intersect(&l0, &l1, x, y, z, vx, vy, vz, R, yheight);}
+  else if (shape == 1){
+    intersect = box_intersect(&l0, &l1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);}
+  else if (shape == 2){
+    intersect = sphere_intersect(&l0, &l1, x, y, z, vx, vy, vz, R);}
+  if(intersect)
+  {
+    if(l0 < 0)
+      ABSORB;
+
+    /* Photon enters at l0. */
+    k = sqrt(kx*kx + ky*ky + kz*kz);
+    l_full = (l1 - l0);          /* Length of full path through sample */
+    dl = rand01()*(l1 - l0) + l0;    /* Point of scattering */
+    PROP_DT(dl);                     /* Point of scattering */
+    l = (dl-l0);                   /* Penetration in sample */
+
+    kx_i=kx;
+    ky_i=ky;
+    kz_i=kz;
+    if ((target_x || target_y || target_z)) {
+      aim_x = target_x-x;            /* Vector pointing at target (anal./det.) */
+      aim_y = target_y-y;
+      aim_z = target_z-z;
+    }
+    if(focus_aw && focus_ah) {
+      randvec_target_rect_angular(&kx, &ky, &kz, &solid_angle,
+        aim_x, aim_y, aim_z, focus_aw, focus_ah, ROT_A_CURRENT_COMP);
+    } else if(focus_xw && focus_yh) {
+      randvec_target_rect(&kx, &ky, &kz, &solid_angle,
+        aim_x, aim_y, aim_z, focus_xw, focus_yh, ROT_A_CURRENT_COMP);
+    } else {
+      randvec_target_circle(&kx, &ky, &kz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
+    }
+    NORM(kx, ky, kz);
+    kx *= k;
+    ky *= k;
+    kz *= k;
+    qx = (kx_i-kx);
+    qy = (ky_i-ky);
+    qz = (kz_i-kz);
+    q = sqrt(qx*qx+qy*qy+qz*qz);
+    
+    double trace_radius_effective=radius_effective;
+    if ( pd_radius_effective!=0.0 ){
+    trace_radius_effective = (randnorm()*pd_radius_effective+1.0)*radius_effective;
+    }
+
+        
+
+
+    // Sample dependent. Retrieved from SasView./////////////////////
+    float Iq_out;
+    Iq_out = 1;
+
+    Iq_out = Iq_hardsphere(q, trace_radius_effective, volfraction);
+
+
+    float vol;
+    vol = 1;
+
+    // Scale by 1.0E2 [SasView: 1/cm  ->   McXtrace: 1/m]
+    Iq_out = model_scale*Iq_out / vol * 1.0E2;
+
+    l_1 = l1;
+    p *= l_full*solid_angle/(4*PI)*my_s_pre*Iq_out*exp(-my_a_v*(l+l_1)/v);
+    SCATTER;
+  }
+%}
+
+MCDISPLAY
+%{
+
+  if (shape == 0) {	/* cylinder */
+    circle("xz", 0,  yheight/2.0, 0, R);
+    circle("xz", 0, -yheight/2.0, 0, R);
+    line(-R, -yheight/2.0, 0, -R, +yheight/2.0, 0);
+    line(+R, -yheight/2.0, 0, +R, +yheight/2.0, 0);
+    line(0, -yheight/2.0, -R, 0, +yheight/2.0, -R);
+    line(0, -yheight/2.0, +R, 0, +yheight/2.0, +R);
+  }
+  else if (shape == 1) { 	/* box */
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zdepth;
+    double zmax =  0.5*zdepth;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
+  else if (shape == 2) {	/* sphere */
+    circle("xy", 0,  0.0, 0, R);
+    circle("xz", 0,  0.0, 0, R);
+    circle("yz", 0,  0.0, 0, R);
+  }
+%}
+END
+

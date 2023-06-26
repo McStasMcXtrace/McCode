@@ -1,0 +1,840 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
+*
+* Component: SasView_bcc_paracrystal
+*
+* %Identification
+* Written by: Jose Robledo
+* Based on sasmodels from SasView
+* Origin: FZJ / DTU / ESS DMSC
+*
+*
+* SasView bcc_paracrystal model component as sample description.
+*
+* %Description
+*
+* SasView_bcc_paracrystal component, generated from bcc_paracrystal.c in sasmodels.
+*
+* Example: 
+*  SasView_bcc_paracrystal_aniso(dnn, d_factor, radius, sld, sld_solvent, theta, phi, Psi, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_radius=0.0, pd_theta=0.0, pd_phi=0.0, pd_Psi=0.0)
+*
+* %Parameters
+* INPUT PARAMETERS:
+* dnn: [Ang] ([-inf, inf]) Nearest neighbour distance.
+* d_factor: [] ([-inf, inf]) Paracrystal distortion factor.
+* radius: [Ang] ([0, inf]) Particle radius.
+* sld: [1e-6/Ang^2] ([-inf, inf]) Particle scattering length density.
+* sld_solvent: [1e-6/Ang^2] ([-inf, inf]) Solvent scattering length density.
+* Optional parameters:
+* model_abs: [ ] Absorption cross section density at 2200 m/s.
+* model_scale: [ ] Global scale factor for scattering kernel. For systems without inter-particle interference, the form factors can be related to the scattering intensity by the particle volume fraction.
+* xwidth: [m] ([-inf, inf]) Horiz. dimension of sample, as a width.
+* yheight: [m] ([-inf, inf]) vert . dimension of sample, as a height for cylinder/box
+* zdepth: [m] ([-inf, inf]) depth of sample
+* R: [m] Outer radius of sample in (x,z) plane for cylinder/sphere.
+* target_x: [m] relative focus target position.
+* target_y: [m] relative focus target position.
+* target_z: [m] relative focus target position.
+* target_index: [ ] Relative index of component to focus at, e.g. next is +1.
+* focus_xw: [m] horiz. dimension of a rectangular area.
+* focus_yh: [m], vert. dimension of a rectangular area.
+* focus_aw: [deg], horiz. angular dimension of a rectangular area.
+* focus_ah: [deg], vert. angular dimension of a rectangular area.
+* focus_r: [m] case of circular focusing, focusing radius.
+* pd_radius: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
+* pd_theta: [] (0,360) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
+* pd_phi: [] (0,360) defined as (dx/x), where x is de mean value and dx the standard devition of the variable.
+* pd_Psi: [] (0,360) defined as (dx/x), where x is de mean value and dx the standard devition of the variable
+*
+* %Link
+* %End
+*******************************************************************************/
+DEFINE COMPONENT SasView_bcc_paracrystal_aniso
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (
+        dnn=220,
+        d_factor=0.06,
+        radius=40,
+        sld=4,
+        sld_solvent=1,
+        theta=60,
+        phi=60,
+        Psi=60,
+        model_scale=1.0,
+        model_abs=0.0,
+        xwidth=0.01,
+        yheight=0.01,
+        zdepth=0.005,
+        R=0,
+        target_x=0,
+        target_y=0,
+        target_z=1,
+        int target_index=1,
+        focus_xw=0.5,
+        focus_yh=0.5,
+        focus_aw=0,
+        focus_ah=0,
+        focus_r=0,
+        pd_radius=0.0,
+        pd_theta=0.0,
+        pd_phi=0.0,
+        pd_Psi=0.0)
+
+
+SHARE %{
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel bcc_paracrystal */
+#define HAS_Iqabc
+#define HAS_Iq
+#define FORM_VOL
+
+#ifndef SAS_HAVE_sas_3j1x_x
+#define SAS_HAVE_sas_3j1x_x
+
+#line 1 "sas_3j1x_x"
+/**
+* Spherical Bessel function 3*j1(x)/x
+*
+* Used for low q to avoid cancellation error.
+* Note that the values differ from sasview ~ 5e-12 rather than 5e-14, but
+* in this case it is likely cancellation errors in the original expression
+* using double precision that are the source.
+*/
+double sas_3j1x_x(double q);
+
+// The choice of the number of terms in the series and the cutoff value for
+// switching between series and direct calculation depends on the numeric
+// precision.
+//
+// Point where direct calculation reaches machine precision:
+//
+//   single machine precision eps 3e-8 at qr=1.1 **
+//   double machine precision eps 4e-16 at qr=1.1
+//
+// Point where Taylor series reaches machine precision (eps), where taylor
+// series matches direct calculation (cross) and the error at that point:
+//
+//   prec   n eps  cross  error
+//   single 3 0.28  0.4   6.2e-7
+//   single 4 0.68  0.7   2.3e-7
+//   single 5 1.18  1.2   7.5e-8
+//   double 3 0.01  0.03  2.3e-13
+//   double 4 0.06  0.1   3.1e-14
+//   double 5 0.16  0.2   5.0e-15
+//
+// ** Note: relative error on single precision starts increase on the direct
+// method at qr=1.1, rising from 3e-8 to 5e-5 by qr=1e3.  This should be
+// safe for the sans range, with objects of 100 nm supported to a q of 0.1
+// while maintaining 5 digits of precision.  For usans/sesans, the objects
+// are larger but the q is smaller, so again it should be fine.
+//
+// See explore/sph_j1c.py for code to explore these ranges.
+
+// Use 4th order series
+#if FLOAT_SIZE>4
+#define SPH_J1C_CUTOFF 0.1
+#else
+#define SPH_J1C_CUTOFF 0.7
+#endif
+#pragma acc routine seq
+double sas_3j1x_x(double q)
+{
+    // 2017-05-18 PAK - support negative q
+    if (fabs(q) < SPH_J1C_CUTOFF) {
+        const double q2 = q*q;
+        return (1.0 + q2*(-3./30. + q2*(3./840. + q2*(-3./45360.))));// + q2*(3./3991680.)))));
+    } else {
+        double sin_q, cos_q;
+        SINCOS(q, sin_q, cos_q);
+        return 3.0*(sin_q/q - cos_q)/(q*q);
+    }
+}
+
+
+#endif // SAS_HAVE_sas_3j1x_x
+
+
+#ifndef SAS_HAVE_gauss150
+#define SAS_HAVE_gauss150
+
+#line 1 "gauss150"
+// Created by Andrew Jackson on 4/23/07
+
+ #ifdef GAUSS_N
+ # undef GAUSS_N
+ # undef GAUSS_Z
+ # undef GAUSS_W
+ #endif
+ #define GAUSS_N 150
+ #define GAUSS_Z Gauss150Z
+ #define GAUSS_W Gauss150Wt
+
+
+// Note: using array size 152 rather than 150 so that it is a multiple of 4.
+// Some OpenCL devices prefer that vectors start and end on nice boundaries.
+constant double Gauss150Z[152]={
+  	-0.9998723404457334,
+  	-0.9993274305065947,
+  	-0.9983473449340834,
+  	-0.9969322929775997,
+  	-0.9950828645255290,
+  	-0.9927998590434373,
+  	-0.9900842691660192,
+  	-0.9869372772712794,
+  	-0.9833602541697529,
+  	-0.9793547582425894,
+  	-0.9749225346595943,
+  	-0.9700655145738374,
+  	-0.9647858142586956,
+  	-0.9590857341746905,
+  	-0.9529677579610971,
+  	-0.9464345513503147,
+  	-0.9394889610042837,
+  	-0.9321340132728527,
+  	-0.9243729128743136,
+  	-0.9162090414984952,
+  	-0.9076459563329236,
+  	-0.8986873885126239,
+  	-0.8893372414942055,
+  	-0.8795995893549102,
+  	-0.8694786750173527,
+  	-0.8589789084007133,
+  	-0.8481048644991847,
+  	-0.8368612813885015,
+  	-0.8252530581614230,
+  	-0.8132852527930605,
+  	-0.8009630799369827,
+  	-0.7882919086530552,
+  	-0.7752772600680049,
+  	-0.7619248049697269,
+  	-0.7482403613363824,
+  	-0.7342298918013638,
+  	-0.7198995010552305,
+  	-0.7052554331857488,
+  	-0.6903040689571928,
+  	-0.6750519230300931,
+  	-0.6595056411226444,
+  	-0.6436719971150083,
+  	-0.6275578900977726,
+  	-0.6111703413658551,
+  	-0.5945164913591590,
+  	-0.5776035965513142,
+  	-0.5604390262878617,
+  	-0.5430302595752546,
+  	-0.5253848818220803,
+  	-0.5075105815339176,
+  	-0.4894151469632753,
+  	-0.4711064627160663,
+  	-0.4525925063160997,
+  	-0.4338813447290861,
+  	-0.4149811308476706,
+  	-0.3959000999390257,
+  	-0.3766465660565522,
+  	-0.3572289184172501,
+  	-0.3376556177463400,
+  	-0.3179351925907259,
+  	-0.2980762356029071,
+  	-0.2780873997969574,
+  	-0.2579773947782034,
+  	-0.2377549829482451,
+  	-0.2174289756869712,
+  	-0.1970082295132342,
+  	-0.1765016422258567,
+  	-0.1559181490266516,
+  	-0.1352667186271445,
+  	-0.1145563493406956,
+  	-0.0937960651617229,
+  	-0.0729949118337358,
+  	-0.0521619529078925,
+  	-0.0313062657937972,
+  	-0.0104369378042598,
+  	0.0104369378042598,
+  	0.0313062657937972,
+  	0.0521619529078925,
+  	0.0729949118337358,
+  	0.0937960651617229,
+  	0.1145563493406956,
+  	0.1352667186271445,
+  	0.1559181490266516,
+  	0.1765016422258567,
+  	0.1970082295132342,
+  	0.2174289756869712,
+  	0.2377549829482451,
+  	0.2579773947782034,
+  	0.2780873997969574,
+  	0.2980762356029071,
+  	0.3179351925907259,
+  	0.3376556177463400,
+  	0.3572289184172501,
+  	0.3766465660565522,
+  	0.3959000999390257,
+  	0.4149811308476706,
+  	0.4338813447290861,
+  	0.4525925063160997,
+  	0.4711064627160663,
+  	0.4894151469632753,
+  	0.5075105815339176,
+  	0.5253848818220803,
+  	0.5430302595752546,
+  	0.5604390262878617,
+  	0.5776035965513142,
+  	0.5945164913591590,
+  	0.6111703413658551,
+  	0.6275578900977726,
+  	0.6436719971150083,
+  	0.6595056411226444,
+  	0.6750519230300931,
+  	0.6903040689571928,
+  	0.7052554331857488,
+  	0.7198995010552305,
+  	0.7342298918013638,
+  	0.7482403613363824,
+  	0.7619248049697269,
+  	0.7752772600680049,
+  	0.7882919086530552,
+  	0.8009630799369827,
+  	0.8132852527930605,
+  	0.8252530581614230,
+  	0.8368612813885015,
+  	0.8481048644991847,
+  	0.8589789084007133,
+  	0.8694786750173527,
+  	0.8795995893549102,
+  	0.8893372414942055,
+  	0.8986873885126239,
+  	0.9076459563329236,
+  	0.9162090414984952,
+  	0.9243729128743136,
+  	0.9321340132728527,
+  	0.9394889610042837,
+  	0.9464345513503147,
+  	0.9529677579610971,
+  	0.9590857341746905,
+  	0.9647858142586956,
+  	0.9700655145738374,
+  	0.9749225346595943,
+  	0.9793547582425894,
+  	0.9833602541697529,
+  	0.9869372772712794,
+  	0.9900842691660192,
+  	0.9927998590434373,
+  	0.9950828645255290,
+  	0.9969322929775997,
+  	0.9983473449340834,
+  	0.9993274305065947,
+  	0.9998723404457334,
+  	0., // zero padding is ignored
+  	0.  // zero padding is ignored
+};
+
+constant double Gauss150Wt[152]={
+  	0.0003276086705538,
+  	0.0007624720924706,
+  	0.0011976474864367,
+  	0.0016323569986067,
+  	0.0020663664924131,
+  	0.0024994789888943,
+  	0.0029315036836558,
+  	0.0033622516236779,
+  	0.0037915348363451,
+  	0.0042191661429919,
+  	0.0046449591497966,
+  	0.0050687282939456,
+  	0.0054902889094487,
+  	0.0059094573005900,
+  	0.0063260508184704,
+  	0.0067398879387430,
+  	0.0071507883396855,
+  	0.0075585729801782,
+  	0.0079630641773633,
+  	0.0083640856838475,
+  	0.0087614627643580,
+  	0.0091550222717888,
+  	0.0095445927225849,
+  	0.0099300043714212,
+  	0.0103110892851360,
+  	0.0106876814158841,
+  	0.0110596166734735,
+  	0.0114267329968529,
+  	0.0117888704247183,
+  	0.0121458711652067,
+  	0.0124975796646449,
+  	0.0128438426753249,
+  	0.0131845093222756,
+  	0.0135194311690004,
+  	0.0138484622795371,
+  	0.0141714592928592,
+  	0.0144882814685445,
+  	0.0147987907597169,
+  	0.0151028518701744,
+  	0.0154003323133401,
+  	0.0156911024699895,
+  	0.0159750356447283,
+  	0.0162520081211971,
+  	0.0165218992159766,
+  	0.0167845913311726,
+  	0.0170399700056559,
+  	0.0172879239649355,
+  	0.0175283451696437,
+  	0.0177611288626114,
+  	0.0179861736145128,
+  	0.0182033813680609,
+  	0.0184126574807331,
+  	0.0186139107660094,
+  	0.0188070535331042,
+  	0.0189920016251754,
+  	0.0191686744559934,
+  	0.0193369950450545,
+  	0.0194968900511231,
+  	0.0196482898041878,
+  	0.0197911283358190,
+  	0.0199253434079123,
+  	0.0200508765398072,
+  	0.0201676730337687,
+  	0.0202756819988200,
+  	0.0203748563729175,
+  	0.0204651529434560,
+  	0.0205465323660984,
+  	0.0206189591819181,
+  	0.0206824018328499,
+  	0.0207368326754401,
+  	0.0207822279928917,
+  	0.0208185680053983,
+  	0.0208458368787627,
+  	0.0208640227312962,
+  	0.0208731176389954,
+  	0.0208731176389954,
+  	0.0208640227312962,
+  	0.0208458368787627,
+  	0.0208185680053983,
+  	0.0207822279928917,
+  	0.0207368326754401,
+  	0.0206824018328499,
+  	0.0206189591819181,
+  	0.0205465323660984,
+  	0.0204651529434560,
+  	0.0203748563729175,
+  	0.0202756819988200,
+  	0.0201676730337687,
+  	0.0200508765398072,
+  	0.0199253434079123,
+  	0.0197911283358190,
+  	0.0196482898041878,
+  	0.0194968900511231,
+  	0.0193369950450545,
+  	0.0191686744559934,
+  	0.0189920016251754,
+  	0.0188070535331042,
+  	0.0186139107660094,
+  	0.0184126574807331,
+  	0.0182033813680609,
+  	0.0179861736145128,
+  	0.0177611288626114,
+  	0.0175283451696437,
+  	0.0172879239649355,
+  	0.0170399700056559,
+  	0.0167845913311726,
+  	0.0165218992159766,
+  	0.0162520081211971,
+  	0.0159750356447283,
+  	0.0156911024699895,
+  	0.0154003323133401,
+  	0.0151028518701744,
+  	0.0147987907597169,
+  	0.0144882814685445,
+  	0.0141714592928592,
+  	0.0138484622795371,
+  	0.0135194311690004,
+  	0.0131845093222756,
+  	0.0128438426753249,
+  	0.0124975796646449,
+  	0.0121458711652067,
+  	0.0117888704247183,
+  	0.0114267329968529,
+  	0.0110596166734735,
+  	0.0106876814158841,
+  	0.0103110892851360,
+  	0.0099300043714212,
+  	0.0095445927225849,
+  	0.0091550222717888,
+  	0.0087614627643580,
+  	0.0083640856838475,
+  	0.0079630641773633,
+  	0.0075585729801782,
+  	0.0071507883396855,
+  	0.0067398879387430,
+  	0.0063260508184704,
+  	0.0059094573005900,
+  	0.0054902889094487,
+  	0.0050687282939456,
+  	0.0046449591497966,
+  	0.0042191661429919,
+  	0.0037915348363451,
+  	0.0033622516236779,
+  	0.0029315036836558,
+  	0.0024994789888943,
+  	0.0020663664924131,
+  	0.0016323569986067,
+  	0.0011976474864367,
+  	0.0007624720924706,
+  	0.0003276086705538,
+  	0., // zero padding is ignored
+  	0.  // zero padding is ignored
+};
+
+#pragma acc declare copyin( Gauss150Wt[0:150], Gauss150Z[0:150] )
+
+#endif // SAS_HAVE_gauss150
+
+
+#ifndef SAS_HAVE_sphere_form
+#define SAS_HAVE_sphere_form
+
+#line 1 "sphere_form"
+double sphere_volume(double radius);
+double sphere_form(double q, double radius, double sld, double solvent_sld);
+
+    
+#pragma acc routine seq
+double sphere_volume(double radius)
+{
+    return M_4PI_3*cube(radius);
+}
+    
+#pragma acc routine seq
+double sphere_form(double q, double radius, double sld, double solvent_sld)
+{
+    const double fq = sphere_volume(radius) * sas_3j1x_x(q*radius);
+    const double contrast = (sld - solvent_sld);
+    return 1.0e-4*square(contrast * fq);
+}
+
+
+
+#endif // SAS_HAVE_sphere_form
+
+
+#ifndef SAS_HAVE_bcc_paracrystal
+#define SAS_HAVE_bcc_paracrystal
+
+#line 1 "bcc_paracrystal"
+static double
+bcc_Zq(double qa, double qb, double qc, double dnn, double d_factor)
+{
+    // Equations from Matsuoka 26-27-28, multiplied by |q|
+    const double a1 = (-qa + qb + qc)/2.0;
+    const double a2 = (+qa - qb + qc)/2.0;
+    const double a3 = (+qa + qb - qc)/2.0;
+    const double d_a = dnn/sqrt(0.75);
+
+#if 1
+    // Matsuoka 29-30-31
+    //     Z_k numerator: 1 - exp(a)^2
+    //     Z_k denominator: 1 - 2 cos(d a_k) exp(a) + exp(2a)
+    // Rewriting numerator
+    //         => -(exp(2a) - 1)
+    //         => -expm1(2a)
+    // Rewriting denominator
+    //         => exp(a)^2 - 2 cos(d ak) exp(a) + 1)
+    //         => (exp(a) - 2 cos(d ak)) * exp(a) + 1
+    const double arg = -0.5*square(dnn*d_factor)*(a1*a1 + a2*a2 + a3*a3);
+    const double exp_arg = exp(arg);
+    const double Zq = -cube(expm1(2.0*arg))
+        / ( ((exp_arg - 2.0*cos(d_a*a1))*exp_arg + 1.0)
+          * ((exp_arg - 2.0*cos(d_a*a2))*exp_arg + 1.0)
+          * ((exp_arg - 2.0*cos(d_a*a3))*exp_arg + 1.0));
+
+#elif 0
+    // ** Alternate form, which perhaps is more approachable
+    //     Z_k numerator   => -[(exp(2a) - 1) / 2.exp(a)] 2.exp(a)
+    //                     => -[sinh(a)] exp(a)
+    //     Z_k denominator => [(exp(2a) + 1) / 2.exp(a) - cos(d a_k)] 2.exp(a)
+    //                     => [cosh(a) - cos(d a_k)] 2.exp(a)
+    //     => Z_k = -sinh(a) / [cosh(a) - cos(d a_k)]
+    //            = sinh(-a) / [cosh(-a) - cos(d a_k)]
+    //
+    // One more step leads to the form in sasview 3.x for 2d models
+    //            = tanh(-a) / [1 - cos(d a_k)/cosh(-a)]
+    //
+    const double arg = 0.5*square(dnn*d_factor)*(a1*a1 + a2*a2 + a3*a3);
+    const double sinh_qd = sinh(arg);
+    const double cosh_qd = cosh(arg);
+    const double Zq = sinh_qd/(cosh_qd - cos(d_a*a1))
+                    * sinh_qd/(cosh_qd - cos(d_a*a2))
+                    * sinh_qd/(cosh_qd - cos(d_a*a3));
+#else
+    const double arg = 0.5*square(dnn*d_factor)*(a1*a1 + a2*a2 + a3*a3);
+    const double tanh_qd = tanh(arg);
+    const double cosh_qd = cosh(arg);
+    const double Zq = tanh_qd/(1.0 - cos(d_a*a1)/cosh_qd)
+                    * tanh_qd/(1.0 - cos(d_a*a2)/cosh_qd)
+                    * tanh_qd/(1.0 - cos(d_a*a3)/cosh_qd);
+#endif
+
+    return Zq;
+}
+
+
+// occupied volume fraction calculated from lattice symmetry and sphere radius
+static double
+bcc_volume_fraction(double radius, double dnn)
+{
+    return 2.0*sphere_volume(sqrt(0.75)*radius/dnn);
+    // note that sqrt(0.75) = root3/2 and sqrt(0.75)/dnn=1/d_a
+    //Thus this is correct
+}
+
+static double
+form_volume_bcc_paracrystal(double radius)
+{
+    return sphere_volume(radius);
+}
+
+
+static double Iq_bcc_paracrystal(double q, double dnn,
+    double d_factor, double radius,
+    double sld, double solvent_sld)
+{
+    // translate a point in [-1,1] to a point in [0, 2 pi]
+    const double phi_m = M_PI;
+    const double phi_b = M_PI;
+    // translate a point in [-1,1] to a point in [0, pi]
+    const double theta_m = M_PI_2;
+    const double theta_b = M_PI_2;
+
+    double outer_sum = 0.0;
+    for(int i=0; i<GAUSS_N; i++) {
+        double inner_sum = 0.0;
+        const double theta = GAUSS_Z[i]*theta_m + theta_b;
+        double sin_theta, cos_theta;
+        SINCOS(theta, sin_theta, cos_theta);
+        const double qc = q*cos_theta;
+        const double qab = q*sin_theta;
+        for(int j=0;j<GAUSS_N;j++) {
+            const double phi = GAUSS_Z[j]*phi_m + phi_b;
+            double sin_phi, cos_phi;
+            SINCOS(phi, sin_phi, cos_phi);
+            const double qa = qab*cos_phi;
+            const double qb = qab*sin_phi;
+            const double form = bcc_Zq(qa, qb, qc, dnn, d_factor);
+            inner_sum += GAUSS_W[j] * form;
+        }
+        inner_sum *= phi_m;  // sum(f(x)dx) = sum(f(x)) dx
+        outer_sum += GAUSS_W[i] * inner_sum * sin_theta;
+    }
+    outer_sum *= theta_m;
+    const double Zq = outer_sum/(4.0*M_PI);
+    const double Pq = sphere_form(q, radius, sld, solvent_sld);
+    return bcc_volume_fraction(radius, dnn) * Pq * Zq;
+    // note that until we can return non fitable values to the GUI this
+    // can only be queried by a script. Otherwise we can drop the
+    // bcc_volume_fraction as it is effectively included in "scale."
+}
+
+
+static double Iqabc_bcc_paracrystal(double qa, double qb, double qc,
+    double dnn, double d_factor, double radius,
+    double sld, double solvent_sld)
+{
+    const double q = sqrt(qa*qa + qb*qb + qc*qc);
+    const double Zq = bcc_Zq(qa, qb, qc, dnn, d_factor);
+    const double Pq = sphere_form(q, radius, sld, solvent_sld);
+    return bcc_volume_fraction(radius, dnn) * Pq * Zq;
+}
+
+
+#endif // SAS_HAVE_bcc_paracrystal
+
+
+
+/* END Required header for SASmodel bcc_paracrystal */
+%}
+    DECLARE
+%{
+  double shape;
+  double my_s_pre;
+  double my_a_v;
+%}
+
+INITIALIZE
+%{
+shape=-1;  /* -1:no shape, 0:cyl, 1:box, 2:sphere  */
+if (xwidth && yheight && zdepth)
+    shape=1;
+  else if (R > 0 && yheight)
+    shape=0;
+  else if (R > 0 && !yheight)
+    shape=2;
+  if (shape < 0)
+    exit(fprintf(stderr, "SasView_model: %s: sample has invalid dimensions.\n"
+                         "ERROR     Please check parameter values.\n", NAME_CURRENT_COMP));
+
+  /* now compute target coords if a component index is supplied */
+  if (!target_index && !target_x && !target_y && !target_z) target_index=1;
+  if (target_index)
+  {
+    Coords ToTarget;
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &target_x, &target_y, &target_z);
+  }
+
+  if (!(target_x || target_y || target_z)) {
+    printf("SasView_model: %s: The target is not defined. Using direct beam (Z-axis).\n",
+      NAME_CURRENT_COMP);
+    target_z=1;
+  }
+
+  my_s_pre = model_abs;
+  my_a_v = 0; // NEEDS FIXING
+
+%}
+
+
+TRACE
+%{
+  double l0=0,l1=0;
+  double k, l_full, l, l_1, dl, d_phi, my_s;
+  double aim_x=0, aim_y=0, aim_z=1, axis_x, axis_y, axis_z;
+  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
+  double f, solid_angle, kx_i, ky_i, kz_i, q, qx, qy, qz;
+  char intersect=0;
+
+  /* Intersection photon trajectory / sample (sample surface) */
+  if (shape == 0){
+    intersect = cylinder_intersect(&l0, &l1, x, y, z, vx, vy, vz, R, yheight);}
+  else if (shape == 1){
+    intersect = box_intersect(&l0, &l1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);}
+  else if (shape == 2){
+    intersect = sphere_intersect(&l0, &l1, x, y, z, vx, vy, vz, R);}
+  if(intersect)
+  {
+    if(l0 < 0)
+      ABSORB;
+
+    /* Photon enters at l0. */
+    k = sqrt(kx*kx + ky*ky + kz*kz);
+    l_full = (l1 - l0);          /* Length of full path through sample */
+    dl = rand01()*(l1 - l0) + l0;    /* Point of scattering */
+    PROP_DT(dl);                     /* Point of scattering */
+    l = (dl-l0);                   /* Penetration in sample */
+
+    kx_i=kx;
+    ky_i=ky;
+    kz_i=kz;
+    if ((target_x || target_y || target_z)) {
+      aim_x = target_x-x;            /* Vector pointing at target (anal./det.) */
+      aim_y = target_y-y;
+      aim_z = target_z-z;
+    }
+    if(focus_aw && focus_ah) {
+      randvec_target_rect_angular(&kx, &ky, &kz, &solid_angle,
+        aim_x, aim_y, aim_z, focus_aw, focus_ah, ROT_A_CURRENT_COMP);
+    } else if(focus_xw && focus_yh) {
+      randvec_target_rect(&kx, &ky, &kz, &solid_angle,
+        aim_x, aim_y, aim_z, focus_xw, focus_yh, ROT_A_CURRENT_COMP);
+    } else {
+      randvec_target_circle(&kx, &ky, &kz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
+    }
+    NORM(kx, ky, kz);
+    kx *= k;
+    ky *= k;
+    kz *= k;
+    qx = (kx_i-kx);
+    qy = (ky_i-ky);
+    qz = (kz_i-kz);
+    q = sqrt(qx*qx+qy*qy+qz*qz);
+    
+    double trace_radius=radius;
+    if ( pd_radius!=0.0 ){
+    trace_radius = (randnorm()*pd_radius+1.0)*radius;
+    }
+
+        
+    double trace_theta=theta, dtheta=0.0;
+    double trace_phi=phi, dphi=0.0;
+    double trace_Psi=Psi, dPsi=0.0;
+    if ( pd_theta!=0.0 || pd_phi!=0.0 || pd_Psi!=0.0 ){
+    trace_theta = ((rand01()-0.5)*pd_theta + 1.0)*theta;
+    dtheta = trace_theta-theta;
+    trace_phi = ((rand01()-0.5)*pd_phi + 1.0)*phi;
+    dphi = trace_phi-phi;
+    trace_Psi = ((rand01()-0.5)*pd_Psi + 1.0)*Psi;
+    dPsi = trace_Psi-Psi;
+    }
+
+
+    // Sample dependent. Retrieved from SasView./////////////////////
+    float Iq_out;
+    Iq_out = 1;
+
+    double qa=0.0, qb=0.0, qc=0.0;
+    QABCRotation rotation;
+
+    qabc_rotation(&rotation, trace_theta, trace_phi, trace_Psi, dtheta, dphi, dPsi);
+    qabc_apply(&rotation, qx, qy, &qa, &qb, &qc);
+    Iq_out = Iqabc_bcc_paracrystal(qa, qb, qc, dnn, d_factor, trace_radius, sld, sld_solvent  );
+
+
+    float vol;
+    vol = 1;
+
+    // Scale by 1.0E2 [SasView: 1/cm  ->   McXtrace: 1/m]
+    Iq_out = model_scale*Iq_out / vol * 1.0E2;
+
+    l_1 = l1;
+    p *= l_full*solid_angle/(4*PI)*my_s_pre*Iq_out*exp(-my_a_v*(l+l_1)/v);
+    SCATTER;
+  }
+%}
+
+MCDISPLAY
+%{
+
+  if (shape == 0) {	/* cylinder */
+    circle("xz", 0,  yheight/2.0, 0, R);
+    circle("xz", 0, -yheight/2.0, 0, R);
+    line(-R, -yheight/2.0, 0, -R, +yheight/2.0, 0);
+    line(+R, -yheight/2.0, 0, +R, +yheight/2.0, 0);
+    line(0, -yheight/2.0, -R, 0, +yheight/2.0, -R);
+    line(0, -yheight/2.0, +R, 0, +yheight/2.0, +R);
+  }
+  else if (shape == 1) { 	/* box */
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zdepth;
+    double zmax =  0.5*zdepth;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
+  else if (shape == 2) {	/* sphere */
+    circle("xy", 0,  0.0, 0, R);
+    circle("xz", 0,  0.0, 0, R);
+    circle("yz", 0,  0.0, 0, R);
+  }
+%}
+END
+

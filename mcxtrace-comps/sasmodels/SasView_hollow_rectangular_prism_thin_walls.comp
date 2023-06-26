@@ -1,0 +1,578 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
+*
+* Component: SasView_hollow_rectangular_prism_thin_walls
+*
+* %Identification
+* Written by: Jose Robledo
+* Based on sasmodels from SasView
+* Origin: FZJ / DTU / ESS DMSC
+*
+*
+* SasView hollow_rectangular_prism_thin_walls model component as sample description.
+*
+* %Description
+*
+* SasView_hollow_rectangular_prism_thin_walls component, generated from hollow_rectangular_prism_thin_walls.c in sasmodels.
+*
+* Example: 
+*  SasView_hollow_rectangular_prism_thin_walls(sld, sld_solvent, length_a, b2a_ratio, c2a_ratio, 
+*     model_scale=1.0, model_abs=0.0, xwidth=0.01, yheight=0.01, zdepth=0.005, R=0, 
+*     int target_index=1, target_x=0, target_y=0, target_z=1,
+*     focus_xw=0.5, focus_yh=0.5, focus_aw=0, focus_ah=0, focus_r=0, 
+*     pd_length_a=0.0)
+*
+* %Parameters
+* INPUT PARAMETERS:
+* sld: [1e-6/Ang^2] ([-inf, inf]) Parallelepiped scattering length density.
+* sld_solvent: [1e-6/Ang^2] ([-inf, inf]) Solvent scattering length density.
+* length_a: [Ang] ([0, inf]) Shorter side of the parallelepiped.
+* b2a_ratio: [Ang] ([0, inf]) Ratio sides b/a.
+* c2a_ratio: [Ang] ([0, inf]) Ratio sides c/a.
+* Optional parameters:
+* model_abs: [ ] Absorption cross section density at 2200 m/s.
+* model_scale: [ ] Global scale factor for scattering kernel. For systems without inter-particle interference, the form factors can be related to the scattering intensity by the particle volume fraction.
+* xwidth: [m] ([-inf, inf]) Horiz. dimension of sample, as a width.
+* yheight: [m] ([-inf, inf]) vert . dimension of sample, as a height for cylinder/box
+* zdepth: [m] ([-inf, inf]) depth of sample
+* R: [m] Outer radius of sample in (x,z) plane for cylinder/sphere.
+* target_x: [m] relative focus target position.
+* target_y: [m] relative focus target position.
+* target_z: [m] relative focus target position.
+* target_index: [ ] Relative index of component to focus at, e.g. next is +1.
+* focus_xw: [m] horiz. dimension of a rectangular area.
+* focus_yh: [m], vert. dimension of a rectangular area.
+* focus_aw: [deg], horiz. angular dimension of a rectangular area.
+* focus_ah: [deg], vert. angular dimension of a rectangular area.
+* focus_r: [m] case of circular focusing, focusing radius.
+* pd_length_a: [] (0,inf) defined as (dx/x), where x is de mean value and dx the standard devition of the variable
+*
+* %Link
+* %End
+*******************************************************************************/
+DEFINE COMPONENT SasView_hollow_rectangular_prism_thin_walls
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (
+        sld=6.3,
+        sld_solvent=1,
+        length_a=35,
+        b2a_ratio=1,
+        c2a_ratio=1,
+        model_scale=1.0,
+        model_abs=0.0,
+        xwidth=0.01,
+        yheight=0.01,
+        zdepth=0.005,
+        R=0,
+        target_x=0,
+        target_y=0,
+        target_z=1,
+        int target_index=1,
+        focus_xw=0.5,
+        focus_yh=0.5,
+        focus_aw=0,
+        focus_ah=0,
+        focus_r=0,
+        pd_length_a=0.0)
+
+
+SHARE %{
+%include "sas_kernel_header.c"
+
+/* BEGIN Required header for SASmodel hollow_rectangular_prism_thin_walls */
+#define HAS_FQ
+#define FORM_VOL
+
+#ifndef SAS_HAVE_gauss76
+#define SAS_HAVE_gauss76
+
+#line 1 "gauss76"
+// Created by Andrew Jackson on 4/23/07
+
+ #ifdef GAUSS_N
+ # undef GAUSS_N
+ # undef GAUSS_Z
+ # undef GAUSS_W
+ #endif
+ #define GAUSS_N 76
+ #define GAUSS_Z Gauss76Z
+ #define GAUSS_W Gauss76Wt
+
+// Gaussians
+constant double Gauss76Wt[76] = {
+	.00126779163408536,		//0
+	.00294910295364247,
+	.00462793522803742,
+	.00629918049732845,
+	.00795984747723973,
+	.00960710541471375,
+	.0112381685696677,
+	.0128502838475101,
+	.0144407317482767,
+	.0160068299122486,
+	.0175459372914742,		//10
+	.0190554584671906,
+	.020532847967908,
+	.0219756145344162,
+	.0233813253070112,
+	.0247476099206597,
+	.026072164497986,
+	.0273527555318275,
+	.028587223650054,
+	.029773487255905,
+	.0309095460374916,		//20
+	.0319934843404216,
+	.0330234743977917,
+	.0339977794120564,
+	.0349147564835508,
+	.0357728593807139,
+	.0365706411473296,
+	.0373067565423816,
+	.0379799643084053,
+	.0385891292645067,
+	.0391332242205184,		//30
+	.0396113317090621,
+	.0400226455325968,
+	.040366472122844,
+	.0406422317102947,
+	.0408494593018285,
+	.040987805464794,
+	.0410570369162294,
+	.0410570369162294,
+	.040987805464794,
+	.0408494593018285,		//40
+	.0406422317102947,
+	.040366472122844,
+	.0400226455325968,
+	.0396113317090621,
+	.0391332242205184,
+	.0385891292645067,
+	.0379799643084053,
+	.0373067565423816,
+	.0365706411473296,
+	.0357728593807139,		//50
+	.0349147564835508,
+	.0339977794120564,
+	.0330234743977917,
+	.0319934843404216,
+	.0309095460374916,
+	.029773487255905,
+	.028587223650054,
+	.0273527555318275,
+	.026072164497986,
+	.0247476099206597,		//60
+	.0233813253070112,
+	.0219756145344162,
+	.020532847967908,
+	.0190554584671906,
+	.0175459372914742,
+	.0160068299122486,
+	.0144407317482767,
+	.0128502838475101,
+	.0112381685696677,
+	.00960710541471375,		//70
+	.00795984747723973,
+	.00629918049732845,
+	.00462793522803742,
+	.00294910295364247,
+	.00126779163408536		//75 (indexed from 0)
+};
+
+constant double Gauss76Z[76] = {
+	-.999505948362153,		//0
+	-.997397786355355,
+	-.993608772723527,
+	-.988144453359837,
+	-.981013938975656,
+	-.972229228520377,
+	-.961805126758768,
+	-.949759207710896,
+	-.936111781934811,
+	-.92088586125215,
+	-.904107119545567,		//10
+	-.885803849292083,
+	-.866006913771982,
+	-.844749694983342,
+	-.822068037328975,
+	-.7980001871612,
+	-.77258672828181,
+	-.74587051350361,
+	-.717896592387704,
+	-.688712135277641,
+	-.658366353758143,		//20
+	-.626910417672267,
+	-.594397368836793,
+	-.560882031601237,
+	-.526420920401243,
+	-.491072144462194,
+	-.454895309813726,
+	-.417951418780327,
+	-.380302767117504,
+	-.342012838966962,
+	-.303146199807908,		//30
+	-.263768387584994,
+	-.223945802196474,
+	-.183745593528914,
+	-.143235548227268,
+	-.102483975391227,
+	-.0615595913906112,
+	-.0205314039939986,
+	.0205314039939986,
+	.0615595913906112,
+	.102483975391227,			//40
+	.143235548227268,
+	.183745593528914,
+	.223945802196474,
+	.263768387584994,
+	.303146199807908,
+	.342012838966962,
+	.380302767117504,
+	.417951418780327,
+	.454895309813726,
+	.491072144462194,		//50
+	.526420920401243,
+	.560882031601237,
+	.594397368836793,
+	.626910417672267,
+	.658366353758143,
+	.688712135277641,
+	.717896592387704,
+	.74587051350361,
+	.77258672828181,
+	.7980001871612,	//60
+	.822068037328975,
+	.844749694983342,
+	.866006913771982,
+	.885803849292083,
+	.904107119545567,
+	.92088586125215,
+	.936111781934811,
+	.949759207710896,
+	.961805126758768,
+	.972229228520377,		//70
+	.981013938975656,
+	.988144453359837,
+	.993608772723527,
+	.997397786355355,
+	.999505948362153		//75
+};
+
+
+#pragma acc declare copyin(Gauss76Wt[0:76], Gauss76Z[0:76])
+
+#endif // SAS_HAVE_gauss76
+
+
+#ifndef SAS_HAVE_hollow_rectangular_prism_thin_walls
+#define SAS_HAVE_hollow_rectangular_prism_thin_walls
+
+#line 1 "hollow_rectangular_prism_thin_walls"
+static double
+shell_volume(double length_a, double b2a_ratio, double c2a_ratio)
+{
+    const double length_b = length_a * b2a_ratio;
+    const double length_c = length_a * c2a_ratio;
+    const double shell_volume = 2.0 * (length_a*length_b + length_a*length_c + length_b*length_c);
+    return shell_volume;
+}
+
+static double
+form_volume_hollow_rectangular_prism_thin_walls(double length_a, double b2a_ratio, double c2a_ratio)
+{
+    const double length_b = length_a * b2a_ratio;
+    const double length_c = length_a * c2a_ratio;
+    const double form_volume = length_a * length_b * length_c;
+    return form_volume;
+}
+
+static double
+radius_from_excluded_volume_hollow_rectangular_prism_thin_walls(double length_a, double b2a_ratio, double c2a_ratio)
+{
+    const double r_equiv = sqrt(length_a*length_a*b2a_ratio/M_PI);
+    const double length_c = length_a*c2a_ratio;
+    return 0.5*cbrt(0.75*r_equiv*(2.0*r_equiv*length_c + (r_equiv + length_c)*(M_PI*r_equiv + length_c)));
+}
+
+static double
+radius_effective_hollow_rectangular_prism_thin_walls(int mode, double length_a, double b2a_ratio, double c2a_ratio)
+{
+    switch (mode) {
+    default:
+    case 1: // equivalent cylinder excluded volume
+        return radius_from_excluded_volume_hollow_rectangular_prism_thin_walls(length_a, b2a_ratio, c2a_ratio);
+    case 2: // equivalent outer volume sphere
+        return cbrt(cube(length_a)*b2a_ratio*c2a_ratio/M_4PI_3);
+    case 3: // half length_a
+        return 0.5 * length_a;
+    case 4: // half length_b
+        return 0.5 * length_a*b2a_ratio;
+    case 5: // half length_c
+        return 0.5 * length_a*c2a_ratio;
+    case 6: // equivalent outer circular cross-section
+        return length_a*sqrt(b2a_ratio/M_PI);
+    case 7: // half ab diagonal
+        return 0.5*sqrt(square(length_a) * (1.0 + square(b2a_ratio)));
+    case 8: // half diagonal
+        return 0.5*sqrt(square(length_a) * (1.0 + square(b2a_ratio) + square(c2a_ratio)));
+    }
+}
+
+static void
+Fq_hollow_rectangular_prism_thin_walls(double q,
+    double *F1,
+    double *F2,
+    double sld,
+    double solvent_sld,
+    double length_a,
+    double b2a_ratio,
+    double c2a_ratio)
+{
+    const double length_b = length_a * b2a_ratio;
+    const double length_c = length_a * c2a_ratio;
+    const double a_half = 0.5 * length_a;
+    const double b_half = 0.5 * length_b;
+    const double c_half = 0.5 * length_c;
+
+   //Integration limits to use in Gaussian quadrature
+    const double v1a = 0.0;
+    const double v1b = M_PI_2;  //theta integration limits
+    const double v2a = 0.0;
+    const double v2b = M_PI_2;  //phi integration limits
+
+    double outer_sum_F1 = 0.0;
+    double outer_sum_F2 = 0.0;
+    for(int i=0; i<GAUSS_N; i++) {
+        const double theta = 0.5 * ( GAUSS_Z[i]*(v1b-v1a) + v1a + v1b );
+
+        double sin_theta, cos_theta;
+        double sin_c, cos_c;
+        SINCOS(theta, sin_theta, cos_theta);
+        SINCOS(q*c_half*cos_theta, sin_c, cos_c);
+
+        // To check potential problems if denominator goes to zero here !!!
+        const double termAL_theta = 8.0 * cos_c / (q*q*sin_theta*sin_theta);
+        const double termAT_theta = 8.0 * sin_c / (q*q*sin_theta*cos_theta);
+
+        double inner_sum_F1 = 0.0;
+        double inner_sum_F2 = 0.0;
+        for(int j=0; j<GAUSS_N; j++) {
+            const double phi = 0.5 * ( GAUSS_Z[j]*(v2b-v2a) + v2a + v2b );
+
+            double sin_phi, cos_phi;
+            double sin_a, cos_a;
+            double sin_b, cos_b;
+            SINCOS(phi, sin_phi, cos_phi);
+            SINCOS(q*a_half*sin_theta*sin_phi, sin_a, cos_a);
+            SINCOS(q*b_half*sin_theta*cos_phi, sin_b, cos_b);
+
+            // Amplitude AL from eqn. (7c)
+            const double AL = termAL_theta
+                * sin_a*sin_b / (sin_phi*cos_phi);
+
+            // Amplitude AT from eqn. (9)
+            const double AT = termAT_theta
+                * ( cos_a*sin_b/cos_phi + cos_b*sin_a/sin_phi );
+
+            inner_sum_F1 += GAUSS_W[j] * (AL+AT);
+            inner_sum_F2 += GAUSS_W[j] * square(AL+AT);
+        }
+
+        inner_sum_F1 *= 0.5 * (v2b-v2a);
+        inner_sum_F2 *= 0.5 * (v2b-v2a);
+        outer_sum_F1 += GAUSS_W[i] * inner_sum_F1 * sin_theta;
+        outer_sum_F2 += GAUSS_W[i] * inner_sum_F2 * sin_theta;
+    }
+
+    outer_sum_F1 *= 0.5*(v1b-v1a);
+    outer_sum_F2 *= 0.5*(v1b-v1a);
+
+    // Normalize as in Eqn. (15) without the volume factor (as cancels with (V*DelRho)^2 normalization)
+    // The factor 2 is due to the different theta integration limit (pi/2 instead of pi)
+    const double form_avg = outer_sum_F1/M_PI_2;
+    const double form_squared_avg = outer_sum_F2/M_PI_2;
+
+    // Multiply by contrast^2. Factor corresponding to volume^2 cancels with previous normalization.
+    const double contrast = sld - solvent_sld;
+
+    // Convert from [1e-12 A-1] to [cm-1]
+    *F1 = 1e-2 * contrast * form_avg;
+    *F2 = 1e-4 * contrast * contrast * form_squared_avg;
+}
+
+
+#endif // SAS_HAVE_hollow_rectangular_prism_thin_walls
+
+
+
+/* END Required header for SASmodel hollow_rectangular_prism_thin_walls */
+%}
+    DECLARE
+%{
+  double shape;
+  double my_s_pre;
+  double my_a_v;
+%}
+
+INITIALIZE
+%{
+shape=-1;  /* -1:no shape, 0:cyl, 1:box, 2:sphere  */
+if (xwidth && yheight && zdepth)
+    shape=1;
+  else if (R > 0 && yheight)
+    shape=0;
+  else if (R > 0 && !yheight)
+    shape=2;
+  if (shape < 0)
+    exit(fprintf(stderr, "SasView_model: %s: sample has invalid dimensions.\n"
+                         "ERROR     Please check parameter values.\n", NAME_CURRENT_COMP));
+
+  /* now compute target coords if a component index is supplied */
+  if (!target_index && !target_x && !target_y && !target_z) target_index=1;
+  if (target_index)
+  {
+    Coords ToTarget;
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &target_x, &target_y, &target_z);
+  }
+
+  if (!(target_x || target_y || target_z)) {
+    printf("SasView_model: %s: The target is not defined. Using direct beam (Z-axis).\n",
+      NAME_CURRENT_COMP);
+    target_z=1;
+  }
+
+  my_s_pre = model_abs;
+  my_a_v = 0; // NEEDS FIXING
+
+%}
+
+
+TRACE
+%{
+  double l0=0,l1=0;
+  double k, l_full, l, l_1, dl, d_phi, my_s;
+  double aim_x=0, aim_y=0, aim_z=1, axis_x, axis_y, axis_z;
+  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
+  double f, solid_angle, kx_i, ky_i, kz_i, q, qx, qy, qz;
+  char intersect=0;
+
+  /* Intersection photon trajectory / sample (sample surface) */
+  if (shape == 0){
+    intersect = cylinder_intersect(&l0, &l1, x, y, z, vx, vy, vz, R, yheight);}
+  else if (shape == 1){
+    intersect = box_intersect(&l0, &l1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);}
+  else if (shape == 2){
+    intersect = sphere_intersect(&l0, &l1, x, y, z, vx, vy, vz, R);}
+  if(intersect)
+  {
+    if(l0 < 0)
+      ABSORB;
+
+    /* Photon enters at l0. */
+    k = sqrt(kx*kx + ky*ky + kz*kz);
+    l_full = (l1 - l0);          /* Length of full path through sample */
+    dl = rand01()*(l1 - l0) + l0;    /* Point of scattering */
+    PROP_DT(dl);                     /* Point of scattering */
+    l = (dl-l0);                   /* Penetration in sample */
+
+    kx_i=kx;
+    ky_i=ky;
+    kz_i=kz;
+    if ((target_x || target_y || target_z)) {
+      aim_x = target_x-x;            /* Vector pointing at target (anal./det.) */
+      aim_y = target_y-y;
+      aim_z = target_z-z;
+    }
+    if(focus_aw && focus_ah) {
+      randvec_target_rect_angular(&kx, &ky, &kz, &solid_angle,
+        aim_x, aim_y, aim_z, focus_aw, focus_ah, ROT_A_CURRENT_COMP);
+    } else if(focus_xw && focus_yh) {
+      randvec_target_rect(&kx, &ky, &kz, &solid_angle,
+        aim_x, aim_y, aim_z, focus_xw, focus_yh, ROT_A_CURRENT_COMP);
+    } else {
+      randvec_target_circle(&kx, &ky, &kz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
+    }
+    NORM(kx, ky, kz);
+    kx *= k;
+    ky *= k;
+    kz *= k;
+    qx = (kx_i-kx);
+    qy = (ky_i-ky);
+    qz = (kz_i-kz);
+    q = sqrt(qx*qx+qy*qy+qz*qz);
+    
+    double trace_length_a=length_a;
+    if ( pd_length_a!=0.0 ){
+    trace_length_a = (randnorm()*pd_length_a+1.0)*length_a;
+    }
+
+        
+
+
+    // Sample dependent. Retrieved from SasView./////////////////////
+    float Iq_out;
+    Iq_out = 1;
+
+    double F1=0.0, F2=0.0;
+    Fq_hollow_rectangular_prism_thin_walls(q, &F1, &F2, sld, sld_solvent, trace_length_a, b2a_ratio, c2a_ratio);
+    Iq_out = F2;
+
+
+    float vol;
+    vol = 1;
+
+    // Scale by 1.0E2 [SasView: 1/cm  ->   McXtrace: 1/m]
+    Iq_out = model_scale*Iq_out / vol * 1.0E2;
+
+    l_1 = l1;
+    p *= l_full*solid_angle/(4*PI)*my_s_pre*Iq_out*exp(-my_a_v*(l+l_1)/v);
+    SCATTER;
+  }
+%}
+
+MCDISPLAY
+%{
+
+  if (shape == 0) {	/* cylinder */
+    circle("xz", 0,  yheight/2.0, 0, R);
+    circle("xz", 0, -yheight/2.0, 0, R);
+    line(-R, -yheight/2.0, 0, -R, +yheight/2.0, 0);
+    line(+R, -yheight/2.0, 0, +R, +yheight/2.0, 0);
+    line(0, -yheight/2.0, -R, 0, +yheight/2.0, -R);
+    line(0, -yheight/2.0, +R, 0, +yheight/2.0, +R);
+  }
+  else if (shape == 1) { 	/* box */
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zdepth;
+    double zmax =  0.5*zdepth;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
+  else if (shape == 2) {	/* sphere */
+    circle("xy", 0,  0.0, 0, R);
+    circle("xz", 0,  0.0, 0, R);
+    circle("yz", 0,  0.0, 0, R);
+  }
+%}
+END
+
