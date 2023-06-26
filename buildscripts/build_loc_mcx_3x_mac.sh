@@ -49,7 +49,7 @@ if [[ !  -d $CONDALOCATION ]]; then
     echo
     export PATH=$CONDALOCATION/bin:$PATH 
     mamba update mamba -y
-    mamba install cmake compilers gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 openmpi -y
+    mamba install cmake compilers gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 openmpi xraylib -y
     mamba clean --all -y
 fi
 
