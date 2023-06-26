@@ -371,7 +371,7 @@ END\n\n"""
                 pd_condition_ang = "    if ("
                 n_pd_angles = 0
                 if ftype in ["Iqac", "Iqabc"]:
-                    for angle, name in zip(angles, ["theta", "phi", "Psi"]):
+                    for angle, name in zip(angles, ["theta", "Phi", "Psi"]):
                         content2 += f"      {name}={angle},\n"
                         func_param_str += f", {name}"
                         pd_angles.append(name)
@@ -473,7 +473,7 @@ SETTING PARAMETERS (\n"""
                     func_param_str += f", {name}"
 
                 if ftype in ["Iqac", "Iqabc"]:
-                    for angle, name in zip(angles, ["theta", "phi", "Psi"]):
+                    for angle, name in zip(angles, ["theta", "Phi", "Psi"]):
                         content_func[ftype] += f"        {name}={angle},\n"
                         func_param_str += f", {name}"
 
@@ -576,19 +576,18 @@ if (xwidth && yheight && zdepth)
 TRACE
 %{
   double l0=0,l1=0;
-  double k, l_full, l, l_1, dl, d_phi, my_s;
+  double k, l_full, l, l_1, dl, d_Phi, my_s;
   double aim_x=0, aim_y=0, aim_z=1, axis_x, axis_y, axis_z;
-  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
   double f, solid_angle, kx_i, ky_i, kz_i, q, qx, qy, qz;
   char intersect=0;
 
   /* Intersection photon trajectory / sample (sample surface) */
   if (shape == 0){
-    intersect = cylinder_intersect(&l0, &l1, x, y, z, vx, vy, vz, R, yheight);}
+    intersect = cylinder_intersect(&l0, &l1, x, y, z, kx, ky, kz, R, yheight);}
   else if (shape == 1){
-    intersect = box_intersect(&l0, &l1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);}
+    intersect = box_intersect(&l0, &l1, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);}
   else if (shape == 2){
-    intersect = sphere_intersect(&l0, &l1, x, y, z, vx, vy, vz, R);}
+    intersect = sphere_intersect(&l0, &l1, x, y, z, kx, ky, kz, R);}
   if(intersect)
   {
     if(l0 < 0)
@@ -598,7 +597,7 @@ TRACE
     k = sqrt(kx*kx + ky*ky + kz*kz);
     l_full = (l1 - l0);          /* Length of full path through sample */
     dl = rand01()*(l1 - l0) + l0;    /* Point of scattering */
-    PROP_DT(dl);                     /* Point of scattering */
+    PROP_DL(dl);                     /* Point of scattering */
     l = (dl-l0);                   /* Penetration in sample */
 
     kx_i=kx;
@@ -691,11 +690,11 @@ TRACE
                     ] += """    double qab=0.0, qc=0.0;
     QACRotation rotation;
 
-    qac_rotation(&rotation, trace_theta, trace_phi, dtheta, dphi);
+    qac_rotation(&rotation, trace_theta, trace_Phi, dtheta, dPhi);
     qac_apply(&rotation, qx, qy, &qab, &qc);
 """
                     func_param_str = func_param_str.replace(", theta,", "")
-                    func_param_str = func_param_str = func_param_str.replace("phi", "")
+                    func_param_str = func_param_str = func_param_str.replace("Phi", "")
                     content_func[
                         ftype
                     ] += f"    Iq_out = Iqac_{MODELS[i]}(qab, qc{func_param_str});\n"
@@ -705,11 +704,11 @@ TRACE
                     ] += """    double qa=0.0, qb=0.0, qc=0.0;
     QABCRotation rotation;
 
-    qabc_rotation(&rotation, trace_theta, trace_phi, trace_Psi, dtheta, dphi, dPsi);
+    qabc_rotation(&rotation, trace_theta, trace_Phi, trace_Psi, dtheta, dPhi, dPsi);
     qabc_apply(&rotation, qx, qy, &qa, &qb, &qc);
 """
                     func_param_str = func_param_str.replace(", theta,", "")
-                    func_param_str = func_param_str.replace("phi,", "")
+                    func_param_str = func_param_str.replace("Phi,", "")
                     func_param_str = func_param_str.replace("Psi", "")
                     content_func[
                         ftype
@@ -726,7 +725,7 @@ TRACE
     Iq_out = model_scale*Iq_out / vol * 1.0E2;
 
     l_1 = l1;
-    p *= l_full*solid_angle/(4*PI)*my_s_pre*Iq_out*exp(-my_a_v*(l+l_1)/v);"""
+    p *= l_full*solid_angle/(4*PI)*my_s_pre*Iq_out*exp(-my_a_v*(l+l_1)/k);"""
 
                 # Save functions
                 content_func[ftype] += final_content
@@ -804,7 +803,7 @@ def generate_tests():
                 content2 += "\n"
                 pd_angles = []
                 if ftype in ["Iqac", "Iqabc"]:
-                    for angle, name in zip(angles, ["theta", "phi", "Psi"]):
+                    for angle, name in zip(angles, ["theta", "Phi", "Psi"]):
                         content2 += f"      {name}={angle},\n"
                         func_param_str += f"{name}={name}, "
                         pd_angles.append(name)
@@ -879,17 +878,23 @@ COMPONENT a1 = Progress_bar()
 COMPONENT arm = Arm(
     )
   AT (0, 0, 0) ABSOLUTE
-COMPONENT source = Source_simple(
-    radius = 0.02, dist = 3, focus_xw = 0.01, focus_yh = 0.01,
-    lambda0 = lambda, dlambda = dlambda, flux = 1e10)
+COMPONENT source = Source_flat(
+	xwidth = 0.0005,
+	yheight = 0.0005,
+	dist = 6, 
+	focus_yh = 0.0003, 
+	focus_xw = 0.0003,
+	lambda0 = lambda, 
+	dlambda = dlambda,
+    flux = 1e10)
   AT (0, 0, 0) RELATIVE arm
 
 COMPONENT coll1 = Slit(
-    radius = 0.005)
+    radius = 0.0005)
   AT (0, 0, 3) RELATIVE arm
 
 COMPONENT coll2 = Slit(
-    radius = 0.005)
+    radius = 0.0003)
   AT (0, 0, 6) RELATIVE arm
 
 COMPONENT sample_arm = Arm()
