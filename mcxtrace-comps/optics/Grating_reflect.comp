@@ -37,9 +37,9 @@
 * zdepth: [m]    The length of the grating.
 * R0:[ ]         Constant reflecticity of the grating [0;1].
 * rho_l: [l/mm]  Number of lines pr mm of the grating. 
-* b: [AA]        Width of the spacing i Angstrom. If zero, default is found using rho_l/3.
+* b: [AA]        Width of the spacing in Angstrom. If zero, default is found using rho_l/3.
 * d: [AA]        Width of the slits in Angstrom. If zero, default is found using rho_l.
-* N: [ ]         Number of slits. If Zero, default is found using r_rho.
+* N: [ ]         Number of slits. If Zero, default is found using rho_l.
 * d_phi: [deg]   Range of diffraction angle that is to be simulated -d_phi/2 ; d_phi/2.
 * order: [ ]     The target order of the grating. If non-zero d_phi will be centered around this scattering line.
 * phi0: [deg]    Target angle to center d_phi. If this is set to 0 the 0th (or any other chosen by the parameter order) order line will be used.
