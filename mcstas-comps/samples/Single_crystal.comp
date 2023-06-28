@@ -442,9 +442,11 @@ double tau;                 /* Length of (tau_x, tau_y, tau_z) */
     // test if the result file has been created
     FILE *file = fopen(OUTFILE,"r");
     if (!file) return(NULL);     
-    printf("%s: INFO: converting %s into F2(HKL) list %s\n", 
+    MPI_MASTER(
+    printf("%s: INFO: Converting %s into F2(HKL) list %s\n", 
       __FILE__, infile, OUTFILE);
-      printf ("%s\n",cmd);
+    printf ("%s\n",cmd);
+    );
     fflush(NULL);
     return(OUTFILE);
   } // cif2hkl
