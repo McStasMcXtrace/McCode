@@ -1,3 +1,32 @@
+# TITLE *Iron-Fe-[IM3-M] Swanson, H.E.;Tatge, E.[1954] [Iron alpha phase]
+# CELL 2.886000 2.886000 2.886000 90.000000 90.000000 90.000000
+# SPCGRP I M 3 M   CUBIC STRUCTURE
+# ATOM FE 1 0.000000 0.000000 0.000000
+# SCATTERING FACTOR  COEFFICIENTS: FE     F= 0.945 CM-12
+# Reference: Acta Crystallographica (1954) 7, 464-464
+#
+# Physical parameters:
+# density   7.87    in [g/cm^3]
+# weight    55.84   in [g/mol] (single atom)
+# multiplicity 2    in [atoms/unit cell]
+# Vc        24.04   volume of unit cell in [A^3]
+# v_sound   4910    in [m/s]
+# v_sound_l 4994    velocity of longitudinal sound in [m/s]
+# v_sound_t 2809    velocity of transversal sound in [m/s]
+# T_m       1811    melting temperature in [K]
+# T_b       3134    boiling temperature in [K]
+# At_number 26      atomic number Z
+# lattice_a 2.886   lattice parameter a in [Angs]
+#
+# Format parameters: Crystallographica format
+# column_j  4 multiplicity 'j'
+# column_d  5 d-spacing 'd' in [Angs]
+# column_F2 7 norm of scattering factor |F|^2 in [fm^2]
+# column_h 1
+# column_k 2
+# column_l 3
+#
+# h   k   l Mult. d-space 2Theta   F-squared
   2   0   0   6  1.43325  3.30462  353.843
   2   1   1  24  1.17024  4.04759  162.086
   2   2   0  12  1.01346  4.67408  78.5888

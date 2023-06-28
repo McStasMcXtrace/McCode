@@ -17,7 +17,7 @@
 * The default sample itself is an LaB6-powder. 
 * Alternatively, the Single_crystal component can also be tested in powder mode.
 *
-* %Example: Test_PowderN.instr reflections="Fe_bcc229_lt13deg.dat" -n1e7 TTH=13.4 d_phi=45 frac_i=0 Detector: detector2_I=2.49827e-16
+* %Example: Test_PowderN.instr reflections="Fe_bcc229_lt13deg.dat" -n1e7 TTH=13.4 d_phi=45 frac_i=0 Detector: Sph_mon_I=2.68295e-14
 * %Example: Test_PowderN.instr E0=15 Detector: Sph_mon_I=6.24257e-12
 * %Example: Test_PowderN.instr E0=15 d_phi=10 Detector: Sph_mon_I=6.59782e-13
 * %Example: Test_PowderN.instr E0=15 directbeam=1 SPLITS=2 Detector: Sph_mon_I=7.94366e-10
