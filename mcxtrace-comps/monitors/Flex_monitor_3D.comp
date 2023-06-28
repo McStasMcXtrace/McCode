@@ -15,7 +15,8 @@
 * Flexible monitor.
 *
 * %D
-* A square 3D single monitor that measures intensity (or something else) as a function of two selectable variables or parameters.
+* A square 3D single monitor that measures intensity (or something else) as a function of three selectable variables or parameters.
+* The 3D data is saved as a series of 2D datasets, which names are filename_index
 *
 * Example: Flex_monitor_3D(nU1=20, nU2=20, nU3=20, filename="Output", ustring1="x", ustring2="y", ustring1="z", Umin1=-.1, Umax1=.1, Umin2=-.1, Umax2=.1, Umin3=-.1, Umax3=.1)
 *
