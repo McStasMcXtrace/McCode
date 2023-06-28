@@ -41,7 +41,7 @@
 * 31.45    | sample stage with e.g. Fluorescence and/or PowderN components. At 13.99 from DCM.
 * 32.09    | a set of detectors (transmission, XRD and XRF), radius 654 mm
 *
-* %Example: E0=13 Detector: xpad_I=67016
+* %Example: E0=13 Detector: xpad_I=1.3e6
 *
 * %Parameters
 * E0:       [keV]  Central energy of the interval to be looked at
