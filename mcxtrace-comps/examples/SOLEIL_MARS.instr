@@ -299,20 +299,39 @@ AT(0,0,0) RELATIVE PREVIOUS
 
 /*------------------------------------ Sample */
 SPLIT 10 COMPONENT Sample = PowderN(
-  reflections = reflections, material="Si.txt",
+  reflections = reflections,
   xwidth = 0.005,
   yheight = 0.05,
   zdepth = 0.0001,
   d_phi=asin(0.02/0.670)*RAD2DEG,
-  p_interact=0.01
+  p_interact=0.5
 )
 AT (0, 0, DistanceToSample-DistanceToSecondaryBeamMonitor) RELATIVE PREVIOUS
+GROUP samples
+
+COMPONENT SampleF = Fluorescence(
+  material=reflections,
+  xwidth = 0.005,
+  yheight = 0.05,
+  zdepth = 0.0001,
+  focus_ah=asin(0.02/0.670)*RAD2DEG,
+  focus_aw=180,
+  p_interact=0.5)
+AT (0, 0, 0) RELATIVE PREVIOUS
+GROUP samples
+
 
 
 /*------------------------------------- detector */
-COMPONENT displayMonoLength1 = Monitor_nD(
+COMPONENT detector_diffraction = Monitor_nD(
   bins=90000, options="abs theta",
   min=5,max=90, radius= 0.670, yheight = 0.02
+)
+AT(0,0,0) RELATIVE Sample
+
+COMPONENT detector_fluo = Monitor_nD(
+  bins=1024, options="energy", min=0, max=E0*(1+dEr),
+  radius= 0.670, yheight = 0.02
 )
 AT(0,0,0) RELATIVE Sample
 
