@@ -20,7 +20,7 @@
 * You may scan like so for example:
 *   mxrun -n 1e7 SSRL_bl_11_2_white_src.instr -N601 Etohit=6900,7500 detuning_percentage=40
 *
-* %Example: Etohit=6900 Detector: EnergyMonitor_first_I=9.51972e+09
+* %Example: Etohit=6900 Detector: EnergyMonitor_first_I=1.69521e+09
 *
 * %Parameters
 * Etohit: [eV.] Energy used to calculate the bragg angle the monochromator is put at. This is the energy we select.

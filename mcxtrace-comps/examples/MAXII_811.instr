@@ -22,7 +22,7 @@
 * If mirrors are in the monochromators are automatically reposistioned to
 * accomadate the deflected beam. 
 *
-* %Example: MAXII_811.instr M1=1 M2=1 M1_pitch=1 M2_pitch=1 theta=14.226   Detector: sphere_psd_I=1.95e+08
+* %Example: MAXII_811.instr M1=1 M2=1 M1_pitch=1 M2_pitch=1 theta=14.226   Detector: sphere_psd_I=1.5e+08
 * %Example: MAXII_811.instr M1=0 M2=0 theta=14.226    Detector: hutch_E2_I=2.25761e+11
 *
 * %Parameters
@@ -130,13 +130,6 @@ INITIALIZE
 /* instrument is defined as a sequence of components.  */
 TRACE
 
-/* The Arm() class component defines reference points and orientations  */
-/* in 3D space. Every component instance must have a unique name. Here, */
-/* Origin is used. This Arm() component is set to define the origin of  */
-/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
-/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
-/* EXTEND GROUP PREVIOUS. Also think about adding a photon source !    */
-/* Progress_bar is an Arm displaying simulation progress.               */
 COMPONENT Origin = Progress_bar()
 AT (0,0,0) ABSOLUTE
 
@@ -316,7 +309,7 @@ COMPONENT  diff_sample_psd = PSD_monitor(
   restore_xray=1) 
 AT(0,0,0) RELATIVE diff_sample_pos
 
-COMPONENT si_sample = PowderN(
+SPLIT COMPONENT si_sample = PowderN(
   reflections = "Si.laz", material="Si.txt", radius = 0.0002,
   yheight = 0.05, d_phi= 0)
 AT (0, 0, 0) RELATIVE diff_sample_pos
@@ -341,12 +334,6 @@ COMPONENT pilatus100k = PSD_monitor(
   nx=487, ny=195, xwidth=83.8e-3, yheight=33.5e-3, filename="pil_diff.psd")
 AT(0,0,1.2) RELATIVE tth_arm
 
-/* This section is executed when the simulation ends (C code). Other    */
-/* optional sections are : SAVE                                         */
-FINALLY
-%{
-%}
-/* The END token marks the instrument definition end */
 END
 
 
