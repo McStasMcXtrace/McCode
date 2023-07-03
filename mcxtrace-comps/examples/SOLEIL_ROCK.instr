@@ -44,7 +44,7 @@
 * Manganese and chrome scan: mxrun SOLEIL_ROCK.instr E0=5.700,6.800 scan=1 sample_file=MnCr cc=2 -N100
 * Pretty energy repartition monitor result: mxrun SOLEIL_ROCK.instr E0=17.000 cc=2 -n1e8
 *
-* %Example: E0=15.918 Detector: psd_monitor_I=2.5e+06
+* %Example: E0=15.918 Detector: psd_monitor_I=2.13326e+07
 *
 * %Parameters
 * E0:               [keV]    Energy to hit, i.e. selected by the channel-cut monochromator
@@ -206,7 +206,7 @@ COMPONENT slit2 = Slit(
 AT (0, 0, 8.6486-8.5336) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- Toroidal mirror M1 */   
-COMPONENT mirror_m1 = Mirror_toroid(
+COMPONENT mirror_m1 = Mirror_toroid_pothole(
     xwidth = 0.015,
     zdepth = 1.1,
     radius=0.0317, 
@@ -218,19 +218,22 @@ EXTEND
 	if (!SCATTERED) ABSORB;
 %}
 
-COMPONENT arm_m1 = PSD_monitor(xwidth=0.02, yheight=0.01)
-AT (0, 0, 0) RELATIVE PREVIOUS
-ROTATED (-angle_m1*RAD2DEG, 0, 0) RELATIVE Source
-
-COMPONENT arm_m1_div = Divergence_monitor(maxdiv_h=0.05, maxdiv_v=0.05, nh=128, nv=128)
-AT (0, 0, 0) RELATIVE PREVIOUS
+COMPONENT mirror_m1_out = Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (-angle_m1*RAD2DEG/2, 0, 0) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- Horizontal slit  3 */
+
+COMPONENT slit3_xy = PSD_monitor(xwidth=0.02, yheight=0.01)
+AT (0, 0, 11.6905-10.15) RELATIVE PREVIOUS
+
+COMPONENT slit3_div = Divergence_monitor(maxdiv_h=0.05, maxdiv_v=0.05, nh=128, nv=128)
+AT (0, 0, 0) RELATIVE PREVIOUS
 
 COMPONENT slit3 = Slit(
     xwidth=0.02, 
     yheight=0.01)
-AT (0, 0, 11.6905-10.15) RELATIVE PREVIOUS
+AT (0, 0, 0) RELATIVE slit3_xy
 
 /* -------------------------------------------------- M2a mirror */
 COMPONENT mirror_m2a = Mirror(
@@ -243,38 +246,24 @@ EXTEND
 	if (!SCATTERED) ABSORB;
 %}
 
-COMPONENT arm_m2a = COPY(arm_m1)
+COMPONENT mirror_m2a_out = Arm()
 AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (-angle_m2a_m2b*RAD2DEG/2, 0, 0) RELATIVE PREVIOUS
 
-COMPONENT arm_m2a_div = COPY(arm_m1_div) // beam divY exits at -0.458 deg == -angle_m2a_m2b
-AT (0, 0, 0) RELATIVE PREVIOUS
-ROTATED (angle_m2a_m2b*RAD2DEG, 0, 0) RELATIVE PREVIOUS
-
 /* -------------------------------------------------- Horizontal slit 4 */
 
-COMPONENT arm_slit4a = COPY(arm_m1)
-AT (0, 0, 18.1512-16.82) RELATIVE PREVIOUS
+COMPONENT slit4_in = PSD_monitor(xwidth=0.5, yheight=0.5)
+AT (0, 0, 18.1512-16.82) RELATIVE mirror_m2a_out
 
 COMPONENT slit4 = Slit(
     xwidth=0.02, 
     yheight=0.02)
 AT (0, 0, 0) RELATIVE PREVIOUS	
 
-COMPONENT arm_slit4b = COPY(arm_m1)
-AT (0, 0, 0) RELATIVE PREVIOUS
-
-COMPONENT arm_slit4b_div = COPY(arm_m1_div)
-AT (0, 0, 0) RELATIVE PREVIOUS
-
 /* -------------------------------------------------- CC crystal 1 */
-// we shift the channel-cut by 0.001 upwards (+Y) to match the mirror output beam
-COMPONENT arm_crystal0 = COPY(arm_m1)
-AT (0, 0.001, center_first_crystal-18.1512) RELATIVE PREVIOUS
 
-COMPONENT bragg_crystal_psd =PSD_monitor(xwidth=25e-3, yheight=length_first_crystal)
-AT (0, 0, 0) RELATIVE PREVIOUS
-ROTATED (90,0,0) RELATIVE PREVIOUS
+COMPONENT arm_crystal0 = Arm()
+AT (0, 0, center_first_crystal-18.1512) RELATIVE slit4
 
 COMPONENT bragg_crystal = Bragg_crystal(
     length=length_first_crystal, 
@@ -292,7 +281,7 @@ EXTEND
 	if (!SCATTERED) ABSORB;
 %}
 
-COMPONENT arm_crystal1 = COPY(arm_m1)
+COMPONENT arm_crystal1 = Arm()
 AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (-calculated_angle, 0, 0) RELATIVE PREVIOUS
 
@@ -307,9 +296,12 @@ EXTEND
 	if (!SCATTERED) ABSORB;
 %}
 
-COMPONENT arm_crystal2 = COPY(arm_m1)(yheight=0.05)
+COMPONENT arm_crystal2 = Arm()
 AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (calculated_angle, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT bragg_crystal_out = PSD_monitor(xwidth=0.1, yheight=0.1, nx=200, ny=200)
+AT (0,0,2*length_second_crystal)  RELATIVE arm_crystal2
 
 /* -------------------------------------------------- Horizontal slit 5 */
 // the beam is positioned at Y=+dy*sin(2*calculated_angle*DEG2RAD)/sin(calculated_angle*DEG2RAD) 
@@ -319,13 +311,6 @@ COMPONENT slit5 = Slit(
     yheight=0.01)
 AT (0, 0, 21.135 - center_first_crystal) RELATIVE arm_crystal2
 
-
-//COMPONENT slit5 = Slit(
-//    xwidth=0.02, 
-//    yheight=0.01)
-//AT (0, 
-//   (0.01*2*cos(DEG2RAD*calculated_angle)-dist_center_to_center*sin(center_to_c_mono_angle+DEG2RAD*calculated_angle)), 
-//   (21.135-(center_first_crystal+cos(angle_m1+angle_m2a_m2b+DEG2RAD*calculated_angle*2)*dist_center_to_center))/cos(angle_m1+angle_m2a_m2b)) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- Vertical slit 6 */
 COMPONENT slit6 = Slit(
@@ -346,7 +331,7 @@ EXTEND
 	if (!SCATTERED) ABSORB; 
 %}
 
-COMPONENT arm_m2b = Arm()
+COMPONENT mirror_m2b_out = Arm()
 AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (angle_m2a_m2b*RAD2DEG, 0, 0) RELATIVE arm_crystal2 
 
@@ -373,6 +358,9 @@ COMPONENT e_repartition_after_m2b = Monitor_nD(
   filename="e_repartition_after_m2b",
   restore_xray = 1) 
 AT (0,0,0.5) RELATIVE PREVIOUS
+
+COMPONENT sample_in = PSD_monitor(xwidth=0.01, yheight=0.01, nx=200, ny=200)
+AT (0,0,0) RELATIVE PREVIOUS
 
 SPLIT COMPONENT absorption_sample = Fluorescence(
   material=sample_file,
