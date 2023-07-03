@@ -418,7 +418,11 @@ class McPyqtgraphPlotter():
         verbose = n<=4
         fontsize = (4, 10, 14)[int(n<=2) + int(n<12)]
 
-        cbmin, cbmax = self.get_sweep_multiplot_colorbar_limits(node)
+        if self.viewmodel.logstate():
+            cbmin = cbmax = None
+        else:
+            cbmin, cbmax = self.get_sweep_multiplot_colorbar_limits(node)
+
         options = self.get_plot_func_opts(
             self.viewmodel.logstate(), self.viewmodel.legendstate(), self.viewmodel.cmapindex(),
             verbose, fontsize, cbmin, cbmax)
@@ -502,6 +506,11 @@ class McPyqtgraphPlotter():
                 statustext = "Showing 1 plot."
             else:
                 statustext = "Showing %d plots." % num_plots
+
+        if self.viewmodel.log:
+            statustext = "Mode: log. " + statustext
+        else:
+            statustext = "Mode: lin. " + statustext
 
         self.statusmessage.setText(statustext)
 
