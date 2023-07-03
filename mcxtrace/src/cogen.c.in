@@ -2094,6 +2094,9 @@ int cogen_rt_funnel(struct instr_def *instr)
     };
     // GROUP
     if (comp->group) {
+      if (comp->group->first_comp_index == comp->group->last_comp_index) {
+	fprintf(stderr,"\n!!! WARNING: GROUP %s seems to include only one COMPONENT: \n!!!   --> %s <-- \n!!! This may lead to unphysical simulation behaviour!\n",comp->group->name,comp->name);
+      }
       coutf("      // GROUP %s: from %s [%i] to %s [%i]", comp->group->name,
         comp->group->first_comp, comp->group->first_comp_index,
         comp->group->last_comp,  comp->group->last_comp_index);
