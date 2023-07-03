@@ -534,8 +534,7 @@ SETTING PARAMETERS (\n"""
                 ] += """DECLARE
 %{
   double shape;
-  double my_s_pre;
-  double my_a_v;
+  double my_a_k;
 %}
 
 INITIALIZE
@@ -567,16 +566,15 @@ if (xwidth && yheight && zdepth)
     target_z=1;
   }
 
-  my_s_pre = model_abs;
-  my_a_v = 0; // NEEDS FIXING
+  /*TODO fix absorption*/
+  my_a_k = model_abs; /* assume absorption is given in 1/m */
 
 %}
 
 
 TRACE
 %{
-  double l0=0,l1=0;
-  double k, l_full, l, l_1, dl, d_Phi, my_s;
+  double l0, l1, k, l_full, l, dl, d_Phi, theta;
   double aim_x=0, aim_y=0, aim_z=1, axis_x, axis_y, axis_z;
   double f, solid_angle, kx_i, ky_i, kz_i, q, qx, qy, qz;
   char intersect=0;
@@ -724,10 +722,10 @@ TRACE
     // Scale by 1.0E2 [SasView: 1/cm  ->   McXtrace: 1/m]
     Iq_out = model_scale*Iq_out / vol * 1.0E2;
 
-    l_1 = l1;
-    p *= l_full*solid_angle/(4*PI)*my_s_pre*Iq_out*exp(-my_a_v*(l+l_1)/k);"""
+    
+    p *= l_full*solid_angle/(4*PI)*Iq_out*exp(-my_a_k*(l+l1));
 
-                # Save functions
+"""             # Save functions
                 content_func[ftype] += final_content
                 # print(content) ## Verbose
                 if not os.path.isdir("indiv_comps"):
