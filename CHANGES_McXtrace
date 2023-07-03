@@ -23,7 +23,7 @@ CHANGES in 3.2
    - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcxtrace-3.1
 
  Documentation & guides:
- - Inline compont documentation has been given an overhaul, most component doc pages should now
+ - Inline component documentation has been given an overhaul, most component doc pages should now
    render in a meaningful way
 
  Installation:
@@ -47,12 +47,17 @@ CHANGES in 3.2
      mcxtrace-pygen Instrument.instr   -->   Instrument_generated.py
    Using 'jupytext' this file may easily be converted to a notebook:
      jupytext --to ipynb Instrument_generated.py   -->   Instrument_generated.ipynb
+   See https://github.com/PaNOSC-ViNYL/McStasScript
+   for more information on McStasScript, that also works for X-rays.
  - Thanks to the work of José Robledo (FZJ), we now have a better interface to the Small-Angle Scattering
    models from SASview, aka. SASmodels. Due to the big number of included models that each correspond
    to a McXtrace component, these are now found in the "sasmodels" folder of your McXtrace installation.
 
  Tools:
  - mxplot (-pyqtgraph) has received a couple of bugfixes relating to plotting in log-mode.
+ - mxrun has now a number of --optimize options to Optimize beam-line parameters. Specify min,max or min,start,max for parameters to vary. the default optimizer is Powell from SciPy. You may choose the monitor to optimize, or all. Use mxrun -h for more help.
+ - mxgui Run dialogue now allows to Optimize beam-line parameters. Specify min,max or min,start,max for parameters to vary. the default optimizer is Powell from SciPy. You may choose the monitor to optimize, or all.
+
 
  Components and Instruments:
  - As mentioned above, SASmodels now come in the form of 94 (!) components in the sasmodels folder.
