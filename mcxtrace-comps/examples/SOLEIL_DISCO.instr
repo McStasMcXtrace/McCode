@@ -18,7 +18,7 @@
 * %Example: grazing_angle_one=22.5 -n 1e5 Detector: second_HFP_I=2.08292e+11
 *
 * %Parameters
-* grazing_angle_one: [deg]
+* grazing_angle_one: [deg] Mirrors M1/M2 rotation angle
 * HFP_shift: [m] z translation from the HFP position (horizontal focal point detector)
 * VFP_shift: [m] z translation from the VFP position (vertical focal point detector)
 * second_HFP_shift: [m] z translation second HFP position
@@ -193,7 +193,7 @@ ROTATED (0, 0, 0) RELATIVE HFP_location
 COMPONENT M3 = Mirror_curved(
   coating="Si_disco.dat", radius=9.93, length=240e-3, width=30e-3)
 AT (0,0,0) RELATIVE PREVIOUS
-ROTATED (0, 22.5, 0) RELATIVE PREVIOUS
+ROTATED (0, grazing_angle_one, 0) RELATIVE PREVIOUS
 EXTEND
 %{ 
 	if (!SCATTERED) ABSORB;
@@ -201,7 +201,7 @@ EXTEND
 
 COMPONENT M3_takeoff = Arm()
 AT (0, 0, 0) RELATIVE PREVIOUS	
-ROTATED (0, 22.5, 0) RELATIVE PREVIOUS
+ROTATED (0, grazing_angle_one, 0) RELATIVE PREVIOUS
 
 COMPONENT M3_yz = Arm()
 AT (0,0,0) RELATIVE PREVIOUS //to do like before
@@ -216,7 +216,7 @@ COMPONENT M4 = Mirror(
     zdepth=240e-3,
     coating="Si_disco.dat")
 AT (0, 0, 0) RELATIVE PREVIOUS	
-ROTATED ( -22.5, 0, 0) RELATIVE PREVIOUS
+ROTATED ( -grazing_angle_one, 0, 0) RELATIVE PREVIOUS
 EXTEND
 %{ 
 	if (!SCATTERED) ABSORB;
@@ -224,7 +224,7 @@ EXTEND
 
 COMPONENT M4_takeoff = Arm()
 AT (0, 0, 0) RELATIVE PREVIOUS	
-ROTATED ( -22.5, 0, 0) RELATIVE PREVIOUS
+ROTATED ( -grazing_angle_one, 0, 0) RELATIVE PREVIOUS
 
 //rotate 90 back so our repere is normal again
 COMPONENT M4_arm_back = Arm()
@@ -256,7 +256,7 @@ COMPONENT M51 = Mirror_elliptic(
     z_c=35,
     coating="Si_disco.dat")
 AT (0, 0, 0) RELATIVE PREVIOUS
-ROTATED (22.5, 0, 0) RELATIVE PREVIOUS
+ROTATED (grazing_angle_one, 0, 0) RELATIVE PREVIOUS
 EXTEND
 %{ 
 	if (!SCATTERED) ABSORB;
@@ -264,7 +264,7 @@ EXTEND
 
 COMPONENT arm = Arm()
 AT (0, 0, 0) RELATIVE PREVIOUS
-ROTATED (22.5, 0, 0) RELATIVE PREVIOUS
+ROTATED (grazing_angle_one, 0, 0) RELATIVE PREVIOUS
 
 //rotate 90 back so our frame is normal again
 COMPONENT M51_arm_back = Arm()
@@ -324,7 +324,7 @@ COMPONENT M53 = Mirror_toroid_pothole(
     radius_o=4.75,
     coating="AlMgF2_disco.dat")
 AT (0,0,0) RELATIVE PREVIOUS
-ROTATED (-22.5, 0, 0) RELATIVE PREVIOUS
+ROTATED (-grazing_angle_one, 0, 0) RELATIVE PREVIOUS
 EXTEND
 %{ 
 	if (!SCATTERED) ABSORB;
@@ -332,7 +332,7 @@ EXTEND
 
 COMPONENT M53_takeoff = Arm()
 AT (0,0,0) RELATIVE PREVIOUS
-ROTATED (-22.5, 0, 0) RELATIVE PREVIOUS
+ROTATED (-grazing_angle_one, 0, 0) RELATIVE PREVIOUS
 
 //____________________________________________________________  44.750 m : M54 toroidal mirror (horizontal deviation) / 22.5° /  AlMgF2 / R = 7.80 m, r = 1.12 m  
 
@@ -350,7 +350,7 @@ COMPONENT M54 = Mirror_toroid_pothole(
     radius_o=7.8,
     coating="AlMgF2_disco.dat")    
 AT (0,0,0) RELATIVE PREVIOUS
-ROTATED (-22.5, 0, 0) RELATIVE PREVIOUS
+ROTATED (-grazing_angle_one, 0, 0) RELATIVE PREVIOUS
 EXTEND
 %{ 
 	if (!SCATTERED) ABSORB;
@@ -358,7 +358,7 @@ EXTEND
 
 COMPONENT M54_takeoff = Arm()
 AT (0,0,0) RELATIVE PREVIOUS
-ROTATED (-22.5, 0, 0) RELATIVE PREVIOUS
+ROTATED (-grazing_angle_one, 0, 0) RELATIVE PREVIOUS
 
 COMPONENT Mtoroids_arm_back = Arm()
 AT (0,0,0) RELATIVE PREVIOUS
