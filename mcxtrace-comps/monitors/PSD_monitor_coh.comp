@@ -217,30 +217,43 @@ SAVE
     /*doing it this way is inefficient since we send a lot of zeros across the network - but it should work*/ 
 #endif
 
+#define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) \
+      mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
+#define DETECTOR_OUT_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f) \
+      mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
+      
+    char fname1[256];
+    snprintf(fname1, 256, "%s_arg", NAME_CURRENT_COMP);
+
+    // we use mcdetector_out_0D in order to update the [comp_name]_I symbol for the 2nd value
     if(nx==1 && ny==1){
-        char fname1[256],fname2[256];
-        snprintf(fname1,255,"Coh. Intensity monitor (magnitude)",NAME_CURRENT_COMP);
-        snprintf(fname1,255,"Coh. Phase monitor (argument)",NAME_CURRENT_COMP);
- 
-        DETECTOR_OUT_0D(fname1, (double) PSD_N[0][0], PSD_p_abs[0], PSD_p2[0][0]);
-        DETECTOR_OUT_0D(fname2, (double) PSD_N[0][0], PSD_p_arg[0], PSD_p2[0][0]);
+        DETECTOR_OUT_0D("Coh. Intensity monitor (magnitude)", 
+          (double) PSD_N[0][0], PSD_p_abs[0], PSD_p2[0][0]);
+        
+        
+        mcdetector_out_0D("Coh. Phase monitor (argument)",
+          (double) PSD_N[0][0], PSD_p_arg[0], PSD_p2[0][0], fname1,POS_A_CURRENT_COMP);
     }else if(nx==1){
         DETECTOR_OUT_1D(
                 "Coh. PSD_monitor (magnitude)","Y Position[m]", "Intensity", "Y",
                 ymin,ymax,ny,PSD_N[0],PSD_p_abs,PSD_p2[0],filename_abs);
-        DETECTOR_OUT_1D(
+                
+        mcdetector_out_1D(
                 "Coh. PSD_monitor (argument)","Y Position[m]", "Phase", "Y",
-                ymin,ymax,ny,PSD_N[0],PSD_p_arg,PSD_p2[0],filename_arg);
+                ymin,ymax,ny,PSD_N[0],PSD_p_arg,PSD_p2[0],filename_arg,
+                fname1,POS_A_CURRENT_COMP);
     }else if (ny==1){
         DETECTOR_OUT_1D(
                 "Coh. PSD_monitor (magnitude)","X Position[m]", "Intensity", "X",
                 xmin,xmax,nx,PSD_N[0],PSD_p_abs,PSD_p2[0],filename_abs);
-        DETECTOR_OUT_1D(
+        mcdetector_out_1D(
                 "Coh. PSD_monitor (argument)","X Position[m]", "Phase", "X",
-                xmin,xmax,nx,PSD_N[0],PSD_p_arg,PSD_p2[0],filename_arg);
+                xmin,xmax,nx,PSD_N[0],PSD_p_arg,PSD_p2[0],filename_arg,
+                fname1,POS_A_CURRENT_COMP);
     }else{
         /*don't do the internal gather in DETECTOR_OUT_2D*/
         //MPI_NOGATHER;
+        mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
         DETECTOR_OUT_2D(
                 "Coh. PSD_monitor (magnitude)",
                 "X position [m]","Y position [m]",
@@ -250,12 +263,13 @@ SAVE
 
         /*don't do the internal gather in DETECTOR_OUT_2D*/
         //MPI_NOGATHER;
-        DETECTOR_OUT_2D(
+        mcdetector_out_2D(
                 "Coh. PSD_monitor (argument)",
                 "X position [m]","Y position [m]",
                 xmin, xmax, ymin, ymax, nx, ny,
                 (PSD_N[0]),PSD_p_arg,PSD_p2[0],
-                filename_arg);
+                filename_arg,
+                fname1,POS_A_CURRENT_COMP);
     }
   }
 %}
