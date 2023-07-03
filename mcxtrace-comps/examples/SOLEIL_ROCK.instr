@@ -44,7 +44,7 @@
 * Manganese and chrome scan: mxrun SOLEIL_ROCK.instr E0=5.700,6.800 scan=1 sample_file=MnCr cc=2 -N100
 * Pretty energy repartition monitor result: mxrun SOLEIL_ROCK.instr E0=17.000 cc=2 -n1e8
 *
-* %Example: E0=15.918 Detector: psd_monitor_I=1.94895e+06
+* %Example: E0=15.918 Detector: psd_monitor_I=2.5e+06
 *
 * %Parameters
 * E0:               [keV]    Energy to hit, i.e. selected by the channel-cut monochromator
@@ -352,8 +352,8 @@ ROTATED (angle_m2a_m2b*RAD2DEG, 0, 0) RELATIVE arm_crystal2
 
 /* -------------------------------------------------- E monitor */ 
 COMPONENT EnergyMonitor_before_sample = Monitor_nD(  
-    xwidth =0.2 , 
-    yheight =0.2 ,
+    xwidth =0.1 , 
+    yheight =0.1 ,
     min=E0-(0.005+(E0-Eminkev)*incr), 
     max=E0+(0.005+(E0-Eminkev)*incr), 
     bins=500,
@@ -376,8 +376,8 @@ AT (0,0,0.5) RELATIVE PREVIOUS
 
 SPLIT COMPONENT absorption_sample = Fluorescence(
   material=sample_file,
-  xwidth = 0.5,
-  yheight = 0.5,
+  xwidth = 0.05,
+  yheight = 0.05,
   zdepth = 0.0001)
 AT (0, 0, 0) RELATIVE e_repartition_after_m2b
 
