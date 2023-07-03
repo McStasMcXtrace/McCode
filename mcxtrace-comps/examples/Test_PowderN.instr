@@ -29,7 +29,7 @@
 * E0:          [keV]  Source energy (width 1 keV)
 * L1:          [m]    Source-sample distance
 * directbeam:  [1]    Suppress direct beam (0) or not (1)
-* reflections: [str]  List of powder reflections
+* reflections: [str]  List of powder reflections, LAU/CIF format.
 * SPLITS:      [1]    Number of SPLIT's before sample
 * frac_c:      [1]    Fraction of stats assigned to coherent scattering
 * frac_i:      [1]    Fraction of stats assigned to incoherent scattering

@@ -50,6 +50,7 @@
 * M1_radius:[m]    Curvature radius of M1 mirror (Rh, 1300x100) longitudinal. Positive=mirror is focusing. 0=flat.
 * M2_radius:[m]    Curvature radius of M2 mirror (Rh, 1300x100) sagittal. Positive=mirror is focusing. 0=flat.
 * DCM_theta:[deg]  Rotation angle of DCM crystals. When left as 0, it is set automatically from E0.
+* sample:   [str]  Sample structure file, LAU/CIF format.
 *
 * %Link
 * https://www.synchrotron-soleil.fr/en/beamlines/diffabs

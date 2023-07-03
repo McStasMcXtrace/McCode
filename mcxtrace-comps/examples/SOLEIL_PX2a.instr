@@ -28,18 +28,18 @@
 * This is a simplified model with an Undulator, mirrors, a double crystal 
 * monochromator, a sample stage and a detector.
 *
-* %Example: -n 1e7 E0=12.65 sample="Mo.lau" Detector: Eiger9M_I=28.0701
-* %Example: -n 1e7 E0=12.65 Detector: Eiger9M_I=42980.3
+* %Example: E0=12.65 sample="Mo.lau" Detector: Eiger9M_I=2.50265e+11
+* %Example: E0=12.65 Detector: Eiger9M_I=5.94109e+14
 *
 * %Parameters
 * E0:    [keV] Energy selected at the Undulator.
 * hfm_radius: [m] horizontally focusing mirror radius
 * vfm_radius: [m] vertically focusing mirror radius
 * mirror_grazing_angle: [deg] Tilt angle of the mirrors.
-* sample:[str] Sample geometry file, LAU format.
-* rotX:  [deg] Sample rtation around X
-* rotY:  [deg] Sample rtation around Y
-* rotZ:  [deg] Sample rtation around Z
+* sample:[str] Sample structure file, LAU/CIF format.
+* rotX:  [deg] Sample rotation around X
+* rotY:  [deg] Sample rotation around Y
+* rotZ:  [deg] Sample rotation around Z
 * 
 * %Link
 * https://www.synchrotron-soleil.fr/en/beamlines/proxima-2a
@@ -78,7 +78,7 @@ AT (0,0,0) ABSOLUTE
 // Undulator U24
 COMPONENT undulator = Undulator(
     E0=E0, 
-    dE=1, 
+    dE=.1, 
     Ee=2.75, 
     dEe=0.001, 
     Ie=0.5, 
@@ -95,7 +95,8 @@ AT (0, 0, 0) RELATIVE PREVIOUS
 
 
 
-// Channel_cut Si(111) ----------------------------------------------------
+// Channel_cut Si(111) ---------------------------------------------------------
+// gap 6 mm
 COMPONENT bragg_crystal_location = Arm()
 AT (0,0,29.5) RELATIVE PREVIOUS
 
@@ -114,10 +115,15 @@ AT (0, 0.006, calculated_angle ? 0.006/tan(calculated_angle*DEG2RAD) : 0) RELATI
 ROTATED (calculated_angle, 0, 0) RELATIVE PREVIOUS
 
 COMPONENT arm_two = Arm()
-AT (0, 0, 0) RELATIVE PREVIOUS
-ROTATED (calculated_angle, 0, 0) RELATIVE PREVIOUS
+AT (0, 0, 0) RELATIVE bragg_crystal_two
+ROTATED (calculated_angle, 0, 0) RELATIVE bragg_crystal_two
 
-// horizontal pre-focusing curved mirror (XZ -> YZ plane)
+COMPONENT bragg_crystal_out = E_monitor(Emin=E0-.1, Emax=E0+.1, nE=512,
+  xwidth=0.1, yheight=0.1)
+AT(0,0,0.2) RELATIVE PREVIOUS
+
+
+// horizontal pre-focusing curved mirror (XZ -> YZ plane) ----------------------
 COMPONENT hpm_location = Arm()
 AT (0,0,32.1-29.5-0.05) RELATIVE arm_two
 
@@ -138,14 +144,14 @@ COMPONENT hpm_takeoff = Arm()
 AT (0,0,0) RELATIVE hpm_location
 ROTATED (0, 2*mirror_grazing_angle, 0) RELATIVE hpm_location
 
-// KB pair ----------------------------------------------------------------
+// KB pair ---------------------------------------------------------------------
 // could use Mirror_elliptic
 // incidence angle 4 mrad
 
 // KB 1st mirror (XZ plane) at 1.6m from sample
 // must be shifted by -2 mm  on Y else beam flies underneath the mirror.
 COMPONENT vfm_location = Monitor_nD(xwidth=0.01, yheight=0.01, options="x y", bins=100)
-AT (0,-1.9e-3,33.9-32.1) RELATIVE hpm_takeoff
+AT (0,0,33.9-32.1) RELATIVE hpm_takeoff
 
 COMPONENT vfm_in_xz_plane = Arm()
 AT (0,0,0) RELATIVE vfm_location
@@ -186,7 +192,7 @@ COMPONENT hfm_takeoff = COPY(vfm_location)
 AT (0,0,0) RELATIVE hfm_location
 ROTATED (0,-2*mirror_grazing_angle,0) RELATIVE hfm_location
 
-// Sample -----------------------------------------------------------------
+// Sample ----------------------------------------------------------------------
 // we centre the beam after the KB.
 COMPONENT sample_stage = Arm()
 AT (1e-3,-1.1e-3,1) RELATIVE hfm_takeoff
@@ -198,22 +204,18 @@ COMPONENT sample_monitor = Monitor_nD(
   xwidth = 0.01, yheight = 0.01,
   options = "x y", bins=100)
   AT (0, 0, 0) RELATIVE sample_stage
-  
-COMPONENT sample_monitor_hfm=COPY(PREVIOUS)
-WHEN (flag_hfm)
-AT (0, 0, 0) RELATIVE sample_stage
 
-COMPONENT sample_monitor_vfm=COPY(PREVIOUS)
-WHEN (flag_vfm)
-AT (0, 0, 0) RELATIVE sample_stage
-
-SPLIT COMPONENT sample = Single_crystal(reflections=sample, 
+SPLIT COMPONENT sample = Single_crystal(reflections=sample, material_datafile="NULL", 
   radius = .5e-4, yheight = 5e-3, p_transmit = 0, mosaic=0.1)
   AT (0, 0, 0) RELATIVE sample_stage
   ROTATED (rotX,rotY,rotZ) RELATIVE sample_stage
 EXTEND %{
   if (!SCATTERED) ABSORB;
 %}
+
+COMPONENT psd4pi = PSD_monitor_4PI(
+    nx = 180, ny = 180, filename = "psd4pi", radius = 0.1, restore_xray = 1)
+AT (0, 0, 0) RELATIVE sample
 
 // Detector
 COMPONENT Eiger9M = PSD_monitor(

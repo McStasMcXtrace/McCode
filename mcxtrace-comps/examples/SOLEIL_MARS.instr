@@ -30,7 +30,7 @@
 * E0: [keV]     Central energy to be emitted by the source
 * dEr: [1]    Relative half width to emitted by the source, e.g. 1e-4
 * alpha: [deg]  Asymmetry angle for the crystals.
-* reflections: [str] List of powder reflections, obtained with e.g. cif2hkl
+* reflections: [str] Sample structure file, LAU/CIF format.
 * reflec_material_M12: [str] reflecting coating on curved mirrors, e.g. Pt
 *
 * %Link
