@@ -67,22 +67,20 @@ DECLARE
 
 INITIALIZE
 %{
-    int intersect;
+    int status=0;
 
     if (coating && strlen(coating) && strcmp(coating,"NULL") ) {
-      intersect=reflec_Init(&re,COATING_UNDEFINED,coating,NULL);
-    }else if (R0>0) {
+      status=reflec_Init(&re,COATING_UNDEFINED,coating,NULL);
+    }else{
       /*assume a constant reflectivity*/
-      intersect=reflec_Init_const(&re,R0);
-    }else 
-      exit(fprintf(stderr,"ERROR (%s): Incorrect reflectivity (coating, R0)\n", 
-          NAME_CURRENT_COMP));
+      status=reflec_Init_const(&re,R0);
+    }
 
-    if(intersect!=0){
+    if(status!=0){
       fprintf(stderr,"ERROR (%s): Could not interpret reflectivity. Aborting.\n", NAME_CURRENT_COMP);
       exit(-1);
     }
-    
+
     if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
       if (off_init(geometry, xwidth, yheight, zdepth, 0, &(offdata)))
         shape=ANY;
@@ -99,9 +97,8 @@ INITIALIZE
 
 TRACE
 %{
-    int intersect=0;
+    int    intersect=1;
     double nx,ny,nz;
-    double s,k,q,R;
 
     if (shape == ANY) { // off/ply
       double l0,l1;
@@ -116,24 +113,24 @@ TRACE
           coords_get(n1, &nx, &ny, &nz);
         }
       }
-    } else {            // flat
-      if(yheight){
-          PROP_X0;
-          if(y<-yheight/2.0|| y>yheight/2.0 || z<-zdepth/2.0 || z>zdepth/2.0){
-              intersect=0;
-          }else{
-              nx=1; ny=0; nz=0;
-          }
-      }else{
-          PROP_Y0;
-          if(x<-xwidth/2.0|| x>xwidth/2.0 || z<-zdepth/2.0 || z>zdepth/2.0){
-              intersect=0;
-          }else{
-              nx=0; ny=1; nz=0;
-          }
-      }
+    } else if(yheight){ // YZ plane
+        PROP_X0;
+        if(y<-yheight/2.0|| y>yheight/2.0 || z<-zdepth/2.0 || z>zdepth/2.0){
+            intersect=0;
+        }else{
+            nx=1; ny=nz=0;
+        }
+    } else {    // XZ plane
+        PROP_Y0;
+        if(x<-xwidth/2.0|| x>xwidth/2.0 || z<-zdepth/2.0 || z>zdepth/2.0){
+            intersect=0;
+        }else{
+            nx=0; ny=1; nz=0;
+        }
     }
     if(intersect){
+        double s,k,q,R;
+        
         s=scalar_prod(kx,ky,kz,nx,ny,nz);
         k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
          
@@ -158,12 +155,12 @@ MCDISPLAY
   magnify("");
   if (shape == ANY) {	/* OFF file */
     off_display(offdata);
-  } else if(yheight) {
+  } else if(yheight){
     line(0,-yheight/2.0,-zdepth/2.0, 0, yheight/2.0,-zdepth/2.0);
     line(0,-yheight/2.0, zdepth/2.0, 0, yheight/2.0, zdepth/2.0);
     line(0,-yheight/2.0,-zdepth/2.0, 0,-yheight/2.0, zdepth/2.0);
     line(0, yheight/2.0,-zdepth/2.0, 0, yheight/2.0, zdepth/2.0);
-  } else {
+  }else{
     line(-xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0,-zdepth/2.0);
     line(-xwidth/2.0,0, zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
     line(-xwidth/2.0,0,-zdepth/2.0,-xwidth/2.0,0, zdepth/2.0);
