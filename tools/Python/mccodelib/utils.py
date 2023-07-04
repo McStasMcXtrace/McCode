@@ -96,9 +96,9 @@ class ComponentParser(object):
             raise Exception('parseComponentHeader: Missing %E tag.')
         
         # extract strings for I, D and P sections
-        text_I = ComponentParser.__removeStarsFromLines(text[pos_I+2: pos_D])
-        text_D = ComponentParser.__removeStarsFromLines(text[pos_D+2: pos_P])
-        text_P = ComponentParser.__removeStarsFromLines(text[pos_P+2: pos_E])
+        text_I = ComponentParser.__removeStarsFromLines(text[pos_I+1: pos_D])
+        text_D = ComponentParser.__removeStarsFromLines(text[pos_D+1: pos_P])
+        text_P = ComponentParser.__removeStarsFromLines(text[pos_P+1: pos_E])
         
         return text_I, text_D, text_P
         
