@@ -47,6 +47,7 @@ DECLARE
 %{
   double dcm_gap;
   double dcm_scatter;
+  #pragma acc declare create(dcm_scatter)
 %}
 
 INITIALIZE
@@ -55,6 +56,7 @@ INITIALIZE
    double d = DM/sqrt(3); // <111> reflection |<111>|=3
    dcm_gap  = 0.02;       // gap between the 2 monochromator crystals
    dcm_scatter = DCM_present;
+   #pragma acc update device(dcm_scatter)
    
    if (DCM_present) {
      if (!dcm_theta && E0) {
