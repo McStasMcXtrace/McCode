@@ -18,19 +18,22 @@
 *
 * %Description
 * A circular detector measuring the radial average of intensity as a function 
-* of the momentum transform in the sample.
+* of the momentum transform in the sample. The q-range is set up to
+*   qMax = 4 * PI * sin(TwoThetaMax / 2.0) / LambdaMin;
 *
 * Example: SAXSQMonitor( RadiusDetector = 0.1, DistanceFromSample = 0.5, LambdaMin = 1, Lambda0 = 1.54, NumberOfBins = 2000 )
+* Example: SAXSQMonitor( RadiusDetector = 0.1, qMax = 5, Lambda0 = 1.54, NumberOfBins = 2000 )
 *
 * %Parameters
-* RadiusDetector: [m]     Radius of the detector (in the xy-plane).
+* RadiusDetector:     [m] Radius of the detector (in the xy-plane).
 * DistanceFromSample: [m] Distance from the sample to this component.
-* LambdaMin: [AA]         Max sensitivity in lambda - used to compute the highest possible value of momentum transfer, q.
-* NumberOfBins: [] Number of bins in the r (and q).
-* RFilename: []    File used for storing I(r).
-* qFilename: []    File used for storing I(q).
-* Lambda0: []      If lambda is given, the momentum transfers of all rays are computed from this value. Otherwise, instrumental effects are negated.
-* restore_xray: [] If set to 1, the component restores the original x-ray.
+* LambdaMin:         [AA] Max sensitivity in lambda - used to compute the highest possible value of momentum transfer, q.
+* qMax:          [Angs-1] Max momentum for the Q-monitor. use either qMax or LambdaMin.
+* NumberOfBins:       [1] Number of bins in the r (and q).
+* RFilename:        [str] File used for storing I(r).
+* qFilename:        [str] File used for storing I(q).
+* Lambda0:         [Angs] If given, the momentum transfers of all rays are computed from this value. Otherwise, instrumental effects are negated Lambda0=2PI/k.
+* restore_xray:        [] If set to 1, the component restores the original x-ray.
 *
 * %End
 *******************************************************************************/
@@ -39,7 +42,7 @@ DEFINE COMPONENT SAXSQMonitor
 
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string RFilename="RDetectror", string qFilename="QDetector", int NumberOfBins=100, restore_xray=0,
-    RadiusDetector, DistanceFromSample, LambdaMin = 1.0, Lambda0 = 0.0)
+    RadiusDetector, DistanceFromSample, LambdaMin = 1.0, Lambda0 = 0.0, qMax=0)
 
 OUTPUT PARAMETERS ()
 
@@ -47,9 +50,6 @@ OUTPUT PARAMETERS ()
 
 DECLARE
 %{
-    double TwoThetaMax;
-    double qMax;
-
     DArray1d Nofq;
     DArray1d Iofq;
     DArray1d IofqSquared;
@@ -67,9 +67,18 @@ INITIALIZE
     NofR=create_darr1d(NumberOfBins);
     IofR=create_darr1d(NumberOfBins);
     IofRSquared=create_darr1d(NumberOfBins);
+    
+    if (DistanceFromSample <= 0)
+      exit(fprintf(stderr,"%s: ERROR: you must set the DistanceFromSample > 0.\n", NAME_CURRENT_COMP));
 
-    TwoThetaMax = atan(RadiusDetector / DistanceFromSample);
-    qMax = 4 * PI * sin(TwoThetaMax / 2.0) / LambdaMin;
+    if (qMax<=0 && LambdaMin) {
+      double TwoThetaMax = atan(RadiusDetector / DistanceFromSample);
+      qMax = 4 * PI * sin(TwoThetaMax / 2.0) / LambdaMin;
+    }
+    
+    // Use instance name for monitor output if no input was given
+    if (!strcmp(RFilename,"\0")) sprintf(RFilename,"%s_R", NAME_CURRENT_COMP);
+    if (!strcmp(qFilename,"\0")) sprintf(qFilename,"%s_Q", NAME_CURRENT_COMP);
 %}
 
 TRACE
@@ -92,11 +101,11 @@ TRACE
     
     PROP_Z0;
 
-    R = sqrt(pow(x, 2) + pow(y, 2));
+    R = sqrt(x*x+y*y);
 
     // Computation of q
     if (Lambda0 <= 0.0) {
-      Lambda = 2.0 * PI / sqrt(pow(kx, 2) + pow(ky, 2) + pow(kz, 2));
+      Lambda = 2.0 * PI / sqrt(kx*kx+ky*ky+kz*kz);
     } else {
       Lambda = Lambda0;
     }
@@ -174,7 +183,10 @@ SAVE
         );
 
     // Output I(q)
-    DETECTOR_OUT_1D(
+    char fname1[256];
+    snprintf(fname1, 256, "%s_q", NAME_CURRENT_COMP);
+    // we use mcdetector_out_nD in order to update the [comp_name]_I symbol for the 2nd output
+    mcdetector_out_1D(
         "QMonitor - Distribution in q (Radially averaged)",
         "q [1 / AA]",
         "I(q)",
@@ -185,7 +197,7 @@ SAVE
         Nofq,
         Iofq,
         IofqSquared,
-        qFilename
+        qFilename, fname1,POS_A_CURRENT_COMP
         );
 %}
 

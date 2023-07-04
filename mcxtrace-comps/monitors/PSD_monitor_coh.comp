@@ -216,16 +216,11 @@ SAVE
     }
     /*doing it this way is inefficient since we send a lot of zeros across the network - but it should work*/ 
 #endif
-
-#define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) \
-      mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
-#define DETECTOR_OUT_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f) \
-      mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
       
     char fname1[256];
     snprintf(fname1, 256, "%s_arg", NAME_CURRENT_COMP);
 
-    // we use mcdetector_out_0D in order to update the [comp_name]_I symbol for the 2nd value
+    // we use mcdetector_out_nD in order to update the [comp_name]_I symbol for the 2nd output
     if(nx==1 && ny==1){
         DETECTOR_OUT_0D("Coh. Intensity monitor (magnitude)", 
           (double) PSD_N[0][0], PSD_p_abs[0], PSD_p2[0][0]);
@@ -253,7 +248,6 @@ SAVE
     }else{
         /*don't do the internal gather in DETECTOR_OUT_2D*/
         //MPI_NOGATHER;
-        mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
         DETECTOR_OUT_2D(
                 "Coh. PSD_monitor (magnitude)",
                 "X position [m]","Y position [m]",
