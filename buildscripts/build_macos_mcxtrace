@@ -87,6 +87,7 @@ make install
 cd $WORK
 
 cd 3rdparty/xraylib
+export LDFLAGS="-L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"
 autoreconf -i
 ./configure --prefix=/Applications/McXtrace-$1.app/Contents/Resources/mcxtrace/$1/
 make install
