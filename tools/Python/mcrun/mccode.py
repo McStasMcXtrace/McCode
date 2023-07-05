@@ -223,10 +223,6 @@ class McStas:
         # Compiler optimisation
         args = ['-o', self.binpath, self.cpath] + cflags
         Process(options.cc).run(args)
-        if sys.platform=="darwin":
-            if not self.options.openacc:
-                args = ['-add_rpath', os.path.join(mccode_config.configuration['MCCODE_LIB_DIR'],'miniconda3','lib'), self.binpath]
-                Process("install_name_tool").run(args)
             
     def run(self, pipe=False, extra_opts=None, override_mpi=None):
         ''' Run simulation '''
