@@ -85,5 +85,4 @@ if [ "x$2" != "x" ]; then
     cp $WORK/INSTALL-McXtrace-3.x/Windows/README.md dist/
     mkdir dist/single-packages
     mv dist/mcxtrace-* dist/single-packages
-    cp INSTALL-McXtrace-3.x/Windows/README.md dist
 fi
