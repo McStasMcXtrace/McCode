@@ -1,4 +1,4 @@
-# Install McXtrace 3.1 on Linux and Unix.
+# Install McXtrace 3.2 on Linux and Unix.
 
 * We provide Debian packages, RedHat packages, and tar.gz's of "preconfigured" source code.
 

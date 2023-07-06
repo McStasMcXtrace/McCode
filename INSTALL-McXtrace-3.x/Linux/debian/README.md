@@ -1,4 +1,4 @@
-## Install McXtrace 3.1 On Debian class systems (including Ubuntu, mint etc.):
+## Install McXtrace 3.2 On Debian class systems (including Ubuntu, mint etc.):
 The packages have been tested to work correctly on Ubuntu 22.04 and Debian 11.
 
 # Add the McCode repository
@@ -22,25 +22,25 @@ latest McXtrace 1.x package
 
 # Look for McXtrace packages to install
 ```bash
-mcxtrace@debian:~$ apt-cache search mcxtrace | grep 3.1
-mcxtrace-3.1 - mcxtrace built using CMake
-mcxtrace-comps-3.1 - mcxtrace-comps built using CMake
-mcxtrace-manuals-3.1 - mcxtrace_manuals built using CMake
+mcxtrace@debian:~$ apt-cache search mcxtrace | grep 3.2
+mcxtrace-3.2 - mcxtrace built using CMake
+mcxtrace-comps-3.2 - mcxtrace-comps built using CMake
+mcxtrace-manuals-3.2 - mcxtrace_manuals built using CMake
 mcxtrace-suite-python-ng - A metapackage for McStas + python tools
-mcxtrace-tools-matlab-mxplot-3.1 - matlab-tools-mcplot built using CMake
-mcxtrace-tools-perl-3.1 - legacy-tools built using CMake
-mcxtrace-tools-perl-cmdline-3.1 - legacy-tools-cmdline built using CMake
-mcxtrace-tools-python-mxcodelib-3.1 - python-tools-mccodelib built using CMake
-mcxtrace-tools-python-mxdisplay-pyqtgraph-3.1 - python-tools-mxdisplay-pyqtgraph built using CMake
-mcxtrace-tools-python-mxdisplay-webgl-3.1 - python-tools-mxdisplay-webgl built using CMake
-mcxtrace-tools-python-mxgui-3.1 - python-tools-mxgui built using CMake
-mcxtrace-tools-python-mxplot-pyqtgraph-3.1 - python-tools-mxplot-pyqtgraph built using CMake
-mcxtrace-tools-python-mxrun-3.1 - python-tools-mxrun built using CMake
+mcxtrace-tools-matlab-mxplot-3.2 - matlab-tools-mcplot built using CMake
+mcxtrace-tools-perl-3.2 - legacy-tools built using CMake
+mcxtrace-tools-perl-cmdline-3.2 - legacy-tools-cmdline built using CMake
+mcxtrace-tools-python-mxcodelib-3.2 - python-tools-mccodelib built using CMake
+mcxtrace-tools-python-mxdisplay-pyqtgraph-3.2 - python-tools-mxdisplay-pyqtgraph built using CMake
+mcxtrace-tools-python-mxdisplay-webgl-3.2 - python-tools-mxdisplay-webgl built using CMake
+mcxtrace-tools-python-mxgui-3.2 - python-tools-mxgui built using CMake
+mcxtrace-tools-python-mxplot-pyqtgraph-3.2 - python-tools-mxplot-pyqtgraph built using CMake
+mcxtrace-tools-python-mxrun-3.2 - python-tools-mxrun built using CMake
 ```
 # Using mxdoc on modern Ubuntu systems
 Ubuntu is shipping its browsers as "snap" packages, meaning that they
 are blocked from accessing e.g. the McStas html snippets in
-/usr/share/mcxtrace/3.1/.
+/usr/share/mcxtrace/3.2/.
 
 To fix this we propose to switch your browser to a proper apt based
 installation, in this example firefox:
@@ -80,7 +80,7 @@ Please report any trouble with the repository to [mcxtrace-users](mailto:mcxtrac
 
 # Installing without adding the repo
 If you want to attempt installing our debian packages manually via
-dpkg, the packages are available for download at http://download.mcxtrace.org/current/linux/mcxtrace-3.1-deb64/
+dpkg, the packages are available for download at http://download.mcxtrace.org/current/linux/mcxtrace-3.2-deb64/
 (available for multiple processor architectures).
 
 ## In case of issues

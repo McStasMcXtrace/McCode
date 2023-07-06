@@ -3,7 +3,7 @@
 
 [McXtrace](http://mcxtrace.org/) X-ray beam-line simulations in a "free" computer at Binder.
 
-<img src="http://mcxtrace.org/mcxtrace_1.png"> <img src="https://mybinder.org/static/logo.svg?v=fe52c40adc69454ba7536393f76ebd715e5fb75f5feafe16a27c47483eabf3311c14ed9fda905c49915d6dbf369ae68fb855a40dd05489a7b9542a9ee532e92b">
+<img src="http://mcxtrace.org/mcxtrace_1.png"> <img src="https://mybinder.org/static/logo.svg?v=fe52c40adc69454ba7536393f76ebd715e5fb75f5feafe16a27c47483eabf3.21c14ed9fda905c49915d6dbf369ae68fb855a40dd05489a7b9542a9ee532e92b">
 
 McXtrace is available on Binder, which provides a free ready-to-run environment for simulations in your internet browser.
 

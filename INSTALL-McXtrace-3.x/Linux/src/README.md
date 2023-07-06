@@ -1,22 +1,22 @@
-# Installing McXtrace 3.1 from preconfigured source code
+# Installing McXtrace 3.2 from preconfigured source code
 
 * Download and build the McXtrace source code for Unix systems:
 ```bash
-wget http://downloads.mcxtrace.org/mcxtrace-3.1/unix/mcxtrace-3.1-UNIX-src.tar.gz
+wget http://downloads.mcxtrace.org/mcxtrace-3.2/unix/mcxtrace-3.2-UNIX-src.tar.gz
 (or curl -O or fetch or...)
 ```
 * Unpack the "metapackage" tarball
 ```bash
-tar xzf mcxtrace-3.1-UNIX-src.tar.gz
-cd mcxtrace-3.1-UNIX-src/
+tar xzf mcxtrace-3.2-UNIX-src.tar.gz
+cd mcxtrace-3.2-UNIX-src/
 ```
 * Unpack the individual subpackages
 ```bash
 find . -name \*tar.gz -exec tar xzf \{\} \;
 ```
-* Next, compile the individual packages you want (minimum set is mcxtrace-3.1-src mcxtrace-comps-3.1-src) using e.g.
+* Next, compile the individual packages you want (minimum set is mcxtrace-3.2-src mcxtrace-comps-3.2-src) using e.g.
 ```bash
-cd mcxtrace-3.1-src
+cd mcxtrace-3.2-src
 cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCXTRACE=1
 make
 sudo make install
