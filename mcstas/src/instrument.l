@@ -145,6 +145,7 @@ NOACC         return TOK_NOACC;
 DEPENDENCY    return TOK_DEPENDENCY;
 SHELL         return TOK_SHELL;         /* extended McStas grammar with SHELL commands pre-cogen */
 SEARCH        return TOK_SEARCH;        /* additional Instrument/Component search directories */
+LITERAL       return TOK_LITERAL;       /* Unparsed string blocks accessible from compiled instrument */
 
 "("|")"|"["|"]"|"{"|"}"|"," return yytext[0]; /* Punctuation. */
 "="|"*"       return yytext[0]; /* Operator. */

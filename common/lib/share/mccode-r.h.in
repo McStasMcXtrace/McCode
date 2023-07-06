@@ -20,6 +20,8 @@
 *
 *   struct mcinputtable_struct mcinputtable[];
 *   int numipar;
+*   struct mcliteralstable_struct mcliteralstable[];
+*   int numliterals;
 *   char instrument_name[], instrument_source[];
 *   int traceenabled, defaultmain;
 *   extern MCNUM  mccomp_storein[];
@@ -194,6 +196,13 @@ struct mcinputtable_struct { /* defines instrument parameters */
   char *unit; /* expected unit for parameter; informational only */
 };
 
+struct mcliteralstable_struct { /* stores literal strings from components */
+  char * source;  // component name which provided the literal string
+  char * name;  // the name of the literal
+  char * type;  // the type of the literal (free form, valid identifier)
+  char * value;  // the literal string contents
+};
+
 #ifndef MCCODE_BASE_TYPES
 typedef double MCNUM;
 typedef struct {MCNUM x, y, z;} Coords;
@@ -205,6 +214,8 @@ typedef MCNUM Rotation[3][3];
 #ifndef DANSE
 extern struct mcinputtable_struct mcinputtable[];         /* list of instrument parameters */
 extern int    numipar;                                    /* number of instrument parameters */
+extern struct mcliteralstable_struct mcliteralstable[];   /* list of component-defined string literals */
+extern int    numliterals;                                /* number of component-defined string literals */
 extern char   instrument_name[], instrument_source[]; /* instrument name and filename */
 extern char  *instrument_exe;                           /* executable path = argv[0] or NULL */
 extern char   instrument_code[];                        /* contains the initial 'instr' file */

@@ -440,7 +440,8 @@ struct comp_def
     int  flag_defined_trace;        /* set to 1 when a common TRACE block is generated */
     int  counter_instances;         /* number of instances using the same definition/class */
     int  flag_noacc;                /* Component type not available on GPU */
-    List def_par, set_par, out_par, decl_par; /* Formal parameters. */
+    struct List_header * def_par, * set_par, * out_par, * decl_par; /* Formal parameters. */
+    struct List_header * literals;
     struct code_block *share_code;  /* Unique Declaration code (shared). */
     struct code_block *uservar_code; /* To be injected in particlce struct */
     struct code_block *decl_code;   /* Declaration code. */
@@ -478,6 +479,7 @@ struct comp_inst
     int    index;   /* index of comp instance */
     struct group_inst *group;       /* NULL or group name in which comp is */
     Symtab defpar, setpar;          /* Parameter values. */
+    List literals;  /* NULL or list of literal code blocks after extend */
     List jump;      /* NULL or list of jumps to execute after trace/extend */
     CExp when;      /* NULL or condition to execute TRACE */
     Symtab actuals; /* save actual/given parameters for COPY */
@@ -522,7 +524,16 @@ struct instr_def
     char dependency[1024];    /* stores all dependencies needed to compile, from comps and instr */
     List user_vars;           /* stores custom particle user variables */
     List user_vars_types;     /* stores custom particle user variable types */
+    List literals;            /* stores all components' literal code blocks */
   };
+
+struct literal_struct
+{
+  char* source;
+  char* name;
+  char* type;
+  struct code_block* code;
+};
 
 struct jump_struct
 {

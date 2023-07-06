@@ -68,6 +68,7 @@ int symtab_cat(struct List_header *, struct List_header *);
   struct comp_orientation  ori;           /* Component orientation */
   struct group_inst       *groupinst;     /* group instances */
   struct jump_struct      *jump;          /* jumps structures */
+  struct literal_struct   *literal;       /* literal structures */
   List                     jumps;
   struct jump_condition    jumpcondition;
   struct jump_name         jumpname;
@@ -113,6 +114,7 @@ int symtab_cat(struct List_header *, struct List_header *);
 %token TOK_DEPENDENCY "DEPENDENCY"
 %token TOK_SHELL      "SHELL" /* pre-cogen commands */
 %token TOK_SEARCH     "SEARCH" /* Additonal include directory for instrument/component file(s) */
+%token TOK_LITERAL    "LITERAL"
 
 /*******************************************************************************
 * Declarations of terminals and nonterminals.
@@ -142,6 +144,8 @@ int symtab_cat(struct List_header *, struct List_header *);
 %type <place>   place
 %type <ori>     orientation
 %type <string>  instname
+%type <literal> literal
+%type <literals> literals literals1
 %type <jump>    jump
 %type <jumps>   jumps jumps1
 %type <jumpname> jumpname
@@ -161,7 +165,7 @@ compdefs:   /* empty */
     | compdefs compdef
 ;
 
-compdef:    "DEFINE" "COMPONENT" TOK_ID parameters shell search dependency noacc share uservars declare initialize trace save finally display "END"
+compdef:    "DEFINE" "COMPONENT" TOK_ID parameters literals shell search dependency noacc share uservars declare initialize trace save finally display "END"
       {
         struct comp_def *c;
         palloc(c);
@@ -170,15 +174,16 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters shell search dependency noacc
         c->def_par = $4.def;
         c->set_par = $4.set;
         c->out_par = $4.out;
-	c->flag_noacc=$8;
-        c->share_code = $9;
-	c->uservar_code = $10;
-        c->decl_code = $11;
-        c->init_code = $12;
-        c->trace_code = $13;
-        c->save_code = $14;
-        c->finally_code = $15;
-        c->display_code = $16;
+        c->literals = $5;
+        c->flag_noacc = $9;
+        c->share_code = $10;
+        c->uservar_code = $11;
+        c->decl_code = $12;
+        c->init_code = $13;
+        c->trace_code = $14;
+        c->save_code = $15;
+        c->finally_code = $16;
+        c->display_code = $17;
         c->flag_defined_structure=0;
         c->flag_defined_share=0;
         c->flag_defined_init=0;
@@ -194,7 +199,7 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters shell search dependency noacc
         symtab_add(read_components, c->name, c);
         if (verbose) fprintf(stderr, "Embedding component %s from file %s\n", c->name, c->source);
       }
-    | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters shell dependency noacc share uservars declare initialize trace save finally display "END"
+    | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters literals shell dependency noacc share uservars declare initialize trace save finally display "END"
       {
         /* create a copy of a comp, and initiate it with given blocks */
         /* all redefined blocks override */
@@ -215,16 +220,19 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters shell search dependency noacc
           c->out_par   = list_create(); list_cat(c->out_par, def->out_par);
           if (list_len($6.out)) list_cat(c->out_par,$6.out);
 
-	  c->flag_noacc=$9;
+          c->literals = list_create(); list_cat(c->literals, def->literals);
+          if (list_len($7)) list_cat(c->literals, $7);
+
+          c->flag_noacc = $10;
 	  
-          c->share_code = ($10->linenum ?  $10  : def->share_code);
-	  c->uservar_code = ($11->linenum ?  $11  : def->uservar_code);
-          c->decl_code  = ($12->linenum ?  $12  : def->decl_code);
-          c->init_code  = ($13->linenum ?  $13  : def->init_code);
-          c->trace_code = ($14->linenum ? $14 : def->trace_code);
-          c->save_code  = ($15->linenum ? $15 : def->save_code);
-          c->finally_code = ($16->linenum ? $16 : def->finally_code);
-          c->display_code = ($17->linenum ? $17 : def->display_code);
+          c->share_code = ($11->linenum ?  $11  : def->share_code);
+          c->uservar_code = ($12->linenum ?  $12  : def->uservar_code);
+          c->decl_code  = ($13->linenum ?  $13  : def->decl_code);
+          c->init_code  = ($14->linenum ?  $14  : def->init_code);
+          c->trace_code = ($15->linenum ? $15 : def->trace_code);
+          c->save_code  = ($16->linenum ? $16 : def->save_code);
+          c->finally_code = ($17->linenum ? $17 : def->finally_code);
+          c->display_code = ($18->linenum ? $18 : def->display_code);
 
           /* Check definition and setting params for uniqueness */
           check_comp_formals(c->def_par, c->set_par, c->name);
@@ -1159,7 +1167,7 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
           comp_formals_actuals(comp, comp->actuals);
         }
       }
-      when place orientation groupref extend jumps
+      when place orientation groupref extend jumps literals
       {
         struct comp_inst *comp = myself_comp;
 
@@ -1189,6 +1197,8 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
         }
         if ($13->linenum)   comp->extend= $13;  /* EXTEND block*/
         if (list_len($14))  comp->jump  = $14;
+        /* one or more LITERAL statements -- the Component definition *can also* add to this list */
+        if (list_len($15))  comp->literals = (comp->literals == NULL) ? $15 : list_cat(comp->literals, $15);
 
         debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $5, $7->def->name));
         /* this comp will be 'previous' for the next, except if removed at include */
@@ -1382,6 +1392,39 @@ extend:   /* empty */
       }
 ;
 
+/* LITERAL block(s) after EXTEND */
+literals: /* empty */
+{
+  $$ = list_create();
+}
+| literals1
+{
+  $$ = $1;
+}
+;
+
+literals1: literal
+{
+  $$ = list_create();
+  list_add($$, $1);
+}
+| literals1 literal
+{
+  list_add($1, $2);
+  $$ = $1;
+}
+;
+
+literal: "LITERAL" TOK_ID TOK_ID codeblock
+{
+  struct literal_struct *literal;
+  palloc(literal);
+  literal->source = NULL;
+  literal->type = $2;
+  literal->name = $3;
+  literal->code = $4;
+}
+
 jumps: /* empty */
     {
       $$ = list_create();
@@ -1458,6 +1501,7 @@ jumpname: "PREVIOUS"
       $$.index = 0;
     }
 ;
+
 
 shell:
     {
@@ -1956,6 +2000,7 @@ main(int argc, char *argv[])
   instrument_definition->groupmap  = NULL;
   instrument_definition->complist  = NULL;
   instrument_definition->grouplist = NULL;
+  instrument_definition->literals  = NULL;
   instrument_definition->has_included_instr=0;
   comp_instances      = NULL;
   comp_instances_list = NULL;
@@ -1994,15 +2039,21 @@ main(int argc, char *argv[])
       error_encountered, instr_current_filename);
     exit(1);
   }
-  else
-  {
-    if (verbose) fprintf(stderr, "Starting to create C code %s\n", output_filename);
-    cogen(output_filename, instrument_definition);
-    if (verbose) fprintf(stderr, "Generated          C code %s from %s\n",
-      output_filename, instrument_definition->source);
-    fprintf(stderr, "CFLAGS=%s\n", instrument_definition->dependency);
-    exit(0);
+
+  if (verbose) fprintf(stderr, "Combine literal blocks into table");
+  err = literals_construct_table(instrument_definition);
+  if (err != 0) {
+    print_error(MCCODE_NAME ": Combining literal blocks into table failed for %s\n", instr_current_filename);
+    exit(1);
   }
+  if (verbose) fprintf(stderr, "Processed %d literal blocks\n", list_len(instrument_definition->literals));
+
+  if (verbose) fprintf(stderr, "Starting to create C code %s\n", output_filename);
+  cogen(output_filename, instrument_definition);
+  if (verbose) fprintf(stderr, "Generated          C code %s from %s\n",
+                       output_filename, instrument_definition->source);
+  fprintf(stderr, "CFLAGS=%s\n", instrument_definition->dependency);
+  exit(0);
 }
 
 
@@ -2285,4 +2336,60 @@ read_component(char *name)
       return NULL;
     }
   }
+}
+
+
+/** @brief Assign component literals to the instrument literals list
+ *
+ * @param inst the instrument_definition
+ * @return 0 if successful, non-zero if not
+ */
+int literals_construct_table(struct instr_def * inst){
+  Symtab_handle comp_iter;
+  struct Symtab_entry * comp_entry;
+  Symtab_handle lit_iter;
+  struct Symtab_entry * lit_entry;
+  comp_inst * comp_ptr;
+  literal_struct * l_ptr;
+  char * key;
+  char sep[] = "::\0";
+  Symtab lit_map = symtab_create();
+
+  // iterate through all components
+  comp_iter = symtab_iterate(inst->compmap);
+  while ((comp_entry = symtab_next(comp_iter))) {
+    // iterate through all literal entries in the component in order
+    comp_ptr = (comp_inst*) comp_entry;
+    for (int i=0; i<list_len(comp_ptr->literals); ++i){
+      // get a pointer to the next literal structure
+      l_ptr = (literal_struct*) list_access(comp_ptr->literals, i);
+      // assign the component name, since we didn't bother doing so earlier
+      l_ptr->source = str_dup(comp_ptr->name);
+      // construct the key for insertion into the symbol table
+      key = str_cat(comp_ptr->name, sep, l_ptr->name);
+      // check if the same-keyed literal was already provided
+      if ((lit_entry = symtab_lookup(lit_map, key))){
+        // This key already exists! What do we do? Trust users to know what they're doing!
+        // Component-definition literals came before Component-declaration literals -- so overwrite!
+        lit_entry->val = (void *) l_ptr;
+      } else {
+        symtab_add(lit_map, key, (void *) l_ptr);
+      }
+      // str_cat allocated new memory, and symtab_add only copied the key; so free it now
+      if (key) memfree(key);
+    }
+  }
+  symtab_iterate_end(comp_iter);
+
+  // Literals table construction complete, now copy it to the instrument literals list:
+  inst->literals = list_create();
+  lit_iter = symtab_iterate(lit_map);
+  while ((lit_entry = symtab_next(lit_iter))){
+    list_add(inst->literals, lit_entry->val);
+  }
+  symtab_iterate_end(lit_iter);
+
+  // Free the Symtab *but not the literal structures pointed at!
+  symtab_free(lit_map, NULL);
+  return 0;
 }

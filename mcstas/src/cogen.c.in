@@ -225,6 +225,65 @@ codeblock_out_brace(struct code_block *code)
   code_reset_source();
 }
 
+// Utilities for helping print an escaped code block:
+int count_chars_in(char * in, char c){
+  int no=0;
+  for (char * s = in; s[no]; s[no]==c ? no++ : *s++) { no+1;}
+  return no;
+}
+char * escape_string_one_char(char * in, char c){
+  char * out;
+  int no = count_chars_in(in, c);
+  if (no) {
+    char tok[2] = {c, '\0'};
+    char esc[2] = {'\\', '\0'};
+    char * pch;
+    pch = strtok(in, tok); // pch will be null terminated *at* the tok *or* the char* \0
+    while (pch != NULL){
+      // pch points to the start of a [^tok]*[tok] substring, and is \0 at tok
+      out = str_cat(pch, esc);
+      // find the next token (or end of the string)
+      pch = strtok(NULL, tok);
+    }
+    out[strlen(out)] = '\0'; // the str_cat *ensures* we added one too many escapes
+  } else {
+    out = str_dup(in);
+  }
+  return out;
+}
+char * escaped_string(char * in){
+  // we need to escape any " and \ characters -- handle back slashes first
+  char * intermediate = escape_string_one_char(in, '\\');
+  char * out = escape_string_one_char(intermediate, '\"');
+  memfree(intermediate);
+  return out;
+}
+/** Output the lines of a code block, encased in double quotes, and with any contained double quotes escaped.
+ *
+ * This form allows for automatic line-breaking string concatenation
+ */
+static void
+escaped_codeblock_out(struct code_block *code) {
+  List_handle liter;                /* For list iteration. */
+  char *line;                       /* Single code line. */
+  char * escaped_line;
+  code_set_source(code->quoted_filename, code->linenum);
+  if (list_len(code->lines) <= 0) {
+    fprintf(output_handle, "\"\"");
+  } else {
+    liter = list_iterate(code->lines);
+    while((line = list_next(liter)))
+    {
+      escaped_line = escaped_string(line);
+      fprintf(output_handle, "\"%s\"\\n", escaped_line);
+      memfree(escaped_line); // a copy was made even if nothing was changed
+      num_next_output_line++;
+    }
+    list_iterate_end(liter);
+  }
+  code_reset_source();
+}
+
 /*******************************************************************************
 * Create an empty code list
 *******************************************************************************/
@@ -1214,6 +1273,23 @@ int cogen_decls(struct instr_def *instr)
   coutf("  NULL, NULL, instr_type_double, \"\"");
   coutf("};");
   cout("");
+
+  /* 3.5 Table of component-defined literal strings. */
+  coutf("struct mcliteralstable_stuct mcliteralstable[] = {");
+  int numliterals = 0;
+  liter = list_iterate(instr->literals);
+  struct literal_struct * literal;
+  while ((literal = list_next(liter))){
+    coutf("  \"%s\", \"%s\", \"%s\",", literal->source, literal->name, literal->type);
+    // prints the filename which produced the literal code -- which seems nice
+    escaped_codeblock_out(literal->code);
+    // and again after -- which is less nice
+    ++numliterals;
+  }
+  list_iterate_end(liter);
+  coutf("};");
+  coutf("int numliterals = %d;", numliterals);
+
 
   /* 4. Component SHAREs. */
   liter = list_iterate(instr->complist);
