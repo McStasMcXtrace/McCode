@@ -43,6 +43,8 @@ struct List_position
     int index;                  /* Next element to return. */
   };
 
+typedef struct List_header *List;
+typedef struct List_position *List_handle;
 
 /*******************************************************************************
 * Create a new list.
@@ -200,7 +202,7 @@ list_iterate_end(List_handle lh)
 /*******************************************************************************
 * Catenate list2 to list1
 *******************************************************************************/
-List list_cat(List l1, List l2)
+struct List_header * list_cat(struct List_header * l1, struct List_header * l2)
 {
   List_handle liter;
   void*       litem;
