@@ -226,7 +226,7 @@ void *Table_File_List_store(t_Table *tab){
       }
       if(!hfile)
       {
-        fprintf(stderr, "Error: Could not open input file '%s' (Open_File)\n", File);
+        // fprintf(stderr, "Warning: Could not open input file '%s' (Open_File)\n", File);
         return (NULL);
       }
     }
