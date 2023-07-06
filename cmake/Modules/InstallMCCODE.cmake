@@ -197,7 +197,7 @@ macro(installMCCODE)
           )
       else()
         # do not overwrite files created by configure
-        if(NOT (EXISTS "${OUT_DIR}/${filename}"))
+        if(NOT (EXISTS "${OUT_DIR}/${filename}") OR ("${file_in}" IS_NEWER_THAN "${OUT_DIR}/${filename}"))
           file(
             COPY "${file_in}"
             DESTINATION "${OUT_DIR}")
