@@ -305,7 +305,11 @@ class McPyqtgraphPlotter():
             return
 
         for s in subdirs:
-            subprocess.Popen('mcplot-pyqtgraph %s' %
+            if mccode_config.configuration["MCCODE"] == "mcstas":
+                prefix = "mc"
+            else:
+                prefix = "mx"
+            subprocess.Popen(prefix+'plot-pyqtgraph %s' %
                 os.path.join(sourcedir, s), shell=True, cwd=os.getcwd())
 
 
