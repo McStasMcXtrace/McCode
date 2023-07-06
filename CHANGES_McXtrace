@@ -10,6 +10,93 @@
 *
 *
 *************************************************************************/
+CHANGES in 3.2
+
+ McXtrace 3.2 is the third official release in the 3.x series, with a modernised 
+ code-generator and support for GPU acceleration on NVIDIA cards.
+
+ Thanks:
+ - Thanks to all members of the joint McStas-McXtrace team, you guys ROCK!
+
+ Fixes of issues from last 3.x release:
+ - A large number of issues from 3.1 were addressed, see the relevant GitHub issues for details:
+   - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcxtrace-3.1
+
+ Documentation & guides:
+ - Inline component documentation has been given an overhaul, most component doc pages should now
+   render in a meaningful way
+
+ Installation:
+ - As usual, our install docs are available on the McCode GitHub page at
+   https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McXtrace
+ - The meta-packages for Debian/Ubuntu and Fedora are named e.g.
+   mcxtrace-suite-python-ng 'next generation' for 3.x and mcxtrace-suite-python
+   for the 1.x series packages.
+ - OpenACC GPU (and CPU multicore) acceleration is at the time of release still ONLY
+   supported on Linux systems, as this is the only platform targeted by the NVIDIA
+   HPC package. Versions 20.x-23.x should all work. On Windows 64bit systems,
+   support is expected to arrive "later", but you may run on your GPU via the so-called
+   "Windows Subsystem for Linux" (WSL). macOS is unfortunately not supported
+   by NVIDIA HPC acceleration.
+
+ McXtrace 3.2 enables further components and instruments GPU. Effectively all functionality has
+ been ported to 3.x.
+
+ Interoperability with other codes:
+ - McXtrace now ships with a "python-aware" code generator for generating "McStasScript" code, example:
+     mcxtrace-pygen Instrument.instr   -->   Instrument_generated.py
+   Using 'jupytext' this file may easily be converted to a notebook:
+     jupytext --to ipynb Instrument_generated.py   -->   Instrument_generated.ipynb
+   See https://github.com/PaNOSC-ViNYL/McStasScript
+   for more information on McStasScript, that also works for X-rays.
+ - Thanks to the work of José Robledo (FZJ), we now have a better interface to the Small-Angle Scattering
+   models from SASview, aka. SASmodels. Due to the big number of included models that each correspond
+   to a McXtrace component, these are now found in the "sasmodels" folder of your McXtrace installation.
+
+ Tools:
+ - mxplot (-pyqtgraph) has received a couple of bugfixes relating to plotting in log-mode.
+ - mxrun has now a number of --optimize options to Optimize beam-line parameters. Specify min,max or min,start,max for parameters to vary. the default optimizer is Powell from SciPy. You may choose the monitor to optimize, or all. Use mxrun -h for more help.
+ - mxgui Run dialogue now allows to Optimize beam-line parameters. Specify min,max or min,start,max for parameters to vary. the default optimizer is Powell from SciPy. You may choose the monitor to optimize, or all.
+
+
+ Components and Instruments:
+ - As mentioned above, SASmodels now come in the form of 94 (!) components in the sasmodels folder.
+ - The Isotropic_Sqw sample by Emmanuel Farhi has received a number of updates.
+ - The Fluorescence sample by Emmanuel Farhi has received a number of updates.
+ - PowderN and Single_crystal may now use material definition from a CIF file, calls the cif2hkl
+   tool behind the scenes, work done by Emmanuel Farhi.
+ - New instrument SOLEIL_CASSIOPEE.instr from Emmanuel Farhi.
+ - Many updates to SOLEIL_ instruments.
+
+ Core simulation framework / code-generator:
+ - McXtrace will now issue a warning if you generate GROUPS of a single component, as this may
+   lead to unphysical results. (GROUPS are intended for 2 or more components in an "exclusive-or"
+   setup.
+
+ Please start your migration to 3.x:
+ - The last release of McXtrace 1.x was 1.7.1 that shares a subset of tool features with McXtrace 3.x.
+   Hence you should now move to McXtrace 3.x.
+ - The Wiki has a dedicated section on McXtrace 1.x -> McXtrace 3.x conversion that includes:
+   * A nomenclature list containing short descriptions of new concepts and important keywords
+     in McXtrace 3.x and OpenACC / CUDA code in general.
+   * A document outlining the most importand differences between 1.x and 3.x.
+   * A guide for 1.x -> 3.x instrument conversion.
+   * A guide for 1.x -> 3.x component conversion.
+ - If you are still in trouble, please write us a GitHub issue or an email to mcxtrace-users@mcxtrace.org
+ - Known limitations in the GPU-implementation:
+   * Some components work on CPU only, but can be used in the mixed GPU/CPU funnnel mode by raising the
+     NOACC component keyword, e.g. Undulator.comp and the various SAXS samples.
+   * Special NOACC versions of Monitor_nD and MCPL_output are included. These may be used in the case
+     of large event datasets, allowing more than 2e9 events to be stored.
+
+ Platforms:
+  - We still support 64bit Windows 10/11 on Intel, all recent 64bit macOS including 13.0 Ventura and later
+    on both Intel and Apple Silicon/M1 processors. Debian-based distros on Intel and Arm, Fedora on Intel.
+  - On macOS and Windows we now bundle a Mambaforge Python with the installation.
+
+
+We hope you will enjoy this new release!!!
+
 CHANGES in 3.1
 
  McXtrace 3.1 is the second official release in the 3.x series, with a modernised 
