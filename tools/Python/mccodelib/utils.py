@@ -726,11 +726,6 @@ def save_instrfile(instr, text):
 
 def get_file_text_direct(file):
     ''' Opens a file for reading binary, reads it, decodes the results and returns the text. Fixes an occational issue on MacOSX. '''
-    try:
-        print(f"{file = }")
-    except:
-        pass
-
     f = open(file, 'rb')
     text = f.read().decode()
     f.close()
