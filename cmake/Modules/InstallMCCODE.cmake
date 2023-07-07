@@ -228,7 +228,7 @@ macro(installMCCODE)
     DEPENDS "${PROJECT_SOURCE_DIR}/src/instrument.l"
 
     OUTPUT work/src/py-lex.yy.c
-    COMMAND "${FLEX_EXECUTABLE}" -i "${PROJECT_SOURCE_DIR}/src/py-instrument.l"
+    COMMAND "${FLEX_EXECUTABLE}" -o py-lex.yy.c -i "${PROJECT_SOURCE_DIR}/src/py-instrument.l"
     WORKING_DIRECTORY work/src
     DEPENDS "${PROJECT_SOURCE_DIR}/src/py-instrument.l"
   )
@@ -252,7 +252,7 @@ macro(installMCCODE)
     OUTPUT work/src/py-instrument.tab.h work/src/py-instrument.tab.c
     COMMAND "${BISON_EXECUTABLE}" -v -d "${PROJECT_SOURCE_DIR}/src/py-instrument.y"
     WORKING_DIRECTORY work/src
-    DEPENDS "${PROJECT_SOURCE_DIR}/src/py-instrument.y" work/src/lex.yy.c
+    DEPENDS "${PROJECT_SOURCE_DIR}/src/py-instrument.y" work/src/py-lex.yy.c
   )
 
   # ## Generate instrument.tab.{h,c} with bison
@@ -286,6 +286,7 @@ macro(installMCCODE)
     work/src/port.h
     work/src/symtab.c
     work/src/re.c
+    work/src/literals.c
 
     # files generated with flex and bison
     work/src/lex.yy.c
@@ -309,7 +310,7 @@ macro(installMCCODE)
     work/src/re.c
 
     # files generated with flex and bison
-    work/src/lex.yy.c
+    work/src/py-lex.yy.c
     work/src/py-instrument.tab.h
     work/src/py-instrument.tab.c
   )

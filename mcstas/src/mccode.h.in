@@ -151,7 +151,7 @@ List_handle list_iterate_back(List);     /* Prepare to traverse list. */
 void *list_next(List_handle);       /* Get next element in list. */
 void *list_previous(List_handle);       /* Get previous element in list. */
 void list_iterate_end(List_handle); /* End list traversal. */
-
+int list_undef(List l);
 
 /*******************************************************************************
 * Definitions for cexp.c
@@ -238,6 +238,8 @@ struct comp_orientation
 /*******************************************************************************
 * Definitions in instrument.y
 *******************************************************************************/
+
+typedef struct instr_def * instr_ptr_t;
 
 /* Name of the file currently being parsed. */
 extern char *instr_current_filename;
@@ -532,7 +534,8 @@ struct literal_struct
   char* source;
   char* name;
   char* type;
-  struct code_block* code;
+  List lines;
+  //struct code_block* code;
 };
 
 struct jump_struct
@@ -555,5 +558,7 @@ struct jump_name
     char *name;
     int  index;
   };
+
+int literals_construct_table(instr_ptr_t);
 
 #endif /* MCCODE_H */
