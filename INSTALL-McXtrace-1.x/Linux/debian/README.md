@@ -5,7 +5,7 @@ The packages have been tested to work correctly on Ubuntu 22.04 and Debian 11.
 After following the below steps your package manager should now be aware of mcxtrace
 ```bash
 cd /etc/apt/sources.list.d
-sudo wget http://packages.mccode.org/debian/mccode.list
+sudo wget https://packages.mccode.org/debian/mccode.list
 sudo apt-get update
 ```
 
@@ -82,7 +82,7 @@ Please report any trouble with the repository to [mcxtrace-users](mailto:mcxtrac
 
 # Installing without adding the repo
 If you want to attempt installing our debian packages manually via
-dpkg, the packages are available for download at http://download.mcxtrace.org/current/linux/mcxtrace-1.7.1-deb64/
+dpkg, the packages are available for download at https://download.mcxtrace.org/current/linux/mcxtrace-1.7.1-deb64/
 (available for multiple processor architectures).
 
 ## In case of issues

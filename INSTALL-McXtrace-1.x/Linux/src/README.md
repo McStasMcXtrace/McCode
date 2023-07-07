@@ -2,7 +2,7 @@
 
 * Download and build the McXtrace source code for Unix systems:
 ```bash
-wget http://downloads.mcxtrace.org/current/unix/mcxtrace-1.7.1-UNIX-src.tar.gz
+wget https://downloads.mcxtrace.org/current/unix/mcxtrace-1.7.1-UNIX-src.tar.gz
 (or curl -O or fetch or...)
 ```
 * Unpack the "metapackage" tarball

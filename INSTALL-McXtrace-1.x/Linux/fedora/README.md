@@ -13,7 +13,7 @@ An alternative solution for you may be, to build yourself using the [repo build 
 ## Add the McCode repo to your system
 ```bash
 cd /etc/yum.repos.d
-sudo wget http://packages.mccode.org/rpm-fedora/mccode-fedora.repo
+sudo wget https://packages.mccode.org/rpm-fedora/mccode-fedora.repo
 sudo yum update
 ```
 
@@ -56,7 +56,7 @@ sudo yum install mcxtrace-suite-python
 Choosing mcxtrace-suite-python-ng  will similarly install the latest 3.x release
 
 ## Install without repo use
-If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at http://download.mcxtrace.org/current/linux/mcxtrace-rpm64_x86_64_fedora
+If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at https://download.mcxtrace.org/current/linux/mcxtrace-rpm64_x86_64_fedora
 
 ## In case of issues
 Please report any trouble with the repository to [mcxtrace-users](mailto:mcstas-users@mcxtrace.org)
