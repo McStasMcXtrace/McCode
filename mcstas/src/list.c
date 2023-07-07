@@ -55,9 +55,9 @@ list_create(void)
   List l;
 
   palloc(l);
+  l->size = 0;
   l->maxsize = MAX_ELEMENTS;
   nalloc(l->elements, l->maxsize);
-  l->size = 0;
   return l;
 }
 
@@ -108,6 +108,10 @@ list_len(List l)
   return l->size;
 }
 
+int list_undef(List l){
+  return l->elements == NULL ? 1 : 0;
+}
+
 
 /*******************************************************************************
 * Prepare to start traversing a list.
@@ -145,6 +149,8 @@ list_access(List l, int index)
 {
     if (index >= l->size)
         fatal_error("list_access: Accesing beyond size, index (%d) of (%d).", index, l->size);
+    if (l->elements == NULL)
+        fatal_error("list_access: Accessing uninitialized array -- why is size %d?", l->size);
     return l->elements[index];
 }
 
