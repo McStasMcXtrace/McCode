@@ -8,9 +8,9 @@
 ## Steps to perform
 
 * Download the Intel package:
-  [McXtrace 3.2 for macOS on Intel](http://download.mcxtrace.org/mcxtrace-3.2/mac/mcxtrace-mac_x86_64/mcxtrace-3.2_x86_64.tgz)
+  [McXtrace 3.2 for macOS on Intel](https://download.mcxtrace.org/mcxtrace-3.2/mac/mcxtrace-mac_x86_64/mcxtrace-3.2_x86_64.tgz)
   or M1 package:
-  [McXtrace 3.2 for macOS on Apple Silicon / M1 ](http://download.mcxtrace.org/mcxtrace-3.2/mac/mcxtrace-mac_arm64/mcxtrace-3.2_arm64.tgz)
+  [McXtrace 3.2 for macOS on Apple Silicon / M1 ](https://download.mcxtrace.org/mcxtrace-3.2/mac/mcxtrace-mac_arm64/mcxtrace-3.2_arm64.tgz)
   and unpack it (e.g. double-clicking should work)
 
 * Open the resulting folder

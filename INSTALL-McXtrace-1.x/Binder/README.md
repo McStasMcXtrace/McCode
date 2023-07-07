@@ -1,9 +1,9 @@
 # Running McXtrace directly in browser - No Installation !
 
 
-[McXtrace](http://mcxtrace.org/) X-ray beam-line simulations in a "free" computer at Binder.
+[McXtrace](https://mcxtrace.org/) X-ray beam-line simulations in a "free" computer at Binder.
 
-<img src="http://mcxtrace.org/mcxtrace_1.png"> <img src="https://mybinder.org/static/logo.svg?v=fe52c40adc69454ba7536393f76ebd715e5fb75f5feafe16a27c47483eabf3311c14ed9fda905c49915d6dbf369ae68fb855a40dd05489a7b9542a9ee532e92b">
+<img src="https://mcxtrace.org/mcxtrace_1.png"> <img src="https://mybinder.org/static/logo.svg?v=fe52c40adc69454ba7536393f76ebd715e5fb75f5feafe16a27c47483eabf3311c14ed9fda905c49915d6dbf369ae68fb855a40dd05489a7b9542a9ee532e92b">
 
 McXtrace is available on Binder, which provides a free ready-to-run environment for simulations in your internet browser.
 
@@ -16,9 +16,9 @@ Both the legacy version 1.x and the 'next-generation' 3.x (with revised grammar,
 Start it in a single click here:  [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/McStasMcXtrace/mcxtrace-binder/master?urlpath=desktop)
 
 A full desktop, running at Binder for free, will appear in your browser after e.g. a few minutes (be patient).
-The [McXtrace](http://mcxtrace.org/) software is available from the __Applications__ menu in group __Education__.
+The [McXtrace](https://mcxtrace.org/) software is available from the __Applications__ menu in group __Education__.
 
-<img src="http://mcxtrace.org/files/mcxtrace-binder.png">
+<img src="https://mcxtrace.org/files/mcxtrace-binder.png">
 
 ## Usage: JupyterLab to exchange files with the running environment
 
