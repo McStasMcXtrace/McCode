@@ -227,22 +227,13 @@ macro(installMCCODE)
     WORKING_DIRECTORY work/src
     DEPENDS "${PROJECT_SOURCE_DIR}/src/instrument.l"
   )
+  ## Generate py-lex.yy.c with flex
   add_custom_command(
     OUTPUT work/src/py-lex.yy.c
     COMMAND "${FLEX_EXECUTABLE}" -o py-lex.yy.c -i "${PROJECT_SOURCE_DIR}/src/py-instrument.l"
     WORKING_DIRECTORY work/src
     DEPENDS "${PROJECT_SOURCE_DIR}/src/py-instrument.l"
   )
-
-  # ## Generate lex.yy.c with flex
-  # add_custom_command(
-  #   OUTPUT work/src/py-lex.yy.c
-  #   COMMAND "${FLEX_EXECUTABLE}" -i "${PROJECT_SOURCE_DIR}/src/py-instrument.l"
-  #   WORKING_DIRECTORY work/src
-  #   DEPENDS "${PROJECT_SOURCE_DIR}/src/py-instrument.l"
-  # )
-
-
   ## Generate instrument.tab.{h,c} with bison
   add_custom_command(
     OUTPUT work/src/instrument.tab.h work/src/instrument.tab.c
@@ -250,20 +241,13 @@ macro(installMCCODE)
     WORKING_DIRECTORY work/src
     DEPENDS "${PROJECT_SOURCE_DIR}/src/instrument.y" work/src/lex.yy.c
   )
+  ## Generate py-instrument.tab.{h,c} with bison
   add_custom_command(
     OUTPUT work/src/py-instrument.tab.h work/src/py-instrument.tab.c
     COMMAND "${BISON_EXECUTABLE}" -v -d "${PROJECT_SOURCE_DIR}/src/py-instrument.y"
     WORKING_DIRECTORY work/src
     DEPENDS "${PROJECT_SOURCE_DIR}/src/py-instrument.y" work/src/py-lex.yy.c
   )
-
-  # ## Generate instrument.tab.{h,c} with bison
-  # add_custom_command(
-  #   OUTPUT work/src/py-instrument.tab.h work/src/py-instrument.tab.c
-  #   COMMAND "${BISON_EXECUTABLE}" -v -d "${PROJECT_SOURCE_DIR}/src/py-instrument.y"
-  #   WORKING_DIRECTORY work/src
-  #   DEPENDS "${PROJECT_SOURCE_DIR}/src/py-instrument.y" work/src/py-lex.yy.c
-  # )
 
 
   # Handling of system-provided random functions on windows - 
