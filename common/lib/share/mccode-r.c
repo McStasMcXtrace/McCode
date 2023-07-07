@@ -4190,6 +4190,24 @@ mcparseoptions(int argc, char *argv[])
       mcinfo();
     else if (!strcmp("--list-parameters", argv[i]))
       mcparameterinfo();
+    else if (!strcmp("--literal-defined", argv[i]) && ((i+1) >= argc || argv[i+1][0] == '-')){
+      exit(literals_table_print_all_components(num_literals, literals_table) == 0);
+    }
+    else if (!strcmp("--literal-defined", argv[i]) && (i+1) < argc){
+      exit(literals_table_print_component_keys(num_literals, literals_table, argv[i+1]) == 0);
+    }
+    else if (!strcmp("--literal-type", argv[i]) && (i+1) < argc){
+      char * literal_type = literals_table_type(num_literals, literals_table, argv[i+1]);
+      if (literal_type == NULL) exit(1);
+      printf("%s\n", literal_type);
+      exit(0);
+    }
+    else if (!strcmp("--literal", argv[i]) && (i+1) < argc){
+      char * literal = literals_table_literal(num_literals, literals_table, argv[i+1]);
+      if (literal == NULL) exit(1);
+      printf("%s\n", literal);
+      exit(0);
+    }
     else if(!strcmp("-t", argv[i]))
       mcenabletrace();
     else if(!strcmp("--trace", argv[i]) || !strcmp("--verbose", argv[i]))

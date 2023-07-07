@@ -225,7 +225,7 @@ codeblock_out_brace(struct code_block *code)
   code_reset_source();
 }
 
-/** Output the lines of a code block, encased in double quotes, and with any contained double quotes escaped.
+/** Output the lines of a literal block, encased in double quotes, and with any contained double quotes escaped.
  *
  * This form allows for automatic line-breaking string concatenation
  */
@@ -1241,7 +1241,7 @@ int cogen_decls(struct instr_def *instr)
   cout("");
 
   /* 3.5 Table of component-defined literal strings. */
-  coutf("struct mcliteralstable_struct mcliteralstable[] = {");
+  coutf("struct literals_table_struct literals_table[] = {");
   int numliterals = 0;
   liter = list_iterate(instr->literals);
   struct literal_struct * literal;
@@ -1254,7 +1254,7 @@ int cogen_decls(struct instr_def *instr)
   list_iterate_end(liter);
   coutf("  \"\", \"\", \"\", \"\"");
   coutf("};");
-  coutf("int numliterals = %d;", numliterals);
+  coutf("int num_literals = %d;", numliterals);
 
 
   /* 4. Component SHAREs. */
@@ -3000,6 +3000,7 @@ cogen(char *output_name, struct instr_def *instr)
 
   cogen_getcompindex_fct(instr);
 
+  embed_file("literals-r.c"); // functions used to query and display instrument/component-defined literal strings
   embed_file("mccode_main.c");
 
   if (verbose && warnings)
