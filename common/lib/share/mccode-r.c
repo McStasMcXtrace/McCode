@@ -2186,6 +2186,9 @@ MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
         char *c, Coords posa)
 {
   /* import and perform basic detector analysis (and handle MPI_Reduce) */
+  // detector_import calls mcdetector_statistics, which will return different
+  // MCDETECTOR versions for 1-D data based on the value of mcformat.
+  //
   MCDETECTOR detector = detector_import(mcformat,
     c, (t ? t : MCCODE_STRING " 1D data"),
     n, 1, 1,
@@ -2197,10 +2200,22 @@ MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
 
 #ifdef USE_NEXUS
   if (strcasestr(detector.format, "NeXus"))
-    return(mcdetector_out_1D_nexus(detector));
+    detector = mcdetector_out_1D_nexus(detector);
   else
 #endif
-    return(mcdetector_out_1D_ascii(detector));
+    detector = mcdetector_out_1D_ascii(detector);
+  if (detector.p1 != p1 && detector.p1) {
+    // mcdetector_statistics allocated memory but it hasn't been freed.
+    free(detector.p1);
+    // plus undo the other damage done there:
+    detector.p0 = p0; // was set to NULL
+    detector.p1 = p1; // was set to this_p1
+    detector.p2 = p2; // was set to NULL
+    detector.m = detector.n; // (e.g., labs(n))
+    detector.n = 1;  // not (n x n)
+    detector.istransposed = n < 0 ? 1 : 0;
+  }
+  return detector;
 
 } /* mcdetector_out_1D */
 
