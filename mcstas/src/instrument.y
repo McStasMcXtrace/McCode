@@ -1063,13 +1063,7 @@ complist:   /* empty */
               }
               list_iterate_end(liter);
             }
-            if (list_len($2->literals)) {
-                printf("Add component %s to comp_instances and comp_instances_list with %d literals\n", $2->name, list_len($2->literals));
-                for (int gst=0; gst < list_len($2->literals); ++gst){
-                  struct literal_struct * tls = list_access($2->literals, gst);
-                  printf("  Literal %d has name %s and type %s\n", gst, (tls->name ? tls->name : "[none]"), (tls->type ? tls->type : "[none]"));
-                }
-            }
+
             /* if we come there, instance is not an OUTPUT name */
             symtab_add(comp_instances, $2->name, $2);
             list_add(comp_instances_list, $2);
@@ -1131,9 +1125,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->actuals= symtab_create();
         symtab_cat(comp->actuals, $5);
         symtab_cat(comp->actuals, comp_src->actuals);
-        if (list_undef(comp_src->literals)) fprintf(stderr, "Something has gone wrong!");
         comp->literals = list_create(); if (list_len(comp_src->literals)) list_cat(comp->literals, comp_src->literals);
-        if (list_undef(comp->literals)) fprintf(stderr, "Something has gone wrong!");
         $$ = comp;
       }
     | "COPY" '(' compref ')'
@@ -1150,9 +1142,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->jump   = comp_src->jump;
         comp->when   = comp_src->when;
         comp->actuals= comp_src->actuals;
-        if (list_undef(comp_src->literals)) fprintf(stderr, "Something has gone wrong!");
         comp->literals = list_create(); if (list_len(comp_src->literals)) list_cat(comp->literals, comp_src->literals);
-        if (list_undef(comp->literals)) fprintf(stderr, "Something has gone wrong!");
         $$ = comp;
       }
     | TOK_ID actuallist /* define new instance with def+set parameters */
@@ -1162,7 +1152,6 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         def = read_component($1);
 
         def->literals = list_create();
-        if (list_undef(def->literals)) fprintf(stderr, "Creating def gone wrong\n");
 
         palloc(comp);
         comp->def          = def;
@@ -1172,7 +1161,6 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->when   = NULL;
         comp->actuals= $2;
         comp->literals = list_create();
-        if (list_undef(comp->literals)) fprintf(stderr, "Something has gone wrong!");
         $$ = comp;
       }
 ;
@@ -1256,19 +1244,7 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
         if (list_len($14))  comp->jump  = $14;
 
         /* one or more LITERAL statements -- the Component definition *can also* add to this list */
-        printf("In component add the %d literal(s)\n", list_len($15));
         comp->literals = list_create(); if (list_len($15)) list_cat(comp->literals, $15);
-        if (list_undef(comp->literals)) fprintf(stderr, "Something has gone wrong!");
-        if (list_len(comp->literals) != list_len($15)) {
-          printf("Copying failed?!");
-        }
-        for (int gst=0; gst < list_len(comp->literals); ++ gst) {
-          struct literal_struct * cls = list_access(comp->literals, gst);
-          struct literal_struct * tls = list_access($15, gst);
-          printf("  literal %d has name %s and type %s (input had %s and %s)\n", gst,
-            (cls->name ? cls->name : "[none]"), (cls->type ? cls->type : "[none]"),
-            (tls->name ? tls->name : "[none]"), (tls->type ? tls->type : "[none]"));
-        }
 
         debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $5, $7->def->name));
         /* this comp will be 'previous' for the next, except if removed at include */
@@ -1462,7 +1438,7 @@ extend:   /* empty */
       }
 ;
 
-/* RAW block(s) after EXTEND */
+/* LITERAL block(s) after EXTEND */
 
 literals:
 {
@@ -1470,11 +1446,6 @@ literals:
 }
 | literals1
 {
-printf("Assigning a list with %d literals in it\n", list_len($1));
-for (int gst = 0; gst < list_len($1); ++gst){
-  struct literal_struct * tls = list_access($1, gst);
-  printf(" literal %d has name %s and type %s\n", gst, (tls->name?tls->name:"[none]"), (tls->type?tls->type:"[none]") );
-}
   $$ = $1;
 }
 
@@ -1483,43 +1454,22 @@ literals1: literal
 {
   $$ = list_create();
   list_add($$, $1);
-
-  printf("New literal list with %d literals in it\n", list_len($$));
-  for (int gst = 0; gst < list_len($$); ++gst){
-    struct literal_struct * tls = list_access($$, gst);
-    printf(" literal %d has name %s and type %s; provided input had %s and %s\n", gst,
-      (tls->name?tls->name:"[none]"), (tls->type?tls->type:"[none]"),
-      ($1->name?$1->name:"[none]"), ($1->type?$1->type:"[none]")
-    );
-  }
-
 }
 | literals1 literal
 {
   list_add($1, $2);
-
-  printf("Add literal to a list with (now) %d literals in it\n", list_len($1));
-  for (int gst = 0; gst < list_len($1); ++gst){
-    struct literal_struct * tls = list_access($1, gst);
-    printf(" literal %d has name %s and type %s\n", gst, (tls->name?tls->name:"[none]"), (tls->type?tls->type:"[none]") );
-  }
-
   $$ = $1;
 }
 
 
 literal: "LITERAL" TOK_ID TOK_ID codeblock
 {
-  printf("literal tokid tokid block: %s %s {code}\n", $2, $3);
   struct literal_struct * literal;
   palloc(literal);
   literal->source = NULL;
   literal->type = str_dup($2);
   literal->name = str_dup($3);
   literal->lines = list_create(); if (list_len($4->lines)) list_cat(literal->lines, $4->lines);
-  //literal->code = $4;
-
-  printf("Producing literal({not known yet}, %s, %s, lines)\n", literal->name, literal->type);
 
   $$ = literal; // This would be very bad to omit. Don't do that!
 }
@@ -2427,7 +2377,6 @@ read_component(char *name)
     instr_current_filename = component_pathname;
     instr_current_line = 1;
     err = mc_yyparse_component();   /* Read definition from file. */
-    printf("Done reading component definition from file for %s\n", name);
     if(err != 0)
       fatal_error("Errors encountered during autoload of component %s. The component definition has syntax errors.\n",
         name);

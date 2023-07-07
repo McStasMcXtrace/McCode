@@ -83,7 +83,6 @@
 //}
 
 int literals_construct_table(instr_ptr_t inst){
-  printf("Start literals_construct_table\n");
   Symtab_handle lit_iter;
   struct Symtab_entry * lit_entry;
   struct comp_inst * comp_ptr;
@@ -106,7 +105,6 @@ int literals_construct_table(instr_ptr_t inst){
       printf("How did component %s get produced without literals?\n", comp_ptr->name);
       continue;
     }
-    printf("Component %s has %d literals\n", comp_ptr->name, list_len(comp_ptr->literals));
 
     strcpy(start, comp_ptr->name);
     strcat(start, sep);
@@ -147,7 +145,6 @@ int literals_construct_table(instr_ptr_t inst){
   symtab_iterate_end(lit_iter);
 
   // Free the Symtab *but not the literal structures pointed at!
-  // symtab_free(lit_map, NULL);
-  printf("End literals_construct_table\n");
+  symtab_free(lit_map, NULL);
   return 0;
 }
