@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2016, All rights reserved
+*         Copyright (C) 1997-2023, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -22,6 +22,10 @@
 *
 * Modified to show a proof of concept method for storing a 'Mantid friendly' type of NeXus file.
 *
+* Example: model_index=1 Ncount=1e6 par1=4 par2=1 par3=40 par4=20 par5=400 Detector: detector_I=5e6
+* Example: model_index=3 Ncount=1e6 par1=220 par2=0.06 par3=40 par4=4 par5=1 Detector: detector_I=3.3e4
+* Example: model_index=47 Ncount=1e6 par1=4 par2=2 par3=35 par4=75 par5=400 Detector: detector_I=2.5e6
+*
 * Needed steps (McStas):
 * 1) Compile your instrument with NeXus library and ISO c99 support
 * 2) Generate an IDF using mcdisplay templateSANS_Mantid --format=Mantid -n0
@@ -35,18 +39,31 @@
 * %Parameters
 * lambda: [AA]   Mean wavelength of neutrons
 * dlambda: [AA]  Wavelength spread of neutrons
+* model_index: [ ] SASmodels model index (see SasView_model.comp mcdoc page)
+* par1: [ ] Slot 1 in SASmodel parameter vector
+* par2: [ ] Slot 2 in SASmodel parameter vector
+* par3: [ ] Slot 3 in SASmodel parameter vector
+* par4: [ ] Slot 4 in SASmodel parameter vector
+* par5: [ ] Slot 5 in SASmodel parameter vector
+* par6: [ ] Slot 6 in SASmodel parameter vector
+* par7: [ ] Slot 7 in SASmodel parameter vector
+* par8: [ ] Slot 8 in SASmodel parameter vector
 *
 * %Link
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT templateSasView_Mantid(lambda=6, dlambda=0.05)
+DEFINE INSTRUMENT templateSasView_Mantid(lambda=6, dlambda=0.05, model_index=47, par1=0, par2=0, par3=0, par4=0, par5=0, par6=0, par7=0, par8=0, Ncount=0)
 DEPENDENCY " @NEXUSFLAGS@ "
 
 DECLARE %{
 %}
 
 INITIALIZE %{
+
+  if (Ncount>0)
+    mcset_ncount(Ncount);
+
 %}
 
 TRACE
@@ -76,13 +93,31 @@ COMPONENT LdetectorPRE = L_monitor(
     Lmax = 6.5)
 AT (0,0,0.05) RELATIVE coll2
 
+SPLIT COMPONENT sample = Arm()
+  AT (0, 0, 0.2) RELATIVE coll2
 
-SPLIT COMPONENT sampleMantid = SasView_model(model_index=10, model_scale=1,  model_pars={ 4, 1, 20, 400, 60, 60 },
-model_abs=0.0,
-                         xwidth=0.01, yheight=0.01, zdepth=0.005, focus_xw=3.6, focus_yh=3.6, target_index=1)
-   AT (0,0,0.2) RELATIVE coll2
+COMPONENT sample1= SasView_barbell(model_scale=1,model_abs=0.0,
+				   sld=par1,sld_solvent=par2,radius_bell=par3,radius=par4,length=par5,
+				      xwidth=0.01, yheight=0.01, zdepth=0.005,focus_xw=0.6, focus_yh=0.6, target_index=1)
+WHEN (model_index==1) AT (0,0,0.2) RELATIVE coll2
 EXTEND %{
-       if (!SCATTERED) ABSORB;
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT sample3= SasView_bcc_paracrystal(model_scale=1,model_abs=0.0,
+					   dnn=par1, d_factor=par2, radius=par3, sld=par4, sld_solvent=par5,
+				      xwidth=0.01, yheight=0.01, zdepth=0.005,focus_xw=0.6, focus_yh=0.6, target_index=1)
+WHEN (model_index==3) AT (0,0,0.2) RELATIVE coll2
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT sample47= SasView_parallelepiped(model_scale=1,model_abs=0.0,
+				      sld=par1,sld_solvent=par2,length_a=par3,length_b=par4,length_c=par5,
+				      xwidth=0.01, yheight=0.01, zdepth=0.005,focus_xw=0.6, focus_yh=0.6, target_index=1)
+WHEN (model_index==47) AT (0,0,0.2) RELATIVE coll2
+EXTEND %{
+  if (!SCATTERED) ABSORB;
 %}
 
 COMPONENT detector = PSD_monitor(
