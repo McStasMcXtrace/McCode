@@ -18,12 +18,12 @@
 * %Example: SAMPLE=1 SPLITS=1 Detector: PSD_I=1
 * %Example: SAMPLE=1 SPLITS=10 Detector: PSD_I=10
 * %Example: SAMPLE=1 SPLITS=100 Detector: PSD_I=100
-* %Example: SAMPLE=2 SPLITS=1 Detector: PSD_I=196000
-* %Example: SAMPLE=2 SPLITS=10 Detector: PSD_I=196000
-* %Example: SAMPLE=2 SPLITS=100 Detector: PSD_I=196000
-* %Example: SAMPLE=3 SPLITS=1 Detector: PSD_I=5400
-* %Example: SAMPLE=3 SPLITS=10 Detector: PSD_I=5400
-* %Example: SAMPLE=3 SPLITS=100 Detector: PSD_I=5400
+* %Example: SAMPLE=2 SPLITS=1 Detector: PSD_I=1
+* %Example: SAMPLE=2 SPLITS=10 Detector: PSD_I=10
+* %Example: SAMPLE=2 SPLITS=100 Detector: PSD_I=100
+* %Example: SAMPLE=3 SPLITS=1 Detector: PSD_I=1
+* %Example: SAMPLE=3 SPLITS=10 Detector: PSD_I=10
+* %Example: SAMPLE=3 SPLITS=100 Detector: PSD_I=100
 *
 * %P
 * SPLITS: [1] Number of SPLIT to do
@@ -67,6 +67,7 @@ SPLIT SPLITS COMPONENT Slit = Arm()
 COMPONENT Incoh = Incoherent(radius=0.01,focus_r=1, target_z=1)
   WHEN (SAMPLE==1) AT (0,0,0.1) RELATIVE Slit
 EXTEND %{
+  if(!SCATTERED) ABSORB;
   p = Pp0;
 %}
 
@@ -74,12 +75,14 @@ COMPONENT Powder = PowderN(radius=0.01,reflections="Al.lau",p_inc=0.01,p_transmi
   WHEN (SAMPLE==2) AT (0,0,0.1) RELATIVE Slit
 EXTEND %{
   if(!SCATTERED) ABSORB;
+  p = Pp0;
 %}
 
 COMPONENT SX = Single_crystal(radius=0.01,reflections="Al.lau",mosaic=20)
   WHEN (SAMPLE==3) AT (0,0,0.1) RELATIVE Slit
 EXTEND %{
   if(!SCATTERED) ABSORB;
+  p = Pp0;
 %}
 
 
