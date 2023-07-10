@@ -294,6 +294,7 @@ macro(installMCCODE)
     work/src/port.h
     work/src/symtab.c
     work/src/re.c
+    work/src/literals.c
 
     # files generated with flex and bison
     work/src/py-lex.yy.c

@@ -245,6 +245,27 @@ codeblock_initialize_add(struct code_block *code)
 }
 
 
+/** Output the lines of a literal block, encased in triple-double quotes
+ *
+ */
+static void
+triple_escaped_lines_out(List lines) {
+  List_handle liter;                /* For list iteration. */
+  char *line;                       /* Single code line. */
+  char * escaped_line;
+  if (list_undef(lines) || list_len(lines) <= 0) {
+    fprintf(output_handle, "\"\"\"\"\"\"");
+  } else {
+    fprintf(output_handle, "\"\"\"");
+    liter = list_iterate(lines);
+    while((line = list_next(liter)))
+    {
+      fprintf(output_handle, "%s", line);
+    }
+    list_iterate_end(liter);
+    fprintf(output_handle, "\"\"\"");
+  }
+}
 
 /*******************************************************************************
 * Create an empty code list
@@ -368,6 +389,20 @@ int cogen_decls(struct instr_def *instr)
     list_iterate_end(liter);
   }
   cout("");
+
+  // Component-define literal strings:
+  /* To start, just write a tuple of (str, str, str) tuples */
+  coutf("component_definition_literals = (");
+  liter = list_iterate(instr->literals);
+  struct literal_struct * literal;
+  while ((literal = list_next(liter))){
+    if (literal->instance != 1) {
+      coutf("(\"%s\", \"%s\", \"%s\", ", literal->source, literal->name, literal->type);
+      triple_escaped_lines_out(literal->lines);
+      coutf("),");
+    }
+  }
+  coutf(")");
 
   cout("instr.append_declare(r'''");
   codeblock_out(instr->decls);
@@ -526,6 +561,35 @@ int cogen_raytrace(struct instr_def *instr)
       coutf("%s.append_EXTEND(r'''",comp->name);
       codeblock_out(comp->extend);
       cout("''')\n\n");
+    }
+
+    if (list_len(comp->literals)) {
+      printf("Component %s has %d literals defined\n", comp->name, list_len(comp->literals));
+
+      struct literal_struct * l_ptr;
+      for (int lit=0; lit<list_len(comp->literals); ++lit){
+        l_ptr = (struct literal_struct *) list_access(comp->literals, lit);
+        coutf("# LITERAL %s %s %s %d", l_ptr->type, l_ptr->name, l_ptr->source == NULL ? "No source" : l_ptr->source, l_ptr->instance);
+      }
+
+      int n_inst_lit = 0;
+      for (int lit=0; lit<list_len(comp->literals); ++lit){
+        l_ptr = (struct literal_struct *) list_access(comp->literals, lit);
+        if (l_ptr->instance) ++n_inst_lit;
+      }
+      if (n_inst_lit) {
+        coutf (n_inst_lit > 1 ? "# LITERAL blocks from %s" : "# LITERAL block from %s", comp->name);
+        for (int lit=0; lit<list_len(comp->literals); ++lit){
+          l_ptr = (struct literal_struct *) list_access(comp->literals, lit);
+          if (l_ptr->instance) {
+            coutf("%s.append_LITERAL(type='%s', name='%s', lines=", comp->name, l_ptr->type, l_ptr->name);
+            triple_escaped_lines_out(l_ptr->lines);
+            coutf(")");
+          }
+        }
+      }
+    } else {
+      printf("Component %s does not have literals defined\n", comp->name);
     }
     
     cout("");

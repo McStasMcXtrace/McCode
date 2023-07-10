@@ -231,6 +231,7 @@ codeblock_out_brace(struct code_block *code)
  */
 static void
 escaped_lines_out(List lines) {
+  printf("\n\n\nCall to escaped_lines_out\n\n\n");
   List_handle liter;                /* For list iteration. */
   char *line;                       /* Single code line. */
   char * escaped_line;
@@ -547,6 +548,8 @@ int cogen_comp_declare(struct comp_inst *comp)
     cout( "  int      _rotation_is_identity;");
     cout( "  int      _position_relative_is_zero;");
     coutf("  _class_%s_parameters _parameters;", comp->def->name);
+//    coutf("  int _literals_count;");
+//    coutf("  literals_table_t * _literals;");
     cout("};");
     coutf("typedef struct _struct_%s _class_%s;", comp->def->name, comp->def->name);
   } /* define class type parameter structure when not done yet (only once) */
@@ -1255,7 +1258,6 @@ int cogen_decls(struct instr_def *instr)
   coutf("  \"\", \"\", \"\", \"\"");
   coutf("};");
   coutf("int num_literals = %d;", numliterals);
-
 
   /* 4. Component SHAREs. */
   liter = list_iterate(instr->complist);
