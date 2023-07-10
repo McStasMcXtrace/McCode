@@ -174,6 +174,7 @@ compdefs:   /* empty */
     | compdefs compdef
 ;
 
+//          $1        $2         $3     $4         $5       $6    $7         $8    $9    $10      $11     $12        $13   $14  $15     $16     $17
 compdef:    "DEFINE" "COMPONENT" TOK_ID parameters literals shell dependency noacc share uservars declare initialize trace save finally display "END"
       {
         struct comp_def *c;
@@ -183,18 +184,21 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters literals shell dependency noa
         c->def_par = $4.def;
         c->set_par = $4.set;
         c->out_par = $4.out;
-
-        c->literals = list_create(); // even though we don't set this, we *need* to initialize it
-        if (list_len($5)) list_cat(c->literals, $5);
-
-
-        c->flag_noacc = $8;
-        c->share_code = $9;
+        c->literals = list_create();
+        if (list_len($5)) {
+          printf("New component %s with %d literal definition(s)\n", $3, list_len($5));
+          literals_assign_from_definition($5);
+          list_cat(c->literals, $5);
+        } else {
+          printf("New component %s without any literal definitions\n", $3);
+        }
+        c->flag_noacc   = $8;
+        c->share_code   = $9;
         c->uservar_code = $10;
-        c->decl_code = $11;
-        c->init_code = $12;
-        c->trace_code = $13;
-        c->save_code = $14;
+        c->decl_code    = $11;
+        c->init_code    = $12;
+        c->trace_code   = $13;
+        c->save_code    = $14;
         c->finally_code = $15;
         c->display_code = $16;
         c->flag_defined_structure=0;
@@ -212,7 +216,8 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters literals shell dependency noa
         symtab_add(read_components, c->name, c);
         if (verbose) fprintf(stderr, "Embedding component %s from file %s\n", c->name, c->source);
       }
-    | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters literals shell dependency noacc share uservars declare initialize trace save finally display "END"
+// $1       $2         $3     $4     $5     $6         $7       $8    $9        $10    $11   $12      $13     $14        $15   $16  $17     $18     $19
+| "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters literals shell dependency noacc share uservars declare initialize trace save finally display "END"
       {
         /* create a copy of a comp, and initiate it with given blocks */
         /* all redefined blocks override */
@@ -233,7 +238,7 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters literals shell dependency noa
           c->out_par   = list_create(); list_cat(c->out_par, def->out_par);
           if (list_len($6.out)) list_cat(c->out_par,$6.out);
 
-          c->literals = list_create(); list_cat(c->literals, def->literals);
+          c->literals = list_create(); if (list_len(def->literals)) list_cat(c->literals, def->literals);
           if (list_len($7)) list_cat(c->literals, $7);
 
           c->flag_noacc = $10;
@@ -711,7 +716,9 @@ display:    /* empty */
 /* INSTRUMENT grammar ************************************************************* */
 
 /* read instrument definition and catenate if this not the first instance */
+//             $1       $2          $3     $4
 instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
+//    $5
       {
         if (!instrument_definition->formals) instrument_definition->formals = $4;
         else { if (list_len($4)) list_cat(instrument_definition->formals,$4); }
@@ -721,6 +728,22 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
           instrument_definition->has_included_instr++;
         }
       }
+/*
+//    $6    $7     $8         $9      $10      $11        $12         $13  $14      $15
+      shell search dependency declare uservars initialize instr_trace save finally "END"
+      {
+        if (!instrument_definition->decls) instrument_definition->decls = $9;
+        else list_cat(instrument_definition->decls->lines, $9->lines);
+        if (!instrument_definition->vars) instrument_definition->vars = $10;
+        else list_cat(instrument_definition->vars->lines, $10->lines);
+        if (!instrument_definition->inits) instrument_definition->inits = $11;
+        else list_cat(instrument_definition->inits->lines, $11->lines);
+        if (!instrument_definition->saves) instrument_definition->saves = $13;
+        else list_cat(instrument_definition->saves->lines, $13->lines);
+        if (!instrument_definition->finals) instrument_definition->finals = $14;
+        else list_cat(instrument_definition->finals->lines, $14->lines);
+*/
+//    $6    $7         $8      $9       $10        $11         $12  $13      $14
       shell dependency declare uservars initialize instr_trace save finally "END"
       {
         if (!instrument_definition->decls) instrument_definition->decls = $8;
@@ -733,6 +756,7 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
         else list_cat(instrument_definition->saves->lines, $12->lines);
         if (!instrument_definition->finals) instrument_definition->finals = $13;
         else list_cat(instrument_definition->finals->lines, $13->lines);
+
         instrument_definition->compmap = comp_instances;
         instrument_definition->groupmap = group_instances;
         instrument_definition->complist = comp_instances_list;
@@ -741,16 +765,10 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
         instrument_definition->literals = list_create();
         if (verbose) fprintf(stderr, "Combine literal blocks into table\n");
         if (literals_construct_table(instrument_definition)) {
-            print_error(MCCODE_NAME ": Combining literal blocks into table failed for %s\n", instr_current_filename);
-            exit(1);
+          print_error(MCCODE_NAME ": Combining literal blocks into table failed for %s\n", instr_current_filename);
+          exit(1);
         }
-        if (verbose) {
-            if (list_undef(instrument_definition->literals)){
-                fprintf(stderr, "Instrument literals list is undefined.\n");
-            } else {
-                fprintf(stderr, "Processed %d literal blocks\n", list_len(instrument_definition->literals));
-            }
-        }
+        if (verbose) fprintf(stderr, "Processed %d literal blocks\n", list_len(instrument_definition->literals));
 
         /* Check instrument parameters for uniqueness */
         check_instrument_formals(instrument_definition->formals, instrument_definition->name);
@@ -1151,7 +1169,10 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         struct comp_inst *comp;
         def = read_component($1);
 
-        def->literals = list_create();
+        if (def->literals == NULL || list_undef(def->literals)) {
+          printf("Read component definition did not set the literals list?!\n");
+          def->literals = list_create();
+        }
 
         palloc(comp);
         comp->def          = def;
@@ -1160,7 +1181,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->jump   = list_create();
         comp->when   = NULL;
         comp->actuals= $2;
-        comp->literals = list_create();
+        comp->literals = list_create(); if (list_len(def->literals)) list_cat(comp->literals, def->literals);
         $$ = comp;
       }
 ;
@@ -1197,11 +1218,11 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
         if (myself_comp->literals == NULL || list_undef(myself_comp->literals)) myself_comp->literals = list_create();
 
         comp->name  = $5;
-	    comp->split = $3;
-	    comp->cpuonly = $2;
-	    if (!comp->cpuonly) {
-	      comp->cpuonly = comp->def->flag_noacc;
-	    }
+        comp->split = $3;
+        comp->cpuonly = $2;
+        if (!comp->cpuonly) {
+          comp->cpuonly = comp->def->flag_noacc;
+        }
         comp->removable = $1;
         comp->index = ++comp_current_index;     /* index of comp instance */
         
@@ -1244,7 +1265,16 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
         if (list_len($14))  comp->jump  = $14;
 
         /* one or more LITERAL statements -- the Component definition *can also* add to this list */
-        comp->literals = list_create(); if (list_len($15)) list_cat(comp->literals, $15);
+        /* So the list *was* created above and should not be re-created now! */
+        if (list_len(comp->literals)){
+          printf("Component instance %s created from component definition with %d literals\n", comp->name, list_len(comp->literals));
+        } else {
+          printf("Component instance %s created from component definition with no literals\n", comp->name);
+        }
+        if (list_len($15)){
+         literals_assign_from_instance($15);
+         list_cat(comp->literals, $15);
+        }
 
         debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $5, $7->def->name));
         /* this comp will be 'previous' for the next, except if removed at include */
@@ -1438,8 +1468,6 @@ extend:   /* empty */
       }
 ;
 
-/* LITERAL block(s) after EXTEND */
-
 literals:
 {
   $$ = list_create();
@@ -1448,7 +1476,7 @@ literals:
 {
   $$ = $1;
 }
-
+;
 
 literals1: literal
 {
@@ -1460,19 +1488,21 @@ literals1: literal
   list_add($1, $2);
   $$ = $1;
 }
+;
 
 
 literal: "LITERAL" TOK_ID TOK_ID codeblock
 {
+  printf("New literal encountered for type %s name %s\n", $2, $3);
   struct literal_struct * literal;
   palloc(literal);
   literal->source = NULL;
   literal->type = str_dup($2);
   literal->name = str_dup($3);
   literal->lines = list_create(); if (list_len($4->lines)) list_cat(literal->lines, $4->lines);
-
   $$ = literal; // This would be very bad to omit. Don't do that!
 }
+;
 
 
 jumps: /* empty */
@@ -2051,7 +2081,7 @@ main(int argc, char *argv[])
   argc = ccommand(&argv);
 #endif
 
-  yydebug = 1;      /* If 1, then bison gives verbose parser debug info. */
+  yydebug = 0;      /* If 1, then bison gives verbose parser debug info. */
 
   palloc(instrument_definition); /* Allocate instrument def. structure. */
   /* init root instrument to NULL */

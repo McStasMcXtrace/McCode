@@ -531,7 +531,8 @@ struct instr_def
 
 struct literal_struct
 {
-  char* source;
+  int instance;
+  char* source; // TODO abuse this field? "__definition__" and "__instance__"?
   char* name;
   char* type;
   List lines;
@@ -560,5 +561,7 @@ struct jump_name
   };
 
 int literals_construct_table(instr_ptr_t);
+void literals_assign_source(List, char *);
+void literals_overwrite_source(List, char *);
 
 #endif /* MCCODE_H */

@@ -29,7 +29,7 @@ char * literals_table_key_literal(char * key){
   if (tokkey) free(tokkey);
   return name;
 }
-int literals_table_defined(int no, struct literals_table_struct * tab, char * key){
+int literals_table_defined(int no, literals_table_t * tab, char * key){
   if (strlen(key) == 0){
     return no;
   }
@@ -46,7 +46,7 @@ int literals_table_defined(int no, struct literals_table_struct * tab, char * ke
   if (name) free(name);
   return number;
 }
-char * literals_table_type(int no, struct literals_table_struct * tab, char * key){
+char * literals_table_type(int no, literals_table_t * tab, char * key){
   if (strlen(key) == 0) {
     fprintf(stderr, "Unable to check type of non-existent key\n");
     exit(1);
@@ -67,7 +67,7 @@ char * literals_table_type(int no, struct literals_table_struct * tab, char * ke
   return type;
 }
 
-char * literals_table_literal(int no, struct literals_table_struct * tab, char * key){
+char * literals_table_literal(int no, literals_table_t * tab, char * key){
   if (strlen(key) == 0) {
     fprintf(stderr, "Unable to retrieve literal for non-existent key\n");
     exit(1);
@@ -87,13 +87,13 @@ char * literals_table_literal(int no, struct literals_table_struct * tab, char *
   if (name) free(name);
   return type;
 }
-void literals_table_print_all_keys(int no, struct literals_table_struct * tab){
+void literals_table_print_all_keys(int no, literals_table_t * tab){
   for (int i=0; i<no; ++i){
     printf("%s::%s ", tab[i].source, tab[i].name);
   }
   printf("\n");
 }
-int literals_table_print_all_components(int no, struct literals_table_struct * tab){
+int literals_table_print_all_components(int no, literals_table_t * tab){
   int count = 0;
   char ** used = malloc(no + sizeof(char*));
   for (int i=0; i<no; ++i){
@@ -113,7 +113,7 @@ int literals_table_print_all_components(int no, struct literals_table_struct * t
   if (used) free(used);
   return count;
 }
-int literals_table_print_component_keys(int no, struct literals_table_struct * tab, char * key){
+int literals_table_print_component_keys(int no, literals_table_t * tab, char * key){
   char * comp = literals_table_key_component(key);
   char * name = literals_table_key_literal(key);
   int count = 0;

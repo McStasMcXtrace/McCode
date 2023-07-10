@@ -20,7 +20,7 @@
 *
 *   struct mcinputtable_struct mcinputtable[];
 *   int numipar;
-*   struct mcliteralstable_struct mcliteralstable[];
+*   literals_table_t literals_table[];
 *   int numliterals;
 *   char instrument_name[], instrument_source[];
 *   int traceenabled, defaultmain;
@@ -186,14 +186,15 @@ struct literals_table_struct { /* stores literal strings from components */
   char * type;  // the type of the literal (free form, valid identifier)
   char * value;  // the literal string contents
 };
+typedef struct literals_table_struct literals_table_t;
 char * literals_table_key_component(char* key);
 char * literals_table_key_literal(char * key);
-int literals_table_defined(int, struct literals_table_struct *, char *);
-char * literals_table_type(int, struct literals_table_struct *, char *);
-char * literals_table_literal(int, struct literals_table_struct *, char *);
-void literals_table_print_all_keys(int no, struct literals_table_struct * tab);
-int literals_table_print_all_components(int no, struct literals_table_struct * tab);
-int literals_table_print_component_keys(int no, struct literals_table_struct * tab, char * key);
+int literals_table_defined(int, literals_table_t *, char *);
+char * literals_table_type(int, literals_table_t *, char *);
+char * literals_table_literal(int, literals_table_t *, char *);
+void literals_table_print_all_keys(int no, literals_table_t * tab);
+int literals_table_print_all_components(int no, literals_table_t * tab);
+int literals_table_print_component_keys(int no, literals_table_t * tab, char * key);
 /* -------------------------------------------------------------------------- Header information for literals-r.c --- */
 
 /* Note: the enum instr_formal_types definition MUST be kept
@@ -225,7 +226,7 @@ typedef MCNUM Rotation[3][3];
 #ifndef DANSE
 extern struct mcinputtable_struct mcinputtable[];         /* list of instrument parameters */
 extern int    numipar;                                    /* number of instrument parameters */
-extern struct literals_table_struct literals_table[];   /* list of component-defined string literals */
+extern literals_table_t literals_table[];                 /* list of component-defined string literals */
 extern int    num_literals;                             /* number of component-defined string literals */
 extern char   instrument_name[], instrument_source[]; /* instrument name and filename */
 extern char  *instrument_exe;                           /* executable path = argv[0] or NULL */
