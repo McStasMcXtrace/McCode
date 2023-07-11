@@ -1213,7 +1213,8 @@ static void mcparameterinfo_out(char * pre, FILE *f){
         strcpy(buffer, "NULL");
       }
       if (strlen(mcinputtable[i].unit)){
-        fprintf(f, "%s%s %s (\"%s\") = %s\n", pre, mcinputtypes[mcinputtable[i].type].parminfo(name), name, mcinputtable[i].unit, buffer);
+        //fprintf(f, "%s%s %s (\"%s\") = %s\n", pre, mcinputtypes[mcinputtable[i].type].parminfo(name), name, mcinputtable[i].unit, buffer);
+        fprintf(f, "%s%s %s/\"%s\" = %s\n", pre, mcinputtypes[mcinputtable[i].type].parminfo(name), name, mcinputtable[i].unit, buffer);
       } else {
         fprintf(f, "%s%s %s = %s\n", pre, mcinputtypes[mcinputtable[i].type].parminfo(name), name, buffer);
       }
@@ -3949,6 +3950,11 @@ mchelp(char *pgmname)
 "  -h        --help           Show this help message.\n"
 "  -i        --info           Detailed instrument information.\n"
 "  --list-parameters          Print the instrument parameters to standard out\n"
+"  --literal-list             Print names of components which defined literals\n"
+"  --literal-defined COMP{::NAME}\n"
+"                             Print component defined literal text names\n"
+"  --literal-type COMP::NAME  Print literal text type specified in definition\n"
+"  --literal COMP::NAME       Print the literal text\n"
 "  --source                   Show the instrument code which was compiled.\n"
 #ifdef OPENACC
 "\n"
@@ -4199,7 +4205,7 @@ mcparseoptions(int argc, char *argv[])
       mcinfo();
     else if (!strcmp("--list-parameters", argv[i]))
       mcparameterinfo();
-    else if (!strcmp("--literal-defined", argv[i]) && ((i+1) >= argc || argv[i+1][0] == '-')){
+    else if (!strcmp("--literal-list", argv[i]) && ((i+1) >= argc || argv[i+1][0] == '-')){
       exit(literals_table_print_all_components(num_literals, literals_table) == 0);
     }
     else if (!strcmp("--literal-defined", argv[i]) && (i+1) < argc){

@@ -286,6 +286,11 @@ def add_mcstas_options(parser):
     add('--list-parameters', action='store_true', default=False,
         help='Print the instrument parameters to standard out')
 
+    add('--literal-list', action='store_true', default=False, help='Print all literal defining component names')
+    add('--literal-defined', default=None, help="Print literals for component, or indicate if component:name exists")
+    add('--literal-type', default=None, help="Print literal type for component:name")
+    add('--literal', default=None, help="Print literal for component:name")
+
     parser.add_option_group(opt)
 
 
@@ -453,6 +458,9 @@ def main():
     LOG.info('===')
 
     if options.info or options.list_parameters:
+        mcstas.run(override_mpi=False)
+        exit()
+    if options.literal_list or options.literal_defined or options.literal_type or options.literal:
         mcstas.run(override_mpi=False)
         exit()
 
