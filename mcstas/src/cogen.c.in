@@ -127,7 +127,7 @@ char *instr_formal_type_names[] =
 
 /* 'char' and 'MCNUM' are for static array allocations */
 char *instr_formal_type_names_real[] =
-  { "long", "char*", "char", "MCNUM", "MCNUM", "double"};
+  { "int", "char*", "char", "MCNUM", "MCNUM", "double"};
 
 /*******************************************************************************
 * Output a single line of code
