@@ -391,18 +391,37 @@ int cogen_decls(struct instr_def *instr)
   cout("");
 
   // Component-define literal strings:
+  Symtab component_literals = literals_separate_by_source(instr->literals, 0); // 0 -> only select component-defined literals
+  Symtab_handle component_literals_handle = symtab_iterate(component_literals);
+  struct Symtab_entry * one_component_literals;
   /* To start, just write a tuple of (str, str, str) tuples */
-  coutf("component_definition_literals = (");
-  liter = list_iterate(instr->literals);
+  coutf("component_definition_literals = {");
   struct literal_struct * literal;
-  while ((literal = list_next(liter))){
-    if (literal->instance != 1) {
-      coutf("(\"%s\", \"%s\", \"%s\", ", literal->source, literal->name, literal->type);
+  while ((one_component_literals = symtab_next(component_literals_handle))) {
+    coutf("'%s': {", one_component_literals->name);
+    liter = list_iterate(one_component_literals->val);
+    while (literal = list_next(liter)) {
+      coutf("'%s': ('%s', ", literal->name, literal->type);
       triple_escaped_lines_out(literal->lines);
-      coutf("),");
+      coutf("), ");
     }
+    list_iterate_end(liter);
+    coutf("}, ");
   }
-  coutf(")");
+  coutf("}");
+  symtab_iterate_end(component_literals_handle);
+  symtab_free(component_literals, NULL);
+
+//  liter = list_iterate(instr->literals);
+//  struct literal_struct * literal;
+//  while ((literal = list_next(liter))){
+//    if (literal->instance != 1) {
+//      coutf("'%s':, ('%s', '%s', ", literal->source, literal->name, literal->type);
+//      triple_escaped_lines_out(literal->lines);
+//      coutf("),");
+//    }
+//  }
+//  coutf("}");
 
   cout("instr.append_declare(r'''");
   codeblock_out(instr->decls);
@@ -564,32 +583,15 @@ int cogen_raytrace(struct instr_def *instr)
     }
 
     if (list_len(comp->literals)) {
-      printf("Component %s has %d literals defined\n", comp->name, list_len(comp->literals));
-
       struct literal_struct * l_ptr;
       for (int lit=0; lit<list_len(comp->literals); ++lit){
         l_ptr = (struct literal_struct *) list_access(comp->literals, lit);
-        coutf("# LITERAL %s %s %s %d", l_ptr->type, l_ptr->name, l_ptr->source == NULL ? "No source" : l_ptr->source, l_ptr->instance);
-      }
-
-      int n_inst_lit = 0;
-      for (int lit=0; lit<list_len(comp->literals); ++lit){
-        l_ptr = (struct literal_struct *) list_access(comp->literals, lit);
-        if (l_ptr->instance) ++n_inst_lit;
-      }
-      if (n_inst_lit) {
-        coutf (n_inst_lit > 1 ? "# LITERAL blocks from %s" : "# LITERAL block from %s", comp->name);
-        for (int lit=0; lit<list_len(comp->literals); ++lit){
-          l_ptr = (struct literal_struct *) list_access(comp->literals, lit);
-          if (l_ptr->instance) {
-            coutf("%s.append_LITERAL(type='%s', name='%s', lines=", comp->name, l_ptr->type, l_ptr->name);
-            triple_escaped_lines_out(l_ptr->lines);
-            coutf(")");
-          }
+        if (l_ptr->instance) {
+          coutf("%s.append_LITERAL(type='%s', name='%s', lines=", comp->name, l_ptr->type, l_ptr->name);
+          triple_escaped_lines_out(l_ptr->lines);
+          coutf(")");
         }
       }
-    } else {
-      printf("Component %s does not have literals defined\n", comp->name);
     }
     
     cout("");

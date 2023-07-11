@@ -109,3 +109,21 @@ void literals_assign_from_definition(List literals){
 void literals_assign_from_instance(List literals){
   _literals_assign_instance_field(literals, 1);
 }
+
+
+Symtab literals_separate_by_source(List literals, int source_type){
+  Symtab sources = symtab_create();
+  struct Symtab_entry * s_ptr;
+  struct literal_struct * l_ptr;
+  for (int i=0; i<list_len(literals); ++i){
+    l_ptr = list_access(literals, i);
+    if (source_type == l_ptr->instance) {
+      s_ptr = symtab_lookup(sources, l_ptr->source == NULL ? "null" : l_ptr->source);
+      if (s_ptr == NULL) {
+        s_ptr = symtab_add(sources, l_ptr->source == NULL ? "null" : l_ptr->source, (void *) list_create());
+      }
+      list_add(s_ptr->val, l_ptr);
+    }
+  }
+  return sources;
+}

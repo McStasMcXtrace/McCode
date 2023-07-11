@@ -563,5 +563,6 @@ struct jump_name
 int literals_construct_table(instr_ptr_t);
 void literals_assign_source(List, char *);
 void literals_overwrite_source(List, char *);
+Symtab literals_separate_by_source(List literals, int source_type);
 
 #endif /* MCCODE_H */
