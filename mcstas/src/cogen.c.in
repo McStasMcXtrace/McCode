@@ -231,7 +231,6 @@ codeblock_out_brace(struct code_block *code)
  */
 static void
 escaped_lines_out(List lines) {
-  printf("\n\n\nCall to escaped_lines_out\n\n\n");
   List_handle liter;                /* For list iteration. */
   char *line;                       /* Single code line. */
   char * escaped_line;

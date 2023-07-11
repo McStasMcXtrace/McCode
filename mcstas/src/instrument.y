@@ -31,6 +31,9 @@ Symtab symtab_cat(Symtab, Symtab);
 char * strcasestr(char *, char *);
 void run_command_to_add_search_dir(char * input);
 int literals_construct_table(instr_ptr_t);
+void literals_assign_from_definition(List literals);
+void literals_assign_from_instance(List literals);
+
 %}
 
 %{
@@ -186,11 +189,8 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters literals shell dependency noa
         c->out_par = $4.out;
         c->literals = list_create();
         if (list_len($5)) {
-          printf("New component %s with %d literal definition(s)\n", $3, list_len($5));
           literals_assign_from_definition($5);
           list_cat(c->literals, $5);
-        } else {
-          printf("New component %s without any literal definitions\n", $3);
         }
         c->flag_noacc   = $8;
         c->share_code   = $9;
@@ -1266,11 +1266,6 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
 
         /* one or more LITERAL statements -- the Component definition *can also* add to this list */
         /* So the list *was* created above and should not be re-created now! */
-        if (list_len(comp->literals)){
-          printf("Component instance %s created from component definition with %d literals\n", comp->name, list_len(comp->literals));
-        } else {
-          printf("Component instance %s created from component definition with no literals\n", comp->name);
-        }
         if (list_len($15)){
          literals_assign_from_instance($15);
          list_cat(comp->literals, $15);
@@ -1493,7 +1488,6 @@ literals1: literal
 
 literal: "LITERAL" TOK_ID TOK_ID codeblock
 {
-  printf("New literal encountered for type %s name %s\n", $2, $3);
   struct literal_struct * literal;
   palloc(literal);
   literal->source = NULL;
