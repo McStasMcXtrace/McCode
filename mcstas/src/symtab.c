@@ -126,7 +126,7 @@ symtab_add(Symtab st, char *name, void *value)
   st->size++;
   st->entries[i].name = str_dup(name);
   st->entries[i].val = value;
-  return value;
+  return &(st->entries[i]);
 }
 
 
