@@ -28,7 +28,6 @@ int yylex();
 int yyerror(char *s);
 List list_cat(List, List);
 Symtab symtab_cat(Symtab, Symtab);
-char * strcasestr(const char *, const char *);
 void run_command_to_add_search_dir(char * input);
 int literals_construct_table(instr_ptr_t);
 void literals_assign_from_definition(List literals);
