@@ -41,6 +41,10 @@ DECLARE %{
   #endif
 %}
 
+USERVARS %{
+  int Stype;
+%}
+
 TRACE
 
 COMPONENT Origin = Progress_bar(percent=1)
@@ -59,6 +63,7 @@ COMPONENT sample=Fluorescence(material=material,
 AT (0,0,0) RELATIVE sample_mount_point
 EXTEND %{
   if (!SCATTERED) ABSORB;
+  Stype=type;
 %}
 
 COMPONENT emon = E_monitor(restore_xray=1,nE=2001,Emin=0, Emax=1.2*E0, 
@@ -69,15 +74,15 @@ COMPONENT psd = PSD_monitor(xwidth=0.0015, yheight=0.0015, nx=100, ny=100, filen
 AT(0,0,0.1) RELATIVE PREVIOUS
 
 COMPONENT emon_fluo = COPY(emon)(filename="Fluorescence.dat")
-WHEN (COMP_GETPAR(sample, type) == FLUORESCENCE)
+WHEN (Stype == FLUORESCENCE)
 AT(0,0,0.1) RELATIVE PREVIOUS
 
 COMPONENT emon_Compton = COPY(emon)(filename="Compton.dat")
-WHEN (COMP_GETPAR(sample, type) == COMPTON)
+WHEN (Stype == COMPTON)
 AT(0,0,0.1) RELATIVE PREVIOUS
 
 COMPONENT emon_Rayleigh = COPY(emon)(filename="Rayleigh.dat")
-WHEN (COMP_GETPAR(sample, type) == RAYLEIGH)
+WHEN (Stype == RAYLEIGH)
 AT(0,0,0.1) RELATIVE PREVIOUS
 
 
