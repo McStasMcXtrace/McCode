@@ -17,7 +17,6 @@ int literals_construct_table(instr_ptr_t inst){
   struct Symtab_entry * lit_entry;
   struct comp_inst * comp_ptr;
   struct literal_struct * l_ptr;
-  struct literal_struct * t_ptr;
   char sep[3] = "::\0";
   char * key = malloc(2048 * sizeof(char));
   char * start = malloc(1024 * sizeof(char));
@@ -48,7 +47,7 @@ int literals_construct_table(instr_ptr_t inst){
       if (l_ptr->source == NULL) l_ptr->source = comp_ptr->name;
       // construct the key for insertion into the symbol table
       strcpy(key, start);
-      strcat(key, t_ptr->name); // using the McCode str_cat caused a segmentation fault?!
+      strcat(key, l_ptr->name); // using the McCode str_cat caused a segmentation fault?!
       // check if the same-keyed literal was already provided
       if ((lit_entry = symtab_lookup(lit_map, key))){
         // This key already exists! What do we do? Trust users to know what they're doing!
