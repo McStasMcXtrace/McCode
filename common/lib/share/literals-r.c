@@ -8,7 +8,8 @@ char * literals_table_key_component(char* key){
   if (strlen(key) == 0) return NULL;
   char sep[2] = ":\0"; // matches any number of repeated colons
   // look for the separator in the provided key; strtok is allowed to modify the string, so copy it
-  char * tokkey = strdup(key);
+  char * tokkey = malloc((1 + strlen(key)) * sizeof(char));
+  strcpy(tokkey, key);
   char * pch = strtok(tokkey, sep); // this *is* the component name (if provided) -- but we need to move the pointer
   char * comp = malloc((1 + strlen(pch)) * sizeof(char));
   strcpy(comp, pch);
@@ -18,7 +19,8 @@ char * literals_table_key_component(char* key){
 char * literals_table_key_literal(char * key){
   if (strlen(key) == 0) return NULL;
   char sep[3] = ":\0";
-  char * tokkey = strdup(key);
+  char * tokkey = malloc((1 + strlen(key)) * sizeof(char));
+  strcpy(tokkey, key);
   char * pch = strtok(tokkey, sep); // this *is* the component name (if provided)
   if (pch) pch = strtok(NULL, sep); // either NULL or the literal name
   char * name = NULL;
