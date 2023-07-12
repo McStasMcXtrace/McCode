@@ -30,7 +30,9 @@ List list_cat(List, List);
 Symtab symtab_cat(Symtab, Symtab);
 char * strcasestr(char *, char *);
 void run_command_to_add_search_dir(char * input);
-int literals_construct_table(instr_ptr_t);
+int metadata_construct_table(instr_ptr_t);
+void metadata_assign_from_definition(List metadata);
+void metadata_assign_from_instance(List metadata);
 %}
 
 %{
@@ -78,8 +80,8 @@ int literals_construct_table(instr_ptr_t);
   List                     jumps;
   struct jump_condition    jumpcondition;
   struct jump_name         jumpname;
-  struct literal_struct   *literal;       /* one literal structure */
-  List                     literals;      /* list of literal structures */
+  struct metadata_struct   *metadatum;       /* one metadatum structure */
+  List                     metadata;      /* list of metadata structures */
 }
 
 %token TOK_RESTRICTED TOK_GENERAL
@@ -122,7 +124,7 @@ int literals_construct_table(instr_ptr_t);
 %token TOK_DEPENDENCY "DEPENDENCY"
 %token TOK_SHELL      "SHELL" /* pre-cogen commands */
 %token TOK_SEARCH     "SEARCH" /* Additonal include directory for instrument/component file(s) */
-%token TOK_LITERAL    "LITERAL"
+%token TOK_METADATA   "METADATA"
 
 /*******************************************************************************
 * Declarations of terminals and nonterminals.
@@ -152,8 +154,8 @@ int literals_construct_table(instr_ptr_t);
 %type <place>   place
 %type <ori>     orientation
 %type <string>  instname
-%type <literal> literal
-%type <literals> literals literals1
+%type <metadatum> metadatum
+%type <metadata> metadata metadata1
 %type <jump>    jump
 %type <jumps>   jumps jumps1
 %type <jumpname> jumpname
@@ -174,7 +176,7 @@ compdefs:   /* empty */
 ;
 
 //          $1        $2         $3     $4         $5       $6    $7         $8    $9    $10      $11     $12        $13   $14  $15     $16     $17
-compdef:    "DEFINE" "COMPONENT" TOK_ID parameters literals shell dependency noacc share uservars declare initialize trace save finally display "END"
+compdef:    "DEFINE" "COMPONENT" TOK_ID parameters metadata shell dependency noacc share uservars declare initialize trace save finally display "END"
       {
         struct comp_def *c;
         palloc(c);
@@ -184,11 +186,11 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters literals shell dependency noa
         c->set_par = $4.set;
         c->out_par = $4.out;
 
-        c->literals = list_create();
+        c->metadata = list_create();
         if (list_len($5)){
-          literals_assign_from_definition($5);
-          literals_assign_source($5, $3);
-          list_cat(c->literals, $5);
+          metadata_assign_from_definition($5);
+          metadata_assign_source($5, $3);
+          list_cat(c->metadata, $5);
         }
 
         c->flag_noacc   = $8;
@@ -216,7 +218,7 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters literals shell dependency noa
         if (verbose) fprintf(stderr, "Embedding component %s from file %s\n", c->name, c->source);
       }
 // $1       $2         $3     $4     $5     $6         $7       $8    $9        $10    $11   $12      $13     $14        $15   $16  $17     $18     $19
-| "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters literals shell dependency noacc share uservars declare initialize trace save finally display "END"
+| "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters metadata shell dependency noacc share uservars declare initialize trace save finally display "END"
       {
         /* create a copy of a comp, and initiate it with given blocks */
         /* all redefined blocks override */
@@ -237,8 +239,8 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters literals shell dependency noa
           c->out_par   = list_create(); list_cat(c->out_par, def->out_par);
           if (list_len($6.out)) list_cat(c->out_par,$6.out);
 
-          c->literals = list_create(); if(list_len(def->literals)) list_cat(c->literals, def->literals);
-          if (list_len($7)) list_cat(c->literals, $7);
+          c->metadata = list_create(); if(list_len(def->metadata)) list_cat(c->metadata, def->metadata);
+          if (list_len($7)) list_cat(c->metadata, $7);
 
           c->flag_noacc = $10;
 	  
@@ -745,13 +747,13 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
         instrument_definition->complist = comp_instances_list;
         instrument_definition->grouplist = group_instances_list;
 
-        instrument_definition->literals = list_create();
-        if (verbose) fprintf(stderr, "Combine literal blocks into table\n");
-        if (literals_construct_table(instrument_definition)) {
-          print_error(MCCODE_NAME ": Combining literal blocks into table failed for %s\n", instr_current_filename);
+        instrument_definition->metadata = list_create();
+        if (verbose) fprintf(stderr, "Combine metadatum blocks into table\n");
+        if (metadata_construct_table(instrument_definition)) {
+          print_error(MCCODE_NAME ": Combining metadatum blocks into table failed for %s\n", instr_current_filename);
           exit(1);
         }
-        if (verbose) fprintf(stderr, "Processed %d literal blocks\n", list_len(instrument_definition->literals));
+        if (verbose) fprintf(stderr, "Processed %d metadatum blocks\n", list_len(instrument_definition->metadata));
 
         /* Check instrument parameters for uniqueness */
         check_instrument_formals(instrument_definition->formals, instrument_definition->name);
@@ -1125,7 +1127,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->actuals= symtab_create();
         symtab_cat(comp->actuals, $5);
         symtab_cat(comp->actuals, comp_src->actuals);
-        comp->literals = list_create(); if (list_len(comp_src->literals)) list_cat(comp->literals, comp_src->literals);
+        comp->metadata = list_create(); if (list_len(comp_src->metadata)) list_cat(comp->metadata, comp_src->metadata);
         $$ = comp;
       }
     | "COPY" '(' compref ')'
@@ -1142,7 +1144,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->jump   = comp_src->jump;
         comp->when   = comp_src->when;
         comp->actuals= comp_src->actuals;
-        comp->literals = list_create(); if (list_len(comp_src->literals)) list_cat(comp->literals, comp_src->literals);
+        comp->metadata = list_create(); if (list_len(comp_src->metadata)) list_cat(comp->metadata, comp_src->metadata);
         $$ = comp;
       }
     | TOK_ID actuallist /* define new instance with def+set parameters */
@@ -1150,9 +1152,9 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         struct comp_def *def;
         struct comp_inst *comp;
         def = read_component($1);
-        if (def->literals == NULL || list_undef(def->literals)) {
-          printf("Read component definition did no set the literals list!?\n");
-          def->literals = list_create();
+        if (def->metadata == NULL || list_undef(def->metadata)) {
+          printf("Read component definition did no set the metadata list!?\n");
+          def->metadata = list_create();
         }
 
         palloc(comp);
@@ -1162,7 +1164,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->jump   = list_create();
         comp->when   = NULL;
         comp->actuals= $2;
-        comp->literals = list_create(); if (list_len(def->literals)) list_cat(comp->literals, def->literals);
+        comp->metadata = list_create(); if (list_len(def->metadata)) list_cat(comp->metadata, def->metadata);
         $$ = comp;
       }
 ;
@@ -1194,9 +1196,9 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
         struct comp_inst *comp;
         myself_comp = comp = $7;
 
-        // Trying to check or assign literals before the previous line is accessing a null pointer!
-        if (comp->literals == NULL || list_undef(comp->literals)) comp->literals = list_create();
-        if (myself_comp->literals == NULL || list_undef(myself_comp->literals)) myself_comp->literals = list_create();
+        // Trying to check or assign metadata before the previous line is accessing a null pointer!
+        if (comp->metadata == NULL || list_undef(comp->metadata)) comp->metadata = list_create();
+        if (myself_comp->metadata == NULL || list_undef(myself_comp->metadata)) myself_comp->metadata = list_create();
 
         comp->name  = $5;
         comp->split = $3;
@@ -1214,7 +1216,7 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
           comp_formals_actuals(comp, comp->actuals);
         }
       }
-      when place orientation groupref extend jumps literals
+      when place orientation groupref extend jumps metadata
       {
         struct comp_inst *comp = myself_comp;
 
@@ -1245,16 +1247,16 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
         if ($13->linenum)   comp->extend= $13;  /* EXTEND block*/
         if (list_len($14))  comp->jump  = $14;
 
-        /* one or more LITERAL statements -- the Component definition *can also* add to this list */
+        /* one or more metadatum statements -- the Component definition *can also* add to this list */
         /* So the list *was* created above and should not be re-created now! */
-        if (list_len(comp->literals)){
-          printf("Component instance %s created from component definition with %d literals\n", comp->name, list_len(comp->literals));
+        if (list_len(comp->metadata)){
+          printf("Component instance %s created from component definition with %d metadata\n", comp->name, list_len(comp->metadata));
         } else {
-          printf("Component instance %s created from component definition with no literals\n", comp->name);
+          printf("Component instance %s created from component definition with no metadata\n", comp->name);
         }
         if (list_len($15)) {
-          literals_assign_from_instance($15);
-          list_cat(comp->literals, $15);
+          metadata_assign_from_instance($15);
+          list_cat(comp->metadata, $15);
         }
 
         debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $5, $7->def->name));
@@ -1449,26 +1451,26 @@ extend:   /* empty */
       }
 ;
 
-literals: {
+metadata: {
   $$ = list_create();
-}| literals1 {
+}| metadata1 {
   $$ = $1;
 }
-literals1: literal {
+metadata1: metadatum {
   $$ = list_create();
   list_add($$, $1);
-} | literals1 literal {
+} | metadata1 metadatum {
   list_add($1, $2);
   $$ = $1;
 }
-literal: "LITERAL" TOK_ID TOK_ID codeblock {
-  struct literal_struct * literal;
-  palloc(literal);
-  literal->source = NULL;
-  literal->type = str_dup($2);
-  literal->name = str_dup($3);
-  literal->lines = list_create(); if (list_len($4->lines)) list_cat(literal->lines, $4->lines);
-  $$ = literal;
+metadatum: "METADATA" TOK_ID TOK_ID codeblock {
+  struct metadata_struct * metadatum;
+  palloc(metadatum);
+  metadatum->source = NULL;
+  metadatum->type = str_dup($2);
+  metadatum->name = str_dup($3);
+  metadatum->lines = list_create(); if (list_len($4->lines)) list_cat(metadatum->lines, $4->lines);
+  $$ = metadatum;
 }
 
 
@@ -1830,6 +1832,7 @@ static int mc_yyparse_component(void){
   int ret;
   Pool old;
   old = parser_pool;
+  parser_pool = pool_create();
   ret = yyparse();
   pool_free(parser_pool);
   parser_pool = old;
@@ -1867,7 +1870,7 @@ List comp_instances_list;
    definition. */
 List group_instances_list;
 
-List literals_list;
+List metadata_list;
 
 /* Filename for outputting generated simulation program ('-' means stdin). */
 static char *output_filename;
@@ -2034,7 +2037,7 @@ main(int argc, char *argv[])
   instrument_definition->groupmap  = NULL;
   instrument_definition->complist  = NULL;
   instrument_definition->grouplist = NULL;
-  instrument_definition->literals  = NULL;
+  instrument_definition->metadata  = NULL;
   instrument_definition->has_included_instr=0;
   comp_instances      = NULL;
   comp_instances_list = NULL;

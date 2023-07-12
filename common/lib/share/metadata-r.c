@@ -1,10 +1,10 @@
-/** --- Contents of  literals-r.c ---------------------------------------------------------------------------------- */
+/** --- Contents of  metadata-r.c ---------------------------------------------------------------------------------- */
 // Created by Gregory Tucker, Data Management Software Centre, European Spallation Source ERIC on 07/07/23.
 #ifndef MCCODE_NAME
-#include "literals-r.h"
+#include "metadata-r.h"
 #endif
 
-char * literals_table_key_component(char* key){
+char * metadata_table_key_component(char* key){
   if (strlen(key) == 0) return NULL;
   char sep[2] = ":\0"; // matches any number of repeated colons
   // look for the separator in the provided key; strtok is allowed to modify the string, so copy it
@@ -15,7 +15,7 @@ char * literals_table_key_component(char* key){
   if (tokkey) free(tokkey);
   return comp;
 }
-char * literals_table_key_literal(char * key){
+char * metadata_table_key_literal(char * key){
   if (strlen(key) == 0) return NULL;
   char sep[3] = ":\0";
   char * tokkey = strdup(key);
@@ -29,12 +29,12 @@ char * literals_table_key_literal(char * key){
   if (tokkey) free(tokkey);
   return name;
 }
-int literals_table_defined(int no, literals_table_t * tab, char * key){
+int metadata_table_defined(int no, metadata_table_t * tab, char * key){
   if (strlen(key) == 0){
     return no;
   }
-  char * comp = literals_table_key_component(key);
-  char * name = literals_table_key_literal(key);
+  char * comp = metadata_table_key_component(key);
+  char * name = metadata_table_key_literal(key);
   // look through the table for the matching component and literal names
   int number = 0;
   for (int i=0; i<no; ++i){
@@ -46,13 +46,13 @@ int literals_table_defined(int no, literals_table_t * tab, char * key){
   if (name) free(name);
   return number;
 }
-char * literals_table_type(int no, literals_table_t * tab, char * key){
+char * metadata_table_type(int no, metadata_table_t * tab, char * key){
   if (strlen(key) == 0) {
     fprintf(stderr, "Unable to check type of non-existent key\n");
     exit(1);
   }
-  char * comp = literals_table_key_component(key);
-  char * name = literals_table_key_literal(key);
+  char * comp = metadata_table_key_component(key);
+  char * name = metadata_table_key_literal(key);
   if (name == NULL){
     fprintf(stderr, "Unable to check type of literal for component %s without its name\n", comp);
     free(comp);
@@ -67,13 +67,13 @@ char * literals_table_type(int no, literals_table_t * tab, char * key){
   return type;
 }
 
-char * literals_table_literal(int no, literals_table_t * tab, char * key){
+char * metadata_table_literal(int no, metadata_table_t * tab, char * key){
   if (strlen(key) == 0) {
     fprintf(stderr, "Unable to retrieve literal for non-existent key\n");
     exit(1);
   }
-  char * comp = literals_table_key_component(key);
-  char * name = literals_table_key_literal(key);
+  char * comp = metadata_table_key_component(key);
+  char * name = metadata_table_key_literal(key);
   if (name == NULL){
     fprintf(stderr, "Unable to retrieve literal for component %s without its name\n", comp);
     free(comp);
@@ -87,13 +87,13 @@ char * literals_table_literal(int no, literals_table_t * tab, char * key){
   if (name) free(name);
   return type;
 }
-void literals_table_print_all_keys(int no, literals_table_t * tab){
+void metadata_table_print_all_keys(int no, metadata_table_t * tab){
   for (int i=0; i<no; ++i){
     printf("%s::%s ", tab[i].source, tab[i].name);
   }
   printf("\n");
 }
-int literals_table_print_all_components(int no, literals_table_t * tab){
+int metadata_table_print_all_components(int no, metadata_table_t * tab){
   int count = 0;
   char ** used = malloc(no + sizeof(char*));
   for (int i=0; i<no; ++i){
@@ -113,9 +113,9 @@ int literals_table_print_all_components(int no, literals_table_t * tab){
   if (used) free(used);
   return count;
 }
-int literals_table_print_component_keys(int no, literals_table_t * tab, char * key){
-  char * comp = literals_table_key_component(key);
-  char * name = literals_table_key_literal(key);
+int metadata_table_print_component_keys(int no, metadata_table_t * tab, char * key){
+  char * comp = metadata_table_key_component(key);
+  char * name = metadata_table_key_literal(key);
   int count = 0;
   for (int i=0; i<no; ++i) if (!strcmp(tab[i].source, comp) && (name == NULL || !strcmp(tab[i].name, name))) {
     if (name == NULL) printf("%s ", tab[i].name);
@@ -125,4 +125,4 @@ int literals_table_print_component_keys(int no, literals_table_t * tab, char * k
   printf("\n");
   return count;
 }
-/* -------------------------------------------------------------------------------------Contents of  literals-r.c --- */
+/* -------------------------------------------------------------------------------------Contents of  metadata-r.c --- */

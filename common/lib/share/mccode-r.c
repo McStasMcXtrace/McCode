@@ -3950,11 +3950,11 @@ mchelp(char *pgmname)
 "  -h        --help           Show this help message.\n"
 "  -i        --info           Detailed instrument information.\n"
 "  --list-parameters          Print the instrument parameters to standard out\n"
-"  --literal-list             Print names of components which defined literals\n"
-"  --literal-defined COMP{::NAME}\n"
-"                             Print component defined literal text names\n"
-"  --literal-type COMP::NAME  Print literal text type specified in definition\n"
-"  --literal COMP::NAME       Print the literal text\n"
+"  --metadata-list            Print names of components which defined metadata\n"
+"  --metadata-defined COMP{::NAME}\n"
+"                             Print component defined metadata text names\n"
+"  --metadata-type COMP::NAME Print metadata text type specified in definition\n"
+"  --metadata COMP::NAME      Print the metadata text\n"
 "  --source                   Show the instrument code which was compiled.\n"
 #ifdef OPENACC
 "\n"
@@ -4205,20 +4205,20 @@ mcparseoptions(int argc, char *argv[])
       mcinfo();
     else if (!strcmp("--list-parameters", argv[i]))
       mcparameterinfo();
-    else if (!strcmp("--literal-list", argv[i]) && ((i+1) >= argc || argv[i+1][0] == '-')){
-      exit(literals_table_print_all_components(num_literals, literals_table) == 0);
+    else if (!strcmp("--metadata-list", argv[i]) && ((i+1) >= argc || argv[i+1][0] == '-')){
+      exit(metadata_table_print_all_components(num_metadata, metadata_table) == 0);
     }
-    else if (!strcmp("--literal-defined", argv[i]) && (i+1) < argc){
-      exit(literals_table_print_component_keys(num_literals, literals_table, argv[i+1]) == 0);
+    else if (!strcmp("--metadata-defined", argv[i]) && (i+1) < argc){
+      exit(metadata_table_print_component_keys(num_metadata, metadata_table, argv[i+1]) == 0);
     }
-    else if (!strcmp("--literal-type", argv[i]) && (i+1) < argc){
-      char * literal_type = literals_table_type(num_literals, literals_table, argv[i+1]);
+    else if (!strcmp("--metadata-type", argv[i]) && (i+1) < argc){
+      char * literal_type = metadata_table_type(num_metadata, metadata_table, argv[i+1]);
       if (literal_type == NULL) exit(1);
       printf("%s\n", literal_type);
       exit(0);
     }
-    else if (!strcmp("--literal", argv[i]) && (i+1) < argc){
-      char * literal = literals_table_literal(num_literals, literals_table, argv[i+1]);
+    else if (!strcmp("--metadata", argv[i]) && (i+1) < argc){
+      char * literal = metadata_table_literal(num_metadata, metadata_table, argv[i+1]);
       if (literal == NULL) exit(1);
       printf("%s\n", literal);
       exit(0);

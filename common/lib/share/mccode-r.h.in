@@ -20,8 +20,8 @@
 *
 *   struct mcinputtable_struct mcinputtable[];
 *   int numipar;
-*   literals_table_t literals_table[];
-*   int numliterals;
+*   metadata_table_t metadata_table[];
+*   int num_metadata;
 *   char instrument_name[], instrument_source[];
 *   int traceenabled, defaultmain;
 *   extern MCNUM  mccomp_storein[];
@@ -179,23 +179,23 @@ size_t str_len(const char *s);
 #  undef NOSIGNALS
 #endif
 
-/** Header information for literals-r.c ---------------------------------------------------------------------------- */
-struct literals_table_struct { /* stores literal strings from components */
-  char * source;  // component name which provided the literal string
-  char * name;  // the name of the literal
-  char * type;  // the type of the literal (free form, valid identifier)
-  char * value;  // the literal string contents
+/** Header information for metadata-r.c ----------------------------------------------------------------------------- */
+struct metadata_table_struct { /* stores metadata strings from components */
+  char * source;  // component name which provided the metadata
+  char * name;    // the name of the metadata
+  char * type;    // the MIME type of the metadata (free form, valid identifier)
+  char * value;   // the metadata string contents
 };
-typedef struct literals_table_struct literals_table_t;
-char * literals_table_key_component(char* key);
-char * literals_table_key_literal(char * key);
-int literals_table_defined(int, literals_table_t *, char *);
-char * literals_table_type(int, literals_table_t *, char *);
-char * literals_table_literal(int, literals_table_t *, char *);
-void literals_table_print_all_keys(int no, literals_table_t * tab);
-int literals_table_print_all_components(int no, literals_table_t * tab);
-int literals_table_print_component_keys(int no, literals_table_t * tab, char * key);
-/* -------------------------------------------------------------------------- Header information for literals-r.c --- */
+typedef struct metadata_table_struct metadata_table_t;
+char * metadata_table_key_component(char* key);
+char * metadata_table_key_literal(char * key);
+int metadata_table_defined(int, metadata_table_t *, char *);
+char * metadata_table_type(int, metadata_table_t *, char *);
+char * metadata_table_literal(int, metadata_table_t *, char *);
+void metadata_table_print_all_keys(int no, metadata_table_t * tab);
+int metadata_table_print_all_components(int no, metadata_table_t * tab);
+int metadata_table_print_component_keys(int no, metadata_table_t * tab, char * key);
+/* -------------------------------------------------------------------------- Header information for metadata-r.c --- */
 
 /* Note: the enum instr_formal_types definition MUST be kept
    synchronized with the one in mccode.h and with the
@@ -226,8 +226,8 @@ typedef MCNUM Rotation[3][3];
 #ifndef DANSE
 extern struct mcinputtable_struct mcinputtable[];         /* list of instrument parameters */
 extern int    numipar;                                    /* number of instrument parameters */
-extern literals_table_t literals_table[];                 /* list of component-defined string literals */
-extern int    num_literals;                             /* number of component-defined string literals */
+extern metadata_table_t metadata_table[];                 /* list of component-defined string metadata */
+extern int    num_metadata;                               /* number of component-defined string metadata */
 extern char   instrument_name[], instrument_source[]; /* instrument name and filename */
 extern char  *instrument_exe;                           /* executable path = argv[0] or NULL */
 extern char   instrument_code[];                        /* contains the initial 'instr' file */

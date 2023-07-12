@@ -443,7 +443,7 @@ struct comp_def
     int  counter_instances;         /* number of instances using the same definition/class */
     int  flag_noacc;                /* Component type not available on GPU */
     struct List_header * def_par, * set_par, * out_par, * decl_par; /* Formal parameters. */
-    struct List_header * literals;
+    struct List_header * metadata;
     struct code_block *share_code;  /* Unique Declaration code (shared). */
     struct code_block *uservar_code; /* To be injected in particlce struct */
     struct code_block *decl_code;   /* Declaration code. */
@@ -481,7 +481,7 @@ struct comp_inst
     int    index;   /* index of comp instance */
     struct group_inst *group;       /* NULL or group name in which comp is */
     Symtab defpar, setpar;          /* Parameter values. */
-    List literals;  /* NULL or list of literal code blocks after extend */
+    List metadata;  /* NULL or list of metadata code blocks after extend */
     List jump;      /* NULL or list of jumps to execute after trace/extend */
     CExp when;      /* NULL or condition to execute TRACE */
     Symtab actuals; /* save actual/given parameters for COPY */
@@ -526,10 +526,10 @@ struct instr_def
     char dependency[1024];    /* stores all dependencies needed to compile, from comps and instr */
     List user_vars;           /* stores custom particle user variables */
     List user_vars_types;     /* stores custom particle user variable types */
-    List literals;            /* stores all components' literal code blocks */
+    List metadata;            /* stores all components' literal code blocks */
   };
 
-struct literal_struct
+struct metadata_struct
 {
   int instance;
   char* source; // TODO abuse this field? "__definition__" and "__instance__"?
@@ -560,9 +560,9 @@ struct jump_name
     int  index;
   };
 
-int literals_construct_table(instr_ptr_t);
-void literals_assign_source(List, char *);
-void literals_overwrite_source(List, char *);
-Symtab literals_separate_by_source(List literals, int source_type);
+int metadata_construct_table(instr_ptr_t);
+void metadata_assign_source(List, char *);
+void metadata_overwrite_source(List, char *);
+Symtab metadata_separate_by_source(List metadata, int source_type);
 
 #endif /* MCCODE_H */

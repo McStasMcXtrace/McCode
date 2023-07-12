@@ -547,8 +547,6 @@ int cogen_comp_declare(struct comp_inst *comp)
     cout( "  int      _rotation_is_identity;");
     cout( "  int      _position_relative_is_zero;");
     coutf("  _class_%s_parameters _parameters;", comp->def->name);
-//    coutf("  int _literals_count;");
-//    coutf("  literals_table_t * _literals;");
     cout("};");
     coutf("typedef struct _struct_%s _class_%s;", comp->def->name, comp->def->name);
   } /* define class type parameter structure when not done yet (only once) */
@@ -1243,20 +1241,20 @@ int cogen_decls(struct instr_def *instr)
   cout("");
 
   /* 3.5 Table of component-defined literal strings. */
-  coutf("struct literals_table_struct literals_table[] = {");
-  int numliterals = 0;
-  liter = list_iterate(instr->literals);
-  struct literal_struct * literal;
-  while ((literal = list_next(liter))){
-    coutf("\"%s\", \"%s\", \"%s\",", literal->source, literal->name, literal->type);
-    escaped_lines_out(literal->lines);
+  coutf("struct metadata_table_struct metadata_table[] = {");
+  int num_metadata = 0;
+  liter = list_iterate(instr->metadata);
+  struct metadata_struct * metadata;
+  while ((metadata = list_next(liter))){
+    coutf("\"%s\", \"%s\", \"%s\",", metadata->source, metadata->name, metadata->type);
+    escaped_lines_out(metadata->lines);
     coutf(","); // terminates the line-broken concatenated strings
-    ++numliterals;
+    ++num_metadata;
   }
   list_iterate_end(liter);
   coutf("  \"\", \"\", \"\", \"\"");
   coutf("};");
-  coutf("int num_literals = %d;", numliterals);
+  coutf("int num_metadata = %d;", num_metadata);
 
   /* 4. Component SHAREs. */
   liter = list_iterate(instr->complist);
@@ -3003,7 +3001,7 @@ cogen(char *output_name, struct instr_def *instr)
 
   cogen_getcompindex_fct(instr);
 
-  embed_file("literals-r.c"); // functions used to query and display instrument/component-defined literal strings
+  embed_file("metadata-r.c"); // functions used to query and display instrument/component-defined metadata strings
   embed_file("mccode_main.c");
 
   if (verbose && warnings)
