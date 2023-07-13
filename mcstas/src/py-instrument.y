@@ -50,9 +50,9 @@ void literals_assign_from_instance(List literals);
 
 /* Need a pure parser to allow for recursive calls when autoloading component
    definitions. */
-//%pure-parser
-%define api.pure
-%define parse.trace
+%pure-parser
+//%define api.pure
+//%define parse.trace
 
 /*******************************************************************************
 * Type definition for semantic values.
@@ -1855,6 +1855,7 @@ static int mc_yyparse_component(void){
   int ret;
   Pool old;
   old = parser_pool;
+  parser_pool = pool_create();
   ret = yyparse();
   pool_free(parser_pool);
   parser_pool = old;

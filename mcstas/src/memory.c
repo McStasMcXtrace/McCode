@@ -221,4 +221,9 @@ pool_mem(Pool p, size_t size)
   return m;
 }
 
+// Accessor to underlying pool list size
+int pool_size(Pool p){
+    return list_len(p->list);
+}
+
 #endif /* MCSTAS_H */
