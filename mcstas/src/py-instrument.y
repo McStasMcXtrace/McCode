@@ -19,14 +19,6 @@
 * $Id$
 *
 *******************************************************************************/
-
-%{
-int yylex();
-int yyerror(char *s);
-int list_cat(struct List_header *, struct List_header *);
-int symtab_cat(struct List_header *, struct List_header *);
-%}
-
 %{
 
 #include <math.h>
@@ -40,9 +32,29 @@ int symtab_cat(struct List_header *, struct List_header *);
 
 %}
 
+%{
+typedef struct List_header * List;
+typedef struct Symbol_table * Symtab;
+typedef struct instr_def * instr_ptr_t;
+int yylex();
+int yyerror(char *s);
+List list_cat(List, List);
+Symtab symtab_cat(Symtab, Symtab);
+void run_command_to_add_search_dir(char * input);
+int metadata_construct_table(instr_ptr_t);
+void metadata_assign_from_definition(List metadata);
+void metadata_assign_from_instance(List metadata);
+
+%}
+
 /* Need a pure parser to allow for recursive calls when autoloading component
    definitions. */
+// TODO: Select either a) or b) below depending on bison version
+// a) bison v < 3
 %pure-parser
+// b) bison v >= 3
+//%define api.pure
+//%define parse.trace
 
 /*******************************************************************************
 * Type definition for semantic values.
@@ -71,6 +83,8 @@ int symtab_cat(struct List_header *, struct List_header *);
   List                     jumps;
   struct jump_condition    jumpcondition;
   struct jump_name         jumpname;
+  struct metadata_struct   *metadatum;       /* one metadatum structure */
+  List                     metadata;      /* list of metadata structures */
 }
 
 %token TOK_RESTRICTED TOK_GENERAL
@@ -113,6 +127,7 @@ int symtab_cat(struct List_header *, struct List_header *);
 %token TOK_DEPENDENCY "DEPENDENCY"
 %token TOK_SHELL      "SHELL" /* pre-cogen commands */
 %token TOK_SEARCH     "SEARCH" /* Additonal include directory for instrument/component file(s) */
+%token TOK_METADATA   "METADATA"
 
 /*******************************************************************************
 * Declarations of terminals and nonterminals.
@@ -142,6 +157,8 @@ int symtab_cat(struct List_header *, struct List_header *);
 %type <place>   place
 %type <ori>     orientation
 %type <string>  instname
+%type <metadatum> metadatum
+%type <metadata> metadata metadata1
 %type <jump>    jump
 %type <jumps>   jumps jumps1
 %type <jumpname> jumpname
@@ -161,7 +178,8 @@ compdefs:   /* empty */
     | compdefs compdef
 ;
 
-compdef:    "DEFINE" "COMPONENT" TOK_ID parameters shell search dependency noacc share uservars declare initialize trace save finally display "END"
+//          $1        $2         $3     $4         $5       $6    $7         $8    $9    $10      $11     $12        $13   $14  $15     $16     $17
+compdef:    "DEFINE" "COMPONENT" TOK_ID parameters metadata shell dependency noacc share uservars declare initialize trace save finally display "END"
       {
         struct comp_def *c;
         palloc(c);
@@ -170,13 +188,18 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters shell search dependency noacc
         c->def_par = $4.def;
         c->set_par = $4.set;
         c->out_par = $4.out;
-	c->flag_noacc=$8;
-        c->share_code = $9;
-	c->uservar_code = $10;
-        c->decl_code = $11;
-        c->init_code = $12;
-        c->trace_code = $13;
-        c->save_code = $14;
+        c->metadata = list_create();
+        if (list_len($5)) {
+          metadata_assign_from_definition($5);
+          list_cat(c->metadata, $5);
+        }
+        c->flag_noacc   = $8;
+        c->share_code   = $9;
+        c->uservar_code = $10;
+        c->decl_code    = $11;
+        c->init_code    = $12;
+        c->trace_code   = $13;
+        c->save_code    = $14;
         c->finally_code = $15;
         c->display_code = $16;
         c->flag_defined_structure=0;
@@ -194,7 +217,8 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters shell search dependency noacc
         symtab_add(read_components, c->name, c);
         if (verbose) fprintf(stderr, "Embedding component %s from file %s\n", c->name, c->source);
       }
-    | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters shell dependency noacc share uservars declare initialize trace save finally display "END"
+// $1       $2         $3     $4     $5     $6         $7       $8    $9        $10    $11   $12      $13     $14        $15   $16  $17     $18     $19
+| "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters metadata shell dependency noacc share uservars declare initialize trace save finally display "END"
       {
         /* create a copy of a comp, and initiate it with given blocks */
         /* all redefined blocks override */
@@ -215,16 +239,19 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters shell search dependency noacc
           c->out_par   = list_create(); list_cat(c->out_par, def->out_par);
           if (list_len($6.out)) list_cat(c->out_par,$6.out);
 
-	  c->flag_noacc=$9;
+          c->metadata = list_create(); if (list_len(def->metadata)) list_cat(c->metadata, def->metadata);
+          if (list_len($7)) list_cat(c->metadata, $7);
+
+          c->flag_noacc = $10;
 	  
-          c->share_code = ($10->linenum ?  $10  : def->share_code);
-	  c->uservar_code = ($11->linenum ?  $11  : def->uservar_code);
-          c->decl_code  = ($12->linenum ?  $12  : def->decl_code);
-          c->init_code  = ($13->linenum ?  $13  : def->init_code);
-          c->trace_code = ($14->linenum ? $14 : def->trace_code);
-          c->save_code  = ($15->linenum ? $15 : def->save_code);
-          c->finally_code = ($16->linenum ? $16 : def->finally_code);
-          c->display_code = ($17->linenum ? $17 : def->display_code);
+          c->share_code   = ($11->linenum ? $11 : def->share_code);
+          c->uservar_code = ($12->linenum ? $12 : def->uservar_code);
+          c->decl_code    = ($13->linenum ? $13 : def->decl_code);
+          c->init_code    = ($14->linenum ? $14 : def->init_code);
+          c->trace_code   = ($15->linenum ? $15 : def->trace_code);
+          c->save_code    = ($16->linenum ? $16 : def->save_code);
+          c->finally_code = ($17->linenum ? $17 : def->finally_code);
+          c->display_code = ($18->linenum ? $18 : def->display_code);
 
           /* Check definition and setting params for uniqueness */
           check_comp_formals(c->def_par, c->set_par, c->name);
@@ -690,7 +717,9 @@ display:    /* empty */
 /* INSTRUMENT grammar ************************************************************* */
 
 /* read instrument definition and catenate if this not the first instance */
+//             $1       $2          $3     $4
 instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
+//    $5
       {
         if (!instrument_definition->formals) instrument_definition->formals = $4;
         else { if (list_len($4)) list_cat(instrument_definition->formals,$4); }
@@ -700,6 +729,8 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
           instrument_definition->has_included_instr++;
         }
       }
+/*
+//    $6    $7     $8         $9      $10      $11        $12         $13  $14      $15
       shell search dependency declare uservars initialize instr_trace save finally "END"
       {
         if (!instrument_definition->decls) instrument_definition->decls = $9;
@@ -712,14 +743,36 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
         else list_cat(instrument_definition->saves->lines, $13->lines);
         if (!instrument_definition->finals) instrument_definition->finals = $14;
         else list_cat(instrument_definition->finals->lines, $14->lines);
+*/
+//    $6    $7         $8      $9       $10        $11         $12  $13      $14
+      shell dependency declare uservars initialize instr_trace save finally "END"
+      {
+        if (!instrument_definition->decls) instrument_definition->decls = $8;
+        else list_cat(instrument_definition->decls->lines, $8->lines);
+        if (!instrument_definition->vars) instrument_definition->vars = $9;
+        else list_cat(instrument_definition->vars->lines, $9->lines);
+        if (!instrument_definition->inits) instrument_definition->inits = $10;
+        else list_cat(instrument_definition->inits->lines, $10->lines);
+        if (!instrument_definition->saves) instrument_definition->saves = $12;
+        else list_cat(instrument_definition->saves->lines, $12->lines);
+        if (!instrument_definition->finals) instrument_definition->finals = $13;
+        else list_cat(instrument_definition->finals->lines, $13->lines);
+
         instrument_definition->compmap = comp_instances;
         instrument_definition->groupmap = group_instances;
         instrument_definition->complist = comp_instances_list;
         instrument_definition->grouplist = group_instances_list;
 
+        instrument_definition->metadata = list_create();
+        if (verbose) fprintf(stderr, "Combine metadata blocks into table\n");
+        if (metadata_construct_table(instrument_definition)) {
+          print_error(MCCODE_NAME ": Combining metadata blocks into table failed for %s\n", instr_current_filename);
+          exit(1);
+        }
+        if (verbose) fprintf(stderr, "Processed %d metadata blocks\n", list_len(instrument_definition->metadata));
+
         /* Check instrument parameters for uniqueness */
-        check_instrument_formals(instrument_definition->formals,
-               instrument_definition->name);
+        check_instrument_formals(instrument_definition->formals, instrument_definition->name);
         if (verbose && !error_encountered) fprintf(stderr, "Creating instrument '%s' (with %li component instances)\n", $3, comp_current_index);
       }
 ;
@@ -770,6 +823,7 @@ instr_formal:   TOK_ID TOK_ID
           formal->type = instr_type_double;
         }
         formal->id = $2;
+        formal->hasunit = 0;
         $$ = formal;
       }
     | TOK_ID '*' TOK_ID
@@ -786,6 +840,7 @@ instr_formal:   TOK_ID TOK_ID
           formal->type = instr_type_double;
         }
         formal->id = $3;
+        formal->hasunit = 0;
         $$ = formal;
       }
     | TOK_ID  /* Default type is "double" */
@@ -795,6 +850,7 @@ instr_formal:   TOK_ID TOK_ID
         formal->type = instr_type_double;
         formal->id = $1;
         formal->isoptional = 0; /* No default value */
+        formal->hasunit = 0;
         $$ = formal;
       }
     | TOK_ID '=' exp
@@ -805,6 +861,7 @@ instr_formal:   TOK_ID TOK_ID
         formal->isoptional = 1; /* Default value available */
         formal->default_value = $3;
         formal->type = instr_type_double;
+        formal->hasunit = 0;
         $$ = formal;
       }
     | TOK_ID TOK_ID '=' exp
@@ -825,6 +882,7 @@ instr_formal:   TOK_ID TOK_ID
         formal->id = $2;
         formal->isoptional = 1; /* Default value available */
         formal->default_value = $4;
+        formal->hasunit = 0;
         $$ = formal;
       }
     | TOK_ID '*' TOK_ID '=' exp
@@ -842,7 +900,111 @@ instr_formal:   TOK_ID TOK_ID
           print_error("ERROR: Illegal type %s* for instrument "
           "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
           formal->type = instr_type_double;
+          formal->hasunit = 0;
         }
+        $$ = formal;
+      }
+    | TOK_ID TOK_ID '/' TOK_STRING
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        if(!strcmp($1, "double")) {
+          formal->type = instr_type_double;
+        } else if(!strcmp($1, "int")) {
+          formal->type = instr_type_int;
+        } else if(!strcmp($1, "string")) {
+          formal->type = instr_type_string;
+        } else {
+          print_error("ERROR: Illegal type %s for instrument "
+          "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
+          formal->type = instr_type_double;
+        }
+        formal->id = $2;
+        formal->hasunit = 1;
+        formal->unit = $4;
+        $$ = formal;
+      }
+    | TOK_ID '*' TOK_ID '/' TOK_STRING
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        if(!strcmp($1, "char")) {
+          formal->type = instr_type_string;
+        } else if(!strcmp($1, "double")) {
+          formal->type = instr_type_vector;
+        } else {
+          print_error("ERROR: Illegal type $s* for instrument "
+          "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
+          formal->type = instr_type_double;
+        }
+        formal->id = $3;
+        formal->hasunit = 1;
+        formal->unit = $5;
+        $$ = formal;
+      }
+    | TOK_ID '/' TOK_STRING
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        formal->type = instr_type_double;
+        formal->id = $1;
+        formal->isoptional = 0; /* No default value */
+        formal->hasunit = 1;
+        formal->unit = $3;
+        $$ = formal;
+      }
+    | TOK_ID '/' TOK_STRING '=' exp
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        formal->id = $1;
+        formal->isoptional = 1; /* Default value available */
+        formal->default_value = $5; //$6;
+        formal->type = instr_type_double;
+        formal->hasunit = 1;
+        formal->unit = $3;
+        $$ = formal;
+      }
+    | TOK_ID TOK_ID '/' TOK_STRING  '=' exp
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        if(!strcmp($1, "double")) {
+          formal->type = instr_type_double;
+        } else if(!strcmp($1, "int")) {
+          formal->type = instr_type_int;
+        } else if(!strcmp($1, "string")) {
+          formal->type = instr_type_string;
+        } else {
+          print_error("ERROR: Illegal type %s for instrument "
+          "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
+          formal->type = instr_type_double;
+        }
+        formal->id = $2;
+        formal->isoptional = 1; /* Default value available */
+        formal->default_value = $6; // $7;
+        formal->hasunit = 1;
+        formal->unit = $4;
+        $$ = formal;
+      }
+    | TOK_ID '*' TOK_ID '/' TOK_STRING '=' exp
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        formal->id = $3;
+        formal->isoptional = 1; /* Default value available */
+        formal->default_value = $7; // $8;
+        if(!strcmp($1, "char")) {
+          formal->type = instr_type_string;
+        } else if(!strcmp($1, "double")) {
+          formal->type = instr_type_vector;
+        } else {
+          print_error("ERROR: Illegal type %s* for instrument "
+          "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
+          formal->type = instr_type_double;
+        }
+        formal->hasunit = 1;
+        formal->unit = $5;
         $$ = formal;
       }
 ;
@@ -861,8 +1023,7 @@ complist:   /* empty */
     | complist component
       {
         if (!$2->removable) { /* must not be a REMOVABLE COMPONENT after %include instr */
-          /* Check that the component instance name has not
-                        been used before. */
+          /* Check that the component instance name has not been used before. */
           if(symtab_lookup(comp_instances, $2->name))
           {
             print_error("ERROR: Multiple use of component instance name "
@@ -909,6 +1070,7 @@ complist:   /* empty */
               }
               list_iterate_end(liter);
             }
+
             /* if we come there, instance is not an OUTPUT name */
             symtab_add(comp_instances, $2->name, $2);
             list_add(comp_instances_list, $2);
@@ -970,6 +1132,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->actuals= symtab_create();
         symtab_cat(comp->actuals, $5);
         symtab_cat(comp->actuals, comp_src->actuals);
+        comp->metadata = list_create(); if (list_len(comp_src->metadata)) list_cat(comp->metadata, comp_src->metadata);
         $$ = comp;
       }
     | "COPY" '(' compref ')'
@@ -986,6 +1149,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->jump   = comp_src->jump;
         comp->when   = comp_src->when;
         comp->actuals= comp_src->actuals;
+        comp->metadata = list_create(); if (list_len(comp_src->metadata)) list_cat(comp->metadata, comp_src->metadata);
         $$ = comp;
       }
     | TOK_ID actuallist /* define new instance with def+set parameters */
@@ -994,6 +1158,11 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         struct comp_inst *comp;
         def = read_component($1);
 
+        if (def->metadata == NULL || list_undef(def->metadata)) {
+          printf("Read component definition did not set the metadata list?!\n");
+          def->metadata = list_create();
+        }
+
         palloc(comp);
         comp->def          = def;
         comp->extend = codeblock_new();
@@ -1001,6 +1170,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->jump   = list_create();
         comp->when   = NULL;
         comp->actuals= $2;
+        comp->metadata = list_create(); if (list_len(def->metadata)) list_cat(comp->metadata, def->metadata);
         $$ = comp;
       }
 ;
@@ -1030,15 +1200,18 @@ cpuonly:    /* empty */
 component: removable cpuonly split "COMPONENT" instname '=' instref
       {
         struct comp_inst *comp;
-
         myself_comp = comp = $7;
 
+        // Trying to check or assign metadata before the previous line is accessing a null pointer!
+        if (comp->metadata == NULL || list_undef(comp->metadata)) comp->metadata = list_create();
+        if (myself_comp->metadata == NULL || list_undef(myself_comp->metadata)) myself_comp->metadata = list_create();
+
         comp->name  = $5;
-	comp->split = $3;
-	comp->cpuonly = $2;
-	if (!comp->cpuonly) {
-	  comp->cpuonly = comp->def->flag_noacc;
-	}
+        comp->split = $3;
+        comp->cpuonly = $2;
+        if (!comp->cpuonly) {
+          comp->cpuonly = comp->def->flag_noacc;
+        }
         comp->removable = $1;
         comp->index = ++comp_current_index;     /* index of comp instance */
         
@@ -1049,7 +1222,7 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
           comp_formals_actuals(comp, comp->actuals);
         }
       }
-      when place orientation groupref extend jumps
+      when place orientation groupref extend jumps metadata
       {
         struct comp_inst *comp = myself_comp;
 
@@ -1072,13 +1245,20 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
           comp->group->last_comp      =comp->name;
           comp->group->last_comp_index=comp->index;
           if (comp->split)
-            print_warn("WARNING: Component %s=%s() at line %s:%d is in GROUP %s and has a SPLIT.\n"
+            print_warn(NULL, "WARNING: Component %s=%s() at line %s:%d is in GROUP %s and has a SPLIT.\n"
               "\tMove the SPLIT keyword before (outside) the component instance %s (first in GROUP)\n",
               comp->name, comp->def->name, instr_current_filename, instr_current_line, $12->name,
               comp->group->first_comp);
         }
         if ($13->linenum)   comp->extend= $13;  /* EXTEND block*/
         if (list_len($14))  comp->jump  = $14;
+
+        /* one or more metadata statements -- the Component definition *can also* add to this list */
+        /* So the list *was* created above and should not be re-created now! */
+        if (list_len($15)){
+         metadata_assign_from_instance($15);
+         list_cat(comp->metadata, $15);
+        }
 
         debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $5, $7->def->name));
         /* this comp will be 'previous' for the next, except if removed at include */
@@ -1272,6 +1452,42 @@ extend:   /* empty */
       }
 ;
 
+metadata:
+{
+  $$ = list_create();
+}
+| metadata1
+{
+  $$ = $1;
+}
+;
+
+metadata1: metadatum
+{
+  $$ = list_create();
+  list_add($$, $1);
+}
+| metadata1 metadatum
+{
+  list_add($1, $2);
+  $$ = $1;
+}
+;
+
+
+metadatum: "METADATA" TOK_ID TOK_ID codeblock
+{
+  struct metadata_struct * metadatum;
+  palloc(metadatum);
+  metadatum->source = NULL;
+  metadatum->type = str_dup($2);
+  metadatum->name = str_dup($3);
+  metadatum->lines = list_create(); if (list_len($4->lines)) list_cat(metadatum->lines, $4->lines);
+  $$ = metadatum; // This would be very bad to omit. Don't do that!
+}
+;
+
+
 jumps: /* empty */
     {
       $$ = list_create();
@@ -1349,6 +1565,7 @@ jumpname: "PREVIOUS"
     }
 ;
 
+
 shell:
     {
     }
@@ -1364,10 +1581,7 @@ shell:
       }
     }
 
-search:
-    {
-    }
-  | "SEARCH" TOK_STRING
+search: "SEARCH" TOK_STRING
     {
       add_search_dir($2);
     }
@@ -1383,7 +1597,7 @@ search:
       while (fgets(svalue, sizeof(svalue), sfp) != NULL){
         // Make a copy of the char array -- We can't free this memory until the program is done, so we're going to leak it :/
         char * path = calloc(strlen(svalue)+1, sizeof(char));
-	strcpy(path, svalue);
+        strcpy(path, svalue);
         // Remove the trailing newline (and/or carriage return) which is almost-certainly present
         path[strcspn(path, "\r\n")] = 0;
         // Ensure the path specification *ends* in a PATHSEP character
@@ -1396,13 +1610,14 @@ search:
       pclose(sfp);
     }
 
+
 dependency:
     {
     }
   | "DEPENDENCY" TOK_STRING
     {
       strncat(instrument_definition->dependency, " ", 1024);
-      strncat(instrument_definition->dependency, $2, 1024);
+      strncat(instrument_definition->dependency, $2, 1023); // 1023 because we already appended a space
     }
 
 noacc:
@@ -1502,6 +1717,10 @@ topatexp:   "PREVIOUS"
     | '*'
       {
         $$ = exp_ctoken("*");
+      }
+    | '/'
+      {
+        $$ = exp_ctoken("/");
       }
     | '(' genexp ')'
       {
@@ -1606,18 +1825,30 @@ code:     /* empty */
 
 /* end of grammar *********************************************************** */
 
+
 static Pool parser_pool = NULL; /* Pool of parser allocations. */
 
 static int mc_yyparse(void)
 {
   int ret;
   Pool oldpool;
-
   oldpool = parser_pool;
   parser_pool = pool_create();
   ret = yyparse();
   pool_free(parser_pool);
   parser_pool = oldpool;
+  return ret;
+}
+
+// Separate identical parser to make debugging a bit easier
+static int mc_yyparse_component(void){
+  int ret;
+  Pool old;
+  old = parser_pool;
+  parser_pool = pool_create();
+  ret = yyparse();
+  pool_free(parser_pool);
+  parser_pool = old;
   return ret;
 }
 
@@ -1651,6 +1882,8 @@ List comp_instances_list;
 /* List of component groups, in the order they where declared in the instrument
    definition. */
 List group_instances_list;
+
+List metadata_list;
 
 /* Filename for outputting generated simulation program ('-' means stdin). */
 static char *output_filename;
@@ -1817,6 +2050,7 @@ main(int argc, char *argv[])
   instrument_definition->groupmap  = NULL;
   instrument_definition->complist  = NULL;
   instrument_definition->grouplist = NULL;
+  instrument_definition->metadata  = NULL;
   instrument_definition->has_included_instr=0;
   comp_instances      = NULL;
   comp_instances_list = NULL;
@@ -2129,7 +2363,7 @@ read_component(char *name)
        must not be freed. */
     instr_current_filename = component_pathname;
     instr_current_line = 1;
-    err = mc_yyparse();   /* Read definition from file. */
+    err = mc_yyparse_component();   /* Read definition from file. */
     if(err != 0)
       fatal_error("Errors encountered during autoload of component %s. The component definition has syntax errors.\n",
         name);

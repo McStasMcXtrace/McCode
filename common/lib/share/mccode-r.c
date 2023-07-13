@@ -1114,8 +1114,8 @@ static void mcinfo_out(char *pre, FILE *f)
     snprintf(ThisParam, CHAR_BUF_LENGTH, " %s(%s)", mcinputtable[i].name,
             (*mcinputtypes[mcinputtable[i].type].parminfo)
                 (mcinputtable[i].name));
+    if (strlen(Parameters) + strlen(ThisParam) + 1 >= CHAR_BUF_LENGTH) break;
     strcat(Parameters, ThisParam);
-    if (strlen(Parameters) >= CHAR_BUF_LENGTH-64) break;
   }
 
   /* output data ============================================================ */
@@ -1168,6 +1168,7 @@ static void mcruninfo_out(char *pre, FILE *f)
     fprintf(f, "%sNodes: %i\n",        pre, mpi_node_count);
 #endif
 
+  // TODO Consider replacing this by a a call to `mcparameterinfo_out(pre+"Param: ", f)`
   /* output parameter string ================================================ */
   for(i = 0; i < numipar; i++) {
       if (mcinputtable[i].par){
@@ -1183,6 +1184,45 @@ static void mcruninfo_out(char *pre, FILE *f)
   }
   fflush(f);
 } /* mcruninfo_out */
+
+/*******************************************************************************
+ * @brief Print parameter information to the specified file
+ * @param pre any beginning-of-line padding
+ * @param f the output file
+ */
+static void mcparameterinfo_out(char * pre, FILE *f){
+  if (!f || mcdisable_output_files) return;
+
+  unsigned int nchar = 4;
+  for (int i=0; i < numipar; ++i){
+    if (mcinputtable[i].par && mcinputtable[i].val && strlen(mcinputtable[i].val) > nchar)
+      nchar = strlen(mcinputtable[i].val);
+  }
+  char * buffer = calloc(nchar+1, sizeof(char));
+
+  if (!buffer) {
+    exit(1);
+  }
+
+  for (int i=0; i < numipar; ++i) {
+    if (mcinputtable[i].par) {
+      char * name = mcinputtable[i].name;
+      if (mcinputtable[i].val && strlen(mcinputtable[i].val)) {
+        mcinputtypes[mcinputtable[i].type].printer(buffer, mcinputtable[i].par);
+      } else {
+        strcpy(buffer, "NULL");
+      }
+      if (strlen(mcinputtable[i].unit)){
+        //fprintf(f, "%s%s %s (\"%s\") = %s\n", pre, mcinputtypes[mcinputtable[i].type].parminfo(name), name, mcinputtable[i].unit, buffer);
+        fprintf(f, "%s%s %s/\"%s\" = %s\n", pre, mcinputtypes[mcinputtable[i].type].parminfo(name), name, mcinputtable[i].unit, buffer);
+      } else {
+        fprintf(f, "%s%s %s = %s\n", pre, mcinputtypes[mcinputtable[i].type].parminfo(name), name, buffer);
+      }
+    }
+  }
+
+  free(buffer);
+}
 
 /*******************************************************************************
 * siminfo_out:    wrapper to fprintf(siminfo_file)
@@ -2382,6 +2422,18 @@ mcinfo(void)
   fprintf(stdout, "end simulation\n");
   exit(0); /* includes MPI_Finalize in MPI mode */
 } /* mcinfo */
+
+/*******************************************************************************
+* mcparameterinfo: display instrument parameter info to stdout and exit
+*******************************************************************************/
+static void
+mcparameterinfo(void)
+{
+  mcparameterinfo_out("  ", stdout);
+  exit(0); /* includes MPI_Finalize in MPI mode */
+} /* mcparameterinfo */
+
+
 
 #endif /* ndef MCCODE_R_IO_C */
 
@@ -3897,6 +3949,12 @@ mchelp(char *pgmname)
 "  --no-output-files          Do not write any data files.\n"
 "  -h        --help           Show this help message.\n"
 "  -i        --info           Detailed instrument information.\n"
+"  --list-parameters          Print the instrument parameters to standard out\n"
+"  --metadata-list            Print names of components which defined metadata\n"
+"  --metadata-defined COMP{::NAME}\n"
+"                             Print component defined metadata text names\n"
+"  --metadata-type COMP::NAME Print metadata text type specified in definition\n"
+"  --metadata COMP::NAME      Print the metadata text\n"
 "  --source                   Show the instrument code which was compiled.\n"
 #ifdef OPENACC
 "\n"
@@ -4145,6 +4203,26 @@ mcparseoptions(int argc, char *argv[])
     }
     else if(!strcmp("--info", argv[i]))
       mcinfo();
+    else if (!strcmp("--list-parameters", argv[i]))
+      mcparameterinfo();
+    else if (!strcmp("--metadata-list", argv[i]) && ((i+1) >= argc || argv[i+1][0] == '-')){
+      exit(metadata_table_print_all_components(num_metadata, metadata_table) == 0);
+    }
+    else if (!strcmp("--metadata-defined", argv[i]) && (i+1) < argc){
+      exit(metadata_table_print_component_keys(num_metadata, metadata_table, argv[i+1]) == 0);
+    }
+    else if (!strcmp("--metadata-type", argv[i]) && (i+1) < argc){
+      char * literal_type = metadata_table_type(num_metadata, metadata_table, argv[i+1]);
+      if (literal_type == NULL) exit(1);
+      printf("%s\n", literal_type);
+      exit(0);
+    }
+    else if (!strcmp("--metadata", argv[i]) && (i+1) < argc){
+      char * literal = metadata_table_literal(num_metadata, metadata_table, argv[i+1]);
+      if (literal == NULL) exit(1);
+      printf("%s\n", literal);
+      exit(0);
+    }
     else if(!strcmp("-t", argv[i]))
       mcenabletrace();
     else if(!strcmp("--trace", argv[i]) || !strcmp("--verbose", argv[i]))
