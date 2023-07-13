@@ -888,9 +888,7 @@ instr_formal:   TOK_ID TOK_ID
         }
         $$ = formal;
       }
-    |
-   // TOK_ID TOK_ID '(' TOK_STRING ')'
-   TOK_ID TOK_ID '/' TOK_STRING
+    | TOK_ID TOK_ID '/' TOK_STRING
       {
         struct instr_formal *formal;
         palloc(formal);
@@ -910,9 +908,7 @@ instr_formal:   TOK_ID TOK_ID
         formal->unit = $4;
         $$ = formal;
       }
-    |
-    // TOK_ID '*' TOK_ID '(' TOK_STRING ')'
-    TOK_ID '*' TOK_ID '/' TOK_STRING
+    | TOK_ID '*' TOK_ID '/' TOK_STRING
       {
         struct instr_formal *formal;
         palloc(formal);
@@ -930,9 +926,7 @@ instr_formal:   TOK_ID TOK_ID
         formal->unit = $5;
         $$ = formal;
       }
-    |
-    //TOK_ID '(' TOK_STRING ')'
-    TOK_ID '/' TOK_STRING
+    | TOK_ID '/' TOK_STRING
       {
         struct instr_formal *formal;
         palloc(formal);
@@ -943,9 +937,7 @@ instr_formal:   TOK_ID TOK_ID
         formal->unit = $3;
         $$ = formal;
       }
-    |
-    //TOK_ID '(' TOK_STRING ')' '=' exp
-    TOK_ID '/' TOK_STRING '=' exp
+    | TOK_ID '/' TOK_STRING '=' exp
       {
         struct instr_formal *formal;
         palloc(formal);
@@ -957,9 +949,7 @@ instr_formal:   TOK_ID TOK_ID
         formal->unit = $3;
         $$ = formal;
       }
-    |
-     //TOK_ID TOK_ID '(' TOK_STRING ')' '=' exp
-     TOK_ID TOK_ID '/' TOK_STRING  '=' exp
+    | TOK_ID TOK_ID '/' TOK_STRING  '=' exp
       {
         struct instr_formal *formal;
         palloc(formal);
@@ -981,9 +971,7 @@ instr_formal:   TOK_ID TOK_ID
         formal->unit = $4;
         $$ = formal;
       }
-    |
-    //TOK_ID '*' TOK_ID '(' TOK_STRING ')' '=' exp
-    TOK_ID '*' TOK_ID '/' TOK_STRING '=' exp
+    | TOK_ID '*' TOK_ID '/' TOK_STRING '=' exp
       {
         struct instr_formal *formal;
         palloc(formal);
