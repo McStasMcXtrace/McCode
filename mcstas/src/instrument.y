@@ -19,6 +19,19 @@
 * $Id$
 *
 *******************************************************************************/
+%{
+
+#include <math.h>
+#include <string.h>
+#include <stdio.h>
+
+#include "mccode.h"
+
+#define YYERROR_VERBOSE 1
+#define YYDEBUG 1
+
+%}
+
 
 %{
 typedef struct List_header * List;
@@ -32,19 +45,6 @@ void run_command_to_add_search_dir(char * input);
 int literals_construct_table(instr_ptr_t);
 void literals_assign_from_definition(List literals);
 void literals_assign_from_instance(List literals);
-
-%}
-
-%{
-
-#include <math.h>
-#include <string.h>
-#include <stdio.h>
-
-#include "mccode.h"
-
-#define YYERROR_VERBOSE 1
-#define YYDEBUG 1
 
 %}
 

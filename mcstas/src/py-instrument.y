@@ -19,6 +19,18 @@
 * $Id$
 *
 *******************************************************************************/
+%{
+
+#include <math.h>
+#include <string.h>
+#include <stdio.h>
+
+#include "mccode.h"
+
+#define YYERROR_VERBOSE 1
+#define YYDEBUG 1
+
+%}
 
 %{
 typedef struct List_header * List;
@@ -35,18 +47,6 @@ void literals_assign_from_instance(List literals);
 
 %}
 
-%{
-
-#include <math.h>
-#include <string.h>
-#include <stdio.h>
-
-#include "mccode.h"
-
-#define YYERROR_VERBOSE 1
-#define YYDEBUG 1
-
-%}
 
 /* Need a pure parser to allow for recursive calls when autoloading component
    definitions. */
