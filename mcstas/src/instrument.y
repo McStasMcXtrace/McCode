@@ -19,23 +19,6 @@
 * $Id$
 *
 *******************************************************************************/
-
-%{
-typedef struct List_header * List;
-typedef struct Symbol_table * Symtab;
-typedef struct instr_def * instr_ptr_t;
-int yylex();
-int yyerror(char *s);
-List list_cat(List, List);
-Symtab symtab_cat(Symtab, Symtab);
-char * strcasestr(char *, char *);
-void run_command_to_add_search_dir(char * input);
-int metadata_construct_table(instr_ptr_t);
-void metadata_assign_from_definition(List metadata);
-void metadata_assign_from_instance(List metadata);
-
-%}
-
 %{
 
 #include <math.h>
@@ -49,11 +32,29 @@ void metadata_assign_from_instance(List metadata);
 
 %}
 
+%{
+typedef struct List_header * List;
+typedef struct Symbol_table * Symtab;
+typedef struct instr_def * instr_ptr_t;
+int yylex();
+int yyerror(char *s);
+List list_cat(List, List);
+Symtab symtab_cat(Symtab, Symtab);
+void run_command_to_add_search_dir(char * input);
+int metadata_construct_table(instr_ptr_t);
+void metadata_assign_from_definition(List metadata);
+void metadata_assign_from_instance(List metadata);
+
+%}
+
 /* Need a pure parser to allow for recursive calls when autoloading component
    definitions. */
-//%pure-parser
-%define api.pure
-%define parse.trace
+// TODO: Select either a) or b) below depending on bison version
+// a) bison v < 3
+%pure-parser
+// b) bison v >= 3
+//%define api.pure
+//%define parse.trace
 
 /*******************************************************************************
 * Type definition for semantic values.

@@ -19,22 +19,6 @@
 * $Id$
 *
 *******************************************************************************/
-
-%{
-typedef struct List_header * List;
-typedef struct Symbol_table * Symtab;
-typedef struct instr_def * instr_ptr_t;
-int yylex();
-int yyerror(char *s);
-List list_cat(List, List);
-Symtab symtab_cat(Symtab, Symtab);
-char * strcasestr(char *, char *);
-void run_command_to_add_search_dir(char * input);
-int metadata_construct_table(instr_ptr_t);
-void metadata_assign_from_definition(List metadata);
-void metadata_assign_from_instance(List metadata);
-%}
-
 %{
 
 #include <math.h>
@@ -48,10 +32,29 @@ void metadata_assign_from_instance(List metadata);
 
 %}
 
+%{
+typedef struct List_header * List;
+typedef struct Symbol_table * Symtab;
+typedef struct instr_def * instr_ptr_t;
+int yylex();
+int yyerror(char *s);
+List list_cat(List, List);
+Symtab symtab_cat(Symtab, Symtab);
+void run_command_to_add_search_dir(char * input);
+int metadata_construct_table(instr_ptr_t);
+void metadata_assign_from_definition(List metadata);
+void metadata_assign_from_instance(List metadata);
+
+%}
+
 /* Need a pure parser to allow for recursive calls when autoloading component
    definitions. */
-// %pure-parser
-%define api.pure
+// TODO: Select either a) or b) below depending on bison version
+// a) bison v < 3
+%pure-parser
+// b) bison v >= 3
+//%define api.pure
+//%define parse.trace
 
 /*******************************************************************************
 * Type definition for semantic values.
@@ -185,14 +188,11 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters metadata shell dependency noa
         c->def_par = $4.def;
         c->set_par = $4.set;
         c->out_par = $4.out;
-
         c->metadata = list_create();
-        if (list_len($5)){
+        if (list_len($5)) {
           metadata_assign_from_definition($5);
-          metadata_assign_source($5, $3);
           list_cat(c->metadata, $5);
         }
-
         c->flag_noacc   = $8;
         c->share_code   = $9;
         c->uservar_code = $10;
@@ -239,7 +239,7 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters metadata shell dependency noa
           c->out_par   = list_create(); list_cat(c->out_par, def->out_par);
           if (list_len($6.out)) list_cat(c->out_par,$6.out);
 
-          c->metadata = list_create(); if(list_len(def->metadata)) list_cat(c->metadata, def->metadata);
+          c->metadata = list_create(); if (list_len(def->metadata)) list_cat(c->metadata, def->metadata);
           if (list_len($7)) list_cat(c->metadata, $7);
 
           c->flag_noacc = $10;
@@ -729,7 +729,22 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
           instrument_definition->has_included_instr++;
         }
       }
-//    $6    $7         $8      $9      $10        $11         $12  $13     $14
+/*
+//    $6    $7     $8         $9      $10      $11        $12         $13  $14      $15
+      shell search dependency declare uservars initialize instr_trace save finally "END"
+      {
+        if (!instrument_definition->decls) instrument_definition->decls = $9;
+        else list_cat(instrument_definition->decls->lines, $9->lines);
+        if (!instrument_definition->vars) instrument_definition->vars = $10;
+        else list_cat(instrument_definition->vars->lines, $10->lines);
+        if (!instrument_definition->inits) instrument_definition->inits = $11;
+        else list_cat(instrument_definition->inits->lines, $11->lines);
+        if (!instrument_definition->saves) instrument_definition->saves = $13;
+        else list_cat(instrument_definition->saves->lines, $13->lines);
+        if (!instrument_definition->finals) instrument_definition->finals = $14;
+        else list_cat(instrument_definition->finals->lines, $14->lines);
+*/
+//    $6    $7         $8      $9       $10        $11         $12  $13      $14
       shell dependency declare uservars initialize instr_trace save finally "END"
       {
         if (!instrument_definition->decls) instrument_definition->decls = $8;
@@ -742,18 +757,19 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
         else list_cat(instrument_definition->saves->lines, $12->lines);
         if (!instrument_definition->finals) instrument_definition->finals = $13;
         else list_cat(instrument_definition->finals->lines, $13->lines);
+
         instrument_definition->compmap = comp_instances;
         instrument_definition->groupmap = group_instances;
         instrument_definition->complist = comp_instances_list;
         instrument_definition->grouplist = group_instances_list;
 
         instrument_definition->metadata = list_create();
-        if (verbose) fprintf(stderr, "Combine metadatum blocks into table\n");
+        if (verbose) fprintf(stderr, "Combine metadata blocks into table\n");
         if (metadata_construct_table(instrument_definition)) {
-          print_error(MCCODE_NAME ": Combining metadatum blocks into table failed for %s\n", instr_current_filename);
+          print_error(MCCODE_NAME ": Combining metadata blocks into table failed for %s\n", instr_current_filename);
           exit(1);
         }
-        if (verbose) fprintf(stderr, "Processed %d metadatum blocks\n", list_len(instrument_definition->metadata));
+        if (verbose) fprintf(stderr, "Processed %d metadata blocks\n", list_len(instrument_definition->metadata));
 
         /* Check instrument parameters for uniqueness */
         check_instrument_formals(instrument_definition->formals, instrument_definition->name);
@@ -1054,6 +1070,7 @@ complist:   /* empty */
               }
               list_iterate_end(liter);
             }
+
             /* if we come there, instance is not an OUTPUT name */
             symtab_add(comp_instances, $2->name, $2);
             list_add(comp_instances_list, $2);
@@ -1140,8 +1157,9 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         struct comp_def *def;
         struct comp_inst *comp;
         def = read_component($1);
+
         if (def->metadata == NULL || list_undef(def->metadata)) {
-          printf("Read component definition did no set the metadata list!?\n");
+          printf("Read component definition did not set the metadata list?!\n");
           def->metadata = list_create();
         }
 
@@ -1235,16 +1253,11 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
         if ($13->linenum)   comp->extend= $13;  /* EXTEND block*/
         if (list_len($14))  comp->jump  = $14;
 
-        /* one or more metadatum statements -- the Component definition *can also* add to this list */
+        /* one or more metadata statements -- the Component definition *can also* add to this list */
         /* So the list *was* created above and should not be re-created now! */
-        if (list_len(comp->metadata)){
-          printf("Component instance %s created from component definition with %d metadata\n", comp->name, list_len(comp->metadata));
-        } else {
-          printf("Component instance %s created from component definition with no metadata\n", comp->name);
-        }
-        if (list_len($15)) {
-          metadata_assign_from_instance($15);
-          list_cat(comp->metadata, $15);
+        if (list_len($15)){
+         metadata_assign_from_instance($15);
+         list_cat(comp->metadata, $15);
         }
 
         debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $5, $7->def->name));
@@ -1439,27 +1452,40 @@ extend:   /* empty */
       }
 ;
 
-metadata: {
+metadata:
+{
   $$ = list_create();
-}| metadata1 {
+}
+| metadata1
+{
   $$ = $1;
 }
-metadata1: metadatum {
+;
+
+metadata1: metadatum
+{
   $$ = list_create();
   list_add($$, $1);
-} | metadata1 metadatum {
+}
+| metadata1 metadatum
+{
   list_add($1, $2);
   $$ = $1;
 }
-metadatum: "METADATA" TOK_ID TOK_ID codeblock {
+;
+
+
+metadatum: "METADATA" TOK_ID TOK_ID codeblock
+{
   struct metadata_struct * metadatum;
   palloc(metadatum);
   metadatum->source = NULL;
   metadatum->type = str_dup($2);
   metadatum->name = str_dup($3);
   metadatum->lines = list_create(); if (list_len($4->lines)) list_cat(metadatum->lines, $4->lines);
-  $$ = metadatum;
+  $$ = metadatum; // This would be very bad to omit. Don't do that!
 }
+;
 
 
 jumps: /* empty */
@@ -1539,6 +1565,7 @@ jumpname: "PREVIOUS"
     }
 ;
 
+
 shell:
     {
     }
@@ -1554,10 +1581,7 @@ shell:
       }
     }
 
-search:
-    {
-    }
-  | "SEARCH" TOK_STRING
+search: "SEARCH" TOK_STRING
     {
       add_search_dir($2);
     }
@@ -1573,7 +1597,7 @@ search:
       while (fgets(svalue, sizeof(svalue), sfp) != NULL){
         // Make a copy of the char array -- We can't free this memory until the program is done, so we're going to leak it :/
         char * path = calloc(strlen(svalue)+1, sizeof(char));
-	strcpy(path, svalue);
+        strcpy(path, svalue);
         // Remove the trailing newline (and/or carriage return) which is almost-certainly present
         path[strcspn(path, "\r\n")] = 0;
         // Ensure the path specification *ends* in a PATHSEP character
@@ -1586,13 +1610,14 @@ search:
       pclose(sfp);
     }
 
+
 dependency:
     {
     }
   | "DEPENDENCY" TOK_STRING
     {
       strncat(instrument_definition->dependency, " ", 1024);
-      strncat(instrument_definition->dependency, $2, 1023);
+      strncat(instrument_definition->dependency, $2, 1023); // 1023 because we already appended a space
     }
 
 noacc:
@@ -1800,13 +1825,13 @@ code:     /* empty */
 
 /* end of grammar *********************************************************** */
 
+
 static Pool parser_pool = NULL; /* Pool of parser allocations. */
 
 static int mc_yyparse(void)
 {
   int ret;
   Pool oldpool;
-
   oldpool = parser_pool;
   parser_pool = pool_create();
   ret = yyparse();
