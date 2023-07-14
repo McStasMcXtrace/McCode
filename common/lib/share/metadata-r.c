@@ -8,25 +8,27 @@ char * metadata_table_key_component(char* key){
   if (strlen(key) == 0) return NULL;
   char sep[2] = ":\0"; // matches any number of repeated colons
   // look for the separator in the provided key; strtok is allowed to modify the string, so copy it
-  char * tokkey = strdup(key);
-  char * pch = strtok(tokkey, sep); // this *is* the component name (if provided) -- but we need to move the pointer
+  char * tok = malloc((strlen(key) + 1) * sizeof(char));
+  strcpy(tok, key);
+  char * pch = strtok(tok, sep); // this *is* the component name (if provided) -- but we need to move the pointer
   char * comp = malloc((1 + strlen(pch)) * sizeof(char));
   strcpy(comp, pch);
-  if (tokkey) free(tokkey);
+  if (tok) free(tok);
   return comp;
 }
 char * metadata_table_key_literal(char * key){
   if (strlen(key) == 0) return NULL;
   char sep[3] = ":\0";
-  char * tokkey = strdup(key);
-  char * pch = strtok(tokkey, sep); // this *is* the component name (if provided)
+  char * tok = malloc((strlen(key) + 1 ) * sizeof(char));
+  strcpy(tok, key);
+  char * pch = strtok(tok, sep); // this *is* the component name (if provided)
   if (pch) pch = strtok(NULL, sep); // either NULL or the literal name
   char * name = NULL;
   if (pch) {
     name = malloc((1 + strlen(pch)) * sizeof(char));
     strcpy(name, pch);
   }
-  if (tokkey) free(tokkey);
+  if (tok) free(tok);
   return name;
 }
 int metadata_table_defined(int no, metadata_table_t * tab, char * key){
