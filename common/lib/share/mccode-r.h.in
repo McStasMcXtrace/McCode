@@ -87,8 +87,17 @@ size_t str_len(const char *s);
 #  define NEED_STAT_H
 #endif
 
+#ifdef WIN32
+#  define NEED_STAT_H
+#  define NEED_TYPES_H
+#endif
+
 #ifdef NEED_STAT_H
 #  include <sys/stat.h>
+#endif
+
+#ifdef NEED_TYPES_H
+#  include <sys/types.h>
 #endif
 
 #ifndef MC_PATHSEP_C
@@ -101,7 +110,10 @@ size_t str_len(const char *s);
 #  endif /* !WIN32 */
 #endif /* MC_PATHSEP_C */
 
-
+#ifdef WIN32
+#  define mkdir(a,b) mkdir(a)
+#  define getpid() NULL
+#endif
 
 /* the version string is replaced when building distribution with mkdist */
 #ifndef MCCODE_STRING
