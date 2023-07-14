@@ -218,3 +218,19 @@ struct List_header * list_cat(struct List_header * l1, struct List_header * l2)
   list_iterate_end(liter);
   return(l1);
 }
+
+
+List list_copy(List from, void * (*copier)(void *)){
+  List to = list_create();
+  if (list_len(from)) {
+    List_handle liter;
+    void *list_item;
+    liter = list_iterate(from);
+    while ((list_item = list_next(liter))) {
+      void *copy = copier(list_item);
+      list_add(to, copy);
+    }
+    list_iterate_end(liter);
+  }
+  return to;
+}
