@@ -458,7 +458,7 @@ def main():
     LOG.info('===')
 
     if options.info or options.list_parameters or\
-            options.metadata_list or options.metadata_defined or options.metadata_type or options.metadata:
+            options.meta_list or options.meta_defined or options.meta_type or options.meta_data:
         mcstas.run(override_mpi=False)
         exit()
 
