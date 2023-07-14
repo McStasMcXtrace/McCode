@@ -1132,7 +1132,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->actuals= symtab_create();
         symtab_cat(comp->actuals, $5);
         symtab_cat(comp->actuals, comp_src->actuals);
-        comp->metadata = list_create(); if (list_len(comp_src->metadata)) list_cat(comp->metadata, comp_src->metadata);
+        comp->metadata = metadata_list_copy(comp_src->metadata);
         $$ = comp;
       }
     | "COPY" '(' compref ')'
@@ -1149,7 +1149,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->jump   = comp_src->jump;
         comp->when   = comp_src->when;
         comp->actuals= comp_src->actuals;
-        comp->metadata = list_create(); if (list_len(comp_src->metadata)) list_cat(comp->metadata, comp_src->metadata);
+        comp->metadata = metadata_list_copy(comp_src->metadata);
         $$ = comp;
       }
     | TOK_ID actuallist /* define new instance with def+set parameters */
@@ -1158,11 +1158,6 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         struct comp_inst *comp;
         def = read_component($1);
 
-        if (def->metadata == NULL || list_undef(def->metadata)) {
-          printf("Read component definition did not set the metadata list?!\n");
-          def->metadata = list_create();
-        }
-
         palloc(comp);
         comp->def          = def;
         comp->extend = codeblock_new();
@@ -1170,7 +1165,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->jump   = list_create();
         comp->when   = NULL;
         comp->actuals= $2;
-        comp->metadata = list_create(); if (list_len(def->metadata)) list_cat(comp->metadata, def->metadata);
+        comp->metadata = metadata_list_copy(def->metadata);
         $$ = comp;
       }
 ;
@@ -1475,13 +1470,54 @@ metadata1: metadatum
 ;
 
 
-metadatum: "METADATA" TOK_ID TOK_ID codeblock
+metadatum:
+"METADATA" TOK_ID TOK_ID codeblock
 {
   struct metadata_struct * metadatum;
   palloc(metadatum);
   metadatum->source = NULL;
   metadatum->type = str_dup($2);
   metadatum->name = str_dup($3);
+  metadatum->lines = list_create(); if (list_len($4->lines)) list_cat(metadatum->lines, $4->lines);
+  $$ = metadatum; // This would be very bad to omit. Don't do that!
+}
+|
+"METADATA" TOK_ID TOK_STRING codeblock
+{
+  struct metadata_struct * metadatum;
+  palloc(metadatum);
+  metadatum->source = NULL;
+  metadatum->type = str_dup($2);
+  char * tmp_key = malloc(((strlen($3)+3)*sizeof(char)));
+  sprintf(tmp_key, "\"%s\"", $3);
+  metadatum->name = str_quote(tmp_key);
+  free(tmp_key);
+  metadatum->lines = list_create(); if (list_len($4->lines)) list_cat(metadatum->lines, $4->lines);
+  $$ = metadatum; // This would be very bad to omit. Don't do that!
+}
+// Add variants to accept string-valued type information for MIME types
+|
+"METADATA" TOK_STRING TOK_ID codeblock
+{
+  struct metadata_struct * metadatum;
+  palloc(metadatum);
+  metadatum->source = NULL;
+  metadatum->type = str_dup($2);
+  metadatum->name = str_dup($3);
+  metadatum->lines = list_create(); if (list_len($4->lines)) list_cat(metadatum->lines, $4->lines);
+  $$ = metadatum; // This would be very bad to omit. Don't do that!
+}
+|
+"METADATA" TOK_STRING TOK_STRING codeblock
+{
+  struct metadata_struct * metadatum;
+  palloc(metadatum);
+  metadatum->source = NULL;
+  metadatum->type = str_dup($2);
+  char * tmp_key = malloc(((strlen($3)+3)*sizeof(char)));
+  sprintf(tmp_key, "\"%s\"", $3);
+  metadatum->name = str_quote(tmp_key);
+  free(tmp_key);
   metadatum->lines = list_create(); if (list_len($4->lines)) list_cat(metadatum->lines, $4->lines);
   $$ = metadatum; // This would be very bad to omit. Don't do that!
 }

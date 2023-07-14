@@ -286,10 +286,10 @@ def add_mcstas_options(parser):
     add('--list-parameters', action='store_true', default=False,
         help='Print the instrument parameters to standard out')
 
-    add('--metadata-list', action='store_true', default=False, help='Print all metadata defining component names')
-    add('--metadata-defined', default=None, help="Print metadatas for component, or indicate if component:name exists")
-    add('--metadata-type', default=None, help="Print metadata type for component:name")
-    add('--metadata', default=None, help="Print metadata for component:name")
+    add('--meta-list', action='store_true', default=False, help='Print all metadata defining component names')
+    add('--meta-defined', default=None, help="Print metadata names for component, or indicate if component:name exists")
+    add('--meta-type', default=None, help="Print metadata type for component:name")
+    add('--meta-data', default=None, help="Print metadata for component:name")
 
     parser.add_option_group(opt)
 
@@ -458,7 +458,7 @@ def main():
     LOG.info('===')
 
     if options.info or options.list_parameters or\
-            options.metadata_list or options.metadata_defined or options.metadata_type or options.metadata:
+            options.meta_list or options.meta_defined or options.meta_type or options.meta_data:
         mcstas.run(override_mpi=False)
         exit()
 

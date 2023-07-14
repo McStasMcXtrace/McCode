@@ -126,3 +126,25 @@ Symtab metadata_separate_by_source(List metadata, int source_type){
   }
   return sources;
 }
+
+struct metadata_struct * metadata_copy(struct metadata_struct * from){
+  struct metadata_struct * to;
+  palloc(to);
+  to->instance = from->instance;
+  to->source = from->source == NULL ? NULL : strdup(from->source);
+  to->name = from->name == NULL ? NULL : strdup(from->name);
+  to->type = from->type == NULL ? NULL : strdup(from->type);
+  // No need to *copy* the lines themselves, since they're not modified at any point.
+  to->lines = list_create();
+  if (list_len(from->lines)) list_cat(to->lines, from->lines);
+  return to;
+}
+
+void * _void_metadata_copy_void(void * from){
+  void * to = (void *) metadata_copy((struct metadata_struct *) from);
+  return to;
+}
+
+List metadata_list_copy(List from){
+  return list_copy(from, _void_metadata_copy_void);
+}

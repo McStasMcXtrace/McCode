@@ -233,7 +233,7 @@ class McStas:
 
         # Handle proxy options with values
         proxy_opts_val = ['seed', 'ncount', 'dir', 'format','vecsize','numgangs','gpu_innerloop','bufsiz']
-        proxy_opts_val.extend(('metadata-defined', 'metadata-type', 'metadata'))
+        proxy_opts_val.extend(('meta-defined', 'meta-type', 'meta-data'))
         for opt in proxy_opts_val:
             # try extra_opts before options
             default = getattr(options, opt.replace('-', '_'))
@@ -242,7 +242,7 @@ class McStas:
                 args.extend(['--%s' % opt, str(val)])
 
         # Handle proxy options without values (flags)
-        proxy_opts_flags = ['trace', 'no-output-files', 'info', 'list-parameters', 'metadata-list']
+        proxy_opts_flags = ['trace', 'no-output-files', 'info', 'list-parameters', 'meta-list']
         if (mccode_config.configuration["MCCODE"]=='mcstas'):
            proxy_opts_flags.append('gravitation')
 

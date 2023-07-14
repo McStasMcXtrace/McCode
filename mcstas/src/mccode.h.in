@@ -152,6 +152,8 @@ void *list_next(List_handle);       /* Get next element in list. */
 void *list_previous(List_handle);       /* Get previous element in list. */
 void list_iterate_end(List_handle); /* End list traversal. */
 int list_undef(List l);
+List list_cat(List l1, List l2);
+List list_copy(List, void * (*)(void *));
 
 /*******************************************************************************
 * Definitions for cexp.c
@@ -564,5 +566,7 @@ int metadata_construct_table(instr_ptr_t);
 void metadata_assign_source(List, char *);
 void metadata_overwrite_source(List, char *);
 Symtab metadata_separate_by_source(List metadata, int source_type);
+struct metadata_struct * metadata_copy(struct metadata_struct *);
+List metadata_list_copy(List from);
 
 #endif /* MCCODE_H */

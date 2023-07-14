@@ -8,25 +8,27 @@ char * metadata_table_key_component(char* key){
   if (strlen(key) == 0) return NULL;
   char sep[2] = ":\0"; // matches any number of repeated colons
   // look for the separator in the provided key; strtok is allowed to modify the string, so copy it
-  char * tokkey = strdup(key);
-  char * pch = strtok(tokkey, sep); // this *is* the component name (if provided) -- but we need to move the pointer
+  char * tok = malloc((strlen(key) + 1) * sizeof(char));
+  strcpy(tok, key);
+  char * pch = strtok(tok, sep); // this *is* the component name (if provided) -- but we need to move the pointer
   char * comp = malloc((1 + strlen(pch)) * sizeof(char));
   strcpy(comp, pch);
-  if (tokkey) free(tokkey);
+  if (tok) free(tok);
   return comp;
 }
 char * metadata_table_key_literal(char * key){
   if (strlen(key) == 0) return NULL;
   char sep[3] = ":\0";
-  char * tokkey = strdup(key);
-  char * pch = strtok(tokkey, sep); // this *is* the component name (if provided)
+  char * tok = malloc((strlen(key) + 1 ) * sizeof(char));
+  strcpy(tok, key);
+  char * pch = strtok(tok, sep); // this *is* the component name (if provided)
   if (pch) pch = strtok(NULL, sep); // either NULL or the literal name
   char * name = NULL;
   if (pch) {
     name = malloc((1 + strlen(pch)) * sizeof(char));
     strcpy(name, pch);
   }
-  if (tokkey) free(tokkey);
+  if (tok) free(tok);
   return name;
 }
 int metadata_table_defined(int no, metadata_table_t * tab, char * key){
@@ -95,22 +97,21 @@ void metadata_table_print_all_keys(int no, metadata_table_t * tab){
 }
 int metadata_table_print_all_components(int no, metadata_table_t * tab){
   int count = 0;
-  char ** used = malloc(no + sizeof(char*));
+  char ** known = malloc(no * sizeof(char*));
   for (int i=0; i<no; ++i){
-    int unused = 1;
-    for (int j=0; j<count; ++j){
-      if (!strcmp(tab[i].source, used[j])) {
-        unused = 0;
-        break;
-      }
-    }
-    if (unused) {
-      printf("%s ", tab[i].source);
-      used[count++] = tab[i].source;
-    }
+    int unknown = 1;
+    for (int j=0; j<count; ++j) if (!strcmp(tab[i].source, known[j])) unknown = 0;
+    if (unknown) known[count++] = tab[i].source;
   }
-  printf("\n");
-  if (used) free(used);
+  size_t nchar = 0;
+  for (int i=0; i<count; ++i) nchar += strlen(known[i]) + 1;
+  char * line = malloc((nchar + 1) * sizeof(char));
+  line[0] = '\0';
+  for (int i=0; i<count; ++i) sprintf(line, "%s%s ", line, known[i]);
+  line[strlen(line)] = '\0'; // eat the trailing space
+  printf("%s\n", line);
+  free(line);
+  free(known);
   return count;
 }
 int metadata_table_print_component_keys(int no, metadata_table_t * tab, char * key){
