@@ -23,7 +23,7 @@
     "OACC": "nvc",
     "MPICC": "mpicc",
     "MPIRUN": "mpirun",
-    "MPINODES": "4"
+    "MPINODES": "auto"
   },
   "platform": {
     "EXESUFFIX": "out"
