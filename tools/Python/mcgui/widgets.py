@@ -580,7 +580,7 @@ class Ui_dlgStartSim(object):
         self.cbxSimTrace.setItemText(1, _translate("dlgStartSim", "Trace"))
         self.cbxSimTrace.setItemText(2, _translate("dlgStartSim", "Optimize"))
         self.edtNeutronCnt.setText(_translate("dlgStartSim", "1000000"))
-        self.edtNodes.setText(_translate("dlgStartSim", "2"))
+        self.edtNodes.setText(_translate("dlgStartSim", "auto"))
         self.lblSimTrace.setText(_translate("dlgStartSim", "Simulation/Trace: "))
         self.lblSweepSteps.setText(_translate("dlgStartSim", "Sweep steps (optional):"))
         self.lblNeutronCount.setToolTip(_translate("dlgStartSim", "<html><head/><body><pre style=\" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Courier New,courier\';\">The Ray count specifies the statistical granularity of your </span></pre><pre style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Courier New,courier\';\">simulation and is NOT equal to the number of particles simulated. </span></pre><pre style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Courier New,courier\';\">For a thorough explanation, see the chapter &quot;Monte Carlo </span></pre><pre style=\" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Courier New,courier\';\">Techniques and simulation strategy&quot; in the user manual.</span></pre></body></html>"))

@@ -325,7 +325,7 @@ class McGuiState(QtCore.QObject):
         mpicount = fixed_params[5]
         Format = fixed_params[9]
         if mpicount == '':
-            mpicount = '2'
+            mpicount = 'auto'
         if clustering == 1:
             mcrunparms = ' --mpi=' + mpicount + ' '
         elif clustering == 2:
