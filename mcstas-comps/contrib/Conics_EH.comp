@@ -80,6 +80,8 @@ INITIALIZE
 
 TRACE
 %{
+  /* "_mctmp_a" defines a "silicon" state variable in underlying conic.h functions */
+  _mctmp_a=0;
   traceSingleNeutron(_particle,s);
 
   if (!_particle->_absorbed) {
