@@ -80,7 +80,7 @@ INITIALIZE
 
 TRACE
 %{
-  Particle pa = makeParticle(x,y,z,vx,vy,vz, t, sx, sy, sz, p);
+  Particle pa = makeParticle(x,y,z,vx,vy,vz, t, sx, sy, sz, 0, p);
   traceSingleNeutron(&pa,s);
 
   //Communicate particle state to McStas
