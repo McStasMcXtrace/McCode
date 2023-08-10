@@ -1822,7 +1822,7 @@ void traceSingleNeutron(_class_particle* p, Scene s) {
                 traceNeutronDetector(p, s.d[index]);
                 break;
             case FLAT:
-                s.traceNeutronFlat(p, s.f[index]);
+	        traceNeutronFlat(p, s.f[index]);
                 break;
             case DISK:
                 traceNeutronDisk(p, s.di[index]);

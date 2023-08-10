@@ -127,7 +127,7 @@ DECLARE
     //point structure
     Point p1;
     //Function to handle Conic-Neutron collisions with reflectivity from McStas Tables
-    void traceNeutronConicWithTables(Particle* p, ConicSurf c);
+    void traceNeutronConicWithTables(_class_particle* p, ConicSurf c);
     double *rfront_inner;//all r-distances at lStart for all mirror surfaces
     int silicon; // +1: neutron in silicon, -1: neutron in air, 0: mirrorwidth is 0; neutron cannot be in silicon and also does not track mirror transitions
     t_Table rsTable;
@@ -193,7 +193,6 @@ TRACE
 
     /* "_mctmp_a" defines a "silicon" state variable in underlying conic.h functions */
     _mctmp_a=silicon;
-    traceSingleNeutron(_particle,s);
 
     if (mirror_width>0){ // if the width of the mirrors is finite neutrons have to know whether they are in silicon or not
         x_check = fabs(x);//lateral component of the neutron which determines whether the neutron arrives in silicon
@@ -205,7 +204,7 @@ TRACE
 		    _mctmp_a=1;
                     //First we have to refract at the entrance
                     Vec nStart = makeVec(0, 0, 1); //surface normal is oriented in beam direction hopefully
-                    Vec init_vec = getParticleVel(pa);
+                    Vec init_vec = get_class_particleVel(*_particle);
                     refractNeutronFlat(_particle, nStart, 0, 0.478);//m_{silicon} =  0.478 laut Peter
                     break;
                     }
@@ -220,7 +219,7 @@ TRACE
     traceSingleNeutron(_particle,s);
     Vec nEnd = makeVec(0, 0, 1);
     if (_mctmp_a==1){//if the neutron arrives at the end of the mirror assembly while still in silicon, it will refract again at the end of the mirror
-        refractNeutronFlat(_particle, nEnd, 0.478, 0);//TODO add functionality to put whatever critical angle
+      refractNeutronFlat(_particle, nEnd, 0.478, 0);//TODO add functionality to put whatever critical angle
     }
 
   if (!_particle->_absorbed) {

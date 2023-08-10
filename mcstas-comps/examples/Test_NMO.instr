@@ -159,12 +159,12 @@ AT (0, 0, 0) RELATIVE monitor_2
 ROTATED (0, 0, 0) RELATIVE monitor_2
 
 COMPONENT f_divpos = DivPos_monitor(//this should be a monitor vertical position vs. vertical direction
-    nh=100,
+    nb=100,
     ndiv=100,
     filename="f_divpos.dat",
     xwidth=det_width_focus,//det_width,
     yheight=det_width_focus,//det_width,
-    maxdiv_h=2*2,
+    maxdiv=2*2,
     restore_neutron=1)
 AT (0, 0, 0) RELATIVE monitor_2
 ROTATED (0, 0, 90) RELATIVE monitor_2
