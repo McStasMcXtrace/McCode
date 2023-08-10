@@ -347,13 +347,13 @@ void move_class_particleT(double t, _class_particle* p) {
         p->z = p->z+p->vz*t;
         p->t = p->t+t;
 	p->p *= exp(-t*98900/52.338);//ugly hard coding in the penetration depth of silicon at 989 m/s
-        //absorbParticle(p);
+        //absorb_class_particle(p);
     }
     else{
-        p->_x = p->_x+p->_vx*t;
-        p->_y = p->_y+p->_vy*t;
-        p->_z = p->_z+p->_vz*t;
-        p->_t = p->_t+t;
+        p->x = p->x+p->vx*t;
+        p->y = p->y+p->vy*t;
+        p->z = p->z+p->vz*t;
+        p->t = p->t+t;
     }
 }
 
@@ -611,7 +611,7 @@ typedef struct {
     int num_d;                 //!< Number of Detector in Scene
 
     //! Function called to handle Neutron-Flat Interaction
-    void (*traceNeutronFlat)(Particle*,FlatSurf);
+    void (*traceNeutronFlat)(_class_particle*,FlatSurf);
     //! Function called to handle Neutron-Conic Interaction
     void (*traceNeutronConic)(_class_particle*,ConicSurf); 
     //! Function called to handle Neutron-Disk Interaction 
@@ -1364,40 +1364,40 @@ double getTimeOfFirstCollisionConic(_class_particle p, ConicSurf s) {
 @return Time until the propogation or -1 if particle will not hit surface
 */
 //TODO
-double getTimeOfFirstCollisionFlat(Particle p, FlatSurf s) {
-    double tz = (s.zs-p._z)/p._vz;
+double getTimeOfFirstCollisionFlat(_class_particle p, FlatSurf s) {
+    double tz = (s.zs-p.z)/p.vz;
     if (tz < 0) {
        tz = 0;
-       if (p._z > s.ze)
+       if (p.z > s.ze)
             return -1;
     }
 
-    Particle p2 = copyMoveParticleT(tz,p);
+    _class_particle p2 = copyMove_class_particleT(tz,p);
     double vs = 0;//the vector important for calculating the intersection with the ellipse
     double s0 = 0;
     double vt = 0;//the other component only important for testing whether the mirror is hit
     double t0 = 0;
     //if(s.b > 0){//obsolete iteration allowing to rotate by 90 deg with out rotation in McStas, not really needed
-    vs = p2._vx;
-    s0 = p2._x;
-    vt = p2._vy;
-    t0 = p2._y;
+    vs = p2.vx;
+    s0 = p2.x;
+    vt = p2.vy;
+    t0 = p2.y;
 
     //}
     /*else{
-    vs = p2._vy;
-    s0 = p2._y;
-    vt = p2._vx;
-    t0 = p2._x;
+    vs = p2.vy;
+    s0 = p2.y;
+    vt = p2.vx;
+    t0 = p2.x;
     };
     */
-    double A = vs*vs-s.k3*p2._vz*p2._vz;
-    double B = 2*(vs*s0-s.k3*p2._vz*p2._z)-s.k2*p2._vz;
-    double C = s0*s0-s.k3*p2._z*p2._z-s.k2*p2._z-s.k1;
+    double A = vs*vs-s.k3*p2.vz*p2.vz;
+    double B = 2*(vs*s0-s.k3*p2.vz*p2.z)-s.k2*p2.vz;
+    double C = s0*s0-s.k3*p2.z*p2.z-s.k2*p2.z-s.k1;
 
     double t = solveQuad(A,B,C);
 
-    if (t <= 0 || p2._vz*t+p2._z > s.ze || p2._vz*t+p2._z < s.zs||vt*t+t0 < s.ll||vt*t +t0 > s.rl)
+    if (t <= 0 || p2.vz*t+p2.z > s.ze || p2.vz*t+p2.z < s.zs||vt*t+t0 < s.ll||vt*t +t0 > s.rl)
         return -1;
     return t+tz;
 }
@@ -1485,9 +1485,6 @@ before computing reflection
 double reflectNeutronConic(_class_particle* _particle, ConicSurf s) {
     Vec n = getNormConic(get_class_particlePos(*_particle),s);
     Vec pv = get_class_particleVel(*_particle);
-double reflectNeutronConic(Particle* p, ConicSurf s) {//TODO add super mirror reflectivity an passing neutrons
-    Vec n = getNormConic(getParticlePos(*p),s);
-    Vec pv = getParticleVel(*p);
 	
 	int disp = 0;
 	if (disp>0) {
@@ -1572,8 +1569,8 @@ before computing reflection
 
 @see traceNeutronConic()
 */
-void refractNeutronFlat(Particle* p, Vec n, double m1, double m2) {
-    Vec pv = getParticleVel(*p);
+void refractNeutronFlat(_class_particle* p, Vec n, double m1, double m2) {
+    Vec pv = get_class_particleVel(*p);
     //printf("incoming %.14g %.14g %.14g\n", pv.x, pv.y, pv.z);
     //printf("normal %.14g %.14g %.14g\n", n.x, n.y, n.z);
     double v = getMagVec(pv);
@@ -1586,15 +1583,15 @@ void refractNeutronFlat(Particle* p, Vec n, double m1, double m2) {
     if (k2_perp>0){//refraction
         
         k2_perp = sqrt(k2_perp)*sign(vn);
-        p->_vx = v_p.x + n.x*k2_perp;
-        p->_vy = v_p.y + n.y*k2_perp;
-        p->_vz = v_p.z + n.z*k2_perp;
-        p-> silicon *= -1;// from silicon to air or vice versa
-        //printf("resulting vector %f %f %f\n", p->_vx, p->_vy, p->_vz);
+        p->vx = v_p.x + n.x*k2_perp;
+        p->vy = v_p.y + n.y*k2_perp;
+        p->vz = v_p.z + n.z*k2_perp;
+        p->_mctmp_a *= -1;// from silicon to air or vice versa
+        //printf("resulting vector %f %f %f\n", p->vx, p->vy, p->vz);
     }else{//total reflection, no change in material
-        p->_vx = p->_vx-2*vn*n.x;
-        p->_vy = p->_vy-2*vn*n.y;
-        p->_vz = p->_vz-2*vn*n.z;
+        p->vx = p->vx-2*vn*n.x;
+        p->vy = p->vy-2*vn*n.y;
+        p->vz = p->vz-2*vn*n.z;
         //no change in material
     }
 
@@ -1615,9 +1612,9 @@ before computing reflection
 
 @see traceNeutronConic()
 */
-double reflectNeutronFlat(Particle* p, FlatSurf s) {
-    Vec n = getNormFlat(getParticlePos(*p),s);
-    Vec pv = getParticleVel(*p);
+double reflectNeutronFlat(_class_particle* p, FlatSurf s) {
+    Vec n = getNormFlat(get_class_particlePos(*p),s);
+    Vec pv = get_class_particleVel(*p);
     //printf("nothing");
     double v = getMagVec(pv);
     double vn = dotVec(pv,n);
@@ -1632,22 +1629,22 @@ double reflectNeutronFlat(Particle* p, FlatSurf s) {
     weight = calcSupermirrorReflectivity(V2Q_conic*2*vn, s.m, 0.995, 0.0218);
 
     if (vn > 0 && !s.doubleReflections) {
-        absorbParticle(p);
+        absorb_class_particle(p);
         return -1;
     }
 
 
     if (weight < 0) {
         printf("this happens?");
-        absorbParticle(p);
+        absorb_class_particle(p);
         return -1;
     } else {//here we need to implement the refraction
         if (rand01() <= weight){//to be updated to use the mcstas random function or quasoi deterministic model
             //printf("oh a reflections\n");
             //printf("this total reflection?");
-            p->_vx = p->_vx-2*vn*n.x;
-            p->_vy = p->_vy-2*vn*n.y;
-            p->_vz = p->_vz-2*vn*n.z;
+            p->vx = p->vx-2*vn*n.x;
+            p->vy = p->vy-2*vn*n.y;
+            p->vz = p->vz-2*vn*n.z;
             return ga;
         }
         else{//
@@ -1655,14 +1652,14 @@ double reflectNeutronFlat(Particle* p, FlatSurf s) {
             double m1 = 0;
             double m2 = 0;
             //if no mirrorwidth is specified no refraction has to be calc
-            if (p->silicon == 0){
+            if (p->_mctmp_a == 0){
                 return ga;
             }
-            if (p->silicon == 1){
+            if (p->_mctmp_a == 1){
                 m1 = m_Si;
                 m2 = 0;
             }
-            if (p->silicon == -1){
+            if (p->_mctmp_a == -1){
                 m1 = 0;
                 m2 = m_Si;                
             }
@@ -1703,13 +1700,13 @@ void traceNeutronConic(_class_particle* p, ConicSurf c) {
 @param f FlatSurf to use
 
 */
-void traceNeutronFlat(Particle* p, FlatSurf f) {
+void traceNeutronFlat(_class_particle* p, FlatSurf f) {
     double t = getTimeOfFirstCollisionFlat(*p, f);
     if (t < 0)
         return;
     else {
 
-        moveParticleT(t, p);
+        move_class_particleT(t, p);
 
         //printf("weight before reflect %f", p->w);
         double ga = reflectNeutronFlat(p, f);
