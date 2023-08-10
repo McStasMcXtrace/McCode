@@ -57,6 +57,7 @@
 * roc: [deg]                Amplitude of oscillation of collimator. 0=fixed.
 * verbose:     []          Gives additional information.
 * approx:      []          Use Soller triangular transmission approximation.
+* focusing: [1]             When set allows you to use the collimators for focusing, rather than dispersing.
 *
 * %E
 *******************************************************************************/
@@ -65,7 +66,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth=0, yheight=.3, length=.35,
 divergence=0,transmission=1,
 theta_min=5, theta_max=165, nchan=0, radius=1.3, nslit=0,
-roc=0, verbose=0, approx=0)
+roc=0, verbose=0, approx=0, focusing = 0)
 OUTPUT PARAMETERS (width_of_slit,width_of_Soller,slit_theta)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -155,25 +156,25 @@ TRACE
     /* determine intersection with inner and outer cylinders */
     intersect=cylinder_intersect(&t0,&t3,x,y,z,vx,vy,vz,radius,yheight);
     if (!intersect) ABSORB;
-    else if (t3 > t0) t0 = t3;
+    else if (t3 > t0 && !focusing) t0 = t3;
 
     intersect=cylinder_intersect(&t1,&t2,x,y,z,vx,vy,vz,radius+length,yheight);
     if (!intersect) ABSORB;
-    else if (t2 > t1) t1 = t2;
+    else if (t2 > t1 && !focusing) t1 = t2;
 
     /* propagate/determine neutron position at inner cylinder */
-    if (t0 > 0 && t1 > t0) {
+    if ((t0 > 0 && t1 > t0 && !focusing) || (t1 > 0 && t0 > t1 && focusing) {
       double input_chan=0;
       double input_theta=0, output_theta=0;
       double roc_theta=0;
       double input_slit=0,  output_slit=0;
-
-      PROP_DT(t0);
+      if (!focusing)  PROP_DT(t0);
+      if (focusing) PROP_DT(t1);
 
       /* apply ROC oscillation with a linear random distribution */
       if (roc) roc_theta = roc*randpm1()/2; else roc_theta=0;
 
-      /* angle on inner cylinder */
+      /* angle on the initial relevant cylinder */
       input_theta = atan2(x, z) + roc_theta;
 
       /* check if we are within min/max collimator input bounds */
@@ -198,10 +199,12 @@ TRACE
       } else /* neutron missed collimator input range */
         input_theta=4*PI;
 
-      /* propagate to outer cylinder */
-      PROP_DT(t1-t0);
+      /* propagate to next cylinder */
+  
+      if (!focusing) PROP_DT(t1-t0);
+      if (focusing) PROP_DT(t0-t1);
 
-      /* angle on outer cylinder */
+      /* angle on the outgoing cylinder */
       output_theta = atan2(x, z) + roc_theta;
 
       /* check if we are within min/max collimator output bounds */
