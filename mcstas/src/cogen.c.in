@@ -2325,6 +2325,10 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  double kx,ky,kz; /* wave-vector */");
   cout("  double phi, Ex,Ey,Ez; /* phase and electrical field */");
 #endif
+  cout("  /* Generic Temporaries: */");
+  cout("  /* May be used internally by components e.g. for special */");
+  cout("  /* return-values from functions used in trace, thusreturned via */");
+  cout("  /* particle struct. (Example: Wolter Conics from McStas, silicon slabs.) */");
   cout("  double _mctmp_a; /* temp a */");
   cout("  double _mctmp_b; /* temp b */");
   cout("  double _mctmp_c; /* temp c */");
