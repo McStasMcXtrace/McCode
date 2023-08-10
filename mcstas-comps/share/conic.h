@@ -1623,23 +1623,26 @@ double reflectNeutronFlat(Particle* p, FlatSurf s) {
     // make it able to reflect from the outside
     double ga = fabs(acos(vn/v)) - M_PI/2;
     double gc = 6.84459399932*s.m/v;
+    double ref=1.0;
+
+    double q = V2Q*(-2)*vn/sqrt(pv.x*pv.x + pv.y*pv.y + pv.z*pv.z);
+    double par[5] = {s.R0, s.Qc, s.alpha, s.m, s.W};
+    StdReflecFunc(q, par, &ref);
+
+    _particle->p = _particle->p * ref;
 
 
-    double weight = 0;
-    weight = calcSupermirrorReflectivity(V2Q_conic*2*vn, s.m, 0.995, 0.0218);
-
-    if (vn > 0 && !s.doubleReflections) {
-        absorbParticle(p);
-        return -1;
-    }
 
 
     if (weight < 0) {
+=======
+    if (ref < 0) {
+>>>>>>> 76ad81317 (Use McStas StdReflecFunc also in the flat case)
         printf("this happens?");
         absorbParticle(p);
         return -1;
     } else {//here we need to implement the refraction
-        if (rand01() <= weight){//to be updated to use the mcstas random function or quasoi deterministic model
+        if (rand01() <= ref){//to be updated to use the mcstas random function or quasoi deterministic model
             //printf("oh a reflections\n");
             //printf("this total reflection?");
             p->_vx = p->_vx-2*vn*n.x;
