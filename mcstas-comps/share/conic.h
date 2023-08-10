@@ -1629,15 +1629,9 @@ double reflectNeutronFlat(Particle* p, FlatSurf s) {
     double par[5] = {s.R0, s.Qc, s.alpha, s.m, s.W};
     StdReflecFunc(q, par, &ref);
 
-    _particle->p = _particle->p * ref;
+    p->w = p->w * ref;
 
-
-
-
-    if (weight < 0) {
-=======
     if (ref < 0) {
->>>>>>> 76ad81317 (Use McStas StdReflecFunc also in the flat case)
         printf("this happens?");
         absorbParticle(p);
         return -1;
