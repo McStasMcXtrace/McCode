@@ -312,11 +312,6 @@ _class_particle make_class_particle(double x, double y, double z,
 
     pa.p = w;
 
-    pa._absorbed = 0;
-    pa.t = t;
-
-    pa._mctmp_a=silicon;
-    
     return pa;
 }
 
@@ -610,14 +605,6 @@ typedef struct {
     Detector d[MAX_DETECTOR];  //!< Array of all Detector in Scene
     int num_d;                 //!< Number of Detector in Scene
 
-    //! Function called to handle Neutron-Flat Interaction
-    void (*traceNeutronFlat)(_class_particle*,FlatSurf);
-    //! Function called to handle Neutron-Conic Interaction
-    void (*traceNeutronConic)(_class_particle*,ConicSurf); 
-    //! Function called to handle Neutron-Disk Interaction 
-    void (*traceNeutronDisk)(_class_particle*,Disk);
-    //! Function called to handle Neutron-Detector Interaction
-    void (*traceNeutronDetector)(_class_particle*,Detector);
 
 } Scene;
 
@@ -871,7 +858,8 @@ void traceNeutronDisk(_class_particle* p, Disk d) {
         return;
 
     move_class_particleT(t, p);
-    absorb_class_particle(p);
+    if (d.absorb)
+      absorb_class_particle(p);
 }
 
 /** @} */ //end of diskgroup
