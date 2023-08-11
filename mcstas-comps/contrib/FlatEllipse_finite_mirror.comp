@@ -1,0 +1,269 @@
+/*******************************************************************************
+*
+* Component: FlatEllipse_finite_mirror
+*
+* %I
+* Written by: Christoph Herb, TUM
+* Version: 0.1
+* Origin: TUM
+* Date: 2022-2023
+*
+* %D
+* Simulates NMO (nested mirror optic) modules as concevied by Böni et al., see
+* Christoph Herb et al., Nucl. Instrum. Meth. A 1040, 1671564 (1-18) 2022.
+*
+* The component relies on an updated version of conic.h from MIT.
+*
+* %P
+* sourceDist: [m]   Distance used for calculating the spacing of the mirrors
+* LStart:     [m]   Left focal point
+* LEnd:       [m]   Right focal point
+* lStart:     [m]   z-Value of the mirror start
+* lEnd:       [m]   z-Value of the mirror end
+* r_0: [m] distance to the mirror at lStart
+* nummirror:  [1]   number of mirrors
+* mirror_width: [mm] width of the individual mirrors
+* doubleReflections: [1] binary value determining whether the mirror backside is reflective
+* rfront_inner_file: [str] file of distances to the optical axis of the individual mirrors
+*
+*
+* %L
+* Christoph Herb et al., Nucl. Instrum. Meth. A 1040, 1671564 (1-18) 2022.
+* %E
+*
+*******************************************************************************/
+
+DEFINE COMPONENT FlatEllipse_finite_mirror
+SETTING PARAMETERS (
+    sourceDist = 0, //only relevant for the caculated spacing of the mirrors, usually this has to equal LStart
+    LStart=0.6, //only relevant for the calculation of the reflections, z coordinate of the first focal point of the ellipses
+    LEnd = 0.6, //z coordinate of the second focal point of the ellipses
+    lStart = 0., //z coordinate of the beginning of the mirrors
+    lEnd = 0., //z coordinate of the end of the mirrors
+    r_0 = 0.02076, //distance of the defining point at z=0 on the outermost mirror
+    int nummirror= 9, // number of mirrors in the assembly
+    mf = 4, //mvalue of the inner side of the coating, m>10 results in perfect reflections
+    mb = 0, //mvalue of the outer side of the coating, m>10 results in perfect reflections
+    R0 = 0.99,
+    Qc = 0.021,
+    W = 0.003,
+    alpha = 6.07,
+    mirror_width = 0.003, //width of the mirror (m), take care that the mirrors do not intersect
+    mirror_sidelength = 1,//lateral extension of the mirror system along y
+    doubleReflections = 0, //can neutrons be reflected from the backside of a mirror
+    string rfront_inner_file = "NULL"//file name of the file providing the distances to the optical axis of the mirrors at the entrance, lStart, of the respective mirror
+)
+OUTPUT PARAMETERS(s, pTable, R0, Qc, W, alpha, transmit)
+
+
+SHARE
+%{
+    %include "ref-lib"
+    %include "conic.h"
+    %include "read_table-lib"
+
+/* Function originally defined in file "calciterativemirrors.h"
+    
+/*! \brief Function to return an array of distances for a nested mirror assembly, see attached files. Also works reasonably well for parabolic mirrors
+see
+
+@param number number of entries in the array = number of mirrros
+@param z_0 z-coordinate of the initial point on the mirror
+@param r_0 r-coordinate of the initial point on the mirror
+@param z_extract z-coordinate at which the distances are extracted
+@param LStart z-coordinate of the left focal point 
+@param LEnd z-coordinate of the right focal point
+@param lStart z-coordinate at which the mirrors begin
+@param lEnd z-coordinate at which the mirrros end
+@return pointer to array with number of distances 
+*/
+double * get_r_at_z0(int number, double z_0, double r_0, double z_extract, double LStart, double LEnd, double lStart, double lEnd) {
+    int n = number;
+    double *r_zExtracts = malloc(n*sizeof(double_t)); /* n is an array of 10 integers */
+	r_zExtracts[0] = r_0;
+    //helper variables as in conic_finite_mirror.h and explained in swissneutronics_überlegungen
+    double k1;
+    double k2;
+    double k3;
+    double c;
+    double u;
+    double a;
+    double r_lEnd;
+    double r_lStart;
+    //initial mirror is calculated from the initial point z0, r0
+    c = (LEnd - LStart)/2;
+    u = (z_0 + c - LEnd);
+    a = sqrt((u*u+c*c+r_0*r_0+sqrt(pow(u*u+c*c+r_0*r_0, 2)-4*c*c*u*u))/2);
+    k3 = c*c/(a*a)-1;
+    k2 = 2*k3*(c-LEnd);
+    k1 = k3*(c-LEnd)*(c-LEnd)-c*c+a*a;
+    printf("k1 %f k2 %f k3 %f\n", k1, k2, k3);
+	//next mirror will be calculated with the point on the surface being lStart, r_lStart
+	for( int k = 0; k < number;++k){
+        r_zExtracts[k] = sqrt(k1 + k2*z_extract + k3*z_extract*z_extract); 
+        r_lEnd = sqrt(k1+ k2*lEnd + k3*lEnd*lEnd);//calculate the radius at the end
+        r_lStart = r_lEnd*(lStart-LStart)/(lEnd-LStart);//
+
+        c = (LEnd - LStart)/2;
+        u = (lStart + c - LEnd);
+        a = sqrt((u*u+c*c+r_lStart*r_lStart+sqrt(pow(u*u+c*c+r_lStart*r_lStart, 2)-4*c*c*u*u))/2);
+        k3 = c*c/(a*a)-1;
+        k2 = 2*k3*(c-LEnd);
+        k1 = k3*(c-LEnd)*(c-LEnd)-c*c+a*a;
+        printf("k1 %f k2 %f k3 %f\n", k1, k2, k3);
+        //r_lEnd = sqrt(k1+ k2*lEnd + k3*lEnd*lEnd);
+        //r_lStart = r_lEnd*(lStart-LStart)/(lEnd-LStart);
+	};
+   return r_zExtracts;
+}
+
+
+%}
+
+DECLARE
+%{
+    //Scene where all geometry is added to
+    Scene s;
+    //point structure
+    Point p1;
+    //Function to handle Conic-Neutron collisions with reflectivity from McStas Tables
+    void traceNeutronConicWithTables(_class_particle* p, ConicSurf c);
+    double *rfront_inner;//all r-distances at lStart for all mirror surfaces
+    int silicon; // +1: neutron in silicon, -1: neutron in air, 0: mirrorwidth is 0; neutron cannot be in silicon and also does not track mirror transitions
+    t_Table rsTable;
+%}
+
+INITIALIZE
+%{
+    if (rfront_inner_file && strlen(rfront_inner_file) && strcmp(rfront_inner_file,"NULL") && strcmp(rfront_inner_file,"0")) {
+        if (Table_Read(&rsTable, rfront_inner_file, 1) <= 0){ /* read 1st block data from file into pTable */
+            exit(fprintf(stderr,"FlatEllipse_finite_mirror: %s: can not read file %s\n", NAME_CURRENT_COMP, rfront_inner_file));
+        }
+        //read the data from the file into an array and point rfron_inner to it
+        nummirror = rsTable.rows;
+        rfront_inner = malloc(sizeof(double)*nummirror);
+        for (int i = 0; i < nummirror; i++){
+
+            rfront_inner[i] = Table_Index(rsTable, i, 1);//reads the value of the second col where i sits in the first col
+        }
+    } else {//proceed as usual calculating the values from the outermost mirror and the number of mirrors
+        printf("automatic calulation\n");
+        rfront_inner = get_r_at_z0(nummirror, 0, r_0, lStart, sourceDist, LEnd, lStart, lEnd);
+        //calculate the r-distances of all mirrors at the entry of the NMO, we will need this later
+    }
+    if (sourceDist == 0){//obsolete?
+        sourceDist = LStart;
+    }
+    silicon = (mirror_width==0) ? 0 : -1; //neutron starts in air by default
+
+    //Load Reflectivity Data File TODO
+    //Make new scene
+    s = makeScene();
+
+
+    //Set Scene to use custom trace function for conic
+    //s.traceNeutronConic = traceNeutronConicWithTables;
+
+    //Add Geometry Here
+    for (int i = 0; i < nummirror; i++) {
+		    p1 = makePoint(rfront_inner[i], 0, lStart);
+            addFlatEllipse(LStart, LEnd, p1, lStart, lEnd, -mirror_sidelength/2, mirror_sidelength/2, mf, R0,Qc,alpha,W, &s); //inner side of the mirror
+		    printf("b[%d] = %f\n", i, rfront_inner[i]);
+    }
+    if (mirror_width > 0){
+        for (int i = 0; i < nummirror; i++){
+            p1 = makePoint(rfront_inner[i]+mirror_width, 0, lStart);
+            addFlatEllipse(LStart, LEnd, p1, lStart, lEnd, -mirror_sidelength/2, mirror_sidelength/2, mb, R0,Qc,alpha,W, &s); //backside of the above mirror shifted by mirror_width
+        }
+    }
+    addEndDisk(lEnd, 0.0, 2000, &s); //neutrons will be propagated to the end of the assembly, important if they still have to move through silicon to be refracted at the correct position
+	//addEllipsoid(-L, L,p1, -l,+l, 40,&s);
+%}
+
+TRACE
+%{
+    double dt;
+    double x_check;
+  
+    dt = (-z + lStart)/vz;
+    if (dt < 0) {
+        printf("negative time\n");
+    }
+    PROP_DT(dt); //propagate neutron to the entrance window of the NMO
+
+    /* "_mctmp_a" defines a "silicon" state variable in underlying conic.h functions */
+    _mctmp_a=silicon;
+
+    if (mirror_width>0){ // if the width of the mirrors is finite neutrons have to know whether they are in silicon or not
+        x_check = fabs(x);//lateral component of the neutron which determines whether the neutron arrives in silicon
+        for (int i = 0; i < nummirror; i++){
+            dt = fabs(rfront_inner[i]); //make sure the mirror distance to check against is positive, repeated use of same variable don't do this at home
+            if (dt +mirror_width >= x_check){ //backside of the substrate further out than neutron
+                if (dt <= x_check) { // mirror itself closer to the optical axis than the neutrons, i.e., we arrive in silicon
+		    /* "_mctmp_a" defines a "silicon" state variable in underlying conic.h functions */
+		    _mctmp_a=1;
+                    //First we have to refract at the entrance
+                    Vec nStart = makeVec(0, 0, 1); //surface normal is oriented in beam direction hopefully
+                    Vec init_vec = get_class_particleVel(*_particle);
+                    refractNeutronFlat(_particle, nStart, 0, 0.478);//m_{silicon} =  0.478 laut Peter
+                    break;
+                    }
+                }
+            else{ //backside of the mirror is closer to optical axis than neutron; as all further mirrors are even closer we can break here
+                    break;
+                    }
+
+        }
+    }
+
+    traceSingleNeutron(_particle,s);
+    Vec nEnd = makeVec(0, 0, 1);
+    if (_mctmp_a==1){//if the neutron arrives at the end of the mirror assembly while still in silicon, it will refract again at the end of the mirror
+      refractNeutronFlat(_particle, nEnd, 0.478, 0);//TODO add functionality to put whatever critical angle
+    }
+
+  if (!_particle->_absorbed) {
+    SCATTER;
+  }
+
+%}
+
+FINALLY %{
+    //Mainly Writes Inline Detector Data
+    free(rfront_inner);
+    finishSimulation(&s);
+%}
+
+MCDISPLAY//TODO this does not work as of now does not show the orientation of the flat conics
+%{
+    //Enlarge xy-plane when mcdisplay is ran with --zoom
+	magnify("xy");
+
+	//Draw xy-axis contour for Conic Surfaces
+	int i;
+    for (i = 0; i < s.num_c; i++) {
+        double step = (s.c[i].ze-s.c[i].zs)/100;
+        double cz;
+	    for (cz = s.c[i].zs+step; cz <= s.c[i].ze; cz+= step) {
+            double rp = rConic(cz-step,s.c[i]);
+            double rc = rConic(cz, s.c[i]);
+
+            line(0,rp,cz-step,0,rc,cz);
+            line(0,-rp,cz-step,0,-rc,cz);
+
+            line(rp,0,cz-step,rc,0,cz);
+            line(-rp,0,cz-step,-rc,0,cz);
+        }
+    }
+
+    //Draw xy-axis cross hairs for Disks
+    for (i = 0; i < s.num_di; i++) {
+        line(s.di[i].r0, 0, s.di[i].z0, s.di[i].r1, 0, s.di[i].z0);
+        line(-s.di[i].r0, 0, s.di[i].z0, -s.di[i].r1, 0, s.di[i].z0);
+        line(0, s.di[i].r0, s.di[i].z0, 0, s.di[i].r1,s.di[i].z0);
+        line(0, -s.di[i].r0, s.di[i].z0, 0, -s.di[i].r1,s.di[i].z0);
+    }
+
+%}
+
+END

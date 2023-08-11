@@ -1535,13 +1535,13 @@ void def_trace_section(struct instr_def *instr)
   static char *statepars_all[] =
   { /* particle state parameter names are used for defines */
   #if MCCODE_PROJECT == 1     /* neutron */
-  #define NUM_STATE_PARS 14
+  #define NUM_STATE_PARS 17
           "x", "y", "z", "vx", "vy", "vz",
-          "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop"
+          "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop", "_mctmp_a", "_mctmp_b", "_mctmp_c"
   #elif MCCODE_PROJECT == 2   /* xray */
-  #define NUM_STATE_PARS 12
+  #define NUM_STATE_PARS 15
           "x", "y", "z", "kx", "ky", "kz",
-          "phi", "t", "Ex", "Ey","Ez", "p"
+          "phi", "t", "Ex", "Ey","Ez", "p", "_mctmp_a", "_mctmp_b", "_mctmp_c"
   #endif
   };
 
@@ -1589,13 +1589,13 @@ void undef_trace_section(struct instr_def *instr)
   static char *statepars_all[] =
     { /* particle state parameter names are used for defines */
     #if MCCODE_PROJECT == 1     /* neutron */
-    #define NUM_STATE_PARS 14
+    #define NUM_STATE_PARS 17
             "x", "y", "z", "vx", "vy", "vz",
-            "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop"
+            "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop", "_mctmp_a", "_mctmp_b", "_mctmp_c"
     #elif MCCODE_PROJECT == 2   /* xray */
-    #define NUM_STATE_PARS 12
+    #define NUM_STATE_PARS 15
             "x", "y", "z", "kx", "ky", "kz",
-            "phi", "t", "Ex", "Ey","Ez", "p"
+            "phi", "t", "Ex", "Ey","Ez", "p", "_mctmp_a", "_mctmp_b", "_mctmp_c"
     #endif
     };
   List l;
@@ -1695,13 +1695,13 @@ int cogen_raytrace(struct instr_def *instr)
   static char *statepars_all[] =
     { /* particle state parameter names are used for defines */
     #if MCCODE_PROJECT == 1     /* neutron */
-    #define NUM_STATE_PARS 14
+    #define NUM_STATE_PARS 17
             "x", "y", "z", "vx", "vy", "vz",
-            "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop"
+            "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop", "_mctmp_a", "_mctmp_b", "_mctmp_c"
     #elif MCCODE_PROJECT == 2   /* xray */
-    #define NUM_STATE_PARS 12
+    #define NUM_STATE_PARS 15
             "x", "y", "z", "kx", "ky", "kz",
-            "phi", "t", "Ex", "Ey","Ez", "p"
+            "phi", "t", "Ex", "Ey","Ez", "p", "_mctmp_a", "_mctmp_b", "_mctmp_c"
     #endif
     };
   List l;
@@ -2006,13 +2006,13 @@ int cogen_rt_funnel(struct instr_def *instr)
   static char *statepars_all[] =
     { /* particle state parameter names are used for defines */
     #if MCCODE_PROJECT == 1     /* neutron */
-    #define NUM_STATE_PARS 14
+    #define NUM_STATE_PARS 17
             "x", "y", "z", "vx", "vy", "vz",
-            "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop"
+            "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop", "_mctmp_a", "_mctmp_b", "_mctmp_c"
     #elif MCCODE_PROJECT == 2   /* xray */
-    #define NUM_STATE_PARS 12
+    #define NUM_STATE_PARS 15
             "x", "y", "z", "kx", "ky", "kz",
-            "phi", "t", "Ex", "Ey","Ez", "p"
+            "phi", "t", "Ex", "Ey","Ez", "p", "_mctmp_a", "_mctmp_b", "_mctmp_c"
     #endif
     };
   List l;
@@ -2325,6 +2325,13 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  double kx,ky,kz; /* wave-vector */");
   cout("  double phi, Ex,Ey,Ez; /* phase and electrical field */");
 #endif
+  cout("  /* Generic Temporaries: */");
+  cout("  /* May be used internally by components e.g. for special */");
+  cout("  /* return-values from functions used in trace, thusreturned via */");
+  cout("  /* particle struct. (Example: Wolter Conics from McStas, silicon slabs.) */");
+  cout("  double _mctmp_a; /* temp a */");
+  cout("  double _mctmp_b; /* temp b */");
+  cout("  double _mctmp_c; /* temp c */");
   //cout("  randstate_t randstate[RANDSTATE_LEN]");
   cout("  unsigned long randstate[7];"); // for the KISS generator
   cout("  double t, p;    /* time, event weight */");
@@ -2444,6 +2451,9 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  if(!str_comp(\"sz\",name)){rval=p->sz;s=0;}");
   cout("  if(!str_comp(\"t\",name)){rval=p->t;s=0;}");
   cout("  if(!str_comp(\"p\",name)){rval=p->p;s=0;}");
+  cout("  if(!str_comp(\"_mctmp_a\",name)){rval=p->_mctmp_a;s=0;}");
+  cout("  if(!str_comp(\"_mctmp_b\",name)){rval=p->_mctmp_b;s=0;}");
+  cout("  if(!str_comp(\"_mctmp_c\",name)){rval=p->_mctmp_c;s=0;}");
   while((var = list_next(liter))) {
     coutf("  if(!str_comp(\"%s\",name)){rval=*( (double *)(&(p->%s)) );s=0;}",var,var);
   }
