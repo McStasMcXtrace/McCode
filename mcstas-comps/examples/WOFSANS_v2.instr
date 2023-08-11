@@ -7,12 +7,14 @@
 * Origin: PSI
 * %INSTRUMENT_SITE: HighNESS
 *
-* <instrument short description>
+* Instrument developed for the HighNESS EU project, describing a Wolter Optics
+* Focusing SANS (WOFSANS_v2), applied for the study of moderator parameters.
 *
 * %D
-* <instrument description>
-*
-* Example: <parameters=values>
+* Instrument developed for the HighNESS EU project, describing a Wolter Optics
+* Focusing SANS (WOFSANS_v2), applied for the study of moderator parameters.
+e*
+* Example: WOFSANS_v2 width=0.15
 *
 * %P
 * <parameter1>: [<unit>] <parameter1 description>
