@@ -104,14 +104,12 @@ double round_par=10.0;
 double u=0.0001; //gap between components
 
 double coeff1, coeff2;
+#pragma acc declare create(coeff1,coeff2)
 
 char BrillianceFile[256];
 
 double bandwidth;
 double l_max;
-
-int was_scattered;
-int was_scattered2;
 
 //Optics Variables
 double optics_start_pos;
@@ -125,6 +123,11 @@ double pulse_delay;
 
 double Lmin_source;
 double Lmax_source;
+%}
+
+USERVARS %{
+int was_scattered;
+int was_scattered2;
 %}
 
 INITIALIZE
@@ -158,6 +161,7 @@ if (width==0.15) {
     } else if (width==0.03) {
       coeff1 = 1.0494, coeff2 = 1.9;
 }
+#pragma acc update device(coeff1,coeff2)
 
  /* Calculate wavelengths via sqrt(E) -> v and v->k */
  Lmin_source = 2*PI/(V2K*(SE2V*sqrt(Emax)));
