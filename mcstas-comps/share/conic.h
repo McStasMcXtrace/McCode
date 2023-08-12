@@ -1600,9 +1600,9 @@ before computing reflection
 
 @see traceNeutronConic()
 */
-double reflectNeutronFlat(_class_particle* p, FlatSurf s) {
-    Vec n = getNormFlat(get_class_particlePos(*p),s);
-    Vec pv = get_class_particleVel(*p);
+double reflectNeutronFlat(_class_particle* _particle, FlatSurf s) {
+    Vec n = getNormFlat(get_class_particlePos(*_particle),s);
+    Vec pv = get_class_particleVel(*_particle);
     //printf("nothing");
     double v = getMagVec(pv);
     double vn = dotVec(pv,n);
@@ -1621,15 +1621,15 @@ double reflectNeutronFlat(_class_particle* p, FlatSurf s) {
 
     if (ref < 0) {
         printf("this happens?");
-        absorb_class_particle(p);
+        absorb_class_particle(_particle);
         return -1;
     } else {//here we need to implement the refraction
         if (rand01() <= ref){//to be updated to use the mcstas random function or quasoi deterministic model
             //printf("oh a reflections\n");
             //printf("this total reflection?");
-            p->vx = p->vx-2*vn*n.x;
-            p->vy = p->vy-2*vn*n.y;
-            p->vz = p->vz-2*vn*n.z;
+            _particle->vx = _particle->vx-2*vn*n.x;
+            _particle->vy = _particle->vy-2*vn*n.y;
+            _particle->vz = _particle->vz-2*vn*n.z;
             return ga;
         }
         else{//
@@ -1637,19 +1637,19 @@ double reflectNeutronFlat(_class_particle* p, FlatSurf s) {
             double m1 = 0;
             double m2 = 0;
             //if no mirrorwidth is specified no refraction has to be calc
-            if (p->_mctmp_a == 0){
+            if (_particle->_mctmp_a == 0){
                 return ga;
             }
-            if (p->_mctmp_a == 1){
+            if (_particle->_mctmp_a == 1){
                 m1 = m_Si;
                 m2 = 0;
             }
-            if (p->_mctmp_a == -1){
+            if (_particle->_mctmp_a == -1){
                 m1 = 0;
                 m2 = m_Si;                
             }
             //printf("k1 %f k2 %f k3 %f x %f y %f z %f\n", s.k1, s.k2, s.k3, p->_x, p->_y, p->_z);
-            refractNeutronFlat(p, n, m1, m2);// this can still lead to total reflection, we miss the supermirror, but are still reflected by the silicon takes care of change of material for refraction
+            refractNeutronFlat(_particle, n, m1, m2);// this can still lead to total reflection, we miss the supermirror, but are still reflected by the silicon takes care of change of material for refraction
             return ga;
         }
     }
@@ -1663,17 +1663,17 @@ double reflectNeutronFlat(_class_particle* p, FlatSurf s) {
 @param c ConicSurf to use
 
 */
-void traceNeutronConic(_class_particle* p, ConicSurf c) {
-    double t = getTimeOfFirstCollisionConic(*p, c);
+void traceNeutronConic(_class_particle* _particle, ConicSurf c) {
+    double t = getTimeOfFirstCollisionConic(*_particle, c);
     if (t < 0)
         return;
     else {
-        move_class_particleT(t, p);
-        double ga = reflectNeutronConic(p, c);
+        move_class_particleT(t, _particle);
+        double ga = reflectNeutronConic(_particle, c);
 #if REC_MAX_GA
         if (ga > c.max_ga) {
             c.max_ga = ga;
-            c.max_ga_z0 = p->z;
+            c.max_ga_z0 = _particle->z;
         }
 #endif
     }
@@ -1685,17 +1685,16 @@ void traceNeutronConic(_class_particle* p, ConicSurf c) {
 @param f FlatSurf to use
 
 */
-void traceNeutronFlat(_class_particle* p, FlatSurf f) {
-    double t = getTimeOfFirstCollisionFlat(*p, f);
+void traceNeutronFlat(_class_particle* _particle, FlatSurf f) {
+    double t = getTimeOfFirstCollisionFlat(*_particle, f);
     if (t < 0)
         return;
     else {
 
-        move_class_particleT(t, p);
+        move_class_particleT(t, _particle);
 
-        //printf("weight before reflect %f", p->w);
-        double ga = reflectNeutronFlat(p, f);
-        //printf("weight after reflect %f\n", p->w);
+        double ga = reflectNeutronFlat(_particle, f);
+
 #if REC_MAX_GA
         if (ga > f.max_ga) {
             f.max_ga = ga;
@@ -1745,7 +1744,7 @@ void initSimulation(Scene* s) {
 @param p Pointer of particle to trace
 @param s Scene to trace
 */
-void traceSingleNeutron(_class_particle* p, Scene s) {
+void traceSingleNeutron(_class_particle* _particle, Scene s) {
    
     int contact = 1;
     do {
@@ -1755,7 +1754,7 @@ void traceSingleNeutron(_class_particle* p, Scene s) {
         int i;
 
         for (i = 0; i < s.num_c; i++) {
-            double t2 = getTimeOfFirstCollisionConic(*p,s.c[i]);
+            double t2 = getTimeOfFirstCollisionConic(*_particle,s.c[i]);
 
             if (t2 <= 0)
                 continue;
@@ -1767,7 +1766,7 @@ void traceSingleNeutron(_class_particle* p, Scene s) {
         }
 
         for (i = 0; i < s.num_f; i++) {
-            double t2 = getTimeOfFirstCollisionFlat(*p,s.f[i]);
+            double t2 = getTimeOfFirstCollisionFlat(*_particle,s.f[i]);
 
             if (t2 <= 0)
                 continue;
@@ -1779,7 +1778,7 @@ void traceSingleNeutron(_class_particle* p, Scene s) {
         }
 
         for (i = 0; i < s.num_di; i++)  {
-            double t2 = getTimeOfFirstCollisionDisk(*p,s.di[i]);
+            double t2 = getTimeOfFirstCollisionDisk(*_particle,s.di[i]);
 
             if (t2 <= 0)
                 continue;
@@ -1791,7 +1790,7 @@ void traceSingleNeutron(_class_particle* p, Scene s) {
         }
 
         for (i = 0; i < s.num_d; i++) {
-            double t2 = getTimeOfFirstCollisionDetector(*p,s.d[i]);
+            double t2 = getTimeOfFirstCollisionDetector(*_particle,s.d[i]);
 
             if (t2 <= 0)
                 continue;
@@ -1804,22 +1803,22 @@ void traceSingleNeutron(_class_particle* p, Scene s) {
 
         switch (type) {
             case DETECTOR:
-                traceNeutronDetector(p, s.d[index]);
+                traceNeutronDetector(_particle, s.d[index]);
                 break;
             case FLAT:
-	        traceNeutronFlat(p, s.f[index]);
+	        traceNeutronFlat(_particle, s.f[index]);
                 break;
             case DISK:
-                traceNeutronDisk(p, s.di[index]);
+                traceNeutronDisk(_particle, s.di[index]);
                 break;
             case CONIC:
-                traceNeutronConic(p, s.c[index]);
+                traceNeutronConic(_particle, s.c[index]);
                 break;
             default:
                 contact = 0;
                 break;
         }
-    } while (contact && !p->_absorbed);
+    } while (contact && !_particle->_absorbed);
 
 }
 
