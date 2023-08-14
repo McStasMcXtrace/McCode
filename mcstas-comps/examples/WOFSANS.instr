@@ -485,7 +485,7 @@ AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (0, 0, 90) RELATIVE PREVIOUS
 
 /*Condenser Lens*/
-COMPONENT cPH = Conics_PH_fixed(R0=R0,alpha=alpha,W=W,m=m,
+COMPONENT cPH = Conics_PH(R0=R0,alpha=alpha,W=W,m=m,
     nshells=nshells_ph, focal_length=fi_ph, rmin=0.010, rmax=0.075, lp=1.3, lh=1.0, disk=1
 )
 AT(0,0,10.0) RELATIVE ABSOLUTE
