@@ -103,7 +103,6 @@ if (radius <= 0)
 
   /* determine total width [m] of Soller channels, containing nslit in xwidth */
   if (nchan) {
-	
 		  width_of_Soller = radius*fabs(theta_max-theta_min)/nchan;
   }
   else       width_of_Soller = 0;
@@ -148,10 +147,7 @@ if (radius <= 0)
     printf(" with %i slits of width %g [mm] pitch %g [deg].\n",
       (int)nslit, width_of_slit*1000, atan2(width_of_slit, radius)*RAD2DEG);
   }
-  if (!yheight_inner) {
-      yheight_inner = yheight;
-	  }
-  
+  if (!yheight_inner) yheight_inner = yheight;
 
 %}
 
