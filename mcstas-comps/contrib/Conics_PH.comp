@@ -43,7 +43,7 @@
 *******************************************************************************/
      
 DEFINE COMPONENT Conics_PH
-DEFINITION PARAMETERS(radii={0,0,0,0})
+DEFINITION PARAMETERS(radii={0.0,0.0,0.0,0.0})
 SETTING PARAMETERS (
     rmin=0,rmax=0, focal_length=10.070, lp=0.84, lh=0.84,
     int nshells=4, m=1, mirr_thick=0, int disk=1,
@@ -70,7 +70,7 @@ INITIALIZE
     double th_c, alpha_p, alpha_h, fp2, dr,rr, cH, theta_1, theta_2, theta_i;
     int i;
 
-    Radii = (double*)radii;
+    Radii = (double[])radii;
     
     s=makeScene();
     /* Mode a, vector of radii */
