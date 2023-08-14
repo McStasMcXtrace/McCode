@@ -43,7 +43,7 @@
 * INPUT PARAMETERS:
 *
 * xwidth: [m]               Soller  window width, filled with nslit slits. Use 0 value for continuous collimator.
-* yheight: [m]              Collimator height. If  yheight_inner is specified, then this is the outer height
+* yheight: [m]              Collimator height. If  yheight_inner is specified, then this is the outer cylinders height
 * length: [m]               Length/Distance between inner and outer slits.
 * divergence: [min of arc]  Divergence angle. May also be specified with the nslit parameter. A zero value unactivates component.
 * theta_min: [deg]          Minimum Theta angle for the radial setting.
