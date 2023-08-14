@@ -72,7 +72,7 @@ INITIALIZE
     double th_c, alpha_p, alpha_h, fp2, dr,rr, cH, theta_1, theta_2, theta_i;
     int i;
 
-    Radii = (double[])radii;
+    Radii = (double*)radii;
     
     s=makeScene();
     /* Mode a, vector of radii */
