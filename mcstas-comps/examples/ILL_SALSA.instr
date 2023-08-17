@@ -2074,8 +2074,8 @@ AT (0,0,0.01) RELATIVE H22_6_Out
 ROTATED (0.0,0.0,0.0) RELATIVE H22_6_Out
 
 COMPONENT GuideOut_xy = Monitor_nD(
- user1 = "", user2 = "",
- user3 = "", xwidth = 0.03,
+ user1 = FLT_MAX, user2 = FLT_MAX,
+ user3 = FLT_MAX, xwidth = 0.03,
  yheight = 0.2, zdepth = 0,
  xmin = 0, xmax = 0,
  ymin = 0, ymax = 0,
@@ -2090,8 +2090,8 @@ AT (0,0,0.01) RELATIVE GuideOut
 ROTATED (0.0,0.0,0.0) RELATIVE GuideOut
 
 COMPONENT GuideOut_dxdy = Monitor_nD(
- user1 = "", user2 = "",
- user3 = "", xwidth = 0.03,
+ user1 = FLT_MAX, user2 = FLT_MAX,
+ user3 = FLT_MAX, xwidth = 0.03,
  yheight = 0.2, zdepth = 0,
  xmin = 0, xmax = 0,
  ymin = 0, ymax = 0,
@@ -2106,8 +2106,8 @@ AT (0,0,0) RELATIVE GuideOut_xy
 ROTATED (0.0,0.0,0.0) RELATIVE GuideOut_xy
 
 COMPONENT GuideOut_Phic = Monitor_nD(
- user1 = "", user2 = "",
- user3 = "", xwidth = 0.03,
+ user1 = FLT_MAX, user2 = FLT_MAX,
+ user3 = FLT_MAX, xwidth = 0.03,
  yheight = 0.2, zdepth = 0,
  xmin = 0, xmax = 0,
  ymin = 0, ymax = 0,
@@ -2122,8 +2122,8 @@ AT (0,0,0) RELATIVE GuideOut_dxdy
 ROTATED (0.0,0.0,0.0) RELATIVE GuideOut_dxdy
 
 COMPONENT GuideOut_L = Monitor_nD(
- user1 = "", user2 = "",
- user3 = "", xwidth = 0.03,
+ user1 = FLT_MAX, user2 = FLT_MAX,
+ user3 = FLT_MAX, xwidth = 0.03,
  yheight = 0.2, zdepth = 0,
  xmin = 0, xmax = 0,
  ymin = 0, ymax = 0,
@@ -2219,9 +2219,6 @@ ROTATED (0,0,0) RELATIVE arm_after_monochromator
 COMPONENT arm_sample_position = Arm()
 AT (0,0,2.1) RELATIVE arm_after_monochromator
 
-COMPONENT init = Union_init()
-AT (0,0,0) ABSOLUTE
-
 COMPONENT Al_inc = Incoherent_process(
  sigma = 0.0328, unit_cell_volume = 66.4)
 AT (0,0,0) ABSOLUTE
@@ -2278,9 +2275,6 @@ COMPONENT logger_space_zy = Union_logger_2D_space(
 AT (0,0,0) RELATIVE sample_geometry
 
 COMPONENT Sample_environment = Union_master()
-AT (0,0,0) ABSOLUTE
-
-COMPONENT stop = Union_stop()
 AT (0,0,0) ABSOLUTE
 
 COMPONENT arm_collimator_out = Arm()
