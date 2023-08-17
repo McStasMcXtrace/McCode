@@ -2,7 +2,6 @@ from os.path import basename
 from log import McRunException, getLogger
 from datetime import datetime
 from decimal import Decimal
-from mccode import McStasResult
 from os.path import join 
 
 try:
@@ -84,7 +83,8 @@ def build_header(options, params, intervals, detectors):
     result = (template % values) + '\n'
     return result
 
-def build_mccodesim_header(options, params, intervals, detectors, version):
+
+def build_mccodesim_header(options, intervals: dict, detectors: list, version: str):
     template = """
 begin instrument:
   Creator: %(version)s
@@ -114,58 +114,60 @@ filename: %(filename)s
 variables: %(variables)s
 end data
     """.strip()
-    
-    # Date format: Fri Aug 26 12:21:39 2011
-    date = datetime.strftime(datetime.now(), '%a %b %d %H %M %Y')
-
-    xvars = ', '.join(params)
-    lst = intervals[list(params)[0]]
-    xmin = min(lst)
-    xmax = max(lst)
+    interval_names = ', '.join(intervals.keys())
+    first_key_interval = intervals[list(intervals.keys())[0]]
 
     # TODO: figure out correct scan type
-    if options.optimize:
-        numpoints =  1
-        title = 'Optimization of %s' % xvars
-    else:
-        numpoints = options.numpoints
-        title = 'Scan of %s' % xvars
+    numpoints = 1 if options.optimize else options.numpoints
 
-    scantype = 'multiarray_1d(%d)' % numpoints
-    variables = list(params)
-    for detector in detectors:
-        variables += [detector + '_I', detector + '_ERR']
-    
-    istrace = 'no'
-    if options.trace:
-        istrace = 'yes'
-    
     values = {
         'instr': options.instr,
-        'date': date,
+        'date': datetime.strftime(datetime.now(), '%a %b %d %H %M %Y'),
 
         'ncount': options.ncount,
         'scanpoints': numpoints,
 
-        'params': ', '.join('%s = %s' % (xvar, intervals[xvar][i]) for xvar in params for i in range(len(intervals[xvar]))),
-        'type': scantype,
-        'title': title,
+        'params': ', '.join(f'{key} = {val}' for (key, vals) in intervals.items() for val in vals),
+        'type': f'multiarray_1d({numpoints})',
+        'title': f'{"Optimization" if options.optimize else "Scan"} of {interval_names}',
 
-        'xvars': xvars,
-        'yvars': ' '.join('(%s_I,%s_ERR)' % (d, d) for d in detectors),
+        'xvars': interval_names,
+        'yvars': ' '.join(f'({d}_I,{d}_ERR' for d in detectors),
 
-        'xmin': xmin,
-        'xmax': xmax,
+        'xmin': min(first_key_interval),
+        'xmax': max(first_key_interval),
 
         'filename': basename(options.optimise_file) or 'mccode.dat',
-        'variables': ' '.join(variables),
+        'variables': ' '.join(intervals.keys()) + ' '.join(f'{d}_I {d}_ERR' for d in detectors),
         
         'version': version,
-        'istrace': istrace
+        'istrace': 'yes' if options.trace else 'no'
     }
     
     result = (template % values) + '\n'
     return result
+
+
+def mcsimdetectors(directory_name: str):
+    """Read back detector (name, intensity, error, ray count, data file name) sets from a mccode.sim file"""
+    # TODO this function should be kept synchronized with build_mccode_header above
+    from pathlib import Path
+    from mccode import Detector
+    directory = Path(directory_name)
+    if not directory.exists() and directory.is_dir():
+        raise RuntimeError(f"{directory_name} is not a directory")
+    filepath = directory.joinpath('mccode.sim')
+    if not filepath.exists():
+        raise RuntimeError(f'The simulation file {filepath} does not exist')
+    with filepath.open('r') as file:
+        contents = file.read()
+    # Each detector has a block between "begin data" and "end data"
+    blocks = [x.split('end data')[0].strip() for x in contents.split('begin data') if 'end data' in x]
+    # with lines of the form "{key}: {value}"
+    blocks = [{k.strip(): v.strip() for k, v in [z.split(':', 1) for z in b.split('\n')]} for b in blocks]
+    # This object only cares about extracting the (name, I, Err, N, data file) sets for each detector
+    return [Detector(d['component'], *d['values'].split(), d['filename']) for d in blocks]
+
 
 def point_at(N, key, minmax, step):
     """ Helper to compute the point for key at step """
@@ -178,12 +180,14 @@ class LinearInterval:
 
     @staticmethod
     def from_range(N, intervals):
+        print(f"LinearInterval from {N=} and {intervals=}")
         for step in range(N):
             yield dict((key, point_at(N, key, intervals[key], step))
                        for key in intervals)
 
     @staticmethod
     def from_list(N, intervals):
+        print(f"LinearInterval from_list {N=} and {intervals=}")
         for step in range(N):
             yield dict((key, intervals[key][step]) for key in intervals)
 
@@ -193,6 +197,7 @@ class MultiInterval:
 
     @staticmethod
     def from_range(N, intervals):
+        print(f"MultiInterval from {N=} and {intervals=}")
         # base case: no intervals yields empty dict
         if len(intervals) == 0:
             yield {}
@@ -231,53 +236,43 @@ class Scanner:
 
         if len(self.intervals) == 0:
             raise InvalidInterval('No interval range specified')
-        
-        # get file handles
-        fid = open(self.outfile, 'w')        
-        mccodesim = open(self.simfile, 'w')
-        
-        wrote_header = False
-        
+
         # each run will be in "dir/1", "dir/2", ...
         mcstas_dir = self.mcstas.options.dir
         if mcstas_dir == '':
-            mcstas_dir ='.'
-        
-        for i, point in enumerate(self.points):
-            par_values = []
-            for key in self.intervals:
-                self.mcstas.set_parameter(key, point[key])
-                LOG.debug("%s: %s", key, point[key])
-                par_values.append(point[key])
-            
-            is_decimal = lambda x: type(x) == Decimal
-            to_string = (lambda x: x if not is_decimal(x) else ( '%f' % x if abs(x)>1e-4 else '%e' % x))
+            mcstas_dir = '.'
 
-            LOG.info(', '.join('%s: %s' % (a, to_string(b))
-                               for (a, b) in point.items()))
-            
-            # Change sub-directory as an extra option (dir/1 -> dir/2)
-            current_dir = '%s/%i' % (mcstas_dir, i)
-            out = self.mcstas.run(pipe=True, extra_opts={'dir': current_dir})
+        with open(self.outfile, 'w') as outfile:
+            for i, point in enumerate(self.points):
+                par_values = []
+                for key in self.intervals:
+                    self.mcstas.set_parameter(key, point[key])
+                    LOG.debug("%s: %s", key, point[key])
+                    par_values.append(point[key])
 
-            dets = McStasResult(out).get_detectors()
+                LOG.info(', '.join(f'{name}: {value}' for name, value in point.items()))
+                # Change subdirectory as an extra option (dir/1 -> dir/2)
+                current_dir = f'{mcstas_dir}/{i}'
+                LOG.info(f"Output step into scan directory {current_dir}")
+                self.mcstas.run(pipe=False, extra_opts={'dir': current_dir})
+                LOG.info("Finish running step, get detectors")
+                detectors = mcsimdetectors(current_dir)
+                LOG.info("Got detectors")
+                if i == 0:
+                    LOG.info("Write headers")
+                    names = [det.name for det in detectors]
+                    outfile.write(build_header(self.mcstas.options, self.intervals.keys(), self.intervals, names))
+                    # Opening a file inside of this loop seems like a bad idea ... oh well
+                    with open(self.simfile, 'w') as simfile:
+                        simfile.write(build_mccodesim_header(self.mcstas.options, self.intervals, names,
+                                                             version=self.mcstas.version))
+                    LOG.info("Wrote headers")
+                LOG.info(f"Write step detectors line into {self.outfile}")
+                values = ['%s %s' % (d.intensity, d.error) for d in detectors]
+                line = '%s %s\n' % (' '.join(map(str, par_values)), ' '.join(values))
+                outfile.write(line)
+                outfile.flush()
 
-            if not wrote_header:
-                fid.write(build_header(self.mcstas.options,
-                   self.intervals.keys(), self.intervals,
-                   [det.name for det in dets]))
-                mccodesim.write(build_mccodesim_header(self.mcstas.options,
-                   self.intervals.keys(), self.intervals,
-                   [det.name for det in dets], version=self.mcstas.version))
-                wrote_header = True
-
-            dets_vals = ['%s %s' % (d.intensity, d.error) for d in dets]
-            line = '%s %s\n' % (' '.join(map(str, par_values)), ' '.join(dets_vals))
-            fid.write(line)
-            fid.flush()
-        
-        fid.close()
-        mccodesim.close()
 
 class Optimizer:
     """ Optimize monitors by varying the parameters within interval """
@@ -381,7 +376,7 @@ class Optimizer:
 def McCode_runner(x, args):
     """ Launch a single optimization step, calling McStas.run() """
 
-    # Change sub-directory as an extra option (dir/1 -> dir/2)
+    # Change subdirectory as an extra option (dir/1 -> dir/2)
     # each run will be in "dir/1", "dir/2", ...
     mcstas_dir = args.mcstas.options.dir
     if mcstas_dir == '':
@@ -393,56 +388,46 @@ def McCode_runner(x, args):
         args.mcstas.set_parameter(key, x[index])
 
     args.parsHistory.append(x)
-    # open output files
-    if not args.wrote_header:
-        mode = 'w'
-    else:
-        mode = 'a'
-    fid       = open(args.outfile, mode)
-    mccodesim = open(args.simfile, mode)
 
-    out = args.mcstas.run(pipe=True, extra_opts={'dir': current_dir})
+    args.mcstas.run(pipe=False, extra_opts={'dir': current_dir})
 
     # track iteration number
     args.iterations = args.iterations+1
 
     # get monitors out, compute criteria
-    dets   = McStasResult(out).get_detectors()
+    detectors = mcsimdetectors(current_dir)
     values = []
 
     # add monitors that match a given name
-    for d in dets:
+    for d in detectors:
         if d.name in args.mcstas.options.optimize_monitor:
             values.append(d.intensity)
     # in case monitor name is not found, we use all monitor values
     if len(values) == 0:
-        for d in dets:
+        for d in detectors:
             values.append(d.intensity)
 
     values = [float(d) for d in values]
 
-    # output files (close)
-    if not args.wrote_header:
-            fid.write(build_header(args.mcstas.options,
-               args.intervals.keys(), args.intervals,
-               [det.name for det in dets]))
-            mccodesim.write(build_mccodesim_header(args.mcstas.options,
-               args.intervals.keys(), args.intervals,
-               [det.name for det in dets], version=args.mcstas.version))
+    # open output files
+    mode = 'a' if args.wrote_header else 'w'
+    with open(args.outfile, mode) as outfile:
+        # output files (close)
+        if not args.wrote_header:
+            names = [det.name for det in detectors]
+            outfile.write(build_header(args.mcstas.options, args.intervals.keys(), args.intervals, names))
+            with open(args.simfile, mode) as simfile:
+                simfile.write(build_mccodesim_header(args.mcstas.options, args.intervals, names,
+                                                     version=args.mcstas.version))
             args.wrote_header = True
 
-    dets_vals = ['%s %s' % (d.intensity, d.error) for d in dets]
-    line = '%s %s\n' % (' '.join(map(str, x)), ' '.join(dets_vals))
-    fid.write(line)
-    fid.flush()
-
-    fid.close()
-    mccodesim.close()
+        outfile.write(f"{' '.join(map(str, x))} {' '.join(f'{d.intensity} {d.error}' for d in detectors)}\n")
+        outfile.flush()
 
     if args.mcstas.options.optimize_minimize:
-        criteria =   sum(values) # minimize
+        criteria = sum(values)  # minimize
     else:
-        criteria =  -sum(values) # maximize
+        criteria = -sum(values)  # maximize
 
     args.criteriaHistory.append(criteria)
     return criteria
