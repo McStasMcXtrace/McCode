@@ -33,6 +33,11 @@
 * machines) with the 'roc' parameter.
 * The neutron beam outside the collimator angular area is transmitted unaffected.
 *
+* When used as a focusing collimator, the focusing parameter should be set to 1.
+*
+* An example of a instrument that uses this collimator can be found in the SALSA instrument,
+* in the example folder
+*
 * Example:
 *   Channelled radial collimator with shadow parts
 *     Collimator_radial(xwidth=0.015, yheight=.3, length=.35, divergence=40,transmission=1, theta_min=5, theta_max=165, nchan=128, radius=0.9)
