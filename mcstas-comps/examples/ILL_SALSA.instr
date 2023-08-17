@@ -1,0 +1,2309 @@
+/********************************************************************************
+* 
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+* 
+* This file was written by McStasScript, which is a 
+* python based McStas instrument generator written by 
+* Mads Bertelsen in 2019 while employed at the 
+* European Spallation Source Data Management and 
+* Software Centre
+* 
+* Instrument SALSA
+* 
+* %Identification
+* Written by: Daniel Lomholt Christensen
+* Date: 13:30:05 on August 17, 2023
+* Origin: ILL, Grenoble, France
+* %INSTRUMENT_SITE: Generated_instruments
+* 
+* %DESCRIPTION
+* SALSA is a instrument developed mainly for measuring residual stress
+* in a gauge volume defined by its collimators.
+* The instrument has three possible collimator positions, with three available collimators at each position.
+* This allows the gauge volumed to be defined in height, width and depth.
+* The size of the gauge volume is chosen in the collimator parameters. The following values correspond to sizes 
+* in a dictionary format. 
+* The vertical collimator {0: 2mm, 1: 4mm, 2: 10mm}
+* The horizontal collimator {0: 0.6mm, 1: 2mm, 2: 4mm}
+* The depth collimator {0: 0.6mm, 1: 2mm, 2: 4mm}
+*
+* The monochromator options are at present only a flat silicon monochromator,
+* with a d-spacing matching the real one.
+*
+* Some of the monitors used in this instrument are not actually present in the real instrument. The only detector
+* that is actually there, is the final monitor.
+* Furthermore the sample environment is of course variable depending on the sample
+* in question.
+*
+* 
+* %Parameters
+* 
+* %End 
+********************************************************************************/
+
+DEFINE INSTRUMENT SALSA (
+double lambda_mean = 1.8, // Desired wavelength of neutrons coming off of the monochromator.
+double lambda_spread = 0.5, // Range over which the neutrons are produced. lambda_mean +- lambda_spread.
+int carrousel_monochromator = 0, // Choose which monochromator is used. There are 3 options as listed in the documentation.
+double m = 2, // m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+double mip = 2, // m-value of in-pile guide coating
+int vertical_collimator = 1, // Choice of collimator. See the documentations for the specifications
+int horizontal_collimator = 0, // Choice of collimator. See the documentations for the specifications
+int outgoing_collimator = 0, // Choice of collimator. See the documentations for the specifications
+double measuring_angle = 50 // Angle between the outgoing collimator and sample. Rotates in the negative direction of revolution. I.E with the clock.
+)
+
+DECLARE 
+%{
+double carrousel_scattering_vector;
+double carrousel_rot;
+int Scattered_from_ingoing_collimators;
+double primary_collimator_vertical_data[21] = {0.158,0.112,0.483,0.104,0.616,39,12,0.158,0.12,0.382,0.096,0.6169,39,12,0.158,0.1201,0.382,0.098,0.61175,39,12};
+double primary_collimator_horizontal_data[28] = {0.1155,0.0664,0.449,0.0435,0.15,39,12,0.11695,0.0664,0.453,0.0439,0.15,39,12,0.112,0.09,0.2225,0.072,0.38,39,12,0.1193,0.093,0.232,0.0653,0.37004,39,12};
+double secondary_collimator_data[28] = {0.132,0.0695,0.459,0.055,0.15,39,12,0.2607,0.1119,0.61,0.0638,0.2,39,12,0.279,0.16,0.499,0.0805,0.4,39,12,0.3061,0.1713,0.49716,0.126,0.50284,39,12};
+
+    /* Thermal (H2x) source parameters */
+    /* guide coating parameters */
+    double gR0          = 1;
+    double gQc          = 0.021;
+    double gAlpha       = 4.07;
+    double gW           = 1.0/300.0;
+    /* gaps and Al windows parameters */
+    double Al_thickness = 0.002;
+    double gGap         = 0.001;
+    /* guide curvatures */
+    double gRh          = -27000; /* clockwise */
+    /* guide section parameters (total length/number of elements) */
+    double L_H22_3 =7.5/7,    Rh_H22_3 =0;
+    double L_H22_4 =15/15,    Rh_H22_4 =0;
+    double L_H22_5 =4.75 /5,  Rh_H22_5 =0;
+    double L_H22_6 =60/60,    Rh_H22_6 =0;
+
+    /* capture flux positions from moderator: 21.4    28.4    61.2 */
+
+  
+%}
+
+INITIALIZE 
+%{
+// Start of initialize for generated SALSA
+if (carrousel_monochromator=1) {
+carrousel_scattering_vector = 3.785051389867221;
+}
+else if (carrousel_monochromator=2){
+carrousel_scattering_vector = 3;
+}
+else if (carrousel_monochromator=3){
+carrousel_scattering_vector = 4;
+}
+
+carrousel_rot = asin(carrousel_scattering_vector*lambda_mean/(4*PI))*RAD2DEG;
+
+primary_collimator_vertical_data[3 + 7*vertical_collimator] = asin(primary_collimator_vertical_data[3 + 7*vertical_collimator]/
+(2*primary_collimator_vertical_data[4 + 7*vertical_collimator]))*RAD2DEG;
+
+
+primary_collimator_horizontal_data[3 + 7*horizontal_collimator] = asin(primary_collimator_horizontal_data[3 + 7*horizontal_collimator]/
+(2*primary_collimator_horizontal_data[4 + 7*horizontal_collimator]))*RAD2DEG;
+
+
+secondary_collimator_data[3 + 7*outgoing_collimator] = asin(secondary_collimator_data[3 + 7*outgoing_collimator]/
+(2*secondary_collimator_data[4 + 7*outgoing_collimator]))*RAD2DEG;
+
+
+    /* Element rotations = Element length / Curvature Radius * RAD2DEG */
+    if (gRh) {
+      Rh_H22_3  = L_H22_3 /gRh*RAD2DEG;
+      Rh_H22_4  = L_H22_4 /gRh*RAD2DEG;
+      Rh_H22_5  = L_H22_5 /gRh*RAD2DEG;
+      Rh_H22_6  = L_H22_6 /gRh*RAD2DEG;
+    }
+    printf("Instrument: ILL_H22 (H22@ILL thermal guide).\n");
+  
+%}
+
+TRACE 
+COMPONENT Thermal = Source_gen(
+ flux_file = "NULL", xdiv_file = "NULL",
+ ydiv_file = "NULL", radius = 0.0,
+ dist = 2.38 + 0.8, focus_xw = 0.038,
+ focus_yh = 0.2, focus_aw = 0,
+ focus_ah = 0, E0 = 0,
+ dE = 0, lambda0 = lambda_mean,
+ dlambda = lambda_spread, I1 = 0.5874e+13,
+ yheight = 0.22, xwidth = 0.14,
+ verbose = 1, T1 = 683.7,
+ flux_file_perAA = 0, flux_file_log = 0,
+ Lmin = 0, Lmax = 0,
+ Emin = 0, Emax = 0,
+ T2 = 257.7, I2 = 2.5099e+13,
+ T3 = 16.7, I3 = 1.0343e+12,
+ zdepth = 0, target_index = +1)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT PinkCarter = Guide_gravity(
+ w1 = 0.038, h1 = 0.2,
+ w2 = 0.032, h2 = 0.2,
+ l = 0.8, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = mip, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,2.38) RELATIVE Thermal
+ROTATED (0.0,0.0,0.0) RELATIVE Thermal
+
+COMPONENT PinkCarterSM = Guide_gravity(
+ w1 = 0.038, h1 = 0.2,
+ w2 = 0.032, h2 = 0.2,
+ l = 2.5, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = mip, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,0.8 + gGap) RELATIVE PinkCarter
+ROTATED (0.0,0.0,0.0) RELATIVE PinkCarter
+
+COMPONENT LeadShutter = Guide_gravity(
+ w1 = 0.031, h1 = 0.2,
+ w2 = 0.031, h2 = 0.2,
+ l = 0.228, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,0.8 + 2.5 + gGap) RELATIVE PinkCarter
+ROTATED (0.0,0.0,0.0) RELATIVE PinkCarter
+
+COMPONENT H22_3 = Arm()
+AT (0,0,0.2281) RELATIVE LeadShutter
+ROTATED (0.0,0.0,0.0) RELATIVE LeadShutter
+
+COMPONENT H22_3_In = Al_window(
+ thickness = Al_thickness)
+AT (0,0,0) RELATIVE H22_3
+ROTATED (0.0,0.0,0.0) RELATIVE H22_3
+
+COMPONENT H22_3_1 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_3, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,Al_thickness + gGap) RELATIVE H22_3_In
+ROTATED (0,Rh_H22_3,0) RELATIVE H22_3_In
+
+COMPONENT H22_3_2 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_3, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_3 + gGap) RELATIVE H22_3_1
+ROTATED (0,Rh_H22_3,0) RELATIVE H22_3_1
+
+COMPONENT H22_3_3 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_3, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_3 + gGap) RELATIVE H22_3_2
+ROTATED (0,Rh_H22_3,0) RELATIVE H22_3_2
+
+COMPONENT H22_3_4 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_3, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_3 + gGap) RELATIVE H22_3_3
+ROTATED (0,Rh_H22_3,0) RELATIVE H22_3_3
+
+COMPONENT H22_3_5 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_3, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_3 + gGap) RELATIVE H22_3_4
+ROTATED (0,Rh_H22_3,0) RELATIVE H22_3_4
+
+COMPONENT H22_3_6 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_3, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_3 + gGap) RELATIVE H22_3_5
+ROTATED (0,Rh_H22_3,0) RELATIVE H22_3_5
+
+COMPONENT H22_3_7 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_3, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_3 + gGap) RELATIVE H22_3_6
+ROTATED (0,Rh_H22_3,0) RELATIVE H22_3_6
+
+COMPONENT H22_3_Out = Al_window(
+ thickness = Al_thickness)
+AT (0,0,L_H22_3 + gGap) RELATIVE H22_3_7
+ROTATED (0.0,0.0,0.0) RELATIVE H22_3_7
+
+COMPONENT H22_4 = Arm()
+AT (0,0,0.148) RELATIVE H22_3_Out
+ROTATED (0.0,0.0,0.0) RELATIVE H22_3_Out
+
+COMPONENT H22_4_In = Al_window(
+ thickness = Al_thickness)
+AT (0,0,0) RELATIVE H22_4
+ROTATED (0.0,0.0,0.0) RELATIVE H22_4
+
+COMPONENT H22_4_1 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_4, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,Al_thickness + gGap) RELATIVE H22_4_In
+ROTATED (0,Rh_H22_4,0) RELATIVE H22_4_In
+
+COMPONENT H22_4_2 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_4, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_4 + gGap) RELATIVE H22_4_1
+ROTATED (0,Rh_H22_4,0) RELATIVE H22_4_1
+
+COMPONENT H22_4_3 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_4, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_4 + gGap) RELATIVE H22_4_2
+ROTATED (0,Rh_H22_4,0) RELATIVE H22_4_2
+
+COMPONENT H22_4_4 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_4, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_4 + gGap) RELATIVE H22_4_3
+ROTATED (0,Rh_H22_4,0) RELATIVE H22_4_3
+
+COMPONENT H22_4_5 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_4, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_4 + gGap) RELATIVE H22_4_4
+ROTATED (0,Rh_H22_4,0) RELATIVE H22_4_4
+
+COMPONENT H22_4_6 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_4, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_4 + gGap) RELATIVE H22_4_5
+ROTATED (0,Rh_H22_4,0) RELATIVE H22_4_5
+
+COMPONENT H22_4_7 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_4, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_4 + gGap) RELATIVE H22_4_6
+ROTATED (0,Rh_H22_4,0) RELATIVE H22_4_6
+
+COMPONENT H22_4_8 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_4, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_4 + gGap) RELATIVE H22_4_7
+ROTATED (0,Rh_H22_4,0) RELATIVE H22_4_7
+
+COMPONENT H22_4_9 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_4, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_4 + gGap) RELATIVE H22_4_8
+ROTATED (0,Rh_H22_4,0) RELATIVE H22_4_8
+
+COMPONENT H22_4_10 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_4, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_4 + gGap) RELATIVE H22_4_9
+ROTATED (0,Rh_H22_4,0) RELATIVE H22_4_9
+
+COMPONENT H22_4_11 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_4, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_4 + gGap) RELATIVE H22_4_10
+ROTATED (0,Rh_H22_4,0) RELATIVE H22_4_10
+
+COMPONENT H22_4_12 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_4, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_4 + gGap) RELATIVE H22_4_11
+ROTATED (0,Rh_H22_4,0) RELATIVE H22_4_11
+
+COMPONENT H22_4_13 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_4, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_4 + gGap) RELATIVE H22_4_12
+ROTATED (0,Rh_H22_4,0) RELATIVE H22_4_12
+
+COMPONENT H22_4_14 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_4, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_4 + gGap) RELATIVE H22_4_13
+ROTATED (0,Rh_H22_4,0) RELATIVE H22_4_13
+
+COMPONENT H22_4_15 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_4, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_4 + gGap) RELATIVE H22_4_14
+ROTATED (0,Rh_H22_4,0) RELATIVE H22_4_14
+
+COMPONENT H22_4_Out = Al_window(
+ thickness = Al_thickness)
+AT (0,0,L_H22_4 + gGap) RELATIVE H22_4_15
+ROTATED (0.0,0.0,0.0) RELATIVE H22_4_15
+
+COMPONENT H22_5 = Arm()
+AT (0,0,0.03) RELATIVE H22_4_Out
+ROTATED (0.0,0.0,0.0) RELATIVE H22_4_Out
+
+COMPONENT H22_5_In = Al_window(
+ thickness = Al_thickness)
+AT (0,0,0) RELATIVE H22_5
+ROTATED (0.0,0.0,0.0) RELATIVE H22_5
+
+COMPONENT H22_5_1 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_5, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,Al_thickness + gGap) RELATIVE H22_5_In
+ROTATED (0,Rh_H22_5,0) RELATIVE H22_5_In
+
+COMPONENT H22_5_2 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_5, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_5 + gGap) RELATIVE H22_5_1
+ROTATED (0,Rh_H22_5,0) RELATIVE H22_5_1
+
+COMPONENT H22_5_3 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_5, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_5 + gGap) RELATIVE H22_5_2
+ROTATED (0,Rh_H22_5,0) RELATIVE H22_5_2
+
+COMPONENT H22_5_4 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_5, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_5 + gGap) RELATIVE H22_5_3
+ROTATED (0,Rh_H22_5,0) RELATIVE H22_5_3
+
+COMPONENT H22_5_5 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_5, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_5 + gGap) RELATIVE H22_5_4
+ROTATED (0,Rh_H22_5,0) RELATIVE H22_5_4
+
+COMPONENT H22_5_Out = Al_window(
+ thickness = Al_thickness)
+AT (0,0,L_H22_5 + gGap) RELATIVE H22_5_5
+ROTATED (0.0,0.0,0.0) RELATIVE H22_5_5
+
+COMPONENT H22_6 = Arm()
+AT (0,0,0.130) RELATIVE H22_5_Out
+ROTATED (0.0,0.0,0.0) RELATIVE H22_5_Out
+
+COMPONENT H22_6_In = Al_window(
+ thickness = Al_thickness)
+AT (0,0,0) RELATIVE H22_6
+ROTATED (0.0,0.0,0.0) RELATIVE H22_6
+
+COMPONENT H22_6_1 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,Al_thickness + gGap) RELATIVE H22_6_In
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_In
+
+COMPONENT H22_6_1_44 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1
+
+COMPONENT H22_6_1_45 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_44
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_44
+
+COMPONENT H22_6_1_46 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_45
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_45
+
+COMPONENT H22_6_1_47 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_46
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_46
+
+COMPONENT H22_6_1_48 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_47
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_47
+
+COMPONENT H22_6_1_49 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_48
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_48
+
+COMPONENT H22_6_1_50 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_49
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_49
+
+COMPONENT H22_6_1_51 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_50
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_50
+
+COMPONENT H22_6_1_52 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_51
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_51
+
+COMPONENT H22_6_1_53 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_52
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_52
+
+COMPONENT H22_6_1_54 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_53
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_53
+
+COMPONENT H22_6_1_55 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_54
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_54
+
+COMPONENT H22_6_1_56 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_55
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_55
+
+COMPONENT H22_6_1_57 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_56
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_56
+
+COMPONENT H22_6_1_58 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_57
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_57
+
+COMPONENT H22_6_1_59 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_58
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_58
+
+COMPONENT H22_6_1_60 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_59
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_59
+
+COMPONENT H22_6_1_61 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_60
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_60
+
+COMPONENT H22_6_1_62 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_61
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_61
+
+COMPONENT H22_6_1_63 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_62
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_62
+
+COMPONENT H22_6_1_64 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_63
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_63
+
+COMPONENT H22_6_1_65 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_64
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_64
+
+COMPONENT H22_6_1_66 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_65
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_65
+
+COMPONENT H22_6_1_67 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_66
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_66
+
+COMPONENT H22_6_1_68 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_67
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_67
+
+COMPONENT H22_6_1_69 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_68
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_68
+
+COMPONENT H22_6_1_70 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_69
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_69
+
+COMPONENT H22_6_1_71 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_70
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_70
+
+COMPONENT H22_6_1_72 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_71
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_71
+
+COMPONENT H22_6_1_73 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_72
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_72
+
+COMPONENT H22_6_1_74 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_73
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_73
+
+COMPONENT H22_6_1_75 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_74
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_74
+
+COMPONENT H22_6_1_76 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_75
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_75
+
+COMPONENT H22_6_1_77 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_76
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_76
+
+COMPONENT H22_6_1_78 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_77
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_77
+
+COMPONENT H22_6_1_79 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_78
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_78
+
+COMPONENT H22_6_1_80 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_79
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_79
+
+COMPONENT H22_6_1_81 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_80
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_80
+
+COMPONENT H22_6_1_82 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_81
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_81
+
+COMPONENT H22_6_1_83 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_82
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_82
+
+COMPONENT H22_6_1_84 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_83
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_83
+
+COMPONENT H22_6_1_85 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_84
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_84
+
+COMPONENT H22_6_1_86 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_85
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_85
+
+COMPONENT H22_6_1_87 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_86
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_86
+
+COMPONENT H22_6_1_88 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_87
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_87
+
+COMPONENT H22_6_1_89 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_88
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_88
+
+COMPONENT H22_6_1_90 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_89
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_89
+
+COMPONENT H22_6_1_91 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_90
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_90
+
+COMPONENT H22_6_1_92 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_91
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_91
+
+COMPONENT H22_6_1_93 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_92
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_92
+
+COMPONENT H22_6_1_94 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_93
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_93
+
+COMPONENT H22_6_1_95 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_94
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_94
+
+COMPONENT H22_6_1_96 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_95
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_95
+
+COMPONENT H22_6_1_97 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_96
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_96
+
+COMPONENT H22_6_1_98 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_97
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_97
+
+COMPONENT H22_6_1_99 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_98
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_98
+
+COMPONENT H22_6_1_100 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_99
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_99
+
+COMPONENT H22_6_1_101 = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ w2 = 0, h2 = 0,
+ l = L_H22_6, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW,
+ nslit = 1, d = 0.0005,
+ mleft = -1, mright = -1,
+ mtop = -1, mbottom = -1,
+ nhslit = 1, G = 0,
+ aleft = -1, aright = -1,
+ atop = -1, abottom = -1,
+ wavy = 0, wavy_z = 0,
+ wavy_tb = 0, wavy_lr = 0,
+ chamfers = 0, chamfers_z = 0,
+ chamfers_lr = 0, chamfers_tb = 0,
+ nelements = 1, nu = 0,
+ phase = 0, reflect = "NULL")
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_100
+ROTATED (0,Rh_H22_6,0) RELATIVE H22_6_1_100
+
+COMPONENT H22_6_Out = Al_window(
+ thickness = Al_thickness)
+AT (0,0,L_H22_6 + gGap) RELATIVE H22_6_1_101
+ROTATED (0.0,0.0,0.0) RELATIVE H22_6_1_101
+
+COMPONENT GuideOut = Arm()
+AT (0,0,0.01) RELATIVE H22_6_Out
+ROTATED (0.0,0.0,0.0) RELATIVE H22_6_Out
+
+COMPONENT GuideOut_xy = Monitor_nD(
+ user1 = "", user2 = "",
+ user3 = "", xwidth = 0.03,
+ yheight = 0.2, zdepth = 0,
+ xmin = 0, xmax = 0,
+ ymin = 0, ymax = 0,
+ zmin = 0, zmax = 0,
+ bins = 0, min = -1e40,
+ max = 1e40, restore_neutron = 1,
+ radius = 0, options = "x y, per cm2, slit",
+ filename = "NULL", geometry = "NULL",
+ nowritefile = 0, username1 = "NULL",
+ username2 = "NULL", username3 = "NULL")
+AT (0,0,0.01) RELATIVE GuideOut
+ROTATED (0.0,0.0,0.0) RELATIVE GuideOut
+
+COMPONENT GuideOut_dxdy = Monitor_nD(
+ user1 = "", user2 = "",
+ user3 = "", xwidth = 0.03,
+ yheight = 0.2, zdepth = 0,
+ xmin = 0, xmax = 0,
+ ymin = 0, ymax = 0,
+ zmin = 0, zmax = 0,
+ bins = 0, min = -1e40,
+ max = 1e40, restore_neutron = 1,
+ radius = 0, options = "dx dy, all auto, per cm2, slit",
+ filename = "NULL", geometry = "NULL",
+ nowritefile = 0, username1 = "NULL",
+ username2 = "NULL", username3 = "NULL")
+AT (0,0,0) RELATIVE GuideOut_xy
+ROTATED (0.0,0.0,0.0) RELATIVE GuideOut_xy
+
+COMPONENT GuideOut_Phic = Monitor_nD(
+ user1 = "", user2 = "",
+ user3 = "", xwidth = 0.03,
+ yheight = 0.2, zdepth = 0,
+ xmin = 0, xmax = 0,
+ ymin = 0, ymax = 0,
+ zmin = 0, zmax = 0,
+ bins = 0, min = -1e40,
+ max = 1e40, restore_neutron = 1,
+ radius = 0, options = "per cm2, capture, slit",
+ filename = "NULL", geometry = "NULL",
+ nowritefile = 0, username1 = "NULL",
+ username2 = "NULL", username3 = "NULL")
+AT (0,0,0) RELATIVE GuideOut_dxdy
+ROTATED (0.0,0.0,0.0) RELATIVE GuideOut_dxdy
+
+COMPONENT GuideOut_L = Monitor_nD(
+ user1 = "", user2 = "",
+ user3 = "", xwidth = 0.03,
+ yheight = 0.2, zdepth = 0,
+ xmin = 0, xmax = 0,
+ ymin = 0, ymax = 0,
+ zmin = 0, zmax = 0,
+ bins = 0, min = -1e40,
+ max = 1e40, restore_neutron = 1,
+ radius = 0, options = "lambda, limits=[1 21] bins=20, per cm2, slit",
+ filename = "NULL", geometry = "NULL",
+ nowritefile = 0, username1 = "NULL",
+ username2 = "NULL", username3 = "NULL")
+AT (0,0,0) RELATIVE GuideOut_Phic
+ROTATED (0.0,0.0,0.0) RELATIVE GuideOut_Phic
+
+COMPONENT Carter_guide = Guide_gravity(
+ w1 = 0.03, h1 = 0.2,
+ l = 9.585, R0 = gR0,
+ Qc = gQc, alpha = gAlpha,
+ m = m, W = gW)
+AT (0,0,0.5) RELATIVE GuideOut
+
+COMPONENT arm_SALSA_start = Arm()
+AT (0,0,10.085) RELATIVE PREVIOUS
+ROTATED (0,carrousel_rot,0) RELATIVE PREVIOUS
+
+COMPONENT Monochromator = Monochromator_flat(
+ zwidth = 0.209, yheight = 0.17,
+ Q = carrousel_scattering_vector)
+AT (0,0,0) RELATIVE arm_SALSA_start
+
+COMPONENT arm_after_monochromator = Arm()
+AT (0,0,0) RELATIVE arm_SALSA_start
+ROTATED (0,carrousel_rot,0) RELATIVE arm_SALSA_start
+
+COMPONENT Beam_entrance_monitor = PSD_monitor(
+ nx = 256, ny = 256,
+ filename = "beam_ent_mon", xwidth = 0.5,
+ yheight = 0.5, restore_neutron = 1)
+AT (0,0,1) RELATIVE arm_after_monochromator
+ROTATED (0,0,0) RELATIVE arm_after_monochromator
+
+COMPONENT primary_collimator_vertical = Collimator_radial(
+ xwidth = 0, yheight = primary_collimator_vertical_data[7*vertical_collimator],
+ length = primary_collimator_vertical_data[2 + 7*vertical_collimator], divergence = 12,
+ transmission = 1, theta_min = -primary_collimator_vertical_data[3 + 7*vertical_collimator],
+ theta_max = primary_collimator_vertical_data[3 + 7*vertical_collimator], nchan = 30,
+ radius = primary_collimator_vertical_data[4 + 7*vertical_collimator], roc = 0.19,
+ verbose = 1, focusing = 1,
+ yheight_inner = primary_collimator_vertical_data[1 + 7*vertical_collimator])
+AT (0,0,2.1) RELATIVE arm_after_monochromator
+ROTATED (0,180,90) RELATIVE arm_after_monochromator
+
+COMPONENT middle = Divergence_monitor(
+ nh = 256, nv = 256,
+ filename = "middle", xwidth = 0.12,
+ yheight = 0.12, maxdiv_h = 2.5,
+ maxdiv_v = 2.5, restore_neutron = 1)
+AT (0,0,1.505) RELATIVE arm_after_monochromator
+ROTATED (0,0,0) RELATIVE arm_after_monochromator
+
+COMPONENT middle2 = PSD_monitor(
+ nx = 256, ny = 256,
+ filename = "middle2", xwidth = 0.2,
+ yheight = 0.2, restore_neutron = 1)
+AT (0,0,1.505) RELATIVE arm_after_monochromator
+ROTATED (0,0,0) RELATIVE arm_after_monochromator
+
+COMPONENT primary_collimator_horizontal = Collimator_radial(
+ xwidth = 0, yheight = primary_collimator_horizontal_data[7*horizontal_collimator],
+ length = primary_collimator_horizontal_data[2 + 7*horizontal_collimator], divergence = 12,
+ transmission = 1, theta_min = -primary_collimator_horizontal_data[3 + 7*horizontal_collimator],
+ theta_max = primary_collimator_horizontal_data[3 + 7*horizontal_collimator], nchan = 30,
+ radius = primary_collimator_horizontal_data[4 + 7*horizontal_collimator], roc = 0,
+ verbose = 1, focusing = 1,
+ yheight_inner = primary_collimator_horizontal_data[1+7*horizontal_collimator])
+AT (0,0,2.1) RELATIVE arm_after_monochromator
+ROTATED (0,180,0) RELATIVE arm_after_monochromator
+
+COMPONENT monitor_after_collimator = Divergence_monitor(
+ nh = 256, nv = 256,
+ filename = "monitor_after_collimator", xwidth = 0.1,
+ yheight = 0.1, maxdiv_h = 2.5,
+ maxdiv_v = 2.5, restore_neutron = 1)
+AT (0,0,1.99) RELATIVE arm_after_monochromator
+ROTATED (0,0,0) RELATIVE arm_after_monochromator
+
+COMPONENT monitor_after_collimator2 = PSD_monitor(
+ nx = 256, ny = 256,
+ filename = "monitor_after_collimator2", xwidth = 0.1,
+ yheight = 0.1, restore_neutron = 1)
+AT (0,0,1.99) RELATIVE arm_after_monochromator
+ROTATED (0,0,0) RELATIVE arm_after_monochromator
+
+COMPONENT arm_sample_position = Arm()
+AT (0,0,2.1) RELATIVE arm_after_monochromator
+
+COMPONENT init = Union_init()
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Al_inc = Incoherent_process(
+ sigma = 0.0328, unit_cell_volume = 66.4)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Al_pow = Powder_process(
+ reflections = "Al.laz")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Al = Union_make_material(
+ process_string = "Al_inc,Al_pow", my_absorption = 1.39157)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Sample_inc = Incoherent_process(
+ sigma = 13.6704, unit_cell_volume = 1079.1)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Sample_pow = Powder_process(
+ reflections = "Na2Ca3Al2F14.laz")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Sample = Union_make_material(
+ process_string = "Sample_inc,Sample_pow", my_absorption = 1.09217)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT sample_geometry = Union_cylinder(
+ material_string = "Sample", priority = 100,
+ radius = 0.075, yheight = 0.1)
+AT (0,0,0) RELATIVE arm_sample_position
+
+COMPONENT sample_container = Union_cylinder(
+ material_string = "Al", priority = 99,
+ radius = 0.0765, yheight = 0.103)
+AT (0,0,0) RELATIVE sample_geometry
+
+COMPONENT sample_container_lid = Union_cylinder(
+ material_string = "Al", priority = 98,
+ radius = 0.013, yheight = 0.004)
+AT (0,0.051,0) RELATIVE sample_container
+
+COMPONENT logger_space_zx = Union_logger_2D_space(
+ D_direction_1 = "z", D1_min = -0.12,
+ D1_max = 0.12, n1 = 300,
+ D_direction_2 = "x", D2_min = -0.12,
+ D2_max = 0.12, n2 = 300,
+ filename = "logger_zx.dat")
+AT (0,0,0) RELATIVE sample_geometry
+
+COMPONENT logger_space_zy = Union_logger_2D_space(
+ D_direction_1 = "z", D1_min = -0.12,
+ D1_max = 0.12, n1 = 300,
+ D_direction_2 = "y", D2_min = -0.12,
+ D2_max = 0.12, n2 = 300,
+ filename = "logger_zy.dat")
+AT (0,0,0) RELATIVE sample_geometry
+
+COMPONENT Sample_environment = Union_master()
+AT (0,0,0) ABSOLUTE
+
+COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
+
+COMPONENT arm_collimator_out = Arm()
+AT (0,0,0) RELATIVE arm_sample_position
+ROTATED (0,-measuring_angle,0) RELATIVE arm_sample_position
+
+COMPONENT secondary_collimator = Collimator_radial(
+ xwidth = 0, yheight = secondary_collimator_data[7*outgoing_collimator],
+ length = secondary_collimator_data[2 + 7*outgoing_collimator], theta_min = -secondary_collimator_data[3 + 7*outgoing_collimator],
+ theta_max = secondary_collimator_data[3 + 7*outgoing_collimator], nchan = 50,
+ radius = secondary_collimator_data[4 + 7*outgoing_collimator], nslit = 10,
+ focusing = 0, yheight_inner = secondary_collimator_data[1 + 7*outgoing_collimator])
+AT (0,0,0) RELATIVE arm_collimator_out
+
+COMPONENT final_monitor = PSD_monitor(
+ nx = 256, ny = 256,
+ filename = "final_mon", xwidth = 0.12,
+ yheight = 0.12)
+AT (0,0,1.25) RELATIVE arm_collimator_out
+
+FINALLY 
+%{
+// Start of finally for generated SALSA
+%}
+
+END
