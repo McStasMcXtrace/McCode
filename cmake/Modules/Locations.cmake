@@ -44,6 +44,12 @@ function( configure_destination_dirs resultvarname )
   set(${resultvarname} "${provided_vars}" PARENT_SCOPE)
 endfunction()
 
+if ( MCCODE_USE_LEGACY_DESTINATIONS )
+  set ( MCCODE_LEGACY_PATHS 1 )
+else()
+  set ( MCCODE_LEGACY_PATHS 0 )
+endif()
+
 function( apply_destination_dirs dir_list )
   while( dir_list )
     list( POP_FRONT dir_list varname varval)

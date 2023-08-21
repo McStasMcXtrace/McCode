@@ -15,10 +15,9 @@ module-whatis   "loads the @FLAVOR@ environment"
 
 
 # Define prefix so PATH and MANPATH can be updated.
-setenv        @FLAVOR_UPPER@ @CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@
-setenv        @FLAVOR_UPPER@_TOOLS @CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/tools/Perl/
-prepend-path  PATH          @CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/bin
-prepend-path  MANPATH       @CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/doc/man
+setenv        @FLAVOR_UPPER@ @CMAKE_INSTALL_PREFIX@/@DEST_DATADIR_COMPS@
+prepend-path  PATH          @CMAKE_INSTALL_PREFIX@/@DEST_BINDIR@
+prepend-path  MANPATH       @CMAKE_INSTALL_PREFIX@/@DEST_DATADIR_DOC@/man
 
 # Define PYTHONPATH to pick up NCrystal if McStas
 if { "@FLAVOR@" == "mcstas"  } {

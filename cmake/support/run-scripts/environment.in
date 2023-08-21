@@ -1,21 +1,27 @@
 #!/usr/bin/env bash
 
-PREFIX="$0"
+if [[ @MCCODE_LEGACY_PATHS@ == 1 ]]; then
+  # Legacy McCode PATH setup 
+  PREFIX="$0"
 
-# Check if we are being called with a non-full path
-if [[ $PREFIX != "/"* ]]; then
-  PREFIX="$PWD/$PREFIX"
+  # Check if we are being called with a non-full path
+  if [[ $PREFIX != "/"* ]]; then
+    PREFIX="$PWD/$PREFIX"
+  fi
+
+  # Iterate down a (possible) chain of symlinks (macOS does not have readlink -f)
+  while [ -L "$PREFIX" ];
+  do
+    PREFIX=`readlink "$PREFIX"`
+  done
+  PREFIX=`dirname $PREFIX`
+  PREFIX=`dirname $PREFIX`
+  PREFIX=`dirname $PREFIX`
+else
+  PREFIX="@CMAKE_INSTALL_PREFIX@"
 fi
 
-# Iterate down a (possible) chain of symlinks (macOS does not have readlink -f)
-while [ -L "$PREFIX" ];
-do
-   PREFIX=`readlink "$PREFIX"`
-done
 
-PREFIX=`dirname $PREFIX`
-PREFIX=`dirname $PREFIX`
-PREFIX=`dirname $PREFIX`
 
 ARCH=`arch`
 UNAME=`uname -s`
@@ -28,9 +34,9 @@ fi
 
 export PATH=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/miniconda3/bin:$PATH
 
-export @FLAVOR_UPPER@=$PREFIX/@FLAVOR@/@MCCODE_VERSION@
-export @FLAVOR_UPPER@_TOOLS=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/tools/Perl/
-export PATH=$PREFIX/@FLAVOR@/@MCCODE_VERSION@/bin:$PATH
+export @FLAVOR_UPPER@=$PREFIX/@DEST_DATADIR_COMPS@
+
+export PATH=$PREFIX/@DEST_BINDIR@:$PATH
 # Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
 if [ -d "$@FLAVOR_UPPER@/miniconda3" ]; then
     source $@FLAVOR_UPPER@/miniconda3/bin/activate base
