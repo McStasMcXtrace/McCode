@@ -1,4 +1,4 @@
-cmake_policy(VERSION 3.16.0)
+include_guard()
 
 include(PlatformDefaults)
 
@@ -21,7 +21,6 @@ macro(installLib path)
   )
 endmacro()
 
-
 # Check whether we are being run through mkdist
 macro(isMkDist outvar)
   string(CONFIGURE "@MCCODE_NAME@" TMP @ONLY) # TMP is empty unless MCCODE_NAME is set already
@@ -34,7 +33,7 @@ macro(setupMCCODE FLAVOR)
 
   # Use .pl suffix on any platform
   set(PERL_SUFFIX "pl")
-  
+
   # Check for WINDOWS
   if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(WINDOWS true)
@@ -120,6 +119,10 @@ macro(setupMCCODE FLAVOR)
     set(MCCODE_TARNAME "${FLAVOR}")
   endif()
 
+  include(Locations)
+  # During migration set these as well:
+  set( bin "${DEST_BINDIR}" )
+  set( lib "${DEST_LIBDIR}" )
 
   # Set default installation paths
   foreach(name bin doc etc include lib man sbin share src)
@@ -134,16 +137,16 @@ macro(setupMCCODE FLAVOR)
     set(CPACK_NSIS_INSTALL_ROOT "C:\\\\${FLAVOR}-${MCCODE_VERSION}")
 
     set(CPACK_NSIS_UNINSTALL_NAME "${CMAKE_PROJECT_NAME}-uninstall")
-    
+
     # Set BIN and LIB paths
-    set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}${MCCODE_NAME}/${bin}/${FLAVOR}")
-    set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}${MCCODE_NAME}/${lib}")
+    set(MCCODE_BIN "${DEST_BINDIR}")
+    set(MCCODE_LIB "${DEST_LIBDIR}")
     # Replace '/' with '\'
     string(REPLACE "/" "\\\\" MCCODE_BIN "${MCCODE_BIN}")
     string(REPLACE "/" "\\\\" MCCODE_LIB "${MCCODE_LIB}")
   else()
-    set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}/${bin}/${MCCODE_NAME}")
-    set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}")
+    set(MCCODE_BIN "${DEST_BINDIR}")
+    set(MCCODE_LIB "${DEST_LIBDIR}")
   endif()
 
   # Helper for adding leading "."
@@ -213,7 +216,7 @@ macro(setupMCCODE FLAVOR)
       ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/libs
       ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/share
       )
-    
+
     # Add "-VERSION" to all program files (executables)
     set(PROGRAM_SUFFIX "-${MCCODE_VERSION}")
 
@@ -225,7 +228,7 @@ macro(setupMCCODE FLAVOR)
     # Define dependencies for gcc and the like
     set(CPACK_DEBIAN_PACKAGE_DEPENDS "build-essential, libopenmpi-dev")
     set(CPACK_RPM_PACKAGE_REQUIRES "gcc, openmpi-devel")
-    
+
     # Generate postinst and postrm scripts
     configure_file(
       cmake/support/install-scripts/postinst.in
@@ -241,7 +244,7 @@ macro(setupMCCODE FLAVOR)
       cmake/support/run-scripts/mccode_errmsg.in
       "work/support/${FLAVOR}_errmsg"
       @ONLY)
-    
+
     # Set architecture
     if(ARCH EQUAL "amd64")
       set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
@@ -256,3 +259,37 @@ macro(setupMCCODE FLAVOR)
 
   endif()
 endmacro()
+
+# Helper function which can look for input files. Apparently "file(GLOB ...)" is
+# frowned upon by some people. However, the only provided alternative (hardcode
+# all your filenames) is rather unappealing. We glob for files, but apply the
+# CONFIGURE_DEPENDS keyword.
+
+function( file_globsrc output_var )
+  set(res "")
+  foreach( pattern ${ARGN} )
+    if ( NOT IS_ABSOLUTE "${pattern}")
+      set(pattern "${PROJECT_SOURCE_DIR}/${pattern}")
+    endif()
+    file(GLOB tmp LIST_DIRECTORIES OFF CONFIGURE_DEPENDS "${pattern}" )
+    #TODO: actually test the below
+    foreach( f ${tmp} )
+      if ( "${f}" MATCHES "~" )
+        continue()
+      endif()
+      if ( "${f}" MATCHES "\\.in$" )
+        continue()
+      endif()
+      if ( "${f}" MATCHES "#" )
+        continue()
+      endif()
+      if ( "${f}" MATCHES "^\\." )
+        continue()
+      endif()
+      #    PATTERN "Makefile*" EXCLUDE  # skip makefiles
+      #    PATTERN "*.out"     EXCLUDE  # skip binary files
+      list( APPEND res "${f}" )
+    endforeach()
+  endforeach()
+  set(${output_var} "${res}" PARENT_SCOPE)
+endfunction()
