@@ -4,11 +4,7 @@ include(PlatformDefaults)
 
 # Install library files into lib/${FLAVOR}, while skipping unneeded files
 macro(installLib path)
-  if(WINDOWS)
-    set(dest "${lib}")
-  else()
-    set(dest "${FLAVOR}/${MCCODE_VERSION}")
-  endif()
+  set(dest "${DEST_TOOLDIR}")
 
   install (
     DIRECTORY "${path}"
@@ -143,11 +139,13 @@ macro(setupMCCODE FLAVOR)
     set(MCCODE_LIB "${DEST_LIBDIR}")
     # Replace '/' with '\'
     string(REPLACE "/" "\\\\" MCCODE_BIN "${MCCODE_BIN}")
-    string(REPLACE "/" "\\\\" MCCODE_LIB "${MCCODE_LIB}")
+    string(REPLACE "/" "\\\\" MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${DEST_DATADIR_COMPS}")
   else()
     set(MCCODE_BIN "${DEST_BINDIR}")
-    set(MCCODE_LIB "${DEST_LIBDIR}")
+    set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${DEST_DATADIR_COMPS}")
   endif()
+
+  #FIXME: ^^ Perhaps we should use something other than MCCODE_LIB for this path
 
   # Helper for adding leading "."
   macro(addDot name val)
@@ -207,14 +205,10 @@ macro(setupMCCODE FLAVOR)
       ${CMAKE_INSTALL_PREFIX}
       ${CMAKE_INSTALL_PREFIX}/${FLAVOR}
       ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/bin
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/tools
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/tools/Python
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/tools/Python/mcplot
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/tools/Python/mcdisplay
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/launchers
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/libs
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/share
+      ${DEST_BINDIR}
+      ${DEST_TOOLDIR}
+      ${DEST_DATADIR_LIBDIR}
+      ${DEST_DATADIR_CODEFILES}
       )
 
     # Add "-VERSION" to all program files (executables)
@@ -224,7 +218,7 @@ macro(setupMCCODE FLAVOR)
     set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/postinst;work/support/postrm")
     set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postinst;")
     set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postrm;")
-
+    
     # Define dependencies for gcc and the like
     set(CPACK_DEBIAN_PACKAGE_DEPENDS "build-essential, libopenmpi-dev")
     set(CPACK_RPM_PACKAGE_REQUIRES "gcc, openmpi-devel")
