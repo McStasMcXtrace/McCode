@@ -1936,7 +1936,7 @@ Symtab read_components = NULL;
 /* name of executable, e.g. mcstas or mcxtrace */
 char *executable_name=NULL;
 
-/* Print a summary of the command usage and exit with error. */
+/* Print a summary of the command usage. */
 static void
 print_usage(void)
 {
@@ -1968,6 +1968,13 @@ print_usage(void)
   fprintf(stderr, "  Use 'gui' to run the " MCCODE_NAME " GUI.\n");
   fprintf(stderr, "SEE ALSO: mcrun, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui, mcformat, mcdoc\n");
   fprintf(stderr, "DOC:      Please visit <" MCCODE_BUGREPORT ">\n");
+}
+
+/* Print a summary of the command usage and exit with error. */
+static void
+print_usage_error(void)
+{
+  print_usage();
   exit(1);
 }
 
@@ -2064,6 +2071,10 @@ parse_command_line(int argc, char *argv[])
       print_version();
     else if(!strcmp("--version", argv[i]))
       print_version();
+    else if(!strcmp("-h", argv[i]))
+      { print_usage(); exit(0); }
+    else if(!strcmp("--help", argv[i]))
+      { print_usage(); exit(0); }
     else if(!strcmp("--verbose", argv[i]))
       verbose = 1;
     else if(!strcmp("--source", argv[i]))
@@ -2075,16 +2086,16 @@ parse_command_line(int argc, char *argv[])
     else if(argv[i][0] != '-')
     {
       if(instr_current_filename != NULL)
-        print_usage();    /* Multiple instruments given. */
+        print_usage_error();    /* Multiple instruments given. */
       instr_current_filename = str_dup(argv[i]);
     }
     else
-      print_usage();
+      print_usage_error();
   }
 
   /* Instrument filename must be given. */
   if(instr_current_filename == NULL)
-    print_usage();
+    print_usage_error();
   /* If no '-o' option was given for INSTR.instr, default to INSTR.c  */
   if(output_filename == NULL)
     output_filename = make_output_filename(instr_current_filename);
