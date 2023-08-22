@@ -32,7 +32,7 @@ setupMCCODE("${FLAVOR}")
 # Select prefix
 set(P "${MCCODE_PREFIX}")
 
-set(TOOLS_NAME "tools/Python/${P}run/")
+set(TOOLS_NAME "Python/${P}run/")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}run-${MCCODE_VERSION}")
@@ -72,78 +72,55 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-# Program files
-if(WINDOWS)
-  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
-else()
-  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
-endif()
-
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcrun.in" "${WORK}/${P}run" @ONLY)
 
-if(WINDOWS)
-  install(
-    FILES "${PROJECT_SOURCE_DIR}/mcrun.py"
-    DESTINATION "${lib}/${TOOLS_NAME}"
-    RENAME "${P}run.py"
-    PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
+# Main script, including rename mcrun/mxrun
+install(
+  FILES "${PROJECT_SOURCE_DIR}/mcrun.py"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+  RENAME "${P}run.py"
+  PERMISSIONS
+  OWNER_READ OWNER_WRITE OWNER_EXECUTE
+  GROUP_READ GROUP_EXECUTE
+  WORLD_READ WORLD_EXECUTE
   )
 
-  foreach(NAME "__init__.py" "log.py" "mccode.py" "optimisation.py")
-    install(
-      FILES "${PROJECT_SOURCE_DIR}/${NAME}"
-      DESTINATION "${lib}/${TOOLS_NAME}"
-      )
-  endforeach()
-endif()
+# Other .py infrastructure
+foreach(NAME "__init__.py" "log.py" "mccode.py" "optimisation.py")
+  install(
+    FILES "${PROJECT_SOURCE_DIR}/${NAME}"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+    )
+endforeach()
 
+# Wrapper-scripts on windows are handled via
+# cmake Modules/MCUtil
 if(NOT WINDOWS)
-  foreach(NAME "__init__.py" "log.py" "mccode.py" "optimisation.py")
-    install(
-      FILES "${PROJECT_SOURCE_DIR}/${NAME}"
-      DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
-      )
-  endforeach()
-  
   add_custom_target(
     "CREATE_${PROJECT_NAME}_SYMLINK" ALL DEPENDS "${WORK}/${P}run"
     )
 
   install(
     FILES "${WORK}/${P}run"
-    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE
   )
-  install(
-    FILES "${PROJECT_SOURCE_DIR}/mcrun.py"
-    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
-    RENAME "${P}run.py"
-    PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
-  )
-
-  
   install(
     PROGRAMS "${WORK}/${P}run"
-    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+    DESTINATION ${DEST_BINDIR}
     )
 
   install(
     PROGRAMS "${PROJECT_SOURCE_DIR}/mcsplit.py"
-    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+    DESTINATION ${DEST_BINDIR}
     )
 
   install(
     PROGRAMS "${PROJECT_SOURCE_DIR}/acc_gpu_bind"
-    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+    DESTINATION ${DEST_BINDIR}
     )
 endif()
