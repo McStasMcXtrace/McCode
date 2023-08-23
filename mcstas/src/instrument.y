@@ -1956,6 +1956,7 @@ print_usage(void)
   fprintf(stderr, "  The instrument description file will be processed and translated into a C code program.\n");
   fprintf(stderr, "  If run-time libraries are not embedded, you will have to pre-compile\n");
   fprintf(stderr, "    them (.c -> .o) before assembling the program.\n");
+  /* fixme: should use get_sys_dir here? And update the text? */
   fprintf(stderr, "  The default component search list is usually defined by the environment\n");
   fprintf(stderr, "    variable '" MCCODE_LIBENV "' %s (default is "
   #if MCCODE_PROJECT == 1

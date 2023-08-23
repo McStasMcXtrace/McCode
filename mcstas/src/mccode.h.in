@@ -67,6 +67,9 @@
 #define MCCODE_YEAR "@MCCODE_YEAR@"
 #endif
 
+/* Stringification of defines - use mccode_xstr: */
+#define mccode_str(s) #s
+#define mccode_xstr(s) mccode_str(s)
 
 /*******************************************************************************
 * Functions defined in memory.c

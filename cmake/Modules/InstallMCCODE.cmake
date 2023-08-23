@@ -305,6 +305,12 @@ macro(installMCCODE)
     work/src/py-instrument.tab.c
   )
 
+  if ( CMAKE_INSTALL_PREFIX AND NOT "x${CMAKE_INSTALL_PREFIX}" STREQUAL "x/" )
+    get_filename_component( tmp "${CMAKE_INSTALL_PREFIX}/${DEST_RESOURCEDIR}" REALPATH )
+    target_compile_definitions(${FLAVOR}-pygen PRIVATE "MCCODE_RESOURCEDIR_HARDCODED=${tmp}")
+    target_compile_definitions(${FLAVOR} PRIVATE "MCCODE_RESOURCEDIR_HARDCODED=${tmp}")
+  endif()
+
   ## Add install targets
   include(MCUtil)
   set(WORK "${PROJECT_BINARY_DIR}/work")
