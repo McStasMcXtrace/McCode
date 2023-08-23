@@ -3,6 +3,7 @@ Intermediary layer for setting up a --trace pipe and interpreting the results.
 '''
 import os
 import re
+from pathlib import Path
 
 from .pipetools import McrunPipeMan
 from .instrparser import InstrTraceParser, InstrObjectConstructor
@@ -20,8 +21,10 @@ class McDisplayReader(object):
             exit()
         
         # assemble command
-        cmd = f"{mccode_config.configuration['MCRUN']} {instr} --no-output-files --trace --ncount={300 if n is None else n}"
+        mcruncmd = str(Path(mccode_config.directories['bindir'],mccode_config.configuration['MCRUN']))
         
+        cmd = f"{mcruncmd} {instr} --no-output-files --trace --ncount={300 if n is None else n}"
+
         if dir:
             cmd = cmd + ' --dir=' + dir
         if options is not None:
