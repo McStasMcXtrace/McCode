@@ -109,7 +109,7 @@ macro(setupMCCODE FLAVOR)
   else()
     ## Set Git-specific version
     set(MCCODE_VERSION "3.9999-git")
-    set(MCCODE_NAME "${MCCODE_NAME}")
+    set(MCCODE_NAME "${FLAVOR}")
     set(MCCODE_DATE "git")
     set(MCCODE_STRING "${NAME} ${MCCODE_VERSION}, ${MCCODE_DATE}")
     set(MCCODE_TARNAME "${FLAVOR}")
