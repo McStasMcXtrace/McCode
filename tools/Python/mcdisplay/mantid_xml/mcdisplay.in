@@ -1,34 +1,33 @@
 #!/usr/bin/env bash
 # Wrapper script for @P@display-mantid-py
 
-# First ensure that we follow symlink if needed
-LINK=`readlink $0`
+@MCCODE_BASH_STANDARD_PREAMBLE@
 
-# Am I a symlink?
-if [ "x$LINK" != "x" ]; then
-    LIB=`dirname $LINK`
-else
-    LIB=`dirname $0`
-fi
-ARCH=`arch`
-UNAME=`uname -s`
+TOOL="@P@display-mantid"
+UTILDIR="${MCCODE_TOOLDIR}/Python/mcdisplay/mantid_xml"
 
 
-if [ -d "$LIB/../miniconda3" ]; then
-    source $LIB/../miniconda3/bin/activate base
+#NB: miniconda should be installed next to the tool folder:
+if [ -d "${MCCODE_TOOLDIR}/../miniconda3" ]; then
+    source "${MCCODE_TOOLDIR}/../miniconda3/bin/activate" base
 fi
 
-LIB="$LIB/../tools/Python/@P@display/mantid_xml"
-TOOL="@P@display"
-VERS="@MCCODE_VERSION@"
+# FIXME: NCrystal should be used via own package/infrastructure
+if [ [ @NCRYSTAL_LEGACY_USE@ == 1 ] && -d "${MCCODE_TOOLDIR}/../share/NCrystal/python" ]; then
+    export PYTHONPATH="${MCCODE_TOOLDIR}/../share/NCrystal/python:$PYTHONPATH"
+fi
+
+#VERS="@MCCODE_VERSION@"
 
 
 canrun() {
-    if ! [ -x ${LIB}/${TOOL}.py ]; then
+    echo $UTILDIR
+    
+    if ! [ -x ${UTILDIR}/mcdisplay.py ]; then
         exit 127;
     fi
 
-    modules="yaml"
+    modules="ply"
     cmd=""
     for name in ${modules}; do
         cmd="${cmd}import ${name}; "
@@ -37,7 +36,7 @@ canrun() {
 }
 
 if ( canrun ); then
-    python3 ${LIB}/${TOOL}.py $*
+    python3 -u ${UTILDIR}/mcdisplay.py $*
 else
     @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
 fi
