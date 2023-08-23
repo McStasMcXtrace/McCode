@@ -37,7 +37,7 @@ set(TOOLS_NAME "Python/${P}run/")
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}run-${MCCODE_VERSION}")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
-set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
+set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
 set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
