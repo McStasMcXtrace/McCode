@@ -75,3 +75,36 @@ file(RELATIVE_PATH MCCODE_RELPATH_BINDIR2TOOLDIR      "${PROJECT_BINARY_DIR}/${D
 file(RELATIVE_PATH MCCODE_RELPATH_TOOLDIR2BINDIR      "${PROJECT_BINARY_DIR}/${DEST_TOOLDIR}" "${PROJECT_BINARY_DIR}/${DEST_BINDIR}" )
 file(RELATIVE_PATH MCCODE_RELPATH_TOOLDIR2LIBDIR      "${PROJECT_BINARY_DIR}/${DEST_TOOLDIR}" "${PROJECT_BINARY_DIR}/${DEST_LIBDIR}" )
 file(RELATIVE_PATH MCCODE_RELPATH_TOOLDIR2RESOURCEDIR "${PROJECT_BINARY_DIR}/${DEST_TOOLDIR}" "${PROJECT_BINARY_DIR}/${DEST_RESOURCEDIR}" )
+
+#Standard preamble for bash .in scripts (expanded from @MCCODE_BASH_STANDARD_PREAMBLE@):
+include( Locations )
+function( setup_standard_bash_preamble )
+  set( lines
+    "############################################"
+    "# Start of standard CMake-generated preamble"
+    "MCCODE_BINDIR=\"\$( cd -P \"\$( dirname \"\${BASH_SOURCE[0]}\" )\" && pwd )\""
+    "MCCODE_TOOLDIR=\"\${MCCODE_BINDIR}/${MCCODE_RELPATH_BINDIR2TOOLDIR}\""
+    "MCCODE_LIBDIR=\"\${MCCODE_BINDIR}/${MCCODE_RELPATH_BINDIR2LIBDIR}\""
+    "MCCODE_RESOURCEDIR=\"\${MCCODE_BINDIR}/${MCCODE_RELPATH_BINDIR2RESOURCEDIR}\""
+    "if [ -d \"\${MCCODE_TOOLDIR}\" ]; then"
+    "    MCCODE_TOOLDIR=\"\$( cd -P \"\${MCCODE_TOOLDIR}\" && pwd )\""
+    "else"
+    "    MCCODE_TOOLDIR=\"\""
+    "fi"
+    "if [ -d \"\${MCCODE_LIBDIR}\" ]; then"
+    "    MCCODE_LIBDIR=\"\$( cd -P \"\${MCCODE_LIBDIR}\" && pwd )\""
+    "else"
+    "    MCCODE_LIBDIR=\"\""
+    "fi"
+    "if [ -d \"\${MCCODE_RESOURCEDIR}\" ]; then"
+    "    MCCODE_RESOURCEDIR=\"\$( cd -P \"\${MCCODE_RESOURCEDIR}\" && pwd )\""
+    "else"
+    "    MCCODE_RESOURCEDIR=\"\""
+    "fi"
+    "# End of standard preamble"
+    "############################################"
+    )
+  string( JOIN "\n" tmp ${lines} )
+  set( MCCODE_BASH_STANDARD_PREAMBLE "${tmp}" PARENT_SCOPE )
+endfunction()
+setup_standard_bash_preamble()

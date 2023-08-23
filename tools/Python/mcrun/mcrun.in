@@ -1,52 +1,30 @@
 #!/usr/bin/env bash
 # Wrapper script for @P@run-py
 
+@MCCODE_BASH_STANDARD_PREAMBLE@
+
 TOOL="@P@run"
-
-BINDIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-TOOLDIR="${BINDIR}/@MCCODE_RELPATH_BINDIR2TOOLDIR@"
-LIBDIR="${BINDIR}/@MCCODE_RELPATH_BINDIR2LIBDIR@"
-RESOURCEDIR="${BINDIR}/@MCCODE_RELPATH_BINDIR2RESOURCEDIR@"
-
-if [ -d "${TOOLDIR}" ]; then
-    TOOLDIR="$( cd -P "${TOOLDIR}" && pwd )"
-else
-    TOOLDIR=""
-fi
-if [ -d "${LIBDIR}" ]; then
-    LIBDIR="$( cd -P "${LIBDIR}" && pwd )"
-else
-    LIBDIR=""
-fi
-if [ -d "${RESOURCEDIR}" ]; then
-    RESOURCEDIR="$( cd -P "${RESOURCEDIR}" && pwd )"
-else
-    RESOURCEDIR=""
-fi
-
-UTILDIR="${TOOLDIR}/Python/$TOOL"
+UTILDIR="${MCCODE_TOOLDIR}/Python/$TOOL"
 
 # Check if we are in / - in that case cd to $HOME
-PW==`pwd`
 if [[ ${PWD} = / ]]; then
     cd $HOME
 fi
 
 #NB: miniconda should be installed next to the tool folder:
-if [ -d "${TOOLDIR}/../miniconda3" ]; then
-    source "${TOOLDIR}/../miniconda3/bin/activate" base
+if [ -d "${MCCODE_TOOLDIR}/../miniconda3" ]; then
+    source "${MCCODE_TOOLDIR}/../miniconda3/bin/activate" base
 fi
 
 # FIXME: NCrystal should be used via own package/infrastructure
-if [ [ @NCRYSTAL_LEGACY_USE@ == 1 ] && -d "${TOOLDIR}/../share/NCrystal/python" ]; then
-    export PYTHONPATH="${TOOLDIR}/../share/NCrystal/python:$PYTHONPATH"
+if [ [ @NCRYSTAL_LEGACY_USE@ == 1 ] && -d "${MCCODE_TOOLDIR}/../share/NCrystal/python" ]; then
+    export PYTHONPATH="${MCCODE_TOOLDIR}/../share/NCrystal/python:$PYTHONPATH"
 fi
 
 ARCH=`arch`
 UNAME=`uname -s`
 
-VERS="@MCCODE_VERSION@"
+#VERS="@MCCODE_VERSION@"
 
 
 canrun() {
