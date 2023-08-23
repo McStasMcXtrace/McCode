@@ -29,18 +29,6 @@
     "EXESUFFIX": "@MCCODE_EXECUTABLE_SUFFIX@"
   },
   "directories": {
-      "bindir": "@DEST_BINDIR@",
-      "libdir": "@DEST_LIBDIR@",
-      "datadir_info": "@DEST_DATADIR_INFO@",
-      "datadir_editors": "@DEST_DATADIR_EDITORS@",
-      "datadir_doc": "@DEST_DATADIR_DOC@",
-      "datadir_topenvfiles": "@DEST_DATADIR_TOPENVFILES@",
-      "datadir_datafiles": "@DEST_DATADIR_DATAFILES@",
-      "datadir_codefiles": "@DEST_DATADIR_CODEFILES@",
-      "datadir_comps": "@DEST_DATADIR_COMPS@",
-      "datadir_examples": "@DEST_DATADIR_EXAMPLES@",
-      "tooldir": "@DEST_TOOLDIR@",
-      "install_prefix": "@CMAKE_INSTALL_PREFIX@"
   }
 }
 
