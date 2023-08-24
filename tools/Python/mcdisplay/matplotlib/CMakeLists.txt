@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.17.0)
 cmake_policy(VERSION 3.17.0)
 
-# This will install McStas components
-project(python-tools-mcdisplay C)
+# This will install McStas or McXtrace mc/mxdisplay-matplotlib
+project(python-tools-mcplot-pyqtgraph C)
+
+message(STATUS "Configure ${CMAKE_PROJECT_NAME} ${FLAVOR} ${PROJECT_NAME}")
 
 # Choose between McStas or McXtrace
 option(BUILD_MCSTAS   "Choose the McStas flavor" off)
@@ -31,19 +33,7 @@ setupMCCODE("${FLAVOR}")
 # Select prefix
 set(P "${MCCODE_PREFIX}")
 
-set(TOOLS_NAME "tools/Python/${P}display/matplotlib")
-
-# Windows needs special handling of this path...
-if(WINDOWS)
-  set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
-else()
-  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
-endif()
-
-
-# Set some extra options for mccode_config
-set(CC "${CMAKE_C_COMPILER}")
-set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
+set(TOOLS_NAME "Python/${P}display/matplotlib")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-matplotlib-${MCCODE_VERSION}")
@@ -74,61 +64,37 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display" @ONLY)
 
-# Configure internal naming and how we call mcrun/mxrun across systems
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.py" "${WORK}/${P}display.py" @ONLY)
-
-if(WINDOWS)
-  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py")
-else()
-  set(BINS "${PROJECT_SOURCE_DIR}/${P}display.py" "${WORK}/${P}display")
-endif()
-
-# Program files
-if(WINDOWS)
-  # Python files
-  foreach(name util.py)
-    install(
-      FILES "${PROJECT_SOURCE_DIR}/${name}"
-      DESTINATION "${lib}/${TOOLS_NAME}"
-      )
-  endforeach()
-
-  install(
-    FILES ${BINS}
-    DESTINATION "${lib}/${TOOLS_NAME}"
-    PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
+# Main script, including rename mc/mxplot
+install(
+  PROGRAMS "${PROJECT_SOURCE_DIR}/mcdisplay.py"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+  RENAME "${P}display.py"
   )
-endif()
 
+# Other .py infrastructure
+foreach(NAME util.py)
+  install(
+    FILES "${PROJECT_SOURCE_DIR}/${NAME}"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+    )
+endforeach()
 
+# Wrapper-scripts on windows are handled via
+# cmake Modules/MCUtil
 if(NOT WINDOWS)
-  # Python files
-  foreach(name util.py)
-    install(
-      FILES "${PROJECT_SOURCE_DIR}/${name}"
-      DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
-      )
-  endforeach()
 
   install(
-    FILES ${BINS}
-    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
-    PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
+    PROGRAMS ${PROJECT_SOURCE_DIR}/mcdisplay.py
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+    RENAME "${P}display.py"
   )
 
   install(
     PROGRAMS "${WORK}/${P}display"
-    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}display-matplotlib${DOT_PYTHON_SUFFIX}"
+    DESTINATION ${DEST_BINDIR}
+    RENAME "${P}display-matplotlib"
     )
 endif()
