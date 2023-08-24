@@ -77,13 +77,8 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcrun.in" "${WORK}/${P}run" @ONLY)
 
 # Main script, including rename mcrun/mxrun
 install(
-  FILES "${PROJECT_SOURCE_DIR}/mcrun.py"
+  PROGRAMS "${PROJECT_SOURCE_DIR}/mcrun.py"
   DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
-  RENAME "${P}run.py"
-  PERMISSIONS
-  OWNER_READ OWNER_WRITE OWNER_EXECUTE
-  GROUP_READ GROUP_EXECUTE
-  WORLD_READ WORLD_EXECUTE
   )
 
 # Other .py infrastructure
