@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.17.0)
 cmake_policy(VERSION 3.17.0)
 
 # This will install McStas or McXtrace mc/display-pyqtgraph
-project(python-tools-mcplot-pyqtgraph C)
+project(python-tools-mcdisplay-pyqtgraph C)
 
 message(STATUS "Configure ${CMAKE_PROJECT_NAME} ${FLAVOR} ${PROJECT_NAME}")
 
@@ -94,7 +94,7 @@ endforeach()
 # cmake Modules/MCUtil
 if(NOT WINDOWS)
   install(
-    PROGRAMS ${PROJECT_SOURCE_DIR}/${P}display.py
+    PROGRAMS ${PROJECT_SOURCE_DIR}/mcdisplay.py
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
     RENAME "${P}display.py"
   )
