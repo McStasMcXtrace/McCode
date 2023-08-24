@@ -14,13 +14,18 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Mo
 option( BUILD_MCSTAS "Build McStas" OFF )
 option( BUILD_MCXTRACE "Build McXtrace" OFF )
 option( BUILD_TOOLS "Include tools" ON )
+option( BUILD_MCXRUN "Include mcrun/mxrun even if BUILD_TOOLS is OFF" )#fixme: replace with more fine-grained control
 option( ENABLE_COMPONENTS "Whether or not to include comps and instruments" ON )
+option( EXCLUDE_CONTRIB "Whether or not to exclude contrib comps" OFF )#fixme: replace with more fine-grained control
 
 if (${BUILD_MCSTAS} AND ${BUILD_MCXTRACE})
     message(WARNING "Configuration requests building both McStas and McXtrace which is likely to fail.")
 elseif(NOT (${BUILD_MCSTAS} OR ${BUILD_MCXTRACE}))
     message(FATAL_ERROR "Configuration requires building one of McStas or McXtrace via -DBUILD_MCXTRACE=ON or -DBUILD_MCSTAS=ON")
 endif()
+
+
+
 
 # Setup McCode values (from mkdist or defaults)
 include(MCUtil)
@@ -32,9 +37,6 @@ if(${BUILD_MCSTAS})
     if ( ENABLE_COMPONENTS )
       add_subdirectory(mcstas-comps)
     endif()
-    if ( BUILD_TOOLS )
-      add_subdirectory(tools)
-    endif()
 endif()
 
 if (${BUILD_MCXTRACE})
@@ -44,9 +46,13 @@ if (${BUILD_MCXTRACE})
     if ( ENABLE_COMPONENTS )
       add_subdirectory(mcxtrace-comps)
     endif()
-    if ( BUILD_TOOLS )
-      add_subdirectory(tools)
-    endif()
+endif()
+
+if ( BUILD_TOOLS )
+  add_subdirectory( tools )
+elseif ( BUILD_MCXRUN )
+  add_subdirectory( tools/Python/mcrun )
+  add_subdirectory( tools/Python/mccodelib)
 endif()
 
 # Find/Fetch dependencies:
