@@ -3,7 +3,7 @@
 #NB get sha256 with: curl -sL <URL> | openssl sha256
 
 package:
-  name: mcstas-core
+  name: mcstas
 #  version: {{ version }}
   version: 3.9999
 
@@ -15,27 +15,95 @@ source:
 
 build:
   number: 0
+  noarch: generic
   skip: true  # [win]
-#  skip: true  # [py<36]
 
 requirements:
   build:
-    - cmake
-    - make  # [not win]
-    - {{ compiler('c') }}
-  host:
-    #NB: host should not be empty:
     - bash
   run:
-    - python
-    - {{ compiler('c') }}
-    - bash
-    - pyaml # for mcrun
-    - ply # for traces fra mcrun
+    - mcstas-core
+    - mcstas-data
+    - mcstas-mcgui
+    - mcstas-vis
+    - ncrystal # [unix]
+    - mcpl     # [unix]
+#  noarch: generic
+#  script: echo "No actual build for mcstas package itself" # [not win]
+
+outputs:
+  - name: mcstas-core
+    script: install-files-core.sh
+    requirements:
+      build:
+        - cmake
+        - make  # [not win]
+        - {{ compiler('c') }}
+        - bash
+      run:
+        - python
+        - {{ compiler('c') }}
+        - bash
+        - pyaml # for mcrun
+        - ply # for traces from mcrun
+
+  - name: mcstas-data
+    noarch: generic
+    build:
+      script:
+        - mkdir -p "${PREFIX}/share/mcstas/resources"
+        - cp -rp ./src/mcstas-comps/data "${PREFIX}/share/mcstas/resources/data"
+
+  - name: mcstas-mcgui
+    noarch: generic
+    requirements:
+      run:
+        - mcstas-core
+        - pyqt
+        - qscintilla2
+
+  - name: mcstas-vis
+    noarch: generic
+    requirements:
+      run:
+        - mcstas-core
+        - matplotlib
+        - numpy
+        - tornado
+        - scipy
+        - pillow
+        - pyqtgraph
+        - pyqt
+
+  - name: mcstas-mpi
+    noarch: generic
+    requirements:
+      run:
+        - mcstas-core
+       #NB: https://conda-forge.org/docs/maintainer/knowledge_base.html#noarch-builds
+        - __win   # [win]
+        - __unix  # [unix]
+        - openmpi # [unix]
+
+  - name: mcstas-all
+    noarch: generic
+    requirements:
+      run:
+        - mcstas-core
+        - mcstas-data
+        - mcstas-gui
+        - mcstas-vis
+        - mcstas-mpi
+        - gsl
+        - nomkl
+        - nexusformat
+        - nexpy
+        - hdf5
+#        - cadquery
 
 test:
+#FIXME:
 #  requires:
-#    - ncrystal
 #    - mcpl
 #  imports:
 #    - mcstas.cfg #does not exist yet
@@ -45,6 +113,7 @@ test:
     #Taking BNL_H8.instr from src rather than
     #$CONDA_PREFIX/share/mcstas/examples, since we might want to not install
     #examples along with mcstas/mcrun.
+    #FIXME: this is for mcstas-core specific test?
     - src/mcstas-comps/examples/BNL_H8.instr
   commands:
     - test -f "${PREFIX}/bin/mcstas"
@@ -65,3 +134,10 @@ extra:
   recipe-maintainers:
     - willend
     - tkittel
+
+
+#NB other deps: openmpi gsl matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5
+
+#mcstas
+#mcstas openmpi
+#mcstas-mpi
