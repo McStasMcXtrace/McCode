@@ -99,7 +99,7 @@ def lookup(cm, x):
         #idx=np.int(len(cm)-1)
         idx=0
     else:
-        idx = np.int(np.round(xp))
+        idx = int(np.round(xp))
     return cm[idx]
 
 def get_params_str_1D(data):
