@@ -87,7 +87,7 @@ install(
   )
 
 # Other .py infrastructure
-foreach(NAME "__init__.py" "log.py" "mccode.py" "optimisation.py")
+foreach(NAME "__init__.py" "log.py" "mccode.py" "optimisation.py" "mcsplit.py")
   install(
     FILES "${PROJECT_SOURCE_DIR}/${NAME}"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
