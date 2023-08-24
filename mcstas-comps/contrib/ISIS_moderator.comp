@@ -746,18 +746,6 @@ int cmdnumberI(char *mc,int* num,const int len)
         efile=fopen(ss,"r");
       }
       if (!efile) {
-        /* Try locating the file in the MCSTAS contrib/ISIS_tables library */
-        sprintf(ss, "%s%c%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
-          MC_PATHSEP_C, "contrib", MC_PATHSEP_C, "ISIS_tables", MC_PATHSEP_C, FileName);
-        efile=fopen(ss,"r");
-      }
-      if (!efile) {
-        /* Try locating the file in the MCSTAS data library */
-        sprintf(ss, "%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
-          MC_PATHSEP_C, "contrib", MC_PATHSEP_C, FileName);
-        efile=fopen(ss,"r");
-      }
-      if (!efile) {
         /* Try locating the file in the MCSTAS data/ISIS_tables library */
         sprintf(ss, "%s%c%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
           MC_PATHSEP_C, "data", MC_PATHSEP_C, "ISIS_tables", MC_PATHSEP_C, FileName);
@@ -767,6 +755,18 @@ int cmdnumberI(char *mc,int* num,const int len)
         /* Try locating the file in the MCSTAS data library */
         sprintf(ss, "%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
           MC_PATHSEP_C, "data", MC_PATHSEP_C, FileName);
+        efile=fopen(ss,"r");
+      }
+      if (!efile) {
+        /* Try locating the file in the MCSTAS contrib/ISIS_tables library */
+        sprintf(ss, "%s%c%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
+          MC_PATHSEP_C, "contrib", MC_PATHSEP_C, "ISIS_tables", MC_PATHSEP_C, FileName);
+        efile=fopen(ss,"r");
+      }
+      if (!efile) {
+        /* Try locating the file in the MCSTAS contrib folder */
+        sprintf(ss, "%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
+          MC_PATHSEP_C, "contrib", MC_PATHSEP_C, FileName);
         efile=fopen(ss,"r");
       }
       if (!efile) { /* Still no file - die! */

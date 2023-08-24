@@ -971,7 +971,7 @@ openFile(char* FileName)
 
   /* 4) Is the file available within the MCSTAS install dir? */
   sprintf(testFileName,"%s%c%s%c%s%c%s",
-    MCSTAS,MC_PATHSEP_C,"contrib",MC_PATHSEP_C,"ISIS_tables",MC_PATHSEP_C,FileName);
+    MCSTAS,MC_PATHSEP_C,"data",MC_PATHSEP_C,"ISIS_tables",MC_PATHSEP_C,FileName);
   efile=fopen(testFileName,"r");
   if (efile) {
     fprintf(stderr," - Found in MCSTAS system dir: \n %s%c%s%c%s\n",
