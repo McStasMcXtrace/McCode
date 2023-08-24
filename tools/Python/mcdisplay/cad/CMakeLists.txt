@@ -1,8 +1,10 @@
-cmake_minimum_required(VERSION 3.16.0)
-cmake_policy(VERSION 3.16.0)
+cmake_minimum_required(VERSION 3.17.0)
+cmake_policy(VERSION 3.17.0)
 
-# This will install McStas components
+# This will install McStas or McXtrace mc/display-cad
 project(python-tools-mcdisplay-cad C)
+
+message(STATUS "Configure ${CMAKE_PROJECT_NAME} ${FLAVOR} ${PROJECT_NAME}")
 
 # Choose between McStas or McXtrace
 option(BUILD_MCSTAS   "Choose the McStas flavor" off)
@@ -27,23 +29,10 @@ endif()
 
 setupMCCODE("${FLAVOR}")
 
-
 # Select prefix
 set(P "${MCCODE_PREFIX}")
 
-set(TOOLS_NAME "tools/Python/${P}display/cad")
-
-# Windows needs special handling of this path...
-if(WINDOWS)
-  set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
-else()
-  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
-endif()
-
-
-# Set some extra options for mccode_config
-set(CC "${CMAKE_C_COMPILER}")
-set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
+set(TOOLS_NAME "Python/${P}display/cad")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-cad-${MCCODE_VERSION}")
@@ -79,49 +68,28 @@ set(CPACK_RPM_PACKAGE_REQUIRES
   "${FLAVOR}-${MCCODE_VERSION}, ${PYDEPS}"
 )
 
-
 include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-cad-py" @ONLY)
+# Configure fallback script
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-cad" @ONLY)
 
-# Program files
-if(WINDOWS)
-
-  install(
-    FILES "${PROJECT_SOURCE_DIR}/mcdisplay.py"
-    DESTINATION "${lib}/${TOOLS_NAME}"
-    RENAME "${P}display.py"
-    PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
+# Main script, including rename mc/mxdisplay
+install(
+  PROGRAMS "${PROJECT_SOURCE_DIR}/mcdisplay.py"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+  RENAME "${P}display.py"
   )
-endif()
 
+# Other .py infrastructure
+# None
 
+# Wrapper-scripts on windows are handled via
+# cmake Modules/MCUtil
 if(NOT WINDOWS)
-
   install(
-    FILES ${PROJECT_SOURCE_DIR}/mcdisplay.py
-    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
-    RENAME "${P}display.py"
-    PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
-  )
-
-  install(
-    PROGRAMS "${WORK}/${P}display-cad-py"
-    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}display-cad${DOT_PYTHON_SUFFIX}"
-    )
-  # Make cad mcdisplay available as mcdisplay/mxdisplay
-  install(
-    PROGRAMS "${WORK}/${P}display-cad-py"
-    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}display-cad"
+    PROGRAMS "${WORK}/${P}display-cad"
+    DESTINATION ${DEST_BINDIR}
     )
 endif()
