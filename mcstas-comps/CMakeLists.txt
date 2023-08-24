@@ -65,14 +65,22 @@ foreach(name ${tmp_complist})
 endforeach()
 
 if ( NOT EXCLUDE_CONTRIB )
-  foreach(contrib_subdir doc Gas_tables ISIS_tables)
+  foreach(contrib_subdir doc)
     file_globsrc( tmp "contrib/${contrib_subdir}/*" )
     install( FILES ${tmp} DESTINATION "${DEST_DATADIR_COMPS}/contrib/${contrib_subdir}" )
   endforeach()
 endif()
 
-file_globsrc( tmp "data/*" )
-install( FILES ${tmp} DESTINATION "${DEST_DATADIR_DATAFILES}" )
+if ( NOT EXCLUDE_DATA )
+  # base data dir
+  file_globsrc( tmp "data/*" )
+  install( FILES ${tmp} DESTINATION "${DEST_DATADIR_DATAFILES}" )
+  # datadir subfolders
+  foreach(data_subdir Gas_tables ISIS_tables)
+    file_globsrc( tmp "data/${data_subdir}/*" )
+    install( FILES ${tmp} DESTINATION "${DEST_DATADIR_COMPS}/data/${data_subdir}" )
+  endforeach()
+endif()
 
 file_globsrc( tmp "examples/*" )
 install( FILES ${tmp} DESTINATION "${DEST_DATADIR_EXAMPLES}" )

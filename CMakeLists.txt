@@ -17,6 +17,7 @@ option( BUILD_TOOLS "Include tools" ON )
 option( BUILD_MCXRUN "Include mcrun/mxrun even if BUILD_TOOLS is OFF" )#fixme: replace with more fine-grained control
 option( ENABLE_COMPONENTS "Whether or not to include comps and instruments" ON )
 option( EXCLUDE_CONTRIB "Whether or not to exclude contrib comps" OFF )#fixme: replace with more fine-grained control
+option( EXCLUDE_DATA "Whether or not to exclude data files" OFF )#fixme: replace with more fine-grained control
 
 if (${BUILD_MCSTAS} AND ${BUILD_MCXTRACE})
     message(WARNING "Configuration requests building both McStas and McXtrace which is likely to fail.")
