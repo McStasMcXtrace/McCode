@@ -75,15 +75,11 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot" @ONLY)
 
-# Main script, including rename mcrun/mxrun
+# Main script, including rename mc/mxplot
 install(
-  FILES "${PROJECT_SOURCE_DIR}/mcplot.py"
+  PROGRAMS "${PROJECT_SOURCE_DIR}/mcplot.py"
   DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
   RENAME "${P}plot.py"
-  PERMISSIONS
-  OWNER_READ OWNER_WRITE OWNER_EXECUTE
-  GROUP_READ GROUP_EXECUTE
-  WORLD_READ WORLD_EXECUTE
   )
 
 # Other .py infrastructure
@@ -102,13 +98,9 @@ if(NOT WINDOWS)
     )
 
   install(
-    FILES ${PROJECT_SOURCE_DIR}/mcplot.py
+    PROGRAMS ${PROJECT_SOURCE_DIR}/mcplot.py
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
     RENAME "${P}plot.py"
-    PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
   )
   install(
     PROGRAMS "${WORK}/${P}plot"
