@@ -1,14 +1,13 @@
-#{% set version = "3.6.1" %}
+{% set version = "3.9999" %}
 #{% set sha_value = "7ef271ae7cd10197ca96923b31ca8e45ccf434dc9824be994640bf15850487e4" %}
 #NB get sha256 with: curl -sL <URL> | openssl sha256
 
 package:
   name: mcstas
-#  version: {{ version }}
-  version: 3.9999
+  version: {{ version }}
 
 source:
-#  url: https://github.com/mctools/ncrystal/archive/v{{ version }}.tar.gz
+#  url: https://github.com/McStasMcXtrace/McCode/archive/v{{ version }}.tar.gz
 #  sha256: {{ sha_value }}
   path: ../../
   folder: src
@@ -16,43 +15,55 @@ source:
 build:
   number: 0
   noarch: generic
-  skip: true  # [win]
 
 requirements:
-  build:
-    - bash
   run:
     - mcstas-core
     - mcstas-data
     - mcstas-mcgui
     - mcstas-vis
+    - openmpi  # [unix]
     - ncrystal # [unix]
     - mcpl     # [unix]
-#  noarch: generic
-#  script: echo "No actual build for mcstas package itself" # [not win]
+    # As per https://conda-forge.org/docs/maintainer/knowledge_base.html#noarch-builds
+    # we are noarch, but our dependency list is not. So we do need a different
+    # "mcstas" package for windows and unix platforms:
+    - __unix  # [unix]
+    - __win   # [win]
 
 outputs:
   - name: mcstas-core
-    script: install-files-core.sh
+    script: install-files-core.py
     requirements:
       build:
+        #Note: nmake on windows does not need to be specifically included.
+        - python
         - cmake
         - make  # [not win]
         - {{ compiler('c') }}
-        - bash
       run:
         - python
         - {{ compiler('c') }}
-        - bash
+        - bash # for mcrun, and maybe others
         - pyaml # for mcrun
         - ply # for traces from mcrun
+    test:
+      files:
+        - test_pkg_core.py
+      source_files:
+        - src/mcstas-comps/examples/BNL_H8.instr
+        - src/mcstas-comps/examples/Union_manual_example.instr
+      commands:
+        - python3 test_pkg_core.py
 
   - name: mcstas-data
     noarch: generic
-    build:
-      script:
-        - mkdir -p "${PREFIX}/share/mcstas/resources"
-        - cp -rp ./src/mcstas-comps/data "${PREFIX}/share/mcstas/resources/data"
+    script: install-files-data.py
+    test:
+      files:
+        - test_pkg_data.py
+      commands:
+        - python3 test_pkg_data.py
 
   - name: mcstas-mcgui
     noarch: generic
@@ -75,49 +86,25 @@ outputs:
         - pyqtgraph
         - pyqt
 
-  - name: mcstas-mpi
-    noarch: generic
-    requirements:
-      run:
-        - mcstas-core
-       #NB: https://conda-forge.org/docs/maintainer/knowledge_base.html#noarch-builds
-        - __win   # [win]
-        - __unix  # [unix]
-        - openmpi # [unix]
-
-  - name: mcstas-all
-    noarch: generic
-    requirements:
-      run:
-        - mcstas-core
-        - mcstas-data
-        - mcstas-gui
-        - mcstas-vis
-        - mcstas-mpi
-        - gsl
-        - nomkl
-        - nexusformat
-        - nexpy
-        - hdf5
-#        - cadquery
+##  - name: mcstas-everything
+##    noarch: generic
+##    requirements:
+##      run:
+##        - mcstas
+##        - gsl
+##        - nomkl
+##        - nexusformat
+##        - nexpy
+##        - hdf5
+##        # - cadquery
 
 test:
-#FIXME:
-#  requires:
-#    - mcpl
-#  imports:
-#    - mcstas.cfg #does not exist yet
   files:
-    - test_mcstas_cmd.x
-  source_files:
-    #Taking BNL_H8.instr from src rather than
-    #$CONDA_PREFIX/share/mcstas/examples, since we might want to not install
-    #examples along with mcstas/mcrun.
-    #FIXME: this is for mcstas-core specific test?
-    - src/mcstas-comps/examples/BNL_H8.instr
+    - test_pkg_mcstas.py
+#  source_files:
+#    - src/mcstas-comps/examples/BNL_H8.instr
   commands:
-    - test -f "${PREFIX}/bin/mcstas"
-    - ./test_mcstas_cmd.x
+    - python3 test_pkg_mcstas.py
 about:
   home: https://mcstas.org/
   summary: McStas is a general tool for simulating neutron scattering instruments and experiments.
@@ -134,10 +121,3 @@ extra:
   recipe-maintainers:
     - willend
     - tkittel
-
-
-#NB other deps: openmpi gsl matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5
-
-#mcstas
-#mcstas openmpi
-#mcstas-mpi
