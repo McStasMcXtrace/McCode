@@ -17,6 +17,32 @@ macro(installLib path)
   )
 endmacro()
 
+  # Macro for configuring every file in a directory
+  # *.in files are configured, while other files are copied unless target exists
+  macro(configure_directory IN_GLOB OUT_DIR)
+    file(GLOB tmp "${IN_GLOB}")
+    foreach(file_in ${tmp})
+      get_filename_component(filename "${file_in}" NAME)      # /doc/man/example.1.in -> example.1.in
+      string(REGEX MATCH "^(.+)\\.in" matches "${filename}")  # example.1.in -> example.1
+      if(matches)
+        # from IN/doc/man/example.1.in -> OUT/doc/man/example.1
+        configure_file (
+          "${file_in}"
+          "${OUT_DIR}/${CMAKE_MATCH_1}"
+          )
+      else()
+        # do not overwrite files created by configure
+        if(NOT (EXISTS "${OUT_DIR}/${filename}") OR ("${file_in}" IS_NEWER_THAN "${OUT_DIR}/${filename}"))
+          if( IS_SYMLINK "${file_in}" )
+            #follow symlink
+            get_filename_component( file_in "${file_in}" REALPATH )
+          endif()
+          file( COPY "${file_in}" DESTINATION "${OUT_DIR}")
+        endif()
+      endif()
+    endforeach()
+  endmacro()
+
 # Check whether we are being run through mkdist
 macro(isMkDist outvar)
   string(CONFIGURE "@MCCODE_NAME@" TMP @ONLY) # TMP is empty unless MCCODE_NAME is set already
