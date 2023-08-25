@@ -24,16 +24,21 @@ requirements:
     - mcstas-data
     - mcstas-mcgui
     - mcstas-vis
-    # mcstas-mpi ??
+    - openmpi  # [unix]
     - ncrystal # [unix]
     - mcpl     # [unix]
+    # As per https://conda-forge.org/docs/maintainer/knowledge_base.html#noarch-builds
+    # we are noarch, but our dependency list is not. So we do need a different
+    # "mcstas" package for windows and unix platforms:
+    - __unix  # [unix]
+    - __win   # [win]
 
 outputs:
   - name: mcstas-core
-    #FIXME where then? noarch: python
     script: install-files-core.py
     requirements:
       build:
+        #Note: nmake on windows does not need to be specifically included.
         - python
         - cmake
         - make  # [not win]
@@ -69,17 +74,6 @@ outputs:
         - pillow
         - pyqtgraph
         - pyqt
-
-  #FIXME: needs more work on mcstas-mpi:
-  - name: mcstas-mpi
-    noarch: generic
-    requirements:
-      run:
-        - mcstas-core
-       #NB: https://conda-forge.org/docs/maintainer/knowledge_base.html#noarch-builds
-        - __win   # [win]
-        - __unix  # [unix]
-        - openmpi # [unix]
 
   - name: mcstas-all
     noarch: generic
@@ -130,10 +124,3 @@ extra:
   recipe-maintainers:
     - willend
     - tkittel
-
-
-#NB other deps: openmpi gsl matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5
-
-#mcstas
-#mcstas openmpi
-#mcstas-mpi

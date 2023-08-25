@@ -4,6 +4,9 @@ import pathlib
 import shlex
 import shutil
 import subprocess
+import platform
+
+is_windows = platform.system().lower()=='windows'
 
 prefix = pathlib.Path(os.environ['PREFIX']).absolute().resolve()
 assert prefix.is_dir()
@@ -28,12 +31,8 @@ cmake_cmd = shutil.which('cmake')
 if not cmake_cmd:
     fatal_error('could not find cmake command')
 
-make_cmd = shutil.which('make')
-if not make_cmd:
-    fatal_error('could not find make command')
-
 cmake_flags = [ f'-DCMAKE_INSTALL_PREFIX={prefix}',
-                src,
+                '-S',src,
                 '-DBUILD_SHARED_LIBS=ON',
                 '-DCMAKE_INSTALL_LIBDIR=lib',
                 '-DCMAKE_BUILD_TYPE=Release',
@@ -45,23 +44,32 @@ cmake_flags = [ f'-DCMAKE_INSTALL_PREFIX={prefix}',
                 '-DENSURE_NCRYSTAL=OFF',
                 '-DENABLE_CIF2HKL=OFF',
                 '-DENABLE_NEUTRONICS=OFF'
-               ] + shlex.split( os.environ.get('CMAKE_ARGS','') )
+               ]
+
+cmake_flags += shlex.split( os.environ.get('CMAKE_ARGS','') )
+
+if is_windows:
+    cmake_flags += ['-G','NMake Makefiles']
+else:
+    cmake_flags += ['-G','Unix Makefiles']
+
+env_python = os.environ.get('PYTHON')
+if env_python:
+    cmake_flags += [ f'-DPython3_EXECUTABLE={env_python}' ]
 
 build = ( pathlib.Path('.') / 'build' ).absolute().resolve()
 build.mkdir()
 os.chdir(build)
 
 launch( [ cmake_cmd ] + cmake_flags )
-ncpu = int( os.environ.get('CPU_COUNT','0') ) or os.cpu_count() or 1
-
-launch([make_cmd,f'-j{ncpu}'])
-launch([make_cmd,'install'])
+launch( [ cmake_cmd, '--build', '.','--config','Release'] )
+launch( [ cmake_cmd, '--build', '.','--target','install','--config','Release'] )
 
 for f in ['bin/mcstas',
           'bin/mcrun',
           'share/mcstas/tools/Python/mccodelib/__init__.py',
           'share/mcstas/resources/data']:
-    if not prefix.joinpath(*(f.split())).exists():
+    if not prefix.joinpath(*(f.split('/'))).exists():
         fatal_error('Installation did not provide expected: <prefix>/%s'%f)
 
 #Data files will be provided in mcstas-data package instead:

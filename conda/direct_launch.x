@@ -16,5 +16,5 @@ for subpkg in core data; do
     mkdir work-${subpkg}
     cd "${TMPDIR}/work-${subpkg}"
     ln -s $REPOROOT src
-    PREFIX="${TMPDIR}/install-${subpkg}" CPU_COUNT=0 python3 $CONDARECIPES/install-files-${subpkg}.py
+    PREFIX="${TMPDIR}/install-${subpkg}" CPU_COUNT=0 PYTHON="$(which python3)" python3 $CONDARECIPES/install-files-${subpkg}.py
 done
