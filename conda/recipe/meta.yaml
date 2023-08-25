@@ -1,14 +1,13 @@
-#{% set version = "3.6.1" %}
+{% set version = "3.9999" %}
 #{% set sha_value = "7ef271ae7cd10197ca96923b31ca8e45ccf434dc9824be994640bf15850487e4" %}
 #NB get sha256 with: curl -sL <URL> | openssl sha256
 
 package:
   name: mcstas
-#  version: {{ version }}
-  version: 3.9999
+  version: {{ version }}
 
 source:
-#  url: https://github.com/mctools/ncrystal/archive/v{{ version }}.tar.gz
+#  url: https://github.com/McStasMcXtrace/McCode/archive/v{{ version }}.tar.gz
 #  sha256: {{ sha_value }}
   path: ../../
   folder: src
@@ -16,7 +15,6 @@ source:
 build:
   number: 0
   noarch: generic
-#  skip: true  # [win]
 
 requirements:
   run:
@@ -75,21 +73,17 @@ outputs:
         - pyqtgraph
         - pyqt
 
-  - name: mcstas-all
-    noarch: generic
-    requirements:
-      run:
-        - mcstas-core
-        - mcstas-data
-        - mcstas-gui
-        - mcstas-vis
-        - mcstas-mpi
-        - gsl
-        - nomkl
-        - nexusformat
-        - nexpy
-        - hdf5
-#        - cadquery
+##  - name: mcstas-everything
+##    noarch: generic
+##    requirements:
+##      run:
+##        - mcstas
+##        - gsl
+##        - nomkl
+##        - nexusformat
+##        - nexpy
+##        - hdf5
+##        # - cadquery
 
 test:
 #FIXME:
