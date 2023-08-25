@@ -9,7 +9,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 # Set McCode values (from mkdist or defaults)
 include(MCUtil)
 setupMCCODE("mcstas")
-include(InstallMCCODE)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
