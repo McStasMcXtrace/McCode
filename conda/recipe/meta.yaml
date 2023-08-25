@@ -16,43 +16,38 @@ source:
 build:
   number: 0
   noarch: generic
-  skip: true  # [win]
+#  skip: true  # [win]
 
 requirements:
-  build:
-    - bash
   run:
     - mcstas-core
     - mcstas-data
     - mcstas-mcgui
     - mcstas-vis
+    # mcstas-mpi ??
     - ncrystal # [unix]
     - mcpl     # [unix]
-#  noarch: generic
-#  script: echo "No actual build for mcstas package itself" # [not win]
 
 outputs:
   - name: mcstas-core
-    script: install-files-core.sh
+    #FIXME where then? noarch: python
+    script: install-files-core.py
     requirements:
       build:
+        - python
         - cmake
         - make  # [not win]
         - {{ compiler('c') }}
-        - bash
       run:
         - python
         - {{ compiler('c') }}
-        - bash
+        - bash # for mcrun, and maybe others
         - pyaml # for mcrun
         - ply # for traces from mcrun
 
   - name: mcstas-data
     noarch: generic
-    build:
-      script:
-        - mkdir -p "${PREFIX}/share/mcstas/resources"
-        - cp -rp ./src/mcstas-comps/data "${PREFIX}/share/mcstas/resources/data"
+    script: install-files-data.py
 
   - name: mcstas-mcgui
     noarch: generic
@@ -75,6 +70,7 @@ outputs:
         - pyqtgraph
         - pyqt
 
+  #FIXME: needs more work on mcstas-mpi:
   - name: mcstas-mpi
     noarch: generic
     requirements:
