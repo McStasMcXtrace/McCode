@@ -472,6 +472,7 @@ INITIALIZE %{
       printf(" packing_factor=%g", packing_factor);
     printf("\n");
   )
+  if (0 < packing_factor && packing_factor < 1) rho *= packing_factor;
   
   /* target for scattering ================================================== */
   if (!target_index && !target_x && !target_y && !target_z) target_index=1;
