@@ -193,16 +193,20 @@ pool_create(void)
 void
 pool_free(Pool p)
 {
-  List_handle liter;
-  void *mem;
-
-  liter = list_iterate(p->list);
-  while((mem = list_next(liter)))
-  {
-    memfree(mem);
-  }
-  list_iterate_end(liter);
-  memfree(p);
+//  List_handle liter;
+//  void *mem;
+//
+//  liter = list_iterate(p->list);
+//  while((mem = list_next(liter)))
+//  {
+//    memfree(mem);
+//  }
+//  list_iterate_end(liter);
+//
+//  memfree(p);
+  // pools *are* lists, which have automatically-allocated memory (which we should free)
+  // the method above only frees part of the memory
+  list_free(p->list, memfree);
 }
 
 

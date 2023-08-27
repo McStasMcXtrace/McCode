@@ -43,6 +43,8 @@ struct List_position
     int index;                  /* Next element to return. */
   };
 
+typedef struct List_header *List;
+typedef struct List_position *List_handle;
 
 /*******************************************************************************
 * Create a new list.
@@ -53,9 +55,9 @@ list_create(void)
   List l;
 
   palloc(l);
+  l->size = 0;
   l->maxsize = MAX_ELEMENTS;
   nalloc(l->elements, l->maxsize);
-  l->size = 0;
   return l;
 }
 
@@ -106,6 +108,10 @@ list_len(List l)
   return l->size;
 }
 
+int list_undef(List l){
+  return l->elements == NULL ? 1 : 0;
+}
+
 
 /*******************************************************************************
 * Prepare to start traversing a list.
@@ -143,6 +149,8 @@ list_access(List l, int index)
 {
     if (index >= l->size)
         fatal_error("list_access: Accesing beyond size, index (%d) of (%d).", index, l->size);
+    if (l->elements == NULL)
+        fatal_error("list_access: Accessing uninitialized array -- why is size %d?", l->size);
     return l->elements[index];
 }
 
@@ -200,7 +208,7 @@ list_iterate_end(List_handle lh)
 /*******************************************************************************
 * Catenate list2 to list1
 *******************************************************************************/
-List list_cat(List l1, List l2)
+struct List_header * list_cat(struct List_header * l1, struct List_header * l2)
 {
   List_handle liter;
   void*       litem;
@@ -209,4 +217,20 @@ List list_cat(List l1, List l2)
     list_add(l1, litem);
   list_iterate_end(liter);
   return(l1);
+}
+
+
+List list_copy(List from, void * (*copier)(void *)){
+  List to = list_create();
+  if (list_len(from)) {
+    List_handle liter;
+    void *list_item;
+    liter = list_iterate(from);
+    while ((list_item = list_next(liter))) {
+      void *copy = copier(list_item);
+      list_add(to, copy);
+    }
+    list_iterate_end(liter);
+  }
+  return to;
 }

@@ -9,18 +9,25 @@
 * Date: September 2021
 *
 * %Description
-* Implements a set of nshells Wolter I Paraboloid/Paraboloid pairs using conics.h from ConicTracer.
-* The shell radii are defined using the radii vector, parametrized from largest to smalles radius.
-* The vector length should match 'nshells'. The mirrors are assumed to be touching
-* at the mid-optic plane, i.e. there is no gap between primary and secondary mirror.
-* This paraboloid/paraboloid set acts as a point-to-point focusing lens.
+* Implements a set of nshells Wolter I Paraboloid/Parabolid pairs using conics.h from ConicTracer.
+* 
+* The component has two distinct modes of specifying the geometry:
+* a) Via the radii vector, parametrized from largest to smallest radius with a length of 'nshells'
+*
+* b) By specifying radii rmax and rmin, between which a quadratic law distributes 'nshells' surfaces.
+*
+* The mirrors are assumed to be touching at the mid-optic plane, i.e. there is no gap between primary 
+* and secondary mirror.
+* By definition the ratio between primary and secondary mirror glancing angles is 1/3.
 * At present a single m-value is used for all mirrors.  
 *
 * %Parameters
 *
 * Input parameters:
 * nshells: [1]          Number of nested shells to expect
-* radii: [m]            Vector of radii (length should match nshells)
+* rmin: [m]             Midoptic plane radius of innermost mirror pair.
+* rmax: [m]             Midoptic plane radius of outermost mirror pair.
+* radii: [m]            Optional vector of radii (length should match nshells)
 * m: [1]                Critical angle of mirrors as multiples of Ni.
 * focal_length_u: [m]    Focal length of upstream mirror.
 * focal_length_d: [m]    Focal length of downstream mirror.
@@ -39,8 +46,9 @@
      
 DEFINE COMPONENT Conics_PP
 DEFINITION PARAMETERS()
-SETTING PARAMETERS (focal_length_u=10.070, focal_length_d=10.070, lp1=0.84, lp2=0.84,
-    int nshells=4, m=1, mirr_thick=0, int disk=1, vector radii,
+SETTING PARAMETERS (
+    rmin=0.0031416, rmax=0.05236, focal_length_u=10.070, focal_length_d=10.070, lp1=0.84, lp2=0.84,
+    int nshells=4, m=1, mirr_thick=0, int disk=1, vector radii=NULL,
     R0 = 0.99, Qc = 0.021, W = 0.003, alpha = 6.07, transmit = 0)
 OUTPUT PARAMETERS(pTable, s)
 
@@ -60,16 +68,47 @@ DECLARE
 INITIALIZE
 %{
     ConicSurf *pm;
-    double th_c, alpha_p, alpha_h, fp2, rr;
+    double th_c, alpha_p, alpha_h, fp2, dr,rr, cH, theta_1, theta_2, theta_i;
     int i;
-    
-    s=makeScene();
-    for (i=0;i<nshells;i++){
-      rr=radii[i];
 
-      Point pi = makePoint(0,rr,0);//f-1);
-      pm=addParaboloid(-focal_length_u,pi,-lp1,0,m,R0,Qc,W,alpha,&s);
-      addParaboloid(focal_length_d,pi,0,lp2,mR0,Qc,W,alpha,,&s);
+    s=makeScene();
+    /* Mode a, vector of radii */
+    if (radii) {
+      for (i=0;i<nshells;i++){
+        rr=radii[i];
+  
+        Point pi = makePoint(0,rr,0);
+        pm=addParaboloid(focal_length_u, pi,-lp1,0,m,R0,Qc,W,alpha,&s);
+        addParaboloid(-focal_length_d,pi,0,lp2,mR0,Qc,W,alpha,&s);
+      }
+    } else {
+    /* Mode b, use quadratic law to distribute the shells */
+      dr=nshells>1?(rmax-rmin)/(nshells-1):0;
+    
+      double constant, quadratic;
+      quadratic = (rmax-rmin)/(rmax*rmax - rmin*rmin);
+      constant = rmax - quadratic*rmax*rmax;
+    
+      for (i=0;i<nshells;i++){
+        rr = rmax-dr*i;
+        rr = constant + quadratic*rr*rr; // Quadratic distribution of radius covers angular space better
+        //printf("--------------------------------------------------------------------");
+        printf("rr = %lf\n", rr);
+        //printf("--------------------------------------------------------------------");
+
+        Point pi = makePoint(0,rr,0);
+        //pm=addEllipsoid(-focal_length_u, focal_length_d  ,  pi, -le,  0, m,R0,Qc,W,alpha,&s);
+        //addHyperboloid(  focal_length_d, focal_length_d*2,  pi,   0, lh, m,R0,Qc,W,alpha,&s);
+        
+        theta_1 = atan(rr/focal_length_u);
+        theta_2 = atan(rr/focal_length_d);
+        theta_i = 0.25*(theta_1 + theta_2);
+        
+        cH = fabs(0.5*(rr/tan(theta_2 - 2.0*theta_i) - focal_length_d));
+        pm=addParaboloid(focal_length_u + 2.0*cH, pi,-lp, 0, m,R0,Qc,W,alpha,&s);
+        addParaboloid(-focal_length_d + 2.0*cH,pi,0,lp2,mR0,Qc,W,alpha,&s);
+      }
+
     }
     if (disk) {
       addDisk(pm->zs,0.0,rConic(pm->ze,*pm),&s);
@@ -79,6 +118,8 @@ INITIALIZE
 
 TRACE
 %{
+  /* "_mctmp_a" defines a "silicon" state variable in underlying conic.h functions */
+  _mctmp_a=0;
   traceSingleNeutron(_particle,s);
 
   if (!_particle->_absorbed) {

@@ -1,0 +1,787 @@
+/*******************************************************************************
+* Instrument: Wolter Optics Focusing - SANS (WOF-SANS)
+*
+* %I
+* Written by: Stavros Samothrakis, PSI
+* Date: 2021-2023
+* Origin: PSI
+* %INSTRUMENT_SITE: HighNESS
+*
+* Instrument developed for the HighNESS EU project, describing a Wolter Optics
+* Focusing SANS (WOFSANS), applied for the study of moderator parameters.
+*
+* %D
+* Instrument developed for the HighNESS EU project, describing a Wolter Optics
+* Focusing SANS (WOFSANS_v2), applied for the study of moderator parameters.
+e*
+* Example: WOFSANS width=0.15
+*
+* %P
+* <parameter1>: [<unit>] <parameter1 description>
+* ...
+*
+* %L
+* V. Santoro et. al. Nuc. Sci. Eng. 2023 https://doi.org/10.1080/00295639.2023.2204184
+* https://highnessproject.eu
+* This work was supported by the HighNESS project and is funded by European Commission (H2020-951782).
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT WOFSANS(double focusing_rectangle = 0.15,double width=0.15, double Emin=0.2, double Emax=100000.0, double l_min=7.2, int pulseskip=0, int npulses=1,
+                                                     int chopper1_flag = 0, double det = 41.5, R0=0.99, m=3, W=0.003, alpha=6.07,nshells_ph = 28, fs_ph=500, fi_ph=5.5, PH_beamstop = 1, nshells_eh = 10, fs_eh=10, fi_eh=10, EH_beamstop = 1)
+
+
+DECLARE
+%{
+/* #include "WOFSANS_functions.c" */
+/* Actual file embedded here: */
+//functions
+
+// calculate chopper open time
+double calcopentime(double pos, double minl, double maxl){
+	// base calculation on minl from start of pulse,
+	// maxl from end of pulse.
+	// it is assumed that maxl-minl is not greater than frame width
+	double opentime;
+	//printf("pos=%g; minl=%g; maxl=%g;\n",pos,minl,maxl);
+	opentime = ((maxl-minl)*(pos)/3.96)+2.86;
+
+	return opentime;
+}
+
+double calcOT(double opening, double freq){
+	//opentime in ms
+	return 1000*opening/(360*freq);
+}
+
+// calculate chopper disk 1 delay
+double calcdisk1delay(double pos, double opening, double minl, double freq){
+	// base calculation on leading edge at guide centre
+	// delay is tof for leading edge + rotation of half opening
+	double delay;
+
+	delay = (minl*(pos)/3.96)+((opening/2)*1000/(freq*360));
+    delay = delay/1000;
+	
+	return delay;
+}
+
+// calculate chopper disk 2 delay
+double calcdisk2delay(double pos, double opening, double maxl, double freq){
+	// base calculation on trailing edge at guide centre
+	// delay is tof for trailing edge - rotation of half opening
+	double delay;
+
+	delay = (maxl*(pos)/3.96)+2.86-((opening/2)*1000/(freq*360));
+	delay = delay/1000;
+
+	return delay;
+}
+
+//calculate lambda
+double calclambda(double starttime,double tof,double dist){
+  return (tof-starttime)*3.96/dist;
+}
+
+// calculate angle of arm after vertically curved guide
+//double calcAlpha(double length, double radius) {
+//	return RAD2DEG * length/radius;
+//}
+
+// calculate position and angle of arm after vertically curved guide/
+//double calcY(double length, double radius) {
+//	double alpha = DEG2RAD * calcAlpha(length, radius);
+//	return radius*(1.0-cos(alpha));
+//}
+
+// calculate position and angle of arm after vertically curved guide
+//double calcZ(double length, double radius) {
+//	double alpha = DEG2RAD * calcAlpha(length, radius);
+//	return radius*sin(alpha);
+//}
+
+/* end of WOFSANS_functions.c */
+double round_par=10.0;
+
+double u=0.0001; //gap between components
+
+double coeff1, coeff2;
+#pragma acc declare create(coeff1,coeff2)
+
+char BrillianceFile[256];
+
+double bandwidth;
+double l_max;
+
+//Optics Variables
+double optics_start_pos;
+double focus_pos;
+
+// Variables for time generation
+double npulses_declare;
+double t_between_pulses;
+double pulse_n;
+double pulse_delay;
+
+double Lmin_source;
+double Lmax_source;
+%}
+
+USERVARS %{
+int was_scattered;
+int was_scattered2;
+%}
+
+INITIALIZE
+%{
+bandwidth = (71.4*(1.0+(double)pulseskip)*3.96/det);
+printf("bandwidth = %g\n",bandwidth);
+l_max=l_min+round(bandwidth*round_par)/round_par;
+printf("l_min = %g\n",l_min);
+printf("l_max = %g\n",l_max);
+
+optics_start_pos =2.0;
+
+npulses_declare = npulses;
+
+if (width==0.15) {
+      sprintf(BrillianceFile,"HighNESS_Mean_Brilliance_15x15.dat");
+    } else if (width==0.10) {
+      sprintf(BrillianceFile,"HighNESS_Mean_Brilliance_10x10.dat");
+    } else if (width==0.05) {
+      sprintf(BrillianceFile,"HighNESS_Mean_Brilliance_5x5.dat");
+    } else if (width==0.03) {
+      sprintf(BrillianceFile,"HighNESS_Mean_Brilliance_3x3.dat");
+}
+
+if (width==0.15) {
+      coeff1 = 1.0824, coeff2 = 1.8;
+    } else if (width==0.10) {
+      coeff1 = 1.0716, coeff2 = 1.8;
+    } else if (width==0.05) {
+      coeff1 = 1.0575, coeff2 = 1.8;
+    } else if (width==0.03) {
+      coeff1 = 1.0494, coeff2 = 1.9;
+}
+#pragma acc update device(coeff1,coeff2)
+
+ /* Calculate wavelengths via sqrt(E) -> v and v->k */
+ Lmin_source = 2*PI/(V2K*(SE2V*sqrt(Emax)));
+ Lmax_source = 2*PI/(V2K*(SE2V*sqrt(Emin)));
+ printf("Source Wavelength band: %g %g\n",Lmin_source,Lmax_source);
+%}
+
+//-------------------------------------------------------------------------------------------//
+//----------------------------COMPONENTS START--------------------------------//
+//-----------------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------------//
+
+TRACE
+
+//-------------------------------------------------------------------------------------------//
+//--------------------------------------SOURCE-----------------------------------------//
+//-----------------------------------------------------------------------------------------//
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+/*********************************************************************************************/
+COMPONENT Source = Source_gen(
+    flux_file=BrillianceFile, 
+    dist=optics_start_pos, 
+    focus_xw=focusing_rectangle, 
+    focus_yh=focusing_rectangle, 
+    yheight=width, 
+    xwidth=width,
+    flux_file_perAA=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+EXTEND %{
+p *= coeff1 + coeff2*y;
+%}
+
+COMPONENT psd_Source = PSD_monitor(
+    nx=100, 
+    ny=100, 
+    filename="PSD_0001", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT l_Source = L_monitor(
+    nL=100, 
+    filename="L_0001", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT nD1 = Monitor_nD(
+  xwidth = width, yheight = width,
+  options="intenisity per cm2, lambda bins=100 limits=[0.0286014 20.2243], file=nD_0001.dat",
+  restore_neutron = 1
+)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT divergence_monitor_Source = Divergence_monitor(
+    nh=100, 
+    nv=100, 
+    filename="DivMon_0001", 
+    xwidth=0.2, 
+    yheight=0.2,
+    maxdiv_h=5,
+    maxdiv_v=5, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT h_divlambda_Source = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_h_0001", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=5, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT v_divlambda_Source = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_v_0001", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=5, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0, 0, 90) RELATIVE PREVIOUS
+
+/*Focusing Position = Optics Start Position*/
+COMPONENT psd_FocusingPosition = PSD_monitor(
+    nx=100, 
+    ny=100, 
+    filename="PSD_0002", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    restore_neutron=1)
+AT (0, 0, optics_start_pos) RELATIVE Source
+
+COMPONENT l_FocusingPosition = L_monitor(
+    nL=100, 
+    filename="L_0002", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT nD2 = Monitor_nD(
+  xwidth = focusing_rectangle, yheight = focusing_rectangle,
+  options="intenisity per cm2, lambda bins=100 limits=[0.0286014 20.2243], file=nD_0002.dat",
+  restore_neutron = 1
+)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT divergence_monitor_FocusingPosition = Divergence_monitor(
+    nh=100, 
+    nv=100, 
+    filename="DivMon_0002", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=5,
+    maxdiv_v=5,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT h_divlambda_FocusingPosition = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_h_0002", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=5, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT v_divlambda_FocusingPosition = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_v_0002", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=5, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0, 0, 90) RELATIVE PREVIOUS
+
+/* Measures brilliance of the "full" cold source */
+COMPONENT BrillmonLD2 = Brilliance_monitor(
+    nlam = 101, nt = 101, filename = "Bril_0001", t_0 = 0,
+    t_1 =1e6, lambda_0 = Lmin_source, lambda_1 = Lmax_source,
+    Freq =14, toflambda=1 ,tofcuts=0, source_dist=optics_start_pos, srcarea=(width*width*100*100), 
+    xwidth=focusing_rectangle, yheight=focusing_rectangle, restore_neutron=1)
+AT (0, 0, optics_start_pos) RELATIVE Source
+
+//-------------------------------------------------------------------------------------------//
+//--------------------------------Guides and monitors-------------------------------//
+//-----------------------------------------------------------------------------------------//
+
+//----------------------------------------------------------------------------------------//
+//-----------------------------------Monolith/Slits-----------------------------------//
+COMPONENT monolith_slit1 = Slit(
+    xwidth=0.15, 
+    yheight=0.15)
+AT (0, 0, 2) RELATIVE ABSOLUTE
+
+COMPONENT monolith_slit2 = Slit(
+    xwidth=0.15, 
+    yheight=0.15)
+AT (0, 0, 3.5) RELATIVE monolith_slit1
+
+COMPONENT psd_monolith = PSD_monitor(
+    nx=100, 
+    ny=100, 
+    filename="PSD_0003", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE monolith_slit2
+
+COMPONENT l_monolith = L_monitor(
+    nL=100, 
+    filename="L_0003", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT nD3 = Monitor_nD(
+  xwidth = 0.15, yheight = 0.15,
+  options="intenisity per cm2, lambda bins=100 limits=[0.0286014 20.2243], file=nD_0003.dat",
+  restore_neutron = 1
+)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT divergence_monitor_monolith = Divergence_monitor(
+    nh=100, 
+    nv=100, 
+    filename="DivMon_0003", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=5,
+    maxdiv_v=5,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT h_divlambda_monolith = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_h_0003", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=5, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT v_divlambda_monolith = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_v_0003", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=5, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0, 0, 90) RELATIVE PREVIOUS
+
+//------------------------------------------------------------------------------------------//
+//--------------------------PH Wolter Optic - Condenser-------------------------//
+
+COMPONENT PSD_before_slit_cPH = PSD_monitor(
+    nx=100, 
+    ny=100, 
+    filename="PSD_before_slit_cPH", 
+    xwidth=1.2, 
+    yheight=1.2, 
+    restore_neutron=1)
+AT (0, 0, 10.0-1.3-u-u) ABSOLUTE
+
+COMPONENT slit_cPH = Slit(
+    radius=0.075)
+AT (0, 0, 10.0-1.3-u) ABSOLUTE
+
+COMPONENT PSD_slit_cPH = PSD_monitor(
+    nx=100, 
+    ny=100, 
+    filename="PSD_0004", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE slit_cPH
+
+COMPONENT l_slit_cPH = L_monitor(
+    nL=100, 
+    filename="L_0004", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT nD4 = Monitor_nD(
+  xwidth = 0.075*2,
+  options="disk, intenisity per cm2, lambda bins=100 limits=[0.0286014 20.2243], file=nD_0004.dat",
+  restore_neutron = 1
+)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT divergence_monitor_slit_cPH = Divergence_monitor(
+    nh=100, 
+    nv=100, 
+    filename="DivMon_0004", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=5,
+    maxdiv_v=5,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT h_divlambda_slit_cPH = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_h_0004", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=5, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT v_divlambda_slit_cPH = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_v_0004", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=5, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0, 0, 90) RELATIVE PREVIOUS
+
+/*Condenser Lens*/
+COMPONENT cPH = Conics_PH(R0=R0,alpha=alpha,W=W,m=m,
+    nshells=nshells_ph, focal_length=fi_ph, rmin=0.010, rmax=0.075, lp=1.3, lh=1.0, disk=1
+)
+AT(0,0,10.0) RELATIVE ABSOLUTE
+
+COMPONENT beamstop_cPH = Beamstop(
+    radius=0.010)
+WHEN(PH_beamstop == 1)
+AT (0, 0, 1.0+u) RELATIVE PREVIOUS
+
+COMPONENT psd_cPH = PSD_monitor(
+    nx=1000, 
+    ny=1000, 
+    filename="PSD_0005", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    restore_neutron=1)
+AT (0, 0, 1.0+u+u) RELATIVE cPH
+
+COMPONENT l_cPH = L_monitor(
+    nL=100, 
+    filename="L_0005", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT nD5 = Monitor_nD(
+  xwidth = 0.075*2,
+  options="disk, intenisity per cm2, lambda bins=100 limits=[0.0286014 20.2243], file=nD_0005.dat",
+  restore_neutron = 1
+)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT divergence_monitor_cPH = Divergence_monitor(
+    nh=100, 
+    nv=100, 
+    filename="DivMon_0005", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=5,
+    maxdiv_v=5,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT h_divlambda_cPH = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_h_0005", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=5, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT v_divlambda_cPH = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_v_0005", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=5, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0, 0, 90) RELATIVE PREVIOUS
+
+//----------------------------------------------------------------------------------------//
+//-----------------------------------Bunker/Slits-----------------------------------//
+
+//COMPONENT bunker_slit1 = Slit(
+//    xwidth=0.15, 
+//    yheight=0.15)
+//AT (0, 0, 11.5) ABSOLUTE
+
+//COMPONENT bunker_slit2 = Slit(
+//    xwidth=0.15, 
+//    yheight=0.15)
+//AT (0, 0, 3.5) RELATIVE bunker_slit1
+
+COMPONENT psd_bunker = PSD_monitor(
+    nx=100, 
+    ny=100, 
+    filename="PSD_0006", 
+    xwidth=1.2, 
+    yheight=1.2, 
+    restore_neutron=1)
+AT (0, 0, 15) ABSOLUTE
+
+COMPONENT l_bunker = L_monitor(
+    nL=100, 
+    filename="L_0006", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT nD6 = Monitor_nD(
+  xwidth = 0.07, yheight = 0.07,
+  options="intenisity per cm2, lambda bins=100 limits=[0.0286014 20.2243], file=nD_0006.dat",
+  restore_neutron = 1
+)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT divergence_monitor_bunker = Divergence_monitor(
+    nh=100, 
+    nv=100, 
+    filename="DivMon_0006", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=1,
+    maxdiv_v=1,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT h_divlambda_bunker = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_h_0006", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=1, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT v_divlambda_bunker = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_v_0006", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=1, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0, 0, 90) RELATIVE PREVIOUS
+
+//------------------------------------------------------------------------------------------//
+//----------------------PH Wolter Optic Focusing Position----------------------//
+
+COMPONENT psd_PHfocus1 = PSD_monitor(
+    nx=100, 
+    ny=100, 
+    filename="PSD_0007", 
+    xwidth=1.5, 
+    yheight=1.5, 
+    restore_neutron=1)
+AT (0, 0, fi_ph-u) RELATIVE cPH
+
+COMPONENT l_PHfocus1 = L_monitor(
+    nL=100, 
+    filename="L_0007", 
+    xwidth=0.5, 
+    yheight=0.5, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT nD7 = Monitor_nD(
+  xwidth = 0.07, yheight = 0.07,
+  options="intenisity per cm2, lambda bins=100 limits=[0.0286014 20.2243], file=nD_0007.dat",
+  restore_neutron = 1
+)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT divergence_monitor_PHfocus1 = Divergence_monitor(
+    nh=100, 
+    nv=100, 
+    filename="DivMon_0007", 
+    xwidth=0.5, 
+    yheight=0.5, 
+    maxdiv_h=1,
+    maxdiv_v=1,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT h_divlambda_PHfocus1 = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_h_0007", 
+    xwidth=0.5, 
+    yheight=0.5, 
+    maxdiv_h=1, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT v_divlambda_PHfocus1 = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_v_0007", 
+    xwidth=0.5, 
+    yheight=0.5, 
+    maxdiv_h=1, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0, 0, 90) RELATIVE PREVIOUS
+
+COMPONENT slit_focusPH = Slit(
+    radius=0.002)
+AT (0, 0, fi_ph) RELATIVE cPH
+
+COMPONENT psd_slit_focusPH = PSD_monitor(
+    nx=100, 
+    ny=100, 
+    filename="PSD_0008", 
+    xwidth=0.02, 
+    yheight=0.02, 
+    restore_neutron=1)
+AT (0, 0, u) RELATIVE slit_focusPH
+
+COMPONENT l_slit_focusPH = L_monitor(
+    nL=100, 
+    filename="L_0008", 
+    xwidth=0.02, 
+    yheight=0.02, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT nD8 = Monitor_nD(
+  xwidth =0.002*2,
+  options="disk, intenisity per cm2, lambda bins=100 limits=[0.0286014 20.2243], file=nD_0008.dat",
+  restore_neutron = 1
+)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT divergence_monitor_slit_focusPH = Divergence_monitor(
+    nh=100, 
+    nv=100, 
+    filename="DivMon_0008", 
+    xwidth=0.02, 
+    yheight=0.02, 
+    maxdiv_h=0.5,
+    maxdiv_v=0.5,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT h_divlambda_slit_focusPH = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_h_0008", 
+    xwidth=0.02, 
+    yheight=0.02, 
+    maxdiv_h=0.5, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT v_divlambda_slit_focusPH = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_v_0008", 
+    xwidth=0.02, 
+    yheight=0.02, 
+    maxdiv_h=0.5, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0, 0, 90) RELATIVE PREVIOUS
+
+//------------------------------------------------------------------------------------------//
+//---------------------------EH Wolter Optic - Objective--------------------------//
+
+COMPONENT psd_test = PSD_monitor(
+    nx=100, 
+    ny=100, 
+    filename="PSD_test", 
+    xwidth=1.2, 
+    yheight=1.2, 
+    restore_neutron=1)
+AT (0, 0, 23.5) ABSOLUTE
+
+
+FINALLY
+%{
+%}
+
+END

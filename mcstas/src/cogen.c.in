@@ -127,7 +127,7 @@ char *instr_formal_type_names[] =
 
 /* 'char' and 'MCNUM' are for static array allocations */
 char *instr_formal_type_names_real[] =
-  { "long", "char*", "char", "MCNUM", "MCNUM", "double"};
+  { "int", "char*", "char", "MCNUM", "MCNUM", "double"};
 
 /*******************************************************************************
 * Output a single line of code
@@ -223,6 +223,31 @@ codeblock_out_brace(struct code_block *code)
   list_iterate_end(liter);
   cout("}");
   code_reset_source();
+}
+
+/** Output the lines of a literal block, encased in double quotes, and with any contained double quotes escaped.
+ *
+ * This form allows for automatic line-breaking string concatenation
+ */
+static void
+escaped_lines_out(List lines) {
+  List_handle liter;                /* For list iteration. */
+  char *line;                       /* Single code line. */
+  char * escaped_line;
+  if (list_undef(lines) || list_len(lines) <= 0) {
+    fprintf(output_handle, "\"\"");
+  } else {
+    liter = list_iterate(lines);
+    while((line = list_next(liter)))
+    {
+      //escaped_line = escaped_string(line);
+      escaped_line = str_quote(line);
+      fprintf(output_handle, "\"%s\"\n", escaped_line);
+      memfree(escaped_line); // a copy was made even if nothing was changed
+      num_next_output_line++;
+    }
+    list_iterate_end(liter);
+  }
 }
 
 /*******************************************************************************
@@ -947,6 +972,7 @@ int cogen_comp_setpos(
   coutf("  stracpy(_%s_var._name, \"%s\", 16384);", comp->name, comp->name);
   coutf("  stracpy(_%s_var._type, \"%s\", 16384);", comp->name, comp->def->name);
   coutf("  _%s_var._index=%i;", comp->name, comp->index);
+  coutf("  int current_setpos_index = %d;", comp->index);
 
   /* setting & output parameters of the component */
   cogen_comp_init_par(comp, instr, "SETTING");  // specific to each instance
@@ -1016,6 +1042,38 @@ void cogen_getcompindex_fct(struct instr_def *instr){
   }
   cout("  return -1;");
   cout("}");
+  cout("");
+}
+
+void cogen_getdistance_fct(){
+  cout("double index_getdistance(int first_index, int second_index)");
+  cout("/* Calculate the distance two components from their indexes*/");
+  cout("{");
+  cout("  return coords_len(coords_sub(POS_A_COMP_INDEX(first_index), POS_A_COMP_INDEX(second_index)));");
+  cout("}");
+  cout("");
+
+  cout("double getdistance(char* first_component, char* second_component)");
+  cout("/* Calculate the distance between two named components */");
+  cout("{");
+  cout("  int first_index = _getcomp_index(first_component);");
+  cout("  int second_index = _getcomp_index(second_component);");
+  cout("  return index_getdistance(first_index, second_index);");
+  cout("}");
+  cout("");
+
+  cout("double checked_setpos_getdistance(int current_index, char* first_component, char* second_component)");
+  cout("/* Calculate the distance between two named components at *_setpos() time, with component index checking */");
+  cout("{");
+  cout("  int first_index = _getcomp_index(first_component);");
+  cout("  int second_index = _getcomp_index(second_component);");
+  cout("  if (first_index >= current_index || second_index >= current_index) {");
+  cout("    printf(\"setpos_getdistance can only be used with the names of components before the current one!\\n\");");
+  cout("    return 0;");
+  cout("  }");
+  cout("  return index_getdistance(first_index, second_index);");
+  cout("}");
+  cout("#define setpos_getdistance(first, second) checked_setpos_getdistance(current_setpos_index, first, second)");
   cout("");
 }
 
@@ -1166,19 +1224,37 @@ int cogen_decls(struct instr_def *instr)
     if (strlen(i_formal->id)) {
       if (i_formal->isoptional  // needed to avoid double quotes in strings
           && !strcmp(instr_formal_type_names[i_formal->type],"instr_type_string"))
-        coutf("  \"%s\", &(_instrument_var._parameters.%s), %s, %s, ", i_formal->id,
+        coutf("  \"%s\", &(_instrument_var._parameters.%s), %s, %s, \"%s\",", i_formal->id,
               i_formal->id, instr_formal_type_names[i_formal->type],
-              exp_tostring(i_formal->default_value));
+              exp_tostring(i_formal->default_value),
+              i_formal->hasunit ? i_formal->unit : "");
       else
-        coutf("  \"%s\", &(_instrument_var._parameters.%s), %s, \"%s\", ", i_formal->id,
+        coutf("  \"%s\", &(_instrument_var._parameters.%s), %s, \"%s\", \"%s\",", i_formal->id,
               i_formal->id, instr_formal_type_names[i_formal->type],
-              i_formal->isoptional ? exp_tostring(i_formal->default_value) : "");
+              i_formal->isoptional ? exp_tostring(i_formal->default_value) : "",
+              i_formal->hasunit ? i_formal->unit : "");
     }
   }
   list_iterate_end(liter);
   coutf("  NULL, NULL, instr_type_double, \"\"");
   coutf("};");
   cout("");
+
+  /* 3.5 Table of component-defined literal strings. */
+  coutf("struct metadata_table_struct metadata_table[] = {");
+  int num_metadata = 0;
+  liter = list_iterate(instr->metadata);
+  struct metadata_struct * metadata;
+  while ((metadata = list_next(liter))){
+    coutf("\"%s\", \"%s\", \"%s\",", metadata->source, metadata->name, metadata->type);
+    escaped_lines_out(metadata->lines);
+    coutf(","); // terminates the line-broken concatenated strings
+    ++num_metadata;
+  }
+  list_iterate_end(liter);
+  coutf("  \"\", \"\", \"\", \"\"");
+  coutf("};");
+  coutf("int num_metadata = %d;", num_metadata);
 
   /* 4. Component SHAREs. */
   liter = list_iterate(instr->complist);
@@ -1285,6 +1361,8 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
 
   /* generate setpos instance functions */
   if (!strcmp(section, "INITIALISE")) {
+    cogen_getdistance_fct();
+
     liter = list_iterate(instr->complist);
     while((comp = list_next(liter)) != NULL) {
       warnings += cogen_comp_setpos(comp, last, instr);
@@ -1457,13 +1535,13 @@ void def_trace_section(struct instr_def *instr)
   static char *statepars_all[] =
   { /* particle state parameter names are used for defines */
   #if MCCODE_PROJECT == 1     /* neutron */
-  #define NUM_STATE_PARS 14
+  #define NUM_STATE_PARS 17
           "x", "y", "z", "vx", "vy", "vz",
-          "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop"
+          "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop", "_mctmp_a", "_mctmp_b", "_mctmp_c"
   #elif MCCODE_PROJECT == 2   /* xray */
-  #define NUM_STATE_PARS 12
+  #define NUM_STATE_PARS 15
           "x", "y", "z", "kx", "ky", "kz",
-          "phi", "t", "Ex", "Ey","Ez", "p"
+          "phi", "t", "Ex", "Ey","Ez", "p", "_mctmp_a", "_mctmp_b", "_mctmp_c"
   #endif
   };
 
@@ -1511,13 +1589,13 @@ void undef_trace_section(struct instr_def *instr)
   static char *statepars_all[] =
     { /* particle state parameter names are used for defines */
     #if MCCODE_PROJECT == 1     /* neutron */
-    #define NUM_STATE_PARS 14
+    #define NUM_STATE_PARS 17
             "x", "y", "z", "vx", "vy", "vz",
-            "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop"
+            "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop", "_mctmp_a", "_mctmp_b", "_mctmp_c"
     #elif MCCODE_PROJECT == 2   /* xray */
-    #define NUM_STATE_PARS 12
+    #define NUM_STATE_PARS 15
             "x", "y", "z", "kx", "ky", "kz",
-            "phi", "t", "Ex", "Ey","Ez", "p"
+            "phi", "t", "Ex", "Ey","Ez", "p", "_mctmp_a", "_mctmp_b", "_mctmp_c"
     #endif
     };
   List l;
@@ -1617,13 +1695,13 @@ int cogen_raytrace(struct instr_def *instr)
   static char *statepars_all[] =
     { /* particle state parameter names are used for defines */
     #if MCCODE_PROJECT == 1     /* neutron */
-    #define NUM_STATE_PARS 14
+    #define NUM_STATE_PARS 17
             "x", "y", "z", "vx", "vy", "vz",
-            "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop"
+            "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop", "_mctmp_a", "_mctmp_b", "_mctmp_c"
     #elif MCCODE_PROJECT == 2   /* xray */
-    #define NUM_STATE_PARS 12
+    #define NUM_STATE_PARS 15
             "x", "y", "z", "kx", "ky", "kz",
-            "phi", "t", "Ex", "Ey","Ez", "p"
+            "phi", "t", "Ex", "Ey","Ez", "p", "_mctmp_a", "_mctmp_b", "_mctmp_c"
     #endif
     };
   List l;
@@ -1928,13 +2006,13 @@ int cogen_rt_funnel(struct instr_def *instr)
   static char *statepars_all[] =
     { /* particle state parameter names are used for defines */
     #if MCCODE_PROJECT == 1     /* neutron */
-    #define NUM_STATE_PARS 14
+    #define NUM_STATE_PARS 17
             "x", "y", "z", "vx", "vy", "vz",
-            "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop"
+            "t", "sx", "sy", "sz", "p", "mcgravitation", "mcMagnet", "allow_backprop", "_mctmp_a", "_mctmp_b", "_mctmp_c"
     #elif MCCODE_PROJECT == 2   /* xray */
-    #define NUM_STATE_PARS 12
+    #define NUM_STATE_PARS 15
             "x", "y", "z", "kx", "ky", "kz",
-            "phi", "t", "Ex", "Ey","Ez", "p"
+            "phi", "t", "Ex", "Ey","Ez", "p", "_mctmp_a", "_mctmp_b", "_mctmp_c"
     #endif
     };
   List l;
@@ -2247,6 +2325,13 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  double kx,ky,kz; /* wave-vector */");
   cout("  double phi, Ex,Ey,Ez; /* phase and electrical field */");
 #endif
+  cout("  /* Generic Temporaries: */");
+  cout("  /* May be used internally by components e.g. for special */");
+  cout("  /* return-values from functions used in trace, thusreturned via */");
+  cout("  /* particle struct. (Example: Wolter Conics from McStas, silicon slabs.) */");
+  cout("  double _mctmp_a; /* temp a */");
+  cout("  double _mctmp_b; /* temp b */");
+  cout("  double _mctmp_c; /* temp c */");
   //cout("  randstate_t randstate[RANDSTATE_LEN]");
   cout("  unsigned long randstate[7];"); // for the KISS generator
   cout("  double t, p;    /* time, event weight */");
@@ -2366,6 +2451,9 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  if(!str_comp(\"sz\",name)){rval=p->sz;s=0;}");
   cout("  if(!str_comp(\"t\",name)){rval=p->t;s=0;}");
   cout("  if(!str_comp(\"p\",name)){rval=p->p;s=0;}");
+  cout("  if(!str_comp(\"_mctmp_a\",name)){rval=p->_mctmp_a;s=0;}");
+  cout("  if(!str_comp(\"_mctmp_b\",name)){rval=p->_mctmp_b;s=0;}");
+  cout("  if(!str_comp(\"_mctmp_c\",name)){rval=p->_mctmp_c;s=0;}");
   while((var = list_next(liter))) {
     coutf("  if(!str_comp(\"%s\",name)){rval=*( (double *)(&(p->%s)) );s=0;}",var,var);
   }
@@ -2896,11 +2984,11 @@ cogen(char *output_name, struct instr_def *instr)
   if(output_handle == NULL)
     fatal_error("Error opening output file '%s'\n", output_name);
 
-
   /* and we now call the writers */
   cogen_header(instr, output_name);
   warnings += cogen_decls(instr);
   detect_skipable_transforms(instr);
+
   warnings += cogen_section(instr, "INITIALISE", "init", instr->inits);
 
   // TRACE section requires a bit more flexibility
@@ -2919,8 +3007,11 @@ cogen(char *output_name, struct instr_def *instr)
   // API macro support functions
   cogen_getvarpars_fct(instr);
   cogen_getparticlevar_fct(instr);
+
+
   cogen_getcompindex_fct(instr);
 
+  embed_file("metadata-r.c"); // functions used to query and display instrument/component-defined metadata strings
   embed_file("mccode_main.c");
 
   if (verbose && warnings)

@@ -93,7 +93,7 @@ COMPONENT LdetectorPRE = L_monitor(
     Lmax = 6.5)
 AT (0,0,0.05) RELATIVE coll2
 
-SPLIT COMPONENT sample = Arm()
+SPLIT COMPONENT sampleMantid = Arm()
   AT (0, 0, 0.2) RELATIVE coll2
 
 COMPONENT sample1= SasView_barbell(model_scale=1,model_abs=0.0,

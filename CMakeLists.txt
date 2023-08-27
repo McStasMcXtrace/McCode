@@ -3,6 +3,7 @@ cmake_policy(VERSION 3.17.0)
 
 # This file will build McStas and/or McXtrace
 project(mccode C)
+set(CMAKE_C_STANDARD 99)
 
 # Set module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")

@@ -23,7 +23,7 @@
     "OACC": "@OACC@",
     "MPICC": "@MPICC@",
     "MPIRUN": "@MPIRUN@",
-    "MPINODES": "4"
+    "MPINODES": "auto"
   },
   "platform": {
     "EXESUFFIX": "@MCCODE_EXECUTABLE_SUFFIX@"

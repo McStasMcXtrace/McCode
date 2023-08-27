@@ -151,7 +151,9 @@ List_handle list_iterate_back(List);     /* Prepare to traverse list. */
 void *list_next(List_handle);       /* Get next element in list. */
 void *list_previous(List_handle);       /* Get previous element in list. */
 void list_iterate_end(List_handle); /* End list traversal. */
-
+int list_undef(List l);
+List list_cat(List l1, List l2);
+List list_copy(List, void * (*)(void *));
 
 /*******************************************************************************
 * Definitions for cexp.c
@@ -238,6 +240,8 @@ struct comp_orientation
 /*******************************************************************************
 * Definitions in instrument.y
 *******************************************************************************/
+
+typedef struct instr_def * instr_ptr_t;
 
 /* Name of the file currently being parsed. */
 extern char *instr_current_filename;
@@ -440,7 +444,8 @@ struct comp_def
     int  flag_defined_trace;        /* set to 1 when a common TRACE block is generated */
     int  counter_instances;         /* number of instances using the same definition/class */
     int  flag_noacc;                /* Component type not available on GPU */
-    List def_par, set_par, out_par, decl_par; /* Formal parameters. */
+    struct List_header * def_par, * set_par, * out_par, * decl_par; /* Formal parameters. */
+    struct List_header * metadata;
     struct code_block *share_code;  /* Unique Declaration code (shared). */
     struct code_block *uservar_code; /* To be injected in particlce struct */
     struct code_block *decl_code;   /* Declaration code. */
@@ -478,6 +483,7 @@ struct comp_inst
     int    index;   /* index of comp instance */
     struct group_inst *group;       /* NULL or group name in which comp is */
     Symtab defpar, setpar;          /* Parameter values. */
+    List metadata;  /* NULL or list of metadata code blocks after extend */
     List jump;      /* NULL or list of jumps to execute after trace/extend */
     CExp when;      /* NULL or condition to execute TRACE */
     Symtab actuals; /* save actual/given parameters for COPY */
@@ -494,6 +500,8 @@ struct instr_formal
     char *id;                     /* Parameter name */
     int isoptional;               /* True if default value is available */
     CExp default_value;           /* Default value if isoptional is true */
+    int hasunit;                  /* Flag to indicate if unit was provided */
+    char *unit;                   /* (Informational) parameter unit */
   };
 
 /* Instrument definition. */
@@ -520,7 +528,18 @@ struct instr_def
     char dependency[1024];    /* stores all dependencies needed to compile, from comps and instr */
     List user_vars;           /* stores custom particle user variables */
     List user_vars_types;     /* stores custom particle user variable types */
+    List metadata;            /* stores all components' literal code blocks */
   };
+
+struct metadata_struct
+{
+  int instance;
+  char* source; // TODO abuse this field? "__definition__" and "__instance__"?
+  char* name;
+  char* type;
+  List lines;
+  //struct code_block* code;
+};
 
 struct jump_struct
 {
@@ -542,5 +561,12 @@ struct jump_name
     char *name;
     int  index;
   };
+
+int metadata_construct_table(instr_ptr_t);
+void metadata_assign_source(List, char *);
+void metadata_overwrite_source(List, char *);
+Symtab metadata_separate_by_source(List metadata, int source_type);
+struct metadata_struct * metadata_copy(struct metadata_struct *);
+List metadata_list_copy(List from);
 
 #endif /* MCCODE_H */

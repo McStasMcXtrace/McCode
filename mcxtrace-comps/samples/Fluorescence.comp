@@ -340,7 +340,6 @@ DECLARE %{
   DArray1d cum_xs_fluo;
   DArray1d cum_xs_Compton;
   DArray1d cum_xs_Rayleigh;
-  int  type;
   int  shape;
   off_struct offdata;
   int  n_fluo;
@@ -505,6 +504,7 @@ TRACE %{
 
 int    intersect=0;       /* flag to continue/stop */
 int    reuse=0;
+int  type;
 double l0,  l1,  l2,  l3; /* times for intersections */
 double dl0, dl1, dl2, dl; /* time intervals */
 int    flag_concentric = 0;

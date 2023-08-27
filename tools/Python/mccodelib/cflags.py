@@ -60,7 +60,7 @@ def evaluate_dependency_str( depstr, verbose=False ):
 
         returnpath=str(fullfile)
         if verbose:
-            print(f"   --> pointing datafile {dfile} to {returnpath}")
+            print(f"   --> pointing path {dfile} to {returnpath}")
         return to_target_fmt(returnpath)
 
     def evalfct_env(s):

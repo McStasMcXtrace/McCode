@@ -128,7 +128,7 @@ char *instr_formal_type_names[] =
 
 /* 'char' and 'MCNUM' are for static array allocations */
 char *instr_formal_type_names_real[] =
-  { "long", "char*", "char", "MCNUM", "MCNUM", "double"};
+  { "int", "char*", "char", "MCNUM", "MCNUM", "double"};
 
 /*******************************************************************************
 * Output a single line of code
@@ -245,6 +245,27 @@ codeblock_initialize_add(struct code_block *code)
 }
 
 
+/** Output the lines of a metadata block, encased in triple-double quotes
+ *
+ */
+static void
+triple_escaped_lines_out(List lines) {
+  List_handle liter;                /* For list iteration. */
+  char *line;                       /* Single code line. */
+  char * escaped_line;
+  if (list_undef(lines) || list_len(lines) <= 0) {
+    fprintf(output_handle, "\"\"\"\"\"\"");
+  } else {
+    fprintf(output_handle, "\"\"\"");
+    liter = list_iterate(lines);
+    while((line = list_next(liter)))
+    {
+      fprintf(output_handle, "%s", line);
+    }
+    list_iterate_end(liter);
+    fprintf(output_handle, "\"\"\"");
+  }
+}
 
 /*******************************************************************************
 * Create an empty code list
@@ -368,6 +389,28 @@ int cogen_decls(struct instr_def *instr)
     list_iterate_end(liter);
   }
   cout("");
+
+  // Component-define literal strings:
+  Symtab component_metadata = metadata_separate_by_source(instr->metadata, 0); // 0 -> only select component-defined metadata
+  Symtab_handle component_metadata_handle = symtab_iterate(component_metadata);
+  struct Symtab_entry * one_component_metadata;
+  /* To start, just write a tuple of (str, str, str) tuples */
+  coutf("component_definition_metadata = {");
+  struct metadata_struct * metadataStruct;
+  while ((one_component_metadata = symtab_next(component_metadata_handle))) {
+    coutf("'%s': {", one_component_metadata->name);
+    liter = list_iterate(one_component_metadata->val);
+    while (metadataStruct = list_next(liter)) {
+      coutf("'%s': ('%s', ", metadataStruct->name, metadataStruct->type);
+      triple_escaped_lines_out(metadataStruct->lines);
+      coutf("), ");
+    }
+    list_iterate_end(liter);
+    coutf("}, ");
+  }
+  coutf("}");
+  symtab_iterate_end(component_metadata_handle);
+  symtab_free(component_metadata, NULL);
 
   cout("instr.append_declare(r'''");
   codeblock_out(instr->decls);
@@ -526,6 +569,18 @@ int cogen_raytrace(struct instr_def *instr)
       coutf("%s.append_EXTEND(r'''",comp->name);
       codeblock_out(comp->extend);
       cout("''')\n\n");
+    }
+
+    if (list_len(comp->metadata)) {
+      struct metadata_struct * l_ptr;
+      for (int lit=0; lit<list_len(comp->metadata); ++lit){
+        l_ptr = (struct metadata_struct *) list_access(comp->metadata, lit);
+        if (l_ptr->instance) {
+          coutf("%s.append_METADATA(type='%s', name='%s', lines=", comp->name, l_ptr->type, l_ptr->name);
+          triple_escaped_lines_out(l_ptr->lines);
+          coutf(")");
+        }
+      }
     }
     
     cout("");

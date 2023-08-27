@@ -20,6 +20,8 @@
 *
 *   struct mcinputtable_struct mcinputtable[];
 *   int numipar;
+*   metadata_table_t metadata_table[];
+*   int num_metadata;
 *   char instrument_name[], instrument_source[];
 *   int traceenabled, defaultmain;
 *   extern MCNUM  mccomp_storein[];
@@ -85,8 +87,17 @@ size_t str_len(const char *s);
 #  define NEED_STAT_H
 #endif
 
+#ifdef WIN32
+#  define NEED_STAT_H
+#  define NEED_TYPES_H
+#endif
+
 #ifdef NEED_STAT_H
 #  include <sys/stat.h>
+#endif
+
+#ifdef NEED_TYPES_H
+#  include <sys/types.h>
 #endif
 
 #ifndef MC_PATHSEP_C
@@ -99,7 +110,10 @@ size_t str_len(const char *s);
 #  endif /* !WIN32 */
 #endif /* MC_PATHSEP_C */
 
-
+#ifdef WIN32
+#  define mkdir(a,b) mkdir(a)
+#  define getpid() NULL
+#endif
 
 /* the version string is replaced when building distribution with mkdist */
 #ifndef MCCODE_STRING
@@ -177,6 +191,24 @@ size_t str_len(const char *s);
 #  undef NOSIGNALS
 #endif
 
+/** Header information for metadata-r.c ----------------------------------------------------------------------------- */
+struct metadata_table_struct { /* stores metadata strings from components */
+  char * source;  // component name which provided the metadata
+  char * name;    // the name of the metadata
+  char * type;    // the MIME type of the metadata (free form, valid identifier)
+  char * value;   // the metadata string contents
+};
+typedef struct metadata_table_struct metadata_table_t;
+char * metadata_table_key_component(char* key);
+char * metadata_table_key_literal(char * key);
+int metadata_table_defined(int, metadata_table_t *, char *);
+char * metadata_table_type(int, metadata_table_t *, char *);
+char * metadata_table_literal(int, metadata_table_t *, char *);
+void metadata_table_print_all_keys(int no, metadata_table_t * tab);
+int metadata_table_print_all_components(int no, metadata_table_t * tab);
+int metadata_table_print_component_keys(int no, metadata_table_t * tab, char * key);
+/* -------------------------------------------------------------------------- Header information for metadata-r.c --- */
+
 /* Note: the enum instr_formal_types definition MUST be kept
    synchronized with the one in mccode.h and with the
    instr_formal_type_names array in cogen.c. */
@@ -191,7 +223,9 @@ struct mcinputtable_struct { /* defines instrument parameters */
   void *par;  /* pointer to instrument parameter (variable) */
   enum instr_formal_types type;
   char *val;  /* default value */
+  char *unit; /* expected unit for parameter; informational only */
 };
+
 
 #ifndef MCCODE_BASE_TYPES
 typedef double MCNUM;
@@ -204,6 +238,8 @@ typedef MCNUM Rotation[3][3];
 #ifndef DANSE
 extern struct mcinputtable_struct mcinputtable[];         /* list of instrument parameters */
 extern int    numipar;                                    /* number of instrument parameters */
+extern metadata_table_t metadata_table[];                 /* list of component-defined string metadata */
+extern int    num_metadata;                               /* number of component-defined string metadata */
 extern char   instrument_name[], instrument_source[]; /* instrument name and filename */
 extern char  *instrument_exe;                           /* executable path = argv[0] or NULL */
 extern char   instrument_code[];                        /* contains the initial 'instr' file */
