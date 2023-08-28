@@ -14,4 +14,5 @@ A few tips for developers:
   conda install -n base conda-libmamba-solver
   conda config --set solver libmamba
   ```
-  #Undo last config step with `conda config --set solver classic`
+  Undo last  step with `conda config --set solver classic`
+* Update conda with: `conda update -n base -c conda-forge conda`

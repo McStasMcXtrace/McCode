@@ -49,21 +49,21 @@ outputs:
         - ply # for traces from mcrun
     test:
       files:
-        - test_pkg_core.py
+        - test_pkg.py
       source_files:
         - src/mcstas-comps/examples/BNL_H8.instr
         - src/mcstas-comps/examples/Union_manual_example.instr
       commands:
-        - python3 test_pkg_core.py
+        - python3 test_pkg.py core
 
   - name: mcstas-data
     noarch: generic
     script: install-files-data.py
     test:
       files:
-        - test_pkg_data.py
+        - test_pkg.py
       commands:
-        - python3 test_pkg_data.py
+        - python3 test_pkg.py data
 
   - name: mcstas-mcgui
     noarch: generic
@@ -100,11 +100,9 @@ outputs:
 
 test:
   files:
-    - test_pkg_mcstas.py
-#  source_files:
-#    - src/mcstas-comps/examples/BNL_H8.instr
+    - test_pkg.py
   commands:
-    - python3 test_pkg_mcstas.py
+    - python3 test_pkg.py mcstas
 about:
   home: https://mcstas.org/
   summary: McStas is a general tool for simulating neutron scattering instruments and experiments.
