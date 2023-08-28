@@ -157,7 +157,7 @@ COMPONENT DCM_slit_in = COPY(primary_slit)
 AT (0,0,2.3) RELATIVE PREVIOUS
 
 COMPONENT DCM_in = Monitor_nD(
-  xwidth = 5e-2, yheight=5e-2,
+  xwidth = 5e-2, yheight=5e-2, restore_xray=1,
   options="x y", bins=128)
 AT (0,0,0.001) RELATIVE PREVIOUS
 
@@ -257,27 +257,32 @@ SPLIT COMPONENT powder = PowderN(reflections=sample,
 AT (0,0,0) RELATIVE sample_stage
 GROUP samples
 
+// The Rayleigh scattering at E0 is large, and creates massive background.
+// We ignore it here.
 COMPONENT fluo = Fluorescence(
   material=sample,
-  xwidth = 0.001, yheight=0.01, zdepth=5e-6,
-  p_interact=1, target_z=1, focus_aw=90, focus_ah=5)
+  xwidth = 0.001, yheight=0.01, zdepth=5e-6, // flag_rayleigh=0,
+  p_interact=1, target_z=1, focus_aw=180, focus_ah=5)
 AT (0,0,0) RELATIVE sample_stage
 GROUP samples
 
 // 4pi energy monitor
 COMPONENT fluo_monitor = Monitor_nD(
   radius=0.2, options="energy", bins=1024, min=0, max=E0*1.2)
+// WHEN (K2E*sqrt(kx*kx+ky*ky+kz*kz) < 0.95*E0)
 AT (0,0,0) RELATIVE PREVIOUS
 
 // ideal "banana" detector
 COMPONENT det_angle = Monitor_nD(options="abs theta limits=[2 90]",
   radius=0.6, yheight=1e-2, bins=10000)
+WHEN (0.75 * E0 < K2E*sqrt(kx*kx+ky*ky+kz*kz)) // model detector energy discrimination
 AT (0,0,0) RELATIVE sample_stage
 
 // -----------------------------------------------------------------------------
 // 32.09    | a set of detectors (transmission, XRD and XRF), radius 654 mm
 COMPONENT xpad = Monitor_nD(radius=.645, yheight = 0.05,
   options="theta bins=512 limits=[-8 120], y bins=128")
+WHEN (0.75 * E0 < K2E*sqrt(kx*kx+ky*ky+kz*kz)) // model detector energy discrimination
 AT (0,0,0) RELATIVE sample_stage
 
 
