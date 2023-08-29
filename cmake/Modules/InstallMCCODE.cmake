@@ -338,13 +338,18 @@ macro(installMCCODE)
       DESTINATION "${DEST_BINDIR}"
     )
 
-    foreach (name environment module)
-      configure_file(
-        cmake/support/run-scripts/${name}.in
-        work/support/${name}
-        @ONLY)
-      install(PROGRAMS ${WORK}/support/${name} DESTINATION "${DEST_DATADIR_TOPENVFILES}")
-    endforeach()
+    configure_file(
+      cmake/support/run-scripts/environment.in
+      work/support/${FLAVOR}-environment
+      @ONLY)
+    install(PROGRAMS ${WORK}/support/${FLAVOR}-environment DESTINATION "${DEST_DATADIR_TOPENVFILES}")
+
+    configure_file(
+      cmake/support/run-scripts/module.in
+      work/support/module
+      @ONLY)
+    install(PROGRAMS ${WORK}/support/module DESTINATION "${DEST_DATADIR_TOPENVFILES}")
+
     install(PROGRAMS ${WORK}/support/postinst DESTINATION "${DEST_BINDIR}")
     install(PROGRAMS ${WORK}/support/${FLAVOR}_errmsg DESTINATION "${DEST_BINDIR}")
   endif()
