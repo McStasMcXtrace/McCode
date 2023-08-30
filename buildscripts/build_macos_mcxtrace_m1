@@ -37,7 +37,7 @@ WORK=`pwd`
 # echo "* Embedding miniconda3 in your app                      *"
 # echo "*********************************************************"
 # chmod a+x Mambaforge-$(uname)-$(uname -m).sh
-# ./Mambaforge-$(uname)-$(uname -m).sh -b -p $MCINSTALL_PREFIX/mcstas/${MCVERSION}/miniconda3/
+# ./Mambaforge-$(uname)-$(uname -m).sh -b -p $MCINSTALL_PREFIX/mcxtrace/${MCVERSION}/miniconda3/
 
 # Run conda to install the dependencies
 echo
@@ -76,7 +76,7 @@ if [ -d build ]; then
     rm -rf build
 fi
 mkdir -p build; cd build
-cmake -DCMAKE_INSTALL_PREFIX=/Applications/McXtrace-${MCVERSION}.app/Contents/Resources/mcxtrace/${MCVERSION}/ ..
+cmake -DCMAKE_INSTALL_PREFIX=/Applications/McXtrace-${MCVERSION}.app/Contents/Resources/mcxtrace/${MCVERSION}/ -DHDF5_ROOT=/Applications/McXtrace-${MCVERSION}.app/Contents/Resources/mcxtrace/${MCVERSION}/miniconda3/ -DCMAKE_MACOSX_RPATH=ON -DCMAKE_INSTALL_RPATH=/Applications/McXtrace-${MCVERSION}.app/Contents/Resources/mcxtrace/${MCVERSION}/lib  ..
 make install
 cd $WORK
 
