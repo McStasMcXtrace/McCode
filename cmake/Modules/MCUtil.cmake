@@ -156,10 +156,10 @@ macro(setupMCCODE FLAVOR)
   if(WINDOWS)
     # Fix installation root
     if ( MCCODE_USE_LEGACY_DESTINATIONS )
-      set(CMAKE_INSTALL_PREFIX "C://")
+      set(CMAKE_INSTALL_PREFIX "${FLAVOR}-${MCCODE_VERSION}")
       set(CPACK_NSIS_INSTALL_ROOT "C:\\\\${FLAVOR}-${MCCODE_VERSION}")
     else()
-      set(CMAKE_INSTALL_PREFIX "C://")
+      set(CMAKE_INSTALL_PREFIX "${FLAVOR}\\\\${MCCODE_VERSION}")
       set(CPACK_NSIS_INSTALL_ROOT "C:\\\\${FLAVOR}\\\\${MCCODE_VERSION}")
     endif()
 
