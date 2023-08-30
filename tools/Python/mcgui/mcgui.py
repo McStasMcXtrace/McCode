@@ -870,7 +870,8 @@ class McGuiAppController():
     def handleEnvironment(self):
         terminal = mccode_config.configuration["TERMINAL"]
         if not sys.platform == 'win32':
-            scriptfile = str(pathlib.Path(__file__).parent.parent.parent.parent.resolve() / 'environment')
+            scriptfile = str(mccode_config.configuration["MCCODE"] + '-environment')
+            scriptfile = str(pathlib.Path(__file__).parent.parent.parent.parent.resolve() / scriptfile)
         else:
             scriptfile = 'start ' + mccode_config.configuration["MCCODE_LIB_DIR"] + '\\..\\bin\\mccodego.bat'
 
