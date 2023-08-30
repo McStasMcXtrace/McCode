@@ -79,6 +79,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcrun.in" "${WORK}/${P}run" @ONLY)
 install(
   PROGRAMS "${PROJECT_SOURCE_DIR}/mcrun.py"
   DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+  RENAME "${P}run.py"
   )
 
 # Other .py infrastructure

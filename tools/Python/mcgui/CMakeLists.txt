@@ -81,13 +81,9 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/McCode-py.desktop.in" "work/${FLAVOR
 
 # Main script, including rename mcgui/mxgui
 install(
-  FILES "${PROJECT_SOURCE_DIR}/mcgui.py"
+  PROGRAMS "${PROJECT_SOURCE_DIR}/mcgui.py"
   DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
   RENAME "${P}gui.py"
-  PERMISSIONS
-  OWNER_READ OWNER_WRITE OWNER_EXECUTE
-  GROUP_READ GROUP_EXECUTE
-  WORLD_READ WORLD_EXECUTE
   )
 
 # Other .py infrastructure

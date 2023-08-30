@@ -38,7 +38,7 @@ canrun() {
 }
 
 if ( canrun ); then
-    python3 -u ${UTILDIR}/mcgui.py $*
+    python3 -u ${UTILDIR}/${TOOL}.py $*
 else
     @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
 fi
