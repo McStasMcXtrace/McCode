@@ -1,22 +1,20 @@
 include(FetchContent)
 
-function(git_fetch package version source required scoped_build_params )
+function(git_fetch package min_version fetch_version_or_branch source required scoped_build_params )
     # If provided a bare version number check for if it is already installed locally
-    if (version MATCHES "^[0-9]+\.([0-9]+\.)*[0-9]+$")
+    if (min_version MATCHES "^[0-9]+\.([0-9]+\.)*[0-9]+$")
       if (${required})
-          find_package(${package} ${version} REQUIRED)
+          find_package(${package} ${min_version} REQUIRED)
       else()
-          find_package(${package} ${version} QUIET)
+          find_package(${package} ${min_version} QUIET)
       endif()
-      # If not found by find_package, ensure the tag starts with a v for GitHub
-      set(version v${version})
     endif()
 
     if (${${package}_FOUND})
         message(STATUS "Found system ${package}")
     else()
-        message(STATUS "Fetch ${package} ${version} from ${source}")
-        FetchContent_Declare(${package} GIT_REPOSITORY ${source} GIT_TAG ${version})
+        message(STATUS "Fetch ${package} ${fetch_version} from ${source}")
+        FetchContent_Declare(${package} GIT_REPOSITORY ${source} GIT_TAG ${fetch_version})
         FetchContent_GetProperties(${package})
         if ( scoped_build_params )
           while( scoped_build_params )

@@ -40,5 +40,5 @@ endif()
 
 unset( tmp_instprefix )
 
-git_fetch(mcpl "${MCPL_MINIMUM_VERSION}" "${MCPL_REPO}" ${MCPL_REQUIRE_PREINSTALL} "${mcpl_fetch_params}")
+git_fetch(mcpl "${MCPL_MINIMUM_VERSION}" "master" "${MCPL_REPO}" ${MCPL_REQUIRE_PREINSTALL} "${mcpl_fetch_params}")
 
