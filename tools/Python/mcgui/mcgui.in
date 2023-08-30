@@ -25,7 +25,7 @@ fi
 
 
 canrun() {
-    if ! [ -x ${UTILDIR}/mcgui.py ]; then
+    if ! [ -x ${UTILDIR}/${TOOL}.py ]; then
         exit 127;
     fi
 
