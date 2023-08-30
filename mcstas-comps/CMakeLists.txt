@@ -57,7 +57,7 @@ file_globsrc( tmp "share/*" )
 install( FILES ${tmp} DESTINATION "${DEST_DATADIR_CODEFILES}" )
 
 set( tmp_complist "misc" "monitors" "obsolete" "optics" "samples" "sources" "union" "sasmodels" )
-if ( NOT EXCLUDE_CONTRIB )#FIXME: Also honour EXCLUDE_CONTRIB in mcxtrace-comps
+if ( NOT EXCLUDE_CONTRIB )
   list( APPEND tmp_complist "contrib" )
 endif()
 foreach(name ${tmp_complist})
