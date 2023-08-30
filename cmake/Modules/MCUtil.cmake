@@ -155,8 +155,10 @@ macro(setupMCCODE FLAVOR)
 
   if(WINDOWS)
     # Fix installation root
-    set(CMAKE_INSTALL_PREFIX "C://")
-    set(CPACK_NSIS_INSTALL_ROOT "C:\\\\${FLAVOR}-${MCCODE_VERSION}")
+    if ( MCCODE_USE_LEGACY_DESTINATIONS )
+      set(CMAKE_INSTALL_PREFIX "C://")
+      set(CPACK_NSIS_INSTALL_ROOT "C:\\\\${FLAVOR}-${MCCODE_VERSION}")
+    endif()
 
     set(CPACK_NSIS_UNINSTALL_NAME "${CMAKE_PROJECT_NAME}-uninstall")
 
