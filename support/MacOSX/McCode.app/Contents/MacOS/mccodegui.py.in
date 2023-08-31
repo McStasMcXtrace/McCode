@@ -3,12 +3,8 @@
 # Wrapper script for starting mcgui in an app on Mac OS X
 #
 
-if [ "@FLAVOR@" == "mcstas" ]
-then
-    BASEDIR=/Applications/McStas-@MCCODE_VERSION@.app
-else
-    BASEDIR=/Applications/McXtrace-@MCCODE_VERSION@.app
-fi
+BASEDIR=`dirname $0`
+BASEDIR=$BASEDIR/../..
 
 SCRIPT=$BASEDIR/Contents/Resources/@DEST_BINDIR@/@GUIPREFIX@gui
 
