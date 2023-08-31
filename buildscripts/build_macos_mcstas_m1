@@ -52,6 +52,9 @@ conda env create -p ${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3 --file en
 eval "$(conda shell.bash hook)"
 conda activate ${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3
 
+# Temporary workaround for issue with conda...
+ln -sf ${MCINSTALL_PREFIX}/mcxtrace/${MCVERSION}/miniconda3/lib/librhash.1.dylib ${MCINSTALL_PREFIX}/mcxtrace/${MCVERSION}/miniconda3/lib/librhash.0.dylib
+
 cd $WORK
 
 ./mkdist mcstas ${MCVERSION} "" "" mac-silicon "" -- OSXapp
