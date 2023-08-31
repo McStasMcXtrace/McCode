@@ -2,10 +2,10 @@
 @set BINDIR=%~dp0
 @CALL %BINDIR%\\mccodeenv.bat
 @ECHO OFF
-@ECHO mcstas environment shell:
+@ECHO @FLAVOR@ environment shell:
 @ECHO OFF
 @ECHO OFF
-@mcstas -v
+@@FLAVOR@ -v
 @ECHO OFF
 @cmd
 

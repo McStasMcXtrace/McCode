@@ -1,4 +1,4 @@
-@REM DOS/cmd.exe batch file for starting mcstas-3.9999-git
+@REM DOS/cmd.exe batch file for starting @CPACK_PACKAGE_NAME@
 @REM
 @REM First, set up various environment variables
 @REM
@@ -6,9 +6,9 @@
 @set BINDIR=%~dp0
 @SET PATH=%BINDIR%;%BINDIR%\\..\\miniconda3;%BINDIR%\\..\\miniconda3\\Scripts\\;%BINDIR%\\..\\miniconda3\\Library\\bin;%BINDIR%\\..\\miniconda3\\Library\\mingw-w64\\bin;c:\\Microsoft MPI\\Bin;%PATH%
 @REM
-@REM McStas related:
-@SET MCSTAS=%BINDIR%\\@MCCODE_RELPATH_BINDIR2RESOURCEDIR@
-@SET MCSTAS_CC=gcc
+@REM @FLAVOR@ related:
+@SET @FLAVOR_UPPER@=%BINDIR%\\@MCCODE_RELPATH_BINDIR2RESOURCEDIR@
+@SET @FLAVOR_UPPER@_CC=gcc
 @REM
 @REM NCrystal Python hooks
 @SET PYTHONPATH=%BINDIR%\\..\\share\\NCrystal\\python;%PYTHONPATH%
