@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Wrapper script for starting mcgui.pl in an app on Mac OS X
+# Wrapper script for starting mcgui in an app on Mac OS X
 #
 
 if [ "@FLAVOR@" == "mcstas" ]
@@ -10,14 +10,7 @@ else
     BASEDIR=/Applications/McXtrace-@MCCODE_VERSION@.app
 fi
 
-ARCH=`arch`
-UNAME=`uname -s`
-if [[ ${UNAME} = Darwin* && ${ARCH} = arm64 ]]; then
-    # Set up for homebrew in /opt
-    export PATH=/opt/homebrew/bin:$PATH
-fi
-
-SCRIPT=$BASEDIR/Contents/Resources/@FLAVOR@/@MCCODE_VERSION@/bin/@GUIPREFIX@gui
+SCRIPT=$BASEDIR/Contents/Resources/@DEST_BINDIR@/@GUIPREFIX@gui
 
 if [ -e $SCRIPT ]
 then
