@@ -87,8 +87,8 @@ install( FILES ${tmp} DESTINATION "${DEST_DATADIR_EDITORS}" )
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/revision.in" "${WORK}/revision" @ONLY)
 
 # copy some descriptory files
-configure_directory ("NOMENCLATURE.md" "work/nomenclature")
+configure_directory ("NOMENCLATURE" "work/nomenclature")
 configure_directory ("README.md" "work/readme")
-install( FILES "${WORK}/nomenclature/NOMENCLATURE.md" DESTINATION "${DEST_DATADIR_INFO}")
-install( FILES "${WORK}/readme/README.md" DESTINATION "${DEST_DATADIR_INFO}")
-install( FILES "${WORK}/revision" DESTINATION "${DEST_DATADIR_INFO}")
+install( FILES "${WORK}/nomenclature/NOMENCLATURE" DESTINATION "${DEST_DATADIR_COMPS}")
+install( FILES "${WORK}/readme/README.md" DESTINATION "${DEST_DATADIR_COMPS}")
+install( FILES "${WORK}/revision" DESTINATION "${DEST_DATADIR_COMPS}" )
