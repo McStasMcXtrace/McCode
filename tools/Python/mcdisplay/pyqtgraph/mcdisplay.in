@@ -9,7 +9,8 @@ UTILDIR="${MCCODE_TOOLDIR}/Python/@P@display/pyqtgraph"
 
 #NB: miniconda should be installed next to the tool folder:
 if [ -d "${MCCODE_TOOLDIR}/../miniconda3" ]; then
-    source "${MCCODE_TOOLDIR}/../miniconda3/bin/activate" base
+    source "${MCCODE_TOOLDIR}/../miniconda3/bin/activate" "${MCCODE_TOOLDIR}/../miniconda3"
+    export PATH=${MCCODE_TOOLDIR}/../miniconda3/bin/:$PATH
 fi
 
 # FIXME: NCrystal should be used via own package/infrastructure
