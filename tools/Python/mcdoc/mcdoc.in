@@ -24,13 +24,13 @@ UNAME=`uname -s`
 
 
 canrun() {
-    if ! [ -x ${UTILDIR}/mcdoc.py ]; then
+    if ! [ -x ${UTILDIR}/${TOOL}.py ]; then
         exit 127;
     fi
 }
 
 if ( canrun ); then
-    python3 -u ${UTILDIR}/mcdoc.py "$@"
+    python3 -u ${UTILDIR}/${TOOL}.py "$@"
 else
     echo ":: Failed to run Python  ${TOOL}."
 fi
