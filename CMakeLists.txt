@@ -25,7 +25,9 @@ elseif(NOT (${BUILD_MCSTAS} OR ${BUILD_MCXTRACE}))
     message(FATAL_ERROR "Configuration requires building one of McStas or McXtrace via -DBUILD_MCXTRACE=ON or -DBUILD_MCSTAS=ON")
 endif()
 
-
+if ("${MCVERSION}" STREQUAL "")
+    message(WARNING "Build version is unset. Define using e.g.  -DMCVERSION=3.9a")
+endif()
 
 
 # Setup McCode values (from mkdist or defaults)
