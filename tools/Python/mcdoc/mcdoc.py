@@ -932,7 +932,7 @@ def main(args):
 
     elif args.web == True:
         ''' open website and exit '''
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], 'http://www.'+mccode_config.configuration['MCCODE']+'.org'), shell=True)
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], 'https://www.'+mccode_config.configuration['MCCODE']+'.org'), shell=True)
         quit()
 
     elif args.install == True:
