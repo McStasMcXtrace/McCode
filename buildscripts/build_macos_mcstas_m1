@@ -23,21 +23,6 @@ export MCINSTALL_PREFIX=/Applications/McStas-${MCVERSION}.app/Contents/Resources
 # 64-bit Mac OS
 WORK=`pwd`
 
-# if [ ! -f Mambaforge-$(uname)-$(uname -m).sh ]; then
-#     # Download and embed a miniconda
-#     echo
-#     echo "*********************************************************"
-#     echo "* Downloading a miniconda3 for your app                 *"
-#     echo "*********************************************************"
-#     echo
-#     sleep 3
-#     curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
-# fi
-# echo "*********************************************************"
-# echo "* Embedding miniconda3 in your app                      *"
-# echo "*********************************************************"
-# chmod a+x Mambaforge-$(uname)-$(uname -m).sh
-# ./Mambaforge-$(uname)-$(uname -m).sh -b -p $MCINSTALL_PREFIX/mcstas/${MCVERSION}/miniconda3/
 
 # Run conda to install the dependencies
 echo
@@ -45,15 +30,16 @@ echo "*********************************************************"
 echo "* Downloading python dependencies to embedded miniconda *"
 echo "*********************************************************"
 echo
-#conda activate
-#conda update mamba -y
+
 conda env create -p ${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3 --file environment.yml
 
 eval "$(conda shell.bash hook)"
 conda activate ${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3
 
 # Temporary workaround for issue with conda...
-ln -sf ${MCINSTALL_PREFIX}/mcxtrace/${MCVERSION}/miniconda3/lib/librhash.1.dylib ${MCINSTALL_PREFIX}/mcxtrace/${MCVERSION}/miniconda3/lib/librhash.0.dylib
+if [ ! -f ${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3/lib/librhash.0.dylib ]; then
+    ln -sf ${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3/lib/librhash.1.dylib ${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3/lib/librhash.0.dylib
+fi
 
 cd $WORK
 
