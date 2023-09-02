@@ -51,7 +51,7 @@ function data = mcplot(varargin)
   
   if nargin == 0
     filename = '';
-  elseif nargin == 1
+  elseif nargin == 1 && ~isempty(dir(varargin{1}))
     filename = varargin{1};
   else
     save_as = '';
@@ -60,6 +60,17 @@ function data = mcplot(varargin)
       this_arg = varargin{index};
       if strncmp(this_arg, '-', 1)  % get option for export 
         save_as=this_arg; 
+        switch save_as
+        case {'-h','--help'}
+          % display help and exit
+          disp([ mfilename ': plot a McCode simulation result using the Matlab backend.' ])
+          disp('usage:')
+          disp([ '    ' mfilename ' FILE|DIR' ])
+          disp(  '        Display the specified monitor file or directory.')
+          disp([ '    ' mfilename ' [-png|-jpg|-fig|-eps|-pdf] [FILE|DIR]' ])
+          disp(  '        Export the specified monitor file or directory to given format.')
+          exit
+        end
         continue;
       else index_out = index_out+1; end
       this_file = varargin{index};
