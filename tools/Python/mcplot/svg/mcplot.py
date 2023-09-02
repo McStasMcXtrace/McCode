@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+"""Display simulation results as HTML pages for single monitor files, and directories (generates an overview)."""
 import argparse
 import logging
 import os
@@ -99,7 +101,7 @@ def lookup(cm, x):
         #idx=np.int(len(cm)-1)
         idx=0
     else:
-        idx = np.int(np.round(xp))
+        idx = int(np.round(xp))
     return cm[idx]
 
 def get_params_str_1D(data):
@@ -214,95 +216,96 @@ def browse(html_filepath):
     except Exception as e:
         raise Exception('Os-specific open browser: %s' % e.__str__())
 
-def plotfunc(node, simdir):
+def plotfunc(node, filename=None):
     ''' plot a plotnode to a html file as an svg-plot using plotfuncs.js and d3.v4.min.js '''
-    data = None
-    f = None
 
+    global logscale
+    if isinstance(filename, list):
+        filename = filename[0]
     # get data and set file path
     if type(node) is PNSingle:
         data = node.getdata_idx(0)
-        f = data.filepath
-
-        if logscale==True:
-            f = os.path.join(os.path.dirname(f), os.path.splitext(os.path.basename(f))[0] + "_log.html")
-        else:
-            f = os.path.join(os.path.dirname(f), os.path.splitext(os.path.basename(f))[0] + ".html")
-        if os.path.exists(f):
-            os.remove(f)
+        return plotfunc_single(data, filename)
 
     elif type(node) is PNMultiple:
         data = node.getdata_lst()
         data_lst = data
-        # NOTE: this line effectively means that we can only plot one PNMultiple pr. scan sweep, and it must be the one with 
-        # "mccode.sim" as the filename property on all (1D overview) data objects
-
-        is_overview = False not in [d.filename == "mccode.dat" for d in data_lst]
-        if is_overview:
-            if logscale == True:
-                f = os.path.join(simdir, "mccode_log.html")
-            else:
-                f = os.path.join(simdir, "mccode.html")
-        else:
-            # TODO: implement - what's the filepath?
-            return
-
+        
+        f     = []
+        f_log = []
+        count = 0
+        for dat in data_lst:
+            logscale = False
+            f.append(plotfunc_single(dat))
+            logscale = True
+            f_log.append(plotfunc_single(dat))
+            count += 1
+        # now create an overview HTML (index.html with <iframe>)
+        directory  = os.path.dirname(f[0])
+        if filename is None:
+            filename = os.path.join(directory, "index.html")
+            
+        with open(filename, 'w') as outfile:
+            outfile.write("<html><head>\n")
+            outfile.write(f"<title>Simulation results {directory}</title>\n")
+            outfile.write("</head><body>\n")
+            outfile.write(f"<h1>Simulation results {directory}</h1>\n")
+            for fname in f:
+                basename = os.path.basename(fname)
+                if os.path.dirname(filename) == directory:  
+                    # we are saving all in the simulation dir
+                    # we can use relative path
+                    linkname = basename
+                else:
+                    # we are saving outside simulation dir
+                    # we use full path
+                    linkname = os.path.join(directory, basename)
+                outfile.write(f"<iframe src='{linkname}' title='{basename}' width={WIDTH} height={HEIGHT}></iframe> \n")
+                outfile.write(f"<a href='{linkname}' target=_blank>[ {basename} ]</a><br>\n")
+                # add the LOG-scale plot, if any
+                filepart = os.path.splitext(basename)
+                basename = filepart[0]+"_log"+filepart[1]
+                if os.path.isfile(os.path.join(directory, basename)):
+                    # append log scale plot link
+                    if os.path.dirname(filename) == directory:  
+                        # we are saving all in the simulation dir
+                        # we can use relative path
+                        linkname = basename
+                    else:
+                        # we are saving outside simulation dir
+                        # we use full path
+                        linkname = os.path.join(directory, basename)
+                    outfile.write(f"<a href='{basename}' target=_blank>[ {basename} ]</a><br>\n")
+            outfile.write("</body></html>\n")
+        return filename
+    
+def plotfunc_single(data, f = None):
+    """save the data node into given file"""
     # three cases of plot data (1D, 2D and multiple), each block should end with a fully formed 'text' variable
     text = ""
-
-    # create overview html
-    if type(data) is list:
-        data_lst = data
-
-        # create dynamic lines
-        divs_txt = ""
-        create_txt = ""
-        params = ""
-        htmlid = ""
-        i = 0
-        for d in data_lst:
-            i = i + 1
-            htmlid = "plt_%d" % i
-
-            # small, overview-style plots, autosize can not be enabled
-            global WIDTH
-            global HEIGHT
-            WIDTH = 290
-            HEIGHT = 290
-            global autosize
-            autosize = False
-
-            # get params
-            if type(d) is Data1D:
-                params = get_params_str_1D(d)
-            elif type(d) is Data2D:
-                params = get_params_str_2D(d)
-
-            divs_txt = divs_txt + "\n" + '<div style="display:inline" id="%s"></div>' % htmlid
-            create_txt = create_txt + "\n" + '  new Plot1D(%s, d3.select("#%s").append("svg"));' % (params, htmlid)
-
-        # assemble html
-        text = '''<!DOCTYPE html>
-<head>
-  <script src="%sd3.v4.min.js"></script>
-  <script src="%splotfuncs.js"></script>
-</head>
-<body>\n''' % (libpath, libpath) + divs_txt + "\n\n<script>\n" + create_txt + "\n</script>\n</body>\n</html>\n"
-
+    
+    if f is None:
+        if logscale:
+            f = data.filepath + "_log.html"
+        else:
+            f = data.filepath + ".html"
+    
+    if os.path.exists(f):
+        os.remove(f)
+    
     # create 1D html
-    elif type(data) is Data1D:
+    if type(data) is Data1D:
         text = get_html('template_1d.html', get_params_str_1D(data), os.path.basename(data.filename))
 
     # create 2D html
     elif type(data) is Data2D:
         text = get_html('template_2d.html', get_params_str_2D(data), os.path.basename(data.filename))
-
+    
     # write to file
-    f = open(f, 'w')
-    f.write(text)
-    f.write("")
-    f.close()
-
+    with open(f, 'w') as fid:
+        fid.write(text)
+        fid.write("")
+    return f
 
 def plotgraph_recurse(node, action_on_node):
     ''' depth-first tree iteration (can not handle circular graphs) '''
@@ -316,6 +319,7 @@ logscale = False
 libpath = ""
 autosize = False
 def main(args):
+    """Main routine for mcplot-svg"""
     logging.basicConfig(level=logging.INFO)
 
     if len(args.simulation) == 0:
@@ -356,24 +360,22 @@ def main(args):
         quit()
     rootnode = loader.plot_graph
 
-    # generate html file (single plotting only)
-    plotfunc(rootnode, simdir)
+    # generate html file(s)
+    f = plotfunc(rootnode, args.output) # can be a single or multiple 'plotnode'
+    print(f"Generated: {f}")
 
     # browse if input was a specific, and therefore browsable, file
-    if not args.nobrowse and os.path.isfile(simfile):
-        if not logscale:
-            browse(os.path.splitext(simfile)[0] + ".html")
-        else:
-            browse(os.path.splitext(simfile)[0] + "_log.html")
-
+    if not args.nobrowse and os.path.isfile(f):
+        browse(f)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('simulation', nargs='*', help='file or directory to plot')
-    parser.add_argument('--nobrowse', action='store_true', help='do not open a webbrowser viewer')
-    parser.add_argument('--log', action='store_true', help='enable logscale on plot')
+    parser.add_argument('-n','--nobrowse', action='store_true', help='do not open a webbrowser viewer')
+    parser.add_argument('-l','--log', action='store_true', help='enable logscale on plot')
     parser.add_argument('--autosize', action='store_true', help='expand to window size on load')
     parser.add_argument('--libpath', nargs='*', help='js lib files path')
+    parser.add_argument('-o','--output', nargs=1, help='specify output file (.html extension)')
 
     args = parser.parse_args()
 
