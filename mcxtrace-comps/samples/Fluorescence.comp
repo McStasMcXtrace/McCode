@@ -309,7 +309,6 @@ double XRMC_SelectFluorescenceEnergy(int Z, double E0, double *dE)
        || !strncasecmp(Line, "_chemical_formula_sum", 21) 
        || !strncasecmp(Line, "_chemical_formula_moiety", 24)
        || flag_found_cif) {
-        printf("Line:            %s\n", Line);
         if  (flag_found_cif) { flag_found_cif=0; /* can not span on more that 2 lines */} 
         else flag_found_cif=1;
         // search for delimiter after the CIF token
