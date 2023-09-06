@@ -282,7 +282,8 @@ double XRMC_SelectFluorescenceEnergy(int Z, double E0, double *dE)
   
     int  ret = 0;
     char Line[65535];
-    FILE *file = Open_File(filename, "r",NULL);
+    int flag_found_cif=0;
+    FILE *file = fopen(filename, "r");
     if (!file)
       exit(fprintf(stderr, "%s: ERROR: can not open file %s\n", 
       __FILE__, filename));
@@ -301,11 +302,33 @@ double XRMC_SelectFluorescenceEnergy(int Z, double E0, double *dE)
       // LAZ/LAU: # TITLE <at> <at> ... [ trailing...]
       // CFL: Title <chemical_formulae>
       // CFL: Atom <at> <trailing>
-      if (!strncasecmp(Line, "_chemical_formula_str", 21) || !strncasecmp(Line, "_chemical_formula_sum", 21)) {
-        token = Line+21;
-        first_non_space = strchr(token,             '\'');
-        if (first_non_space) next_non_space  = strchr(first_non_space+1, '\'');
-        if (next_non_space)  flag_exit = 1;
+      
+      // search for CIF token
+      // single line: search " '\'" delimiter after CIF token, marks reading the formula
+      if (!strncasecmp(Line, "_chemical_formula_structural", 28) 
+       || !strncasecmp(Line, "_chemical_formula_sum", 21) 
+       || !strncasecmp(Line, "_chemical_formula_moiety", 24)
+       || flag_found_cif) {
+        printf("Line:            %s\n", Line);
+        if  (flag_found_cif) { flag_found_cif=0; /* can not span on more that 2 lines */} 
+        else flag_found_cif=1;
+        // search for delimiter after the CIF token
+        char *first_space_after_token=strpbrk(Line, " \'\n");
+        if (first_space_after_token) {
+          // search for the characters that may compose the formula
+          first_non_space = strpbrk(first_space_after_token, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()[]");
+          if (strchr(first_space_after_token,'?')) {
+            // we have an invalid/unknown formula in the CIF. Skip CIF token/line
+            flag_found_cif=0;
+            continue;
+          }
+        }
+        if (first_non_space) 
+          next_non_space  = strpbrk(first_non_space+1, "\'\n\r"); // position of formula end
+        if (next_non_space) { 
+          flag_exit = 1;
+          token = first_non_space;
+        }
       } else if (!strncasecmp(Line, "# TITLE", 7) && strchr(Line, '['))
         token = Line+7;
       else if (!strncasecmp(Line, "# Atom", 6))
