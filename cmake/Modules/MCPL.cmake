@@ -1,24 +1,24 @@
 include(fetcher)
 
 set( MCPL_REPO "https://github.com/mctools/mcpl.git" CACHE STRING "Fallback location (URL or local path) of MCPL sources.")
-set( MCPL_MINIMUM_VERSION 1.5.1 CACHE STRING "Minimum version of MCPL (can use git ref-spec).")
+set( MCPL_MINIMUM_VERSION 1.6.2 CACHE STRING "Minimum version of MCPL (can use git ref-spec).")
 option(MCPL_REQUIRE_PREINSTALL "Require pre-installed MCPL (>= MCPL_MINIMUM_VERSION)" OFF)
 
 #Set variables for MCPL config like this, to keep them from poluting the current
 #scope:
 set(mcpl_fetch_params "")
 list( APPEND mcpl_fetch_params MCPL_NOTOUCH_CMAKE_BUILD_TYPE ON)
-list( APPEND mcpl_fetch_params MODIFY_RPATH ON)#Might not need this depending on environment
-list( APPEND mcpl_fetch_params BUILD_WITHZLIB ON )#"Whether to link with zlib if
+list( APPEND mcpl_fetch_params MCPL_MODIFY_RPATH ON)#Might not need this depending on environment
+list( APPEND mcpl_fetch_params MCPL_BUILD_WITHZLIB ON )#"Whether to link with zlib if
 #available." (fixme: should we try to fetchcontent zlib as well?)  The variables
 #below are (as per MCPL v1.5.1) all at default values, just included here for
 #robustness:
-list( APPEND mcpl_fetch_params BUILD_EXAMPLES OFF )
-list( APPEND mcpl_fetch_params BUILD_WITHSSW ON )
-list( APPEND mcpl_fetch_params BUILD_WITHPHITS ON )
-list( APPEND mcpl_fetch_params BUILD_WITHG4 OFF )
-list( APPEND mcpl_fetch_params BUILD_FAT OFF )
-list( APPEND mcpl_fetch_params INSTALL_PY ON )
+list( APPEND mcpl_fetch_params MCPL_ENABLE_EXAMPLES OFF )
+list( APPEND mcpl_fetch_params MCPL_ENABLE_SSW ON )
+list( APPEND mcpl_fetch_params MCPL_ENABLE_PHITS ON )
+list( APPEND mcpl_fetch_params MCPL_ENABLE_GEANT4 OFF )
+list( APPEND mcpl_fetch_params MCPL_ENABLE_FATBINARIES OFF )
+list( APPEND mcpl_fetch_params MCPL_ENABLE_PYTHON ON )
 
 if (WINDOWS)
   set( tmp_instprefix "" )
@@ -40,5 +40,5 @@ endif()
 
 unset( tmp_instprefix )
 
-git_fetch(mcpl "${MCPL_MINIMUM_VERSION}" "${MCPL_REPO}" ${MCPL_REQUIRE_PREINSTALL} "${mcpl_fetch_params}")
+git_fetch(mcpl "${MCPL_MINIMUM_VERSION}" "master" "${MCPL_REPO}" ${MCPL_REQUIRE_PREINSTALL} "${mcpl_fetch_params}")
 

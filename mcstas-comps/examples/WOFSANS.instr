@@ -28,7 +28,7 @@ e*
 * %E
 *******************************************************************************/
 DEFINE INSTRUMENT WOFSANS(double focusing_rectangle = 0.15,double width=0.15, double Emin=0.2, double Emax=100000.0, double l_min=7.2, int pulseskip=0, int npulses=1,
-                                                     int chopper1_flag = 0, double det = 41.5, R0=0.99, m=3, W=0.003, alpha=6.07,nshells_ph = 28, fs_ph=500, fi_ph=5.5, PH_beamstop = 1, nshells_eh = 10, fs_eh=10, fi_eh=10, EH_beamstop = 1)
+                                                     int chopper1_flag = 0, double det = 41.5, R0=0.99, m=3, W=0.003, alpha=6.07,nshells_ph = 28, fs_ph=500, fi_ph=5.5, PH_beamstop = 1, nshells_eh = 25, fs_eh=8, fi_eh=6, EH_beamstop = 1)
 
 
 DECLARE
@@ -489,7 +489,7 @@ AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (0, 0, 90) RELATIVE PREVIOUS
 
 /*Condenser Lens*/
-COMPONENT cPH = Conics_PH(R0=R0,alpha=alpha,W=W,m=m,
+COMPONENT cPH = Conics_PH_fixed(R0=R0,alpha=alpha,W=W,m=m,
     nshells=nshells_ph, focal_length=fi_ph, rmin=0.010, rmax=0.075, lp=1.3, lh=1.0, disk=1
 )
 AT(0,0,10.0) RELATIVE ABSOLUTE
@@ -702,7 +702,7 @@ AT (0, 0, 0) RELATIVE PREVIOUS
 ROTATED (0, 0, 90) RELATIVE PREVIOUS
 
 COMPONENT slit_focusPH = Slit(
-    radius=0.002)
+    radius=0.002*2)
 AT (0, 0, fi_ph) RELATIVE cPH
 
 COMPONENT psd_slit_focusPH = PSD_monitor(
@@ -770,15 +770,185 @@ ROTATED (0, 0, 90) RELATIVE PREVIOUS
 //------------------------------------------------------------------------------------------//
 //---------------------------EH Wolter Optic - Objective--------------------------//
 
-COMPONENT psd_test = PSD_monitor(
+COMPONENT slit_EH = Slit(
+    radius=0.1)
+AT (0, 0, fs_eh-0.9-u) RELATIVE slit_focusPH
+
+COMPONENT cEH = Conics_EH_fixed(R0=R0,alpha=alpha,W=W,m=m,
+    nshells=nshells_eh, focal_length_u=fs_eh, focal_length_d=fi_eh, rmin=0.01, rmax=0.1, le=0.9, lh=0.82, disk=1)
+  AT(0,0,fs_eh) RELATIVE slit_focusPH
+EXTEND %{
+  was_scattered2=SCATTERED;
+%}
+
+COMPONENT beamstop_cEH = Beamstop(
+    radius=0.01)
+WHEN(EH_beamstop == 1)
+AT (0, 0, 0.82+u) RELATIVE PREVIOUS
+
+COMPONENT psd_cEH = PSD_monitor(
     nx=100, 
     ny=100, 
-    filename="PSD_test", 
-    xwidth=1.2, 
-    yheight=1.2, 
+    filename="PSD_0009", 
+    xwidth=0.2, 
+    yheight=0.2, 
     restore_neutron=1)
-AT (0, 0, 23.5) ABSOLUTE
+AT (0, 0, 0.82+u) RELATIVE cEH
 
+COMPONENT l_cEH = L_monitor(
+    nL=100, 
+    filename="L_0009", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT nD9 = Monitor_nD(
+  xwidth =0.10*2,
+  options="disk, intenisity per cm2, lambda bins=100 limits=[0.0286014 20.2243], file=nD_0009.dat",
+  restore_neutron = 1
+)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT divergence_monitor_cEH = Divergence_monitor(
+    nh=100, 
+    nv=100, 
+    filename="DivMon_0009", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=1,
+    maxdiv_v=1,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT h_divlambda_cEH = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_h_0009", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=1, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT v_divlambda_cEH = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_v_0009", 
+    xwidth=0.2, 
+    yheight=0.2, 
+    maxdiv_h=1, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0, 0, 90) RELATIVE PREVIOUS
+
+//-----------------------------------------------------------------------------------------------//
+//---------------------------Monitors Along Sample Positions--------------------------//
+
+COMPONENT PSD_10 = COPY(psd_cEH)(filename="PSD_0010")
+AT (0, 0, 0.82+2) RELATIVE cEH
+COMPONENT PSD_11 = COPY(psd_cEH)(filename="PSD_0011")
+AT (0, 0, 0.82+4) RELATIVE cEH
+COMPONENT PSD_12 = COPY(psd_cEH)(filename="PSD_0012")
+AT (0, 0, 0.82+6) RELATIVE cEH
+COMPONENT PSD_13 = COPY(psd_cEH)(filename="PSD_0013")
+AT (0, 0, 0.82+8) RELATIVE cEH
+
+COMPONENT l_10 = COPY(l_cEH)(filename="L_0010")
+AT (0, 0, 0.82+2) RELATIVE cEH
+COMPONENT l_11 = COPY(l_cEH)(filename="L_0011")
+AT (0, 0, 0.82+4) RELATIVE cEH
+COMPONENT l_12 = COPY(l_cEH)(filename="L_0012")
+AT (0, 0, 0.82+6) RELATIVE cEH
+COMPONENT l_13 = COPY(l_cEH)(filename="L_0013")
+AT (0, 0, 0.82+8) RELATIVE cEH
+
+COMPONENT divergence_monitor_10 = COPY(divergence_monitor_cEH)(filename="DivMon_0010")
+AT (0, 0, 0.82+2) RELATIVE cEH
+COMPONENT divergence_monitor_11 = COPY(divergence_monitor_cEH)(filename="DivMon_0011")
+AT (0, 0, 0.82+4) RELATIVE cEH
+COMPONENT divergence_monitor_12 = COPY(divergence_monitor_cEH)(filename="DivMon_0012")
+AT (0, 0, 0.82+6) RELATIVE cEH
+COMPONENT divergence_monitor_13 = COPY(divergence_monitor_cEH)(filename="DivMon_0013")
+AT (0, 0, 0.82+8) RELATIVE cEH
+
+COMPONENT divlambda_10 = COPY(h_divlambda_cEH)(filename="DivLambdaMon_h_0010")
+AT (0, 0, 0.82+2) RELATIVE cEH
+COMPONENT h_divlambda_11 = COPY(h_divlambda_cEH)(filename="DivLambdaMon_h_0011")
+AT (0, 0, 0.82+4) RELATIVE cEH
+COMPONENT h_divlambda_12 = COPY(h_divlambda_cEH)(filename="DivLambdaMon_h_0012")
+AT (0, 0, 0.82+6) RELATIVE cEH
+COMPONENT h_divlambda_13 = COPY(h_divlambda_cEH)(filename="DivLambdaMon_h_0013")
+AT (0, 0, 0.82+8) RELATIVE cEH
+
+COMPONENT v_divlambda_10 = COPY(v_divlambda_cEH)(filename="DivLambdaMon_v_0010")
+AT (0, 0, 0.82+2) RELATIVE cEH
+COMPONENT v_divlambda_11 = COPY(v_divlambda_cEH)(filename="DivLambdaMon_v_0011")
+AT (0, 0, 0.82+4) RELATIVE cEH
+COMPONENT v_divlambda_12 = COPY(v_divlambda_cEH)(filename="DivLambdaMon_v_0012")
+AT (0, 0, 0.82+6) RELATIVE cEH
+COMPONENT v_divlambda_13 = COPY(v_divlambda_cEH)(filename="DivLambdaMon_v_0013")
+AT (0, 0, 0.82+8) RELATIVE cEH
+
+//-----------------------------------------------------------------------------------------------//
+//-----------------------------------Detector Position-------------------------------------//
+
+COMPONENT psd_monitor_detector = PSD_monitor(
+    nx=1000, 
+    ny=1000, 
+    filename="PSD_0014", 
+    xwidth=0.02, 
+    yheight=0.02, 
+    restore_neutron=1)
+AT (0, 0, fi_eh) RELATIVE cEH
+
+COMPONENT l_detector = L_monitor(
+    nL=100, 
+    filename="L_0014", 
+    xwidth=0.02, 
+    yheight=0.02, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT divergence_monitor_detector = Divergence_monitor(
+    nh=100, 
+    nv=100, 
+    filename="DivMon_0014", 
+    xwidth=0.02, 
+    yheight=0.02, 
+    maxdiv_h=1,
+    maxdiv_v=1,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT divlambda_detector = DivLambda_monitor(
+    nL=100, 
+    nh=100, 
+    filename="DivLambdaMon_0014", 
+    xwidth=0.02, 
+    yheight=0.02, 
+    maxdiv_h=1, 
+    Lmin=Lmin_source, 
+    Lmax=Lmax_source, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT psd_monitor_detector_big = PSD_monitor(
+    nx=750, 
+    ny=750, 
+    filename="PSD_0015", 
+    xwidth=3, 
+    yheight=3, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
 
 FINALLY
 %{
