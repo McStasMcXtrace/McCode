@@ -323,7 +323,7 @@ double XRMC_SelectFluorescenceEnergy(int Z, double E0, double *dE)
       if (!first_non_space) first_non_space = strtok(token, " \t\n");
       if (!first_non_space) continue;
       if (!next_non_space)  next_non_space  = strtok(NULL,  " \t\n"); // end of formulae
-      if (!next_non_space)  next_non_space = Line+strlen(Line)-1;
+      if (!next_non_space)  next_non_space = Line+strlen(Line);
       // remove spaces
       strncat(formula, first_non_space, next_non_space-first_non_space);
       ret++;
