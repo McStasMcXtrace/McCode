@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Implements functionality for mcplot-gnuplot. Independent of ui.
 #
@@ -292,7 +292,7 @@ def get_overview_files(sim_file):
 def get_monitor(mon_file):
     """ returns monitor .dat file info structured as a python dict """
     is_header = lambda line: line.startswith('#')
-    header_lines = filter(is_header, open(mon_file).readlines())
+    header_lines = list(filter(is_header, open(mon_file).readlines()))
     
     file_struct_str ="{"
     for j in range(0, len(header_lines)):
@@ -301,7 +301,7 @@ def get_monitor(mon_file):
         Line = Line.split(':')
         Field = Line[0]
         Value = ""
-        Value = string.join(string.join(Line[1:len(Line)], ':').split("'"), '')
+        Value = "".join(":".join(Line[1:len(Line)]).split("'"))
         file_struct_str = file_struct_str + "'" + Field + "':'" + Value + "'"
         if j<len(header_lines)-1:
             file_struct_str = file_struct_str + ","
