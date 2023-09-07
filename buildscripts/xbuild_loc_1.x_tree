@@ -2,7 +2,7 @@
 
 # rappid-build script for mcstas-kernel dev:
 
-git checkout master
+git checkout mccode-legacy
 git pull
 
 # Ensure our 3rd party modules are in place and updated
