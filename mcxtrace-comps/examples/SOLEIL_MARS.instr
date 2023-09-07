@@ -309,14 +309,16 @@ SPLIT 10 COMPONENT Sample = PowderN(
 AT (0, 0, DistanceToSample-DistanceToSecondaryBeamMonitor) RELATIVE PREVIOUS
 GROUP samples
 
-COMPONENT SampleF = Fluorescence(
+// The Rayleigh scattering at E0 is large, and creates massive background.
+// We ignore it here.
+SPLIT 10 COMPONENT SampleF = Fluorescence(
   material=reflections,
   xwidth = 0.005,
   yheight = 0.05,
   zdepth = 0.0001,
   focus_ah=asin(0.02/0.670)*RAD2DEG,
-  focus_aw=180,
-  p_interact=0.5)
+  focus_aw=180, target_z=1, flag_rayleigh=0,
+  p_interact=0.99)
 AT (0, 0, 0) RELATIVE PREVIOUS
 GROUP samples
 
@@ -325,14 +327,16 @@ GROUP samples
 /*------------------------------------- detector */
 COMPONENT detector_diffraction = Monitor_nD(
   bins=90000, options="abs theta",
-  min=5,max=90, radius= 0.670, yheight = 0.02
+  min=5,max=90, radius= 0.670, yheight = 0.02, restore_xray=1
 )
+WHEN (0.75 * E0 < K2E*sqrt(kx*kx+ky*ky+kz*kz)) // model detector energy discrimination
 AT(0,0,0) RELATIVE Sample
 
 COMPONENT detector_fluo = Monitor_nD(
-  bins=1024, options="energy", min=0, max=E0*(1+dEr),
+  bins=1024, options="energy", min=0, max=E0*1.2,
   radius= 0.670, yheight = 0.02
 )
+WHEN (K2E*sqrt(kx*kx+ky*ky+kz*kz) < 0.95*E0)
 AT(0,0,0) RELATIVE Sample
 
 

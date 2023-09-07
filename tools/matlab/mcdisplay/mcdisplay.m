@@ -38,6 +38,20 @@ function [comps, fig] = mcdisplay(varargin)
     case {'-png' '-pdf' '-fig' '-tif' '-jpg' '-eps'}
       save_as = [ save_as ' ' this_arg ];
       continue
+    case {'-h','--help'}
+          % display help and exit
+          disp(' mcdisplay instr')
+          disp('    displays the given McCode model with its defaults/current parameters.')
+          disp(' mcdisplay instr name1=value1 ...')
+          disp('    displays the given McCode model with given parameters.')
+          disp(' mcdisplay [-png|-jpg|-fig|-eps|-pdf|-tif] instr name1=value1 ...')
+          disp('    same as above, and specifies an output file format to generate')
+          disp('    Possible save_as are -png -pdf -fig -tif -jpg -eps')
+          disp(' mcdisplay --inspect=COMP instr name1=value1 ...')
+          disp('    same as above, and only plot component names that match "inspect, given as')
+          disp('                a single component word for partial match, such as Monitor')
+          disp('                a component interval such as Monok:Sample or 2:10 or 2:end')
+          exit
     end
     if strncmp(this_arg, '--inspect=', 10)  % get option for inspection 
       match=this_arg(11:end); 

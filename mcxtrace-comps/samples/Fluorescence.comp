@@ -100,6 +100,8 @@
 * target_x:  [m]      Position of target to focus at, along X.
 * target_y:  [m]      Position of target to focus at, along Y.
 * target_z:  [m]      Position of target to focus at, along Z.
+* flag_compton: [m]   When 0, the Compton  scattering is ignored.
+* flag_rayleigh:[m]   When 0, the Rayleigh scattering is ignored.
 *
 * OUTPUT PARAMETERS:
 * type: scattering event type 0=fluorescence, 1=Rayleigh, 2=Compton, 3=transmit
@@ -131,7 +133,8 @@ SETTING PARAMETERS(
   string material="LaB6", packing_factor=0, rho=0, density=0, weight=0, 
   p_interact=0, 
   target_x = 0, target_y = 0, target_z = 0, focus_r = 0,
-  focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0, int target_index=0)
+  focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0, int target_index=0,
+  int flag_compton=1, int flag_rayleigh=1)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 DEPENDENCY "-Wl,-rpath,GETPATH(lib) -LGETPATH(lib) -lxrl -IGETPATH(include) -DUSE_OFF"
@@ -279,7 +282,8 @@ double XRMC_SelectFluorescenceEnergy(int Z, double E0, double *dE)
   
     int  ret = 0;
     char Line[65535];
-    FILE *file = Open_File(filename, "r",NULL);
+    int flag_found_cif=0;
+    FILE *file = fopen(filename, "r");
     if (!file)
       exit(fprintf(stderr, "%s: ERROR: can not open file %s\n", 
       __FILE__, filename));
@@ -298,11 +302,32 @@ double XRMC_SelectFluorescenceEnergy(int Z, double E0, double *dE)
       // LAZ/LAU: # TITLE <at> <at> ... [ trailing...]
       // CFL: Title <chemical_formulae>
       // CFL: Atom <at> <trailing>
-      if (!strncasecmp(Line, "_chemical_formula_str", 21) || !strncasecmp(Line, "_chemical_formula_sum", 21)) {
-        token = Line+21;
-        first_non_space = strchr(token,             '\'');
-        if (first_non_space) next_non_space  = strchr(first_non_space+1, '\'');
-        if (next_non_space)  flag_exit = 1;
+      
+      // search for CIF token
+      // single line: search " '\'" delimiter after CIF token, marks reading the formula
+      if (!strncasecmp(Line, "_chemical_formula_structural", 28) 
+       || !strncasecmp(Line, "_chemical_formula_sum", 21) 
+       || !strncasecmp(Line, "_chemical_formula_moiety", 24)
+       || flag_found_cif) {
+        if  (flag_found_cif) { flag_found_cif=0; /* can not span on more that 2 lines */} 
+        else flag_found_cif=1;
+        // search for delimiter after the CIF token
+        char *first_space_after_token=strpbrk(Line, " \'\n");
+        if (first_space_after_token) {
+          // search for the characters that may compose the formula
+          first_non_space = strpbrk(first_space_after_token, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()[]");
+          if (strchr(first_space_after_token,'?')) {
+            // we have an invalid/unknown formula in the CIF. Skip CIF token/line
+            flag_found_cif=0;
+            continue;
+          }
+        }
+        if (first_non_space) 
+          next_non_space  = strpbrk(first_non_space+1, "\'\n\r"); // position of formula end
+        if (next_non_space) { 
+          flag_exit = 1;
+          token = first_non_space;
+        }
       } else if (!strncasecmp(Line, "# TITLE", 7) && strchr(Line, '['))
         token = Line+7;
       else if (!strncasecmp(Line, "# Atom", 6))
@@ -320,7 +345,7 @@ double XRMC_SelectFluorescenceEnergy(int Z, double E0, double *dE)
       if (!first_non_space) first_non_space = strtok(token, " \t\n");
       if (!first_non_space) continue;
       if (!next_non_space)  next_non_space  = strtok(NULL,  " \t\n"); // end of formulae
-      if (!next_non_space)  next_non_space = Line+strlen(Line)-1;
+      if (!next_non_space)  next_non_space = Line+strlen(Line);
       // remove spaces
       strncat(formula, first_non_space, next_non_space-first_non_space);
       ret++;
@@ -471,6 +496,7 @@ INITIALIZE %{
       printf(" packing_factor=%g", packing_factor);
     printf("\n");
   )
+  if (0 < packing_factor && packing_factor < 1) rho *= packing_factor;
   
   /* target for scattering ================================================== */
   if (!target_index && !target_x && !target_y && !target_z) target_index=1;
@@ -764,9 +790,11 @@ if (intersect) { /* scattering event */
       i_Z = XRMC_SelectFromDistribution(cum_xs_fluo,     compound->nElements+1);
       break;
     case RAYLEIGH:
+      if (!flag_rayleigh) ABSORB;
       i_Z = XRMC_SelectFromDistribution(cum_xs_Rayleigh, compound->nElements+1);
       break;
     case COMPTON:
+      if (!flag_compton) ABSORB;
       i_Z = XRMC_SelectFromDistribution(cum_xs_Compton,  compound->nElements+1);
       break;
     default:
@@ -791,6 +819,7 @@ if (intersect) { /* scattering event */
     randvec_target_circle(&kf_x, &kf_y, &kf_z, &solid_angle, aim_x, aim_y, aim_z, focus_r);
   }
   p *= solid_angle/(4*PI); // correct for selected solid-angle
+  NORM(kf_x, kf_y, kf_z);  // normalize the outout direction |kf|=1
   
   // determine final energy
   switch (type) {
@@ -822,7 +851,6 @@ if (intersect) { /* scattering event */
   }
   Ef = K2E*kf;
   
-  NORM(kf_x, kf_y, kf_z);
   kx = kf*kf_x;
   ky = kf*kf_y;
   kz = kf*kf_z;

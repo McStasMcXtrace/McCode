@@ -235,22 +235,38 @@ def print_help(nogui=False):
     print('\n'.join(helplines))
 
 
-def dumpfile(frmat):
+def dumpfile(frmat, filename = None):
     """ save current fig to softcopy """
     from pylab import savefig
 
     global filenamebase
-    filename = '%s.%s' % (filenamebase, frmat)
+    
+    if filename is None:
+        filename = filenamebase
+        
+    # get directory, basename and extension
+    if isinstance(filename, list):
+        filename = filename[0]
+    basename  = os.path.splitext(filename)[0] # contains full path and base filename
+    if frmat is None:
+        ext       = os.path.splitext(filename)[1] # extension with the dot
+    else:
+        ext = frmat
+    if ext[0] != '.':
+        ext = '.'+ext
+    # assemble target name
+    saveto = basename + ext
+    
     # Check for existance of earlier exports
-    if os.path.isfile(filename):
+    if os.path.isfile(saveto):
         index=1
-        filename = '%s_%i.%s' % (filenamebase, index, frmat )
-        while os.path.isfile(filename):
+        saveto = f"{basename}_{index}{frmat}"
+        while os.path.isfile(saveto):
             index += 1
-            filename = '%s_%i.%s' % (filenamebase, index, frmat)
+            saveto = f"{basename}_{index}{frmat}"
 
-    savefig(filename)
-    print("Saved " + filename)
+    savefig(saveto)
+    print("Saved " + saveto)
 
 
 def click(event, subplts, click_cbs, ctrl_cbs, back_cb, dc_cb):
@@ -294,7 +310,7 @@ def main(args):
         if args.test:
             test_decfuncs(simfile)
 
-        if args.format:
+        if args.format or args.output:
             matplotlib.use('template')
                        
         if args.backend:
@@ -330,10 +346,10 @@ def main(args):
             # display gui / prepare graphics dump
             print_help(nogui=True)
             plotter.plot_node(rootnode)
-
-        if args.format:
+        
+        if args.output or args.format:
             try:
-                dumpfile(args.format)
+                dumpfile(args.format, args.output)
             except Exception as e:
                 print('dumpfile issue: ' + e.__str__())
 
@@ -346,13 +362,20 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('simulation', nargs='*', help='file or directory to plot')
-    parser.add_argument('-t', '--test',  action='store_true', default=False, help='mccode data loader test run')
-
-    parser.add_argument('--html', action='store_true', help='save plot to html using mpld3 (linux only)')
-    parser.add_argument('--format', dest='format', help='save plot to pdf/png/eps... without bringing up window')
-    parser.add_argument('--log', action='store_true', help='initiate plot(s) with log of signal')
-    parser.add_argument('--backend', dest='backend', help='use non-default backend for matplotlib plot')
+    parser.add_argument('simulation', nargs='*', 
+        help='file or directory to plot')
+    parser.add_argument('-t', '--test',  action='store_true', default=False, 
+        help='mccode data loader test run')
+    parser.add_argument('--html', action='store_true', 
+        help='save plot to html using mpld3 (linux only)')
+    parser.add_argument('--format', dest='format', 
+        help='save plot to pdf/png/eps/svg... without bringing up window')
+    parser.add_argument('--output',nargs=1, dest='output', default=None,
+        help='save plot to given file without bringing up window. Extension (e.g. pdf/png/eps/svg) can be specified in the file name or --format')
+    parser.add_argument('--log', action='store_true', 
+        help='initiate plot(s) with log of signal')
+    parser.add_argument('--backend', dest='backend', 
+        help='use non-default backend for matplotlib plot')
 
     args = parser.parse_args()
 
