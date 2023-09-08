@@ -102,10 +102,6 @@ if(NOT WINDOWS)
   install(
     PROGRAMS "${WORK}/${P}display"
     DESTINATION ${DEST_BINDIR}
-    )
-  install(
-    PROGRAMS "${WORK}/${P}display"
-    DESTINATION ${DEST_BINDIR}
     RENAME "${P}display-webgl"
     )
 endif()
