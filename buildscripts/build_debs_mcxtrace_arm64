@@ -49,7 +49,6 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" deb64arm "o" -- deb
 ./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" deb64arm "" -- deb
 
-export MCINSTALL_PREFIX=/usr/share/mcxtrace/$1
 ./mkdist mcxtrace-mcpl $1 3rdparty/mcpl-package "" deb64arm "" -- deb
 
 #build metapackages?
