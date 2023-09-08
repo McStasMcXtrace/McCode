@@ -386,7 +386,7 @@ macro(installMCCODE)
     )
 
     install(PROGRAMS
-      cmake/support/install-scripts/postsetup.bat
+      cmake/support/run-scripts/mpirun.bat
       DESTINATION "${DEST_BINDIR}"
       )
 
