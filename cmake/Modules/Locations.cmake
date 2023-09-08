@@ -94,7 +94,12 @@ function( setup_standard_bash_preamble )
   set( lines
     "############################################"
     "# Start of standard CMake-generated preamble"
-    "MCCODE_BINDIR=\"\$( cd -P \"\$( dirname \"\${BASH_SOURCE[0]}\" )\" && pwd )\""
+    "FILE=\${BASH_SOURCE[0]}"
+    "LINK=`readlink \${FILE}`"
+    "if [ \"x\${LINK}\" != \"x\" ]; then"
+    "  FILE=\${LINK}"
+    "fi"
+    "MCCODE_BINDIR=\"\$( cd -P \"\$( dirname \"\${FILE}\" )\" && pwd )\""
     "MCCODE_TOOLDIR=\"\${MCCODE_BINDIR}/${MCCODE_RELPATH_BINDIR2TOOLDIR}\""
     "MCCODE_LIBDIR=\"\${MCCODE_BINDIR}/${MCCODE_RELPATH_BINDIR2LIBDIR}\""
     "MCCODE_RESOURCEDIR=\"\${MCCODE_BINDIR}/${MCCODE_RELPATH_BINDIR2RESOURCEDIR}\""
