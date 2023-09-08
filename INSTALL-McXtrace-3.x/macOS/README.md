@@ -9,8 +9,8 @@
 
 * Download the Intel package:
   [McXtrace 3.2 for macOS on Intel](https://download.mcxtrace.org/mcxtrace-3.2/mac/mcxtrace-mac_x86_64/mcxtrace-3.2_x86_64.tgz)
-  or M1 package:
-  [McXtrace 3.2 for macOS on Apple Silicon / M1 ](https://download.mcxtrace.org/mcxtrace-3.2/mac/mcxtrace-mac_arm64/mcxtrace-3.2_arm64.tgz)
+  or Silicon / M-series package:
+  [McXtrace 3.2 for macOS on Apple Silicon / M-series ](https://download.mcxtrace.org/mcxtrace-3.2/mac/mcxtrace-mac_arm64/mcxtrace-3.2_arm64.tgz)
   and unpack it (e.g. double-clicking should work)
 
 * Open the resulting folder
@@ -20,13 +20,8 @@
 
 * Run the Check-PY-dependencies.command script to check for / install
   basic compiler support and  Python tool dependencies (right-click and "open"). Please follow
-  on-screen instructions. The Silicon / M1 version requires the Arm
-  version of Homebrew installed in /opt.
-
-* Optionally run the Check-PL-dependencies.command script to check for
-  / install basic compiler support  Perl tool dependencies (right-click and "open"). Please follow
-  on-screen instructions.
-
+  on-screen instructions. 
+  
 * Once the app and dependencies have been installed on your harddrive, optionally use the gui to make your McCode
 the default mcstas/mcxtrace on your machine:
  * mxgui    (python) - Use "File -> Set as default"

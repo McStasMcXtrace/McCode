@@ -7,7 +7,7 @@
 
 ## Steps to perform
 
-* Download the relevant verison (arm64 for M1/Silicon processor,
+* Download the relevant verison (arm64 for M-series / Silicon processor,
 x86_64 for Intel processor) from 
 [McXtrace 1.7.1 for macOS](https://download.mcxtrace.org/mcxtrace-1.7.1/mac/)
   and unpack it (e.g. double-clicking should work)
@@ -24,10 +24,6 @@ x86_64 for Intel processor) from
 * In case you have trouble accessing instrument files in certain areas
   of your disk, please give the McXtrace bundle "Full Disk Access"
   through your macOS Settings app
-
-* Optionally run the Check-PL-dependencies.command script to check for
-  / install basic compiler support  Perl tool dependencies (right-click and "open"). Please follow
-  on-screen instructions.
 
 * Once the app and dependencies have been installed on your harddrive, optionally use the gui to make your McCode
 the default mcstas/mcxtrace on your machine:
