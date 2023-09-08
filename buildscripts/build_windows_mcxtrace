@@ -74,7 +74,6 @@ if [ "x$2" != "x" ]; then
     ./iscc McXtrace-${1}-metapackage64.iss
     mv Output/setup.exe dist/McXtrace-Metapackage-${1}-win64.exe
     mkdir dist/extras
-    cp MSMPI/*.* dist/extras
     cp NeXus/*.* dist/extras
     cp $WORK/INSTALL-McXtrace-3.x/Windows/README.md dist/
     mkdir dist/single-packages
