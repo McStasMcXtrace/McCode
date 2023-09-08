@@ -53,8 +53,6 @@ cd $WORK
 
 ./mkdist mcxtrace $1 "" "" mac "" -- OSXapp
 ./mkdist mcxtrace-comps $1 "" "" mac "" -- OSXapp
-./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" mac "" -- OSXapp
-./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-matlab-mxdisplay $1 tools/matlab/mcdisplay/ "" mac "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mac "" -- OSXapp

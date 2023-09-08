@@ -34,9 +34,6 @@ then
 fi
 ./mkdist mcstas 2.x-dev "" "" mac "" -- justinst
 ./mkdist mcstas-comps 2.x-dev "" "" mac "" -- justinst
-# can be out-commented after the first build iteration:
-./mkdist mcstas-tools-perl-cmdline 2.x-dev tools/Legacy-Perl-cmdline/ "" mac "" -- justinst
-./mkdist mcstas-tools-perl 2.x-dev tools/Legacy-Perl/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcrun 2.x-dev tools/Python/mcrun/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcgui 2.x-dev tools/Python/mcgui/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mccodelib 2.x-dev tools/Python/mccodelib/ "" mac "" -- justinst
