@@ -30,8 +30,6 @@ WORK=`pwd`
 # 64-bit
 ./mkdist mcstas $1 "" "" linux64 "" -- src
 ./mkdist mcstas-comps $1 "" "" linux64 "" -- src
-./mkdist mcstas-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" linux64 "" -- src
-./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" linux64 "" -- src
 ./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" linux64 "" -- src
 ./mkdist mcstas-tools-matlab-mcdisplay $1 tools/matlab/mcdisplay/ "" linux64 "" -- src
 ./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" linux64 "" -- src

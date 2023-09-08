@@ -16,8 +16,6 @@ WORK=`pwd`
 # 64-bit
 ./mkdist mcxtrace $1 "" "" rpm64 "" -- rpm
 ./mkdist mcxtrace-comps $1 "" "" rpm64 "" -- rpm
-./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" rpm64 "" -- rpm
-./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" rpm64 "" -- rpm
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" rpm64 "" -- rpm
 ./mkdist mcxtrace-tools-matlab-mxdisplay $1 tools/matlab/mcdisplay/ "" rpm64 "" -- rpm
 ./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" rpm64 "" -- rpm
