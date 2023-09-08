@@ -16,8 +16,6 @@ fi
 
 ./mkdist mcxtrace 3.x-dev "" "" mac "" -- justinst
 ./mkdist mcxtrace-comps 3.x-dev "" "" mac "" -- justinst
-# can be out-commented after the first build iteration:
-./mkdist mcxtrace-tools-perl-cmdline 3.x-dev tools/Legacy-Perl-cmdline/ "" mac "" -- justinst
 ./mkdist mcxtrace-tools-python-mxrun 3.x-dev tools/Python/mcrun/ "" mac "" -- justinst
 ./mkdist mcxtrace-tools-python-mxdoc 3.x-dev tools/Python/mcdoc/ "" mac "" -- justinst
 ./mkdist mcxtrace-tools-python-mxgui 3.x-dev tools/Python/mcgui/ "" mac "" -- justinst

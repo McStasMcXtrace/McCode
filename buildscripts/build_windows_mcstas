@@ -33,18 +33,12 @@ WORK=`pwd`
 # Workaround for having CRLF linefeeds in a couple of windows packages
 rsync -avz --delete --exclude=".svn/"  mcstas-comps/ mcstas-comps-win
 find mcstas-comps-win -type f -not -name \*.off -exec unix2dos \{\} \;
-rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl/ tools/Legacy-Perl-win
-rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl-cmdline/ tools/Legacy-Perl-cmdline-win
-find tools/Legacy-Perl-win -type f -exec unix2dos \{\} \;
-find tools/Legacy-Perl-cmdline-win -type f -exec unix2dos \{\} \;
 # Patch the Multilayer_sample to allow compilation with GSL
 sed -i 's+@MCCODE_LIB@/miniconda3/+c:\\mcstas-'${1}'\\miniconda3\\Library\\mingw-w64\\+g' mcstas-comps-win/contrib/Multilayer_Sample.comp
 
 # 64-bit
 ./mkdist mcstas $1 "" "" mingw64 "" -- nsis64
 ./mkdist mcstas-comps $1 mcstas-comps-win "" mingw64 "" -- nsis64
-./mkdist mcstas-tools-perl $1 tools/Legacy-Perl-win/ "" mingw64 "" -- nsis64
-./mkdist mcstas-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline-win/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw64 "" -- nsis64
@@ -85,7 +79,6 @@ if [ "x$2" != "x" ]; then
     mkdir dist/extras
     cp MSMPI/*.* dist/extras
     cp NeXus/*.* dist/extras
-    cp Perl/*.msi dist/
     cp $WORK/INSTALL-McStas-2.x/Windows/README.md dist/
     mkdir dist/single-packages
     mv dist/mcstas-* dist/single-packages
