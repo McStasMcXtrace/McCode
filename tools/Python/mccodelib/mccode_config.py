@@ -27,6 +27,8 @@ def check_env_vars():
     # MPICC
     if not os.getenv('MCSTAS_MPICC_OVERRIDE') is None:
         compilation['MPICC'] = os.getenv('MCSTAS_MPICC_OVERRIDE')
+    if not os.getenv('MCSTAS_MPIRUN_OVERRIDE') is None:
+        compilation['MPIRUN'] = os.getenv('MCSTAS_MPIRUN_OVERRIDE')
 
 def load_config(path=None):
     ''' loads a json user config to the dictionaries in this module '''
@@ -62,6 +64,7 @@ def load_config(path=None):
     platform = obj['platform']
     # Finally, fill in the location of MCCODE_LIB_DIR based on location of Python script
     configuration["MCCODE_LIB_DIR"]=LIBDIR
+
 
 def save_user_config():
     ''' attempts to save the current values to a local .json file '''

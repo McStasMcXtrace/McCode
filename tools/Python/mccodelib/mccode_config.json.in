@@ -21,8 +21,8 @@
     "OACCFLAGS": "@OACCFLAGS@",
     "CC": "@TOOLS_CC@",
     "OACC": "@OACC@",
-    "MPICC": "@MPICC@",
-    "MPIRUN": "@MPIRUN@",
+    "MPICC": "mpicc",
+    "MPIRUN": "mpirun",
     "MPINODES": "auto"
   },
   "platform": {
