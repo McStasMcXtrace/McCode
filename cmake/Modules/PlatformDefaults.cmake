@@ -125,7 +125,7 @@ function( detect_platform_variables resultvarname )
   #C flags:
   include (CheckCCompilerFlag)
   set(MCCODE_CFLAGS "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
-  foreach( flag "-std=c99" "-lm" "-D_POSIX_SOURCE" )
+  foreach( flag "-std=c99" "-lm" )
     #NB: plethora of "unset(tmp_test_c_flag_result ...)" statements below is
     #added for safety, to prevent CMake's CACHE system to give unpredictable
     #results.

@@ -37,10 +37,10 @@ def parse_trace():
     mpl.rcParams['legend.fontsize'] = 10
 
     fig = plt.figure(figsize=plt.figaspect(0.5)*1.5)
-    ax = fig.gca(projection='3d')
-    ax.set_xlabel("z")
-    ax.set_ylabel("x")
-    ax.set_zlabel("y")
+    ax = fig.gca()
+#    ax.xlabel("z")
+#    ax.ylabel("x")
+#    ax.zlabel("y")
     try:
         ax.set_aspect('equal')
     except:
@@ -162,9 +162,9 @@ def parse_trace():
 
 
     # A little bit of logic for controlling the aspect ratios/view
-    (xmin, xmax)=ax.get_xlim3d()
-    (ymin, ymax)=ax.get_ylim3d()
-    (zmin, zmax)=ax.get_zlim3d()
+    (xmin, xmax)=ax.get_xlim()
+    (ymin, ymax)=ax.get_ylim()
+    (zmin, zmax)=ax.get_zlim()
     dx = xmax - xmin
     dy = ymax - ymin
     dz = zmax - zmin

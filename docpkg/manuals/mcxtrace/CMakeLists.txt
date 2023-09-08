@@ -35,14 +35,8 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(MANUAL "${FLAVOR}-manual.pdf")
 set(CMANUAL "${FLAVOR}-components.pdf")
 
-if(WINDOWS)
-  set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/")
-  set(MANDEST "${lib}/doc/manuals")
-else()
-  set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${MCCODE_NAME}")
-  set(MANDEST "${FLAVOR}/${MCCODE_VERSION}/doc/manuals")
-endif()
-
+set(MCCODE_LIB "${DEST_DATADIR_COMPS}")
+set(MANDEST "${DEST_DATADIR_DOC}")
 
 # Debian
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}")

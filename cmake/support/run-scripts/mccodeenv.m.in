@@ -7,7 +7,7 @@ setenv('PATH', ['@CPACK_NSIS_INSTALL_ROOT@\\bin;@CPACK_NSIS_INSTALL_ROOT@\\minic
 %
 % McStas related:
 setenv('@FLAVOR_UPPER@', '@CPACK_NSIS_INSTALL_ROOT@\\lib');
-setenv('@FLAVOR_UPPER@_TOOLS', '@CPACK_NSIS_INSTALL_ROOT@\\lib\\tools\\Perl\\');
+setenv('@FLAVOR_UPPER@_TOOLS', '@CPACK_NSIS_INSTALL_ROOT@\\@DEST_TOOLDIR@\\Perl\\');
 setenv('@FLAVOR_UPPER@_CC', 'gcc');
 setenv('@FLAVOR_UPPER@_FORMAT', '@PLOTTER@');
 %

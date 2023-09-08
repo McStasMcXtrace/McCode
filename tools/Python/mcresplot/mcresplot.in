@@ -1,25 +1,32 @@
 #!/usr/bin/env bash
 # Wrapper script for mcresplot-py
 
-# First ensure that we follow symlink if needed
-LINK=`readlink $0`
+@MCCODE_BASH_STANDARD_PREAMBLE@
 
-# Am I a symlink?
-if [ "x$LINK" != "x" ]; then
-    LIB=`dirname $LINK`
-else
-    LIB=`dirname $0`
-fi
-if [ -d "$LIB/../miniconda3" ]; then
-    source $LIB/../miniconda3/bin/activate base
-fi
-LIB="$LIB/../tools/Python/mcresplot"
 TOOL="mcresplot"
-VERS="@MCCODE_VERSION@"
+UTILDIR="${MCCODE_TOOLDIR}/Python/$TOOL"
+
+# Check if we are in / - in that case cd to $HOME
+if [[ ${PWD} = / ]]; then
+    cd $HOME
+fi
+
+#NB: miniconda should be installed next to the tool folder:
+if [ -d "${MCCODE_BINDIR}/../miniconda3" ]; then
+    source "${MCCODE_BINDIR}/../miniconda3/bin/activate" "${MCCODE_BINDIR}/../miniconda3"
+    export PATH=${MCCODE_BINDIR}/../miniconda3/bin/:$PATH
+fi
+
+# FIXME: NCrystal should be used via own package/infrastructure
+if [ [ @NCRYSTAL_LEGACY_USE@ == 1 ] && -d "${MCCODE_TOOLDIR}/../share/NCrystal/python" ]; then
+    export PYTHONPATH="${MCCODE_TOOLDIR}/../share/NCrystal/python:$PYTHONPATH"
+fi
+
+#VERS="@MCCODE_VERSION@"
 
 
 canrun() {
-    if ! [ -x ${LIB}/${TOOL}.py ]; then
+    if ! [ -x "${UTILDIR}/${TOOL}.py" ]; then
         exit 127;
     fi
 
@@ -32,7 +39,7 @@ canrun() {
 }
 
 if ( canrun ); then
-    python3 ${LIB}/${TOOL}.py $*
+    python3 -u ${UTILDIR}/${TOOL}.py "$@"
 else
     @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
 fi

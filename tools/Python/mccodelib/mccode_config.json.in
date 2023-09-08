@@ -27,6 +27,8 @@
   },
   "platform": {
     "EXESUFFIX": "@MCCODE_EXECUTABLE_SUFFIX@"
+  },
+  "directories": {
   }
 }
 

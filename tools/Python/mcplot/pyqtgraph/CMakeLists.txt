@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.17.0)
 cmake_policy(VERSION 3.17.0)
 
-# This will install McStas components
+# This will install McStas or McXtrace mc/mxplot-pyqtgraph
 project(python-tools-mcplot-pyqtgraph C)
 
 message(STATUS "Configure ${CMAKE_PROJECT_NAME} ${FLAVOR} ${PROJECT_NAME}")
@@ -29,23 +29,10 @@ endif()
 
 setupMCCODE("${FLAVOR}")
 
-
 # Select prefix
 set(P "${MCCODE_PREFIX}")
 
-set(TOOLS_NAME "tools/Python/${P}plot/pyqtgraph")
-
-# Windows needs special handling of this path...
-if(WINDOWS)
-  set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
-else()
-  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
-endif()
-
-
-# Set some extra options for mccode_config
-set(CC "${CMAKE_C_COMPILER}")
-set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
+set(TOOLS_NAME "Python/${P}plot/pyqtgraph")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}plot-pyqtgraph-${MCCODE_VERSION}")
@@ -85,59 +72,43 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-
 # Configure fallback script
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot-pyqtgraph" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot" @ONLY)
 
-# Program files
-if(WINDOWS)
-  # Python files
-  foreach(name mcdataclient.py  mcdataserver.py  mcdataservice.py plotfuncs.py)
-    install(
-      FILES "${PROJECT_SOURCE_DIR}/${name}"
-      DESTINATION "${lib}/${TOOLS_NAME}"
-      )
-  endforeach()
-
-  install(
-    FILES "${PROJECT_SOURCE_DIR}/mcplot.py"
-    DESTINATION "${lib}/${TOOLS_NAME}"
-    RENAME "${P}plot.py"
-    PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
-  )
-endif()
-
-if(NOT WINDOWS)
-  # Python files
-  foreach(name mcdataclient.py  mcdataserver.py  mcdataservice.py plotfuncs.py )
-    install(
-      FILES "${PROJECT_SOURCE_DIR}/${name}"
-      DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
-      )
-  endforeach()
-
-  install(
-    FILES ${PROJECT_SOURCE_DIR}/mcplot.py
-    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
-    RENAME "${P}plot.py"
-    PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
+# Main script, including rename mc/mxplot
+install(
+  PROGRAMS "${PROJECT_SOURCE_DIR}/mcplot.py"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+  RENAME "${P}plot.py"
   )
 
+# Other .py infrastructure
+foreach(NAME "mcdataclient.py"  "mcdataserver.py"  "mcdataservice.py" "plotfuncs.py")
   install(
-    PROGRAMS "${WORK}/${P}plot-pyqtgraph"
-    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}plot-pyqtgraph${DOT_PYTHON_SUFFIX}"
+    FILES "${PROJECT_SOURCE_DIR}/${NAME}"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
     )
-  # Make pyqtgraph plotter available as mcplot/mxplot
+endforeach()
+
+# Wrapper-scripts on windows are handled via
+# cmake Modules/MCUtil
+if(NOT WINDOWS)
+  add_custom_target(
+    "CREATE_${PROJECT_NAME}_SYMLINK" ALL DEPENDS "${WORK}/${P}plot"
+    )
+
   install(
-    PROGRAMS "${WORK}/${P}plot-pyqtgraph"
-    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}plot"
+    PROGRAMS ${PROJECT_SOURCE_DIR}/mcplot.py
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+    RENAME "${P}plot.py"
+  )
+  install(
+    PROGRAMS "${WORK}/${P}plot"
+    DESTINATION ${DEST_BINDIR}
+    )
+  install(
+    PROGRAMS "${WORK}/${P}plot"
+    DESTINATION ${DEST_BINDIR}
+    RENAME "${P}plot-pyqtgraph"
     )
 endif()

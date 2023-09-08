@@ -4,6 +4,7 @@ mcgui UI.
 import sys
 import os
 import re
+import pathlib
 from widgets import *
 from PyQt5 import QtWidgets
 
@@ -223,7 +224,7 @@ class McMainWindow(QtWidgets.QMainWindow):
         self.ui.actionMcstas_User_Manual.setText(mccode + " User Manual")
         self.ui.actionMcstas_Component_Manual.setText(mccode + " Component Manual")
         self.ui.actionMcstas_Web_Page.setText(mccode + " Web Page")
-        self.ui.lblIcon.setPixmap(QtGui.QPixmap(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"],'tools','Python',prefix + 'gui',mccode + "-py.png")))
+        self.ui.lblIcon.setPixmap(QtGui.QPixmap(os.path.join(str(pathlib.Path(__file__).parent.resolve()),mccode + "-py.png")))
 
     def initDynamicView(self, args, callback):
         ''' - args ([str, [], []]): list of triplets consisting of site name,

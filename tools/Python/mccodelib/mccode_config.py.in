@@ -1,14 +1,13 @@
 import os
+import pathlib
 import json
 import sys
 
-'''
-Dynamic vs static LIBDIR location
-'''
-LIBDIR = os.path.join(os.path.dirname(__file__),"..","..","..")
-LIBDIR_FALLBACK = '@MCCODE_LOCATION@'
-if sys.platform == 'darwin':
-    LIBDIR = LIBDIR_FALLBACK
+thisdir = pathlib.Path(__file__).parent.absolute().resolve()
+tooldir = ( thisdir / '..' / '..' ).absolute().resolve()
+resourcedir = ( tooldir / '@MCCODE_RELPATH_TOOLDIR2RESOURCEDIR@' ).absolute().resolve()
+bindir = ( tooldir / '@MCCODE_RELPATH_TOOLDIR2BINDIR@' ).absolute().resolve()
+libdir = ( tooldir / '@MCCODE_RELPATH_TOOLDIR2LIBDIR@' ).absolute().resolve()
 
 def check_env_vars():
     ''' checks the OS environment variables '''
@@ -33,6 +32,7 @@ def load_config(path=None):
     global configuration
     global compilation
     global platform
+    global directories
 
     if path==None:
         level="system"
@@ -46,26 +46,40 @@ def load_config(path=None):
             userdir =  os.path.join(os.path.expandvars("$HOME"),"." + configuration['MCCODE'],configuration['MCCODE_VERSION'])
         userconfig = os.path.join(userdir,"mccode_config.json")
         info = " from " + userconfig
-    
+
         if not os.path.isfile(userconfig):
             return
     else:
         level="override"
         userconfig= os.path.join(path,"mccode_config.json")
         info = " from " + userconfig
-    
-    print("loading " + level + " configuration" + info )
+
+    #slightly nasty workaround to suppress print statement below:
+    if os.environ.get('MCCODE_SUPPRESS_LOAD_CONFIG_PRINT_STATEMENT','') != '1':
+        print("loading " + level + " configuration" + info )
     text = open(userconfig).read()
     obj = json.loads(text)
     configuration = obj['configuration']
     compilation = obj['compilation']
     platform = obj['platform']
-    # Finally, fill in the location of MCCODE_LIB_DIR based on location of Python script
-    configuration["MCCODE_LIB_DIR"]=LIBDIR
+    directories = obj['directories']
+    # Fill in the location of MCCODE_LIB_DIR based on location of Python script
+    configuration["MCCODE_LIB_DIR"]=str(resourcedir) #NB: Is actually in the 'directories' part now (as a non-absolute directory name).
+    # Finally, set dynamically deduced directory paths:
+    directories['bindir'] = str( bindir )
+    directories['libdir'] = str( libdir )
+    directories['tooldir'] = str( tooldir )
+    directories['resourcedir'] = str( resourcedir )
+    directories['pydir'] = str( tooldir / 'Python' )
+    directories['datadir'] = str( resourcedir / 'data' )
+    directories['sharedir'] = str( resourcedir / 'share' )
+    directories['compdir'] = str( resourcedir )
+    directories['exampledir'] = str( resourcedir / 'examples' )
+
 
 def save_user_config():
     ''' attempts to save the current values to a local .json file '''
-    text = json.dumps({'configuration' : configuration, 'compilation' : compilation, 'platform' : platform}, indent=2)
+    text = json.dumps({'configuration' : configuration, 'compilation' : compilation, 'platform' : platform, 'directories' : directories}, indent=2)
 
     if os.name == 'nt':
         homedirconf =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",configuration['MCCODE'])
@@ -77,13 +91,13 @@ def save_user_config():
             os.mkdir(homedirconf)
         except Exception as e:
             print("Directory %s could not be created: %s " % (homedirconf, e.__str__()))
-            
+
     userdir = os.path.join(homedirconf,configuration['MCCODE_VERSION'])
     if not os.path.isdir(userdir):
         try:
             os.mkdir(userdir)
         except Exception as e:
-            print("Directory %s could not be created: %s " % (userdir, e.__str__())) 
+            print("Directory %s could not be created: %s " % (userdir, e.__str__()))
     userconfig = os.path.join(userdir,"mccode_config.json")
     f = None
     try:
@@ -105,7 +119,7 @@ def get_options():
     else:
         suffix='.pl'
         suffix2=''
-        
+
     if configuration['MCCODE'] == "mcstas":
         prefix = "mc"
         mcdisplay_lst = [prefix+"display-webgl",
@@ -123,7 +137,7 @@ def get_options():
         mcrun_lst =     [prefix+"run", prefix+"run --format=NeXus"]
         format_lst =    ["McCode", "NeXus", "NeXus -c"]
 
-        
+
     mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot-matplotlib", prefix+"plot-matlab"]
 
     return mcrun_lst, mcplot_lst, mcdisplay_lst, format_lst
@@ -152,10 +166,14 @@ Platform settings
 '''
 platform = {
 }
+'''
+Directories
+'''
+directories = {
+}
 
 load_config()
-    
-# Set environment variables according to the above
-os.environ[configuration["MCCODE"].upper()] = configuration["MCCODE_LIB_DIR"]
-os.environ["PATH"] = os.path.join(configuration["MCCODE_LIB_DIR"],"bin") + os.pathsep + os.environ["PATH"]
 
+# Set environment variables according to the above
+os.environ[configuration["MCCODE"].upper()] = str(resourcedir)
+os.environ["PATH"] = '%s%s%s'%(str(bindir),os.pathsep,os.environ.get("PATH",''))

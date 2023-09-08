@@ -1,5 +1,6 @@
 @CALL @CPACK_NSIS_INSTALL_ROOT@\\bin\\mccodeenv.bat
-@SET PATH=@CPACK_NSIS_INSTALL_ROOT@\\lib\\tools\\matlab\\@MCCODE_PREFIX@plot;%PATH%
+@set BINDIR=%~dp0
+@SET PATH=%BINDIR%\\@MCCODE_RELPATH_BINDIR2TOOLDIR@\\matlab\\@MCCODE_PREFIX@plot;%PATH%
 @REM Isn't windows a lovely place???
 @mcplot.m %*
 

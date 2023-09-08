@@ -3,19 +3,13 @@
 @REM First, set up various environment variables
 @REM
 @REM Path related:
-@SET PATH=@CPACK_NSIS_INSTALL_ROOT@\\bin;@CPACK_NSIS_INSTALL_ROOT@\\miniconda3;@CPACK_NSIS_INSTALL_ROOT@\\miniconda3\\Scripts\\;@CPACK_NSIS_INSTALL_ROOT@\\miniconda3\\Library\\bin;@CPACK_NSIS_INSTALL_ROOT@\\miniconda3\\Library\\mingw-w64\\bin;c:\\strawberry\\perl\\bin;c:\\Microsoft MPI\\Bin;%PATH%
+@set BINDIR=%~dp0
+@SET PATH=%BINDIR%;%BINDIR%\\..\\miniconda3;%BINDIR%\\..\\miniconda3\\Scripts\\;%BINDIR%\\..\\miniconda3\\Library\\bin;%BINDIR%\\..\\miniconda3\\Library\\mingw-w64\\bin;c:\\Microsoft MPI\\Bin;%PATH%
 @REM
-@REM McStas related:
-@SET @FLAVOR_UPPER@=@CPACK_NSIS_INSTALL_ROOT@\\lib
-@SET @FLAVOR_UPPER@_TOOLS=@CPACK_NSIS_INSTALL_ROOT@\\lib\\tools\\Perl\\
+@REM @FLAVOR@ related:
+@SET @FLAVOR_UPPER@=%BINDIR%\\@MCCODE_RELPATH_BINDIR2RESOURCEDIR@
 @SET @FLAVOR_UPPER@_CC=gcc
-@SET @FLAVOR_UPPER@_FORMAT=@PLOTTER@
-@REM
-@REM PGPLOT configuration
-@SET PGPLOT_DIR=c:\\strawberry\\perl\\site\\lib\\PGPLOT\\pgplot_supp
-@SET PGPLOT_FONT=c:\\strawberry\\perl\\site\\lib\\PGPLOT\\pgplot_supp\\grfont.dat
-@SET PGPLOT_DEV=/gw
 @REM
 @REM NCrystal Python hooks
-@SET PYTHONPATH=@FLAVOR_UPPER@\\share\\NCrystal\\python;%PYTHONPATH%
+@SET PYTHONPATH=%BINDIR%\\..\\share\\NCrystal\\python;%PYTHONPATH%
 

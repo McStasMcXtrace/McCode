@@ -84,7 +84,7 @@ void metadata_assign_from_instance(List metadata);
   struct jump_condition    jumpcondition;
   struct jump_name         jumpname;
   struct metadata_struct   *metadatum;       /* one metadatum structure */
-  List                     metadata;      /* list of metadata structures */
+  List                     metadata;      /* list of metadatum structures */
 }
 
 %token TOK_RESTRICTED TOK_GENERAL
@@ -1132,7 +1132,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->actuals= symtab_create();
         symtab_cat(comp->actuals, $5);
         symtab_cat(comp->actuals, comp_src->actuals);
-        comp->metadata = list_create(); if (list_len(comp_src->metadata)) list_cat(comp->metadata, comp_src->metadata);
+        comp->metadata = metadata_list_copy(comp_src->metadata);
         $$ = comp;
       }
     | "COPY" '(' compref ')'
@@ -1149,7 +1149,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->jump   = comp_src->jump;
         comp->when   = comp_src->when;
         comp->actuals= comp_src->actuals;
-        comp->metadata = list_create(); if (list_len(comp_src->metadata)) list_cat(comp->metadata, comp_src->metadata);
+        comp->metadata = metadata_list_copy(comp_src->metadata);
         $$ = comp;
       }
     | TOK_ID actuallist /* define new instance with def+set parameters */
@@ -1158,11 +1158,6 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         struct comp_inst *comp;
         def = read_component($1);
 
-        if (def->metadata == NULL || list_undef(def->metadata)) {
-          printf("Read component definition did not set the metadata list?!\n");
-          def->metadata = list_create();
-        }
-
         palloc(comp);
         comp->def          = def;
         comp->extend = codeblock_new();
@@ -1170,7 +1165,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         comp->jump   = list_create();
         comp->when   = NULL;
         comp->actuals= $2;
-        comp->metadata = list_create(); if (list_len(def->metadata)) list_cat(comp->metadata, def->metadata);
+        comp->metadata = metadata_list_copy(def->metadata);
         $$ = comp;
       }
 ;
@@ -1475,13 +1470,54 @@ metadata1: metadatum
 ;
 
 
-metadatum: "METADATA" TOK_ID TOK_ID codeblock
+metadatum:
+"METADATA" TOK_ID TOK_ID codeblock
 {
   struct metadata_struct * metadatum;
   palloc(metadatum);
   metadatum->source = NULL;
   metadatum->type = str_dup($2);
   metadatum->name = str_dup($3);
+  metadatum->lines = list_create(); if (list_len($4->lines)) list_cat(metadatum->lines, $4->lines);
+  $$ = metadatum; // This would be very bad to omit. Don't do that!
+}
+|
+"METADATA" TOK_ID TOK_STRING codeblock
+{
+  struct metadata_struct * metadatum;
+  palloc(metadatum);
+  metadatum->source = NULL;
+  metadatum->type = str_dup($2);
+  char * tmp_key = malloc(((strlen($3)+3)*sizeof(char)));
+  sprintf(tmp_key, "\"%s\"", $3);
+  metadatum->name = str_quote(tmp_key);
+  free(tmp_key);
+  metadatum->lines = list_create(); if (list_len($4->lines)) list_cat(metadatum->lines, $4->lines);
+  $$ = metadatum; // This would be very bad to omit. Don't do that!
+}
+// Add variants to accept string-valued type information for MIME types
+|
+"METADATA" TOK_STRING TOK_ID codeblock
+{
+  struct metadata_struct * metadatum;
+  palloc(metadatum);
+  metadatum->source = NULL;
+  metadatum->type = str_dup($2);
+  metadatum->name = str_dup($3);
+  metadatum->lines = list_create(); if (list_len($4->lines)) list_cat(metadatum->lines, $4->lines);
+  $$ = metadatum; // This would be very bad to omit. Don't do that!
+}
+|
+"METADATA" TOK_STRING TOK_STRING codeblock
+{
+  struct metadata_struct * metadatum;
+  palloc(metadatum);
+  metadatum->source = NULL;
+  metadatum->type = str_dup($2);
+  char * tmp_key = malloc(((strlen($3)+3)*sizeof(char)));
+  sprintf(tmp_key, "\"%s\"", $3);
+  metadatum->name = str_quote(tmp_key);
+  free(tmp_key);
   metadatum->lines = list_create(); if (list_len($4->lines)) list_cat(metadatum->lines, $4->lines);
   $$ = metadatum; // This would be very bad to omit. Don't do that!
 }
@@ -1900,7 +1936,7 @@ Symtab read_components = NULL;
 /* name of executable, e.g. mcstas or mcxtrace */
 char *executable_name=NULL;
 
-/* Print a summary of the command usage and exit with error. */
+/* Print a summary of the command usage. */
 static void
 print_usage(void)
 {
@@ -1925,6 +1961,13 @@ print_usage(void)
   fprintf(stderr, "  Use 'gui' to run the " MCCODE_NAME " GUI.\n");
   fprintf(stderr, "SEE ALSO: mcrun, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui, mcformat, mcdoc\n");
   fprintf(stderr, "DOC:      Please visit <" MCCODE_BUGREPORT ">\n");
+}
+
+/* Print a summary of the command usage and exit with error. */
+static void
+print_usage_error(void)
+{
+  print_usage();
   exit(1);
 }
 
@@ -2006,21 +2049,25 @@ parse_command_line(int argc, char *argv[])
       print_version();
     else if(!strcmp("--version", argv[i]))
       print_version();
+    else if(!strcmp("-h", argv[i]))
+      { print_usage(); exit(0); }
+    else if(!strcmp("--help", argv[i]))
+      { print_usage(); exit(0); }
     else if(!strcmp("--verbose", argv[i]))
       verbose = 1;
     else if(argv[i][0] != '-')
     {
       if(instr_current_filename != NULL)
-        print_usage();    /* Multiple instruments given. */
+        print_usage_error();    /* Multiple instruments given. */
       instr_current_filename = str_dup(argv[i]);
     }
     else
-      print_usage();
+      print_usage_error();
   }
 
   /* Instrument filename must be given. */
   if(instr_current_filename == NULL)
-    print_usage();
+    print_usage_error();
   /* If no '-o' option was given for INSTR.instr, default to INSTR.c  */
   if(output_filename == NULL)
     output_filename = make_output_filename(instr_current_filename);

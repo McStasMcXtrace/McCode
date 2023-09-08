@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+
+#Suppress 'loading xxx configuration' print statement, since it might interfere
+#with printouts of e.g. --version, --showcfg, ...:
+import os
+os.environ['MCCODE_SUPPRESS_LOAD_CONFIG_PRINT_STATEMENT']='1'
+
 from os import mkdir
 from os.path import isfile, isdir, abspath, dirname, basename, join
 from shutil import copyfile
@@ -12,7 +18,8 @@ from optimisation import Scanner, LinearInterval, MultiInterval, Optimizer
 # import config
 import sys
 
-sys.path.append(join(dirname(__file__), '..'))
+sys.path.insert(0,join(dirname(__file__), '..'))
+
 from mccodelib import mccode_config
 
 from log import getLogger, setupLogger, setLogLevel, McRunException
@@ -196,6 +203,13 @@ def add_mcrun_options(parser):
     #                       https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html?highlight=minimize
     #    --minimize         choose to minimize the function if needed
     #    --monitor monitor  monitor name
+
+    cfg_items = ['bindir','libdir','resourcedir','tooldir']
+    cfg_items_prettyprint =   '"%s", and "%s"'%('", "'.join(cfg_items[:-1]),cfg_items[-1])
+    add(
+        "--showcfg", choices=cfg_items, metavar="ITEM",
+        help="Print selected cfg item and exit (paths are resolved and absolute). Allowed values are %s."%cfg_items_prettyprint
+    )
 
     parser.add_option_group(opt)
 
@@ -404,10 +418,17 @@ def main():
     # Parse options
     (options, args) = parser.parse_args()
 
+    if options.showcfg:
+        #For now, all options are actually directly available as keys in the
+        #mccode_config.directories dictionary:
+        assert options.showcfg in mccode_config.directories.keys()
+        print(mccode_config.directories[options.showcfg])
+        raise SystemExit
+
     # Write user config file and exit
     if options.write_user_config:
         mccode_config.save_user_config()
-        quit()
+        raise SystemExit
 
     # Override system and user level config files if prompted
     if options.override_config:
@@ -423,7 +444,7 @@ def main():
     options.instr = find_instr_file(args[0])
 
     if options.param:
-        # load params from file 
+        # load params from file
         text = open(options.param).read()
         import re
         params = re.findall('[\w0-9]+=[^=\s]+', text)

@@ -1,4 +1,4 @@
 @CALL @CPACK_NSIS_INSTALL_ROOT@\\bin\\mccodeenv.bat
 @REM Isn't windows a lovely place???
 @cd %USERPROFILE%
-@python @CPACK_NSIS_INSTALL_ROOT@\\lib\\tools\\Python\\@MCCODE_PREFIX@gui\\@MCCODE_PREFIX@gui.py %*
+@python @CPACK_NSIS_INSTALL_ROOT@\\@DEST_TOOLDIR@\\Python\\@MCCODE_PREFIX@gui\\@MCCODE_PREFIX@gui.py %*

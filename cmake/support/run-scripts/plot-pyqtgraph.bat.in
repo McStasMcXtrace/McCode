@@ -1,3 +1,4 @@
 @REM Isn't windows a lovely place???
-@python @CPACK_NSIS_INSTALL_ROOT@\\lib\\tools\\Python\\@MCCODE_PREFIX@plot\\pyqtgraph\\@MCCODE_PREFIX@plot.py %*
+@set BINDIR=%~dp0
+@python -u %BINDIR%\\@MCCODE_RELPATH_BINDIR2TOOLDIR@\\Python\\@MCCODE_PREFIX@plot\\pyqtgraph\\@MCCODE_PREFIX@plot.py %*
 

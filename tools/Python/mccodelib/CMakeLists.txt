@@ -34,15 +34,10 @@ else()
   set(P "mx")
 endif()
 
-set(TOOLS_NAME "tools/Python/mccodelib")
+set(TOOLS_NAME "Python/mccodelib")
 
-if(WINDOWS)
-  set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
-  set(MCCODE_LOCATION "${lib}/")
-else()
-  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
-  set(MCCODE_LOCATION "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/")
-endif()
+set(TOOLS_LIB "${DEST_TOOLDIR}/${TOOLS_NAME}")
+set(MCCODE_LOCATION "${DEST_TOOLDIR}")
 
 
 # Set some extra options for mccode_config
@@ -101,12 +96,12 @@ if(WINDOWS)
   foreach(name __init__.py fcparticleparser.py utils.py flowchart.py instrgeom.py instrparser.py mcdisplayutils.py mcplotloader.py nodetree.py particleparser.py pipetools.py plotgraph.py pqtgfrontend.py cflags.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
-      DESTINATION "${lib}/${TOOLS_NAME}"
+      DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
       )
   endforeach()
   install(
     FILES ${BINS}
-    DESTINATION "${lib}/${TOOLS_NAME}"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
@@ -119,12 +114,12 @@ if(NOT WINDOWS)
   foreach(name __init__.py fcparticleparser.py utils.py flowchart.py instrgeom.py instrparser.py mcdisplayutils.py mcplotloader.py nodetree.py particleparser.py pipetools.py plotgraph.py pqtgfrontend.py cflags.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
-      DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+      DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
       )
   endforeach()
   install(
     FILES ${BINS}
-    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE

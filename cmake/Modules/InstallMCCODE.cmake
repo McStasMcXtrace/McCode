@@ -185,8 +185,8 @@ macro(installMCCODE)
   # Macro for configuring every file in a directory
   # *.in files are configured, while other files are copied unless target exists
   macro(configure_directory IN_GLOB OUT_DIR)
-    file(GLOB MAN_IN_FILES "" "${IN_GLOB}")
-    foreach(file_in ${MAN_IN_FILES})
+    file(GLOB tmp "${IN_GLOB}")
+    foreach(file_in ${tmp})
       get_filename_component(filename "${file_in}" NAME)      # /doc/man/example.1.in -> example.1.in
       string(REGEX MATCH "^(.+)\\.in" matches "${filename}")  # example.1.in -> example.1
       if(matches)
@@ -198,16 +198,19 @@ macro(installMCCODE)
       else()
         # do not overwrite files created by configure
         if(NOT (EXISTS "${OUT_DIR}/${filename}") OR ("${file_in}" IS_NEWER_THAN "${OUT_DIR}/${filename}"))
-          file(
-            COPY "${file_in}"
-            DESTINATION "${OUT_DIR}")
+          if( IS_SYMLINK "${file_in}" )
+            #follow symlink
+            get_filename_component( file_in "${file_in}" REALPATH )
+          endif()
+          file( COPY "${file_in}" DESTINATION "${OUT_DIR}")
         endif()
       endif()
     endforeach()
   endmacro()
 
 
-  configure_directory ("lib/*" "work/lib")
+  configure_directory ("lib/COPYING" "work/licensefiles")
+
   configure_directory ("lib/share/*" "work/lib/share")
 
   configure_directory ("src/*" "work/src")
@@ -302,78 +305,94 @@ macro(installMCCODE)
     work/src/py-instrument.tab.c
   )
 
+  if ( CMAKE_INSTALL_PREFIX AND NOT "x${CMAKE_INSTALL_PREFIX}" STREQUAL "x/" )
+    get_filename_component( tmp "${CMAKE_INSTALL_PREFIX}/${DEST_RESOURCEDIR}" REALPATH )
+    target_compile_definitions(${FLAVOR}-pygen PRIVATE "MCCODE_RESOURCEDIR_HARDCODED=${tmp}")
+    target_compile_definitions(${FLAVOR} PRIVATE "MCCODE_RESOURCEDIR_HARDCODED=${tmp}")
+  endif()
+
   ## Add install targets
   include(MCUtil)
   set(WORK "${PROJECT_BINARY_DIR}/work")
 
-  # Flavor-specific library
-  installLib("${PROJECT_SOURCE_DIR}/${FLAVOR_LIB}/")
+  #license file:
+  install( FILES "${WORK}/licensefiles/COPYING" DESTINATION "${DEST_DATADIR_INFO}")
 
-  # Shared library, lib
-  installLib("${WORK}/lib/")
+  #General library:
+  file_globsrc( general_codefiles "${WORK}/lib/share/*.h"  "${WORK}/lib/share/*.c" )
+  install( FILES ${general_codefiles} DESTINATION "${DEST_DATADIR_CODEFILES}")
+
+  # Flavor-specific library
+  file_globsrc( flavor_codefiles "${FLAVOR_LIB}/share/*.h" "${FLAVOR_LIB}/share/*.c" "${FLAVOR_LIB}/share/*.cl" )
+  install( FILES ${flavor_codefiles} DESTINATION "${DEST_DATADIR_CODEFILES}" )
 
   if(NOT WINDOWS)
     # Binaries
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
-      DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+      DESTINATION "${DEST_BINDIR}"
     )
 
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}-pygen${DOT_EXE_SUFFIX}"
-      DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+      DESTINATION "${DEST_BINDIR}"
     )
 
-    foreach (name environment module)
-      configure_file(
-	      cmake/support/run-scripts/${name}.in
-	      work/support/${name}
-	      @ONLY)
-      install(PROGRAMS ${WORK}/support/${name} DESTINATION ${FLAVOR}/${MCCODE_VERSION}/)
-    endforeach()
-    install(PROGRAMS ${WORK}/support/postinst DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin/)
-    install(PROGRAMS ${WORK}/support/${FLAVOR}_errmsg DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin/)
+    configure_file(
+      cmake/support/run-scripts/environment.in
+      work/support/${FLAVOR}-environment
+      @ONLY)
+    install(PROGRAMS ${WORK}/support/${FLAVOR}-environment DESTINATION "${DEST_DATADIR_TOPENVFILES}")
+
+    configure_file(
+      cmake/support/run-scripts/module.in
+      work/support/module
+      @ONLY)
+    install(PROGRAMS ${WORK}/support/module DESTINATION "${DEST_DATADIR_TOPENVFILES}")
+
+    install(PROGRAMS ${WORK}/support/postinst DESTINATION "${DEST_BINDIR}")
+    install(PROGRAMS ${WORK}/support/${FLAVOR}_errmsg DESTINATION "${DEST_BINDIR}")
   endif()
 
   if(WINDOWS)
     # Generate and install Windows setup scripts
     foreach (name mccodeenv.bat mccodeenv.m mccodego.bat mccodetest.bat)
       configure_file(
-	      cmake/support/run-scripts/${name}.in
-	      work/support/${name}
-	      )
-      install(PROGRAMS ${WORK}/support/${name} DESTINATION ${bin})
+        cmake/support/run-scripts/${name}.in
+        work/support/${name}
+        )
+      install(PROGRAMS ${WORK}/support/${name} DESTINATION "${DEST_BINDIR}")
     endforeach()
 
     # Python/Perl related batches special handling
-    foreach (name run.bat run-pl.bat doc.bat doc-pl.bat resplot.bat plot.bat plot-pl.bat display.bat display-pl.bat gui.bat guistart.bat gui-pl.bat plot-pyqtgraph.bat plot-matplotlib.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-mantid.bat display-matlab-pl.bat display-mantid-pl.bat)
+    foreach (name run.bat doc.bat resplot.bat plot.bat display.bat gui.bat guistart.bat plot-pyqtgraph.bat plot-matplotlib.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-mantid.bat)
       configure_file(
 	      cmake/support/run-scripts/${name}.in
 	      work/support/${MCCODE_PREFIX}${name}
 	      )
-      install(PROGRAMS ${WORK}/support/${MCCODE_PREFIX}${name} DESTINATION ${bin})
+      install(PROGRAMS ${WORK}/support/${MCCODE_PREFIX}${name} DESTINATION "${DEST_BINDIR}")
     endforeach()
 
     # Binaries
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
-      DESTINATION ${bin}
+      DESTINATION "${DEST_BINDIR}"
     )
 
     # Binaries
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}-pygen${DOT_EXE_SUFFIX}"
-      DESTINATION ${bin}
+      DESTINATION ${DEST_BINDIR}
     )
 
     install(PROGRAMS
       cmake/support/install-scripts/postsetup.bat
-      DESTINATION ${bin}
+      DESTINATION "${DEST_BINDIR}"
       )
 
     install(PROGRAMS
       cmake/support/run-scripts/mpicc.bat
-      DESTINATION ${bin}
+      DESTINATION "${DEST_BINDIR}"
       )
 
   endif()

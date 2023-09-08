@@ -1,14 +1,10 @@
-cmake_policy(VERSION 3.16.0)
+include_guard()
 
 include(PlatformDefaults)
 
 # Install library files into lib/${FLAVOR}, while skipping unneeded files
 macro(installLib path)
-  if(WINDOWS)
-    set(dest "${lib}")
-  else()
-    set(dest "${FLAVOR}/${MCCODE_VERSION}")
-  endif()
+  set(dest "${DEST_TOOLDIR}")
 
   install (
     DIRECTORY "${path}"
@@ -21,6 +17,31 @@ macro(installLib path)
   )
 endmacro()
 
+  # Macro for configuring every file in a directory
+  # *.in files are configured, while other files are copied unless target exists
+  macro(configure_directory IN_GLOB OUT_DIR)
+    file(GLOB tmp "${IN_GLOB}")
+    foreach(file_in ${tmp})
+      get_filename_component(filename "${file_in}" NAME)      # /doc/man/example.1.in -> example.1.in
+      string(REGEX MATCH "^(.+)\\.in" matches "${filename}")  # example.1.in -> example.1
+      if(matches)
+        # from IN/doc/man/example.1.in -> OUT/doc/man/example.1
+        configure_file (
+          "${file_in}"
+          "${OUT_DIR}/${CMAKE_MATCH_1}"
+          )
+      else()
+        # do not overwrite files created by configure
+        if(NOT (EXISTS "${OUT_DIR}/${filename}") OR ("${file_in}" IS_NEWER_THAN "${OUT_DIR}/${filename}"))
+          if( IS_SYMLINK "${file_in}" )
+            #follow symlink
+            get_filename_component( file_in "${file_in}" REALPATH )
+          endif()
+          file( COPY "${file_in}" DESTINATION "${OUT_DIR}")
+        endif()
+      endif()
+    endforeach()
+  endmacro()
 
 # Check whether we are being run through mkdist
 macro(isMkDist outvar)
@@ -34,7 +55,7 @@ macro(setupMCCODE FLAVOR)
 
   # Use .pl suffix on any platform
   set(PERL_SUFFIX "pl")
-  
+
   # Check for WINDOWS
   if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(WINDOWS true)
@@ -113,13 +134,21 @@ macro(setupMCCODE FLAVOR)
     message(STATUS "Using provided settings MCCODE_VERSION=${MCCODE_VERSION}, MCCODE_NAME=${MCCODE_NAME}, MCCODE_DATE=${MCCODE_DATE}, MCCODE_STRING=${MCCODE_STRING}, MCCODE_TARNAME=${MCCODE_TARNAME}")
   else()
     ## Set Git-specific version
-    set(MCCODE_VERSION "3.9999-git")
-    set(MCCODE_NAME "${MCCODE_NAME}")
+    if (MCVERSION)
+      set(MCCODE_VERSION "${MCVERSION}")
+    else ()
+      set(MCCODE_VERSION "3.9999-git")
+    endif()
+    set(MCCODE_NAME "${FLAVOR}")
     set(MCCODE_DATE "git")
     set(MCCODE_STRING "${NAME} ${MCCODE_VERSION}, ${MCCODE_DATE}")
     set(MCCODE_TARNAME "${FLAVOR}")
   endif()
 
+  include(Locations)
+  # During migration set these as well:
+  set( bin "${DEST_BINDIR}" )
+  set( lib "${DEST_LIBDIR}" )
 
   # Set default installation paths
   foreach(name bin doc etc include lib man sbin share src)
@@ -130,21 +159,28 @@ macro(setupMCCODE FLAVOR)
 
   if(WINDOWS)
     # Fix installation root
-    set(CMAKE_INSTALL_PREFIX "C://")
-    set(CPACK_NSIS_INSTALL_ROOT "C:\\\\${FLAVOR}-${MCCODE_VERSION}")
+    if ( MCCODE_USE_LEGACY_DESTINATIONS )
+      set(CMAKE_INSTALL_PREFIX "${FLAVOR}-${MCCODE_VERSION}")
+      set(CPACK_NSIS_INSTALL_ROOT "C:\\\\${FLAVOR}-${MCCODE_VERSION}")
+    else()
+      set(CMAKE_INSTALL_PREFIX "${FLAVOR}\\\\${MCCODE_VERSION}")
+      set(CPACK_NSIS_INSTALL_ROOT "C:\\\\${FLAVOR}\\\\${MCCODE_VERSION}")
+    endif()
 
     set(CPACK_NSIS_UNINSTALL_NAME "${CMAKE_PROJECT_NAME}-uninstall")
-    
+
     # Set BIN and LIB paths
-    set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}${MCCODE_NAME}/${bin}/${FLAVOR}")
-    set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}${MCCODE_NAME}/${lib}")
+    set(MCCODE_BIN "${DEST_BINDIR}")
+    set(MCCODE_LIB "${DEST_LIBDIR}")
     # Replace '/' with '\'
     string(REPLACE "/" "\\\\" MCCODE_BIN "${MCCODE_BIN}")
-    string(REPLACE "/" "\\\\" MCCODE_LIB "${MCCODE_LIB}")
+    string(REPLACE "/" "\\\\" MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${DEST_DATADIR_COMPS}")
   else()
-    set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}/${bin}/${MCCODE_NAME}")
-    set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}")
+    set(MCCODE_BIN "${DEST_BINDIR}")
+    set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${DEST_DATADIR_COMPS}")
   endif()
+
+  #FIXME: ^^ Perhaps we should use something other than MCCODE_LIB for this path
 
   # Helper for adding leading "."
   macro(addDot name val)
@@ -204,16 +240,12 @@ macro(setupMCCODE FLAVOR)
       ${CMAKE_INSTALL_PREFIX}
       ${CMAKE_INSTALL_PREFIX}/${FLAVOR}
       ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/bin
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/tools
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/tools/Python
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/tools/Python/mcplot
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/tools/Python/mcdisplay
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/launchers
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/libs
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/share
+      ${DEST_BINDIR}
+      ${DEST_TOOLDIR}
+      ${DEST_DATADIR_LIBDIR}
+      ${DEST_DATADIR_CODEFILES}
       )
-    
+
     # Add "-VERSION" to all program files (executables)
     set(PROGRAM_SUFFIX "-${MCCODE_VERSION}")
 
@@ -221,11 +253,11 @@ macro(setupMCCODE FLAVOR)
     set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/postinst;work/support/postrm")
     set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postinst;")
     set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postrm;")
-
+    
     # Define dependencies for gcc and the like
     set(CPACK_DEBIAN_PACKAGE_DEPENDS "build-essential, libopenmpi-dev")
     set(CPACK_RPM_PACKAGE_REQUIRES "gcc, openmpi-devel")
-    
+
     # Generate postinst and postrm scripts
     configure_file(
       cmake/support/install-scripts/postinst.in
@@ -241,7 +273,7 @@ macro(setupMCCODE FLAVOR)
       cmake/support/run-scripts/mccode_errmsg.in
       "work/support/${FLAVOR}_errmsg"
       @ONLY)
-    
+
     # Set architecture
     if(ARCH EQUAL "amd64")
       set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
@@ -256,3 +288,37 @@ macro(setupMCCODE FLAVOR)
 
   endif()
 endmacro()
+
+# Helper function which can look for input files. Apparently "file(GLOB ...)" is
+# frowned upon by some people. However, the only provided alternative (hardcode
+# all your filenames) is rather unappealing. We glob for files, but apply the
+# CONFIGURE_DEPENDS keyword.
+
+function( file_globsrc output_var )
+  set(res "")
+  foreach( pattern ${ARGN} )
+    if ( NOT IS_ABSOLUTE "${pattern}")
+      set(pattern "${PROJECT_SOURCE_DIR}/${pattern}")
+    endif()
+    file(GLOB tmp LIST_DIRECTORIES OFF CONFIGURE_DEPENDS "${pattern}" )
+    #TODO: actually test the below
+    foreach( f ${tmp} )
+      if ( "${f}" MATCHES "~" )
+        continue()
+      endif()
+      if ( "${f}" MATCHES "\\.in$" )
+        continue()
+      endif()
+      if ( "${f}" MATCHES "#" )
+        continue()
+      endif()
+      if ( "${f}" MATCHES "^\\." )
+        continue()
+      endif()
+      #    PATTERN "Makefile*" EXCLUDE  # skip makefiles
+      #    PATTERN "*.out"     EXCLUDE  # skip binary files
+      list( APPEND res "${f}" )
+    endforeach()
+  endforeach()
+  set(${output_var} "${res}" PARENT_SCOPE)
+endfunction()

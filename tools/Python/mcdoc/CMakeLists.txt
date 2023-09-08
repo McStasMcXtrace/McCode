@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.17.0)
 cmake_policy(VERSION 3.17.0)
 
-# This will install McStas components
+# This will install McStas or McXtrace mc/mxdoc
 project(python-tools-mcdoc C)
 
 message(STATUS "Configure ${CMAKE_PROJECT_NAME} ${FLAVOR} ${PROJECT_NAME}")
@@ -30,28 +30,13 @@ endif()
 setupMCCODE("${FLAVOR}")
 
 # Select prefix
-if(${BUILD_MCSTAS})
-  set(P "mc")
-else()
-  set(P "mx")
-endif()
+set(P "${MCCODE_PREFIX}")
 
-set(TOOLS_NAME "tools/Python/${P}doc/")
-
-if(WINDOWS)
-  set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
-else()
-  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
-endif()
-
-
-# Set some extra options for mccode_config
-set(CC "${CMAKE_C_COMPILER}")
-set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
+set(TOOLS_NAME "Python/${P}doc/")
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-Python-${P}doc-${MCCODE_VERSION}")
-set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}doc-${MCCODE_VERSION}")
+set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
 set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
@@ -69,63 +54,56 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-comps-${MCCODE_VERSION}")
 
 # RPM
-set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-comps-${MCCODE_VERSION}"
-  )
+if (RPMPROFILE)
+   if (RPMPROFILE STREQUAL "fedora")
+        set(PYDEPS "python3")
+   else()
+	set(PYDEPS ${FLAVOR}-miniconda3-${MCCODE_VERSION})
+   endif()
+else()
+	set(PYDEPS ${FLAVOR}-miniconda3-${MCCODE_VERSION})
+endif()
 
+set(CPACK_RPM_PACKAGE_REQUIRES
+  "${FLAVOR}-${MCCODE_VERSION}, ${PYDEPS}"
+)
 
 include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdoc.in" "${WORK}/${P}doc" @ONLY)
 
-
-if(WINDOWS)
-  set(BINS "${PROJECT_SOURCE_DIR}/mcdoc.py")
-else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcdoc.py" "${WORK}/${P}doc")
-endif()
-
-
-if(WINDOWS)
-  install(
-    FILES ${BINS}
-    DESTINATION "${lib}/${TOOLS_NAME}"
-    RENAME "${P}doc.py"
-    PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
+# Main script, including rename mcdoc/mxdoc
+install(
+  FILES "${PROJECT_SOURCE_DIR}/mcdoc.py"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+  RENAME "${P}doc.py"
+  PERMISSIONS
+  OWNER_READ OWNER_WRITE OWNER_EXECUTE
+  GROUP_READ GROUP_EXECUTE
+  WORLD_READ WORLD_EXECUTE
   )
-endif()
 
+# Wrapper-scripts on windows are handled via
+# cmake Modules/MCUtil
 if(NOT WINDOWS)
-  install(
-    FILES ${BINS}
-    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
-    PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
-  )
-
-  # Symlink to main
-  add_custom_command(
-    OUTPUT "${WORK}/${P}doc"
-    COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
-    COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}doc"
-    COMMAND "${CMAKE_COMMAND}" -E create_symlink
-    "${TOOLS_LIB}/mcdoc" "${WORK}/${P}doc"
+  add_custom_target(
+    "CREATE_${PROJECT_NAME}_SYMLINK" ALL DEPENDS "${WORK}/${P}doc"
     )
 
-  add_custom_target("CREATE_${PROJECT_NAME}_SYMLINK"  ALL DEPENDS "${WORK}/${P}doc")
-
+  install(
+    FILES "${WORK}/${P}doc"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+    PERMISSIONS
+    OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    GROUP_READ GROUP_EXECUTE
+    WORLD_READ WORLD_EXECUTE
+  )
   install(
     PROGRAMS "${WORK}/${P}doc"
-    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}doc"
+    DESTINATION ${DEST_BINDIR}
     )
+
 endif()

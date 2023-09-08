@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.17.0)
 cmake_policy(VERSION 3.17.0)
 
 # This will install McStas mcresplot
-project(python-tools-mcresplot)
+project(python-tools-mcresplot C)
 
 message(STATUS "Configure ${CMAKE_PROJECT_NAME} ${FLAVOR} ${PROJECT_NAME}")
 
@@ -16,10 +16,8 @@ set(FLAVOR "mcstas")
 set(CPACK_PACKAGE_HOMEPAGE_URL "http://mcstas.org/")
 setupMCCODE("${FLAVOR}")
 
-# Select prefix
-set(P "${MCCODE_PREFIX}")
 
-set(TOOLS_NAME "tools/Python/mcresplot")
+set(TOOLS_NAME "Python/mcresplot")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-mcresplot-${MCCODE_VERSION}")
@@ -55,72 +53,47 @@ set(CPACK_RPM_PACKAGE_REQUIRES
   "${FLAVOR}-${MCCODE_VERSION}, ${PYDEPS}"
 )
 
-
 include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-# Program files
-if(WINDOWS)
-  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
-else()
-  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
-endif()
-
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcresplot.in" "${WORK}/mcresplot" @ONLY)
 
-if(WINDOWS)
-  install(
-    FILES "${PROJECT_SOURCE_DIR}/mcresplot.py"
-    DESTINATION "${lib}/${TOOLS_NAME}"
-    PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
+# Main script
+install(
+  PROGRAMS "${PROJECT_SOURCE_DIR}/mcresplot.py"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
   )
 
-  foreach(NAME "cov.py" "tas.py")
-    install(
-      FILES "${PROJECT_SOURCE_DIR}/${NAME}"
-      DESTINATION "${lib}/${TOOLS_NAME}"
-      )
-  endforeach()
-endif()
+# Other .py infrastructure
+foreach(NAME "cov.py" "tas.py")
+  install(
+    FILES "${PROJECT_SOURCE_DIR}/${NAME}"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+    )
+endforeach()
 
+# Wrapper-scripts on windows are handled via
+# cmake Modules/MCUtil
 if(NOT WINDOWS)
-  foreach(NAME "mcresplot.py" "cov.py" "tas.py")
-    install(
-      FILES "${PROJECT_SOURCE_DIR}/${NAME}"
-      DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
-      )
-  endforeach()
-  
   add_custom_target(
     "CREATE_${PROJECT_NAME}_SYMLINK" ALL DEPENDS "${WORK}/mcresplot"
     )
 
   install(
     FILES "${WORK}/mcresplot"
-    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE
   )
-  install(
-    FILES "${PROJECT_SOURCE_DIR}/mcresplot.py"
-    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
-    RENAME "mcresplot.py"
-    PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
-  )
-
-  
   install(
     PROGRAMS "${WORK}/mcresplot"
-    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+    DESTINATION ${DEST_BINDIR}
+    )
+
+  install(
     )
 endif()
