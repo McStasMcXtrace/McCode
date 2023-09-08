@@ -44,8 +44,6 @@ cd $WORK
 
 ./mkdist mcxtrace ${MCVERSION} "" "" mac-silicon "" -- OSXapp
 ./mkdist mcxtrace-comps ${MCVERSION} "" "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-perl ${MCVERSION} tools/Legacy-Perl/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-perl-cmdline ${MCVERSION} tools/Legacy-Perl-cmdline/ "" mac-silicon "" -- OSXapp
 ./mkdist mcxtrace-tools-matlab-mxplot ${MCVERSION} tools/matlab/mcplot/ "" mac-silicon "" -- OSXapp
 ./mkdist mcxtrace-tools-matlab-mxdisplay ${MCVERSION} tools/matlab/mcdisplay/ "" mac-silicon "" -- OSXapp
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph ${MCVERSION} tools/Python/mcplot/pyqtgraph/ "" mac-silicon "" -- OSXapp

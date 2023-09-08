@@ -31,8 +31,6 @@ WORK=`pwd`
 # 64-bit
 ./mkdist mcstas $1 "" "" rpm64 "" -- rpm
 ./mkdist mcstas-comps $1 "" "" rpm64 "" -- rpm
-./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" rpm64 "" -- rpm
-./mkdist mcstas-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" rpm64 "" -- rpm
 ./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" rpm64 "" -- rpm
 ./mkdist mcstas-tools-python-mcplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" rpm64 "" -- rpm
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" rpm64 "" -- rpm

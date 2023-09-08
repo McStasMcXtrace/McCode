@@ -31,7 +31,6 @@ WORK=`pwd`
 # 64-bit
 ./mkdist mcstas $1 "" "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-comps $1 "" "" rpm64-fedora "" -- rpm
-./mkdist mcstas-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-matlab-mcdisplay $1 tools/matlab/mcdisplay/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" rpm64-fedora "" -- rpm
