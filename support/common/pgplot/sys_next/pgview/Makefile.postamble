@@ -1,8 +1,0 @@
-demo: demo.o nexsup.o mkspeak.o pgvSpeaker.o
-	cc -o demo demo.o nexsup.o mkspeak.o pgvSpeaker.o -lNeXT_s
-
-pgvSpeaker.h pgvListener.h pgvSpeaker.m pgvListener.m: pgv.msg
-	msgwrap pgv.msg
-
-clean::
-	rm -f pgvListener.m demo
