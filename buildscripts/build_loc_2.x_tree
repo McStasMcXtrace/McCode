@@ -34,8 +34,6 @@ export FC=gfortran
 
 ./mkdist mcstas 2.x-dev "" "" deb64 "" -- justinst
 ./mkdist mcstas-comps 2.x-dev "" "" deb64 "" -- justinst
-# can be out-commented after the first build iteration:
-./mkdist mcstas-tools-perl-cmdline 2.x-dev tools/Legacy-Perl-cmdline/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcrun 2.x-dev tools/Python/mcrun/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcgui 2.x-dev tools/Python/mcgui/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mccodelib 2.x-dev tools/Python/mccodelib/ "" deb64 "" -- justinst

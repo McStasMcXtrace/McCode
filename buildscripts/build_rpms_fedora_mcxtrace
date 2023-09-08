@@ -31,7 +31,6 @@ WORK=`pwd`
 # 64-bit
 ./mkdist mcxtrace $1 "" "" rpm64-fedora "" -- rpm
 ./mkdist mcxtrace-comps $1 "" "" rpm64-fedora "" -- rpm
-./mkdist mcxtrace-tools-perl-cmdline $1 tools/Legacy-Perl-cmdline/ "" rpm64-fedora "" -- rpm
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" rpm64-fedora "" -- rpm
 ./mkdist mcxtrace-tools-matlab-mxdisplay $1 tools/matlab/mcdisplay/ "" rpm64-fedora "" -- rpm
 ./mkdist mcxtrace-tools-python-mxcodelib $1 tools/Python/mccodelib/ "" rpm64-fedora "" -- rpm
