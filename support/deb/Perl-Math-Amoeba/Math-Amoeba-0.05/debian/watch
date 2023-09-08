@@ -1,2 +1,0 @@
-version=3
-http://search.cpan.org/dist/Math-Amoeba/   .*/Math-Amoeba-v?(\d[\d.-]+)\.(?:tar(?:\.gz|\.bz2)?|tgz|zip)$

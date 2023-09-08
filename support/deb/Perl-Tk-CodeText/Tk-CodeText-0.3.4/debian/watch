@@ -1,2 +1,0 @@
-version=3
-http://search.cpan.org/dist/Tk-CodeText/   .*/Tk-CodeText-v?(\d[\d.-]+)\.(?:tar(?:\.gz|\.bz2)?|tgz|zip)$
