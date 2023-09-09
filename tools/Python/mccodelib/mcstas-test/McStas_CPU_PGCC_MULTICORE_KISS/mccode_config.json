@@ -26,5 +26,7 @@
   },
   "platform": {
     "EXESUFFIX": "out"
+  },
+  "directories": {
   }
 }
