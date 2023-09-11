@@ -1,44 +1,28 @@
 #!/usr/bin/env bash
 
 # Extract CMake macros during configure
-PREFIX="@CMAKE_INSTALL_PREFIX@"
 UNAME=`uname -s`
+
+@MCCODE_BASH_STANDARD_PREAMBLE@
+export PATH=${MCCODE_BINDIR}:${PATH}
+
+PREFIX="@CMAKE_INSTALL_PREFIX@"
 
 if [ "$1" == "set_mccode_default" ]; then
     # If we are being called with the input parameter default, this is a call
     # for post-configuration using mcgui and the PREFIX value should be
     # defined from the location of this script
-    PREFIX=`dirname $0`
-    cd $PREFIX
-    PREFIX=`pwd -P`
-    cd -
-    PREFIX=`dirname $PREFIX`
-    PREFIX=`dirname $PREFIX`
-    PREFIX=`dirname $PREFIX`
-fi
-if [ "$1" == "osx_app_default" ]; then
-    # Hook to change which mcgui will run using the App bundle 
-    if [[ ${UNAME} = Darwin* ]]; then
-	PREFIX=`dirname $0`
-	cd $PREFIX/../../../../MacOS/
-	if [[ -x "./mccodegui.$2" ]]; then
-	    cp mccodegui.$2 mccodegui
-	    echo Set up your bundle to run the $2 version of mcgui
-	fi
-	cd -
-	exit 0
-    fi
+    PREFIX=${MCCODE_RESOURCEDIR}
 fi
 
 FLAVOR="@FLAVOR@"
 VERSION="@MCCODE_VERSION@"
 MC="@MCCODE_PREFIX@"
-NO_ALTERNATIVES="@NO_ALTERNATIVES@" 
 
 echo "Post-install configuring $FLAVOR v. $VERSION on $UNAME."
 echo "PREFIX was set to $PREFIX"
 # Include installation path before any attempt to postconfig
-export PATH=${PREFIX}/${FLAVOR}/${VERSION}/bin:${PATH}
+export PATH=${MCCODE_BINDIR}:${PATH}
 MCCODE=${FLAVOR}
 
 # Function to check if link exists, then remove it
@@ -151,16 +135,16 @@ then
     # Is this RPM-postinstall, potentially relocated?
     if [[ -z "$RPM_INSTALL_PREFIX" ]]; 
     then
-	cp ${PREFIX}/${FLAVOR}/${VERSION}/module /etc/modulefiles/${FLAVOR}/${VERSION}
+	cp ${PREFIX}/@DEST_DATADIR_COMPS@/${FLAVOR}-module /etc/modulefiles/${FLAVOR}/${VERSION}
     else
-	if [ -e ${RPM_INSTALL_PREFIX}/${FLAVOR}/${VERSION}/module ];
+	if [ -e ${RPM_INSTALL_PREFIX}/@DEST_DATADIR_COMPS@/module ];
 	then
-	    sed -i.bak s+/usr/local+${RPM_INSTALL_PREFIX}+g ${RPM_INSTALL_PREFIX}/${FLAVOR}/${VERSION}/module
-	    cp ${RPM_INSTALL_PREFIX}/${FLAVOR}/${VERSION}/module /etc/modulefiles/${FLAVOR}/${VERSION}
+	    sed -i.bak s+/usr/local+${RPM_INSTALL_PREFIX}+g ${RPM_INSTALL_PREFIX}/@DEST_DATADIR_COMPS@/${FLAVOR}-module
+	    cp ${RPM_INSTALL_PREFIX}/@DEST_DATADIR_COMPS@/${FLAVOR}-module /etc/modulefiles/${FLAVOR}/${VERSION}
 	fi
 	if [ ${RPM_INSTALL_PREFIX} == /usr/local ];
 	then
-	    ln -sf ${RPM_INSTALL_PREFIX}/${FLAVOR}/${VERSION}/bin/* /usr/local/bin/
+	    ln -sf ${RPM_INSTALL_PREFIX}/@DEST_BINDIR@/* /usr/local/bin/
 	fi
     fi
 fi
@@ -172,22 +156,22 @@ then
     # Recent GTK on Linux
     if [ -d /usr/share/gtksourceview-4/language-specs/ ];
     then
-	cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /usr/share/gtksourceview-4/language-specs/
+	cp ${PREFIX}/@DEST_DATADIR_EDITORS@/mccode.lang  /usr/share/gtksourceview-4/language-specs/
     fi
     # Slighly older GTK on Linux
     if [ -d /usr/share/gtksourceview-3/language-specs/ ];
     then
-	cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /usr/share/gtksourceview-3/language-specs/
+	cp ${PREFIX}/@DEST_DATADIR_EDITORS@/mccode.lang  /usr/share/gtksourceview-3/language-specs/
     fi
     # homebrew Arm on mac
     if [ -d /opt/homebrew/share/gtksourceview-4/language-specs/ ];
     then
-	cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /opt/homebrew/share/gtksourceview-4/language-specs/
+	cp ${PREFIX}/@DEST_DATADIR_EDITORS@/mccode.lang  /opt/homebrew/share/gtksourceview-4/language-specs/
     fi
     # homebrew Intel on mac
     if [ -d /usr/local/share/gtksourceview-4/language-specs/ ];
     then
-	cp ${PREFIX}/${FLAVOR}/${VERSION}/editors/mccode.lang  /usr/local/share/gtksourceview-4/language-specs/
+	cp ${PREFIX}/@DEST_DATADIR_EDITORS@/mccode.lang  /usr/local/share/gtksourceview-4/language-specs/
     fi
 fi
 
@@ -202,7 +186,7 @@ then
     checklinks
 elif [[ ${UNAME} = Darwin* || ${PREFIX} = /Applications* ]]
 then
-    # Looks like a Mac - dump links in /usr/bin
+    # Looks like a Mac - dump links in /usr/local/bin
     BINTARGET="/usr/local/bin"
     APPTARGET="none"
     LOGOTARGET="none"
@@ -210,8 +194,8 @@ then
     mkdir -p /usr/local/${FLAVOR}
     # - Should not be done if called from the 'app bundle' installer - and only once
     if [[ ${PREFIX} = */Contents/Resources ]]; then
-	if [ ! -h /usr/local/${FLAVOR}/${VERSION} ]; then
-	    ln -sf ${PREFIX}/${FLAVOR}/${VERSION} /usr/local/${FLAVOR}/${VERSION}
+	if [ ! -h /usr/local/@DEST_RESOURCEDIR@ ]; then
+	    ln -sf ${PREFIX}/@DEST_RESOURCEDIR@ /usr/local/@DEST_RESOURCEDIR@
 	fi
     fi
     checklinks
@@ -225,28 +209,28 @@ fi
 if [ -d ${BINTARGET} ];
 then
     cd ${BINTARGET}
-    ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/bin/* .
-    ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/${FLAVOR}-environment ${FLAVOR}-${VERSION}-environment
+    ln -sf ${MCCODE_BINDIR}/* .
+    ln -sf ${MCCODE_RESOURCEDIR}/${FLAVOR}-environment ${FLAVOR}-${VERSION}-environment
 else
     echo "Sorry, your BINTARGET folder \"${BINTARGET}\" does not exist, dropping link creation"
 fi
 if [ -d ${APPTARGET} ];
 then
     cd ${APPTARGET}
-    ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/launchers/*.desktop .
+    ln -sf ${MCCODE_RESOURCEDIR}/launchers/*.desktop .
 else
     echo "Sorry, your APPTARGET folder \"${APPTARGET}\" does not exist, dropping link creation"
 fi
 if [ -d ${LOGOTARGET} ];
 then
     cd ${LOGOTARGET}
-    ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/launchers/*.png .
+    ln -sf ${MCCODE_RESOURCEDIR}/launchers/*.png .
 else
     echo "Sorry, your LOGOTARGET folder \"${LOGOTARGET}\" does not exist, dropping link creation"
 fi
 
 # Check if mcdoc is installed and if it needs to run
-if [ -x ${PREFIX}/${FLAVOR}/${VERSION}/bin/${MC}doc ] && \
-    [ -d ${PREFIX}/${FLAVOR}/${VERSION}/examples ]; then
-    ${PREFIX}/${FLAVOR}/${VERSION}/bin/${MC}doc -i &>/dev/null
+if [ -x ${MCCODE_BINDIR}${MC}doc ] && \
+    [ -d ${MCCODE_RESOURCEDIR}/examples ]; then
+    ${MCCODE_BINDIR}${MC}doc -i &>/dev/null
 fi

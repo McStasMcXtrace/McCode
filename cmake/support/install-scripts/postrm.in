@@ -1,19 +1,18 @@
 #!/bin/sh
 
 # Extract CMake macros during configure
-PREFIX="@CMAKE_INSTALL_PREFIX@"
 FLAVOR="@FLAVOR@"
 VERSION="@MCCODE_VERSION@"
 MC="@MCCODE_PREFIX@"
-NO_ALTERNATIVES="@NO_ALTERNATIVES@"
+
+@MCCODE_BASH_STANDARD_PREAMBLE@
 
 # Include installation path before any attempt to postconfig
-export PATH=${PREFIX}/${FLAVOR}/${VERSION}/bin:${PATH}
-MCCODE=${FLAVOR}
+export PATH=${MCCODE_BINDIR}:${PATH}
 
 # Remove html files if mcdoc is no longer installed
-if [ ! -x ${PREFIX}/${FLAVOR}/${VERSION}/bin/${MC}doc ]; then
-    find ${PREFIX}/${FLAVOR}/${VERSION}/ -iname '*.instr' -or -iname '*.comp' | \
+if [ ! -x ${MCCODE_BINDIR}/${MC}doc ]; then
+    find ${MCCODE_RESOURCEDIR} -iname '*.instr' -or -iname '*.comp' | \
         while read comp; do
         rm -f $(dirname ${comp})/$(basename ${comp} .instr).html ;
         rm -f $(dirname ${comp})/$(basename ${comp} .comp).html ;
