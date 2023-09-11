@@ -250,9 +250,9 @@ macro(setupMCCODE FLAVOR)
     set(PROGRAM_SUFFIX "-${MCCODE_VERSION}")
 
     # Run postinst and postrm scripts for various platforms
-    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/postinst;work/support/postrm")
-    set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postinst;")
-    set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postrm;")
+    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/${FLAVOR}-postinst;work/support/${FLAVOR}-postrm")
+    set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/${FLAVOR}-postinst;")
+    set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/${FLAVOR}-postrm;")
     
     # Define dependencies for gcc and the like
     set(CPACK_DEBIAN_PACKAGE_DEPENDS "build-essential, libopenmpi-dev")
@@ -261,11 +261,11 @@ macro(setupMCCODE FLAVOR)
     # Generate postinst and postrm scripts
     configure_file(
       cmake/support/install-scripts/postinst.in
-      work/support/postinst
+      work/support/${FLAVOR}-postinst
       @ONLY)
     configure_file(
       cmake/support/install-scripts/postrm.in
-      work/support/postrm
+      work/support/${FLAVOR}-postrm
       @ONLY)
 
     # Generate the console-errormessage wrapper

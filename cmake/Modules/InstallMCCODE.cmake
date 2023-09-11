@@ -350,7 +350,7 @@ macro(installMCCODE)
       @ONLY)
     install(PROGRAMS ${WORK}/support/module DESTINATION "${DEST_DATADIR_TOPENVFILES}")
 
-    install(PROGRAMS ${WORK}/support/postinst DESTINATION "${DEST_BINDIR}")
+    install(PROGRAMS ${WORK}/support/${FLAVOR}-postinst DESTINATION "${DEST_BINDIR}")
     install(PROGRAMS ${WORK}/support/${FLAVOR}_errmsg DESTINATION "${DEST_BINDIR}")
   endif()
 
