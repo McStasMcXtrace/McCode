@@ -1,7 +1,7 @@
 include_guard()
 
 #common place to define locations
-option( MCCODE_USE_LEGACY_DESTINATIONS "Whether or not to install files to legacy (pre Nov 2022) locations" OFF )
+option( MCCODE_USE_LEGACY_DESTINATIONS "Whether or not to install files to legacy (pre Nov 2022) locations" ON )
 
 if ( NOT MCCODE_VERSION OR NOT FLAVOR )
   message(FATAL_ERROR "Locations module should only be invoked after FLAVOR and MCCODE_VERSION have been set" )
