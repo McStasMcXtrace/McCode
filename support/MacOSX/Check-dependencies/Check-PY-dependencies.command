@@ -86,9 +86,7 @@ fi
 
 ENVSCRIPT=`find /Applications/$NEWESTAPP/Contents/Resources/ -name \*-environment`
 if [ -f $ENVSCRIPT ]; then
-    echo $ENVSCRIPT
     VERSION=$RELEASE
-    echo $VERSION
     FLAVOR=$MCCODE
     osascript -e "tell app \"System Events\" to display dialog \"Do you want to define the Unix command \n\n$FLAVOR-$VERSION-environment \n\nfor easy terminal acess to $NEWESTAPP? \n\n (Please give your passwd to the sudo command in the terminal...) \""
     rc1=$?; 
@@ -117,7 +115,6 @@ fi
 
 PACKAGEDIR=`dirname $0`
 cd $PACKAGEDIR
-
 ENVSCRIPT=`ls -art | grep ${ENVSCRIPT} | grep \.command | tail -1`
 if [ "x$ENVSCRIPT" != "x" ]; then
     osascript -e "tell app \"System Events\" to display dialog \"It looks like you did not move your environment script $ENVSCRIPT to /Applications? \n\n We recommend that to run McStas/McXtrace from commmandline - do you want to do this? \""
