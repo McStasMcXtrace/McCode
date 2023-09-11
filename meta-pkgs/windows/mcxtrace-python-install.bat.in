@@ -11,7 +11,7 @@
 @REM update conda and install mamba
 @mamba update mamba -y
 @REM pick dependencies from the default channel and clean up
-@mamba install m2-msys2-runtime m2w64-gcc m2w64-gsl mpld3 pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph qscintilla2 nomkl xraylib msmpi -y
+@mamba install m2-msys2-runtime m2w64-gcc m2w64-gsl mpld3 pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph qscintilla2 nomkl xraylib msmpi jupytext -y
 @mamba clean --all -y
 @echo ...
 @echo Press a key below to exit this installation shell...
