@@ -40,15 +40,9 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-# These two provide a method to change between running the .pl and .py launchers
-configure_file(Contents/MacOS/mccodegui.pl.in ${WORK}/mccodegui.pl @ONLY)
-configure_file(Contents/MacOS/mccodegui.py.in ${WORK}/mccodegui.py @ONLY)
-
-# This one is the one actually run by the app 
+# Configure the .py launcher
 configure_file(Contents/MacOS/mccodegui.py.in ${WORK}/mccodegui @ONLY)
 
-exec_program(chmod ARGS 755 work/mccodegui.pl)
-exec_program(chmod ARGS 755 work/mccodegui.py)
 exec_program(chmod ARGS 755 work/mccodegui)
 
 # Include the Contents subfolder...
@@ -62,7 +56,7 @@ install (
   )
 
 install(
-    FILES "${WORK}/mccodegui.pl" "${WORK}/mccodegui.py" "${WORK}/mccodegui"
+    FILES "${WORK}/mccodegui"
     PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ 
     DESTINATION "Contents/MacOS/"
   )
