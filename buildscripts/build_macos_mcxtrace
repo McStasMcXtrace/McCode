@@ -72,8 +72,9 @@ cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcxtrace/${MCVERSION}/bin
 export MCINSTALL_PREFIX=/Applications/McXtrace-${MCVERSION}.app/Contents/Resources/
 
 cd $WORK
+MXDOC=`find $MCINSTALL_PREFIX -name mxdoc.py`
 # Generate mcdoc pages
-$MCINSTALL_PREFIX/mcxtrace/${MCVERSION}/miniconda3/bin/python $MCINSTALL_PREFIX/mcxtrace/${MCVERSION}/tools/Python/mxdoc/mxdoc.py -i
+python ${MXDOC} -i
 
 # Hack to make openmpi from the conda env available on Big Sur and later
 ln -s $MCINSTALL_PREFIX/mcxtrace/${MCVERSION}/miniconda3/bin/mpi* $MCINSTALL_PREFIX/mcxtrace/${MCVERSION}/bin/
