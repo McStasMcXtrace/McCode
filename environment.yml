@@ -27,6 +27,7 @@ dependencies:
   - hdf5
   - ncrystal
   - mcpl
+  - jupytext
   - pip
   - pip:
     - guide_bot
