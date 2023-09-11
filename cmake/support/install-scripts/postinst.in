@@ -226,7 +226,7 @@ if [ -d ${BINTARGET} ];
 then
     cd ${BINTARGET}
     ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/bin/* .
-    ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/environment ${FLAVOR}-${VERSION}-environment
+    ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/${FLAVOR}-environment ${FLAVOR}-${VERSION}-environment
 else
     echo "Sorry, your BINTARGET folder \"${BINTARGET}\" does not exist, dropping link creation"
 fi
