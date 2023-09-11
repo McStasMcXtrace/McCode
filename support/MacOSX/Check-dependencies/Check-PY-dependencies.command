@@ -84,14 +84,12 @@ then
 fi
 
 
-ENVSCRIPT=`ls /Applications/$NEWESTAPP/Contents/Resources/mc*/*/environment`
+ENVSCRIPT=`find /Applications/$NEWESTAPP/Contents/Resources/ -name \*-environment`
 if [ -f $ENVSCRIPT ]; then
     echo $ENVSCRIPT
-    VERSION=`dirname $ENVSCRIPT`
+    VERSION=$RELEASE
     echo $VERSION
-    FLAVOR=`dirname $VERSION`
-    VERSION=`basename $VERSION`
-    FLAVOR=`basename $FLAVOR`
+    FLAVOR=$MCCODE
     osascript -e "tell app \"System Events\" to display dialog \"Do you want to define the Unix command \n\n$FLAVOR-$VERSION-environment \n\nfor easy terminal acess to $NEWESTAPP? \n\n (Please give your passwd to the sudo command in the terminal...) \""
     rc1=$?; 
     if [[ $rc1 == 0 ]]; 
@@ -107,17 +105,20 @@ osascript -e "tell app \"System Events\" to display dialog \"Allow embedded open
 rc1=$?; 
 if [[ $rc1 == 0 ]]; 
 then
-    echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/$MCCODE/$RELEASE/miniconda3/bin/orted
-    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/$MCCODE/$RELEASE/miniconda3/bin/orted
-    echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/$MCCODE/$RELEASE/miniconda3/bin/orterun
-    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/$NEWESTAPP/Contents/Resources/$MCCODE/$RELEASE/miniconda3/bin/orterun
+    ORTED=`find /Applications/$NEWESTAPP/Contents/Resources -type f -name orted`
+    ORTERUN=`find /Applications/$NEWESTAPP/Contents/Resources -type f -name orterun`
+    echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add $ORTED
+    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add $ORTED
+    echo sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add $ORTERUN
+    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add $ORTERUN
 else
     echo "Not allowing access for openmpi binaries..."
 fi
 
 PACKAGEDIR=`dirname $0`
 cd $PACKAGEDIR
-ENVSCRIPT=`ls -art | grep environment | grep \.command | tail -1`
+
+ENVSCRIPT=`ls -art | grep ${ENVSCRIPT} | grep \.command | tail -1`
 if [ "x$ENVSCRIPT" != "x" ]; then
     osascript -e "tell app \"System Events\" to display dialog \"It looks like you did not move your environment script $ENVSCRIPT to /Applications? \n\n We recommend that to run McStas/McXtrace from commmandline - do you want to do this? \""
     rc1=$?; 
