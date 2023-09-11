@@ -883,22 +883,7 @@ class McGuiAppController():
                                            'Do you want to make the current ' +  mccode_config.configuration["MCCODE"] + ' the system default?'),
  
         if reply == QtWidgets.QMessageBox.Yes:
-             subprocess.Popen('postinst set_mccode_default', shell=True)
-             
-
-    def handleDefaultMcguiPy(self):
-        reply = QtWidgets.QMessageBox.question(self.view.mw,
-                                           'Make Python gui App default?',
-                                           'Do you want to use Python ' +  mccode_config.configuration["MCCODE"] + ' gui in the macOS App?')
-        if reply == QtWidgets.QMessageBox.Yes:
-            subprocess.Popen('postinst osx_app_default py', shell=True)
-
-    def handleDefaultMcguiPl(self):
-        reply = QtWidgets.QMessageBox.question(self.view.mw,
-                                           'Make Python gui App default?',
-                                           'Do you want to use Perl ' +  mccode_config.configuration["MCCODE"] + ' gui in the macOS App?')
-        if reply == QtWidgets.QMessageBox.Yes:
-            subprocess.Popen('postinst osx_app_default pl', shell=True)
+             subprocess.Popen(mccode_config.configuration["MCCODE"] +'-postinst set_mccode_default', shell=True)
 
         
     ''' Connect UI and state callbacks 
@@ -922,9 +907,7 @@ class McGuiAppController():
         # 1) add a copy of the configuration menu to File
         # 2) add menu points for changing what the bundle opens
         if sys.platform == 'darwin':
-            self.view.mw.add_conf_menu('Configuration').triggered.connect(self.handleConfiguration)
-            self.view.mw.add_conf_menu('Use Python App').triggered.connect(self.handleDefaultMcguiPy)
-            self.view.mw.add_conf_menu('Use Perl App').triggered.connect(self.handleDefaultMcguiPl)            
+            self.view.mw.add_conf_menu('Configuration').triggered.connect(self.handleConfiguration)       
 
         # If not on Windows add menu point to make current mccode the system default
         if not sys.platform == 'win32':
