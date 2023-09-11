@@ -5,9 +5,9 @@
 @echo WARNING: Please wait, process may take several minutes to complete!
 @echo  (Pressing [enter] a few times to ensure something is happening is OK)
 @echo ...
-@start /wait "" Mambaforge-Windows-x86_64.exe /S /AddToPath=0 /D=c:\@FLAVOR@-@VERSION@\miniconda3
+@start /wait "" Mambaforge-Windows-x86_64.exe /S /AddToPath=0 /D=@CPACK_NSIS_INSTALL_ROOT@\@DEST_TOOLDIR@\..\miniconda3
 @echo Mambaforge install completed, proceeding with McCode dependencies...
-@SET PATH=c:\\@FLAVOR@-@VERSION@\\bin;c:\\@FLAVOR@-@VERSION@\\miniconda3;c:\\@FLAVOR@-@VERSION@\\miniconda3\\Scripts\\;c:\\@FLAVOR@-@VERSION@\\miniconda3\\Library\\bin;c:\\@FLAVOR@-@VERSION@\\miniconda3\\Library\\mingw-w64\\bin;%PATH%
+@SET PATH=@CPACK_NSIS_INSTALL_ROOT@\\@DEST_BINDIR@;@CPACK_NSIS_INSTALL_ROOT@\\@DEST_TOOLDIR@\\..\\miniconda3;@CPACK_NSIS_INSTALL_ROOT@\\@DEST_TOOLDIR@\\..\\miniconda3\\Scripts\\;@CPACK_NSIS_INSTALL_ROOT@\\@DEST_TOOLDIR@\\..\\miniconda3\\Library\\bin;@CPACK_NSIS_INSTALL_ROOT@\\@DEST_TOOLDIR@\\..\\miniconda3\\Library\\mingw-w64\\bin;%PATH%
 @REM update conda and install mamba
 @mamba update mamba -y
 @REM pick dependencies from the default channel and clean up
