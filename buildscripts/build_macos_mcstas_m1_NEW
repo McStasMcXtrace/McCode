@@ -1,0 +1,112 @@
+# #!/usr/bin/env bash
+export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "import os;print(os.cpu_count())")}
+
+if [ "x$1" = "x" ]; then
+    # No arguments
+    echo Please provide one argument,e.g : $0 2.0
+    exit 1;
+fi
+
+export MCVERSION=${1}
+
+
+./3rdparty/sync.sh
+
+# This is an app bundle being built, but non-relocatable.
+export MCINSTALL_PREFIX=/Applications/McStas-${MCVERSION}.app/
+./mkdist mcstas-app ${MCVERSION} support/MacOSX/McCode.app/ "" mac-silicon "" -- OSXapp
+# hack to ensure the silicon app is opened arch -arm64
+sed -i.bak s+/bin/bash+/usr/bin/arch\ -arm64\ /bin/bash+ $MCINSTALL_PREFIX/Contents/MacOS/mccodegui
+
+# For the actual mcstas part, the packages need a 'deep' PREFIX
+export MCINSTALL_PREFIX=/Applications/McStas-${MCVERSION}.app/Contents/Resources
+# 64-bit Mac OS
+WORK=`pwd`
+
+
+# Run conda to install the dependencies
+echo
+echo "*********************************************************"
+echo "* Downloading python dependencies to embedded miniconda *"
+echo "*********************************************************"
+echo
+
+conda env create -p ${MCINSTALL_PREFIX}/share/mcstas/miniconda3 --file environment.yml
+
+eval "$(conda shell.bash hook)"
+conda activate ${MCINSTALL_PREFIX}/share/mcstas/miniconda3
+export PATH=${MCINSTALL_PREFIX}/share/mcstas/miniconda3/bin:$PATH
+
+which cmake
+
+# Temporary workaround for issue with conda...
+if [ ! -f ${MCINSTALL_PREFIX}/share/mcstas/miniconda3/lib/librhash.0.dylib ]; then
+    ln -sf ${MCINSTALL_PREFIX}/share/mcstas/miniconda3/lib/librhash.1.dylib ${MCINSTALL_PREFIX}/share/mcstas/miniconda3/lib/librhash.0.dylib
+fi
+
+cd $WORK
+
+./mkdist mcstas ${MCVERSION} "" "" mac-silicon "" -- OSXapp
+./mkdist mcstas-comps ${MCVERSION} "" "" mac-silicon "" -- OSXapp
+./mkdist mcstas-tools-matlab-mcplot ${MCVERSION} tools/matlab/mcplot/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-tools-matlab-mcdisplay ${MCVERSION} tools/matlab/mcdisplay/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-tools-python-mcplot-pyqtgraph ${MCVERSION} tools/Python/mcplot/pyqtgraph/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-tools-python-mcplot-matplotlib ${MCVERSION} tools/Python/mcplot/matplotlib/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-tools-python-mcplot-svg ${MCVERSION} tools/Python/mcplot/svg/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-tools-python-mcrun ${MCVERSION} tools/Python/mcrun/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-tools-python-mcresplot ${MCVERSION} tools/Python/mcresplot/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-tools-python-mcgui ${MCVERSION} tools/Python/mcgui/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-tools-python-mccodelib ${MCVERSION} tools/Python/mccodelib/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-tools-python-mcdisplay-webgl ${MCVERSION} tools/Python/mcdisplay/webgl/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-tools-python-mcdisplay-pyqtgraph ${MCVERSION} tools/Python/mcdisplay/pyqtgraph/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-tools-python-mcdisplay-matplotlib ${MCVERSION} tools/Python/mcdisplay/matplotlib/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-tools-python-mcdisplay-mantid ${MCVERSION} tools/Python/mcdisplay/mantid_xml/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-tools-python-mcdisplay-cad ${MCVERSION} tools/Python/mcdisplay/cad/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-tools-python-mcdoc ${MCVERSION} tools/Python/mcdoc/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-clusterscripts ${MCVERSION} tools/cluster-scripts/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-manuals ${MCVERSION} docpkg/manuals/mcstas/ "" mac-silicon "" -- OSXapp
+
+cd 3rdparty/nexus-code
+if [ -d build ]; then
+    rm -rf build
+fi
+mkdir -p build; cd build
+cmake -DCMAKE_INSTALL_PREFIX=/Applications/McStas-${MCVERSION}.app/Contents/Resources/mcstas/${MCVERSION}/ -DHDF5_ROOT=/Applications/McStas-${MCVERSION}.app/Contents/Resources/share/mcstas/miniconda3/ -DCMAKE_MACOSX_RPATH=ON -DCMAKE_INSTALL_RPATH=/Applications/McStas-${MCVERSION}.app/Contents/Resources/mcstas/${MCVERSION}/lib  ..
+make install
+cd $WORK
+
+# Copy in the mpicc snippets
+cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcstas/${MCVERSION}/bin
+
+export MCINSTALL_PREFIX=/Applications/McStas-${MCVERSION}.app/Contents/Resources/
+
+cd $WORK
+MCDOC=`find $MCINSTALL_PREFIX -name mcdoc.py`
+# Generate mcdoc pages
+python ${MCDOC} -i
+
+# Hack to make openmpi from the conda env available on Big Sur and later
+ln -s $MCINSTALL_PREFIX/share/mcstas/miniconda3/bin/mpi* $MCINSTALL_PREFIX/bin/
+
+mkdir -p dist
+# Move the App bundle back to the dist - or keep it in /Applications?
+if [ "x$2" = "x" ]; then
+    mv /Applications/McStas-${MCVERSION}.app dist
+    ln -s /Applications dist/
+    cd dist
+    ln -s McStas-${MCVERSION}.app/Contents/Resources/share/mcstas/mcstas-environment McStas-${MCVERSION}-environment.command
+    cd ..
+    cp support/MacOSX/Check-dependencies/* dist
+    mv dist mcstas-${MCVERSION}
+    mkdir dist
+    tar cfz dist/mcstas-${MCVERSION}_arm64.tgz mcstas-${MCVERSION}
+    cp INSTALL-McStas-3.x/macOS/README.md dist
+    echo A tgz of your app is now located in the dist folder
+    rm -rf mcstas-${MCVERSION}
+else
+    ln -s /Applications/McStas-${MCVERSION}.app dist/
+    echo Your app is now located in /Applications \(link available in the dist folder\)
+fi
+
+
+
