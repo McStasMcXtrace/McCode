@@ -90,7 +90,7 @@ if [ "x$2" = "x" ]; then
     mv /Applications/McStas-${MCVERSION}.app dist
     ln -s /Applications dist/
     cd dist
-    ln -s McStas-${MCVERSION}.app/Contents/Resources/mcstas/${MCVERSION}/environment McStas-${MCVERSION}-environment.command
+    ln -s McStas-${MCVERSION}.app/Contents/Resources/mcstas/${MCVERSION}/mcstas-environment McStas-${MCVERSION}-environment.command
     cd ..
     cp support/MacOSX/Check-dependencies/* dist
     mv dist mcstas-${MCVERSION}

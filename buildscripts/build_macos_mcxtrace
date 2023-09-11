@@ -84,7 +84,7 @@ if [ "x$2" = "x" ]; then
     mv /Applications/McXtrace-${MCVERSION}.app dist
     ln -s /Applications dist/
     cd dist
-    ln -s McXtrace-${MCVERSION}.app/Contents/Resources/mcxtrace/${MCVERSION}/environment McXtrace-${MCVERSION}-environment.command
+    ln -s McXtrace-${MCVERSION}.app/Contents/Resources/mcxtrace/${MCVERSION}/mcxtrace-environment McXtrace-${MCVERSION}-environment.command
     cd ..
     cp support/MacOSX/Check-dependencies/* dist
     mv dist mcxtrace-${MCVERSION}
