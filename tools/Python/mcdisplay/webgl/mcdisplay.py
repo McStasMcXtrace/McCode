@@ -129,6 +129,11 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
     json_particles = 'MCDATA_particledata = %s;' % json.dumps(raybundle.jsonize(), indent=0)
     file_save(json_particles, dest.joinpath('_particles.js'))
 
+    # Workaround for allowing non-relative paths to instrname
+    # see https://github.com/McStasMcXtrace/McCode/issues/1426
+    temp_instrname = Path(instrname)
+    instrname = temp_instrname.name
+
     # copy McCode instrument (this *may* be a binary!)
     shutil_copy(instrname, str(dest.joinpath(instrname)))
     
