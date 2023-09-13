@@ -8,7 +8,12 @@
 * 
 *
 *
+* McStas and McXtrace share code repository at
+* https://github.com/McStasMcXtrace/McCode
 *
+* Both codes are released under GPL v3
+*
+* Documentation: CHANGES_McXtrace
 *************************************************************************/
 CHANGES in 3.2
 
