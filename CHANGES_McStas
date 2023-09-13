@@ -165,7 +165,7 @@ Changes in McStas 3.4, September 15th, 2023
       double lambda/"Aa" = 2.36
 
    Thanks to Gregory S. Tucker (ESS) for contributing this grammar enhancement!
- - A new syntax called METATDATA has been added to the grammar, allowing users to "glue" one or more
+ - A new syntax called METADATA has been added to the grammar, allowing users to "glue" one or more
    pieces of information to a component instance, e.g.:
    
      COMPONENT Origin = Progress_bar()
