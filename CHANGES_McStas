@@ -75,7 +75,7 @@ Changes in McStas 3.4, September 15th, 2023
    https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
  - The meta-packages for Debian/Ubuntu and RedHat/Centos/Fedora are named e.g.
    mcstas-suite-python-ng for 'next generation' for coexistance with the 2.x
-   series packages
+   series packages. (Please note that there will be no future 2.x releases!)
  - OpenACC GPU (and CPU multicore) acceleration is at the time of release still ONLY
    supported on Linux systems, as this is the only platform targeted by the NVIDIA
    HPC package. Versions 20.x, 21.x, 22.x and 23.x should all work. On Windows 64bit systems,
@@ -85,7 +85,7 @@ Changes in McStas 3.4, September 15th, 2023
  - McStas 3.4 comes with embedded NeXus support on macOS and on Debian/Ubuntu NeXus is pulled
    as a package dependency. On Windows, please install NeXus from the extras/ folder alongside
    your McStas bundle.
- - The build process for both macOS and Windows has been furhter overhauled and is based on an
+ - The build process for both macOS and Windows has been further overhauled and is based on an
    embedded conda environment. MPI support is now included with the installation on Windows.
  - We have further been modernising the (CMake-based) build system and will be contributing
    conda recipes for distribution via conda in the near future.
@@ -121,11 +121,12 @@ Changes in McStas 3.4, September 15th, 2023
     --optimize-monitor=optimize_monitor
                         Name of a single monitor to optimize (default is to
                         use all)
- - mcstas-pygen: Secondary code-generator that translates an instrument file to a .py script
-   for use with McStasScript. If your system includes the jupytext utility (McStas on Windows
-   and macOS now does by default), the command
-     jupytext --to ipynb
-   will translate the .py output from mcstas-pygen to an iPython notebook.
+ - McStas now ships with a "python-aware" code generator for generating "McStasScript" code, example:
+     mcstas-pygen Instrument.instr   -->   Instrument_generated.py
+   Using 'jupytext' this file may easily be converted to a notebook:
+     jupytext --to ipynb Instrument_generated.py   -->   Instrument_generated.ipynb
+   See https://github.com/PaNOSC-ViNYL/McStasScript
+   for more information on McStasScript.
  - McStasScript is included with McStas 3.4 on macOS and Windows. To enable use of it, please
    manually correct your mcstasscript/configuration.py along the lines of the documentation
    at https://mads-bertelsen.github.io/getting_started/installation.html
@@ -133,7 +134,13 @@ Changes in McStas 3.4, September 15th, 2023
  Components and Instruments:
  - In relation to the HighNESS project, the Wolter-optic components Conics_* have been given an
    overhaul by Mads Bertelsen. New related instrument WOFSANS is included with McStas 3.4.
-
+ - The many SASmodel
+ - Thanks to the work of José Robledo (FZJ), we now have a better interface to the Small-Angle Scattering
+   models from SASview, aka. SASmodels. Due to the big number of included models that each correspond
+   to a McStas component (94 in total!), these are now found in the "sasmodels" folder of your McStas
+   installation. Two example instruments are also included: Test_SasView_bcc_paracrystal_aniso.instr and
+   Test_SasView_guinier.instr.
+   
  Core simulation framework / code-generator:
  - mcstas-pygen: A secondary code-generator is now included that translates an instrument file to
    a .py script for use with McStasScript. If your system includes the jupytext utility
