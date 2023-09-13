@@ -299,7 +299,7 @@ class MantidPixelWriter:
 
                 rot_vector, alpha = m.transform.get_rotvector_alpha(deg=True)
 
-                if alpha ==0.0:
+                if rot_vector.x == 0 and rot_vector.y == 0 and rot_vector.z == 0:
                     rot_vector.y = 1
 
                 x_step = (float(rec.xmax) - float(rec.xmin)) / float(rec.nx)
@@ -399,6 +399,9 @@ class MantidPixelWriter:
             else:
 
                 rot_vector, alpha = m.transform.get_rotvector_alpha(deg=True)
+
+                if rot_vector.x == 0 and rot_vector.y == 0 and rot_vector.z == 0:
+                    rot_vector.y = 1
 
                 t_step = (float(ban.tmax) - float(ban.tmin)) / float(ban.nt)
                 y_step = (float(ban.ymax) - float(ban.ymin)) / float(ban.ny)
