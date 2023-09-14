@@ -129,9 +129,8 @@ Changes in McStas 3.4, September 15th, 2023
      jupytext --to ipynb Instrument_generated.py   -->   Instrument_generated.ipynb
    See https://github.com/PaNOSC-ViNYL/McStasScript
    for more information on McStasScript.
- - McStasScript is included with McStas 3.4 on macOS and Windows. To enable use of it, please
-   manually correct your mcstasscript/configuration.py along the lines of the documentation
-   at https://mads-bertelsen.github.io/getting_started/installation.html
+ - McStasScript is included with McStas 3.4 on macOS and Windows and readily configured for use with
+   McStas 3.4 and its embedded Python version.
 
  Components and Instruments:
  - In relation to the HighNESS project, the Wolter-optic components Conics_* have been given an
