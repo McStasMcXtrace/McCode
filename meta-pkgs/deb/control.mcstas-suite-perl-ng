@@ -1,9 +1,0 @@
-Package: mcstas-suite-perl-ng
-Version: @VERSION@
-Section: main
-Priority: optional
-Architecture: all
-Depends: mcstas-@VERSION@, mcstas-comps-@VERSION@, mcstas-tools-perl-@VERSION@, mcstas-tools-perl-cmdline-@VERSION@, mcstas-manuals-@VERSION@
-Installed-Size:
-Maintainer: Peter Willendrup
-Description: A metapackage for McStas + perl tools

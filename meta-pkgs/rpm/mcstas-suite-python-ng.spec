@@ -17,7 +17,7 @@ Summary:   %{summary}
 Group:     %{group}
 URL:       http://www.mccode.org
 Buildroot: %{buildroot}
-Requires:  mcstas-@VERSION@ mcstas-comps-@VERSION@ mcstas-tools-perl-cmdline-@VERSION@ mcstas-tools-python-mcplot-pyqtgraph-@VERSION@ mcstas-tools-python-mcplot-matplotlib-@VERSION@ mcstas-tools-python-mcrun-@VERSION@ mcstas-tools-python-mcgui-@VERSION@ mcstas-tools-python-mccodelib-@VERSION@ mcstas-tools-python-mcdisplay-webgl-@VERSION@ mcstas-tools-python-mcdisplay-pyqtgraph-@VERSION@ mcstas-tools-python-mcdisplay-mantid-@VERSION@ mcstas-tools-python-mcdoc-@VERSION@ mcstas-manuals-@VERSION@ mcstas-mcpl-@VERSION@
+Requires:  mcstas-@VERSION@ mcstas-comps-@VERSION@ mcstas-tools-python-mcplot-pyqtgraph-@VERSION@ mcstas-tools-python-mcplot-matplotlib-@VERSION@ mcstas-tools-python-mcrun-@VERSION@ mcstas-tools-python-mcgui-@VERSION@ mcstas-tools-python-mccodelib-@VERSION@ mcstas-tools-python-mcdisplay-webgl-@VERSION@ mcstas-tools-python-mcdisplay-pyqtgraph-@VERSION@ mcstas-tools-python-mcdisplay-mantid-@VERSION@ mcstas-tools-python-mcdoc-@VERSION@ mcstas-manuals-@VERSION@ mcstas-mcpl-@VERSION@
 
 %description
 A metapackage for McStas + python tools
