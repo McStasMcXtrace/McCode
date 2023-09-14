@@ -85,6 +85,17 @@ python ${MCDOC} -i
 # Hack to make openmpi from the conda env available on Big Sur and later
 ln -s $MCINSTALL_PREFIX/mcstas/${MCVERSION}/miniconda3/bin/mpi* $MCINSTALL_PREFIX/mcstas/${MCVERSION}/bin/
 
+# Adapt McStasScript to bundle version
+MCSCONFIG=`find $MCINSTALL_PREFIX/mcstas/${MCVERSION}/miniconda3/lib -type d -name mcstasscript`
+MCSCONFIG=${MCSCONFIG}/configuration.py
+
+echo other: > ${MCSCONFIG}
+echo   characters_per_line: 85 >> ${MCSCONFIG}
+echo paths: >> ${MCSCONFIG}
+echo   mcrun_path: /Applications/McStas-${MCVERSION}.app/Contents/Resources/mcstas/${MCVERSION}/bin >> ${MCSCONFIG}
+echo   mcstas_path: /Applications/McStas-${MCVERSION}.app/Contents/Resources/mcstas/${MCVERSION} >> ${MCSCONFIG}
+echo  >> ${MCSCONFIG}
+
 mkdir -p dist
 # Move the App bundle back to the dist - or keep it in /Applications?
 if [ "x$2" = "x" ]; then
