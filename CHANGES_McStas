@@ -95,9 +95,9 @@ Changes in McStas 3.4, September 15th, 2023
  and NCrystal) compute only on CPU.
 
  Tools:
- - mcrun now supports an set of "optimisation" swtiches to allow evaluating an instrument as
+ - mcrun now supports an set of "optimisation" switches to allow evaluating an instrument as
    "object function". Thanks to Emmanuel Farhi for working on this.
-     --optimize          Optimize instrument variable parameters to maximize
+    --optimize          Optimize instrument variable parameters to maximize
                         monitors
     --optimize-maxiter=optimize_maxiter
                         Maximum number of optimization iterations to perform
