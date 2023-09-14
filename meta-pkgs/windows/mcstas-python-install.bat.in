@@ -14,6 +14,13 @@
 @mamba install m2-msys2-runtime m2w64-gcc m2w64-gsl mpld3 pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph qscintilla2 nomkl typing msmpi jupytext -y
 @mamba clean --all -y
 @pip3 install McStasScript guide_bot
+@SET MCSCONFIG=C:\\@FLAVOR@-@VERSION@\\miniconda3\\Lib\\site-packages\\mcstasscript\\configuration.yaml
+@echo other: > %MCSCONFIG%
+@echo   characters_per_line: 85 >> %MCSCONFIG%
+@echo paths: >> %MCSCONFIG%
+@echo   mcrun_path: C:\\@FLAVOR@-@VERSION@\\bin >> %MCSCONFIG%
+@echo   mcstas_path: C:\\@FLAVOR@-@VERSION@\\lib >> %MCSCONFIG%
+@echo  >> %MCSCONFIG%
 @echo ...
 @echo Press a key below to exit this installation shell...
 @echo ...
