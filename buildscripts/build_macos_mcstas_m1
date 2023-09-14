@@ -87,7 +87,7 @@ ln -s $MCINSTALL_PREFIX/mcstas/${MCVERSION}/miniconda3/bin/mpi* $MCINSTALL_PREFI
 
 # Adapt McStasScript to bundle version
 MCSCONFIG=`find $MCINSTALL_PREFIX/mcstas/${MCVERSION}/miniconda3/lib -type d -name mcstasscript`
-MCSCONFIG=${MCSCONFIG}/configuration.py
+MCSCONFIG=${MCSCONFIG}/configuration.yaml
 
 echo other: > ${MCSCONFIG}
 echo   characters_per_line: 85 >> ${MCSCONFIG}
