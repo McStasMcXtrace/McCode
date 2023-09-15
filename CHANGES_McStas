@@ -52,11 +52,11 @@
 * Modified by: PW March 2023: version 3.3
 * Modified by: PW September 2023: version 3.4
 *
-* This file is part of McStas 3.4, released September 15th 2023.
+* This file is part of McStas 3.4, released September 18th 2023.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas 3.4, September 15th, 2023
+Changes in McStas 3.4, September 18th, 2023
 
  McStas 3.4 is the fifth official release in the 3.x series, with a modernised 
  code-generator and support for GPU acceleration on NVIDIA cards.
