@@ -141,6 +141,8 @@ Changes in McStas 3.4, September 18th, 2023
    to a McStas component (94 in total!), these are now found in the "sasmodels" folder of your McStas
    installation. Two example instruments are also included: Test_SasView_bcc_paracrystal_aniso.instr and
    Test_SasView_guinier.instr.
+ - The strain-scanning instrument ILL_SALSA.instr was contributed by Daniel Lomholt Christensen,
+   Uni Copenhagen and ILL.
    
  Core simulation framework / code-generator:
  - mcstas-pygen: A secondary code-generator is now included that translates an instrument file to
