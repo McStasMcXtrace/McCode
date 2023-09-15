@@ -1,4 +1,4 @@
-# Installation of McStas 3.3 on Windows 64 bit systems
+# Installation of McStas 3.4 on Windows 64 bit systems
 
 
 ## IMPORTANT A:
@@ -9,12 +9,12 @@
 	```bash
 		set HTTPS_PROXY=https://your_proxy_ip:port
 	```
-in a cmd.exe shell and start the Perl and McStas installers from there
+in a cmd.exe shell and start the McSta installers from there
 	
 ## IMPORTANT B:
-* Please install the [McStas 3.3 metapackage](https://download.mcstas.org/mcstas-3.3/windows/McStas-Metapackage-3.3-win64.exe)
+* Please install the [McStas 3.4 metapackage](https://download.mcstas.org/mcstas-3.4/windows/McStas-Metapackage-3.4-win64.exe)
 
-* The [extras](https://download.mcstas.org/mcstas-3.3/windows/extras)
+* The [extras](https://download.mcstas.org/mcstas-3.4/windows/extras)
   folder provides binaries for Microsoft MPI and NeXus, which can be utilised by the McStas metapackage installation
 
 * An alternative to installing this version is to follow the instructions
