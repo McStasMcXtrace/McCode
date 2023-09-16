@@ -54,7 +54,11 @@ all dependencies, and hence is preferred!
 ## Install without repo use
 If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at https://download.mcstas.org/mcstas-3.4/linux/fedora/
 
-
+## NeXus support
+Pleae install NeXus via the packages 
+```nexus,nexus-devel```
+and configure your NeXus compile flags in mccode_config.json to
+```"NEXUSFLAGS": "-DUSE_NEXUS -lNeXus -I/usr/include/nexus -L/usr/lib64",```
 ## In case of issues
 Please report any trouble with the repository to [mcstas-users](mailto:mcstas-users@mcstas.org)
 
