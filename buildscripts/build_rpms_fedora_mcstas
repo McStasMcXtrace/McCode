@@ -48,7 +48,6 @@ WORK=`pwd`
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" rpm64-fedora "" -- rpm
 
-export MCINSTALL_PREFIX=/usr/local/mcstas/$1
 ./mkdist mcstas-mcpl $1 3rdparty/mcpl-package "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-ncrystal $1 3rdparty/ncrystal-package "" rpm64-fedora "" -- rpm
 
