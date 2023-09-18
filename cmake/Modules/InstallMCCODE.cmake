@@ -348,7 +348,7 @@ macro(installMCCODE)
       cmake/support/run-scripts/module.in
       work/support/${FLAVOR}-module
       @ONLY)
-    install(PROGRAMS ${WORK}/support/module DESTINATION "${DEST_DATADIR_TOPENVFILES}")
+    install(PROGRAMS ${WORK}/support/${FLAVOR}-module DESTINATION "${DEST_DATADIR_TOPENVFILES}")
 
     install(PROGRAMS ${WORK}/support/${FLAVOR}-postinst DESTINATION "${DEST_BINDIR}")
     install(PROGRAMS ${WORK}/support/${FLAVOR}_errmsg DESTINATION "${DEST_BINDIR}")
