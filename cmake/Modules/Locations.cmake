@@ -94,7 +94,7 @@ function( setup_standard_bash_preamble )
   set( lines
     "############################################"
     "# Start of standard CMake-generated preamble"
-    "FILE=\${BASH_SOURCE[0]}"
+    "FILE=\${0}"
     "LINK=`readlink \${FILE}`"
     "if [ \"x\${LINK}\" != \"x\" ]; then"
     "  FILE=\${LINK}"
