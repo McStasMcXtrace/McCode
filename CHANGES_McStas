@@ -52,11 +52,11 @@
 * Modified by: PW March 2023: version 3.3
 * Modified by: PW September 2023: version 3.4
 *
-* This file is part of McStas 3.4, released September 18th 2023.
+* This file is part of McStas 3.4, released September 19th 2023.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas 3.4, September 18th, 2023
+Changes in McStas 3.4, September 19th, 2023
 
  McStas 3.4 is the fifth official release in the 3.x series, with a modernised 
  code-generator and support for GPU acceleration on NVIDIA cards.
@@ -130,7 +130,9 @@ Changes in McStas 3.4, September 18th, 2023
    See https://github.com/PaNOSC-ViNYL/McStasScript
    for more information on McStasScript.
  - McStasScript is included with McStas 3.4 on macOS and Windows and readily configured for use with
-   McStas 3.4 and its embedded Python version.
+   McStas 3.4 and its embedded Python version. For sake of user convenience, Jupyterlab is also included
+   on these platforms, use 'jupyter lab' from within the McStas 'environment' to work with a McStasScript
+   notebook.
 
  Components and Instruments:
  - In relation to the HighNESS project, the Wolter-optic components Conics_* have been given an
