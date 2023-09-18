@@ -250,7 +250,7 @@ macro(setupMCCODE FLAVOR)
     set(PROGRAM_SUFFIX "-${MCCODE_VERSION}")
 
     # Run postinst and postrm scripts for various platforms
-    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/$postinst;work/support/postrm")
+    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/postinst;work/support/postrm")
     set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postinst;")
     set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postrm;")
     
