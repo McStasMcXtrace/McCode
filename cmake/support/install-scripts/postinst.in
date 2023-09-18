@@ -38,6 +38,8 @@ function checklinks {
         # McCode itself
     checklinkrm /usr/bin/@FLAVOR@
     checklinkrm /usr/local/bin/@FLAVOR@
+    checklinkrm /usr/bin/@FLAVOR@-pygen
+    checklinkrm /usr/local/bin/@FLAVOR@-pygen
         # MCPL tool
     checklinkrm /usr/bin/mcpltool
     checklinkrm /usr/local/bin/mcpltool  
