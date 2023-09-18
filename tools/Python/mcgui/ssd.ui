@@ -148,7 +148,7 @@
         <item row="7" column="1">
          <widget class="QLabel" name="lblSweepSteps">
           <property name="text">
-           <string>Sweep steps (optional):</string>
+           <string>Scan steps (optional):</string>
           </property>
          </widget>
         </item>
