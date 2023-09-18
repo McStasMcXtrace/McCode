@@ -135,12 +135,13 @@ Changes in McStas 3.4, September 18th, 2023
  Components and Instruments:
  - In relation to the HighNESS project, the Wolter-optic components Conics_* have been given an
    overhaul by Mads Bertelsen. New related instrument WOFSANS is included with McStas 3.4.
- - The many SASmodel
  - Thanks to the work of José Robledo (FZJ), we now have a better interface to the Small-Angle Scattering
    models from SASview, aka. SASmodels. Due to the big number of included models that each correspond
    to a McStas component (94 in total!), these are now found in the "sasmodels" folder of your McStas
    installation. Two example instruments are also included: Test_SasView_bcc_paracrystal_aniso.instr and
    Test_SasView_guinier.instr.
+ - The strain-scanning instrument ILL_SALSA.instr was contributed by Daniel Lomholt Christensen,
+   Uni Copenhagen and ILL.
    
  Core simulation framework / code-generator:
  - mcstas-pygen: A secondary code-generator is now included that translates an instrument file to
@@ -208,7 +209,7 @@ Changes in McStas 3.4, September 18th, 2023
  - On macOS NCrystal and MCPL are now installed via conda.
 
  START your migration to 3.x:
- - Following the release of 3.3, we will no longer systematically be releasing updates to the
+ - Following the release of 3.4, we will no longer systematically be releasing updates to the
    2.x series.
  - The Wiki has a dedicated section on McStas 2.x -> McStas 3.x conversion that includes:
    * A nomenclature list containing short descriptions of new concepts and important keywords
