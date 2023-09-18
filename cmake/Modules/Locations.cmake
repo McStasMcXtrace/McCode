@@ -99,7 +99,7 @@ function( setup_standard_bash_preamble )
     "# install-time (postinst/postrm) or we are "
     "# running in an installation \"userland\""
     "SCRIPT=`basename $FILE`"
-    "if [[ \${SCRIPT} == *.postinst || \${SCRIPT} == *.postrm ]]\;"
+    "if [[ \${SCRIPT} == *.postinst || \${SCRIPT} == *.postrm || \${SCRIPT} == *rpm-tmp* ]]\;"
     " then"
     "  MCCODE_BINDIR=${CMAKE_INSTALL_PREFIX}/${DEST_BINDIR}"
     "else"
