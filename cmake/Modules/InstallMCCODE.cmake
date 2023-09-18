@@ -346,7 +346,7 @@ macro(installMCCODE)
 
     configure_file(
       cmake/support/run-scripts/module.in
-      work/support/module
+      work/support/${FLAVOR}-module
       @ONLY)
     install(PROGRAMS ${WORK}/support/module DESTINATION "${DEST_DATADIR_TOPENVFILES}")
 
