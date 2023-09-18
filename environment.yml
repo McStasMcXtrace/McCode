@@ -28,6 +28,8 @@ dependencies:
   - ncrystal
   - mcpl
   - jupytext
+  - jupyterlab
+  - ipympl
   - pip
   - pip:
     - guide_bot
