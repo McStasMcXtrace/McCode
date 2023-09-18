@@ -209,7 +209,7 @@ Changes in McStas 3.4, September 18th, 2023
  - On macOS NCrystal and MCPL are now installed via conda.
 
  START your migration to 3.x:
- - Following the release of 3.3, we will no longer systematically be releasing updates to the
+ - Following the release of 3.4, we will no longer systematically be releasing updates to the
    2.x series.
  - The Wiki has a dedicated section on McStas 2.x -> McStas 3.x conversion that includes:
    * A nomenclature list containing short descriptions of new concepts and important keywords
