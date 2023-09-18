@@ -139,7 +139,7 @@ then
     then
 	cp ${PREFIX}/@DEST_DATADIR_COMPS@/${FLAVOR}-module /etc/modulefiles/${FLAVOR}/${VERSION}
     else
-	if [ -e ${RPM_INSTALL_PREFIX}/@DEST_DATADIR_COMPS@/module ];
+	if [ -e ${RPM_INSTALL_PREFIX}/@DEST_DATADIR_COMPS@/${FLAVOR}-module ];
 	then
 	    sed -i.bak s+/usr/local+${RPM_INSTALL_PREFIX}+g ${RPM_INSTALL_PREFIX}/@DEST_DATADIR_COMPS@/${FLAVOR}-module
 	    cp ${RPM_INSTALL_PREFIX}/@DEST_DATADIR_COMPS@/${FLAVOR}-module /etc/modulefiles/${FLAVOR}/${VERSION}
