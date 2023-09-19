@@ -48,8 +48,31 @@ WORK=`pwd`
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" rpm64-fedora "" -- rpm
 
-./mkdist mcstas-mcpl $1 3rdparty/mcpl-package "" rpm64-fedora "" -- rpm
-./mkdist mcstas-ncrystal $1 3rdparty/ncrystal-package "" rpm64-fedora "" -- rpm
+cd 3rdparty/mcpl-package
+rm -rf build
+mkdir build
+cd build
+cmake .. -DBUILD_MCSTAS=1 -DFLAVOR=mcstas -DMCCODE_VERSION=${1} -DCMAKE_INSTALL_PREFIX=/usr/local
+make
+cpack -G RPM .
+RPM=`ls *.rpm`
+RPMNAME=`echo $RPM | sed s/Linux/rpm64-fedora/g`
+mv $DEB $WORK/dist/$DEBNAME
+
+cd $WORK
+
+cd 3rdparty/ncrystal-package
+rm -rf build
+mkdir build
+cd build
+cmake .. -DBUILD_MCSTAS=1 -DFLAVOR=mcstas -DMCCODE_VERSION=${1} -DCMAKE_INSTALL_PREFIX=/usr/local
+make
+cpack -G RPM .
+RPM=`ls *.rpm`
+RPMNAME=`echo $RPM | sed s/Linux/rpm64-fedora/g`
+mv $DEB $WORK/dist/$DEBNAME
+
+cd $WORK
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
