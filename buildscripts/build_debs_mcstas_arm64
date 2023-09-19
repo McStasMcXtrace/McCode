@@ -51,8 +51,31 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" deb64arm "" -- deb
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" deb64arm "" -- deb
 
-./mkdist mcstas-mcpl $1 3rdparty/mcpl-package "" deb64arm "" -- deb
-./mkdist mcstas-ncrystal $1 3rdparty/ncrystal-package "" deb64arm "" -- deb
+cd 3rdparty/mcpl-package
+rm -rf build
+mkdir build
+cd build
+cmake .. -DBUILD_MCSTAS=1 -DFLAVOR=mcstas -DMCCODE_VERSION=${1} -DCMAKE_INSTALL_PREFIX=/usr
+make
+cpack -G DEB .
+DEB=`ls *.deb`
+DEBNAME=`echo $DEB | sed s/Linux/deb64arm/g`
+mv $DEB $WORK/dist/$DEBNAME
+
+cd $WORK
+
+cd 3rdparty/ncrystal-package
+rm -rf build
+mkdir build
+cd build
+cmake .. -DBUILD_MCSTAS=1 -DFLAVOR=mcstas -DMCCODE_VERSION=${1} -DCMAKE_INSTALL_PREFIX=/usr
+make
+cpack -G DEB .
+DEB=`ls *.deb`
+DEBNAME=`echo $DEB | sed s/Linux/deb64arm/g`
+mv $DEB $WORK/dist/$DEBNAME
+
+cd $WORK
 
 #build metapackages?
 if [ "x$2" != "x" ]; then

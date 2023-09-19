@@ -15,7 +15,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 include(MCUtil)
 
 set(FLAVOR "mcstas")
-setupMCCODE("${FLAVOR}")
+
+if(WINDOWS)
+  setupMCCODE("${FLAVOR}")
+endif()
 
 set(CPACK_PACKAGE_NAME "${FLAVOR}-NCrystal-${MCCODE_VERSION}")
 set(CPACK_PACKAGE_CONTACT       "ncrystal-developers@cern.ch")
@@ -28,6 +31,11 @@ set(CPACK_NSIS_DISPLAY_NAME "NCrystal 3.4.1")
 # NSIS
 set(NSIS_NAME "${CPACK_PACKAGE_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
+
+# Drop any mccode-deb/rpm postfixing
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "")
+set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "")
+set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "")
 
 include(CPack)
 

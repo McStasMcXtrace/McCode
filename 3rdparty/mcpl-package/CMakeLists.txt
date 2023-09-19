@@ -22,7 +22,10 @@ else()
   message(FATAL_ERROR "No flavor specified!\n"
     "Please use either -DBUILD_MCSTAS=1 or -DBUILD_MCXTRACE=1")
 endif()
-setupMCCODE("${FLAVOR}")
+
+if(WINDOWS)
+  setupMCCODE("${FLAVOR}")
+endif()
 
 set(CPACK_PACKAGE_NAME "${FLAVOR}-mcpl-${MCCODE_VERSION}")
 set(CPACK_PACKAGE_CONTACT       "mcpl-developers@cern.ch")
@@ -35,6 +38,11 @@ set(CPACK_NSIS_DISPLAY_NAME "MCPL 1.5.1")
 # NSIS
 set(NSIS_NAME "${CPACK_PACKAGE_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
+
+# Drop any mccode-deb/rpm postfixing
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "")
+set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "")
+set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "")
 
 include(CPack)
 
