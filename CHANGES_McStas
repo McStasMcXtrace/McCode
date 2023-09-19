@@ -67,7 +67,7 @@ Changes in McStas 3.4, September 19th, 2023
    users via emails and GitHub issues alike!
 
  Fixes of issues from last 3.x release:
- - A number of issues from 3.4 were addressed, see the relevant GitHub issues for details:
+ - A number of issues from 3.3 were addressed, see the relevant GitHub issues for details:
    - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-3.3
 
  Installation:
