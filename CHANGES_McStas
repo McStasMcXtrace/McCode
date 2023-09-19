@@ -209,6 +209,10 @@ Changes in McStas 3.4, September 19th, 2023
    for "production" availability.)
  - MCPL library from T. Kittelmann (ESS) included at v. 1.6.2
  - On macOS NCrystal and MCPL are now installed via conda.
+ - On debian and fedora we are providing new packages for NCrystal and MCPL via the
+   McCode repository, independent of the McStas release. (Both codes will also soon arrive
+   in the Debian ecosystem to beecome available with the next releases, thanks to
+   Synchrotron SOLEIL, Emmanuel Farhi and Roland Mas.)
 
  START your migration to 3.x:
  - Following the release of 3.4, we will no longer systematically be releasing updates to the
