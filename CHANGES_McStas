@@ -89,6 +89,7 @@ Changes in McStas 3.4, September 19th, 2023
    embedded conda environment. MPI support is now included with the installation on Windows.
  - We have further been modernising the (CMake-based) build system and will be contributing
    conda recipes for distribution via conda in the near future.
+   Thanks to Thomas Kittelmann (ESS) for lots of help and footwork in the CMake/conda effort!
 
  McStas 3.4 enables most components and instruments on GPU. A very limited instruments using
  the "scatter logger" mechanism are still only available on 2.x and key components (e.g. Union
