@@ -95,13 +95,12 @@ chance that we will be willing to help you out.
 
 Contacts for McStas are:
   Peter Kjaer Willendrup <pkwi@fysik.dtu.dk> (PW)
-  Erik Knudsen <erkn@fysik.dtu.dk> (EK)  
   Emmanuel Farhi <emmanuel.farhi@synchrotron-soleil.fr> (EF)
+  Mads Bertelsen <mads.bertelsen@ess.eu) (MB)
   Kim Lefmann <lefmann@nbi.dk> (KL)
 
 Contacts for McXtrace are:
   Peter Kjaer Willendrup <pkwi@fysik.dtu.dk> (PW)
-  Erik Knudsen <erkn@fysik.dtu.dk> (EK)
   Emmanuel Farhi <emmanuel.farhi@synchrotron-soleil.fr> (EF)
 
 Previous authors are:
@@ -109,6 +108,7 @@ Previous authors are:
   Per-Olof AAstrand (PEO)
   Klaus Lieutenant (KL2)
   Peter Christiansen (PC)
+  Erik Knudsen <erkn@fysik.dtu.dk> (EK)
 
 Some parts of McStas/McXtrace require additional software to be installed in
 order to work. The needed software packages are either included as part of
