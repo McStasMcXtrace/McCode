@@ -5,13 +5,12 @@
 
 # Download the installer
 cd `dirname $0`
-wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
-chmod a+x Miniconda3-latest-Linux-x86_64.sh
-./Miniconda3-latest-Linux-x86_64.sh -b -p $PWD/miniconda3/
+wget curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
+chmod a+x Mambaforge-$(uname)-$(uname -m).sh
+./Mambaforge-$(uname)-$(uname -m).sh -b -b -p $PWD/miniconda3/
 export PATHBAK=$PATH
 export PATH=$PWD/miniconda3/bin:$PATH
-$PWD/miniconda3/bin/conda install libxkbcommon gsl
-$PWD/miniconda3/bin/pip install PyQt5 Qscintilla pyqtgraph pyaml ply matplotlib numpy tornado scipy pillow jinja2 mpld3
+$PWD/miniconda3/bin/mamba env update base -f ../../../environment.yml
 export PATH=$PATHBAK
 sed -i.orig 's+${PWD}/miniconda3/bin/python+/usr/local/mcstas/${1}/miniconda3/bin/python/+' ${PWD}/miniconda3/bin/*
 cd -
