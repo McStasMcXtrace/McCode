@@ -76,8 +76,6 @@ cd $WORK
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
-  ./support/rpm/miniconda3/prepare.sh $1
-  ./mkdist mcstas-miniconda3 $1 support/rpm/miniconda3/ "" rpm64 "" -- rpm
   cd meta-pkgs/rpm
 
   for controlfile in `ls mcstas-*.spec`
