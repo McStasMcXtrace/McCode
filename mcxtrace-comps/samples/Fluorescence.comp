@@ -100,8 +100,9 @@
 * target_x:  [m]      Position of target to focus at, along X.
 * target_y:  [m]      Position of target to focus at, along Y.
 * target_z:  [m]      Position of target to focus at, along Z.
-* flag_compton: [m]   When 0, the Compton  scattering is ignored.
-* flag_rayleigh:[m]   When 0, the Rayleigh scattering is ignored.
+* flag_compton: [1]   When 0, the Compton  scattering is ignored.
+* flag_rayleigh:[1]   When 0, the Rayleigh scattering is ignored.
+* flag_lorentzian:[1] When 1, the line shapes are assumed to be Lorentzian, else Gaussian
 *
 * OUTPUT PARAMETERS:
 * type: scattering event type 0=fluorescence, 1=Rayleigh, 2=Compton, 3=transmit
@@ -134,7 +135,7 @@ SETTING PARAMETERS(
   p_interact=0, 
   target_x = 0, target_y = 0, target_z = 0, focus_r = 0,
   focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0, int target_index=0,
-  int flag_compton=1, int flag_rayleigh=1)
+  int flag_compton=1, int flag_rayleigh=1, int flag_lorentzian=0)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 DEPENDENCY "-Wl,-rpath,GETPATH(lib) -LGETPATH(lib) -lxrl -IGETPATH(include) -DUSE_OFF"
@@ -827,8 +828,9 @@ if (intersect) { /* scattering event */
       n_fluo++;
       p_fluo += p;
       Ef      = XRMC_SelectFluorescenceEnergy(Z, Ei, &dE);
-      // if (dE)     dE  = 1+dE*tan(PI/2*randpm1()); // Lorentzian distribution
-      if (dE)     dE  = 1+dE*randnorm()); // Gaussian distribution
+      if (dE)
+        if (flag_lorentzian) dE  = 1+dE*tan(PI/2*randpm1()); // Lorentzian distribution
+        else                 dE  = 1+dE*randnorm(); // Gaussian distribution
       if (dE > 0) Ef *= dE;
       kf      = Ef*E2K;
       break;
