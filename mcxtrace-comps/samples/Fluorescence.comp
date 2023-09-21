@@ -828,10 +828,11 @@ if (intersect) { /* scattering event */
       n_fluo++;
       p_fluo += p;
       Ef      = XRMC_SelectFluorescenceEnergy(Z, Ei, &dE);      // dE in keV
-      if (dE)
+      if (dE) {
         if (flag_lorentzian) dE  *= tan(PI/2*randpm1()); // Lorentzian distribution
         else                 dE  *= randnorm();          // Gaussian distribution
-      if (dE > 0) Ef = Ef + dE;
+        Ef = Ef + dE;
+      }
       kf      = Ef*E2K;
       break;
       
