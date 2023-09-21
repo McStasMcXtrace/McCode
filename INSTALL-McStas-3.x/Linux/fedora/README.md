@@ -4,7 +4,7 @@ McStas provides a package repository for use with RedHat-based
 distributions, such as Fedora. To allow automatic update of your
 mcstas, mcstas-components and tools when new revisions are relased,
 follow the below instruction. **PLEASE NOTE** that our repo-based RPM
-packages are built on Fedora 37.
+packages are built on Fedora 38.
 
 An alternative solution for you may be to build yourself using the [repo build instructions](https://github.com/McStasMcXtrace/McCode/wiki/Building-McStas-McXtrace)
 
@@ -42,14 +42,15 @@ mcstas-tools-python-mcrun-3.4.x86_64 : python-tools-mcrun built using CMake
 The meta-package mcstas-suite-python-ng allows you to install mcstas 3.4 with one or both sets of tools (mcrun/mcplot etc.) by simple yum commands like
 
 ```bash
-sudo yum install mcstas-suite-python
+sudo dnf install mcstas-suite-python-ng
 ```
-The -suite packages without 'ng' in the package name will install the
-latest McStas 2.x package
 
+To install ```MCPL``` and ```NCrystal``` also from the mccode-hosted
+repository, please use
 
-**NOTE** that the Python based package should automatically include
-all dependencies, and hence is preferred!
+```bash
+sudo dnf install mcpl ncrystal
+```
 
 ## Install without repo use
 If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at https://download.mcstas.org/mcstas-3.4/linux/fedora/
