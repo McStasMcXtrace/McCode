@@ -85,6 +85,9 @@ SETTING PARAMETERS (
 
 
 SHARE %{
+#ifdef OPENACC
+#define USE_CUDA
+#endif
 %include "sas_kernel_header.c"
 
 /* BEGIN Required header for SASmodel fractal */

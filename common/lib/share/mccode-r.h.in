@@ -51,7 +51,6 @@
 #include <stdint.h>
 #ifdef OPENACC
 #include <openacc.h>
-#define USE_CUDA
 #ifndef GCCOFFLOAD
 #include <accelmath.h>
 #else
