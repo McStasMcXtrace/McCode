@@ -7,6 +7,9 @@ The preferred way of installing on Debian/Ubuntu or Fedora
 7 type systems is by adding our respective **deb** or **rpm** repository!!! Please consult the
 specific [Debian/Ubuntu](debian/README.md) or  [Fedora](fedora/README.md).
 
+## Experimental builds
+Apart from our "standard" Debian or Fedora builds, we may on occasion include "one-off, experimental" builds for other systems, check be low for for folders and consult with corresponding README's.
+
 ## Favorite system not available?
 * For other systems, please either
  * Use the instructions for
