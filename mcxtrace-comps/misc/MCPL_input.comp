@@ -322,7 +322,7 @@ TRACE
     p /= mpi_node_count;
 #endif
 #else
-  unsigned long long i=_particle->_uid;
+  unsigned long long i=_particle->_loopid;
   if (i>=nparticles) {
     repeating=1;
     i = i % nparticles;
