@@ -144,7 +144,7 @@ INITIALIZE
     clrp=clr;
     clrp+=snprintf(clrp,2048,"%s",instrument_exe);
     for (ii=0;ii<numipar;ii++){
-        clrp+=snprintf(clrp,2048-(clrp-clr)," %s=%s",mcinputtable[ii].name,mcinputtable[ii].val);
+        clrp+=snprintf(clrp,2048-(clrp-clr)," %s=%s",mcinputtable[ii].name,mcinputtable[ii].par);
     }
     *(clrp)='\0';
     mcpl_hdr_add_data(outputfile, "mccode_cmd_line" , strlen(clr), clr);
