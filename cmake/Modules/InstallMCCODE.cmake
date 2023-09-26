@@ -396,7 +396,7 @@ macro(installMCCODE)
       )
 
     install(PROGRAMS
-      work/support/mpicc.bat
+      ${CMAKE_CURRENT_SOURCE_DIR}/work/support/mpicc.bat
       DESTINATION "${DEST_BINDIR}"
       )
 
