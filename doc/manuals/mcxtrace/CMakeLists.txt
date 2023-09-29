@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required( VERSION 3.17.0 )
 
 # This will install McXtrace user and component manuals.
 set(FLAVOR mcxtrace)
