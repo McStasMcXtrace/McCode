@@ -1,7 +1,7 @@
 cmake_minimum_required( VERSION 3.17.0 )
 
 # This will install McXtrace components
-project(mcxtrace-comps C Fortran)
+project( mcxtrace-comps C )
 
 # Set module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -33,6 +33,7 @@ include(CPack)
 
 option( ENABLE_CIF2HKL "Build Third Party code cif2hkl (fortran)" ON )#TODO: Only enable enable Fortran if this is on
 if ( ENABLE_CIF2HKL )
+  enable_language( Fortran )
   add_executable(
     cif2hkl
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/cif2hkl/cif2hkl.F90

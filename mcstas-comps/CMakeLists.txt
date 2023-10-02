@@ -1,7 +1,7 @@
 cmake_minimum_required( VERSION 3.17.0 )
 
 # This will install McStas components
-project(mcstas-comps C Fortran)
+project( mcstas-comps C )
 
 # Set module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -33,6 +33,7 @@ include(CPack)
 
 option( ENABLE_CIF2HKL "Build Third Party code cif2hkl (fortran)" ON )#TODO: Only enable enable Fortran if this is on
 if ( ENABLE_CIF2HKL )
+  enable_language( Fortran )
   add_executable(
     cif2hkl
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/cif2hkl/cif2hkl.F90
@@ -46,6 +47,7 @@ endif()
 
 option( ENABLE_NEUTRONICS "Build Third Party code neutronics (fortran)" ON )#TODO: Only enable enable Fortran if this is on
 if ( ENABLE_NEUTRONICS )
+  enable_language( Fortran )
   add_library(neutronics "STATIC" libs/neutronics/neutronics-subs.f)
   install(TARGETS neutronics DESTINATION "${DEST_LIBDIR}/neutronics")
   #NB (Aug 2023): Removed general "libs" which has the side-effect of not
