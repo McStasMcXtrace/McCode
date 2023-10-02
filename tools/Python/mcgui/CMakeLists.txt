@@ -65,9 +65,7 @@ else()
 endif()
 
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-tools-python-${P}doc-${MCCODE_VERSION}, ${FLAVOR}-tools-python-mccodelib-${MCCODE_VERSION}, """
-  )
-set(CPACK_RPM_PACKAGE_REQUIRES "qt5-qtbase-gui")
+  "${FLAVOR}-${MCCODE_VERSION}, ${FLAVOR}-tools-python-${P}doc-${MCCODE_VERSION}, ${FLAVOR}-tools-python-mccodelib-${MCCODE_VERSION}, qt5-qtbase-gui")
 
 include(CPack)
 
