@@ -10,6 +10,10 @@ message(STATUS "Configure ${CMAKE_PROJECT_NAME} ${FLAVOR} ${PROJECT_NAME}")
 option(BUILD_MCSTAS   "Choose the McStas flavor" off)
 option(BUILD_MCXTRACE "Choose the McXtrace flavor (trumps BUILD_MCSTAS)" Off)
 
+
+#Option normally needed only for the conda pkg recipe:
+option(MCCODE_BUILD_CONDA_PKG   "If current build will be relocatable conda package" OFF)
+
 # Set module path
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 
@@ -69,61 +73,53 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-
 
 # RPM
 if (RPMPROFILE)
-   if (RPMPROFILE STREQUAL "fedora")
-        set(PYDEPS "python3, python3-ply")
-   else()
-	set(PYDEPS ${FLAVOR}-miniconda3-${MCCODE_VERSION})
-   endif()
+  if (RPMPROFILE STREQUAL "fedora")
+    set(PYDEPS "python3, python3-ply")
+  else()
+    set(PYDEPS ${FLAVOR}-miniconda3-${MCCODE_VERSION})
+  endif()
 else()
-	set(PYDEPS ${FLAVOR}-miniconda3-${MCCODE_VERSION})
+  set(PYDEPS ${FLAVOR}-miniconda3-${MCCODE_VERSION})
 endif()
 
 set(CPACK_RPM_PACKAGE_REQUIRES
   "${FLAVOR}-${MCCODE_VERSION}, ${PYDEPS}"
 )
 
-
 include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
+set(entries_with_conda_prefix "CFLAGS;NEXUSFLAGS;MPIFLAGS;OACCFLAGS;TOOLS_CC")
+foreach( var ${entries_with_conda_prefix} )
+  set( MCCODE_FINAL_${var} "${${var}}" )
+endforeach()
+
+if ( MCCODE_BUILD_CONDA_PKG )
+  #Conda pkgs mode need special treatment, to make sure compiler name is not an
+  #absolute path into the build conda env:
+  set( MCCODE_IS_CONDA_PKG "1" )
+  set( conda_prefix "$ENV{CONDA_PREFIX}" )
+  foreach( var ${entries_with_conda_prefix} )
+    string(REPLACE "${conda_prefix}" "\$\{CONDA_PREFIX\}" MCCODE_FINAL_${var} "${MCCODE_FINAL_${var}}")
+  endforeach()
+  #get_filename_component(MCCODE_FINAL_TOOLS_CC "${MCCODE_FINAL_TOOLS_CC}" NAME)
+else()
+  set( MCCODE_IS_CONDA_PKG "0" )
+endif()
+
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mccode_config.py.in" "${WORK}/mccode_config.py" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mccode_config.json.in" "${WORK}/mccode_config.json" @ONLY)
-set(BINS "${WORK}/mccode_config.py" "${WORK}/mccode_config.json")
 
-if(WINDOWS)
-  # Python files
-  foreach(name __init__.py fcparticleparser.py utils.py flowchart.py instrgeom.py instrparser.py mcdisplayutils.py mcplotloader.py nodetree.py particleparser.py pipetools.py plotgraph.py pqtgfrontend.py cflags.py)
-    install(
-      FILES "${PROJECT_SOURCE_DIR}/${name}"
-      DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
-      )
-  endforeach()
+# Python files
+foreach(name __init__.py fcparticleparser.py utils.py flowchart.py instrgeom.py instrparser.py mcdisplayutils.py mcplotloader.py nodetree.py particleparser.py pipetools.py plotgraph.py pqtgfrontend.py cflags.py)
   install(
-    FILES ${BINS}
+    FILES "${PROJECT_SOURCE_DIR}/${name}"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
-    PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
-  )
-endif()
+    )
+endforeach()
 
-if(NOT WINDOWS)
-  # Python files
-  foreach(name __init__.py fcparticleparser.py utils.py flowchart.py instrgeom.py instrparser.py mcdisplayutils.py mcplotloader.py nodetree.py particleparser.py pipetools.py plotgraph.py pqtgfrontend.py cflags.py)
-    install(
-      FILES "${PROJECT_SOURCE_DIR}/${name}"
-      DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
-      )
-  endforeach()
-  install(
-    FILES ${BINS}
-    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
-    PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
+install(
+  FILES "${WORK}/mccode_config.py" "${WORK}/mccode_config.json"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
   )
-
-endif()

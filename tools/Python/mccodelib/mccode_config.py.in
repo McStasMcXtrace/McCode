@@ -1,7 +1,6 @@
 import os
 import pathlib
 import json
-import sys
 
 thisdir = pathlib.Path(__file__).parent.absolute().resolve()
 tooldir = ( thisdir / '..' / '..' ).absolute().resolve()
@@ -15,16 +14,16 @@ def check_env_vars():
     global compilation
 
     # MCCODE_LIB_DIR
-    if not os.getenv('MCSTAS_OVERRIDE') is None:
+    if os.getenv('MCSTAS_OVERRIDE') is not None:
         configuration['MCCODE_LIB_DIR'] = os.getenv('MCSTAS_OVERRIDE')
     # CFLAGS
-    if not os.getenv('MCSTAS_CFLAGS_OVERRIDE') is None:
+    if os.getenv('MCSTAS_CFLAGS_OVERRIDE') is not None:
         compilation['CFLAGS'] = os.getenv('MCSTAS_CFLAGS_OVERRIDE')
     # CC
-    if not os.getenv('MCSTAS_CC_OVERRIDE') is None:
+    if os.getenv('MCSTAS_CC_OVERRIDE') is not None:
         compilation['CC'] = os.getenv('MCSTAS_CC_OVERRIDE')
     # MPICC
-    if not os.getenv('MCSTAS_MPICC_OVERRIDE') is None:
+    if os.getenv('MCSTAS_MPICC_OVERRIDE') is not None:
         compilation['MPICC'] = os.getenv('MCSTAS_MPICC_OVERRIDE')
 
 def load_config(path=None):
@@ -34,7 +33,7 @@ def load_config(path=None):
     global platform
     global directories
 
-    if path==None:
+    if path is None:
         level="system"
         userconfig = os.path.join(os.path.dirname(__file__),"mccode_config.json")
         info=""
@@ -61,6 +60,16 @@ def load_config(path=None):
     obj = json.loads(text)
     configuration = obj['configuration']
     compilation = obj['compilation']
+    if configuration['ISCONDAPKG']=='1':
+        conda_prefix = os.environ.get('CONDA_PREFIX')
+        if conda_prefix:
+            import shlex
+            entries_with_conda_prefix=['CFLAGS','NEXUSFLAGS','MPIFLAGS','OACCFLAGS','CC']
+            conda_prefix = shlex.quote(str(pathlib.Path(conda_prefix).absolute().resolve()))
+            for e in entries_with_conda_prefix:
+                if '${CONDA_PREFIX}' in compilation[e]:
+                    compilation[e] = compilation[e].replace('${CONDA_PREFIX}',conda_prefix)
+
     platform = obj['platform']
     directories = obj['directories']
     # Fill in the location of MCCODE_LIB_DIR based on location of Python script
@@ -115,10 +124,10 @@ def get_options():
     ''' values below are not enforced in the dicts, but probably used to populate certain gui menus '''
     if os.name == 'nt':
         suffix='-pl'
-        suffix2='.pl'
+        #suffix2='.pl'
     else:
         suffix='.pl'
-        suffix2=''
+        #suffix2=''
 
     if configuration['MCCODE'] == "mcstas":
         prefix = "mc"
