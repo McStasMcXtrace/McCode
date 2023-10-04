@@ -94,6 +94,7 @@ function( setup_standard_bash_preamble )
   set( lines
     "############################################"
     "# Start of standard CMake-generated preamble"
+    "set -e"
     "FILE=\${0}"
     "# First, probe if we are calling script at"
     "# install-time (postinst/postrm) or we are "
@@ -103,7 +104,7 @@ function( setup_standard_bash_preamble )
     " then"
     "  MCCODE_BINDIR=${CMAKE_INSTALL_PREFIX}/${DEST_BINDIR}"
     "else"
-    "  LINK=`readlink \${FILE}`"
+    "  LINK=\$(readlink \${FILE}||true)"
     "  if [ \"x\${LINK}\" != \"x\" ]; then"
     "    FILE=\${LINK}"
     "  fi"
