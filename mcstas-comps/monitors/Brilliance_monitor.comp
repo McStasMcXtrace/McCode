@@ -159,7 +159,7 @@ INITIALIZE
   ster = xwidth * yheight/(source_dist*source_dist);
 
   // Use instance name for monitor output if no input was given
-  if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);  
+  if (!strcmp(filename,"\0")) sprintf(filename,"%s",NAME_CURRENT_COMP);  
 %}
 
 TRACE
