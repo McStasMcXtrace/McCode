@@ -627,11 +627,11 @@ INITIALIZE
   
   this_logger.data_union.p_2D_kf_t_storage = &this_storage;
   
-  sprintf(this_logger.name,NAME_CURRENT_COMP);
+  sprintf(this_logger.name,"%s",NAME_CURRENT_COMP);
   
   //printf("past this_logger assignment \n");
   
-  sprintf(logger_list_element.name,NAME_CURRENT_COMP);
+  sprintf(logger_list_element.name,"%s",NAME_CURRENT_COMP);
   logger_list_element.component_index = INDEX_CURRENT_COMP;
   logger_list_element.logger = &this_logger;
   

@@ -349,7 +349,7 @@ exit(-1);
   safty_distance2 = safty_distance*2;
   
   // Write information to the global_master_list_master about the current Union_master
-  sprintf(global_master_element.name,NAME_CURRENT_COMP);
+  sprintf(global_master_element.name,"%s",NAME_CURRENT_COMP);
   global_master_element.component_index = INDEX_CURRENT_COMP;
   add_element_to_master_list(global_master_list_master, global_master_element);
   if (inherit_number_of_scattering_events == 1 && global_master_list_master->num_elements == 1) {
