@@ -283,14 +283,14 @@ struct line_info_struct
   //   used to convert CIF/CFL/INS file into F2(hkl)
   //   the CIF2HKL env var can point to a cif2hkl executable
   //   else the McCode binary is attempted, then the system.
-  char *cif2hkl(const char *infile, const char *options) {
+  char *cif2hkl(char *infile, char *options) {
     char cmd[1024];
     int  ret = 0;
     int  found = 0;
     char *OUTFILE;
     
     // get filename extension
-    const char *ext = strrchr(infile, '.');
+    char *ext = strrchr(infile, '.');
     if(!ext || ext == infile) return infile;
     else ext++;
     
