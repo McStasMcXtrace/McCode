@@ -134,12 +134,12 @@ FINALLY
   /* free pointers */
   Monitor_nD_Finally(&DEFS, &Vars);
   if (bufsize) {
-    printf("Virtual_output: %s: Saved %ll events (from buffer) in file %s\n",
+    printf("Virtual_output: %s: Saved %llu events (from buffer) in file %s\n",
            NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
     if (bufsize < Vars.Nsum)
       printf("WARNING         When using this source, intensities must be multiplied\n"
              "                by a factor %g\n", (double)Vars.Nsum/(double)bufsize);
-  } else printf("Virtual_output: %s: Saved %ll events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
+  } else printf("Virtual_output: %s: Saved %llu events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
 %}
 
 MCDISPLAY
