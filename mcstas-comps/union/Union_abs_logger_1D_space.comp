@@ -410,7 +410,7 @@ INITIALIZE
   sprintf(this_abs_storage.Detector_1D.string_axis, "y [m]");
   sprintf(this_abs_storage.Detector_1D.string_axis_short, "y");
   sprintf(this_abs_storage.Detector_1D.string_axis_value, "Intensity [n/s]");
-  sprintf(this_abs_storage.Detector_1D.Filename, filename);
+  sprintf(this_abs_storage.Detector_1D.Filename,"%s",filename);
   
   this_abs_storage.order = order_total;
   this_abs_storage.order_in_this_volume = order_volume;

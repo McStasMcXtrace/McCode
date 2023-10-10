@@ -642,7 +642,7 @@ INITIALIZE
   else
     sprintf(this_abs_storage.Detector_2D.string_axis_2, "measured lambda / true lambda [1]");
   
-  sprintf(this_abs_storage.Detector_2D.Filename, filename);
+  sprintf(this_abs_storage.Detector_2D.Filename,"%s",filename);
   
   // Get the position from a component instance
   this_abs_storage.sample_pos = POS_A_COMP_INDEX(INDEX_CURRENT_COMP+ref_component);
