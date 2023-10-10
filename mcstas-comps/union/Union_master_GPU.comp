@@ -778,9 +778,9 @@ exit(-1);
       
       if (verbal) {
         if (volume_index_main != 0) {
-          if (volume_index_main,Volumes[volume_index_main]->geometry.is_mask_volume == 0 ||
-              volume_index_main,Volumes[volume_index_main]->geometry.is_masked_volume == 0 ||
-              volume_index_main,Volumes[volume_index_main]->geometry.is_exit_volume == 0) {
+          if (Volumes[volume_index_main]->geometry.is_mask_volume == 0 ||
+              Volumes[volume_index_main]->geometry.is_masked_volume == 0 ||
+              Volumes[volume_index_main]->geometry.is_exit_volume == 0) {
             printf("List overview for %s with %s shape made of %s\n",
                    Volumes[volume_index_main]->name,
                    Volumes[volume_index_main]->geometry.shape,
