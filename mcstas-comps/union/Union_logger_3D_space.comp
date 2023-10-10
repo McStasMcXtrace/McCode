@@ -669,7 +669,7 @@ INITIALIZE
   
   strcat(this_storage.Detector_3D.title_string,temp_string);
   
-  sprintf(this_storage.Detector_3D.Filename,filename);
+  sprintf(this_storage.Detector_3D.Filename,"%s",filename);
   
   
   this_storage.order = order_total;

@@ -453,7 +453,7 @@ INITIALIZE
   // Input sanitation for filename apparently done in 2D_detector_out
   sprintf(this_storage.Detector_1D.title_string,"1D Union logger");
   sprintf(this_storage.Detector_1D.string_axis_value,"Intensity");
-  sprintf(this_storage.Detector_1D.Filename,filename);
+  sprintf(this_storage.Detector_1D.Filename,"%s",filename);
   
   // detect variable type and set axis accordingly
   int variable_identifier; // 1 time, 2 |q|, ...

@@ -463,7 +463,7 @@ INITIALIZE
   sprintf(this_abs_storage.Detector_2D.string_axis_1, "y [m]");
   sprintf(this_abs_storage.Detector_2D.string_axis_2, "t [s]");
   
-  sprintf(this_abs_storage.Detector_2D.Filename,filename);
+  sprintf(this_abs_storage.Detector_2D.Filename,"%s",filename);
   
   
   this_abs_storage.order = order_total;

@@ -632,7 +632,7 @@ INITIALIZE
   
   strcat(this_storage.Detector_3D.title_string,temp_string); // Connects the title string started in D_direction_1 part with the ending in D_direction_2 part
   
-  sprintf(this_storage.Detector_3D.Filename,filename);
+  sprintf(this_storage.Detector_3D.Filename,"%s",filename);
   
   
   this_storage.order = order_total;

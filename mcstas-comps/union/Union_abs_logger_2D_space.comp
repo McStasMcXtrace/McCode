@@ -541,7 +541,7 @@ INITIALIZE
   
   strcat(this_abs_storage.Detector_2D.title_string,temp_string); // Connects the title string started in D_direction_1 part with the ending in D_direction_2 part
   
-  sprintf(this_abs_storage.Detector_2D.Filename,filename);
+  sprintf(this_abs_storage.Detector_2D.Filename,"%s",filename);
   
   
   this_abs_storage.order = order_total;
