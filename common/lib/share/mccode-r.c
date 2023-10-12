@@ -1843,11 +1843,11 @@ int mcdetector_out_axis_nexus(NXhandle f, char *label, char *var, int rank, long
 int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR detector)
 {
 
-  int dims[3]={detector.m,detector.n,detector.p};  /* number of elements to write */
-  int fulldims[3]={detector.m,detector.n,detector.p};
+  int64_t dims[3]={detector.m,detector.n,detector.p};  /* number of elements to write */
+  int64_t fulldims[3]={detector.m,detector.n,detector.p};
   int signal=1;
   int exists=0;
-  int current_dims[3]={0,0,0};
+  int64_t current_dims[3]={0,0,0};
   int ret=NX_OK;
 
   if (!f || !data || !detector.m || mcdisable_output_files) return(NX_OK);
@@ -1857,7 +1857,7 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
 
   /* create the data set in NXdata group */
   NXMDisableErrorReporting(); /* unactivate NeXus error messages, as creation may fail */
-  ret = NXcompmakedata(f, part, NX_FLOAT64, detector.rank, fulldims, NX_COMPRESSION, dims);
+  ret = NXcompmakedata64(f, part, NX_FLOAT64, detector.rank, fulldims, NX_COMPRESSION, dims);
   if (ret != NX_OK) {
     /* failed: data set already exists */
     int datatype=0;
@@ -1865,7 +1865,7 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
     exists=1;
     /* inquire current size of data set (nb of events stored) */
     NXopendata(f, part);
-    NXgetinfo(f, &rank, current_dims, &datatype);
+    NXgetinfo64(f, &rank, current_dims, &datatype);
     NXclosedata(f);
   }
   NXMEnableErrorReporting();  /* re-enable NeXus error messages */
@@ -1878,7 +1878,7 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
   }
   if (strcasestr(detector.format, "list")) {
     current_dims[1] = current_dims[2] = 0; /* set starting location for writing slab */
-    NXputslab(f, data, current_dims, dims);
+    NXputslab64(f, data, current_dims, dims);
     if (!exists)
       printf("Events:   \"%s\"\n",
         strlen(detector.filename) ? detector.filename : detector.component);
