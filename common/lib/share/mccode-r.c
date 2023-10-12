@@ -2004,6 +2004,7 @@ MCDETECTOR mcdetector_out_list_slaves(MCDETECTOR detector)
 	  }
 	}
       } /* if not master */
+      free(this_p1);
     } /* for */
   MPI_MASTER(
 	     printf("\n** Done ** \n");
