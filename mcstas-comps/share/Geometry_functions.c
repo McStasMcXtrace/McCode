@@ -836,6 +836,8 @@ switch(*num_solutions) {
  
     return output;
 */
+ // FIXME should we ever reach / return here?
+ return -2;
 };
 
 int cone_intersect(double *t,int *num_solutions,double *r,double *v,struct geometry_struct *geometry){
@@ -879,7 +881,8 @@ This function was created by Martin Olsen at NBI on september 20, 2018.
 
     }
 */
-
+    // FIXME Is it meaningful that this function is of int type? Anyone requesting output?
+    return 0;
 };
 
 int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
@@ -3271,13 +3274,13 @@ int cone_overlaps_box(struct geometry_struct *geometry_cone,struct geometry_stru
     double sphere_2_radius = 0;
 
     dist_to_corner = sqrt(pow(x_width1,2)+pow(x_width1,2));
-    if (dist_to_corner > sphere_2_radius); { sphere_2_radius = dist_to_corner ; }
+    if (dist_to_corner > sphere_2_radius) { sphere_2_radius = dist_to_corner ; }
     dist_to_corner = sqrt(pow(x_width1,2)+pow(x_width2,2));
-    if (dist_to_corner > sphere_2_radius); { sphere_2_radius = dist_to_corner ; }
+    if (dist_to_corner > sphere_2_radius) { sphere_2_radius = dist_to_corner ; }
     dist_to_corner = sqrt(pow(x_width2,2)+pow(x_width1,2));
-    if (dist_to_corner > sphere_2_radius); { sphere_2_radius = dist_to_corner ; }
+    if (dist_to_corner > sphere_2_radius) { sphere_2_radius = dist_to_corner ; }
     dist_to_corner = sqrt(pow(x_width2,2)+pow(x_width2,2));
-    if (dist_to_corner > sphere_2_radius); { sphere_2_radius = dist_to_corner ; }
+    if (dist_to_corner > sphere_2_radius) { sphere_2_radius = dist_to_corner ; }
 
     Coords sphere_2_pos = center_box;
 

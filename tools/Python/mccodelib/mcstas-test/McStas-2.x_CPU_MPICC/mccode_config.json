@@ -11,7 +11,9 @@
     "BROWSER": "xdg-open",
     "GUICOLS": "3",
     "EDITOR": "xdg-open",
-    "QSCI": "1"
+    "QSCI": "1",  
+    "FORMAT": "McCode",
+    "ISCONDAPKG": "0"
   },
   "compilation": {
     "CFLAGS": "-g -lm -O2 -DUSE_MPI -lmpi",
@@ -24,5 +26,7 @@
   },
   "platform": {
     "EXESUFFIX": "out"
+  },
+  "directories": {
   }
 }

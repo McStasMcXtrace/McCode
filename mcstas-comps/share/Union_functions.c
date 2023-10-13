@@ -1508,11 +1508,19 @@ int Sample_compare_doubles (const void *a, const void *b) {
 */
 
 
+/* TK: For osx compilation, changed ordering fct to use void* pointers. Orignal function was:
 int Sample_compare_history_intensities (const struct saved_history_struct *a, const struct saved_history_struct *b) {
   const double *da = (const double *) &(a->intensity);
   const double *db = (const double *) &(b->intensity);
 
   return (*da < *db) - (*da > *db);
+}
+*/
+
+int Sample_compare_history_intensities (const void* a, const void* b) {
+  const double da = ((const struct saved_history_struct *)a)->intensity;
+  const double db = ((const struct saved_history_struct *)b)->intensity;
+  return (da < db) - (da > db);
 }
 
 void write_tagging_tree(struct list_of_tagging_tree_node_pointers *master_list, struct Volume_struct **Volumes, int total_history_counter, int number_of_volumes) {
@@ -1642,7 +1650,12 @@ void write_tagging_tree(struct list_of_tagging_tree_node_pointers *master_list, 
   printf("Top 20 most common histories. Shows the index of volumes entered (VX), and the scattering processes (PX)\n");
   for (history_iterate=0;history_iterate<total_history.used_elements && history_iterate<20;history_iterate++) {
     printf("%d\t N I=%E \t", total_history.saved_histories[history_iterate].number_of_rays, total_history.saved_histories[history_iterate].intensity);
-    printf_history(&total_history.saved_histories[history_iterate]);
+    /*TK Changed from
+      printf_history(&total_history.saved_histories[history_iterate]); to the
+      following (of course this cast is only safe because the initial layout of
+      the two struct types is the same... I am not 100% sure it is actually
+      entirely guaranteed by the standard): */
+    printf_history((struct dynamic_history_list *)(&total_history.saved_histories[history_iterate]));
   }
    
   FILE *fp;

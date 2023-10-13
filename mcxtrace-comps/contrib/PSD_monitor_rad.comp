@@ -76,10 +76,10 @@ INITIALIZE
   }
 
   // Use instance name for monitor output if no input was given
-  if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
+  if (!strcmp(filename,"\0")) sprintf(filename,"%s",NAME_CURRENT_COMP);
 
   // Use instance name for monitor output if no input was given
-  if (!strcmp(filename_av,"\0")) sprintf(filename_av,NAME_CURRENT_COMP,"_avg");
+  if (!strcmp(filename_av,"\0")) sprintf(filename_av,"%s%s",NAME_CURRENT_COMP,"_avg");
 %}
 
 TRACE

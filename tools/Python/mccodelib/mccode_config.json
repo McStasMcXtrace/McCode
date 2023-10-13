@@ -12,7 +12,8 @@
     "BROWSER": "xdg-open",
     "GUICOLS": "3",
     "EDITOR": "open",
-    "FORMAT": "McCode"
+    "FORMAT": "McCode",
+    "ISCONDAPKG": "0"
   },
   "compilation": {
     "CFLAGS": "-g -O2 -lm -std=c99",
@@ -27,6 +28,8 @@
   },
   "platform": {
     "EXESUFFIX": "out"
+  },
+  "directories": {
   }
 }
 

@@ -2253,6 +2253,12 @@ cogen_header(struct instr_def *instr, char *output_name)
   coutf(" * CFLAGS=%s", instr->dependency);
   cout(" */");
   cout("");
+
+  /* Enable _POSIX_SOURCE consistently (todo: revisit the ifndef WIN32 protection) */
+  coutf("#ifndef WIN32");
+  coutf("#  define _POSIX_C_SOURCE 200809L");
+  coutf("#endif");
+
   coutf("#define MCCODE_STRING \"%s\"", MCCODE_STRING);
   coutf("#define FLAVOR        \"%s\"", FLAVOR);
   coutf("#define FLAVOR_UPPER  \"%s\"", FLAVOR_UPPER);

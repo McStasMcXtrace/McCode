@@ -11,7 +11,9 @@
     "BROWSER": "xdg-open",
     "GUICOLS": "3",
     "EDITOR": "xdg-open",
-    "QSCI": "1"
+    "QSCI": "1",
+    "FORMAT": "McCode",
+    "ISCONDAPKG": "0"
   },
   "compilation": {
     "CFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=managed -Minfo=accel -DOPENACC -DFUNNEL",

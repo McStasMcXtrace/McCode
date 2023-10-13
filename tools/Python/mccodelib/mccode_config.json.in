@@ -12,14 +12,15 @@
     "BROWSER": "@BROWSER@",
     "GUICOLS": "3",
     "EDITOR": "@EDITOR@",
-    "FORMAT": "McCode"
+    "FORMAT": "McCode",
+    "ISCONDAPKG": "@MCCODE_IS_CONDA_PKG@"
   },
   "compilation": {
-    "CFLAGS": "@CFLAGS@",
-    "NEXUSFLAGS": "@NEXUSFLAGS@",
-    "MPIFLAGS": "@MPIFLAGS@",
-    "OACCFLAGS": "@OACCFLAGS@",
-    "CC": "@TOOLS_CC@",
+    "CFLAGS": "@MCCODE_FINAL_CFLAGS@",
+    "NEXUSFLAGS": "@MCCODE_FINAL_NEXUSFLAGS@",
+    "MPIFLAGS": "@MCCODE_FINAL_MPIFLAGS@",
+    "OACCFLAGS": "@MCCODE_FINAL_OACCFLAGS@",
+    "CC": "@MCCODE_FINAL_TOOLS_CC@",
     "OACC": "@OACC@",
     "MPICC": "mpicc",
     "MPIRUN": "mpirun",

@@ -632,7 +632,7 @@ INITIALIZE
   
   strcat(this_storage.Detector_3D.title_string,temp_string); // Connects the title string started in D_direction_1 part with the ending in D_direction_2 part
   
-  sprintf(this_storage.Detector_3D.Filename,filename);
+  sprintf(this_storage.Detector_3D.Filename,"%s",filename);
   
   
   this_storage.order = order_total;
@@ -682,11 +682,11 @@ struct global_positions_to_transform_list_struct *global_positions_to_transform_
   
   this_logger.data_union.p_2DS_t_storage = &this_storage;
   
-  sprintf(this_logger.name,NAME_CURRENT_COMP);
+  sprintf(this_logger.name,"%s",NAME_CURRENT_COMP);
   
   //printf("past this_logger assignment \n");
   
-  sprintf(logger_list_element.name,NAME_CURRENT_COMP);
+  sprintf(logger_list_element.name,"%s",NAME_CURRENT_COMP);
   logger_list_element.component_index = INDEX_CURRENT_COMP;
   logger_list_element.logger = &this_logger;
   

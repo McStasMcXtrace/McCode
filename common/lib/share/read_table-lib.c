@@ -280,7 +280,10 @@ void *Table_File_List_store(t_Table *tab){
 
     /*Need to be able to store the pointer*/
     if (!Table) return(-1);
-    
+
+    /*TK: Valgrind flags it as usage of uninitialised variable: */
+    Table->quiet = 0;
+
     //if (offset && *offset) snprintf(name, 1024, "%s@%li", File, *offset);
     //else                   
     strncpy(name, File, 1024);
@@ -625,7 +628,7 @@ void *Table_File_List_store(t_Table *tab){
     }
     if (count_invalid)
     {
-      fprintf(stderr,"Warning: Read_Table :%s %s Data has %i invalid lines (*****). Ignored.\n",
+      fprintf(stderr,"Warning: Read_Table :%s %s Data has %li invalid lines (*****). Ignored.\n",
       (Table->filename[0] != '\0' ? Table->filename : ""),
         (!block_number ? " catenated" : ""),
         count_invalid);

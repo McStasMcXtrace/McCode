@@ -568,8 +568,8 @@ exit(-1);
   this_abs_logger.conditional_list.num_elements = 0;
 
   this_abs_logger.data_union.p_1D_event_abs_storage = &this_abs_storage;
-  sprintf(this_abs_logger.name, NAME_CURRENT_COMP);
-  sprintf(abs_logger_list_element.name, NAME_CURRENT_COMP);
+  sprintf(this_abs_logger.name,"%s",NAME_CURRENT_COMP);
+  sprintf(abs_logger_list_element.name,"%s",NAME_CURRENT_COMP);
   abs_logger_list_element.component_index = INDEX_CURRENT_COMP;
   abs_logger_list_element.abs_logger = &this_abs_logger;
 
@@ -617,12 +617,12 @@ FINALLY
 /* free pointers */
   Monitor_nD_Finally(&this_abs_storage.DEFS, &this_abs_storage.Vars);
   if (bufsize) {
-    printf("Virtual_output: %s: Saved %Li events (from buffer) in file %s\n",
+    printf("Virtual_output: %s: Saved %llu events (from buffer) in file %s\n",
            NAME_CURRENT_COMP, this_abs_storage.Vars.Nsum, this_abs_storage.Vars.Mon_File);
     if (bufsize < this_abs_storage.Vars.Nsum)
       printf("WARNING         When using this source, intensities must be multiplied\n"
              "                by a factor %g\n", (double)this_abs_storage.Vars.Nsum/(double)bufsize);
-  } else printf("Virtual_output: %s: Saved %Li events (all) in file %s\n", NAME_CURRENT_COMP, this_abs_storage.Vars.Nsum, this_abs_storage.Vars.Mon_File);
+  } else printf("Virtual_output: %s: Saved %llu events (all) in file %s\n", NAME_CURRENT_COMP, this_abs_storage.Vars.Nsum, this_abs_storage.Vars.Mon_File);
 
 // Remember to clean up allocated lists
 if (this_abs_storage.temp_abs_1D_event_data.allocated_elements>0) free(this_abs_storage.temp_abs_1D_event_data.elements);

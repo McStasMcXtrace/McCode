@@ -410,7 +410,7 @@ INITIALIZE
   sprintf(this_abs_storage.Detector_1D.string_axis, "y [m]");
   sprintf(this_abs_storage.Detector_1D.string_axis_short, "y");
   sprintf(this_abs_storage.Detector_1D.string_axis_value, "Intensity [n/s]");
-  sprintf(this_abs_storage.Detector_1D.Filename, filename);
+  sprintf(this_abs_storage.Detector_1D.Filename,"%s",filename);
   
   this_abs_storage.order = order_total;
   this_abs_storage.order_in_this_volume = order_volume;
@@ -458,11 +458,11 @@ struct global_positions_to_transform_list_struct *global_positions_to_transform_
   
   this_abs_logger.data_union.p_1D_abs_storage = &this_abs_storage;
   
-  sprintf(this_abs_logger.name, NAME_CURRENT_COMP);
+  sprintf(this_abs_logger.name,"%s",NAME_CURRENT_COMP);
   
   //printf("past this_logger assignment \n");
   
-  sprintf(abs_logger_list_element.name, NAME_CURRENT_COMP);
+  sprintf(abs_logger_list_element.name,"%s",NAME_CURRENT_COMP);
   abs_logger_list_element.component_index = INDEX_CURRENT_COMP;
   abs_logger_list_element.abs_logger = &this_abs_logger;
   

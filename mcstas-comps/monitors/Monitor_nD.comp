@@ -515,7 +515,7 @@ TRACE
                 intersect=0;
                 Flag_Restore=1;
             } else {
-                printf("Cylinder_intersect returned unexpected value %l\n", intersect);
+                printf("Cylinder_intersect returned unexpected value %i\n", intersect);
             }
         } else {
             // All other shapes than the BANANA 

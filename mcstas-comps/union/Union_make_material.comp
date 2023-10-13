@@ -241,10 +241,10 @@ struct pointer_to_global_process_list *global_process_list = COMP_GETPAR3(Union_
   }
   
   this_material.my_a = my_absorption;  // add the absorption to this material
-  sprintf(this_material.name,NAME_CURRENT_COMP);
+  sprintf(this_material.name,"%s",NAME_CURRENT_COMP);
   
   // packing the information into the global_material_element, which is then included in the global_material_list.
-  sprintf(global_material_element.name,NAME_CURRENT_COMP);
+  sprintf(global_material_element.name,"%s",NAME_CURRENT_COMP);
   global_material_element.component_index = INDEX_CURRENT_COMP;
   global_material_element.physics = &this_material; // Would be nicer if this material was a pointer, now we have the (small) data two places
   add_element_to_material_list(global_material_list, global_material_element);

@@ -90,7 +90,7 @@ INITIALIZE
     PSD_p2_s = create_darr2d(nx,ny);
 
     // Use instance name for monitor output if no input was given
-    if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
+    if (!strcmp(filename,"\0")) sprintf(filename,"%s",NAME_CURRENT_COMP);
 %}
 
 TRACE
