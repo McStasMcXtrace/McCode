@@ -8,7 +8,9 @@
     "TOOL_NAME": "mxgui",
     "PARTICLE": "xray",
     "BROWSER": "xdg-open",
-    "GUICOLS": "3"
+    "GUICOLS": "3",
+    "FORMAT": "McCode",
+    "ISCONDAPKG": "0"
   },
   "compilation": {
     "CFLAGS": "-lm -O2 -acc=multicore -DOPENACC",
