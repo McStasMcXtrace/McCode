@@ -11,7 +11,9 @@
     "BROWSER": "xdg-open",
     "GUICOLS": "3",
     "EDITOR": "xdg-open",
-    "QSCI": "1"
+    "QSCI": "1",
+    "FORMAT": "McCode",
+    "ISCONDAPKG": "0"
   },
   "compilation": {
     "CFLAGS": "-g -lm -std=c99 -D_POSIX_SOURCE -O2 -DRNG_ALG=2",

@@ -13,7 +13,8 @@
     "EDITOR": "xdg-open",
     "QSCI": "1",
     "FORMAT": "McCode",
-    "IDFGEN": "mcdisplay-mantid"      
+    "IDFGEN": "mcdisplay-mantid",
+    "ISCONDAPKG": "0"
   },
   "compilation": {
     "CFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=managed -Minfo=accel -DOPENACC",

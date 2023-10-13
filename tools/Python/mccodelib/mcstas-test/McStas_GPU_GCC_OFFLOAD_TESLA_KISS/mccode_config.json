@@ -11,7 +11,9 @@
     "BROWSER": "xdg-open",
     "GUICOLS": "3",
     "EDITOR": "xdg-open",
-    "QSCI": "1"
+    "QSCI": "1",
+    "FORMAT": "McCode",
+    "ISCONDAPKG": "0"
   },
   "compilation": {
     "CFLAGS": "-fopenacc -foffload=nvptx-none -foffload="-fcf-protection=none" -fno-stack-protector -DOPENACC -foffload=-lm -DGCCOFFLOAD -lm",
