@@ -57,7 +57,7 @@ make
 cpack -G RPM .
 RPM=`ls *.rpm`
 RPMNAME=`echo $RPM | sed s/Linux/rpm64-fedora/g`
-mv $DEB $WORK/dist/$DEBNAME
+mv $RPM $WORK/dist/$RPMNAME
 
 cd $WORK
 
@@ -70,7 +70,7 @@ make
 cpack -G RPM .
 RPM=`ls *.rpm`
 RPMNAME=`echo $RPM | sed s/Linux/rpm64-fedora/g`
-mv $DEB $WORK/dist/$DEBNAME
+mv $RPM $WORK/dist/$RPMNAME
 
 cd $WORK
 

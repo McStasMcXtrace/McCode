@@ -132,8 +132,10 @@ INITIALIZE
     char clr[2048],*clrp;
     clrp=clr;
     clrp+=snprintf(clrp,2048,"%s",instrument_exe);
+    char Parameters[CHAR_BUF_LENGTH];
     for (ii=0;ii<numipar;ii++){
-        clrp+=snprintf(clrp,2048-(clrp-clr)," %s=%s",mcinputtable[ii].name,mcinputtable[ii].val);
+        (*mcinputtypes[mcinputtable[ii].type].printer)(Parameters, mcinputtable[ii].par);
+        clrp+=snprintf(clrp,2048-(clrp-clr)," %s=%s",mcinputtable[ii].name, Parameters);
     }
     *(clrp)='\0';
     mcpl_hdr_add_data(outputfile, "mccode_cmd_line" , strlen(clr), clr);

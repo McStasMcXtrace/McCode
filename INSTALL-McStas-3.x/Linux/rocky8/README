@@ -1,0 +1,8 @@
+These are EXPERIMENTAL rpms built for / on Rocky Linux 8.
+
+They include NO Python dependency resolution - but Python support may be added
+after installation of the rpm's by running
+
+./Mamba-inject.sh /usr/local/mcstas/3.4 
+
+(with sufficient write access etc...)

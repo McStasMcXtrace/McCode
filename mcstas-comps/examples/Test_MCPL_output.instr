@@ -76,5 +76,15 @@ COMPONENT m4 = Monitor_nD(
   options="E limits=[0 82] parallel", bins=40
 ) AT (0,0,0) ABSOLUTE
 
+FINALLY %{
+#ifndef USE_MPI
+  char *outputfile = mcfull_file(COMP_GETPAR2(vout, filename),"mcpl.gz");
+  char cmdline[2048];
+  printf("\n---\nMCPL outputfile includes this binary blob:\n");
+  sprintf(cmdline,"mcpltool -bmccode_cmd_line %s",outputfile);
+  system(cmdline);
+  printf("\n---\n");
+#endif
+%}
 
 END

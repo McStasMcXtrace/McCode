@@ -1188,7 +1188,9 @@ cpuonly:    /* empty */
     | "CPU"
       {
         $$ = 1;
-	strncat(instrument_definition->dependency, " -DFUNNEL ", 1024);
+	if (strstr(instrument_definition->dependency," -DFUNNEL ") == NULL) {
+	  strncat(instrument_definition->dependency, " -DFUNNEL ", 1024);
+	}
       }
 ;
 
@@ -1652,8 +1654,10 @@ dependency:
     }
   | "DEPENDENCY" TOK_STRING
     {
-      strncat(instrument_definition->dependency, " ", 1024);
-      strncat(instrument_definition->dependency, $2, 1023); // 1023 because we already appended a space
+      if (strstr(instrument_definition->dependency,$2) == NULL) {
+	strncat(instrument_definition->dependency, " ", 1024);
+	strncat(instrument_definition->dependency, $2, 1023); // 1023 because we already appended a space
+      }
     }
 
 noacc:
@@ -1665,7 +1669,9 @@ noacc:
     {
       /* Comp class is CPU only */
       $$ = 1;
-      strncat(instrument_definition->dependency, " -DFUNNEL ", 1024);
+      if (strstr(instrument_definition->dependency," -DFUNNEL ") == NULL) {
+	strncat(instrument_definition->dependency, " -DFUNNEL ", 1024);
+      }
     }
 ;
 /* C expressions used to give component actual parameters **********************

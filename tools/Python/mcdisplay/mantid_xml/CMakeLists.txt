@@ -58,10 +58,10 @@ if (RPMPROFILE)
    if (RPMPROFILE STREQUAL "fedora")
         set(PYDEPS "python3, python3-ply")
    else()
-	set(PYDEPS ${FLAVOR}-miniconda3-${MCCODE_VERSION})
+	set(PYDEPS "")
    endif()
 else()
-	set(PYDEPS ${FLAVOR}-miniconda3-${MCCODE_VERSION})
+	set(PYDEPS "")
 endif()
 
 set(CPACK_RPM_PACKAGE_REQUIRES

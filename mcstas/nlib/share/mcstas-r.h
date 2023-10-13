@@ -115,7 +115,7 @@
 
 #define PROP_DT(dt) \
   do { \
-    if(dt < 0) { RESTORE=1; ABSORB; }; \
+    if(dt < 0 && mcallowbackprop == 0) { RESTORE=1; ABSORB; }; \
     if (mcgravitation) { Coords mcLocG; double mc_gx, mc_gy, mc_gz; \
     mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \

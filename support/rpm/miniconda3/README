@@ -1,1 +1,2 @@
-Please run ./prepare.sh before attempting to assemble package!
+./inject.sh can be used to download and install a Mambaforge environment in
+a McStas/McXtrace installation on Unix
