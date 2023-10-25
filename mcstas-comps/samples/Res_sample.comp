@@ -239,7 +239,7 @@ TRACE %{
     vz *= v;
     SCATTER;
 
-     /* Store final neutroxn state. */
+     /* Store final neutron state. */
     kfx=V2K*vx; kfy=V2K*vy; kfz=V2K*vz;
     particle_setvar_void(_particle, res_kf_x_var, &(kfx));
     particle_setvar_void(_particle, res_kf_y_var, &(kfy));

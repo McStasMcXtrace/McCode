@@ -27,9 +27,9 @@
 * The box is specified with dimensions xwidth, yheight, zdepth.
 *
 * The scattered neutrons will have directions towards a given target and
-* energies between E0-dE and E0+dE, where E0 is calculated from the position
-* and width of the time bin.
-* This target area is default disk shaped, but may also be rectangular
+* detector arrival time in an interval of time_width centered on time_bin.
+*
+* The target area is default disk shaped, but may also be rectangular
 * if specified focus_xw and focus_yh
 * or focus_aw and focus_ah, respectively in meters and degrees.
 * The target itself is either situated according to given coordinates (x,y,z),
@@ -38,7 +38,7 @@
 * When targeting to centered components, such as spheres or cylinders,
 * define an Arm component where to focus at.
 *
-* Example: TOFRes_sample(thickness=0.001, radius=0.01, yheight=0.04, focus_xw=0.025, focus_yh=0.025, E0=14.6,dE=2, target_x=0, target_y=0, target_z=1)
+* Example: TOFRes_sample(thickness=0.001, radius=0.01, yheight=0.04, focus_xw=0.025, focus_yh=0.025, time_bin=3e4, time_width=200, target_x=0, target_y=0, target_z=1)
 *
 * %P
 * INPUT PARAMETERS:
@@ -50,6 +50,7 @@
 * target_index: [1]  relative index of component to focus at, e.g. next is +1 
 * time_bin: [us]     position of time bin 
 * time_width: [us]   width of time bin 
+* f: [1]             Adaptive time-shortening factor
 *
 * Optional parameters
 * xwidth: [m]        horiz. dimension of sample, as a width 
@@ -69,43 +70,67 @@ DEFINE COMPONENT TOFRes_sample
 DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (thickness=0,radius=0.01,yheight=0.05,focus_r=0.05,
-time_bin=20000, time_width=10,
+time_bin=20000, time_width=10, f=50,
 target_x=0, target_y=0, target_z=.5, focus_xw=0, focus_yh=0,
 focus_aw=0, focus_ah=0, xwidth=0, zdepth=0, int target_index=0)
 
-OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
-struct Res_sample_struct
-{
-double ki_x,ki_y,ki_z,kf_x,kf_y,kf_z;
-double rx,ry,rz,pi;
-char   isrect;      /* true when sample is a box */
-double distance;    /* when non zero, gives rect target distance */
-double aw,ah;       /* rectangular angular dimensions */
-double xw,yh;       /* rectangular metrical dimensions */
-double tx,ty,tz;    /* target coords */
-};
+  struct Res_sample_struct {
+    char   isrect;      /* true when7 sample is a box */
+    double distance;    /* when non zero, gives rect target distance */
+    double aw,ah;       /* rectangular angular dimensions */
+    double xw,yh;       /* rectangular metrical dimensions */
+    double tx,ty,tz;    /* target coords */
+  };
+%}
+
+/* Needed for resolution calculation */
+USERVARS %{
+  double res_pi;
+  double res_ki_x;
+  double res_ki_y;
+  double res_ki_z;
+  double res_kf_x;
+  double res_kf_y;
+  double res_kf_z;
+  double res_rx;
+  double res_ry;
+  double res_rz;
 %}
 
 DECLARE
 %{
-double f;
-double E0;
-double dE;
-struct Res_sample_struct res_struct;
+  struct Res_sample_struct res_struct;
+  char res_pi_var[20];
+  char res_ki_x_var[20];
+  char res_ki_y_var[20];
+  char res_ki_z_var[20];
+  char res_kf_x_var[20];
+  char res_kf_y_var[20];
+  char res_kf_z_var[20];
+  char res_rx_var[20];
+  char res_ry_var[20];
+  char res_rz_var[20];
+  int compindex;
 %}
 
 INITIALIZE
 %{
 
-f = 50;
 if (!radius || !yheight) {
-    if (!xwidth || !yheight || !zdepth) exit(fprintf(stderr,"Res_sample: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
-    else res_struct.isrect=1; }
-  else res_struct.isrect=0;
+  if (!xwidth || !yheight || !zdepth) {
+    exit(fprintf(stderr,"TOFRes_sample: %s: box-shaped sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+  } else {
+    res_struct.isrect=1;
+  } else {
+    res_struct.isrect=0;
+    if (thickness && thickness >= radius) {
+      exit(fprintf(stderr,"TOFRes_sample: %s: Hollow cylinder sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+    }
+  }
 
   /* now compute target coords if a component index is supplied */
   if (target_index)
@@ -134,6 +159,20 @@ if (!radius || !yheight) {
   if (focus_ah) {
     res_struct.ah = DEG2RAD*focus_ah;
   }
+
+  /* Initialize uservar strings */
+  sprintf(res_pi_var,"res_pi_%i",_comp->_index);
+  sprintf(res_ki_x_var,"res_ki_x_%i",_comp->_index);
+  sprintf(res_ki_y_var,"res_ki_y_%i",_comp->_index);
+  sprintf(res_ki_z_var,"res_ki_z_%i",_comp->_index);
+  sprintf(res_kf_x_var,"res_kf_x_%i",_comp->_index);
+  sprintf(res_kf_y_var,"res_kf_y_%i",_comp->_index);
+  sprintf(res_kf_z_var,"res_kf_z_%i",_comp->_index);
+  sprintf(res_rx_var,"res_rx_%i",_comp->_index);
+  sprintf(res_ry_var,"res_ry_%i",_comp->_index);
+  sprintf(res_rz_var,"res_rz_%i",_comp->_index);
+  compindex=_comp->_index;
+  
 %}
 
 TRACE
@@ -150,7 +189,8 @@ TRACE
                                 /* Position of target relative to scattering point */
   double scat_factor;           /* Simple cross-section model */
   int    intersect=0;
-
+  double kix,kiy,kiz;
+  double kfx,kfy,kfz;
 
   if(res_struct.isrect)
     intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
@@ -161,11 +201,15 @@ TRACE
   {
     if(t0 < 0) ABSORB;
     if(res_struct.isrect) { t1 = t2 = t3; scat_factor = 2*zdepth; } /* box sample */
-    else {  /* Hollow cylinder sample */
+    else {
+      /* Cylindrical sample */
       /* Neutron enters at t=t0. */
-      /* If cylinder hollow exists - and is NOT intersected */ 
-      if(!cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius-thickness, yheight) && thickness)
+      /* If cylinder hollow does not exist or is NOT intersected */ 
+      if(thickness==0 || !cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius-thickness, yheight)) {
         t1 = t2 = t3;
+      } else {
+	ABSORB;
+      }
       scat_factor = 2*(radius-thickness);
     }
     dt0 = t1-t0;                  /* Time in sample, ingoing */
@@ -182,13 +226,14 @@ TRACE
 
     /* Store initial neutron state. */
     if(p == 0) ABSORB;
-    res_struct.pi = p;
-    res_struct.ki_x = V2K*vx;
-    res_struct.ki_y = V2K*vy;
-    res_struct.ki_z = V2K*vz;
-    res_struct.rx = x;
-    res_struct.ry = y;
-    res_struct.rz = z;
+    kix=V2K*vx; kiy=V2K*vy; kiz=V2K*vz;
+    particle_setvar_void(_particle, res_pi_var, &p);
+    particle_setvar_void(_particle, res_ki_x_var, &(kix));
+    particle_setvar_void(_particle, res_ki_y_var, &(kiy));
+    particle_setvar_void(_particle, res_ki_z_var, &(kiz));
+    particle_setvar_void(_particle, res_rx_var, &x);
+    particle_setvar_void(_particle, res_ry_var, &y);
+    particle_setvar_void(_particle, res_rz_var, &z);
 
     aim_x = res_struct.tx-x;       /* Vector pointing at target (anal./det.) */
     aim_y = res_struct.ty-y;
@@ -206,23 +251,22 @@ TRACE
     }
     NORM(vx, vy, vz);
     flight_time = -t + 1e-6*(time_bin + time_width * randpm1());
-/* Correct for too large or negative flight_times */
-/* Should perhaps be done more cleanly (more user choices) ?! */
+    /* Correct for too large or negative flight_times, based on user-defined f */
     for (; flight_time<0; flight_time += 1/f);
     for (; flight_time>1/f; flight_time -= 1/f);
     v = aim_length / flight_time;
-/* !! Remember later to correct for Jacobian in MC choice, t to V !! */
+    /* !! Remember later to correct for Jacobian in MC choice, t to V !! */
 
     vx *= v;
     vy *= v;
     vz *= v;
     SCATTER;
 
-      /* Store final neutron state. */
-    res_struct.kf_x = V2K*vx;
-    res_struct.kf_y = V2K*vy;
-    res_struct.kf_z = V2K*vz;
-
+    /* Store final neutron state. */
+    kfx=V2K*vx; kfy=V2K*vy; kfz=V2K*vz;
+    particle_setvar_void(_particle, res_kf_x_var, &(kfx));
+    particle_setvar_void(_particle, res_kf_y_var, &(kfy));
+    particle_setvar_void(_particle, res_kf_z_var, &(kfz));
   }
 %}
 
