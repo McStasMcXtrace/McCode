@@ -1,0 +1,321 @@
+/*******************************************************************************
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: TOFRes_monitor
+*
+* %I
+* Written by: Kristian Nielsen
+* Date: 1999
+* Origin: Risoe
+* Modified by: EF, 16th Apr 2003: imported from Monitor_nD to enable many shapes
+* Modified by: T. Weber, Nov 2020: a) added live calculations; b) updated for McStas 3 / OpenACC
+*
+* Monitor for resolution calculations, TOFRes version, for use with TOFRes_sample in 3.x
+*
+* %D
+* A single detector/monitor, used together with the TOFRes_sample component to
+* compute instrument resolution functions. Outputs a list of neutron
+* scattering events in the sample along with their intensities in the
+* detector. The output file may be analyzed with the mcresplot front-end.
+*
+* Example: Res_monitor(filename="Output.res", res_sample_comp="RSample", xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
+*
+* Setting the monitor geometry.
+*   The optional parameter 'options' may be set as a string with the
+*   following keywords. Default is rectangular ('square'):
+*     box                       Box of size xwidth, yheight, zdepth
+*     cylinder                  To get a cylindrical monitor (diameter is xwidth, height is yheight).
+*     banana                    Same as cylinder, without top/bottom, on restricted angular area
+*     disk                      Disk flat xy monitor. diameter is xwidth.
+*     sphrere                   To get a spherical monitor (e.g. a 4PI) (diameter is xwidth).
+*     square                    Square flat xy monitor (xwidth, yheight)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin: [m]                     Lower x bound of detector opening
+* xmax: [m]                     Upper x bound of detector opening
+* ymin: [m]                     Lower y bound of detector opening
+* ymax: [m]                     Upper y bound of detector opening
+* zmin: [m]                     Lower z bound of detector opening
+* zmax: [m]                     Upper z bound of detector opening
+* filename: [string]            Name of output file. If unset, use automatic name
+* res_sample_comp: [WITH quotes]  Name of TOFRes_sample component in the instrument definition
+* bufsize: [1]                  Number of events to store. Use 0 to store all
+*
+* OPTIONAL PARAMETERS (derived from Monitor_nD)
+*
+* xwidth: [m]                   Width/diameter of detector
+* yheight: [m]                  Height of detector
+* zdepth: [m]                   Thichness of detector
+* radius: [m]                   Radius of sphere/cylinder monitor
+* options: [str]                String that specifies the geometry of the monitor
+* restore_neutron: [1]          If set, the monitor does not influence the neutron state
+* live_calc: [1]                If set, the monitor directly outputs the resolution matrix
+*
+* OUTPUT PARAMETERS:
+*
+* DEFS: [struct]                structure containing Monitor_nD Defines
+* Vars: [struct]                structure containing Monitor_nD variables
+* buffer_index: [long]          number of recorded events
+*
+* %E
+*******************************************************************************/
+DEFINE COMPONENT TOFRes_monitor
+
+DEFINITION PARAMETERS ()
+
+SETTING PARAMETERS (string res_sample_comp,
+  string filename=0, string options=0, xwidth=.1, yheight=.1, zdepth=0, radius=0,
+  xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bufsize=0, restore_neutron=0, live_calc=1)
+
+/* these are protected C variables */
+OUTPUT PARAMETERS ()
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+
+SHARE %{
+  %include "monitor_nd-lib"
+  %include "cov-lib"
+%}
+
+
+DECLARE%{
+  MonitornD_Defines_type DEFS;
+  MonitornD_Variables_type Vars;
+  long buffer_index;
+
+  tl2_list_type *reso_events;
+  tl2_list_type *reso_probabilities;
+  char res_pi_var[20];
+  char res_ki_x_var[20];
+  char res_ki_y_var[20];
+  char res_ki_z_var[20];
+  char res_kf_x_var[20];
+  char res_kf_y_var[20];
+  char res_kf_z_var[20];
+  char res_rx_var[20];
+  char res_ry_var[20];
+  char res_rz_var[20];
+%}
+
+
+INITIALIZE %{
+
+  // Use instance name for monitor output if no input was given
+  if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
+  
+  buffer_index = 0;
+
+  reso_events = 0;
+  reso_probabilities = 0;
+
+  if(live_calc) {
+    reso_events = tl2_lst_create(0);
+    reso_probabilities = tl2_lst_create(0);
+  }
+
+  int i;
+  char tmp[1024];
+  strcpy(Vars.compcurname, NAME_CURRENT_COMP);
+
+  if (options != NULL)
+    strncpy(tmp, options, 1024);
+  else
+    strcpy(tmp, "");
+
+  if (strstr(tmp, "list"))
+    exit(fprintf(stderr, "Res_monitor: %s: Error: Only use geometry keywords (remove list from 'option').\n", NAME_CURRENT_COMP));
+  if (!bufsize)
+    sprintf(Vars.option, "%s borders list all, ud1 ud2 ud3 ud4 ud5 ud6 ud7 ud8 ud9 ud10", tmp);
+  else
+    sprintf(Vars.option, "%s borders list=%f, ud1 ud2 ud3 ud4 ud5 ud6 ud7 ud8 ud9 ud10", tmp, bufsize);
+
+  if (radius) xwidth = 2*radius;
+
+  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin, xmax, ymin, ymax, zmin, zmax, 0);
+  Vars.Coord_Type[0] = DEFS.COORD_USERDOUBLE0; /* otherwise p is always the first variable */
+
+  if (Vars.Coord_Number != 10)
+    exit(fprintf(stderr,"Res_monitor: %s: Error: Invalid number of variables to monitor (%li).\n", NAME_CURRENT_COMP, Vars.Coord_Number+1));
+
+  /* set the labels */
+  /* we have to record ki_x ki_y ki_z kf_x kf_y kf_z x y z p_i p_f */
+  int idx = 0;
+  strcpy(tmp,"ki_x"); strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"ki_y"); strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"ki_z"); strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"kf_x"); strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"kf_y"); strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"kf_z"); strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"x");    strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"y");    strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"z");    strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"p_i");  strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+  strcpy(tmp,"p_f");  strcpy(Vars.Coord_Label[idx], tmp); strcpy(Vars.Coord_Var[idx++], tmp);
+
+  if (filename != NULL)
+    strncpy(Vars.Mon_File, filename, 128);
+  /* Initialize uservar strings */
+  int *index_ptr=COMP_GETPAR3(TOFRes_sample, res_sample_comp, compindex);
+  int index = *index_ptr;
+  sprintf(res_pi_var,"res_pi_%i",index);
+  sprintf(res_ki_x_var,"res_ki_x_%i",index);
+  sprintf(res_ki_y_var,"res_ki_y_%i",index);
+  sprintf(res_ki_z_var,"res_ki_z_%i",index);
+  sprintf(res_kf_x_var,"res_kf_x_%i",index);
+  sprintf(res_kf_y_var,"res_kf_y_%i",index);
+  sprintf(res_kf_z_var,"res_kf_z_%i",index);
+  sprintf(res_rx_var,"res_rx_%i",index);
+  sprintf(res_ry_var,"res_ry_%i",index);
+  sprintf(res_rz_var,"res_rz_%i",index);
+%}
+
+
+TRACE %{
+  double t0 = 0;
+  double t1 = 0;
+  int intersect = 0;
+
+  if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE) /* square xy */
+  {
+    PROP_Z0;
+    intersect = (x>=Vars.mxmin && x<=Vars.mxmax && y>=Vars.mymin && y<=Vars.mymax);
+  }
+  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_DISK)   /* disk xy */
+  {
+    PROP_Z0;
+    intersect = ((x*x + y*y) <= Vars.Sphere_Radius*Vars.Sphere_Radius);
+  }
+  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) /* sphere */
+  {
+    intersect = sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, Vars.Sphere_Radius);
+  /*      intersect = (intersect && t0 > 0); */
+  }
+  else if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)) /* cylinder */
+  {
+    intersect = cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, Vars.Sphere_Radius, Vars.Cylinder_Height);
+    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) intersect = 0; /* remove top/bottom for banana */
+  }
+  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) /* box */
+  {
+    intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, fabs(Vars.mxmax-Vars.mxmin), fabs(Vars.mymax-Vars.mymin), fabs(Vars.mzmax-Vars.mzmin));
+  }
+
+  if (intersect)
+  {
+    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || 
+        (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || 
+        (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || 
+        (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA))
+    {
+      if (t0 < 0 && t1 > 0)
+        t0 = t;  /* neutron was already inside ! */
+      if (t1 < 0 && t0 > 0) /* neutron exit before entering !! */
+        t1 = t;
+      /* t0 is now time of incoming intersection with the sphere. */
+      if ((Vars.Flag_Shape < 0) && (t1 > 0))
+        PROP_DT(t1); /* t1 outgoing beam */
+      else
+        PROP_DT(t0); /* t0 incoming beam */
+    }
+
+    /* Now fetch data from the TOFRes_sample. */
+    if(p && (!bufsize || buffer_index<bufsize))
+    {
+      /* old behaviour not supported by openacc:
+        struct Res_sample_struct *s =
+          (struct Res_sample_struct *)(COMP_GETPAR3(Res_sample, res_sample_comp, res_struct));*/
+
+      if(particle_getvar(_particle,res_pi_var,NULL))
+      {
+        /* ki */
+        Vars.UserDoubles[0] = particle_getvar(_particle,res_ki_x_var,NULL);
+        Vars.UserDoubles[1] = particle_getvar(_particle,res_ki_y_var,NULL);
+        Vars.UserDoubles[2] = particle_getvar(_particle,res_ki_z_var,NULL);
+
+        /* kf */
+        Vars.UserDoubles[3] = particle_getvar(_particle,res_kf_x_var,NULL);
+        Vars.UserDoubles[4] = particle_getvar(_particle,res_kf_y_var,NULL);
+        Vars.UserDoubles[5] = particle_getvar(_particle,res_kf_z_var,NULL);
+
+        /* pos */
+        Vars.UserDoubles[6] = particle_getvar(_particle,res_rx_var,NULL);
+        Vars.UserDoubles[7] = particle_getvar(_particle,res_ry_var,NULL);
+        Vars.UserDoubles[8] = particle_getvar(_particle,res_rz_var,NULL);
+
+        /* pi and pf */
+        Vars.UserDoubles[9] = particle_getvar(_particle,res_pi_var,NULL);
+        Vars.UserDoubles[10] = Vars.UserDoubles[9];
+
+        Monitor_nD_Trace(&DEFS, &Vars, _particle);
+
+        /* live calculation */
+        if(live_calc) {
+          double *reso_event = (double*)malloc(4 * sizeof(double));
+          reso_event[0] = Vars.UserDoubles[0] - Vars.UserDoubles[3];
+          reso_event[1] = Vars.UserDoubles[1] - Vars.UserDoubles[4];
+          reso_event[2] = Vars.UserDoubles[2] - Vars.UserDoubles[5];
+          reso_event[3] = tl2_k_to_E(Vars.UserDoubles[0], Vars.UserDoubles[1], Vars.UserDoubles[2],
+                                     Vars.UserDoubles[3], Vars.UserDoubles[4], Vars.UserDoubles[5]);
+
+          double *reso_prob = (double*)malloc(sizeof(double));
+          *reso_prob = p;
+
+          tl2_lst_append(reso_events, reso_event);
+          tl2_lst_append(reso_probabilities, reso_prob);
+        }
+      }
+
+      SCATTER;
+    } /* if p */
+  } /* end if intersection */
+
+  if (restore_neutron) {
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+    }
+%}
+
+
+SAVE %{
+  /* save results, but do not free pointers */
+  Monitor_nD_Save(&DEFS, &Vars);
+
+  /* live calculation */
+  if(live_calc) {
+    double cov[4*4], reso[4*4];
+    if(tl2_reso(reso_events->next, reso_probabilities->next, cov, reso)) {
+      printf("Resolution matrix:"
+        "\n\t%12.4e %12.4e %12.4e %12.4e"
+        "\n\t%12.4e %12.4e %12.4e %12.4e"
+        "\n\t%12.4e %12.4e %12.4e %12.4e"
+        "\n\t%12.4e %12.4e %12.4e %12.4e\n",
+        reso[0], reso[1], reso[2], reso[3],
+        reso[4], reso[5], reso[6], reso[7],
+        reso[8], reso[9], reso[10], reso[11],
+        reso[12], reso[13], reso[14], reso[15]);
+    }
+    else {
+      printf("Error: Resolution matrix could not be calculated.");
+    }
+  }
+%}
+
+
+FINALLY %{
+  /* free pointers */
+  Monitor_nD_Finally(&DEFS, &Vars);
+
+  tl2_lst_free(reso_events);
+  tl2_lst_free(reso_probabilities);
+%}
+
+
+MCDISPLAY %{
+  Monitor_nD_McDisplay(&DEFS, &Vars);
+%}
+
+END
