@@ -104,12 +104,13 @@ if (!radius || !yheight) {
     exit(fprintf(stderr,"TOFRes_sample: %s: box-shaped sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
   } else {
     res_struct.isrect=1;
-  } else {
-    res_struct.isrect=0;
-    if (thickness && thickness >= radius) {
-      exit(fprintf(stderr,"TOFRes_sample: %s: Hollow cylinder sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
-    }
   }
+ } else {
+  res_struct.isrect=0;
+  if (thickness && thickness >= radius) {
+    exit(fprintf(stderr,"TOFRes_sample: %s: Hollow cylinder sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+  }
+ }
 
   /* now compute target coords if a component index is supplied */
   if (target_index)
