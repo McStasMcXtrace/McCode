@@ -249,7 +249,7 @@ TRACE %{
 
         /* pi and pf */
         Vars.UserDoubles[9] = particle_getvar(_particle,res_pi_var,NULL);
-        Vars.UserDoubles[10] = Vars.UserDoubles[9];
+        Vars.UserDoubles[10] = p/particle_getvar(_particle,res_pi_var,NULL);
 
         Monitor_nD_Trace(&DEFS, &Vars, _particle);
 
