@@ -26,7 +26,7 @@
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT Test_DiskChoppers2(chopper=0,lambda=10, dlambda=9.9, deltay=0.19,dx=0.016, nu=10, phase=0, int ABSORBER=0)
+DEFINE INSTRUMENT Test_DiskChoppers2(chopper=0,lambda=10, dlambda=9.9, deltay=0.19,dx=0.016, nu=10, phase=0, int ABSORBER=0, tz=0.001)
 
 DECLARE
 %{
@@ -40,7 +40,6 @@ TRACE
 
 COMPONENT origin = Progress_bar()
 AT (0, 0, 0) RELATIVE ABSOLUTE
-
 
 COMPONENT source_gen = Source_gen(
     flux_file="NULL", 
@@ -92,42 +91,61 @@ COMPONENT diskchopper0 = DiskChopper(
 WHEN (chopper==0) AT (0, 0, 0) RELATIVE Arm0
 GROUP Disks
 
-COMPONENT diskArm = Arm()
-WHEN (chopper==1) AT (0, 0, 0) RELATIVE PREVIOUS
+COMPONENT Slab1 = PowderN(yheight=tz, radius=0.25, reflections="B4C.lau",p_transmit=0.8)
+  WHEN (chopper==0 && ABSORBER) AT (0,-deltay,tz/2) RELATIVE Arm0
+ROTATED (90,0,0) RELATIVE Arm0
 GROUP Disks
 EXTEND %{
-  if (INSTRUMENT_GETPAR(chopper)==1) SCATTER;
+  if (neutrontype==1) {
+    SCATTER;
+  }
+%}
+
+COMPONENT diskArm = Arm()
+AT (0, 0, 0) RELATIVE Arm0
+GROUP Disks
+EXTEND %{
+  if (INSTRUMENT_GETPAR(chopper)==1) {
+    SCATTER;
+  }
 %}
 
 COMPONENT SlitRotC = Arm()
 AT (0, -deltay, 0) RELATIVE PREVIOUS
-
+  
 COMPONENT R=Rotator(nu=nu, phase=phase, direction=3)
 WHEN (chopper==1) AT (0,0,0) RELATIVE SlitRotC
-EXTEND %{
-%}  
 
 COMPONENT SlitArm = Arm()
-  WHEN (chopper==1) AT (0,deltay,0) RELATIVE R
+AT (0,deltay,0) RELATIVE R
 
 COMPONENT Slit = Slit(yheight=0.12, xwidth=dx)
 WHEN (chopper==1) AT (0,0,0) RELATIVE SlitArm
-GROUP Slits 
+GROUP Slits
 
-COMPONENT Slab2 = PowderN(yheight=0.001, radius=0.25, reflections="B4C.lau",p_transmit=0.8)
-WHEN (ABSORBER==1 && chopper==1) AT (0,0,0) RELATIVE R
-GROUP Slits 
-  
-COMPONENT SlitArm2 = Arm()
-WHEN (chopper==1) AT (0, 0, 0) RELATIVE SlitArm
+COMPONENT Slab2 = COPY(Slab1)
+WHEN (chopper==1 && ABSORBER) AT (0,-deltay,tz/2) RELATIVE SlitArm
+ROTATED (90,0,0) RELATIVE SlitArm
 GROUP Slits
 EXTEND %{
-  if (INSTRUMENT_GETPAR(chopper)==0) SCATTER;
+  if (neutrontype==1) {
+    SCATTER;
+  }
 %}
 
+COMPONENT slitArm = Arm()
+AT (0, 0, 0) RELATIVE Arm0
+GROUP Slits
+EXTEND %{
+  if (INSTRUMENT_GETPAR(chopper)==0) {
+    SCATTER;
+  }
+%}
+  
 COMPONENT DR=Derotator(rotator="R")
 WHEN (chopper==1) AT (0,0,0) RELATIVE R
-  
+
+
 COMPONENT Tofl = TOFLambda_monitor(
     tmin=0, 
     tmax=1e6,
@@ -137,7 +155,8 @@ COMPONENT Tofl = TOFLambda_monitor(
     yheight=0.13, 
     Lmin=lambda-dlambda, 
     Lmax=lambda+dlambda)
-AT (0, 0, 0.01) RELATIVE diskArm
+AT (0, 0, tz) RELATIVE diskArm
+
 
 COMPONENT Tof = TOF_monitor(
     tmin=0, 
@@ -148,13 +167,11 @@ COMPONENT Tof = TOF_monitor(
     yheight=0.13)
 AT (0, 0, 0.001) RELATIVE PREVIOUS
   
-COMPONENT psd_monitor = PSD_TOF_monitor(
-    filename="PSD",
-    tmin=0, 
-    tmax=1e6,
+COMPONENT psd_monitor = PSD_monitor(
     xwidth=1, 
     yheight=1)
 AT (0, 0, 0.001) RELATIVE PREVIOUS
+
 
 FINALLY
 %{

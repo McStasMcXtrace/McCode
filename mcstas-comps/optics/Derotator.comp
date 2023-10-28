@@ -42,31 +42,19 @@ SETTING PARAMETERS (string rotator)
 
 TRACE
 %{
-  double* angleptr = COMP_GETPAR3(Rotator, rotator, angle);
-  double* dirptr = COMP_GETPAR3(Rotator, rotator, direction);
-  double angle = *angleptr;
-  int direction = *dirptr;
-  if (angle) { /* rotate back neutron w/r to monochromator */
-    /* approximation of rotating monochromator */
-    /* current coordinates of neutron in centered static frame */
-    Rotation R;
-    double rx=0,ry=0,rz=0;
-     /* will rotate back neutron: positive side */
-    if (direction==1) {
-      rx=-angle*DEG2RAD;
-    }
-    else if (direction==2) {
-      ry=-angle*DEG2RAD;
-    }
-    else if (direction==3) {
-      rz=-angle*DEG2RAD;
-    }   
-    rot_set_rotation(R, rx, ry, rz); 
-    /* apply rotation to centered coordinates */
-    coords_get(rot_apply(R, coords_set(x,y,z)), &x, &y, &z);
-    /* rotate speed */
-    coords_get(rot_apply(R, coords_set(vx,vy,vz)), &vx, &vy, &vz);
-  }
+  Rotation R;
+
+  /* Name of Rotation uservar */
+  char* Rot_varptr = COMP_GETPAR3(Rotator, rotator, rot_var);
+
+  /* Invert rotation matrix for use in derotation */
+  rot_transpose((Rotation*)particle_getvar_void(_particle, Rot_varptr, NULL),R);
+  /* apply rotation to centered coordinates */
+  Coords tmp = coords_set(x,y,z);
+  coords_get(rot_apply(R, tmp), &x, &y, &z);
+  /* rotate speed */
+  tmp = coords_set(vx,vy,vz);
+  coords_get(rot_apply(R, tmp), &vx, &vy, &vz);
 %}
 
 END
