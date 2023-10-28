@@ -15,12 +15,18 @@
 *
 * %Example: Test_DiskChoppers.instr chopper=0 Detector: Tofl_I=0.0005
 * %Example: Test_DiskChoppers.instr chopper=1 Detector: Tofl_I=0.0005
-* %Example: Test_DiskChoppers.instr chopper=1 ABSORBER=1 Detector: Tofl_I=0.0005
+* %Example: Test_DiskChoppers.instr chopper=0 ABSORBER=1 Detector: Tofl_I=0.0007
+* %Example: Test_DiskChoppers.instr chopper=1 ABSORBER=1 Detector: Tofl_I=0.0007
 *
 * %P
 * chopper:  [int] chopper=0 selects DiskChopper, chopper=1 selects a rotating Slit
-* lambda:   [AA] Mean wavelength produced from the source 
-* dlambda: [AA] Halfwidth of wavelenghts produced from the source
+* lambda:   [AA]  Mean wavelength produced from the source 
+* dlambda:  [AA]  Halfwidth of wavelenghts produced from the source
+* deltay:   [m]   Position of centre of rotation vs. beam in slit case
+* nu:       [Hz]  Chopper frequency
+* phase:    [deg] Chopper phase
+* ABSORBER: [1]   Flag to indicate if slab is B4C(=1) or perfect(=0)
+* tz:       [m]   Thickness of B4C slab
 *
 * %L
 *
