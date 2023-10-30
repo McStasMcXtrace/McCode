@@ -45,12 +45,23 @@ OUTPUT PARAMETERS ()
 TRACE
 %{
 double angle = MC_GETPAR(rotator, angle);
-
+double direction = MC_GETPAR(rotator, direction);
   if (angle) { /* rotate back neutron w/r to monochromator */
     /* approximation of rotating monochromator */
     /* current coordinates of neutron in centered static frame */
     Rotation R;
-    rot_set_rotation(R, 0, angle*DEG2RAD, 0); /* will rotate back neutron: positive side */
+    double rx=0,ry=0,rz=0;
+    /* will rotate back neutron: positive side */
+    if (direction==1) {
+      rx=angle*DEG2RAD;
+    }
+    else if (direction==2) {
+      ry=angle*DEG2RAD;
+    }
+    else if (direction==3) {
+      rz=angle*DEG2RAD;
+    }
+    rot_set_rotation(R, rx, ry, rz); 
     /* apply rotation to centered coordinates */
     coords_get(rot_apply(R, coords_set(x,y,z)), &x, &y, &z);
     /* rotate speed */
