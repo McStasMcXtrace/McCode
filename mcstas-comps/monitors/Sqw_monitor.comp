@@ -59,7 +59,7 @@ OUTPUT PARAMETERS ()
 DECLARE
 %{
   DArray2d M_N;
-  DArray2d M_p;7
+  DArray2d M_p;
   DArray2d M_p2;
   double dE;
 %}
