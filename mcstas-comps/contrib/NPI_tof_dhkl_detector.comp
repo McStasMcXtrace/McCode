@@ -230,10 +230,7 @@ DECLARE
   int n_dhkl;
   // set to 1 for some debugging info
   int dbg;
-  int dbgn;
-
-}
-  
+  int dbgn; 
 %}
 INITIALIZE
   %{
