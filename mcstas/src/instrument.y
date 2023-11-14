@@ -33,9 +33,10 @@
 %}
 
 %{
-typedef struct List_header * List;
-typedef struct Symbol_table * Symtab;
-typedef struct instr_def * instr_ptr_t;
+/* Already typedef'ed in mccode.h:         */
+/* typedef struct List_header * List;      */
+/* typedef struct Symbol_table * Symtab;   */
+/* typedef struct instr_def * instr_ptr_t; */
 int yylex();
 int yyerror(const char *s);
 List list_cat(List, List);
