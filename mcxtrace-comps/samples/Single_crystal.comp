@@ -176,7 +176,7 @@
 * Optional input parameters
 *
 * p_transmit: [1]        Monte Carlo probability for photons to be transmitted without any scattering. Used to improve statistics from weak reflections
-* sigma_inc: [barns]     Incoherent scattering cross-section per unit cell (uniform). Use -1 to unactivate
+* sigma_inc: [barns]     Incoherent scattering cross-section per unit cell (uniform). Fully isotropic and constant. Use -1 to unactivate
 * aa: [deg]              Unit cell angles alpha, beta and gamma. Then uses norms of vectors a,b and c as lattice parameters
 * bb: [deg]              Beta angle
 * cc: [deg]              Gamma angle
@@ -893,11 +893,14 @@ SHARE
       kix,kiy,kiz: may be different for each call
     this function returns:
       tau_count (return), coh_refl, coh_xsect, T (updated elements in the array up to [j])
+      
+    The function has been modified to handle a thin layer
    */
 #pragma acc routine
 int hkl_search(struct hkl_data *L, void *TT, int count, double V0,
     double kix, double kiy, double kiz, double tau_max,
-    double *coh_refl, double *coh_xsect)
+    double *coh_refl, double *coh_xsect, 
+    double xwidth, double yheight, double zdepth)
   {
     double rho, rho_x, rho_y, rho_z;
     double diff;
@@ -928,14 +931,26 @@ int hkl_search(struct hkl_data *L, void *TT, int count, double V0,
           break;
         /* Check if this reciprocal lattice point is close enough to the
            Ewald sphere to make scattering possible. */
-        rho_x = kix - L[i].tau_x;
+        rho_x = kix - L[i].tau_x; /* rho = |ki - tau| = |kf| = |ki| within cutoff on the Ewald sphere */
         rho_y = kiy - L[i].tau_y;
         rho_z = kiz - L[i].tau_z;
         rho = sqrt(rho_x*rho_x + rho_y*rho_y + rho_z*rho_z);
         diff = fabs(rho - ki);
 
         /* Check if scattering is possible (cutoff of Gaussian tails). */
-        if(diff <= L[i].cutoff)
+        /* must also check for thin layer broadening */
+        /* if vec(rho) -> vec(rho)+vec(2pi/thickness) then                           */
+        /*   |rho| = sqrt(|rho|^2+|vec(2pi/thickness)|^2+2*|vec(2pi/thickness).rho|) */
+        /* as 2pi/thickness << rho, we neglect |vec(2pi/thickness)|^2 and linearize (Taylor sqrt) */
+        /*   sqrt(|rho|^2+|vec(2pi/thickness)|^2+2*|vec(2pi/thickness).rho|) */ 
+        /* ~ rho+fabs(2pi/thickness.rho)/rho                                 */ 
+        /* so we just increase the cutoff by fabs(2pi/thickness.rho)/rho     */
+        /* in practice, cutoff+fabs(2*PI/xwidth*rho_x/rho)                   */
+        double cutoff = L[i].cutoff;
+        if (xwidth  > 0) cutoff += fabs(2*PI/xwidth /1e10*rho_x/rho);
+        if (yheight > 0) cutoff += fabs(2*PI/yheight/1e10*rho_y/rho);
+        if (zdepth  > 0) cutoff += fabs(2*PI/zdepth /1e10*rho_y/rho);
+        if(diff <= cutoff) /* |ki - tau| - ki < cutoff */
         {
           /* Store reflection. */
           T[j].index = i;
@@ -1184,8 +1199,8 @@ INITIALIZE
   }
   else
   if (xwidth && yheight && zdepth)  hkl_info.shape=1; /* box */
-  else if (radius > 0 && yheight)        hkl_info.shape=0; /* cylinder */
-  else if (radius > 0 && !yheight)       hkl_info.shape=2; /* sphere */
+  else if (radius > 0 && yheight)   hkl_info.shape=0; /* cylinder */
+  else if (radius > 0 && !yheight)  hkl_info.shape=2; /* sphere */
 
   if (hkl_info.shape < 0)
     exit(fprintf(stderr,"Single_crystal: %s: sample has invalid dimensions.\n"
@@ -1355,7 +1370,7 @@ TRACE
       else if (hkl_info.shape == 3)
 	      intersect = off_x_intersect(&l1, &l2, NULL, NULL, x, y, z, kx, ky, kz, thread_offdata );
       #endif
-      if(!intersect || l2 < -1e-9 || l1 > 1e-9)
+      if(!intersect || l2 < -1e-9 || l1 > 1e-8)
       {
         /* photon is leaving the sample */
         hkl_info.flag_warning++;
@@ -1364,8 +1379,8 @@ TRACE
           MPI_MASTER(
           fprintf(stderr,
                 "Single_crystal: %s: Warning: photon has unexpectedly left the crystal!\n"
-                "                l1=%g l2=%g x=%g y=%g z=%g kx=%g ky=%g kz=%g\n",
-                NAME_CURRENT_COMP, l1, l2, x, y, z, kx, ky, kz);
+                "                l1=%g l2=%g x=%g y=%g z=%g kx=%g ky=%g kz=%g order=%i\n",
+                NAME_CURRENT_COMP, l1, l2, x, y, z, kx, ky, kz, event_counter);
           );
 #endif
         break;
@@ -1439,9 +1454,20 @@ TRACE
         double tau_max   = 2*ki/(1 - 5*hkl_info.m_delta_d_d);
 
         /* call hkl_search */
-        tau_count = hkl_search(L, T, hkl_info.count, hkl_info.V0, 
-              kix, kiy, kiz, tau_max,
-              &coh_refl, &coh_xsect);
+        
+        if (hkl_info.shape == 1) { /* box */
+          tau_count = hkl_search(L, T, hkl_info.count, hkl_info.V0, 
+                kix, kiy, kiz, tau_max,
+                &coh_refl, &coh_xsect, xwidth, yheight, zdepth);
+        } else if (hkl_info.shape == 0) { /* cylinder */
+          tau_count = hkl_search(L, T, hkl_info.count, hkl_info.V0, 
+                kix, kiy, kiz, tau_max,
+                &coh_refl, &coh_xsect, 0, yheight, 0);
+        } else {
+          tau_count = hkl_search(L, T, hkl_info.count, hkl_info.V0, 
+                kix, kiy, kiz, tau_max,
+                &coh_refl, &coh_xsect, 0, 0, 0);
+        }
 
         /* store ki so that we can check for further SPLIT iterations */
 #ifndef OPENACC
@@ -1596,6 +1622,18 @@ TRACE
         kx = L[i].u1x*kfx + L[i].u2x*kfy + L[i].u3x*kfz;
         ky = L[i].u1y*kfx + L[i].u2y*kfy + L[i].u3y*kfz;
         kz = L[i].u1z*kfx + L[i].u2z*kfy + L[i].u3z*kfz;
+        
+        /* add thin layer k-broadening, only with box/cylinder shape */
+        if (hkl_info.shape == 1) { /* box */
+          double thickness_threshold = 1000*2*PI/ki/1e10; // 1000*lambda in Angs, /1e10 -> m
+          if (xwidth  < thickness_threshold) kx += 2*PI/xwidth /1e10*randnorm();
+          if (yheight < thickness_threshold) ky += 2*PI/yheight/1e10*randnorm();
+          if (zdepth  < thickness_threshold) kz += 2*PI/zdepth /1e10*randnorm();
+        } else if (hkl_info.shape == 0) { /* cylinder */
+          double thickness_threshold = 1000*2*PI/ki/1e10;
+          if (yheight < thickness_threshold) ky += 2*PI/yheight/1e10*randnorm();
+        }
+        
 	
         type = 'c';
         if (!itype) itype = 3;
