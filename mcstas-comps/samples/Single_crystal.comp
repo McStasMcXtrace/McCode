@@ -1337,11 +1337,11 @@ TRACE
         randrotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
       }
       if (PG) { /* orientation of crystallite is random along <c> axis */
-	    Alpha = randpm1()*PI*PG;
+	Alpha = randpm1()*PI*PG;
         component_vx = vx;
         component_vy = vy;
         component_vz = vz;
-	    PGrotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
+	PGrotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
       }
 
 
@@ -1555,9 +1555,9 @@ TRACE
 	
 	    type = 'i';
 	    if (!itype) itype = 2;
-        #ifndef OPENACC
+#ifndef OPENACC
          hkl_info.type = type;
-        #endif
+#endif
       } else {
         /* 7. Coherent scattering. Select reciprocal lattice point. */
         if(coh_refl <= 0){
@@ -1567,12 +1567,12 @@ TRACE
         j = hkl_select(T, tau_count, coh_refl, &sum,_particle);
         if(j >= tau_count)
         {
-        #ifndef OPENACC
+#ifndef OPENACC
           if (hkl_info.flag_warning < 100)
             fprintf(stderr, "Single_crystal: Error: Illegal tau search "
               "(sum=%g, j=%i, tau_count=%i).\n", sum, j , tau_count);
           hkl_info.flag_warning++;
-        #endif
+#endif
           j = tau_count - 1;
         }
         i = T[j].index;
