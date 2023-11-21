@@ -1237,6 +1237,11 @@ TRACE
   double _vy;
   double _vz;
 
+  double component_vx;          /* velocities not rotated by Powder / PG for non-rotated propagation*/
+  double component_vy;
+  double component_vz;
+    
+
   char   type;      /* type of last event: t=transmit,c=coherent or i=incoherent */
   int    itype;     /* type of last event: t=1,c=2 or i=3 */
 
@@ -1326,10 +1331,16 @@ TRACE
         Alpha = randpm1()*PI*powder;
         Beta  = randpm1()*PI/2;
         Gamma = randpm1()*PI;
+        component_vx = vx;
+        component_vy = vy;
+        component_vz = vz;
         randrotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
       }
       if (PG) { /* orientation of crystallite is random along <c> axis */
 	Alpha = randpm1()*PI*PG;
+        component_vx = vx;
+        component_vy = vy;
+        component_vz = vz;
 	PGrotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
       }
 
@@ -1447,9 +1458,9 @@ TRACE
 
       if (force_transmit) {
 	/* Exit due to truncated order, weight with relevant cross-sections to distance l_full */
-	 p*=exp(-abs_xlen*l_full);
+	p*=exp(-abs_xlen*l_full);
         intersect=0; 
-	 break;
+	break;
       }
       
       /* (5). Transmission */
@@ -1471,10 +1482,10 @@ TRACE
           PGderotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
         }
 
-	type = 't';
-	if (!itype) itype = 1;
+        type = 't';
+	    if (!itype) itype = 1;
         #ifndef OPENACC
-	hkl_info.type = type;
+	      hkl_info.type = type;
         #endif
 
         break; 
@@ -1510,9 +1521,26 @@ TRACE
       else
         l = -log(1 - rand0max((1 - exp(-tot_xlen*l_full))))/tot_xlen;
  
+      if (PG || powder) {
+        /* If PG or powder mode, we need to propagate the neutron in the component frame instead of the crystalite frame*/
+        _vx = vx;
+        _vy = vy;
+        _vz = vz;
+        vx = component_vx;
+        vy = component_vy;
+        vz = component_vz;
+      }
+    
       /* Propagate to scattering point */
       PROP_DT(l/v);
       event_counter++;
+    
+      if (PG || powder) {
+        /* In case of PG or powder return to crystalite frame after propagation */
+        vx = _vx;
+        vy = _vy;
+        vz = _vz;
+      }
 
       /* (4). Account for the probability of sigma_abs */
       p *= (coh_xlen + inc_xlen)/tot_xlen;
