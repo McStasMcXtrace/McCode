@@ -1396,10 +1396,10 @@ TRACE
         && fabs(kiz - hkl_info.kiz) < deltak) {
         hkl_info.nb_reuses++;
 
-	    /* Restore in case of matching event (e.g. SPLIT) */
-	    coh_refl = hkl_info.coh_refl;
+	/* Restore in case of matching event (e.g. SPLIT) */
+	coh_refl = hkl_info.coh_refl;
         coh_xsect = hkl_info.coh_xsect;
-	    tau_count = hkl_info.tau_count;
+	tau_count = hkl_info.tau_count;
 
       } else {
 #endif
@@ -1457,10 +1457,10 @@ TRACE
       }
 
       if (force_transmit) {
-	    /* Exit due to truncated order, weight with relevant cross-sections to distance l_full */
-	    p*=exp(-abs_xlen*l_full);
+	/* Exit due to truncated order, weight with relevant cross-sections to distance l_full */
+	p*=exp(-abs_xlen*l_full);
         intersect=0; 
-	    break;
+	break;
       }
       
       /* (5). Transmission */
@@ -1553,10 +1553,10 @@ TRACE
         vy = kiy;
         vz = kiz; /* Go for next scattering event */
 	
-	    type = 'i';
-	    if (!itype) itype = 2;
+	type = 'i';
+	if (!itype) itype = 2;
 #ifndef OPENACC
-         hkl_info.type = type;
+        hkl_info.type = type;
 #endif
       } else {
         /* 7. Coherent scattering. Select reciprocal lattice point. */
@@ -1632,7 +1632,7 @@ TRACE
         randderotate(&vx, &vy, &vz, Alpha, Beta, Gamma);
       }
       if (PG) { /* orientation of crystallite is longer random */
-	    PGderotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
+	PGderotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
       }
       /* exit if multiple scattering order has been reached */
       if (order && event_counter >= order) { force_transmit=1; }
