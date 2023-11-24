@@ -1574,7 +1574,7 @@ void def_trace_section(struct instr_def *instr)
   coutf("#define %s (_particle->%s)", "ABSORBED" , "_absorbed");
   /* define mcget_run_num within trace scope to refer to the particle */
   coutf("#define mcget_run_num() _particle->_uid");
-  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; } while(0)");
+  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(_comp); } while(0)");
   cout( "#define ABSORB ABSORB0");
 } /* def_trace_section */
 
