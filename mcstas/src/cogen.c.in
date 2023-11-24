@@ -1574,7 +1574,7 @@ void def_trace_section(struct instr_def *instr)
   coutf("#define %s (_particle->%s)", "ABSORBED" , "_absorbed");
   /* define mcget_run_num within trace scope to refer to the particle */
   coutf("#define mcget_run_num() _particle->_uid");
-  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(_comp); } while(0)");
+  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; } while(0)");
   cout( "#define ABSORB ABSORB0");
 } /* def_trace_section */
 
@@ -1724,7 +1724,7 @@ int cogen_raytrace(struct instr_def *instr)
   // we need this override, since "comp" is not defined in raytrace() - see section-wide define
   cout("  #undef ABSORB0");
   cout("  #undef ABSORB");
-  cout("  #define ABSORB0 do { DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(ABSORBED);} while(0)");
+  cout("  #define ABSORB0 do { DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; } while(0)");
   cout("  #define ABSORB ABSORB0");
 
   /* Debugging (initial state). */
@@ -1782,6 +1782,7 @@ int cogen_raytrace(struct instr_def *instr)
       coutf("    _class_particle Split_%s_particle=*_particle;", comp->name); // store incoming particle state at SPLIT
       coutf("    int Split_%s_counter;", comp->name);
       coutf("    int SplitS_%s = %s;", comp->name, exp);
+      coutf("    #pragma acc loop independent");
       coutf("    for (" "Split_%s_counter = 0; "
                         "Split_%s_counter< SplitS_%s; "
                         "Split_%s_counter++) {",
@@ -1962,7 +1963,10 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("    #endif");
   coutf("    #endif");
   coutf("");
-  coutf("    #pragma acc parallel loop num_gangs(numgangs) vector_length(vecsize)");
+  coutf("    #pragma acc parallel");
+  coutf("    {");
+  coutf("    #pragma acc loop independent");
+  coutf("    //#pragma acc parallel loop num_gangs(numgangs) vector_length(vecsize)");
   coutf("    for (unsigned long pidx=0 ; pidx < gpu_innerloop ; pidx++) {");
   coutf("      _class_particle particleN = mcgenstate(); // initial particle");
   coutf("      _class_particle* _particle = &particleN;");
@@ -1976,6 +1980,7 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("");
   coutf("      raytrace(_particle);");
   coutf("    } /* inner for */");
+  coutf("    }");
   coutf("    seed = seed+gpu_innerloop;");
   coutf("  } /* CPU for */");
   coutf("  /* if on GPU, printf has been globally nullified, re-enable here */");
