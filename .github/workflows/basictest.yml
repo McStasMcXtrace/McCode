@@ -116,7 +116,7 @@ jobs:
            set -e
            set -u
            set -x
-           python3 -mpip install PyYAML ply
+           python3 -mpip install PyYAML ply McStasscript
            if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
            then
              python3 -mpip install ncrystal
@@ -128,10 +128,12 @@ jobs:
            set -u
            set -x
            export MCSTAS_EXECUTABLE="mcstas"
+           export MCSTAS_PYGEN_EXECUTABLE="mcstas-pygen"
            export MCRUN_EXECUTABLE="mcrun"
            if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
            then
              export MCSTAS_EXECUTABLE="mcstas.exe"
+             export MCSTAS_PYGEN_EXECUTABLE="mcstas-pygen.exe"
              export MCRUN_EXECUTABLE="mcrun.bat"
            fi
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
@@ -141,6 +143,8 @@ jobs:
            #Not a final solution!!!:
            if [ "x$(uname)" == "xDarwin" ]; then export MCSTAS_CC_OVERRIDE=/usr/bin/clang; fi
            ../install_mcstas/bin/${MCRUN_EXECUTABLE} BNL_H8.instr lambda=2.36
+           ../install_mcstas/bin/${MCSTAS_PYGEN_EXECUTABLE} BNL_H8.instr
+           #python3 BNL_H8_generated.py
 
     - name: Launch MCPL test instrument
       run: |
