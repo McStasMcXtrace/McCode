@@ -1,0 +1,114 @@
+/********************************************************************************
+* 
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+* 
+* This file was written by McStasScript, which is a 
+* python based McStas instrument generator written by 
+* Mads Bertelsen in 2019 while employed at the 
+* European Spallation Source Data Management and 
+* Software Centre
+* 
+* Instrument Bent_monochromator_test
+* 
+* %Identification
+* Written by: Daniel Lomholt Christensen
+* Date: 15:02:20 on November 27, 2023
+* Origin: ILL
+* %INSTRUMENT_SITE: Generated_instruments
+* 
+* %DESCRIPTION
+* An instrument lacking a description* 
+* 
+* %Parameters
+* 
+* %End 
+********************************************************************************/
+
+DEFINE INSTRUMENT Bent_monochromator_test (
+)
+
+DECLARE 
+%{
+int reflections;
+%}
+
+INITIALIZE 
+%{
+// Start of initialize for generated Bent_monochromator_test
+%}
+
+TRACE 
+COMPONENT Source = Source_gen(
+ dist = 10, focus_xw = 0.001,
+ focus_yh = 0.01, lambda0 = 1.5,
+ dlambda = 7.5E-06, I1 = 7.95775E+12,
+ yheight = 0.01, xwidth = 0.001,
+ T1 = 315)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Slit = Slit(
+ xwidth = 0.001, yheight = 0.01)
+AT (0,0,10) RELATIVE Source
+
+COMPONENT entry_monitor = PSD_monitor(
+ nx = 200, ny = 200,
+ filename = "entry_monitor", xwidth = 0.02,
+ yheight = 0.02, restore_neutron = 1)
+AT (0,0,0) RELATIVE Slit
+
+COMPONENT entry_monitordiv = Divergence_monitor(
+ nh = 200, nv = 200,
+ filename = "entry_monitordiv", xwidth = 0.02,
+ yheight = 0.02, restore_neutron = 1)
+AT (0,0,0) RELATIVE Slit
+
+COMPONENT monochromator_arm = Arm()
+AT (0,0,10.15) RELATIVE Source
+ROTATED (0,43.73370225565156,0) RELATIVE Source
+
+COMPONENT Monochromator = Monochromator_bent(
+ zwidth = 0.07, yheight = 0.012,
+ xthickness = 0.008, radius_x = 10,
+ lamellar_slabs = 1, lamellar_gap_size = 0.0001,
+ plane_of_reflection = "Ge 511", angle_to_cut_horizontal = -19.47,
+ angle_to_cut_vertical = 0)
+AT (0,0,0) RELATIVE monochromator_arm
+ROTATED (0,-19.47,0) RELATIVE monochromator_arm
+EXTEND %{
+reflections = SCATTERED;
+%}
+
+COMPONENT arm_after_monochromator = Arm()
+AT (0,0,0) RELATIVE monochromator_arm
+ROTATED (0,43.533702255651555,0) RELATIVE monochromator_arm
+
+COMPONENT monitor_arm = Arm()
+AT (0,0,0) RELATIVE arm_after_monochromator
+ROTATED (0,0.2,0) RELATIVE arm_after_monochromator
+
+COMPONENT exit_monitor = Monitor(
+ xwidth = 0.1, yheight = 0.1,
+ restore_neutron = 1)
+AT (0,0,0.05) RELATIVE monitor_arm
+
+COMPONENT PSDlin_exit_monitor = PSDlin_monitor(
+ nbins = 100, filename = "det1d.dat",
+ xwidth = 0.1, yheight = 0.02,
+ restore_neutron = 1)
+AT (0,0,0) RELATIVE exit_monitor
+
+COMPONENT PSD_exit_monitor = PSD_monitor(
+ nx = 200, ny = 200,
+ filename = "det2d.dat", xwidth = 0.1,
+ yheight = 0.02, restore_neutron = 1)
+AT (0,0,0) RELATIVE exit_monitor
+
+FINALLY 
+%{
+// Start of finally for generated Bent_monochromator_test
+%}
+
+END
