@@ -26,6 +26,7 @@ jobs:
           - { os: macos-12,      CC: clang,    CXX: clang++,    python: "3.11" }
           - { os: macos-13,      CC: clang,    CXX: clang++,    python: "3.11" }
           - { os: windows-latest,  CC: gcc,    CXX: g++,        python: "3.11" }
+          - { os: windows-2019,    CC: gcc,    CXX: g++,        python: "3.11" }
 
     name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
     runs-on: ${{ matrix.os }}
@@ -93,10 +94,13 @@ jobs:
            cmake --build . --config Release
            cmake --build . --target install --config Release
            export MCSTAS_EXECUTABLE="mcstas"
-           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ]; then export MCSTAS_EXECUTABLE="mcstas.exe"; fi
-           test -f "../install_mcstas/bin/${MCSTAS_EXECUTABLE}"
            export MCRUN_EXECUTABLE="mcrun"
-           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ]; then export MCRUN_EXECUTABLE="mcrun.bat"; fi
+           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
+           then
+             export MCSTAS_EXECUTABLE="mcstas.exe"
+             export MCRUN_EXECUTABLE="mcrun.bat"
+           fi
+           test -f "../install_mcstas/bin/${MCSTAS_EXECUTABLE}"
            test -f "../install_mcstas/bin/${MCRUN_EXECUTABLE}"
            test -f "../install_mcstas/share/mcstas/tools/Python/mccodelib/__init__.py"
            test -d "../install_mcstas/share/mcstas/resources/data"
@@ -114,16 +118,18 @@ jobs:
            set -u
            set -x
            export MCSTAS_EXECUTABLE="mcstas"
-           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ]; then export MCSTAS_EXECUTABLE="mcstas.exe"; fi
+           export MCRUN_EXECUTABLE="mcrun"
+           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
+           then
+             export MCSTAS_EXECUTABLE="mcstas.exe"
+             export MCRUN_EXECUTABLE="mcrun.bat"
+           fi
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_BNL_H8 && cd run_BNL_H8
            cp ../install_mcstas/share/mcstas/resources/examples/BNL_H8.instr .
            #Not a final solution!!!:
            if [ "x$(uname)" == "xDarwin" ]; then export MCSTAS_CC_OVERRIDE=/usr/bin/clang; fi
-           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ]; then export MCSTAS_CC_OVERRIDE=gcc; fi
-           export MCRUN_EXECUTABLE="mcrun"
-           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ]; then export MCRUN_EXECUTABLE="mcrun.bat"; fi
            ../install_mcstas/bin/${MCRUN_EXECUTABLE} BNL_H8.instr lambda=2.36
 
     - name: Setup tmate session for manual debugging
