@@ -408,21 +408,6 @@ macro(installMCCODE)
       DESTINATION ${DEST_BINDIR}
     )
 
-    install(PROGRAMS
-      cmake/support/run-scripts/mpirun.bat
-      DESTINATION "${DEST_BINDIR}"
-      )
-
-    configure_file(
-      cmake/support/run-scripts/mpicc.bat.in
-      work/support/mpicc.bat
-      )
-
-    install(PROGRAMS
-      ${CMAKE_CURRENT_SOURCE_DIR}/work/support/mpicc.bat
-      DESTINATION "${DEST_BINDIR}"
-      )
-
   endif()
 
 
