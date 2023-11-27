@@ -1,0 +1,750 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Monochromator
+*
+* %I
+* Written by: Daniel Lomholt Christensen <dlc@math.ku.dk>
+* Based on the model implemented by Jan Šaroun in the paper published in
+* Nuclear Instruments and Methods in Physics Research Section A: Accelerators, Spectrometers, Detectors and Associated Equipment
+* Volume 529, Issues 1 through 3, 21 August 2004, Pages 162-165
+* 
+*
+* Date: 24 August 2023
+* Origin: ILL / Niels Bohr Institute, University of Copenhagen.
+*
+* A perfect bent crystal monochromator.
+*
+* %D
+* This monochromator is a number of slabs or strips of a perfect crystal.
+* The crystal is bent, so that it follows a curve on a cylinder.
+* The monochromator lies along the z plane, so when a diffraction angle of theta 
+* is desired, it should just be inserted in the ROTATED parameter around
+* the y-axis.
+* An instrument that showcases the use of this component is the 
+* "bent_monochromator_test.instr" under the examples folder.
+*
+*
+* Example:
+*
+* %P
+* INPUT PARAMETERS:
+*
+* zwidth: [m]               			Width of each slab without bending.
+* yheight: [m]              			Height of each slab without bending.
+* xthickness: [m]           			Thickness of each slab without bending.
+* radius_x: [m]             			Radius of the circle the monochromator bends on in the plane. Disable bending with radius_x=0.
+* lamellar_slabs = 1					Amount of horizontal slabs in you monochromator.
+* lamellar_gap_size = 0					Gap between said horizontal slabs.
+* plane_of_reflection: ["Si 400"] 		The plane of reflection from the material.
+* angle_to_cut_horizontal [degrees]  	Angle between cut and normal of crystal slab, horizontally
+* angle_to_cut_vertical [degrees] 		Angle between cut and normal of crystal slab, vertically
+* domainthickness [micro meter]			Thickness of the crystal domains.
+* temperature: [K]          			Temperature of the monochromator in Kelvin.
+*
+* %E
+*******************************************************************************/
+DEFINE COMPONENT Monochromator_bent
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (zwidth = 0.2,
+					yheight = 0.1,
+					xthickness = 0.0005,
+					radius_x = 2,
+					lamellar_slabs = 1,
+					lamellar_gap_size = 0,
+					string plane_of_reflection = "Si 400",
+					angle_to_cut_horizontal = 0,
+					angle_to_cut_vertical = 0,
+					domainthickness = 10,
+					temperature = 300)
+OUTPUT PARAMETERS ()
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+SHARE
+%{
+	%include "read_table-lib"
+	#include <string.h>
+	///////////////////////////////////////////////////////////////////////////
+	/////////////// Structs and simple functions specific for this component
+	///////////////////////////////////////////////////////////////////////////
+
+	struct Monochromator_values{
+		double length, height, thickness;
+		int type;
+		double radius_horizontal;
+		double Debye_Waller_factor;
+		double lattice_spacing;
+		double Maier_Leibnitz_reflectivity;
+		double poisson_ratio;
+		double bound_atom_scattering_cross_section;
+		double absorption_for_1AA_Neutrons;
+		double incoherent_scattering_cross_section;
+		double volume;
+		double Constant_from_Freund_paper;
+		double debye_temperature;
+		double atomic_number;
+		double temperature_mono;
+		double B0;
+		double BT;
+		double single_phonon_absorption;
+		double multiple_phonon_absorption;
+		double nuclear_capture_absorption;
+		double total_absorption;
+		double tau[3];
+		double perp_to_tau[3];
+		double lattice_spacing_gradient_field[3][3];
+		double gradient_of_bragg_angle;
+		int lamellars;
+		double gap_size;
+		double domain_thickness;
+		double max_angle;
+		double min_angle;
+	};
+
+	struct neutron_values {
+		double* ki; // Incoming wavevector
+		double* kf; // outgoig wavevector
+		double* r;
+		double* v; // velocity of neutron
+		double* tau; //Reciprocal lattice vector
+		double ki_size; // size of incoming wavevector
+		double v_size; // speed
+		double tau_size; // size of reciprocal lattice vector
+		double kf_size; // size of outgoing wavevector
+		double* Bragg_angle_gradient; // Deviation from bragg condition
+		double absorption; // Absorption factor
+		double path; // Length of the path the neutron follows
+		double wavelength; // De Broglie wavelength of neutron
+		double kinematic_reflectivity;
+		double* path_length; /* The time spent in crystals, to add to path for attenuation */
+		double* entry_time; /* Time from start of crystal, to entrance of each lamellar */
+		double* exit_time; /* Time from start of crystal, to exit of each lamellar */
+		double* probabilities; /* Probability of reflection in each lamellar */
+		double* accumulating_probabilities; /* Accumulating probability in each lamellar */
+		double* time_of_reflection; /* The time in s from crystal edge to reflection */
+	};
+
+	enum crystal_type {flat, bent, mosaic, bent_mosaic};
+	/////////////// Define sign function
+
+	double sign(double x){
+		if (x > 0) return 1;
+		if (x < 0) return -1;
+	}
+	
+	double square(double x){
+		return x*x;
+	}
+	///////////////////////////////////////////////////////////////////////////
+	/////////////// Testing function
+	///////////////////////////////////////////////////////////////////////////
+	void print_neutron_state(struct neutron_values* neutron){
+		printf("Neutron state:\nki %g, %g, %g\ntau %g, %g, %g\nkf %g, %g, %g\nv %g, %g, %g\nr %g, %g, %g\nki size %g, tau size %g, kf size %g, v size %g\n\n", 
+			neutron->ki[0], neutron->ki[1], neutron->ki[2],
+			neutron->tau[0], neutron->tau[1], neutron->tau[2],
+			neutron->kf[0], neutron->kf[1], neutron->kf[2],
+			neutron->v[0], neutron->v[1], neutron->v[2],
+			neutron->r[0], neutron->r[1], neutron->r[2],
+			neutron->ki_size, neutron->tau_size, neutron->kf_size, neutron->v_size
+			);
+	}
+	///////////////////////////////////////////////////////////////////////////
+	/////////////// Calculations for absorption factor
+	/////////////// Based on the cross sections from 
+	/////////////// A. K. Freund in Nuclear Instruments and Methods 213 (1983) 495-501
+	///////////////////////////////////////////////////////////////////////////
+	
+	// Integral needed for debye factor
+
+	double calculate_phi_integral(double x){
+	// Asymptotic approximation
+		if (x > 5) return PI * PI / 6 - exp(-x)/(x+1);
+	// Integate with Simpson/3. I dont know what this means
+		double z = 1 + x/(exp(x)-1);
+		double dx = x/100;
+		double ksi;
+		for (int i = 2; i <= 100; i++) {
+			ksi = (i-1)*dx;
+			switch (i%2){
+				case 1:
+					z = z + 4 * ksi/(exp(ksi)-1);
+					break;
+				case 0:
+					z = z + 2 * ksi/(exp(ksi)-1);
+					break;
+			}
+		}
+		return z*dx/3;
+	}
+
+	
+	int neutron_is_inside_monochromator(struct Monochromator_values* monochromator,
+											struct neutron_values* neutron, int lamellar){
+		double t1, t2;
+		if (neutron->time_of_reflection[lamellar] <= 0) return 0;
+		/* Check that the neutron is not beyond */
+		cylinder_intersect(&t1, &t2, neutron->r[0]-monochromator->radius_horizontal + monochromator->thickness/2,
+		neutron->r[1],neutron->r[2],neutron->v[0],neutron->v[1],neutron->v[2],
+		monochromator->radius_horizontal, monochromator->height);			
+		if (t2 <= 0) return 0;
+		/* Check that the neutron is with the angle ranges*/
+		double angle_on_inner_cylinder = PI - asin(neutron->r[2]/monochromator->radius_horizontal);
+		if (monochromator-> max_angle + 0.0001 <= angle_on_inner_cylinder || angle_on_inner_cylinder <= monochromator->min_angle - 0.0001){
+			return 0;
+		} 
+		return 1;
+	}
+	
+	/* B0 and BT are values used for the Debye factor	*/
+	void calculate_B0_and_BT(struct Monochromator_values *monochromator){
+		double x;
+		monochromator->B0 = 2872.556/monochromator->atomic_number
+								/monochromator->debye_temperature;
+		
+		if (monochromator->temperature_mono>0.1) x = monochromator->debye_temperature/monochromator->temperature_mono;
+		else x =monochromator->debye_temperature/0.1;
+		double phi = calculate_phi_integral(x);
+
+		monochromator->BT = 4 * monochromator->B0 * phi / square(x);
+	}
+
+	double calculate_kinematic_reflectivity(struct Monochromator_values* monochromator, 
+											struct neutron_values* neutron){
+		double sine_of_bragg_angle = neutron->wavelength/2/monochromator->lattice_spacing;
+		double cosine_of_bragg_angle = sqrt(1-square(sine_of_bragg_angle));
+		double extinction_length =  monochromator->lattice_spacing/neutron->wavelength*sqrt(4*PI/monochromator->Maier_Leibnitz_reflectivity);
+		
+		// Kinenatic reflectivity = QML*DHKL*sin(theta_B)**2/PI/cos(theta_B)
+		double kinematic_reflectivity = monochromator->Maier_Leibnitz_reflectivity;
+		kinematic_reflectivity *= monochromator->lattice_spacing;
+		kinematic_reflectivity *= square(sine_of_bragg_angle);
+		kinematic_reflectivity *= 1/PI/cosine_of_bragg_angle;
+		kinematic_reflectivity *= monochromator->Debye_Waller_factor;
+		// Primary extinction factor, using the approximation in G.E Bacon and R.D. Lowde, Acta Cryst. (1948). 1, 303
+		kinematic_reflectivity *= tanh(monochromator->domain_thickness/extinction_length)/monochromator->domain_thickness*extinction_length;
+		return kinematic_reflectivity;
+	}
+
+	double calculate_attenuation_coefficient(struct Monochromator_values* monochromator,
+										struct neutron_values* neutron){
+		double E = square(neutron->v_size)*VS2E; // Neutron energy in meV
+		// Get factor for single phonon cross section
+		
+		double Bernoulli_sequence[31] = {1,-0.5,0.166667,0,-0.033333,0,0.0238095,0,-0.033333,
+										0,0.0757576,0,-0.253114,0,1.16667,0,-7.09216,0,54.9712,
+										0,-529.124,0,6192.12,0,-86580.3,0,1.42551717e6,0,-2.7298231e7,
+										0,6.01580874e8};
+		double x;
+		if (monochromator->temperature_mono - 0.1 <= 0){
+			x = monochromator->debye_temperature/0.1;
+		}
+		else{
+			x = monochromator->debye_temperature/monochromator->temperature_mono;
+		} 
+		double R, Ifact, Xn;
+		if (x<6){
+			R = 0;
+			Ifact = 1;
+			Xn = 1/x;
+			for (int i=0; i<30; i++){
+				R += Bernoulli_sequence[i]*Xn/Ifact*(i + 2.5);
+				Xn *= x;
+				Ifact *= i + 1;
+			}
+		}
+		else R = 3.3/sqrt(x*x*x*x*x*x*x);
+
+	// Define boltzmann_constant in units of (meV/K)
+		double boltzmann_constant = 0.08617333262;
+		double DWMF =  1-exp(-(monochromator->B0+monochromator->BT)*monochromator->Constant_from_Freund_paper*E/1000);
+	// Set the cross sections, as written in freunds paper
+		monochromator->nuclear_capture_absorption = monochromator->incoherent_scattering_cross_section
+													+monochromator->absorption_for_1AA_Neutrons*neutron->wavelength;
+
+		monochromator->multiple_phonon_absorption = monochromator->bound_atom_scattering_cross_section
+											*square(monochromator->atomic_number/(monochromator->atomic_number + 1))
+											*DWMF;
+
+		monochromator->single_phonon_absorption = 3*monochromator->bound_atom_scattering_cross_section/monochromator->atomic_number
+											* sqrt(boltzmann_constant * monochromator->debye_temperature/E) * R;
+
+		double attenuation_coefficient =  (monochromator->nuclear_capture_absorption
+										+ monochromator->single_phonon_absorption
+										+ monochromator->multiple_phonon_absorption)
+										/monochromator->volume * 100; // *100 to change to per mm?
+		return attenuation_coefficient;
+	}
+	///////////////////////////////////////////////////////////////////////////
+	/////////////// Function that retrieves local scattering vector G or tau.
+	/////////////// TODO:
+	/////////////// Add mosaic stuff to this function.
+	///////////////////////////////////////////////////////////////////////////
+	void calculate_local_scattering_vector(struct Monochromator_values* monochromator,
+											struct neutron_values* neutron, int direction){
+		neutron->tau[0] = monochromator->tau[0];
+		neutron->tau[1] = monochromator->tau[1];
+		neutron->tau[2] = monochromator->tau[2];
+		for (int i=0 ; i<3; i++) {
+			neutron->tau[i] += monochromator->lattice_spacing_gradient_field[i][0]*neutron->r[0]
+									+monochromator->lattice_spacing_gradient_field[i][1]*neutron->r[1]
+									+monochromator->lattice_spacing_gradient_field[i][2]*neutron->r[2];
+		}
+		/* Renormalize local scat vect */
+		double normalization_factor = sqrt(square(monochromator->tau[0]) + square(monochromator->tau[1]) + square(monochromator->tau[2]))
+									/sqrt(square(neutron->tau[0]) + square(neutron->tau[1]) + square(neutron->tau[2]));
+		
+		neutron->tau[0] *= direction*normalization_factor;
+		neutron->tau[1] *= direction*normalization_factor;
+		neutron->tau[2] *= direction*normalization_factor;
+	}
+	///////////////////////////////////////////////////////////////////////////
+	/////////////// Function that sets the neutron structs values at a point
+	///////////////////////////////////////////////////////////////////////////
+	void set_neutron_values(struct Monochromator_values* monochromator,
+		struct neutron_values* neutron,
+		double x, double y, double z,
+		double vx, double vy, double vz){
+			neutron->r[0] = x;
+			neutron->r[1] = y;
+			neutron->r[2] = z;
+			neutron->v[0] = vx;
+			neutron->v[1] = vy;
+			neutron->v[2] = vz;
+			neutron->v_size = 0;
+			neutron->ki_size = 0;
+			neutron->tau_size = 0;
+			neutron->kf_size = 0;
+			for (int i =0; i<3; i++){ 
+				neutron->ki[i] = neutron->v[i]*V2K;
+				neutron->ki_size += square(neutron->ki[i]);
+				neutron->v_size += square(neutron->v[i]);
+			}        
+			neutron->v_size = sqrt(neutron->v_size);
+			neutron->ki_size = sqrt(neutron->ki_size);
+			neutron->wavelength = 3956/neutron->v_size;// Wavelength in Angstrom.
+	}
+	///////////////////////////////////////////////////////////////////////////
+	/////////////// Function that solves the Laue condition
+	/////////////// Solves |k + tau|^2 - k^2 = 0 after expanding with
+	/////////////// bending terms
+	///////////////////////////////////////////////////////////////////////////
+
+	void solve_Bragg_condition(struct neutron_values* neutron,
+								struct Monochromator_values* monochromator,
+								int direction, int lamellar) {
+		calculate_local_scattering_vector(monochromator, neutron, direction);
+		neutron->tau_size = 0;
+		neutron->kf_size = 0;
+		for (int i=0; i<3; i++){
+			neutron->kf[i] = neutron->ki[i] + neutron->tau[i];
+			neutron->tau_size += square(neutron->tau[i]); 
+			neutron->kf_size += square(neutron->kf[i]);
+		}
+		neutron->tau_size = sqrt(neutron->tau_size);
+		neutron->kf_size = sqrt(neutron->kf_size);
+		double a = 0;		
+		double b = 0;
+		double c = square(neutron->kf_size) - square(neutron->ki_size);
+		double ksi = 0;
+
+		for (int i=0; i<3; i++){
+			ksi = (monochromator->lattice_spacing_gradient_field[i][0]*neutron->ki[0]
+								+ monochromator->lattice_spacing_gradient_field[i][1]*neutron->ki[1]
+								+ monochromator->lattice_spacing_gradient_field[i][2]*neutron->ki[2]);
+			a += ksi*ksi;
+			b += neutron->kf[i] * ksi;
+		}
+		neutron->Bragg_angle_gradient[lamellar] = b/neutron->tau_size/(
+									neutron->kf[0]*monochromator->perp_to_tau[0]
+									+ neutron->kf[1]*monochromator->perp_to_tau[1]
+									+ neutron->kf[2]*monochromator->perp_to_tau[2]
+									);
+		b *= direction;
+		//printf("a %g, b %g, c %g \n", a, b, c);
+		double det = b*b - a*c;
+		if (a> 1e-20 && det > 1e-20){
+			neutron->time_of_reflection[lamellar] = sign(b)*((-fabs(b)+sqrt(det))/a);	
+		}
+		neutron->time_of_reflection[lamellar] *= neutron->ki_size/neutron->v_size;
+	}					
+	///////////////////////////////////////////////////////////////////////////
+	/////////////// Simple function to reflect a neutron
+	/////////////////////////////////////////////////////////////////////////// 
+	void reflect_neutron(struct neutron_values* neutron, double* vx, double* vy, double* vz){
+			*vx = (neutron->ki[0] + neutron->tau[0])*K2V;
+			*vy = (neutron->ki[1] + neutron->tau[1])*K2V;
+			*vz = (neutron->ki[2] + neutron->tau[2])*K2V;
+	}
+
+	///////////////////////////////////////////////////////////////////////////
+	/////////////// Function that scans the neutron path
+	/////////////// and finds the probability of reflection in each lamellar,
+	/////////////// the accumulative probability, the path length in each lamellar,
+	/////////////// as well as the point of reflection in each lamellar.
+	/////////////////////////////////////////////////////////////////////////// 
+	void get_crossing_times_of_lamellars(struct Monochromator_values* monochromator, struct neutron_values* neutron,
+							int lamellar, int direction){
+		double transposed_x;
+		double inner_t0;
+		double outer_t0;
+		double inner_t1;
+		double outer_t1;
+		transposed_x = neutron->r[0]-monochromator->radius_horizontal
+							-(monochromator->lamellars)*monochromator->thickness/2
+							- (monochromator->lamellars-1)*monochromator->gap_size/2
+							+ monochromator->thickness * lamellar + monochromator->gap_size * lamellar;
+		cylinder_intersect(&inner_t0,&inner_t1,
+							transposed_x,neutron->r[1],neutron->r[2],
+							neutron->v[0],neutron->v[1],neutron->v[2],
+							monochromator->radius_horizontal,
+							monochromator->height);
+		cylinder_intersect(&outer_t0,&outer_t1,
+							transposed_x + monochromator->thickness,neutron->r[1],neutron->r[2],
+							neutron->v[0],neutron->v[1],neutron->v[2],
+							monochromator->radius_horizontal,
+							monochromator->height);
+		if (direction == 1){
+			neutron->entry_time[lamellar] = inner_t1;
+			neutron->exit_time[lamellar] = outer_t1;
+		} else {
+			neutron->entry_time[lamellar] = outer_t0;
+			neutron->exit_time[lamellar] = inner_t0;
+		}
+		neutron->path_length[lamellar] = neutron->exit_time[lamellar] - neutron->entry_time[lamellar];
+	}
+	void transport_neutron_to_lamellar_coordinates(struct Monochromator_values* monochromator, struct neutron_values* neutron,
+													int lamellar, int direction){
+ 		neutron->r[0] += neutron->v[0]*neutron->entry_time[lamellar];
+		neutron->r[1] += neutron->v[1]*neutron->entry_time[lamellar];
+		neutron->r[2] += neutron->v[2]*neutron->entry_time[lamellar];
+		neutron->r[0] += monochromator->thickness * lamellar + monochromator->gap_size * lamellar
+						-(monochromator->lamellars-1)*monochromator->thickness/2
+							- (monochromator->lamellars-1)*monochromator->gap_size/2;
+	}
+	void transport_neutron_back_to_entry(struct Monochromator_values* monochromator, struct neutron_values* neutron,
+													int lamellar, int direction){
+		neutron->r[0] -= neutron->v[0]*neutron->entry_time[lamellar];
+		neutron->r[1] -= neutron->v[1]*neutron->entry_time[lamellar];
+		neutron->r[2] -= neutron->v[2]*neutron->entry_time[lamellar];
+		neutron->r[0] -= monochromator->thickness * lamellar + monochromator->gap_size * lamellar
+						 -(monochromator->lamellars-1)*monochromator->thickness/2
+						- (monochromator->lamellars-1)*monochromator->gap_size/2;
+	}
+	void propagate_neutrons_to_point_of_reflection(struct neutron_values* neutron, int lamellar){
+		neutron->r[0] += neutron->v[0]*neutron->time_of_reflection[lamellar];
+		neutron->r[1] += neutron->v[1]*neutron->time_of_reflection[lamellar];
+		neutron->r[2] += neutron->v[2]*neutron->time_of_reflection[lamellar];
+	}
+	void propagate_neutrons_to_lamellar_entry(struct neutron_values* neutron, int lamellar){
+		neutron->r[0] -= neutron->v[0]*neutron->time_of_reflection[lamellar];
+		neutron->r[1] -= neutron->v[1]*neutron->time_of_reflection[lamellar];
+		neutron->r[2] -= neutron->v[2]*neutron->time_of_reflection[lamellar];
+	}
+
+	void scan_lamellars(struct Monochromator_values* monochromator, struct neutron_values* neutron,
+							int current_lamellar, int direction){
+		double t0, inner_t1, outer_t1;
+		double kinematic_reflectivity;
+		double r[3] = {neutron->r[0], neutron->r[1], neutron->r[2]};
+		int intersected;
+		double transposed_x;
+		for (int i = current_lamellar; i < monochromator->lamellars && i >= 0;){
+			get_crossing_times_of_lamellars(monochromator, neutron, i, direction);
+			transport_neutron_to_lamellar_coordinates(monochromator, neutron, i, direction);
+			solve_Bragg_condition(neutron, monochromator, direction, i);
+			propagate_neutrons_to_point_of_reflection(neutron, i);
+			/* Assign probabilities in arrays */
+			if (!neutron_is_inside_monochromator(monochromator, neutron, i)) {
+				neutron->probabilities[i] = 0;
+			} else{
+				kinematic_reflectivity = calculate_kinematic_reflectivity(monochromator, neutron);
+				neutron->probabilities[i] = 1 - exp(-neutron->ki_size*kinematic_reflectivity/neutron->Bragg_angle_gradient[i]);
+			}
+			if (i != current_lamellar || neutron->probabilities[i-direction] != 0) {
+				neutron->accumulating_probabilities[i] =  1 - (1-neutron->accumulating_probabilities[i-direction])*(1-neutron->probabilities[i]);
+			} else{
+				if (i == current_lamellar){
+					if (neutron->entry_time[i]<0) neutron->accumulating_probabilities[i] = 0;
+					else neutron->accumulating_probabilities[i] =  neutron->probabilities[i];
+				}
+				else neutron->accumulating_probabilities[i] =  neutron->accumulating_probabilities[i-direction];
+			}
+
+			/* Move neutron back to starting position */
+			propagate_neutrons_to_lamellar_entry(neutron, i);
+			transport_neutron_back_to_entry(monochromator, neutron, i, direction);
+			i += direction;
+			
+			}
+	}
+%}
+
+DECLARE
+%{
+	double angle_range;
+	double neutron_counter;
+	double curvature;
+    double tau_size_zero;
+
+	t_Table *crystal_table;
+    struct neutron_values neutron;
+	struct Monochromator_values monochromator;
+%}
+
+INITIALIZE
+%{
+	///////////////////////////////////////////////////////////////////////////
+	/////////////// ERROR FUNCTIONS
+	///////////////////////////////////////////////////////////////////////////
+	if (radius_x <= 0)
+		exit(printf("tau_approach_bent_perfect_crystal: %s: incorrect radius_x=%g\n", NAME_CURRENT_COMP, radius_x));
+	if (xthickness <= 0)
+		exit(printf("tau_approach_bent_perfect_crystal: %s: invalid monochromator xthickness=%g\n", NAME_CURRENT_COMP, xthickness));
+	if (zwidth <= 0)
+		exit(printf("tau_approach_bent_perfect_crystal: %s: invalid monochromator zwidth=%g\n", NAME_CURRENT_COMP, zwidth));
+
+	///////////////////////////////////////////////////////////////////////////
+	/////////////// INITIALIZING PARAMETERS
+	///////////////////////////////////////////////////////////////////////////
+	neutron_counter = 0;
+	/* Initialize angles of the monochromator */
+	angle_range = zwidth/radius_x;
+	monochromator.max_angle = angle_range/2 + PI;
+	monochromator.min_angle = -angle_range/2 + PI; 
+	/* Read the designated plane of reflection, for use in the monochromator. */
+	long rows;
+	crystal_table = Table_Read_Array("crystal_table.dat", &rows);
+	int row_of_reflection = 0;
+
+	for (int i = 1; i <= rows-2; i++){
+		for (int j = 0; j< 6; j++){
+			if (plane_of_reflection[j] != crystal_table[i].header[j+2]) break;
+			if (j == 5){
+				row_of_reflection = i+1;
+			}
+		}
+		if (row_of_reflection) break;
+	}
+
+	/* Set Monochromator values */
+
+	monochromator.length = zwidth;
+	monochromator.type = bent;
+	monochromator.height = yheight;
+	monochromator.thickness = xthickness;
+	monochromator.radius_horizontal = radius_x;
+	monochromator.lamellars = lamellar_slabs;
+	monochromator.gap_size = lamellar_gap_size;
+	monochromator.domain_thickness = domainthickness;
+	monochromator.temperature_mono = temperature;
+	monochromator.lattice_spacing = Table_Index(crystal_table[row_of_reflection], 0, 0);
+	monochromator.Maier_Leibnitz_reflectivity = Table_Index(crystal_table[row_of_reflection], 0, 1)*100; /* Convert to SI and Angstrom */
+	monochromator.bound_atom_scattering_cross_section = Table_Index(crystal_table[row_of_reflection], 0, 2);
+	monochromator.absorption_for_1AA_Neutrons = Table_Index(crystal_table[row_of_reflection], 0, 3);
+	monochromator.incoherent_scattering_cross_section = Table_Index(crystal_table[row_of_reflection], 0, 4);
+	monochromator.volume = Table_Index(crystal_table[row_of_reflection], 0, 5);
+	monochromator.atomic_number = Table_Index(crystal_table[row_of_reflection], 0, 6);
+	monochromator.debye_temperature = Table_Index(crystal_table[row_of_reflection], 0, 7);
+	monochromator.Constant_from_Freund_paper = Table_Index(crystal_table[row_of_reflection], 0, 8);
+	monochromator.poisson_ratio = Table_Index(crystal_table[row_of_reflection], 0, 9);
+	calculate_B0_and_BT(&monochromator);
+	monochromator.Debye_Waller_factor = exp(-(monochromator.B0 + monochromator.BT)/2/square(monochromator.lattice_spacing));
+	
+	/* Initialize reciprocal lattice vector G or tau in some texts, and perp_to_tau. */
+
+	angle_to_cut_horizontal *= DEG2RAD;
+	angle_to_cut_vertical *= DEG2RAD;
+
+	tau_size_zero = 2*PI/monochromator.lattice_spacing;
+
+	monochromator.tau[0] = tau_size_zero*cos(angle_to_cut_horizontal)*cos(angle_to_cut_vertical);
+	monochromator.tau[1] = tau_size_zero*sin(angle_to_cut_vertical);
+	monochromator.tau[2] = tau_size_zero*sin(angle_to_cut_horizontal)*cos(angle_to_cut_vertical);
+
+	monochromator.perp_to_tau[0] = sin(angle_to_cut_horizontal)*cos(angle_to_cut_vertical);
+	monochromator.perp_to_tau[1] = sin(angle_to_cut_vertical);
+	monochromator.perp_to_tau[2] = -cos(angle_to_cut_horizontal)*cos(angle_to_cut_vertical);
+
+	/* Initialize lattice_spacing_gradient_field */
+
+	curvature = 1/radius_x;
+	monochromator.lattice_spacing_gradient_field[0][0] = -monochromator.poisson_ratio*cos(angle_to_cut_horizontal)*tau_size_zero*curvature;
+	monochromator.lattice_spacing_gradient_field[0][1] = 0;
+	monochromator.lattice_spacing_gradient_field[0][2] = sin(angle_to_cut_horizontal)*tau_size_zero*curvature;
+	monochromator.lattice_spacing_gradient_field[1][0] = 0;
+	monochromator.lattice_spacing_gradient_field[1][1] = 0;
+	monochromator.lattice_spacing_gradient_field[1][2] = 0;
+	monochromator.lattice_spacing_gradient_field[2][0] = sin(angle_to_cut_horizontal)*tau_size_zero*curvature;
+	monochromator.lattice_spacing_gradient_field[2][1] = 0;
+	monochromator.lattice_spacing_gradient_field[2][2] = -cos(angle_to_cut_horizontal)*tau_size_zero*curvature;
+
+	/* Initialize neutron structs values */
+	neutron.ki = (double*) calloc (3, sizeof(double));
+	neutron.r = (double*) calloc (3, sizeof(double));
+	neutron.v = (double*) calloc (3, sizeof(double));
+	neutron.tau = (double*) calloc (3, sizeof(double));
+	neutron.kf = (double*) calloc (3, sizeof(double));
+	neutron.Bragg_angle_gradient = (double*) calloc (lamellar_slabs, sizeof(double));
+	neutron.path_length = (double*) calloc (lamellar_slabs, sizeof(double));
+	neutron.entry_time = (double*) calloc (lamellar_slabs, sizeof(double));
+	neutron.exit_time = (double*) calloc (lamellar_slabs, sizeof(double));
+	neutron.probabilities = (double*) calloc (lamellar_slabs, sizeof(double));
+	neutron.accumulating_probabilities = (double*) calloc (lamellar_slabs, sizeof(double));
+	neutron.time_of_reflection = (double*) calloc (lamellar_slabs, sizeof(double));
+%}
+
+TRACE
+%{
+	/* Initialize variables for use in TRACE */
+	int current_lamellar = 0;
+	int neutron_is_in_crystal = 1;
+	int neutron_just_reflected = 0;
+	double reflect_condition;
+	int start_lamellar;
+	double intersected;
+	double intersect_time_1 = 0; 
+	double intersect_time_2 = 0;
+	int direction = 1;
+	double attenuation_coefficient;
+	intersected = cylinder_intersect(&intersect_time_1,
+									&intersect_time_2,
+									x-radius_x - lamellar_slabs*xthickness/2 - (lamellar_slabs-1)*lamellar_gap_size/2,
+									y,z,
+									vx,vy,vz,
+									radius_x, yheight);
+	PROP_DT(intersect_time_2);
+	SCATTER;
+	
+	//print_neutron_state(&neutron, neutron.path);
+	switch (monochromator.type){
+		case flat:
+			break;
+		case bent:
+			neutron.path = 0;
+			/* This is an infinite loop that the neutrons should break out of */
+			while (neutron_is_in_crystal){
+				start_lamellar = current_lamellar;
+				set_neutron_values(&monochromator, &neutron, x,y,z,vx,vy,vz);
+				scan_lamellars(&monochromator, &neutron, current_lamellar, direction);
+				if (neutron_just_reflected) neutron.path += neutron.exit_time[current_lamellar];
+				switch(direction){
+					case (1):
+						reflect_condition = neutron.accumulating_probabilities[monochromator.lamellars]*rand01();
+						break;
+					case(-1):
+						reflect_condition = 1*rand01();
+						break;
+				}
+				while(neutron.accumulating_probabilities[current_lamellar]<= reflect_condition &&
+						current_lamellar < monochromator.lamellars && current_lamellar >= 0){
+					current_lamellar += direction;
+				}
+				for (int i = start_lamellar + direction; direction*(current_lamellar - i) > 0; i += direction){
+					neutron.path += neutron.path_length[i];
+				}  
+				if (current_lamellar == -1 && direction == -1) {
+					break;
+				}
+				if (current_lamellar == monochromator.lamellars) ABSORB;
+				neutron.path += neutron.time_of_reflection[current_lamellar];
+				PROP_DT(neutron.time_of_reflection[current_lamellar] + neutron.entry_time[current_lamellar]);
+				SCATTER;
+				p *= neutron.accumulating_probabilities[current_lamellar];
+				reflect_neutron(&neutron, &vx, &vy, &vz);
+				direction *= -1;
+				neutron_just_reflected++;
+			}
+			neutron_counter += 1;
+			attenuation_coefficient = calculate_attenuation_coefficient(&monochromator, &neutron);
+			p *= exp(-attenuation_coefficient*neutron.path*neutron.v_size);
+			z += 0.001;
+			PROP_DT(neutron.exit_time[0]);
+			SCATTER;
+			break;
+		case mosaic:
+			break;
+
+		case bent_mosaic:
+			break;
+	}
+
+%}
+
+FINALLY
+%{
+	//printf("\nThe amount of neutrons reflected in the monochromator are %g.\n", neutron_counter);
+%}
+
+MCDISPLAY
+%{
+	/////////////// Draw the monochromator as a curving line, between 10 points.
+
+	double x_inner [2];
+	double x_outer [2];
+	double y_top;
+	double y_bottom;
+	double z_inner [2];
+	double z_outer [2];
+	double i = 0;
+	double inner_radii = radius_x - xthickness/2;
+	double outer_radii = radius_x + xthickness/2;
+	x_inner[1] = radius_x - cos(angle_range/2)*inner_radii;
+	y_top = yheight/2;
+	z_inner[1] = -sin(angle_range/2)*inner_radii;
+	
+	x_outer[1] = radius_x - cos(angle_range/2)*outer_radii;
+	y_bottom = -yheight/2;
+	z_outer[1] = -sin(angle_range/2)*outer_radii;
+	
+		 
+	for (i = 0; i < 2; i = i + 0.2) {
+
+		x_inner[0] = x_inner[1];
+
+		z_inner[0] = z_inner[1];
+		x_inner[1] = radius_x - cos(fabs(i-1)*angle_range/2)*inner_radii;
+		z_inner[1] = -sin(angle_range/2)*radius_x + sin(angle_range/2)*inner_radii*i;
+
+		x_outer[0] = x_outer[1];
+		z_outer[0] = z_outer[1];
+		
+		x_outer[1] = radius_x - cos(fabs(i-1)*angle_range/2)*outer_radii;
+		z_outer[1] = -sin(angle_range/2)*outer_radii + sin(angle_range/2)*outer_radii*i;
+		
+		multiline(5, 
+				  x_inner[0], y_top, z_inner[0],
+				  x_outer[0], y_top, z_outer[0],
+				  x_outer[0], y_bottom, z_outer[0],
+				  x_inner[0], y_bottom, z_inner[0],
+				  x_inner[0], y_top, z_inner[0]);
+				  
+				  
+		line(x_inner[0], y_top, z_inner[0],
+		     x_inner[1], y_top, z_inner[1]);
+		line(x_outer[0], y_top, z_outer[0],
+		     x_outer[1], y_top, z_outer[1]);
+		line(x_inner[0], y_bottom, z_inner[0],
+		     x_inner[1], y_bottom, z_inner[1]);
+		line(x_outer[0], y_bottom, z_outer[0],
+		     x_outer[1], y_bottom, z_outer[1]);
+		
+	}
+	multiline(5, 
+		  x_inner[1], y_top, z_inner[1],
+		  x_outer[1], y_top, z_outer[1],
+		  x_outer[1], y_bottom, z_outer[1],
+		  x_inner[1], y_bottom, z_inner[1],
+		  x_inner[1], y_top, z_inner[1]);
+	line(0,0,0,
+		monochromator.tau[0],monochromator.tau[1],monochromator.tau[2]);
+	line(0,0,0,
+		monochromator.perp_to_tau[0], monochromator.perp_to_tau[1], monochromator.perp_to_tau[2]);
+%}
+
+END
+
+
