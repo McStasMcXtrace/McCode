@@ -122,16 +122,13 @@ jobs:
              python3 -mpip install ncrystal
            fi
 
-    - name: Launch test instrument
+    - name: Launch basic test instrument
       run: |
            set -e
            set -u
            set -x
            export MCSTAS_EXECUTABLE="mcstas"
            export MCRUN_EXECUTABLE="mcrun"
-           export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
-           which mcpl-config
-           find . -name mcpl-config
            if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
            then
              export MCSTAS_EXECUTABLE="mcstas.exe"
@@ -141,19 +138,79 @@ jobs:
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_BNL_H8 && cd run_BNL_H8
            cp ../install_mcstas/share/mcstas/resources/examples/BNL_H8.instr .
-           cp ../install_mcstas/share/mcstas/resources/examples/ESS_BEER_MCPL.instr .
-           cp ../install_mcstas/share/mcstas/resources/examples/NCrystal_example.instr .
-           cp ../install_mcstas/share/mcstas/resources/examples/templateSANS_Mantid.instr .
            #Not a final solution!!!:
            if [ "x$(uname)" == "xDarwin" ]; then export MCSTAS_CC_OVERRIDE=/usr/bin/clang; fi
            ../install_mcstas/bin/${MCRUN_EXECUTABLE} BNL_H8.instr lambda=2.36
+
+    - name: Launch MCPL test instrument
+      run: |
+           set -e
+           set -u
+           set -x
+           export MCSTAS_EXECUTABLE="mcstas"
+           export MCRUN_EXECUTABLE="mcrun"
+           export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
+           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
+           then
+             export MCSTAS_EXECUTABLE="mcstas.exe"
+             export MCRUN_EXECUTABLE="mcrun.bat"
+           fi
+           test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
+           ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
+           mkdir run_ESS_BEER_MCPL && cd run_ESS_BEER_MCPL
+           cp ../install_mcstas/share/mcstas/resources/examples/ESS_BEER_MCPL.instr .
+           #Not a final solution!!!:
+           if [ "x$(uname)" == "xDarwin" ]; then export MCSTAS_CC_OVERRIDE=/usr/bin/clang; fi
            if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
            then
             ../install_mcstas/bin/${MCRUN_EXECUTABLE} ESS_BEER_MCPL.instr repetition=50
+           fi
+
+    - name: Launch NCrystal test instrument
+      run: |
+           set -e
+           set -u
+           set -x
+           export MCSTAS_EXECUTABLE="mcstas"
+           export MCRUN_EXECUTABLE="mcrun"
+           export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
+           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
+           then
+             export MCSTAS_EXECUTABLE="mcstas.exe"
+             export MCRUN_EXECUTABLE="mcrun.bat"
+           fi
+           test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
+           ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
+           mkdir run_NCrystal_example && cd run_NCrystal_example
+           cp ../install_mcstas/share/mcstas/resources/examples/NCrystal_example.instr .
+           #Not a final solution!!!:
+           if [ "x$(uname)" == "xDarwin" ]; then export MCSTAS_CC_OVERRIDE=/usr/bin/clang; fi
+           if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
+           then
             ../install_mcstas/bin/${MCRUN_EXECUTABLE} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
-             if [ "x$(uname)" == "xLinux" ]; then
-               ../install_mcstas/bin/${MCRUN_EXECUTABLE} --format=NeXus --IDF templateSANS_Mantid.instr lambda=6
-             fi
+           fi
+
+    - name: Launch NeXus test instrument
+      run: |
+           set -e
+           set -u
+           set -x
+           export MCSTAS_EXECUTABLE="mcstas"
+           export MCRUN_EXECUTABLE="mcrun"
+           export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
+           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
+           then
+             export MCSTAS_EXECUTABLE="mcstas.exe"
+             export MCRUN_EXECUTABLE="mcrun.bat"
+           fi
+           test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
+           ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
+           mkdir run_templateSANS_Mantid && cd run_templateSANS_Mantid
+           cp ../install_mcstas/share/mcstas/resources/examples/templateSANS_Mantid.instr .
+           #Not a final solution!!!:
+           if [ "x$(uname)" == "xDarwin" ]; then export MCSTAS_CC_OVERRIDE=/usr/bin/clang; fi
+           if [ "x$(uname)" == "xLinux" ]; then
+             ../install_mcstas/bin/${MCRUN_EXECUTABLE} --format=NeXus --IDF templateSANS_Mantid.instr lambda=6
            fi
 
     - name: Setup tmate session for manual debugging
