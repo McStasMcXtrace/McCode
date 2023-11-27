@@ -55,7 +55,7 @@ jobs:
 
     - name: Setup NeXus
       run: |
-           if [ "x$(uname)" == "xLinux" ]; then sudo apt -y install libnexus-dev python3-ply; fi
+           if [ "x$(uname)" == "xLinux" ]; then sudo apt -y install libnexus-dev; fi
 
     - name: Check versions
       run: |
@@ -116,7 +116,7 @@ jobs:
            set -e
            set -u
            set -x
-           python3 -mpip install PyYAML
+           python3 -mpip install PyYAML ply
            if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
            then
              python3 -mpip install ncrystal
