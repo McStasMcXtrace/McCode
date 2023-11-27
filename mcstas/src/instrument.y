@@ -52,10 +52,10 @@ void metadata_assign_from_instance(List metadata);
    definitions. */
 // TODO: Select either a) or b) below depending on bison version
 // a) bison v < 3
-// %pure-parser
+%pure-parser
 // b) bison v >= 3
-%define api.pure
-%define parse.trace
+//%define api.pure
+//%define parse.trace
 
 /*******************************************************************************
 * Type definition for semantic values.

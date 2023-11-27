@@ -50,7 +50,7 @@ jobs:
     - name: Setup Bison
       run: |
            if [ "x$(uname)" == "xDarwin" ]; then brew install bison flex; fi
-
+           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ]; then choco install winflexbison; fi
     - name: Check versions
       run: |
            which python3
