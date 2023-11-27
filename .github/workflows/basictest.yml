@@ -52,6 +52,7 @@ jobs:
       run: |
            if [ "x$(uname)" == "xDarwin" ]; then brew install bison flex; fi
            if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ]; then choco install winflexbison; fi
+
     - name: Check versions
       run: |
            which python3
@@ -86,7 +87,7 @@ jobs:
                -DMCCODE_USE_LEGACY_DESTINATIONS=OFF \
                -DBUILD_TOOLS=ON \
                -DENABLE_COMPONENTS=ON \
-               -DENSURE_MCPL=OFF \
+               -DENSURE_MCPL=ON \
                -DENSURE_NCRYSTAL=OFF \
                -DENABLE_CIF2HKL=OFF \
                -DENABLE_NEUTRONICS=OFF \
@@ -111,7 +112,6 @@ jobs:
            set -u
            set -x
            python3 -mpip install PyYAML
-           python3 -mpip install mcpl
            if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
            then
              python3 -mpip install ncrystal
@@ -124,6 +124,9 @@ jobs:
            set -x
            export MCSTAS_EXECUTABLE="mcstas"
            export MCRUN_EXECUTABLE="mcrun"
+           export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
+           which mcpl-config
+           find . -name mcpl-config
            if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
            then
              export MCSTAS_EXECUTABLE="mcstas.exe"
@@ -140,8 +143,8 @@ jobs:
            ../install_mcstas/bin/${MCRUN_EXECUTABLE} BNL_H8.instr lambda=2.36
            if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
            then
-             #../install_mcstas/bin/${MCRUN_EXECUTABLE} ESS_BEER_MCPL.instr repetition=50
-            ../install_mcstas/bin/${MCRUN_EXECUTABLE} NCrystal_example.instr sample_cfg=""Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
+            ../install_mcstas/bin/${MCRUN_EXECUTABLE} ESS_BEER_MCPL.instr repetition=50
+            ../install_mcstas/bin/${MCRUN_EXECUTABLE} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
            fi
 
     - name: Setup tmate session for manual debugging
