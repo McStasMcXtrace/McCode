@@ -105,12 +105,17 @@ jobs:
            test -f "../install_mcstas/share/mcstas/tools/Python/mccodelib/__init__.py"
            test -d "../install_mcstas/share/mcstas/resources/data"
 
-    - name: Pip install PyYAML
+    - name: Pip install various
       run: |
            set -e
            set -u
            set -x
            python3 -mpip install PyYAML
+           python3 -mpip install mcpl
+           if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
+           then
+             python3 -mpip install ncrystal
+           fi
 
     - name: Launch test instrument
       run: |
@@ -128,9 +133,16 @@ jobs:
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_BNL_H8 && cd run_BNL_H8
            cp ../install_mcstas/share/mcstas/resources/examples/BNL_H8.instr .
+           cp ../install_mcstas/share/mcstas/resources/examples/ESS_BEER_MCPL.instr .
+           cp ../install_mcstas/share/mcstas/resources/examples/NCrystal_example.instr .
            #Not a final solution!!!:
            if [ "x$(uname)" == "xDarwin" ]; then export MCSTAS_CC_OVERRIDE=/usr/bin/clang; fi
            ../install_mcstas/bin/${MCRUN_EXECUTABLE} BNL_H8.instr lambda=2.36
+           if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
+           then
+             #../install_mcstas/bin/${MCRUN_EXECUTABLE} ESS_BEER_MCPL.instr repetition=50
+            ../install_mcstas/bin/${MCRUN_EXECUTABLE} NCrystal_example.instr sample_cfg=""Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
+           fi
 
     - name: Setup tmate session for manual debugging
       uses: mxschmitt/action-tmate@v3
