@@ -1,5 +1,16 @@
 name: basictest
-on: push
+on:
+  push:
+  
+  schedule:
+    - cron: '30 23 * * 0'  # 23:30 every Sunday
+
+  workflow_dispatch:
+    inputs:
+      manual-debugging:
+        type: boolean
+        description: Launch manual debugging tmate session on failure
+        default: false
 
 jobs:
   build:
@@ -14,11 +25,17 @@ jobs:
           - { os: macos-11,      CC: clang,    CXX: clang++,    python: "3.10" }
           - { os: macos-12,      CC: clang,    CXX: clang++,    python: "3.11" }
           - { os: macos-13,      CC: clang,    CXX: clang++,    python: "3.11" }
+          - { os: windows-latest,  CC: gcc,    CXX: g++,        python: "3.11" }
+          - { os: windows-2019,    CC: gcc,    CXX: g++,        python: "3.11" }
+
     name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
     runs-on: ${{ matrix.os }}
     env:
       CC: ${{ matrix.CC }}
       CXX: ${{ matrix.CXX }}
+    defaults:
+      run:
+        shell: bash -el {0}
 
     steps:
     - name: Checkout
@@ -34,6 +51,11 @@ jobs:
     - name: Setup Bison
       run: |
            if [ "x$(uname)" == "xDarwin" ]; then brew install bison flex; fi
+           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ]; then choco install winflexbison; fi
+
+    - name: Setup NeXus
+      run: |
+           if [ "x$(uname)" == "xLinux" ]; then sudo apt -y install libnexus-dev; fi
 
     - name: Check versions
       run: |
@@ -56,6 +78,7 @@ jobs:
            cd build_mcstas
            export EXTRA_ARGS_FOR_CMAKE=""
            if [ "x$(uname)" == "xDarwin" ]; then export EXTRA_ARGS_FOR_CMAKE="-DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DFLEX_EXECUTABLE=/usr/local/opt/flex/bin/flex"; fi
+           if [ "x$(uname)" == "xLinux" ]; then export EXTRA_ARGS_FOR_CMAKE="-DNEXUSLIB=/usr/lib -DNEXUSINCLUDE=/usr/include/nexus"; fi
            cmake \
                -DCMAKE_INSTALL_PREFIX=../install_mcstas \
                -S ../src \
@@ -69,34 +92,137 @@ jobs:
                -DMCCODE_USE_LEGACY_DESTINATIONS=OFF \
                -DBUILD_TOOLS=ON \
                -DENABLE_COMPONENTS=ON \
-               -DENSURE_MCPL=OFF \
+               -DENSURE_MCPL=ON \
                -DENSURE_NCRYSTAL=OFF \
                -DENABLE_CIF2HKL=OFF \
                -DENABLE_NEUTRONICS=OFF \
                ${EXTRA_ARGS_FOR_CMAKE}
            cmake --build . --config Release
            cmake --build . --target install --config Release
-           test -f "../install_mcstas/bin/mcstas"
-           test -f "../install_mcstas/bin/mcrun"
+           export MCSTAS_EXECUTABLE="mcstas"
+           export MCRUN_EXECUTABLE="mcrun"
+           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
+           then
+             export MCSTAS_EXECUTABLE="mcstas.exe"
+             export MCRUN_EXECUTABLE="mcrun.bat"
+           fi
+           test -f "../install_mcstas/bin/${MCSTAS_EXECUTABLE}"
+           test -f "../install_mcstas/bin/${MCRUN_EXECUTABLE}"
            test -f "../install_mcstas/share/mcstas/tools/Python/mccodelib/__init__.py"
            test -d "../install_mcstas/share/mcstas/resources/data"
 
-    - name: Pip install PyYAML
+    - name: Pip install various
       run: |
            set -e
            set -u
            set -x
-           python3 -mpip install PyYAML
+           python3 -mpip install PyYAML ply McStasscript
+           if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
+           then
+             python3 -mpip install ncrystal
+           fi
 
-    - name: Launch test instrument
+    - name: Launch basic test instrument
+      # Status: Works on Windows + Unixes
       run: |
            set -e
            set -u
            set -x
-           test -f ./install_mcstas/bin/mcstas
-           ./install_mcstas/bin/mcstas --version
+           export MCSTAS_EXECUTABLE="mcstas"
+           export MCSTAS_PYGEN_EXECUTABLE="mcstas-pygen"
+           export MCRUN_EXECUTABLE="mcrun"
+           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
+           then
+             export MCSTAS_EXECUTABLE="mcstas.exe"
+             export MCSTAS_PYGEN_EXECUTABLE="mcstas-pygen.exe"
+             export MCRUN_EXECUTABLE="mcrun.bat"
+           fi
+           test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
+           ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_BNL_H8 && cd run_BNL_H8
            cp ../install_mcstas/share/mcstas/resources/examples/BNL_H8.instr .
            #Not a final solution!!!:
            if [ "x$(uname)" == "xDarwin" ]; then export MCSTAS_CC_OVERRIDE=/usr/bin/clang; fi
-           ../install_mcstas/bin/mcrun BNL_H8.instr lambda=2.36
+           ../install_mcstas/bin/${MCRUN_EXECUTABLE} BNL_H8.instr lambda=2.36
+           ../install_mcstas/bin/${MCSTAS_PYGEN_EXECUTABLE} BNL_H8.instr
+           #python3 BNL_H8_generated.py
+
+    - name: Launch MCPL test instrument
+      # Status: Works on Unixes ("wrapper batches missing for Windows")
+      run: |
+           set -e
+           set -u
+           set -x
+           export MCSTAS_EXECUTABLE="mcstas"
+           export MCRUN_EXECUTABLE="mcrun"
+           export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
+           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
+           then
+             export MCSTAS_EXECUTABLE="mcstas.exe"
+             export MCRUN_EXECUTABLE="mcrun.bat"
+           fi
+           test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
+           ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
+           mkdir run_ESS_BEER_MCPL && cd run_ESS_BEER_MCPL
+           cp ../install_mcstas/share/mcstas/resources/examples/ESS_BEER_MCPL.instr .
+           #Not a final solution!!!:
+           if [ "x$(uname)" == "xDarwin" ]; then export MCSTAS_CC_OVERRIDE=/usr/bin/clang; fi
+           if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
+           then
+            ../install_mcstas/bin/${MCRUN_EXECUTABLE} ESS_BEER_MCPL.instr repetition=50
+           fi
+
+    - name: Launch NCrystal test instrument
+      # Status: Works on Unixes ("ncrystal missing for Windows")
+      run: |
+           set -e
+           set -u
+           set -x
+           export MCSTAS_EXECUTABLE="mcstas"
+           export MCRUN_EXECUTABLE="mcrun"
+           export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
+           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
+           then
+             export MCSTAS_EXECUTABLE="mcstas.exe"
+             export MCRUN_EXECUTABLE="mcrun.bat"
+           fi
+           test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
+           ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
+           mkdir run_NCrystal_example && cd run_NCrystal_example
+           cp ../install_mcstas/share/mcstas/resources/examples/NCrystal_example.instr .
+           #Not a final solution!!!:
+           if [ "x$(uname)" == "xDarwin" ]; then export MCSTAS_CC_OVERRIDE=/usr/bin/clang; fi
+           if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
+           then
+            ../install_mcstas/bin/${MCRUN_EXECUTABLE} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
+           fi
+
+    - name: Launch NeXus test instrument
+      # Status: Works on Linux (NeXus packages w/napi.h missing on mac+Windows)
+      run: |
+           set -e
+           set -u
+           set -x
+           export MCSTAS_EXECUTABLE="mcstas"
+           export MCRUN_EXECUTABLE="mcrun"
+           export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
+           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
+           then
+             export MCSTAS_EXECUTABLE="mcstas.exe"
+             export MCRUN_EXECUTABLE="mcrun.bat"
+           fi
+           test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
+           ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
+           mkdir run_templateSANS_Mantid && cd run_templateSANS_Mantid
+           cp ../install_mcstas/share/mcstas/resources/examples/templateSANS_Mantid.instr .
+           #Not a final solution!!!:
+           if [ "x$(uname)" == "xDarwin" ]; then export MCSTAS_CC_OVERRIDE=/usr/bin/clang; fi
+           if [ "x$(uname)" == "xLinux" ]; then
+             ../install_mcstas/bin/${MCRUN_EXECUTABLE} --format=NeXus --IDF templateSANS_Mantid.instr lambda=6
+           fi
+
+    - name: Setup tmate session for manual debugging
+      uses: mxschmitt/action-tmate@v3
+      if: always() && inputs.manual-debugging == true && (steps.build-and-test-release-mode.outcome != 'success' || steps.build-and-test-debug-mode.outcome != 'success')
+      with:
+        limit-access-to-actor: true
