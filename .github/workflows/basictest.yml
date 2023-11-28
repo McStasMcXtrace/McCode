@@ -123,6 +123,7 @@ jobs:
            fi
 
     - name: Launch basic test instrument
+      # Status: Works on Windows + Unixes
       run: |
            set -e
            set -u
@@ -147,6 +148,7 @@ jobs:
            #python3 BNL_H8_generated.py
 
     - name: Launch MCPL test instrument
+      # Status: Works on Unixes ("wrapper batches missing for Windows")
       run: |
            set -e
            set -u
@@ -171,6 +173,7 @@ jobs:
            fi
 
     - name: Launch NCrystal test instrument
+      # Status: Works on Unixes ("ncrystal missing for Windows")
       run: |
            set -e
            set -u
@@ -195,6 +198,7 @@ jobs:
            fi
 
     - name: Launch NeXus test instrument
+      # Status: Works on Linux (NeXus packages w/napi.h missing on mac+Windows)
       run: |
            set -e
            set -u
