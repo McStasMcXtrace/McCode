@@ -49,15 +49,18 @@ jobs:
         python-version: ${{ matrix.python }}
 
     - name: Setup Bison
+      id: setup-flex-bison
       run: |
            if [ "x$(uname)" == "xDarwin" ]; then brew install bison flex; fi
            if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ]; then choco install winflexbison; fi
 
     - name: Setup NeXus
+      id: setup-nexus
       run: |
            if [ "x$(uname)" == "xLinux" ]; then sudo apt -y install libnexus-dev; fi
 
     - name: Check versions
+      id: version-checks
       run: |
            which python3
            python3 --version
@@ -69,6 +72,7 @@ jobs:
            #flex --version
 
     - name: Configure build and install mcstas
+      id: mcstas-install
       run: |
            if [ "x$(uname)" == "xDarwin" ]; then export SDKROOT=$(xcrun --sdk macosx --show-sdk-path); fi
            set -e
@@ -112,6 +116,7 @@ jobs:
            test -d "../install_mcstas/share/mcstas/resources/data"
 
     - name: Pip install various
+      id: pip-install
       run: |
            set -e
            set -u
@@ -123,6 +128,7 @@ jobs:
            fi
 
     - name: Launch basic test instrument
+      id: h8-tests
       # Status: Works on Windows + Unixes
       run: |
            set -e
@@ -148,6 +154,7 @@ jobs:
            #python3 BNL_H8_generated.py
 
     - name: Launch MCPL test instrument
+      id: mcpl-test
       # Status: Works on Unixes ("wrapper batches missing for Windows")
       run: |
            set -e
@@ -173,6 +180,7 @@ jobs:
            fi
 
     - name: Launch NCrystal test instrument
+      id: ncrystal-test
       # Status: Works on Unixes ("ncrystal missing for Windows")
       run: |
            set -e
@@ -198,6 +206,7 @@ jobs:
            fi
 
     - name: Launch NeXus test instrument
+      id: nexus-test
       # Status: Works on Linux (NeXus packages w/napi.h missing on mac+Windows)
       run: |
            set -e
@@ -220,9 +229,10 @@ jobs:
            if [ "x$(uname)" == "xLinux" ]; then
              ../install_mcstas/bin/${MCRUN_EXECUTABLE} --format=NeXus --IDF templateSANS_Mantid.instr lambda=6
            fi
+           exit 1
 
     - name: Setup tmate session for manual debugging
       uses: mxschmitt/action-tmate@v3
-      if: always() && inputs.manual-debugging == true && (steps.build-and-test-release-mode.outcome != 'success' || steps.build-and-test-debug-mode.outcome != 'success')
+      if: always() && inputs.manual-debugging == true && (steps.nexus-test.outcome != 'success')
       with:
         limit-access-to-actor: true
