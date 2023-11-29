@@ -229,7 +229,6 @@ jobs:
            if [ "x$(uname)" == "xLinux" ]; then
              ../install_mcstas/bin/${MCRUN_EXECUTABLE} --format=NeXus --IDF templateSANS_Mantid.instr lambda=6
            fi
-           exit 1
 
     - name: Setup tmate session for manual debugging
       uses: mxschmitt/action-tmate@v3
