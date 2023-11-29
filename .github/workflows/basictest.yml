@@ -54,6 +54,12 @@ jobs:
            if [ "x$(uname)" == "xDarwin" ]; then brew install bison flex; fi
            if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ]; then choco install winflexbison; fi
 
+    - name: Setup OpenMPI
+      id: setup-openmpi
+      run: |
+           if [ "x$(uname)" == "xLinux" ]; then sudo apt -y install openmpi-devel; fi
+           if [ "x$(uname)" == "xDarwin" ]; then brew install openmpi; fi
+
     - name: Setup NeXus
       id: setup-nexus
       run: |
@@ -151,6 +157,10 @@ jobs:
            if [ "x$(uname)" == "xDarwin" ]; then export MCSTAS_CC_OVERRIDE=/usr/bin/clang; fi
            ../install_mcstas/bin/${MCRUN_EXECUTABLE} BNL_H8.instr lambda=2.36
            ../install_mcstas/bin/${MCSTAS_PYGEN_EXECUTABLE} BNL_H8.instr
+           if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
+           then
+             ../install_mcstas/bin/${MCRUN_EXECUTABLE} -c --mpi=2 BNL_H8.instr lambda=2.36
+            fi
            #python3 BNL_H8_generated.py
 
     - name: Launch MCPL test instrument
@@ -177,7 +187,8 @@ jobs:
            if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
            then
             ../install_mcstas/bin/${MCRUN_EXECUTABLE} ESS_BEER_MCPL.instr repetition=50
-           fi
+            ../install_mcstas/bin/${MCRUN_EXECUTABLE} -c --mpi=2 ESS_BEER_MCPL.instr repetition=50
+            fi
 
     - name: Launch NCrystal test instrument
       id: ncrystal-test
@@ -203,6 +214,7 @@ jobs:
            if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
            then
             ../install_mcstas/bin/${MCRUN_EXECUTABLE} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
+            ../install_mcstas/bin/${MCRUN_EXECUTABLE} -c --mpi=2 NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
            fi
 
     - name: Launch NeXus test instrument
@@ -228,6 +240,7 @@ jobs:
            if [ "x$(uname)" == "xDarwin" ]; then export MCSTAS_CC_OVERRIDE=/usr/bin/clang; fi
            if [ "x$(uname)" == "xLinux" ]; then
              ../install_mcstas/bin/${MCRUN_EXECUTABLE} --format=NeXus --IDF templateSANS_Mantid.instr lambda=6
+             ../install_mcstas/bin/${MCRUN_EXECUTABLE} -c --mpi=2 --format=NeXus --IDF templateSANS_Mantid.instr lambda=6
            fi
 
     - name: Setup tmate session for manual debugging
