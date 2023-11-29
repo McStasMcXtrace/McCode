@@ -229,9 +229,10 @@ jobs:
            if [ "x$(uname)" == "xLinux" ]; then
              ../install_mcstas/bin/${MCRUN_EXECUTABLE} --format=NeXus --IDF templateSANS_Mantid.instr lambda=6
            fi
+           exit -1
 
     - name: Setup tmate session for manual debugging
       uses: mxschmitt/action-tmate@v3
-      if: always() && inputs.manual-debugging == true && (steps.nexus-test.outcome != 'success')
+      if: always() && (inputs.manual-debugging == true || steps.nexus-test.outcome != 'success')
       with:
         limit-access-to-actor: true
