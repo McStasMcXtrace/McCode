@@ -188,7 +188,7 @@ class McGuiState(QtCore.QObject):
     
     def checkInstrFileCandidate(self, instr):
         if ' ' in instr:
-            raise Exception("checkInstrFileCandidate: \s in instr")
+            raise Exception("checkInstrFileCandidate: ' ' char in instr filename")
 
     def setWorkDir(self, newdir):
         if not os.path.isdir(newdir):
@@ -628,7 +628,7 @@ class McGuiAppController():
             def get_compnames(text):
                 ''' return a list of compnames from an instrument definition code text '''
                 comps = []
-                pat = 'COMPONENT[ ]+([\w0-9]+)[ ]*='
+                pat = r'COMPONENT[ ]+([\w0-9]+)[ ]*='
                 for l in text.splitlines():
                     m = re.search(pat, l)
                     if m:
