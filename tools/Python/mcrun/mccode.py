@@ -3,6 +3,7 @@ import pathlib
 import sys
 import re
 import shutil
+import shlex
 import yaml
 
 from os.path import isfile, dirname, basename, splitext, join
@@ -161,6 +162,17 @@ class McStas:
 
         # Setup cflags
         cflags = ['-lm']  # math library
+
+        # Special support for conda environment with compilers included. To be
+        # conservative we (for now?) only apply this when both CONDA_PREFIX and
+        # LDFLAGS/CFLAGS are set (C++/Fortran would use CXXFLAGS/FFLAGS instead
+        # of CFLAGS):
+        if os.environ.get('CONDA_PREFIX'):
+            if os.environ.get('LDFLAGS'):
+                cflags += shlex.split( os.environ.get('LDFLAGS') )
+            if os.environ.get('CFLAGS'):
+                cflags += shlex.split( os.environ.get('CFLAGS') )
+
         # Parse for instances of CMD() ENV() GETPATH() in the loaded CFLAG entries
         cflags += [self.options.mpi and mccodelib.cflags.evaluate_dependency_str(mccode_config.compilation['MPIFLAGS'],
                                                                                  options.verbose) or '']  # MPI
@@ -175,7 +187,7 @@ class McStas:
         cflags += [self.options.D3 is not None and "-D" + self.options.D3 or ' ']  # DEFINE3
 
         if not self.options.openacc:
-            cflags += options.no_cflags and ['-O0'] or mccode_config.compilation['CFLAGS'].split()  # cflags
+            cflags += options.no_cflags and ['-O0'] or shlex.split(mccode_config.compilation['CFLAGS'])  # cflags
         # Look for CFLAGS in the generated C code
         ccode = open(self.cpath, 'rb')
         counter = 0
@@ -200,7 +212,7 @@ class McStas:
                 # Support CMD(..) and ENV(..) in cflags:
                 flags = mccodelib.cflags.evaluate_dependency_str(flags, options.verbose)
 
-                flags = flags.split(' ')
+                flags = shlex.split(flags)
                 cflags += flags
 
             counter += 1
