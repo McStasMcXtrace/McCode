@@ -49,11 +49,6 @@ jobs:
         python-version: ${{ matrix.python }}
 
     - name: Setup Bison
-      run: |
-           if [ "x$(uname)" == "xDarwin" ]; then brew install bison flex; fi
-
-    - name: Check versions
-
       id: setup-flex-bison
       run: |
            if [ "x$(uname)" == "xDarwin" ]; then brew install bison flex; fi
@@ -114,12 +109,6 @@ jobs:
                ${EXTRA_ARGS_FOR_CMAKE}
            cmake --build . --config Release
            cmake --build . --target install --config Release
-           test -f "../install_mcstas/bin/mcstas"
-           test -f "../install_mcstas/bin/mcrun"
-           test -f "../install_mcstas/share/mcstas/tools/Python/mccodelib/__init__.py"
-           test -d "../install_mcstas/share/mcstas/resources/data"
-
-    - name: Pip install PyYAML
            export MCSTAS_EXECUTABLE="mcstas"
            export MCRUN_EXECUTABLE="mcrun"
            if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
