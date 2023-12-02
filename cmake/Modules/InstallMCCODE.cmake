@@ -407,21 +407,22 @@ macro(installMCCODE)
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}-pygen${DOT_EXE_SUFFIX}"
       DESTINATION ${DEST_BINDIR}
     )
-
-    install(PROGRAMS
-      cmake/support/run-scripts/mpirun.bat
-      DESTINATION "${DEST_BINDIR}"
+    if ( MCCODE_USE_LEGACY_DESTINATIONS )
+      install(PROGRAMS
+        cmake/support/run-scripts/mpirun.bat
+        DESTINATION "${DEST_BINDIR}"
       )
 
-    configure_file(
-      cmake/support/run-scripts/mpicc.bat.in
-      work/support/mpicc.bat
+      configure_file(
+        cmake/support/run-scripts/mpicc.bat.in
+        work/support/mpicc.bat
       )
 
-    install(PROGRAMS
-      ${CMAKE_CURRENT_SOURCE_DIR}/work/support/mpicc.bat
-      DESTINATION "${DEST_BINDIR}"
+      install(PROGRAMS
+        ${CMAKE_CURRENT_SOURCE_DIR}/work/support/mpicc.bat
+        DESTINATION "${DEST_BINDIR}"
       )
+    endif()
 
   endif()
 

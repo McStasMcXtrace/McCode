@@ -54,7 +54,7 @@ SHARE
 %{
 
 #ifdef Union
-printf("ERROR: The Union_init component needs to be the first Union component!\n")
+printf("ERROR: The Union_init component needs to be the first Union component!\n");
 exit(1);
 #endif
 

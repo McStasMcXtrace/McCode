@@ -4,7 +4,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Component: Res_monitor
+* Component: TOFRes_monitor
 *
 * %I
 * Written by: Kristian Nielsen
@@ -13,15 +13,15 @@
 * Modified by: EF, 16th Apr 2003: imported from Monitor_nD to enable many shapes
 * Modified by: T. Weber, Nov 2020: a) added live calculations; b) updated for McStas 3 / OpenACC
 *
-* Monitor for resolution calculations
+* Monitor for resolution calculations, TOFRes version, for use with TOFRes_sample in 3.x
 *
 * %D
-* A single detector/monitor, used together with the Res_sample component to
+* A single detector/monitor, used together with the TOFRes_sample component to
 * compute instrument resolution functions. Outputs a list of neutron
 * scattering events in the sample along with their intensities in the
 * detector. The output file may be analyzed with the mcresplot front-end.
 *
-* Example: Res_monitor(filename="Output.res", res_sample_comp=RSample, xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
+* Example: Res_monitor(filename="Output.res", res_sample_comp="RSample", xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
 *
 * Setting the monitor geometry.
 *   The optional parameter 'options' may be set as a string with the
@@ -43,7 +43,7 @@
 * zmin: [m]                     Lower z bound of detector opening
 * zmax: [m]                     Upper z bound of detector opening
 * filename: [string]            Name of output file. If unset, use automatic name
-* res_sample_comp: [no quotes]  Name of Res_sample component in the instrument definition
+* res_sample_comp: [WITH quotes]  Name of TOFRes_sample component in the instrument definition
 * bufsize: [1]                  Number of events to store. Use 0 to store all
 *
 * OPTIONAL PARAMETERS (derived from Monitor_nD)
@@ -64,7 +64,7 @@
 *
 * %E
 *******************************************************************************/
-DEFINE COMPONENT Res_monitor
+DEFINE COMPONENT TOFRes_monitor
 
 DEFINITION PARAMETERS ()
 
@@ -106,7 +106,7 @@ DECLARE%{
 INITIALIZE %{
 
   // Use instance name for monitor output if no input was given
-  if (!strcmp(filename,"\0")) sprintf(filename,"%s",NAME_CURRENT_COMP);
+  if (!strcmp(filename,"\0")) sprintf(filename,NAME_CURRENT_COMP);
   
   buffer_index = 0;
 
@@ -160,7 +160,7 @@ INITIALIZE %{
   if (filename != NULL)
     strncpy(Vars.Mon_File, filename, 128);
   /* Initialize uservar strings */
-  int *index_ptr=COMP_GETPAR3(Res_sample, res_sample_comp, compindex);
+  int *index_ptr=COMP_GETPAR3(TOFRes_sample, res_sample_comp, compindex);
   int index = *index_ptr;
   sprintf(res_pi_var,"res_pi_%i",index);
   sprintf(res_ki_x_var,"res_ki_x_%i",index);
@@ -223,7 +223,7 @@ TRACE %{
         PROP_DT(t0); /* t0 incoming beam */
     }
 
-    /* Now fetch data from the Res_sample. */
+    /* Now fetch data from the TOFRes_sample. */
     if(p && (!bufsize || buffer_index<bufsize))
     {
       /* old behaviour not supported by openacc:

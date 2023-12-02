@@ -1,0 +1,186 @@
+/*******************************************************************************
+* Instrument: Test_DiskChoppers2
+*
+* %I
+* Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
+* Date: September 2018
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests_optics
+*
+* Simple test instrument that compares DiskChoppers with a simple, rotating Slit.
+*
+* %D
+* Simple test instrument that compares DiskChoppers with a simple, rotating Slit.
+* When ABSORBER is set, a slab of B4C is acts as absorbing medium.
+*
+* %Example: Test_DiskChoppers.instr chopper=0 Detector: Tofl_I=0.0005
+* %Example: Test_DiskChoppers.instr chopper=1 Detector: Tofl_I=0.0005
+* %Example: Test_DiskChoppers.instr chopper=0 ABSORBER=1 Detector: Tofl_I=0.0007
+* %Example: Test_DiskChoppers.instr chopper=1 ABSORBER=1 Detector: Tofl_I=0.0007
+*
+* %P
+* chopper:  [int] chopper=0 selects DiskChopper, chopper=1 selects a rotating Slit
+* lambda:   [AA]  Mean wavelength produced from the source 
+* dlambda:  [AA]  Halfwidth of wavelenghts produced from the source
+* deltay:   [m]   Position of centre of rotation vs. beam in slit case
+* nu:       [Hz]  Chopper frequency
+* phase:    [deg] Chopper phase
+* ABSORBER: [1]   Flag to indicate if slab is B4C(=1) or perfect(=0)
+* tz:       [m]   Thickness of B4C slab
+*
+* %L
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Test_DiskChoppers2(chopper=0,lambda=10, dlambda=9.9, deltay=0.19,dx=0.016, nu=10, phase=0, int ABSORBER=0, tz=0.001)
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT source_gen = Source_gen(
+    flux_file="NULL", 
+    xdiv_file="NULL", 
+    ydiv_file="NULL", 
+    radius=0.0, 
+    dist=10, 
+    focus_xw=dx*1.1, 
+    focus_yh=0.12, 
+    focus_aw=0, 
+    focus_ah=0, 
+    E0=0, 
+    dE=0, 
+    lambda0=lambda, 
+    dlambda=dlambda, 
+    I1=1, 
+    yheight=0.1, 
+    xwidth=0.1, 
+    verbose=0, 
+    T1=0, 
+    flux_file_perAA=0, 
+    flux_file_log=0, 
+    Lmin=0, 
+    Lmax=0, 
+    Emin=0, 
+    Emax=0, 
+    T2=0, 
+    I2=0, 
+    T3=0, 
+    I3=0, 
+    zdepth=0, 
+    target_index=+1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (0, 0, 0) RELATIVE PREVIOUS
+EXTEND %{
+  t=rand01();
+%}
+  
+COMPONENT Arm0 = Arm()
+  AT (0, 0, 10) RELATIVE source_gen
+
+COMPONENT diskchopper0 = DiskChopper(
+    theta_0=5, 
+    radius=0.25, 
+    yheight=0.12, 
+    nu=nu, 
+    nslit=1, 
+    isfirst=0, phase=phase)
+WHEN (chopper==0) AT (0, 0, 0) RELATIVE Arm0
+GROUP Disks
+
+COMPONENT Slab1 = PowderN(yheight=tz, radius=0.25, reflections="B4C.lau",p_transmit=0.8)
+  WHEN (chopper==0 && ABSORBER) AT (0,-deltay,tz/2) RELATIVE Arm0
+ROTATED (90,0,0) RELATIVE Arm0
+GROUP Disks
+EXTEND %{
+  if (neutrontype==1) {
+    SCATTER;
+  }
+%}
+
+COMPONENT diskArm = Arm()
+AT (0, 0, 0) RELATIVE Arm0
+GROUP Disks
+EXTEND %{
+  if (INSTRUMENT_GETPAR(chopper)==1) {
+    SCATTER;
+  }
+%}
+
+COMPONENT SlitRotC = Arm()
+AT (0, -deltay, 0) RELATIVE PREVIOUS
+  
+COMPONENT R=Rotator(nu=nu, phase=phase, direction=3)
+WHEN (chopper==1) AT (0,0,0) RELATIVE SlitRotC
+
+COMPONENT SlitArm = Arm()
+AT (0,deltay,0) RELATIVE R
+
+COMPONENT Slit = Slit(yheight=0.12, xwidth=dx)
+WHEN (chopper==1) AT (0,0,0) RELATIVE SlitArm
+GROUP Slits
+
+COMPONENT Slab2 = COPY(Slab1)
+WHEN (chopper==1 && ABSORBER) AT (0,-deltay,tz/2) RELATIVE SlitArm
+ROTATED (90,0,0) RELATIVE SlitArm
+GROUP Slits
+EXTEND %{
+  if (neutrontype==1) {
+    SCATTER;
+  }
+%}
+
+COMPONENT slitArm = Arm()
+AT (0, 0, 0) RELATIVE Arm0
+GROUP Slits
+EXTEND %{
+  if (INSTRUMENT_GETPAR(chopper)==0) {
+    SCATTER;
+  }
+%}
+  
+COMPONENT DR=Derotator(rotator="R")
+WHEN (chopper==1) AT (0,0,0) RELATIVE R
+
+
+COMPONENT Tofl = TOFLambda_monitor(
+    tmin=0, 
+    tmax=1e6,
+    nt=1000,
+    filename="TOFlambda", 
+    xwidth=0.05, 
+    yheight=0.13, 
+    Lmin=lambda-dlambda, 
+    Lmax=lambda+dlambda)
+AT (0, 0, tz) RELATIVE diskArm
+
+
+COMPONENT Tof = TOF_monitor(
+    tmin=0, 
+    tmax=1e6,
+    nt=1000,
+    filename="TOF", 
+    xwidth=0.05, 
+    yheight=0.13)
+AT (0, 0, 0.001) RELATIVE PREVIOUS
+  
+COMPONENT psd_monitor = PSD_monitor(
+    xwidth=1, 
+    yheight=1)
+AT (0, 0, 0.001) RELATIVE PREVIOUS
+
+
+FINALLY
+%{
+%}
+
+END

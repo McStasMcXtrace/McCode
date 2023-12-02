@@ -33,9 +33,10 @@
 %}
 
 %{
-typedef struct List_header * List;
-typedef struct Symbol_table * Symtab;
-typedef struct instr_def * instr_ptr_t;
+/* Already typedef'ed in mccode.h:         */
+/* typedef struct List_header * List;      */
+/* typedef struct Symbol_table * Symtab;   */
+/* typedef struct instr_def * instr_ptr_t; */
 int yylex();
 int yyerror(const char *s);
 List list_cat(List, List);
@@ -51,10 +52,10 @@ void metadata_assign_from_instance(List metadata);
    definitions. */
 // TODO: Select either a) or b) below depending on bison version
 // a) bison v < 3
-// %pure-parser
+%pure-parser
 // b) bison v >= 3
-%define api.pure
-%define parse.trace
+//%define api.pure
+//%define parse.trace
 
 /*******************************************************************************
 * Type definition for semantic values.

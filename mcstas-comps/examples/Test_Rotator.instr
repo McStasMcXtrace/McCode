@@ -1,0 +1,95 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Test_Rotator
+*
+* %Identification
+* Written by: Peter Willendrup
+* Date: October 2023
+* Origin: ESS
+* %INSTRUMENT_SITE: Tests_optics
+*
+* Unittest for Rotator/Derotator
+*
+* %Description
+* Unittest for Rotator/Derotator
+*
+* Example: mcrun test.instr <parameters=values>
+*
+* %Parameters
+* nu:     [Hz] Rotation frequency
+* phase: [deg] Rotatoion phase
+* dir:   [int] Rotation axis direction x=1, y=2, z=3
+*
+* %Link
+* A reference/HTML link for more information
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_Rotator(nu=10,phase=5,int dir=2)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source_simple = Source_simple(
+    lambda0=5, 
+    dlambda=1, dist=1, focus_xw=0.01, focus_yh=0.01)
+AT (0, 0, 0) RELATIVE PREVIOUS
+EXTEND %{
+  t=rand01();
+%}
+COMPONENT Sphere0 = PSD_monitor_4PI(restore_neutron=1)
+AT (0, 0, 0) ABSOLUTE
+
+COMPONENT Incoming = Event_monitor_simple()
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT R0=Rotator(nu=nu, phase=phase, direction=dir)
+AT (0,0,1) RELATIVE source_simple
+ 
+COMPONENT Sphere1 = PSD_monitor_4PI(restore_neutron=1)
+AT (0, 0, 0) ABSOLUTE
+
+COMPONENT Rot = Event_monitor_simple()
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT DR=Derotator(rotator="R0")
+AT (0,0,0) RELATIVE R0
+
+COMPONENT Sphere2 = PSD_monitor_4PI(restore_neutron=1)
+AT (0, 0, 0) ABSOLUTE
+  
+COMPONENT Derotated = Event_monitor_simple()
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+

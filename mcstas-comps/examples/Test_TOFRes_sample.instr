@@ -1,0 +1,135 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+* Instrument: Test_TOFRes_sample 
+*
+* %Identification
+* Written by: Peter Willendrup (adapted from ancient Kim Lefmann instrument)
+* Date: 25-Oct-2023
+* Origin: DTU
+*
+* %INSTRUMENT_SITE: Templates
+*
+* Testing resolution of a TOF spectrometer, use "reso.dat" output with mcresplot.py
+*
+* %Description
+* Testing resolution of a TOF spectrometer, use "reso.dat" output with mcresplot.py
+*
+* TOF resolution test instrument.
+*
+* %Example: TWOTHETA=60 Detector: TOFL3_I=1.49356e+08
+*
+* %Parameters
+* Chop_W1:     [m] Width of 1st chopper slit
+* Chop_ph1:    [s] Temporal phase of 1st chopper
+* Chop_W2:     [m] Width of 2nd chopper slit
+* Chop_ph2:    [s] Temporal phase of 2nd chopper
+* Chop_W3:     [m] Width of 3rd chopper slit
+* Chop_ph3:    [s] Temporal phase of 3rd chopper
+* TIME_BIN:   [us] Target detection time
+* BIN_WIDTH:  [us] Width of detection times
+* TWOTHETA:  [deg] Scattering angle
+*
+* %L
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_TOFRes_sample(Chop_W1=0.1, Chop_ph1=0.0009, Chop_W2=0.2, Chop_ph2=0.003, Chop_W3=0.1, Chop_ph3=0.006, TIME_BIN=10000, BIN_WIDTH=10, TWOTHETA=60)
+DECLARE
+%{
+%}
+INITIALIZE
+%{
+%}
+TRACE
+
+COMPONENT a1 = Arm()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = ESS_moderator_short(
+    size = 0.095, Lmin = 0.3, Lmax = 4, dist = 10, focus_xw = 0.03,
+    focus_yh = 0.10, nu = 50, T = 325, tau = 22e-6, tau1 = 0,
+    tau2 = 7e-6, n = 5, n2 = 5, chi2 = 2.5, I0 = 9e10,
+    I2 = 4.6e10, branch1 = 0.5, branch2 = 0.5, branchframe = 0.5)
+  AT (0, 0, 0) RELATIVE a1
+
+COMPONENT TOFL1 = TOFLambda_monitor(
+    nL = 200, nt = 200, filename = "TOFL1.dat", xmin = -0.05,
+    xmax = 0.05, ymin = -0.05, ymax = 0.05, tmin = -100,
+    tmax = 200, Lmin = 0, Lmax = 4)
+  AT (0, 0, 0.00001) RELATIVE a1
+
+COMPONENT slit1 = Slit(
+    xmin = -0.015, xmax = 0.015, ymin = -0.05, ymax = 0.05)
+  AT (0, 0, 2.99) RELATIVE a1
+
+COMPONENT chop1 = DiskChopper(yheight = 0.1,
+    xwidth = Chop_W1, radius = 0.5, nu = 50, nslit = 1, delay = Chop_ph1)
+  AT (0, 0, 3.00) RELATIVE a1
+
+COMPONENT slit2 = Slit(
+    xmin = -0.015, xmax = 0.015, ymin = -0.05, ymax = 0.05)
+  AT (0, 0, 9.99) RELATIVE a1
+
+COMPONENT chop2 = DiskChopper(yheight = 0.1,
+    xwidth = Chop_W2, radius = 0.5, nu = 50, nslit = 1, delay = Chop_ph2)
+  AT (0, 0, 10.00) RELATIVE a1
+
+COMPONENT TOFL2 = TOFLambda_monitor(
+    nL = 200, nt = 200, filename = "TOFL2.dat", xmin = -0.05,
+    xmax = 0.05, ymin = -0.05, ymax = 0.05, tmin = -2e4,
+    tmax = 4e4, Lmin = 0, Lmax = 4)
+  AT (0, 0, 10.02) RELATIVE a1
+
+COMPONENT g = Guide(
+    w1 = 0.03, h1 = 0.1, w2 = 0.02, h2 = 0.03, l = 9.5, R0 = 1,
+    Qc = 0.02, alpha = 6, m = 3, W = 0.003)
+  AT (0, 0, 10.2) RELATIVE a1
+
+COMPONENT chop3 = DiskChopper(yheight = 0.03,
+    xwidth = Chop_W3, radius = 0.5, nu = 200, nslit = 1, delay = Chop_ph3)
+  AT (0, 0, 20.00) RELATIVE a1
+
+COMPONENT PSD = PSD_monitor(
+    nx = 200, ny = 200, filename = "PSD.dat", xmin = -0.05,
+    xmax = 0.05, ymin = -0.05, ymax = 0.05)
+  AT (0, 0, 20.01) RELATIVE a1
+
+COMPONENT TOFL3 = TOFLambda_monitor(
+    nL = 200, nt = 200, filename = "TOFL3.dat", xmin = -0.05,
+    xmax = 0.05, ymin = -0.05, ymax = 0.05, tmin = -2e4,
+    tmax = 4e4, Lmin = 0, Lmax = 4)
+  AT (0, 0, 20.02) RELATIVE a1
+
+COMPONENT sample = TOFRes_sample(
+    radius=0.01, yheight=0.05,
+    time_bin=TIME_BIN, time_width=BIN_WIDTH,
+    focus_xw=0.01, focus_yh=0.01, 
+    target_index=2 )
+  AT (0, 0, 20.1) RELATIVE a1
+
+COMPONENT arm2 = Arm()
+  AT (0,0,0) RELATIVE sample
+  ROTATED (0, TWOTHETA, 0) RELATIVE sample
+
+COMPONENT detector = TOFRes_monitor(
+    xmin= -0.01, xmax= 0.01, ymin= -0.01, ymax= 0.01,
+    filename = "TOFres.dat", res_sample_comp = "sample")
+  AT (0, 0, 5) RELATIVE arm2
+
+
+FINALLY
+%{
+%}
+END
+
+
+
+
+
+
+
+
+
+
+
+

@@ -18,8 +18,10 @@
 * %Description
 * All components positioned after this one are rotating at frequency 'nu' with
 * phase 'phase'. Use the Derotator component to put back the model steady.
-* The rotation is performed w.r.t. the position of the component, along the
-* vertical axis 'y'.
+* The rotation is performed w.r.t. the position of the component, along a chosen
+* main axis (use directon=1 for x, direction=2 for y, direction=3 for z).
+*
+* Default rotation axis is vertical axis / 'y'.
 *
 * Example:
 *   R=Rotator(nu=14, phase=0)
@@ -29,8 +31,9 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-* nu: [Hz]      Rotation frequency (round/s) in the rotating option (vertical axis)
-* phase: [deg]  Phase shift
+* nu:       [Hz] Rotation frequency (round/s) in the rotating option (vertical axis)
+* phase:   [deg] Phase shift
+* direction: [1] Rotation axis selection 1=x, 2=y, 3=z
 *
 * OUTPUT PARAMETERS:
 * angle: [deg]  rotation angle 
@@ -40,30 +43,66 @@
 
 DEFINE COMPONENT Rotator
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (nu=0, phase=0)
+SETTING PARAMETERS (nu=0, phase=0, int direction=2)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
+USERVARS
+%{
+  Rotation Rot;
+%}
+
 DECLARE
 %{
-double angle;
+  char rot_var[20];
 %}
+
+INITIALIZE
+%{
+
+  if (direction <= 0 || direction > 3) {
+    fprintf(stderr,"%s: Please indicate direction=1,2 or 3 (x,y or z)\n",NAME_CURRENT_COMP,direction);
+    exit(-1);
+  }
+
+  /* Initialize uservar string */
+  sprintf(rot_var,"Rot_%i",_comp->_index);
+  
+%}
+
 
 TRACE
 %{
-double dt=0;
 
 if (nu != 0 || phase != 0) { /* rotate neutron w/r to position of component */
     /* approximation of rotating frame */
     /* current coordinates of neutron in centered static frame */
+    double dt=0;
+    double angle;
     Rotation R;
+
     dt     = -z/vz; /* time shift to center of component */
     angle  = fmod(360*nu*(t+dt)+phase, 360); /* in deg */
-    rot_set_rotation(R, 0, -angle*DEG2RAD, 0); /* will rotate neutron instead of comp: negative side */
+    double rx=0,ry=0,rz=0;
+    /* will rotate neutron instead of comp: negative side */
+    if (direction==1) {
+      rx=-angle*DEG2RAD;
+    }
+    else if (direction==2) {
+      ry=-angle*DEG2RAD;
+    }
+    else if (direction==3) {
+      rz=-angle*DEG2RAD;
+    }
+      
+    rot_set_rotation(R, rx, ry, rz); 
     /* apply rotation to centered coordinates */
-    coords_get(rot_apply(R, coords_set(x,y,z)),    &x, &y, &z);
+    Coords tmp = coords_set(x,y,z);
+    coords_get(rot_apply(R, tmp),    &x, &y, &z);
     /* rotate speed */
-    coords_get(rot_apply(R, coords_set(vx,vy,vz)), &vx, &vy, &vz);
+    tmp = coords_set(vx,vy,vz);
+    coords_get(rot_apply(R, tmp), &vx, &vy, &vz);
+    particle_setvar_void(_particle, rot_var, &(R));
   }
 
 %}
