@@ -125,6 +125,10 @@ function( detect_platform_variables resultvarname )
   #C flags:
   include (CheckCCompilerFlag)
   set(MCCODE_CFLAGS "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
+  if ( DARWIN AND DEFINED CMAKE_OSX_SYSROOT AND NOT "x${CMAKE_OSX_SYSROOT}" STREQUAL "x" )
+    #Attempt to provide the relevant -isysroot on macOS, possibly found by cmake
+    set(MCCODE_CFLAGS "${MCCODE_CFLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
+  endif()
   foreach( flag "-std=c99" "-lm" )
     #NB: plethora of "unset(tmp_test_c_flag_result ...)" statements below is
     #added for safety, to prevent CMake's CACHE system to give unpredictable
