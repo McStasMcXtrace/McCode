@@ -253,7 +253,7 @@ jobs:
 
     - name: 'Upload Artifact'
       id: tar-upload
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: my-artifact
         path: "*_output.tgz"
