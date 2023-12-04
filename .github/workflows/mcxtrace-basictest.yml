@@ -60,10 +60,11 @@ jobs:
            if [ "x$(uname)" == "xLinux" ]; then sudo apt -y install libopenmpi-dev; fi
            if [ "x$(uname)" == "xDarwin" ]; then brew install openmpi; fi
 
-    - name: Setup NeXus
-      id: setup-nexus
+    - name: Setup xraylib
+      id: setup-xraylib
       run: |
-           if [ "x$(uname)" == "xLinux" ]; then sudo apt -y install libnexus-dev; fi
+           if [ "x$(uname)" == "xLinux" ]; then sudo apt -y install xraylib; fi
+           if [ "x$(uname)" == "xDarwin" ]; then brew install xraylib; fi
 
     - name: Check versions
       id: version-checks
@@ -126,7 +127,7 @@ jobs:
            set -e
            set -u
            set -x
-           python3 -mpip install PyYAML ply McStasscript xraylib
+           python3 -mpip install PyYAML ply McStasscript
 
     - name: Launch basic test instrument
       id: JJ_SAXS-tests
