@@ -13,18 +13,24 @@ def check_env_vars():
     global configuration
     global compilation
 
+    # Initially figure out if this is McStas or McXtrace
+    MCCODE_OVERRIDE        = configuration["MCCODE"].upper() + '_OVERRIDE'
+    MCCODE_CFLAGS_OVERRIDE = configuration["MCCODE"].upper() + '_CFLAGS_OVERRIDE'
+    MCCODE_CC_OVERRIDE     = configuration["MCCODE"].upper() + '_CC_OVERRIDE'
+    MCCODE_MPICC_OVERRIDE  = configuration["MCCODE"].upper() + '_MPICC_OVERRIDE'
+
     # MCCODE_LIB_DIR
-    if os.getenv('MCSTAS_OVERRIDE') is not None:
-        configuration['MCCODE_LIB_DIR'] = os.getenv('MCSTAS_OVERRIDE')
+    if os.getenv(MCCODE_OVERRIDE) is not None:
+        configuration['MCCODE_LIB_DIR'] = os.getenv(MCCODE_OVERRIDE)
     # CFLAGS
-    if os.getenv('MCSTAS_CFLAGS_OVERRIDE') is not None:
-        compilation['CFLAGS'] = os.getenv('MCSTAS_CFLAGS_OVERRIDE')
+    if os.getenv(MCCODE_CFLAGS_OVERRIDE) is not None:
+        compilation['CFLAGS'] = os.getenv(MCCODE_CFLAGS_OVERRIDE)
     # CC
-    if os.getenv('MCSTAS_CC_OVERRIDE') is not None:
-        compilation['CC'] = os.getenv('MCSTAS_CC_OVERRIDE')
+    if os.getenv(MCCODE_CC_OVERRIDE) is not None:
+        compilation['CC'] = os.getenv(MCCODE_CC_OVERRIDE)
     # MPICC
-    if os.getenv('MCSTAS_MPICC_OVERRIDE') is not None:
-        compilation['MPICC'] = os.getenv('MCSTAS_MPICC_OVERRIDE')
+    if os.getenv(MCCODE_MPICC_OVERRIDE) is not None:
+        compilation['MPICC'] = os.getenv(MCCODE_MPICC_OVERRIDE)
 
 def load_config(path=None):
     ''' loads a json user config to the dictionaries in this module '''
