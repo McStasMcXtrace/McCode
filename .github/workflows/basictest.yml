@@ -243,8 +243,23 @@ jobs:
              ../install_mcstas/bin/${MCRUN_EXECUTABLE} -c --mpi=2 --format=NeXus --IDF templateSANS_Mantid.instr lambda=6
            fi
 
+    - name: 'Tar output files'
+      id: tar-package
+      run: |
+           set -e
+           set -u
+           set -x
+           export TESTOS=`uname | cut -f1 -d_` && tar -cvfz $TESTOS_output.tgz run_*
+
+    - name: 'Upload Artifact'
+      id: tar-upload
+      uses: actions/upload-artifact@v2
+      with:
+        name: my-artifact
+        path: *_output.tgz
+
     - name: Setup tmate session for manual debugging
       uses: mxschmitt/action-tmate@v3
-      if: always() && (inputs.manual-debugging == true || steps.nexus-test.outcome != 'success')
+      if: always() && (inputs.manual-debugging == true || steps.tar-package.outcome != 'success')
       with:
         limit-access-to-actor: true
