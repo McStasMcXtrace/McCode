@@ -337,7 +337,7 @@ class McStasInfo:
         """
 
         def escape(line):
-            ''' Escape \ and " '''
+            # ''' Escape \ and " '''
             return line.replace('\\', '\\\\').replace('"', r'\"')
 
         def quote(match):
