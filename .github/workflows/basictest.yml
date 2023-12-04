@@ -52,7 +52,7 @@ jobs:
       id: setup-flex-bison
       run: |
            if [ "x$(uname)" == "xDarwin" ]; then brew install bison flex; fi
-           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ]; then choco install winflexbison; fi
+           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ]; then choco install winflexbison3; fi
 
     - name: Setup OpenMPI
       id: setup-openmpi

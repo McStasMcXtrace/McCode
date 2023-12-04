@@ -1724,7 +1724,7 @@ int cogen_raytrace(struct instr_def *instr)
   // we need this override, since "comp" is not defined in raytrace() - see section-wide define
   cout("  #undef ABSORB0");
   cout("  #undef ABSORB");
-  cout("  #define ABSORB0 do { DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(ABSORBED);} while(0)");
+  cout("  #define ABSORB0 do { DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; } while(0)");
   cout("  #define ABSORB ABSORB0");
 
   /* Debugging (initial state). */
@@ -1782,6 +1782,7 @@ int cogen_raytrace(struct instr_def *instr)
       coutf("    _class_particle Split_%s_particle=*_particle;", comp->name); // store incoming particle state at SPLIT
       coutf("    int Split_%s_counter;", comp->name);
       coutf("    int SplitS_%s = %s;", comp->name, exp);
+      coutf("    #pragma acc loop independent");
       coutf("    for (" "Split_%s_counter = 0; "
                         "Split_%s_counter< SplitS_%s; "
                         "Split_%s_counter++) {",
