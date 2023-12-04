@@ -58,7 +58,7 @@ jobs:
       id: setup-openmpi
       run: |
            if [ "x$(uname)" == "xLinux" ]; then sudo apt -y install libopenmpi-dev; fi
-           if [ "x$(uname)" == "xDarwin" ]; then brew install openmpi llvm; fi
+           if [ "x$(uname)" == "xDarwin" ]; then brew install openmpi; fi
 
     - name: Setup NeXus
       id: setup-nexus
