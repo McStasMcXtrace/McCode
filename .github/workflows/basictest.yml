@@ -256,7 +256,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: my-artifact
-        path: *_output.tgz
+        path: "*_output.tgz"
 
     - name: Setup tmate session for manual debugging
       uses: mxschmitt/action-tmate@v3
