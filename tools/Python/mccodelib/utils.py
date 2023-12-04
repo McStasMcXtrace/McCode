@@ -70,7 +70,7 @@ class ComponentParser(object):
         if text == '':
             raise Exception('parse: component file is empty.')
         
-        pat = 'MCDISPLAY\s*\%\{([-+.\w\s=<>,/*{}\"\'()\.&$=?;:*|]*)\%\}'
+        pat = r'MCDISPLAY\s*\%\{([-+.\w\s=<>,/*{}\"\'()\.&$=?;:*|]*)\%\}'
         sr = re.search(pat, text)
         if sr:
             self.mcdisplay = sr.group()
@@ -104,7 +104,7 @@ class ComponentParser(object):
         
     @staticmethod
     def __parseComponentName(text):
-        re_out = re.search('DEFINE\s+COMPONENT\s+(\w*)', text)
+        re_out = re.search(r'DEFINE\s+COMPONENT\s+(\w*)', text)
         if re_out:
             return re_out.group(1)
     
@@ -253,7 +253,7 @@ class ComponentParser(object):
     
     @staticmethod
     def __parseInstrumentDef(text):
-        re_out = re.search('DEFINE\s+INSTRUMENT\s+([a-zA-Z0-9_]*)\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*{}\"]*)\)', text)
+        re_out = re.search(r'DEFINE\s+INSTRUMENT\s+([a-zA-Z0-9_]*)\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*{}\"]*)\)', text)
         if re_out:
             return re_out.group(1)
 
@@ -279,10 +279,10 @@ def read_header(file):
             lines.append(l)
         except:
             break
-        if not re.match('[ ]*\*', l):
-            if not re.match('[ ]*\/\*', l):
+        if not re.match(r'[ ]*\*', l):
+            if not re.match(r'[ ]*\/\*', l):
                 break
-        elif re.search('[ ]*\*\*\*\*', l):
+        elif re.search(r'[ ]*\*\*\*\*', l):
             break
     return ''.join(lines)
 
@@ -394,38 +394,38 @@ def parse_header(text):
     info = InstrCompHeaderInfo()
     
     # get author, date, origin, revision
-    m1 = re.search('Written by:([^\n]*)\n', bites[tag_I])
+    m1 = re.search(r'Written by:([^\n]*)\n', bites[tag_I])
     if not m1:
-      m1 = re.search('Author:([^\n]*)\n', bites[tag_I])
+      m1 = re.search(r'Author:([^\n]*)\n', bites[tag_I])
     if m1: info.author = m1.group(1).strip()
     
-    m2 = re.search('Date:([^\n]*)\n', bites[tag_I])
+    m2 = re.search(r'Date:([^\n]*)\n', bites[tag_I])
     if m2: info.date = m2.group(1).strip()
     
-    m3 = re.search('Origin:([^\n]*)\n', bites[tag_I])
+    m3 = re.search(r'Origin:([^\n]*)\n', bites[tag_I])
     if m3: info.origin = m3.group(1).strip()
     
-    m4 = re.search('Version:([^\n]*)\n', bites[tag_I])
+    m4 = re.search(r'Version:([^\n]*)\n', bites[tag_I])
     if m4: info.version = m4.group(1).strip()
     
-    m5 = re.search('\%INSTRUMENT_SITE:[^\n]*\n(.*)', bites[tag_I], flags=re.DOTALL)
+    m5 = re.search(r'\%INSTRUMENT_SITE:[^\n]*\n(.*)', bites[tag_I], flags=re.DOTALL)
     if not m5:
-      m5 = re.search('Origin:[^\n]*\n(.*)', bites[tag_I], flags=re.DOTALL)
+      m5 = re.search(r'Origin:[^\n]*\n(.*)', bites[tag_I], flags=re.DOTALL)
     
     if m5:
       # ignore some comments
       descrlines = []
       # remove all "*:" lines
       for l in m5.group(1).strip().splitlines():
-          if not re.match('[^\n]*:', l, flags=re.DOTALL):
+          if not re.match(r'[^\n]*:', l, flags=re.DOTALL):
               descrlines.append(l)
       info.short_descr = '\n'.join(descrlines).strip()
     
     # description
     descr = bites[tag_D]
-    if re.match('\%Description', descr):
+    if re.match(r'\%Description', descr):
         descr = descr.replace('%Description', '').strip()
-    elif re.match('\%D', descr):
+    elif re.match(r'\%D', descr):
         descr = descr.replace('%D', '').strip()
     info.description = descr
     
@@ -436,20 +436,20 @@ def parse_header(text):
     # params
     par_doc = None
     for l in bites[tag_P].splitlines():
-        m = re.match('(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^\|\{\};\*]*)\][ \t]*(.*)', l)
+        m = re.match(r'(\w+):[ \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^\|\{\};\*]*)\][ \t]*(.*)', l)
         par_doc = (None, None, None)
         if m:
             par_doc = (m.group(1), m.group(2), m.group(3).strip())
             info.params_docs.append(par_doc)
         else:
-            m = re.match('(\w+):[ \t]*(.*)', l)
+            m = re.match(r'(\w+):[ \t]*(.*)', l)
             if m:
                 par_doc = (m.group(1), "", m.group(2).strip())
                 info.params_docs.append(par_doc)
     
     # links
     for l in bites[tag_L].splitlines():
-        if re.match('\s*%', l) or l.strip() == '' or re.match('\/', l):
+        if re.match(r'\s*%', l) or l.strip() == '' or re.match(r'\/', l):
             continue
         info.links.append(l)
     
@@ -462,16 +462,16 @@ def read_define_instr(file):
     '''
     lines = []
     for l in file:
-        if not re.match('DEFINE[ \t]+INSTRUMENT[ \t]+', l):
+        if not re.match(r'DEFINE[ \t]+INSTRUMENT[ \t]+', l):
             continue
         else:
             lines.append(l.strip())
             break
     
-    if len(lines) > 0 and not re.search('\)', lines[-1]):
+    if len(lines) > 0 and not re.search(r'\)', lines[-1]):
         for l in file:
             lines.append(l.strip())
-            if re.search('\)', l):
+            if re.search(r'\)', l):
                 break
     
     return ' '.join(lines)
@@ -485,22 +485,22 @@ def read_define_comp(file):
     # get to DEFINE COMPONENT statement
     for l in file:
         lines.append(l.strip())
-        if not re.match('DEFINE[ \t]+COMPONENT[ \t]+', l):
+        if not re.match(r'DEFINE[ \t]+COMPONENT[ \t]+', l):
             continue
         else:
             break
     
     for l in file:
-        m = re.match('[ ]*(\w+)', l)
+        m = re.match(r'[ ]*(\w+)', l)
         lines.append(l.strip())
         if m and m.group(1) in end_conds:
             break
     
     # look for closing 
-    if not re.search('\)', lines[-1]):
+    if not re.search(r'\)', lines[-1]):
         for l in file:
             lines.append(l.strip())
-            if re.search('\)', l):
+            if re.search(r'\)', l):
                 break
     
     return '\n'.join(lines)
@@ -522,16 +522,16 @@ def parse_define_comp(text):
     text = text.replace(' =', '=')
     text = text.replace('= ', '=')
     
-    name = re.search('DEFINE[ \t]+COMPONENT[ \t]+(\w+)', text).group(1)
-    m = re.search('DEFINITION[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=\{\}]*)\)', text)
+    name = re.search(r'DEFINE[ \t]+COMPONENT[ \t]+(\w+)', text).group(1)
+    m = re.search(r'DEFINITION[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=\{\}]*)\)', text)
     defpar = []
     if m:
         defpar = parse_params(m.group(1))
-    m = re.search('SETTING[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=\{\}]*)\)', text)
+    m = re.search(r'SETTING[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=\{\}]*)\)', text)
     setpar = []
     if m:
         setpar = parse_params(m.group(1))
-    m = re.search('OUTPUT[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
+    m = re.search(r'OUTPUT[ \t]+PARAMETERS[ \t]*\(([\w\,\"\s\n\t\r\.\+\-=]*)\)', text)
     outpar = []
     if m:
         outpar = parse_params(m.group(1))
@@ -540,7 +540,7 @@ def parse_define_comp(text):
 
 def clean_instr_def(defline):
     ''' takes a typical output of read_define_instr() and extracts the "params string" for use with parse_params '''
-    m = re.search('\(([^(^)]*)\)', defline)
+    m = re.search(r'\(([^(^)]*)\)', defline)
     try:
         return m.group(1)
     except:
@@ -553,8 +553,8 @@ def parse_params(params_line):
     def par_rec(substr, lst):
         try:
             # handle parameter sections including curly bracket default values (case 2)
-            m1 = re.match('([^,{]+),(.*)', substr) # not comma or curl, then a comma
-            m2 = re.match('([^,{]+\{[^}]*\}\s*),(.*)', substr) # not comma or curl, then not a right curl, then a right curlt, then a comma
+            m1 = re.match(r'([^,{]+),(.*)', substr) # not comma or curl, then a comma
+            m2 = re.match(r'([^,{]+\{[^}]*\}\s*),(.*)', substr) # not comma or curl, then not a right curl, then a right curlt, then a comma
     
             if m1:
                 lst.append(m1.group(1)) 
@@ -588,22 +588,22 @@ def parse_params(params_line):
         name = None
         if re.search(r'^ ', part):
             part = part[1:]
-        if re.match('double ', part):
+        if re.match(r'double ', part):
             part = part.replace('double ', '').strip()
-        if re.match('string ', part):
+        if re.match(r'string ', part):
             tpe = 'string'
             part = part.replace('string ', '').strip()
-        if re.match('vector ', part):
+        if re.match(r'vector ', part):
             tpe = 'vector'
             part = part.replace('vector ', '').strip()
-        if re.match('int ', part):
+        if re.match(r'int ', part):
             tpe = 'int'
             part = part.replace('int ', '').strip()
-        if re.search('"', part):
-            m=re.match('(.*)\s*=\s*"(.*)"', part)
+        if re.search(r'"', part):
+            m=re.match(r'(.*)\s*=\s*"(.*)"', part)
             dval = '"' + m.group(2) + '"'
             name = m.group(1).strip()
-        elif re.search('=', part):
+        elif re.search(r'=', part):
             m = re.match("(.*)=(.*)", part)
             dval = m.group(2).strip()
             name = m.group(1).strip()
@@ -619,7 +619,7 @@ def parse_define_instr(text):
     Not robust to "junk" in the input string.
     '''
     try:
-        m = re.match('DEFINE[ \t]+INSTRUMENT[ \t]+(\w+)\s*\(([\w\,\"\s\n\t\r\.\+:;\-=]*)\)', text)
+        m = re.match(r'DEFINE[ \t]+INSTRUMENT[ \t]+(\w+)\s*\(([\w\,\"\s\n\t\r\.\+:;\-=]*)\)', text)
         name = m.group(1)
         params = m.group(2).replace('\n', '').strip()
     except:
@@ -639,7 +639,7 @@ def read_finally(file):
     raise Exception('Read_finally: not yet implemented.')
 
 def get_instr_site_fromtxt(text):
-    m = re.search('\%INSTRUMENT_SITE:[ \t]*(\w+)[ \t]*\n?', text)
+    m = re.search(r'\%INSTRUMENT_SITE:[ \t]*(\w+)[ \t]*\n?', text)
     if m:
         return m.group(1)
     else:
