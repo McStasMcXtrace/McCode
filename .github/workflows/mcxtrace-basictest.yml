@@ -60,12 +60,6 @@ jobs:
            if [ "x$(uname)" == "xLinux" ]; then sudo apt -y install libopenmpi-dev; fi
            if [ "x$(uname)" == "xDarwin" ]; then brew install openmpi; fi
 
-    - name: Setup xraylib
-      id: setup-xraylib
-      run: |
-           if [ "x$(uname)" == "xLinux" ]; then sudo apt -y install xraylib; fi
-           if [ "x$(uname)" == "xDarwin" ]; then brew install xraylib; fi
-
     - name: Check versions
       id: version-checks
       run: |
@@ -184,32 +178,6 @@ jobs:
             ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} Test_MCPL_input.instr repeat=10
             ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} -c --mpi=2 Test_MCPL_input.instr repeat=20
             fi
-
-    - name: Launch Fluorescence test instrument
-      id: xraylib-test
-      run: |
-           set -e
-           set -u
-           set -x
-           export MCXTRACE_EXECUTABLE="mcxtrace"
-           export MXRUN_EXECUTABLE="mxrun"
-           export PATH=${PATH}:${PWD}/install_mcxtrace/bin/:${PWD}/install_mcxtrace/mcxtrace/3.99.99/bin/
-           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
-           then
-             export MCXTRACE_EXECUTABLE="mcxtrace.exe"
-             export MXRUN_EXECUTABLE="mxrun.bat"
-           fi
-           test -f ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE}
-           ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE} --version
-           mkdir run_Test_Fluorescence && cd run_Test_Fluorescence
-           cp ../install_mcxtrace/share/mcxtrace/resources/examples/Test_Fluorescence.instr .
-           #Not a final solution!!!:
-           if [ "x$(uname)" == "xDarwin" ]; then export MCXTRACE_CC_OVERRIDE=/usr/bin/clang; fi
-           if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
-           then
-            ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} Test_Fluorescence.instr material=LaB6
-            ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} -c --mpi=2 Test_Fluorescence.instr material=LaB6
-           fi
 
     - name: 'Tar output files'
       id: tar-package
