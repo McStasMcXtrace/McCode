@@ -249,7 +249,7 @@ jobs:
            set -e
            set -u
            set -x
-           export TESTOS=`uname | cut -f1 -d_` && tar cvfz ${TESTOS}_output.tgz run_*
+           export TESTOS=`uname | cut -f1 -d_` && export TESTREL=`uname -r` && tar cvfz ${TESTOS}_${TESTREL}_output.tgz run_*
 
     - name: 'Upload Artifact'
       id: tar-upload
