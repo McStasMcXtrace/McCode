@@ -217,7 +217,7 @@ jobs:
            set -e
            set -u
            set -x
-           export TESTOS=`uname | cut -f1 -d_` && export TESTREL=`uname -r` && tar cvfz mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}_output.tgz run_*
+           tar cvfz mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}_output.tgz run_*
 
     - name: 'Upload Artifact'
       id: tar-upload
@@ -228,6 +228,6 @@ jobs:
 
     - name: Setup tmate session for manual debugging
       uses: mxschmitt/action-tmate@v3
-      if: always() && (inputs.manual-debugging == true || steps.tar-package.outcome != 'success')
+      if: always() && (inputs.manual-debugging == true && steps.tar-package.outcome != 'success')
       with:
         limit-access-to-actor: true
