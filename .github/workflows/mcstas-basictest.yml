@@ -22,9 +22,9 @@ jobs:
           - { os: ubuntu-latest, CC: gcc,      CXX: g++,        python: '3.10' }
           - { os: ubuntu-latest, CC: clang,    CXX: clang++,    python: '3.11' }
           - { os: ubuntu-latest, CC: gcc-12,   CXX: g++-12,     python: '3.11' }
-#          - { os: macos-11,      CC: clang,    CXX: clang++,    python: "3.10" }
+          - { os: macos-11,      CC: clang,    CXX: clang++,    python: "3.10" }
           - { os: macos-12,      CC: clang,    CXX: clang++,    python: "3.11" }
-#          - { os: macos-13,      CC: clang,    CXX: clang++,    python: "3.11" }
+          - { os: macos-13,      CC: clang,    CXX: clang++,    python: "3.11" }
           - { os: windows-latest,  CC: gcc,    CXX: g++,        python: "3.11" }
           - { os: windows-2019,    CC: gcc,    CXX: g++,        python: "3.11" }
 
@@ -48,22 +48,29 @@ jobs:
       with:
         python-version: ${{ matrix.python }}
 
-    - name: Setup Bison
-      id: setup-flex-bison
+    - name: Setup Bison (macOS)
+      id: setup-flex-bison-macos
+      if: runner.os == 'macOS'
       run: |
-           if [ "x$(uname)" == "xDarwin" ]; then brew install bison flex; fi
-           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ]; then choco install winflexbison3; fi
+           brew install bison flex
 
-    - name: Setup OpenMPI
-      id: setup-openmpi
+    - name: Setup Bison (Windows)
+      id: setup-flex-bison-Windows
+      if: runner.os == 'Windows'
       run: |
-           if [ "x$(uname)" == "xLinux" ]; then sudo apt -y install libopenmpi-dev; fi
-           if [ "x$(uname)" == "xDarwin" ]; then brew install openmpi; fi
+           choco install winflexbison3
 
-    - name: Setup NeXus
-      id: setup-nexus
+    - name: Setup OpenMPI (Linux)
+      id: setup-openmpi-linux
+      if: runner.os == 'Linux'
       run: |
-           if [ "x$(uname)" == "xLinux" ]; then sudo apt -y install libnexus-dev; fi
+           sudo apt -y install libopenmpi-dev
+
+    - name: Setup OpenMPI (macOS-12)
+      id: setup-openmpi-macos12
+      if: matrix.os == 'macos-12'
+      run: |
+           brew install openmpi
 
     - name: Check versions
       id: version-checks
@@ -72,23 +79,21 @@ jobs:
            python3 --version
            which cmake
            cmake --version
-           #NB: bison and flex in path are actually too old, we will install the
-           #    keg-only recipes for them later:
-           #bison --version
-           #flex --version
+           #NB: bison and flex in path are actually too old, on mac we
+           #inject these via a brew keg later
 
     - name: Configure build and install mcstas
       id: mcstas-install
       run: |
-           if [ "x$(uname)" == "xDarwin" ]; then export SDKROOT=$(xcrun --sdk macosx --show-sdk-path); fi
+           if [ "$RUNNER_OS" == "macOS" ]; then export SDKROOT=$(xcrun --sdk macosx --show-sdk-path); fi
            set -e
            set -u
            set -x
            mkdir build_mcstas
            cd build_mcstas
            export EXTRA_ARGS_FOR_CMAKE=""
-           if [ "x$(uname)" == "xDarwin" ]; then export EXTRA_ARGS_FOR_CMAKE="-DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DFLEX_EXECUTABLE=/usr/local/opt/flex/bin/flex"; fi
-           if [ "x$(uname)" == "xLinux" ]; then export EXTRA_ARGS_FOR_CMAKE="-DNEXUSLIB=/usr/lib -DNEXUSINCLUDE=/usr/include/nexus"; fi
+           if [ "$RUNNER_OS" == "macOS" ]; then export EXTRA_ARGS_FOR_CMAKE="-DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DFLEX_EXECUTABLE=/usr/local/opt/flex/bin/flex"; fi
+           if [ "$RUNNER_OS" == "Linux" ]; then export EXTRA_ARGS_FOR_CMAKE="-DNEXUSLIB=/usr/lib -DNEXUSINCLUDE=/usr/include/nexus"; fi
            cmake \
                -DCMAKE_INSTALL_PREFIX=../install_mcstas \
                -S ../src \
@@ -111,7 +116,7 @@ jobs:
            cmake --build . --target install --config Release
            export MCSTAS_EXECUTABLE="mcstas"
            export MCRUN_EXECUTABLE="mcrun"
-           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
+           if [ "$RUNNER_OS" == "Windows" ];
            then
              export MCSTAS_EXECUTABLE="mcstas.exe"
              export MCRUN_EXECUTABLE="mcrun.bat"
@@ -133,13 +138,13 @@ jobs:
            set -u
            set -x
            python3 -mpip install PyYAML ply McStasscript
-           if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
+           if [ "$RUNNER_OS" != "Windows" ];
            then
              python3 -mpip install ncrystal
            fi
 
-    - name: Launch basic test instrument
-      id: h8-tests
+    - name: Launch BNL_H8 instrument
+      id: h8-test
       # Status: Works on Windows + Unixes
       run: |
            set -e
@@ -148,7 +153,7 @@ jobs:
            export MCSTAS_EXECUTABLE="mcstas"
            export MCSTAS_PYGEN_EXECUTABLE="mcstas-pygen"
            export MCRUN_EXECUTABLE="mcrun"
-           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
+           if [ "$RUNNER_OS" == "Windows" ];
            then
              export MCSTAS_EXECUTABLE="mcstas.exe"
              export MCSTAS_PYGEN_EXECUTABLE="mcstas-pygen.exe"
@@ -158,18 +163,28 @@ jobs:
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_BNL_H8 && cd run_BNL_H8
            cp ../install_mcstas/share/mcstas/resources/examples/BNL_H8.instr .
-           #Not a final solution!!!:
-           #if [ "x$(uname)" == "xDarwin" ]; then export MCSTAS_CC_OVERRIDE=/usr/bin/clang; fi
            ../install_mcstas/bin/${MCRUN_EXECUTABLE} BNL_H8.instr lambda=2.36
            ../install_mcstas/bin/${MCSTAS_PYGEN_EXECUTABLE} BNL_H8.instr
-           if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
-           then
-             ../install_mcstas/bin/${MCRUN_EXECUTABLE} -c --mpi=2 BNL_H8.instr lambda=2.36
-            fi
-           #python3 BNL_H8_generated.py
+
+    - name: Launch BNL_H8 instrument (MPI)
+      id: h8-test-mpi
+      if: runner.os == 'Linux'  || matrix.os == 'macos-12' # Linux or macos-12 only
+      run: |
+           set -e
+           set -u
+           set -x
+           export MCSTAS_EXECUTABLE="mcstas"
+           export MCSTAS_PYGEN_EXECUTABLE="mcstas-pygen"
+           export MCRUN_EXECUTABLE="mcrun"
+           test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
+           ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
+           mkdir run_BNL_H8_mpi && cd run_BNL_H8_mpi
+           cp ../install_mcstas/share/mcstas/resources/examples/BNL_H8.instr .
+           ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=2 BNL_H8.instr lambda=2.36
 
     - name: Launch MCPL test instrument
       id: mcpl-test
+      if: runner.os == 'Linux' || runner.os == 'macOS' # Linux or macOS only
       # Status: Works on Unixes ("wrapper batches missing for Windows")
       run: |
            set -e
@@ -178,25 +193,32 @@ jobs:
            export MCSTAS_EXECUTABLE="mcstas"
            export MCRUN_EXECUTABLE="mcrun"
            export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
-           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
-           then
-             export MCSTAS_EXECUTABLE="mcstas.exe"
-             export MCRUN_EXECUTABLE="mcrun.bat"
-           fi
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_ESS_BEER_MCPL && cd run_ESS_BEER_MCPL
            cp ../install_mcstas/share/mcstas/resources/examples/ESS_BEER_MCPL.instr .
-           #Not a final solution!!!:
-           #if [ "x$(uname)" == "xDarwin" ]; then export MCSTAS_CC_OVERRIDE=/usr/bin/clang; fi
-           if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
-           then
-            ../install_mcstas/bin/${MCRUN_EXECUTABLE} ESS_BEER_MCPL.instr repetition=50
-            ../install_mcstas/bin/${MCRUN_EXECUTABLE} -c --mpi=2 ESS_BEER_MCPL.instr repetition=50
-            fi
+           ../install_mcstas/bin/${MCRUN_EXECUTABLE} ESS_BEER_MCPL.instr repetition=50
+
+    - name: Launch MCPL test instrument (mpi)
+      id: mcpl-test-mpi
+      if: runner.os == 'Linux'  || matrix.os == 'macos-12' # Linux or macos-12 only
+      # Status: Works on Unixes ("wrapper batches missing for Windows")
+      run: |
+           set -e
+           set -u
+           set -x
+           export MCSTAS_EXECUTABLE="mcstas"
+           export MCRUN_EXECUTABLE="mcrun"
+           export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
+           test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
+           ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
+           mkdir run_ESS_BEER_MCPL_mpi && cd run_ESS_BEER_MCPL_mpi
+           cp ../install_mcstas/share/mcstas/resources/examples/ESS_BEER_MCPL.instr .
+            ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=2 ESS_BEER_MCPL.instr repetition=100
 
     - name: Launch NCrystal test instrument
       id: ncrystal-test
+      if: runner.os == 'Linux' || runner.os == 'macOS' # Linux or macOS only
       # Status: Works on Unixes ("ncrystal missing for Windows")
       run: |
            set -e
@@ -205,30 +227,38 @@ jobs:
            export MCSTAS_EXECUTABLE="mcstas"
            export MCRUN_EXECUTABLE="mcrun"
            export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
-           if [ "x$(uname | cut -f1 -d_)" == "xMINGW64" ];
-           then
-             export MCSTAS_EXECUTABLE="mcstas.exe"
-             export MCRUN_EXECUTABLE="mcrun.bat"
-           fi
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_NCrystal_example && cd run_NCrystal_example
            cp ../install_mcstas/share/mcstas/resources/examples/NCrystal_example.instr .
-           #Not a final solution!!!:
-           #if [ "x$(uname)" == "xDarwin" ]; then export MCSTAS_CC_OVERRIDE=/usr/bin/clang; fi
-           if [ "x$(uname | cut -f1 -d_)" != "xMINGW64" ];
-           then
             ../install_mcstas/bin/${MCRUN_EXECUTABLE} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
-            ../install_mcstas/bin/${MCRUN_EXECUTABLE} -c --mpi=2 NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
-           fi
+
+    - name: Launch NCrystal test instrument (mpi)
+      id: ncrystal-test-mpi
+      if: runner.os == 'Linux'  || matrix.os == 'macos-12' # Linux or macos-12 only
+      # Status: Works on Unixes ("ncrystal missing for Windows")
+      run: |
+           set -e
+           set -u
+           set -x
+           export MCSTAS_EXECUTABLE="mcstas"
+           export MCRUN_EXECUTABLE="mcrun"
+           export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
+           test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
+           ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
+           mkdir run_NCrystal_example_mpi && cd run_NCrystal_example_mpi
+           cp ../install_mcstas/share/mcstas/resources/examples/NCrystal_example.instr .
+           ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=2 NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
 
     - name: Launch NeXus test instrument
       id: nexus-test
+      if: runner.os == 'Linux' # Linux only
       # Status: Works on Linux (NeXus packages w/napi.h missing on mac+Windows)
       run: |
            set -e
            set -u
            set -x
+           sudo apt -y install libnexus-dev
            export MCSTAS_EXECUTABLE="mcstas"
            export MCRUN_EXECUTABLE="mcrun"
            export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
@@ -254,13 +284,13 @@ jobs:
            set -e
            set -u
            set -x
-           export TESTOS=`uname | cut -f1 -d_` && export TESTREL=`uname -r` && tar cvfz mcstas-${TESTOS}_${TESTREL}_output.tgz run_*
+           export TESTOS=`uname | cut -f1 -d_` && export TESTREL=`uname -r` && tar cvfz mcstas-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}_output.tgz run_*
 
     - name: 'Upload Artifact'
       id: tar-upload
       uses: actions/upload-artifact@v3
       with:
-        name: my-artifact
+        name: mcstas-artefacts
         path: "*_output.tgz"
 
     - name: Setup tmate session for manual debugging
