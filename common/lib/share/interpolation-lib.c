@@ -380,7 +380,7 @@ struct interpolator_struct *interpolator_load(char *filename,
   for (dim=0; dim<interpolator->space_dimensionality; dim++) {
     double  x_prev=0;
     long    index;
-    double  vector[table.rows];
+    double* vector = (double*) calloc(sizeof(double), table.rows);
     
     /* get min/max and fill vector for sorting */
     for (index=0; index<table.rows; index++) {
