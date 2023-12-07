@@ -57,11 +57,10 @@ OUTPUT PARAMETERS ()
 
 DECLARE
 %{
-  #define LARGENUMBER
   int nchan;
-  double TOF_N[LARGENUMBER];
-  double TOF_p[LARGENUMBER];
-  double TOF_p2[LARGENUMBER];
+  DArray1d TOF_N;
+  DArray1d TOF_p;
+  DArray1d TOF_p2;
 %}
 
 INITIALIZE
@@ -76,10 +75,23 @@ INITIALIZE
          NAME_CURRENT_COMP);
     exit(0);
   }
+  
+  if (tmin <= 0 || tmax <= 0) {
+      printf("TOFlog_mon: %s: Only supports positive tmin and tmax !\n"
+             "ERROR       (tmin, tmax). Exiting", NAME_CURRENT_COMP);
+      exit(0);
+  }
+    
+  if (tmin >= tmax) {
+      printf("TOFlog_mon: %s: tmin should be smaller than tmax !\n"
+             "ERROR       (tmin, tmax). Exiting", NAME_CURRENT_COMP);
+      exit(0);
+  }
 
   nchan=(int)ceil(ndec*log(tmax/tmin)/log(10.0));
-  if (nchan>LARGENUMBER)
-    printf("FATAL ERROR, too many time channels \n");
+  TOF_N = create_darr1d(nchan);
+  TOF_p = create_darr1d(nchan);
+  TOF_p2 = create_darr1d(nchan);
 
   for (i=0; i<nchan; i++)
   {
@@ -108,6 +120,7 @@ TRACE
       TOF_p[i] = TOF_p[i]+p;
       #pragma acc atomic      
       TOF_p2[i] = TOF_p2[i]+p2;
+      SCATTER;
     }
   }
   if (restore_neutron) {
@@ -127,6 +140,14 @@ if (!nowritefile) {
       filename);
 }
 %}
+
+FINALLY
+%{
+  destroy_darr1d(TOF_N);
+  destroy_darr1d(TOF_p);
+  destroy_darr1d(TOF_p2);
+%}
+
 
 MCDISPLAY
 %{

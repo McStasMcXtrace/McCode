@@ -71,7 +71,9 @@ TRACE
 
 SAVE
   %{
-    DETECTOR_OUT_0D("4PI monitor " NAME_CURRENT_COMP, Nsum, psum, p2sum);
+    char full_name[1024];
+    sprintf(full_name, "4PI monitor %s", NAME_CURRENT_COMP);
+    DETECTOR_OUT_0D(full_name, Nsum, psum, p2sum);
   %}
 
 MCDISPLAY

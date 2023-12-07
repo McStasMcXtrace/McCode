@@ -58,10 +58,6 @@ SETTING PARAMETERS (
 
 OUTPUT PARAMETERS ()
 
-STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
-
-POLARISATION PARAMETERS (sx, sy, sz)
-
 DECLARE
 %{
   DArray2d PSD_N;
