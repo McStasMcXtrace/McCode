@@ -742,7 +742,7 @@ def generate_tests():
     for i in range(len(MODELS)):
         content = f"""/*******************************************************************************
 *
-* McXtrace, neutron ray-tracing package
+* McXtrace, X ray-tracing package
 *         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
@@ -814,9 +814,8 @@ def generate_tests():
                 pd_args = pd_args[:-2]
                 content_func[
                     ftype
-                ] += f"""* lambda: [AA]   Mean wavelength of neutrons.
-* dlambda: [AA]  Wavelength spread of neutrons.
-* model_abs: [ ] Absorption cross section density at 2200 m/s.
+                ] += f"""* lambda: [AA]   Mean wavelength of X-rays.
+* dlambda: [AA]  Wavelength spread of X-rays.
 * model_scale: [ ] Global scale factor for scattering kernel. For systems without inter-particle interference, the form factors can be related to the scattering intensity by the particle volume fraction.
 * xwidth: [m] ([-inf, inf]) Horiz. dimension of sample, as a width.
 * yheight: [m] ([-inf, inf]) vert . dimension of sample, as a height for cylinder/box
@@ -842,7 +841,6 @@ DEFINE INSTRUMENT test_SasView_{MODELS[i]}(
 
 {content2}
       model_scale=1.0,
-      model_abs=0.0,
       xwidth=0.01,
       yheight=0.01,
       zdepth=0.005,
@@ -912,7 +910,7 @@ AT (0,0,target_z) RELATIVE coll2
                 ] += f"""
 SPLIT COMPONENT sample = SasView_{MODELS[i]}{suffix}(
         {func_param_str}
-        model_scale=model_scale, model_abs=model_abs, xwidth=xwidth,
+        model_scale=model_scale, xwidth=xwidth,
         yheight=yheight, zdepth=zdepth, R=R, target_x=target_x,
         target_y=target_y, target_z=target_z, target_index=target_index,
         focus_xw=focus_xw, focus_yh=focus_yh, focus_aw=focus_aw, focus_ah=focus_ah,focus_r=focus_r{pd_args})

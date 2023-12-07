@@ -29,8 +29,8 @@
 * %Example: model_index=47 Ncount=1e5 par1=4 par2=2 par3=35 par4=75 par5=400 Detector: detector_I=297
 *
 * %Parameters
-* lambda: [AA]   Mean wavelength of neutrons
-* dlambda: [AA]  Wavelength spread of neutrons
+* lambda: [AA]   Mean wavelength of X-rays
+* dlambda: [AA]  Wavelength spread of X-rays
 * model_index: [ ] SASmodels model index (see SasView_model.comp mcdoc page)
 * par1: [ ] Slot 1 in SASmodel parameter vector
 * par2: [ ] Slot 2 in SASmodel parameter vector

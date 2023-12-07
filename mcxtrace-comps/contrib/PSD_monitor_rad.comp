@@ -33,11 +33,11 @@
 *
 * OUTPUT PARAMETERS:
 *
-* PSDr_N: []           Array of neutron counts
-* PSDr_p: []           Array of neutron weight counts
+* PSDr_N: []           Array of particle counts
+* PSDr_p: []           Array of particle weight counts
 * PSDr_p2: []          Array of second moments
-* PSDr_av_N: []        Array of neutron counts, averaged
-* PSDr_av_p: []        Array of neutron weight counts, averaged
+* PSDr_av_N: []        Array of particle counts, averaged
+* PSDr_av_p: []        Array of particle weight counts, averaged
 * PSDr_av_p2: []       Array of second moments, averaged
 *
 * %E
@@ -47,7 +47,6 @@ DEFINE COMPONENT PSD_monitor_rad
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (nr=100, string filename=0, string filename_av=0, rmax=0.2)
 OUTPUT PARAMETERS ()
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
 %{

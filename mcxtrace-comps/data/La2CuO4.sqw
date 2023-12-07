@@ -17,7 +17,6 @@
 # ylabel: Energy [meV]
 #
 # Physical parameters:
-# Instrument    /home/farhi neutron spectrometer used for measurement
 # NMOD          22-Sep-2022 11:06:08 ENDF modification id
 # lattice_a 3.81 lattice parameter a in [Angs]
 # lattice_c 13.22 lattice parameter c in [Angs]

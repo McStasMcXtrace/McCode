@@ -55,7 +55,7 @@ printf("Using the input file: %s\n", MCPLFILE);
 TRACE
 
 COMPONENT Origin = Progress_bar()
-  AT (0, 0, 0) ABSOLUTE/* read neutrons from an mcpl file*/
+  AT (0, 0, 0) ABSOLUTE /* read particles from an mcpl file*/
 
 /* read photons from an mcpl file*/
 COMPONENT vin = MCPL_input(filename=MCPLFILE,verbose=1,repeat_count=repeat,E_smear=E_smear,pos_smear=pos_smear,dir_smear=dir_smear)

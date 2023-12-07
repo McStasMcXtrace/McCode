@@ -26,16 +26,16 @@
 * Umax: []              Maximum U to detect
 * nU: [1]               Number of U channels
 * filename: [string]    Name of file in which to store the detector image
-* restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* restore_xray: [1]  If set, the monitor does not influence the particle state
 * uid: [1]              Integer index of uservar to be monitored. Overrides ustring.
-* ustring: [string]     Name of variable (user or neutron state parameter as a string) to be monitored.  
+* ustring: [string]     Name of variable (user or particle state parameter as a string) to be monitored.  
 * signal: [string]      Name of variable to be used as an additive signal to be monitored. Default is intensity.
 * nowritefile: [1]      Flag to indicate if monitor should not save any data.
 *
 * OUTPUT PARAMETERS:
 *
-* U_N: []               Array of neutron counts
-* U_p: []               Array of neutron weight counts
+* U_N: []               Array of particle counts
+* U_p: []               Array of particle weight counts
 * U_p2: []              Array of second moments
 *
 * %E
@@ -45,7 +45,7 @@ DEFINE COMPONENT Flex_monitor_1D
 DEFINITION PARAMETERS ()
 
 SETTING PARAMETERS (nU=20, string filename=0,
-  Umin, Umax, uid=-1, string ustring="", restore_neutron=0, string signal="p", int nowritefile=0)
+  Umin, Umax, uid=-1, string ustring="", restore_xray=0, string signal="p", int nowritefile=0)
 
 OUTPUT PARAMETERS ()
 
@@ -100,7 +100,7 @@ TRACE
       SCATTER;
     }
   
-  if (restore_neutron) {
+  if (restore_xray) {
     RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
   }
 %}
