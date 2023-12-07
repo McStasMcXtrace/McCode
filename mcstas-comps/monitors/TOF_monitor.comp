@@ -64,8 +64,6 @@ DECLARE
 
 INITIALIZE
 %{
-  int i;
-
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
@@ -80,12 +78,6 @@ INITIALIZE
   TOF_p = create_darr1d(nt);
   TOF_p2 = create_darr1d(nt);
 
-  for (i=0; i<nt; i++)
-  {
-    TOF_N[i] = 0;
-    TOF_p[i] = 0;
-    TOF_p2[i] = 0;
-  }
   if (tmax!=0)
   {
     t_max=tmax;

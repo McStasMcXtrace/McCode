@@ -69,16 +69,6 @@ INITIALIZE
   TOF_p2 = create_darr2d(nQ, ny);
 
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
-//    tt_0=t_0*1e-6;
-//    tt_1=t_1*1e-6;
-
-  for (i=0; i<nQ; i++)
-    for (j=0; j<ny; j++)
-    {
-      TOF_N[i][j] = 0;
-      TOF_p[i][j] = 0;
-      TOF_p2[i][j] = 0;
-    }
 
   // Use instance name for monitor output if no input was given
   if (!strcmp(filename,"\0")) sprintf(filename,"%s",NAME_CURRENT_COMP);
@@ -102,7 +92,6 @@ TRACE
 
   E = VS2E*(L_flight/(t-T_zero))*(L_flight/(t-T_zero));
 
-  /*i = floor((t-tt_0)*nt/(tt_1-tt_0));               Bin number */
   j = floor((x - ymin)*ny/(ymax - ymin));
 // printf("--------------- E = %g meV ---------------  \n",E);
 // printf("--------------- sqrt4 = %g meV ---------------  \n",sqrt(4));

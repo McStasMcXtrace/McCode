@@ -64,8 +64,6 @@ DECLARE
 
 INITIALIZE
 %{
-  int i;
-
   // Check that input parameteters makes sense
   if (Lmax<=Lmin) {
     fprintf(stderr, "Pol_monitor: %s: l1 <= l0!\n"
@@ -95,13 +93,6 @@ INITIALIZE
   PolL_p = create_darr1d(nL);
   PolL_p2 = create_darr1d(nL);
   HelpArray = create_darr1d(nL);
-
-  for (i=0; i<nL; i++) {
-    PolL_N[i] = 0;
-    PolL_p[i] = 0;
-    PolL_p2[i] = 0;
-    HelpArray[i] = 0;
-  }
 
   // Use instance name for monitor output if no input was given
   if (!strcmp(filename,"\0")) sprintf(filename,"%s",NAME_CURRENT_COMP);

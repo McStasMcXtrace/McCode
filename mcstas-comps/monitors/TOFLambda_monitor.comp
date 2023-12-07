@@ -68,8 +68,6 @@ DECLARE
 
 INITIALIZE
 %{
-  int i,j;
-
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
@@ -85,13 +83,6 @@ INITIALIZE
   TOFL_p2 = create_darr2d(nt, nL);
   tt_0 = tmin*1e-6;
   tt_1 = tmax*1e-6;
-  for (i=0; i<nL; i++){
-    for (j=0; j<nt; j++){
-      TOFL_N[j][i] = 0;
-      TOFL_p[j][i] = 0;
-      TOFL_p2[j][i] = 0;
-    }
-  }
 
   // Use instance name for monitor output if no input was given
   if (!strcmp(filename,"\0")) sprintf(filename,"%s",NAME_CURRENT_COMP);

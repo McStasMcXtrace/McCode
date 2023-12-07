@@ -78,14 +78,6 @@ INITIALIZE
   L_p = create_darr1d(nL);
   L_p2 = create_darr1d(nL);
 
-  int i;
-  for (i=0; i<nL; i++)
-  {
-    L_N[i] = 0;
-    L_p[i] = 0;
-    L_p2[i] = 0;
-  }
-
   // Use instance name for monitor output if no input was given
   if (!strcmp(filename,"\0")) sprintf(filename,"%s",NAME_CURRENT_COMP);
 %}

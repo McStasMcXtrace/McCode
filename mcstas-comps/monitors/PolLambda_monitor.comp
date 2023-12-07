@@ -61,8 +61,6 @@ DECLARE
 
 INITIALIZE
 %{
-  int i, j;
-
   // Check that input parameteters makes sense
   if (Lmax<=Lmin) {
     fprintf(stderr, "Pol_monitor: %s: l1 <= l0!\n"

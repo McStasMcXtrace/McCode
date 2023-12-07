@@ -57,22 +57,13 @@ DECLARE
 
 INITIALIZE
 %{
-  int i,j;
-
   TOF_N = create_darr2d(nt, nphi);
   TOF_p = create_darr2d(nt, nphi);
   TOF_p2 = create_darr2d(nt, nphi);
 
   tt_0 = tmin*1e-6;
   tt_1 = tmax*1e-6;
-  for (i=0; i<nt; i++) {
-    for (j=0; j<nphi; j++)
-    {
-      TOF_N[i][j] = 0;
-      TOF_p[i][j] = 0;
-      TOF_p2[i][j] = 0;
-    }
-  }
+
   binphi = 360.0/(double)nphi;
 
   // Use instance name for monitor output if no input was given

@@ -110,9 +110,6 @@ INITIALIZE
 %{
   prsec = 1e-6;
 
-  int i, j;
-
-
   BRIL_N = create_darr2d(nt, nlam);
   BRIL_p = create_darr2d(nt, nlam);
   BRIL_p2 = create_darr2d(nt, nlam);
@@ -132,24 +129,6 @@ INITIALIZE
   tt_1 = t_1*prsec;
   dt = (t_1-t_0)*prsec/nt;
   dlam = (lambda_1-lambda_0)/(nlam-1);
-  for (i=0; i<nlam; i++){
-  	BRIL_mean[i] = 0;
-  	BRIL_peak[i] = 0;
-  	BRIL_meanN[i] = 0;
-  	BRIL_peakN[i] = 0;
-  	BRIL_meanE[i] = 0;
-  	BRIL_peakE[i] = 0;
-  	for (j=0; j<nt; j++) {
-	    BRIL_N[j][i] = 0;
-	    BRIL_p[j][i] = 0;
-	    BRIL_p2[j][i] = 0;
-	    if (i==0) {
-	      BRIL_shape[j] = 0;
-	      BRIL_shapeN[j] = 0;
-	      BRIL_shapeE[j] = 0;
-	    }
-	  }
-  }
 
   xmax = xwidth/2.0;
   ymax = yheight/2.0;

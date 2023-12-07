@@ -60,8 +60,6 @@ DECLARE
 
 INITIALIZE
 %{
-  int i, j;
-
   PSD_N = create_darr2d(nr, ny);
   PSD_p = create_darr2d(nr, ny);
   PSD_p2 = create_darr2d(nr, ny);

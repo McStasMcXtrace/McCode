@@ -65,7 +65,6 @@ DECLARE
 
 INITIALIZE
 %{
-  int i;
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 

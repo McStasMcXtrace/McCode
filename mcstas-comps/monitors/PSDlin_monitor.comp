@@ -59,8 +59,6 @@ DECLARE
 
 INITIALIZE
 %{
-  int i;
-
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
@@ -74,13 +72,6 @@ INITIALIZE
   PSDlin_N = create_darr1d(nbins);
   PSDlin_p = create_darr1d(nbins);
   PSDlin_p2 = create_darr1d(nbins);
-
-  for (i=0; i<nbins; i++)
-  {
-    PSDlin_N[i] = 0;
-    PSDlin_p[i] = 0;
-    PSDlin_p2[i] = 0;
-  }
 
   // Use instance name for monitor output if no input was given
   if (!strcmp(filename,"\0")) sprintf(filename,"%s",NAME_CURRENT_COMP);

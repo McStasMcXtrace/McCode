@@ -70,8 +70,6 @@ DECLARE
 
 INITIALIZE
 %{
-  int i, j;
-
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
@@ -85,14 +83,6 @@ INITIALIZE
   Div_N = create_darr2d(nb, ndiv);
   Div_p = create_darr2d(nb, ndiv);
   Div_p2 = create_darr2d(nb, ndiv);
-
-  for (i=0; i<nb; i++)
-    for (j=0; j<ndiv; j++)
-    {
-      Div_N[i][j] = 0;
-      Div_p[i][j] = 0;
-      Div_p2[i][j] = 0;
-    }
 
   NORM(nx,ny,nz);
 

@@ -67,8 +67,6 @@ DECLARE
 
 INITIALIZE
 %{
-  int i, j;
-
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
@@ -83,15 +81,6 @@ INITIALIZE
   PSD_p = create_darr2d(nx, ny);
   PSD_p2 = create_darr2d(nx, ny);
 
-  for (i=0; i<nx; i++) {
-    for (j=0; j<ny; j++)
-    {
-      PSD_N[i][j] = 0;
-      PSD_p[i][j] = 0;
-      PSD_p2[i][j] = 0;
-    }
-  }
-  
   // Use instance name for monitor output if no input was given
   if (!strcmp(filename,"\0")) sprintf(filename,"%s",NAME_CURRENT_COMP);
 %}

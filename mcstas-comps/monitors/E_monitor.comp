@@ -67,8 +67,6 @@ DECLARE
 
 INITIALIZE
 %{
-  int i;
-
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
@@ -83,12 +81,6 @@ INITIALIZE
   E_p = create_darr1d(nE);
   E_p2 = create_darr1d(nE);
 
-  for (i=0; i<nE; i++)
-  {
-    E_N[i] = 0;
-    E_p[i] = 0;
-    E_p2[i] = 0;
-  }
   S_p = S_pE = S_pE2 = 0;
 
   // Use instance name for monitor output if no input was given
