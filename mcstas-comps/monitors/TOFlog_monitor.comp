@@ -93,13 +93,6 @@ INITIALIZE
   TOF_p = create_darr1d(nchan);
   TOF_p2 = create_darr1d(nchan);
 
-  for (i=0; i<nchan; i++)
-  {
-    TOF_N[i] = 0;
-    TOF_p[i] = 0;
-    TOF_p2[i] = 0;
-  }
-
   // Use instance name for monitor output if no input was given
   if (!strcmp(filename,"\0")) sprintf(filename,"%s",NAME_CURRENT_COMP);
 %}
