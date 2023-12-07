@@ -172,6 +172,17 @@ class McStas:
                 cflags += shlex.split( os.environ.get('LDFLAGS') )
             if os.environ.get('CFLAGS'):
                 cflags += shlex.split( os.environ.get('CFLAGS') )
+            # Special handling of NVIDIA's OpenACC-aware compiler inside a CONDA env,
+            # remove certain unsupported flags:
+            if self.options.openacc and 'nvc' in mccode_config.compilation['OACC']:
+                Cflags = shlex.join(cflags)
+                Cflags=Cflags.replace('-march=nocona', '')
+                Cflags=Cflags.replace('-ftree-vectorize', '')
+                Cflags=Cflags.replace('-fstack-protector-strong', '')
+                Cflags=Cflags.replace('-fno-plt', '')
+                Cflags=Cflags.replace('-ffunction-sections', '')
+                Cflags=Cflags.replace('-pipe', '')
+                cflags=shlex.split(Cflags)
 
         # Parse for instances of CMD() ENV() GETPATH() in the loaded CFLAG entries
         cflags += [self.options.mpi and mccodelib.cflags.evaluate_dependency_str(mccode_config.compilation['MPIFLAGS'],
@@ -188,6 +199,7 @@ class McStas:
 
         if not self.options.openacc:
             cflags += options.no_cflags and ['-O0'] or shlex.split(mccode_config.compilation['CFLAGS'])  # cflags
+
         # Look for CFLAGS in the generated C code
         ccode = open(self.cpath, 'rb')
         counter = 0
