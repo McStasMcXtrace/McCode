@@ -213,6 +213,7 @@ jobs:
 
     - name: 'Tar output files'
       id: tar-package
+      if: always()
       run: |
            set -e
            set -u
@@ -222,6 +223,7 @@ jobs:
     - name: 'Upload Artifact'
       id: tar-upload
       uses: actions/upload-artifact@v3
+      if: always()
       with:
         name: mcxtrace-artefacts
         path: "*_output.tgz"
