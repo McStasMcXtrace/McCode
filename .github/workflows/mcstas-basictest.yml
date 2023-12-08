@@ -258,7 +258,8 @@ jobs:
            set -e
            set -u
            set -x
-           sudo apt -y install libnexus-dev
+           sudo apt-get update
+           sudo apt-get -y install libnexus-dev
            export MCSTAS_EXECUTABLE="mcstas"
            export MCRUN_EXECUTABLE="mcrun"
            export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
