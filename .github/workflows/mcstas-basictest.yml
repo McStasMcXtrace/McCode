@@ -249,6 +249,9 @@ jobs:
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_NCrystal_example_mpi && cd run_NCrystal_example_mpi
            cp ../install_mcstas/share/mcstas/resources/examples/NCrystal_example.instr .
+           clang --version
+           mpirun --version
+           ncrystal-config --version
            ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=2 NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
 
     - name: Launch NeXus test instrument
