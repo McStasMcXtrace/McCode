@@ -127,7 +127,7 @@
 * when 'cif2hkl' is installed. The CIF2HKL env variable can be used to point to a
 * proper executable, else the McCode or the system installed versions are used.
 *
-* <b>Crystal truncation rods (CTR)<b>
+* <b>Satellite Bragg peaks - surface crystal truncation rods (CTR)<b>
 * It is known that scattering from a finite crystal introduces a broadening of
 * Bragg peaks, seen in surface diffraction at grazing angle [Robinson and Tweet, 
 * Rep. Prog. Phys. 55 (1992) 599)]. The CTR is specified as two vectors, which 
@@ -137,10 +137,11 @@
 *   layer:      sinc(PI*k*d)^2  (FT of a top-hat, thickness 'd')
 * These vectors are given as 'surf_k' [in 1/Angs] and 'surf_FT2', both of length
 * 'surf_size'. The CTR is to be applied along vector 'surf_dir' which indicates 
-* the surface normal {nx,ny,nz} in real space. The default is to let the component 
-* set the proper truncation function (only for box and thin disk shapes).
+* the surface normal {nx,ny,nz} in real space. When surf_size=-1, the component 
+* sets the proper truncation function (only for thin box and disk shapes).
 * This feature is an approximation of the real surface scattering, and does not
-* handle complex geometries (clusters, wetting, multi-layers, ...).
+* handle complex geometries (clusters, wetting, multi-layers, ...). It may be 
+* used as well to describe over-structure stallite peaks.
 *
 * Example: Single_crystal(xwidth=0.01, yheight=0.01, zdepth=0.01, mosaic = 5, 
 *   reflections="Si.lau")
@@ -201,7 +202,7 @@
 * powder:            [1] Flag to indicate powder mode, for simulation of Debye-Scherrer cones via random crystallite orientation. A powder texture can be approximated with powder within 0-1
 * deltak:         [AA-1] Equality-threshold for use in SPLIT settings. If difference between all ki_{x,y,z} are less than deltak from previous particle, the two are considered alike enough to jump directly to the MC choice between 'active' reflections 
 * material_datafile: [Be.txt] File where the material parameters for the absorption may be found. Format is similar to what may be found off the NIST website. 
-* surf_size:         [1] Length of the surf_k and surf_FT vectors. When set as -1, CTR is set for the box/thin disk geometry.
+* surf_size:         [1] Length of the surf_k and surf_FT vectors. When set as -1, CTR is automatically set for the box/thin disk geometry.
 * surf_k:       [1/Angs] Momentum 'k' distribution around 0 for the CTR, length 'surf_size'.
 * surf_FT2:          [1] Intensity |FT(real space)|^2 distribution as CTR of a single Bragg peak, length 'surf_size'.
 * surf_dir:   [nx,ny,nz] Normal vector in real space for the truncation rod spread direction. {1,0,0} is for an YZ surface, with normal along X.
@@ -297,7 +298,7 @@ SETTING PARAMETERS(string reflections=0, string geometry=0, vector mosaic_AB={0,
   p_transmit = 0.001, sigma_inc = 0,
   aa=0, bb=0, cc=0, order=1, RX=0, RY=0, powder=0,
   deltak=1e-6, string material_datafile="Si.txt",
-  int surf_size=-1, vector surf_k, vector surf_FT2, vector surf_dir={0,0,0})
+  int surf_size=0, vector surf_k=NULL, vector surf_FT2=NULL, vector surf_dir={0,0,0})
 OUTPUT PARAMETERS()
 /* photon parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 SHARE
@@ -374,6 +375,10 @@ SHARE
       double kix, kiy, kiz;       /* last incoming photon ki */
       int    nb_reuses, nb_refl, nb_refl_count;
       int    max_tau_count;
+      int    ctr_size;
+      double *ctr_k;
+      double *ctr_FT2;
+      double *ctr_dir;
     };
     
 #pragma acc routine
@@ -743,7 +748,7 @@ SHARE
       list[J].tau_z = h*info->asz + k*info->bsz + l*info->csz;
       
       // create satellite peaks from e.g. surface truncation (CTR)
-      if (surf_size > 1 && surf_FT2[j] > 0 && surf_k[j]) {
+      if (surf_size > 1 && surf_FT2 && surf_k && surf_FT2[j] > 0 && surf_k[j]) {
         list[J].tau_x += surf_dir[0]*surf_k[j];
         list[J].tau_y += surf_dir[1]*surf_k[j];
         list[J].tau_z += surf_dir[2]*surf_k[j];
@@ -1179,7 +1184,6 @@ INITIALIZE
 
   double as, bs, cs;
   int i=0;
-  double surf_thickness=0;
 
   /* transfer input parameters */
   hkl_info.m_delta_d_d = delta_d_d;
@@ -1235,66 +1239,82 @@ INITIALIZE
                         "ERROR           Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
   
   /* determine if we have a surface broadening/truncation rods (CTR) */
-  if (surf_size < 0) { /* CTR automatic mode */
-    double surf_dir_sum=0;
-    for (i=0; i<3; surf_dir[i++]=0);
+  hkl_info.ctr_size=surf_size;
+  hkl_info.ctr_k   =surf_k;
+  hkl_info.ctr_FT2 =surf_FT2;
+  hkl_info.ctr_dir =surf_dir;
+  if (hkl_info.ctr_size < 0) { /* CTR automatic mode */
+    double surf_dir_sum  =0;
+    double surf_thickness=0;
+    for (i=0; i<3; hkl_info.ctr_dir[i++]=0);
     if (hkl_info.shape == 1) {
-      if      (xwidth <= yheight && xwidth <= zdepth)    { surf_dir[0]=1; surf_thickness=xwidth;  }
-      else if (yheight<= xwidth  && yheight<= zdepth)    { surf_dir[1]=1; surf_thickness=yheight; }
-      else                                               { surf_dir[2]=1; surf_thickness=zdepth;  }
-    } else if (hkl_info.shape == 0 && yheight <= radius) { surf_dir[1]=1; surf_thickness=yheight; }
+      if      (xwidth <= yheight && xwidth <= zdepth)    { hkl_info.ctr_dir[0]=1; surf_thickness=xwidth;  }
+      else if (yheight<= xwidth  && yheight<= zdepth)    { hkl_info.ctr_dir[1]=1; surf_thickness=yheight; }
+      else                                               { hkl_info.ctr_dir[2]=1; surf_thickness=zdepth;  }
+    } else if (hkl_info.shape == 0 && yheight <= radius) { hkl_info.ctr_dir[1]=1; surf_thickness=yheight; }
     // surf_size=-1: set automatically the k and FT2 vectors
-    if (0 < surf_thickness) { 
-      surf_size=11;
-      double dk = 2.0/surf_size; // 2 [1/Angs] range
-      for (i=0; i<surf_size; i++) {
-        surf_k[i]   = -1.0+i*dk;  // 1/Angs, from -1 to 1 [1/Angs]
-        if (surf_thickness < 1e-7) {  // thin layer thickness < 0.1 um -> sinc
-          double x=PI*surf_k[i]*surf_thickness*1e10;  // 1e10 [m -> Angs]
-          surf_FT2[i] = surf_k[i] ? sin(x)/x : 1; 
-        } else {                      // assume a half-bulk -> 1/k^2 [in rlu]
-          surf_FT2[i] = 1/(surf_k[i]*2*PI); // we assume a=2PI
+    if (0 < surf_thickness) {
+      hkl_info.ctr_size=21;                       // nb of satellite peaks
+      double range_k = 1.0;               // k range [1/Angs], k=[-range/2 : +range/2]
+      double dk = range_k/(hkl_info.ctr_size-1);  // delta-k for btw satellites
+      DArray1d s_k = create_darr1d(hkl_info.ctr_size);
+      DArray1d s_F = create_darr1d(hkl_info.ctr_size);
+      hkl_info.ctr_k       = (double *)s_k;
+      hkl_info.ctr_FT2     = (double *)s_F;
+      for (i=0; i<hkl_info.ctr_size; i++) {
+        hkl_info.ctr_k[i]   = -range_k/2+i*dk;    // 1/Angs, symmetric around 0 [1/Angs]
+        if (surf_thickness < 1e-7) {      // thin layer thickness < 0.1 um -> sinc^2
+          double x=PI*hkl_info.ctr_k[i]*surf_thickness*1e10;  // 1e10 [m -> Angs]
+          hkl_info.ctr_FT2[i] = hkl_info.ctr_k[i] ? sin(x)/x : 1; 
+        } else {                          // assume a half-bulk -> 1/k^2 [in rlu]
+          hkl_info.ctr_FT2[i] = hkl_info.ctr_k[i] ? 1/(hkl_info.ctr_k[i]*2*PI) : 4*PI; // we assume a=2PI
         }
-        surf_FT2[i]*= surf_FT2[i];
+        hkl_info.ctr_FT2[i]*= hkl_info.ctr_FT2[i];        // squared
       }
+      MPI_MASTER(
+        printf("Single_crystal: %s: Info: Setting CTR surface normal XYZ=[%g,%g,%g], as a %s.\n", 
+          NAME_CURRENT_COMP,
+          hkl_info.ctr_dir[0],hkl_info.ctr_dir[1],hkl_info.ctr_dir[2], 
+          surf_thickness < 1e-7 ? "thin layer (sinc^2)" : "half-bulk (1/k^2)");
+      );
     }
   }
-  if (surf_size > 1 && !surf_dir[0] && !surf_dir[1] && !surf_dir[2]) { // no CTR normal ?
+  if (hkl_info.ctr_size > 1 && (!hkl_info.ctr_dir || !hkl_info.ctr_dir[0] && !hkl_info.ctr_dir[1] && !hkl_info.ctr_dir[2])) { // no CTR normal ?
     MPI_MASTER(
     printf("Single_crystal: %s: Warning: No surf_dir surface normal set. Ignoring CTR.\n", i, NAME_CURRENT_COMP);
     );
-    surf_size = 1;
+    hkl_info.ctr_size = 1;
   }
-  if (surf_size > 1) { // do some CTR tests
+  if (hkl_info.ctr_size > 1 && hkl_info.ctr_FT2 && hkl_info.ctr_k) { // do some CTR tests
     double sum_FT2=0, min_k=FLT_MAX, max_k=-FLT_MAX;
-    for (i=0; i<surf_size; i++) {
-      if (surf_FT2[i] < 0) {
+    for (i=0; i<hkl_info.ctr_size; i++) {
+      if (hkl_info.ctr_FT2[i] < 0) {
         MPI_MASTER(
         printf("Single_crystal: %s: Warning: surf_FT2[%i] < 0. Must all be >= 0. Ignoring CTR.\n", i, NAME_CURRENT_COMP);
         );
-        surf_size=1;
+        hkl_info.ctr_size=1;
         break;
       }
-      sum_FT2 += surf_FT2[i];
-      if (surf_k[i] < min_k) min_k = surf_k[i];
-      if (max_k < surf_k[i]) max_k = surf_k[i];
+      sum_FT2 += hkl_info.ctr_FT2[i];
+      if (hkl_info.ctr_k[i] < min_k) min_k = hkl_info.ctr_k[i];
+      if (max_k < hkl_info.ctr_k[i]) max_k = hkl_info.ctr_k[i];
     }
-    if (surf_size>1 && min_k*max_k >= 0) { // k vector not around 0 ?
+    if (hkl_info.ctr_size>1 && min_k*max_k >= 0) { // k vector not around 0 ?
       MPI_MASTER(
         printf("Single_crystal: %s: Warning: surf_k = [%g:%g]. Must be around 0. Ignoring CTR.\n", min_k, max_k, NAME_CURRENT_COMP);
       );
-      surf_size=1;
+      hkl_info.ctr_size=1;
     }
-    if (surf_size>1 && sum_FT2 <= 0) { // no positive FT2 value ?
+    if (hkl_info.ctr_size>1 && sum_FT2 <= 0) { // no positive FT2 value ?
       MPI_MASTER(
         printf("Single_crystal: %s: Warning: sum(surf_FT2) <= 0. Must be > 0. Ignoring CTR.\n", min_k, max_k, NAME_CURRENT_COMP);
       );
-      surf_size=1;
+      hkl_info.ctr_size=1;
     }
-    if (surf_size>1 && sum_FT2) { // all is fine. Normalize CTR.
-      NORM(surf_dir[0],surf_dir[1],surf_dir[2]); // normal vector |u|=1
+    if (hkl_info.ctr_size>1 && sum_FT2) { // all is fine. Normalize CTR.
+      NORM(hkl_info.ctr_dir[0],hkl_info.ctr_dir[1],hkl_info.ctr_dir[2]); // normal vector |u|=1
       // normalize surf_FT2 (distribute Bragg scattering along all satellites)
-      for (i=0; i<surf_size; surf_FT2[i++] /= sum_FT2);
+      for (i=0; i<hkl_info.ctr_size; hkl_info.ctr_FT2[i++] /= sum_FT2);
     }
   } // if (CTR)
 
@@ -1302,7 +1322,7 @@ INITIALIZE
   double* mosaic_ABin = mosaic_AB;
   /* Read in structure factors, and do some pre-calculations. */
   if (!read_hkl_data(reflections, &hkl_info, &hkl_list, mosaic, mosaic_a, mosaic_b, mosaic_c, mosaic_ABin,
-    surf_size,surf_k,surf_FT2,surf_dir)) {
+    hkl_info.ctr_size,hkl_info.ctr_k,hkl_info.ctr_FT2,hkl_info.ctr_dir)) {
     MPI_MASTER(
     printf("Single_crystal: %s: ERROR: can not set crystal structure. Check file and mosaic. Aborting.\n", NAME_CURRENT_COMP);
     );
@@ -1484,7 +1504,7 @@ TRACE
       else if (hkl_info.shape == 3)
 	      intersect = off_x_intersect(&l1, &l2, NULL, NULL, x, y, z, kx, ky, kz, thread_offdata );
       #endif
-      if(!intersect || l2 < -1e-9 || l1 > 1e-8)
+      if(!intersect || l2 < -1e-7 || l1 > 1e-7)
       {
         /* photon is leaving the sample */
         hkl_info.flag_warning++;
