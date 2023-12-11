@@ -82,46 +82,43 @@ TRACE
     double cyl_t0,cyl_t1,dt,phi;
     double E,Q;
 
-    if(!cylinder_intersect(&cyl_t0, &cyl_t1, x,y,z,vx,vy,vz, radius, yheight))
-     /* No hit */
-      ABSORB;
-    if(cyl_t0>0)  /* Neutron hits cylinder from the outside */
-      ABSORB;
+  if(!cylinder_intersect(&cyl_t0, &cyl_t1, x,y,z,vx,vy,vz, radius, yheight))
+   /* No hit */
+    ABSORB;
+  if(cyl_t0>0)  /* Neutron hits cylinder from the outside */
+    ABSORB;
     dt=cyl_t1;
-    PROP_DT(dt);
-    if(y>=yheight/2 || y<= -yheight/2)
-      ABSORB;  /* Neutron hits cylinder ends; no detectors here */
+  PROP_DT(dt);
+  if(y>=yheight/2 || y<= -yheight/2)
+    ABSORB;  /* Neutron hits cylinder ends; no detectors here */
 
-    E = VS2E*(L_flight/(t-T_zero))*(L_flight/(t-T_zero));
+  E = VS2E*(L_flight/(t-T_zero))*(L_flight/(t-T_zero));
 
-    /*i = floor((t-tt_0)*nt/(tt_1-tt_0));               Bin number */
-      j = floor((x - ymin)*ny/(ymax - ymin));
-// printf("--------------- E = %g meV ---------------  \n",E);
-// printf("--------------- sqrt4 = %g meV ---------------  \n",sqrt(4));
-// printf("--------------- lambda = %g Å ---------------  \n",2*PI/sqrt(E/2.072));
-     Q=2*sqrt(E/2.072)*sin(theta);
-     // printf("--------------- Q = %g Å ---------------  \n",Q);
-     i = floor((Q-Qmin)*nQ/(Qmax-Qmin));
+  j = floor((y - ymin)*ny/(ymax - ymin));
 
+  Q=2*sqrt(E/2.072)*sin(theta);
+
+   if (i>=0 && i<nQ && j>=0 && j<ny) {
       TOF_N[i][j]++;
       TOF_p[i][j] += p;
       TOF_p2[i][j] += p*p;
-    if (restore_neutron) {
-      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
-    }
-  %}
+   } 
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
 
 SAVE
-  %{
-    if (!nowritefile) {
-    DETECTOR_OUT_2D(
-        "Cylindrical TOF2E PSD monitor",
-        "TOF2Q [Ang^-1]",
-        "Y position [cm]",
-        Qmin, Qmax, ymin*100.0, ymax*100.0,
-        nQ, ny,
-        &TOF_N[0][0],&TOF_p[0][0],&TOF_p2[0][0],
-        filename);
+%{
+if (!nowritefile) {
+  DETECTOR_OUT_2D(
+      "Cylindrical TOF2E PSD monitor",
+      "TOF2Q [Ang^-1]",
+      "Y position [cm]",
+      Qmin, Qmax, ymin*100.0, ymax*100.0,
+      nQ, ny,
+      &TOF_N[0][0],&TOF_p[0][0],&TOF_p2[0][0],
+      filename);
     }
   %}
 
