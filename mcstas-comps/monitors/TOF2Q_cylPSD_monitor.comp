@@ -92,21 +92,21 @@ TRACE
 
   E = VS2E*(L_flight/(t-T_zero))*(L_flight/(t-T_zero));
 
-  j = floor((x - ymin)*ny/(ymax - ymin));
-// printf("--------------- E = %g meV ---------------  \n",E);
-// printf("--------------- sqrt4 = %g meV ---------------  \n",sqrt(4));
-// printf("--------------- lambda = %g Å ---------------  \n",2*PI/sqrt(E/2.072));
-  Q=2*sqrt(E/2.072)*sin(theta);
-// printf("--------------- Q = %g Å ---------------  \n",Q);
-  i = floor((Q-Qmin)*nQ/(Qmax-Qmin));
+  j = floor((y - ymin)*ny/(ymax - ymin));
 
-  double p2 = p*p;
-  #pragma acc atomic
-  TOF_N[i][j] = TOF_N[i][j]+1;
-  #pragma acc atomic
-  TOF_p[i][j] = TOF_p[i][j]+p;
-  #pragma acc atomic
-  TOF_p2[i][j] = TOF_p2[i][j]+p2;
+  Q=2*sqrt(E/2.072)*sin(theta);
+
+  i = floor((Q-Qmin)*nQ/(Qmax-Qmin));
+  
+  if (i>=0 && i<nQ && j>=0 && j<ny) {
+    double p2 = p*p;
+    #pragma acc atomic
+    TOF_N[i][j] = TOF_N[i][j]+1;
+    #pragma acc atomic
+    TOF_p[i][j] = TOF_p[i][j]+p;
+    #pragma acc atomic
+    TOF_p2[i][j] = TOF_p2[i][j]+p2;
+  }
   if (restore_neutron) {
     RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   }
