@@ -554,7 +554,7 @@ off_struct thread_offdata = offdata;
 #define thread_offdata offdata
 #endif
 
-double ki_x,ki_y,ki_z,ki,Ei;
+double ki_x,ki_y,ki_z,ki,Ei, pi;
 double kf_x,kf_y,kf_z,kf,Ef;
 
 /* Store Initial photon state */
@@ -565,6 +565,7 @@ ki_z = kz;
 ki   = sqrt(kx*kx+ky*ky+kz*kz); //  Angs-1
 kf   = ki;
 Ei   = K2E*ki; // keV
+pi   = p;      // used to test for multiple fluo weighting and order cutoff
 
 do { /* while (intersect) Loop over multiple scattering events */
 
@@ -874,7 +875,8 @@ do { /* while (intersect) Loop over multiple scattering events */
     
     /* exit if multiple scattering order has been reached */
     if (!order) break; // skip final absorption
-    if (order && event_counter >= order) { force_transmit=1; }
+    // stop when order has been reached, or weighting is very low
+    if (order && (event_counter >= order || p/pi < 1e-7)) { force_transmit=1; }
  
   } // if intersect (scatter)
 } while(intersect); /* end do (intersect) (multiple scattering loop) */
