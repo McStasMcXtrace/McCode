@@ -26,7 +26,7 @@ do
     fi
 done
 
-WORK=`pwd`
+export WORK=`pwd`
 
 # From 2.1 onwards, let McStas reside in /usr/share on Debian-like systems
 export MCINSTALL_PREFIX=/usr/share/
@@ -79,6 +79,7 @@ cd $WORK
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
+  echo Building metapackage
   cd meta-pkgs/deb
 
   for controlfile in `ls control.mcstas*`
@@ -88,6 +89,11 @@ if [ "x$2" != "x" ]; then
     mv $controlfile.bak $controlfile
   done
 
-  mv $WORK/meta-pkgs/deb/mcstas-suite*${1}*.deb $WORK/dist
-  cp $WORK/INSTALL-McStas-3.x/Linux/debian/README.md $WORK/dist
+  echo DEB metapackages done
+  
+  echo WORK dir is $WORK
+  echo mv ${WORK}/meta-pkgs/deb/mcstas-suite*${1}*.deb ${WORK}/dist
+  echo cp ${WORK}/INSTALL-McStas-3.x/Linux/debian/README.md ${WORK}/dist
+  mv ${WORK}/meta-pkgs/deb/mcstas-suite*${1}*.deb ${WORK}/dist
+  cp ${WORK}/INSTALL-McStas-3.x/Linux/debian/README.md ${WORK}/dist
 fi

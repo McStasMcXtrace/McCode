@@ -8,6 +8,8 @@ dependencies:
   - mamba
   - conda
   - cmake
+  - flex
+  - bison
   - compilers
   - openmpi
   - compilers
