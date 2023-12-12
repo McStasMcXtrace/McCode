@@ -22,7 +22,7 @@ jobs:
 #         - { os: ubuntu-latest, CC: clang,    CXX: clang++,    python: '3.11' }
 #         - { os: ubuntu-latest, CC: gcc-12,   CXX: g++-12,     python: '3.11' }
 #         - { os: macos-11,      CC: clang,    CXX: clang++,    python: "3.10" }
-         - { os: macos-12,      CC: clang,    CXX: clang++,    python: "3.11" }
+        - { os: macos-12,      CC: clang,    CXX: clang++,    python: "3.11" }
 #         - { os: macos-13,      CC: clang,    CXX: clang++,    python: "3.11" }
 #         - { os: windows-latest,  CC: gcc,    CXX: g++,        python: "3.11" }
 #         - { os: windows-2019,    CC: gcc,    CXX: g++,        python: "3.11" }
