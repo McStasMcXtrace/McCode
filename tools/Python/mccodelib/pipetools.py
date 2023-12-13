@@ -77,7 +77,7 @@ class PromptState(LineHandlerState):
         # prompt case
         print(line.rstrip('\n'))
         self.databox.add_comment(line)
-        if re.search('\]:', line):
+        if re.search(r'\]:', line):
             if not self.args['use_defaultpars']:
                 inpt = input()
                 self.process.stdin.write(inpt + '\n')
@@ -101,7 +101,7 @@ class InstrState(LineHandlerState):
             self.databox.add_instrdef(line)
             self.first = False
             self.second = True
-        elif self.second and re.match('Instrument \'[\w\-]+\' \([/\w\\\:\-]+.instr\)', line):
+        elif self.second and re.match(r'Instrument \'[\w\-]+\' \([/\w\\\:\-]+.instr\)', line):
             self.databox.add_instrdef(line)
             self.second = False
         elif re.match('COMPONENT:', line):
