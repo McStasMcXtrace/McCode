@@ -651,7 +651,7 @@ class CompDocWriter:
     lnk_str = "<LI>%s"
     
     
-    html = '''
+    html = r'''
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <HTML><HEAD>
 <TITLE>McStas: %TITLE%</TITLE>
@@ -967,7 +967,7 @@ def main(args):
             flter = args.searchterm
 
         # single, specific file
-        if args.searchterm is not None and re.search('\.', args.searchterm):
+        if args.searchterm is not None and re.search(r'\.', args.searchterm):
             usedir2 = '.'
             if args.dir is not None:
                 usedir2 = args.dir
@@ -987,8 +987,8 @@ def main(args):
             if len(results) == 1:
                 f = results[0]
 
-                instr = re.search('[\w0-9]+\.instr', args.searchterm)
-                comp = re.search('[\w0-9]+\.comp', args.searchterm)
+                instr = re.search(r'[\w0-9]+\.instr', args.searchterm)
+                comp = re.search(r'[\w0-9]+\.comp', args.searchterm)
 
                 if instr:
                     f_html = os.path.splitext(f)[0] + ".html"
