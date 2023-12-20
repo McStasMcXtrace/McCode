@@ -2,7 +2,7 @@
 * Instrument: SOLEIL_SIXS
 *
 * %Identification
-* Written by: E. Farhi
+* Written by: E. Farhi, A. Resta, A. Coati
 * Date: 2023
 * Origin: SOLEIL
 * Version: 0.1
@@ -40,17 +40,24 @@
 * 15       | Slit S1 2x0.7 mm^2
 * 16.5     | a Si(111) DCM, 40x40x10 mm^3 E0=5-20 keV
 * 26       | Mirror M1 Si coated with Pd, elliptically vertical focusing 20x350x20 mm^3 Incident angle 0.175 deg (3 mrad)
-* 28       | Mirror M2 at 20x550x20mm^3. Can be tilted 45 deg exchange horz/vert components
+* 28       | Mirror M2 at 20x550x20mm^3. (tilted 45 deg exchange horz/vert components for UHV)
 * 33       | multipurpose diffractometer
-* 42       | UHV diffractometer
+* 42       | UHV diffractometer (not modelled here)
 *
 * Example: E0=10 Detector: mon_spl_fluo_I=3.66859e+14
 *
 * %Parameters
-* E0: [keV] Nominal energy at the Wiggler.
-* dE: [keV] Energy half-bandwidth at the Wiggler
-* dcm_theta: [deg] Rotation angle of the DCM. 0=set from energy E0
-* sample_material: [str] reflection/structure data file for the single crystal sample
+* E0:             [keV]  Nominal energy at the Wiggler.
+* dE:             [keV]  Energy half-bandwidth at the Wiggler
+* dcm_theta:      [deg]  Rotation angle of the DCM. 0=set from energy E0
+* M1_angle:       [mrad] Rotation angle of M1/M2 mirrors. When left as 0, it is set automatically from E0.
+* M1_radius:      [m]    Curvature radius of M1 mirror (Rh, 1300x100) longitudinal. Positive=mirror is focusing. 0=flat.
+* M2_radius:      [m]    Curvature radius of M2 mirror (Rh, 1300x100) sagittal. Positive=mirror is focusing. 0=flat.
+* sample_coating: [str]  Reflection/structure data file for the single crystal thin layer coating
+* sample_bulk:    [str]  Reflection/structure data file for the single crystal bulk
+* sample_thickness: [m]  The single crystal thin layer coating thickness
+* sample_angle:   [deg]  The sample tilt angle (around X axis)
+* detector_angle: [deg]  The detector tilt angle (around X axis)
 *
 * %Link
 * https://www.synchrotron-soleil.fr/en/beamlines/sixs
@@ -58,7 +65,9 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT SOLEIL_SIXS(E0=3, dE=0.1, dcm_theta=0, 
-  string sample_material="CaCO3Ti", string sample_geometry="wire.ply")
+  M1_angle=3, M1_radius=1400, M2_radius=1400,
+  string sample_coating="Mo.lau", string sample_bulk="Si.lau", sample_thickness=50e-10,
+  sample_angle=0.175, detector_angle=0.175)
 
 DECLARE
 %{
@@ -80,8 +89,11 @@ INITIALIZE
     E0 = 2*PI/E2K / (2*d*sin(dcm_theta*DEG2RAD));
   if (!dcm_theta || !E0 || dE <=0)
     exit(fprintf(stderr, "%s: ERROR: Monochromator can not reflect E0=%g +/- %g [keV]. Aborting.\n", NAME_INSTRUMENT, E0, dE));
+  MPI_MASTER(
   printf("%s: E0=%g [keV] Monochromator dcm_theta=%g [deg] \n", NAME_INSTRUMENT, E0, dcm_theta);
+  );
   if (fabs(dE/E0)>0.1) dE = 3e-2*E0;
+  M1_angle *= RAD2DEG/1000;
 %}
 
 TRACE
@@ -104,13 +116,13 @@ AT (0,0,0) RELATIVE origin
 
 COMPONENT mon_src_xy = Monitor_nD(
   options="x y", xwidth=2e-3, yheight=2e-3, bins=128)
-AT (0,0,13.3) RELATIVE Source_U20
+AT (0,0,14.9) RELATIVE Source_U20
 
 COMPONENT mon_src_e = Monitor_nD(options="energy", xwidth=2e-3, yheight=2e-3, bins=128,
   min=E0-dE*1.1, max=E0+dE*1.1)
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT slit = Slit(xwidth=0.5e-3, yheight=0.5e-3)
+COMPONENT slit = Slit(xwidth=2e-3, yheight=0.7e-3)
 AT (0,0,0.1) RELATIVE PREVIOUS
 
 COMPONENT slit_mon_xy = COPY(mon_src_xy)
@@ -118,7 +130,7 @@ AT (0,0,0) RELATIVE PREVIOUS
 
 // The double monochromator ----------------------------------------------------
 COMPONENT DCM_location = Arm()
-AT (0,0,20.5) RELATIVE Source_U20
+AT (0,0,16.5) RELATIVE Source_U20
 
 COMPONENT dcm_xtal0 = Bragg_crystal(
     length=0.04, width=0.04, 
@@ -150,28 +162,72 @@ AT (0,0,0.5) RELATIVE PREVIOUS
 COMPONENT mon_dcm_xy = COPY(mon_src_xy)
 AT (0,0,0) RELATIVE PREVIOUS
 
+// M1 location -----------------------------------------------------------------
+COMPONENT M1_location = Arm()
+AT(0,0,26-16.5-0.5) RELATIVE mon_dcm_e
+
+COMPONENT M1_rotated = Arm()  // rotation of the mirror
+AT(0,0,0)               RELATIVE M1_location
+ROTATED (-M1_angle,0,0) RELATIVE M1_location
+
+// should image the slit to get a parallel beam.
+COMPONENT M1 = Mirror_curved( // 90 deg brings it from YZ (vert) to XZ (horiz)
+    length=.350, width=0.2,
+    coating="Pd.txt", radius=M1_radius)
+AT(0,0,0)           RELATIVE M1_rotated
+ROTATED (0, 0, 90) RELATIVE M1_rotated
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT M1_out = Arm()      // 2-theta direction
+AT(0,0,0)               RELATIVE M1_rotated
+ROTATED (-M1_angle,0,0) RELATIVE M1_rotated
+
+// M2 mirror -------------------------------------------------------------------
+
+COMPONENT M2_location = Arm()
+AT (0,0,28-26) RELATIVE M1_out
+
+COMPONENT M2_rotated = Arm()  // rotation of the mirror
+AT(0,0,0)                      RELATIVE M2_location
+ROTATED (M1_angle,0,0) RELATIVE M2_location
+
+COMPONENT M2 = Mirror_curved( // bring it from YZ to XZ (horiz)
+    length=0.550, width=.2,
+    coating="Pd.txt", radius=M2_radius)
+AT(0,0,0)         RELATIVE M2_rotated
+ROTATED (0, 0, -90) RELATIVE M2_rotated
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT M2_out = Arm()      // 2-theta direction
+AT(0,0,0) RELATIVE M2_rotated
+ROTATED (M1_angle,0,0) RELATIVE M2_rotated
+
+
+
 // The sample area -------------------------------------------------------------
 COMPONENT sample_stage = COPY(mon_src_xy)
-AT (0,0,8.13) RELATIVE PREVIOUS
+AT (0,0,33-28) RELATIVE PREVIOUS
 
-COMPONENT fluo_rotated = Arm()
+COMPONENT sx_layer = Single_crystal(
+  reflections=sample_coating, xwidth=2e-3, yheight=sample_thickness, zdepth=0.01,
+  surf_size=-1)
 AT (0,0,0) RELATIVE PREVIOUS
-ROTATED (0,30,0) RELATIVE PREVIOUS
+ROTATED (sample_angle,0,0) RELATIVE PREVIOUS
 
-COMPONENT sample = Fluorescence(
-  xwidth=0.001, yheight=0.001, zdepth=0.5e-3,
-  material=sample_material, geometry=sample_geometry, p_interact=0.8,
-  target_index=1, focus_xw=0.1, focus_yh=0.1)
+COMPONENT sx_bulk  = Single_crystal(
+  reflections=sample_bulk, xwidth=2e-3, yheight=1e-3, zdepth=0.01)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT sample_out = Arm()
 AT (0,0,0) RELATIVE sample_stage
+ROTATED (detector_angle,0,0) RELATIVE sample_stage
 
-COMPONENT mon_spl_fluo = Monitor_nD(options="energy", 
-  xwidth=0.1, yheight=0.1, bins=1000,
-  min=0, max=E0+dE*1.1)
-AT (0,0,0.1) RELATIVE fluo_rotated
+COMPONENT detector = Monitor_nD(xwidth=0.5, yheight=0.5, options="x y", bins=512)
+AT (0,0,0.5) RELATIVE sample_out
   
-
-FINALLY
-%{
-%}
 
 END

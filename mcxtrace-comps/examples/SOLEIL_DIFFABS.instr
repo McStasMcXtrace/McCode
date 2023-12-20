@@ -34,7 +34,7 @@
 * 0        | the BM D13-1 Bender B=1.71 T in range 3-23 keV, e-beam cross-section 55.1x20.6 µm2 123.7x1.6 µrad. Other specs give 60.1x24.9 µm and 134.8x2.1 µrad. Critical energy 8.6 keV.
 * 11.85    | primary slit
 * 14.92    | M1 bent mirror with Rh/Si coating. Focuses vertically the beam on the DCM. length 1300 mm, width 100 mm. 2.4 mrad incidence above 19 keV, 3 mrad in 12.5-19 keV, and 5 mrad in 6.5-12.5 keV, and 6 mrad below.
-* 17.462   | a Si(111) DCM. First crystal is 200x100 mm flat at 2.54 m from M1; 2nd is bent 70x100 mm to focus the beam horizontally. See the practical 5 "Optics". 
+* 17.462   | a Si(111) DCM. First crystal is 200x100 mm flat at 2.54 m from M1; 2nd is bent 70x100 mm to focus the beam horizontally.
 * 19.28    | M2 bent mirror with Rh coating, 1300x100 mm. Focuses vertically the beam. At 1.817 from DCM.
 * 27.752   | _secondary slits when using the KB. We ignore them here_.
 * 31.227   | _a KB mirror set M3/M4 for micro focusing. Optional, see the practical 5 "Optics"._
