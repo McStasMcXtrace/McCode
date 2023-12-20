@@ -44,7 +44,7 @@
 * 33       | multipurpose diffractometer
 * 42       | UHV diffractometer
 *
-* %Example: E0=10 Detector: mon_spl_fluo_I=3.66859e+14
+* Example: E0=10 Detector: mon_spl_fluo_I=3.66859e+14
 *
 * %Parameters
 * E0: [keV] Nominal energy at the Wiggler.
@@ -58,7 +58,7 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT SOLEIL_SIXS(E0=3, dE=0.1, dcm_theta=0, 
-  string sample_material="Mo.lau")
+  string sample_material="CaCO3Ti", string sample_geometry="wire.ply")
 
 DECLARE
 %{
