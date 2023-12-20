@@ -103,7 +103,7 @@ TRACE
     (    (minutes && difftime(NowTime,CurrentTime) > minutes*60)
       || (percent && !minutes && ncount >= IntermediateCnts))   )
   {
-    fprintf(stdout, "%d ", (int)(ncount*100.0/mcget_ncount())); fflush(stdout);
+    fprintf(stdout, "%llu ", (unsigned long long)(ncount*100.0/mcget_ncount())); fflush(stdout);
     CurrentTime = NowTime;
 
     IntermediateCnts = ncount + percent*mcget_ncount()/100;
