@@ -104,7 +104,7 @@ AT (0,0,0) RELATIVE origin
 
 COMPONENT mon_src_xy = Monitor_nD(
   options="x y", xwidth=2e-3, yheight=2e-3, bins=128)
-AT (0,0,13.3) RELATIVE source
+AT (0,0,13.3) RELATIVE Source_U20
 
 COMPONENT mon_src_e = Monitor_nD(options="energy", xwidth=2e-3, yheight=2e-3, bins=128,
   min=E0-dE*1.1, max=E0+dE*1.1)
@@ -118,7 +118,7 @@ AT (0,0,0) RELATIVE PREVIOUS
 
 // The double monochromator ----------------------------------------------------
 COMPONENT DCM_location = Arm()
-AT (0,0,20.5) RELATIVE source
+AT (0,0,20.5) RELATIVE Source_U20
 
 COMPONENT dcm_xtal0 = Bragg_crystal(
     length=0.04, width=0.04, 
