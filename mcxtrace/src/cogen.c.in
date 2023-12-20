@@ -1969,7 +1969,7 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("    for (unsigned long pidx=0 ; pidx < gpu_innerloop ; pidx++) {");
   coutf("      _class_particle particleN = mcgenstate(); // initial particle");
   coutf("      _class_particle* _particle = &particleN;");
-  coutf("      particleN._uid = particleN._loopid = pidx;");
+  coutf("      particleN._uid = pidx;");
   coutf("      #ifdef USE_MPI");
   coutf("      particleN._uid += mpi_node_rank * ncount; ");
   coutf("      #endif");
@@ -2094,7 +2094,7 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("      // generate particle state, set loop index and seed");
   coutf("      particles[pidx] = mcgenstate();");
   coutf("      _class_particle* _particle = particles + pidx;");
-  coutf("      _particle->_uid = _particle->_loopid = pidx;");
+  coutf("      _particle->_uid = pidx;");
   coutf("      #ifdef USE_MPI");
   coutf("      _particle->_uid += mpi_node_rank * ncount; ");
   coutf("      #endif");
@@ -2351,7 +2351,6 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  unsigned long randstate[7];"); // for the KISS generator
   cout("  double t, p;     /* time, event weight */");
   cout("  long long _uid;  /* Unique event ID */");
-  cout("  long long _loopid; /* inner-loop event ID */");
   cout("  long _index;     /* component index where to send this event */");
   /* these are needed for SCATTERED, ABSORB and RESTORE macros */
   cout("  long _absorbed;  /* flag set to TRUE when this event is to be removed/ignored */");
