@@ -277,7 +277,7 @@ TRACE
 #endif
   ncount = mcget_ncount();
   //fprintf(stdout,"Trace ncount is %ld on %i\n",ncount,ismpislave);
-  unsigned long long i=_particle->_loopid;
+  unsigned long long i=(_particle->_uid % gpu_innerloop); 
   if (preload) {
     if (i>=used_neutrons) {
       repeating=1;
