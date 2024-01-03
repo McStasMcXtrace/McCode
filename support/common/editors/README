@@ -20,3 +20,7 @@ provided emacs file should be entered in your .emacs file, setting font-lock-mod
 default and using the standard c-mode for McCode .instr files.
 Note: Works also on Win32, copy the .emacs file to c:\ :-)
 
+VISUAL STUDIO CODE:
+Instructions for installing the syntax highlighter for visual studio code can be found on https://code.visualstudio.com/docs/editor/extension-marketplace under "Install from a VSIX".
+The vsix file in this folder is the one that should be installed as an extension.
+The syntax highlighter uses syntax highlighting from C and like the other syntax highlighters, adds more keywords to the code that is McStas specific.
