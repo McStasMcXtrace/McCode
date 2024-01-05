@@ -5,13 +5,13 @@ example instruments that include them
 Air is used in 4 example(s):
 - Airport_scannerII.instr
 - NBI_Lab_TOMO.instr
-- Test_Air.instr
 - Test_Filter.instr
+- Test_Air.instr
 ---------------------------------------
 Focus is used in 4 example(s):
-- JJ_SAXS.instr
 - MAXIV_DanMAX_pxrd1d.instr
 - MAXIV_DanMAX_pxrd2d.instr
+- JJ_SAXS.instr
 - SOLEIL_DIFFABS.instr
 ---------------------------------------
 MCPL_input is used in 1 example(s):
@@ -30,16 +30,18 @@ Progress_bar is used in 86 example(s):
 - ATHENA_1shell.instr
 - ATHENA_cfgA_1mm.instr
 - ATHENA_cfgA_1mm_FEMd.instr
-- Airport_scannerII.instr
-- Be_BM_beamline.instr
+- NuSTAR_1shell_con.instr
+- Simple_1shell.instr
+- Test_shells.instr
 - CXO.instr
+- NuSTAR_1shell.instr
 - Czerny_Turner.instr
-- DBD_IBM_Si_analyzer_BC.instr
+- Airport_scannerII.instr
+- Pump_probe.instr
+- Pump_probe_solvent.instr
 - ESRF_BM29.instr
 - ESRF_ID01.instr
 - ESRF_ID11.instr
-- Focal_pt_monitor.instr
-- JJ_SAXS.instr
 - MAXII_711.instr
 - MAXII_811.instr
 - MAXIV_Bloch.instr
@@ -47,12 +49,10 @@ Progress_bar is used in 86 example(s):
 - MAXIV_DanMAX_pxrd2d.instr
 - MAXIV_FemtoMAX.instr
 - NBI_Lab_TOMO.instr
-- NSLS2_CHX.instr
-- NuSTAR_1shell.instr
-- NuSTAR_1shell_con.instr
+- DBD_IBM_Si_analyzer_BC.instr
 - PBD_BT.instr
-- Pump_probe.instr
-- Pump_probe_solvent.instr
+- NSLS2_CHX.instr
+- JJ_SAXS.instr
 - SAXS_saxlab.instr
 - SOLEIL_ANATOMIX.instr
 - SOLEIL_CASSIOPEE.instr
@@ -66,47 +66,47 @@ Progress_bar is used in 86 example(s):
 - SOLEIL_SIXS.instr
 - SSRL_bl_11_2_not_white_src.instr
 - SSRL_bl_11_2_white_src.instr
-- Simple_1shell.instr
+- Focal_pt_monitor.instr
 - Template_1Slit_Diff.instr
 - Template_2Slit_Diff.instr
-- Template_DCM.instr
 - Template_Johann_spec.instr
-- Template_SasView.instr
-- Test_Absorption.instr
-- Test_Air.instr
-- Test_BM.instr
-- Test_CRL.instr
-- Test_CRL_Be.instr
+- template_simple.instr
+- Be_BM_beamline.instr
 - Test_Detector_pn.instr
-- Test_Filter.instr
-- Test_Fluorescence.instr
-- Test_GROUP.instr
-- Test_KB.instr
 - Test_MCPL_input.instr
 - Test_MCPL_output.instr
+- Test_monitors.instr
+- Test_GROUP.instr
+- Template_DCM.instr
+- Test_CRL.instr
+- Test_CRL_Be.instr
+- Test_Filter.instr
+- Test_KB.instr
 - Test_ML_elliptic.instr
 - Test_Mask.instr
 - Test_Mirror_toroid.instr
 - Test_Mirrors.instr
 - Test_Mono.instr
-- Test_PowderN.instr
-- Test_SAXS.instr
-- Test_Saxs_spheres.instr
-- Test_Source_quasi.instr
-- Test_Sources.instr
-- Test_Sqw.instr
 - Test_capillary.instr
 - Test_grating_reflect.instr
 - Test_grating_trans.instr
 - Test_mirror_elliptic.instr
 - Test_mirror_parabolic.instr
-- Test_monitors.instr
-- Test_shells.instr
+- Template_SasView.instr
+- Test_Absorption.instr
+- Test_Air.instr
+- Test_Fluorescence.instr
+- Test_PowderN.instr
+- Test_SAXS.instr
+- Test_Saxs_spheres.instr
+- Test_Sqw.instr
+- Test_BM.instr
+- Test_Source_quasi.instr
+- Test_Sources.instr
 - Test_source_lab.instr
 - Test_source_spectra.instr
 - Test_undulator.instr
 - XFEL_SPB.instr
-- template_simple.instr
 ---------------------------------------
 Shadow_input is used in 0 example(s):
 ---------------------------------------

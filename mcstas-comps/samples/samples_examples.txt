@@ -14,21 +14,26 @@ Incoherent is used in 66 example(s):
 - ISIS_Prisma2.instr
 - ISIS_TOSCA_preupgrade.instr
 - ISIS_TOSCA_preupgrade_Mantid.instr
-- McStas_Isotropic_Sqw.instr
-- PSI_Focus.instr
-- RITA-II.instr
+- templateVanadiumMultipleScat_Mantid.instr
 - SAFARI_MPISI.instr
 - SAFARI_PITSI.instr
+- PSI_Focus.instr
+- RITA-II.instr
+- linup-4.instr
+- linup-6.instr
+- McStas_Isotropic_Sqw.instr
 - SNS_BASIS.instr
+- Test_TasReso.instr
+- Tomography.instr
+- templateTAS.instr
+- Test_Cyl_monitors.instr
+- Unittest_SPLIT_sample.instr
+- Test_Pol_Set.instr
 - Samples_Incoherent.instr
 - Samples_Incoherent_off.instr
 - Samples_vanadium.instr
-- Test_Cyl_monitors.instr
 - Test_Incoherent.instr
-- Test_Pol_Set.instr
 - Test_SX.instr
-- Test_TasReso.instr
-- Tomography.instr
 - Union_IncoherentPhonon_test.instr
 - Union_conditional_test.instr
 - Union_demonstration.instr
@@ -64,11 +69,6 @@ Incoherent is used in 66 example(s):
 - Union_unit_test_logger_2D_space_time.instr
 - Union_unit_test_logger_3D_space.instr
 - Union_unit_test_loggers_base.instr
-- Unittest_SPLIT_sample.instr
-- linup-4.instr
-- linup-6.instr
-- templateTAS.instr
-- templateVanadiumMultipleScat_Mantid.instr
 ---------------------------------------
 Isotropic_Sqw is used in 23 example(s):
 - HZB_NEAT.instr
@@ -87,13 +87,13 @@ Isotropic_Sqw is used in 23 example(s):
 - ISIS_TOSCA_preupgrade_Mantid.instr
 - McStas_Isotropic_Sqw.instr
 - SNS_BASIS.instr
+- templateTAS.instr
+- templateTOF.instr
+- Test_StatisticalChopper.instr
 - Samples_Incoherent.instr
 - Samples_Isotropic_Sqw.instr
 - Test_Sqw.instr
 - Test_Sqw_monitor.instr
-- Test_StatisticalChopper.instr
-- templateTAS.instr
-- templateTOF.instr
 ---------------------------------------
 Magnon_bcc is used in 2 example(s):
 - Test_Magnon_bcc_2D.instr
@@ -129,19 +129,21 @@ PowderN is used in 42 example(s):
 - ILL_Lagrange.instr
 - ISIS_GEM.instr
 - ISIS_IMAT.instr
-- McStas_PowderN.instr
+- SAFARI_MPISI.instr
+- SAFARI_PITSI.instr
 - PSI_DMC.instr
 - PSI_DMC_simple.instr
 - PSI_source.instr
 - RITA-II.instr
+- McStas_PowderN.instr
 - RTP_DIF.instr
 - RTP_NeutronRadiography.instr
 - RTP_SANS.instr
-- SAFARI_MPISI.instr
-- SAFARI_PITSI.instr
-- Samples_Incoherent.instr
+- templateDIFF.instr
+- Unittest_SPLIT_sample.instr
 - Test_Collimator_Radial.instr
 - Test_DiskChoppers2.instr
+- Samples_Incoherent.instr
 - Test_PowderN.instr
 - Test_PowderN_Res.instr
 - Test_PowderN_concentric.instr
@@ -149,55 +151,53 @@ PowderN is used in 42 example(s):
 - Union_external_component.instr
 - Union_external_component_test.instr
 - Union_powder_validation.instr
-- Unittest_SPLIT_sample.instr
-- templateDIFF.instr
 ---------------------------------------
 Res_sample is used in 2 example(s):
 - Test_TOFRes_sample.instr
 - Test_TasReso.instr
 ---------------------------------------
 SANS_spheres2 is used in 5 example(s):
+- templateSANS2_Mantid.instr
 - SEMSANS_Delft.instr
 - SESANS_Delft.instr
 - Unittest_SANS_benchmark2.instr
 - templateSANS2.instr
-- templateSANS2_Mantid.instr
 ---------------------------------------
 Sans_spheres is used in 6 example(s):
 - ILL_H142_D33.instr
 - ILL_H53_D16.instr
+- templateSANS_Mantid.instr
 - RTP_SANS.instr
 - templateSANS.instr
 - templateSANS_MCPL.instr
-- templateSANS_Mantid.instr
 ---------------------------------------
 SasView_model is used in 2 example(s):
-- templateSasView.instr
 - templateSasView_Mantid.instr
+- templateSasView.instr
 ---------------------------------------
 Single_crystal is used in 22 example(s):
 - ILL_H143_LADI.instr
 - ILL_H22_VIVALDI.instr
 - ILL_IN13.instr
 - LLB_6T2.instr
-- McStas_Single_crystal.instr
-- RITA-II.instr
-- RTP_Laue.instr
 - SAFARI_MPISI.instr
 - SAFARI_PITSI.instr
-- Samples_Incoherent.instr
-- Test_Magnon_bcc_2D.instr
-- Test_Monochromators.instr
-- Test_SX.instr
-- Test_Single_crystal_inelastic.instr
+- RITA-II.instr
+- McStas_Single_crystal.instr
+- RTP_Laue.instr
 - Test_TasReso.instr
-- Test_focus.instr
-- Union_laue_camera.instr
-- Union_single_crystal_validation.instr
-- Unittest_SPLIT_sample.instr
 - templateLaue.instr
 - templateNMX.instr
 - templateNMX_TOF.instr
+- Unittest_SPLIT_sample.instr
+- Test_Monochromators.instr
+- Test_focus.instr
+- Samples_Incoherent.instr
+- Test_Magnon_bcc_2D.instr
+- Test_SX.instr
+- Test_Single_crystal_inelastic.instr
+- Union_laue_camera.instr
+- Union_single_crystal_validation.instr
 ---------------------------------------
 Single_magnetic_crystal is used in 1 example(s):
 - Test_single_magnetic_crystal.instr

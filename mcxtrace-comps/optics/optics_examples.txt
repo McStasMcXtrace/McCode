@@ -12,14 +12,17 @@ Arm is used in 74 example(s):
 - ATHENA_1shell.instr
 - ATHENA_cfgA_1mm.instr
 - ATHENA_cfgA_1mm_FEMd.instr
-- Airport_scannerII.instr
+- NuSTAR_1shell_con.instr
+- Simple_1shell.instr
+- Test_shells.instr
 - CXO.instr
+- NuSTAR_1shell.instr
 - Czerny_Turner.instr
-- DBD_IBM_Si_analyzer_BC.instr
+- Airport_scannerII.instr
+- Pump_probe.instr
+- Pump_probe_solvent.instr
 - ESRF_ID01.instr
 - ESRF_ID11.instr
-- Focal_pt_monitor.instr
-- JJ_SAXS.instr
 - MAXII_711.instr
 - MAXII_811.instr
 - MAXIV_Bloch.instr
@@ -27,11 +30,9 @@ Arm is used in 74 example(s):
 - MAXIV_DanMAX_pxrd2d.instr
 - MAXIV_FemtoMAX.instr
 - NBI_Lab_TOMO.instr
-- NuSTAR_1shell.instr
-- NuSTAR_1shell_con.instr
+- DBD_IBM_Si_analyzer_BC.instr
 - PBD_BT.instr
-- Pump_probe.instr
-- Pump_probe_solvent.instr
+- JJ_SAXS.instr
 - SAXS_saxlab.instr
 - SOLEIL_ANATOMIX.instr
 - SOLEIL_CASSIOPEE.instr
@@ -45,35 +46,34 @@ Arm is used in 74 example(s):
 - SOLEIL_SIXS.instr
 - SSRL_bl_11_2_not_white_src.instr
 - SSRL_bl_11_2_white_src.instr
-- Simple_1shell.instr
+- Focal_pt_monitor.instr
 - Template_1Slit_Diff.instr
 - Template_2Slit_Diff.instr
-- Template_DCM.instr
 - Template_Johann_spec.instr
-- Template_SasView.instr
-- Test_Absorption.instr
-- Test_BM.instr
+- Test_monitors.instr
+- Template_DCM.instr
 - Test_CRL.instr
-- Test_Fluorescence.instr
 - Test_KB.instr
 - Test_ML_elliptic.instr
 - Test_Mask.instr
 - Test_Mirror_toroid.instr
 - Test_Mirrors.instr
 - Test_Mono.instr
-- Test_PowderN.instr
-- Test_SX.instr
-- Test_Saxs_spheres.instr
-- Test_Source_quasi.instr
-- Test_Sources.instr
-- Test_Sqw.instr
 - Test_capillary.instr
 - Test_grating_reflect.instr
 - Test_grating_trans.instr
 - Test_mirror_elliptic.instr
 - Test_mirror_parabolic.instr
-- Test_monitors.instr
-- Test_shells.instr
+- Template_SasView.instr
+- Test_Absorption.instr
+- Test_Fluorescence.instr
+- Test_PowderN.instr
+- Test_SX.instr
+- Test_Saxs_spheres.instr
+- Test_Sqw.instr
+- Test_BM.instr
+- Test_Source_quasi.instr
+- Test_Sources.instr
 - Test_source_lab.instr
 - Test_source_spectra.instr
 - XFEL_SPB.instr
@@ -88,12 +88,12 @@ Beamstop is used in 7 example(s):
 - XFEL_SPB.instr
 ---------------------------------------
 Bragg_crystal is used in 19 example(s):
-- DBD_IBM_Si_analyzer_BC.instr
 - ESRF_ID01.instr
 - MAXII_811.instr
 - MAXIV_DanMAX_pxrd1d.instr
 - MAXIV_DanMAX_pxrd2d.instr
 - MAXIV_FemtoMAX.instr
+- DBD_IBM_Si_analyzer_BC.instr
 - PBD_BT.instr
 - SOLEIL_ANATOMIX.instr
 - SOLEIL_DIFFABS.instr
@@ -103,8 +103,8 @@ Bragg_crystal is used in 19 example(s):
 - SOLEIL_PX2a.instr
 - SOLEIL_ROCK.instr
 - SOLEIL_SIXS.instr
-- Template_DCM.instr
 - Template_Johann_spec.instr
+- Template_DCM.instr
 - Test_Mono.instr
 - XFEL_SPB.instr
 ---------------------------------------
@@ -130,8 +130,8 @@ Filter is used in 11 example(s):
 - NBI_Lab_TOMO.instr
 - SOLEIL_ANATOMIX.instr
 - SOLEIL_PSICHE.instr
-- Test_Absorption.instr
 - Test_Filter.instr
+- Test_Absorption.instr
 ---------------------------------------
 Grating_reflect is used in 5 example(s):
 - Czerny_Turner.instr
@@ -162,9 +162,9 @@ Lens_parab_Cyl is used in 3 example(s):
 - Test_CRL.instr
 ---------------------------------------
 Lens_simple is used in 5 example(s):
-- Be_BM_beamline.instr
 - ESRF_ID11.instr
 - Focal_pt_monitor.instr
+- Be_BM_beamline.instr
 - Test_CRL.instr
 - XFEL_SPB.instr
 ---------------------------------------
@@ -177,7 +177,6 @@ Mirror is used in 26 example(s):
 - ATHENA_cfgA_1mm_FEMd.instr
 - Czerny_Turner.instr
 - ESRF_ID01.instr
-- JJ_SAXS.instr
 - MAXII_711.instr
 - MAXII_811.instr
 - MAXIV_Bloch.instr
@@ -185,6 +184,7 @@ Mirror is used in 26 example(s):
 - MAXIV_DanMAX_pxrd2d.instr
 - MAXIV_FemtoMAX.instr
 - PBD_BT.instr
+- JJ_SAXS.instr
 - SOLEIL_ANATOMIX.instr
 - SOLEIL_CASSIOPEE.instr
 - SOLEIL_DIFFABS.instr
@@ -201,11 +201,11 @@ Mirror is used in 26 example(s):
 - XFEL_SPB.instr
 ---------------------------------------
 Mirror_curved is used in 15 example(s):
-- JJ_SAXS.instr
 - MAXII_711.instr
 - MAXII_811.instr
 - MAXIV_Bloch.instr
 - MAXIV_FemtoMAX.instr
+- JJ_SAXS.instr
 - SOLEIL_CASSIOPEE.instr
 - SOLEIL_DIFFABS.instr
 - SOLEIL_DISCO.instr
@@ -245,22 +245,21 @@ Multilayer_elliptic is used in 3 example(s):
 - Test_Mirrors.instr
 ---------------------------------------
 Slit is used in 35 example(s):
-- Be_BM_beamline.instr
 - Czerny_Turner.instr
-- DBD_IBM_Si_analyzer_BC.instr
+- Pump_probe.instr
 - ESRF_BM29.instr
 - ESRF_ID01.instr
 - ESRF_ID11.instr
-- JJ_SAXS.instr
 - MAXII_711.instr
 - MAXII_811.instr
 - MAXIV_Bloch.instr
 - MAXIV_DanMAX_pxrd1d.instr
 - MAXIV_DanMAX_pxrd2d.instr
 - MAXIV_FemtoMAX.instr
-- NSLS2_CHX.instr
+- DBD_IBM_Si_analyzer_BC.instr
 - PBD_BT.instr
-- Pump_probe.instr
+- NSLS2_CHX.instr
+- JJ_SAXS.instr
 - SAXS_saxlab.instr
 - SOLEIL_CASSIOPEE.instr
 - SOLEIL_DIFFABS.instr
@@ -274,10 +273,11 @@ Slit is used in 35 example(s):
 - SSRL_bl_11_2_white_src.instr
 - Template_1Slit_Diff.instr
 - Template_2Slit_Diff.instr
-- Template_SasView.instr
-- Test_CRL_Be.instr
+- Be_BM_beamline.instr
 - Test_GROUP.instr
+- Test_CRL_Be.instr
 - Test_KB.instr
+- Template_SasView.instr
 - Test_SAXS.instr
 - Test_undulator.instr
 ---------------------------------------

@@ -26,7 +26,7 @@ do
     echo --------------------------------------- >> ${category}_examples.txt
     for comp in $(ls *.comp | sed s/.comp//g)
     do
-	examples=$(grep -H ${comp} ${COMPDIR}/examples/*instr | cut -f1 -d: | sort | uniq | xargs -n1 basename)
+	examples=$(grep -H ${comp} ${COMPDIR}/examples/*/*/*instr | cut -f1 -d: | sort | uniq | xargs -n1 basename)
 	num_examples=$(echo $examples | wc -w)
 	echo $comp is used in $num_examples example\(s\): >> ${category}_examples.txt
 	echo $examples | xargs -n1 echo - >> ${category}_examples.txt

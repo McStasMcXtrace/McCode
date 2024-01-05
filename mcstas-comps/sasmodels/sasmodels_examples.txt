@@ -5,15 +5,15 @@ example instruments that include them
 SasView_adsorbed_layer is used in 0 example(s):
 ---------------------------------------
 SasView_barbell is used in 2 example(s):
-- templateSasView.instr
 - templateSasView_Mantid.instr
+- templateSasView.instr
 ---------------------------------------
 SasView_barbell_aniso is used in 0 example(s):
 ---------------------------------------
 SasView_bcc_paracrystal is used in 3 example(s):
+- templateSasView_Mantid.instr
 - Test_SasView_bcc_paracrystal_aniso.instr
 - templateSasView.instr
-- templateSasView_Mantid.instr
 ---------------------------------------
 SasView_bcc_paracrystal_aniso is used in 1 example(s):
 - Test_SasView_bcc_paracrystal_aniso.instr
@@ -134,8 +134,8 @@ SasView_multilayer_vesicle is used in 0 example(s):
 SasView_onion is used in 0 example(s):
 ---------------------------------------
 SasView_parallelepiped is used in 2 example(s):
-- templateSasView.instr
 - templateSasView_Mantid.instr
+- templateSasView.instr
 ---------------------------------------
 SasView_parallelepiped_aniso is used in 0 example(s):
 ---------------------------------------

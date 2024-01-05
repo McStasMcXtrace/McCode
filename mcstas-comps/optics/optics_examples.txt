@@ -9,7 +9,9 @@ Absorber is used in 2 example(s):
 Arm is used in 213 example(s):
 - BNL_H8.instr
 - BNL_H8_simple.instr
-- BTsimple.instr
+- h8_test_legacy.instr
+- Vin_test.instr
+- Vout_test.instr
 - ESS_BEER_MCPL.instr
 - ESS_IN5_reprate.instr
 - ESS_Testbeamline_HZB_V20.instr
@@ -67,69 +69,66 @@ Arm is used in 213 example(s):
 - ISIS_OSIRIS.instr
 - ISIS_Prisma2.instr
 - ISIS_SANS2d.instr
-- ISIS_SANS2d_Mantid.instr
 - ISIS_TOSCA_preupgrade.instr
-- ISIS_TOSCA_preupgrade_Mantid.instr
 - ISIS_TS1_Brilliance.instr
 - ISIS_TS2_Brilliance.instr
 - LLB_6T2.instr
-- MCPL2Mantid_flat.instr
-- MCPL_filter_energy.instr
-- MCPL_filter_radius.instr
-- MCPL_filter_wavelength.instr
+- ISIS_SANS2d_Mantid.instr
+- ISIS_TOSCA_preupgrade_Mantid.instr
+- SNS_ARCS_Mantid.instr
+- Tools_ONION.instr
+- templateSANS2_Mantid.instr
+- templateSANS_Mantid.instr
+- templateSasView_Mantid.instr
 - NCrystal_example.instr
+- Union_NCrystal_example.instr
+- Union_NCrystal_mix_example.instr
+- SAFARI_MPISI.instr
+- SAFARI_PITSI.instr
 - PSI_DMC.instr
 - PSI_DMC_simple.instr
 - PSI_Focus.instr
 - PSI_source.instr
 - RITA-II.instr
+- SESANS_Delft.instr
+- linup-1.instr
+- linup-2.instr
+- linup-3.instr
+- linup-4.instr
+- linup-5.instr
+- linup-6.instr
+- linup-7.instr
+- SNS_ARCS.instr
+- SNS_BASIS.instr
 - RTP_DIF.instr
 - RTP_Laue.instr
 - RTP_NeutronRadiography.instr
 - RTP_SANS.instr
+- BTsimple.instr
 - Reflectometer.instr
-- SAFARI_MPISI.instr
-- SAFARI_PITSI.instr
-- SESANS_Delft.instr
 - SE_example.instr
 - SE_example2.instr
-- SNS_ARCS.instr
-- SNS_ARCS_Mantid.instr
-- SNS_BASIS.instr
-- Samples_Incoherent.instr
-- Samples_Isotropic_Sqw.instr
-- Samples_Phonon.instr
-- Samples_vanadium.instr
-- Test_Cyl_monitors.instr
-- Test_DiskChoppers.instr
-- Test_DiskChoppers2.instr
-- Test_Fermi.instr
-- Test_Guides.instr
-- Test_Guides_Curved.instr
-- Test_Incoherent.instr
-- Test_Jump_Iterate.instr
-- Test_Magnetic_Constant.instr
-- Test_Magnetic_Majorana.instr
-- Test_Magnetic_Rotation.instr
-- Test_Magnon_bcc_TAS.instr
-- Test_Monitor_nD.instr
-- Test_Monochromators.instr
-- Test_NMO.instr
-- Test_PSD_Detector.instr
-- Test_Pol_Bender.instr
-- Test_Pol_Bender_Vs_Guide_Curved.instr
-- Test_Pol_Guide_Vmirror.instr
-- Test_Pol_Guide_mirror.instr
-- Test_Pol_MSF.instr
-- Test_Pol_Mirror.instr
-- Test_Pol_SF_ideal.instr
-- Test_Pol_Set.instr
-- Test_Pol_Tabled.instr
 - Test_Pol_TripleAxis.instr
-- Test_PowderN.instr
-- Test_PowderN_Res.instr
-- Test_PowderN_concentric.instr
-- Test_PreMonitor_nD.instr
+- Test_SasView_bcc_paracrystal_aniso.instr
+- Test_SasView_guinier.instr
+- Test_TOFRes_sample.instr
+- Test_TasReso.instr
+- Tomography.instr
+- Unittest_SANS_benchmark2.instr
+- mini.instr
+- template.instr
+- templateDIFF.instr
+- templateNMX_TOF.instr
+- templateSANS.instr
+- templateSANS2.instr
+- templateSANS_MCPL.instr
+- templateSasView.instr
+- templateTAS.instr
+- templateTOF.instr
+- Test_single_magnetic_crystal.instr
+- Test_Cyl_monitors.instr
+- Test_Monitor_nD.instr
+- Test_NMO.instr
 - Test_RNG_rand01.instr
 - Test_RNG_randnorm.instr
 - Test_RNG_randpm1.instr
@@ -137,25 +136,54 @@ Arm is used in 213 example(s):
 - Test_RNG_randvec_target_circle.instr
 - Test_RNG_randvec_target_rect.instr
 - Test_RNG_randvec_target_rect_angular.instr
-- Test_Rotator.instr
+- Test_Source_quasi.instr
+- Test_Vertical_Bender.instr
 - Test_SSR_SSW.instr
 - Test_SSR_SSW_Guide.instr
+- Test_Jump_Iterate.instr
+- Unittest_JUMP_ITERATE.instr
+- Unittest_JUMP_WHEN.instr
+- Unittest_SPLIT.instr
+- Unittest_SPLIT_sample.instr
+- Test_DiskChoppers.instr
+- Test_DiskChoppers2.instr
+- Test_Fermi.instr
+- Test_Guides.instr
+- Test_Guides_Curved.instr
+- Test_Monochromators.instr
+- Test_PSD_Detector.instr
+- Test_Pol_Bender_Vs_Guide_Curved.instr
+- Test_PreMonitor_nD.instr
+- Test_Rotator.instr
+- Test_focus.instr
+- Test_Magnetic_Constant.instr
+- Test_Magnetic_Majorana.instr
+- Test_Magnetic_Rotation.instr
+- Test_Pol_Bender.instr
+- Test_Pol_Guide_Vmirror.instr
+- Test_Pol_Guide_mirror.instr
+- Test_Pol_MSF.instr
+- Test_Pol_Mirror.instr
+- Test_Pol_SF_ideal.instr
+- Test_Pol_Set.instr
+- Test_Pol_Tabled.instr
+- Samples_Incoherent.instr
+- Samples_Isotropic_Sqw.instr
+- Samples_Phonon.instr
+- Samples_vanadium.instr
+- Test_Incoherent.instr
+- Test_Magnon_bcc_TAS.instr
+- Test_PowderN.instr
+- Test_PowderN_Res.instr
+- Test_PowderN_concentric.instr
 - Test_SX.instr
-- Test_SasView_bcc_paracrystal_aniso.instr
-- Test_SasView_guinier.instr
-- Test_Source_quasi.instr
 - Test_Sqw.instr
 - Test_Sqw_monitor.instr
-- Test_TOFRes_sample.instr
-- Test_TasReso.instr
-- Test_Vertical_Bender.instr
-- Test_focus.instr
-- Test_single_magnetic_crystal.instr
-- Tomography.instr
-- Tools_ONION.instr
+- MCPL2Mantid_flat.instr
+- MCPL_filter_energy.instr
+- MCPL_filter_radius.instr
+- MCPL_filter_wavelength.instr
 - Union_IncoherentPhonon_test.instr
-- Union_NCrystal_example.instr
-- Union_NCrystal_mix_example.instr
 - Union_conditional_test.instr
 - Union_demonstration.instr
 - Union_demonstration_absorption_image.instr
@@ -192,48 +220,20 @@ Arm is used in 213 example(s):
 - Union_unit_test_logger_2D_space_time.instr
 - Union_unit_test_logger_3D_space.instr
 - Union_unit_test_loggers_base.instr
-- Unittest_JUMP_ITERATE.instr
-- Unittest_JUMP_WHEN.instr
-- Unittest_SANS_benchmark2.instr
-- Unittest_SPLIT.instr
-- Unittest_SPLIT_sample.instr
-- Vin_test.instr
-- Vout_test.instr
-- h8_test_legacy.instr
-- linup-1.instr
-- linup-2.instr
-- linup-3.instr
-- linup-4.instr
-- linup-5.instr
-- linup-6.instr
-- linup-7.instr
-- mini.instr
-- template.instr
-- templateDIFF.instr
-- templateNMX_TOF.instr
-- templateSANS.instr
-- templateSANS2.instr
-- templateSANS2_Mantid.instr
-- templateSANS_MCPL.instr
-- templateSANS_Mantid.instr
-- templateSasView.instr
-- templateSasView_Mantid.instr
-- templateTAS.instr
-- templateTOF.instr
 ---------------------------------------
 Beamstop is used in 12 example(s):
 - FZJ_SANS_KWS2_AnySample.instr
+- WOFSANS.instr
 - ISIS_OSIRIS.instr
-- PSI_DMC.instr
-- PSI_DMC_simple.instr
 - SAFARI_MPISI.instr
 - SAFARI_PITSI.instr
-- Samples_Incoherent.instr
+- PSI_DMC.instr
+- PSI_DMC_simple.instr
 - TestSANS.instr
-- Test_SX.instr
-- WOFSANS.instr
 - templateSANS.instr
 - templateSANS_MCPL.instr
+- Samples_Incoherent.instr
+- Test_SX.instr
 ---------------------------------------
 Bender is used in 9 example(s):
 - ESS_Testbeamline_HZB_V20.instr
@@ -241,10 +241,10 @@ Bender is used in 9 example(s):
 - PSI_DMC.instr
 - PSI_DMC_simple.instr
 - PSI_Focus.instr
-- Test_Guides_Curved.instr
-- Test_Pol_Bender.instr
-- Test_Pol_Bender_Vs_Guide_Curved.instr
 - Test_Vertical_Bender.instr
+- Test_Guides_Curved.instr
+- Test_Pol_Bender_Vs_Guide_Curved.instr
+- Test_Pol_Bender.instr
 ---------------------------------------
 Collimator_linear is used in 22 example(s):
 - ILL_BRISP.instr
@@ -257,9 +257,6 @@ Collimator_linear is used in 22 example(s):
 - ILL_H8_IN1.instr
 - ISIS_Prisma2.instr
 - RITA-II.instr
-- Samples_vanadium.instr
-- Test_Magnon_bcc_TAS.instr
-- Test_TasReso.instr
 - linup-1.instr
 - linup-2.instr
 - linup-3.instr
@@ -267,8 +264,11 @@ Collimator_linear is used in 22 example(s):
 - linup-5.instr
 - linup-6.instr
 - linup-7.instr
+- Test_TasReso.instr
 - templateDIFF.instr
 - templateTAS.instr
+- Samples_vanadium.instr
+- Test_Magnon_bcc_TAS.instr
 ---------------------------------------
 Collimator_radial is used in 8 example(s):
 - ILL_D2B.instr
@@ -277,8 +277,8 @@ Collimator_radial is used in 8 example(s):
 - ILL_H22_D1A_noenv.instr
 - ILL_SALSA.instr
 - SAFARI_PITSI.instr
-- Test_Collimator_Radial.instr
 - templateDIFF.instr
+- Test_Collimator_Radial.instr
 ---------------------------------------
 Derotator is used in 2 example(s):
 - Test_DiskChoppers2.instr
@@ -300,9 +300,9 @@ DiskChopper is used in 15 example(s):
 - PSI_Focus.instr
 - SEMSANS_instrument.instr
 - SNS_BASIS.instr
+- Test_TOFRes_sample.instr
 - Test_DiskChoppers.instr
 - Test_DiskChoppers2.instr
-- Test_TOFRes_sample.instr
 ---------------------------------------
 Elliptic_guide_gravity is used in 4 example(s):
 - BTsimple.instr
@@ -324,13 +324,14 @@ FermiChopper is used in 7 example(s):
 ---------------------------------------
 Filter_gen is used in 4 example(s):
 - ILL_IN4.instr
-- RITA-II.instr
 - SAFARI_MPISI.instr
 - SAFARI_PITSI.instr
+- RITA-II.instr
 ---------------------------------------
 Guide is used in 75 example(s):
 - BNL_H8.instr
 - BNL_H8_simple.instr
+- h8_test_legacy.instr
 - ESS_IN5_reprate.instr
 - ESS_Testbeamline_HZB_V20.instr
 - ESS_butterfly_Guide_curved_test.instr
@@ -340,6 +341,7 @@ Guide is used in 75 example(s):
 - FZJ_SANS_KWS2_AnySample.instr
 - HZB_FLEX.instr
 - HZB_NEAT.instr
+- WOFSANS.instr
 - ILL_BRISP.instr
 - ILL_D2B.instr
 - ILL_D2B_noenv.instr
@@ -374,36 +376,34 @@ Guide is used in 75 example(s):
 - ISIS_MERLIN.instr
 - ISIS_OSIRIS.instr
 - ISIS_SANS2d.instr
-- ISIS_SANS2d_Mantid.instr
 - ISIS_TOSCA_preupgrade.instr
+- ISIS_SANS2d_Mantid.instr
 - ISIS_TOSCA_preupgrade_Mantid.instr
+- SNS_ARCS_Mantid.instr
 - PSI_DMC.instr
 - PSI_DMC_simple.instr
 - PSI_Focus.instr
 - PSI_source.instr
 - RITA-II.instr
+- SEMSANS_instrument.instr
+- SNS_ARCS.instr
+- SNS_BASIS.instr
 - RTP_DIF.instr
 - RTP_Laue.instr
 - RTP_NeutronRadiography.instr
 - RTP_SANS.instr
-- SEMSANS_instrument.instr
-- SNS_ARCS.instr
-- SNS_ARCS_Mantid.instr
-- SNS_BASIS.instr
+- Test_TOFRes_sample.instr
+- templateTAS.instr
+- Test_SSR_SSW_Guide.instr
+- Test_Jump_Iterate.instr
 - Test_Fermi.instr
 - Test_Guides.instr
 - Test_Guides_Curved.instr
-- Test_Jump_Iterate.instr
-- Test_Magnon_bcc_TAS.instr
 - Test_Pol_Bender_Vs_Guide_Curved.instr
 - Test_Pol_Guide_Vmirror.instr
 - Test_Pol_Guide_mirror.instr
-- Test_SSR_SSW_Guide.instr
-- Test_TOFRes_sample.instr
+- Test_Magnon_bcc_TAS.instr
 - Union_manual_example.instr
-- WOFSANS.instr
-- h8_test_legacy.instr
-- templateTAS.instr
 ---------------------------------------
 Guide_anyshape is used in 1 example(s):
 - Test_Guides.instr
@@ -419,9 +419,9 @@ Guide_channeled is used in 15 example(s):
 - ISIS_MERLIN.instr
 - ISIS_TOSCA_preupgrade.instr
 - ISIS_TOSCA_preupgrade_Mantid.instr
+- SNS_ARCS_Mantid.instr
 - PSI_Focus.instr
 - SNS_ARCS.instr
-- SNS_ARCS_Mantid.instr
 - Test_Fermi.instr
 - Test_Guides.instr
 ---------------------------------------
@@ -445,9 +445,9 @@ Guide_gravity is used in 23 example(s):
 - ISIS_SANS2d.instr
 - ISIS_SANS2d_Mantid.instr
 - SNS_BASIS.instr
+- Test_Jump_Iterate.instr
 - Test_Fermi.instr
 - Test_Guides.instr
-- Test_Jump_Iterate.instr
 - Union_manual_example.instr
 ---------------------------------------
 Guide_simple is used in 2 example(s):
@@ -475,8 +475,8 @@ Mirror is used in 9 example(s):
 - PSI_source.instr
 - Reflectometer.instr
 - Test_Conics_pairs.instr
-- Test_FocalisationMirrors.instr
 - Test_NMO.instr
+- Test_FocalisationMirrors.instr
 - Test_Pol_Mirror.instr
 ---------------------------------------
 Monochromator_curved is used in 30 example(s):
@@ -497,31 +497,28 @@ Monochromator_curved is used in 30 example(s):
 - ILL_IN6.instr
 - ILL_Lagrange.instr
 - ISIS_TOSCA_preupgrade.instr
-- ISIS_TOSCA_preupgrade_Mantid.instr
 - LLB_6T2.instr
+- ISIS_TOSCA_preupgrade_Mantid.instr
+- SAFARI_MPISI.instr
+- SAFARI_PITSI.instr
 - RITA-II.instr
 - RTP_DIF.instr
 - RTP_SANS.instr
-- SAFARI_MPISI.instr
-- SAFARI_PITSI.instr
-- Test_Monochromators.instr
-- Test_PreMonitor_nD.instr
 - Test_TasReso.instr
-- Test_focus.instr
 - templateDIFF.instr
 - templateTAS.instr
+- Test_Monochromators.instr
+- Test_PreMonitor_nD.instr
+- Test_focus.instr
 ---------------------------------------
 Monochromator_flat is used in 17 example(s):
 - BNL_H8.instr
 - BNL_H8_simple.instr
+- h8_test_legacy.instr
 - ESS_Testbeamline_HZB_V20.instr
 - ILL_SALSA.instr
 - ISIS_Prisma2.instr
 - RITA-II.instr
-- Test_Magnon_bcc_TAS.instr
-- Test_Monochromators.instr
-- Test_Pol_TripleAxis.instr
-- h8_test_legacy.instr
 - linup-1.instr
 - linup-2.instr
 - linup-3.instr
@@ -529,11 +526,14 @@ Monochromator_flat is used in 17 example(s):
 - linup-5.instr
 - linup-6.instr
 - linup-7.instr
+- Test_Pol_TripleAxis.instr
+- Test_Monochromators.instr
+- Test_Magnon_bcc_TAS.instr
 ---------------------------------------
 Monochromator_pol is used in 3 example(s):
 - ISIS_OSIRIS.instr
-- Test_Monochromators.instr
 - Test_Pol_TripleAxis.instr
+- Test_Monochromators.instr
 ---------------------------------------
 PolAnalyser_ideal is used in 4 example(s):
 - SEMSANS_Delft.instr
@@ -567,15 +567,15 @@ Pol_SF_ideal is used in 1 example(s):
 Pol_bender is used in 4 example(s):
 - ESS_Testbeamline_HZB_V20.instr
 - Test_Guides_Curved.instr
-- Test_Pol_Bender.instr
 - Test_Pol_Bender_Vs_Guide_Curved.instr
+- Test_Pol_Bender.instr
 ---------------------------------------
 Pol_constBfield is used in 5 example(s):
+- Test_Pol_TripleAxis.instr
 - Test_Magnetic_Constant.instr
 - Test_Magnetic_Rotation.instr
 - Test_Pol_FieldBox.instr
 - Test_Pol_MSF.instr
-- Test_Pol_TripleAxis.instr
 ---------------------------------------
 Pol_guide_mirror is used in 2 example(s):
 - Test_Pol_Guide_Vmirror.instr
@@ -613,10 +613,11 @@ Selector is used in 5 example(s):
 ---------------------------------------
 Set_pol is used in 15 example(s):
 - FZJ_BenchmarkSfin2.instr
-- He3_spin_filter.instr
 - SEMSANS_Delft.instr
 - SEMSANS_instrument.instr
 - SESANS_Delft.instr
+- Test_single_magnetic_crystal.instr
+- He3_spin_filter.instr
 - Test_Magnetic_Constant.instr
 - Test_Magnetic_Majorana.instr
 - Test_Magnetic_Rotation.instr
@@ -626,17 +627,18 @@ Set_pol is used in 15 example(s):
 - Test_Pol_Set.instr
 - Test_Pol_Tabled.instr
 - Test_pol_ideal.instr
-- Test_single_magnetic_crystal.instr
 ---------------------------------------
 Slit is used in 80 example(s):
 - BNL_H8.instr
 - BNL_H8_simple.instr
+- h8_test_legacy.instr
 - ESS_BEER_MCPL.instr
 - ESS_Testbeamline_HZB_V20.instr
 - FZJ_BenchmarkSfin2.instr
 - FZJ_KWS2_Lens.instr
 - FZJ_SANS_KWS2_AnySample.instr
 - HZB_FLEX.instr
+- WOFSANS.instr
 - ILL_D2B.instr
 - ILL_D2B_noenv.instr
 - ILL_H142_D33.instr
@@ -652,44 +654,21 @@ Slit is used in 80 example(s):
 - ISIS_IMAT.instr
 - ISIS_Prisma2.instr
 - ISIS_SANS2d.instr
-- ISIS_SANS2d_Mantid.instr
 - ISIS_TOSCA_preupgrade.instr
-- ISIS_TOSCA_preupgrade_Mantid.instr
 - LLB_6T2.instr
+- ISIS_SANS2d_Mantid.instr
+- ISIS_TOSCA_preupgrade_Mantid.instr
+- SNS_ARCS_Mantid.instr
+- templateSANS2_Mantid.instr
+- templateSANS_Mantid.instr
+- templateSasView_Mantid.instr
+- SAFARI_MPISI.instr
+- SAFARI_PITSI.instr
 - PSI_DMC.instr
 - PSI_DMC_simple.instr
 - PSI_Focus.instr
 - RITA-II.instr
-- RTP_Laue.instr
-- Reflectometer.instr
-- SAFARI_MPISI.instr
-- SAFARI_PITSI.instr
 - SEMSANS_instrument.instr
-- SE_example.instr
-- SE_example2.instr
-- SNS_ARCS.instr
-- SNS_ARCS_Mantid.instr
-- TestSANS.instr
-- Test_DiskChoppers2.instr
-- Test_Fermi.instr
-- Test_FocalisationMirrors.instr
-- Test_GROUP.instr
-- Test_Guides.instr
-- Test_Magnon_bcc_TAS.instr
-- Test_PowderN_Res.instr
-- Test_PreMonitor_nD.instr
-- Test_SSR_SSW.instr
-- Test_SSR_SSW_Guide.instr
-- Test_SasView_bcc_paracrystal_aniso.instr
-- Test_SasView_guinier.instr
-- Test_TOFRes_sample.instr
-- Union_laue_camera.instr
-- Union_single_crystal_validation.instr
-- Unittest_SANS_benchmark2.instr
-- Unittest_SPLIT.instr
-- Unittest_SPLIT_sample.instr
-- WOFSANS.instr
-- h8_test_legacy.instr
 - linup-1.instr
 - linup-2.instr
 - linup-3.instr
@@ -697,6 +676,16 @@ Slit is used in 80 example(s):
 - linup-5.instr
 - linup-6.instr
 - linup-7.instr
+- SNS_ARCS.instr
+- RTP_Laue.instr
+- Reflectometer.instr
+- SE_example.instr
+- SE_example2.instr
+- TestSANS.instr
+- Test_SasView_bcc_paracrystal_aniso.instr
+- Test_SasView_guinier.instr
+- Test_TOFRes_sample.instr
+- Unittest_SANS_benchmark2.instr
 - mini.instr
 - templateDIFF.instr
 - templateLaue.instr
@@ -704,11 +693,22 @@ Slit is used in 80 example(s):
 - templateNMX_TOF.instr
 - templateSANS.instr
 - templateSANS2.instr
-- templateSANS2_Mantid.instr
 - templateSANS_MCPL.instr
-- templateSANS_Mantid.instr
 - templateSasView.instr
-- templateSasView_Mantid.instr
+- Test_SSR_SSW.instr
+- Test_SSR_SSW_Guide.instr
+- Test_GROUP.instr
+- Unittest_SPLIT.instr
+- Unittest_SPLIT_sample.instr
+- Test_DiskChoppers2.instr
+- Test_Fermi.instr
+- Test_FocalisationMirrors.instr
+- Test_Guides.instr
+- Test_PreMonitor_nD.instr
+- Test_Magnon_bcc_TAS.instr
+- Test_PowderN_Res.instr
+- Union_laue_camera.instr
+- Union_single_crystal_validation.instr
 ---------------------------------------
 V_selector is used in 6 example(s):
 - FZJ_KWS2_Lens.instr
