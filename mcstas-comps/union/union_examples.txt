@@ -1,0 +1,454 @@
+---------------------------------------
+List of union comps and the
+example instruments that include them
+---------------------------------------
+AF_HB_1D_process is used in 0 example(s):
+---------------------------------------
+IncoherentPhonon_process is used in 1 example(s):
+- Union_IncoherentPhonon_test.instr
+---------------------------------------
+Incoherent_process is used in 35 example(s):
+- ILL_SALSA.instr
+- Union_conditional_test.instr
+- Union_demonstration.instr
+- Union_demonstration_absorption_image.instr
+- Union_external_component.instr
+- Union_geometry_test.instr
+- Union_incoherent_validation.instr
+- Union_laue_camera.instr
+- Union_logger_test.instr
+- Union_manual_example.instr
+- Union_powder_validation.instr
+- Union_sample_picture_replica.instr
+- Union_single_crystal_validation.instr
+- Union_tagging_demo.instr
+- Union_test_absorption_image.instr
+- Union_test_box.instr
+- Union_test_mask.instr
+- Union_test_powder.instr
+- Union_time_of_flight.instr
+- Union_unit_test_abs_logger_1D_space.instr
+- Union_unit_test_abs_logger_1D_space_event.instr
+- Union_unit_test_abs_logger_1D_space_tof.instr
+- Union_unit_test_abs_logger_1D_space_tof_to_lambda.instr
+- Union_unit_test_abs_logger_2D_space.instr
+- Union_unit_test_abs_logger_event.instr
+- Union_unit_test_conditional_PSD.instr
+- Union_unit_test_conditional_standard.instr
+- Union_unit_test_logger_1D.instr
+- Union_unit_test_logger_2DQ.instr
+- Union_unit_test_logger_2D_kf.instr
+- Union_unit_test_logger_2D_kf_time.instr
+- Union_unit_test_logger_2D_space.instr
+- Union_unit_test_logger_2D_space_time.instr
+- Union_unit_test_logger_3D_space.instr
+- Union_unit_test_loggers_base.instr
+---------------------------------------
+NCrystal_process is used in 2 example(s):
+- Union_NCrystal_example.instr
+- Union_NCrystal_mix_example.instr
+---------------------------------------
+Non_process is used in 0 example(s):
+---------------------------------------
+PhononSimple_process is used in 0 example(s):
+---------------------------------------
+Powder_process is used in 31 example(s):
+- ILL_SALSA.instr
+- Union_conditional_test.instr
+- Union_demonstration.instr
+- Union_demonstration_absorption_image.instr
+- Union_external_component.instr
+- Union_external_component_test.instr
+- Union_geometry_test.instr
+- Union_logger_test.instr
+- Union_manual_example.instr
+- Union_powder_validation.instr
+- Union_sample_picture_replica.instr
+- Union_tagging_demo.instr
+- Union_test_absorption_image.instr
+- Union_test_powder.instr
+- Union_time_of_flight.instr
+- Union_unit_test_abs_logger_1D_space.instr
+- Union_unit_test_abs_logger_1D_space_event.instr
+- Union_unit_test_abs_logger_1D_space_tof.instr
+- Union_unit_test_abs_logger_1D_space_tof_to_lambda.instr
+- Union_unit_test_abs_logger_2D_space.instr
+- Union_unit_test_abs_logger_event.instr
+- Union_unit_test_conditional_PSD.instr
+- Union_unit_test_conditional_standard.instr
+- Union_unit_test_logger_1D.instr
+- Union_unit_test_logger_2DQ.instr
+- Union_unit_test_logger_2D_kf.instr
+- Union_unit_test_logger_2D_kf_time.instr
+- Union_unit_test_logger_2D_space.instr
+- Union_unit_test_logger_2D_space_time.instr
+- Union_unit_test_logger_3D_space.instr
+- Union_unit_test_loggers_base.instr
+---------------------------------------
+Single_crystal_process is used in 2 example(s):
+- Union_laue_camera.instr
+- Union_single_crystal_validation.instr
+---------------------------------------
+Template_process is used in 0 example(s):
+---------------------------------------
+Texture_process is used in 1 example(s):
+- Union_test_texture.instr
+---------------------------------------
+Union_abs_logger_1D_space is used in 4 example(s):
+- Union_unit_test_abs_logger_1D_space.instr
+- Union_unit_test_abs_logger_1D_space_event.instr
+- Union_unit_test_abs_logger_1D_space_tof.instr
+- Union_unit_test_abs_logger_1D_space_tof_to_lambda.instr
+---------------------------------------
+Union_abs_logger_1D_space_event is used in 1 example(s):
+- Union_unit_test_abs_logger_1D_space_event.instr
+---------------------------------------
+Union_abs_logger_1D_space_tof is used in 2 example(s):
+- Union_unit_test_abs_logger_1D_space_tof.instr
+- Union_unit_test_abs_logger_1D_space_tof_to_lambda.instr
+---------------------------------------
+Union_abs_logger_1D_space_tof_to_lambda is used in 1 example(s):
+- Union_unit_test_abs_logger_1D_space_tof_to_lambda.instr
+---------------------------------------
+Union_abs_logger_2D_space is used in 1 example(s):
+- Union_unit_test_abs_logger_2D_space.instr
+---------------------------------------
+Union_abs_logger_event is used in 1 example(s):
+- Union_unit_test_abs_logger_event.instr
+---------------------------------------
+Union_box is used in 30 example(s):
+- Union_NCrystal_example.instr
+- Union_NCrystal_mix_example.instr
+- Union_conditional_test.instr
+- Union_demonstration.instr
+- Union_demonstration_absorption_image.instr
+- Union_geometry_test.instr
+- Union_logger_test.instr
+- Union_manual_example.instr
+- Union_sample_picture_replica.instr
+- Union_test_absorption_image.instr
+- Union_test_box.instr
+- Union_test_mask.instr
+- Union_test_texture.instr
+- Union_time_of_flight.instr
+- Union_unit_test_abs_logger_1D_space.instr
+- Union_unit_test_abs_logger_1D_space_event.instr
+- Union_unit_test_abs_logger_1D_space_tof.instr
+- Union_unit_test_abs_logger_1D_space_tof_to_lambda.instr
+- Union_unit_test_abs_logger_2D_space.instr
+- Union_unit_test_abs_logger_event.instr
+- Union_unit_test_conditional_PSD.instr
+- Union_unit_test_conditional_standard.instr
+- Union_unit_test_logger_1D.instr
+- Union_unit_test_logger_2DQ.instr
+- Union_unit_test_logger_2D_kf.instr
+- Union_unit_test_logger_2D_kf_time.instr
+- Union_unit_test_logger_2D_space.instr
+- Union_unit_test_logger_2D_space_time.instr
+- Union_unit_test_logger_3D_space.instr
+- Union_unit_test_loggers_base.instr
+---------------------------------------
+Union_conditional_PSD is used in 2 example(s):
+- Union_conditional_test.instr
+- Union_unit_test_conditional_PSD.instr
+---------------------------------------
+Union_conditional_standard is used in 2 example(s):
+- Union_conditional_test.instr
+- Union_unit_test_conditional_standard.instr
+---------------------------------------
+Union_cone is used in 18 example(s):
+- Union_conditional_test.instr
+- Union_geometry_test.instr
+- Union_unit_test_abs_logger_1D_space.instr
+- Union_unit_test_abs_logger_1D_space_event.instr
+- Union_unit_test_abs_logger_1D_space_tof.instr
+- Union_unit_test_abs_logger_1D_space_tof_to_lambda.instr
+- Union_unit_test_abs_logger_2D_space.instr
+- Union_unit_test_abs_logger_event.instr
+- Union_unit_test_conditional_PSD.instr
+- Union_unit_test_conditional_standard.instr
+- Union_unit_test_logger_1D.instr
+- Union_unit_test_logger_2DQ.instr
+- Union_unit_test_logger_2D_kf.instr
+- Union_unit_test_logger_2D_kf_time.instr
+- Union_unit_test_logger_2D_space.instr
+- Union_unit_test_logger_2D_space_time.instr
+- Union_unit_test_logger_3D_space.instr
+- Union_unit_test_loggers_base.instr
+---------------------------------------
+Union_cylinder is used in 38 example(s):
+- ILL_SALSA.instr
+- Union_IncoherentPhonon_test.instr
+- Union_NCrystal_example.instr
+- Union_conditional_test.instr
+- Union_demonstration.instr
+- Union_demonstration_absorption_image.instr
+- Union_external_component.instr
+- Union_external_component_test.instr
+- Union_geometry_test.instr
+- Union_incoherent_validation.instr
+- Union_laue_camera.instr
+- Union_logger_test.instr
+- Union_manual_example.instr
+- Union_powder_validation.instr
+- Union_sample_picture_replica.instr
+- Union_single_crystal_validation.instr
+- Union_tagging_demo.instr
+- Union_test_absorption.instr
+- Union_test_absorption_image.instr
+- Union_test_box.instr
+- Union_test_powder.instr
+- Union_time_of_flight.instr
+- Union_unit_test_abs_logger_1D_space.instr
+- Union_unit_test_abs_logger_1D_space_event.instr
+- Union_unit_test_abs_logger_1D_space_tof.instr
+- Union_unit_test_abs_logger_1D_space_tof_to_lambda.instr
+- Union_unit_test_abs_logger_2D_space.instr
+- Union_unit_test_abs_logger_event.instr
+- Union_unit_test_conditional_PSD.instr
+- Union_unit_test_conditional_standard.instr
+- Union_unit_test_logger_1D.instr
+- Union_unit_test_logger_2DQ.instr
+- Union_unit_test_logger_2D_kf.instr
+- Union_unit_test_logger_2D_kf_time.instr
+- Union_unit_test_logger_2D_space.instr
+- Union_unit_test_logger_2D_space_time.instr
+- Union_unit_test_logger_3D_space.instr
+- Union_unit_test_loggers_base.instr
+---------------------------------------
+Union_init is used in 41 example(s):
+- ILL_SALSA.instr
+- Union_IncoherentPhonon_test.instr
+- Union_NCrystal_example.instr
+- Union_NCrystal_mix_example.instr
+- Union_conditional_test.instr
+- Union_demonstration.instr
+- Union_demonstration_absorption_image.instr
+- Union_external_component.instr
+- Union_external_component_test.instr
+- Union_geometry_test.instr
+- Union_incoherent_validation.instr
+- Union_laue_camera.instr
+- Union_logger_test.instr
+- Union_manual_example.instr
+- Union_powder_validation.instr
+- Union_sample_picture_replica.instr
+- Union_single_crystal_validation.instr
+- Union_tagging_demo.instr
+- Union_test_absorption.instr
+- Union_test_absorption_image.instr
+- Union_test_box.instr
+- Union_test_mask.instr
+- Union_test_powder.instr
+- Union_test_texture.instr
+- Union_time_of_flight.instr
+- Union_unit_test_abs_logger_1D_space.instr
+- Union_unit_test_abs_logger_1D_space_event.instr
+- Union_unit_test_abs_logger_1D_space_tof.instr
+- Union_unit_test_abs_logger_1D_space_tof_to_lambda.instr
+- Union_unit_test_abs_logger_2D_space.instr
+- Union_unit_test_abs_logger_event.instr
+- Union_unit_test_conditional_PSD.instr
+- Union_unit_test_conditional_standard.instr
+- Union_unit_test_logger_1D.instr
+- Union_unit_test_logger_2DQ.instr
+- Union_unit_test_logger_2D_kf.instr
+- Union_unit_test_logger_2D_kf_time.instr
+- Union_unit_test_logger_2D_space.instr
+- Union_unit_test_logger_2D_space_time.instr
+- Union_unit_test_logger_3D_space.instr
+- Union_unit_test_loggers_base.instr
+---------------------------------------
+Union_logger_1D is used in 4 example(s):
+- Union_conditional_test.instr
+- Union_geometry_test.instr
+- Union_logger_test.instr
+- Union_unit_test_logger_1D.instr
+---------------------------------------
+Union_logger_2DQ is used in 4 example(s):
+- Union_geometry_test.instr
+- Union_logger_test.instr
+- Union_single_crystal_validation.instr
+- Union_unit_test_logger_2DQ.instr
+---------------------------------------
+Union_logger_2D_kf is used in 3 example(s):
+- Union_logger_test.instr
+- Union_unit_test_logger_2D_kf.instr
+- Union_unit_test_logger_2D_kf_time.instr
+---------------------------------------
+Union_logger_2D_kf_time is used in 2 example(s):
+- Union_logger_test.instr
+- Union_unit_test_logger_2D_kf_time.instr
+---------------------------------------
+Union_logger_2D_space is used in 8 example(s):
+- ILL_SALSA.instr
+- Union_conditional_test.instr
+- Union_geometry_test.instr
+- Union_logger_test.instr
+- Union_unit_test_conditional_PSD.instr
+- Union_unit_test_conditional_standard.instr
+- Union_unit_test_logger_2D_space.instr
+- Union_unit_test_logger_2D_space_time.instr
+---------------------------------------
+Union_logger_2D_space_time is used in 2 example(s):
+- Union_logger_test.instr
+- Union_unit_test_logger_2D_space_time.instr
+---------------------------------------
+Union_logger_3D_space is used in 3 example(s):
+- Union_geometry_test.instr
+- Union_logger_test.instr
+- Union_unit_test_logger_3D_space.instr
+---------------------------------------
+Union_make_material is used in 41 example(s):
+- ILL_SALSA.instr
+- Union_IncoherentPhonon_test.instr
+- Union_NCrystal_example.instr
+- Union_NCrystal_mix_example.instr
+- Union_conditional_test.instr
+- Union_demonstration.instr
+- Union_demonstration_absorption_image.instr
+- Union_external_component.instr
+- Union_external_component_test.instr
+- Union_geometry_test.instr
+- Union_incoherent_validation.instr
+- Union_laue_camera.instr
+- Union_logger_test.instr
+- Union_manual_example.instr
+- Union_powder_validation.instr
+- Union_sample_picture_replica.instr
+- Union_single_crystal_validation.instr
+- Union_tagging_demo.instr
+- Union_test_absorption.instr
+- Union_test_absorption_image.instr
+- Union_test_box.instr
+- Union_test_mask.instr
+- Union_test_powder.instr
+- Union_test_texture.instr
+- Union_time_of_flight.instr
+- Union_unit_test_abs_logger_1D_space.instr
+- Union_unit_test_abs_logger_1D_space_event.instr
+- Union_unit_test_abs_logger_1D_space_tof.instr
+- Union_unit_test_abs_logger_1D_space_tof_to_lambda.instr
+- Union_unit_test_abs_logger_2D_space.instr
+- Union_unit_test_abs_logger_event.instr
+- Union_unit_test_conditional_PSD.instr
+- Union_unit_test_conditional_standard.instr
+- Union_unit_test_logger_1D.instr
+- Union_unit_test_logger_2DQ.instr
+- Union_unit_test_logger_2D_kf.instr
+- Union_unit_test_logger_2D_kf_time.instr
+- Union_unit_test_logger_2D_space.instr
+- Union_unit_test_logger_2D_space_time.instr
+- Union_unit_test_logger_3D_space.instr
+- Union_unit_test_loggers_base.instr
+---------------------------------------
+Union_master is used in 41 example(s):
+- ILL_SALSA.instr
+- Union_IncoherentPhonon_test.instr
+- Union_NCrystal_example.instr
+- Union_NCrystal_mix_example.instr
+- Union_conditional_test.instr
+- Union_demonstration.instr
+- Union_demonstration_absorption_image.instr
+- Union_external_component.instr
+- Union_external_component_test.instr
+- Union_geometry_test.instr
+- Union_incoherent_validation.instr
+- Union_laue_camera.instr
+- Union_logger_test.instr
+- Union_manual_example.instr
+- Union_powder_validation.instr
+- Union_sample_picture_replica.instr
+- Union_single_crystal_validation.instr
+- Union_tagging_demo.instr
+- Union_test_absorption.instr
+- Union_test_absorption_image.instr
+- Union_test_box.instr
+- Union_test_mask.instr
+- Union_test_powder.instr
+- Union_test_texture.instr
+- Union_time_of_flight.instr
+- Union_unit_test_abs_logger_1D_space.instr
+- Union_unit_test_abs_logger_1D_space_event.instr
+- Union_unit_test_abs_logger_1D_space_tof.instr
+- Union_unit_test_abs_logger_1D_space_tof_to_lambda.instr
+- Union_unit_test_abs_logger_2D_space.instr
+- Union_unit_test_abs_logger_event.instr
+- Union_unit_test_conditional_PSD.instr
+- Union_unit_test_conditional_standard.instr
+- Union_unit_test_logger_1D.instr
+- Union_unit_test_logger_2DQ.instr
+- Union_unit_test_logger_2D_kf.instr
+- Union_unit_test_logger_2D_kf_time.instr
+- Union_unit_test_logger_2D_space.instr
+- Union_unit_test_logger_2D_space_time.instr
+- Union_unit_test_logger_3D_space.instr
+- Union_unit_test_loggers_base.instr
+---------------------------------------
+Union_master_GPU is used in 0 example(s):
+---------------------------------------
+Union_mesh is used in 0 example(s):
+---------------------------------------
+Union_sphere is used in 18 example(s):
+- Union_conditional_test.instr
+- Union_geometry_test.instr
+- Union_unit_test_abs_logger_1D_space.instr
+- Union_unit_test_abs_logger_1D_space_event.instr
+- Union_unit_test_abs_logger_1D_space_tof.instr
+- Union_unit_test_abs_logger_1D_space_tof_to_lambda.instr
+- Union_unit_test_abs_logger_2D_space.instr
+- Union_unit_test_abs_logger_event.instr
+- Union_unit_test_conditional_PSD.instr
+- Union_unit_test_conditional_standard.instr
+- Union_unit_test_logger_1D.instr
+- Union_unit_test_logger_2DQ.instr
+- Union_unit_test_logger_2D_kf.instr
+- Union_unit_test_logger_2D_kf_time.instr
+- Union_unit_test_logger_2D_space.instr
+- Union_unit_test_logger_2D_space_time.instr
+- Union_unit_test_logger_3D_space.instr
+- Union_unit_test_loggers_base.instr
+---------------------------------------
+Union_stop is used in 41 example(s):
+- ILL_SALSA.instr
+- Union_IncoherentPhonon_test.instr
+- Union_NCrystal_example.instr
+- Union_NCrystal_mix_example.instr
+- Union_conditional_test.instr
+- Union_demonstration.instr
+- Union_demonstration_absorption_image.instr
+- Union_external_component.instr
+- Union_external_component_test.instr
+- Union_geometry_test.instr
+- Union_incoherent_validation.instr
+- Union_laue_camera.instr
+- Union_logger_test.instr
+- Union_manual_example.instr
+- Union_powder_validation.instr
+- Union_sample_picture_replica.instr
+- Union_single_crystal_validation.instr
+- Union_tagging_demo.instr
+- Union_test_absorption.instr
+- Union_test_absorption_image.instr
+- Union_test_box.instr
+- Union_test_mask.instr
+- Union_test_powder.instr
+- Union_test_texture.instr
+- Union_time_of_flight.instr
+- Union_unit_test_abs_logger_1D_space.instr
+- Union_unit_test_abs_logger_1D_space_event.instr
+- Union_unit_test_abs_logger_1D_space_tof.instr
+- Union_unit_test_abs_logger_1D_space_tof_to_lambda.instr
+- Union_unit_test_abs_logger_2D_space.instr
+- Union_unit_test_abs_logger_event.instr
+- Union_unit_test_conditional_PSD.instr
+- Union_unit_test_conditional_standard.instr
+- Union_unit_test_logger_1D.instr
+- Union_unit_test_logger_2DQ.instr
+- Union_unit_test_logger_2D_kf.instr
+- Union_unit_test_logger_2D_kf_time.instr
+- Union_unit_test_logger_2D_space.instr
+- Union_unit_test_logger_2D_space_time.instr
+- Union_unit_test_logger_3D_space.instr
+- Union_unit_test_loggers_base.instr
+---------------------------------------

@@ -1,0 +1,210 @@
+---------------------------------------
+List of samples comps and the
+example instruments that include them
+---------------------------------------
+Incoherent is used in 66 example(s):
+- ILL_H5.instr
+- ILL_H5_new.instr
+- ILL_IN13.instr
+- ILL_IN4.instr
+- ILL_SALSA.instr
+- ISIS_HET.instr
+- ISIS_MERLIN.instr
+- ISIS_OSIRIS.instr
+- ISIS_Prisma2.instr
+- ISIS_TOSCA_preupgrade.instr
+- ISIS_TOSCA_preupgrade_Mantid.instr
+- McStas_Isotropic_Sqw.instr
+- PSI_Focus.instr
+- RITA-II.instr
+- SAFARI_MPISI.instr
+- SAFARI_PITSI.instr
+- SNS_BASIS.instr
+- Samples_Incoherent.instr
+- Samples_Incoherent_off.instr
+- Samples_vanadium.instr
+- Test_Cyl_monitors.instr
+- Test_Incoherent.instr
+- Test_Pol_Set.instr
+- Test_SX.instr
+- Test_TasReso.instr
+- Tomography.instr
+- Union_IncoherentPhonon_test.instr
+- Union_conditional_test.instr
+- Union_demonstration.instr
+- Union_demonstration_absorption_image.instr
+- Union_external_component.instr
+- Union_geometry_test.instr
+- Union_incoherent_validation.instr
+- Union_laue_camera.instr
+- Union_logger_test.instr
+- Union_manual_example.instr
+- Union_powder_validation.instr
+- Union_sample_picture_replica.instr
+- Union_single_crystal_validation.instr
+- Union_tagging_demo.instr
+- Union_test_absorption_image.instr
+- Union_test_box.instr
+- Union_test_mask.instr
+- Union_test_powder.instr
+- Union_time_of_flight.instr
+- Union_unit_test_abs_logger_1D_space.instr
+- Union_unit_test_abs_logger_1D_space_event.instr
+- Union_unit_test_abs_logger_1D_space_tof.instr
+- Union_unit_test_abs_logger_1D_space_tof_to_lambda.instr
+- Union_unit_test_abs_logger_2D_space.instr
+- Union_unit_test_abs_logger_event.instr
+- Union_unit_test_conditional_PSD.instr
+- Union_unit_test_conditional_standard.instr
+- Union_unit_test_logger_1D.instr
+- Union_unit_test_logger_2DQ.instr
+- Union_unit_test_logger_2D_kf.instr
+- Union_unit_test_logger_2D_kf_time.instr
+- Union_unit_test_logger_2D_space.instr
+- Union_unit_test_logger_2D_space_time.instr
+- Union_unit_test_logger_3D_space.instr
+- Union_unit_test_loggers_base.instr
+- Unittest_SPLIT_sample.instr
+- linup-4.instr
+- linup-6.instr
+- templateTAS.instr
+- templateVanadiumMultipleScat_Mantid.instr
+---------------------------------------
+Isotropic_Sqw is used in 23 example(s):
+- HZB_NEAT.instr
+- ILL_BRISP.instr
+- ILL_D4.instr
+- ILL_H5.instr
+- ILL_H512_D22.instr
+- ILL_H5_new.instr
+- ILL_IN4.instr
+- ILL_IN5.instr
+- ILL_IN5_Mantid.instr
+- ILL_IN5_Spots.instr
+- ILL_IN6.instr
+- ILL_Lagrange.instr
+- ISIS_TOSCA_preupgrade.instr
+- ISIS_TOSCA_preupgrade_Mantid.instr
+- McStas_Isotropic_Sqw.instr
+- SNS_BASIS.instr
+- Samples_Incoherent.instr
+- Samples_Isotropic_Sqw.instr
+- Test_Sqw.instr
+- Test_Sqw_monitor.instr
+- Test_StatisticalChopper.instr
+- templateTAS.instr
+- templateTOF.instr
+---------------------------------------
+Magnon_bcc is used in 2 example(s):
+- Test_Magnon_bcc_2D.instr
+- Test_Magnon_bcc_TAS.instr
+---------------------------------------
+Phonon_simple is used in 2 example(s):
+- RITA-II.instr
+- Samples_Phonon.instr
+---------------------------------------
+Powder1 is used in 3 example(s):
+- Tools_ONION.instr
+- linup-5.instr
+- linup-7.instr
+---------------------------------------
+PowderN is used in 42 example(s):
+- ESS_BEER_MCPL.instr
+- ESS_Testbeamline_HZB_V20.instr
+- ILL_D2B.instr
+- ILL_D2B_noenv.instr
+- ILL_D4.instr
+- ILL_H22_D1A.instr
+- ILL_H22_D1A_noenv.instr
+- ILL_H22_D1B.instr
+- ILL_H22_D1B_noenv.instr
+- ILL_H22_VIVALDI.instr
+- ILL_H5.instr
+- ILL_H512_D22.instr
+- ILL_H53_D16.instr
+- ILL_H5_new.instr
+- ILL_IN5.instr
+- ILL_IN5_Mantid.instr
+- ILL_IN5_Spots.instr
+- ILL_Lagrange.instr
+- ISIS_GEM.instr
+- ISIS_IMAT.instr
+- McStas_PowderN.instr
+- PSI_DMC.instr
+- PSI_DMC_simple.instr
+- PSI_source.instr
+- RITA-II.instr
+- RTP_DIF.instr
+- RTP_NeutronRadiography.instr
+- RTP_SANS.instr
+- SAFARI_MPISI.instr
+- SAFARI_PITSI.instr
+- Samples_Incoherent.instr
+- Test_Collimator_Radial.instr
+- Test_DiskChoppers2.instr
+- Test_PowderN.instr
+- Test_PowderN_Res.instr
+- Test_PowderN_concentric.instr
+- Test_Sqw_monitor.instr
+- Union_external_component.instr
+- Union_external_component_test.instr
+- Union_powder_validation.instr
+- Unittest_SPLIT_sample.instr
+- templateDIFF.instr
+---------------------------------------
+Res_sample is used in 2 example(s):
+- Test_TOFRes_sample.instr
+- Test_TasReso.instr
+---------------------------------------
+SANS_spheres2 is used in 5 example(s):
+- SEMSANS_Delft.instr
+- SESANS_Delft.instr
+- Unittest_SANS_benchmark2.instr
+- templateSANS2.instr
+- templateSANS2_Mantid.instr
+---------------------------------------
+Sans_spheres is used in 6 example(s):
+- ILL_H142_D33.instr
+- ILL_H53_D16.instr
+- RTP_SANS.instr
+- templateSANS.instr
+- templateSANS_MCPL.instr
+- templateSANS_Mantid.instr
+---------------------------------------
+SasView_model is used in 2 example(s):
+- templateSasView.instr
+- templateSasView_Mantid.instr
+---------------------------------------
+Single_crystal is used in 22 example(s):
+- ILL_H143_LADI.instr
+- ILL_H22_VIVALDI.instr
+- ILL_IN13.instr
+- LLB_6T2.instr
+- McStas_Single_crystal.instr
+- RITA-II.instr
+- RTP_Laue.instr
+- SAFARI_MPISI.instr
+- SAFARI_PITSI.instr
+- Samples_Incoherent.instr
+- Test_Magnon_bcc_2D.instr
+- Test_Monochromators.instr
+- Test_SX.instr
+- Test_Single_crystal_inelastic.instr
+- Test_TasReso.instr
+- Test_focus.instr
+- Union_laue_camera.instr
+- Union_single_crystal_validation.instr
+- Unittest_SPLIT_sample.instr
+- templateLaue.instr
+- templateNMX.instr
+- templateNMX_TOF.instr
+---------------------------------------
+Single_magnetic_crystal is used in 1 example(s):
+- Test_single_magnetic_crystal.instr
+---------------------------------------
+TOFRes_sample is used in 1 example(s):
+- Test_TOFRes_sample.instr
+---------------------------------------
+Tunneling_sample is used in 1 example(s):
+- ESS_IN5_reprate.instr
+---------------------------------------

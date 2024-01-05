@@ -1,0 +1,62 @@
+---------------------------------------
+List of obsolete comps and the
+example instruments that include them
+---------------------------------------
+Beam_spy is used in 0 example(s):
+---------------------------------------
+ESS_moderator_short is used in 3 example(s):
+- Mezei_SNS_decoupled_poisoned.instr
+- SNS_BASIS.instr
+- Test_TOFRes_sample.instr
+---------------------------------------
+V_sample is used in 6 example(s):
+- BNL_H8.instr
+- BNL_H8_simple.instr
+- SE_example.instr
+- SE_example2.instr
+- Test_Pol_TripleAxis.instr
+- h8_test_legacy.instr
+---------------------------------------
+Virtual_input is used in 6 example(s):
+- Histogrammer.instr
+- RITA-II.instr
+- SAFARI_MPISI.instr
+- SAFARI_PITSI.instr
+- Vin_test.instr
+- vinput2mcpl.instr
+---------------------------------------
+Virtual_mcnp_input is used in 1 example(s):
+- Histogrammer.instr
+---------------------------------------
+Virtual_mcnp_output is used in 0 example(s):
+---------------------------------------
+Virtual_mcnp_ss_Guide is used in 1 example(s):
+- Test_SSR_SSW_Guide.instr
+---------------------------------------
+Virtual_mcnp_ss_input is used in 2 example(s):
+- Test_SSR_SSW.instr
+- Test_SSR_SSW_Guide.instr
+---------------------------------------
+Virtual_mcnp_ss_output is used in 1 example(s):
+- Test_SSR_SSW.instr
+---------------------------------------
+Virtual_output is used in 8 example(s):
+- Histogrammer.instr
+- RITA-II.instr
+- SAFARI_MPISI.instr
+- SAFARI_PITSI.instr
+- SNS_ARCS.instr
+- SNS_ARCS_Mantid.instr
+- Vin_test.instr
+- Vout_test.instr
+---------------------------------------
+Virtual_tripoli4_input is used in 1 example(s):
+- Histogrammer.instr
+---------------------------------------
+Virtual_tripoli4_output is used in 0 example(s):
+---------------------------------------
+Vitess_input is used in 1 example(s):
+- Histogrammer.instr
+---------------------------------------
+Vitess_output is used in 0 example(s):
+---------------------------------------
