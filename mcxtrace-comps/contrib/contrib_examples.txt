@@ -1,0 +1,73 @@
+---------------------------------------
+List of contrib comps and the
+example instruments that include them
+---------------------------------------
+Attenuating_mask is used in 0 example(s):
+---------------------------------------
+Bragg_crystal_BC is used in 3 example(s):
+- DBD_IBM_Si_analyzer_BC.instr
+- PBD_BT.instr
+- Test_Mono.instr
+---------------------------------------
+Bragg_crystal_bent_BC is used in 3 example(s):
+- DBD_IBM_Si_analyzer_BC.instr
+- Template_Johann_spec.instr
+- Test_Mono.instr
+---------------------------------------
+Bragg_crystal_simple is used in 1 example(s):
+- Test_Mono.instr
+---------------------------------------
+Detector_pn is used in 2 example(s):
+- NBI_Lab_TOMO.instr
+- Test_Detector_pn.instr
+---------------------------------------
+Laue_crystal_BC is used in 0 example(s):
+---------------------------------------
+Mirror_toroid_pothole is used in 3 example(s):
+- SOLEIL_DISCO.instr
+- SOLEIL_ROCK.instr
+- Test_Mirrors.instr
+---------------------------------------
+PSD_monitor_rad is used in 0 example(s):
+---------------------------------------
+SAXSCurve is used in 1 example(s):
+- Test_SAXS.instr
+---------------------------------------
+SAXSCylinders is used in 1 example(s):
+- Test_SAXS.instr
+---------------------------------------
+SAXSEllipticCylinders is used in 1 example(s):
+- Test_SAXS.instr
+---------------------------------------
+SAXSLiposomes is used in 1 example(s):
+- Test_SAXS.instr
+---------------------------------------
+SAXSNanodiscs is used in 1 example(s):
+- Test_SAXS.instr
+---------------------------------------
+SAXSNanodiscsFast is used in 1 example(s):
+- Test_SAXS.instr
+---------------------------------------
+SAXSNanodiscsWithTags is used in 1 example(s):
+- Test_SAXS.instr
+---------------------------------------
+SAXSNanodiscsWithTagsFast is used in 1 example(s):
+- Test_SAXS.instr
+---------------------------------------
+SAXSPDB is used in 1 example(s):
+- Test_SAXS.instr
+---------------------------------------
+SAXSPDBFast is used in 1 example(s):
+- Test_SAXS.instr
+---------------------------------------
+SAXSQMonitor is used in 2 example(s):
+- ESRF_BM29.instr
+- Test_SAXS.instr
+---------------------------------------
+SAXSShells is used in 1 example(s):
+- Test_SAXS.instr
+---------------------------------------
+SAXSSpheres is used in 2 example(s):
+- ESRF_BM29.instr
+- Test_SAXS.instr
+---------------------------------------

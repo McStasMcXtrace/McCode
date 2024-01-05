@@ -1,0 +1,195 @@
+---------------------------------------
+List of sasmodels comps and the
+example instruments that include them
+---------------------------------------
+SasView_adsorbed_layer is used in 0 example(s):
+---------------------------------------
+SasView_barbell is used in 1 example(s):
+- Template_SasView.instr
+---------------------------------------
+SasView_barbell_aniso is used in 0 example(s):
+---------------------------------------
+SasView_bcc_paracrystal is used in 1 example(s):
+- Template_SasView.instr
+---------------------------------------
+SasView_bcc_paracrystal_aniso is used in 0 example(s):
+---------------------------------------
+SasView_binary_hard_sphere is used in 0 example(s):
+---------------------------------------
+SasView_broad_peak is used in 0 example(s):
+---------------------------------------
+SasView_capped_cylinder is used in 0 example(s):
+---------------------------------------
+SasView_capped_cylinder_aniso is used in 0 example(s):
+---------------------------------------
+SasView_core_multi_shell is used in 0 example(s):
+---------------------------------------
+SasView_core_shell_bicelle is used in 0 example(s):
+---------------------------------------
+SasView_core_shell_bicelle_aniso is used in 0 example(s):
+---------------------------------------
+SasView_core_shell_bicelle_elliptical is used in 0 example(s):
+---------------------------------------
+SasView_core_shell_bicelle_elliptical_aniso is used in 0 example(s):
+---------------------------------------
+SasView_core_shell_bicelle_elliptical_belt_rough is used in 0 example(s):
+---------------------------------------
+SasView_core_shell_bicelle_elliptical_belt_rough_aniso is used in 0 example(s):
+---------------------------------------
+SasView_core_shell_cylinder is used in 0 example(s):
+---------------------------------------
+SasView_core_shell_cylinder_aniso is used in 0 example(s):
+---------------------------------------
+SasView_core_shell_ellipsoid is used in 0 example(s):
+---------------------------------------
+SasView_core_shell_ellipsoid_aniso is used in 0 example(s):
+---------------------------------------
+SasView_core_shell_parallelepiped is used in 0 example(s):
+---------------------------------------
+SasView_core_shell_parallelepiped_aniso is used in 0 example(s):
+---------------------------------------
+SasView_core_shell_sphere is used in 0 example(s):
+---------------------------------------
+SasView_correlation_length is used in 0 example(s):
+---------------------------------------
+SasView_cylinder is used in 0 example(s):
+---------------------------------------
+SasView_cylinder_aniso is used in 0 example(s):
+---------------------------------------
+SasView_dab is used in 0 example(s):
+---------------------------------------
+SasView_ellipsoid is used in 0 example(s):
+---------------------------------------
+SasView_ellipsoid_aniso is used in 0 example(s):
+---------------------------------------
+SasView_elliptical_cylinder is used in 0 example(s):
+---------------------------------------
+SasView_elliptical_cylinder_aniso is used in 0 example(s):
+---------------------------------------
+SasView_fcc_paracrystal is used in 0 example(s):
+---------------------------------------
+SasView_fcc_paracrystal_aniso is used in 0 example(s):
+---------------------------------------
+SasView_flexible_cylinder is used in 0 example(s):
+---------------------------------------
+SasView_flexible_cylinder_elliptical is used in 0 example(s):
+---------------------------------------
+SasView_fractal is used in 0 example(s):
+---------------------------------------
+SasView_fractal_core_shell is used in 0 example(s):
+---------------------------------------
+SasView_fuzzy_sphere is used in 0 example(s):
+---------------------------------------
+SasView_gauss_lorentz_gel is used in 0 example(s):
+---------------------------------------
+SasView_gaussian_peak is used in 0 example(s):
+---------------------------------------
+SasView_gel_fit is used in 0 example(s):
+---------------------------------------
+SasView_guinier is used in 0 example(s):
+---------------------------------------
+SasView_guinier_porod is used in 0 example(s):
+---------------------------------------
+SasView_hardsphere is used in 0 example(s):
+---------------------------------------
+SasView_hayter_msa is used in 0 example(s):
+---------------------------------------
+SasView_hollow_cylinder is used in 0 example(s):
+---------------------------------------
+SasView_hollow_cylinder_aniso is used in 0 example(s):
+---------------------------------------
+SasView_hollow_rectangular_prism is used in 0 example(s):
+---------------------------------------
+SasView_hollow_rectangular_prism_aniso is used in 0 example(s):
+---------------------------------------
+SasView_hollow_rectangular_prism_thin_walls is used in 0 example(s):
+---------------------------------------
+SasView_lamellar_hg is used in 0 example(s):
+---------------------------------------
+SasView_lamellar_hg_stack_caille is used in 0 example(s):
+---------------------------------------
+SasView_lamellar_stack_caille is used in 0 example(s):
+---------------------------------------
+SasView_lamellar_stack_paracrystal is used in 0 example(s):
+---------------------------------------
+SasView_line is used in 0 example(s):
+---------------------------------------
+SasView_linear_pearls is used in 0 example(s):
+---------------------------------------
+SasView_lorentz is used in 0 example(s):
+---------------------------------------
+SasView_mass_fractal is used in 0 example(s):
+---------------------------------------
+SasView_mass_surface_fractal is used in 0 example(s):
+---------------------------------------
+SasView_mono_gauss_coil is used in 0 example(s):
+---------------------------------------
+SasView_multilayer_vesicle is used in 0 example(s):
+---------------------------------------
+SasView_onion is used in 0 example(s):
+---------------------------------------
+SasView_parallelepiped is used in 1 example(s):
+- Template_SasView.instr
+---------------------------------------
+SasView_parallelepiped_aniso is used in 0 example(s):
+---------------------------------------
+SasView_peak_lorentz is used in 0 example(s):
+---------------------------------------
+SasView_pearl_necklace is used in 0 example(s):
+---------------------------------------
+SasView_poly_gauss_coil is used in 0 example(s):
+---------------------------------------
+SasView_polymer_excl_volume is used in 0 example(s):
+---------------------------------------
+SasView_polymer_micelle is used in 0 example(s):
+---------------------------------------
+SasView_porod is used in 0 example(s):
+---------------------------------------
+SasView_power_law is used in 0 example(s):
+---------------------------------------
+SasView_pringle is used in 0 example(s):
+---------------------------------------
+SasView_raspberry is used in 0 example(s):
+---------------------------------------
+SasView_rectangular_prism is used in 0 example(s):
+---------------------------------------
+SasView_rectangular_prism_aniso is used in 0 example(s):
+---------------------------------------
+SasView_rpa is used in 0 example(s):
+---------------------------------------
+SasView_sc_paracrystal is used in 0 example(s):
+---------------------------------------
+SasView_sc_paracrystal_aniso is used in 0 example(s):
+---------------------------------------
+SasView_sphere is used in 0 example(s):
+---------------------------------------
+SasView_spinodal is used in 0 example(s):
+---------------------------------------
+SasView_squarewell is used in 0 example(s):
+---------------------------------------
+SasView_stacked_disks is used in 0 example(s):
+---------------------------------------
+SasView_stacked_disks_aniso is used in 0 example(s):
+---------------------------------------
+SasView_star_polymer is used in 0 example(s):
+---------------------------------------
+SasView_stickyhardsphere is used in 0 example(s):
+---------------------------------------
+SasView_superball is used in 0 example(s):
+---------------------------------------
+SasView_superball_aniso is used in 0 example(s):
+---------------------------------------
+SasView_surface_fractal is used in 0 example(s):
+---------------------------------------
+SasView_teubner_strey is used in 0 example(s):
+---------------------------------------
+SasView_triaxial_ellipsoid is used in 0 example(s):
+---------------------------------------
+SasView_triaxial_ellipsoid_aniso is used in 0 example(s):
+---------------------------------------
+SasView_two_lorentzian is used in 0 example(s):
+---------------------------------------
+SasView_two_power_law is used in 0 example(s):
+---------------------------------------
+SasView_vesicle is used in 0 example(s):
+---------------------------------------

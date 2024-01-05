@@ -1,0 +1,49 @@
+---------------------------------------
+Comps with no examples (disregarding
+sasmodels and obsolete categories)
+---------------------------------------
+Missing examples from astrox
+- MM_c in astrox is not in any example
+- Pore_c in astrox is not in any example
+- Ring_c in astrox is not in any example
+- Source_extended in astrox is not in any example
+---------------------------------------
+Missing examples from contrib
+- Attenuating_mask in contrib is not in any example
+- Laue_crystal_BC in contrib is not in any example
+- PSD_monitor_rad in contrib is not in any example
+---------------------------------------
+Missing examples from misc
+- Shadow_input in misc is not in any example
+- Shadow_output in misc is not in any example
+- Shape in misc is not in any example
+---------------------------------------
+Missing examples from monitors
+- DivE_monitor in monitors is not in any example
+- DivPos_monitor in monitors is not in any example
+- Flex_monitor_1D in monitors is not in any example
+- Flex_monitor_2D in monitors is not in any example
+- Flex_monitor_3D in monitors is not in any example
+- PreMonitor_nD in monitors is not in any example
+- TOF_monitor in monitors is not in any example
+- W_psd_monitor in monitors is not in any example
+---------------------------------------
+Missing examples from obsolete
+... Not reporting comps in obsolete
+---------------------------------------
+Missing examples from optics
+- Lens_elliptical in optics is not in any example
+- Slit_N in optics is not in any example
+---------------------------------------
+Missing examples from samples
+---------------------------------------
+Missing examples from sasmodels
+... Not reporting comps in sasmodels
+---------------------------------------
+Missing examples from sources
+- Source_genesis13 in sources is not in any example
+- Source_simplex in sources is not in any example
+---------------------------------------
+Missing examples from union
+- Incoherent_process in union is not in any example
+---------------------------------------

@@ -1,0 +1,60 @@
+---------------------------------------
+List of astrox comps and the
+example instruments that include them
+---------------------------------------
+MM_c is used in 0 example(s):
+---------------------------------------
+MM_h is used in 3 example(s):
+- ATHENA_1mm.instr
+- ATHENA_cfgA_1mm.instr
+- ATHENA_cfgA_1mm_FEMd.instr
+---------------------------------------
+MM_p is used in 3 example(s):
+- ATHENA_1mm.instr
+- ATHENA_cfgA_1mm.instr
+- ATHENA_cfgA_1mm_FEMd.instr
+---------------------------------------
+Pore_c is used in 0 example(s):
+---------------------------------------
+Pore_h is used in 1 example(s):
+- ATHENA_1pore.instr
+---------------------------------------
+Pore_p is used in 1 example(s):
+- ATHENA_1pore.instr
+---------------------------------------
+Ring_c is used in 0 example(s):
+---------------------------------------
+Ring_h is used in 1 example(s):
+- ATHENA_1ring.instr
+---------------------------------------
+Ring_p is used in 1 example(s):
+- ATHENA_1ring.instr
+---------------------------------------
+Shell_c is used in 4 example(s):
+- ATHENA_1sh_both.instr
+- ATHENA_1sh_conical.instr
+- NuSTAR_1shell_con.instr
+- Test_shells.instr
+---------------------------------------
+Shell_h is used in 8 example(s):
+- ATHENA_1sh_W1_OA.instr
+- ATHENA_1sh_both.instr
+- ATHENA_1shell.instr
+- CXO.instr
+- NuSTAR_1shell.instr
+- NuSTAR_1shell_con.instr
+- Simple_1shell.instr
+- Test_shells.instr
+---------------------------------------
+Shell_p is used in 8 example(s):
+- ATHENA_1sh_W1_OA.instr
+- ATHENA_1sh_both.instr
+- ATHENA_1shell.instr
+- CXO.instr
+- NuSTAR_1shell.instr
+- NuSTAR_1shell_con.instr
+- Simple_1shell.instr
+- Test_shells.instr
+---------------------------------------
+Source_extended is used in 0 example(s):
+---------------------------------------

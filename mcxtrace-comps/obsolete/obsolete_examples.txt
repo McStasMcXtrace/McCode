@@ -1,0 +1,14 @@
+---------------------------------------
+List of obsolete comps and the
+example instruments that include them
+---------------------------------------
+Lens_Kinoform is used in 0 example(s):
+---------------------------------------
+Lens_parab_Cyl_rough is used in 0 example(s):
+---------------------------------------
+Lens_parab_rough is used in 0 example(s):
+---------------------------------------
+Perfect_crystal is used in 2 example(s):
+- MAXII_711.instr
+- Test_Mono.instr
+---------------------------------------

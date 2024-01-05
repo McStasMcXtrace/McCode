@@ -1,0 +1,52 @@
+---------------------------------------
+List of samples comps and the
+example instruments that include them
+---------------------------------------
+Abs_objects is used in 2 example(s):
+- Airport_scannerII.instr
+- Test_Absorption.instr
+---------------------------------------
+Absorption_sample is used in 2 example(s):
+- MAXII_811.instr
+- Test_Absorption.instr
+---------------------------------------
+Fluorescence is used in 7 example(s):
+- SOLEIL_DIFFABS.instr
+- SOLEIL_LUCIA.instr
+- SOLEIL_MARS.instr
+- SOLEIL_PSICHE.instr
+- SOLEIL_ROCK.instr
+- Test_Absorption.instr
+- Test_Fluorescence.instr
+---------------------------------------
+Isotropic_Sqw is used in 1 example(s):
+- Test_Sqw.instr
+---------------------------------------
+Molecule_2state is used in 2 example(s):
+- Pump_probe.instr
+- Pump_probe_solvent.instr
+---------------------------------------
+Polycrystal is used in 1 example(s):
+- ESRF_ID01.instr
+---------------------------------------
+PowderN is used in 7 example(s):
+- MAXII_711.instr
+- MAXII_811.instr
+- MAXIV_DanMAX_pxrd1d.instr
+- MAXIV_DanMAX_pxrd2d.instr
+- SOLEIL_DIFFABS.instr
+- SOLEIL_MARS.instr
+- Test_PowderN.instr
+---------------------------------------
+Saxs_spheres is used in 1 example(s):
+- Test_Saxs_spheres.instr
+---------------------------------------
+Single_crystal is used in 7 example(s):
+- SOLEIL_PX2a.instr
+- SOLEIL_SIXS.instr
+- SSRL_bl_11_2_not_white_src.instr
+- SSRL_bl_11_2_white_src.instr
+- Test_Mono.instr
+- Test_PowderN.instr
+- Test_SX.instr
+---------------------------------------

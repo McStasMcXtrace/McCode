@@ -1,0 +1,124 @@
+---------------------------------------
+List of sources comps and the
+example instruments that include them
+---------------------------------------
+Bending_magnet is used in 7 example(s):
+- Czerny_Turner.instr
+- SOLEIL_DIFFABS.instr
+- SOLEIL_DISCO.instr
+- SOLEIL_MARS.instr
+- SOLEIL_ROCK.instr
+- Test_BM.instr
+- Test_grating_reflect.instr
+---------------------------------------
+Source_div is used in 22 example(s):
+- ATHENA_1mm.instr
+- ATHENA_1pore.instr
+- ATHENA_1ring.instr
+- ATHENA_1sh_W1_OA.instr
+- ATHENA_1sh_both.instr
+- ATHENA_1sh_conical.instr
+- ATHENA_1shell.instr
+- ATHENA_cfgA_1mm.instr
+- ATHENA_cfgA_1mm_FEMd.instr
+- CXO.instr
+- ESRF_ID11.instr
+- MAXIV_FemtoMAX.instr
+- NuSTAR_1shell.instr
+- NuSTAR_1shell_con.instr
+- Simple_1shell.instr
+- Template_Johann_spec.instr
+- Test_Mask.instr
+- Test_Source_quasi.instr
+- Test_Sources.instr
+- Test_grating_trans.instr
+- Test_mirror_parabolic.instr
+- Test_shells.instr
+---------------------------------------
+Source_div_quasi is used in 1 example(s):
+- Test_Source_quasi.instr
+---------------------------------------
+Source_flat is used in 25 example(s):
+- Airport_scannerII.instr
+- DBD_IBM_Si_analyzer_BC.instr
+- ESRF_BM29.instr
+- JJ_SAXS.instr
+- MAXIV_Bloch.instr
+- Pump_probe_solvent.instr
+- Template_SasView.instr
+- Test_Absorption.instr
+- Test_CRL.instr
+- Test_Detector_pn.instr
+- Test_Fluorescence.instr
+- Test_GROUP.instr
+- Test_MCPL_output.instr
+- Test_ML_elliptic.instr
+- Test_Mirror_toroid.instr
+- Test_Mirrors.instr
+- Test_Mono.instr
+- Test_PowderN.instr
+- Test_SAXS.instr
+- Test_SX.instr
+- Test_Saxs_spheres.instr
+- Test_Sources.instr
+- Test_Sqw.instr
+- Test_capillary.instr
+- Test_mirror_elliptic.instr
+---------------------------------------
+Source_gaussian is used in 12 example(s):
+- Be_BM_beamline.instr
+- ESRF_ID01.instr
+- ESRF_ID11.instr
+- MAXII_711.instr
+- MAXII_811.instr
+- NSLS2_CHX.instr
+- SAXS_saxlab.instr
+- Test_CRL_Be.instr
+- Test_KB.instr
+- Test_Sources.instr
+- Test_monitors.instr
+- XFEL_SPB.instr
+---------------------------------------
+Source_genesis13 is used in 0 example(s):
+---------------------------------------
+Source_lab is used in 3 example(s):
+- DBD_IBM_Si_analyzer_BC.instr
+- PBD_BT.instr
+- Test_source_lab.instr
+---------------------------------------
+Source_pt is used in 9 example(s):
+- Focal_pt_monitor.instr
+- NBI_Lab_TOMO.instr
+- Pump_probe.instr
+- Template_1Slit_Diff.instr
+- Template_2Slit_Diff.instr
+- Template_DCM.instr
+- Test_Air.instr
+- Test_Filter.instr
+- Test_Sources.instr
+---------------------------------------
+Source_simplex is used in 0 example(s):
+---------------------------------------
+Source_spectra is used in 2 example(s):
+- MAXIV_FemtoMAX.instr
+- Test_source_spectra.instr
+---------------------------------------
+Undulator is used in 9 example(s):
+- MAXIV_Bloch.instr
+- MAXIV_DanMAX_pxrd1d.instr
+- MAXIV_DanMAX_pxrd2d.instr
+- SOLEIL_ANATOMIX.instr
+- SOLEIL_CASSIOPEE.instr
+- SOLEIL_LUCIA.instr
+- SOLEIL_PX2a.instr
+- SOLEIL_SIXS.instr
+- Test_undulator.instr
+---------------------------------------
+Wiggler is used in 6 example(s):
+- SOLEIL_LUCIA.instr
+- SOLEIL_PSICHE.instr
+- SOLEIL_SIXS.instr
+- SSRL_bl_11_2_not_white_src.instr
+- SSRL_bl_11_2_white_src.instr
+- Test_BM.instr
+---------------------------------------

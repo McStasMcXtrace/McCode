@@ -1,0 +1,265 @@
+---------------------------------------
+List of monitors comps and the
+example instruments that include them
+---------------------------------------
+DivE_monitor is used in 0 example(s):
+---------------------------------------
+DivPos_monitor is used in 0 example(s):
+---------------------------------------
+Divergence_monitor is used in 4 example(s):
+- ESRF_ID01.instr
+- SOLEIL_ROCK.instr
+- Test_Air.instr
+- Test_monitors.instr
+---------------------------------------
+EPSD_monitor is used in 1 example(s):
+- Test_monitors.instr
+---------------------------------------
+E_monitor is used in 35 example(s):
+- ATHENA_1sh_W1_OA.instr
+- ATHENA_1sh_both.instr
+- ATHENA_1sh_conical.instr
+- ATHENA_cfgA_1mm.instr
+- ATHENA_cfgA_1mm_FEMd.instr
+- Airport_scannerII.instr
+- CXO.instr
+- DBD_IBM_Si_analyzer_BC.instr
+- ESRF_ID01.instr
+- MAXII_811.instr
+- MAXIV_Bloch.instr
+- NBI_Lab_TOMO.instr
+- PBD_BT.instr
+- Pump_probe.instr
+- Pump_probe_solvent.instr
+- SAXS_saxlab.instr
+- SOLEIL_ANATOMIX.instr
+- SOLEIL_MARS.instr
+- SOLEIL_PX2a.instr
+- Template_DCM.instr
+- Test_Absorption.instr
+- Test_BM.instr
+- Test_CRL_Be.instr
+- Test_Fluorescence.instr
+- Test_KB.instr
+- Test_ML_elliptic.instr
+- Test_Mono.instr
+- Test_Source_quasi.instr
+- Test_Sources.instr
+- Test_capillary.instr
+- Test_mirror_elliptic.instr
+- Test_source_lab.instr
+- Test_source_spectra.instr
+- Test_undulator.instr
+- XFEL_SPB.instr
+---------------------------------------
+Flex_monitor_1D is used in 0 example(s):
+---------------------------------------
+Flex_monitor_2D is used in 0 example(s):
+---------------------------------------
+Flex_monitor_3D is used in 0 example(s):
+---------------------------------------
+L_monitor is used in 11 example(s):
+- Be_BM_beamline.instr
+- ESRF_ID11.instr
+- MAXII_711.instr
+- MAXII_811.instr
+- MAXIV_Bloch.instr
+- Pump_probe.instr
+- Pump_probe_solvent.instr
+- Template_SasView.instr
+- Test_Filter.instr
+- Test_Source_quasi.instr
+- Test_Sources.instr
+---------------------------------------
+Monitor is used in 44 example(s):
+- ATHENA_1mm.instr
+- ATHENA_1pore.instr
+- ATHENA_1ring.instr
+- ATHENA_1sh_W1_OA.instr
+- ATHENA_1shell.instr
+- ATHENA_cfgA_1mm.instr
+- ATHENA_cfgA_1mm_FEMd.instr
+- CXO.instr
+- Czerny_Turner.instr
+- ESRF_BM29.instr
+- ESRF_ID01.instr
+- Focal_pt_monitor.instr
+- MAXII_811.instr
+- MAXIV_Bloch.instr
+- MAXIV_DanMAX_pxrd1d.instr
+- MAXIV_DanMAX_pxrd2d.instr
+- MAXIV_FemtoMAX.instr
+- NuSTAR_1shell_con.instr
+- Pump_probe.instr
+- Pump_probe_solvent.instr
+- SOLEIL_ANATOMIX.instr
+- SOLEIL_CASSIOPEE.instr
+- SOLEIL_DIFFABS.instr
+- SOLEIL_DISCO.instr
+- SOLEIL_LUCIA.instr
+- SOLEIL_MARS.instr
+- SOLEIL_PSICHE.instr
+- SOLEIL_PX2a.instr
+- SOLEIL_ROCK.instr
+- SOLEIL_SIXS.instr
+- SSRL_bl_11_2_not_white_src.instr
+- SSRL_bl_11_2_white_src.instr
+- Simple_1shell.instr
+- Template_Johann_spec.instr
+- Test_MCPL_input.instr
+- Test_MCPL_output.instr
+- Test_PowderN.instr
+- Test_SAXS.instr
+- Test_Sqw.instr
+- Test_grating_reflect.instr
+- Test_mirror_parabolic.instr
+- Test_monitors.instr
+- Test_shells.instr
+- XFEL_SPB.instr
+---------------------------------------
+Monitor_nD is used in 38 example(s):
+- ATHENA_1mm.instr
+- ATHENA_1pore.instr
+- ATHENA_1ring.instr
+- ATHENA_1sh_W1_OA.instr
+- ATHENA_1shell.instr
+- ATHENA_cfgA_1mm.instr
+- ATHENA_cfgA_1mm_FEMd.instr
+- CXO.instr
+- Czerny_Turner.instr
+- Focal_pt_monitor.instr
+- MAXIV_Bloch.instr
+- MAXIV_DanMAX_pxrd1d.instr
+- MAXIV_DanMAX_pxrd2d.instr
+- MAXIV_FemtoMAX.instr
+- NuSTAR_1shell_con.instr
+- Pump_probe.instr
+- Pump_probe_solvent.instr
+- SOLEIL_ANATOMIX.instr
+- SOLEIL_CASSIOPEE.instr
+- SOLEIL_DIFFABS.instr
+- SOLEIL_DISCO.instr
+- SOLEIL_LUCIA.instr
+- SOLEIL_MARS.instr
+- SOLEIL_PSICHE.instr
+- SOLEIL_PX2a.instr
+- SOLEIL_ROCK.instr
+- SOLEIL_SIXS.instr
+- SSRL_bl_11_2_not_white_src.instr
+- SSRL_bl_11_2_white_src.instr
+- Simple_1shell.instr
+- Template_Johann_spec.instr
+- Test_MCPL_input.instr
+- Test_MCPL_output.instr
+- Test_PowderN.instr
+- Test_mirror_parabolic.instr
+- Test_monitors.instr
+- Test_shells.instr
+- XFEL_SPB.instr
+---------------------------------------
+PSD_monitor is used in 71 example(s):
+- ATHENA_1mm.instr
+- ATHENA_1pore.instr
+- ATHENA_1ring.instr
+- ATHENA_1sh_W1_OA.instr
+- ATHENA_1sh_both.instr
+- ATHENA_1sh_conical.instr
+- ATHENA_1shell.instr
+- ATHENA_cfgA_1mm.instr
+- ATHENA_cfgA_1mm_FEMd.instr
+- Airport_scannerII.instr
+- Be_BM_beamline.instr
+- CXO.instr
+- Czerny_Turner.instr
+- DBD_IBM_Si_analyzer_BC.instr
+- ESRF_ID01.instr
+- ESRF_ID11.instr
+- JJ_SAXS.instr
+- MAXII_711.instr
+- MAXII_811.instr
+- MAXIV_Bloch.instr
+- MAXIV_DanMAX_pxrd1d.instr
+- MAXIV_DanMAX_pxrd2d.instr
+- MAXIV_FemtoMAX.instr
+- NSLS2_CHX.instr
+- NuSTAR_1shell.instr
+- NuSTAR_1shell_con.instr
+- PBD_BT.instr
+- Pump_probe.instr
+- Pump_probe_solvent.instr
+- SAXS_saxlab.instr
+- SOLEIL_ANATOMIX.instr
+- SOLEIL_DISCO.instr
+- SOLEIL_MARS.instr
+- SOLEIL_PX2a.instr
+- SOLEIL_ROCK.instr
+- Simple_1shell.instr
+- Template_1Slit_Diff.instr
+- Template_2Slit_Diff.instr
+- Template_Johann_spec.instr
+- Template_SasView.instr
+- Test_Absorption.instr
+- Test_Air.instr
+- Test_BM.instr
+- Test_CRL.instr
+- Test_CRL_Be.instr
+- Test_Detector_pn.instr
+- Test_Fluorescence.instr
+- Test_GROUP.instr
+- Test_KB.instr
+- Test_ML_elliptic.instr
+- Test_Mask.instr
+- Test_Mirror_toroid.instr
+- Test_Mirrors.instr
+- Test_Mono.instr
+- Test_PowderN.instr
+- Test_SAXS.instr
+- Test_SX.instr
+- Test_Saxs_spheres.instr
+- Test_Source_quasi.instr
+- Test_Sources.instr
+- Test_Sqw.instr
+- Test_capillary.instr
+- Test_grating_reflect.instr
+- Test_grating_trans.instr
+- Test_mirror_elliptic.instr
+- Test_mirror_parabolic.instr
+- Test_monitors.instr
+- Test_shells.instr
+- Test_source_spectra.instr
+- Test_undulator.instr
+- XFEL_SPB.instr
+---------------------------------------
+PSD_monitor_4PI is used in 21 example(s):
+- ATHENA_1pore.instr
+- ATHENA_1shell.instr
+- Czerny_Turner.instr
+- MAXII_711.instr
+- MAXII_811.instr
+- MAXIV_Bloch.instr
+- MAXIV_FemtoMAX.instr
+- NuSTAR_1shell_con.instr
+- Pump_probe.instr
+- Pump_probe_solvent.instr
+- SOLEIL_PX2a.instr
+- Template_Johann_spec.instr
+- Test_Air.instr
+- Test_Mono.instr
+- Test_PowderN.instr
+- Test_SX.instr
+- Test_Saxs_spheres.instr
+- Test_Sqw.instr
+- Test_grating_reflect.instr
+- Test_mirror_parabolic.instr
+- XFEL_SPB.instr
+---------------------------------------
+PSD_monitor_coh is used in 2 example(s):
+- Template_1Slit_Diff.instr
+- Template_2Slit_Diff.instr
+---------------------------------------
+PreMonitor_nD is used in 0 example(s):
+---------------------------------------
+TOF_monitor is used in 0 example(s):
+---------------------------------------
+W_psd_monitor is used in 0 example(s):
+---------------------------------------
