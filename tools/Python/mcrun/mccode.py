@@ -290,7 +290,7 @@ class McStas:
             binpath = self.options.mpirun
             if self.options.mpi == "auto":
                 LOG.info('Using system default number of mpirun -np processes')
-                mpi_flags = []
+                mpi_flags = ['--']
             elif int(self.options.mpi) >= 1:
                 mpi_flags = ['-np', str(self.options.mpi)]
             else:
