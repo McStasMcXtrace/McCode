@@ -67,9 +67,9 @@ jobs:
       run: |
            sudo apt -y install libopenmpi-dev
 
-    - name: Setup OpenMPI (macOS-12)
+    - name: Setup OpenMPI (macOS-12,13)
       id: setup-openmpi-macos12
-      if: matrix.os == 'macos-12' 
+      if: runner.os == 'macOS' && matrix.os != 'macos-11'
       run: |
            brew install openmpi
 
@@ -164,7 +164,7 @@ jobs:
 
     - name: Launch JJ_SAXS instrument (MPI)
       id: JJ_SAXS-mpi
-      if: runner.os == 'Linux'  || matrix.os == 'macos-12' # Linux or macos-12 only
+      if: runner.os == 'Linux'  || (runner.os == 'macOS' && matrix.os != 'macos-11') # Linux or macos-12/13 only
       run: |
            set -e
            set -u
@@ -197,7 +197,7 @@ jobs:
 
     - name: Launch MCPL test instrument (MPI)
       id: mcpl-test-mpi
-      if: runner.os == 'Linux'  || matrix.os == 'macos-12' # Linux or macos-12 only
+      if: runner.os == 'Linux'  || (runner.os == 'macOS' && matrix.os != 'macos-11') # Linux or macos-12/13 only
       # Status: Works on Unixes ("wrapper batches missing for Windows")
       run: |
            set -e
