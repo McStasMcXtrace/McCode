@@ -65,7 +65,7 @@ class Process:
         command = self.executable + " " + " ".join(args)
         LOG.debug(f'CMD: {command}')
         try:
-            proc = run(shlex.split(command), check=True, text=True, capture_output=pipe)
+            proc = run(command, shell=True, check=True, text=True, capture_output=pipe)
             LOG.debug(f"CMD: {self.executable} finished")
         except CalledProcessError as err:
             LOG.info(f"call to {self.executable} failed with {err}")
