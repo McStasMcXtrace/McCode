@@ -12,10 +12,24 @@ import sys
 import re
 import time
 import math
+import pathlib
+import shutil
+import platform
+import subprocess
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import utils, mccode_config
 
+def get_processor_info():
+    if platform.system() == "Windows":
+        return platform.processor()
+    elif platform.system() == "Darwin":
+        return subprocess.check_output(['/usr/sbin/sysctl', "-n", "machdep.cpu.brand_string"]).strip().decode('utf-8')
+    elif platform.system() == "Linux":
+        command = "cat /proc/cpuinfo | grep model\ name | uniq | cut -f2 -d:"
+        return subprocess.check_output(command, shell=True).strip().decode('utf-8')
+
+    return ""
 
 #
 # Functionality
@@ -172,15 +186,16 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
     logging.info("Copying instruments to: %s" % testdir)
     tests = []
     for f in instrs:
-        # create the test foldr for this instrument
+        # copy the test folder for this instrument
         instrname = splitext(basename(f))[0]
         instrdir = join(testdir, instrname)
-        mkdir(instrdir)
 
-        # create a new file with the instr text in it - e.g. a local copy of the instrument file
+        shutil.copytree(os.path.dirname(f),instrdir)
+
+        f_new=join(instrdir,os.path.basename(f))
+
+        # Read instr file content to look for tests
         text = open(f, encoding='utf-8').read()
-        f_new = join(instrdir, basename(f))
-        open(f_new, 'w', encoding='utf-8').write(text)
 
         # create a test object for every test defined in the instrument header
         instrtests = create_instr_test_objs(sourcefile=f, localfile=f_new, header=text)
@@ -215,7 +230,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
                 t1 = time.time()
                 cmd = mccode_config.configuration["MCRUN"]
                 if version:
-                    cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test",version)
+                    cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
                 if openacc:
                     cmd = cmd + " --openacc "
                 if mpi:
@@ -260,15 +275,15 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
         if mpi is not None:
             if openacc is True:
                 if version:
-                    cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test",version)
+                    cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
                 cmd = cmd + " -s 1000 %s %s -n%s --openacc --mpi=%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
             else:
                 if version:
-                    cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test",version)
+                    cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
                 cmd = cmd + " -s 1000 %s %s -n%s --mpi=%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
         else:
             if version:
-                    cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test",version)
+                    cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
             cmd = cmd + " -s 1000 %s %s -n%s -d%d  &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, test.testnb, test.testnb)
         retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
         t2 = time.time()
@@ -300,15 +315,15 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
     #    cpu type: cat /proc/cpuinfo |grep name |uniq | cut -f2- -d: 
     #    gpu type: nvidia-smi -L | head -1 |cut -f2- -d: |cut -f1 -d\(
 
-    metalog = LineLogger()
-    utils.run_subtool_to_completion("cat /proc/cpuinfo |grep name |uniq | cut -f2- -d: | xargs echo", stdout_cb=metalog.logline)
-    cpu_type = ",".join(metalog.lst)
+    cpu_type = "".join(get_processor_info())
 
-    metalog = LineLogger()
-    utils.run_subtool_to_completion("nvidia-smi -L | head -1 |cut -f2- -d: |cut -f1 -d\(", stdout_cb=metalog.logline) 
-    gpu_type = ",".join(metalog.lst)
-    if "failed because" in gpu_type:
-        gpu_type = "none"
+    gpu_type = "none"
+    if (platform.system() == "Linux"):
+        metalog = LineLogger()
+        utils.run_subtool_to_completion("nvidia-smi -L | head -1 |cut -f2- -d: |cut -f1 -d\(", stdout_cb=metalog.logline) 
+        gpu_type = ",".join(metalog.lst)
+        if "failed because" in gpu_type:
+            gpu_type = "none"
 
     metalog = LineLogger()
     utils.run_subtool_to_completion("hostname", stdout_cb=metalog.logline)
@@ -463,7 +478,7 @@ def run_configs_test(testdir, mccoderoot, limit, configfilter, instrfilter):
     
     def get_config_files(configfltr):
         ''' look in "__file__/../mccodelib/MCCODE-test" location or config files'''
-        lookin = join(os.path.dirname(__file__), "..", "mccodelib", mccode_config.configuration["MCCODE"] + "-test")
+        lookin = join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test")
         print("getting config files...")
         print(configfltr + " vs " + os.path.join(lookin,configfltr,'mccode_config.json'))
         if configfltr is not None and os.path.isfile(os.path.join(lookin,configfltr,'mccode_config.json')):

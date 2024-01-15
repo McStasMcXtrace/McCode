@@ -61,6 +61,7 @@ fi
 ./mkdist mcstas-tools-python-mcgui 3.x-dev tools/Python/mcgui/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcrun 3.x-dev tools/Python/mcrun/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcdoc 3.x-dev tools/Python/mcdoc/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mctest 3.x-dev tools/Python/mctest/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mccodelib 3.x-dev tools/Python/mccodelib/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph 3.x-dev tools/Python/mcdisplay/pyqtgraph/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcdisplay-webgl 3.x-dev tools/Python/mcdisplay/webgl/ "" deb64 "" -- justinst
