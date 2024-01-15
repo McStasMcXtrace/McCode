@@ -3,6 +3,7 @@ Utility function for handling flexible DEPENDENCY lines.
 '''
 import os
 import subprocess
+import shlex
 import pathlib
 from . import mccode_config
 
@@ -77,8 +78,7 @@ def evaluate_dependency_str( depstr, verbose=False ):
             if verbose:
                 print(f"   --> launching cmd: {cmd}")
             returncode = 1
-            with subprocess.Popen( cmd,
-                                   shell=True,
+            with subprocess.Popen(shlex.split(cmd),
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE ) as proc:
                 output = proc.communicate()[0]

@@ -4,6 +4,8 @@ Buffering and low-level filtering. Thread management.
 '''
 import re
 import subprocess
+import shlex
+
 from subprocess import Popen, PIPE
 from threading import Thread, Event
 import os
@@ -248,13 +250,13 @@ class TraceReader(Thread):
             # os.setsid defineds a fresh process group so that the calling Python survives when the
             # simulation is potentially terminated.
             if not os.name == 'nt':
-                process = Popen(self.cmd, shell=True, preexec_fn=os.setsid, universal_newlines=True,
+                process = Popen(shlex.split(self.cmd), preexec_fn=os.setsid, universal_newlines=True,
                                 stdout=PIPE,
                                 stderr=PIPE,
                                 stdin=PIPE
                                 )
             else:
-                process = Popen(self.cmd, shell=True, universal_newlines=True,
+                process = Popen(shlex.split(self.cmd), universal_newlines=True,
                                 stdout=PIPE,
                                 stderr=PIPE,
                                 stdin=PIPE

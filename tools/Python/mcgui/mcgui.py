@@ -12,6 +12,8 @@ import subprocess
 import time
 import re
 import pathlib
+import shlex
+
 from PyQt5 import QtCore, QtWidgets
 import PyQt5
 try:
@@ -78,13 +80,10 @@ class McRunQThread(QtCore.QThread):
             if self.cmd == '':
                 raise Exception("McRunQThread: Set cmd before running 'start'")
 
-            # open a subprocess with shell=True, otherwise stdout will be buffered and thus 
-            # not readable live
-            process = subprocess.Popen(self.cmd, 
+            process = subprocess.Popen(shlex.split(self.cmd), 
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.STDOUT,
                                        stdin=subprocess.PIPE,
-                                       shell=True,
                                        universal_newlines=True,
                                        cwd=self.cwd)
 
@@ -251,10 +250,9 @@ class McGuiState(QtCore.QObject):
                 cmd = mccode_config.configuration["MCRUN"] + ' -c --mpi=1 ' + nf + ' -n0 '
             else:
                 cmd = mccode_config.configuration["MCRUN"] + ' -c ' + nf + ' -n0 '
-            process = subprocess.Popen(cmd, 
+            process = subprocess.Popen(shlex.split(cmd), 
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
-                                       shell=True,
                                        universal_newlines=True,
                                        cwd=os.path.dirname(self.__instrFile))
             self.__emitter.status('Compiling instrument via ' + mccode_config.configuration["MCRUN"])
@@ -431,7 +429,7 @@ class McGuiState(QtCore.QObject):
         else:
             self.__emitter.message(runstr, gui=True)
             self.__emitter.status('Started simulation/trace in background shell...')
-            subprocess.Popen(runstr, shell=True)
+            subprocess.Popen(shlex.split(runstr))
 
     def __runFinished(self, process_returncode):
         self.__fireSimStateUpdate()
@@ -457,10 +455,9 @@ class McGuiAppController():
         
         # Print MCCODE version info in main window
         cmd = mccode_config.configuration["MCCODE"] + ' -v '
-        process = subprocess.Popen(cmd, 
+        process = subprocess.Popen(shlex.split(cmd), 
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,
-                                   shell=True,
                                    universal_newlines=True)
 
         (stdoutdata, stderrdata) = process.communicate()
@@ -750,7 +747,6 @@ class McGuiAppController():
         process = subprocess.Popen(mccode_config.configuration["MCCODE"] +' -v', 
                                    stdout=subprocess.PIPE, 
                                    stderr=subprocess.STDOUT,
-                                   shell=True,
                                    universal_newlines=True)
         # synchronous
         (stdoutdata, stderrdata) = process.communicate()
@@ -764,10 +760,9 @@ class McGuiAppController():
 
     def handleEditExtInstrument(self):
         instr = self.state.getInstrumentFile()
-        process = subprocess.Popen(mccode_config.configuration["EDITOR"] + ' ' + os.path.basename(str(instr)), 
+        process = subprocess.Popen(shlex.split(mccode_config.configuration["EDITOR"] + ' ' + os.path.basename(str(instr))), 
                                    stdout=subprocess.PIPE, 
                                    stderr=subprocess.STDOUT,
-                                   shell=True,
                                    universal_newlines=True)
         self.emitter.status("Editing instrument: " + os.path.basename(str(instr)))
 
@@ -858,14 +853,14 @@ class McGuiAppController():
         cmd='%sdoc' % mccode_config.get_mccode_prefix()
         if sys.platform == "win32":
             cmd='start ' + cmd + '.bat'
-        subprocess.Popen(cmd, shell=True)
+        subprocess.Popen(shlex.split(cmd))
 
     def handleMcdocCurrentInstr(self):
         cmd='%sdoc' % mccode_config.get_mccode_prefix()
         if sys.platform == "win32":
             cmd ='start ' + cmd + '.bat'
         cmd = cmd + ' %s' % self.state.getInstrumentFile()
-        subprocess.Popen(cmd, shell=True)
+        subprocess.Popen(shlex.split(cmd))
 
     def handleEnvironment(self):
         terminal = mccode_config.configuration["TERMINAL"]
@@ -875,7 +870,7 @@ class McGuiAppController():
         else:
             scriptfile = 'start ' + mccode_config.configuration["MCCODE_LIB_DIR"] + '\\..\\bin\\mccodego.bat'
 
-        subprocess.Popen(terminal + ' ' + scriptfile, shell=True)
+        subprocess.Popen(shlex.split(terminal + ' ' + scriptfile))
         
     def handleDefault(self):
         reply = QtWidgets.QMessageBox.question(self.view.mw,
@@ -883,7 +878,7 @@ class McGuiAppController():
                                            'Do you want to make the current ' +  mccode_config.configuration["MCCODE"] + ' the system default?'),
  
         if reply == QtWidgets.QMessageBox.Yes:
-             subprocess.Popen(mccode_config.configuration["MCCODE"] +'-postinst set_mccode_default', shell=True)
+             subprocess.Popen(shlex.split(mccode_config.configuration["MCCODE"] +'-postinst set_mccode_default'))
 
         
     ''' Connect UI and state callbacks 

@@ -5,6 +5,7 @@ import os
 import sys
 import math
 import subprocess
+import shlex
 import numpy as np
 
 import PyQt5
@@ -309,8 +310,8 @@ class McPyqtgraphPlotter():
                 prefix = "mc"
             else:
                 prefix = "mx"
-            subprocess.Popen(prefix+'plot-pyqtgraph %s' %
-                os.path.join(sourcedir, s), shell=True, cwd=os.getcwd())
+            subprocess.Popen(shlex.split(prefix+'plot-pyqtgraph %s' %
+                os.path.join(sourcedir, s)), cwd=os.getcwd())
 
 
     def clear_window_and_handlers(self):

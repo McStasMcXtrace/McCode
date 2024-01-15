@@ -5,6 +5,7 @@ import re
 import os
 from os.path import splitext, join
 import subprocess
+import shlex
 from datetime import datetime
 
 '''
@@ -743,11 +744,10 @@ def run_subtool_noread(cmd, cwd=None):
     if not cwd:
         cwd = os.getcwd()
     try:
-        process = subprocess.Popen(cmd,
+        process = subprocess.Popen(shlex.split(cmd),
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,
                                    stdin=subprocess.PIPE,
-                                   shell=True,
                                    universal_newlines=True,
                                    cwd=cwd)
         process.communicate()
@@ -771,11 +771,10 @@ def run_subtool_to_completion(cmd, cwd=None, stdout_cb=None, stderr_cb=None):
 
     try:
         # open the process with all bells & whistles
-        process = subprocess.Popen(cmd,
+        process = subprocess.Popen(shlex.split(cmd),
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,
                                    stdin=subprocess.PIPE,
-                                   shell=True,
                                    universal_newlines=True,
                                    cwd=cwd)
         # flush until EOF
@@ -803,11 +802,10 @@ def start_subtool_then_return(cmd, cwd=None):
         cwd = os.getcwd()
 
     # open the process with all bells & whistles
-    process = subprocess.Popen(cmd,
+    process = subprocess.Popen(shlex.split(cmd),
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
                                stdin=subprocess.PIPE,
-                               shell=True,
                                universal_newlines=True,
                                cwd=cwd)
 

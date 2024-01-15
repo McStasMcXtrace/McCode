@@ -11,6 +11,7 @@ import io
 import base64
 import json
 import subprocess
+import shlex
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -212,7 +213,7 @@ def get_params_str_2D(data):
 def browse(html_filepath):
     # open a web-browser in a cross-platform way
     try:
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], html_filepath), shell=True)
+        subprocess.Popen(shlex.split('%s %s' % (mccode_config.configuration['BROWSER'], html_filepath)))
     except Exception as e:
         raise Exception('Os-specific open browser: %s' % e.__str__())
 

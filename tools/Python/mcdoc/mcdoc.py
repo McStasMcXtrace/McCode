@@ -15,6 +15,8 @@ import sys
 import os
 import re
 import subprocess
+import shlex
+
 from datetime import datetime
 from os.path import join, basename
 
@@ -917,22 +919,22 @@ def main(args):
 
     if args.dir==None and args.install==False and args.searchterm==None and args.manual==False and args.comps==False and args.web==False:
         ''' browse system docs and exit '''
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,mccode_config.get_mccode_prefix()+'doc.html')), shell=True)
+        subprocess.Popen(shlex.split('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,mccode_config.get_mccode_prefix()+'doc.html'))))
         quit()
 
     elif args.manual == True:
         ''' open manual and exit ''' 
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'doc','manuals',mccode_config.configuration['MCCODE']+'-manual.pdf')), shell=True)
+        subprocess.Popen(shlex.split('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'doc','manuals',mccode_config.configuration['MCCODE']+'-manual.pdf'))))
         quit()
 
     elif args.comps == True:
         ''' open component manual and exit '''
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'doc','manuals',mccode_config.configuration['MCCODE']+'-components.pdf')), shell=True)
+        subprocess.Popen(shlex.split('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'doc','manuals',mccode_config.configuration['MCCODE']+'-components.pdf'))))
         quit()
 
     elif args.web == True:
         ''' open website and exit '''
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], 'https://www.'+mccode_config.configuration['MCCODE']+'.org'), shell=True)
+        subprocess.Popen(shlex.split('%s %s' % (mccode_config.configuration['BROWSER'], 'https://www.'+mccode_config.configuration['MCCODE']+'.org')))
         quit()
 
     elif args.install == True:
@@ -995,13 +997,13 @@ def main(args):
                     info = InstrParser(f).parse()
                     info.filepath = os.path.abspath(f)
                     write_doc_files_or_continue([], [info], [], [f])
-                    subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], f_html), shell=True)
+                    subprocess.Popen(shlex.split('%s %s' % (mccode_config.configuration['BROWSER'], f_html)))
                 elif comp:
                     f_html = os.path.splitext(f)[0] + ".html"
                     info = CompParser(f).parse()
                     info.filepath = os.path.abspath(f)
                     write_doc_files_or_continue([info], [], [f], [])
-                    subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], f_html), shell=True)
+                    subprocess.Popen(shlex.split('%s %s' % (mccode_config.configuration['BROWSER'], f_html)))
                 quit()
             # there were multiple matches - fall back to general search term mode
             else:
@@ -1031,7 +1033,7 @@ def main(args):
             print('writing local overview doc file... %s' % mcdoc_html_filepath)
         write_file(mcdoc_html_filepath, text)
 
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join('.',mccode_config.get_mccode_prefix()+'doc.html')), shell=True)
+        subprocess.Popen(shlex.split('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join('.',mccode_config.get_mccode_prefix()+'doc.html'))))
 
 
 if __name__ == '__main__':
