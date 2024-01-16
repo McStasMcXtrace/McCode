@@ -74,6 +74,8 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mctest.in" "${WORK}/${P}test" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcviewtest.in" "${WORK}/${P}viewtest" @ONLY)
+
 
 # Main script, including rename mctest/mxtest
 install(
@@ -87,20 +89,29 @@ install(
   )
 
 install(
+  FILES "${PROJECT_SOURCE_DIR}/mcviewtest.py"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+  RENAME "${P}viewtest.py"
+  PERMISSIONS
+  OWNER_READ OWNER_WRITE OWNER_EXECUTE
+  GROUP_READ GROUP_EXECUTE
+  WORLD_READ WORLD_EXECUTE
+  )
+
+install(
   DIRECTORY "${PROJECT_SOURCE_DIR}/${FLAVOR}-test"
   DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
   )
 
-
+install(
+  DIRECTORY "${PROJECT_SOURCE_DIR}/main.template"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+  )
 
 
 # Wrapper-scripts on windows are handled via
 # cmake Modules/MCUtil
 if(NOT WINDOWS)
-  add_custom_target(
-    "CREATE_${PROJECT_NAME}_SYMLINK" ALL DEPENDS "${WORK}/${P}test"
-    )
-
   install(
     FILES "${WORK}/${P}test"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
@@ -112,6 +123,18 @@ if(NOT WINDOWS)
   install(
     PROGRAMS "${WORK}/${P}test"
     DESTINATION ${DEST_BINDIR}
-    )
+  )
+  install(
+    FILES "${WORK}/${P}viewtest"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+    PERMISSIONS
+    OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    GROUP_READ GROUP_EXECUTE
+    WORLD_READ WORLD_EXECUTE
+  )
+  install(
+    PROGRAMS "${WORK}/${P}viewtest"
+    DESTINATION ${DEST_BINDIR}
+  )
 
 endif()

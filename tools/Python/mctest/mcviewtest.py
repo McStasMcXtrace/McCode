@@ -16,7 +16,10 @@ def run_normal_mode(testdir, reflabel):
     ''' load test data and print to html label '''
 
     def get_col_header(label, meta):
-        return "<br>".join((label + " - " + meta.get("ncount", ""), meta.get("hostname", ""), meta.get("cpu_type", ""), meta.get("gpu_type", ""), meta.get("date", "")))
+        try:
+            return "<br>".join((label + " - " + meta.get("ncount", ""), meta.get("hostname", ""), "CPU: " + meta.get("cpu_type", ""), "GPU: " + meta.get("gpu_type", ""), meta.get("date", "")))
+        except:
+            return "<br>UNDEFINED"
 
     def get_header_lst(meta):
         ''' composes an easily-templatable list fom a "_meta" test header object '''
@@ -213,15 +216,22 @@ def main(args):
     testdir = None
     if args.testdir:
         testdir = args.testdir
+
+    if not args.reflabel:
+        print("NO reflabel defined! Please define a reference test label")
+        quit(0)
     reflabel = args.reflabel
 
     if not testdir and testroot:
         print("interactive mode")
         run_interactive_mode(testroot)
-        quit(0)
+        exit(-1)
     else:
-        run_normal_mode(testdir, reflabel)
-
+        if testdir is not None:
+            run_normal_mode(testdir, reflabel)
+        else:
+            print("Please input a testdir or testroot input")
+            exit(-1)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
