@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Wrapper script for @P@viewtest-py
+
+@MCCODE_BASH_STANDARD_PREAMBLE@
+
+TOOL="@P@viewtest"
+UTILDIR="${MCCODE_TOOLDIR}/Python/@P@test"
+
+
+#NB: miniconda should be installed next to the tool folder:
+if [ -d "${MCCODE_TOOLDIR}/../miniconda3" ]; then
+    source "${MCCODE_TOOLDIR}/../miniconda3/bin/activate" "${MCCODE_TOOLDIR}/../miniconda3"
+    export PATH=${MCCODE_TOOLDIR}/../miniconda3/bin/:$PATH
+fi
+
+# FIXME: NCrystal should be used via own package/infrastructure
+if [ "x@NCRYSTAL_LEGACY_USE@" == "x1" ]; then
+    if [ -d "${MCCODE_TOOLDIR}/../share/NCrystal/python" ]; then
+        export PYTHONPATH="${MCCODE_TOOLDIR}/../share/NCrystal/python:$PYTHONPATH"
+    fi
+fi
+
+ARCH=`arch`
+UNAME=`uname -s`
+
+#VERS="@MCCODE_VERSION@"
+
+
+canrun() {
+    if ! [ -x ${UTILDIR}/${TOOL}.py ]; then
+        exit 127;
+    fi
+}
+
+if ( canrun ); then
+    python3 -u ${UTILDIR}/${TOOL}.py "$@"
+else
+    echo ":: Failed to run Python  ${TOOL}."
+fi
