@@ -104,7 +104,7 @@ install(
   )
 
 install(
-  DIRECTORY "${PROJECT_SOURCE_DIR}/main.template"
+  FILES "${PROJECT_SOURCE_DIR}/main.template"
   DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
   )
 
