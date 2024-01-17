@@ -289,6 +289,6 @@ AT (0,0,L_H53_C1+gGap) RELATIVE PREVIOUS
 COMPONENT H53_C1_Shift = Arm()
 AT (0,0,0.3) RELATIVE PREVIOUS
 
-%include "templateTAS.instr"
+%include "Templates/templateTAS/templateTAS.instr"
 
 END

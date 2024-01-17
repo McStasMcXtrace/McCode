@@ -72,7 +72,7 @@ DEFINE INSTRUMENT ILL_H15_IN6(lambda=4.14, dlambda=0.075)
 /* -------------------------------- TRACE -------------------------------- */
 TRACE
 
-%include "ILL_H15.instr"
-%include "ILL_IN6.instr"
+%include "ILL/ILL_H15/ILL_H15.instr"
+%include "ILL/ILL_IN6/ILL_IN6.instr"
 
 END

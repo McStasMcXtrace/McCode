@@ -33,7 +33,7 @@ DEFINE INSTRUMENT ILL_H16_IN5(lambda=4.5, dlambda=0.09)
 
 TRACE
 
-%include "ILL_H16.instr"
-%include "ILL_IN5.instr"
+%include "ILL/ILL_H16/ILL_H16.instr"
+%include "ILL/ILL_IN5/ILL_IN5.instr"
 
 END

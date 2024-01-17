@@ -99,7 +99,7 @@ if (verbose) {
 /* instrument is defined as a sequence of components.  */
 TRACE
 
-%include "ILL_H53.instr"
+%include "ILL/ILL_H53/ILL_H53.instr"
 
 /* position of D16 */
 /* The beam at the monochromator position is asymetric due to the curved section. */

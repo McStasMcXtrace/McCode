@@ -109,6 +109,6 @@ AT (0, 0, machine_hkl.l1/4) ABSOLUTE
 REMOVABLE COMPONENT Guide_out=Arm()
 AT (0, 0, machine_hkl.l1-0.2) ABSOLUTE
 
-%include "templateTAS.instr"
+%include "Templates/templateTAS/templateTAS.instr"
 
 END

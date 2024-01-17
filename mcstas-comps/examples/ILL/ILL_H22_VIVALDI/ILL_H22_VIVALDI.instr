@@ -77,7 +77,7 @@ if (verbose) {
 /* instrument is defined as a sequence of components.  */
 TRACE
 
-%include "ILL_H22.instr"
+%include "ILL/ILL_H22/ILL_H22.instr"
 
 /* additional horizontal divergence monitor at end of guide */
 /* also defines a static position to orient remaining instrument */
