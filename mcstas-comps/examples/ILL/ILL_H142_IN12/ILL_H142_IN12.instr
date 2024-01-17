@@ -54,6 +54,6 @@ INITIALIZE
 TRACE
 
 %include "ILL/ILL_H142/ILL_H142.instr"
-%include "templates/templateTAS/templateTAS.instr"
+%include "Templates/templateTAS/templateTAS.instr"
 
 END
