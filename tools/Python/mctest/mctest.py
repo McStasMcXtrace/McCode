@@ -371,7 +371,7 @@ def activate_mccode_version(version, mccoderoot):
     
     branchdir: mccode version install directory
     '''
-    branchdir = os.path.join(mccoderoot, version)
+    branchdir = mccoderoot
     os.environ["MCSTAS"] = branchdir
     oldpath = os.environ["PATH"]
     os.environ["PATH"] = "%s/miniconda3/bin:%s/bin:%s" % (branchdir, branchdir, oldpath)
@@ -427,7 +427,7 @@ def run_default_test(testdir, mccoderoot, limit, instrfilter, suffix):
 
     logging.info("Testing: %s" % version)
     logging.info("")
-    results = mccode_test(os.path.join(mccoderoot, version), labeldir, limit, instrfilter)
+    results = mccode_test(mccoderoot, labeldir, limit, instrfilter)
     
     reportfile = os.path.join(labeldir, "testresults_%s.json" % version)
     open(os.path.join(reportfile), "w").write(json.dumps(results, indent=2))
@@ -452,7 +452,7 @@ def run_version_test(testdir, mccoderoot, limit, instrfilter, version, suffix):
         logging.info("Testing: %s" % version)
         logging.info("")
 
-        results = mccode_test(os.path.join(mccoderoot, version), labeldir, limit, instrfilter, version)
+        results = mccode_test(mccoderoot, labeldir, limit, instrfilter, version)
     finally:
         deactivate_mccode_version(oldpath)
 
@@ -521,7 +521,7 @@ def run_config_test(testdir, mccoderoot, limit, configfilter, instrfilter, suffi
 
                 # craete the proper test dir
                 labeldir = create_label_dir(testdir, label)
-                results = mccode_test(os.path.join(mccoderoot, version), labeldir, limit, instrfilter, label0)
+                results = mccode_test(mccoderoot, labeldir, limit, instrfilter, label0)
 
                 # write local test result
                 reportfile = os.path.join(labeldir, "testresults_%s.json" % label)
@@ -618,13 +618,13 @@ def main(args):
                 print("Probing " + mccode_config.configuration["MCRUN"] + " --showcfg=resourcedir for 'mccoderoot'")
             metalog = LineLogger()
             utils.run_subtool_to_completion(mccode_config.configuration["MCRUN"] + " --showcfg=resourcedir", stdout_cb=metalog.logline)
-            mccoderoot=os.path.dirname(metalog.lst[0])
+            mccoderoot=metalog.lst[0]
         # Probe environment variable
         MCCODE = mccode_config.configuration["MCCODE"].upper()
         if os.environ[MCCODE] is not None:
             if (verbose):
                 print("Probing " + MCCODE + " env var for 'mccoderoot'")
-            mccoderoot=os.path.dirname(os.environ[MCCODE])
+            mccoderoot=os.environ[MCCODE]
         # Fallback attempt
         if not mccoderoot:
             if (verbose):
