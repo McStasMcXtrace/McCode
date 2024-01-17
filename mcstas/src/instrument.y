@@ -2170,6 +2170,21 @@ main(int argc, char *argv[])
   {
     print_error(MCCODE_NAME ": %i Errors encountered during parse of %s.\n",
       error_encountered, instr_current_filename);
+    if (verbose) {
+      fprintf(stderr, "Please check the usual grammar:\n");
+      fprintf(stderr, "DEFINE INSTRUMENT\n");
+      fprintf(stderr, "DECLARE\n");
+      fprintf(stderr, "INITIALIZE\n");
+      fprintf(stderr, "TRACE\n");
+      fprintf(stderr, "  {SPLIT} COMPONENT name = comp(parameters) {WHEN condition}\n");
+      fprintf(stderr, "  AT (...) [RELATIVE [reference|PREVIOUS] | ABSOLUTE]\n");
+      fprintf(stderr, "  {ROTATED {RELATIVE [reference|PREVIOUS] | ABSOLUTE} }\n");
+      fprintf(stderr, "  {GROUP group_name}\n");
+      fprintf(stderr, "  {EXTEND C_code}\n");
+      fprintf(stderr, "  {JUMP [reference|PREVIOUS|MYSELF|NEXT] [ITERATE number_of_times | WHEN condition]\n");
+      fprintf(stderr, "END\n");
+      fprintf(stderr, "as well as '%{ ... %}' blocks.\n\n");
+    }
     exit(1);
   }
   fclose(file);
