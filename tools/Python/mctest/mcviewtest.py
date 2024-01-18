@@ -4,7 +4,7 @@ import logging
 import argparse
 import json
 import os
-from os.path import join, dirname
+from os.path import join, dirname, isdir
 from os import walk
 import shutil
 import jinja2
@@ -141,7 +141,15 @@ def run_normal_mode(testdir, reflabel):
                     row.append(get_empty_cell_tuple(errmsg))
 
     # load test data
-    for _, alllabels, _ in walk(testdir): break
+    alllabels = list()
+    for root, labels, files in walk(testdir):
+        for lab in labels:
+            if isdir(lab):
+                try:
+                    obj = json.loads(open(join(testdir, lab, "testresults_%s.json" % lab)).read())
+                    alllabels.append(lab)
+                except:
+                    pass
     alllabels.sort()
     # get number of data columns
     numcols= len(alllabels)
