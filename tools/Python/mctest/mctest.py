@@ -429,7 +429,7 @@ def run_default_test(testdir, mccoderoot, limit, instrfilter, suffix):
     logging.info("")
     results = mccode_test(mccoderoot, labeldir, limit, instrfilter)
     
-    reportfile = os.path.join(labeldir, "testresults_%s.json" % version)
+    reportfile = os.path.join(labeldir, "testresults_%s.json" % version+suffix)
     open(os.path.join(reportfile), "w").write(json.dumps(results, indent=2))
 
     logging.debug("")
@@ -456,7 +456,7 @@ def run_version_test(testdir, mccoderoot, limit, instrfilter, version, suffix):
     finally:
         deactivate_mccode_version(oldpath)
 
-    reportfile = os.path.join(labeldir, "testresults_%s.json" % version)
+    reportfile = os.path.join(labeldir, "testresults_%s.json" % version+suffix)
     open(os.path.join(reportfile), "w").write(json.dumps(results, indent=2))
 
     logging.debug("")
@@ -524,7 +524,7 @@ def run_config_test(testdir, mccoderoot, limit, configfilter, instrfilter, suffi
                 results = mccode_test(mccoderoot, labeldir, limit, instrfilter, label0)
 
                 # write local test result
-                reportfile = os.path.join(labeldir, "testresults_%s.json" % label)
+                reportfile = os.path.join(labeldir, "testresults_%s.json" % label+suffix)
                 open(os.path.join(reportfile), "w").write(json.dumps(results, indent=2))
             
                 logging.debug("")
