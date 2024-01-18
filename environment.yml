@@ -32,6 +32,7 @@ dependencies:
   - jupytext
   - jupyterlab
   - ipympl
+  - jinja2
   - pip
   - pip:
     - guide_bot

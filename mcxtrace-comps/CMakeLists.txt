@@ -78,8 +78,7 @@ if ( NOT EXCLUDE_DATA )
   # endforeach()
 endif()
 
-file_globsrc( tmp "examples/*" )
-install( FILES ${tmp} DESTINATION "${DEST_DATADIR_EXAMPLES}" )
+install( DIRECTORY "examples/" DESTINATION "${DEST_DATADIR_EXAMPLES}")
 
 file_globsrc( tmp "editors/*" )
 install( FILES ${tmp} DESTINATION "${DEST_DATADIR_EDITORS}" )

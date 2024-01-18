@@ -67,9 +67,9 @@ jobs:
       run: |
            sudo apt -y install libopenmpi-dev
 
-    - name: Setup OpenMPI (macOS-12)
+    - name: Setup OpenMPI (macOS-12,13)
       id: setup-openmpi-macos12
-      if: matrix.os == 'macos-12'
+      if: runner.os == 'macOS' && matrix.os != 'macos-11'
       run: |
            brew install openmpi
 
@@ -163,13 +163,13 @@ jobs:
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_BNL_H8 && cd run_BNL_H8
-           cp ../install_mcstas/share/mcstas/resources/examples/BNL_H8.instr .
+           cp ../install_mcstas/share/mcstas/resources/examples/Brookhaven/BNL_H8/BNL_H8.instr .
            ../install_mcstas/bin/${MCRUN_EXECUTABLE} BNL_H8.instr lambda=2.36
            ../install_mcstas/bin/${MCSTAS_PYGEN_EXECUTABLE} BNL_H8.instr
 
     - name: Launch BNL_H8 instrument (MPI)
       id: h8-test-mpi
-      if: runner.os == 'Linux'  || matrix.os == 'macos-12' # Linux or macos-12 only
+      if: runner.os == 'Linux'  || (runner.os == 'macOS' && matrix.os != 'macos-11') # Linux or macos-12/13 only
       run: |
            set -e
            set -u
@@ -180,7 +180,7 @@ jobs:
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_BNL_H8_mpi && cd run_BNL_H8_mpi
-           cp ../install_mcstas/share/mcstas/resources/examples/BNL_H8.instr .
+           cp ../install_mcstas/share/mcstas/resources/examples/Brookhaven/BNL_H8/BNL_H8.instr .
            ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=2 BNL_H8.instr lambda=2.36
 
     - name: Launch MCPL test instrument
@@ -197,12 +197,12 @@ jobs:
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_ESS_BEER_MCPL && cd run_ESS_BEER_MCPL
-           cp ../install_mcstas/share/mcstas/resources/examples/ESS_BEER_MCPL.instr .
+           cp ../install_mcstas/share/mcstas/resources/examples/ESS/ESS_BEER_MCPL/ESS_BEER_MCPL.instr .
            ../install_mcstas/bin/${MCRUN_EXECUTABLE} ESS_BEER_MCPL.instr repetition=50
 
     - name: Launch MCPL test instrument (mpi)
       id: mcpl-test-mpi
-      if: runner.os == 'Linux'  || matrix.os == 'macos-12' # Linux or macos-12 only
+      if: runner.os == 'Linux'  || (runner.os == 'macOS' && matrix.os != 'macos-11') # Linux or macos-12/13 only
       # Status: Works on Unixes ("wrapper batches missing for Windows")
       run: |
            set -e
@@ -214,7 +214,7 @@ jobs:
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_ESS_BEER_MCPL_mpi && cd run_ESS_BEER_MCPL_mpi
-           cp ../install_mcstas/share/mcstas/resources/examples/ESS_BEER_MCPL.instr .
+           cp ../install_mcstas/share/mcstas/resources/examples/ESS/ESS_BEER_MCPL/ESS_BEER_MCPL.instr .
             ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=2 ESS_BEER_MCPL.instr repetition=100
 
     - name: Launch NCrystal test instrument
@@ -231,12 +231,12 @@ jobs:
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_NCrystal_example && cd run_NCrystal_example
-           cp ../install_mcstas/share/mcstas/resources/examples/NCrystal_example.instr .
+           cp ../install_mcstas/share/mcstas/resources/examples/NCrystal/NCrystal_example/NCrystal_example.instr .
             ../install_mcstas/bin/${MCRUN_EXECUTABLE} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
 
     - name: Launch NCrystal test instrument (mpi)
       id: ncrystal-test-mpi
-      if: runner.os == 'Linux'  || matrix.os == 'macos-12' # Linux or macos-12 only
+      if: runner.os == 'Linux'  || (runner.os == 'macOS' && matrix.os != 'macos-11') # Linux or macos-12/13 only
       # Status: Works on Unixes ("ncrystal missing for Windows")
       run: |
            set -e
@@ -248,7 +248,7 @@ jobs:
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_NCrystal_example_mpi && cd run_NCrystal_example_mpi
-           cp ../install_mcstas/share/mcstas/resources/examples/NCrystal_example.instr .
+           cp ../install_mcstas/share/mcstas/resources/examples/NCrystal/NCrystal_example/NCrystal_example.instr .
            clang --version
            mpirun --version
            ncrystal-config --version
@@ -275,7 +275,7 @@ jobs:
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_templateSANS_Mantid && cd run_templateSANS_Mantid
-           cp ../install_mcstas/share/mcstas/resources/examples/templateSANS_Mantid.instr .
+           cp ../install_mcstas/share/mcstas/resources/examples/Mantid/templateSANS_Mantid/templateSANS_Mantid.instr .
            #Not a final solution!!!:
            #if [ "x$(uname)" == "xDarwin" ]; then export MCSTAS_CC_OVERRIDE=/usr/bin/clang; fi
            if [ "x$(uname)" == "xLinux" ]; then

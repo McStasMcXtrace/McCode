@@ -67,9 +67,9 @@ jobs:
       run: |
            sudo apt -y install libopenmpi-dev
 
-    - name: Setup OpenMPI (macOS-12)
+    - name: Setup OpenMPI (macOS-12,13)
       id: setup-openmpi-macos12
-      if: matrix.os == 'macos-12' 
+      if: runner.os == 'macOS' && matrix.os != 'macos-11'
       run: |
            brew install openmpi
 
@@ -158,13 +158,13 @@ jobs:
            test -f ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE}
            ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE} --version
            mkdir run_JJ_SAXS && cd run_JJ_SAXS
-           cp ../install_mcxtrace/share/mcxtrace/resources/examples/JJ_SAXS.instr .
+           cp ../install_mcxtrace/share/mcxtrace/resources/examples/SAXSLAB/JJ_SAXS/JJ_SAXS.instr .
            ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} JJ_SAXS.instr pin2_pos=0.2 pin3_pos=0.4 optic_L=0.1 sample_pos=0.2 detector_pos=2
            ../install_mcxtrace/bin/${MCXTRACE_PYGEN_EXECUTABLE} JJ_SAXS.instr
 
     - name: Launch JJ_SAXS instrument (MPI)
       id: JJ_SAXS-mpi
-      if: runner.os == 'Linux'  || matrix.os == 'macos-12' # Linux or macos-12 only
+      if: runner.os == 'Linux'  || (runner.os == 'macOS' && matrix.os != 'macos-11') # Linux or macos-12/13 only
       run: |
            set -e
            set -u
@@ -175,7 +175,7 @@ jobs:
            test -f ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE}
            ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE} --version
            mkdir run_JJ_SAXS_mpi && cd run_JJ_SAXS_mpi
-           cp ../install_mcxtrace/share/mcxtrace/resources/examples/JJ_SAXS.instr .
+           cp ../install_mcxtrace/share/mcxtrace/resources/examples/SAXSLAB/JJ_SAXS/JJ_SAXS.instr .
            ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=2 JJ_SAXS.instr pin2_pos=0.2 pin3_pos=0.4 optic_L=0.1 sample_pos=0.2 detector_pos=2
 
     - name: Launch MCPL test instrument
@@ -192,12 +192,12 @@ jobs:
            test -f ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE}
            ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE} --version
            mkdir run_Test_MCPL_input && cd run_Test_MCPL_input
-           cp ../install_mcxtrace/share/mcxtrace/resources/examples/Test_MCPL_input.instr .
+           cp ../install_mcxtrace/share/mcxtrace/resources/examples/Tests/Test_MCPL_input/Test_MCPL_input.instr .
             ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} Test_MCPL_input.instr repeat=10
 
     - name: Launch MCPL test instrument (MPI)
       id: mcpl-test-mpi
-      if: runner.os == 'Linux'  || matrix.os == 'macos-12' # Linux or macos-12 only
+      if: runner.os == 'Linux'  || (runner.os == 'macOS' && matrix.os != 'macos-11') # Linux or macos-12/13 only
       # Status: Works on Unixes ("wrapper batches missing for Windows")
       run: |
            set -e
@@ -209,7 +209,7 @@ jobs:
            test -f ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE}
            ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE} --version
            mkdir run_Test_MCPL_input_mpi && cd run_Test_MCPL_input_mpi
-           cp ../install_mcxtrace/share/mcxtrace/resources/examples/Test_MCPL_input.instr .
+           cp ../install_mcxtrace/share/mcxtrace/resources/examples/Tests/Test_MCPL_input/Test_MCPL_input.instr .
            ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=2 Test_MCPL_input.instr repeat=20
 
     - name: 'Tar output files'

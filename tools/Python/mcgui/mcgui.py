@@ -12,6 +12,7 @@ import subprocess
 import time
 import re
 import pathlib
+import shutil
 from PyQt5 import QtCore, QtWidgets
 import PyQt5
 try:
@@ -815,7 +816,7 @@ class McGuiAppController():
             return
         
         if new_instr_req != '':
-            template_text = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template_simple.instr")).read()
+            template_text = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "Templates", "template_simple", "template_simple.instr")).read()
             new_instr = save_instrfile(new_instr_req, template_text)
             if new_instr != '':
                 if self.view.closeCodeEditorWindow():
@@ -825,7 +826,7 @@ class McGuiAppController():
                     self.emitter.status("Editing new instrument: " + os.path.basename(str(new_instr)))
     
     def handleNewFromTemplate(self, instr_templ=''):
-        new_instr_req = self.view.showNewInstrFromTemplateDialog(os.path.join(self.state.getWorkDir(), os.path.basename(str(instr_templ))))
+        new_instr_req = self.view.showNewInstrFromTemplateDialog(os.path.join(self.state.getWorkDir(), os.path.basename(os.path.dirname(str(instr_templ)))))
         if self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(new_instr_req))==False:
             return
         
@@ -833,7 +834,9 @@ class McGuiAppController():
             if self.view.closeCodeEditorWindow():
                 text = get_file_contents(instr_templ)
                 self.state.unloadInstrument()
-                new_instr = save_instrfile(new_instr_req, text)
+                # Templates are now cpoied including their containing folder
+                shutil.copytree(os.path.dirname(str(instr_templ)),new_instr_req)
+                new_instr = os.path.join(new_instr_req, os.path.basename(str(instr_templ)))
                 self.state.loadInstrument(new_instr)
                 self.emitter.status("Instrument created: " + os.path.basename(str(new_instr)))
     

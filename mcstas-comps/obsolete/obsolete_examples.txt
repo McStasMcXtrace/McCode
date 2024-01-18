@@ -12,17 +12,17 @@ ESS_moderator_short is used in 3 example(s):
 V_sample is used in 6 example(s):
 - BNL_H8.instr
 - BNL_H8_simple.instr
+- h8_test_legacy.instr
 - SE_example.instr
 - SE_example2.instr
 - Test_Pol_TripleAxis.instr
-- h8_test_legacy.instr
 ---------------------------------------
 Virtual_input is used in 6 example(s):
-- Histogrammer.instr
-- RITA-II.instr
+- Vin_test.instr
 - SAFARI_MPISI.instr
 - SAFARI_PITSI.instr
-- Vin_test.instr
+- RITA-II.instr
+- Histogrammer.instr
 - vinput2mcpl.instr
 ---------------------------------------
 Virtual_mcnp_input is used in 1 example(s):
@@ -41,14 +41,14 @@ Virtual_mcnp_ss_output is used in 1 example(s):
 - Test_SSR_SSW.instr
 ---------------------------------------
 Virtual_output is used in 8 example(s):
-- Histogrammer.instr
-- RITA-II.instr
-- SAFARI_MPISI.instr
-- SAFARI_PITSI.instr
-- SNS_ARCS.instr
-- SNS_ARCS_Mantid.instr
 - Vin_test.instr
 - Vout_test.instr
+- SNS_ARCS_Mantid.instr
+- SAFARI_MPISI.instr
+- SAFARI_PITSI.instr
+- RITA-II.instr
+- SNS_ARCS.instr
+- Histogrammer.instr
 ---------------------------------------
 Virtual_tripoli4_input is used in 1 example(s):
 - Histogrammer.instr

@@ -40,7 +40,17 @@ export @FLAVOR_UPPER@=$TOPENV/@DEST_DATADIR_COMPS@
 export PATH=$TOPENV/@DEST_BINDIR@:$PATH
 # Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
 if [ -d "$@FLAVOR_UPPER@/miniconda3" ]; then
-    source $@FLAVOR_UPPER@/miniconda3/bin/activate base
+    #Activation hook for conda 
+    _conda_bindir="$@FLAVOR_UPPER@/miniconda3/bin"
+    function conda() {
+	unset conda
+	eval "$(${_conda_bindir}/conda shell.bash hook 2> /dev/null)"
+	conda "$@"
+    }
+    conda activate $@FLAVOR_UPPER@/miniconda3
+    export PS1='(@FLAVOR@-@MCCODE_VERSION@/miniconda3) \W \$ '
+else
+    export PS1='@FLAVOR@-@MCCODE_VERSION@ env \W \$ '
 fi
 
  
@@ -55,8 +65,13 @@ echo
 echo
 echo To end using this version of @FLAVOR@, exit this shell.
 echo
-export PS1='@FLAVOR@-@MCCODE_VERSION@ env \W \$ '
-if [ -x "${SHELL}" ]; then
+if ! [ "${CONDA_PREFIX}x" == "x" ]; then
+    echo \( Using CONDA env placed in 
+    echo    ${CONDA_PREFIX} \)
+    echo
+fi
+
+if [ -x ${SHELL} ]; then
   ${SHELL}
 else
   /bin/sh

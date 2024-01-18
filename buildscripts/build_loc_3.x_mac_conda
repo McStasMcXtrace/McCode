@@ -47,11 +47,21 @@ if [[ !  -d $CONDALOCATION ]]; then
     echo "* Downloading python dependencies to embedded miniconda *"
     echo "*********************************************************"
     echo
-    export PATH=$CONDALOCATION/bin:$PATH 
+    export PATH=$CONDALOCATION/bin:$PATH
+    source $CONDALOCATION/bin/activate
+    which conda
     mamba update mamba -y
-    mamba install -c conda-forge --override-channels cmake compilers gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 openmpi mcpl ncrystal -y
+    mamba install -c conda-forge --override-channels cmake compilers flex bison gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 openmpi mcpl ncrystal -y
     mamba clean --all -y
+    echo CMAKE:
+    which cmake
+else
+    source $CONDALOCATION/bin/activate
+    which conda
+    echo CMAKE:
+    which cmake
 fi
+
 
 export PATH=$CONDALOCATION/bin:$PATH
 
@@ -59,6 +69,7 @@ export PATH=$CONDALOCATION/bin:$PATH
 ./mkdist mcstas-comps 3.x-dev "" "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcrun 3.x-dev tools/Python/mcrun/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcdoc 3.x-dev tools/Python/mcdoc/ "" mac "" -- justinst
+./mkdist mcstas-tools-python-mctest 3.x-dev tools/Python/mctest/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcgui 3.x-dev tools/Python/mcgui/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mccodelib 3.x-dev tools/Python/mccodelib/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph 3.x-dev tools/Python/mcdisplay/pyqtgraph/ "" mac "" -- justinst
