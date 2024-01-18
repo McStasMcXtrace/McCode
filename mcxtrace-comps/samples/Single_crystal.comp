@@ -736,10 +736,10 @@ SHARE
       else if (info->column_order[4])
         F2= Table_Index(sTable, i, info->column_order[4]-1);
 
-      list[i].h = h;
-      list[i].k = k;
-      list[i].l = l;
-      list[i].F2 = F2;
+      list[J].h = h;
+      list[J].k = k;
+      list[J].l = l;
+      list[J].F2 = F2;
       sum_F2    += F2;
 
       /* Precompute some values */
@@ -908,10 +908,10 @@ SHARE
         );
         return(0);
       }
-      list[i].sig123 = sig1*sig2*sig3;
-      list[i].m1 = 1/(2*sig1*sig1);
-      list[i].m2 = 1/(2*sig2*sig2);
-      list[i].m3 = 1/(2*sig3*sig3);
+      list[J].sig123 = sig1*sig2*sig3;
+      list[J].m1 = 1/(2*sig1*sig1);
+      list[J].m2 = 1/(2*sig2*sig2);
+      list[J].m3 = 1/(2*sig3*sig3);
       /* Set Gauss cutoff to 5 times the maximal sigma. */
       if(sig1 > sig2)
         if(sig1 > sig3)
@@ -923,7 +923,8 @@ SHARE
           list[J].cutoff = 5*sig2;
         else
           list[J].cutoff = 5*sig3;
-      J++; // switch to next HKL Brag element in hkl_data
+      if (!isnan(list[J].F2) && !isnan(list[J].cutoff) && !isnan(list[J].tau))
+        J++; // switch to next HKL Bragg element in hkl_data
     } // for i, j
     Table_Free(&sTable);
     
@@ -1058,6 +1059,7 @@ int hkl_search(struct hkl_data *L, void *TT, int count, double V0,
           alpha = L[i].m1*ox*ox + L[i].m2*oy*oy + L[i].m3*oz*oz -
                        (y0x*y0x*n11 + y0y*y0y*n22 + 2*y0x*y0y*n12);
           T[j].refl = xsect_factor*det_L*exp(-alpha)/L[i].sig123; /* intensity of that Bragg */
+          if (isnan(T[j].refl)) continue;
           *coh_refl += T[j].refl;                                 /* total scatterable intensity*/
           T[j].xsect = T[j].refl*L[i].F2;
           *coh_xsect += T[j].xsect;
@@ -1578,8 +1580,8 @@ TRACE
         hkl_info.nb_reuses++;
 
         /* Restore in case of matching event (e.g. SPLIT) */
-        coh_refl = hkl_info.coh_refl;
-              coh_xsect = hkl_info.coh_xsect;
+        coh_refl  = hkl_info.coh_refl;
+        coh_xsect = hkl_info.coh_xsect;
         tau_count = hkl_info.tau_count;
 
       } else {
