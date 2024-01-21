@@ -9,15 +9,16 @@ for the moment only work on macOS or Linux**
 We recommend [miniforge](https://github.com/conda-forge/miniforge)
 
 ## Optionally create a dedicated environment and load it
-```conda create --name mcstas ```
-```conda activate mcstas```
+* ```conda create --name mcstas ```
+* ```conda activate mcstas```
 
 ## Install McStas, compilers, openmpi
-```mamba install mcstas compilers openmpi```
+* ```mamba install mcstas compilers openmpi==4``` 
+(From next McStas release newer openmpi versions are also OK)
 
 ## Install McStasScript, jypyterlab ipympl
-```mamba install pip jupyterlab ipympl```
-```pip install mcstasscript```
+* ```mamba install pip jupyterlab ipympl```
+* ```pip install mcstasscript```
 
 You are welcome to contact us in case of issues, e.g. via
 *   [mcstas-users](mailto:mcstas-users@mcstas.org)
