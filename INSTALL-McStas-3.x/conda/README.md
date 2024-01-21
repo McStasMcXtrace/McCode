@@ -13,7 +13,8 @@ We recommend [miniforge](https://github.com/conda-forge/miniforge)
 * ```conda activate mcstas```
 
 ## Install McStas, compilers, openmpi
-* ```mamba install mcstas compilers openmpi=4``` 
+* ```mamba install mcstas compilers openmpi=4```
+  
 (From next McStas release newer openmpi versions are also OK, but the 3.4 version of mcrun has an issue with openmpi 5.x)
 
 ## Install McStasScript, jypyterlab ipympl
