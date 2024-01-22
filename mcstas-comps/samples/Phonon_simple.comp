@@ -7,6 +7,7 @@
 * Written by: Kim Lefmann
 * Date: 04.02.04
 * Origin: Risoe
+* Modified by: MB,    15.01.24   (removed extra K2V factor in weight, reduced scattered intensity significantly)
 *
 * A sample for phonon scattering based on cross section expressions from Squires, Ch.3.
 * Possibility for adding an (unphysical) bandgap.
@@ -427,7 +428,7 @@ TRACE
       f1=omega_q(parms);
       parms[0]=v_f+DV;
       f2=omega_q(parms);
-      J_factor = fabs(f2-f1)/(2*DV*K2V);
+      J_factor = fabs(f2-f1)/(2*DV);
       omega=VS2E*(v_i*v_i-v_f*v_f);
       vx *= v_f;
       vy *= v_f;
