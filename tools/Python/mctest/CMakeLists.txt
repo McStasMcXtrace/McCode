@@ -32,7 +32,7 @@ setupMCCODE("${FLAVOR}")
 # Select prefix
 set(P "${MCCODE_PREFIX}")
 
-set(TOOLS_NAME "Python/${P}test/")
+set(TOOLS_NAME "tools/Python/${P}test/")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}test-${MCCODE_VERSION}")

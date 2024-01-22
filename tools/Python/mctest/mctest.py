@@ -612,7 +612,7 @@ def main(args):
         if os.environ[MCCODE] is not None:
             if (verbose):
                 print("Probing " + MCCODE + " env var for 'mccoderoot'")
-            mccoderoot=os.path.dirname(os.environ[MCCODE])
+            mccoderoot=os.path.join(os.environ[MCCODE],'..')
         # Fallback attempt
         if not mccoderoot:
             if (verbose):
