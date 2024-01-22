@@ -26,7 +26,7 @@ do
     fi
 done
 
-WORK=`pwd`
+export WORK=`pwd`
 
 # From 1.4 onwards, let McXtrace reside in /usr/share on Debian-like systems
 export MCINSTALL_PREFIX=/usr/share/
@@ -49,11 +49,22 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" deb64 "o" -- deb
 ./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" deb64 "" -- deb
 
-export MCINSTALL_PREFIX=/usr/share/mcxtrace/$1
-./mkdist mcxtrace-mcpl $1 3rdparty/mcpl-package "" deb64 "" -- deb
+cd 3rdparty/mcpl
+rm -rf build
+mkdir build
+cd build
+cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DMCPL_ENABLE_CPACK=ON
+make
+cpack -G DEB .
+DEB=`ls *.deb`
+DEBNAME=`echo $DEB | sed s/Linux/deb64/g`
+mv $DEB $WORK/dist/$DEBNAME
+
+cd $WORK
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
+  echo Building metapackage
   cd meta-pkgs/deb
 
   for controlfile in `ls control.mcxtrace*`
@@ -63,6 +74,11 @@ if [ "x$2" != "x" ]; then
     mv $controlfile.bak $controlfile
   done
 
-  mv $WORK/meta-pkgs/deb/mcxtrace-suite*${1}*.deb $WORK/dist
-  cp $WORK/INSTALL-McXtrace/Linux/debian/README.md $WORK/dist
+  echo DEB metapackages done
+  
+  echo WORK dir is $WORK
+  echo mv ${WORK}/meta-pkgs/deb/mcxtrace-suite*${1}*.deb ${WORK}/dist
+  echo cp ${WORK}/INSTALL-McXtrace-3.x/Linux/debian/README.md ${WORK}/dist
+  mv ${WORK}/meta-pkgs/deb/mcxtrace-suite*${1}*.deb ${WORK}/dist
+  cp ${WORK}/INSTALL-McXtrace-3.x/Linux/debian/README.md ${WORK}/dist
 fi

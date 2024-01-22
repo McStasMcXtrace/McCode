@@ -48,15 +48,37 @@ WORK=`pwd`
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" rpm64-fedora "" -- rpm
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" rpm64-fedora "" -- rpm
 
-export MCINSTALL_PREFIX=/usr/local/mcstas/$1
-./mkdist mcstas-mcpl $1 3rdparty/mcpl-package "" rpm64-fedora "" -- rpm
-./mkdist mcstas-ncrystal $1 3rdparty/ncrystal-package "" rpm64-fedora "" -- rpm
+cd 3rdparty/mcpl
+rm -rf build
+mkdir build
+cd build
+cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DMCPL_ENABLE_CPACK=ON
+make
+cpack -G RPM .
+RPM=`ls *.rpm`
+RPMNAME=`echo $RPM | sed s/Linux/rpm64-fedora/g`
+mv $RPM $WORK/dist/$RPMNAME
+
+cd $WORK
+
+cd 3rdparty/ncrystal
+rm -rf build
+mkdir build
+cd build
+cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DNCRYSTAL_ENABLE_CPACK=ON
+make
+cpack -G RPM .
+RPM=`ls *.rpm`
+RPMNAME=`echo $RPM | sed s/Linux/rpm64-fedora/g`
+mv $RPM $WORK/dist/$RPMNAME
+
+cd $WORK
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
   cd meta-pkgs/rpm
 
-  for controlfile in `ls mcstas-suite-python.spec`
+  for controlfile in `ls mcstas-suite-python-ng.spec`
   do
     sed -i.bak s/@VERSION@/${1}/g $controlfile
     rpmbuild -bb --target x86_64 $controlfile

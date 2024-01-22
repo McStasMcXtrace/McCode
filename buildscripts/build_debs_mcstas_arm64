@@ -46,13 +46,36 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" deb64arm "" -- deb
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" deb64arm "" -- deb
 ./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" deb64arm "" -- deb
+./mkdist mcstas-tools-python-mcdisplay-cad $1 tools/Python/mcdisplay/cad/ "" deb64arm "" -- deb
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" deb64arm "" -- deb
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" deb64arm "" -- deb
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" deb64arm "" -- deb
 
-export MCINSTALL_PREFIX=/usr/share/mcstas/$1
-./mkdist mcstas-mcpl $1 3rdparty/mcpl-package "" deb64arm "" -- deb
-./mkdist mcstas-ncrystal $1 3rdparty/ncrystal-package "" deb64arm "" -- deb
+cd 3rdparty/mcpl
+rm -rf build
+mkdir build
+cd build
+cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DMCPL_ENABLE_CPACK=ON
+make
+cpack -G DEB .
+DEB=`ls *.deb`
+DEBNAME=`echo $DEB | sed s/Linux/deb64arm/g`
+mv $DEB $WORK/dist/$DEBNAME
+
+cd $WORK
+
+cd 3rdparty/ncrystal
+rm -rf build
+mkdir build
+cd build
+cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DNCRYSTAL_ENABLE_CPACK=ON
+make
+cpack -G DEB .
+DEB=`ls *.deb`
+DEBNAME=`echo $DEB | sed s/Linux/deb64arm/g`
+mv $DEB $WORK/dist/$DEBNAME
+
+cd $WORK
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
