@@ -17,10 +17,10 @@
 * Written by: Daniel Lomholt Christensen
 * Date: 14:28:08 on January 23, 2024
 * Origin: ILL, Grenoble, France
-* %INSTRUMENT_SITE: Institute Laue Langevin
+* %INSTRUMENT_SITE: ILL
 *
 *
-* * %DESCRIPTION
+* %DESCRIPTION
 * SALSA is a instrument developed mainly for measuring residual stress
 * in a gauge volume defined by its collimators.
 * The instrument has three possible collimator positions, with three available collimators at each position.
