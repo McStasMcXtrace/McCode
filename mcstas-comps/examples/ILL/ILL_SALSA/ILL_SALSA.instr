@@ -53,7 +53,8 @@ double mip = 2, // m-value of in-pile guide coating
 int vertical_collimator = 1, // Choice of collimator. See the documentations for the specifications
 int horizontal_collimator = 0, // Choice of collimator. See the documentations for the specifications
 int outgoing_collimator = 0, // Choice of collimator. See the documentations for the specifications
-double measuring_angle = 50 // Angle between the outgoing collimator and sample. Rotates in the negative direction of revolution. I.E with the clock.
+double measuring_angle = 50, // Angle between the outgoing collimator and sample. Rotates in the negative direction of revolution. I.E with the clock.
+double mono_rock=0 // Angle to offset monochromator from nominal angle - allows to make a rocking curve
 )
 
 DECLARE 
@@ -101,7 +102,8 @@ carrousel_scattering_vector = 4;
 }
 
 carrousel_rot = asin(carrousel_scattering_vector*lambda_mean/(4*PI))*RAD2DEG;
-
+carrousel_rot += mono_rock;
+ 
 primary_collimator_vertical_data[3 + 7*vertical_collimator] = asin(primary_collimator_vertical_data[3 + 7*vertical_collimator]/
 (2*primary_collimator_vertical_data[4 + 7*vertical_collimator]))*RAD2DEG;
 
@@ -2114,7 +2116,7 @@ COMPONENT GuideOut_Phic = Monitor_nD(
  zmin = 0, zmax = 0,
  bins = 0, min = -1e40,
  max = 1e40, restore_neutron = 1,
- radius = 0, options = "per cm2, capture, slit",
+ radius = 0, options = "x y per cm2, capture, slit",
  filename = "NULL", geometry = "NULL",
  nowritefile = 0, username1 = "NULL",
  username2 = "NULL", username3 = "NULL")
