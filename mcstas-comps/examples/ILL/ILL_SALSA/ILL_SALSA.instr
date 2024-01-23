@@ -11,15 +11,16 @@
 * European Spallation Source Data Management and 
 * Software Centre
 * 
-* Instrument SALSA
+* Instrument ILL_SALSA
 * 
 * %Identification
 * Written by: Daniel Lomholt Christensen
-* Date: 13:30:05 on August 17, 2023
+* Date: 14:28:08 on January 23, 2024
 * Origin: ILL, Grenoble, France
-* %INSTRUMENT_SITE: ILL
-* 
-* %DESCRIPTION
+* %INSTRUMENT_SITE: Institute Laue Langevin
+*
+*
+* * %DESCRIPTION
 * SALSA is a instrument developed mainly for measuring residual stress
 * in a gauge volume defined by its collimators.
 * The instrument has three possible collimator positions, with three available collimators at each position.
@@ -30,47 +31,56 @@
 * The horizontal collimator {0: 0.6mm, 1: 2mm, 2: 4mm}
 * The depth collimator {0: 0.6mm, 1: 2mm, 2: 4mm}
 *
-* The monochromator options are at present only a flat silicon monochromator,
-* with a d-spacing matching the real one.
+* The instument showcases the Monochromator_bent component, 
+* and the focusing use of the Collimator_radial component.
 *
-* Some of the monitors used in this instrument are not actually present in the real instrument. The only detector
-* that is actually there, is the final monitor.
+* Some of the monitors used in this instrument are not actually present in the real instrument. 
+* The only detector that is actually there, is the final monitor.
 * Furthermore the sample environment is of course variable depending on the sample
 * in question.
-*
+* 
 * 
 * %Parameters
-* 
+* lambda_mean [Å]                           Desired wavelength of neutrons coming off of the monochromator.
+* lambda_spread [Å]                         Range over which the neutrons are produced. lambda_mean +- lambda_spread.
+* m [2]                                     m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* mip [2]                                   m-value of in-pile guide coating
+* monochromator_horizontal_radius [m]       Radius of the horizontal cylinder the monochromator is bent on.
+* takeoff_angle [deg],                      Takeoff angle of the instrument
+* mono_rotation [deg]                       Rotation of monochromator in the horizontal plane. Omega angle in SALSA
+* vertical_mono_radius [m]                  Radius of the cylinder the monochromator is bent on vertically
+* vertical_focus [mm]                       Choice of collimator focus in mm. Choose either 2, 4, or 10.
+* horizontal_focus [mm]                     Choice of collimator focus in mm. Choose either 0.6, 2, or 4.
+* outgoing_focus [mm]                       Choice of collimator focus in mm. Choose either 0.6, 2, or 4.
+* measuring_angle [deg]                     Angle between the outgoing collimator and sample. Rotates in the negative direction of revolution. I.E with the clock.
+
 * %End 
 ********************************************************************************/
 
-DEFINE INSTRUMENT SALSA (
-double lambda_mean = 1.8, // Desired wavelength of neutrons coming off of the monochromator.
-double lambda_spread = 0.5, // Range over which the neutrons are produced. lambda_mean +- lambda_spread.
-int carrousel_monochromator = 0, // Choose which monochromator is used. There are 3 options as listed in the documentation.
+DEFINE INSTRUMENT ILL_SALSA (
+double lambda_mean = 1.66795, // Desired wavelength of neutrons coming off of the monochromator.
+double lambda_spread = 0.0224372, // Range over which the neutrons are produced. lambda_mean +- lambda_spread.
 double m = 2, // m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
 double mip = 2, // m-value of in-pile guide coating
-int vertical_collimator = 1, // Choice of collimator. See the documentations for the specifications
-int horizontal_collimator = 0, // Choice of collimator. See the documentations for the specifications
-int outgoing_collimator = 0, // Choice of collimator. See the documentations for the specifications
+double monochromator_horizontal_radius = 2.6, // Radius of the horizontal cylinder the monochromator is bent on.
+double takeoff_angle = 75.8, // Takeoff angle of the instrument
+double mono_rotation = 37.9, // Rotation of monochromator in the horizontal plane. Omega angle in SALSA
+double vertical_mono_radius = 2.2, // "Radius of the cylinder the monochromator is bent on vertically
+double vertical_focus = 2, // Choice of collimator focus in mm. Choose either 2, 4, or 10.
+double horizontal_focus = 0.6, // Choice of collimator focus in mm. Choose either 0.6, 2, or 4.
+double outgoing_focus = 0.6, // Choice of collimator focus in mm. Choose either 0.6, 2, or 4.
 double measuring_angle = 50 // Angle between the outgoing collimator and sample. Rotates in the negative direction of revolution. I.E with the clock.
 )
 
 DECLARE 
 %{
-double carrousel_scattering_vector;
-double carrousel_rot;
-int Scattered_from_ingoing_collimators;
-double primary_collimator_vertical_data[21] = {0.158,0.112,0.483,0.104,0.616,39,12,0.158,0.12,0.382,0.096,0.6169,39,12,0.158,0.1201,0.382,0.098,0.61175,39,12};
-double primary_collimator_horizontal_data[28] = {0.1155,0.0664,0.449,0.0435,0.15,39,12,0.11695,0.0664,0.453,0.0439,0.15,39,12,0.112,0.09,0.2225,0.072,0.38,39,12,0.1193,0.093,0.232,0.0653,0.37004,39,12};
-double secondary_collimator_data[28] = {0.132,0.0695,0.459,0.055,0.15,39,12,0.2607,0.1119,0.61,0.0638,0.2,39,12,0.279,0.16,0.499,0.0805,0.4,39,12,0.3061,0.1713,0.49716,0.126,0.50284,39,12};
+double gQc;
+double gAlpha;
+double gW;
 
     /* Thermal (H2x) source parameters */
     /* guide coating parameters */
     double gR0          = 1;
-    double gQc          = 0.021;
-    double gAlpha       = 4.07;
-    double gW           = 1.0/300.0;
     /* gaps and Al windows parameters */
     double Al_thickness = 0.002;
     double gGap         = 0.001;
@@ -85,34 +95,20 @@ double secondary_collimator_data[28] = {0.132,0.0695,0.459,0.055,0.15,39,12,0.26
     /* capture flux positions from moderator: 21.4    28.4    61.2 */
 
   
+int vertical_collimator;
+int horizontal_collimator;
+int outgoing_collimator;
+double primary_collimator_vertical_data[21] = {0.158,0.112,0.483,0.104,0.616,110,0.158,0.12,0.382,0.096,0.6169,60};
+double primary_collimator_horizontal_data[28] = {0.1155,0.0664,0.449,0.0435,0.15,130,0.11695,0.0664,0.453,0.0439,0.15,39,0.112,0.09,0.2225,0.072,0.38,65,0.1193,0.093,0.232,0.0653,0.37004,20};
+double secondary_collimator_data[28] = {0.132,0.0695,0.459,0.055,0.15,39,12,0.2607,0.1119,0.61,0.0638,0.2,39,12,0.279,0.16,0.499,0.0805,0.4,39,12,0.3061,0.1713,0.49716,0.126,0.50284,39,12};
 %}
 
 INITIALIZE 
 %{
-// Start of initialize for generated SALSA
-if (carrousel_monochromator=1) {
-carrousel_scattering_vector = 3.785051389867221;
-}
-else if (carrousel_monochromator=2){
-carrousel_scattering_vector = 3;
-}
-else if (carrousel_monochromator=3){
-carrousel_scattering_vector = 4;
-}
-
-carrousel_rot = asin(carrousel_scattering_vector*lambda_mean/(4*PI))*RAD2DEG;
-
-primary_collimator_vertical_data[3 + 7*vertical_collimator] = asin(primary_collimator_vertical_data[3 + 7*vertical_collimator]/
-(2*primary_collimator_vertical_data[4 + 7*vertical_collimator]))*RAD2DEG;
-
-
-primary_collimator_horizontal_data[3 + 7*horizontal_collimator] = asin(primary_collimator_horizontal_data[3 + 7*horizontal_collimator]/
-(2*primary_collimator_horizontal_data[4 + 7*horizontal_collimator]))*RAD2DEG;
-
-
-secondary_collimator_data[3 + 7*outgoing_collimator] = asin(secondary_collimator_data[3 + 7*outgoing_collimator]/
-(2*secondary_collimator_data[4 + 7*outgoing_collimator]))*RAD2DEG;
-
+// Start of initialize for generated ILL_SALSA
+gQc = 0.021;
+gAlpha = 4.07;
+gW = 1.0/300.0;
 
     /* Element rotations = Element length / Curvature Radius * RAD2DEG */
     if (gRh) {
@@ -122,7 +118,49 @@ secondary_collimator_data[3 + 7*outgoing_collimator] = asin(secondary_collimator
       Rh_H22_6  = L_H22_6 /gRh*RAD2DEG;
     }
     printf("Instrument: ILL_H22 (H22@ILL thermal guide).\n");
-  
+    
+
+    if (vertical_focus == 2) 
+        vertical_collimator = 0;
+    else if (vertical_focus == 4) 
+        vertical_collimator = 1;
+    else if (vertical_focus == 10) 
+        vertical_collimator = 2;
+    else{
+        exit(printf("Vertical_collimator: incorrect focus=%g \n ", vertical_focus));
+    }
+
+    if (horizontal_focus == 0.6) 
+        horizontal_collimator = 0;
+    else if (horizontal_focus == 2) 
+        horizontal_collimator = 1;
+    else if (horizontal_focus == 4) 
+        horizontal_collimator = 2;
+    else{
+        exit(printf("Horizontal_collimator: incorrect focus=%g \n ", vertical_focus));
+    }
+    
+
+    primary_collimator_vertical_data[3 + 6*vertical_collimator] = asin(primary_collimator_vertical_data[3 + 6*vertical_collimator]/
+    (2*primary_collimator_vertical_data[4 + 6*vertical_collimator]))*RAD2DEG;
+    
+
+    primary_collimator_horizontal_data[3 + 6*horizontal_collimator] = asin(primary_collimator_horizontal_data[3 + 6*horizontal_collimator]/
+    (2*primary_collimator_horizontal_data[4 + 6*horizontal_collimator]))*RAD2DEG;
+    
+if (outgoing_focus == 0.6) 
+        outgoing_collimator = 0;
+    else if (outgoing_focus == 2) 
+        outgoing_collimator = 1;
+    else if (outgoing_focus == 4) 
+        outgoing_collimator = 2;
+    else{
+        exit(printf("Outgoing_collimator: incorrect focus=%g \n ", vertical_focus));
+    }
+
+    secondary_collimator_data[3 + 7*outgoing_collimator] = asin(secondary_collimator_data[3 + 7*outgoing_collimator]/
+    (2*secondary_collimator_data[4 + 7*outgoing_collimator]))*RAD2DEG;
+    
 %}
 
 TRACE 
@@ -2073,70 +2111,6 @@ COMPONENT GuideOut = Arm()
 AT (0,0,0.01) RELATIVE H22_6_Out
 ROTATED (0.0,0.0,0.0) RELATIVE H22_6_Out
 
-COMPONENT GuideOut_xy = Monitor_nD(
- user1 = "", user2 = "",
- user3 = "", xwidth = 0.03,
- yheight = 0.2, zdepth = 0,
- xmin = 0, xmax = 0,
- ymin = 0, ymax = 0,
- zmin = 0, zmax = 0,
- bins = 0, min = -1e40,
- max = 1e40, restore_neutron = 1,
- radius = 0, options = "x y, per cm2, slit",
- filename = "NULL", geometry = "NULL",
- nowritefile = 0, username1 = "NULL",
- username2 = "NULL", username3 = "NULL")
-AT (0,0,0.01) RELATIVE GuideOut
-ROTATED (0.0,0.0,0.0) RELATIVE GuideOut
-
-COMPONENT GuideOut_dxdy = Monitor_nD(
- user1 = "", user2 = "",
- user3 = "", xwidth = 0.03,
- yheight = 0.2, zdepth = 0,
- xmin = 0, xmax = 0,
- ymin = 0, ymax = 0,
- zmin = 0, zmax = 0,
- bins = 0, min = -1e40,
- max = 1e40, restore_neutron = 1,
- radius = 0, options = "dx dy, all auto, per cm2, slit",
- filename = "NULL", geometry = "NULL",
- nowritefile = 0, username1 = "NULL",
- username2 = "NULL", username3 = "NULL")
-AT (0,0,0) RELATIVE GuideOut_xy
-ROTATED (0.0,0.0,0.0) RELATIVE GuideOut_xy
-
-COMPONENT GuideOut_Phic = Monitor_nD(
- user1 = "", user2 = "",
- user3 = "", xwidth = 0.03,
- yheight = 0.2, zdepth = 0,
- xmin = 0, xmax = 0,
- ymin = 0, ymax = 0,
- zmin = 0, zmax = 0,
- bins = 0, min = -1e40,
- max = 1e40, restore_neutron = 1,
- radius = 0, options = "per cm2, capture, slit",
- filename = "NULL", geometry = "NULL",
- nowritefile = 0, username1 = "NULL",
- username2 = "NULL", username3 = "NULL")
-AT (0,0,0) RELATIVE GuideOut_dxdy
-ROTATED (0.0,0.0,0.0) RELATIVE GuideOut_dxdy
-
-COMPONENT GuideOut_L = Monitor_nD(
- user1 = "", user2 = "",
- user3 = "", xwidth = 0.03,
- yheight = 0.2, zdepth = 0,
- xmin = 0, xmax = 0,
- ymin = 0, ymax = 0,
- zmin = 0, zmax = 0,
- bins = 0, min = -1e40,
- max = 1e40, restore_neutron = 1,
- radius = 0, options = "lambda, limits=[1 21] bins=20, per cm2, slit",
- filename = "NULL", geometry = "NULL",
- nowritefile = 0, username1 = "NULL",
- username2 = "NULL", username3 = "NULL")
-AT (0,0,0) RELATIVE GuideOut_Phic
-ROTATED (0.0,0.0,0.0) RELATIVE GuideOut_Phic
-
 COMPONENT Carter_guide = Guide_gravity(
  w1 = 0.03, h1 = 0.2,
  l = 9.585, R0 = gR0,
@@ -2144,117 +2118,605 @@ COMPONENT Carter_guide = Guide_gravity(
  m = m, W = gW)
 AT (0,0,0.5) RELATIVE GuideOut
 
-COMPONENT arm_SALSA_start = Arm()
-AT (0,0,10.085) RELATIVE PREVIOUS
-ROTATED (0,carrousel_rot,0) RELATIVE PREVIOUS
+COMPONENT arm_guide_end = Arm()
+AT (0,0,9.585) RELATIVE PREVIOUS
+ROTATED (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT Monochromator = Monochromator_flat(
- zwidth = 0.209, yheight = 0.17,
- Q = carrousel_scattering_vector)
-AT (0,0,0) RELATIVE arm_SALSA_start
-
-COMPONENT arm_after_monochromator = Arm()
-AT (0,0,0) RELATIVE arm_SALSA_start
-ROTATED (0,carrousel_rot,0) RELATIVE arm_SALSA_start
-
-COMPONENT Beam_entrance_monitor = PSD_monitor(
+COMPONENT monitor_before_mono = PSD_monitor(
  nx = 256, ny = 256,
- filename = "beam_ent_mon", xwidth = 0.5,
- yheight = 0.5, restore_neutron = 1)
-AT (0,0,1) RELATIVE arm_after_monochromator
-ROTATED (0,0,0) RELATIVE arm_after_monochromator
+ filename = "monitor_before_mono", xwidth = 0.035,
+ yheight = 0.21, restore_neutron = 1)
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT arm_mono = Arm()
+AT (0,0,0.5) RELATIVE arm_guide_end
+ROTATED (0,mono_rotation,0) RELATIVE arm_guide_end
+
+COMPONENT arm_mono_0 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,2.67042917191868) RELATIVE arm_mono
+
+COMPONENT arm_mono_1 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,2.5334840861792607) RELATIVE arm_mono
+
+COMPONENT arm_mono_2 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,2.3965390004398412) RELATIVE arm_mono
+
+COMPONENT arm_mono_3 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,2.259593914700422) RELATIVE arm_mono
+
+COMPONENT arm_mono_4 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,2.122648828961002) RELATIVE arm_mono
+
+COMPONENT arm_mono_5 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,1.9857037432215825) RELATIVE arm_mono
+
+COMPONENT arm_mono_6 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,1.848758657482163) RELATIVE arm_mono
+
+COMPONENT arm_mono_7 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,1.7118135717427436) RELATIVE arm_mono
+
+COMPONENT arm_mono_8 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,1.5748684860033242) RELATIVE arm_mono
+
+COMPONENT arm_mono_9 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,1.4379234002639047) RELATIVE arm_mono
+
+COMPONENT arm_mono_10 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,1.300978314524485) RELATIVE arm_mono
+
+COMPONENT arm_mono_11 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,1.1640332287850657) RELATIVE arm_mono
+
+COMPONENT arm_mono_12 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,1.0270881430456462) RELATIVE arm_mono
+
+COMPONENT arm_mono_13 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,0.8901430573062266) RELATIVE arm_mono
+
+COMPONENT arm_mono_14 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,0.7531979715668073) RELATIVE arm_mono
+
+COMPONENT arm_mono_15 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,0.6162528858273877) RELATIVE arm_mono
+
+COMPONENT arm_mono_16 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,0.47930780008796825) RELATIVE arm_mono
+
+COMPONENT arm_mono_17 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,0.3423627143485488) RELATIVE arm_mono
+
+COMPONENT arm_mono_18 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,0.20541762860912938) RELATIVE arm_mono
+
+COMPONENT arm_mono_19 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,0.06847254286970994) RELATIVE arm_mono
+
+COMPONENT arm_mono_20 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-0.06847254286970994) RELATIVE arm_mono
+
+COMPONENT arm_mono_21 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-0.20541762860912938) RELATIVE arm_mono
+
+COMPONENT arm_mono_22 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-0.3423627143485488) RELATIVE arm_mono
+
+COMPONENT arm_mono_23 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-0.47930780008796825) RELATIVE arm_mono
+
+COMPONENT arm_mono_24 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-0.6162528858273877) RELATIVE arm_mono
+
+COMPONENT arm_mono_25 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-0.7531979715668071) RELATIVE arm_mono
+
+COMPONENT arm_mono_26 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-0.890143057306227) RELATIVE arm_mono
+
+COMPONENT arm_mono_27 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-1.027088143045646) RELATIVE arm_mono
+
+COMPONENT arm_mono_28 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-1.1640332287850654) RELATIVE arm_mono
+
+COMPONENT arm_mono_29 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-1.3009783145244853) RELATIVE arm_mono
+
+COMPONENT arm_mono_30 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-1.4379234002639047) RELATIVE arm_mono
+
+COMPONENT arm_mono_31 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-1.5748684860033237) RELATIVE arm_mono
+
+COMPONENT arm_mono_32 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-1.7118135717427436) RELATIVE arm_mono
+
+COMPONENT arm_mono_33 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-1.8487586574821635) RELATIVE arm_mono
+
+COMPONENT arm_mono_34 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-1.9857037432215825) RELATIVE arm_mono
+
+COMPONENT arm_mono_35 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-2.1226488289610024) RELATIVE arm_mono
+
+COMPONENT arm_mono_36 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-2.2595939147004214) RELATIVE arm_mono
+
+COMPONENT arm_mono_37 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-2.3965390004398412) RELATIVE arm_mono
+
+COMPONENT arm_mono_38 = Arm()
+AT (vertical_mono_radius,0,0) RELATIVE arm_mono
+ROTATED (0,0,-2.5334840861792602) RELATIVE arm_mono
+
+COMPONENT Monochromator_0 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_0
+GROUP monochromator_array
+
+COMPONENT Monochromator_1 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_1
+GROUP monochromator_array
+
+COMPONENT Monochromator_2 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_2
+GROUP monochromator_array
+
+COMPONENT Monochromator_3 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_3
+GROUP monochromator_array
+
+COMPONENT Monochromator_4 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_4
+GROUP monochromator_array
+
+COMPONENT Monochromator_5 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_5
+GROUP monochromator_array
+
+COMPONENT Monochromator_6 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_6
+GROUP monochromator_array
+
+COMPONENT Monochromator_7 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_7
+GROUP monochromator_array
+
+COMPONENT Monochromator_8 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_8
+GROUP monochromator_array
+
+COMPONENT Monochromator_9 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_9
+GROUP monochromator_array
+
+COMPONENT Monochromator_10 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_10
+GROUP monochromator_array
+
+COMPONENT Monochromator_11 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_11
+GROUP monochromator_array
+
+COMPONENT Monochromator_12 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_12
+GROUP monochromator_array
+
+COMPONENT Monochromator_13 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_13
+GROUP monochromator_array
+
+COMPONENT Monochromator_14 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_14
+GROUP monochromator_array
+
+COMPONENT Monochromator_15 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_15
+GROUP monochromator_array
+
+COMPONENT Monochromator_16 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_16
+GROUP monochromator_array
+
+COMPONENT Monochromator_17 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_17
+GROUP monochromator_array
+
+COMPONENT Monochromator_18 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_18
+GROUP monochromator_array
+
+COMPONENT Monochromator_19 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_19
+GROUP monochromator_array
+
+COMPONENT Monochromator_20 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_20
+GROUP monochromator_array
+
+COMPONENT Monochromator_21 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_21
+GROUP monochromator_array
+
+COMPONENT Monochromator_22 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_22
+GROUP monochromator_array
+
+COMPONENT Monochromator_23 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_23
+GROUP monochromator_array
+
+COMPONENT Monochromator_24 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_24
+GROUP monochromator_array
+
+COMPONENT Monochromator_25 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_25
+GROUP monochromator_array
+
+COMPONENT Monochromator_26 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_26
+GROUP monochromator_array
+
+COMPONENT Monochromator_27 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_27
+GROUP monochromator_array
+
+COMPONENT Monochromator_28 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_28
+GROUP monochromator_array
+
+COMPONENT Monochromator_29 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_29
+GROUP monochromator_array
+
+COMPONENT Monochromator_30 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_30
+GROUP monochromator_array
+
+COMPONENT Monochromator_31 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_31
+GROUP monochromator_array
+
+COMPONENT Monochromator_32 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_32
+GROUP monochromator_array
+
+COMPONENT Monochromator_33 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_33
+GROUP monochromator_array
+
+COMPONENT Monochromator_34 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_34
+GROUP monochromator_array
+
+COMPONENT Monochromator_35 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_35
+GROUP monochromator_array
+
+COMPONENT Monochromator_36 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_36
+GROUP monochromator_array
+
+COMPONENT Monochromator_37 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_37
+GROUP monochromator_array
+
+COMPONENT Monochromator_38 = Monochromator_bent(
+ zwidth = 0.178, yheight = 0.005,
+ xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
+ lamella_slabs = 16, lamella_gap_size = 0.00025,
+ plane_of_reflection = "Si400")
+AT (-2.2,0,0) RELATIVE arm_mono_38
+GROUP monochromator_array
+
+COMPONENT arm_takeoff = Arm()
+AT (0,0,0) RELATIVE arm_mono
+ROTATED (0,takeoff_angle - mono_rotation,0) RELATIVE arm_mono
+
+COMPONENT Beam_entrance_monitor_psd = PSD_monitor(
+ nx = 256, ny = 256,
+ filename = "beam_ent_mon_psd", xwidth = 0.14,
+ yheight = 0.14, restore_neutron = 1)
+AT (0,0,0.8) RELATIVE arm_takeoff
+ROTATED (0,0,0) RELATIVE arm_takeoff
+
+COMPONENT Beam_entrance_monitor_div = Divergence_monitor(
+ nh = 256, nv = 256,
+ filename = "Beam_entrance_monitor_div", xwidth = 0.14,
+ yheight = 0.14, maxdiv_h = 5,
+ maxdiv_v = 5, restore_neutron = 1)
+AT (0,0,0.8) RELATIVE arm_takeoff
+ROTATED (0,0,0) RELATIVE arm_takeoff
+
+COMPONENT Beam_entrance_monitor_lambda = L_monitor(
+ nL = 256, filename = "beam_ent_mon_lambda",
+ xwidth = 0.14, yheight = 0.14,
+ Lmin = lambda_mean - lambda_spread, Lmax = lambda_mean + lambda_spread,
+ restore_neutron = 1)
+AT (0,0,0.8) RELATIVE arm_takeoff
+ROTATED (0,0,0) RELATIVE arm_takeoff
+
+COMPONENT arm_collimators = Arm()
+AT (0,0,2.1) RELATIVE arm_takeoff
+ROTATED (0,180,0) RELATIVE arm_takeoff
 
 COMPONENT primary_collimator_vertical = Collimator_radial(
- xwidth = 0, yheight = primary_collimator_vertical_data[7*vertical_collimator],
- length = primary_collimator_vertical_data[2 + 7*vertical_collimator], divergence = 12,
- transmission = 1, theta_min = -primary_collimator_vertical_data[3 + 7*vertical_collimator],
- theta_max = primary_collimator_vertical_data[3 + 7*vertical_collimator], nchan = 30,
- radius = primary_collimator_vertical_data[4 + 7*vertical_collimator], roc = 0.19,
- verbose = 1, focusing = 1,
- yheight_inner = primary_collimator_vertical_data[1 + 7*vertical_collimator])
-AT (0,0,2.1) RELATIVE arm_after_monochromator
-ROTATED (0,180,90) RELATIVE arm_after_monochromator
+ xwidth = 0, yheight = primary_collimator_vertical_data[6*vertical_collimator],
+ length = primary_collimator_vertical_data[2 + 6*vertical_collimator], transmission = 1,
+ theta_min = -primary_collimator_vertical_data[3 + 6*vertical_collimator], theta_max = primary_collimator_vertical_data[3 + 6*vertical_collimator],
+ radius = primary_collimator_vertical_data[4 + 6*vertical_collimator], nslit = primary_collimator_vertical_data[5 + 6*vertical_collimator],
+ roc = 0, verbose = 0,
+ focusing = 1, yheight_inner = primary_collimator_vertical_data[1 + 6*vertical_collimator])
+AT (0,0,0) RELATIVE arm_collimators
+ROTATED (0,0,90) RELATIVE arm_collimators
 
-COMPONENT middle = Divergence_monitor(
+COMPONENT middle_div = Divergence_monitor(
  nh = 256, nv = 256,
- filename = "middle", xwidth = 0.12,
- yheight = 0.12, maxdiv_h = 2.5,
- maxdiv_v = 2.5, restore_neutron = 1)
-AT (0,0,1.505) RELATIVE arm_after_monochromator
-ROTATED (0,0,0) RELATIVE arm_after_monochromator
+ filename = "middle_div", xwidth = 0.2,
+ yheight = 0.2, maxdiv_h = 5,
+ maxdiv_v = 5, restore_neutron = 1)
+AT (0,0,0.5950000000000002) RELATIVE arm_collimators
+ROTATED (0,180,0) RELATIVE arm_collimators
 
-COMPONENT middle2 = PSD_monitor(
+COMPONENT middle_psd = PSD_monitor(
  nx = 256, ny = 256,
- filename = "middle2", xwidth = 0.2,
- yheight = 0.2, restore_neutron = 1)
-AT (0,0,1.505) RELATIVE arm_after_monochromator
-ROTATED (0,0,0) RELATIVE arm_after_monochromator
+ filename = "middle_psd", xwidth = 0.07,
+ yheight = 0.07, restore_neutron = 1)
+AT (0,0,0.5950000000000002) RELATIVE arm_collimators
+ROTATED (0,180,0) RELATIVE arm_collimators
 
 COMPONENT primary_collimator_horizontal = Collimator_radial(
- xwidth = 0, yheight = primary_collimator_horizontal_data[7*horizontal_collimator],
- length = primary_collimator_horizontal_data[2 + 7*horizontal_collimator], divergence = 12,
- transmission = 1, theta_min = -primary_collimator_horizontal_data[3 + 7*horizontal_collimator],
- theta_max = primary_collimator_horizontal_data[3 + 7*horizontal_collimator], nchan = 30,
- radius = primary_collimator_horizontal_data[4 + 7*horizontal_collimator], roc = 0,
- verbose = 1, focusing = 1,
- yheight_inner = primary_collimator_horizontal_data[1+7*horizontal_collimator])
-AT (0,0,2.1) RELATIVE arm_after_monochromator
-ROTATED (0,180,0) RELATIVE arm_after_monochromator
+ xwidth = 0, yheight = primary_collimator_horizontal_data[6*horizontal_collimator],
+ length = primary_collimator_horizontal_data[2 + 6*horizontal_collimator], transmission = 1,
+ theta_min = -primary_collimator_horizontal_data[3 + 6*horizontal_collimator], theta_max = primary_collimator_horizontal_data[3 + 6*horizontal_collimator],
+ radius = primary_collimator_horizontal_data[4 + 6*horizontal_collimator], nslit = primary_collimator_horizontal_data[5 + 6*horizontal_collimator],
+ roc = 7, verbose = 0,
+ focusing = 1, yheight_inner = primary_collimator_horizontal_data[1+6*horizontal_collimator])
+AT (0,0,0) RELATIVE arm_collimators
+ROTATED (0,0,0) RELATIVE arm_collimators
 
-COMPONENT monitor_after_collimator = Divergence_monitor(
+COMPONENT monitor_after_collimator_div = Divergence_monitor(
  nh = 256, nv = 256,
- filename = "monitor_after_collimator", xwidth = 0.1,
- yheight = 0.1, maxdiv_h = 2.5,
- maxdiv_v = 2.5, restore_neutron = 1)
-AT (0,0,1.99) RELATIVE arm_after_monochromator
-ROTATED (0,0,0) RELATIVE arm_after_monochromator
+ filename = "monitor_after_collimator_div", xwidth = 0.1,
+ yheight = 0.1, maxdiv_h = 1,
+ maxdiv_v = 1, restore_neutron = 1)
+AT (0,0,0.1100000000000001) RELATIVE arm_collimators
+ROTATED (0,180,0) RELATIVE arm_collimators
 
-COMPONENT monitor_after_collimator2 = PSD_monitor(
+COMPONENT monitor_after_collimator_psd = PSD_monitor(
  nx = 256, ny = 256,
- filename = "monitor_after_collimator2", xwidth = 0.1,
- yheight = 0.1, restore_neutron = 1)
-AT (0,0,1.99) RELATIVE arm_after_monochromator
-ROTATED (0,0,0) RELATIVE arm_after_monochromator
+ filename = "monitor_after_collimator_psd", xwidth = 0.04,
+ yheight = 0.04, restore_neutron = 1)
+AT (0,0,0.1100000000000001) RELATIVE arm_collimators
+ROTATED (0,180,0) RELATIVE arm_collimators
 
 COMPONENT arm_sample_position = Arm()
-AT (0,0,2.1) RELATIVE arm_after_monochromator
+AT (0,0,0) RELATIVE arm_collimators
+ROTATED (0,-180,0) RELATIVE arm_collimators
 
 COMPONENT init = Union_init()
-AT (0,0,0) ABSOLUTE
+AT (0,0,0) RELATIVE arm_sample_position
 
 COMPONENT Al_inc = Incoherent_process(
  sigma = 0.0328, unit_cell_volume = 66.4)
-AT (0,0,0) ABSOLUTE
+AT (0,0,0) RELATIVE arm_sample_position
 
 COMPONENT Al_pow = Powder_process(
  reflections = "Al.laz")
-AT (0,0,0) ABSOLUTE
+AT (0,0,0) RELATIVE arm_sample_position
 
 COMPONENT Al = Union_make_material(
- process_string = "Al_inc,Al_pow", my_absorption = 1.39157)
-AT (0,0,0) ABSOLUTE
+ process_string = "Al_inc,Al_pow", my_absorption = 0)
+AT (0,0,0) RELATIVE arm_sample_position
 
 COMPONENT Sample_inc = Incoherent_process(
  sigma = 13.6704, unit_cell_volume = 1079.1)
-AT (0,0,0) ABSOLUTE
+AT (0,0,0) RELATIVE arm_sample_position
 
 COMPONENT Sample_pow = Powder_process(
  reflections = "Na2Ca3Al2F14.laz")
-AT (0,0,0) ABSOLUTE
+AT (0,0,0) RELATIVE arm_sample_position
 
 COMPONENT Sample = Union_make_material(
- process_string = "Sample_inc,Sample_pow", my_absorption = 1.09217)
-AT (0,0,0) ABSOLUTE
-
-COMPONENT sample_geometry = Union_cylinder(
- material_string = "Sample", priority = 100,
- radius = 0.075, yheight = 0.1)
+ process_string = "Sample_inc,Sample_pow", my_absorption = 0)
 AT (0,0,0) RELATIVE arm_sample_position
 
 COMPONENT sample_container = Union_cylinder(
  material_string = "Al", priority = 99,
  radius = 0.0765, yheight = 0.103)
-AT (0,0,0) RELATIVE sample_geometry
+AT (0,0,0) RELATIVE arm_sample_position
 
 COMPONENT sample_container_lid = Union_cylinder(
  material_string = "Al", priority = 98,
@@ -2267,7 +2729,7 @@ COMPONENT logger_space_zx = Union_logger_2D_space(
  D_direction_2 = "x", D2_min = -0.12,
  D2_max = 0.12, n2 = 300,
  filename = "logger_zx.dat")
-AT (0,0,0) RELATIVE sample_geometry
+AT (0,0,0) RELATIVE arm_sample_position
 
 COMPONENT logger_space_zy = Union_logger_2D_space(
  D_direction_1 = "z", D1_min = -0.12,
@@ -2275,13 +2737,13 @@ COMPONENT logger_space_zy = Union_logger_2D_space(
  D_direction_2 = "y", D2_min = -0.12,
  D2_max = 0.12, n2 = 300,
  filename = "logger_zy.dat")
-AT (0,0,0) RELATIVE sample_geometry
+AT (0,0,0) RELATIVE arm_sample_position
 
 COMPONENT Sample_environment = Union_master()
-AT (0,0,0) ABSOLUTE
+AT (0,0,0) RELATIVE arm_sample_position
 
 COMPONENT stop = Union_stop()
-AT (0,0,0) ABSOLUTE
+AT (0,0,0) RELATIVE arm_sample_position
 
 COMPONENT arm_collimator_out = Arm()
 AT (0,0,0) RELATIVE arm_sample_position
@@ -2303,7 +2765,7 @@ AT (0,0,1.25) RELATIVE arm_collimator_out
 
 FINALLY 
 %{
-// Start of finally for generated SALSA
+// Start of finally for generated ILL_SALSA
 %}
 
 END
