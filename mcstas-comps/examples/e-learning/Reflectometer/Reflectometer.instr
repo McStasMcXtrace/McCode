@@ -55,7 +55,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT reflectometer(
+DEFINE INSTRUMENT Reflectometer(
   lambda_min           = 5.3,
   lambda_max           = 5.45,
   slittranslation      = 0,   
