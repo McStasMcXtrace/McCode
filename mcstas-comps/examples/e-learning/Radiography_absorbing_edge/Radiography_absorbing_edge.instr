@@ -1,0 +1,123 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Radiography_absorbing_edge
+*
+* %Identification
+* Written by: Linda Udby and Peter Willendrup
+* Date: July 4th, 2014
+* Origin: University of Copenhagen
+* Release: McStas 2.0
+* Version: $December 21 (2012) $
+* %INSTRUMENT_SITE: e-learning
+*
+* Instrument to study radiographic imaging of an absobing edge sample used for "Spacial resolution in neutron imaging" Moodle quiz in the Virtual Neutrons for Teaching project 
+* http://vnt.nmi3.org/moodle/mod/quiz/view.php?id=56
+*
+* %Description
+*  Instrument to study radiographic imaging of an absobing edge sample used for "Spacial resolution in neutron imaging" Moodle quiz in the Virtual Neutrons for Teaching project 
+* http://vnt.nmi3.org/moodle/mod/quiz/view.php?id=56
+*
+* Example: mcrun  Radiography_absorbing_edge.instr -n5e8 l=0.2 -d EdgeImaging
+*
+*
+* %Parameters
+* D: 	[m] Diameter of pinhole before sample
+* L:	[m] Distance between pinhole and sample
+* l:	[m] Distance between sample and detector
+* sigma_abs: [barns] Absorption cross-section of the sample
+* Vc: [AA^3] Unit cell volume in the sample
+* sample_Z: [m] Sample depth along the beam direction 
+*
+* %Link
+* http://vnt.nmi3.org/mcstas-web
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Radiography_absorbing_edge(D=0.01,L=5, l=0.10, sigma_abs=5.08, Vc=13.827,sample_z=0.01)	
+
+DECLARE
+%{
+  double L0  = 5.0;   /* Distance between source and pinhole */
+  double sample_xoff ; /* Sample x offset */
+  double det_w = 0.10;
+  double det_h = 0.10;	
+  double sample_x=0.10;
+  double sample_y=0.10;
+  double sigma_inc=1e-4;/*Smallest possible value close to 0 where the absorption XS is still correctly calculated in the Incoherent component*/
+  double sqrt2=1.414214;         
+ double frac_interact=1e-6; // set to something close to zero since we don't want to look at inchorent scattering. But do not set to 0 since then the scattering from sigma_inc will be considered            
+%}
+
+INITIALIZE
+%{
+ 
+  sample_xoff  = sample_x/2*sqrt(2); /* Sample x offset */
+     
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_gen(
+    dist = L0, focus_xw = D, focus_yh = D, lambda0 = 3,
+    dlambda = 1, I1 = 1, yheight = 0.1, xwidth = 0.1,
+    target_index = 1)
+  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT pinhole = Slit(
+    radius = D/2)
+  AT (0, 0, L0) RELATIVE source
+
+/*COMPONENT PSD_after_pinhole = PSD_monitor(
+    xwidth = D*1.1, yheight = D*1.1, filename="PSD_after_pinhole")
+  AT (0, 0, 0.001) RELATIVE pinhole*/
+
+/* COMPONENT PSD_before_sample_samplesize= PSD_monitor(
+    xwidth = sample_x, yheight = sample_y, filename="PSD_before_sample_samplesize")
+  AT (0, 0, L-sample_x) RELATIVE pinhole */
+
+COMPONENT samplearm = Arm()
+AT (0,0,L) RELATIVE pinhole
+ROTATED (0,0,0) RELATIVE pinhole
+
+COMPONENT edge_sample = Incoherent(
+    xwidth = sample_x, yheight = sample_y, zdepth = sample_z,
+    target_x = det_w, target_y = det_h, target_index = 1,
+    sigma_abs = sigma_abs, sigma_inc = sigma_inc, Vc = Vc, p_interact=frac_interact)
+  AT (sample_x/2, 0, 0) RELATIVE samplearm
+  ROTATED (0, 0, 0) RELATIVE samplearm 
+
+/*COMPONENT PSD_after_sample_samplesize= PSD_monitor(
+    xwidth = sample_x, yheight = sample_y, filename="PSD_after_sample_samplesize", restore_neutron=1,nx=1000,ny=1000)
+  AT (0, 0, L+sample_x) RELATIVE pinhole*/
+
+/*COMPONENT PSD_detector_50mum= PSD_monitor(
+    xwidth = det_w, yheight = det_h, filename="PSD_detector_50mum", restore_neutron=1,nx=2000,ny=2000)
+  AT (0, 0, L+l) RELATIVE pinhole*/
+
+COMPONENT PSD_1cm_detector_50mum= PSD_monitor(
+    xwidth = 0.01, yheight = 0.01, filename="PSD_1cm_detector_50mum", restore_neutron=1,nx=200,ny=200)
+  AT (0, 0, L+l) RELATIVE pinhole
+
+  COMPONENT edge_monitor_50mum= PSDlin_diff_monitor(xwidth=0.01,yheight=det_h,nx=200, filename="edge_monitor_50mum")
+  AT (0, 0, L+l) RELATIVE pinhole 
+
+
+END
+
+
+
+
+
+
+
+
+
+
+
+
+
