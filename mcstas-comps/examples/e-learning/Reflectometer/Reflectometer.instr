@@ -1,0 +1,264 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: reflectometer
+*
+* %Identification
+* Written by:  Pia Jensen (bozack@bozack.dk)
+* Date:        13.08.2012
+* Origin:      Niels Bohr Instute, University of Copenhagen
+* Release:     McStas 2.x
+* Version:     0.2
+* %INSTRUMENT_SITE: e-learning
+*
+* Simple reflectometer with two slits, a sample (either none, mirror or multilayer),
+* and a detector. For use in the OMIC summer school 2012.
+*
+* %Description
+* This simple reflectometer consists of a source (using the standard PSI parameters
+* for three Maxwellian distributions), on which the user can control the bandwidth
+* by simply choosing a minumum and maximum value. Two slits handle the divergence
+* distribution on the sample. The sample itself can either be an empty spot, a simple
+* mirror, or a multilayer. A simple PSD detector is used for detecting the scattered
+* beam. The scattering is in the horizontal plane.
+* 
+* Example: mcrun reflectometer.instr <parameters=values>
+*
+* %Parameters
+* lambda_min:           [AA]   Minimum wavelength from source
+* lambda_max:           [AA]   Maximum wavelength from source
+* slittranslation:      [m]    Translation of slit (horizontal)
+* sampletranslation:    [m]    Sample translation (horizontal)
+* slitwidth:            [m]    Width of slit pinholes                  
+* slitheight:           [m]    Height of slit pinholes                 
+* dist_source2slit:     [m]    Distance between source and first slit  
+* dist_slit2slit:       [m]    Distance between slits                  
+* dist_slit2sample:     [m]    Distance between second slit and sample 
+* dist_sample2detector: [m]    Distance between sample and detector    
+* sampletype:           [1]    Sample type: 0 none, 1 mirror, 2+ multilayer
+* samplesize:           [m]    Side-length of the (quadratic) sample plate
+* substratethickness:   [m]    Thickness of the substrate
+* MR_Qc:                [AA]   Critical Q-vector length of mirror sample
+* sampleangle:          [deg]  Rotation angle of sample (theta)
+* detectorangle:        [deg]  Rotation angle of detector (2 theta)
+*
+* The sample types are as follows:
+*  0  no sample (for looking at direct beam)
+*  1  simple mirror (for alignment purposes)
+*  2  d54DMPC-D2O
+*  3  d54DMPC-H2O
+*  4  hDMPC-D2O
+*  5  hDMPC-H2O
+*  6  silicon-D2O
+*  7  silicon-H2O
+* 
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT reflectometer(
+  lambda_min           = 5.3,
+  lambda_max           = 5.45,
+  slittranslation      = 0,   
+  sampletranslation    = 0,   
+  slitwidth            = 0.001, 
+  slitheight           = 0.002, 
+  dist_source2slit     = 1,     
+  dist_slit2slit       = 3.2,   
+  dist_slit2sample     = 0.18,  
+  dist_sample2detector = 2,     
+  sampletype           = 1,    
+  samplesize           = 0.15, 
+  substratethickness   = 0.003,
+  MR_Qc                = 0.15, 
+  sampleangle          = 2.5,  
+  detectorangle        = 5     
+)
+
+DECLARE
+%{
+double blocktranslation;
+%}
+
+INITIALIZE
+%{
+blocktranslation = -slittranslation;
+%}
+
+// Begin instrument
+TRACE
+
+// Origin
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+// Source (so far just with the PSI source distribution)
+COMPONENT Source = Source_Maxwell_3(
+    size = 0.12, 
+    Lmin = lambda_min, 
+    Lmax = lambda_max, 
+    dist = dist_source2slit+dist_slit2slit,
+    focus_xw = slitwidth, focus_yh = slitheight, 
+    T1 = 150.42, T2 = 38.72, T3 = 14.84,
+    I1 = 3.67E11, I2 = 3.64E11, I3 = 0.95E11)
+  AT (0, 0, 0) RELATIVE Origin
+
+  /*COMPONENT mon_PSD_atSource = PSD_monitor(
+    nx = 100, ny = 100, 
+    filename = "mon_PSD_atSource.dat",
+    xwidth = 0.2, yheight = 0.2, 
+    restore_neutron = 1)
+  AT (0, 0, 0.01) RELATIVE Source
+
+COMPONENT mon_div_atSource = Divergence_monitor(
+    nh = 100, nv = 100, 
+    filename = "mon_div_atSource",
+    restore_neutron = 1, 
+    xwidth = 0.2, yheight = 0.2, 
+    maxdiv_h = 10, maxdiv_v = 10)
+  AT (0, 0, 1e-6) RELATIVE PREVIOUS
+
+COMPONENT mon_Lmon_atSource = L_monitor(
+    nL = 100, 
+    filename = "mon_Lmon_atSource.dat", 
+    xwidth = 0.2, yheight = 0.2, 
+    Lmin = 0, Lmax = 22, 
+    restore_neutron = 1)
+  AT (0, 0, 1e-6) RELATIVE PREVIOUS
+  */
+// First slit
+COMPONENT Slit1 = Slit(
+    xwidth = slitwidth, yheight = slitheight)
+  AT (0, 0, dist_source2slit) RELATIVE Source
+  /*
+COMPONENT mon_PSD_afterSlit1 = PSD_monitor(
+    nx = 100, ny = 100, 
+    filename = "mon_PSD_afterslit1.dat",
+    xwidth = slitwidth+0.1, yheight = slitheight+0.1, 
+    restore_neutron = 1)
+  AT (0, 0, 0.01) RELATIVE Slit1
+
+COMPONENT mon_div_afterSlit1 = Divergence_monitor(
+    nh = 100, nv = 100, 
+    filename = "mon_div_afterSlit1",
+    restore_neutron = 1, 
+    xwidth = slitwidth+0.1, yheight = slitheight+0.1, 
+    maxdiv_h = 10, maxdiv_v = 10)
+  AT (0, 0, 1e-6) RELATIVE PREVIOUS
+
+COMPONENT mon_Lmon_afterSlit1 = L_monitor(
+    nL = 100, 
+    filename = "mon_Lmon_afterSlit1.dat", 
+    xwidth = slitwidth+0.1, yheight = slitheight+0.1, 
+    Lmin = 0, Lmax = 22, 
+    restore_neutron = 1)
+  AT (0, 0, 1e-6) RELATIVE PREVIOUS
+  */
+// Second slit
+COMPONENT Slit2 = Slit(
+    xwidth = slitwidth, yheight = slitheight)
+  AT (0, 0, dist_slit2slit) RELATIVE Slit1
+
+  /*COMPONENT mon_PSD_afterSlit2 = PSD_monitor(
+    nx = 100, ny = 100, 
+    filename = "mon_PSD_afterslit2.dat",
+    xwidth = slitwidth+0.1, yheight = slitheight+0.1, 
+    restore_neutron = 1)
+  AT (0, 0, 0.01) RELATIVE Slit2
+
+COMPONENT mon_div_afterSlit2 = Divergence_monitor(
+    nh = 100, nv = 100, 
+    filename = "mon_div_afterSlit2",
+    restore_neutron = 1, 
+    xwidth = slitwidth+0.1, yheight = slitheight+0.1, 
+    maxdiv_h = 10, maxdiv_v = 10)
+  AT (0, 0, 1e-6) RELATIVE PREVIOUS
+
+COMPONENT mon_Lmon_afterSlit2 = L_monitor(
+    nL = 100, 
+    filename = "mon_Lmon_afterSlit2.dat", 
+    xwidth = slitwidth+0.1, yheight = slitheight+0.1, 
+    Lmin = 0, Lmax = 22, 
+    restore_neutron = 1)
+  AT (0, 0, 1e-6) RELATIVE PREVIOUS
+  */
+// Sample position and rotation arms
+COMPONENT Arm_sampleNOROTNOTRANS = Arm()
+  AT (blocktranslation, 0, dist_slit2sample) RELATIVE Slit2
+
+COMPONENT Arm_sampleNOROT = Arm()
+  AT (sampletranslation, 0, 0) RELATIVE Arm_sampleNOROTNOTRANS  //Slit2    //??
+
+COMPONENT Arm_sample = Arm()
+  AT (0, 0, 0) RELATIVE Arm_sampleNOROT
+  ROTATED (0, sampleangle, 0) RELATIVE Arm_sampleNOROT // originally Source...
+
+// MIRROR sample
+COMPONENT Sample_Mirror = Mirror(
+    xwidth = samplesize, yheight = samplesize, center = 1,
+    R0 = 0.99, Qc = MR_Qc, alpha = 6.07, m = 1, W = 0.003)
+  WHEN (sampletype == 1) AT (0, 0, 0) RELATIVE Arm_sample
+  ROTATED (0, 90, 0) RELATIVE Arm_sample
+
+COMPONENT Sample_Mirror_backside = Isotropic_Sqw(
+    rho=1/13.827, sigma_abs=500.08, sigma_inc=4.935, sigma_coh=0,
+    xwidth = samplesize, yheight = samplesize, zdepth = substratethickness)
+  WHEN (sampletype == 1) AT (0, 0, -substratethickness/2-1e-6) RELATIVE Sample_Mirror
+
+// MULTILAYER samples
+COMPONENT Sample_Multilayer1 = Mirror(
+    xwidth = samplesize, yheight = samplesize, center = 1,
+    reflect = "d54DMPC-D2O.dat")
+  WHEN (sampletype == 2) AT (0, 0, 0) RELATIVE Arm_sample
+  ROTATED (0, 90, 0) RELATIVE Arm_sample
+  
+COMPONENT Sample_Multilayer2 = Mirror(
+    xwidth = samplesize, yheight = samplesize, center = 1,
+    reflect = "d54DMPC-H2O.dat")
+  WHEN (sampletype == 3) AT (0, 0, 0) RELATIVE Arm_sample
+  ROTATED (0, 90, 0) RELATIVE Arm_sample
+  
+COMPONENT Sample_Multilayer3 = Mirror(
+    xwidth = samplesize, yheight = samplesize, center = 1,
+    reflect = "hDMPC-D2O.dat")
+  WHEN (sampletype == 5) AT (0, 0, 0) RELATIVE Arm_sample
+  ROTATED (0, 90, 0) RELATIVE Arm_sample
+  
+COMPONENT Sample_Multilayer4 = Mirror(
+    xwidth = samplesize, yheight = samplesize, center = 1,
+    reflect = "hDMPC-H2O.dat")
+  WHEN (sampletype == 6) AT (0, 0, 0) RELATIVE Arm_sample
+  ROTATED (0, 90, 0) RELATIVE Arm_sample
+  
+COMPONENT Sample_Multilayer5 = Mirror(
+    xwidth = samplesize, yheight = samplesize, center = 1,
+    reflect = "silicon-D2O.dat")
+  WHEN (sampletype == 6) AT (0, 0, 0) RELATIVE Arm_sample
+  ROTATED (0, 90, 0) RELATIVE Arm_sample
+  
+COMPONENT Sample_Multilayer6 = Mirror(
+    xwidth = samplesize, yheight = samplesize, center = 1,
+    reflect = "silicon-H2O.dat")
+  WHEN (sampletype == 7) AT (0, 0, 0) RELATIVE Arm_sample
+  ROTATED (0, 90, 0) RELATIVE Arm_sample
+
+// Detector
+COMPONENT Arm_detectorONLYROT = Arm()
+  AT (0, 0, 0) RELATIVE Arm_sampleNOROTNOTRANS
+  ROTATED (0, detectorangle, 0) RELATIVE Source
+
+COMPONENT Arm_detector = Arm()
+  AT (0, 0, dist_sample2detector) RELATIVE Arm_detectorONLYROT
+
+COMPONENT Detector = PSD_monitor(
+    nx = 200, ny = 200, 
+    filename = "mon_detector",
+    restore_neutron = 1, 
+    xwidth = 0.025, yheight = 0.05)
+  AT (0, 0, 0) RELATIVE Arm_detector
+
+FINALLY
+%{
+%}
+
+END
+
