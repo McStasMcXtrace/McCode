@@ -195,13 +195,13 @@ INITIALIZE
   tiltH=calloc((int)2*(NH+1),sizeof(double));
   tiltV=calloc((int)2*(NV+1),sizeof(double));
 
-  if (!tiltH) printf("Monochromator_curved: %s: Warning: not enough memory to allocate tilts (NH=%g).\n", NAME_CURRENT_COMP, NH);
+  if (!tiltH) printf("Monochromator_curved: %s: Warning: not enough memory to allocate tilts (NH=%i).\n", NAME_CURRENT_COMP, NH);
   else if (RH) { /* pre-compute tilts */
     for (i=0;i<=NH;i++){
       tiltH[i]=asin((i-(NH+1)/2.0)*(SlabWidth+gap)/RH);
     }
   }
-  if (!tiltV) printf("Monochromator_curved: %s: Warning: not enough memory to allocate tilts (NV=%g).\n", NAME_CURRENT_COMP, NV);
+  if (!tiltV) printf("Monochromator_curved: %s: Warning: not enough memory to allocate tilts (NV=%i).\n", NAME_CURRENT_COMP, NV);
   else if (RV) {
     for (i=0;i<=NV;i++){
       tiltV[i]=-asin((i-(NV+1)/2.0)*(SlabHeight+gap)/RV);
