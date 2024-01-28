@@ -163,8 +163,8 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: mcstas-artefacts
-        path: "*_output.tgz"
+        name: mcstas-artefacts-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
+        path: "mcstas-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}_output.tgz"
 
     - name: Setup tmate session for manual debugging
       uses: mxschmitt/action-tmate@v3

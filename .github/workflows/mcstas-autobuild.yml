@@ -80,8 +80,8 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: mcstas-artefacts
-        path: "McCode/dist-*.tgz"
+        name: mcstas-artefact-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
+        path: "McCode/dist-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}.tgz"
 
     - name: Setup tmate session for manual debugging
       uses: mxschmitt/action-tmate@v3
