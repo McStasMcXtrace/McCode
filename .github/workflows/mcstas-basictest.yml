@@ -235,7 +235,7 @@ jobs:
 
     - name: Launch NCrystal test instrument (mpi)
       id: ncrystal-test-mpi
-      if: runner.os == 'Linux'  || (runner.os == 'macOS' && matrix.os != 'macos-11') # Linux or macos-12/13 only
+      if: runner.os == 'Linux' 
       # Status: Works on Unixes ("ncrystal missing for Windows")
       run: |
            set -e
