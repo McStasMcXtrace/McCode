@@ -73,7 +73,7 @@ jobs:
            export REV=`date +%Y-%m-%d`
            if [ "$RUNNER_OS" == "macOS" ]; then ./buildscripts/build_macos_mcxtrace ${REV}; fi
            if [ "$RUNNER_OS" == "Linux" ]; then ./buildscripts/build_debs_mcxtrace ${REV} meta; fi
-           tar cfz dist-${RUNNER_OS}.tgz dist/
+           tar cfz dist-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}.tgz dist/
 
     - name: 'Upload Artifact'
       id: tar-upload
