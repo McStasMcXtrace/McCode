@@ -189,11 +189,11 @@ COMPONENT guide_field_2_slit=Slit(xwidth=0.1, yheight=0.1)
   AT(0,0,0.0205) RELATIVE sample_mnt
 
 COMPONENT guide_field_2 = Pol_Bfield(field_type=1, 
-    xwidth = 0.1, yheight = 0.1, zdepth = 1, Bx=0, By=0, Bz=Bguide)
+    xwidth = 0.1, yheight = 0.1, Bx=0, By=0, Bz=Bguide)
 AT (0, 0, 0.021) RELATIVE sample_mnt
   
 COMPONENT guide_field_2_stop=Pol_Bfield_stop()
-AT(0,0,0) RELATIVE guide_field_2
+AT(0,0,1) RELATIVE guide_field_2
 
 COMPONENT guide_field_2_end=Slit(xwidth=0.1, yheight=0.01)
 AT(0,0,1.001) RELATIVE guide_field_2_stop
