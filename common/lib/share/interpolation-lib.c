@@ -221,7 +221,7 @@ void kdtree_nearestNeighbour_helper(vertex* v, treeNode *tree,
   }
 
   // we only investigate second child if necessary
-  int treek = tree->point->v[k];
+  double treek = tree->point->v[k];
 
   if (R_SQR(treek - v->v[k]) <= *bestDist) {
     kdtree_borderCheck(v, second, bestV, bestDist);
