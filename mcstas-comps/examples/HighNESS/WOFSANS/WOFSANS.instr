@@ -1,7 +1,13 @@
 /*******************************************************************************
-* Instrument: Wolter Optics Focusing - SANS (WOF-SANS)
 *
-* %I
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: WOFSANS
+*
+* %Identification
 * Written by: Stavros Samothrakis, PSI
 * Date: 2021-2023
 * Origin: PSI
@@ -10,25 +16,44 @@
 * Instrument developed for the HighNESS EU project, describing a Wolter Optics
 * Focusing SANS (WOFSANS), applied for the study of moderator parameters.
 *
-* %D
+* %Description
 * Instrument developed for the HighNESS EU project, describing a Wolter Optics
 * Focusing SANS (WOFSANS_v2), applied for the study of moderator parameters.
-e*
+*
 * Example: WOFSANS width=0.15
 *
-* %P
-* <parameter1>: [<unit>] <parameter1 description>
-* ...
+* %Parameters
+* focusing_rectangle: [m] Dimensions, both width and height of the source focusing area
+* width:              [m] Width-dimension of the source
+* height:             [m] Height-dimension of the source
+* Emin:             [meV] Minimum energy of neutron beam simulated from source
+* Emax:             [meV] Maximum energy of neutron beam simulated from source
+* l_min:             [AA] Minimum wavelength allowed through emulated chopper system
+* pulseskip:          [1] Flag to skip one or more pulse frames in bandwidth calculation
+* npulses:            [1] Number of pulses to simulate
+* chopper1_flag       [1] Switch emulated chopper on/off
+* det:                [m] Detector position for bandwidth calculation
+* R0:                 [1] R0 low-angle reflectivity of optical coating
+* m:                  [1] m-value of optical coating
+* alpha:             [AA] alpha parmeter of optical coating
+* W:               [AA-1] Supermirror cut-off, optical coating
+* nshells_ph:         [1] Number of conical shells simulated in PH-Wolter optic
+* fi_ph:              [m] Focal length for PH-Wolter optic
+* PH_beamstop:        [1] Flag to (de)activate Beamstop post PH-Wolter optic
+* nshells_eh:         [1] Number of conical shells simulated in EH-Wolter optic
+* fs_eh:              [m] Upstream focal length for EH-Wolter optic
+* fi_eh:              [m] Downstream focal length for EH-Wolter optic
+* EH_beamstop:        [1] Flag to (de)activate Beamstop post EH-Wolter optic
 *
-* %L
+* %Link
 * V. Santoro et. al. Nuc. Sci. Eng. 2023 https://doi.org/10.1080/00295639.2023.2204184
 * https://highnessproject.eu
 * This work was supported by the HighNESS project and is funded by European Commission (H2020-951782).
 *
-* %E
+* %End
 *******************************************************************************/
 DEFINE INSTRUMENT WOFSANS(double focusing_rectangle = 0.15,double width=0.15, double Emin=0.2, double Emax=100000.0, double l_min=7.2, int pulseskip=0, int npulses=1,
-                                                     int chopper1_flag = 0, double det = 41.5, R0=0.99, m=3, W=0.003, alpha=6.07,nshells_ph = 28, fs_ph=500, fi_ph=5.5, PH_beamstop = 1, nshells_eh = 25, fs_eh=8, fi_eh=6, EH_beamstop = 1)
+                                                     int chopper1_flag = 0, double det = 41.5, R0=0.99, m=3, W=0.003, alpha=6.07,nshells_ph = 28, fi_ph=5.5, PH_beamstop = 1, nshells_eh = 25, fs_eh=8, fi_eh=6, EH_beamstop = 1)
 
 
 DECLARE
