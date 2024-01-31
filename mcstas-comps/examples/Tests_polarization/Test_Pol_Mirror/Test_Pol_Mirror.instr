@@ -19,16 +19,19 @@
 * The intensity on the first monitor should be the same as the sum
 * of the two polarization monitors.
 *
-* %Example: mirrorOption=1 Detector: lamReflec_I=3.27108e-05
+* %Example: mirrorOption=0.99 Detector: lamReflec_I=3.27108e-05
 *
 * %Parameters
-* mirrorOption: [1]  Option for mirror (1:T+R, 2:R, 3:T)
+* mirrorOption: [1]  Fraction of neutrons to reflect 
 *
 * %Link
 *
 * %End
 ******************************************************************************/
-DEFINE INSTRUMENT Test_Pol_Mirror(int mirrorOption=1)
+DEFINE INSTRUMENT Test_Pol_Mirror(double mirrorOption=0.5,int polarize=0)
+
+DECLARE %{
+%}
 
 USERVARS
 %{
@@ -37,7 +40,7 @@ USERVARS
 
 INITIALIZE
 %{
-  %}
+%}
 
 TRACE
 
@@ -49,13 +52,16 @@ Source_simple(radius = 0.001, dist = 1.0, focus_xw = 0.01, focus_yh = 0.01, lamb
 	      dlambda = 14.5, flux = 1)
 AT (0, 0, 0) RELATIVE Origin
 
+COMPONENT setPol = Set_pol(randomOn=1, normalize=1)
+WHEN (polarize) AT (0, 0, 0) RELATIVE Origin
+
 COMPONENT lamStart =
 L_monitor(nL = 30, filename = "lambdaStart.dat",
 	  xwidth = 0.20, yheight = 0.20,
 	  Lmin = 0.0, Lmax = 30)
 AT (0, 0, 0.5) RELATIVE Origin
 
-COMPONENT mirror =
+ COMPONENT mirror =
 Pol_mirror(zwidth = 0.40, yheight = 0.40, p_reflect=mirrorOption,
 	   rUpPar={1.0, 0.0219, 6.07, 2.0, 0.003},
 	   rDownPar={0.1, 0.0219, 6.07, 2.0, 0.003})
