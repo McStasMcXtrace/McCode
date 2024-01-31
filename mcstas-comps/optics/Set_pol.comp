@@ -31,7 +31,7 @@
 * py: [1]        Y-component of polarisation vector (can be negative) 
 * pz: [1]        Z-component of polarisation vector (can be negative) 
 * randomOn: [1]  Generate random values if randomOn!=0. 
-* normalize: [1] Normalize the polarization vector. If used with randomOn will generate random vectors with length 1.
+* normalize: [1] Normalize the polarization vector to unity length.
 *
 * OUTPUT PARAMETERS:
 *
