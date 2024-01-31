@@ -98,13 +98,24 @@ INITIALIZE
 
 #if defined (USE_MPI)
   /* In case of MPI, simply redefine the filename used by each node */
-    MPI_MASTER(fprintf(stdout, "Message(%s): You are using MCPL_output with MPI, hence your will get %i filenames %s_node_#i as output.\n",NAME_CURRENT_COMP,mpi_node_count,filename); );
+    MPI_MASTER(fprintf(stdout, "Message(%s): You are using MCPL_output with MPI, hence your will get %i filenames %s.node_#i.mcpl{.gz} as output.\n",NAME_CURRENT_COMP,mpi_node_count,filename); );
     sprintf(extension,"node_%i.mcpl",mpi_node_rank);
 #else
     sprintf(extension,"mcpl");
 #endif
     /*add output dir (if applicable) to the output filename and add extension if */
-    myfilename=mcfull_file(filename,extension);
+    // Append the extension to the filename
+    //  -- do not use mcfull_file for this since it can not handle absolute filenames with a '.' in them
+    char * actual_filename = (char *) calloc(strlen(filename)+strlen(extension)+2, sizeof(char));
+    strcpy(actual_filename, filename);
+    strcat(actual_filename, ".");
+    strcat(actual_filename, extension);
+
+    // still use mcfull_file in case the filename does not include path information
+    myfilename = mcfull_file(actual_filename, NULL);
+
+    // release the memory now that we have the full filename
+    if (actual_filename) free(actual_filename);
 
     char line[256];
     outputfile = mcpl_create_outfile(myfilename);
@@ -364,13 +375,22 @@ FINALLY
         int j;
         mcpl_outfile_t merge_outfile;
 
-        merge_outfilename=mcfull_file(filename,extension);
+        char * real_filename = (char *) calloc(strlen(filename) + strlen(extension) + 2, sizeof(char));
+        strcpy(real_filename, filename);
+        strcat(real_filename, ".");
+        strcat(real_filename, extension);
+
+        merge_outfilename = mcfull_file(real_filename, NULL);
 
         mpi_node_files=(char **) calloc(mpi_node_count,sizeof(char *));
+        sprintf(extension,"node_%i.mcpl", mpi_node_count);
+        char * temp_name = (char *) calloc(strlen(filename) + strlen(extension) + 2, sizeof(char));
         for (j=0;j<mpi_node_count;j++){
-            sprintf(extension,"node_%i.mcpl",j);
-            mpi_node_files[j]=mcfull_file(filename,extension);
+            sprintf(temp_name, "%s.node_%i.mcpl", filename, j);
+            mpi_node_files[j] = mcfull_file(temp_name, NULL);
         }
+        if (temp_name) free(temp_name);
+
         /*now do the merge through the call to mcpl_merge_files*/
         merge_outfile = mcpl_merge_files(merge_outfilename,mpi_node_count,(const char **) mpi_node_files);
         mcpl_closeandgzip_outfile(merge_outfile);
