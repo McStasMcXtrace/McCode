@@ -257,11 +257,11 @@ vertex* kdtree_nearestNeighbour(vertex* v, treeNode *tree) {
 /******************************************************************************/
 /* interpolator_double_vector_compare: comparator for double qsort */
 int interpolator_double_vector_compare(void const *a, void const *b) {
-  if ((*(double*)a - *(double*)b) > 0 )
+  if (*(double*)a > *(double*)b)
   {
     return 1;
   }
-  else if ((*(double*)a - *(double*)b) < 0 )
+  else if (*(double*)a < *(double*)b)
   {
     return -1;
   }
