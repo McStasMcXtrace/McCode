@@ -215,84 +215,84 @@ macro(setupMCCODE FLAVOR)
 
   # Add some special Windows/Unix CPACK configuration
   if(WINDOWS)
+    if ( MCCODE_USE_LEGACY_DESTINATIONS )
+      # Fix installation folder (installs to ${ROOT}\${DIRECTORY})
+      set(CPACK_PACKAGE_INSTALL_DIRECTORY "")
 
-    # Fix installation folder (installs to ${ROOT}\${DIRECTORY})
-    set(CPACK_PACKAGE_INSTALL_DIRECTORY "")
+      # Windows program files do not have any version-suffix
+      set(PROGRAM_SUFFIX "")
 
-    # Windows program files do not have any version-suffix
-    set(PROGRAM_SUFFIX "")
-
-    # Create desktop links for mcgui py/pl and mccodego batch files
-    set(CPACK_NSIS_CREATE_ICONS "CreateShortCut '$DESKTOP\\\\${MCCODE_PREFIX}gui-${MCCODE_VERSION}.lnk' '${CPACK_NSIS_INSTALL_ROOT}\\\\${DEST_BINDIR}\\\\${MCCODE_PREFIX}guistart.bat' ")
-    set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '$DESKTOP\\\\${FLAVOR}-shell-${MCCODE_VERSION}.lnk' '${CPACK_NSIS_INSTALL_ROOT}\\\\${DEST_BINDIR}\\\\mccodego.bat' ")
-
-  else()
-
-    # Have CMake respect install prefix
-    message(STATUS "Install prefix -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}")
-    set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
-    set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
-
-    set(CPACK_RPM_PACKAGE_RELOCATABLE TRUE)
-
-    # Avoid e.g. /usr/local being "part" of the RPMs
-    set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST
-      ${CMAKE_INSTALL_PREFIX}
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}
-      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}
-      ${DEST_BINDIR}
-      ${DEST_TOOLDIR}
-      ${DEST_DATADIR_LIBDIR}
-      ${DEST_DATADIR_CODEFILES}
-      )
-
-    # Add "-VERSION" to all program files (executables)
-    set(PROGRAM_SUFFIX "-${MCCODE_VERSION}")
-
-    # Run postinst and postrm scripts for various platforms
-    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/postinst;work/support/postrm")
-    set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postinst;")
-    set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postrm;")
-    
-    # Define dependencies for gcc and the like
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS "build-essential, libopenmpi-dev")
-    set(CPACK_RPM_PACKAGE_REQUIRES "gcc, openmpi-devel")
-
-    # Generate postinst and postrm scripts
-    configure_file(
-      cmake/support/install-scripts/postinst.in
-      work/support/${FLAVOR}-postinst
-      @ONLY)
-    configure_file(
-      cmake/support/install-scripts/postrm.in
-      work/support/${FLAVOR}-postrm
-      @ONLY)
-    configure_file(
-      cmake/support/install-scripts/postinst.in
-      work/support/postinst
-      @ONLY)
-    configure_file(
-      cmake/support/install-scripts/postrm.in
-      work/support/postrm
-      @ONLY)
-
-    # Generate the console-errormessage wrapper
-    configure_file(
-      cmake/support/run-scripts/mccode_errmsg.in
-      "work/support/${FLAVOR}_errmsg"
-      @ONLY)
-
-    # Set architecture
-    if(ARCH EQUAL "amd64")
-      set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
-      set(CPACK_RPM_PACKAGE_ARCHITECTURE    "x86_64")
-    elseif(ARCH EQUAL "i386")
-      set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386")
-      set(CPACK_RPM_PACKAGE_ARCHITECTURE    "i686")
-    else()
-      set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${ARCH}")
-      set(CPACK_RPM_PACKAGE_ARCHITECTURE    "${ARCH}")
+      # Create desktop links for mcgui py/pl and mccodego batch files
+      set(CPACK_NSIS_CREATE_ICONS "CreateShortCut '$DESKTOP\\\\${MCCODE_PREFIX}gui-${MCCODE_VERSION}.lnk' '${CPACK_NSIS_INSTALL_ROOT}\\\\${DEST_BINDIR}\\\\${MCCODE_PREFIX}guistart.bat' ")
+     set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '$DESKTOP\\\\${FLAVOR}-shell-${MCCODE_VERSION}.lnk' '${CPACK_NSIS_INSTALL_ROOT}\\\\${DEST_BINDIR}\\\\mccodego.bat' ")
     endif()
+  else()
+  
+  # Have CMake respect install prefix
+  message(STATUS "Install prefix -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}")
+  set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+  set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+
+  set(CPACK_RPM_PACKAGE_RELOCATABLE TRUE)
+
+  # Avoid e.g. /usr/local being "part" of the RPMs
+  set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST
+    ${CMAKE_INSTALL_PREFIX}
+    ${CMAKE_INSTALL_PREFIX}/${FLAVOR}
+    ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}
+    ${DEST_BINDIR}
+    ${DEST_TOOLDIR}
+    ${DEST_DATADIR_LIBDIR}
+    ${DEST_DATADIR_CODEFILES}
+    )
+
+  # Add "-VERSION" to all program files (executables)
+  set(PROGRAM_SUFFIX "-${MCCODE_VERSION}")
+
+  # Run postinst and postrm scripts for various platforms
+  set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/postinst;work/support/postrm")
+  set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postinst;")
+  set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postrm;")
+    
+  # Define dependencies for gcc and the like
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "build-essential, libopenmpi-dev")
+  set(CPACK_RPM_PACKAGE_REQUIRES "gcc, openmpi-devel")
+
+  # Generate postinst and postrm scripts
+  configure_file(
+    cmake/support/install-scripts/postinst.in
+    work/support/${FLAVOR}-postinst
+    @ONLY)
+  configure_file(
+    cmake/support/install-scripts/postrm.in
+    work/support/${FLAVOR}-postrm
+    @ONLY)
+  configure_file(
+    cmake/support/install-scripts/postinst.in
+    work/support/postinst
+    @ONLY)
+  configure_file(
+    cmake/support/install-scripts/postrm.in
+    work/support/postrm
+    @ONLY)
+
+  # Generate the console-errormessage wrapper
+  configure_file(
+    cmake/support/run-scripts/mccode_errmsg.in
+    "work/support/${FLAVOR}_errmsg"
+    @ONLY)
+
+  # Set architecture
+  if(ARCH EQUAL "amd64")
+    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
+    set(CPACK_RPM_PACKAGE_ARCHITECTURE    "x86_64")
+  elseif(ARCH EQUAL "i386")
+    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386")
+    set(CPACK_RPM_PACKAGE_ARCHITECTURE    "i686")
+  else()
+    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${ARCH}")
+    set(CPACK_RPM_PACKAGE_ARCHITECTURE    "${ARCH}")
+  endif()
 
   endif()
 endmacro()
