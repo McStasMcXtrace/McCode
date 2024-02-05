@@ -12,4 +12,4 @@
 @REM
 @REM NCrystal Python hooks
 @SET PYTHONPATH=%BINDIR%\\..\\share\\NCrystal\\python;%PYTHONPATH%
-
+@CALL c:\\@FLAVOR@-@VERSION@\\miniconda3\\Scripts\\activate.bat
