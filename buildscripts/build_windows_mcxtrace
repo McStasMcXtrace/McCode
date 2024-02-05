@@ -56,9 +56,9 @@ sed -i s+GETPATH\(+GETPATH\(../miniconda3/Library/+g mcxtrace-comps-win/samples/
 if [ "x$2" != "x" ]; then
     # Build the meta-packages also
     cd meta-pkgs/windows/Support
-    if [ ! -f Mambaforge-Windows-x86_64.exe ]; then
+    if [ ! -f Miniforge3-Windows-x86_64.exe ]; then
 	echo Sorry! I need to download a Miniconda3 for embedding - will take some time...
-	wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Windows-x86_64.exe
+	wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Windows-x86_64.exe
     fi
     cd ..
 

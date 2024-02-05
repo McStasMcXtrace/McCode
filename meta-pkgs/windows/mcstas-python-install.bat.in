@@ -5,7 +5,7 @@
 @echo WARNING: Please wait, process may take several minutes to complete!
 @echo  (Pressing [enter] a few times to ensure something is happening is OK)
 @echo ...
-@start /wait "" Mambaforge-Windows-x86_64.exe /S /AddToPath=0 /D=c:\@FLAVOR@-@VERSION@\miniconda3
+@start /wait "" Miniforge3-Windows-x86_64.exe /S /AddToPath=0 /D=c:\@FLAVOR@-@VERSION@\miniconda3
 @echo Mambaforge install completed, proceeding with McCode dependencies...
 @SET PATH=c:\\@FLAVOR@-@VERSION@\\bin;c:\\@FLAVOR@-@VERSION@\\miniconda3;c:\\@FLAVOR@-@VERSION@\\miniconda3\\Scripts\\;c:\\@FLAVOR@-@VERSION@\\miniconda3\\Library\\bin;c:\\@FLAVOR@-@VERSION@\\miniconda3\\Library\\mingw-w64\\bin;%PATH%
 @REM update conda and install mamba
