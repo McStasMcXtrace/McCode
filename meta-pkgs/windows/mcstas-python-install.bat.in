@@ -10,10 +10,9 @@
 @SET PATH=c:\\@FLAVOR@-@VERSION@\\bin;c:\\@FLAVOR@-@VERSION@\\miniconda3;c:\\@FLAVOR@-@VERSION@\\miniconda3\\Scripts\\;c:\\@FLAVOR@-@VERSION@\\miniconda3\\Library\\bin;c:\\@FLAVOR@-@VERSION@\\miniconda3\\Library\\mingw-w64\\bin;%PATH%
 @REM update conda and install mamba
 @CALL c:\\@FLAVOR@-@VERSION@\\miniconda3\\Scripts\\activate.bat
-@mamba update mamba -y
 @REM pick dependencies from the default channel and clean up
-@mamba install m2-msys2-runtime m2w64-gcc m2w64-gsl mpld3 pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph qscintilla2 nomkl typing msmpi jupytext jupyterlab ipympl -y
-@mamba clean --all -y
+@conda install m2-msys2-runtime m2w64-gcc m2w64-gsl mpld3 pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph qscintilla2 nomkl typing msmpi jupytext jupyterlab ipympl -y
+@conda clean --all -y
 @pip3 install McStasScript guide_bot
 @SET MCSCONFIG=C:\\@FLAVOR@-@VERSION@\\miniconda3\\Lib\\site-packages\\mcstasscript\\configuration.yaml
 @echo other: > %MCSCONFIG%
