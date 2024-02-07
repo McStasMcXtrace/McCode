@@ -118,7 +118,10 @@ class McPyqtgraphPlotter():
         self.update_statusbar(None, node, None)
 
         # start
-        sys.exit(self.app.exec_())
+        if hasattr(self.app, "exec_"):
+          sys.exit(self.app.exec_())  # Qt5
+        else:
+          sys.exit(self.app.exec())   # Qt6
 
 
     def create_plotwindow(self, title):
@@ -141,7 +144,12 @@ class McPyqtgraphPlotter():
         self.main_window.setMouseTracking(True)
 
         # window size
-        rect = QtWidgets.QApplication.desktop().screenGeometry()
+        if hasattr(QtWidgets.QApplication,"desktop"):	# Qt5
+        	rect = QtWidgets.QApplication.desktop().screenGeometry()
+        else:	                                          # Qt6
+        	rect = QtWidgets.QApplication.primaryScreen().size()
+
+        # 
         w = int(0.7 * rect.width())
         h = int(0.7 * rect.height())
         self.main_window.resize(w, h)
@@ -165,16 +173,22 @@ class McPyqtgraphPlotter():
 
         def get_modifiers(modname):
             ''' Get int codes for keyboardmodifiers. WARNING: String codes may be used directly in code. '''
+            if (hasattr(QtCore.Qt,"KeyboardModifier")):   # Qt6
+              k = QtCore.Qt.KeyboardModifier
+            else:                                         # Qt5
+              k = QtCore.Qt
+              
             if modname == "none":
                 return 0
             if modname == "ctrl":
-                return QtCore.Qt.ControlModifier
+                return k.ControlModifier
             if modname == "shft":
-                return QtCore.Qt.ShiftModifier
+                return k.ShiftModifier
             if modname == "ctrl-shft":
-                return QtCore.Qt.ControlModifier | QtCore.Qt.ShiftModifier
+                return k.ControlModifier | k.ShiftModifier
             if modname == "alt":
-                return QtCore.Qt.AltModifier
+                return k.AltModifier
+              
 
         # init
         self.clear_window_and_handlers()
@@ -243,30 +257,36 @@ class McPyqtgraphPlotter():
 
         def key_handler(ev, replot_cb, back_cb, savefile_cb, flip_log, flip_legend, inc_cmap, expand_sp, debug=False):
             ''' global keypress handler, replot_cb is a function of log '''
-            if ev.key() == QtCore.Qt.Key_Q:                 # q
+            
+            if hasattr(QtCore.Qt, "Key"):
+              k = QtCore.Qt.Key
+            else:
+              k = QtCore.Qt
+            
+            if ev.key() == k.Key_Q:                 # q
                 QtWidgets.QApplication.quit()
-            elif ev.key() == QtCore.Qt.Key_L:               # l
+            elif ev.key() == k.Key_L:               # l
                 flip_log()
                 replot_cb()
-            elif ev.key() == QtCore.Qt.Key_P:               # p
+            elif ev.key() == k.Key_P:               # p
                 savefile_cb(format='png')
             elif ev.key() == 83:                            # s
                 if not os.name == 'nt':
                     savefile_cb(format='svg')
-            elif ev.key() == QtCore.Qt.Key_T:               # t
+            elif ev.key() == k.Key_T:               # t
                 print("Toggle legend visibility")
                 flip_legend()
                 replot_cb()
-            elif ev.key() == QtCore.Qt.Key_C:               # c
+            elif ev.key() == k.Key_C:               # c
                 inc_cmap()
                 replot_cb()
-            elif ev.key() == QtCore.Qt.Key_F5:              # F5
+            elif ev.key() == k.Key_F5:              # F5
                 replot_cb()
-            elif ev.key() == QtCore.Qt.Key_X:               # x
+            elif ev.key() == k.Key_X:               # x
                 expand_sp()
-            elif ev.key() == QtCore.Qt.Key_F1 or ev.key() == QtCore.Qt.Key_H:   # F1 or h
+            elif ev.key() == k.Key_F1 or ev.key() == k.Key_H:   # F1 or h
                 self.show_help()
-            elif ev.key() == QtCore.Qt.Key_B:               # b
+            elif ev.key() == k.Key_B:               # b
                 back_cb()
             # print debug info
             if debug:
