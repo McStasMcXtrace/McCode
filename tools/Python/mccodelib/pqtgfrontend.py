@@ -144,10 +144,11 @@ class McPyqtgraphPlotter():
         self.main_window.setMouseTracking(True)
 
         # window size
-        if hasattr(QtWidgets.QApplication,"desktop"):	# Qt5
+        if hasattr(QtWidgets.QApplication,"primaryScreen"):	# Qt6
+          rect = QtWidgets.QApplication.primaryScreen().size()
+        else:                                               # Qt5
         	rect = QtWidgets.QApplication.desktop().screenGeometry()
-        else:	                                          # Qt6
-        	rect = QtWidgets.QApplication.primaryScreen().size()
+        	
 
         # 
         w = int(0.7 * rect.width())
