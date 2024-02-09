@@ -257,7 +257,18 @@ vertex* kdtree_nearestNeighbour(vertex* v, treeNode *tree) {
 /******************************************************************************/
 /* interpolator_double_vector_compare: comparator for double qsort */
 int interpolator_double_vector_compare(void const *a, void const *b) {
-  return ( *(double*)a - *(double*)b );
+  if (*(double*)a > *(double*)b)
+  {
+    return 1;
+  }
+  else if (*(double*)a < *(double*)b)
+  {
+    return -1;
+  }
+  else
+  {
+    return 0;
+  }
 }
 
 /******************************************************************************/
@@ -382,6 +393,7 @@ struct interpolator_struct *interpolator_load(char *filename,
     long    index;
     double* vector = (double*) calloc(sizeof(double), table.rows);
     
+    interpolator->bin[dim] = 1;
     /* get min/max and fill vector for sorting */
     for (index=0; index<table.rows; index++) {
       double x = Table_Index(table, index, dim);
@@ -419,6 +431,7 @@ struct interpolator_struct *interpolator_load(char *filename,
       strcpy(interpolator->method,"NULL");
       return NULL;
     }
+    free(vector);
   } /* end for dim(space/axis) */
 
   /* check kd-tree method */
@@ -457,7 +470,7 @@ struct interpolator_struct *interpolator_load(char *filename,
         /* compute index 'space' elements of this 'field' value */
         for (axis=0; axis < interpolator->space_dimensionality; axis++) {
           double x      = Table_Index(table, index, axis);
-          indices[axis] = floor((x - interpolator->min[axis])/interpolator->step[axis]);
+          indices[axis] = round((x - interpolator->min[axis])/interpolator->step[axis]);
         }
         this_index = interpolator_offset(interpolator->space_dimensionality,
                        interpolator->bin, indices);
@@ -558,7 +571,7 @@ double *interpolator_interpolate(struct interpolator_struct *interpolator,
     int axis;
     long *indices = malloc((int)interpolator->space_dimensionality*sizeof(double));
     for (axis=0; axis < interpolator->space_dimensionality; axis++) {
-      indices[axis] = (space[axis]-interpolator->min[axis])/interpolator->step[axis];
+      indices[axis] = round((space[axis]-interpolator->min[axis])/interpolator->step[axis]);
     }
     long index = interpolator_offset(3, interpolator->bin, indices);
     for (axis=0; axis < interpolator->field_dimensionality; axis++) {
