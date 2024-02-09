@@ -13,10 +13,18 @@ import time
 import re
 import pathlib
 import shutil
-from PyQt5 import QtCore, QtWidgets
-import PyQt5
 try:
-    from PyQt5 import Qsci
+    from PyQt6 import QtWidgets, QtCore
+    from PyQt6.QtWidgets import QApplication, QWidget
+    import PyQt6 as PyQt
+
+except ImportError:
+    from PyQt5 import QtWidgets, QtCore
+    from PyQt5.QtWidgets import QApplication, QWidget
+    import PyQt5 as PyQt
+
+try:
+    from PyQt import Qsci
 except ImportError:
     Qsci = None
 
@@ -221,7 +229,7 @@ class McGuiState(QtCore.QObject):
                 self.__cFile = ''
 
         # that wait cursor
-        QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.CursorShape.WaitCursor)
         def compile_complete():
             self.__emitter.message('compile thread done\n')
             QtWidgets.QApplication.restoreOverrideCursor()
@@ -571,7 +579,7 @@ class McGuiAppController():
             self.view.ew.save()
 
             self.emitter.status("Getting instrument params...")
-            QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+            QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.CursorShape.WaitCursor)
             self.view.disableRunBtn()
             try:
                 class ThreadInfoHandler():
@@ -969,10 +977,10 @@ def main():
         mccode_config.load_config("user")
         mccode_config.check_env_vars()
 
-        mcguiApp = PyQt5.QtWidgets.QApplication(sys.argv)
+        mcguiApp = QtWidgets.QApplication(sys.argv)
         mcguiApp.ctr = McGuiAppController()
 
-        sys.exit(mcguiApp.exec_())
+        sys.exit(mcguiApp.exec())
 
     except Exception as e: 
         print(e)

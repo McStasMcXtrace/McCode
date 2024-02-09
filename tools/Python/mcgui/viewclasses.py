@@ -6,10 +6,21 @@ import os
 import re
 import pathlib
 from widgets import *
-from PyQt5 import QtWidgets
 
 try:
-    from PyQt5 import Qsci
+    from PyQt6 import QtGui, QtWidgets, QtCore
+    from PyQt6.QtWidgets import QApplication, QWidget
+    from PyQt6.QtGui import QAction
+    import PyQt6 as PyQt
+
+except ImportError:
+    from PyQt5 import QtGui, QtWidgets, QtCore
+    from PyQt5.QtWidgets import QApplication, QWidget, QAction
+    from PyQt5.QtWidgets import QAction
+    import PyQt5 as PyQt
+
+try:
+    from PyQt import Qsci
 except ImportError:
     Qsci = None
 
@@ -45,7 +56,7 @@ class McView(object):
         msg.setIcon(QtWidgets.QMessageBox.Critical)
         msg.setWindowTitle(title)
         msg.setText(message)
-        msg.exec_()
+        msg.exec()
     
     def showCodeEditorWindow(self, instr):
         self.ew.initCodeEditor(instr)
@@ -144,7 +155,7 @@ class McView(object):
         
         dlg.setNameFilters([mccode_config.configuration["MCCODE"]+" instruments (*.instr)", "All files (*)"]);
         dlg.selectNameFilter(mccode_config.configuration["MCCODE"]+" instruments (*.instr)")
-        if dlg.exec_():
+        if dlg.exec():
             return dlg.selectedFiles()[0]
         
     def showOpenPlotDirDlg(self, lookDir):
@@ -157,7 +168,7 @@ class McView(object):
         dlg = QtWidgets.QFileDialog()
         dlg.setFileMode(QtWidgets.QFileDialog.Directory)
         dlg.setDirectory(lookDir)
-        if dlg.exec_():
+        if dlg.exec():
             return dlg.selectedFiles()[0]
 
     def showStartSimDialog(self, params, comps, mcdisplays, mcplots, formats):
@@ -168,7 +179,7 @@ class McView(object):
         self.__ssd.set_mcdisplays(mcdisplays)
         self.__ssd.set_mcplots(mcplots)
         self.__ssd.set_formats(formats)
-        if self.__ssd.exec_():
+        if self.__ssd.exec():
             return self.__ssd.getValues()
         else:
             return None, None, None, None, None, None
@@ -191,7 +202,7 @@ class McView(object):
     def showConfigDialog(self):
         dlg = McConfigDialog()
         dlg.initConfigData(None)
-        dlg.exec_()
+        dlg.exec()
 
     def showAboutBox(self, text):
         if mccode_config.configuration["MCCODE"] == "mcstas":
@@ -256,10 +267,10 @@ class McMainWindow(QtWidgets.QMainWindow):
                 action.triggered.connect(h.handle)
     
     def add_conf_menu(self,label):
-        confmenu = QtWidgets.QAction(self)
+        confmenu = QAction(self)
         self.ui.menuFile.addAction(confmenu)
-        confmenu.setText(QtWidgets.QApplication.translate("MainWindow", label, None))
-        confmenu.setToolTip(QtWidgets.QApplication.translate("MainWindow", "mccode " + label, None))
+        confmenu.setText(QApplication.translate("MainWindow", label, None))
+        confmenu.setToolTip(QApplication.translate("MainWindow", "mccode " + label, None))
         return confmenu
 
     def closeEvent(self, event):
@@ -280,7 +291,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
         self.ui =  Ui_EditorWindow()
         self.ui.setupUi(self)
 
-        sheight = QtWidgets.QDesktopWidget().availableGeometry().height()
+        sheight = QtGui.QGuiApplication.primaryScreen().availableGeometry().height()
         if sheight < 1080:
             self.resize(920, sheight)
 
@@ -447,7 +458,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
     def __handleComponentClicked(self, comp_parser):
         dlg = McInsertComponentDialog()
         dlg.initComponentData(comp_parser)
-        if dlg.exec_():
+        if dlg.exec():
             comp_type, inst_name, params, atrel = dlg.getValues()
         else:
             return
@@ -599,7 +610,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
         dlg = QtWidgets.QFileDialog()
         dlg.setDirectory(mccode_config.configuration["MCCODE_LIB_DIR"])
         dlg.setNameFilter(mccode_config.configuration["MCCODE"]+"component files (*.comp)");
-        if dlg.exec_():
+        if dlg.exec():
             comp_file = dlg.selectedFiles()[0]
             parser = ComponentParser(comp_file)
             self.__handleComponentClicked(parser)
@@ -842,7 +853,7 @@ class McStartSimDialog(QtWidgets.QDialog):
             y = i // (int(mccode_config.configuration["GUICOLS"])*2)
 
             lbl = QtWidgets.QLabel(self.ui.gbxGrid)
-            lbl.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+            lbl.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
             lbl.setObjectName("lbl" + name)
             lbl.setText(name + ':')
             self.ui.gridGrid.addWidget(lbl, y, x, 1, 1)
@@ -851,7 +862,7 @@ class McStartSimDialog(QtWidgets.QDialog):
             x = i % (int(mccode_config.configuration["GUICOLS"])*2)
 
             edt = QtWidgets.QLineEdit(self.ui.gbxGrid)
-            edt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+            edt.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
             edt.setObjectName("edt" + name)
             edt.setText(value)
             self.ui.gridGrid.addWidget(edt, y, x, 1, 1)
@@ -961,7 +972,7 @@ class McInsertComponentDialog(QtWidgets.QDialog):
             # parameter value line-edit
             x = 1
             edt = QtWidgets.QLineEdit()
-            edt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+            edt.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
             edt.setObjectName("edt" + par.par_name)
             edt.defval = par.default_value
             self._initTbwFocusEvents(edt)
