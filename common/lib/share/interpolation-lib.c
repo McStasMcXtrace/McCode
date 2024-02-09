@@ -374,7 +374,7 @@ struct interpolator_struct *interpolator_load(char *filename,
 
   #ifdef OPENACC
   if (method && strlen(method) && (!strcmp(method, "kdtree"))) {
-    fprintf(stderr, "interpolator_load: FATAL ERROR: 'kdtree' is not supported on OpenACC/GPU - only 'regular' works!\n");
+    fprintf(stderr, "\n\n!! interpolator_load: FATAL ERROR: !! \n'kdtree' is not supported on OpenACC/GPU - only 'regular' works!\n\n");
     Table_Free(&table);
     exit(-1);
   }
@@ -468,10 +468,21 @@ struct interpolator_struct *interpolator_load(char *filename,
   /* assign interpolation technique: 'regular' direct indexing */
   if (!strcmp(interpolator->method, "regular")) {
     interpolator->kdtree = NULL;
+    /* Terminate if the dimensions are not equal */
+    if (interpolator->bin[0] != interpolator->bin[1] ||
+	interpolator->bin[0] != interpolator->bin[2] ||
+	interpolator->bin[1] != interpolator->bin[2]) {
+      fprintf(stderr,"\n\n%s\n\n",
+	      "!! interpolation-lib ERROR: !!\n"
+	      "   You are running the 'regular' interpolation scheme\n"
+	      "   with a file of unequal axis dimensions. This will lead to systematic errors!\n"
+	      "   Please either resample the file to achieve this or run with 'kdtree'\n"
+	      "   (kdtree is available on CPU only)");
+      exit(-1);
+    }
     /* store table values onto the grid: each field component is stored on the
      * interpolator->grid, and has size=prod(interpolator->bin)
      */
-    
     long prod=1; /* the number of elements in the grid */
     for (dim=0; dim<interpolator->space_dimensionality; dim++)
       prod *= interpolator->bin[dim];

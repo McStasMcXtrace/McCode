@@ -158,6 +158,16 @@ INITIALIZE
   /* these default field functions are part of pol-lib */
   /*initialize the interpolation vertex structure*/
 
+
+  #ifdef OPENACC
+  // If "aotomatic mode is given on GPU, switch
+  // to 'default'
+  if (!strcmp(interpol_method,"NULL")) {
+    sprintf(interpol_method,"default");
+  }
+  #endif
+
+  // Handle default mode in both CPU and GPU case
   if (!strcmp(interpol_method,"default")) {
     #ifdef OPENACC
     // Default is to assume regular interpolation on GPU
@@ -168,7 +178,7 @@ INITIALIZE
     sprintf(interpol_method,"NULL");
     #endif
   }
-  
+
   interpolator = interpolator_load(filename, 3, 3, interpol_method);
   interpolator_info(interpolator);
 
