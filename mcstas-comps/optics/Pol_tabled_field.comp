@@ -160,9 +160,12 @@ INITIALIZE
 
   if (!strcmp(interpol_method,"default")) {
     #ifdef OPENACC
+    // Default is to assume regular interpolation on GPU
     sprintf(interpol_method,"regular");
     #else
-    sprintf(interpol_method,"kdtree");
+    // On CPU we use "NULL" allowing to jump automatically
+    // between regular and kdtree interpolation
+    sprintf(interpol_method,"NULL");
     #endif
   }
   
