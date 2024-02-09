@@ -353,7 +353,15 @@ struct interpolator_struct *interpolator_load(char *filename,
     Table_Free(&table);
     return NULL;
   }
-  
+
+  #ifdef OPENACC
+  if (method && strlen(method) && (!strcmp(method, "kdtree"))) {
+    fprintf(stderr, "interpolator_load: FATAL ERROR: 'kdtree' is not supported on OpenACC/GPU - only 'regular' works!\n");
+    Table_Free(&table);
+    exit(-1);
+  }
+  #endif
+
   strcpy(interpolator->filename, filename);
   interpolator->space_dimensionality = space_dimensionality;
   interpolator->field_dimensionality = field_dimensionality;
