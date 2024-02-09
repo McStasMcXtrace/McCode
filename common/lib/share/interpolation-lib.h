@@ -42,6 +42,24 @@
 * Data file format:
 * file is a list of rows [x,y,z...    field_x, field_y, ... ]
 *                        | space ... | field  ... |
+*
+* ---------------------------------------------------------------------------------
+*             !! Important notes on table dimensionality etc: !!
+* ---------------------------------------------------------------------------------
+* 1. On GPU's (NVIDIA/OpenACC) only the 'regular' interpolation method is available
+*    and us hence the 'default'. A GPU-compiled instrument will exit with an error
+*    if you decide to force 'kdtree' mode.
+*    ('kdtree' needs the macro R_SWAP which works node connectivity/placement in
+*      the loaded dataset structure - is thus not thread-safe. And difficult to
+*      make 'atomic' / would require 'one file content pr. neutron'... :-( )
+*
+* 2. On CPU's the default is 'NULL'/0, meaning that the library will itself try to
+*    evaluate if a dataset is suitable for 'regular' or 'kdtree'. You may still
+*    request one of the method explicitly if this makes sense in your case.
+*
+* 3. 'regular' means 'quite regular indeed'... Voxels in the volume MUST be of
+*    uniform size AND dimensions of the volume MUST be equal on all spatial axes.
+* ---------------------------------------------------------------------------------
 */
 
 /*******************************************************************************
