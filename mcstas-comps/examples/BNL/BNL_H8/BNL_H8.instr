@@ -5,13 +5,13 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: BNL_H8_simple
+* Instrument: BNL_H8
 *
 * %Identification
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* %INSTRUMENT_SITE: Brookhaven
+* %INSTRUMENT_SITE: BNL
 *
 * The former thermal H8 triple-axis spectrometer from Brookhaven reactor
 *
@@ -33,7 +33,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT BNL_H8_simple(lambda=2.36)
+DEFINE INSTRUMENT BNL_H8(lambda=2.36)
 
 DECLARE
 %{
@@ -90,7 +90,7 @@ lambda);
 
 TRACE
 /* Source description */
-COMPONENT Origin=Arm()
+COMPONENT Origin=Progress_bar()
 AT (0,0,0) ABSOLUTE
 
 /* a flat constant source */
@@ -109,7 +109,7 @@ AT (0, 0, 0.0001) RELATIVE Source
 
 /* SC1 collimator. 40'=3 slots, 20'=6 slots */
 
-COMPONENT SC1 = Guide_simple(
+COMPONENT SC1 = Guide(
   w1 = 0.031, h1 = 0.054, l = 0.9144,
   R0 = 1.0, Qc=0.021, alpha=6, m=1, W=0.0003)
 AT (0.0, 0, 2.7473) RELATIVE Source
@@ -143,7 +143,7 @@ AT (0, 0, 0.0001) RELATIVE As4
 COMPONENT Mono_Cradle = Arm()
   AT (0, 0, 5.2746) RELATIVE Source ROTATED (0, A1, 0) RELATIVE Source
 
-COMPONENT PG1Xtal = Monochromator_flat(
+SPLIT COMPONENT PG1Xtal = Monochromator_flat(
   zwidth = 0.1, yheight = 0.08,
   mosaich = 40, mosaicv = 40,
   r0 = 0.7, Q=mono_q)
@@ -161,7 +161,7 @@ COMPONENT D4_SC2_In = PSD_monitor(
 AT (0, 0, 0.2222) RELATIVE Mono_Out
 
 /* SC2 collimator. 40'=4 slots, 20'=8 slots */
-COMPONENT SC2 = Guide_simple(
+COMPONENT SC2 = Guide(
   w1 = 0.0318, h1 = 0.0495, l = 0.6096,
   R0 = 1.0, Qc=0.021, alpha=6, m=1, W=0.0003)
 AT (0, 0, 0.2223) RELATIVE Mono_Out
@@ -177,7 +177,7 @@ AT (0, 0, 0.7811) RELATIVE D5_SC2_Out ROTATED (0, A3, 0) RELATIVE Mono_Out
 COMPONENT Sample_Out = Arm() /*        this is the sample-ana axis */
 AT (0,0,0) RELATIVE Sample_Cradle ROTATED (0, A4, 0) RELATIVE Mono_Out
 
-COMPONENT Sample = V_sample(
+SPLIT COMPONENT Sample = V_sample(
  radius = 0.0064, yheight = 0.0254,
  focus_xw = 0.0478, focus_yh = 0.049, pack = 1,
  target_index = +1)
@@ -191,7 +191,7 @@ COMPONENT D7_SC3_In = PSD_monitor(
 AT (0, 0, 0.2349) RELATIVE Sample_Out
 
 /* SC3 collimator. 40' = 12 slots, 20'=24 slots */
-COMPONENT SC3 = Guide_simple(
+COMPONENT SC3 = Guide(
   w1 = 0.0478, h1 = 0.0490, l = 0.3048,
   R0 = 1.0, Qc=0.021, alpha=6, m=1, W=0.0003)
 AT (0, 0, 0.2350) RELATIVE Sample_Out
@@ -204,7 +204,7 @@ AT (0, 0, 0.3047) RELATIVE SC3
 COMPONENT Ana_Cradle = Arm()
   AT (0, 0, 0.1397) RELATIVE D8_SC3_Out ROTATED (0, A5, 0) RELATIVE Sample_Out
 
-COMPONENT PG2Xtal = Monochromator_flat(
+SPLIT COMPONENT PG2Xtal = Monochromator_flat(
   zwidth = 0.10, yheight = 0.08,
   mosaich = 40, mosaicv = 40,
   r0 = 0.7, Q=mono_q)
@@ -221,7 +221,7 @@ COMPONENT D10_SC4_In = PSD_monitor(
 AT (0, 0, 0.3365) RELATIVE Ana_Out
 
 /* SC4 collimator. 80' = 6 slots */
-COMPONENT SC4 = Guide_simple(
+COMPONENT SC4 = Guide(
   w1 = 0.0478, h1 = 0.0490, l = 0.3048,
   R0 = 1.0, Qc=0.021, alpha=6, m=1, W=0.0003)
 AT (0, 0, 0.3366) RELATIVE Ana_Out
