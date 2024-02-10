@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Wrapper script for mcjupyter
+
+@MCCODE_BASH_STANDARD_PREAMBLE@
+
+TOOL="@P@run"
+UTILDIR="${MCCODE_TOOLDIR}/Python/$TOOL"
+
+# Check if we are in / - in that case cd to $HOME
+if [[ ${PWD} = / ]]; then
+    cd $HOME
+fi
+
+#NB: miniconda should be installed next to the tool folder:
+if [ -d "${MCCODE_TOOLDIR}/../miniconda3" ]; then
+    source "${MCCODE_TOOLDIR}/../miniconda3/bin/activate" "${MCCODE_TOOLDIR}/../miniconda3"
+    export PATH=${MCCODE_TOOLDIR}/../miniconda3/bin/:$PATH
+fi
+
+# FIXME: NCrystal should be used via own package/infrastructure
+if [ "x@NCRYSTAL_LEGACY_USE@" == "x1" ]; then
+    if [ -d "${MCCODE_TOOLDIR}/../share/NCrystal/python" ]; then
+        export PYTHONPATH="${MCCODE_TOOLDIR}/../share/NCrystal/python:$PYTHONPATH"
+    fi
+fi
+
+#VERS="@MCCODE_VERSION@"
+
+
+canrun() {
+    if ! [ -x "${MCCODE_BINDIR}/@FLAVOR@-pygen" ]; then
+        exit 127;
+    fi
+}
+
+if ( canrun ); then
+    INSTR=$1 # We can actually assume a single input here
+    BASE=`basename ${INSTR} .instr`
+    PYINSTR="${BASE}_generated.py"
+    JUPYBK="${BASE}_generated.ipynb"
+    @FLAVOR@-pygen ${INSTR}
+    jupytext --to ipynb ${PYINSTR}
+    jupyter lab ${JUPYBK}
+else
+    @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
+fi

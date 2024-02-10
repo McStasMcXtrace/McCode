@@ -75,6 +75,10 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcrun.in" "${WORK}/${P}run" @ONLY)
 
+# Configure jupyter tool script
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/jupylab.in" "${WORK}/${FLAVOR}-jupylab" @ONLY)
+
+
 # Main script, including rename mcrun/mxrun
 install(
   PROGRAMS "${PROJECT_SOURCE_DIR}/mcrun.py"
@@ -105,8 +109,23 @@ if(NOT WINDOWS)
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE
   )
+
+  install(
+    FILES "${WORK}/${FLAVOR}-jupylab"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+    PERMISSIONS
+    OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    GROUP_READ GROUP_EXECUTE
+    WORLD_READ WORLD_EXECUTE
+  )
+
   install(
     PROGRAMS "${WORK}/${P}run"
+    DESTINATION ${DEST_BINDIR}
+    )
+
+  install(
+    PROGRAMS "${WORK}/${FLAVOR}-jupylab"
     DESTINATION ${DEST_BINDIR}
     )
 
