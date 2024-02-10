@@ -1,11 +1,11 @@
 /*******************************************************************************
-* Instrument: Test_RNG_randnorm
+* Instrument: Test_RNG_randvec_target_rect_angular
 *
 * %I
 * Written by: Peter Willendrup
 * Date: Oct 2nd, 2020
 * Origin: DTU
-* %INSTRUMENT_SITE: Tests
+* %INSTRUMENT_SITE: Tests_RNG
 *
 * Instrument to get basic test output from random number generator.
 *
@@ -18,23 +18,27 @@
 * For a low statistics, one may e.g. check that setting the seed gives
 * varied output or fixing the seed gives fixed output·
 *
-* %Example: Ncount=1000000 Detector: PSD_I=0.999999999
+* %Example: Ncount=1000000 Detector: Div_I=1
 *
 * %P
-* Ncount: [1] Specify statistics
-* seed:   [1] Specify RNG seed
+* Ncount:  [1] Specify statistics
+* seed:    [1] Specify RNG seed
+* dist:    [m] Distance between synthetic point-source and monitor
+* angle: [deg] Angular focusing settin 
 *
 * %L
 * <reference/HTML link>
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT Test_RNG_randnorm(Ncount=1000000,int seed=0)
+DEFINE INSTRUMENT Test_RNG_randvec_target_rect_angular(Ncount=1000000,int seed=0, angle=45)
 
 DECLARE
 %{
   double p0;
   #pragma acc declare create(p0)
+  double Angle;
+  #pragma acc declare create(Angle)
 %}
 
 INITIALIZE
@@ -43,6 +47,8 @@ INITIALIZE
   if (seed) mcseed = seed;
   p0=1.0/mcget_ncount();
   #pragma acc update device(p0)
+  Angle=angle;
+  #pragma acc update device(Angle)
 %}
 
 TRACE
@@ -50,15 +56,16 @@ TRACE
 COMPONENT Arm = Arm()
   AT (0,0,0) ABSOLUTE
 EXTEND %{
-  // position x in one of 100 bins
-  x = 0.2*randnorm();
-  y = 0.2*randnorm();
+  randvec_target_rect_angular(&vx, &vy, &vz, NULL, 0, 0, 1, Angle*DEG2RAD, Angle*DEG2RAD, ROT_A_CURRENT_COMP);
+  NORM(vx,vy,vz);
+  vx *= 1000;
+  vy *= 1000;
+  vz *= 1000;
   p = p0;
-  vz=1000;
 %}
 
-COMPONENT PSD = PSD_monitor(xwidth=2.0, yheight=2.0, filename="rngout", nx=100, ny=100)
-  AT (0,0,0) ABSOLUTE
+  COMPONENT Div = Divergence_monitor(xwidth=100.0, yheight=100.0, filename="rngout", maxdiv_h=1.1*(angle/2), maxdiv_v=1.1*(angle/2), nh=100,nv=100)
+  AT (0,0,0.01) RELATIVE Arm
 
 FINALLY
 %{
