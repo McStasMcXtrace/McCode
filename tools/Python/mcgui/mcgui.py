@@ -17,16 +17,19 @@ try:
     from PyQt6 import QtWidgets, QtCore
     from PyQt6.QtWidgets import QApplication, QWidget
     import PyQt6 as PyQt
+    try:
+        from PyQt6 import Qsci
+    except ImportError:
+        Qsci = None
 
 except ImportError:
     from PyQt5 import QtWidgets, QtCore
     from PyQt5.QtWidgets import QApplication, QWidget
     import PyQt5 as PyQt
-
-try:
-    from PyQt import Qsci
-except ImportError:
-    Qsci = None
+    try:
+        from PyQt5 import Qsci
+    except ImportError:
+        Qsci = None
 
 from viewclasses import McView
 from datetime import datetime

@@ -8,21 +8,22 @@ import pathlib
 from widgets import *
 
 try:
-    from PyQt6 import QtGui, QtWidgets, QtCore
+    from PyQt6 import QtWidgets, QtCore
     from PyQt6.QtWidgets import QApplication, QWidget
-    from PyQt6.QtGui import QAction
     import PyQt6 as PyQt
+    try:
+        from PyQt6 import Qsci
+    except ImportError:
+        Qsci = None
 
 except ImportError:
-    from PyQt5 import QtGui, QtWidgets, QtCore
-    from PyQt5.QtWidgets import QApplication, QWidget, QAction
-    from PyQt5.QtWidgets import QAction
+    from PyQt5 import QtWidgets, QtCore
+    from PyQt5.QtWidgets import QApplication, QWidget
     import PyQt5 as PyQt
-
-try:
-    from PyQt import Qsci
-except ImportError:
-    Qsci = None
+    try:
+        from PyQt5 import Qsci
+    except ImportError:
+        Qsci = None
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import mccode_config
