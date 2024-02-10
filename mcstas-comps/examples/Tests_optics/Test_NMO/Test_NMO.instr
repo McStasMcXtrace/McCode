@@ -5,7 +5,7 @@
 * Written by: Christoph Herb, TUM
 * Date: 2022-2023
 * Origin: TUM
-* %INSTRUMENT_SITE: Tests
+* %INSTRUMENT_SITE: Tests_optics
 *
 * Implements a test instrument for the component FlatEllipse_finite_mirror,
 * implementing Nested Mirror Optic (NMO) as suggested by Böni et al.

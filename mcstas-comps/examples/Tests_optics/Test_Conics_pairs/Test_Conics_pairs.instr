@@ -5,7 +5,7 @@
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
 * Date: Dec '21
 * Origin: DTU Physics
-* %INSTRUMENT_SITE: Tests
+* %INSTRUMENT_SITE: Tests_optics
 *
 * Unit test instrument for Conics Pairs components
 *
