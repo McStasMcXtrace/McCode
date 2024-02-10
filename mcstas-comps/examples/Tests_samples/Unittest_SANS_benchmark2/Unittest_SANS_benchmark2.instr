@@ -11,7 +11,7 @@
 * Written by: Peter Willendrup
 * Date: April 2023
 * Origin: <a href="http://www.ess.eu">ESS</a>
-* %INSTRUMENT_SITE: Templates
+* %INSTRUMENT_SITE: Tests_samples
 *
 * Test instrument for the SANS_benchmark2 component. No guide / velocity selector.
 *

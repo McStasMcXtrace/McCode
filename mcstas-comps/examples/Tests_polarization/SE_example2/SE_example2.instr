@@ -7,7 +7,7 @@
 * Written by: Erik Knudsen, Peter Willendrup
 * Date: June 2010
 * Origin: Risoe
-* %INSTRUMENT_SITE: Templates
+* %INSTRUMENT_SITE: Tests_polarization
 *
 * Mockup of transmission Spin-Echo, written for PNCMI 2010 school in Delft. This version uses Pol_FieldBox for description of the fields.
 *

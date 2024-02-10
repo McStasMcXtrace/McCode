@@ -7,7 +7,7 @@
 * Date: 25-Oct-2023
 * Origin: DTU
 *
-* %INSTRUMENT_SITE: Templates
+* %INSTRUMENT_SITE: Tests_samples
 *
 * Testing resolution of a TOF spectrometer, use "reso.dat" output with mcresplot.py
 *
