@@ -162,7 +162,7 @@ jobs:
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_BNL_H8 && cd run_BNL_H8
-           cp ../install_mcstas/share/mcstas/resources/examples/Brookhaven/BNL_H8/BNL_H8.instr .
+           cp ../install_mcstas/share/mcstas/resources/examples/BNL/BNL_H8/BNL_H8.instr .
            ../install_mcstas/bin/${MCRUN_EXECUTABLE} BNL_H8.instr lambda=2.36
            ../install_mcstas/bin/${MCSTAS_PYGEN_EXECUTABLE} BNL_H8.instr
 
@@ -179,7 +179,7 @@ jobs:
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_BNL_H8_mpi && cd run_BNL_H8_mpi
-           cp ../install_mcstas/share/mcstas/resources/examples/Brookhaven/BNL_H8/BNL_H8.instr .
+           cp ../install_mcstas/share/mcstas/resources/examples/BNL/BNL_H8/BNL_H8.instr .
            ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=2 BNL_H8.instr lambda=2.36
 
     - name: Launch MCPL test instrument
