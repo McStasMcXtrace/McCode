@@ -196,7 +196,7 @@ jobs:
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_ESS_BEER_MCPL && cd run_ESS_BEER_MCPL
-           cp ../install_mcstas/share/mcstas/resources/examples/ESS/ESS_BEER_MCPL/ESS_BEER_MCPL.instr .
+           cp ../install_mcstas/share/mcstas/resources/examples/ESS/ESS_BEER_MCPL/* .
            ../install_mcstas/bin/${MCRUN_EXECUTABLE} ESS_BEER_MCPL.instr repetition=50
 
     - name: Launch MCPL test instrument (mpi)
@@ -213,7 +213,7 @@ jobs:
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_ESS_BEER_MCPL_mpi && cd run_ESS_BEER_MCPL_mpi
-           cp ../install_mcstas/share/mcstas/resources/examples/ESS/ESS_BEER_MCPL/ESS_BEER_MCPL.instr .
+           cp ../install_mcstas/share/mcstas/resources/examples/ESS/ESS_BEER_MCPL/* .
             ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=2 ESS_BEER_MCPL.instr repetition=100
 
     - name: Launch NCrystal test instrument
