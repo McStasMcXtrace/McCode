@@ -7,7 +7,7 @@
 * Date: 30-Mar-2019
 * Origin: ILL
 *
-* %INSTRUMENT_SITE: Templates
+* %INSTRUMENT_SITE: Tests_samples
 *
 * Testing the triple-axis resolution, use "reso.dat" output with mcresplot.py
 *
