@@ -994,11 +994,12 @@ cogen(char *output_name, struct instr_def *instr)
   cout("#import mcstasscript.jb_interface as ms_widget");
   cout("#ms_widget.show(data)");  
   cout("\n\n# Bring up the simulation 'interface' - only relevant in Jupyter");
-  cout("#%matplotlib widget");
-  cout("#import mcstasscript.jb_interface as ms_widget");
-  cout("#sim_widget = ms_widget.SimInterface(instr)");
-  cout("#sim_widget.show_interface()");
-  cout("#data = sim_widget.get_data()");
+  cout("%matplotlib widget");
+  cout("import mcstasscript.jb_interface as ms_widget");
+  cout("sim_widget = ms_widget.SimInterface(instr)");
+  cout("sim_widget.show_interface()");
+  cout("\n\n# Acessing data from the interface");
+  cout("data = sim_widget.get_data()");
   coutf("\n\n# end of generated Python code %s ", output_name);
 
   fclose(output_handle);
