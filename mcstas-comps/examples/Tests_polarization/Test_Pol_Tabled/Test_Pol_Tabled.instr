@@ -71,7 +71,7 @@ COMPONENT pol_0 = Pol_monitor(
     restore_neutron=1,xwidth=0.2, yheight=0.2, mx=0, my=1, mz=0)
 AT(0,0,1) RELATIVE setpol
 
-COMPONENT polx_0 = PolLambda_monitor(
+COMPONENT polx_0 = PolLambda_monitor(nL=100,npol=101,
     xwidth = 0.2, yheight = 0.2, restore_neutron = 1, mx = 1,
     my = 0, mz = 0, Lmin = 0, Lmax = 10, filename="polx_0")
 AT(0,0,0) RELATIVE setpol
@@ -79,7 +79,7 @@ COMPONENT poly_0 = COPY (polx_0)(mx=0,my=1,mz=0,filename="poly_0")
 AT(0,0,0) RELATIVE PREVIOUS
 COMPONENT polz_0 = COPY (polx_0)(mx=0,my=0,mz=1,filename="polz_0")
 AT(0,0,0) RELATIVE PREVIOUS
-COMPONENT lmon_0 = L_monitor(Lmin=0, Lmax=10,xwidth=0.2, yheight=0.2, filename="lmon_0")
+COMPONENT lmon_0 = L_monitor(nL=100,Lmin=0, Lmax=10,xwidth=0.2, yheight=0.2, filename="lmon_0")
 AT(0,0,0) RELATIVE PREVIOUS
 
 
