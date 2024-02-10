@@ -4,6 +4,7 @@
     "TERMINAL": "@TERMINAL@",
     "MCCODE": "@FLAVOR@",
     "MCRUN": "@MCCODE_PREFIX@run",
+    "JUPYLAB": "@FLAVOR@-jupylab",
     "MCPLOT": "@MCCODE_PREFIX@plot-pyqtgraph",
     "MCDISPLAY": "@MCCODE_PREFIX@display-webgl",
     "IDFGEN": "@IDFGEN@",

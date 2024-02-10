@@ -4,6 +4,7 @@
     "TERMINAL": "x-terminal-emulator -e",
     "MCCODE": "mcstas",
     "MCRUN": "mcrun",
+    "JUPYLAB": "mcstas-jupylab",
     "MCPLOT": "mcplot-pyqtgraph",
     "MCDISPLAY": "mcdisplay-webgl",
     "IDFGEN": "mcdisplay-mantid",
