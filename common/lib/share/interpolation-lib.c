@@ -440,11 +440,23 @@ struct interpolator_struct *interpolator_load(char *filename,
         interpolator->bin[dim]++; /* count unique values */
       if (interpolator->step[dim] <= 0) 
         interpolator->step[dim] = this_step;
-      if (fabs(this_step - interpolator->step[dim]) > interpolator->step[dim]*READ_TABLE_STEPTOL) {
+      if (this_step && fabs(this_step - interpolator->step[dim]) > interpolator->step[dim]*READ_TABLE_STEPTOL) {
         /* difference of this step with the first one is 'large' */
         interpolator->constant_step[dim] = 0; /* not constant step -> kd-tree should be used */
-        if (!strcmp(interpolator->method, "NULL") || !strcmp(interpolator->method, "0"))
-          strcpy(interpolator->method, "kdtree");          
+        if (!strcmp(interpolator->method, "NULL") || !strcmp(interpolator->method, "0")) {
+          strcpy(interpolator->method, "kdtree");
+	} else if (!strcmp(interpolator->method, "regular")) { 
+	    // We arrived here with 'regular' explicitly user-selected / required (GPU)
+	    // which leads to wrong results.
+	    fprintf(stderr,"\n\n%s\n\n",
+	      "!! interpolation-lib ERROR: !!\n"
+	      "   You are running the 'regular' interpolation scheme with a file of\n"
+	      "   non-consistent axis 'binning' along one or more axes.\n"
+              "   This combination is not possible.\n"
+	      "   Please either resample the file to a regular grid or run with 'kdtree'\n"
+	      "   (NB: kdtree is available on CPU only)");
+	    exit(-1);
+	}
       }
       x_prev = x;
     }
@@ -468,18 +480,7 @@ struct interpolator_struct *interpolator_load(char *filename,
   /* assign interpolation technique: 'regular' direct indexing */
   if (!strcmp(interpolator->method, "regular")) {
     interpolator->kdtree = NULL;
-    /* Terminate if the dimensions are not equal */
-    if (interpolator->bin[0] != interpolator->bin[1] ||
-	interpolator->bin[0] != interpolator->bin[2] ||
-	interpolator->bin[1] != interpolator->bin[2]) {
-      fprintf(stderr,"\n\n%s\n\n",
-	      "!! interpolation-lib ERROR: !!\n"
-	      "   You are running the 'regular' interpolation scheme\n"
-	      "   with a file of unequal axis dimensions. This will lead to systematic errors!\n"
-	      "   Please either resample the file to achieve this or run with 'kdtree'\n"
-	      "   (kdtree is available on CPU only)");
-      exit(-1);
-    }
+
     /* store table values onto the grid: each field component is stored on the
      * interpolator->grid, and has size=prod(interpolator->bin)
      */
