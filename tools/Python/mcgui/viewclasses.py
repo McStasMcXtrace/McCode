@@ -94,7 +94,7 @@ class McView(object):
     
     def disableRunBtn(self):
         self.mw.ui.btnRun.setEnabled(False)
-    
+
     def enableRunBtn(self):
         self.mw.ui.btnRun.setEnabled(True)
 
@@ -112,6 +112,7 @@ class McView(object):
         # set enabled/disabled states on menus and buttons
         ui = self.mw.ui
         ui.btnRun.setEnabled(enableRun)
+        ui.btnJuPy.setEnabled(enableRun)
         ui.btnEdit.setEnabled(enableRun)
         ui.btnPlot.setEnabled(enablePlot)
         if enableRun:
@@ -145,7 +146,7 @@ class McView(object):
             ui.actionNew_Instrument.setEnabled(False)
             ui.menuNew_From_Template.setEnabled(False)
         else:
-            ui.btnRun.setText('Run...')
+            ui.btnRun.setText('Run..')
             ui.btnRun.setToolTip('Compile and Run the current instrument')
 
     ''' UI actions

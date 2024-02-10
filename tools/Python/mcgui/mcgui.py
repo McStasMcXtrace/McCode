@@ -776,13 +776,21 @@ class McGuiAppController():
 
     def handleEditExtInstrument(self):
         instr = self.state.getInstrumentFile()
-        process = subprocess.Popen(mccode_config.configuration["EDITOR"] + ' ' + os.path.basename(str(instr)), 
-                                   stdout=subprocess.PIPE, 
+        process = subprocess.Popen(mccode_config.configuration["EDITOR"] + ' ' + os.path.basename(str(instr)),
+                                   stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
                                    shell=True,
                                    universal_newlines=True)
         self.emitter.status("Editing instrument: " + os.path.basename(str(instr)))
 
+    def handleJuPyInstrument(self):
+        instr = self.state.getInstrumentFile()
+        process = subprocess.Popen(mccode_config.configuration["JUPYLAB"] + ' ' + os.path.basename(str(instr)),
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT,
+                                   shell=True,
+                                   universal_newlines=True)
+        self.emitter.status("Sending instrument to Jupyter: " + os.path.basename(str(instr)))
 
     def handleCloseInstrument(self):
         if self.view.closeCodeEditorWindow():
@@ -927,6 +935,7 @@ class McGuiAppController():
         if not sys.platform == 'win32':
             self.view.mw.add_conf_menu('Set as default').triggered.connect(self.handleDefault)
         mwui.btnDoc.clicked.connect(self.handleMcdoc)
+        mwui.btnJuPy.clicked.connect(self.handleJuPyInstrument)
         mwui.btnRun.clicked.connect(self.handleRunOrInterruptSim)
         mwui.btnPlot.clicked.connect(self.handlePlotResults)
 
