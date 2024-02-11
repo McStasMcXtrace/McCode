@@ -784,14 +784,17 @@ class McGuiAppController():
         self.emitter.status("Editing instrument: " + os.path.basename(str(instr)))
 
     def handleJuPyInstrument(self):
+        instr = self.state.getInstrumentFile()
         terminal = mccode_config.configuration["TERMINAL"]
         if not sys.platform == 'win32':
             scriptfile = str(mccode_config.configuration["MCCODE"] + '-labenv')
             scriptfile = str(pathlib.Path(__file__).parent.parent.parent.parent.resolve() / scriptfile)
+            if sys.platform == 'Darwin':
+                args = "--args " + instr 
         else:
             scriptfile = 'start ' + mccode_config.configuration["MCCODE_LIB_DIR"] + '\\..\\bin\\mccodelab.bat'
-
-        subprocess.Popen(terminal + ' ' + scriptfile, shell=True)
+            
+        subprocess.Popen(terminal + ' ' + scriptfile + args, shell=True)
         self.emitter.status("Spawning Jupyter... ")
 
     def handleCloseInstrument(self):
