@@ -786,7 +786,9 @@ class McGuiAppController():
     def handleJuPyInstrument(self):
         instr = self.state.getInstrumentFile()
         terminal = mccode_config.configuration["TERMINAL"]
-        wrapper= ""
+        wrapper = ""
+        suffix = ""
+        scriptfile = str(mccode_config.configuration["MCCODE"] + '-labenv')
         if not sys.platform == 'win32':
             scriptfile = str(mccode_config.configuration["MCCODE"] + '-labenv')
             scriptfile = str(pathlib.Path(__file__).parent.parent.parent.parent.resolve() / scriptfile)
@@ -797,18 +799,24 @@ class McGuiAppController():
             wrapper += f'' + scriptfile + ' ' + os.path.basename(instr) + '\n\n'
             wrapper += f'# Remove script post jupyter exit \n\nrm -f $0\n\n'
             wrapper += f'# End of wrapper script\n'
-
-            # Write temporary script to cwd with write perms
-            import random, string
-            TMP=''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(5))
-            scriptfile = str(pathlib.Path(instr).stem + '_' + TMP + '.command')
-            scriptfile = os.path.join(os.getcwd(),scriptfile)
-            ff = open(scriptfile,"w")
-            ff.write(wrapper)
-            ff.close
-            make_executable(scriptfile)
+            suffix = ".command"
         else:
-            scriptfile = 'start ' + mccode_config.configuration["MCCODE_LIB_DIR"] + '\\..\\bin\\mccodeenv.bat'
+            wrapper += f'@REM cd to location of taget .instr file\n'
+            wrapper += f'cd ' + os.path.dirname(instr) + '\n\n'
+            wrapper += f'"REM call jupylab wrapper script from new directory, with input of base instr file.\n'
+            wrapper += f'' + scriptfile + ' ' + os.path.basename(instr) + '\n\n'
+            wrapper += f'@REM Remove script post jupyter exit \n\n@del %~dpnx0\n@exit\n'
+            wrapper += f'@REM End of wrapper script\n'
+            suffix = ".bat"            
+        # Write temporary script to cwd with write perms
+        import random, string
+        TMP=''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(5))
+        scriptfile = str(pathlib.Path(instr).stem + '_' + TMP + suffix)
+        scriptfile = os.path.join(os.getcwd(),scriptfile)
+        ff = open(scriptfile,"w")
+        ff.write(wrapper)
+        ff.close
+        make_executable(scriptfile)
 
         print(terminal + ' ' + scriptfile)
         subprocess.Popen(terminal + ' ' + scriptfile , shell=True)
