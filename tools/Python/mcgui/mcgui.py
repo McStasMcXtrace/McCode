@@ -802,6 +802,7 @@ class McGuiAppController():
             import random, string
             TMP=''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(5))
             scriptfile = str(pathlib.Path(instr).stem + '_' + TMP + '.command')
+            scriptfile = os.path.join(os.getcwd(),scriptfile)
             ff = open(scriptfile,"w")
             ff.write(wrapper)
             ff.close
