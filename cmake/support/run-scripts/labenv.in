@@ -76,7 +76,7 @@ fi
 
 # Got an input, check if it has suffix .instr
 if [[ "${INSTRUMENT}" == *".instr" ]]; then
-    @FLAVOR-jupylab ${INSTRUMENT}
+    @FLAVOR@-jupylab ${INSTRUMENT}
 else
     jupyter lab ${INSTRUMENT}
 fi
