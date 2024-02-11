@@ -36,7 +36,7 @@ from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import mccode_config, utils
-from mccodelib.utils import ComponentParser, get_instr_site, get_instr_comp_files, save_instrfile, get_file_contents
+from mccodelib.utils import ComponentParser, get_instr_site, get_instr_comp_files, save_instrfile, get_file_contents, make_executable
 
 ''' Message emitter
 Status and message log and signalling.
@@ -786,15 +786,31 @@ class McGuiAppController():
     def handleJuPyInstrument(self):
         instr = self.state.getInstrumentFile()
         terminal = mccode_config.configuration["TERMINAL"]
+        wrapper= ""
         if not sys.platform == 'win32':
             scriptfile = str(mccode_config.configuration["MCCODE"] + '-labenv')
             scriptfile = str(pathlib.Path(__file__).parent.parent.parent.parent.resolve() / scriptfile)
-            if sys.platform == 'Darwin':
-                args = "--args " + instr 
+            wrapper += f'#!/usr/bin/env bash\n\n'
+            wrapper += f'# cd to location of taget .instr file\n'
+            wrapper += f'cd ' + os.path.dirname(instr) + '\n\n'
+            wrapper += f'# call jupylab wrapper script from new directory, with input of base instr file.\n'
+            wrapper += f'' + scriptfile + ' ' + os.path.basename(instr) + '\n\n'
+            wrapper += f'# Remove script post jupyter exit \n\nrm -f $0\n\n'
+            wrapper += f'# End of wrapper script\n'
+
+            # Write temporary script to cwd with write perms
+            import random, string
+            TMP=''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(5))
+            scriptfile = str(pathlib.Path(instr).stem + '_' + TMP + '.command')
+            ff = open(scriptfile,"w")
+            ff.write(wrapper)
+            ff.close
+            make_executable(scriptfile)
         else:
-            scriptfile = 'start ' + mccode_config.configuration["MCCODE_LIB_DIR"] + '\\..\\bin\\mccodelab.bat'
-            
-        subprocess.Popen(terminal + ' ' + scriptfile + args, shell=True)
+            scriptfile = 'start ' + mccode_config.configuration["MCCODE_LIB_DIR"] + '\\..\\bin\\mccodeenv.bat'
+
+        print(terminal + ' ' + scriptfile)
+        subprocess.Popen(terminal + ' ' + scriptfile , shell=True)
         self.emitter.status("Spawning Jupyter... ")
 
     def handleCloseInstrument(self):
