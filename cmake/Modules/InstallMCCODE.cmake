@@ -368,6 +368,12 @@ macro(installMCCODE)
     install(PROGRAMS ${WORK}/support/${FLAVOR}-environment DESTINATION "${DEST_DATADIR_TOPENVFILES}")
 
     configure_file(
+      cmake/support/run-scripts/labenv.in
+      work/support/${FLAVOR}-labenv
+      @ONLY)
+    install(PROGRAMS ${WORK}/support/${FLAVOR}-labenv DESTINATION "${DEST_DATADIR_TOPENVFILES}")
+
+    configure_file(
       cmake/support/run-scripts/module.in
       work/support/${FLAVOR}-module
       @ONLY)
