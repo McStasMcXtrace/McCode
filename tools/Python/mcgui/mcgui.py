@@ -784,13 +784,15 @@ class McGuiAppController():
         self.emitter.status("Editing instrument: " + os.path.basename(str(instr)))
 
     def handleJuPyInstrument(self):
-        instr = self.state.getInstrumentFile()
-        process = subprocess.Popen(mccode_config.configuration["JUPYLAB"] + ' ' + os.path.basename(str(instr)),
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT,
-                                   shell=True,
-                                   universal_newlines=True)
-        self.emitter.status("Sending instrument to Jupyter: " + os.path.basename(str(instr)))
+        terminal = mccode_config.configuration["TERMINAL"]
+        if not sys.platform == 'win32':
+            scriptfile = str(mccode_config.configuration["MCCODE"] + '-labenv')
+            scriptfile = str(pathlib.Path(__file__).parent.parent.parent.parent.resolve() / scriptfile)
+        else:
+            scriptfile = 'start ' + mccode_config.configuration["MCCODE_LIB_DIR"] + '\\..\\bin\\mccodelab.bat'
+
+        subprocess.Popen(terminal + ' ' + scriptfile, shell=True)
+        self.emitter.status("Spawning Jupyter... ")
 
     def handleCloseInstrument(self):
         if self.view.closeCodeEditorWindow():
