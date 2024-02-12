@@ -27,10 +27,10 @@ SET EXT=%%~xi
 @IF "%INSTRUMENT%"=="" (call :JupyLaunch "INSTRUMENT" ".")
 @ELSE ()
 
-@:JupyText
+:JupyText
 @jupytext --to ipynb %INSTRUMENT%
 @SET INSTRUMENT="%BASE%_generated.ipynb"
 
-@:JupyLaunch
+:JupyLaunch
 @jupyter lab %INSTRUMENT%
 @goto :EOF
