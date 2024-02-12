@@ -1,0 +1,36 @@
+@set BINDIR=%~dp0
+@CALL %BINDIR%\\mccodeenv.bat
+@ECHO OFF
+@ECHO @FLAVOR@ Jupyter lab shell
+@set INSTRUMENT=%1
+@REM Check if we were called with an input file name?
+@IF "%INSTRUMENT%"=="" (call :JupyLaunch "INSTRUMENT" ".")
+
+@FOR /F "delims=" %%i IN ("%INSTRUMENT%") DO (
+SET BASE=%%~ni
+SET EXT=%%~xi
+)
+
+@IF "%EXT%"==".instr" (
+  @FLAVOR@-pygen %INSTRUMENT%
+  SET INSTRUMENT="%BASE%_generated.py"
+  goto :JupyText 
+) ELSE IF "%EXT%"==".py" (
+  goto :JupyLaunch
+) ELSE IF "%EXT%"==".ipynb" (
+  goto :JupyText
+) ELSE (JupyLaunch
+  call :JupyLaunch "INSTRUMENT" "."
+)
+
+@IF /I "%INSTRUMENT%"=="%%~G"
+@IF "%INSTRUMENT%"=="" (call :JupyLaunch "INSTRUMENT" ".")
+@ELSE ()
+
+:JupyText
+@jupytext --to ipynb %INSTRUMENT%
+@SET INSTRUMENT="%BASE%_generated.ipynb"
+
+:JupyLaunch
+@jupyter lab %INSTRUMENT%
+@goto :EOF
