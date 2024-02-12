@@ -62,15 +62,11 @@ fi
 export INSTRUMENT=$1
 # Check if we got an input file or not
 if [ -z "${INSTRUMENT}" ]; then
-    # No input given, look for most recent, local .instr file
-    export INSTRUMENT=`ls -rt *.instr | tail -1`
+    # Still empty? Look for most recent local .py or .ipynb file
+    export INSTRUMENT=`ls -rt *.py *.ipynb | tail -1`
     if [ -z "${INSTRUMENT}" ]; then
-	# Still empty? Look for most recent local .py or .ipynb file
-	export INSTRUMENT=`ls -rt *.py *.ipynb | tail -1`
-	if [ -z "${INSTRUMENT}" ]; then
-	    # Still empty? Just open .
-	    export INSTRUMENT="."
-	fi
+	# Still empty? Just open .
+	export INSTRUMENT="."
     fi
 fi
 
