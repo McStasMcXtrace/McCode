@@ -497,8 +497,7 @@ class MantidRectangularDetector:
         self.ymax = l[3]
         self.nx = l[4]
         self.ny = l[5]
-        self.pixelmin = l[6]
-
+        self.pixelmin = str(int(float(l[6])))
 
 class MantidBananaDetector:
     def __init__(self, det_line_lst):
@@ -511,7 +510,7 @@ class MantidBananaDetector:
         self.ymax = l[4]
         self.nt = l[5]
         self.ny = l[6]
-        self.pixelmin = l[7]
+        self.pixelmin = str(int(float(l[7])))
 
 
 def debug_load_instr(filename):
