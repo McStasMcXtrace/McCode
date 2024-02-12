@@ -393,6 +393,12 @@ macro(installMCCODE)
       install(PROGRAMS ${WORK}/support/${name} DESTINATION "${DEST_BINDIR}")
     endforeach()
 
+    configure_file(
+      cmake/support/run-scripts/labenv.bat.in
+      work/support/${FLAVOR}-labenv.bat
+      @ONLY)
+    install(PROGRAMS ${WORK}/support/${FLAVOR}-labenv.bat DESTINATION "${DEST_BINDIR}")
+
     # Python/Perl related batches special handling
     foreach (name run.bat doc.bat resplot.bat plot.bat display.bat gui.bat guistart.bat plot-pyqtgraph.bat plot-matplotlib.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-mantid.bat)
       configure_file(
