@@ -85,9 +85,6 @@ SETTING PARAMETERS (
 
 
 SHARE %{
-#ifdef OPENACC
-#define USE_CUDA
-#endif
 %include "sas_kernel_header.c"
 
 /* BEGIN Required header for SASmodel fractal */
@@ -444,7 +441,7 @@ if (xwidth && yheight && zdepth)
 
 TRACE
 %{
-  double l0, l1, k, l_full, l, dl, d_Phi, theta;
+  double l0, l1, k, l_full, l, dl, d_Phi;
   double aim_x=0, aim_y=0, aim_z=1, axis_x, axis_y, axis_z;
   double f, solid_angle, kx_i, ky_i, kz_i, q, qx, qy, qz;
   char intersect=0;
