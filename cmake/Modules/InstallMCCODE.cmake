@@ -231,10 +231,7 @@ macro(installMCCODE)
     endforeach()
   endmacro()
 
-  # Temorarily disabled to allow conda builds for windows...
-  if(NOT WINDOWS)
-    configure_directory ("lib/COPYING" "work/licensefiles")
-  endif()
+  configure_directory ("lib/COPYING" "work")
   configure_directory ("lib/share/*" "work/lib/share")
 
   configure_directory ("src/*" "work/src")
@@ -340,10 +337,7 @@ macro(installMCCODE)
   set(WORK "${PROJECT_BINARY_DIR}/work")
 
   #license file:
-  # Temorarily disabled to allow conda builds for windows...
-  if(NOT WINDOWS)
-    install( FILES "${WORK}/licensefiles/COPYING" DESTINATION "${DEST_DATADIR_INFO}")
-  endif()
+  install( FILES "${WORK}/COPYING" DESTINATION "${DEST_DATADIR_INFO}")
   #General library:
   file_globsrc( general_codefiles "${WORK}/lib/share/*.h"  "${WORK}/lib/share/*.c" )
   install( FILES ${general_codefiles} DESTINATION "${DEST_DATADIR_CODEFILES}")
