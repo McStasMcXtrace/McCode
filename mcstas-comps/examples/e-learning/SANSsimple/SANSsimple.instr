@@ -1,0 +1,200 @@
+/*****************************************************************************
+*         Mcstas Instrument definition URL=http://mcstas.risoe.dk
+*
+* Instrument: DMC
+*
+* %Identification
+* Written by:  Linda
+* Date: 05.09.10
+* Origin: Copenhagen
+* Release: McStas 1.12c
+* Version: 
+* %INSTRUMENT_SITE: e-learning
+*
+* Instrument short description
+*
+* %Description
+* Instrument longer description (type, elements, usage...)
+*
+* Example: mcrun SANSsimple.instr <parameters=values>
+*
+* %Parameters
+* Lambda: [AA] Average wavelength traced from source
+* DLambda: [AA] Wavelength band +/- traced from source
+* pinhole_rad: [m] radius of the collimating pinholes
+* LC: [m] length of the collimator - distance between pinholes
+* LD: [m] distance between the last pinhole slit and detector
+* SAMPLE: [0/1/2] When SAMPLE==0, no sample is used, SAMPLE==1 sample is composed of hard spheres, if SAMPLE==2 sample is composed ofspherical shells.
+* R: [AA] radius of the hard, monodisperse spheres in the sample
+* dR: [AA] Normal variance of Radius
+* dbilayer: [AA] Thickness of spherical shell, only relevant when SAMPLE==2
+* PHI: [1] Volumefraction of the hard, monodisperse spheres in the sample
+* Delta_Rho: [fm/AA^3] Volume specific scattering length density contrast of the  hard, monodisperse spheres in the sample as compared to the solution
+* Sigma_a: [barn] Absorption crossection of the sample
+* Qmax: [AA^-1] Maximum scattering vector allowed by geometry to hit the detector area
+* BEAMSTOP: [0/1] If set, the beamstop is inserted in front of the detector in order to block the transmitted beam
+* 
+*
+* %Link
+* A reference/HTML link for more information
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT SANS2_liposomes(pinhole_rad=0.004,LC=3,LD=3,Lambda=6, DLambda=0.6, R=400, dR=0, dbilayer=35, PHI=1e-2, Delta_Rho=0.6, Qmax=0.3, BEAMSTOP=1,SAMPLE=1,Sigma_a=0)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+double nm=1e-9;
+double Rdet;
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+  Rdet=0.5; // Radius of detector, also used for focusing sample
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D spac. Every comPonent instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, and even replaced by a Progress_bar  */
+/* component. Other useful keywords are : ROTATED EXTEND GROUP PREVIOUS */
+/* Also think about adding a neutron source !                           */
+
+
+COMPONENT Origin = Progress_bar(
+    )
+  AT (0, 0, 0) RELATIVE ABSOLUTE
+
+/*COMPONENT Origin = Arm()
+  AT (0,0,0) ABSOLUTE*/
+
+
+COMPONENT source = Source_Maxwell_3(
+    size=2*pinhole_rad, Lmin = Lambda-DLambda, Lmax =Lambda+DLambda , dist = LC,
+    focus_xw =pinhole_rad, focus_yh = pinhole_rad, T1 = 150.42, T2 = 38.74, T3 = 14.84,
+    I1 = 3.67e11, I2 = 3.64e11, I3 = 0.95e11)
+  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT ArmSlit1 = Arm()
+  AT (0,0,6-LC+0.001) RELATIVE source
+
+COMPONENT CircSlit1 = Slit(
+    radius = pinhole_rad)
+  AT (0, 0, 0) RELATIVE ArmSlit1
+
+
+COMPONENT ArmSlit2 = Arm()
+  AT (0,0,6) RELATIVE source
+
+COMPONENT CircSlit2 = Slit(
+    radius = pinhole_rad)
+  AT (0, 0, 0) RELATIVE ArmSlit2
+
+
+// COMPONENT LmonSlit2 = L_monitor(
+//     nchan = 100, filename = "LmonSlit2.txt", restore_neutron = 1,
+//     xwidth = 4*pinhole_rad, yheight = 4*pinhole_rad,
+//     Lmin = Lambda-2*DLambda, Lmax = Lambda+2*DLambda)
+//   AT (0, 0, nm) RELATIVE ArmSlit2
+// 
+// COMPONENT DivmonSlit2 = Divergence_monitor(
+//     nh = 128, nv = 128, filename = "DivmonSlit2.txt",
+//     xwidth = 0.05, yheight = 0.05, v_maxdiv=0.2, h_maxdiv=0.2, restore_neutron = 1 )
+//   AT (0, 0,2*nm) RELATIVE ArmSlit2
+// 
+// COMPONENT PSDslit2 = PSD_monitor(
+//     nx = 128, ny = 128, filename = "PSDslit2.txt",xwidth = 0.05, yheight = 0.05, restore_neutron = 1 )
+//   AT (0, 0,3*nm) RELATIVE ArmSlit2
+
+
+COMPONENT SampleArm =  Arm()
+  AT (0,0,0.05) RELATIVE ArmSlit2
+
+	
+/* SPLIT 10 COMPONENT sample = SANS_Spheres_Abs(R=R, Phi=PHI, Delta_rho=Delta_Rho, sigma_a=Sigma_a,qmax=Qmax,xwidth=4*pinhole_rad,yheight=4*pinhole_rad) */
+/*    WHEN (SAMPLE) AT (0,0,0) RELATIVE SampleArm */
+
+/*SPLIT 10 COMPONENT sampleA = SANS_Liposomes_Abs(R=R, dR=dR, Phi=PHI, Delta_rho=Delta_Rho, dbilayer=dbilayer,  sigma_a=Sigma_a,qmax=Qmax,xwidth=4*pinhole_rad,yheight=4*pinhole_rad) 
+  WHEN (SAMPLE==0) AT (0,0,0) RELATIVE SampleArm */
+
+SPLIT 10 COMPONENT sampleB = Sans_liposomes_new(R=R, dR=dR, Phi=PHI, Delta_rho=Delta_Rho,  sigma_a=0.5,qmax=Qmax, Rdet=Rdet, dist=LD, xwidth=4*pinhole_rad,yheight=4*pinhole_rad)
+    WHEN (SAMPLE==1) AT (0,0,0) RELATIVE SampleArm
+
+COMPONENT beamstop = Beamstop(
+    radius = 3*pinhole_rad)
+WHEN (BEAMSTOP)  AT (0, 0, LD-0.01) RELATIVE ArmSlit2
+
+
+COMPONENT PSD = PSD_monitor(
+    nx = 128, ny = 128, filename = "PSD.txt",xwidth = 1, yheight = 1, restore_neutron = 1)
+  AT (0, 0,LD-0.001) RELATIVE ArmSlit2
+
+// COMPONENT PSD_rad = PSD_monitor_rad(
+//     nr = 100, filename ="PSD_rad.dat", filename_av = "PSD_rad_av.dat",
+//     rmax = 0.5)
+//   AT (0, 0, LD) RELATIVE ArmSlit2
+
+/* COMPONENT PSD_monitor =PSD_monitor_sans( */
+/* q_filename = "circPSD", rmax=0.5,dist=LD,lambda=Lambda) */
+/* AT (0,0,LD) RELATIVE ArmSlit2 */
+
+COMPONENT q_monitor =SANSQMonitor( 
+DistanceFromSample=LD, RadiusDetector=Rdet,
+restore_neutron=1, LambdaMin=Lambda-DLambda, RFilename="rdetector", qFilename="qdetector", NumberOfBins=100)
+AT (0,0,LD+0.001) RELATIVE ArmSlit2
+
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

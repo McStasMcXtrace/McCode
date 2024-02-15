@@ -1,0 +1,157 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: test (rename also the example and DEFINE lines below)
+*
+* %Identification
+* Written by: Linda Udby (udby@nbi.dk)
+* Date: 20.09.2016
+* Origin: Niels Bohr Institute
+* Release: McStas
+* Version: 2.2
+* %INSTRUMENT_SITE: e-learning
+*
+* Instrument short description
+*
+* %Description
+* Instrument longer description (type, elements, usage...)
+* This simple SANS instrument is used for the SANS simulation quiz on th e-learning platform www.e-neutrons.org
+*
+* Example: mcrun SANSsimple.instr  Lambda=10 DLambda=0
+*
+* %Parameters
+* Lambda: [Angs] Average wavelength traced from source
+* DLambda: [Angs] Wavelength band +/- traced from source
+* pinhole_rad: [m] radius of the collimating pinholes. Also used to optimise the sample size.
+* LC: [m] length of the collimator - distance between pinholes
+* LD: [m] distance between the last pinhole slit and detector
+* SAMPLE: [0/1] If set, a sample of spheres or spherical shells is inserted
+* R: [m] average radius of the monodisperse spheres in the sample
+* dR: [AA] Normal variance of  the radius of spheres in the sample. If zero the sample is monodisperse.
+* PHI: [1] Volumefraction of the hard spheres in the sample
+* Delta_Rho: [fm/Angs^3] Volume specific scattering length density contrast of the  hard, monodisperse spheres in the sample as compared to the solution
+* Sigma_a: [barn] Absorption crossection of the sample
+* BEAMSTOP: [0/1] If set, the beamstop is inserted in front of the detector in order to block the transmitted beam
+*
+* %Link
+* https://sim.e-neutrons.org/instrument/intro-ns/SANSsimple
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT SANSsimpleSpheres(pinhole_rad=0.004,LC=3,LD=3,Lambda=6, DLambda=0.001, R=400, dR=0,PHI=1e-2, Delta_Rho=0.6, BEAMSTOP=1,SAMPLE=1)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+double nm=1e-9;
+double Rdet;
+double Na= 6.02214129e23; //Avogadros number
+double VAA; //  Average volume of one particle in [AA3]    CEHCK UNITS OF THIS AND BELOW
+double V; //  Average volume of one particle in [L]
+double Vm;  // Volume per millimole of particles [L]
+double conc;  // millimol per litre
+double DeltaRho; // excess scattering length density [cm/AA3]
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+Rdet=0.5; // Radius of detector, also used for focusing sample
+if (DLambda==0){
+printf(" \n Warning: Monochromatic source, setting automatic bandwidth DLambda=0.001 AA.\n \n");
+DLambda=0.001;
+}
+
+// Calculate input parameters for SANSSpheres
+VAA =   4.0 / 3.0 * PI * pow(R, 3) ; //  Average volume of one particle in [AA3]
+V = VAA*1e-27; // Average volume of one particle in [L]
+Vm = V*NA*1e-3; // Volume per millimol of particles [L]
+conc = PHI / Vm; // [millimol /L] = [mol /m3]
+printf(" \n Concentration of sample = %g mmol/L \n",conc);
+DeltaRho = Delta_Rho*1e-13; // excess scattering length density converted to [cm/AA3] as used in SANSSpheres
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+
+COMPONENT source = Source_Maxwell_3(
+    size = 2*pinhole_rad, Lmin = Lambda-DLambda, Lmax = Lambda+DLambda, dist = LC,
+    focus_xw = pinhole_rad, focus_yh = pinhole_rad, T1 = 150.42,
+    T2 = 38.74, T3 = 14.84, I1 = 3.67, I2 =  3.64e11,
+    I3 =  0.95e11)
+  AT (0, 0, 0) RELATIVE Origin
+
+
+COMPONENT ArmSlit1 = Arm(
+    )
+  AT (0, 0, 6-LC+0.001) RELATIVE source
+
+COMPONENT CircSlit1 = Slit(
+    radius = pinhole_rad)
+  AT (0, 0, 0) RELATIVE ArmSlit1
+
+COMPONENT ArmSlit2 = Arm()
+  AT (0,0,6) RELATIVE source
+
+COMPONENT CircSlit2 = Slit(
+    radius = pinhole_rad)
+  AT (0, 0, 0) RELATIVE ArmSlit2
+
+COMPONENT SampleArm =  Arm()
+  AT (0,0,0.05) RELATIVE ArmSlit2
+
+
+COMPONENT sample = SANSSpheresPolydisperse(
+    R = R, dR = dR, Concentration = conc, DeltaRho = DeltaRho,
+    AbsorptionCrosssection = 0.5, xwidth = 4*pinhole_rad,
+    yheight = 4*pinhole_rad, zdepth = 0.005,
+    SampleToDetectorDistance = LD, DetectorRadius = 1.03*Rdet)
+  WHEN(SAMPLE) AT (0, 0, 0) RELATIVE SampleArm
+
+COMPONENT beamstop = Beamstop(
+    radius = 3*pinhole_rad)
+  WHEN(BEAMSTOP)  AT (0, 0, LD-0.01) RELATIVE ArmSlit2
+
+
+COMPONENT PSD = PSD_monitor(
+    nx = 128, ny = 128, restore_neutron = 1, filename = "PSD.dat",
+    xwidth = 1, yheight = 1)
+  AT (0, 0, LD-0.001) RELATIVE ArmSlit2
+
+
+COMPONENT q_monitor = SANSQMonitor(
+    RFilename = "rdetector.dat", qFilename = "qdetector.dat",
+    NumberOfBins = 100, restore_neutron = 1,
+    RadiusDetector = Rdet, DistanceFromSample = LD,
+    LambdaMin = Lambda, Lambda0 = Lambda)
+  AT (0, 0, LD+0.001) RELATIVE ArmSlit2
+
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
+
+
+
+

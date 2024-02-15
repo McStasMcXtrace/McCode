@@ -1,0 +1,154 @@
+/*******************************************************************************
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2003, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: SANSSpheresPolydisperse
+*
+* %I
+* 
+* Written by Linda Udby (udby@nbi.dk)
+* Modified from SANSSpheres by Martin Cramer Pedersen (mcpe@nbi.dk)
+* Based on a SANS-component in McStas by Peter Willendrup
+* Date: October 17, 2012
+* Version: $Revision$
+* Origin: KU-Science
+* Release: McStas 1.12c
+*
+* A sample of mono- or polydisperse spherical particles in solution.
+*
+* %D
+* A simple component simulating the scattering from a box-shaped, thin solution
+* of monodisperse, spherical particles.
+*
+* %P
+* R						    : [AA]		Radius of the spherical particles.
+* dR                                : [AA]  Variance of the radius of spherical particles. Default 0 (monodisperse spheres)
+* Concentration		  	    : [mM]		Concentration of sample.
+* DeltaRho  			    : [cm/AA^3]	Excess scattering length density of the 
+*								   	    particles.
+* AbsorptionCrosssection    : [1/m]		Absorption cross section of the sample.
+* xwidth    			    : [m]  		Dimension of component in the x-direction.
+* yheight   			    : [m]		Dimension of component in the y-direction.
+* zdepth    			    : [m]		Dimension of component in the z-direction.
+* SampleToDetectorDistance	: [m]		Distance from sample to detector (for 
+*										focusing the scattered neutrons).
+* DetectorRadius          	: [m] 		Radius of the detector (for focusing the 
+*										scattered neutrons).
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT SANSSpheresPolydisperse
+
+DEFINITION PARAMETERS ()
+
+  SETTING PARAMETERS (R = 100.0, dR=0.0, Concentration = 0.01, DeltaRho = 1.0e-14, AbsorptionCrosssection = 0.0,
+		    		xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
+
+OUTPUT PARAMETERS ()
+
+DECLARE
+%{
+	// Declarations	
+	double Prefactor;
+	double Absorption;
+	double q;
+	double NumberDensity;
+%}
+
+INITIALIZE
+%{
+	// Rescale concentration into number of aggregates per m^3 times 10^-4
+	NumberDensity = Concentration * 6.02214129e19;
+
+	// Computations
+	if (!xwidth || !yheight || !zdepth) {
+		printf("%s: Sample has no volume, check parameters!\n", NAME_CURRENT_COMP);
+	}
+
+	Prefactor = NumberDensity * pow(4.0 / 3.0 * PI * pow(R, 3), 2) * pow(DeltaRho, 2);
+
+	Absorption = AbsorptionCrosssection;
+%}
+
+TRACE
+%{
+	// Declarations	
+	double t0; 
+	double t1;
+	double l_full;
+	double l;
+	double l1;
+	double Formfactor;
+	double SolidAngle;
+	double qx; 
+	double qy; 
+	double qz;
+	double v;
+	double dt;
+	double vx_i;
+	double vy_i;
+	double vz_i;
+	char Intersect = 0;
+	
+	// Set radius if polydisperse spheres
+	R = R + randnorm()*dR;
+	
+	// Computation
+	Intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
+
+	if (Intersect) {
+
+		if (t0 < 0.0) {
+			fprintf(stderr, "Neutron already inside sample %s - absorbing...\n", NAME_CURRENT_COMP);
+			ABSORB;
+    	}
+
+		// Compute properties of neutron
+		v = sqrt(pow(vx, 2) + pow(vy, 2) + pow(vz, 2));
+		l_full = v * (t1 - t0);
+		dt = rand01() * (t1 - t0) + t0;
+		PROP_DT(dt);                     
+	    l = v * (dt - t0);
+
+		// Store properties of incoming neutron
+		vx_i = vx;
+		vy_i = vy;
+		vz_i = vz;
+
+		// Generate new direction of neutron
+		randvec_target_circle(&vx, &vy, &vz, &SolidAngle, 0, 0, SampleToDetectorDistance, DetectorRadius);
+
+		NORM(vx, vy, vz);
+
+		vx *= v;
+		vy *= v;
+		vz *= v;
+
+		// Compute q
+		qx = V2K * (vx_i - vx);
+		qy = V2K * (vy_i - vy);
+		qz = V2K * (vz_i - vz);
+
+		q = sqrt(pow(qx, 2) + pow(qy, 2) + pow(qz, 2));
+
+		// Compute scattering
+		l1 = v * t1;
+
+		Formfactor = 3.0 * (sin(q * R) - q * R * cos(q * R)) / pow(q * R, 3);
+
+		p *= l_full * SolidAngle / (4.0 * PI) * Prefactor * pow(Formfactor, 2) * exp(- Absorption * (l + l1) / v);
+
+		SCATTER;
+	}
+%}
+
+MCDISPLAY
+%{
+	magnify("xyz");
+	box(0, 0, 0, xwidth, yheight, zdepth);
+%}
+
+END

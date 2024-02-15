@@ -1,0 +1,232 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2011, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, Fance
+*
+* Component: SANS_Spheres_Abs
+*
+* %I
+* Written by: Wim Bouwman, Delft University of Technology
+* Date:       Aug 2012
+* Origin:     
+* Version:    $Revision: 1.0 $
+* Release:    McStas 1.12c
+* Original file: SANS_AnySamp
+* Written by: Henrich Frielinghaus
+* Date:       Sept 2004
+* Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
+* Version:    $Revision: 1.5 $
+*
+* Solid dilute monodisperse spheres sample with transmitted beam for Small Angle Neutron Scattering.
+*
+* %D
+* Sample for Small Angle Neutron Scattering.
+* Modified from the Any Sample model.
+* Normalization of scattering is done in INITIALIZE.
+* Some elements of Sans_spheres have been re-used
+*
+* Some remarks:
+* Scattering function should be a defined the same way in INITIALIZE and TRACE sections
+* There exist maybe better library functions for the integral.
+*
+* Transmitted paths set to 50% of all paths to be optimised for SESANS. In this simulation method paths are
+* well distributed among transmission and scattering (equally in Q-space).
+*
+* Sample components leave the units of flux for the probability
+* of the individual paths. That is more consitent than the
+* Sans_spheres routine. Furthermore one can simulate the
+* transmitted beam. This allows to determine the needed size of
+* the beam stop. Absorption is included to
+* these sample-components. 
+*
+* Example: SANS_Spheres_Abs(R=100, Phi=1e-3, Delta_rho=0.6, sigma_a = 50, qmax=0.03, xwidth=0.01, yheight=0.01, zthick=0.001)
+*
+* %P
+*
+* INPUT PARAMETERS
+*
+* R	     : Radius of scattering hard spheres (AA)
+* Phi	     : Particle volume fraction (1)
+* Delta_rho  : Excess scattering length density (fm/AA^3)
+* sigma_a:   Absorption cross section density at 2200 m/s (m^-1)
+* qmax (AA-1): Maximum scattering vector (typically 10/R to observe the 3rd ring)
+* xwidth  (m): horiz. dimension of sample, as a width (m)
+* yheight (m): vert.. dimension of sample, as a height (m)
+* zthick  (m): thickness of sample (m)
+*
+* %Link
+* Sans_spheres component
+* SANS_AnySamp component
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT SANS_Liposomes_Abs
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (R=100, dR=0.0,Phi=1e-3, Delta_rho=0.6, sigma_a=0.50, qmax=0.03, xwidth=0.01, yheight=0.01, zthick=0.001, dbilayer=35)
+OUTPUT PARAMETERS (q_v,my_a_v,isq)
+//STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+  double my_a_v;
+  double isq;
+  double Ri;
+  double fi;
+%}
+
+INITIALIZE
+%{
+    if (!xwidth || !yheight || !zthick) {
+  exit(fprintf(stderr,"SANS_AnySamp: %s:   sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+    }
+
+  int    iqmax=30000,iq=iqmax;    // number of intervals
+  double q,sq,f;
+
+  isq = 0.0;           // integral = 0
+
+  while (iq > 1)       // start integrating with low intensities at large q
+  {                               // MODIFIY HERE
+  q  = (iq-0.5)*qmax/iqmax;       // q always slightly larger than 0
+  if(Ri<=0)
+    fi = 0;
+else
+    fi = 3*(sin(q*Ri) - q*Ri*cos(q*Ri))/(q*Ri*q*Ri*q*Ri);
+    
+  sq = fi*fi;	                  // define this function in INITIALIZE and TRACE part
+  sq*= q;
+  isq+= sq;
+  --iq;
+  }
+
+  isq*=qmax/iqmax;
+  my_a_v = sigma_a*2200*100;           /* Is not yet divided by v. 100: Convert barns -> fm^2 */
+
+%}
+
+TRACE
+%{
+  double a,q,qm,sq,f;
+  double Vi,Vo;
+  double RiTrace,Ro;
+  double fiTrace, fo;
+  double transsim=0.5;                  // portion of paths for transmission, ~ 0.03 for SANS, 0.5 for SESANS
+  double my_s_pre;
+  double q_v;
+
+  double transmr, t0, t1, v, l_full, l, dt, d_phi, theta;
+  double axis_x, axis_y, axis_z;
+  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
+  char   intersect=0;
+
+  RiTrace=Ri;
+  fiTrace=fi;
+  
+  Ro=R+randnorm()*dR;
+  RiTrace = Ro-dbilayer; /*  Calculate inner radius of liposphere */
+  if(dbilayer==R)
+	  RiTrace=0; /*  Treat sample as solid spheres */
+  Vi = 4/3*PI*RiTrace*RiTrace*RiTrace;
+  Vo = 4/3*PI*Ro*Ro*Ro;
+  my_s_pre = Phi * (Vo-Vi) * Delta_rho*Delta_rho;
+
+  intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+  if(intersect)
+  {
+    if(t0 < 0) ABSORB;                   /* Neutron enters at t=t0. */
+
+    v = sqrt(vx*vx + vy*vy + vz*vz);
+    /* amount of scattering is described by \lambda^2 zthick Delta_rho^2 phi 3/2 R */
+    /* for example J. Schelten, W. Schmatz: J. Appl. Crystallogr. 13, 385 (1980) */
+    /* units perfectly cancel each other \AA^2 m fm^2 \AA^-6 \AA = 1 */
+    transmr = 1.0 - 4.0*PI*PI/V2K/V2K/v/v*zthick*Delta_rho*Delta_rho*Phi*1.5*R;       /* transmission for single scattering */
+/*  if (transmr<1e-10) transmr = 1e-10; */
+/*  if (transmr>0.99 ) transmr = 0.99;  */
+
+    l_full = v * (t1 - t0);              /* Length of full path through sample */
+    transmr = exp(log(transmr)*l_full/zthick);  /* real transmission */
+
+    dt = rand01()*(t1 - t0) + t0;        /* Time of scattering */
+    PROP_DT(dt);                         /* Point of scattering */
+    l = v*dt;                            /* Penetration in sample */
+
+    qm = qmax;                           // adjust maximal q
+    if (qm > 2.0*v/K2V) qm = 2.0*v/K2V;  // should not be totally wrong
+    q = sqrt(rand01())*qm;               // otherwise normalization with isq is wrong
+
+    q_v = q*K2V;                         /* scattering possible ??? */
+    arg = q_v/(2.0*v);
+
+    if(rand01()>transsim)
+    {
+      //  f = 3 * (sin(q*R) - q*R*cos(q*R))/(q*R*q*R*q*R);
+
+    fo = 3*(sin(q*Ro) - q*Ro*cos(q*Ro))/(q*Ro*q*Ro*q*Ro);
+    
+if(RiTrace<=0)
+    fiTrace = 0;
+else
+    fiTrace = 3*(sin(q*RiTrace) - q*RiTrace*cos(q*RiTrace))/(q*RiTrace*q*RiTrace*q*RiTrace);
+    
+    f= (Vo*fo-Vi*fiTrace)/(Vo-Vi);
+
+    sq = f*f;	                  // define this function in INITIALIZE and TRACE part
+
+    p*= sq*(qmax*qmax*0.5)*(1.0-transmr)/(1.0-transsim)/isq;
+
+    theta = asin(arg);                   /* Bragg scattering law */
+    d_phi = 2*PI*rand01();
+
+    vec_prod(axis_x, axis_y, axis_z, vx, vy, vz, 0, 1, 0);
+    rotate(tmp_vx, tmp_vy, tmp_vz, vx, vy, vz, 2*theta, axis_x, axis_y, axis_z);
+    rotate(vout_x, vout_y, vout_z, tmp_vx, tmp_vy, tmp_vz, d_phi, vx, vy, vz);
+
+    vx = vout_x;
+    vy = vout_y;
+    vz = vout_z;
+
+    if(!box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick))    fprintf(stderr, "SANS_AnySamp: FATAL ERROR: Did not hit box from inside.\n");
+    }
+    else
+    {
+    p*= transmr / transsim;
+    }
+    p *= exp(-my_a_v*(l_full)/v);
+    SCATTER;
+  }
+%}
+
+MCDISPLAY
+%{
+  double radius = 0;
+  double h = 0;
+  magnify("xyz");
+  {
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zthick;
+    double zmax =  0.5*zthick;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
+
+%}
+END
+

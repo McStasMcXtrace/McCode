@@ -1,0 +1,165 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: test (rename also the example and DEFINE lines below)
+*
+* %Identification
+* Written by: Linda Udby <udby@nbi.dk>
+* Date: 26/02/2015
+* Origin: Your institution
+* Release: McStas CVS-080208
+* Version: 0.2
+* %INSTRUMENT_SITE: e-learning
+*
+* Instrument short description
+* A simple monochromatic powder diffractometer with variable bandwidth, aluminium sample container with powder sample (default nickel powder).
+*
+* %Description
+* A simple monochromatic powder diffractometer with variable bandwidth, collimation, aluminium sample container and powder sample.
+* The sample container (Al can) is optional.
+* A banana detector records scattering agles [20,100]
+*
+* Example: mcrun SimplePowderDIffractometer.instr coll=40, container=1
+*
+* %Parameters
+* lambda0: [AA]  The mean value of  incoming wavelegths (Gaussian distribution)
+* dlambda: [AA] Gaussian sigma of incoming wavelength distribution
+* coll: [arcmin] horizontal collimation 
+* container: [1] When >0 a 2mm thick Al pressed powder can is inserted around the sample
+* sample: [1] 0=Ni, 1=Fe, 2=SiO2, 3=C_diamond, otherwise empty
+* %Link
+* http://vnt.nmi3.org/mcstas-web
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT SimplePowderDIffractometer(lambda0=1, dlambda=0.005, coll=120, int container=0, int sample=0)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+double L1=3;
+double LC=1;
+double sample_radius=0.005;
+double sample_height=0.05;
+double al_thickness=0.002;
+char samplestring[128];
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+
+if (sample==0) {
+  sprintf(samplestring,"Ni.laz");
+} else if (sample==1) {
+  sprintf(samplestring,"Fe.laz");
+} else if (sample==2) {
+  sprintf(samplestring,"SiO2_quartza.laz");
+} else if (sample==3) {
+  sprintf(samplestring,"C_diamond.laz");
+} else {
+  sprintf(samplestring,"NULL");
+}
+
+
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+
+COMPONENT source = Source_simple(
+    radius = 0.1, dist=L1, focus_xw = 2*sample_radius+2*al_thickness,
+    focus_yh = sample_height+2*al_thickness, lambda0 = lambda0,
+    dlambda = dlambda, flux = 5e10, gauss = 1, dist=L1)
+  AT (0, 0, 0) RELATIVE Origin
+
+
+/*COMPONENT PSD_precoll =  PSD_monitor(
+    xwidth=0.15, yheight=0.15,
+    nx=80, ny=80, filename="PSD_precoll.dat", restore_neutron=1)
+  AT ( 0, 0, LC-0.04) RELATIVE source 
+*/
+
+COMPONENT collimator = Collimator_linear(
+    xwidth = 0.2, yheight = 0.2, length = 0.2, divergence = coll)
+  AT (0, 0, LC) RELATIVE source 
+
+//The following two monitors are sample size
+/*COMPONENT PSD_sample =  PSD_monitor(
+    xwidth=2*sample_radius+2*al_thickness, yheight=sample_height+2*al_thickness,
+    nx=80, ny=80, filename="PSD_sample.dat", restore_neutron=1)
+  AT ( 0, 0, L1-0.0101) RELATIVE source
+
+COMPONENT lambda_sample =  L_monitor(
+    xwidth=2*sample_radius+2*al_thickness, yheight=sample_height+2*al_thickness,
+    Lmin=lambda0-5*dlambda, Lmax=lambda0+5*dlambda, nL=128, filename="L_sample.dat")
+  AT ( 0, 0, L1-0.01) RELATIVE source 
+*/
+
+COMPONENT entry_side= PowderN(
+   reflections="Al.laz",barns=1, radius=sample_radius+al_thickness, thickness=al_thickness, yheight=sample_height +2*al_thickness,d_phi=2, p_transmit=0.8,concentric=1)
+WHEN (container >0)
+AT (0, 0, L1) RELATIVE source
+
+
+COMPONENT sample = PowderN(
+    reflections = samplestring, radius = sample_radius, yheight=sample_height,
+    pack = 1, sigma_abs = -1, sigma_inc = -1, p_inc=0,
+    delta_d_d = 0, d_phi = 2,barns=1,DW=0, p_transmit=0.1)
+  AT (0, 0, L1) RELATIVE source
+
+
+COMPONENT exit_side= COPY(entry_side)(concentric=0)
+WHEN (container >0)
+AT  (0, 0, L1) RELATIVE source 
+
+/*COMPONENT PSD_4pi = PSD_monitor_4PI(
+    filename = "PSD_4pi.dat", radius = 0.4, restore_neutron=1)
+  AT (0, 0, 0) RELATIVE sample 
+ */
+
+COMPONENT Detector = Monitor_nD(
+    xwidth=L1,yheight=0.20,
+    options="banana, theta" , filename="detector.dat",min=20, max=100,bins=400,restore_neutron=1)
+  // options="banana, theta bins=800 limits [20 100] , file=detector.dat") // works too
+   // options="banana, theta longitude bins=800  limits [20 80] auto y, file=detector.dat ")// does not work
+  AT (0,0,0) RELATIVE sample
+  ROTATED (0,0,180) RELATIVE sample
+
+
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
+
+
+
+
+
+
+
+
+
+
+
