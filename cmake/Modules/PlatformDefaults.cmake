@@ -172,7 +172,7 @@ apply_platform_variables( "${tmp_detected_var_list}" )
 unset( tmp_detected_var_list )
 
 #A bit of derived variable logic:
-set( MCCODE_EXE_SUFFIX_NEVEREMPTY "${MCCODE_EXECUTABLE_SUFFIX}" )
+set( MCCODE_EXE_SUFFIX_NEVEREMPTY "${MCCODE_EXE_SUFFIX}" )
 if ( NOT MCCODE_EXE_SUFFIX_NEVEREMPTY )
   set( MCCODE_EXE_SUFFIX_NEVEREMPTY "out" )
 endif()

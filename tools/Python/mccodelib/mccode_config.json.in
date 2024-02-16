@@ -28,7 +28,7 @@
     "MPINODES": "auto"
   },
   "platform": {
-    "EXESUFFIX": "@MCCODE_EXECUTABLE_SUFFIX@"
+    "EXESUFFIX": "@MCCODE_EXE_SUFFIX@"
   },
   "directories": {
   }
