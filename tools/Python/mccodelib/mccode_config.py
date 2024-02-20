@@ -83,7 +83,7 @@ def load_config(path=None):
                 else:
                     compilation[e] = lexer.quote(str(compilation[e]))
     else:
-        entries_to_qoute=['CFLAGS','NEXUSFLAGS','MPIFLAGS','OACCFLAGS','CC']
+        entries_to_quote=['CFLAGS','NEXUSFLAGS','MPIFLAGS','OACCFLAGS','CC']
         for e in entries_to_quote:
             compilation[e] = lexer.quote(str(compilation[e]))
 
