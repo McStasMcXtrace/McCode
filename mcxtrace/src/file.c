@@ -20,7 +20,13 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#ifndef _MSC_EXTENSIONS
 #include <dirent.h>
+#else
+#include "windirent.h"
+#define popen _popen
+#define pclose _pclose
+#endif
 #include <string.h>
 
 #include "mccode.h"
@@ -90,6 +96,51 @@ try_open_component(char *dir, char *name)
 }
 
 char *
+query_mcxrun_for_resourcedir( void )
+{
+  /* Launch "mcrun/mxrun --showcfg=resourcedir" and return output (or NULL in */
+  /* case of failure):                                                        */
+
+  FILE *fp;
+  char path[8192];
+  char *cmd;
+  unsigned nlines;
+
+#ifdef WIN32
+#  define MCXRUN_REDIR ""
+#else
+#  define MCXRUN_REDIR " 2>/dev/null"
+#endif
+
+  /* Open the command for reading. */
+  if ( strcmp( MCCODE_NAME, "mcstas" ) == 0 )
+    cmd = "mcrun --showcfg=resourcedir" MCXRUN_REDIR;
+  else
+    cmd = "mxrun --showcfg=resourcedir" MCXRUN_REDIR;
+  fp = popen(cmd, "r");
+  if ( !fp )
+    return NULL;//cmd failed
+
+  /* Read the output one line at a time: */
+  nlines = 0;
+  while (fgets(path, sizeof(path), fp) != NULL)
+    ++nlines;
+
+  /* close */
+  pclose(fp);
+
+  if ( nlines == 1 ) {
+    /* Ok, but must r-trim the trailing end-of-line-chars: */
+    size_t len = strnlen( path, sizeof(path)-1 );
+    while ( len && ( path[len-1]=='\n' || path[len-1]=='\r' ) )
+      --len;
+    return len ? str_dup_n( path, len ) : NULL;
+  } else {
+    return NULL;/*unexpected output*/
+  }
+}
+
+char *
 get_sys_dir(void)
 {
   static char *sys_dir = NULL;
@@ -97,8 +148,27 @@ get_sys_dir(void)
   if(sys_dir == NULL)
   {
     sys_dir = getenv(FLAVOR_UPPER);
-    if(sys_dir == NULL)
-      sys_dir = MCXTRACE;
+    if(sys_dir == NULL) {
+      /* Environment variable $MCSTAS/$MXTRACE was not set. Next up, try */
+      /* "mcrun/mxrun --showcfg=resourcedir":                            */
+      sys_dir = query_mcxrun_for_resourcedir();
+      /* Return already, since we already did str_dup_n: */
+      if ( sys_dir )
+        return sys_dir;
+    }
+#ifdef MCCODE_RESOURCEDIR_HARDCODED
+    if(sys_dir == NULL) {
+      /* Final fall-back is to check the original cmake location (will not be */
+      /* relocatable):                                                        */
+      sys_dir = mccode_xstr(MCCODE_RESOURCEDIR_HARDCODED);
+    }
+#endif
+    if(sys_dir == NULL) {
+      /* Give up! */
+      fatal_error("Can not find resource directory (tried $" FLAVOR_UPPER ", mcrun"
+                  " --showcfg=resourcedir, and CMake locations). Please"
+                  " set $" FLAVOR_UPPER " variable and rerun");
+    }
     sys_dir = str_dup(sys_dir);
   }
   return sys_dir;
@@ -119,7 +189,7 @@ generic_open_file_search(char *name, FILE *(*try_open)(char *, char *))
   if(search_list != NULL)
   {
     liter = list_iterate(search_list);
-    while(dir = list_next(liter))
+    while((dir = list_next(liter)))
     {
       f = (*try_open)(dir, name);
       if(f != NULL)

@@ -30,6 +30,13 @@
 #define YYERROR_VERBOSE 1
 #define YYDEBUG 1
 
+// On Windows and using cl.exe, avoid
+// unistd.h and map popen/pclose to fallback _ versions
+#ifdef _MSC_EXTENSIONS
+#define YY_NO_UNISTD_H
+#define popen _popen
+#define pclose _pclose
+#endif
 %}
 
 %{
@@ -37,7 +44,7 @@ typedef struct List_header * List;
 typedef struct Symbol_table * Symtab;
 typedef struct instr_def * instr_ptr_t;
 int yylex();
-int yyerror(char *s);
+int yyerror(const char *s);
 List list_cat(List, List);
 Symtab symtab_cat(Symtab, Symtab);
 void run_command_to_add_search_dir(char * input);
@@ -51,10 +58,11 @@ void metadata_assign_from_instance(List metadata);
    definitions. */
 // TODO: Select either a) or b) below depending on bison version
 // a) bison v < 3
-%pure-parser
+// %pure-parser
 // b) bison v >= 3
-//%define api.pure
-//%define parse.trace
+%define api.pure
+%define parse.trace
+
 
 /*******************************************************************************
 * Type definition for semantic values.
@@ -2150,7 +2158,7 @@ main(int argc, char *argv[])
 
 
 int
-yyerror(char *s)
+yyerror(const char *s)
 {
   print_error("ERROR: %s at line %d.\n", s, instr_current_line);
   return 0;

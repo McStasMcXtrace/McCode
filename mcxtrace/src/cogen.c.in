@@ -2260,6 +2260,13 @@ cogen_header(struct instr_def *instr, char *output_name)
   coutf("#  define _POSIX_C_SOURCE 200809L");
   coutf("#endif");
 
+  /* In case of cl.exe on Windows, supppress warnings about #pragma acc */
+  cout("/* In case of cl.exe on Windows, supppress warnings about #pragma acc */");
+  coutf("#ifdef _MSC_EXTENSIONS");
+  coutf("#pragma warning(disable: 4068)");
+  coutf("#endif");
+  cout("");
+
   coutf("#define MCCODE_STRING \"%s\"", MCCODE_STRING);
   coutf("#define FLAVOR        \"%s\"", FLAVOR);
   coutf("#define FLAVOR_UPPER  \"%s\"", FLAVOR_UPPER);
