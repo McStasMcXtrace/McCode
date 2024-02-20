@@ -66,15 +66,26 @@ def load_config(path=None):
     obj = json.loads(text)
     configuration = obj['configuration']
     compilation = obj['compilation']
+
+    if not os.name == 'nt':
+        import shlex as lexer
+    else:
+        import mslex as lexer
+
     if configuration['ISCONDAPKG']=='1':
         conda_prefix = os.environ.get('CONDA_PREFIX')
         if conda_prefix:
-            import shlex
             entries_with_conda_prefix=['CFLAGS','NEXUSFLAGS','MPIFLAGS','OACCFLAGS','CC']
-            conda_prefix = shlex.quote(str(pathlib.Path(conda_prefix).absolute().resolve()))
+            conda_prefix = str(pathlib.Path(conda_prefix).absolute().resolve())
             for e in entries_with_conda_prefix:
                 if '${CONDA_PREFIX}' in compilation[e]:
-                    compilation[e] = compilation[e].replace('${CONDA_PREFIX}',conda_prefix)
+                    compilation[e] = lexer.quote(str(pathlib.Path(compilation[e].replace('${CONDA_PREFIX}',conda_prefix)).absolute().resolve()))
+                else:
+                    compilation[e] = lexer.quote(str(compilation[e]))
+    else:
+        entries_to_qoute=['CFLAGS','NEXUSFLAGS','MPIFLAGS','OACCFLAGS','CC']
+        for e in entries_to_quote:
+            compilation[e] = lexer.quote(str(compilation[e]))
 
     platform = obj['platform']
     directories = obj['directories']
