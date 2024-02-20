@@ -32,6 +32,13 @@ def check_env_vars():
     if os.getenv(MCCODE_MPICC_OVERRIDE) is not None:
         compilation['MPICC'] = os.getenv(MCCODE_MPICC_OVERRIDE)
 
+def needsquotes(i):
+    # Check if string is quoted already:
+    if i.startswith("'") and i.endswith("'") and len(i) > 1:
+        return False # already quoted
+    else:
+        return True
+
 def load_config(path=None):
     ''' loads a json user config to the dictionaries in this module '''
     global configuration
@@ -75,17 +82,27 @@ def load_config(path=None):
     if configuration['ISCONDAPKG']=='1':
         conda_prefix = os.environ.get('CONDA_PREFIX')
         if conda_prefix:
-            entries_with_conda_prefix=['CFLAGS','NEXUSFLAGS','MPIFLAGS','OACCFLAGS','CC']
+            entries_with_conda_prefix=['CFLAGS','NEXUSFLAGS','MPIFLAGS','OACCFLAGS','CC','MPICC','MPIRUN']
             conda_prefix = str(pathlib.Path(conda_prefix).absolute().resolve())
             for e in entries_with_conda_prefix:
                 if '${CONDA_PREFIX}' in compilation[e]:
-                    compilation[e] = lexer.quote(str(pathlib.Path(compilation[e].replace('${CONDA_PREFIX}',conda_prefix)).absolute().resolve()))
+                    compilation[e] = str(pathlib.Path(compilation[e].replace('${CONDA_PREFIX}',conda_prefix)).absolute().resolve())
                 else:
-                    compilation[e] = lexer.quote(str(compilation[e]))
+                    compilation[e] = str(compilation[e])
+                if needsquotes(compilation[e]):
+                    compilation[e] = lexer.quote(compilation[e])
     else:
-        entries_to_quote=['CFLAGS','NEXUSFLAGS','MPIFLAGS','OACCFLAGS','CC']
+        entries_to_quote=['CFLAGS','NEXUSFLAGS','MPIFLAGS','OACCFLAGS','CC','MPICC','MPIRUN']
         for e in entries_to_quote:
-            compilation[e] = lexer.quote(str(compilation[e]))
+            if needsquotes(compilation[e]):
+                compilation[e] = lexer.quote(compilation[e])
+    # Special treatment for 'CC', 'MPICC', 'MPIRUN'
+    if pathlib.Path(compilation['CC']).is_absolute() and needsquotes(compilation['CC']):
+        compilation['CC'] = lexer.quote(compilation['CC'])
+    if pathlib.Path(compilation['MPICC']).is_absolute() and needsquotes(compilation['MPICC']):
+        compilation['MPICC'] = lexer.quote(compilation['MPICC'])
+    if pathlib.Path(compilation['MPIRUN']).is_absolute() and needsquotes(compilation['MPIRUN']):
+        compilation['MPIRUN'] = lexer.quote(compilation['MPIRUN'])
 
     platform = obj['platform']
     directories = obj['directories']
