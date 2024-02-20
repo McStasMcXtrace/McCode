@@ -59,6 +59,7 @@ jobs:
       if: runner.os == 'Windows'
       run: |
            choco install winflexbison3
+           pip install mslex
 
     - name: Setup OpenMPI (Linux)
       id: setup-openmpi-linux
