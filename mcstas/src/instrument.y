@@ -30,6 +30,15 @@
 #define YYERROR_VERBOSE 1
 #define YYDEBUG 1
 
+// On Windows and using cl.exe, avoid
+// unistd.h and map popen/pclose to fallback _ versions
+#ifdef _WIN32
+#ifdef _MSC_EXTENSIONS
+#define YY_NO_UNISTD_H
+#define popen _popen
+#define pclose _pclose
+#endif
+#endif
 %}
 
 %{

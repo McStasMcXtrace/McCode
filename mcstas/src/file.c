@@ -20,7 +20,13 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#ifndef _MSC_EXTENSIONS
 #include <dirent.h>
+#else
+#include "windirent.h"
+#define popen _popen
+#define pclose _pclose
+#endif
 #include <string.h>
 
 #include "mccode.h"

@@ -32,6 +32,14 @@
 #include <math.h>
 #include <stdio.h>
 
+// On Windows and using cl.exe, avoid
+// unistd.h and map popen/pclose to fallback _ versions
+#ifdef _MSC_EXTENSIONS
+#define YY_NO_UNISTD_H
+#define popen _popen
+#define pclose _pclose
+#endif
+
 #include "mccode.h"
 #include "instrument.tab.h"
 
