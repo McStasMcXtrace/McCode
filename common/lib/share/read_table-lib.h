@@ -59,7 +59,14 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#ifndef _MSC_EXTENSIONS
 #include <strings.h>
+#else
+#  include <string.h>
+#  define strcasecmp _stricmp
+#  define strncasecmp _strnicmp
+#endif
 
   typedef struct struct_table
   {
