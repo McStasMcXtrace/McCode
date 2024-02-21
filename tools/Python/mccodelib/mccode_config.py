@@ -84,7 +84,6 @@ def load_config(path=None):
 
         # On macOS, map ${XCRUN_DETECTED} 'symbols' to actual, current "SDK" path from xcrun
         if OsPlatform.system() == 'Darwin':
-            print("This is DARWIN")
             cmd = "xcrun --show-sdk-path"
             errmsg = lambda : f'Errors encountered while executing cmd: {cmd}'
             try:
