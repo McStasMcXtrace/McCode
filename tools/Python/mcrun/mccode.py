@@ -295,7 +295,10 @@ class McStas:
             binpath = self.options.mpirun
             if self.options.mpi == "auto":
                 LOG.info('Using system default number of mpirun -np processes')
-                mpi_flags = ['--']
+                if os.name == 'nt':
+                    mpi_flags = [''] # msmpi mpiexec.exe does not accept --
+                else:
+                    mpi_flags = ['--'] # ... whereas openmpi mpirun does.
             elif int(self.options.mpi) >= 1:
                 mpi_flags = ['-np', str(self.options.mpi)]
             else:
