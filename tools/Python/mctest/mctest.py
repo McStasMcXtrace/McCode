@@ -220,7 +220,10 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
     logging.info("Compiling instruments [seconds]...")
     for test in tests:
         # if binary exists, set compile time = 0 and continue
-        binfile = os.path.splitext(test.localfile)[0] + "." + mccode_config.platform["EXESUFFIX"].lower()
+        if not platform.system() == "Windows":
+            binfile = os.path.splitext(test.localfile)[0] + ".out"
+        else:
+            binfile = os.path.splitext(test.localfile)[0] + "." + mccode_config.platform["EXESUFFIX"].lower()
         if os.path.exists(binfile):
             test.compiled = True
             test.compiletime = 0
