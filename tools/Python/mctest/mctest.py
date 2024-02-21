@@ -408,7 +408,7 @@ def create_label_dir(testdir, label):
     if not os.path.exists(testdir):
         logging.info("could not create test folder, exiting...")
         quit()
-    labeldir = join(testdir, label)
+    labeldir = join(testdir, label + "_" + platform.system())
     if not os.path.exists(labeldir):
         mkdir(labeldir)
     return labeldir
