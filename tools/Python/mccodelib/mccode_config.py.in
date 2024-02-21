@@ -1,6 +1,8 @@
 import os
 import pathlib
 import json
+import platform as OsPlatform
+import subprocess
 
 thisdir = pathlib.Path(__file__).parent.absolute().resolve()
 tooldir = ( thisdir / '..' / '..' ).absolute().resolve()
@@ -45,7 +47,7 @@ def load_config(path=None):
         info=""
     elif path=="user":
         level="user"
-        if os.name == 'nt':
+        if OsPlatform.system() == 'Windows':
             userdir =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",configuration['MCCODE'],configuration['MCCODE_VERSION'])
         else:
             userdir =  os.path.join(os.path.expandvars("$HOME"),"." + configuration['MCCODE'],configuration['MCCODE_VERSION'])
@@ -67,14 +69,39 @@ def load_config(path=None):
     configuration = obj['configuration']
     compilation = obj['compilation']
 
+    # Special handling of build-env detected settings on conda
     if configuration['ISCONDAPKG']=='1':
+        # Map existing ${CONDA_PREFIX} 'symbols' to actual current CONDA_PREFIX
         conda_prefix = os.environ.get('CONDA_PREFIX')
         if conda_prefix:
             entries_with_conda_prefix=['CFLAGS','NEXUSFLAGS','MPIFLAGS','OACCFLAGS','CC','MPICC','MPIRUN']
             conda_prefix = str(pathlib.Path(conda_prefix).absolute().resolve())
             for e in entries_with_conda_prefix:
                 if '${CONDA_PREFIX}' in compilation[e]:
-                    compilation[e] = str(pathlib.Path(compilation[e].replace('${CONDA_PREFIX}',conda_prefix)).absolute().resolve())
+                    compilation[e] = str(compilation[e].replace('${CONDA_PREFIX}',conda_prefix))
+                else:
+                    compilation[e] = str(compilation[e])
+
+        # On macOS, map ${XCRUN_DETECTED} 'symbols' to actual, current "SDK" path from xcrun
+        if OsPlatform.system() == 'Darwin':
+            cmd = "xcrun --show-sdk-path"
+            errmsg = lambda : f'Errors encountered while executing cmd: {cmd}'
+            try:
+                returncode = 1
+                with subprocess.Popen( cmd,
+                                   shell=True,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE ) as proc:
+                    xcrun_path = proc.communicate()[0].decode("utf-8").rstrip()
+                    returncode = proc.returncode
+            except:
+                print(errmsg())
+                raise
+            entries_with_isysroot=['CFLAGS','NEXUSFLAGS','MPIFLAGS','OACCFLAGS','CC','MPICC','MPIRUN']
+            conda_prefix = str(pathlib.Path(xcrun_path).absolute().resolve())
+            for e in entries_with_isysroot:
+                if '${XCRUN_DETECTED}' in compilation[e]:
+                    compilation[e] = str(compilation[e].replace('${XCRUN_DETECTED}',xcrun_path))
                 else:
                     compilation[e] = str(compilation[e])
 
@@ -98,7 +125,7 @@ def save_user_config():
     ''' attempts to save the current values to a local .json file '''
     text = json.dumps({'configuration' : configuration, 'compilation' : compilation, 'platform' : platform, 'directories' : directories}, indent=2)
 
-    if os.name == 'nt':
+    if OsPlatform.system() == 'Windows':
         homedirconf =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",configuration['MCCODE'])
     else:
         homedirconf =  os.path.join(os.path.expandvars("$HOME"),"." + configuration['MCCODE'])
@@ -130,7 +157,7 @@ def save_user_config():
 
 def get_options():
     ''' values below are not enforced in the dicts, but probably used to populate certain gui menus '''
-    if os.name == 'nt':
+    if OsPlatform.system() == 'Windows':
         suffix='-pl'
         #suffix2='.pl'
     else:
