@@ -4,12 +4,13 @@
 @REM
 @REM Path related:
 @set BINDIR=%~dp0
-@SET PATH=%BINDIR%;%BINDIR%\\..\\miniconda3;%BINDIR%\\..\\miniconda3\\Scripts\\;%BINDIR%\\..\\miniconda3\\Library\\bin;%BINDIR%\\..\\miniconda3\\Library\\mingw-w64\\bin;c:\\Microsoft MPI\\Bin;%PATH%
+@SET PATH=%BINDIR%;%BINDIR%\..\miniconda3;%BINDIR%\..\miniconda3\Scripts\;%BINDIR%\..\miniconda3\Library\bin;%BINDIR%\..\miniconda3\Library\mingw-w64\bin;c:\Microsoft MPI\Bin;%PATH%
 @REM
 @REM @FLAVOR@ related:
-@SET @FLAVOR_UPPER@=%BINDIR%\\@MCCODE_RELPATH_BINDIR2RESOURCEDIR@
+@SET @FLAVOR_UPPER@=%BINDIR%\@MCCODE_RELPATH_BINDIR2RESOURCEDIR@
 @SET @FLAVOR_UPPER@_CC=gcc
 @REM
 @REM NCrystal Python hooks
-@SET PYTHONPATH=%BINDIR%\\..\\share\\NCrystal\\python;%PYTHONPATH%
-@CALL c:\\@FLAVOR@-@MCCODE_VERSION@\\miniconda3\\Scripts\\activate.bat
+@IF exist %BINDIR%\..\share\NCrystal\python SET PYTHONPATH=%BINDIR%\..\share\NCrystal\python;%PYTHONPATH%
+@REM Attempt loading conda only if "embedded env" exists
+@IF exist c:\@FLAVOR@-@MCCODE_VERSION@\miniconda3\Scripts\activate.bat CALL c:\@FLAVOR@-@MCCODE_VERSION@\miniconda3\Scripts\activate.bat
