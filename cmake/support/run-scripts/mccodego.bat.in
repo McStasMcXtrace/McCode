@@ -1,6 +1,6 @@
 @cd %USERPROFILE%
 @set BINDIR=%~dp0
-@CALL %BINDIR%\\mccodeenv.bat
+@CALL %BINDIR%\mccodeenv.bat
 @ECHO OFF
 @ECHO @FLAVOR@ environment shell:
 @ECHO OFF

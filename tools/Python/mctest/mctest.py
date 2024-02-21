@@ -221,7 +221,6 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
     for test in tests:
         # if binary exists, set compile time = 0 and continue
         binfile = os.path.splitext(test.localfile)[0] + "." + mccode_config.platform["EXESUFFIX"].lower()
-        print(binfile)
         if os.path.exists(binfile):
             test.compiled = True
             test.compiletime = 0
@@ -409,7 +408,7 @@ def create_label_dir(testdir, label):
     if not os.path.exists(testdir):
         logging.info("could not create test folder, exiting...")
         quit()
-    labeldir = join(testdir, label)
+    labeldir = join(testdir, label + "_" + platform.system())
     if not os.path.exists(labeldir):
         mkdir(labeldir)
     return labeldir

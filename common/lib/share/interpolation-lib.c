@@ -501,7 +501,7 @@ struct interpolator_struct *interpolator_load(char *filename,
         break;
       }
       for (index=0; index<table.rows; index++) {
-        long indices[interpolator->space_dimensionality];
+        long *indices = malloc(interpolator->space_dimensionality*sizeof(long));
         long this_index;
         int  axis=0;
 
@@ -514,6 +514,7 @@ struct interpolator_struct *interpolator_load(char *filename,
                        interpolator->bin, indices);
         // array[axis1][axis2][...] = field[dim] column after [space] elements
         array[this_index] = Table_Index(table, index, interpolator->space_dimensionality+dim);
+	free(indices);
       }
       if (dim==0)
 	interpolator->gridx = array;

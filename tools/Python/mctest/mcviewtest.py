@@ -43,6 +43,10 @@ def run_normal_mode(testdir, reflabel):
         refp = None
         # Decostruct localfile path to find 'label' corresponding to current cell
         label = cellobj["localfile"].split("/");
+        # If localfile was not split by "/", the input was likely generated on Windows:
+        if len(label)==1:
+            label = cellobj["localfile"].split("\\");
+
         label=label[len(label)-3];
         url =  label + "/" + cellobj["instrname"] +  "/" + str(cellobj["testnb"]) + "/browse.html"
         burl = label + "/" + cellobj["instrname"] +  "/"
