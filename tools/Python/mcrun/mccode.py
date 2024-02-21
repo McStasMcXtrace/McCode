@@ -3,7 +3,12 @@ import pathlib
 import sys
 import re
 import shutil
-import shlex
+
+if not os.name == 'nt':
+    import shlex as lexer
+else:
+    import mslex as lexer
+
 import yaml
 
 from os.path import isfile, dirname, basename, splitext, join
@@ -169,20 +174,20 @@ class McStas:
         # of CFLAGS):
         if os.environ.get('CONDA_PREFIX'):
             if os.environ.get('LDFLAGS'):
-                cflags += shlex.split( os.environ.get('LDFLAGS') )
+                cflags += lexer.split( os.environ.get('LDFLAGS') )
             if os.environ.get('CFLAGS'):
-                cflags += shlex.split( os.environ.get('CFLAGS') )
+                cflags += lexer.split( os.environ.get('CFLAGS') )
             # Special handling of NVIDIA's OpenACC-aware compiler inside a CONDA env,
             # remove certain unsupported flags:
             if self.options.openacc and 'nvc' in mccode_config.compilation['OACC']:
-                Cflags = shlex.join(cflags)
+                Cflags = lexer.join(cflags)
                 Cflags=Cflags.replace('-march=nocona', '')
                 Cflags=Cflags.replace('-ftree-vectorize', '')
                 Cflags=Cflags.replace('-fstack-protector-strong', '')
                 Cflags=Cflags.replace('-fno-plt', '')
                 Cflags=Cflags.replace('-ffunction-sections', '')
                 Cflags=Cflags.replace('-pipe', '')
-                cflags=shlex.split(Cflags)
+                cflags=lexer.split(Cflags)
 
         # Parse for instances of CMD() ENV() GETPATH() in the loaded CFLAG entries
         cflags += [self.options.mpi and mccodelib.cflags.evaluate_dependency_str(mccode_config.compilation['MPIFLAGS'],
@@ -198,7 +203,7 @@ class McStas:
         cflags += [self.options.D3 is not None and "-D" + self.options.D3 or ' ']  # DEFINE3
 
         if not self.options.openacc:
-            cflags += options.no_cflags and ['-O0'] or shlex.split(mccode_config.compilation['CFLAGS'])  # cflags
+            cflags += options.no_cflags and ['-O0'] or lexer.split(mccode_config.compilation['CFLAGS'])  # cflags
 
         # Look for CFLAGS in the generated C code
         ccode = open(self.cpath, 'rb')
@@ -224,7 +229,7 @@ class McStas:
                 # Support CMD(..) and ENV(..) in cflags:
                 flags = mccodelib.cflags.evaluate_dependency_str(flags, options.verbose)
 
-                flags = shlex.split(flags)
+                flags = lexer.split(flags)
                 cflags += flags
 
             counter += 1
@@ -234,10 +239,10 @@ class McStas:
         if any("OPENACC" in cf for cf in cflags):
             if any("NeXus" in cf for cf in cflags):
                 cflags += ['-D__GNUC__']
-
+                
         # Compiler optimisation
         args = ['-o', self.binpath, self.cpath] + cflags
-        Process(options.cc).run(args)
+        Process(lexer.quote(options.cc)).run(args)
 
     def run(self, pipe=False, extra_opts=None, override_mpi=None):
         ''' Run simulation '''
