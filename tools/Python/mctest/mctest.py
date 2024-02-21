@@ -167,8 +167,8 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
     ''' this main test function tests the given mccode branch/version '''
 
     # copy instr files and record info
-    logging.info("Finding instruments in: %s" % branchdir)
-    instrs, _ = utils.get_instr_comp_files(join(branchdir, "examples"), recursive=True, instrfilter=instrfilter)
+    logging.info("Finding instruments in: %s" % str(pathlib.Path(branchdir,"examples").resolve()))
+    instrs, _ = utils.get_instr_comp_files(str(pathlib.Path(branchdir,"examples").resolve()), recursive=True, instrfilter=instrfilter)
     instrs.sort()
 
     # limt runs if required
@@ -220,7 +220,8 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
     logging.info("Compiling instruments [seconds]...")
     for test in tests:
         # if binary exists, set compile time = 0 and continue
-        binfile = os.path.splitext(test.localfile)[0] + ".out"
+        binfile = os.path.splitext(test.localfile)[0] + "." + mccode_config.platform["EXESUFFIX"].lower()
+        print(binfile)
         if os.path.exists(binfile):
             test.compiled = True
             test.compiletime = 0
@@ -235,7 +236,10 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
                     cmd = cmd + " --openacc "
                 if mpi:
                     cmd = cmd + " --mpi=1 "
-                cmd = cmd + " --verbose -c -n0 %s &> compile_stdout.txt" % test.localfile
+                if not platform.system() == "Windows":
+                    cmd = cmd + " --verbose -c -n0 %s &> compile_stdout.txt" % test.localfile
+                else:
+                    cmd = cmd + " --verbose -c -n0 %s > compile_stdout.txt 2>&1" % test.localfile
                 utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
                 t2 = time.time()
                 test.compiled = os.path.exists(binfile)
@@ -276,15 +280,24 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
             if openacc is True:
                 if version:
                     cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
-                cmd = cmd + " -s 1000 %s %s -n%s --openacc --mpi=%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
+                if not platform.system() == "Windows":
+                    cmd = cmd + " -s 1000 %s %s -n%s --openacc --mpi=%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
+                else:
+                    cmd = cmd + " -s 1000 %s %s -n%s --openacc --mpi=%s -d%d > run_stdout_%d.txt 2>&1" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
             else:
                 if version:
                     cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
-                cmd = cmd + " -s 1000 %s %s -n%s --mpi=%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
+                if not platform.system() == "Windows":
+                    cmd = cmd + " -s 1000 %s %s -n%s --mpi=%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
+                else:
+                    cmd = cmd + " -s 1000 %s %s -n%s --mpi=%s -d%d > run_stdout_%d.txt 2>&1" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
         else:
             if version:
-                    cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
-            cmd = cmd + " -s 1000 %s %s -n%s -d%d  &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, test.testnb, test.testnb)
+                cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
+            if not platform.system() == "Windows":
+                cmd = cmd + " -s 1000 %s %s -n%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, test.testnb, test.testnb)
+            else:
+                cmd = cmd + " -s 1000 %s %s -n%s -d%d > run_stdout_%d.txt 2>&1" % (test.localfile, test.parvals, ncount, test.testnb, test.testnb)
         retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
         t2 = time.time()
         didwrite = os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.sim"))
