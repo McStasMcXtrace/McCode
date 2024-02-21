@@ -333,6 +333,13 @@ def expand_options(options):
         options.use_mpi = False
         options.cc = mccode_config.compilation['CC']
 
+    # Check if options.cc is a bareword 'command' or a full path
+    if not dirname(options.cc) == '':
+        if not os.path.exists(options.cc):
+            LOG.warning('Full-path compiler "%s" not found!!', options.cc)
+            options.cc=basename(options.cc)
+            LOG.warning('Attempting replacement by "%s"', options.cc)
+
     if options.funnel is not None:
         options.use_funnel = True
 
