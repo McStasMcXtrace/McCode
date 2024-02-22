@@ -23,8 +23,8 @@
     "OACCFLAGS": "@MCCODE_FINAL_OACCFLAGS@",
     "CC": "@MCCODE_FINAL_TOOLS_CC@",
     "OACC": "@OACC@",
-    "MPICC": "mpicc",
-    "MPIRUN": "mpirun",
+    "MPICC": "@MCCODE_FINAL_MPICC@",
+    "MPIRUN": "@MCCODE_FINAL_MPIRUN@",
     "MPINODES": "auto"
   },
   "platform": {
