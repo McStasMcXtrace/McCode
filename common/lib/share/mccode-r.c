@@ -352,7 +352,7 @@ int mc_MPI_Send(void *sbuf,
   while (offset < count) {
     if (offset+length > count-1) length=count-offset;
     else length=MPI_REDUCE_BLOCKSIZE;
-    if (MPI_Send((void*)(sbuf+offset*dsize), length, dtype, dest, tag++, MPI_COMM_WORLD) != MPI_SUCCESS)
+    if (MPI_Send((void*)((char*)sbuf+offset*dsize), length, dtype, dest, tag++, MPI_COMM_WORLD) != MPI_SUCCESS)
       return MPI_ERR_COUNT;
     offset += length;
   }
@@ -379,7 +379,7 @@ int mc_MPI_Recv(void *sbuf,
   while (offset < count) {
     if (offset+length > count-1) length=count-offset;
     else length=MPI_REDUCE_BLOCKSIZE;
-    if (MPI_Recv((void*)(sbuf+offset*dsize), length, dtype, source, tag++,
+    if (MPI_Recv((void*)((char*)sbuf+offset*dsize), length, dtype, source, tag++,
             MPI_COMM_WORLD, MPI_STATUS_IGNORE) != MPI_SUCCESS)
       return MPI_ERR_COUNT;
     offset += length;
