@@ -811,7 +811,7 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   while (i<faceSize)
   {
     int    nbVertex=faceArray[i];//nb of vertices of this polygon
-    double vertices[3*nbVertex];
+    double *vertices=malloc(3*nbVertex*sizeof(double));
     int j;
 
     for (j=0; j<nbVertex; ++j)
@@ -834,7 +834,7 @@ long r_off_init(  char *offfile, double xwidth, double yheight, double zdepth,
 
     i += nbVertex+1;
     indNormal++;
-
+    free(vertices);
   }
   
   MPI_MASTER(
