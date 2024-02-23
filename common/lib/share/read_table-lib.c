@@ -453,7 +453,7 @@ void *Table_File_List_store(t_Table *tab){
   { /* reads all/a data block from 'file' handle and returns a Table structure  */
     double *Data;
     char *Header              = NULL;
-    long  malloc_size         = CHAR_BUF_LENGTH*CHAR_BUF_LENGTH;
+    long  malloc_size         = CHAR_BUF_LENGTH;
     long  malloc_size_h       = 4096;
     long  Rows = 0,   Columns = 0;
     long  count_in_array      = 0;
