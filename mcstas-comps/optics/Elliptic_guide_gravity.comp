@@ -1492,10 +1492,10 @@ MCDISPLAY
 	double zdelta = guideInfo.Length/(1.0*ApproximationMirrors);
 
 	// The vector used to store the points defining the lines
-	double xplus[ApproximationMirrors+1];
-	double xminus[ApproximationMirrors+1];
-	double yplus[ApproximationMirrors+1];
-	double yminus[ApproximationMirrors+1];
+	double *xplus=malloc((ApproximationMirrors+1)*sizeof(double));
+	double *xminus=malloc((ApproximationMirrors+1)*sizeof(double));
+	double *yplus=malloc((ApproximationMirrors+1)*sizeof(double));
+	double *yminus=malloc((ApproximationMirrors+1)*sizeof(double));
 
 	// Temperary values for the loop
 	double tempx;
@@ -1664,6 +1664,8 @@ MCDISPLAY
 			dashed_line( guideInfo.xArray[2],guideInfo.yArray[2],guideInfo.zArray[2],
 							guideInfo.xArray[1],guideInfo.yArray[1],guideInfo.zArray[1],10 );
 		}
+		free(xminus);free(yminus);free(xplus);free(yplus);
+
 %}
 
 END
