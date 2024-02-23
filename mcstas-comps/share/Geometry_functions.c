@@ -1251,7 +1251,8 @@ int sample_mesh_intersect(double *t,int *num_solutions,double *r,double *v,struc
     Coords edge1,edge2,h,s,q,tmp,intersect_pos;
     double UNION_EPSILON = 0.0000001;
     double this_facet_t;
-    double a,f,u,V,t_intersect[n_facets];
+    double a,f,u,V;
+    double *t_intersect=malloc(n_facets*sizeof(double));
     *num_solutions = 0;
     for (iter = 0 ; iter < n_facets ; iter++){
     /*////printf("\n\n facet v1 = [%f,%f,%f]",v1_x[iter],v1_y[iter],v1_z[iter]);
@@ -1304,6 +1305,7 @@ int sample_mesh_intersect(double *t,int *num_solutions,double *r,double *v,struc
             }
         //}
     }
+    free(t_intersect);
     
     // find two smallest non-zero intersections:
     /*
