@@ -474,7 +474,8 @@ MCDISPLAY
 %{
   double x1, x2, z1, z2;
   const int n = 90;
-  double xplot[n], zplot[n];
+  double *xplot=malloc(n*sizeof(double));
+  double *zplot=malloc(n*sizeof(double));
   int ns = 0;
   int j = 1;
   const double lengthOfGuide = sin(length/radius)*radius;
@@ -550,6 +551,7 @@ MCDISPLAY
   line(x1, 0.5*yheight, z1, x1,-0.5*yheight, z1);
   line(x2,-0.5*yheight, z2, x2, 0.5*yheight, z2);
   line(x1,-0.5*yheight, z1, x2,-0.5*yheight, z2);
+  free(xplot);free(zplot);
   %}
 
 END
