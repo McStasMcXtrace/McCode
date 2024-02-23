@@ -453,7 +453,7 @@ void *Table_File_List_store(t_Table *tab){
   { /* reads all/a data block from 'file' handle and returns a Table structure  */
     double *Data;
     char *Header              = NULL;
-    long  malloc_size         = CHAR_BUF_LENGTH;
+    long  malloc_size         = CHAR_BUF_LENGTH*CHAR_BUF_LENGTH;
     long  malloc_size_h       = 4096;
     long  Rows = 0,   Columns = 0;
     long  count_in_array      = 0;
@@ -479,7 +479,7 @@ void *Table_File_List_store(t_Table *tab){
 
     int flag_In_array = 0;
     do { /* while (!flag_End_row_loop) */
-      char  line[1024*CHAR_BUF_LENGTH];
+      char  *line=malloc(1024*CHAR_BUF_LENGTH*sizeof(char));
       long  back_pos=0;   /* ftell start of line */
 
       back_pos = ftell(hfile);
@@ -599,7 +599,7 @@ void *Table_File_List_store(t_Table *tab){
         } /* while (!flag_End_Line) */
       } /* end: if fgets */
       else flag_End_row_loop = 1; /* else fgets : end of file */
-
+      free(line);
     } while (!flag_End_row_loop); /* end while flag_End_row_loop */
 
     Table->block_number = block_number;
