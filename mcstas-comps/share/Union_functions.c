@@ -731,7 +731,7 @@ void add_element_to_double_list(struct pointer_to_1d_double_list *list,double va
       list-> elements = malloc(list->num_elements*sizeof(double));
       list-> elements[0] = value;
     } else {
-      double temp[list->num_elements];
+      double *temp=malloc(list->num_elements*sizeof(double));
       int iterate;
       for (iterate=0;iterate<list->num_elements;iterate++) temp[iterate] = list->elements[iterate];
       free(list->elements);
@@ -739,6 +739,7 @@ void add_element_to_double_list(struct pointer_to_1d_double_list *list,double va
       list-> elements = malloc(list->num_elements*sizeof(double));
       for (iterate=0;iterate<list->num_elements-1;iterate++) list->elements[iterate] = temp[iterate];
       list->elements[list->num_elements-1] = value;
+      free(temp);
     }
     };
 
@@ -748,7 +749,7 @@ void add_element_to_int_list(struct pointer_to_1d_int_list *list,int value) {
       list-> elements = malloc(list->num_elements*sizeof(int));
       list-> elements[0] = value;
     } else {
-      int temp[list->num_elements];
+      double *temp=malloc(list->num_elements*sizeof(double));
       int iterate;
       for (iterate=0;iterate<list->num_elements;iterate++) temp[iterate] = list->elements[iterate];
       free(list->elements);
@@ -756,6 +757,7 @@ void add_element_to_int_list(struct pointer_to_1d_int_list *list,int value) {
       list-> elements = malloc(list->num_elements*sizeof(int));
       for (iterate=0;iterate<list->num_elements-1;iterate++) list->elements[iterate] = temp[iterate];
       list->elements[list->num_elements-1] = value;
+      free(temp);
     }
     };
 
@@ -849,8 +851,8 @@ void add_function_to_conditional_list(struct conditional_list_struct *list,condi
       list->p_data_unions[0] = data_union;
     }
     else {
-    conditional_function_pointer temp_fp[list->num_elements];
-    union conditional_data_union *temp_du[list->num_elements];
+    conditional_function_pointer *temp_fp=malloc(list->num_elements*sizeof(conditional_function_pointer));
+    union conditional_data_union **temp_du=malloc(list->num_elements*sizeof(union conditional_data_union));
     int iterate;
     // Could even get away with a shallow copy here instead of the loop, but it is not relevant for performance.
     for (iterate=0;iterate<list->num_elements;iterate++) {
@@ -1879,7 +1881,7 @@ struct lines_to_draw draw_line_with_highest_priority(Coords position1,Coords pos
     
     int volume_index,iterate,permanent_list_length = 0;
     int number_of_solutions;
-    double temp_intersection[max_number_of_solutions];
+    double *temp_intersection=malloc(max_number_of_solutions*sizeof(double));
     double r1[3],r2[3],direction[3];
     struct pointer_to_1d_double_list intersection_list;
     
@@ -1923,6 +1925,7 @@ struct lines_to_draw draw_line_with_highest_priority(Coords position1,Coords pos
             
         }
     }
+    free(temp_intersection);
     // Now we have a list of intersection distances between r1 and r2 and all volumes.
     // This list needs to be sorted before we continue!
     
