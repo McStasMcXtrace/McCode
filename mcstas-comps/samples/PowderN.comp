@@ -332,7 +332,10 @@ struct line_info_struct
       ret = system(cmd);
     }
       
-    if (ret == -1 || ret == 127) return(NULL);
+    if (ret == -1 || ret == 127) {
+      free(OUTFILE);
+      return(NULL);
+    }
       
     // test if the result file has been created
     FILE *file = fopen(OUTFILE,"r");
@@ -343,6 +346,7 @@ struct line_info_struct
     printf ("%s\n",cmd);
     );
     fflush(NULL);
+    fclose(file);
     return(OUTFILE);
   } // cif2hkl
 #endif
