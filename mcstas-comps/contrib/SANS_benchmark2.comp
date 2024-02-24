@@ -74,19 +74,19 @@ SHARE
 #include <math.h>
 #include <stdio.h>
 
-double min(double A, double B) {
+double sb_min(double A, double B) {
 if (A<B) return A; else return B;
 };
 
-double max(double A, double B) {
+double sb_max(double A, double B) {
 if (A>B) return A; else return B;
 };
 
-int imin(int A, int B) {
+int sb_imin(int A, int B) {
 if (A<B) return A; else return B;
 };
 
-int imax(int A, int B) {
+int sb_imax(int A, int B) {
 if (A>B) return A; else return B;
 };
 
@@ -590,7 +590,7 @@ INITIALIZE
     Idsdw[iii][jjj] = 0.0;
     Isq  = 0.0;
     qmin = 0.0;
-    step = (log10(min(Qmaxd,4.0*PI/iii))-Qminl)/istp;
+    step = (log10(sb_min(Qmaxd,4.0*PI/iii))-Qminl)/istp;
     for (kkk=0;kkk<=istp;kkk++) {
      qmax = pow(10.0,Qminl+kkk*step);
      q    = 0.5*(qmin+qmax);
@@ -604,8 +604,8 @@ INITIALIZE
 
 TRACE
 %{
-  double sc_a   = max(0.01,min(0.99,sc_aim));
-  double sans_a = max(0.01,min(0.99,sans_aim));
+  double sc_a   = sb_max(0.01,sb_min(0.99,sc_aim));
+  double sans_a = sb_max(0.01,sb_min(0.99,sans_aim));
 
   int    modl,sngsp;
   double v,k0,lambda;
@@ -626,7 +626,7 @@ TRACE
   double tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
 
   iscatt = 0;
-  modl   = imax(0,imin(18,floor(model+0.5)));
+  modl   = sb_imax(0,sb_imin(18,floor(model+0.5)));
   sngsp  = floor(singlesp+0.5);
 
   v      = sqrt(vx*vx + vy*vy + vz*vz);
@@ -635,15 +635,15 @@ TRACE
 
   if (modl!=11) {
 
-  Ilam   = imax(floor(lambda),1);
-  Ilam2  = imin(Ilam+1,30);
+  Ilam   = sb_imax(floor(lambda),1);
+  Ilam2  = sb_imin(Ilam+1,30);
   if (lambda<=1.0)   Scoh = 200.0*PI*Idsdw[1][modl]  / (k0*k0);
   else
   {if (lambda>=30.0) Scoh = 200.0*PI*Idsdw[30][modl] / (k0*k0);
   else               Scoh = 200.0*PI*((Ilam2-lambda)*Idsdw[Ilam][modl]+(lambda-Ilam)*Idsdw[Ilam2][modl]) / (k0*k0);
   };
 
-  qmax   = min(Qmaxd,2.0*k0);
+  qmax   = sb_min(Qmaxd,2.0*k0);
   qmaxl  = log10(qmax);
   Ymax   = 0.25*qmax*qmax/(k0*k0);
   if (Ymax>=0.9999) Ymax=1.0;       /* if rounding errors occurr, this will help to avoid problems */
@@ -657,7 +657,7 @@ TRACE
   }
   else {
 
-  qmax   = min(Qmaxd,2.0*k0);
+  qmax   = sb_min(Qmaxd,2.0*k0);
   Ymax   = 0.25*qmax*qmax/(k0*k0);
   if (Ymax>=0.9999) Ymax=1.0;       /* if rounding errors occurr, this will help to avoid problems */
   Xmax   = 1.0 - 2.0*Ymax;
@@ -704,7 +704,7 @@ TRACE
       SCATTER;
       iscatt = 1;
 
-      fcut   = max(Ymax,sans_a);
+      fcut   = sb_max(Ymax,sans_a);
 
       if (modl!=11) {
 
@@ -764,7 +764,7 @@ TRACE
           SCATTER;
           iscatt++;
 
-          fcut   = max(Ymax,sans_a);
+          fcut   = sb_max(Ymax,sans_a);
 
           if (modl!=11) {
 
