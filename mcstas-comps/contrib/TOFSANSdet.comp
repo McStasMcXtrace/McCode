@@ -681,7 +681,7 @@ SAVE
                   Qmx  = QQQ*QQQ/Qmn;
 
                   LAM  = (2.0*Pic/V2K)*time/(ssdist+sqrt(dsA2));
-                  Qstp = 2.0*Pic*min(xwA[k]/Nxc,yhA[k]/Nyc)/(sqrt(dsA2)*LAM);
+                  Qstp = 2.0*Pic*ddmin(xwA[k]/Nxc,yhA[k]/Nyc)/(sqrt(dsA2)*LAM);
 
                   qq1  = iimax( floor(log(Qmn/qmin)/qstp-1.0),    0);
                   qq2  = iimin(-floor(log(qmin/Qmx)/qstp-1.0),Nqc-1);
