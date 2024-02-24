@@ -1164,7 +1164,8 @@ int cogen_decls(struct instr_def *instr)
   index = list_len(instr->grouplist); // count GROUP
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL) {
-    index += list_len(comp->jump);    // count JUMP
+    //It seems that JUMP alone does not require this struct?!
+    //index += list_len(comp->jump);    // count JUMP 
     if (comp->split) index++;         // count SPLIT
   }
   list_iterate_end(liter);
@@ -1743,7 +1744,7 @@ int cogen_raytrace(struct instr_def *instr)
         /* create counter for JUMP iteration */
         if (this_jump->iterate)
           coutf("  _particle->_logic.Jump_%s_%s=0;", comp->name, this_jump->target);
-        /* check that the target_index is defined, else search for the target comp index */
+        /* check that the target_index is defined, else search for the target comp index* /
         if (!this_jump->target_index) {
           List_handle liter3 = list_iterate(instr->complist);
           struct comp_inst *target=NULL;
