@@ -374,11 +374,5 @@ ROTATED (0,0,90) RELATIVE ABSOLUTE
 
 FINALLY
 %{
-#if defined (USE_MPI)
-   MPI_MASTER(
-#endif
-#if defined (USE_MPI) || defined(USE_THREADS)
-   );
-#endif
 %}
 END
