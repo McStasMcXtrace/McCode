@@ -408,6 +408,10 @@ void *Table_File_List_store(t_Table *tab){
     if (offset) *offset=Table->end;
     fclose(hfile);
     data = (double*)realloc(data, (double)nelements*sizeofelement);
+    if (!data) {
+      fprintf(stderr,"Error: reallocating %ld elements for %s file '%s'. Too big (Table_Read_Offset_Binary).\n", nelements, type, File);
+      exit(-1);
+    }
     /* copy file data into Table */
     if (type && !strcmp(type,"double")) Table->data = data;
     else {
@@ -495,6 +499,10 @@ void *Table_File_List_store(t_Table *tab){
             /* if succeed and in array : add (and realloc if necessary) */
             malloc_size_h = count_in_header+4096;
             Header        = (char*)realloc(Header, malloc_size_h*sizeof(char));
+	    if(!Header) {
+	             fprintf(stderr, "Error: Could not reallocate Header (Table_Read_Handle).\n");
+		     return (-1);
+	    }
           }
           strncat(Header, line, 4096);
           flag_In_array=0;
@@ -608,6 +616,10 @@ void *Table_File_List_store(t_Table *tab){
     // shrink header to actual size (plus terminating 0-byte)
     if (count_in_header) {
       Header = (char*)realloc(Header, count_in_header*sizeof(char) + 1);
+      if(!Header) {
+	fprintf(stderr, "Error: Could not shrink Header (Table_Read_Handle).\n");
+	return (-1);
+      }
     }
     Table->header = Header;
 
@@ -634,6 +646,10 @@ void *Table_File_List_store(t_Table *tab){
         count_invalid);
     }
     Data     = (double*)realloc(Data, count_in_array*sizeof(double));
+    if(!Data) {
+      fprintf(stderr, "Error: Could reallocate Data block to %li doubles (Table_Read_Handle).\n", count_in_array);
+      return (-1);
+    }
     Table->data         = Data;
     Table->rows         = Rows;
     Table->columns      = Columns;
