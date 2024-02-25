@@ -24,6 +24,9 @@ function( detect_platform_variables resultvarname )
   if ( MCCODE_EXE_SUFFIX  MATCHES "^\\." )
     string(SUBSTRING "${MCCODE_EXE_SUFFIX}" 1 -1 MCCODE_EXE_SUFFIX)
   endif()
+  if ( MCCODE_EXE_SUFFIX STREQUAL "" ) # If we arrive here without any suffix, opt for "out"
+    set( MCCODE_EXE_SUFFIX "out" )
+  endif()
   provide_var( MCCODE_EXE_SUFFIX )
 
   #BROWSER (a.k.a. generic "open" command):
