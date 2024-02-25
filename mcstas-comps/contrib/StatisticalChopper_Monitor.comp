@@ -114,9 +114,9 @@ SAVE
     /* copy raw detector as correlation base */
     long correlation_m = detector.m/f; /* new time binning for autocorrelation */
 
-    double p0[correlation_m*detector.n*detector.p]; /* static arrays to store correlation monitor */
-    double p1[correlation_m*detector.n*detector.p];
-    double p2[correlation_m*detector.n*detector.p];
+    double *p0=malloc*(correlation_m*detector.n*detector.p*sizeof(double)); /* Arrays to store correlation monitor */
+    double *p1=malloc*(correlation_m*detector.n*detector.p*sizeof(double));
+    double *p2=malloc*(correlation_m*detector.n*detector.p*sizeof(double));
 
     /* initialize arrays to zero */
     for (i=0;i<correlation_m*detector.n*detector.p;i++) p0[i]=p1[i]=p2[i]=0;
@@ -184,7 +184,7 @@ SAVE
         detector.xmin,detector.xmax,detector.ymin,detector.ymax,
         correlation_m,detector.n,
         p0,p1,p2,file);
-
+    free(p0);free(p1);free(p2);
   }
 
 %}
