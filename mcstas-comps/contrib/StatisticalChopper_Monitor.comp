@@ -114,9 +114,9 @@ SAVE
     /* copy raw detector as correlation base */
     long correlation_m = detector.m/f; /* new time binning for autocorrelation */
 
-    double *p0=malloc*(correlation_m*detector.n*detector.p*sizeof(double)); /* Arrays to store correlation monitor */
-    double *p1=malloc*(correlation_m*detector.n*detector.p*sizeof(double));
-    double *p2=malloc*(correlation_m*detector.n*detector.p*sizeof(double));
+    double *p0=malloc(correlation_m*detector.n*detector.p*sizeof(double)); /* Arrays to store correlation monitor */
+    double *p1=malloc(correlation_m*detector.n*detector.p*sizeof(double));
+    double *p2=malloc(correlation_m*detector.n*detector.p*sizeof(double));
 
     /* initialize arrays to zero */
     for (i=0;i<correlation_m*detector.n*detector.p;i++) p0[i]=p1[i]=p2[i]=0;
