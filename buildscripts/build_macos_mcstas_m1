@@ -51,6 +51,7 @@ cd $WORK
 ./mkdist mcstas-tools-python-mcplot-matplotlib ${MCVERSION} tools/Python/mcplot/matplotlib/ "" mac-silicon "" -- OSXapp
 ./mkdist mcstas-tools-python-mcplot-svg ${MCVERSION} tools/Python/mcplot/svg/ "" mac-silicon "" -- OSXapp
 ./mkdist mcstas-tools-python-mcrun ${MCVERSION} tools/Python/mcrun/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-tools-python-mctest ${MCVERSION} tools/Python/mctest/ "" mac-silicon "" -- OSXapp
 ./mkdist mcstas-tools-python-mcresplot ${MCVERSION} tools/Python/mcresplot/ "" mac-silicon "" -- OSXapp
 ./mkdist mcstas-tools-python-mcgui ${MCVERSION} tools/Python/mcgui/ "" mac-silicon "" -- OSXapp
 ./mkdist mcstas-tools-python-mccodelib ${MCVERSION} tools/Python/mccodelib/ "" mac-silicon "" -- OSXapp
