@@ -26,7 +26,7 @@ def get_processor_info():
     elif platform.system() == "Darwin":
         return subprocess.check_output(['/usr/sbin/sysctl', "-n", "machdep.cpu.brand_string"]).strip().decode('utf-8')
     elif platform.system() == "Linux":
-        command = "cat /proc/cpuinfo | grep model\ name | uniq | cut -f2 -d:"
+        command = r"cat /proc/cpuinfo | grep model\ name | uniq | cut -f2 -d:"
         return subprocess.check_output(command, shell=True).strip().decode('utf-8')
 
     return ""
@@ -38,7 +38,7 @@ def get_processor_info():
 def create_instr_test_objs(sourcefile, localfile, header):
     ''' returns a list containing one initialized test object pr %Example within the instr file '''
     tests = []
-    ms = re.findall("\%Example:([^\n]*)Detector\:([^\n]*)_I=([0-9.+-e]+)", header)
+    ms = re.findall(r"\%Example:([^\n]*)Detector\:([^\n]*)_I=([0-9.+-e]+)", header)
     if len(ms) > 0:
         testnb = 1
         for m in ms:
@@ -122,16 +122,16 @@ def _monitorname_filename_match(dfolder, monname):
     look_for_filename = False
     lns = open(join(dfolder, "mccode.sim")).read().splitlines()
     for l in lns:
-        if re.match("  component: %s$" % monname, l):
+        if re.match(r"  component: %s$" % monname, l):
             # flag this data section 
             look_for_filename = True
         if look_for_filename:
-            m = re.match("\s*filename:\s+(.+)", l)
+            m = re.match(r"\s*filename:\s+(.+)", l)
             if m:
                 filename = m.group(1) 
                 if os.path.isfile(join(dfolder,filename)):
                     return filename 
-            if re.match("end data", l):
+            if re.match(r"end data", l):
                 # the filename can for 0D monitors be monname.dat
                 zeroDfilename = join(dfolder, monname + ".dat")
                 if os.path.isfile(zeroDfilename):
@@ -155,7 +155,7 @@ def extract_testvals(datafolder, monitorname):
             l = fp.readline()
             if not l:
                 break
-            m = re.match("# values: ([0-9+-e.]+) ([0-9+-e.]+) ([0-9]+)", l)
+            m = re.match(r"# values: ([0-9+-e.]+) ([0-9+-e.]+) ([0-9]+)", l)
             if m :
                 I = float(m.group(1))
                 I_err = float(m.group(2))
@@ -325,7 +325,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
         else:
             metalog = LineLogger()
             resfile = join(testdir,test.instrname,"run_stdout_%d.txt" % (test.testnb))
-            cmd = "grep %s_I= %s | head -1 | cut -f2- -d= | cut -f1 -d\ " %(test.detector, resfile)
+            cmd = r"grep %s_I= %s | head -1 | cut -f2- -d= | cut -f1 -d\ " %(test.detector, resfile)
             utils.run_subtool_to_completion(cmd, stdout_cb=metalog.logline)
             try:
                 test.testval=float(metalog.lst[0])
@@ -344,7 +344,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
     gpu_type = "none"
     if (platform.system() == "Linux"):
         metalog = LineLogger()
-        utils.run_subtool_to_completion("nvidia-smi -L | head -1 |cut -f2- -d: |cut -f1 -d\(", stdout_cb=metalog.logline) 
+        utils.run_subtool_to_completion(r"nvidia-smi -L | head -1 |cut -f2- -d: |cut -f1 -d\(", stdout_cb=metalog.logline) 
         gpu_type = ",".join(metalog.lst)
         if "failed because" in gpu_type:
             gpu_type = "none"
@@ -496,7 +496,7 @@ def run_config_test(testdir, mccoderoot, limit, configfilter, instrfilter, suffi
     
     def extract_config_mccode_version(configfile):
         for l in open(configfile).read().splitlines():
-            m = re.match("\s*\"MCCODE_VERSION\": (.+),", l)
+            m = re.match(r"\s*\"MCCODE_VERSION\": (.+),", l)
             if m:
                 return m.group(1).strip("\""), os.path.basename(os.path.dirname(configfile))
     
@@ -511,9 +511,9 @@ def run_config_test(testdir, mccoderoot, limit, configfilter, instrfilter, suffi
         for (_, _, files) in os.walk(lookin):
             print("Looking")
             if configfltr is not None:
-                return [join(lookin, f) for f in files if re.search("^%s/mccode_config.json$" % configfltr, f)]
+                return [join(lookin, f) for f in files if re.search(r"^%s/mccode_config.json$" % configfltr, f)]
             else:
-                return [join(lookin, f) for f in files if re.search("^mccode_config.json$", f)]
+                return [join(lookin, f) for f in files if re.search(r"^mccode_config.json$", f)]
 
     # get test directory datetime string
     datetime = utils.get_datetimestr()
