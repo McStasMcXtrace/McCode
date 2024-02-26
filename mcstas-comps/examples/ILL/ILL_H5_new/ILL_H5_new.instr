@@ -218,7 +218,7 @@ COMPONENT H5_rect = Guide_gravity(w1=0.170, h1=0.12, l=1.0,
 AT(0,0,2.155) RELATIVE HCS
 
 /* distribute the beam along channels */
-COMPONENT H53_origin = Monitor_nD(xwidth=0.06, yheight=0.120, options="dx dy, all auto", bins=25, restore_neutron=1)
+COMPONENT H53_origin = Monitor_nD(xwidth=0.06, yheight=0.120, options="dx limits=[-2 2] dy limits=[-2 2]", bins=25, restore_neutron=1)
 AT (0.17/2-0.06/2,0,1+gGap)               RELATIVE H5 ROTATED (0,1.5,0) RELATIVE H5
 JUMP H53_start WHEN SCATTERED
 
@@ -509,7 +509,7 @@ COMPONENT H52_Common_Out = Monitor_nD(xwidth=0.120, yheight=0.240)
 AT (0,0,0.01+gGap) RELATIVE PREVIOUS
 
 /* distribute the H52 beam along channels 1 2 3 */
-COMPONENT H523_origin = Monitor_nD(xwidth=0.06, yheight=0.120, options="dx dy, all auto", bins=25, restore_neutron=1)
+COMPONENT H523_origin = Monitor_nD(xwidth=0.06, yheight=0.120, options="dx limits=[-2 2] dy limits=[-2 2] ", bins=25, restore_neutron=1)
 AT (0.03,-.06,0)   RELATIVE H52_Common_Out
 JUMP H523_start WHEN SCATTERED
 
@@ -1107,7 +1107,7 @@ COMPONENT H522_WASP_Sample_XY = Monitor_nD(xwidth=0.02, yheight=0.05,
 AT (0,0,WASP_L+1.76) RELATIVE H522_Straight_Last
 
 COMPONENT H522_WASP_Sample_L = Monitor_nD(xwidth=0.02, yheight=0.05,
-  options="auto limits=[1 10]", bins=50, restore_neutron=1)
+  options="wavelength limits=[1 10]", bins=50, restore_neutron=1)
 AT (0,0,WASP_L+1.76) RELATIVE H522_Straight_Last
 
 COMPONENT H522_WASP_Sample = Incoherent(radius=0.02,yheight=0.04, 
