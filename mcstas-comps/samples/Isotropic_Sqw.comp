@@ -1381,7 +1381,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       Sqw->compname, file, Sqw->type=='c' ? "coh" : "inc");
   );
 
-  double w_file2full[w_bins]; /* lookup table for fast file -> Sqw_full allocation */
+  double *w_file2full = malloc(w_bins*sizeof(double)); /* lookup table for fast file -> Sqw_full allocation */
 
   for (index_w=0; index_w < w_bins; w_file2full[index_w++]=0);
 
@@ -1422,7 +1422,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     w_file2full[index_w] = index_w_file;
   }
 
-  double q_file2full[q_bins];
+  double *q_file2full=malloc(q_bins*sizeof(double));
   for   (index_q=0; index_q < q_bins; q_file2full[index_q++]=0);
 
   for (index_q=0; index_q < q_bins; index_q++) {
@@ -1932,7 +1932,8 @@ struct Sqw_Data_struct *Sqw_readfile(
       Sqw->compname, Sqw->lookup_length);
     );
   }
-
+  free(w_file2full);
+  free(q_file2full);
   return(Sqw_Data);
 } /* end Sqw_readfile */
 
