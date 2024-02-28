@@ -1166,7 +1166,6 @@ int cogen_decls(struct instr_def *instr)
   index = list_len(instr->grouplist); // count GROUP
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL) {
-    index += list_len(comp->jump);    // count JUMP
     if (comp->split) index++;         // count SPLIT
   }
   list_iterate_end(liter);
