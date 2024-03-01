@@ -408,15 +408,14 @@ def create_label_dir(testdir, label):
     if not os.path.exists(testdir):
         logging.info("could not create test folder, exiting...")
         quit()
-    labeldir = join(testdir, label + "_" + platform.system())
+    labeldir = join(testdir, label)
     if not os.path.exists(labeldir):
         mkdir(labeldir)
     return labeldir
 
 def create_datetime_testdir(testroot):
     datetime = utils.get_datetimestr()
-    create_label_dir(testroot, datetime)
-    return join(testroot, datetime)
+    return create_label_dir(testroot, datetime)
 
 #
 # Program functions for every main test mode
@@ -435,7 +434,7 @@ def run_default_test(testdir, mccoderoot, limit, instrfilter, suffix):
         quit(1)
 
     # create single-run test directory
-    labeldir = create_label_dir(testdir, version + suffix)
+    labeldir = create_label_dir(testdir, mccode_config.configuration["MCCODE"] + "-" + version + suffix)
 
     logging.info("Testing: %s" % version)
     logging.info("")
@@ -619,8 +618,8 @@ def main(args):
         logging.basicConfig(level=logging.INFO, format="%(message)s")
     if not testdir:
         if not testroot:
-                testroot = os.path.join(os.getcwd(),"mctest")
-        testdir = create_datetime_testdir(testroot)
+            testroot = os.path.join(os.getcwd(),mccode_config.configuration["MCCODE"]+"-test")
+            testdir = create_datetime_testdir(testroot)
     logging.info("Output of test will be placed in: %s" % testdir)
 
     if not mccoderoot:
@@ -662,7 +661,8 @@ def main(args):
     if args.suffix:
         suffix = '_' + args.suffix[0]
     else:
-        suffix = ''
+        suffix = ""
+    suffix=suffix + "_" + platform.system()
     logging.info("ncount is: %s" % ncount)
     if args.mpi:
         mpi = args.mpi[0]
