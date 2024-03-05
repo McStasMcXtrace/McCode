@@ -124,7 +124,7 @@ DECLARE
 INITIALIZE
 %{
     calculated_angle=RAD2DEG*asin(12398.42*sqrt(8)/(2*5.4309*(E0*1e3)));
-    fprintf(stdout,"%s: Energy %g [keV] Mono Angle %g [deg]", NAME_INSTRUMENT, E0, calculated_angle);
+    fprintf(stdout,"%s: Energy %g [keV] Mono Angle %g [deg]\n", NAME_INSTRUMENT, E0, calculated_angle);
     
 %}
 
