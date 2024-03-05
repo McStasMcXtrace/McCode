@@ -290,7 +290,7 @@ double XRMC_SelectFluorescenceEnergy(int Z, double E0, double *dE)
     int  ret = 0;
     char Line[65535];
     int flag_found_cif=0;
-    FILE *file = fopen(filename, "r");
+    FILE *file = Open_File(filename, "r", NULL);
     if (!file)
       exit(fprintf(stderr, "%s: ERROR: can not open file %s\n", 
       __FILE__, filename));

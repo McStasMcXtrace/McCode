@@ -107,7 +107,7 @@ INITIALIZE
       const int ERROR=1;
       const int NOT_PNG=2;
 
-      FILE *fp = fopen(mask, "rb");
+      FILE *fp = Open_File(mask, "rb", NULL);
       if (!fp){
         fprintf(stderr,"Error(%s): cant open file %s for reading\n", NAME_CURRENT_COMP,mask); 
         exit(1);

@@ -454,7 +454,7 @@ SHARE
     if (ret == -1 || ret == 127) return(NULL);
       
     // test if the result file has been created
-    FILE *file = fopen(OUTFILE,"r");
+    FILE *file = Open_File(OUTFILE,"r", NULL);
     if (!file) return(NULL);     
     MPI_MASTER(
     printf("%s: INFO: Converting %s into F2(HKL) list %s\n", 

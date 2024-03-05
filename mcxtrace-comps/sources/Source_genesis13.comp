@@ -84,7 +84,7 @@ INITIALIZE
     fprintf(stderr,"Error(%s): allocation failed for slice array. Aborting.\n",NAME_CURRENT_COMP);
     exit(-1);
   }
-  if( (dflfp=fopen(dflfn,"r"))==NULL){
+  if( (dflfp=Open_File(dflfn,"r",NULL))==NULL){
     fprintf(stderr,"Error(%s): cannot open file %s for reading- Aborting.\n",NAME_CURRENT_COMP,dflfn);
     exit(-1);
   }
