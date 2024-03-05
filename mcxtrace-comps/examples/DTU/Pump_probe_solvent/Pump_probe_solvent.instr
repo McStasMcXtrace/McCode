@@ -76,7 +76,7 @@ INITIALIZE
               "(NOSOLUTE!=0) and set a solute volume fraction of 1 (FSOLV==0).\n");
   }
   if(NOSOLUTE && NOSOLVENT){
-      fprintf(stderr,"Warning (Pump_probe_solvent): You have disabled solute and solvent scattering.\nAborting to avoid wasting your time.");
+      fprintf(stderr,"Warning (Pump_probe_solvent): You have disabled solute and solvent scattering.\nAborting to avoid wasting your time.\n");
       exit(0);
   }
 

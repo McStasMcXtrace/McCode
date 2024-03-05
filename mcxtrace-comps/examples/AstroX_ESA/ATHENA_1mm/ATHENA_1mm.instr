@@ -155,7 +155,7 @@ INITIALIZE
 
     fp=fopen(fullpath_geomfile,"rb");
     if (fp==NULL){
-        fprintf(stderr,"Error: Cannot open file \'%s\'. Aborting.",fullpath_geomfile);
+        fprintf(stderr,"Error: Cannot open file \'%s\'. Aborting.\n",fullpath_geomfile);
         exit(-1);
     }
     fgets(line,1023,fp);

@@ -245,7 +245,7 @@ if (cff && !grating_mode){
 /*}*/
 
 if(verbose){
-  fprintf(stdout,"INFO(%s):Monochromator specs: \n Angle of pre-mirror=%f deg. \n Angle of grating=%f deg.",instrument_name,mirror2_angle,angle_grating);
+  fprintf(stdout,"INFO(%s):Monochromator specs: \n Angle of pre-mirror=%f deg. \n Angle of grating=%f deg.\n",instrument_name,mirror2_angle,angle_grating);
 }
 MCAngleVariation=angle_grating*0.99;
 
@@ -276,17 +276,17 @@ Error messages:
 *******************************************************/
 if (angle_grating>30 || angle_grating<0)
 {
-  fprintf(stderr,"ERROR: cPGM grating angle is out of bounds(%f DEG). Simulation ended",angle_grating);
+  fprintf(stderr,"ERROR: cPGM grating angle is out of bounds(%f DEG). Simulation ended.\n",angle_grating);
   exit(-1);
 }
 if (mirror2_angle>21 || mirror2_angle<0)
 {
-  fprintf(stderr,"ERROR: M2 angle is out of bounds(%f DEG). Simulation ended",mirror2_angle);
+  fprintf(stderr,"ERROR: M2 angle is out of bounds(%f DEG). Simulation ended.\n",mirror2_angle);
   exit(-1);
 }
 if (theta_PG_NIM>30 || theta_PG_NIM<0)
 {
-  fprintf(stderr,"ERROR: NIM grating angle is out of bounds(%f DEG). Simulation ended",theta_PG_NIM);
+  fprintf(stderr,"ERROR: NIM grating angle is out of bounds(%f DEG). Simulation ended.\n",theta_PG_NIM);
   exit(-1);
 }
 %}
