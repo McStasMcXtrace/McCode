@@ -62,10 +62,9 @@ jobs:
            set -u
            set -x
            cd McCode
-           git fetch --tags origin
-           export REV=`git describe --tags --match="mcxtrace*" | cut -f2 -d\-`
-           if [ "$RUNNER_OS" == "macOS" ]; then ./buildscripts/build_macos_mcxtrace ${REV}; fi
-           if [ "$RUNNER_OS" == "Linux" ]; then ./buildscripts/build_debs_mcxtrace ${REV} meta; fi
+           export REV=`git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags origin 'mcxtrace-*.*.*' | tail -1 | cut -f3 -d/ | cut -f2 -d\-`
+           if [ "$RUNNER_OS" == "macOS" ]; then ./buildscripts/build_macos_mcstas ${REV}; fi
+           if [ "$RUNNER_OS" == "Linux" ]; then ./buildscripts/build_debs_mcstas ${REV} meta; fi
            tar cfz dist-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}.tgz dist/
 
     - name: Cross-Build McXtrace for windows
@@ -75,8 +74,7 @@ jobs:
            set -u
            set -x
            cd McCode
-           git fetch --tags origin
-           export REV=`git describe --tags --match="mcxtrace*" | cut -f2 -d\-`
+           export REV=`git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags origin 'mcxtrace-*.*.*' | tail -1 | cut -f3 -d/ | cut -f2 -d\-`
            if [ "$RUNNER_OS" == "Linux" ]; then rm -rf dist; fi
            if [ "$RUNNER_OS" == "Linux" ]; then ./buildscripts/build_windows_mcxtrace ${REV}; fi
            if [ "$RUNNER_OS" == "Linux" ]; then tar cfz dist-Windows.mingw64.python-${{ matrix.python }}.tgz dist/; fi
