@@ -11,7 +11,7 @@
 * Written by: Mads Bertelsen
 * Date: May 2016
 * Origin: Johns Hopkins University, Baltimore
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Union_validation
 *
 *
 * %Description
@@ -38,7 +38,11 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_powder_validation(int comp_select=1, string material_data_file="Al.laz",E0=100,dE=2,sample_radius=0.01,sample_height=0.01,pack=1,sigma_inc=0.0328,sigma_abs=0.924,Vc=66.4,geometry_interact=0.5,incoherent_fraction=0.2)
+DEFINE INSTRUMENT Powder_validation(
+  int comp_select=1, string material_data_file="Al.laz",
+  E0=100, dE=2, sample_radius=0.01, sample_height=0.01,
+  pack=1, sigma_inc=0.0328, sigma_abs=0.924,
+  Vc=66.4, geometry_interact=0.5, incoherent_fraction=0.2)
 
 USERVARS
 %{
@@ -53,7 +57,7 @@ AT (0,0,0) ABSOLUTE
 COMPONENT Incoherent_process = Incoherent_process(sigma=sigma_inc,packing_factor=pack,unit_cell_volume=Vc,interact_fraction=incoherent_fraction)
 AT (0,0,0) ABSOLUTE
 
-COMPONENT Powder_process = Powder_process(reflections=material_data_file, d_phi=30) //,format=Lazy)
+COMPONENT Powder_process = Powder_process(reflections=material_data_file, d_phi=30)
 AT (0,0,0) ABSOLUTE
 
 COMPONENT test_material = Union_make_material(my_absorption=100*sigma_abs/Vc*pack, process_string="Powder_process,Incoherent_process")

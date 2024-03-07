@@ -11,7 +11,7 @@
 * Written by: Mads Bertelsen
 * Date: May 2016
 * Origin: Johns Hopkins University, Baltimore
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Union_validation
 *
 * %Description
 * Validation of Union components against incoherent scattering component
@@ -34,7 +34,10 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_incoherent_validation(int comp_select=1,sample_radius=0.01,sample_height=0.01,pack=1,sigma_inc_vanadium=5.08,sigma_abs_vanadium=5.08,Vc_vanadium=13.827,geometry_interact=0.5)
+DEFINE INSTRUMENT Incoherent_validation(
+  int comp_select=1, sample_radius=0.01, sample_height=0.01,
+  pack=1, sigma_inc_vanadium=5.08, sigma_abs_vanadium=5.08,
+  Vc_vanadium=13.827,geometry_interact=0.5)
 
 DECLARE
 %{
