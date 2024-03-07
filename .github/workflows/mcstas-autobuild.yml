@@ -43,7 +43,12 @@ jobs:
       id: setup-build-deps
       run: |
            if [ "$RUNNER_OS" == "Linux" ]; then sudo apt-get -y install equivs ; fi
-           if [ "$RUNNER_OS" == "Linux" ]; then sudo apt-get -y install mingw-w64 gfortran-mingw-w64 mingw-w64-x86-64-dev libz-mingw-w64-dev dos2unix nsis; fi
+           if [ "$RUNNER_OS" == "Linux" ]; then sudo apt-get -y install xvfb mingw-w64 gfortran-mingw-w64 mingw-w64-x86-64-dev libz-mingw-w64-dev dos2unix nsis wine64; fi
+           if [ "$RUNNER_OS" == "Linux" ]; then sudo dpkg --add-architecture i386 && sudo apt-get update && sudo apt-get install wine32; fi
+           ( if [ "$RUNNER_OS" == "Linux" ]; then Xvfb :0 -screen 0 1024x768x16 ; fi ) &
+           if [ "$RUNNER_OS" == "Linux" ]; then mkdir /tmp/innosetup && cd /tmp/innosetup && wget https://jrsoftware.org/download.php/is.exe && DISPLAY=:0 wine ./is.exe /SP- /VERYSILENT /ALLUSERS /SUPPRESSMSGBOXES /DOWNLOADISCRYPT=1 ; fi
+           if [ "$RUNNER_OS" == "Linux" ]; then killall -9 Xvfb ; fi
+
     - name: Check versions
       id: version-checks
       run: |
@@ -76,7 +81,7 @@ jobs:
            cd McCode
            export REV=`git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags origin 'mcstas-*.*.*' | tail -1 | cut -f3 -d/ | cut -f2 -d\-`
            if [ "$RUNNER_OS" == "Linux" ]; then rm -rf dist; fi
-           if [ "$RUNNER_OS" == "Linux" ]; then ./buildscripts/build_windows_mcstas ${REV}; fi
+           if [ "$RUNNER_OS" == "Linux" ]; then ./buildscripts/build_windows_mcstas ${REV} meta; fi
            if [ "$RUNNER_OS" == "Linux" ]; then tar cfz dist-Windows.mingw64.python-${{ matrix.python }}.tgz dist/; fi
 
     - name: 'Upload Artifact'
