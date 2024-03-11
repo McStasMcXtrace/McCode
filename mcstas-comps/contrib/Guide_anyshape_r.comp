@@ -43,9 +43,6 @@
 *   bounding box may be resized using xwidth,yheight and zdepth.
 *   PLY geometry files are also supported.
 *
-* %BUGS
-* This component does take into account gravitation accurately.
-*
 * %P
 * INPUT PARAMETERS:
 *
