@@ -44,8 +44,8 @@ DEFINE COMPONENT Flex_monitor_1D
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (nU=20, string filename=0,
-  Umin, Umax, uid=-1, string ustring="", restore_neutron=0, string signal="p", int nowritefile=0)
+SETTING PARAMETERS (int nU=20, string filename=0,
+  Umin, Umax, uid=-1, string ustring="", int restore_neutron=0, string signal="p", int nowritefile=0)
 
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
