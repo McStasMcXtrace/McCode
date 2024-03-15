@@ -440,7 +440,7 @@ def run_default_test(testdir, mccoderoot, limit, instrfilter, suffix):
     logging.info("")
     results = mccode_test(mccoderoot, labeldir, limit, instrfilter)
     
-    reportfile = os.path.join(labeldir, "testresults_%s.json" % (version+suffix))
+    reportfile = os.path.join(labeldir, "testresults_%s.json" % (mccode_config.configuration["MCCODE"]+"-"+version+suffix))
     open(os.path.join(reportfile), "w").write(json.dumps(results, indent=2))
 
     logging.debug("")
