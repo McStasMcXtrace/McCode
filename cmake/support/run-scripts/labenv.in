@@ -24,7 +24,7 @@ fi
 
 
 
-ARCH=`arch`
+ARCH=`uname -m`
 UNAME=`uname -s`
 
 # On macOS, shorten TMPDIR 
