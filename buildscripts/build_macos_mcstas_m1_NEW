@@ -16,7 +16,7 @@ export MCVERSION=${1}
 export MCINSTALL_PREFIX=/Applications/McStas-${MCVERSION}.app/
 ./mkdist mcstas-app ${MCVERSION} support/MacOSX/McCode.app/ "" mac-silicon "" -- OSXapp
 # hack to ensure the silicon app is opened arch -arm64
-sed -i.bak s+/bin/bash+/usr/bin/arch\ -arm64\ /bin/bash+ $MCINSTALL_PREFIX/Contents/MacOS/mccodegui
+sed -i.bak s+/usr/bin/env bash+/usr/bin/arch\ -arm64\ /bin/bash+ $MCINSTALL_PREFIX/Contents/MacOS/mccodegui
 
 # For the actual mcstas part, the packages need a 'deep' PREFIX
 export MCINSTALL_PREFIX=/Applications/McStas-${MCVERSION}.app/Contents/Resources

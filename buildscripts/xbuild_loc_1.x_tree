@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # rappid-build script for mcstas-kernel dev:
 
