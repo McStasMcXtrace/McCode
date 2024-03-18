@@ -20,7 +20,7 @@ if [ "x@NCRYSTAL_LEGACY_USE@" == "x1" ]; then
     fi
 fi
 
-ARCH=`arch`
+ARCH=`uname -m`
 UNAME=`uname -s`
 
 #VERS="@MCCODE_VERSION@"
