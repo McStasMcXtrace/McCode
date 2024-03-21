@@ -258,6 +258,9 @@ macro(setupMCCODE FLAVOR)
   set(CPACK_DEBIAN_PACKAGE_DEPENDS "build-essential, libopenmpi-dev")
   set(CPACK_RPM_PACKAGE_REQUIRES "gcc, openmpi-devel")
 
+  # Specify license for FreeBSD pkg
+  set(CPACK_FREEBSD_PACKAGE_LICENSE "GPLv3")
+
   # Generate postinst and postrm scripts
   configure_file(
     cmake/support/install-scripts/postinst.in

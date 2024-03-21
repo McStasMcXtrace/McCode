@@ -493,6 +493,12 @@ make_rpm() {
     simple_cpack_file RPM "${NAME}" ".rpm";
 }
 
+make_pkg() {
+    # Default to linux32 when toolchain is incompatible
+    #sane_toolchain "grep linux" rpm32;
+    simple_cpack_file FREEBSD "${NAME}" ".pkg";
+}
+
 make_justinst() {
     simple_cpack_file APP "${NAME}" ".deb";
 }
