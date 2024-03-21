@@ -33,7 +33,11 @@ char * metadata_table_key_literal(char * key){
 }
 int metadata_table_defined(int no, metadata_table_t * tab, char * key){
   if (strlen(key) == 0){
-    return no;
+    /* This is 0 instead of `no` independent of any wildcard-matching logic
+     * because a caller _already_ knows `no` and can verify
+     * that `key` is not "" at call-time. So returning `no` is useless.
+     */
+    return 0;
   }
   char * comp = metadata_table_key_component(key);
   char * name = metadata_table_key_literal(key);
@@ -48,6 +52,35 @@ int metadata_table_defined(int no, metadata_table_t * tab, char * key){
   if (name) free(name);
   return number;
 }
+
+char * metadata_table_name(int no, metadata_table_t * tab, char *key){
+    if (strlen(key) == 0){
+        return NULL;
+    }
+    char * comp = metadata_table_key_component(key);
+    char * name = metadata_table_key_literal(key);
+    if (name == NULL) {
+        for (int i=0; i<no; ++i){
+            if (!strcmp(comp, tab[i].source)){
+                name = malloc((strlen(tab[i].name) + 1) * sizeof(char));
+                strcpy(name, tab[i].name);
+                break;
+            }
+        }
+    } else {
+        int found=0;
+        for (int i=0; i<no; ++i){
+            if (!strcmp(comp, tab[i].source) && !strcmp(name, tab[i].name)) {
+                found = 1;
+                break;
+            }
+        }
+        if (!found) free(name);
+    }
+    free(comp);
+    return name;
+}
+
 char * metadata_table_type(int no, metadata_table_t * tab, char * key){
   if (strlen(key) == 0) {
     fprintf(stderr, "Unable to check type of non-existent key\n");
