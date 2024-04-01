@@ -42,7 +42,7 @@ jobs:
     - name: Setup build-deps
       id: setup-build-deps
       run: |
-           if [ "$RUNNER_OS" == "Linux" ]; then sudo apt-get -y install equivs ; fi
+           if [ "$RUNNER_OS" == "Linux" ]; then sudo apt-get update && sudo apt-get -y install equivs ; fi
            if [ "$RUNNER_OS" == "Linux" ]; then sudo apt-get -y install xvfb mingw-w64 gfortran-mingw-w64 mingw-w64-x86-64-dev libz-mingw-w64-dev dos2unix nsis wine64; fi
            if [ "$RUNNER_OS" == "Linux" ]; then sudo dpkg --add-architecture i386 && sudo apt-get update && sudo apt-get install wine32; fi
            ( if [ "$RUNNER_OS" == "Linux" ]; then Xvfb :0 -screen 0 1024x768x16 ; fi ) &
