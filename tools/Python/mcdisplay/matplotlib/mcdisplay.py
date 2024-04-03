@@ -36,16 +36,13 @@ def parse_trace():
 
     mpl.rcParams['legend.fontsize'] = 10
 
-    fig = plt.figure(figsize=plt.figaspect(0.5)*1.5)
-    ax = fig.gca()
-#    ax.xlabel("z")
-#    ax.ylabel("x")
-#    ax.zlabel("y")
+    ax = plt.figure(figsize=plt.figaspect(0.5)*1.5).add_subplot(projection='3d')
+    ax.set(xlabel='z', ylabel='x', zlabel='y')
     try:
         ax.set_aspect('equal')
     except:
         print("manual aspect not supported")
-    #    ax.autoscale_view(scalex=False, scaley=False, scalez=False)
+
     color = 0
 
     # map from component name to (position, rotation matrix)
