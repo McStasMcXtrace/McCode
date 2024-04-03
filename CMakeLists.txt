@@ -2,8 +2,10 @@ cmake_minimum_required(VERSION 3.17.0)
 cmake_policy(VERSION 3.17.0)
 
 # This file will build McStas and/or McXtrace
-project(mccode C)
+project(mccode LANGUAGES C VERSION 3.5.0)
 set(CMAKE_C_STANDARD 99)
+# Stash the project version for use in C macro comparisons
+math(EXPR MCCODE_VERSION_MACRO "(${CMAKE_PROJECT_VERSION_MAJOR} * 100 + ${CMAKE_PROJECT_VERSION_MINOR}) * 1000 + ${CMAKE_PROJECT_VERSION_PATCH}" OUTPUT_FORMAT DECIMAL)
 
 # Set module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
@@ -26,7 +28,8 @@ elseif( NOT BUILD_MCSTAS AND NOT BUILD_MCXTRACE )
 endif()
 
 if ( "x${MCVERSION}" STREQUAL "x" )
-    message(WARNING "Build version is unset. Define using e.g.  -DMCVERSION=3.9a")
+    set(MCVERSION "${CMAKE_PROJECT_VERSION}")
+    message(INFO "Build version was unset. Define using e.g. -DMCVERSION=3.9a; using project McCode version ${MCVERSION}")
 endif()
 
 # Setup McCode values (from mkdist or defaults)
