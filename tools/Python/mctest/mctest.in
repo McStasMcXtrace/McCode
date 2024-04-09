@@ -23,9 +23,6 @@ fi
 ARCH=`uname -m`
 UNAME=`uname -s`
 
-#VERS="@MCCODE_VERSION@"
-
-
 canrun() {
     if ! [ -x ${UTILDIR}/${TOOL}.py ]; then
         exit 127;

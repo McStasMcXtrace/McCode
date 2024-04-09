@@ -13,14 +13,6 @@ if [ -d "${MCCODE_TOOLDIR}/../miniconda3" ]; then
     export PATH=${MCCODE_TOOLDIR}/../miniconda3/bin/:$PATH
 fi
 
-# FIXME: NCrystal should be used via own package/infrastructure
-if [ [ @NCRYSTAL_LEGACY_USE@ == 1 ] && -d "${MCCODE_TOOLDIR}/../share/NCrystal/python" ]; then
-    export PYTHONPATH="${MCCODE_TOOLDIR}/../share/NCrystal/python:$PYTHONPATH"
-fi
-
-#VERS="@MCCODE_VERSION@"
-
-
 canrun() {
     echo $UTILDIR
     
