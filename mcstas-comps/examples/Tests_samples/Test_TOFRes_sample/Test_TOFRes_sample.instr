@@ -101,7 +101,7 @@ COMPONENT TOFL3 = TOFLambda_monitor(
   AT (0, 0, 20.02) RELATIVE a1
 
 COMPONENT sample = TOFRes_sample(
-    radius=0.01, yheight=0.05,
+    radius=0.01, yheight=0.05, thickness=0.001,
     time_bin=TIME_BIN, time_width=BIN_WIDTH,
     focus_xw=0.01, focus_yh=0.01, 
     target_index=2 )
