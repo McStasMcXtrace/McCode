@@ -187,6 +187,10 @@ clock_t times (struct tms *__buffer) {
 #  define MCCODE_VERSION "@MCCODE_VERSION@"
 #endif
 
+#ifndef __MCCODE_VERSION__
+#define __MCCODE_VERSION__ @MCCODE_VERSION_MACRO@L
+#endif
+
 #ifndef MCCODE_NAME
 #  define MCCODE_NAME "@MCCODE_NAME@"
 #endif
