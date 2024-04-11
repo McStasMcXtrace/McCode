@@ -1,8 +1,13 @@
 cmake_minimum_required(VERSION 3.17.0)
 cmake_policy(VERSION 3.17.0)
 
+
+if ( "x${MCVERSION}" STREQUAL "x" )
+    message(FATAL_ERROR "Build version was unset. Define using e.g. -DMCVERSION=3.9.0.1")
+endif()
+
 # This file will build McStas and/or McXtrace
-project(mccode LANGUAGES C VERSION 3.5.0)
+project(mccode LANGUAGES C VERSION "${MCVERSION}")
 set(CMAKE_C_STANDARD 99)
 # Stash the project version for use in C macro comparisons
 math(EXPR MCCODE_VERSION_MACRO "(${CMAKE_PROJECT_VERSION_MAJOR} * 100 + ${CMAKE_PROJECT_VERSION_MINOR}) * 1000 + ${CMAKE_PROJECT_VERSION_PATCH}" OUTPUT_FORMAT DECIMAL)
@@ -25,11 +30,6 @@ if ( BUILD_MCSTAS AND BUILD_MCXTRACE )
     message(WARNING "Configuration requests building both McStas and McXtrace which is likely to fail.")
 elseif( NOT BUILD_MCSTAS AND NOT BUILD_MCXTRACE )
     message(FATAL_ERROR "Configuration requires building one of McStas or McXtrace via -DBUILD_MCXTRACE=ON or -DBUILD_MCSTAS=ON")
-endif()
-
-if ( "x${MCVERSION}" STREQUAL "x" )
-    set(MCVERSION "${CMAKE_PROJECT_VERSION}")
-    message(INFO "Build version was unset. Define using e.g. -DMCVERSION=3.9a; using project McCode version ${MCVERSION}")
 endif()
 
 # Setup McCode values (from mkdist or defaults)
