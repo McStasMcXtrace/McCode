@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.17.0)
 cmake_policy(VERSION 3.17.0)
 
-
 if ( "x${MCVERSION}" STREQUAL "x" )
-    message(FATAL_ERROR "Build version was unset. Define using e.g. -DMCVERSION=3.9.0.1")
+    set(MCVERSION 3.99.999)
+    message(WARNING "Build version was unset. Define using e.g. -DMCVERSION=${MCVERSION}")
 endif()
 
 # This file will build McStas and/or McXtrace
