@@ -98,6 +98,7 @@ RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0, order=0)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
+
 SHARE
 %{
 #pragma acc routine
@@ -105,8 +106,12 @@ double GAUSS_monocurved(double x, double mean, double rms){
   return (exp(-((x)-(mean))*((x)-(mean))/(2*(rms)*(rms)))/(sqrt(2*PI)*(rms)));
 }
 
-
 %include "read_table-lib"
+%}
+
+USERVARS %{
+  int ncol;
+  int nrow;
 %}
 
 DECLARE
@@ -123,6 +128,8 @@ DECLARE
   int tTableFlag;
   double *tiltH;
   double *tiltV;
+  char ncol_var[128];
+  char nrow_var[128];
 %}
 
 INITIALIZE
@@ -207,6 +214,8 @@ INITIALIZE
       tiltV[i]=-asin((i-(NV+1)/2.0)*(SlabHeight+gap)/RV);
     }
   }
+  sprintf(ncol_var,"ncol_%i",_comp->_index);
+  sprintf(nrow_var,"nrow_%i",_comp->_index);
 
 %}
 
@@ -247,6 +256,9 @@ TRACE
       col = ceil ( (zz-zmin)/(SlabWidth +gap));  /* which slab hit ? */
       row = ceil ( (yy-ymin)/(SlabHeight+gap));
 
+      particle_setvar_void(_particle, ncol_var, &col);
+      particle_setvar_void(_particle, nrow_var, &row);
+      
       if (RH != 0) {
 	tilth = tiltH ? tiltH[(int)col] :  asin((col-(NH+1)/2.0)*(SlabWidth+gap)/RH);
       } else {
