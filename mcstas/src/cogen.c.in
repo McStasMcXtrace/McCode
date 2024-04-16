@@ -2373,26 +2373,29 @@ cogen_header(struct instr_def *instr, char *output_name)
   // Look in comp definitions
   List_handle liter3;
   liter3 = list_iterate(instr->complist);
-  List cvars;
-  List ctypes;
-  cvars = list_create();
-  ctypes = list_create();
-  List_handle cliter;
-  List_handle cliter2;
   while((comp = list_next(liter3)) != NULL) {
+    List cvars;
+    List ctypes;
+    cvars = list_create();
+    ctypes = list_create();
     if (get_codeblock_vars(comp->def->uservar_code, cvars, ctypes, "USERVARS", "EXTEND")) {
+      List_handle cliter;
+      List_handle cliter2;
       cliter = list_iterate(cvars);
       cliter2 = list_iterate(ctypes);
       char *cvar;
       char *ctpe;
-      while((cvar = list_next(cliter))) {
-	ctpe = list_next(cliter2);
+      while(cvar = list_next(cliter)) {
+        ctpe = list_next(cliter2);
+        char *Numberedvar = malloc(256*sizeof(char));
+	strcat(Numberedvar,cvar);
 	/* We need to attach comp index to cvar */
 	char snum[5];
 	sprintf(snum,"_%d",comp->index);
-	strcat(cvar,snum);
-	list_add(instr->user_vars, cvar);
+	strcat(Numberedvar,snum);
+	list_add(instr->user_vars, Numberedvar);
 	list_add(instr->user_vars_types, ctpe);
+	printf("\n--> Added COMPONENT %s USERVAR %s with type %s\n",comp->name,Numberedvar,ctpe);
       }
       list_iterate_end(cliter);
       list_iterate_end(cliter2);
