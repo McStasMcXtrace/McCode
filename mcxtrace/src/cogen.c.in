@@ -2390,11 +2390,8 @@ cogen_header(struct instr_def *instr, char *output_name)
       while(cvar = list_next(cliter)) {
 	ctpe = list_next(cliter2);
         char *Numberedvar = malloc(256*sizeof(char));
-	strcat(Numberedvar,cvar);
 	/* We need to attach comp index to cvar */
-	char snum[5];
-	sprintf(snum,"_%d",comp->index);
-	strcat(Numberedvar,snum);
+	sprintf(Numberedvar,"%s_%d",cvar,comp->index);
 	list_add(instr->user_vars, Numberedvar);
 	list_add(instr->user_vars_types, ctpe);
 	printf("\n--> Added COMPONENT %s USERVAR %s with type %s\n",comp->name,Numberedvar,ctpe);
