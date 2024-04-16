@@ -174,7 +174,7 @@ if __name__ == '__main__':
     parser, prefix = make_common_parser(__file__, __doc__)
 
     parser.add_argument('--dirname', help='output directory name override')
-    parser.add_argument('-n', '--ncount', dest='n', type=int, default=0, help='Number of particles to simulate')
+    parser.add_argument('-n', '--ncount', dest='n', type=float, default=0, help='Number of particles to simulate')
     parser.add_argument('-f', '--format', dest='format', type=output_format, default='step', help='Output CAD file format')
 
     args, unknown = parser.parse_known_args()
