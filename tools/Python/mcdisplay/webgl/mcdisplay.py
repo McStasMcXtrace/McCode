@@ -184,7 +184,7 @@ if __name__ == '__main__':
     parser.add_argument('--invcanvas', action='store_true', help='invert canvas background from black to white')
     parser.add_argument('--first', help='zoom range first component')
     parser.add_argument('--last', help='zoom range last component')
-    parser.add_argument('-n', '--ncount', dest='n', type=int, default=300, help='Number of particles to simulate')
+    parser.add_argument('-n', '--ncount', dest='n', type=float, default=300, help='Number of particles to simulate')
     
     args, unknown = parser.parse_known_args()
     # Convert the defined arguments in the args Namespace structure to a dict
