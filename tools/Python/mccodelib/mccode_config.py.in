@@ -169,6 +169,8 @@ def get_options():
         mcdisplay_lst = [prefix+"display-webgl",
                          prefix+"display-pyqtgraph",
                          prefix+"display-pyqtgraph --tof",
+                         prefix+"display-matplotlib",
+                         prefix+"display-cad",
                          prefix+"display-mantid",
                          prefix+"display-matlab"+suffix+" --format=Matlab"]
         mcrun_lst =     [prefix+"run", prefix+"run --format=NeXus", prefix+"run --format=NeXus --IDF"]
@@ -177,6 +179,8 @@ def get_options():
         prefix = "mx"
         mcdisplay_lst = [prefix+"display-webgl",
                          prefix+"display-pyqtgraph",
+                         prefix+"display-matplotlib",
+                         prefix+"display-cad",
                          prefix+"display-matlab"+suffix+" --format=Matlab"]
         mcrun_lst =     [prefix+"run", prefix+"run --format=NeXus"]
         format_lst =    ["McCode", "NeXus", "NeXus -c"]
