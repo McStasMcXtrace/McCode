@@ -3,7 +3,7 @@
 from sys import stdin, stderr
 from math import pi, cos, sin
 from numpy import dot, array
-
+import numpy as np
 
 def parse_multiline(line):
     ''' Parse a multiline with size as first elements and n points as rest '''
@@ -45,6 +45,15 @@ def rotate_points(points, inps):
     z.append(z[0]);
     return x,y,z
 
+
+def draw_sphere(center, radius):
+    u = np.linspace(0, 2 * np.pi, 100)
+    v = np.linspace(0, np.pi, 100)
+    x = center[0] + radius * np.outer(np.cos(u), np.sin(v))
+    y = center[1] + radius * np.outer(np.sin(u), np.sin(v))
+    z = center[2] + radius * np.outer(np.ones(np.size(u)), np.cos(v))
+    return x, y, z
+
 POINTS_IN_CIRCLE = 128
 def draw_circle(plane, pos, radius, comp):
     ''' Draw a circle in plane, at pos and with r radius, rotated by comp '''
@@ -64,7 +73,7 @@ def draw_circle(plane, pos, radius, comp):
         z.append(xyz[2])
     x.append(x[0]);
     y.append(y[0]);
-    z.append(z[0]); 
+    z.append(z[0]);
     return x,y,z
 
 def get_line():

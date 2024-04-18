@@ -8,16 +8,16 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from util import parse_multiline, rotate, rotate_points, draw_circle, get_line, debug
-
+from util import parse_multiline, rotate, rotate_points, draw_circle, get_line, debug, draw_sphere
 
 UC_COMP = 'COMPONENT:'
 
-MC_COMP       = 'MCDISPLAY: component'
+MC_COMP = 'MCDISPLAY: component'
 MC_COMP_SHORT = 'COMP: '
 
 MC_LINE = 'MCDISPLAY: multiline'
 MC_CIRCLE = 'MCDISPLAY: circle'
+MC_SPHERE = 'MCDISPLAY: sphere'
 
 MC_ENTER = 'ENTER:'
 MC_LEAVE = 'LEAVE:'
@@ -110,7 +110,11 @@ def parse_trace():
             rad = float(items[4])
             (x,y,z) = draw_circle(pla, pos, rad, comp)
             ax.plot(z, x, y)
-            
+
+        # process sphere
+        elif line.startswith(MC_SPHERE):
+            process_sphere(ax, line)
+
         # activate neutron when it enters
         elif line.startswith(MC_ENTER):
             prev = None
@@ -139,17 +143,8 @@ def parse_trace():
             if skip:
                 skip = False
                 continue
-            
-            xyz = [float(x) for x in line[line.find(':')+1:].split(',')[:3]]
-            xyz = rotate(xyz, comp)
-            if prev is not None:
-                xstate.append(xyz[0])
-                ystate.append(xyz[1])
-                zstate.append(xyz[2])
-            prev = xyz
-            xstate.append(prev[0])
-            ystate.append(prev[1])
-            zstate.append(prev[2])
+
+            register_state_and_scatter(comp, line, prev, xstate, ystate, zstate)
 
         # kick out legacy "junk"
         elif line.startswith(MC_MAGNIFY) or line.startswith(MC_START) or line.startswith(MC_END) or line.startswith(MC_STOP):
@@ -157,36 +152,64 @@ def parse_trace():
         else:
             print(line)
 
+    set_axis_limits(ax)
 
+    plt.show()
+
+
+def process_sphere(ax, line):
+    items = line[len(MC_SPHERE):].strip('()').split(',')
+    # center and radius
+    center = [float(x) for x in items[1:4]]
+    rad = float(items[3])
+    #sphere
+    (x, y, z) = draw_sphere(center, rad)
+    ax.plot_surface(x,y,z)
+
+
+
+
+
+def register_state_and_scatter(comp, line, prev, xstate, ystate, zstate):
+    xyz = [float(x) for x in line[line.find(':') + 1:].split(',')[:3]]
+    xyz = rotate(xyz, comp)
+    if prev is not None:
+        xstate.append(xyz[0])
+        ystate.append(xyz[1])
+        zstate.append(xyz[2])
+    prev = xyz
+    xstate.append(prev[0])
+    ystate.append(prev[1])
+    zstate.append(prev[2])
+
+
+def set_axis_limits(ax):
     # A little bit of logic for controlling the aspect ratios/view
-    (xmin, xmax)=ax.get_xlim()
-    (ymin, ymax)=ax.get_ylim()
-    (zmin, zmax)=ax.get_zlim()
+    (xmin, xmax) = ax.get_xlim()
+    (ymin, ymax) = ax.get_ylim()
+    (zmin, zmax) = ax.get_zlim()
     dx = xmax - xmin
     dy = ymax - ymin
     dz = zmax - zmin
-    dmax=max(dx,dy,dz)
-
+    dmax = max(dx, dy, dz)
     # Check ranges and define axis box of max length cubed
     if dmax > dx:
-        mean=(xmax+xmin)/2
-        xmin=mean-dmax/2
-        xmax=mean+dmax/2
+        mean = (xmax + xmin) / 2
+        xmin = mean - dmax / 2
+        xmax = mean + dmax / 2
     if dmax > dy:
-        mean=(ymax+ymin)/2
-        ymin=mean-dmax/2
-        ymax=mean+dmax/2
+        mean = (ymax + ymin) / 2
+        ymin = mean - dmax / 2
+        ymax = mean + dmax / 2
     if dmax > dz:
-        mean=(zmax+zmin)/2
-        zmin=mean-dmax/2
-        zmax=mean+dmax/2
-        
+        mean = (zmax + zmin) / 2
+        zmin = mean - dmax / 2
+        zmax = mean + dmax / 2
     # Set new axis limits
-    ax.set_xlim3d(xmin,xmax)
-    ax.set_ylim3d(ymin,ymax)
-    ax.set_zlim3d(zmin,zmax)
- 
-    plt.show()
+    ax.set_xlim3d(xmin, xmax)
+    ax.set_ylim3d(ymin, ymax)
+    ax.set_zlim3d(zmin, zmax)
+
 
 if __name__ == '__main__':
     parse_trace()

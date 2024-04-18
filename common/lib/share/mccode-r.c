@@ -2648,27 +2648,9 @@ void mcdis_cylinder( double x, double y, double z,
     }
 }
 
-/* draws a sphere with center at (x,y,z) with extent (r)
- * The sphere is drawn using N longitudes and N latitudes.*/
-void mcdis_sphere(double x, double y, double z, double r, int N){
-    double nx,ny,nz;
-    int i;
-    /*no lines make little sense - so trigger the default*/
-    if(N<=0) N=5;
-
-    nx=0;ny=0;nz=1;
-    mcdis_Circle(x,y,z,r,nx,ny,nz);
-    for (i=1;i<N;i++){
-        rotate(nx,ny,nz, nx,ny,nz, PI/N, 0,1,0);
-        mcdis_Circle(x,y,z,r,nx,ny,nz);
-    }
-    /*lastly draw a great circle perpendicular to all N circles*/
-    //mcdis_Circle(x,y,z,radius,1,0,0);
-
-    for (i=1;i<=N;i++){
-        double yy=-r+ 2*r*((double)i/(N+1));
-        mcdis_Circle(x,y+yy ,z,  sqrt(r*r-yy*yy) ,0,1,0);
-    }
+/* draws a sphere with center at (x,y,z) with extent (r)*/
+void mcdis_sphere(double x, double y, double z, double r){
+    printf("MCDISPLAY: sphere(%g,%g,%g,%g)\n", x, y, z, r);
 }
 
 /* SECTION: coordinates handling ============================================ */
