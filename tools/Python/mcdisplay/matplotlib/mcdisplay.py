@@ -118,8 +118,9 @@ def parse_trace():
             process_sphere(ax, line, comp)
 
         # process box
-        #elif line.startswith(MC_BOX):
-        #process_box(ax, line)
+        elif line.startswith(MC_BOX):
+            print('elif line.startswith(MC_BOX): process_box(ax, line)')
+            process_box(ax, line)
 
         # process cylinder
         elif line.startswith(MC_CYLINDER):
@@ -197,15 +198,30 @@ def process_cylinder(ax, line, comp):
     axis_vector=[float(x) for x in items[6:9]]
     (x, y, z) = draw_cylinder(center, rad, height, axis_vector)
     (x, y, z) = rotate_xyz(x, y, z, comp)
-    ax.plot_surface(z,x,y)
+    ax.plot_surface(z, x, y)
 
-'''
+
 def process_box(ax, line):
-    items = line[len(MC_BOX):].strip('()').split(',')
-    center = [float(x) for x in items[1:4]]
+    print('process_box')
 
-    ax.plot_surface(x,y,z)
-'''
+    items = line[len(MC_BOX):].strip('()').split(',')
+
+    center = [float(x) for x in items[1:4]]
+    print(f'center: {center}')
+    a = float(items[3])
+    b = float(items[4])
+    c = float(items[5])
+    print(f'a,b,c: {a,b,c}')
+
+    #spherical coordinates cube
+    phi = np.arange(1,10,2)*np.pi/4
+    Phi, Theta = np.meshgrid(phi, phi)
+    x = center[0] + (np.cos(Phi)*np.sin(Theta))*a
+    y = center[1] + (np.sin(Phi)*np.sin(Theta))*b
+    z = center[2] + (np.cos(Theta)/np.sqrt(2))*c
+
+    ax.plot_surface(z, x, y)
+
 
 def register_state_and_scatter(comp, line, prev, xstate, ystate, zstate):
     xyz = [float(x) for x in line[line.find(':') + 1:].split(',')[:3]]

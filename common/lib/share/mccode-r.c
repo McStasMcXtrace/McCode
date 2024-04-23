@@ -2574,17 +2574,7 @@ void mcdis_rectangle(char* plane, double x, double y, double z,
     width (deltax), height (deltay), length (deltaz) */
 void mcdis_box(double x, double y, double z,
 	       double width, double height, double length){
-
-  mcdis_rectangle("xy", x, y, z-length/2, width, height);
-  mcdis_rectangle("xy", x, y, z+length/2, width, height);
-  mcdis_line(x-width/2, y-height/2, z-length/2,
-	     x-width/2, y-height/2, z+length/2);
-  mcdis_line(x-width/2, y+height/2, z-length/2,
-	     x-width/2, y+height/2, z+length/2);
-  mcdis_line(x+width/2, y-height/2, z-length/2,
-	     x+width/2, y-height/2, z+length/2);
-  mcdis_line(x+width/2, y+height/2, z-length/2,
-	     x+width/2, y+height/2, z+length/2);
+  printf("MCDISPLAY: box(%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length);
 }
 
 void mcdis_circle(char *plane, double x, double y, double z, double r){

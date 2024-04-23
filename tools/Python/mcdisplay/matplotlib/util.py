@@ -117,7 +117,9 @@ def draw_circle(plane, pos, radius, comp):
 
 def get_line():
     ''' Read a line from stdin '''
-    return stdin.readline().strip()
+    line = stdin.readline().strip()
+    print(line)
+    return line
 
 
 def debug(obj):
