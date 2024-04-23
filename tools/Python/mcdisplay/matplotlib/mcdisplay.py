@@ -8,7 +8,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from util import parse_multiline, rotate, rotate_points, draw_circle, get_line, debug, draw_sphere
+from util import parse_multiline, rotate, rotate_points, draw_circle, get_line, debug, draw_sphere, draw_cylinder
 
 UC_COMP = 'COMPONENT:'
 
@@ -18,6 +18,8 @@ MC_COMP_SHORT = 'COMP: '
 MC_LINE = 'MCDISPLAY: multiline'
 MC_CIRCLE = 'MCDISPLAY: circle'
 MC_SPHERE = 'MCDISPLAY: sphere'
+MC_CYLINDER = 'MCDISPLAY: cylinder'
+MC_BOX = 'MCDISPLAY: box'
 
 MC_ENTER = 'ENTER:'
 MC_LEAVE = 'LEAVE:'
@@ -113,7 +115,15 @@ def parse_trace():
 
         # process sphere
         elif line.startswith(MC_SPHERE):
-            process_sphere(ax, line)
+            process_sphere(ax, line, comp)
+
+        # process box
+        #elif line.startswith(MC_BOX):
+        #process_box(ax, line)
+
+        # process cylinder
+        elif line.startswith(MC_CYLINDER):
+            process_cylinder(ax, line, comp)
 
         # activate neutron when it enters
         elif line.startswith(MC_ENTER):
@@ -157,18 +167,45 @@ def parse_trace():
     plt.show()
 
 
-def process_sphere(ax, line):
+def process_sphere(ax, line, comp):
     items = line[len(MC_SPHERE):].strip('()').split(',')
     # center and radius
     center = [float(x) for x in items[1:4]]
+    radius = float(items[3])
+    (x, y, z) = draw_sphere(center, radius)
+    (x, y, z) = rotate_xyz(x, y, z, comp)
+    ax.plot_surface(z,x,y)
+
+
+def rotate_xyz(x, y, z, comp):
+    for i in range(len(x)):
+        for j in range(len(x)):
+            point = np.array([x[i][j], y[i][j], z[i][j]])
+            rotated_point = rotate(point, comp)
+            x[i][j] = rotated_point[0]
+            y[i][j] = rotated_point[1]
+            z[i][j] = rotated_point[2]
+    return (x, y, z)
+
+
+
+def process_cylinder(ax, line, comp):
+    items = line[len(MC_CYLINDER):].strip('()').split(',')
+    center = [float(x) for x in items[1:4]]
     rad = float(items[3])
-    #sphere
-    (x, y, z) = draw_sphere(center, rad)
+    height = float(items[4])
+    axis_vector=[float(x) for x in items[6:9]]
+    (x, y, z) = draw_cylinder(center, rad, height, axis_vector)
+    (x, y, z) = rotate_xyz(x, y, z, comp)
+    ax.plot_surface(z,x,y)
+
+'''
+def process_box(ax, line):
+    items = line[len(MC_BOX):].strip('()').split(',')
+    center = [float(x) for x in items[1:4]]
+
     ax.plot_surface(x,y,z)
-
-
-
-
+'''
 
 def register_state_and_scatter(comp, line, prev, xstate, ystate, zstate):
     xyz = [float(x) for x in line[line.find(':') + 1:].split(',')[:3]]

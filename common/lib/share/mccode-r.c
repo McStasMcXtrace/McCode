@@ -2622,30 +2622,8 @@ void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, 
  * N determines how many vertical lines are drawn.*/
 void mcdis_cylinder( double x, double y, double z,
         double r, double height, int N, double nx, double ny, double nz){
-    int i;
-    /*no lines make little sense - so trigger the default*/
-    if(N<=0) N=5;
-
-    NORM(nx,ny,nz);
-    double h_2=height/2.0;
-    mcdis_Circle(x+nx*h_2,y+ny*h_2,z+nz*h_2,r,nx,ny,nz);
-    mcdis_Circle(x-nx*h_2,y-ny*h_2,z-nz*h_2,r,nx,ny,nz);
-
-    double mx,my,mz;
-    /*generate perpendicular vector using (nx,ny,nz) and (0,1,0)*/
-    if(nx==0 && ny && nz==0){
-        mx=my=0;mz=1;
-    }else{
-        vec_prod(mx,my,mz, 0,1,0, nx,ny,nz);
-        NORM(mx,my,mz);
-    }
-    /*draw circle*/
-    for (i=0; i<24; i++){
-        double ux,uy,uz;
-        rotate(ux,uy,uz, mx,my,mz, i*2*PI/24, nx,ny,nz);
-        mcdis_line(x+nx*h_2+ux*r, y+ny*h_2+uy*r, z+nz*h_2+uz*r,
-                 x-nx*h_2+ux*r, y-ny*h_2+uy*r, z-nz*h_2+uz*r);
-    }
+    printf("MCDISPLAY: cylinder(%g, %g, %g, %g, %g, %d, %g, %g, %g)\n",
+       x, y, z, r, height, N, nx, ny, nz);
 }
 
 /* draws a sphere with center at (x,y,z) with extent (r)*/
