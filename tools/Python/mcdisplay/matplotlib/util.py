@@ -2,12 +2,15 @@
 
 from sys import stdin, stderr
 from math import pi, cos, sin
+
+from matplotlib.patches import Circle
+from mpl_toolkits.mplot3d import art3d
 from numpy import dot, array
 import numpy as np
 from scipy.linalg import norm
 
-
-
+#level of detail in linspace
+num_samples = 100
 def parse_multiline(line):
     ''' Parse a multiline with size as first elements and n points as rest '''
     elems = [float(x) for x in line.split(',')]
@@ -48,10 +51,19 @@ def rotate_points(points, inps):
     z.append(z[0]);
     return x,y,z
 
+def rotate_xyz(x, y, z, comp):
+    for i in range(len(x)):
+        for j in range(len(x)):
+            point = np.array([x[i][j], y[i][j], z[i][j]])
+            rotated_point = rotate(point, comp)
+            x[i][j] = rotated_point[0]
+            y[i][j] = rotated_point[1]
+            z[i][j] = rotated_point[2]
+    return (x, y, z)
 
 def draw_sphere(center, radius):
-    u = np.linspace(0, 2 * np.pi)
-    v = np.linspace(0, np.pi)
+    u = np.linspace(0, 2 * np.pi, num_samples)
+    v = np.linspace(0, np.pi, num_samples)
     x = center[0] + radius * np.outer(np.cos(u), np.sin(v))
     y = center[1] + radius * np.outer(np.sin(u), np.sin(v))
     z = center[2] + radius * np.outer(np.ones(np.size(u)), np.cos(v))
@@ -84,14 +96,35 @@ def draw_cylinder(center, radius, height, axis_vector):
     #make unit vector perpendicular to v and n1
     n2 = np.cross(v, n1)
     #surface ranges over t from 0 to height and 0 to 2*pi
-    t = np.linspace(0, mag)
-    theta = np.linspace(0, 2 * np.pi)
+    t = np.linspace(0, mag, num_samples)
+    theta = np.linspace(0, 2 * np.pi, num_samples)
     #use meshgrid to make 2d arrays
     t, theta = np.meshgrid(t, theta)
     #generate coordinates for surface
-    X, Y, Z = [p0[i] + v[i] * t + radius * np.sin(theta) * n1[i] + radius * np.cos(theta) * n2[i] for i in [0, 1, 2]]
+    x, y, z = [p0[i] + v[i] * t + radius * np.sin(theta) * n1[i] + radius * np.cos(theta) * n2[i] for i in [0, 1, 2]]
 
-    return X, Y, Z
+    return x, y, z
+
+def draw_box(center, a, b, c):
+    #spherical coordinates cube
+    phi = np.arange(1,10,2)*np.pi/4
+    Phi, Theta = np.meshgrid(phi, phi)
+    x = center[0] + (np.cos(Phi)*np.sin(Theta))*a
+    y = center[1] + (np.sin(Phi)*np.sin(Theta))*b
+    z = center[2] + (np.cos(Theta)/np.sqrt(2))*c
+
+    return x, y, z
+
+def draw_cylinder_lid(center, radius):
+    radius = np.linspace(0, radius, 100)
+    u = np.linspace(0,  2*np.pi, 100)
+
+    x = center[0] + np.outer(radius, np.cos(u))
+    y = center[1] + np.outer(radius, np.sin(u))
+    z = np.full((100, 100), center[2])
+    return x, y, z
+
+
 
 POINTS_IN_CIRCLE = 128
 def draw_circle(plane, pos, radius, comp):

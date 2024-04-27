@@ -8,7 +8,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from util import parse_multiline, rotate, rotate_points, draw_circle, get_line, debug, draw_sphere, draw_cylinder
+from util import parse_multiline, rotate, rotate_points, draw_circle, get_line, debug, draw_box, draw_sphere, \
+    draw_cylinder, draw_cylinder_lid, rotate_xyz
 
 UC_COMP = 'COMPONENT:'
 
@@ -186,7 +187,23 @@ def process_cylinder(ax, line, comp):
     axis_vector=[float(x) for x in items[6:9]]
     (x, y, z) = draw_cylinder(center, rad, height, axis_vector)
     (x, y, z) = rotate_xyz(x, y, z, comp)
+
+    axis_vector_normalized = axis_vector / np.linalg.norm(axis_vector)
+    # Calculate half of the height vector
+    half_height_vector = (height / 2) * axis_vector_normalized
+
+    # Calculate the centers for the upper and lower lid
+    center_upper_lid = center + half_height_vector
+    center_lower_lid = center - half_height_vector
+
+    (x_upper_lid, y_upper_lid, z_upper_lid) = draw_cylinder_lid(center_upper_lid, rad)
+    (x_lower_lid, y_lower_lid, z_lower_lid) = draw_cylinder_lid(center_lower_lid, rad)
+    (x_cylinder_upper_lid, y_upper_lid, z_upper_lid) = rotate_xyz(x_upper_lid, y_upper_lid, z_upper_lid, comp)
+    (x_lower_lid, y_lower_lid, z_lower_lid) = rotate_xyz(x_lower_lid, y_lower_lid, z_lower_lid, comp)
+
     ax.plot_surface(z, x, y)
+    ax.plot_surface(z_upper_lid, x_upper_lid, y_upper_lid)
+    ax.plot_surface(z_lower_lid, x_lower_lid, y_lower_lid)
 
 
 def process_box(ax, line, comp):
@@ -197,26 +214,10 @@ def process_box(ax, line, comp):
     b = float(items[4])
     c = float(items[5])
 
-    #spherical coordinates cube
-    phi = np.arange(1,10,2)*np.pi/4
-    Phi, Theta = np.meshgrid(phi, phi)
-    x = center[0] + (np.cos(Phi)*np.sin(Theta))*a
-    y = center[1] + (np.sin(Phi)*np.sin(Theta))*b
-    z = center[2] + (np.cos(Theta)/np.sqrt(2))*c
-
+    (x, y, z) = draw_box(center, a, b, c)
     (x, y, z) = rotate_xyz(x, y, z, comp)
 
     ax.plot_surface(z, x, y)
-
-def rotate_xyz(x, y, z, comp):
-    for i in range(len(x)):
-        for j in range(len(x)):
-            point = np.array([x[i][j], y[i][j], z[i][j]])
-            rotated_point = rotate(point, comp)
-            x[i][j] = rotated_point[0]
-            y[i][j] = rotated_point[1]
-            z[i][j] = rotated_point[2]
-    return (x, y, z)
 
 def register_state_and_scatter(comp, line, prev, xstate, ystate, zstate):
     xyz = [float(x) for x in line[line.find(':') + 1:].split(',')[:3]]
