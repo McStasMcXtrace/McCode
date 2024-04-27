@@ -35,15 +35,17 @@ TRACE
 COMPONENT origin = Progress_bar()
 AT (0, 0, 0) RELATIVE ABSOLUTE
 
-COMPONENT shape0 = Shape_simple(radius=0.5)
+COMPONENT shape0 = Shape(radius=0.5)
 AT(0,0,.5) RELATIVE PREVIOUS
 
-COMPONENT shape1 = Shape_simple(radius=0.5, yheight=0.5)
+COMPONENT shape1 = Shape(radius=0.5, yheight=0.5)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape2 = Shape_simple(xwidth=0.25, yheight=0.8,zdepth=0.1234)
+COMPONENT shape2 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234)
 AT(0,0,1) RELATIVE PREVIOUS
 
+COMPONENT shape3 = Shape(geometry="cube.off", xwidth=0.25)
+AT(0,0,1) RELATIVE PREVIOUS
 FINALLY
 %{
 %}
