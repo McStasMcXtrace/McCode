@@ -460,7 +460,7 @@ MCDISPLAY
       box(0,0,0,xwidth, yheight, zdepth);
   }
   else if (radius > 0 && !yheight) {	/* sphere */
-      sphere(0,0,0,radius,0);
+      sphere(0,0,0,radius);
   }
 %}
 
