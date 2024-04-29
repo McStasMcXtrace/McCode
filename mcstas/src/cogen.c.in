@@ -788,8 +788,10 @@ int cogen_comp_section_class(
     if (!strcmp(section, "TRACE")) {
       if (!comp->def->flag_noacc)
 	coutf("#pragma acc routine");
+        coutf("void class_%s_%s(_class_%s *_comp", comp->def->name, section_lower, comp->def->name);
+    } else {
+      coutf("_class_%s *class_%s_%s(_class_%s *_comp", comp->def->name, comp->def->name, section_lower, comp->def->name);
     }
-    coutf("_class_%s *class_%s_%s(_class_%s *_comp", comp->def->name, comp->def->name, section_lower, comp->def->name);
 
     // TRACE add particle parameter to footprint
     if (!strcmp(section, "TRACE")) /* TRACE: need to define particle state */
@@ -933,7 +935,11 @@ int cogen_comp_section_class(
     /* undefine aliases */
     cogen_defundef(comp, comp->def->set_par, PAR_UNDEF);
     cogen_defundef(comp, comp->def->out_par, PAR_UNDEF);
-    cout("  return(_comp);");
+    if (!strcmp(section, "TRACE")) {    
+      cout("  return;");
+    } else {
+      cout("  return(_comp);");
+    }
     coutf("} /* class_%s_%s */", comp->def->name, section_lower);
     cout("");
 
@@ -1573,7 +1579,7 @@ void def_trace_section(struct instr_def *instr)
   coutf("#define %s (_particle->%s)", "ABSORBED" , "_absorbed");
   /* define mcget_run_num within trace scope to refer to the particle */
   coutf("#define mcget_run_num() _particle->_uid");
-  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(_comp); } while(0)");
+  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return; } while(0)");
   cout( "#define ABSORB ABSORB0");
 } /* def_trace_section */
 
