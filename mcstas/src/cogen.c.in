@@ -1748,7 +1748,7 @@ int cogen_raytrace(struct instr_def *instr)
         /* create counter for JUMP iteration */
         if (this_jump->iterate)
           coutf("  _particle->_logic.Jump_%s_%s=0;", comp->name, this_jump->target);
-        /* check that the target_index is defined, else search for the target comp index* /
+        /* check that the target_index is defined, else search for the target comp index */
         if (!this_jump->target_index) {
           List_handle liter3 = list_iterate(instr->complist);
           struct comp_inst *target=NULL;
