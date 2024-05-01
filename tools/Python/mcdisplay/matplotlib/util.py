@@ -8,9 +8,11 @@ from mpl_toolkits.mplot3d import art3d
 from numpy import dot, array
 import numpy as np
 from scipy.linalg import norm
+from scipy.spatial.transform import Rotation as R
 
 #level of detail in linspace
 num_samples = 100
+
 def parse_multiline(line):
     ''' Parse a multiline with size as first elements and n points as rest '''
     elems = [float(x) for x in line.split(',')]
@@ -51,6 +53,7 @@ def rotate_points(points, inps):
     z.append(z[0]);
     return x,y,z
 
+'''BEGIN NEW CODE 3D-visualization. REMOVE OLD CODE AND THIS COMMENT AFTER CONVERTING COMPS'''
 def rotate_xyz(x, y, z, comp):
     for i in range(len(x)):
         for j in range(len(x)):
@@ -105,6 +108,72 @@ def draw_cylinder(center, radius, height, axis_vector):
 
     return x, y, z
 
+def draw_disc(center, radius, axis_vector):
+    # Normalize the axis vector
+    axis_vector_normalized = axis_vector / np.linalg.norm(axis_vector)
+
+    # Create an arbitrary vector perpendicular to the axis vector
+    if (axis_vector_normalized == np.array([1, 0, 0])).all():
+        not_v = np.array([0, 1, 0])
+    else:
+        not_v = np.array([1, 0, 0])
+
+    # Compute two orthogonal vectors in the plane perpendicular to the axis vector
+    n1 = np.cross(axis_vector_normalized, not_v)
+    n1 /= np.linalg.norm(n1)  # Normalize n1
+    n2 = np.cross(axis_vector_normalized, n1)
+
+    # Polar coordinates in the disc's plane
+    theta = np.linspace(0, 2*np.pi, num_samples)
+    r = np.linspace(0, radius, num_samples)
+    theta, r = np.meshgrid(theta, r)
+
+    # Calculate coordinates in the disc's plane
+    x_plane = r * np.cos(theta)
+    y_plane = r * np.sin(theta)
+
+    # Transform these coordinates to align with the given axis_vector
+    x = center[0] + x_plane * n1[0] + y_plane * n2[0]
+    y = center[1] + x_plane * n1[1] + y_plane * n2[1]
+    z = center[2] + x_plane * n1[2] + y_plane * n2[2]
+
+    return x, y, z
+
+def draw_cone(center, radius, height, axis_vector):
+    # Normalize the axis vector
+    axis_vector_normalized = axis_vector / np.linalg.norm(axis_vector)
+
+    # Axis of rotation (cross product of z-axis and v) and angle of rotation
+    z_axis = np.array([0, 0, 1])
+    axis = np.cross(z_axis, axis_vector_normalized)
+    angle = np.arccos(np.dot(z_axis, axis_vector_normalized))
+    # Generate rotation matrix using scipy's Rotation
+    rotation = R.from_rotvec(axis * angle)
+    rot_matrix = rotation.as_matrix()
+
+    # Define the grid in polar coordinates
+    theta = np.linspace(0, 2 * np.pi, num_samples)
+    z = np.linspace(-height/2, height/2, num_samples)  # Adjusted to center around 0 along z
+    theta, z = np.meshgrid(theta, z)
+
+    # Convert polar to Cartesian coordinates (original, along z-axis)
+    x = (radius * (z + height/2) / height) * np.cos(theta)  # Adjusted radius calculation
+    y = (radius * (z + height/2) / height) * np.sin(theta)  # Adjusted radius calculation
+
+    # Rotate the coordinates
+    xyz = np.stack([x.flatten(), y.flatten(), z.flatten()])
+    xyz_rotated = rot_matrix @ xyz
+
+    # Reshape back to original dimensions
+    x_rotated, y_rotated, z_rotated = xyz_rotated.reshape(3, *x.shape)
+
+    # Translate to center the midpoint of the cone at the given center
+    x = x_rotated + center[0]
+    y = y_rotated + center[1]
+    z = z_rotated + center[2]
+
+    return x, y, z
+
 def draw_box(center, a, b, c):
     #spherical coordinates cube
     phi = np.arange(1,10,2)*np.pi/4
@@ -115,16 +184,7 @@ def draw_box(center, a, b, c):
 
     return x, y, z
 
-def draw_cylinder_lid(center, radius):
-    radius = np.linspace(0, radius, 100)
-    u = np.linspace(0,  2*np.pi, 100)
-
-    x = center[0] + np.outer(radius, np.cos(u))
-    y = center[1] + np.outer(radius, np.sin(u))
-    z = np.full((100, 100), center[2])
-    return x, y, z
-
-
+'''END NEW CODE 3D-visualization. REMOVE OLD CODE AND THIS COMMENT AFTER CONVERTING COMPS'''
 
 POINTS_IN_CIRCLE = 128
 def draw_circle(plane, pos, radius, comp):

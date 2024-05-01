@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 from util import parse_multiline, rotate, rotate_points, draw_circle, get_line, debug, draw_box, draw_sphere, \
-    draw_cylinder, draw_cylinder_lid, rotate_xyz
+    draw_cylinder, draw_disc, rotate_xyz, draw_cone
 
 UC_COMP = 'COMPONENT:'
 
@@ -21,6 +21,7 @@ MC_CIRCLE = 'MCDISPLAY: circle'
 MC_SPHERE = 'MCDISPLAY: sphere'
 MC_CYLINDER = 'MCDISPLAY: cylinder'
 MC_BOX = 'MCDISPLAY: box'
+MC_CONE = 'MCDISPLAY: cone'
 
 MC_ENTER = 'ENTER:'
 MC_LEAVE = 'LEAVE:'
@@ -32,6 +33,8 @@ MC_START = 'MCDISPLAY: start'
 MC_END = 'MCDISPLAY: end'
 MC_STOP = 'INSTRUMENT END:'
 
+#transparency in plot_surface is called alpha
+transparency = 0.6
 
 def parse_trace():
     ''' Parse McStas trace output from stdin and write results
@@ -47,6 +50,7 @@ def parse_trace():
         print("manual aspect not supported")
 
     color = 0
+
 
     # map from component name to (position, rotation matrix)
     comps = {}
@@ -126,6 +130,10 @@ def parse_trace():
         elif line.startswith(MC_CYLINDER):
             process_cylinder(ax, line, comp)
 
+        # process cone
+        elif line.startswith(MC_CONE):
+            process_cone(ax, line, comp)
+
         # activate neutron when it enters
         elif line.startswith(MC_ENTER):
             prev = None
@@ -172,7 +180,6 @@ def process_sphere(ax, line, comp):
     items = line[len(MC_SPHERE):].strip('()').split(',')
     # center and radius
     center = [float(x) for x in items[0:3]]
-    print(f'center: {center}')
     radius = float(items[3])
     (x, y, z) = draw_sphere(center, radius)
     (x, y, z) = rotate_xyz(x, y, z, comp)
@@ -181,10 +188,10 @@ def process_sphere(ax, line, comp):
 def process_cylinder(ax, line, comp):
     items = line[len(MC_CYLINDER):].strip('()').split(',')
     center = [float(x) for x in items[0:3]]
-    print(f'center: {center}')
     rad = float(items[3])
     height = float(items[4])
     axis_vector=[float(x) for x in items[6:9]]
+    print(axis_vector)
     (x, y, z) = draw_cylinder(center, rad, height, axis_vector)
     (x, y, z) = rotate_xyz(x, y, z, comp)
 
@@ -196,8 +203,8 @@ def process_cylinder(ax, line, comp):
     center_upper_lid = center + half_height_vector
     center_lower_lid = center - half_height_vector
 
-    (x_upper_lid, y_upper_lid, z_upper_lid) = draw_cylinder_lid(center_upper_lid, rad)
-    (x_lower_lid, y_lower_lid, z_lower_lid) = draw_cylinder_lid(center_lower_lid, rad)
+    (x_upper_lid, y_upper_lid, z_upper_lid) = draw_disc(center_upper_lid, rad, axis_vector)
+    (x_lower_lid, y_lower_lid, z_lower_lid) = draw_disc(center_lower_lid, rad, axis_vector)
     (x_cylinder_upper_lid, y_upper_lid, z_upper_lid) = rotate_xyz(x_upper_lid, y_upper_lid, z_upper_lid, comp)
     (x_lower_lid, y_lower_lid, z_lower_lid) = rotate_xyz(x_lower_lid, y_lower_lid, z_lower_lid, comp)
 
@@ -209,7 +216,6 @@ def process_cylinder(ax, line, comp):
 def process_box(ax, line, comp):
     items = line[len(MC_BOX):].strip('()').split(',')
     center = [float(x) for x in items[0:3]]
-    print(f'center: {center}')
     a = float(items[3])
     b = float(items[4])
     c = float(items[5])
@@ -218,6 +224,29 @@ def process_box(ax, line, comp):
     (x, y, z) = rotate_xyz(x, y, z, comp)
 
     ax.plot_surface(z, x, y)
+
+def process_cone(ax, line, comp):
+    items = line[len(MC_CONE):].strip('()').split(',')
+    center = [float(x) for x in items[0:3]]
+    rad = float(items[3])
+    height = float(items[4])
+    axis_vector=[float(x) for x in items[6:9]]
+
+    (x, y, z) = draw_cone(center, rad, height, axis_vector)
+    (x, y, z) = rotate_xyz(x, y, z, comp)
+
+    axis_vector_normalized = axis_vector / np.linalg.norm(axis_vector)
+    # Calculate half of the height vector
+    half_height_vector = (height / 2) * axis_vector_normalized
+
+    # Calculate the center for the lid
+    center_lid = center + half_height_vector
+
+    (x_lid, y_lid, z_lid) = draw_disc(center_lid, rad, axis_vector)
+    (x_lid, y_lid, z_lid) = rotate_xyz(z_lid, x_lid, y_lid, comp)
+
+    ax.plot_surface(z, x, y)
+    ax.plot_surface(z_lid, x_lid, y_lid)
 
 def register_state_and_scatter(comp, line, prev, xstate, ystate, zstate):
     xyz = [float(x) for x in line[line.find(':') + 1:].split(',')[:3]]
