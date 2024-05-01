@@ -2608,12 +2608,19 @@ void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, 
 }
 
 /* Draws a cylinder with center at (x,y,z) with extent (r,height).
- * The cylinder axis is along the vector nx,ny,nz.
- * N determines how many vertical lines are drawn.*/
+ * The cylinder axis is along the vector nx,ny,nz.*/
 void mcdis_cylinder( double x, double y, double z,
         double r, double height, int N, double nx, double ny, double nz){
     printf("MCDISPLAY: cylinder(%g, %g, %g, %g, %g, %d, %g, %g, %g)\n",
        x, y, z, r, height, N, nx, ny, nz);
+}
+
+/* Draws a cone with center at (x,y,z) with extent (r,height).
+ * The cone axis is along the vector nx,ny,nz.*/
+void mcdis_cone( double x, double y, double z,
+        double r, double height, double nx, double ny, double nz){
+    printf("MCDISPLAY: cone(%g, %g, %g, %g, %g, %g, %g, %g)\n",
+       x, y, z, r, height, nx, ny, nz);
 }
 
 /* draws a sphere with center at (x,y,z) with extent (r)*/
