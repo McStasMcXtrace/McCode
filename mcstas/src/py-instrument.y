@@ -1935,6 +1935,9 @@ static char *output_filename;
 /* Verbose parsing/code generation */
 char verbose = 0;
 
+/* Are we generating code for the "lint" mode? */
+char lint = 0;
+
 /* include instrument source code in executable ? */
 char embed_instrument_file = 0;
 
@@ -1956,6 +1959,8 @@ print_usage(void)
   fprintf(stderr, "      -o FILE --output-file=FILE Place Python output in file FILE.\n");
   fprintf(stderr, "      -v      --version          Prints " MCCODE_NAME " version.\n");
   fprintf(stderr, "      --verbose                  Display compilation process steps.\n");
+  fprintf(stderr, "      --lint                     Generate a .py script for McStasScript\n");
+  fprintf(stderr, "                                 style \"diagnostic\" linting.\n\n");
   fprintf(stderr, "  The instrument description file will be processed and translated into a Python script.\n");
   fprintf(stderr, "  The default component search list is usually defined by the environment\n");
   fprintf(stderr, "    variable '" MCCODE_LIBENV "' %s (default is "
@@ -2035,6 +2040,7 @@ parse_command_line(int argc, char *argv[])
 
   output_filename                        = NULL;
   verbose                                = 0;
+  lint                                   = 0;
   instr_current_filename                 = NULL;
   instrument_definition->use_default_main= 1;
   instrument_definition->include_runtime = 1;
@@ -2062,6 +2068,8 @@ parse_command_line(int argc, char *argv[])
       { print_usage(); exit(0); }
     else if(!strcmp("--verbose", argv[i]))
       verbose = 1;
+    else if(!strcmp("--lint", argv[i]))
+      lint = 1;
     else if(argv[i][0] != '-')
     {
       if(instr_current_filename != NULL)
