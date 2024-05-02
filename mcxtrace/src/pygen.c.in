@@ -245,6 +245,27 @@ codeblock_initialize_add(struct code_block *code)
 }
 
 
+/** Output the lines of a metadata block, encased in triple-double quotes
+ *
+ */
+static void
+triple_escaped_lines_out(List lines) {
+  List_handle liter;                /* For list iteration. */
+  char *line;                       /* Single code line. */
+  char * escaped_line;
+  if (list_undef(lines) || list_len(lines) <= 0) {
+    fprintf(output_handle, "\"\"\"\"\"\"");
+  } else {
+    fprintf(output_handle, "\"\"\"");
+    liter = list_iterate(lines);
+    while((line = list_next(liter)))
+    {
+      fprintf(output_handle, "%s", line);
+    }
+    list_iterate_end(liter);
+    fprintf(output_handle, "\"\"\"");
+  }
+}
 
 /*******************************************************************************
 * Create an empty code list
@@ -368,6 +389,28 @@ int cogen_decls(struct instr_def *instr)
     list_iterate_end(liter);
   }
   cout("");
+
+  // Component-define literal strings:
+  Symtab component_metadata = metadata_separate_by_source(instr->metadata, 0); // 0 -> only select component-defined metadata
+  Symtab_handle component_metadata_handle = symtab_iterate(component_metadata);
+  struct Symtab_entry * one_component_metadata;
+  /* To start, just write a tuple of (str, str, str) tuples */
+  coutf("component_definition_metadata = {");
+  struct metadata_struct * metadataStruct;
+  while ((one_component_metadata = symtab_next(component_metadata_handle))) {
+    coutf("'%s': {", one_component_metadata->name);
+    liter = list_iterate(one_component_metadata->val);
+    while (metadataStruct = list_next(liter)) {
+      coutf("'%s': ('%s', ", metadataStruct->name, metadataStruct->type);
+      triple_escaped_lines_out(metadataStruct->lines);
+      coutf("), ");
+    }
+    list_iterate_end(liter);
+    coutf("}, ");
+  }
+  coutf("}");
+  symtab_iterate_end(component_metadata_handle);
+  symtab_free(component_metadata, NULL);
 
   cout("instr.append_declare(r'''");
   codeblock_out(instr->decls);
@@ -526,6 +569,18 @@ int cogen_raytrace(struct instr_def *instr)
       coutf("%s.append_EXTEND(r'''",comp->name);
       codeblock_out(comp->extend);
       cout("''')\n\n");
+    }
+
+    if (list_len(comp->metadata)) {
+      struct metadata_struct * l_ptr;
+      for (int lit=0; lit<list_len(comp->metadata); ++lit){
+        l_ptr = (struct metadata_struct *) list_access(comp->metadata, lit);
+        if (l_ptr->instance) {
+          coutf("%s.append_METADATA(type='%s', name='%s', lines=", comp->name, l_ptr->type, l_ptr->name);
+          triple_escaped_lines_out(l_ptr->lines);
+          coutf(")");
+        }
+      }
     }
     
     cout("");
@@ -920,8 +975,13 @@ cogen(char *output_name, struct instr_def *instr)
 
   cout("# Instruct McStasscript not to 'check everythng'");
   cout("instr.settings(checks=False)");
-  cout("# (also, this is where one can add e.g. seed=1000, ncount=1e7, mpi=8, openacc=True etc.)");
-  cout("\n# Generate a dataset with default parameters.");
+  if (!lint) {
+    cout("# (also, this is where one can add e.g. seed=1000, ncount=1e7, mpi=8, openacc=True, force_compile=False etc.)");
+    cout("\n\n# Show diagram");
+    cout("instr.show_diagram()");
+    cout("\n\n# Visualise with default parameters.");
+    cout("instr.show_instrument()");
+    cout("\n\n# Generate a dataset with default parameters.");
   cout("data = instr.backengine()");
   cout("\n# Overview plot:");
   cout("ms.make_sub_plot(data)");
@@ -935,7 +995,7 @@ cogen(char *output_name, struct instr_def *instr)
   cout("\n\n# Bring up the 'interface' - only relevant in Jupyter");
   cout("#%matplotlib widget");
   cout("#import mcstasscript.jb_interface as ms_widget");
-  cout("#ms_widget.show(data)");  
+    cout("#ms_widget.show(data)");
   cout("\n\n# Bring up the simulation 'interface' - only relevant in Jupyter");
   cout("%matplotlib widget");
   cout("import mcstasscript.jb_interface as ms_widget");
@@ -943,6 +1003,11 @@ cogen(char *output_name, struct instr_def *instr)
   cout("sim_widget.show_interface()");
   cout("\n\n# Acessing data from the interface");
   cout("data = sim_widget.get_data()");
+  } else {
+    cout("instr.check_for_relative_errors()");
+    cout("\n\n# Show diagram");
+    cout("instr.show_diagram()");
+  }
   coutf("\n\n# end of generated Python code %s ", output_name);
 
   fclose(output_handle);
