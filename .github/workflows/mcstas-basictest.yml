@@ -26,7 +26,7 @@ jobs:
           - { os: macos-12,      CC: clang,    CXX: clang++,    python: "3.11" }
           - { os: macos-13,      CC: clang,    CXX: clang++,    python: "3.11" }
           - { os: macos-14,      CC: clang,    CXX: clang++,    python: "3.12" }
-  - { os: windows-latest,  CC: gcc,    CXX: g++,        python: "3.11" }
+          - { os: windows-latest,  CC: gcc,    CXX: g++,        python: "3.11" }
 
     name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
     runs-on: ${{ matrix.os }}
