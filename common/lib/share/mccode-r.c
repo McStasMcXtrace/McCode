@@ -2628,6 +2628,23 @@ void mcdis_sphere(double x, double y, double z, double r){
     printf("MCDISPLAY: sphere(%g,%g,%g,%g)\n", x, y, z, r);
 }
 
+void mcdis_polygon(int count, ...){
+  va_list ap;
+  double x,y,z;
+
+  printf("MCDISPLAY: polygon(%d", count);
+  va_start(ap, count);
+  while(count--)
+  {
+    x = va_arg(ap, double);
+    y = va_arg(ap, double);
+    z = va_arg(ap, double);
+    printf(",%g,%g,%g", x, y, z);
+  }
+  va_end(ap);
+  printf(")\n");
+}
+
 /* SECTION: coordinates handling ============================================ */
 
 /*******************************************************************************

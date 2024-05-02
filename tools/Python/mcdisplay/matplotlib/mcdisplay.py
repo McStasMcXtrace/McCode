@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 from util import parse_multiline, rotate, rotate_points, draw_circle, get_line, debug, draw_box, draw_sphere, \
-    draw_cylinder, draw_disc, rotate_xyz, draw_cone
+    draw_cylinder, draw_disc, rotate_xyz, draw_cone, parse_polygon
 
 UC_COMP = 'COMPONENT:'
 
@@ -22,6 +22,7 @@ MC_SPHERE = 'MCDISPLAY: sphere'
 MC_CYLINDER = 'MCDISPLAY: cylinder'
 MC_BOX = 'MCDISPLAY: box'
 MC_CONE = 'MCDISPLAY: cone'
+MC_POLYGON = 'MCDISPLAY: polygon'
 
 MC_ENTER = 'ENTER:'
 MC_LEAVE = 'LEAVE:'
@@ -134,6 +135,9 @@ def parse_trace():
         elif line.startswith(MC_CONE):
             process_cone(ax, line, comp)
 
+        elif line.startswith(MC_POLYGON):
+            process_polygon(ax, line, comp)
+
         # activate neutron when it enters
         elif line.startswith(MC_ENTER):
             prev = None
@@ -175,7 +179,7 @@ def parse_trace():
 
     plt.show()
 
-
+'''BEGIN NEW CODE 3D-visualization. REMOVE OLD CODE AND THIS COMMENT AFTER CONVERTING COMPS'''
 def process_sphere(ax, line, comp):
     items = line[len(MC_SPHERE):].strip('()').split(',')
     # center and radius
@@ -188,11 +192,10 @@ def process_sphere(ax, line, comp):
 def process_cylinder(ax, line, comp):
     items = line[len(MC_CYLINDER):].strip('()').split(',')
     center = [float(x) for x in items[0:3]]
-    rad = float(items[3])
+    radius = float(items[3])
     height = float(items[4])
     axis_vector=[float(x) for x in items[6:9]]
-    print(axis_vector)
-    (x, y, z) = draw_cylinder(center, rad, height, axis_vector)
+    (x, y, z) = draw_cylinder(center, radius, height, axis_vector)
     (x, y, z) = rotate_xyz(x, y, z, comp)
 
     axis_vector_normalized = axis_vector / np.linalg.norm(axis_vector)
@@ -203,8 +206,8 @@ def process_cylinder(ax, line, comp):
     center_upper_lid = center + half_height_vector
     center_lower_lid = center - half_height_vector
 
-    (x_upper_lid, y_upper_lid, z_upper_lid) = draw_disc(center_upper_lid, rad, axis_vector)
-    (x_lower_lid, y_lower_lid, z_lower_lid) = draw_disc(center_lower_lid, rad, axis_vector)
+    (x_upper_lid, y_upper_lid, z_upper_lid) = draw_disc(center_upper_lid, radius, axis_vector)
+    (x_lower_lid, y_lower_lid, z_lower_lid) = draw_disc(center_lower_lid, radius, axis_vector)
     (x_cylinder_upper_lid, y_upper_lid, z_upper_lid) = rotate_xyz(x_upper_lid, y_upper_lid, z_upper_lid, comp)
     (x_lower_lid, y_lower_lid, z_lower_lid) = rotate_xyz(x_lower_lid, y_lower_lid, z_lower_lid, comp)
 
@@ -212,6 +215,28 @@ def process_cylinder(ax, line, comp):
     ax.plot_surface(z_upper_lid, x_upper_lid, y_upper_lid)
     ax.plot_surface(z_lower_lid, x_lower_lid, y_lower_lid)
 
+def process_cone(ax, line, comp):
+    items = line[len(MC_CONE):].strip('()').split(',')
+    center = [float(x) for x in items[0:3]]
+    radius = float(items[3])
+    height = float(items[4])
+    axis_vector=[float(x) for x in items[5:8]]
+
+    (x, y, z) = draw_cone(center, radius, height, axis_vector)
+    (x, y, z) = rotate_xyz(x, y, z, comp)
+
+    axis_vector_normalized = axis_vector / np.linalg.norm(axis_vector)
+    # Calculate half of the height vector
+    half_height_vector = (height / 2) * axis_vector_normalized
+
+    # Calculate the center for the lid
+    center_lid = center + half_height_vector
+
+    (x_lid, y_lid, z_lid) = draw_disc(center_lid, radius, axis_vector)
+    (x_lid, y_lid, z_lid) = rotate_xyz(x_lid, y_lid, z_lid, comp)
+
+    ax.plot_surface(z, x, y)
+    ax.plot_surface(z_lid, x_lid, y_lid)
 
 def process_box(ax, line, comp):
     items = line[len(MC_BOX):].strip('()').split(',')
@@ -225,28 +250,29 @@ def process_box(ax, line, comp):
 
     ax.plot_surface(z, x, y)
 
-def process_cone(ax, line, comp):
-    items = line[len(MC_CONE):].strip('()').split(',')
-    center = [float(x) for x in items[0:3]]
-    rad = float(items[3])
-    height = float(items[4])
-    axis_vector=[float(x) for x in items[6:9]]
+def process_polygon(ax, line, comp):
+    points = parse_polygon(line[len(MC_POLYGON):].strip('()'))
+    start = points.pop(0)
+    print(f'points: {points}')
 
-    (x, y, z) = draw_cone(center, rad, height, axis_vector)
-    (x, y, z) = rotate_xyz(x, y, z, comp)
+    '''
+    (x, y, z) = rotate_points(points, comp)
 
-    axis_vector_normalized = axis_vector / np.linalg.norm(axis_vector)
-    # Calculate half of the height vector
-    half_height_vector = (height / 2) * axis_vector_normalized
+    items = line[len(MC_POLYGON):].strip('()').split(',')
 
-    # Calculate the center for the lid
-    center_lid = center + half_height_vector
-
-    (x_lid, y_lid, z_lid) = draw_disc(center_lid, rad, axis_vector)
-    (x_lid, y_lid, z_lid) = rotate_xyz(z_lid, x_lid, y_lid, comp)
+    hull = ConvexHull(points)
+    # draw the polygons of the convex hull
+    for s in hull.simplices:
+        tri = Poly3DCollection([hull[s]])
+        ax.add_collection3d(tri)
+    # draw the vertices
+    ax.scatter(cube[:, 0])
 
     ax.plot_surface(z, x, y)
-    ax.plot_surface(z_lid, x_lid, y_lid)
+    '''
+
+
+'''END NEW CODE 3D-visualization. REMOVE OLD CODE AND THIS COMMENT AFTER CONVERTING COMPS'''
 
 def register_state_and_scatter(comp, line, prev, xstate, ystate, zstate):
     xyz = [float(x) for x in line[line.find(':') + 1:].split(',')[:3]]

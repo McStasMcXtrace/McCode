@@ -38,13 +38,16 @@ AT (0, 0, 0) RELATIVE ABSOLUTE
 COMPONENT shape0 = Shape(radius=0.5)
 AT(0,0,.5) RELATIVE PREVIOUS
 
-COMPONENT shape1 = Shape(radius=0.5, yheight=0.5)
+COMPONENT shape1 = Cone(radius=0.5, yheight=0.5)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape2 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234)
+COMPONENT shape2 = Shape(radius=0.5, yheight=0.5)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape3 = Shape(geometry="cube.off", xwidth=0.25)
+COMPONENT shape3 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234)
+AT(0,0,1) RELATIVE PREVIOUS
+
+COMPONENT shape4 = Shape(geometry="cube.off", xwidth=0.25)
 AT(0,0,1) RELATIVE PREVIOUS
 FINALLY
 %{

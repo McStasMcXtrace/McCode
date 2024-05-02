@@ -5,10 +5,12 @@ from math import pi, cos, sin
 
 from matplotlib.patches import Circle
 from mpl_toolkits.mplot3d import art3d
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from numpy import dot, array
 import numpy as np
 from scipy.linalg import norm
 from scipy.spatial.transform import Rotation as R
+from scipy.spatial import ConvexHull
 
 #level of detail in linspace
 num_samples = 100
@@ -54,6 +56,20 @@ def rotate_points(points, inps):
     return x,y,z
 
 '''BEGIN NEW CODE 3D-visualization. REMOVE OLD CODE AND THIS COMMENT AFTER CONVERTING COMPS'''
+
+''' Parse a polygon with size as first elements and n points as rest '''
+def parse_polygon(line):
+    elems = [float(x) for x in line.split(',')]
+    count = int(elems.pop(0))
+    points = []
+    while count > 0:
+        points.append(elems[0:3])
+        elems = elems[3:]
+        count -= 1
+
+    points.append(points[0])
+    return points
+
 def rotate_xyz(x, y, z, comp):
     for i in range(len(x)):
         for j in range(len(x)):
@@ -181,6 +197,15 @@ def draw_box(center, a, b, c):
     x = center[0] + (np.cos(Phi)*np.sin(Theta))*a
     y = center[1] + (np.sin(Phi)*np.sin(Theta))*b
     z = center[2] + (np.cos(Theta)/np.sqrt(2))*c
+
+    return x, y, z
+
+def draw_polygon(points, ax):
+
+    plt.show()
+    x = center[0]
+    y = center[1]
+    z = center[2]
 
     return x, y, z
 
