@@ -315,7 +315,6 @@ macro(installMCCODE)
     work/src/debug.c
     work/src/file.c
     work/src/list.c
-    work/src/mccode-pygen.h
     work/src/memory.c
     work/src/port.c
     work/src/port.h
