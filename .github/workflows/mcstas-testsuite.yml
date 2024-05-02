@@ -15,8 +15,6 @@ jobs:
       matrix:
         include:
           - { os: ubuntu-latest, CC: clang,    CXX: clang++,    python: '3.11' }
-          # Drop macOS, takes much too long time executing
-          # - { os: macos-13,      CC: clang,    CXX: clang++,     python: "3.11" }
   
     name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
     runs-on: ${{ matrix.os }}
