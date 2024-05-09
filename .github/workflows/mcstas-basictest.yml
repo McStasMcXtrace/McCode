@@ -1,7 +1,7 @@
 name: mcstas-basictest
 on:
   push:
-  
+  pull_request:
   schedule:
     - cron: '30 23 * * 0'  # 23:30 every Sunday
 
