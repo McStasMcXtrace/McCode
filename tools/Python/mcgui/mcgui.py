@@ -883,9 +883,19 @@ class McGuiAppController():
             if self.view.closeCodeEditorWindow():
                 text = get_file_contents(instr_templ)
                 self.state.unloadInstrument()
-                # Templates are now cpoied including their containing folder
-                shutil.copytree(os.path.dirname(str(instr_templ)),new_instr_req)
-                new_instr = os.path.join(new_instr_req, os.path.basename(str(instr_templ)))
+                # Templates are now copied including their containing folder
+                srcdir = os.path.dirname(str(instr_templ))
+                trgdir = pathlib.Path(new_instr_req)
+                # Case 1: destination folder already exists, "merge":
+                if pathlib.Path.exists(trgdir):
+                    files=os.listdir(srcdir)
+                    for fname in files:
+                        shutil.copy2(os.path.join(srcdir,fname), trgdir)
+                else:
+                    # Case 2: create a new folder:
+                    shutil.copytree(srcdir,trgdir)
+
+                new_instr = os.path.join(trgdir, os.path.basename(str(instr_templ)))
                 self.state.loadInstrument(new_instr)
                 self.emitter.status("Instrument created: " + os.path.basename(str(new_instr)))
     
