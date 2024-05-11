@@ -1,0 +1,29 @@
+#!/usr/bin/arch -x86_64 /usr/bin/env bash
+export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "import os;print(os.cpu_count())")}
+
+MCVERSION=`conda search mcxtrace |tail -1 | cut -b 31-41 |sed s/\ //g`
+
+# This is an app bundle being built, but non-relocatable.
+
+export MCINSTALL_PREFIX=/Applications/McXtrace-${MCVERSION}.app/
+
+mkdir -p  support/MacOSX/McCode.app/tmp
+cd support/MacOSX/McCode.app/tmp
+rm -rf *
+cmake .. -DBUILD_MCXTRACE=ON -DCONDA_EMBED=ON -DMCVERSION=${MCVERSION} -DCMAKE_INSTALL_PREFIX=$MCINSTALL_PREFIX
+make install
+
+cd -
+#./mkdist mcxtrace-app ${MCVERSION} support/MacOSX/McCode.app/ "" mac-silicon "" -- OSXapp
+
+# Run conda to install the dependencies
+echo
+echo "*********************************************************"
+echo "* Downloading python dependencies to embedded miniconda *"
+echo "*********************************************************"
+echo
+
+conda env create -p ${MCINSTALL_PREFIX}/Contents/Resources/mcxtrace/${MCVERSION}/miniconda3 --file mcxtrace-environment.yml
+
+eval "$(${MCINSTALL_PREFIX}/Contents/Resources/mcxtrace/${MCVERSION}/miniconda3/bin/conda shell.bash hook)"
+mcdoc -i
