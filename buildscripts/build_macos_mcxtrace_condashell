@@ -5,7 +5,7 @@ MCVERSION=`conda search mcxtrace |tail -1 | cut -b 31-41 |sed s/\ //g`
 
 # This is an app bundle being built, but non-relocatable.
 
-export MCINSTALL_PREFIX=/Applications/McXtrace-${MCVERSION}.app/
+export MCINSTALL_PREFIX=/Applications/McXtrace${MCVERSION}.app/
 
 mkdir -p  support/MacOSX/McCode.app/tmp
 cd support/MacOSX/McCode.app/tmp
@@ -26,4 +26,4 @@ echo
 conda env create -p ${MCINSTALL_PREFIX}/Contents/Resources/mcxtrace/${MCVERSION}/miniconda3 --file mcxtrace-environment.yml
 
 eval "$(${MCINSTALL_PREFIX}/Contents/Resources/mcxtrace/${MCVERSION}/miniconda3/bin/conda shell.bash hook)"
-mcdoc -i
+mxdoc -i
