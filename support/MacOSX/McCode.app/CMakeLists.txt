@@ -46,6 +46,12 @@ else()
   set(SHEBANG "/usr/bin/env bash")
 endif()
 
+if (${CONDA_EMBED})
+  set(CONDA_EMBEDDED "1")
+else()
+  set(CONDA_EMBEDDED "0")
+endif()
+
 # Configure the .py launcher
 configure_file(Contents/MacOS/mccodegui.py.in ${WORK}/mccodegui @ONLY)
 
