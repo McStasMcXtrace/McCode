@@ -18,6 +18,7 @@ dependencies:
   - ply
   - matplotlib
   - numpy
+  - scipy
   - tornado
   - scipy
   - pillow

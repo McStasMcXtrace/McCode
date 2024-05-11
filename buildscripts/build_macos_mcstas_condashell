@@ -25,3 +25,5 @@ echo
 
 conda env create -p ${MCINSTALL_PREFIX}/Contents/Resources/mcstas/${MCVERSION}/miniconda3 --file mcstas-environment.yml
 
+eval "$(${MCINSTALL_PREFIX}/Contents/Resources/mcstas/${MCVERSION}/miniconda3/bin/conda shell.bash hook)"
+mcdoc -i
