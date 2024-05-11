@@ -30,7 +30,7 @@ dependencies:
   - hdf5
   - xraylib
   - mcpl
-  - mcstas
+  - mcxtrace
   - jupytext
   - jupyterlab
   - ipympl
