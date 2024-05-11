@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@SHEBANG@
 #
 # Wrapper script for starting mcgui in an app on Mac OS X
 #
