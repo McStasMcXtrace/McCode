@@ -1,0 +1,18 @@
+#!@SHEBANG@ --login
+#
+# Script for downloading and injecting dependencies using a fresh Miniforge
+#
+
+BASEDIR=`dirname $0`
+BASEDIR=$BASEDIR/../..
+
+osascript -e "tell app \"System Events\" to display dialog \"Attempting to inject dependencies using your existing conda-installation :-) \"" 
+
+conda activate
+
+(cd /tmp && curl -L -O https://raw.githubusercontent.com/willend/McCode/main/@FLAVOR@-environment.yml)
+
+
+conda env create --file /tmp/@FLAVOR@-environment.yml -p ${BASEDIR}/Contents/Resources/miniforge3
+
+osascript -e "tell app \"System Events\" to display dialog \"Your @FLAVOR@ should now contain the necessary dependencies! :-) \""
