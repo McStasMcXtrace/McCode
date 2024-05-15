@@ -25,6 +25,20 @@ else()
 endif()
 
 message("Enabling ${FLAVOR} flavor")
+
+if (DEFINED ARCH_ENABLE)
+  message("Enabling archictecture ${ARCH_ENABLE}")
+  set(SHEBANG "/usr/bin/arch ${ARCH_ENABLE} /usr/bin/env bash")
+else()
+  message("Auto-detecting archictecture ...")
+  if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "arm64" )
+    message("Enabling archictecture ${CMAKE_SYSTEM_PROCESSOR}")
+    set(SHEBANG "/usr/bin/arch -arm64 /usr/bin/env bash")
+  else()
+    set(SHEBANG "/usr/bin/env bash")
+  endif()
+endif()
+
 setupMCCODE("${FLAVOR}")
 
 # CPack configuration
@@ -39,18 +53,6 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
-
-if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "arm64" )
-  set(SHEBANG "/usr/bin/arch -arm64 /usr/bin/env bash") # 
-else()
-  set(SHEBANG "/usr/bin/env bash")
-endif()
-
-if (${CONDA_EMBED})
-  set(CONDA_EMBEDDED "1")
-else()
-  set(CONDA_EMBEDDED "0")
-endif()
 
 # Configure the .py launcher
 configure_file(Contents/MacOS/mccodegui.py.in ${WORK}/mccodegui @ONLY)
