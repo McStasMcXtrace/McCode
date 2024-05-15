@@ -525,7 +525,6 @@ MCDISPLAY
     for (i=0;i<N-1;i++){
       j=intersect_paraboloid(&l0,0,0,z0,1,0,0,Z0,radius_m,NULL,NULL,NULL);
       k=intersect_paraboloid(&l1,0,0,z1,1,0,0,Z0,radius_m,NULL,NULL,NULL);
-      printf("%i %i %i %g %g %g\n",i,j,k,zentry,z0,z1);
       if(k && j){
         line(l0,0,z0,l1,0,z1);
         line(0,l0,z0,0,l1,z1);
@@ -534,7 +533,6 @@ MCDISPLAY
       }
       j=intersect_paraboloid(&l0,0,0,z0,1,0,0,Z0,radius_m-yheight,NULL,NULL,NULL);
       k=intersect_paraboloid(&l1,0,0,z1,1,0,0,Z0,radius_m-yheight,NULL,NULL,NULL);
-      printf("%i %i\n",i,j);
       if(k && j){
         line(l0,0,z0,l1,0,z1);
         line(0,l0,z0,0,l1,z1);
