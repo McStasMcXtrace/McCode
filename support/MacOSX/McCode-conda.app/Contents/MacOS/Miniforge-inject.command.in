@@ -15,4 +15,6 @@ bash /tmp/Miniforge3-$(uname)-$(uname -m).sh -p ${BASEDIR}/Contents/Resources/mi
 conda update conda
 conda env update --name base --file /tmp/@FLAVOR@-environment.yml
 
+@GUIPREFIX@doc -i
+
 osascript -e "tell app \"System Events\" to display dialog \"Your @FLAVOR@ should now contain the necessary dependencies! :-) \""

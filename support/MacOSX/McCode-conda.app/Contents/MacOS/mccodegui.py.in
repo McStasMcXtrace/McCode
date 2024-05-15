@@ -35,7 +35,7 @@ then
 else
     if [ -z "${INJECTING}" ];
     then
-	osascript -e "tell app \"System Events\" to display dialog \"It looks like your @FLAVOR@ app is not located in /Applications? \n\n (Please move it there and try again...) \""
+	osascript -e "tell app \"System Events\" to display dialog \"Sorry, your @FLAVOR@ app (@GUIPREFIX@gui) can not be started, please create an issue at https://github.com/McStasMcXtrace/McCode/issues \""
     fi
 fi
 
