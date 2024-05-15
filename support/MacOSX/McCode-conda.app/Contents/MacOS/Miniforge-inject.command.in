@@ -8,7 +8,7 @@ BASEDIR=$BASEDIR/../..
 
 osascript -e "tell app \"System Events\" to display dialog \"Will download inject dependencies using latest Miniforge :-) \"" 
 
-(cd /tmp && curl -L -O https://raw.githubusercontent.com/willend/McCode/main/@FLAVOR@-environment.yml)
+(cd /tmp && curl -L -O https://raw.githubusercontent.com/McStasMcXtrace/McCode/main/@FLAVOR@-environment.yml)
 (cd /tmp && curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh")
 bash /tmp/Miniforge3-$(uname)-$(uname -m).sh -p ${BASEDIR}/Contents/Resources/miniconda3/ -b
 . ${BASEDIR}/Contents/Resources/miniconda3/bin/activate

@@ -10,7 +10,7 @@ osascript -e "tell app \"System Events\" to display dialog \"Attempting to injec
 
 conda activate
 
-(cd /tmp && curl -L -O https://raw.githubusercontent.com/willend/McCode/main/@FLAVOR@-environment.yml)
+(cd /tmp && curl -L -O https://raw.githubusercontent.com/McStasMcXtrace/McCode/main/@FLAVOR@-environment.yml)
 
 
 conda env create --file /tmp/@FLAVOR@-environment.yml -p ${BASEDIR}/Contents/Resources/miniconda3

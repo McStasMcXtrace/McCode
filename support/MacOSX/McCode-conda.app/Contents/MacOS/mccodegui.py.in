@@ -12,7 +12,7 @@ if [ -f ${BASEDIR}/Contents/Resources/miniconda3/bin/conda ]; then
     eval "$(${BASEDIR}/Contents/Resources/miniconda3/bin/conda shell.bash hook)"
 else
     osascript -e "tell app \"System Events\" to display dialog \"Your @FLAVOR@ app does not yet include a conda environment, now proceeding to download. A notification should appear again once the process is over. :-) \""
-    (cd /tmp && curl -L -O https://raw.githubusercontent.com/willend/McCode/main/@FLAVOR@-environment.yml)
+    (cd /tmp && curl -L -O https://raw.githubusercontent.com/McStasMcXtrace/McCode/main/@FLAVOR@-environment.yml)
     # Check if conda is on the path or not?
     conda activate &> /dev/null
     ret_code=$?
