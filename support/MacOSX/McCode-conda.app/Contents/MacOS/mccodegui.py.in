@@ -14,7 +14,10 @@ else
     osascript -e "tell app \"System Events\" to display dialog \"Your @FLAVOR@ app does not yet include a conda environment, now proceeding to download. A notification should appear again once the process is over. :-) \""
     (cd /tmp && curl -L -O https://raw.githubusercontent.com/willend/McCode/main/@FLAVOR@-environment.yml)
     # Check if conda is on the path or not?
-    if [ ! $(conda activate &> /dev/null) ];
+    conda activate &> /dev/null
+    ret_code=$?
+
+    if [ "$ret_code" -eq "0" ];
     then
 	/usr/bin/open $SCRIPTDIR/conda-inject.command
 	export INJECTING=1
