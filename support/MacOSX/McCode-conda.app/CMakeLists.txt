@@ -28,7 +28,7 @@ message("Enabling ${FLAVOR} flavor")
 
 if (DEFINED ARCH_ENABLE)
   message("Enabling archictecture ${ARCH_ENABLE}")
-  set(SHEBANG "/usr/bin/arch ${ARCH_ENABLE} /usr/bin/env bash")
+  set(SHEBANG "/usr/bin/arch -${ARCH_ENABLE} /usr/bin/env bash")
 else()
   message("Auto-detecting archictecture ...")
   if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "arm64" )
