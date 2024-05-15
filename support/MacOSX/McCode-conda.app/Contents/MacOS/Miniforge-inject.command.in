@@ -1,4 +1,4 @@
-#!@SHEBANG@
+#!@SHEBANG@ --login
 #
 # Script for downloading and injecting dependencies using a fresh Miniforge
 #
