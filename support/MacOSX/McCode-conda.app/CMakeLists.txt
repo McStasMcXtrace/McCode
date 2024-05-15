@@ -25,6 +25,20 @@ else()
 endif()
 
 message("Enabling ${FLAVOR} flavor")
+
+if (DEFINED ARCH_ENABLE)
+  message("Enabling archictecture ${ARCH_ENABLE}")
+  set(SHEBANG "/usr/bin/arch -${ARCH_ENABLE} /usr/bin/env bash")
+else()
+  message("Auto-detecting archictecture ...")
+  if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "arm64" )
+    message("Enabling archictecture ${CMAKE_SYSTEM_PROCESSOR}")
+    set(SHEBANG "/usr/bin/arch -arm64 /usr/bin/env bash")
+  else()
+    set(SHEBANG "/usr/bin/env bash")
+  endif()
+endif()
+
 setupMCCODE("${FLAVOR}")
 
 # CPack configuration
@@ -40,20 +54,10 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "arm64" )
-  set(SHEBANG "/usr/bin/arch -arm64 /usr/bin/env bash") # 
-else()
-  set(SHEBANG "/usr/bin/env bash")
-endif()
-
-if (${CONDA_EMBED})
-  set(CONDA_EMBEDDED "1")
-else()
-  set(CONDA_EMBEDDED "0")
-endif()
-
 # Configure the .py launcher
 configure_file(Contents/MacOS/mccodegui.py.in ${WORK}/mccodegui @ONLY)
+configure_file(Contents/MacOS/Miniforge-inject.command.in ${WORK}/Miniforge-inject.command @ONLY)
+configure_file(Contents/MacOS/conda-inject.command.in ${WORK}/conda-inject.command @ONLY)
 
 execute_process(COMMAND "chmod ARGS 755 work/mccodegui")
 
@@ -68,7 +72,7 @@ install (
   )
 
 install(
-    FILES "${WORK}/mccodegui"
+    FILES "${WORK}/mccodegui" "${WORK}/Miniforge-inject.command" "${WORK}/conda-inject.command"
     PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ 
     DESTINATION "Contents/MacOS/"
   )
