@@ -281,14 +281,14 @@ def process_polygon(ax, line, comp):
         vertices_arr[i] = [z, x, y]
 
         #for setting axis limits
-        x_max_polygon = max(x_max_polygon, x)
-        x_min_polygon = min(x_min_polygon, x)
-        y_max_polygon = max(y_max_polygon, y)
-        y_min_polygon = min(y_min_polygon, y)
-        z_max_polygon = max(z_max_polygon, z)
-        z_min_polygon = min(z_min_polygon, z)
+        x_max_polygon = max(x_max_polygon, z)
+        x_min_polygon = min(x_min_polygon, z)
+        y_max_polygon = max(y_max_polygon, x)
+        y_min_polygon = min(y_min_polygon, x)
+        z_max_polygon = max(z_max_polygon, y)
+        z_min_polygon = min(z_min_polygon, y)
 
-    pc = art3d.Poly3DCollection(vertices_arr[faces])
+    pc = art3d.Poly3DCollection(vertices_arr[faces], facecolors="blue", edgecolors="black", linewidths=0.1, alpha=transparency)
     ax.add_collection(pc)
 
 '''END NEW CODE 3D-visualization. REMOVE OLD CODE AND THIS COMMENT AFTER CONVERTING COMPONENTS'''
