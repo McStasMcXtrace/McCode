@@ -4033,10 +4033,10 @@ mcusage(char *pgmname)
 
 /* mcenabletrace: enable trace/mcdisplay or error if requires recompile */
 static void
-mcenabletrace(void)
+mcenabletrace(int mode)
 {
  if(traceenabled) {
-  mcdotrace = 1;
+  mcdotrace = mode;
   #pragma acc update device ( mcdotrace )
  } else {
    fprintf(stderr,
@@ -4225,9 +4225,12 @@ mcparseoptions(int argc, char *argv[])
       exit(0);
     }
     else if(!strcmp("-t", argv[i]))
-      mcenabletrace();
-    else if(!strcmp("--trace", argv[i]) || !strcmp("--verbose", argv[i]))
-      mcenabletrace();
+      mcenabletrace(1);
+    else if(!strncmp("--trace=", argv[i], 8)) {
+      mcenabletrace(atoi(&argv[i][8]));
+    }
+    else if(!strncmp("--trace", argv[i]) || !strcmp("--verbose", argv[i]))
+      mcenabletrace(1);
     else if(!strcmp("--gravitation", argv[i]))
       mcgravitation = 1;
     else if(!strcmp("-g", argv[i]))
