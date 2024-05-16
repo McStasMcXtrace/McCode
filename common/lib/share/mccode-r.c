@@ -3946,6 +3946,7 @@ mchelp(char *pgmname)
 "  -n COUNT  --ncount=COUNT   Set number of particles to simulate.\n"
 "  -d DIR    --dir=DIR        Put all data files in directory DIR.\n"
 "  -t        --trace          Enable trace of " MCCODE_PARTICLE "s through instrument.\n"
+"                             (Use -t=2 or --trace=2 for modernised mcdisplay rendering)\n"
 "  -g        --gravitation    Enable gravitation for all trajectories.\n"
 "  --no-output-files          Do not write any data files.\n"
 "  -h        --help           Show this help message.\n"
@@ -4033,10 +4034,10 @@ mcusage(char *pgmname)
 
 /* mcenabletrace: enable trace/mcdisplay or error if requires recompile */
 static void
-mcenabletrace(void)
+mcenabletrace(int mode)
 {
  if(traceenabled) {
-  mcdotrace = 1;
+  mcdotrace = mode;
   #pragma acc update device ( mcdotrace )
  } else {
    fprintf(stderr,
@@ -4224,10 +4225,15 @@ mcparseoptions(int argc, char *argv[])
       printf("%s\n", literal);
       exit(0);
     }
+    else if(!strncmp("--trace=", argv[i], 8)) {
+      mcenabletrace(atoi(&argv[i][8]));
+    }
+    else if(!strncmp("-t=", argv[i], 3) || !strcmp("--verbose", argv[i]))
+      mcenabletrace(atoi(&argv[i][3]));
     else if(!strcmp("-t", argv[i]))
-      mcenabletrace();
+      mcenabletrace(1);
     else if(!strcmp("--trace", argv[i]) || !strcmp("--verbose", argv[i]))
-      mcenabletrace();
+      mcenabletrace(1);
     else if(!strcmp("--gravitation", argv[i]))
       mcgravitation = 1;
     else if(!strcmp("-g", argv[i]))

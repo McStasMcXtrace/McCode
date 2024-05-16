@@ -62,6 +62,7 @@ export PATH=$CONDALOCATION/bin:$PATH
 ./mkdist mcstas-tools-python-mcgui 3.x-dev tools/Python/mcgui/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mccodelib 3.x-dev tools/Python/mccodelib/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph 3.x-dev tools/Python/mcdisplay/pyqtgraph/ "" mac "" -- justinst
+./mkdist mcstas-tools-python-mcdisplay-matplotlib 3.x-dev tools/Python/mcdisplay/matplotlib/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcdisplay-webgl 3.x-dev tools/Python/mcdisplay/webgl/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcdisplay-cad 3.x-dev tools/Python/mcdisplay/cad/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-pyqtgraph 3.x-dev tools/Python/mcplot/pyqtgraph/ "" mac "" -- justinst
