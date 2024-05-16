@@ -1,0 +1,125 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2024, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: File
+*
+* %I
+*
+* Written by: Greg Tucker
+* Date: 2024
+* Origin: ESS
+*
+* File.comp - allows to generate instrument/component input-files
+* from METADATA blocks
+*
+* %D
+* File.comp - allows to generate instrument/component input-files
+* from METADATA blocks - see test_File.instr for an example.
+*
+* %P
+* Input parameters:
+* filename:    [string] Filename for output-file generated from metadata block
+* metadatakey: [string] METADATA-key for looking up file content (may belong to File instance or another comp)
+* keep:             [1] Flag to indicate if file should be kept post-simulation
+*
+* %E
+*******************************************************************************/
+DEFINE COMPONENT File
+SETTING PARAMETERS (string filename=0, string metadatakey, int keep=0)
+OUTPUT PARAMETERS ()
+SHARE
+%{
+%}
+DECLARE
+%{
+char * key;
+char * name;
+%}
+INITIALIZE
+%{
+// Sort-out the key that we are searching for
+if (metadatakey == NULL || metadatakey[0] == '\0'){
+  key = malloc((strlen(NAME_CURRENT_COMP) + 1) * sizeof(char));
+  strcpy(key, NAME_CURRENT_COMP);
+} else {
+  key = malloc((strlen(metadatakey) + 1) * sizeof(char));
+  strcpy(key, metadatakey);
+}
+int matches = metadata_table_defined(num_metadata, metadata_table, key);
+if (matches != 1) {
+  // 0 would mean _no_ matches; maybe they metadata name without the component was given?
+  if (matches == 0 && strcmp(key, NAME_CURRENT_COMP)) {
+    free(key);
+    key = malloc((strlen(NAME_CURRENT_COMP) + strlen(metadatakey) + 2) * sizeof(char));
+    sprintf(key, "%s:%s", NAME_CURRENT_COMP, metadatakey);
+    matches = metadata_table_defined(num_metadata, metadata_table, key);
+  }
+  // there's a bug in metadata_table_defined that returns num_metadata if key == NULL
+  // But since key _isn't_ null, any other result _should_ mean key == A_COMPONENT_NAME
+  // _and_ that component defines _multiple_ METADATA entries.
+  else {
+    printf("%s: There are %d METADATA entries that match %s; please select only one of:\n", NAME_CURRENT_COMP, matches, key);
+    metadata_table_print_component_keys(num_metadata, metadata_table, key);
+    exit(1);
+  }
+}
+if (metadata_table_defined(num_metadata, metadata_table, key) != 1) {
+  fprintf(stderr, "%s: No unique metadata defined with key %s\n", NAME_CURRENT_COMP, key);
+  exit(1);
+}
+  
+char * name_part = metadata_table_key_literal(key);
+if (name_part == NULL) {
+#if defined(__MCCODE_VERSION__) && __MCCODE_VERSION__ >= 305000L
+  // We already restrict that only one key matches.
+  name_part = metadata_table_name(num_metadata, metadata_table, key);
+  // is key NAME_CURRENT_COMP or something provided by the user? We don't know
+  // so we _must_ cycle the key allocation to make this work.
+  char * new_key = malloc((strlen(key) + strlen(name_part) + 2) * sizeof(char));
+  sprintf(new_key, "%s:%s", key, name_part);
+  free(key);
+  key = new_key;
+#else
+  printf("Can not update the key automatically prior to McCode v3.5.0, please fix %s usage or upgrade\n", NAME_CURRENT_COMP);
+  exit(1);
+#endif
+}
+
+if (filename == NULL || filename[0] == '\0'){
+  char * comp_part = metadata_table_key_component(key);
+  name = malloc((strlen(comp_part) + strlen(name_part) + 2) * sizeof(char));
+  sprintf(name, "%s_%s", comp_part, name_part);
+  free(comp_part);
+} else{
+  name = malloc((strlen(filename) + 1) * sizeof(char));
+  strcpy(name, filename);
+}
+  
+free(name_part);
+
+// Read the file contents and write them to file now.
+FILE * file_ptr = fopen(name, "w");
+fprintf(file_ptr, "%s", metadata_table_literal(num_metadata, metadata_table, key));
+fclose(file_ptr);
+%}
+TRACE
+%{
+// Do nothing
+%}
+FINALLY
+%{
+// (Optionally) Remove the file now that the runtime is done
+if (!keep && !remove(name)) {
+  fprintf(stderr, "%s: Could not remove file %s\n", NAME_CURRENT_COMP, name);
+}
+if (key) free(key);
+if (name) free(name);
+%}
+MCDISPLAY
+%{
+%}
+END
