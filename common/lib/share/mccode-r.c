@@ -3946,6 +3946,7 @@ mchelp(char *pgmname)
 "  -n COUNT  --ncount=COUNT   Set number of particles to simulate.\n"
 "  -d DIR    --dir=DIR        Put all data files in directory DIR.\n"
 "  -t        --trace          Enable trace of " MCCODE_PARTICLE "s through instrument.\n"
+"                             (Use -t=2 or --trace=2 for modernised mcdisplay rendering)\n"
 "  -g        --gravitation    Enable gravitation for all trajectories.\n"
 "  --no-output-files          Do not write any data files.\n"
 "  -h        --help           Show this help message.\n"
