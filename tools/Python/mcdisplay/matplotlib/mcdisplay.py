@@ -42,7 +42,7 @@ MC_STOP = 'INSTRUMENT END:'
 colors = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow']
 #transparency in plot_surface is called alpha as in rgba
 #transparency will be a user controlled parameter eventually
-transparency = 0.6
+transparency = 1
 #for setting axis limits when using polygon
 x_max_polygon = y_max_polygon = z_max_polygon = float('-inf')
 x_min_polygon = y_min_polygon = z_min_polygon = float('inf')
@@ -121,7 +121,7 @@ def parse_trace():
 
         # process polygon
         elif line.startswith(MC_POLYGON):
-            process_polygon(ax, line, comp, colors[color])
+            process_polygon(ax, line, comp, colors[color], transparency)
 
         # process circle
         elif line.startswith(MC_CIRCLE):
@@ -137,19 +137,19 @@ def parse_trace():
 
         # process cone
         elif line.startswith(MC_CONE):
-            process_cone(ax, line, comp, colors[color])
+            process_cone(ax, line, comp, colors[color], transparency)
 
         # process sphere
         elif line.startswith(MC_SPHERE):
-            process_sphere(ax, line, comp, colors[color])
+            process_sphere(ax, line, comp, colors[color], transparency)
 
         # process box
         elif line.startswith(MC_BOX):
-            process_box(ax, line, comp, colors[color])
+            process_box(ax, line, comp, colors[color], transparency)
 
         # process cylinder
         elif line.startswith(MC_CYLINDER):
-            process_cylinder(ax, line, comp, colors[color])
+            process_cylinder(ax, line, comp, colors[color], transparency)
 
         # activate neutron when it enters
         elif line.startswith(MC_ENTER):
@@ -194,7 +194,7 @@ def parse_trace():
 '''BEGIN NEW CODE 3D-visualization. REMOVE OLD CODE AND THIS COMMENT AFTER CONVERTING COMPONENTS'''
 
 
-def process_sphere(ax, line, comp, color):
+def process_sphere(ax, line, comp, color, transparency):
     items = line[len(MC_SPHERE):].strip('()').split(',')
     # center and radius
     center = [float(x) for x in items[0:3]]
@@ -202,10 +202,10 @@ def process_sphere(ax, line, comp, color):
     (x, y, z) = draw_sphere(center, radius)
     (x, y, z) = rotate_xyz(x, y, z, comp)
     print(f'color: {color}')
-    ax.plot_surface(z, x, y, color=color)
+    ax.plot_surface(z, x, y, color=color, alpha=transparency)
 
 
-def process_cylinder(ax, line, comp, color):
+def process_cylinder(ax, line, comp, color, transparency):
     items = line[len(MC_CYLINDER):].strip('()').split(',')
     center = [float(x) for x in items[0:3]]
     radius = float(items[3])
@@ -227,12 +227,12 @@ def process_cylinder(ax, line, comp, color):
     (x_cylinder_upper_lid, y_upper_lid, z_upper_lid) = rotate_xyz(x_upper_lid, y_upper_lid, z_upper_lid, comp)
     (x_lower_lid, y_lower_lid, z_lower_lid) = rotate_xyz(x_lower_lid, y_lower_lid, z_lower_lid, comp)
 
-    ax.plot_surface(z, x, y, color=color)
-    ax.plot_surface(z_upper_lid, x_upper_lid, y_upper_lid, color=color)
-    ax.plot_surface(z_lower_lid, x_lower_lid, y_lower_lid, color=color)
+    ax.plot_surface(z, x, y, color=color, alpha=transparency)
+    ax.plot_surface(z_upper_lid, x_upper_lid, y_upper_lid, color=color, alpha=transparency)
+    ax.plot_surface(z_lower_lid, x_lower_lid, y_lower_lid, color=color, alpha=transparency)
 
 
-def process_cone(ax, line, comp, color):
+def process_cone(ax, line, comp, color, transparency):
     items = line[len(MC_CONE):].strip('()').split(',')
     center = [float(x) for x in items[0:3]]
     radius = float(items[3])
@@ -252,11 +252,11 @@ def process_cone(ax, line, comp, color):
     (x_lid, y_lid, z_lid) = draw_disc(center_lid, radius, axis_vector)
     (x_lid, y_lid, z_lid) = rotate_xyz(x_lid, y_lid, z_lid, comp)
 
-    ax.plot_surface(z, x, y, color=color)
-    ax.plot_surface(z_lid, x_lid, y_lid, color=color)
+    ax.plot_surface(z, x, y, color=color, alpha=transparency)
+    ax.plot_surface(z_lid, x_lid, y_lid, color=color, alpha=transparency)
 
 
-def process_box(ax, line, comp, color):
+def process_box(ax, line, comp, color, transparency):
     items = line[len(MC_BOX):].strip('()').split(',')
     center = [float(x) for x in items[0:3]]
     a = float(items[3])
@@ -266,10 +266,10 @@ def process_box(ax, line, comp, color):
     (x, y, z) = draw_box(center, a, b, c)
     (x, y, z) = rotate_xyz(x, y, z, comp)
 
-    ax.plot_surface(z, x, y, color=color)
+    ax.plot_surface(z, x, y, color=color, alpha=transparency)
 
 
-def process_polygon(ax, line, comp, color):
+def process_polygon(ax, line, comp, color, transparency):
     global x_min_polygon, x_max_polygon, y_min_polygon, y_max_polygon, z_min_polygon, z_max_polygon
 
     json_data = line.replace('MCDISPLAY: polygon ', '')
