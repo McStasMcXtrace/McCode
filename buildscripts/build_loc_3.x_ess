@@ -38,7 +38,7 @@ then
     rm -rf $HOME/McStas/mcstas/3.x-dev/*
 fi
 
-if [ ! -f Mambaforge-$(uname)-$(uname -m).sh ]; then
+if [ ! -f Miniforge3-$(uname)-$(uname -m).sh ]; then
     # Download and embed a miniconda
     echo
     echo "*********************************************************"
@@ -46,14 +46,14 @@ if [ ! -f Mambaforge-$(uname)-$(uname -m).sh ]; then
     echo "*********************************************************"
     echo
     sleep 3
-    curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
+    curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
 fi
 echo "*********************************************************"
 echo "* Embedding miniconda3 in your app                      *"
 echo "*********************************************************"
-chmod a+x Mambaforge-$(uname)-$(uname -m).sh
+chmod a+x Miniforge3-$(uname)-$(uname -m).sh
 echo $MCINSTALL_PREFIX/mcstas/3.x-dev/miniconda3/
-./Mambaforge-$(uname)-$(uname -m).sh -b -p $MCINSTALL_PREFIX/mcstas/3.x-dev/miniconda3/
+./Miniforge3-$(uname)-$(uname -m).sh -b -p $MCINSTALL_PREFIX/mcstas/3.x-dev/miniconda3/
 
 # Run conda to install the dependencies
 echo
@@ -65,7 +65,7 @@ export PATHBAK=$PATH
 export PATH=$MCINSTALL_PREFIX/mcstas/3.x-dev/miniconda3/bin:$PATH
 ls 
 mamba update mamba -y
-mamba install gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 -y
+mamba install gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 nexus mcpl ncrystal -y
 mamba clean --all -y
 
 
@@ -84,10 +84,6 @@ mamba clean --all -y
 ./mkdist mcstas-tools-python-mcplot-matplotlib 3.x-dev tools/Python/mcplot/matplotlib/ "" deb64 "" -- justinst
 cp tools/other/mcsplit/mcsplit.py $HOME/McStas/mcstas/3.x-dev/bin/
 
-export MCINSTALL_PREFIX=$HOME/McStas/mcstas/3.x-dev/
-./mkdist mcstas-ncrystal 3.x-dev 3rdparty/ncrystal-package "" deb64 "" -- justinst
-./mkdist mcstas-mcpl 3.x-dev 3rdparty/mcpl-package "" deb64 "" -- justinst
-./mkdist mcstas-nexus 3.x-dev 3rdparty/nexus-package "" deb64 "" -- justinst
 
 # Ensure we are configured for 10 node MPI runs
 sed -i s/\'4\'/\'10\'/g $HOME/McStas/mcstas/3.x-dev/tools/Python/mccodelib/mccode_config.py

@@ -47,9 +47,9 @@ set(MCCODE_LOCATION "${DEST_TOOLDIR}")
 # Set some extra options for mccode_config
 set(CC "${CMAKE_C_COMPILER}")
 if (APPLE)
-  set(CFLAGS "${MCCODE_CFLAGS} -headerpad_max_install_names ${CMAKE_C_FLAGS}")
+  set(CFLAGS "-headerpad_max_install_names ${CMAKE_C_FLAGS} ${MCCODE_CFLAGS}")
 else()
-  set(CFLAGS "${MCCODE_CFLAGS} ${CMAKE_C_FLAGS}")
+  set(CFLAGS "${CMAKE_C_FLAGS} ${MCCODE_CFLAGS}")
 endif()
 
 # CPack configuration

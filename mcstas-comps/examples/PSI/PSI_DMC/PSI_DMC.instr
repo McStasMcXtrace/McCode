@@ -39,7 +39,7 @@
 *
 * %End
 ***************************************************/
-DEFINE INSTRUMENT PSI_DMC(lambda=2.5666, R=0.87, R_curve=0.87, string filename="Na2Ca3Al2F14.laz",D_PHI=6, SHIFT=0, PACK=0.7, Dw=0.8, BARNS=1)
+DEFINE INSTRUMENT PSI_DMC(lambda=2.5666, R=0.87, R_curve=0.87, string filename="Na2Ca3Al2F14.laz",D_PHI=6, SHIFT=0, PACK=0.7, Dw=0.8, int BARNS=1, int SPLITS=58)
 
 DECLARE
 %{
@@ -239,7 +239,7 @@ COMPONENT sa_arm = Arm()
    AT (0, 0, 2.82) RELATIVE msa 
    ROTATED (0, 0, 0) RELATIVE msa 
 
-SPLIT 10 COMPONENT sample = PowderN (
+SPLIT SPLITS COMPONENT sample = PowderN (
 	d_phi=D_PHI,radius=sample_radius, yheight=sample_height, DW=Dw,
   pack=PACK, reflections = filename, barns=BARNS, p_transmit=0, p_inc=0)
 AT ( 0, 0, 0) RELATIVE sa_arm

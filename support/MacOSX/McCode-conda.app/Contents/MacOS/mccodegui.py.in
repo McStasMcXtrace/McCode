@@ -1,0 +1,42 @@
+#!@SHEBANG@ --login
+#
+# Wrapper script for starting mcgui in an app on Mac OS X
+#
+
+SCRIPTDIR=`dirname $0`
+BASEDIR=$SCRIPTDIR/../..
+
+
+# conda already in place, shell hook activate
+if [ -f ${BASEDIR}/Contents/Resources/miniconda3/bin/conda ]; then
+    eval "$(${BASEDIR}/Contents/Resources/miniconda3/bin/conda shell.bash hook)"
+else
+    osascript -e "tell app \"System Events\" to display dialog \"Your @FLAVOR@ app does not yet include a conda environment, now proceeding to download. A notification should appear again once the process is over. :-) \""
+    (cd /tmp && curl -L -O https://raw.githubusercontent.com/McStasMcXtrace/McCode/main/@FLAVOR@-environment.yml)
+    # Check if conda is on the path or not?
+    conda activate &> /dev/null
+    ret_code=$?
+
+    if [ "$ret_code" -eq "0" ];
+    then
+	/usr/bin/open $SCRIPTDIR/conda-inject.command
+	export INJECTING=1
+    else
+	# No conda, fetch latest
+	/usr/bin/open $SCRIPTDIR/Miniforge-inject.command
+	export INJECTING=1
+    fi
+fi
+
+SCRIPT=${CONDA_PREFIX}/bin/@GUIPREFIX@gui
+if [ -e $SCRIPT ]
+then
+    $SCRIPT $* > /dev/null 2>&1 
+else
+    if [ -z "${INJECTING}" ];
+    then
+	osascript -e "tell app \"System Events\" to display dialog \"Sorry, your @FLAVOR@ app (@GUIPREFIX@gui) can not be started, please create an issue at https://github.com/McStasMcXtrace/McCode/issues \""
+    fi
+fi
+
+

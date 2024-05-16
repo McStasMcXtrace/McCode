@@ -315,7 +315,6 @@ macro(installMCCODE)
     work/src/debug.c
     work/src/file.c
     work/src/list.c
-    work/src/mccode-pygen.h
     work/src/memory.c
     work/src/port.c
     work/src/port.h
@@ -400,7 +399,7 @@ macro(installMCCODE)
     install(PROGRAMS ${WORK}/support/${FLAVOR}-labenv.bat DESTINATION "${DEST_BINDIR}")
 
     # Python/Perl related batches special handling
-    foreach (name run.bat doc.bat test.bat viewtest.bat resplot.bat plot.bat display.bat gui.bat guistart.bat plot-pyqtgraph.bat plot-matplotlib.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-mantid.bat)
+    foreach (name run.bat doc.bat test.bat viewtest.bat resplot.bat plot.bat display.bat gui.bat guistart.bat plot-pyqtgraph.bat plot-matplotlib.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-matplotlib.bat display-mantid.bat)
       configure_file(
 	      cmake/support/run-scripts/${name}.in
 	      work/support/${MCCODE_PREFIX}${name}

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@SHEBANG@
 #
 # Wrapper script for starting mcgui in an app on Mac OS X
 #
@@ -6,8 +6,12 @@
 BASEDIR=`dirname $0`
 BASEDIR=$BASEDIR/../..
 
-SCRIPT=$BASEDIR/Contents/Resources/@DEST_BINDIR@/@GUIPREFIX@gui
-
+if [ "@CONDA_EMBEDDED@" = "1" ]; then
+    eval "$(${BASEDIR}/Contents/Resources/@DEST_RESOURCEDIR@/miniconda3/bin/conda shell.bash hook)"
+    SCRIPT=${CONDA_PREFIX}/bin/@GUIPREFIX@gui
+else
+    SCRIPT=$BASEDIR/Contents/Resources/@DEST_BINDIR@/@GUIPREFIX@gui
+fi
 if [ -e $SCRIPT ]
 then
     $SCRIPT $* > /dev/null 2>&1 
