@@ -23,7 +23,7 @@ class McDisplayReader(object):
         # assemble command
         mcruncmd = str(Path(mccode_config.directories['bindir'],mccode_config.configuration['MCRUN']))
         
-        cmd = f"{mcruncmd} {instr} --no-output-files --trace --ncount={300 if n is None else n}"
+        cmd = f"{mcruncmd} {instr} --no-output-files --trace=1 --ncount={300 if n is None else n}"
 
         if dir:
             cmd = cmd + ' --dir=' + dir
