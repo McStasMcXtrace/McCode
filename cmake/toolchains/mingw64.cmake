@@ -38,7 +38,7 @@ set(OACCFLAGS "-ta:multicore -DOPENACC")
 set(MPICC "mpicc.bat")
 set(MPIRUN "mpiexec.exe")
 set(MPILIB "msmpi")
-set(MCCODE_CFLAGS "-g -O2 -DNDEBUG -lm -std=c99 -D_POSIX_SOURCE")
+set(MCCODE_CFLAGS "-fno-PIC -fPIE -flto -O3 -mtune=native -march=native -fno-math-errno -ftree-vectorize -g -DNDEBUG -D_POSIX_SOURCE -std=c99 -lm")
 set(EDITOR "start")
 
 # NeXus location defaults

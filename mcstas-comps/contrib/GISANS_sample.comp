@@ -14,17 +14,55 @@
 *
 * %D
 * Sample for GISANS
+* The idea of this sample goes back to the real sample studied in the publication https://doi.org/10.1063/1.4723634
+* This is a sandwich of a sapphire and silicon slab through which the neutrons impinge and the sample in between where the scattering emerges from.
+* The sample consist of spherical polystyrene colloids in heavy water that form aligned crystallites at the solid-liquid interface,
+* while in the middle of the volume the crytallites are orientationally averaged in the polar angle that points in the lateral direaction.
+* The crystallites of the current verision are not highly realistic because they are monoclinic with a 60° angle mimicking a fraction
+* of a hexagonal structure with hexagonal planes stacked in the z-direction.
+* Inside the routine one can change between 2 or 3 different planes. Also the total crystallite size can be changed.
+* Especially the parallelogram with 60° angle is unrealistic because one usually would assume the crystallites to have a hexagonal shape.
+* However, the finite crystallites mimic the final correlation length inside the sample.
+* The sample works for neutrons impingin from the sapphire, the silicon at grazing angles and in transmission in the sense of a SANS sample.
+* If the neutrons impinge through the other layers (sample and silicon oxide) - the responses are not so realistic and need further development.
+* Also multiple scattering would be needed to be implemented still - but could be done.
 *
+* What this sample component covers relatively well is the fact that damping of the intensity by scattering and absorption is also covered.
+* That means that even at larger angles than the critical angle the intensity is damped inside the sample and so only a certain near surface
+* layer scatters neutrons.
+* This effect is not covered by BornAgain.
+*
+* I see this as a start for further developments.
 *
 * %P
-*
 * INPUT PARAMETERS
-*
+* (sample geometry)
 * xwidth:       [m]  Width of sample volume 
 * yheight:      [m]  Height of sample volume 
-* zthick:       [m]  Thickness of sample volume 
+* zsapph:       [m]  Thickness of the sapphire layer on one side
+* zsamp:        [m]  Thickness of the overall sample between sapphire and silicon
+* zsampsurf:    [m]  Thickness from the total of zsamp on either side of sapphire/silicon that is oriented
+* zsilicon:     [m]  Thickness of the silicon layer on the other side
+* zsiliconsurf: [m]  Thickness from the total of zsilicon on the sample side (oxidization layer)
+* the total thickness of the sandwich is zsapph+zsamp+zsilicon
+* the thicknesses zsampsurf and zsiliconsurf are parts of the total sample/silicon thicknesses
 *
-* %Link
+* (scattering length densitites, reciprocal total cross section of absorption, reciprocal total cross section of incoherent scattering)
+* units rho... [A-2], abslen... [cm], inclen... [cm]
+* rhosapph,       abslensapph,       inclensapph        for sapphire
+* rhoD2O,         abslenD2O,         inclenD2O          for D2O as solvent in sample
+* rhoPS,          abslenPS,          inclenPS           for polystyrene as colloids in sample
+* rhosiliconsurf, abslensiliconsurf, inclensiliconsurf  for silicon surface (oxide layer)
+* rhosilicon,     abslensilicon,     inclensilicon      for silicon
+*
+* (specs of the polystyrene colloids in heavy water)
+* phiPS:       [1] Concentration vol/vol of colloids in D2O
+* Rad:         [A] Radius of colloids in Aangstroem
+* phirot:      [rad] angle of the ordered (aligned) crytallites at the two surfaces towards sapphire/silicon
+* 
+* (specs for the redirection of simulations paths (scattering and sans versus rest) similar to the SANS sample of Henrich Frielinghaus)
+* sc_aim:      [1] how much is scattered versus transmitted
+* sans_aim:    [1] how much goes to the small angle range versus wide angles
 *
 * %E
 *******************************************************************************/
@@ -259,15 +297,15 @@ int Nxy;
 
 /*limit=59.09079715;*/
 limit=18.42;
-fudgef=0.02500;
+fudgef=0.0250;
 
 xidwfxy = 180.0; /* Aangstroem, local precision for Debye Waller factor */
 xidwfz  = 125.0; /* Aangstroem, local precision for Debye Waller factor */
 
 /* these parameters are actually linked to wavelength resolution, so Nz = Nxy ~ (lambda / delta lambda)    */
 /* the exact prefactor remains to be determined */
-Nlz= 6;        /* number of different planes in z-direction, 3 for fcc lattice, 2 for hex with 2 different planes */
-Nz = 3;        /* limited number of planes in z-direction, should be relatively small and multiples of 6: so 6 or 12 (or at least multiple of Nlz) */
+Nlz= 3;        /* number of different planes in z-direction, 3 for fcc lattice, 2 for hex with 2 different planes */
+Nz = 6;        /* limited number of planes in z-direction, should be relatively small and multiples of 6: so 6 or 12 (or at least multiple of Nlz) */
 Nxy= 3;        /* limited number of planes in xy-direction, should be relatively small, let's say between 4 and 12 */
 
 corrlen = 3e4;  /* additional correlation length in z-direction would limit the maximum correlation length, if not needed make it big, i.e. 1e6 */

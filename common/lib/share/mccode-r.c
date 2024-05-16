@@ -2183,7 +2183,7 @@ MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
     1, 1, 1,
     "I", "", "",
     "I", "", "",
-    0, 0, 0, 0, 0, 0, "",
+    0, 0, 0, 0, 0, 0, c,
     &p0, &p1, &p2, posa); /* write Detector: line */
 
 #ifdef USE_NEXUS

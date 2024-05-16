@@ -66,6 +66,19 @@ size_t str_len(const char *s);
 #include <math.h>
 #endif
 
+/* In case of gcc / clang, ensure to use
+   the built-in isnan/isinf functions */
+#if defined(__GNUC__) || defined(__clang__)
+#  ifdef isnan
+#    undef isnan
+#  endif
+#  ifdef isinf
+#    undef isinf
+#  endif
+#  define isnan(x) __builtin_isnan(x)
+#  define isinf(x) __builtin_isinf(x)
+#endif
+
 #ifdef _MSC_EXTENSIONS
 #ifndef _TIMES_H
 #define _TIMES_H

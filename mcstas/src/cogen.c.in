@@ -788,8 +788,10 @@ int cogen_comp_section_class(
     if (!strcmp(section, "TRACE")) {
       if (!comp->def->flag_noacc)
 	coutf("#pragma acc routine");
+        coutf("void class_%s_%s(_class_%s *_comp", comp->def->name, section_lower, comp->def->name);
+    } else {
+      coutf("_class_%s *class_%s_%s(_class_%s *_comp", comp->def->name, comp->def->name, section_lower, comp->def->name);
     }
-    coutf("_class_%s *class_%s_%s(_class_%s *_comp", comp->def->name, comp->def->name, section_lower, comp->def->name);
 
     // TRACE add particle parameter to footprint
     if (!strcmp(section, "TRACE")) /* TRACE: need to define particle state */
@@ -878,14 +880,8 @@ int cogen_comp_section_class(
     if (!strcmp(section, "TRACE")) {
       cout("#ifndef NOABSORB_INF_NAN");
       cout("  /* Check for nan or inf particle parms */ ");
-      cout("  if(isnan(p)  ||  isinf(p)) ABSORB;");
-      cout("  if(isnan(t)  ||  isinf(t)) ABSORB;");
-      cout("  if(isnan(vx) || isinf(vx)) ABSORB;");
-      cout("  if(isnan(vy) || isinf(vy)) ABSORB;");
-      cout("  if(isnan(vz) || isinf(vz)) ABSORB;");
-      cout("  if(isnan(x)  ||  isinf(x)) ABSORB;");
-      cout("  if(isnan(y)  ||  isinf(y)) ABSORB;");
-      cout("  if(isnan(z)  ||  isinf(z)) ABSORB;");
+      cout("  if(isnan(p + t + vx + vy + vz + x + y + z)) ABSORB;");
+      cout("  if(isinf(fabs(p) + fabs(t) + fabs(vx) + fabs(vy) + fabs(vz) + fabs(x) + fabs(y) + fabs(z))) ABSORB;");
       cout("#else");
       cout("  if(isnan(p)  ||  isinf(p)) printf(\"NAN or INF found in p,  %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
       cout("  if(isnan(t)  ||  isinf(t)) printf(\"NAN or INF found in t,  %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
@@ -933,7 +929,11 @@ int cogen_comp_section_class(
     /* undefine aliases */
     cogen_defundef(comp, comp->def->set_par, PAR_UNDEF);
     cogen_defundef(comp, comp->def->out_par, PAR_UNDEF);
-    cout("  return(_comp);");
+    if (!strcmp(section, "TRACE")) {    
+      cout("  return;");
+    } else {
+      cout("  return(_comp);");
+    }
     coutf("} /* class_%s_%s */", comp->def->name, section_lower);
     cout("");
 
@@ -1573,7 +1573,7 @@ void def_trace_section(struct instr_def *instr)
   coutf("#define %s (_particle->%s)", "ABSORBED" , "_absorbed");
   /* define mcget_run_num within trace scope to refer to the particle */
   coutf("#define mcget_run_num() _particle->_uid");
-  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(_comp); } while(0)");
+  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return; } while(0)");
   cout( "#define ABSORB ABSORB0");
 } /* def_trace_section */
 
@@ -1723,7 +1723,11 @@ int cogen_raytrace(struct instr_def *instr)
   // we need this override, since "comp" is not defined in raytrace() - see section-wide define
   cout("  #undef ABSORB0");
   cout("  #undef ABSORB");
+  cout("  #ifndef OPENACC");
   cout("  #define ABSORB0 do { DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(ABSORBED);} while(0)");
+  cout("  #else");
+  cout("  #define ABSORB0 do { DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++;} while(0)");
+  cout("  #endif");
   cout("  #define ABSORB ABSORB0");
 
   /* Debugging (initial state). */
@@ -1742,7 +1746,7 @@ int cogen_raytrace(struct instr_def *instr)
         /* create counter for JUMP iteration */
         if (this_jump->iterate)
           coutf("  _particle->_logic.Jump_%s_%s=0;", comp->name, this_jump->target);
-        /* check that the target_index is defined, else search for the target comp index* /
+        /* check that the target_index is defined, else search for the target comp index */
         if (!this_jump->target_index) {
           List_handle liter3 = list_iterate(instr->complist);
           struct comp_inst *target=NULL;

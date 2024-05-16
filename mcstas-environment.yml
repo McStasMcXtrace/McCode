@@ -1,0 +1,42 @@
+name: miniconda3
+
+channels:
+  - conda-forge
+  - nodefaults
+
+dependencies:
+  - mamba
+  - conda
+  - cmake
+  - flex
+  - bison
+  - compilers
+  - openmpi=4
+  - compilers
+  - gsl
+  - pyaml
+  - ply
+  - matplotlib
+  - numpy
+  - scipy
+  - tornado
+  - scipy
+  - pillow
+  - pyqtgraph
+  - pyqt
+  - qscintilla2
+  - nexusformat
+  - nexpy
+  - hdf5
+  - ncrystal
+  - mcpl
+  - mcstas
+  - jupytext
+  - jupyterlab
+  - ipympl
+  - jinja2
+  - mslex
+  - pip
+  - pip:
+    - guide_bot
+    - McStasScript

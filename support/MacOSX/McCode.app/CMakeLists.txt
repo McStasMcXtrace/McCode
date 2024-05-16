@@ -40,10 +40,22 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
+if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "arm64" )
+  set(SHEBANG "/usr/bin/arch -arm64 /usr/bin/env bash") # 
+else()
+  set(SHEBANG "/usr/bin/env bash")
+endif()
+
+if (${CONDA_EMBED})
+  set(CONDA_EMBEDDED "1")
+else()
+  set(CONDA_EMBEDDED "0")
+endif()
+
 # Configure the .py launcher
 configure_file(Contents/MacOS/mccodegui.py.in ${WORK}/mccodegui @ONLY)
 
-exec_program(chmod ARGS 755 work/mccodegui)
+execute_process(COMMAND "chmod ARGS 755 work/mccodegui")
 
 # Include the Contents subfolder...
 install (
