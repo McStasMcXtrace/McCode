@@ -2627,7 +2627,13 @@ void mcdis_cone( double x, double y, double z,
 void mcdis_sphere(double x, double y, double z, double r){
     printf("MCDISPLAY: sphere(%g,%g,%g,%g)\n", x, y, z, r);
 }
+/* BEGIN NEW POLYGON IMPLEMENTATION*/
 
+void mcdis_new_polygon(char *vertices_faces){
+  printf("MCDISPLAY: polygon %s\n", vertices_faces);
+}
+
+/* OLD POLYGON IMPLEMENTATION REMOVE AFTER CONVERTING COMPONENTS*/
 void mcdis_polygon(int count, ...){
   va_list ap;
   double x,y,z;
@@ -2635,15 +2641,24 @@ void mcdis_polygon(int count, ...){
   printf("MCDISPLAY: polygon(%d", count);
   va_start(ap, count);
   while(count--)
-  {
+    {
     x = va_arg(ap, double);
     y = va_arg(ap, double);
     z = va_arg(ap, double);
     printf(",%g,%g,%g", x, y, z);
-  }
+    }
   va_end(ap);
   printf(")\n");
 }
+/* END NEW POLYGON IMPLEMENTATION*/
+
+/*
+void mcdis_polygon(double x1, double y1, double z1,
+                double x2, double y2, double z2){
+  printf("MCDISPLAY: polygon(2,%g,%g,%g,%g,%g,%g)\n",
+         x1,y1,z1,x2,y2,z2);
+}
+*/
 
 /* SECTION: coordinates handling ============================================ */
 

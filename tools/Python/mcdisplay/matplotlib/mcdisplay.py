@@ -2,11 +2,13 @@
 
 ''' Small script to rewrite McStas trace output to python matplotlib for plotting '''
 
-import sys
-import numpy as np
 import matplotlib as mpl
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import art3d
+from matplotlib import pyplot as plt
+import numpy as np
+import sys
+import json
+
 
 from util import parse_multiline, rotate, rotate_points, draw_circle, get_line, debug, draw_box, draw_sphere, \
     draw_cylinder, draw_disc, rotate_xyz, draw_cone, parse_polygon
@@ -18,11 +20,13 @@ MC_COMP_SHORT = 'COMP: '
 
 MC_LINE = 'MCDISPLAY: multiline'
 MC_CIRCLE = 'MCDISPLAY: circle'
-MC_SPHERE = 'MCDISPLAY: sphere'
 MC_CYLINDER = 'MCDISPLAY: cylinder'
+
+MC_SPHERE = 'MCDISPLAY: sphere'
 MC_BOX = 'MCDISPLAY: box'
 MC_CONE = 'MCDISPLAY: cone'
 MC_POLYGON = 'MCDISPLAY: polygon'
+
 
 MC_ENTER = 'ENTER:'
 MC_LEAVE = 'LEAVE:'
@@ -34,8 +38,11 @@ MC_START = 'MCDISPLAY: start'
 MC_END = 'MCDISPLAY: end'
 MC_STOP = 'INSTRUMENT END:'
 
-#transparency in plot_surface is called alpha
+#transparency in plot_surface is called alpha as in rgba
 transparency = 0.6
+#for setting axis limits when using polygon
+x_max_polygon = y_max_polygon = z_max_polygon = float('-inf')
+x_min_polygon = y_min_polygon = z_min_polygon = float('inf')
 
 def parse_trace():
     ''' Parse McStas trace output from stdin and write results
@@ -103,9 +110,12 @@ def parse_trace():
         # process multiline
         elif line.startswith(MC_LINE):
             points = parse_multiline(line[len(MC_LINE):].strip('()'))
-            start = points.pop(0)
             (x, y, z) = rotate_points(points, comp)
             ax.plot(z, x, y)
+
+        # process polygon
+        elif line.startswith(MC_POLYGON):
+            process_polygon(ax, line, comp)
 
         # process circle
         elif line.startswith(MC_CIRCLE):
@@ -119,6 +129,10 @@ def parse_trace():
             (x,y,z) = draw_circle(pla, pos, rad, comp)
             ax.plot(z, x, y)
 
+        # process cone
+        elif line.startswith(MC_CONE):
+            process_cone(ax, line, comp)
+
         # process sphere
         elif line.startswith(MC_SPHERE):
             process_sphere(ax, line, comp)
@@ -130,13 +144,6 @@ def parse_trace():
         # process cylinder
         elif line.startswith(MC_CYLINDER):
             process_cylinder(ax, line, comp)
-
-        # process cone
-        elif line.startswith(MC_CONE):
-            process_cone(ax, line, comp)
-
-        elif line.startswith(MC_POLYGON):
-            process_polygon(ax, line, comp)
 
         # activate neutron when it enters
         elif line.startswith(MC_ENTER):
@@ -179,7 +186,7 @@ def parse_trace():
 
     plt.show()
 
-'''BEGIN NEW CODE 3D-visualization. REMOVE OLD CODE AND THIS COMMENT AFTER CONVERTING COMPS'''
+'''BEGIN NEW CODE 3D-visualization. REMOVE OLD CODE AND THIS COMMENT AFTER CONVERTING COMPONENTS'''
 def process_sphere(ax, line, comp):
     items = line[len(MC_SPHERE):].strip('()').split(',')
     # center and radius
@@ -251,28 +258,40 @@ def process_box(ax, line, comp):
     ax.plot_surface(z, x, y)
 
 def process_polygon(ax, line, comp):
-    points = parse_polygon(line[len(MC_POLYGON):].strip('()'))
-    start = points.pop(0)
-    print(f'points: {points}')
+    global x_min_polygon, x_max_polygon, y_min_polygon, y_max_polygon, z_min_polygon, z_max_polygon
 
-    '''
-    (x, y, z) = rotate_points(points, comp)
+    json_data = line.replace('MCDISPLAY: polygon ', '')
 
-    items = line[len(MC_POLYGON):].strip('()').split(',')
+    # Parse the JSON string
+    data = json.loads(json_data)
 
-    hull = ConvexHull(points)
-    # draw the polygons of the convex hull
-    for s in hull.simplices:
-        tri = Poly3DCollection([hull[s]])
-        ax.add_collection3d(tri)
-    # draw the vertices
-    ax.scatter(cube[:, 0])
+    # Extract vertices and faces from the parsed JSON
+    vertices = data['vertices']
+    faces = np.array([face['face'] for face in data['faces']])
 
-    ax.plot_surface(z, x, y)
-    '''
+    vertices_arr = np.zeros((len(vertices), 3))
 
+    for i, vertex in enumerate(vertices):
+        (x, y, z) = vertex['x'], vertex['y'], vertex['z']
 
-'''END NEW CODE 3D-visualization. REMOVE OLD CODE AND THIS COMMENT AFTER CONVERTING COMPS'''
+        #rotate
+        (x, y, z) = rotate([x, y, z], comp)
+
+        #from xyz to zxy
+        vertices_arr[i] = [z, x, y]
+
+        #for setting axis limits
+        x_max_polygon = max(x_max_polygon, x)
+        x_min_polygon = min(x_min_polygon, x)
+        y_max_polygon = max(y_max_polygon, y)
+        y_min_polygon = min(y_min_polygon, y)
+        z_max_polygon = max(z_max_polygon, z)
+        z_min_polygon = min(z_min_polygon, z)
+
+    pc = art3d.Poly3DCollection(vertices_arr[faces])
+    ax.add_collection(pc)
+
+'''END NEW CODE 3D-visualization. REMOVE OLD CODE AND THIS COMMENT AFTER CONVERTING COMPONENTS'''
 
 def register_state_and_scatter(comp, line, prev, xstate, ystate, zstate):
     xyz = [float(x) for x in line[line.find(':') + 1:].split(',')[:3]]
@@ -292,11 +311,20 @@ def set_axis_limits(ax):
     (xmin, xmax) = ax.get_xlim()
     (ymin, ymax) = ax.get_ylim()
     (zmin, zmax) = ax.get_zlim()
+
+    # Consider polygon limits
+    xmax = max(x_max_polygon, xmax)
+    ymax = max(y_max_polygon, ymax)
+    zmax = max(z_max_polygon, zmax)
+    xmin = min(x_min_polygon, xmin)
+    ymin = min(y_min_polygon, ymin)
+    zmin = min(z_min_polygon, zmin)
+
     dx = xmax - xmin
     dy = ymax - ymin
     dz = zmax - zmin
     dmax = max(dx, dy, dz)
-    # Check ranges and define axis box of max length cubed
+# Check ranges and define axis box of max length cubed
     if dmax > dx:
         mean = (xmax + xmin) / 2
         xmin = mean - dmax / 2
@@ -309,7 +337,7 @@ def set_axis_limits(ax):
         mean = (zmax + zmin) / 2
         zmin = mean - dmax / 2
         zmax = mean + dmax / 2
-    # Set new axis limits
+# Set new axis limits
     ax.set_xlim3d(xmin, xmax)
     ax.set_ylim3d(ymin, ymax)
     ax.set_zlim3d(zmin, zmax)

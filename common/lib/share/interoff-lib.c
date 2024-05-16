@@ -1185,52 +1185,107 @@ int off_x_intersect(double *l0,double *l3,
 *******************************************************************************/
 void off_display(off_struct data)
 {
-  unsigned int i;
-  double ratio=(double)(N_VERTEX_DISPLAYED)/(double)data.faceSize;
-  unsigned int pixel=0;
-  for (i=0; i<data.faceSize-1; i++) {
-    int j;
-    int nbVertex = data.faceArray[i];
-    double x0,y0,z0;
-    x0 = data.vtxArray[data.faceArray[i+1]].x;
-    y0 = data.vtxArray[data.faceArray[i+1]].y;
-    z0 = data.vtxArray[data.faceArray[i+1]].z;
-    double x1=x0,y1=y0,z1=z0;
-    double cmx=0,cmy=0,cmz=0;
+    if(mcdotrace==2){
+    // Estimate size of the JSON string
+    const int VERTEX_OVERHEAD = 90;
+    const int FACE_OVERHEAD_BASE = 20;
+    const int FACE_INDEX_OVERHEAD = 15;
+    int estimated_size = 256; // Base size
+    estimated_size += data.vtxSize * VERTEX_OVERHEAD;
 
-    int drawthis = rand01() < ratio;
-    // First pass, calculate center of mass location...
-    for (j=1; j<=nbVertex; j++) {
-      cmx = cmx+data.vtxArray[data.faceArray[i+j]].x;
-      cmy = cmy+data.vtxArray[data.faceArray[i+j]].y;
-      cmz = cmz+data.vtxArray[data.faceArray[i+j]].z;
+    for (int i = 0; i < data.faceSize;) {
+        int num_indices = data.faceArray[i];
+        estimated_size += FACE_OVERHEAD_BASE + num_indices * FACE_INDEX_OVERHEAD;
+        i += num_indices + 1;
     }
-    cmx /= nbVertex;
-    cmy /= nbVertex;
-    cmz /= nbVertex;
 
-    char pixelinfo[1024];
-    sprintf(pixelinfo, "%li,%li,%li,%i,%g,%g,%g,%g,%g,%g", data.mantidoffset+pixel, data.mantidoffset, data.mantidoffset+data.polySize-1, nbVertex, cmx, cmy, cmz, x1-cmx, y1-cmy, z1-cmz);
-    for (j=2; j<=nbVertex; j++) {
-      double x2,y2,z2;
-      x2 = data.vtxArray[data.faceArray[i+j]].x;
-      y2 = data.vtxArray[data.faceArray[i+j]].y;
-      z2 = data.vtxArray[data.faceArray[i+j]].z;
-      sprintf(pixelinfo, "%s,%g,%g,%g", pixelinfo, x2-cmx, y2-cmy, z2-cmz);
-      if (ratio > 1 || drawthis) {
-	mcdis_line(x1,y1,z1,x2,y2,z2);
-      }
-      x1 = x2; y1 = y2; z1 = z2;
+    char *json_string = malloc(estimated_size);
+    if (json_string == NULL) {
+        fprintf(stderr, "Memory allocation failed.\n");
+        return;
     }
-    if (ratio > 1 || drawthis) {
-	mcdis_line(x1,y1,z1,x0,y0,z0);
-      }
-    if (data.mantidflag) {
-      printf("MANTID_PIXEL: %s\n", pixelinfo);
-      pixel++;
+
+    char *ptr = json_string;
+    ptr += sprintf(ptr, "{ \"vertices\": [");
+
+    for (int i = 0; i < data.vtxSize; i++) {
+        ptr += sprintf(ptr, "{\"x\": %g, \"y\": %g, \"z\": %g}", data.vtxArray[i].x, data.vtxArray[i].y, data.vtxArray[i].z);
+        if (i < data.vtxSize - 1) {
+            ptr += sprintf(ptr, ", ");
+        }
     }
-    i += nbVertex;
-  }
+
+    ptr += sprintf(ptr, "], \"faces\": [");
+
+    for (int i = 0; i < data.faceSize;) {
+        int num = data.faceArray[i];
+        ptr += sprintf(ptr, "{ \"face\": [");
+        for (int j = 1; j <= num; j++) {
+            ptr += sprintf(ptr, "%lu", data.faceArray[i + j]);
+            if (j < num) {
+                ptr += sprintf(ptr, ", ");
+            }
+        }
+        ptr += sprintf(ptr, "]}");
+        i += num + 1;
+        if(i<data.faceSize){
+          ptr += sprintf(ptr, ", ");
+        }
+    }
+
+    ptr += sprintf(ptr, "]}");
+    mcdis_new_polygon(json_string);
+
+    free(json_string);
+    }
+    else {
+      unsigned int i;
+      double ratio=(double)(N_VERTEX_DISPLAYED)/(double)data.faceSize;
+      unsigned int pixel=0;
+      for (i=0; i<data.faceSize-1; i++) {
+        int j;
+        int nbVertex = data.faceArray[i];
+        double x0,y0,z0;
+        x0 = data.vtxArray[data.faceArray[i+1]].x;
+        y0 = data.vtxArray[data.faceArray[i+1]].y;
+        z0 = data.vtxArray[data.faceArray[i+1]].z;
+        double x1=x0,y1=y0,z1=z0;
+        double cmx=0,cmy=0,cmz=0;
+
+        int drawthis = rand01() < ratio;
+        // First pass, calculate center of mass location...
+        for (j=1; j<=nbVertex; j++) {
+          cmx = cmx+data.vtxArray[data.faceArray[i+j]].x;
+          cmy = cmy+data.vtxArray[data.faceArray[i+j]].y;
+          cmz = cmz+data.vtxArray[data.faceArray[i+j]].z;
+        }
+        cmx /= nbVertex;
+        cmy /= nbVertex;
+        cmz /= nbVertex;
+
+        char pixelinfo[1024];
+        sprintf(pixelinfo, "%li,%li,%li,%i,%g,%g,%g,%g,%g,%g", data.mantidoffset+pixel, data.mantidoffset, data.mantidoffset+data.polySize-1, nbVertex, cmx, cmy, cmz, x1-cmx, y1-cmy, z1-cmz);
+        for (j=2; j<=nbVertex; j++) {
+          double x2,y2,z2;
+          x2 = data.vtxArray[data.faceArray[i+j]].x;
+          y2 = data.vtxArray[data.faceArray[i+j]].y;
+          z2 = data.vtxArray[data.faceArray[i+j]].z;
+          sprintf(pixelinfo, "%s,%g,%g,%g", pixelinfo, x2-cmx, y2-cmy, z2-cmz);
+          if (ratio > 1 || drawthis) {
+	    mcdis_line(x1,y1,z1,x2,y2,z2);
+          }
+          x1 = x2; y1 = y2; z1 = z2;
+        }
+        if (ratio > 1 || drawthis) {
+	    mcdis_line(x1,y1,z1,x0,y0,z0);
+          }
+        if (data.mantidflag) {
+          printf("MANTID_PIXEL: %s\n", pixelinfo);
+          pixel++;
+        }
+        i += nbVertex;
+      }
+    }
 } /* off_display */
 
 /* end of interoff-lib.c */

@@ -200,14 +200,6 @@ def draw_box(center, a, b, c):
 
     return x, y, z
 
-def draw_polygon(points, ax):
-
-    plt.show()
-    x = center[0]
-    y = center[1]
-    z = center[2]
-
-    return x, y, z
 
 '''END NEW CODE 3D-visualization. REMOVE OLD CODE AND THIS COMMENT AFTER CONVERTING COMPS'''
 
@@ -235,9 +227,7 @@ def draw_circle(plane, pos, radius, comp):
 
 def get_line():
     ''' Read a line from stdin '''
-    line = stdin.readline().strip()
-    print(line)
-    return line
+    return stdin.readline().strip()
 
 
 def debug(obj):
