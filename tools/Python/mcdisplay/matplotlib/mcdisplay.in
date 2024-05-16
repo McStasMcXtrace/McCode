@@ -27,7 +27,7 @@ canrun() {
 }
 
 if ( canrun ); then
-    @P@run  $* --trace --no-output-files -n1e2 | python3 ${UTILDIR}/${TOOL}.py 
+    @P@run  $* --trace=2 --no-output-files -n1e2 | python3 ${UTILDIR}/${TOOL}.py 
 else
     @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
 fi
