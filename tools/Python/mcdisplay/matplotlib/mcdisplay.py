@@ -6,12 +6,11 @@ import matplotlib as mpl
 from mpl_toolkits.mplot3d import art3d
 from matplotlib import pyplot as plt
 import numpy as np
-import sys
 import json
 
 
-from util import parse_multiline, rotate, rotate_points, draw_circle, get_line, debug, draw_box, draw_sphere, \
-    draw_cylinder, draw_disc, rotate_xyz, draw_cone, parse_polygon
+from util import parse_multiline, rotate, rotate_points, draw_circle, get_line, draw_box, draw_sphere, \
+    draw_cylinder, draw_disc, rotate_xyz, draw_cone
 
 UC_COMP = 'COMPONENT:'
 
@@ -38,13 +37,18 @@ MC_START = 'MCDISPLAY: start'
 MC_END = 'MCDISPLAY: end'
 MC_STOP = 'INSTRUMENT END:'
 
+
+
+colors = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow']
 #transparency in plot_surface is called alpha as in rgba
+#transparency will be a user controlled parameter eventually
 transparency = 0.6
 #for setting axis limits when using polygon
 x_max_polygon = y_max_polygon = z_max_polygon = float('-inf')
 x_min_polygon = y_min_polygon = z_min_polygon = float('inf')
 
 def parse_trace():
+    print(f'colors: {colors}')
     ''' Parse McStas trace output from stdin and write results
         to file objects csv_comps and csv_lines '''
 
@@ -57,8 +61,8 @@ def parse_trace():
     except:
         print("manual aspect not supported")
 
-    color = 0
 
+    color = 0
 
     # map from component name to (position, rotation matrix)
     comps = {}
@@ -99,7 +103,9 @@ def parse_trace():
 
         # switch perspective
         elif line.startswith(MC_COMP):
-            color += 1
+            if(color < len(colors)-1):
+                color += 1
+            else: color = 0
             comp = comps[line[len(MC_COMP) + 1:]]
 
         elif line.startswith(MC_COMP_SHORT):
@@ -111,11 +117,11 @@ def parse_trace():
         elif line.startswith(MC_LINE):
             points = parse_multiline(line[len(MC_LINE):].strip('()'))
             (x, y, z) = rotate_points(points, comp)
-            ax.plot(z, x, y)
+            ax.plot(z, x, y, colors[color])
 
         # process polygon
         elif line.startswith(MC_POLYGON):
-            process_polygon(ax, line, comp)
+            process_polygon(ax, line, comp, colors[color])
 
         # process circle
         elif line.startswith(MC_CIRCLE):
@@ -127,30 +133,29 @@ def parse_trace():
             pos = [float(x) for x in items[1:4]]
             rad = float(items[4])
             (x,y,z) = draw_circle(pla, pos, rad, comp)
-            ax.plot(z, x, y)
+            ax.plot(z, x, y, colors[color])
 
         # process cone
         elif line.startswith(MC_CONE):
-            process_cone(ax, line, comp)
+            process_cone(ax, line, comp, colors[color])
 
         # process sphere
         elif line.startswith(MC_SPHERE):
-            process_sphere(ax, line, comp)
+            process_sphere(ax, line, comp, colors[color])
 
         # process box
         elif line.startswith(MC_BOX):
-            process_box(ax, line, comp)
+            process_box(ax, line, comp, colors[color])
 
         # process cylinder
         elif line.startswith(MC_CYLINDER):
-            process_cylinder(ax, line, comp)
+            process_cylinder(ax, line, comp, colors[color])
 
         # activate neutron when it enters
         elif line.startswith(MC_ENTER):
             prev = None
             skip = True
             active = True
-            color = 0
             xstate=[]
             ystate=[]
             zstate=[]
@@ -187,21 +192,25 @@ def parse_trace():
     plt.show()
 
 '''BEGIN NEW CODE 3D-visualization. REMOVE OLD CODE AND THIS COMMENT AFTER CONVERTING COMPONENTS'''
-def process_sphere(ax, line, comp):
+
+
+def process_sphere(ax, line, comp, color):
     items = line[len(MC_SPHERE):].strip('()').split(',')
     # center and radius
     center = [float(x) for x in items[0:3]]
     radius = float(items[3])
     (x, y, z) = draw_sphere(center, radius)
     (x, y, z) = rotate_xyz(x, y, z, comp)
-    ax.plot_surface(z,x,y)
+    print(f'color: {color}')
+    ax.plot_surface(z, x, y, color=color)
 
-def process_cylinder(ax, line, comp):
+
+def process_cylinder(ax, line, comp, color):
     items = line[len(MC_CYLINDER):].strip('()').split(',')
     center = [float(x) for x in items[0:3]]
     radius = float(items[3])
     height = float(items[4])
-    axis_vector=[float(x) for x in items[6:9]]
+    axis_vector = [float(x) for x in items[6:9]]
     (x, y, z) = draw_cylinder(center, radius, height, axis_vector)
     (x, y, z) = rotate_xyz(x, y, z, comp)
 
@@ -218,11 +227,12 @@ def process_cylinder(ax, line, comp):
     (x_cylinder_upper_lid, y_upper_lid, z_upper_lid) = rotate_xyz(x_upper_lid, y_upper_lid, z_upper_lid, comp)
     (x_lower_lid, y_lower_lid, z_lower_lid) = rotate_xyz(x_lower_lid, y_lower_lid, z_lower_lid, comp)
 
-    ax.plot_surface(z, x, y)
-    ax.plot_surface(z_upper_lid, x_upper_lid, y_upper_lid)
-    ax.plot_surface(z_lower_lid, x_lower_lid, y_lower_lid)
+    ax.plot_surface(z, x, y, color=color)
+    ax.plot_surface(z_upper_lid, x_upper_lid, y_upper_lid, color=color)
+    ax.plot_surface(z_lower_lid, x_lower_lid, y_lower_lid, color=color)
 
-def process_cone(ax, line, comp):
+
+def process_cone(ax, line, comp, color):
     items = line[len(MC_CONE):].strip('()').split(',')
     center = [float(x) for x in items[0:3]]
     radius = float(items[3])
@@ -242,10 +252,11 @@ def process_cone(ax, line, comp):
     (x_lid, y_lid, z_lid) = draw_disc(center_lid, radius, axis_vector)
     (x_lid, y_lid, z_lid) = rotate_xyz(x_lid, y_lid, z_lid, comp)
 
-    ax.plot_surface(z, x, y)
-    ax.plot_surface(z_lid, x_lid, y_lid)
+    ax.plot_surface(z, x, y, color=color)
+    ax.plot_surface(z_lid, x_lid, y_lid, color=color)
 
-def process_box(ax, line, comp):
+
+def process_box(ax, line, comp, color):
     items = line[len(MC_BOX):].strip('()').split(',')
     center = [float(x) for x in items[0:3]]
     a = float(items[3])
@@ -255,9 +266,10 @@ def process_box(ax, line, comp):
     (x, y, z) = draw_box(center, a, b, c)
     (x, y, z) = rotate_xyz(x, y, z, comp)
 
-    ax.plot_surface(z, x, y)
+    ax.plot_surface(z, x, y, color=color)
 
-def process_polygon(ax, line, comp):
+
+def process_polygon(ax, line, comp, color):
     global x_min_polygon, x_max_polygon, y_min_polygon, y_max_polygon, z_min_polygon, z_max_polygon
 
     json_data = line.replace('MCDISPLAY: polygon ', '')
@@ -288,7 +300,7 @@ def process_polygon(ax, line, comp):
         z_max_polygon = max(z_max_polygon, y)
         z_min_polygon = min(z_min_polygon, y)
 
-    pc = art3d.Poly3DCollection(vertices_arr[faces], facecolors="blue", edgecolors="black", linewidths=0.1, alpha=transparency)
+    pc = art3d.Poly3DCollection(vertices_arr[faces], facecolors=color, edgecolors="black", linewidths=0.1, alpha=transparency)
     ax.add_collection(pc)
 
 '''END NEW CODE 3D-visualization. REMOVE OLD CODE AND THIS COMMENT AFTER CONVERTING COMPONENTS'''
