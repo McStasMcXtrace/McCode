@@ -12,7 +12,7 @@ osascript -e "tell app \"System Events\" to display dialog \"Will download injec
 (cd /tmp && curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh")
 bash /tmp/Miniforge3-$(uname)-$(uname -m).sh -p ${BASEDIR}/Contents/Resources/miniconda3/ -b
 . ${BASEDIR}/Contents/Resources/miniconda3/bin/activate
-conda update conda
+conda update conda -y
 conda env update --name base --file /tmp/@FLAVOR@-environment.yml
 
 @GUIPREFIX@doc -i
