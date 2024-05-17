@@ -9,8 +9,8 @@ import numpy as np
 import json
 
 
-from util import parse_multiline, rotate, rotate_points, draw_circle, get_line, draw_box, draw_sphere, \
-    draw_cylinder, draw_disc, rotate_xyz, draw_cone
+from util import (parse_multiline, rotate, rotate_points, draw_circle, get_line,
+                  draw_box, draw_sphere, draw_cylinder, draw_disc, rotate_xyz, draw_cone, draw_hollow_box, draw_annulus)
 
 UC_COMP = 'COMPONENT:'
 
@@ -210,6 +210,8 @@ def process_cylinder(ax, line, comp, color, transparency):
     center = [float(x) for x in items[0:3]]
     radius = float(items[3])
     height = float(items[4])
+    thickness = float(items[5])
+    print(f'thickness in process_cylinder: {thickness}')
     axis_vector = [float(x) for x in items[6:9]]
     (x, y, z) = draw_cylinder(center, radius, height, axis_vector)
     (x, y, z) = rotate_xyz(x, y, z, comp)
@@ -222,14 +224,28 @@ def process_cylinder(ax, line, comp, color, transparency):
     center_upper_lid = center + half_height_vector
     center_lower_lid = center - half_height_vector
 
-    (x_upper_lid, y_upper_lid, z_upper_lid) = draw_disc(center_upper_lid, radius, axis_vector)
-    (x_lower_lid, y_lower_lid, z_lower_lid) = draw_disc(center_lower_lid, radius, axis_vector)
-    (x_cylinder_upper_lid, y_upper_lid, z_upper_lid) = rotate_xyz(x_upper_lid, y_upper_lid, z_upper_lid, comp)
-    (x_lower_lid, y_lower_lid, z_lower_lid) = rotate_xyz(x_lower_lid, y_lower_lid, z_lower_lid, comp)
+    if thickness == 0:
+        print('thickness == 0')
+        (x_upper_lid, y_upper_lid, z_upper_lid) = draw_disc(center_upper_lid, radius, axis_vector)
+        (x_lower_lid, y_lower_lid, z_lower_lid) = draw_disc(center_lower_lid, radius, axis_vector)
+        (x_cylinder_upper_lid, y_upper_lid, z_upper_lid) = rotate_xyz(x_upper_lid, y_upper_lid, z_upper_lid, comp)
+        (x_lower_lid, y_lower_lid, z_lower_lid) = rotate_xyz(x_lower_lid, y_lower_lid, z_lower_lid, comp)
+        ax.plot_surface(z_upper_lid, x_upper_lid, y_upper_lid, color=color, alpha=transparency)
+        ax.plot_surface(z_lower_lid, x_lower_lid, y_lower_lid, color=color, alpha=transparency)
+
+    if thickness > 0:
+        print('thickness > 0')
+        (x_inner, y_inner, z_inner) = draw_cylinder(center, radius-thickness, height, axis_vector)
+        (x_inner, y_inner, z_inner) = rotate_xyz(x_inner, y_inner, z_inner, comp)
+        ax.plot_surface(z_inner, x_inner, y_inner, color=color, alpha=transparency)
+        (x_upper_lid, y_upper_lid, z_upper_lid) = draw_annulus(center_upper_lid, radius, radius-thickness, axis_vector)
+        (x_lower_lid, y_lower_lid, z_lower_lid) = draw_annulus(center_lower_lid, radius, radius-thickness, axis_vector)
+        (x_upper_lid, y_upper_lid, z_upper_lid) = rotate_xyz(x_upper_lid, y_upper_lid, z_upper_lid, comp)
+        (x_lower_lid, y_lower_lid, z_lower_lid) = rotate_xyz(x_lower_lid, y_lower_lid, z_lower_lid, comp)
+        ax.plot_surface(z_upper_lid, x_upper_lid, y_upper_lid, color=color, alpha=transparency)
+        ax.plot_surface(z_lower_lid, x_lower_lid, y_lower_lid, color=color, alpha=transparency)
 
     ax.plot_surface(z, x, y, color=color, alpha=transparency)
-    ax.plot_surface(z_upper_lid, x_upper_lid, y_upper_lid, color=color, alpha=transparency)
-    ax.plot_surface(z_lower_lid, x_lower_lid, y_lower_lid, color=color, alpha=transparency)
 
 
 def process_cone(ax, line, comp, color, transparency):
@@ -262,11 +278,21 @@ def process_box(ax, line, comp, color, transparency):
     a = float(items[3])
     b = float(items[4])
     c = float(items[5])
+    thickness = float(items[6])
 
-    (x, y, z) = draw_box(center, a, b, c)
-    (x, y, z) = rotate_xyz(x, y, z, comp)
+    if(thickness > 0):
+        (x_outer, y_outer, z_outer) = draw_hollow_box(center, a, b, c)
+        (x_outer, y_outer, z_outer) = rotate_xyz(x_outer, y_outer, z_outer, comp)
+        (x_inner, y_inner, z_inner) = draw_hollow_box(center, a-thickness, b-thickness, c)
+        (x_inner, y_inner, z_inner) = rotate_xyz(x_inner, y_inner, z_inner, comp)
 
-    ax.plot_surface(z, x, y, color=color, alpha=transparency)
+        ax.plot_surface(z_outer, x_outer, y_outer, color=color, alpha=transparency)
+        ax.plot_surface(z_inner, x_inner, y_inner, color=color, alpha=transparency)
+
+    else:
+        (x, y, z) = draw_box(center, a, b, c)
+        (x, y, z) = rotate_xyz(x, y, z, comp)
+        ax.plot_surface(z, x, y, color=color, alpha=transparency)
 
 
 def process_polygon(ax, line, comp, color, transparency):
@@ -300,7 +326,11 @@ def process_polygon(ax, line, comp, color, transparency):
         z_max_polygon = max(z_max_polygon, y)
         z_min_polygon = min(z_min_polygon, y)
 
-    pc = art3d.Poly3DCollection(vertices_arr[faces], facecolors=color, edgecolors="black", linewidths=0.1, alpha=transparency)
+    pc = art3d.Poly3DCollection(vertices_arr[faces],
+                                facecolors=color,
+                                edgecolors="black",
+                                linewidths=0.1,
+                                alpha=transparency)
     ax.add_collection(pc)
 
 '''END NEW CODE 3D-visualization. REMOVE OLD CODE AND THIS COMMENT AFTER CONVERTING COMPONENTS'''

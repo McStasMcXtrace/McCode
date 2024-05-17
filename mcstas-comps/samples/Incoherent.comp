@@ -448,19 +448,38 @@ TRACE
 
 MCDISPLAY
 %{
-  if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {	/* OFF file */
-    off_display(offdata);
+  /*NEW 3D IMPLEMENTATION WITH HOLLOW USING THICKNESS*/
+  if(mcdotrace==2){
+      if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {	/* OFF file */
+            off_display(offdata);
+      }
+      else
+        if (radius > 0 &&  yheight) {	/* cylinder */
+          mcdis_new_cylinder(0,0,0,radius,yheight,thickness,0,0,1,0);
+      }
+      else if (xwidth && yheight) { 	/* box/rectangle XY */
+          mcdis_new_box(0,0,0,xwidth,yheight,zdepth,thickness);
+      }
+      else if (radius > 0 && !yheight) {	/* sphere */
+          sphere(0,0,0,radius);
+      }
   }
-  else
-    if (radius > 0 &&  yheight) {	/* cylinder */
-      cylinder(0,0,0,radius,yheight,0, 0,1,0);
-      cylinder(0,0,0,radius-thickness,yheight,0, 0,1,0);
-  }
-  else if (xwidth && yheight) { 	/* box/rectangle XY */
-      box(0,0,0,xwidth, yheight, zdepth);
-  }
-  else if (radius > 0 && !yheight) {	/* sphere */
-      sphere(0,0,0,radius);
+  /*OLD IMPLEMENTATION*/
+  else{
+      if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {	/* OFF file */
+        off_display(offdata);
+      }
+      else
+        if (radius > 0 &&  yheight) {	/* cylinder */
+          cylinder(0,0,0,radius,yheight,0, 0,1,0);
+          cylinder(0,0,0,radius-thickness,yheight,0, 0,1,0);
+      }
+      else if (xwidth && yheight) { 	/* box/rectangle XY */
+          box(0,0,0,xwidth, yheight, zdepth);
+      }
+      else if (radius > 0 && !yheight) {	/* sphere */
+          sphere(0,0,0,radius);
+      }
   }
 %}
 

@@ -2570,13 +2570,6 @@ void mcdis_rectangle(char* plane, double x, double y, double z,
   }
 }
 
-/*  draws a box with center at (x, y, z) and
-    width (deltax), height (deltay), length (deltaz) */
-void mcdis_box(double x, double y, double z,
-	       double width, double height, double length){
-  printf("MCDISPLAY: box(%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length);
-}
-
 void mcdis_circle(char *plane, double x, double y, double z, double r){
   printf("MCDISPLAY: circle('%s',%g,%g,%g,%g)\n", plane, x, y, z, r);
 }
@@ -2607,12 +2600,72 @@ void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, 
     }
 }
 
-/* Draws a cylinder with center at (x,y,z) with extent (r,height).
- * The cylinder axis is along the vector nx,ny,nz.*/
+/*  NEW 3D IMPLEMENTATION OF BOX SUPPORTS HOLLOW ALSO
+    draws a box with center at (x, y, z) and
+    width (deltax), height (deltay), length (deltaz) */
+void mcdis_new_box(double x, double y, double z,
+	       double width, double height, double length, double thickness){
+  printf("MCDISPLAY: box(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness);
+}
+
+/*  OLD IMPLEMENTATION
+    draws a box with center at (x, y, z) and
+    width (deltax), height (deltay), length (deltaz) */
+void mcdis_box(double x, double y, double z,
+	       double width, double height, double length){
+
+  mcdis_rectangle("xy", x, y, z-length/2, width, height);
+  mcdis_rectangle("xy", x, y, z+length/2, width, height);
+  mcdis_line(x-width/2, y-height/2, z-length/2,
+	     x-width/2, y-height/2, z+length/2);
+  mcdis_line(x-width/2, y+height/2, z-length/2,
+	     x-width/2, y+height/2, z+length/2);
+  mcdis_line(x+width/2, y-height/2, z-length/2,
+	     x+width/2, y-height/2, z+length/2);
+  mcdis_line(x+width/2, y+height/2, z-length/2,
+	     x+width/2, y+height/2, z+length/2);
+}
+
+
+/* OLD IMPLEMENTATION
+Draws a cylinder with center at (x,y,z) with extent (r,height).
+ * The cylinder axis is along the vector nx,ny,nz.
+ * After converting comps to 3D implementation remove this*/
 void mcdis_cylinder( double x, double y, double z,
         double r, double height, int N, double nx, double ny, double nz){
-    printf("MCDISPLAY: cylinder(%g, %g, %g, %g, %g, %d, %g, %g, %g)\n",
-       x, y, z, r, height, N, nx, ny, nz);
+    int i;
+    /*no lines make little sense - so trigger the default*/
+    if(N<=0) N=5;
+
+    NORM(nx,ny,nz);
+    double h_2=height/2.0;
+    mcdis_Circle(x+nx*h_2,y+ny*h_2,z+nz*h_2,r,nx,ny,nz);
+    mcdis_Circle(x-nx*h_2,y-ny*h_2,z-nz*h_2,r,nx,ny,nz);
+
+    double mx,my,mz;
+    /*generate perpendicular vector using (nx,ny,nz) and (0,1,0)*/
+    if(nx==0 && ny && nz==0){
+        mx=my=0;mz=1;
+    }else{
+        vec_prod(mx,my,mz, 0,1,0, nx,ny,nz);
+        NORM(mx,my,mz);
+    }
+    /*draw circle*/
+    for (i=0; i<24; i++){
+        double ux,uy,uz;
+        rotate(ux,uy,uz, mx,my,mz, i*2*PI/24, nx,ny,nz);
+        mcdis_line(x+nx*h_2+ux*r, y+ny*h_2+uy*r, z+nz*h_2+uz*r,
+                 x-nx*h_2+ux*r, y-ny*h_2+uy*r, z-nz*h_2+uz*r);
+    }
+}
+
+/* NEW 3D IMPLEMENTATION ALSO SUPPORTING HOLLOW
+Draws a cylinder with center at (x,y,z) with extent (r,height).
+ * The cylinder axis is along the vector nx,ny,nz.*/
+void mcdis_new_cylinder( double x, double y, double z,
+        double r, double height, double thickness, double t, double nx, double ny, double nz){
+      printf("MCDISPLAY: cylinder(%g, %g, %g, %g, %g, %g, %g, %g, %g)\n",
+         x, y, z, r, height, thickness, nx, ny, nz);
 }
 
 /* Draws a cone with center at (x,y,z) with extent (r,height).

@@ -2,18 +2,14 @@
 
 from sys import stdin, stderr
 from math import pi, cos, sin
-
-from matplotlib.patches import Circle
-from mpl_toolkits.mplot3d import art3d
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from numpy import dot, array
 import numpy as np
 from scipy.linalg import norm
 from scipy.spatial.transform import Rotation as R
-from scipy.spatial import ConvexHull
 
 #level of detail in linspace
 num_samples = 100
+
 
 def parse_multiline(line):
     ''' Parse a multiline with size as first elements and n points as rest '''
@@ -34,6 +30,7 @@ def rotate(point, inps):
     (origin, rotm)=inps
     return dot(point, rotm) + origin
 
+
 def rotate_points(points, inps):
     ''' Rotate and move v according to origin and rotation matrix '''
     (origin, rotm)=inps
@@ -50,14 +47,27 @@ def rotate_points(points, inps):
         y.append(p[1])
         z.append(p[2])
         count +=1
-    x.append(x[0]);
-    y.append(y[0]);
-    z.append(z[0]);
-    return x,y,z
+    x.append(x[0])
+    y.append(y[0])
+    z.append(z[0])
+    return x, y, z
 
 '''BEGIN NEW CODE 3D-visualization. REMOVE OLD CODE AND THIS COMMENT AFTER CONVERTING COMPS'''
 
 ''' Parse a polygon with size as first elements and n points as rest '''
+
+
+def rotate_xyz(x, y, z, comp):
+    for i in range(len(x)):
+        for j in range(len(x)):
+            point = np.array([x[i][j], y[i][j], z[i][j]])
+            rotated_point = rotate(point, comp)
+            x[i][j] = rotated_point[0]
+            y[i][j] = rotated_point[1]
+            z[i][j] = rotated_point[2]
+    return x, y, z
+
+
 def parse_polygon(line):
     elems = [float(x) for x in line.split(',')]
     count = int(elems.pop(0))
@@ -70,15 +80,6 @@ def parse_polygon(line):
     points.append(points[0])
     return points
 
-def rotate_xyz(x, y, z, comp):
-    for i in range(len(x)):
-        for j in range(len(x)):
-            point = np.array([x[i][j], y[i][j], z[i][j]])
-            rotated_point = rotate(point, comp)
-            x[i][j] = rotated_point[0]
-            y[i][j] = rotated_point[1]
-            z[i][j] = rotated_point[2]
-    return (x, y, z)
 
 def draw_sphere(center, radius):
     u = np.linspace(0, 2 * np.pi, num_samples)
@@ -87,6 +88,7 @@ def draw_sphere(center, radius):
     y = center[1] + radius * np.outer(np.sin(u), np.sin(v))
     z = center[2] + radius * np.outer(np.ones(np.size(u)), np.cos(v))
     return x, y, z
+
 
 def draw_cylinder(center, radius, height, axis_vector):
     axis_vector_normalized = axis_vector / np.linalg.norm(axis_vector)
@@ -124,6 +126,7 @@ def draw_cylinder(center, radius, height, axis_vector):
 
     return x, y, z
 
+
 def draw_disc(center, radius, axis_vector):
     # Normalize the axis vector
     axis_vector_normalized = axis_vector / np.linalg.norm(axis_vector)
@@ -154,6 +157,39 @@ def draw_disc(center, radius, axis_vector):
     z = center[2] + x_plane * n1[2] + y_plane * n2[2]
 
     return x, y, z
+
+
+def draw_annulus(center, outer_radius, inner_radius, axis_vector):
+    # Normalize the axis vector
+    axis_vector_normalized = axis_vector / np.linalg.norm(axis_vector)
+
+    # Create an arbitrary vector perpendicular to the axis vector
+    if (axis_vector_normalized == np.array([1, 0, 0])).all():
+        not_v = np.array([0, 1, 0])
+    else:
+        not_v = np.array([1, 0, 0])
+
+    # Compute two orthogonal vectors in the plane perpendicular to the axis vector
+    n1 = np.cross(axis_vector_normalized, not_v)
+    n1 /= np.linalg.norm(n1)  # Normalize n1
+    n2 = np.cross(axis_vector_normalized, n1)
+
+    # Polar coordinates in the disc's plane
+    theta = np.linspace(0, 2*np.pi, num_samples)
+    r = np.linspace(0, inner_radius, num_samples)
+    theta, r = np.meshgrid(theta, r)
+
+    # Calculate coordinates in the disc's plane
+    x_plane = (outer_radius-r) * np.cos(theta)
+    y_plane = (outer_radius-r) * np.sin(theta)
+
+    # Transform these coordinates to align with the given axis_vector
+    x = center[0] + x_plane * n1[0] + y_plane * n2[0]
+    y = center[1] + x_plane * n1[1] + y_plane * n2[1]
+    z = center[2] + x_plane * n1[2] + y_plane * n2[2]
+
+    return x, y, z
+
 
 def draw_cone(center, radius, height, axis_vector):
     # Normalize the axis vector
@@ -190,7 +226,20 @@ def draw_cone(center, radius, height, axis_vector):
 
     return x, y, z
 
+
 def draw_box(center, a, b, c):
+    #spherical coordinates cube
+    phi = np.arange(1,10,2)*np.pi/4
+    Phi, Theta = np.meshgrid(phi, phi)
+    x = center[0] + (np.cos(Phi)*np.sin(Theta))*a
+    y = center[1] + (np.sin(Phi)*np.sin(Theta))*b
+    z = center[2] + (np.cos(Theta)/np.sqrt(2))*c
+
+    return x, y, z
+
+
+def draw_hollow_box(center, a, b, c):
+    #not implemented yet
     #spherical coordinates cube
     phi = np.arange(1,10,2)*np.pi/4
     Phi, Theta = np.meshgrid(phi, phi)
