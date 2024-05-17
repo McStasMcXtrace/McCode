@@ -457,7 +457,7 @@ def parse_header(text):
 
 def read_define_instr(file):
     '''
-    Reads lines from file obj until DEFINE INSTRUMENT, then reads lines until \).
+    Reads lines from file obj until DEFINE INSTRUMENT, then reads lines until ")".
     Parses this statement and returns the result in organized form.
     '''
     lines = []
