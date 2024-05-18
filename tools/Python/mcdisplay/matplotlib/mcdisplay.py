@@ -275,13 +275,9 @@ def process_box(ax, line, comp, color, transparency):
     thickness = float(items[6])
 
     if (thickness > 0):
-        (x_outer, y_outer, z_outer) = draw_hollow_box(center, a, b, c)
-        (x_outer, y_outer, z_outer) = rotate_xyz(x_outer, y_outer, z_outer, comp)
-        (x_inner, y_inner, z_inner) = draw_hollow_box(center, a - thickness, b - thickness, c)
-        (x_inner, y_inner, z_inner) = rotate_xyz(x_inner, y_inner, z_inner, comp)
-
-        ax.plot_surface(z_outer, x_outer, y_outer, color=color, alpha=transparency)
-        ax.plot_surface(z_inner, x_inner, y_inner, color=color, alpha=transparency)
+       faces, vertices = draw_hollow_box(center, a, b, c, thickness)
+       rotated_vertices = rotate_polygon(vertices, comp)
+       show_polygon(ax, color, transparency, faces, rotated_vertices)
 
     else:
         (x, y, z) = draw_box(center, a, b, c)
@@ -301,16 +297,30 @@ def process_polygon(ax, line, comp, color, transparency):
     vertices = data['vertices']
     faces = np.array([face['face'] for face in data['faces']])
 
-    vertices_arr = np.zeros((len(vertices), 3))
+    vertices_arr = np.array([[vertex['x'], vertex['y'], vertex['z']] for vertex in vertices])
 
-    for i, vertex in enumerate(vertices):
-        (x, y, z) = vertex['x'], vertex['y'], vertex['z']
+    rotated_vertices_arr = rotate_polygon(vertices_arr, comp)
 
-        (x, y, z) = rotate([x, y, z], comp)
+    show_polygon(ax, color, transparency, faces, rotated_vertices_arr)
 
-        vertices_arr[i] = [z, x, y]
 
-        #for setting axis limits
+def show_polygon(ax, color, transparency, faces, rotated_vertices_arr):
+    pc = art3d.Poly3DCollection(rotated_vertices_arr[faces],
+                                facecolors=color,
+                                edgecolors="black",
+                                linewidths=0.1,
+                                alpha=transparency)
+    ax.add_collection(pc)
+
+
+def rotate_polygon(vertices_arr, comp):
+    global x_max_polygon, x_min_polygon, y_max_polygon, y_min_polygon, z_max_polygon, z_min_polygon
+    rotated_vertices_arr = np.zeros((len(vertices_arr), 3))
+    for i, vertex in enumerate(vertices_arr):
+        (x, y, z) = rotate(vertex, comp)
+        rotated_vertices_arr[i] = [z, x, y]
+
+        # for setting axis limits
         x_max_polygon = max(x_max_polygon, z)
         x_min_polygon = min(x_min_polygon, z)
         y_max_polygon = max(y_max_polygon, x)
@@ -318,13 +328,7 @@ def process_polygon(ax, line, comp, color, transparency):
         z_max_polygon = max(z_max_polygon, y)
         z_min_polygon = min(z_min_polygon, y)
 
-    pc = art3d.Poly3DCollection(vertices_arr[faces],
-                                facecolors=color,
-                                edgecolors="black",
-                                linewidths=0.1,
-                                alpha=transparency)
-    ax.add_collection(pc)
-
+    return rotated_vertices_arr
 
 '''END NEW CODE 3D-visualization. REMOVE OLD CODE AND THIS COMMENT AFTER CONVERTING COMPONENTS'''
 

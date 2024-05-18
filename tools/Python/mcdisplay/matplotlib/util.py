@@ -4,7 +4,6 @@ from sys import stdin, stderr
 from math import pi, cos, sin
 from numpy import dot, array
 import numpy as np
-from scipy.spatial.transform import Rotation as R
 
 #level of detail in linspace
 num_samples = 100
@@ -55,14 +54,22 @@ def rotate_points(points, inps):
 
 
 def rotate_xyz(x, y, z, comp):
-    for i in range(len(x)):
-        for j in range(len(x)):
-            point = np.array([x[i][j], y[i][j], z[i][j]])
+    if x.ndim == 2:  # Handle 2D arrays
+        for i in range(len(x)):
+            for j in range(len(x[0])):
+                point = np.array([x[i][j], y[i][j], z[i][j]])
+                rotated_point = rotate(point, comp)
+                x[i][j] = rotated_point[0]
+                y[i][j] = rotated_point[1]
+                z[i][j] = rotated_point[2]
+    else:  # Handle 1D arrays
+        for i in range(len(x)):
+            point = np.array([x[i], y[i], z[i]])
             rotated_point = rotate(point, comp)
-            x[i][j] = rotated_point[0]
-            y[i][j] = rotated_point[1]
-            z[i][j] = rotated_point[2]
-    return x, y, z
+            x[i] = rotated_point[0]
+            y[i] = rotated_point[1]
+            z[i] = rotated_point[2]
+    return (x, y, z)
 
 
 def draw_sphere(center, radius):
@@ -158,14 +165,63 @@ def draw_box(center, a, b, c):
     return x, y, z
 
 
-def draw_hollow_box(center, a, b, c):
-    phi = np.arange(1, 10, 2)*np.pi/4
-    phi, theta = np.meshgrid(phi, phi)
-    x = center[0] + np.cos(phi)*a
-    y = center[1] + np.sin(phi)*b
-    z = center[2] + (np.cos(theta)/np.sqrt(2))*c
+def draw_hollow_box(center, a, b, c, thickness):
+    outer_vertices = np.array([
+        [a, 0, 0],
+        [0, b, 0],
+        [0, 0, c],
+        [0, 0, 0],
+        [a, 0, c],
+        [a, b, 0],
+        [a, b, c],
+        [0, b, c]
+    ], dtype=float)
 
-    return x, y, z
+    inner_vertices = np.array([
+        [a-thickness, 0+thickness, 0],
+        [0+thickness, b-thickness, 0],
+        [0+thickness, 0+thickness, c],
+        [0+thickness, 0+thickness, 0],
+
+        [a-thickness, 0+thickness, c],
+        [a-thickness, b-thickness, 0],
+        [a-thickness, b-thickness, c],
+        [0+thickness, b-thickness, c]
+    ], dtype=float)
+
+    # Adjust outer vertices to center
+    outer_vertices -= [a/2, b/2, c/2]
+    inner_vertices -= [a/2, b/2, c/2]
+
+    # Translate vertices to the center position
+    outer_vertices += center
+    inner_vertices += center
+
+    # Combine outer and inner vertices
+    vertices = np.vstack([outer_vertices, inner_vertices])
+
+    faces = [
+        [0, 4, 6, 5],
+        [1, 5, 6, 7],
+        [3, 0, 4, 2],
+        [3, 1, 7, 2],
+
+        [8, 12, 14, 13],
+        [9, 13, 14, 15],
+        [11, 8, 12, 10],
+        [11, 9, 15, 10],
+
+        [0, 8, 11, 3],
+        [3, 11, 9, 1],
+        [1, 9, 13, 5],
+        [5, 13, 8, 0],
+
+        [4, 12, 10, 2],
+        [2, 10, 15, 7],
+        [7, 15, 14, 6],
+        [6, 14, 12, 4]
+    ]
+    return faces, vertices
 
 def draw_rectangular_lid(center, outer_a, outer_b, inner_a, inner_b):
     phi = np.arange(1, 10, 2)*np.pi/4
@@ -178,14 +234,15 @@ def draw_rectangular_lid(center, outer_a, outer_b, inner_a, inner_b):
 
 def draw_new_circle(center, radius, axis_vector):
     theta = np.linspace(0, 2 * np.pi, num_samples)
-    theta = np.meshgrid(theta, theta)
 
-    x_plane = center[0] + radius * np.cos(theta)
-    y_plane = center[1] + radius * np.sin(theta)
+    x = radius * np.cos(theta)
+    y = radius * np.sin(theta)
+    z = np.zeros_like(x)
 
-    (x, y, z) = center_and_align_with_axis_vector(center, x_plane, y_plane, axis_vector)
+    (x, y, z) = center_and_align_with_axis_vector(center, x, y, axis_vector)
 
     return x, y, z
+
 
 def center_and_align_with_axis_vector(center, x_plane, y_plane, axis_vector):
     # Calculate perpendicular vectors
