@@ -51,6 +51,7 @@ double IntermediateCnts;
 time_t StartTime;
 time_t EndTime;
 time_t CurrentTime;
+char infostring[64];
 %}
 
 INITIALIZE
@@ -67,6 +68,13 @@ fprintf(stdout, "[%s] Initialize\n", instrument_name);
   #ifdef OPENACC
   time(&StartTime);
   #endif
+
+#ifdef USE_MPI
+  sprintf(infostring, "(%i MPI processes) ", mpi_node_count);
+#else
+  sprintf(infostring, "");
+#endif
+
 %}
 
 TRACE
@@ -89,9 +97,7 @@ TRACE
       IntermediateCnts = 0;
       MPI_MASTER(
         fprintf(stdout, "\nTrace ETA ");
-	#ifdef USE_MPI
-	fprintf(stdout, "(%i MPI processes) ", mpi_node_count);
-	#endif
+	fprintf(stdout, "%s", infostring);
         if (difftime(EndTime,StartTime) < 60.0)
           fprintf(stdout, "%g [s] ", difftime(EndTime,StartTime));
         else if (difftime(EndTime,StartTime) > 3600.0)

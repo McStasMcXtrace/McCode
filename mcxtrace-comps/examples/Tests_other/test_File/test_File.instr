@@ -1,0 +1,48 @@
+/*******************************************************************************
+*
+* McXtrace, x-ray tracing package
+*         Copyright, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*         Synchrotron SOLEIL, Saint-Aubin, France
+*
+* Instrument: test_File
+*
+* %Identification
+* Written by: Greg Tucker
+* Date: 2024
+* Origin: ESS
+* %INSTRUMENT_SITE: Tests_other
+*
+* Demonstrates how to use the File.comp component for storing instrument 
+* input-files as METADATA blocks
+*
+* %Description
+* Demonstrates how to use the File.comp component for storing instrument 
+* input-files as METADATA blocks
+*
+* %Link
+* From https://github.com/g5t/mccode-file
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT test_File()
+TRACE
+COMPONENT Origin = Progress_bar() AT (0, 0, 0) ABSOLUTE
+METADATA "mimetype/text" origin_info %{
+# Generated file
+Here is some data to go into a file.
+%}
+
+COMPONENT source = Source_flat(E0=40, dE=0.01, focus_xw=0.0001, focus_yh=0.0001, radius=0.0001, dist=1
+) AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT first_file = File(filename="first.txt", metadatakey="stored", keep=1) AT (0, 0, 0) ABSOLUTE
+METADATA txt stored %{
+Store text to write in first.txt
+%}
+
+COMPONENT second_file = File(filename="second.txt", metadatakey="Origin:origin_info", keep=1)
+AT (0, 0, 0) ABSOLUTE
+
+END
+

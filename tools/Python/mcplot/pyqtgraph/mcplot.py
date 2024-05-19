@@ -6,6 +6,7 @@ import argparse
 import logging
 import os
 import sys
+import subprocess
 
 import plotfuncs
 
@@ -28,6 +29,27 @@ def main(args):
             simfile = ''
         else:
             simfile = args.simulation[0]
+            h5file = None
+            # Check if we are prompted with a h5 file or a directory with mccode.h5 index
+            # -> try spawning nexpy
+            if ('mccode.h5' in args.simulation[0]):
+                h5file = args.simulation[0]
+            if (os.path.isdir(args.simulation[0]) and
+                    os.path.isfile(os.path.join(args.simulation[0],'mccode.h5')) and
+                not os.path.isfile(os.path.join(args.simulation[0],'mccode.sim'))):
+                h5file = os.path.join(args.simulation[0],'mccode.h5')
+            if (h5file):
+                if not os.path.isabs(h5file):
+                    h5file = os.path.join(os.getcwd(),h5file)
+                try:
+                    cmd = 'nexpy -f ' + h5file
+                    print('Spawning nexpy: ' + cmd)
+                    sub=subprocess.Popen(cmd, shell=True)
+                    sub.wait()
+                except:
+                    print("Could not launch nexpy on "+ h5file)
+                quit()
+
         if args.test:
             test_decfuncs(simfile)
         
