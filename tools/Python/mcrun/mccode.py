@@ -273,6 +273,12 @@ class McStas:
                         libflags.append(flag)
                 # Everthing else
                 else:
+                    if flag.startswith("-std="): # -std
+                        flag.replace("-std=","/std:")
+                    if flag.startswith("-D"): # -D defines
+                        flag.replace("-D","/D")
+                    if flag.startswith("-U"): # -U undefines
+                        flag.replace("-U","/U")
                     otherflags.append(flag)
 
             cflags = lexer.join(otherflags) + " /link " + lexer.join(libflags)
