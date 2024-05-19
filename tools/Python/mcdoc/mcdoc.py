@@ -917,11 +917,19 @@ def main(args):
 
     if args.dir==None and args.install==False and args.searchterm==None and args.manual==False and args.comps==False and args.web==False:
         ''' browse system docs and exit '''
+        if not os.path.isfile(os.path.join(usedir,mccode_config.get_mccode_prefix()+'doc.html')):
+            try:
+                sub=subprocess.Popen('%s%s -i' % (mccode_config.get_mccode_prefix(), 'doc'), shell=True)
+                sub.wait()
+            except:
+                print("Could not write main mcdoc page, you may need admin permissions!")
+                quit()
+
         subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,mccode_config.get_mccode_prefix()+'doc.html')), shell=True)
         quit()
 
     elif args.manual == True:
-        ''' open manual and exit ''' 
+        ''' open manual and exit '''
         subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'doc','manuals',mccode_config.configuration['MCCODE']+'-manual.pdf')), shell=True)
         quit()
 

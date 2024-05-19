@@ -1129,13 +1129,11 @@ static void mcinfo_out(char *pre, FILE *f)
 
   fprintf(f, "%sTrace_enabled: %s\n", pre, traceenabled ? "yes" : "no");
   fprintf(f, "%sDefault_main: %s\n",  pre, defaultmain ?  "yes" : "no");
-  fprintf(f, "%sEmbedded_runtime: %s\n", pre,
 #ifdef MC_EMBEDDED_RUNTIME
-         "yes"
+  fprintf(f, "%sEmbedded_runtime: %s\n", pre, "yes");
 #else
-         "no"
+  fprintf(f, "%sEmbedded_runtime: %s\n", pre, "no");
 #endif
-         );
 
   fflush(f);
 } /* mcinfo_out */
@@ -1631,13 +1629,11 @@ static void mcinfo_out_nexus(NXhandle f)
 
       nxprintattr(f, "Trace_enabled", traceenabled ? "yes" : "no");
       nxprintattr(f, "Default_main",  defaultmain ?  "yes" : "no");
-      nxprintattr(f, "Embedded_runtime",
-  #ifdef MC_EMBEDDED_RUNTIME
-           "yes"
-  #else
-           "no"
-  #endif
-           );
+#ifdef MC_EMBEDDED_RUNTIME
+      nxprintattr(f, "Embedded_runtime", "yes");
+#else
+      nxprintattr(f, "Embedded_runtime", "no");
+#endif
 
       /* add instrument source code when available */
       buffer = mcinfo_readfile(instrument_source);
@@ -1806,8 +1802,10 @@ int mcdetector_out_axis_nexus(NXhandle f, char *label, char *var, int rank, long
 {
   if (!f || length <= 1 || mcdisable_output_files || max == min) return(NX_OK);
   else {
-    double axis[length];
-    char valid[CHAR_BUF_LENGTH];
+    double *axis;
+    axis=malloc(sizeof(double)*length);
+    char *valid;
+    valid=malloc(sizeof(char)*CHAR_BUF_LENGTH);
     int dim=(int)length;
     int i;
     int nprimary=1;
@@ -1821,6 +1819,8 @@ int mcdetector_out_axis_nexus(NXhandle f, char *label, char *var, int rank, long
     if (NXopendata(f, valid) != NX_OK) {
       fprintf(stderr, "Warning: could not open axis rank %i '%s' (NeXus)\n",
         rank, valid);
+      free(axis);
+      free(valid);
       return(NX_ERROR);
     }
     /* put the axis and its attributes */
@@ -1831,7 +1831,8 @@ int mcdetector_out_axis_nexus(NXhandle f, char *label, char *var, int rank, long
     nxprintattr(f, "units",      var);
     NXputattr  (f, "primary",    &nprimary, 1, NX_INT32);
     NXclosedata(f);
-
+    free(axis);
+    free(valid);
     return(NX_OK);
   }
 } /* mcdetector_out_axis_nexus */
