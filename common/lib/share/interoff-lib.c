@@ -1187,7 +1187,7 @@ void off_display(off_struct data)
 {
     if(mcdotrace==2){
     // Estimate size of the JSON string
-    const int VERTEX_OVERHEAD = 90;
+    const int VERTEX_OVERHEAD = 30;
     const int FACE_OVERHEAD_BASE = 20;
     const int FACE_INDEX_OVERHEAD = 15;
     int estimated_size = 256; // Base size
@@ -1209,7 +1209,7 @@ void off_display(off_struct data)
     ptr += sprintf(ptr, "{ \"vertices\": [");
 
     for (int i = 0; i < data.vtxSize; i++) {
-        ptr += sprintf(ptr, "{\"x\": %g, \"y\": %g, \"z\": %g}", data.vtxArray[i].x, data.vtxArray[i].y, data.vtxArray[i].z);
+        ptr += sprintf(ptr, "[%g, %g, %g]", data.vtxArray[i].x, data.vtxArray[i].y, data.vtxArray[i].z);
         if (i < data.vtxSize - 1) {
             ptr += sprintf(ptr, ", ");
         }

@@ -288,18 +288,16 @@ def process_polygon(ax, line, comp, color, transparency):
     data = json.loads(json_data)
 
     # Extract vertices and faces from the parsed JSON
-    vertices = data['vertices']
+    vertices = np.array(data['vertices'])
     faces = np.array([face['face'] for face in data['faces']])
 
-    vertices_arr = np.array([[vertex['x'], vertex['y'], vertex['z']] for vertex in vertices])
+    rotated_vertices = rotate_polygon(vertices, comp)
 
-    rotated_vertices_arr = rotate_polygon(vertices_arr, comp)
-
-    show_polygon(ax, color, transparency, faces, rotated_vertices_arr)
+    show_polygon(ax, color, transparency, faces, rotated_vertices)
 
 
-def show_polygon(ax, color, transparency, faces, rotated_vertices_arr):
-    pc = art3d.Poly3DCollection(rotated_vertices_arr[faces],
+def show_polygon(ax, color, transparency, faces, rotated_vertices):
+    pc = art3d.Poly3DCollection(rotated_vertices[faces],
                                 facecolors=color,
                                 edgecolors="black",
                                 linewidths=0.1,
