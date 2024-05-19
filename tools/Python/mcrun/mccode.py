@@ -240,6 +240,12 @@ class McStas:
                 # Insert NEXUSFLAGS if instrument/comps request this
                 flags = re.sub(r'\@NEXUSFLAGS\@', mccode_config.compilation['NEXUSFLAGS'], flags)
 
+                # Insert GSLFLAGS if instrument/comps request this
+                flags = re.sub(r'\@GSLFLAGS\@', mccode_config.compilation['GSLFLAGS'], flags)
+
+                # Insert XRLFLAGS if instrument/comps request this (McXtrace only)
+                flags = re.sub(r'\@XRLFLAGS\@', mccode_config.compilation['XRLFLAGS'], flags)
+
                 # Support for legacy @MCCODE_LIB@ symbol, with Unix-slashes
                 flags = re.sub(r'\@MCCODE_LIB\@', re.sub(r'\\', '/', MCCODE_LIB), flags)
 
