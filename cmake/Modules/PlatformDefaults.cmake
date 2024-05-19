@@ -80,6 +80,32 @@ function( detect_platform_variables resultvarname )
   endif()
   provide_var( IDFGEN )
 
+  #gsl-flags:
+  set( GSLFLAGS "-lgsl -lgslcblas" )
+  if ( MCCODE_BUILD_CONDA_PKG )
+    if ( WINDOWS )
+      if ( "${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC" )
+        set( GSLFLAGS "/I\$\{CONDA_PREFIX\}/Library/include /link /LIBPATH:\$\{CONDA_PREFIX\}/Library/lib gsl.lib gslcblas.lib" )
+      endif()
+    endif()
+  endif()
+  provide_var( GSLFLAGS )
+
+  #xraylib-flags:
+  if ( BUILD_MCSTAS )
+    set( XRLFLAGS "" )
+  else()
+    set( XRLFLAGS "-lxrl" )
+    if ( MCCODE_BUILD_CONDA_PKG )
+      if ( WINDOWS )
+	if ( "${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC" )
+          set( GSLFLAGS "/I\$\{CONDA_PREFIX\}/Library/include /link /LIBPATH:\$\{CONDA_PREFIX\}/Library/lib xrl.lib" )
+	endif()
+      endif()
+    endif()
+  endif()
+  provide_var( XRLFLAGS )
+
   #C compiler:
   set( TOOLS_CC "${CMAKE_C_COMPILER}" )
   provide_var( TOOLS_CC )
