@@ -34,7 +34,7 @@ MC_START = 'MCDISPLAY: start'
 MC_END = 'MCDISPLAY: end'
 MC_STOP = 'INSTRUMENT END:'
 
-colors = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow']
+COLORS = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow']
 #transparency will be a user controlled parameter eventually
 transparency = 1
 #for setting axis limits when using polygon
@@ -43,7 +43,6 @@ x_min_polygon = y_min_polygon = z_min_polygon = float('inf')
 
 
 def parse_trace():
-    print(f'colors: {colors}')
     ''' Parse McStas trace output from stdin and write results
         to file objects csv_comps and csv_lines '''
 
@@ -72,9 +71,7 @@ def parse_trace():
     skip = False
     # we are drawing a neutron
     active = False
-    xstate = []
-    ystate = []
-    zstate = []
+    xstate, ystate, zstate = [], [], []
 
     while True:
         # read line
@@ -97,10 +94,7 @@ def parse_trace():
 
         # switch perspective
         elif line.startswith(MC_COMP):
-            if color < len(colors) - 1:
-                color += 1
-            else:
-                color = 0
+            color = (color + 1) % len(COLORS)
             comp = comps[line[len(MC_COMP) + 1:]]
 
         elif line.startswith(MC_COMP_SHORT):
@@ -110,34 +104,32 @@ def parse_trace():
 
         #process primitives
         elif line.startswith(MC_LINE):
-            process_multiline(ax, line, colors[color], comp, transparency)
+            process_multiline(ax, line, COLORS[color], comp, transparency)
 
         elif line.startswith(MC_POLYGON):
-            process_polygon(ax, line, comp, colors[color], transparency)
+            process_polygon(ax, line, comp, COLORS[color], transparency)
 
         elif line.startswith(MC_CIRCLE):
             process_circle(ax, line, color, comp, transparency)
 
         elif line.startswith(MC_CONE):
-            process_cone(ax, line, comp, colors[color], transparency)
+            process_cone(ax, line, comp, COLORS[color], transparency)
 
         elif line.startswith(MC_SPHERE):
-            process_sphere(ax, line, comp, colors[color], transparency)
+            process_sphere(ax, line, comp, COLORS[color], transparency)
 
         elif line.startswith(MC_BOX):
-            process_box(ax, line, comp, colors[color], transparency)
+            process_box(ax, line, comp, COLORS[color], transparency)
 
         elif line.startswith(MC_CYLINDER):
-            process_cylinder(ax, line, comp, colors[color], transparency)
+            process_cylinder(ax, line, comp, COLORS[color], transparency)
 
         # activate neutron when it enters
         elif line.startswith(MC_ENTER):
             prev = None
             skip = True
             active = True
-            xstate = []
-            ystate = []
-            zstate = []
+            xstate, ystate, zstate = [], [], []
 
         # deactivate neutron when it leaves
         elif line.startswith(MC_LEAVE):
@@ -181,22 +173,23 @@ def process_circle(ax, line, color, comp, transparency):
     pos = [float(x) for x in items[1:4]]
     rad = float(items[4])
     (x, y, z) = draw_circle(pla, pos, rad, comp)
-    ax.plot(z, x, y, colors[color], alpha=transparency)
+    ax.plot(z, x, y, COLORS[color], alpha=transparency)
 
 
 def process_multiline(ax, line, color, comp, transparency):
     points = parse_multiline(line[len(MC_LINE):].strip('()'))
     (x, y, z) = rotate_points(points, comp)
-    ax.plot(z, x, y, colors[color], alpha=transparency)
+    ax.plot(z, x, y, COLORS[color], alpha=transparency)
 
 
 def process_sphere(ax, line, comp, color, transparency):
     items = line[len(MC_SPHERE):].strip('()').split(',')
-    # center and radius
     center = [float(x) for x in items[0:3]]
     radius = float(items[3])
+
     (x, y, z) = draw_sphere(center, radius)
     (x, y, z) = rotate_xyz(x, y, z, comp)
+
     ax.plot_surface(z, x, y, color=color, alpha=transparency)
 
 
@@ -207,6 +200,7 @@ def process_cylinder(ax, line, comp, color, transparency):
     height = float(items[4])
     thickness = float(items[5])
     axis_vector = [float(x) for x in items[6:9]]
+
     (x, y, z) = draw_cylinder(center, radius, height, axis_vector)
     (x, y, z) = rotate_xyz(x, y, z, comp)
 
@@ -274,7 +268,7 @@ def process_box(ax, line, comp, color, transparency):
     c = float(items[5])
     thickness = float(items[6])
 
-    if (thickness > 0):
+    if thickness > 0:
        faces, vertices = draw_hollow_box(center, a, b, c, thickness)
        rotated_vertices = rotate_polygon(vertices, comp)
        show_polygon(ax, color, transparency, faces, rotated_vertices)

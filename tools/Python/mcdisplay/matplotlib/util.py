@@ -6,7 +6,7 @@ from numpy import dot, array
 import numpy as np
 
 #level of detail in linspace
-num_samples = 100
+NUM_SAMPLES = 100
 
 
 def parse_multiline(line):
@@ -59,22 +59,18 @@ def rotate_xyz(x, y, z, comp):
             for j in range(len(x[0])):
                 point = np.array([x[i][j], y[i][j], z[i][j]])
                 rotated_point = rotate(point, comp)
-                x[i][j] = rotated_point[0]
-                y[i][j] = rotated_point[1]
-                z[i][j] = rotated_point[2]
+                x[i][j], y[i][j], z[i][j] = rotated_point
     else:  # Handle 1D arrays
         for i in range(len(x)):
             point = np.array([x[i], y[i], z[i]])
             rotated_point = rotate(point, comp)
-            x[i] = rotated_point[0]
-            y[i] = rotated_point[1]
-            z[i] = rotated_point[2]
-    return (x, y, z)
+            x[i], y[i], z[i] = rotated_point
+    return x, y, z
 
 
 def draw_sphere(center, radius):
-    u = np.linspace(0, 2 * np.pi, num_samples)
-    v = np.linspace(0, np.pi, num_samples)
+    u = np.linspace(0, 2 * np.pi, NUM_SAMPLES)
+    v = np.linspace(0, np.pi, NUM_SAMPLES)
     x = center[0] + radius * np.outer(np.cos(u), np.sin(v))
     y = center[1] + radius * np.outer(np.sin(u), np.sin(v))
     z = center[2] + radius * np.outer(np.ones(np.size(u)), np.cos(v))
@@ -90,8 +86,8 @@ def draw_cylinder(center, radius, height, axis_vector):
     # Calculate the startpoint
     p0 = center - half_height_vector
 
-    t = np.linspace(0, height, num_samples)
-    theta = np.linspace(0, 2 * np.pi, num_samples)
+    t = np.linspace(0, height, NUM_SAMPLES)
+    theta = np.linspace(0, 2 * np.pi, NUM_SAMPLES)
     t, theta = np.meshgrid(t, theta)
 
     n1, n2 = calc_perp_vectors(axis_vector)
@@ -105,8 +101,8 @@ def draw_cylinder(center, radius, height, axis_vector):
 
 def draw_disc(center, radius, axis_vector):
     # Polar coordinates in the disc's plane
-    theta = np.linspace(0, 2*np.pi, num_samples)
-    r = np.linspace(0, radius, num_samples)
+    theta = np.linspace(0, 2 * np.pi, NUM_SAMPLES)
+    r = np.linspace(0, radius, NUM_SAMPLES)
     theta, r = np.meshgrid(theta, r)
 
     # Calculate coordinates in the disc's plane
@@ -119,12 +115,12 @@ def draw_disc(center, radius, axis_vector):
 
 
 def draw_annulus(center, outer_radius, inner_radius, axis_vector):
-    # Polar coordinates in the disc's plane
-    theta = np.linspace(0, 2*np.pi, num_samples)
-    r = np.linspace(0, inner_radius, num_samples)
+    # Polar coordinates in the annulus' plane
+    theta = np.linspace(0, 2 * np.pi, NUM_SAMPLES)
+    r = np.linspace(0, inner_radius, NUM_SAMPLES)
     theta, r = np.meshgrid(theta, r)
 
-    # Calculate coordinates in the disc's plane
+    # Calculate coordinates in the annulus's plane
     x_plane = (outer_radius-r) * np.cos(theta)
     y_plane = (outer_radius-r) * np.sin(theta)
 
@@ -135,8 +131,8 @@ def draw_annulus(center, outer_radius, inner_radius, axis_vector):
 
 def draw_cone(center, radius, height, axis_vector):
     # Define the grid in polar coordinates
-    theta = np.linspace(0, 2 * np.pi, num_samples)
-    z = np.linspace(-height/2, height/2, num_samples)
+    theta = np.linspace(0, 2 * np.pi, NUM_SAMPLES)
+    z = np.linspace(-height / 2, height / 2, NUM_SAMPLES)
     theta, z = np.meshgrid(theta, z)
 
     # Convert polar to Cartesian coordinates (original, along z-axis)
@@ -189,7 +185,7 @@ def draw_hollow_box(center, a, b, c, thickness):
         [0+thickness, b-thickness, c]
     ], dtype=float)
 
-    # Adjust outer vertices to center
+    #Center
     outer_vertices -= [a/2, b/2, c/2]
     inner_vertices -= [a/2, b/2, c/2]
 
@@ -223,21 +219,12 @@ def draw_hollow_box(center, a, b, c, thickness):
     ]
     return faces, vertices
 
-def draw_rectangular_lid(center, outer_a, outer_b, inner_a, inner_b):
-    phi = np.arange(1, 10, 2)*np.pi/4
-    phi, theta = np.meshgrid(phi, phi)
-    x = center[0] + (outer_a-phi) * np.cos(phi)*inner_a
-    y = center[1] + (outer_b-phi) * np.sin(phi)*inner_b
-    z = center[2] + x + y
-
-    return x, y, z
 
 def draw_new_circle(center, radius, axis_vector):
-    theta = np.linspace(0, 2 * np.pi, num_samples)
+    theta = np.linspace(0, 2 * np.pi, NUM_SAMPLES)
 
     x = radius * np.cos(theta)
     y = radius * np.sin(theta)
-    z = np.zeros_like(x)
 
     (x, y, z) = center_and_align_with_axis_vector(center, x, y, axis_vector)
 
