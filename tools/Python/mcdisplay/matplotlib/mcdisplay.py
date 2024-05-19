@@ -173,13 +173,13 @@ def process_circle(ax, line, color, comp, transparency):
     pos = [float(x) for x in items[1:4]]
     rad = float(items[4])
     (x, y, z) = draw_circle(pla, pos, rad, comp)
-    ax.plot(z, x, y, COLORS[color], alpha=transparency)
+    ax.plot(z, x, y, color=color, alpha=transparency)
 
 
 def process_multiline(ax, line, color, comp, transparency):
     points = parse_multiline(line[len(MC_LINE):].strip('()'))
     (x, y, z) = rotate_points(points, comp)
-    ax.plot(z, x, y, COLORS[color], alpha=transparency)
+    ax.plot(z, x, y, color=color, alpha=transparency)
 
 
 def process_sphere(ax, line, comp, color, transparency):
