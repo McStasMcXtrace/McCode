@@ -15,6 +15,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from mccodelib.mcplotloader import McCodeDataLoader, test_decfuncs
 from mccodelib.plotgraph import PlotGraphPrint
 from mccodelib import pqtgfrontend
+from mccodelib import mccode_config
 
 
 def main(args):
@@ -42,12 +43,12 @@ def main(args):
                 if not os.path.isabs(h5file):
                     h5file = os.path.join(os.getcwd(),h5file)
                 try:
-                    cmd = 'nexpy -f ' + h5file
-                    print('Spawning nexpy: ' + cmd)
+                    cmd = mccode_config.configuration['HDFVIEW'] + ' ' + h5file
+                    print('Spawning ' + mccode_config.configuration['HDFVIEW'])
                     sub=subprocess.Popen(cmd, shell=True)
                     sub.wait()
                 except:
-                    print("Could not launch nexpy on "+ h5file)
+                    print("Could not launch " + mccode_config.configuration['HDFVIEW'] + " on " + h5file)
                 quit()
 
         if args.test:

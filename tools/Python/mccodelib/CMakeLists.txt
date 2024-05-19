@@ -69,7 +69,7 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply, hdf-compass")
 
 # RPM
 if (RPMPROFILE)
@@ -90,7 +90,7 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-set(entries_with_conda_prefix "CFLAGS;NEXUSFLAGS;MPIFLAGS;OACCFLAGS;TOOLS_CC;MPIRUN;MPICC")
+set(entries_with_conda_prefix "CFLAGS;NEXUSFLAGS;MPIFLAGS;GSLFLAGS;XRLFLAGS;OACCFLAGS;TOOLS_CC;MPIRUN;MPICC")
 foreach( var ${entries_with_conda_prefix} )
   set( MCCODE_FINAL_${var} "${${var}}" )
 endforeach()
@@ -118,6 +118,13 @@ if ( MCCODE_BUILD_CONDA_PKG )
 else()
   set( MCCODE_IS_CONDA_PKG "0" )
 endif()
+
+# HDF-viewer
+if ( MCCODE_BUILD_CONDA_PKG )
+  set( HDFVIEW "nexpy" )
+else ()
+  set( HDFVIEW "HDFCompass" )
+endif ()
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mccode_config.py.in" "${WORK}/mccode_config.py" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mccode_config.json.in" "${WORK}/mccode_config.json" @ONLY)
