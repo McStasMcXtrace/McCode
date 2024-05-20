@@ -2571,23 +2571,6 @@ void mcdis_rectangle(char* plane, double x, double y, double z,
   }
 }
 
-/*  draws a box with center at (x, y, z) and
-    width (deltax), height (deltay), length (deltaz) */
-void mcdis_box(double x, double y, double z,
-	       double width, double height, double length){
-
-  mcdis_rectangle("xy", x, y, z-length/2, width, height);
-  mcdis_rectangle("xy", x, y, z+length/2, width, height);
-  mcdis_line(x-width/2, y-height/2, z-length/2,
-	     x-width/2, y-height/2, z+length/2);
-  mcdis_line(x-width/2, y+height/2, z-length/2,
-	     x-width/2, y+height/2, z+length/2);
-  mcdis_line(x+width/2, y-height/2, z-length/2,
-	     x+width/2, y-height/2, z+length/2);
-  mcdis_line(x+width/2, y+height/2, z-length/2,
-	     x+width/2, y+height/2, z+length/2);
-}
-
 void mcdis_circle(char *plane, double x, double y, double z, double r){
   printf("MCDISPLAY: circle('%s',%g,%g,%g,%g)\n", plane, x, y, z, r);
 }
@@ -2618,9 +2601,37 @@ void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, 
     }
 }
 
-/* Draws a cylinder with center at (x,y,z) with extent (r,height).
+/*  NEW 3D IMPLEMENTATION OF BOX SUPPORTS HOLLOW ALSO
+    draws a box with center at (x, y, z) and
+    width (deltax), height (deltay), length (deltaz) */
+void mcdis_new_box(double x, double y, double z,
+	       double width, double height, double length, double thickness){
+  printf("MCDISPLAY: box(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness);
+}
+
+/*  OLD IMPLEMENTATION
+    draws a box with center at (x, y, z) and
+    width (deltax), height (deltay), length (deltaz) */
+void mcdis_box(double x, double y, double z,
+	       double width, double height, double length){
+
+  mcdis_rectangle("xy", x, y, z-length/2, width, height);
+  mcdis_rectangle("xy", x, y, z+length/2, width, height);
+  mcdis_line(x-width/2, y-height/2, z-length/2,
+	     x-width/2, y-height/2, z+length/2);
+  mcdis_line(x-width/2, y+height/2, z-length/2,
+	     x-width/2, y+height/2, z+length/2);
+  mcdis_line(x+width/2, y-height/2, z-length/2,
+	     x+width/2, y-height/2, z+length/2);
+  mcdis_line(x+width/2, y+height/2, z-length/2,
+	     x+width/2, y+height/2, z+length/2);
+}
+
+
+/* OLD IMPLEMENTATION
+Draws a cylinder with center at (x,y,z) with extent (r,height).
  * The cylinder axis is along the vector nx,ny,nz.
- * N determines how many vertical lines are drawn.*/
+ * After converting comps to 3D implementation remove this*/
 void mcdis_cylinder( double x, double y, double z,
         double r, double height, int N, double nx, double ny, double nz){
     int i;
@@ -2649,13 +2660,31 @@ void mcdis_cylinder( double x, double y, double z,
     }
 }
 
-/* draws a sphere with center at (x,y,z) with extent (r)
- * The sphere is drawn using N longitudes and N latitudes.*/
-void mcdis_sphere(double x, double y, double z, double r, int N){
+/* NEW 3D IMPLEMENTATION ALSO SUPPORTING HOLLOW
+Draws a cylinder with center at (x,y,z) with extent (r,height).
+ * The cylinder axis is along the vector nx,ny,nz.*/
+void mcdis_new_cylinder( double x, double y, double z,
+        double r, double height, double thickness, double t, double nx, double ny, double nz){
+      printf("MCDISPLAY: cylinder(%g, %g, %g, %g, %g, %g, %g, %g, %g)\n",
+         x, y, z, r, height, thickness, nx, ny, nz);
+}
+
+/* Draws a cone with center at (x,y,z) with extent (r,height).
+ * The cone axis is along the vector nx,ny,nz.*/
+void mcdis_cone( double x, double y, double z,
+        double r, double height, double nx, double ny, double nz){
+    printf("MCDISPLAY: cone(%g, %g, %g, %g, %g, %g, %g, %g)\n",
+       x, y, z, r, height, nx, ny, nz);
+}
+
+/* draws a sphere with center at (x,y,z) with extent (r)*/
+void mcdis_sphere(double x, double y, double z, double r){
+  if (mcdotrace==2) {
+    printf("MCDISPLAY: sphere(%g,%g,%g,%g)\n", x, y, z, r);
+  } else {
     double nx,ny,nz;
     int i;
-    /*no lines make little sense - so trigger the default*/
-    if(N<=0) N=5;
+    int N=12;
 
     nx=0;ny=0;nz=1;
     mcdis_Circle(x,y,z,r,nx,ny,nz);
@@ -2670,7 +2699,40 @@ void mcdis_sphere(double x, double y, double z, double r, int N){
         double yy=-r+ 2*r*((double)i/(N+1));
         mcdis_Circle(x,y+yy ,z,  sqrt(r*r-yy*yy) ,0,1,0);
     }
+  }
 }
+/* BEGIN NEW POLYGON IMPLEMENTATION*/
+
+void mcdis_new_polygon(char *vertices_faces){
+  printf("MCDISPLAY: polygon %s\n", vertices_faces);
+}
+
+/* OLD POLYGON IMPLEMENTATION REMOVE AFTER CONVERTING COMPONENTS*/
+void mcdis_polygon(int count, ...){
+  va_list ap;
+  double x,y,z;
+
+  printf("MCDISPLAY: polygon(%d", count);
+  va_start(ap, count);
+  while(count--)
+    {
+    x = va_arg(ap, double);
+    y = va_arg(ap, double);
+    z = va_arg(ap, double);
+    printf(",%g,%g,%g", x, y, z);
+    }
+  va_end(ap);
+  printf(")\n");
+}
+/* END NEW POLYGON IMPLEMENTATION*/
+
+/*
+void mcdis_polygon(double x1, double y1, double z1,
+                double x2, double y2, double z2){
+  printf("MCDISPLAY: polygon(2,%g,%g,%g,%g,%g,%g)\n",
+         x1,y1,z1,x2,y2,z2);
+}
+*/
 
 /* SECTION: coordinates handling ============================================ */
 
@@ -4228,10 +4290,9 @@ mcparseoptions(int argc, char *argv[])
     }
     else if(!strncmp("--trace=", argv[i], 8)) {
       mcenabletrace(atoi(&argv[i][8]));
-    }
-    else if(!strncmp("-t=", argv[i], 3) || !strcmp("--verbose", argv[i]))
+    } else if(!strncmp("-t=", argv[i], 3) || !strcmp("--verbose", argv[i])) {
       mcenabletrace(atoi(&argv[i][3]));
-    else if(!strcmp("-t", argv[i]))
+    } else if(!strcmp("-t", argv[i]))
       mcenabletrace(1);
     else if(!strcmp("--trace", argv[i]) || !strcmp("--verbose", argv[i]))
       mcenabletrace(1);

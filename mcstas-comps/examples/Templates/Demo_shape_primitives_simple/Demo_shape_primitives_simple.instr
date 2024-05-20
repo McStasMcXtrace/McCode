@@ -43,7 +43,6 @@ AT(0,0,1) RELATIVE PREVIOUS
 
 COMPONENT shape2 = Shape_simple(xwidth=0.25, yheight=0.8,zdepth=0.1234)
 AT(0,0,1) RELATIVE PREVIOUS
-
 FINALLY
 %{
 %}
