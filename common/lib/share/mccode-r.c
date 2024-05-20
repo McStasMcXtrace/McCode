@@ -2679,7 +2679,27 @@ void mcdis_cone( double x, double y, double z,
 
 /* draws a sphere with center at (x,y,z) with extent (r)*/
 void mcdis_sphere(double x, double y, double z, double r){
+  if (mcdotrace==2) {
     printf("MCDISPLAY: sphere(%g,%g,%g,%g)\n", x, y, z, r);
+  } else {
+    double nx,ny,nz;
+    int i;
+    int N=12;
+
+    nx=0;ny=0;nz=1;
+    mcdis_Circle(x,y,z,r,nx,ny,nz);
+    for (i=1;i<N;i++){
+        rotate(nx,ny,nz, nx,ny,nz, PI/N, 0,1,0);
+        mcdis_Circle(x,y,z,r,nx,ny,nz);
+    }
+    /*lastly draw a great circle perpendicular to all N circles*/
+    //mcdis_Circle(x,y,z,radius,1,0,0);
+
+    for (i=1;i<=N;i++){
+        double yy=-r+ 2*r*((double)i/(N+1));
+        mcdis_Circle(x,y+yy ,z,  sqrt(r*r-yy*yy) ,0,1,0);
+    }
+  }
 }
 /* BEGIN NEW POLYGON IMPLEMENTATION*/
 
@@ -4270,10 +4290,9 @@ mcparseoptions(int argc, char *argv[])
     }
     else if(!strncmp("--trace=", argv[i], 8)) {
       mcenabletrace(atoi(&argv[i][8]));
-    }
-    else if(!strncmp("-t=", argv[i], 3) || !strcmp("--verbose", argv[i]))
+    } else if(!strncmp("-t=", argv[i], 3) || !strcmp("--verbose", argv[i])) {
       mcenabletrace(atoi(&argv[i][3]));
-    else if(!strcmp("-t", argv[i]))
+    } else if(!strcmp("-t", argv[i]))
       mcenabletrace(1);
     else if(!strcmp("--trace", argv[i]) || !strcmp("--verbose", argv[i]))
       mcenabletrace(1);
