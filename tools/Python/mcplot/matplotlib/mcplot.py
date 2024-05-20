@@ -21,7 +21,7 @@ from mccodelib.plotgraph import PNSingle
 from mccodelib.mcplotloader import Data1D, Data2D
 from mccodelib.mccode_config import get_mccode_prefix
 filenamebase=get_mccode_prefix() + 'plot'
-
+from mccodelib import mccode_config
 
 FONTSIZE = 10
 
@@ -400,5 +400,7 @@ if __name__ == '__main__':
         help='use non-default backend for matplotlib plot')
 
     args = parser.parse_args()
+
+    mccode_config.load_config("user")
 
     main(args)
