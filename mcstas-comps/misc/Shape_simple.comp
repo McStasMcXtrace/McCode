@@ -94,8 +94,7 @@ MCDISPLAY
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {	/* OFF file */
     off_display(offdata);
   }
-  else
-    if (radius > 0 &&  yheight) {	/* cylinder */
+  else if (radius > 0 &&  yheight) {	/* cylinder */
       cylinder(0,0,0,radius,yheight,0, 0,1,0);
       cylinder(0,0,0,radius-thickness,yheight,0, 0,1,0);
   }
@@ -103,7 +102,7 @@ MCDISPLAY
       box(0,0,0,xwidth, yheight, zdepth);
   }
   else if (radius > 0 && !yheight) {	/* sphere */
-      sphere(0,0,0,radius,0);
+      sphere(0,0,0,radius);
   }
 %}
 
