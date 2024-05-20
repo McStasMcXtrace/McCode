@@ -283,6 +283,11 @@ class McStas:
 
             cflags = lexer.join(otherflags) + " /link " + lexer.join(libflags)
 
+        # A final check for presence of CONDA_PREFIX strings
+        if os.environ.get('CONDA_PREFIX'):
+            if "${CONDA_PREFIX}" in cflags:
+                cflags=cflags.replace("${CONDA_PREFIX}",os.environ.get('CONDA_PREFIX'))
+
         # Final assembly of compiler commandline
         args = ['-o', self.binpath, self.cpath] + lexer.split(cflags)
         Process(lexer.quote(options.cc)).run(args)
