@@ -808,7 +808,7 @@ class McGuiAppController():
             wrapper += f'cd ' + os.path.dirname(instr) + '\n\n'
             if os.environ.get('CONDA_PREFIX'):
                 wrapper += f'REM Activate our "current" conda env.\n'
-                wrapper += f' '+ os.environ.get('CONDA_PREFIX') +  '\Scripts\activate \n\n'
+                wrapper += f'call '+ os.environ.get('CONDA_PREFIX') +  '\\Scripts\\activate \n\n'
             wrapper += f'"REM call jupylab wrapper script from new directory, with input of base instr file.\n'
             wrapper += f'' + scriptfile + ' ' + os.path.basename(instr) + '\n\n'
             wrapper += f'@REM Remove script post jupyter exit \n\n@del %~dpnx0\n@exit\n'
