@@ -336,7 +336,16 @@ class McStas:
         # If this is McStas, if format is NeXus and --IDF requested, call the XML-generator
         if mccode_config.configuration["MCCODE"] == 'mcstas' and not self.options.info:
             if self.options.format.lower() == 'nexus' and self.options.IDF:
-                Process(mccode_config.configuration['IDFGEN'] + " " + self.path).run(args, pipe=pipe)
+                idfargs=[]
+                for arg in args:
+                    if '--trace' in arg:
+                        idfargs.append('--trace=1')
+                    elif '--ncount' in arg:
+                        idfargs.append('--ncount=0')
+                    else:
+                        idfargs.append(arg)
+
+                Process(mccode_config.configuration['IDFGEN'] + " " + self.path).run(idfargs, pipe=pipe)
 
         mpi = self.options.use_mpi
         if override_mpi or override_mpi is None and mpi:
