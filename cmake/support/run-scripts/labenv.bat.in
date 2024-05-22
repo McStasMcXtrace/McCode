@@ -1,5 +1,5 @@
 @set BINDIR=%~dp0
-@CALL %BINDIR%\mccodeenv.bat
+@CALL %BINDIR%\@FLAVOR@env.bat
 @ECHO OFF
 @ECHO @FLAVOR@ Jupyter lab shell
 @set INSTRUMENT=%1

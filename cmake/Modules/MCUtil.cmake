@@ -224,7 +224,7 @@ macro(setupMCCODE FLAVOR)
 
       # Create desktop links for mcgui py/pl and mccodego batch files
       set(CPACK_NSIS_CREATE_ICONS "CreateShortCut '$DESKTOP\\\\${MCCODE_PREFIX}gui-${MCCODE_VERSION}.lnk' '${CPACK_NSIS_INSTALL_ROOT}\\\\${DEST_BINDIR}\\\\${MCCODE_PREFIX}guistart.bat' ")
-     set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '$DESKTOP\\\\${FLAVOR}-shell-${MCCODE_VERSION}.lnk' '${CPACK_NSIS_INSTALL_ROOT}\\\\${DEST_BINDIR}\\\\mccodego.bat' ")
+     set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '$DESKTOP\\\\${FLAVOR}-shell-${MCCODE_VERSION}.lnk' '${CPACK_NSIS_INSTALL_ROOT}\\\\${DEST_BINDIR}\\\\${FLAVOR}go.bat' ")
     endif()
   else()
   
