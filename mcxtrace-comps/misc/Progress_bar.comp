@@ -54,6 +54,7 @@ DECLARE
   time_t StartTime;
   time_t EndTime;
   time_t CurrentTime;
+  char infostring[64];
 %}
 
 INITIALIZE
@@ -70,6 +71,13 @@ INITIALIZE
   #ifdef OPENACC
   time(&StartTime);
   #endif
+
+#ifdef USE_MPI
+  sprintf(infostring, "(%i MPI processes) ", mpi_node_count);
+#else
+  sprintf(infostring, "");
+#endif
+
 %}
 
 TRACE
@@ -90,13 +98,17 @@ TRACE
       EndTime = StartTime + (time_t)(difftime(NowTime,StartTime)
 				     *(double)mcget_ncount()/ncount);
       IntermediateCnts = 0;
+      MPI_MASTER(
       fprintf(stdout, "\nTrace ETA ");
+	fprintf(stdout, "%s", infostring);
       if (difftime(EndTime,StartTime) < 60.0)
         fprintf(stdout, "%g [s] %% ", difftime(EndTime,StartTime));
       else if (difftime(EndTime,StartTime) > 3600.0)
         fprintf(stdout, "%g [h] %% ", difftime(EndTime,StartTime)/3600.0);
       else
-        fprintf(stdout, "%g [min] %% ", difftime(EndTime,StartTime)/60.0);
+          fprintf(stdout, "%g [min] ", difftime(EndTime,StartTime)/60.0);
+	fprintf(stdout, "\n");
+      );
     } else IntermediateCnts += 1e3;
     fflush(stdout);
   }
@@ -106,7 +118,9 @@ TRACE
     (    (minutes && difftime(NowTime,CurrentTime) > minutes*60)
       || (percent && !minutes && ncount >= IntermediateCnts))   )
   {
-    fprintf(stdout, "%llu ", (unsigned long long)(ncount*100.0/mcget_ncount())); fflush(stdout);
+    MPI_MASTER(
+      fprintf(stdout, "%llu %%\n", (unsigned long long)(ncount*100.0/mcget_ncount())); fflush(stdout);
+    );
     CurrentTime = NowTime;
 
     IntermediateCnts = ncount + percent*mcget_ncount()/100;

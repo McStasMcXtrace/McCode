@@ -110,7 +110,7 @@ def parse_trace():
             process_polygon(ax, line, comp, COLORS[color], transparency)
 
         elif line.startswith(MC_CIRCLE):
-            process_circle(ax, line, color, comp, transparency)
+            process_circle(ax, line, COLORS[color], comp, transparency)
 
         elif line.startswith(MC_CONE):
             process_cone(ax, line, comp, COLORS[color], transparency)

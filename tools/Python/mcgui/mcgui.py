@@ -795,14 +795,23 @@ class McGuiAppController():
             wrapper += f'#!/usr/bin/env bash\n\n'
             wrapper += f'# cd to location of taget .instr file\n'
             wrapper += f'cd ' + os.path.dirname(instr) + '\n\n'
-            wrapper += f'# call jupylab wrapper script from new directory, with input of base instr file.\n'
-            wrapper += f'' + scriptfile + ' ' + os.path.basename(instr) + '\n\n'
-            wrapper += f'# Remove script post jupyter exit \n\nrm -f $0\n\n'
+            if os.environ.get('CONDA_PREFIX'):
+                wrapper += f'# Activate our "current" conda env.\n'
+                wrapper += f'. ' + os.environ.get('CONDA_PREFIX') +  '/bin/activate \n\n'
+            wrapper += f'# Call jupylab wrapper script from new directory, with input of base instr file.\n'
+            wrapper += f'' + scriptfile + ' ' + os.path.basename(instr) + '\nret_code1=$?\n\n'
+            # Remove script post jupyter exit
+            wrapper += f'# Remove script post jupyter exit if jupyter exited cleanly\n'
+            wrapper += f'if [ \"$ret_code1\" -eq \"0\" ];'
+            wrapper += f'then\n    rm -f $0\nfi\n\n'
             wrapper += f'# End of wrapper script\n'
             suffix = ".command"
         else:
             wrapper += f'@REM cd to location of taget .instr file\n'
             wrapper += f'cd ' + os.path.dirname(instr) + '\n\n'
+            if os.environ.get('CONDA_PREFIX'):
+                wrapper += f'REM Activate our "current" conda env.\n'
+                wrapper += f'call '+ os.environ.get('CONDA_PREFIX') +  '\\Scripts\\activate \n\n'
             wrapper += f'"REM call jupylab wrapper script from new directory, with input of base instr file.\n'
             wrapper += f'' + scriptfile + ' ' + os.path.basename(instr) + '\n\n'
             wrapper += f'@REM Remove script post jupyter exit \n\n@del %~dpnx0\n@exit\n'

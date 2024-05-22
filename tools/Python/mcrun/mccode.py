@@ -273,9 +273,20 @@ class McStas:
                         libflags.append(flag)
                 # Everthing else
                 else:
+                    if flag.startswith("-std="): # -std
+                        flag.replace("-std=","/std:")
+                    if flag.startswith("-D"): # -D defines
+                        flag.replace("-D","/D")
+                    if flag.startswith("-U"): # -U undefines
+                        flag.replace("-U","/U")
                     otherflags.append(flag)
 
             cflags = lexer.join(otherflags) + " /link " + lexer.join(libflags)
+
+        # A final check for presence of CONDA_PREFIX strings
+        if os.environ.get('CONDA_PREFIX'):
+            if "${CONDA_PREFIX}" in cflags:
+                cflags=cflags.replace("${CONDA_PREFIX}",os.environ.get('CONDA_PREFIX'))
 
         # Final assembly of compiler commandline
         args = ['-o', self.binpath, self.cpath] + lexer.split(cflags)
@@ -289,17 +300,18 @@ class McStas:
         options = self.options
 
         # Handle proxy options with values
-        proxy_opts_val = ['seed', 'ncount', 'dir', 'format', 'vecsize', 'numgangs', 'gpu_innerloop', 'bufsiz']
+        proxy_opts_val = ['trace', 'seed', 'ncount', 'dir', 'format', 'vecsize', 'numgangs', 'gpu_innerloop', 'bufsiz']
         proxy_opts_val.extend(('meta-defined', 'meta-type', 'meta-data'))
+
         for opt in proxy_opts_val:
             # try extra_opts before options
             default = getattr(options, opt.replace('-', '_'))
             val = extra_opts.get(opt, default)
             if val is not None and val != '':
-                args.extend([f'--{opt}', str(val)])
+                args.extend([f'--{opt}=' + str(val)])
 
         # Handle proxy options without values (flags)
-        proxy_opts_flags = ['trace', 'no-output-files', 'info', 'list-parameters', 'meta-list']
+        proxy_opts_flags = ['no-output-files', 'info', 'list-parameters', 'meta-list']
         if mccode_config.configuration["MCCODE"] == 'mcstas':
             proxy_opts_flags.append('gravitation')
 
@@ -324,7 +336,16 @@ class McStas:
         # If this is McStas, if format is NeXus and --IDF requested, call the XML-generator
         if mccode_config.configuration["MCCODE"] == 'mcstas' and not self.options.info:
             if self.options.format.lower() == 'nexus' and self.options.IDF:
-                Process(mccode_config.configuration['IDFGEN'] + " " + self.path).run(args, pipe=pipe)
+                idfargs=[]
+                for arg in args:
+                    if '--trace' in arg:
+                        idfargs.append('--trace=1')
+                    elif '--ncount' in arg:
+                        idfargs.append('--ncount=0')
+                    else:
+                        idfargs.append(arg)
+
+                Process(mccode_config.configuration['IDFGEN'] + " " + self.path).run(idfargs, pipe=pipe)
 
         mpi = self.options.use_mpi
         if override_mpi or override_mpi is None and mpi:

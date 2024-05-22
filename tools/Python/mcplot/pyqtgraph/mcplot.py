@@ -88,5 +88,7 @@ if __name__ == '__main__':
     parser.add_argument('--invcanvas', action='store_true', help='invert canvas background from black to white')
     args = parser.parse_args()
 
+    mccode_config.load_config("user")
+    
     main(args)
 

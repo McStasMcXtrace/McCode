@@ -27,7 +27,48 @@ canrun() {
 }
 
 if ( canrun ); then
-    @P@run  $* --trace=2 --no-output-files -n1e2 | python3 ${UTILDIR}/${TOOL}.py 
+    arguments=""
+    ncountmax="1e2"
+    ncount=""
+    next=0
+    found=0
+    for arg in "${@}"; do
+	if [ "${next}" == "1" ];               # We found -n or --ncount in last pass, this is NUMBER
+	then
+	    ncount=${arg}
+	    found=1
+	    next=0
+	elif [[ "${arg}" == "-n" ]];           # Case: -n NUMBER (NUMBER is next pass)
+	then
+	    next=1
+	elif [[ "${arg}" == "--ncount" ]];     # Case: --ncount NUMBER (NUMBER is next pass)
+	then
+	    next=1
+	elif
+	    [[ ${arg} =~ ^-n ]];               # Case: -nNUMBER
+	then
+	    ncount=`echo $arg | cut -f2 -dn`
+	elif [[ ${arg} =~ ^--ncount= ]];       # Case: --ncount=NUMBER
+	then
+	    ncount=`echo $arg | cut -f2 -d=`
+	    found=1
+	else
+	    arguments="$arguments $arg"
+	fi
+    done
+    if [ "${found}" == "1" ];
+    then
+	ncountmax_bc=`echo $ncountmax | sed s/e/\*10^/g`
+	ncount_bc=`echo $ncount | sed s/e/\*10^/g`
+	if (( $(echo "${ncount_bc} > ${ncountmax_bc}" |bc -l) ));
+	then
+	    ncount=$ncountmax
+	    echo "WARNING from $0: Reduced your ncount to $ncountmax"
+	fi
+    else
+	ncount=$ncountmax
+    fi
+    @P@run  $* --trace=2 --no-output-files -n $ncount | python3 ${UTILDIR}/${TOOL}.py
 else
     @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
 fi
