@@ -30,13 +30,14 @@ if ( canrun ); then
     arguments=""
     ncountmax="1e2"
     ncount=""
+    trace=""
     next=0
-    found=0
+    found_ncount=0
     for arg in "${@}"; do
 	if [ "${next}" == "1" ];               # We found -n or --ncount in last pass, this is NUMBER
 	then
 	    ncount=${arg}
-	    found=1
+	    found_ncount=1
 	    next=0
 	elif [[ "${arg}" == "-n" ]];           # Case: -n NUMBER (NUMBER is next pass)
 	then
@@ -51,12 +52,31 @@ if ( canrun ); then
 	elif [[ ${arg} =~ ^--ncount= ]];       # Case: --ncount=NUMBER
 	then
 	    ncount=`echo $arg | cut -f2 -d=`
-	    found=1
+	    found_ncount=1
+	elif [[ ${arg} =~ ^--trace= ]];       # Case: --trace=NUMBER
+	then
+	    trace=`echo $arg | cut -f2 -d=`
+	elif [[ ${arg} =~ ^--help ]];       # Case: --help
+	then
+	    script=`basename $0`
+	    echo ""
+	    echo "$script usage:"
+	    echo ""
+	    echo "$script [--trace=N] --ncount=NUM Instrument.instr par1=A par2=B ...\n"
+	    echo "       --trace={1,2} - select classic / new visualisation mode, 2 is default"
+	    echo "       --ncount=NUM  - set number of particles to trace"
+	    echo "      -nNUM, -n NUM    Maximum / default NUM=1e2"
+	    echo ""
+	    exit
 	else
 	    arguments="$arguments $arg"
 	fi
     done
-    if [ "${found}" == "1" ];
+    if [ "${trace}" == "" ];
+    then
+	trace="2"
+    fi
+    if [ "${found_ncount}" == "1" ];
     then
 	ncountmax_bc=`echo $ncountmax | sed s/e/\*10^/g`
 	ncount_bc=`echo $ncount | sed s/e/\*10^/g`
@@ -68,7 +88,7 @@ if ( canrun ); then
     else
 	ncount=$ncountmax
     fi
-    @P@run  $* --trace=2 --no-output-files -n $ncount | python3 ${UTILDIR}/${TOOL}.py
+    @P@run  $* --trace=$trace --no-output-files -n $ncount | python3 ${UTILDIR}/${TOOL}.py
 else
     @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
 fi
