@@ -1,4 +1,4 @@
-@CALL @CPACK_NSIS_INSTALL_ROOT@\bin\mccodeenv.bat
+@CALL @CPACK_NSIS_INSTALL_ROOT@\bin\@FLAVOR@env.bat
 @set BINDIR=%~dp0
 @SET PATH=%BINDIR%\@MCCODE_RELPATH_BINDIR2TOOLDIR@\Python\@MCCODE_PREFIX@display\matplotlib;%PATH%
 @REM Isn't windows a lovely place???

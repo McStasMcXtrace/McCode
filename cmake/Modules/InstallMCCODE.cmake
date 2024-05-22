@@ -384,12 +384,12 @@ macro(installMCCODE)
 
   if(WINDOWS)
     # Generate and install Windows setup scripts
-    foreach (name mccodeenv.bat mccodeenv.m mccodego.bat mccodetest.bat)
+    foreach (name env.bat env.m go.bat test.bat)
       configure_file(
-        cmake/support/run-scripts/${name}.in
-        work/support/${name}
+        cmake/support/run-scripts/mccode${name}.in
+        work/support/${FLAVOR}${name}
         )
-      install(PROGRAMS ${WORK}/support/${name} DESTINATION "${DEST_BINDIR}")
+      install(PROGRAMS ${WORK}/support/${FLAVOR}${name} DESTINATION "${DEST_BINDIR}")
     endforeach()
 
     configure_file(
