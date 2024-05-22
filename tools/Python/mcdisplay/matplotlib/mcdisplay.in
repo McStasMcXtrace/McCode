@@ -62,10 +62,11 @@ if ( canrun ); then
 	    echo ""
 	    echo "$script usage:"
 	    echo ""
-	    echo "$script [--trace=N] --ncount=NUM Instrument.instr par1=A par2=B ...\n"
+	    echo "$script [--trace=2] [--ncount=1e2] Instrument.instr par1=A par2=B ..."
 	    echo "       --trace={1,2} - select classic / new visualisation mode, 2 is default"
-	    echo "       --ncount=NUM  - set number of particles to trace"
-	    echo "      -nNUM, -n NUM    Maximum / default NUM=1e2"
+	    echo "       --ncount=N    - set number of particles to trace, max/default N=1e2"
+	    echo "             -n N "
+	    echo "              -nN "
 	    echo ""
 	    exit
 	else
