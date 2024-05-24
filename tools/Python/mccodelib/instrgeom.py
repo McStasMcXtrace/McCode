@@ -417,11 +417,21 @@ drawcommands = {
     'rectangle'   : 'DrawRectangle',
     'box'         : 'DrawBox',
     'circle'      : 'DrawCircle',
-    }
+    'sphere'      : 'DrawSphere',
+    'cone'        : 'DrawCone',
+    'cylinder'    : 'DrawCylinder',
+    'polygon'     : 'DrawPolygon',
+}
 # reduced set containing wholly implemented and non-trivial commands
 reduced_drawcommands = {
     'multiline'   : 'DrawMultiline',
     'circle'      : 'DrawCircle',
+
+    'box'         : 'DrawBox',
+    'sphere'      : 'DrawSphere',
+    'cone'        : 'DrawCone',
+    'cylinder'    : 'DrawCylinder',
+    'polygon'     : 'DrawPolygon',
     }
 
 def drawclass_factory(commandname, args, reduced=False):
@@ -576,12 +586,12 @@ class DrawRectangle(DrawCommand):
         self.height = float(args[5])
 
 class DrawBox(DrawCommand):
-    ''' '''
     center = None
     xwidth = None
     yheight = None
     zlength = None
-    # x, y, z, xwidth, yheight, zlength
+    thickness = None
+
     def __init__(self, args):
         super(DrawBox, self).__init__(args)
         self.key = 'box'
@@ -590,13 +600,14 @@ class DrawBox(DrawCommand):
         self.xwidth = float(args[3])
         self.yheight = float(args[4])
         self.zlength = float(args[5])
+        self.thickness = float(args[6])
+
 
 class DrawCircle(DrawCommand):
-    ''' '''
     plane = ''
     center = None
     radius = None
-    # plane, x, y, z, radius
+
     def __init__(self, args):
         super(DrawCircle, self).__init__(args)
         self.key = 'circle'
@@ -608,51 +619,67 @@ class DrawCircle(DrawCommand):
         # override default behavior to ensure quotes around the first arg, plane
         idx = self.args_str.find(',')
         self.args_str = '\"' + self.args_str[:idx] + '\"' + self.args_str[idx:]
-    
-    def _get_points(self):
-        ''' returns the corners of a flat square around the circle, transformed into the proper plane '''
-        rad = self.radius
-        cen = self.center
-        
-        ne = Vector3d(rad, rad, 0)
-        nw = Vector3d(-rad, rad, 0)
-        sw = Vector3d(-rad, -rad, 0)
-        se = Vector3d(rad, -rad, 0)
-        
-        square = [ne, nw, sw, se]
-        
-        if self.plane == 'xy':
-            return map(lambda p: cen.add(p), square)
-        elif self.plane == 'xz':
-            return map(lambda p: cen.add(Vector3d(p.x, 0, p.y)), square)
-        elif self.plane == 'yz':
-            return map(lambda p: cen.add(Vector3d(0, p.x, p.y)), square)
-        else:
-            raise Exception('DrawCircle: invalid plane argument')
-    
-    def get_points_on_circle(self, steps=60):
-        ''' returns points on the circle, transformed into the proper plane '''
-        if self.plane in ['zy', 'yz']: (k1, k2) = (2,1)
-        elif self.plane in ['xy', 'yx']: (k1, k2) = (0,1)
-        elif self.plane in ['zx', 'xz']: (k1, k2) = (2,0)
-        else:
-            raise Exception('DrawCircle: invalid plane argument: %s' % self.plane)
-        
-        rad = self.radius
-        center = self.center
-        
-        circ2 = [ (rad*np.cos(theta), rad*np.sin(theta)) for theta in np.linspace(0, 2*np.pi, steps) ]
-        circ3 = []
-        for p2 in circ2:
-            p = Vector3d()
-            p[k1] = p2[0]
-            p[k2] = p2[1]
-            circ3.append(p)
-        
-        return [center.add(c) for c in circ3]
+
+
+class DrawSphere(DrawCommand):
+    center = None
+    radius = None
+
+    def __init__(self, args):
+        super(DrawSphere, self).__init__(args)
+        self.key = 'sphere'
+
+        self.center = Vector3d(float(args[0]), float(args[1]), float(args[2]))
+        self.radius = float(args[3])
+
+
+class DrawCone(DrawCommand):
+    center = None
+    radius = None
+    height = None
+    axis_vector = None
+
+
+    def __init__(self, args):
+        super(DrawCone, self).__init__(args)
+        self.key = 'cone'
+
+        self.center = Vector3d(float(args[0]), float(args[1]), float(args[2]))
+        self.radius = float(args[3])
+        self.height = float(args[4])
+        self.axis_vector = Vector3d(float(args[5]), float(args[6]), float(args[7]))
+
+
+class DrawCylinder(DrawCommand):
+    center = None
+    radius = None
+    height = None
+    thickness = None
+    axis_vector = None
+
+    def __init__(self, args):
+        super(DrawCylinder, self).__init__(args)
+        self.key = 'cylinder'
+
+        self.center = Vector3d(float(args[0]), float(args[1]), float(args[2]))
+        self.radius = float(args[3])
+        self.height = float(args[4])
+        self.thickness = float(args[5])
+        self.axis_vector = Vector3d(float(args[6]), float(args[7]), float(args[8]))
+
+
+class DrawPolygon(DrawCommand):
+    faces = None
+    vertices = None
+    def __init__(self, args):
+        super(DrawPolygon, self).__init__(args)
+        self.key = 'polygon'
+        self.faces = args[0]
+        self.vertices = args[1]
+
 
 class Vector3d(object):
-    def __init__(self, x=0, y=0, z=0):
+    def __init__(self, x=0.0, y=0.0, z=0.0):
         self.x = float(x)
         self.y = float(y)
         self.z = float(z)
@@ -783,7 +810,10 @@ class Transform(object):
 
 class Matrix3Identity(Matrix3):
     def __init__(self):
-        Matrix3.__init__(self, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+        Matrix3.__init__(self,
+                         1, 0, 0,
+                         0, 1, 0,
+                         0, 0, 1)
 
 def floatify(org_lst):
     ''' returns a transformed list with entries converted to floats, if possible '''

@@ -42,7 +42,12 @@ class InstrTraceParser:
         'rectangle'   : 'DRAWCALL',
         'box'         : 'DRAWCALL',
         'circle'      : 'DRAWCALL',
-        
+
+        'sphere'      : 'DRAWCALL',
+        'cone'        : 'DRAWCALL',
+        'cylinder'    : 'DRAWCALL',
+        'polygon'     : 'DRAWCALL',
+
         'MANTID_PIXEL': 'MANTID_PIXEL',
         'MANTID_BANANA_DET': 'MANTID_BANANA_DET',
         'MANTID_RECTANGULAR_DET': 'MANTID_RECTANGULAR_DET',
@@ -254,7 +259,7 @@ class InstrTraceParser:
             print(token)
     
     def build_parser(self, **kwargs):
-        ''' builds the lexer '''
+        ''' builds the yaccer '''
         self.parser = yacc.yacc(module=self, debug=self.debug, write_tables=False)
 
     def parse(self, data):
