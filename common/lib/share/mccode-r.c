@@ -903,7 +903,7 @@ MCDETECTOR detector_import(
   double x1, double x2, double y1, double y2, double z1, double z2,
   char *filename,
   double *p0, double *p1, double *p2,
-  Coords position)
+  Coords position, Rotation rotation)
 {
   time_t t;       /* for detector.date */
   long   date_l;  /* date as a long number */
@@ -983,6 +983,12 @@ MCDETECTOR detector_import(
   /* these only apply to detector files ===================================== */
 
   snprintf(detector.position, CHAR_BUF_LENGTH, "%g %g %g", position.x, position.y, position.z);
+  snprintf(detector.rotation, CHAR_BUF_LENGTH, "%g %g %g %g %g %g %g %g %g",
+	   rotation[0][0], rotation[0][1], rotation[0][2],		\
+	   rotation[1][0], rotation[1][1], rotation[1][2],
+	   rotation[2][0], rotation[2][1], rotation[2][2]);
+  /* may also store actual detector orientation in the future */
+
   /* may also store actual detector orientation in the future */
 
   strncpy(detector.title,      title && strlen(title) ? title : component,       CHAR_BUF_LENGTH);
@@ -1782,7 +1788,8 @@ mcdatainfo_out_nexus(NXhandle f, MCDETECTOR detector)
                  "xylimits", detector.limits);
       nxprintattr(f, "variables",
         strcasestr(detector.format, "list") ? detector.ylabel : detector.variables);
-      nxprintf(f, "distance", detector.position);
+      nxprintf(f, "Position", detector.position);
+      nxprintf(f, "Rotation", detector.rotation);
       nxprintf(f, "acquisition_mode",
         strcasestr(detector.format, "list") ? "event" : "summed");
 
@@ -2176,7 +2183,7 @@ void siminfo_close()
 *   Title is t, component name is c.
 *******************************************************************************/
 MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
-                         char *c, Coords posa)
+			     char *c, Coords posa, Rotation rota)
 {
   /* import and perform basic detector analysis (and handle MPI reduce) */
   MCDETECTOR detector = detector_import(mcformat,
@@ -2185,7 +2192,7 @@ MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
     "I", "", "",
     "I", "", "",
     0, 0, 0, 0, 0, 0, c,
-    &p0, &p1, &p2, posa); /* write Detector: line */
+    &p0, &p1, &p2, posa, rota); /* write Detector: line */
 
 #ifdef USE_NEXUS
   if (strcasestr(detector.format, "NeXus"))
@@ -2225,7 +2232,7 @@ MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
         char *xvar, double x1, double x2,
         long n,
         double *p0, double *p1, double *p2, char *f,
-        char *c, Coords posa)
+	char *c, Coords posa, Rotation rota)
 {
   /* import and perform basic detector analysis (and handle MPI_Reduce) */
   // detector_import calls mcdetector_statistics, which will return different
@@ -2237,7 +2244,7 @@ MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
     xl, yl, (n > 1 ? "Signal per bin" : " Signal"),
     xvar, "(I,I_err)", "I",
     x1, x2, 0, 0, 0, 0, f,
-    p0, p1, p2, posa); /* write Detector: line */
+    p0, p1, p2, posa, rota); /* write Detector: line */
   if (!detector.p1 || !detector.m) return(detector);
 
 #ifdef USE_NEXUS
@@ -2283,12 +2290,13 @@ MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
 *   Not included in the macro, and here forwarded to detector_import:
 *   c:    ?
 *   posa: ?
+*   rota: ?
 *******************************************************************************/
 MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
                   double x1, double x2, double y1, double y2,
                   long m, long n,
                   double *p0, double *p1, double *p2, char *f,
-                  char *c, Coords posa)
+		  char *c, Coords posa, Rotation rota)
 {
   char xvar[CHAR_BUF_LENGTH];
   char yvar[CHAR_BUF_LENGTH];
@@ -2309,7 +2317,7 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
       yl, "", "Signal per bin",
       yvar, "(I,Ierr)", "I",
       y1, y2, x1, x2, 0, 0, f,
-      p0, p1, p2, posa); /* write Detector: line */
+      p0, p1, p2, posa, rota); /* write Detector: line */
   } else if (labs(n)==1) {/* m>1 on X, n==1 on Y: 1D, no Y axis*/
     detector = detector_import(mcformat,
       c, (t ? t : MCCODE_STRING " 1D data"),
@@ -2317,7 +2325,7 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
       xl, "", "Signal per bin",
       xvar, "(I,Ierr)", "I",
       x1, x2, y1, y2, 0, 0, f,
-      p0, p1, p2, posa); /* write Detector: line */
+      p0, p1, p2, posa, rota); /* write Detector: line */
   }else {
     detector = detector_import(mcformat,
       c, (t ? t : MCCODE_STRING " 2D data"),
@@ -2325,7 +2333,7 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
       xl, yl, "Signal per bin",
       xvar, yvar, "I",
       x1, x2, y1, y2, 0, 0, f,
-      p0, p1, p2, posa); /* write Detector: line */
+      p0, p1, p2, posa, rota); /* write Detector: line */
   }
 
   if (!detector.p1 || !detector.m) return(detector);
@@ -2346,7 +2354,7 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
 MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
                   long m, long n,
                   double *p1, char *f,
-                  char *c, Coords posa)
+		  char *c, Coords posa, Rotation rota)
 {
   char       format_new[CHAR_BUF_LENGTH];
   char      *format_org;
@@ -2361,7 +2369,7 @@ MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
                   1,labs(m),1,labs(n),
                   m,n,
                   NULL, p1, NULL, f,
-                  c, posa);
+		  c, posa,rota);
 
   mcformat = format_org;
   return(detector);
