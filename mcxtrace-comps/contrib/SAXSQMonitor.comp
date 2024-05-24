@@ -197,7 +197,7 @@ SAVE
         Nofq,
         Iofq,
         IofqSquared,
-        qFilename, fname1,POS_A_CURRENT_COMP
+        qFilename, fname1,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP
         );
 %}
 

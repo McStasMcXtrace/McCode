@@ -269,6 +269,7 @@ INITIALIZE
     printf("Monitor_nD: %s has no option specified. Setting to PSD ('x y') monitor.\n", NAME_CURRENT_COMP);
   }
   Vars.compcurpos = POS_A_CURRENT_COMP;
+  Vars.compcurrot = ROT_A_CURRENT_COMP;
 
   if (strstr(Vars.option, "source"))
     strcat(Vars.option, " list, x y z vx vy vz t sx sy sz ");

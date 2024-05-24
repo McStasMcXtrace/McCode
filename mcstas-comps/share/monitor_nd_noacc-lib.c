@@ -1402,7 +1402,7 @@ MCDETECTOR Monitor_nd_noaccSave(Monitornd_noaccDefines_type *DEFS, Monitornd_noa
       if (Vars->Flag_signal != DEFS->COORD_P && Nsum > 0)
       { psum /=Nsum; p2sum /= Nsum*Nsum; }
       /* DETECTOR_OUT_0D(Vars->Monitor_Label, Vars->Nsum, Vars->psum, Vars->p2sum); */
-      detector = mcdetector_out_0D(Vars->Monitor_Label, Nsum, psum, p2sum, Vars->compcurname, Vars->compcurpos);
+      detector = mcdetector_out_0D(Vars->Monitor_Label, Nsum, psum, p2sum, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
     }
     else
     if (strlen(Vars->Mon_File) > 0)
@@ -1434,7 +1434,7 @@ MCDETECTOR Monitor_nd_noaccSave(Monitornd_noaccDefines_type *DEFS, Monitornd_noa
               label, "List of neutron events", Coord_X_Label,
               -Vars->Buffer_Size, Vars->Coord_Number+1,
               Vars->Mon2D_Buffer,
-              fname, Vars->compcurname, Vars->compcurpos);
+              fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
       }
       if (Vars->Flag_Multiple) /* n1D: DETECTOR_OUT_1D */
       {
@@ -1465,7 +1465,7 @@ MCDETECTOR Monitor_nd_noaccSave(Monitornd_noaccDefines_type *DEFS, Monitornd_noa
               min1d, max1d,
               Vars->Coord_Bin[i+1],
               Vars->Mon2D_N[i],Vars->Mon2D_p[i],Vars->Mon2D_p2[i],
-              fname, Vars->compcurname, Vars->compcurpos);
+              fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
             } /* if (p2m == NULL) */
             else
             {
@@ -1508,7 +1508,7 @@ MCDETECTOR Monitor_nd_noaccSave(Monitornd_noaccDefines_type *DEFS, Monitornd_noa
                 min1d, max1d,
                 Vars->Coord_Bin[i+1],
                 Vars->Mon2D_N[i],p1m,p2m,
-                fname, Vars->compcurname, Vars->compcurpos);
+                fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
 
             } /* else */
             /* comment out 'free memory' lines to avoid loosing arrays if
@@ -1517,7 +1517,7 @@ MCDETECTOR Monitor_nd_noaccSave(Monitornd_noaccDefines_type *DEFS, Monitornd_noa
             if (p2m != NULL) free(p2m); p2m=NULL;
             */
           } else { /* 0d monitor */
-            detector = mcdetector_out_0D(label, Vars->Mon2D_p[i][0], Vars->Mon2D_p2[i][0], Vars->Mon2D_N[i][0], Vars->compcurname, Vars->compcurpos);
+            detector = mcdetector_out_0D(label, Vars->Mon2D_p[i][0], Vars->Mon2D_p2[i][0], Vars->Mon2D_N[i][0], Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
           }
 
 
@@ -1606,7 +1606,7 @@ MCDETECTOR Monitor_nd_noaccSave(Monitornd_noaccDefines_type *DEFS, Monitornd_noa
             Vars->Coord_Bin[1],
             Vars->Coord_Bin[2],
             p0m,p1m,p2m,
-            fname, Vars->compcurname, Vars->compcurpos);
+            fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
 
           /* comment out 'free memory' lines to avoid loosing arrays if
                'detector' structure is used by other instrument parts
