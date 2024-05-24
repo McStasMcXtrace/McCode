@@ -38,7 +38,6 @@ var Main = function ()
 //
 Main.prototype.addCircle = function(plane, x, y, z, radius, parent, linecolor)
 {
-    console.log(plane, x, y, z, radius);
     if (radius == 0)
     {
         return;
@@ -67,17 +66,141 @@ Main.prototype.addCircle = function(plane, x, y, z, radius, parent, linecolor)
     parent.add( circle );
 }
 // add sphere
+//		x,y,z - center coordinates
 //		radius
 //		wseg 	- width segments
 //		hseg 	- height segments
-Main.prototype.addSphere = function(radius, wseg, hseg)
+Main.prototype.addSphere = function(x, y, z, radius, wseg, hseg, parent, color)
 {
+    if (radius === 0)
+    {
+        return;
+    }
     var geometry = new THREE.SphereGeometry(radius, wseg, hseg);
-    var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
-    var sphereMaterial = new THREE.MeshLambertMaterial({ color: 0xCC0000 });
-    var sphere = new THREE.Mesh( geometry, sphereMaterial );
-    this.scene.add( sphere );
+    var material = new THREE.MeshLambertMaterial( {color: color} );
+    var sphere = new THREE.Mesh( geometry, material );
+
+    sphere.position.x = x;
+    sphere.position.y = y;
+    sphere.position.z = z;
+
+    parent.add( sphere );
 }
+
+Main.prototype.addCone = function(x, y, z, radius, height, nx, ny, nz, radSeg, parent, color)
+{
+    if (radius === 0)
+    {
+        return;
+    }
+    var geometry = new THREE.ConeGeometry(radius, height, radSeg);
+    var material = new THREE.MeshLambertMaterial( {color: color} );
+    var cone = new THREE.Mesh( geometry, material );
+
+    cone.position.x = x;
+    cone.position.y = y;
+    cone.position.z = z;
+
+    var original_axis = new THREE.Vector3(0, 1, 0);
+    var align_axis = new THREE.Vector3(nx, ny, nz);
+    cone.quaternion.setFromUnitVectors(original_axis, align_axis.clone().normalize());
+
+    parent.add( cone );
+}
+
+Main.prototype.addCylinder = function(x, y, z, radius, height, thickness, nx, ny, nz, radSeg, parent, color)
+{
+    let geometry = new THREE.CylinderGeometry(radius, radius, height, radSeg);
+    let original_axis = new THREE.Vector3(0, 1, 0);
+
+    if(thickness > 0){
+        //correcting some differences between ExtrudeGeometry and CylinderGeometry implementation
+        original_axis = new THREE.Vector3(0, 0, 1);
+        y = -height/2;
+
+        let outer_cylinder = new THREE.Shape();
+        outer_cylinder.absarc(0, 0, radius, 0, Math.PI * 2);
+        let inner_cylinder = new THREE.Path();
+        inner_cylinder.absarc(0, 0, (radius - thickness), 0, Math.PI * 2);
+        outer_cylinder.holes.push(inner_cylinder);
+
+        geometry = new THREE.ExtrudeGeometry(outer_cylinder, {
+            steps: 1,
+            amount: height,
+            curveSegments: radSeg,
+            bevelEnabled: false
+        });
+    }
+
+
+    const material = new THREE.MeshLambertMaterial({color: color});
+    const cylinder = new THREE.Mesh(geometry, material);
+
+    cylinder.position.x = x;
+    cylinder.position.y = y;
+    cylinder.position.z = z;
+
+    var align_axis = new THREE.Vector3(nx, ny, nz);
+    cylinder.quaternion.setFromUnitVectors(original_axis, align_axis.clone().normalize());
+
+    parent.add( cylinder );
+}
+
+Main.prototype.addBox = function(x, y, z, a, b, c, thickness, parent, color)
+{
+    let geometry = new THREE.BoxGeometry(a, b, c);
+
+    if(thickness > 0){
+        a /= 2;
+        b /= 2;
+
+        let outerBox = new THREE.Shape();
+        outerBox.moveTo(-a, -b); // Bottom-left corner
+        outerBox.lineTo(a, -b);  // Bottom-right corner
+        outerBox.lineTo(a, b);   // Top-right corner
+        outerBox.lineTo(-a, b);  // Top-left corner
+
+        const a_inner = a - thickness;
+        const b_inner = b - thickness;
+
+        let innerBox =  new THREE.Shape();
+        innerBox.moveTo(-a_inner, -b_inner);
+        innerBox.lineTo(a_inner, -b_inner);
+        innerBox.lineTo(a_inner, b_inner);
+        innerBox.lineTo(-a_inner, b_inner);
+
+        outerBox.holes.push(innerBox);
+
+        geometry = new THREE.ExtrudeGeometry(outerBox, {
+            steps: 1,
+            amount: c,
+            bevelEnabled: false
+        });
+    }
+
+    const material = new THREE.MeshLambertMaterial({color: color});
+    const box = new THREE.Mesh(geometry, material);
+
+    box.position.x = x;
+    box.position.y = y;
+    box.position.z = z;
+
+    parent.add( box );
+}
+
+Main.prototype.addPolygon = function(faces, vertices, parent, color)
+{
+    let geometry = new THREE.BufferGeometry();
+
+    geometry.setIndex(faces);
+    geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+
+    const material = new THREE.MeshLambertMaterial({color: color});
+    const polygon = new THREE.Mesh(geometry, material);
+
+    parent.add( polygon );
+}
+
 // add pointlight
 // 		center 	- THREE.Vector3 instance
 Main.prototype.addLight = function(center)
@@ -100,13 +223,23 @@ Main.prototype.init = function(campos, invert)
     this.camera.position.y = campos.y; // 0;
     this.camera.position.z = campos.z; // 50;
 
-    // NOTE: initial camera view direction is along the x axis
-
-    this.renderer = new THREE.WebGLRenderer();
+    this.renderer = new THREE.WebGLRenderer({
+        antialias: true
+    });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    if (invert) {
+    if (invert)
+    {
         this.renderer.setClearColor( 0xffffff );
     }
+
+    document.body.appendChild(this.renderer.domElement);
+    window.addEventListener("resize", event => {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+    })
+
+    // NOTE: initial camera view direction is along the x axis
 
     element = document.getElementById("3dcanvas");
     console.log(element);
@@ -119,7 +252,11 @@ Main.prototype.init = function(campos, invert)
 
     this.camera.lookAt(this.controls.target);
 
-    this.addLight(new THREE.Vector3(10, 50, 130))
+    let light = new THREE.DirectionalLight(0xffffff, 0.5);
+    light.position.setScalar(1);
+    this.scene.add(light, new THREE.AmbientLight(0xffffff, 0.5));
+
+    this.scene.add(new THREE.GridHelper());
     this.scene.add(this.rootnode);
 }
 //  cat camera view according to campos, a Vector3
@@ -347,14 +484,34 @@ TraceLoader.prototype.loadInstr = function()
         key = call['key'];
         args = call['args'];
 
-        if (key == 'multiline') {
+        if (key === 'multiline') {
             main.addMultiLine(args, parentnode, color);
         }
-        if (key == 'line') {
+        if (key === 'line') {
             main.addMultiLine(args, parentnode, color);
         }
-        if (key == 'circle') {
+        if (key === 'circle') {
             main.addCircle(args[0], args[1], args[2], args[3], args[4], parentnode, color);
+        }
+        if (key === 'sphere') {
+            console.log(args)
+            main.addSphere(args[0], args[1], args[2], args[3], 32,32, parentnode, color);
+        }
+        if (key === 'cone') {
+            console.log(args)
+            main.addCone(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 32, parentnode, color);
+        }
+        if (key === 'cylinder') {
+            console.log(args)
+            main.addCylinder(args[0], args[1], args[2], args[3],args[4], args[5], args[6], args[7], args[8], 32, parentnode, color);
+        }
+        if (key === 'box') {
+            console.log(args)
+            main.addBox(args[0], args[1], args[2], args[3], args[4], args[5], args[6], parentnode, color);
+        }
+        if (key === 'polygon') {
+            console.log(args)
+            main.addPolygon(args[0], args[1], parentnode, color);
         }
     }
 
