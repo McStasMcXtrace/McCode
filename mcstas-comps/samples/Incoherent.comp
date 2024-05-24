@@ -455,7 +455,7 @@ MCDISPLAY
       }
       else
         if (radius > 0 &&  yheight) {	/* cylinder */
-          mcdis_new_cylinder(0,0,0,radius,yheight,thickness,0,0,1,0);
+          mcdis_new_cylinder(0,0,0,radius,yheight,thickness,0,1,0);
       }
       else if (xwidth && yheight) { 	/* box/rectangle XY */
           mcdis_new_box(0,0,0,xwidth,yheight,zdepth,thickness);
