@@ -564,6 +564,11 @@ int cogen_raytrace(struct instr_def *instr)
       coutf("%s.set_WHEN('%s')",comp->name, exp_tostring(comp->when));
     }
 
+    if (comp->group) {
+      coutf("# %s is in GROUP %s",comp->name, comp->group->name);
+      coutf("%s.set_GROUP('%s')",comp->name, comp->group->name);
+    }
+
     if (list_len(comp->extend->lines) > 0) {
       coutf("# EXTEND at %s", comp->name);
       coutf("%s.append_EXTEND(r'''",comp->name);
