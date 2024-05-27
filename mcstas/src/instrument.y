@@ -1251,11 +1251,20 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
           }
           comp->group->last_comp      =comp->name;
           comp->group->last_comp_index=comp->index;
-          if (comp->split)
-            print_warn(NULL, "WARNING: Component %s=%s() at line %s:%d is in GROUP %s and has a SPLIT.\n"
-              "\tMove the SPLIT keyword before (outside) the component instance %s (first in GROUP)\n",
-              comp->name, comp->def->name, instr_current_filename, instr_current_line, $12->name,
-              comp->group->first_comp);
+          if (comp->split) {
+	    if (strcmp(comp->name, comp->group->first_comp)) {
+	      print_error("FATAL ERROR:\n\tComponent %s=%s() at line %s:%d is in GROUP %s and has a SPLIT.\n"
+			  "\tOnly the first component of a GROUP may impose SPLIT, so please only include \n"
+			  "\tSPLIT on %s (first in GROUP) or better yet to an earlier component!\n\n",
+			  comp->name, comp->def->name, instr_current_filename, instr_current_line, $12->name,
+			  comp->group->first_comp);
+	      exit(-1);
+	    } else {
+	      print_warn(NULL," Component %s=%s() at line %s:%d is 1st in GROUP %s and has a SPLIT.\n"
+			  "\tBest practice is to move the SPLIT to an earlier component.\n\n",
+			  comp->name, comp->def->name, instr_current_filename, instr_current_line, $12->name);
+	    }
+	  }
         }
         if ($13->linenum)   comp->extend= $13;  /* EXTEND block*/
         if (list_len($14))  comp->jump  = $14;
