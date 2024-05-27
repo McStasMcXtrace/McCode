@@ -36,7 +36,7 @@ MC_STOP = 'INSTRUMENT END:'
 
 COLORS = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow']
 #transparency will be a user controlled parameter eventually
-transparency = 1
+transparency = 0.5
 #for setting axis limits when using polygon
 x_max_polygon = y_max_polygon = z_max_polygon = float('-inf')
 x_min_polygon = y_min_polygon = z_min_polygon = float('inf')
