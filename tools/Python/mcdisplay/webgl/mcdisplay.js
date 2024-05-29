@@ -3,8 +3,7 @@
 //      transform  -  matrix4
 var transformPoints = function(apoints, transform)
 {
-    var geometry = new THREE.Geometry();
-    geometry.vertices = apoints;
+    var geometry = new THREE.BufferGeometry().setFromPoints(apoints);
     geometry.applyMatrix4(transform);
     return geometry.vertices.slice();
 }
@@ -285,8 +284,7 @@ Main.prototype.setNativeBoundingBox = function()
 Main.prototype.addMultiLineV3 = function(arrVector3, parent, linecolor)
 {
     var multilinematerial = new THREE.LineBasicMaterial({color: linecolor});
-    var multilinegeometry = new THREE.Geometry();
-    multilinegeometry.vertices = arrVector3;
+    var multilinegeometry = new THREE.BufferGeometry().setFromPoints(arrVector3);
     var multiline = new THREE.Line(multilinegeometry, multilinematerial);
     parent.add(multiline);
 }
@@ -297,12 +295,12 @@ Main.prototype.addMultiLine = function(points, parent, linecolor)
     vectors = [];
     for (var i = 0; i < points.length / 3; i++)
     {
-        points[i];
-        v = new THREE.Vector3(points[i*3], points[i*3+1], points[i*3+2]);
+        const v = new THREE.Vector3(points[i*3], points[i*3+1], points[i*3+2]);
         vectors.push(v);
     }
     this.addMultiLineV3(vectors, parent, linecolor);
 }
+
 //  adds tiny boxes to each particle ray scatter point
 //
 Main.prototype.putScatterPoints = function(raynode)
@@ -340,8 +338,7 @@ Main.prototype.addRayNode = function(rayObj, vertices, speed)
     console.log("lut_color: " + lut_color);
 
     var multilinematerial = new THREE.LineBasicMaterial({color: lut_color});
-    var multilinegeometry = new THREE.Geometry();
-    multilinegeometry.vertices = vertices;
+    var multilinegeometry = new THREE.BufferGeometry().setFromPoints(vertices);
     var multiline = new THREE.Line(multilinegeometry, multilinematerial);
     rayObj.add(multiline);
 
