@@ -5,7 +5,7 @@ var transformPoints = function(apoints, transform)
 {
     var geometry = new THREE.Geometry();
     geometry.vertices = apoints;
-    geometry.applyMatrix(transform);
+    geometry.applyMatrix4(transform);
     return geometry.vertices.slice();
 }
 // "main" class which is a collection of scene graph setup routives and data objects
@@ -57,7 +57,7 @@ Main.prototype.addCircle = function(plane, x, y, z, radius, parent, linecolor)
 
     var circle = new THREE.Line( circleGeometry, material ); // THREE.Mesh results in solid coloring
 
-    circle.applyMatrix(m);
+    circle.applyMatrix4(m);
 
     circle.position.x = x;
     circle.position.y = y;
@@ -126,7 +126,7 @@ Main.prototype.addCylinder = function(x, y, z, radius, height, thickness, nx, ny
 
         geometry = new THREE.ExtrudeGeometry(outer_cylinder, {
             steps: 1,
-            amount: height,
+            depth: height,
             curveSegments: radSeg,
             bevelEnabled: false
         });
@@ -173,7 +173,7 @@ Main.prototype.addBox = function(x, y, z, a, b, c, thickness, parent, color)
 
         geometry = new THREE.ExtrudeGeometry(outerBox, {
             steps: 1,
-            amount: c,
+            depth: c,
             bevelEnabled: false
         });
     }
@@ -547,7 +547,7 @@ TraceLoader.prototype.loadInstr = function()
 
         comp_matrix = new THREE.Matrix4();
         comp_matrix.set(m4[0], m4[1], m4[2], m4[3], m4[4], m4[5], m4[6], m4[7], m4[8], m4[9], m4[10], m4[11], m4[12], m4[13], m4[14], m4[15]);
-        comp_node.applyMatrix(comp_matrix);
+        comp_node.applyMatrix4(comp_matrix);
     }
 
     // BOUNDING BOX
