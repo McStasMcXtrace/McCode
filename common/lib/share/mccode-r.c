@@ -2575,6 +2575,11 @@ void mcdis_circle(char *plane, double x, double y, double z, double r){
   printf("MCDISPLAY: circle('%s',%g,%g,%g,%g)\n", plane, x, y, z, r);
 }
 
+void mcdis_new_circle(double x, double y, double z, double r, double nx, double ny, double nz){
+  printf("MCDISPLAY: new_circle(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, r, nx, ny, nz);
+}
+
+
 /* Draws a circle with center (x,y,z), radius (r), and in the plane
  * with normal (nx,ny,nz)*/
 void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, double nz){
@@ -2675,6 +2680,22 @@ void mcdis_cone( double x, double y, double z,
         double r, double height, double nx, double ny, double nz){
     printf("MCDISPLAY: cone(%g, %g, %g, %g, %g, %g, %g, %g)\n",
        x, y, z, r, height, nx, ny, nz);
+}
+
+/* Draws a disc with center at (x,y,z) with extent (r).
+ * The disc axis is along the vector nx,ny,nz.*/
+void mcdis_disc( double x, double y, double z,
+        double r, double nx, double ny, double nz){
+  printf("MCDISPLAY: disc(%g, %g, %g, %g, %g, %g, %g)\n",
+     x, y, z, r, nx, ny, nz);
+}
+
+/* Draws a annulus with center at (x,y,z) with extent (outer_radius) and remove inner_radius.
+ * The annulus axis is along the vector nx,ny,nz.*/
+void mcdis_annulus( double x, double y, double z,
+        double outer_radius, double inner_radius, double nx, double ny, double nz){
+  printf("MCDISPLAY: annulus(%g, %g, %g, %g, %g, %g, %g, %g)\n",
+     x, y, z, outer_radius, inner_radius, nx, ny, nz);
 }
 
 /* draws a sphere with center at (x,y,z) with extent (r)*/
