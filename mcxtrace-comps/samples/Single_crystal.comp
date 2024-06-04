@@ -141,7 +141,7 @@
 * sets the proper truncation function (only for thin box and disk shapes).
 * This feature is an approximation of the real surface scattering, and does not
 * handle complex geometries (clusters, wetting, multi-layers, ...). It may be 
-* used as well to describe over-structure stallite peaks.
+* used as well to describe over-structure satellite peaks.
 *
 * Example: Single_crystal(xwidth=0.01, yheight=0.01, zdepth=0.01, mosaic = 5, 
 *   reflections="Si.lau")
