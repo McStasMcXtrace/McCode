@@ -420,6 +420,9 @@ drawcommands = {
     'sphere'      : 'DrawSphere',
     'cone'        : 'DrawCone',
     'cylinder'    : 'DrawCylinder',
+    'disc'        : 'DrawDisc',
+    'annulus'     : 'DrawAnnulus',
+    'new_circle'  : 'DrawNewCircle',
     'polygon'     : 'DrawPolygon',
 }
 # reduced set containing wholly implemented and non-trivial commands
@@ -431,6 +434,9 @@ reduced_drawcommands = {
     'sphere'      : 'DrawSphere',
     'cone'        : 'DrawCone',
     'cylinder'    : 'DrawCylinder',
+    'disc'        : 'DrawDisc',
+    'annulus'     : 'DrawAnnulus',
+    'new_circle'  : 'DrawNewCircle',
     'polygon'     : 'DrawPolygon',
     }
 
@@ -621,6 +627,20 @@ class DrawCircle(DrawCommand):
         self.args_str = '\"' + self.args_str[:idx] + '\"' + self.args_str[idx:]
 
 
+class DrawNewCircle(DrawCommand):
+    center = None
+    radius = None
+    axis_vector = None
+
+    def __init__(self, args):
+        super(DrawNewCircle, self).__init__(args)
+        self.key = 'new_circle'
+
+        self.center = Vector3d(float(args[0]), float(args[1]), float(args[2]))
+        self.radius = float(args[3])
+        self.axis_vector = Vector3d(float(args[4]), float(args[5]), float(args[6]))
+
+
 class DrawSphere(DrawCommand):
     center = None
     radius = None
@@ -666,6 +686,36 @@ class DrawCylinder(DrawCommand):
         self.height = float(args[4])
         self.thickness = float(args[5])
         self.axis_vector = Vector3d(float(args[6]), float(args[7]), float(args[8]))
+
+
+class DrawDisc(DrawCommand):
+    center = None
+    radius = None
+    axis_vector = None
+
+    def __init__(self, args):
+        super(DrawDisc, self).__init__(args)
+        self.key = 'disc'
+
+        self.center = Vector3d(float(args[0]), float(args[1]), float(args[2]))
+        self.radius = float(args[3])
+        self.axis_vector = Vector3d(float(args[4]), float(args[5]), float(args[6]))
+
+
+class DrawAnnulus(DrawCommand):
+    center = None
+    outer_radius = None
+    inner_radius = None
+    axis_vector = None
+
+    def __init__(self, args):
+        super(DrawAnnulus, self).__init__(args)
+        self.key = 'annulus'
+
+        self.center = Vector3d(float(args[0]), float(args[1]), float(args[2]))
+        self.outer_radius = float(args[3])
+        self.inner_radius = float(args[4])
+        self.axis_vector = Vector3d(float(args[5]), float(args[6]), float(args[7]))
 
 
 class DrawPolygon(DrawCommand):

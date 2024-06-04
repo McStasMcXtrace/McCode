@@ -46,7 +46,10 @@ class InstrTraceParser:
         'sphere'      : 'DRAWCALL',
         'cone'        : 'DRAWCALL',
         'cylinder'    : 'DRAWCALL',
-        'polygon'     : 'DRAWCALL',
+        'disc'        : 'DRAWCALL',
+        'annulus'     : 'DRAWCALL',
+        'new_circle'  : 'DRAWCALL',
+
 
         'MANTID_PIXEL': 'MANTID_PIXEL',
         'MANTID_BANANA_DET': 'MANTID_BANANA_DET',
