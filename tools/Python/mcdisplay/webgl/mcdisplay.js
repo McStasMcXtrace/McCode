@@ -1,12 +1,29 @@
-// transforms vertices by and returns the transformed
-//      apoints  -  an array of vertices
-//      transform  -  matrix4
-var transformPoints = function(apoints, transform)
-{
-    var geometry = new THREE.BufferGeometry().setFromPoints(apoints);
+var transformPoints = function(apoints, transform) {
+    // Create a BufferGeometry
+    var geometry = new THREE.BufferGeometry();
+
+    // Convert apoints array to a Float32Array and set it as the position attribute
+    var vertices = new Float32Array(apoints.length * 3);
+    for (var i = 0; i < apoints.length; i++) {
+        vertices[i * 3] = apoints[i].x;
+        vertices[i * 3 + 1] = apoints[i].y;
+        vertices[i * 3 + 2] = apoints[i].z;
+    }
+    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+
+    // Apply the transformation matrix
     geometry.applyMatrix4(transform);
-    return geometry.vertices.slice();
+
+    // Extract the transformed vertices
+    var transformedVertices = [];
+    var position = geometry.getAttribute('position');
+    for (var i = 0; i < position.count; i++) {
+        transformedVertices.push(new THREE.Vector3(position.getX(i), position.getY(i), position.getZ(i)));
+    }
+
+    return transformedVertices;
 }
+
 // "main" class which is a collection of scene graph setup routives and data objects
 //
 var Main = function ()
@@ -42,27 +59,15 @@ Main.prototype.addCircle = function(plane, x, y, z, radius, parent, linecolor)
         return;
     }
 
-    var wrapper = new THREE.Object3D();
-    var m = new THREE.Matrix4()
-    if (plane == 'xy') { } // identity
-    if (plane == 'xz') { m.makeRotationX( Math.PI/2 ); }
-    if (plane == 'yz') { m.makeRotationY( Math.PI/2 ); }
-
-    var segments = 48;
-    var circleGeometry = new THREE.CircleGeometry( radius, segments );
-    circleGeometry.vertices.shift(); // removes center vertex
-    var material = new THREE.MeshBasicMaterial( {color: linecolor} );
-    material.side = THREE.DoubleSide;
-
-    var circle = new THREE.Line( circleGeometry, material ); // THREE.Mesh results in solid coloring
-
-    circle.applyMatrix4(m);
-
-    circle.position.x = x;
-    circle.position.y = y;
-    circle.position.z = z;
-
-    parent.add( circle );
+    if (plane === 'xy') {
+        Main.prototype.addNewCircle(x, y, z, radius, 0, 0, 1, 32, parent, linecolor)
+    }
+    if (plane === 'xz') {
+        Main.prototype.addNewCircle(x, y, z, radius, 0, 1, 0, 32, parent, linecolor)
+    }
+    if (plane === 'yz') {
+        Main.prototype.addNewCircle(x, y, z, radius, 1, 0, 0, 32, parent, linecolor)
+    }
 }
 // add sphere
 //		x,y,z - center coordinates
@@ -143,6 +148,34 @@ Main.prototype.addCylinder = function(x, y, z, radius, height, thickness, nx, ny
     cylinder.quaternion.setFromUnitVectors(original_axis, align_axis.clone().normalize());
 
     parent.add( cylinder );
+}
+
+Main.prototype.addAnnulus = function(x, y, z, outer_radius, inner_radius, nx, ny, nz, radSeg, parent, color)
+{
+    let geometry = new THREE.RingGeometry(outer_radius-inner_radius, outer_radius, radSeg);
+    let original_axis = new THREE.Vector3(0, 0, 1);
+
+    const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
+    const annulus = new THREE.Mesh(geometry, material);
+
+    annulus.position.x = x;
+    annulus.position.y = y;
+    annulus.position.z = z;
+
+    var align_axis = new THREE.Vector3(nx, ny, nz);
+    annulus.quaternion.setFromUnitVectors(original_axis, align_axis.clone().normalize());
+
+    parent.add( annulus );
+}
+
+Main.prototype.addDisc = function(x, y, z, radius, nx, ny, nz, radSeg, parent, color)
+{
+    Main.prototype.addAnnulus(x, y, z, radius, radius, nx, ny, nz, radSeg, parent, color);
+}
+
+Main.prototype.addNewCircle = function(x, y, z, radius, nx, ny, nz, radSeg, parent, color)
+{
+    Main.prototype.addAnnulus(x, y, z, radius, 0.01, nx, ny, nz, radSeg, parent, color);
 }
 
 Main.prototype.addBox = function(x, y, z, a, b, c, thickness, parent, color)
@@ -326,8 +359,6 @@ Main.prototype.setLutRange = function(min, max)
     this.lut = new THREE.Lut( "cooltowarm", 512 );
     this.lut.setMin(min);
     this.lut.setMax(max);
-    console.log("Lut min value: " + min);
-    console.log("Lut max value: " + max);
 }
 // add a ray node
 //
@@ -335,7 +366,6 @@ Main.prototype.addRayNode = function(rayObj, vertices, speed)
 {
     var lut_color = this.lut.getColor(speed);
     rayObj.lut_color = lut_color;
-    console.log("lut_color: " + lut_color);
 
     var multilinematerial = new THREE.LineBasicMaterial({color: lut_color});
     var multilinegeometry = new THREE.BufferGeometry().setFromPoints(vertices);
@@ -491,23 +521,27 @@ TraceLoader.prototype.loadInstr = function()
             main.addCircle(args[0], args[1], args[2], args[3], args[4], parentnode, color);
         }
         if (key === 'sphere') {
-            console.log(args)
             main.addSphere(args[0], args[1], args[2], args[3], 32,32, parentnode, color);
         }
         if (key === 'cone') {
-            console.log(args)
             main.addCone(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 32, parentnode, color);
         }
         if (key === 'cylinder') {
-            console.log(args)
             main.addCylinder(args[0], args[1], args[2], args[3],args[4], args[5], args[6], args[7], args[8], 32, parentnode, color);
         }
+        if (key === 'disc') {
+            main.addDisc(args[0], args[1], args[2], args[3],args[4], args[5], args[6], 32, parentnode, color);
+        }
+        if (key === 'annulus') {
+            main.addAnnulus(args[0], args[1], args[2], args[3],args[4], args[5], args[6], args[7], 32, parentnode, color);
+        }
+        if (key === 'new_circle') {
+            main.addNewCircle(args[0], args[1], args[2], args[3],args[4], args[5], args[6], 32, parentnode, color);
+        }
         if (key === 'box') {
-            console.log(args)
             main.addBox(args[0], args[1], args[2], args[3], args[4], args[5], args[6], parentnode, color);
         }
         if (key === 'polygon') {
-            console.log(args)
             main.addPolygon(args[0], args[1], parentnode, color);
         }
     }
