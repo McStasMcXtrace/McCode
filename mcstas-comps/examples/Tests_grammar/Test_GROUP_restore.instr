@@ -1,0 +1,137 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: test (rename also the example and DEFINE lines below)
+*
+* %Identification
+* Written by: Peter Willendrup
+* Date: June 2024
+* Origin: DTU/ESS
+* %INSTRUMENT_SITE: Tests_grammar
+*
+* Test instrument for GROUP of monitors using restore_neutron
+*
+* %Description
+* Test instrument for GROUP of monitors using restore_neutron.
+*
+* 1st test: Source emits intensity of 6e6 - "cube" positioned monitors each catch 1/6 of that.
+* 2nd test: Reduced dimension of monitors mean a fraction is lost in the GROUP
+* 3rd test: Adding a "catchall" arm recovers the intensity
+*
+* %Example: mcrun Test_GROUP_restore catchall=0 Detector: Mon00_12_I=1.00e+06
+* %Example: mcrun Test_GROUP_restore catchall=0 dim=3 Detector: psd_monitor_4pi_3m_I=4.22e+06
+* %Example: mcrun Test_GROUP_restore catchall=1 dim=3 Detector: psd_monitor_4pi_3m_I=6.00e+06
+*
+* %Parameters
+* dim:        [m] Width/height of monitors in "cubic" GROUP arrangement
+* catchall:   [1] Flag to indicate if "catchall"-Arm is included in GROUP
+* src_dim:    [m] radius of 4PI-emitting source
+*
+* %Link
+* A reference/HTML link for more information
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_GROUP_restore(dim=4,int catchall=0, int restore=1, src_dim=0.01)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source_div = Source_4PI(gauss=1, flux=6e6, lambda0=4, dlambda=0.1, radius=src_dim)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT psd_monitor_4pi = PSD_monitor_4PI()
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT dir00 = Arm()
+AT (0,0,0) RELATIVE source_div
+ROTATED (0,0,0) RELATIVE source_div
+
+COMPONENT dir90 = Arm()
+AT (0,0,0) RELATIVE source_div
+ROTATED (0,90,0) RELATIVE source_div
+
+COMPONENT dir180 = Arm()
+AT (0,0,0) RELATIVE source_div
+ROTATED (0,180,0) RELATIVE source_div
+
+COMPONENT dir270 = Arm()
+AT (0,0,0) RELATIVE source_div
+ROTATED (0,270,0) RELATIVE source_div
+
+COMPONENT dirup = Arm()
+AT (0,0,0) RELATIVE source_div
+ROTATED (90,0,0) RELATIVE source_div
+
+COMPONENT dirdown = Arm()
+AT (0,0,0) RELATIVE source_div
+ROTATED (-90,0,0) RELATIVE source_div
+
+COMPONENT Mon00 = PSD_monitor(
+    xwidth=dim, 
+    yheight=dim, restore_neutron=restore)
+AT (0, 0, 2) RELATIVE dir00
+GROUP Mons
+
+COMPONENT COPY(Mon00) = COPY(Mon00)
+AT (0, 0, 2) RELATIVE dir90
+GROUP Mons
+
+COMPONENT COPY(Mon00) = COPY(Mon00)
+AT (0, 0, 2) RELATIVE dir180
+GROUP Mons
+
+COMPONENT COPY(Mon00) = COPY(Mon00)
+AT (0, 0, 2) RELATIVE dir270
+GROUP Mons
+
+COMPONENT COPY(Mon00) = COPY(Mon00)
+AT (0, 0, 2) RELATIVE dirup
+GROUP Mons
+
+COMPONENT COPY(Mon00) = COPY(Mon00)
+AT (0, 0, 2) RELATIVE dirdown
+GROUP Mons
+
+COMPONENT ArmCatcha = Arm()
+WHEN (catchall) AT (0, 0, 0) RELATIVE source_div
+GROUP Mons
+EXTEND %{
+	if(INSTRUMENT_GETPAR(catchall)) SCATTER;
+%}
+
+COMPONENT psd_monitor_4pi_3m = PSD_monitor_4PI(radius=5)
+AT (0, 0, 0) RELATIVE source_div
+
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
