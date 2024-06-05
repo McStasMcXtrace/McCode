@@ -49,6 +49,7 @@ class InstrTraceParser:
         'disc'        : 'DRAWCALL',
         'annulus'     : 'DRAWCALL',
         'new_circle'  : 'DRAWCALL',
+        'polygon'     : 'DRAWCALL',
 
 
         'MANTID_PIXEL': 'MANTID_PIXEL',

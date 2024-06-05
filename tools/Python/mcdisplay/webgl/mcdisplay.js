@@ -224,6 +224,12 @@ Main.prototype.addPolygon = function(faces, vertices, parent, color)
 {
     let geometry = new THREE.BufferGeometry();
 
+    //check faces for rank 4 TODO
+    if(true){
+        //transform faces to rank 3
+        faces = getRank3Indices(faces);
+    }
+
     geometry.setIndex(faces);
     geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
 
@@ -232,6 +238,27 @@ Main.prototype.addPolygon = function(faces, vertices, parent, color)
 
     parent.add( polygon );
 }
+
+function getRank3Indices(rank4indices)
+{
+    let rank3indices = [];
+
+    for(let i = 0; i < rank4indices.length; i+=4){
+        let face = [];
+        for(let j = 0; j < 4; j++){
+            face.push(rank4indices[i+j]);
+        }
+        rank3indices.push(face[0]);
+        rank3indices.push(face[1]);
+        rank3indices.push(face[2]);
+
+        rank3indices.push(face[0]);
+        rank3indices.push(face[2]);
+        rank3indices.push(face[3]);
+    }
+    return rank3indices;
+}
+
 
 // add pointlight
 // 		center 	- THREE.Vector3 instance
