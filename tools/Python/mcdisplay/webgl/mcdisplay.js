@@ -332,13 +332,7 @@ Main.prototype.setCameraView = function(campos)
 
     this.camera.lookAt(this.controls.target);
 }
-//  set a bounding box around the components
-//
-Main.prototype.setNativeBoundingBox = function()
-{
-    var box = new THREE.BoxHelper(this.rootnode, 0x808080);
-    this.scene.add(box);
-}
+
 // add multiline
 // 		arrVector3  -  an array of THREE.Vector3 instances
 Main.prototype.addMultiLineV3 = function(arrVector3, parent, linecolor)
@@ -607,18 +601,6 @@ TraceLoader.prototype.loadInstr = function()
         comp_matrix.set(m4[0], m4[1], m4[2], m4[3], m4[4], m4[5], m4[6], m4[7], m4[8], m4[9], m4[10], m4[11], m4[12], m4[13], m4[14], m4[15]);
         comp_node.applyMatrix4(comp_matrix);
     }
-
-    // BOUNDING BOX
-    var bb = instr['boundingbox'];
-    var drawcalls = bb['drawcalls'];
-    var call;
-    for (var i = 0; i < drawcalls.length; i++)
-    {
-        call = drawcalls[i];
-        key = call['key'];
-
-        drawFunc(call, main.bbnode, 0x808080);
-    }
 }
 // load particle rays
 //
@@ -727,9 +709,6 @@ Controller.prototype.run = function()
             _this.hidePrevRays();
         }
 
-        // set bounding box visible property
-        _this.main.bbnode.visible = viewmodel.getShowBoundingBox();
-
         // set scatter cubes on/off
         if (viewmodel.getShowScatterCubes())
         {
@@ -758,7 +737,6 @@ Controller.prototype.run = function()
     // load data - possibly heavy
     this.loader.loadInstr();
     this.loader.loadParticles();
-    //this.main.setNativeBoundingBox();
 
     // set pause playback mode now after everything else, in case of zero or one rays
     if (this.numRays <= 1) { this.viewmodel.playBack = PlayBack.PAUSE }
@@ -826,7 +804,6 @@ var ViewModel = function(numRays)
     this.playBack = PlayBack.RUN;
     this.displayMode = DisplayMode.SINGLE;
 
-    this.showBoundingbox = true;
     this.showScattCubes = false;
 
     this.numRays = numRays;
@@ -838,22 +815,6 @@ var ViewModel = function(numRays)
 ViewModel.prototype.getUpdateVersion = function()
 {
     return this.updateVersion;
-}
-ViewModel.prototype.setShowBoundingBox = function(bbOnOff)
-{
-    if (bbOnOff)
-    {
-        this.showBoundingbox = true;
-    }
-    else
-    {
-        this.showBoundingbox = false;
-    }
-    this.updateVersion += 1;
-}
-ViewModel.prototype.getShowBoundingBox = function()
-{
-    return this.showBoundingbox;
 }
 ViewModel.prototype.setShowScatterCubes = function(scOnOff)
 {
