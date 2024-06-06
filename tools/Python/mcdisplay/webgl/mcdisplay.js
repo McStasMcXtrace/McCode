@@ -315,7 +315,18 @@ Main.prototype.init = function(campos, invert)
     light.position.setScalar(1);
     this.scene.add(light, new THREE.AmbientLight(0xffffff, 0.5));
 
-    this.scene.add(new THREE.GridHelper());
+    var gridXZ = new THREE.GridHelper(100, 100);
+    this.scene.add(gridXZ);
+
+    var gridXY = new THREE.GridHelper(100, 100);
+    gridXY.rotation.x = Math.PI / 2;
+    this.scene.add(gridXY);
+
+    var gridYZ = new THREE.GridHelper(100, 100);
+    gridYZ.rotation.z = Math.PI / 2;
+    this.scene.add(gridYZ);
+
+
     this.scene.add(this.rootnode);
 }
 //  cat camera view according to campos, a Vector3
