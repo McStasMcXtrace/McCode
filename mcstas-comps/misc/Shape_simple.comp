@@ -95,7 +95,7 @@ MCDISPLAY
     off_display(offdata);
   }
   else if (radius > 0 &&  yheight) {	/* cylinder */
-    cylinder(0,0,0,radius,yheight,thickness,0, 0,1,0);
+    cylinder(0,0,0,radius,yheight,thickness, 0,1,0);
   }
   else if (xwidth && yheight) { 	/* box/rectangle XY */
       box(0,0,0,xwidth, yheight, zdepth,0);
