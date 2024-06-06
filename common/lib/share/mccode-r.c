@@ -2604,15 +2604,21 @@ void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, 
 /*  NEW 3D IMPLEMENTATION OF BOX SUPPORTS HOLLOW ALSO
     draws a box with center at (x, y, z) and
     width (deltax), height (deltay), length (deltaz) */
-void mcdis_new_box(double x, double y, double z,
+void mcdis_box(double x, double y, double z,
 	       double width, double height, double length, double thickness){
-  printf("MCDISPLAY: box(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness);
+  if (mcdotrace==2) {
+    printf("MCDISPLAY: box(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness);
+  } else {
+    mcdis_legacy_box(x, y, z, width, height, length);
+    if (thickness)
+      mcdis_legacy_box(x, y, z, width-thickness, height-thickness, length);
+  }
 }
 
 /*  OLD IMPLEMENTATION
     draws a box with center at (x, y, z) and
     width (deltax), height (deltay), length (deltaz) */
-void mcdis_box(double x, double y, double z,
+void mcdis_legacy_box(double x, double y, double z,
 	       double width, double height, double length){
 
   mcdis_rectangle("xy", x, y, z-length/2, width, height);
@@ -2630,9 +2636,8 @@ void mcdis_box(double x, double y, double z,
 
 /* OLD IMPLEMENTATION
 Draws a cylinder with center at (x,y,z) with extent (r,height).
- * The cylinder axis is along the vector nx,ny,nz.
- * After converting comps to 3D implementation remove this*/
-void mcdis_cylinder( double x, double y, double z,
+ * The cylinder axis is along the vector nx,ny,nz. */
+void mcdis_legacy_cylinder( double x, double y, double z,
         double r, double height, int N, double nx, double ny, double nz){
     int i;
     /*no lines make little sense - so trigger the default*/
@@ -2663,10 +2668,15 @@ void mcdis_cylinder( double x, double y, double z,
 /* NEW 3D IMPLEMENTATION ALSO SUPPORTING HOLLOW
 Draws a cylinder with center at (x,y,z) with extent (r,height).
  * The cylinder axis is along the vector nx,ny,nz.*/
-void mcdis_new_cylinder( double x, double y, double z,
+void mcdis_cylinder( double x, double y, double z,
         double r, double height, double thickness, double t, double nx, double ny, double nz){
+  if (mcdotrace==) {
       printf("MCDISPLAY: cylinder(%g, %g, %g, %g, %g, %g, %g, %g, %g)\n",
          x, y, z, r, height, thickness, nx, ny, nz);
+  } else {
+    mcdis_legacy_cylinder(x, y, z,
+			   r, height, 12, nx, ny, nz)
+  }
 }
 
 /* Draws a cone with center at (x,y,z) with extent (r,height).
