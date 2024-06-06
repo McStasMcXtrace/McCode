@@ -2675,7 +2675,7 @@ void mcdis_cylinder( double x, double y, double z,
          x, y, z, r, height, thickness, nx, ny, nz);
   } else {
     mcdis_legacy_cylinder(x, y, z,
-			   r, height, 12, nx, ny, nz)
+			  r, height, 12, nx, ny, nz);
   }
 }
 
