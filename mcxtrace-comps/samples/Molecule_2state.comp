@@ -417,7 +417,7 @@ MCDISPLAY
     circle("yz",0,0,0,radius);
   }else if (shape==BOX){
    /*sample is a box*/
-    box(0,0,0,xwidth,yheight,zdepth);
+    box(0,0,0,xwidth,yheight,zdepth,0);
   }
 
 

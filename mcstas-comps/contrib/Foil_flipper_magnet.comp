@@ -292,9 +292,9 @@ MCDISPLAY
 %{
   double y=atan(phi)*zdepth/2.0;
   
-  box(0.0,0.0,0.0,Bxwidth,Byheight,Bzdepth);
+  box(0.0,0.0,0.0,Bxwidth,Byheight,Bzdepth,0);
   if (Bxwidth!=xwidth || Byheight!=yheight || Bzdepth!=zdepth){
-    box(0,0,0,xwidth,yheight,zdepth);
+    box(0,0,0,xwidth,yheight,zdepth,0);
   }
   /*draw the foil plane*/
   multiline(5,-xwidth/2.0,-y,-zdepth/2.0, xwidth/2.0,-y,-zdepth/2.0, xwidth/2.0,y,zdepth/2.0, -xwidth/2.0,y,zdepth/2.0, -xwidth/2.0,-y,-zdepth/2.0);
