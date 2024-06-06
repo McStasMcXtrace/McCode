@@ -18,10 +18,8 @@ from mccodelib.utils import get_file_text_direct
 
 class SimpleWriter(object):
     ''' a minimal, django-omiting "glue file" writer tightly coupled to some comments in the file template.html '''
-    def __init__(self, templatefile, campos, box, html_filename, invcanvas):
+    def __init__(self, templatefile, html_filename, invcanvas):
         self.template = templatefile
-        self.campos = campos
-        self.box = box
         self.html_filename = html_filename
         self.invcanvas = invcanvas
     
@@ -78,21 +76,12 @@ class DjangoWriter(object):
 
 def _write_html(instrument, html_filepath, first=None, last=None, invcanvas=False):
     ''' writes instrument definition to html/js '''
-    box = instrument.get_boundingbox(first, last)
-    box_total = instrument.get_boundingbox()
     
     # create camera view coordinates given the bounding box
-    dx = box.x2 - box.x1
-    dy = box.y2 - box.y1
-    dz = box.z2 - box.z1
-    x = -(box.x1 + max(dx, dz)/2)
-    y = max(dx, dz)/2
-    z = box.z1 + dz/2
-    campos = Vector3d(x, y, z)
-    
+
     # render html
     templatefile = Path(__file__).absolute().parent.joinpath("template.html")
-    writer = SimpleWriter(templatefile, campos, box_total, html_filepath, invcanvas)
+    writer = SimpleWriter(templatefile, html_filepath, invcanvas)
     writer.write()
 
 def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first=None, last=None, invcanvas=None, **kwds):
