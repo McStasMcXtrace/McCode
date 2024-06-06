@@ -2673,8 +2673,13 @@ void mcdis_new_cylinder( double x, double y, double z,
  * The cone axis is along the vector nx,ny,nz.*/
 void mcdis_cone( double x, double y, double z,
         double r, double height, double nx, double ny, double nz){
+  if (mcdotrace==2) {
     printf("MCDISPLAY: cone(%g, %g, %g, %g, %g, %g, %g, %g)\n",
        x, y, z, r, height, nx, ny, nz);
+  } else {
+    mcdis_Circle(x, y, z, r, nx, ny, nz);
+    mcdis_line(x, y, z, x+height*nx, y+height*ny, z+height*nz);
+  }
 }
 
 /* draws a sphere with center at (x,y,z) with extent (r)*/
@@ -2719,6 +2724,7 @@ void mcdis_polygon(int count, ...){
   z=malloc(count*sizeof(double));
 
   va_start(ap, count);
+  // Fallback for trace==1 is multiline, one rank higher
   if (mcdotrace==1) {
     printf("MCDISPLAY: multiline(%i,",count+1);
   }
@@ -2731,11 +2737,12 @@ void mcdis_polygon(int count, ...){
     if (mcdotrace==1) {
       printf("%g,%g,%g,",x[j],y[j],z[j]);
     } else {
+      // Calculation of polygon centre of mass
       x0 += x[j]; y0 += y[j]; z0 += z[j];
     }
   }
 
-  /* Patch arrays for multiline(count+1, ... use */
+  /* Patch data for multiline(count+1, ... use 0th point*/
   if (mcdotrace==1) {
     printf("%g,%g,%g)\n",x[0],y[0],z[0]);
   } else {
@@ -2770,7 +2777,6 @@ void mcdis_polygon(int count, ...){
         fprintf(stderr, "Memory allocation failed.\n");
         return;
     }
-    fprintf(stderr,"Past initial malloc!\n");
 
     char *ptr = json_string;
     ptr += sprintf(ptr, "{ \"vertices\": [");
@@ -2778,7 +2784,6 @@ void mcdis_polygon(int count, ...){
     if (count==3) { // Single, basic triangle
       ptr += sprintf(ptr, "[%g, %g, %g], [%g, %g, %g], [%g, %g, %g]", x[0], y[0], z[0], x[1], y[1], z[1], x[2], y[2], z[2]);
     } else {
-      fprintf(stderr,"Vertexloop\n");
       for (int i = 0; i < vtxSize-1; i++) {
         ptr += sprintf(ptr, "[%g, %g, %g]", x[i], y[i], z[i]);
         if (i < vtxSize - 2) {
@@ -2788,14 +2793,12 @@ void mcdis_polygon(int count, ...){
 	}
       }
     }
-    fprintf(stderr,"Past Vertexloop\n");
     ptr += sprintf(ptr, "], \"faces\": [");
     if (count==3) { // Single, basic triangle, 1 face...
       ptr += sprintf(ptr, "{ \"face\": [");
       ptr += sprintf(ptr, "0, 1, 2");
       ptr += sprintf(ptr, "]}");
     } else {
-      fprintf(stderr,"faceloop\n");
       for (int i = 0; i < faceSize; i++) {
         int num = 3;
         ptr += sprintf(ptr, "{ \"face\": [");
@@ -2809,7 +2812,6 @@ void mcdis_polygon(int count, ...){
 	  ptr += sprintf(ptr, ", ");
 	}
       }
-      fprintf(stderr,"past faceloop\n");
     }
     ptr += sprintf(ptr, "]}");
     mcdis_polyhedron(json_string);
