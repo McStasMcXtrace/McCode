@@ -202,7 +202,72 @@ TRACE
 
 MCDISPLAY
 %{
+  /* V3, independent "polygons": */
+  // TOP
+  mcdis_polygon(4,
+            -w1/2.0, h1/2.0, 0.0,
+             w1/2.0, h1/2.0, 0.0,
+	     w2/2.0, h2/2.0, (double)l,
+            -w2/2.0, h2/2.0, (double)l);
+  // BOTTOM
+  mcdis_polygon(4,
+            -w1/2.0, -h1/2.0, 0.0,
+             w1/2.0, -h1/2.0, 0.0,
+	     w2/2.0, -h2/2.0, (double)l,
+            -w2/2.0, -h2/2.0, (double)l);
+
+  // RIGHT
+  mcdis_polygon(4,
+            -w1/2.0, h1/2.0, 0.0,
+            -w1/2.0, -h1/2.0, 0.0,
+	    -w2/2.0, -h2/2.0, (double)l,
+            -w2/2.0, h2/2.0, (double)l);
+
+  // LEFT
+  mcdis_polygon(4,
+            w1/2.0, h1/2.0, 0.0,
+            w1/2.0, -h1/2.0, 0.0,
+	    w2/2.0, -h2/2.0, (double)l,
+            w2/2.0, h2/2.0, (double)l);
+
+
+
   
+  /* V2, draw top, bottom, sides independently: */
+  // TOP
+  /* multiline(5, */
+  /*           -w1/2.0, h1/2.0, 0.0, */
+  /*            w1/2.0, h1/2.0, 0.0, */
+  /* 	     w2/2.0, h2/2.0, (double)l, */
+  /*           -w2/2.0, h2/2.0, (double)l, */
+  /*           -w1/2.0, h1/2.0, 0.0); */
+  /* // BOTTOM */
+  /* multiline(5, */
+  /*           -w1/2.0, -h1/2.0, 0.0, */
+  /*            w1/2.0, -h1/2.0, 0.0, */
+  /* 	     w2/2.0, -h2/2.0, (double)l, */
+  /*           -w2/2.0, -h2/2.0, (double)l, */
+  /*           -w1/2.0, -h1/2.0, 0.0); */
+
+  /* // RIGHT */
+  /* multiline(5, */
+  /*           -w1/2.0, h1/2.0, 0.0, */
+  /*           -w1/2.0, -h1/2.0, 0.0, */
+  /* 	    -w2/2.0, -h2/2.0, (double)l, */
+  /*           -w2/2.0, h2/2.0, (double)l, */
+  /* 	    -w1/2.0, h1/2.0, 0.0); */
+
+  /* // LEFT */
+  /* multiline(5, */
+  /*           w1/2.0, h1/2.0, 0.0, */
+  /*           w1/2.0, -h1/2.0, 0.0, */
+  /* 	    w2/2.0, -h2/2.0, (double)l, */
+  /*           w2/2.0, h2/2.0, (double)l, */
+  /* 	    w1/2.0, h1/2.0, 0.0); */
+
+
+
+  /* Original implementation: 
   multiline(5,
             -w1/2.0, -h1/2.0, 0.0,
              w1/2.0, -h1/2.0, 0.0,
@@ -219,6 +284,7 @@ MCDISPLAY
   line( w1/2.0, -h1/2.0, 0,  w2/2.0, -h2/2.0, (double)l);
   line( w1/2.0,  h1/2.0, 0,  w2/2.0,  h2/2.0, (double)l);
   line(-w1/2.0,  h1/2.0, 0, -w2/2.0,  h2/2.0, (double)l);
+  */
 %}
 
 END
