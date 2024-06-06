@@ -2678,6 +2678,9 @@ void mcdis_cone( double x, double y, double z,
        x, y, z, r, height, nx, ny, nz);
   } else {
     mcdis_Circle(x, y, z, r, nx, ny, nz);
+    mcdis_Circle(x+0.25*height*nx, y+0.25*height*ny, z+0.25*height*nz, 0.75*r, nx, ny, nz);
+    mcdis_Circle(x+0.5*height*nx, y+0.5*height*ny, z+0.5*height*nz, 0.5*r, nx, ny, nz);
+    mcdis_Circle(x+0.75*height*nx, y+0.75*height*ny, z+0.75*height*nz, 0.25*r, nx, ny, nz);
     mcdis_line(x, y, z, x+height*nx, y+height*ny, z+height*nz);
   }
 }
