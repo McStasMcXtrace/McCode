@@ -72,7 +72,8 @@ class InstrTraceParser:
               'DEC',
               'ID',
               'INSTRNAME',
-              ] + list(set(reserved.values()))
+              'JSON',
+             ] + list(set(reserved.values()))
     
     t_LB = r'\('
     t_RB = r'\)'
@@ -80,7 +81,7 @@ class InstrTraceParser:
     t_QUOTE = r'"'
     t_SQUOTE = r'\''
     t_COMMA = r','
-    
+
     def t_ANY_NL(self, t):
         r'\n'
         self.lexer.lineno += 1
@@ -101,6 +102,10 @@ class InstrTraceParser:
     
     def t_INSTRNAME(self, t):
         r'\w[\w\-0-9]*'
+        return t
+
+    def t_JSON(self, t):
+        r'\{.*\}'
         return t
     
     # ignore whitespaces and tabs means that we do not tokenize them, but they are still applied in the regex checks defined above for our tokens
@@ -183,6 +188,7 @@ class InstrTraceParser:
                         | MCDISPLAY COLON DRAWCALL LB SQUOTE arg SQUOTE COMMA args RB NL
                         | MCDISPLAY COLON DRAWCALL LB SQUOTE SQUOTE RB NL
                         | MCDISPLAY COLON DRAWCALL LB RB NL
+                        | MCDISPLAY COLON DRAWCALL json NL
                         | MANTID_PIXEL COLON nineteen_dec NL
                         | MANTID_BANANA_DET COLON eight_dec NL
                         | MANTID_RECTANGULAR_DET COLON seven_dec NL
@@ -236,7 +242,11 @@ class InstrTraceParser:
         '''arg : DEC
                | ID'''
         self.args.leaf.append(p[1])
-    
+
+    def p_json(self, p):
+        'json : JSON'
+        self.args.leaf.append(p[1])
+
     def p_draw_open(self, p):
         '''draw_open : MCDISPLAY COLON STARTKWLC NL'''
     
@@ -337,7 +347,7 @@ class InstrObjectConstructor:
                                     if dc.type == 'mantid':
                                         comp.drawcalls.append(dc.leaf)
                                         continue
-                                    
+
                                     # get args
                                     argsnode = dc.children[0]
                                     args = argsnode.leaf
@@ -352,7 +362,7 @@ class InstrObjectConstructor:
                         # save component in dictionary-by-name for internal use
                         comp_idx += 1
                         self.compindices[name] = comp_idx
-        
+
         return instrument_tree
 
 class MantidPixelLine(DrawCommand):

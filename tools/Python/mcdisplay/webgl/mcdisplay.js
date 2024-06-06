@@ -220,20 +220,23 @@ Main.prototype.addBox = function(x, y, z, a, b, c, thickness, parent, color)
     parent.add( box );
 }
 
-Main.prototype.addPolygon = function(faces, vertices, parent, color)
+Main.prototype.addPolygon = function(faces_vertices, parent, color)
 {
-    let geometry = new THREE.BufferGeometry();
-
-    //check faces for rank 4 TODO
-    if(true){
+    const parsed_faces_vertices = JSON.parse(faces_vertices);
+    let faces = parsed_faces_vertices.faces.flatMap(index => index.face);
+    if(parsed_faces_vertices.faces[0].face.length === 4){
         //transform faces to rank 3
         faces = getRank3Indices(faces);
     }
 
+    let vertices = new Float32Array(parsed_faces_vertices.vertices.flatMap(vertex => vertex));
+
+    let geometry = new THREE.BufferGeometry();
+
     geometry.setIndex(faces);
     geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
 
-    const material = new THREE.MeshLambertMaterial({color: color});
+    const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
     const polygon = new THREE.Mesh(geometry, material);
 
     parent.add( polygon );
@@ -574,7 +577,7 @@ TraceLoader.prototype.loadInstr = function()
             main.addBox(args[0], args[1], args[2], args[3], args[4], args[5], args[6], parentnode, color);
         }
         if (key === 'polygon') {
-            main.addPolygon(args[0], args[1], parentnode, color);
+            main.addPolygon(args[0], parentnode, color);
         }
     }
 

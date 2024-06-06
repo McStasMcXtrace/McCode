@@ -499,13 +499,11 @@ class DrawAnnulus(DrawCommand):
 
 
 class DrawPolygon(DrawCommand):
-    faces = None
-    vertices = None
+    faces_vertices = None
     def __init__(self, args):
         super(DrawPolygon, self).__init__(args)
         self.key = 'polygon'
-        self.faces = args[0]
-        self.vertices = args[1]
+        self.faces_vertices = args[0]
 
 
 class Vector3d(object):
