@@ -2669,7 +2669,7 @@ void mcdis_legacy_cylinder( double x, double y, double z,
 Draws a cylinder with center at (x,y,z) with extent (r,height).
  * The cylinder axis is along the vector nx,ny,nz.*/
 void mcdis_cylinder( double x, double y, double z,
-        double r, double height, double thickness, double t, double nx, double ny, double nz){
+        double r, double height, double thickness, double nx, double ny, double nz){
   if (mcdotrace==) {
       printf("MCDISPLAY: cylinder(%g, %g, %g, %g, %g, %g, %g, %g, %g)\n",
          x, y, z, r, height, thickness, nx, ny, nz);
