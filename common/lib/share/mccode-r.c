@@ -2601,20 +2601,6 @@ void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, 
     }
 }
 
-/*  NEW 3D IMPLEMENTATION OF BOX SUPPORTS HOLLOW ALSO
-    draws a box with center at (x, y, z) and
-    width (deltax), height (deltay), length (deltaz) */
-void mcdis_box(double x, double y, double z,
-	       double width, double height, double length, double thickness){
-  if (mcdotrace==2) {
-    printf("MCDISPLAY: box(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness);
-  } else {
-    mcdis_legacy_box(x, y, z, width, height, length);
-    if (thickness)
-      mcdis_legacy_box(x, y, z, width-thickness, height-thickness, length);
-  }
-}
-
 /*  OLD IMPLEMENTATION
     draws a box with center at (x, y, z) and
     width (deltax), height (deltay), length (deltaz) */
@@ -2631,6 +2617,20 @@ void mcdis_legacy_box(double x, double y, double z,
 	     x+width/2, y-height/2, z+length/2);
   mcdis_line(x+width/2, y+height/2, z-length/2,
 	     x+width/2, y+height/2, z+length/2);
+}
+
+/*  NEW 3D IMPLEMENTATION OF BOX SUPPORTS HOLLOW ALSO
+    draws a box with center at (x, y, z) and
+    width (deltax), height (deltay), length (deltaz) */
+void mcdis_box(double x, double y, double z,
+	       double width, double height, double length, double thickness){
+  if (mcdotrace==2) {
+    printf("MCDISPLAY: box(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness);
+  } else {
+    mcdis_legacy_box(x, y, z, width, height, length);
+    if (thickness)
+      mcdis_legacy_box(x, y, z, width-thickness, height-thickness, length);
+  }
 }
 
 
@@ -2670,7 +2670,7 @@ Draws a cylinder with center at (x,y,z) with extent (r,height).
  * The cylinder axis is along the vector nx,ny,nz.*/
 void mcdis_cylinder( double x, double y, double z,
         double r, double height, double thickness, double nx, double ny, double nz){
-  if (mcdotrace==) {
+  if (mcdotrace==2) {
       printf("MCDISPLAY: cylinder(%g, %g, %g, %g, %g, %g, %g, %g, %g)\n",
          x, y, z, r, height, thickness, nx, ny, nz);
   } else {
