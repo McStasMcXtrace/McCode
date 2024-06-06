@@ -22,7 +22,7 @@ MC_CYLINDER = 'MCDISPLAY: cylinder'
 MC_SPHERE = 'MCDISPLAY: sphere'
 MC_BOX = 'MCDISPLAY: box'
 MC_CONE = 'MCDISPLAY: cone'
-MC_POLYGON = 'MCDISPLAY: polygon'
+MC_POLYGON = 'MCDISPLAY: polyhedron'
 
 MC_ENTER = 'ENTER:'
 MC_LEAVE = 'LEAVE:'
@@ -36,7 +36,7 @@ MC_STOP = 'INSTRUMENT END:'
 
 COLORS = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow']
 #transparency will be a user controlled parameter eventually
-transparency = 0.5
+transparency = 1
 #for setting axis limits when using polygon
 x_max_polygon = y_max_polygon = z_max_polygon = float('-inf')
 x_min_polygon = y_min_polygon = z_min_polygon = float('inf')
@@ -282,7 +282,7 @@ def process_box(ax, line, comp, color, transparency):
 def process_polygon(ax, line, comp, color, transparency):
     global x_min_polygon, x_max_polygon, y_min_polygon, y_max_polygon, z_min_polygon, z_max_polygon
 
-    json_data = line.replace('MCDISPLAY: polygon ', '')
+    json_data = line.replace('MCDISPLAY: polyhedron ', '')
 
     # Parse the JSON string
     data = json.loads(json_data)
