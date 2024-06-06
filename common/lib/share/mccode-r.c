@@ -2673,8 +2673,16 @@ void mcdis_new_cylinder( double x, double y, double z,
  * The cone axis is along the vector nx,ny,nz.*/
 void mcdis_cone( double x, double y, double z,
         double r, double height, double nx, double ny, double nz){
+  if (mcdotrace==2) {
     printf("MCDISPLAY: cone(%g, %g, %g, %g, %g, %g, %g, %g)\n",
        x, y, z, r, height, nx, ny, nz);
+  } else {
+    mcdis_Circle(x, y, z, r, nx, ny, nz);
+    mcdis_Circle(x+0.25*height*nx, y+0.25*height*ny, z+0.25*height*nz, 0.75*r, nx, ny, nz);
+    mcdis_Circle(x+0.5*height*nx, y+0.5*height*ny, z+0.5*height*nz, 0.5*r, nx, ny, nz);
+    mcdis_Circle(x+0.75*height*nx, y+0.75*height*ny, z+0.75*height*nz, 0.25*r, nx, ny, nz);
+    mcdis_line(x, y, z, x+height*nx, y+height*ny, z+height*nz);
+  }
 }
 
 /* draws a sphere with center at (x,y,z) with extent (r)*/
@@ -2701,28 +2709,119 @@ void mcdis_sphere(double x, double y, double z, double r){
     }
   }
 }
-/* BEGIN NEW POLYGON IMPLEMENTATION*/
+/* POLYHEDRON IMPLEMENTATION*/
 
 void mcdis_polyhedron(char *vertices_faces){
   printf("MCDISPLAY: polyhedron %s\n", vertices_faces);
 }
 
-/* OLD POLYGON IMPLEMENTATION REMOVE AFTER CONVERTING COMPONENTS*/
+/* POLYGON IMPLEMENTATION */
 void mcdis_polygon(int count, ...){
   va_list ap;
-  double x,y,z;
+  double *x,*y,*z;
 
-  printf("MCDISPLAY: polygon(%d", count);
+  double x0=0,y0=0,z0=0; /* Used for centre-of-mass in trace==2 */
+
+  x=malloc(count*sizeof(double));
+  y=malloc(count*sizeof(double));
+  z=malloc(count*sizeof(double));
+
   va_start(ap, count);
-  while(count--)
-    {
-    x = va_arg(ap, double);
-    y = va_arg(ap, double);
-    z = va_arg(ap, double);
-    printf(",%g,%g,%g", x, y, z);
+  // Fallback for trace==1 is multiline, one rank higher
+  if (mcdotrace==1) {
+    printf("MCDISPLAY: multiline(%i,",count+1);
+  }
+  
+  int j;
+  for (j=0; j<count; j++) {
+    x[j] = va_arg(ap, double);
+    y[j] = va_arg(ap, double);
+    z[j] = va_arg(ap, double);
+    if (mcdotrace==1) {
+      printf("%g,%g,%g,",x[j],y[j],z[j]);
+    } else {
+      // Calculation of polygon centre of mass
+      x0 += x[j]; y0 += y[j]; z0 += z[j];
     }
-  va_end(ap);
-  printf(")\n");
+  }
+
+  /* Patch data for multiline(count+1, ... use 0th point*/
+  if (mcdotrace==1) {
+    printf("%g,%g,%g)\n",x[0],y[0],z[0]);
+  } else {
+    x0 /= count; y0 /= count; z0 /= count;
+    /* Build up a json string for a "polyhedron" */
+    // Estimate size of the JSON string
+    const int VERTEX_OVERHEAD = 30;
+    const int FACE_OVERHEAD_BASE = 20;
+    const int FACE_INDEX_OVERHEAD = 15;
+    int estimated_size = 256; // Base size
+    estimated_size += count * VERTEX_OVERHEAD;
+
+    int faceSize;
+    int vtxSize;
+    if (count > 3) {
+      /* Split in triangles - as many as polygon rank */
+      faceSize=count;
+      vtxSize=count+1;
+    } else {
+      faceSize=1;
+      vtxSize=count;
+    }
+    
+    for (int i = 0; i < faceSize;) {
+        int num_indices = 3;
+        estimated_size += FACE_OVERHEAD_BASE + num_indices * FACE_INDEX_OVERHEAD;
+        i += num_indices + 1;
+    }
+
+    char *json_string = malloc(estimated_size);
+    if (json_string == NULL) {
+        fprintf(stderr, "Memory allocation failed.\n");
+        return;
+    }
+
+    char *ptr = json_string;
+    ptr += sprintf(ptr, "{ \"vertices\": [");
+
+    if (count==3) { // Single, basic triangle
+      ptr += sprintf(ptr, "[%g, %g, %g], [%g, %g, %g], [%g, %g, %g]", x[0], y[0], z[0], x[1], y[1], z[1], x[2], y[2], z[2]);
+    } else {
+      for (int i = 0; i < vtxSize-1; i++) {
+        ptr += sprintf(ptr, "[%g, %g, %g]", x[i], y[i], z[i]);
+        if (i < vtxSize - 2) {
+	  ptr += sprintf(ptr, ", ");
+        } else {
+	  ptr += sprintf(ptr, ", [%g, %g, %g]", x0, y0, z0);
+	}
+      }
+    }
+    ptr += sprintf(ptr, "], \"faces\": [");
+    if (count==3) { // Single, basic triangle, 1 face...
+      ptr += sprintf(ptr, "{ \"face\": [");
+      ptr += sprintf(ptr, "0, 1, 2");
+      ptr += sprintf(ptr, "]}");
+    } else {
+      for (int i = 0; i < faceSize; i++) {
+        int num = 3;
+        ptr += sprintf(ptr, "{ \"face\": [");
+	if (i < faceSize - 1) {
+	  ptr += sprintf(ptr, "%lu, %lu, %lu",i,i+1,count);
+	} else {
+	  ptr += sprintf(ptr, "%lu, %lu, %lu",i,count,0);
+	}
+	ptr += sprintf(ptr, "]}");
+	if (i < faceSize-1) {
+	  ptr += sprintf(ptr, ", ");
+	}
+      }
+    }
+    ptr += sprintf(ptr, "]}");
+    mcdis_polyhedron(json_string);
+
+    free(json_string);
+  }
+  free(x);free(y);free(z);
 }
 /* END NEW POLYGON IMPLEMENTATION*/
 
