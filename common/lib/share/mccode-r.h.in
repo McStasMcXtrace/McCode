@@ -597,11 +597,11 @@ void mcdis_multiline(int count, ...);
 void mcdis_rectangle(char* plane, double x, double y, double z,
 		     double width, double height);
 void mcdis_box(double x, double y, double z,
-	       double width, double height, double length);
+	       double width, double height, double length, double thickness);
 void mcdis_circle(char *plane, double x, double y, double z, double r);
 void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, double nz);
 void mcdis_cylinder( double x, double y, double z,
-        double r, double height, int N, double nx, double ny, double nz);
+		     double r, double height, double thickness, double nx, double ny, double nz);
 void mcdis_cone( double x, double y, double z,
         double r, double height, double nx, double ny, double nz);
 void mcdis_sphere(double x, double y, double z, double r);
