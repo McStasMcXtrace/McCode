@@ -2724,8 +2724,8 @@ void mcdis_sphere(double x, double y, double z, double r){
 }
 /* BEGIN NEW POLYGON IMPLEMENTATION*/
 
-void mcdis_new_polygon(char *vertices_faces){
-  printf("MCDISPLAY: polygon %s\n", vertices_faces);
+void mcdis_polyhedron(char *vertices_faces){
+  printf("MCDISPLAY: polyhedron %s\n", vertices_faces);
 }
 
 /* OLD POLYGON IMPLEMENTATION REMOVE AFTER CONVERTING COMPONENTS*/

@@ -944,7 +944,7 @@ class McGuiAppController():
             scriptfile = str(mccode_config.configuration["MCCODE"] + '-environment')
             scriptfile = str(pathlib.Path(__file__).parent.parent.parent.parent.resolve() / scriptfile)
         else:
-            scriptfile = 'start ' + mccode_config.configuration["MCCODE_LIB_DIR"] + '\\..\\bin\\mccodego.bat'
+            scriptfile = mccode_config.directories["bindir"] + '\\' + mccode_config.configuration["MCCODE"] + 'go.bat'
 
         subprocess.Popen(terminal + ' ' + scriptfile, shell=True)
         
