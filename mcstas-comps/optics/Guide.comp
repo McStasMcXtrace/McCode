@@ -204,27 +204,27 @@ MCDISPLAY
 %{
   /* V3, independent "polygons": */
   // TOP
-  mcdis_polygon(4,
+  polygon(4,
             -w1/2.0, h1/2.0, 0.0,
              w1/2.0, h1/2.0, 0.0,
 	     w2/2.0, h2/2.0, (double)l,
             -w2/2.0, h2/2.0, (double)l);
   // BOTTOM
-  mcdis_polygon(4,
+  polygon(4,
             -w1/2.0, -h1/2.0, 0.0,
              w1/2.0, -h1/2.0, 0.0,
 	     w2/2.0, -h2/2.0, (double)l,
             -w2/2.0, -h2/2.0, (double)l);
 
   // RIGHT
-  mcdis_polygon(4,
+  polygon(4,
             -w1/2.0, h1/2.0, 0.0,
             -w1/2.0, -h1/2.0, 0.0,
 	    -w2/2.0, -h2/2.0, (double)l,
             -w2/2.0, h2/2.0, (double)l);
 
   // LEFT
-  mcdis_polygon(4,
+  polygon(4,
             w1/2.0, h1/2.0, 0.0,
             w1/2.0, -h1/2.0, 0.0,
 	    w2/2.0, -h2/2.0, (double)l,
