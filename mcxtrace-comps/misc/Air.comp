@@ -243,7 +243,7 @@ MCDISPLAY
         line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
     }
     else if (shape == 1) { 	/* box */
-        box(0,0,0,xwidth,yheight,zdepth);
+      box(0,0,0,xwidth,yheight,zdepth,0);
     }
     else if (shape == 2) {	/* sphere */
         circle("xy", 0,  0.0, 0, radius);
