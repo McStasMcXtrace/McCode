@@ -31,9 +31,6 @@ class SimpleWriter(object):
         lines = template.splitlines()
         for i in range(len(lines)):
             if 'INSERT_CAMPOS_HERE' in lines[i]:
-                lines[i] = '        campos_x = %s, campos_y = %s, campos_z = %s; // line written by SimpleWriter' % (str(self.campos.x), str(self.campos.y), str(self.campos.z))
-                box = self.box
-                lines[i+1] = '        box_x1 = %s, box_x2 = %s, box_y1 = %s, box_y2 = %s, box_z1 = %s, box_z2 = %s; // line written by SimpleWriter' % (str(box.x1), str(box.x2), str(box.y1), str(box.y2), str(box.z1), str(box.z2))
                 lines[i+2] = '        invert_canvas = %s; // line written by SimpleWriter' % 'true' if self.invcanvas else 'false'
         self.text = '\n'.join(lines)
         
