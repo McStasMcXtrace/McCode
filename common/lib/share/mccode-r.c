@@ -4421,6 +4421,9 @@ mcparseoptions(int argc, char *argv[])
     else if(!strcmp("--vecsize", argv[i]) && (i + 1) < argc) {
       vecsize=atoi(argv[++i]);
     }
+    else if(!strncmp("--bufsiz=", argv[i], 9)) {
+      MONND_BUFSIZ=atoi(&argv[i][9]);
+    }
     else if(!strcmp("--bufsiz", argv[i]) && (i + 1) < argc) {
       MONND_BUFSIZ=atoi(argv[++i]);
     }
