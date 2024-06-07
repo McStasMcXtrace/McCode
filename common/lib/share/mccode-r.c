@@ -1788,8 +1788,27 @@ mcdatainfo_out_nexus(NXhandle f, MCDETECTOR detector)
                  "xylimits", detector.limits);
       nxprintattr(f, "variables",
         strcasestr(detector.format, "list") ? detector.ylabel : detector.variables);
-      nxprintf(f, "Position", detector.position);
-      nxprintf(f, "Rotation", detector.rotation);
+
+      int64_t pdims[3]={3,1,0};
+
+      NXcompmakedata64(f, "Position", NX_FLOAT64, 1, pdims, NX_COMPRESSION, pdims);
+      if (NXopendata(f, "Position") == NX_ERROR) {
+	fprintf(stderr, "Warning: could not open Position\n");
+	return;
+      }
+      NXputdata (f, detector.position);
+
+      int64_t rdims[3]={3,3,0};
+
+      NXcompmakedata64(f, "Rotation", NX_FLOAT64, 2, rdims, NX_COMPRESSION, rdims);
+      if (NXopendata(f, "Rotation") == NX_ERROR) {
+	fprintf(stderr, "Warning: could not open Rotation\n");
+	return;
+      }
+      NXputdata (f, detector.rotation);
+
+      nxprintf(f, "strPosition", detector.position);
+      nxprintf(f, "strRotation", detector.rotation);
       nxprintf(f, "acquisition_mode",
         strcasestr(detector.format, "list") ? "event" : "summed");
 
