@@ -2610,8 +2610,10 @@ void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, 
     draws a box with center at (x, y, z) and
     width (deltax), height (deltay), length (deltaz) */
 void mcdis_new_box(double x, double y, double z,
-	       double width, double height, double length, double thickness){
-  printf("MCDISPLAY: box(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness);
+	double width, double height, double length,
+	double thickness, double nx, double ny, double nz)
+{
+  printf("MCDISPLAY: box(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness, nx, ny, nz);
 }
 
 /*  OLD IMPLEMENTATION

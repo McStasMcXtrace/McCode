@@ -106,48 +106,66 @@ Main.prototype.addCone = function(x, y, z, radius, height, nx, ny, nz, radSeg, p
     cone.position.z = z;
 
     var original_axis = new THREE.Vector3(0, 1, 0);
-    var align_axis = new THREE.Vector3(nx, ny, nz);
-    cone.quaternion.setFromUnitVectors(original_axis, align_axis.clone().normalize());
+    var align_axis = new THREE.Vector3(nx, ny, nz).normalize();
+    cone.quaternion.setFromUnitVectors(original_axis, align_axis.clone());
 
     parent.add( cone );
 }
 
 Main.prototype.addCylinder = function(x, y, z, radius, height, thickness, nx, ny, nz, radSeg, parent, color)
 {
-    let geometry = new THREE.CylinderGeometry(radius, radius, height, radSeg);
+    const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
     let original_axis = new THREE.Vector3(0, 1, 0);
 
-    if(thickness > 0){
-        //correcting some differences between ExtrudeGeometry and CylinderGeometry implementation
-        original_axis = new THREE.Vector3(0, 0, 1);
-        y = -height/2;
+    if (thickness === 0) {
+        geometry = new THREE.CylinderGeometry(radius, radius, height, radSeg);
+        const cylinder = new THREE.Mesh(geometry, material);
 
-        let outer_cylinder = new THREE.Shape();
-        outer_cylinder.absarc(0, 0, radius, 0, Math.PI * 2);
-        let inner_cylinder = new THREE.Path();
-        inner_cylinder.absarc(0, 0, (radius - thickness), 0, Math.PI * 2);
-        outer_cylinder.holes.push(inner_cylinder);
+        cylinder.position.x = x;
+        cylinder.position.y = y;
+        cylinder.position.z = z;
 
-        geometry = new THREE.ExtrudeGeometry(outer_cylinder, {
-            steps: 1,
-            depth: height,
-            curveSegments: radSeg,
-            bevelEnabled: false
-        });
+        const align_axis = new THREE.Vector3(nx, ny, nz).normalize();
+        cylinder.quaternion.setFromUnitVectors(original_axis, align_axis.clone());
+
+        parent.add(cylinder);
+    } else {
+        //openended outer and inner cylinder
+        let outer_geometry = new THREE.CylinderGeometry(radius, radius, height, radSeg, 1, true);
+        let inner_geometry = new THREE.CylinderGeometry(radius - thickness, radius - thickness, height, radSeg, 1, true);
+
+        const outer_cylinder = new THREE.Mesh(outer_geometry, material);
+        const inner_cylinder = new THREE.Mesh(inner_geometry, material);
+
+        outer_cylinder.position.x = x;
+        outer_cylinder.position.y = y;
+        outer_cylinder.position.z = z;
+        inner_cylinder.position.x = x;
+        inner_cylinder.position.y = y;
+        inner_cylinder.position.z = z;
+
+        const align_axis = new THREE.Vector3(nx, ny, nz).normalize();
+        outer_cylinder.quaternion.setFromUnitVectors(original_axis, align_axis.clone());
+        inner_cylinder.quaternion.setFromUnitVectors(original_axis, align_axis.clone());
+
+        parent.add(outer_cylinder);
+        parent.add(inner_cylinder);
+
+        const halfheight = height / 2;
+        const upper_lid_center = new THREE.Vector3(
+            x + halfheight * align_axis.x,
+            y + halfheight * align_axis.y,
+            z + halfheight * align_axis.z);
+        const lower_lid_center = new THREE.Vector3(
+            x - halfheight * align_axis.x,
+            y - halfheight * align_axis.y,
+            z - halfheight * align_axis.z);
+
+        //lid top
+        Main.prototype.addAnnulus(upper_lid_center.x, upper_lid_center.y, upper_lid_center.z, radius, thickness, nx, ny, nz, radSeg, parent, color);
+        //lid bottom
+        Main.prototype.addAnnulus(lower_lid_center.x, lower_lid_center.y, lower_lid_center.z, radius, thickness, nx, ny, nz, radSeg, parent, color);
     }
-
-
-    const material = new THREE.MeshLambertMaterial({color: color});
-    const cylinder = new THREE.Mesh(geometry, material);
-
-    cylinder.position.x = x;
-    cylinder.position.y = y;
-    cylinder.position.z = z;
-
-    var align_axis = new THREE.Vector3(nx, ny, nz);
-    cylinder.quaternion.setFromUnitVectors(original_axis, align_axis.clone().normalize());
-
-    parent.add( cylinder );
 }
 
 Main.prototype.addAnnulus = function(x, y, z, outer_radius, inner_radius, nx, ny, nz, radSeg, parent, color)
@@ -162,8 +180,8 @@ Main.prototype.addAnnulus = function(x, y, z, outer_radius, inner_radius, nx, ny
     annulus.position.y = y;
     annulus.position.z = z;
 
-    var align_axis = new THREE.Vector3(nx, ny, nz);
-    annulus.quaternion.setFromUnitVectors(original_axis, align_axis.clone().normalize());
+    var align_axis = new THREE.Vector3(nx, ny, nz).normalize();
+    annulus.quaternion.setFromUnitVectors(original_axis, align_axis.clone());
 
     parent.add( annulus );
 }
@@ -178,40 +196,46 @@ Main.prototype.addNewCircle = function(x, y, z, radius, nx, ny, nz, radSeg, pare
     Main.prototype.addAnnulus(x, y, z, radius, 0.01, nx, ny, nz, radSeg, parent, color);
 }
 
-Main.prototype.addBox = function(x, y, z, a, b, c, thickness, parent, color)
+Main.prototype.addBox = function(x, y, z, xwidth, yheight, zdepth, thickness, nx, ny, nz, parent, color)
 {
-    let geometry = new THREE.BoxGeometry(a, b, c);
+    let geometry = new THREE.BoxGeometry(xwidth, yheight, zdepth);
+    let original_axis = new THREE.Vector3(0, 1, 0);
 
     if(thickness > 0){
-        a /= 2;
-        b /= 2;
+        original_axis = new THREE.Vector3(0, 0, 1);
+
+        xwidth /= 2;
+        zdepth /= 2;
 
         let outerBox = new THREE.Shape();
-        outerBox.moveTo(-a, -b); // Bottom-left corner
-        outerBox.lineTo(a, -b);  // Bottom-right corner
-        outerBox.lineTo(a, b);   // Top-right corner
-        outerBox.lineTo(-a, b);  // Top-left corner
+        outerBox.moveTo(-xwidth, -zdepth);
+        outerBox.lineTo(xwidth, -zdepth);
+        outerBox.lineTo(xwidth, zdepth);
+        outerBox.lineTo(-xwidth, zdepth);
 
-        const a_inner = a - thickness;
-        const b_inner = b - thickness;
+        const zdepth_inner = zdepth - thickness;
+        const xwidth_inner = xwidth - thickness;
 
         let innerBox =  new THREE.Shape();
-        innerBox.moveTo(-a_inner, -b_inner);
-        innerBox.lineTo(a_inner, -b_inner);
-        innerBox.lineTo(a_inner, b_inner);
-        innerBox.lineTo(-a_inner, b_inner);
+        innerBox.moveTo(-xwidth_inner, -zdepth_inner);
+        innerBox.lineTo(xwidth_inner, -zdepth_inner);
+        innerBox.lineTo(xwidth_inner, zdepth_inner);
+        innerBox.lineTo(-xwidth_inner, zdepth_inner);
 
         outerBox.holes.push(innerBox);
 
         geometry = new THREE.ExtrudeGeometry(outerBox, {
             steps: 1,
-            depth: c,
+            depth: yheight,
             bevelEnabled: false
         });
     }
 
     const material = new THREE.MeshLambertMaterial({color: color});
     const box = new THREE.Mesh(geometry, material);
+
+    let align_axis = new THREE.Vector3(nx, ny, nz);
+    box.quaternion.setFromUnitVectors(original_axis, align_axis.clone().normalize());
 
     box.position.x = x;
     box.position.y = y;
@@ -220,7 +244,7 @@ Main.prototype.addBox = function(x, y, z, a, b, c, thickness, parent, color)
     parent.add( box );
 }
 
-Main.prototype.addPolygon = function(faces_vertices, parent, color)
+Main.prototype.addPolyhedron = function(faces_vertices, parent, color)
 {
     const parsed_faces_vertices = JSON.parse(faces_vertices);
     let faces = parsed_faces_vertices.faces.flatMap(index => index.face);
@@ -235,11 +259,15 @@ Main.prototype.addPolygon = function(faces_vertices, parent, color)
 
     geometry.setIndex(faces);
     geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
-
+    geometry.computeVertexNormals();
     const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
-    const polygon = new THREE.Mesh(geometry, material);
+    const polyhedron = new THREE.Mesh(geometry, material);
 
-    parent.add( polygon );
+    const edges = new THREE.EdgesGeometry(geometry);
+    const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color: 0x000000}));
+    //polyhedron.add(line);
+
+    parent.add( polyhedron);
 }
 
 function getRank3Indices(rank4indices)
@@ -262,6 +290,29 @@ function getRank3Indices(rank4indices)
     return rank3indices;
 }
 
+
+Main.prototype.addPolygon = function(faces_vertices, parent, color)
+{
+    const parsed_faces_vertices = JSON.parse(faces_vertices);
+    let faces = parsed_faces_vertices.faces.flatMap(index => index.face);
+
+
+    let vertices = new Float32Array(parsed_faces_vertices.vertices.flatMap(vertex => vertex));
+
+    let geometry = new THREE.BufferGeometry();
+
+    geometry.setIndex(faces);
+    geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+    geometry.computeVertexNormals();
+    const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
+    const polygon = new THREE.Mesh(geometry, material);
+
+    const edges = new THREE.EdgesGeometry(geometry);
+    const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color: 0x000000}));
+    //polygon.add(line);
+
+    parent.add( polygon);
+}
 
 // add pointlight
 // 		center 	- THREE.Vector3 instance
@@ -574,10 +625,14 @@ TraceLoader.prototype.loadInstr = function()
             main.addNewCircle(args[0], args[1], args[2], args[3],args[4], args[5], args[6], 32, parentnode, color);
         }
         if (key === 'box') {
-            main.addBox(args[0], args[1], args[2], args[3], args[4], args[5], args[6], parentnode, color);
+            console.log(args);
+            main.addBox(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], parentnode, color);
         }
         if (key === 'polygon') {
             main.addPolygon(args[0], parentnode, color);
+        }
+        if (key === 'polyhedron') {
+            main.addPolyhedron(args[0], parentnode, color);
         }
     }
 
