@@ -1234,7 +1234,7 @@ void off_display(off_struct data)
     }
 
     ptr += sprintf(ptr, "]}");
-    mcdis_new_polygon(json_string);
+    mcdis_polyhedron(json_string);
 
     free(json_string);
     }

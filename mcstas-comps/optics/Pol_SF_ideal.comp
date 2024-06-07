@@ -73,10 +73,10 @@ TRACE
 
 MCDISPLAY
 %{
-    double dx=xwidth/16;
-    double dy=yheight/8;
+  double dx=xwidth/16;
+  double dy=yheight/8;
   
-  box(0,0,0,xwidth,yheight,zdepth);
+  box(0,0,0,xwidth,yheight,zdepth,0);
   
   line(dx,-dy,0,dx,-dy+yheight/2.0,0);
   line(-dx,dy,0,-dx,dy-yheight/2.0,0);

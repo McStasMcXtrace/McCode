@@ -194,15 +194,6 @@ MCDISPLAY
 %{
   /* display the object */
   off_display(offdata);
-  /* and its bounding box */
-  /*
-  mcdis_box(( offdata.xmin+offdata.xmax)/2,
-            ( offdata.ymin+offdata.ymax)/2,
-            ( offdata.zmin+offdata.zmax)/2,
-            (-offdata.xmin+offdata.xmax),
-            (-offdata.ymin+offdata.ymax),
-            (-offdata.zmin+offdata.zmax));
-  */
 %}
 
 END
