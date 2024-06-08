@@ -21,6 +21,8 @@
     "NEXUSFLAGS": "-Wl,-rpath,GETPATH(lib) -LGETPATH(lib) -DUSE_NEXUS -lNeXus -IGETPATH(include/nexus)",
     "MPIFLAGS": "-DUSE_MPI -lmpi",
     "OACCFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=managed -DOPENACC",
+    "GSLFLAGS": "-lgsl -lgslcblas",
+    "XRLFLAGS": "",
     "CC": "mpicc",
     "OACC": "nvc",
     "MPICC": "mpicc",
