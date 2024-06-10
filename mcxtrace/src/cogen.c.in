@@ -1364,6 +1364,9 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower,
     cout("  #define circle      mcdis_circle");
     cout("  #define cylinder    mcdis_cylinder");
     cout("  #define sphere      mcdis_sphere");
+    cout("  #define cone        mcdis_cone");
+    cout("  #define polygon     mcdis_polygon");
+    cout("  #define polyhedron  mcdis_polyhedron");
   }
 
   /* generate setpos instance functions */

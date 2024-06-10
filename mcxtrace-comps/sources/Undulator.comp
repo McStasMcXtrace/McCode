@@ -347,8 +347,8 @@ MCDISPLAY
   dz=lu/2.0;
 
   while (zz<=(length-lu)/2.0){
-    box(0.0,gap/2.0+5e-4,zz,xwidth,1e-3,lu/2.0);
-    box(0.0,-gap/2.0-5e-4,zz,xwidth,1e-3,lu/2.0);
+    box(0.0,gap/2.0+5e-4,zz,xwidth,1e-3,lu/2.0,0);
+    box(0.0,-gap/2.0-5e-4,zz,xwidth,1e-3,lu/2.0,0);
     zz+=dz;
   }
 

@@ -270,7 +270,7 @@ MCDISPLAY
 %{
   
   if (shape==CUBE){
-    box(0,0,0,xwidth,yheight,zdepth);
+    box(0,0,0,xwidth,yheight,zdepth,0);
   } else if (shape==CYLINDER){
     circle("xy",0, yheight/2.0,0,radius);
     circle("xy",0,-yheight/2.0,0,radius);

@@ -291,7 +291,7 @@ MCDISPLAY
   w=(yheight*yheight)/(8*r);
   zdepth=N*(2*w+d);
   z_c=(zdepth/2.0)-w;
-  box(0,0,z_c,yheight/2,yheight/2,zdepth);
+  box(0,0,z_c,yheight/2,yheight/2,zdepth,0);
 %}
 
 END
