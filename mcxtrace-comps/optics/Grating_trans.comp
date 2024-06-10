@@ -215,8 +215,8 @@ MCDISPLAY
     rectangle("xy", 0,0,-(sdepth)/2.0, xwidth,yheight);
   rectangle("xy", 0,0, (sdepth)/2.0, xwidth,yheight);
   for (i=-1;i<2;i++){
-    box(period/4.0+i*period,0, sdepth/2.0 + zdepth/2.0, period/2.0, yheight, zdepth,0);  
-    box(-3*period/4.0+ i*period,0, sdepth/2.0 + zdepth/2.0, period/2.0, yheight, zdepth,0);  
+    box(period/4.0+i*period,0, sdepth/2.0 + zdepth/2.0, period/2.0, yheight, zdepth,0, 0, 1, 0);  
+    box(-3*period/4.0+ i*period,0, sdepth/2.0 + zdepth/2.0, period/2.0, yheight, zdepth,0, 0, 1, 0);  
   }
 %}
 

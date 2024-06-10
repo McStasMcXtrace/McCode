@@ -176,7 +176,7 @@ TRACE
 MCDISPLAY
 %{
   /* Draw a box around the lenslets*/
-  box(0,0,zdepth*N/2.0,xwidth,Y,zdepth*N,0);
+  box(0,0,zdepth*N/2.0,xwidth,Y,zdepth*N,0, 0, 1, 0);
 %}
 
 END
