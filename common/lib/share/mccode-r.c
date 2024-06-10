@@ -2838,9 +2838,9 @@ void mcdis_polygon(int count, ...){
         int num = 3;
         ptr += sprintf(ptr, "{ \"face\": [");
 	if (i < faceSize - 1) {
-	  ptr += sprintf(ptr, "%lu, %lu, %lu",i,i+1,count);
+	  ptr += sprintf(ptr, "%d, %d, %d",i,i+1,count);
 	} else {
-	  ptr += sprintf(ptr, "%lu, %lu, %lu",i,count,0);
+	  ptr += sprintf(ptr, "%d, %d, %d",i,count,0);
 	}
 	ptr += sprintf(ptr, "]}");
 	if (i < faceSize-1) {
