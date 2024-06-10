@@ -202,36 +202,83 @@ Main.prototype.addBox = function(x, y, z, xwidth, yheight, zdepth, thickness, nx
     let original_axis = new THREE.Vector3(0, 1, 0);
 
     if(thickness > 0){
-        original_axis = new THREE.Vector3(0, 0, 1);
+        //Hollow box using BufferGeometry with vertices and faces
+        const a = xwidth;
+        const b = yheight;
+        const c = zdepth;
 
-        xwidth /= 2;
-        zdepth /= 2;
+        let vertices = new Float32Array( [
+            a, 0, 0,
+            0, b, 0,
+            0, 0, c,
+            0, 0, 0,
+            a, 0, c,
+            a, b, 0,
+            a, b, c,
+            0, b, c,
 
-        let outerBox = new THREE.Shape();
-        outerBox.moveTo(-xwidth, -zdepth);
-        outerBox.lineTo(xwidth, -zdepth);
-        outerBox.lineTo(xwidth, zdepth);
-        outerBox.lineTo(-xwidth, zdepth);
+            a-thickness, 0, 0+thickness,
+            0+thickness, b, 0+thickness,
+            0+thickness, 0, c-thickness,
+            0+thickness, 0, 0+thickness,
+            a-thickness, 0, c-thickness,
+            a-thickness, b, 0+thickness,
+            a-thickness, b, c-thickness,
+            0+thickness, b, c-thickness
+        ]);
 
-        const zdepth_inner = zdepth - thickness;
-        const xwidth_inner = xwidth - thickness;
+        const center = [a / 2, b / 2, c / 2];
 
-        let innerBox =  new THREE.Shape();
-        innerBox.moveTo(-xwidth_inner, -zdepth_inner);
-        innerBox.lineTo(xwidth_inner, -zdepth_inner);
-        innerBox.lineTo(xwidth_inner, zdepth_inner);
-        innerBox.lineTo(-xwidth_inner, zdepth_inner);
+        const centeredVertices = new Float32Array(vertices.length);
+        for (let i = 0; i < vertices.length; i += 3) {
+            centeredVertices[i] = vertices[i] - center[0];
+            centeredVertices[i + 1] = vertices[i + 1] - center[1];
+            centeredVertices[i + 2] = vertices[i + 2] - center[2];
+        }
 
-        outerBox.holes.push(innerBox);
+        let faces = [
+            8, 11, 9,
+            8, 9, 13,
+            8, 12, 14,
+            8, 14, 13,
+            12, 10, 15,
+            12, 15, 14,
+            10, 11, 9,
+            10, 9, 15,
+            0, 3, 1,
+            0, 1, 5,
+            0, 4, 6,
+            0, 6, 5,
+            4, 2, 7,
+            4, 7, 6,
+            2, 3, 1,
+            2, 1, 7,
+            0, 8, 11,
+            0, 11, 3,
+            1, 9, 13,
+            1, 13, 5,
+            4, 12, 10,
+            4, 10, 2,
+            7, 15, 14,
+            7, 14, 6,
+            0, 8, 4,
+            0, 4, 12,
+            11, 3, 2,
+            11, 2, 10,
+            1, 9, 7,
+            1, 7, 15,
+            13, 5, 6,
+            13, 6, 14
+        ];
 
-        geometry = new THREE.ExtrudeGeometry(outerBox, {
-            steps: 1,
-            depth: yheight,
-            bevelEnabled: false
-        });
+        geometry = new THREE.BufferGeometry();
+
+        geometry.setIndex(faces);
+        geometry.setAttribute( 'position', new THREE.BufferAttribute( centeredVertices, 3 ) );
+        geometry.computeVertexNormals();
     }
 
-    const material = new THREE.MeshLambertMaterial({color: color});
+    const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
     const box = new THREE.Mesh(geometry, material);
 
     let align_axis = new THREE.Vector3(nx, ny, nz);
