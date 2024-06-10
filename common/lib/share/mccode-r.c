@@ -2623,9 +2623,9 @@ void mcdis_legacy_box(double x, double y, double z,
     draws a box with center at (x, y, z) and
     width (deltax), height (deltay), length (deltaz) */
 void mcdis_box(double x, double y, double z,
-	       double width, double height, double length, double thickness){
+	       double width, double height, double length, double thickness, double nx, double ny, double nz){
   if (mcdotrace==2) {
-    printf("MCDISPLAY: box(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness);
+    printf("MCDISPLAY: box(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness, nx, ny, nz);
   } else {
     mcdis_legacy_box(x, y, z, width, height, length);
     if (thickness)
