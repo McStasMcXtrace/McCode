@@ -115,7 +115,8 @@
 
 DEFINE COMPONENT Incoherent
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string geometry=0, radius=0, xwidth=0, yheight=0, zdepth=0, thickness=0,
+SETTING PARAMETERS (string geometry=0, radius=0, xwidth=0, yheight=0, zdepth=0,
+thickness=0, nx=0, ny=1, nz=0,
 target_x = 0, target_y = 0, target_z = 0, focus_r = 0,
 focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0, int target_index=0,
 pack = 1, p_interact=1, f_QE=0, gamma=0, Etrans=0,deltaE=0,
@@ -453,10 +454,10 @@ MCDISPLAY
       }
       else
         if (radius > 0 &&  yheight) {	/* cylinder */
-          mcdis_cylinder(0,0,0,radius,yheight,thickness,0,1,0);
+          cylinder(0,0,0,radius,yheight,thickness, nx, ny, nz);
       }
-      else if (xwidth && yheight) { 	/* box/rectangle XY */
-          mcdis_box(0,0,0,xwidth,yheight,zdepth,thickness);
+      else if (xwidth && yheight) { 	/* box/rectangle */
+          box(0,0,0,xwidth,yheight,zdepth,thickness, nx, ny, nz);
       }
       else if (radius > 0 && !yheight) {	/* sphere */
           sphere(0,0,0,radius);

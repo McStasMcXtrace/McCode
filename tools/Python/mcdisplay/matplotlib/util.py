@@ -99,21 +99,6 @@ def draw_cylinder(center, radius, height, axis_vector):
     return x, y, z
 
 
-def draw_disc(center, radius, axis_vector):
-    # Polar coordinates in the disc's plane
-    theta = np.linspace(0, 2 * np.pi, NUM_SAMPLES)
-    r = np.linspace(0, radius, NUM_SAMPLES)
-    theta, r = np.meshgrid(theta, r)
-
-    # Calculate coordinates in the disc's plane
-    x_plane = r * np.cos(theta)
-    y_plane = r * np.sin(theta)
-
-    (x, y, z) = center_and_align_with_axis_vector(center, x_plane, y_plane, axis_vector)
-
-    return x, y, z
-
-
 def draw_annulus(center, outer_radius, inner_radius, axis_vector):
     # Polar coordinates in the annulus' plane
     theta = np.linspace(0, 2 * np.pi, NUM_SAMPLES)
@@ -127,6 +112,14 @@ def draw_annulus(center, outer_radius, inner_radius, axis_vector):
     (x, y, z) = center_and_align_with_axis_vector(center, x_plane, y_plane, axis_vector)
 
     return x, y, z
+
+
+def draw_disc(center, radius, axis_vector):
+    return draw_annulus(center, radius, radius, axis_vector)
+
+
+def draw_new_circle(center, radius, axis_vector):
+    return draw_annulus(center, radius, 0.01, axis_vector)
 
 
 def draw_cone(center, radius, height, axis_vector):
@@ -218,17 +211,6 @@ def draw_hollow_box(center, a, b, c, thickness):
         [6, 14, 12, 4]
     ]
     return faces, vertices
-
-
-def draw_new_circle(center, radius, axis_vector):
-    theta = np.linspace(0, 2 * np.pi, NUM_SAMPLES)
-
-    x = radius * np.cos(theta)
-    y = radius * np.sin(theta)
-
-    (x, y, z) = center_and_align_with_axis_vector(center, x, y, axis_vector)
-
-    return x, y, z
 
 
 def center_and_align_with_axis_vector(center, x_plane, y_plane, axis_vector):

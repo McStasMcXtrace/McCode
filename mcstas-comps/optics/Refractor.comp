@@ -688,7 +688,7 @@ MCDISPLAY
     line(0, -yheight/2.0, -radius, 0, +yheight/2.0, -radius);
     line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
   } else if (!strcmp(geometry, "box")) {
-    box(0,0,0, xwidth, yheight, zdepth,0);
+    box(0,0,0, xwidth, yheight, zdepth,0, 0, 1, 0);
   } else if (!strcmp(geometry, "lens_sphere")) {
     // sphere: x^2+y^2+z^2=radius. In 2D: radius^2=z^2+r^2
     int index;
@@ -698,7 +698,7 @@ MCDISPLAY
       circle("xy", 0, 0, z-(radius+zdepth/2), r);
       circle("xy", 0, 0,-z+(radius+zdepth/2), r);
     }
-    box(0,0,0, 2*radius, 2*radius, 2*radius+zdepth,0);
+    box(0,0,0, 2*radius, 2*radius, 2*radius+zdepth,0, 0, 1, 0);
   } else if (!strcmp(geometry, "lens_parabola")) {
     // parabola: z  = (x^2+y^2)/4/radius. In 2D: z = r^2/4/radius
     int index;
@@ -708,7 +708,7 @@ MCDISPLAY
       circle("xy", 0, 0,-z-(zdepth/2), r);
       circle("xy", 0, 0, z+(zdepth/2), r);
     }
-    box(0,0,0, 4*radius, 4*radius, 2*radius+zdepth,0);
+    box(0,0,0, 4*radius, 4*radius, 2*radius+zdepth,0, 0, 1, 0);
   } else if (geometry && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
     off_display(offdata);
   }
