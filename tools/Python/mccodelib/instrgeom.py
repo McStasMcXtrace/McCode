@@ -238,6 +238,7 @@ drawcommands = {
     'annulus'     : 'DrawAnnulus',
     'new_circle'  : 'DrawNewCircle',
     'polygon'     : 'DrawPolygon',
+    'polyhedron'     : 'DrawPolyhedron',
 }
 # reduced set containing wholly implemented and non-trivial commands
 reduced_drawcommands = {
@@ -252,6 +253,7 @@ reduced_drawcommands = {
     'annulus'     : 'DrawAnnulus',
     'new_circle'  : 'DrawNewCircle',
     'polygon'     : 'DrawPolygon',
+    'polyhedron'  : 'DrawPolyhedron',
     }
 
 def drawclass_factory(commandname, args, reduced=False):
@@ -498,12 +500,19 @@ class DrawAnnulus(DrawCommand):
         self.axis_vector = Vector3d(float(args[5]), float(args[6]), float(args[7]))
 
 
-class DrawPolygon(DrawCommand):
+class DrawPolyhedron(DrawCommand):
     faces_vertices = None
+    def __init__(self, args):
+        super(DrawPolyhedron, self).__init__(args)
+        self.key = 'polyhedron'
+        self.faces_vertices = args[0]
+
+
+class DrawPolygon(DrawCommand):
+    #TODO: awaiting C code for this
     def __init__(self, args):
         super(DrawPolygon, self).__init__(args)
         self.key = 'polygon'
-        self.faces_vertices = args[0]
 
 
 class Vector3d(object):

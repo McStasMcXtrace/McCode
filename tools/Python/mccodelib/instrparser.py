@@ -50,6 +50,7 @@ class InstrTraceParser:
         'annulus'     : 'DRAWCALL',
         'new_circle'  : 'DRAWCALL',
         'polygon'     : 'DRAWCALL',
+        'polyhedron'  : 'DRAWCALL',
 
 
         'MANTID_PIXEL': 'MANTID_PIXEL',
