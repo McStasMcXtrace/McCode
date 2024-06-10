@@ -217,6 +217,7 @@ Main.prototype.addBox = function(x, y, z, xwidth, yheight, zdepth, thickness, nx
             a, b, c,
             0, b, c,
 
+            //inner vertices
             a-thickness, 0, 0+thickness,
             0+thickness, b, 0+thickness,
             0+thickness, 0, c-thickness,
@@ -281,8 +282,8 @@ Main.prototype.addBox = function(x, y, z, xwidth, yheight, zdepth, thickness, nx
     const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
     const box = new THREE.Mesh(geometry, material);
 
-    let align_axis = new THREE.Vector3(nx, ny, nz);
-    box.quaternion.setFromUnitVectors(original_axis, align_axis.clone().normalize());
+    let align_axis = new THREE.Vector3(nx, ny, nz).normalize();
+    box.quaternion.setFromUnitVectors(original_axis, align_axis.clone());
 
     box.position.x = x;
     box.position.y = y;
@@ -310,9 +311,11 @@ Main.prototype.addPolyhedron = function(faces_vertices, parent, color)
     const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
     const polyhedron = new THREE.Mesh(geometry, material);
 
+    /*
     const edges = new THREE.EdgesGeometry(geometry);
     const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color: 0x000000}));
-    //polyhedron.add(line);
+    polyhedron.add(line);
+    */
 
     parent.add( polyhedron);
 }
@@ -354,9 +357,11 @@ Main.prototype.addPolygon = function(faces_vertices, parent, color)
     const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
     const polygon = new THREE.Mesh(geometry, material);
 
+    /*
     const edges = new THREE.EdgesGeometry(geometry);
     const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color: 0x000000}));
-    //polygon.add(line);
+    polygon.add(line);
+    */
 
     parent.add( polygon);
 }
