@@ -454,10 +454,10 @@ MCDISPLAY
       }
       else
         if (radius > 0 &&  yheight) {	/* cylinder */
-          mcdis_cylinder(0,0,0,radius,yheight,thickness, nx, ny, nz);
+          cylinder(0,0,0,radius,yheight,thickness, nx, ny, nz);
       }
       else if (xwidth && yheight) { 	/* box/rectangle */
-          mcdis_box(0,0,0,xwidth,yheight,zdepth,thickness, nx, ny, nz);
+          box(0,0,0,xwidth,yheight,zdepth,thickness, nx, ny, nz);
       }
       else if (radius > 0 && !yheight) {	/* sphere */
           sphere(0,0,0,radius);

@@ -245,7 +245,7 @@ MCDISPLAY
 %{
   
   if (shape_o==CUBE){
-    box(0,0,0,xwidth_o,yheight_o,zdepth_o,0);
+    box(0,0,0,xwidth_o,yheight_o,zdepth_o,0, 0, 1, 0);
   } else if (shape_o==CYLINDER){
     circle("xy",0, yheight_o/2.0,0,radius_o);
     circle("xy",0,-yheight_o/2.0,0,radius_o);
@@ -262,7 +262,7 @@ MCDISPLAY
   }
   
   if (shape_i==CUBE){
-    box(0,0,0,xwidth_i,yheight_i,zdepth_i,0);
+    box(0,0,0,xwidth_i,yheight_i,zdepth_i,0, 0, 1, 0);
   } else if (shape_i==CYLINDER){
     circle("xy",0, yheight_i/2.0,0,radius_i);
     circle("xy",0,-yheight_i/2.0,0,radius_i);
