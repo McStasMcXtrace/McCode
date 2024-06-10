@@ -84,6 +84,21 @@
 		{
 			controller.setViewHome();
 		}
+
+		var toggleGridXY = function()
+		{
+			controller.toggleGridXY();
+		}
+
+		var toggleGridXZ = function()
+		{
+			controller.toggleGridXZ();
+		}
+
+		var toggleGridYZ = function()
+		{
+			controller.toggleGridYZ();
+		}
 	</script>
 
 	<div id="gui" style="width: auto; background-color: black;">
@@ -106,6 +121,10 @@
 		<button id="btnHome", onclick="handleViewHome();" style="width: 60px;">Home</button>
 		<button id="btnSide", onclick="handleViewSide();" style="width: 60px;">Side</button>
 		<button id="btnTop", onclick="handleViewTop();" style="width: 60px;">Top</button>
+		<label id="toggleGrids" style="color: white; background-color: black; display: inline-block; text-align:right; width: 120px;">Toggle grids:</label>
+		<button id="btnToggleGridXY", onclick="toggleGridXY();" style="width: 60px;">XY</button>
+		<button id="btnToggleGridXZ", onclick="toggleGridXZ();" style="width: 60px;">XZ</button>
+		<button id="btnToggleGridYZ",  onclick="toggleGridYZ();" style="width: 60px;">YZ</button>
 	</div>
 	<div id="3dcanvas"></div>
 
@@ -155,6 +174,7 @@
 			// update show/hide scatter cubes
 			cbxScattCub = document.getElementById("cbxScattCub");
 			cbxScattCub.checked = this.viewmodel.getShowScatterCubes();
+
 		}
 		var upd = new UpdateGui();
 

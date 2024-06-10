@@ -422,14 +422,20 @@ Main.prototype.init = function(campos, invert)
     this.scene.add(light, new THREE.AmbientLight(0xffffff, 0.5));
 
     var gridXZ = new THREE.GridHelper(100, 100);
+    gridXZ.visible = true;
+    gridXZ.name = "gridXZ";
     this.scene.add(gridXZ);
 
     var gridXY = new THREE.GridHelper(100, 100);
     gridXY.rotation.x = Math.PI / 2;
+    gridXY.visible = false;
+    gridXY.name = "gridXY";
     this.scene.add(gridXY);
 
     var gridYZ = new THREE.GridHelper(100, 100);
     gridYZ.rotation.z = Math.PI / 2;
+    gridYZ.visible = false;
+    gridYZ.name = "gridYZ";
     this.scene.add(gridYZ);
 
 
@@ -579,6 +585,44 @@ Main.prototype.showCubes = function()
         ray.annotcubes.visible = true;
     }
 }
+
+// toggle grid visibility
+Main.prototype.toggleGridYZ = function()
+{
+    if(this.scene.getObjectByName("gridYZ").visible == true) {
+        this.scene.getObjectByName("gridYZ").visible = false;
+        console.log(this.scene.getObjectByName("gridYZ").visible);
+    }
+    else {
+        this.scene.getObjectByName("gridYZ").visible = true;
+        console.log(this.scene.getObjectByName("gridYZ").visible);
+    }
+}
+
+Main.prototype.toggleGridXY = function()
+{
+    if(this.scene.getObjectByName("gridXY").visible == true) {
+        this.scene.getObjectByName("gridXY").visible = false;
+        console.log(this.scene.getObjectByName("gridXY").visible);
+    }
+    else {
+        this.scene.getObjectByName("gridXY").visible = true;
+        console.log(this.scene.getObjectByName("gridXY").visible);
+    }
+}
+
+Main.prototype.toggleGridXZ = function()
+{
+    if(this.scene.getObjectByName("gridXZ").visible == true) {
+        this.scene.getObjectByName("gridXZ").visible = false;
+        console.log(this.scene.getObjectByName("gridXZ").visible);
+    }
+    else {
+        this.scene.getObjectByName("gridXZ").visible = true;
+        console.log(this.scene.getObjectByName("gridXZ").visible);
+    }
+}
+
 // iterates to attach the next ray in the global ray sequence
 //
 Main.prototype.showNextRay = function()
@@ -785,6 +829,19 @@ var Controller = function(campos_x, campos_y, campos_z, box_lst, invert_canvas)
     this.numRays = MCDATA_particledata["numrays"]
     this.viewmodel = new ViewModel(numRays = this.numRays);
 }
+Controller.prototype.toggleGridXY = function()
+{
+    this.main.toggleGridXY();
+}
+Controller.prototype.toggleGridXZ = function()
+{
+    this.main.toggleGridXZ();
+}
+Controller.prototype.toggleGridYZ = function()
+{
+    this.main.toggleGridYZ();
+}
+
 Controller.prototype.setUpdateGuiFunc = function(updateGuiFunc)
 {
     this.updateGuiFunc = updateGuiFunc;
