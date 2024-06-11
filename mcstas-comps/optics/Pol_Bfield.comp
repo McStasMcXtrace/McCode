@@ -212,7 +212,7 @@ MCDISPLAY
     enum shapes {NONE=0, BOX, WINDOW, CYLINDER, SPHERE, ANY};
     switch (shape){
         case BOX:
-	  box(0,0,0,xwidth,yheight,zdepth,0);
+	  box(0,0,0,xwidth,yheight,zdepth,0, 0, 1, 0);
             break;
         case CYLINDER:
             circle("xz",0, yheight/2.0,0,radius);

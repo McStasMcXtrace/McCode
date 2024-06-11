@@ -2602,6 +2602,11 @@ void mcdis_circle(char *plane, double x, double y, double z, double r){
   printf("MCDISPLAY: circle('%s',%g,%g,%g,%g)\n", plane, x, y, z, r);
 }
 
+void mcdis_new_circle(double x, double y, double z, double r, double nx, double ny, double nz){
+  printf("MCDISPLAY: new_circle(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, r, nx, ny, nz);
+}
+
+
 /* Draws a circle with center (x,y,z), radius (r), and in the plane
  * with normal (nx,ny,nz)*/
 void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, double nz){
@@ -2628,6 +2633,7 @@ void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, 
     }
 }
 
+
 /*  OLD IMPLEMENTATION
     draws a box with center at (x, y, z) and
     width (deltax), height (deltay), length (deltaz) */
@@ -2650,9 +2656,9 @@ void mcdis_legacy_box(double x, double y, double z,
     draws a box with center at (x, y, z) and
     width (deltax), height (deltay), length (deltaz) */
 void mcdis_box(double x, double y, double z,
-	       double width, double height, double length, double thickness){
+	       double width, double height, double length, double thickness, double nx, double ny, double nz){
   if (mcdotrace==2) {
-    printf("MCDISPLAY: box(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness);
+    printf("MCDISPLAY: box(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness, nx, ny, nz);
   } else {
     mcdis_legacy_box(x, y, z, width, height, length);
     if (thickness)
@@ -2720,6 +2726,22 @@ void mcdis_cone( double x, double y, double z,
     mcdis_Circle(x+0.75*height*nx, y+0.75*height*ny, z+0.75*height*nz, 0.25*r, nx, ny, nz);
     mcdis_line(x, y, z, x+height*nx, y+height*ny, z+height*nz);
   }
+}
+
+/* Draws a disc with center at (x,y,z) with extent (r).
+ * The disc axis is along the vector nx,ny,nz.*/
+void mcdis_disc( double x, double y, double z,
+        double r, double nx, double ny, double nz){
+  printf("MCDISPLAY: disc(%g, %g, %g, %g, %g, %g, %g)\n",
+     x, y, z, r, nx, ny, nz);
+}
+
+/* Draws a annulus with center at (x,y,z) with extent (outer_radius) and remove inner_radius.
+ * The annulus axis is along the vector nx,ny,nz.*/
+void mcdis_annulus( double x, double y, double z,
+        double outer_radius, double inner_radius, double nx, double ny, double nz){
+  printf("MCDISPLAY: annulus(%g, %g, %g, %g, %g, %g, %g, %g)\n",
+     x, y, z, outer_radius, inner_radius, nx, ny, nz);
 }
 
 /* draws a sphere with center at (x,y,z) with extent (r)*/
@@ -2843,9 +2865,9 @@ void mcdis_polygon(int count, ...){
         int num = 3;
         ptr += sprintf(ptr, "{ \"face\": [");
 	if (i < faceSize - 1) {
-	  ptr += sprintf(ptr, "%lu, %lu, %lu",i,i+1,count);
+	  ptr += sprintf(ptr, "%d, %d, %d",i,i+1,count);
 	} else {
-	  ptr += sprintf(ptr, "%lu, %lu, %lu",i,count,0);
+	  ptr += sprintf(ptr, "%d, %d, %d",i,count,0);
 	}
 	ptr += sprintf(ptr, "]}");
 	if (i < faceSize-1) {
@@ -4447,6 +4469,9 @@ mcparseoptions(int argc, char *argv[])
     }    
     else if(!strcmp("--vecsize", argv[i]) && (i + 1) < argc) {
       vecsize=atoi(argv[++i]);
+    }
+    else if(!strncmp("--bufsiz=", argv[i], 9)) {
+      MONND_BUFSIZ=atoi(&argv[i][9]);
     }
     else if(!strcmp("--bufsiz", argv[i]) && (i + 1) < argc) {
       MONND_BUFSIZ=atoi(argv[++i]);

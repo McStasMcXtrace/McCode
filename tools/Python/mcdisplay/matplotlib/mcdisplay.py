@@ -9,7 +9,7 @@ import numpy as np
 import json
 
 from util import (parse_multiline, rotate, rotate_points, draw_circle, get_line,
-                  draw_box, draw_sphere, draw_cylinder, draw_disc, rotate_xyz, draw_cone, draw_hollow_box, draw_annulus)
+                  draw_box, draw_sphere, draw_cylinder, draw_disc, rotate_xyz, draw_cone, draw_hollow_box, draw_annulus, draw_new_circle)
 
 UC_COMP = 'COMPONENT:'
 
@@ -18,6 +18,12 @@ MC_COMP_SHORT = 'COMP: '
 
 MC_LINE = 'MCDISPLAY: multiline'
 MC_CIRCLE = 'MCDISPLAY: circle'
+
+MC_NEW_CIRCLE = 'MCDISPLAY: new_circle'
+
+MC_DISC = 'MCDISPLAY: disc'
+MC_ANNULUS = 'MCDISPLAY: annulus'
+
 MC_CYLINDER = 'MCDISPLAY: cylinder'
 MC_SPHERE = 'MCDISPLAY: sphere'
 MC_BOX = 'MCDISPLAY: box'
@@ -111,6 +117,15 @@ def parse_trace():
 
         elif line.startswith(MC_CIRCLE):
             process_circle(ax, line, COLORS[color], comp, transparency)
+
+        elif line.startswith(MC_DISC):
+            process_disc(ax, line, comp, COLORS[color], transparency)
+
+        elif line.startswith(MC_ANNULUS):
+            process_annulus(ax, line, comp, COLORS[color], transparency)
+
+        elif line.startswith(MC_NEW_CIRCLE):
+            process_new_circle(ax, line, comp, COLORS[color], transparency)
 
         elif line.startswith(MC_CONE):
             process_cone(ax, line, comp, COLORS[color], transparency)
@@ -235,6 +250,42 @@ def process_cylinder(ax, line, comp, color, transparency):
 
     ax.plot_surface(z, x, y, color=color, alpha=transparency)
 
+
+def process_disc(ax, line, comp, color, transparency):
+    items = line[len(MC_DISC):].strip('()').split(',')
+    center = [float(x) for x in items[0:3]]
+    radius = float(items[3])
+    axis_vector = [float(x) for x in items[4:7]]
+
+    (x, y, z) = draw_disc(center, radius, axis_vector)
+    (x, y, z) = rotate_xyz(x, y, z, comp)
+
+    ax.plot_surface(z, x, y, color=color, alpha=transparency)
+
+
+def process_new_circle(ax, line, comp, color, transparency):
+    items = line[len(MC_NEW_CIRCLE):].strip('()').split(',')
+    center = [float(x) for x in items[0:3]]
+    radius = float(items[3])
+    axis_vector = [float(x) for x in items[4:7]]
+
+    (x, y, z) = draw_new_circle(center, radius, axis_vector)
+    (x, y, z) = rotate_xyz(x, y, z, comp)
+
+    ax.plot_surface(z, x, y, color=color, alpha=transparency)
+
+
+def process_annulus(ax, line, comp, color, transparency):
+    items = line[len(MC_ANNULUS):].strip('()').split(',')
+    center = [float(x) for x in items[0:3]]
+    outer_radius = float(items[3])
+    inner_radius = float(items[4])
+    axis_vector = [float(x) for x in items[5:8]]
+
+    (x, y, z) = draw_annulus(center, outer_radius, inner_radius, axis_vector)
+    (x, y, z) = rotate_xyz(x, y, z, comp)
+
+    ax.plot_surface(z, x, y, color=color, alpha=transparency)
 
 def process_cone(ax, line, comp, color, transparency):
     items = line[len(MC_CONE):].strip('()').split(',')

@@ -181,14 +181,14 @@ class McStas:
                 cflags += os.environ.get('CFLAGS') + " "
             # Special handling of NVIDIA's OpenACC-aware compiler inside a CONDA env,
             # remove certain unsupported flags:
-            if self.options.openacc and 'nvc' in mccode_config.compilation['OACC']:
+            if mccode_config.configuration['ISCONDAPKG']==1 and self.options.openacc and 'nvc' in mccode_config.compilation['OACC']:
                 Cflags = lexer.join(cflags)
-                Cflags=Cflags.replace('-march=nocona', None)
-                Cflags=Cflags.replace('-ftree-vectorize', None)
-                Cflags=Cflags.replace('-fstack-protector-strong', None)
-                Cflags=Cflags.replace('-fno-plt', None)
-                Cflags=Cflags.replace('-ffunction-sections', None)
-                Cflags=Cflags.replace('-pipe', None)
+                Cflags=Cflags.replace('-march=nocona', '')
+                Cflags=Cflags.replace('-ftree-vectorize', '')
+                Cflags=Cflags.replace('-fstack-protector-strong', '')
+                Cflags=Cflags.replace('-fno-plt', '')
+                Cflags=Cflags.replace('-ffunction-sections', '')
+                Cflags=Cflags.replace('-pipe', '')
                 cflags=lexer.split(Cflags)
 
         # Parse for instances of CMD() ENV() GETPATH() in the loaded CFLAG entries using fct. evaluate_dependency_str

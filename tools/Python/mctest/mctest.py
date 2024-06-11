@@ -535,7 +535,7 @@ def run_config_test(testdir, mccoderoot, limit, configfilter, instrfilter, suffi
                 results = mccode_test(mccoderoot, labeldir, limit, instrfilter, label0)
 
                 # write local test result
-                reportfile = os.path.join(labeldir, "testresults_%s.json" % (label+suffix))
+                reportfile = os.path.join(labeldir, "testresults_%s.json" % (os.path.basename(labeldir)))
                 open(os.path.join(reportfile), "w").write(json.dumps(results, indent=2))
             
                 logging.debug("")
