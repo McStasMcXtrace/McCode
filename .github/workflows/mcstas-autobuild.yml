@@ -67,7 +67,10 @@ jobs:
            set -u
            set -x
            cd McCode
-           export REV=`git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags origin 'v*.*.*' | tail -1 | cut -f3 -d/ | cut -f2 -dv`
+           export REV=`git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags origin 'v*.*.*'`
+           echo ${REV}
+           export REV=`echo ${REV} | tail -1 | cut -f3 -d/ | cut -f2 -dv`
+           echo ${REV}
            if [ "$RUNNER_OS" == "macOS" ]; then ./buildscripts/build_macos_mcstas ${REV}; fi
            if [ "$RUNNER_OS" == "Linux" ]; then ./buildscripts/build_debs_mcstas ${REV} meta; fi
            tar cfz dist-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}.tgz dist/
