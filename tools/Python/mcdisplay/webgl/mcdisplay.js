@@ -1,13 +1,29 @@
-// transforms vertices by and returns the transformed
-//      apoints  -  an array of vertices
-//      transform  -  matrix4
-var transformPoints = function(apoints, transform)
-{
-    var geometry = new THREE.Geometry();
-    geometry.vertices = apoints;
-    geometry.applyMatrix(transform);
-    return geometry.vertices.slice();
+var transformPoints = function(apoints, transform) {
+    // Create a BufferGeometry
+    var geometry = new THREE.BufferGeometry();
+
+    // Convert apoints array to a Float32Array and set it as the position attribute
+    var vertices = new Float32Array(apoints.length * 3);
+    for (var i = 0; i < apoints.length; i++) {
+        vertices[i * 3] = apoints[i].x;
+        vertices[i * 3 + 1] = apoints[i].y;
+        vertices[i * 3 + 2] = apoints[i].z;
+    }
+    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+
+    // Apply the transformation matrix
+    geometry.applyMatrix4(transform);
+
+    // Extract the transformed vertices
+    var transformedVertices = [];
+    var position = geometry.getAttribute('position');
+    for (var i = 0; i < position.count; i++) {
+        transformedVertices.push(new THREE.Vector3(position.getX(i), position.getY(i), position.getZ(i)));
+    }
+
+    return transformedVertices;
 }
+
 // "main" class which is a collection of scene graph setup routives and data objects
 //
 var Main = function ()
@@ -38,46 +54,318 @@ var Main = function ()
 //
 Main.prototype.addCircle = function(plane, x, y, z, radius, parent, linecolor)
 {
-    console.log(plane, x, y, z, radius);
     if (radius == 0)
     {
         return;
     }
 
-    var wrapper = new THREE.Object3D();
-    var m = new THREE.Matrix4()
-    if (plane == 'xy') { } // identity
-    if (plane == 'xz') { m.makeRotationX( Math.PI/2 ); }
-    if (plane == 'yz') { m.makeRotationY( Math.PI/2 ); }
-
-    var segments = 48;
-    var circleGeometry = new THREE.CircleGeometry( radius, segments );
-    circleGeometry.vertices.shift(); // removes center vertex
-    var material = new THREE.MeshBasicMaterial( {color: linecolor} );
-    material.side = THREE.DoubleSide;
-
-    var circle = new THREE.Line( circleGeometry, material ); // THREE.Mesh results in solid coloring
-
-    circle.applyMatrix(m);
-
-    circle.position.x = x;
-    circle.position.y = y;
-    circle.position.z = z;
-
-    parent.add( circle );
+    if (plane === 'xy') {
+        Main.prototype.addNewCircle(x, y, z, radius, 0, 0, 1, 32, parent, linecolor)
+    }
+    if (plane === 'xz') {
+        Main.prototype.addNewCircle(x, y, z, radius, 0, 1, 0, 32, parent, linecolor)
+    }
+    if (plane === 'yz') {
+        Main.prototype.addNewCircle(x, y, z, radius, 1, 0, 0, 32, parent, linecolor)
+    }
 }
 // add sphere
+//		x,y,z - center coordinates
 //		radius
 //		wseg 	- width segments
 //		hseg 	- height segments
-Main.prototype.addSphere = function(radius, wseg, hseg)
+Main.prototype.addSphere = function(x, y, z, radius, wseg, hseg, parent, color)
 {
+    if (radius === 0)
+    {
+        return;
+    }
     var geometry = new THREE.SphereGeometry(radius, wseg, hseg);
-    var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
-    var sphereMaterial = new THREE.MeshLambertMaterial({ color: 0xCC0000 });
-    var sphere = new THREE.Mesh( geometry, sphereMaterial );
-    this.scene.add( sphere );
+    var material = new THREE.MeshLambertMaterial( {color: color} );
+    var sphere = new THREE.Mesh( geometry, material );
+
+    sphere.position.x = x;
+    sphere.position.y = y;
+    sphere.position.z = z;
+
+    parent.add( sphere );
 }
+
+Main.prototype.addCone = function(x, y, z, radius, height, nx, ny, nz, radSeg, parent, color)
+{
+    if (radius === 0)
+    {
+        return;
+    }
+    var geometry = new THREE.ConeGeometry(radius, height, radSeg);
+    var material = new THREE.MeshLambertMaterial( {color: color} );
+    var cone = new THREE.Mesh( geometry, material );
+
+    cone.position.x = x;
+    cone.position.y = y;
+    cone.position.z = z;
+
+    var original_axis = new THREE.Vector3(0, 1, 0);
+    var align_axis = new THREE.Vector3(nx, ny, nz).normalize();
+    cone.quaternion.setFromUnitVectors(original_axis, align_axis.clone());
+
+    parent.add( cone );
+}
+
+Main.prototype.addCylinder = function(x, y, z, radius, height, thickness, nx, ny, nz, radSeg, parent, color)
+{
+    const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
+    let original_axis = new THREE.Vector3(0, 1, 0);
+
+    if (thickness === 0) {
+        geometry = new THREE.CylinderGeometry(radius, radius, height, radSeg);
+        const cylinder = new THREE.Mesh(geometry, material);
+
+        cylinder.position.x = x;
+        cylinder.position.y = y;
+        cylinder.position.z = z;
+
+        const align_axis = new THREE.Vector3(nx, ny, nz).normalize();
+        cylinder.quaternion.setFromUnitVectors(original_axis, align_axis.clone());
+
+        parent.add(cylinder);
+    } else {
+        //openended outer and inner cylinder
+        let outer_geometry = new THREE.CylinderGeometry(radius, radius, height, radSeg, 1, true);
+        let inner_geometry = new THREE.CylinderGeometry(radius - thickness, radius - thickness, height, radSeg, 1, true);
+
+        const outer_cylinder = new THREE.Mesh(outer_geometry, material);
+        const inner_cylinder = new THREE.Mesh(inner_geometry, material);
+
+        outer_cylinder.position.x = x;
+        outer_cylinder.position.y = y;
+        outer_cylinder.position.z = z;
+        inner_cylinder.position.x = x;
+        inner_cylinder.position.y = y;
+        inner_cylinder.position.z = z;
+
+        const align_axis = new THREE.Vector3(nx, ny, nz).normalize();
+        outer_cylinder.quaternion.setFromUnitVectors(original_axis, align_axis.clone());
+        inner_cylinder.quaternion.setFromUnitVectors(original_axis, align_axis.clone());
+
+        parent.add(outer_cylinder);
+        parent.add(inner_cylinder);
+
+        const halfheight = height / 2;
+        const upper_lid_center = new THREE.Vector3(
+            x + halfheight * align_axis.x,
+            y + halfheight * align_axis.y,
+            z + halfheight * align_axis.z);
+        const lower_lid_center = new THREE.Vector3(
+            x - halfheight * align_axis.x,
+            y - halfheight * align_axis.y,
+            z - halfheight * align_axis.z);
+
+        //lid top
+        Main.prototype.addAnnulus(upper_lid_center.x, upper_lid_center.y, upper_lid_center.z, radius, thickness, nx, ny, nz, radSeg, parent, color);
+        //lid bottom
+        Main.prototype.addAnnulus(lower_lid_center.x, lower_lid_center.y, lower_lid_center.z, radius, thickness, nx, ny, nz, radSeg, parent, color);
+    }
+}
+
+Main.prototype.addAnnulus = function(x, y, z, outer_radius, inner_radius, nx, ny, nz, radSeg, parent, color)
+{
+    let geometry = new THREE.RingGeometry(outer_radius-inner_radius, outer_radius, radSeg);
+    let original_axis = new THREE.Vector3(0, 0, 1);
+
+    const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
+    const annulus = new THREE.Mesh(geometry, material);
+
+    annulus.position.x = x;
+    annulus.position.y = y;
+    annulus.position.z = z;
+
+    var align_axis = new THREE.Vector3(nx, ny, nz).normalize();
+    annulus.quaternion.setFromUnitVectors(original_axis, align_axis.clone());
+
+    parent.add( annulus );
+}
+
+Main.prototype.addDisc = function(x, y, z, radius, nx, ny, nz, radSeg, parent, color)
+{
+    Main.prototype.addAnnulus(x, y, z, radius, radius, nx, ny, nz, radSeg, parent, color);
+}
+
+Main.prototype.addNewCircle = function(x, y, z, radius, nx, ny, nz, radSeg, parent, color)
+{
+    Main.prototype.addAnnulus(x, y, z, radius, 0.01, nx, ny, nz, radSeg, parent, color);
+}
+
+Main.prototype.addBox = function(x, y, z, xwidth, yheight, zdepth, thickness, nx, ny, nz, parent, color)
+{
+    let geometry = new THREE.BoxGeometry(xwidth, yheight, zdepth);
+    let original_axis = new THREE.Vector3(0, 1, 0);
+
+    if(thickness > 0){
+        //Hollow box using BufferGeometry with vertices and faces
+        const a = xwidth;
+        const b = yheight;
+        const c = zdepth;
+
+        let vertices = new Float32Array( [
+            a, 0, 0,
+            0, b, 0,
+            0, 0, c,
+            0, 0, 0,
+            a, 0, c,
+            a, b, 0,
+            a, b, c,
+            0, b, c,
+
+            //inner vertices
+            a-thickness, 0, 0+thickness,
+            0+thickness, b, 0+thickness,
+            0+thickness, 0, c-thickness,
+            0+thickness, 0, 0+thickness,
+            a-thickness, 0, c-thickness,
+            a-thickness, b, 0+thickness,
+            a-thickness, b, c-thickness,
+            0+thickness, b, c-thickness
+        ]);
+
+        const center = [a / 2, b / 2, c / 2];
+
+        const centeredVertices = new Float32Array(vertices.length);
+        for (let i = 0; i < vertices.length; i += 3) {
+            centeredVertices[i] = vertices[i] - center[0];
+            centeredVertices[i + 1] = vertices[i + 1] - center[1];
+            centeredVertices[i + 2] = vertices[i + 2] - center[2];
+        }
+
+        let faces = [
+            8, 11, 9,
+            8, 9, 13,
+            8, 12, 14,
+            8, 14, 13,
+            12, 10, 15,
+            12, 15, 14,
+            10, 11, 9,
+            10, 9, 15,
+            0, 3, 1,
+            0, 1, 5,
+            0, 4, 6,
+            0, 6, 5,
+            4, 2, 7,
+            4, 7, 6,
+            2, 3, 1,
+            2, 1, 7,
+            0, 8, 11,
+            0, 11, 3,
+            1, 9, 13,
+            1, 13, 5,
+            4, 12, 10,
+            4, 10, 2,
+            7, 15, 14,
+            7, 14, 6,
+            0, 8, 4,
+            0, 4, 12,
+            11, 3, 2,
+            11, 2, 10,
+            1, 9, 7,
+            1, 7, 15,
+            13, 5, 6,
+            13, 6, 14
+        ];
+
+        geometry = new THREE.BufferGeometry();
+
+        geometry.setIndex(faces);
+        geometry.setAttribute( 'position', new THREE.BufferAttribute( centeredVertices, 3 ) );
+        geometry.computeVertexNormals();
+    }
+
+    const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
+    const box = new THREE.Mesh(geometry, material);
+
+    let align_axis = new THREE.Vector3(nx, ny, nz).normalize();
+    box.quaternion.setFromUnitVectors(original_axis, align_axis.clone());
+
+    box.position.x = x;
+    box.position.y = y;
+    box.position.z = z;
+
+    parent.add( box );
+}
+
+Main.prototype.addPolyhedron = function(faces_vertices, parent, color)
+{
+    const parsed_faces_vertices = JSON.parse(faces_vertices);
+    let faces = parsed_faces_vertices.faces.flatMap(index => index.face);
+    if(parsed_faces_vertices.faces[0].face.length === 4){
+        //transform faces to rank 3
+        faces = getRank3Indices(faces);
+    }
+
+    let vertices = new Float32Array(parsed_faces_vertices.vertices.flatMap(vertex => vertex));
+
+    let geometry = new THREE.BufferGeometry();
+
+    geometry.setIndex(faces);
+    geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+    geometry.computeVertexNormals();
+    const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
+    const polyhedron = new THREE.Mesh(geometry, material);
+
+    /*
+    const edges = new THREE.EdgesGeometry(geometry);
+    const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color: 0x000000}));
+    polyhedron.add(line);
+    */
+
+    parent.add( polyhedron);
+}
+
+function getRank3Indices(rank4indices)
+{
+    let rank3indices = [];
+
+    for(let i = 0; i < rank4indices.length; i+=4){
+        let face = [];
+        for(let j = 0; j < 4; j++){
+            face.push(rank4indices[i+j]);
+        }
+        rank3indices.push(face[0]);
+        rank3indices.push(face[1]);
+        rank3indices.push(face[2]);
+
+        rank3indices.push(face[0]);
+        rank3indices.push(face[2]);
+        rank3indices.push(face[3]);
+    }
+    return rank3indices;
+}
+
+
+Main.prototype.addPolygon = function(faces_vertices, parent, color)
+{
+    const parsed_faces_vertices = JSON.parse(faces_vertices);
+    let faces = parsed_faces_vertices.faces.flatMap(index => index.face);
+
+
+    let vertices = new Float32Array(parsed_faces_vertices.vertices.flatMap(vertex => vertex));
+
+    let geometry = new THREE.BufferGeometry();
+
+    geometry.setIndex(faces);
+    geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+    geometry.computeVertexNormals();
+    const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
+    const polygon = new THREE.Mesh(geometry, material);
+
+    /*
+    const edges = new THREE.EdgesGeometry(geometry);
+    const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color: 0x000000}));
+    polygon.add(line);
+    */
+
+    parent.add( polygon);
+}
+
 // add pointlight
 // 		center 	- THREE.Vector3 instance
 Main.prototype.addLight = function(center)
@@ -100,13 +388,23 @@ Main.prototype.init = function(campos, invert)
     this.camera.position.y = campos.y; // 0;
     this.camera.position.z = campos.z; // 50;
 
-    // NOTE: initial camera view direction is along the x axis
-
-    this.renderer = new THREE.WebGLRenderer();
+    this.renderer = new THREE.WebGLRenderer({
+        antialias: true
+    });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    if (invert) {
+    if (invert)
+    {
         this.renderer.setClearColor( 0xffffff );
     }
+
+    document.body.appendChild(this.renderer.domElement);
+    window.addEventListener("resize", event => {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+    })
+
+    // NOTE: initial camera view direction is along the x axis
 
     element = document.getElementById("3dcanvas");
     console.log(element);
@@ -119,7 +417,28 @@ Main.prototype.init = function(campos, invert)
 
     this.camera.lookAt(this.controls.target);
 
-    this.addLight(new THREE.Vector3(10, 50, 130))
+    let light = new THREE.DirectionalLight(0xffffff, 0.5);
+    light.position.setScalar(1);
+    this.scene.add(light, new THREE.AmbientLight(0xffffff, 0.5));
+
+    var gridXZ = new THREE.GridHelper(100, 100);
+    gridXZ.visible = true;
+    gridXZ.name = "gridXZ";
+    this.scene.add(gridXZ);
+
+    var gridXY = new THREE.GridHelper(100, 100);
+    gridXY.rotation.x = Math.PI / 2;
+    gridXY.visible = false;
+    gridXY.name = "gridXY";
+    this.scene.add(gridXY);
+
+    var gridYZ = new THREE.GridHelper(100, 100);
+    gridYZ.rotation.z = Math.PI / 2;
+    gridYZ.visible = false;
+    gridYZ.name = "gridYZ";
+    this.scene.add(gridYZ);
+
+
     this.scene.add(this.rootnode);
 }
 //  cat camera view according to campos, a Vector3
@@ -136,20 +455,13 @@ Main.prototype.setCameraView = function(campos)
 
     this.camera.lookAt(this.controls.target);
 }
-//  set a bounding box around the components
-//
-Main.prototype.setNativeBoundingBox = function()
-{
-    var box = new THREE.BoxHelper(this.rootnode, 0x808080);
-    this.scene.add(box);
-}
+
 // add multiline
 // 		arrVector3  -  an array of THREE.Vector3 instances
 Main.prototype.addMultiLineV3 = function(arrVector3, parent, linecolor)
 {
     var multilinematerial = new THREE.LineBasicMaterial({color: linecolor});
-    var multilinegeometry = new THREE.Geometry();
-    multilinegeometry.vertices = arrVector3;
+    var multilinegeometry = new THREE.BufferGeometry().setFromPoints(arrVector3);
     var multiline = new THREE.Line(multilinegeometry, multilinematerial);
     parent.add(multiline);
 }
@@ -160,12 +472,12 @@ Main.prototype.addMultiLine = function(points, parent, linecolor)
     vectors = [];
     for (var i = 0; i < points.length / 3; i++)
     {
-        points[i];
-        v = new THREE.Vector3(points[i*3], points[i*3+1], points[i*3+2]);
+        const v = new THREE.Vector3(points[i*3], points[i*3+1], points[i*3+2]);
         vectors.push(v);
     }
     this.addMultiLineV3(vectors, parent, linecolor);
 }
+
 //  adds tiny boxes to each particle ray scatter point
 //
 Main.prototype.putScatterPoints = function(raynode)
@@ -191,8 +503,6 @@ Main.prototype.setLutRange = function(min, max)
     this.lut = new THREE.Lut( "cooltowarm", 512 );
     this.lut.setMin(min);
     this.lut.setMax(max);
-    console.log("Lut min value: " + min);
-    console.log("Lut max value: " + max);
 }
 // add a ray node
 //
@@ -200,11 +510,9 @@ Main.prototype.addRayNode = function(rayObj, vertices, speed)
 {
     var lut_color = this.lut.getColor(speed);
     rayObj.lut_color = lut_color;
-    console.log("lut_color: " + lut_color);
 
     var multilinematerial = new THREE.LineBasicMaterial({color: lut_color});
-    var multilinegeometry = new THREE.Geometry();
-    multilinegeometry.vertices = vertices;
+    var multilinegeometry = new THREE.BufferGeometry().setFromPoints(vertices);
     var multiline = new THREE.Line(multilinegeometry, multilinematerial);
     rayObj.add(multiline);
 
@@ -277,6 +585,44 @@ Main.prototype.showCubes = function()
         ray.annotcubes.visible = true;
     }
 }
+
+// toggle grid visibility
+Main.prototype.toggleGridYZ = function()
+{
+    if(this.scene.getObjectByName("gridYZ").visible == true) {
+        this.scene.getObjectByName("gridYZ").visible = false;
+        console.log(this.scene.getObjectByName("gridYZ").visible);
+    }
+    else {
+        this.scene.getObjectByName("gridYZ").visible = true;
+        console.log(this.scene.getObjectByName("gridYZ").visible);
+    }
+}
+
+Main.prototype.toggleGridXY = function()
+{
+    if(this.scene.getObjectByName("gridXY").visible == true) {
+        this.scene.getObjectByName("gridXY").visible = false;
+        console.log(this.scene.getObjectByName("gridXY").visible);
+    }
+    else {
+        this.scene.getObjectByName("gridXY").visible = true;
+        console.log(this.scene.getObjectByName("gridXY").visible);
+    }
+}
+
+Main.prototype.toggleGridXZ = function()
+{
+    if(this.scene.getObjectByName("gridXZ").visible == true) {
+        this.scene.getObjectByName("gridXZ").visible = false;
+        console.log(this.scene.getObjectByName("gridXZ").visible);
+    }
+    else {
+        this.scene.getObjectByName("gridXZ").visible = true;
+        console.log(this.scene.getObjectByName("gridXZ").visible);
+    }
+}
+
 // iterates to attach the next ray in the global ray sequence
 //
 Main.prototype.showNextRay = function()
@@ -347,14 +693,42 @@ TraceLoader.prototype.loadInstr = function()
         key = call['key'];
         args = call['args'];
 
-        if (key == 'multiline') {
+        if (key === 'multiline') {
             main.addMultiLine(args, parentnode, color);
         }
-        if (key == 'line') {
+        if (key === 'line') {
             main.addMultiLine(args, parentnode, color);
         }
-        if (key == 'circle') {
+        if (key === 'circle') {
             main.addCircle(args[0], args[1], args[2], args[3], args[4], parentnode, color);
+        }
+        if (key === 'sphere') {
+            main.addSphere(args[0], args[1], args[2], args[3], 32,32, parentnode, color);
+        }
+        if (key === 'cone') {
+            main.addCone(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 32, parentnode, color);
+        }
+        if (key === 'cylinder') {
+            main.addCylinder(args[0], args[1], args[2], args[3],args[4], args[5], args[6], args[7], args[8], 32, parentnode, color);
+        }
+        if (key === 'disc') {
+            main.addDisc(args[0], args[1], args[2], args[3],args[4], args[5], args[6], 32, parentnode, color);
+        }
+        if (key === 'annulus') {
+            main.addAnnulus(args[0], args[1], args[2], args[3],args[4], args[5], args[6], args[7], 32, parentnode, color);
+        }
+        if (key === 'new_circle') {
+            main.addNewCircle(args[0], args[1], args[2], args[3],args[4], args[5], args[6], 32, parentnode, color);
+        }
+        if (key === 'box') {
+            console.log(args);
+            main.addBox(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], parentnode, color);
+        }
+        if (key === 'polygon') {
+            main.addPolygon(args[0], parentnode, color);
+        }
+        if (key === 'polyhedron') {
+            main.addPolyhedron(args[0], parentnode, color);
         }
     }
 
@@ -390,19 +764,7 @@ TraceLoader.prototype.loadInstr = function()
 
         comp_matrix = new THREE.Matrix4();
         comp_matrix.set(m4[0], m4[1], m4[2], m4[3], m4[4], m4[5], m4[6], m4[7], m4[8], m4[9], m4[10], m4[11], m4[12], m4[13], m4[14], m4[15]);
-        comp_node.applyMatrix(comp_matrix);
-    }
-
-    // BOUNDING BOX
-    var bb = instr['boundingbox'];
-    var drawcalls = bb['drawcalls'];
-    var call;
-    for (var i = 0; i < drawcalls.length; i++)
-    {
-        call = drawcalls[i];
-        key = call['key'];
-
-        drawFunc(call, main.bbnode, 0x808080);
+        comp_node.applyMatrix4(comp_matrix);
     }
 }
 // load particle rays
@@ -467,6 +829,19 @@ var Controller = function(campos_x, campos_y, campos_z, box_lst, invert_canvas)
     this.numRays = MCDATA_particledata["numrays"]
     this.viewmodel = new ViewModel(numRays = this.numRays);
 }
+Controller.prototype.toggleGridXY = function()
+{
+    this.main.toggleGridXY();
+}
+Controller.prototype.toggleGridXZ = function()
+{
+    this.main.toggleGridXZ();
+}
+Controller.prototype.toggleGridYZ = function()
+{
+    this.main.toggleGridYZ();
+}
+
 Controller.prototype.setUpdateGuiFunc = function(updateGuiFunc)
 {
     this.updateGuiFunc = updateGuiFunc;
@@ -512,9 +887,6 @@ Controller.prototype.run = function()
             _this.hidePrevRays();
         }
 
-        // set bounding box visible property
-        _this.main.bbnode.visible = viewmodel.getShowBoundingBox();
-
         // set scatter cubes on/off
         if (viewmodel.getShowScatterCubes())
         {
@@ -543,7 +915,6 @@ Controller.prototype.run = function()
     // load data - possibly heavy
     this.loader.loadInstr();
     this.loader.loadParticles();
-    //this.main.setNativeBoundingBox();
 
     // set pause playback mode now after everything else, in case of zero or one rays
     if (this.numRays <= 1) { this.viewmodel.playBack = PlayBack.PAUSE }
@@ -611,7 +982,6 @@ var ViewModel = function(numRays)
     this.playBack = PlayBack.RUN;
     this.displayMode = DisplayMode.SINGLE;
 
-    this.showBoundingbox = true;
     this.showScattCubes = false;
 
     this.numRays = numRays;
@@ -623,22 +993,6 @@ var ViewModel = function(numRays)
 ViewModel.prototype.getUpdateVersion = function()
 {
     return this.updateVersion;
-}
-ViewModel.prototype.setShowBoundingBox = function(bbOnOff)
-{
-    if (bbOnOff)
-    {
-        this.showBoundingbox = true;
-    }
-    else
-    {
-        this.showBoundingbox = false;
-    }
-    this.updateVersion += 1;
-}
-ViewModel.prototype.getShowBoundingBox = function()
-{
-    return this.showBoundingbox;
 }
 ViewModel.prototype.setShowScatterCubes = function(scOnOff)
 {

@@ -147,7 +147,7 @@ TRACE
 
 MCDISPLAY
 %{
-	box(0, 0, 0, xwidth, yheight, zdepth,0);
+	box(0, 0, 0, xwidth, yheight, zdepth,0, 0, 1, 0);
 %}
 
 END
