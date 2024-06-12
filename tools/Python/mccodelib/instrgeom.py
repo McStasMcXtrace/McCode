@@ -408,6 +408,47 @@ class DrawCircle(DrawCommand):
         idx = self.args_str.find(',')
         self.args_str = '\"' + self.args_str[:idx] + '\"' + self.args_str[idx:]
 
+    def _get_points(self):
+        ''' returns the corners of a flat square around the circle, transformed into the proper plane '''
+        rad = self.radius
+        cen = self.center
+
+        ne = Vector3d(rad, rad, 0)
+        nw = Vector3d(-rad, rad, 0)
+        sw = Vector3d(-rad, -rad, 0)
+        se = Vector3d(rad, -rad, 0)
+
+        square = [ne, nw, sw, se]
+
+        if self.plane == 'xy':
+            return map(lambda p: cen.add(p), square)
+        elif self.plane == 'xz':
+            return map(lambda p: cen.add(Vector3d(p.x, 0, p.y)), square)
+        elif self.plane == 'yz':
+            return map(lambda p: cen.add(Vector3d(0, p.x, p.y)), square)
+        else:
+            raise Exception('DrawCircle: invalid plane argument')
+
+    def get_points_on_circle(self, steps=60):
+        ''' returns points on the circle, transformed into the proper plane '''
+        if self.plane in ['zy', 'yz']: (k1, k2) = (2,1)
+        elif self.plane in ['xy', 'yx']: (k1, k2) = (0,1)
+        elif self.plane in ['zx', 'xz']: (k1, k2) = (2,0)
+        else:
+            raise Exception('DrawCircle: invalid plane argument: %s' % self.plane)
+
+        rad = self.radius
+        center = self.center
+
+        circ2 = [ (rad*np.cos(theta), rad*np.sin(theta)) for theta in np.linspace(0, 2*np.pi, steps) ]
+        circ3 = []
+        for p2 in circ2:
+            p = Vector3d()
+            p[k1] = p2[0]
+            p[k2] = p2[1]
+            circ3.append(p)
+
+        return [center.add(c) for c in circ3]
 
 class DrawNewCircle(DrawCommand):
     center = None
