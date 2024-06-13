@@ -554,20 +554,6 @@ double sans_a;
 double zthick;
 double poserr;
 
-double xi[8];
-double beta[8];
-double v2re[8];
-double v2im[8];
-double vv2re[8];
-double vv2im[8];
-double Ot1[8];
-double Ot2[8];
-double In1[8];
-double In2[8];
-double Ott1[8];
-double Ott2[8];
-double Inn1[8];
-double Inn2[8];
 %}
 
 INITIALIZE
@@ -775,6 +761,21 @@ double t00,t0,t1;
 double X,Y,Z,VX,VY,VZ,VZI;
 char   intersect;
 double fcut;
+
+double xi[8];
+double beta[8];
+double v2re[8];
+double v2im[8];
+double vv2re[8];
+double vv2im[8];
+double Ot1[8];
+double Ot2[8];
+double In1[8];
+double In2[8];
+double Ott1[8];
+double Ott2[8];
+double Inn1[8];
+double Inn2[8];
 
 phirrr = (phirot/PI-floor(phirot/PI))*PI;
 
