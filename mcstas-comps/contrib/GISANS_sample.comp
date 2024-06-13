@@ -693,12 +693,17 @@ Sig+=dSigdW(phiPS, Rad, drho, rotphi, dvx, dvy, dvz, dvzi, sign, 20e-10*Rad);
 }; /* xii */
 Sig*=2.0*Qstp*Qstp;
 SigB[li][181]=Sig;
-fprintf(stderr, "total cross section for lambda = %i AA is: %e cm-1\n", li, 0.5/PI*(li*li)*Sig);
+MPI_MASTER(
+  fprintf(stderr, "total cross section for lambda = %i AA is: %e cm-1\n", li, 0.5/PI*(li*li)*Sig);
+);
 Qmaxo=Qmax;
 } else {
 for (phii=0; phii<=181; phii++) { SigB[li][phii]=SigB[li-1][phii]; };
-if (li==6)
-fprintf(stderr, "total cross section for lambda = %i AA is: %e cm-1\n", li, 0.5/PI*(li*li)*SigB[li][181]);
+ if (li==6) {
+   MPI_MASTER(
+     fprintf(stderr, "total cross section for lambda = %i AA is: %e cm-1\n", li, 0.5/PI*(li*li)*SigB[li][181]);
+   );
+ }
 };
 };
 /* END CROSS SECTION TABLE CALCULATION */
