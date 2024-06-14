@@ -28,43 +28,39 @@ echo "*********************************************************"
 echo "* Downloading python dependencies to embedded miniconda *"
 echo "*********************************************************"
 echo
-conda env create -p ${MCINSTALL_PREFIX}/mcxtrace/${MCVERSION}/miniconda3 --file environment.yml
 
-eval "$(conda shell.bash hook)"
-conda activate ${MCINSTALL_PREFIX}/mcxtrace/${MCVERSION}/miniconda3
-
-# Temporary workaround for issue with conda...
-if [ ! -f ${MCINSTALL_PREFIX}/mcxtrace/${MCVERSION}/miniconda3/lib/librhash.0.dylib ]; then
-    ln -sf ${MCINSTALL_PREFIX}/mcxtrace/${MCVERSION}/miniconda3/lib/librhash.1.dylib ${MCINSTALL_PREFIX}/mcxtrace/${MCVERSION}/miniconda3/lib/librhash.0.dylib
+if [ -e Miniforge3-$(uname)-$(uname -m).sh ]; then
+  rm -f Miniforge3-$(uname)-$(uname -m).sh
 fi
+curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+chmod a+x Miniforge3-$(uname)-$(uname -m).sh
+./Miniforge3-$(uname)-$(uname -m).sh -p ${MCINSTALL_PREFIX}/mcxtrace/${MCVERSION}/miniconda3/ -b
+eval "$(${MCINSTALL_PREFIX}/mcxtrace/${MCVERSION}/miniconda3/bin/conda shell.bash hook)"
+
+CONDA_NO_PLUGINS=true mamba env update --name base --file environment.yml
 
 cd $WORK
 
-./mkdist mcxtrace ${MCVERSION} "" "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-comps ${MCVERSION} "" "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-matlab-mxplot ${MCVERSION} tools/matlab/mcplot/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-matlab-mxdisplay ${MCVERSION} tools/matlab/mcdisplay/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxplot-pyqtgraph ${MCVERSION} tools/Python/mcplot/pyqtgraph/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxplot-matplotlib ${MCVERSION} tools/Python/mcplot/matplotlib/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxrun ${MCVERSION} tools/Python/mcrun/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxdoc ${MCVERSION} tools/Python/mcdoc/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxgui ${MCVERSION} tools/Python/mcgui/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mcodelib ${MCVERSION} tools/Python/mccodelib/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxdisplay-webgl ${MCVERSION} tools/Python/mcdisplay/webgl/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph ${MCVERSION} tools/Python/mcdisplay/pyqtgraph/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-clusterscripts ${MCVERSION} tools/cluster-scripts/ "" mac-silicon "" -- OSXapp
-./mkdist mcxtrace-manuals ${MCVERSION} docpkg/manuals/mcxtrace/ "" mac-silicon "" -- OSXapp
+./mkdist mcxtrace ${MCVERSION} "" "" mac "" -- OSXapp
+./mkdist mcxtrace-comps ${MCVERSION} "" "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-matlab-mxplot ${MCVERSION} tools/matlab/mcplot/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-matlab-mxdisplay ${MCVERSION} tools/matlab/mcdisplay/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxplot-pyqtgraph ${MCVERSION} tools/Python/mcplot/pyqtgraph/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxplot-matplotlib ${MCVERSION} tools/Python/mcplot/matplotlib/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxplot-svg ${MCVERSION} tools/Python/mcplot/svg/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxrun ${MCVERSION} tools/Python/mcrun/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mctest ${MCVERSION} tools/Python/mctest/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mcresplot ${MCVERSION} tools/Python/mcresplot/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mcgui ${MCVERSION} tools/Python/mcgui/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mccodelib ${MCVERSION} tools/Python/mccodelib/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdisplay-webgl ${MCVERSION} tools/Python/mcdisplay/webgl/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph ${MCVERSION} tools/Python/mcdisplay/pyqtgraph/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdisplay-matplotlib ${MCVERSION} tools/Python/mcdisplay/matplotlib/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdisplay-cad ${MCVERSION} tools/Python/mcdisplay/cad/ "" mac "" -- OSXapp
+./mkdist mcxtrace-tools-python-mxdoc ${MCVERSION} tools/Python/mcdoc/ "" mac "" -- OSXapp
+./mkdist mcxtrace-clusterscripts ${MCVERSION} tools/cluster-scripts/ "" mac "" -- OSXapp
+./mkdist mcxtrace-manuals ${MCVERSION} docpkg/manuals/mcxtrace/ "" mac "" -- OSXapp
 
-cd 3rdparty/nexus-code
-if [ -d build ]; then
-    rm -rf build
-fi
-mkdir -p build; cd build
-cmake -DCMAKE_INSTALL_PREFIX=/Applications/McXtrace-${MCVERSION}.app/Contents/Resources/mcxtrace/${MCVERSION}/ -DHDF5_ROOT=/Applications/McXtrace-${MCVERSION}.app/Contents/Resources/mcxtrace/${MCVERSION}/miniconda3/ -DCMAKE_MACOSX_RPATH=ON -DCMAKE_INSTALL_RPATH=/Applications/McXtrace-${MCVERSION}.app/Contents/Resources/mcxtrace/${MCVERSION}/lib  ..
-make install
-cd $WORK
-
-sed -i.bak s+GETPATH\(+GETPATH\(miniconda3/+g /Applications/McXtrace-${MCVERSION}.app/Contents/Resources/mcxtrace/${MCVERSION}/samples/Fluorescence.comp
 
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcxtrace/${MCVERSION}/bin

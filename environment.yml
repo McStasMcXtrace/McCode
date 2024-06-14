@@ -24,6 +24,7 @@ dependencies:
   - pyqtgraph
   - pyqt
   - qscintilla2
+  - nexus
   - nexusformat
   - nexpy
   - hdf5
@@ -34,6 +35,8 @@ dependencies:
   - ipympl
   - jinja2
   - mslex
+  - typish
+  - jsons
   - pip
   - pip:
     - guide_bot

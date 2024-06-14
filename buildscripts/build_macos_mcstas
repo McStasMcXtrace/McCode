@@ -14,7 +14,7 @@ export MCVERSION=${1}
 
 # This is an app bundle being built, but non-relocatable.
 export MCINSTALL_PREFIX=/Applications/McStas-${MCVERSION}.app/
-./mkdist mcstas-app ${MCVERSION} support/MacOSX/McCode.app/ "" mac-silicon "" -- OSXapp
+./mkdist mcstas-app ${MCVERSION} support/MacOSX/McCode.app/ "" mac "" -- OSXapp
 
 # For the actual mcstas part, the packages need a 'deep' PREFIX
 export MCINSTALL_PREFIX=/Applications/McStas-${MCVERSION}.app/Contents/Resources
@@ -29,10 +29,15 @@ echo "* Downloading python dependencies to embedded miniconda *"
 echo "*********************************************************"
 echo
 
-conda env create -p ${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3 --file environment.yml
+if [ -e Miniforge3-$(uname)-$(uname -m).sh ]; then
+  rm -f Miniforge3-$(uname)-$(uname -m).sh
+fi
+curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+chmod a+x Miniforge3-$(uname)-$(uname -m).sh
+./Miniforge3-$(uname)-$(uname -m).sh -p ${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3/ -b
+eval "$(${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3/bin/conda shell.bash hook)"
 
-eval "$(conda shell.bash hook)"
-conda activate ${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3
+CONDA_NO_PLUGINS=true mamba env update --name base --file environment.yml
 
 cd $WORK
 
