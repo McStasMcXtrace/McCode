@@ -14,8 +14,8 @@ const ThreeCanvas = () => {
     const container = containerRef.current;
     if (!container) return;
     const margin = 20;
-    const width = (container.clientWidth || window.innerWidth) - margin * 2;
-    const height = (container.clientHeight || window.innerHeight)-margin * 3.5;
+    const width = (container.clientWidth || window.innerWidth) - margin;
+    const height = (container.clientHeight || window.innerHeight) - margin;
     console.log(width, height);
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
@@ -57,8 +57,8 @@ const ThreeCanvas = () => {
     animate();
 
     const handleResize = () => {
-      const newWidth = container.clientWidth - margin * 2;
-      const newHeight = container.clientHeight - margin * 2;
+      const newWidth = (container.clientWidth || window.innerWidth) - margin;
+      const newHeight = (container.clientHeight || window.innerHeight) - margin;
       camera.aspect = newWidth / newHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(newWidth, newHeight);

@@ -7,7 +7,7 @@ import { GridProvider } from './Contexts/GridContext';
 
 const App = () => {
     return (
-        <div className='column'>
+        <div id='app' className='column'>
             <GridProvider>
                 <ConfigureSceneMenu/>
                 <ThreeCanvas />
