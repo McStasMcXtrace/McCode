@@ -51,10 +51,10 @@ jobs:
            choco install winflexbison3
 
     - name: Setup OpenMPI (Linux)
-      id: setup-openmpi-nexus-linux
+      id: setup-openmpi-nexus-linux-gsl-xraylib
       if: runner.os == 'Linux'
       run: |
-           sudo apt -y install libopenmpi-dev libnexus-dev curl
+           sudo apt -y install libopenmpi-dev libnexus-dev curl libgsl-dev xraylib
            sudo curl -O https://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcpl-1.6.2-deb64.deb
            sudo dpkg -i mcpl-1.6.2-deb64.deb
            sudo apt-get -f install
