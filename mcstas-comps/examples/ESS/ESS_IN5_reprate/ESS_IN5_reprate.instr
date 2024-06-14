@@ -108,7 +108,7 @@ TRACE
 
 
 /* Displaced wrt Origin - as it has a volume... */
-COMPONENT source = ESS_butterfly(sector="W",beamline=5,Lmin=Lmin,Lmax=Lmax,dist=GUI_start,target_index=6,cold_frac=cold,focus_xw = GUI_w, focus_yh = GUI_h)
+COMPONENT source = ESS_butterfly(sector="W",beamline=5,Lmin=Lmin,Lmax=Lmax,dist=GUI_start,target_index=6,cold_frac=cold,focus_xw = GUI_w, focus_yh = GUI_h, n_pulses=Num_pulses)
   AT (0, 0, -0.1) ABSOLUTE
 
 

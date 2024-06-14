@@ -1,7 +1,7 @@
-name: mcstas-testsuite
+name: mcxtrace-testsuite
 on:
   schedule:
-    - cron: '00 02 * * *'  # 02:00 every day
+    - cron: '00 01 * * *'  # 01:00 every day
 
   workflow_dispatch:
     inputs:
@@ -51,13 +51,12 @@ jobs:
            choco install winflexbison3
 
     - name: Setup OpenMPI (Linux)
-      id: setup-openmpi-nexus-linux-gsl
+      id: setup-openmpi-nexus-linux-gsl-xraylib
       if: runner.os == 'Linux'
       run: |
-           sudo apt -y install libopenmpi-dev libnexus-dev curl libgsl-dev
+           sudo apt -y install libopenmpi-dev libnexus-dev curl libgsl-dev libxrl-dev
            sudo curl -O https://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcpl-1.6.2-deb64.deb
-           sudo curl -O https://packages.mccode.org/debian/dists/stable/main/binary-amd64/ncrystal-3.7.1-deb64.deb
-           sudo dpkg -i mcpl-1.6.2-deb64.deb ncrystal-3.7.1-deb64.deb
+           sudo dpkg -i mcpl-1.6.2-deb64.deb
            sudo apt-get -f install
 
     - name: Setup OpenMPI (macOS-12,13)
@@ -79,20 +78,20 @@ jobs:
            #NB: bison and flex in path are actually too old, on mac we
            #inject these via a brew keg later
 
-    - name: Configure build and install mcstas
-      id: mcstas-install
+    - name: Configure build and install mcxtrace
+      id: mcxtrace-install
       run: |
            if [ "$RUNNER_OS" == "macOS" ]; then export SDKROOT=$(xcrun --sdk macosx --show-sdk-path); fi
            set -e
            set -u
            set -x
-           mkdir build_mcstas
-           cd build_mcstas
+           mkdir build_mcxtrace
+           cd build_mcxtrace
            export EXTRA_ARGS_FOR_CMAKE=""
            if [ "$RUNNER_OS" == "macOS" ]; then export EXTRA_ARGS_FOR_CMAKE="-DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DFLEX_EXECUTABLE=/usr/local/opt/flex/bin/flex"; fi
            if [ "$RUNNER_OS" == "Linux" ]; then export EXTRA_ARGS_FOR_CMAKE="-DNEXUSLIB=/usr/lib -DNEXUSINCLUDE=/usr/include/nexus"; fi
            cmake \
-               -DCMAKE_INSTALL_PREFIX=../install_mcstas \
+               -DCMAKE_INSTALL_PREFIX=../install_mcxtrace \
                -S ../src \
                -G "Unix Makefiles" \
                -DMCVERSION="3.99.99" \
@@ -100,7 +99,7 @@ jobs:
                -DBUILD_SHARED_LIBS=ON \
                -DCMAKE_INSTALL_LIBDIR=lib \
                -DCMAKE_BUILD_TYPE=Release \
-               -DBUILD_MCSTAS=ON \
+               -DBUILD_MCXTRACE=ON \
                -DMCCODE_USE_LEGACY_DESTINATIONS=OFF \
                -DBUILD_TOOLS=ON \
                -DENABLE_COMPONENTS=ON \
@@ -111,21 +110,21 @@ jobs:
                ${EXTRA_ARGS_FOR_CMAKE}
            cmake --build . --config Release
            cmake --build . --target install --config Release
-           export MCSTAS_EXECUTABLE="mcstas"
-           export MCRUN_EXECUTABLE="mcrun"
+           export MCXTRACE_EXECUTABLE="mcxtrace"
+           export MXRUN_EXECUTABLE="mxrun"
            if [ "$RUNNER_OS" == "Windows" ];
            then
-             export MCSTAS_EXECUTABLE="mcstas.exe"
-             export MCRUN_EXECUTABLE="mcrun.bat"
+             export MCXTRACE_EXECUTABLE="mcxtrace.exe"
+             export MXRUN_EXECUTABLE="mxrun.bat"
            fi
-           test -f "../install_mcstas/bin/${MCSTAS_EXECUTABLE}"
-           test -f "../install_mcstas/bin/${MCRUN_EXECUTABLE}"
-           test -f "../install_mcstas/share/mcstas/tools/Python/mccodelib/__init__.py"
-           test -d "../install_mcstas/share/mcstas/resources/data"
+           test -f "../install_mcxtrace/bin/${MCXTRACE_EXECUTABLE}"
+           test -f "../install_mcxtrace/bin/${MXRUN_EXECUTABLE}"
+           test -f "../install_mcxtrace/share/mcxtrace/tools/Python/mccodelib/__init__.py"
+           test -d "../install_mcxtrace/share/mcxtrace/resources/data"
            echo *******************************************************************************
            echo Resulting mccode_config.json:
            echo *******************************************************************************
-           cat ../install_mcstas/share/mcstas/tools/Python/mccodelib/mccode_config.json
+           cat ../install_mcxtrace/share/mcxtrace/tools/Python/mccodelib/mccode_config.json
            echo *******************************************************************************
 
     - name: Pip install various
@@ -146,9 +145,9 @@ jobs:
            set -e
            set -u
            set -x
-           export PATH=$PWD/install_mcstas/bin/:$PATH
+           export PATH=$PWD/install_mcxtrace/bin/:$PATH
            mkdir run_test-suite && cd run_test-suite
-           mctest --testdir $PWD --mpi=2 --suffix ${{ matrix.os }}
+           mxtest --testdir $PWD --mpi=2 --suffix ${{ matrix.os }}
 
     - name: 'Tar output files'
       id: tar-package
@@ -157,15 +156,15 @@ jobs:
            set -e
            set -u
            set -x
-           tar cvfz mcstas-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}_output.tgz run_*
+           tar cvfz mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}_output.tgz run_*
 
     - name: 'Upload Artifact'
       id: tar-upload
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: mcstas-artefacts-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
-        path: "mcstas-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}_output.tgz"
+        name: mcxtrace-artefacts-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
+        path: "mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}_output.tgz"
 
     - name: Setup tmate session for manual debugging
       uses: mxschmitt/action-tmate@v3
