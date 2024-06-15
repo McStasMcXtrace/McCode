@@ -8,10 +8,10 @@ dependencies:
   - mamba
   - conda
   - cmake
-  - compilers
-  - openmpi=4
-  - compilers
-  - gsl
+  - m2-msys2-runtime
+  - m2w64-gcc
+  - m2w64-gsl
+  - msmpi
   - pyaml
   - ply
   - matplotlib
