@@ -33,9 +33,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "python-install.bat"; DestDir: "{tmp}"
+Source: "environment.yml"; DestDir: "{tmp}"
 Source: "docupdate.bat"; DestDir: "{tmp}"
-Source: "Support\unzip.exe"; DestDir: "{tmp}"
-Source: "Support\unzip32.dll"; DestDir: "{tmp}"
 Source: "dist\mcstas-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-comps-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-manuals-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"

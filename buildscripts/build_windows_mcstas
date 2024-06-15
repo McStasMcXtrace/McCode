@@ -69,7 +69,7 @@ if [ "x$2" != "x" ]; then
 
     rm -f python-install.bat.in.2 python-install.bat docupdate.bat.in.2 docupdate.bat
     
-    sed s/@VERSION@/${1}/g mcstas-python-install.bat.in > python-install.bat.in.2
+    sed s/@VERSION@/${1}/g python-install.bat.in > python-install.bat.in.2
     sed s/@FLAVOR@/mcstas/g python-install.bat.in.2 > python-install.bat
     sed s/@VERSION@/${1}/g docupdate.bat.in > docupdate.bat.in.2
     sed s/@P@/mc/g docupdate.bat.in.2 >docupdate.bat.in.3
@@ -78,8 +78,6 @@ if [ "x$2" != "x" ]; then
     sed s/@VERSION@/${1}/g McStas-metapackage64.iss > McStas-${1}-metapackage64.iss
     ./iscc McStas-${1}-metapackage64.iss
     mv Output/setup.exe dist/McStas-Metapackage-${1}-win64.exe
-    mkdir dist/extras
-    cp NeXus/*.* dist/extras
     cp $WORK/INSTALL-McStas-3.x/Windows/README.md dist/
     mkdir dist/single-packages
     mv dist/mcstas-* dist/single-packages
