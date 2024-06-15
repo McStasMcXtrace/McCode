@@ -45,6 +45,9 @@ set(EDITOR "start")
 set(NEXUSINCLUDE "GETPATH(../miniconda3/Library/include/nexus)")
 set(NEXUSLIB "GETPATH(../miniconda3/Library/lib)")
 
+# HDFviewer
+set(HDFVIEW "nexpy")
+
 # gsl and xraylib locations
 set(GSLFLAGS "-IGETPATH(../miniconda3/Library/include/) -Wl,-rpath,GETPATH(../miniconda3/Library/lib) -LGETPATH(../miniconda3/Library/lib) -lgsl -lgslcblas")
 set(XRLFLAGS "-IGETPATH(../miniconda3/Library/include/) -Wl,-rpath,GETPATH(../miniconda3/Library/lib) -LGETPATH(../miniconda3/Library/lib) -lxrl")
