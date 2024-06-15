@@ -201,7 +201,7 @@ function( detect_platform_variables resultvarname )
   if ( NOT WINDOWS )
     set(NEXUSFLAGS "-DUSE_NEXUS -lNeXus")#?? should probably have another value
   else()
-    set(NEXUSFLAGS "-DUSE_NEXUS -lNeXus-0")
+    set(NEXUSFLAGS "-DUSE_NEXUS -lNeXus")
     if ( MCCODE_BUILD_CONDA_PKG )
       if ( "${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC" )
         set(NEXUSFLAGS "/DUSE_NEXUS NeXus.lib")

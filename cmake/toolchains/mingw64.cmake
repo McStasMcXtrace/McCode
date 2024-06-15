@@ -42,5 +42,9 @@ set(MCCODE_CFLAGS "-flto -O3 -mtune=native -fno-math-errno -ftree-vectorize -g -
 set(EDITOR "start")
 
 # NeXus location defaults
-set(NEXUSINCLUDE "\\\"C:/Program Files/NeXus Data Format/include/nexus\\\"")
-set(NEXUSLIB "\\\"C:/Program Files/NeXus Data Format/bin\\\"")
+set(NEXUSINCLUDE "GETPATH(../miniconda3/Library/include/nexus")
+set(NEXUSLIB "GETPATH(../miniconda3/Library/lib")
+
+# gsl and xraylib locations
+set(GSLFLAGS "-IGETPATH(../miniconda3/Library/include/) -Wl,-rpath,GETPATH(../miniconda3/Library/lib) -LGETPATH(../miniconda3/Library/lib) -lgsl -lgslcblas")
+set(XRLFLAGS "-IGETPATH(../miniconda3/Library/include/) -Wl,-rpath,GETPATH(../miniconda3/Library/lib) -LGETPATH(../miniconda3/Library/lib) -lxrl")
