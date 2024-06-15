@@ -11,9 +11,9 @@
 @REM update conda and install mamba
 @CALL c:\\@FLAVOR@-@VERSION@\\miniconda3\\Scripts\\activate.bat
 @mamba update mamba -y
-@mamba clean --all -y
 @set CONDA_NO_PLUGINS=true 
 @mamba env update --name base --file environment.yml
+@mamba clean --all -y
 @echo ...
 @echo Press a key below to exit this installation shell...
 @echo ...
