@@ -33,6 +33,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "python-install.bat"; DestDir: "{tmp}"
+Source: "environment.yml"; DestDir: "{tmp}"
 Source: "docupdate.bat"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-comps-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
@@ -69,4 +70,3 @@ Filename: "{tmp}\mcxtrace-mcpl-NSIS64-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\docupdate.bat";
 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
-

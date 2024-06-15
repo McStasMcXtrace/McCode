@@ -11,9 +11,9 @@
 @REM update conda and install mamba
 @CALL c:\\@FLAVOR@-@VERSION@\\miniconda3\\Scripts\\activate.bat
 @mamba update mamba -y
-@REM pick dependencies from the default channel and clean up
-@mamba install m2-msys2-runtime m2w64-gcc m2w64-gsl mpld3 pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph qscintilla2 nomkl xraylib msmpi mslex jupytext -y
 @mamba clean --all -y
+@set CONDA_NO_PLUGINS=true 
+@mamba env update --name base --file environment.yml
 @echo ...
 @echo Press a key below to exit this installation shell...
 @echo ...
