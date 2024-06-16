@@ -46,7 +46,7 @@ Source: "dist\mcxtrace-tools-python-mxplot-pyqtgraph-NSIS64-@VERSION@-mingw64.ex
 Source: "dist\mcxtrace-tools-python-mxplot-matplotlib-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-tools-python-mxdisplay-webgl-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-tools-python-mxdisplay-pyqtgraph-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
-Source: "dist\mcstas-tools-python-mxdisplay-matplotlib-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
+Source: "dist\mcxtrace-tools-python-mxdisplay-matplotlib-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-tools-python-mxdoc-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-mcpl-NSIS64-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "Support\Miniforge3-Windows-x86_64.exe"; DestDir: "{tmp}"
