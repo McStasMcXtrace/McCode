@@ -5,9 +5,6 @@ channels:
   - nodefaults
 
 dependencies:
-  - mamba
-  - conda
-  - cmake
   - m2-msys2-runtime
   - m2w64-gcc
   - m2w64-gsl
