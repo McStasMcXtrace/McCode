@@ -56,7 +56,7 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python, python3-m
 
 # RPM
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, python, python-matplotlib"
+  "${FLAVOR}-${MCCODE_VERSION}, python3, python3-matplotlib"
   )
 
 
