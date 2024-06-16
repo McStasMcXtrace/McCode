@@ -53,7 +53,7 @@ const ThreeCanvas = () => {
           }
           window.removeEventListener('resize', handleResize);
       };
-  }, [camPos, gridSize, gridDivisions]);
+  }, []);
 
     useEffect(() => {
       if (gridsRef.current.gridXY) {
