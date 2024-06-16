@@ -1,0 +1,26 @@
+{
+  "name": "webgl",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "http-server dist -p 8000"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.165.0",
+    "three-lut": "^79.0.2",
+    "three-orbitcontrols": "^2.110.3",
+    "vite": "^5.2.13"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

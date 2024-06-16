@@ -4,13 +4,16 @@ import ThreeCanvas from './components/scene/ThreeCanvas';
 import ConfigureSceneMenu from './components/configure-scene/ConfigureSceneMenu';
 import './common.css';
 import { GridProvider } from './Contexts/GridContext';
+import { CameraProvider } from './Contexts/CameraContext';
 
 const App = () => {
     return (
         <div id='app' className='column'>
             <GridProvider>
-                <ConfigureSceneMenu/>
-                <ThreeCanvas />
+                <CameraProvider>
+                    <ConfigureSceneMenu/>
+                    <ThreeCanvas />
+                </CameraProvider>
             </GridProvider>
         </div>
     );

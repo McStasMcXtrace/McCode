@@ -1,13 +1,17 @@
 import React, { useEffect, useRef } from 'react';
 import  * as THREE from 'three';
 import { useGridContext } from '../../Contexts/GridContext';
+import { useCameraContext } from '../../Contexts/CameraContext';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import './three-canvas.css';
 
 const ThreeCanvas = () => {
     const { showXY, showXZ, showYZ} = useGridContext();
+    const {camPos} = useCameraContext();
     const gridsRef = useRef({ gridXY: null, gridXZ: null, gridYZ: null });
-
+    
+    const cameraRef = useRef(null);
+    const controlsRef = useRef(null);
     const containerRef = useRef(null);
 
     useEffect(() => {
@@ -19,7 +23,9 @@ const ThreeCanvas = () => {
     console.log(width, height);
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    camera.position.set(10, 20, 30); // Set a default camera position
+    camera.position.set(camPos.x, camPos.y, camPos.z); // Set camera position
+    cameraRef.current = camera;
+
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize(width, height);
 
@@ -85,6 +91,15 @@ const ThreeCanvas = () => {
           gridsRef.current.gridYZ.visible = showYZ;
       }
     }, [showXY, showXZ, showYZ]);
+
+    useEffect(() => {
+      if (cameraRef.current) {
+          cameraRef.current.position.set(camPos.x, camPos.y, camPos.z);
+          if (controlsRef.current) {
+              controlsRef.current.update();
+          }
+      }
+    }, [camPos]);
 
 
     return <div id="canvas-container" ref={containerRef}>
