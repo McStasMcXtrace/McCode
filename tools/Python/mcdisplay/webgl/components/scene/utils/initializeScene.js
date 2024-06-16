@@ -1,0 +1,50 @@
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+
+export const initializeScene = () => {
+    return new THREE.Scene();
+};
+
+export const initializeCamera = (width, height, camPos) => {
+    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+    camera.position.set(camPos.x, camPos.y, camPos.z);
+    return camera;
+};
+
+export const initializeRenderer = (width, height, container) => {
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(width, height);
+    if (container) {
+        container.appendChild(renderer.domElement);
+    }
+    return renderer;
+};
+
+export const initializeGrids = (scene, gridSize, gridDivisions) => {
+    const grids = {};
+
+    const gridXZ = new THREE.GridHelper(gridSize, gridDivisions);
+    gridXZ.name = "gridXZ";
+    scene.add(gridXZ);
+    grids.gridXZ = gridXZ;
+
+    const gridXY = new THREE.GridHelper(gridSize, gridDivisions);
+    gridXY.rotation.x = Math.PI / 2;
+    gridXY.name = "gridXY";
+    scene.add(gridXY);
+    grids.gridXY = gridXY;
+
+    const gridYZ = new THREE.GridHelper(gridSize, gridDivisions);
+    gridYZ.rotation.z = Math.PI / 2;
+    gridYZ.name = "gridYZ";
+    scene.add(gridYZ);
+    grids.gridYZ = gridYZ;
+
+    return grids;
+};
+
+export const initializeControls = (camera, renderer) => {
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.update();
+    return controls;
+};
