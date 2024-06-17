@@ -489,7 +489,7 @@ exit(-1);
 
 // Need to tell the monitor from what integer its pixel id range starts, and it necessary to avoid overlaps.
   // global_mantid_min_pixel_id is initialized as 0, and each monitor adds its number of pixels to avoid overlap.
-  int global_mantid_min_pixel_id = COMP_GETPAR3(Union_init, init, global_mantid_min_pixel_id);
+  int global_mantid_min_pixel_id = (int)COMP_GETPAR3(Union_init, init, global_mantid_min_pixel_id);
   sprintf(option_string_part,", neutron pixel min=%i t, list all neutrons", global_mantid_min_pixel_id);
   global_mantid_min_pixel_id += 3*n;
 
