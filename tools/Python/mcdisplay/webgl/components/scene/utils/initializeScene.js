@@ -48,3 +48,31 @@ export const initializeControls = (camera, renderer) => {
     controls.update();
     return controls;
 };
+
+export const initializeDirectionalLight = (scene) => {
+    const light = new THREE.DirectionalLight(0xffffff, 5);
+    light.position.set(0, 10, 10);
+    scene.add(light);
+    return light;
+}
+
+export const initializeAmbientLight = (scene) => {
+    const light = new THREE.AmbientLight(0x404040);
+    scene.add(light);
+    return light;
+}
+
+export const initializeSphere = (scene) => {
+    const geometry = new THREE.SphereGeometry(1, 32, 32);
+    const material = new THREE.MeshLambertMaterial({ color: 0xffff00 });
+    const sphere = new THREE.Mesh(geometry, material);
+    scene.add(sphere);
+    return sphere;
+}
+
+export const loadComponents = (scene, components) => {
+    components.forEach((component) => {
+        scene.add(component);
+    });
+}
+

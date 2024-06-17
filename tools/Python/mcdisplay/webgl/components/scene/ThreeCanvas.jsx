@@ -2,11 +2,14 @@ import React, { useEffect, useRef } from 'react';
 import { useGridContext } from '../../Contexts/GridContext';
 import { useCameraContext } from '../../Contexts/CameraContext';
 import './three-canvas.css';
-import { initializeScene, initializeCamera, initializeRenderer, initializeGrids, initializeControls } from './utils/initializeScene';
+import { initializeScene, initializeCamera, initializeRenderer, initializeGrids, initializeControls, initializeSphere, initializeDirectionalLight, initializeAmbientLight, loadComponents } from './utils/initializeScene';
+import { useComponentsContext } from '../../Contexts/ComponentsContext';
 
 const ThreeCanvas = () => {
     const { showXY, showXZ, showYZ, gridSize, gridDivisions} = useGridContext();
     const {camPos} = useCameraContext();
+    const {components} = useComponentsContext();
+
     const gridsRef = useRef({ gridXY: null, gridXZ: null, gridYZ: null });
 
     const cameraRef = useRef(null);
@@ -27,6 +30,9 @@ const ThreeCanvas = () => {
       const grids = initializeGrids(scene, gridSize, gridDivisions);
       gridsRef.current = grids;
       const controls = initializeControls(camera, renderer);
+      loadComponents(scene, components);
+      initializeDirectionalLight(scene);
+      initializeAmbientLight(scene);
       controlsRef.current = controls;
 
       function animate() {
