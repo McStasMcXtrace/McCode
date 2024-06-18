@@ -1672,6 +1672,11 @@ static void mcinfo_out_nexus(NXhandle f)
         free(buffer);
       }
       free(IDFfile);
+      if (NXmakegroup(f, "components", "NXdata") == NX_OK)
+	if (NXopengroup(f, "components", "NXdata") == NX_OK) {
+	  nxprintattr(f, "description", "Component list for instrument %s",  instrument_name);
+	  NXclosegroup(f); /* components */
+	}
       NXclosegroup(f); /* instrument */
     } /* NXinstrument */
 
@@ -1744,30 +1749,33 @@ static void mccomp_out_nexus(NXhandle f, char* component, Coords position, Rotat
 	   rotation[1][0], rotation[1][1], rotation[1][2],
 	   rotation[2][0], rotation[2][1], rotation[2][2]);
   if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
-    if (NXmakegroup(f, component, "NXdata") == NX_OK) {
-      if (NXopengroup(f, component, "NXdata") == NX_OK) {
+    if (NXopengroup(f, "components", "NXdata") == NX_OK) {
+      if (NXmakegroup(f, component, "NXdata") == NX_OK) {
+	if (NXopengroup(f, component, "NXdata") == NX_OK) {
 
-	int64_t pdims[3]={3,1,0};
+	  int64_t pdims[3]={3,1,0};
 
-	NXcompmakedata64(f, "Position", NX_FLOAT64, 1, pdims, NX_COMPRESSION, pdims);
-	if (NXopendata(f, "Position") == NX_ERROR) {
-	  fprintf(stderr, "Warning: could not open Position\n");
-	  return;
+	  NXcompmakedata64(f, "Position", NX_FLOAT64, 1, pdims, NX_COMPRESSION, pdims);
+	  if (NXopendata(f, "Position") == NX_ERROR) {
+	    fprintf(stderr, "Warning: could not open Position\n");
+	    return;
+	  }
+	  NXputdata (f, Position);
+
+	  int64_t rdims[3]={3,3,0};
+
+	  NXcompmakedata64(f, "Rotation", NX_FLOAT64, 2, rdims, NX_COMPRESSION, rdims);
+	  if (NXopendata(f, "Rotation") == NX_ERROR) {
+	    fprintf(stderr, "Warning: could not open Rotation\n");
+	    return;
+	  }
+	  NXputdata (f, Rotation);
 	}
-	NXputdata (f, Position);
-
-	int64_t rdims[3]={3,3,0};
-
-	NXcompmakedata64(f, "Rotation", NX_FLOAT64, 2, rdims, NX_COMPRESSION, rdims);
-	if (NXopendata(f, "Rotation") == NX_ERROR) {
-	  fprintf(stderr, "Warning: could not open Rotation\n");
-	  return;
-	}
-	NXputdata (f, Rotation);
-	NXclosegroup(f);
-      } /* NXdata component */
+	NXclosegroup(f); /* NXcomponent */
+      }
+      NXclosegroup(f); /* components  */
     }
-    NXclosegroup(f);
+    NXclosegroup(f); /* instrument */
   }
 } /* mccomp_out_nexus */
 
