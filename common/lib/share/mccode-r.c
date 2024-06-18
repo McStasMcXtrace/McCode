@@ -1766,7 +1766,6 @@ static void mccomp_out_nexus(NXhandle f, char* component, Coords position, Rotat
 	NXputdata (f, Rotation);
 	NXclosegroup(f);
       } /* NXdata component */
-      printf("Added component \"%s\"\n",component);
     }
     NXclosegroup(f);
   }
