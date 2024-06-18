@@ -1731,13 +1731,13 @@ static void mcinfo_out_nexus(NXhandle f)
 } /* mcinfo_out_nexus */
 
 /*******************************************************************************
-* mccomp_out_nexus:
+* mccomp_placement_nexus:
 *   Output absolute (3x1) position and (3x3) rotation of component instance into
 *   the attribute
 *     entry<N>/instrument/compname
 *   requires: NXentry to be opened
 *******************************************************************************/
-static void mccomp_out_nexus(NXhandle f, char* component, Coords position, Rotation rotation)
+static void mccomp_placement_nexus(NXhandle f, char* component, Coords position, Rotation rotation)
 {
   /* open NeXus instrument group */
 
@@ -1777,7 +1777,29 @@ static void mccomp_out_nexus(NXhandle f, char* component, Coords position, Rotat
     }
     NXclosegroup(f); /* instrument */
   }
-} /* mccomp_out_nexus */
+} /* mccomp_placement_nexus */
+
+/*******************************************************************************
+* mccomp_metadata_nexus:
+*   Output component metadata to NeXus hieracy under
+*     entry<N>/instrument/compname
+*   requires: NXentry to be opened and called post component "setpos" code
+*******************************************************************************/
+static void mccomp_metadata_nexus(NXhandle f, char* component, char* fieldname position, char* data)
+{
+  /* open NeXus instrument group */
+
+  if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+    if (NXopengroup(f, "components", "NXdata") == NX_OK) {
+      if (NXopengroup(f, component, "NXdata") == NX_OK) {
+	nxprintattr(f, fieldname, data);
+	NXclosegroup(f); /* NXcomponent */
+      }
+      NXclosegroup(f); /* components  */
+    }
+    NXclosegroup(f); /* instrument */
+  }
+} /* mccomp_metadata_nexus */
 
 /*******************************************************************************
 * mcdatainfo_out_nexus: output detector header
