@@ -12,7 +12,9 @@ export const initializeCamera = (width, height, camPos) => {
 };
 
 export const initializeRenderer = (width, height, container) => {
-    const renderer = new THREE.WebGLRenderer();
+    const renderer = new THREE.WebGLRenderer({
+        antialias: true
+    });
     renderer.setSize(width, height);
     if (container) {
         container.appendChild(renderer.domElement);
@@ -68,11 +70,5 @@ export const initializeSphere = (scene) => {
     const sphere = new THREE.Mesh(geometry, material);
     scene.add(sphere);
     return sphere;
-}
-
-export const loadComponents = (scene, components) => {
-    components.forEach((component) => {
-        scene.add(component);
-    });
 }
 
