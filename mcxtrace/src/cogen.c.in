@@ -732,6 +732,13 @@ static void cogen_comp_init_position(
   coutf("  } /* %s=%s() AT ROTATED */", comp->name, comp->def->name);
 
   coutf("  DEBUG_COMPONENT(\"%s\", _%s_var._position_absolute, _%s_var._rotation_absolute);", comp->name, comp->name, comp->name);
+  coutf("  #ifdef USE_NEXUS");
+  coutf("  if (!mcdotrace) {");
+  coutf("    MPI_MASTER(");
+  coutf("      mccomp_out_nexus(nxhandle,\"%s\", _%s_var._position_absolute, _%s_var._rotation_absolute);", comp->name, comp->name, comp->name);
+  coutf("    );");
+  coutf("  }");
+  coutf("  #endif");
   coutf("  instrument->_position_absolute[%i] = _%s_var._position_absolute;", comp->index, comp->name);
   coutf("  instrument->_position_relative[%i] = _%s_var._position_relative;", comp->index, comp->name);
 
