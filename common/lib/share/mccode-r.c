@@ -1785,7 +1785,7 @@ static void mccomp_placement_nexus(NXhandle f, char* component, Coords position,
 *     entry<N>/instrument/compname
 *   requires: NXentry to be opened and called post component "setpos" code
 *******************************************************************************/
-static void mccomp_metadata_nexus(NXhandle f, char* component, char* fieldname position, char* data)
+static void mccomp_metadata_nexus(NXhandle f, char* component, char* fieldname, char* data)
 {
   /* open NeXus instrument group */
 
