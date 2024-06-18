@@ -987,10 +987,6 @@ MCDETECTOR detector_import(
   detector.Position[2]=position.z;
   rot_copy(detector.Rotation,rotation);
   snprintf(detector.position, CHAR_BUF_LENGTH, "%g %g %g", position.x, position.y, position.z);
-  snprintf(detector.rotation, CHAR_BUF_LENGTH, "%g %g %g %g %g %g %g %g %g",
-	   rotation[0][0], rotation[0][1], rotation[0][2],		\
-	   rotation[1][0], rotation[1][1], rotation[1][2],
-	   rotation[2][0], rotation[2][1], rotation[2][2]);
   /* may also store actual detector orientation in the future */
 
   /* may also store actual detector orientation in the future */
@@ -1791,7 +1787,6 @@ static void mccomp_metadata_nexus(NXhandle f, char* component, char* fieldname, 
     if (NXopengroup(f, "components", "NXdata") == NX_OK) {
       if (NXopengroup(f, component, "NXdata") == NX_OK) {
 	if (NXopengroup(f, fieldname, "NXdata") == NX_OK) {
-	  printf("Opened field %s\n",fieldname);
 	  nxprintattr(f, "metadata", data);
 	  NXclosegroup(f); /* fieldname */
 	}
@@ -1883,10 +1878,9 @@ mcdatainfo_out_nexus(NXhandle f, MCDETECTOR detector)
 	fprintf(stderr, "Warning: could not open Rotation\n");
 	return;
       }
-      NXputdata (f, detector.Rotation); 
+      NXputdata (f, detector.Rotation);
 
-      nxprintf(f, "strPosition", detector.position);
-      nxprintf(f, "strRotation", detector.rotation);
+      nxprintf(f, "position", detector.position);
       nxprintf(f, "acquisition_mode",
         strcasestr(detector.format, "list") ? "event" : "summed");
 
