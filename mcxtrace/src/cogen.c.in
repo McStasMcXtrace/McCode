@@ -735,7 +735,7 @@ static void cogen_comp_init_position(
   coutf("  #ifdef USE_NEXUS");
   coutf("  if (!mcdotrace) {");
   coutf("    MPI_MASTER(");
-  coutf("      mccomp_out_nexus(nxhandle,\"%s\", _%s_var._position_absolute, _%s_var._rotation_absolute);", comp->name, comp->name, comp->name);
+  coutf("      mccomp_placement_nexus(nxhandle,\"%s\", _%s_var._position_absolute, _%s_var._rotation_absolute);", comp->name, comp->name, comp->name);
   coutf("    );");
   coutf("  }");
   coutf("  #endif");
