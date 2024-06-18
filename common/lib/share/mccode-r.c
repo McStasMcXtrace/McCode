@@ -1792,8 +1792,12 @@ static void mccomp_metadata_nexus(NXhandle f, char* component, char* fieldname, 
   if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
     if (NXopengroup(f, "components", "NXdata") == NX_OK) {
       if (NXopengroup(f, component, "NXdata") == NX_OK) {
-	nxprintattr(f, fieldname, data);
-	NXclosegroup(f); /* NXcomponent */
+	if (NXopengroup(f, fieldname, "NXdata") == NX_OK) {
+	  printf("Opened field %s\n",fieldname);
+	  nxprintattr(f, "metadata", data);
+	  NXclosegroup(f); /* fieldname */
+	}
+	NXclosegroup(f); /* component-name */
       }
       NXclosegroup(f); /* components  */
     }
