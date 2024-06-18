@@ -982,6 +982,10 @@ MCDETECTOR detector_import(
 
   /* these only apply to detector files ===================================== */
 
+  detector.Position[0]=position.x;
+  detector.Position[1]=position.y;
+  detector.Position[2]=position.z;
+  rot_copy(detector.Rotation,rotation);
   snprintf(detector.position, CHAR_BUF_LENGTH, "%g %g %g", position.x, position.y, position.z);
   snprintf(detector.rotation, CHAR_BUF_LENGTH, "%g %g %g %g %g %g %g %g %g",
 	   rotation[0][0], rotation[0][1], rotation[0][2],		\
@@ -1740,14 +1744,6 @@ static void mcinfo_out_nexus(NXhandle f)
 static void mccomp_placement_nexus(NXhandle f, char* component, Coords position, Rotation rotation)
 {
   /* open NeXus instrument group */
-
-  char Position[CHAR_BUF_LENGTH];
-  char Rotation[CHAR_BUF_LENGTH];
-  snprintf(Position, CHAR_BUF_LENGTH, "%g %g %g", position.x, position.y, position.z);
-  snprintf(Rotation, CHAR_BUF_LENGTH, "%g %g %g %g %g %g %g %g %g",
-	   rotation[0][0], rotation[0][1], rotation[0][2],
-	   rotation[1][0], rotation[1][1], rotation[1][2],
-	   rotation[2][0], rotation[2][1], rotation[2][2]);
   if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
     if (NXopengroup(f, "components", "NXdata") == NX_OK) {
       if (NXmakegroup(f, component, "NXdata") == NX_OK) {
@@ -1760,7 +1756,9 @@ static void mccomp_placement_nexus(NXhandle f, char* component, Coords position,
 	    fprintf(stderr, "Warning: could not open Position\n");
 	    return;
 	  }
-	  NXputdata (f, Position);
+	  double pos[3];
+	  pos[0]=position.x; pos[1]=position.y; pos[2]=position.z;
+	  NXputdata (f, pos);
 
 	  int64_t rdims[3]={3,3,0};
 
@@ -1769,7 +1767,7 @@ static void mccomp_placement_nexus(NXhandle f, char* component, Coords position,
 	    fprintf(stderr, "Warning: could not open Rotation\n");
 	    return;
 	  }
-	  NXputdata (f, Rotation);
+	  NXputdata (f, rotation);
 	}
 	NXclosegroup(f); /* NXcomponent */
       }
@@ -1876,7 +1874,7 @@ mcdatainfo_out_nexus(NXhandle f, MCDETECTOR detector)
 	fprintf(stderr, "Warning: could not open Position\n");
 	return;
       }
-      NXputdata (f, detector.position);
+      NXputdata (f, detector.Position);
 
       int64_t rdims[3]={3,3,0};
 
@@ -1885,7 +1883,7 @@ mcdatainfo_out_nexus(NXhandle f, MCDETECTOR detector)
 	fprintf(stderr, "Warning: could not open Rotation\n");
 	return;
       }
-      NXputdata (f, detector.rotation);
+      NXputdata (f, detector.Rotation); 
 
       nxprintf(f, "strPosition", detector.position);
       nxprintf(f, "strRotation", detector.rotation);
