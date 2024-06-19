@@ -1774,31 +1774,6 @@ static void mccomp_placement_nexus(NXhandle f, char* component, Coords position,
 } /* mccomp_placement_nexus */
 
 /*******************************************************************************
-* mccomp_metadata_nexus:
-*   Output component metadata to NeXus hieracy under
-*     entry<N>/instrument/compname
-*   requires: NXentry to be opened and called post component "setpos" code
-*******************************************************************************/
-static void mccomp_metadata_nexus(NXhandle f, char* component, char* fieldname, char* data)
-{
-  /* open NeXus instrument group */
-
-  if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
-    if (NXopengroup(f, "components", "NXdata") == NX_OK) {
-      if (NXopengroup(f, component, "NXdata") == NX_OK) {
-	if (NXopengroup(f, fieldname, "NXdata") == NX_OK) {
-	  nxprintattr(f, "metadata", data);
-	  NXclosegroup(f); /* fieldname */
-	}
-	NXclosegroup(f); /* component-name */
-      }
-      NXclosegroup(f); /* components  */
-    }
-    NXclosegroup(f); /* instrument */
-  }
-} /* mccomp_metadata_nexus */
-
-/*******************************************************************************
 * mcdatainfo_out_nexus: output detector header
 *   mcdatainfo_out_nexus(detector) create group and write info to NeXus data file
 *   open data:NXdetector then filename:NXdata and write headers/attributes
@@ -2020,6 +1995,10 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
     /* the NXdata group has been created in mcdatainfo_out_nexus */
     if (NXopengroup(f, data_name, "NXdata") == NX_OK) {
 
+      MPI_MASTER(
+      nxprintattr(f, "options",
+		  strlen(detector.options) ? detector.options : "None");
+      );
       /* write axes, for histogram data sets, not for lists */
       if (!strcasestr(detector.format, "list")) {
         mcdetector_out_axis_nexus(f, detector.xlabel, detector.xvar,
@@ -2439,13 +2418,102 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
 } /* mcdetector_out_2D */
 
 /*******************************************************************************
+* mcdetector_out_2D_list: List mode 2D including forwarding "options" from
+* Monitor_nD
+*
+*   Special case for list: master creates file first, then slaves append their
+*   blocks without header-
+*
+*   t:    title
+*   xl:   x-label
+*   yl:   y-label
+*   x1:   x axus min
+*   x2:   x axis max
+*   y1:   y axis min
+*   y2:   y axis max
+*   m:    dim 1 (x) size
+*   n:    dim 2 (y) size
+*   p0:   pntr to start of data block#0
+*   p1:   pntr to start of data block#1
+*   p2:   pntr to start of data block#2
+*   f:    filename
+*
+*   Not included in the macro, and here forwarded to detector_import:
+*   c:    ?
+*   posa: ?
+*   rota: ?
+*******************************************************************************/
+MCDETECTOR mcdetector_out_2D_list(char *t, char *xl, char *yl,
+                  double x1, double x2, double y1, double y2,
+                  long m, long n,
+                  double *p0, double *p1, double *p2, char *f,
+		  char *c, Coords posa, Rotation rota, char* options)
+{
+  char xvar[CHAR_BUF_LENGTH];
+  char yvar[CHAR_BUF_LENGTH];
+
+  /* create short axes labels */
+  if (xl && strlen(xl)) { strncpy(xvar, xl, CHAR_BUF_LENGTH); xvar[2]='\0'; }
+  else strcpy(xvar, "x");
+  if (yl && strlen(yl)) { strncpy(yvar, yl, CHAR_BUF_LENGTH); yvar[2]='\0'; }
+  else strcpy(yvar, "y");
+
+  MCDETECTOR detector;
+
+  /* import and perform basic detector analysis (and handle MPI_Reduce) */
+  if (labs(m) == 1) {/* n>1 on Y, m==1 on X: 1D, no X axis*/
+    detector = detector_import(mcformat,
+      c, (t ? t : MCCODE_STRING " 1D data"),
+      n, 1, 1,
+      yl, "", "Signal per bin",
+      yvar, "(I,Ierr)", "I",
+      y1, y2, x1, x2, 0, 0, f,
+      p0, p1, p2, posa, rota); /* write Detector: line */
+  } else if (labs(n)==1) {/* m>1 on X, n==1 on Y: 1D, no Y axis*/
+    detector = detector_import(mcformat,
+      c, (t ? t : MCCODE_STRING " 1D data"),
+      m, 1, 1,
+      xl, "", "Signal per bin",
+      xvar, "(I,Ierr)", "I",
+      x1, x2, y1, y2, 0, 0, f,
+      p0, p1, p2, posa, rota); /* write Detector: line */
+  }else {
+    detector = detector_import(mcformat,
+      c, (t ? t : MCCODE_STRING " 2D data"),
+      m, n, 1,
+      xl, yl, "Signal per bin",
+      xvar, yvar, "I",
+      x1, x2, y1, y2, 0, 0, f,
+      p0, p1, p2, posa, rota); /* write Detector: line */
+  }
+
+  MPI_MASTER(
+  if (strlen(options)) {
+    strcpy(detector.options,options);
+  } else {
+    strcpy(detector.options,"None");
+  }
+  );
+
+  if (!detector.p1 || !detector.m) return(detector);
+
+#ifdef USE_NEXUS
+  if (strcasestr(detector.format, "NeXus"))
+    return(mcdetector_out_2D_nexus(detector));
+  else
+#endif
+    return(mcdetector_out_2D_ascii(detector));
+
+} /* mcdetector_out_2D_list */
+
+/*******************************************************************************
 * mcdetector_out_list: wrapper for list output (calls out_2D with mcformat+"list").
 *   m=number of events, n=size of each event
 *******************************************************************************/
 MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
                   long m, long n,
                   double *p1, char *f,
-		  char *c, Coords posa, Rotation rota)
+			       char *c, Coords posa, Rotation rota, char* options)
 {
   char       format_new[CHAR_BUF_LENGTH];
   char      *format_org;
@@ -2455,12 +2523,11 @@ MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
   strcpy(format_new, mcformat);
   strcat(format_new, " list");
   mcformat = format_new;
-
-  detector = mcdetector_out_2D(t, xl, yl,
+  detector = mcdetector_out_2D_list(t, xl, yl,
                   1,labs(m),1,labs(n),
                   m,n,
                   NULL, p1, NULL, f,
-		  c, posa,rota);
+		  c, posa,rota,options);
 
   mcformat = format_org;
   return(detector);

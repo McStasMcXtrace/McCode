@@ -1245,7 +1245,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
     char    label[CHAR_BUF_LENGTH];
 
     MCDETECTOR detector;
-
+    strcpy(detector.options,Vars->option);
     if (Vars->Flag_Verbose && Vars->Flag_per_cm2) {
       printf("Monitor_nD: %s: active flat detector area is %g [cm^2], total area is %g [cm^2]\n",
         Vars->compcurname, (Vars->max_x-Vars->min_x)
@@ -1426,7 +1426,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
               label, "List of neutron events", Coord_X_Label,
               -Vars->Buffer_Size, Vars->Coord_Number+1,
               Vars->Mon2D_Buffer,
-              fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
+              fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot, Vars->option);
       }
       if (Vars->Flag_Multiple) /* n1D: DETECTOR_OUT_1D */
       {
@@ -1588,17 +1588,29 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
           if (Vars->Coord_Bin[1]*Vars->Coord_Bin[2] > 1
            && Vars->Flag_signal == DEFS->COORD_P)
             strcat(label, " per bin");
-
-          detector = mcdetector_out_2D(
-            label,
-            Vars->Coord_Label[1],
-            Vars->Coord_Label[2],
-            min1d, max1d,
-            min2d, max2d,
-            Vars->Coord_Bin[1],
-            Vars->Coord_Bin[2],
-            p0m,p1m,p2m,
-            fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
+	  if (Vars->Flag_List) {
+            detector = mcdetector_out_2D_list(
+              label,
+              Vars->Coord_Label[1],
+	      Vars->Coord_Label[2],
+	      min1d, max1d,
+	      min2d, max2d,
+	      Vars->Coord_Bin[1],
+	      Vars->Coord_Bin[2],
+	      p0m,p1m,p2m,
+	      fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot,Vars->option);
+	  } else {
+            detector = mcdetector_out_2D(
+              label,
+              Vars->Coord_Label[1],
+	      Vars->Coord_Label[2],
+	      min1d, max1d,
+	      min2d, max2d,
+	      Vars->Coord_Bin[1],
+	      Vars->Coord_Bin[2],
+	      p0m,p1m,p2m,
+	      fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
+	  }
 
           /* comment out 'free memory' lines to avoid loosing arrays if
                'detector' structure is used by other instrument parts
