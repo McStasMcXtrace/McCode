@@ -894,8 +894,10 @@ int mccode_main(int argc, char *argv[]);
 /* main DETECTOR structure which stores most information to write to data files */
 struct mcdetector_struct {
   char   filename[CHAR_BUF_LENGTH];   /* file name of monitor */
-  char   position[CHAR_BUF_LENGTH];   /* position of detector component */
-  char   rotation[CHAR_BUF_LENGTH];   /* rotation of detector component */
+  double Position[3];                 /* position of detector component*/
+  char   position[CHAR_BUF_LENGTH];   /* position of detector component (string)*/
+  Rotation Rotation;                  /* position of detector component*/
+  char   options[CHAR_BUF_LENGTH];    /* Monitor_nD style list-mode'options' (string)*/
   char   component[CHAR_BUF_LENGTH];  /* component instance name */
   char   instrument[CHAR_BUF_LENGTH]; /* instrument name */
   char   type[CHAR_BUF_LENGTH];       /* data type, e.g. 0d, 1d, 2d, 3d */
@@ -970,7 +972,7 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
 MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
                   long m, long n,
                   double *p1, char *f,
-                  char *c, Coords posa, Rotation rot);
+	          char *c, Coords posa, Rotation rot,char* options);
 
 /* wrappers to output functions, that automatically set NAME and POSITION */
 #define DETECTOR_OUT(p0,p1,p2) mcdetector_out_0D(NAME_CURRENT_COMP,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP)
