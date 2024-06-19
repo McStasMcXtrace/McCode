@@ -1,5 +1,6 @@
 #component-styler{
-    padding-block: 5px;
-    border-style: solid;
-    border-radius: 5px;
+    max-width: 250px;
+    max-height: 50px;
+    overflow: visible;
+
 }

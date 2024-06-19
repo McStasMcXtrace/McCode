@@ -1,12 +1,25 @@
 import * as THREE from 'three';
 
-export const loadComponents = (parentnode, components) => {
+export function clearComponents(parentnode) {
+    for(let i = parentnode.children.length - 1; i >= 0; i--){
+        let child = parentnode.children[i];
+        if(child.type === 'Group'){
+            console.log("removing child = " , child);
+            parentnode.remove(child);
+        }
+    }
+}
+
+
+export function loadComponents(parentnode, components){
+    console.log(components);
     let compList = {};
     components.forEach((component, i) => {
-        compList[i] = new THREE.Object3D();
+        compList[i] = new THREE.Group();
+        let color = component.color;
+        let transparency = component.transparency;
         for(let j = 0; j < component.drawcalls.length; j++){
             let args = [];
-            let color = component.color;
             if(component.drawcalls.length > 0){
                 args = component.drawcalls[j].args;
             }
@@ -16,40 +29,40 @@ export const loadComponents = (parentnode, components) => {
                     addMultiLine(args, compList[i], color);
                     break;
                 case 'circle':
-                    addCircle(args[0], args[1], args[2], args[3], args[4], compList[i], color);
+                    addCircle(args[0], args[1], args[2], args[3], args[4], compList[i], color, transparency);
                     break;
                 case 'sphere':
-                    addSphere(args[0], args[1], args[2], args[3], 32, 32, compList[i], color);
+                    addSphere(args[0], args[1], args[2], args[3], 32, 32, compList[i], color, transparency);
                     break;
                 case 'cone':
-                    addCone(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 32, compList[i], color);
+                    addCone(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 32, compList[i], color, transparency);
                     break;
                 case 'cylinder':
-                    addCylinder(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], 32, compList[i], color);
+                    addCylinder(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], 32, compList[i], color, transparency);
                     break;
                 case 'disc':
-                    addDisc(args[0], args[1], args[2], args[3], args[4], args[5], args[6], 32, compList[i], color);
+                    addDisc(args[0], args[1], args[2], args[3], args[4], args[5], args[6], 32, compList[i], color, transparency);
                     break;
                 case 'annulus':
-                    addAnnulus(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 32, compList[i], color);
+                    addAnnulus(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], 32, compList[i], color, transparency);
                     break;
                 case 'new_circle':
-                    addNewCircle(args[0], args[1], args[2], args[3], args[4], args[5], args[6], 32, compList[i], color);
+                    addNewCircle(args[0], args[1], args[2], args[3], args[4], args[5], args[6], 32, compList[i], color, transparency);
                     break;
                 case 'box':
-                    addBox(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], compList[i], color);
+                    addBox(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], compList[i], color, transparency);
                     break;
                 case 'polygon':
-                    addPolygon(args[0], compList[i], color);
+                    addPolygon(args[0], compList[i], color, transparency);
                     break;
                 case 'polyhedron':
-                    addPolyhedron(args[0], compList[i], color);
+                    addPolyhedron(args[0], compList[i], color, transparency);
                     break;
                 default:
                     break;
+                }
             }
-        }
-    });
+        });
     for (let i = 0; i < components.length; i++) {
         let m4 = components[i].m4;
         let comp_matrix = new THREE.Matrix4();
@@ -84,7 +97,7 @@ export function addMultiLine(points, parent, linecolor)
 
 // add circle to xy, xz or yz plane
 //
-export function addCircle(plane, x, y, z, radius, parent, linecolor)
+export function addCircle(plane, x, y, z, radius, parent, linecolor, transparency)
 {
     if (radius == 0)
     {
@@ -92,13 +105,13 @@ export function addCircle(plane, x, y, z, radius, parent, linecolor)
     }
 
     if (plane === 'xy') {
-        addNewCircle(x, y, z, radius, 0, 0, 1, 32, parent, linecolor)
+        addNewCircle(x, y, z, radius, 0, 0, 1, 32, parent, linecolor, transparency)
     }
     if (plane === 'xz') {
-        addNewCircle(x, y, z, radius, 0, 1, 0, 32, parent, linecolor)
+        addNewCircle(x, y, z, radius, 0, 1, 0, 32, parent, linecolor, transparency)
     }
     if (plane === 'yz') {
-        addNewCircle(x, y, z, radius, 1, 0, 0, 32, parent, linecolor)
+        addNewCircle(x, y, z, radius, 1, 0, 0, 32, parent, linecolor, transparency)
     }
 }
 // add sphere
@@ -106,15 +119,16 @@ export function addCircle(plane, x, y, z, radius, parent, linecolor)
 //		radius
 //		wseg 	- width segments
 //		hseg 	- height segments
-export function addSphere(x, y, z, radius, wseg, hseg, parent, color)
+export function addSphere(x, y, z, radius, wseg, hseg, parent, color, transparency)
 {
+    console.log(transparency);
     if (radius === 0)
     {
         return;
     }
     var geometry = new THREE.SphereGeometry(radius, wseg, hseg);
-
-    var material = new THREE.MeshLambertMaterial( {color: color} );
+    var material = new THREE.MeshLambertMaterial( {color: color, transparent: true, opacity: transparency, side: THREE.DoubleSide} );
+    console.log(material);
     var sphere = new THREE.Mesh( geometry, material );
 
     sphere.position.x = x;
@@ -124,14 +138,14 @@ export function addSphere(x, y, z, radius, wseg, hseg, parent, color)
     parent.add( sphere );
 }
 
-export function addCone(x, y, z, radius, height, nx, ny, nz, radSeg, parent, color)
+export function addCone(x, y, z, radius, height, nx, ny, nz, radSeg, parent, color, transparency)
 {
     if (radius === 0)
     {
         return;
     }
     var geometry = new THREE.ConeGeometry(radius, height, radSeg);
-    var material = new THREE.MeshLambertMaterial( {color: color} );
+    var material = new THREE.MeshLambertMaterial( {color: color, transparent: true, opacity: transparency, side: THREE.DoubleSide} );
     var cone = new THREE.Mesh( geometry, material );
 
     cone.position.x = x;
@@ -145,9 +159,9 @@ export function addCone(x, y, z, radius, height, nx, ny, nz, radSeg, parent, col
     parent.add( cone );
 }
 
-export function addCylinder(x, y, z, radius, height, thickness, nx, ny, nz, radSeg, parent, color)
+export function addCylinder(x, y, z, radius, height, thickness, nx, ny, nz, radSeg, parent, color, transparency)
 {
-    const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
+    const material = new THREE.MeshLambertMaterial({color: color, transparent: true, opacity: transparency, side: THREE.DoubleSide});
     let original_axis = new THREE.Vector3(0, 1, 0);
 
     if (thickness === 0) {
@@ -195,18 +209,18 @@ export function addCylinder(x, y, z, radius, height, thickness, nx, ny, nz, radS
             z - halfheight * align_axis.z);
 
         //lid top
-        addAnnulus(upper_lid_center.x, upper_lid_center.y, upper_lid_center.z, radius, thickness, nx, ny, nz, radSeg, parent, color);
+        addAnnulus(upper_lid_center.x, upper_lid_center.y, upper_lid_center.z, radius, thickness, nx, ny, nz, radSeg, parent, color, transparency);
         //lid bottom
-        addAnnulus(lower_lid_center.x, lower_lid_center.y, lower_lid_center.z, radius, thickness, nx, ny, nz, radSeg, parent, color);
+        addAnnulus(lower_lid_center.x, lower_lid_center.y, lower_lid_center.z, radius, thickness, nx, ny, nz, radSeg, parent, color, transparency);
     }
 }
 
-export function addAnnulus(x, y, z, outer_radius, inner_radius, nx, ny, nz, radSeg, parent, color)
+export function addAnnulus(x, y, z, outer_radius, inner_radius, nx, ny, nz, radSeg, parent, color, transparency)
 {
     let geometry = new THREE.RingGeometry(outer_radius-inner_radius, outer_radius, radSeg);
     let original_axis = new THREE.Vector3(0, 0, 1);
 
-    const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
+    const material = new THREE.MeshLambertMaterial({color: color, transparent: true, opacity: transparency, side: THREE.DoubleSide});
     const annulus = new THREE.Mesh(geometry, material);
 
     annulus.position.x = x;
@@ -219,17 +233,17 @@ export function addAnnulus(x, y, z, outer_radius, inner_radius, nx, ny, nz, radS
     parent.add( annulus );
 }
 
-export function addDisc(x, y, z, radius, nx, ny, nz, radSeg, parent, color)
+export function addDisc(x, y, z, radius, nx, ny, nz, radSeg, parent, color, transparency)
 {
-    addAnnulus(x, y, z, radius, radius, nx, ny, nz, radSeg, parent, color);
+    addAnnulus(x, y, z, radius, radius, nx, ny, nz, radSeg, parent, color, transparency);
 }
 
-export function addNewCircle(x, y, z, radius, nx, ny, nz, radSeg, parent, color)
+export function addNewCircle(x, y, z, radius, nx, ny, nz, radSeg, parent, color, transparency)
 {
-    addAnnulus(x, y, z, radius, 0.01, nx, ny, nz, radSeg, parent, color);
+    addAnnulus(x, y, z, radius, 0.01, nx, ny, nz, radSeg, parent, color, transparency);
 }
 
-export function addBox(x, y, z, xwidth, yheight, zdepth, thickness, nx, ny, nz, parent, color)
+export function addBox(x, y, z, xwidth, yheight, zdepth, thickness, nx, ny, nz, parent, color, transparency)
 {
     let geometry = new THREE.BoxGeometry(xwidth, yheight, zdepth);
     let original_axis = new THREE.Vector3(0, 1, 0);
@@ -312,7 +326,7 @@ export function addBox(x, y, z, xwidth, yheight, zdepth, thickness, nx, ny, nz, 
         geometry.computeVertexNormals();
     }
 
-    const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
+    const material = new THREE.MeshLambertMaterial({color: color, transparent: true, opacity: transparency, side: THREE.DoubleSide});
     const box = new THREE.Mesh(geometry, material);
 
     let align_axis = new THREE.Vector3(nx, ny, nz).normalize();
@@ -325,7 +339,7 @@ export function addBox(x, y, z, xwidth, yheight, zdepth, thickness, nx, ny, nz, 
     parent.add( box );
 }
 
-export function addPolyhedron(faces_vertices, parent, color)
+export function addPolyhedron(faces_vertices, parent, color, transparency)
 {
     const parsed_faces_vertices = JSON.parse(faces_vertices);
     let faces = parsed_faces_vertices.faces.flatMap(index => index.face);
@@ -341,7 +355,7 @@ export function addPolyhedron(faces_vertices, parent, color)
     geometry.setIndex(faces);
     geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
     geometry.computeVertexNormals();
-    const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
+    const material = new THREE.MeshLambertMaterial({color: color, transparent: true, opacity: transparency, side: THREE.DoubleSide});
     const polyhedron = new THREE.Mesh(geometry, material);
 
     /*
@@ -374,7 +388,7 @@ function getRank3Indices(rank4indices)
 }
 
 
-export function addPolygon(faces_vertices, parent, color)
+export function addPolygon(faces_vertices, parent, color, transparency)
 {
     const parsed_faces_vertices = JSON.parse(faces_vertices);
     let faces = parsed_faces_vertices.faces.flatMap(index => index.face);
@@ -387,7 +401,8 @@ export function addPolygon(faces_vertices, parent, color)
     geometry.setIndex(faces);
     geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
     geometry.computeVertexNormals();
-    const material = new THREE.MeshLambertMaterial({color: color, side: THREE.DoubleSide});
+
+    const material = new THREE.MeshLambertMaterial({color: color, transparent: true, opacity: transparency, side: THREE.DoubleSide});
     const polygon = new THREE.Mesh(geometry, material);
 
     /*

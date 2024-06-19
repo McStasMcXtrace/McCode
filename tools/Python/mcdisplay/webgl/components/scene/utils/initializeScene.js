@@ -11,9 +11,10 @@ export const initializeCamera = (width, height, camPos) => {
     return camera;
 };
 
+
 export const initializeRenderer = (width, height, container) => {
     const renderer = new THREE.WebGLRenderer({
-        antialias: true
+        antialias: true,
     });
     renderer.setSize(width, height);
     if (container) {
@@ -62,13 +63,5 @@ export const initializeAmbientLight = (scene) => {
     const light = new THREE.AmbientLight(0x404040);
     scene.add(light);
     return light;
-}
-
-export const initializeSphere = (scene) => {
-    const geometry = new THREE.SphereGeometry(1, 32, 32);
-    const material = new THREE.MeshLambertMaterial({ color: 0xffff00 });
-    const sphere = new THREE.Mesh(geometry, material);
-    scene.add(sphere);
-    return sphere;
 }
 
