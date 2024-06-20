@@ -61,6 +61,7 @@ static   long mcstartdate            = 0; /* start simulation time */
 static   int  mcdisable_output_files = 0; /* --no-output-files */
 mcstatic int  mcgravitation          = 0; /* use gravitation flag, for PROP macros */
 mcstatic int  mcdotrace              = 0; /* flag for --trace and messages for DISPLAY */
+mcstatic int  mcnexus_embed_idf      = 0; /* flag to embed xml-formatted IDF file for Mantid */
 #pragma acc declare create ( mcdotrace )
 int      mcallowbackprop             = 0;         /* flag to enable negative/backprop */
 
@@ -1658,21 +1659,23 @@ static void mcinfo_out_nexus(NXhandle f)
         nxprintf (f, "description", "File %s not found (instrument description %s is missing)",
           instrument_source, instrument_name);
 
-      /* add Mantid/IDF.xml when available */
-      char *IDFfile=NULL;
-      IDFfile = (char*)malloc(CHAR_BUF_LENGTH);
-      sprintf(IDFfile,"%s%s",instrument_source,".xml");
-      buffer = mcinfo_readfile(IDFfile);
-      if (buffer && strlen(buffer)) {
-        NXmakegroup (nxhandle, "instrument_xml", "NXnote");
-        NXopengroup (nxhandle, "instrument_xml", "NXnote");
-        nxprintf(f, "data", buffer);
-        nxprintf(f, "description", "IDF.xml file found with instrument %s", instrument_source);
-        nxprintf(f, "type", "text/xml");
-        NXclosegroup(f); /* instrument_xml */
-        free(buffer);
+      if (mcnexus_embed_idf) {
+        /* add Mantid/IDF.xml when available */
+        char *IDFfile=NULL;
+        IDFfile = (char*)malloc(CHAR_BUF_LENGTH);
+        sprintf(IDFfile,"%s%s",instrument_source,".xml");
+        buffer = mcinfo_readfile(IDFfile);
+        if (buffer && strlen(buffer)) {
+          NXmakegroup (nxhandle, "instrument_xml", "NXnote");
+          NXopengroup (nxhandle, "instrument_xml", "NXnote");
+          nxprintf(f, "data", buffer);
+          nxprintf(f, "description", "IDF.xml file found with instrument %s", instrument_source);
+          nxprintf(f, "type", "text/xml");
+          NXclosegroup(f); /* instrument_xml */
+          free(buffer);
+        }
+	free(IDFfile);
       }
-      free(IDFfile);
       if (NXmakegroup(f, "components", "NXdata") == NX_OK)
 	if (NXopengroup(f, "components", "NXdata") == NX_OK) {
 	  nxprintattr(f, "description", "Component list for instrument %s",  instrument_name);
@@ -1724,10 +1727,8 @@ static void mcinfo_out_nexus(NXhandle f)
     } /* NXsimulation */
 
     /* create a group to hold all links for all monitors */
-    NXmakegroup(f, "data", "NXdetector");
-
-    /* create a group to hold all monitors */
-    //NXmakegroup(f, "data", "NXdetector");
+    if(mcnexus_embed_idf)
+      NXmakegroup(f, "data", "NXdetector");
 
     /* leave the NXentry opened (closed at exit) */
   } /* NXentry */
@@ -1767,11 +1768,6 @@ static void mccomp_placement_nexus(NXhandle f, char* component, Coords position,
 	    return;
 	  }
 	  NXputdata (f, rotation);
-	  /* if (NXmakegroup(f, "output", "NXdetector") == NX_OK) { */
-	  /*   if (NXopengroup(f, "output", "NXdetector") == NX_OK) { */
-	  /*     NXclosegroup(f); /\* output *\/ */
-	  /*   } */
-	  /* } */
 	}
 	NXclosegroup(f); /* component */
       }
@@ -2028,9 +2024,11 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
     NXclosegroup(f);
   } /* NXdata instrument */
 
-  if (NXopengroup(f, "data", "NXdetector") == NX_OK) {
-    NXmakelink(nxhandle, &pLink);
-    NXclosegroup(f);
+  if (mcnexus_embed_idf) {
+    if (NXopengroup(f, "data", "NXdetector") == NX_OK) {
+      NXmakelink(nxhandle, &pLink);
+      NXclosegroup(f);
+    }
   }
   return(NX_OK);
 } /* mcdetector_out_array_nexus */
@@ -4337,9 +4335,12 @@ mchelp(char *pgmname)
 "  --format=FORMAT            Output data files using FORMAT="
    FLAVOR_UPPER
 #ifdef USE_NEXUS
-   " NEXUS"
-#endif
+   " NEXUS\n"
+"  --IDF                      Embed an xml-formatted IDF instrument definition\n"
+"                             in the NeXus file (if existent in .)\n\n"
+#else
 "\n\n"
+#endif
 );
 #ifdef USE_MPI
   fprintf(stderr,
@@ -4610,6 +4611,11 @@ mcparseoptions(int argc, char *argv[])
     else if(!strcmp("--format", argv[i]) && (i + 1) < argc) {
       mcformat=argv[++i];
     }
+#ifdef USE_NEXUS
+    else if(!strcmp("--IDF", argv[i])) {
+      mcnexus_embed_idf = 1;
+    }
+#endif
     else if(!strncmp("--vecsize=", argv[i], 10)) {
       vecsize=atoi(&argv[i][10]);
     }    
