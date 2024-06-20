@@ -86,7 +86,7 @@ function addMultiLineV3(arrVector3, parent, linecolor)
 //		points  -  array of single points
 export function addMultiLine(points, parent, linecolor)
 {
-    vectors = [];
+    let vectors = [];
     for (var i = 0; i < points.length / 3; i++)
     {
         const v = new THREE.Vector3(points[i*3], points[i*3+1], points[i*3+2]);
