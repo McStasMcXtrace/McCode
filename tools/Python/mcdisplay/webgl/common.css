@@ -32,6 +32,9 @@ p, h1, h2, h3, h4, h5, h6 {
     font-family: Arial, Helvetica, sans-serif;
     overflow-wrap: break-word;
 }
+li{
+    font-family: Arial, Helvetica, sans-serif;
+}
 
 #root, #__next {
     isolation: isolate;
@@ -46,6 +49,7 @@ p, h1, h2, h3, h4, h5, h6 {
     --border-color: #dddddd;
     --button-bg-color: #3498db;
     --button-text-color: #ffffff;
+    --button-text-color-hover: #121212;
     --button-border-color: #2980b9;
     --button-hover-bg-color: #2980b9;
     --button-active-bg-color: #4CAF50; 
@@ -59,6 +63,7 @@ p, h1, h2, h3, h4, h5, h6 {
     --border-color-dark: #333333;
     --button-bg-color-dark: #2980b9;
     --button-text-color-dark: #ffffff;
+    --button-text-color-hover-dark: #121212;
     --button-border-color-dark: #1c5783;
     --button-hover-bg-color-dark: #1c5783;
     --button-active-bg-color-dark: #27ae60;
@@ -67,6 +72,7 @@ p, h1, h2, h3, h4, h5, h6 {
 .row{
     display: flex;
     flex-direction: row;
+    align-items: center;
 }
 
 .column{
@@ -121,6 +127,7 @@ button{
 
 button:hover{
     background-color: var(--button-hover-bg-color);
+    color: var(--button-text-color-hover);
 }
 
 button.active {
@@ -164,6 +171,7 @@ button.active {
     }
     button:hover{
         background-color: var(--button-hover-bg-color-dark);
+        color: var(--button-text-color-hover-dark);
     }
     button.active {
         background-color: var(--button-active-bg-color-dark);
