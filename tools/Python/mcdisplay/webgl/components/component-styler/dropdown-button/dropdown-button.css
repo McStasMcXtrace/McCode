@@ -1,17 +1,17 @@
 .chevron-icon {
-    width: 16px; /* Adjust the size as needed */
-    height: 16px;
-    margin-left: 8px; /* Adjust spacing as needed */
+  width: 16px; /* Adjust the size as needed */
+  height: 16px;
+  margin-left: 8px; /* Adjust spacing as needed */
 }
 
 .dropdown-button {
-    min-width: 50px;
-    border: none;
-    padding: 10px;
-    color: #fff;
-    cursor: pointer;
-    outline: none;
-    font-size: 16px;
+  min-width: 50px;
+  border: none;
+  padding: 10px;
+  color: #fff;
+  cursor: pointer;
+  outline: none;
+  font-size: 16px;
 }
 
 .dropdown-button:hover {
