@@ -805,7 +805,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     if(nxhandle) {
     char metadata[CHAR_BUF_LENGTH];
 
-    sprintf(metadata,"id=ld + %ld pixels: %: ",Vars->Coord_Min[Vars->Coord_Number-1],Vars->Coord_BinProd[Vars->Coord_Number-1]);
+    sprintf(metadata,"id=%ld + %ld pixels: ",(long)Vars->Coord_Min[Vars->Coord_Number-1],(long)Vars->Coord_BinProd[Vars->Coord_Number-1]);
     for (i=1; i<N_spatial_dims; i++) {
       sprintf(metadata,"%s %s (%ld bins) x ",metadata,Vars->Coord_Label[i],Vars->Coord_Bin[i]);
     }
@@ -875,7 +875,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     printf("Done with the pixel array part\n");
     } // nxhandle available
     #ifdef USE_MPI
-    }
+    } // Master only
+    MPI_Barrier(MPI_COMM_WORLD);
     #endif
 
     #endif // USE_NEXUS
