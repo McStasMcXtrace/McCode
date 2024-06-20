@@ -796,7 +796,12 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     for (i = 1; i <= Vars->Coord_Number; i++) {
       Vars->Coord_BinProd[i]=Vars->Coord_Bin[i]*Vars->Coord_BinProd[i-1];
     }
+
     #ifdef USE_NEXUS
+
+    #ifdef USE_MPI
+    if(mpi_node_rank == mpi_node_root) {
+    #endif
 
     char metadata[CHAR_BUF_LENGTH];
 
@@ -872,8 +877,12 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     }
 
     printf("Done with the pixel array part\n");
-    #endif // USE_NEXUS
 
+    #ifdef USE_MPI
+    }
+    #endif
+
+    #endif // USE_NEXUS
     } /* end Monitor_nD_Init */
 
 /* ========================================================================= */
