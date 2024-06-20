@@ -1734,6 +1734,72 @@ static void mcinfo_out_nexus(NXhandle f)
   } /* NXentry */
 } /* mcinfo_out_nexus */
 
+static void mcbins_out_1d_nexus(NXhandle f, long* pixels, long nx, char* component, char* metadata)
+{
+  if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+    if (NXopengroup(f, "components", "NXdata") == NX_OK) {
+	if (NXopengroup(f, component, "NXdata") == NX_OK) {
+	  int64_t pdims[3]={nx,1,0};
+
+	  NXcompmakedata64(f, "pixels", NX_INT64, 1, pdims, NX_COMPRESSION, pdims);
+	  if (NXopendata(f, "pixels") == NX_ERROR) {
+	    fprintf(stderr, "Warning: could not open pixels\n");
+	    return;
+	  }
+	  NXputdata (f, pixels);
+	  nxprintattr(f, "Pixel metadata", metadata);
+	  NXclosegroup(f);
+	}
+      NXclosegroup(f);
+    }
+    NXclosegroup(f);
+  }
+}
+
+static void mcbins_out_2d_nexus(NXhandle f, long** pixels, long nx, long ny, char* component, char* metadata)
+{
+  if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+    if (NXopengroup(f, "components", "NXdata") == NX_OK) {
+	if (NXopengroup(f, component, "NXdata") == NX_OK) {
+	  int64_t pdims[3]={nx,ny,0};
+
+	  NXcompmakedata64(f, "pixels", NX_INT64, 2, pdims, NX_COMPRESSION, pdims);
+	  if (NXopendata(f, "pixels") == NX_ERROR) {
+	    fprintf(stderr, "Warning: could not open pixels\n");
+	    return;
+	  }
+	  NXputdata (f, pixels);
+	  nxprintattr(f, "Pixel metadata", metadata);
+	  NXclosegroup(f);
+	}
+      NXclosegroup(f);
+    }
+    NXclosegroup(f);
+  }
+}
+
+static void mcbins_out_3d_nexus(NXhandle f, long*** pixels, long nx, long ny, long nz, char* component, char* metadata)
+{
+  if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+    if (NXopengroup(f, "components", "NXdata") == NX_OK) {
+	if (NXopengroup(f, component, "NXdata") == NX_OK) {
+	  int64_t pdims[3]={nx,ny,nz};
+
+	  NXcompmakedata64(f, "pixels", NX_INT64, 3, pdims, NX_COMPRESSION, pdims);
+	  if (NXopendata(f, "pixels") == NX_ERROR) {
+	    fprintf(stderr, "Warning: could not open pixels\n");
+	    return;
+	  }
+	  NXputdata (f, pixels);
+	  nxprintattr(f, "Pixel metadata", metadata);
+	  NXclosegroup(f);
+	}
+      NXclosegroup(f);
+    }
+    NXclosegroup(f);
+  }
+}
+
 /*******************************************************************************
 * mccomp_placement_nexus:
 *   Output absolute (3x1) position and (3x3) rotation of component instance into
