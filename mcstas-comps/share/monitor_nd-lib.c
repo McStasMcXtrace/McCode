@@ -60,7 +60,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     long i=0, j=0;
     double lmin, lmax, XY=0;
     long t;
-
+    int N_spatial_dims=0;
 
     t = (long)time(NULL);
 
@@ -207,6 +207,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
       Vars->Flag_Shape        = DEFS->SHAPE_BOX;
 
     if (Vars->Flag_OFF) {
+      N_spatial_dims++;
       Vars->Flag_Shape        = DEFS->SHAPE_OFF;
     }
     
@@ -362,14 +363,17 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
           { Set_Vars_Coord_Type = DEFS->COORD_X; strcpy(Set_Vars_Coord_Label,"x [m]"); strcpy(Set_Vars_Coord_Var,"x");
           lmin = Vars->mxmin; lmax = Vars->mxmax;
           Vars->Coord_Min[Vars->Coord_Number+1] = Vars->mxmin;
-          Vars->Coord_Max[Vars->Coord_Number+1] = Vars->mxmax;}
+          Vars->Coord_Max[Vars->Coord_Number+1] = Vars->mxmax;
+	  N_spatial_dims++;}
         if (!strcmp(token, "y"))
           { Set_Vars_Coord_Type = DEFS->COORD_Y; strcpy(Set_Vars_Coord_Label,"y [m]"); strcpy(Set_Vars_Coord_Var,"y");
           lmin = Vars->mymin; lmax = Vars->mymax;
           Vars->Coord_Min[Vars->Coord_Number+1] = Vars->mymin;
-          Vars->Coord_Max[Vars->Coord_Number+1] = Vars->mymax;}
+          Vars->Coord_Max[Vars->Coord_Number+1] = Vars->mymax;
+	  N_spatial_dims++;}
         if (!strcmp(token, "z"))
-          { Set_Vars_Coord_Type = DEFS->COORD_Z; strcpy(Set_Vars_Coord_Label,"z [m]"); strcpy(Set_Vars_Coord_Var,"z"); lmin = Vars->mzmin; lmax = Vars->mzmax; }
+          { Set_Vars_Coord_Type = DEFS->COORD_Z; strcpy(Set_Vars_Coord_Label,"z [m]"); strcpy(Set_Vars_Coord_Var,"z"); lmin = Vars->mzmin; lmax = Vars->mzmax;
+	    N_spatial_dims++;}
         if (!strcmp(token, "k") || !strcmp(token, "wavevector"))
           { Set_Vars_Coord_Type = DEFS->COORD_K; strcpy(Set_Vars_Coord_Label,"|k| [Angs-1]"); strcpy(Set_Vars_Coord_Var,"k"); lmin = 0; lmax = 10; }
         if (!strcmp(token, "v"))
@@ -415,11 +419,11 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
         if (!strcmp(token, "radius") || !strcmp(token, "r"))
           { Set_Vars_Coord_Type = DEFS->COORD_RADIUS; strcpy(Set_Vars_Coord_Label,"Radius [m]"); strcpy(Set_Vars_Coord_Var,"xy"); lmin = 0; lmax = xmax; }
         if (!strcmp(token, "xy"))
-          { Set_Vars_Coord_Type = DEFS->COORD_XY; strcpy(Set_Vars_Coord_Label,"Radius (xy) [m]"); strcpy(Set_Vars_Coord_Var,"xy"); lmin = 0; lmax = xmax; }
+          { Set_Vars_Coord_Type = DEFS->COORD_XY; strcpy(Set_Vars_Coord_Label,"Radius (xy) [m]"); strcpy(Set_Vars_Coord_Var,"xy"); lmin = 0; lmax = xmax; N_spatial_dims+=2;}
         if (!strcmp(token, "yz"))
-          { Set_Vars_Coord_Type = DEFS->COORD_YZ; strcpy(Set_Vars_Coord_Label,"Radius (yz) [m]"); strcpy(Set_Vars_Coord_Var,"yz"); lmin = 0; lmax = xmax; }
+          { Set_Vars_Coord_Type = DEFS->COORD_YZ; strcpy(Set_Vars_Coord_Label,"Radius (yz) [m]"); strcpy(Set_Vars_Coord_Var,"yz"); lmin = 0; lmax = xmax; N_spatial_dims+=2;}
         if (!strcmp(token, "xz"))
-          { Set_Vars_Coord_Type = DEFS->COORD_XZ; strcpy(Set_Vars_Coord_Label,"Radius (xz) [m]"); strcpy(Set_Vars_Coord_Var,"xz"); lmin = 0; lmax = xmax; }
+          { Set_Vars_Coord_Type = DEFS->COORD_XZ; strcpy(Set_Vars_Coord_Label,"Radius (xz) [m]"); strcpy(Set_Vars_Coord_Var,"xz"); lmin = 0; lmax = xmax; N_spatial_dims+=2;}
         if (!strcmp(token, "vxy"))
           { Set_Vars_Coord_Type = DEFS->COORD_VXY; strcpy(Set_Vars_Coord_Label,"Radial Velocity (xy) [m]"); strcpy(Set_Vars_Coord_Var,"Vxy"); lmin = 0; lmax = 2000; }
         if (!strcmp(token, "kxy"))
@@ -433,15 +437,15 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
         if (!strcmp(token, "kxz"))
           { Set_Vars_Coord_Type = DEFS->COORD_KXZ; strcpy(Set_Vars_Coord_Label,"Radial Wavevector (xz) [Angs-1]"); strcpy(Set_Vars_Coord_Var,"Kxz"); lmin = 0; lmax = 2; }
         if (!strcmp(token, "angle") || !strcmp(token, "a"))
-          { Set_Vars_Coord_Type = DEFS->COORD_ANGLE; strcpy(Set_Vars_Coord_Label,"Angle [deg]"); strcpy(Set_Vars_Coord_Var,"A"); lmin = -50; lmax = 50; }
+          { Set_Vars_Coord_Type = DEFS->COORD_ANGLE; strcpy(Set_Vars_Coord_Label,"Angle [deg]"); strcpy(Set_Vars_Coord_Var,"A"); lmin = -50; lmax = 50; N_spatial_dims++;}
         if (!strcmp(token, "hdiv")|| !strcmp(token, "divergence") || !strcmp(token, "xdiv") || !strcmp(token, "hd") || !strcmp(token, "dx"))
-          { Set_Vars_Coord_Type = DEFS->COORD_HDIV; strcpy(Set_Vars_Coord_Label,"Hor. Divergence [deg]"); strcpy(Set_Vars_Coord_Var,"hd"); lmin = -5; lmax = 5; }
+          { Set_Vars_Coord_Type = DEFS->COORD_HDIV; strcpy(Set_Vars_Coord_Label,"Hor. Divergence [deg]"); strcpy(Set_Vars_Coord_Var,"hd"); lmin = -5; lmax = 5; N_spatial_dims++;}
         if (!strcmp(token, "vdiv") || !strcmp(token, "ydiv") || !strcmp(token, "vd") || !strcmp(token, "dy"))
-          { Set_Vars_Coord_Type = DEFS->COORD_VDIV; strcpy(Set_Vars_Coord_Label,"Vert. Divergence [deg]"); strcpy(Set_Vars_Coord_Var,"vd"); lmin = -5; lmax = 5; }
+          { Set_Vars_Coord_Type = DEFS->COORD_VDIV; strcpy(Set_Vars_Coord_Label,"Vert. Divergence [deg]"); strcpy(Set_Vars_Coord_Var,"vd"); lmin = -5; lmax = 5; N_spatial_dims++;}
         if (!strcmp(token, "theta") || !strcmp(token, "longitude") || !strcmp(token, "th"))
-          { Set_Vars_Coord_Type = DEFS->COORD_THETA; strcpy(Set_Vars_Coord_Label,"Longitude [deg]"); strcpy(Set_Vars_Coord_Var,"th"); lmin = -180; lmax = 180; }
+          { Set_Vars_Coord_Type = DEFS->COORD_THETA; strcpy(Set_Vars_Coord_Label,"Longitude [deg]"); strcpy(Set_Vars_Coord_Var,"th"); lmin = -180; lmax = 180; N_spatial_dims++;}
         if (!strcmp(token, "phi") || !strcmp(token, "latitude") || !strcmp(token, "ph"))
-          { Set_Vars_Coord_Type = DEFS->COORD_PHI; strcpy(Set_Vars_Coord_Label,"Latitude [deg]"); strcpy(Set_Vars_Coord_Var,"ph"); lmin = -90; lmax = 90; }
+          { Set_Vars_Coord_Type = DEFS->COORD_PHI; strcpy(Set_Vars_Coord_Label,"Latitude [deg]"); strcpy(Set_Vars_Coord_Var,"ph"); lmin = -90; lmax = 90; N_spatial_dims++;}
         if (!strcmp(token, "ncounts") || !strcmp(token, "n") || !strcmp(token, "neutron"))
           { Set_Vars_Coord_Type = DEFS->COORD_NCOUNT; strcpy(Set_Vars_Coord_Label,"Neutron ID [1]"); strcpy(Set_Vars_Coord_Var,"n"); lmin = 0; lmax = mcget_ncount(); if (Flag_auto>0) Flag_auto=0; }
         if (!strcmp(token, "id") || !strcmp(token, "pixel"))
@@ -788,9 +792,89 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     
     /* compute the product of bin dimensions for PixelID */
     Vars->Coord_BinProd[0]=1;
-    for (i = 1; i <= Vars->Coord_Number; i++)
+
+    for (i = 1; i <= Vars->Coord_Number; i++) {
       Vars->Coord_BinProd[i]=Vars->Coord_Bin[i]*Vars->Coord_BinProd[i-1];
-  } /* end Monitor_nD_Init */
+    }
+    #ifdef USE_NEXUS
+
+    char metadata[CHAR_BUF_LENGTH];
+
+    sprintf(metadata,"%s","");
+
+    printf("Coord_Number  to measure is %ld\n",Vars->Coord_Number);
+    printf("Final number of pixels is %ld, ",Vars->Coord_BinProd[Vars->Coord_Number-1]);
+    printf("distributed over %i spatial dimensions:\n ",N_spatial_dims);
+    for (i=1; i<N_spatial_dims; i++) {
+      sprintf(metadata,"%s %s (%ld bins) x ",metadata,Vars->Coord_Label[i],Vars->Coord_Bin[i]);
+    }
+    sprintf(metadata,"%s %s (%ld bins)",metadata,Vars->Coord_Label[i],Vars->Coord_Bin[i]);
+    printf("%s\n",metadata);
+
+
+    long k,l,m;
+
+    long pix=Vars->Coord_Min[Vars->Coord_Number-1]; // Second to last col is min. pixel id
+    if (N_spatial_dims==1) { // 1D case
+      long *D1;
+      if (Vars->Flag_Verbose) printf("1D case %ld pixels\n",Vars->Coord_Bin[1]);
+      D1=malloc(Vars->Coord_Bin[1]*sizeof(long));
+      for (k=0; k<Vars->Coord_Bin[1]; k++) {
+	if (Vars->Flag_Verbose) printf("Assigning pixel k[%ld]=%ld (out of of %ld)\n",k,pix,Vars->Coord_Bin[1]);
+	D1[k]=pix;
+	pix++;
+      }
+      mcbins_out_1d_nexus(nxhandle, D1, Vars->Coord_Bin[1],Vars->compcurname,metadata);
+      free(D1);
+    } else if (N_spatial_dims==2) { // 2D case
+      long **D2;
+      if (Vars->Flag_Verbose) printf("2D case %ld x %ld \n",Vars->Coord_Bin[1],Vars->Coord_Bin[2]);
+      D2=(long**)malloc(Vars->Coord_Bin[1]*sizeof(long*));
+      for (k=0; k<Vars->Coord_Bin[1]; k++) {
+        D2[k]= (long*)malloc(Vars->Coord_Bin[2] * sizeof(long));
+	for (l=0; l<Vars->Coord_Bin[2]; l++) {
+	  if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld] = %ld\n",k,l,pix);
+	  D2[k][l]=pix;
+	  pix++;
+	}
+      }
+      mcbins_out_2d_nexus(nxhandle, D2, Vars->Coord_Bin[1], Vars->Coord_Bin[2],Vars->compcurname,metadata);
+      free(D2);
+    } else if (N_spatial_dims==3) { // 3D case
+      long ***D3;
+      if (Vars->Flag_Verbose) printf("3D case %ld x %ld x %ld\n",Vars->Coord_Bin[1],Vars->Coord_Bin[2],Vars->Coord_Bin[3]);
+      D3=(long***)malloc(Vars->Coord_Bin[1]*sizeof(long**));
+      for (k=0; k<Vars->Coord_Bin[1]; k++) {
+        D3[k]= (long**)malloc(Vars->Coord_Bin[2] * sizeof(long*));
+        for (l=0; l<Vars->Coord_Bin[2]; l++) {
+          D3[k][l]= (long*)malloc(Vars->Coord_Bin[3] * sizeof(long));
+            for (m=0; m<Vars->Coord_Bin[3]; m++) {
+	      if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld,%ld] = %ld\n",k,l,m,pix);
+	      D3[k][l][m]=pix;
+	      pix++;
+	  }
+        }
+      }
+      mcbins_out_3d_nexus(nxhandle, D3, Vars->Coord_Bin[1], Vars->Coord_Bin[2], Vars->Coord_Bin[3],Vars->compcurname,metadata);
+      free(D3);
+    } else { // -> something else/more -> 1D case
+      if (Vars->Flag_Verbose) printf("Unknown dimensionality case\n");
+      long *D1;
+      if (Vars->Flag_Verbose) printf("1D case %ld pixels\n",Vars->Coord_BinProd[Vars->Coord_Number-1]);
+      D1=malloc(Vars->Coord_BinProd[Vars->Coord_Number-1]*sizeof(long));
+      for (k=0; k<Vars->Coord_BinProd[Vars->Coord_Number-1]; k++) {
+	if (Vars->Flag_Verbose) printf("Assigning pixel k[%ld]=%ld (out of of %ld)\n",k,pix,Vars->Coord_Bin[1]);
+	D1[k]=pix;
+	pix++;
+      }
+      mcbins_out_1d_nexus(nxhandle, D1, Vars->Coord_BinProd[Vars->Coord_Number-1],Vars->compcurname,metadata);
+      free(D1);
+    }
+
+    printf("Done with the pixel array part\n");
+    #endif // USE_NEXUS
+
+    } /* end Monitor_nD_Init */
 
 /* ========================================================================= */
 /* Monitor_nD_Trace: this routine is used to monitor one propagating neutron */
