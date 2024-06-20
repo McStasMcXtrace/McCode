@@ -802,14 +802,10 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     #ifdef USE_MPI
     if(mpi_node_rank == mpi_node_root) {
     #endif
-
+    if(nxhandle) {
     char metadata[CHAR_BUF_LENGTH];
 
-    sprintf(metadata,"%s","");
-
-    printf("Coord_Number  to measure is %ld\n",Vars->Coord_Number);
-    printf("Final number of pixels is %ld, ",Vars->Coord_BinProd[Vars->Coord_Number-1]);
-    printf("distributed over %i spatial dimensions:\n ",N_spatial_dims);
+    sprintf(metadata,"id=ld + %ld pixels: %: ",Vars->Coord_Min[Vars->Coord_Number-1],Vars->Coord_BinProd[Vars->Coord_Number-1]);
     for (i=1; i<N_spatial_dims; i++) {
       sprintf(metadata,"%s %s (%ld bins) x ",metadata,Vars->Coord_Label[i],Vars->Coord_Bin[i]);
     }
@@ -877,7 +873,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     }
 
     printf("Done with the pixel array part\n");
-
+    } // nxhandle available
     #ifdef USE_MPI
     }
     #endif
