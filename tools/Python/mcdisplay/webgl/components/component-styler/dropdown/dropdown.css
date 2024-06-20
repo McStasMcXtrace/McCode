@@ -1,6 +1,4 @@
 ul {
-  columns: 4;
-  column-gap: 0;
   list-style: none;
   padding: unset;
   margin: unset;
@@ -19,7 +17,9 @@ li:hover {
 
 .dropdown-menu {
   position: absolute;
-  min-width: 350px;
+  min-width: fit-content;
+  max-height: 75vh;
+  overflow: auto;
   background: #fff;
   box-shadow: 0px 10px 30px 0px rgba(82, 63, 105, 0.05);
   transition: all linear 0.3s;
