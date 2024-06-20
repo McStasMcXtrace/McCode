@@ -16,3 +16,7 @@
 
 .dropdown-button:hover {
 }
+
+.rotate{
+  transform: rotate(180deg);
+}

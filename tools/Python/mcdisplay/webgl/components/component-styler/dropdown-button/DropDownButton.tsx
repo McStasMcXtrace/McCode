@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import "../../../common.css";
 import "./dropdown-button.css";
 import Chevron from "./chevron.svg";
@@ -24,17 +24,32 @@ const DropDownButton = ({
     return `linear-gradient(-45deg, ${color}, ${transparentColor})`;
   }
 
+  const [open, setOpen] = useState(false);
+
+  const handleButtonClick = () => {
+    setOpen(!open);
+    handleOpen();
+  };
+
   const style = {
     background: showGradient ? getGradientColor(color) : color,
   };
 
   return (
     <>
-      <button className="dropdown-button" onClick={handleOpen} style={style}>
+      <button
+        className="dropdown-button"
+        onClick={handleButtonClick}
+        style={style}
+      >
         <div className="row">
           {text}
           {showChevron && (
-            <img src={Chevron} alt="Chevron" className="chevron-icon" />
+            <img
+              src={Chevron}
+              alt="Chevron"
+              className={`chevron-icon ${open ? "rotate" : ""}`}
+            />
           )}
         </div>
       </button>
