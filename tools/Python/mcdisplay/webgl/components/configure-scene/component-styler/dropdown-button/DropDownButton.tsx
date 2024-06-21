@@ -31,6 +31,10 @@ const DropDownButton = ({
     handleOpen();
   };
 
+  const truncateText = (text: string) => {
+    return text.length > 10 ? text.slice(0, 8) + "..." : text;
+  };
+
   const style = {
     background: showGradient ? getGradientColor(color) : color,
   };
@@ -43,7 +47,7 @@ const DropDownButton = ({
         style={style}
       >
         <div className="row">
-          {text}
+          {truncateText(text)}
           {showChevron && (
             <img
               src={Chevron}
