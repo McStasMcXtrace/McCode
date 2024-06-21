@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../../common.css";
+import "../../../common.css";
 import "./component-styler.css";
 import { useComponentsContext } from "../../../Contexts/ComponentsContext";
 import DropDown from "./dropdown/DropDown";

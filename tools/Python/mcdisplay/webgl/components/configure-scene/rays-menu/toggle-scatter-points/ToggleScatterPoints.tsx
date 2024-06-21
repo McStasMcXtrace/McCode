@@ -1,5 +1,5 @@
 import React from "react";
-import "../../../common.css";
+import "../../../../common.css";
 import "./toggle-scatter-points.css";
 import { useRaysContext } from "../../../../Contexts/RaysContext";
 

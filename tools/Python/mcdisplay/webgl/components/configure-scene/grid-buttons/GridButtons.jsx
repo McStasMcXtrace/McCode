@@ -1,5 +1,5 @@
 import React from "react";
-import "../../common.css";
+import "../../../common.css";
 import { useGridContext } from "../../../Contexts/GridContext";
 
 const GridButtons = () => {

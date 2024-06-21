@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import "../../../common.css";
+import "../../../../common.css";
 import "./color-picker.css";
 import Sketch from "@uiw/react-color-sketch";
 import DropDownButton from "../dropdown-button/DropDownButton";
