@@ -1570,6 +1570,34 @@ char *mcinfo_readfile(char *filename)
 }
 
 /*******************************************************************************
+* NXmakeopengroup: Nexus-style function wrapper to
+* a) try opening a group
+* b) try creating and reopening in case of failure
+* Used in: mccode-r (nexus calls)
+*******************************************************************************/
+NXstatus NXmakeopengroup (NXhandle handle, CONSTCHAR *name, CONSTCHAR* NXclass) {
+
+  NXstatus status1,status2,status3;
+
+  NXMDisableErrorReporting();
+  status1=NXopengroup(handle, name, NXclass);
+  if (status1 !=NX_OK) {
+    status2=NXmakegroup(handle, name, NXclass);
+q    if (status2 !=NX_OK) {
+      NXMEnableErrorReporting();
+      return status2;
+    } else {
+      status3=NXopengroup(handle, name, NXclass);
+      NXMEnableErrorReporting();
+      return status3;
+    }
+  } else {
+    NXMEnableErrorReporting();
+    return status1;
+  }
+}
+
+/*******************************************************************************
 * mcinfo_out: output instrument/simulation groups in NeXus file
 * Used in: siminfo_init (nexus)
 *******************************************************************************/
@@ -1594,8 +1622,7 @@ static void mcinfo_out_nexus(NXhandle f)
   sprintf(entry0, "entry%i", count+1);
 
   /* create the main NXentry (mandatory in NeXus) */
-  if (NXmakegroup(f, entry0, "NXentry") == NX_OK)
-    if (NXopengroup(f, entry0, "NXentry") == NX_OK) {
+  if (NXmakeopengroup(f, entry0, "NXentry") == NX_OK) {
 
     nxprintf(nxhandle, "program_name", MCCODE_STRING);
     nxprintf(f, "start_time", ctime(&t));
@@ -1608,8 +1635,7 @@ static void mcinfo_out_nexus(NXhandle f)
         dirname && strlen(dirname) ? dirname : ".", MC_PATHSEP_S, siminfo_name);
 
     /* write NeXus instrument group */
-    if (NXmakegroup(f, "instrument", "NXinstrument") == NX_OK)
-    if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+    if (NXmakeopengroup(f, "instrument", "NXinstrument") == NX_OK) {
       printf("Created instrument group!\n");
       int   i;
       char *string=NULL;
@@ -1666,8 +1692,7 @@ static void mcinfo_out_nexus(NXhandle f)
         sprintf(IDFfile,"%s%s",instrument_source,".xml");
         buffer = mcinfo_readfile(IDFfile);
         if (buffer && strlen(buffer)) {
-          NXmakegroup (nxhandle, "instrument_xml", "NXnote");
-          NXopengroup (nxhandle, "instrument_xml", "NXnote");
+          NXmakeopengroup (nxhandle, "instrument_xml", "NXnote");
           nxprintf(f, "data", buffer);
           nxprintf(f, "description", "IDF.xml file found with instrument %s", instrument_source);
           nxprintf(f, "type", "text/xml");
@@ -1676,8 +1701,7 @@ static void mcinfo_out_nexus(NXhandle f)
         }
 	free(IDFfile);
       }
-      if (NXmakegroup(f, "components", "NXdata") == NX_OK)
-	if (NXopengroup(f, "components", "NXdata") == NX_OK) {
+      if (NXmakeopengroup(f, "components", "NXdata") == NX_OK) {
 	  nxprintattr(f, "description", "Component list for instrument %s",  instrument_name);
 	  NXclosegroup(f); /* components */
 	}
@@ -1685,8 +1709,7 @@ static void mcinfo_out_nexus(NXhandle f)
     } /* NXinstrument */
 
     /* write NeXus simulation group */
-    if (NXmakegroup(f, "simulation", "NXnote") == NX_OK)
-    if (NXopengroup(f, "simulation", "NXnote") == NX_OK) {
+    if (NXmakeopengroup(f, "simulation", "NXnote") == NX_OK) {
 
       nxprintattr(f, "name",   "%s%s%s",
         dirname && strlen(dirname) ? dirname : ".", MC_PATHSEP_S, siminfo_name);
@@ -1706,8 +1729,7 @@ static void mcinfo_out_nexus(NXhandle f)
     #endif
 
       /* output parameter string ================================================ */
-      if (NXmakegroup(f, "Param", "NXparameters") == NX_OK)
-      if (NXopengroup(f, "Param", "NXparameters") == NX_OK) {
+      if (NXmakeopengroup(f, "Param", "NXparameters") == NX_OK) {
         int i;
         char string[CHAR_BUF_LENGTH];
         for(i = 0; i < numipar; i++) {
@@ -1734,72 +1756,6 @@ static void mcinfo_out_nexus(NXhandle f)
   } /* NXentry */
 } /* mcinfo_out_nexus */
 
-static void mcbins_out_1d_nexus(NXhandle f, long* pixels, long nx, char* component, char* metadata)
-{
-  if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
-    if (NXopengroup(f, "components", "NXdata") == NX_OK) {
-	if (NXopengroup(f, component, "NXdata") == NX_OK) {
-	  int64_t pdims[3]={nx,1,0};
-
-	  NXcompmakedata64(f, "pixels", NX_INT64, 1, pdims, NX_COMPRESSION, pdims);
-	  if (NXopendata(f, "pixels") == NX_ERROR) {
-	    fprintf(stderr, "Warning: could not open pixels\n");
-	    return;
-	  }
-	  NXputdata (f, pixels);
-	  nxprintattr(f, "Pixel metadata", metadata);
-	  NXclosegroup(f);
-	}
-      NXclosegroup(f);
-    }
-    NXclosegroup(f);
-  }
-}
-
-static void mcbins_out_2d_nexus(NXhandle f, long** pixels, long nx, long ny, char* component, char* metadata)
-{
-  if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
-    if (NXopengroup(f, "components", "NXdata") == NX_OK) {
-	if (NXopengroup(f, component, "NXdata") == NX_OK) {
-	  int64_t pdims[3]={nx,ny,0};
-
-	  NXcompmakedata64(f, "pixels", NX_INT64, 2, pdims, NX_COMPRESSION, pdims);
-	  if (NXopendata(f, "pixels") == NX_ERROR) {
-	    fprintf(stderr, "Warning: could not open pixels\n");
-	    return;
-	  }
-	  NXputdata (f, pixels);
-	  nxprintattr(f, "Pixel metadata", metadata);
-	  NXclosegroup(f);
-	}
-      NXclosegroup(f);
-    }
-    NXclosegroup(f);
-  }
-}
-
-static void mcbins_out_3d_nexus(NXhandle f, long*** pixels, long nx, long ny, long nz, char* component, char* metadata)
-{
-  if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
-    if (NXopengroup(f, "components", "NXdata") == NX_OK) {
-	if (NXopengroup(f, component, "NXdata") == NX_OK) {
-	  int64_t pdims[3]={nx,ny,nz};
-
-	  NXcompmakedata64(f, "pixels", NX_INT64, 3, pdims, NX_COMPRESSION, pdims);
-	  if (NXopendata(f, "pixels") == NX_ERROR) {
-	    fprintf(stderr, "Warning: could not open pixels\n");
-	    return;
-	  }
-	  NXputdata (f, pixels);
-	  nxprintattr(f, "Pixel metadata", metadata);
-	  NXclosegroup(f);
-	}
-      NXclosegroup(f);
-    }
-    NXclosegroup(f);
-  }
-}
-
 /*******************************************************************************
 * mccomp_placement_nexus:
 *   Output absolute (3x1) position and (3x3) rotation of component instance into
@@ -1810,10 +1766,9 @@ static void mcbins_out_3d_nexus(NXhandle f, long*** pixels, long nx, long ny, lo
 static void mccomp_placement_nexus(NXhandle f, char* component, Coords position, Rotation rotation)
 {
   /* open NeXus instrument group */
-  if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
-    if (NXopengroup(f, "components", "NXdata") == NX_OK) {
-      if (NXmakegroup(f, component, "NXdata") == NX_OK) {
-	if (NXopengroup(f, component, "NXdata") == NX_OK) {
+  if (NXmakeopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+    if (NXmakeopengroup(f, "components", "NXdata") == NX_OK) {
+      if (NXmakeopengroup(f, component, "NXdata") == NX_OK) {
 
 	  int64_t pdims[3]={3,1,0};
 
@@ -1834,8 +1789,7 @@ static void mccomp_placement_nexus(NXhandle f, char* component, Coords position,
 	    return;
 	  }
 	  NXputdata (f, rotation);
-	}
-	NXclosegroup(f); /* component */
+	  NXclosegroup(f); /* component */
       }
       NXclosegroup(f); /* components  */
     }
@@ -1860,15 +1814,12 @@ mcdatainfo_out_nexus(NXhandle f, MCDETECTOR detector)
       detector.filename : detector.component);
 
   /* the NXdetector group has been created in mcinfo_out_nexus (siminfo_init) */
-  if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
-    if (NXopengroup(f, "components", "NXdata") == NX_OK) {
+  if (NXmakeopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+    if (NXmakeopengroup(f, "components", "NXdata") == NX_OK) {
       //NXMDisableErrorReporting(); /* unactivate NeXus error messages, as creation may fail */
-      if (NXopengroup(f, detector.component, "NXdata") == NX_OK) {
-	if (NXmakegroup(f, "output", "NXdetector") == NX_OK)
-	  if (NXopengroup(f, "output", "NXdetector") == NX_OK) {
-	    if (NXmakegroup(f, data_name, "NXdata") == NX_OK)
-	      if (NXopengroup(f, data_name, "NXdata") == NX_OK) {
-
+      if (NXmakeopengroup(f, detector.component, "NXdata") == NX_OK) {
+	if (NXmakeopengroup(f, "output", "NXdetector") == NX_OK) {
+	  if (NXmakeopengroup(f, data_name, "NXdata") == NX_OK) {
 		/* output metadata (as attributes) ======================================== */
 		nxprintattr(f, "Date",       detector.date);
 		nxprintattr(f, "type",       detector.type);
@@ -1985,6 +1936,9 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
 
   /* create the data set in NXdata group */
   NXMDisableErrorReporting(); /* unactivate NeXus error messages, as creation may fail */
+
+  //printf("Writing array %s with rank %i and dimensions %ld %ld %ld\n",part,detector.rank,detector.m,detector.n,detector.p);
+  //printf("NXcompmakedata(f, %s, NX_FLOAT64, %i, {%ld,%ld,%ld}, NX_COMPRESSION, {%ld,%ld,%ld}\n",part,detector.rank, fulldims[0], fulldims[1], fulldims[2], dims[0],dims[1],dims[2]);
   ret = NXcompmakedata64(f, part, NX_FLOAT64, detector.rank, fulldims, NX_COMPRESSION, dims);
   if (ret != NX_OK) {
     /* failed: data set already exists */
@@ -2044,13 +1998,13 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
       detector.filename : detector.component);
   NXlink pLink;
   /* the NXdetector group has been created in mcinfo_out_nexus (siminfo_init) */
-  if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
-    if (NXopengroup(f, "components", "NXdata") == NX_OK) {
-      if (NXopengroup(f, detector.component, "NXdata") == NX_OK) {
-	if (NXopengroup(f, "output", "NXdetector") == NX_OK) {
+  if (NXmakeopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+    if (NXmakeopengroup(f, "components", "NXdata") == NX_OK) {
+      if (NXmakeopengroup(f, detector.component, "NXdata") == NX_OK) {
+	if (NXmakeopengroup(f, "output", "NXdetector") == NX_OK) {
 
 	  /* the NXdata group has been created in mcdatainfo_out_nexus */
-	  if (NXopengroup(f, data_name, "NXdata") == NX_OK) {
+	  if (NXmakeopengroup(f, data_name, "NXdata") == NX_OK) {
 
 	    MPI_MASTER(
 		       nxprintattr(f, "options",
@@ -2070,14 +2024,16 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
 	    } /* !list */
 
 	    /* write the actual data (appended if already exists) */
-	    if (!strcasestr(detector.format, "list")) {
+	    if (!strcasestr(detector.format, "list") && !strcasestr(detector.format, "pixels")) {
 	      mcdetector_out_array_nexus(f, "data", detector.p1, detector);
 	      mcdetector_out_array_nexus(f, "errors", detector.p2, detector);
 	      mcdetector_out_array_nexus(f, "ncount", detector.p0, detector);
+	    } else if (strcasestr(detector.format, "pixels")) {
+	      mcdetector_out_array_nexus(  f, "pixels", detector.p1, detector);
 	    } else
 	      mcdetector_out_array_nexus(  f, "events", detector.p1, detector);
 	    NXclosegroup(f);
-	    NXopengroup(f, data_name, "NXdata");
+	    NXmakeopengroup(f, data_name, "NXdata");
 	    NXgetgroupID(nxhandle, &pLink);
 	    NXclosegroup(f);
 	  } /* NXdata data_name*/
@@ -2090,8 +2046,8 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
     NXclosegroup(f);
   } /* NXdata instrument */
 
-  if (mcnexus_embed_idf) {
-    if (NXopengroup(f, "data", "NXdetector") == NX_OK) {
+  if (mcnexus_embed_idf && !strcasestr(detector.format, "pixels")) {
+    if (NXmakeopengroup(f, "data", "NXdetector") == NX_OK) {
       NXmakelink(nxhandle, &pLink);
       NXclosegroup(f);
     }
@@ -2197,6 +2153,17 @@ MCDETECTOR mcdetector_out_2D_nexus(MCDETECTOR detector)
 
   return(detector);
 } /* mcdetector_out_2D_nexus */
+
+MCDETECTOR mcdetector_out_3D_nexus(MCDETECTOR detector)
+{
+  printf("Received detector from %s\n",detector.component);
+  MPI_MASTER(
+  mcdatainfo_out_nexus(nxhandle, detector);
+  mcdetector_out_data_nexus(nxhandle, detector);
+  );
+  return(detector);
+} /* mcdetector_out_3D_nexus */
+
 
 #endif /* USE_NEXUS*/
 
