@@ -13,11 +13,14 @@ import {
 } from "./utils/initializeScene";
 import { useComponentsContext } from "../../Contexts/ComponentsContext";
 import { clearComponents, loadComponents } from "../../Contexts/addComponents";
+import { useRaysContext } from "../../Contexts/RaysContext";
+import { addRays, setRaysVisible, setRaysInvisible } from "../../Contexts/addRays";
 
 const ThreeCanvas = () => {
   const { showXY, showXZ, showYZ, gridSize, gridDivisions } = useGridContext();
   const { camPos } = useCameraContext();
   const { components, setComponents } = useComponentsContext();
+  const {showRays, rays} = useRaysContext();
 
   const gridsRef = useRef({ gridXY: null, gridXZ: null, gridYZ: null });
 
@@ -45,6 +48,7 @@ const ThreeCanvas = () => {
     const controls = initializeControls(camera, renderer);
     loadComponents(scene, components);
     setComponents(components);
+    addRays(scene, rays, components);
     initializeDirectionalLight(scene);
     initializeAmbientLight(scene);
     controlsRef.current = controls;
@@ -100,8 +104,18 @@ const ThreeCanvas = () => {
     clearComponents(sceneRef.current);
     loadComponents(sceneRef.current, components);
     rendererRef.current.render(sceneRef.current, cameraRef.current);
-    console.log("should rerender");
   }, [components]);
+
+  useEffect(() => {
+    if(!showRays){
+      setRaysInvisible(sceneRef.current);
+      rendererRef.current.render(sceneRef.current, cameraRef.current);
+    }
+    else{
+      setRaysVisible(sceneRef.current);
+      rendererRef.current.render(sceneRef.current, cameraRef.current);
+    }
+  }, [showRays]);
 
   return <div id="canvas-container" ref={containerRef}></div>;
 };

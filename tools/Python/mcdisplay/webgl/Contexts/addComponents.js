@@ -3,15 +3,13 @@ import * as THREE from "three";
 export function clearComponents(parentnode) {
   for (let i = parentnode.children.length - 1; i >= 0; i--) {
     let child = parentnode.children[i];
-    if (child.type === "Group") {
-      console.log("removing child = ", child);
+    if (child.type === "Group" && child.name !== "rays") {
       parentnode.remove(child);
     }
   }
 }
 
 export function loadComponents(parentnode, components) {
-  console.log(components);
   let compList = {};
   components.forEach((component, i) => {
     compList[i] = new THREE.Group();
@@ -250,7 +248,6 @@ export function addSphere(
   color,
   transparency
 ) {
-  console.log(transparency);
   if (radius === 0) {
     return;
   }
@@ -261,7 +258,6 @@ export function addSphere(
     opacity: transparency,
     side: THREE.DoubleSide,
   });
-  console.log(material);
   var sphere = new THREE.Mesh(geometry, material);
 
   sphere.position.x = x;

@@ -6,6 +6,7 @@ import "./common.css";
 import { GridProvider } from "./Contexts/GridContext";
 import { CameraProvider } from "./Contexts/CameraContext";
 import { ComponentsProvider } from "./Contexts/ComponentsContext";
+import { RaysProvider } from "./Contexts/RaysContext";
 
 const App = () => {
   return (
@@ -13,8 +14,10 @@ const App = () => {
       <GridProvider>
         <CameraProvider>
           <ComponentsProvider>
-            <ConfigureSceneMenu />
-            <ThreeCanvas />
+            <RaysProvider>
+              <ConfigureSceneMenu />
+              <ThreeCanvas />
+            </RaysProvider>
           </ComponentsProvider>
         </CameraProvider>
       </GridProvider>
