@@ -1,5 +1,5 @@
 import React from "react";
-import { useCameraContext } from "../../Contexts/CameraContext";
+import { useCameraContext } from "../../../Contexts/CameraContext";
 import "../../common.css";
 import "./view-buttons.css";
 

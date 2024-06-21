@@ -1,6 +1,6 @@
 import React from "react";
 import "../../common.css";
-import { useGridContext } from "../../Contexts/GridContext";
+import { useGridContext } from "../../../Contexts/GridContext";
 
 const GridButtons = () => {
   const { showXY, showXZ, showYZ, toggleXY, toggleXZ, toggleYZ } =

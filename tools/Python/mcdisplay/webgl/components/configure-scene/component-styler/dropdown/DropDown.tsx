@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "../../../common.css";
 import "./dropdown.css";
 import DropDownButton from "../dropdown-button/DropDownButton";
-import { Component } from "../../../model/Component";
+import { Component } from "../../../../model/Component";
 
 interface DropDownProps {
   components: Component[];

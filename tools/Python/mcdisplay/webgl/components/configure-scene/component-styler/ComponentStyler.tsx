@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import "../../common.css";
 import "./component-styler.css";
-import { useComponentsContext } from "../../Contexts/ComponentsContext";
+import { useComponentsContext } from "../../../Contexts/ComponentsContext";
 import DropDown from "./dropdown/DropDown";
 import ColorPicker from "./color-picker/ColorPicker";
-import { Component } from "../../model/Component";
+import { Component } from "../../../model/Component";
 
 const ComponentStyler = () => {
   const { components, setComponents } = useComponentsContext();

@@ -1,7 +1,7 @@
 import React from "react";
 import "../../../common.css";
 import "./toggle-rays.css";
-import { useRaysContext } from "../../../Contexts/RaysContext";
+import { useRaysContext } from "../../../../Contexts/RaysContext";
 import ToggleScatterPoints from "../toggle-scatter-points/ToggleScatterPoints";
 
 const ToggleRays = () => {

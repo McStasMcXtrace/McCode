@@ -3,7 +3,7 @@ import "../../../common.css";
 import "./color-picker.css";
 import Sketch from "@uiw/react-color-sketch";
 import DropDownButton from "../dropdown-button/DropDownButton";
-import { Component } from "../../../model/Component";
+import { Component } from "../../../../model/Component";
 
 interface ColorPickerProps {
   currentComponent: Component;
