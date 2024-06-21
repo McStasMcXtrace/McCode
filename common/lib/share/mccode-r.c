@@ -1583,7 +1583,7 @@ NXstatus NXmakeopengroup (NXhandle handle, CONSTCHAR *name, CONSTCHAR* NXclass) 
   status1=NXopengroup(handle, name, NXclass);
   if (status1 !=NX_OK) {
     status2=NXmakegroup(handle, name, NXclass);
-q    if (status2 !=NX_OK) {
+    if (status2 !=NX_OK) {
       NXMEnableErrorReporting();
       return status2;
     } else {
