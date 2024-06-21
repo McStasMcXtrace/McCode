@@ -1,31 +1,3 @@
-var transformPoints = function (apoints, transform) {
-  // Create a BufferGeometry
-  var geometry = new THREE.BufferGeometry();
-
-  // Convert apoints array to a Float32Array and set it as the position attribute
-  var vertices = new Float32Array(apoints.length * 3);
-  for (var i = 0; i < apoints.length; i++) {
-    vertices[i * 3] = apoints[i].x;
-    vertices[i * 3 + 1] = apoints[i].y;
-    vertices[i * 3 + 2] = apoints[i].z;
-  }
-  geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
-
-  // Apply the transformation matrix
-  geometry.applyMatrix4(transform);
-
-  // Extract the transformed vertices
-  var transformedVertices = [];
-  var position = geometry.getAttribute("position");
-  for (var i = 0; i < position.count; i++) {
-    transformedVertices.push(
-      new THREE.Vector3(position.getX(i), position.getY(i), position.getZ(i))
-    );
-  }
-
-  return transformedVertices;
-};
-
 // "main" class which is a collection of scene graph setup routives and data objects
 //
 var Main = function () {
@@ -1119,6 +1091,53 @@ TraceLoader.prototype.loadParticles = function () {
     main.addRayNode(rayobj, aVertices, speed);
   }
 };
+
+var transformPoints = function (apoints, transform) {
+  // Create a BufferGeometry
+  var geometry = new THREE.BufferGeometry();
+
+  // Convert apoints array to a Float32Array and set it as the position attribute
+  var vertices = new Float32Array(apoints.length * 3);
+  for (var i = 0; i < apoints.length; i++) {
+    vertices[i * 3] = apoints[i].x;
+    vertices[i * 3 + 1] = apoints[i].y;
+    vertices[i * 3 + 2] = apoints[i].z;
+  }
+  geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
+
+  // Apply the transformation matrix
+  geometry.applyMatrix4(transform);
+
+  // Extract the transformed vertices
+  var transformedVertices = [];
+  var position = geometry.getAttribute("position");
+  for (var i = 0; i < position.count; i++) {
+    transformedVertices.push(
+      new THREE.Vector3(position.getX(i), position.getY(i), position.getZ(i))
+    );
+  }
+
+  return transformedVertices;
+};
+
+Main.prototype.addRayNode = function (rayObj, vertices, speed) {
+  var lut_color = this.lut.getColor(speed);
+  rayObj.lut_color = lut_color;
+
+  var multilinematerial = new THREE.LineBasicMaterial({ color: lut_color });
+  var multilinegeometry = new THREE.BufferGeometry().setFromPoints(vertices);
+  var multiline = new THREE.Line(multilinegeometry, multilinematerial);
+  rayObj.add(multiline);
+
+  rayObj.vtx = vertices; // WARNING: this is a hidden field hacky stuff, but only used in the function putScatterPoints
+  annotcubes = new THREE.Object3D();
+  rayObj.add(annotcubes);
+  rayObj.annotcubes = annotcubes;
+
+  this.raynodes.push(rayObj);
+  rayObj.visible = false;
+};
+
 //  program controller
 //      campos_x/y/z  -  determines initial camera position, this is used with --inspect
 var Controller = function (

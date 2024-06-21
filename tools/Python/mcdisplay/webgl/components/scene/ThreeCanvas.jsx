@@ -14,13 +14,17 @@ import {
 import { useComponentsContext } from "../../Contexts/ComponentsContext";
 import { clearComponents, loadComponents } from "../../Contexts/addComponents";
 import { useRaysContext } from "../../Contexts/RaysContext";
-import { addRays, setRaysVisible, setRaysInvisible } from "../../Contexts/addRays";
+import {
+  addRays,
+  setRaysVisible,
+  setRaysInvisible,
+} from "../../Contexts/addRays";
 
 const ThreeCanvas = () => {
   const { showXY, showXZ, showYZ, gridSize, gridDivisions } = useGridContext();
   const { camPos } = useCameraContext();
   const { components, setComponents } = useComponentsContext();
-  const {showRays, rays} = useRaysContext();
+  const { showRays, rays } = useRaysContext();
 
   const gridsRef = useRef({ gridXY: null, gridXZ: null, gridYZ: null });
 
@@ -107,11 +111,10 @@ const ThreeCanvas = () => {
   }, [components]);
 
   useEffect(() => {
-    if(!showRays){
+    if (!showRays) {
       setRaysInvisible(sceneRef.current);
       rendererRef.current.render(sceneRef.current, cameraRef.current);
-    }
-    else{
+    } else {
       setRaysVisible(sceneRef.current);
       rendererRef.current.render(sceneRef.current, cameraRef.current);
     }
