@@ -15,6 +15,8 @@ import { useComponentsContext } from "../../Contexts/ComponentsContext";
 import { clearComponents, loadComponents } from "../../Contexts/addComponents";
 import { useRaysContext } from "../../Contexts/RaysContext";
 import {
+  setScatterPointsVisible,
+  setScatterPointsInvisible,
   addRays,
   setRaysVisible,
   setRaysInvisible,
@@ -24,7 +26,7 @@ const ThreeCanvas = () => {
   const { showXY, showXZ, showYZ, gridSize, gridDivisions } = useGridContext();
   const { camPos } = useCameraContext();
   const { components, setComponents } = useComponentsContext();
-  const { showRays, rays } = useRaysContext();
+  const { showScatterPoints, showRays, rays } = useRaysContext();
 
   const gridsRef = useRef({ gridXY: null, gridXZ: null, gridYZ: null });
 
@@ -119,6 +121,16 @@ const ThreeCanvas = () => {
       rendererRef.current.render(sceneRef.current, cameraRef.current);
     }
   }, [showRays]);
+
+  useEffect(() => {
+    if (!showScatterPoints) {
+      setScatterPointsInvisible(sceneRef.current);
+      rendererRef.current.render(sceneRef.current, cameraRef.current);
+    } else {
+      setScatterPointsVisible(sceneRef.current);
+      rendererRef.current.render(sceneRef.current, cameraRef.current);
+    }
+  }, [showScatterPoints]);
 
   return <div id="canvas-container" ref={containerRef}></div>;
 };

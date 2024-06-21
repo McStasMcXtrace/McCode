@@ -3,24 +3,51 @@ import * as THREE from "three";
 import { Lut } from "three/examples/jsm/Addons.js";
 import { Component } from "../model/Component";
 
+// Constants
+const SCATTERPOINTS = "scatterpoints";
+const RAYS = "rays";
+
+// LUT Configuration
+const LUT = new Lut("cooltowarm", 512);
+
 export function setRaysInvisible(parentnode) {
   for (let i = 0; i < parentnode.children.length; i++) {
-    if (parentnode.children[i].name === "rays")
+    if (parentnode.children[i].name === RAYS)
       parentnode.children[i].visible = false;
   }
 }
 
 export function setRaysVisible(parentnode) {
   for (let i = 0; i < parentnode.children.length; i++) {
-    if (parentnode.children[i].name === "rays")
+    if (parentnode.children[i].name === RAYS)
       parentnode.children[i].visible = true;
+  }
+}
+export function setScatterPointsInvisible(parentnode) {
+  for (let i = 0; i < parentnode.children.length; i++) {
+    if (parentnode.children[i].name === RAYS) {
+      for (let j = 0; j < parentnode.children[i].children.length; j++) {
+        if (parentnode.children[i].children[j].name === SCATTERPOINTS)
+          parentnode.children[i].children[j].visible = false;
+      }
+    }
+  }
+}
+
+export function setScatterPointsVisible(parentnode) {
+  for (let i = 0; i < parentnode.children.length; i++) {
+    if (parentnode.children[i].name === RAYS) {
+      for (let j = 0; j < parentnode.children[i].children.length; j++) {
+        if (parentnode.children[i].children[j].name === SCATTERPOINTS)
+          parentnode.children[i].children[j].visible = true;
+      }
+    }
   }
 }
 
 export function addRays(parentNode, rayData: RayData, components: Component[]) {
   LUT.setMin(rayData.vmin);
   LUT.setMax(rayData.vmax);
-  console.log("addRays", rayData);
   const rays = rayData.rays;
   rays.forEach((ray) => {
     const rayGroup = createRayGroup(ray, components);
@@ -28,11 +55,9 @@ export function addRays(parentNode, rayData: RayData, components: Component[]) {
   });
 }
 
-const LUT = new Lut("cooltomwarm", 512);
-
 function createRayGroup(ray: Ray, components: Component[]): THREE.Group {
   const rayGroup = new THREE.Group();
-  rayGroup.name = "rays";
+  rayGroup.name = RAYS;
   let vertices: THREE.Vector3[] = [];
   ray.groups.forEach((group) => {
     let compVertices: THREE.Vector3[] = [];
@@ -128,6 +153,7 @@ function createScatterPoints(
   color: THREE.Color
 ): THREE.Group {
   const scatterPoints = new THREE.Group();
+  scatterPoints.name = SCATTERPOINTS;
 
   vertices.forEach((vertex) => {
     const geometry = new THREE.SphereGeometry(0.0035, 32, 32);

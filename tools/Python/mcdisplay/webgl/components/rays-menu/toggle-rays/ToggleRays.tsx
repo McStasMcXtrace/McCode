@@ -1,7 +1,8 @@
 import React from "react";
-import "../../common.css";
+import "../../../common.css";
 import "./toggle-rays.css";
-import { useRaysContext } from "../../Contexts/RaysContext";
+import { useRaysContext } from "../../../Contexts/RaysContext";
+import ToggleScatterPoints from "../toggle-scatter-points/ToggleScatterPoints";
 
 const ToggleRays = () => {
   const { showRays, toggleRays } = useRaysContext();
@@ -11,6 +12,7 @@ const ToggleRays = () => {
       <button onClick={toggleRays}>
         {showRays ? "Hide Rays" : "Show Rays"}
       </button>
+      {showRays ? <ToggleScatterPoints /> : null}
     </div>
   );
 };
