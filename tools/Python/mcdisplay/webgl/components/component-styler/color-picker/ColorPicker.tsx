@@ -35,7 +35,6 @@ const ColorPicker = ({
   };
 
   const handleClickOutside = (event) => {
-    console.log("click outside component.id = ", currentComponent.id);
     if (sketchRef.current && !sketchRef.current.contains(event.target)) {
       const newComponents = components.map((c) => {
         if (c.id === currentComponent.id) {
