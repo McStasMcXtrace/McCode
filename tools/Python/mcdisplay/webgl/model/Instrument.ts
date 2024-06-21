@@ -8,5 +8,4 @@ export interface Instrument {
   params_values: any[];
   cmd: string;
   components: Component[];
-  rays: any[];
 }
