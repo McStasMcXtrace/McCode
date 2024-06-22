@@ -8,7 +8,7 @@ export interface Component {
   transparency: number;
 }
 
-interface DrawCall {
+export interface DrawCall {
   key: string;
-  args: any[];
+  args: number[];
 }
