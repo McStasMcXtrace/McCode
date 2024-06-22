@@ -354,7 +354,7 @@ INITIALIZE
              NAME_CURRENT_COMP, geometry);
       strcpy(geometry, "");
     } else {
-      offflag=1;
+      offflag=offdata.faceSize;
     }
     #endif
   }
