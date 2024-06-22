@@ -20,6 +20,7 @@
     "@vitejs/plugin-react": "^4.3.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-loader-spinner": "^6.1.6",
     "three": "^0.165.0",
     "three-lut": "^79.0.2",
     "three-orbitcontrols": "^2.110.3",
