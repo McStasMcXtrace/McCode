@@ -55,7 +55,7 @@ DEPENDENCY " @NEXUSFLAGS@ "
 
 TRACE
 
-%include "ILL/ILL_H16_Mantid/ILL_H16_Mantid.instr"
-%include "ILL/ILL_IN5_Mantid/ILL_IN5_Mantid.instr"
+%include "Mantid/ILL_H16_Mantid/ILL_H16_Mantid.instr"
+%include "Mantid/ILL_IN5_Mantid/ILL_IN5_Mantid.instr"
 
 END
