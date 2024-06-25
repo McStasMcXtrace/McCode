@@ -17,7 +17,6 @@ interface AppProviderProps {
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [loading, _setLoading] = useState<boolean>(true);
   const setLoading = (value: React.SetStateAction<boolean>) => {
-    console.log("setLoading called with value:", value);
     _setLoading(value);
   };
   return (

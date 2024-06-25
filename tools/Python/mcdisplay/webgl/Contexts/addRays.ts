@@ -4,28 +4,41 @@ import { Lut } from "three/examples/jsm/Addons.js";
 import { Component } from "../model/Component";
 
 // Constants
-const SCATTERPOINTS = "scatterpoints";
-const RAYS = "rays";
+export const SCATTERPOINTS = "scatterpoints";
+export const RAY = "ray";
 
 // LUT Configuration
 const LUT = new Lut("cooltowarm", 512);
 
 export function setRaysInvisible(parentnode) {
   for (let i = 0; i < parentnode.children.length; i++) {
-    if (parentnode.children[i].name === RAYS)
+    if (parentnode.children[i].name.includes(RAY))
       parentnode.children[i].visible = false;
   }
 }
 
 export function setRaysVisible(parentnode) {
   for (let i = 0; i < parentnode.children.length; i++) {
-    if (parentnode.children[i].name === RAYS)
+    if (parentnode.children[i].name.includes(RAY))
       parentnode.children[i].visible = true;
   }
 }
+
+export function setRayVisibility(
+  parentnode,
+  index: number,
+  visibility: boolean
+) {
+  for (let i = 0; i < parentnode.children.length; i++) {
+    if (parentnode.children[i].name === RAY + index) {
+      parentnode.children[i].visible = visibility;
+    }
+  }
+}
+
 export function setScatterPointsInvisible(parentnode) {
   for (let i = 0; i < parentnode.children.length; i++) {
-    if (parentnode.children[i].name === RAYS) {
+    if (parentnode.children[i].name.includes(RAY)) {
       for (let j = 0; j < parentnode.children[i].children.length; j++) {
         if (parentnode.children[i].children[j].name === SCATTERPOINTS)
           parentnode.children[i].children[j].visible = false;
@@ -36,7 +49,7 @@ export function setScatterPointsInvisible(parentnode) {
 
 export function setScatterPointsVisible(parentnode) {
   for (let i = 0; i < parentnode.children.length; i++) {
-    if (parentnode.children[i].name === RAYS) {
+    if (parentnode.children[i].name.includes(RAY)) {
       for (let j = 0; j < parentnode.children[i].children.length; j++) {
         if (parentnode.children[i].children[j].name === SCATTERPOINTS)
           parentnode.children[i].children[j].visible = true;
@@ -49,15 +62,16 @@ export function addRays(parentNode, rayData: RayData, components: Component[]) {
   LUT.setMin(rayData.vmin);
   LUT.setMax(rayData.vmax);
   const rays = rayData.rays;
-  rays.forEach((ray) => {
+  rays.forEach((ray, index) => {
     const rayGroup = createRayGroup(ray, components);
+    rayGroup.name = RAY + index;
     parentNode.add(rayGroup);
   });
 }
 
 function createRayGroup(ray: Ray, components: Component[]): THREE.Group {
   const rayGroup = new THREE.Group();
-  rayGroup.name = RAYS;
+  rayGroup.name = RAY;
   let vertices: THREE.Vector3[] = [];
   ray.groups.forEach((group) => {
     let compVertices: THREE.Vector3[] = [];

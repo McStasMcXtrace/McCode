@@ -15,6 +15,7 @@ import { useComponentsContext } from "../../Contexts/ComponentsContext";
 import { clearComponents, loadComponents } from "../../Contexts/addComponents";
 import { useRaysContext } from "../../Contexts/RaysContext";
 import {
+  setRayVisibility,
   setScatterPointsVisible,
   setScatterPointsInvisible,
   addRays,
@@ -29,7 +30,7 @@ const ThreeCanvas = () => {
   const { showXY, showXZ, showYZ, gridSize, gridDivisions } = useGridContext();
   const { camPos, setCamPosSide, setCamPosTop, setCamPosHome} = useCameraContext();
   const { components, setComponents } = useComponentsContext();
-  const { showScatterPoints, showRays, rays } = useRaysContext();
+  const { play, setPlay, prevRayIndex, currentRayIndex, setCurrentRayIndex, showScatterPoints, showRays, rays, handleNextClick } = useRaysContext();
   const { loading, setLoading } = useAppContext();
   const gridsRef = useRef({ gridXY: null, gridXZ: null, gridYZ: null });
 
@@ -38,6 +39,8 @@ const ThreeCanvas = () => {
   const containerRef = useRef(null);
   const rendererRef = useRef(null);
   const sceneRef = useRef(null);
+  const playRef = useRef(play);
+
 
   useEffect(() => {
     const container = containerRef.current;
@@ -133,7 +136,7 @@ const ThreeCanvas = () => {
     if (!showRays) {
       setRaysInvisible(sceneRef.current);
     } else {
-      setRaysVisible(sceneRef.current);
+      //setRaysVisible(sceneRef.current);
     }
     rendererRef.current.render(sceneRef.current, cameraRef.current);
     setLoading(false);
@@ -157,6 +160,35 @@ const ThreeCanvas = () => {
   useEffect(() => {
     handleShowScatterPoints();
   }, [showScatterPoints]);
+
+  const handleRayChange = async (index, prevIndex) => {
+    setLoading(true);
+    setRayVisibility(sceneRef.current, prevIndex, false);
+    setRayVisibility(sceneRef.current, index, true);
+    rendererRef.current.render(sceneRef.current, cameraRef.current);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    handleRayChange(currentRayIndex, prevRayIndex);
+  }, [currentRayIndex]);
+
+  const loop = () => {
+    setTimeout(() => {
+      handleRayChange(currentRayIndex, prevRayIndex);
+      handleNextClick();
+      if (playRef.current){
+        console.log("Play loop: ", play);
+        loop();
+      }
+    }, 1000);
+  };
+
+  useEffect(() => {
+    playRef.current = play;
+    console.log("Play: ", play);
+    if (play) loop();
+  }, [play]);
 
   return <div id="canvas-container" ref={containerRef}></div>;
 };
