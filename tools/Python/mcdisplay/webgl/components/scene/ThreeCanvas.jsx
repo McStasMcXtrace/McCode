@@ -27,7 +27,7 @@ import * as THREE from "three";
 
 const ThreeCanvas = () => {
   const { showXY, showXZ, showYZ, gridSize, gridDivisions } = useGridContext();
-  const { camPos } = useCameraContext();
+  const { camPos, setCamPosSide, setCamPosTop, setCamPosHome} = useCameraContext();
   const { components, setComponents } = useComponentsContext();
   const { showScatterPoints, showRays, rays } = useRaysContext();
   const { loading, setLoading } = useAppContext();
@@ -108,6 +108,7 @@ const ThreeCanvas = () => {
     if (cameraRef.current) {
       cameraRef.current.position.set(camPos.x, camPos.y, camPos.z);
       if (controlsRef.current) {
+        controlsRef.current.target.set(0, 0, camPos.z);
         controlsRef.current.update();
       }
     }
@@ -118,6 +119,10 @@ const ThreeCanvas = () => {
     loadComponents(sceneRef.current, components);
     const bbox = new THREE.Box3().setFromObject(sceneRef.current);
     const bboxSize = bbox.min.distanceTo(bbox.max);
+    setCamPosHome(new THREE.Vector3(bboxSize/2, bboxSize/2, bboxSize/2));
+    setCamPosSide(new THREE.Vector3(bboxSize/2, 0, bboxSize/2));
+    setCamPosTop(new THREE.Vector3(0, bboxSize, bboxSize/2));
+
     const grids = initializeGrids(sceneRef.current, bboxSize*2, gridDivisions);
     gridsRef.current = grids;
     rendererRef.current.render(sceneRef.current, cameraRef.current);
