@@ -4,6 +4,8 @@ import { RayData } from "../model/Rays";
 import { initializeRays } from "../data/initRays";
 
 type RaysContextType = {
+  showAllRays: boolean;
+  toggleShowAllRays: () => void;
   play: boolean;
   setPlay: React.Dispatch<React.SetStateAction<boolean>>;
   prevRayIndex: number;
@@ -20,6 +22,8 @@ type RaysContextType = {
 };
 
 const RaysContext = createContext<RaysContextType>({
+  showAllRays: false,
+  toggleShowAllRays: () => {},
   play: false,
   setPlay: () => {},
   prevRayIndex: 0,
@@ -46,6 +50,11 @@ export const RaysProvider: React.FC<RaysProviderProps> = ({ children }) => {
   const [currentRayIndex, _setCurrentRayIndex] = useState(0);
   const [prevRayIndex, setPrevRayIndex] = useState(0);
   const [play, setPlay] = useState(false);
+  const [showAllRays, setShowAllRays] = useState(false);
+
+  const toggleShowAllRays = () => {
+    setShowAllRays((prevShowAllRays) => !prevShowAllRays);
+  };
 
   const setCurrentRayIndex = (
     indexOrUpdater: number | ((prevIndex: number) => number)
@@ -99,6 +108,8 @@ export const RaysProvider: React.FC<RaysProviderProps> = ({ children }) => {
   return (
     <RaysContext.Provider
       value={{
+        showAllRays,
+        toggleShowAllRays,
         play,
         setPlay,
         prevRayIndex,

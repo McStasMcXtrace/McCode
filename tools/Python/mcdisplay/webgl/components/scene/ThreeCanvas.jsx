@@ -30,7 +30,7 @@ const ThreeCanvas = () => {
   const { showXY, showXZ, showYZ, gridSize, gridDivisions } = useGridContext();
   const { camPos, setCamPosSide, setCamPosTop, setCamPosHome} = useCameraContext();
   const { components, setComponents } = useComponentsContext();
-  const { play, setPlay, prevRayIndex, currentRayIndex, setCurrentRayIndex, showScatterPoints, showRays, rays, handleNextClick } = useRaysContext();
+  const { showAllRays, toggleShowAllRays, play, setPlay, prevRayIndex, currentRayIndex, setCurrentRayIndex, showScatterPoints, showRays, rays, handleNextClick } = useRaysContext();
   const { loading, setLoading } = useAppContext();
   const gridsRef = useRef({ gridXY: null, gridXZ: null, gridYZ: null });
 
@@ -135,8 +135,9 @@ const ThreeCanvas = () => {
     setLoading(true);
     if (!showRays) {
       setRaysInvisible(sceneRef.current);
-    } else {
-      //setRaysVisible(sceneRef.current);
+    } else if(showRays && showAllRays) {
+      setPlay(false);
+      setRaysVisible(sceneRef.current);
     }
     rendererRef.current.render(sceneRef.current, cameraRef.current);
     setLoading(false);
@@ -156,6 +157,10 @@ const ThreeCanvas = () => {
   useEffect(() => {
     handleShowRays();
   }, [showRays]);
+
+  useEffect(() => {
+    handleShowRays();
+  }, [showAllRays]);
 
   useEffect(() => {
     handleShowScatterPoints();
@@ -178,7 +183,6 @@ const ThreeCanvas = () => {
       handleRayChange(currentRayIndex, prevRayIndex);
       handleNextClick();
       if (playRef.current){
-        console.log("Play loop: ", play);
         loop();
       }
     }, 1000);
@@ -186,7 +190,6 @@ const ThreeCanvas = () => {
 
   useEffect(() => {
     playRef.current = play;
-    console.log("Play: ", play);
     if (play) loop();
   }, [play]);
 
