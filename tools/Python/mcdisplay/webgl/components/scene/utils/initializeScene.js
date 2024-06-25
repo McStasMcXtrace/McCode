@@ -24,19 +24,21 @@ export const initializeRenderer = (width, height, container) => {
 
 export const initializeGrids = (scene, gridSize, gridDivisions) => {
   const grids = {};
-
   const gridXZ = new THREE.GridHelper(gridSize, gridDivisions);
+  gridXZ.visible = true;
   gridXZ.name = "gridXZ";
   scene.add(gridXZ);
   grids.gridXZ = gridXZ;
 
   const gridXY = new THREE.GridHelper(gridSize, gridDivisions);
+  gridXY.visible = false;
   gridXY.rotation.x = Math.PI / 2;
   gridXY.name = "gridXY";
   scene.add(gridXY);
   grids.gridXY = gridXY;
 
   const gridYZ = new THREE.GridHelper(gridSize, gridDivisions);
+  gridYZ.visible = false;
   gridYZ.rotation.z = Math.PI / 2;
   gridYZ.name = "gridYZ";
   scene.add(gridYZ);

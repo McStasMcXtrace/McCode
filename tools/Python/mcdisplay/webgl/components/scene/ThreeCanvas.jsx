@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useGridContext } from "../../Contexts/GridContext";
 import { useCameraContext } from "../../Contexts/CameraContext";
 import "./three-canvas.css";
@@ -21,13 +21,16 @@ import {
   setRaysVisible,
   setRaysInvisible,
 } from "../../Contexts/addRays";
+import { useAppContext } from "../../Contexts/AppContext";
+import * as THREE from "three";
+
 
 const ThreeCanvas = () => {
   const { showXY, showXZ, showYZ, gridSize, gridDivisions } = useGridContext();
   const { camPos } = useCameraContext();
   const { components, setComponents } = useComponentsContext();
   const { showScatterPoints, showRays, rays } = useRaysContext();
-
+  const { loading, setLoading } = useAppContext();
   const gridsRef = useRef({ gridXY: null, gridXZ: null, gridYZ: null });
 
   const cameraRef = useRef(null);
@@ -49,12 +52,16 @@ const ThreeCanvas = () => {
     cameraRef.current = camera;
     const renderer = initializeRenderer(width, height, container);
     rendererRef.current = renderer;
+
+    /*
     const grids = initializeGrids(scene, gridSize, gridDivisions);
-    gridsRef.current = grids;
-    const controls = initializeControls(camera, renderer);
+    /*
     loadComponents(scene, components);
     setComponents(components);
     addRays(scene, rays, components);
+    */
+    const controls = initializeControls(camera, renderer);
+
     initializeDirectionalLight(scene);
     initializeAmbientLight(scene);
     controlsRef.current = controls;
@@ -109,27 +116,47 @@ const ThreeCanvas = () => {
   useEffect(() => {
     clearComponents(sceneRef.current);
     loadComponents(sceneRef.current, components);
+    const bbox = new THREE.Box3().setFromObject(sceneRef.current);
+    const bboxSize = bbox.min.distanceTo(bbox.max);
+    const grids = initializeGrids(sceneRef.current, bboxSize*2, gridDivisions);
+    gridsRef.current = grids;
     rendererRef.current.render(sceneRef.current, cameraRef.current);
   }, [components]);
 
+  
   useEffect(() => {
+    addRays(sceneRef.current, rays, components);
+    rendererRef.current.render(sceneRef.current, cameraRef.current);
+  }, [rays]);
+
+  const handleShowRays = async () => {
+    setLoading(true);
     if (!showRays) {
       setRaysInvisible(sceneRef.current);
-      rendererRef.current.render(sceneRef.current, cameraRef.current);
     } else {
       setRaysVisible(sceneRef.current);
-      rendererRef.current.render(sceneRef.current, cameraRef.current);
     }
+    rendererRef.current.render(sceneRef.current, cameraRef.current);
+    setLoading(false);
+  };
+
+  const handleShowScatterPoints = async () => {
+    setLoading(true);
+    if (!showScatterPoints) {
+      setScatterPointsInvisible(sceneRef.current);
+    } else {
+      setScatterPointsVisible(sceneRef.current);
+    }
+    rendererRef.current.render(sceneRef.current, cameraRef.current);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    handleShowRays();
   }, [showRays]);
 
   useEffect(() => {
-    if (!showScatterPoints) {
-      setScatterPointsInvisible(sceneRef.current);
-      rendererRef.current.render(sceneRef.current, cameraRef.current);
-    } else {
-      setScatterPointsVisible(sceneRef.current);
-      rendererRef.current.render(sceneRef.current, cameraRef.current);
-    }
+    handleShowScatterPoints();
   }, [showScatterPoints]);
 
   return <div id="canvas-container" ref={containerRef}></div>;
