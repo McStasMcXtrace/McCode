@@ -20,7 +20,7 @@ export function loadComponents(parentnode, components) {
       if (component.drawcalls.length > 0) {
         args = component.drawcalls[j].args;
       }
-      switch (component.shape) {
+      switch (component.drawcalls[j].key) {
         case "multiline":
         case "line":
           addMultiLine(args, compList[i], color);
