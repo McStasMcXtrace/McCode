@@ -22,7 +22,7 @@ export const initializeRenderer = (width, height, container) => {
   return renderer;
 };
 
-export const initializeGrids = (scene, gridSize, gridDivisions) => {
+export const addGrids = (scene, gridSize, gridDivisions) => {
   const grids = {};
   const gridXZ = new THREE.GridHelper(gridSize, gridDivisions);
   gridXZ.visible = true;
@@ -46,6 +46,8 @@ export const initializeGrids = (scene, gridSize, gridDivisions) => {
 
   return grids;
 };
+
+
 
 export const initializeControls = (camera, renderer) => {
   const controls = new OrbitControls(camera, renderer.domElement);

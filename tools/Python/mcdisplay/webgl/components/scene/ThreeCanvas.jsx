@@ -6,7 +6,7 @@ import {
   initializeScene,
   initializeCamera,
   initializeRenderer,
-  initializeGrids,
+  addGrids,
   initializeControls,
   initializeDirectionalLight,
   initializeAmbientLight,
@@ -52,14 +52,6 @@ const ThreeCanvas = () => {
     cameraRef.current = camera;
     const renderer = initializeRenderer(width, height, container);
     rendererRef.current = renderer;
-
-    /*
-    const grids = initializeGrids(scene, gridSize, gridDivisions);
-    /*
-    loadComponents(scene, components);
-    setComponents(components);
-    addRays(scene, rays, components);
-    */
     const controls = initializeControls(camera, renderer);
 
     initializeDirectionalLight(scene);
@@ -117,14 +109,16 @@ const ThreeCanvas = () => {
   useEffect(() => {
     clearComponents(sceneRef.current);
     loadComponents(sceneRef.current, components);
-    const bbox = new THREE.Box3().setFromObject(sceneRef.current);
-    const bboxSize = bbox.min.distanceTo(bbox.max);
-    setCamPosHome(new THREE.Vector3(bboxSize/2, bboxSize/2, bboxSize/2));
-    setCamPosSide(new THREE.Vector3(bboxSize/2, 0, bboxSize/2));
-    setCamPosTop(new THREE.Vector3(0, bboxSize, bboxSize/2));
-
-    const grids = initializeGrids(sceneRef.current, bboxSize*2, gridDivisions);
-    gridsRef.current = grids;
+    const gridsInitialized = gridsRef.current.gridXY;
+    if(!gridsInitialized){
+      const bbox = new THREE.Box3().setFromObject(sceneRef.current);
+      const bboxSize = bbox.min.distanceTo(bbox.max);
+      setCamPosHome(new THREE.Vector3(bboxSize/2, bboxSize/2, bboxSize/2));
+      setCamPosSide(new THREE.Vector3(bboxSize/2, 0, bboxSize/2));
+      setCamPosTop(new THREE.Vector3(0, bboxSize, bboxSize/2));
+      const grids = addGrids(sceneRef.current, bboxSize*2, gridDivisions);
+      gridsRef.current = grids;
+    }
     rendererRef.current.render(sceneRef.current, cameraRef.current);
   }, [components]);
 
