@@ -67,6 +67,10 @@ export const RaysProvider: React.FC<RaysProviderProps> = ({ children }) => {
   };
 
   const toggleRays = () => {
+    //when showing rays have setplay true by default  else Pause the playback if the rays are hidden
+    if (showRays) {
+      setPlay(false);
+    } else setPlay(true);
     setShowRays((prevShowRays) => !prevShowRays);
   };
 
