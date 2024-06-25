@@ -21,7 +21,6 @@ const RaysPlayback = () => {
   const { rays, setRays } = useRaysContext();
 
   const handlePlayPauseClick = () => {
-    console.log("handlePlayPauseClick play: ", play);
     setPlay(!play);
   };
 
