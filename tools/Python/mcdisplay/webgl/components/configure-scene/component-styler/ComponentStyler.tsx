@@ -11,7 +11,7 @@ const ComponentStyler = () => {
     id: 0,
     name: "Loading instrument",
     m4: [],
-    drawcalls: { key: "sphere", args: [] },
+    drawcalls: { key: "", args: [] },
     color: "#1a73e8",
     transparency: 1,
   };
