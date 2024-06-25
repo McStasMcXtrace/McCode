@@ -8,7 +8,6 @@ import RaysMenu from "./rays-menu/RaysMenu";
 const ConfigureSceneMenu = () => {
   return (
     <div id="configure-scene-menu">
-      <h1>Menu</h1>
       <RaysMenu />
       <ComponentStyler />
       <ViewButtons />
