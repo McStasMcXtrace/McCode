@@ -23,21 +23,34 @@ export const initializeRenderer = (width, height, container) => {
 };
 
 export const addGrids = (scene, gridSize, gridDivisions) => {
+  /*
+  the constants + 20 and -10 are hacks for taking into account that 0,0,0
+   is not the true start point of the instrument components may be centered there
+    but can extend beyond it.
+  */
+  const correctedGridSize = gridSize /2 + 5 || 100;
+  //griddivisions is equal to the number of lines in the grid to ensure that each division represents 1 meter.
+  const correctedGridDivisions = correctedGridSize || 100;
+  const center = gridSize / 4 - 5|| 25;
+
   const grids = {};
-  const gridXZ = new THREE.GridHelper(gridSize, gridDivisions);
+  const gridXZ = new THREE.GridHelper(correctedGridSize, correctedGridSize);
+  gridXZ.position.set(0, 0, center);
   gridXZ.visible = true;
   gridXZ.name = "gridXZ";
   scene.add(gridXZ);
   grids.gridXZ = gridXZ;
 
-  const gridXY = new THREE.GridHelper(gridSize, gridDivisions);
+  const gridXY = new THREE.GridHelper(correctedGridSize, correctedGridSize);
+  gridXY.position.set(0, 0, center);
   gridXY.visible = false;
   gridXY.rotation.x = Math.PI / 2;
   gridXY.name = "gridXY";
   scene.add(gridXY);
   grids.gridXY = gridXY;
 
-  const gridYZ = new THREE.GridHelper(gridSize, gridDivisions);
+  const gridYZ = new THREE.GridHelper(correctedGridSize, correctedGridSize);
+  gridYZ.position.set(0, 0, center);
   gridYZ.visible = false;
   gridYZ.rotation.z = Math.PI / 2;
   gridYZ.name = "gridYZ";
