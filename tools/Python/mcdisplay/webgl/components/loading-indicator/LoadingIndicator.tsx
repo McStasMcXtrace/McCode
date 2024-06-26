@@ -4,7 +4,6 @@ import "./loading-indicator.css";
 import { Watch } from "react-loader-spinner";
 
 const LoadingIndicator = () => {
-  console.log("LoadingIndicator called");
   return (
     <div id="loading-indicator" className="">
       <Watch

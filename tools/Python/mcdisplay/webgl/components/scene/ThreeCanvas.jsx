@@ -41,7 +41,7 @@ const ThreeCanvas = () => {
   const sceneRef = useRef(null);
   const playRef = useRef(play);
 
-
+  
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -133,7 +133,7 @@ const ThreeCanvas = () => {
 
   const handleShowRays = async () => {
     setLoading(true);
-    if (!showRays) {
+    if (!showRays || (showRays && !showAllRays)) {
       setRaysInvisible(sceneRef.current);
     } else if(showRays && showAllRays) {
       setPlay(false);
