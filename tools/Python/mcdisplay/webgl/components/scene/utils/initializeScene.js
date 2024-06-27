@@ -1,14 +1,54 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { element } from "three/examples/jsm/nodes/Nodes.js";
 
 export const initializeScene = () => {
   return new THREE.Scene();
 };
 
-export const initializeCamera = (width, height, camPos) => {
-  const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-  camera.position.set(camPos.x, camPos.y, camPos.z);
-  return camera;
+export const initializeCameras = (width, height, views, renderer, scene, size) => {
+  views.forEach((view) => {
+    let camera;
+    let controls;
+    if (view.camera === "OrthographicCamera") {
+      const left = width / -20;
+      const right = width / 20;
+      const top = height / 20;
+      const bottom = height  / -20;
+      const near = 0.1;
+      const far = 1000;
+      if(view.view === "default"){
+        //customize left right top bottom using bounding box lengths of a,b,c
+      }else if(view.view === "back"){
+        
+      }else if(view.view === "top"){
+        
+      }else if(view.view === "side"){
+
+      }
+
+      camera = new THREE.OrthographicCamera(left, right, top, bottom, near, far);
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableRotate = false;
+    } else {
+      camera = new THREE.PerspectiveCamera(
+        view.fov,
+        width / height,
+        0.1,
+        10000
+      );
+      console.log(renderer.domElement);
+      controls = new OrbitControls(camera, renderer.domElement);
+    }
+    console.log(size, view.initialCamPos);
+    const position = view.initialCamPos.map(element => element*size);
+    console.log(position)
+    camera.position.fromArray(position);
+    view.controls = controls;
+    view.camera = camera;
+    const cameraHelper = new THREE.CameraHelper(camera);
+    //scene.add(cameraHelper);
+  });
 };
 
 export const initializeRenderer = (width, height, container) => {
@@ -28,10 +68,10 @@ export const addGrids = (scene, gridSize, gridDivisions) => {
    is not the true start point of the instrument components may be centered there
     but can extend beyond it.
   */
-  const correctedGridSize = gridSize /2 + 5 || 100;
+  const correctedGridSize = gridSize / 2 + 5 || 100;
   //griddivisions is equal to the number of lines in the grid to ensure that each division represents 1 meter.
   const correctedGridDivisions = correctedGridSize || 100;
-  const center = gridSize / 4 - 5|| 25;
+  const center = gridSize / 4 - 5 || 25;
 
   const grids = {};
   const gridXZ = new THREE.GridHelper(correctedGridSize, correctedGridSize);
@@ -59,8 +99,6 @@ export const addGrids = (scene, gridSize, gridDivisions) => {
 
   return grids;
 };
-
-
 
 export const initializeControls = (camera, renderer) => {
   const controls = new OrbitControls(camera, renderer.domElement);
