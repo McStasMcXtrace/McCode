@@ -25,15 +25,37 @@ import {
 import { useAppContext } from "../../Contexts/AppContext";
 import * as THREE from "three";
 
-
 const ThreeCanvas = () => {
   const { showXY, showXZ, showYZ, gridSize, gridDivisions } = useGridContext();
-  const { camPos, setCamPosSide, setCamPosTop, setCamPosHome} = useCameraContext();
+  const { camPos, setCamPosSide, setCamPosTop, setCamPosHome } =
+    useCameraContext();
   const { components, setComponents } = useComponentsContext();
-  const { showAllRays, toggleShowAllRays, play, setPlay, prevRayIndex, currentRayIndex, setCurrentRayIndex, showScatterPoints, showRays, rays, handleNextClick } = useRaysContext();
+  const {
+    showAllRays,
+    toggleShowAllRays,
+    play,
+    setPlay,
+    prevRayIndex,
+    currentRayIndex,
+    setCurrentRayIndex,
+    showScatterPoints,
+    showRays,
+    rays,
+    handleNextClick,
+  } = useRaysContext();
   const { loading, setLoading } = useAppContext();
+  const [hoverInfo, setHoverInfo] = useState("");
   const gridsRef = useRef({ gridXY: null, gridXZ: null, gridYZ: null });
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  
+  function onPointerMove(event) {
+    // calculate pointer position in normalized device coordinates
+    // (-1 to +1) for both components
 
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  }
   const cameraRef = useRef(null);
   const controlsRef = useRef(null);
   const containerRef = useRef(null);
@@ -41,7 +63,88 @@ const ThreeCanvas = () => {
   const sceneRef = useRef(null);
   const playRef = useRef(play);
 
-  
+  const views = [
+    // Main view Perspective camera
+    {
+      left: 0.0,
+      bottom: 0.5,
+      width: 1.0,
+      height: 0.5,
+      camera: "PerspectiveCamera",
+      initialCamPos: [10, 20, 30],
+    },
+    // PyQtGraph replacements using Ortographic cameras
+    // Top view - XZ
+    {
+      left: 0.0,
+      bottom: 0.25,
+      width: 1.0,
+      height: 0.25,
+      camera: "OrthographicCamera",
+      initialCamPos: [0, gridSize, 0],
+    },
+    // Back view - XY
+    {
+      left: 0.0,
+      bottom: 0.0,
+      width: 0.5,
+      height: 0.25,
+      camera: "OrthographicCamera",
+      initialCamPos: [gridSize, 0, 0],
+    },
+    //Side view - YZ
+    {
+      left: 0.5,
+      bottom: 0.0,
+      width: 0.5,
+      height: 0.25,
+      camera: "OrthographicCamera",
+      initialCamPos: [0, 0, gridSize],
+    },
+  ];
+  const insertText = (textarea, text) => {
+    // Get the current cursor position
+    const position = textarea.selectionStart;
+
+    // Get the text before and after the cursor position
+    const before = textarea.value.substring(0, position);
+    const after = textarea.value.substring(position, textarea.value.length);
+
+    // Insert the new text at the cursor position
+    textarea.value = before + text + after;
+
+    // Set the cursor position to after the newly inserted text
+    textarea.selectionStart = textarea.selectionEnd = position + text.length;
+};
+
+  function render() {
+    /*
+    raycaster.setFromCamera(pointer, cameraRef.current);
+    const intersects = raycaster.intersectObjects(sceneRef.current.children);
+    let currHoverInfo = "";
+    for (let i = 0; i < intersects.length; i++) {
+      if (
+        intersects[i].object.visible === true &&
+        !intersects[i].object.name.includes("grid")
+      ) {
+        currHoverInfo = intersects[i].object.name + " ";
+        if(intersects[i].object.name==="" && intersects[i].object.parent.name !== undefined && intersects[i].object.parent.visible === true){          
+          currHoverInfo += intersects[i].object.parent.name + " ";
+        }
+      }
+    }
+    if(currHoverInfo !== undefined) console.log(currHoverInfo);
+    insertText(document.getElementById("hover-info"), currHoverInfo);
+    */
+    /*rendererRef.current.setViewPort(left, bottom, width, height);
+    views.forEach(element => {
+      
+    });
+    */
+    controlsRef.current.update();
+    rendererRef.current.render(sceneRef.current, cameraRef.current);
+  }
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -63,8 +166,7 @@ const ThreeCanvas = () => {
 
     function animate() {
       requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
+      render();
     }
 
     animate();
@@ -113,19 +215,20 @@ const ThreeCanvas = () => {
     clearComponents(sceneRef.current);
     loadComponents(sceneRef.current, components);
     const gridsInitialized = gridsRef.current.gridXY;
-    if(!gridsInitialized){
+    if (!gridsInitialized) {
       const bbox = new THREE.Box3().setFromObject(sceneRef.current);
       const bboxSize = bbox.min.distanceTo(bbox.max);
-      setCamPosHome(new THREE.Vector3(bboxSize/2, bboxSize/2, bboxSize/2));
-      setCamPosSide(new THREE.Vector3(bboxSize/2, 0, bboxSize/2));
-      setCamPosTop(new THREE.Vector3(0, bboxSize, bboxSize/2));
-      const grids = addGrids(sceneRef.current, bboxSize*2, gridDivisions);
+      setCamPosHome(
+        new THREE.Vector3(bboxSize / 2, bboxSize / 2, bboxSize / 2)
+      );
+      setCamPosSide(new THREE.Vector3(bboxSize / 2, 0, bboxSize / 2));
+      setCamPosTop(new THREE.Vector3(0, bboxSize, bboxSize / 2));
+      const grids = addGrids(sceneRef.current, bboxSize * 2, gridDivisions);
       gridsRef.current = grids;
     }
     rendererRef.current.render(sceneRef.current, cameraRef.current);
   }, [components]);
 
-  
   useEffect(() => {
     addRays(sceneRef.current, rays, components);
     rendererRef.current.render(sceneRef.current, cameraRef.current);
@@ -135,7 +238,7 @@ const ThreeCanvas = () => {
     setLoading(true);
     if (!showRays || (showRays && !showAllRays)) {
       setRaysInvisible(sceneRef.current);
-    } else if(showRays && showAllRays) {
+    } else if (showRays && showAllRays) {
       setPlay(false);
       setRaysVisible(sceneRef.current);
     }
@@ -182,7 +285,7 @@ const ThreeCanvas = () => {
     setTimeout(() => {
       handleRayChange(currentRayIndex, prevRayIndex);
       handleNextClick();
-      if (playRef.current){
+      if (playRef.current) {
         loop();
       }
     }, 1000);
@@ -193,7 +296,11 @@ const ThreeCanvas = () => {
     if (play) loop();
   }, [play]);
 
-  return <div id="canvas-container" ref={containerRef}></div>;
+  return (
+    <div id="canvas-container" ref={containerRef}>
+      <div id="hover-info">{hoverInfo}</div>
+    </div>
+  );
 };
 
 export default ThreeCanvas;

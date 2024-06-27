@@ -180,6 +180,7 @@ export function loadComponents(parentnode, components) {
       m4[15]
     );
     compList[i].applyMatrix4(comp_matrix);
+    compList[i].name = components[i].name;
     parentnode.add(compList[i]);
   }
 }
