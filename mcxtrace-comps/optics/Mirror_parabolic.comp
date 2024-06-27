@@ -116,7 +116,7 @@ TRACE
       /*The intersect routine assumes a parabola opening towards positive z
         so swap y and z.*/
       first=1;
-      status=paraboloid_intersect(&l0,&l1,x,z,y,kx,kz,ky, a,b,1);
+      status=paraboloid_intersect(&l0,&l1,x,z,y,kx,kz,ky, a,b,0);
       /*if l0==0, assume that we should pick l1 instead (if it is positive).*/
       double ll;
       if (l0>0){
@@ -144,7 +144,7 @@ TRACE
         /*update phase - as an approximation turn by 180 deg.*/
         phi+=M_PI;
         first=0;
-        status=paraboloid_intersect(&l0,&l1,x,z,y,kx,kz,ky, a,b,1);
+        status=paraboloid_intersect(&l0,&l1,x,z,y,kx,kz,ky, a,b,0);
         /*need to check if the new reflection point is within mirror limits*/
         if(status){
           if(l0>0){
