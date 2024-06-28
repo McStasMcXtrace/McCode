@@ -71,4 +71,4 @@ cp tools/other/mcsplit/mcsplit.py $HOME/McXtrace/mcxtrace/3.x-dev/bin/
 
 # Ensure we are configured for 10 node MPI runs
 sed -i s/\'4\'/\'10\'/g $HOME/McXtrace/mcxtrace/3.x-dev/tools/Python/mccodelib/mccode_config.py
-$HOME/McStas/mcstas/3.x-dev/bin/mxdoc -i
+$HOME/McXtrace/mcxtrace/3.x-dev/bin/mxdoc -i
