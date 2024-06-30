@@ -1,0 +1,37 @@
+{
+  "configuration": {
+    "MCCODE_VERSION": "3.x-dev",
+    "TERMINAL": "x-terminal-emulator -e",
+    "MCCODE": "mcxtrace",
+    "MCRUN": "mxrun --openacc",
+    "MCPLOT": "mxplot-pyqtgraph",
+    "MCDISPLAY": "mxdisplay-webgl",
+    "TOOL_NAME": "mxgui",
+    "PARTICLE": "xray",
+    "BROWSER": "xdg-open",
+    "GUICOLS": "3",
+    "EDITOR": "xdg-open",
+    "QSCI": "1",
+    "FORMAT": "McCode",
+    "IDFGEN": "",
+    "ISCONDAPKG": "0"
+  },
+  "compilation": {
+    "CFLAGS": "-g -lm -O2 -std=c99",
+    "NEXUSFLAGS": "-Wl,-rpath,GETPATH(miniconda3/lib) -LGETPATH(miniconda3/lib) -DUSE_NEXUS -lNeXus -IGETPATH(miniconda3/include/nexus)",
+    "MPIFLAGS": "-DUSE_MPI -lmpi -Wl,-rpath,/opt/nvidia/hpc_sdk/Linux_x86_64/24.5/comm_libs/12.4/openmpi4/openmpi-4.1.5/lib -L,/opt/nvidia/hpc_sdk/Linux_x86_64/24.5/comm_libs/12.4/openmpi4/openmpi-4.1.5/lib -I/opt/nvidia/hpc_sdk/Linux_x86_64/24.5/comm_libs/12.4/openmpi4/openmpi-4.1.5/include",
+    "OACCFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=managed -DOPENACC",
+    "GSLFLAGS": "-Wl,-rpath,GETPATH(miniconda3/lib) -LGETPATH(miniconda3/lib) -lgsl -lgslcblas -IGETPATH(miniconda3/include)",
+    "XRLFLAGS": "",
+    "CC": "gcc",
+    "OACC": "nvc",
+    "MPICC": "/opt/nvidia/hpc_sdk/Linux_x86_64/24.5/comm_libs/12.4/openmpi4/openmpi-4.1.5/bin/mpicc",
+    "MPIRUN": "/opt/nvidia/hpc_sdk/Linux_x86_64/24.5/comm_libs/12.4/openmpi4/openmpi-4.1.5/bin/mpirun",
+    "MPINODES": "8"
+  },
+  "platform": {
+    "EXESUFFIX": "out"
+  },
+  "directories": {
+  }
+}
