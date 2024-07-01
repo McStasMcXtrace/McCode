@@ -114,13 +114,7 @@ const ThreeCanvas = () => {
       const camera = view.camera;
       view.updateCamera(camera, sceneRef.current, mouseX, mouseY);
       view.updateControls(view.controls);
-
-      const left = Math.floor(width * view.left);
-      const bottom = Math.floor(height * view.bottom);
-      const _width = Math.floor(width * view.width);
-      const _height = Math.floor(height * view.height);
-
-      camera.aspect = _width / _height;
+      //camera.aspect = aspect;
       camera.updateProjectionMatrix();
       rendererRef.current.render(sceneRef.current, camera);
     });
@@ -301,15 +295,15 @@ const ThreeCanvas = () => {
     <div id="canvas-container" ref={containerRef}>
       <canvas id="canvas"></canvas>
       <div id="views">
-        <div className="view" id="primaryView" ref={primaryViewRef}></div>
+        <div className="view" id="primaryView" ref={primaryViewRef}>3D</div>
         <div className="column fill row-gap two-D">
           <div className="row fill">
-            <div className="view" id="TopView2D" ref={TopView2DRef}></div>
-            <div className="view" id="SideView2D" ref={SideView2DRef}></div>
+            <div className="view" id="TopView2D" ref={TopView2DRef}>Top</div>
+            <div className="view" id="SideView2D" ref={SideView2DRef}>Side</div>
           </div>
           <div className="row fill">
-            <div className="view" id="BackView2D" ref={BackView2DRef}></div>
-            <div className="view" id="FrontView2D" ref={FrontView2DRef}></div>
+            <div className="view" id="BackView2D" ref={BackView2DRef}>Back</div>
+            <div className="view" id="FrontView2D" ref={FrontView2DRef}>Front</div>
           </div>
         </div>
       </div>
