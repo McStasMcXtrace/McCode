@@ -8,6 +8,7 @@ export const views = [
       camera: "PerspectiveCamera",
       view: "primary",
       initialCamPos: [1, 2, 3],
+      up: [ 0, 1, 0 ],
       fov: 60,
       updateCamera: function ( camera, scene, mouseX ) {
 
@@ -23,13 +24,10 @@ export const views = [
     // PyQtGraph replacements using Ortographic cameras
     // Top view - XZ
     {
-      left: 0.0,
-      bottom: 0.0,
-      width: 0.5,
-      height: 0.5,
       camera: "OrthographicCamera",
       view: "top2D",
       initialCamPos: [0, 1, 1],
+      up: [ 1, 0, 0],
       fov: 60,
       updateCamera: function ( camera, scene, mouseX ) {
 
@@ -44,13 +42,10 @@ export const views = [
     },
     // Back view - XY
     {
-      left: 0.5,
-      bottom: 0.25,
-      width: 0.5,
-      height: 0.25,
       camera: "OrthographicCamera",
       view: "back2D",
-      initialCamPos: [1, 0, 1],
+      initialCamPos: [0, 0, 1],
+      up: [ 0, 1, 0 ],
       fov: 60,
       updateCamera: function ( camera, scene, mouseX ) {
 
@@ -64,13 +59,10 @@ export const views = [
     },
     // Front view - XY
     {
-      left: 0.5,
-      bottom: 0.25,
-      width: 0.5,
-      height: 0.25,
       camera: "OrthographicCamera",
       view: "front2D",
       initialCamPos: [0, 0, 0],
+      up: [ 0, 1, 0 ],
       fov: 60,
       updateCamera: function ( camera, scene, mouseX ) {
 
@@ -84,13 +76,10 @@ export const views = [
     },
     //Side view - YZ
     {
-      left: 0.5,
-      bottom: 0.0,
-      width: 0.5,
-      height: 0.25,
       camera: "OrthographicCamera",
       view: "side2D",
-      initialCamPos: [0, 0, 1],
+      initialCamPos: [1, 0, 1],
+      up: [ 0, 1, 0 ],
       fov: 60,
       updateCamera: function ( camera, scene, mouseX ) {
 

@@ -42,11 +42,10 @@ export const initializeCameras = (width, height, views, size, frontView2DRef, ba
       controls = new OrbitControls(camera, primaryViewRef);
     }
     const position = view.initialCamPos.map(element => element*size);
-    console.log(position)
     camera.position.fromArray(position);
+    camera.up.fromArray( view.up );
     view.controls = controls;
     view.camera = camera;
-    console.log(domElement);
     view.domElement = domElement;
     //const cameraHelper = new THREE.CameraHelper(camera);
     //scene.add(cameraHelper);
