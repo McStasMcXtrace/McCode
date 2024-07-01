@@ -311,7 +311,7 @@ GROUP samples
 
 // The Rayleigh scattering at E0 is large, and creates massive background.
 // We ignore it here.
-SPLIT 10 COMPONENT SampleF = Fluorescence(
+COMPONENT SampleF = Fluorescence(
   material=reflections,
   xwidth = 0.005,
   yheight = 0.05,
