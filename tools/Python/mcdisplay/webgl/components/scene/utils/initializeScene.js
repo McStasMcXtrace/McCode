@@ -6,48 +6,51 @@ export const initializeScene = () => {
 };
 
 export const initializeCameras = (width, height, views, size, frontView2DRef, backView2DRef, topView2DRef, sideView2DRef, primaryViewRef) => {
+
+  // Helper function to create an Orthographic Camera
+  const createOrthographicCamera = (width, height) => {
+    const near = 0.1;
+    const far = 1000;
+    return new THREE.OrthographicCamera(-1, 1, 1, -1, near, far);
+  };
+
+  // Helper function to assign the correct DOM element
+  const getDomElement = (view) => {
+    switch(view.view) {
+      case "back2D":
+        return backView2DRef;
+      case "top2D":
+        return topView2DRef;
+      case "side2D":
+        return sideView2DRef;
+      case "front2D":
+        return frontView2DRef;
+      default:
+        return primaryViewRef;
+    }
+  };
+
   views.forEach((view) => {
     let camera;
     let controls;
-    let domElement;
-    if (view.camera === "OrthographicCamera") {
-      const left = width / -20;
-      const right = width / 20;
-      const top = height / 20;
-      const bottom = height  / -20;
-      const near = 0.1;
-      const far = 1000;
-      if(view.view === "back2D"){
-        domElement = backView2DRef;
-      }else if(view.view === "top2D"){
-        domElement = topView2DRef;
-      }else if(view.view === "side2D"){
-        domElement = sideView2DRef;
-      }else if(view.view === "front2D"){
-        domElement = frontView2DRef;
-      }
+    const domElement = getDomElement(view);
 
-      camera = new THREE.OrthographicCamera(left, right, top, bottom, near, far);
+    if (view.camera === "OrthographicCamera") {
+      camera = createOrthographicCamera(width, height);
       controls = new OrbitControls(camera, domElement);
       controls.enableRotate = false;
     } else {
-      camera = new THREE.PerspectiveCamera(
-        view.fov,
-        width / height,
-        0.1,
-        1000
-      );
-      domElement = primaryViewRef;
+      camera = new THREE.PerspectiveCamera(view.fov, width / height, 0.1, 1000);
       controls = new OrbitControls(camera, primaryViewRef);
     }
-    const position = view.initialCamPos.map(element => element*size);
+
+    const position = view.initialCamPos.map(element => element * size);
     camera.position.fromArray(position);
-    camera.up.fromArray( view.up );
+    camera.up.fromArray(view.up);
+
     view.controls = controls;
     view.camera = camera;
     view.domElement = domElement;
-    //const cameraHelper = new THREE.CameraHelper(camera);
-    //scene.add(cameraHelper);
   });
 };
 
