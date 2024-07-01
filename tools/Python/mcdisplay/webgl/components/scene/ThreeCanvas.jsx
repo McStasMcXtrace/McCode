@@ -55,6 +55,10 @@ const ThreeCanvas = () => {
   const margin = 20;
 
   const containerRef = useRef(null);
+
+  const primaryCameraRef = useRef(null);
+  const primaryControlsRef = useRef(null);
+
   const primaryViewRef = useRef(null);
   const TopView2DRef = useRef(null);
   const SideView2DRef = useRef(null);
@@ -80,8 +84,7 @@ const ThreeCanvas = () => {
       width = correctWidth;
       height = correctHeight * 2;
 
-      rendererRef.current.setSize(width, height * 2);
-      console.log("updatesize: ", width, height);
+      rendererRef.current.setSize(width, height);
     }
   }
 
@@ -114,7 +117,11 @@ const ThreeCanvas = () => {
       const camera = view.camera;
       view.updateCamera(camera, sceneRef.current, mouseX, mouseY);
       view.updateControls(view.controls);
-      //camera.aspect = aspect;
+      if(camera.type === "PerspectiveCamera"){
+        camera.aspect = aspect;
+        primaryCameraRef.current = camera;
+        primaryControlsRef.current = view.controls;
+      }
       camera.updateProjectionMatrix();
       rendererRef.current.render(sceneRef.current, camera);
     });
@@ -137,7 +144,6 @@ const ThreeCanvas = () => {
     // setup the scissor to only render to that part of the canvas
     const positiveYUpBottom = canvasRect.height - bottom;
     renderer.setScissor(left, positiveYUpBottom, width, height);
-    console.log(left, positiveYUpBottom, width, height);
     renderer.setViewport(left, positiveYUpBottom, width, height);
 
     // return the aspect
@@ -149,10 +155,6 @@ const ThreeCanvas = () => {
     if (!container) return;
     const width = (container.clientWidth || window.innerWidth) * 2 - margin;
     const height = (container.clientHeight || window.innerHeight) * 2 - margin;
-    console.log("height: ",height);
-    console.log("window.innerHeight: ",window.innerHeight);
-    console.log("container.clientHeight: ",container.clientHeight);
-
 
     const scene = initializeScene();
     sceneRef.current = scene;
@@ -193,17 +195,16 @@ const ThreeCanvas = () => {
     }
   }, [showXY, showXZ, showYZ]);
 
-  /*
+  
   useEffect(() => {
-    if (cameraRef.current) {
-      cameraRef.current.position.set(camPos.x, camPos.y, camPos.z);
-      if (controlsRef.current) {
-        controlsRef.current.target.set(0, 0, camPos.z);
-        controlsRef.current.update();
+    if (primaryCameraRef.current) {
+      primaryCameraRef.current.position.set(camPos.x, camPos.y, camPos.z);
+      if (primaryControlsRef.current) {
+        primaryControlsRef.current.target.set(0, 0, camPos.z);
+        primaryControlsRef.current.update();
       }
     }
   }, [camPos]);
-  */
 
   useEffect(() => {
     clearComponents(sceneRef.current);
@@ -211,7 +212,6 @@ const ThreeCanvas = () => {
     const gridsInitialized = gridsRef.current.gridXY;
     if (!gridsInitialized) {
       const bbox = new THREE.Box3().setFromObject(sceneRef.current);
-      console.log(bbox);
       const bboxSize = bbox.min.distanceTo(bbox.max);
       setCamPosHome(
         new THREE.Vector3(bboxSize / 2, bboxSize / 2, bboxSize / 2)

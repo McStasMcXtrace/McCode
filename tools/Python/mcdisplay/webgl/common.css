@@ -38,6 +38,7 @@ select {
 }
 
 p,
+div,
 h1,
 h2,
 h3,
@@ -45,6 +46,7 @@ h4,
 h5,
 h6 {
   font-family: Arial, Helvetica, sans-serif;
+  color: var(--text-color);
   overflow-wrap: break-word;
 }
 li {
@@ -62,7 +64,7 @@ li {
   --background-color: #ffffff;
   --text-color: #333333;
   --link-color: #1a73e8;
-  --border-color: #dddddd;
+  --border-color: #000000;
   --button-bg-color: #3498db;
   --button-text-color: #ffffff;
   --button-text-color-hover: #121212;
@@ -76,7 +78,7 @@ li {
   --background-color-dark: #121212;
   --text-color-dark: #e0e0e0;
   --link-color-dark: #8ab4f8;
-  --border-color-dark: #333333;
+  --border-color-dark: #ffffff;
   --button-bg-color-dark: #2980b9;
   --button-text-color-dark: #ffffff;
   --button-text-color-hover-dark: #121212;
@@ -106,14 +108,10 @@ li {
 }
 
 h1 {
-  color: var(--text-color);
-  font-family: Arial, Helvetica, sans-serif;
   font-size: xx-large;
 }
 
-p, div {
-  color: var(--text-color);
-  font-family: Arial, Helvetica, sans-serif;
+p {
   font-size: large;
 }
 

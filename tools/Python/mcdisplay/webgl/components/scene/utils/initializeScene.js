@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { element } from "three/examples/jsm/nodes/Nodes.js";
 
 export const initializeScene = () => {
   return new THREE.Scene();
@@ -56,10 +55,11 @@ export const initializeRenderer = (width, height) => {
   const renderer = new THREE.WebGLRenderer({
     canvas: document.getElementById("canvas"),
     antialias: true,
+    alpha: true,
   });
+  renderer.setClearColor(0x000000, 0);
   renderer.setPixelRatio( window.devicePixelRatio );
   renderer.setSize(width, height);
-  console.log(width, height);
   return renderer;
 };
 
