@@ -111,7 +111,7 @@ const ThreeCanvas = () => {
 
     if(containerRef.current){
     views.forEach((view) => {
-      const aspect = setScissorForElement(view.domElement, rendererRef.current, containerRef.current);
+      const aspect = setScissorForElement(view.domElement);
 
       const camera = view.camera;
       view.updateCamera(camera, sceneRef.current, mouseX, mouseY);
@@ -127,8 +127,8 @@ const ThreeCanvas = () => {
   }
   }
 
-  function setScissorForElement(elem, renderer, canvas) {
-    const canvasRect = canvas.getBoundingClientRect();
+  function setScissorForElement(elem) {
+    const canvasRect = containerRef.current.getBoundingClientRect();
     const elemRect = elem.getBoundingClientRect();
 
     // compute a canvas relative rectangle
@@ -142,8 +142,8 @@ const ThreeCanvas = () => {
 
     // setup the scissor to only render to that part of the canvas
     const positiveYUpBottom = canvasRect.height - bottom;
-    renderer.setScissor(left, positiveYUpBottom, width, height);
-    renderer.setViewport(left, positiveYUpBottom, width, height);
+    rendererRef.current.setScissor(left, positiveYUpBottom, width, height);
+    rendererRef.current.setViewport(left, positiveYUpBottom, width, height);
 
     // return the aspect
     return width / height;
@@ -160,6 +160,7 @@ const ThreeCanvas = () => {
     const renderer = initializeRenderer(width, height);
     rendererRef.current = renderer;
     initializeCameras(
+      sceneRef.current,
       width,
       height,
       views,
@@ -215,8 +216,23 @@ const ThreeCanvas = () => {
       setCamPosHome(
         new THREE.Vector3(bboxSize / 2, bboxSize / 2, bboxSize / 2)
       );
-      setCamPosSide(new THREE.Vector3(bboxSize / 2, 0, bboxSize / 2));
-      setCamPosTop(new THREE.Vector3(0, bboxSize, bboxSize / 2));
+      const topPos = new THREE.Vector3(0, bboxSize, bboxSize / 2);
+      const sidePos = new THREE.Vector3(bboxSize / 2, 0, bboxSize / 2);
+      setCamPosSide(sidePos);
+      setCamPosTop(topPos);
+      
+      //set top 2D view camera position for centering
+      const topView = views[1];
+      const currentTopViewPos = topView.camera.position;
+      topView.camera.position.set(topPos.x, topPos.y, topPos.z);
+      topView.controls.target.set(0, 0, topPos.z);
+
+      //set side 2D view camera position for centering
+      const sideView = views[4];
+      const currentSideViewPos = sideView.camera.position;
+      sideView.camera.position.set(currentSideViewPos.x, currentSideViewPos.y, sidePos.z);
+      sideView.controls.target.set(0, 0, sidePos.z);
+      
       const grids = addGrids(sceneRef.current, bboxSize * 2, gridDivisions);
       gridsRef.current = grids;
     }
