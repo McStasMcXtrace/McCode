@@ -64,6 +64,12 @@ const ThreeCanvas = () => {
   const BackView2DRef = useRef(null);
   const FrontView2DRef = useRef(null);
 
+  const primaryView = views[0];
+  const topView = views[1];
+  const backView = views[2];
+  const frontView = views[3];
+  const sideView = views[4];
+
   const rendererRef = useRef(null);
   const sceneRef = useRef(null);
   const playRef = useRef(play);
@@ -109,22 +115,22 @@ const ThreeCanvas = () => {
     */
     rendererRef.current.setScissorTest(true);
 
-    if(containerRef.current){
-    views.forEach((view) => {
-      const aspect = setScissorForElement(view.domElement);
+    if (containerRef.current) {
+      views.forEach((view) => {
+        const aspect = setScissorForElement(view.domElement);
 
-      const camera = view.camera;
-      view.updateCamera(camera, sceneRef.current, mouseX, mouseY);
-      view.updateControls(view.controls);
-      if(camera.type === "PerspectiveCamera"){
-        camera.aspect = aspect;
-        primaryCameraRef.current = camera;
-        primaryControlsRef.current = view.controls;
-      }
-      camera.updateProjectionMatrix();
-      rendererRef.current.render(sceneRef.current, camera);
-    });
-  }
+        const camera = view.camera;
+        view.updateCamera(camera, sceneRef.current, mouseX, mouseY);
+        view.updateControls(view.controls);
+        if (camera.type === "PerspectiveCamera") {
+          camera.aspect = aspect;
+          primaryCameraRef.current = camera;
+          primaryControlsRef.current = view.controls;
+        }
+        camera.updateProjectionMatrix();
+        rendererRef.current.render(sceneRef.current, camera);
+      });
+    }
   }
 
   function setScissorForElement(elem) {
@@ -134,7 +140,8 @@ const ThreeCanvas = () => {
     // compute a canvas relative rectangle
     const right = Math.min(elemRect.right, canvasRect.right) - canvasRect.left;
     const left = Math.max(0, elemRect.left - canvasRect.left);
-    const bottom = Math.min(elemRect.bottom, canvasRect.bottom) - canvasRect.top;
+    const bottom =
+      Math.min(elemRect.bottom, canvasRect.bottom) - canvasRect.top;
     const top = Math.max(0, elemRect.top - canvasRect.top);
 
     const width = Math.min(canvasRect.width, right - left);
@@ -195,7 +202,6 @@ const ThreeCanvas = () => {
     }
   }, [showXY, showXZ, showYZ]);
 
-  
   useEffect(() => {
     if (primaryCameraRef.current) {
       primaryCameraRef.current.position.set(camPos.x, camPos.y, camPos.z);
@@ -220,19 +226,15 @@ const ThreeCanvas = () => {
       const sidePos = new THREE.Vector3(bboxSize / 2, 0, bboxSize / 2);
       setCamPosSide(sidePos);
       setCamPosTop(topPos);
-      
+
       //set top 2D view camera position for centering
-      const topView = views[1];
-      const currentTopViewPos = topView.camera.position;
       topView.camera.position.set(topPos.x, topPos.y, topPos.z);
       topView.controls.target.set(0, 0, topPos.z);
 
       //set side 2D view camera position for centering
-      const sideView = views[4];
-      const currentSideViewPos = sideView.camera.position;
-      sideView.camera.position.set(currentSideViewPos.x, currentSideViewPos.y, sidePos.z);
+      sideView.camera.position.set(sidePos.x, sidePos.y, sidePos.z);
       sideView.controls.target.set(0, 0, sidePos.z);
-      
+
       const grids = addGrids(sceneRef.current, bboxSize * 2, gridDivisions);
       gridsRef.current = grids;
     }
@@ -310,15 +312,33 @@ const ThreeCanvas = () => {
     <div id="canvas-container" ref={containerRef}>
       <canvas id="canvas"></canvas>
       <div id="views">
-        <div className="view" id="primaryView" ref={primaryViewRef}>3D</div>
+        <div className="view" id="primaryView" ref={primaryViewRef}>
+          3D
+        </div>
         <div className="column fill row-gap two-D">
           <div className="row fill">
-            <div className="view" id="TopView2D" ref={TopView2DRef}>Top</div>
-            <div className="view" id="SideView2D" ref={SideView2DRef}>Side</div>
+            <div className="view" id="TopView2D" ref={TopView2DRef}>
+              <p className="view-name">Top</p>
+              <div className="y-axis">{topView.y_label}[m]</div>
+              <div className="x-axis">{topView.x_label}[m]</div>
+            </div>
+            <div className="view" id="SideView2D" ref={SideView2DRef}>
+              <p className="view-name">Side</p>
+              <div className="y-axis">{sideView.y_label}[m]</div>
+              <div className="x-axis">{sideView.x_label}[m]</div>
+            </div>
           </div>
           <div className="row fill">
-            <div className="view" id="BackView2D" ref={BackView2DRef}>Back</div>
-            <div className="view" id="FrontView2D" ref={FrontView2DRef}>Front</div>
+            <div className="view" id="BackView2D" ref={BackView2DRef}>
+              <p className="view-name">End</p>
+              <div className="y-axis">{backView.y_label}[m]</div>
+              <div className="x-axis">{backView.x_label}[m]</div>
+            </div>
+            <div className="view" id="FrontView2D" ref={FrontView2DRef}>
+              <p className="view-name">Origin</p>
+              <div className="y-axis">{frontView.y_label}[m]</div>
+              <div className="x-axis">{frontView.x_label}[m]</div>
+            </div>
           </div>
         </div>
       </div>
