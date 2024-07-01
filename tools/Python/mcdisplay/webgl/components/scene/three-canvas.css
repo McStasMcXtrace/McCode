@@ -19,7 +19,17 @@
 }
 
 .view {
-  margin: 25px;
   width: 100%;
   height: 100%;
+  margin-block: 25px;
+  margin-left: 25px;
+}
+
+.row-gap{
+  row-gap: 25px;
+}
+
+.two-D{
+  display: flex;
+  justify-content: center;
 }

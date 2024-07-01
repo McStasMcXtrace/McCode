@@ -59,6 +59,7 @@ const ThreeCanvas = () => {
   const TopView2DRef = useRef(null);
   const SideView2DRef = useRef(null);
   const BackView2DRef = useRef(null);
+  const FrontView2DRef = useRef(null);
 
   const rendererRef = useRef(null);
   const sceneRef = useRef(null);
@@ -168,6 +169,7 @@ const ThreeCanvas = () => {
       height,
       views,
       gridSize,
+      FrontView2DRef.current,
       BackView2DRef.current,
       TopView2DRef.current,
       SideView2DRef.current,
@@ -300,10 +302,15 @@ const ThreeCanvas = () => {
       <canvas id="canvas"></canvas>
       <div id="views">
         <div className="view" id="primaryView" ref={primaryViewRef}></div>
-        <div className="view" id="TopView2D" ref={TopView2DRef}></div>
-        <div className="row fill">
-          <div className="view" id="SideView2D" ref={SideView2DRef}></div>
-          <div className="view" id="BackView2D" ref={BackView2DRef}></div>
+        <div className="column fill row-gap two-D">
+          <div className="row fill">
+            <div className="view" id="TopView2D" ref={TopView2DRef}></div>
+            <div className="view" id="SideView2D" ref={SideView2DRef}></div>
+          </div>
+          <div className="row fill">
+            <div className="view" id="BackView2D" ref={BackView2DRef}></div>
+            <div className="view" id="FrontView2D" ref={FrontView2DRef}></div>
+          </div>
         </div>
       </div>
     </div>

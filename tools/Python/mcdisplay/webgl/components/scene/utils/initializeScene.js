@@ -6,7 +6,7 @@ export const initializeScene = () => {
   return new THREE.Scene();
 };
 
-export const initializeCameras = (width, height, views, size, backView2DRef, topView2DRef, sideView2DRef, primaryViewRef) => {
+export const initializeCameras = (width, height, views, size, frontView2DRef, backView2DRef, topView2DRef, sideView2DRef, primaryViewRef) => {
   views.forEach((view) => {
     let camera;
     let controls;
@@ -24,6 +24,8 @@ export const initializeCameras = (width, height, views, size, backView2DRef, top
         domElement = topView2DRef;
       }else if(view.view === "side2D"){
         domElement = sideView2DRef;
+      }else if(view.view === "front2D"){
+        domElement = frontView2DRef;
       }
 
       camera = new THREE.OrthographicCamera(left, right, top, bottom, near, far);

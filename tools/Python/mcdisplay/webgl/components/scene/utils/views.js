@@ -62,6 +62,26 @@ export const views = [
         controls.update();
       }
     },
+    // Front view - XY
+    {
+      left: 0.5,
+      bottom: 0.25,
+      width: 0.5,
+      height: 0.25,
+      camera: "OrthographicCamera",
+      view: "front2D",
+      initialCamPos: [0, 0, 0],
+      fov: 60,
+      updateCamera: function ( camera, scene, mouseX ) {
+
+        camera.position.x = Math.max( Math.min( camera.position.x, 2000 ), - 2000 );
+        camera.lookAt( scene.position );
+
+      },
+      updateControls: function(controls){
+        controls.update();
+      }
+    },
     //Side view - YZ
     {
       left: 0.5,
