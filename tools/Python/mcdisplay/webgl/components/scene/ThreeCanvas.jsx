@@ -52,7 +52,6 @@ const ThreeCanvas = () => {
   let width, height;
   let mouseX = 0,
     mouseY = 0;
-  const margin = 20;
 
   const containerRef = useRef(null);
 
@@ -153,8 +152,8 @@ const ThreeCanvas = () => {
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const width = (container.clientWidth || window.innerWidth) * 2 - margin;
-    const height = (container.clientHeight || window.innerHeight) * 2 - margin;
+    const width = (container.clientWidth || window.innerWidth) * 2;
+    const height = (container.clientHeight || window.innerHeight) * 2;
 
     const scene = initializeScene();
     sceneRef.current = scene;
