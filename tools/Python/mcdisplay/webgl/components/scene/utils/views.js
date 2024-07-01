@@ -28,7 +28,6 @@ export const views = [
       view: "top2D",
       initialCamPos: [0, 1, 1],
       up: [ 1, 0, 0],
-      fov: 60,
       updateCamera: function ( camera, scene, mouseX ) {
 
         camera.position.x += mouseX * 0.05;
@@ -46,7 +45,6 @@ export const views = [
       view: "back2D",
       initialCamPos: [0, 0, 1],
       up: [ 0, 1, 0 ],
-      fov: 60,
       updateCamera: function ( camera, scene, mouseX ) {
 
         camera.position.x = Math.max( Math.min( camera.position.x, 2000 ), - 2000 );
@@ -63,7 +61,6 @@ export const views = [
       view: "front2D",
       initialCamPos: [0, 0, 0],
       up: [ 0, 1, 0 ],
-      fov: 60,
       updateCamera: function ( camera, scene, mouseX ) {
 
         camera.position.x = Math.max( Math.min( camera.position.x, 2000 ), - 2000 );
@@ -80,7 +77,6 @@ export const views = [
       view: "side2D",
       initialCamPos: [1, 0, 0],
       up: [ 0, 1, 0 ],
-      fov: 60,
       updateCamera: function ( camera, scene, mouseX ) {
 
         camera.position.x += mouseX * 0.05;
