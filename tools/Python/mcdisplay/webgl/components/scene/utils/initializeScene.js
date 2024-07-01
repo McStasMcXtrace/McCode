@@ -6,10 +6,11 @@ export const initializeScene = () => {
   return new THREE.Scene();
 };
 
-export const initializeCameras = (width, height, views, renderer, scene, size) => {
+export const initializeCameras = (width, height, views, size, backView2DRef, topView2DRef, sideView2DRef, primaryViewRef) => {
   views.forEach((view) => {
     let camera;
     let controls;
+    let domElement;
     if (view.camera === "OrthographicCamera") {
       const left = width / -20;
       const right = width / 20;
@@ -17,48 +18,47 @@ export const initializeCameras = (width, height, views, renderer, scene, size) =
       const bottom = height  / -20;
       const near = 0.1;
       const far = 1000;
-      if(view.view === "default"){
-        //customize left right top bottom using bounding box lengths of a,b,c
-      }else if(view.view === "back"){
-        
-      }else if(view.view === "top"){
-        
-      }else if(view.view === "side"){
-
+      if(view.view === "back2D"){
+        domElement = backView2DRef;
+      }else if(view.view === "top2D"){
+        domElement = topView2DRef;
+      }else if(view.view === "side2D"){
+        domElement = sideView2DRef;
       }
 
       camera = new THREE.OrthographicCamera(left, right, top, bottom, near, far);
-      controls = new OrbitControls(camera, renderer.domElement);
+      controls = new OrbitControls(camera, domElement);
       controls.enableRotate = false;
     } else {
       camera = new THREE.PerspectiveCamera(
         view.fov,
         width / height,
         0.1,
-        10000
+        1000
       );
-      console.log(renderer.domElement);
-      controls = new OrbitControls(camera, renderer.domElement);
+      domElement = primaryViewRef;
+      controls = new OrbitControls(camera, primaryViewRef);
     }
-    console.log(size, view.initialCamPos);
     const position = view.initialCamPos.map(element => element*size);
     console.log(position)
     camera.position.fromArray(position);
     view.controls = controls;
     view.camera = camera;
-    const cameraHelper = new THREE.CameraHelper(camera);
+    console.log(domElement);
+    view.domElement = domElement;
+    //const cameraHelper = new THREE.CameraHelper(camera);
     //scene.add(cameraHelper);
   });
 };
 
-export const initializeRenderer = (width, height, container) => {
+export const initializeRenderer = (width, height) => {
   const renderer = new THREE.WebGLRenderer({
+    canvas: document.getElementById("canvas"),
     antialias: true,
   });
+  renderer.setPixelRatio( window.devicePixelRatio );
   renderer.setSize(width, height);
-  if (container) {
-    container.appendChild(renderer.domElement);
-  }
+  console.log(width, height);
   return renderer;
 };
 

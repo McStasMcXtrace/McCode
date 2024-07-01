@@ -24,7 +24,7 @@ import {
 } from "../../Contexts/addRays";
 import { useAppContext } from "../../Contexts/AppContext";
 import * as THREE from "three";
-import  {views} from "./utils/views";
+import { views } from "./utils/views";
 
 const ThreeCanvas = () => {
   const { showXY, showXZ, showYZ, gridSize, gridDivisions } = useGridContext();
@@ -50,32 +50,39 @@ const ThreeCanvas = () => {
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
   let width, height;
-  let mouseX = 0, mouseY = 0;
+  let mouseX = 0,
+    mouseY = 0;
   const margin = 20;
+
   const containerRef = useRef(null);
+  const primaryViewRef = useRef(null);
+  const TopView2DRef = useRef(null);
+  const SideView2DRef = useRef(null);
+  const BackView2DRef = useRef(null);
+
   const rendererRef = useRef(null);
   const sceneRef = useRef(null);
   const playRef = useRef(play);
 
-function updateSize() {
-  let containerWidth, containerHeight;
+  function updateSize() {
+    let containerWidth, containerHeight;
 
-  if (containerRef.current) {
-    containerWidth = containerRef.current.clientWidth;
-    containerHeight = containerRef.current.clientHeight;
+    if (containerRef.current) {
+      containerWidth = containerRef.current.clientWidth;
+      containerHeight = containerRef.current.clientHeight;
+    }
+
+    const correctWidth = window.innerWidth;
+    const correctHeight = window.innerHeight;
+
+    if (width !== correctWidth || height !== correctHeight) {
+      width = correctWidth;
+      height = correctHeight * 2;
+
+      rendererRef.current.setSize(width, height * 2);
+      console.log("updatesize: ", width, height);
+    }
   }
-
-  const correctWidth = (containerWidth || window.innerWidth);
-  const correctHeight = (containerHeight || window.innerHeight);
-  
-  if ( width != correctWidth|| height != correctHeight) {
-
-    width = correctWidth;
-    height = correctHeight;
-
-    rendererRef.current.setSize( width, height );
-  }
-}
 
   function render() {
     updateSize();
@@ -97,26 +104,49 @@ function updateSize() {
     if(currHoverInfo !== undefined) console.log(currHoverInfo);
     insertText(document.getElementById("hover-info"), currHoverInfo);
     */
-    if(rendererRef.current && sceneRef.current){
-      views.forEach(view => {
-        const camera = view.camera;
-        view.updateCamera(camera, sceneRef.current, mouseX, mouseY);
-        view.updateControls(view.controls);
+    rendererRef.current.setScissorTest(true);
 
-        const left = Math.floor( width * view.left );
-        const bottom = Math.floor( height * view.bottom );
-        const _width = Math.floor( width * view.width );
-        const _height = Math.floor( height * view.height );
+    if(containerRef.current){
+    views.forEach((view) => {
+      const aspect = setScissorForElement(view.domElement, rendererRef.current, containerRef.current);
 
-        rendererRef.current.setViewport(left, bottom, _width, _height);
-        rendererRef.current.setScissor(left, bottom, _width, _height);
-        rendererRef.current.setScissorTest( true );
+      const camera = view.camera;
+      view.updateCamera(camera, sceneRef.current, mouseX, mouseY);
+      view.updateControls(view.controls);
 
-        camera.aspect = _width/_height;
-        camera.updateProjectionMatrix();
-        rendererRef.current.render(sceneRef.current, camera);
-      });
-    }
+      const left = Math.floor(width * view.left);
+      const bottom = Math.floor(height * view.bottom);
+      const _width = Math.floor(width * view.width);
+      const _height = Math.floor(height * view.height);
+
+      camera.aspect = _width / _height;
+      camera.updateProjectionMatrix();
+      rendererRef.current.render(sceneRef.current, camera);
+    });
+  }
+  }
+
+  function setScissorForElement(elem, renderer, canvas) {
+    const canvasRect = canvas.getBoundingClientRect();
+    const elemRect = elem.getBoundingClientRect();
+
+    // compute a canvas relative rectangle
+    const right = Math.min(elemRect.right, canvasRect.right) - canvasRect.left;
+    const left = Math.max(0, elemRect.left - canvasRect.left);
+    const bottom = Math.min(elemRect.bottom, canvasRect.bottom) - canvasRect.top;
+    const top = Math.max(0, elemRect.top - canvasRect.top);
+
+    const width = Math.min(canvasRect.width, right - left);
+    const height = Math.min(canvasRect.height, bottom - top);
+
+    // setup the scissor to only render to that part of the canvas
+    const positiveYUpBottom = canvasRect.height - bottom;
+    renderer.setScissor(left, positiveYUpBottom, width, height);
+    console.log(left, positiveYUpBottom, width, height);
+    renderer.setViewport(left, positiveYUpBottom, width, height);
+
+    // return the aspect
+    return width / height;
   }
 
   useEffect(() => {
@@ -124,12 +154,25 @@ function updateSize() {
     if (!container) return;
     const width = (container.clientWidth || window.innerWidth) * 2 - margin;
     const height = (container.clientHeight || window.innerHeight) * 2 - margin;
+    console.log("height: ",height);
+    console.log("window.innerHeight: ",window.innerHeight);
+    console.log("container.clientHeight: ",container.clientHeight);
+
 
     const scene = initializeScene();
     sceneRef.current = scene;
-    const renderer = initializeRenderer(width, height, container);
+    const renderer = initializeRenderer(width, height);
     rendererRef.current = renderer;
-    initializeCameras(width, height, views, rendererRef.current, sceneRef.current, gridSize);
+    initializeCameras(
+      width,
+      height,
+      views,
+      gridSize,
+      BackView2DRef.current,
+      TopView2DRef.current,
+      SideView2DRef.current,
+      primaryViewRef.current
+    );
 
     initializeDirectionalLight(scene);
     initializeAmbientLight(scene);
@@ -254,7 +297,15 @@ function updateSize() {
 
   return (
     <div id="canvas-container" ref={containerRef}>
-      <div id="hover-info">{hoverInfo}</div>
+      <canvas id="canvas"></canvas>
+      <div id="views">
+        <div className="view" id="primaryView" ref={primaryViewRef}></div>
+        <div className="view" id="TopView2D" ref={TopView2DRef}></div>
+        <div className="row fill">
+          <div className="view" id="SideView2D" ref={SideView2DRef}></div>
+          <div className="view" id="BackView2D" ref={BackView2DRef}></div>
+        </div>
+      </div>
     </div>
   );
 };
