@@ -318,26 +318,26 @@ const ThreeCanvas = () => {
         <div className="column fill row-gap two-D">
           <div className="row fill">
             <div className="view" id="TopView2D" ref={TopView2DRef}>
-              <p className="view-name">Top</p>
-              <div className="y-axis">{topView.y_label}[m]</div>
-              <div className="x-axis">{topView.x_label}[m]</div>
+              <p className="view-name opposite-color">Top</p>
+              <div className="y-axis opposite-color">{topView.y_label}[m]</div>
+              <div className="x-axis opposite-color">{topView.x_label}[m]</div>
             </div>
             <div className="view" id="SideView2D" ref={SideView2DRef}>
-              <p className="view-name">Side</p>
-              <div className="y-axis">{sideView.y_label}[m]</div>
-              <div className="x-axis">{sideView.x_label}[m]</div>
+              <p className="view-name opposite-color">Side</p>
+              <div className="y-axis opposite-color">{sideView.y_label}[m]</div>
+              <div className="x-axis opposite-color">{sideView.x_label}[m]</div>
             </div>
           </div>
           <div className="row fill">
             <div className="view" id="BackView2D" ref={BackView2DRef}>
-              <p className="view-name">End</p>
-              <div className="y-axis">{backView.y_label}[m]</div>
-              <div className="x-axis">{backView.x_label}[m]</div>
+              <p className="view-name opposite-color">End</p>
+              <div className="y-axis opposite-color">{backView.y_label}[m]</div>
+              <div className="x-axis opposite-color">{backView.x_label}[m]</div>
             </div>
             <div className="view" id="FrontView2D" ref={FrontView2DRef}>
-              <p className="view-name">Origin</p>
-              <div className="y-axis">{frontView.y_label}[m]</div>
-              <div className="x-axis">{frontView.x_label}[m]</div>
+              <p className="view-name opposite-color">Origin</p>
+              <div className="y-axis opposite-color">{frontView.y_label}[m]</div>
+              <div className="x-axis opposite-color">{frontView.x_label}[m]</div>
             </div>
           </div>
         </div>
