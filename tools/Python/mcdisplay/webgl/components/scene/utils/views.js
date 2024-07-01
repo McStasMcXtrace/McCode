@@ -7,7 +7,7 @@ export const views = [
       height: 0.5,
       camera: "PerspectiveCamera",
       view: "primary",
-      initialCamPos: [1, 2, 3],
+      initialCamPos: [1, 1, 0.1],
       up: [ 0, 1, 0 ],
       fov: 60,
       updateCamera: function ( camera, scene, mouseX ) {
@@ -78,7 +78,7 @@ export const views = [
     {
       camera: "OrthographicCamera",
       view: "side2D",
-      initialCamPos: [1, 0, 1],
+      initialCamPos: [1, 0, 0],
       up: [ 0, 1, 0 ],
       fov: 60,
       updateCamera: function ( camera, scene, mouseX ) {
