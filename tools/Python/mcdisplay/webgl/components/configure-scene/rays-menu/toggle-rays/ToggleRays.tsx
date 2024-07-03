@@ -5,13 +5,30 @@ import { useRaysContext } from "../../../../Contexts/RaysContext";
 import ToggleScatterPoints from "../toggle-scatter-points/ToggleScatterPoints";
 import RaysPlayback from "../rays-playback/RaysPlayback";
 import ShowAllRays from "../show-all-rays/ShowAllRays";
+import { initializeRays } from "../../../../data/initRays";
+import particledata from "../../../../testdata/particledata.json";
 
 const ToggleRays = () => {
-  const { showAllRays, toggleShowAllRays, showRays, toggleRays } =
-    useRaysContext();
+  const {
+    rays,
+    setRays,
+    showAllRays,
+    toggleShowAllRays,
+    showRays,
+    toggleRays,
+  } = useRaysContext();
+
+  const handleClick = () => {
+    if (rays.rays.length === 0) {
+      console.log("initialize rays");
+      setRays(initializeRays(particledata));
+    }
+    toggleRays();
+  };
+
   return (
     <div id="toggle-rays" className="row">
-      <button onClick={toggleRays}>
+      <button onClick={handleClick}>
         {showRays ? "Hide Rays" : "Show Rays"}
       </button>
       {showRays && showAllRays ? <ShowAllRays text="Show PlayBack" /> : null}

@@ -1,7 +1,5 @@
 import React, { ReactNode, createContext, useContext, useState } from "react";
-import particledata from "../testdata/particledata.json";
 import { RayData } from "../model/Rays";
-import { initializeRays } from "../data/initRays";
 
 type RaysContextType = {
   showAllRays: boolean;
@@ -45,7 +43,12 @@ interface RaysProviderProps {
 
 export const RaysProvider: React.FC<RaysProviderProps> = ({ children }) => {
   const [showScatterPoints, setShowScatterPoints] = useState(true);
-  const [rays, setRays] = useState<RayData>(initializeRays(particledata));
+  const [rays, setRays] = useState<RayData>({
+    rays: [],
+    numrays: 0,
+    vmin: 0,
+    vmax: 0,
+  });
   const [showRays, setShowRays] = useState(false);
   const [currentRayIndex, _setCurrentRayIndex] = useState(0);
   const [prevRayIndex, setPrevRayIndex] = useState(0);

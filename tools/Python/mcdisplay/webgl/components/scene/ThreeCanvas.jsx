@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { useGridContext } from "../../Contexts/GridContext";
 import { useCameraContext } from "../../Contexts/CameraContext";
 import "./three-canvas.css";
+import particledata from "../../testdata/particledata.json";
+import { initializeRays } from "../../data/initRays";
 import {
   initializeScene,
   initializeCameras,
@@ -42,6 +44,7 @@ const ThreeCanvas = () => {
     showScatterPoints,
     showRays,
     rays,
+    setRays,
     handleNextClick,
   } = useRaysContext();
   const { loading, setLoading, backgroundColor, toggleBackgroundColor } = useAppContext();
@@ -89,8 +92,6 @@ const ThreeCanvas = () => {
 
 
       rendererRef.current.setSize(width, height);
-      console.log("width: ", width);
-      console.log("height: ", height);
     }
   }
 
@@ -149,7 +150,6 @@ const ThreeCanvas = () => {
 
   function setScissorForElement(elem) {
     const canvasRect = containerRef.current.getBoundingClientRect();
-    console.log("canvasRect.width: ", canvasRect);
     const elemRect = elem.getBoundingClientRect();
 
     // compute a canvas relative rectangle
@@ -160,7 +160,6 @@ const ThreeCanvas = () => {
     const top = Math.max(0, elemRect.top - canvasRect.top);
 
     const width = Math.min(canvasRect.width, right - left);
-    console.log("width: ", width);
     const height = Math.min(canvasRect.height, bottom - top);
 
     // setup the scissor to only render to that part of the canvas
@@ -258,6 +257,7 @@ const ThreeCanvas = () => {
   }, [components]);
 
   useEffect(() => {
+    console.log("Rays updated");
     addRays(sceneRef.current, rays, components);
     render();
   }, [rays]);
@@ -325,7 +325,6 @@ const ThreeCanvas = () => {
   }, [play]);
 
   useEffect(() => {
-    console.log("changed to :  ", backgroundColor);
     if(backgroundColor){
       sceneRef.current.background = new THREE.Color(0xffffff);
     }
