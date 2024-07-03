@@ -1,7 +1,13 @@
-import React, { ReactNode, createContext, useContext, useState } from "react";
+import React, {
+  ReactNode,
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+} from "react";
 import { Component } from "../model/Component";
 import { initializeInstrument } from "../data/initInstrument";
-import instrumentdata from "../testdata/instrument.json";
+import { fetchJSON } from "../utils/fetch";
 
 type ComponentsContextType = {
   components: Component[];
@@ -20,9 +26,17 @@ interface ComponentsProviderProps {
 export const ComponentsProvider: React.FC<ComponentsProviderProps> = ({
   children,
 }) => {
-  const [components, _setComponents] = useState<Component[]>(
-    initializeInstrument(instrumentdata).components
-  );
+  const [components, _setComponents] = useState<Component[]>([]);
+
+  useEffect(() => {
+    fetchJSON("/dist/instrument.json").then((data) => {
+      if (data) {
+        _setComponents(data);
+      } else {
+        console.warn("Instrument data is missing");
+      }
+    });
+  }, []);
 
   const setComponents = (newComponents: React.SetStateAction<Component[]>) => {
     _setComponents(newComponents);

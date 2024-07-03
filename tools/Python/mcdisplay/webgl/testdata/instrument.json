@@ -1,10 +1,10 @@
 {
-  "name": "ILL_H5",
-  "abspath": "ILL_H5.instr",
+  "name": "Failed to load instrument",
+  "abspath": "Failed_to_load_instrument.instr",
   "params": [],
   "params_defaults": [],
   "params_values": [],
-  "cmd": "/usr/local/mcstas/3.99.999/bin/mcrun ILL_H5.instr --no-output-files --trace=2 --ncount=50.0 --dir=/home/theogutt/mgui_test/ILL_H5/ILL_H5_20240621_090951 --no-output-files",
+  "cmd": "/usr/local/mcstas/3.99.999/bin/mcrun Failed_to_load_instrument.instr --trace=2 --ncount=0 --dir= --no-output-files",
   "components": [
     {
       "name": "Origin",
@@ -14,14 +14,14 @@
       "drawcalls": []
     },
     {
-      "name": "Cylinder",
+      "name": "Failed to load instrument",
       "m4": [
         1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0, 0, 0, 1
       ],
       "drawcalls": [
         {
           "key": "cylinder",
-          "args": [0.0, 0.0, 0.0, 0.005, 0.05, 0.0, 0.0, 1.0, 0.0]
+          "args": [0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0]
         }
       ]
     }
