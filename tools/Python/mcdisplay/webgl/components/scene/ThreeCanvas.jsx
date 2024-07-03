@@ -44,7 +44,7 @@ const ThreeCanvas = () => {
     rays,
     handleNextClick,
   } = useRaysContext();
-  const { loading, setLoading } = useAppContext();
+  const { loading, setLoading, backgroundColor, toggleBackgroundColor } = useAppContext();
   const [hoverInfo, setHoverInfo] = useState("");
   const gridsRef = useRef({ gridXY: null, gridXZ: null, gridYZ: null });
   const raycaster = new THREE.Raycaster();
@@ -75,23 +75,37 @@ const ThreeCanvas = () => {
   const playRef = useRef(play);
 
   function updateSize() {
-    let containerWidth, containerHeight;
+    let correctWidth = window.innerWidth;
+    let correctHeight = window.innerHeight;
 
     if (containerRef.current) {
-      containerWidth = containerRef.current.clientWidth;
-      containerHeight = containerRef.current.clientHeight;
+      correctWidth = containerRef.current.clientWidth;
+      correctHeight = containerRef.current.clientHeight;
     }
-
-    const correctWidth = window.innerWidth;
-    const correctHeight = window.innerHeight;
 
     if (width !== correctWidth || height !== correctHeight) {
       width = correctWidth;
-      height = correctHeight * 2;
+      height = correctHeight;
+
 
       rendererRef.current.setSize(width, height);
+      console.log("width: ", width);
+      console.log("height: ", height);
     }
   }
+
+  // Resize handling to keep renderer size in sync with the window
+  useEffect(() => {
+    const handleResize = () => {
+      rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+      render();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   function render() {
     updateSize();
@@ -135,6 +149,7 @@ const ThreeCanvas = () => {
 
   function setScissorForElement(elem) {
     const canvasRect = containerRef.current.getBoundingClientRect();
+    console.log("canvasRect.width: ", canvasRect);
     const elemRect = elem.getBoundingClientRect();
 
     // compute a canvas relative rectangle
@@ -145,6 +160,7 @@ const ThreeCanvas = () => {
     const top = Math.max(0, elemRect.top - canvasRect.top);
 
     const width = Math.min(canvasRect.width, right - left);
+    console.log("width: ", width);
     const height = Math.min(canvasRect.height, bottom - top);
 
     // setup the scissor to only render to that part of the canvas
@@ -308,36 +324,48 @@ const ThreeCanvas = () => {
     if (play) loop();
   }, [play]);
 
+  useEffect(() => {
+    console.log("changed to :  ", backgroundColor);
+    if(backgroundColor){
+      sceneRef.current.background = new THREE.Color(0xffffff);
+    }
+    else {
+      sceneRef.current.background = new THREE.Color(0x000000);
+    }
+    render();
+  }, [backgroundColor]);
+
+
   return (
-    <div id="canvas-container" ref={containerRef}>
-      <canvas id="canvas"></canvas>
+    <div id="canvas-container">
+      <canvas id="canvas" ref={containerRef}></canvas>
       <div id="views">
-        <div className="view" id="primaryView" ref={primaryViewRef}>
+        <div className="view gray-color" id="primaryView" ref={primaryViewRef}>
           3D
         </div>
         <div className="column fill row-gap two-D">
           <div className="row fill">
             <div className="view" id="TopView2D" ref={TopView2DRef}>
-              <p className="view-name opposite-color">Top</p>
-              <div className="y-axis opposite-color">{topView.y_label}[m]</div>
-              <div className="x-axis opposite-color">{topView.x_label}[m]</div>
+              <p className="view-name gray-color">Top</p>
+              <div className="y-axis gray-color">{topView.y_label}[m]</div>
+              <div className="x-axis gray-color">{topView.x_label}[m]</div>
             </div>
             <div className="view" id="SideView2D" ref={SideView2DRef}>
-              <p className="view-name opposite-color">Side</p>
-              <div className="y-axis opposite-color">{sideView.y_label}[m]</div>
-              <div className="x-axis opposite-color">{sideView.x_label}[m]</div>
+              <p className="view-name gray-color">Side</p>
+              <div className="y-axis gray-color">{sideView.y_label}[m]</div>
+              <div className="x-axis gray-color">{sideView.x_label}[m]</div>
             </div>
           </div>
           <div className="row fill">
             <div className="view" id="BackView2D" ref={BackView2DRef}>
-              <p className="view-name opposite-color">End</p>
-              <div className="y-axis opposite-color">{backView.y_label}[m]</div>
-              <div className="x-axis opposite-color">{backView.x_label}[m]</div>
+              <p className="view-name gray-color">End</p>
+              <div className="y-axis gray-color">{backView.y_label}[m]</div>
+              <div className="x-axis gray-color">{backView.x_label}[m]</div>
             </div>
             <div className="view" id="FrontView2D" ref={FrontView2DRef}>
-              <p className="view-name opposite-color">Origin</p>
-              <div className="y-axis opposite-color">{frontView.y_label}[m]</div>
-              <div className="x-axis opposite-color">{frontView.x_label}[m]</div>
+              <p className="view-name gray-color">Origin</p>
+              <div className="y-axis gray-color">{frontView.y_label}[m]</div>
+              <div className="x-axis gray-color">{frontView.x_label}[m]</div>
             </div>
           </div>
         </div>

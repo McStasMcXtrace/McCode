@@ -4,6 +4,7 @@ import ViewButtons from "./view-buttons/ViewButtons";
 import "./configure-scene-menu.css";
 import ComponentStyler from "./component-styler/ComponentStyler";
 import RaysMenu from "./rays-menu/RaysMenu";
+import BackgroundColorButton from "./background-color-button/BackgroundColorButton";
 
 const ConfigureSceneMenu = () => {
   return (
@@ -12,6 +13,7 @@ const ConfigureSceneMenu = () => {
       <ComponentStyler />
       <ViewButtons />
       <GridButtons />
+      <BackgroundColorButton />
     </div>
   );
 };

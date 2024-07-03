@@ -3,11 +3,15 @@ import React, { createContext, useContext, ReactNode, useState } from "react";
 type AppContextType = {
   loading: boolean;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  backgroundColor: boolean;
+  toggleBackgroundColor: () => void;
 };
 
 const AppContext = createContext<AppContextType>({
   loading: true,
   setLoading: () => {},
+  backgroundColor: true,
+  toggleBackgroundColor: () => {},
 });
 
 interface AppProviderProps {
@@ -15,12 +19,18 @@ interface AppProviderProps {
 }
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
-  const [loading, _setLoading] = useState<boolean>(true);
-  const setLoading = (value: React.SetStateAction<boolean>) => {
-    _setLoading(value);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [backgroundColor, setBackgroundColor] = useState<boolean>(true);
+
+  const toggleBackgroundColor = () => {
+    console.log("toggleBackgroundColor", backgroundColor);
+    setBackgroundColor((prevDarkBackground) => !prevDarkBackground);
   };
+
   return (
-    <AppContext.Provider value={{ loading, setLoading }}>
+    <AppContext.Provider
+      value={{ loading, setLoading, backgroundColor, toggleBackgroundColor }}
+    >
       {children}
     </AppContext.Provider>
   );
