@@ -23,7 +23,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [backgroundColor, setBackgroundColor] = useState<boolean>(true);
 
   const toggleBackgroundColor = () => {
-    console.log("toggleBackgroundColor", backgroundColor);
     setBackgroundColor((prevDarkBackground) => !prevDarkBackground);
   };
 

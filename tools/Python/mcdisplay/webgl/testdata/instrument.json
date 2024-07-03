@@ -1,0 +1,29 @@
+{
+  "name": "ILL_H5",
+  "abspath": "ILL_H5.instr",
+  "params": [],
+  "params_defaults": [],
+  "params_values": [],
+  "cmd": "/usr/local/mcstas/3.99.999/bin/mcrun ILL_H5.instr --no-output-files --trace=2 --ncount=50.0 --dir=/home/theogutt/mgui_test/ILL_H5/ILL_H5_20240621_090951 --no-output-files",
+  "components": [
+    {
+      "name": "Origin",
+      "m4": [
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0, 0, 0, 1
+      ],
+      "drawcalls": []
+    },
+    {
+      "name": "Cylinder",
+      "m4": [
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0, 0, 0, 1
+      ],
+      "drawcalls": [
+        {
+          "key": "cylinder",
+          "args": [0.0, 0.0, 0.0, 0.005, 0.05, 0.0, 0.0, 1.0, 0.0]
+        }
+      ]
+    }
+  ]
+}

@@ -2,8 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { useGridContext } from "../../Contexts/GridContext";
 import { useCameraContext } from "../../Contexts/CameraContext";
 import "./three-canvas.css";
-import particledata from "../../testdata/particledata.json";
-import { initializeRays } from "../../data/initRays";
 import {
   initializeScene,
   initializeCameras,

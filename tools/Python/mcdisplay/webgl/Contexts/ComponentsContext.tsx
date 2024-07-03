@@ -1,7 +1,7 @@
 import React, { ReactNode, createContext, useContext, useState } from "react";
 import { Component } from "../model/Component";
 import { initializeInstrument } from "../data/initInstrument";
-import instrumentdata from "../testdata/instrumentdata.json";
+import instrumentdata from "../testdata/instrument.json";
 
 type ComponentsContextType = {
   components: Component[];
