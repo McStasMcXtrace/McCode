@@ -24,7 +24,7 @@
 *
 * This model implements the XRD station for powders.
 *
-* %Example: E0=16.99 Detector: detector_diffraction_I=3.13e+09
+* %Example: E0=16.99 Detector: detector_diffraction_I=2.3e+09
 *
 * %Parameters
 * E0: [keV]     Central energy to be emitted by the source
