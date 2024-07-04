@@ -75,15 +75,28 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display" @ONLY)
 
-# Main script, including rename mc/mxdisplay
+# Dist
 install(
-  PROGRAMS "${PROJECT_SOURCE_DIR}/mcdisplay.py"
+  DIRECTORY "${PROJECT_SOURCE_DIR}/dist"
   DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
-  RENAME "${P}display.py"
   )
 
+
+# Node modules
+install(
+    DIRECTORY "${PROJECT_SOURCE_DIR}/node_modules"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+    )
+
+# Main script, including rename mc/mxdisplay
+install(
+        PROGRAMS "${PROJECT_SOURCE_DIR}/mcdisplay.py"
+        DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+        RENAME "${P}display.py"
+    )
+
 # Other .py infrastructure
-foreach(NAME mcdisplay.js Lut.js OrbitControls.js dat.gui.min.js jquery.min.js three.min.js template.html __init__.py)
+foreach(NAME start-vite.js package.json mcdisplay.js Lut.js OrbitControls.js dat.gui.min.js jquery.min.js three.min.js template.html __init__.py)
   install(
     FILES "${PROJECT_SOURCE_DIR}/${NAME}"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
