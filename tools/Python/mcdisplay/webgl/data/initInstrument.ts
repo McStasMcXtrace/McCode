@@ -24,7 +24,7 @@ export function initializeInstrument(data: any): Instrument {
       name: component.name,
       m4: component.m4,
       drawcalls: component.drawcalls,
-      color: colors[index % colors.length], // Assigning color from the predefined array
+      color: colors[index % colors.length], // Assigning color from the colors array
       transparency: 1,
     })),
   };
