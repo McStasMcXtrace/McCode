@@ -23,6 +23,7 @@ from mccodelib.mcdisplayutils import McDisplayReader
 from mccodelib.instrgeom import Vector3d
 from mccodelib.utils import get_file_text_direct
 from threading import Thread
+from shutil import copy as shutil_copy, copytree, ignore_patterns
 
 class SimpleWriter(object):
     ''' a minimal, django-omiting "glue file" writer tightly coupled to some comments in the file template.html '''
@@ -94,7 +95,6 @@ def _write_html(instrument, html_filepath, first=None, last=None, invcanvas=Fals
 
 def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first=None, last=None, invcanvas=None, **kwds):
     ''' writes instrument definitions to html/ js '''
-    from shutil import copy as shutil_copy, copytree, ignore_patterns
 
     def copy(a, b):
         shutil_copy(str(a), str(b))
@@ -106,60 +106,41 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
     if not dest.exists():
         dest.mkdir(parents=True)
 
-    '''
-    # copy mcdisplay.js to _mcdisplay.js
-    copy(source.joinpath('mcdisplay.js'), dest.joinpath('_mcdisplay.js'))
-    # copy JavaScript files without name changes
-    for file in ('three.min', 'dat.gui.min', 'OrbitControls', 'Lut', 'jquery.min'):
-        copy(source.joinpath(f'{file}.js'), dest.joinpath(f'{file}.js'))
-    
-    # write html
-    html_filepath = str(dest.joinpath('index.html'))
-    _write_html(instrument, html_filepath, first=first, last=last, invcanvas=invcanvas)
-    
-        # Workaround for allowing non-relative paths to instrname
-    # see https://github.com/McStasMcXtrace/McCode/issues/1426
-    temp_instrname = Path(instrname)
-    instrname = temp_instrname.name
-
-    # copy McCode instrument (this *may* be a binary!)
-    shutil_copy(instrname, str(dest.joinpath(instrname)))
-    '''
-
-    # write app
+    # Copy the app files
     copytree(source.joinpath('dist'), dest.joinpath('dist'))
 
-    # Copy package.json from source to dest
+    # Copy package.json and package-lock.json from source to dest
     package_json_source = source.joinpath('package.json')
-    print(package_json_source)
     package_json_dest = dest.joinpath('dist/package.json')
     shutil_copy(package_json_source, package_json_dest)
 
-    # Copy package.json from source to dest
-    package_json_source = source.joinpath('package-lock.json')
-    print(package_json_source)
-    package_json_dest = dest.joinpath('dist/package-lock.json')
-    shutil_copy(package_json_source, package_json_dest)
+    package_lock_json_source = source.joinpath('package-lock.json')
+    package_lock_json_dest = dest.joinpath('dist/package-lock.json')
+    shutil_copy(package_lock_json_source, package_lock_json_dest)
 
-    '''
     # Copy node_modules from source to dist
     node_modules_source = source.joinpath('node_modules')
     node_modules_dest = dest.joinpath('dist/node_modules')
     copytree(node_modules_source, node_modules_dest, dirs_exist_ok=True, ignore=ignore_patterns('*.log', '*.cache'))
+
     # Ensure execute permissions for vite binary
     vite_bin = node_modules_dest.joinpath('.bin/vite')
     os.chmod(vite_bin, 0o755)
-    '''
 
-    # write instrument
+    # Copy start-vite.js script to destination
+    start_vite_source = source.joinpath('start-vite.js')
+    start_vite_dest = dest.joinpath('dist/start-vite.js')
+    shutil_copy(start_vite_source, start_vite_dest)
+
+    # Write instrument
     json_instr = '%s' % json.dumps(instrument.jsonize(), indent=2)
     file_save(json_instr, dest.joinpath('dist/instrument.json'))
-    
-    # write particles
+
+    # Write particles
     json_particles = '%s' % json.dumps(raybundle.jsonize(), indent=2)
     file_save(json_particles, dest.joinpath('dist/particles.json'))
 
-    # exit if nobrowse flag has been set
+    # Exit if nobrowse flag has been set
     if nobrowse is not None and nobrowse:
         return
 
@@ -168,8 +149,7 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
     # Function to run npm commands and capture port
     def run_npm_and_capture_port(port_container):
         try:
-            subprocess.run(["npm", "install"], check=True, cwd=str(destdist))
-            proc = subprocess.Popen(["npm", "run", "dev"], cwd=str(destdist), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            proc = subprocess.Popen(["npm","run","dev"], cwd=str(destdist), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             for line in proc.stdout:
                 print(line)
                 if 'Local:' in line:
@@ -196,6 +176,7 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
         webbrowser.open(f"http://localhost:{port_container['port']}/")
     else:
         print("Failed to determine the localhost port")
+
 def file_save(data, filename):
     ''' saves data for debug purposes '''
     with open(filename, 'w') as f:

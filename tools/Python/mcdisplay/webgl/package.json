@@ -2,8 +2,9 @@
   "name": "webgl",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node start-vite.js",
     "build": "vite build",
     "serve": "http-server dist -p 8000"
   },
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "http-server": "^14.1.1",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vite-plugin-static-copy": "^1.0.6"
   }
 }
