@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { Component } from "../model/Component";
 import { fetchJSON } from "../utils/fetch";
-import { initializeInstrument } from "../data/initInstrument";
+import { initializeInstrument } from "../data-utils/initInstrument";
 
 type ComponentsContextType = {
   components: Component[];

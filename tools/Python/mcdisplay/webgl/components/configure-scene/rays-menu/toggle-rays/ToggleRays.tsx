@@ -6,7 +6,7 @@ import ToggleScatterPoints from "../toggle-scatter-points/ToggleScatterPoints";
 import RaysPlayback from "../rays-playback/RaysPlayback";
 import ShowAllRays from "../show-all-rays/ShowAllRays";
 import { fetchJSON } from "../../../../utils/fetch";
-import { initializeRays } from "../../../../data/initRays";
+import { initializeRays } from "../../../../data-utils/initRays";
 
 const ToggleRays = () => {
   const {
