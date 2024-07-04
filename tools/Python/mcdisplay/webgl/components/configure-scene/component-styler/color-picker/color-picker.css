@@ -1,0 +1,10 @@
+#color-button {
+  height: 100%;
+}
+
+.color-picker-background {
+  position: relative;
+  left: 25px;
+  top: 150px;
+  background-color: var(--background-color);
+}
