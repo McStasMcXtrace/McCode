@@ -10,7 +10,7 @@ import {
   initializeControls,
   initializeDirectionalLight,
   initializeAmbientLight,
-} from "./utils/initializeScene";
+} from "./initializeScene";
 import { useComponentsContext } from "../../Contexts/ComponentsContext";
 import { clearComponents, loadComponents } from "../../Contexts/addComponents";
 import { useRaysContext } from "../../Contexts/RaysContext";
@@ -24,7 +24,7 @@ import {
 } from "../../Contexts/addRays";
 import { useAppContext } from "../../Contexts/AppContext";
 import * as THREE from "three";
-import { views } from "./utils/views";
+import { views } from "./views";
 
 const ThreeCanvas = () => {
   const { showXY, showXZ, showYZ, gridSize, gridDivisions } = useGridContext();
@@ -63,13 +63,11 @@ const ThreeCanvas = () => {
   const TopView2DRef = useRef(null);
   const SideView2DRef = useRef(null);
   const BackView2DRef = useRef(null);
-  const FrontView2DRef = useRef(null);
 
   const primaryView = views[0];
   const topView = views[1];
   const backView = views[2];
-  const frontView = views[3];
-  const sideView = views[4];
+  const sideView = views[3];
 
   const rendererRef = useRef(null);
   const sceneRef = useRef(null);
@@ -184,7 +182,6 @@ const ThreeCanvas = () => {
       height,
       views,
       gridSize,
-      FrontView2DRef.current,
       BackView2DRef.current,
       TopView2DRef.current,
       SideView2DRef.current,
@@ -359,10 +356,7 @@ const ThreeCanvas = () => {
               <div className="y-axis gray-color">{backView.y_label}[m]</div>
               <div className="x-axis gray-color">{backView.x_label}[m]</div>
             </div>
-            <div className="view" id="FrontView2D" ref={FrontView2DRef}>
-              <p className="view-name gray-color">Origin</p>
-              <div className="y-axis gray-color">{frontView.y_label}[m]</div>
-              <div className="x-axis gray-color">{frontView.x_label}[m]</div>
+            <div className="view" id="">
             </div>
           </div>
         </div>

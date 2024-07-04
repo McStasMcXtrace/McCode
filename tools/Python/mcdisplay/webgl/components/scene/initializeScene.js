@@ -5,7 +5,7 @@ export const initializeScene = () => {
   return new THREE.Scene();
 };
 
-export const initializeCameras = (width, height, views, size, frontView2DRef, backView2DRef, topView2DRef, sideView2DRef, primaryViewRef) => {
+export const initializeCameras = (width, height, views, size, backView2DRef, topView2DRef, sideView2DRef, primaryViewRef) => {
 
   // Helper function to create an Orthographic Camera
   const createOrthographicCamera = (width, height) => {
@@ -28,8 +28,6 @@ export const initializeCameras = (width, height, views, size, frontView2DRef, ba
         return topView2DRef;
       case "side2D":
         return sideView2DRef;
-      case "front2D":
-        return frontView2DRef;
       default:
         return primaryViewRef;
     }

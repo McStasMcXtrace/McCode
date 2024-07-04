@@ -61,24 +61,6 @@ export const views = [
         controls.update();
       }
     },
-    // Front view - XY
-    {
-      camera: "OrthographicCamera",
-      view: "front2D",
-      initialCamPos: [0, 0, 0],
-      up: [ 0, 1, 0 ],
-      x_label: "x",
-      y_label: "y",
-      updateCamera: function ( camera, scene, mouseX ) {
-
-        camera.position.x = Math.max( Math.min( camera.position.x, 2000 ), - 2000 );
-        camera.lookAt( scene.position );
-
-      },
-      updateControls: function(controls){
-        controls.update();
-      }
-    },
     //Side view - YZ
     {
       camera: "OrthographicCamera",
