@@ -45,7 +45,8 @@ const ThreeCanvas = () => {
     setRays,
     handleNextClick,
   } = useRaysContext();
-  const { loading, setLoading, backgroundColor, toggleBackgroundColor } = useAppContext();
+  const { loading, setLoading, backgroundColor, toggleBackgroundColor } =
+    useAppContext();
   const [hoverInfo, setHoverInfo] = useState("");
   const gridsRef = useRef({ gridXY: null, gridXZ: null, gridYZ: null });
   const raycaster = new THREE.Raycaster();
@@ -86,7 +87,6 @@ const ThreeCanvas = () => {
       width = correctWidth;
       height = correctHeight;
 
-
       rendererRef.current.setSize(width, height);
     }
   }
@@ -98,9 +98,9 @@ const ThreeCanvas = () => {
       render();
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
@@ -320,15 +320,13 @@ const ThreeCanvas = () => {
   }, [play]);
 
   useEffect(() => {
-    if(backgroundColor){
+    if (backgroundColor) {
       sceneRef.current.background = new THREE.Color(0xffffff);
-    }
-    else {
+    } else {
       sceneRef.current.background = new THREE.Color(0x000000);
     }
     render();
   }, [backgroundColor]);
-
 
   return (
     <div id="canvas-container">
@@ -356,8 +354,7 @@ const ThreeCanvas = () => {
               <div className="y-axis gray-color">{backView.y_label}[m]</div>
               <div className="x-axis gray-color">{backView.x_label}[m]</div>
             </div>
-            <div className="view" id="">
-            </div>
+            <div className="view" id=""></div>
           </div>
         </div>
       </div>

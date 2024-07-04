@@ -10,7 +10,7 @@
   display: block;
 }
 
-#views{
+#views {
   position: absolute;
   top: 50px;
   left: 0;
@@ -29,7 +29,7 @@
   color: var(--gray-color);
 }
 
-.two-D{
+.two-D {
   display: flex;
   justify-content: center;
 }
@@ -45,7 +45,7 @@
   left: 50%;
   top: 92.5%;
 }
-.view-name{
+.view-name {
   position: absolute;
   left: 50%;
 }

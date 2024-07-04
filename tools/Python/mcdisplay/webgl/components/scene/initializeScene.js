@@ -5,8 +5,16 @@ export const initializeScene = () => {
   return new THREE.Scene();
 };
 
-export const initializeCameras = (width, height, views, size, backView2DRef, topView2DRef, sideView2DRef, primaryViewRef) => {
-
+export const initializeCameras = (
+  width,
+  height,
+  views,
+  size,
+  backView2DRef,
+  topView2DRef,
+  sideView2DRef,
+  primaryViewRef
+) => {
   // Helper function to create an Orthographic Camera
   const createOrthographicCamera = (width, height) => {
     const left = width / -100;
@@ -21,7 +29,7 @@ export const initializeCameras = (width, height, views, size, backView2DRef, top
 
   // Helper function to assign the correct DOM element
   const getDomElement = (view) => {
-    switch(view.view) {
+    switch (view.view) {
       case "back2D":
         return backView2DRef;
       case "top2D":
@@ -50,7 +58,7 @@ export const initializeCameras = (width, height, views, size, backView2DRef, top
       controls = new OrbitControls(camera, primaryViewRef);
     }
 
-    const position = view.initialCamPos.map(element => element * size);
+    const position = view.initialCamPos.map((element) => element * size);
     camera.position.fromArray(position);
     camera.up.fromArray(view.up);
     view.controls = controls;
@@ -64,7 +72,7 @@ export const initializeRenderer = (width, height) => {
     canvas: document.getElementById("canvas"),
     antialias: true,
   });
-  renderer.setPixelRatio( window.devicePixelRatio );
+  renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(width, height);
   return renderer;
 };
