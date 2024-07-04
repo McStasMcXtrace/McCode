@@ -6,8 +6,8 @@ import React, {
   useEffect,
 } from "react";
 import { Component } from "../model/Component";
-import { initializeInstrument } from "../data/initInstrument";
 import { fetchJSON } from "../utils/fetch";
+import { initializeInstrument } from "../data/initInstrument";
 
 type ComponentsContextType = {
   components: Component[];
@@ -29,9 +29,10 @@ export const ComponentsProvider: React.FC<ComponentsProviderProps> = ({
   const [components, _setComponents] = useState<Component[]>([]);
 
   useEffect(() => {
-    fetchJSON("/dist/instrument.json").then((data) => {
+    fetchJSON("../instrument.json").then((data) => {
       if (data) {
-        _setComponents(data);
+        const instrument = initializeInstrument(data);
+        _setComponents(instrument.components);
       } else {
         console.warn("Instrument data is missing");
       }

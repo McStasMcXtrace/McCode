@@ -5,7 +5,7 @@ export const initializeScene = () => {
   return new THREE.Scene();
 };
 
-export const initializeCameras = (scene, width, height, views, size, frontView2DRef, backView2DRef, topView2DRef, sideView2DRef, primaryViewRef) => {
+export const initializeCameras = (width, height, views, size, frontView2DRef, backView2DRef, topView2DRef, sideView2DRef, primaryViewRef) => {
 
   // Helper function to create an Orthographic Camera
   const createOrthographicCamera = (width, height) => {
@@ -71,7 +71,7 @@ export const initializeRenderer = (width, height) => {
   return renderer;
 };
 
-export const addGrids = (scene, gridSize, gridDivisions) => {
+export const addGrids = (scene, gridSize) => {
   /*
   the constants + 20 and -10 are hacks for taking into account that 0,0,0
    is not the true start point of the instrument components may be centered there

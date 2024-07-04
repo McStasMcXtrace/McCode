@@ -180,7 +180,6 @@ const ThreeCanvas = () => {
     const renderer = initializeRenderer(width, height);
     rendererRef.current = renderer;
     initializeCameras(
-      sceneRef.current,
       width,
       height,
       views,
@@ -229,7 +228,8 @@ const ThreeCanvas = () => {
     clearComponents(sceneRef.current);
     loadComponents(sceneRef.current, components);
     const gridsInitialized = gridsRef.current.gridXY;
-    if (!gridsInitialized) {
+
+    if (!gridsInitialized && components.length > 0) {
       const bbox = new THREE.Box3().setFromObject(sceneRef.current);
       const bboxSize = bbox.min.distanceTo(bbox.max);
       setCamPosHome(
@@ -248,7 +248,7 @@ const ThreeCanvas = () => {
       sideView.camera.position.set(sidePos.x, sidePos.y, sidePos.z);
       sideView.controls.target.set(0, 0, sidePos.z);
 
-      const grids = addGrids(sceneRef.current, bboxSize * 2, gridDivisions);
+      const grids = addGrids(sceneRef.current, bboxSize * 2);
       gridsRef.current = grids;
     }
     render();

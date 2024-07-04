@@ -1,12 +1,12 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "../../../../common.css";
 import "./toggle-rays.css";
 import { useRaysContext } from "../../../../Contexts/RaysContext";
 import ToggleScatterPoints from "../toggle-scatter-points/ToggleScatterPoints";
 import RaysPlayback from "../rays-playback/RaysPlayback";
 import ShowAllRays from "../show-all-rays/ShowAllRays";
+import { fetchJSON } from "../../../../utils/fetch";
 import { initializeRays } from "../../../../data/initRays";
-import particledata from "../../../../testdata/particles.json";
 
 const ToggleRays = () => {
   const {
@@ -21,7 +21,14 @@ const ToggleRays = () => {
   const handleClick = () => {
     if (rays.rays.length === 0) {
       console.log("initialize rays");
-      setRays(initializeRays(particledata));
+      fetchJSON("../particles.json").then((data) => {
+        if (data) {
+          const rayData = initializeRays(data);
+          setRays(rayData);
+        } else {
+          console.warn("Particle data is missing");
+        }
+      });
     }
     toggleRays();
   };
