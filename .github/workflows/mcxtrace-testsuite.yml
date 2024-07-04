@@ -1,0 +1,173 @@
+name: mcxtrace-testsuite
+on:
+  schedule:
+    - cron: '00 01 * * *'  # 01:00 every day
+
+  workflow_dispatch:
+    inputs:
+      manual-debugging:
+        type: boolean
+        description: Launch manual debugging tmate for inspection (automatic in case of errors)
+        default: false
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, CC: clang,    CXX: clang++,    python: '3.11' }
+  
+    name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    env:
+      CC: ${{ matrix.CC }}
+      CXX: ${{ matrix.CXX }}
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        path: src
+
+    - name: Setup python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python }}
+
+    - name: Setup Bison (macOS)
+      id: setup-flex-bison-macos
+      if: runner.os == 'macOS'
+      run: |
+           brew install bison flex
+
+    - name: Setup Bison (Windows)
+      id: setup-flex-bison-Windows
+      if: runner.os == 'Windows'
+      run: |
+           choco install winflexbison3
+
+    - name: Setup OpenMPI (Linux)
+      id: setup-openmpi-nexus-linux-gsl-xraylib
+      if: runner.os == 'Linux'
+      run: |
+           sudo apt -y install libopenmpi-dev libnexus-dev curl libgsl-dev libxrl-dev
+           sudo curl -O https://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcpl-1.6.2-deb64.deb
+           sudo dpkg -i mcpl-1.6.2-deb64.deb
+           sudo apt-get -f install
+
+    - name: Setup OpenMPI (macOS-12,13)
+      id: setup-openmpi-macos
+      if: runner.os == 'macOS' && matrix.os != 'macos-11'
+      run: |
+           set -e
+           set -u
+           set -x
+           brew install openmpi
+
+    - name: Check versions
+      id: version-checks
+      run: |
+           which python3
+           python3 --version
+           which cmake
+           cmake --version
+           #NB: bison and flex in path are actually too old, on mac we
+           #inject these via a brew keg later
+
+    - name: Configure build and install mcxtrace
+      id: mcxtrace-install
+      run: |
+           if [ "$RUNNER_OS" == "macOS" ]; then export SDKROOT=$(xcrun --sdk macosx --show-sdk-path); fi
+           set -e
+           set -u
+           set -x
+           mkdir build_mcxtrace
+           cd build_mcxtrace
+           export EXTRA_ARGS_FOR_CMAKE=""
+           if [ "$RUNNER_OS" == "macOS" ]; then export EXTRA_ARGS_FOR_CMAKE="-DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DFLEX_EXECUTABLE=/usr/local/opt/flex/bin/flex"; fi
+           if [ "$RUNNER_OS" == "Linux" ]; then export EXTRA_ARGS_FOR_CMAKE="-DNEXUSLIB=/usr/lib -DNEXUSINCLUDE=/usr/include/nexus"; fi
+           cmake \
+               -DCMAKE_INSTALL_PREFIX=../install_mcxtrace \
+               -S ../src \
+               -G "Unix Makefiles" \
+               -DMCVERSION="3.99.99" \
+               -DMCCODE_BUILD_CONDA_PKG=ON \
+               -DBUILD_SHARED_LIBS=ON \
+               -DCMAKE_INSTALL_LIBDIR=lib \
+               -DCMAKE_BUILD_TYPE=Release \
+               -DBUILD_MCXTRACE=ON \
+               -DMCCODE_USE_LEGACY_DESTINATIONS=OFF \
+               -DBUILD_TOOLS=ON \
+               -DENABLE_COMPONENTS=ON \
+               -DENSURE_MCPL=ON \
+               -DENSURE_NCRYSTAL=OFF \
+               -DENABLE_CIF2HKL=OFF \
+               -DENABLE_NEUTRONICS=OFF \
+               ${EXTRA_ARGS_FOR_CMAKE}
+           cmake --build . --config Release
+           cmake --build . --target install --config Release
+           export MCXTRACE_EXECUTABLE="mcxtrace"
+           export MXRUN_EXECUTABLE="mxrun"
+           if [ "$RUNNER_OS" == "Windows" ];
+           then
+             export MCXTRACE_EXECUTABLE="mcxtrace.exe"
+             export MXRUN_EXECUTABLE="mxrun.bat"
+           fi
+           test -f "../install_mcxtrace/bin/${MCXTRACE_EXECUTABLE}"
+           test -f "../install_mcxtrace/bin/${MXRUN_EXECUTABLE}"
+           test -f "../install_mcxtrace/share/mcxtrace/tools/Python/mccodelib/__init__.py"
+           test -d "../install_mcxtrace/share/mcxtrace/resources/data"
+           echo *******************************************************************************
+           echo Resulting mccode_config.json:
+           echo *******************************************************************************
+           cat ../install_mcxtrace/share/mcxtrace/tools/Python/mccodelib/mccode_config.json
+           echo *******************************************************************************
+
+    - name: Pip install various
+      id: pip-install
+      run: |
+           set -e
+           set -u
+           set -x
+           python3 -mpip install PyYAML ply McStasscript
+           if [ "$RUNNER_OS" != "Windows" ];
+           then
+             python3 -mpip install ncrystal
+           fi
+
+    - name: Test suite, 2-core MPI
+      id: test-suite
+      run: |
+           set -e
+           set -u
+           set -x
+           export PATH=$PWD/install_mcxtrace/bin/:$PATH
+           mkdir run_test-suite && cd run_test-suite
+           mxtest --testdir $PWD --mpi=2 --suffix ${{ matrix.os }}
+
+    - name: 'Tar output files'
+      id: tar-package
+      if: always()
+      run: |
+           set -e
+           set -u
+           set -x
+           tar cvfz mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}_output.tgz run_*
+
+    - name: 'Upload Artifact'
+      id: tar-upload
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: mcxtrace-artefacts-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
+        path: "mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}_output.tgz"
+
+    - name: Setup tmate session for manual debugging
+      uses: mxschmitt/action-tmate@v3
+      if: always() && (inputs.manual-debugging == true && steps.tar-package.outcome != 'success')
+      with:
+        limit-access-to-actor: true

@@ -22,6 +22,32 @@ class InstrumentSpecific(object):
     def set_cmd(self, cmd):
         self.cmd = cmd
     
+    def get_boundingbox(self, first=None, last=None):
+        components = self.components
+
+        cnames = map(lambda c: c.name, self.components)
+        if first in cnames and last in cnames:
+            i_first = cnames.index(first)
+            i_last = cnames.index(last)
+            components = filter(lambda c: self.components.index(c) > i_first and self.components.index(c) < i_last, self.components)
+        elif first in cnames:
+            i_first = cnames.index(first)
+            components = filter(lambda c: self.components.index(c) > i_first, self.components)
+        elif last in cnames:
+            i_last = cnames.index(last)
+            components = filter(lambda c: self.components.index(c) < i_last, self.components)
+
+        # run the bounding box calculation
+        oldbox = None
+        for c in components:
+            box = c.get_tranformed_bb()
+
+            if oldbox:
+                box = box.add(oldbox)
+            oldbox = box
+
+        return box
+
     def jsonize(self):
         ''' returns this object in jsonized form '''
         instr = {}
@@ -34,6 +60,9 @@ class InstrumentSpecific(object):
         instr['params_values'] = self.params_values
         instr['cmd'] = self.cmd
         
+        # "bounding" box - only present for the sake of pyqtgraph --tof mode
+        instr['boundingbox'] = self.get_boundingbox().jsonize()
+
         # components
         lst = []
         for c in self.components:
@@ -59,6 +88,23 @@ class Component(object):
         self.m4 = [rot.a11, rot.a12, rot.a13, pos.x, rot.a21, rot.a22, rot.a23, pos.y, rot.a31, rot.a32, rot.a33, pos.z, 0, 0, 0, 1]
         self.drawcalls = []
 
+    # "bounding" box - only present for the sake of pyqtgraph --tof mode
+    def get_bounding_box(self):
+        ''' calculate and return bounding box in naiive/local coordinates '''
+        box = BoundingBox()
+        for d in self.drawcalls:
+            box = d.get_boundingbox().add(box)
+
+        return box
+
+    # "bounding" box - only present for the sake of pyqtgraph --tof mode
+    def get_tranformed_bb(self):
+        ''' calculate and return bounding box in transformed coordinates '''
+        box = BoundingBox()
+        for d in self.drawcalls:
+            box = d.get_boundingbox(self.transform).add(box)
+
+        return box
     
     def jsonize(self):
         ''' returns a jsonized version of this object '''
@@ -79,6 +125,77 @@ class Component(object):
     def __str__(self):
         return self.name
 
+# "bounding" box - only present for the sake of pyqtgraph --tof mode
+class BoundingBox(object):
+    ''' bounding box '''
+    def __init__(self, x1=None, x2=None, y1=None, y2=None, z1=None, z2=None):
+        ''' properly initialize the bounding box by infinity/ minus infinity '''
+        inf = float("inf")
+        ninf = - inf
+
+        self.x1 = x1 if x1 != None else inf
+        self.x2 = x2 if x2 != None else ninf
+        self.y1 = y1 if y1 != None else inf
+        self.y2 = y2 if y2 != None else ninf
+        self.z1 = z1 if z1 != None else inf
+        self.z2 = z2 if z2 != None else ninf
+
+        self.m4 = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+
+    def add(self, box):
+        ''' add and return a combined bounding box '''
+
+        x1 = min(self.x1, box.x1)
+        x2 = max(self.x2, box.x2)
+        y1 = min(self.y1, box.y1)
+        y2 = max(self.y2, box.y2)
+        z1 = min(self.z1, box.z1)
+        z2 = max(self.z2, box.z2)
+
+        return BoundingBox(x1, x2, y1, y2, z1, z2)
+
+    def _get_drawcalls(self):
+        ''' private method used to describe the bounding box in terms of mcdisplay drawcalls '''
+        x1 = self.x1
+        x2 = self.x2
+        y1 = self.y1
+        y2 = self.y2
+        z1 = self.z1
+        z2 = self.z2
+        # the rectangle front and back sides
+        d1 = DrawMultiline(args=[x1, y1, z1, x1, y2, z1, x2, y2, z1, x2, y1, z1, x1, y1, z1])
+        d2 = DrawMultiline(args=[x1, y1, z2, x1, y2, z2, x2, y2, z2, x2, y1, z2, x1, y1, z2])
+        # the four lines connecting
+        d3 = DrawLine(args=[x1, y1, z1, x1, y1, z2])
+        d4 = DrawLine(args=[x2, y1, z1, x2, y1, z2])
+        d5 = DrawLine(args=[x1, y2, z1, x1, y2, z2])
+        d6 = DrawLine(args=[x2, y2, z1, x2, y2, z2])
+
+        return [d1, d2, d3, d4, d5, d6]
+
+
+    def jsonize(self):
+        ''' returns a jsonized version of this object '''
+        box = {}
+
+        box['xmin'] = self.x1
+        box['xmax'] = self.x2
+        box['ymin'] = self.y1
+        box['ymax'] = self.y2
+        box['zmin'] = self.z1
+        box['zmax'] = self.z2
+
+        # drawcalls
+        lst = []
+        drawcalls = self._get_drawcalls()
+        for d in drawcalls:
+            lst.append(d.jsonize())
+        box['drawcalls'] = lst
+
+        return box
+
+    def __str__(self):
+        return '%s, %s, %s, %s, %s, %s' % (self.x1, self.x2, self.y1, self.y2, self.z1, self.z2)
 
 class RayBundle(object):
     ''' represents a bundle of particles '''
@@ -273,13 +390,47 @@ class DrawCommand(object):
         self.args = floatify(args)
         self.args_str = ''
         self.key = ''
+        self.boundingbox = None
         if len(args) > 0:
             self.args_str = str(args[0])
             for i in range(len(args)-1):
                 self.args_str = self.args_str + ', ' + str(args[i+1])
-    
+
+    # "bounding" box - only present for the sake of pyqtgraph --tof mode
+    def get_boundingbox(self, transform=None):
+        self.boundingbox = self._calc_boundingbox(self._get_points(), transform)
+        return self.boundingbox
+
     def _get_points(self):
         return
+
+    # "bounding" box - only present for the sake of pyqtgraph --tof mode
+    @classmethod
+    def _calc_boundingbox(self, points, transform):
+        ''' override to implement alternative OR implement get_points '''
+        box = BoundingBox()
+        if not points:
+            return box
+
+        x_set = []
+        y_set = []
+        z_set = []
+
+        for p in points:
+            if transform:
+                p = transform.apply(p)
+            x_set.append(p.x)
+            y_set.append(p.y)
+            z_set.append(p.z)
+
+        box.x1 = min(x_set)
+        box.x2 = max(x_set)
+        box.y1 = min(y_set)
+        box.y2 = max(y_set)
+        box.z1 = min(z_set)
+        box.z2 = max(z_set)
+
+        return box
     
     def jsonize(self):
         ''' returns a jsonzied version of this object '''
@@ -408,6 +559,47 @@ class DrawCircle(DrawCommand):
         idx = self.args_str.find(',')
         self.args_str = '\"' + self.args_str[:idx] + '\"' + self.args_str[idx:]
 
+    def _get_points(self):
+        ''' returns the corners of a flat square around the circle, transformed into the proper plane '''
+        rad = self.radius
+        cen = self.center
+
+        ne = Vector3d(rad, rad, 0)
+        nw = Vector3d(-rad, rad, 0)
+        sw = Vector3d(-rad, -rad, 0)
+        se = Vector3d(rad, -rad, 0)
+
+        square = [ne, nw, sw, se]
+
+        if self.plane == 'xy':
+            return map(lambda p: cen.add(p), square)
+        elif self.plane == 'xz':
+            return map(lambda p: cen.add(Vector3d(p.x, 0, p.y)), square)
+        elif self.plane == 'yz':
+            return map(lambda p: cen.add(Vector3d(0, p.x, p.y)), square)
+        else:
+            raise Exception('DrawCircle: invalid plane argument')
+
+    def get_points_on_circle(self, steps=60):
+        ''' returns points on the circle, transformed into the proper plane '''
+        if self.plane in ['zy', 'yz']: (k1, k2) = (2,1)
+        elif self.plane in ['xy', 'yx']: (k1, k2) = (0,1)
+        elif self.plane in ['zx', 'xz']: (k1, k2) = (2,0)
+        else:
+            raise Exception('DrawCircle: invalid plane argument: %s' % self.plane)
+
+        rad = self.radius
+        center = self.center
+
+        circ2 = [ (rad*np.cos(theta), rad*np.sin(theta)) for theta in np.linspace(0, 2*np.pi, steps) ]
+        circ3 = []
+        for p2 in circ2:
+            p = Vector3d()
+            p[k1] = p2[0]
+            p[k2] = p2[1]
+            circ3.append(p)
+
+        return [center.add(c) for c in circ3]
 
 class DrawNewCircle(DrawCommand):
     center = None

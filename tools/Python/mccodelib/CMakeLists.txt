@@ -119,13 +119,6 @@ else()
   set( MCCODE_IS_CONDA_PKG "0" )
 endif()
 
-# HDF-viewer
-if ( MCCODE_BUILD_CONDA_PKG )
-  set( HDFVIEW "nexpy" )
-else ()
-  set( HDFVIEW "HDFCompass" )
-endif ()
-
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mccode_config.py.in" "${WORK}/mccode_config.py" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mccode_config.json.in" "${WORK}/mccode_config.json" @ONLY)
 
