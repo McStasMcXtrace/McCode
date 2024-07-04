@@ -48,7 +48,7 @@ def run_normal_mode(testdir, reflabel):
             label = cellobj["localfile"].split("\\");
 
         label=label[len(label)-3];
-        url =  label + "/" + cellobj["instrname"] +  "/" + str(cellobj["testnb"]) + "/browse.html"
+        url =  label + "/" + cellobj["instrname"] +  "/" + str(cellobj["testnb"]) + "/"
         burl = label + "/" + cellobj["instrname"] +  "/"
         curl = label + "/" + cellobj["instrname"] +  "/compile_stdout.txt"
 

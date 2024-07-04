@@ -632,7 +632,9 @@ TRACE
   double aa; // alpha coordinate (along the arc of the detector) of the absorption
   double t1,t2; // time for the first and second charged particles to the next wall
 
+  #ifndef HUGE_VAL
   #define HUGE_VAL DBL_MAX
+  #endif
   
   #pragma acc atomic 
   CountNeutrons = CountNeutrons + p;
