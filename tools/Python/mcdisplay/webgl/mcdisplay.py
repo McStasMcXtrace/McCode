@@ -95,7 +95,7 @@ def _write_html(instrument, html_filepath, first=None, last=None, invcanvas=Fals
 
 def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first=None, last=None, invcanvas=None, **kwds):
     ''' writes instrument definitions to html/ js '''
-
+    print("Launching WebGL...")
     def copy(a, b):
         shutil_copy(str(a), str(b))
 
@@ -109,14 +109,10 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
     # Copy the app files
     copytree(source.joinpath('dist'), dest.joinpath('dist'))
 
-    # Copy package.json and package-lock.json from source to dest
+    # Copy package.json from source to dest
     package_json_source = source.joinpath('package.json')
     package_json_dest = dest.joinpath('dist/package.json')
     shutil_copy(package_json_source, package_json_dest)
-
-    package_lock_json_source = source.joinpath('package-lock.json')
-    package_lock_json_dest = dest.joinpath('dist/package-lock.json')
-    shutil_copy(package_lock_json_source, package_lock_json_dest)
 
     # Copy node_modules from source to dist
     node_modules_source = source.joinpath('node_modules')
@@ -173,6 +169,7 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
 
     # If a port was found, open the browser
     if port_container['port']:
+        print("Opening browser...")
         webbrowser.open(f"http://localhost:{port_container['port']}/")
     else:
         print("Failed to determine the localhost port")
