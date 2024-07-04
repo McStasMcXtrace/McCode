@@ -60,7 +60,7 @@ li {
 :root {
   --gray-color: #7c7c7c;
 
-  /* Light mode colors */  
+  /* Light mode colors */
   --primary-color: #3498db;
   --secondary-color: #2ecc71;
   --background-color: #ffffff;
@@ -100,7 +100,7 @@ li {
   flex-direction: column;
 }
 
-.fill{
+.fill {
   width: 100%;
   height: 100%;
 }
