@@ -891,10 +891,10 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	  detector.p1=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2], sizeof(double));
 	  detector.p2=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2], sizeof(double));
 	  if (Vars->Flag_Verbose) printf("2D case %ld x %ld \n",Vars->Coord_Bin[1],Vars->Coord_Bin[2]);
-	  for (k=0; k<Vars->Coord_Bin[1]; k++) {
-	    for (l=0; l<Vars->Coord_Bin[2]; l++) {
-	      if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld] = %ld\n",k,l,pix);
-	      detector.p1[k*Vars->Coord_Bin[2]+l]=pix;
+	  for (k=0; k<Vars->Coord_Bin[2]; k++) {
+	    for (l=0; l<Vars->Coord_Bin[1]; l++) {
+	      if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld] = %ld\n",l,k,pix);
+	      detector.p1[k+l*Vars->Coord_Bin[2]]=pix;
 	      pix++;
 	    }
 	  }
@@ -920,11 +920,11 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	  detector.p1=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*Vars->Coord_Bin[3], sizeof(double));
 	  detector.p2=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*Vars->Coord_Bin[3], sizeof(double));
 	  if (Vars->Flag_Verbose) printf("3D case %ld x %ld x %ld \n",Vars->Coord_Bin[1],Vars->Coord_Bin[2],Vars->Coord_Bin[3]);
-	  for (k=0; k<Vars->Coord_Bin[1]; k++) {
+	  for (k=0; k<Vars->Coord_Bin[3]; k++) {
 	    for (l=0; l<Vars->Coord_Bin[2]; l++) {
-	      for (m=0; m<Vars->Coord_Bin[3]; m++) {
-		if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld,%ld] = %ld\n",k,l,m,pix); 
-		detector.p1[Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*k + Vars->Coord_Bin[2]*l + m]=pix;
+	      for (m=0; m<Vars->Coord_Bin[1]; m++) {
+		if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld,%ld] = %ld\n",m,l,k,pix); 
+		detector.p1[k + Vars->Coord_Bin[2]*l + Vars->Coord_Bin[2]*Vars->Coord_Bin[1]*m]=pix;
 		pix++;
 	      }
 	    }
