@@ -95,7 +95,7 @@ const ThreeCanvas = () => {
   // Resize handling to keep renderer size in sync with the window
   useEffect(() => {
     const handleResize = () => {
-      rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+      rendererRef.current.setSize(window.innerWidth, window.innerHeight*2);
       render();
     };
 
@@ -169,10 +169,8 @@ const ThreeCanvas = () => {
   }
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const width = (container.clientWidth || window.innerWidth) * 2;
-    const height = (container.clientHeight || window.innerHeight) * 2;
+    const width = window.innerWidth* 2;
+    const height = window.innerHeight * 2;
 
     const scene = initializeScene();
     sceneRef.current = scene;
