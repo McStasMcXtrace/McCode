@@ -13,7 +13,7 @@
 * %Description
 * The HU52 undulator, a DCM, a fluorescence sample, and monitors.
 *
-* %Example: E0=3 Detector: mon_spl_fluo_I=3.66859e+14
+* %Example: E0=3 Detector: mon_spl_fluo_I=1.9e+15
 *
 * %Parameters
 * E0: [keV] Nominal energy at the Wiggler.

@@ -1,5 +1,7 @@
 name: mcstas-testsuite
 on:
+  schedule:
+    - cron: '00 02 * * *'  # 02:00 every day
 
   workflow_dispatch:
     inputs:
@@ -49,12 +51,13 @@ jobs:
            choco install winflexbison3
 
     - name: Setup OpenMPI (Linux)
-      id: setup-openmpi-nexus-linux
+      id: setup-openmpi-nexus-linux-gsl
       if: runner.os == 'Linux'
       run: |
-           sudo apt -y install libopenmpi-dev libnexus-dev curl
+           sudo apt -y install libopenmpi-dev libnexus-dev curl libgsl-dev
            sudo curl -O https://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcpl-1.6.2-deb64.deb
-           sudo dpkg -i mcpl-1.6.2-deb64.deb
+           sudo curl -O https://packages.mccode.org/debian/dists/stable/main/binary-amd64/ncrystal-3.7.1-deb64.deb
+           sudo dpkg -i mcpl-1.6.2-deb64.deb ncrystal-3.7.1-deb64.deb
            sudo apt-get -f install
 
     - name: Setup OpenMPI (macOS-12,13)
