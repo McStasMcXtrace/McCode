@@ -1,2 +1,4 @@
 instrument.json
 particles.json
+dist/
+node_modules/

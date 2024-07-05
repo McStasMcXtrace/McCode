@@ -4,20 +4,18 @@ import "./color-picker.css";
 import Sketch from "@uiw/react-color-sketch";
 import DropDownButton from "../dropdown-button/DropDownButton";
 import { Component } from "../../../../model/Component";
+import { useInstrumentContext } from "../../../../Contexts/InstrumentContext";
 
 interface ColorPickerProps {
   currentComponent: Component;
   setCurrentComponent: React.Dispatch<React.SetStateAction<Component>>;
-  components: Component[];
-  setComponents: React.Dispatch<React.SetStateAction<Component[]>>;
 }
 
 const ColorPicker = ({
   currentComponent,
   setCurrentComponent,
-  components,
-  setComponents,
 }: ColorPickerProps) => {
+  const { instrument, setInstrument } = useInstrumentContext();
   const [open, setOpen] = useState(false);
   const [tempColor, setTempColor] = useState(currentComponent.color);
   const [tempTransparency, setTempTransparency] = useState(
@@ -36,13 +34,16 @@ const ColorPicker = ({
 
   const handleClickOutside = (event) => {
     if (sketchRef.current && !sketchRef.current.contains(event.target)) {
-      const newComponents = components.map((c) => {
+      const newComponents = instrument.components.map((c) => {
         if (c.id === currentComponent.id) {
           return { ...c, color: tempColor, transparency: tempTransparency };
         }
         return c;
       });
-      setComponents(newComponents);
+      setInstrument((prevInstrument) => ({
+        ...prevInstrument,
+        components: newComponents,
+      }));
       setCurrentComponent((prevComponent) => ({
         ...prevComponent,
         color: tempColor,

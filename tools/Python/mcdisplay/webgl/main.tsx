@@ -2,7 +2,7 @@ import React from "react";
 import "./common.css";
 import { GridProvider } from "./Contexts/GridContext";
 import { CameraProvider } from "./Contexts/CameraContext";
-import { ComponentsProvider } from "./Contexts/ComponentsContext";
+import { InstrumentProvider } from "./Contexts/InstrumentContext";
 import { RaysProvider } from "./Contexts/RaysContext";
 import { AppProvider } from "./Contexts/AppContext";
 import App from "./App";
@@ -12,11 +12,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <AppProvider>
     <GridProvider>
       <CameraProvider>
-        <ComponentsProvider>
+        <InstrumentProvider>
           <RaysProvider>
             <App />
           </RaysProvider>
-        </ComponentsProvider>
+        </InstrumentProvider>
       </CameraProvider>
     </GridProvider>
   </AppProvider>

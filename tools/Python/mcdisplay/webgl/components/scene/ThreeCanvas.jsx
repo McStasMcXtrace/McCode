@@ -11,7 +11,7 @@ import {
   initializeDirectionalLight,
   initializeAmbientLight,
 } from "./initializeScene";
-import { useComponentsContext } from "../../Contexts/ComponentsContext";
+import { useInstrumentContext } from "../../Contexts/InstrumentContext";
 import { clearComponents, loadComponents } from "../../Contexts/addComponents";
 import { useRaysContext } from "../../Contexts/RaysContext";
 import {
@@ -26,12 +26,13 @@ import { useAppContext } from "../../Contexts/AppContext";
 import * as THREE from "three";
 import { views } from "./views";
 import TwoDView from "./two-d-view/TwoDView";
+import InfoView from "./info-view/InfoView";
 
 const ThreeCanvas = () => {
   const { showXY, showXZ, showYZ, gridSize, gridDivisions } = useGridContext();
   const { camPos, setCamPosSide, setCamPosTop, setCamPosHome } =
     useCameraContext();
-  const { components, setComponents } = useComponentsContext();
+  const { instrument, setInstrument } = useInstrumentContext();
   const {
     showAllRays,
     toggleShowAllRays,
@@ -222,10 +223,10 @@ const ThreeCanvas = () => {
 
   useEffect(() => {
     clearComponents(sceneRef.current);
-    loadComponents(sceneRef.current, components);
+    loadComponents(sceneRef.current, instrument.components);
     const gridsInitialized = gridsRef.current.gridXY;
 
-    if (!gridsInitialized && components.length > 0) {
+    if (!gridsInitialized && instrument.components.length > 0) {
       const bbox = new THREE.Box3().setFromObject(sceneRef.current);
       const bboxSize = bbox.min.distanceTo(bbox.max);
       setCamPosHome(
@@ -248,11 +249,11 @@ const ThreeCanvas = () => {
       gridsRef.current = grids;
     }
     render();
-  }, [components]);
+  }, [instrument.components]);
 
   useEffect(() => {
     console.log("Rays updated");
-    addRays(sceneRef.current, rays, components);
+    addRays(sceneRef.current, rays, instrument.components);
     render();
   }, [rays]);
 
@@ -341,7 +342,9 @@ const ThreeCanvas = () => {
           </div>
           <div className="row fill">
             <TwoDView viewRef={BackView2DRef} text="End" x_label={backView.x_label} y_label={backView.y_label} unit="m"/>
-            <div className="view"></div>
+            <div className="view">
+              <InfoView/>
+            </div>
           </div>
         </div>
       </div>
