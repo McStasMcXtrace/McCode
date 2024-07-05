@@ -10,7 +10,6 @@ const CameraContext = createContext({
   setCamPosHome: () => {},
   setCamPosSide: () => {},
   setCamPosTop: () => {},
-  logMessage: () => {},
 });
 
 export const CameraProvider = ({ children }) => {

@@ -5,6 +5,7 @@ import "./configure-scene-menu.css";
 import ComponentStyler from "./component-styler/ComponentStyler";
 import RaysMenu from "./rays-menu/RaysMenu";
 import BackgroundColorButton from "./background-color-button/BackgroundColorButton";
+import AxesButton from "./axes-button/AxesButton";
 
 const ConfigureSceneMenu = () => {
   return (
@@ -13,6 +14,7 @@ const ConfigureSceneMenu = () => {
       <ComponentStyler />
       <ViewButtons />
       <GridButtons />
+      <AxesButton />
       <BackgroundColorButton />
     </div>
   );

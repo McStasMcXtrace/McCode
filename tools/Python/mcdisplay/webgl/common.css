@@ -58,6 +58,10 @@ li {
   isolation: isolate;
 }
 :root {
+  --x-axis-color: #7f2020;
+  --y-axis-color: #207f20;
+  --z-axis-color: #20207f;
+
   --gray-color: #808080;
 
   /* Light mode colors */

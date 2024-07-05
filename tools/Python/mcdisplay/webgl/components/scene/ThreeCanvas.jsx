@@ -7,7 +7,7 @@ import {
   initializeCameras,
   initializeRenderer,
   addGrids,
-  initializeControls,
+  addAxes,
   initializeDirectionalLight,
   initializeAmbientLight,
 } from "./initializeScene";
@@ -29,7 +29,7 @@ import TwoDView from "./two-d-view/TwoDView";
 import InfoView from "./info-view/InfoView";
 
 const ThreeCanvas = () => {
-  const { showXY, showXZ, showYZ, gridSize, gridDivisions } = useGridContext();
+  const { showXY, showXZ, showYZ, gridSize, gridDivisions, showAxes } = useGridContext();
   const { camPos, setCamPosSide, setCamPosTop, setCamPosHome } =
     useCameraContext();
   const { instrument, setInstrument } = useInstrumentContext();
@@ -51,6 +51,7 @@ const ThreeCanvas = () => {
     useAppContext();
   const [hoverInfo, setHoverInfo] = useState("");
   const gridsRef = useRef({ gridXY: null, gridXZ: null, gridYZ: null });
+  const axesRef = useRef({ x_axis: null, y_axis: null, z_axis: null});
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
   let width, height;
@@ -212,6 +213,14 @@ const ThreeCanvas = () => {
   }, [showXY, showXZ, showYZ]);
 
   useEffect(() => {
+    if(axesRef.current.x_axis || axesRef.current.y_axis || axesRef.current.z_axis){
+      axesRef.current.x_axis.visible = showAxes;
+      axesRef.current.y_axis.visible = showAxes;
+      axesRef.current.z_axis.visible = showAxes;
+    }
+  }, [showAxes]);
+
+  useEffect(() => {
     if (primaryCameraRef.current) {
       primaryCameraRef.current.position.set(camPos.x, camPos.y, camPos.z);
       if (primaryControlsRef.current) {
@@ -228,7 +237,7 @@ const ThreeCanvas = () => {
 
     if (!gridsInitialized && instrument.components.length > 0) {
       const bbox = new THREE.Box3().setFromObject(sceneRef.current);
-      const bboxSize = bbox.min.distanceTo(bbox.max);
+      const bboxSize = Math.ceil(bbox.min.distanceTo(bbox.max));
       setCamPosHome(
         new THREE.Vector3(bboxSize / 2, bboxSize / 2, bboxSize / 2)
       );
@@ -247,6 +256,9 @@ const ThreeCanvas = () => {
 
       const grids = addGrids(sceneRef.current, bboxSize * 2);
       gridsRef.current = grids;
+
+      const axes = addAxes(sceneRef.current, bboxSize);
+      axesRef.current = axes;
     }
     render();
   }, [instrument.components]);
@@ -327,6 +339,8 @@ const ThreeCanvas = () => {
     }
     render();
   }, [backgroundColor]);
+
+
 
   return (
     <div id="canvas-container">

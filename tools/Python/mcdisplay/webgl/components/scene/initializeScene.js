@@ -77,6 +77,28 @@ export const initializeRenderer = (width, height) => {
   return renderer;
 };
 
+export const addAxes = (scene, size) => {
+
+  const axes = {};
+
+  const center = new THREE.Vector3( 0,0,0 );
+
+  /* arrow colors should match --x-axis-color, y-ax.. colors in common.css*/
+  const x_axis = new THREE.ArrowHelper( new THREE.Vector3( 1,0,0 ), center, size, 0x7F2020, 1, 0.5 );
+  const y_axis = new THREE.ArrowHelper( new THREE.Vector3( 0,1,0 ), center, size, 0x207F20, 1, 0.5 );
+  const z_axis = new THREE.ArrowHelper( new THREE.Vector3( 0,0,1 ), center, size, 0x20207F, 1, 0.5 );
+
+  axes.x_axis = x_axis;
+  axes.y_axis = y_axis;
+  axes.z_axis = z_axis;
+
+  scene.add( x_axis );
+  scene.add( y_axis );
+  scene.add( z_axis );
+
+  return axes;
+};
+
 export const addGrids = (scene, gridSize) => {
   /*
   the constants + 20 and -10 are hacks for taking into account that 0,0,0
@@ -103,7 +125,6 @@ export const addGrids = (scene, gridSize) => {
   gridXY.name = "gridXY";
   scene.add(gridXY);
   grids.gridXY = gridXY;
-
   const gridYZ = new THREE.GridHelper(correctedGridSize, correctedGridSize);
   gridYZ.position.set(0, 0, center);
   gridYZ.visible = false;
@@ -115,11 +136,6 @@ export const addGrids = (scene, gridSize) => {
   return grids;
 };
 
-export const initializeControls = (camera, renderer) => {
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.update();
-  return controls;
-};
 
 export const initializeDirectionalLight = (scene) => {
   const light = new THREE.DirectionalLight(0xffffff, 5);

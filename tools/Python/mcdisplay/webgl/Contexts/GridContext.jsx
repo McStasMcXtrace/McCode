@@ -11,9 +11,13 @@ const GridContext = createContext({
   toggleXY: () => {},
   toggleXZ: () => {},
   toggleYZ: () => {},
+
+  showAxes: true,
+  toggleAxes: () => {},
 });
 
 export const GridProvider = ({ children }) => {
+  const [showAxes, setShowAxes] = useState(true);
   const [gridSize, setGridSize] = useState(100);
   const [gridDivisions, setGridDivisions] = useState(100);
   const updateGridSize = (size, divisions) => {
@@ -28,6 +32,7 @@ export const GridProvider = ({ children }) => {
   const toggleXY = () => setShowXY(!showXY);
   const toggleXZ = () => setShowXZ(!showXZ);
   const toggleYZ = () => setShowYZ(!showYZ);
+  const toggleAxes = () => setShowAxes(!showAxes);
 
   return (
     <GridContext.Provider
@@ -41,6 +46,8 @@ export const GridProvider = ({ children }) => {
         toggleXY,
         toggleXZ,
         toggleYZ,
+        showAxes,
+        toggleAxes,
       }}
     >
       {children}
