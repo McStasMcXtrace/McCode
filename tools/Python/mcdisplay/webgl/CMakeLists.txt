@@ -51,7 +51,7 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply, python3-numpy")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply, python3-numpy nodejs")
 
 # RPM
 if (RPMPROFILE)
@@ -75,6 +75,13 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display" @ONLY)
 
+# Put package.json in $WORK
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/package.json" "${WORK}/package.json" @ONLY)
+
+# Run npm to install project
+execute_process(COMMAND "npm" "install"
+                WORKING_DIRECTORY "${WORK}")
+
 # Dist
 install(
   DIRECTORY "${PROJECT_SOURCE_DIR}/dist"
@@ -84,7 +91,7 @@ install(
 
 # Node modules
 install(
-    DIRECTORY "${PROJECT_SOURCE_DIR}/node_modules"
+    DIRECTORY "${WORK}/node_modules"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
     )
 
