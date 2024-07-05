@@ -25,6 +25,7 @@ import {
 import { useAppContext } from "../../Contexts/AppContext";
 import * as THREE from "three";
 import { views } from "./views";
+import TwoDView from "./two-d-view/TwoDView";
 
 const ThreeCanvas = () => {
   const { showXY, showXZ, showYZ, gridSize, gridDivisions } = useGridContext();
@@ -337,24 +338,12 @@ const ThreeCanvas = () => {
         </div>
         <div className="column fill row-gap two-D">
           <div className="row fill">
-            <div className="view" id="TopView2D" ref={TopView2DRef}>
-              <p className="view-name gray-color">Top</p>
-              <div className="y-axis gray-color">{topView.y_label}[m]</div>
-              <div className="x-axis gray-color">{topView.x_label}[m]</div>
-            </div>
-            <div className="view" id="SideView2D" ref={SideView2DRef}>
-              <p className="view-name gray-color">Side</p>
-              <div className="y-axis gray-color">{sideView.y_label}[m]</div>
-              <div className="x-axis gray-color">{sideView.x_label}[m]</div>
-            </div>
+            <TwoDView viewRef={TopView2DRef} text="Top" x_label={topView.x_label} y_label={topView.y_label} unit="m"/>
+            <TwoDView viewRef={SideView2DRef} text="Side" x_label={sideView.x_label} y_label={sideView.y_label} unit="m"/>
           </div>
           <div className="row fill">
-            <div className="view" id="BackView2D" ref={BackView2DRef}>
-              <p className="view-name gray-color">End</p>
-              <div className="y-axis gray-color">{backView.y_label}[m]</div>
-              <div className="x-axis gray-color">{backView.x_label}[m]</div>
-            </div>
-            <div className="view" id=""></div>
+            <TwoDView viewRef={BackView2DRef} text="End" x_label={backView.x_label} y_label={backView.y_label} unit="m"/>
+            <div className="view"></div>
           </div>
         </div>
       </div>
