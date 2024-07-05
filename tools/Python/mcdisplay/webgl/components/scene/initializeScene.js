@@ -54,7 +54,7 @@ export const initializeCameras = (
       view.cameraHelper = cameraHelper;
       //scene.add(cameraHelper);
     } else {
-      camera = new THREE.PerspectiveCamera(view.fov, width / height, 0.1, 1000);
+      camera = new THREE.PerspectiveCamera(view.fov, width / height, 0.01, 1000);
       controls = new OrbitControls(camera, primaryViewRef);
     }
 
