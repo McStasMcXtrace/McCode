@@ -2,8 +2,9 @@
   "name": "webgl",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node start-vite.js",
     "build": "vite build",
     "serve": "http-server dist -p 8000"
   },
