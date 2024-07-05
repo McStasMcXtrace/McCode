@@ -36,6 +36,7 @@ dependencies:
   - ipympl
   - jinja2
   - mslex
+  - nodejs
   - pip
   - pip:
     - guide_bot
