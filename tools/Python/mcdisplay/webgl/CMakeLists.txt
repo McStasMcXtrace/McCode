@@ -79,7 +79,12 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display" 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/package.json" "${WORK}/package.json" @ONLY)
 
 # Run npm to install project
-execute_process(COMMAND "npm" "install"
+if (WINDOWS)
+  set(NPM "npm.cmd")
+else()
+  set(NPM "npm")
+endif()
+execute_process(COMMAND ${NPM} "install"
                 WORKING_DIRECTORY "${WORK}")
 
 # Dist
