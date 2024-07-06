@@ -80,14 +80,17 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/package.json" "${WORK}/package.json"
 
 # Run npm to install project
 if (WINDOWS)
-  if(NOT NPM)
-    set(NPM "npm.cmd")
-  endif()
+  set(NPM "npm.cmd")
 else()
   set(NPM "npm")
 endif()
-execute_process(COMMAND ${NPM} "install"
-                WORKING_DIRECTORY "${WORK}")
+if(NOT NPMDEFER)
+  execute_process(COMMAND ${NPM} "install"
+    WORKING_DIRECTORY "${WORK}")
+else()
+  execute_process(COMMAND "mkdir" "node_modules"
+    WORKING_DIRECTORY "${WORK}")
+endif()
 
 # Dist
 install(

@@ -53,4 +53,4 @@ set(GSLFLAGS "-IGETPATH(../miniconda3/Library/include/) -Wl,-rpath,GETPATH(../mi
 set(XRLFLAGS "-IGETPATH(../miniconda3/Library/include/) -Wl,-rpath,GETPATH(../miniconda3/Library/lib) -LGETPATH(../miniconda3/Library/lib) -lxrl")
 
 # In cross-compile, use bare npm command
-set(NPM "npm")
+set(NPMDEFER "defer")
