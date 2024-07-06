@@ -80,7 +80,9 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/package.json" "${WORK}/package.json"
 
 # Run npm to install project
 if (WINDOWS)
-  set(NPM "npm.cmd")
+  if(NOT NPM)
+    set(NPM "npm.cmd")
+  endif()
 else()
   set(NPM "npm")
 endif()
