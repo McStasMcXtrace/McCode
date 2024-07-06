@@ -144,8 +144,13 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
 
     # Function to run npm commands and capture port
     def run_npm_and_capture_port(port_container):
+        if not os.name == 'nt':
+            npmexe = "npm"
+        else:
+            npmexe = "npm.cmd"
+
         try:
-            proc = subprocess.Popen(["npm","run","dev"], cwd=str(destdist), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            proc = subprocess.Popen([npmexe,"run","dev"], cwd=str(destdist), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             for line in proc.stdout:
                 print(line)
                 if 'Local:' in line:

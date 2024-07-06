@@ -31,6 +31,7 @@ dependencies:
   - mslex
   - typish
   - jsons
+  - nodejs
   - pip
   - pip:
     - guide_bot
