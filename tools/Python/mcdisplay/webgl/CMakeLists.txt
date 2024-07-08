@@ -78,19 +78,9 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display" 
 # Put package.json in $WORK
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/package.json" "${WORK}/package.json" @ONLY)
 
-# Run npm to install project
-if (WINDOWS)
-  set(NPM "npm.cmd")
-else()
-  set(NPM "npm")
-endif()
-if(NOT NPMDEFER)
-  execute_process(COMMAND ${NPM} "install"
-    WORKING_DIRECTORY "${WORK}")
-else()
-  execute_process(COMMAND "mkdir" "node_modules"
-    WORKING_DIRECTORY "${WORK}")
-endif()
+# Create folder for node_modules later installed by npm
+execute_process(COMMAND "mkdir" "node_modules"
+  WORKING_DIRECTORY "${WORK}")
 
 # Dist
 install(
@@ -134,4 +124,15 @@ if(NOT WINDOWS)
     DESTINATION ${DEST_BINDIR}
     RENAME "${P}display-webgl"
     )
+endif()
+
+# Script for npm instal during install part
+if (NOT WINDOWS)
+  # Configure fallback script
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/npminstall.in" "${WORK}/npminstall" @ONLY)
+  install(
+    PROGRAMS "${WORK}/npminstall"
+    DESTINATION ${DEST_TOOLDIR}/${TOOLS_NAME}
+  )
+  install(CODE "execute_process(COMMAND \"${CMAKE_INSTALL_PREFIX}/${DEST_TOOLDIR}/${TOOLS_NAME}/npminstall\")")
 endif()
