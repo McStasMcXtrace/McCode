@@ -51,7 +51,7 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply, python3-numpy")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply, python3-numpy, nodejs")
 
 # RPM
 if (RPMPROFILE)
@@ -75,15 +75,45 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display" @ONLY)
 
-# Main script, including rename mc/mxdisplay
+# Put package.json in $WORK
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/package.json" "${WORK}/package.json" @ONLY)
+
+# Run npm to install project
+if (WINDOWS)
+  set(NPM "npm.cmd")
+else()
+  set(NPM "npm")
+endif()
+if(NOT NPMDEFER)
+  execute_process(COMMAND ${NPM} "install"
+    WORKING_DIRECTORY "${WORK}")
+else()
+  execute_process(COMMAND "mkdir" "node_modules"
+    WORKING_DIRECTORY "${WORK}")
+endif()
+
+# Dist
 install(
-  PROGRAMS "${PROJECT_SOURCE_DIR}/mcdisplay.py"
+  DIRECTORY "${PROJECT_SOURCE_DIR}/dist"
   DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
-  RENAME "${P}display.py"
   )
 
+
+# Node modules
+install(
+    DIRECTORY "${WORK}/node_modules"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+    )
+
+# Main script, including rename mc/mxdisplay
+install(
+        PROGRAMS "${PROJECT_SOURCE_DIR}/mcdisplay.py"
+        DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+        RENAME "${P}display.py"
+    )
+
 # Other .py infrastructure
-foreach(NAME mcdisplay.js Lut.js OrbitControls.js dat.gui.min.js jquery.min.js three.min.js template.html __init__.py)
+foreach(NAME start-vite.js package.json mcdisplay.js Lut.js OrbitControls.js dat.gui.min.js jquery.min.js three.min.js template.html __init__.py)
   install(
     FILES "${PROJECT_SOURCE_DIR}/${NAME}"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
