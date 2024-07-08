@@ -135,4 +135,12 @@ if (NOT WINDOWS)
     DESTINATION ${DEST_TOOLDIR}/${TOOLS_NAME}
   )
   install(CODE "execute_process(COMMAND \"${CMAKE_INSTALL_PREFIX}/${DEST_TOOLDIR}/${TOOLS_NAME}/npminstall\")")
+else()
+  # Configure fallback script
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/npminstall.bat.in" "${WORK}/npminstall.bat" @ONLY)
+  install(
+    PROGRAMS "${WORK}/npminstall.bat"
+    DESTINATION ${DEST_TOOLDIR}/${TOOLS_NAME}
+  )
+  install(CODE "execute_process(COMMAND \"${CMAKE_INSTALL_PREFIX}/${DEST_TOOLDIR}/${TOOLS_NAME}/npminstall.bat\")")
 endif()
