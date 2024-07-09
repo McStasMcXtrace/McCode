@@ -20,12 +20,12 @@
 * 
 * %Parameters
 * Input parameters:
-* r1: radius of the profile along the X axis [m]
-* r2: radius of the profile along the Y axis [m]
-* w: parabola parameter, constraining it along the propagation axis [m]
-* d: distance between two surfaces of the lens along the propagation axis [m]
-* N: amount of single lenses in a stack [1]
-* material_datafile:     File where the material parameters for the filter may be found. Format is similar to what may be found off the NIST website. [Be.txt]
+* r1:                 [m]       Radius of the profile along the X axis 
+* r2:                 [m]       Radius of the profile along the Y axis 
+* w:                  [m]       Parabola parameter, constraining it along the propagation axis
+* d:                  [m]       Distance between two surfaces of the lens along the propagation axis
+* N:                  [1]       Amount of single lenses in a stack
+* material_datafile:  [Be.txt]  File where the material parameters for the filter may be found. Format is similar to what may be found off the NIST website.
 * 
 * %Link
 * material datafile obtained from http://physics.nist.gov/cgi-bin/ffast/ffast.pl
