@@ -201,7 +201,7 @@ INITIALIZE
 TRACE
 %{
   // calculation of the parabolic parameters
-  double parab_Cyl[6];
+  double parab_Cyl[8];
   data_lens_parab_Cyl incid,refr,outg;
   
   int i=0,nr;  
