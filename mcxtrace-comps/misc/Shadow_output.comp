@@ -30,10 +30,9 @@
 * %Parameters
 * INPUT PARAMETERS
 *
-* file:     Filename of x-ray file to write. Default is standard
-*           output [string]
-* bufsize:  Size of x-ray output buffer [records]
-* progress: If not zero, output dots as progress indicator [flag]
+* file:     [string]  Filename of x-ray file to write. Default is standard output
+* bufsize:  [records] Size of x-ray output buffer
+* progress: [flag]    If not zero, output dots as progress indicator
 *
 * %End
 *******************************************************************************/
