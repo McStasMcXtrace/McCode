@@ -25,11 +25,11 @@
 * mirror_length: [m]      Length of the focusing mirror
 * mirror_full_deflection_angle: [deg]  Deflection angle of mirror
 * mirror_center_distance: [m]  Distance from
-* mirror_focal_error: [ ]
-* mirror_rotation_angle:  [ ]
+* mirror_focal_error: [m] Additional shift on the mirror focal distance
+* mirror_rotation_angle:  [deg] Mirror tilt angle
 * mirror_y_offset: [m]
 * use_mirror: [ ]         Flag to set whether to use the mirror or no.
-* mono_rotation: [ ]      Rotation angle of the monochromator crystal.
+* mono_rotation: [deg]      Rotation angle of the monochromator crystal.
 * use_mono: [ ]           Flag enabling/disabling the monochromator.
 * mono_detuning_seconds: [arcsec]  Detuning angle for the monochromator crystal(s).
 * mono_misalignment_angle_arcsec: [arcsec] Mislignment of the monochromator.

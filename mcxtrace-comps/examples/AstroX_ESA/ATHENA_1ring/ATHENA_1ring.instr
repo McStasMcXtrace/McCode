@@ -32,17 +32,17 @@
 * Example: ATHENA_1ring.instr shellnumber=3
 *
 * %Parameters
-* FL [m] The focal length of the optical system
-* optics_dist [m] The distance between souce and optic. In space this would be quite large :-).
-* SRC_POS_X [m] Displacement of source along X
-* SRC_POS_Y [m] Displacement of source along Y
-* offaxis_angle [arcmin] Angle of collimated light from source
-* reflectivity [ ] Data file containing reflectivities (such as from IMD)
-* E0 [keV] Central energy of X-rays
-* dE [keV] Half spread of energy spectrum to be emitted from source
-* shellnumber [ ] Actually the ring number.
-* geomfile [ ] File which contains the geometry of the pores (i.e. radii,lengths)
-* ringfile [ ] File which contains details for the meta shells.
+* FL: [m] The focal length of the optical system
+* optics_dist: [m] The distance between souce and optic. In space this would be quite large :-).
+* SRC_POS_X: [m] Displacement of source along X
+* SRC_POS_Y: [m] Displacement of source along Y
+* offaxis_angle: [arcmin] Angle of collimated light from source
+* reflectivity: [ ] Data file containing reflectivities (such as from IMD)
+* E0: [keV] Central energy of X-rays
+* dE: [keV] Half spread of energy spectrum to be emitted from source
+* shellnumber: [ ] Actually the ring number.
+* geomfile; [ ] File which contains the geometry of the pores (i.e. radii,lengths)
+* ringfile: [ ] File which contains details for the meta shells.
 *
 * %Link
 * <a href="http://www.cosmos.esa.int/web/athena">The ATHENA web pages @ ESA</a>
