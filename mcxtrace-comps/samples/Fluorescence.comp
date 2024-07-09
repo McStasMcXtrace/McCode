@@ -87,7 +87,7 @@
 * weight:    [g/mol]  Atomic/molecular weight of material.
 * density:   [g/cm^3] Density of material. V_rho=density/weight/1e24*N_A.
 * rho:       [AA-3]   Density of scattering elements (nb atoms/unit cell V_0).
-* packing_factor: [1] How dense is the material compared to optimal 0-1.
+* packing_factor: [1] How dense is the material compared to bulk 0-1.
 * radius:    [m]      Outer radius of sample in (x,z) plane. cylinder/sphere.
 * xwidth:    [m]      width for a box sample shape.
 * yheight:   [m]      Height of sample in vertical direction for box/cylinder shapes.
@@ -96,10 +96,10 @@
 * concentric: [1]     Indicate that this component has a hollow geometry and may contain other components. It should then be duplicated after the inside part (only for box, cylinder, sphere) [1]
 * geometry:  [str]    Name of an Object File Format (OFF) or PLY file for complex geometry. The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust.
 * p_interact: [1]     Force a given fraction of the beam to scatter, keeping intensity right, to enhance small signals (-1 unactivate).
-* focus_xw:  [m]      horiz. dimension of a rectangular area.
-* focus_yh:  [m]      vert.  dimension of a rectangular area.
-* focus_aw:  [deg]    horiz. angular dimension of a rectangular area.
-* focus_ah:  [deg]    vert.  angular dimension of a rectangular area.
+* focus_xw:  [m]      Horiz. dimension of a rectangular area.
+* focus_yh:  [m]      Vert.  dimension of a rectangular area.
+* focus_aw:  [deg]    Horiz. angular dimension of a rectangular area.
+* focus_ah:  [deg]    Vert.  angular dimension of a rectangular area.
 * focus_r:   [m]      Radius of disk containing target. Use 0 for full space.
 * target_index: [1]   Relative index of component to focus at, e.g. next is +1.
 * target_x:  [m]      Position of target to focus at, along X.

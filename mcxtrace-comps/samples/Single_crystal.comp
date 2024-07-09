@@ -127,7 +127,7 @@
 * when 'cif2hkl' is installed. The CIF2HKL env variable can be used to point to a
 * proper executable, else the McCode or the system installed versions are used.
 *
-* <b>Satellite Bragg peaks - surface crystal truncation rods (CTR)<b>
+* <b>Satellite Bragg peaks - surface crystal truncation rods (CTR)</b>
 * It is known that scattering from a finite crystal introduces a broadening of
 * Bragg peaks, seen in surface diffraction at grazing angle [Robinson and Tweet, 
 * Rep. Prog. Phys. 55 (1992) 599)]. The CTR is specified as two vectors, which 
@@ -178,14 +178,14 @@
 *
 * recip_cell:        [1] Choice of direct/reciprocal (0/1) unit cell definition
 * ax:      [AA or AA^-1] Coordinates of first (direct/recip) unit cell vector 
-* ay:                 []   a on y axis
-* az:                 []   a on z axis
+* ay:      [AA or AA^-1]   a on y axis
+* az:      [AA or AA^-1]   a on z axis
 * bx:      [AA or AA^-1] Coordinates of second (direct/recip) unit cell vector
-* by:                 []   b on y axis
-* bz:                 []   b on z axis
+* by:      [AA or AA^-1]   b on y axis
+* bz:      [AA or AA^-1]   b on z axis
 * cx:      [AA or AA^-1] Coordinates of third (direct/recip) unit cell vector
-* cy:                 []   c on y axis
-* cz:                 []   c on z axis
+* cy:      [AA or AA^-1]   c on y axis
+* cz:      [AA or AA^-1]   c on z axis
 * reflections:  [string] File name containing structure factors of reflections (LAZ LAU CIF, FullProf, ShelX). Use empty ("") or NULL for incoherent scattering only
 * order:             [1] Limit multiple scattering up to given order (0: all, 1: first, 2: second, ...)
 *
