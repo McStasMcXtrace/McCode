@@ -46,15 +46,14 @@
 * Lpsd2:    [m]   Distance from vacumm chamber entry to 2nd diagnostic PSD.
 * Lpsd3:    [m]   Distance from vacumm chamber entry to 3rd diagnostic PSD.
 * detPos:   [m]   Distance from vacuum chamber entry to Detector.
-* detOffSet:[m]   detector offset perpendicular to the optical axis (roughly "up").=3e-2;
 * GammaP: [deg]   When given, Gamma=Gamma/sqrt(2)
-* detOffset: [m]  Final detector shift along Y
+* detOffSet: [m]  Final detector shift along Y
 *
 * %End
 **************************************************************/
 DEFINE INSTRUMENT SAXS_saxlab(Gamma=1.2 ,GammaP=0 ,S1=.045, S2 =.9, Energy=8.05,
         int mirrorin=3, int pin1=1, int pin2=1, int pin3=1, Lpsd1=0.160, Lpsd2=0.15,Lpsd3=1.2,
-        detPos=1.41, detOffset=3e-2)
+        detPos=1.41, detOffSet=3e-2)
 
 DECLARE
 %{
