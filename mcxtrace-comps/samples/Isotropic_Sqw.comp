@@ -2045,12 +2045,6 @@ INITIALIZE
     parsing=Table_ParseHeader(VarSqw.mat_table.header,
        "column_e","column_abs","column_inc","column_cohinc","column_tot",NULL);
 
-    if (parsing){
-      int i;
-      for (i=0;i<5;i++){
-        if (parsing[i]) VarSqw.mat_columns_order[i]=atoi(parsing[i]);
-      }
-    }
     if (VarSqw.mat_table.columns==3) {  /*which column is the energy in and which holds mu*/
       VarSqw.mat_mu_c_o=1;
     }else{
