@@ -45,6 +45,9 @@ if ( ENABLE_CIF2HKL )
     )
 endif()
 
+# System c-code
+install( DIRECTORY "share/" DESTINATION "${DEST_DATADIR_CODEFILES}")
+
 # Editor syntax-highlighting etc
 install( DIRECTORY "editors/" DESTINATION "${DEST_DATADIR_EDITORS}" )
 
