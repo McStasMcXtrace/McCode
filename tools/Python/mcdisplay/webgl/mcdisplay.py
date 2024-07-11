@@ -14,7 +14,8 @@ from pathlib import Path
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import threading
 import socket
-
+if os.name=='nt':
+    import _winapi
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
@@ -116,7 +117,10 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
     node_modules_source = source.joinpath('node_modules')
     node_modules_dest = dest.joinpath('node_modules')
     try:
-        os.symlink(node_modules_source, node_modules_dest)
+        if not os.name=='nt':
+            os.symlink(node_modules_source, node_modules_dest)
+        else:
+            _winapi.CreateJunction(node_modules_source, node_modules_dest)
     except:
         copytree(node_modules_source, node_modules_dest, dirs_exist_ok=True, ignore=ignore_patterns('*.log', '*.cache'))
 
