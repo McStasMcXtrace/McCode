@@ -14,7 +14,8 @@ from pathlib import Path
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import threading
 import socket
-
+if os.name=='nt':
+    import _winapi
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
@@ -101,23 +102,27 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
 
     source = Path(__file__).absolute().parent
     dest = Path(dirname)
-    if dest.exists() and not dest.is_dir():
-        raise RuntimeError(f"The specified destination {dirname} exists but is not a directory")
-    if not dest.exists():
-        dest.mkdir(parents=True)
+    if dest.exists():
+        raise RuntimeError(f"The specified destination {dirname} already exists!")
 
-    # Copy the app files
-    copytree(source.joinpath('dist'), dest.joinpath('dist'))
+    # Copy the app files - i.e. creating dest
+    copytree(source.joinpath('dist'), dest)
 
     # Copy package.json from source to dest
     package_json_source = source.joinpath('package.json')
-    package_json_dest = dest.joinpath('dist/package.json')
+    package_json_dest = dest.joinpath('package.json')
     shutil_copy(package_json_source, package_json_dest)
 
-    # Copy node_modules from source to dist
+    # Copy node_modules from source to destination
     node_modules_source = source.joinpath('node_modules')
-    node_modules_dest = dest.joinpath('dist/node_modules')
-    copytree(node_modules_source, node_modules_dest, dirs_exist_ok=True, ignore=ignore_patterns('*.log', '*.cache'))
+    node_modules_dest = dest.joinpath('node_modules')
+    try:
+        if not os.name=='nt':
+            os.symlink(node_modules_source, node_modules_dest)
+        else:
+            _winapi.CreateJunction(node_modules_source, node_modules_dest)
+    except:
+        copytree(node_modules_source, node_modules_dest, dirs_exist_ok=True, ignore=ignore_patterns('*.log', '*.cache'))
 
     # Ensure execute permissions for vite binary
     vite_bin = node_modules_dest.joinpath('.bin/vite')
@@ -125,22 +130,22 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
 
     # Copy start-vite.js script to destination
     start_vite_source = source.joinpath('start-vite.js')
-    start_vite_dest = dest.joinpath('dist/start-vite.js')
+    start_vite_dest = dest.joinpath('start-vite.js')
     shutil_copy(start_vite_source, start_vite_dest)
 
     # Write instrument
     json_instr = '%s' % json.dumps(instrument.jsonize(), indent=2)
-    file_save(json_instr, dest.joinpath('dist/instrument.json'))
+    file_save(json_instr, dest.joinpath('instrument.json'))
 
     # Write particles
     json_particles = '%s' % json.dumps(raybundle.jsonize(), indent=2)
-    file_save(json_particles, dest.joinpath('dist/particles.json'))
+    file_save(json_particles, dest.joinpath('particles.json'))
 
     # Exit if nobrowse flag has been set
     if nobrowse is not None and nobrowse:
         return
 
-    destdist = dest.joinpath('dist')
+    destdist = dest
 
     # Function to run npm commands and capture port
     def run_npm_and_capture_port(port_container):
