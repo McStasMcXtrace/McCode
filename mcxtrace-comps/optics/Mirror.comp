@@ -29,12 +29,12 @@
 *
 * %Parameters
 * Input parameters:
-* xwidth:  [m] The width of the mirror
-* zdepth:  [m] The length of the mirror
-* yheight: [m] The height of the mirror. This overrides xwidth and puts the mirror in the yz-plane. 
-* R0:      [0-1] Constant reflectivity
-* coating: [ ] Filename containing reflectivities (or coating).
-* geometry:[str] Filename of an OFF/PLY geometry providing a polygonal surface. When xwidth/yheight/zdepth are also given, the object is rescaled accordingly.
+* xwidth:  [m]    The width of the mirror
+* zdepth:  [m]    The length of the mirror
+* yheight: [m]    The height of the mirror. This overrides xwidth and puts the mirror in the yz-plane. 
+* R0:      [0-1]  Constant reflectivity
+* coating: [str]  Filename containing reflectivities (or coating).
+* geometry:[str]  Filename of an OFF/PLY geometry providing a polygonal surface. When xwidth/yheight/zdepth are also given, the object is rescaled accordingly.
 *
 * %End
 *******************************************************************************/

@@ -221,7 +221,7 @@
 DEFINE COMPONENT Isotropic_Sqw
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS(
-  vector powder_format={0,0,0,0,0,0,0,0,0}, vector mat_format={0,0,0,0,0},
+  vector powder_format={0,0,0,0,0,0,0,0,0}, 
   string Sqw_coh=0, string geometry=0,
   string material="NULL",
   radius=0,thickness=0,
@@ -354,7 +354,6 @@ struct Sqw_sample_struct { /* global parameters gathered as a structure */
   
   t_Table mat_table;  /* holds material absorption data */
   int mat_mu_c_o;         /* column for absorption in material file */
-  int    mat_columns_order[5]; /*column signification for the coeff. in material data file*/
 }; // Sqw_sample_struct
 
 #include <stdio.h>
@@ -1892,13 +1891,8 @@ INITIALIZE
 %{
   int i;
   /* check for parameters */
-  int *powder_columns, *mat_columns;
+  int *powder_columns;
   powder_columns = (int*)powder_format; // also in VarSqw.powder_columns_order
-  mat_columns    = (int*)mat_format;
-  
-  for (i=0; i< 4;  i++) {
-    VarSqw.mat_columns_order[i] = (int)mat_columns[i];
-  }
 
   VarSqw.verbose_output= verbose;
   VarSqw.shape = -1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
@@ -2051,12 +2045,6 @@ INITIALIZE
     parsing=Table_ParseHeader(VarSqw.mat_table.header,
        "column_e","column_abs","column_inc","column_cohinc","column_tot",NULL);
 
-    if (parsing){
-      int i;
-      for (i=0;i<5;i++){
-        if (parsing[i]) VarSqw.mat_columns_order[i]=atoi(parsing[i]);
-      }
-    }
     if (VarSqw.mat_table.columns==3) {  /*which column is the energy in and which holds mu*/
       VarSqw.mat_mu_c_o=1;
     }else{

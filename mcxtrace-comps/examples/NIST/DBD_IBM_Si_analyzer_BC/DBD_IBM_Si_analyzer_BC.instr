@@ -20,7 +20,7 @@
 * %Parameters
 * a_distance_error: [m]          Logitudinal offset of source.
 * figure_radius_multiplier: [ ]  Extra multiplicative factor to the crystal curvature.
-* lattice_radius_miltiplier: [ ] Extra factor to the lattice curvature. Currently IGNORED.
+* lattice_radius_multiplier: [ ] Extra factor to the lattice curvature. Currently IGNORED.
 * beam_hor: [m]                  Beam width of source.
 * beam_vert: [m]                 Unscaled Beam height of source. Will be scaled with take_off angle.
 * tails_integral: [ ]            Integrated beam power in the source tails.

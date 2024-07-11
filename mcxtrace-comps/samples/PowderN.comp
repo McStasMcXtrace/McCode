@@ -146,7 +146,7 @@
 * focus_flip:   [1] Controls the sense of d_phi. If 0 d_phi is measured against the xz-plane. If !=0 d_phi is measured against zy-plane.
 * pack: [1]         Packing factor
 * delta_d_d: [AA]   Global relative Delta_d/d spreading when the 'w' column is not available. Use 0 if ideal.
-* format:  [ ]      Name of the format, or list of column indexes (see Description). N.b. no qoutes!
+* format:  [{}]     Name of the format, or list of column indexes (see Description). N.b. no quotes!
 * p_inc:   [1]      Fraction of incoherently scattered rays.
 * p_transmit: [1]   Fraction of transmitted (only attenuated) rays.
 * p_interact: [1]   Fraction of events interacting with sample, e.g. 1-p_transmit-p_inc.
@@ -159,6 +159,7 @@
 * density: [g/cm^3] Density of material. rho=density/weight/1e24*N_A.
 * nb_atoms:[1]      Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell.
 * material: [Be.txt] File where the material parameters for the absorption may be found. Format is similar to what may be found off the NIST website. 
+* mat_format: [{}]  Format of the asorption parameter file.
 *
 * OUTPUT PARAMETERS:
 * line_info: [struct]     Internal structure containing many members/info

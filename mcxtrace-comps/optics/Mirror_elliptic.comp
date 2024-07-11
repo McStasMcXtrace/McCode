@@ -38,6 +38,8 @@
 * coating: [str] Datafile containing either mirror material constants or reflectivity  numbers.
 * R0:      [1]   Reflectivity of mirror (mostly relevant for debugging, when coating="")
 * radius:  [m]   Spherical radius, Sets x_a=y_b=z_c=radius
+* length:  [m]   alternate name for zdepth (obsolete)
+* width:   [m]   alternate name for xwidth (obsolete)
 *
 * %End
 *******************************************************************************/

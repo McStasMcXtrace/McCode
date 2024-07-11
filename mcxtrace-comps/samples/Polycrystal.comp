@@ -30,10 +30,10 @@
 *   ax = 5.6579, ay = 0.0000, az = 0.0000, bx = 0.0000, by = 5.6579, bz = 0.0000, cx = 0.0000, cy = 0.0000, cz = 5.6579 )
 *
 * %Parameters
-* MapFile:                   []     File describing, which orientation is found in which voxel
-* OrientationsFile:          []     File describing the different orientations
-* ReflectionsDatafile:       []     File describing the reflections in the relevant lattice (usually in .lau-format)
-* MaterialDatafile:          []     File describing the scattering and absorbtion properties of the material
+* MapFile:                   [str]  File describing, which orientation is found in which voxel
+* OrientationsFile:          [str]  File describing the different orientations
+* ReflectionsDatafile:       [str]  File describing the reflections in the relevant lattice (usually in .lau-format)
+* MaterialDatafile:          [str]  File describing the scattering and absorbtion properties of the material
 * xwidth:                    [m]    Width of the sample
 * yheight:                   [m]    Height of the sample
 * zdepth:                    [m]    Depth of the sample
@@ -50,16 +50,13 @@
 * MosaicityA:                [moa]  Anisotropic mosaicity around the first unit cell vector
 * MosaicityB:                [moa]  Anisotropic mosaicity around the second unit cell vector
 * MosaicityC:                [moa]  Anisotropic mosaicity around the third unit cell vector
-* DeltadOverd:               []     Statistical description of the lattice spacing
-* ProbabilityOfTransmission: []     Probability that a ray will not interact with the sample
+* DeltadOverd:               [1]    Statistical description of the lattice spacing
+* ProbabilityOfTransmission: [0-1]  Probability that a ray will not interact with the sample
 * SigmaAbsorbtion:           [fm^2] Absorbtion crosssection of the sample
 * SigmaIncoherent:           [fm^2] Incoherent crosssection of the sample
-* MaxNumberOfReflections:    []     Highest number of allowed scattering events in the entire crystal - to prevent computationally
-*                                   expensive high-order multiple scattering. If this parameter is set to 0, all possible orders
-*                                   of scattering are considered.
-* Reciprocal:                []     If this parameter is set to 0, then the lattice vectors should be given in real space.
-*                                   Anything else implies that the vectors are given in reciprocal space.
-* verbose:                   []     If nonzero - output more info to the console.
+* MaxNumberOfReflections:    [1]    Highest number of allowed scattering events in the entire crystal - to prevent computationally expensive high-order multiple scattering. If this parameter is set to 0, all possible orders of scattering are considered.
+* Reciprocal:                [0/1]  If this parameter is set to 0, then the lattice vectors should be given in real space. Anything else implies that the vectors are given in reciprocal space.
+* verbose:                   [0/1]  If nonzero - output more info to the console.
 * %End
 ***********************************************************************************************************************************/
 

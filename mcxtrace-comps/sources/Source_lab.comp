@@ -44,14 +44,14 @@
 * take_off:   [deg]  Take off angle of beam centre.
 * dist:       [m]    Distance between centre of illuminated target and exit window.
 * E0:         [kV]   Acceleration voltage of xray tube.
-* tube_current:  [A] Electron beam current.
+* tube_current: [A]  Electron beam current.
 * Emax:       [keV]  Maximum energy to sample. Default (Emax=0) is to set it to E0.
 * Emin:       [keV]  Minimum energy to sample.
 * focus_xw:   [m]    Width of exit window.
 * focus_yh:   [m]    Height of exit window.
-* frac:       [ ]    Fraction of statistic to use for Bremsstrahlung.
-* material_datafile: [ ] Name of datafile which describes the target material.
-* lorentzian: [ ]    If nonzero Lorentzian (more correct) line profiles are used.
+* frac:       [0-1]  Fraction of statistic to use for Bremsstrahlung.
+* material_datafile: [string] Name of datafile which describes the target material.
+* lorentzian: [0/1]  If nonzero Lorentzian (more correct) line profiles are used.
 * exit_window_refpt: [m] If set, the AT position and exit window will coincide (legacy behaviour).
 *
 * %End

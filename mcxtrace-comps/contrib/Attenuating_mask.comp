@@ -26,7 +26,7 @@
 *
 * %Parameters
 * Input parameters:
-* att_file : [".txt"] File that contains the object information. (Default: "W.txt")
+* att_file: [".txt"] File that contains the object information. (Default: "W.txt")
 * xwidth: [m] Horizontal width of the mask. (Default: 1e-1)
 * yheight: [m] Vertical height of the mask. (Default: 1e-1)
 * zdepth: [m] Thickness of the absorbing mask. (Default: 3e-3)

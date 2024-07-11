@@ -37,8 +37,8 @@
 *
 * %Parameters
 * INPUT PARAMETERS
-* objects: [ ]     Input file where the off-shapes are defined.
-* refraction: [ ]  Flag to enable refraction at interfaces.
+* objects:    [str] Input file where the off-shapes are defined.
+* refraction: [str] Flag to enable refraction at interfaces.
 *
 * %End
 *******************************************************************************/
