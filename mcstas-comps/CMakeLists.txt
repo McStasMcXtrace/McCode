@@ -58,7 +58,9 @@ endif()
 install( DIRECTORY "share/" DESTINATION "${DEST_DATADIR_CODEFILES}")
 
 # Editor syntax-highlighting etc
-install( DIRECTORY "editors/" DESTINATION "${DEST_DATADIR_EDITORS}" )
+if (NOT WINDOWS)
+  install( DIRECTORY "editors/" DESTINATION "${DEST_DATADIR_EDITORS}" )
+endif()
 
 # System comps
 install( DIRECTORY "misc/" DESTINATION "${DEST_DATADIR_COMPS}/misc")
