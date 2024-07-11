@@ -45,10 +45,6 @@ if ( ENABLE_CIF2HKL )
     )
 endif()
 
-
-# docs
-install( DIRECTORY "doc/" DESTINATION "${DEST_DATADIR_COMPS}/doc")
-
 # Editor syntax-highlighting etc
 install( DIRECTORY "editors/" DESTINATION "${DEST_DATADIR_EDITORS}" )
 

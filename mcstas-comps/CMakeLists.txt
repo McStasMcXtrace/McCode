@@ -57,9 +57,6 @@ endif()
 # System c-code
 install( DIRECTORY "share/" DESTINATION "${DEST_DATADIR_CODEFILES}")
 
-# docs
-install( DIRECTORY "doc/" DESTINATION "${DEST_DATADIR_COMPS}/doc")
-
 # Editor syntax-highlighting etc
 install( DIRECTORY "editors/" DESTINATION "${DEST_DATADIR_EDITORS}" )
 
