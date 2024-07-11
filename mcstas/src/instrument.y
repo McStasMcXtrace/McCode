@@ -2201,7 +2201,7 @@ main(int argc, char *argv[])
       fprintf(stderr, "  {EXTEND C_code}\n");
       fprintf(stderr, "  {JUMP [reference|PREVIOUS|MYSELF|NEXT] [ITERATE number_of_times | WHEN condition]\n");
       fprintf(stderr, "END\n");
-      fprintf(stderr, "as well as '%{ ... %}' blocks.\n\n");
+      fprintf(stderr, "as well as '\%{ ... \%}' blocks.\n\n");
     }
     exit(1);
   }
