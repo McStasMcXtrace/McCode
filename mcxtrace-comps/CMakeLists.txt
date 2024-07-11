@@ -46,42 +46,35 @@ if ( ENABLE_CIF2HKL )
 endif()
 
 
+# docs
+install( DIRECTORY "doc/" DESTINATION "${DEST_DATADIR_COMPS}/doc")
 
-file_globsrc( tmp "share/*" )
-install( FILES ${tmp} DESTINATION "${DEST_DATADIR_CODEFILES}" )
+# Editor syntax-highlighting etc
+install( DIRECTORY "editors/" DESTINATION "${DEST_DATADIR_EDITORS}" )
 
-set( tmp_complist "misc" "monitors" "obsolete" "optics" "samples" "sources" "union" "sasmodels" "astrox")
+# System comps
+install( DIRECTORY "misc/" DESTINATION "${DEST_DATADIR_COMPS}/misc")
+install( DIRECTORY "monitors/" DESTINATION "${DEST_DATADIR_COMPS}/monitors")
+install( DIRECTORY "obsolete/" DESTINATION "${DEST_DATADIR_COMPS}/obsolete")
+install( DIRECTORY "optics/" DESTINATION "${DEST_DATADIR_COMPS}/optics")
+install( DIRECTORY "samples/" DESTINATION "${DEST_DATADIR_COMPS}/samples")
+install( DIRECTORY "sources/" DESTINATION "${DEST_DATADIR_COMPS}/sources")
+install( DIRECTORY "union/" DESTINATION "${DEST_DATADIR_COMPS}/union")
+install( DIRECTORY "sasmodels/" DESTINATION "${DEST_DATADIR_COMPS}/sasmodels")
+install( DIRECTORY "astrox/" DESTINATION "${DEST_DATADIR_COMPS}/astrox")
+
+# Contrib comps
 if ( NOT EXCLUDE_CONTRIB )
-  list( APPEND tmp_complist "contrib" )
+  install( DIRECTORY "contrib/" DESTINATION "${DEST_DATADIR_COMPS}/contrib")
 endif()
-foreach(name ${tmp_complist})
-  file_globsrc( tmp "${name}/*" )
-  install( FILES ${tmp} DESTINATION "${DEST_DATADIR_COMPS}/${name}" )
-endforeach()
 
-# contrib subfolders / examplified from McStas
-#if ( NOT EXCLUDE_CONTRIB )
-#  foreach(contrib_subdir doc)
-#    file_globsrc( tmp "contrib/${contrib_subdir}/*" )
-#    install( FILES ${tmp} DESTINATION "${DEST_DATADIR_COMPS}/contrib/${contrib_subdir}" )
-#  endforeach()
-#endif()
-
+# Data files
 if ( NOT EXCLUDE_DATA )
-  # base data dir
-  file_globsrc( tmp "data/*" )
-  install( FILES ${tmp} DESTINATION "${DEST_DATADIR_DATAFILES}" )
-  # datadir subfolders / examplified from McStas
-  # foreach(data_subdir Gas_tables ISIS_tables)
-  #  file_globsrc( tmp "data/${data_subdir}/*" )
-  #  install( FILES ${tmp} DESTINATION "${DEST_DATADIR_COMPS}/data/${data_subdir}" )
-  # endforeach()
+  install( DIRECTORY "data/" DESTINATION "${DEST_DATADIR_COMPS}/data")
 endif()
 
 install( DIRECTORY "examples/" DESTINATION "${DEST_DATADIR_EXAMPLES}")
 
-file_globsrc( tmp "editors/*" )
-install( FILES ${tmp} DESTINATION "${DEST_DATADIR_EDITORS}" )
 
 # Include mcstas-comp revision tag file
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/revision.in" "${WORK}/revision" @ONLY)
