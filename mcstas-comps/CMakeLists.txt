@@ -59,7 +59,8 @@ install( DIRECTORY "share/" DESTINATION "${DEST_DATADIR_CODEFILES}")
 
 # Editor syntax-highlighting etc
 if (NOT WINDOWS)
-  install( DIRECTORY "editors/" DESTINATION "${DEST_DATADIR_EDITORS}" )
+  file(GLOB EDITORS editors/*) # follow links (install DIRECTORY does not)
+  install( FILES ${EDITORS} DESTINATION "${DEST_DATADIR_EDITORS}" )
 endif()
 
 # System comps
