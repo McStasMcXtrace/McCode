@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "../../../common.css";
 import "./two-d-view.css";
+import Chart from "./chart/Chart";
 
 interface TwoDViewProps {
   viewRef: React.RefObject<HTMLDivElement>;
@@ -30,13 +31,7 @@ const TwoDView = ({
 
   return (
     <div id="two-d-view" className="view" ref={viewRef}>
-      <p className="view-name gray-color">{text}</p>
-      <div className="y-axis gray-color">
-        {y_label}[{unit}]
-      </div>
-      <div className="x-axis gray-color">
-        {x_label}[{unit}]
-      </div>
+      <Chart yAxisLabel={y_label} xAxisLabel={x_label} chartTitle={text} />
     </div>
   );
 };
