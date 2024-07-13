@@ -40,7 +40,7 @@
 DEFINE COMPONENT Shadow_input
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string file="", int bufsize=10000, int repeat_count=1)
-OUTPUT PARAMETERS (hfile, ibuf, size, pos, rep, finished)
+OUTPUT PARAMETERS ()
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)*/
 SHARE
 %{
@@ -58,7 +58,6 @@ int ncol;                       /* X-ray input file number of columns for each r
 int iflag; 
 int size;			/* Number of X-rays currently in buffer */
 int pos;			/* Current position in buffer */
-int rep;			/* X-ray repeat count */
 int finished;			/* Set to 1 when last X-ray read */
 int count;
 int count2;
@@ -72,7 +71,6 @@ INITIALIZE
   iflag=1;
   size=0;
   pos=0;
-  rep=0;
   finished=0;
   count=0;
   count2=0;
@@ -153,16 +151,19 @@ INITIALIZE
 
 TRACE
 %{
-
+   int rep=0;			/* X-ray repeat count */
+ 
   /* When no more x-ray records are available in the x-ray file,
      any remaining iterations are skipped by immediately ABSORB'ing
      the rays. */
 
   if(pos<npoint){
     shadow2mcxtrace(ibuf[pos], &x, &y, &z, &kx, &ky, &kz, &Ex, &Ey, &Ez, &phi, &t, &p);
-    count++;}    
-  else{  
-    count2++;
+    #pragma acc atomic
+    count = count + 1;
+  } else{
+    #pragma acc atomic
+    count2 = count2 + 1;
     ABSORB;
   }
 
@@ -170,7 +171,8 @@ TRACE
   ++rep;
   if(rep >= repeat_count) {
     rep = 0;
-    ++pos;
+    #pragma acc atomic
+    pos=pos+1;
   }
  
 %}
