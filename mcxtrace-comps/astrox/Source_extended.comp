@@ -47,8 +47,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Source_extended
-DEFINITION PARAMETERS (string spectrum_file=NULL)
-SETTING PARAMETERS (yheight=0, xwidth=0,
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string spectrum_file=NULL,yheight=0, xwidth=0,
   dist=0, E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,incoherent=1,phase=0, string image_path="")
 OUTPUT PARAMETERS (prms,square)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
@@ -56,25 +56,17 @@ OUTPUT PARAMETERS (prms,square)
 SHARE
 %{
   %include "read_table-lib"
-%}
-
-DECLARE
-%{
-  double pmul, srcArea;
-  int square;
-  struct {
+  struct Sextended_prms {
     double l0,dl;
     double pmul,pint;
     t_Table T;
-  } prms;
-
-  struct {
-      double xref, yref, rmax;
-      int pw, ph;
-      t_Table data;
-      double iCD[2][2];
-  } extendedParams;
-
+  };
+  struct Sextended_table_prms {
+    double xref, yref, rmax;
+    int pw, ph;
+    t_Table data;
+    double iCD[2][2];
+  };
   double* sphericalToCartesian(double r, double theta, double phi, double* cartesian){
     cartesian[0] = r*cos(theta)*cos(phi);
     cartesian[1] = r*cos(theta)*sin(phi);
@@ -85,7 +77,16 @@ DECLARE
     spherical[0] = sqrt(x*x + y*y + z*z);
     spherical[1] = atan2(z, sqrt(x*x + y*y));
     spherical[2] = atan2(y, x);
-  }
+  }  
+%}
+
+DECLARE
+%{
+  double pmul;
+  double srcArea;
+  int square;
+  struct Sextended_prms prms;
+  struct Sextended_table_prms extendedParams;
 %}
 
 INITIALIZE
