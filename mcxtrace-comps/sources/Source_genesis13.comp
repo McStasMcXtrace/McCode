@@ -77,7 +77,11 @@ INITIALIZE
   char dflfn[512];
   FILE *dflfp;
   int k,l,m;
-  double r[gridpoints],i[gridpoints];
+  double *r;
+  double *i;
+
+  r=malloc(gridpoints*sizeof(double));
+  i=malloc(gridpoints*sizeof(fdouble));
 
   strncpy(dflfn,fname,502);
   strncat(dflfn,".dfl",4);
@@ -115,7 +119,8 @@ INITIALIZE
     }
     /*printf("done\n");*/
   }
-  
+  free(r);
+  free(i);
   pmul=flux/(double)mcget_ncount();
 %}
 
