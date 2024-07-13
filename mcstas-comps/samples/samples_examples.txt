@@ -2,7 +2,7 @@
 List of samples comps and the
 example instruments that include them
 ---------------------------------------
-Incoherent is used in 66 example(s):
+Incoherent is used in 67 example(s):
 - ILL_H5.instr
 - ILL_H5_new.instr
 - ILL_IN13.instr
@@ -23,17 +23,17 @@ Incoherent is used in 66 example(s):
 - linup-6.instr
 - McStas_Isotropic_Sqw.instr
 - SNS_BASIS.instr
-- Test_TasReso.instr
 - Tomography.instr
 - templateTAS.instr
-- Test_Cyl_monitors.instr
 - Unittest_SPLIT_sample.instr
+- Test_Cyl_monitors.instr
 - Test_Pol_Set.instr
 - Samples_Incoherent.instr
 - Samples_Incoherent_off.instr
 - Samples_vanadium.instr
 - Test_Incoherent.instr
 - Test_SX.instr
+- Test_TasReso.instr
 - Union_IncoherentPhonon_test.instr
 - Union_conditional_test.instr
 - Union_demonstration.instr
@@ -69,8 +69,9 @@ Incoherent is used in 66 example(s):
 - Union_unit_test_logger_2D_space_time.instr
 - Union_unit_test_logger_3D_space.instr
 - Union_unit_test_loggers_base.instr
+- Radiography_absorbing_edge.instr
 ---------------------------------------
-Isotropic_Sqw is used in 23 example(s):
+Isotropic_Sqw is used in 24 example(s):
 - HZB_NEAT.instr
 - ILL_BRISP.instr
 - ILL_D4.instr
@@ -79,11 +80,11 @@ Isotropic_Sqw is used in 23 example(s):
 - ILL_H5_new.instr
 - ILL_IN4.instr
 - ILL_IN5.instr
-- ILL_IN5_Mantid.instr
 - ILL_IN5_Spots.instr
 - ILL_IN6.instr
 - ILL_Lagrange.instr
 - ISIS_TOSCA_preupgrade.instr
+- ILL_IN5_Mantid.instr
 - ISIS_TOSCA_preupgrade_Mantid.instr
 - McStas_Isotropic_Sqw.instr
 - SNS_BASIS.instr
@@ -94,6 +95,7 @@ Isotropic_Sqw is used in 23 example(s):
 - Samples_Isotropic_Sqw.instr
 - Test_Sqw.instr
 - Test_Sqw_monitor.instr
+- Reflectometer.instr
 ---------------------------------------
 Magnon_bcc is used in 2 example(s):
 - Test_Magnon_bcc_2D.instr
@@ -108,7 +110,7 @@ Powder1 is used in 3 example(s):
 - linup-5.instr
 - linup-7.instr
 ---------------------------------------
-PowderN is used in 42 example(s):
+PowderN is used in 43 example(s):
 - ESS_BEER_MCPL.instr
 - ESS_Testbeamline_HZB_V20.instr
 - ILL_D2B.instr
@@ -124,11 +126,11 @@ PowderN is used in 42 example(s):
 - ILL_H53_D16.instr
 - ILL_H5_new.instr
 - ILL_IN5.instr
-- ILL_IN5_Mantid.instr
 - ILL_IN5_Spots.instr
 - ILL_Lagrange.instr
 - ISIS_GEM.instr
 - ISIS_IMAT.instr
+- ILL_IN5_Mantid.instr
 - SAFARI_MPISI.instr
 - SAFARI_PITSI.instr
 - PSI_DMC.instr
@@ -151,6 +153,7 @@ PowderN is used in 42 example(s):
 - Union_external_component.instr
 - Union_external_component_test.instr
 - Union_powder_validation.instr
+- SimplePowderDiffractometer.instr
 ---------------------------------------
 Res_sample is used in 2 example(s):
 - Test_TOFRes_sample.instr
@@ -160,8 +163,8 @@ SANS_spheres2 is used in 5 example(s):
 - templateSANS2_Mantid.instr
 - SEMSANS_Delft.instr
 - SESANS_Delft.instr
-- Unittest_SANS_benchmark2.instr
 - templateSANS2.instr
+- Unittest_SANS_benchmark2.instr
 ---------------------------------------
 Sans_spheres is used in 6 example(s):
 - ILL_H142_D33.instr
@@ -185,7 +188,6 @@ Single_crystal is used in 22 example(s):
 - RITA-II.instr
 - McStas_Single_crystal.instr
 - RTP_Laue.instr
-- Test_TasReso.instr
 - templateLaue.instr
 - templateNMX.instr
 - templateNMX_TOF.instr
@@ -196,6 +198,7 @@ Single_crystal is used in 22 example(s):
 - Test_Magnon_bcc_2D.instr
 - Test_SX.instr
 - Test_Single_crystal_inelastic.instr
+- Test_TasReso.instr
 - Union_laue_camera.instr
 - Union_single_crystal_validation.instr
 ---------------------------------------

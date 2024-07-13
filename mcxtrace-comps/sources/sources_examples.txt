@@ -38,7 +38,7 @@ Source_div is used in 22 example(s):
 Source_div_quasi is used in 1 example(s):
 - Test_Source_quasi.instr
 ---------------------------------------
-Source_flat is used in 25 example(s):
+Source_flat is used in 26 example(s):
 - Airport_scannerII.instr
 - Pump_probe_solvent.instr
 - ESRF_BM29.instr
@@ -55,6 +55,7 @@ Source_flat is used in 25 example(s):
 - Test_Mono.instr
 - Test_capillary.instr
 - Test_mirror_elliptic.instr
+- test_File.instr
 - Template_SasView.instr
 - Test_Absorption.instr
 - Test_Fluorescence.instr

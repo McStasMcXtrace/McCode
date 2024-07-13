@@ -17,6 +17,7 @@ Missing examples from contrib
 - Sapphire_Filter in contrib is not in any example
 - SiC in contrib is not in any example
 - Source_multi_surfaces in contrib is not in any example
+- TOF2Q_cyl_monitor in contrib is not in any example
 - multi_pipe in contrib is not in any example
 ---------------------------------------
 Missing examples from misc
@@ -25,6 +26,7 @@ Missing examples from misc
 - Scatter_log_iterator_stop in misc is not in any example
 - Scatter_logger in misc is not in any example
 - Scatter_logger_stop in misc is not in any example
+- Shape_simple in misc is not in any example
 ---------------------------------------
 Missing examples from monitors
 - EPSD_monitor in monitors is not in any example
@@ -33,7 +35,6 @@ Missing examples from monitors
 - Monitor_nD_noacc in monitors is not in any example
 - PSD_TOF_monitor in monitors is not in any example
 - PSDcyl_monitor in monitors is not in any example
-- PSDlin_diff_monitor in monitors is not in any example
 - TOF_PSD_monitor_rad in monitors is not in any example
 - TOF_cylPSD_monitor in monitors is not in any example
 - TOFlog_monitor in monitors is not in any example
@@ -53,6 +54,7 @@ Missing examples from sasmodels
 Missing examples from sources
 - Adapt_check in sources is not in any example
 - Monitor_Optimizer in sources is not in any example
+- Source_4PI in sources is not in any example
 - Source_Optimizer in sources is not in any example
 ---------------------------------------
 Missing examples from union
