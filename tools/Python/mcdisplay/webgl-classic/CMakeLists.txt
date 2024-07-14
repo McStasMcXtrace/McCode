@@ -32,10 +32,10 @@ setupMCCODE("${FLAVOR}")
 # Select prefix
 set(P "${MCCODE_PREFIX}")
 
-set(TOOLS_NAME "Python/${P}display/webgl")
+set(TOOLS_NAME "Python/${P}display/webgl-classic")
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-webgl-${MCCODE_VERSION}")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-webgl-classic-${MCCODE_VERSION}")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
@@ -102,6 +102,6 @@ if(NOT WINDOWS)
   install(
     PROGRAMS "${WORK}/${P}display"
     DESTINATION ${DEST_BINDIR}
-    RENAME "${P}display-webgl"
+    RENAME "${P}display-webgl-classic"
     )
 endif()
