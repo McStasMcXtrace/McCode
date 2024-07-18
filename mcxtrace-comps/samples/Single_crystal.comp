@@ -660,7 +660,7 @@ SHARE
       if (!info->V0 || isnan(info->V0)) {
         MPI_MASTER(
           fprintf(stderr,
-              "Single_crystal: %s: ERROR: Lattice cell volume is found invalid V0=%g. Check crystal cell parameters.\n", __FILE__, info->V0);
+              "Single_crystal: %s: ERROR: Lattice cell volume is found invalid V0=%g. Check crystal cell parameters.\n", __FILE__, info->V0));
       }
 
       info->asx = 2*PI/info->V0*tmp_x;
@@ -692,7 +692,7 @@ SHARE
 	    if (!info->V0 || isnan(info->V0)) {
         MPI_MASTER(
           fprintf(stderr,
-              "Single_crystal: %s: ERROR: Lattice reciprocal cell volume is found invalid V0=%g. Check crystal cell parameters.\n", __FILE__, info->V0);
+              "Single_crystal: %s: ERROR: Lattice reciprocal cell volume is found invalid V0=%g. Check crystal cell parameters.\n", __FILE__, info->V0));
       }
       info->V0 = 1/fabs(info->V0);
 
