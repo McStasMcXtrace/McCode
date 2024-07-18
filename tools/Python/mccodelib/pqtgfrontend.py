@@ -364,7 +364,7 @@ class McPyqtgraphPlotter():
                 print("click modifier: %s" % str(int(event.modifiers())))
 
             # prevent action for modifiers mismatch
-            if int(event.modifiers()) != mod:
+            if event.modifiers() != mod: # Qt5: int(event.modifiers()) != mod fails in Qt6
                 return
             # prevent action for mouse button mismatch
             if click == "rclick" and event.button() != 2:
