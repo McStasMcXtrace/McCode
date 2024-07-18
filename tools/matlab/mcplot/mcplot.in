@@ -1,8 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 # launcher for matlab/octave/ifit data plotter
 
-LIB="@TOOLS_LIB@"
+@MCCODE_BASH_STANDARD_PREAMBLE@
+
+LIB="${MCCODE_TOOLDIR}/matlab/@P@plot"
 TOOL="mcplot"
 VERS="@MCCODE_VERSION@"
 

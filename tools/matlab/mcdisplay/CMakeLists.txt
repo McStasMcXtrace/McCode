@@ -30,7 +30,8 @@ setupMCCODE("${FLAVOR}")
 # Select prefix
 set(P "${MCCODE_PREFIX}")
 
-set(TOOLS_NAME "tools/matlab/${P}display/")
+set(TOOLS_NAME "matlab/${P}display/")
+set(TOOLS_LIB  "${DEST_TOOLDIR}/${TOOLS_NAME}")
 
 # Set some extra options for mccode_config
 set(CC "${CMAKE_C_COMPILER}")
