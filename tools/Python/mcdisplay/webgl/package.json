@@ -19,6 +19,7 @@
     "@uiw/color-convert": "^2.3.0",
     "@uiw/react-color-sketch": "^2.3.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "plotly.js-dist": "^2.33.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-loader-spinner": "^6.1.6",
