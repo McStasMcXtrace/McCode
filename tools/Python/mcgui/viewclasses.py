@@ -163,7 +163,7 @@ class McView(object):
     def showOpenPlotDirDlg(self, lookDir):
         dlg = QtWidgets.QFileDialog()
         dlg.setDirectory(lookDir)
-        dlg.ShowDirsOnly
+        # dlg.ShowDirsOnly # not supported in Qt5/Qt6/PySide
         return dlg.getExistingDirectory(self.mw,"Open a folder")
         
     def showChangeWorkDirDlg(self, lookDir):
