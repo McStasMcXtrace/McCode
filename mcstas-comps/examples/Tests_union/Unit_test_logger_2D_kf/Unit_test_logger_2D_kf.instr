@@ -5,13 +5,13 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Union_unit_test_logger_2D_kf
+* Instrument: Unit_test_logger_2D_kf
 *
 * %Identification
 * Written by: Mads Bertelsen
 * Date: June 2020
 * Origin: ESS
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
 *
 * Base instrument for logger unit tests
 *
@@ -21,7 +21,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_unit_test_logger_2D_kf()
+DEFINE INSTRUMENT Unit_test_logger_2D_kf()
 
 DECLARE
 %{

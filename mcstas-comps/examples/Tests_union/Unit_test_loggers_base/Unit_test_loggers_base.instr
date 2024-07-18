@@ -11,17 +11,20 @@
 * Written by: Mads Bertelsen
 * Date: June 2020
 * Origin: ESS
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
 *
 * Base instrument for logger unit tests
 *
 * %Description
-* Base instrument for logger unit tests
+* Base instrument for logger unit tests, expand this file to make a
+* test for new logger components or similar. Contains a material and
+* a geometry made of box, sphere, cylinder and cone. Remember to add
+* an example line with expected detector output when creating a test.
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_unit_test_loggers_base()
+DEFINE INSTRUMENT Unit_test_loggers_base()
 
 DECLARE
 %{

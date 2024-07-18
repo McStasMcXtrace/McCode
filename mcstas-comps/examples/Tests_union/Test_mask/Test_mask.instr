@@ -11,19 +11,20 @@
 * Written by: Mads Bertelsen
 * Date: September 2015
 * Origin: University of Copenhagen
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
 *
 * Simple test instrument for mask functionality in Union framework.
 *
-* Example: Detector: m4pi_I=2.27579e-07
-*
 * %Description
-* simple test instrument for sample component.
+* Masks allow restricing some geometry to the internal part of a mask
+* geometry. All Union geometry components can be used as masks.
+*
+* Example: Detector: m4pi_I=2.27579e-07
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_test_mask()
+DEFINE INSTRUMENT Test_mask()
 
 DECLARE
 %{
@@ -51,17 +52,10 @@ COMPONENT a1 = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT source = Source_div(
-//        xwidth=0.0005, yheight=0.0005,focus_aw=15, focus_ah=15,
         xwidth=0.0005, yheight=0.0005,focus_aw=0.3, focus_ah=1,
         E0 = 10,
         dE = 0)
   AT (0,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
-
-// test
-//COMPONENT start_volume_test = cylinder(radius=0.03,yheight=1.4,priority=99,material_string="Vacuum")
-//AT (0,0,0.7-0.02) RELATIVE a1
-//ROTATED (90,0,0) RELATIVE a1
-
 
 // Sample position
 COMPONENT beam_center = Arm()

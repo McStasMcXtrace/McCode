@@ -5,13 +5,13 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Union_conditional_test
+* Instrument: Conditional_test
 *
 * %Identification
 * Written by: Mads Bertelsen
 * Date: September 2015
 * Origin: University of Copenhagen
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
 *
 *
 * %Description
@@ -27,7 +27,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_conditional_test(dummy=1)
+DEFINE INSTRUMENT Conditional_test(dummy=1)
 
 DECLARE
 %{

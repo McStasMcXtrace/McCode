@@ -5,23 +5,27 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Union_unit_test_conditional_standard
+* Instrument: Unit_test_conditional_standard
 *
 * %Identification
 * Written by: Mads Bertelsen
 * Date: June 2020
 * Origin: ESS
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
 *
-* Base instrument for logger unit tests
+* Test of Union_conditional_standard
 *
 * %Description
-* Base instrument for logger unit tests
+* Union_conditional_standard can limit loggers to only record rays that end
+* their trace in Union_master within certain set limits. Here two loggers
+* are modified by a single conditional component that requires a final time.
+*
+* %Example: Detector: Union_logger_2D_space_zx_con_I=2.99448e-10
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_unit_test_conditional_standard()
+DEFINE INSTRUMENT Unit_test_conditional_standard()
 
 DECLARE
 %{

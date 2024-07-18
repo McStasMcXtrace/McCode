@@ -13,9 +13,8 @@
 * Origin: Johns Hopkins University, Baltimore
 * %INSTRUMENT_SITE: Union_validation
 *
-*
 * %Description
-*  Validation of Union powder against standard PowderN component. 
+* Validation of Union powder against standard PowderN component. 
 *
 * %Example: comp_select=1 Detector: detectors_m4pi_I=67635.2
 * %Example: comp_select=1 Detector: PSDlin_scattering_I=5.79875
@@ -127,7 +126,6 @@ AT (0,0,0.5) RELATIVE scattering_arm
 COMPONENT PSDlin_scattering_single = PSDlin_monitor(xwidth=0.1, yheight=0.05, nbins=100, filename="Output_scattering_single.psd",restore_neutron = 1)
 WHEN (single_scattering_flag == 1)
 AT (0,0,0.5) RELATIVE scattering_arm
-
 
 COMPONENT scattering_arm_2 = Arm()
 AT (0,0,0) RELATIVE sample_position

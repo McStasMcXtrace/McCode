@@ -5,28 +5,29 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Union_logger_test
+* Instrument: Logger_test
 *
 * %Identification
 * Written by: Mads Bertelsen
 * Date: September 2015
 * Origin: University of Copenhagen
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
 *
+* Test of all Union loggers
 *
 * %Description
 * Reconstruction of a sample holder from picture.
 * All arms are 30 cm below the actual center point in order to avoid arms
-*  in the mcdisplay picture.
+* in the mcdisplay picture. Uses all Union loggers.
 *
-* Example: Detector: detector_I=1982.98
+* %Example: Detector: test_logger_1D_I=31.7195
 *
 * %Parameters
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_logger_test()
+DEFINE INSTRUMENT Logger_test()
 
 DECLARE
 %{
@@ -188,7 +189,6 @@ AT (0,0.3-0.0011,0) RELATIVE cylinder_bottom_center
 ROTATED (0,0,0) RELATIVE cylinder_bottom_center
 
 
-
 COMPONENT test_logger_1D = Union_logger_1D(
   variable="time", min_value=0, max_value=3E-4, n1=200, filename="logger_1D.dat"
 )
@@ -197,8 +197,8 @@ ROTATED (0,0,0) RELATIVE sample_pos
 
 
 COMPONENT test_logger_2DQ = Union_logger_2DQ(
-  Q_direction_1 = "z", Q1_min=-10, Q1_max=10, n1=100,
-  Q_direction_2 = "x", Q2_min=-10, Q2_max=10, n2=100,
+  Q_direction_1 = "z", Q1_min=-18, Q1_max=18, n1=100,
+  Q_direction_2 = "x", Q2_min=-18, Q2_max=18, n2=100,
   filename="logger_2DQ.dat"
 )
 AT (0,0,0) RELATIVE sample_pos

@@ -5,13 +5,13 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Union_sample_picture_replica
+* Instrument: Sample_picture_replica
 *
 * %Identification
 * Written by: Mads Bertelsen
 * Date: September 2015
 * Origin: University of Copenhagen
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
 *
 *
 * %Description
@@ -24,7 +24,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_sample_picture_replica(dummy=1)
+DEFINE INSTRUMENT Geometry_test(dummy=1)
 
 DECLARE
 %{

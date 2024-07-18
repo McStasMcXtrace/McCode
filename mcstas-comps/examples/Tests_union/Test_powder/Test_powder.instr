@@ -11,19 +11,19 @@
 * Written by: Mads Bertelsen
 * Date: September 2015
 * Origin: University of Copenhagen
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
 *
 * Simple test instrument for powder process in Union framework.
 *
 * %Description
-* simple test instrument for sample component.
+* Simple test instrument for powder sample simulated using Union components.
 *
-* Example: Detector: m4pi_I=4.23557e-06
+* %Example: Detector: m4pi_I=4.23557e-06
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_test_powder()
+DEFINE INSTRUMENT Test_powder()
 
 DECLARE
 %{

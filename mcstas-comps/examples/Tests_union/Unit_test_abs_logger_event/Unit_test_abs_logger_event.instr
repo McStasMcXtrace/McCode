@@ -5,23 +5,24 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Union_unit_test_abs_logger_event
+* Instrument: Unit_test_abs_logger_event
 *
 * %Identification
 * Written by: Mads Bertelsen
 * Date: June 2020
 * Origin: ESS
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
 *
-* Base instrument for logger unit tests
+* Test of Union_abs_logger_event
 *
 * %Description
-* Base instrument for logger unit tests
+* Does not include a test case as the event file does not contain a intensity
+* value in output to test against.
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_unit_test_abs_logger_event()
+DEFINE INSTRUMENT Unit_test_abs_logger_event()
 
 DECLARE
 %{

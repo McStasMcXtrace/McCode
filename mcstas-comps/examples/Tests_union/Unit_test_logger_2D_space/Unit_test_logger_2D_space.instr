@@ -5,23 +5,27 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Union_unit_test_logger_2D_space
+* Instrument: Unit_test_logger_2D_space
 *
 * %Identification
 * Written by: Mads Bertelsen
 * Date: June 2020
 * Origin: ESS
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
 *
-* Base instrument for logger unit tests
+* Test of 2 dimensional spatial logger
 *
 * %Description
-* Base instrument for logger unit tests
+* Test of 2 dimensional spatial logger that shows scattered intensity
+* projected onto a plane spanned by two of the coordinate axis, for
+* example z and x.
+*
+* %Example: Detector: Union_logger_2D_space_zx_I=5.6604e-09
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_unit_test_logger_2D_space()
+DEFINE INSTRUMENT Unit_test_logger_2D_space()
 
 DECLARE
 %{

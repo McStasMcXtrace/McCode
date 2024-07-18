@@ -5,17 +5,19 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: test
+* Instrument: Test_absorption_image
 *
 * %Identification
 * Written by: Mads Bertelsen
 * Date: September 2015
 * Origin: University of Copenhagen
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
+*
+* Image of cryostat with sample 
 *
 * %Description
 * Simple test instrument showing absorption image of a cryostat with vanadium
-*  sample using the Union components.
+* sample using the Union components.
 *
 * Example: Detector: screen_I=0.00925
 *
@@ -25,7 +27,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_test_absorption_image(stick_displacement=0)
+DEFINE INSTRUMENT Test_absorption_image(stick_displacement=0)
 
 DECLARE
 %{

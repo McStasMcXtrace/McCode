@@ -5,23 +5,26 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Union_unit_test_abs_logger_1D_space_tof
+* Instrument: Unit_test_abs_logger_1D_space_tof
 *
 * %Identification
 * Written by: Mads Bertelsen
 * Date: June 2020
 * Origin: ESS
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
 *
-* Base instrument for logger unit tests
+* Test of abs_logger_1D_space_tof
 *
 * %Description
-* Base instrument for logger unit tests
+* Tests absorption logger measuring position projected onto a line and the
+*  time of absorption in a histogram.
+*
+* %Example: Detector: abs_logger_1D_space_tof_I=1.12682e-09
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_unit_test_abs_logger_1D_space_tof()
+DEFINE INSTRUMENT Unit_test_abs_logger_1D_space_tof()
 
 DECLARE
 %{

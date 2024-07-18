@@ -5,23 +5,25 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Union_unit_test_abs_logger_2D_space
+* Instrument: Unit_test_abs_logger_2D_space
 *
 * %Identification
 * Written by: Mads Bertelsen
 * Date: June 2020
 * Origin: ESS
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
 *
-* Base instrument for logger unit tests
+* Test for Union_abs_logger_2D_space
 *
 * %Description
-* Base instrument for logger unit tests
+* Test of absorption logger with basic geometry from Unit_test_loggers_base.
+*
+* %Example: Detector: Union_abs_logger_2D_space_zx_I=1.1258e-09
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_unit_test_abs_logger_2D_space()
+DEFINE INSTRUMENT Unit_test_abs_logger_2D_space()
 
 DECLARE
 %{

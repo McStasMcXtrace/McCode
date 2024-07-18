@@ -5,23 +5,27 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Union_unit_test_conditional_PSD
+* Instrument: Unit_test_conditional_PSD
 *
 * %Identification
 * Written by: Mads Bertelsen
 * Date: June 2020
 * Origin: ESS
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
 *
-* Base instrument for logger unit tests
+* Test of conditional_PSD
 *
 * %Description
-* Base instrument for logger unit tests
+* Test of conditional_PSD component that attaches to a logger and reduces
+* its output to neutrons that reached the conditional_PSD area in specified
+* time interval. This is used to investigate origin of interesting signals.
+*
+* %Example: Detector: Union_logger_2D_space_zx_con_I=2.81593e-11
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_unit_test_conditional_PSD()
+DEFINE INSTRUMENT Unit_test_conditional_PSD()
 
 DECLARE
 %{

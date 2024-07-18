@@ -5,20 +5,20 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Union_test_mask
+* Instrument: Test_texture
 *
 * Identification
 * Written by: Victor Laliena
 * Date: January 2019
 * Origin: University of Zaragoza
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
 *
 * Simple test instrument for Texture functionality in Union framework.
 *
-* Example: Detector: m4pi_I=2.27579e-07
-*
 * %Description
-* simple test instrument for texture sample component.
+* Simple test instrument for texture sample component.
+*
+* %Example: Detector: monitor_I=8.08899e-05
 *
 * %P
 * lmax: [AA] Maximum wavelength treated by texture process
@@ -28,10 +28,10 @@
 *
 * %L
 *
-* %E
+* %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_test_texture(lmax=0,
+DEFINE INSTRUMENT Test_texture(lmax=0,
       string crystal_fn="Zr.laz",
       string fcoef_fn="coef_Four_L2.txt",barns=1)
 DECLARE
@@ -99,13 +99,13 @@ AT (0,0,0.3) RELATIVE source
 ROTATED (0,0,0) RELATIVE source
 
 //sample
-SPLIT 1000 COMPONENT sample = Union_box(xwidth=sample_wx,yheight=sample_wy,zdepth=sample_wz,
+COMPONENT sample = Union_box(xwidth=sample_wx,yheight=sample_wy,zdepth=sample_wz,
 priority=1, material_string="texture_material",
 p_interact=geometry_interact)
 AT (0,0,0) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center
 
-COMPONENT simulation_master = Union_master()
+SPLIT 1000 COMPONENT simulation_master = Union_master()
 AT(0,0,0) RELATIVE beam_center
 ROTATED(0,0,0) RELATIVE beam_center
 EXTEND

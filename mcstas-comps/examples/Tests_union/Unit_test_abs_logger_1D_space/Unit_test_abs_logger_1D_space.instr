@@ -11,17 +11,21 @@
 * Written by: Mads Bertelsen
 * Date: June 2020
 * Origin: ESS
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
 *
-* Base instrument for logger unit tests
+* Test of the 1 dimensional spatial absorption logger
 *
 * %Description
-* Base instrument for logger unit tests
+* Test of the 1 dimensional spatial absorption logger that investigates
+* the amount of absorbed intensity projected onto a axis along its y coordinate.
+* Often used for detectors.
+*
+* %Example: Detector: abs_logger_1D_I=1.12609e-09
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_unit_test_abs_logger_1D_space()
+DEFINE INSTRUMENT Unit_test_abs_logger_1D_space()
 
 DECLARE
 %{

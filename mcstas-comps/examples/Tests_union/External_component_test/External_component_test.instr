@@ -5,13 +5,13 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Union_external_component_test
+* Instrument: External_component_test
 *
 * %Identification
 * Written by: Mads Bertelsen
 * Date: September 2015
 * Origin: University of Copenhagen
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
 *
 *
 * %Description
@@ -25,7 +25,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_external_component_test()
+DEFINE INSTRUMENT External_component_test()
 
 USERVARS
 %{

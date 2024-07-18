@@ -5,23 +5,23 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Union_unit_test_abs_logger_1D_space_event
+* Instrument: Unit_test_abs_logger_1D_space_event
 *
 * %Identification
 * Written by: Mads Bertelsen
 * Date: June 2020
 * Origin: ESS
-* %INSTRUMENT_SITE: Union_demos
+* %INSTRUMENT_SITE: Tests_union
 *
-* Base instrument for logger unit tests
+* Test of Union_abs_logger_1D_space_event
 *
 * %Description
-* Base instrument for logger unit tests
+* No example value as the produced file contains events.
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Union_unit_test_abs_logger_1D_space_event()
+DEFINE INSTRUMENT Unit_test_abs_logger_1D_space_event()
 
 DECLARE
 %{
