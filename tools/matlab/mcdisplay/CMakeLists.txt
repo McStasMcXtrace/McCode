@@ -1,4 +1,5 @@
 cmake_minimum_required( VERSION 3.17.0 )
+cmake_policy(VERSION 3.17.0)
 
 # This will install McStas components
 project(matlab-tools-mcdisplay C)
@@ -15,31 +16,21 @@ include(MCUtil)
 
 if (${BUILD_MCXTRACE})
   set(FLAVOR "mcxtrace")
+  set(CPACK_PACKAGE_HOMEPAGE_URL "http://mcxtrace.org/")
 elseif(${BUILD_MCSTAS})
   set(FLAVOR "mcstas")
+  set(CPACK_PACKAGE_HOMEPAGE_URL "http://mcstas.org/")
 else()
   message(FATAL_ERROR "No flavor specified!\n"
     "Please use either -DBUILD_MCSTAS=1 or -DBUILD_MCXTRACE=1")
 endif()
 
-message("Enabling ${FLAVOR} flavor")
 setupMCCODE("${FLAVOR}")
 
 # Select prefix
-if(${BUILD_MCSTAS})
-  set(P "mc")
-else()
-  set(P "mx")
-endif()
+set(P "${MCCODE_PREFIX}")
 
 set(TOOLS_NAME "tools/matlab/${P}display/")
-
-if(WINDOWS)
-  set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
-else()
-  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
-endif()
-
 
 # Set some extra options for mccode_config
 set(CC "${CMAKE_C_COMPILER}")
@@ -89,7 +80,7 @@ endif()
 if(WINDOWS)
   install(
     FILES ${BINS}
-    DESTINATION "${lib}/${TOOLS_NAME}"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
@@ -100,7 +91,7 @@ endif()
 if(NOT WINDOWS)
   install(
     FILES ${BINS}
-    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
@@ -135,12 +126,12 @@ if(NOT WINDOWS)
 
   install(
     PROGRAMS "${WORK}/${P}display"
-    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+    DESTINATION ${DEST_BINDIR}
     RENAME "${P}display-matlab"
     )
   install(
     PROGRAMS "${WORK}/${P}display-octave"
-    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+    DESTINATION ${DEST_BINDIR}
     RENAME "${P}display-octave"
     )
 endif()
