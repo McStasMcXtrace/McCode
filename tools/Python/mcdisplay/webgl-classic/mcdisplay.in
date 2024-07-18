@@ -4,7 +4,7 @@
 @MCCODE_BASH_STANDARD_PREAMBLE@
 
 TOOL="@P@display"
-UTILDIR="${MCCODE_TOOLDIR}/Python/@P@display/webgl"
+UTILDIR="${MCCODE_TOOLDIR}/Python/@P@display/webgl-classic"
 
 
 #NB: miniconda should be installed next to the tool folder:

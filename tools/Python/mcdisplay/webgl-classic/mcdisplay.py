@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 '''
-mcdisplay webgl script.
+mcdisplay webgl-classic script.
 '''
 import sys
 import logging
