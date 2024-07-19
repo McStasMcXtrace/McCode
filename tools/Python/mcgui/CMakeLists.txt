@@ -111,11 +111,12 @@ if(NOT WINDOWS)
     PROGRAMS "${WORK}/${P}gui"
     DESTINATION ${DEST_BINDIR}
     )
-    
-  # Install desktop entry
-  install(FILES "${WORK}/${FLAVOR}-${MCCODE_VERSION}-py.desktop" DESTINATION /usr/share/applications )
 
-  # Install icon
-  install(FILES "${FLAVOR}-py.png" DESTINATION /usr/share/pixmaps/)
+  if (NOT DARWIN)
+    # Install desktop entry
+    install(FILES "${WORK}/${FLAVOR}-${MCCODE_VERSION}-py.desktop" DESTINATION /usr/share/applications )
 
+    # Install icon
+    install(FILES "${FLAVOR}-py.png" DESTINATION /usr/share/pixmaps/)
+  endif()
 endif()
