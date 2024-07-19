@@ -112,11 +112,9 @@ if(NOT WINDOWS)
     DESTINATION ${DEST_BINDIR}
     )
 
-  if (NOT DARWIN)
-    # Install desktop entry
-    install(FILES "${WORK}/${FLAVOR}-${MCCODE_VERSION}-py.desktop" DESTINATION /usr/share/applications )
+  # Install desktop entry
+  install(FILES "${WORK}/${FLAVOR}-${MCCODE_VERSION}-py.desktop" DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications" )
 
-    # Install icon
-    install(FILES "${FLAVOR}-py.png" DESTINATION /usr/share/pixmaps/)
-  endif()
+  # Install icon
+  install(FILES "${FLAVOR}-py.png" DESTINATION "${CMAKE_INSTALL_PREFIX}/share/pixmaps/")
 endif()
