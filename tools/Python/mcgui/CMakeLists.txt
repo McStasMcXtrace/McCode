@@ -75,7 +75,7 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcgui.in" "${WORK}/${P}gui" @ONLY)
 
 # Configure launcher
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/McCode-py.desktop.in" "work/${FLAVOR}-${MCCODE_VERSION}-py.desktop")
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/McCode-py.desktop.in" "${WORK}/${FLAVOR}-${MCCODE_VERSION}-py.desktop")
 
 # Main script, including rename mcgui/mxgui
 install(
@@ -113,7 +113,7 @@ if(NOT WINDOWS)
     )
     
   # Install desktop entry
-  install(FILES "work/${FLAVOR}-${MCCODE_VERSION}-py.desktop" DESTINATION /usr/share/applications )
+  install(FILES "${WORK}/${FLAVOR}-${MCCODE_VERSION}-py.desktop" DESTINATION /usr/share/applications )
 
   # Install icon
   install(FILES "${FLAVOR}-py.png" DESTINATION /usr/share/pixmaps/)
