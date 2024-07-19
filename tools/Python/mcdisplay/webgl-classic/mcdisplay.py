@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 '''
-mcdisplay webgl script.
+mcdisplay webgl-classic script.
 '''
 import sys
 import logging
@@ -18,8 +18,10 @@ from mccodelib.utils import get_file_text_direct
 
 class SimpleWriter(object):
     ''' a minimal, django-omiting "glue file" writer tightly coupled to some comments in the file template.html '''
-    def __init__(self, templatefile, html_filename, invcanvas):
+    def __init__(self, templatefile, campos, box, html_filename, invcanvas):
         self.template = templatefile
+        self.campos = campos
+        self.box = box
         self.html_filename = html_filename
         self.invcanvas = invcanvas
     
@@ -29,6 +31,9 @@ class SimpleWriter(object):
         lines = template.splitlines()
         for i in range(len(lines)):
             if 'INSERT_CAMPOS_HERE' in lines[i]:
+                lines[i] = '        campos_x = %s, campos_y = %s, campos_z = %s; // line written by SimpleWriter' % (str(self.campos.x), str(self.campos.y), str(self.campos.z))
+                box = self.box
+                lines[i+1] = '        box_x1 = %s, box_x2 = %s, box_y1 = %s, box_y2 = %s, box_z1 = %s, box_z2 = %s; // line written by SimpleWriter' % (str(box.x1), str(box.x2), str(box.y1), str(box.y2), str(box.z1), str(box.z2))
                 lines[i+2] = '        invert_canvas = %s; // line written by SimpleWriter' % 'true' if self.invcanvas else 'false'
         self.text = '\n'.join(lines)
         
@@ -76,12 +81,21 @@ class DjangoWriter(object):
 
 def _write_html(instrument, html_filepath, first=None, last=None, invcanvas=False):
     ''' writes instrument definition to html/js '''
+    box = instrument.get_boundingbox(first, last)
+    box_total = instrument.get_boundingbox()
     
     # create camera view coordinates given the bounding box
-
+    dx = box.x2 - box.x1
+    dy = box.y2 - box.y1
+    dz = box.z2 - box.z1
+    x = -(box.x1 + max(dx, dz)/2)
+    y = max(dx, dz)/2
+    z = box.z1 + dz/2
+    campos = Vector3d(x, y, z)
+    
     # render html
     templatefile = Path(__file__).absolute().parent.joinpath("template.html")
-    writer = SimpleWriter(templatefile, html_filepath, invcanvas)
+    writer = SimpleWriter(templatefile, campos, box_total, html_filepath, invcanvas)
     writer.write()
 
 def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first=None, last=None, invcanvas=None, **kwds):
@@ -171,8 +185,7 @@ if __name__ == '__main__':
     parser.add_argument('--first', help='zoom range first component')
     parser.add_argument('--last', help='zoom range last component')
     parser.add_argument('-n', '--ncount', dest='n', type=float, default=300, help='Number of particles to simulate')
-    parser.add_argument('-t', '--trace', dest='trace', type=int, default=2, help='Select visualization mode')
-
+    
     args, unknown = parser.parse_known_args()
     # Convert the defined arguments in the args Namespace structure to a dict
     args = {k: args.__getattribute__(k) for k in dir(args) if k[0] != '_'}

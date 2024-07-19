@@ -38,9 +38,9 @@
 
 
 DEFINE COMPONENT Shadow_input
-DEFINITION PARAMETERS (string file = 0)
-SETTING PARAMETERS (int bufsize = 10000, repeat_count = 1)
-OUTPUT PARAMETERS (hfile, ibuf, size, pos, rep, finished)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string file="", int bufsize=10000, int repeat_count=1)
+OUTPUT PARAMETERS ()
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)*/
 SHARE
 %{
@@ -49,24 +49,31 @@ SHARE
 
 DECLARE
 %{
-char *filename=NULL;            /* path + filename */
-FILE *hfile  =NULL;		/* X-ray input file handle */
-Ray *ibuf=NULL;			/* X-ray input buffer */
+char *filename;                 /* path + filename */
+FILE *hfile;		        /* X-ray input file handle */
+Ray *ibuf;			/* X-ray input buffer */
 int npoint;                     /* X-ray input file number of rays */
 int reclen;                     /* X-ray input file Fortran record head-tail */
 int ncol;                       /* X-ray input file number of columns for each ray*/
-int iflag=1; 
-int size=0;			/* Number of X-rays currently in buffer */
-int pos=0;			/* Current position in buffer */
-int rep=0;			/* X-ray repeat count */
-int finished=0;			/* Set to 1 when last X-ray read */
-int count=0;
-int count2=0;
+int iflag; 
+int size;			/* Number of X-rays currently in buffer */
+int pos;			/* Current position in buffer */
+int finished;			/* Set to 1 when last X-ray read */
+int count;
+int count2;
 %}
 
 INITIALIZE
 %{
-
+  filename=NULL;            
+  hfile=NULL;		/* X-ray input file handle */
+  ibuf=NULL;			/* X-ray input buffer */
+  iflag=1;
+  size=0;
+  pos=0;
+  finished=0;
+  count=0;
+  count2=0;
   int dum, i;
 
   /* Open x-ray input file. */
@@ -144,16 +151,19 @@ INITIALIZE
 
 TRACE
 %{
-
+   int rep=0;			/* X-ray repeat count */
+ 
   /* When no more x-ray records are available in the x-ray file,
      any remaining iterations are skipped by immediately ABSORB'ing
      the rays. */
 
   if(pos<npoint){
     shadow2mcxtrace(ibuf[pos], &x, &y, &z, &kx, &ky, &kz, &Ex, &Ey, &Ez, &phi, &t, &p);
-    count++;}    
-  else{  
-    count2++;
+    #pragma acc atomic
+    count = count + 1;
+  } else{
+    #pragma acc atomic
+    count2 = count2 + 1;
     ABSORB;
   }
 
@@ -161,7 +171,8 @@ TRACE
   ++rep;
   if(rep >= repeat_count) {
     rep = 0;
-    ++pos;
+    #pragma acc atomic
+    pos=pos+1;
   }
  
 %}

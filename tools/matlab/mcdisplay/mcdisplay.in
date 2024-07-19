@@ -1,8 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 # launcher for matlab/octave 3d geometry plotter
 
-LIB="@TOOLS_LIB@"
+@MCCODE_BASH_STANDARD_PREAMBLE@
+
+LIB="${MCCODE_TOOLDIR}/matlab/@P@display"
 TOOL="mcdisplay"
 MCRUN="@P@run"
 VERS="@MCCODE_VERSION@"

@@ -43,31 +43,30 @@
 *****************************************************************************/
 
 DEFINE COMPONENT Source_simplex
-DEFINITION PARAMETERS (gridpoints=101)
-SETTING PARAMETERS (string fname="template.fld",focus_xw=0,focus_yh=0,dist=1,E0=0, dE=0, 
-    meshsize=1e-5, nslices=102, s0=-2e-3,s1=2e-3,flux=1.0, focus_a=0.1)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (int gridpoints=101, string fname="template.fld",focus_xw=0,focus_yh=0,dist=1,E0=0, dE=0, 
+    meshsize=1e-5, int nslices=102, s0=-2e-3,s1=2e-3,flux=1.0, focus_a=0.1)
 OUTPUT PARAMETERS (prms)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{
   %include "read_table-lib"
-#include <complex.h>
+  #include <complex.h>
+  struct Ssimplex_struct {
+    double l0,dl;
+    double s0,s1;
+    double pmul,pint;
+    t_Table T;
+    double complex **dfl;
+  };
 %}
 
 
 DECLARE
 %{
   double e;
-  double l;
-  struct {
-    double l0,dl;
-    double s0,s1;
-    double pmul,pint;
-    t_Table T;
-    double complex **dfl;
-  } prms;
-
+  struct Ssimplex_struct prms;
 %}
 
 INITIALIZE
@@ -78,8 +77,14 @@ INITIALIZE
 
   char dflfn[512];
   FILE *dflfp;
-  int k,l,m;
-  float r[gridpoints],i[gridpoints];
+  int k;
+  int l;
+  int m;
+  float *r;
+  float *i;
+
+  r=malloc(gridpoints*sizeof(float));
+  i=malloc(gridpoints*sizeof(float));
 
   strncpy(dflfn,fname,502);
   strncat(dflfn,".fld",4);
@@ -117,7 +122,8 @@ INITIALIZE
     }
     /*printf("done\n");*/
   }
-  
+  free(r);
+  free(i);
   prms.pmul=flux/(double)mcget_ncount();
 %}
 

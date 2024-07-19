@@ -58,7 +58,10 @@ endif()
 install( DIRECTORY "share/" DESTINATION "${DEST_DATADIR_CODEFILES}")
 
 # Editor syntax-highlighting etc
-install( DIRECTORY "editors/" DESTINATION "${DEST_DATADIR_EDITORS}" )
+if (NOT WINDOWS)
+  file(GLOB EDITORS editors/*) # follow links (install DIRECTORY does not)
+  install( FILES ${EDITORS} DESTINATION "${DEST_DATADIR_EDITORS}" )
+endif()
 
 # System comps
 install( DIRECTORY "misc/" DESTINATION "${DEST_DATADIR_COMPS}/misc")

@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.17.0)
 cmake_policy(VERSION 3.17.0)
 
-# This will install McStas or McXtrace mc/display-webgl
-project(python-tools-mcdisplay-webgl C)
+# This will install McStas or McXtrace mc/display-webgl-classic
+project(python-tools-mcdisplay-webgl-classic C)
 
 message(STATUS "Configure ${CMAKE_PROJECT_NAME} ${FLAVOR} ${PROJECT_NAME}")
 
@@ -32,10 +32,10 @@ setupMCCODE("${FLAVOR}")
 # Select prefix
 set(P "${MCCODE_PREFIX}")
 
-set(TOOLS_NAME "Python/${P}display/webgl")
+set(TOOLS_NAME "Python/${P}display/webgl-classic")
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-webgl-${MCCODE_VERSION}")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-webgl-classic-${MCCODE_VERSION}")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
@@ -45,7 +45,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
 # NSIS
-set(NSIS_NAME "Python/webgl -based ${P}display (${P}display-webgl-py), ${MCCODE_STRING}")
+set(NSIS_NAME "Python/webgl -based ${P}display (${P}display-webgl-classic-py), ${MCCODE_STRING}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
@@ -102,6 +102,6 @@ if(NOT WINDOWS)
   install(
     PROGRAMS "${WORK}/${P}display"
     DESTINATION ${DEST_BINDIR}
-    RENAME "${P}display-webgl"
+    RENAME "${P}display-webgl-classic"
     )
 endif()

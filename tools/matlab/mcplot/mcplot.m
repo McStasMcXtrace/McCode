@@ -74,7 +74,7 @@ function data = mcplot(varargin)
         continue;
       else index_out = index_out+1; end
       this_file = varargin{index};
-      if isempty(this_file), return; end
+      if isempty(this_file) || isempty(dir(this_file)), continue; end
       this_data = mcplot(this_file);
       data{index_out} = this_data;
       
@@ -114,9 +114,15 @@ function data = mcplot(varargin)
   end
   
   % import data set
+  if iempty(filename) || isempty(dir(filename))
+    error([ mfilename ': Invalid/empty dataset ' filename ])
+  end
   data = mcplot_load(filename);
   
   % check data structures
+  if isempty(data)
+    error([ mfilename ': Invalid/empty dataset ' filename ])
+  end
   data = mcplot_check_data(data);
   
   % plot (overview or single)
@@ -474,7 +480,7 @@ function data = mcplot_check_data(structure)
     if isfield(structure,'Instrument')
       structure.Source = structure.Instrument;
     else
-      structure.Source = filename;
+      structure.Source = structure.filename;
     end
   end
   if ~isfield(structure, 'component') structure.component = 'unknown'; end
