@@ -114,7 +114,7 @@ function data = mcplot(varargin)
   end
   
   % import data set
-  if iempty(filename) || isempty(dir(filename))
+  if isempty(filename) || isempty(dir(filename))
     error([ mfilename ': Invalid/empty dataset ' filename ])
   end
   data = mcplot_load(filename);
