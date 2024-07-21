@@ -113,8 +113,8 @@ if(NOT WINDOWS)
     )
 
   # Install desktop entry
-  install(FILES "${WORK}/${FLAVOR}-${MCCODE_VERSION}-py.desktop" DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications" )
+  install(FILES "${WORK}/${FLAVOR}-${MCCODE_VERSION}-py.desktop" DESTINATION "${CMAKE_INSTALL_PREFIX}/applications" )
 
   # Install icon
-  install(FILES "${FLAVOR}-py.png" DESTINATION "${CMAKE_INSTALL_PREFIX}/share/pixmaps/")
+  install(FILES "${FLAVOR}-py.png" DESTINATION "${CMAKE_INSTALL_PREFIX}/pixmaps/")
 endif()
