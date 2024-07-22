@@ -69,7 +69,6 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 # Configure fallback script
 configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display" @ONLY)
-configure_file("${CMAKE_SOURCE_DIR}/mcdisplay-octave.in" "${WORK}/${P}display-octave" @ONLY)
 
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.m")
