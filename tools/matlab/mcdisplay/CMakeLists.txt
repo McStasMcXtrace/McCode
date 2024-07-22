@@ -112,27 +112,10 @@ if(NOT WINDOWS)
     "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}display"
     )
 
-  add_custom_command(
-    OUTPUT "${WORK}/${P}display-octave"
-    COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
-    COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}display-octave"
-    COMMAND "${CMAKE_COMMAND}" -E create_symlink2
-    "${TOOLS_LIB}/mcdisplay-octave" "${WORK}/${P}display-octave"
-    )
-
-  add_custom_target(
-    "CREATE_SYMLINK2" ALL DEPENDS "${WORK}/${P}display-octave"
-    )
-
-
   install(
     PROGRAMS "${WORK}/${P}display"
     DESTINATION ${DEST_BINDIR}
     RENAME "${P}display-matlab"
     )
-  install(
-    PROGRAMS "${WORK}/${P}display-octave"
-    DESTINATION ${DEST_BINDIR}
-    RENAME "${P}display-octave"
-    )
+
 endif()

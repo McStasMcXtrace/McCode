@@ -51,7 +51,6 @@ while getopts hiom flag
 do
   case "${flag}" in
   o)
-    echo "select octave"
     RUN_OCTAVE=1
     RUN_MATLAB=0
     RUN_IFIT=0
