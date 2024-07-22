@@ -216,19 +216,21 @@ then
 else
     echo "Sorry, your BINTARGET folder \"${BINTARGET}\" does not exist, dropping link creation"
 fi
-if [ -d ${APPTARGET} ];
+desktop=$(${MCCODE_RESOURCEDIR}/launchers/*.desktop 2> /dev/null | wc -l)
+if [ -d ${APPTARGET} -a -d ${MCCODE_RESOURCEDIR}/launchers -a "$desktop" != "0" ];
 then
     cd ${APPTARGET}
     ln -sf ${MCCODE_RESOURCEDIR}/launchers/*.desktop .
 else
-    echo "Sorry, your APPTARGET folder \"${APPTARGET}\" does not exist, dropping link creation"
+    echo "No APPTARGET folder \"${APPTARGET}\" or ${MCCODE_RESOURCEDIR}/launchers/.desktop: dropping link creation"
 fi
-if [ -d ${LOGOTARGET} ];
+logo=$(${MCCODE_RESOURCEDIR}/launchers/*.png 2> /dev/null | wc -l)
+if [ -d ${LOGOTARGET} -a -d ${MCCODE_RESOURCEDIR}/launchers -a "$logo" != "0" ];
 then
     cd ${LOGOTARGET}
     ln -sf ${MCCODE_RESOURCEDIR}/launchers/*.png .
 else
-    echo "Sorry, your LOGOTARGET folder \"${LOGOTARGET}\" does not exist, dropping link creation"
+    echo "No LOGOTARGET folder \"${LOGOTARGET}\" or ${MCCODE_RESOURCEDIR}/launchers/.png: dropping link creation"
 fi
 
 # Check if mcdoc is installed and if it needs to run
