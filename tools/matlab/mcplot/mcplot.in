@@ -80,7 +80,7 @@ do
     ;;
   esac
 done  
-  
+shift $((OPTIND-1))
 
 
 if [ "$RUN_MATLAB" == "1" ]; then

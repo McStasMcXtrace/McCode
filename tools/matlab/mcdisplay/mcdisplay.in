@@ -36,7 +36,7 @@ if ( canrun_m ); then RUN_MATLAB=1; else RUN_MATLAB=0; fi
 if ( canrun_o ); then RUN_OCTAVE=1; else RUN_OCTAVE=0; fi
 
 # handle input options, overriding defaults
-while getopts hiom flag
+while getopts hom flag
 do
   case "${flag}" in
   o)
@@ -67,7 +67,8 @@ do
     exit 1
     ;;
   esac
-done  
+done
+shift $((OPTIND-1))
 
 if [ "$RUN_MATLAB" == "1" ]; then
     matlab -nosplash -nodesktop -r "addpath('${LIB}');${TOOL} ${MCRUN} $*"
