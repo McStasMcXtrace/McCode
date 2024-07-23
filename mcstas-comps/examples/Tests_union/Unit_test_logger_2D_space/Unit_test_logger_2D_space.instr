@@ -74,7 +74,6 @@ AT (-0.03,0,0.02) RELATIVE geometry_center
 COMPONENT cone = Union_cone(radius_top=0.02, radius_bottom=0.055, yheight=0.09, priority=8, material_string="material")
 AT (0.03,0,0.07) RELATIVE geometry_center
 
-// Insert loggers to be tested here
 COMPONENT Union_logger_2D_space_zx = Union_logger_2D_space(
     D_direction_1="z", D1_min=-0.15, D1_max=0.15, n1=200,
     D_direction_2="x", D2_min=-0.1, D2_max=0.1, n2=200,

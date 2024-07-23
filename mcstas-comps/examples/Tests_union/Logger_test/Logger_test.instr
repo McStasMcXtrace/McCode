@@ -138,11 +138,9 @@ COMPONENT al_in_box_cut = Union_box(xwidth=0.01,yheight=0.001,zdepth=0.001, prio
 AT (0,0.0019,-0.0019) RELATIVE sample_box_cut
 ROTATED (30,0,0) RELATIVE sample_box_cut
 
-
 COMPONENT sample_holder_under_sample = Union_box(xwidth=0.01, yheight=0.025, zdepth=0.002, priority=21, material_string="Al", p_interact=0.3)
 AT (0,0,-0.005-0.0011) RELATIVE sample
 ROTATED (0,0,0) RELATIVE sample
-
 
 COMPONENT long_piece_center = Arm()
 AT (0,-0.0225,0) RELATIVE beam_center
@@ -251,7 +249,6 @@ COMPONENT test_logger_3D_space = Union_logger_3D_space(
 )
 AT (0,0,0) RELATIVE sample_pos
 ROTATED (0,0,0) RELATIVE sample_pos
-
 
 COMPONENT test_sample = Union_master()
 AT(0,0,0) RELATIVE sample_pos

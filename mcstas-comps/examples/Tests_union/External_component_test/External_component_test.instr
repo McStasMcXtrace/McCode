@@ -13,12 +13,13 @@
 * Origin: University of Copenhagen
 * %INSTRUMENT_SITE: Tests_union
 *
+* Inserts external component in Union system with exit volumes and number_of_activations
 *
 * %Description
 * Demonstration of the use of "number_of_activations" and exit volumes to
-*  include a regular McStas component in an ensemble of Union components.
+* include a regular McStas component in an ensemble of Union components.
 *
-* Example: Detector: detector_I=213.109
+* %Example: Detector: detector_I=213.109
 *
 * %Parameters
 *

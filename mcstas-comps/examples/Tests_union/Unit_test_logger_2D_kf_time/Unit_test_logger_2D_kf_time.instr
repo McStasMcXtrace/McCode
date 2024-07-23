@@ -13,10 +13,12 @@
 * Origin: ESS
 * %INSTRUMENT_SITE: Tests_union
 *
-* Base instrument for logger unit tests
+* Tests Logger_2D_kf_time that records final wavevector in several time steps
 *
 * %Description
-* Base instrument for logger unit tests
+* Tests the 2D kf time logger that histograms the final wavevector after each
+* scattering event in a 2D plane, and these are further distributed into a number
+* of time bins so the time evolution of final wavevectors can be monitored.
 *
 * %End
 *******************************************************************************/

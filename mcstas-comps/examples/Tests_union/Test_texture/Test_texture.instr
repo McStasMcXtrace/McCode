@@ -108,9 +108,6 @@ ROTATED (0,0,0) RELATIVE beam_center
 SPLIT 1000 COMPONENT simulation_master = Union_master()
 AT(0,0,0) RELATIVE beam_center
 ROTATED(0,0,0) RELATIVE beam_center
-EXTEND
-%{
-%}
 
 COMPONENT monitor = L_monitor(filename="L_monitor_transmission.dat",
     nL = 420, xwidth = 2.0*sample_wx, yheight = 2.0*sample_wy, Lmin = 1.9, Lmax = 6.1)

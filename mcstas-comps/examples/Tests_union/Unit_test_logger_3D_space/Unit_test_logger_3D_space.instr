@@ -13,10 +13,11 @@
 * Origin: ESS
 * %INSTRUMENT_SITE: Tests_union
 *
-* Base instrument for logger unit tests
+* Test of the Union_logger_3D_space
 *
 * %Description
-* Base instrument for logger unit tests
+* Tests the 3D space logger that makes a number of 2D slices, integrating over
+* some thickness depending on the number of bins in the 3rd dimension.
 *
 * %End
 *******************************************************************************/

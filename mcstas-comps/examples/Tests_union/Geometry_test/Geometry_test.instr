@@ -13,6 +13,7 @@
 * Origin: University of Copenhagen
 * %INSTRUMENT_SITE: Tests_union
 *
+* Test of all Union geometry components in one file
 *
 * %Description
 * Use of all basic geometries, sphere, cylinder, cone and box

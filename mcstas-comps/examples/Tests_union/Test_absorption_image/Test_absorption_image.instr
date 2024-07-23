@@ -19,7 +19,7 @@
 * Simple test instrument showing absorption image of a cryostat with vanadium
 * sample using the Union components.
 *
-* Example: Detector: screen_I=0.00925
+* %Example: Detector: screen_I=0.00925
 *
 * %Parameters
 * stick_displacement: [m] Displacement of sample stick
@@ -59,7 +59,6 @@ AT (0,0,0) ABSOLUTE
 COMPONENT Absorber = Union_make_material(my_absorption=1000,absorber=1)
 AT (0,0,0) ABSOLUTE
 
-
 COMPONENT a1 = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
@@ -69,7 +68,6 @@ COMPONENT source = Source_div(
         dE = 0)
   AT (0,0.35,0) RELATIVE a1
   ROTATED (0,0,0) RELATIVE a1
-
 
 // Sample position
 COMPONENT beam_center = Arm()
@@ -193,7 +191,6 @@ ROTATED (0,0,0) RELATIVE sample_rod_bottom
 COMPONENT sample = Union_cylinder(radius=0.008,yheight=0.042,priority=38,material_string="Vanadium")
 AT (0,-0.01,-0.011) RELATIVE sample_holder3
 ROTATED (-7,0,32) RELATIVE sample_holder3
-
 
 COMPONENT test_sample = Union_master()
 AT(0,0,0) RELATIVE beam_center

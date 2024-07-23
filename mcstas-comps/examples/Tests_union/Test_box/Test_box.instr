@@ -21,7 +21,7 @@
 * be set, and when two or more geometries overlap, the one with highest
 * priority determines what material is simulated in that region.
 *
-* Example: Detector: m4pi_both_I=4.8716e-10
+* %Example: Detector: m4pi_both_I=4.8716e-10
 *
 * %End
 *******************************************************************************/
@@ -59,22 +59,14 @@ COMPONENT source = Source_div(
         dE = 0)
   AT (0,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
 
-// test
-//COMPONENT start_volume_test = cylinder(radius=0.03,yheight=1.4,priority=99,material_string="Vacuum")
-//AT (0,0,0.7-0.02) RELATIVE a1
-//ROTATED (90,0,0) RELATIVE a1
-
-
 // Sample position
 COMPONENT beam_center = Arm()
 AT (0,0,1.4) RELATIVE a1
 ROTATED (0,0,0) RELATIVE a1
 
-
 COMPONENT tube_point = Arm()
 AT (0,0,0) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center
-
 
 // V1
 COMPONENT box_tube1 = Union_box(xwidth=0.1, yheight=0.15, xwidth2=0.03, yheight2=0.03, zdepth=0.045, priority=5, material_string="test_material")

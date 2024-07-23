@@ -81,7 +81,6 @@ AT (0.03,0,0.02) RELATIVE geometry_center
 COMPONENT cylinder = Union_cylinder(radius=0.02, yheight=0.8, priority=7, material_string="material")
 AT (-1.0,0,0.0) RELATIVE geometry_center
 
-// Insert loggers to be tested here
 COMPONENT abs_logger_1D_space_tof_to_lambda = Union_abs_logger_1D_space_tof_to_lambda(
     yheight=0.8, yn=100,
     target_geometry="cylinder",

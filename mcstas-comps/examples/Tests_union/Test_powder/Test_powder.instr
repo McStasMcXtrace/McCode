@@ -43,7 +43,6 @@ AT (0,0,0) ABSOLUTE
 COMPONENT test_material = Union_make_material(my_absorption=4)
 AT (0,0,0) ABSOLUTE
 
-
 COMPONENT a1 = Progress_bar()
   AT (0,0,0) ABSOLUTE
 

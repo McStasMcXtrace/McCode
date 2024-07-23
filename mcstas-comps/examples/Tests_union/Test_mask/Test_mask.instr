@@ -19,7 +19,7 @@
 * Masks allow restricing some geometry to the internal part of a mask
 * geometry. All Union geometry components can be used as masks.
 *
-* Example: Detector: m4pi_I=2.27579e-07
+* %Example: Detector: m4pi_I=2.27579e-07
 *
 * %End
 *******************************************************************************/
@@ -62,7 +62,6 @@ COMPONENT beam_center = Arm()
 AT (0,0,10.4) RELATIVE a1
 ROTATED (0,0,0) RELATIVE a1
 
-
 // Children tests
 COMPONENT volume_1 = Union_box(xwidth=0.1,yheight=0.1,zdepth=0.1,priority=10,material_string="test_material")
 AT (0,0,0) RELATIVE beam_center
@@ -87,8 +86,6 @@ ROTATED (0,0,0) RELATIVE beam_center
 COMPONENT mask_2_2 = Union_box(xwidth=0.015,yheight=0.015,zdepth=0.055,priority=15,mask_string="volume_2",mask_setting="ALL")
 AT (0,0.0,0.0) RELATIVE beam_center
 ROTATED (0,0,0) RELATIVE beam_center
-
-
 
 COMPONENT test_sample = Union_master()
 AT(0,0,0) RELATIVE beam_center
@@ -121,6 +118,5 @@ COMPONENT m4pi_both = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events
 
 COMPONENT stop = Union_stop()
 AT (0,0,0) ABSOLUTE
-
 
 END

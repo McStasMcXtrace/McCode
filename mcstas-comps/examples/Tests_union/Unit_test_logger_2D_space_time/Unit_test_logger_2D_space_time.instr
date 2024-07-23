@@ -13,10 +13,13 @@
 * Origin: ESS
 * %INSTRUMENT_SITE: Tests_union
 *
-* Base instrument for logger unit tests
+* Test of Union logger 2D space time that records spatial distribution of scattering in time steps
 *
 * %Description
-* Base instrument for logger unit tests
+* Test instrument for the Union logger 2D space time component that records
+* the spatial distribution of scattering intensity projected onto a 2D plane
+* chosen by the user. This is furthermore split into several timesteps so
+* the time dependency of scattering in the Union system can be monitored.
 *
 * %End
 *******************************************************************************/
@@ -70,7 +73,6 @@ AT (-0.03,0,0.02) RELATIVE geometry_center
 COMPONENT cone = Union_cone(radius_top=0.02, radius_bottom=0.055, yheight=0.09, priority=8, material_string="material")
 AT (0.03,0,0.07) RELATIVE geometry_center
 
-// Insert loggers to be tested here
 COMPONENT Union_logger_2D_space_time = Union_logger_2D_space_time(
     D_direction_1="z", D1_min=-0.15, D1_max=0.15, n1=200,
     D_direction_2="x", D2_min=-0.1, D2_max=0.1, n2=200,

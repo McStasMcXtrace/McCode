@@ -13,10 +13,12 @@
 * Origin: ESS
 * %INSTRUMENT_SITE: Tests_union
 *
-* Base instrument for logger unit tests
+* Test of the Union 2DQ logger that shows scattering vector projected onto 2D plane
 *
 * %Description
-* Base instrument for logger unit tests
+* This instrument uses a basic Union system and investigates scattering within
+* using the 2DQ logger that histograms occurances of the scattering vectors for
+* scattering events in the Union system projected onto a chosen 2D plane.
 *
 * %End
 *******************************************************************************/
