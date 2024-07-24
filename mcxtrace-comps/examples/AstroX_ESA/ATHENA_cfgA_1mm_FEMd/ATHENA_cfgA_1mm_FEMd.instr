@@ -63,6 +63,8 @@
 * Hyper:    [ ] If non-zero the secondary mirror (hyperbolic) is active. Useful for debugging.
 * Para:     [ ] If non-zero the primary mirror is acive (parabolic) is active. Useful for debugging.
 * lists:    [ ] If non-zero drop event mode monitr are active. Turn-off to save disk-space.
+* default_reflec: [] Default reflectivity value to use if no reflectivity file is given.
+* disp_type: [] Displacement type
 *
 * %Link
 * <a href="http://www.cosmos.esa.int/web/athena">The ATHENA web pages @ ESA</a>

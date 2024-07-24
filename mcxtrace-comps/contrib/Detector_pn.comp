@@ -5,13 +5,13 @@
 *         DTU Physics, Kgs. Lyngby, Denmark
 *         Synchrotron SOLEIL, Saint-Aubin, France
 *
-* Component: Detector_pn.comp
+* Component: Detector_pn
 *
 * %Identification
 * Written by: Maria Thomsen (mariath@fys.ku.dk)
 * Date: Jan 24, 2011
 * Origin: NBI, KU
-* Release: McXtrace 1.2
+* Version: McXtrace 1.2
 *
 * Block of a attenuating material
 * 
@@ -20,7 +20,6 @@
 * more physical version of the PSD_monitor. Only direct absorption is taken into account.
 *
 * Example: Detector_pn(restore_xray=restore_flag,filename="detector_Si", material_datafile="Si.txt", xwidth=1e-2, yheight=1e-2,zdepth=1e-5)
-AT(0,0,0.1) RELATIVE psrc
 *
 * %Parameters
 * INPUT PARAMETERS

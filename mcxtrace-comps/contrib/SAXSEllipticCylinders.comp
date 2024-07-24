@@ -21,8 +21,8 @@
 * Example: SAXSEllipticCylinders( xwidth = 0.01, yheight = 0.01, zdepth = 0.01, SampleToDetectorDistance = 0.48, DetectorRadius = 0.1 )
 *
 * %Parameters
-* R1; [AA]              First semiaxis of the cross section of the elliptic cylinder.
-* R2; [AA]              Second semiaxis of the cross section of the elliptic cylinder.
+* R1: [AA]             First semiaxis of the cross section of the elliptic cylinder.
+* R2: [AA]             Second semiaxis of the cross section of the elliptic cylinder.
 * Height: [AA]         Height of the cylinder.
 * Concentration: [mM]  Concentration of sample.
 * DeltaRho: [cm/AA^3]  Excess scattering length density of the particles.

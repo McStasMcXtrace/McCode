@@ -75,7 +75,7 @@ function [comps, fig] = mcdisplay(varargin)
   elseif isunix, precmd = 'LD_LIBRARY_PATH= ; DISPLAY= ; ';
   else           precmd = ''; end
   % add --trace --no-output-files
-  [status,output] = system([ precmd model ' --trace --no-output-files' ]);
+  [status,output] = system([ precmd model ' --trace=1 --no-output-files' ]);
   
   disp([ mfilename ': plotting ' instr ]);
   if isempty(comps)

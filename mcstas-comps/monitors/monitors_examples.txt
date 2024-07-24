@@ -39,7 +39,7 @@ DivLambda_monitor is used in 2 example(s):
 DivPos_monitor is used in 1 example(s):
 - Test_NMO.instr
 ---------------------------------------
-Divergence_monitor is used in 17 example(s):
+Divergence_monitor is used in 19 example(s):
 - HZB_FLEX.instr
 - WOFSANS.instr
 - ILL_SALSA.instr
@@ -51,12 +51,14 @@ Divergence_monitor is used in 17 example(s):
 - PSI_Focus.instr
 - RITA-II.instr
 - BTsimple.instr
+- Test_RNG_randvec_target_rect_angular.instr
+- Test_Monitor_nD.instr
+- Test_focus.instr
 - Test_TasReso.instr
 - Test_single_magnetic_crystal.instr
-- Test_Monitor_nD.instr
-- Test_RNG_randvec_target_rect_angular.instr
-- Test_focus.instr
 - Union_test_texture.instr
+- Reflectometer.instr
+- SANSsimple.instr
 ---------------------------------------
 EPSD_monitor is used in 0 example(s):
 ---------------------------------------
@@ -75,12 +77,12 @@ E_monitor is used in 21 example(s):
 - linup-6.instr
 - linup-7.instr
 - SNS_BASIS.instr
-- Test_TasReso.instr
 - Test_Monitor_nD.instr
-- Test_Source_quasi.instr
 - Test_focus.instr
 - Samples_Phonon.instr
 - Test_Magnon_bcc_TAS.instr
+- Test_TasReso.instr
+- Test_Source_quasi.instr
 - Union_IncoherentPhonon_test.instr
 ---------------------------------------
 Event_monitor_simple is used in 3 example(s):
@@ -96,7 +98,7 @@ Flex_monitor_2D is used in 1 example(s):
 ---------------------------------------
 Flex_monitor_3D is used in 0 example(s):
 ---------------------------------------
-L_monitor is used in 54 example(s):
+L_monitor is used in 58 example(s):
 - ESS_BEER_MCPL.instr
 - ESS_IN5_reprate.instr
 - ESS_Testbeamline_HZB_V20.instr
@@ -105,6 +107,7 @@ L_monitor is used in 54 example(s):
 - ILL_D4.instr
 - ILL_IN13.instr
 - ILL_Lagrange.instr
+- ILL_SALSA.instr
 - ISIS_CRISP.instr
 - ISIS_IMAT.instr
 - ISIS_MERLIN.instr
@@ -126,36 +129,39 @@ L_monitor is used in 54 example(s):
 - RITA-II.instr
 - SNS_BASIS.instr
 - BTsimple.instr
-- SE_example.instr
-- SE_example2.instr
 - Test_SasView_bcc_paracrystal_aniso.instr
 - Test_SasView_guinier.instr
-- Test_TasReso.instr
-- Unittest_SANS_benchmark2.instr
 - templateSANS.instr
 - templateSANS2.instr
 - templateSasView.instr
-- Test_single_magnetic_crystal.instr
-- Test_Conics_pairs.instr
 - Test_Monitor_nD.instr
-- Test_Source_quasi.instr
-- Test_Vertical_Bender.instr
+- Test_Conics_pairs.instr
 - Test_Monochromators.instr
 - Test_Pol_Bender_Vs_Guide_Curved.instr
 - Test_Source_pulsed.instr
+- Test_Vertical_Bender.instr
 - Test_focus.instr
+- SE_example.instr
+- SE_example2.instr
 - Test_Pol_Bender.instr
 - Test_Pol_Guide_Vmirror.instr
 - Test_Pol_Guide_mirror.instr
 - Test_Pol_Mirror.instr
 - Test_Pol_Tabled.instr
 - Test_Magnon_bcc_TAS.instr
+- Test_TasReso.instr
+- Test_single_magnetic_crystal.instr
+- Unittest_SANS_benchmark2.instr
+- Test_Source_quasi.instr
 - Union_test_texture.instr
+- Reflectometer.instr
+- SANSsimple.instr
+- SimplePowderDiffractometer.instr
 ---------------------------------------
 MeanPolLambda_monitor is used in 10 example(s):
+- He3_spin_filter.instr
 - SE_example.instr
 - SE_example2.instr
-- He3_spin_filter.instr
 - Test_Magnetic_Constant.instr
 - Test_Magnetic_Majorana.instr
 - Test_Magnetic_Rotation.instr
@@ -164,7 +170,7 @@ MeanPolLambda_monitor is used in 10 example(s):
 - Test_Pol_MSF.instr
 - Test_Pol_Mirror.instr
 ---------------------------------------
-Monitor is used in 137 example(s):
+Monitor is used in 139 example(s):
 - ESS_BEER_MCPL.instr
 - ESS_Testbeamline_HZB_V20.instr
 - ESS_butterfly_Guide_curved_test.instr
@@ -187,7 +193,6 @@ Monitor is used in 137 example(s):
 - ILL_H15.instr
 - ILL_H15_D11.instr
 - ILL_H16.instr
-- ILL_H16_Mantid.instr
 - ILL_H22.instr
 - ILL_H22_D1A.instr
 - ILL_H22_D1A_noenv.instr
@@ -205,11 +210,9 @@ Monitor is used in 137 example(s):
 - ILL_IN13.instr
 - ILL_IN4.instr
 - ILL_IN5.instr
-- ILL_IN5_Mantid.instr
 - ILL_IN5_Spots.instr
 - ILL_IN6.instr
 - ILL_Lagrange.instr
-- ILL_SALSA.instr
 - ISIS_GEM.instr
 - ISIS_HET.instr
 - ISIS_IMAT.instr
@@ -218,6 +221,8 @@ Monitor is used in 137 example(s):
 - ISIS_TOSCA_preupgrade.instr
 - ISIS_test.instr
 - ViewModISIStest.instr
+- ILL_H16_Mantid.instr
+- ILL_IN5_Mantid.instr
 - ISIS_SANS2d_Mantid.instr
 - ISIS_TOSCA_preupgrade_Mantid.instr
 - SNS_ARCS_Mantid.instr
@@ -247,24 +252,22 @@ Monitor is used in 137 example(s):
 - RTP_Laue.instr
 - RTP_NeutronRadiography.instr
 - RTP_SANS.instr
-- TestSANS.instr
-- Test_Pol_TripleAxis.instr
 - Tomography.instr
 - templateDIFF.instr
 - templateTAS.instr
 - templateTOF.instr
-- Test_Cyl_monitors.instr
-- Test_Monitor_nD.instr
-- Test_NMO.instr
 - Test_MCPL_input.instr
 - Test_MCPL_output.instr
 - Test_Jump_Iterate.instr
+- Test_Cyl_monitors.instr
+- Test_Monitor_nD.instr
 - Test_Collimator_Radial.instr
 - Test_Fermi.instr
 - Test_Guides.instr
 - Test_Guides_Curved.instr
 - Test_Lens.instr
 - Test_Monochromators.instr
+- Test_NMO.instr
 - Test_PreMonitor_nD.instr
 - Test_Selectors.instr
 - Test_Source_pulsed.instr
@@ -279,9 +282,11 @@ Monitor is used in 137 example(s):
 - Test_Pol_MSF.instr
 - Test_Pol_Mirror.instr
 - Test_Pol_Set.instr
+- Test_Pol_TripleAxis.instr
 - Samples_Incoherent.instr
 - Samples_Incoherent_off.instr
 - Samples_Isotropic_Sqw.instr
+- TestSANS.instr
 - Test_PowderN_Res.instr
 - Test_SX.instr
 - Test_Sqw_monitor.instr
@@ -302,6 +307,9 @@ Monitor is used in 137 example(s):
 - Union_single_crystal_validation.instr
 - Union_tagging_demo.instr
 - Union_time_of_flight.instr
+- SANSsimple.instr
+- SANSsimpleSpheres.instr
+- SimplePowderDiffractometer.instr
 ---------------------------------------
 Monitor_4PI is used in 0 example(s):
 ---------------------------------------
@@ -328,7 +336,6 @@ Monitor_nD is used in 118 example(s):
 - ILL_H15.instr
 - ILL_H15_D11.instr
 - ILL_H16.instr
-- ILL_H16_Mantid.instr
 - ILL_H22.instr
 - ILL_H22_D1A.instr
 - ILL_H22_D1A_noenv.instr
@@ -346,11 +353,9 @@ Monitor_nD is used in 118 example(s):
 - ILL_IN13.instr
 - ILL_IN4.instr
 - ILL_IN5.instr
-- ILL_IN5_Mantid.instr
 - ILL_IN5_Spots.instr
 - ILL_IN6.instr
 - ILL_Lagrange.instr
-- ILL_SALSA.instr
 - ISIS_GEM.instr
 - ISIS_HET.instr
 - ISIS_IMAT.instr
@@ -358,6 +363,8 @@ Monitor_nD is used in 118 example(s):
 - ISIS_TOSCA_preupgrade.instr
 - ISIS_test.instr
 - ViewModISIStest.instr
+- ILL_H16_Mantid.instr
+- ILL_IN5_Mantid.instr
 - ISIS_SANS2d_Mantid.instr
 - ISIS_TOSCA_preupgrade_Mantid.instr
 - SNS_ARCS_Mantid.instr
@@ -384,11 +391,11 @@ Monitor_nD is used in 118 example(s):
 - templateDIFF.instr
 - templateTAS.instr
 - templateTOF.instr
-- Test_Cyl_monitors.instr
-- Test_Monitor_nD.instr
 - Test_MCPL_input.instr
 - Test_MCPL_output.instr
 - Test_Jump_Iterate.instr
+- Test_Cyl_monitors.instr
+- Test_Monitor_nD.instr
 - Test_Collimator_Radial.instr
 - Test_Fermi.instr
 - Test_Guides.instr
@@ -424,12 +431,13 @@ Monitor_nD is used in 118 example(s):
 - Union_single_crystal_validation.instr
 - Union_tagging_demo.instr
 - Union_time_of_flight.instr
+- SimplePowderDiffractometer.instr
 ---------------------------------------
 Monitor_nD_noacc is used in 0 example(s):
 ---------------------------------------
 PSD_TOF_monitor is used in 0 example(s):
 ---------------------------------------
-PSD_monitor is used in 142 example(s):
+PSD_monitor is used in 149 example(s):
 - BNL_H8.instr
 - BNL_H8_simple.instr
 - h8_test_legacy.instr
@@ -472,22 +480,16 @@ PSD_monitor is used in 142 example(s):
 - PSI_Focus.instr
 - PSI_source.instr
 - RITA-II.instr
-- SEMSANS_Delft.instr
-- SESANS_Delft.instr
 - linup-4.instr
 - linup-6.instr
 - SNS_BASIS.instr
 - RTP_SANS.instr
+- SEMSANS_Delft.instr
+- SESANS_Delft.instr
 - BTsimple.instr
-- Reflectometer.instr
-- SE_example.instr
-- SE_example2.instr
-- TestSANS.instr
+- TOF_Reflectometer.instr
 - Test_SasView_bcc_paracrystal_aniso.instr
 - Test_SasView_guinier.instr
-- Test_TOFRes_sample.instr
-- Test_TasReso.instr
-- Unittest_SANS_benchmark2.instr
 - mini.instr
 - templateLaue.instr
 - templateNMX.instr
@@ -496,39 +498,42 @@ PSD_monitor is used in 142 example(s):
 - templateSANS2.instr
 - templateSasView.instr
 - templateTAS.instr
-- Test_single_magnetic_crystal.instr
-- Test_Conics_pairs.instr
-- Test_Cyl_monitors.instr
-- Test_Monitor_nD.instr
-- Test_NMO.instr
 - Test_RNG_rand01.instr
 - Test_RNG_randnorm.instr
 - Test_RNG_randpm1.instr
 - Test_RNG_randtriangle.instr
 - Test_RNG_randvec_target_circle.instr
 - Test_RNG_randvec_target_rect.instr
-- Test_Source_quasi.instr
-- Test_Vertical_Bender.instr
 - Test_GROUP.instr
 - Unittest_JUMP_ITERATE.instr
 - Unittest_JUMP_WHEN.instr
 - Unittest_SPLIT.instr
 - Unittest_SPLIT_sample.instr
+- Test_Cyl_monitors.instr
+- Test_Monitor_nD.instr
+- Test_Conics_pairs.instr
 - Test_DiskChoppers.instr
 - Test_DiskChoppers2.instr
 - Test_FocalisationMirrors.instr
 - Test_Guides_Curved.instr
+- Test_Monochromator_bent.instr
 - Test_Monochromators.instr
+- Test_NMO.instr
 - Test_Pol_Bender_Vs_Guide_Curved.instr
 - Test_Rotator.instr
+- Test_Vertical_Bender.instr
 - Test_focus.instr
+- SE_example.instr
+- SE_example2.instr
 - Test_Pol_Bender.instr
 - Test_Pol_Guide_Vmirror.instr
 - Test_Pol_Guide_mirror.instr
 - Test_pol_ideal.instr
+- GISANS_tests.instr
 - Samples_Incoherent.instr
 - Samples_Isotropic_Sqw.instr
 - Samples_vanadium.instr
+- TestSANS.instr
 - Test_Incoherent.instr
 - Test_Magnon_bcc_2D.instr
 - Test_PowderN.instr
@@ -536,6 +541,11 @@ PSD_monitor is used in 142 example(s):
 - Test_PowderN_concentric.instr
 - Test_SX.instr
 - Test_Sqw.instr
+- Test_TOFRes_sample.instr
+- Test_TasReso.instr
+- Test_single_magnetic_crystal.instr
+- Unittest_SANS_benchmark2.instr
+- Test_Source_quasi.instr
 - Histogrammer.instr
 - Union_conditional_test.instr
 - Union_demonstration.instr
@@ -572,8 +582,13 @@ PSD_monitor is used in 142 example(s):
 - Union_unit_test_logger_2D_space_time.instr
 - Union_unit_test_logger_3D_space.instr
 - Union_unit_test_loggers_base.instr
+- Radiography_absorbing_edge.instr
+- Reflectometer.instr
+- SANSsimple.instr
+- SANSsimpleSpheres.instr
+- SimplePowderDiffractometer.instr
 ---------------------------------------
-PSD_monitor_4PI is used in 41 example(s):
+PSD_monitor_4PI is used in 42 example(s):
 - ESS_butterfly_Guide_curved_test.instr
 - ESS_butterfly_MCPL_test.instr
 - ILL_D2B.instr
@@ -588,7 +603,6 @@ PSD_monitor_4PI is used in 41 example(s):
 - templateLaue.instr
 - templateNMX.instr
 - templateNMX_TOF.instr
-- Test_single_magnetic_crystal.instr
 - Unittest_SPLIT_sample.instr
 - Test_Guides_Curved.instr
 - Test_Monochromators.instr
@@ -602,6 +616,7 @@ PSD_monitor_4PI is used in 41 example(s):
 - Test_PowderN_concentric.instr
 - Test_SX.instr
 - Test_Sqw.instr
+- Test_single_magnetic_crystal.instr
 - Histogrammer.instr
 - Union_demonstration.instr
 - Union_external_component.instr
@@ -615,6 +630,7 @@ PSD_monitor_4PI is used in 41 example(s):
 - Union_test_mask.instr
 - Union_test_powder.instr
 - Union_time_of_flight.instr
+- SimplePowderDiffractometer.instr
 ---------------------------------------
 PSD_monitor_4PI_spin is used in 1 example(s):
 - Test_single_magnetic_crystal.instr
@@ -630,7 +646,8 @@ PSD_monitor_psf_eff is used in 1 example(s):
 ---------------------------------------
 PSDcyl_monitor is used in 0 example(s):
 ---------------------------------------
-PSDlin_diff_monitor is used in 0 example(s):
+PSDlin_diff_monitor is used in 1 example(s):
+- Radiography_absorbing_edge.instr
 ---------------------------------------
 PSDlin_monitor is used in 8 example(s):
 - HZB_FLEX.instr
@@ -645,10 +662,9 @@ PSDlin_monitor is used in 8 example(s):
 PolLambda_monitor is used in 15 example(s):
 - SEMSANS_Delft.instr
 - SESANS_Delft.instr
+- He3_spin_filter.instr
 - SE_example.instr
 - SE_example2.instr
-- Test_Pol_TripleAxis.instr
-- He3_spin_filter.instr
 - Test_Magnetic_Constant.instr
 - Test_Magnetic_Majorana.instr
 - Test_Magnetic_Rotation.instr
@@ -658,6 +674,7 @@ PolLambda_monitor is used in 15 example(s):
 - Test_Pol_MSF.instr
 - Test_Pol_Mirror.instr
 - Test_Pol_Tabled.instr
+- Test_Pol_TripleAxis.instr
 ---------------------------------------
 Pol_monitor is used in 5 example(s):
 - He3_spin_filter.instr
@@ -689,17 +706,17 @@ TOF2E_monitor is used in 1 example(s):
 - ESS_IN5_reprate.instr
 ---------------------------------------
 TOF2Q_cylPSD_monitor is used in 1 example(s):
-- Reflectometer.instr
+- TOF_Reflectometer.instr
 ---------------------------------------
 TOFLambda_monitor is used in 8 example(s):
 - ESS_BEER_MCPL.instr
 - ESS_IN5_reprate.instr
 - ESS_Testbeamline_HZB_V20.instr
 - ISIS_OSIRIS.instr
-- Test_TOFRes_sample.instr
 - templateNMX_TOF.instr
 - Test_DiskChoppers.instr
 - Test_DiskChoppers2.instr
+- Test_TOFRes_sample.instr
 ---------------------------------------
 TOFRes_monitor is used in 1 example(s):
 - Test_TOFRes_sample.instr
@@ -717,11 +734,11 @@ TOF_monitor is used in 16 example(s):
 - ISIS_TOSCA_preupgrade.instr
 - ISIS_TOSCA_preupgrade_Mantid.instr
 - SNS_ARCS_Mantid.instr
-- SEMSANS_instrument.instr
 - SNS_ARCS.instr
 - SNS_BASIS.instr
 - SNS_analytic_test.instr
 - SNS_test.instr
+- SEMSANS_instrument.instr
 - Test_Monitor_nD.instr
 - Test_DiskChoppers2.instr
 - Test_Source_pulsed.instr

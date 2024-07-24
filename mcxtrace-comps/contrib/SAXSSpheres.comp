@@ -22,9 +22,9 @@
 *
 * %Parameters
 * R: [AA]        Radius of the spherical particles.
-* Concentration	: [mM]   Concentration of sample.
-* DeltaRho: [cm/AA^3]	 Excess scattering length density of the particles.
-* AbsorptionCrosssection: [1/m]		Absorption cross section of the sample.
+* Concentration: [mM]   Concentration of sample.
+* DeltaRho: [cm/AA^3]   Excess scattering length density of the particles.
+* AbsorptionCrosssection: [1/m] Absorption cross section of the sample.
 * xwidth: [m]            Dimension of component in the x-direction.
 * yheight: [m]           Dimension of component in the y-direction.
 * zdepth: [m]            Dimension of component in the z-direction.

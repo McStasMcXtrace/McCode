@@ -35,12 +35,12 @@
 *
 * %Parameters
 * Input parameters:
-* theta: [deg] Incident angle
-* s1: [m]      Distance from the source to the multilayer
-* s2: [m]      Focusing distance of the multilayer
-* length: [m]  Length of the mirrors
-* width: [m]   Width of the mirror along x-axis
-* R0: [ ]      Constant reflectivity, R0=1 for an ideal situation. If R0=0, the code reads the reflectivity from the datafile
+* theta:  [deg] Incident angle
+* s1:     [m]   Distance from the source to the multilayer
+* s2:     [m]   Focusing distance of the multilayer
+* length: [m]   Length of the mirrors
+* width:  [m]   Width of the mirror along x-axis
+* R0:     [0-1] Constant reflectivity, R0=1 for an ideal situation. If R0=0, the code reads the reflectivity from the datafile
 * reflectivity_datafile: [str] File which contains reflectivities as a function of q.
 *
 * %End

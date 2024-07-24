@@ -7,23 +7,23 @@
 * Origin: <your institution>
 * %INSTRUMENT_SITE: Templates
 *
-* <instrument short description>
+* [Put here the instrument short description]
 *
 * %Description
-* <instrument description>
+* [Put here a longer instrument description]
 *
 * Example: <parameters=values>
 *
 * %Parameters
-* <parameter1>: [<unit>] <parameter1 description>
+* parameter1: [unit] parameter1 description
 * ...
 *
 * %L
-* <reference/HTML link>
+* <put here any reference/HTML link>
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT template_simple(Par1=1)
+DEFINE INSTRUMENT template_simple(parameter1=1)
 
 DECLARE
 %{

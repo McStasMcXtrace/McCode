@@ -30,19 +30,18 @@
 * %Parameters
 * INPUT PARAMETERS
 *
-* file:     Filename of x-ray file to write. Default is standard
-*           output [string]
-* bufsize:  Size of x-ray output buffer [records]
-* progress: If not zero, output dots as progress indicator [flag]
+* file:     [string]  Filename of x-ray file to write. Default is standard output
+* bufsize:  [records] Size of x-ray output buffer
+* progress: [flag]    If not zero, output dots as progress indicator
 *
 * %End
 *******************************************************************************/
 
 
 DEFINE COMPONENT Shadow_output
-DEFINITION PARAMETERS (string file = 0, int bufsize = 1000)
-SETTING PARAMETERS (int progress = 0)
-OUTPUT PARAMETERS (hfile, obuf, pos, p_out, p2_out)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string file="", int bufsize=1000, int progress=0)
+OUTPUT PARAMETERS ()
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)*/
 
 SHARE
@@ -57,14 +56,17 @@ FILE *hfile;			/* X-ray output file handle    */
 Ray *obuf;			/* X-ray output buffer         */
 int pos;			/* Current position in buffer  */
 int reclen;                     /* Fortran binary unformatted sequential record head/tail */
-int ncol = 18;                  /* num column fixed at 18 for McXtrace->Shadow */
-int i, iflag = 0;               /* Shadow flag must be set to zero !!! */ 
+int ncol;                       
+int i;
+int iflag;
 double p_out;                   /* sum of output weight        */
 double p2_out;                  /* square sum of output weight */
 %}
 
 INITIALIZE
 %{
+  ncol = 18;                  /* num column fixed at 18 for McXtrace->Shadow */
+  iflag = 0 ;                 /* Shadow flag must be set to zero !!! */ 
   /* Open x-ray output file. */
   if (file==NULL)
   {

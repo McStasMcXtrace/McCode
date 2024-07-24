@@ -8,6 +8,24 @@ Air is used in 4 example(s):
 - Test_Filter.instr
 - Test_Air.instr
 ---------------------------------------
+File is used in 16 example(s):
+- ATHENA_1mm.instr
+- ATHENA_1pore.instr
+- ATHENA_1ring.instr
+- ATHENA_1sh_W1_OA.instr
+- ATHENA_1sh_both.instr
+- ATHENA_1sh_conical.instr
+- ATHENA_1shell.instr
+- ATHENA_cfgA_1mm.instr
+- ATHENA_cfgA_1mm_FEMd.instr
+- NuSTAR_1shell_con.instr
+- CXO.instr
+- NuSTAR_1shell.instr
+- ESRF_ID01.instr
+- test_File.instr
+- Test_SAXS.instr
+- Test_source_spectra.instr
+---------------------------------------
 Focus is used in 4 example(s):
 - MAXIV_DanMAX_pxrd1d.instr
 - MAXIV_DanMAX_pxrd2d.instr
@@ -20,7 +38,7 @@ MCPL_input is used in 1 example(s):
 MCPL_output is used in 1 example(s):
 - Test_MCPL_output.instr
 ---------------------------------------
-Progress_bar is used in 86 example(s):
+Progress_bar is used in 87 example(s):
 - ATHENA_1mm.instr
 - ATHENA_1pore.instr
 - ATHENA_1ring.instr
@@ -92,6 +110,7 @@ Progress_bar is used in 86 example(s):
 - Test_grating_trans.instr
 - Test_mirror_elliptic.instr
 - Test_mirror_parabolic.instr
+- test_File.instr
 - Template_SasView.instr
 - Test_Absorption.instr
 - Test_Air.instr

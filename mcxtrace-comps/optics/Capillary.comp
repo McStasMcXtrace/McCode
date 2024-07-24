@@ -28,13 +28,13 @@
 *       radius=1e-4,length=0.1, R0=0, coating="Rh.txt")
 * 
 * %Parameters
-* radius: [m]   Radius of curvature.
-* length: [m]   Length of the unbent mirror.
-* coating: []   Name of file containing the material data (i.e. f1 and f2) for the coating
-* R0: [ ] Fixed constant reflectivity
-* rtable: [ ] if nonzero, the coating file contains an E,theta paramterized matrix of raw reflectivities.
-* waviness: [rad]  The momentaneous waviness is uniformly distributed in the range [-waviness,waviness].
-* longw: [ ] If non-zero, waviness is purely longitudinal in its nature.
+* radius:   [m]   Radius of curvature.
+* length:   [m]   Length of the unbent mirror.
+* coating:  [str] Name of file containing the material data (i.e. f1 and f2) for the coating
+* R0:       [0-1] Fixed constant reflectivity
+* rtable:   [0/1] If nonzero, the coating file contains an E,theta paramterized matrix of raw reflectivities.
+* waviness: [rad] The momentaneous waviness is uniformly distributed in the range [-waviness,waviness].
+* longw:    [0/1] If non-zero, waviness is purely longitudinal in its nature.
 * %End
 ***********************************************************************/
 

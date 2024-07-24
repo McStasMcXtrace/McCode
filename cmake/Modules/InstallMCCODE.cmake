@@ -341,11 +341,11 @@ macro(installMCCODE)
   #license file:
   install( FILES "${WORK}/COPYING" DESTINATION "${DEST_DATADIR_INFO}")
   #General library:
-  file_globsrc( general_codefiles "${WORK}/lib/share/*.h"  "${WORK}/lib/share/*.c" )
+  file( GLOB general_codefiles "${WORK}/lib/share/*.h"  "${WORK}/lib/share/*.c" )
   install( FILES ${general_codefiles} DESTINATION "${DEST_DATADIR_CODEFILES}")
 
   # Flavor-specific library
-  file_globsrc( flavor_codefiles "${FLAVOR_LIB}/share/*.h" "${FLAVOR_LIB}/share/*.c" "${FLAVOR_LIB}/share/*.cl" )
+  file( GLOB flavor_codefiles "${FLAVOR_LIB}/share/*.h" "${FLAVOR_LIB}/share/*.c" "${FLAVOR_LIB}/share/*.cl" )
   install( FILES ${flavor_codefiles} DESTINATION "${DEST_DATADIR_CODEFILES}" )
 
   if(NOT WINDOWS)
