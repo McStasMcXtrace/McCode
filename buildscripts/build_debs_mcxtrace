@@ -29,7 +29,8 @@ done
 export WORK=`pwd`
 
 # From 1.4 onwards, let McXtrace reside in /usr/share on Debian-like systems
-export MCINSTALL_PREFIX=/usr/share/
+export MCINSTALL_PREFIX=/usr
+export MCCODE_USE_LEGACY_DESTINATIONS=OFF
 
 # 64-bit
 ./mkdist mcxtrace $1 "" "" deb64 "" -- deb
