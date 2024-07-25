@@ -38,23 +38,23 @@ export ENABLE_CIF2HKL=OFF                 # cif2hkl is available as a separate p
 
 ./mkdist $FLAVOUR                                         $1 "" "" $MCCODE_ARCH "" -- deb
 ./mkdist $FLAVOUR-comps                                   $1 "" "" $MCCODE_ARCH "" -- deb
-./mkdist $FLAVOUR-tools-matlab-${P}plot                   $1 tools/matlab/${P}plot/ "" $MCCODE_ARCH "" -- deb
-./mkdist $FLAVOUR-tools-matlab-${P}display                $1 tools/matlab/${P}display/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-matlab-${P}plot                   $1 tools/matlab/mcplot/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-matlab-${P}display                $1 tools/matlab/mcdisplay/ "" $MCCODE_ARCH "" -- deb
 ./mkdist $FLAVOUR-tools-python-mccodelib                  $1 tools/Python/mccodelib/ "" $MCCODE_ARCH "" -- deb
-./mkdist $FLAVOUR-tools-python-${P}plot-pyqtgraph         $1 tools/Python/${P}plot/pyqtgraph/ "" $MCCODE_ARCH "" -- deb
-./mkdist $FLAVOUR-tools-python-${P}plot-matplotlib        $1 tools/Python/${P}plot/matplotlib/ "" $MCCODE_ARCH "" -- deb
-./mkdist $FLAVOUR-tools-python-${P}plot-svg               $1 tools/Python/${P}plot/svg/ "" $MCCODE_ARCH "" -- deb
-./mkdist $FLAVOUR-tools-python-${P}run                    $1 tools/Python/${P}run/ "" $MCCODE_ARCH "" -- deb
-./mkdist $FLAVOUR-tools-python-${P}test                   $1 tools/Python/${P}test/ "" $MCCODE_ARCH "" -- deb
-./mkdist $FLAVOUR-tools-python-${P}gui                    $1 tools/Python/${P}gui/ "" $MCCODE_ARCH "" -- deb
-./mkdist $FLAVOUR-tools-python-${P}display-webgl          $1 tools/Python/${P}display/webgl/ "" $MCCODE_ARCH "" -- deb
-./mkdist $FLAVOUR-tools-python-${P}display-webgl-classic  $1 tools/Python/${P}display/webgl-classic/ "" $MCCODE_ARCH "" -- deb
-./mkdist $FLAVOUR-tools-python-${P}display-pyqtgraph      $1 tools/Python/${P}display/pyqtgraph/ "" $MCCODE_ARCH "" -- deb
-./mkdist $FLAVOUR-tools-python-${P}display-matplotlib     $1 tools/Python/${P}display/matplotlib/ "" $MCCODE_ARCH "" -- deb
-./mkdist $FLAVOUR-tools-python-${P}display-cad            $1 tools/Python/${P}display/cad/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}plot-pyqtgraph         $1 tools/Python/mcplot/pyqtgraph/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}plot-matplotlib        $1 tools/Python/mcplot/matplotlib/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}plot-svg               $1 tools/Python/mcplot/svg/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}run                    $1 tools/Python/mcrun/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}test                   $1 tools/Python/mctest/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}gui                    $1 tools/Python/mcgui/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}display-webgl          $1 tools/Python/mcdisplay/webgl/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}display-webgl-classic  $1 tools/Python/mcdisplay/webgl-classic/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}display-pyqtgraph      $1 tools/Python/mcdisplay/pyqtgraph/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}display-matplotlib     $1 tools/Python/mcdisplay/matplotlib/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}display-cad            $1 tools/Python/mcdisplay/cad/ "" $MCCODE_ARCH "" -- deb
 ./mkdist $FLAVOUR-clusterscripts                          $1 tools/cluster-scripts/ "" $MCCODE_ARCH "" -- deb
 ./mkdist $FLAVOUR-manuals                                 $1 docpkg/manuals/$FLAVOUR/ "" $MCCODE_ARCH "" -- deb
-./mkdist $FLAVOUR-tools-python-${P}doc                    $1 tools/Python/${P}doc/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}doc                    $1 tools/Python/mcdoc/ "" $MCCODE_ARCH "" -- deb
 
 cd 3rdparty/mcpl
 rm -rf build
