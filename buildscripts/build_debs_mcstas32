@@ -26,30 +26,38 @@ do
     fi
 done
 
-WORK=`pwd`
+export WORK=`pwd`
+MCCODE_ARCH=deb32
+P=mc
+FLAVOUR=mcstas
 
 # From 2.1 onwards, let McStas reside in /usr/share on Debian-like systems
-export MCINSTALL_PREFIX=/usr/share/
+export MCINSTALL_PREFIX=/usr              # Debian standard /usr/bin and /usr/share/$FLAVOUR
+export MCCODE_USE_LEGACY_DESTINATIONS=OFF # install in e.g. /usr/share/$FLAVOUR/resources
+export ENABLE_CIF2HKL=OFF                 # cif2hkl is available as a separate package
 
-# 32-bit
-./mkdist mcstas $1 "" "" deb32 "" -- deb
-./mkdist mcstas-comps $1 "" "" deb32 "" -- deb
-./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" deb32 "" -- deb
-./mkdist mcstas-tools-matlab-mcdisplay $1 tools/matlab/mcdisplay/ "" deb32 "" -- deb
-./mkdist mcstas-tools-python-mcplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" deb32 "" -- deb
-./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" deb32 "" -- deb
-./mkdist mcstas-tools-python-mcplot-svg $1 tools/Python/mcplot/svg/ "" deb32 "" -- deb
-./mkdist mcstas-tools-python-mcresplot $1 tools/Python/mcresplot/ "" deb32 "" -- deb
-./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" deb32 "" -- deb
-./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" deb32 "" -- deb
-./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" deb32 "" -- deb
-./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" deb32 "" -- deb
-./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" deb32 "" -- deb
-./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" deb32 "" -- deb
-./mkdist mcstas-tools-python-mcdisplay-cad $1 tools/Python/mcdisplay/cad/ "" deb32 "" -- deb
-./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" deb32 "" -- deb
-./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" deb32 "" -- deb
-./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" deb32 "" -- deb
+./mkdist $FLAVOUR                                         $1 "" "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-comps                                   $1 "" "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-matlab-${P}plot                   $1 tools/matlab/${P}plot/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-matlab-${P}display                $1 tools/matlab/${P}display/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-mccodelib                  $1 tools/Python/mccodelib/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}plot-pyqtgraph         $1 tools/Python/${P}plot/pyqtgraph/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}plot-matplotlib        $1 tools/Python/${P}plot/matplotlib/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}plot-svg               $1 tools/Python/${P}plot/svg/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}run                    $1 tools/Python/${P}run/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}test                   $1 tools/Python/${P}test/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}gui                    $1 tools/Python/${P}gui/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}display-webgl          $1 tools/Python/${P}display/webgl/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}display-webgl-classic  $1 tools/Python/${P}display/webgl-classic/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}display-pyqtgraph      $1 tools/Python/${P}display/pyqtgraph/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}display-matplotlib     $1 tools/Python/${P}display/matplotlib/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}display-cad            $1 tools/Python/${P}display/cad/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-clusterscripts                          $1 tools/cluster-scripts/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-manuals                                 $1 docpkg/manuals/$FLAVOUR/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}doc                    $1 tools/Python/${P}doc/ "" $MCCODE_ARCH "" -- deb
+
+./mkdist $FLAVOUR-tools-python-${P}resplot                $1 tools/Python/${P}resplot/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}display-mantid         $1 tools/Python/${P}display/mantid_xml/ "" $MCCODE_ARCH "" -- deb
 
 cd 3rdparty/mcpl
 rm -rf build
@@ -59,7 +67,7 @@ cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DMCPL_ENABLE_CPACK=ON
 make
 cpack -G DEB .
 DEB=`ls *.deb`
-DEBNAME=`echo $DEB | sed s/Linux/deb32/g`
+DEBNAME=`echo $DEB | sed s/Linux/$MCCODE_ARCH/g`
 mv $DEB $WORK/dist/$DEBNAME
 
 cd $WORK
@@ -72,22 +80,28 @@ cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DNCRYSTAL_ENABLE_CPACK=ON
 make
 cpack -G DEB .
 DEB=`ls *.deb`
-DEBNAME=`echo $DEB | sed s/Linux/deb32g`
+DEBNAME=`echo $DEB | sed s/Linux/$MCCODE_ARCH/g`
 mv $DEB $WORK/dist/$DEBNAME
 
 cd $WORK
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
+  echo Building metapackage
   cd meta-pkgs/deb
 
-  for controlfile in `ls control.mcstas*`
+  for controlfile in `ls control.$FLAVOUR*`
   do
     sed -i.bak s/@VERSION@/${1}/g $controlfile
     equivs-build $controlfile
     mv $controlfile.bak $controlfile
   done
 
-  mv $WORK/meta-pkgs/deb/mcstas-suite*${1}*.deb $WORK/dist
-  cp $WORK/INSTALL-McStas-3.x/Linux/debian/README.md $WORK/dist
+  echo DEB metapackages done
+  
+  echo WORK dir is $WORK
+  echo mv ${WORK}/meta-pkgs/deb/$FLAVOUR-suite*${1}*.deb ${WORK}/dist
+  echo cp ${WORK}/INSTALL-McStas-3.x/Linux/debian/README.md ${WORK}/dist
+  mv ${WORK}/meta-pkgs/deb/$FLAVOUR-suite*${1}*.deb ${WORK}/dist
+  cp ${WORK}/INSTALL-McStas-3.x/Linux/debian/README.md ${WORK}/dist
 fi
