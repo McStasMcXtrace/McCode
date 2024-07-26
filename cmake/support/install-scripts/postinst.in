@@ -156,7 +156,6 @@ then
 fi
 
 # Look for relevant locations of gtksourceview folder
-echo "Editors: ${PREFIX}/@DEST_DATADIR_EDITORS@"
 if [ -f  ${PREFIX}/@DEST_DATADIR_EDITORS@/mccode.lang ];
 then
     # Recent GTK on Linux
