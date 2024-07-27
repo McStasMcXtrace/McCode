@@ -23,7 +23,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, libnexus-dev, libgsl-dev cif2hkl")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, libnexus-dev, libgsl-dev, cif2hkl")
 
 # NSIS
 set(CPACK_NSIS_PACKAGE_NAME "${MCCODE_STRING} Components")
