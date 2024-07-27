@@ -15,7 +15,6 @@ import sys
 import os
 import re
 import subprocess
-from datetime import datetime
 from os.path import join, basename
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -148,7 +147,8 @@ class OverviewDocWriter:
         text = text.replace('%TAB_LINES_INSTR_LOCAL%', local_instr_tab)
         text = text.replace('%LINK_FILECOLON_DATA%', 'file://%s/data' % self.mccode_libdir)
         text = text.replace('%LINK_FILECOLON_SHARE%', 'file://%s/share' % self.mccode_libdir)
-        text = text.replace('%GENDATE%', '{0:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
+        text = text.replace('%VERSION%', '%s %s' % (mccode_config.configuration["MCCODE"],
+                                                    mccode_config.configuration["MCCODE_VERSION"]))
 
         #some McXtrace specific edits
         if (mccode_config.get_mccode_prefix() == 'mx'):
@@ -195,7 +195,7 @@ class OverviewDocWriter:
             '%TAB_LINES_LOCAL%',
             '%LINK_FILECOLON_DATA%',
             '%LINK_FILECOLON_SHARE%',
-            '%GENDATE%']
+            '%VERSION%']
     html = '''
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <HTML>
@@ -368,7 +368,7 @@ class OverviewDocWriter:
 
 <P><BR>
 <ADDRESS>
-Generated on %GENDATE%
+Generated for %VERSION%
 </ADDRESS>
 </BODY>
 </HTML>
@@ -452,7 +452,8 @@ class InstrDocWriter:
             lstr = lstr + self.lnk_str % l + '\n'
         h = h.replace(t[12], lstr)
         
-        h = h.replace(t[13], '{0:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
+        h = h.replace(t[13], '%s %s' % (mccode_config.configuration["MCCODE"],
+                                        mccode_config.configuration["MCCODE_VERSION"]))
 
         self.text = h
         return self.text
@@ -470,7 +471,7 @@ class InstrDocWriter:
             '%INSTRFILE%',
             '%INSTRFILE_BASE%',
             '%LINKS%',
-            '%GENDATE%']
+            '%VERSION%']
     par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
     par_str_boldface = "<TR> <TD><strong>%s</strong></TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
     par_header = par_str % ('<strong>Name</strong>', '<strong>Unit</strong>', '<strong>Description</strong>', '<strong>Default</strong>')
@@ -534,7 +535,7 @@ the others are optional.
 </P>
 
 <ADDRESS>
-Generated on %GENDATE%
+Generated for %VERSION%
 </ADDRESS>
 </BODY></HTML>
 '''
@@ -625,7 +626,8 @@ class CompDocWriter:
             lstr = lstr + self.lnk_str % l + '\n'
         h = h.replace(t[12], lstr)
 
-        h = h.replace(t[13], '{0:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
+        h = h.replace(t[13], '%s %s' % (mccode_config.configuration["MCCODE"],
+                                        mccode_config.configuration["MCCODE_VERSION"]))
 
         self.text = h
         return self.text
@@ -643,7 +645,7 @@ class CompDocWriter:
             '%COMPFILE%',
             '%COMPFILE_BASE%',
             '%LINKS%',
-            '%GENDATE%',
+            '%VERSION%',
             '%PARLIST%']
     par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
     par_str_boldface = "<TR> <TD><strong>%s</strong></TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
@@ -828,7 +830,7 @@ the others are optional.
 </P>
 
 <ADDRESS>
-Generated on %GENDATE%
+Generated on %VERSION%
 </ADDRESS>
 </BODY></HTML>
 '''
