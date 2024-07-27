@@ -23,7 +23,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, libnexus-dev, libxrl-dev, libgsl-dev")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, libnexus-dev, libxrl-dev, libgsl-dev, cif2hkl")
 
 # NSIS
 set(CPACK_NSIS_PACKAGE_NAME "${MCCODE_STRING} Components")
@@ -55,15 +55,15 @@ if (NOT WINDOWS)
 endif()
 
 # System comps
-install( DIRECTORY "misc/" DESTINATION "${DEST_DATADIR_COMPS}/misc")
-install( DIRECTORY "monitors/" DESTINATION "${DEST_DATADIR_COMPS}/monitors")
-install( DIRECTORY "obsolete/" DESTINATION "${DEST_DATADIR_COMPS}/obsolete")
-install( DIRECTORY "optics/" DESTINATION "${DEST_DATADIR_COMPS}/optics")
-install( DIRECTORY "samples/" DESTINATION "${DEST_DATADIR_COMPS}/samples")
-install( DIRECTORY "sources/" DESTINATION "${DEST_DATADIR_COMPS}/sources")
-install( DIRECTORY "union/" DESTINATION "${DEST_DATADIR_COMPS}/union")
+install( DIRECTORY "misc/"      DESTINATION "${DEST_DATADIR_COMPS}/misc")
+install( DIRECTORY "monitors/"  DESTINATION "${DEST_DATADIR_COMPS}/monitors")
+install( DIRECTORY "obsolete/"  DESTINATION "${DEST_DATADIR_COMPS}/obsolete")
+install( DIRECTORY "optics/"    DESTINATION "${DEST_DATADIR_COMPS}/optics")
+install( DIRECTORY "samples/"   DESTINATION "${DEST_DATADIR_COMPS}/samples")
+install( DIRECTORY "sources/"   DESTINATION "${DEST_DATADIR_COMPS}/sources")
+install( DIRECTORY "union/"     DESTINATION "${DEST_DATADIR_COMPS}/union")
 install( DIRECTORY "sasmodels/" DESTINATION "${DEST_DATADIR_COMPS}/sasmodels")
-install( DIRECTORY "astrox/" DESTINATION "${DEST_DATADIR_COMPS}/astrox")
+install( DIRECTORY "astrox/"    DESTINATION "${DEST_DATADIR_COMPS}/astrox")
 
 # Contrib comps
 if ( NOT EXCLUDE_CONTRIB )
@@ -72,10 +72,10 @@ endif()
 
 # Data files
 if ( NOT EXCLUDE_DATA )
-  install( DIRECTORY "data/" DESTINATION "${DEST_DATADIR_COMPS}/data")
+  install( DIRECTORY "data/"    DESTINATION "${DEST_DATADIR_COMPS}/data")
 endif()
 
-install( DIRECTORY "examples/" DESTINATION "${DEST_DATADIR_EXAMPLES}")
+install( DIRECTORY "examples/"  DESTINATION "${DEST_DATADIR_EXAMPLES}")
 
 
 # Include mcstas-comp revision tag file

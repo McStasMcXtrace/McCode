@@ -16,3 +16,9 @@ if [ ! -x ${MCCODE_BINDIR}/${MC}doc ]; then
 	find ${MCCODE_RESOURCEDIR} -iname '*.html' -exec rm -f \{\} \;
     fi
 fi
+
+# remove mccode-environment start script
+if [ -f ${MCCODE_BINDIR}/${FLAVOR}-${VERSION}-environment ];
+then
+    rm ${MCCODE_BINDIR}/${FLAVOR}-${VERSION}-environment
+fi
