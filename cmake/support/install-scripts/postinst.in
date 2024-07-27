@@ -207,9 +207,12 @@ else
 fi
 if [ -d ${BINTARGET} ];
 then
-    cd ${BINTARGET}
     if [[ ${BINTARGET} != ${MCCODE_BINDIR} ]]; then
-      ln -sf ${MCCODE_BINDIR}/* .
+      for i in ${MCCODE_BINDIR}/*; do
+        if [[ ! -f ${BINTARGET}/$i ]]; then
+          ln -sf ${MCCODE_BINDIR}/$i ${BINTARGET}/$i
+        fi
+      done
     fi
     if [[ -f ${MCCODE_RESOURCEDIR}/${FLAVOR}-environment ]]; then
       ln -sf ${MCCODE_RESOURCEDIR}/${FLAVOR}-environment ${BINTARGET}/${FLAVOR}-${VERSION}-environment
@@ -221,7 +224,7 @@ else
 fi
 
 # Check if mcdoc is installed and if it needs to run
-if [ -x ${MCCODE_BINDIR}${MC}doc ] && \
+if [ -x ${MCCODE_BINDIR}/${MC}doc ] && \
     [ -d ${MCCODE_RESOURCEDIR}/examples ]; then
-    ${MCCODE_BINDIR}${MC}doc -i &>/dev/null
+    ${MCCODE_BINDIR}/${MC}doc -i &>/dev/null
 fi
