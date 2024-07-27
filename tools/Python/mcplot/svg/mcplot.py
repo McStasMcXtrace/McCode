@@ -125,8 +125,9 @@ def get_params_str_2D(data):
     cm = get_cm()
     for i in range(dims[0]):
         for j in range(dims[1]):
-            color = lookup(cm, vals[i,j]/maxval)
-            img[i,j,:] = color
+            if maxval:
+                color = lookup(cm, vals[i,j]/maxval)
+                img[i,j,:] = color
 
     # encode png as base64 string
     image = Image.fromarray(np.flipud(img).astype(np.uint8))
