@@ -9,17 +9,16 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Mo
 
 # Setup McCode values (from mkdist or defaults)
 include(MCUtil)
-setupMCCODE("${FLAVOR}")
-
-# Configure doc
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${FLAVOR}.md.in" "${WORK}/${FLAVOR}.md" @ONLY)
-
-install(
-  PROGRAMS "${WORK}/${FLAVOR}.md"
-  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
-  )
-
+setupMCCODE("mcxtrace")
 
 # Setup install target
 include(InstallMCCODE)
 installMCCODE()
+
+# Configure doc
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcxtrace.md.in" "${WORK}/mcxtrace.md" @ONLY)
+
+install(
+  PROGRAMS "${WORK}/mcxtrace.md"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+  )
