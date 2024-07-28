@@ -75,6 +75,9 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdoc.in" "${WORK}/${P}doc" @ONLY)
 
+# Configure doc
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdoc.md.in" "${WORK}/${P}doc.md" @ONLY)
+
 # Main script, including rename mcdoc/mxdoc
 install(
   FILES "${PROJECT_SOURCE_DIR}/mcdoc.py"
@@ -105,5 +108,10 @@ if(NOT WINDOWS)
     PROGRAMS "${WORK}/${P}doc"
     DESTINATION ${DEST_BINDIR}
     )
+    
+  install(
+    PROGRAMS "${WORK}/${P}doc.md"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+  )
 
 endif()

@@ -74,6 +74,9 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcgui.in" "${WORK}/${P}gui" @ONLY)
 
+# Configure doc
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcgui.md.in" "${WORK}/${P}gui.md" @ONLY)
+
 # Configure launcher
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/McCode-py.desktop.in" "${WORK}/${FLAVOR}-${MCCODE_VERSION}-py.desktop")
 
@@ -111,6 +114,11 @@ if(NOT WINDOWS)
     PROGRAMS "${WORK}/${P}gui"
     DESTINATION ${DEST_BINDIR}
     )
+    
+  install(
+    PROGRAMS "${WORK}/${P}gui.md"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+  )
 
   # Install desktop entry
   install(FILES "${WORK}/${FLAVOR}-${MCCODE_VERSION}-py.desktop" DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications" )

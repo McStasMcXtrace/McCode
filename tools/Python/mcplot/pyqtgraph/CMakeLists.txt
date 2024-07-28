@@ -75,6 +75,9 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot" @ONLY)
 
+# Configure doc
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot-pyqtgraph.md.in" "${WORK}/${P}plot-pyqtgraph.md" @ONLY)
+
 # Main script, including rename mc/mxplot
 install(
   PROGRAMS "${PROJECT_SOURCE_DIR}/mcplot.py"
@@ -111,4 +114,9 @@ if(NOT WINDOWS)
     DESTINATION ${DEST_BINDIR}
     RENAME "${P}plot-pyqtgraph"
     )
+    
+  install(
+    PROGRAMS "${WORK}/${P}plot-pyqtgraph.md"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+  )
 endif()
