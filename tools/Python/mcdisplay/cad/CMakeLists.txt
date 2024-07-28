@@ -36,7 +36,7 @@ set(TOOLS_NAME "Python/${P}display/cad")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-cad-${MCCODE_VERSION}")
-set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
+set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_CONTACT       "gregory.tucker@ess.eu")
 
 set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
