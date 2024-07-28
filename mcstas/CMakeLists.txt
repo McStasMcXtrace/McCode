@@ -20,5 +20,5 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcstas.md.in" "${WORK}/mcstas.md" @O
 
 install(
   PROGRAMS "${WORK}/mcstas.md"
-  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+  DESTINATION "${DEST_DATADIR_DOC}/${TOOLS_NAME}"
   )

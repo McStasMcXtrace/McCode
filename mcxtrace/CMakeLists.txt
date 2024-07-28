@@ -20,5 +20,5 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcxtrace.md.in" "${WORK}/mcxtrace.md
 
 install(
   PROGRAMS "${WORK}/mcxtrace.md"
-  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+  DESTINATION "${DEST_DATADIR_DOC}/${TOOLS_NAME}"
   )

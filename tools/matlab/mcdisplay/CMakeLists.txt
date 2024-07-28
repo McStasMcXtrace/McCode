@@ -122,7 +122,7 @@ if(NOT WINDOWS)
     
   install(
     PROGRAMS "${WORK}/${P}display-matlab.md"
-    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+    DESTINATION "${DEST_DATADIR_DOC}/${TOOLS_NAME}"
   )
 
 endif()
