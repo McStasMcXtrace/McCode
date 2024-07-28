@@ -17,7 +17,7 @@ all the monitors in a simulation, and it is thus useful to get a quick overview
 of the simulation results. In the simplest case, the front-end is run simply by
 typing `mxplot`. This will plot any simulation data stored in the current
 directory, which is where simulations store their results by default. If the
---dir or --file options have been used (see section 5.2), the name of the file
+`--dir` or `--file` options have been used, the name of the file
 or directory should be passed to *mxplot*, e.g. `mxplot dir` or `mxplot file`. It
 is also possible to plot one single text (not binary) data file from a given
 monitor, passing its name to `mxplot`. The `-h` option will list valid options.
@@ -29,7 +29,6 @@ The default plotting backend is `mxplot-pyqtgraph`, but there exists a number of
 **simulation**
 :   file or directory to plot
 
-   options:
 **-h, --help**
 :   show this help message and exit
 
