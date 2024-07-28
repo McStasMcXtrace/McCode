@@ -14,9 +14,9 @@
 
 The **mcdisplay-matlab** front-end is a graphical debugging tool. It presents a
 schematic drawing of the instrument definition, showing the position of the
-components and the paths of the simulated photons through the instrument. It is
+components and the paths of the simulated neutrons through the instrument. It is
 thus very useful for debugging a simulation, for example to spot components in
-the wrong position or to find out where photons are getting lost. To use the
+the wrong position or to find out where neutrons are getting lost. To use the
 **mcdisplay-matlab** front-end with a simulation, run it as follows: 
 `mcdisplay INSTR args...` where INSTR is the name of either the instrument 
 source `INSTR.instr` or the simulation program `INSTR.out` generated with
