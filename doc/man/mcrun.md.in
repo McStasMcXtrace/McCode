@@ -1,22 +1,22 @@
-% MXRUN(1)
-% McXtrace X-ray Ray Tracing Team
-% July 2024
+% @MCCODE_PREFIX@RUN(1)
+% @FLAVOR_UPPER@ @MCCODE_PARTICLE@ Ray Tracing Team
+% @MCCODE_DATE@
 
 # NAME
 
-**mxrun** - Running McXtrace simulations from the command-line
+**@MCCODE_PREFIX@run** - Running @MCCODE_NAME@ simulations from the command-line
 
 # SYNOPSIS
 
-**mxrun** [-cpnN] *INSTR* [-sndftgahi] params={val|min,max|min,guess,max}... [-hB][-c CMD][-f FROM][-n NAME][-o DIR][-s SCRIPT]
+**@MCCODE_PREFIX@run** [-cpnN] *INSTR* [-sndftgahi] params={val|min,max|min,guess,max}... [-hB][-c CMD][-f FROM][-n NAME][-o DIR][-s SCRIPT]
 
 # DESCRIPTION
 
-The **mxrun** front-end provides a convenient command-line interface for running
+The **@MCCODE_PREFIX@run** front-end provides a convenient command-line interface for running
 simulations with the same automatic compilation features. It also provides a
 facility for running a series of simulations while varying an input
 parameter, as well as a multiparameter non-linear optimisation. The command
-`mxrun sim args ...` will compile the instrument definition INSTR e.g.
+`@MCCODE_PREFIX@run sim args ...` will compile the instrument definition INSTR e.g.
 `sim.instr` (if necessary) into an executable simulation `sim.out`. It will
 then run `sim.out`, passing the argument list `args` usually given as a
 series of `param=value` pairs. The `-h` option will list valid options.
@@ -31,8 +31,8 @@ series of `param=value` pairs. The `-h` option will list valid options.
 
 **-c, --force-compile**
 :   force rebuilding of instrument. This may be needed in case any
-    component definitions are changed (in which case mxrun does not automatically
-    recompile), or if a new version of McXtrace has been installed.
+    component definitions are changed (in which case @MCCODE_PREFIX@run does not automatically
+    recompile), or if a new version of @MCCODE_NAME@ has been installed.
 
 **-I I**
 :   Append path *I* to McCode search path (implies -c)
@@ -57,10 +57,10 @@ series of `param=value` pairs. The `-h` option will list valid options.
 :   Set number of scan points, varying one or more parameters within specified 
     intervals. Such a series of simulations is called a scan. To specify an interval 
     for a parameter X, it should be assigned two values separated by a comma. 
-    For example, the command *mxrun sim.instr -N4 X=2,8 Y=1* would run the 
+    For example, the command *@MCCODE_PREFIX@run sim.instr -N4 X=2,8 Y=1* would run the 
     simulation defined in sim.instr four times, with X having the values 2, 4, 6, 
     and 8, respectively. After running the simulation, the results will be written 
-    to the file mccode.dat by default. This file contains one line for each 
+    to the file @MCCODE_PREFIX@code.dat by default. This file contains one line for each 
     simulation run giving the values of the scanned input variables along with 
     the integrated intensity and estimated error in all monitors
 
@@ -92,13 +92,13 @@ series of `param=value` pairs. The `-h` option will list valid options.
 :   Defines path of MPI machinefile to use in parallel mode
 
 **--optimise-file=FILE**
-:   Store scan results in FILE (defaults to: "mccode.dat")
+:   Store scan results in FILE (defaults to: "@MCCODE_PREFIX@code.dat")
 
 **--no-cflags**
 :   Disable optimising compiler flags for faster compilation
 
 **--no-main**
-:   Do not generate a main(), e.g. for  use  with  mcstas2vitess.pl.
+:   Do not generate a main(), e.g. for  use  with  @FLAVOR@2vitess.pl.
     Implies -c
 
 **--verbose**
@@ -147,10 +147,10 @@ series of `param=value` pairs. The `-h` option will list valid options.
 :   Set random seed (must be: SEED != 0)
 
 **-n COUNT, --ncount=COUNT**
-:   Set number of xray to simulate
+:   Set number of @MCCODE_PARTICLE@ to simulate
 
 **-t trace, --trace=trace**
-:   Enable trace of xray through instrument
+:   Enable trace of @MCCODE_PARTICLE@ through instrument
 
 **-d DIR, --dir=DIR**
 :   Put all data files in directory DIR. Additionally, the directory will have
@@ -198,19 +198,21 @@ series of `param=value` pairs. The `-h` option will list valid options.
 
 # FILES
 
-/usr/share/mcxtrace/tools/Python/mccodelib/mccode_config.json
-~/.mcxtrace/mccode_config.json
+/usr/share/@FLAVOR@/resources
+/usr/share/@FLAVOR@/tools/Python/mccodelib/mccode_config.json
+~/.@FLAVOR@/mccode_config.json
+http://www.@FLAVOR@.org
 
 # EXAMPLES
 
 Run the *Test_SX* example (Single crystal diffraction)
-:   - `mxrun Test_SX.instr -d output_dir -n 1e7 TTH=13.4`
+:   - `@MCCODE_PREFIX@run Test_SX.instr -d output_dir -n 1e7 TTH=13.4`
 
 # AUTHORS
 
-McXtrace Team (mcxtrace.org)
+@MCCODE_NAME@ Team (@FLAVOR@.org)
 
 # SEE ALSO
 
-mcxtrace(1), mxdoc(1), mxplot(1), mxrun(1), mxgui(1), mxdisplay(1)
+@FLAVOR@(1), @MCCODE_PREFIX@doc(1), @MCCODE_PREFIX@plot(1), @MCCODE_PREFIX@run(1), @MCCODE_PREFIX@gui(1), @MCCODE_PREFIX@display(1)
 
