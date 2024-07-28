@@ -1,22 +1,22 @@
-% MXRUN(1)
-% McXtrace X-ray Ray Tracing Team
+% MCRUN(1)
+% McStas Neutron Ray-Tracing Team
 % July 2024
 
 # NAME
 
-**mxrun** - Running McXtrace simulations from the command-line
+**mcrun** - Running McStas simulations from the command-line
 
 # SYNOPSIS
 
-**mxrun** [-cpnN] *INSTR* [-sndftgahi] params={val|min,max|min,guess,max}... [-hB][-c CMD][-f FROM][-n NAME][-o DIR][-s SCRIPT]
+**mcrun** [-cpnN] *INSTR* [-sndftgahi] params={val|min,max|min,guess,max}... [-hB][-c CMD][-f FROM][-n NAME][-o DIR][-s SCRIPT]
 
 # DESCRIPTION
 
-The **mxrun** front-end provides a convenient command-line interface for running
+The **mcrun** front-end provides a convenient command-line interface for running
 simulations with the same automatic compilation features. It also provides a
 facility for running a series of simulations while varying an input
 parameter, as well as a multiparameter non-linear optimisation. The command
-`mxrun sim args ...` will compile the instrument definition INSTR e.g.
+`mcrun sim args ...` will compile the instrument definition INSTR e.g.
 `sim.instr` (if necessary) into an executable simulation `sim.out`. It will
 then run `sim.out`, passing the argument list `args` usually given as a
 series of `param=value` pairs. The `-h` option will list valid options.
@@ -31,8 +31,8 @@ series of `param=value` pairs. The `-h` option will list valid options.
 
 **-c, --force-compile**
 :   force rebuilding of instrument. This may be needed in case any
-    component definitions are changed (in which case mxrun does not automatically
-    recompile), or if a new version of McXtrace has been installed.
+    component definitions are changed (in which case mcrun does not automatically
+    recompile), or if a new version of McStas has been installed.
 
 **-I I**
 :   Append path *I* to McCode search path (implies -c)
@@ -57,7 +57,7 @@ series of `param=value` pairs. The `-h` option will list valid options.
 :   Set number of scan points, varying one or more parameters within specified 
     intervals. Such a series of simulations is called a scan. To specify an interval 
     for a parameter X, it should be assigned two values separated by a comma. 
-    For example, the command *mxrun sim.instr -N4 X=2,8 Y=1* would run the 
+    For example, the command *mcrun sim.instr -N4 X=2,8 Y=1* would run the 
     simulation defined in sim.instr four times, with X having the values 2, 4, 6, 
     and 8, respectively. After running the simulation, the results will be written 
     to the file mccode.dat by default. This file contains one line for each 
@@ -198,19 +198,19 @@ series of `param=value` pairs. The `-h` option will list valid options.
 
 # FILES
 
-/usr/share/mcxtrace/tools/Python/mccodelib/mccode_config.json
-~/.mcxtrace/mccode_config.json
+/usr/share/mcstas/tools/Python/mccodelib/mccode_config.json
+~/.mcstas/mccode_config.json
 
 # EXAMPLES
 
 Run the *Test_SX* example (Single crystal diffraction)
-:   - `mxrun Test_SX.instr -d output_dir -n 1e7 TTH=13.4`
+:   - `mcrun Test_SX.instr -d output_dir -n 1e7 TTH=13.4`
 
 # AUTHORS
 
-McXtrace Team (mcxtrace.org)
+McStas Team (mcstas.org)
 
 # SEE ALSO
 
-mcxtrace(1), mxdoc(1), mxplot(1), mxrun(1), mxgui(1), mxdisplay(1)
+mcstas(1), mcdoc(1), mcplot(1), mcrun(1), mcgui(1), mcdisplay(1)
 

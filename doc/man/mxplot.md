@@ -1,5 +1,5 @@
 % MXPLOT(1)
-% McXtrace Team
+% McXtrace X-ray Ray Tracing Team
 % July 2024
 
 # NAME

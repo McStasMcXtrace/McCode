@@ -1,20 +1,20 @@
-% MXGUI(1)
-% McXtrace X-ray Ray Tracing Team
+% MCGUI(1)
+% McStas Neutron Ray-Tracing Team
 % July 2024
 
 # NAME
 
-**mxgui** - The McXtrace graphical user interface
+**mcgui** - The McStas graphical user interface
 
 # SYNOPSIS
 
-**mxgui** [INSTR]
+**mcgui** [INSTR]
 
 # DESCRIPTION
 
-The front-end **mxgui** provides a graphical user interface that interfaces the
-various parts of the McXtrace package. It is started from a shell/command prompt
-using simply the command mxgui The `mxgui` program may optionally be given the
+The front-end **mcgui** provides a graphical user interface that interfaces the
+various parts of the McStas package. It is started from a shell/command prompt
+using simply the command mcgui The `mcgui` program may optionally be given the
 name INSTR of an instrument file. When the front-end is started, a main window
 is opened. This window displays the output from compiling and running
 simulations, and also contains a few menus and buttons. The main purpose of the
@@ -29,12 +29,12 @@ and visualize the results.
 # EXAMPLES
 
 Open the *Test_SX* example (Single crystal diffraction)
-:   - `mxgui Test_SX.instr`
+:   - `mcgui Test_SX.instr`
 
 # AUTHORS
 
-McXtrace Team (mcxtrace.org)
+McStas Team (mcstas.org)
 
 # SEE ALSO
 
-mcxtrace(1), mxdoc(1), mxplot(1), mxrun(1), mxgui(1), mxdisplay(1)
+mcstas(1), mcdoc(1), mcplot(1), mcrun(1), mcgui(1), mcdisplay(1)
