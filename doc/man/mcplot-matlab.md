@@ -49,14 +49,3 @@ McStas Team (mcstas.org)
 
 mcstas(1), mcdoc(1), mcplot(1), mcrun(1), mcgui(1), mcdisplay(1)
 
-
-
-/usr/bin/mcplot-matlab: plot a McCode simulation result using the Matlab/Octave backend.
-### usage
-
-Name | Description
----- | -----------
-`/usr/bin/mcplot-matlab FILE|DIR Display the specified monitor file or directory.
-`/usr/bin/mcplot-matlab [-png|-jpg|-fig|-eps|-pdf] [FILE|DIR] Export the specified monitor file or directory to given format.
-`/usr/bin/mcplot-matlab -m FILE|DIR Explicitely request to use Matlab
-`/usr/bin/mcplot-matlab -o FILE|DIR Explicitely request to use Octave

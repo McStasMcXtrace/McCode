@@ -49,14 +49,3 @@ McXtrace Team (mcxtrace.org)
 
 mcxtrace(1), mxdoc(1), mxplot(1), mxrun(1), mxgui(1), mxdisplay(1)
 
-
-
-/usr/bin/mxplot-matlab: plot a McCode simulation result using the Matlab/Octave backend.
-### usage
-
-Name | Description
----- | -----------
-`/usr/bin/mxplot-matlab FILE|DIR Display the specified monitor file or directory.
-`/usr/bin/mxplot-matlab [-png|-jpg|-fig|-eps|-pdf] [FILE|DIR] Export the specified monitor file or directory to given format.
-`/usr/bin/mxplot-matlab -m FILE|DIR Explicitely request to use Matlab
-`/usr/bin/mxplot-matlab -o FILE|DIR Explicitely request to use Octave
