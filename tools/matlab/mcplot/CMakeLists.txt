@@ -70,6 +70,9 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot" @ONLY)
 
+# Configure doc
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot-matlab.md.in" "${WORK}/${P}plot-matlab.md" @ONLY)
+
 
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcplot.m")
@@ -117,4 +120,9 @@ if(NOT WINDOWS)
     DESTINATION ${DEST_BINDIR}
     RENAME "${P}plot-matlab"
     )
+    
+  install(
+    PROGRAMS "${WORK}/${P}plot-matlab.md"
+    DESTINATION "${DEST_DATADIR_DOC}/${TOOLS_NAME}"
+  )
 endif()

@@ -36,7 +36,7 @@ set(TOOLS_NAME "Python/${P}plot/svg")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}plot-svg-${MCCODE_VERSION}")
-set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
+set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
 set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
@@ -75,6 +75,9 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot-svg" @ONLY)
 
+# Configure doc
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot-svg.md.in" "${WORK}/${P}plot-svg.md" @ONLY)
+
 # Main script, including rename mc/mxplot
 install(
   PROGRAMS "${PROJECT_SOURCE_DIR}/mcplot.py"
@@ -107,4 +110,10 @@ if(NOT WINDOWS)
     PROGRAMS "${WORK}/${P}plot-svg"
     DESTINATION ${DEST_BINDIR}
     )
+    
+  install(
+    PROGRAMS "${WORK}/${P}plot-svg.md"
+    DESTINATION "${DEST_DATADIR_DOC}/${TOOLS_NAME}"
+  )
+  
 endif()

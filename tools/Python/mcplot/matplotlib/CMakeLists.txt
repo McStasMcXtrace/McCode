@@ -75,6 +75,9 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot-matplotlib" @ONLY)
 
+# Configure doc
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot-matplotlib.md.in" "${WORK}/${P}plot-matplotlib.md" @ONLY)
+
 # Main script, including rename mc/mxplot
 install(
   PROGRAMS "${PROJECT_SOURCE_DIR}/mcplot.py"
@@ -102,4 +105,9 @@ if(NOT WINDOWS)
     PROGRAMS "${WORK}/${P}plot-matplotlib"
     DESTINATION ${DEST_BINDIR}
     )
+    
+  install(
+    PROGRAMS "${WORK}/${P}plot-matplotlib.md"
+    DESTINATION "${DEST_DATADIR_DOC}/${TOOLS_NAME}"
+  )
 endif()

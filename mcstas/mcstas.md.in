@@ -1,0 +1,102 @@
+% @FLAVOR_UPPER@(1)
+% @FLAVOR_UPPER@ @MCCODE_PARTICLE@ Ray Tracing Team
+% @MCCODE_DATE@
+
+# NAME
+
+**@FLAVOR@** Compiler of the @MCCODE_NAME@ @MCCODE_PARTICLE@ ray-trace simulation package
+
+# SYNOPSIS
+
+**@FLAVOR@** [-o file] [-I dir1 ...] [-t] [-p] [-v] [--no-main] [--no-runtime] [--verbose] file
+
+# DESCRIPTION
+
+The compiler for the @MCCODE_NAME@ instrument definition is invoked by typing a
+command of the form `@FLAVOR@ name.instr` in a shell or command prompt.
+This will read the beamline definition `name.instr` which is written in the
+@MCCODE_NAME@ meta-language. The compiler will translate the instrument definition
+into a Monte Carlo simulation program provided in ISO-C. The output is by
+default written to a file in the current directory with the same name as the
+instrument file, but with extension `.c` rather than `.instr`. This can be
+overridden using the `-o` option as follows: `@FLAVOR@ -o code.c name.instr` which
+gives the output in the file `code.c`. A single dash `-` may be used for both
+input and output filename to represent standard input and standard output,
+respectively. The default component search list is usually defined by the 
+environment variable `@FLAVOR_UPPER@`  (default is `/usr/share/@FLAVOR@/resources`).
+
+Often, it will be more convenient to use the front-end program `@MCCODE_PREFIX@gui` or
+`@MCCODE_PREFIX@run`. These front-ends will compile and run the simulations automatically.
+
+The usual instrument syntax is:
+```c
+DEFINE INSTRUMENT name(parameters)
+
+DECLARE %{
+  // C_code
+%}
+INITIALIZE %{
+  // C_code
+%}
+TRACE
+
+COMPONENT name = comp(parameters)
+WHEN (condition)
+AT (...) [RELATIVE reference
+{ROTATED {RELATIVE reference }
+EXTEND %{
+  // C_code
+%}
+
+FINALLY %{
+  // C_code
+%}
+END
+```
+
+# OPTIONS
+
+**-o FILE --output-file=FILE**
+:   Place C output in file FILE.
+
+**-I DIR --search-dir=DIR**
+:   Append DIR to the component search list.
+
+**-t --trace**
+:   Enable 'trace' mode for instrument display.
+
+**-v --version**
+:   Prints @MCCODE_NAME@ version.
+
+**--no-main**
+:   Do not create main(), for external embedding.
+
+**--no-runtime**
+:   Do not embed run-time libraries.
+
+**--verbose**
+:   Display compilation process steps.
+
+**--source**
+:   Embed the instrument source code in executable.
+
+# FILES
+
+/usr/share/@FLAVOR@/resources
+/usr/share/@FLAVOR@/tools/Python/mccodelib/mccode_config.json
+~/.@FLAVOR@/mccode_config.json
+http://www.@FLAVOR@.org
+
+# EXAMPLES
+
+Translate the *Test_SX* example (Single crystal diffraction) into C
+:   - `@FLAVOR@ Test_SX.instr`
+:   - `gcc Test_SX.instr -o Test_SX.out -lm`
+
+# AUTHORS
+
+@MCCODE_NAME@ Team (@FLAVOR@.org)
+
+# SEE ALSO
+
+@FLAVOR@(1), @MCCODE_PREFIX@doc(1), @MCCODE_PREFIX@plot(1), @MCCODE_PREFIX@run(1), @MCCODE_PREFIX@gui(1), @MCCODE_PREFIX@display(1)
