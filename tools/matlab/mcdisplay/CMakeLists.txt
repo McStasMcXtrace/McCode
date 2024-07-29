@@ -69,7 +69,6 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 # Configure fallback script
 configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display" @ONLY)
-configure_file("${CMAKE_SOURCE_DIR}/mcdisplay-octave.in" "${WORK}/${P}display-octave" @ONLY)
 
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.m")
@@ -112,27 +111,10 @@ if(NOT WINDOWS)
     "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}display"
     )
 
-  add_custom_command(
-    OUTPUT "${WORK}/${P}display-octave"
-    COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
-    COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}display-octave"
-    COMMAND "${CMAKE_COMMAND}" -E create_symlink2
-    "${TOOLS_LIB}/mcdisplay-octave" "${WORK}/${P}display-octave"
-    )
-
-  add_custom_target(
-    "CREATE_SYMLINK2" ALL DEPENDS "${WORK}/${P}display-octave"
-    )
-
-
   install(
     PROGRAMS "${WORK}/${P}display"
     DESTINATION ${DEST_BINDIR}
     RENAME "${P}display-matlab"
     )
-  install(
-    PROGRAMS "${WORK}/${P}display-octave"
-    DESTINATION ${DEST_BINDIR}
-    RENAME "${P}display-octave"
-    )
+
 endif()

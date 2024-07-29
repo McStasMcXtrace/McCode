@@ -27,30 +27,34 @@ do
 done
 
 export WORK=`pwd`
+MCCODE_ARCH=deb64arm
+P=mx
+FLAVOUR=mcxtrace
 
-# From 1.4 onwards, let McXtrace reside in /usr/share on Debian-like systems
-export MCINSTALL_PREFIX=/usr/share/
+# From 2.1 onwards, let McStas reside in /usr/share on Debian-like systems
+export MCINSTALL_PREFIX=/usr              # Debian standard /usr/bin and /usr/share/$FLAVOUR
+export MCCODE_USE_LEGACY_DESTINATIONS=OFF # install in e.g. /usr/share/$FLAVOUR/resources
+export ENABLE_CIF2HKL=OFF                 # cif2hkl is available as a separate package
 
-# 64-bit
-./mkdist mcxtrace $1 "" "" deb64arm "" -- deb
-./mkdist mcxtrace-comps $1 "" "" deb64arm "" -- deb
-./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" deb64arm "" -- deb
-./mkdist mcxtrace-tools-matlab-mxdisplay $1 tools/matlab/mcdisplay/ "" deb64arm "" -- deb
-./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" deb64arm "" -- deb
-./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" deb64arm "" -- deb
-./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" deb64arm "" -- deb
-./mkdist mcxtrace-tools-python-mxplot-svg $1 tools/Python/mcplot/svg/ "" deb64arm "" -- deb
-./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" deb64arm "" -- deb
-./mkdist mcxtrace-tools-python-mxtest $1 tools/Python/mctest/ "" deb64arm "" -- deb
-./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" deb64arm "" -- deb
-./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" deb64arm "" -- deb
-./mkdist mcxtrace-tools-python-mxdisplay-webgl-classic $1 tools/Python/mcdisplay/webgl-classic/ "" deb64arm "" -- deb
-./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" deb64arm "" -- deb
-./mkdist mcxtrace-tools-python-mxdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" deb64arm "" -- deb
-./mkdist mcxtrace-tools-python-mcdisplay-cad $1 tools/Python/mcdisplay/cad/ "" deb64arm "" -- deb
-./mkdist mcxtrace-clusterscripts $1 tools/cluster-scripts/ "" deb64arm "" -- deb
-./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" deb64arm "o" -- deb
-./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" deb64arm "" -- deb
+./mkdist $FLAVOUR                                         $1 "" "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-comps                                   $1 "" "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-matlab-${P}plot                   $1 tools/matlab/mcplot/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-matlab-${P}display                $1 tools/matlab/mcdisplay/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-mccodelib                  $1 tools/Python/mccodelib/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}plot-pyqtgraph         $1 tools/Python/mcplot/pyqtgraph/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}plot-matplotlib        $1 tools/Python/mcplot/matplotlib/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}plot-svg               $1 tools/Python/mcplot/svg/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}run                    $1 tools/Python/mcrun/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}test                   $1 tools/Python/mctest/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}gui                    $1 tools/Python/mcgui/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}display-webgl          $1 tools/Python/mcdisplay/webgl/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}display-webgl-classic  $1 tools/Python/mcdisplay/webgl-classic/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}display-pyqtgraph      $1 tools/Python/mcdisplay/pyqtgraph/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}display-matplotlib     $1 tools/Python/mcdisplay/matplotlib/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}display-cad            $1 tools/Python/mcdisplay/cad/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-clusterscripts                          $1 tools/cluster-scripts/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-manuals                                 $1 docpkg/manuals/$FLAVOUR/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}doc                    $1 tools/Python/mcdoc/ "" $MCCODE_ARCH "" -- deb
 
 cd 3rdparty/mcpl
 rm -rf build
@@ -60,7 +64,7 @@ cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DMCPL_ENABLE_CPACK=ON
 make
 cpack -G DEB .
 DEB=`ls *.deb`
-DEBNAME=`echo $DEB | sed s/Linux/deb64/g`
+DEBNAME=`echo $DEB | sed s/Linux/$MCCODE_ARCH/g`
 mv $DEB $WORK/dist/$DEBNAME
 
 cd $WORK
@@ -70,7 +74,7 @@ if [ "x$2" != "x" ]; then
   echo Building metapackage
   cd meta-pkgs/deb
 
-  for controlfile in `ls control.mcxtrace*`
+  for controlfile in `ls control.$FLAVOUR*`
   do
     sed -i.bak s/@VERSION@/${1}/g $controlfile
     equivs-build $controlfile
@@ -80,8 +84,8 @@ if [ "x$2" != "x" ]; then
   echo DEB metapackages done
   
   echo WORK dir is $WORK
-  echo mv ${WORK}/meta-pkgs/deb/mcxtrace-suite*${1}*.deb ${WORK}/dist
+  echo mv ${WORK}/meta-pkgs/deb/$FLAVOUR-suite*${1}*.deb ${WORK}/dist
   echo cp ${WORK}/INSTALL-McXtrace-3.x/Linux/debian/README.md ${WORK}/dist
-  mv ${WORK}/meta-pkgs/deb/mcxtrace-suite*${1}*.deb ${WORK}/dist
+  mv ${WORK}/meta-pkgs/deb/$FLAVOUR-suite*${1}*.deb ${WORK}/dist
   cp ${WORK}/INSTALL-McXtrace-3.x/Linux/debian/README.md ${WORK}/dist
 fi
