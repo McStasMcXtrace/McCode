@@ -72,7 +72,7 @@ export PATH=$CONDALOCATION/bin:$PATH
 ./mkdist mcstas-tools-python-mcplot-pyqtgraph 3.x-dev tools/Python/mcplot/pyqtgraph/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-svg 3.x-dev tools/Python/mcplot/svg/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-matplotlib 3.x-dev tools/Python/mcplot/matplotlib/ "" deb64 "" -- justinst
-cp tools/other/mcsplit/mcsplit.py $HOME/McStas/mcstas/3.x-dev/bin/
+cp tools/other/mcsplit/mcsplit $HOME/McStas/mcstas/3.x-dev/bin/
 
 # Ensure we are configured for 10 node MPI runs
 sed -i s/\'4\'/\'10\'/g $HOME/McStas/mcstas/3.x-dev/tools/Python/mccodelib/mccode_config.py

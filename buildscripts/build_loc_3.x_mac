@@ -69,7 +69,7 @@ export PATH=$CONDALOCATION/bin:$PATH
 ./mkdist mcstas-tools-python-mcdisplay-mantid 3.x-dev tools/Python/mcdisplay/mantid_xml/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-svg 3.x-dev tools/Python/mcplot/svg/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-matplotlib 3.x-dev tools/Python/mcplot/matplotlib/ "" mac "" -- justinst
-cp tools/other/mcsplit/mcsplit.py $MCINSTALL_PREFIX/mcstas/3.x-dev/bin/
+cp tools/other/mcsplit/mcsplit $MCINSTALL_PREFIX/mcstas/3.x-dev/bin/
 
 # Ensure we are configured for 10 node MPI runs
 sed -i.bak s/\'4\'/\'10\'/g $HOME/McStas/mcstas/3.x-dev/tools/Python/mccodelib/mccode_config.py
