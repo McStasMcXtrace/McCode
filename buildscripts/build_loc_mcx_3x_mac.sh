@@ -65,7 +65,7 @@ export PATH=$CONDALOCATION/bin:$PATH
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph 3.x-dev tools/Python/mcplot/pyqtgraph/ "" mac "" -- justinst
 ./mkdist mcxtrace-tools-python-mxplot-svg 3.x-dev tools/Python/mcplot/svg/ "" mac "" -- justinst
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib 3.x-dev tools/Python/mcplot/matplotlib/ "" mac "" -- justinst
-cp tools/other/mcsplit/mcsplit $MCINSTALL_PREFIX/mcxtrace/3.x-dev/bin/
+cp tools/other/mcsplit/mcsplit.py $MCINSTALL_PREFIX/mcxtrace/3.x-dev/bin/
 
 export MCINSTALL_PREFIX=$HOME/McXtrace/mcxtrace/3.x-dev/
 ./mkdist mcxtrace-mcpl 3.x-dev 3rdparty/mcpl-package "" mac "" -- justinst
