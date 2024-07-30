@@ -116,7 +116,7 @@ if(NOT WINDOWS)
     )
     
   install(
-    PROGRAMS "${WORK}/${P}plot-pyqtgraph.md"
+    FILES "${WORK}/${P}plot-pyqtgraph.md"
     DESTINATION "${DEST_DATADIR_DOC}"
   )
 endif()

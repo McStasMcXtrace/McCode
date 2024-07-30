@@ -19,6 +19,6 @@ installMCCODE()
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcxtrace.md.in" "${WORK}/mcxtrace.md" @ONLY)
 
 install(
-  PROGRAMS "${WORK}/mcxtrace.md"
-  DESTINATION "${DEST_DATADIR_DOC}/${TOOLS_NAME}"
+  FILES "${WORK}/mcxtrace.md"
+  DESTINATION "${DEST_DATADIR_DOC}"
   )

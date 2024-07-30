@@ -112,7 +112,7 @@ if(NOT WINDOWS)
     )
     
   install(
-    PROGRAMS "${WORK}/${P}plot-svg.md"
+    FILES "${WORK}/${P}plot-svg.md"
     DESTINATION "${DEST_DATADIR_DOC}"
   )
   

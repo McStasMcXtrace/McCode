@@ -118,7 +118,7 @@ if(NOT WINDOWS)
   )
   
   install(
-    PROGRAMS "${WORK}/${P}display-pyqtgraph.md"
+    FILES "${WORK}/${P}display-pyqtgraph.md"
     DESTINATION "${DEST_DATADIR_DOC}"
   )
   

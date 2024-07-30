@@ -107,7 +107,7 @@ if(NOT WINDOWS)
     )
     
   install(
-    PROGRAMS "${WORK}/${P}plot-matplotlib.md"
+    FILES "${WORK}/${P}plot-matplotlib.md"
     DESTINATION "${DEST_DATADIR_DOC}"
   )
 endif()

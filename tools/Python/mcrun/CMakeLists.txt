@@ -145,7 +145,7 @@ if(NOT WINDOWS)
     )
     
   install(
-    PROGRAMS "${WORK}/${P}run.md"
+    FILES "${WORK}/${P}run.md"
     DESTINATION "${DEST_DATADIR_DOC}"
   )
   
