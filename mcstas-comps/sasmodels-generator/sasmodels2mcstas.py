@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """SAS constructor from sasmodels for McStas
 
 Requires one input argument, where necessary files are located.
