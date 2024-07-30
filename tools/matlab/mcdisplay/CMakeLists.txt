@@ -70,10 +70,13 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display" @ONLY)
 
+# Configure doc
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay-matlab.md.in" "${WORK}/${P}display-matlab.md" @ONLY)
+
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.m")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.m" "${WORK}/${P}display")
+  set(BINS "${WORK}/${P}display")
 endif()
 
 
@@ -116,5 +119,10 @@ if(NOT WINDOWS)
     DESTINATION ${DEST_BINDIR}
     RENAME "${P}display-matlab"
     )
+    
+  install(
+    FILES "${WORK}/${P}display-matlab.md"
+    DESTINATION "${DEST_DATADIR_DOC}"
+  )
 
 endif()

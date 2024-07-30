@@ -4,7 +4,7 @@
 /*                                                                                          */
 /* The free non-commercial use of these routines is granted providing due credit is given   */
 /* to the authors:                                                                          */
-/* Friedrich Streffer, Géza Zsigmond, Dietmar Wechsler,                                     */
+/* Friedrich Streffer, GÃ©za Zsigmond, Dietmar Wechsler,                                     */
 /* Michael Fromme, Klaus Lieutenant, Sergey Manoshin                                        */ 
 /*                                                                                          */
 /* Change: K.L.  2002 JAN, reorganized routines                                             */

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 '''
 SasView_generator.py analyzes C-files prefixed "sas_" in the specified directory.

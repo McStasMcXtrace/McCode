@@ -34,6 +34,10 @@ WORK=`pwd`
 rsync -avz --delete --exclude=".svn/" mcxtrace-comps/ mcxtrace-comps-win
 find mcxtrace-comps-win -type f -not -name \*.off -exec unix2dos \{\} \;
 s
+
+# For now we need to use legacy file destinations on Windows
+export MCCODE_USE_LEGACY_DESTINATIONS=ON
+
 # 64-bit
 ./mkdist mcxtrace $1 "" "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-comps $1 mcxtrace-comps-win "" mingw64 "" -- nsis64

@@ -36,7 +36,7 @@ set(TOOLS_NAME "Python/${P}display/webgl-classic")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-webgl-classic-${MCCODE_VERSION}")
-set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
+set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
 set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
@@ -75,6 +75,9 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display" @ONLY)
 
+# Configure doc
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay-webgl-classic.md.in" "${WORK}/${P}display-webgl-classic.md" @ONLY)
+
 # Main script, including rename mc/mxdisplay
 install(
   PROGRAMS "${PROJECT_SOURCE_DIR}/mcdisplay.py"
@@ -104,4 +107,9 @@ if(NOT WINDOWS)
     DESTINATION ${DEST_BINDIR}
     RENAME "${P}display-webgl-classic"
     )
+    
+  install(
+    FILES "${WORK}/${P}display-webgl-classic.md"
+    DESTINATION "${DEST_DATADIR_DOC}"
+  )
 endif()
