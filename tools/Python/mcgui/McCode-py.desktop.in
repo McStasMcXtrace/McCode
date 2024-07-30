@@ -1,5 +1,3 @@
-#!/usr/bin/env xdg-open
-
 [Desktop Entry]
 Comment=Monte-Carlo @MCCODE_PARTICLE@ instrument simulation (@FLAVOR@.org)
 Exec=@CMAKE_INSTALL_PREFIX@/bin/@MCCODE_PREFIX@gui %F
