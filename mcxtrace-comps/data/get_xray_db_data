@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 url=http://physics.nist.gov/cgi-bin/ffast/ffast.pl
 

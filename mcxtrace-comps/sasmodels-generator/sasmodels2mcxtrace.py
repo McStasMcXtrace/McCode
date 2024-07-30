@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """SAS constructor from sasmodels for McXtrace
 
 Requires one input argument, where necessary files are located.

@@ -109,7 +109,7 @@ if(NOT WINDOWS)
     )
     
   install(
-    PROGRAMS "${WORK}/${P}display-webgl-classic.md"
-    DESTINATION "${DEST_DATADIR_DOC}/${TOOLS_NAME}"
+    FILES "${WORK}/${P}display-webgl-classic.md"
+    DESTINATION "${DEST_DATADIR_DOC}"
   )
 endif()

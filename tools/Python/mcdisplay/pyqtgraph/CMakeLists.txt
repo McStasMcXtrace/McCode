@@ -111,15 +111,16 @@ if(NOT WINDOWS)
     DESTINATION ${DEST_BINDIR}
     RENAME "${P}display-pyqtgraph"
     )
-    
+  
   install(
-    PROGRAMS "${WORK}/${P}display-pyqtgraph.md"
-    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+    FILES "${WORK}/${P}display-pyqtgraph.md"
+    DESTINATION "${DEST_DATADIR_DOC}"
   )
   
   install(
-    PROGRAMS "${WORK}/${P}display-pyqtgraph.md"
-    DESTINATION "${DEST_DATADIR_DOC}/${TOOLS_NAME}"
+    FILES "${WORK}/${P}display-pyqtgraph.md"
+    DESTINATION "${DEST_DATADIR_DOC}"
+    RENAME "${P}display.md"
   )
   
 endif()

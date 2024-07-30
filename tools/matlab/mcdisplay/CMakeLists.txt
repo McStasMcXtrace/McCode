@@ -76,7 +76,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay-matlab.md.in" "${WORK}/${P
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.m")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.m" "${WORK}/${P}display")
+  set(BINS "${WORK}/${P}display")
 endif()
 
 
@@ -121,8 +121,8 @@ if(NOT WINDOWS)
     )
     
   install(
-    PROGRAMS "${WORK}/${P}display-matlab.md"
-    DESTINATION "${DEST_DATADIR_DOC}/${TOOLS_NAME}"
+    FILES "${WORK}/${P}display-matlab.md"
+    DESTINATION "${DEST_DATADIR_DOC}"
   )
 
 endif()

@@ -19,6 +19,6 @@ installMCCODE()
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcstas.md.in" "${WORK}/mcstas.md" @ONLY)
 
 install(
-  PROGRAMS "${WORK}/mcstas.md"
-  DESTINATION "${DEST_DATADIR_DOC}/${TOOLS_NAME}"
+  FILES "${WORK}/mcstas.md"
+  DESTINATION "${DEST_DATADIR_DOC}"
   )

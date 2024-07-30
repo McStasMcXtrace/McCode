@@ -77,7 +77,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot-matlab.md.in" "${WORK}/${P}pl
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcplot.m")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.m" "${WORK}/${P}plot")
+  set(BINS "${WORK}/${P}plot")
 endif()
 
 
@@ -122,7 +122,7 @@ if(NOT WINDOWS)
     )
     
   install(
-    PROGRAMS "${WORK}/${P}plot-matlab.md"
-    DESTINATION "${DEST_DATADIR_DOC}/${TOOLS_NAME}"
+    FILES "${WORK}/${P}plot-matlab.md"
+    DESTINATION "${DEST_DATADIR_DOC}"
   )
 endif()

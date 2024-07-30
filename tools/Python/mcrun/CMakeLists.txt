@@ -135,6 +135,7 @@ if(NOT WINDOWS)
   install(
     PROGRAMS "${PROJECT_SOURCE_DIR}/mcsplit.py"
     DESTINATION ${DEST_BINDIR}
+    RENAME "${P}split"
     )
 
   install(
@@ -144,8 +145,8 @@ if(NOT WINDOWS)
     )
     
   install(
-    PROGRAMS "${WORK}/${P}run.md"
-    DESTINATION "${DEST_DATADIR_DOC}/${TOOLS_NAME}"
+    FILES "${WORK}/${P}run.md"
+    DESTINATION "${DEST_DATADIR_DOC}"
   )
   
 endif()
