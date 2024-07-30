@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
-if [[ 1 == 1 ]]; then
+# Function to provide "readlink -f" even on systems missing -f:
+readlinkf(){
+    perl -MCwd -e 'print Cwd::abs_path shift' "$1";
+}
+
+if [[ @MCCODE_LEGACY_PATHS@ == 1 ]]; then
   # Legacy McCode PATH setup 
   TOPENV="$0"
 
@@ -9,17 +14,12 @@ if [[ 1 == 1 ]]; then
     TOPENV="$PWD/$TOPENV"
   fi
 
-  # Iterate down a (possible) chain of symlinks (macOS does not have readlink -f)
-  while [ -L "$TOPENV" ];
-  do
-    TOPENV=`readlink "$TOPENV"`
-  done
+  TOPENV=`readlinkf "$TOPENV"`
   TOPENV=`dirname $TOPENV`
   TOPENV=`dirname $TOPENV`
   TOPENV=`dirname $TOPENV`
-
 else
-  TOPENV="\$( cd -P \"\$( dirname \"\${BASH_SOURCE[0]}\" )\" && pwd )"
+  TOPENV=$( dirname $( readlinkf ${BASH_SOURCE[0]} ) )
 fi
 
 
