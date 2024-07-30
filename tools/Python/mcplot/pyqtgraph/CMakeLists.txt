@@ -119,4 +119,11 @@ if(NOT WINDOWS)
     FILES "${WORK}/${P}plot-pyqtgraph.md"
     DESTINATION "${DEST_DATADIR_DOC}"
   )
+  
+    install(
+    FILES "${WORK}/${P}plot-pyqtgraph.md"
+    DESTINATION "${DEST_DATADIR_DOC}"
+    RENAME "${P}plot.md"
+  )
+  
 endif()
