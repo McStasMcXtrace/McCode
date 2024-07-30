@@ -117,7 +117,7 @@ if(NOT WINDOWS)
     
   install(
     PROGRAMS "${WORK}/${P}gui.md"
-    DESTINATION "${DEST_DATADIR_DOC}/${TOOLS_NAME}"
+    DESTINATION "${DEST_DATADIR_DOC}"
   )
 
   # Install desktop entry

@@ -142,7 +142,7 @@ if(NOT WINDOWS)
   
   install(
     PROGRAMS "${WORK}/${P}test.md"
-    DESTINATION "${DEST_DATADIR_DOC}/${TOOLS_NAME}"
+    DESTINATION "${DEST_DATADIR_DOC}"
   )
 
 endif()
