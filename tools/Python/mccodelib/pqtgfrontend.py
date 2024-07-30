@@ -364,14 +364,24 @@ class McPyqtgraphPlotter():
                 print("click modifier: %s" % str(event.modifiers()))
 
             # prevent action for modifiers mismatch
-            if not isinstance(mod, int):
-                if event.modifiers() != mod: # Qt5: int(event.modifiers()) != mod fails in Qt6
+            if (hasattr(QtCore.Qt,"KeyboardModifier")):   # Qt6
+                if not isinstance(mod, int):
+                    if event.modifiers() != mod: # Qt5: int(event.modifiers()) != mod fails in Qt6
+                        return
+                # prevent action for mouse button mismatch
+                if click == "rclick" and (str(event.button()) != 'MouseButton.RightButton'):
                     return
-            # prevent action for mouse button mismatch
-            if click == "rclick" and (str(event.button()) != 'MouseButton.RightButton'):
-                return
-            if click == "click" and (str(event.button()) != 'MouseButton.LeftButton'):
-                return
+                if click == "click" and (str(event.button()) != 'MouseButton.LeftButton'):
+                    return
+
+            else: # Qt5
+                if int(event.modifiers()) != mod:
+                    return
+                # prevent action for mouse button mismatch
+                if click == "rclick" and event.button() != 2:
+                    return
+                if click == "click" and event.button() != 1:
+                    return
 
             if plotIdx >= 0 and plotIdx < len(node_list):
                 node = node_list[plotIdx]
