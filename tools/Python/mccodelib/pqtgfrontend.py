@@ -7,7 +7,6 @@ import math
 import subprocess
 import numpy as np
 
-import PyQt5
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
@@ -95,9 +94,16 @@ class McPyqtgraphPlotter():
         self.graph = plotgraph
         self.sourcedir = sourcedir
         self.plot_func = plot_func
-
+        self.isQt6 = None
+        
         # Qt app
         self.app = QtWidgets.QApplication(sys.argv)
+
+        # start
+        if hasattr(self.app, "exec_"):
+            self.isQt6 = False
+        else:
+            self.isQt6 = True
 
         if invcanvas:
             # switch to using white background and black foreground
@@ -118,10 +124,10 @@ class McPyqtgraphPlotter():
         self.update_statusbar(None, node, None)
 
         # start
-        if hasattr(self.app, "exec_"):
-          sys.exit(self.app.exec_())  # Qt5
+        if (not self.isQt6):
+            sys.exit(self.app.exec_())  # Qt5
         else:
-          sys.exit(self.app.exec())   # Qt6
+            sys.exit(self.app.exec())   # Qt6
 
 
     def create_plotwindow(self, title):
@@ -144,10 +150,10 @@ class McPyqtgraphPlotter():
         self.main_window.setMouseTracking(True)
 
         # window size
-        if hasattr(QtWidgets.QApplication,"primaryScreen"):	# Qt6
-          rect = QtWidgets.QApplication.primaryScreen().size()
-        else:                                               # Qt5
-        	rect = QtWidgets.QApplication.desktop().screenGeometry()
+        if hasattr(QtWidgets.QApplication,"primaryScreen"):	# Qt6 and late Qt5
+            rect = QtWidgets.QApplication.primaryScreen().size()
+        else:               # earlier Qt5
+            rect = QtWidgets.QApplication.desktop().screenGeometry()
         	
 
         # 
@@ -174,9 +180,9 @@ class McPyqtgraphPlotter():
 
         def get_modifiers(modname):
             ''' Get int codes for keyboardmodifiers. WARNING: String codes may be used directly in code. '''
-            if (hasattr(QtCore.Qt,"KeyboardModifier")):   # Qt6
+            if (self.isQt6):   # Qt6
               k = QtCore.Qt.KeyboardModifier
-            else:                                         # Qt5
+            else:             # Qt5
               k = QtCore.Qt
               
             if modname == "none":
@@ -364,14 +370,24 @@ class McPyqtgraphPlotter():
                 print("click modifier: %s" % str(event.modifiers()))
 
             # prevent action for modifiers mismatch
-            if not isinstance(mod, int):
-                if event.modifiers() != mod: # Qt5: int(event.modifiers()) != mod fails in Qt6
+            if (self.isQt6 and hasattr(QtCore.Qt,"KeyboardModifier")):   # Qt6
+                if not isinstance(mod, int):
+                    if event.modifiers() != mod: # Qt5: int(event.modifiers()) != mod fails in Qt6
+                        return
+                # prevent action for mouse button mismatch
+                if click == "rclick" and (str(event.button()) != 'MouseButton.RightButton'):
                     return
-            # prevent action for mouse button mismatch
-            if click == "rclick" and (str(event.button()) != 'MouseButton.RightButton'):
-                return
-            if click == "click" and (str(event.button()) != 'MouseButton.LeftButton'):
-                return
+                if click == "click" and (str(event.button()) != 'MouseButton.LeftButton'):
+                    return
+
+            else: # Qt5
+                if int(event.modifiers()) != mod:
+                    return
+                # prevent action for mouse button mismatch
+                if click == "rclick" and event.button() != 2:
+                    return
+                if click == "click" and event.button() != 1:
+                    return
 
             if plotIdx >= 0 and plotIdx < len(node_list):
                 node = node_list[plotIdx]
