@@ -79,7 +79,7 @@ if [ "x$2" != "x" ]; then
     sed s/@VERSION@/${1}/g McStas-metapackage64.iss > McStas-${1}-metapackage64.iss
     ./iscc McStas-${1}-metapackage64.iss
     mv Output/setup.exe dist/McStas-Metapackage-${1}-win64.exe
-    cp $WORK/INSTALL-McStas-3.x/Windows/README.md dist/
+    cp $WORK/INSTALL-McStas/Windows/README.md dist/
     mkdir dist/single-packages
     mv dist/mcstas-* dist/single-packages
 fi
