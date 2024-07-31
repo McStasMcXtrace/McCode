@@ -9,6 +9,7 @@ tooldir = ( thisdir / '..' / '..' ).absolute().resolve()
 resourcedir = ( tooldir / '@MCCODE_RELPATH_TOOLDIR2RESOURCEDIR@' ).absolute().resolve()
 bindir = ( tooldir / '@MCCODE_RELPATH_TOOLDIR2BINDIR@' ).absolute().resolve()
 libdir = ( tooldir / '@MCCODE_RELPATH_TOOLDIR2LIBDIR@' ).absolute().resolve()
+docdir = ( tooldir / '@MCCODE_RELPATH_TOOLDIR2DOCDIR@' ).absolute().resolve()
 
 def check_env_vars():
     ''' checks the OS environment variables '''
@@ -112,6 +113,7 @@ def load_config(path=None):
     # Finally, set dynamically deduced directory paths:
     directories['bindir'] = str( bindir )
     directories['libdir'] = str( libdir )
+    directories['docdir'] = str( docdir )
     directories['tooldir'] = str( tooldir )
     directories['resourcedir'] = str( resourcedir )
     directories['pydir'] = str( tooldir / 'Python' )

@@ -1,8 +1,8 @@
 cmake_minimum_required( VERSION 3.17.0 )
 
-# This will install McStas components
+# This will install McStas manuals
 set(FLAVOR mcstas)
-project(${FLAVOR}_manuals C)
+project(${FLAVOR} C)
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
