@@ -99,6 +99,10 @@ def add_mcrun_options(parser):
         action='store_true',
         help='Open plotter on generated dataset')
 
+    add('--invcanvas',
+        action='store_true',
+        help='Forward request for inverted canvas to plotter')
+
     add('--autoplotter',
         action='store',
         type=str,
@@ -557,8 +561,10 @@ def main():
             autoplotter = options.autoplotter
         if isdir(options.dir):
             LOG.info('Running plotter %s on dataset %s', autoplotter, options.dir)
-            Process(autoplotter).run([options.dir])
-
+            if not options.invcanvas:
+                Process(autoplotter).run([options.dir])
+            else:
+                Process(autoplotter).run([options.dir, '--invcanvas'])
 
 if __name__ == '__main__':
     try:
