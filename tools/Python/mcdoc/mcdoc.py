@@ -22,16 +22,19 @@ from mccodelib import utils, mccode_config
 
 def get_html_filepath(filepath):
     ''' transform from .anything to .html '''
-    return os.path.splitext(filepath)[0] + '.html'
+    h = os.path.splitext(filepath)[0] + '.html'
+    h = re.sub(mccode_config.directories['resourcedir'], mccode_config.directories['docdir'],h)
+    return h
 
 class OverviewDocWriter:
     ''' Creates the mcdoc overview html page. '''
-    def __init__(self, comp_info_lst, instr_info_lst, comp_info_local_lst, instr_info_local_lst, mccode_libdir):
+    def __init__(self, comp_info_lst, instr_info_lst, comp_info_local_lst, instr_info_local_lst, mccode_libdir, mccode_docdir):
         self.comp_info_lst = comp_info_lst
         self.instr_info_lst = instr_info_lst
         self.comp_info_local_lst = comp_info_local_lst
         self.instr_info_local_lst = instr_info_local_lst
         self.mccode_libdir = mccode_libdir
+        self.mccode_docdir = mccode_docdir
         self.text = ''
     
     def create(self):
@@ -132,6 +135,7 @@ class OverviewDocWriter:
             text = text.replace('%TABLE_ASTROX%', '')
 
         text = text.replace('%MCCODE_LIBDIR%', self.mccode_libdir)
+        text = text.replace('%MCCODE_DOCDIR%', self.mccode_docdir)
         text = text.replace('%TAB_HEAD%', self.tab_header)
         text = text.replace('%TAB_LINES_SOURCES%', sources_tab)
         text = text.replace('%TAB_LINES_OPTICS%', optics_tab)
@@ -223,8 +227,8 @@ class OverviewDocWriter:
  | <A href="%LINK_FILECOLON_SHARE%">share</A> ]
 </P>
 <P ALIGN=CENTER>
-[ <a href="file://%MCCODE_LIBDIR%/doc/manuals/mcstas-manual.pdf">User Manual</a>
-| <a href="file://%MCCODE_LIBDIR%/doc/manuals/mcstas-components.pdf">Component Manual</a> ]
+[ <a href="file://%MCCODE_DOCDIR%/mcstas-manual.pdf">User Manual</a>
+| <a href="file://%MCCODE_DOCDIR%/mcstas-components.pdf">Component Manual</a> ]
 | <a href="file://%MCCODE_LIBDIR%/">McCode lib dir</a> ]
 </P>
 
@@ -838,6 +842,10 @@ Generated on %VERSION%
 
 def write_file(filename, text, failsilent=False):
     try:
+        dirname = os.path.dirname(filename)
+        
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
         f = open(filename, 'w')
         f.write(text)
         f.close()
@@ -897,6 +905,7 @@ def write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files
         doc = CompDocWriter(p)
         text = doc.create()
         h = os.path.splitext(f)[0] + '.html'
+        h = re.sub(mccode_config.directories['resourcedir'], mccode_config.directories['docdir'],h)
         if printlog:
             print("writing doc file... %s" % h)
         write_file(h, text, failsilent=True)
@@ -907,6 +916,7 @@ def write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files
         doc = InstrDocWriter(p)
         text = doc.create()
         h = os.path.splitext(f)[0] + '.html'
+        h = re.sub(mccode_config.directories['resourcedir'], mccode_config.directories['docdir'],h)
         if printlog:
             print("writing doc file... %s" % h)
         write_file(h, text, failsilent=True)
@@ -916,10 +926,11 @@ def main(args):
     logging.basicConfig(level=logging.INFO)
 
     usedir = mccode_config.configuration["MCCODE_LIB_DIR"]
+    docdir = mccode_config.directories["docdir"]
 
     if args.dir==None and args.install==False and args.searchterm==None and args.manual==False and args.comps==False and args.web==False:
         ''' browse system docs and exit '''
-        if not os.path.isfile(os.path.join(usedir,mccode_config.get_mccode_prefix()+'doc.html')):
+        if not os.path.isfile(os.path.join(docdir,mccode_config.get_mccode_prefix()+'doc.html')):
             try:
                 sub=subprocess.Popen('%s%s -i' % (mccode_config.get_mccode_prefix(), 'doc'), shell=True)
                 sub.wait()
@@ -927,17 +938,17 @@ def main(args):
                 print("Could not write main mcdoc page, you may need admin permissions!")
                 quit()
 
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,mccode_config.get_mccode_prefix()+'doc.html')), shell=True)
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(docdir,mccode_config.get_mccode_prefix()+'doc.html')), shell=True)
         quit()
 
     elif args.manual == True:
         ''' open manual and exit '''
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'doc','manuals',mccode_config.configuration['MCCODE']+'-manual.pdf')), shell=True)
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(docdir,'doc','manuals',mccode_config.configuration['MCCODE']+'-manual.pdf')), shell=True)
         quit()
 
     elif args.comps == True:
         ''' open component manual and exit '''
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'doc','manuals',mccode_config.configuration['MCCODE']+'-components.pdf')), shell=True)
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(docdir,'doc','manuals',mccode_config.configuration['MCCODE']+'-components.pdf')), shell=True)
         quit()
 
     elif args.web == True:
@@ -958,10 +969,10 @@ def main(args):
         comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir, recursive=True, printlog=args.verbose)
         write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files, args.verbose)
 
-        masterdoc = OverviewDocWriter(comp_infos, instr_infos, [], [], mccode_config.configuration['MCCODE_LIB_DIR'])
+        masterdoc = OverviewDocWriter(comp_infos, instr_infos, [], [], mccode_config.configuration['MCCODE_LIB_DIR'], mccode_config.directories['docdir'])
         text = masterdoc.create()
 
-        mcdoc_html_filepath = os.path.join(usedir,mccode_config.get_mccode_prefix()+'doc.html')
+        mcdoc_html_filepath = os.path.join(docdir,mccode_config.get_mccode_prefix()+'doc.html')
         try:
             write_file(mcdoc_html_filepath, text)
             print("master doc file: %s" % mcdoc_html_filepath)
