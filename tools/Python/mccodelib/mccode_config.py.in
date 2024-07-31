@@ -171,7 +171,9 @@ def get_options():
         mcdisplay_lst = [prefix+"display-webgl",
                          prefix+"display-webgl-classic",
                          prefix+"display-pyqtgraph",
+                         prefix+"display-pyqtgraph --invcanvas",
                          prefix+"display-pyqtgraph --tof",
+                         prefix+"display-pyqtgraph --tof --invcanvas",
                          prefix+"display-matplotlib",
                          prefix+"display-matlab",
                          prefix+"display-cad",
@@ -183,6 +185,7 @@ def get_options():
         mcdisplay_lst = [prefix+"display-webgl",
                          prefix+"display-webgl-classic",
                          prefix+"display-pyqtgraph",
+                         prefix+"display-pyqtgraph --invcanvas",
                          prefix+"display-matplotlib",
                          prefix+"display-matlab",
                          prefix+"display-cad"]
@@ -191,6 +194,7 @@ def get_options():
 
 
     mcplot_lst =    [prefix+"plot-pyqtgraph",
+                     prefix+"plot-pyqtgraph --invcanvas",
                      prefix+"plot-matplotlib", 
                      prefix+"plot-matlab",
                      prefix+"plot-svg"]
