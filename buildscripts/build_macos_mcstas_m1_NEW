@@ -84,7 +84,7 @@ if [ "x$2" = "x" ]; then
     mv dist mcstas-${MCVERSION}
     mkdir dist
     tar cfz dist/mcstas-${MCVERSION}_arm64.tgz mcstas-${MCVERSION}
-    cp INSTALL-McStas-3.x/macOS/README.md dist
+    cp INSTALL-McStas/macOS/README.md dist
     echo A tgz of your app is now located in the dist folder
     rm -rf mcstas-${MCVERSION}
 else
