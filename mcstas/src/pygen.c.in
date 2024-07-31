@@ -427,8 +427,8 @@ int cogen_decls(struct instr_def *instr)
 *******************************************************************************/
 void def_uservars(struct instr_def *instr)
 {
-  List liter = list_iterate(instr->user_vars);
-  List liter2 = list_iterate(instr->user_vars_types);
+  List_handle liter = list_iterate(instr->user_vars);
+  List_handle liter2 = list_iterate(instr->user_vars_types);
   char *var;
   char *tpe;
   while((var = list_next(liter))) {
