@@ -330,18 +330,6 @@ const ThreeCanvas = () => {
     render();
   }, [rays]);
 
-  const handleShowRays = async () => {
-    setLoading(true);
-    if (!showRays || (showRays && !showAllRays)) {
-      setRaysInvisible(sceneRef.current);
-    } else if (showRays && showAllRays) {
-      setPlay(false);
-      setRaysVisible(sceneRef.current);
-    }
-    render();
-    setLoading(false);
-  };
-
   const handleShowScatterPoints = async () => {
     setLoading(true);
     if (!showScatterPoints) {
@@ -353,12 +341,19 @@ const ThreeCanvas = () => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    handleShowRays();
-  }, [showRays]);
+  const handleShowAllRays = async () => {
+    setLoading(true);
+    if (!showRays || (showRays && !showAllRays)) {
+      setRaysInvisible(sceneRef.current);
+    } else if (showRays && showAllRays) {
+      setPlay(false);
+      setRaysVisible(sceneRef.current);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    handleShowRays();
+    handleShowAllRays();
   }, [showAllRays]);
 
   useEffect(() => {

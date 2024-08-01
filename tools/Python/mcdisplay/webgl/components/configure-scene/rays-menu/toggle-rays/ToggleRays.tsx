@@ -7,6 +7,9 @@ import RaysPlayback from "../rays-playback/RaysPlayback";
 import ShowAllRays from "../show-all-rays/ShowAllRays";
 import { fetchJSON } from "../../../../utils/fetch";
 import { initializeRays } from "../../../../data-utils/initRays";
+import { useAppContext } from "../../../../Contexts/AppContext";
+import { setRaysInvisible, setRaysVisible } from "../../../../Contexts/addRays";
+import { useSceneContext } from "../../../../Contexts/SceneContext";
 
 const ToggleRays = () => {
   const {
@@ -16,7 +19,16 @@ const ToggleRays = () => {
     toggleShowAllRays,
     showRays,
     toggleRays,
+    play,
+    setPlay,
+    currentRayIndex,
+    setCurrentRayIndex,
+    showScatterPoints,
+    handleNextClick,
   } = useRaysContext();
+
+  const { loading, setLoading } = useAppContext();
+  const { sceneRef } = useSceneContext();
 
   const handleClick = () => {
     if (rays.rays.length === 0) {
@@ -32,6 +44,21 @@ const ToggleRays = () => {
     }
     toggleRays();
   };
+
+  const handleShowRays = async () => {
+    setLoading(true);
+    if (!showRays || (showRays && !showAllRays)) {
+      setRaysInvisible(sceneRef.current);
+    } else if (showRays && showAllRays) {
+      setPlay(false);
+      setRaysVisible(sceneRef.current);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    handleShowRays();
+  }, [showRays, showAllRays]);
 
   return (
     <div id="toggle-rays" className="row">
