@@ -46,12 +46,17 @@ const Chart: React.FC<ChartProps> = ({
       pad: 0, // padding
     },
   };
+  const config = {
+    displayModeBar: false, // Disables the mode bar
+    staticPlot: true, // Disable interactivity
+  };
 
   return (
     <div id="chart" className="">
       <Plot
         data={[]}
         layout={layout}
+        config={config}
         useResizeHandler
         style={{ width: "100%", height: "100%" }}
       />
