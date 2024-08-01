@@ -7,6 +7,7 @@ import { RaysProvider } from "./Contexts/RaysContext";
 import { AppProvider } from "./Contexts/AppContext";
 import App from "./App";
 import ReactDOM from "react-dom/client";
+import { PlotRangeProvider } from "./Contexts/PlotRangeContext";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <AppProvider>
@@ -14,7 +15,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <CameraProvider>
         <InstrumentProvider>
           <RaysProvider>
-            <App />
+            <PlotRangeProvider>
+              <App />
+            </PlotRangeProvider>
           </RaysProvider>
         </InstrumentProvider>
       </CameraProvider>
