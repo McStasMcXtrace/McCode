@@ -26,7 +26,7 @@ Loaded plugins: security
 mcstas-3.4.x86_64 : mcstas built using CMake
 mcstas-comps-3.4.x86_64 : mcstas-comps built using CMake
 mcstas-manuals-3.4.x86_64 : mcstas_manuals built using CMake
-mcstas-suite-python-ng.x86_64 : A metapackage for McStas + python tools built using CMake
+mcstas-suite-python.x86_64 : A metapackage for McStas + python tools built using CMake
 mcstas-miniconda3.4.3.x86_64 : miniconda3 built using CMake
 mcstas-tools-matlab-mcplot-3.4.x86_64 : matlab-tools-mcplot built using CMake
 mcstas-tools-python-mccodelib-3.4.x86_64 : python-tools-mccodelib built using CMake
@@ -39,10 +39,10 @@ mcstas-tools-python-mcrun-3.4.x86_64 : python-tools-mcrun built using CMake
 
   Name and summary matches only, use "search all" for everything.
 ```
-The meta-package mcstas-suite-python-ng allows you to install mcstas 3.4 with one or both sets of tools (mcrun/mcplot etc.) by simple yum commands like
+The meta-package mcstas-suite-python allows you to install mcstas 3.4 with one or both sets of tools (mcrun/mcplot etc.) by simple yum commands like
 
 ```bash
-sudo dnf install mcstas-suite-python-ng
+sudo dnf install mcstas-suite-python
 ```
 
 To install ```MCPL``` and ```NCrystal``` also from the mccode-hosted

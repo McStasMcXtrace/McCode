@@ -14,7 +14,7 @@ the start menu
 ## Install the McStas 3.4 Debian packages
 * Follow the
   [normal Debian installation instructions](../../Linux/debian/README.md)
-  - essentially a matter of sudo apt-get install mcstas-suite-python mcstas-suite-python-ng
+  - essentially a matter of sudo apt-get install mcstas-suite-python
 
 ## For WSL 2.0: Use WSLg
 * Please try to upgrade WSL to v. 2.0 or later which should install [WSLg graphical support (X11)](https://github.com/microsoft/wslg)
