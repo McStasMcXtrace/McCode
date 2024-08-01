@@ -282,20 +282,6 @@ const ThreeCanvas = () => {
   }, []);
 
   useEffect(() => {
-    if (axesRef.current) {
-      if (
-        axesRef.current.x_axis ||
-        axesRef.current.y_axis ||
-        axesRef.current.z_axis
-      ) {
-        axesRef.current.x_axis.visible = showAxes;
-        axesRef.current.y_axis.visible = showAxes;
-        axesRef.current.z_axis.visible = showAxes;
-      }
-    }
-  }, [showAxes]);
-
-  useEffect(() => {
     if (primaryCameraRef.current) {
       primaryCameraRef.current.position.set(camPos.x, camPos.y, camPos.z);
       if (primaryControlsRef.current) {
