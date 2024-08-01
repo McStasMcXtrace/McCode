@@ -62,7 +62,7 @@ export const views = [
     camera: "OrthographicCamera",
     zoom: 1.0,
     view: "Side",
-    initialCamPos: [1, 0, 0],
+    initialCamPos: [1, 0, 1],
     up: [0, 1, 0],
     x_label: "z",
     y_label: "y",

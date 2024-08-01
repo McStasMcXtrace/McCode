@@ -289,12 +289,16 @@ const ThreeCanvas = () => {
       setCamPosTop(topPos);
 
       //set top 2D view camera position for centering
-      topView.camera.position.set(topPos.x, topPos.y, topPos.z);
-      topView.controls.target.set(0, 0, topPos.z);
+      topView.camera.position.set(0, bboxSize, bboxSize / 2);
+      topView.controls.target.set(0, 0, bboxSize / 2);
 
       //set side 2D view camera position for centering
-      sideView.camera.position.set(sidePos.x, sidePos.y, sidePos.z);
-      sideView.controls.target.set(0, 0, sidePos.z);
+      sideView.camera.position.set(-bboxSize/2, 0, bboxSize/2);
+      sideView.controls.target.set(0, 0, bboxSize / 2);
+
+      //set end 2D view camera position for centering
+      backView.camera.position.set(0, 0, bboxSize);
+      backView.controls.target.set(0, 0, bboxSize / 2);
 
       const grids = addGrids(sceneRef.current, bboxSize * 2);
       gridsRef.current = grids;
@@ -309,6 +313,20 @@ const ThreeCanvas = () => {
           const camera = view.camera;
           const originalXRange = [0, bboxSize];
           const originalYRange = [-bboxSize / 2, bboxSize / 2];
+          /*
+          if(view.view === "Top") {
+             originalXRange = [0, bboxSize];
+             originalYRange = [-bboxSize / 2, bboxSize / 2];
+          }
+          else if(view.view === "Side") {
+             originalXRange = [bboxSize,0];
+             originalYRange = [-bboxSize / 2, bboxSize / 2];
+          }
+          else if(view.view === "End") {
+             originalXRange = [0, bboxSize];
+             originalYRange = [-bboxSize / 2, bboxSize / 2];
+          }
+             */
           const originalXCenter = (originalXRange[0] + originalXRange[1]) / 2;
           const originalYCenter = (originalYRange[0] + originalYRange[1]) / 2;
           const setZoom =
