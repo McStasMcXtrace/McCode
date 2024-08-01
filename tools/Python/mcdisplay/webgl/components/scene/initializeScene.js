@@ -30,11 +30,11 @@ export const initializeCameras = (
   // Helper function to assign the correct DOM element
   const getDomElement = (view) => {
     switch (view.view) {
-      case "back2D":
+      case "End":
         return backView2DRef;
-      case "top2D":
+      case "Top":
         return topView2DRef;
-      case "side2D":
+      case "Side":
         return sideView2DRef;
       default:
         return primaryViewRef;

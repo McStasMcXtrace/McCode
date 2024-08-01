@@ -25,7 +25,8 @@ export const views = [
   // Top view - XZ
   {
     camera: "OrthographicCamera",
-    view: "top2D",
+    zoom: 1.0,
+    view: "Top",
     initialCamPos: [0, 1, 0],
     up: [1, 0, 0],
     x_label: "z",
@@ -42,7 +43,8 @@ export const views = [
   // Back view - XY
   {
     camera: "OrthographicCamera",
-    view: "back2D",
+    zoom: 1.0,
+    view: "End",
     initialCamPos: [0, 0, 1],
     up: [0, 1, 0],
     x_label: "x",
@@ -58,7 +60,8 @@ export const views = [
   //Side view - YZ
   {
     camera: "OrthographicCamera",
-    view: "side2D",
+    zoom: 1.0,
+    view: "Side",
     initialCamPos: [1, 0, 0],
     up: [0, 1, 0],
     x_label: "z",
