@@ -5,6 +5,7 @@
 *         Copyright (C) 1997-2020, All rights reserved
 *         DTU Physics, Kgs. Lyngby, Denmark
 *         Institut Laue Langevin, Grenoble, France
+*         Synchrotron SOLEIL, Saint-Aubin, France
 *         Copenhagen University, Copenhagen, Denmark
 *
 * Kernel: cogen.c
@@ -887,14 +888,26 @@ int cogen_comp_section_class(
     if (!strcmp(section, "TRACE")) {
       cout("#ifndef NOABSORB_INF_NAN");
       cout("  /* Check for nan or inf particle parms */ ");
+#if MCCODE_PROJECT == 1     /* neutron */
       cout("  if(isnan(p + t + vx + vy + vz + x + y + z)) ABSORB;");
       cout("  if(isinf(fabs(p) + fabs(t) + fabs(vx) + fabs(vy) + fabs(vz) + fabs(x) + fabs(y) + fabs(z))) ABSORB;");
+#elif MCCODE_PROJECT == 2   /* xray */
+      cout("  if(isnan(p + t + kx + ky + kz + x + y + z + phi)) ABSORB;");
+      cout("  if(isinf(fabs(p) + fabs(t) + fabs(kx) + fabs(ky) + fabs(kz) + fabs(x) + fabs(y) + fabs(z) + fabs(phi))) ABSORB;");
+#endif
       cout("#else");
       cout("  if(isnan(p)  ||  isinf(p)) printf(\"NAN or INF found in p,  %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
       cout("  if(isnan(t)  ||  isinf(t)) printf(\"NAN or INF found in t,  %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
+#if MCCODE_PROJECT == 1     /* neutron */
       cout("  if(isnan(vx) || isinf(vx)) printf(\"NAN or INF found in vx, %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
       cout("  if(isnan(vy) || isinf(vy)) printf(\"NAN or INF found in vy, %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
       cout("  if(isnan(vz) || isinf(vz)) printf(\"NAN or INF found in vz, %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
+#elif MCCODE_PROJECT == 2   /* xray */
+      cout("  if(isnan(phi)  ||  isinf(phi)) printf(\"NAN or INF found in phi, %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
+      cout("  if(isnan(kx) || isinf(kx)) printf(\"NAN or INF found in kx, %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
+      cout("  if(isnan(ky) || isinf(ky)) printf(\"NAN or INF found in ky, %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
+      cout("  if(isnan(kz) || isinf(kz)) printf(\"NAN or INF found in kz, %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
+#endif
       cout("  if(isnan(x)  ||  isinf(x)) printf(\"NAN or INF found in x,  %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
       cout("  if(isnan(y)  ||  isinf(y)) printf(\"NAN or INF found in y,  %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
       cout("  if(isnan(z)  ||  isinf(z)) printf(\"NAN or INF found in z,  %s (particle %lld)\\n\",_comp->_name,_particle->_uid);");
@@ -1579,11 +1592,16 @@ void def_trace_section(struct instr_def *instr)
   /* define SCATTERED, ABSORB and RESTORE macros for all TRACE */
   coutf("#define %s (_particle->%s)", "SCATTERED", "_scattered");
   coutf("#define %s (_particle->%s)", "RESTORE"  , "_restore");
+#if MCCODE_PROJECT == 1     /* neutron */
   coutf("#define RESTORE_NEUTRON(_index, ...) _particle->_restore = _index;");
+  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return; } while(0)");
+#elif MCCODE_PROJECT == 2   /* xray */
+  coutf("#define RESTORE_XRAY(_index, ...) _particle->_restore = _index;");
+  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); ABSORBED++; return; } while(0)");
+#endif
   coutf("#define %s (_particle->%s)", "ABSORBED" , "_absorbed");
   /* define mcget_run_num within trace scope to refer to the particle */
   coutf("#define mcget_run_num() _particle->_uid");
-  cout( "#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return; } while(0)");
   cout( "#define ABSORB ABSORB0");
 } /* def_trace_section */
 
@@ -1625,8 +1643,13 @@ void undef_trace_section(struct instr_def *instr)
   cout("#endif");
   cout("#undef SCATTERED");
   cout("#undef RESTORE"  );
+#if MCCODE_PROJECT == 1     /* neutron */
   cout("#undef RESTORE_NEUTRON"  );
   cout("#undef STORE_NEUTRON"  );
+#elif MCCODE_PROJECT == 2   /* xray */
+  cout("#undef RESTORE_XRAY"  );
+  cout("#undef STORE_XRAY"  );
+#endif
   cout("#undef ABSORBED" );
   cout("#undef ABSORB");
   cout("#undef ABSORB0");
@@ -2231,7 +2254,7 @@ int cogen_rt_funnel(struct instr_def *instr)
 } /* cogen_rt_funnel */
 
 /*******************************************************************************
-* Output code for the mcstas runtime system. Default is to copy the runtime
+* Output code for the mcstas/mcxtrace runtime system. Default is to copy the runtime
 * code into the generated executable, to minimize problems with finding the
 * right files during compilation and linking, but this may be changed using
 * the --no-runtime compiler switch.
@@ -2438,9 +2461,22 @@ cogen_header(struct instr_def *instr, char *output_name)
   /* Below lines relating to mcgenstate / setstate are in principle McStas-centric, we ought to generate this function based on "project" */
   cout("#pragma acc routine");
   cout("_class_particle mcgenstate(void);");
+#if MCCODE_PROJECT == 1     /* neutron */
   cout("#pragma acc routine");
   cout("_class_particle mcsetstate(double x, double y, double z, double vx, double vy, double vz,");
   cout("			   double t, double sx, double sy, double sz, double p, int mcgravitation, void *mcMagnet, int mcallowbackprop);");
+  cout("#pragma acc routine");
+  cout("_class_particle mcgetstate(_class_particle mcneutron, double *x, double *y, double *z,
+  cout("                           double *vx, double *vy, double *vz, double *t,
+  cout("                           double *sx, double *sy, double *sz, double *p)
+#elif MCCODE_PROJECT == 2   /* xray */
+  cout("#pragma acc routine");
+  cout("_class_particle mcsetstate(double x, double y, double z, double kx, double ky, double kz,");
+  cout("			   double phi, double t, double Ex, double Ey, double Ez, double p, int mcgravitation, void *mcMagnet, int mcallowbackprop);");
+  cout("#pragma acc routine");
+  cout("_class_particle mcgetstate(_class_particle mcphoton, double *x, double *y, double *z, double *kx, double *ky, double *kz,");
+  cout("			   double *phi, double *t, double *Ex, double *Ey, double *Ez, double *p);");
+#endif
   cout("");
   cout("extern int mcgravitation;      /* flag to enable gravitation */");
   cout("#pragma acc declare create ( mcgravitation )");
@@ -2449,7 +2485,11 @@ cogen_header(struct instr_def *instr, char *output_name)
 
   cout("");
   cout("_class_particle mcgenstate(void) {");
+#if MCCODE_PROJECT == 1     /* neutron */
   cout("  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, NULL, mcallowbackprop);");
+#elif MCCODE_PROJECT == 2   /* xray */
+  cout("  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, mcgravitation, NULL, mcallowbackprop);");
+#endif
   cout("  return(particle);");
   cout("}");
 
@@ -2476,12 +2516,22 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  if(!str_comp(\"x\",name)){rval=p->x;s=0;}");
   cout("  if(!str_comp(\"y\",name)){rval=p->y;s=0;}");
   cout("  if(!str_comp(\"z\",name)){rval=p->z;s=0;}");
+#if MCCODE_PROJECT == 1     /* neutron */
   cout("  if(!str_comp(\"vx\",name)){rval=p->vx;s=0;}");
   cout("  if(!str_comp(\"vy\",name)){rval=p->vy;s=0;}");
   cout("  if(!str_comp(\"vz\",name)){rval=p->vz;s=0;}");
   cout("  if(!str_comp(\"sx\",name)){rval=p->sx;s=0;}");
   cout("  if(!str_comp(\"sy\",name)){rval=p->sy;s=0;}");
   cout("  if(!str_comp(\"sz\",name)){rval=p->sz;s=0;}");
+#elif MCCODE_PROJECT == 2   /* xray */
+  cout("  if(!str_comp(\"phi\",name)){rval=p->phi;s=0;}");
+  cout("  if(!str_comp(\"kx\",name)){rval=p->kx;s=0;}");
+  cout("  if(!str_comp(\"ky\",name)){rval=p->ky;s=0;}");
+  cout("  if(!str_comp(\"kz\",name)){rval=p->kz;s=0;}");
+  cout("  if(!str_comp(\"Ex\",name)){rval=p->Ex;s=0;}");
+  cout("  if(!str_comp(\"Ey\",name)){rval=p->Ey;s=0;}");
+  cout("  if(!str_comp(\"Ez\",name)){rval=p->Ez;s=0;}");
+#endif
   cout("  if(!str_comp(\"t\",name)){rval=p->t;s=0;}");
   cout("  if(!str_comp(\"p\",name)){rval=p->p;s=0;}");
   cout("  if(!str_comp(\"_mctmp_a\",name)){rval=p->_mctmp_a;s=0;}");
@@ -2514,12 +2564,22 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  if(!str_comp(\"x\",name)) {rval=(void*)&(p->x); s=0;}");
   cout("  if(!str_comp(\"y\",name)) {rval=(void*)&(p->y); s=0;}");
   cout("  if(!str_comp(\"z\",name)) {rval=(void*)&(p->z); s=0;}");
+#if MCCODE_PROJECT == 1     /* neutron */
   cout("  if(!str_comp(\"vx\",name)){rval=(void*)&(p->vx);s=0;}");
   cout("  if(!str_comp(\"vy\",name)){rval=(void*)&(p->vy);s=0;}");
   cout("  if(!str_comp(\"vz\",name)){rval=(void*)&(p->vz);s=0;}");
   cout("  if(!str_comp(\"sx\",name)){rval=(void*)&(p->sx);s=0;}");
   cout("  if(!str_comp(\"sy\",name)){rval=(void*)&(p->sy);s=0;}");
   cout("  if(!str_comp(\"sz\",name)){rval=(void*)&(p->sz);s=0;}");
+#elif MCCODE_PROJECT == 2   /* xray */
+  cout("  if(!str_comp(\"kx\",name)){rval=(void*)&(p->kx);s=0;}");
+  cout("  if(!str_comp(\"ky\",name)){rval=(void*)&(p->ky);s=0;}");
+  cout("  if(!str_comp(\"kz\",name)){rval=(void*)&(p->kz);s=0;}");
+  cout("  if(!str_comp(\"Ex\",name)){rval=(void*)&(p->Ex);s=0;}");
+  cout("  if(!str_comp(\"Ey\",name)){rval=(void*)&(p->Ey);s=0;}");
+  cout("  if(!str_comp(\"Ez\",name)){rval=(void*)&(p->Ez);s=0;}");
+  cout("  if(!str_comp(\"phi\",name)){rval=(void*)&(p->phi);s=0;}");
+#endif
   cout("  if(!str_comp(\"t\",name)) {rval=(void*)&(p->t); s=0;}");
   cout("  if(!str_comp(\"p\",name)) {rval=(void*)&(p->p); s=0;}");
 //  char *var, *tpe;
@@ -2545,12 +2605,22 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  if(!str_comp(\"x\",name)) {memcpy(&(p->x),  value, sizeof(double)); rval=0;}");
   cout("  if(!str_comp(\"y\",name)) {memcpy(&(p->y),  value, sizeof(double)); rval=0;}");
   cout("  if(!str_comp(\"z\",name)) {memcpy(&(p->z),  value, sizeof(double)); rval=0;}");
+#if MCCODE_PROJECT == 1     /* neutron */
   cout("  if(!str_comp(\"vx\",name)){memcpy(&(p->vx), value, sizeof(double)); rval=0;}");
   cout("  if(!str_comp(\"vy\",name)){memcpy(&(p->vy), value, sizeof(double)); rval=0;}");
   cout("  if(!str_comp(\"vz\",name)){memcpy(&(p->vz), value, sizeof(double)); rval=0;}");
   cout("  if(!str_comp(\"sx\",name)){memcpy(&(p->sx), value, sizeof(double)); rval=0;}");
   cout("  if(!str_comp(\"sy\",name)){memcpy(&(p->sy), value, sizeof(double)); rval=0;}");
   cout("  if(!str_comp(\"sz\",name)){memcpy(&(p->sz), value, sizeof(double)); rval=0;}");
+#elif MCCODE_PROJECT == 2   /* xray */
+  cout("  if(!str_comp(\"kx\",name)){memcpy(&(p->kx), value, sizeof(double)); rval=0;}");
+  cout("  if(!str_comp(\"ky\",name)){memcpy(&(p->ky), value, sizeof(double)); rval=0;}");
+  cout("  if(!str_comp(\"kz\",name)){memcpy(&(p->kz), value, sizeof(double)); rval=0;}");
+  cout("  if(!str_comp(\"Ex\",name)){memcpy(&(p->Ex), value, sizeof(double)); rval=0;}");
+  cout("  if(!str_comp(\"Ey\",name)){memcpy(&(p->Ey), value, sizeof(double)); rval=0;}");
+  cout("  if(!str_comp(\"Ez\",name)){memcpy(&(p->Ez), value, sizeof(double)); rval=0;}");
+  cout("  if(!str_comp(\"phi\",name)){memcpy(&(p->phi), value, sizeof(double)); rval=0;}");
+#endif
   cout("  if(!str_comp(\"p\",name)) {memcpy(&(p->p),  value, sizeof(double)); rval=0;}");
   cout("  if(!str_comp(\"t\",name)) {memcpy(&(p->t),  value, sizeof(double)); rval=0;}");
   char *invar;
@@ -2598,9 +2668,15 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("");
   cout("void particle_restore(_class_particle *p, _class_particle *p0) {");
   cout("  p->x  = p0->x;  p->y  = p0->y;  p->z  = p0->z;");
+#if MCCODE_PROJECT == 1     /* neutron */
   cout("  p->vx = p0->vx; p->vy = p0->vy; p->vz = p0->vz;");
   cout("  p->sx = p0->sx; p->sy = p0->sy; p->sz = p0->sz;");
   cout("  p->t = p0->t;  p->p  = p0->p;");
+#elif MCCODE_PROJECT == 2   /* xray */
+  cout("  p->kx = p0->kx; p->ky = p0->ky; p->kz = p0->kz;");
+  cout("  p->Ex = p0->Ex; p->Ey = p0->Ey; p->Ez = p0->Ez;");
+  cout("  p->t = p0->t;   p->p  = p0->p;  p->phi  = p0->phi;");
+#endif
   cout("  p->_absorbed=0; p->_restore=0;");
   cout("}");
   cout("");
