@@ -52,7 +52,7 @@ const Chart: React.FC<ChartProps> = ({
   };
 
   return (
-    <div id="chart" className="">
+    <div id={`plotlyDiv-${chartTitle}`} className="chart">
       <Plot
         data={[]}
         layout={layout}
