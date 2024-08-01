@@ -1105,19 +1105,19 @@ complist:   /* empty */
 
 instname: "COPY" '(' TOK_ID ')'
       {
-        char str_index[10];
+        char str_index[64];
         sprintf(str_index, "_%li", comp_current_index+1);
         $$ = str_cat($3, str_index, NULL);
       }
     | "MYSELF"
       {
-        char str_index[10];
+        char str_index[64];
         sprintf(str_index, "_%li", comp_current_index+1);
         $$ = str_cat("Comp", str_index, NULL);
       }
     | "COPY"
       {
-        char str_index[10];
+        char str_index[64];
         sprintf(str_index, "_%li", comp_current_index+1);
         $$ = str_cat("Comp", str_index, NULL);
       }
