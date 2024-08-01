@@ -1,4 +1,4 @@
-Package: mcstas-suite-python-ng
+Package: mcstas-suite-python
 Version: @VERSION@
 Section: main
 Priority: optional

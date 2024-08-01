@@ -21,7 +21,7 @@ the start menu
 ## Install the McXtrace 3.2 Debian packages
 * Follow the
   [normal Debian installation instructions](../../Linux/debian/README.md)
-  - essentially a matter of sudo apt-get install mcxtrace-suite-python mcxtrace-suite-perl
+  - essentially a matter of sudo apt-get install mcxtrace-suite-python
 
 ##  Install Xming or another X11 server application
 * Download and install Xming via https://sourceforge.net/projects/xming/

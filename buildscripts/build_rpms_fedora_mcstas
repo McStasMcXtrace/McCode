@@ -78,7 +78,7 @@ cd $WORK
 if [ "x$2" != "x" ]; then
   cd meta-pkgs/rpm
 
-  for controlfile in `ls mcstas-suite-python-ng.spec`
+  for controlfile in `ls mcstas-suite-python.spec`
   do
     sed -i.bak s/@VERSION@/${1}/g $controlfile
     rpmbuild -bb --target x86_64 $controlfile

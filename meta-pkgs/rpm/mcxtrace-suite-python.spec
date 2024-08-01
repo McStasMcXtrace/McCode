@@ -1,4 +1,4 @@
-%define name			mcxtrace-suite-python-ng
+%define name			mcxtrace-suite-python
 %define summary			A metapackage for McXtrace + python tools
 %define version			@VERSION@
 %define release			1
