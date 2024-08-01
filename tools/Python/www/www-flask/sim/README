@@ -1,2 +1,0 @@
-This directory contains the available McStas source files (*.instr).
-Run the bin/update_simulations.sh script whenever source files are added or updated.
