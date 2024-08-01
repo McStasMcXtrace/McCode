@@ -16,14 +16,15 @@ import os
 import re
 import subprocess
 from os.path import join, basename
+import pathlib
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import utils, mccode_config
 
 def get_html_filepath(filepath):
     ''' transform from .anything to .html '''
-    h = os.path.splitext(filepath)[0] + '.html'
-    h = re.sub(mccode_config.directories['resourcedir'], mccode_config.directories['docdir'],h)
+    h = pathlib.Path(os.path.splitext(filepath)[0] + '.html')
+    h = pathlib.Path(str(h).replace(mccode_config.directories['resourcedir'], mccode_config.directories['docdir']))
     return h
 
 class OverviewDocWriter:
@@ -904,8 +905,8 @@ def write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files
         f = comp_files[i]
         doc = CompDocWriter(p)
         text = doc.create()
-        h = os.path.splitext(f)[0] + '.html'
-        h = re.sub(mccode_config.directories['resourcedir'], mccode_config.directories['docdir'],h)
+        h = pathlib.Path(os.path.splitext(f)[0] + '.html')
+        h = pathlib.Path(str(h).replace(mccode_config.directories['resourcedir'], mccode_config.directories['docdir']))
         if printlog:
             print("writing doc file... %s" % h)
         write_file(h, text, failsilent=True)
@@ -915,8 +916,8 @@ def write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files
         f = instr_files[i]
         doc = InstrDocWriter(p)
         text = doc.create()
-        h = os.path.splitext(f)[0] + '.html'
-        h = re.sub(mccode_config.directories['resourcedir'], mccode_config.directories['docdir'],h)
+        h = pathlib.Path(os.path.splitext(f)[0] + '.html')
+        h = pathlib.Path(str(h).replace(mccode_config.directories['resourcedir'], mccode_config.directories['docdir']))
         if printlog:
             print("writing doc file... %s" % h)
         write_file(h, text, failsilent=True)

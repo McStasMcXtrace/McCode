@@ -87,7 +87,7 @@ if [ "x$2" = "x" ]; then
     mv dist mcxtrace-${MCVERSION}
     mkdir dist
     tar cfz dist/mcxtrace-${MCVERSION}_arm64.tgz mcxtrace-${MCVERSION}
-    cp INSTALL-McXtrace-3.x/macOS/README.md dist
+    cp INSTALL-McXtrace/macOS/README.md dist
     echo A tgz of your app is now located in the dist folder
     rm -rf mcxtrace-${MCVERSION}
 else
