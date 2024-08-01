@@ -67,8 +67,8 @@ class ModLegend(pg.LegendItem):
         self.updateSize()
 
     def paint(self, p, *args):
-        p.setPen(pg.functions.mkPen(255,255,255,100))
-        p.setBrush(pg.functions.mkBrush(0,0,0,100))
+        p.setPen(pg.functions.mkPen(255,255,255,225))
+        p.setBrush(pg.functions.mkBrush(255,255,255,255))
         p.drawRect(self.boundingRect())
 
 
