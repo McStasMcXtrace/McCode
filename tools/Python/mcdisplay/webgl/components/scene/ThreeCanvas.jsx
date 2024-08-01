@@ -28,6 +28,7 @@ import { views } from "./views";
 import TwoDView from "./two-d-view/TwoDView";
 import InfoView from "./info-view/InfoView";
 import { usePlotRangeContext } from "../../Contexts/PlotRangeContext";
+import { useSceneContext } from "../../Contexts/SceneContext";
 
 const ThreeCanvas = () => {
   const { showXY, showXZ, showYZ, gridSize, gridDivisions, showAxes } =
@@ -53,39 +54,38 @@ const ThreeCanvas = () => {
     useAppContext();
 
   const { plotlyRanges, updatePlotlyRanges } = usePlotRangeContext();
+  const {
+    containerRef,
+    primaryCameraRef,
+    primaryControlsRef,
+    primaryViewRef,
+    TopView2DRef,
+    SideView2DRef,
+    BackView2DRef,
+    rendererRef,
+    sceneRef,
+    gridsRef,
+    axesRef,
+  } = useSceneContext();
 
   const [hoverInfo, setHoverInfo] = useState("");
-  const gridsRef = useRef({ gridXY: null, gridXZ: null, gridYZ: null });
-  const axesRef = useRef({ x_axis: null, y_axis: null, z_axis: null });
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
   let width, height;
   let mouseX = 0,
     mouseY = 0;
 
-  const containerRef = useRef(null);
-
-  const primaryCameraRef = useRef(null);
-  const primaryControlsRef = useRef(null);
-
-  const primaryViewRef = useRef(null);
-  const TopView2DRef = useRef(null);
-  const SideView2DRef = useRef(null);
-  const BackView2DRef = useRef(null);
-
   const primaryView = views[0];
   const topView = views[1];
   const backView = views[2];
   const sideView = views[3];
 
-  const rendererRef = useRef(null);
-  const sceneRef = useRef(null);
   const playRef = useRef(play);
 
   let cameraZoom = {
     Top: 1,
     Side: 1,
-    End: 1
+    End: 1,
   };
 
   function updateSize() {
@@ -282,26 +282,16 @@ const ThreeCanvas = () => {
   }, []);
 
   useEffect(() => {
-    if (gridsRef.current.gridXY) {
-      gridsRef.current.gridXY.visible = showXY;
-    }
-    if (gridsRef.current.gridXZ) {
-      gridsRef.current.gridXZ.visible = showXZ;
-    }
-    if (gridsRef.current.gridYZ) {
-      gridsRef.current.gridYZ.visible = showYZ;
-    }
-  }, [showXY, showXZ, showYZ]);
-
-  useEffect(() => {
-    if (
-      axesRef.current.x_axis ||
-      axesRef.current.y_axis ||
-      axesRef.current.z_axis
-    ) {
-      axesRef.current.x_axis.visible = showAxes;
-      axesRef.current.y_axis.visible = showAxes;
-      axesRef.current.z_axis.visible = showAxes;
+    if (axesRef.current) {
+      if (
+        axesRef.current.x_axis ||
+        axesRef.current.y_axis ||
+        axesRef.current.z_axis
+      ) {
+        axesRef.current.x_axis.visible = showAxes;
+        axesRef.current.y_axis.visible = showAxes;
+        axesRef.current.z_axis.visible = showAxes;
+      }
     }
   }, [showAxes]);
 
@@ -318,7 +308,7 @@ const ThreeCanvas = () => {
   useEffect(() => {
     clearComponents(sceneRef.current);
     loadComponents(sceneRef.current, instrument.components);
-    const gridsInitialized = gridsRef.current.gridXY;
+    const gridsInitialized = gridsRef.current;
 
     if (!gridsInitialized && instrument.components.length > 0) {
       const bbox = new THREE.Box3().setFromObject(sceneRef.current);
