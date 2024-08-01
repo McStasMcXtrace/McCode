@@ -19,7 +19,7 @@ mcstas-3.4 - mcstas built using CMake
 mcstas-comps-3.4 - mcstas-comps built using CMake
 mcstas-manuals-3.4 - mcstas_manuals built using CMake
 mcstas-suite - A metapackage for McStas + perl and python tools
-mcstas-suite-python-ng - A metapackage for McStas + python tools
+mcstas-suite-python - A metapackage for McStas + python tools
 mcstas-tools-matlab-mcplot-3.4 - matlab-tools-mcplot built using CMake
 mcstas-tools-python-mccodelib-3.4 - python-tools-mccodelib built using CMake
 mcstas-tools-python-mcdisplay-mantid-3.4 - python-tools-mcdisplay-mantid built using CMake
@@ -29,10 +29,10 @@ mcstas-tools-python-mcgui-3.4 - python-tools-mcgui built using CMake
 mcstas-tools-python-mcplot-pyqtgraph-3.4 - python-tools-mcplot-pyqtgraph built using CMake
 mcstas-tools-python-mcrun-3.4 - python-tools-mcrun built using CMake
 ```
-The meta-package mcstas-suite-pytho-ng
+The meta-package mcstas-suite-python
 allows you to install mcstas 3.4 with one or both sets of tools (mcrun/mcplot etc.) by simple apt-get commands like
 ```bash
-sudo apt-get install mcstas-suite-python-ng
+sudo apt-get install mcstas-suite-python
 ```
 The -suite packages without 'ng' in the package name will install the
 latest McStas 2.x package
