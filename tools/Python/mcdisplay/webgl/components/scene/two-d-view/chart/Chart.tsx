@@ -20,7 +20,7 @@ const Chart: React.FC<ChartProps> = ({
     title: chartTitle,
     xaxis: {
       title: xAxisLabel,
-      showgrid: true,
+      showgrid: false,
       zeroline: false,
       showline: true,
       range: plotlyRanges[chartTitle]?.xaxis,
@@ -30,7 +30,7 @@ const Chart: React.FC<ChartProps> = ({
         text: yAxisLabel,
         standoff: 10, // Adjust this value to move the title
       },
-      showgrid: true,
+      showgrid: false,
       zeroline: false,
       showline: true,
       range: plotlyRanges[chartTitle]?.yaxis,
