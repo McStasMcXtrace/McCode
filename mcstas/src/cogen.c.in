@@ -2466,9 +2466,9 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("_class_particle mcsetstate(double x, double y, double z, double vx, double vy, double vz,");
   cout("			   double t, double sx, double sy, double sz, double p, int mcgravitation, void *mcMagnet, int mcallowbackprop);");
   cout("#pragma acc routine");
-  cout("_class_particle mcgetstate(_class_particle mcneutron, double *x, double *y, double *z,
-  cout("                           double *vx, double *vy, double *vz, double *t,
-  cout("                           double *sx, double *sy, double *sz, double *p)
+  cout("_class_particle mcgetstate(_class_particle mcneutron, double *x, double *y, double *z,");
+  cout("                           double *vx, double *vy, double *vz, double *t,");
+  cout("                           double *sx, double *sy, double *sz, double *p)");
 #elif MCCODE_PROJECT == 2   /* xray */
   cout("#pragma acc routine");
   cout("_class_particle mcsetstate(double x, double y, double z, double kx, double ky, double kz,");
