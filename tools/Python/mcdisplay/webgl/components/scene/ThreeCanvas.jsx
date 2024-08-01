@@ -87,6 +87,9 @@ const ThreeCanvas = () => {
     Side: 1,
     End: 1,
   };
+  const [zoomTop, setZoomTop] = useState(1);
+  const [zoomSide, setZoomSide] = useState(1);
+  const [zoomEnd, setZoomEnd] = useState(1);
 
   function updateSize() {
     let correctWidth = window.innerWidth;
@@ -125,7 +128,8 @@ const ThreeCanvas = () => {
     originalXRange,
     originalYRange,
     originalXCenter,
-    originalYCenter
+    originalYCenter,
+    setZoom
   ) {
     console.log("scrolling");
     if (event.deltaY < 0) {
@@ -134,6 +138,7 @@ const ThreeCanvas = () => {
       camera.zoom /= 1.1; // zoom out
     }
     cameraZoom[viewName] = camera.zoom;
+    setZoom(camera.zoom);
     camera.updateProjectionMatrix();
 
     updatePlotlyZoom(
@@ -242,36 +247,12 @@ const ThreeCanvas = () => {
       BackView2DRef.current,
       TopView2DRef.current,
       SideView2DRef.current,
-      primaryViewRef.current
+      primaryViewRef.current,
+      updatePlotlyRanges
     );
 
     initializeDirectionalLight(scene);
     initializeAmbientLight(scene);
-
-    // Setup zoom sync for each orthographic camera
-    views.forEach((view) => {
-      if (view.camera.type === "OrthographicCamera") {
-        const camera = view.camera;
-        const originalXRange = [0, 100];
-        const originalYRange = [-50, 50];
-        const originalXCenter = (originalXRange[0] + originalXRange[1]) / 2;
-        const originalYCenter = (originalYRange[0] + originalYRange[1]) / 2;
-        window.addEventListener(
-          "wheel",
-          (event) =>
-            onScrollZoom(
-              event,
-              view.view,
-              camera,
-              originalXRange,
-              originalYRange,
-              originalXCenter,
-              originalYCenter
-            ),
-          false
-        );
-      }
-    });
 
     function animate() {
       requestAnimationFrame(animate);
@@ -320,6 +301,40 @@ const ThreeCanvas = () => {
 
       const axes = addAxes(sceneRef.current, bboxSize);
       axesRef.current = axes;
+
+      // Setup zoom sync for each orthographic camera
+      views.forEach((view) => {
+        if (view.camera.type === "OrthographicCamera") {
+          console.log("bboxSize", bboxSize);
+          const camera = view.camera;
+          const originalXRange = [0, bboxSize];
+          const originalYRange = [-bboxSize / 2, bboxSize / 2];
+          const originalXCenter = (originalXRange[0] + originalXRange[1]) / 2;
+          const originalYCenter = (originalYRange[0] + originalYRange[1]) / 2;
+          const setZoom =
+          view.view === "Top"
+            ? setZoomTop
+            : view.view === "Side"
+            ? setZoomSide
+            : setZoomEnd;
+
+        view.domElement.addEventListener(
+            "wheel",
+            (event) =>
+              onScrollZoom(
+                event,
+                view.view,
+                camera,
+                originalXRange,
+                originalYRange,
+                originalXCenter,
+                originalYCenter,
+                setZoom
+              ),
+            false
+          );
+        }
+      });
     }
     render();
   }, [instrument.components]);
