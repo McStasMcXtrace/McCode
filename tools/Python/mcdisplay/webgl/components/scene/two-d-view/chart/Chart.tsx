@@ -2,6 +2,7 @@ import React from "react";
 import "../../../../common.css";
 import Plot from "react-plotly.js";
 import "./chart.css";
+import { usePlotRangeContext } from "../../../../Contexts/PlotRangeContext";
 
 interface ChartProps {
   chartTitle: string;
@@ -13,6 +14,8 @@ const Chart: React.FC<ChartProps> = ({
   xAxisLabel,
   yAxisLabel,
 }) => {
+  const { plotlyRanges } = usePlotRangeContext();
+
   const layout = {
     title: chartTitle,
     xaxis: {
@@ -20,7 +23,7 @@ const Chart: React.FC<ChartProps> = ({
       showgrid: true,
       zeroline: false,
       showline: true,
-      range: [0, 100], // Set a range from data later
+      range: plotlyRanges[chartTitle]?.xaxis,
     },
     yaxis: {
       title: {
@@ -30,7 +33,7 @@ const Chart: React.FC<ChartProps> = ({
       showgrid: true,
       zeroline: false,
       showline: true,
-      range: [-50, 50], // Set a range from data later
+      range: plotlyRanges[chartTitle]?.yaxis,
     },
     paper_bgcolor: "rgba(0,0,0,0)",
     plot_bgcolor: "rgba(0,0,0,0)",
