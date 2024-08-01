@@ -13,7 +13,8 @@ export const initializeCameras = (
   backView2DRef,
   topView2DRef,
   sideView2DRef,
-  primaryViewRef
+  primaryViewRef,
+  updatePlotlyRanges
 ) => {
   // Helper function to create an Orthographic Camera
   const createOrthographicCamera = (width, height) => {
@@ -61,6 +62,14 @@ export const initializeCameras = (
     const position = view.initialCamPos.map((element) => element * size);
     camera.position.fromArray(position);
     camera.up.fromArray(view.up);
+
+    /*panning for orthographic cameras updates plotly axes
+    controls.addEventListener('change', () => {
+      const xRange = [camera.position.x - 5, camera.position.x + 5];
+      const yRange = [camera.position.y - 5, camera.position.y + 5];
+      updatePlotlyRanges(view.view, { xaxis: xRange, yaxis: yRange });
+    });
+  */
     view.controls = controls;
     view.camera = camera;
     view.domElement = domElement;
