@@ -56,6 +56,14 @@
 *  the coordinate system of the logger component. Note the detection is along the
 *  y axis of the component, so it is natural to place it relative to a cylinder.
 *
+* This component works as other absorption loggers, but converts the tof and
+*  position data to wavelength, which is then compared to the actual wavelength
+*  calculated from the neutron state. The neutron position used to calculate
+*  the wavelength is pixelated while the time of flight is continous. The
+*  distance from source to sample is an input parameter, and the distance from
+*  sample to a detector pixel is calculated using the reference component position
+*  which should be specified with a relative component index.
+*
 * It is possible to attach one or more conditional components to this absorption
 *  logger. Such a conditional component would impose a condition on the state of
 *  the neutron after the Union_master component that executes the simulation,
@@ -80,8 +88,8 @@
 * lambda_m_min:       [AA]     Minimum measured wavelength recorded from tof and travelled distance (overwrites lambda_min)
 * lambda_m_max:       [AA]     Maximum measured wavelength recorded from tof and travelled distance (overwrites lambda_max)
 * lambda_m_bins:      [1]      Number of measured wavelength bins
-* lambda_t_min:       [AA]     Minimum measured wavelength recorded from tof and travelled distance (overwrites lambda_min)
-* lambda_t_max:       [AA]     Maximum measured wavelength recorded from tof and travelled distance (overwrites lambda_max)
+* lambda_t_min:       [AA]     Minimum true wavelength recorded from tof and travelled distance (overwrites lambda_min)
+* lambda_t_max:       [AA]     Maximum true wavelength recorded from tof and travelled distance (overwrites lambda_max)
 * lambda_t_bins:      [1]      Number of true wavelength bins
 * relative_measured:  [1]      Default 0, records measured as function of true wavelength, if this is enabled, records measured relative to true wavelength
 * relative_min:       [1]      Smallest value of measured / true wavelength in histogram
@@ -644,10 +652,6 @@ INITIALIZE
   
   sprintf(this_abs_storage.Detector_2D.Filename,"%s",filename);
   
-  // Get the position from a component instance
-  this_abs_storage.sample_pos = POS_A_COMP_INDEX(INDEX_CURRENT_COMP+ref_component);
-  this_abs_storage.transformed = 0; // Set to 1 when sample_pos is transformed
-  
   // Input sanitation for sample point and source_sample distance.
   // Can only check its not the same
   
@@ -668,7 +672,7 @@ NAME_CURRENT_COMP, init);
 exit(-1);
 }
 
-struct global_positions_to_transform_list_struct *global_positions_to_transform_list = COMP_GETPAR3(Union_init, init, global_positions_to_transform_list);
+  struct global_positions_to_transform_list_struct *global_positions_to_transform_list = COMP_GETPAR3(Union_init, init, global_positions_to_transform_list);
   struct global_rotations_to_transform_list_struct *global_rotations_to_transform_list = COMP_GETPAR3(Union_init, init, global_rotations_to_transform_list);
   // Test position and rotation stored in a data storage, and pointers assigned to transform lists
   this_abs_logger.position = POS_A_CURRENT_COMP;
@@ -683,7 +687,12 @@ struct global_positions_to_transform_list_struct *global_positions_to_transform_
   rot_transpose(ROT_A_CURRENT_COMP,this_abs_logger.t_rotation);
   add_rotation_pointer_to_list(global_rotations_to_transform_list, &this_abs_logger.t_rotation);
   
-  //printf("past direction choices sanitation \n");
+  // Get the position from a component instance
+  this_abs_storage.sample_pos = POS_A_COMP_INDEX(INDEX_CURRENT_COMP+ref_component);
+  this_abs_storage.transformed = 0; // Set to 1 when sample_pos is transformed
+  
+  // Ask master to transform it to its coordinate system
+  add_position_pointer_to_list(global_positions_to_transform_list, &this_abs_storage.sample_pos);
   
   // Book keeping
   this_abs_logger.abs_logger_extend_index = logger_conditional_extend_index;
@@ -697,21 +706,13 @@ struct global_positions_to_transform_list_struct *global_positions_to_transform_
   // Initializing for conditional
   this_abs_logger.conditional_list.num_elements = 0;
   
-  //this_logger.function_pointers.perm_to_disk = &write_perm_to_disk_1D_time_to_lambda_abs; //Obsolete
-  
-  //printf("past this_logger function assignment \n");
-  
   this_abs_logger.data_union.p_1D_time_to_lambda_abs_storage = &this_abs_storage;
   
   sprintf(this_abs_logger.name,"%s",NAME_CURRENT_COMP);
   
-  //printf("past this_logger assignment \n");
-  
   sprintf(abs_logger_list_element.name,"%s",NAME_CURRENT_COMP);
   abs_logger_list_element.component_index = INDEX_CURRENT_COMP;
   abs_logger_list_element.abs_logger = &this_abs_logger;
-  
-  //printf("past logger_list_element assignment \n");
 
   struct pointer_to_global_geometry_list *global_geometry_list = COMP_GETPAR3(Union_init, init, global_geometry_list);
   struct pointer_to_global_abs_logger_list *global_specific_volumes_abs_logger_list = COMP_GETPAR3(Union_init, init, global_specific_volumes_abs_logger_list);
