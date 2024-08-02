@@ -1,29 +1,29 @@
-% @MCCODE_PREFIX@PLOT-SVG(1)
+% @MCCODE_PREFIX@PLOT-html(1)
 % @FLAVOR_UPPER@ @MCCODE_PARTICLE@ Ray Tracing Team
 % @MCCODE_DATE@
 
 # NAME
 
-**@MCCODE_PREFIX@plot-svg** - Plotting the results of a @MCCODE_NAME@ simulation in a browser
+**@MCCODE_PREFIX@plot-html** - Plotting the results of a @MCCODE_NAME@ simulation in a browser
 
 # SYNOPSIS
 
-**@MCCODE_PREFIX@plot-svg** [-h] [-n] [-l] [--autosize] [--libpath [LIBPATH ...]] [-o OUTPUT] [simulation ...]
+**@MCCODE_PREFIX@plot-html** [-h] [-n] [-l] [--autosize] [--libpath [LIBPATH ...]] [-o OUTPUT] [simulation ...]
 
 # DESCRIPTION
 
-The front-end **@MCCODE_PREFIX@plot-svg** is a program that produces plots of all the
+The front-end **@MCCODE_PREFIX@plot-html** is a program that produces plots of all the
 monitors in a simulation, and it is thus useful to get a quick overview of the
 simulation results. In the simplest case, the front-end is run simply by typing
-`@MCCODE_PREFIX@plot-svg`. This will plot any simulation data stored in the current
+`@MCCODE_PREFIX@plot-html`. This will plot any simulation data stored in the current
 directory, which is where simulations store their results by default. If the
 `--dir` or `--file` options have been used, the name of the file or directory
-should be passed to *@MCCODE_PREFIX@plot-svg*, e.g. `@MCCODE_PREFIX@plot-svg dir` or
-`@MCCODE_PREFIX@plot-svg file`. It is also possible to plot one single text (not
-binary) data file from a given monitor, passing its name to `@MCCODE_PREFIX@plot-svg`.
+should be passed to *@MCCODE_PREFIX@plot-html*, e.g. `@MCCODE_PREFIX@plot-html dir` or
+`@MCCODE_PREFIX@plot-html file`. It is also possible to plot one single text (not
+binary) data file from a given monitor, passing its name to `@MCCODE_PREFIX@plot-html`.
 The `-h` option will list valid options.
 
-This is the web/svg plotting tool (in browser).
+This is the web/html plotting tool (in browser).
 
 # OPTIONS
 
@@ -56,7 +56,7 @@ http://www.@FLAVOR@.org
 
 Run and plot the *Test_SX* example (Single crystal diffraction)
 :   - `@MCCODE_PREFIX@run Test_SX.instr -d output_dir -n 1e7 TTH=13.4`
-:   - `@MCCODE_PREFIX@plot-svg output_dir`
+:   - `@MCCODE_PREFIX@plot-html output_dir`
 
 # AUTHORS
 

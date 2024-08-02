@@ -191,7 +191,7 @@ def get_options():
     mcplot_lst =    [prefix+"plot-pyqtgraph",
                      prefix+"plot-matplotlib", 
                      prefix+"plot-matlab",
-                     prefix+"plot-svg"]
+                     prefix+"plot-html"]
 
     return mcrun_lst, mcplot_lst, mcdisplay_lst, format_lst
 
