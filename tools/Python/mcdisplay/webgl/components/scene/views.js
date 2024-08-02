@@ -50,6 +50,7 @@ export const views = [
     x_label: "x",
     y_label: "y",
     updateCamera: function (camera, scene, mouseX) {
+      camera.position.x += mouseX * 0.05;
       camera.position.x = Math.max(Math.min(camera.position.x, 2000), -2000);
       camera.lookAt(scene.position);
     },
