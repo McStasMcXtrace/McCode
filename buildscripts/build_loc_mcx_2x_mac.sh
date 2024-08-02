@@ -22,7 +22,7 @@ fi
 ./mkdist mcxtrace-tools-python-mccodelib 2.x-dev tools/Python/mccodelib/ "" mac "" -- justinst
 ./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph 2.x-dev tools/Python/mcdisplay/pyqtgraph/ "" mac "" -- justinst
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph 2.x-dev tools/Python/mcplot/pyqtgraph/ "" mac "" -- justinst
-./mkdist mcxtrace-tools-python-mxplot-svg 2.x-dev tools/Python/mcplot/svg/ "" mac "" -- justinst
+./mkdist mcxtrace-tools-python-mxplot-html 2.x-dev tools/Python/mcplot/html/ "" mac "" -- justinst
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib 2.x-dev tools/Python/mcplot/matplotlib/ "" mac "" -- justinst
 cp tools/other/mcsplit/mcsplit.py $MCINSTALL_PREFIX/mcxtrace/2.x-dev/bin/
 

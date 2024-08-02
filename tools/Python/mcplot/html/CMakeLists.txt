@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.17.0)
 cmake_policy(VERSION 3.17.0)
 
 # This will install McStas or McXtrace mc/mxplot-pyqtgraph
-project(python-tools-mcplot-svg C)
+project(python-tools-mcplot-html C)
 
 message(STATUS "Configure ${CMAKE_PROJECT_NAME} ${FLAVOR} ${PROJECT_NAME}")
 
@@ -32,10 +32,10 @@ setupMCCODE("${FLAVOR}")
 # Select prefix
 set(P "${MCCODE_PREFIX}")
 
-set(TOOLS_NAME "Python/${P}plot/svg")
+set(TOOLS_NAME "Python/${P}plot/html")
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}plot-svg-${MCCODE_VERSION}")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}plot-html-${MCCODE_VERSION}")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
@@ -45,7 +45,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
 # NSIS
-set(NSIS_NAME "Python-based mcplot (mcplot-svg-py), ${MCCODE_STRING}")
+set(NSIS_NAME "Python-based mcplot (mcplot-html-py), ${MCCODE_STRING}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
@@ -73,10 +73,10 @@ include(CPack)
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
 # Configure fallback script
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot-svg" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot-html" @ONLY)
 
 # Configure doc
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot-svg.md.in" "${WORK}/${P}plot-svg.md" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot-html.md.in" "${WORK}/${P}plot-html.md" @ONLY)
 
 # Main script, including rename mc/mxplot
 install(
@@ -97,7 +97,7 @@ endforeach()
 # cmake Modules/MCUtil
 if(NOT WINDOWS)
   add_custom_target(
-    "CREATE_${PROJECT_NAME}_SYMLINK" ALL DEPENDS "${WORK}/${P}plot-svg"
+    "CREATE_${PROJECT_NAME}_SYMLINK" ALL DEPENDS "${WORK}/${P}plot-html"
     )
 
   install(
@@ -107,12 +107,12 @@ if(NOT WINDOWS)
   )
 
   install(
-    PROGRAMS "${WORK}/${P}plot-svg"
+    PROGRAMS "${WORK}/${P}plot-html"
     DESTINATION ${DEST_BINDIR}
     )
     
   install(
-    FILES "${WORK}/${P}plot-svg.md"
+    FILES "${WORK}/${P}plot-html.md"
     DESTINATION "${DEST_DATADIR_DOC}"
   )
   

@@ -39,7 +39,7 @@ mcxtrace-tools-python-mxdoc-3.2.x86_64 : python-tools-mcdoc built using CMake
 mcxtrace-tools-python-mxgui-3.2.x86_64 : python-tools-mcgui built using CMake
 mcxtrace-tools-python-mxplot-matplotlib-3.2.x86_64 : python-tools-mcplot built using CMake
 mcxtrace-tools-python-mxplot-pyqtgraph-3.2.x86_64 : python-tools-mcplot-pyqtgraph built using CMake
-mcxtrace-tools-python-mxplot-svg-3.2.x86_64 : python-tools-mcplot-svg built using CMake
+mcxtrace-tools-python-mxplot-html-3.2.x86_64 : python-tools-mcplot-html built using CMake
 mcxtrace-tools-python-mxrun-3.2.x86_64 : python-tools-mcrun built using CMake
 ```
 ```

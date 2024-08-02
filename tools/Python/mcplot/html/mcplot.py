@@ -320,7 +320,7 @@ logscale = False
 libpath = ""
 autosize = False
 def main(args):
-    """Main routine for mcplot-svg"""
+    """Main routine for mcplot-html"""
     logging.basicConfig(level=logging.INFO)
 
     if len(args.simulation) == 0:

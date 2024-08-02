@@ -22,7 +22,7 @@ or directory should be passed to *@MCCODE_PREFIX@plot*, e.g. `@MCCODE_PREFIX@plo
 is also possible to plot one single text (not binary) data file from a given
 monitor, passing its name to `@MCCODE_PREFIX@plot`. The `-h` option will list valid options.
 
-The default plotting backend is `@MCCODE_PREFIX@plot-pyqtgraph`, but there exists a number of additional plotters such as `@MCCODE_PREFIX@plot-matplotlib`, `@MCCODE_PREFIX@plot-svg` (in a browser), `@MCCODE_PREFIX@plot-matlab` (using Matlab or Octave).
+The default plotting backend is `@MCCODE_PREFIX@plot-pyqtgraph`, but there exists a number of additional plotters such as `@MCCODE_PREFIX@plot-matplotlib`, `@MCCODE_PREFIX@plot-html` (in a browser), `@MCCODE_PREFIX@plot-matlab` (using Matlab or Octave).
 
 # OPTIONS
 
