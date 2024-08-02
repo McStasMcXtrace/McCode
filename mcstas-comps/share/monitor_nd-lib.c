@@ -804,16 +804,45 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     #endif
       if(nxhandle) {
 	char metadata[CHAR_BUF_LENGTH];
+	char metadatatmp[CHAR_BUF_LENGTH];
 	// Vars for 1D, >3D, OFF
 	long numbins;
-	long minbins;
-	long maxbins;
+	long minbins = 0;
+	long maxbins = 0;
 	char binlabel[CHAR_BUF_LENGTH];
 	char binvar[CHAR_BUF_LENGTH];
-
+	sprintf(binlabel,"");
+	sprintf(binvar,"");
 	long pix=Vars->Coord_Min[Vars->Coord_Number-1]; // Second to last col is min. pixel id
 		  
 	MCDETECTOR detector;
+	/* Init - perhaps better with an init-function in mccode-r? */
+	detector.m = 0;
+	detector.xmin = 0;
+	detector.xmax = 0;
+	detector.ymin = 0;
+	detector.ymax = 0;
+	detector.zmin = 0;
+	detector.zmax = 0;
+	detector.intensity = 0;
+	detector.error = 0;
+	detector.events = 0;
+	detector.min = 0;
+	detector.max = 0;
+	detector.mean = 0;
+	detector.centerX = 0;
+	detector.halfwidthX = 0;
+	detector.centerY = 0;
+	detector.halfwidthY = 0;
+	detector.rank = 0;
+	detector.istransposed = 0;
+	detector.n = 0;
+	detector.p = 0;
+	detector.date_l = 0;
+	detector.p0 = NULL;
+	detector.p1 = NULL;
+	detector.p2 = NULL;
+
 	sprintf(detector.filename,"BINS");
 	sprintf(detector.component,Vars->compcurname);
 	sprintf(detector.format,"pixels");
@@ -822,9 +851,11 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     
 	  sprintf(metadata,"id=%ld + %ld pixels: ",(long)Vars->Coord_Min[Vars->Coord_Number-1],(long)Vars->Coord_BinProd[Vars->Coord_Number-1]);
 	  for (i=1; i<N_spatial_dims; i++) {
-	    sprintf(metadata,"%s %s (%ld bins) x ",metadata,Vars->Coord_Label[i],Vars->Coord_Bin[i]);
+	    sprintf(metadatatmp,"%s %s (%ld bins) x ",metadata,Vars->Coord_Label[i],Vars->Coord_Bin[i]);
+	    sprintf(metadata,"%s",metadatatmp);
 	  }
-	  sprintf(metadata,"%s %s (%ld bins)",metadata,Vars->Coord_Label[i],Vars->Coord_Bin[i]);
+	  sprintf(metadatatmp,"%s %s (%ld bins)",metadata,Vars->Coord_Label[i],Vars->Coord_Bin[i]);
+	  sprintf(metadata,"%s",metadatatmp);
 	  printf("%s\n",metadata);
 	  numbins = Vars->Coord_BinProd[Vars->Coord_Number-1];
 	  if (N_spatial_dims==1) {
@@ -1898,8 +1929,10 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
       int issphere;
       issphere = (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE);
       width = (hdiv_max-hdiv_min)/NH;
-      if (!issphere) NV=1; /* cylinder has vertical axis */
-      else height= (vdiv_max-vdiv_min)/NV;
+      if (!issphere) {
+	NV=1; /* cylinder has vertical axis */
+      }
+      height= (vdiv_max-vdiv_min)/NV;
       
       /* check width and height of elements (sphere) to make sure the nb
          of plates remains limited */
