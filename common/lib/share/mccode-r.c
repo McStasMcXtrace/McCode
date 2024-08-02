@@ -2019,6 +2019,7 @@ MCDETECTOR mcdetector_out_list_slaves(MCDETECTOR detector)
 	     printf("\n** Done ** \n");
   );
   }
+  return(detector);
 }
 #endif
 
