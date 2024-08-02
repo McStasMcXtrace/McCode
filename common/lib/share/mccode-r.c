@@ -2785,6 +2785,7 @@ void mcdis_polygon(int count, ...){
       x0 += x[j]; y0 += y[j]; z0 += z[j];
     }
   }
+  va_end(ap);
 
   /* Patch data for multiline(count+1, ... use 0th point*/
   if (mcdotrace==1) {
