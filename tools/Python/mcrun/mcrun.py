@@ -233,7 +233,7 @@ def add_mcstas_options(parser):
         help='Set number of %s to simulate' % (mccode_config.configuration["PARTICLE"]))
 
     add('-t', '--trace',
-        action='store_true', default=False,
+        metavar='trace', type=int, default=0,
         help='Enable trace of %s through instrument' % (mccode_config.configuration["PARTICLE"]))
 
     if (mccode_config.configuration["MCCODE"] == 'mcstas'):

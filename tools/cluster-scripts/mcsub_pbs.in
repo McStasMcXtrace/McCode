@@ -47,7 +47,9 @@ my $mccode_version =  basename(dirname(dirname(abs_path$mccode_path)));
 
 if (@cmdline == 0) { $show_help=1; }
 if ($show_help) {
-die "Usage: $0 [options] [@MCCODE_PREFIX@run params] 
+die "$0 generate PBS submission script
+
+Usage: $0 [options] [@MCCODE_PREFIX@run params] 
  -h        --help            Show this help
  -rN       --runtime=N       Specify maximum runtime (hours) [default $runtime]
  -qQNAME   --queue=QNAME     Specify wanted SLURM queue [default '$queue']

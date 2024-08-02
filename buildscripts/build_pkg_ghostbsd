@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "import os;print(os.cpu_count())")}
+
+# rapid-build script for mcstas-kernel dev:
+
+
+if [ "x$1" = "x" ]; then
+    # No arguments
+    echo Please provide one argument,e.g : $0 2.0
+    exit 1;
+fi
+
+git checkout main
+git pull
+
+# Ensure our 3rd party modules are in place and updated
+THIRDPARTY=`ls 3rdparty | grep -v patches`
+
+./3rdparty/sync.sh
+
+WORK=`pwd`
+
+export MCINSTALL_PREFIX=/usr/local
+
+./mkdist mcstas ${1} "" "" ghostbsd "" -- pkg
+./mkdist mcstas-comps ${1} "" "" ghostbsd "" -- pkg
+./mkdist mcstas-tools-python-mcgui ${1} tools/Python/mcgui/ "" ghostbsd "" -- pkg
+./mkdist mcstas-tools-python-mcrun ${1} tools/Python/mcrun/ "" ghostbsd "" -- pkg
+./mkdist mcstas-tools-python-mcdoc ${1} tools/Python/mcdoc/ "" ghostbsd "" -- pkg
+./mkdist mcstas-tools-python-mctest ${1} tools/Python/mctest/ "" ghostbsd "" -- pkg
+./mkdist mcstas-tools-python-mccodelib ${1} tools/Python/mccodelib/ "" ghostbsd "" -- pkg
+./mkdist mcstas-tools-python-mcdisplay-pyqtgraph ${1} tools/Python/mcdisplay/pyqtgraph/ "" ghostbsd "" -- pkg
+./mkdist mcstas-tools-python-mcdisplay-webgl ${1} tools/Python/mcdisplay/webgl/ "" ghostbsd "" -- pkg
+./mkdist mcstas-tools-python-mcdisplay-cad ${1} tools/Python/mcdisplay/cad/ "" ghostbsd "" -- pkg
+./mkdist mcstas-tools-python-mcdisplay-mantid ${1} tools/Python/mcdisplay/mantid_xml/ "" ghostbsd "" -- pkg
+./mkdist mcstas-tools-python-mcplot-pyqtgraph ${1} tools/Python/mcplot/pyqtgraph/ "" ghostbsd "" -- pkg
+./mkdist mcstas-tools-python-mcplot-svg ${1} tools/Python/mcplot/svg/ "" ghostbsd "" -- pkg
+./mkdist mcstas-tools-python-mcplot-matplotlib ${1} tools/Python/mcplot/matplotlib/ "" ghostbsd "" -- pkg
+
+./mkdist mcstas-ncrystal ${1} 3rdparty/ncrystal-package "" ghostbsd "" -- pkg
+./mkdist mcstas-mcpl ${1} 3rdparty/mcpl-package "" ghostbsd "" -- pkg
+./mkdist mcstas-nexus ${1} 3rdparty/nexus-package "" ghostbsd "" -- pkg
+

@@ -30,15 +30,16 @@
 *
 * %Parameters
 * Input parameters:
-* period: [m]      Distance between grating grooves.
-* zdepth: [m]      Depth of grooves.
-* gamma: [ ]       Ratio between groove and period  aka duty cycle. 1 means fully open.
-* sdepth: [m]      Thickness of substrate. The default is to have no substrate - i.e. rods. 
-* xwidth: [m]      Width of the grating. Defines how many lines there are in total.
-* yheight: [m]     Height of the grating.
-* material: [str]  Data file containing the material from which the grating is made.
-* substrate: [str] Data file containing material data for the substrate.
-* fixed_dalte: [ ] Set delta to the given constant. Useful for debugging.
+* period:     [m]   Distance between grating grooves.
+* zdepth:     [m]   Depth of grooves.
+* gamma:      [0-1] Ratio between groove and period  aka duty cycle. 1 means fully open.
+* sdepth:     [m]   Thickness of substrate. The default is to have no substrate - i.e. rods. 
+* xwidth:     [m]   Width of the grating. Defines how many lines there are in total.
+* yheight:    [m]   Height of the grating.
+* material:   [str] Data file containing the material from which the grating is made.
+* substrate:  [str] Data file containing material data for the substrate.
+* fixed_delta:[0/1] Set delta to the given constant. Useful for debugging.
+* max_order:  [1]   Maximum order to diffract
 * 
 * %End
 *******************************************************************************/
@@ -215,8 +216,8 @@ MCDISPLAY
     rectangle("xy", 0,0,-(sdepth)/2.0, xwidth,yheight);
   rectangle("xy", 0,0, (sdepth)/2.0, xwidth,yheight);
   for (i=-1;i<2;i++){
-      box(period/4.0+i*period,0, sdepth/2.0 + zdepth/2.0, period/2.0, yheight, zdepth);  
-      box(-3*period/4.0+ i*period,0, sdepth/2.0 + zdepth/2.0, period/2.0, yheight, zdepth);  
+    box(period/4.0+i*period,0, sdepth/2.0 + zdepth/2.0, period/2.0, yheight, zdepth,0, 0, 1, 0);  
+    box(-3*period/4.0+ i*period,0, sdepth/2.0 + zdepth/2.0, period/2.0, yheight, zdepth,0, 0, 1, 0);  
   }
 %}
 

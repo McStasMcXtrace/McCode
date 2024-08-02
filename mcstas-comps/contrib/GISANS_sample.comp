@@ -1,0 +1,1748 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2003, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: GISANS_sample
+*
+* %I
+* Written by: H. Frielinghaus
+* Date: 10.03.2023
+* Origin: FZJ
+*
+* %D
+* Sample for GISANS
+* The idea of this sample goes back to the real sample studied in the publication https://doi.org/10.1063/1.4723634
+* This is a sandwich of a sapphire and silicon slab through which the neutrons impinge and the sample in between where the scattering emerges from.
+* The sample consist of spherical polystyrene colloids in heavy water that form aligned crystallites at the solid-liquid interface,
+* while in the middle of the volume the crytallites are orientationally averaged in the polar angle that points in the lateral direaction.
+* The crystallites of the current verision are not highly realistic because they are monoclinic with a 60° angle mimicking a fraction
+* of a hexagonal structure with hexagonal planes stacked in the z-direction.
+* Inside the routine one can change between 2 or 3 different planes. Also the total crystallite size can be changed.
+* Especially the parallelogram with 60° angle is unrealistic because one usually would assume the crystallites to have a hexagonal shape.
+* However, the finite crystallites mimic the final correlation length inside the sample.
+* The sample works for neutrons impingin from the sapphire, the silicon at grazing angles and in transmission in the sense of a SANS sample.
+* If the neutrons impinge through the other layers (sample and silicon oxide) - the responses are not so realistic and need further development.
+* Also multiple scattering would be needed to be implemented still - but could be done.
+*
+* What this sample component covers relatively well is the fact that damping of the intensity by scattering and absorption is also covered.
+* That means that even at larger angles than the critical angle the intensity is damped inside the sample and so only a certain near surface
+* layer scatters neutrons.
+* This effect is not covered by BornAgain.
+*
+* I see this as a start for further developments.
+*
+* %P
+* INPUT PARAMETERS
+* (sample geometry)
+* xwidth:       [m]  Width of sample volume 
+* yheight:      [m]  Height of sample volume 
+* zsapph:       [m]  Thickness of the sapphire layer on one side
+* zsamp:        [m]  Thickness of the overall sample between sapphire and silicon
+* zsampsurf:    [m]  Thickness from the total of zsamp on either side of sapphire/silicon that is oriented
+* zsilicon:     [m]  Thickness of the silicon layer on the other side
+* zsiliconsurf: [m]  Thickness from the total of zsilicon on the sample side (oxidization layer)
+* the total thickness of the sandwich is zsapph+zsamp+zsilicon
+* the thicknesses zsampsurf and zsiliconsurf are parts of the total sample/silicon thicknesses
+*
+* (scattering length densitites, reciprocal total cross section of absorption, reciprocal total cross section of incoherent scattering)
+* units rho... [A-2], abslen... [cm], inclen... [cm]
+* rhosapph,       abslensapph,       inclensapph        for sapphire
+* rhoD2O,         abslenD2O,         inclenD2O          for D2O as solvent in sample
+* rhoPS,          abslenPS,          inclenPS           for polystyrene as colloids in sample
+* rhosiliconsurf, abslensiliconsurf, inclensiliconsurf  for silicon surface (oxide layer)
+* rhosilicon,     abslensilicon,     inclensilicon      for silicon
+*
+* (specs of the polystyrene colloids in heavy water)
+* phiPS:       [1] Concentration vol/vol of colloids in D2O
+* Rad:         [A] Radius of colloids in Aangstroem
+* phirot:      [rad] angle of the ordered (aligned) crytallites at the two surfaces towards sapphire/silicon
+* 
+* (specs for the redirection of simulations paths (scattering and sans versus rest) similar to the SANS sample of Henrich Frielinghaus)
+* sc_aim:      [1] how much is scattered versus transmitted
+* sans_aim:    [1] how much goes to the small angle range versus wide angles
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT GISANS_sample
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xwidth=0.05, yheight=0.15, zsapph=0.02, zsamp=0.002, zsampsurf=0.000001, zsilicon=0.02, zsiliconsurf=5e-9,
+rhosapph=5.773e-6,       abslensapph=163.708,       inclensapph=49.815,
+rhoD2O=6.364e-6,         abslenD2O=44066.347,       inclenD2O=7.258,
+rhoPS=1.358e-6,          abslenPS=114.502,          inclenPS=0.24588,
+rhosiliconsurf=4.123e-6, abslensiliconsurf=401.051, inclensiliconsurf=169.11,
+rhosilicon=2.079e-6,     abslensilicon=209.919,     inclensilicon=9901.6,
+phiPS = 0.1, Rad = 370.0, phirot=0.0, sc_aim=0.98, sans_aim=0.98
+)
+OUTPUT PARAMETERS ()
+
+SHARE
+%{
+double min(double A, double B) {
+if (A<B) return A; else return B;
+};
+
+double max(double A, double B) {
+if (A>B) return A; else return B;
+};
+
+int imin(int A, int B) {
+if (A<B) return A; else return B;
+};
+
+int imax(int A, int B) {
+if (A>B) return A; else return B;
+};
+
+double complsqrt(double re, double im, double *imsqrt) {
+ double resqrt;
+ double ratio;
+ if (re==0.0) {ratio=1e32;} else {ratio = fabs(im/re);};
+ if (ratio<0.027) {
+   if (re>0) {resqrt  = sqrt(0.5*(sqrt(re*re+im*im)+re));
+             *imsqrt  = 0.5*sqrt( re)*ratio*(1.0-0.125*ratio*ratio*(1.0-0.4375*ratio*ratio));}
+   else      {resqrt  = 0.5*sqrt(-re)*ratio*(1.0-0.125*ratio*ratio*(1.0-0.4375*ratio*ratio));
+             *imsqrt  = sqrt(0.5*(sqrt(re*re+im*im)-re));} }
+ else {       resqrt  = sqrt(0.5*(sqrt(re*re+im*im)+re));
+             *imsqrt  = sqrt(0.5*(sqrt(re*re+im*im)-re));  };
+ if (im<0) *imsqrt = -*imsqrt;
+ return resqrt;
+};
+
+double calclayers(double xiref, double bref, double vz, double vzi, double v,
+                  double zt[8],
+                  double xi[8],   double beta[8],
+                  double v2re[8], double v2im[8],
+                  double Ot1[8],  double Ot2[8],
+                  double In1[8],  double In2[8]
+                  ) {
+/* vz und vzi haben beide das Vorzeichen der Richtung */
+int i;
+double t11re[7], t11im[7];
+double t12re[7], t12im[7];
+double d11re[8], d11im[8];
+double d22re[8], d22im[8];
+double vv1re,vv1im,vv2re,vv2im;
+double vs1re[8],vs1im[8],vs2re[8],vs2im[8];
+double vb1re[8],vb1im[8],vb2re[8],vb2im[8];
+double www, wwi;
+double sintheta;
+double cmpabs;
+double argre,argim;
+double sign;
+double limit;
+
+/*limit=59.09079715;*/
+limit=18.42;
+
+/* fprintf(stderr, "%e %e\n", vz, vzi);   */
+sintheta = fabs(vz)/v;
+sign = 1.0;
+if (vz<0.0) {sign=-1.0;};
+
+for (i=0; i<=7; i++) {
+  www = complsqrt(xiref-xi[i]+(1.0-xiref)*sintheta*sintheta,beta[i]-bref*(1.0-sintheta*sintheta),&wwi);
+  cmpabs = sqrt(vz*vz+vzi*vzi);
+/*if (wwi>=0.0) { */
+  v2re[i] = v *  ( www * vz - wwi * vzi ) / cmpabs;
+  v2im[i] = v *  ( wwi * vz + www * vzi ) / cmpabs;  /*}   else {
+  v2re[i] =-v *  ( www * vz - wwi * vzi ) / cmpabs;
+  v2im[i] =-v *  ( wwi * vz + www * vzi ) / cmpabs;    };*/
+/*  if(v2re[i]<0.0){v2re[i]=-v2re[i];v2im[i]=-v2im[i];};     */
+/*  fprintf(stderr, "%i %e %e\n", i, v2re[i], v2im[i]);      */
+  argre = v2re[i]*zt[i]*sign*1e10/K2V;
+  argim = v2im[i]*zt[i]*sign*1e10/K2V;
+/*if (fabs(argre)>3.141592654e6) {argre=2.0*PI*rand01();};   */   /* no interferences anymore ----   IS THIS NEEDED ????????  */
+  if (argim> limit) {argim = limit;} else {
+  if (argim<-limit) {argim =-limit;};      };                /* truncate large exponents to approx. float precision */
+  d11re[i] = cos(argre)*exp( argim);
+  d11im[i] =-sin(argre)*exp( argim);
+  d22re[i] = cos(argre)*exp(-argim);
+  d22im[i] = sin(argre)*exp(-argim);
+};
+for (i=0; i<=6; i++) {
+if ((vz>=0.0 && i<6) || (vz<0.0 && i<1)) {
+cmpabs = 2.0*(v2re[i]*v2re[i]+v2im[i]*v2im[i]);
+t11re[i] = (v2re[i+1]*v2re[i]+v2im[i+1]*v2im[i])/cmpabs;
+t11im[i] = (v2im[i+1]*v2re[i]-v2re[i+1]*v2im[i])/cmpabs;
+ } else {
+cmpabs = 2.0*(v2re[i+1]*v2re[i+1]+v2im[i+1]*v2im[i+1]);
+t11re[i] = (v2re[i]*v2re[i+1]+v2im[i]*v2im[i+1])/cmpabs;
+t11im[i] = (v2im[i]*v2re[i+1]-v2re[i]*v2im[i+1])/cmpabs;
+};
+t12re[i] = 0.5-t11re[i];
+t12im[i] =    -t11im[i];
+t11re[i]+= 0.5;
+};
+
+vv1re = 0.0;
+vv1im = 0.0;
+vv2re = exp(-3.0*limit);
+vv2im = 0.0;
+
+if (vz>=0) {
+vb1re[7] = vv1re;
+vb1im[7] = vv1im;
+vb2re[7] = vv2re;
+vb2im[7] = vv2im;
+vs1re[7] = t11re[6]*vv1re - t11im[6]*vv1im + t12re[6]*vv2re - t12im[6]*vv2im;
+vs1im[7] = t11re[6]*vv1im + t11im[6]*vv1re + t12re[6]*vv2im + t12im[6]*vv2re;
+vs2re[7] = t12re[6]*vv1re - t12im[6]*vv1im + t11re[6]*vv2re - t11im[6]*vv2im;
+vs2im[7] = t12re[6]*vv1im + t12im[6]*vv1re + t11re[6]*vv2im + t11im[6]*vv2re;
+for (i=6; i>=1; i--) {
+vs1re[i] = d11re[i]*vv1re - d11im[i]*vv1im;
+vs1im[i] = d11re[i]*vv1im + d11im[i]*vv1re;
+vs2re[i] = d22re[i]*vv2re - d22im[i]*vv2im;
+vs2im[i] = d22re[i]*vv2im + d22im[i]*vv2re;
+vv1re = vs1re[i];
+vv1im = vs1im[i];
+vv2re = vs2re[i];
+vv2im = vs2im[i];
+vb1re[i] = t11re[i-1]*vv1re - t11im[i-1]*vv1im + t12re[i-1]*vv2re - t12im[i-1]*vv2im;
+vb1im[i] = t11re[i-1]*vv1im + t11im[i-1]*vv1re + t12re[i-1]*vv2im + t12im[i-1]*vv2re;
+vb2re[i] = t12re[i-1]*vv1re - t12im[i-1]*vv1im + t11re[i-1]*vv2re - t11im[i-1]*vv2im;
+vb2im[i] = t12re[i-1]*vv1im + t12im[i-1]*vv1re + t11re[i-1]*vv2im + t11im[i-1]*vv2re;
+vv1re = vb1re[i];
+vv1im = vb1im[i];
+vv2re = vb2re[i];
+vv2im = vb2im[i];
+};
+vs1re[0] = 0.0;
+vs1im[0] = 0.0;
+vs2re[0] = 0.0;
+vs2im[0] = 0.0;
+vb1re[0] = 0.0;
+vb1im[0] = 0.0;
+vb2re[0] = 0.0;
+vb2im[0] = 0.0;
+} else {
+vb1re[0] = vv1re;
+vb1im[0] = vv1im;
+vb2re[0] = vv2re;
+vb2im[0] = vv2im;
+vs1re[0] = t11re[0]*vv1re - t11im[0]*vv1im + t12re[0]*vv2re - t12im[0]*vv2im;
+vs1im[0] = t11re[0]*vv1im + t11im[0]*vv1re + t12re[0]*vv2im + t12im[0]*vv2re;
+vs2re[0] = t12re[0]*vv1re - t12im[0]*vv1im + t11re[0]*vv2re - t11im[0]*vv2im;
+vs2im[0] = t12re[0]*vv1im + t12im[0]*vv1re + t11re[0]*vv2im + t11im[0]*vv2re;
+for (i=1; i<=6; i++) {
+vs1re[i] = d11re[i]*vv1re - d11im[i]*vv1im;
+vs1im[i] = d11re[i]*vv1im + d11im[i]*vv1re;
+vs2re[i] = d22re[i]*vv2re - d22im[i]*vv2im;
+vs2im[i] = d22re[i]*vv2im + d22im[i]*vv2re;
+vv1re = vs1re[i];
+vv1im = vs1im[i];
+vv2re = vs2re[i];
+vv2im = vs2im[i];
+vb1re[i] = t11re[i]*vv1re - t11im[i]*vv1im + t12re[i]*vv2re - t12im[i]*vv2im;
+vb1im[i] = t11re[i]*vv1im + t11im[i]*vv1re + t12re[i]*vv2im + t12im[i]*vv2re;
+vb2re[i] = t12re[i]*vv1re - t12im[i]*vv1im + t11re[i]*vv2re - t11im[i]*vv2im;
+vb2im[i] = t12re[i]*vv1im + t12im[i]*vv1re + t11re[i]*vv2im + t11im[i]*vv2re;
+vv1re = vb1re[i];
+vv1im = vb1im[i];
+vv2re = vb2re[i];
+vv2im = vb2im[i];
+};
+vs1re[7] = 0.0;
+vs1im[7] = 0.0;
+vs2re[7] = 0.0;
+vs2im[7] = 0.0;
+vb1re[7] = 0.0;
+vb1im[7] = 0.0;
+vb2re[7] = 0.0;
+vb2im[7] = 0.0;
+};
+
+for (i=0; i<=7; i++) {
+Ot1[i] = vb1re[i]*vb1re[i] + vb1im[i]*vb1im[i];
+Ot2[i] = vb2re[i]*vb2re[i] + vb2im[i]*vb2im[i];
+In1[i] = vs1re[i]*vs1re[i] + vs1im[i]*vs1im[i];
+In2[i] = vs2re[i]*vs2re[i] + vs2im[i]*vs2im[i];
+};
+return 0.0;
+}; /* end subroutine calclayers  */
+
+
+
+/* NEUTRON CROSS SECTIONS (SANS) */
+
+double dSigdW(double phi, double Rad, double drho, double rotphi,
+              double dvx, double dvy, double dvz, double dvzi, double sign,
+              double zthck ) {
+
+double ac,a111,d111,dpln;
+double phi0;
+int i;
+double vec1x,vec1y,vec1z,vec2x,vec2y,vec2z,vec3x,vec3y,vec3z,vec4x,vec4y,vec4z;
+double Qx,Qy,Qz,QRre,QRim,QR2re,QR2im,QRQR,Q2xy,Q2z;
+double QR1,QR2,QR3,QR4,QRz;
+double Sig;
+double snx,arg;
+int NN;
+double SF1,SF2,SF3,SFa;
+double SF3re,SF3im,Sp3re,Sp3im;
+double FFre,FFim,FF;
+double epre,epim,emre,emim;
+double dex,ddw,fnc,dmp;
+double number;
+double corrlen;
+double xidwfxy,xidwfz;
+double limit;
+double fudgef;
+int Nlz;
+int Nz;
+int Nxy;
+
+/*limit=59.09079715;*/
+limit=18.42;
+fudgef=0.0250;
+
+xidwfxy = 180.0; /* Aangstroem, local precision for Debye Waller factor */
+xidwfz  = 125.0; /* Aangstroem, local precision for Debye Waller factor */
+
+/* these parameters are actually linked to wavelength resolution, so Nz = Nxy ~ (lambda / delta lambda)    */
+/* the exact prefactor remains to be determined */
+Nlz= 3;        /* number of different planes in z-direction, 3 for fcc lattice, 2 for hex with 2 different planes */
+Nz = 6;        /* limited number of planes in z-direction, should be relatively small and multiples of 6: so 6 or 12 (or at least multiple of Nlz) */
+Nxy= 3;        /* limited number of planes in xy-direction, should be relatively small, let's say between 4 and 12 */
+
+corrlen = 3e4;  /* additional correlation length in z-direction would limit the maximum correlation length, if not needed make it big, i.e. 1e6 */
+                /* corrlen not really important */
+
+ac = pow(PI/0.1875/fabs(phi),1.0/3.0)*fabs(Rad);   /* units Aangstroem */
+a111 = sqrt(3.0)*ac;
+d111 = a111/3.0;
+dpln = sqrt(0.5)*ac;
+
+if (dvx==0.0) { phi0 = 0.5*PI; }
+         else { phi0 = atan(dvy/dvx); };
+
+vec1x=dpln*cos(rotphi-phi0);
+vec1y=dpln*sin(rotphi-phi0);
+vec1z=0.0;
+vec2x=dpln*cos(rotphi-phi0+PI/3.0);
+vec2y=dpln*sin(rotphi-phi0+PI/3.0);
+vec2z=0.0;
+vec3x=(vec1x+vec2x)/3.0;
+vec3y=(vec1y+vec2y)/3.0;
+vec3z=d111;
+vec4x=-vec3x;
+vec4y=-vec3y;
+vec4z=2.0*d111;
+
+QR1 = (dvx*vec1x+dvy*vec1y)/K2V;
+QR2 = (dvx*vec2x+dvy*vec2y)/K2V;
+QR3 = (dvx*vec3x+dvy*vec3y+sign*dvz*vec3z)/K2V;
+QR4 = (dvx*vec4x+dvy*vec4y+sign*dvz*vec4z)/K2V;
+QRz = sign*dvz*d111*Nlz/K2V;
+QR2re = (dvx*dvx+dvy*dvy+dvz*dvz-dvzi*dvzi)*Rad*Rad/(K2V*K2V);
+QR2im = 2.0*dvz*dvzi*Rad*Rad/(K2V*K2V);
+QRQR  = (dvx*dvx+dvy*dvy+dvz*dvz+dvzi*dvzi)*Rad*Rad/(K2V*K2V);
+Q2xy  = (dvx*dvx+dvy*dvy)/(K2V*K2V);
+Q2z   = (dvz*dvz+dvzi*dvzi)/(K2V*K2V);
+
+QR1 *= 0.5;
+snx = sin(QR1);
+if (fabs(snx)<0.01) {
+arg = QR1-floor(QR1/PI+0.5)*PI;
+arg*= arg;
+NN  = Nxy*Nxy;
+SF1 = NN*(1.0-(NN-1)*arg/3.0+(2*NN*NN-5*NN+3)*arg*arg/45.0);
+} else {
+SF1  = sin(Nxy*QR1)/snx;
+SF1 *= SF1;
+};
+
+QR2 *= 0.5;
+snx = sin(QR2);
+if (fabs(snx)<0.01) {
+arg = QR2-floor(QR2/PI+0.5)*PI;
+arg*= arg;
+NN  = Nxy*Nxy;
+SF2 = NN*(1.0-(NN-1)*arg/3.0+(2*NN*NN-5*NN+3)*arg*arg/45.0);
+} else {
+SF2  = sin(Nxy*QR2)/snx;
+SF2 *= SF2;
+};
+
+dex = sign*dvzi*vec3z/K2V;       /* this is called s in calculations  */
+if (fabs(dex)<1e-9) dex=1e-9;
+ddw = 0.5*vec3z/corrlen;         /* here correlation length for sigma */
+arg = sqrt(0.25*PI)*dex/ddw;
+
+if (arg>7.0) {
+arg *= arg;
+fnc = 1.0-(4.0-(40.0-(592.0-(11296.0-(261184.0-7066240.0/arg)/arg)/arg)/arg)/arg)/arg;
+} else {
+if (arg>1.0) {
+arg -= 4.0;
+fnc = 0.83632161198882839595+arg*(
+      0.056582086644761999922+arg*(
+     -0.013426901882714073489+arg*(
+      0.0026036629558670416522+arg*(
+     -0.00043493947025108071631+arg*(
+      0.000063696401659655369894+arg*(
+     -8.15571922810475175216e-6+arg*(
+      8.88360569009343837213e-7+arg*(
+     -7.53231914564623106045e-8+arg*(
+      3.18537731810442393942e-9+arg*
+      4.48953122905093423545e-10)))))))));
+} else {
+fnc = arg*(0.56418958354775628695+arg*(
+          -0.18169011381620932846+arg*(
+           0.038539726238227489952+arg*(
+          -0.0047821117522591190687+arg*(
+          -0.000032686662549066312807+arg*(
+           0.000159019306085059302185+arg*(
+          -0.000032272354631649569110+arg*(
+           8.08407359778557261765e-7+arg*(
+           1.13411148402714999777e-6-arg*
+           2.90801221215845255891e-7)))))))));
+}; };
+dex /= fnc;
+if (dex> limit) dex =  limit;
+if (dex<-limit) dex = -limit;
+dmp = exp(-dex);
+
+SF3re = 1.0;
+SF3im = 0.0;
+if (Nlz==2) {
+SF3re += cos(QR3)*dmp;
+SF3im += sin(QR3)*dmp;
+} else {
+SF3re += cos(QR3)*dmp+cos(QR4)*dmp*dmp;
+SF3im += sin(QR3)*dmp+sin(QR4)*dmp*dmp;
+};
+SF3re *= sqrt(dmp);
+SF3im *= sqrt(dmp);
+
+if (Nlz==2) {dmp *= dmp;} else {dmp *= dmp*dmp;};
+Sp3re = 1.0;
+Sp3im = 0.0;
+for (i=1; i<Nz/Nlz; i++) {
+Sp3re += cos(QRz*i)*pow(dmp,i);
+Sp3im += sin(QRz*i)*pow(dmp,i);
+};
+
+SF3re = SF3re*Sp3re - SF3im*Sp3im;
+SF3im = SF3re*Sp3im + SF3im*Sp3re;
+SF3   = SF3re*SF3re + SF3im*SF3im;
+SFa   = SF1*SF2*SF3*exp(-xidwfxy*xidwfxy*Q2xy-xidwfz*xidwfz*Q2z);      /* here proportional to (Nxy^2 * Nz)^2  for Q -> 0   */
+
+if (QR2im> limit) QR2im =  limit;
+if (QR2im<-limit) QR2im = -limit;
+if (QRQR<0.01) {
+FFre = 1.0 -0.1*QR2re + (QR2re*QR2re-QR2im*QR2im)/280.0;
+FFim =     -0.1*QR2im + (QR2re*QR2im)            /140.0;
+FF   = FFre*FFre + FFim*FFim;
+} else {
+QRre = complsqrt(QR2re,QR2im,&QRim);
+epre = cos(QRre)*exp(-QRim);
+epim = sin(QRre)*exp(-QRim);
+emre = cos(QRre)*exp( QRim);
+emim =-sin(QRre)*exp( QRim);
+FFre = epim-emim-QRre*(epre+emre)+QRim*(epim+emim);
+FFim = emre-epre-QRim*(epre+emre)-QRre*(epim+emim);
+FF   = 2.25*(FFre*FFre + FFim*FFim)/(QRQR*QRQR*QRQR);
+};
+
+dex = sign*Nz*dvzi*vec3z/K2V;                 /* this is called s in calculations  */
+if (fabs(dex)<1e-9) dex=1e-9;
+number = zthck*1e10/(d111*Nz);
+/*                                               berechne (1-exp(-number*dex))/(1-exp(-dex)) / (number) */ 
+arg = number*dex;
+if (arg> limit) arg = limit;
+if (arg<-limit) arg =-limit;
+if (fabs(arg)<0.055) {
+epre = arg*(1.0-arg*(1.0-arg*(1.0-arg*(1.0-arg*(1.0-arg*(1.0-arg*(1.0-arg*0.125)/7.0)/6.0)*0.2)*0.25)/3.0)*0.5);
+} else {
+epre = 1.0-exp(-arg); };
+arg = dex;
+if (arg> limit) arg = limit;
+if (arg<-limit) arg =-limit;
+if (fabs(arg)<0.055) {
+emre = arg*(1.0-arg*(1.0-arg*(1.0-arg*(1.0-arg*(1.0-arg*(1.0-arg*(1.0-arg*0.125)/7.0)/6.0)*0.2)*0.25)/3.0)*0.5);
+} else {
+emre = 1.0-exp(-arg); };
+
+/* fprintf(stderr,"%e\n",fabs(fudgef*phi*drho*drho*PI/0.75e-8*Rad*Rad*Rad*FF*SFa*epre/emre/number)); */
+return fabs(fudgef*phi*drho*drho*PI/0.75e-8*Rad*Rad*Rad*FF*SFa*epre/emre/number);
+
+}; /* END OF SUBROUTINE CROSS SECTION */
+
+
+char outofthebox(double *t0, double *t1, double x, double y, double z, double vx, double vy, double vz, double xwidth, double yheight, double zthick
+) {
+double tt[2];
+char   i;
+double t,xx,yy,zz;
+
+i = 0;
+tt[0] = 0.0;
+tt[1] = 0.0;
+
+t = -z/vz;
+xx = x + vx*t;
+yy = y + vy*t;
+if (fabs(x-xx)<=xwidth && fabs(y-yy)<=yheight) {tt[i]=t; i++;};
+if (i>=2) goto stop;
+
+t = (zthick-z)/vz;
+xx = x + vx*t;
+yy = y + vy*t;
+if (fabs(x-xx)<=xwidth && fabs(y-yy)<=yheight) {tt[i]=t; i++;};
+if (i>=2) goto stop;
+
+t = (-0.5*xwidth-x)/vx;
+yy = y + vy*t;
+zz = z + vz*t;
+if (fabs(y-yy)<=yheight && zz>=0.0 && zz<=zthick) {tt[i]=t; i++;};
+if (i>=2) goto stop;
+
+t = ( 0.5*xwidth-x)/vx;
+yy = y + vy*t;
+zz = z + vz*t;
+if (fabs(y-yy)<=yheight && zz>=0.0 && zz<=zthick) {tt[i]=t; i++;};
+if (i>=2) goto stop;
+
+t = (-0.5*yheight-y)/vy;
+xx = x + vx*t;
+zz = z + vz*t;
+if (fabs(x-xx)<=xwidth && zz>=0.0 && zz<=zthick) {tt[i]=t; i++;};
+if (i>=2) goto stop;
+
+t = ( 0.5*yheight-y)/vy;
+xx = x + vx*t;
+zz = z + vz*t;
+if (fabs(x-xx)<=xwidth && zz>=0.0 && zz<=zthick) {tt[i]=t; i++;};
+
+stop:
+
+*t0 = min(tt[0],tt[1]);
+*t1 = max(tt[0],tt[1]);
+
+return i;
+};
+
+
+char propbyt(double t, double *x, double *y, double *z, double vx, double vy, double vz
+) {
+*x += vx*t;
+*y += vy*t;
+*z += vz*t;
+return 0;
+};
+
+%}
+
+
+DECLARE
+%{
+double phase[10][10];   /* Table of different orientations in bulk phase */
+double SigB[21][182];   /* Table of total cross sections from integral */
+double z1[8];
+double z2[8];
+double zt[8];
+
+double Qmin;
+double Qminl;
+double l10;
+double sc_a;
+double sans_a;
+double zthick;
+double poserr;
+
+%}
+
+INITIALIZE
+%{
+double rhosamp,abslensamp,inclensamp,drho;
+
+double ac;
+
+int i;
+
+double  Qmaxo, Qmax, Qstp;
+double  qmaxl;
+int Qno;
+
+int xii,yii,zii;
+int phii, phimax;
+double  rotphi;
+double Sig;
+double sign;
+
+double vzi;
+double phi0;
+
+int     li,lj,phij;
+double  lf,   phif;
+
+double phirrr;
+
+double dvx,dvy,dvz,dvzi;
+double Qx,Qy,Qz;
+
+Qmin = 1e-5;    /* reasonable smallest SANS Q, should be close to zero, but finite */
+Qminl= log10(1e-5);  /* logarithm of Qmin */
+l10  = log(10.0);    /* constant ln(10)   */
+
+sc_a   = max(0.01,min(0.99,sc_aim));
+sans_a = max(0.01,min(0.99,sans_aim));
+
+zthick = zsapph + zsamp + zsilicon;
+
+poserr = 1e-10;
+
+  if (xwidth<=0.0 || yheight<=0.0 || zsapph<=0.0 || zsamp<=0.0 || zsilicon<=0.0 || zsampsurf<=0.0 || zsiliconsurf<=0.0)
+  { exit(fprintf(stderr,"%s:	 sample dimensions negative, so no reasonable size \n", NAME_CURRENT_COMP));
+  };
+
+  if (zsampsurf>0.1*zsamp || zsiliconsurf>0.1*zsilicon)
+  { exit(fprintf(stderr,"%s:	 sample surface layers too thick \n", NAME_CURRENT_COMP));
+  };
+
+  if (phiPS<0.01 ||  phiPS>0.2 || Rad<100.0 || Rad>1000.0)
+  { exit(fprintf(stderr,"%s:	 check phi and Rad parameters, not reasonably chosen \n", NAME_CURRENT_COMP));
+  };
+
+phirrr = (phirot/PI-floor(phirot/PI))*PI;
+
+z1[0] = -1e32;     /* positions of the layer bottom and top */
+z2[0] = 0.0;
+zt[0] =  1e32;
+z1[1] = z2[0];
+z2[1] = zsapph;
+zt[1] = zsapph;
+z1[2] = z2[1];
+z2[2] = z2[1]+zsampsurf;
+zt[2] = zsampsurf;
+z1[3] = z2[2];
+z2[3] = z2[1]+zsamp-zsampsurf;
+zt[3] = zsamp-2.0*zsampsurf;
+z1[4] = z2[3];
+z2[4] = z2[1]+zsamp;
+zt[4] = zsampsurf;
+z1[5] = z2[4];
+z2[5] = z2[4]+zsiliconsurf;
+zt[5] = zsiliconsurf;
+z1[6] = z2[5];
+z2[6] = zthick;
+zt[6] = zsilicon-zsiliconsurf;
+z1[7] = z2[6];
+z2[7] = z2[6]+1e32;
+zt[7] = 1e32;
+
+for (xii = 0; xii<10; xii++) {
+for (yii = 0; yii<10; yii++) {
+phase[xii][yii]=PI*rand01();   }; };
+
+rhosamp = phiPS*rhoPS + (1.0-phiPS)*rhoD2O;
+abslensamp = 1.0/(phiPS/abslenPS+(1.0-phiPS)/abslenD2O);
+inclensamp = 1.0/(phiPS/inclenPS+(1.0-phiPS)/inclenD2O);
+drho       = rhoPS-rhoD2O;
+
+/* CALCULATE TABLE OF NEUTRON CROSS SECTIONS (SANS) FOR 'ALL' WAVELENGTHS  */
+
+sign = 1.0;
+ac = pow(PI/0.1875/fabs(phiPS),1.0/3.0)*fabs(Rad);   /* units Aangstroem */
+
+Qmaxo = 1e10;
+for (li = 1; li<=20; li++) {
+Qmax = min(25.9/fabs(Rad),PI/li);
+if (Qmax<Qmaxo) {
+Qstp = 0.1*PI/ac;
+Qno  = (int)(-floor(-Qmax/Qstp)+0.5);
+Qstp = Qmax/Qno;
+phimax = 180;
+for (phii = 0; phii<=phimax; phii++) {
+rotphi=phii*PI/180.0;
+Qy  = 0.0;
+Sig = 0.0;
+for (xii = 0; xii<Qno; xii++) {
+Qx  = (xii+0.5)*Qstp;
+for (zii = 0; zii<Qno; zii++) {
+Qz  = (zii+0.5)*Qstp;
+dvx=Qx*K2V;
+dvy=Qy*K2V,
+dvz=Qz*K2V;
+dvzi=0.0;
+Sig+=dSigdW(phiPS, Rad, drho, rotphi, dvx, dvy, dvz, dvzi, sign, 20e-10*Rad);
+}; /* zii */
+}; /* xii */
+Sig*=4.0*Qstp*Qstp;
+SigB[li][phii]=Sig;
+}; /* phii */
+
+phii = 0;
+rotphi=phii*PI/180.0;
+Qz  = 0.0;
+Sig = 0.0;
+for (xii = -Qno; xii<Qno; xii++) {
+Qx  = (xii+0.5)*Qstp;
+for (yii = 0; yii<Qno; yii++) {
+Qy  = (yii+0.5)*Qstp;
+dvx=Qx*K2V;
+dvy=Qy*K2V,
+dvz=Qz*K2V;
+dvzi=0.0;
+Sig+=dSigdW(phiPS, Rad, drho, rotphi, dvx, dvy, dvz, dvzi, sign, 20e-10*Rad);
+}; /* yii */
+}; /* xii */
+Sig*=2.0*Qstp*Qstp;
+SigB[li][181]=Sig;
+MPI_MASTER(
+  fprintf(stderr, "total cross section for lambda = %i AA is: %e cm-1\n", li, 0.5/PI*(li*li)*Sig);
+);
+Qmaxo=Qmax;
+} else {
+for (phii=0; phii<=181; phii++) { SigB[li][phii]=SigB[li-1][phii]; };
+ if (li==6) {
+   MPI_MASTER(
+     fprintf(stderr, "total cross section for lambda = %i AA is: %e cm-1\n", li, 0.5/PI*(li*li)*SigB[li][181]);
+   );
+ }
+};
+};
+/* END CROSS SECTION TABLE CALCULATION */
+
+%}
+
+
+TRACE
+%{
+double rhosamp,abslensamp,inclensamp,drho;
+
+int i;
+
+double  Qmaxo, Qmax, Qstp;
+double  qmaxl;
+int Qno;
+
+double Ymax,Xmax,Xsc,phi,theta;
+double Scoh,Sinc,Sinc1,Sinc2,Sincin,S1,Stot,Snorm;
+double SigSamp,SigSsurf;
+double SS1,SS2,SS3,SS4;
+
+int xii,yii,zii;
+int phii, phimax;
+double  rotphi;
+
+double Qxy,Qcnt,wind;
+double Qz;
+double Qm2,Qm2l,Qzd,Qm3,Qm3l,QQ;
+double Sig;
+double snx,arg;
+int NN;
+double SF1,SF2,SF3,SFa;
+double SF3re,SF3im,Sp3re,Sp3im;
+double FF;
+
+double v,k0,lambda,cos2z,cosz;
+double vzi;
+double phi0;
+
+int     li,lj,phij;
+double  lf,   phif;
+double phi1;
+
+double phirrr;
+double cmpabs;
+double sintheta;
+double www,wwi;
+
+double axis_x,axis_y,axis_z,tmp_vx,tmp_vy,tmp_vz;
+double vout_x,vout_y,vout_z,vout_zz,vout_zi,vout_v;
+double dvx,dvy,dvz,dvzi;
+double xiref,beref;
+double sign;
+
+int layerno;
+int iscatt;
+
+double t00,t0,t1;
+double X,Y,Z,VX,VY,VZ,VZI;
+char   intersect;
+double fcut;
+
+double xi[8];
+double beta[8];
+double v2re[8];
+double v2im[8];
+double vv2re[8];
+double vv2im[8];
+double Ot1[8];
+double Ot2[8];
+double In1[8];
+double In2[8];
+double Ott1[8];
+double Ott2[8];
+double Inn1[8];
+double Inn2[8];
+
+phirrr = (phirot/PI-floor(phirot/PI))*PI;
+
+rhosamp = phiPS*rhoPS + (1.0-phiPS)*rhoD2O;
+abslensamp = 1.0/(phiPS/abslenPS+(1.0-phiPS)/abslenD2O);
+inclensamp = 1.0/(phiPS/inclenPS+(1.0-phiPS)/inclenD2O);
+drho       = rhoPS-rhoD2O;
+
+X=x;
+Y=y;
+Z=z;
+VX=vx;
+VY=vy;
+VZ=vz;
+VZI=0.0;
+
+/* intersect = box_intersect(&t00, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick);  */
+intersect = outofthebox(&t00, &t1, X, Y, Z, VX, VY, VZ, xwidth, yheight, zthick);
+
+if (intersect && t00>=0.0) {                /* intersect check */
+  PROP_DT(t00);
+  SCATTER;
+  propbyt(t00,&X,&Y,&Z,VX,VY,VZ);
+/*x  = X;
+  y  = Y;
+  z  = Z;    */
+  vx = VX;
+  vy = VY;
+  vz = VZ;
+  vzi= VZI;
+  iscatt = 1;
+
+  v      = sqrt(VX*VX + VY*VY + VZ*VZ);
+  k0     = v / K2V;
+  lambda = 2.0*PI / k0;
+  vzi    = 0.0;
+  VZI    = 0.0;
+  layerno= 0;
+
+  cmpabs = 0.0;
+
+  if (fabs(Z)<poserr)        { layerno = 1; goto in11; };
+  if (fabs(Z-zthick)<poserr) { layerno = 6; goto in11; };
+
+  if (fabs(fabs(X)-0.5*xwidth)<poserr || fabs(fabs(Y)-0.5*yheight)<poserr) {
+   if (VZ==0.0) {VZ=1e3*poserr; vz=VZ;};
+   if (Z<zsapph)                   {layerno = 1;  goto in1; };
+   if (Z<zsapph+zsamp) {
+    if (Z<zsapph+zsampsurf)        {layerno = 2;  goto in1; };
+    if (Z<zsapph+zsamp-zsampsurf)  {layerno = 3;  goto in1; };
+                                    layerno = 4;  goto in1;
+   };
+   if (Z<zthick+poserr) {
+    if (Z<zsapph+zsamp+zsiliconsurf) {layerno = 5;} else
+                                     {layerno = 6;}; goto in1;
+   };
+   ABSORB;
+   in1:
+   i=0;
+/* fprintf(stderr, "%e %e %e %e %i\n", t0, t1, z1[layerno], t, layerno);   */
+};
+in11:
+/* fprintf(stderr, "%i \n", layerno); */
+
+cosz   = VZ/v;
+cos2z  = cosz*cosz;
+
+if (lambda < 1.0)  { li = 1; lf = 0.0; } else {
+if (lambda>=20.0)  { li =19; lf = 1.0; } else {
+li     = (int)(lambda);
+lf     = lambda-li;                             }; };
+lj     = li+1;
+
+xii = (int)((100.0*X-floor(100.0*X))*10.0);
+yii = (int)((100.0*Y-floor(100.0*Y))*10.0);
+
+if (VY==0.0) { phi0 = 0.5*PI; }          /* perpendicular vector in x,y-plane */
+        else { phi0 = atan(-VX/VY); };
+
+phi0 -= phirrr;
+if (phi0<=-0.5*PI) {phi0+=PI;}; 
+
+phi1  = (phase[xii][yii]-phi0)*180.0/PI;    /* later rotphi = phase[xi,yi] */
+
+phi0 *= -180.0/PI;
+if (phi0<0.0) {phi0 += 180.0;};
+phii = (int)(phi0);
+phij = phii+1;
+if (phij>180) {phij -= 180;};
+phif = phi0-phii;
+
+SigSsurf = ((SigB[li][phii]*(1.0-phif)+SigB[li][phij]*phif)*(1.0-lf)+(SigB[lj][phii]*(1.0-phif)+SigB[lj][phij]*phif)*lf)*(1.0-cos2z)
+         +  (SigB[li][181]*(1.0-lf)+SigB[lj][181]*lf)*cos2z;
+SigSsurf*= 200.0*PI/(k0*k0);
+
+if (phi1<   0.0) {phi1 += 180.0;};
+if (phi1>=180.0) {phi1 -= 180.0;};
+phii = (int)(phi1);
+phij = phii+1;
+if (phij>180) {phij -= 180;};
+phif = phi1-phii;
+
+SigSamp  = ((SigB[li][phii]*(1.0-phif)+SigB[li][phij]*phif)*(1.0-lf)+(SigB[lj][phii]*(1.0-phif)+SigB[lj][phij]*phif)*lf)*(1.0-cos2z)
+         +  (SigB[li][181]*(1.0-lf)+SigB[lj][181]*lf)*cos2z;
+SigSamp *= 200.0*PI/(k0*k0);
+
+/* fprintf(stderr,"%e %e %e %e %e %e %e %e %e %e %e %e\n",xi[1],beta[1],xi[2],beta[2],xi[3],beta[3],xi[4],beta[4],xi[5],beta[5],xi[6],beta[6]); */
+
+xi[0]   = 0.0;   /* 0 to 7, 0 and 7 are air */
+beta[0] = 0.0;   /* rho in units A^-2, abslen in units cm (see NIST SLD calculator) */
+xi[1]   = lambda*lambda*rhosapph/PI;
+beta[1] = lambda*5e-9*(lambda/abslensapph + 1.0/inclensapph)/PI;
+xi[2]   = lambda*lambda*rhosamp/PI;
+beta[2] = lambda*5e-9*(lambda/abslensamp + 1.0/inclensamp + SigSsurf)/PI;
+xi[3]   = lambda*lambda*rhosamp/PI;
+beta[3] = lambda*5e-9*(lambda/abslensamp + 1.0/inclensamp + SigSamp )/PI;
+xi[4]   = lambda*lambda*rhosamp/PI;
+beta[4] = lambda*5e-9*(lambda/abslensamp + 1.0/inclensamp + SigSsurf)/PI;
+xi[5]   = lambda*lambda*rhosiliconsurf/PI;
+beta[5] = lambda*5e-9*(lambda/abslensiliconsurf + 1.0/inclensiliconsurf)/PI;
+xi[6]   = lambda*lambda*rhosilicon/PI;
+beta[6] = lambda*5e-9*(lambda/abslensilicon     + 1.0/inclensilicon    )/PI;
+xi[7]   = 0.0;
+beta[7] = 0.0;
+
+/*
+ fprintf(stderr,"%e %e\n",SigSsurf,SigSamp);
+ fprintf(stderr,"%e %e %e %e %e %e %e %e %e %e %e %e\n",xi[1],beta[1],xi[2],beta[2],xi[3],beta[3],xi[4],beta[4],xi[5],beta[5],xi[6],beta[6]);
+*/
+
+  if (fabs(Z)<poserr)        { 
+   if (VZ<=0.0) {VZ=1e3*poserr;};
+   sintheta = VZ / v;
+   www = complsqrt(-xi[layerno]+sintheta*sintheta,beta[layerno],&wwi);
+   VZI = v * wwi;
+   VZ  = v * www;
+   goto insample;
+};
+
+  if (fabs(Z-zthick)<poserr) {
+   if (VZ>=0.0) {VZ=-1e3*poserr;};
+   sintheta = -VZ / v;
+   www = complsqrt(-xi[layerno]+sintheta*sintheta,beta[layerno],&wwi);
+   VZI = -v * wwi;
+   VZ  = -v * www;
+   goto insample;
+};
+
+  if (fabs(X+0.5*xwidth)<poserr) {     /* surface at -0.5*xwidth */
+   if (VX<=0.0) {VX=1e3*poserr;};
+   sintheta = VX / v;
+   www = complsqrt(-xi[layerno]+sintheta*sintheta,beta[layerno],&wwi);
+   VZI = v * wwi * VX / VZ;
+   VX  = v * www;
+   goto insample;
+};
+
+  if (fabs(X-0.5*xwidth)<poserr) {     /* surface at +0.5*xwidth */
+   if (VX>=0.0) {VX=-1e3*poserr;};
+   sintheta = -VX / v;
+   www = complsqrt(-xi[layerno]+sintheta*sintheta,beta[layerno],&wwi);
+   VZI = -v * wwi * VX / VZ;
+   VX  = -v * www;
+   goto insample;
+};
+
+  if (fabs(Y+0.5*yheight)<poserr) {     /* surface at -0.5*ywidth */
+   if (VY<=0.0) {VY=1e3*poserr;};
+   sintheta = VY / v;
+   www = complsqrt(-xi[layerno]+sintheta*sintheta,beta[layerno],&wwi);
+   VZI = v * wwi * VY / VZ;
+   VY  = v * www;
+/*fprintf(stderr, "%e %e \n", vy,v);
+  fprintf(stderr, "%e %e %e \n", x,y,z); */
+   goto insample;
+};
+
+  if (fabs(Y-0.5*yheight)<poserr) {     /* surface at +0.5*ywidth */
+   if (VY>=0.0) {VY=-1e3*poserr;};
+   sintheta = -VY / v;
+   www = complsqrt(-xi[layerno]+sintheta*sintheta,beta[layerno],&wwi);
+   VZI = -v * wwi * VY / VZ;
+   VY  = -v * www;
+/* fprintf(stderr, "%e %e \n", vy,v);
+   fprintf(stderr, "%e %e %e \n", x,y,z);  */
+   goto insample;
+};
+
+  if (fabs(Z)<poserr)            {     /* surface at z=0         */
+   layerno = 1;
+   if (VZ<=0.0) {VZ=1e3*poserr;};
+   sintheta = VZ / v;
+   www = complsqrt(-xi[layerno]+sintheta*sintheta,beta[layerno],&wwi);
+   VZI = v * wwi;
+   VZ  = v * www;
+   goto insample;
+};
+
+  if (fabs(Z-zthick)<poserr)     {     /* surface at z=zthick    */
+   layerno = 6;
+   if (VZ>=0.0) {VZ=-1e3*poserr;};
+   sintheta = -VZ / v;
+   www = complsqrt(-xi[layerno]+sintheta*sintheta,beta[layerno],&wwi);
+   VZI = -v * wwi;
+   VZ  = -v * www;
+   goto insample;
+};
+  ABSORB;
+
+insample:
+/*x  = X;
+  y  = Y;
+  z  = Z;    */
+  vx = VX;
+  vy = VY;
+  vz = VZ;
+  vzi= VZI;
+
+  v      = sqrt(VX*VX + VY*VY + VZ*VZ + VZI*VZI);
+  k0     = v / K2V;
+  lambda = 2.0*PI / k0;
+
+  cmpabs = (sintheta+www)*(sintheta+www)+wwi*wwi;
+  p *= 4.0*sintheta*sintheta/cmpabs;
+
+  sign  = 1.0;
+  xiref = -2.0*fabs(VZ)  / v;
+  beref =  2.0*     VZI  / v;
+  if (VZ<0.0) {beref=-beref; sign=-1.0;};
+
+/*intersect = box_inteRsect(&t0, &t1, x, y, z-z1[layerno], vx, vy, vz, xwidth, yheight, zt[layerno]);   */
+  intersect = outofthebox(&t0, &t1, X, Y, Z-z1[layerno], VX, VY, VZ, xwidth, yheight, zt[layerno]);
+
+/*fprintf(stderr, "%e %e %e \n", t0, t1, z1[layerno]);*/
+/*if (fabs(fabs(X)-0.5*xwidth)>poserr && fabs(fabs(Y)-0.5*yheight)>poserr && fabs(Z-z1[layerno])>poserr && fabs(Z-z2[layerno])>poserr) ABSORB; */
+  if (fabs(t0*v)>poserr) ABSORB;
+  PROP_DT(t1-t0);
+  SCATTER;
+  propbyt(t1-t0,&X,&Y,&Z,VX,VY,VZ);
+/*x  = X;
+  y  = Y;
+  z  = Z;   */
+  vx = VX;
+  vy = VY;
+  vz = VZ;
+  vzi= VZI;
+  iscatt++;
+  p *= exp(-VZI*VZ*(t1-t0)/K2V);
+
+/*fprintf(stderr, "%e %e %e %e %i %e %e %e\n", t0, t1, z1[layerno], t, layerno, X,Y,Z);   */
+/*fprintf(stderr, "%e %e %e %e %e %e    %i\n", X,Y,Z,VX,VY,VZ,layerno);   */
+
+  if (fabs(fabs(X)-0.5*xwidth)<poserr || fabs(fabs(Y)-0.5*yheight)<poserr) {goto leave;};
+
+/* fprintf(stderr, "passed \n");    */
+/*
+v      = sqrt(VX*VX + VY*VY + VZ*VZ + VZI*VZI);
+k0     = v / K2V;
+lambda = 2.0*PI / k0;                 */
+
+cosz   = VZ/v;
+cos2z  = cosz*cosz;
+
+if (lambda < 1.0)  { li = 1; lf = 0.0; } else {
+if (lambda>=20.0)  { li =19; lf = 1.0; } else {
+li     = (int)(lambda);
+lf     = lambda-li;                             }; };
+lj     = li+1;
+
+xii = (int)((100.0*X-floor(100.0*X))*10.0);
+yii = (int)((100.0*Y-floor(100.0*Y))*10.0);
+
+if (VY==0.0) { phi0 = 0.5*PI; }          /* perpendicular vector in x,y-plane */
+        else { phi0 = atan(-VX/VY); };
+
+phi0 -= phirrr;
+if (phi0<=-0.5*PI) {phi0+=PI;}; 
+
+phi1 = (phase[xii][yii]-phi0)*180.0/PI;    /* later rotphi = phase[xi,yi] */
+
+phi0 *= -180.0/PI;
+if (phi0<0.0) {phi0 += 180.0;};
+phii = (int)(phi0);
+phij = phii+1;
+if (phij>180) {phij -= 180;};
+phif = phi0-phii;
+
+SigSsurf = ((SigB[li][phii]*(1.0-phif)+SigB[li][phij]*phif)*(1.0-lf)+(SigB[lj][phii]*(1.0-phif)+SigB[lj][phij]*phif)*lf)*(1.0-cos2z)
+         +  (SigB[li][181]*(1.0-lf)+SigB[lj][181]*lf)*cos2z;
+SigSsurf*= 200.0*PI/(k0*k0);
+
+if (phi1<   0.0) {phi1 += 180.0;};
+if (phi1>=180.0) {phi1 -= 180.0;};
+phii = (int)(phi1);
+phij = phii+1;
+if (phij>180) {phij -= 180;};
+phif = phi1-phii;
+
+SigSamp  = ((SigB[li][phii]*(1.0-phif)+SigB[li][phij]*phif)*(1.0-lf)+(SigB[lj][phii]*(1.0-phif)+SigB[lj][phij]*phif)*lf)*(1.0-cos2z)
+         +  (SigB[li][181]*(1.0-lf)+SigB[lj][181]*lf)*cos2z;
+SigSamp *= 200.0*PI/(k0*k0);
+
+xi[0]   = 0.0;   /* 0 to 7, 0 and 7 are air */
+beta[0] = 0.0;   /* rho in units A^-2, abslen in units cm (see NIST SLD calculator) */
+xi[1]   = lambda*lambda*rhosapph/PI;
+beta[1] = lambda*5e-9*(lambda/abslensapph + 1.0/inclensapph)/PI;
+xi[2]   = lambda*lambda*rhosamp/PI;
+beta[2] = lambda*5e-9*(lambda/abslensamp + 1.0/inclensamp + SigSsurf)/PI;
+xi[3]   = lambda*lambda*rhosamp/PI;
+beta[3] = lambda*5e-9*(lambda/abslensamp + 1.0/inclensamp + SigSamp )/PI;
+xi[4]   = lambda*lambda*rhosamp/PI;
+beta[4] = lambda*5e-9*(lambda/abslensamp + 1.0/inclensamp + SigSsurf)/PI;
+xi[5]   = lambda*lambda*rhosiliconsurf/PI;
+beta[5] = lambda*5e-9*(lambda/abslensiliconsurf + 1.0/inclensiliconsurf)/PI;
+xi[6]   = lambda*lambda*rhosilicon/PI;
+beta[6] = lambda*5e-9*(lambda/abslensilicon     + 1.0/inclensilicon    )/PI;
+xi[7]   = 0.0;
+beta[7] = 0.0;
+
+Qmax = min(25.9/fabs(Rad),PI/lambda);  /* resonably small angle */
+qmaxl= log10(Qmax);
+Ymax = 0.25*Qmax*Qmax/(k0*k0);
+if (Ymax>=0.9999) Ymax = 1.0;          /* avoid rounding errors */
+Xmax = 1.0 - 2.0*Ymax;
+
+/*
+Scoh = SigSsuf oder SigSamp;    */
+Sinc = 0.25/PI/inclensamp;       /* inclensamp in cm, 1/4pi solid angle normalization */
+/*
+Sinc1= 400.0*PI*     Ymax *Sinc;
+Sinc2= 400.0*PI*(1.0-Ymax)*Sinc;  */
+/*
+S1   = Sinc1 + Scoh;
+Stot = Sinc2 + S1;              */
+
+if (rand01()<=sc_a) {
+
+fcut = max(Ymax,sans_a);
+
+if (rand01()<=fcut) {
+
+Qxy = pow(10.0,Qminl+(qmaxl-Qminl)*rand01());
+if (rand01()<0.5) Qxy = -Qxy;
+p  *= fabs(Qxy/k0*(qmaxl-Qminl))*l10*2.0;
+/* fprintf(stderr,"%e\n",p);  */
+
+Qcnt= fabs(2.6*cosz*k0);                       /* in positive coordinates */
+
+if (2.0*Qcnt > Qmax || Qcnt==0.0) {            /* total reflection out of window */
+Qz  = pow(10.0,Qminl+(qmaxl-Qminl)*rand01());
+if (rand01()>0.5) Qz  = -Qz;
+p  *= fabs(Qz /k0*(qmaxl-Qminl))*l10*2.0;
+} else {
+
+if (Qcnt<Qmax)       {                        /* full in */
+wind= rand01();
+if (0.5*(Qmax-    Qcnt)/Qmax>wind) {
+Qm2 = Qmax-Qcnt;
+Qm2l= log10(Qm2);
+Qzd = pow(10.0,Qminl+(Qm2l -Qminl)*rand01());
+p  *= fabs(Qzd/k0*(Qm2l -Qminl))*l10*2.0*Qmax/(Qmax-Qcnt);
+Qz  = Qcnt+Qzd;
+} else {
+if (0.5*(Qmax-0.5*Qcnt)/Qmax>wind) {
+Qm2 = 0.5*Qcnt;
+Qm2l= log10(Qm2);
+Qzd = pow(10.0,Qminl+(Qm2l -Qminl)*rand01());
+p  *= fabs(Qzd/k0*(Qm2l -Qminl))*l10*4.0*Qmax/Qcnt;
+Qz  = Qcnt-Qzd;
+} else {
+if (0.5                     >wind) {
+Qm2 = 0.5*Qcnt;
+Qm2l= log10(Qm2);
+Qzd = pow(10.0,Qminl+(Qm2l -Qminl)*rand01());
+p  *= fabs(Qzd/k0*(Qm2l -Qminl))*l10*4.0*Qmax/Qcnt;
+Qz  = Qzd;
+} else {
+Qz  =-pow(10.0,Qminl+(qmaxl-Qminl)*rand01());
+p  *= fabs(Qz /k0*(qmaxl-Qminl))*l10*2.0;
+
+}; }; }; } else {                             /* part in */
+wind= rand01();
+if (0.5*(Qmax-0.5*Qcnt)/Qmax>wind) {
+Qm2 = 0.5*Qcnt;
+Qm2l= log10(Qm2);
+Qm3 = Qmax-0.5*Qcnt;
+Qm3l= log10(Qm3);
+Qzd = pow(10.0,Qm3l +(Qm2l -Qm3l )*rand01());
+p  *= fabs(Qzd/k0*(Qm2l -Qm3l ))*l10*2.0*Qmax/(Qmax-0.5*Qcnt);
+Qz  = Qcnt-Qzd;
+} else {
+if (0.5                     >wind) {
+Qm2 = 0.5*Qcnt;
+Qm2l= log10(Qm2);
+Qzd = pow(10.0,Qminl+(Qm2l -Qminl)*rand01());
+p  *= fabs(Qzd/k0*(Qm2l -Qminl))*l10*4.0*Qmax/Qcnt;
+Qz  = Qzd;
+} else {
+Qz  =-pow(10.0,Qminl+(qmaxl-Qminl)*rand01());
+p  *= fabs(Qz /k0*(qmaxl-Qminl))*l10*2.0;
+}; }; }; };
+
+Sincin = 0.0;
+QQ = Qxy*Qxy+Qz*Qz;
+if (QQ<Qmax*Qmax) {Sincin = Sinc;};
+
+if (Qz==0.0) {phi=-0.5*PI*Qxy/fabs(Qxy);} else {
+phi = atan(-Qxy/Qz);                                  };
+if (Qz<0.0) {phi+=PI;};
+theta = 2.0*asin(0.5*sqrt(QQ)/k0);
+
+
+xiref = xi[layerno];
+beref = beta[layerno];
+
+calclayers(xiref, beref, VZ, VZI, v,
+           zt,
+           xi,   beta,
+           v2re, v2im,
+           Ot1,  Ot2,
+           In1,  In2 );
+
+vec_prod(axis_x, axis_y, axis_z, VX, VY, VZ, 0.0, 0.0, -sign);
+rotate(tmp_vx, tmp_vy, tmp_vz, VX, VY, VZ, theta, axis_x, axis_y, axis_z);
+rotate(vout_x, vout_y, vout_z, tmp_vx, tmp_vy, tmp_vz, phi, VX, VY, VZ);
+
+vout_zz = sign*fabs(           vout_z );   /*seems to be ok*/
+vout_zi = sign*fabs(VZI * VZ / vout_zz);
+vout_v  = sqrt(vout_x*vout_x + vout_y*vout_y + vout_zz*vout_zz + vout_zi*vout_zi);; 
+
+calclayers(xiref, beref, vout_zz, vout_zi, vout_v,
+           zt,
+           xi,   beta,
+           vv2re, vv2im,
+           Ott1,  Ott2,
+           Inn1,  Inn2 );
+
+/*
+fprintf(stderr,"%e %e %e %e \n", sign, VZ, vout_z, vout_zz);
+
+fprintf(stderr,"%e %e %e %e %e %e %e %e %e %e %e %e\n", xi[1],beta[1],v2re[1],v2im[1],vv2re[1],vv2im[1],xi[2],beta[2],v2re[2],v2im[2],vv2re[2],vv2im[2]);
+fprintf(stderr,"%e %e %e %e \n", In1[2],In2[2],Inn1[2],Inn2[2]);
+fprintf(stderr,"%e %e %e %e \n", In1[3],In2[3],Inn1[3],Inn2[3]);
+*/
+
+Scoh = 0.0;
+Snorm= 0.0;
+
+rotphi = phirrr;
+
+dvx     = vout_x - VX;
+dvy     = vout_y - VY;
+dvz     = vv2re[2] - v2re[2];
+dvzi    = vv2im[2] - v2im[2];
+SS1   = (dSigdW(phiPS, Rad, drho, rotphi, dvx, dvy, dvz, dvzi, sign, zt[2])+Sincin) * In1[2]*Inn1[2] * zt[2];
+Scoh += SS1;
+
+dvz     = -vv2re[2] - v2re[2];
+dvzi    = -vv2im[2] - v2im[2];
+SS2   = (dSigdW(phiPS, Rad, drho, rotphi, dvx, dvy, dvz, dvzi, sign, zt[2])+Sincin) * In1[2]*Inn2[2] * zt[2];
+Scoh += SS2;
+
+dvz     = vv2re[2] + v2re[2];
+dvzi    = vv2im[2] + v2im[2];
+SS3   = (dSigdW(phiPS, Rad, drho, rotphi, dvx, dvy, dvz, dvzi, sign, zt[2])+Sincin) * In2[2]*Inn1[2] * zt[2];
+Scoh += SS3;
+
+dvz     = -vv2re[2] + v2re[2];
+dvzi    = -vv2im[2] + v2im[2];
+SS4   = (dSigdW(phiPS, Rad, drho, rotphi, dvx, dvy, dvz, dvzi, sign, zt[2])+Sincin) * In2[2]*Inn2[2] * zt[2];
+Scoh += SS4;
+
+Snorm+= (SigSsurf+400.0*PI*Sinc)*zt[2];
+
+/* fprintf(stderr,"layer1 %e %e %e %e\n",SS1,SS2,SS3,SS4); */
+
+rotphi  = phase[xii][yii]+phirrr;
+
+/* dvx     = vout_x - VX;
+   dvy     = vout_y - VY;  */
+dvz     = vv2re[3] - v2re[3];
+dvzi    = vv2im[3] - v2im[3];
+SS1   = (dSigdW(phiPS, Rad, drho, rotphi, dvx, dvy, dvz, dvzi, sign, zt[3])+Sincin) * In1[3]*Inn1[3] * zt[3];
+Scoh += SS1;
+
+dvz     = -vv2re[3] - v2re[3];
+dvzi    = -vv2im[3] - v2im[3];
+SS2   = (dSigdW(phiPS, Rad, drho, rotphi, dvx, dvy, dvz, dvzi, sign, zt[3])+Sincin) * In1[3]*Inn2[3] * zt[3];
+Scoh += SS2;
+
+dvz     = vv2re[3] + v2re[3];
+dvzi    = vv2im[3] + v2im[3];
+SS3   = (dSigdW(phiPS, Rad, drho, rotphi, dvx, dvy, dvz, dvzi, sign, zt[3])+Sincin) * In2[3]*Inn1[3] * zt[3];
+Scoh += SS3;
+
+dvz     = -vv2re[3] + v2re[3];
+dvzi    = -vv2im[3] + v2im[3];
+SS4   = (dSigdW(phiPS, Rad, drho, rotphi, dvx, dvy, dvz, dvzi, sign, zt[3])+Sincin) * In2[3]*Inn2[3] * zt[3];
+Scoh += SS4;
+
+Snorm+= (SigSamp+400.0*PI*Sinc)*zt[3];
+
+/* fprintf(stderr,"layer2 %e %e %e %e\n",SS1,SS2,SS3,SS4); */
+
+rotphi = phirrr;
+
+/* dvx     = vout_x - VX;
+   dvy     = vout_y - VY;  */
+dvz     = vv2re[4] - v2re[4];
+dvzi    = vv2im[4] - v2im[4];
+SS1   = (dSigdW(phiPS, Rad, drho, rotphi, dvx, dvy, dvz, dvzi, sign, zt[4])+Sincin) * In1[4]*Inn1[4] * zt[4];
+Scoh += SS1;
+
+dvz     = -vv2re[4] - v2re[4];
+dvzi    = -vv2im[4] - v2im[4];
+SS2   = (dSigdW(phiPS, Rad, drho, rotphi, dvx, dvy, dvz, dvzi, sign, zt[4])+Sincin) * In1[4]*Inn2[4] * zt[4];
+Scoh += SS2;
+
+dvz     = vv2re[4] + v2re[4];
+dvzi    = vv2im[4] + v2im[4];
+SS3   = (dSigdW(phiPS, Rad, drho, rotphi, dvx, dvy, dvz, dvzi, sign, zt[4])+Sincin) * In2[4]*Inn1[4] * zt[4];
+Scoh += SS3;
+
+dvz     = -vv2re[4] + v2re[4];
+dvzi    = -vv2im[4] + v2im[4];
+SS4   = (dSigdW(phiPS, Rad, drho, rotphi, dvx, dvy, dvz, dvzi, sign, zt[4])+Sincin) * In2[4]*Inn2[4] * zt[4];
+Scoh += SS4;
+
+Snorm+= (SigSsurf+400.0*PI*Sinc)*zt[4];
+
+/* fprintf(stderr,"layer3 %e %e %e %e\n",SS1,SS2,SS3,SS4); */
+/* fprintf(stderr, "before %e %e %e %e %e %e %i yes yes\n", X,Y,Z,VX,VY,VZ,layerno);   */
+
+if (VZ>0.0) {
+if (vout_z<0.0) {
+  vx = 0.0;
+  vy = 0.0;
+  vz = -1e5;
+  if (Z<z2[1]) vz = 1e5;
+  PROP_DT(fabs((Z-z2[1])/vz));
+  SCATTER;
+  Scoh /= Ot1[layerno+1]*Ott1[2]*Snorm;
+  Z = z2[1];
+  VX = vout_x;
+  VY = vout_y;
+  VZ = -fabs(vv2re[1]);
+  VZI= -fabs(vv2im[1]);
+  layerno = 1;
+} else {
+  vx = 0.0;
+  vy = 0.0;
+  vz = 1e5;
+  if (Z>z1[6]) vz = -1e5;
+  PROP_DT(fabs((Z-z1[6])/vz));
+  SCATTER;
+  Scoh /= Ot1[layerno+1]*Ott1[2]*Ott1[2]*Snorm/Inn2[6];
+  Z = z1[6];
+  VX = vout_x;
+  VY = vout_y;
+  VZ = fabs(vv2re[6]);
+  VZI= fabs(vv2im[6]);
+  layerno = 6;
+}; } else {
+if (vout_z>0.0) {
+  vx = 0.0;
+  vy = 0.0;
+  vz = 1e5;
+  if (Z>z1[6]) vz = -1e5;
+  PROP_DT(fabs((Z-z1[6])/vz));
+  SCATTER;
+  Scoh /= Ot1[layerno-1]*Ott1[5]*Snorm;
+  Z = z1[6];
+  VX = vout_x;
+  VY = vout_y;
+  VZ = fabs(vv2re[6]);
+  VZI= fabs(vv2im[6]);
+  layerno = 6;
+} else {
+  vx = 0.0;
+  vy = 0.0;
+  vz = -1e5;
+  if (Z<z2[1]) vz = 1e5;
+  PROP_DT(fabs((Z-z2[1])/vz));
+  SCATTER;
+  Scoh /= Ot1[layerno-1]*Ott1[5]*Ott1[5]*Snorm/Inn2[1];
+  Z = z2[1];
+  VX = vout_x;
+  VY = vout_y;
+  VZ = -fabs(vv2re[1]);
+  VZI= -fabs(vv2im[1]);
+  layerno = 1;
+}; };
+
+/*x  = X;
+  y  = Y;
+  z  = Z;   */
+  vx = VX;
+  vy = VY;
+  vz = VZ;
+  vzi= VZI;
+/*SCATTER;  */
+  iscatt++;
+
+/*
+Scoh = SigSsuf oder SigSamp;
+Sinc = 25.00/PI/inclensamp;
+Sinc1= 400.0*PI*     Ymax *Sinc;
+Sinc2= 400.0*PI*(1.0-Ymax)*Sinc;  */
+/*
+S1   = Sinc1 + Scoh;
+Stot = Sinc2 + S1;     */
+
+/* Scoh *= 1e5;  just for testing  */
+/* fprintf(stderr,"%e %e\n",Scoh,Sincin); */
+
+p  *= 100.0*PI*PI*Scoh/(fcut*sc_a);
+/* fprintf(stderr,"%e %e\n",p,Scoh); */
+
+} else {
+
+Xsc = -1.0+(Xmax+1.0)*rand01();
+p  *= (1.0-Ymax)*(1.0-fcut);
+phi = 2.0*PI*rand01();
+theta = acos(Xsc);
+
+xiref = xi[layerno];
+beref = beta[layerno];
+
+calclayers(xiref, beref, VZ, VZI, v,
+           zt,
+           xi,   beta,
+           v2re, v2im,
+           Ot1,  Ot2,
+           In1,  In2 );
+
+vec_prod(axis_x, axis_y, axis_z, VX, VY, VZ, 0.0, 0.0, 1.0);
+rotate(tmp_vx, tmp_vy, tmp_vz, VX, VY, VZ, theta, axis_x, axis_y, axis_z);
+rotate(vout_x, vout_y, vout_z, tmp_vx, tmp_vy, tmp_vz, phi, VX, VY, VZ);
+
+vout_zz = VZ*fabs(vout_z/VZ);       /* refer to incoming neutron */
+vout_zi = VZI * VZ / vout_zz;
+vout_v  = sqrt(vout_x*vout_x + vout_y*vout_y + vout_z*vout_z);
+
+calclayers(xiref, beref, vout_zz, vout_zi, vout_v,
+           zt,
+           xi,   beta,
+           vv2re, vv2im,
+           Ott1,  Ott2,
+           Inn1,  Inn2 );
+
+Scoh  = (In1[2]+In2[2])*(Inn1[2]+Inn2[2])*zt[2]
+      + (In1[3]+In2[3])*(Inn1[3]+Inn2[3])*zt[3]
+      + (In1[4]+In2[4])*(Inn1[4]+Inn2[4])*zt[4];
+
+/* fprintf(stderr, "before %e %e %e %e %e %e %i yes yes\n", X,Y,Z,VX,VY,VZ,layerno); */
+
+if (VZ>0.0) {
+if (vout_z<0.0) {
+  vx = 0.0;
+  vy = 0.0;
+  vz = -1e5;
+  if (Z<z2[1]) vz = 1e5;
+  PROP_DT(fabs((Z-z2[1])/vz));
+  SCATTER;
+  Scoh /= Ot1[layerno+1]*Ott1[2]*zsamp;
+  Z = z2[1];
+  VX = vout_x;
+  VY = vout_y;
+  VZ = -fabs(vv2re[1]);
+  VZI= -fabs(vv2im[1]);
+  layerno = 1;
+} else {
+  vx = 0.0;
+  vy = 0.0;
+  vz = 1e5;
+  if (Z>z1[6]) vz = -1e5;
+  PROP_DT(fabs((Z-z1[6])/vz));
+  SCATTER;
+  Scoh /= Ot1[layerno+1]*Ott1[2]*Ott1[2]*zsamp/Inn2[6];
+  Z = z1[6];
+  VX = vout_x;
+  VY = vout_y;
+  VZ = fabs(vv2re[6]);
+  VZI= fabs(vv2im[6]);
+  layerno = 6;
+}; } else {
+if (vout_z>0.0) {
+  vx = 0.0;
+  vy = 0.0;
+  vz = 1e5;
+  if (Z>z1[6]) vz = -1e5;
+  PROP_DT(fabs((Z-z1[6])/vz));
+  SCATTER;
+  Scoh /= Ot1[layerno-1]*Ott1[5]*zsamp;
+  Z = z1[6];
+  VX = vout_x;
+  VY = vout_y;
+  VZ = fabs(vv2re[6]);
+  VZI= fabs(vv2im[6]);
+  layerno = 6;
+} else {
+  vx = 0.0;
+  vy = 0.0;
+  vz = -1e5;
+  if (Z<z2[1]) vz = 1e5;
+  PROP_DT(fabs((Z-z2[1])/vz));
+  SCATTER;
+  Scoh /= Ot1[layerno-1]*Ott1[5]*Ott1[5]*zsamp/Inn2[1];
+  Z = z2[1];
+  VX = vout_x;
+  VY = vout_y;
+  VZ = -fabs(vv2re[1]);
+  VZI= -fabs(vv2im[1]);
+  layerno = 1;
+}; };
+
+/*x  = X;
+  y  = Y;
+  z  = Z;  */
+  vx = VX;
+  vy = VY;
+  vz = VZ;
+  vzi= VZI;
+/*SCATTER; */
+  iscatt++;
+
+p  *= Scoh/sc_a;
+
+};  /* coherent or incoherent */
+
+
+} else {    /* reflection */
+
+xiref = xi[layerno];
+beref = beta[layerno];
+
+calclayers(xiref, beref, VZ, VZI, v,
+           zt,
+           xi,   beta,
+           v2re, v2im,
+           Ot1,  Ot2,
+           In1,  In2 );
+
+if (VZ>0.0) {
+  vx = 0.0;
+  vy = 0.0;
+  vz = -1e5;
+  if (Z<z2[1]) vz = 1e5;
+  PROP_DT(fabs((Z-z2[1])/vz));
+  SCATTER;
+  p  *= Ot2[2]/Ot1[layerno+1]/(1.0-sc_a);
+  Z = z2[1];
+  VZ = -fabs(v2re[1]);
+  VZI= -fabs(v2im[1]);
+  layerno = 1;
+} else {
+  vx = 0.0;
+  vy = 0.0;
+  vz = 1e5;
+  if (Z>z1[6]) vz = -1e5;
+  PROP_DT(fabs((Z-z1[6])/vz));
+  SCATTER;
+  p  *= Ot2[5]/Ot1[layerno-1]/(1.0-sc_a);
+  Z = z1[6];
+  VZ = fabs(v2re[6]);
+  VZI= fabs(v2im[6]);
+  layerno = 6;
+};
+
+/*x  = X;
+  y  = Y;
+  z  = Z;   */
+  vx = VX;
+  vy = VY;
+  vz = VZ;
+  vzi= VZI;
+  SCATTER;
+  iscatt++;
+
+};
+
+
+/*fprintf(stderr, "after1 %e %e %e %e %e %e %i yes yes\n", X,Y,Z,VX,VY,VZ,layerno);  */
+
+/*fprintf(stderr, "%e %e %e %e %e %e %e %e %i \n", X,Y,Z,VX,VY,VZ,VZI,p,layerno);   */
+/*fprintf(stderr, "on leave 1\n");  */
+
+  v = sqrt(VX*VX + VY*VY + VZ*VZ + VZI*VZI);
+
+/*intersect = box_intersect(&t0, &t1, x, y, z-z1[layerno], vx, vy, vz, xwidth, yheight, zt[layerno]); */
+  intersect = outofthebox(&t0, &t1, X, Y, Z-z1[layerno], VX, VY, VZ, xwidth, yheight, zt[layerno]);
+/*if (fabs(fabs(X)-0.5*xwidth)>poserr && fabs(fabs(Y)-0.5*yheight)>poserr && fabs(Z-z1[layerno])>poserr && fabs(Z-z2[layerno])>poserr) ABSORB; */
+/* fprintf(stderr, "after2 %i %e %e %e\n", layerno,t0,t1,v);  */
+  if (fabs(t0*v)>poserr) ABSORB;
+  PROP_DT(t1-t0);
+  SCATTER;
+  propbyt(t1-t0,&X,&Y,&Z,VX,VY,VZ);
+/* fprintf(stderr, "after3 %e %e %e %e %e %e %i yes yes\n", X,Y,Z,VX,VY,VZ,layerno);   */
+/*x  = X;
+  y  = Y;
+  z  = Z;  */
+  vx = VX;
+  vy = VY;
+  vz = VZ;
+  vzi= VZI;
+  iscatt++;
+  p *= exp(-VZI*VZ*(t1-t0)/K2V);
+
+leave:
+
+/* fprintf(stderr, "on leave 2\n");  */
+
+  v = sqrt(VX*VX + VY*VY + VZ*VZ + VZI*VZI);
+
+  if (fabs(Z)<poserr)        { 
+   if (VZ>=0.0) {VZ=-1e3*poserr; vz=VZ;};
+   sintheta = -VZ / v;
+   www = complsqrt(xi[layerno]+sintheta*sintheta,-beta[layerno],&wwi);
+   cmpabs = sqrt(VZ*VZ+VZI*VZI);
+   if (wwi>=0.0) {
+   VZ  =-v * (www * vz - wwi * vzi) / cmpabs;
+   VZI = v * (wwi * vz + www * vzi) / cmpabs; } else {
+   VZ  = v * (www * vz - wwi * vzi) / cmpabs;
+   VZI =-v * (wwi * vz + www * vzi) / cmpabs; };
+   goto outsample;
+};
+
+  if (fabs(Z-zthick)<poserr) {
+   if (VZ<=0.0) {VZ=1e3*poserr; vz=VZ;};
+   sintheta = VZ / v;
+   www = complsqrt(xi[layerno]+sintheta*sintheta,-beta[layerno],&wwi);
+   cmpabs = sqrt(VZ*VZ+VZI*VZI);
+   if (wwi>=0.0) {
+   VZ  =-v * (www * vz - wwi * vzi) / cmpabs;
+   VZI = v * (wwi * vz + www * vzi) / cmpabs; } else {
+   VZ  = v * (www * vz - wwi * vzi) / cmpabs;
+   VZI =-v * (wwi * vz + www * vzi) / cmpabs; };
+   goto outsample;
+};
+
+  if (fabs(X+0.5*xwidth)<poserr) {     /* surface at -0.5*xwidth */
+   if (VX>=0.0) {VX=-1e3*poserr; vx=VX;};
+   sintheta = -VX / v;
+   www = complsqrt(xi[layerno]+sintheta*sintheta,-beta[layerno],&wwi);
+   cmpabs = sqrt(VX*VX+VZI*VZI*VZ*VZ/(VX*VX));
+   if (wwi>=0.0) {
+   VX  =-v * (www * vx - wwi * vzi * vz / vx) / cmpabs;
+   VZI = v * (wwi * vx + www * vzi * vz / vx) * vx / (vz*cmpabs); } else {
+   VX  = v * (www * vx - wwi * vzi * vz / vx) / cmpabs;
+   VZI =-v * (wwi * vx + www * vzi * vz / vx) * vx / (vz*cmpabs); };
+   goto outsample;
+};
+
+  if (fabs(X-0.5*xwidth)<poserr) {     /* surface at +0.5*xwidth */
+   if (VX<=0.0) {VX=1e3*poserr; vx=VX;};
+   sintheta = VX / v;
+   www = complsqrt(xi[layerno]+sintheta*sintheta,-beta[layerno],&wwi);
+   cmpabs = sqrt(VX*VX+VZI*VZI*VZ*VZ/(VX*VX));
+   if (wwi>=0.0) {
+   VX  =-v * (www * vx - wwi * vzi * vz / vx) / cmpabs;
+   VZI = v * (wwi * vx + www * vzi * vz / vx) * vx / (vz*cmpabs); } else {
+   VX  = v * (www * vx - wwi * vzi * vz / vx) / cmpabs;
+   VZI =-v * (wwi * vx + www * vzi * vz / vx) * vx / (vz*cmpabs); };
+   goto outsample;
+};
+
+  if (fabs(Y+0.5*yheight)<poserr) {     /* surface at -0.5*ywidth */
+   if (VY>=0.0) {VY=-1e3*poserr; vy=VY;};
+   sintheta = -VY / v;
+   www = complsqrt(xi[layerno]+sintheta*sintheta,-beta[layerno],&wwi);
+   cmpabs = sqrt(VY*VY+VZI*VZI*VZ*VZ/(VY*VY));
+   if (wwi>=0.0) {
+   VY  =-v * (www * vy - wwi * vzi * vz / vy) / cmpabs;
+   VZI = v * (wwi * vy + www * vzi * vz / vy) * vy / (vz*cmpabs); } else {
+   VY  = v * (www * vy - wwi * vzi * vz / vy) / cmpabs;
+   VZI =-v * (wwi * vy + www * vzi * vz / vy) * vy / (vz*cmpabs); };
+   goto outsample;
+};
+
+  if (fabs(Y-0.5*yheight)<poserr) {     /* surface at +0.5*ywidth */
+   if (VY<=0.0) {VY=1e3*poserr; vy=VY;};
+   sintheta = VY / v;
+   www = complsqrt(xi[layerno]+sintheta*sintheta,-beta[layerno],&wwi);
+   cmpabs = sqrt(VY*VY+VZI*VZI*VZ*VZ/(VY*VY));
+   if (wwi>=0.0) {
+   VY  =-v * (www * vy - wwi * vzi * vz / vy) / cmpabs;
+   VZI = v * (wwi * vy + www * vzi * vz / vy) * vy / (vz*cmpabs); } else {
+   VY  = v * (www * vy - wwi * vzi * vz / vy) / cmpabs;
+   VZI =-v * (wwi * vy + www * vzi * vz / vy) * vy / (vz*cmpabs); };
+   goto outsample;
+};
+
+  if (fabs(Z)<poserr)            {     /* surface at z=0         */
+   if (VZ>=0.0) {VZ=-1e3*poserr; vz=VZ;};
+   sintheta = -VZ / v;
+   www = complsqrt(xi[layerno]+sintheta*sintheta,-beta[layerno],&wwi);
+   cmpabs = sqrt(VZ*VZ+VZI*VZI);
+   if (wwi>=0.0) {
+   VZ  =-v * (www * vz - wwi * vzi) / cmpabs;
+   VZI =-v * (wwi * vz + www * vzi) / cmpabs; } else {
+   VZ  = v * (www * vz - wwi * vzi) / cmpabs;
+   VZI = v * (wwi * vz + www * vzi) / cmpabs; };
+   goto outsample;
+};
+
+  if (fabs(Z-zthick)<poserr)     {     /* surface at z=zthick    */
+   if (VZ<=0.0) {vz=1e3*poserr; vz=VZ;};
+   sintheta = vz / v;
+   www = complsqrt(xi[layerno]+sintheta*sintheta,-beta[layerno],&wwi);
+   cmpabs = sqrt(VZ*VZ+VZI*VZI);
+   if (wwi>=0.0) {
+   VZ  =-v * (www * vz - wwi * vzi) / cmpabs;
+   VZI =-v * (wwi * vz + www * vzi) / cmpabs; } else {
+   VZ  = v * (www * vz - wwi * vzi) / cmpabs;
+   VZI = v * (wwi * vz + www * vzi) / cmpabs; };
+   goto outsample;
+};
+ABSORB;
+
+outsample:
+/*fprintf(stderr, "%e %e %e %e %e %e %i \n", X,Y,Z,VX,VY,VZ,layerno);  */
+/*x  = X;
+  y  = Y;
+  z  = Z;   */
+  vx = VX;
+  vy = VY;
+  vz = VZ;
+  vzi= VZI;
+/*SCATTER;  */
+/*i=0;      */
+};       /* end intersect check */
+
+
+%}
+
+MCDISPLAY
+%{
+  double radius = 0;
+  double h = 0;
+  
+  {
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin =  0.0;
+    double zmax =  zthick;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
+
+%}
+END

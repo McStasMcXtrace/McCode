@@ -268,6 +268,8 @@ extern int parse_restricted;
 extern Symtab read_components;
 /* Verbose parsing/code generation */
 extern char verbose;
+/* Lint mode */
+extern char lint;
 /* Will store component instance for PREVIOUS reference */
 extern char embed_instrument_file;
 /* Will store component instance for PREVIOUS reference */

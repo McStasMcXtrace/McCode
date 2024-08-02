@@ -13,7 +13,7 @@ from . import mccode_config
 
 class McDisplayReader(object):
     ''' High-level trace manager '''
-    def __init__(self, instr=None, inspect=None, default=None, n=None, dir=None, debug=False, options=None, **kwds):
+    def __init__(self, instr=None, inspect=None, default=False, n=300, dir=None, debug=False, options=None, trace=1, **kwds):
         ext = mccode_config.platform["EXESUFFIX"]
 
         if instr is None or ('.instr' not in instr and ext not in instr):
@@ -23,7 +23,7 @@ class McDisplayReader(object):
         # assemble command
         mcruncmd = str(Path(mccode_config.directories['bindir'],mccode_config.configuration['MCRUN']))
         
-        cmd = f"{mcruncmd} {instr} --no-output-files --trace --ncount={300 if n is None else n}"
+        cmd = f"{mcruncmd} {instr} --no-output-files --trace={trace} --ncount={n}"
 
         if dir:
             cmd = cmd + ' --dir=' + dir
@@ -34,7 +34,7 @@ class McDisplayReader(object):
         self.debug = debug
         self.count = n
         self.cmd = cmd
-        self.pipeman = McrunPipeMan(cmd, inspect=inspect, send_enter=False if default is None else default)
+        self.pipeman = McrunPipeMan(cmd, inspect=inspect, send_enter=default)
     
     def read_instrument(self):
         ''' starts a pipe to mcrun given cmd, waits for instdef and reads, returning the parsed instrument '''

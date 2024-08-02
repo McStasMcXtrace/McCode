@@ -49,6 +49,9 @@ macro(installMCCODE)
   set(CPACK_DEBIAN_PACKAGE_CONFLICTS     "${FLAVOR}-2.1rc1")
   set(CPACK_DEBIAN_PACKAGE_SUGGESTS      "")
 
+  ## FreeBSD
+  set(CPACK_FREEBSD_PACKAGE_LICENSE "GPLv3")
+
   ## NSIS
   set(CPACK_NSIS_PACKAGE_NAME "${MCCODE_STRING}")
   set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING}")
@@ -312,7 +315,6 @@ macro(installMCCODE)
     work/src/debug.c
     work/src/file.c
     work/src/list.c
-    work/src/mccode-pygen.h
     work/src/memory.c
     work/src/port.c
     work/src/port.h
@@ -382,12 +384,12 @@ macro(installMCCODE)
 
   if(WINDOWS)
     # Generate and install Windows setup scripts
-    foreach (name mccodeenv.bat mccodeenv.m mccodego.bat mccodetest.bat)
+    foreach (name env.bat env.m go.bat test.bat)
       configure_file(
-        cmake/support/run-scripts/${name}.in
-        work/support/${name}
+        cmake/support/run-scripts/mccode${name}.in
+        work/support/${FLAVOR}${name}
         )
-      install(PROGRAMS ${WORK}/support/${name} DESTINATION "${DEST_BINDIR}")
+      install(PROGRAMS ${WORK}/support/${FLAVOR}${name} DESTINATION "${DEST_BINDIR}")
     endforeach()
 
     configure_file(
@@ -397,7 +399,7 @@ macro(installMCCODE)
     install(PROGRAMS ${WORK}/support/${FLAVOR}-labenv.bat DESTINATION "${DEST_BINDIR}")
 
     # Python/Perl related batches special handling
-    foreach (name run.bat doc.bat test.bat viewtest.bat resplot.bat plot.bat display.bat gui.bat guistart.bat plot-pyqtgraph.bat plot-matplotlib.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-mantid.bat)
+    foreach (name run.bat doc.bat test.bat viewtest.bat resplot.bat plot.bat display.bat gui.bat guistart.bat plot-pyqtgraph.bat plot-matplotlib.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-matplotlib.bat display-mantid.bat)
       configure_file(
 	      cmake/support/run-scripts/${name}.in
 	      work/support/${MCCODE_PREFIX}${name}

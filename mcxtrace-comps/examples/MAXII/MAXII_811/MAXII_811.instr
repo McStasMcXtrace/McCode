@@ -41,6 +41,9 @@
 * ATT1:    [ ]   Should attenuation filter 1 be in the beam?
 * ATT2:    [ ]   Should attenuation filter 2 be in the beam?
 * ATT3:    [ ]   Should attenuation filter 3 be in the beam?
+* XAFS:    [ ]   Flag to activate/inactivate the XAFS station
+* xafs_h:  [m]   XAFS station horizontal slit opening
+* xafs_v:  [m]   XAFS station vertical   slit opening
 
 * %Link
 * http://www.maxlab.lu.se/beamlines/bli811/

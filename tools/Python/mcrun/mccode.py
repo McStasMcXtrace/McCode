@@ -165,8 +165,10 @@ class McStas:
 
         LOG.info('Recompiling: %s', self.binpath)
 
-        # Setup cflags
-        cflags = ['-lm']  # math library
+        # Setup cflags, use -lm anywhere else than Windows-conda with cl.exe
+        cflags = ''
+        if not os.environ.get('CONDA_PREFIX') and "cl.exe" in mccode_config.compilation['CC'].lower():
+            cflags += '-lm ' # math library
 
         # Special support for conda environment with compilers included. To be
         # conservative we (for now?) only apply this when both CONDA_PREFIX and
@@ -174,36 +176,52 @@ class McStas:
         # of CFLAGS):
         if os.environ.get('CONDA_PREFIX'):
             if os.environ.get('LDFLAGS'):
-                cflags += lexer.split( os.environ.get('LDFLAGS') )
+                cflags += os.environ.get('LDFLAGS') + " "
             if os.environ.get('CFLAGS'):
-                cflags += lexer.split( os.environ.get('CFLAGS') )
+                cflags += os.environ.get('CFLAGS') + " "
+
             # Special handling of NVIDIA's OpenACC-aware compiler inside a CONDA env,
             # remove certain unsupported flags:
             if self.options.openacc and 'nvc' in mccode_config.compilation['OACC']:
-                Cflags = lexer.join(cflags)
+                Cflags = cflags
                 Cflags=Cflags.replace('-march=nocona', '')
                 Cflags=Cflags.replace('-ftree-vectorize', '')
                 Cflags=Cflags.replace('-fstack-protector-strong', '')
                 Cflags=Cflags.replace('-fno-plt', '')
                 Cflags=Cflags.replace('-ffunction-sections', '')
                 Cflags=Cflags.replace('-pipe', '')
-                cflags=lexer.split(Cflags)
+                cflags=Cflags
 
-        # Parse for instances of CMD() ENV() GETPATH() in the loaded CFLAG entries
-        cflags += [self.options.mpi and mccodelib.cflags.evaluate_dependency_str(mccode_config.compilation['MPIFLAGS'],
-                                                                                 options.verbose) or '']  # MPI
-        cflags += [
-            self.options.openacc and mccodelib.cflags.evaluate_dependency_str(mccode_config.compilation['OACCFLAGS'],
-                                                                              options.verbose) or ' ']  # OpenACC
-        cflags += [self.options.format.lower() == 'nexus' and mccodelib.cflags.evaluate_dependency_str(
-            mccode_config.compilation['NEXUSFLAGS'], options.verbose) or ' ']  # NeXus
-        cflags += [self.options.funnel and '-DFUNNEL' or ' ']  # Funneling
-        cflags += [self.options.D1 is not None and "-D" + self.options.D1 or ' ']  # DEFINE1
-        cflags += [self.options.D2 is not None and "-D" + self.options.D2 or ' ']  # DEFINE2
-        cflags += [self.options.D3 is not None and "-D" + self.options.D3 or ' ']  # DEFINE3
+        # Parse for instances of CMD() ENV() GETPATH() in the loaded CFLAG entries using fct. evaluate_dependency_str
+        
+        # MPI
+        if self.options.mpi: 
+            cflags += mccodelib.cflags.evaluate_dependency_str(mccode_config.compilation['MPIFLAGS'],
+                                                                                 options.verbose) + " "
+        # OpenACC
+        if self.options.openacc: 
+            cflags += mccodelib.cflags.evaluate_dependency_str(mccode_config.compilation['OACCFLAGS'],
+                                                                              options.verbose) + " "
+        # NeXus
+        if self.options.format.lower() == 'nexus':
+            cflags += mccodelib.cflags.evaluate_dependency_str(
+            mccode_config.compilation['NEXUSFLAGS'], options.verbose)  + " "
 
+        # Funneling
+        if self.options.funnel:
+            cflags += ' -DFUNNEL '                                                               
+        
+        # Commandline -D flags
+        if self.options.D1 is not None:
+            cflags += self.options.D1 + " "
+        if self.options.D2 is not None:
+            cflags += self.options.D2 + " "
+        if self.options.D3 is not None:
+            cflags += self.options.D3 + " "       
+
+        # Add "standard CFLAGS" or "no CFLAGS" if not openacc
         if not self.options.openacc:
-            cflags += options.no_cflags and ['-O0'] or lexer.split(mccode_config.compilation['CFLAGS'])  # cflags
+            cflags += options.no_cflags and ['-O0'] + " " or mccode_config.compilation['CFLAGS'] + " " # cflags
 
         # Look for CFLAGS in the generated C code
         ccode = open(self.cpath, 'rb')
@@ -223,14 +241,19 @@ class McStas:
                 # Insert NEXUSFLAGS if instrument/comps request this
                 flags = re.sub(r'\@NEXUSFLAGS\@', mccode_config.compilation['NEXUSFLAGS'], flags)
 
+                # Insert GSLFLAGS if instrument/comps request this
+                flags = re.sub(r'\@GSLFLAGS\@', mccode_config.compilation['GSLFLAGS'], flags)
+
+                # Insert XRLFLAGS if instrument/comps request this (McXtrace only)
+                flags = re.sub(r'\@XRLFLAGS\@', mccode_config.compilation['XRLFLAGS'], flags)
+
                 # Support for legacy @MCCODE_LIB@ symbol, with Unix-slashes
                 flags = re.sub(r'\@MCCODE_LIB\@', re.sub(r'\\', '/', MCCODE_LIB), flags)
 
                 # Support CMD(..) and ENV(..) in cflags:
                 flags = mccodelib.cflags.evaluate_dependency_str(flags, options.verbose)
 
-                flags = lexer.split(flags)
-                cflags += flags
+                cflags += flags + " "
 
             counter += 1
             if (counter > 20):
@@ -238,10 +261,36 @@ class McStas:
 
         if any("OPENACC" in cf for cf in cflags):
             if any("NeXus" in cf for cf in cflags):
-                cflags += ['-D__GNUC__']
-                
-        # Compiler optimisation
-        args = ['-o', self.binpath, self.cpath] + cflags
+                cflags += '-D__GNUC__'+ " "
+
+        # cl.exe under conda needs the linking flags at the end...
+        if os.environ.get('CONDA_PREFIX') and "cl.exe" in mccode_config.compilation['CC'].lower():
+            libflags = []
+            otherflags = []
+            for flag in lexer.split(cflags):
+                # /link /LIBPATH or .lib file means linking flag
+                if str(flag).lower().startswith("/l") or str(flag).lower().endswith(r'.lib'):
+                    if not(flag.startswith("/link")):
+                        libflags.append(flag)
+                # Everthing else
+                else:
+                    if flag.startswith("-std="): # -std
+                        flag.replace("-std=","/std:")
+                    if flag.startswith("-D"): # -D defines
+                        flag.replace("-D","/D")
+                    if flag.startswith("-U"): # -U undefines
+                        flag.replace("-U","/U")
+                    otherflags.append(flag)
+
+            cflags = lexer.join(otherflags) + " /link " + lexer.join(libflags)
+
+        # A final check for presence of CONDA_PREFIX strings
+        if os.environ.get('CONDA_PREFIX'):
+            if "${CONDA_PREFIX}" in cflags:
+                cflags=cflags.replace("${CONDA_PREFIX}",os.environ.get('CONDA_PREFIX'))
+
+        # Final assembly of compiler commandline
+        args = ['-o', self.binpath, self.cpath] + lexer.split(cflags)
         Process(lexer.quote(options.cc)).run(args)
 
     def run(self, pipe=False, extra_opts=None, override_mpi=None):
@@ -252,17 +301,18 @@ class McStas:
         options = self.options
 
         # Handle proxy options with values
-        proxy_opts_val = ['seed', 'ncount', 'dir', 'format', 'vecsize', 'numgangs', 'gpu_innerloop', 'bufsiz']
+        proxy_opts_val = ['trace', 'seed', 'ncount', 'dir', 'format', 'vecsize', 'numgangs', 'gpu_innerloop', 'bufsiz']
         proxy_opts_val.extend(('meta-defined', 'meta-type', 'meta-data'))
+
         for opt in proxy_opts_val:
             # try extra_opts before options
             default = getattr(options, opt.replace('-', '_'))
             val = extra_opts.get(opt, default)
             if val is not None and val != '':
-                args.extend([f'--{opt}', str(val)])
+                args.extend([f'--{opt}=' + str(val)])
 
         # Handle proxy options without values (flags)
-        proxy_opts_flags = ['trace', 'no-output-files', 'info', 'list-parameters', 'meta-list']
+        proxy_opts_flags = ['no-output-files', 'info', 'list-parameters', 'meta-list']
         if mccode_config.configuration["MCCODE"] == 'mcstas':
             proxy_opts_flags.append('gravitation')
 
@@ -287,7 +337,16 @@ class McStas:
         # If this is McStas, if format is NeXus and --IDF requested, call the XML-generator
         if mccode_config.configuration["MCCODE"] == 'mcstas' and not self.options.info:
             if self.options.format.lower() == 'nexus' and self.options.IDF:
-                Process(mccode_config.configuration['IDFGEN'] + " " + self.path).run(args, pipe=pipe)
+                idfargs=[]
+                for arg in args:
+                    if '--trace' in arg:
+                        idfargs.append('--trace=1')
+                    elif '--ncount' in arg:
+                        idfargs.append('--ncount=0')
+                    else:
+                        idfargs.append(arg)
+
+                Process(mccode_config.configuration['IDFGEN'] + " " + self.path).run(idfargs, pipe=pipe)
 
         mpi = self.options.use_mpi
         if override_mpi or override_mpi is None and mpi:
@@ -306,7 +365,7 @@ class McStas:
             if self.options.machines:
                 mpi_flags = mpi_flags + ['-machinefile', self.options.machines]
             if self.options.openacc and not os.name == 'nt':
-                mpi_flags = mpi_flags + [mccode_config.configuration['MCCODE_LIB_DIR'] + '/bin/acc_gpu_bind']
+                mpi_flags = mpi_flags + [mccode_config.directories['bindir'] + '/' + mccode_config.configuration['MCCODE'] + '-acc_gpu_bind']
             args = mpi_flags + [self.binpath] + args
 
         return Process(binpath).run(args, pipe=pipe)

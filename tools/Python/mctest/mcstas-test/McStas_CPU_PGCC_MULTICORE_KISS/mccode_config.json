@@ -20,6 +20,8 @@
     "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
     "MPIFLAGS": "-DUSE_MPI -lmpi",
     "OACCFLAGS": "-ta=multicore -Minfo=accel -DOPENACC",
+    "GSLFLAGS": "-lgsl -lgslcblas",
+    "XRLFLAGS": "",
     "CC": "nvc",
     "OACC": "nvc",
     "MPICC": "mpicc",

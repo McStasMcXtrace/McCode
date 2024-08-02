@@ -77,8 +77,7 @@ TRACE
 
 MCDISPLAY
 %{
-  
-  box(xm, ym, zm, xw, yh, zt);
+  box(xm, ym, zm, xw, yh, zt,0, 0, 1, 0);
 %}
 
 END

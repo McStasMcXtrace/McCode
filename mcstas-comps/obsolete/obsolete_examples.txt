@@ -30,15 +30,11 @@ Virtual_mcnp_input is used in 1 example(s):
 ---------------------------------------
 Virtual_mcnp_output is used in 0 example(s):
 ---------------------------------------
-Virtual_mcnp_ss_Guide is used in 1 example(s):
-- Test_SSR_SSW_Guide.instr
+Virtual_mcnp_ss_Guide is used in 0 example(s):
 ---------------------------------------
-Virtual_mcnp_ss_input is used in 2 example(s):
-- Test_SSR_SSW.instr
-- Test_SSR_SSW_Guide.instr
+Virtual_mcnp_ss_input is used in 0 example(s):
 ---------------------------------------
-Virtual_mcnp_ss_output is used in 1 example(s):
-- Test_SSR_SSW.instr
+Virtual_mcnp_ss_output is used in 0 example(s):
 ---------------------------------------
 Virtual_output is used in 8 example(s):
 - Vin_test.instr

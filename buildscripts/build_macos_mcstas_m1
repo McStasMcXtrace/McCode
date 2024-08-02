@@ -15,12 +15,10 @@ export MCVERSION=${1}
 # This is an app bundle being built, but non-relocatable.
 export MCINSTALL_PREFIX=/Applications/McStas-${MCVERSION}.app/
 ./mkdist mcstas-app ${MCVERSION} support/MacOSX/McCode.app/ "" mac-silicon "" -- OSXapp
-# hack to ensure the silicon app is opened arch -arm64
-sed -i.bak s+/bin/bash+/usr/bin/arch\ -arm64\ /bin/bash+ $MCINSTALL_PREFIX/Contents/MacOS/mccodegui
 
 # For the actual mcstas part, the packages need a 'deep' PREFIX
 export MCINSTALL_PREFIX=/Applications/McStas-${MCVERSION}.app/Contents/Resources
-# 64-bit Mac OS
+# 64-bit mac-silicon OS
 WORK=`pwd`
 
 
@@ -31,15 +29,15 @@ echo "* Downloading python dependencies to embedded miniconda *"
 echo "*********************************************************"
 echo
 
-conda env create -p ${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3 --file environment.yml
-
-eval "$(conda shell.bash hook)"
-conda activate ${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3
-
-# Temporary workaround for issue with conda...
-if [ ! -f ${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3/lib/librhash.0.dylib ]; then
-    ln -sf ${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3/lib/librhash.1.dylib ${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3/lib/librhash.0.dylib
+if [ -e Miniforge3-$(uname)-$(uname -m).sh ]; then
+  rm -f Miniforge3-$(uname)-$(uname -m).sh
 fi
+curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+chmod a+x Miniforge3-$(uname)-$(uname -m).sh
+./Miniforge3-$(uname)-$(uname -m).sh -p ${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3/ -b
+eval "$(${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3/bin/conda shell.bash hook)"
+
+CONDA_NO_PLUGINS=true mamba env update --name base --file environment.yml
 
 cd $WORK
 
@@ -64,14 +62,6 @@ cd $WORK
 ./mkdist mcstas-clusterscripts ${MCVERSION} tools/cluster-scripts/ "" mac-silicon "" -- OSXapp
 ./mkdist mcstas-manuals ${MCVERSION} docpkg/manuals/mcstas/ "" mac-silicon "" -- OSXapp
 
-cd 3rdparty/nexus-code
-if [ -d build ]; then
-    rm -rf build
-fi
-mkdir -p build; cd build
-cmake -DCMAKE_INSTALL_PREFIX=/Applications/McStas-${MCVERSION}.app/Contents/Resources/mcstas/${MCVERSION}/ -DHDF5_ROOT=/Applications/McStas-${MCVERSION}.app/Contents/Resources/mcstas/${MCVERSION}/miniconda3/ -DCMAKE_MACOSX_RPATH=ON -DCMAKE_INSTALL_RPATH=/Applications/McStas-${MCVERSION}.app/Contents/Resources/mcstas/${MCVERSION}/lib  ..
-make install
-cd $WORK
 
 # Copy in the mpicc snippets
 cp support/MacOSX/mpicc-wrappers/* $MCINSTALL_PREFIX/mcstas/${MCVERSION}/bin
@@ -85,20 +75,6 @@ python ${MCDOC} -i
 
 # Hack to make openmpi from the conda env available on Big Sur and later
 ln -s $MCINSTALL_PREFIX/mcstas/${MCVERSION}/miniconda3/bin/mpi* $MCINSTALL_PREFIX/mcstas/${MCVERSION}/bin/
-
-# Adapt McStasScript to bundle version
-MCSCONFIG=`find ${MCINSTALL_PREFIX}/mcstas/${MCVERSION}/miniconda3/lib -type d -name mcstasscript`
-MCSCONFIG=${MCSCONFIG}/configuration.yaml
-echo McStasScript config is found in ${MCSCONFIG}
-
-echo "other:" > ${MCSCONFIG}
-echo "  characters_per_line: 85" >> ${MCSCONFIG}
-echo "paths:" >> ${MCSCONFIG}
-echo "  mcrun_path: /Applications/McStas-${MCVERSION}.app/Contents/Resources/mcstas/${MCVERSION}/bin" >> ${MCSCONFIG}
-echo "  mcstas_path: /Applications/McStas-${MCVERSION}.app/Contents/Resources/mcstas/${MCVERSION}" >> ${MCSCONFIG}
-echo  >> ${MCSCONFIG}
-
-cat ${MCSCONFIG} 
 
 mkdir -p dist
 # Move the App bundle back to the dist - or keep it in /Applications?

@@ -35,27 +35,27 @@
 *
 * %Parameters
 * Input parameters:
-* initial_state: ( ) Which state is Molecule_2state in for t<delta_t? Useful for modelling something that changes state slowly.
-* form_factors:  ( ) File from which to read atomic form factors. Defualt amounts to use the one shipped with McXtrace.
-* state_0_file:  ( ) Isotropic scattering factors (parameterized by q), or atom positions are specified for state 0.
-* state_1_file:  ( ) Isotropic scattering factors (parameterized by q), or atom positions are specified for state 1.
-* nq:            ( ) Number of q-bins if F is to be computed from atom positions (Debye formalism).
-* material_datafile: ( ) Where to read f1 and f2 factors from in order to handle absorption.
-* delta_t:       (s) Delay between the exciting event t=0. delay is negative, i.e. delta_t>0 means the exciting event happens before t=0.
-* excitation_yield: ( ) Mean fraction of molecules that get excited.
-* t_relax:       (s) Mean relaxation time (into state 0) of excited molecules.
-* psimin:         (rad) Minimum scattering angle off the optical axis.
-* psimax:         (rad) Maximum scattering angle off the optical axis.
-* etamin:         (rad) Minimum scattering angle around the optical axis.
-* etamax:         (rad) Maximum scattering angle around the optical axis.
-* radius:         (m) Radius of cylindrical of spherical sample.
-* xwidth:         (m) Width of rectangular sample.
-* yheight:        (m) Height of rectangular or cylindrical sample.
-* zdepth:         (m) Depth (thickness) of rectangular sample.
-* concentration:  (m) Concentration or packing factor of sample.
-* p_transmit:     (m) Fraction of statistics devoted to sample direct (unscattered) beam.
-* q_parametric:   ( ) 0: Assume that datafiles contains atom positions. 1: datafiles contains F vs. q data.
-* Emax:           ( ) Maximal energy for which scattering factors are computed. Must be larger than the maximal impinging energy.
+* initial_state:  [0/1] Which state is Molecule_2state in for t<delta_t? Useful for modelling something that changes state slowly.
+* form_factors:   [str] File from which to read atomic form factors. Defualt amounts to use the one shipped with McXtrace.
+* state_0_file:   [str] Isotropic scattering factors (parameterized by q), or atom positions are specified for state 0.
+* state_1_file:   [str] Isotropic scattering factors (parameterized by q), or atom positions are specified for state 1.
+* nq:             [1]   Number of q-bins if F is to be computed from atom positions (Debye formalism).
+* material_datafile: [str] Where to read f1 and f2 factors from in order to handle absorption.
+* delta_t:        [s]   Delay between the exciting event t=0. delay is negative, i.e. delta_t>0 means the exciting event happens before t=0.
+* excitation_yield: [1] Mean fraction of molecules that get excited.
+* t_relax:        [s]   Mean relaxation time (into state 0) of excited molecules.
+* psimin:         [rad] Minimum scattering angle off the optical axis.
+* psimax:         [rad] Maximum scattering angle off the optical axis.
+* etamin:         [rad] Minimum scattering angle around the optical axis.
+* etamax:         [rad] Maximum scattering angle around the optical axis.
+* radius:         [m]   Radius of cylindrical of spherical sample.
+* xwidth:         [m]   Width of rectangular sample.
+* yheight:        [m]   Height of rectangular or cylindrical sample.
+* zdepth:         [m]   Depth (thickness) of rectangular sample.
+* concentration:  [m]   Concentration or packing factor of sample.
+* p_transmit:     [m]   Fraction of statistics devoted to sample direct (unscattered) beam.
+* q_parametric:   [0/1] When 0: Assume that datafiles contains atom positions. 1: datafiles contains F vs. q data.
+* Emax:           [keV] Maximal energy for which scattering factors are computed. Must be larger than the maximal impinging energy.
 *  
 * %End
 *******************************************************************************/
@@ -417,7 +417,7 @@ MCDISPLAY
     circle("yz",0,0,0,radius);
   }else if (shape==BOX){
    /*sample is a box*/
-    box(0,0,0,xwidth,yheight,zdepth);
+    box(0,0,0,xwidth,yheight,zdepth,0, 0, 1, 0);
   }
 
 

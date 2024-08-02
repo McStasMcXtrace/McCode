@@ -1247,11 +1247,20 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
           }
           comp->group->last_comp      =comp->name;
           comp->group->last_comp_index=comp->index;
-          if (comp->split)
-            print_warn(NULL, "WARNING: Component %s=%s() at line %s:%d is in GROUP %s and has a SPLIT.\n"
-              "\tMove the SPLIT keyword before (outside) the component instance %s (first in GROUP)\n",
+          if (comp->split) {
+	    if (strcmp(comp->name, comp->group->first_comp)) {
+	      print_error("FATAL ERROR:\n\tComponent %s=%s() at line %s:%d is in GROUP %s and has a SPLIT.\n"
+			  "\tOnly the first component of a GROUP may impose SPLIT, so please only include \n"
+			  "\tSPLIT on %s (first in GROUP) or better yet to an earlier component!\n\n",
               comp->name, comp->def->name, instr_current_filename, instr_current_line, $12->name,
               comp->group->first_comp);
+	      exit(-1);
+	    } else {
+	      print_warn(NULL," Component %s=%s() at line %s:%d is 1st in GROUP %s and has a SPLIT.\n"
+			  "\tBest practice is to move the SPLIT to an earlier component.\n\n",
+			  comp->name, comp->def->name, instr_current_filename, instr_current_line, $12->name);
+	    }
+	  }
         }
         if ($13->linenum)   comp->extend= $13;  /* EXTEND block*/
         if (list_len($14))  comp->jump  = $14;
@@ -1935,6 +1944,9 @@ static char *output_filename;
 /* Verbose parsing/code generation */
 char verbose = 0;
 
+/* Are we generating code for the "lint" mode? */
+char lint = 0;
+
 /* include instrument source code in executable ? */
 char embed_instrument_file = 0;
 
@@ -1956,6 +1968,8 @@ print_usage(void)
   fprintf(stderr, "      -o FILE --output-file=FILE Place Python output in file FILE.\n");
   fprintf(stderr, "      -v      --version          Prints " MCCODE_NAME " version.\n");
   fprintf(stderr, "      --verbose                  Display compilation process steps.\n");
+  fprintf(stderr, "      --lint                     Generate a .py script for McStasScript\n");
+  fprintf(stderr, "                                 style \"diagnostic\" linting.\n\n");
   fprintf(stderr, "  The instrument description file will be processed and translated into a Python script.\n");
   fprintf(stderr, "  The default component search list is usually defined by the environment\n");
   fprintf(stderr, "    variable '" MCCODE_LIBENV "' %s (default is "
@@ -2036,6 +2050,7 @@ parse_command_line(int argc, char *argv[])
 
   output_filename                        = NULL;
   verbose                                = 0;
+  lint                                   = 0;
   instr_current_filename                 = NULL;
   instrument_definition->use_default_main= 1;
   instrument_definition->include_runtime = 1;
@@ -2063,6 +2078,8 @@ parse_command_line(int argc, char *argv[])
       { print_usage(); exit(0); }
     else if(!strcmp("--verbose", argv[i]))
       verbose = 1;
+    else if(!strcmp("--lint", argv[i]))
+      lint = 1;
     else if(argv[i][0] != '-')
     {
       if(instr_current_filename != NULL)

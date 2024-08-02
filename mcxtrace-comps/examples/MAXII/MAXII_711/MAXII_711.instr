@@ -26,6 +26,7 @@
 * chi: [deg] 2nd rotation of four circle, around X.
 * phi: [deg] 3rd rotation of four circle, around Y'.
 * tth: [deg] 4th rotation of four circle, i.e. detector arm. Around Y.
+* dphi: [deg] Restrict the powder scattering angle along vertical axis Z.
 *
 * %End
 *******************************************************************************/

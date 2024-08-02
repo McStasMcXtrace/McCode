@@ -11,6 +11,7 @@
 * Modified from Res_sample, written by: Kristian Nielsen
 * Date: 1999
 * Written by: KL, 10 October 2004
+* Modified by KL, 20 March 2024 after input from Ryoichi Kajimoto, J-PARC
 * Origin: Risoe
 *
 * Sample for TOF resolution function calculation.
@@ -22,14 +23,18 @@
 * function of all time-of-flight instruments.
 * The method of time focusing is used to optimize the simulations.
 *
-* The shape of the sample is either a hollow cylinder or a rectangular box. The
-* hollow cylinder shape is specified with an inner and outer radius.
-* The box is specified with dimensions xwidth, yheight, zdepth.
+* The shape of the sample is either:
+* 1. Hollow cylinder (Please note that the cylinder **must** be specified with both 
+*    a radius and a wall-thickness!)
+* 2. A massive, rectangular box specified with dimensions xwidth, yheight, zdepth.
+*    (i.e. **withouht** a thickness)
+*
+* hollow cylinder shape **must** be specified with both a radius and a wall-thickness.
+* The box is 
 *
 * The scattered neutrons will have directions towards a given target and
 * detector arrival time in an interval of time_width centered on time_bin.
-*
-* The target area is default disk shaped, but may also be rectangular
+* This target area is default disk shaped, but may also be rectangular
 * if specified focus_xw and focus_yh
 * or focus_aw and focus_ah, respectively in meters and degrees.
 * The target itself is either situated according to given coordinates (x,y,z),
@@ -128,8 +133,8 @@ if (!radius || !yheight) {
   }
  } else {
   res_struct.isrect=0;
-  if (thickness && thickness >= radius) {
-    exit(fprintf(stderr,"TOFRes_sample: %s: Hollow cylinder sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+  if (!thickness || thickness >= radius) {
+    exit(fprintf(stderr,"TOFRes_sample: %s: Hollow of cylindrical sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
   }
  }
  
@@ -188,7 +193,7 @@ TRACE
   double solid_angle=0;         /* Solid angle of target as seen from scattering point */
   double aim_x, aim_y, aim_z, aim_length;
                                 /* Position of target relative to scattering point */
-  double scat_factor;           /* Simple cross-section model */
+  double norm_factor;           /* Normalization factor */
   int    intersect=0;
   double kix,kiy,kiz;
   double kfx,kfy,kfz;
@@ -201,7 +206,7 @@ TRACE
   if(intersect)
   {
     if(t0 < 0) ABSORB;
-    if(res_struct.isrect) { t1 = t2 = t3; scat_factor = 2*zdepth; } /* box sample */
+    if(res_struct.isrect) { t1 = t2 = t3; norm_factor = 2*zdepth; } /* box sample */
     else {
       /* Cylindrical sample */
       /* Neutron enters at t=t0. */
@@ -211,14 +216,14 @@ TRACE
       } else {
 	ABSORB;
       }
-      scat_factor = 2*(radius-thickness);
+      norm_factor = 2*thickness;  /* Maximum path length in the sample for zero vertical divergence */
     }
     dt0 = t1-t0;                  /* Time in sample, ingoing */
     dt1 = t2-t1;                  /* Time in hole */
     dt2 = t3-t2;                  /* Time in sample, outgoing */
     v = sqrt(vx*vx + vy*vy + vz*vz);
     l_full = v * (dt0 + dt2);     /* Length of full path through sample */
-    p *= l_full/scat_factor;      /* Scattering probability */
+    p *= l_full/norm_factor;      /* Normalized scattering probability, proportional to path length in the sample */
     dt = rand01()*(dt0+dt2);      /* Time of scattering (relative to t0) */
     if (dt > dt0)
       dt += dt1;

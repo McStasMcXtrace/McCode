@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "import os;print(os.cpu_count())")}
 
 # rapid-build script for mcstas-kernel dev:
@@ -27,7 +27,7 @@ then
     cd -
 fi
 
-if [ ! -f Mambaforge-$(uname)-$(uname -m).sh ]; then
+if [ ! -f Miniforge3-$(uname)-$(uname -m).sh ]; then
     # Download and embed a miniconda
     echo
     echo "*********************************************************"
@@ -35,15 +35,15 @@ if [ ! -f Mambaforge-$(uname)-$(uname -m).sh ]; then
     echo "*********************************************************"
     echo
     sleep 3
-    curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
+    curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
 fi
 
 if [[ !  -d $CONDALOCATION ]]; then
     echo "*********************************************************"
     echo "* Embedding miniconda3 in your app                      *"
     echo "*********************************************************"
-    chmod a+x Mambaforge-$(uname)-$(uname -m).sh
-    ./Mambaforge-$(uname)-$(uname -m).sh -b -p $CONDALOCATION
+    chmod a+x Miniforge3-$(uname)-$(uname -m).sh
+    ./Miniforge3-$(uname)-$(uname -m).sh -b -p $CONDALOCATION
     # Run conda to install the dependencies
     echo
     echo "*********************************************************"
@@ -52,7 +52,7 @@ if [[ !  -d $CONDALOCATION ]]; then
     echo
     export PATH=$CONDALOCATION/bin:$PATH 
     mamba update mamba -y
-    mamba install gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5  autoconf automake libtool -y
+    mamba install cmake compilers flex bison nodejs gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 nexus mcpl xraylib -y
     mamba clean --all -y
 fi
 
@@ -60,6 +60,8 @@ fi
 ./mkdist mcxtrace-comps 3.x-dev "" "" deb64 "" -- justinst
 ./mkdist mcxtrace-tools-python-mxgui 3.x-dev tools/Python/mcgui/ "" deb64 "" -- justinst
 ./mkdist mcxtrace-tools-python-mxrun 3.x-dev tools/Python/mcrun/ "" deb64 "" -- justinst
+./mkdist mcxtrace-tools-python-mxdoc 3.x-dev tools/Python/mcdoc/ "" deb64 "" -- justinst
+./mkdist mcxtrace-tools-python-mxtest 3.x-dev tools/Python/mctest/ "" deb64 "" -- justinst
 ./mkdist mcxtrace-tools-python-mccodelib 3.x-dev tools/Python/mccodelib/ "" deb64 "" -- justinst
 ./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph 3.x-dev tools/Python/mcdisplay/pyqtgraph/ "" deb64 "" -- justinst
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph 3.x-dev tools/Python/mcplot/pyqtgraph/ "" deb64 "" -- justinst
@@ -67,16 +69,6 @@ fi
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib 3.x-dev tools/Python/mcplot/matplotlib/ "" deb64 "" -- justinst
 cp tools/other/mcsplit/mcsplit.py $HOME/McXtrace/mcxtrace/3.x-dev/bin/
 
-export MCINSTALL_PREFIX=$HOME/McXtrace/mcxtrace/3.x-dev/
-./mkdist mcxtrace-mcpl 3.x-dev 3rdparty/mcpl-package "" deb64 "" -- justinst
-./mkdist mcxtrace-nexus 3.x-dev 3rdparty/nexus-package "" deb64 "" -- justinst
-
-cd 3rdparty/xraylib
-make distclean
-autoreconf -i
-./configure --prefix=$MCINSTALL_PREFIX
-make install
-cd $WORK
-
 # Ensure we are configured for 10 node MPI runs
 sed -i s/\'4\'/\'10\'/g $HOME/McXtrace/mcxtrace/3.x-dev/tools/Python/mccodelib/mccode_config.py
+$HOME/McXtrace/mcxtrace/3.x-dev/bin/mxdoc -i

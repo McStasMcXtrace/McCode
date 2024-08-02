@@ -565,7 +565,7 @@ MCDISPLAY
   if (do_translate) nx=ny=nz=0;
   if (do_rotate)    { dx=dy=0; dz=.1; }
 
-  mcdis_box(nx,ny,nz, max_x-min_x, max_y-min_y, max_z-min_z);
+  box(nx,ny,nz, max_x-min_x, max_y-min_y, max_z-min_z, 0, 0, 1, 0);
   line(     nx,ny,nz, dx,dy,dz);
 
 %}

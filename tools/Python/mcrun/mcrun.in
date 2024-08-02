@@ -24,9 +24,6 @@ if [ "x@NCRYSTAL_LEGACY_USE@" == "x1" ]; then
     fi
 fi
 
-#VERS="@MCCODE_VERSION@"
-
-
 canrun() {
     if ! [ -x "${UTILDIR}/${TOOL}.py" ]; then
         exit 127;

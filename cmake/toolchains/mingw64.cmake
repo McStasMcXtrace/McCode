@@ -38,9 +38,16 @@ set(OACCFLAGS "-ta:multicore -DOPENACC")
 set(MPICC "mpicc.bat")
 set(MPIRUN "mpiexec.exe")
 set(MPILIB "msmpi")
-set(MCCODE_CFLAGS "-g -O2 -DNDEBUG -lm -std=c99 -D_POSIX_SOURCE")
+set(MCCODE_CFLAGS "-flto -O3 -mtune=native -fno-math-errno -ftree-vectorize -g -DNDEBUG -D_POSIX_SOURCE -std=c99 -lm")
 set(EDITOR "start")
 
 # NeXus location defaults
-set(NEXUSINCLUDE "\\\"C:/Program Files/NeXus Data Format/include/nexus\\\"")
-set(NEXUSLIB "\\\"C:/Program Files/NeXus Data Format/bin\\\"")
+set(NEXUSINCLUDE "GETPATH(../miniconda3/Library/include/nexus)")
+set(NEXUSLIB "GETPATH(../miniconda3/Library/lib)")
+
+# HDFviewer
+set(HDFVIEW "nexpy")
+
+# gsl and xraylib locations
+set(GSLFLAGS "-IGETPATH(../miniconda3/Library/include/) -Wl,-rpath,GETPATH(../miniconda3/Library/lib) -LGETPATH(../miniconda3/Library/lib) -lgsl -lgslcblas")
+set(XRLFLAGS "-IGETPATH(../miniconda3/Library/include/) -Wl,-rpath,GETPATH(../miniconda3/Library/lib) -LGETPATH(../miniconda3/Library/lib) -lxrl")

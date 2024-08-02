@@ -1129,13 +1129,11 @@ static void mcinfo_out(char *pre, FILE *f)
 
   fprintf(f, "%sTrace_enabled: %s\n", pre, traceenabled ? "yes" : "no");
   fprintf(f, "%sDefault_main: %s\n",  pre, defaultmain ?  "yes" : "no");
-  fprintf(f, "%sEmbedded_runtime: %s\n", pre,
 #ifdef MC_EMBEDDED_RUNTIME
-         "yes"
+  fprintf(f, "%sEmbedded_runtime: %s\n", pre, "yes");
 #else
-         "no"
+  fprintf(f, "%sEmbedded_runtime: %s\n", pre, "no");
 #endif
-         );
 
   fflush(f);
 } /* mcinfo_out */
@@ -1631,13 +1629,11 @@ static void mcinfo_out_nexus(NXhandle f)
 
       nxprintattr(f, "Trace_enabled", traceenabled ? "yes" : "no");
       nxprintattr(f, "Default_main",  defaultmain ?  "yes" : "no");
-      nxprintattr(f, "Embedded_runtime",
-  #ifdef MC_EMBEDDED_RUNTIME
-           "yes"
-  #else
-           "no"
-  #endif
-           );
+#ifdef MC_EMBEDDED_RUNTIME
+      nxprintattr(f, "Embedded_runtime", "yes");
+#else
+      nxprintattr(f, "Embedded_runtime", "no");
+#endif
 
       /* add instrument source code when available */
       buffer = mcinfo_readfile(instrument_source);
@@ -1806,8 +1802,10 @@ int mcdetector_out_axis_nexus(NXhandle f, char *label, char *var, int rank, long
 {
   if (!f || length <= 1 || mcdisable_output_files || max == min) return(NX_OK);
   else {
-    double axis[length];
-    char valid[CHAR_BUF_LENGTH];
+    double *axis;
+    axis=malloc(sizeof(double)*length);
+    char *valid;
+    valid=malloc(sizeof(char)*CHAR_BUF_LENGTH);
     int dim=(int)length;
     int i;
     int nprimary=1;
@@ -1821,6 +1819,8 @@ int mcdetector_out_axis_nexus(NXhandle f, char *label, char *var, int rank, long
     if (NXopendata(f, valid) != NX_OK) {
       fprintf(stderr, "Warning: could not open axis rank %i '%s' (NeXus)\n",
         rank, valid);
+      free(axis);
+      free(valid);
       return(NX_ERROR);
     }
     /* put the axis and its attributes */
@@ -1831,7 +1831,8 @@ int mcdetector_out_axis_nexus(NXhandle f, char *label, char *var, int rank, long
     nxprintattr(f, "units",      var);
     NXputattr  (f, "primary",    &nprimary, 1, NX_INT32);
     NXclosedata(f);
-
+    free(axis);
+    free(valid);
     return(NX_OK);
   }
 } /* mcdetector_out_axis_nexus */
@@ -2183,7 +2184,7 @@ MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
     1, 1, 1,
     "I", "", "",
     "I", "", "",
-    0, 0, 0, 0, 0, 0, "",
+    0, 0, 0, 0, 0, 0, c,
     &p0, &p1, &p2, posa); /* write Detector: line */
 
 #ifdef USE_NEXUS
@@ -2570,26 +2571,14 @@ void mcdis_rectangle(char* plane, double x, double y, double z,
   }
 }
 
-/*  draws a box with center at (x, y, z) and
-    width (deltax), height (deltay), length (deltaz) */
-void mcdis_box(double x, double y, double z,
-	       double width, double height, double length){
-
-  mcdis_rectangle("xy", x, y, z-length/2, width, height);
-  mcdis_rectangle("xy", x, y, z+length/2, width, height);
-  mcdis_line(x-width/2, y-height/2, z-length/2,
-	     x-width/2, y-height/2, z+length/2);
-  mcdis_line(x-width/2, y+height/2, z-length/2,
-	     x-width/2, y+height/2, z+length/2);
-  mcdis_line(x+width/2, y-height/2, z-length/2,
-	     x+width/2, y-height/2, z+length/2);
-  mcdis_line(x+width/2, y+height/2, z-length/2,
-	     x+width/2, y+height/2, z+length/2);
-}
-
 void mcdis_circle(char *plane, double x, double y, double z, double r){
   printf("MCDISPLAY: circle('%s',%g,%g,%g,%g)\n", plane, x, y, z, r);
 }
+
+void mcdis_new_circle(double x, double y, double z, double r, double nx, double ny, double nz){
+  printf("MCDISPLAY: new_circle(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, r, nx, ny, nz);
+}
+
 
 /* Draws a circle with center (x,y,z), radius (r), and in the plane
  * with normal (nx,ny,nz)*/
@@ -2617,10 +2606,44 @@ void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, 
     }
 }
 
-/* Draws a cylinder with center at (x,y,z) with extent (r,height).
- * The cylinder axis is along the vector nx,ny,nz.
- * N determines how many vertical lines are drawn.*/
-void mcdis_cylinder( double x, double y, double z,
+
+/*  OLD IMPLEMENTATION
+    draws a box with center at (x, y, z) and
+    width (deltax), height (deltay), length (deltaz) */
+void mcdis_legacy_box(double x, double y, double z,
+	       double width, double height, double length){
+
+  mcdis_rectangle("xy", x, y, z-length/2, width, height);
+  mcdis_rectangle("xy", x, y, z+length/2, width, height);
+  mcdis_line(x-width/2, y-height/2, z-length/2,
+	     x-width/2, y-height/2, z+length/2);
+  mcdis_line(x-width/2, y+height/2, z-length/2,
+	     x-width/2, y+height/2, z+length/2);
+  mcdis_line(x+width/2, y-height/2, z-length/2,
+	     x+width/2, y-height/2, z+length/2);
+  mcdis_line(x+width/2, y+height/2, z-length/2,
+	     x+width/2, y+height/2, z+length/2);
+}
+
+/*  NEW 3D IMPLEMENTATION OF BOX SUPPORTS HOLLOW ALSO
+    draws a box with center at (x, y, z) and
+    width (deltax), height (deltay), length (deltaz) */
+void mcdis_box(double x, double y, double z,
+	       double width, double height, double length, double thickness, double nx, double ny, double nz){
+  if (mcdotrace==2) {
+    printf("MCDISPLAY: box(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness, nx, ny, nz);
+  } else {
+    mcdis_legacy_box(x, y, z, width, height, length);
+    if (thickness)
+      mcdis_legacy_box(x, y, z, width-thickness, height-thickness, length);
+  }
+}
+
+
+/* OLD IMPLEMENTATION
+Draws a cylinder with center at (x,y,z) with extent (r,height).
+ * The cylinder axis is along the vector nx,ny,nz. */
+void mcdis_legacy_cylinder( double x, double y, double z,
         double r, double height, int N, double nx, double ny, double nz){
     int i;
     /*no lines make little sense - so trigger the default*/
@@ -2648,13 +2671,60 @@ void mcdis_cylinder( double x, double y, double z,
     }
 }
 
-/* draws a sphere with center at (x,y,z) with extent (r)
- * The sphere is drawn using N longitudes and N latitudes.*/
-void mcdis_sphere(double x, double y, double z, double r, int N){
+/* NEW 3D IMPLEMENTATION ALSO SUPPORTING HOLLOW
+Draws a cylinder with center at (x,y,z) with extent (r,height).
+ * The cylinder axis is along the vector nx,ny,nz.*/
+void mcdis_cylinder( double x, double y, double z,
+        double r, double height, double thickness, double nx, double ny, double nz){
+  if (mcdotrace==2) {
+      printf("MCDISPLAY: cylinder(%g, %g, %g, %g, %g, %g, %g, %g, %g)\n",
+         x, y, z, r, height, thickness, nx, ny, nz);
+  } else {
+    mcdis_legacy_cylinder(x, y, z,
+			  r, height, 12, nx, ny, nz);
+  }
+}
+
+/* Draws a cone with center at (x,y,z) with extent (r,height).
+ * The cone axis is along the vector nx,ny,nz.*/
+void mcdis_cone( double x, double y, double z,
+        double r, double height, double nx, double ny, double nz){
+  if (mcdotrace==2) {
+    printf("MCDISPLAY: cone(%g, %g, %g, %g, %g, %g, %g, %g)\n",
+       x, y, z, r, height, nx, ny, nz);
+  } else {
+    mcdis_Circle(x, y, z, r, nx, ny, nz);
+    mcdis_Circle(x+0.25*height*nx, y+0.25*height*ny, z+0.25*height*nz, 0.75*r, nx, ny, nz);
+    mcdis_Circle(x+0.5*height*nx, y+0.5*height*ny, z+0.5*height*nz, 0.5*r, nx, ny, nz);
+    mcdis_Circle(x+0.75*height*nx, y+0.75*height*ny, z+0.75*height*nz, 0.25*r, nx, ny, nz);
+    mcdis_line(x, y, z, x+height*nx, y+height*ny, z+height*nz);
+  }
+}
+
+/* Draws a disc with center at (x,y,z) with extent (r).
+ * The disc axis is along the vector nx,ny,nz.*/
+void mcdis_disc( double x, double y, double z,
+        double r, double nx, double ny, double nz){
+  printf("MCDISPLAY: disc(%g, %g, %g, %g, %g, %g, %g)\n",
+     x, y, z, r, nx, ny, nz);
+}
+
+/* Draws a annulus with center at (x,y,z) with extent (outer_radius) and remove inner_radius.
+ * The annulus axis is along the vector nx,ny,nz.*/
+void mcdis_annulus( double x, double y, double z,
+        double outer_radius, double inner_radius, double nx, double ny, double nz){
+  printf("MCDISPLAY: annulus(%g, %g, %g, %g, %g, %g, %g, %g)\n",
+     x, y, z, outer_radius, inner_radius, nx, ny, nz);
+}
+
+/* draws a sphere with center at (x,y,z) with extent (r)*/
+void mcdis_sphere(double x, double y, double z, double r){
+  if (mcdotrace==2) {
+    printf("MCDISPLAY: sphere(%g,%g,%g,%g)\n", x, y, z, r);
+  } else {
     double nx,ny,nz;
     int i;
-    /*no lines make little sense - so trigger the default*/
-    if(N<=0) N=5;
+    int N=12;
 
     nx=0;ny=0;nz=1;
     mcdis_Circle(x,y,z,r,nx,ny,nz);
@@ -2669,7 +2739,131 @@ void mcdis_sphere(double x, double y, double z, double r, int N){
         double yy=-r+ 2*r*((double)i/(N+1));
         mcdis_Circle(x,y+yy ,z,  sqrt(r*r-yy*yy) ,0,1,0);
     }
+  }
 }
+/* POLYHEDRON IMPLEMENTATION*/
+
+void mcdis_polyhedron(char *vertices_faces){
+  printf("MCDISPLAY: polyhedron %s\n", vertices_faces);
+}
+
+/* POLYGON IMPLEMENTATION */
+void mcdis_polygon(int count, ...){
+  va_list ap;
+  double *x,*y,*z;
+
+  double x0=0,y0=0,z0=0; /* Used for centre-of-mass in trace==2 */
+
+  x=malloc(count*sizeof(double));
+  y=malloc(count*sizeof(double));
+  z=malloc(count*sizeof(double));
+
+  va_start(ap, count);
+  // Fallback for trace==1 is multiline, one rank higher
+  if (mcdotrace==1) {
+    printf("MCDISPLAY: multiline(%i,",count+1);
+  }
+  
+  int j;
+  for (j=0; j<count; j++) {
+    x[j] = va_arg(ap, double);
+    y[j] = va_arg(ap, double);
+    z[j] = va_arg(ap, double);
+    if (mcdotrace==1) {
+      printf("%g,%g,%g,",x[j],y[j],z[j]);
+    } else {
+      // Calculation of polygon centre of mass
+      x0 += x[j]; y0 += y[j]; z0 += z[j];
+    }
+  }
+
+  /* Patch data for multiline(count+1, ... use 0th point*/
+  if (mcdotrace==1) {
+    printf("%g,%g,%g)\n",x[0],y[0],z[0]);
+  } else {
+    x0 /= count; y0 /= count; z0 /= count;
+    /* Build up a json string for a "polyhedron" */
+    // Estimate size of the JSON string
+    const int VERTEX_OVERHEAD = 30;
+    const int FACE_OVERHEAD_BASE = 20;
+    const int FACE_INDEX_OVERHEAD = 15;
+    int estimated_size = 256; // Base size
+    estimated_size += count * VERTEX_OVERHEAD;
+
+    int faceSize;
+    int vtxSize;
+    if (count > 3) {
+      /* Split in triangles - as many as polygon rank */
+      faceSize=count;
+      vtxSize=count+1;
+    } else {
+      faceSize=1;
+      vtxSize=count;
+    }
+    
+    for (int i = 0; i < faceSize;) {
+        int num_indices = 3;
+        estimated_size += FACE_OVERHEAD_BASE + num_indices * FACE_INDEX_OVERHEAD;
+        i += num_indices + 1;
+    }
+
+    char *json_string = malloc(estimated_size);
+    if (json_string == NULL) {
+        fprintf(stderr, "Memory allocation failed.\n");
+        return;
+    }
+
+    char *ptr = json_string;
+    ptr += sprintf(ptr, "{ \"vertices\": [");
+
+    if (count==3) { // Single, basic triangle
+      ptr += sprintf(ptr, "[%g, %g, %g], [%g, %g, %g], [%g, %g, %g]", x[0], y[0], z[0], x[1], y[1], z[1], x[2], y[2], z[2]);
+    } else {
+      for (int i = 0; i < vtxSize-1; i++) {
+        ptr += sprintf(ptr, "[%g, %g, %g]", x[i], y[i], z[i]);
+        if (i < vtxSize - 2) {
+	  ptr += sprintf(ptr, ", ");
+        } else {
+	  ptr += sprintf(ptr, ", [%g, %g, %g]", x0, y0, z0);
+	}
+      }
+    }
+    ptr += sprintf(ptr, "], \"faces\": [");
+    if (count==3) { // Single, basic triangle, 1 face...
+      ptr += sprintf(ptr, "{ \"face\": [");
+      ptr += sprintf(ptr, "0, 1, 2");
+      ptr += sprintf(ptr, "]}");
+    } else {
+      for (int i = 0; i < faceSize; i++) {
+        int num = 3;
+        ptr += sprintf(ptr, "{ \"face\": [");
+	if (i < faceSize - 1) {
+	  ptr += sprintf(ptr, "%d, %d, %d",i,i+1,count);
+	} else {
+	  ptr += sprintf(ptr, "%d, %d, %d",i,count,0);
+	}
+	ptr += sprintf(ptr, "]}");
+	if (i < faceSize-1) {
+	  ptr += sprintf(ptr, ", ");
+	}
+      }
+    }
+    ptr += sprintf(ptr, "]}");
+    mcdis_polyhedron(json_string);
+
+    free(json_string);
+  }
+  free(x);free(y);free(z);
+}
+/* END NEW POLYGON IMPLEMENTATION*/
+
+/*
+void mcdis_polygon(double x1, double y1, double z1,
+                double x2, double y2, double z2){
+  printf("MCDISPLAY: polygon(2,%g,%g,%g,%g,%g,%g)\n",
+         x1,y1,z1,x2,y2,z2);
+}
+*/
 
 /* SECTION: coordinates handling ============================================ */
 
@@ -3946,6 +4140,7 @@ mchelp(char *pgmname)
 "  -n COUNT  --ncount=COUNT   Set number of particles to simulate.\n"
 "  -d DIR    --dir=DIR        Put all data files in directory DIR.\n"
 "  -t        --trace          Enable trace of " MCCODE_PARTICLE "s through instrument.\n"
+"                             (Use -t=2 or --trace=2 for modernised mcdisplay rendering)\n"
 "  -g        --gravitation    Enable gravitation for all trajectories.\n"
 "  --no-output-files          Do not write any data files.\n"
 "  -h        --help           Show this help message.\n"
@@ -4033,10 +4228,10 @@ mcusage(char *pgmname)
 
 /* mcenabletrace: enable trace/mcdisplay or error if requires recompile */
 static void
-mcenabletrace(void)
+mcenabletrace(int mode)
 {
  if(traceenabled) {
-  mcdotrace = 1;
+  mcdotrace = mode;
   #pragma acc update device ( mcdotrace )
  } else {
    fprintf(stderr,
@@ -4224,10 +4419,14 @@ mcparseoptions(int argc, char *argv[])
       printf("%s\n", literal);
       exit(0);
     }
-    else if(!strcmp("-t", argv[i]))
-      mcenabletrace();
+    else if(!strncmp("--trace=", argv[i], 8)) {
+      mcenabletrace(atoi(&argv[i][8]));
+    } else if(!strncmp("-t=", argv[i], 3) || !strcmp("--verbose", argv[i])) {
+      mcenabletrace(atoi(&argv[i][3]));
+    } else if(!strcmp("-t", argv[i]))
+      mcenabletrace(1);
     else if(!strcmp("--trace", argv[i]) || !strcmp("--verbose", argv[i]))
-      mcenabletrace();
+      mcenabletrace(1);
     else if(!strcmp("--gravitation", argv[i]))
       mcgravitation = 1;
     else if(!strcmp("-g", argv[i]))
@@ -4243,6 +4442,9 @@ mcparseoptions(int argc, char *argv[])
     }    
     else if(!strcmp("--vecsize", argv[i]) && (i + 1) < argc) {
       vecsize=atoi(argv[++i]);
+    }
+    else if(!strncmp("--bufsiz=", argv[i], 9)) {
+      MONND_BUFSIZ=atoi(&argv[i][9]);
     }
     else if(!strcmp("--bufsiz", argv[i]) && (i + 1) < argc) {
       MONND_BUFSIZ=atoi(argv[++i]);

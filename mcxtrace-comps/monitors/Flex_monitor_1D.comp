@@ -26,7 +26,7 @@
 * Umax: []              Maximum U to detect
 * nU: [1]               Number of U channels
 * filename: [string]    Name of file in which to store the detector image
-* restore_xray: [1]  If set, the monitor does not influence the particle state
+* restore_xray: [1]     If set, the monitor does not influence the particle state
 * uid: [1]              Integer index of uservar to be monitored. Overrides ustring.
 * ustring: [string]     Name of variable (user or particle state parameter as a string) to be monitored.  
 * signal: [string]      Name of variable to be used as an additive signal to be monitored. Default is intensity.

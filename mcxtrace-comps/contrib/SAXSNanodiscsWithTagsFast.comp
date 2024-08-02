@@ -32,17 +32,18 @@
 * VolumeOfHeadgroup: [AA^3] Volume of one lipid headgroup - default is POPC.
 * VolumeOfCH2Tail: [AA^3]   Volume of the CH2-chains of one lipid - default is POPC.
 * VolumeOfCH3Tail: [AA^3]   Volume of the CH3-tails of one lipid - default is POPC.
-* VolumeOfOneHisTag				: [AA^3]	Volume of one his-tag.
+* VolumeOfOneHisTag: [AA^3]	Volume of one his-tag.
 * ScatteringLengthOfOneMSP: [cm]    Scattering length of one belt protein - default is MSP1D1.
+* ScatteringLengthOfOneHisTag: [cm] Scattering length of one histidine tag.
 * ScatteringLengthOfHeadgroup: [cm] Scattering length of one lipid headgroup - default is POPC.
 * ScatteringLengthOfCH2Tail: [cm]   Scattering length of the CH2-chains of one lipid - default is POPC.
 * ScatteringLengthOfCH3Tail: [cm]   Scattering length of the CH3-tails of one lipid - default is POPC.
 * Roughness: []         Factor used to smear the interfaces of the nanodisc.
 * Concentration: [mM]   Concentration of sample.
 * AbsorptionCrosssection: [1/m]	Absorption cross section of the sample.
-* xwidth: [m]  		Dimension of component in the x-direction.
-* yheight: [m]		Dimension of component in the y-direction.
-* zdepth: [m]		Dimension of component in the z-direction.
+* xwidth: [m]  Dimension of component in the x-direction.
+* yheight: [m] Dimension of component in the y-direction.
+* zdepth: [m]  Dimension of component in the z-direction.
 * SampleToDetectorDistance: [m] Distance from sample to detector (for focusing the scattered x-rays).
 * DetectorRadius: [m]   Radius of the detector (for focusing the scattered x-rays).
 * qMin: [AA^-1]         Lowest q-value, for which a point is generated in the scattering profile
@@ -62,7 +63,7 @@ SETTING PARAMETERS (AxisRatio = 1.4, NumberOfLipids = 130.0, AreaPerLipidHeadgro
     Roughness = 3.5, Concentration = 0.01, AbsorptionCrosssection = 0.0,
     xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius, qMin = 0.001, qMax = 1.0, int NumberOfQBins=200)
 OUTPUT PARAMETERS ()
-DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -Wl,-rpath,@MCCODE_LIB@/miniconda3/lib -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
+DEPENDENCY " @GSLFLAGS@ "
 NOACC
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
@@ -407,8 +408,7 @@ TRACE
 
 MCDISPLAY
 %{
-	
-	box(0, 0, 0, xwidth, yheight, zdepth);
+  box(0, 0, 0, xwidth, yheight, zdepth,0, 0, 1, 0);
 %}
 
 END

@@ -24,7 +24,7 @@ class InstrumentSpecific(object):
     
     def get_boundingbox(self, first=None, last=None):
         components = self.components
-        
+
         cnames = map(lambda c: c.name, self.components)
         if first in cnames and last in cnames:
             i_first = cnames.index(first)
@@ -36,18 +36,18 @@ class InstrumentSpecific(object):
         elif last in cnames:
             i_last = cnames.index(last)
             components = filter(lambda c: self.components.index(c) < i_last, self.components)
-        
+
         # run the bounding box calculation
         oldbox = None
         for c in components:
             box = c.get_tranformed_bb()
-            
-            if oldbox: 
+
+            if oldbox:
                 box = box.add(oldbox)
             oldbox = box
-            
+
         return box
-    
+
     def jsonize(self):
         ''' returns this object in jsonized form '''
         instr = {}
@@ -60,9 +60,9 @@ class InstrumentSpecific(object):
         instr['params_values'] = self.params_values
         instr['cmd'] = self.cmd
         
-        # bounding box
+        # "bounding" box - only present for the sake of pyqtgraph --tof mode
         instr['boundingbox'] = self.get_boundingbox().jsonize()
-        
+
         # components
         lst = []
         for c in self.components:
@@ -87,21 +87,23 @@ class Component(object):
         self.transform = Transform(rot, pos)
         self.m4 = [rot.a11, rot.a12, rot.a13, pos.x, rot.a21, rot.a22, rot.a23, pos.y, rot.a31, rot.a32, rot.a33, pos.z, 0, 0, 0, 1]
         self.drawcalls = []
-    
+
+    # "bounding" box - only present for the sake of pyqtgraph --tof mode
     def get_bounding_box(self):
         ''' calculate and return bounding box in naiive/local coordinates '''
         box = BoundingBox()
         for d in self.drawcalls:
             box = d.get_boundingbox().add(box)
-        
+
         return box
-    
+
+    # "bounding" box - only present for the sake of pyqtgraph --tof mode
     def get_tranformed_bb(self):
         ''' calculate and return bounding box in transformed coordinates '''
         box = BoundingBox()
         for d in self.drawcalls:
             box = d.get_boundingbox(self.transform).add(box)
-        
+
         return box
     
     def jsonize(self):
@@ -123,34 +125,35 @@ class Component(object):
     def __str__(self):
         return self.name
 
+# "bounding" box - only present for the sake of pyqtgraph --tof mode
 class BoundingBox(object):
     ''' bounding box '''
     def __init__(self, x1=None, x2=None, y1=None, y2=None, z1=None, z2=None):
         ''' properly initialize the bounding box by infinity/ minus infinity '''
         inf = float("inf")
         ninf = - inf
-        
+
         self.x1 = x1 if x1 != None else inf
         self.x2 = x2 if x2 != None else ninf
         self.y1 = y1 if y1 != None else inf
         self.y2 = y2 if y2 != None else ninf
         self.z1 = z1 if z1 != None else inf
         self.z2 = z2 if z2 != None else ninf
-        
+
         self.m4 = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
-    
+
     def add(self, box):
         ''' add and return a combined bounding box '''
-        
+
         x1 = min(self.x1, box.x1)
         x2 = max(self.x2, box.x2)
         y1 = min(self.y1, box.y1)
         y2 = max(self.y2, box.y2)
         z1 = min(self.z1, box.z1)
         z2 = max(self.z2, box.z2)
-        
+
         return BoundingBox(x1, x2, y1, y2, z1, z2)
-    
+
     def _get_drawcalls(self):
         ''' private method used to describe the bounding box in terms of mcdisplay drawcalls '''
         x1 = self.x1
@@ -167,102 +170,30 @@ class BoundingBox(object):
         d4 = DrawLine(args=[x2, y1, z1, x2, y1, z2])
         d5 = DrawLine(args=[x1, y2, z1, x1, y2, z2])
         d6 = DrawLine(args=[x2, y2, z1, x2, y2, z2])
-        
+
         return [d1, d2, d3, d4, d5, d6]
-    
-    def _get_drawcalls_gridticks(self, unit=1):
-        ''' creates the tick marks by drawing a partial grid on the six box faces '''
-        
-        def gridticks(p1, p2, ticksize=0.1):
-            ''' returns DrawLine objects corresponding to a list of "tickmarks" between p1 and p2 '''
-            p1 = Vector3d(p1[0], p1[1], p1[2])
-            p2 = Vector3d(p2[0], p2[1], p2[2])
-            
-            v = p2.subtract(p1).normalize()
-            v = v.scalarmult(ticksize)
-            d1 = DrawLine(args=[p1, p1.add(v)])
-            d2 = DrawLine(args=[p2, p2.subtract(v)])
-            
-            return [d1, d2]
-        
-        def gridlines(p1, p2):
-            ''' returns DrawLine objects corresponding to all gridlines '''
-            p1 = Vector3d(p1[0], p1[1], p1[2])
-            p2 = Vector3d(p2[0], p2[1], p2[2])
-            
-            d1 = DrawLine(args=[p1, p2])
-            
-            return [d1]
-        
-        def gridpoints(a1, a2, b1, b2):
-            ''' returns a list of pairs of (a, b) points, the endpoints of a grid line on axes a and b '''
-            unit = 1
-            lst = []
-            
-            # vertical lines 
-            a = a1
-            while a < a2 - unit:
-                a = a + unit
-                lst.append( ((a, b1), (a, b2)) )
-            
-            # horizontal lines 
-            b = b1
-            while b < b2 - unit:
-                b = b + unit
-                lst.append( ((a1, b), (a2, b)) )
-            
-            return lst
-        
-        # get min/max values shorthand
-        x1 = self.x1
-        x2 = self.x2
-        y1 = self.y1
-        y2 = self.y2
-        z1 = self.z1
-        z2 = self.z2
-        
-        # orientation planes in local 2d coordinates
-        gridlines2d_xy = gridpoints(x1, x2, y1, y2)
-        gridlines2d_xz = gridpoints(x1, x2, z1, z2)
-        gridlines2d_yz = gridpoints(y1, y2, z1, z2)
-        
-        # transform gridlines to 3d coordinates
-        gridlines3d_xy_min = map(lambda p: ( (p[0][0], p[0][1],      z1), (p[1][0], p[1][1],      z1) ), gridlines2d_xy)
-        gridlines3d_xy_max = map(lambda p: ( (p[0][0], p[0][1],      z2), (p[1][0], p[1][1],      z2) ), gridlines2d_xy)
-        gridlines3d_xz_min = map(lambda p: ( (p[0][0],      y1, p[0][1]), (p[1][0],      y1, p[1][1]) ), gridlines2d_xz)
-        gridlines3d_xz_max = map(lambda p: ( (p[0][0],      y2, p[0][1]), (p[1][0],      y2, p[1][1]) ), gridlines2d_xz)
-        gridlines3d_yz_min = map(lambda p: ( (x1,      p[0][0], p[0][1]), (     x1, p[1][0], p[1][1]) ), gridlines2d_yz)
-        gridlines3d_yz_max = map(lambda p: ( (x2,      p[0][0], p[0][1]), (     x2, p[1][0], p[1][1]) ), gridlines2d_yz)
-        
-        # do the gridticks for all six planes:
-        calls = []
-        for gridlinepoints in [gridlines3d_xy_min, gridlines3d_xy_max, gridlines3d_xz_min, gridlines3d_xz_max, gridlines3d_yz_min, gridlines3d_yz_max]:
-            for pair in gridlinepoints:
-                calls = calls + gridticks(pair[0], pair[1])
-                #calls = calls + gridlines(pair[0], pair[1])
-        
-        return calls
-    
+
+
     def jsonize(self):
         ''' returns a jsonized version of this object '''
         box = {}
-        
+
         box['xmin'] = self.x1
         box['xmax'] = self.x2
         box['ymin'] = self.y1
         box['ymax'] = self.y2
         box['zmin'] = self.z1
         box['zmax'] = self.z2
-        
+
         # drawcalls
         lst = []
-        drawcalls = self._get_drawcalls() + self._get_drawcalls_gridticks()
+        drawcalls = self._get_drawcalls()
         for d in drawcalls:
             lst.append(d.jsonize())
         box['drawcalls'] = lst
-        
+
         return box
-    
+
     def __str__(self):
         return '%s, %s, %s, %s, %s, %s' % (self.x1, self.x2, self.y1, self.y2, self.z1, self.z2)
 
@@ -417,11 +348,29 @@ drawcommands = {
     'rectangle'   : 'DrawRectangle',
     'box'         : 'DrawBox',
     'circle'      : 'DrawCircle',
-    }
+    'sphere'      : 'DrawSphere',
+    'cone'        : 'DrawCone',
+    'cylinder'    : 'DrawCylinder',
+    'disc'        : 'DrawDisc',
+    'annulus'     : 'DrawAnnulus',
+    'new_circle'  : 'DrawNewCircle',
+    'polygon'     : 'DrawPolygon',
+    'polyhedron'     : 'DrawPolyhedron',
+}
 # reduced set containing wholly implemented and non-trivial commands
 reduced_drawcommands = {
     'multiline'   : 'DrawMultiline',
     'circle'      : 'DrawCircle',
+
+    'box'         : 'DrawBox',
+    'sphere'      : 'DrawSphere',
+    'cone'        : 'DrawCone',
+    'cylinder'    : 'DrawCylinder',
+    'disc'        : 'DrawDisc',
+    'annulus'     : 'DrawAnnulus',
+    'new_circle'  : 'DrawNewCircle',
+    'polygon'     : 'DrawPolygon',
+    'polyhedron'  : 'DrawPolyhedron',
     }
 
 def drawclass_factory(commandname, args, reduced=False):
@@ -446,14 +395,16 @@ class DrawCommand(object):
             self.args_str = str(args[0])
             for i in range(len(args)-1):
                 self.args_str = self.args_str + ', ' + str(args[i+1])
-    
+
+    # "bounding" box - only present for the sake of pyqtgraph --tof mode
     def get_boundingbox(self, transform=None):
         self.boundingbox = self._calc_boundingbox(self._get_points(), transform)
         return self.boundingbox
-    
+
     def _get_points(self):
         return
-    
+
+    # "bounding" box - only present for the sake of pyqtgraph --tof mode
     @classmethod
     def _calc_boundingbox(self, points, transform):
         ''' override to implement alternative OR implement get_points '''
@@ -464,21 +415,21 @@ class DrawCommand(object):
         x_set = []
         y_set = []
         z_set = []
-        
+
         for p in points:
             if transform:
                 p = transform.apply(p)
             x_set.append(p.x)
             y_set.append(p.y)
             z_set.append(p.z)
-        
+
         box.x1 = min(x_set)
         box.x2 = max(x_set)
         box.y1 = min(y_set)
         box.y2 = max(y_set)
         box.z1 = min(z_set)
         box.z2 = max(z_set)
-                
+
         return box
     
     def jsonize(self):
@@ -489,9 +440,7 @@ class DrawCommand(object):
         call['key'] = self.key
         #call['args_str'] = self.args_str
         call['args'] = self.args
-        
-        # forget the bounding box for now
-        
+
         return call
 
 class DrawMagnify(DrawCommand):
@@ -576,12 +525,12 @@ class DrawRectangle(DrawCommand):
         self.height = float(args[5])
 
 class DrawBox(DrawCommand):
-    ''' '''
     center = None
     xwidth = None
     yheight = None
     zlength = None
-    # x, y, z, xwidth, yheight, zlength
+    thickness = None
+
     def __init__(self, args):
         super(DrawBox, self).__init__(args)
         self.key = 'box'
@@ -590,13 +539,14 @@ class DrawBox(DrawCommand):
         self.xwidth = float(args[3])
         self.yheight = float(args[4])
         self.zlength = float(args[5])
+        self.thickness = float(args[6])
+
 
 class DrawCircle(DrawCommand):
-    ''' '''
     plane = ''
     center = None
     radius = None
-    # plane, x, y, z, radius
+
     def __init__(self, args):
         super(DrawCircle, self).__init__(args)
         self.key = 'circle'
@@ -608,19 +558,19 @@ class DrawCircle(DrawCommand):
         # override default behavior to ensure quotes around the first arg, plane
         idx = self.args_str.find(',')
         self.args_str = '\"' + self.args_str[:idx] + '\"' + self.args_str[idx:]
-    
+
     def _get_points(self):
         ''' returns the corners of a flat square around the circle, transformed into the proper plane '''
         rad = self.radius
         cen = self.center
-        
+
         ne = Vector3d(rad, rad, 0)
         nw = Vector3d(-rad, rad, 0)
         sw = Vector3d(-rad, -rad, 0)
         se = Vector3d(rad, -rad, 0)
-        
+
         square = [ne, nw, sw, se]
-        
+
         if self.plane == 'xy':
             return map(lambda p: cen.add(p), square)
         elif self.plane == 'xz':
@@ -629,7 +579,7 @@ class DrawCircle(DrawCommand):
             return map(lambda p: cen.add(Vector3d(0, p.x, p.y)), square)
         else:
             raise Exception('DrawCircle: invalid plane argument')
-    
+
     def get_points_on_circle(self, steps=60):
         ''' returns points on the circle, transformed into the proper plane '''
         if self.plane in ['zy', 'yz']: (k1, k2) = (2,1)
@@ -637,10 +587,10 @@ class DrawCircle(DrawCommand):
         elif self.plane in ['zx', 'xz']: (k1, k2) = (2,0)
         else:
             raise Exception('DrawCircle: invalid plane argument: %s' % self.plane)
-        
+
         rad = self.radius
         center = self.center
-        
+
         circ2 = [ (rad*np.cos(theta), rad*np.sin(theta)) for theta in np.linspace(0, 2*np.pi, steps) ]
         circ3 = []
         for p2 in circ2:
@@ -648,11 +598,117 @@ class DrawCircle(DrawCommand):
             p[k1] = p2[0]
             p[k2] = p2[1]
             circ3.append(p)
-        
+
         return [center.add(c) for c in circ3]
 
+class DrawNewCircle(DrawCommand):
+    center = None
+    radius = None
+    axis_vector = None
+
+    def __init__(self, args):
+        super(DrawNewCircle, self).__init__(args)
+        self.key = 'new_circle'
+
+        self.center = Vector3d(float(args[0]), float(args[1]), float(args[2]))
+        self.radius = float(args[3])
+        self.axis_vector = Vector3d(float(args[4]), float(args[5]), float(args[6]))
+
+
+class DrawSphere(DrawCommand):
+    center = None
+    radius = None
+
+    def __init__(self, args):
+        super(DrawSphere, self).__init__(args)
+        self.key = 'sphere'
+
+        self.center = Vector3d(float(args[0]), float(args[1]), float(args[2]))
+        self.radius = float(args[3])
+
+
+class DrawCone(DrawCommand):
+    center = None
+    radius = None
+    height = None
+    axis_vector = None
+
+
+    def __init__(self, args):
+        super(DrawCone, self).__init__(args)
+        self.key = 'cone'
+
+        self.center = Vector3d(float(args[0]), float(args[1]), float(args[2]))
+        self.radius = float(args[3])
+        self.height = float(args[4])
+        self.axis_vector = Vector3d(float(args[5]), float(args[6]), float(args[7]))
+
+
+class DrawCylinder(DrawCommand):
+    center = None
+    radius = None
+    height = None
+    thickness = None
+    axis_vector = None
+
+    def __init__(self, args):
+        super(DrawCylinder, self).__init__(args)
+        self.key = 'cylinder'
+
+        self.center = Vector3d(float(args[0]), float(args[1]), float(args[2]))
+        self.radius = float(args[3])
+        self.height = float(args[4])
+        self.thickness = float(args[5])
+        self.axis_vector = Vector3d(float(args[6]), float(args[7]), float(args[8]))
+
+
+class DrawDisc(DrawCommand):
+    center = None
+    radius = None
+    axis_vector = None
+
+    def __init__(self, args):
+        super(DrawDisc, self).__init__(args)
+        self.key = 'disc'
+
+        self.center = Vector3d(float(args[0]), float(args[1]), float(args[2]))
+        self.radius = float(args[3])
+        self.axis_vector = Vector3d(float(args[4]), float(args[5]), float(args[6]))
+
+
+class DrawAnnulus(DrawCommand):
+    center = None
+    outer_radius = None
+    inner_radius = None
+    axis_vector = None
+
+    def __init__(self, args):
+        super(DrawAnnulus, self).__init__(args)
+        self.key = 'annulus'
+
+        self.center = Vector3d(float(args[0]), float(args[1]), float(args[2]))
+        self.outer_radius = float(args[3])
+        self.inner_radius = float(args[4])
+        self.axis_vector = Vector3d(float(args[5]), float(args[6]), float(args[7]))
+
+
+class DrawPolyhedron(DrawCommand):
+    faces_vertices = None
+    def __init__(self, args):
+        super(DrawPolyhedron, self).__init__(args)
+        self.key = 'polyhedron'
+        self.faces_vertices = args[0]
+
+
+class DrawPolygon(DrawCommand):
+    #TODO: awaiting C code for this
+    def __init__(self, args):
+        super(DrawPolygon, self).__init__(args)
+        self.key = 'polygon'
+
+
 class Vector3d(object):
-    def __init__(self, x=0, y=0, z=0):
+    def __init__(self, x=0.0, y=0.0, z=0.0):
         self.x = float(x)
         self.y = float(y)
         self.z = float(z)
@@ -783,7 +839,10 @@ class Transform(object):
 
 class Matrix3Identity(Matrix3):
     def __init__(self):
-        Matrix3.__init__(self, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+        Matrix3.__init__(self,
+                         1, 0, 0,
+                         0, 1, 0,
+                         0, 0, 1)
 
 def floatify(org_lst):
     ''' returns a transformed list with entries converted to floats, if possible '''

@@ -337,7 +337,7 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
       if (root != UNUSED)
       {
         list[(*index)++]=root;
- //       printf("findroots found a high root: vf = %g \n",root); 
+        //printf("findroots found a high root: vf = %g \n",root); 
       }
      }
     
@@ -349,12 +349,14 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
       if (root != UNUSED)
       {
         list[(*index)++]=root;
- //       printf("findroots found a  low root: vf = %g \n",root); 
+        //printf("findroots found a  low root: vf = %g \n",root);
+	return(-1);
       }      
      }
-//  fatalerror("exiting findroots");
-     }
-
+     //fatalerror("exiting findroots");
+     return(-1);
+    }
+ 
 #pragma acc routine 
  int findroots_gpu(double brack_low, double brack_mid, double brack_high, double *list, int* index, double *parms, _class_particle *_particle)
     {
@@ -382,7 +384,8 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
         list[(*index)++]=root;
       }      
      }
-     }
+    return(0);
+    }
 
 
 

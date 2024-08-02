@@ -27,14 +27,15 @@
 * %Parameters
 * Input parameters:
 *
-* r: [m]          Radius of curavature at the lens apex.
-* yheight: [m]    Height of lens opening. If zero this is set by the lens thickness.
-* N: [m]          Number of lenslets in the stack.
-* xwidth: [m]     Width of the lenslets.
-* yheight: [m]    Physical height of aperture. This may be used to introduce a gap between lenslets.
-* zdepth: [m]     Thickness of a single lenslet.
-* material: [str]   Datafile containing f1 constants
-* fast: [m]       Use fast calculation - should be off for better display with mxdisplay
+* r:        [m]   Radius of curavature at the lens apex.
+* yheight:  [m]   Height of lens opening. If zero this is set by the lens thickness.
+* N:        [m]   Number of lenslets in the stack.
+* xwidth:   [m]   Width of the lenslets.
+* yheight:  [m]   Physical height of aperture. This may be used to introduce a gap between lenslets.
+* zdepth:   [m]   Thickness of a single lenslet.
+* material: [str] Datafile containing f1 constants
+* fast:     [m]   Use fast calculation - should be off for better display with mxdisplay
+* d:        [m]   Thickness of a single lens
 * %End
 *******************************************************************************/
 
@@ -176,7 +177,7 @@ TRACE
 MCDISPLAY
 %{
   /* Draw a box around the lenslets*/
-  box(0,0,zdepth*N/2.0,xwidth,Y,zdepth*N);
+  box(0,0,zdepth*N/2.0,xwidth,Y,zdepth*N,0, 0, 1, 0);
 %}
 
 END

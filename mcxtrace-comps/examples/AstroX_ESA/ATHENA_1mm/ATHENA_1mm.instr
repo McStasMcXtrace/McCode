@@ -44,17 +44,17 @@
 * Example: ATHENA_1mm.instr porenumber=3
 *
 * %Parameters
-* FL [m] The focal length of the optical system
-* optics_dist [m] The distance between souce and optic. In space this would be quite large :-).
-* SRC_POS_X [m] Displacement of source along X
-* SRC_POS_Y [m] Displacement of source along Y
-* offaxis_angle [arcmin] Angle of collimated light from source
-* reflectivity [ ] Data file containing reflectivities (such as from IMD)
-* E0 [keV] Central energy of X-rays
-* dE [keV] Half spread of energy spectrum to be emitted from source
-* porenumber [ ] Actually the mirror module number.
-* positionfile [ ] File containing the pore/mirror module positions.
-* geomfile [ ] File which contains the geometry of the pores (i.e. radii,lengths)
+* FL: [m] The focal length of the optical system
+* optics_dist: [m] The distance between souce and optic. In space this would be quite large :-).
+* SRC_POS_X: [m] Displacement of source along X
+* SRC_POS_Y: [m] Displacement of source along Y
+* offaxis_angle: [arcmin] Angle of collimated light from source
+* reflectivity: [ ] Data file containing reflectivities (such as from IMD)
+* E0: [keV] Central energy of X-rays
+* dE: [keV] Half spread of energy spectrum to be emitted from source
+* porenumber: [ ] Actually the mirror module number.
+* positionfile: [ ] File containing the pore/mirror module positions.
+* geomfile: [ ] File which contains the geometry of the pores (i.e. radii,lengths)
 * dPx:      [m] Offset/displacement of parabolic pore along x from its theoretical position.
 * dPy:      [m] Offset/displacement of parabolic pore along y from its theoretical position.
 * dPz:      [m] Offset/displacement of parabolic pore along z from its theoretical position.
@@ -67,6 +67,9 @@
 * dHrx:     [arcsec] Rotational misalignment of hyperbolic pore around x.
 * dHry:     [arcsec] Rotational misalignment of hyperbolic pore around y.
 * dHrz:     [arcsec] Rotational misalignment of hyperbolic pore around z.
+* Hyper:    [ ] If non-zero the secondary mirror (hyperbolic) is active. Useful for debugging.
+* Para:     [ ] If non-zero the primary mirror is acive (parabolic) is active. Useful for debugging.
+* ringfile: [ ] File which contains deatiled plate descriptions.
 *
 * %Link
 * <a href="http://www.cosmos.esa.int/web/athena">The ATHENA web pages @ ESA</a>
@@ -81,7 +84,7 @@ DEFINE INSTRUMENT ATHENA_1mm(FL=12, optics_dist=10,
         dHx=0,dHy=0,dHz=0, dHrx=0, dHry=0, dHrz=0,
         string reflectivity="mirror_coating_unity.txt", 
         E0=5, dE=0.001, int porenumber=1,string ringfile="ref_design_breaks.txt", 
-        string positionfile="ATHENA_mm_1petal.dat", string geomfile="ATHENA_rings_1_20.dat", int hyper=1, int para=1)
+        string positionfile="ATHENA_mm_1petal.dat", string geomfile="ATHENA_rings_1_20.dat", int Hyper=1, int Para=1)
 DEPENDENCY "-DDATPATH=GETPATH(data/)"
 
 /* The DECLARE section allows us to declare variables or  small      */
@@ -153,7 +156,7 @@ INITIALIZE
 
     fp=fopen(fullpath_geomfile,"rb");
     if (fp==NULL){
-        fprintf(stderr,"Error: Cannot open file \'%s\'. Aborting.",fullpath_geomfile);
+        fprintf(stderr,"Error: Cannot open file \'%s\'. Aborting.\n",fullpath_geomfile);
         exit(-1);
     }
     fgets(line,1023,fp);
@@ -231,7 +234,7 @@ AT( 0,-PRM[ROW[porenumber-1]-1],0) RELATIVE misalign_rot_p
 
 COMPONENT mm_p_1 = MM_p(
         pore_th=0, ring_nr=ROW[porenumber-1], Z0=FL, pore_width=pore_width , pore_height=pore_height, mirror_reflec=reflectivity, R_d=0, size_file=ringfile)
-WHEN(para) AT(0,0,0) RELATIVE ref_p
+WHEN(Para) AT(0,0,0) RELATIVE ref_p
 ROTATED (0.0,0.0,0.0) RELATIVE ref_p
 EXTEND
 %{
@@ -250,7 +253,7 @@ AT( 0,-PRM[ROW[porenumber-1]-1],0) RELATIVE misalign_rot_h
 
 COMPONENT mm_h_1 = MM_h(
         pore_th=0, ring_nr=ROW[porenumber-1], Z0=FL, pore_width=pore_width, pore_height=pore_height, mirror_reflec=reflectivity, R_d=0, size_file=ringfile)
-WHEN (hyper) AT(0,0,0) RELATIVE ref_h
+WHEN (Hyper) AT(0,0,0) RELATIVE ref_h
 ROTATED (0.0,0.0,0.0) RELATIVE ref_h
 EXTEND
 %{

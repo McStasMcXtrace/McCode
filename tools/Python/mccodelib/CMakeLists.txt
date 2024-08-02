@@ -47,9 +47,9 @@ set(MCCODE_LOCATION "${DEST_TOOLDIR}")
 # Set some extra options for mccode_config
 set(CC "${CMAKE_C_COMPILER}")
 if (APPLE)
-  set(CFLAGS "${MCCODE_CFLAGS} -headerpad_max_install_names ${CMAKE_C_FLAGS}")
+  set(CFLAGS "-headerpad_max_install_names ${CMAKE_C_FLAGS} ${MCCODE_CFLAGS}")
 else()
-  set(CFLAGS "${MCCODE_CFLAGS} ${CMAKE_C_FLAGS}")
+  set(CFLAGS "${CMAKE_C_FLAGS} ${MCCODE_CFLAGS}")
 endif()
 
 # CPack configuration
@@ -69,7 +69,7 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply, hdf-compass")
 
 # RPM
 if (RPMPROFILE)
@@ -90,7 +90,7 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-set(entries_with_conda_prefix "CFLAGS;NEXUSFLAGS;MPIFLAGS;OACCFLAGS;TOOLS_CC;MPIRUN;MPICC")
+set(entries_with_conda_prefix "CFLAGS;NEXUSFLAGS;MPIFLAGS;GSLFLAGS;XRLFLAGS;OACCFLAGS;TOOLS_CC;MPIRUN;MPICC")
 foreach( var ${entries_with_conda_prefix} )
   set( MCCODE_FINAL_${var} "${${var}}" )
 endforeach()

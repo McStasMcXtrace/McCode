@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "import os;print(os.cpu_count())")}
 
 if [ "x$1" = "x" ]; then
@@ -42,9 +42,12 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcstas-tools-python-mcplot-svg $1 tools/Python/mcplot/svg/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-python-mcresplot $1 tools/Python/mcresplot/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" deb64 "" -- deb
+./mkdist mcstas-tools-python-mctest $1 tools/Python/mctest/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" deb64 "" -- deb
+./mkdist mcstas-tools-python-mcdisplay-webgl-classic $1 tools/Python/mcdisplay/webgl-classic/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" deb64 "" -- deb
+./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" deb64 "" -- deb
 ./mkdist mcstas-tools-python-mcdisplay-cad $1 tools/Python/mcdisplay/cad/ "" deb64 "" -- deb
 ./mkdist mcstas-clusterscripts $1 tools/cluster-scripts/ "" deb64 "" -- deb

@@ -24,16 +24,21 @@ dependencies:
   - pyqtgraph
   - pyqt
   - qscintilla2
+  - nexus
   - nexusformat
   - nexpy
   - hdf5
   - ncrystal
+  - xraylib
   - mcpl
   - jupytext
   - jupyterlab
   - ipympl
   - jinja2
   - mslex
+  - typish
+  - jsons
+  - nodejs
   - pip
   - pip:
     - guide_bot

@@ -32,14 +32,14 @@
 * %Parameters
 * INPUT PARAMETERS
 *
-* xwidth:  Width of block. (m) 
-* yheight: Height of block. (m)
-* zdepth:  Thickness of block. (m)
-* radius:  Radius of cylinder or sphere. (m)
-* material_datafile: File where the material parameters for the filter may be found. Format is similar to what may be found off the NIST website. [Be.txt]
-* geometry: File containing the polygon definition of a general shape object. When xwidth is also given, the object is rescaled accordingly (OFF/PLY)
-* fixed_delta: Use a fixed delta to compute refraction - useful for debugging. ( ) 
-* refraction: If nonzero, refraction is enabled. (0/1) 
+* xwidth:     [m] Width of block.
+* yheight:    [m] Height of block.
+* zdepth:     [m] Thickness of block.
+* radius:     [m] Radius of cylinder or sphere.
+* material_datafile: [str] File where the material parameters for the filter may be found. Format is similar to what may be found off the NIST website. [Be.txt]
+* geometry:   [str] File containing the polygon definition of a general shape object. When xwidth is also given, the object is rescaled accordingly (OFF/PLY)
+* fixed_delta:[0/1] Use a fixed delta to compute refraction - useful for debugging.
+* refraction: [0/1] If nonzero, refraction is enabled.
 *
 * %Link
 * Meshlab https://www.meshlab.net/
@@ -270,7 +270,7 @@ MCDISPLAY
 %{
   
   if (shape==CUBE){
-    box(0,0,0,xwidth,yheight,zdepth);
+    box(0,0,0,xwidth,yheight,zdepth,0, 0, 1, 0);
   } else if (shape==CYLINDER){
     circle("xy",0, yheight/2.0,0,radius);
     circle("xy",0,-yheight/2.0,0,radius);

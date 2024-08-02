@@ -1,0 +1,4 @@
+@set PATH=c:\\@FLAVOR@-@VERSION@\\bin;c:\\@FLAVOR@-@VERSION@\\miniconda3;%PATH%
+@cd %~dp0
+@npm.cmd install
+

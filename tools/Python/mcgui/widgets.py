@@ -759,7 +759,7 @@ class Ui_dlgInsertComponent(object):
         self.gridAtRotated.addWidget(self.edtRotY, 1, 4, 1, 1)
         self.edtRotZ = QtWidgets.QLineEdit(dlgInsertComponent)
         self.edtRotZ.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.edtRotZ.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AligVCenter)
+        self.edtRotZ.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.edtRotZ.setObjectName("edtRotZ")
         self.gridAtRotated.addWidget(self.edtRotZ, 1, 6, 1, 1)
         self.edtRotRel = QtWidgets.QLineEdit(dlgInsertComponent)

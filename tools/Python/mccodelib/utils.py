@@ -457,7 +457,7 @@ def parse_header(text):
 
 def read_define_instr(file):
     '''
-    Reads lines from file obj until DEFINE INSTRUMENT, then reads lines until \).
+    Reads lines from file obj until DEFINE INSTRUMENT, then reads lines until ")".
     Parses this statement and returns the result in organized form.
     '''
     lines = []
@@ -686,7 +686,7 @@ def get_instr_comp_files(mydir, recursive=True, instrfilter=None, compfilter=Non
             # get instr files
             if splitext(f)[1] == '.instr':
                 if instrfilter is not None:
-                    if instrreg.match(splitext(f)[0]):
+                    if instrreg.search(splitext(f)[0]):
                         files_instr.append(join(dirpath, f))
                 else:
                     files_instr.append(join(dirpath, f))
@@ -694,7 +694,7 @@ def get_instr_comp_files(mydir, recursive=True, instrfilter=None, compfilter=Non
             # get comp files
             if os.path.splitext(f)[1] == '.comp':
                 if compfilter is not None:
-                    if compreg.match(splitext(f)[0]):
+                    if compreg.search(splitext(f)[0]):
                         files_comp.append(join(dirpath, f))
                 else:
                     files_comp.append(join(dirpath, f))

@@ -57,7 +57,6 @@
 * sample_bulk:    [str]  Reflection/structure data file for the single crystal bulk
 * sample_thickness: [m]  The single crystal thin layer coating thickness
 * sample_angle:   [deg]  The sample tilt angle (around X axis)
-* detector_angle: [deg]  The detector tilt angle (around X axis)
 *
 * %Link
 * https://www.synchrotron-soleil.fr/en/beamlines/sixs
@@ -66,18 +65,22 @@
 *******************************************************************************/
 DEFINE INSTRUMENT SOLEIL_SIXS(E0=13, dE=0.1, dcm_theta=0, 
   M1_angle=3, M1_radius=1400, M2_radius=1400,
-  string sample_coating="Mo.lau", string sample_bulk="Si.lau", sample_thickness=50e-10,
-  sample_angle=0.175, detector_angle=0.175)
+  string sample_coating="Mo.lau", string sample_bulk="Si.lau", 
+  sample_thickness=50e-10, sample_angle=0.175)
 
 DECLARE
 %{
   double dcm_gap;
+%}
+
+USERVARS
+%{
   int    flag_scatt;
 %}
 
 INITIALIZE
 %{
-  double DM= 5.4909;     // Si d-spacing
+  double DM= 5.4909;     // Si d-spacing for the Monochromator
   double d = DM/sqrt(3); // <111> reflection |<111>|=3
   dcm_gap  = 0.02;       // gap between the 2 monochromator crystals
    
@@ -210,8 +213,8 @@ ROTATED (M1_angle,0,0) RELATIVE M2_rotated
 
 
 // The sample area -------------------------------------------------------------
-// align beam to hit surface centre
-COMPONENT sample_stage = COPY(mon_src_xy)
+// align surface so that the beam hits its centre (shift along Y axis)
+SPLIT 10 COMPONENT sample_stage = COPY(mon_src_xy)
 AT (0,0,33-28) RELATIVE PREVIOUS
 EXTEND %{
   flag_scatt = 0;
@@ -219,34 +222,37 @@ EXTEND %{
 
 COMPONENT sx_layer = Single_crystal(
   reflections=sample_coating, xwidth=2e-3, yheight=sample_thickness, zdepth=0.01,
-  surf_size=-1, p_transmit = 0.1,mosaic=1e-4)
-AT (0,-sample_thickness/2,0) RELATIVE PREVIOUS
-ROTATED (sample_angle,0,0) RELATIVE sample_stage
+  surf_size=-1, mosaic=1e-4, sigma_inc=0, p_transmit = 0.1)
+AT (0,-sample_thickness/2,0) RELATIVE sample_stage
+ROTATED (sample_angle,0,0)   RELATIVE sample_stage
 EXTEND %{
   if (SCATTERED) flag_scatt++;
 %}
 
 COMPONENT sx_bulk  = Single_crystal(
-  reflections=sample_bulk, xwidth=2e-3, yheight=1e-3, zdepth=0.01, surf_size=-1,mosaic=1e-4)
-AT (0,-1e-3/2,0) RELATIVE PREVIOUS
+  reflections=sample_bulk, xwidth=2e-3, yheight=1e-3, zdepth=0.01, 
+  surf_size=-1, mosaic=1e-4, sigma_inc=0)
+AT (0,-1e-3/2,0) RELATIVE PREVIOUS /* just below the thin layer */
 EXTEND %{
   if (SCATTERED) flag_scatt += 2;
 %}
 
 COMPONENT sample_out = Arm()
-AT (0,0,0) RELATIVE sample_stage
-ROTATED (detector_angle,0,0) RELATIVE sample_stage
+AT (0,0,0)       RELATIVE sample_stage
 EXTEND %{
   if (!flag_scatt) ABSORB;
 %}
 
-COMPONENT det = Monitor_nD(xwidth=0.5, yheight=0.5, options="x y", bins=512)
-AT (0,0,0.5) RELATIVE sample_out
+COMPONENT det4pi = Monitor_nD(radius=1, options="theta phi", bins=2048)
+AT (0,0,0) RELATIVE sample_stage
 
+COMPONENT detector_layer = COPY(det4pi)
+WHEN (flag_scatt == 1 || flag_scatt == 3)
+AT (0,0,0) RELATIVE sample_stage
 
-COMPONENT detector_layer = COPY(det)
-WHEN (flag_scatt == 1)
-AT (0,0,0.5) RELATIVE sample_out
+COMPONENT detector_bulk  = COPY(det4pi)
+WHEN (flag_scatt > 1)
+AT (0,0,0) RELATIVE sample_stage
 
 
 END

@@ -1,0 +1,169 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2010, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: TOF2Q_cyl_monitor
+*
+* %I
+* Written by:  Kim Lefmann
+* Date: October 2000
+* Version: $Revision: 1.14 $
+* Origin: Risoe
+* Release: McStas 2.0
+* Modified by: Sonja Holm, October 9, 2012
+* Modified by: Kim Lefmann, Feb 11, 2013
+*
+* %D
+* Cylindrical (2pi) 2theta v. q Time-of-flight monitor.
+*
+* %P
+* INPUT PARAMETERS:
+*
+* radius:          Cylinder radius (m)
+* height:          Cylinder height (m)
+* nq:              Number of q bins (1)
+* nh:              Number of bins in detector height (1)
+* nphi:            Number of angular bins (1)
+* q_min:           Minimum q value (1/AA)
+* q_max:           Maximum q value (1/AA)
+* L_chop2samp:     Distance from resolution chopper to sample position (m)
+* t_chop:          Fleight time of mean wave length from source to resolution chopper (ms)
+* pixel:           Flag, 0: no pixelation and perfect time. 1: make pixels from nphi and nh and time resolution limitation.
+* filename:        Name of file in which to store the detector image (text)
+* restore_neutron: If set, the monitor does not influence the neutron state (1)
+*
+* OUTPUT PARAMETERS:
+*
+* TOFq_N:    Array of neutron counts
+* TOFq_p:    Array of neutron weight counts
+* TOFq_p2:   Array of second moments
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT TOF2Q_cyl_monitor
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (int nq=100, int nphi=100, int nh=10, int restore_neutron=0, string filename=0, radius=1.0, height=0.1, q_min=0, q_max=20, L_chop2samp=144.0, t_chop=0.004, int pixel=1)
+DECLARE
+  %{
+    DArray2d TOFq_N;
+    DArray2d TOFq_p;
+    DArray2d TOFq_p2;
+    double binphi;
+    double alpha;
+  %}
+INITIALIZE
+  %{
+    int i,j;
+
+    alpha=0.252778e-3;
+
+    TOFq_N = create_darr2d(nphi+1,nq);
+    TOFq_p = create_darr2d(nphi+1,nq);
+    TOFq_p2 = create_darr2d(nphi+1,nq);
+    
+    binphi=180.0/(double)nphi;
+
+  %}
+TRACE
+  %{
+  double lambda_real,lambda, phi_inplane, q;
+    int i,j;
+    double cyl_t0,cyl_t1,dt,phi, phi_deg, L_tot;
+
+// Check if the neutron hits the detector
+    if(!cylinder_intersect(&cyl_t0, &cyl_t1, x,y,z,vx,vy,vz, radius, height))     /* No hit */
+      ABSORB;
+    if(cyl_t0>0)  /* Neutron hits cylinder from the outside */
+      ABSORB;
+    dt=cyl_t1;
+    PROP_DT(dt);
+    if(y>=(height/2-1E-7) || y<= -(height/2-1E-7))  /* Neutron hits cylinder ends; no detectors here */
+      ABSORB;  
+
+// Make the detector pixelated or continuos
+    if(pixel==0)
+    {
+      L_tot=L_chop2samp+sqrt(y*y+radius*radius);
+      lambda=(t-t_chop)/alpha/L_tot;
+
+      lambda_real = 2*PI/(sqrt(vx*vx+vy*vy +vz*vz)*V2K);
+//      printf("dt = %g Delta-t= %g L0 = %g L-tot = %g x=  %g y= %g z= %g lambda= %g lambda-real=%g \n", dt, t-t_chop, L_chop2samp, L_tot, x ,y, z, lambda, lambda_real);
+    } 
+
+    if(pixel==1)
+    {
+      L_tot=L_chop2samp+sqrt(y*y+radius*radius);
+      lambda=(t-t_chop)/alpha/L_tot;
+      phi_inplane = atan2(x,z);
+      phi_inplane =PI/nphi*round(phi_inplane*nphi/PI);
+      x = radius*sin(phi_inplane);
+      z = radius*cos(phi_inplane);
+      y = height/nh*round(y*nh/height);
+//      printf("x=  %g y= %g z= %g lambda= %g \n", x ,y, z, lambda);
+    }
+
+// Calculate where the neutron hits the detector
+    phi = acos(z/sqrt(x*x+y*y+z*z));   /* x-axis value */
+    q = (2*sin(sqrt(phi*phi)/2)) / lambda *2*PI;   /* y-axis value */
+    j = floor((q - q_min)*nq / (q_max - q_min));   /* Bin number */
+    i = round(RAD2DEG*phi/(double)binphi); /* Bin number */
+
+//    printf("lambda=%g phi= %g q= %g i= %d j=%d \n",lambda,phi,q,i,j);
+    
+    if (j < 0 || j >= nq)        /* Do not detect */
+    {
+    phi=phi*RAD2DEG;
+ //   printf("Ops! q value is not in detector range:  q=  %g lambda= %g 2theta= %g \n", q ,lambda, phi);
+    }
+    if (i < 0 || i >= nphi)
+    {
+  //  printf("Ops! 2theta value is not in detector range:  q=  %g lambda= %g 2theta= %g \n", q ,lambda, phi);
+    }
+    else
+     {
+      double p2 = p*p;
+      #pragma acc atomic
+      TOFq_N[i][j] = TOFq_N[i][j] + 1;
+      #pragma acc atomic
+      TOFq_p[i][j] = TOFq_p[i][j] + p;
+      #pragma acc atomic
+      TOFq_p2[i][j] = TOFq_p2[i][j] + p2;
+     } 
+    if (restore_neutron) {
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+    }
+  %}
+SAVE
+  %{
+    DETECTOR_OUT_2D(
+        "Cylindrical Time-of-flight 2theta v. q monitor",
+        "Scattering angle (2theta) [deg]",
+        "q [1/AA]",
+        0, 180, q_min, q_max, 
+        nphi, nq, 
+        &TOFq_N[0][0],&TOFq_p[0][0],&TOFq_p2[0][0],
+        filename);
+  %}
+
+FINALLY
+%{
+  destroy_darr2d(TOFq_N);
+  destroy_darr2d(TOFq_p);
+  destroy_darr2d(TOFq_p2);
+%}
+
+MCDISPLAY
+%{
+  magnify("y");
+  circle("xz", 0,0,0,radius);
+%}
+
+END
+
+
+
+

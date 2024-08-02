@@ -39,22 +39,22 @@
 *
 * %Parameters
 *
-* xwidth:  [m] Width of the air volume.
-* yheight: [m] Height of the air volume. 
-* zdepth:  [m] Depth of the air volume.
-* radius:  [m] Radius of spherical or cylindrical air volume.
-* target_x:[m] X-coordinate of sampling window.
-* target_y:[m] Y-coordinate of sampling window.
-* target_z:[m] Z-coordinate of sampling window.
-* target_index: [ ] index of target component putting sampling window on a subsequent component.
-* focus_xw:[m] Width of the sampling window.
-* focus_yh:[m] Height of the sampling window.
-* focus_ah:[rad] Vertical (height) opening angle of sampling window.
-* focus_aw:[rad] Horizontal (width) opening angle of sampling window.
-* focus_r:[rad] Radius of circular sampling window. 
-* frac:          fraction of rays to scatter from the air [ ]
-* pressure:      total pressure of the air gas [Pa]
-* temperature:   absolute temperature [K]
+* xwidth:  [m]    Width of the air volume.
+* yheight: [m]    Height of the air volume. 
+* zdepth:  [m]    Depth of the air volume.
+* radius:  [m]    Radius of spherical or cylindrical air volume.
+* target_x:[m]    X-coordinate of sampling window.
+* target_y:[m]    Y-coordinate of sampling window.
+* target_z:[m]    Z-coordinate of sampling window.
+* target_index: [ ] Index of target component putting sampling window on a subsequent component.
+* focus_xw:[m]    Width of the sampling window.
+* focus_yh:[m]    Height of the sampling window.
+* focus_ah:[rad]  Vertical (height) opening angle of sampling window.
+* focus_aw:[rad]  Horizontal (width) opening angle of sampling window.
+* focus_r: [rad]  Radius of circular sampling window. 
+* frac:    [0-1]  Fraction of rays to scatter from the air
+* pressure: [Pa]  Total pressure of the air gas
+* temperature:[K] Absolute temperature
 * 
 * %End
 *******************************************************************************/
@@ -243,7 +243,7 @@ MCDISPLAY
         line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
     }
     else if (shape == 1) { 	/* box */
-        box(0,0,0,xwidth,yheight,zdepth);
+      box(0,0,0,xwidth,yheight,zdepth,0, 0, 1, 0);
     }
     else if (shape == 2) {	/* sphere */
         circle("xy", 0,  0.0, 0, radius);

@@ -23,17 +23,19 @@
 * Example: Source_pt(dist=1,focus_xw=0.1,focus_yh=0.1, lamda=0.231, dlambda=0.002)
 *
 * %Parameters
-* focus_xw:[m]  Width of target.
-* focus_yh:[m]  Height of target.
-* E0:     [keV] Mean energy of xrays.
-* fname:  [ ] filename of main output file of GENESIS 1.3.
-* meshsize: [m] spacing between mesh points (equal in x and y).
-* gridpoints: [ ] number of mesh points along 1 axis.
-* s0: [m] back end of pulse time sampling windows scaled by c^-1. 
-* s1: [m] front end of pulse time sampling window scaled by c^-1.
-* focus_a: [rad] mean divergence angle.
-* nslices: [1] Number of slices simulated
-* flux: [1] Flux-multiplier
+* focus_xw: [m]     Width of target.
+* focus_yh: [m]     Height of target.
+* E0:       [keV]   Mean energy of xrays.
+* dE:       [kev]   Half-width (or std. dev.) of emitted energy spectrum.
+* fname:    [string] Filename of main output file of GENESIS 1.3.
+* meshsize: [m]     Spacing between mesh points (equal in x and y).
+* gridpoints:[int]  Number of mesh points along 1 axis.
+* s0:       [m]     Back end of pulse time sampling windows scaled by c^-1. 
+* s1:       [m]     Front end of pulse time sampling window scaled by c^-1.
+* focus_a:  [rad]   Mean divergence angle.
+* nslices:  [int]   Number of slices simulated
+* flux:     [1]     Flux-multiplier
+* dist:     [m]     Distance to target along z axis.
 *
 * %End
 ***********************************************************************/
@@ -41,7 +43,7 @@
 DEFINE COMPONENT Source_genesis13
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (int gridpoints=101, string fname="template.out",focus_xw=0,focus_yh=0,dist=1,E0=0, dE=0, 
-    meshsize=1e-5, nslices=102, s0=-2e-3,s1=2e-3,flux=1.0, focus_a=0.1)
+    meshsize=1e-5, int nslices=102, s0=-2e-3,s1=2e-3,flux=1.0, focus_a=0.1)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -55,11 +57,6 @@ SHARE
 DECLARE
 %{
   double e;
-  double l;
-  double l0;
-  double dl;
-  double s0;
-  double s1;
   double pmul;
   double pint;
   t_Table T;
@@ -75,7 +72,11 @@ INITIALIZE
   char dflfn[512];
   FILE *dflfp;
   int k,l,m;
-  double r[gridpoints],i[gridpoints];
+  double *r;
+  double *i;
+
+  r=malloc(gridpoints*sizeof(double));
+  i=malloc(gridpoints*sizeof(double));
 
   strncpy(dflfn,fname,502);
   strncat(dflfn,".dfl",4);
@@ -84,7 +85,7 @@ INITIALIZE
     fprintf(stderr,"Error(%s): allocation failed for slice array. Aborting.\n",NAME_CURRENT_COMP);
     exit(-1);
   }
-  if( (dflfp=fopen(dflfn,"r"))==NULL){
+  if( (dflfp=Open_File(dflfn,"r",NULL))==NULL){
     fprintf(stderr,"Error(%s): cannot open file %s for reading- Aborting.\n",NAME_CURRENT_COMP,dflfn);
     exit(-1);
   }
@@ -113,7 +114,8 @@ INITIALIZE
     }
     /*printf("done\n");*/
   }
-  
+  free(r);
+  free(i);
   pmul=flux/(double)mcget_ncount();
 %}
 

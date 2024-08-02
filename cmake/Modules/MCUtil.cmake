@@ -224,7 +224,7 @@ macro(setupMCCODE FLAVOR)
 
       # Create desktop links for mcgui py/pl and mccodego batch files
       set(CPACK_NSIS_CREATE_ICONS "CreateShortCut '$DESKTOP\\\\${MCCODE_PREFIX}gui-${MCCODE_VERSION}.lnk' '${CPACK_NSIS_INSTALL_ROOT}\\\\${DEST_BINDIR}\\\\${MCCODE_PREFIX}guistart.bat' ")
-     set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '$DESKTOP\\\\${FLAVOR}-shell-${MCCODE_VERSION}.lnk' '${CPACK_NSIS_INSTALL_ROOT}\\\\${DEST_BINDIR}\\\\mccodego.bat' ")
+     set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '$DESKTOP\\\\${FLAVOR}-shell-${MCCODE_VERSION}.lnk' '${CPACK_NSIS_INSTALL_ROOT}\\\\${DEST_BINDIR}\\\\${FLAVOR}go.bat' ")
     endif()
   else()
   
@@ -257,6 +257,9 @@ macro(setupMCCODE FLAVOR)
   # Define dependencies for gcc and the like
   set(CPACK_DEBIAN_PACKAGE_DEPENDS "build-essential, libopenmpi-dev")
   set(CPACK_RPM_PACKAGE_REQUIRES "gcc, openmpi-devel")
+
+  # Specify license for FreeBSD pkg
+  set(CPACK_FREEBSD_PACKAGE_LICENSE "GPLv3")
 
   # Generate postinst and postrm scripts
   configure_file(

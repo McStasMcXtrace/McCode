@@ -1,0 +1,119 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: GISANS_tests
+*
+* %Identification
+* Written by: Peter Willendrup (DTU/ESS) and Henrich Frielinghaus (MLZ)
+* Date: 2023-2024
+* Origin: MLZ
+* %INSTRUMENT_SITE: Tests_samples
+*
+* Instrument to test features of newly developed sample model for GISANS from H. Frielinghaus.
+*
+* %Description
+* Instrument to test features of newly developed sample model for GISANS from H. Frielinghaus, 
+* developed to model the GISANS features described in M. S. Hellsing et. al [1]
+*
+* Test case 1, grazing incidence from front
+* %Example: mcrun GISANS_tests.instr mode=1 Detector: DETfin_I=66.7514
+* Test case 2, grazing incidence from back
+* %Example: mcrun GISANS_tests.instr mode=2 Detector: DETfin_I=418.947
+* Test case 3, transmission, with beamstop
+* %Example: mcrun GISANS_tests.instr mode=3 BEAMSTOP=1 Detector: DETfin_I=4.93923e-05
+* Test case 4, transmission, without beamstop
+* %Example: mcrun GISANS_tests.instr mode=3 BEAMSTOP=0 Detector: DETfin_I=0.000247253
+
+*
+* %Parameters
+* mode: [1] Test mode selection
+*
+* %Link
+* [1] M. S. Hellsing et. al "Crystalline order of polymer nanoparticles over large areas at solid/liquid interfaces" Appl. Phys. Lett. 100, 221601 (2012) https://doi.org/10.1063/1.4723634
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT GISANS_tests(int mode=1, int BEAMSTOP=0)
+
+DECLARE
+%{
+  /* Source setup parameters */
+  double source_focus_xw;
+  double source_focus_yh;
+  /* Sample positional parameters */
+  double sample_x_rot;
+  double sample_y_pos;
+  /* Detector rotational parameter */
+  double detector_y_rot;
+%}
+
+INITIALIZE
+%{
+  if (mode==1) {
+    source_focus_xw=0.01;
+    source_focus_yh = 0.0008,
+    detector_y_rot=0.25;
+    sample_x_rot=89.700;
+    sample_y_pos=0.02;
+  } else if (mode==2) {
+    source_focus_xw=0.01;
+    source_focus_yh = 0.0008,
+    detector_y_rot=0;
+    sample_x_rot=90.300;
+    sample_y_pos=0.022;
+  } else if (mode==3) {
+    source_focus_xw=0.002;
+    source_focus_yh = 0.002;
+    detector_y_rot=0;
+    sample_x_rot=0;
+    sample_y_pos=0;
+  } else {
+    fprintf(stderr,"Error, no such test mode (%i)\n",mode);
+  }
+  
+%}
+
+TRACE
+
+/*This arm can be rotated to adjust the direction of the complete instrument*/
+COMPONENT arm = Arm()
+AT (0, 0, 0) ABSOLUTE
+ROTATED (0,0,0) ABSOLUTE
+
+COMPONENT ColdSource = Source_gen(
+   yheight =  0.01, xwidth = 0.01,
+   focus_xw = source_focus_xw, focus_yh = source_focus_yh, dist = 100.00,
+   lambda0 = 6.0, dlambda = 0.1,
+   T1=361.9,I1=7.22e13,
+   T2=159.0,I2=6.74e13,
+   T3=35.66,I3=6.435e13)
+  AT (0, 0, 0)  RELATIVE arm
+
+COMPONENT sample = GISANS_sample () 
+AT (0.0, sample_y_pos, 100.077) RELATIVE arm
+ROTATED (sample_x_rot,0,0) RELATIVE arm
+/* The sample uses default material parameters of:
+    rhosapph=5.773e-6;
+    rhoD2O=6.364e-6;
+    rhoPS=1.358e-6;
+    rhosiliconsurf=4.123e-6;
+    rhosilicon=2.079e-6;
+    rhosiliconsurf=2.079e-6;
+    abslensiliconsurf=209.919;
+    inclensiliconsurf=9901.6;
+*/
+
+COMPONENT STOP = Beamstop(radius=0.015)
+WHEN (BEAMSTOP) AT (0,0,109.95) RELATIVE arm
+
+COMPONENT DETfin = PSD_monitor(
+    nx = 256, 
+    ny = 256,
+    filename = "PSDfin.txt",
+    xmin = -0.5,
+    xmax =  0.5,
+    ymin = -0.5,
+    ymax =  0.5)
+AT (0,0,110.00) RELATIVE arm
+ROTATED (0,detector_y_rot,0) RELATIVE arm
+
+END

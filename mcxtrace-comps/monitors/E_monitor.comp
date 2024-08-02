@@ -26,13 +26,13 @@
 * %Parameters
 * INPUT PARAMETERS:
 *
-* xwidth: [m]  Width of detector. 
-* yheight: [m] Height of detector. 
-* Emin: [keV]  Minimum energy to detect.
-* Emax: [keV]  Maximum energy to detect.
-* nE: [m]      Number of energy channels.
-* filename: [str]  Name of file in which to store the detector image.
-* restore_xray: [ ]If set, the monitor does not influence the x-ray state.
+* xwidth:       [m]   Width of detector. 
+* yheight:      [m]   Height of detector. 
+* Emin:         [keV] Minimum energy to detect.
+* Emax:         [keV] Maximum energy to detect.
+* nE:           [m]   Number of energy channels.
+* filename:     [str] Name of file in which to store the detector image.
+* restore_xray: [0/1] If set, the monitor does not influence the x-ray state.
 *
 * OUTPUT PARAMETERS:
 *

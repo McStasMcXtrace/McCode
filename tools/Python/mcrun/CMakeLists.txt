@@ -137,5 +137,6 @@ if(NOT WINDOWS)
   install(
     PROGRAMS "${PROJECT_SOURCE_DIR}/acc_gpu_bind"
     DESTINATION ${DEST_BINDIR}
+    RENAME "${FLAVOR}-acc_gpu_bind"
     )
 endif()

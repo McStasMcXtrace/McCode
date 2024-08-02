@@ -43,6 +43,7 @@
 * debugMon: [ ]    If nonzero, all intermediate monitors appear for debugging purposes.
 * beamStop: [ ]    If nonzero, a beamstop is in between sample and PXRD 2d-detector.
 * SPLITS: [ ]      Split-number at the sample position.
+* sample_radius: [m] Powder sample cylinder radius
 * %End
 *******************************************************************************/
 
@@ -54,7 +55,7 @@ DEFINE INSTRUMENT MAXIV_DanMAX_pxrd2d(E0=35,DE=0.05,undK=0,undDetune=4,
         PXRDsampleap_h=300e-6, PXRDsampleap_w=300e-6,
         DMM_angle=0, DCM_angle=0,
         DCM=1, DMM=0,
-        OH_2DCRL_N=0,EH_2DCRL_N=0, D_EH_2DCRL=0,
+        OH_2DCRL_N=0, EH_2DCRL_N=0, D_EH_2DCRL=0,
         sample_radius=100e-6,
         pxrd_2d_y=135e-3, pxrd_2d_tthc=0, SDD_2D=150e-3,
         debugMon=1, beamStop=1, int SPLITS=100)

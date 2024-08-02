@@ -1,0 +1,38 @@
+name: miniconda3
+
+channels:
+  - conda-forge
+  - nodefaults
+
+dependencies:
+  - m2-msys2-runtime
+  - m2w64-gcc
+  - m2w64-gsl
+  - msmpi
+  - pyaml
+  - ply
+  - matplotlib
+  - numpy
+  - tornado
+  - scipy
+  - pillow
+  - pyqtgraph
+  - pyqt
+  - qscintilla2
+  - nexus
+  - nexusformat
+  - nexpy
+  - hdf5
+  - xraylib
+  - jupytext
+  - jupyterlab
+  - ipympl
+  - jinja2
+  - mslex
+  - typish
+  - jsons
+  - nodejs
+  - pip
+  - pip:
+    - guide_bot
+    - McStasScript

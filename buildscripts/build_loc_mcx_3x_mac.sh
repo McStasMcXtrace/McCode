@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "import os;print(os.cpu_count())")}
 
 # rapid-build script for mcxtrace-kernel dev:
@@ -24,7 +24,7 @@ then
     cd -
 fi
 
-if [ ! -f Mambaforge-$(uname)-$(uname -m).sh ]; then
+if [ ! -f Miniforge3-$(uname)-$(uname -m).sh ]; then
     # Download and embed a miniconda
     echo
     echo "*********************************************************"
@@ -32,15 +32,15 @@ if [ ! -f Mambaforge-$(uname)-$(uname -m).sh ]; then
     echo "*********************************************************"
     echo
     sleep 3
-    curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
+    curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
 fi
 
 if [[ !  -d $CONDALOCATION ]]; then
     echo "*********************************************************"
     echo "* Embedding miniconda3 in your app                      *"
     echo "*********************************************************"
-    chmod a+x Mambaforge-$(uname)-$(uname -m).sh
-    ./Mambaforge-$(uname)-$(uname -m).sh -b -p $CONDALOCATION
+    chmod a+x Miniforge3-$(uname)-$(uname -m).sh
+    ./Miniforge3-$(uname)-$(uname -m).sh -b -p $CONDALOCATION
     # Run conda to install the dependencies
     echo
     echo "*********************************************************"
@@ -49,7 +49,7 @@ if [[ !  -d $CONDALOCATION ]]; then
     echo
     export PATH=$CONDALOCATION/bin:$PATH 
     mamba update mamba -y
-    mamba install cmake compilers gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 openmpi xraylib -y
+    mamba install cmake compilers flex bison nodejs gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 openmpi xraylib -y
     mamba clean --all -y
 fi
 

@@ -66,6 +66,19 @@ size_t str_len(const char *s);
 #include <math.h>
 #endif
 
+/* In case of gcc / clang, ensure to use
+   the built-in isnan/isinf functions */
+#if defined(__GNUC__) || defined(__clang__)
+#  ifdef isnan
+#    undef isnan
+#  endif
+#  ifdef isinf
+#    undef isinf
+#  endif
+#  define isnan(x) __builtin_isnan(x)
+#  define isinf(x) __builtin_isinf(x)
+#endif
+
 #ifdef _MSC_EXTENSIONS
 #ifndef _TIMES_H
 #define _TIMES_H
@@ -187,6 +200,10 @@ clock_t times (struct tms *__buffer) {
 #  define MCCODE_VERSION "@MCCODE_VERSION@"
 #endif
 
+#ifndef __MCCODE_VERSION__
+#define __MCCODE_VERSION__ @MCCODE_VERSION_MACRO@L
+#endif
+
 #ifndef MCCODE_NAME
 #  define MCCODE_NAME "@MCCODE_NAME@"
 #endif
@@ -261,6 +278,7 @@ typedef struct metadata_table_struct metadata_table_t;
 char * metadata_table_key_component(char* key);
 char * metadata_table_key_literal(char * key);
 int metadata_table_defined(int, metadata_table_t *, char *);
+char * metadata_table_name(int, metadata_table_t *, char *);
 char * metadata_table_type(int, metadata_table_t *, char *);
 char * metadata_table_literal(int, metadata_table_t *, char *);
 void metadata_table_print_all_keys(int no, metadata_table_t * tab);
@@ -579,12 +597,14 @@ void mcdis_multiline(int count, ...);
 void mcdis_rectangle(char* plane, double x, double y, double z,
 		     double width, double height);
 void mcdis_box(double x, double y, double z,
-	       double width, double height, double length);
+	       double width, double height, double length, double thickness, double nx, double ny, double nz);
 void mcdis_circle(char *plane, double x, double y, double z, double r);
 void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, double nz);
 void mcdis_cylinder( double x, double y, double z,
-        double r, double height, int N, double nx, double ny, double nz);
-void mcdis_sphere(double x, double y, double z, double r, int N);
+		     double r, double height, double thickness, double nx, double ny, double nz);
+void mcdis_cone( double x, double y, double z,
+        double r, double height, double nx, double ny, double nz);
+void mcdis_sphere(double x, double y, double z, double r);
 
 
 /* random number generation. ================================================ */

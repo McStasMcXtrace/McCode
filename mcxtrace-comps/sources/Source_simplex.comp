@@ -21,17 +21,19 @@
 * in McXtrace.
 * 
 * %Parameters
-* focus_xw:[m]  Width of target.
-* focus_yh:[m]  Height of target.
-* E0:     [keV] Mean energy of xrays.
-* fname:  [ ] filename of main output file of GENESIS 1.3.
-* meshsize: [m] spacing between mesh points (equal in x and y).
-* gridpoints: [ ] number of mesh points along 1 axis.
-* s0: [m] back end of pulse time sampling windows scaled by c^-1. 
-* s1: [m] front end of pulse time sampling window scaled by c^-1.
-* focus_a: [rad] mean divergence angle.
-* nslices: [1] Number of slices simulated.
-* flux: [1] Flux-multiplier
+* focus_xw:   [m]   Width of target.
+* focus_yh:   [m]   Height of target.
+* dist:       [m]   Distance to target along z axis.
+* E0:         [keV] Mean energy of xrays.
+* dE:         [keV] Energy half spread of x-rays.
+* fname:      [string] Filename of main output file of GENESIS 1.3.
+* meshsize:   [m]   Spacing between mesh points (equal in x and y).
+* gridpoints: [int] Number of mesh points along 1 axis.
+* s0:         [m]   Back end of pulse time sampling windows scaled by c^-1. 
+* s1:         [m]   Front end of pulse time sampling window scaled by c^-1.
+* focus_a:    [rad] Mean divergence angle.
+* nslices:    [1]   Number of slices simulated.
+* flux:       [1]   Flux-multiplier.
 *
 * %Link
 * Tanaka, Journal of Synchrotron Radiation 22, 1319 (2015) http://journals.iucr.org/s/issues/2015/05/00/gb5029/
@@ -41,31 +43,30 @@
 *****************************************************************************/
 
 DEFINE COMPONENT Source_simplex
-DEFINITION PARAMETERS (gridpoints=101)
-SETTING PARAMETERS (string fname="template.fld",focus_xw=0,focus_yh=0,dist=1,E0=0, dE=0, 
-    meshsize=1e-5, nslices=102, s0=-2e-3,s1=2e-3,flux=1.0, focus_a=0.1)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (int gridpoints=101, string fname="template.fld",focus_xw=0,focus_yh=0,dist=1,E0=0, dE=0, 
+    meshsize=1e-5, int nslices=102, s0=-2e-3,s1=2e-3,flux=1.0, focus_a=0.1)
 OUTPUT PARAMETERS (prms)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{
   %include "read_table-lib"
-#include <complex.h>
+  #include <complex.h>
+  struct Ssimplex_struct {
+    double l0,dl;
+    double s0,s1;
+    double pmul,pint;
+    t_Table T;
+    double complex **dfl;
+  };
 %}
 
 
 DECLARE
 %{
   double e;
-  double l;
-  struct {
-    double l0,dl;
-    double s0,s1;
-    double pmul,pint;
-    t_Table T;
-    double complex **dfl;
-  } prms;
-
+  struct Ssimplex_struct prms;
 %}
 
 INITIALIZE
@@ -76,8 +77,14 @@ INITIALIZE
 
   char dflfn[512];
   FILE *dflfp;
-  int k,l,m;
-  float r[gridpoints],i[gridpoints];
+  int k;
+  int l;
+  int m;
+  float *r;
+  float *i;
+
+  r=malloc(gridpoints*sizeof(float));
+  i=malloc(gridpoints*sizeof(float));
 
   strncpy(dflfn,fname,502);
   strncat(dflfn,".fld",4);
@@ -86,7 +93,7 @@ INITIALIZE
     fprintf(stderr,"Error(%s): allocation failed for slice array. Aborting.\n",NAME_CURRENT_COMP);
     exit(-1);
   }
-  if( (dflfp=fopen(dflfn,"r"))==NULL){
+  if( (dflfp=Open_File(dflfn,"r", NULL))==NULL){
     fprintf(stderr,"Error(%s): cannot open file %s for reading- Aborting.\n",NAME_CURRENT_COMP,dflfn);
     exit(-1);
   }
@@ -115,7 +122,8 @@ INITIALIZE
     }
     /*printf("done\n");*/
   }
-  
+  free(r);
+  free(i);
   prms.pmul=flux/(double)mcget_ncount();
 %}
 

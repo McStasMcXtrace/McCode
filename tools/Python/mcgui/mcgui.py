@@ -795,14 +795,23 @@ class McGuiAppController():
             wrapper += f'#!/usr/bin/env bash\n\n'
             wrapper += f'# cd to location of taget .instr file\n'
             wrapper += f'cd ' + os.path.dirname(instr) + '\n\n'
-            wrapper += f'# call jupylab wrapper script from new directory, with input of base instr file.\n'
-            wrapper += f'' + scriptfile + ' ' + os.path.basename(instr) + '\n\n'
-            wrapper += f'# Remove script post jupyter exit \n\nrm -f $0\n\n'
+            if os.environ.get('CONDA_PREFIX'):
+                wrapper += f'# Activate our "current" conda env.\n'
+                wrapper += f'. ' + os.environ.get('CONDA_PREFIX') +  '/bin/activate \n\n'
+            wrapper += f'# Call jupylab wrapper script from new directory, with input of base instr file.\n'
+            wrapper += f'' + scriptfile + ' ' + os.path.basename(instr) + '\nret_code1=$?\n\n'
+            # Remove script post jupyter exit
+            wrapper += f'# Remove script post jupyter exit if jupyter exited cleanly\n'
+            wrapper += f'if [ \"$ret_code1\" -eq \"0\" ];'
+            wrapper += f'then\n    rm -f $0\nfi\n\n'
             wrapper += f'# End of wrapper script\n'
             suffix = ".command"
         else:
             wrapper += f'@REM cd to location of taget .instr file\n'
             wrapper += f'cd ' + os.path.dirname(instr) + '\n\n'
+            if os.environ.get('CONDA_PREFIX'):
+                wrapper += f'REM Activate our "current" conda env.\n'
+                wrapper += f'call '+ os.environ.get('CONDA_PREFIX') +  '\\Scripts\\activate \n\n'
             wrapper += f'"REM call jupylab wrapper script from new directory, with input of base instr file.\n'
             wrapper += f'' + scriptfile + ' ' + os.path.basename(instr) + '\n\n'
             wrapper += f'@REM Remove script post jupyter exit \n\n@del %~dpnx0\n@exit\n'
@@ -883,9 +892,19 @@ class McGuiAppController():
             if self.view.closeCodeEditorWindow():
                 text = get_file_contents(instr_templ)
                 self.state.unloadInstrument()
-                # Templates are now cpoied including their containing folder
-                shutil.copytree(os.path.dirname(str(instr_templ)),new_instr_req)
-                new_instr = os.path.join(new_instr_req, os.path.basename(str(instr_templ)))
+                # Templates are now copied including their containing folder
+                srcdir = os.path.dirname(str(instr_templ))
+                trgdir = pathlib.Path(new_instr_req)
+                # Case 1: destination folder already exists, "merge":
+                if pathlib.Path.exists(trgdir):
+                    files=os.listdir(srcdir)
+                    for fname in files:
+                        shutil.copy2(os.path.join(srcdir,fname), trgdir)
+                else:
+                    # Case 2: create a new folder:
+                    shutil.copytree(srcdir,trgdir)
+
+                new_instr = os.path.join(trgdir, os.path.basename(str(instr_templ)))
                 self.state.loadInstrument(new_instr)
                 self.emitter.status("Instrument created: " + os.path.basename(str(new_instr)))
     
@@ -925,7 +944,7 @@ class McGuiAppController():
             scriptfile = str(mccode_config.configuration["MCCODE"] + '-environment')
             scriptfile = str(pathlib.Path(__file__).parent.parent.parent.parent.resolve() / scriptfile)
         else:
-            scriptfile = 'start ' + mccode_config.configuration["MCCODE_LIB_DIR"] + '\\..\\bin\\mccodego.bat'
+            scriptfile = mccode_config.directories["bindir"] + '\\' + mccode_config.configuration["MCCODE"] + 'go.bat'
 
         subprocess.Popen(terminal + ' ' + scriptfile, shell=True)
         

@@ -30,6 +30,7 @@
 * index: [1]   Index of the Mirror component to test
 * L:     [m]   Distance source-mirror and mirror-detector
 * radius:[m]   Radius of curvature
+* E0:    [keV] Mean photon energy
 *
 * %End
 *******************************************************************************/

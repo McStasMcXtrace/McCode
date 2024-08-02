@@ -329,9 +329,9 @@ def plot_ellipses(file, Q4, w, Qmean, ellis):
 	coord_names = ["Qpara (1/A)", "Qperp (1/A)", "Qup (1/A)", "E (meV)"]
 
 	if options["use_tex"]:
-		coord_names[0] = "$Q_{\parallel}$ (\AA$^{-1}$)"
-		coord_names[1] = "$Q_{\perp}$ (\AA$^{-1}$)"
-		coord_names[2] = "$Q_{up}$ (\AA$^{-1}$)"
+		coord_names[0] = "$Q_{\\parallel}$ (\\AA$^{-1}$)"
+		coord_names[1] = "$Q_{\\perp}$ (\\AA$^{-1}$)"
+		coord_names[2] = "$Q_{up}$ (\\AA$^{-1}$)"
 
 
 	ellplots = []

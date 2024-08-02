@@ -383,7 +383,7 @@ MCDISPLAY
     mcdis_line(0, -geoparams.dy/2.0, +geoparams.rradius, 0, +geoparams.dy/2.0, +geoparams.rradius);
     break;
   case NC_BOX:
-    mcdis_box(0., 0., 0., geoparams.dx, geoparams.dy, geoparams.dz);
+    mcdis_box(0., 0., 0., geoparams.dx, geoparams.dy, geoparams.dz,0, 0, 1, 0);
     break;
   case NC_SPHERE:
     mcdis_circle("xy", 0., 0., 0., geoparams.rradius);

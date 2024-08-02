@@ -1,4 +1,4 @@
-@CALL @CPACK_NSIS_INSTALL_ROOT@\bin\mccodeenv.bat
+@CALL @CPACK_NSIS_INSTALL_ROOT@\bin\@FLAVOR@env.bat
 @ECHO OFF
 @ECHO @MCCODE_NAME@ environment shell:
 @ECHO OFF

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "import os;print(os.cpu_count())")}
 
 PATH=$PATH:$PWD/tools/download-tool
@@ -33,8 +33,6 @@ WORK=`pwd`
 # Workaround for having CRLF linefeeds in a couple of windows packages
 rsync -avz --delete --exclude=".svn/"  mcstas-comps/ mcstas-comps-win
 find mcstas-comps-win -type f -not -name \*.off -exec unix2dos \{\} \;
-# Patch the Multilayer_sample to allow compilation with GSL
-sed -i 's+@MCCODE_LIB@/miniconda3/+c:\\mcstas-'${1}'\\miniconda3\\Library\\mingw-w64\\+g' mcstas-comps-win/contrib/Multilayer_Sample.comp
 
 # 64-bit
 ./mkdist mcstas $1 "" "" mingw64 "" -- nsis64
@@ -44,11 +42,13 @@ sed -i 's+@MCCODE_LIB@/miniconda3/+c:\\mcstas-'${1}'\\miniconda3\\Library\\mingw
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcplot-svg $1 tools/Python/mcplot/svg/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-python-mctest $1 tools/Python/mctest/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcresplot $1 tools/Python/mcresplot/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcdisplay-cad $1 tools/Python/mcdisplay/cad/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mingw64 "" -- nsis64
@@ -59,15 +59,15 @@ sed -i 's+@MCCODE_LIB@/miniconda3/+c:\\mcstas-'${1}'\\miniconda3\\Library\\mingw
 if [ "x$2" != "x" ]; then
     # Build the meta-packages also
     cd meta-pkgs/windows/Support
-    if [ ! -f Miniforge3-Windows-x86_64.exe ]; then
-	echo Sorry! I need to download a Miniconda3 for embedding - will take some time...
-	wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Windows-x86_64.exe
+    if [  -f Miniforge3-Windows-x86_64.exe ]; then
+	rm Miniforge3-Windows-x86_64.exe
     fi
+    wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Windows-x86_64.exe
     cd ..
 
     rm -f python-install.bat.in.2 python-install.bat docupdate.bat.in.2 docupdate.bat
     
-    sed s/@VERSION@/${1}/g mcstas-python-install.bat.in > python-install.bat.in.2
+    sed s/@VERSION@/${1}/g python-install.bat.in > python-install.bat.in.2
     sed s/@FLAVOR@/mcstas/g python-install.bat.in.2 > python-install.bat
     sed s/@VERSION@/${1}/g docupdate.bat.in > docupdate.bat.in.2
     sed s/@P@/mc/g docupdate.bat.in.2 >docupdate.bat.in.3
@@ -76,8 +76,6 @@ if [ "x$2" != "x" ]; then
     sed s/@VERSION@/${1}/g McStas-metapackage64.iss > McStas-${1}-metapackage64.iss
     ./iscc McStas-${1}-metapackage64.iss
     mv Output/setup.exe dist/McStas-Metapackage-${1}-win64.exe
-    mkdir dist/extras
-    cp NeXus/*.* dist/extras
     cp $WORK/INSTALL-McStas-3.x/Windows/README.md dist/
     mkdir dist/single-packages
     mv dist/mcstas-* dist/single-packages

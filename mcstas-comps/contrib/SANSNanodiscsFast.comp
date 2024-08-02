@@ -59,7 +59,7 @@ SETTING PARAMETERS (int NumberOfQBins = 200,
 	xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius, qMin = 0.001, qMax = 1.0 )
 
 OUTPUT PARAMETERS ()
-DEPENDENCY "-I@MCCODE_LIB@/miniconda3/include -Wl,-rpath,@MCCODE_LIB@/miniconda3/lib -L@MCCODE_LIB@/miniconda3/lib -lgsl -lgslcblas "
+DEPENDENCY " @GSLFLAGS@ "
 NOACC
 
 SHARE
@@ -357,8 +357,7 @@ TRACE
 
 MCDISPLAY
 %{
-
-	box(0, 0, 0, xwidth, yheight, zdepth);
+  box(0, 0, 0, xwidth, yheight, zdepth,0, 0, 1, 0);
 %}
 
 END

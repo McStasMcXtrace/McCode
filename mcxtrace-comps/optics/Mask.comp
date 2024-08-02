@@ -47,13 +47,11 @@
 * 
 * %Parameters
 * Input parameters:
-* xwidth: [m]   Width of the masking object
-* yheight:[m]   Height of the masking object
-* mask:   [ ]   Name of file containing the masking image
-* invert: [ ]   ==0 => make values are opacity, ==1 => makse values are transparency.
-* virtual:[ ]   Mask does not affect the x-ray, but does still read the pixel value of the pixel hit and stores it in masking.
-* Output parameters:
-* maskvar: [ ]  Opacity/transmission value.
+* xwidth: [m]     Width of the masking object
+* yheight:[m]     Height of the masking object
+* mask:   [str]   Name of file containing the masking image
+* invert: [0/1]   When 0 => masked values are opaque, when 1 => masked values are transparent.
+* virtual:[0/1]   Mask does not affect the x-ray, but does still read the pixel value of the pixel hit and stores it in masking.
 * %End
 *******************************************************************************/
 
@@ -107,7 +105,7 @@ INITIALIZE
       const int ERROR=1;
       const int NOT_PNG=2;
 
-      FILE *fp = fopen(mask, "rb");
+      FILE *fp = Open_File(mask, "rb", NULL);
       if (!fp){
         fprintf(stderr,"Error(%s): cant open file %s for reading\n", NAME_CURRENT_COMP,mask); 
         exit(1);

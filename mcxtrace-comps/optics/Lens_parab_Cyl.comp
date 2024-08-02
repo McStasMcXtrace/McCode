@@ -34,7 +34,7 @@
 * yheight:  [m] The CRL's aperture along Y.
 * xwidth:   [m] The width of the CRL in the invariant direction x.
 * d:        [m] Distance between two surfaces of the lens along the propagation axis.
-* N:        [ ] Number of single lenses in a stack.
+* N:        [1] Number of single lenses in a stack.
 * rough_xy: [rad] RMS value of random slope along x and y.
 * rough_z:  [rad] RMS value of random slope along z.
 * material_datafile: [str]   Datafile containing f1 constants
@@ -201,7 +201,7 @@ INITIALIZE
 TRACE
 %{
   // calculation of the parabolic parameters
-  double parab_Cyl[6];
+  double parab_Cyl[8];
   data_lens_parab_Cyl incid,refr,outg;
   
   int i=0,nr;  
@@ -291,7 +291,7 @@ MCDISPLAY
   w=(yheight*yheight)/(8*r);
   zdepth=N*(2*w+d);
   z_c=(zdepth/2.0)-w;
-  box(0,0,z_c,yheight/2,yheight/2,zdepth);
+  box(0,0,z_c,yheight/2,yheight/2,zdepth,0, 0, 1, 0);
 %}
 
 END

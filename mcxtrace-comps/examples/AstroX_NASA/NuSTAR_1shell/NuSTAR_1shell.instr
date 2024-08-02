@@ -41,6 +41,9 @@
 * shellnumber: [ ]   The row number for the miror module. This defines the shell.
 * parabolic_datafile: [ ]  File which contains the geometry of the parabolic (primary) mirrors. (i.e. radii,lengths)
 * hyperbolic_datafile: [ ] File which contains the geometry of the hyperbolic (secondary) mirrors. (i.e. radii,lengths)
+* drx: [arcsec] Rotation of shell along X
+* dry: [arcsec] Rotation of shell along Y
+* drz: [arcsec] Rotation of shell along Z
 *
 * %Link
 * <a href="http://www.cosmos.esa.int/web/athena">The ATHENA web pages @ ESA</a>
