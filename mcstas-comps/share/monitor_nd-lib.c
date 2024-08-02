@@ -844,7 +844,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	detector.p2 = NULL;
 
 	sprintf(detector.filename,"BINS");
-	sprintf(detector.component,Vars->compcurname);
+	sprintf(detector.component,"%s",Vars->compcurname);
 	sprintf(detector.format,"pixels");
 	
 	if(!Vars->Flag_OFF) {
@@ -861,8 +861,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	  if (N_spatial_dims==1) {
 	    minbins=Vars->Coord_Min[1];
 	    maxbins=Vars->Coord_Max[1];
-	    sprintf(binlabel,Vars->Coord_Label[1]);
-	    sprintf(binvar,Vars->Coord_Var[1]);
+	    sprintf(binlabel,"%s",Vars->Coord_Label[1]);
+	    sprintf(binvar,"%s",Vars->Coord_Var[1]);
 	  } else if (N_spatial_dims>3) {
 	    minbins=1;
 	    maxbins=Vars->Coord_BinProd[Vars->Coord_Number-1];
@@ -870,8 +870,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	    sprintf(binvar,"wrapped_variables_4plus_dims");
 	    N_spatial_dims=1;
 	  }
-	  sprintf(detector.xlabel,binlabel);
-	  sprintf(detector.xvar,binvar);
+	  sprintf(detector.xlabel,"%s",binlabel);
+	  sprintf(detector.xvar,"%s",binvar);
 	  detector.xmin=minbins;
 	  detector.xmax=maxbins;
 	} else {
@@ -881,8 +881,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	  sprintf(binlabel,"OFF pixel index");
 	  sprintf(binvar,"OFF");
 	  N_spatial_dims=1;
-	  sprintf(detector.xlabel,binlabel);
-	  sprintf(detector.xvar,binvar);
+	  sprintf(detector.xlabel,"%s",binlabel);
+	  sprintf(detector.xvar,"%s",binvar);
 	  detector.xmin=minbins;
 	  detector.xmax=maxbins;
 	} 
@@ -910,12 +910,12 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	  detector.n=Vars->Coord_Bin[2];
 	  detector.p=1;
 	  detector.rank=2;
-	  sprintf(detector.xlabel,Vars->Coord_Label[1]);
-	  sprintf(detector.xvar,Vars->Coord_Var[1]);
+	  sprintf(detector.xlabel,"%s",Vars->Coord_Label[1]);
+	  sprintf(detector.xvar,"%s",Vars->Coord_Var[1]);
 	  detector.xmin=Vars->Coord_Min[1];
 	  detector.xmax=Vars->Coord_Max[1];
-	  sprintf(detector.ylabel,Vars->Coord_Label[2]);
-	  sprintf(detector.yvar,Vars->Coord_Var[2]);
+	  sprintf(detector.ylabel,"%s",Vars->Coord_Label[2]);
+	  sprintf(detector.yvar,"%s",Vars->Coord_Var[2]);
 	  detector.ymin=Vars->Coord_Min[2];
 	  detector.ymax=Vars->Coord_Max[2];
 	  detector.p0=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2], sizeof(double));
@@ -935,16 +935,16 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	  detector.n=Vars->Coord_Bin[2];
 	  detector.p=Vars->Coord_Bin[3];;
 	  detector.rank=3;
-	  sprintf(detector.xlabel,Vars->Coord_Label[1]);
-	  sprintf(detector.xvar,Vars->Coord_Var[1]);
+	  sprintf(detector.xlabel,"%s",Vars->Coord_Label[1]);
+	  sprintf(detector.xvar,"%s",Vars->Coord_Var[1]);
 	  detector.xmin=Vars->Coord_Min[1];
 	  detector.xmax=Vars->Coord_Max[1];
-	  sprintf(detector.ylabel,Vars->Coord_Label[2]);
-	  sprintf(detector.yvar,Vars->Coord_Var[2]);
+	  sprintf(detector.ylabel,"%s",Vars->Coord_Label[2]);
+	  sprintf(detector.yvar,"%s",Vars->Coord_Var[2]);
 	  detector.ymin=Vars->Coord_Min[2];
 	  detector.ymax=Vars->Coord_Max[2];
-	  sprintf(detector.zlabel,Vars->Coord_Label[3]);
-	  sprintf(detector.zvar,Vars->Coord_Var[3]);
+	  sprintf(detector.zlabel,"%s",Vars->Coord_Label[3]);
+	  sprintf(detector.zvar,"%s",Vars->Coord_Var[3]);
 	  detector.zmin=Vars->Coord_Min[3];
 	  detector.zmax=Vars->Coord_Max[3];
 	  detector.p0=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*Vars->Coord_Bin[3], sizeof(double));
