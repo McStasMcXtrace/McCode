@@ -332,6 +332,7 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
     pol.npol  = faceArray[i];                //nb vertex of polygon
     pol.p     = popol;
     pol.normal= coords_set(0,0,1);
+    pol.D     = 1;
     unsigned long indVertP1=faceArray[++i];  //polygon's first vertex index in vtxTable
     int j=1;
     /*check whether vertex is left or right of plane*/
@@ -801,6 +802,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
     polygon p;
     p.p   =vertices;
     p.npol=nbVertex;
+    p.D=1;
     off_normal(&(p.normal),p);
 
     normalArray[indNormal]=p.normal;
