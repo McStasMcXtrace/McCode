@@ -22,7 +22,7 @@ const Chart: React.FC<ChartProps> = ({
       title: xAxisLabel,
       showgrid: false,
       zeroline: false,
-      showline: true,
+      showline: false,
       range: plotlyRanges[chartTitle]?.xaxis,
     },
     yaxis: {
@@ -32,7 +32,7 @@ const Chart: React.FC<ChartProps> = ({
       },
       showgrid: false,
       zeroline: false,
-      showline: true,
+      showline: false,
       range: plotlyRanges[chartTitle]?.yaxis,
     },
     paper_bgcolor: "rgba(0,0,0,0)",

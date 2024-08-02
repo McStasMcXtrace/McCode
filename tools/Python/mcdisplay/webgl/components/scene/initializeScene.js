@@ -14,15 +14,18 @@ export const initializeCameras = (
   topView2DRef,
   sideView2DRef,
   primaryViewRef,
-  updatePlotlyRanges
 ) => {
   // Helper function to create an Orthographic Camera
-  const createOrthographicCamera = (width, height) => {
-    const left = width / -100;
-    const right = width / 100;
-    const top = height / 100;
-    const bottom = height / -100;
-    const size = 1;
+  const createOrthographicCamera = (width, height, size) => {
+    // Calculate the aspect ratio
+    const aspect = width / height;
+
+    // Calculate the boundaries
+    const left = -size / 2;
+    const right = size / 2;
+    const top = (size / 2) / aspect;
+    const bottom = -(size / 2) / aspect;
+
     const near = 0.1;
     const far = 1000;
     return new THREE.OrthographicCamera(left, right, top, bottom, near, far);
@@ -48,7 +51,7 @@ export const initializeCameras = (
     const domElement = getDomElement(view);
 
     if (view.camera === "OrthographicCamera") {
-      camera = createOrthographicCamera(width, height);
+      camera = createOrthographicCamera(width, height, size);
       controls = new OrbitControls(camera, domElement);
       controls.enableRotate = false;
       const cameraHelper = new THREE.CameraHelper(camera);
@@ -60,6 +63,8 @@ export const initializeCameras = (
     }
 
     const position = view.initialCamPos.map((element) => element * size);
+    console.log("position: ",position);
+    console.log("size: ",size); 
     camera.position.fromArray(position);
     camera.up.fromArray(view.up);
 
@@ -121,6 +126,7 @@ export const addGrids = (scene, gridSize) => {
 
   const grids = {};
   const gridXZ = new THREE.GridHelper(correctedGridSize, correctedGridSize);
+  console.log("correctedGridSize: ",correctedGridSize);
   gridXZ.position.set(0, 0, center);
   gridXZ.visible = true;
   gridXZ.name = "gridXZ";

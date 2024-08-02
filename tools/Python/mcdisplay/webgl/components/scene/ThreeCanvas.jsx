@@ -33,7 +33,7 @@ import { useSceneContext } from "../../Contexts/SceneContext";
 const ThreeCanvas = () => {
   const { showXY, showXZ, showYZ, gridSize, gridDivisions, showAxes } =
     useGridContext();
-  const { camPos, setCamPosSide, setCamPosTop, setCamPosHome } =
+  const {camPos, setCamPosSide, setCamPosTop, setCamPosHome } =
     useCameraContext();
   const { instrument, setInstrument } = useInstrumentContext();
   const {
@@ -68,6 +68,7 @@ const ThreeCanvas = () => {
     axesRef,
   } = useSceneContext();
 
+  const [aspectRatio,setAspectRatio] = useState(1.0);
   const [hoverInfo, setHoverInfo] = useState("");
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
@@ -193,7 +194,7 @@ const ThreeCanvas = () => {
     if (containerRef.current) {
       views.forEach((view) => {
         const aspect = setScissorForElement(view.domElement);
-
+        setAspectRatio(aspect);
         const camera = view.camera;
         view.updateCamera(camera, sceneRef.current, mouseX, mouseY);
         view.updateControls(view.controls);
@@ -311,22 +312,22 @@ const ThreeCanvas = () => {
         if (view.camera.type === "OrthographicCamera") {
           console.log("bboxSize", bboxSize);
           const camera = view.camera;
-          const originalXRange = [0, bboxSize];
-          const originalYRange = [-bboxSize / 2, bboxSize / 2];
-          /*
+          let originalXRange = [0, bboxSize];
+          let originalYRange = [-bboxSize / 2, bboxSize / 2];
+          
           if(view.view === "Top") {
              originalXRange = [0, bboxSize];
-             originalYRange = [-bboxSize / 2, bboxSize / 2];
+             originalYRange = [-bboxSize / 2/aspectRatio, bboxSize / 2/aspectRatio];
           }
           else if(view.view === "Side") {
-             originalXRange = [bboxSize,0];
-             originalYRange = [-bboxSize / 2, bboxSize / 2];
+             originalXRange = [0,bboxSize];
+             originalYRange = [-bboxSize / 2/aspectRatio, bboxSize / 2/aspectRatio];
           }
           else if(view.view === "End") {
-             originalXRange = [0, bboxSize];
-             originalYRange = [-bboxSize / 2, bboxSize / 2];
+             originalXRange = [-bboxSize / 2, bboxSize / 2];
+             originalYRange = [-bboxSize / 2/aspectRatio, bboxSize / 2/aspectRatio];
           }
-             */
+          
           const originalXCenter = (originalXRange[0] + originalXRange[1]) / 2;
           const originalYCenter = (originalYRange[0] + originalYRange[1]) / 2;
           const setZoom =
