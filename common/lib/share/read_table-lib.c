@@ -357,7 +357,8 @@ void *Table_File_List_store(t_Table *tab){
     FILE   *hfile;
     char    path[1024];
     struct stat stfile;
-    double *data;
+    double *data    = NULL;
+    double *datatmp = NULL;
     long    i;
     long    begin;
 
@@ -407,10 +408,14 @@ void *Table_File_List_store(t_Table *tab){
     Table->end     = ftell(hfile);
     if (offset) *offset=Table->end;
     fclose(hfile);
-    data = (double*)realloc(data, (double)nelements*sizeofelement);
-    if (!data) {
+
+    datatmp = (double*)realloc(data, (double)nelements*sizeofelement);
+    if (!datatmp) {
+      free(data);
       fprintf(stderr,"Error: reallocating %ld elements for %s file '%s'. Too big (Table_Read_Offset_Binary).\n", nelements, type, File);
       exit(-1);
+    } else {
+      data = datatmp;
     }
     /* copy file data into Table */
     if (type && !strcmp(type,"double")) Table->data = data;
@@ -455,8 +460,10 @@ void *Table_File_List_store(t_Table *tab){
   long Table_Read_Handle(t_Table *Table, FILE *hfile,
                          long block_number, long max_rows, char *name)
   { /* reads all/a data block from 'file' handle and returns a Table structure  */
-    double *Data;
+    double *Data              = NULL;
+    double *Datatmp           = NULL;
     char *Header              = NULL;
+    char *Headertmp           = NULL;
     long  malloc_size         = CHAR_BUF_LENGTH;
     long  malloc_size_h       = 4096;
     long  Rows = 0,   Columns = 0;
@@ -498,10 +505,14 @@ void *Table_File_List_store(t_Table *tab){
           if (count_in_header >= malloc_size_h) {
             /* if succeed and in array : add (and realloc if necessary) */
             malloc_size_h = count_in_header+4096;
-            Header        = (char*)realloc(Header, malloc_size_h*sizeof(char));
-	    if(!Header) {
+            char *Headertmp = (char*)realloc(Header, malloc_size_h*sizeof(char));
+	    if(!Headertmp) {
+	      free(Header);
 	             fprintf(stderr, "Error: Could not reallocate Header (Table_Read_Handle).\n");
+		     free(Header);
 		     return (-1);
+	    } else {
+	      Header = Headertmp;
 	    }
           }
           strncat(Header, line, 4096);
@@ -570,11 +581,14 @@ void *Table_File_List_store(t_Table *tab){
                   if (count_in_array >= malloc_size) {
                     /* realloc data buffer if necessary */
                     malloc_size = count_in_array*1.5;
-                    Data = (double*) realloc(Data, malloc_size*sizeof(double));
-                    if (Data == NULL) {
+                    Datatmp = (double*) realloc(Data, malloc_size*sizeof(double));
+                    if (Datatmp == NULL) {
                       fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Handle).\n",
                               malloc_size*sizeof(double));
+		      free(Data);
                       return (-1);
+                    } else {
+                      Data=Datatmp;
                     }
                   }
                   if (0 == block_Num_Columns) Rows++;
@@ -615,10 +629,13 @@ void *Table_File_List_store(t_Table *tab){
 
     // shrink header to actual size (plus terminating 0-byte)
     if (count_in_header) {
-      Header = (char*)realloc(Header, count_in_header*sizeof(char) + 1);
-      if(!Header) {
+      Headertmp = (char*)realloc(Header, count_in_header*sizeof(char) + 1);
+      if(!Headertmp) {
 	fprintf(stderr, "Error: Could not shrink Header (Table_Read_Handle).\n");
+	free(Header);
 	return (-1);
+      } else {
+        Header = Headertmp;
       }
     }
     Table->header = Header;
@@ -645,10 +662,13 @@ void *Table_File_List_store(t_Table *tab){
         (!block_number ? " catenated" : ""),
         count_invalid);
     }
-    Data     = (double*)realloc(Data, count_in_array*sizeof(double));
-    if(!Data) {
+    Datatmp     = (double*)realloc(Data, count_in_array*sizeof(double));
+    if(!Datatmp) {
       fprintf(stderr, "Error: Could reallocate Data block to %li doubles (Table_Read_Handle).\n", count_in_array);
+      free(Data);
       return (-1);
+    } else {
+      Data = Datatmp;
     }
     Table->data         = Data;
     Table->rows         = Rows;
@@ -1048,6 +1068,30 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
 
   if ((Table.data == NULL) && (Table.rows*Table.columns)) {
     detector.m = 0;
+    detector.xmin = 0;
+    detector.xmax = 0;
+    detector.ymin = 0;
+    detector.ymax = 0;
+    detector.zmin = 0;
+    detector.zmax = 0; 
+    detector.intensity = 0;
+    detector.error = 0;
+    detector.events = 0;
+    detector.min = 0;
+    detector.max = 0;
+    detector.mean = 0;
+    detector.centerX = 0;
+    detector.halfwidthX = 0;
+    detector.centerY = 0;
+    detector.halfwidthY = 0;
+    detector.rank = 0;
+    detector.istransposed = 0;
+    detector.n = 0;
+    detector.p = 0;
+    detector.date_l = 0;
+    detector.p0 = NULL;
+    detector.p1 = NULL;
+    detector.p2 = NULL;
     return(detector); /* Table is empty - nothing to do */
   }
   if (!x1 && !x2) {
@@ -1163,7 +1207,8 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
 *******************************************************************************/
   t_Table *Table_Read_Array(char *File, long *blocks)
   {
-    t_Table *Table_Array=NULL;
+    t_Table *Table_Array    = NULL;
+    t_Table *Table_Arraytmp = NULL;
     long offset=0;
     long block_number=0;
     long allocated=256;
@@ -1194,13 +1239,16 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
           /* if t_Table array is not long enough, expand and realocate */
           if (block_number >= allocated-1) {
               allocated += 256;
-              Table_Array = (t_Table *)realloc(Table_Array,
+              Table_Arraytmp = (t_Table *)realloc(Table_Array,
                       allocated*sizeof(t_Table));
-              if (!Table_Array) {
+              if (!Table_Arraytmp) {
                   fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Array).\n",
                           allocated*sizeof(t_Table));
+                  free(Table_Array);
                   *blocks = 0;
                   return (NULL);
+              } else {
+                Table_Array = Table_Arraytmp;
               }
           }
           /* store it into t_Table array */
