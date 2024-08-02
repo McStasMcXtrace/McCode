@@ -1,0 +1,129 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: Union_demonstration
+*
+* %Identification
+* Written by: Mads Bertelsen
+* Date: July 2024
+* Origin: ESS DMSC
+* %INSTRUMENT_SITE: Union_sample_environments
+*
+* Sample in cryostat included from other instrument file
+*
+* %Description
+* This instrument demonstrates how to include a sample environment
+* from another instrument file and add a sample to the Union system.
+* See the cryostat_example.instr file for details on the used sample
+* environment.
+*
+* %Parameters
+* stick_displacement: [m] height displacement of sample stick
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT SE_usage_example()
+
+DECLARE
+%{
+%}
+
+USERVARS %{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT init = Union_init()
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Cu_incoherent = Incoherent_process(
+  sigma=4*0.55, unit_cell_volume=47.22)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Cu_powder = Powder_process(
+  reflections="Cu.laz")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Cu = Union_make_material(
+  my_absorption=100*4*3.78/47.22,
+  process_string="Cu_incoherent,Cu_powder")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_div(
+        xwidth=0.015, yheight=0.015,
+        focus_aw=0.05, focus_ah=0.05,
+        E0 = 50, dE = 0, flux = 1E9)
+AT (0, 0, 0) RELATIVE origin
+
+// Arm at sample position / center of sample environment
+COMPONENT SE_position = Arm()
+AT (0, 0, 2) RELATIVE source
+
+// Includes the sample environment, center is placed relative to PREVIOUS
+%include "Union_sample_environments/cryostat_example/cryostat_example.instr"
+
+// Sample added inside sample environment, can include more geometries or materials
+COMPONENT sample = Union_cylinder(
+  radius=0.008, yheight=0.04,
+  priority=100, material_string="Cu")
+AT (0,0,0) RELATIVE SE_position
+
+// Loggers recording scattering in the Union system
+COMPONENT Union_abs_logger_2D_space_zx = Union_abs_logger_2D_space(
+    D_direction_1="z", D1_min=-0.22, D1_max=0.22, n1=500,
+    D_direction_2="x", D2_min=-0.22, D2_max=0.22, n2=500,
+    filename="Union_abs_logger_2D_space_zx.dat")
+AT (0,0,0) RELATIVE SE_position
+
+COMPONENT Union_abs_logger_2D_space_zy = Union_abs_logger_2D_space(
+    D_direction_1="z", D1_min=-0.22, D1_max=0.22, n1=500,
+    D_direction_2="y", D2_min=-0.15, D2_max=0.8, n2=1000,
+    filename="Union_abs_logger_2D_space_zy.dat")
+AT (0,0,0) RELATIVE SE_position
+
+// Union master component, simulating entire system of cryostat + sample
+COMPONENT master = Union_master()
+AT (0, 0, 0) RELATIVE SE_position
+
+// Monitors showing signal after Union system
+COMPONENT m4pi = PSD_monitor_4PI(
+  radius=1.0, nx=250, ny=250,
+  filename="Events.dat",
+  restore_neutron=1)
+AT (0, 0, 0) RELATIVE beam_center
+
+COMPONENT Banana_monitor = Monitor_nD(
+  radius=1, yheight=0.1,
+  options="banana, theta limits=[20,170], bins=800",
+  filename="banana.dat",restore_neutron=1)
+AT (0,0,0) RELATIVE beam_center
+
+COMPONENT detector = PSD_monitor(
+  xwidth=0.1, yheight=0.08, nx=200, ny=200,
+  filename="PSD.dat", restore_neutron=1)
+AT (0,0,0.4) RELATIVE beam_center
+
+COMPONENT screen = PSD_monitor(
+  xwidth=0.45, nx=500,
+  ymin=-0.15, ymax=0.85, ny=1200,
+  filename="screen.dat",
+  restore_neutron=1)
+AT (0,0,0.5) RELATIVE beam_center
+
+// Required stop component at end of instrument when using Union components
+COMPONENT stop = Union_stop()
+AT (0, 0, 0) RELATIVE SE_position
+
+END
