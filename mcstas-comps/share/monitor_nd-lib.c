@@ -1736,8 +1736,10 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
       int issphere;
       issphere = (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE);
       width = (hdiv_max-hdiv_min)/NH;
-      if (!issphere) NV=1; /* cylinder has vertical axis */
-      else height= (vdiv_max-vdiv_min)/NV;
+      if (!issphere) {
+	NV=1; /* cylinder has vertical axis */
+      }
+      height= (vdiv_max-vdiv_min)/NV;
       
       /* check width and height of elements (sphere) to make sure the nb
          of plates remains limited */
