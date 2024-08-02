@@ -1740,7 +1740,7 @@ mcdatainfo_out_nexus(NXhandle f, MCDETECTOR detector)
   if (!f || !detector.m || mcdisable_output_files) return;
 
   strcpy_valid(data_name,
-    detector.filename && strlen(detector.filename) ?
+    strlen(detector.filename) ?
       detector.filename : detector.component);
 
   /* the NXdetector group has been created in mcinfo_out_nexus (siminfo_init) */
@@ -1900,7 +1900,7 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
 
   if (strstr(part,"data") || strstr(part, "events")) {
     NXputattr(f, "signal", &signal, 1, NX_INT32);
-    nxprintattr(f, "short_name", detector.filename && strlen(detector.filename) ?
+    nxprintattr(f, "short_name", strlen(detector.filename) ?
       detector.filename : detector.component);
   }
   nxprintattr(f, "long_name", "%s '%s'", part, detector.title);
@@ -1921,7 +1921,7 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
   if (!f || !detector.m || mcdisable_output_files) return(NX_OK);
 
   strcpy_valid(data_name,
-    detector.filename && strlen(detector.filename) ?
+    strlen(detector.filename) ?
       detector.filename : detector.component);
 
   /* the NXdetector group has been created in mcinfo_out_nexus (siminfo_init) */
