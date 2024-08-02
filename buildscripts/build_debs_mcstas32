@@ -43,7 +43,7 @@ export ENABLE_CIF2HKL=OFF                 # cif2hkl is available as a separate p
 ./mkdist $FLAVOUR-tools-python-mccodelib                  $1 tools/Python/mccodelib/ "" $MCCODE_ARCH "" -- deb
 ./mkdist $FLAVOUR-tools-python-${P}plot-pyqtgraph         $1 tools/Python/mcplot/pyqtgraph/ "" $MCCODE_ARCH "" -- deb
 ./mkdist $FLAVOUR-tools-python-${P}plot-matplotlib        $1 tools/Python/mcplot/matplotlib/ "" $MCCODE_ARCH "" -- deb
-./mkdist $FLAVOUR-tools-python-${P}plot-svg               $1 tools/Python/mcplot/svg/ "" $MCCODE_ARCH "" -- deb
+./mkdist $FLAVOUR-tools-python-${P}plot-html              $1 tools/Python/mcplot/html/ "" $MCCODE_ARCH "" -- deb
 ./mkdist $FLAVOUR-tools-python-${P}run                    $1 tools/Python/mcrun/ "" $MCCODE_ARCH "" -- deb
 ./mkdist $FLAVOUR-tools-python-${P}test                   $1 tools/Python/mctest/ "" $MCCODE_ARCH "" -- deb
 ./mkdist $FLAVOUR-tools-python-${P}gui                    $1 tools/Python/mcgui/ "" $MCCODE_ARCH "" -- deb

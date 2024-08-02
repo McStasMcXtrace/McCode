@@ -47,7 +47,7 @@ cd $WORK
 ./mkdist mcstas-tools-matlab-mcdisplay ${MCVERSION} tools/matlab/mcdisplay/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcplot-pyqtgraph ${MCVERSION} tools/Python/mcplot/pyqtgraph/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcplot-matplotlib ${MCVERSION} tools/Python/mcplot/matplotlib/ "" mac "" -- OSXapp
-./mkdist mcstas-tools-python-mcplot-svg ${MCVERSION} tools/Python/mcplot/svg/ "" mac "" -- OSXapp
+./mkdist mcstas-tools-python-mcplot-html ${MCVERSION} tools/Python/mcplot/html/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcrun ${MCVERSION} tools/Python/mcrun/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mctest ${MCVERSION} tools/Python/mctest/ "" mac "" -- OSXapp
 ./mkdist mcstas-tools-python-mcresplot ${MCVERSION} tools/Python/mcresplot/ "" mac "" -- OSXapp

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Wrapper script for @P@plot-svg-py
+# Wrapper script for @P@plot-html-py
 
 @MCCODE_BASH_STANDARD_PREAMBLE@
 
 TOOL="@P@plot"
-UTILDIR="${MCCODE_TOOLDIR}/Python/@P@plot/svg"
+UTILDIR="${MCCODE_TOOLDIR}/Python/@P@plot/html"
 
 
 #NB: miniconda should be installed next to the tool folder:
