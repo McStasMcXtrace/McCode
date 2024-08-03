@@ -9,6 +9,7 @@ interface ChartProps {
   xAxisLabel: string;
   yAxisLabel: string;
 }
+
 const Chart: React.FC<ChartProps> = ({
   chartTitle,
   xAxisLabel,
@@ -45,10 +46,24 @@ const Chart: React.FC<ChartProps> = ({
       t: 15, // top margin
       pad: 0, // padding
     },
+    dragmode: "pan",
   };
+
   const config = {
-    displayModeBar: false, // Disables the mode bar
-    staticPlot: true, // Disable interactivity
+    displayModeBar: true,
+    modeBarButtonsToRemove: [
+      "toImage",
+      "zoom2d",
+      "select2d",
+      "lasso2d",
+      "zoomIn2d",
+      "zoomOut2d",
+      "autoScale2d",
+      "resetScale2d",
+    ],
+    displaylogo: false,
+    scrollZoom: false,
+    staticPlot: false,
   };
 
   return (

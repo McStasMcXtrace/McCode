@@ -61,7 +61,11 @@ export const initializeCameras = (
       camera = new THREE.PerspectiveCamera(view.fov, width / height, 0.01, 1000);
       controls = new OrbitControls(camera, primaryViewRef);
     }
-
+    controls.mouseButtons = {
+      LEFT: THREE.MOUSE.PAN,
+      MIDDLE: THREE.MOUSE.DOLLY,
+      RIGHT: THREE.MOUSE.ROTATE
+    };
     const position = view.initialCamPos.map((element) => element * size);
     console.log("position: ",position);
     console.log("size: ",size); 
