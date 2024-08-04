@@ -8,7 +8,6 @@ const GridButtons = () => {
     useGridContext();
   const { gridsRef, sceneRef } = useSceneContext();
 
-
   useEffect(() => {
     if (gridsRef.current) {
       if (gridsRef.current.gridXY) {

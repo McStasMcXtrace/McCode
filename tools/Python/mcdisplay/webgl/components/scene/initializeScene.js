@@ -13,7 +13,7 @@ export const initializeCameras = (
   backView2DRef,
   topView2DRef,
   sideView2DRef,
-  primaryViewRef,
+  primaryViewRef
 ) => {
   // Helper function to create an Orthographic Camera
   const createOrthographicCamera = (width, height, size) => {
@@ -23,7 +23,7 @@ export const initializeCameras = (
     // Calculate the boundaries
     const left = -size / 2;
     const right = size / 2;
-    const top = (size / 2) / aspect;
+    const top = size / 2 / aspect;
     const bottom = -(size / 2) / aspect;
 
     const near = 0.1;
@@ -58,17 +58,22 @@ export const initializeCameras = (
       view.cameraHelper = cameraHelper;
       //scene.add(cameraHelper);
     } else {
-      camera = new THREE.PerspectiveCamera(view.fov, width / height, 0.01, 1000);
+      camera = new THREE.PerspectiveCamera(
+        view.fov,
+        width / height,
+        0.01,
+        1000
+      );
       controls = new OrbitControls(camera, primaryViewRef);
     }
     controls.mouseButtons = {
       LEFT: THREE.MOUSE.PAN,
       MIDDLE: THREE.MOUSE.DOLLY,
-      RIGHT: THREE.MOUSE.ROTATE
+      RIGHT: THREE.MOUSE.ROTATE,
     };
     const position = view.initialCamPos.map((element) => element * size);
-    console.log("position: ",position);
-    console.log("size: ",size); 
+    console.log("position: ", position);
+    console.log("size: ", size);
     camera.position.fromArray(position);
     camera.up.fromArray(view.up);
 
@@ -96,30 +101,50 @@ export const initializeRenderer = (width, height) => {
 };
 
 export const addAxes = (scene, size) => {
-
   const axes = {};
 
-  const center = new THREE.Vector3( 0,0,0 );
+  const center = new THREE.Vector3(0, 0, 0);
 
   /* arrow colors should match --x-axis-color, y-ax.. colors in common.css*/
-  const x_axis = new THREE.ArrowHelper( new THREE.Vector3( 1,0,0 ), center, size, 0x7F2020, 1, 0.5 );
-  const y_axis = new THREE.ArrowHelper( new THREE.Vector3( 0,1,0 ), center, size, 0x207F20, 1, 0.5 );
-  const z_axis = new THREE.ArrowHelper( new THREE.Vector3( 0,0,1 ), center, size, 0x20207F, 1, 0.5 );
+  const x_axis = new THREE.ArrowHelper(
+    new THREE.Vector3(1, 0, 0),
+    center,
+    size,
+    0x7f2020,
+    1,
+    0.5
+  );
+  const y_axis = new THREE.ArrowHelper(
+    new THREE.Vector3(0, 1, 0),
+    center,
+    size,
+    0x207f20,
+    1,
+    0.5
+  );
+  const z_axis = new THREE.ArrowHelper(
+    new THREE.Vector3(0, 0, 1),
+    center,
+    size,
+    0x20207f,
+    1,
+    0.5
+  );
 
   axes.x_axis = x_axis;
   axes.y_axis = y_axis;
   axes.z_axis = z_axis;
 
-  scene.add( x_axis );
-  scene.add( y_axis );
-  scene.add( z_axis );
+  scene.add(x_axis);
+  scene.add(y_axis);
+  scene.add(z_axis);
 
   return axes;
 };
 
 export const addGrids = (scene, gridSize) => {
   /*
-  the constants + 20 and -10 are hacks for taking into account that 0,0,0
+  the constants + 5 and -5 are hacks for taking into account that 0,0,0
    is not the true start point of the instrument components may be centered there
     but can extend beyond it.
   */
@@ -130,7 +155,7 @@ export const addGrids = (scene, gridSize) => {
 
   const grids = {};
   const gridXZ = new THREE.GridHelper(correctedGridSize, correctedGridSize);
-  console.log("correctedGridSize: ",correctedGridSize);
+  console.log("correctedGridSize: ", correctedGridSize);
   gridXZ.position.set(0, 0, center);
   gridXZ.visible = true;
   gridXZ.name = "gridXZ";
@@ -154,7 +179,6 @@ export const addGrids = (scene, gridSize) => {
 
   return grids;
 };
-
 
 export const initializeDirectionalLight = (scene) => {
   const light = new THREE.DirectionalLight(0xffffff, 5);

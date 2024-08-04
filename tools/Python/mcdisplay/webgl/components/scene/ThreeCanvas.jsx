@@ -33,7 +33,7 @@ import { useSceneContext } from "../../Contexts/SceneContext";
 const ThreeCanvas = () => {
   const { showXY, showXZ, showYZ, gridSize, gridDivisions, showAxes } =
     useGridContext();
-  const {camPos, setCamPosSide, setCamPosTop, setCamPosHome } =
+  const { camPos, setCamPosSide, setCamPosTop, setCamPosHome } =
     useCameraContext();
   const { instrument, setInstrument } = useInstrumentContext();
   const {
@@ -68,7 +68,7 @@ const ThreeCanvas = () => {
     axesRef,
   } = useSceneContext();
 
-  const [aspectRatio,setAspectRatio] = useState(1.0);
+  const [aspectRatio, setAspectRatio] = useState(1.0);
   const [hoverInfo, setHoverInfo] = useState("");
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
@@ -294,7 +294,7 @@ const ThreeCanvas = () => {
       topView.controls.target.set(0, 0, bboxSize / 2);
 
       //set side 2D view camera position for centering
-      sideView.camera.position.set(-bboxSize/2, 0, bboxSize/2);
+      sideView.camera.position.set(-bboxSize / 2, 0, bboxSize / 2);
       sideView.controls.target.set(0, 0, bboxSize / 2);
 
       //set end 2D view camera position for centering
@@ -314,30 +314,37 @@ const ThreeCanvas = () => {
           const camera = view.camera;
           let originalXRange = [0, bboxSize];
           let originalYRange = [-bboxSize / 2, bboxSize / 2];
-          
-          if(view.view === "Top") {
-             originalXRange = [0, bboxSize];
-             originalYRange = [-bboxSize / 2/aspectRatio, bboxSize / 2/aspectRatio];
+
+          if (view.view === "Top") {
+            originalXRange = [0, bboxSize];
+            originalYRange = [
+              -bboxSize / 2 / aspectRatio,
+              bboxSize / 2 / aspectRatio,
+            ];
+          } else if (view.view === "Side") {
+            originalXRange = [0, bboxSize];
+            originalYRange = [
+              -bboxSize / 2 / aspectRatio,
+              bboxSize / 2 / aspectRatio,
+            ];
+          } else if (view.view === "End") {
+            originalXRange = [-bboxSize / 2, bboxSize / 2];
+            originalYRange = [
+              -bboxSize / 2 / aspectRatio,
+              bboxSize / 2 / aspectRatio,
+            ];
           }
-          else if(view.view === "Side") {
-             originalXRange = [0,bboxSize];
-             originalYRange = [-bboxSize / 2/aspectRatio, bboxSize / 2/aspectRatio];
-          }
-          else if(view.view === "End") {
-             originalXRange = [-bboxSize / 2, bboxSize / 2];
-             originalYRange = [-bboxSize / 2/aspectRatio, bboxSize / 2/aspectRatio];
-          }
-          
+
           const originalXCenter = (originalXRange[0] + originalXRange[1]) / 2;
           const originalYCenter = (originalYRange[0] + originalYRange[1]) / 2;
           const setZoom =
-          view.view === "Top"
-            ? setZoomTop
-            : view.view === "Side"
-            ? setZoomSide
-            : setZoomEnd;
+            view.view === "Top"
+              ? setZoomTop
+              : view.view === "Side"
+              ? setZoomSide
+              : setZoomEnd;
 
-        view.domElement.addEventListener(
+          view.domElement.addEventListener(
             "wheel",
             (event) =>
               onScrollZoom(

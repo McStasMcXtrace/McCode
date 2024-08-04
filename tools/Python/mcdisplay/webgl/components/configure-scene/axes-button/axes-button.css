@@ -1,13 +1,14 @@
-#axes-button{}
-
-#x{
-    color: var(--x-axis-color);
+#axes-button {
 }
 
-#y{
-    color: var(--y-axis-color);
+#x {
+  color: var(--x-axis-color);
 }
 
-#z{
-    color: var(--z-axis-color);
+#y {
+  color: var(--y-axis-color);
+}
+
+#z {
+  color: var(--z-axis-color);
 }
