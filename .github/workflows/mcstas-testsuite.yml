@@ -148,7 +148,7 @@ jobs:
            set -x
            export PATH=$PWD/install_mcstas/bin/:$PATH
            mkdir run_test-suite && cd run_test-suite
-           mctest --testdir $PWD --mpi=2 --suffix ${{ matrix.os }} --ncount 1e5
+           mctest --testdir $PWD --mpi=2 --suffix ${{ matrix.os }}
 
     - name: 'Tar output files'
       id: tar-package
