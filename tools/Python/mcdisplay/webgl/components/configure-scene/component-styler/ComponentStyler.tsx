@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../../../common.css";
 import "./component-styler.css";
-import { useComponentsContext } from "../../../Contexts/ComponentsContext";
+import { useInstrumentContext } from "../../../Contexts/InstrumentContext";
 import DropDown from "./dropdown/DropDown";
 import ColorPicker from "./color-picker/ColorPicker";
 import { DrawCall, Component } from "../../../model/Component";
@@ -15,18 +15,18 @@ const ComponentStyler = () => {
     color: "#1a73e8",
     transparency: 1,
   };
-  const { components, setComponents } = useComponentsContext();
+  const { instrument, setInstrument } = useInstrumentContext();
   const [currentComponent, setCurrentComponent] =
     useState<Component>(fallBackComponent);
 
   useEffect(() => {
     if (
-      components.length > 0 &&
+      instrument.components.length > 0 &&
       currentComponent.name === "Loading instrument"
     ) {
-      setCurrentComponent(components[1]);
+      setCurrentComponent(instrument.components[1]);
     }
-  }, [components, currentComponent]);
+  }, [instrument.components, currentComponent]);
 
   return (
     <div id="component-styler" className="row">
@@ -34,12 +34,10 @@ const ComponentStyler = () => {
       <DropDown
         currentComponent={currentComponent}
         setCurrentComponent={setCurrentComponent}
-        components={components}
+        components={instrument.components}
       />
       <ColorPicker
         setCurrentComponent={setCurrentComponent}
-        components={components}
-        setComponents={setComponents}
         currentComponent={currentComponent}
       />
     </div>

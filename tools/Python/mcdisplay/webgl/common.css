@@ -58,7 +58,11 @@ li {
   isolation: isolate;
 }
 :root {
-  --gray-color: #7c7c7c;
+  --x-axis-color: #7f2020;
+  --y-axis-color: #207f20;
+  --z-axis-color: #20207f;
+
+  --gray-color: #808080;
 
   /* Light mode colors */
   --primary-color: #3498db;
@@ -78,7 +82,7 @@ li {
   --primary-color-dark: #2980b9;
   --secondary-color-dark: #27ae60;
   --background-color-dark: #121212;
-  --text-color-dark: #000000;
+  --text-color-dark: #ffffff;
   --link-color-dark: #8ab4f8;
   --border-color-dark: #ffffff;
   --button-bg-color-dark: #2980b9;
@@ -176,6 +180,9 @@ button.active {
 
   body {
     background-color: var(--background-color-dark);
+    color: var(--text-color-dark);
+  }
+  p {
     color: var(--text-color-dark);
   }
 

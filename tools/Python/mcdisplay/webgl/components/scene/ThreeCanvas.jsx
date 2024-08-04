@@ -7,11 +7,11 @@ import {
   initializeCameras,
   initializeRenderer,
   addGrids,
-  initializeControls,
+  addAxes,
   initializeDirectionalLight,
   initializeAmbientLight,
 } from "./initializeScene";
-import { useComponentsContext } from "../../Contexts/ComponentsContext";
+import { useInstrumentContext } from "../../Contexts/InstrumentContext";
 import { clearComponents, loadComponents } from "../../Contexts/addComponents";
 import { useRaysContext } from "../../Contexts/RaysContext";
 import {
@@ -25,12 +25,17 @@ import {
 import { useAppContext } from "../../Contexts/AppContext";
 import * as THREE from "three";
 import { views } from "./views";
+import TwoDView from "./two-d-view/TwoDView";
+import InfoView from "./info-view/InfoView";
+import { usePlotRangeContext } from "../../Contexts/PlotRangeContext";
+import { useSceneContext } from "../../Contexts/SceneContext";
 
 const ThreeCanvas = () => {
-  const { showXY, showXZ, showYZ, gridSize, gridDivisions } = useGridContext();
+  const { showXY, showXZ, showYZ, gridSize, gridDivisions, showAxes } =
+    useGridContext();
   const { camPos, setCamPosSide, setCamPosTop, setCamPosHome } =
     useCameraContext();
-  const { components, setComponents } = useComponentsContext();
+  const { instrument, setInstrument } = useInstrumentContext();
   const {
     showAllRays,
     toggleShowAllRays,
@@ -47,32 +52,45 @@ const ThreeCanvas = () => {
   } = useRaysContext();
   const { loading, setLoading, backgroundColor, toggleBackgroundColor } =
     useAppContext();
+
+  const { plotlyRanges, updatePlotlyRanges } = usePlotRangeContext();
+  const {
+    containerRef,
+    primaryCameraRef,
+    primaryControlsRef,
+    primaryViewRef,
+    TopView2DRef,
+    SideView2DRef,
+    BackView2DRef,
+    rendererRef,
+    sceneRef,
+    gridsRef,
+    axesRef,
+  } = useSceneContext();
+
+  const [aspectRatio, setAspectRatio] = useState(1.0);
   const [hoverInfo, setHoverInfo] = useState("");
-  const gridsRef = useRef({ gridXY: null, gridXZ: null, gridYZ: null });
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
   let width, height;
   let mouseX = 0,
     mouseY = 0;
 
-  const containerRef = useRef(null);
-
-  const primaryCameraRef = useRef(null);
-  const primaryControlsRef = useRef(null);
-
-  const primaryViewRef = useRef(null);
-  const TopView2DRef = useRef(null);
-  const SideView2DRef = useRef(null);
-  const BackView2DRef = useRef(null);
-
   const primaryView = views[0];
   const topView = views[1];
   const backView = views[2];
   const sideView = views[3];
 
-  const rendererRef = useRef(null);
-  const sceneRef = useRef(null);
   const playRef = useRef(play);
+
+  let cameraZoom = {
+    Top: 1,
+    Side: 1,
+    End: 1,
+  };
+  const [zoomTop, setZoomTop] = useState(1);
+  const [zoomSide, setZoomSide] = useState(1);
+  const [zoomEnd, setZoomEnd] = useState(1);
 
   function updateSize() {
     let correctWidth = window.innerWidth;
@@ -94,7 +112,7 @@ const ThreeCanvas = () => {
   // Resize handling to keep renderer size in sync with the window
   useEffect(() => {
     const handleResize = () => {
-      rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+      rendererRef.current.setSize(window.innerWidth, window.innerHeight * 2);
       render();
     };
 
@@ -103,6 +121,53 @@ const ThreeCanvas = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  function onScrollZoom(
+    event,
+    viewName,
+    camera,
+    originalXRange,
+    originalYRange,
+    originalXCenter,
+    originalYCenter,
+    setZoom
+  ) {
+    console.log("scrolling");
+    if (event.deltaY < 0) {
+      camera.zoom *= 1.1; // zoom in
+    } else {
+      camera.zoom /= 1.1; // zoom out
+    }
+    cameraZoom[viewName] = camera.zoom;
+    setZoom(camera.zoom);
+    camera.updateProjectionMatrix();
+
+    updatePlotlyZoom(
+      viewName,
+      originalXRange,
+      originalYRange,
+      originalXCenter,
+      originalYCenter
+    );
+  }
+
+  function updatePlotlyZoom(
+    viewName,
+    originalXRange,
+    originalYRange,
+    originalXCenter,
+    originalYCenter
+  ) {
+    const xRange =
+      (originalXRange[1] - originalXRange[0]) / cameraZoom[viewName];
+    const yRange =
+      (originalYRange[1] - originalYRange[0]) / cameraZoom[viewName];
+
+    updatePlotlyRanges(viewName, {
+      xaxis: [originalXCenter - xRange / 2, originalXCenter + xRange / 2],
+      yaxis: [originalYCenter - yRange / 2, originalYCenter + yRange / 2],
+    });
+  }
 
   function render() {
     updateSize();
@@ -129,7 +194,7 @@ const ThreeCanvas = () => {
     if (containerRef.current) {
       views.forEach((view) => {
         const aspect = setScissorForElement(view.domElement);
-
+        setAspectRatio(aspect);
         const camera = view.camera;
         view.updateCamera(camera, sceneRef.current, mouseX, mouseY);
         view.updateControls(view.controls);
@@ -168,10 +233,8 @@ const ThreeCanvas = () => {
   }
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const width = (container.clientWidth || window.innerWidth) * 2;
-    const height = (container.clientHeight || window.innerHeight) * 2;
+    const width = window.innerWidth * 2;
+    const height = window.innerHeight * 2;
 
     const scene = initializeScene();
     sceneRef.current = scene;
@@ -185,7 +248,8 @@ const ThreeCanvas = () => {
       BackView2DRef.current,
       TopView2DRef.current,
       SideView2DRef.current,
-      primaryViewRef.current
+      primaryViewRef.current,
+      updatePlotlyRanges
     );
 
     initializeDirectionalLight(scene);
@@ -200,18 +264,6 @@ const ThreeCanvas = () => {
   }, []);
 
   useEffect(() => {
-    if (gridsRef.current.gridXY) {
-      gridsRef.current.gridXY.visible = showXY;
-    }
-    if (gridsRef.current.gridXZ) {
-      gridsRef.current.gridXZ.visible = showXZ;
-    }
-    if (gridsRef.current.gridYZ) {
-      gridsRef.current.gridYZ.visible = showYZ;
-    }
-  }, [showXY, showXZ, showYZ]);
-
-  useEffect(() => {
     if (primaryCameraRef.current) {
       primaryCameraRef.current.position.set(camPos.x, camPos.y, camPos.z);
       if (primaryControlsRef.current) {
@@ -223,12 +275,12 @@ const ThreeCanvas = () => {
 
   useEffect(() => {
     clearComponents(sceneRef.current);
-    loadComponents(sceneRef.current, components);
-    const gridsInitialized = gridsRef.current.gridXY;
+    loadComponents(sceneRef.current, instrument.components);
+    const gridsInitialized = gridsRef.current;
 
-    if (!gridsInitialized && components.length > 0) {
+    if (!gridsInitialized && instrument.components.length > 0) {
       const bbox = new THREE.Box3().setFromObject(sceneRef.current);
-      const bboxSize = bbox.min.distanceTo(bbox.max);
+      const bboxSize = Math.ceil(bbox.min.distanceTo(bbox.max));
       setCamPosHome(
         new THREE.Vector3(bboxSize / 2, bboxSize / 2, bboxSize / 2)
       );
@@ -238,36 +290,86 @@ const ThreeCanvas = () => {
       setCamPosTop(topPos);
 
       //set top 2D view camera position for centering
-      topView.camera.position.set(topPos.x, topPos.y, topPos.z);
-      topView.controls.target.set(0, 0, topPos.z);
+      topView.camera.position.set(0, bboxSize, bboxSize / 2);
+      topView.controls.target.set(0, 0, bboxSize / 2);
 
       //set side 2D view camera position for centering
-      sideView.camera.position.set(sidePos.x, sidePos.y, sidePos.z);
-      sideView.controls.target.set(0, 0, sidePos.z);
+      sideView.camera.position.set(-bboxSize / 2, 0, bboxSize / 2);
+      sideView.controls.target.set(0, 0, bboxSize / 2);
+
+      //set end 2D view camera position for centering
+      backView.camera.position.set(0, 0, bboxSize);
+      backView.controls.target.set(0, 0, bboxSize / 2);
 
       const grids = addGrids(sceneRef.current, bboxSize * 2);
       gridsRef.current = grids;
+
+      const axes = addAxes(sceneRef.current, bboxSize);
+      axesRef.current = axes;
+
+      // Setup zoom sync for each orthographic camera
+      views.forEach((view) => {
+        if (view.camera.type === "OrthographicCamera") {
+          console.log("bboxSize", bboxSize);
+          const camera = view.camera;
+          let originalXRange = [0, bboxSize];
+          let originalYRange = [-bboxSize / 2, bboxSize / 2];
+
+          if (view.view === "Top") {
+            originalXRange = [0, bboxSize];
+            originalYRange = [
+              -bboxSize / 2 / aspectRatio,
+              bboxSize / 2 / aspectRatio,
+            ];
+          } else if (view.view === "Side") {
+            originalXRange = [0, bboxSize];
+            originalYRange = [
+              -bboxSize / 2 / aspectRatio,
+              bboxSize / 2 / aspectRatio,
+            ];
+          } else if (view.view === "End") {
+            originalXRange = [-bboxSize / 2, bboxSize / 2];
+            originalYRange = [
+              -bboxSize / 2 / aspectRatio,
+              bboxSize / 2 / aspectRatio,
+            ];
+          }
+
+          const originalXCenter = (originalXRange[0] + originalXRange[1]) / 2;
+          const originalYCenter = (originalYRange[0] + originalYRange[1]) / 2;
+          const setZoom =
+            view.view === "Top"
+              ? setZoomTop
+              : view.view === "Side"
+              ? setZoomSide
+              : setZoomEnd;
+
+          view.domElement.addEventListener(
+            "wheel",
+            (event) =>
+              onScrollZoom(
+                event,
+                view.view,
+                camera,
+                originalXRange,
+                originalYRange,
+                originalXCenter,
+                originalYCenter,
+                setZoom
+              ),
+            false
+          );
+        }
+      });
     }
     render();
-  }, [components]);
+  }, [instrument.components]);
 
   useEffect(() => {
     console.log("Rays updated");
-    addRays(sceneRef.current, rays, components);
+    addRays(sceneRef.current, rays, instrument.components);
     render();
   }, [rays]);
-
-  const handleShowRays = async () => {
-    setLoading(true);
-    if (!showRays || (showRays && !showAllRays)) {
-      setRaysInvisible(sceneRef.current);
-    } else if (showRays && showAllRays) {
-      setPlay(false);
-      setRaysVisible(sceneRef.current);
-    }
-    render();
-    setLoading(false);
-  };
 
   const handleShowScatterPoints = async () => {
     setLoading(true);
@@ -280,12 +382,19 @@ const ThreeCanvas = () => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    handleShowRays();
-  }, [showRays]);
+  const handleShowAllRays = async () => {
+    setLoading(true);
+    if (!showRays || (showRays && !showAllRays)) {
+      setRaysInvisible(sceneRef.current);
+    } else if (showRays && showAllRays) {
+      setPlay(false);
+      setRaysVisible(sceneRef.current);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    handleShowRays();
+    handleShowAllRays();
   }, [showAllRays]);
 
   useEffect(() => {
@@ -337,24 +446,32 @@ const ThreeCanvas = () => {
         </div>
         <div className="column fill row-gap two-D">
           <div className="row fill">
-            <div className="view" id="TopView2D" ref={TopView2DRef}>
-              <p className="view-name gray-color">Top</p>
-              <div className="y-axis gray-color">{topView.y_label}[m]</div>
-              <div className="x-axis gray-color">{topView.x_label}[m]</div>
-            </div>
-            <div className="view" id="SideView2D" ref={SideView2DRef}>
-              <p className="view-name gray-color">Side</p>
-              <div className="y-axis gray-color">{sideView.y_label}[m]</div>
-              <div className="x-axis gray-color">{sideView.x_label}[m]</div>
-            </div>
+            <TwoDView
+              viewRef={TopView2DRef}
+              text="Top"
+              x_label={topView.x_label}
+              y_label={topView.y_label}
+              unit="m"
+            />
+            <TwoDView
+              viewRef={SideView2DRef}
+              text="Side"
+              x_label={sideView.x_label}
+              y_label={sideView.y_label}
+              unit="m"
+            />
           </div>
           <div className="row fill">
-            <div className="view" id="BackView2D" ref={BackView2DRef}>
-              <p className="view-name gray-color">End</p>
-              <div className="y-axis gray-color">{backView.y_label}[m]</div>
-              <div className="x-axis gray-color">{backView.x_label}[m]</div>
+            <TwoDView
+              viewRef={BackView2DRef}
+              text="End"
+              x_label={backView.x_label}
+              y_label={backView.y_label}
+              unit="m"
+            />
+            <div className="view">
+              <InfoView />
             </div>
-            <div className="view" id=""></div>
           </div>
         </div>
       </div>
