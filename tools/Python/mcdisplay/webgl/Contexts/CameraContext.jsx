@@ -13,8 +13,8 @@ const CameraContext = createContext({
 });
 
 export const CameraProvider = ({ children }) => {
-  const [camPos, setCamPos] = useState(new Vector3(10, 20, 30));
-  const [camPosHome, setCamPosHome] = useState(new Vector3(10, 20, 30));
+  const [camPos, setCamPos] = useState(new Vector3(0, 10, 0));
+  const [camPosHome, setCamPosHome] = useState(new Vector3(0, 10, 0));
   const [camPosSide, setCamPosSide] = useState(new Vector3(0, 0, 30));
   const [camPosTop, setCamPosTop] = useState(new Vector3(0, 30, 0));
 
