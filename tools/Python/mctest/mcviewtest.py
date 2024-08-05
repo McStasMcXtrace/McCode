@@ -282,7 +282,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('testdir', nargs="?", help='test data is drawn from this root folder')
-    parser.add_argument('--reflabel', nargs="?", help='reference label name')
+    parser.add_argument('--reflabel', nargs="?", help='Reference label name for comparison between multiple test runs (oldest subfolder in PWD is used if unset)')
     parser.add_argument('--testroot', nargs="?", help='test root folder for test result management')
     parser.add_argument('--verbose', action='store_true', help='output excessive information for debug purposes')
     parser.add_argument('--nobrowse', action='store_true', help='Do not spawn browser on exit')
