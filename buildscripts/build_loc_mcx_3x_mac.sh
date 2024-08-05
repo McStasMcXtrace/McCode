@@ -4,7 +4,7 @@ export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "im
 # rapid-build script for mcxtrace-kernel dev:
 
 
-git checkout main
+
 git pull
 
 # Ensure our 3rd party modules are in place and updated
