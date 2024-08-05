@@ -10,7 +10,7 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
-git checkout main
+
 git pull
 
 # Ensure our 3rd party modules are in place and updated
