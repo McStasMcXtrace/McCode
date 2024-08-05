@@ -1,0 +1,59 @@
+% @MCCODE_PREFIX@TEST(1)
+% @FLAVOR_UPPER@ @MCCODE_PARTICLE@ Ray Tracing Team
+% @MCCODE_DATE@
+
+# NAME
+
+**@MCCODE_PREFIX@viewtest** - View results from one or more runs of
+the @MCCODE_PREFIX@test toool, testing the @MCCODE_NAME@ installation
+
+# SYNOPSIS
+
+**@MCCODE_PREFIX@viewtest** [-h] [--reflabel [REFLABEL]] [--testroot [TESTROOT]] [--verbose] [--nobrowse] [testdir]
+
+# DESCRIPTION
+
+The tool **@MCCODE_PREFIX@viewtest** is a program visualise testesults
+from the current @MCCODE_NAME@ installation.
+
+# OPTIONS
+
+**-h, --help**
+:   show this help message and exit
+
+**--reflabel REFLABEL**
+	Reference label name for comparison between
+    multiple test runs (oldest subfolder in PWD is
+    used if unset)
+
+**--testroot [TESTROOT]**
+	test root folder for test result management
+
+**--verbose**             
+	output excessive information for debug purposes
+
+**--nobrowse**
+	Do not spawn browser on exit
+
+**testdir** 
+	Indicate location of result directories 
+	(PWD is used if unset)
+
+# FILES
+
+/usr/share/@FLAVOR@/resources
+/usr/share/@FLAVOR@/tools/Python/mccodelib/mccode_config.json
+~/.@FLAVOR@/mccode_config.json
+http://www.@FLAVOR@.org
+
+# EXAMPLES
+
+`@MCCODE_PREFIX@viewtest`
+
+# AUTHORS
+
+@MCCODE_NAME@ Team (@FLAVOR@.org)
+
+# SEE ALSO
+
+@FLAVOR@(1), @MCCODE_PREFIX@test(1), @MCCODE_PREFIX@doc(1), @MCCODE_PREFIX@plot(1), @MCCODE_PREFIX@run(1), @MCCODE_PREFIX@gui(1), @MCCODE_PREFIX@display(1)
