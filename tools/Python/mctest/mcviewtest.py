@@ -3,14 +3,33 @@
 import logging
 import argparse
 import json
+import sys
 import os
 from os.path import join, dirname, isdir
 from os import walk
+import subprocess
 import shutil
 import jinja2
 
 ERROR_PERCENT_THRESSHOLD_ACCEPT = 20
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from mccodelib import utils, mccode_config
+
+def scantree(path):
+    """Recursively yield DirEntry objects for given directory."""
+    for entry in os.scandir(path):
+        if entry.is_dir(follow_symlinks=True):
+            yield entry
+
+def get_oldest_dir(directory_name):
+    files = []
+
+    for file in scantree(directory_name):
+        files.append((file.stat().st_mtime, file.path))
+
+    files.sort(key=lambda x:x[0])
+    return files[0][1]
 
 def run_normal_mode(testdir, reflabel):
     ''' load test data and print to html label '''
@@ -232,20 +251,33 @@ def main(args):
         testdir = args.testdir
 
     if not args.reflabel:
-        print("NO reflabel defined! Please define a reference test label")
-        quit(0)
-    reflabel = args.reflabel
+        print("\nNo reflabel defined, will use oldest subfolder in current workdir")
+        print("(cwd=%s)" % os.getcwd())
+        reflabel= get_oldest_dir(os.getcwd())
+        if reflabel is None:
+            print("No subfolders found in current workdir:")
+            exit(-1)
+        else:
+            reflabel=os.path.basename(reflabel)
+            print("--> Using reflabel=%s\n" % reflabel)
+    else:
+        reflabel = args.reflabel
 
     if not testdir and testroot:
         print("interactive mode")
         run_interactive_mode(testroot)
         exit(-1)
     else:
-        if testdir is not None:
-            run_normal_mode(testdir, reflabel)
-        else:
-            print("Please input a testdir or testroot input")
-            exit(-1)
+        if testdir is None:
+            print("No testdir defined, will use current dir")
+            print("--> Using testdir=%s\n" % os.getcwd())
+            testdir=os.getcwd()
+        run_normal_mode(testdir, reflabel)
+
+    if not args.nobrowse:
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(testdir,os.path.basename(testdir) +'_output.html')), shell=True)
+        quit()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
@@ -253,6 +285,7 @@ if __name__ == '__main__':
     parser.add_argument('--reflabel', nargs="?", help='reference label name')
     parser.add_argument('--testroot', nargs="?", help='test root folder for test result management')
     parser.add_argument('--verbose', action='store_true', help='output excessive information for debug purposes')
+    parser.add_argument('--nobrowse', action='store_true', help='Do not spawn browser on exit')
     args = parser.parse_args()
 
     main(args)
