@@ -13,6 +13,7 @@
     "PARTICLE": "@MCCODE_PARTICLE@",
     "BROWSER": "@BROWSER@",
     "GUICOLS": "3",
+    "GUIFONTSIZE": "12",
     "EDITOR": "@EDITOR@",
     "FORMAT": "McCode",
     "ISCONDAPKG": "@MCCODE_IS_CONDA_PKG@"

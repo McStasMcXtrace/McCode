@@ -498,9 +498,8 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
         # setup scintilla
         # set default font
         font = QtGui.QFont()
-        font.setFamily('DejaVu Sans Mono')
         font.setFixedPitch(True)
-        font.setPointSize(11)
+        font.setPointSize(int(mccode_config.configuration["GUIFONTSIZE"]))
 
         # brace matching
         scintilla.setBraceMatching(Qsci.QsciScintilla.SloppyBraceMatch)

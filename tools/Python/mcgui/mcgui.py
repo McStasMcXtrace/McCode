@@ -16,6 +16,7 @@ import shutil
 try:
     from PyQt6 import QtWidgets, QtCore
     from PyQt6.QtWidgets import QApplication, QWidget
+    from PyQt6.QtGui import QFont, QFontDatabase
     import PyQt6 as PyQt
     try:
         from PyQt6 import Qsci
@@ -25,6 +26,7 @@ try:
 except ImportError:
     from PyQt5 import QtWidgets, QtCore
     from PyQt5.QtWidgets import QApplication, QWidget
+    from PyQt5.QtGui import QFont, QFontDatabase
     import PyQt5 as PyQt
     try:
         from PyQt5 import Qsci
@@ -1040,7 +1042,10 @@ def main():
 
         mcguiApp = QtWidgets.QApplication(sys.argv)
         mcguiApp.ctr = McGuiAppController()
-
+        font = QFont()
+        font.setFixedPitch(True)
+        font.setPointSize(int(mccode_config.configuration["GUIFONTSIZE"]))
+        mcguiApp.setFont(font)
         sys.exit(mcguiApp.exec())
 
     except Exception as e: 
