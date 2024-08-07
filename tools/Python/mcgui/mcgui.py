@@ -16,6 +16,7 @@ import shutil
 try:
     from PyQt6 import QtWidgets, QtCore
     from PyQt6.QtWidgets import QApplication, QWidget
+    from PyQt6.QtGui import QFont, QFontDatabase
     import PyQt6 as PyQt
     try:
         from PyQt6 import Qsci
@@ -25,6 +26,7 @@ try:
 except ImportError:
     from PyQt5 import QtWidgets, QtCore
     from PyQt5.QtWidgets import QApplication, QWidget
+    from PyQt5.QtGui import QFont, QFontDatabase
     import PyQt5 as PyQt
     try:
         from PyQt5 import Qsci
@@ -869,6 +871,11 @@ class McGuiAppController():
                 self.emitter.status("Instrument saved as: " + newinstr)
     
     def handleNewInstrument(self):
+        if not self.state.getInstrumentFile() == '':
+            instrbase = pathlib.PurePath(self.state.getInstrumentFile())
+            wd = pathlib.PurePath(self.state.getWorkDir())
+            if wd.stem==instrbase.stem:
+                self.state.setWorkDir("..")
         new_instr_req = self.view.showNewInstrDialog(self.state.getWorkDir())
         if self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(new_instr_req))==False:
             return
@@ -884,6 +891,11 @@ class McGuiAppController():
                     self.emitter.status("Editing new instrument: " + os.path.basename(str(new_instr)))
     
     def handleNewFromTemplate(self, instr_templ=''):
+        if not self.state.getInstrumentFile() == '':
+            instrbase = pathlib.PurePath(self.state.getInstrumentFile())
+            wd = pathlib.PurePath(self.state.getWorkDir())
+            if wd.stem==instrbase.stem:
+                self.state.setWorkDir("..")
         new_instr_req = self.view.showNewInstrFromTemplateDialog(os.path.join(self.state.getWorkDir(), os.path.basename(os.path.dirname(str(instr_templ)))))
         if self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(new_instr_req))==False:
             return
@@ -1040,7 +1052,10 @@ def main():
 
         mcguiApp = QtWidgets.QApplication(sys.argv)
         mcguiApp.ctr = McGuiAppController()
-
+        font = QFont()
+        font.setFixedPitch(True)
+        font.setPointSize(int(mccode_config.configuration["GUIFONTSIZE"]))
+        mcguiApp.setFont(font)
         sys.exit(mcguiApp.exec())
 
     except Exception as e: 
