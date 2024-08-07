@@ -871,6 +871,11 @@ class McGuiAppController():
                 self.emitter.status("Instrument saved as: " + newinstr)
     
     def handleNewInstrument(self):
+        if not self.state.getInstrumentFile() == '':
+            instrbase = pathlib.PurePath(self.state.getInstrumentFile())
+            wd = pathlib.PurePath(self.state.getWorkDir())
+            if wd.stem==instrbase.stem:
+                self.state.setWorkDir("..")
         new_instr_req = self.view.showNewInstrDialog(self.state.getWorkDir())
         if self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(new_instr_req))==False:
             return
@@ -886,6 +891,11 @@ class McGuiAppController():
                     self.emitter.status("Editing new instrument: " + os.path.basename(str(new_instr)))
     
     def handleNewFromTemplate(self, instr_templ=''):
+        if not self.state.getInstrumentFile() == '':
+            instrbase = pathlib.PurePath(self.state.getInstrumentFile())
+            wd = pathlib.PurePath(self.state.getWorkDir())
+            if wd.stem==instrbase.stem:
+                self.state.setWorkDir("..")
         new_instr_req = self.view.showNewInstrFromTemplateDialog(os.path.join(self.state.getWorkDir(), os.path.basename(os.path.dirname(str(instr_templ)))))
         if self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(new_instr_req))==False:
             return
