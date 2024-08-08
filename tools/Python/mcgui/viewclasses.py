@@ -498,9 +498,8 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
         # setup scintilla
         # set default font
         font = QtGui.QFont()
-        font.setFamily('DejaVu Sans Mono')
         font.setFixedPitch(True)
-        font.setPointSize(11)
+        font.setPointSize(int(mccode_config.configuration["GUIFONTSIZE"]))
 
         # brace matching
         scintilla.setBraceMatching(Qsci.QsciScintilla.SloppyBraceMatch)
@@ -1201,6 +1200,9 @@ class McConfigDialog(QtWidgets.QDialog):
         self.ui.edtNumCols.setText(mccode_config.configuration["GUICOLS"])
         self.ui.edtNumCols.conf_var = "GUICOLS"
 
+        self.ui.edtFontSize.setText(mccode_config.configuration["GUIFONTSIZE"])
+        self.ui.edtFontSize.conf_var = "GUIFONTSIZE"
+
         self.ui.editor.setText(mccode_config.configuration["EDITOR"])
         self.ui.editor.conf_var = "EDITOR"
 
@@ -1225,6 +1227,7 @@ class McConfigDialog(QtWidgets.QDialog):
         mccode_config.compilation[str(self.ui.edtMPIrun.conf_var)] = str(self.ui.edtMPIrun.text())
         mccode_config.compilation[str(self.ui.edtNumNodes.conf_var)] = str(self.ui.edtNumNodes.text())
         mccode_config.configuration[str(self.ui.edtNumCols.conf_var)] = str(self.ui.edtNumCols.text())
+        mccode_config.configuration[str(self.ui.edtFontSize.conf_var)] = str(self.ui.edtFontSize.text())
         mccode_config.configuration[str(self.ui.editor.conf_var)] = str(self.ui.editor.text())
         # Export selected variables to the system / mcrun
         target_mccode=mccode_config.configuration["MCCODE"].upper()
