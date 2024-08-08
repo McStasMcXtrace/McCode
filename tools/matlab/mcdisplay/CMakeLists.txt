@@ -77,6 +77,7 @@ if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.m")
 else()
   set(BINS "${WORK}/${P}display")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.m")
 endif()
 
 

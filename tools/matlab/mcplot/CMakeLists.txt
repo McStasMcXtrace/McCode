@@ -78,6 +78,7 @@ if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcplot.m")
 else()
   set(BINS "${WORK}/${P}plot")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.m")
 endif()
 
 
