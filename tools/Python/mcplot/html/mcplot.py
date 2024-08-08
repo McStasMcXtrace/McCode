@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+ #!/usr/bin/env python3
 
 """Display simulation results as HTML pages for single monitor files, and directories (generates an overview)."""
 import argparse
@@ -327,7 +327,14 @@ def main(args):
         simfile = ''
     else:
         simfile = args.simulation[0]
-    simdir = os.path.dirname(simfile)
+        if os.path.isfile(simfile):
+            simdir = os.path.dirname(simfile)
+        elif os.path.isdir(simfile):
+            simdir = simfile
+            simfile = os.path.join(simdir,'mccode.sim')
+        else:
+            printf(simfile + " is neither a file or directory, exiting")
+            exit(-1)
 
     # logscale house keeping
     global logscale
