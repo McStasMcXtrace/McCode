@@ -1,4 +1,4 @@
- #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """Display simulation results as HTML pages for single monitor files, and directories (generates an overview)."""
 import argparse
