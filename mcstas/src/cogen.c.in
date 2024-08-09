@@ -733,6 +733,13 @@ static void cogen_comp_init_position(
   coutf("  } /* %s=%s() AT ROTATED */", comp->name, comp->def->name);
 
   coutf("  DEBUG_COMPONENT(\"%s\", _%s_var._position_absolute, _%s_var._rotation_absolute);", comp->name, comp->name, comp->name);
+  coutf("  #ifdef USE_NEXUS");
+  coutf("  if (!mcdotrace && strcasestr(mcformat, \"NeXus\")) {");
+  coutf("    MPI_MASTER(");
+  coutf("      mccomp_placement_nexus(nxhandle,\"%s\", _%s_var._position_absolute, _%s_var._rotation_absolute);", comp->name, comp->name, comp->name);
+  coutf("    );");
+  coutf("  }");
+  coutf("  #endif");
   coutf("  instrument->_position_absolute[%i] = _%s_var._position_absolute;", comp->index, comp->name);
   coutf("  instrument->_position_relative[%i] = _%s_var._position_relative;", comp->index, comp->name);
 
@@ -2284,6 +2291,7 @@ cogen_header(struct instr_def *instr, char *output_name)
 
   /* Enable _POSIX_SOURCE consistently (todo: revisit the ifndef WIN32 protection) */
   coutf("#ifndef WIN32");
+  coutf("#  define _GNU_SOURCE");
   coutf("#  define _POSIX_C_SOURCE 200809L");
   coutf("#endif");
 

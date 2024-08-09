@@ -339,7 +339,10 @@ struct line_info_struct
       
     // test if the result file has been created
     FILE *file = fopen(OUTFILE,"r");
-    if (!file) return(NULL);  
+    if (!file) {
+      free(OUTFILE);
+      return(NULL);
+    }
     MPI_MASTER(   
     printf("%s: INFO: Converting %s into F2(HKL) list %s\n", 
       __FILE__, infile, OUTFILE);
@@ -855,7 +858,9 @@ INITIALIZE
 TRACE
 %{
   double t0, t1, t2, t3, v, v1,l_full, l, l_1, dt, alpha0, alpha, theta, my_s, my_s_n, sg;
-  double solid_angle, neutrontype, ntype;
+  double solid_angle;
+  double neutrontype = 0;
+  double ntype = 0;
   double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z, nx, ny, nz, pmul=1;
   int    line;
   char   intersect=0;

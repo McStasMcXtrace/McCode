@@ -145,6 +145,9 @@ FINALLY
   double* tmpp2;
   double* tmpd1;
   double* tmpd2;
+  Rotation R;
+  rot_set_rotation(R,0,0,0);
+  Coords C=coords_set(0,0,0);
   tmpN =COMP_GETPAR(BT_out,L_N);
   tmpp1=COMP_GETPAR(BT_in, L_p);
   tmpp2=COMP_GETPAR(BT_out,L_p);
@@ -176,7 +179,7 @@ FINALLY
 		  "BT",
 		  "L", lambda-dlambda, lambda+dlambda, 101,
 		  &BT_N[0],&BT_p[0],&BT_p2[0],
-		  "Brilliance_transfer", "BTransfer", coords_set(0,0,0));
+		  "Brilliance_transfer", "BTransfer", C, R);
 
 %}
 

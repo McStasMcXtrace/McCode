@@ -1145,6 +1145,7 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
 /* ========================================================================= */
 /* Monitor_nD_Save: this routine is used to save data files                  */
 /* ========================================================================= */
+
 MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars)
   {
     char   *fname;
@@ -1164,7 +1165,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
     double  ratio;
 
     MCDETECTOR detector;
-
+    strcpy(detector.options,Vars->option);
     ratio = 100.0*mcget_run_num()/mcget_ncount();
     if (Vars->Flag_Verbose && Vars->Flag_per_cm2) {
       printf("Monitor_nD: %s: active flat detector area is %g [cm^2], total area is %g [cm^2]\n",
@@ -1314,7 +1315,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
       if (Vars->Flag_signal != DEFS->COORD_P && Nsum > 0)
       { psum /=Nsum; p2sum /= Nsum*Nsum; }
       /* DETECTOR_OUT_0D(Vars->Monitor_Label, Vars->Nsum, Vars->psum, Vars->p2sum); */
-      detector = mcdetector_out_0D(Vars->Monitor_Label, Nsum, psum, p2sum, Vars->compcurname, Vars->compcurpos);
+      detector = mcdetector_out_0D(Vars->Monitor_Label, Nsum, psum, p2sum, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
     }
     else
     if (strlen(Vars->Mon_File) > 0)
@@ -1346,7 +1347,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
               label, "List of photon events", Coord_X_Label,
               -Vars->Buffer_Size, Vars->Coord_Number+1,
               Vars->Mon2D_Buffer,
-              fname, Vars->compcurname, Vars->compcurpos);
+              fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot, Vars->option);
       }
       if (Vars->Flag_Multiple) /* n1D: DETECTOR_OUT_1D */
       {
@@ -1377,7 +1378,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
               min1d, max1d,
               Vars->Coord_Bin[i+1],
               Vars->Mon2D_N[i],Vars->Mon2D_p[i],Vars->Mon2D_p2[i],
-              fname, Vars->compcurname, Vars->compcurpos);
+              fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
             } /* if (p2m == NULL) */
             else
             {
@@ -1420,7 +1421,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
                 min1d, max1d,
                 Vars->Coord_Bin[i+1],
                 Vars->Mon2D_N[i],p1m,p2m,
-                fname, Vars->compcurname, Vars->compcurpos);
+                fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
 
             } /* else */
             /* comment out 'free memory' lines to avoid loosing arrays if
@@ -1429,7 +1430,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
             if (p2m != NULL) free(p2m); p2m=NULL;
             */
           } else { /* 0d monitor */
-            detector = mcdetector_out_0D(label, Vars->Mon2D_p[i][0], Vars->Mon2D_p2[i][0], Vars->Mon2D_N[i][0], Vars->compcurname, Vars->compcurpos);
+            detector = mcdetector_out_0D(label, Vars->Mon2D_p[i][0], Vars->Mon2D_p2[i][0], Vars->Mon2D_N[i][0], Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
           }
 
 
@@ -1508,7 +1509,18 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
           if (Vars->Coord_Bin[1]*Vars->Coord_Bin[2] > 1
            && Vars->Flag_signal == DEFS->COORD_P)
             strcat(label, " per bin");
-
+	  if (Vars->Flag_List) {
+            detector = mcdetector_out_2D_list(
+              label,
+              Vars->Coord_Label[1],
+	      Vars->Coord_Label[2],
+	      min1d, max1d,
+	      min2d, max2d,
+	      Vars->Coord_Bin[1],
+	      Vars->Coord_Bin[2],
+	      p0m,p1m,p2m,
+	      fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot,Vars->option);
+	  } else {
           detector = mcdetector_out_2D(
             label,
             Vars->Coord_Label[1],
@@ -1518,7 +1530,8 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
             Vars->Coord_Bin[1],
             Vars->Coord_Bin[2],
             p0m,p1m,p2m,
-            fname, Vars->compcurname, Vars->compcurpos);
+            fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
+	  }
 
           /* comment out 'free memory' lines to avoid loosing arrays if
                'detector' structure is used by other instrument parts

@@ -588,7 +588,7 @@ INITIALIZE
   if (p_interact>1) p_interact=1;
 
 /* handle event files as in Virtual_output, with bufsize=0 ****************** */
-  long element_size;
+  long element_size=1e6;
   if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
     printf("PSD_Detector: %s: saving detector signal as events\n", NAME_CURRENT_COMP);
 

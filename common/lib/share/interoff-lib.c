@@ -332,6 +332,7 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
     pol.npol  = faceArray[i];                //nb vertex of polygon
     pol.p     = popol;
     pol.normal= coords_set(0,0,1);
+    pol.D     = 1;
     unsigned long indVertP1=faceArray[++i];  //polygon's first vertex index in vtxTable
     int j=1;
     /*check whether vertex is left or right of plane*/
@@ -801,6 +802,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
     polygon p;
     p.p   =vertices;
     p.npol=nbVertex;
+    p.D=1;
     off_normal(&(p.normal),p);
 
     normalArray[indNormal]=p.normal;
@@ -1264,13 +1266,15 @@ void off_display(off_struct data)
         cmz /= nbVertex;
 
         char pixelinfo[1024];
+	char pixelinfotmp[1024];
         sprintf(pixelinfo, "%li,%li,%li,%i,%g,%g,%g,%g,%g,%g", data.mantidoffset+pixel, data.mantidoffset, data.mantidoffset+data.polySize-1, nbVertex, cmx, cmy, cmz, x1-cmx, y1-cmy, z1-cmz);
         for (j=2; j<=nbVertex; j++) {
           double x2,y2,z2;
           x2 = data.vtxArray[data.faceArray[i+j]].x;
           y2 = data.vtxArray[data.faceArray[i+j]].y;
           z2 = data.vtxArray[data.faceArray[i+j]].z;
-          sprintf(pixelinfo, "%s,%g,%g,%g", pixelinfo, x2-cmx, y2-cmy, z2-cmz);
+          sprintf(pixelinfotmp, "%s,%g,%g,%g", pixelinfo, x2-cmx, y2-cmy, z2-cmz);
+	  sprintf(pixelinfo,"%s",pixelinfotmp);
           if (ratio > 1 || drawthis) {
 	    mcdis_line(x1,y1,z1,x2,y2,z2);
           }

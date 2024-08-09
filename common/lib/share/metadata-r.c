@@ -139,11 +139,14 @@ int metadata_table_print_all_components(int no, metadata_table_t * tab){
   size_t nchar = 0;
   for (int i=0; i<count; ++i) nchar += strlen(known[i]) + 1;
   char * line = malloc((nchar + 1) * sizeof(char));
+  char * linetmp = malloc((nchar + 1) * sizeof(char));
   line[0] = '\0';
-  for (int i=0; i<count; ++i) sprintf(line, "%s%s ", line, known[i]);
+  for (int i=0; i<count; ++i) sprintf(linetmp, "%s%s ", line, known[i]);
+  line=linetmp;
   line[strlen(line)] = '\0'; // eat the trailing space
   printf("%s\n", line);
   free(line);
+  free(linetmp);
   free(known);
   return count;
 }

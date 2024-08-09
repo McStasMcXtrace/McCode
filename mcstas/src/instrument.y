@@ -21,6 +21,7 @@
 *******************************************************************************/
 %{
 
+#define _GNU_SOURCE
 #include <math.h>
 #include <string.h>
 #include <stdio.h>

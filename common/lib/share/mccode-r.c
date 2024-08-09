@@ -61,6 +61,7 @@ static   long mcstartdate            = 0; /* start simulation time */
 static   int  mcdisable_output_files = 0; /* --no-output-files */
 mcstatic int  mcgravitation          = 0; /* use gravitation flag, for PROP macros */
 mcstatic int  mcdotrace              = 0; /* flag for --trace and messages for DISPLAY */
+mcstatic int  mcnexus_embed_idf      = 0; /* flag to embed xml-formatted IDF file for Mantid */
 #pragma acc declare create ( mcdotrace )
 int      mcallowbackprop             = 0;         /* flag to enable negative/backprop */
 
@@ -903,7 +904,7 @@ MCDETECTOR detector_import(
   double x1, double x2, double y1, double y2, double z1, double z2,
   char *filename,
   double *p0, double *p1, double *p2,
-  Coords position)
+  Coords position, Rotation rotation)
 {
   time_t t;       /* for detector.date */
   long   date_l;  /* date as a long number */
@@ -982,7 +983,13 @@ MCDETECTOR detector_import(
 
   /* these only apply to detector files ===================================== */
 
+  detector.Position[0]=position.x;
+  detector.Position[1]=position.y;
+  detector.Position[2]=position.z;
+  rot_copy(detector.Rotation,rotation);
   snprintf(detector.position, CHAR_BUF_LENGTH, "%g %g %g", position.x, position.y, position.z);
+  /* may also store actual detector orientation in the future */
+
   /* may also store actual detector orientation in the future */
 
   strncpy(detector.title,      title && strlen(title) ? title : component,       CHAR_BUF_LENGTH);
@@ -1563,6 +1570,34 @@ char *mcinfo_readfile(char *filename)
 }
 
 /*******************************************************************************
+* NXmakeopengroup: Nexus-style function wrapper to
+* a) try opening a group
+* b) try creating and reopening in case of failure
+* Used in: mccode-r (nexus calls)
+*******************************************************************************/
+NXstatus NXmakeopengroup (NXhandle handle, CONSTCHAR *name, CONSTCHAR* NXclass) {
+
+  NXstatus status1,status2,status3;
+
+  NXMDisableErrorReporting();
+  status1=NXopengroup(handle, name, NXclass);
+  if (status1 !=NX_OK) {
+    status2=NXmakegroup(handle, name, NXclass);
+    if (status2 !=NX_OK) {
+      NXMEnableErrorReporting();
+      return status2;
+    } else {
+      status3=NXopengroup(handle, name, NXclass);
+      NXMEnableErrorReporting();
+      return status3;
+    }
+  } else {
+    NXMEnableErrorReporting();
+    return status1;
+  }
+}
+
+/*******************************************************************************
 * mcinfo_out: output instrument/simulation groups in NeXus file
 * Used in: siminfo_init (nexus)
 *******************************************************************************/
@@ -1587,8 +1622,7 @@ static void mcinfo_out_nexus(NXhandle f)
   sprintf(entry0, "entry%i", count+1);
 
   /* create the main NXentry (mandatory in NeXus) */
-  if (NXmakegroup(f, entry0, "NXentry") == NX_OK)
-  if (NXopengroup(f, entry0, "NXentry") == NX_OK) {
+  if (NXmakeopengroup(f, entry0, "NXentry") == NX_OK) {
 
     nxprintf(nxhandle, "program_name", MCCODE_STRING);
     nxprintf(f, "start_time", ctime(&t));
@@ -1601,8 +1635,8 @@ static void mcinfo_out_nexus(NXhandle f)
         dirname && strlen(dirname) ? dirname : ".", MC_PATHSEP_S, siminfo_name);
 
     /* write NeXus instrument group */
-    if (NXmakegroup(f, "instrument", "NXinstrument") == NX_OK)
-    if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+    if (NXmakeopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+      printf("Created instrument group!\n");
       int   i;
       char *string=NULL;
 
@@ -1651,27 +1685,31 @@ static void mcinfo_out_nexus(NXhandle f)
         nxprintf (f, "description", "File %s not found (instrument description %s is missing)",
           instrument_source, instrument_name);
 
-      /* add Mantid/IDF.xml when available */
-      char *IDFfile=NULL;
-      IDFfile = (char*)malloc(CHAR_BUF_LENGTH);
-      sprintf(IDFfile,"%s%s",instrument_source,".xml");
-      buffer = mcinfo_readfile(IDFfile);
-      if (buffer && strlen(buffer)) {
-        NXmakegroup (nxhandle, "instrument_xml", "NXnote");
-        NXopengroup (nxhandle, "instrument_xml", "NXnote");
-        nxprintf(f, "data", buffer);
-        nxprintf(f, "description", "IDF.xml file found with instrument %s", instrument_source);
-        nxprintf(f, "type", "text/xml");
-        NXclosegroup(f); /* instrument_xml */
-        free(buffer);
+      if (mcnexus_embed_idf) {
+        /* add Mantid/IDF.xml when available */
+        char *IDFfile=NULL;
+        IDFfile = (char*)malloc(CHAR_BUF_LENGTH);
+        sprintf(IDFfile,"%s%s",instrument_source,".xml");
+        buffer = mcinfo_readfile(IDFfile);
+        if (buffer && strlen(buffer)) {
+          NXmakeopengroup (nxhandle, "instrument_xml", "NXnote");
+          nxprintf(f, "data", buffer);
+          nxprintf(f, "description", "IDF.xml file found with instrument %s", instrument_source);
+          nxprintf(f, "type", "text/xml");
+          NXclosegroup(f); /* instrument_xml */
+          free(buffer);
+        }
+	free(IDFfile);
       }
-      free(IDFfile);
+      if (NXmakeopengroup(f, "components", "NXdata") == NX_OK) {
+	  nxprintattr(f, "description", "Component list for instrument %s",  instrument_name);
+	  NXclosegroup(f); /* components */
+	}
       NXclosegroup(f); /* instrument */
     } /* NXinstrument */
 
     /* write NeXus simulation group */
-    if (NXmakegroup(f, "simulation", "NXnote") == NX_OK)
-    if (NXopengroup(f, "simulation", "NXnote") == NX_OK) {
+    if (NXmakeopengroup(f, "simulation", "NXnote") == NX_OK) {
 
       nxprintattr(f, "name",   "%s%s%s",
         dirname && strlen(dirname) ? dirname : ".", MC_PATHSEP_S, siminfo_name);
@@ -1691,8 +1729,7 @@ static void mcinfo_out_nexus(NXhandle f)
     #endif
 
       /* output parameter string ================================================ */
-      if (NXmakegroup(f, "Param", "NXparameters") == NX_OK)
-      if (NXopengroup(f, "Param", "NXparameters") == NX_OK) {
+      if (NXmakeopengroup(f, "Param", "NXparameters") == NX_OK) {
         int i;
         char string[CHAR_BUF_LENGTH];
         for(i = 0; i < numipar; i++) {
@@ -1708,16 +1745,57 @@ static void mcinfo_out_nexus(NXhandle f)
         }
         NXclosegroup(f); /* Param */
       } /* NXparameters */
-
       NXclosegroup(f); /* simulation */
     } /* NXsimulation */
 
-    /* create a group to hold all monitors */
-    NXmakegroup(f, "data", "NXdetector");
+    /* create a group to hold all links for all monitors */
+    if(mcnexus_embed_idf)
+      NXmakegroup(f, "data", "NXdetector");
 
     /* leave the NXentry opened (closed at exit) */
   } /* NXentry */
 } /* mcinfo_out_nexus */
+
+/*******************************************************************************
+* mccomp_placement_nexus:
+*   Output absolute (3x1) position and (3x3) rotation of component instance into
+*   the attribute
+*     entry<N>/instrument/compname
+*   requires: NXentry to be opened
+*******************************************************************************/
+static void mccomp_placement_nexus(NXhandle f, char* component, Coords position, Rotation rotation)
+{
+  /* open NeXus instrument group */
+  if (NXmakeopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+    if (NXmakeopengroup(f, "components", "NXdata") == NX_OK) {
+      if (NXmakeopengroup(f, component, "NXdata") == NX_OK) {
+
+	  int64_t pdims[3]={3,1,0};
+
+	  NXcompmakedata64(f, "Position", NX_FLOAT64, 1, pdims, NX_COMPRESSION, pdims);
+	  if (NXopendata(f, "Position") == NX_ERROR) {
+	    fprintf(stderr, "Warning: could not open Position\n");
+	    return;
+	  }
+	  double pos[3];
+	  pos[0]=position.x; pos[1]=position.y; pos[2]=position.z;
+	  NXputdata (f, pos);
+
+	  int64_t rdims[3]={3,3,0};
+
+	  NXcompmakedata64(f, "Rotation", NX_FLOAT64, 2, rdims, NX_COMPRESSION, rdims);
+	  if (NXopendata(f, "Rotation") == NX_ERROR) {
+	    fprintf(stderr, "Warning: could not open Rotation\n");
+	    return;
+	  }
+	  NXputdata (f, rotation);
+	  NXclosegroup(f); /* component */
+      }
+      NXclosegroup(f); /* components  */
+    }
+    NXclosegroup(f); /* instrument */
+  }
+} /* mccomp_placement_nexus */
 
 /*******************************************************************************
 * mcdatainfo_out_nexus: output detector header
@@ -1732,65 +1810,65 @@ mcdatainfo_out_nexus(NXhandle f, MCDETECTOR detector)
   if (!f || !detector.m || mcdisable_output_files) return;
 
   strcpy_valid(data_name,
-    detector.filename && strlen(detector.filename) ?
+    strlen(detector.filename) ?
       detector.filename : detector.component);
 
   /* the NXdetector group has been created in mcinfo_out_nexus (siminfo_init) */
-  if (NXopengroup(f, "data", "NXdetector") == NX_OK) {
+  if (NXmakeopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+    if (NXmakeopengroup(f, "components", "NXdata") == NX_OK) {
+      //NXMDisableErrorReporting(); /* unactivate NeXus error messages, as creation may fail */
+      if (NXmakeopengroup(f, detector.component, "NXdata") == NX_OK) {
+	if (NXmakeopengroup(f, "output", "NXdetector") == NX_OK) {
+	  if (NXmakeopengroup(f, data_name, "NXdata") == NX_OK) {
+		/* output metadata (as attributes) ======================================== */
+		nxprintattr(f, "Date",       detector.date);
+		nxprintattr(f, "type",       detector.type);
+		nxprintattr(f, "Source",     detector.instrument);
+		nxprintattr(f, "component",  detector.component);
+		nxprintattr(f, "position",   detector.position);
 
-    /* create and open the data group */
-    /* this may fail when appending to list -> ignore/skip */
-    NXMDisableErrorReporting(); /* unactivate NeXus error messages, as creation may fail */
+		nxprintattr(f, "title",      detector.title);
+		nxprintattr(f, !mcget_run_num() || mcget_run_num() >= mcget_ncount() ?
+			    "Ncount" :
+			    "ratio",  detector.ncount);
 
-    if (NXmakegroup(f, data_name, "NXdata") == NX_OK)
-    if (NXopengroup(f, data_name, "NXdata") == NX_OK) {
+		if (strlen(detector.filename)) {
+		  nxprintattr(f, "filename", detector.filename);
+		}
 
-      /* output metadata (as attributes) ======================================== */
-      nxprintattr(f, "Date",       detector.date);
-      nxprintattr(f, "type",       detector.type);
-      nxprintattr(f, "Source",     detector.instrument);
-      nxprintattr(f, "component",  detector.component);
-      nxprintattr(f, "position",   detector.position);
+		nxprintattr(f, "statistics", detector.statistics);
+		nxprintattr(f, "signal",     detector.signal);
+		nxprintattr(f, "values",     detector.values);
 
-      nxprintattr(f, "title",      detector.title);
-      nxprintattr(f, !mcget_run_num() || mcget_run_num() >= mcget_ncount() ?
-                 "Ncount" :
-                 "ratio",  detector.ncount);
+		if (detector.rank >= 1)
+		  {
+		    nxprintattr(f, "xvar",     detector.xvar);
+		    nxprintattr(f, "yvar",     detector.yvar);
+		    nxprintattr(f, "xlabel",   detector.xlabel);
+		    nxprintattr(f, "ylabel",   detector.ylabel);
+		    if (detector.rank > 1) {
+		      nxprintattr(f, "zvar",   detector.zvar);
+		      nxprintattr(f, "zlabel", detector.zlabel);
+		    }
+		  }
 
-      if (strlen(detector.filename)) {
-        nxprintattr(f, "filename", detector.filename);
+		nxprintattr(f, abs(detector.rank)==1 ?
+			    "xlimits" :
+			    "xylimits", detector.limits);
+		nxprintattr(f, "variables",
+			    strcasestr(detector.format, "list") ? detector.ylabel : detector.variables);
+
+		NXclosegroup(f);
+	      }
+	    NXclosegroup(f);
+	  }
+	NXclosegroup(f);
       }
-
-      nxprintattr(f, "statistics", detector.statistics);
-      nxprintattr(f, "signal",     detector.signal);
-      nxprintattr(f, "values",     detector.values);
-
-      if (detector.rank >= 1)
-      {
-        nxprintattr(f, "xvar",     detector.xvar);
-        nxprintattr(f, "yvar",     detector.yvar);
-        nxprintattr(f, "xlabel",   detector.xlabel);
-        nxprintattr(f, "ylabel",   detector.ylabel);
-        if (detector.rank > 1) {
-          nxprintattr(f, "zvar",   detector.zvar);
-          nxprintattr(f, "zlabel", detector.zlabel);
-        }
-      }
-
-      nxprintattr(f, abs(detector.rank)==1 ?
-                 "xlimits" :
-                 "xylimits", detector.limits);
-      nxprintattr(f, "variables",
-        strcasestr(detector.format, "list") ? detector.ylabel : detector.variables);
-      nxprintf(f, "distance", detector.position);
-      nxprintf(f, "acquisition_mode",
-        strcasestr(detector.format, "list") ? "event" : "summed");
-
       NXclosegroup(f);
-    } /* NXdata (filename) */
-    NXMEnableErrorReporting();  /* re-enable NeXus error messages */
+    } /* NXdata (components) */
+    //NXMEnableErrorReporting();  /* re-enable NeXus error messages */
     NXclosegroup(f);
-  } /* NXdetector (data) */
+  } /* NXdetector (instrument) */
 
 } /* mcdatainfo_out_nexus */
 
@@ -1858,6 +1936,9 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
 
   /* create the data set in NXdata group */
   NXMDisableErrorReporting(); /* unactivate NeXus error messages, as creation may fail */
+
+  //printf("Writing array %s with rank %i and dimensions %ld %ld %ld\n",part,detector.rank,detector.m,detector.n,detector.p);
+  //printf("NXcompmakedata(f, %s, NX_FLOAT64, %i, {%ld,%ld,%ld}, NX_COMPRESSION, {%ld,%ld,%ld}\n",part,detector.rank, fulldims[0], fulldims[1], fulldims[2], dims[0],dims[1],dims[2]);
   ret = NXcompmakedata64(f, part, NX_FLOAT64, detector.rank, fulldims, NX_COMPRESSION, dims);
   if (ret != NX_OK) {
     /* failed: data set already exists */
@@ -1892,7 +1973,7 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
 
   if (strstr(part,"data") || strstr(part, "events")) {
     NXputattr(f, "signal", &signal, 1, NX_INT32);
-    nxprintattr(f, "short_name", detector.filename && strlen(detector.filename) ?
+    nxprintattr(f, "short_name", strlen(detector.filename) ?
       detector.filename : detector.component);
   }
   nxprintattr(f, "long_name", "%s '%s'", part, detector.title);
@@ -1913,41 +1994,64 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
   if (!f || !detector.m || mcdisable_output_files) return(NX_OK);
 
   strcpy_valid(data_name,
-    detector.filename && strlen(detector.filename) ?
+    strlen(detector.filename) ?
       detector.filename : detector.component);
-
+  NXlink pLink;
   /* the NXdetector group has been created in mcinfo_out_nexus (siminfo_init) */
-  if (NXopengroup(f, "data", "NXdetector") == NX_OK) {
+  if (NXmakeopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+    if (NXmakeopengroup(f, "components", "NXdata") == NX_OK) {
+      if (NXmakeopengroup(f, detector.component, "NXdata") == NX_OK) {
+	if (NXmakeopengroup(f, "output", "NXdetector") == NX_OK) {
 
-    /* the NXdata group has been created in mcdatainfo_out_nexus */
-    if (NXopengroup(f, data_name, "NXdata") == NX_OK) {
+	  /* the NXdata group has been created in mcdatainfo_out_nexus */
+	  if (NXmakeopengroup(f, data_name, "NXdata") == NX_OK) {
 
-      /* write axes, for histogram data sets, not for lists */
-      if (!strcasestr(detector.format, "list")) {
-        mcdetector_out_axis_nexus(f, detector.xlabel, detector.xvar,
-          1, detector.m, detector.xmin, detector.xmax);
+	    MPI_MASTER(
+		       nxprintattr(f, "options",
+				   strlen(detector.options) ? detector.options : "None");
+		       );
+	    /* write axes, for histogram data sets, not for lists */
+	    if (!strcasestr(detector.format, "list")) {
+	      mcdetector_out_axis_nexus(f, detector.xlabel, detector.xvar,
+					1, detector.m, detector.xmin, detector.xmax);
 
-        mcdetector_out_axis_nexus(f, detector.ylabel, detector.yvar,
-          2, detector.n, detector.ymin, detector.ymax);
+	      mcdetector_out_axis_nexus(f, detector.ylabel, detector.yvar,
+					2, detector.n, detector.ymin, detector.ymax);
 
-        mcdetector_out_axis_nexus(f, detector.zlabel, detector.zvar,
-          3, detector.p, detector.zmin, detector.zmax);
+	      mcdetector_out_axis_nexus(f, detector.zlabel, detector.zvar,
+					3, detector.p, detector.zmin, detector.zmax);
 
-      } /* !list */
+	    } /* !list */
 
-      /* write the actual data (appended if already exists) */
-      if (!strcasestr(detector.format, "list")) {
-        mcdetector_out_array_nexus(f, "data", detector.p1, detector);
-        mcdetector_out_array_nexus(f, "errors", detector.p2, detector);
-        mcdetector_out_array_nexus(f, "ncount", detector.p0, detector);
-      } else
-        mcdetector_out_array_nexus(  f, "events", detector.p1, detector);
-
+	    /* write the actual data (appended if already exists) */
+	    if (!strcasestr(detector.format, "list") && !strcasestr(detector.format, "pixels")) {
+	      mcdetector_out_array_nexus(f, "data", detector.p1, detector);
+	      mcdetector_out_array_nexus(f, "errors", detector.p2, detector);
+	      mcdetector_out_array_nexus(f, "ncount", detector.p0, detector);
+	    } else if (strcasestr(detector.format, "pixels")) {
+	      mcdetector_out_array_nexus(  f, "pixels", detector.p1, detector);
+	    } else
+	      mcdetector_out_array_nexus(  f, "events", detector.p1, detector);
+	    NXclosegroup(f);
+	    NXmakeopengroup(f, data_name, "NXdata");
+	    NXgetgroupID(nxhandle, &pLink);
+	    NXclosegroup(f);
+	  } /* NXdata data_name*/
+	  NXclosegroup(f);
+	} /* NXdetector output */
+	NXclosegroup(f);
+      } /* NXdata detector.component */
       NXclosegroup(f);
-    } /* NXdata */
+    } /* NXdata components */
     NXclosegroup(f);
-  } /* NXdetector */
+  } /* NXdata instrument */
 
+  if (mcnexus_embed_idf && !strcasestr(detector.format, "pixels")) {
+    if (NXmakeopengroup(f, "data", "NXdetector") == NX_OK) {
+      NXmakelink(nxhandle, &pLink);
+      NXclosegroup(f);
+    }
+  }
   return(NX_OK);
 } /* mcdetector_out_array_nexus */
 
@@ -2011,6 +2115,7 @@ MCDETECTOR mcdetector_out_list_slaves(MCDETECTOR detector)
 	     printf("\n** Done ** \n");
   );
   }
+  return(detector);
 }
 #endif
 
@@ -2049,6 +2154,17 @@ MCDETECTOR mcdetector_out_2D_nexus(MCDETECTOR detector)
 
   return(detector);
 } /* mcdetector_out_2D_nexus */
+
+MCDETECTOR mcdetector_out_3D_nexus(MCDETECTOR detector)
+{
+  printf("Received detector from %s\n",detector.component);
+  MPI_MASTER(
+  mcdatainfo_out_nexus(nxhandle, detector);
+  mcdetector_out_data_nexus(nxhandle, detector);
+  );
+  return(detector);
+} /* mcdetector_out_3D_nexus */
+
 
 #endif /* USE_NEXUS*/
 
@@ -2176,7 +2292,7 @@ void siminfo_close()
 *   Title is t, component name is c.
 *******************************************************************************/
 MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
-                         char *c, Coords posa)
+			     char *c, Coords posa, Rotation rota)
 {
   /* import and perform basic detector analysis (and handle MPI reduce) */
   MCDETECTOR detector = detector_import(mcformat,
@@ -2185,7 +2301,7 @@ MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
     "I", "", "",
     "I", "", "",
     0, 0, 0, 0, 0, 0, c,
-    &p0, &p1, &p2, posa); /* write Detector: line */
+    &p0, &p1, &p2, posa, rota); /* write Detector: line */
 
 #ifdef USE_NEXUS
   if (strcasestr(detector.format, "NeXus"))
@@ -2225,7 +2341,7 @@ MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
         char *xvar, double x1, double x2,
         long n,
         double *p0, double *p1, double *p2, char *f,
-        char *c, Coords posa)
+	char *c, Coords posa, Rotation rota)
 {
   /* import and perform basic detector analysis (and handle MPI_Reduce) */
   // detector_import calls mcdetector_statistics, which will return different
@@ -2237,7 +2353,7 @@ MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
     xl, yl, (n > 1 ? "Signal per bin" : " Signal"),
     xvar, "(I,I_err)", "I",
     x1, x2, 0, 0, 0, 0, f,
-    p0, p1, p2, posa); /* write Detector: line */
+    p0, p1, p2, posa, rota); /* write Detector: line */
   if (!detector.p1 || !detector.m) return(detector);
 
 #ifdef USE_NEXUS
@@ -2283,12 +2399,13 @@ MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
 *   Not included in the macro, and here forwarded to detector_import:
 *   c:    ?
 *   posa: ?
+*   rota: ?
 *******************************************************************************/
 MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
                   double x1, double x2, double y1, double y2,
                   long m, long n,
                   double *p0, double *p1, double *p2, char *f,
-                  char *c, Coords posa)
+		  char *c, Coords posa, Rotation rota)
 {
   char xvar[CHAR_BUF_LENGTH];
   char yvar[CHAR_BUF_LENGTH];
@@ -2309,7 +2426,7 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
       yl, "", "Signal per bin",
       yvar, "(I,Ierr)", "I",
       y1, y2, x1, x2, 0, 0, f,
-      p0, p1, p2, posa); /* write Detector: line */
+      p0, p1, p2, posa, rota); /* write Detector: line */
   } else if (labs(n)==1) {/* m>1 on X, n==1 on Y: 1D, no Y axis*/
     detector = detector_import(mcformat,
       c, (t ? t : MCCODE_STRING " 1D data"),
@@ -2317,7 +2434,7 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
       xl, "", "Signal per bin",
       xvar, "(I,Ierr)", "I",
       x1, x2, y1, y2, 0, 0, f,
-      p0, p1, p2, posa); /* write Detector: line */
+      p0, p1, p2, posa, rota); /* write Detector: line */
   }else {
     detector = detector_import(mcformat,
       c, (t ? t : MCCODE_STRING " 2D data"),
@@ -2325,7 +2442,7 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
       xl, yl, "Signal per bin",
       xvar, yvar, "I",
       x1, x2, y1, y2, 0, 0, f,
-      p0, p1, p2, posa); /* write Detector: line */
+      p0, p1, p2, posa, rota); /* write Detector: line */
   }
 
   if (!detector.p1 || !detector.m) return(detector);
@@ -2340,13 +2457,102 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
 } /* mcdetector_out_2D */
 
 /*******************************************************************************
+* mcdetector_out_2D_list: List mode 2D including forwarding "options" from
+* Monitor_nD
+*
+*   Special case for list: master creates file first, then slaves append their
+*   blocks without header-
+*
+*   t:    title
+*   xl:   x-label
+*   yl:   y-label
+*   x1:   x axus min
+*   x2:   x axis max
+*   y1:   y axis min
+*   y2:   y axis max
+*   m:    dim 1 (x) size
+*   n:    dim 2 (y) size
+*   p0:   pntr to start of data block#0
+*   p1:   pntr to start of data block#1
+*   p2:   pntr to start of data block#2
+*   f:    filename
+*
+*   Not included in the macro, and here forwarded to detector_import:
+*   c:    ?
+*   posa: ?
+*   rota: ?
+*******************************************************************************/
+MCDETECTOR mcdetector_out_2D_list(char *t, char *xl, char *yl,
+                  double x1, double x2, double y1, double y2,
+                  long m, long n,
+                  double *p0, double *p1, double *p2, char *f,
+		  char *c, Coords posa, Rotation rota, char* options)
+{
+  char xvar[CHAR_BUF_LENGTH];
+  char yvar[CHAR_BUF_LENGTH];
+
+  /* create short axes labels */
+  if (xl && strlen(xl)) { strncpy(xvar, xl, CHAR_BUF_LENGTH); xvar[2]='\0'; }
+  else strcpy(xvar, "x");
+  if (yl && strlen(yl)) { strncpy(yvar, yl, CHAR_BUF_LENGTH); yvar[2]='\0'; }
+  else strcpy(yvar, "y");
+
+  MCDETECTOR detector;
+
+  /* import and perform basic detector analysis (and handle MPI_Reduce) */
+  if (labs(m) == 1) {/* n>1 on Y, m==1 on X: 1D, no X axis*/
+    detector = detector_import(mcformat,
+      c, (t ? t : MCCODE_STRING " 1D data"),
+      n, 1, 1,
+      yl, "", "Signal per bin",
+      yvar, "(I,Ierr)", "I",
+      y1, y2, x1, x2, 0, 0, f,
+      p0, p1, p2, posa, rota); /* write Detector: line */
+  } else if (labs(n)==1) {/* m>1 on X, n==1 on Y: 1D, no Y axis*/
+    detector = detector_import(mcformat,
+      c, (t ? t : MCCODE_STRING " 1D data"),
+      m, 1, 1,
+      xl, "", "Signal per bin",
+      xvar, "(I,Ierr)", "I",
+      x1, x2, y1, y2, 0, 0, f,
+      p0, p1, p2, posa, rota); /* write Detector: line */
+  }else {
+    detector = detector_import(mcformat,
+      c, (t ? t : MCCODE_STRING " 2D data"),
+      m, n, 1,
+      xl, yl, "Signal per bin",
+      xvar, yvar, "I",
+      x1, x2, y1, y2, 0, 0, f,
+      p0, p1, p2, posa, rota); /* write Detector: line */
+  }
+
+  MPI_MASTER(
+  if (strlen(options)) {
+    strcpy(detector.options,options);
+  } else {
+    strcpy(detector.options,"None");
+  }
+  );
+
+  if (!detector.p1 || !detector.m) return(detector);
+
+#ifdef USE_NEXUS
+  if (strcasestr(detector.format, "NeXus"))
+    return(mcdetector_out_2D_nexus(detector));
+  else
+#endif
+    return(mcdetector_out_2D_ascii(detector));
+
+} /* mcdetector_out_2D_list */
+
+/*******************************************************************************
 * mcdetector_out_list: wrapper for list output (calls out_2D with mcformat+"list").
 *   m=number of events, n=size of each event
 *******************************************************************************/
 MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
                   long m, long n,
                   double *p1, char *f,
-                  char *c, Coords posa)
+			       char *c, Coords posa, Rotation rota, char* options)
 {
   char       format_new[CHAR_BUF_LENGTH];
   char      *format_org;
@@ -2356,12 +2562,11 @@ MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
   strcpy(format_new, mcformat);
   strcat(format_new, " list");
   mcformat = format_new;
-
-  detector = mcdetector_out_2D(t, xl, yl,
+  detector = mcdetector_out_2D_list(t, xl, yl,
                   1,labs(m),1,labs(n),
                   m,n,
                   NULL, p1, NULL, f,
-                  c, posa);
+		  c, posa,rota,options);
 
   mcformat = format_org;
   return(detector);
@@ -2776,6 +2981,7 @@ void mcdis_polygon(int count, ...){
       x0 += x[j]; y0 += y[j]; z0 += z[j];
     }
   }
+  va_end(ap);
 
   /* Patch data for multiline(count+1, ... use 0th point*/
   if (mcdotrace==1) {
@@ -4164,9 +4370,12 @@ mchelp(char *pgmname)
 "  --format=FORMAT            Output data files using FORMAT="
    FLAVOR_UPPER
 #ifdef USE_NEXUS
-   " NEXUS"
-#endif
+   " NEXUS\n"
+"  --IDF                      Embed an xml-formatted IDF instrument definition\n"
+"                             in the NeXus file (if existent in .)\n\n"
+#else
 "\n\n"
+#endif
 );
 #ifdef USE_MPI
   fprintf(stderr,
@@ -4437,6 +4646,11 @@ mcparseoptions(int argc, char *argv[])
     else if(!strcmp("--format", argv[i]) && (i + 1) < argc) {
       mcformat=argv[++i];
     }
+#ifdef USE_NEXUS
+    else if(!strcmp("--IDF", argv[i])) {
+      mcnexus_embed_idf = 1;
+    }
+#endif
     else if(!strncmp("--vecsize=", argv[i], 10)) {
       vecsize=atoi(&argv[i][10]);
     }    

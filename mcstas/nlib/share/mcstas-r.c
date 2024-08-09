@@ -74,7 +74,11 @@ _class_particle mcsetstate(double x, double y, double z, double vx, double vy, d
   mcneutron._absorbed  = 0;
   mcneutron._restore   = 0;
   mcneutron._scattered = 0;
-
+  mcneutron.flag_nocoordschange = 0;
+  
+  /* init tmp-vars - FIXME are they used? */
+  mcneutron._mctmp_a = mcneutron._mctmp_b =  mcneutron._mctmp_c = 0;
+  // what about mcneutron._logic ?
   return(mcneutron);
 } /* mcsetstate */
 
