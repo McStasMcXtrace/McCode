@@ -4,3 +4,4 @@ set -e
 FILE=${0}
 cd `dirname $FILE`
 npm install
+npm run build

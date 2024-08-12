@@ -82,18 +82,41 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/package.json" "${WORK}/package.json"
 execute_process(COMMAND "mkdir" "node_modules"
   WORKING_DIRECTORY "${WORK}")
 
-# Dist
+# dist
 install(
   DIRECTORY "${PROJECT_SOURCE_DIR}/dist"
   DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+)
+
+# components
+install(
+  DIRECTORY "${PROJECT_SOURCE_DIR}/components"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
   )
 
+# Contexts
+install(
+  DIRECTORY "${PROJECT_SOURCE_DIR}/Contexts"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+)
+
+# data-utils
+install(
+  DIRECTORY "${PROJECT_SOURCE_DIR}/data-utils"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+)
+
+# utils
+install(
+  DIRECTORY "${PROJECT_SOURCE_DIR}/utils"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+)
 
 # Node modules
 install(
     DIRECTORY "${WORK}/node_modules"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
-    )
+)
 
 # Main script, including rename mc/mxdisplay
 install(
@@ -103,7 +126,7 @@ install(
     )
 
 # Other .py infrastructure
-foreach(NAME start-vite.js package.json mcdisplay.js Lut.js OrbitControls.js dat.gui.min.js jquery.min.js three.min.js template.html __init__.py)
+foreach(NAME start-vite.js package.json mcdisplay.js Lut.js OrbitControls.js dat.gui.min.js jquery.min.js three.min.js template.html __init__.py common.css main.tsx App.tsx index.html)
   install(
     FILES "${PROJECT_SOURCE_DIR}/${NAME}"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
