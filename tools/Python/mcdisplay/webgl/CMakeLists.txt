@@ -126,7 +126,7 @@ install(
     )
 
 # Other .py infrastructure
-foreach(NAME start-vite.js package.json mcdisplay.js Lut.js OrbitControls.js dat.gui.min.js jquery.min.js three.min.js template.html __init__.py common.css main.tsx App.tsx)
+foreach(NAME start-vite.js package.json mcdisplay.js Lut.js OrbitControls.js dat.gui.min.js jquery.min.js three.min.js template.html __init__.py common.css main.tsx App.tsx index.html)
   install(
     FILES "${PROJECT_SOURCE_DIR}/${NAME}"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
