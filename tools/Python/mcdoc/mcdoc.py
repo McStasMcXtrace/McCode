@@ -944,12 +944,12 @@ def main(args):
 
     elif args.manual == True:
         ''' open manual and exit '''
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(docdir,'doc','manuals',mccode_config.configuration['MCCODE']+'-manual.pdf')), shell=True)
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(docdir,mccode_config.configuration['MCCODE']+'-manual.pdf')), shell=True)
         quit()
 
     elif args.comps == True:
         ''' open component manual and exit '''
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(docdir,'doc','manuals',mccode_config.configuration['MCCODE']+'-components.pdf')), shell=True)
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(docdir,mccode_config.configuration['MCCODE']+'-components.pdf')), shell=True)
         quit()
 
     elif args.web == True:

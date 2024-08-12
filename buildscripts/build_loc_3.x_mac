@@ -4,7 +4,7 @@ export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "im
 # rapid-build script for mcstas-kernel dev:
 
 
-#git checkout main
+
 git pull
 
 # Ensure our 3rd party modules are in place and updated
@@ -69,7 +69,8 @@ export PATH=$CONDALOCATION/bin:$PATH
 ./mkdist mcstas-tools-python-mcdisplay-mantid 3.x-dev tools/Python/mcdisplay/mantid_xml/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-html 3.x-dev tools/Python/mcplot/html/ "" mac "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-matplotlib 3.x-dev tools/Python/mcplot/matplotlib/ "" mac "" -- justinst
-cp tools/other/mcsplit/mcsplit.py $MCINSTALL_PREFIX/mcstas/3.x-dev/bin/
+./mkdist mcstas-tools-matlab-mcplot 3.x-dev tools/matlab/mcplot/ "" mac "" -- justinst
+./mkdist mcstas-tools-matlab-mcdisplay 3.x-dev tools/matlab/mcdisplay/ "" mac "" -- justinst
 
 # Ensure we are configured for 10 node MPI runs
 sed -i.bak s/\'4\'/\'10\'/g $HOME/McStas/mcstas/3.x-dev/tools/Python/mccodelib/mccode_config.py
