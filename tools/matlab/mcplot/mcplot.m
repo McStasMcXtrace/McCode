@@ -76,7 +76,7 @@ function data = mcplot(varargin)
       this_file = varargin{index};
       if isempty(this_file) || (ischar(this_file) && isempty(dir(this_file))), continue; end
       if isstruct(this_file), 
-        this_data=mcplot_display(this_file);
+        this_data = mcplot_display(this_file);
       elseif ischar(this_file),
         this_data = mcplot(this_file);
       else
@@ -142,9 +142,8 @@ function data = mcplot(varargin)
   if exist ('OCTAVE_VERSION', 'builtin')
     if ~isempty(data)
       if nargin==0 || nargin==1
-        display('Pausing --> Please press a key in the octave terminal exit.');
-        disp('Use the plot window')
-        pause();
+        display('Close window to exit the plot.');
+        waitfor(gcf);
       end
     end
   end
@@ -736,7 +735,7 @@ end % mcplot_split_multiarray
 
 % ==============================================================================
 
-function data = mcplot_display(data, fig) 
+function [data, fig] = mcplot_display(data, fig) 
   % opens a new window, with subplots and plots each structure in axes
   % data: single monitor structure or a cell array of monitor structures
   %  fig: optional figure handle to use, else a new figure is created.

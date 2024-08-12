@@ -170,7 +170,7 @@ function createScatterPoints(
   scatterPoints.name = SCATTERPOINTS;
 
   vertices.forEach((vertex) => {
-    const geometry = new THREE.SphereGeometry(0.0035, 32, 32);
+    const geometry = new THREE.SphereGeometry(0.004, 4, 2);
     const material = new THREE.MeshBasicMaterial({ color });
     const sphere = new THREE.Mesh(geometry, material);
     sphere.position.copy(vertex);
