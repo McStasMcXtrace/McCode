@@ -5,6 +5,8 @@ mcdisplay webgl script.
 '''
 import os
 import sys
+import signal
+import time
 import logging
 import json
 import subprocess
@@ -94,9 +96,9 @@ def _write_html(instrument, html_filepath, first=None, last=None, invcanvas=Fals
     writer = SimpleWriter(templatefile, html_filepath, invcanvas)
     writer.write()
 
-def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first=None, last=None, invcanvas=None, **kwds):
+def write_browse(instrument, raybundle, dirname, instrname, timeout, nobrowse=None, first=None, last=None, invcanvas=None, **kwds):
     ''' writes instrument definitions to html/ js '''
-    print("Launching WebGL...")
+    print("Launching WebGL... - timeout is " + str(timeout))
     def copy(a, b):
         shutil_copy(str(a), str(b))
 
@@ -164,13 +166,21 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
                         if part.startswith('http://localhost:'):
                             port = part.split(':')[-1].rstrip('/')
                             port_container['port'] = port
+                            port_container['process'] = proc
                             return
         except subprocess.CalledProcessError as e:
             print(f"npm run dev failed: {e}")
             return None
 
+    def signal_handler(sig, frame):
+        global port_container
+        print('Received signal ' + str(sig))
+        port_container['process'].send_signal(signal.SIGTERM)
+        sys.exit(0)
+
     # Container to hold the port information
-    port_container = {'port': None}
+    global port_container
+    port_container = {'port': None, 'process': None}
 
     # Start npm and capture the port in a separate thread
     npm_thread = Thread(target=lambda: run_npm_and_capture_port(port_container))
@@ -183,13 +193,23 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
         webbrowser.open(f"http://localhost:{port_container['port']}/")
     else:
         print("Failed to determine the localhost port")
+    if port_container['process']:
+        signal.signal(signal.SIGTERM, signal_handler)
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGUSR1, signal_handler)
+        signal.signal(signal.SIGUSR2, signal_handler)
+        print('Press Ctrl+C to exit - otherwise visualisation vill terminate server after ' + str(timeout) + ' s')
+        time.sleep(timeout)
+        print("Sending SIGTERM to npm/vite server")
+        port_container['process'].send_signal(signal.SIGTERM)
+        sys.exit(0)
 
 def file_save(data, filename):
     ''' saves data for debug purposes '''
     with open(filename, 'w') as f:
         f.write(data)
 
-def main(instr=None, dirname=None, debug=None, n=None, **kwds):
+def main(instr=None, dirname=None, debug=None, n=None, timeout=None, **kwds):
     logging.basicConfig(level=logging.INFO)
     
     # output directory
@@ -204,7 +224,7 @@ def main(instr=None, dirname=None, debug=None, n=None, **kwds):
     raybundle = reader.read_particles()
     
     # write output files
-    write_browse(instrument, raybundle, dirname, instr, **kwds)
+    write_browse(instrument, raybundle, dirname, instr, timeout, **kwds)
 
     if debug:
         # this should enable template.html to load directly
@@ -223,7 +243,7 @@ if __name__ == '__main__':
     parser.add_argument('--last', help='zoom range last component')
     parser.add_argument('-n', '--ncount', dest='n', type=float, default=300, help='Number of particles to simulate')
     parser.add_argument('-t', '--trace', dest='trace', type=int, default=2, help='Select visualization mode')
-
+    parser.add_argument('--timeout', dest='timeout', type=int, default=300, help='Shutdown time of npm/vite server')
     args, unknown = parser.parse_known_args()
     # Convert the defined arguments in the args Namespace structure to a dict
     args = {k: args.__getattribute__(k) for k in dir(args) if k[0] != '_'}
