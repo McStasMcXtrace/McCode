@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+@MCCODE_BASH_STANDARD_PREAMBLE@
 
 set -e
 cd ${HOME} && mkdir -p .@FLAVOR@ && cd .@FLAVOR@ && mkdir -p @MCCODE_VERSION@ && cd @MCCODE_VERSION@ && mkdir -p webgl && cd webgl
@@ -6,8 +7,13 @@ cd ${HOME} && mkdir -p .@FLAVOR@ && cd .@FLAVOR@ && mkdir -p @MCCODE_VERSION@ &&
 FILE=${0}
 TOOLDIR=`dirname $FILE`
 cp ${TOOLDIR}/*.tsx .
+cp ${TOOLDIR}/*.css .
 cp ${TOOLDIR}/index.html .
 cp ${TOOLDIR}/*.js .
 cp ${TOOLDIR}/package.json .
+rsync -avz ${TOOLDIR}/Contexts/ Contexts
+rsync -avz ${TOOLDIR}/utils/ utils
+rsync -avz ${TOOLDIR}/data-utils/ data-utils
+rsync -avz ${TOOLDIR}/components/ components
 npm install
 npm run build
