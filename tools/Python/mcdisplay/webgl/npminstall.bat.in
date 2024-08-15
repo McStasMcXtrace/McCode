@@ -13,10 +13,10 @@
 @copy /Y %TOOLDIR%\index.html .
 @copy /Y %TOOLDIR%\*.js .
 @copy /Y %TOOLDIR%\package.json .
-@rsync -avz %TOOLDIR%\Contexts\ Contexts
-@rsync -avz %TOOLDIR%\utils\ utils
-@rsync -avz %TOOLDIR%\data-utils\ data-utils
-@rsync -avz %TOOLDIR%\components\ components
+@Xcopy %TOOLDIR%\Contexts\ Contexts /c /i /e /h /y
+@xcopy %TOOLDIR%\utils\ utils /c /i /e /h /y
+@xcopy %TOOLDIR%\data-utils\ data-utils /c /i /e /h /y
+@xcopy %TOOLDIR%\components\ components /c /i /e /h /y
 @call npm.cmd install
 @call npm.cmd run build
 
