@@ -32,6 +32,7 @@ dependencies:
   - typish
   - jsons
   - nodejs
+  - rsync
   - pip
   - pip:
     - guide_bot
