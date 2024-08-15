@@ -103,9 +103,9 @@ def write_browse(instrument, raybundle, dirname, instrname, timeout, nobrowse=No
         shutil_copy(str(a), str(b))
 
     if os.name == 'nt':
-            source =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",configuration['MCCODE'],configuration['MCCODE_VERSION'],'webgl')
+            source =  Path(os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",mccode_config.configuration['MCCODE'],mccode_config.configuration['MCCODE_VERSION'],'webgl'))
     else:
-            source =  os.path.join(os.path.expandvars("$HOME"),"." + configuration['MCCODE'],configuration['MCCODE_VERSION'],'webgl')
+            source =  Path(os.path.join(os.path.expandvars("$HOME"),"." + mccode_config.configuration['MCCODE'],mccode_config.configuration['MCCODE_VERSION'],'webgl'))
 
     dest = Path(dirname)
     if dest.exists():
@@ -224,22 +224,21 @@ def main(instr=None, dirname=None, debug=None, n=None, timeout=None, **kwds):
             npminst = "npminstall.bat"
         npminst = Path(__file__).absolute().parent.joinpath(npminst)
         try:
-            proc = subprocess.Popen(npinst, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            for line in proc.stdout:
-                print(line)
+            proc = subprocess.Popen(npminst, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            print("Installing npm / vite modules")
         except subprocess.CalledProcessError as e:
             print(f"npminstall failed: {e}")
             return None
     
     # 1st run setup: Check if the user has a "webgl" folder or not
     if os.name == 'nt':
-            userdir =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",configuration['MCCODE'],configuration['MCCODE_VERSION'],'webgl')
+            userdir =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",mccode_config.configuration['MCCODE'],mccode_config.configuration['MCCODE_VERSION'],'webgl')
     else:
-            userdir =  os.path.join(os.path.expandvars("$HOME"),"." + configuration['MCCODE'],configuration['MCCODE_VERSION'],'webgl')
+            userdir =  os.path.join(os.path.expandvars("$HOME"),"." + mccode_config.configuration['MCCODE'],mccode_config.configuration['MCCODE_VERSION'],'webgl')
 
     if not os.path.isdir(userdir):
         try:
-            os.mkdir(userdir)
+            run_npminstall()
         except Exception as e:
             print("Local WebGL Directory %s could not be created: %s " % (userdir, e.__str__()))
 
