@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 
 set -e
+cd ${HOME} && mkdir -p .@FLAVOR@ && cd .@FLAVOR@ && mkdir -p @MCCODE_VERSION@ && cd @MCCODE_VERSION@ && mkdir -p webgl && cd webgl
+
 FILE=${0}
-cd `dirname $FILE`
+TOOLDIR=`dirname $FILE`
+cp ${TOOLDIR}/*.tsx .
+cp ${TOOLDIR}/index.html .
+cp ${TOOLDIR}/*.js .
+cp ${TOOLDIR}/package.json .
 npm install
 npm run build
