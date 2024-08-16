@@ -112,10 +112,7 @@ def write_browse(instrument, raybundle, dirname, instrname, timeout, nobrowse=No
         raise RuntimeError(f"The specified destination {dirname} already exists!")
 
     # Copy the app files - i.e. creating dest
-    if not os.name=='nt':
-        os.symlink(source.joinpath('dist'), dest)
-    else:
-        _winapi.CreateJunction(str(source.joinpath('dist')), str(dest))
+    copytree(source.joinpath('dist'), dest)
 
     # Copy package.json from source to dest
     package_json_source = source.joinpath('package.json')
