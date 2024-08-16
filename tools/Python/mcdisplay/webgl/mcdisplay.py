@@ -112,7 +112,10 @@ def write_browse(instrument, raybundle, dirname, instrname, timeout, nobrowse=No
         raise RuntimeError(f"The specified destination {dirname} already exists!")
 
     # Copy the app files - i.e. creating dest
-    copytree(source.joinpath('dist'), dest)
+    if not os.name=='nt':
+        os.symlink(source.joinpath('dist'), dest)
+    else:
+        _winapi.CreateJunction(str(source.joinpath('dist')), str(dest))
 
     # Copy package.json from source to dest
     package_json_source = source.joinpath('package.json')
@@ -122,13 +125,10 @@ def write_browse(instrument, raybundle, dirname, instrname, timeout, nobrowse=No
     # Copy node_modules from source to destination
     node_modules_source = source.joinpath('node_modules')
     node_modules_dest = dest.joinpath('node_modules')
-    try:
-        if not os.name=='nt':
-            os.symlink(node_modules_source, node_modules_dest)
-        else:
-            _winapi.CreateJunction(node_modules_source, node_modules_dest)
-    except:
-        copytree(node_modules_source, node_modules_dest, dirs_exist_ok=True, ignore=ignore_patterns('*.log', '*.cache'))
+    if not os.name=='nt':
+        os.symlink(node_modules_source, node_modules_dest)
+    else:
+        _winapi.CreateJunction(str(node_modules_source), str(node_modules_dest))
 
     # Ensure execute permissions for vite binary
     vite_bin = node_modules_dest.joinpath('.bin/vite')
