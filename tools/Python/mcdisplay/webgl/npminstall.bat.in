@@ -1,5 +1,4 @@
 @REM Isn't windows a lovely place???
-@CALL @CPACK_NSIS_INSTALL_ROOT@\bin\@FLAVOR@env.bat
 @set TOOLDIR=%~dp0
 @cd %USERPROFILE%\AppData
 @if not exist "@FLAVOR@\" mkdir @FLAVOR@

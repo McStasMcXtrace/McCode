@@ -2,5 +2,4 @@
 @REM Script for calling mcdoc -i after installation of McStas/McXtrace
 @set PATH=c:\\@FLAVOR@-@VERSION@\\bin;c:\\@FLAVOR@-@VERSION@\\miniconda3;%PATH%
 @call @P@doc.bat -i
-@cd c:\\@FLAVOR@-@VERSION@\\lib\\tools\\Python\\@P@display\\webgl
-@npm.cmd install
+
