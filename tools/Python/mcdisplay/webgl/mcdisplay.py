@@ -5,6 +5,8 @@ mcdisplay webgl script.
 '''
 import os
 import sys
+import signal
+import time
 import logging
 import json
 import subprocess
@@ -94,13 +96,17 @@ def _write_html(instrument, html_filepath, first=None, last=None, invcanvas=Fals
     writer = SimpleWriter(templatefile, html_filepath, invcanvas)
     writer.write()
 
-def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first=None, last=None, invcanvas=None, **kwds):
+def write_browse(instrument, raybundle, dirname, instrname, timeout, nobrowse=None, first=None, last=None, invcanvas=None, **kwds):
     ''' writes instrument definitions to html/ js '''
-    print("Launching WebGL...")
+    print("Launching WebGL... Once launched, server will run for " + str(timeout) + " s")
     def copy(a, b):
         shutil_copy(str(a), str(b))
 
-    source = Path(__file__).absolute().parent
+    if os.name == 'nt':
+            source =  Path(os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",mccode_config.configuration['MCCODE'],mccode_config.configuration['MCCODE_VERSION'],'webgl'))
+    else:
+            source =  Path(os.path.join(os.path.expandvars("$HOME"),"." + mccode_config.configuration['MCCODE'],mccode_config.configuration['MCCODE_VERSION'],'webgl'))
+
     dest = Path(dirname)
     if dest.exists():
         raise RuntimeError(f"The specified destination {dirname} already exists!")
@@ -116,13 +122,10 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
     # Copy node_modules from source to destination
     node_modules_source = source.joinpath('node_modules')
     node_modules_dest = dest.joinpath('node_modules')
-    try:
-        if not os.name=='nt':
-            os.symlink(node_modules_source, node_modules_dest)
-        else:
-            _winapi.CreateJunction(node_modules_source, node_modules_dest)
-    except:
-        copytree(node_modules_source, node_modules_dest, dirs_exist_ok=True, ignore=ignore_patterns('*.log', '*.cache'))
+    if not os.name=='nt':
+        os.symlink(node_modules_source, node_modules_dest)
+    else:
+        _winapi.CreateJunction(str(node_modules_source), str(node_modules_dest))
 
     # Ensure execute permissions for vite binary
     vite_bin = node_modules_dest.joinpath('.bin/vite')
@@ -164,13 +167,21 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
                         if part.startswith('http://localhost:'):
                             port = part.split(':')[-1].rstrip('/')
                             port_container['port'] = port
+                            port_container['process'] = proc
                             return
         except subprocess.CalledProcessError as e:
             print(f"npm run dev failed: {e}")
             return None
 
+    def signal_handler(sig, frame):
+        global port_container
+        print('Received signal ' + str(sig))
+        port_container['process'].send_signal(signal.SIGTERM)
+        sys.exit(0)
+
     # Container to hold the port information
-    port_container = {'port': None}
+    global port_container
+    port_container = {'port': None, 'process': None}
 
     # Start npm and capture the port in a separate thread
     npm_thread = Thread(target=lambda: run_npm_and_capture_port(port_container))
@@ -183,15 +194,66 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
         webbrowser.open(f"http://localhost:{port_container['port']}/")
     else:
         print("Failed to determine the localhost port")
+    if port_container['process']:
+        signal.signal(signal.SIGTERM, signal_handler)
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGUSR1, signal_handler)
+        signal.signal(signal.SIGUSR2, signal_handler)
+        if not os.name == 'nt':
+            print('Press Ctrl+C to exit\n(visualisation server willterminate server after ' + str(timeout) + ' s)')
+            time.sleep(timeout)
+            print("Sending SIGTERM to npm/vite server")
+            port_container['process'].send_signal(signal.SIGTERM)
+            sys.exit(0)
+        else:
+            print('Press Ctrl+C to exit visualisation server')
+            port_container['process'].wait()
+            sys.exit(0)
 
 def file_save(data, filename):
     ''' saves data for debug purposes '''
     with open(filename, 'w') as f:
         f.write(data)
 
-def main(instr=None, dirname=None, debug=None, n=None, **kwds):
+def main(instr=None, dirname=None, debug=None, n=None, timeout=None, **kwds):
     logging.basicConfig(level=logging.INFO)
+
+    # Function to run npm commands and capture port
+    def run_npminstall():
+        toolpath=str(Path(__file__).absolute().parent)
+        print(toolpath)
+        if not os.name == 'nt':
+            npminst = Path(toolpath + "/npminstall")
+        else:
+            npminst = Path(toolpath + "/npminstall.bat")
+
+        print("Executing " + str(npminst))
+        try:
+            proc = subprocess.Popen(npminst, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            print("Installing npm / vite modules")
+            for line in proc.stdout:
+                 print(line.rstrip())
+            print("Installing npm / vite modules - stderr:")  
+            for line in proc.stderr:
+                 print(line.rstrip())            
+            print("Done installing npm / vite modules")
+        except subprocess.CalledProcessError as e:
+            print(f"npminstall failed: {e}")
+            return None
     
+    # 1st run setup: Check if the user has a "webgl" folder or not
+    if os.name == 'nt':
+            userdir =  os.path.join(os.path.expandvars("$USERPROFILE"),"AppData",mccode_config.configuration['MCCODE'],mccode_config.configuration['MCCODE_VERSION'],'webgl')
+    else:
+            userdir =  os.path.join(os.path.expandvars("$HOME"),"." + mccode_config.configuration['MCCODE'],mccode_config.configuration['MCCODE_VERSION'],'webgl')
+
+    if not os.path.isdir(userdir):
+        try:
+            run_npminstall()
+        except Exception as e:
+            print("Local WebGL Directory %s could not be created: %s " % (userdir, e.__str__()))
+
+
     # output directory
     if dirname is None:
         from datetime import datetime as dt
@@ -204,7 +266,7 @@ def main(instr=None, dirname=None, debug=None, n=None, **kwds):
     raybundle = reader.read_particles()
     
     # write output files
-    write_browse(instrument, raybundle, dirname, instr, **kwds)
+    write_browse(instrument, raybundle, dirname, instr, timeout, **kwds)
 
     if debug:
         # this should enable template.html to load directly
@@ -223,7 +285,7 @@ if __name__ == '__main__':
     parser.add_argument('--last', help='zoom range last component')
     parser.add_argument('-n', '--ncount', dest='n', type=float, default=300, help='Number of particles to simulate')
     parser.add_argument('-t', '--trace', dest='trace', type=int, default=2, help='Select visualization mode')
-
+    parser.add_argument('--timeout', dest='timeout', type=int, default=300, help='Shutdown time of npm/vite server')
     args, unknown = parser.parse_known_args()
     # Convert the defined arguments in the args Namespace structure to a dict
     args = {k: args.__getattribute__(k) for k in dir(args) if k[0] != '_'}

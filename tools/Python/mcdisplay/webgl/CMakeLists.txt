@@ -51,7 +51,7 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply, python3-numpy, nodejs")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply, python3-numpy, nodejs, rsync")
 
 # RPM
 if (RPMPROFILE)
@@ -157,7 +157,6 @@ if (NOT WINDOWS)
     PROGRAMS "${WORK}/npminstall"
     DESTINATION ${DEST_TOOLDIR}/${TOOLS_NAME}
   )
-  install(CODE "execute_process(COMMAND \"${CMAKE_INSTALL_PREFIX}/${DEST_TOOLDIR}/${TOOLS_NAME}/npminstall\")")
 else()
   # Configure fallback script
   configure_file("${CMAKE_CURRENT_SOURCE_DIR}/npminstall.bat.in" "${WORK}/npminstall.bat" @ONLY)
@@ -165,5 +164,4 @@ else()
     PROGRAMS "${WORK}/npminstall.bat"
     DESTINATION ${DEST_TOOLDIR}/${TOOLS_NAME}
   )
-  install(CODE "execute_process(COMMAND \"${CMAKE_INSTALL_PREFIX}/${DEST_TOOLDIR}/${TOOLS_NAME}/npminstall.bat\")")
 endif()
