@@ -202,11 +202,16 @@ def write_browse(instrument, raybundle, dirname, instrname, timeout, nobrowse=No
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGUSR1, signal_handler)
         signal.signal(signal.SIGUSR2, signal_handler)
-        print('Press Ctrl+C to exit - otherwise visualisation vill terminate server after ' + str(timeout) + ' s')
-        time.sleep(timeout)
-        print("Sending SIGTERM to npm/vite server")
-        port_container['process'].send_signal(signal.SIGTERM)
-        sys.exit(0)
+        if not os.name == 'nt':
+            print('Press Ctrl+C to exit\n(visualisation server willterminate server after ' + str(timeout) + ' s)')
+            time.sleep(timeout)
+            print("Sending SIGTERM to npm/vite server")
+            port_container['process'].send_signal(signal.SIGTERM)
+            sys.exit(0)
+        else:
+            print('Press Ctrl+C to exit visualisation server')
+            port_container['process'].wait()
+            sys.exit(0)
 
 def file_save(data, filename):
     ''' saves data for debug purposes '''
