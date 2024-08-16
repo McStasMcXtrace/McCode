@@ -1,4 +1,5 @@
 @REM Isn't windows a lovely place???
+@set WORKDIR=%cd%
 @set TOOLDIR=%~dp0
 @cd %USERPROFILE%\AppData
 @if not exist "@FLAVOR@\" mkdir @FLAVOR@
@@ -18,4 +19,5 @@
 @xcopy %TOOLDIR%\components\ components /c /i /e /h /y
 @call npm.cmd install
 @call npm.cmd run build
+@cd %WORKDIR%\
 

@@ -98,7 +98,7 @@ def _write_html(instrument, html_filepath, first=None, last=None, invcanvas=Fals
 
 def write_browse(instrument, raybundle, dirname, instrname, timeout, nobrowse=None, first=None, last=None, invcanvas=None, **kwds):
     ''' writes instrument definitions to html/ js '''
-    print("Launching WebGL... - timeout is " + str(timeout))
+    print("Launching WebGL... Once launched, server will run for " + str(timeout) + " s")
     def copy(a, b):
         shutil_copy(str(a), str(b))
 
@@ -218,14 +218,23 @@ def main(instr=None, dirname=None, debug=None, n=None, timeout=None, **kwds):
 
     # Function to run npm commands and capture port
     def run_npminstall():
+        toolpath=str(Path(__file__).absolute().parent)
+        print(toolpath)
         if not os.name == 'nt':
-            npminst = "npminstall"
+            npminst = Path(toolpath + "/npminstall")
         else:
-            npminst = "npminstall.bat"
-        npminst = Path(__file__).absolute().parent.joinpath(npminst)
+            npminst = Path(toolpath + "/npminstall.bat")
+
+        print("Executing " + str(npminst))
         try:
             proc = subprocess.Popen(npminst, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             print("Installing npm / vite modules")
+            for line in proc.stdout:
+                 print(line.rstrip())
+            print("Installing npm / vite modules - stderr:")  
+            for line in proc.stderr:
+                 print(line.rstrip())            
+            print("Done installing npm / vite modules")
         except subprocess.CalledProcessError as e:
             print(f"npminstall failed: {e}")
             return None
