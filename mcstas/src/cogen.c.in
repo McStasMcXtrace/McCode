@@ -1006,7 +1006,7 @@ int cogen_comp_setpos(
   coutf("    if ((!mcdotrace) && mcformat && strcasestr(mcformat, \"NeXus\")) {");
   coutf("      if (NXopengroup(nxhandle, \"instrument\", \"NXinstrument\") == NX_OK) {");
   coutf("        if (NXopengroup(nxhandle, \"components\", \"NXcomponents\") == NX_OK) {");
-  //coutf("          MPI_MASTER(");  
+  coutf("          MPI_MASTER(");  
   coutf("            if (NXmakegroup(nxhandle, \"%s\", \"NXcomponent\") == NX_OK) {",comp->name);
   coutf("              if (NXopengroup(nxhandle, \"%s\", \"NXcomponent\") == NX_OK) {", comp->name);
   coutf("                int64_t pdims[3]; pdims[0]=3; pdims[1]=1; pdims[2]=0;\n");
@@ -1042,8 +1042,7 @@ int cogen_comp_setpos(
   coutf("            } else {");
   coutf("              printf(\"FAILED to create comp data group %s\\n\");",comp->name);
   coutf("            }");
-  //coutf("          );");
-  coutf("          NXflush(nxhandle); // components");
+  coutf("          );");
   coutf("          NXclosegroup(nxhandle); // components");
   coutf("        } else {");
   coutf("          printf(\"Failed to open NeXus component hierarchy\\n\");");
@@ -1054,7 +1053,7 @@ int cogen_comp_setpos(
   coutf("      }");
   coutf("    }");
   coutf("  } else {");
-  coutf("  //fprintf(stderr,\"NO NEXUS FILE\");");
+  coutf("    fprintf(stderr,\"NO NEXUS FILE\");");
   coutf("  }");
   coutf("  #endif");
   cout("  return(0);");
