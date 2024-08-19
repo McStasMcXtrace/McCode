@@ -1005,7 +1005,7 @@ int cogen_comp_setpos(
   coutf("  #ifdef USE_MPI");
   coutf("  MPI_MASTER(");
   coutf("  #endif");
-  coutf("    if (mcformat && strcasestr(mcformat, \"NeXus\")) {");
+  coutf("    if ((!mcdotrace) && mcformat && strcasestr(mcformat, \"NeXus\")) {");
   coutf("      if (NXopengroup(nxhandle, \"instrument\", \"NXinstrument\") == NX_OK) {");
   coutf("        if (NXopengroup(nxhandle, \"components\", \"NXcomponents\") == NX_OK) {");
   coutf("          if (NXmakegroup(nxhandle, \"%s\", \"NXdata\") == NX_OK) {",comp->name);
