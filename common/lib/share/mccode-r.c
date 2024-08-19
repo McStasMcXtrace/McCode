@@ -1780,6 +1780,7 @@ static void mccomp_placement_nexus(NXhandle f, char* component, Coords position,
 	  double pos[3];
 	  pos[0]=position.x; pos[1]=position.y; pos[2]=position.z;
 	  NXputdata (f, pos);
+	  NXclosedata(f);
 
 	  int64_t rdims[3]={3,3,0};
 
@@ -1789,6 +1790,8 @@ static void mccomp_placement_nexus(NXhandle f, char* component, Coords position,
 	    return;
 	  }
 	  NXputdata (f, rotation);
+	  NXclosedata(f);
+
 	  NXclosegroup(f); /* component */
       }
       NXclosegroup(f); /* components  */
