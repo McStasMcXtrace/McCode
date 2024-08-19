@@ -1046,9 +1046,6 @@ int cogen_comp_setpos(
   coutf("  //fprintf(stderr,\"NO NEXUS FILE\");");
   coutf("  }");
   coutf("  #endif");
-  coutf("  #ifdef USE_MPI");
-  coutf("  MPI_Barrier(MPI_COMM_WORLD);");
-  coutf("  #endif");
   cout("  return(0);");
 
   coutf("} /* _%s_%s */", comp->name, "setpos");
