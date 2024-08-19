@@ -1010,11 +1010,11 @@ int cogen_comp_setpos(
   coutf("        if (NXopengroup(nxhandle, \"components\", \"NXcomponents\") == NX_OK) {");
   coutf("          if (NXmakegroup(nxhandle, \"%s\", \"NXdata\") == NX_OK) {",comp->name);
   coutf("            printf(\"Created comp data group %s\\n\");",comp->name);
-  coutf("            if (NXopengroup(nxhandle, \"%s\", \"NXdata\") == NX_OK) {");
+  coutf("            if (NXopengroup(nxhandle, \"%s\", \"NXdata\") == NX_OK) {", comp->name);
   coutf("              int64_t pdims[3]; pdims[0]=3; pdims[1]=1; pdims[2]=0;\n");
   coutf("              NXcompmakedata64(nxhandle, \"Position\", NX_FLOAT64, 1, pdims, NX_COMPRESSION, pdims);");
   coutf("              if (NXopendata(nxhandle, \"Position\") == NX_ERROR) {");
-  coutf("                fprintf(stderr, \"Warning: could not open Position field for component %s\\n\");");
+  coutf("                fprintf(stderr, \"Warning: could not open Position field for component %s\\n\");", comp->name);
   coutf("              } else {");
   coutf("            	 double pos[3];");
   coutf("            	 pos[0]=_%s_var._position_absolute.x; pos[1]=_%s_var._position_absolute.y; pos[2]=_%s_var._position_absolute.z;",comp->name,comp->name,comp->name);
@@ -1023,10 +1023,8 @@ int cogen_comp_setpos(
   coutf("              int64_t rdims[3]; rdims[0]=3; rdims[1]=3; rdims[2]=0;\n");
   coutf("              NXcompmakedata64(nxhandle, \"Rotation\", NX_FLOAT64, 2, rdims, NX_COMPRESSION, rdims);");
   coutf("              if (NXopendata(nxhandle, \"Rotation\") == NX_ERROR) {");
-  coutf("                fprintf(stderr, \"Warning: could not open Rotation field for component %s\\n\");");
+  coutf("                fprintf(stderr, \"Warning: could not open Rotation field for component %s\\n\");", comp->name);
   coutf("              } else {");
-  coutf("            	 double pos[3];");
-  coutf("            	 pos[0]=_%s_var._position_absolute.x; pos[1]=_%s_var._position_absolute.y; pos[2]=_%s_var._position_absolute.z;",comp->name,comp->name,comp->name);
   coutf("            	 NXputdata (nxhandle, _%s_var._rotation_absolute);",comp->name);
   coutf("              }");
   coutf("              NXclosegroup(nxhandle); // %s ",comp->name);
