@@ -1665,6 +1665,14 @@ static void mcinfo_out_nexus(NXhandle f)
         NXclosegroup(f); /* instrument_xml */
         free(buffer);
       }
+
+      /* Add "components" entry */
+      if (NXmakegroup(f, "components", "NXcomponents") == NX_OK) {
+	printf("Succesfully created NeXus component hierarchy\n");
+      } else {
+	printf("Failed to create NeXus component hierarchy\n");
+      }
+
       free(IDFfile);
       NXclosegroup(f); /* instrument */
     } /* NXinstrument */
