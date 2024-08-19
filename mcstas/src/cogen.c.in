@@ -1015,7 +1015,6 @@ int cogen_comp_setpos(
   coutf("                    double pos[3];");
   coutf("            	     pos[0]=_%s_var._position_absolute.x; pos[1]=_%s_var._position_absolute.y; pos[2]=_%s_var._position_absolute.z;",comp->name,comp->name,comp->name);
   coutf("            	     if (NXputdata (nxhandle, pos) == NX_OK) {");
-  coutf("                      fprintf(stderr, \"PUT Position field for component %s\\n\");", comp->name);
   coutf("                      NXclosedata(nxhandle);");
   coutf("                    } else {");
   coutf("                      fprintf(stderr, \"COULD NOT PUT Position field for component %s\\n\");", comp->name);
@@ -1028,7 +1027,6 @@ int cogen_comp_setpos(
   coutf("                if (NXcompmakedata64(nxhandle, \"Rotation\", NX_FLOAT64, 2, rdims, NX_COMPRESSION, rdims) == NX_OK) {");
   coutf("                  if (NXopendata(nxhandle, \"Rotation\") == NX_OK) {");
   coutf("            	     if (NXputdata (nxhandle, _%s_var._rotation_absolute) == NX_OK) {",comp->name);
-  coutf("                      fprintf(stderr, \"PUT Rotation field for component %s\\n\");", comp->name);
   coutf("                      NXclosedata(nxhandle);");
   coutf("                    } else {");
   coutf("                      fprintf(stderr, \"COULD NOT PUT Rotation field for component %s\\n\");", comp->name);
@@ -1055,7 +1053,7 @@ int cogen_comp_setpos(
   coutf("      }");
   coutf("    }");
   coutf("  } else {");
-  coutf("    fprintf(stderr,\"NO NEXUS FILE\");");
+  coutf("    // fprintf(stderr,\"NO NEXUS FILE\");");
   coutf("  }");
   coutf("  #endif");
   cout("  return(0);");
