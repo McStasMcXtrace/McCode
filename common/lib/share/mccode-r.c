@@ -1668,7 +1668,7 @@ static void mcinfo_out_nexus(NXhandle f)
 
       /* Add "components" entry */
       if (NXmakegroup(f, "components", "NXcomponents") == NX_OK) {
-	printf("Succesfully created NeXus component hierarchy\n");
+	// Do nothing
       } else {
 	printf("Failed to create NeXus component hierarchy\n");
       }
