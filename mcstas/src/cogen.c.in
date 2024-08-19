@@ -1007,8 +1007,8 @@ int cogen_comp_setpos(
   coutf("      if (NXopengroup(nxhandle, \"instrument\", \"NXinstrument\") == NX_OK) {");
   coutf("        if (NXopengroup(nxhandle, \"components\", \"NXcomponents\") == NX_OK) {");
   //coutf("          MPI_MASTER(");  
-  coutf("            if (NXmakegroup(nxhandle, \"%s\", \"NXdata\") == NX_OK) {",comp->name);
-  coutf("              if (NXopengroup(nxhandle, \"%s\", \"NXdata\") == NX_OK) {", comp->name);
+  coutf("            if (NXmakegroup(nxhandle, \"%s\", \"NXcomponent\") == NX_OK) {",comp->name);
+  coutf("              if (NXopengroup(nxhandle, \"%s\", \"NXcomponent\") == NX_OK) {", comp->name);
   coutf("                int64_t pdims[3]; pdims[0]=3; pdims[1]=1; pdims[2]=0;\n");
   coutf("                if (NXcompmakedata64(nxhandle, \"Position\", NX_FLOAT64, 1, pdims, NX_COMPRESSION, pdims) == NX_OK) {");
   coutf("                  if (NXopendata(nxhandle, \"Position\") == NX_OK) {");
