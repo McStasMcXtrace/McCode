@@ -1043,6 +1043,7 @@ int cogen_comp_setpos(
   coutf("              printf(\"FAILED to create comp data group %s\\n\");",comp->name);
   coutf("            }");
   //coutf("          );");
+  coutf("          NXflush(nxhandle); // components");
   coutf("          NXclosegroup(nxhandle); // components");
   coutf("        } else {");
   coutf("          printf(\"Failed to open NeXus component hierarchy\\n\");");
