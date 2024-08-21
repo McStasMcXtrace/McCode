@@ -101,7 +101,7 @@ INITIALIZE
     }
     mcset_ncount(nparticles);
 
-    if(repeat_count>0 && E_smear==0 && pos_smear==0 && dir_smear=0) {
+    if(repeat_count>0 && E_smear==0 && pos_smear==0 && dir_smear==0) {
       fprintf(stdout, "\n\n WARNING: You have requested a repeat_count=%i but have left all *_smear parameters at 0!\n --> This is not allowed! Resetting to repeat_count=1!\n",repeat_count);
       fprintf(stderr, "\n\n WARNING: You have requested a repeat_count=%i but have left all *_smear parameters at 0!\n --> This is not allowed! Resetting to repeat_count=1!\n",repeat_count);
       repeat_count=1;
