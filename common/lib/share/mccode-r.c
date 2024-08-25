@@ -1773,7 +1773,7 @@ static void mccomp_placement_nexus(NXhandle nxhandle, char* component, Coords po
 		  fprintf(stderr, "COULD NOT PUT Rotation field for component %s\n",component);
 		}
 	      } else {
-		fprintf(stderr, "Warning: could not open Rotation field for component %s\n"),component);
+		fprintf(stderr, "Warning: could not open Rotation field for component %s\n",component);
 	      }
 	    }
 	    NXclosegroup(nxhandle); // component
