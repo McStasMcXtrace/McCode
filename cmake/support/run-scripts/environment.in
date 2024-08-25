@@ -16,13 +16,11 @@ if [[ @MCCODE_LEGACY_PATHS@ == 1 ]]; then
 
   TOPENV=`readlinkf "$TOPENV"`
   TOPENV=`dirname $TOPENV`
-  TOPENV=`dirname $TOPENV`
-  TOPENV=`dirname $TOPENV`
 else
   TOPENV=$( dirname $( readlinkf ${BASH_SOURCE[0]} ) )
 fi
 
-
+@MCCODE_ENV_PREAMBLE@
 
 ARCH=`uname -m`
 UNAME=`uname -s`
@@ -33,13 +31,13 @@ if [[ ${UNAME} = Darwin* ]]; then
     OSXVER=`sw_vers -productVersion|cut -f 1 -d.`
 fi
 
-export PATH=$TOPENV/miniconda3/bin:$PATH
+export PATH=$MCCODE_BINDIR:$PATH
 
-export @FLAVOR_UPPER@=$TOPENV/@DEST_DATADIR_COMPS@
+export @FLAVOR_UPPER@=$MCCODE_RESOURCEDIR
 
-export PATH=$TOPENV/@DEST_BINDIR@:$PATH
 # Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
 if [ -d "$@FLAVOR_UPPER@/miniconda3" ]; then
+    export PATH=$TOPENV/miniconda3/bin:$PATH
     #Activation hook for conda 
     _conda_bindir="$@FLAVOR_UPPER@/miniconda3/bin"
     function conda() {
