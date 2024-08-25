@@ -799,9 +799,9 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 
     #ifdef USE_NEXUS
 
-    #ifdef USE_MPI
-    if(mpi_node_rank == mpi_node_root) {
-    #endif
+    /* #ifdef USE_MPI */
+    /* //if(mpi_node_rank == mpi_node_root) { */
+    /* #endif */
       if(nxhandle) {
 	char metadata[CHAR_BUF_LENGTH];
 	char metadatatmp[CHAR_BUF_LENGTH];
@@ -890,7 +890,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	long k,l,m;
 	  
 	printf("Pixel info OFF: %ld -> %ld \n",pix,pix+Vars->Flag_OFF);
-	if (N_spatial_dims==1) { // 1D case or 
+	if (N_spatial_dims==1) { // 1D case or ND
 	  detector.m=numbins;
 	  detector.n=1;
 	  detector.p=1;
@@ -965,10 +965,10 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	
 	printf("Done with the pixel array part\n");
       } // nxhandle available
-    #ifdef USE_MPI
-    } // Master only
-    MPI_Barrier(MPI_COMM_WORLD);
-    #endif
+    /* #ifdef USE_MPI */
+    /* //} // Master only */
+    /* //MPI_Barrier(MPI_COMM_WORLD); */
+    /* #endif */
 
     #endif // USE_NEXUS
     } /* end Monitor_nD_Init */
