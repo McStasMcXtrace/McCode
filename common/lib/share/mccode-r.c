@@ -61,6 +61,7 @@ static   long mcstartdate            = 0; /* start simulation time */
 static   int  mcdisable_output_files = 0; /* --no-output-files */
 mcstatic int  mcgravitation          = 0; /* use gravitation flag, for PROP macros */
 mcstatic int  mcdotrace              = 0; /* flag for --trace and messages for DISPLAY */
+mcstatic int  mcnexus_embed_idf      = 0; /* flag to embed xml-formatted IDF file for Mantid */
 #pragma acc declare create ( mcdotrace )
 int      mcallowbackprop             = 0;         /* flag to enable negative/backprop */
 
@@ -903,7 +904,7 @@ MCDETECTOR detector_import(
   double x1, double x2, double y1, double y2, double z1, double z2,
   char *filename,
   double *p0, double *p1, double *p2,
-  Coords position)
+  Coords position, Rotation rotation)
 {
   time_t t;       /* for detector.date */
   long   date_l;  /* date as a long number */
@@ -982,6 +983,10 @@ MCDETECTOR detector_import(
 
   /* these only apply to detector files ===================================== */
 
+  detector.Position[0]=position.x;
+  detector.Position[1]=position.y;
+  detector.Position[2]=position.z;
+  rot_copy(detector.Rotation,rotation);
   snprintf(detector.position, CHAR_BUF_LENGTH, "%g %g %g", position.x, position.y, position.z);
   /* may also store actual detector orientation in the future */
 
@@ -1651,29 +1656,31 @@ static void mcinfo_out_nexus(NXhandle f)
         nxprintf (f, "description", "File %s not found (instrument description %s is missing)",
           instrument_source, instrument_name);
 
-      /* add Mantid/IDF.xml when available */
-      char *IDFfile=NULL;
-      IDFfile = (char*)malloc(CHAR_BUF_LENGTH);
-      sprintf(IDFfile,"%s%s",instrument_source,".xml");
-      buffer = mcinfo_readfile(IDFfile);
-      if (buffer && strlen(buffer)) {
-        NXmakegroup (nxhandle, "instrument_xml", "NXnote");
-        NXopengroup (nxhandle, "instrument_xml", "NXnote");
-        nxprintf(f, "data", buffer);
-        nxprintf(f, "description", "IDF.xml file found with instrument %s", instrument_source);
-        nxprintf(f, "type", "text/xml");
-        NXclosegroup(f); /* instrument_xml */
-        free(buffer);
+      if (mcnexus_embed_idf) {
+        /* add Mantid/IDF.xml when available */
+        char *IDFfile=NULL;
+        IDFfile = (char*)malloc(CHAR_BUF_LENGTH);
+        sprintf(IDFfile,"%s%s",instrument_source,".xml");
+        buffer = mcinfo_readfile(IDFfile);
+        if (buffer && strlen(buffer)) {
+          NXmakegroup (nxhandle, "instrument_xml", "NXnote");
+          NXopengroup (nxhandle, "instrument_xml", "NXnote");
+          nxprintf(f, "data", buffer);
+          nxprintf(f, "description", "IDF.xml file found with instrument %s", instrument_source);
+          nxprintf(f, "type", "text/xml");
+          NXclosegroup(f); /* instrument_xml */
+          free(buffer);
+        }
+        free(IDFfile);
       }
 
       /* Add "components" entry */
       if (NXmakegroup(f, "components", "NXcomponents") == NX_OK) {
-	// Do nothing
+        nxprintattr(f, "description", "Component list for instrument %s",  instrument_name);
+	NXclosegroup(f); /* components */
       } else {
 	printf("Failed to create NeXus component hierarchy\n");
       }
-
-      free(IDFfile);
       NXclosegroup(f); /* instrument */
     } /* NXinstrument */
 
@@ -1726,6 +1733,69 @@ static void mcinfo_out_nexus(NXhandle f)
     /* leave the NXentry opened (closed at exit) */
   } /* NXentry */
 } /* mcinfo_out_nexus */
+
+/*******************************************************************************
+* mccomp_placement_nexus:
+*   Output absolute (3x1) position and (3x3) rotation of component instance into
+*   the attribute
+*     entry<N>/instrument/compname
+*   requires: NXentry to be opened
+*******************************************************************************/
+static void mccomp_placement_nexus(NXhandle nxhandle, char* component, Coords position, Rotation rotation)
+{
+  /* open NeXus instrument group */
+
+  #ifdef USE_NEXUS
+  if(nxhandle) {
+    if (NXopengroup(nxhandle, "instrument", "NXinstrument") == NX_OK) {
+      if (NXopengroup(nxhandle, "components", "NXcomponents") == NX_OK) {
+	if (NXmakegroup(nxhandle, component, "NXcomponent") == NX_OK) {
+	  if (NXopengroup(nxhandle, component, "NXcomponent") == NX_OK) {
+	    int64_t pdims[3]; pdims[0]=3; pdims[1]=0; pdims[2]=0;
+	    if (NXcompmakedata64(nxhandle, "Position", NX_FLOAT64, 1, pdims, NX_COMPRESSION, pdims) == NX_OK) {
+	      if (NXopendata(nxhandle, "Position") == NX_OK) {
+		double pos[3]; coords_get(position, &pos[0], &pos[1], &pos[2]);
+		if (NXputdata (nxhandle, pos) == NX_OK) {
+		  NXclosedata(nxhandle);
+		} else {
+		  fprintf(stderr, "COULD NOT PUT Position field for component %s\n",component);
+		}
+	      } else {
+		fprintf(stderr, "Warning: could not open Position field for component %s\n",component);
+	      }
+	    }
+	    int64_t rdims[3]; rdims[0]=3; rdims[1]=3; rdims[2]=0;
+	    if (NXcompmakedata64(nxhandle, "Rotation", NX_FLOAT64, 2, rdims, NX_COMPRESSION, rdims) == NX_OK) {
+	      if (NXopendata(nxhandle, "Rotation") == NX_OK) {
+		if (NXputdata (nxhandle, rotation) == NX_OK) {
+		  NXclosedata(nxhandle);
+		} else {
+		  fprintf(stderr, "COULD NOT PUT Rotation field for component %s\n",component);
+		}
+	      } else {
+		fprintf(stderr, "Warning: could not open Rotation field for component %s\",component);", comp->name);
+	      }
+	    }
+	    NXclosegroup(nxhandle); // component
+	  } else {
+	    printf("FAILED to open comp data group %s\n",component);
+	  }
+	} else {
+	  printf("FAILED to create comp data group %s\n",component);
+	}
+	NXclosegroup(nxhandle); // components
+      } else {
+	printf("Failed to open NeXus component hierarchy\n");
+      }
+      NXclosegroup(nxhandle); // instrument
+    } else {
+      printf("Failed to open NeXus instrument hierarchy\n");
+    }
+  } else {
+    fprintf(stderr,"NO NEXUS FILE\n");
+  }
+  #endif
+} /* mccomp_placement_nexus */
 
 /*******************************************************************************
 * mcdatainfo_out_nexus: output detector header
