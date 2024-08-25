@@ -1814,62 +1814,67 @@ mcdatainfo_out_nexus(NXhandle f, MCDETECTOR detector)
       detector.filename : detector.component);
 
   /* the NXdetector group has been created in mcinfo_out_nexus (siminfo_init) */
-  if (NXmakeopengroup(f, "instrument", "NXinstrument") == NX_OK) {
-    if (NXmakeopengroup(f, "components", "NXdata") == NX_OK) {
+  if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+    if (NXopengroup(f, "components", "NXdata") == NX_OK) {
       //NXMDisableErrorReporting(); /* unactivate NeXus error messages, as creation may fail */
-      if (NXmakeopengroup(f, detector.component, "NXdata") == NX_OK) {
-	if (NXmakeopengroup(f, "output", "NXdetector") == NX_OK) {
-	  if (NXmakeopengroup(f, data_name, "NXdata") == NX_OK) {
-      /* output metadata (as attributes) ======================================== */
-      nxprintattr(f, "Date",       detector.date);
-      nxprintattr(f, "type",       detector.type);
-      nxprintattr(f, "Source",     detector.instrument);
-      nxprintattr(f, "component",  detector.component);
-      nxprintattr(f, "position",   detector.position);
-
-      nxprintattr(f, "title",      detector.title);
-      nxprintattr(f, !mcget_run_num() || mcget_run_num() >= mcget_ncount() ?
-                 "Ncount" :
-                 "ratio",  detector.ncount);
-
-      if (strlen(detector.filename)) {
-        nxprintattr(f, "filename", detector.filename);
-      }
-
-      nxprintattr(f, "statistics", detector.statistics);
-      nxprintattr(f, "signal",     detector.signal);
-      nxprintattr(f, "values",     detector.values);
-
-      if (detector.rank >= 1)
-      {
-        nxprintattr(f, "xvar",     detector.xvar);
-        nxprintattr(f, "yvar",     detector.yvar);
-        nxprintattr(f, "xlabel",   detector.xlabel);
-        nxprintattr(f, "ylabel",   detector.ylabel);
-        if (detector.rank > 1) {
-          nxprintattr(f, "zvar",   detector.zvar);
-          nxprintattr(f, "zlabel", detector.zlabel);
-        }
-      }
-
-      nxprintattr(f, abs(detector.rank)==1 ?
-                 "xlimits" :
-                 "xylimits", detector.limits);
-      nxprintattr(f, "variables",
-        strcasestr(detector.format, "list") ? detector.ylabel : detector.variables);
-
-      NXclosegroup(f);
+      if (NXmakegroup(f, detector.component, "NXdata") == NX_OK) {
+	if (NXopengroup(f, detector.component, "NXdata") == NX_OK) {
+	  if (NXmakegroup(f, "output", "NXdetector") == NX_OK) {
+	    if (NXopengroup(f, "output", "NXdetector") == NX_OK) {
+	      if (NXmakegroup(f, data_name, "NXdata") == NX_OK) {
+		if (NXopengroup(f, data_name, "NXdata") == NX_OK) {
+		  /* output metadata (as attributes) ======================================== */
+		  nxprintattr(f, "Date",       detector.date);
+		  nxprintattr(f, "type",       detector.type);
+		  nxprintattr(f, "Source",     detector.instrument);
+		  nxprintattr(f, "component",  detector.component);
+		  nxprintattr(f, "position",   detector.position);
+		  
+		  nxprintattr(f, "title",      detector.title);
+		  nxprintattr(f, !mcget_run_num() || mcget_run_num() >= mcget_ncount() ?
+			      "Ncount" :
+			      "ratio",  detector.ncount);
+		  
+		  if (strlen(detector.filename)) {
+		    nxprintattr(f, "filename", detector.filename);
+		  }
+		  
+		  nxprintattr(f, "statistics", detector.statistics);
+		  nxprintattr(f, "signal",     detector.signal);
+		  nxprintattr(f, "values",     detector.values);
+		  
+		  if (detector.rank >= 1)
+		    {
+		      nxprintattr(f, "xvar",     detector.xvar);
+		      nxprintattr(f, "yvar",     detector.yvar);
+		      nxprintattr(f, "xlabel",   detector.xlabel);
+		      nxprintattr(f, "ylabel",   detector.ylabel);
+		      if (detector.rank > 1) {
+			nxprintattr(f, "zvar",   detector.zvar);
+			nxprintattr(f, "zlabel", detector.zlabel);
+		      }
+		    }
+		  
+		  nxprintattr(f, abs(detector.rank)==1 ?
+			      "xlimits" :
+			      "xylimits", detector.limits);
+		  nxprintattr(f, "variables",
+			      strcasestr(detector.format, "list") ? detector.ylabel : detector.variables);
+		  
+		  NXclosegroup(f); // data_name
+		}
 	      }
-	    NXclosegroup(f);
+	      NXclosegroup(f); // output
+	    }
 	  }
 	NXclosegroup(f);
+	} // detector.component
       }
       NXclosegroup(f);
     } /* NXdata (components) */
     //NXMEnableErrorReporting();  /* re-enable NeXus error messages */
     NXclosegroup(f);
-  } /* NXdetector (instrument) */
-
+  } /* NXdetector (instrument) */ 
 } /* mcdatainfo_out_nexus */
 
 /*******************************************************************************
@@ -1995,56 +2000,56 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
       detector.filename : detector.component);
   NXlink pLink;
   /* the NXdetector group has been created in mcinfo_out_nexus (siminfo_init) */
-  if (NXmakeopengroup(f, "instrument", "NXinstrument") == NX_OK) {
-    if (NXmakeopengroup(f, "components", "NXdata") == NX_OK) {
-      if (NXmakeopengroup(f, detector.component, "NXdata") == NX_OK) {
-	if (NXmakeopengroup(f, "output", "NXdetector") == NX_OK) {
+  if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+    if (NXopengroup(f, "components", "NXdata") == NX_OK) {
+      if (NXopengroup(f, detector.component, "NXdata") == NX_OK) {
+	if (NXopengroup(f, "output", "NXdetector") == NX_OK) {
 
-    /* the NXdata group has been created in mcdatainfo_out_nexus */
-    if (NXopengroup(f, data_name, "NXdata") == NX_OK) {
-
+	  /* the NXdata group has been created in mcdatainfo_out_nexus */
+	  if (NXopengroup(f, data_name, "NXdata") == NX_OK) {
+	    
 	    MPI_MASTER(
 		       nxprintattr(f, "options",
 				   strlen(detector.options) ? detector.options : "None");
 		       );
-      /* write axes, for histogram data sets, not for lists */
-      if (!strcasestr(detector.format, "list")) {
-        mcdetector_out_axis_nexus(f, detector.xlabel, detector.xvar,
-          1, detector.m, detector.xmin, detector.xmax);
-
-        mcdetector_out_axis_nexus(f, detector.ylabel, detector.yvar,
-          2, detector.n, detector.ymin, detector.ymax);
-
-        mcdetector_out_axis_nexus(f, detector.zlabel, detector.zvar,
-          3, detector.p, detector.zmin, detector.zmax);
-
-      } /* !list */
-
-      /* write the actual data (appended if already exists) */
+	    /* write axes, for histogram data sets, not for lists */
+	    if (!strcasestr(detector.format, "list")) {
+	      mcdetector_out_axis_nexus(f, detector.xlabel, detector.xvar,
+					1, detector.m, detector.xmin, detector.xmax);
+	      
+	      mcdetector_out_axis_nexus(f, detector.ylabel, detector.yvar,
+					2, detector.n, detector.ymin, detector.ymax);
+	      
+	      mcdetector_out_axis_nexus(f, detector.zlabel, detector.zvar,
+					3, detector.p, detector.zmin, detector.zmax);
+	      
+	    } /* !list */
+	    
+	    /* write the actual data (appended if already exists) */
 	    if (!strcasestr(detector.format, "list") && !strcasestr(detector.format, "pixels")) {
-        mcdetector_out_array_nexus(f, "data", detector.p1, detector);
-        mcdetector_out_array_nexus(f, "errors", detector.p2, detector);
-        mcdetector_out_array_nexus(f, "ncount", detector.p0, detector);
+	      mcdetector_out_array_nexus(f, "data", detector.p1, detector);
+	      mcdetector_out_array_nexus(f, "errors", detector.p2, detector);
+	      mcdetector_out_array_nexus(f, "ncount", detector.p0, detector);
 	    } else if (strcasestr(detector.format, "pixels")) {
 	      mcdetector_out_array_nexus(  f, "pixels", detector.p1, detector);
-      } else
-        mcdetector_out_array_nexus(  f, "events", detector.p1, detector);
-      NXclosegroup(f);
-	    NXmakeopengroup(f, data_name, "NXdata");
+	    } else
+	      mcdetector_out_array_nexus(  f, "events", detector.p1, detector);
+	    NXclosegroup(f);
+	    NXopengroup(f, data_name, "NXdata");
 	    NXgetgroupID(nxhandle, &pLink);
 	    NXclosegroup(f);
 	  } /* NXdata data_name*/
 	  NXclosegroup(f);
 	} /* NXdetector output */
-    NXclosegroup(f);
+	NXclosegroup(f);
       } /* NXdata detector.component */
       NXclosegroup(f);
     } /* NXdata components */
     NXclosegroup(f);
   } /* NXdata instrument */
-
+  
   if (mcnexus_embed_idf && !strcasestr(detector.format, "pixels")) {
-    if (NXmakeopengroup(f, "data", "NXdetector") == NX_OK) {
+    if (NXopengroup(f, "data", "NXdetector") == NX_OK) {
       NXmakelink(nxhandle, &pLink);
       NXclosegroup(f);
     }
