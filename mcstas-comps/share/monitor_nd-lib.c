@@ -904,7 +904,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	    detector.p1[k]=pix;
 	    pix++;
 	  }
-	  mcdetector_out_1D_nexus(detector);
+	  //mcdetector_out_1D_nexus(detector);
 	} else if (N_spatial_dims==2) { // 2D case
 	  detector.m=Vars->Coord_Bin[1];
 	  detector.n=Vars->Coord_Bin[2];
@@ -929,7 +929,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	      pix++;
 	    }
 	  }
-	  mcdetector_out_2D_nexus(detector);
+	  //mcdetector_out_2D_nexus(detector);
 	} else if (N_spatial_dims==3) { // 3D case
 	  detector.m=Vars->Coord_Bin[1];
 	  detector.n=Vars->Coord_Bin[2];
@@ -960,7 +960,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	      }
 	    }
 	  }
-	  mcdetector_out_3D_nexus(detector);
+	  //mcdetector_out_3D_nexus(detector);
 	}
 	
 	printf("Done with the pixel array part\n");
