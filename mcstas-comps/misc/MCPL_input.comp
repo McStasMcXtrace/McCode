@@ -32,7 +32,7 @@
 * polarisationuse: [ ]  If !=0 read polarisation vectors from file.
 * Emin: [meV]           Lower energy bound. Particles found in the MCPL-file below the limit are skipped.
 * Emax: [meV]           Upper energy bound. Particles found in the MCPL-file above the limit are skipped.
-* repeat_count: [1]     Repeat contents of the MCPL file this number of times. NB: When running MPI, repeating is implicit and is taken into account by integer division. Should be combined sith the _smear options!
+* repeat_count: [1]     Repeat contents of the MCPL file this number of times. NB: When running MPI, repeating is implicit and is taken into account by integer division. MUST be combined with _smear options!
 * E_smear: [1]          When repeating events, make a Gaussian MC choice within E_smear*E around particle energy E
 * pos_smear: [m]        When repeating events, make a flat MC choice of position within pos_smear around particle starting position
 * dir_smear: [deg]      When repeating events, make a Gaussian MC choice of direction within dir_smear around particle direction
@@ -100,6 +100,13 @@ INITIALIZE
         printf("Message(%s): MCPL file (%s) contains %lu particles.\n",NAME_CURRENT_COMP,filename,(long unsigned)nparticles); 
     }
     mcset_ncount(nparticles);
+
+    if(repeat_count>0 && E_smear==0 && pos_smear==0 && dir_smear==0) {
+      fprintf(stdout, "\n\n WARNING: You have requested a repeat_count=%i but have left all *_smear parameters at 0!\n --> This is not allowed! Resetting to repeat_count=1!\n",repeat_count);
+      fprintf(stderr, "\n\n WARNING: You have requested a repeat_count=%i but have left all *_smear parameters at 0!\n --> This is not allowed! Resetting to repeat_count=1!\n",repeat_count);
+      repeat_count=1;
+      sleep(10);
+    }
 
     if(repeat_count==0) repeat_count=1;
     repeat_cnt = repeat_count;

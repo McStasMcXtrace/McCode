@@ -83,6 +83,8 @@ set( DEST_INTERNALPYDIR     "${DEST_TOOLDIR}/Python" )
 
 file(RELATIVE_PATH MCCODE_RELPATH_BINDIR2LIBDIR       "${PROJECT_BINARY_DIR}/${DEST_BINDIR}"  "${PROJECT_BINARY_DIR}/${DEST_LIBDIR}" )
 file(RELATIVE_PATH MCCODE_RELPATH_BINDIR2RESOURCEDIR  "${PROJECT_BINARY_DIR}/${DEST_BINDIR}"  "${PROJECT_BINARY_DIR}/${DEST_RESOURCEDIR}" )
+file(RELATIVE_PATH MCCODE_RELPATH_BINDIR2TOPENVFILES  "${PROJECT_BINARY_DIR}/${DEST_BINDIR}"  "${PROJECT_BINARY_DIR}/${DEST_TOPENVFILES}" )
+file(RELATIVE_PATH MCCODE_RELPATH_TOPENVFILES2BINDIR  "${PROJECT_BINARY_DIR}/${DEST_TOPENVFILES}"  "${PROJECT_BINARY_DIR}/${DEST_BINDIR}" )
 file(RELATIVE_PATH MCCODE_RELPATH_BINDIR2TOOLDIR      "${PROJECT_BINARY_DIR}/${DEST_BINDIR}"  "${PROJECT_BINARY_DIR}/${DEST_TOOLDIR}" )
 file(RELATIVE_PATH MCCODE_RELPATH_TOOLDIR2BINDIR      "${PROJECT_BINARY_DIR}/${DEST_TOOLDIR}" "${PROJECT_BINARY_DIR}/${DEST_BINDIR}" )
 file(RELATIVE_PATH MCCODE_RELPATH_TOOLDIR2LIBDIR      "${PROJECT_BINARY_DIR}/${DEST_TOOLDIR}" "${PROJECT_BINARY_DIR}/${DEST_LIBDIR}" )
@@ -137,3 +139,26 @@ function( setup_standard_bash_preamble )
   set( MCCODE_BASH_STANDARD_PREAMBLE "${tmp}" PARENT_SCOPE )
 endfunction()
 setup_standard_bash_preamble()
+
+#Preamble for bash environment script
+include( Locations )
+function( setup_env_preamble )
+  set( lines
+    "############################################"
+    "# Start of standard CMake-generated ENV preamble"
+    "set -e"
+    "FILE=\${0}"
+    "readlinkf(){ perl -MCwd -e 'print Cwd::abs_path shift' \"$1\";}"
+    "LINK=\$(readlinkf \${FILE}||true)"
+    "if [ \"x\${LINK}\" != \"x\" ]; then"
+    "  FILE=\${LINK}"
+    "fi"
+    "MCCODE_BINDIR=${CMAKE_INSTALL_PREFIX}/${DEST_BINDIR}"
+    "MCCODE_RESOURCEDIR=\"\${MCCODE_BINDIR}/${MCCODE_RELPATH_BINDIR2RESOURCEDIR}\""
+    "# End of preamble"
+    "############################################"
+    )
+  string( JOIN "\n" tmp ${lines} )
+  set( MCCODE_ENV_PREAMBLE "${tmp}" PARENT_SCOPE )
+endfunction()
+setup_env_preamble()
