@@ -560,8 +560,7 @@ int _getcomp_index(char* compname);
          "POS: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
          name, c.x, c.y, c.z, t[0][0], t[0][1], t[0][2], \
          t[1][0], t[1][1], t[1][2], t[2][0], t[2][1], t[2][2]); \
-  printf("Component %30s AT (%g,%g,%g)\n", name, c.x, c.y, c.z); \
-  }
+     printf("Component %30s AT (%g,%g,%g)\n", name, c.x, c.y, c.z); }
 #define DEBUG_INSTR_END() if(!mcdotrace); else printf("INSTRUMENT END:\n");
 #define DEBUG_ENTER() if(!mcdotrace); else printf("ENTER:\n");
 #define DEBUG_COMP(c) if(!mcdotrace); else printf("COMP: \"%s\"\n", c);
@@ -895,7 +894,10 @@ int mccode_main(int argc, char *argv[]);
 /* main DETECTOR structure which stores most information to write to data files */
 struct mcdetector_struct {
   char   filename[CHAR_BUF_LENGTH];   /* file name of monitor */
-  char   position[CHAR_BUF_LENGTH];   /* position of detector component */
+  double Position[3];                 /* position of detector component*/
+  char   position[CHAR_BUF_LENGTH];   /* position of detector component (string)*/
+  Rotation Rotation;                  /* position of detector component*/
+  char   options[CHAR_BUF_LENGTH];    /* Monitor_nD style list-mode'options' (string)*/
   char   component[CHAR_BUF_LENGTH];  /* component instance name */
   char   instrument[CHAR_BUF_LENGTH]; /* instrument name */
   char   type[CHAR_BUF_LENGTH];       /* data type, e.g. 0d, 1d, 2d, 3d */
@@ -959,26 +961,26 @@ mcstatic FILE *siminfo_file        = NULL;
 char *strcasestr(const char *haystack, const char *needle);
 
 /* output functions */
-MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c, Coords pos);
+MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c, Coords pos, Rotation rot);
 MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
                   char *xvar, double x1, double x2, long n,
-                  double *p0, double *p1, double *p2, char *f, char *c, Coords pos);
+                  double *p0, double *p1, double *p2, char *f, char *c, Coords pos, Rotation rot);
 MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
                   double x1, double x2, double y1, double y2, long m,
                   long n, double *p0, double *p1, double *p2, char *f,
-                  char *c, Coords pos);
+                  char *c, Coords pos, Rotation rot);
 MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
                   long m, long n,
                   double *p1, char *f,
-                  char *c, Coords posa);
+	          char *c, Coords posa, Rotation rot,char* options);
 
 /* wrappers to output functions, that automatically set NAME and POSITION */
-#define DETECTOR_OUT(p0,p1,p2) mcdetector_out_0D(NAME_CURRENT_COMP,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
-#define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
+#define DETECTOR_OUT(p0,p1,p2) mcdetector_out_0D(NAME_CURRENT_COMP,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP)
+#define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP)
 #define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) \
-     mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
+     mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP)
 #define DETECTOR_OUT_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f) \
-     mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
+     mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP)
 
 #ifdef USE_NEXUS
 #include "napi.h"
