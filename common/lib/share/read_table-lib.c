@@ -1105,21 +1105,23 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
 
   /* transfer content of the Table into a 2D detector */
   Coords coords = { 0, 0, 0};
-
+  Rotation rot;
+  rot_set_rotation(rot, 0, 0, 0);
+  
   if (Table.rows == 1 || Table.columns == 1) {
     detector = mcdetector_out_1D(Table.filename,
                       xl ? xl : "", yl ? yl : "",
                       "x", x1, x2,
                       Table.rows * Table.columns,
                       NULL, Table.data, NULL,
-                      file, file, coords);
+		      file, file, coords, rot);
   } else {
     detector = mcdetector_out_2D(Table.filename,
                       xl ? xl : "", yl ? yl : "",
                       x1, x2, y1, y2,
                       Table.rows, Table.columns,
                       NULL, Table.data, NULL,
-                      file, file, coords);
+		      file, file, coords, rot);
   }
   return(detector);
 }
