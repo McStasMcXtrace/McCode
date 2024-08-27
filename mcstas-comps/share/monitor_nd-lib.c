@@ -797,180 +797,180 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
       Vars->Coord_BinProd[i]=Vars->Coord_Bin[i]*Vars->Coord_BinProd[i-1];
     }
 
-    /* #ifdef USE_NEXUS */
+    #ifdef USE_NEXUS
 
-    /* /\* #ifdef USE_MPI *\/ */
-    /* /\* //if(mpi_node_rank == mpi_node_root) { *\/ */
-    /* /\* #endif *\/ */
-    /*   if(nxhandle) { */
-    /* 	char metadata[CHAR_BUF_LENGTH]; */
-    /* 	char metadatatmp[CHAR_BUF_LENGTH]; */
-    /* 	// Vars for 1D, >3D, OFF */
-    /* 	long numbins; */
-    /* 	long minbins = 0; */
-    /* 	long maxbins = 0; */
-    /* 	char binlabel[CHAR_BUF_LENGTH]; */
-    /* 	char binvar[CHAR_BUF_LENGTH]; */
-    /* 	sprintf(binlabel,""); */
-    /* 	sprintf(binvar,""); */
-    /* 	long pix=Vars->Coord_Min[Vars->Coord_Number-1]; // Second to last col is min. pixel id */
+    /* #ifdef USE_MPI */
+    /* //if(mpi_node_rank == mpi_node_root) { */
+    /* #endif */
+      if(nxhandle) {
+    	char metadata[CHAR_BUF_LENGTH];
+    	char metadatatmp[CHAR_BUF_LENGTH];
+    	// Vars for 1D, >3D, OFF
+    	long numbins;
+    	long minbins = 0;
+    	long maxbins = 0;
+    	char binlabel[CHAR_BUF_LENGTH];
+    	char binvar[CHAR_BUF_LENGTH];
+    	sprintf(binlabel,"");
+    	sprintf(binvar,"");
+    	long pix=Vars->Coord_Min[Vars->Coord_Number-1]; // Second to last col is min. pixel id
 		  
-    /* 	MCDETECTOR detector; */
-    /* 	/\* Init - perhaps better with an init-function in mccode-r? *\/ */
-    /* 	detector.m = 0; */
-    /* 	detector.xmin = 0; */
-    /* 	detector.xmax = 0; */
-    /* 	detector.ymin = 0; */
-    /* 	detector.ymax = 0; */
-    /* 	detector.zmin = 0; */
-    /* 	detector.zmax = 0; */
-    /* 	detector.intensity = 0; */
-    /* 	detector.error = 0; */
-    /* 	detector.events = 0; */
-    /* 	detector.min = 0; */
-    /* 	detector.max = 0; */
-    /* 	detector.mean = 0; */
-    /* 	detector.centerX = 0; */
-    /* 	detector.halfwidthX = 0; */
-    /* 	detector.centerY = 0; */
-    /* 	detector.halfwidthY = 0; */
-    /* 	detector.rank = 0; */
-    /* 	detector.istransposed = 0; */
-    /* 	detector.n = 0; */
-    /* 	detector.p = 0; */
-    /* 	detector.date_l = 0; */
-    /* 	detector.p0 = NULL; */
-    /* 	detector.p1 = NULL; */
-    /* 	detector.p2 = NULL; */
+    	MCDETECTOR detector;
+    	/* Init - perhaps better with an init-function in mccode-r? */
+    	detector.m = 0;
+    	detector.xmin = 0;
+    	detector.xmax = 0;
+    	detector.ymin = 0;
+    	detector.ymax = 0;
+    	detector.zmin = 0;
+    	detector.zmax = 0;
+    	detector.intensity = 0;
+    	detector.error = 0;
+    	detector.events = 0;
+    	detector.min = 0;
+    	detector.max = 0;
+    	detector.mean = 0;
+    	detector.centerX = 0;
+    	detector.halfwidthX = 0;
+    	detector.centerY = 0;
+    	detector.halfwidthY = 0;
+    	detector.rank = 0;
+    	detector.istransposed = 0;
+    	detector.n = 0;
+    	detector.p = 0;
+    	detector.date_l = 0;
+    	detector.p0 = NULL;
+    	detector.p1 = NULL;
+    	detector.p2 = NULL;
 
-    /* 	sprintf(detector.filename,"BINS"); */
-    /* 	sprintf(detector.component,"%s",Vars->compcurname); */
-    /* 	sprintf(detector.format,"pixels"); */
+    	sprintf(detector.filename,"BINS");
+    	sprintf(detector.component,"%s",Vars->compcurname);
+    	sprintf(detector.format,"pixels");
 	
-    /* 	if(!Vars->Flag_OFF) { */
+    	if(!Vars->Flag_OFF) {
     
-    /* 	  sprintf(metadata,"id=%ld + %ld pixels: ",(long)Vars->Coord_Min[Vars->Coord_Number-1],(long)Vars->Coord_BinProd[Vars->Coord_Number-1]); */
-    /* 	  for (i=1; i<N_spatial_dims; i++) { */
-    /* 	    sprintf(metadatatmp,"%s %s (%ld bins) x ",metadata,Vars->Coord_Label[i],Vars->Coord_Bin[i]); */
-    /* 	    sprintf(metadata,"%s",metadatatmp); */
-    /* 	  } */
-    /* 	  sprintf(metadatatmp,"%s %s (%ld bins)",metadata,Vars->Coord_Label[i],Vars->Coord_Bin[i]); */
-    /* 	  sprintf(metadata,"%s",metadatatmp); */
-    /* 	  printf("%s\n",metadata); */
-    /* 	  numbins = Vars->Coord_BinProd[Vars->Coord_Number-1]; */
-    /* 	  if (N_spatial_dims==1) { */
-    /* 	    minbins=Vars->Coord_Min[1]; */
-    /* 	    maxbins=Vars->Coord_Max[1]; */
-    /* 	    sprintf(binlabel,"%s",Vars->Coord_Label[1]); */
-    /* 	    sprintf(binvar,"%s",Vars->Coord_Var[1]); */
-    /* 	  } else if (N_spatial_dims>3) { */
-    /* 	    minbins=1; */
-    /* 	    maxbins=Vars->Coord_BinProd[Vars->Coord_Number-1]; */
-    /* 	    sprintf(binlabel,"More than 3 dimensions"); */
-    /* 	    sprintf(binvar,"wrapped_variables_4plus_dims"); */
-    /* 	    N_spatial_dims=1; */
-    /* 	  } */
-    /* 	  sprintf(detector.xlabel,"%s",binlabel); */
-    /* 	  sprintf(detector.xvar,"%s",binvar); */
-    /* 	  detector.xmin=minbins; */
-    /* 	  detector.xmax=maxbins; */
-    /* 	} else { */
-    /* 	  numbins = Vars->Flag_OFF; */
-    /* 	  minbins=1; */
-    /* 	  maxbins=Vars->Flag_OFF; */
-    /* 	  sprintf(binlabel,"OFF pixel index"); */
-    /* 	  sprintf(binvar,"OFF"); */
-    /* 	  N_spatial_dims=1; */
-    /* 	  sprintf(detector.xlabel,"%s",binlabel); */
-    /* 	  sprintf(detector.xvar,"%s",binvar); */
-    /* 	  detector.xmin=minbins; */
-    /* 	  detector.xmax=maxbins; */
-    /* 	}  */
+    	  sprintf(metadata,"id=%ld + %ld pixels: ",(long)Vars->Coord_Min[Vars->Coord_Number-1],(long)Vars->Coord_BinProd[Vars->Coord_Number-1]);
+    	  for (i=1; i<N_spatial_dims; i++) {
+    	    sprintf(metadatatmp,"%s %s (%ld bins) x ",metadata,Vars->Coord_Label[i],Vars->Coord_Bin[i]);
+    	    sprintf(metadata,"%s",metadatatmp);
+    	  }
+    	  sprintf(metadatatmp,"%s %s (%ld bins)",metadata,Vars->Coord_Label[i],Vars->Coord_Bin[i]);
+    	  sprintf(metadata,"%s",metadatatmp);
+    	  printf("%s\n",metadata);
+    	  numbins = Vars->Coord_BinProd[Vars->Coord_Number-1];
+    	  if (N_spatial_dims==1) {
+    	    minbins=Vars->Coord_Min[1];
+    	    maxbins=Vars->Coord_Max[1];
+    	    sprintf(binlabel,"%s",Vars->Coord_Label[1]);
+    	    sprintf(binvar,"%s",Vars->Coord_Var[1]);
+    	  } else if (N_spatial_dims>3) {
+    	    minbins=1;
+    	    maxbins=Vars->Coord_BinProd[Vars->Coord_Number-1];
+    	    sprintf(binlabel,"More than 3 dimensions");
+    	    sprintf(binvar,"wrapped_variables_4plus_dims");
+    	    N_spatial_dims=1;
+    	  }
+    	  sprintf(detector.xlabel,"%s",binlabel);
+    	  sprintf(detector.xvar,"%s",binvar);
+    	  detector.xmin=minbins;
+    	  detector.xmax=maxbins;
+    	} else {
+    	  numbins = Vars->Flag_OFF;
+    	  minbins=1;
+    	  maxbins=Vars->Flag_OFF;
+    	  sprintf(binlabel,"OFF pixel index");
+    	  sprintf(binvar,"OFF");
+    	  N_spatial_dims=1;
+    	  sprintf(detector.xlabel,"%s",binlabel);
+    	  sprintf(detector.xvar,"%s",binvar);
+    	  detector.xmin=minbins;
+    	  detector.xmax=maxbins;
+    	}
 	  
-    /* 	long k,l,m; */
+    	long k,l,m;
 	  
-    /* 	printf("Pixel info OFF: %ld -> %ld \n",pix,pix+Vars->Flag_OFF); */
-    /* 	if (N_spatial_dims==1) { // 1D case or ND */
-    /* 	  detector.m=numbins; */
-    /* 	  detector.n=1; */
-    /* 	  detector.p=1; */
-    /* 	  detector.rank=1; */
-    /* 	  detector.p0=(double *)calloc(numbins, sizeof(double)); */
-    /* 	  detector.p1=(double *)calloc(numbins, sizeof(double)); */
-    /* 	  detector.p2=(double *)calloc(numbins, sizeof(double)); */
-    /* 	  if (Vars->Flag_Verbose) printf("1D case %ld \n",Vars->Coord_Bin[1]); */
-    /* 	  for (k=0; k<maxbins; k++) { */
-    /* 	    if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld] = %ld\n",k,pix); */
-    /* 	    detector.p1[k]=pix; */
-    /* 	    pix++; */
-    /* 	  } */
-    /* 	  //mcdetector_out_1D_nexus(detector); */
-    /* 	} else if (N_spatial_dims==2) { // 2D case */
-    /* 	  detector.m=Vars->Coord_Bin[1]; */
-    /* 	  detector.n=Vars->Coord_Bin[2]; */
-    /* 	  detector.p=1; */
-    /* 	  detector.rank=2; */
-    /* 	  sprintf(detector.xlabel,"%s",Vars->Coord_Label[1]); */
-    /* 	  sprintf(detector.xvar,"%s",Vars->Coord_Var[1]); */
-    /* 	  detector.xmin=Vars->Coord_Min[1]; */
-    /* 	  detector.xmax=Vars->Coord_Max[1]; */
-    /* 	  sprintf(detector.ylabel,"%s",Vars->Coord_Label[2]); */
-    /* 	  sprintf(detector.yvar,"%s",Vars->Coord_Var[2]); */
-    /* 	  detector.ymin=Vars->Coord_Min[2]; */
-    /* 	  detector.ymax=Vars->Coord_Max[2]; */
-    /* 	  detector.p0=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2], sizeof(double)); */
-    /* 	  detector.p1=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2], sizeof(double)); */
-    /* 	  detector.p2=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2], sizeof(double)); */
-    /* 	  if (Vars->Flag_Verbose) printf("2D case %ld x %ld \n",Vars->Coord_Bin[1],Vars->Coord_Bin[2]); */
-    /* 	  for (k=0; k<Vars->Coord_Bin[2]; k++) { */
-    /* 	    for (l=0; l<Vars->Coord_Bin[1]; l++) { */
-    /* 	      if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld] = %ld\n",l,k,pix); */
-    /* 	      detector.p1[k+l*Vars->Coord_Bin[2]]=pix; */
-    /* 	      pix++; */
-    /* 	    } */
-    /* 	  } */
-    /* 	  //mcdetector_out_2D_nexus(detector); */
-    /* 	} else if (N_spatial_dims==3) { // 3D case */
-    /* 	  detector.m=Vars->Coord_Bin[1]; */
-    /* 	  detector.n=Vars->Coord_Bin[2]; */
-    /* 	  detector.p=Vars->Coord_Bin[3];; */
-    /* 	  detector.rank=3; */
-    /* 	  sprintf(detector.xlabel,"%s",Vars->Coord_Label[1]); */
-    /* 	  sprintf(detector.xvar,"%s",Vars->Coord_Var[1]); */
-    /* 	  detector.xmin=Vars->Coord_Min[1]; */
-    /* 	  detector.xmax=Vars->Coord_Max[1]; */
-    /* 	  sprintf(detector.ylabel,"%s",Vars->Coord_Label[2]); */
-    /* 	  sprintf(detector.yvar,"%s",Vars->Coord_Var[2]); */
-    /* 	  detector.ymin=Vars->Coord_Min[2]; */
-    /* 	  detector.ymax=Vars->Coord_Max[2]; */
-    /* 	  sprintf(detector.zlabel,"%s",Vars->Coord_Label[3]); */
-    /* 	  sprintf(detector.zvar,"%s",Vars->Coord_Var[3]); */
-    /* 	  detector.zmin=Vars->Coord_Min[3]; */
-    /* 	  detector.zmax=Vars->Coord_Max[3]; */
-    /* 	  detector.p0=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*Vars->Coord_Bin[3], sizeof(double)); */
-    /* 	  detector.p1=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*Vars->Coord_Bin[3], sizeof(double)); */
-    /* 	  detector.p2=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*Vars->Coord_Bin[3], sizeof(double)); */
-    /* 	  if (Vars->Flag_Verbose) printf("3D case %ld x %ld x %ld \n",Vars->Coord_Bin[1],Vars->Coord_Bin[2],Vars->Coord_Bin[3]); */
-    /* 	  for (k=0; k<Vars->Coord_Bin[3]; k++) { */
-    /* 	    for (l=0; l<Vars->Coord_Bin[2]; l++) { */
-    /* 	      for (m=0; m<Vars->Coord_Bin[1]; m++) { */
-    /* 		if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld,%ld] = %ld\n",m,l,k,pix);  */
-    /* 		detector.p1[k + Vars->Coord_Bin[2]*l + Vars->Coord_Bin[2]*Vars->Coord_Bin[1]*m]=pix; */
-    /* 		pix++; */
-    /* 	      } */
-    /* 	    } */
-    /* 	  } */
-    /* 	  //mcdetector_out_3D_nexus(detector); */
-    /* 	} */
+    	printf("Pixel info OFF: %ld -> %ld \n",pix,pix+Vars->Flag_OFF);
+    	if (N_spatial_dims==1) { // 1D case or ND
+    	  detector.m=numbins;
+    	  detector.n=1;
+    	  detector.p=1;
+    	  detector.rank=1;
+    	  detector.p0=(double *)calloc(numbins, sizeof(double));
+    	  detector.p1=(double *)calloc(numbins, sizeof(double));
+    	  detector.p2=(double *)calloc(numbins, sizeof(double));
+    	  if (Vars->Flag_Verbose) printf("1D case %ld \n",Vars->Coord_Bin[1]);
+    	  for (k=0; k<maxbins; k++) {
+    	    if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld] = %ld\n",k,pix);
+    	    detector.p1[k]=pix;
+    	    pix++;
+    	  }
+    	  //mcdetector_out_1D_nexus(detector);
+    	} else if (N_spatial_dims==2) { // 2D case
+    	  detector.m=Vars->Coord_Bin[1];
+    	  detector.n=Vars->Coord_Bin[2];
+    	  detector.p=1;
+    	  detector.rank=2;
+    	  sprintf(detector.xlabel,"%s",Vars->Coord_Label[1]);
+    	  sprintf(detector.xvar,"%s",Vars->Coord_Var[1]);
+    	  detector.xmin=Vars->Coord_Min[1];
+    	  detector.xmax=Vars->Coord_Max[1];
+    	  sprintf(detector.ylabel,"%s",Vars->Coord_Label[2]);
+    	  sprintf(detector.yvar,"%s",Vars->Coord_Var[2]);
+    	  detector.ymin=Vars->Coord_Min[2];
+    	  detector.ymax=Vars->Coord_Max[2];
+    	  detector.p0=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2], sizeof(double));
+    	  detector.p1=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2], sizeof(double));
+    	  detector.p2=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2], sizeof(double));
+    	  if (Vars->Flag_Verbose) printf("2D case %ld x %ld \n",Vars->Coord_Bin[1],Vars->Coord_Bin[2]);
+    	  for (k=0; k<Vars->Coord_Bin[2]; k++) {
+    	    for (l=0; l<Vars->Coord_Bin[1]; l++) {
+    	      if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld] = %ld\n",l,k,pix);
+    	      detector.p1[k+l*Vars->Coord_Bin[2]]=pix;
+    	      pix++;
+    	    }
+    	  }
+    	  //mcdetector_out_2D_nexus(detector);
+    	} else if (N_spatial_dims==3) { // 3D case
+    	  detector.m=Vars->Coord_Bin[1];
+    	  detector.n=Vars->Coord_Bin[2];
+    	  detector.p=Vars->Coord_Bin[3];;
+    	  detector.rank=3;
+    	  sprintf(detector.xlabel,"%s",Vars->Coord_Label[1]);
+    	  sprintf(detector.xvar,"%s",Vars->Coord_Var[1]);
+    	  detector.xmin=Vars->Coord_Min[1];
+    	  detector.xmax=Vars->Coord_Max[1];
+    	  sprintf(detector.ylabel,"%s",Vars->Coord_Label[2]);
+    	  sprintf(detector.yvar,"%s",Vars->Coord_Var[2]);
+    	  detector.ymin=Vars->Coord_Min[2];
+    	  detector.ymax=Vars->Coord_Max[2];
+    	  sprintf(detector.zlabel,"%s",Vars->Coord_Label[3]);
+    	  sprintf(detector.zvar,"%s",Vars->Coord_Var[3]);
+    	  detector.zmin=Vars->Coord_Min[3];
+    	  detector.zmax=Vars->Coord_Max[3];
+    	  detector.p0=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*Vars->Coord_Bin[3], sizeof(double));
+    	  detector.p1=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*Vars->Coord_Bin[3], sizeof(double));
+    	  detector.p2=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*Vars->Coord_Bin[3], sizeof(double));
+    	  if (Vars->Flag_Verbose) printf("3D case %ld x %ld x %ld \n",Vars->Coord_Bin[1],Vars->Coord_Bin[2],Vars->Coord_Bin[3]);
+    	  for (k=0; k<Vars->Coord_Bin[3]; k++) {
+    	    for (l=0; l<Vars->Coord_Bin[2]; l++) {
+    	      for (m=0; m<Vars->Coord_Bin[1]; m++) {
+    		if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld,%ld] = %ld\n",m,l,k,pix);
+    		detector.p1[k + Vars->Coord_Bin[2]*l + Vars->Coord_Bin[2]*Vars->Coord_Bin[1]*m]=pix;
+    		pix++;
+    	      }
+    	    }
+    	  }
+    	  //mcdetector_out_3D_nexus(detector);
+    	}
 	
-    /* 	printf("Done with the pixel array part\n"); */
-    /*   } // nxhandle available */
-    /* /\* #ifdef USE_MPI *\/ */
-    /* /\* //} // Master only *\/ */
-    /* /\* //MPI_Barrier(MPI_COMM_WORLD); *\/ */
-    /* /\* #endif *\/ */
+    	printf("Done with the pixel array part\n");
+      } // nxhandle available
+    /* #ifdef USE_MPI */
+    /* //} // Master only */
+    /* //MPI_Barrier(MPI_COMM_WORLD); */
+    /* #endif */
 
-    /* #endif // USE_NEXUS */
+    #endif // USE_NEXUS
     } /* end Monitor_nD_Init */
 
 /* ========================================================================= */
