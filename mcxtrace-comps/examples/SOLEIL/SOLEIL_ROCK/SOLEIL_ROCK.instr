@@ -423,7 +423,9 @@ FINALLY
         #define NAME_CURRENT_COMP "absorption_coefficient"
         #endif           
 	Coords dummy;
-	mcdetector_out_0D("XANES EXAFS",number_events_after_sample, absorption_coefficient, absorption_coefficient_error,instrument_name,dummy);  
+	Rotation Rot;
+	rot_set_rotation(Rot,0,0,0);
+	mcdetector_out_0D("XANES EXAFS",number_events_after_sample, absorption_coefficient, absorption_coefficient_error,instrument_name,dummy,Rot);  
     }
 %}
 
