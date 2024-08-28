@@ -1530,8 +1530,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
         }
       }
       free(fname);
-    }
-    return(detector);
+      return(detector);
   } /* end Monitor_nD_Save */
 
 /* ========================================================================= */
