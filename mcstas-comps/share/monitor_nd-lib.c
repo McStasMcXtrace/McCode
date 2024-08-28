@@ -799,9 +799,9 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 
     #ifdef USE_NEXUS
 
-    /* #ifdef USE_MPI */
-    /* //if(mpi_node_rank == mpi_node_root) { */
-    /* #endif */
+    #ifdef USE_MPI
+    if(mpi_node_rank == mpi_node_root) {
+    #endif
       if(nxhandle) {
     	char metadata[CHAR_BUF_LENGTH];
     	char metadatatmp[CHAR_BUF_LENGTH];
@@ -899,13 +899,17 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     	  detector.p1=(double *)calloc(numbins, sizeof(double));
     	  detector.p2=(double *)calloc(numbins, sizeof(double));
     	  if (Vars->Flag_Verbose) printf("1D case %ld \n",Vars->Coord_Bin[1]);
-    	  for (k=0; k<maxbins; k++) {
+	  for (k=0; k<numbins; k++) {
     	    if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld] = %ld\n",k,pix);
     	    detector.p1[k]=pix;
     	    pix++;
     	  }
-    	  //mcdetector_out_1D_nexus(detector);
+	  mcdetector_out_1D_nexus(detector);
+	  free(detector.p0);
+	  free(detector.p1);
+	  free(detector.p2);
     	} else if (N_spatial_dims==2) { // 2D case
+	  printf("2D CASE\n");
     	  detector.m=Vars->Coord_Bin[1];
     	  detector.n=Vars->Coord_Bin[2];
     	  detector.p=1;
@@ -925,11 +929,14 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     	  for (k=0; k<Vars->Coord_Bin[2]; k++) {
     	    for (l=0; l<Vars->Coord_Bin[1]; l++) {
     	      if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld] = %ld\n",l,k,pix);
-    	      detector.p1[k+l*Vars->Coord_Bin[2]]=pix;
+		detector.p1[k*Vars->Coord_Bin[2]+l]=pix;
     	      pix++;
     	    }
     	  }
-    	  //mcdetector_out_2D_nexus(detector);
+	  mcdetector_out_2D_nexus(detector);
+	  free(detector.p0);
+	  free(detector.p1);
+	  free(detector.p2);
     	} else if (N_spatial_dims==3) { // 3D case
     	  detector.m=Vars->Coord_Bin[1];
     	  detector.n=Vars->Coord_Bin[2];
@@ -955,20 +962,21 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     	    for (l=0; l<Vars->Coord_Bin[2]; l++) {
     	      for (m=0; m<Vars->Coord_Bin[1]; m++) {
     		if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld,%ld] = %ld\n",m,l,k,pix);
-    		detector.p1[k + Vars->Coord_Bin[2]*l + Vars->Coord_Bin[2]*Vars->Coord_Bin[1]*m]=pix;
+		  detector.p1[k*Vars->Coord_Bin[2]*Vars->Coord_Bin[3] + l*Vars->Coord_Bin[3] + m]=pix;
     		pix++;
     	      }
     	    }
     	  }
-    	  //mcdetector_out_3D_nexus(detector);
+	  mcdetector_out_3D_nexus(detector);
+	  free(detector.p0);
+	  free(detector.p1);
+	  free(detector.p2);
     	}
-	
     	printf("Done with the pixel array part\n");
       } // nxhandle available
-    /* #ifdef USE_MPI */
-    /* //} // Master only */
-    /* //MPI_Barrier(MPI_COMM_WORLD); */
-    /* #endif */
+    #ifdef USE_MPI
+    } // Master only
+    #endif
 
     #endif // USE_NEXUS
     } /* end Monitor_nD_Init */
