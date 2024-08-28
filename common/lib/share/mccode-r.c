@@ -73,7 +73,7 @@ long gpu_innerloop = 2147483647;
 /* Starting value may be defined using -DND_BUFSIZ=N */
 /* Can further be controlled dynamically using --bufsiz input */
 #ifndef ND_BUFSIZ
-#define ND_BUFSIZ= 1000000;
+#define ND_BUFSIZ = 1000000;
 #endif
 long MONND_BUFSIZ = ND_BUFSIZ;
 
