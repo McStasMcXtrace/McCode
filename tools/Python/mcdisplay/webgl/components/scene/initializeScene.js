@@ -131,6 +131,10 @@ export const addAxes = (scene, size) => {
     0.5
   );
 
+  x_axis.visible=false;
+  y_axis.visible=false;
+  z_axis.visible=false;
+
   axes.x_axis = x_axis;
   axes.y_axis = y_axis;
   axes.z_axis = z_axis;

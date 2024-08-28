@@ -12,7 +12,7 @@ const GridContext = createContext({
   toggleXZ: () => {},
   toggleYZ: () => {},
 
-  showAxes: true,
+  showAxes: false,
   toggleAxes: () => {},
 });
 
