@@ -73,11 +73,9 @@ long gpu_innerloop = 2147483647;
 /* Monitor_nD list/buffer-size default */
 /* Starting value may be defined using -DND_BUFFER=N */
 /* Can further be controlled dynamically using --bufsiz input */
-long MONND_BUFSIZ;
+long MONND_BUFSIZ = 10000000;
 #ifdef ND_BUFFER
 MONND_BUFSIZ = ND_BUFFER;
-#else
-MONDD_BUFSIZ = 10000000;
 #endif
  
 
