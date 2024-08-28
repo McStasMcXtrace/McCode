@@ -70,12 +70,12 @@ int numgangs = 7813;
 long gpu_innerloop = 2147483647;
 
 /* Monitor_nD list/buffer-size default */
-/* Starting value may be defined using -DND_BUFSIZ=N */
+/* Starting value may be defined using -DND_BUFFER=N */
 /* Can further be controlled dynamically using --bufsiz input */
-#ifndef ND_BUFSIZ
-#define ND_BUFSIZ = 1000000;
+#ifndef ND_BUFFER
+#define ND_BUFFER = 1000000;
 #endif
-long MONND_BUFSIZ = ND_BUFSIZ;
+long MONND_BUFSIZ = ND_BUFFER;
 
 /* Number of particle histories to simulate. */
 #ifdef NEUTRONICS
