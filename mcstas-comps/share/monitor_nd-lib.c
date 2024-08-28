@@ -246,7 +246,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     carg = 1;
     while((Flag_End == 0) && (carg < 128))
     {
-
       if (Flag_New_token) /* retain previous token or get a new one */
       {
         if (carg == 1) token=(char *)strtok(option_copy,DEFS->TOKEN_DEL);
