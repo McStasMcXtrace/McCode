@@ -18,9 +18,7 @@ export default function App() {
     const file = e.dataTransfer.files[0];
     const reader = new FileReader();
     reader.onload = (e) => {
-      const data = JSON.parse(e.target.result as string);
-      const newInstrument = instrument;
-      newInstrument.components = data;
+      const newInstrument = JSON.parse(e.target.result as string);
       setInstrument(initializeInstrument(newInstrument));
       setLoading(false);
     };

@@ -3,7 +3,10 @@ import "../../../common.css";
 import "./info-view.css";
 import { useInstrumentContext } from "../../../Contexts/InstrumentContext";
 import { useRaysContext } from "../../../Contexts/RaysContext";
-import ExportJSONButton from "./export-json-button/ExportJSONButton";
+import ExportJSONButton, {
+  ExportType,
+} from "./export-json-button/ExportJSONButton";
+import ImportJson from "./import-json/ImportJson";
 
 const InfoView = () => {
   const { instrument, setInstrument } = useInstrumentContext();
@@ -54,7 +57,17 @@ const InfoView = () => {
           {rays.vmin}
         </p>
       ) : null}
-      <ExportJSONButton />
+      <div className="row">
+        <ExportJSONButton
+          buttonText="Export Instrument JSON"
+          exportType={ExportType.Components}
+        />
+        <ExportJSONButton
+          buttonText="Export Rays JSON"
+          exportType={ExportType.Rays}
+        />
+      </div>
+      <ImportJson />
     </div>
   );
 };

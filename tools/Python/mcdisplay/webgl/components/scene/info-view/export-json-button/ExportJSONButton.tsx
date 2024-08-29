@@ -2,19 +2,41 @@ import React from "react";
 import "../../../../common.css";
 import "./export-json-button.css";
 import { useInstrumentContext } from "../../../../Contexts/InstrumentContext";
+import { useRaysContext } from "../../../../Contexts/RaysContext";
 
-const ExportJSONButton = () => {
+export enum ExportType {
+  Components = 0,
+  Rays = 1,
+}
+
+interface ExportJSONButtonProps {
+  buttonText: string;
+  exportType: ExportType;
+}
+
+const ExportJSONButton = ({
+  buttonText,
+  exportType = ExportType.Components,
+}: ExportJSONButtonProps) => {
   const { instrument, setInstrument } = useInstrumentContext();
-
+  const { rays, setRays } = useRaysContext();
   const handleButtonClick = () => {
-    const comps = instrument.components;
+    let data = {};
+    let fileName = "";
+    if (exportType === ExportType.Components) {
+      data = instrument;
+      fileName = instrument.name + "_instrument.json";
+    } else if (exportType === ExportType.Rays) {
+      data = rays;
+      fileName = instrument.name + "_rays.json";
+    }
     let element = document.createElement("a");
     element.setAttribute(
       "href",
       "data:text/plain;charset=utf-8," +
-        encodeURIComponent(JSON.stringify(comps, null, 2))
+        encodeURIComponent(JSON.stringify(data, null, 2))
     );
-    element.setAttribute("download", "components.json");
+    element.setAttribute("download", fileName);
     element.style.display = "none";
     document.body.appendChild(element);
 
@@ -25,7 +47,7 @@ const ExportJSONButton = () => {
 
   return (
     <div id="export-json-button" className="">
-      <button onClick={handleButtonClick}>Export JSON</button>
+      <button onClick={handleButtonClick}>{buttonText}</button>
     </div>
   );
 };
