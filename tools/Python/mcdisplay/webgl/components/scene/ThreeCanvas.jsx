@@ -12,7 +12,7 @@ import {
   initializeAmbientLight,
 } from "./initializeScene";
 import { useInstrumentContext } from "../../Contexts/InstrumentContext";
-import { clearComponents, loadComponents } from "../../Contexts/addComponents";
+import { clearScene, loadComponents } from "../../Contexts/addComponents";
 import { useRaysContext } from "../../Contexts/RaysContext";
 import {
   setRayVisibility,
@@ -274,11 +274,10 @@ const ThreeCanvas = () => {
   }, [camPos]);
 
   useEffect(() => {
-    clearComponents(sceneRef.current);
+    clearScene(sceneRef.current);
     loadComponents(sceneRef.current, instrument.components);
     const gridsInitialized = gridsRef.current;
-
-    if (!gridsInitialized && instrument.components.length > 0) {
+    if (instrument.components.length > 0) {
       const bbox = new THREE.Box3().setFromObject(sceneRef.current);
       const bboxSize = Math.ceil(bbox.min.distanceTo(bbox.max));
       setCamPosHome(
@@ -363,7 +362,7 @@ const ThreeCanvas = () => {
       });
     }
     render();
-  }, [instrument.components]);
+  }, [instrument]);
 
   useEffect(() => {
     console.log("Rays updated");

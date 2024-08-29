@@ -104,6 +104,8 @@ export const addAxes = (scene, size) => {
   const axes = {};
 
   const center = new THREE.Vector3(0, 0, 0);
+  const arrowHeadLength = size * 0.01;
+  const arrowHeadWidth = size * 0.005;
 
   /* arrow colors should match --x-axis-color, y-ax.. colors in common.css*/
   const x_axis = new THREE.ArrowHelper(
@@ -111,24 +113,24 @@ export const addAxes = (scene, size) => {
     center,
     size,
     0x7f2020,
-    1,
-    0.5
+    arrowHeadLength,
+    arrowHeadWidth
   );
   const y_axis = new THREE.ArrowHelper(
     new THREE.Vector3(0, 1, 0),
     center,
     size,
     0x207f20,
-    1,
-    0.5
+    arrowHeadLength,
+    arrowHeadWidth
   );
   const z_axis = new THREE.ArrowHelper(
     new THREE.Vector3(0, 0, 1),
     center,
     size,
     0x20207f,
-    1,
-    0.5
+    arrowHeadLength,
+    arrowHeadWidth
   );
 
   x_axis.visible=false;
