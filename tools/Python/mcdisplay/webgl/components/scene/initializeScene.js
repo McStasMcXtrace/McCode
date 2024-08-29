@@ -2,7 +2,9 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 export const initializeScene = () => {
-  return new THREE.Scene();
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xffffff);
+  return scene;
 };
 
 export const initializeCameras = (

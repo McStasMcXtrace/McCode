@@ -49,7 +49,7 @@ const ThreeCanvas = () => {
     setRays,
     handleNextClick,
   } = useRaysContext();
-  const { loading, setLoading, backgroundColor, toggleBackgroundColor } =
+  const { loading, setLoading } =
     useAppContext();
 
   const { plotlyRanges, updatePlotlyRanges } = usePlotRangeContext();
@@ -410,15 +410,6 @@ const ThreeCanvas = () => {
     playRef.current = play;
     if (play) loop();
   }, [play]);
-
-  useEffect(() => {
-    if (backgroundColor) {
-      sceneRef.current.background = new THREE.Color(0xffffff);
-    } else {
-      sceneRef.current.background = new THREE.Color(0x000000);
-    }
-    render();
-  }, [backgroundColor]);
 
   return (
     <div id="canvas-container">
