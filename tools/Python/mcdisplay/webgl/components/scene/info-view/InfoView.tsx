@@ -27,18 +27,24 @@ const InfoView = () => {
         <b>Command: </b>
         {instrument.cmd}
       </p>
+      {instrument.params.length > 0 ? (
       <p>
         <b>Instrument parameters: </b>
         {instrument.params}
       </p>
+      ) : null}
+      {instrument.params_defaults.length > 0 ? (
       <p>
         <b>Instrument parameter defaults: </b>
         {instrument.params_defaults}
       </p>
+      ) : null}
+      {instrument.params_values.length > 0 ? (
       <p>
         <b>Instrument parameters values: </b>
         {instrument.params_values}
       </p>
+      ) : null}
       {rays.numrays ? (
         <p>
           <b>Number of rays: </b>

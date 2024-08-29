@@ -9,8 +9,6 @@ type RaysContextType = {
   prevRayIndex: number;
   currentRayIndex: number;
   setCurrentRayIndex: (index: number) => void;
-  showScatterPoints: boolean;
-  toggleScatterPoints: () => void;
   showRays: boolean;
   toggleRays: () => void;
   rays: RayData;
@@ -27,8 +25,6 @@ const RaysContext = createContext<RaysContextType>({
   prevRayIndex: 0,
   currentRayIndex: 0,
   setCurrentRayIndex: () => {},
-  showScatterPoints: true,
-  toggleScatterPoints: () => {},
   showRays: false,
   toggleRays: () => {},
   rays: { rays: [], numrays: 0, vmin: 0, vmax: 0 },
@@ -42,7 +38,6 @@ interface RaysProviderProps {
 }
 
 export const RaysProvider: React.FC<RaysProviderProps> = ({ children }) => {
-  const [showScatterPoints, setShowScatterPoints] = useState(true);
   const [rays, setRays] = useState<RayData>({
     rays: [],
     numrays: 0,
@@ -72,10 +67,6 @@ export const RaysProvider: React.FC<RaysProviderProps> = ({ children }) => {
       setPrevRayIndex(currentRayIndex);
       _setCurrentRayIndex(indexOrUpdater);
     }
-  };
-
-  const toggleScatterPoints = () => {
-    setShowScatterPoints((prevShowScatterPoints) => !prevShowScatterPoints);
   };
 
   const toggleRays = () => {
@@ -115,8 +106,6 @@ export const RaysProvider: React.FC<RaysProviderProps> = ({ children }) => {
         prevRayIndex,
         currentRayIndex,
         setCurrentRayIndex,
-        showScatterPoints,
-        toggleScatterPoints,
         showRays,
         toggleRays,
         rays,
