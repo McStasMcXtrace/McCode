@@ -44,7 +44,6 @@ const ThreeCanvas = () => {
     prevRayIndex,
     currentRayIndex,
     setCurrentRayIndex,
-    showScatterPoints,
     showRays,
     rays,
     setRays,
@@ -370,17 +369,6 @@ const ThreeCanvas = () => {
     render();
   }, [rays]);
 
-  const handleShowScatterPoints = async () => {
-    setLoading(true);
-    if (!showScatterPoints) {
-      setScatterPointsInvisible(sceneRef.current);
-    } else {
-      setScatterPointsVisible(sceneRef.current);
-    }
-    render();
-    setLoading(false);
-  };
-
   const handleShowAllRays = async () => {
     setLoading(true);
     if (!showRays || (showRays && !showAllRays)) {
@@ -395,10 +383,6 @@ const ThreeCanvas = () => {
   useEffect(() => {
     handleShowAllRays();
   }, [showAllRays]);
-
-  useEffect(() => {
-    handleShowScatterPoints();
-  }, [showScatterPoints]);
 
   const handleRayChange = async (index, prevIndex) => {
     setLoading(true);
