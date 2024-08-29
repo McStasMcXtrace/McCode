@@ -62,10 +62,12 @@ const InfoView = () => {
           buttonText="Export Instrument JSON"
           exportType={ExportType.Components}
         />
-        <ExportJSONButton
-          buttonText="Export Rays JSON"
-          exportType={ExportType.Rays}
-        />
+        {rays.numrays > 0 ? (
+          <ExportJSONButton
+            buttonText="Export Rays JSON"
+            exportType={ExportType.Rays}
+          />
+        ) : null}
       </div>
       <ImportJson />
     </div>
