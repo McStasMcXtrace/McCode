@@ -3,9 +3,9 @@ import { Component } from "./Component";
 export interface Instrument {
   name: string;
   abspath: string;
-  params: any[];
-  params_defaults: any[];
-  params_values: any[];
+  params: string;
+  params_defaults: string;
+  params_values: string;
   cmd: string;
   components: Component[];
 }
