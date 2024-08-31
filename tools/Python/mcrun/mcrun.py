@@ -280,8 +280,8 @@ def add_mcstas_options(parser):
                  '(format list obtained from <instr>.%s -h)' % mccode_config.platform["EXESUFFIX"])
 
     add('--bufsiz',
-        metavar='BUFSIZ', default='10000000',
-        help='Monitor_nD list/buffer-size (defaults to 10000000)')
+        metavar='BUFSIZ', default=mccode_config.configuration["NDBUFFERSIZE"],
+        help='Monitor_nD list/buffer-size (defaults to '+mccode_config.configuration["NDBUFFERSIZE"]+')')
 
     add('--vecsize',
         metavar='VECSIZE', default='',
