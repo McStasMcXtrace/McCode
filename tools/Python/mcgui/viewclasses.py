@@ -181,7 +181,6 @@ class McView(object):
         self.__ssd.set_mcdisplays(mcdisplays)
         self.__ssd.set_mcplots(mcplots)
         self.__ssd.set_formats(formats)
-        print("SETTING BUFFERSIZE " + buffersize)
         self.__ssd.set_buffersize(buffersize)
         if self.__ssd.exec():
             return self.__ssd.getValues()
