@@ -330,6 +330,7 @@ class McGuiState(QtCore.QObject):
                 7 - output directory (str)
                 8 - autoplotter
                 9 - format
+               10 - Monitor_nD buffersize
             params[]:
                 [<par_name>, <value>] pairs
         '''
@@ -411,7 +412,12 @@ class McGuiState(QtCore.QObject):
         if Format and simtrace == 0:
             print("REDEFINING FORMAT: " + mccode_config.configuration["FORMAT"])
             runstr = runstr + ' --format=' + mccode_config.configuration["FORMAT"]
-        
+
+        # Monitor_nD buffersize
+        Bufsiz = fixed_params[10]
+        if Bufsiz and simtrace == 0:
+            runstr = runstr + ' --bufsiz=' + Bufsiz
+
         # parse instrument params
         for p in params:
             runstr = runstr + ' ' + p[0] + '=' + p[1]
@@ -652,7 +658,7 @@ class McGuiAppController():
             comps = get_compnames(text=open(self.state.getInstrumentFile(), 'rb').read().decode())
             _a, mcplots, mcdisplays, formats = mccode_config.get_options()
             fixed_params, new_instr_params, inspect, mcdisplay, autoplotter, Format = self.view.showStartSimDialog(
-                instr_params, comps, mcdisplays, mcplots, formats)
+                instr_params, comps, mcdisplays, mcplots, formats, mccode_config.configuration["NDBUFFERSIZE"])
 
             if Format != None:
                 print("SETTING FORMAT: " + Format)

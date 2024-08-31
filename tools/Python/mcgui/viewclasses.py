@@ -173,7 +173,7 @@ class McView(object):
         if dlg.exec():
             return dlg.selectedFiles()[0]
 
-    def showStartSimDialog(self, params, comps, mcdisplays, mcplots, formats):
+    def showStartSimDialog(self, params, comps, mcdisplays, mcplots, formats, buffersize):
         if self.__ssd == None:
             self.__ssd = McStartSimDialog()
         self.__ssd.createParamsWidgets(params)
@@ -181,6 +181,8 @@ class McView(object):
         self.__ssd.set_mcdisplays(mcdisplays)
         self.__ssd.set_mcplots(mcplots)
         self.__ssd.set_formats(formats)
+        print("SETTING BUFFERSIZE " + buffersize)
+        self.__ssd.set_buffersize(buffersize)
         if self.__ssd.exec():
             return self.__ssd.getValues()
         else:
@@ -650,6 +652,7 @@ class McStartSimDialog(QtWidgets.QDialog):
         self._last_mcdisplays = None
         self._last_mcplots = None
         self._last_formats = None
+        self._last_buffersize = mccode_config.configuration["NDBUFFERSIZE"]
         self.ui = Ui_dlgStartSim()
         self.ui.setupUi(self)
         if not mccode_config.configuration["PARTICLE"] == "neutron":
@@ -694,7 +697,10 @@ class McStartSimDialog(QtWidgets.QDialog):
         self.ui.cbxFormats.clear()
         for f in formats:
             self.ui.cbxFormats.addItem(f)
-            
+
+    def set_buffersize(self, buffersize):
+        self.ui.edtNDbufsiz.setText(buffersize)
+
     def _set_inspect_visible(self, sim_run_idx):
         visible = False
         if sim_run_idx == 1 or sim_run_idx == 2:
@@ -725,6 +731,7 @@ class McStartSimDialog(QtWidgets.QDialog):
                 7 - output directory (str)
                 8 - autoplotter
                 9 - format
+               10 - Monitor_nD buffersize
             params[]:
                 [<par_name>, <value>] pairs
         '''
@@ -787,8 +794,11 @@ class McStartSimDialog(QtWidgets.QDialog):
         p9 = idx > 0
         if idx > 0:
             Format = self._last_formats[idx]
-        
-        fixed_params =[p0, p1, p2, p3, p4, p5, p6, p7, p8, p9]
+
+        # Monitor_nD buffersize
+        p10 = self.ui.edtNDbufsiz.text()
+ 
+        fixed_params =[p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10]
         
         # get dynamic params
         params = []
@@ -1203,6 +1213,9 @@ class McConfigDialog(QtWidgets.QDialog):
         self.ui.edtFontSize.setText(mccode_config.configuration["GUIFONTSIZE"])
         self.ui.edtFontSize.conf_var = "GUIFONTSIZE"
 
+        self.ui.edtNDbufsiz.setText(mccode_config.configuration["NDBUFFERSIZE"])
+        self.ui.edtNDbufsiz.conf_var = "NDBUFFERSIZE"
+        
         self.ui.editor.setText(mccode_config.configuration["EDITOR"])
         self.ui.editor.conf_var = "EDITOR"
 
@@ -1227,6 +1240,7 @@ class McConfigDialog(QtWidgets.QDialog):
         mccode_config.compilation[str(self.ui.edtMPIrun.conf_var)] = str(self.ui.edtMPIrun.text())
         mccode_config.compilation[str(self.ui.edtNumNodes.conf_var)] = str(self.ui.edtNumNodes.text())
         mccode_config.configuration[str(self.ui.edtNumCols.conf_var)] = str(self.ui.edtNumCols.text())
+        mccode_config.configuration[str(self.ui.edtNDbufsiz.conf_var)] = str(self.ui.edtNDbufsiz.text())
         mccode_config.configuration[str(self.ui.edtFontSize.conf_var)] = str(self.ui.edtFontSize.text())
         mccode_config.configuration[str(self.ui.editor.conf_var)] = str(self.ui.editor.text())
         # Export selected variables to the system / mcrun
