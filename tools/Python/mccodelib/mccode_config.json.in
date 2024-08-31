@@ -14,6 +14,7 @@
     "BROWSER": "@BROWSER@",
     "GUICOLS": "3",
     "GUIFONTSIZE": "12",
+    "NDBUFFERSIZE": "10000000",
     "EDITOR": "@EDITOR@",
     "FORMAT": "McCode",
     "ISCONDAPKG": "@MCCODE_IS_CONDA_PKG@"
