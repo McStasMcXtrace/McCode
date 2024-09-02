@@ -1,10 +1,10 @@
 import * as THREE from "three";
 import { RAY } from "./addRays";
 
-export function clearComponents(parentnode) {
+export function clearScene(parentnode) {
   for (let i = parentnode.children.length - 1; i >= 0; i--) {
     let child = parentnode.children[i];
-    if (child.type === "Group" && !child.name.includes(RAY)) {
+    if ((child.type === "Group" && !child.name.includes(RAY))|| child.type === "GridHelper" || child.type === "ArrowHelper") {
       parentnode.remove(child);
     }
   }

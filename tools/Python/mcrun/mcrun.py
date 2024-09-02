@@ -280,8 +280,8 @@ def add_mcstas_options(parser):
                  '(format list obtained from <instr>.%s -h)' % mccode_config.platform["EXESUFFIX"])
 
     add('--bufsiz',
-        metavar='BUFSIZ', default='',
-        help='Monitor_nD list/buffer-size (defaults to 1000000)')
+        metavar='BUFSIZ', default=mccode_config.configuration["NDBUFFERSIZE"],
+        help='Monitor_nD list/buffer-size (defaults to '+mccode_config.configuration["NDBUFFERSIZE"]+')')
 
     add('--vecsize',
         metavar='VECSIZE', default='',
@@ -553,6 +553,10 @@ def main():
     if isdir(options.dir):
         LOG.info('Placing instr file copy %s in dataset %s', options.instr, options.dir)
         copyfile(options.instr, join(options.dir, basename(options.instr)))
+        cfile = os.path.splitext(options.instr)[0] + ".c"
+        if os.path.exists(cfile):
+            LOG.info('Placing generated c-code copy %s in dataset %s', cfile, options.dir)
+            copyfile(cfile, join(options.dir, basename(cfile)))
 
     if options.autoplot is not None:
         autoplotter = mccode_config.configuration['MCPLOT']

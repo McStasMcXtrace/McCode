@@ -17,7 +17,7 @@ const GridContext = createContext({
 });
 
 export const GridProvider = ({ children }) => {
-  const [showAxes, setShowAxes] = useState(true);
+  const [showAxes, setShowAxes] = useState(false);
   const [gridSize, setGridSize] = useState(100);
   const [gridDivisions, setGridDivisions] = useState(100);
   const updateGridSize = (size, divisions) => {
