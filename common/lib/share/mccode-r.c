@@ -1716,7 +1716,8 @@ static void mcinfo_out_nexus(NXhandle f)
     #endif
 
       /* output parameter string ================================================ */
-      if (NXmakeopengroup(f, "Param", "NXparameters") == NX_OK) {
+      if (NXmakegroup(f, "Param", "NXparameters") == NX_OK) {
+	NXopengroup(f,"Param", "NXparameters");
 	printf("  --> Opened Param\n");
         int i;
         char string[CHAR_BUF_LENGTH];
