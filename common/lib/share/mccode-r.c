@@ -1691,6 +1691,7 @@ static void mcinfo_out_nexus(NXhandle f)
 	printf("Failed to create NeXus component hierarchy\n");
       }
       NXclosegroup(f); /* instrument */
+      printf("--> Closed instrument\n");
     } /* NXinstrument */
 
     /* write NeXus simulation group */
@@ -1715,8 +1716,8 @@ static void mcinfo_out_nexus(NXhandle f)
     #endif
 
       /* output parameter string ================================================ */
-      if (NXmakegroup(f, "Param", "NXparameters") == NX_OK)
-      if (NXopengroup(f, "Param", "NXparameters") == NX_OK) {
+      if (NXmakeopengroup(f, "Param", "NXparameters") == NX_OK) {
+	printf("  --> Opened Param\n");
         int i;
         char string[CHAR_BUF_LENGTH];
         for(i = 0; i < numipar; i++) {
@@ -1731,12 +1732,13 @@ static void mcinfo_out_nexus(NXhandle f)
           }
         }
         NXclosegroup(f); /* Param */
+	printf("  --> Closed Param\n");
       } /* NXparameters */
-
       NXclosegroup(f); /* simulation */
+      printf("--> Closed simulation\n");
     } /* NXsimulation */
 
-    /* create a group to hold all monitors */
+    /* create a group to hold all links for all monitors */
     NXmakegroup(f, "data", "NXdetector");
 
     /* leave the NXentry opened (closed at exit) */
@@ -2149,9 +2151,15 @@ MCDETECTOR mcdetector_out_1D_nexus(MCDETECTOR detector)
 
 MCDETECTOR mcdetector_out_2D_nexus(MCDETECTOR detector)
 {
+  printf("Enter 2D nexus\n\n");
   MPI_MASTER(
+  char path[128];
+  NXgetpath(nxhandle,path,128);
+  printf("Path is %s\n",path);
   mcdatainfo_out_nexus(nxhandle, detector);
+  printf("Info written nexus\n\n");
   mcdetector_out_data_nexus(nxhandle, detector);
+  printf("Data written nexus\n\n");
   );
 
 #ifdef USE_MPI // and USE_NEXUS

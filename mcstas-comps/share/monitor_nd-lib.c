@@ -801,6 +801,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     #ifdef USE_MPI
     if(mpi_node_rank == mpi_node_root) {
     #endif
+      printf("Flag_all=%i\n",Flag_All);
       if(nxhandle) {
     	char metadata[CHAR_BUF_LENGTH];
     	char metadatatmp[CHAR_BUF_LENGTH];
@@ -888,8 +889,9 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	  
     	long k,l,m;
 	  
-    	printf("Pixel info OFF: %ld -> %ld \n",pix,pix+Vars->Flag_OFF);
+    	printf("Monitor component %s\n",Vars->compcurname);
     	if (N_spatial_dims==1) { // 1D case or ND
+	  printf("1D/ND CASE\n\n");
     	  detector.m=numbins;
     	  detector.n=1;
     	  detector.p=1;
@@ -908,7 +910,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	  free(detector.p1);
 	  free(detector.p2);
     	} else if (N_spatial_dims==2) { // 2D case
-	  printf("2D CASE\n");
+	  printf("2D CASE\n\n");
     	  detector.m=Vars->Coord_Bin[1];
     	  detector.n=Vars->Coord_Bin[2];
     	  detector.p=1;
@@ -932,11 +934,13 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     	      pix++;
     	    }
     	  }
+	  printf("Call to 2D_nexus...\n\n");
 	  mcdetector_out_2D_nexus(detector);
 	  free(detector.p0);
 	  free(detector.p1);
 	  free(detector.p2);
     	} else if (N_spatial_dims==3) { // 3D case
+	  printf("3D CASE\n\n");
     	  detector.m=Vars->Coord_Bin[1];
     	  detector.n=Vars->Coord_Bin[2];
     	  detector.p=Vars->Coord_Bin[3];;
@@ -970,7 +974,9 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	  free(detector.p0);
 	  free(detector.p1);
 	  free(detector.p2);
-    	}
+    	} else {
+	  printf("non-spatial measurement CASE\n\n");
+	}
     	printf("Done with the pixel array part\n");
       } // nxhandle available
     #ifdef USE_MPI
