@@ -435,7 +435,7 @@ AT (0,0,LME-.273) RELATIVE mono_out
 
 COMPONENT Mon_SampleInXY = Monitor_nD(
   xwidth = 0.06, yheight = 0.1,
-  options="x y parallel, per cm2 bins=50")
+  options="x bins=50 y bins=50 parallel, per cm2")
 AT (0,0,0) RELATIVE PREVIOUS
 
 /* BEGIN ********************************** Sample environment and sample */
