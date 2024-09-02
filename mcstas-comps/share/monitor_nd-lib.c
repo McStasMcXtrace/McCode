@@ -811,8 +811,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     	long maxbins = 0;
     	char binlabel[CHAR_BUF_LENGTH];
     	char binvar[CHAR_BUF_LENGTH];
-    	sprintf(binlabel,"");
-    	sprintf(binvar,"");
+    	sprintf(binlabel,"none");
+    	sprintf(binvar,"none");
     	long pix=Vars->Coord_Min[Vars->Coord_Number-1]; // Second to last col is min. pixel id
 		  
     	MCDETECTOR detector;
