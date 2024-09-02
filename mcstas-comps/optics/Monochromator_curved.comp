@@ -214,8 +214,8 @@ INITIALIZE
       tiltV[i]=-asin((i-(NV+1)/2.0)*(SlabHeight+gap)/RV);
     }
   }
-  sprintf(ncol_var,"ncol_%i",_comp->_index);
-  sprintf(nrow_var,"nrow_%i",_comp->_index);
+  sprintf(ncol_var,"ncol_%l",_comp->_index);
+  sprintf(nrow_var,"nrow_%l",_comp->_index);
 
 %}
 
