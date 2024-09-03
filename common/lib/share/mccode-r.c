@@ -2145,15 +2145,9 @@ MCDETECTOR mcdetector_out_1D_nexus(MCDETECTOR detector)
 
 MCDETECTOR mcdetector_out_2D_nexus(MCDETECTOR detector)
 {
-  printf("Enter 2D nexus\n\n");
   MPI_MASTER(
-  char path[128];
-  NXgetpath(nxhandle,path,128);
-  printf("Path is %s\n",path);
   mcdatainfo_out_nexus(nxhandle, detector);
-  printf("Info written nexus\n\n");
   mcdetector_out_data_nexus(nxhandle, detector);
-  printf("Data written nexus\n\n");
   );
 
 #ifdef USE_MPI // and USE_NEXUS
