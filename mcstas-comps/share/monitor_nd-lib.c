@@ -849,7 +849,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	
     	if(!Vars->Flag_OFF) {
     
-    	  sprintf(metadata,"id=%ld + %ld pixels: ",(long)Vars->Coord_Min[Vars->Coord_Number-1],(long)Vars->Coord_BinProd[Vars->Coord_Number-1]);
+    	  sprintf(metadata,"id=%ld + %ld pixels: ",(long)Vars->Coord_Min[Vars->Coord_Number-1],(long)Vars->Coord_BinProd[Vars->Coord_Number]);
     	  for (i=1; i<N_spatial_dims; i++) {
     	    sprintf(metadatatmp,"%s %s (%ld bins) x ",metadata,Vars->Coord_Label[i],Vars->Coord_Bin[i]);
     	    sprintf(metadata,"%s",metadatatmp);
@@ -857,7 +857,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     	  sprintf(metadatatmp,"%s %s (%ld bins)",metadata,Vars->Coord_Label[i],Vars->Coord_Bin[i]);
     	  sprintf(metadata,"%s",metadatatmp);
     	  printf("%s\n",metadata);
-    	  numbins = Vars->Coord_BinProd[Vars->Coord_Number-1];
+    	  numbins = Vars->Coord_BinProd[Vars->Coord_Number];
     	  if (N_spatial_dims==1) {
     	    minbins=Vars->Coord_Min[1];
     	    maxbins=Vars->Coord_Max[1];
@@ -865,7 +865,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     	    sprintf(binvar,"%s",Vars->Coord_Var[1]);
     	  } else if (N_spatial_dims>3) {
     	    minbins=1;
-    	    maxbins=Vars->Coord_BinProd[Vars->Coord_Number-1];
+    	    maxbins=Vars->Coord_BinProd[Vars->Coord_Number];
     	    sprintf(binlabel,"More than 3 dimensions");
     	    sprintf(binvar,"wrapped_variables_4plus_dims");
     	    N_spatial_dims=1;
@@ -923,12 +923,12 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     	  sprintf(detector.yvar,"%s",Vars->Coord_Var[2]);
     	  detector.ymin=Vars->Coord_Min[2];
     	  detector.ymax=Vars->Coord_Max[2];
-    	  detector.p0=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2], sizeof(double));
-    	  detector.p1=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2], sizeof(double));
-    	  detector.p2=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2], sizeof(double));
+    	  detector.p0=(double *)calloc(Vars->Coord_BinProd[Vars->Coord_Number], sizeof(double));
+    	  detector.p1=(double *)calloc(Vars->Coord_BinProd[Vars->Coord_Number], sizeof(double));
+    	  detector.p2=(double *)calloc(Vars->Coord_BinProd[Vars->Coord_Number], sizeof(double));
     	  if (Vars->Flag_Verbose) printf("2D case %ld x %ld \n",Vars->Coord_Bin[1],Vars->Coord_Bin[2]);
-    	  for (k=0; k<Vars->Coord_Bin[2]; k++) {
-    	    for (l=0; l<Vars->Coord_Bin[1]; l++) {
+    	  for (k=0; k<Vars->Coord_Bin[1]; k++) {
+    	    for (l=0; l<Vars->Coord_Bin[2]; l++) {
     	      if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld] = %ld\n",l,k,pix);
 		detector.p1[k*Vars->Coord_Bin[2]+l]=pix;
     	      pix++;
@@ -957,13 +957,13 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     	  sprintf(detector.zvar,"%s",Vars->Coord_Var[3]);
     	  detector.zmin=Vars->Coord_Min[3];
     	  detector.zmax=Vars->Coord_Max[3];
-    	  detector.p0=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*Vars->Coord_Bin[3], sizeof(double));
-    	  detector.p1=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*Vars->Coord_Bin[3], sizeof(double));
-    	  detector.p2=(double *)calloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*Vars->Coord_Bin[3], sizeof(double));
+    	  detector.p0=(double *)calloc(Vars->Coord_BinProd[Vars->Coord_Number], sizeof(double));
+    	  detector.p1=(double *)calloc(Vars->Coord_BinProd[Vars->Coord_Number], sizeof(double));
+    	  detector.p2=(double *)calloc(Vars->Coord_BinProd[Vars->Coord_Number], sizeof(double));
     	  if (Vars->Flag_Verbose) printf("3D case %ld x %ld x %ld \n",Vars->Coord_Bin[1],Vars->Coord_Bin[2],Vars->Coord_Bin[3]);
-    	  for (k=0; k<Vars->Coord_Bin[3]; k++) {
+    	  for (k=0; k<Vars->Coord_Bin[1]; k++) {
     	    for (l=0; l<Vars->Coord_Bin[2]; l++) {
-    	      for (m=0; m<Vars->Coord_Bin[1]; m++) {
+    	      for (m=0; m<Vars->Coord_Bin[3]; m++) {
     		if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld,%ld] = %ld\n",m,l,k,pix);
 		  detector.p1[k*Vars->Coord_Bin[2]*Vars->Coord_Bin[3] + l*Vars->Coord_Bin[3] + m]=pix;
     		pix++;
