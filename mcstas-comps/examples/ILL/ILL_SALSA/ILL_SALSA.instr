@@ -39,6 +39,7 @@
 * Furthermore the sample environment is of course variable depending on the sample
 * in question.
 * 
+* %Example ILL_SALSA.instr lambda_mean=1.66795 Detector: Beam_entrance_monitor_psd_I=1.59973e+07
 * 
 * %Parameters
 * lambda_mean [Å]                           Desired wavelength of neutrons coming off of the monochromator.
@@ -69,8 +70,8 @@ double vertical_mono_radius = 2.2, // "Radius of the cylinder the monochromator 
 double vertical_focus = 2, // Choice of collimator focus in mm. Choose either 2, 4, or 10.
 double horizontal_focus = 0.6, // Choice of collimator focus in mm. Choose either 0.6, 2, or 4.
 double outgoing_focus = 0.6, // Choice of collimator focus in mm. Choose either 0.6, 2, or 4.
-double measuring_angle = 50 // Angle between the outgoing collimator and sample. Rotates in the negative direction of revolution. I.E with the clock.
-)
+double measuring_angle = 50, // Angle between the outgoing collimator and sample. Rotates in the negative direction of revolution. I.E with the clock.
+int Debug=0)
 
 DECLARE 
 %{
@@ -2290,7 +2291,7 @@ AT (vertical_mono_radius,0,0) RELATIVE arm_mono
 ROTATED (0,0,-2.5334840861792602) RELATIVE arm_mono
 
 COMPONENT Monochromator_0 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2298,7 +2299,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_0
 GROUP monochromator_array
 
 COMPONENT Monochromator_1 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2306,7 +2307,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_1
 GROUP monochromator_array
 
 COMPONENT Monochromator_2 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2314,7 +2315,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_2
 GROUP monochromator_array
 
 COMPONENT Monochromator_3 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2322,7 +2323,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_3
 GROUP monochromator_array
 
 COMPONENT Monochromator_4 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2330,7 +2331,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_4
 GROUP monochromator_array
 
 COMPONENT Monochromator_5 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2338,7 +2339,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_5
 GROUP monochromator_array
 
 COMPONENT Monochromator_6 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2346,7 +2347,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_6
 GROUP monochromator_array
 
 COMPONENT Monochromator_7 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2354,7 +2355,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_7
 GROUP monochromator_array
 
 COMPONENT Monochromator_8 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2362,7 +2363,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_8
 GROUP monochromator_array
 
 COMPONENT Monochromator_9 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2370,7 +2371,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_9
 GROUP monochromator_array
 
 COMPONENT Monochromator_10 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2378,7 +2379,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_10
 GROUP monochromator_array
 
 COMPONENT Monochromator_11 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2386,7 +2387,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_11
 GROUP monochromator_array
 
 COMPONENT Monochromator_12 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2394,7 +2395,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_12
 GROUP monochromator_array
 
 COMPONENT Monochromator_13 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2402,7 +2403,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_13
 GROUP monochromator_array
 
 COMPONENT Monochromator_14 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2410,7 +2411,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_14
 GROUP monochromator_array
 
 COMPONENT Monochromator_15 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2418,7 +2419,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_15
 GROUP monochromator_array
 
 COMPONENT Monochromator_16 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2426,7 +2427,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_16
 GROUP monochromator_array
 
 COMPONENT Monochromator_17 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2434,7 +2435,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_17
 GROUP monochromator_array
 
 COMPONENT Monochromator_18 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2442,7 +2443,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_18
 GROUP monochromator_array
 
 COMPONENT Monochromator_19 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2450,7 +2451,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_19
 GROUP monochromator_array
 
 COMPONENT Monochromator_20 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2458,7 +2459,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_20
 GROUP monochromator_array
 
 COMPONENT Monochromator_21 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2466,7 +2467,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_21
 GROUP monochromator_array
 
 COMPONENT Monochromator_22 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2474,7 +2475,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_22
 GROUP monochromator_array
 
 COMPONENT Monochromator_23 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2482,7 +2483,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_23
 GROUP monochromator_array
 
 COMPONENT Monochromator_24 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2490,7 +2491,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_24
 GROUP monochromator_array
 
 COMPONENT Monochromator_25 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2498,7 +2499,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_25
 GROUP monochromator_array
 
 COMPONENT Monochromator_26 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2506,7 +2507,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_26
 GROUP monochromator_array
 
 COMPONENT Monochromator_27 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2514,7 +2515,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_27
 GROUP monochromator_array
 
 COMPONENT Monochromator_28 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2522,7 +2523,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_28
 GROUP monochromator_array
 
 COMPONENT Monochromator_29 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2530,7 +2531,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_29
 GROUP monochromator_array
 
 COMPONENT Monochromator_30 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2538,7 +2539,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_30
 GROUP monochromator_array
 
 COMPONENT Monochromator_31 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2546,7 +2547,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_31
 GROUP monochromator_array
 
 COMPONENT Monochromator_32 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2554,7 +2555,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_32
 GROUP monochromator_array
 
 COMPONENT Monochromator_33 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2562,7 +2563,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_33
 GROUP monochromator_array
 
 COMPONENT Monochromator_34 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2570,7 +2571,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_34
 GROUP monochromator_array
 
 COMPONENT Monochromator_35 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2578,7 +2579,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_35
 GROUP monochromator_array
 
 COMPONENT Monochromator_36 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2586,7 +2587,7 @@ AT (-2.2,0,0) RELATIVE arm_mono_36
 GROUP monochromator_array
 
 COMPONENT Monochromator_37 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
@@ -2594,12 +2595,13 @@ AT (-2.2,0,0) RELATIVE arm_mono_37
 GROUP monochromator_array
 
 COMPONENT Monochromator_38 = Monochromator_bent(
- zwidth = 0.178, yheight = 0.005,
+ mosaicity=0, zwidth = 0.178, yheight = 0.005,
  xthickness = 0.0005, radius_x = monochromator_horizontal_radius,
  lamella_slabs = 16, lamella_gap_size = 0.00025,
  plane_of_reflection = "Si400")
 AT (-2.2,0,0) RELATIVE arm_mono_38
 GROUP monochromator_array
+
 
 COMPONENT arm_takeoff = Arm()
 AT (0,0,0) RELATIVE arm_mono
