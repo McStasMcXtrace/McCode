@@ -39,7 +39,7 @@
 * Furthermore the sample environment is of course variable depending on the sample
 * in question.
 * 
-* %Example ILL_SALSA.instr lambda_mean=1.66795 Detector: Beam_entrance_monitor_psd_I=1.59973e+07
+* %Example: ILL_SALSA.instr lambda_mean=1.66795 Detector: Beam_entrance_monitor_psd_I=1.59973e+07
 * 
 * %Parameters
 * lambda_mean [Å]                           Desired wavelength of neutrons coming off of the monochromator.
@@ -54,7 +54,7 @@
 * horizontal_focus [mm]                     Choice of collimator focus in mm. Choose either 0.6, 2, or 4.
 * outgoing_focus [mm]                       Choice of collimator focus in mm. Choose either 0.6, 2, or 4.
 * measuring_angle [deg]                     Angle between the outgoing collimator and sample. Rotates in the negative direction of revolution. I.E with the clock.
-
+*
 * %End 
 ********************************************************************************/
 
