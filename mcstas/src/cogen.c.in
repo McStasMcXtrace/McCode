@@ -1001,6 +1001,17 @@ int cogen_comp_setpos(
   coutf("  instrument->counter_N[%i]  = instrument->counter_P[%i] = instrument->counter_P2[%i] = 0;",
         comp->index, comp->index, comp->index);
   coutf("  instrument->counter_AbsorbProp[%i]= 0;", comp->index);
+  coutf("  #ifdef USE_NEXUS");
+  coutf("  if(nxhandle) {");
+  coutf("    if ((!mcdotrace) && mcformat && strcasestr(mcformat, \"NeXus\")) {");
+  coutf("    MPI_MASTER(");
+  coutf("        mccomp_placement_nexus(nxhandle,\"%s\", _%s_var._position_absolute, _%s_var._rotation_absolute);", comp->name, comp->name, comp->name);
+  coutf("      );");
+  coutf("    }");
+  coutf("  } else {");
+  coutf("    // fprintf(stderr,\"NO NEXUS FILE\");");
+  coutf("  }");
+  coutf("  #endif");
   cout("  return(0);");
 
   coutf("} /* _%s_%s */", comp->name, "setpos");
@@ -2284,6 +2295,7 @@ cogen_header(struct instr_def *instr, char *output_name)
 
   /* Enable _POSIX_SOURCE consistently (todo: revisit the ifndef WIN32 protection) */
   coutf("#ifndef WIN32");
+  coutf("#  define _GNU_SOURCE");
   coutf("#  define _POSIX_C_SOURCE 200809L");
   coutf("#endif");
 

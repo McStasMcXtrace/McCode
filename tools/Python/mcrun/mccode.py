@@ -347,6 +347,8 @@ class McStas:
                         idfargs.append(arg)
 
                 Process(mccode_config.configuration['IDFGEN'] + " " + self.path).run(idfargs, pipe=pipe)
+                # Forward --IDF request to binary
+                args.append('--IDF')
 
         mpi = self.options.use_mpi
         if override_mpi or override_mpi is None and mpi:
