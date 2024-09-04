@@ -16,8 +16,8 @@
 *
 * %D
 *
-* This component has no physical size or extent, it simply asign polaristion
-* randomly to either spin-up or spin-down.
+* This component has no physical size or extent, it simply asigns the neutron
+* ray polarisation randomly to either spin-up or spin-down.
 *
 * %P
 * INPUT PARAMETERS:
