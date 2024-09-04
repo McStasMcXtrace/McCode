@@ -1,11 +1,11 @@
 /*******************************************************************************
 *
+* %I
 * Component: Transmission_V_polarisator
 *
 * Written by: Andreas Ostermann
 * Modified by Michael Schneider, SNAG, includes absorption by Fe in supermirror
-* Origin: McStas 1.8/<a href="http://www.ill.fr">ILL (France)</a>.
-*         (The main source code was taken from Gravity_guide (ver 1.6ill))
+* Origin: SNAG
 *
 *
 * Example: Transmission_V_polarisator(w1=0.050, h1=0.050,
@@ -16,31 +16,31 @@
 *                                     mleft=1.2, mright=1.2, mtop=1.2, mbottom=1.2,
 *                                     reflectUP="measured_up_q.dat",reflectDW="measured_dw_q.dat")
 *                                     
+* %D
+* Transmission V-polarisator including by Fe in the supermirror.
 *
 * %P
 * INPUT PARAMETERS:
 *
-* w1:         (m)     Width at the polarizer entry
-* h1:         (m)     Height at the polarizer entry
-* w2:         (m)     Width at the polarizer exit
-* h2:         (m)     Height at the polarizer exit
-* l:          (m)     length of polarizer
-* R0:         (1)     Low-angle reflectivity of the outer guide
-* Qc:         (AA-1)  Critical scattering vector of the outer guide
-* W:          (AA-1)  Width of supermirror cut-off of the outer guide
-* alpha:      (AA)    Slope of reflectivity of the outer guide
-* mleft:      (1)     m-value of material for left.   vert. mirror of the outer guide
-* mright:     (1)     m-value of material for right.  vert. mirror of the outer guide
-* mtop:       (1)     m-value of material for top.    horz. mirror of the outer guide
-* mbottom:    (1)     m-value of material for bottom. horz. mirror of the outer guide
-* waferD      (m)     Thickness of Si wafer
-* FeD:        (m)     Thickness of Fe in supermirror, Ti is neglected
-* Si_i        (barns) Scattering cross section per atom (barns)
-* Si_a        (barns) Absorption cross section per atom (barns) at 2200m/s
-* reflectUP   (str)   Reflectivity profile of the FeSi-wafer for spin-up neutrons; columns [q,R]
-* reflectDW   (str)   Reflectivity profile of the FeSi-wafer for spin-down neutrons; columns [q,R]
-* 
-* %D
+* w1:         [m]     Width at the polarizer entry
+* h1:         [m]     Height at the polarizer entry
+* w2:         [m]     Width at the polarizer exit
+* h2:         [m]     Height at the polarizer exit
+* l:          [m]     length of polarizer
+* R0:         [1]     Low-angle reflectivity of the outer guide
+* Qc:         [AA-1]  Critical scattering vector of the outer guide
+* W:          [AA-1]  Width of supermirror cut-off of the outer guide
+* alpha:      [AA]    Slope of reflectivity of the outer guide
+* mleft:      [1]     m-value of material for left.   vert. mirror of the outer guide
+* mright:     [1]     m-value of material for right.  vert. mirror of the outer guide
+* mtop:       [1]     m-value of material for top.    horz. mirror of the outer guide
+* mbottom:    [1]     m-value of material for bottom. horz. mirror of the outer guide
+* waferD:     [m]     Thickness of Si wafer
+* FeD:        [m]     Thickness of Fe in supermirror, Ti is neglected
+* Si_i:       [barns] Scattering cross section per atom (barns)
+* Si_a:       [barns] Absorption cross section per atom (barns) at 2200m/s
+* reflectUP   [str]   Reflectivity profile of the FeSi-wafer for spin-up neutrons; columns [q,R]
+* reflectDW   [str]   Reflectivity profile of the FeSi-wafer for spin-down neutrons; columns [q,R]
 * 
 *
 * %E
