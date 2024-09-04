@@ -1,4 +1,31 @@
-/* Set polarisation to random value. */
+/*****************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2006, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Spin_random
+*
+* %I
+* Written by: Michael Schneider (SNAG)
+* Date: 2024
+* Origin: SNAG
+*
+* Set a random polarisation
+*
+* %D
+*
+* This component has no physical size or extent, it simply asign polaristion
+* randomly to either spin-up or spin-down.
+*
+* %P
+* INPUT PARAMETERS:
+*
+* OUTPUT PARAMETERS:
+*
+* %E
+*******************************************************************************/
 DEFINE COMPONENT Spin_random
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS ()
