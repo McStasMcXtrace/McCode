@@ -1,5 +1,42 @@
-DEFINE INSTRUMENT  cavity_QU24003_DiffScattSpect_CSNS(  
-    Lam=7.0, dLam=6.0, 
+/******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Test_V_cavity_SNAG_double_side
+*
+* %I
+* Written by: Michael Schneider (SNAG)
+* Date: 2024
+* Origin: SNAG
+* %INSTRUMENT_SITE: Tests_polarization
+*
+* Test instrument for Transmission_V_polarisator, double layer reflectivity.
+*
+* %D
+* Test instrument for Transmission_V_polarisator, double layer reflectivity.
+*
+* %Example: Test_V_cavity_SNAG_single_side.instr Lam=7 
+*
+* %P
+* Lam:      [AA]  Central wavelength produced at source
+* dLam:     [AA]  Wavelength spread produced at source
+* l_guide:  [m]   Length of feeding guide
+* m_hori:   [1]   m-value of feeding guide, horizontal mirrors
+* m_vert:   [1]   m-value of feeding guide, vertical mirrors
+* m_pol_h:  [1]   m-value of guide body, horizontal (m of FeSi is defined by data files)
+* m_pol_v:  [1]   m-value of guide body, vertical (m of FeSi is defined by data files)
+* W:        [m]   Width of guide and cavity
+* H:        [m]   Height of guide and cavity
+* Length_C: [m]   Length of guide body
+* tap_ang:  [deg] Taper angle with respect to optical axis of V-cavity
+* distK:    [m]   Distance between V-cavities (applicable, if 2 cavities are installed)
+* d_Fe:     [m]   Thickness of Fe in one supermirror coating
+* d:        [m]   Distance from source to guide entrance
+*
+* %L * P. B&ouml;ni, W. M&uuml&nzer and A. Ostermann: <a href="">Physica B: Condensed Matter Volume 404, Issue 17, 1 September 2009, Pages 2620-2623</a>
+*
+* %E
+******************************************************************************/
+DEFINE INSTRUMENT  Test_V_cavity_SNAG_double_side(Lam=7.0, dLam=6.0, 
 			// Simulationen mit FeSi m = 5.0, 1.4 Angstroem
 			// Version from 28-Dec-2023	runs with McStas Version 2.7.1
     l_guide0=2,		// length of feeding guide (m)
@@ -92,7 +129,7 @@ COMPONENT a_POL = Arm()
 /* ******************************* V-cavity  *************************************/    
 
 /********************************* one side coated with FeSi m=5.0 ************************/
-
+/*
 COMPONENT  cavity  = Transmission_V_polarisator(
 			    w1=W, h1=H, w2=W, h2=H, l=Length_C,  
                                               waferD=0.0003, FeD= d_Fe,  
@@ -102,12 +139,12 @@ COMPONENT  cavity  = Transmission_V_polarisator(
                                               reflectUP="FeSi_m50_up.dat",reflectDW="FeSi_m50_down.dat")  
   AT (0,0,0.00001)      RELATIVE a_POL  
   ROTATED (0,0,0) RELATIVE a_POL  
-
+*/
 
 
 /********************************* both sides coated with FeSi m=5.0 ************************/
 /***** this approach does not take into account the multireflections within the wafer *******/
-/*
+
 
 COMPONENT  cavity  = Transmission_V_polarisator(
 			    w1=W, h1=H, w2=W, h2=H, l=Length_C,  
@@ -118,7 +155,7 @@ COMPONENT  cavity  = Transmission_V_polarisator(
                                               reflectUP="FeSi_m50_up_R2.dat",reflectDW="FeSi_m50_down_R2.dat")  
   AT (0,0,0.00001)      RELATIVE a_POL  
   ROTATED (0,0,0) RELATIVE a_POL  
-*/
+
 
 
 
