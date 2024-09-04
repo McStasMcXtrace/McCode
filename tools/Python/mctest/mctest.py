@@ -215,7 +215,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
 
 
     # compile, record time
-    global ncount, mpi, openacc, suffix
+    global ncount, mpi, openacc, suffix, nexus
     logging.info("")
     logging.info("Compiling instruments [seconds]...")
     for test in tests:
@@ -229,6 +229,8 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
                 log = LineLogger()
                 t1 = time.time()
                 cmd = mccode_config.configuration["MCRUN"]
+                if nexus:
+                    cmd = cmd + " --format=NeXus "
                 if version:
                     cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
                 if openacc:
@@ -275,6 +277,8 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
         # run the test, record time and runtime success/fail
         t1 = time.time()
         cmd = mccode_config.configuration["MCRUN"]
+        if nexus:
+            cmd = cmd + " --format=NeXus "
         if mpi is not None:
             if openacc is True:
                 if version:
@@ -592,6 +596,7 @@ ncount = None
 mpi = None
 openacc = None
 suffix = None
+nexus = None
 
 def main(args):
     # mutually excusive main branches
@@ -653,7 +658,7 @@ def main(args):
             quit(1)
     logging.debug("")
 
-    global ncount, mpi, skipnontest, openacc
+    global ncount, mpi, skipnontest, openacc, nexus
     if args.ncount:
         ncount = args.ncount[0]
     else:
@@ -670,7 +675,9 @@ def main(args):
     if args.openacc:
         openacc = True
         logging.info("openacc is enabled")
-
+    if args.nexus:
+        nexus = True
+        logging.info("NeXus output format by default is enabled")
     # decide and run main branch
     if version and configs or version and vinfo or configs and vinfo:
         print("WARNING: version, --configs and --versions are mutually exclusive, exiting")
@@ -702,6 +709,7 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', action='store_true', help='output a test/notest instrument status header before each test')
     parser.add_argument('--skipnontest', action='store_true', help='Skip compilation of instruments without a test')
     parser.add_argument('--suffix', nargs=1, help='Add suffix to test directory name, e.g. 3.x-dev_suffix')
+    parser.add_argument('--nexus', action='store_true', help='Compile for / use NeXus output format everywhere')
     args = parser.parse_args()
 
     try:
