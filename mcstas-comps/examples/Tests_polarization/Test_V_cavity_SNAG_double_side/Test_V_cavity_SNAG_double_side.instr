@@ -1,6 +1,4 @@
 /******************************************************************************
-*         McStas instrument definition URL=http://www.mcstas.org
-*
 * Instrument: Test_V_cavity_SNAG_double_side
 *
 * %I
@@ -32,13 +30,12 @@
 * d_Fe:     [m]   Thickness of Fe in one supermirror coating
 * d:        [m]   Distance from source to guide entrance
 *
-* %L * P. B&ouml;ni, W. M&uuml&nzer and A. Ostermann: <a href="">Physica B: Condensed Matter Volume 404, Issue 17, 1 September 2009, Pages 2620-2623</a>
+* %L 
+* P. B&ouml;ni, W. M&uuml&nzer and A. Ostermann: <a href="">Physica B: Condensed Matter Volume 404, Issue 17, 1 September 2009, Pages 2620-2623</a>
 *
 * %E
 ******************************************************************************/
-DEFINE INSTRUMENT  Test_V_cavity_SNAG_double_side(Lam=7.0, dLam=6.0, 
-			// Simulationen mit FeSi m = 5.0, 1.4 Angstroem
-			// Version from 28-Dec-2023	runs with McStas Version 2.7.1
+DEFINE INSTRUMENT  Test_V_cavity_double_double_side(Lam=7.0, dLam=6.0, 
     l_guide0=2,		// length of feeding guide (m)
     m_hori=1.0,		// m of feeding guide
     m_vert=3.0, 	// m of feeding guide
@@ -50,8 +47,8 @@ DEFINE INSTRUMENT  Test_V_cavity_SNAG_double_side(Lam=7.0, dLam=6.0,
     tap_ang=0.55, 	// taper angle with respect to optical axis of V-cavity (deg)
     distK=1.23864,	// distance between V-cavities (m) (applicable, if 2 cavities are installed)
     d_Fe=6.95e-6, 	// thickness of Fe in one supermirror coating (m)
-    d=2.0 		// distance source to guide entrance (m)
-)  
+    d=2.0)		// distance source to guide entrance (m)
+
 DECLARE  
 %{  
 

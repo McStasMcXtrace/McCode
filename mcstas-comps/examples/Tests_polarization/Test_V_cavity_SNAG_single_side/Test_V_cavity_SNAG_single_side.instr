@@ -30,7 +30,8 @@
 * d_Fe:     [m]   Thickness of Fe in one supermirror coating
 * d:        [m]   Distance from source to guide entrance
 *
-* %L * P. B&ouml;ni, W. M&uuml&nzer and A. Ostermann: <a href="">Physica B: Condensed Matter Volume 404, Issue 17, 1 September 2009, Pages 2620-2623</a>
+* %L 
+* P. B&ouml;ni, W. M&uuml&nzer and A. Ostermann: <a href="">Physica B: Condensed Matter Volume 404, Issue 17, 1 September 2009, Pages 2620-2623</a>
 *
 * %E
 ******************************************************************************/
