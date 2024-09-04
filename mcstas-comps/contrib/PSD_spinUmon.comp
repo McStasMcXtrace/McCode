@@ -1,0 +1,69 @@
+DEFINE COMPONENT PSD_spinUmon
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (int nx=90, int ny=90, string filename, xmin, xmax, ymin, ymax)
+
+DECLARE
+  %{
+    DArray2d PSD_N;
+    DArray2d PSD_p;
+    DArray2d PSD_p2;
+  %}
+INITIALIZE
+  %{
+  PSD_N = create_darr2d(nx, ny);
+  PSD_p = create_darr2d(nx, ny);
+  PSD_p2 = create_darr2d(nx, ny);
+  %}
+TRACE
+  %{
+    int i,j;
+
+    if (sy < 0)
+     {SCATTER;}
+    else
+    {
+     PROP_Z0;
+     if (x>xmin && x<xmax && y>ymin && y<ymax)
+     {
+       i = floor((x - xmin)*nx/(xmax - xmin));
+       j = floor((y - ymin)*ny/(ymax - ymin));
+       double p2 = p*p;
+       #pragma acc atomic
+       PSD_N[i][j]  = PSD_N[i][j] +1;
+       #pragma acc atomic
+       PSD_p[i][j]  = PSD_p[i][j] + p;
+       #pragma acc atomic
+       PSD_p2[i][j] = PSD_p2[i][j] + p2;
+       SCATTER;
+     }
+    }
+  %}
+SAVE
+  %{
+    DETECTOR_OUT_2D(
+        "PSD monitor",
+        "X position [cm]",
+        "Y position [cm]",
+        xmin*100.0, xmax*100.0, ymin*100.0, ymax*100.0,
+        nx, ny,
+        &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
+        filename);
+  %}
+
+FINALLY %{
+  destroy_darr2d(PSD_N);
+  destroy_darr2d(PSD_p);
+  destroy_darr2d(PSD_p2);
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+END

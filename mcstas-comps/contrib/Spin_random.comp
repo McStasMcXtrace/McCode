@@ -1,0 +1,24 @@
+/* Set polarisation to random value. */
+DEFINE COMPONENT Spin_random
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS ()
+/* STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p) */
+/* POLARISATION PARAMETERS (sx,sy,sz) */
+TRACE
+%{
+    int S_check;
+    sx = 0.0;
+    sz = 0.0;
+    do
+     {
+      sy = randpm1();
+      S_check = 0;
+      if (sy < 0)
+       {sy = -1.0; S_check=1;}
+      if (sy  > 0)
+       {sy =  1.0; S_check=1;}
+     }while (S_check == 0); 
+%}
+
+END
+
