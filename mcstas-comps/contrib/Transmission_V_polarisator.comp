@@ -3,11 +3,11 @@
 * %I
 * Component: Transmission_V_polarisator
 *
-* Written by: Andreas Ostermann
-* Modified by Michael Schneider, SNAG, includes absorption by Fe in supermirror
+* Written by: Michael Schneider (from Andreas Ostermann comp)
 * Origin: SNAG
 *
-*
+* %D
+* Transmission V-polarisator including absorption by Fe in the supermirror.
 * Example: Transmission_V_polarisator(w1=0.050, h1=0.050,
 *                                     w2=0.050, h2=0.050, l=2.700,
 *                                     waferD=0.0003, FeD=2.16e-06,
@@ -15,9 +15,6 @@
 *                                     R0=0.99, Qc=0.02174, alpha=4.25, W=0.001,
 *                                     mleft=1.2, mright=1.2, mtop=1.2, mbottom=1.2,
 *                                     reflectUP="measured_up_q.dat",reflectDW="measured_dw_q.dat")
-*                                     
-* %D
-* Transmission V-polarisator including by Fe in the supermirror.
 *
 * %P
 * INPUT PARAMETERS:
@@ -41,7 +38,8 @@
 * Si_a:       [barns] Absorption cross section per atom (barns) at 2200m/s
 * reflectUP   [str]   Reflectivity profile of the FeSi-wafer for spin-up neutrons; columns [q,R]
 * reflectDW   [str]   Reflectivity profile of the FeSi-wafer for spin-down neutrons; columns [q,R]
-* 
+*
+* %L
 *
 * %E
 *******************************************************************************/
