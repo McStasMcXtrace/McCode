@@ -3,8 +3,10 @@
 * %I
 * Component: Transmission_V_polarisator
 *
-* Written by: Michael Schneider (from Andreas Ostermann comp)
+* Written by: Michael Schneider (adapted from Andreas Ostermann comp)
 * Origin: SNAG
+*
+* Transmission V-polarisator including absorption by Fe in the supermirror. Experimentally benchmarked
 *
 * %D
 * Transmission V-polarisator including absorption by Fe in the supermirror.
