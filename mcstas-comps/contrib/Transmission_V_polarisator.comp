@@ -11,6 +11,7 @@
 *
 * %D
 * Transmission V-polarisator including absorption by Fe in the supermirror.
+*
 * Example: Transmission_V_polarisator(w1=0.050, h1=0.050,
 *                                     w2=0.050, h2=0.050, l=2.700,
 *                                     waferD=0.0003, FeD=2.16e-06,
