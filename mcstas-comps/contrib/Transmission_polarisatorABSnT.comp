@@ -4,6 +4,7 @@
 * Component: Transmission_polarisatorABSnT
 *
 * Written by: Andreas Ostermann
+* Date: 2004
 * Origin: TUM
 *
 * Transmission V-polarisator including absorption by Fe in the supermirror.
@@ -21,8 +22,6 @@
 *                                        mleft=1.2, mright=1.2, mtop=1.2, mbottom=1.2,
 *                                        R0_up=0.99, Qc_up=0.014, alpha_up=2.25, W_up=0.0025, mup=1.0,
 *                                        R0_down=0.99, Qc_down=0.02174, alpha_down=3.8, W_down=0.00235, mdown=2.5)
-* 
-* %D
 * 
 * %P
 * INPUT PARAMETERS:

@@ -4,9 +4,10 @@
 * Component: Transmission_V_polarisator
 *
 * Written by: Michael Schneider (adapted from Andreas Ostermann comp)
+* Date: 2024
 * Origin: SNAG
 *
-* Transmission V-polarisator including absorption by Fe in the supermirror. Experimentally benchmarked
+* Transmission V-polarisator including absorption by Fe in the supermirror. Experimentally benchmarked.
 *
 * %D
 * Transmission V-polarisator including absorption by Fe in the supermirror.
@@ -38,10 +39,11 @@
 * FeD:        [m]     Thickness of Fe in supermirror, Ti is neglected
 * Si_i:       [barns] Scattering cross section per atom (barns)
 * Si_a:       [barns] Absorption cross section per atom (barns) at 2200m/s
-* reflectUP   [str]   Reflectivity profile of the FeSi-wafer for spin-up neutrons; columns [q,R]
-* reflectDW   [str]   Reflectivity profile of the FeSi-wafer for spin-down neutrons; columns [q,R]
+* reflectUP:  [str]   Reflectivity profile of the FeSi-wafer for spin-up neutrons; columns [q,R]
+* reflectDW:  [str]   Reflectivity profile of the FeSi-wafer for spin-down neutrons; columns [q,R]
 *
 * %L
+* P. B&ouml;ni, W. M&uuml&nzer and A. Ostermann: <a href="">Physica B: Condensed Matter Volume 404, Issue 17, 1 September 2009, Pages 2620-2623</a>
 *
 * %E
 *******************************************************************************/
