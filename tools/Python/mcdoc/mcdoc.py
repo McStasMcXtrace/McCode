@@ -1045,7 +1045,7 @@ def main(args):
             print("no matches found")
             quit()
 
-        masterdoc = OverviewDocWriter(comp_infos, instr_infos, comp_infos_local, instr_infos_local, usedir)
+        masterdoc = OverviewDocWriter(comp_infos, instr_infos, comp_infos_local, instr_infos_local, usedir, mccode_config.directories['docdir'])
         text = masterdoc.create()
 
         mcdoc_html_filepath = os.path.join('.', mccode_config.get_mccode_prefix()+'doc.html')
