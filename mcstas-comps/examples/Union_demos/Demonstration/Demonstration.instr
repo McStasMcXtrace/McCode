@@ -23,7 +23,7 @@
 *  two samples.
 *
 * %Example: stick_displacement=0 Detector: m4pi_I=21849.9
-* %Example: stick_displacement=0 Detector: M4pi_two_or_more_samples_I=0.0820905
+* %Example: stick_displacement=0 Detector: Banana_monitor_I=101.8
 *
 * %Parameters
 * stick_displacement: [m] height displacement of sample stick
@@ -419,7 +419,7 @@ EXTEND
 
 // Using mcdisplay and -inspect m4pi_two_or_more_samples one can show only
 //  trajectories where the ray scatters from two or more of the samples
-COMPONENT M4pi_two_or_more_samples = PSD_monitor_4PI(
+COMPONENT m4pi_two_or_more_samples = PSD_monitor_4PI(
   radius=1, nx=180, ny=180,
   filename="Events2.dat", restore_neutron=1,
   nowritefile=transmission_picture)
