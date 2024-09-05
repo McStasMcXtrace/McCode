@@ -615,6 +615,7 @@ def main(args):
     mccoderoot = args.mccoderoot    # use non-default mccode system install location
     limit = args.limit              # only test the first [limit] instruments (useful for debugging purposes)
     instrfilter = args.instr        # test only matching instrs
+    suffix=""
 
     # set modifications first
     if verbose:
@@ -663,21 +664,26 @@ def main(args):
         ncount = args.ncount[0]
     else:
         ncount = "1e6"
+
+    if instrfilter:
+        suffix = '_' + instrfilter
     if args.suffix:
         suffix = '_' + args.suffix[0]
-    else:
-        suffix = ""
+
     suffix=suffix + "_" + platform.system()
     logging.info("ncount is: %s" % ncount)
     if args.mpi:
         mpi = args.mpi[0]
         logging.info("mpi count is: %s" % mpi)
+        suffix = '_mpi=' + str(mpi) + suffix
     if args.openacc:
         openacc = True
         logging.info("openacc is enabled")
+        suffix = '_openacc' + suffix
     if args.nexus:
         nexus = True
-        logging.info("NeXus output format by default is enabled")
+        suffix = '_NeXus' + suffix
+        logging.info("NeXus compilation / output format is enabled")
     # decide and run main branch
     if version and configs or version and vinfo or configs and vinfo:
         print("WARNING: version, --configs and --versions are mutually exclusive, exiting")
