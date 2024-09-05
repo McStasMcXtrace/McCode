@@ -78,7 +78,7 @@ INITIALIZE
 %}
 
 TRACE
-  %{
+%{
     int i,j;
 
     if (sy < 0)
@@ -100,13 +100,13 @@ TRACE
     
        SCATTER;
      }
-  if (restore_neutron) {
-    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
-    }
-  %}
+     if (restore_neutron) {
+       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+     }
+   }
+%}
 SAVE
 %{
-    if (!nowritefile) {
     DETECTOR_OUT_2D(
         "PSD monitor",
         "X position [cm]",
@@ -115,8 +115,7 @@ SAVE
         nx, ny,
         &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
         filename);
-    }
-  %}
+%}
 
 FINALLY %{
   destroy_darr2d(PSD_N);
@@ -126,7 +125,7 @@ FINALLY %{
 
 MCDISPLAY
 %{
-
+  magnify("xy");
   multiline(5, (double)xmin, (double)ymin, 0.0,
                (double)xmax, (double)ymin, 0.0,
                (double)xmax, (double)ymax, 0.0,
