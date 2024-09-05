@@ -39,21 +39,21 @@
 * Furthermore the sample environment is of course variable depending on the sample
 * in question.
 * 
-* %Example: ILL_SALSA.instr lambda_mean=1.66795 Detector: Beam_entrance_monitor_psd_I=1.59973e+07
+* %Example: ILL_SALSA.instr lambda_mean=1.66795 Detector: Beam_entrance_monitor_psd_I=4e+07
 * 
 * %Parameters
-* lambda_mean [Å]                           Desired wavelength of neutrons coming off of the monochromator.
-* lambda_spread [Å]                         Range over which the neutrons are produced. lambda_mean +- lambda_spread.
-* m [2]                                     m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
-* mip [2]                                   m-value of in-pile guide coating
-* monochromator_horizontal_radius [m]       Radius of the horizontal cylinder the monochromator is bent on.
-* takeoff_angle [deg],                      Takeoff angle of the instrument
-* mono_rotation [deg]                       Rotation of monochromator in the horizontal plane. Omega angle in SALSA
-* vertical_mono_radius [m]                  Radius of the cylinder the monochromator is bent on vertically
-* vertical_focus [mm]                       Choice of collimator focus in mm. Choose either 2, 4, or 10.
-* horizontal_focus [mm]                     Choice of collimator focus in mm. Choose either 0.6, 2, or 4.
-* outgoing_focus [mm]                       Choice of collimator focus in mm. Choose either 0.6, 2, or 4.
-* measuring_angle [deg]                     Angle between the outgoing collimator and sample. Rotates in the negative direction of revolution. I.E with the clock.
+* lambda_mean:                     [Å]   Desired wavelength of neutrons coming off of the monochromator.
+* lambda_spread:                   [Å]   Range over which the neutrons are produced. lambda_mean +- lambda_spread.
+* m:                               [1]   m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* mip:                             [1]   m-value of in-pile guide coating
+* monochromator_horizontal_radius: [m]   Radius of the horizontal cylinder the monochromator is bent on.
+* takeoff_angle:                   [deg] Takeoff angle of the instrument
+* mono_rotation:                   [deg] Rotation of monochromator in the horizontal plane. Omega angle in SALSA
+* vertical_mono_radius:            [m]   Radius of the cylinder the monochromator is bent on vertically
+* vertical_focus:                  [mm]  Choice of collimator focus in mm. Choose either 2, 4, or 10.
+* horizontal_focus:                [mm]  Choice of collimator focus in mm. Choose either 0.6, 2, or 4.
+* outgoing_focus:                  [mm]  Choice of collimator focus in mm. Choose either 0.6, 2, or 4.
+* measuring_angle:                 [deg] Angle between the outgoing collimator and sample. Rotates in the negative direction of revolution. I.E with the clock.
 *
 * %End 
 ********************************************************************************/

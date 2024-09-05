@@ -157,6 +157,9 @@ def mcsimdetectors(directory_name: str):
     if not directory.exists() and directory.is_dir():
         raise RuntimeError(f"{directory_name} is not a directory")
     filepath = directory.joinpath('mccode.sim')
+    hdfpath = directory.joinpath('mccode.h5')
+    if not filepath.exists() and hdfpath.exists():
+        return
     if not filepath.exists():
         raise RuntimeError(f'The simulation file {filepath} does not exist')
     with filepath.open('r') as file:
@@ -257,21 +260,22 @@ class Scanner:
                 self.mcstas.run(pipe=False, extra_opts={'dir': current_dir})
                 LOG.info("Finish running step, get detectors")
                 detectors = mcsimdetectors(current_dir)
-                LOG.info("Got detectors")
-                if i == 0:
-                    LOG.info("Write headers")
-                    names = [det.name for det in detectors]
-                    outfile.write(build_header(self.mcstas.options, self.intervals.keys(), self.intervals, names))
-                    # Opening a file inside of this loop seems like a bad idea ... oh well
-                    with open(self.simfile, 'w') as simfile:
-                        simfile.write(build_mccodesim_header(self.mcstas.options, self.intervals, names,
-                                                             version=self.mcstas.version))
-                    LOG.info("Wrote headers")
-                LOG.info(f"Write step detectors line into {self.outfile}")
-                values = ['%s %s' % (d.intensity, d.error) for d in detectors]
-                line = '%s %s\n' % (' '.join(map(str, par_values)), ' '.join(values))
-                outfile.write(line)
-                outfile.flush()
+                if detectors is not None:
+                    LOG.info("Got detectors")
+                    if i == 0:
+                        LOG.info("Write headers")
+                        names = [det.name for det in detectors]
+                        outfile.write(build_header(self.mcstas.options, self.intervals.keys(), self.intervals, names))
+                        # Opening a file inside of this loop seems like a bad idea ... oh well
+                        with open(self.simfile, 'w') as simfile:
+                            simfile.write(build_mccodesim_header(self.mcstas.options, self.intervals, names,
+                                                                version=self.mcstas.version))
+                        LOG.info("Wrote headers")
+                    LOG.info(f"Write step detectors line into {self.outfile}")
+                    values = ['%s %s' % (d.intensity, d.error) for d in detectors]
+                    line = '%s %s\n' % (' '.join(map(str, par_values)), ' '.join(values))
+                    outfile.write(line)
+                    outfile.flush()
 
 
 class Optimizer:
