@@ -70,7 +70,8 @@ SETTING PARAMETERS (zwidth = 0.2,
 					temperature = 300,
 					int verbose = 0)
 OUTPUT PARAMETERS ()
-// Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) 
+NOACC
+// The component is currently "NOACC" only, there are thread race-conditions on GPU
 
 SHARE
 %{
