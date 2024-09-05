@@ -675,7 +675,7 @@ def main(args):
     if args.mpi:
         mpi = args.mpi[0]
         logging.info("mpi count is: %s" % mpi)
-        suffix = '_mpi=' + str(mpi) + suffix
+        suffix = '_mpi_x_' + str(mpi) + suffix
     if args.openacc:
         openacc = True
         logging.info("openacc is enabled")
