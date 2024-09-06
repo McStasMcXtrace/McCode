@@ -1,4 +1,4 @@
-Package: mcxtrace-suite-perl
+Package: mcxtrace-suite-perl-legacy
 Version: @VERSION@
 Section: main
 Priority: optional
