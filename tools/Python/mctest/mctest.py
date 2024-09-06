@@ -237,10 +237,8 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
                     cmd = cmd + " --openacc "
                 if mpi:
                     cmd = cmd + " --mpi=1 "
-                if not platform.system() == "Windows":
-                    cmd = cmd + " --verbose -c -n0 %s &> compile_stdout.txt" % test.localfile
-                else:
-                    cmd = cmd + " --verbose -c -n0 %s > compile_stdout.txt 2>&1" % test.localfile
+
+                cmd = cmd + " --verbose -c -n0 %s > compile_stdout.txt 2>&1" % test.instrname
                 utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
                 t2 = time.time()
                 test.compiled = os.path.exists(binfile)
