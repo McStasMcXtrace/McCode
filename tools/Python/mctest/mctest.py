@@ -653,6 +653,7 @@ def main(args):
         ncount = args.ncount[0]
     else:
         ncount = "1e6"
+    suffix = '_' + ncount
 
     if instrfilter:
         suffix = '_' + instrfilter
