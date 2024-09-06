@@ -1,4 +1,4 @@
-Package: mcstas-suite-python
+Package: mcstas-suite-python-legacy
 Version: @VERSION@
 Section: main
 Priority: optional
