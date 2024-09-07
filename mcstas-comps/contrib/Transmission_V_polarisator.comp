@@ -1,92 +1,81 @@
 /*******************************************************************************
 *
 * %I
-* Component: Transmission_polarisatorABSnT
+* Component: Transmission_V_polarisator
 *
-* Written by: Andreas Ostermann
-* Date: 2004
+* Written by: Andreas Ostermann (additions from Michael Schneider, SNAG)
+* Date: 2024
 * Origin: TUM
 *
-* Transmission V-polarisator including absorption by Fe in the supermirror.
+* Transmission V-polarisator including absorption by Fe in the supermirror. Experimentally benchmarked.
 *
 * %D
 * Transmission V-polarisator including absorption by Fe in the supermirror.
 *
-* Example: Gravity_guide(w1=0.1, h1=0.1, w2=0.1, h2=0.1, l=12, 
-*           R0=0.99, Qc=0.021, alpha=6.07, m=1.0, W=0.003, k=1, d=0.0005)
-* Example: Transmission_polarisatorABSnT(w1=0.050, h1=0.050,
-*                                        w2=0.050, h2=0.050, l=2.700,
-*                                        waferD=0.0003, FeD=2.16e-06,
-*                                        Si_i=0.2, Si_a=0.215,
-*                                        R0=0.99, Qc=0.02174, alpha=4.25, W=0.001,
-*                                        mleft=1.2, mright=1.2, mtop=1.2, mbottom=1.2,
-*                                        R0_up=0.99, Qc_up=0.014, alpha_up=2.25, W_up=0.0025, mup=1.0,
-*                                        R0_down=0.99, Qc_down=0.02174, alpha_down=3.8, W_down=0.00235, mdown=2.5)
-* 
+* Example: Transmission_V_polarisator(w1=0.050, h1=0.050,
+*                                     w2=0.050, h2=0.050, l=2.700,
+*                                     waferD=0.0003, FeD=2.16e-06,
+*                                     Si_i=0.2, Si_a=0.215,
+*                                     R0=0.99, Qc=0.02174, alpha=4.25, W=0.001,
+*                                     mleft=1.2, mright=1.2, mtop=1.2, mbottom=1.2,
+*                                     reflectUP="measured_up_q.dat",reflectDW="measured_dw_q.dat")
+*
 * %P
 * INPUT PARAMETERS:
 *
-* w1: [m]           Width at the polarizer entry
-* h1: [m]           Height at the polarizer entry
-* w2: [m]           Width at the polarizer exit
-* h2: [m]           Height at the polarizer exit
-* l: [m]            length of polarizer
-* R0: [1]           Low-angle reflectivity of the outer guide
-* Qc: [AA-1]        Critical scattering vector of the outer guide
-* W: [AA-1]         Width of supermirror cut-off of the outer guide
-* alpha: [AA]       Slope of reflectivity of the outer guide
-* mleft: [1]        m-value of material for left.   vert. mirror of the outer guide
-* mright: [1]       m-value of material for right.  vert. mirror of the outer guide
-* mtop: [1]         m-value of material for top.    horz. mirror of the outer guide
-* mbottom: [1]      m-value of material for bottom. horz. mirror of the outer guide
-* waferD: [m]       Thickness of Si wafer
-* FeD: [m]          Thickness of Fe wafer
-* Si_i: [barns]     Scattering cross section per atom (barns)
-* Si_a: [barns]     Absorption cross section per atom (barns) at 2200m/s
-* R0_up: [1]        Low-angle reflectivity of the Fe/Si-wafer for spin up neutrons
-* Qc_up: [AA-1]     Critical scattering vector of the Fe/Si-wafer for spin up neutrons
-* W_up: [AA-1]      Width of supermirror cut-off of the Fe/Si-wafer for spin up neutrons
-* alpha_up: [AA]    Slope of reflectivity of the Fe/Si-wafer for spin up neutrons
-* mup: [1]          m-value of the Fe/Si-wafer for spin up neutrons
-* R0_down: [1]      Low-angle reflectivity of the Fe/Si-wafer for spin down neutrons
-* Qc_down: [AA-1]   Critical scattering vector of the Fe/Si-wafer for spin down neutrons
-* W_down: [AA-1]    Width of supermirror cut-off of the Fe/Si-wafer for spin down neutrons
-* alpha_down: [AA]  Slope of reflectivity of the Fe/Si-wafer for spin down neutrons
-* mdown: [1]        m-value of the Fe/Si-wafer for spin down neutrons
-* 
+* w1:         [m]     Width at the polarizer entry
+* h1:         [m]     Height at the polarizer entry
+* w2:         [m]     Width at the polarizer exit
+* h2:         [m]     Height at the polarizer exit
+* l:          [m]     length of polarizer
+* R0:         [1]     Low-angle reflectivity of the outer guide
+* Qc:         [AA-1]  Critical scattering vector of the outer guide
+* W:          [AA-1]  Width of supermirror cut-off of the outer guide
+* alpha:      [AA]    Slope of reflectivity of the outer guide
+* mleft:      [1]     m-value of material for left.   vert. mirror of the outer guide
+* mright:     [1]     m-value of material for right.  vert. mirror of the outer guide
+* mtop:       [1]     m-value of material for top.    horz. mirror of the outer guide
+* mbottom:    [1]     m-value of material for bottom. horz. mirror of the outer guide
+* waferD:     [m]     Thickness of Si wafer
+* FeD:        [m]     Thickness of Fe in supermirror, Ti is neglected
+* Si_i:       [barns] Scattering cross section per atom (barns)
+* Si_a:       [barns] Absorption cross section per atom (barns) at 2200m/s
+* reflectUP:  [str]   Reflectivity profile of the FeSi-wafer for spin-up neutrons; columns [q,R]
+* reflectDW:  [str]   Reflectivity profile of the FeSi-wafer for spin-down neutrons; columns [q,R]
+*
+* %L
+* P. B&ouml;ni, W. M&uuml&nzer and A. Ostermann: <a href="https://doi.org/10.1016/j.physb.2009.06.03">Physica B: Condensed Matter Volume 404, Issue 17, 1 September 2009, Pages 2620-2623</a>
+*
 * %E
 *******************************************************************************/
 
-DEFINE COMPONENT Transmission_polarisatorABSnT
+DEFINE COMPONENT Transmission_V_polarisator
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (w1, h1, w2, h2, l, waferD, Si_i, Si_a, FeD,
-R0=0.99, Qc=0.02174, alpha=4.25, W=0.001,
-R0_up=0.99, Qc_up=0.0109, alpha_up=4.25, W_up=0.0025,
-R0_down=0.99, Qc_down=0.02174, alpha_down=6.25, W_down=0.001,
-mleft=-1, mright=-1, mtop=-1, mbottom=-1, mup=-1, mdown=-1)
-OUTPUT PARAMETERS ()
-
+SETTING PARAMETERS (string reflectUP=0, string reflectDW=0,
+		    w1, h1, w2, h2, l, waferD, Si_i, Si_a, FeD,
+                    R0=0.99, Qc=0.02174, alpha=4.25, W=0.001,
+                    mleft=-1, mright=-1, mtop=-1, mbottom=-1)
 SHARE
 %{
 
 
-typedef struct Polarizer_guide_Vars
-{
-double nx[8], ny[8], nz[8];
-double wx[8], wy[8], wz[8];
-double A[8], norm_n2[8], norm_n[8];
-long   N_reflection[9];
-double M[8];
-double w1c;
-double w2c;
-double n_dot_v[8];
-char   compcurname[256];
-} Polarizer_guide_Vars_type;
+  typedef struct Polarizer_guide_Vars
+  {
+    double nx[8], ny[8], nz[8];
+    double wx[8], wy[8], wz[8];
+    double A[8], norm_n2[8], norm_n[8];
+    long   N_reflection[9];
+    double M[8];
+    double w1c;
+    double w2c;
+    double n_dot_v[8];
+    char   compcurname[256];
+  } Polarizer_guide_Vars_type;
 
-void Polarizer_guide_Init(Polarizer_guide_Vars_type *aVars,
-MCNUM a_w1, MCNUM a_h1, MCNUM a_w2, MCNUM a_h2, MCNUM a_l,
-MCNUM a_R0, MCNUM a_Qc, MCNUM a_alpha, MCNUM a_W,
-MCNUM a_mleft, MCNUM a_mright, MCNUM a_mtop, MCNUM a_mbottom, MCNUM a_mup, MCNUM a_mdown)
+  void Polarizer_guide_Init(Polarizer_guide_Vars_type *aVars, 
+    MCNUM a_w1, MCNUM a_h1, MCNUM a_w2, MCNUM a_h2, MCNUM a_l, 
+    MCNUM a_R0, MCNUM a_Qc, MCNUM a_alpha, MCNUM a_W,
+    MCNUM a_mleft, MCNUM a_mright, MCNUM a_mtop, MCNUM a_mbottom)
   {
     int i;
 
@@ -100,8 +89,6 @@ MCNUM a_mleft, MCNUM a_mright, MCNUM a_mtop, MCNUM a_mbottom, MCNUM a_mup, MCNUM
     if (a_mright  >= 0) aVars->M[2] =a_mright ;
     if (a_mtop    >= 0) aVars->M[3] =a_mtop   ;
     if (a_mbottom >= 0) aVars->M[4] =a_mbottom;
-    if (a_mup     >= 0) aVars->M[6] =a_mup    ;
-    if (a_mdown   >= 0) aVars->M[7] =a_mdown  ;
 
 
     aVars->nx[1] =  a_l; aVars->ny[1] =  0;   aVars->nz[1] = -0.5*(aVars->w2c-aVars->w1c);  /* 1:+X left       */
@@ -149,7 +136,7 @@ MCNUM a_mleft, MCNUM a_mright, MCNUM a_mtop, MCNUM a_mbottom, MCNUM a_mup, MCNUM
     /* 3=+Y side: n=(0, l, -0.5*(h2-h1)) ; W = (0, +h1/2, 0) (up) */
 
     B = aVars->ny[3]*cvy + aVars->nz[3]*cvz; C = aVars->ny[3]*(cy-aVars->wy[3]) + aVars->nz[3]*cz;   /* aVars->nx=aVars->wz=0 */
-    ret = solve_2nd_order(dt0, NULL, aVars->A[3], B, C);
+    ret = solve_2nd_order(&*dt0, NULL, aVars->A[3], B, C);
     if (ret && *dt0>10e-10 && *dt0<*dt)
     { *dt = *dt0; side=3; aVars->n_dot_v[3] = B; }
     
@@ -157,7 +144,7 @@ MCNUM a_mleft, MCNUM a_mright, MCNUM a_mtop, MCNUM a_mbottom, MCNUM a_mup, MCNUM
     /* 4=-Y side: n=(0, l, +0.5*(h2-h1)) ; W = (0, -h1/2, 0) (down) */
 
     B = aVars->ny[4]*cvy + aVars->nz[4]*cvz; C = aVars->ny[4]*(cy-aVars->wy[4]) + aVars->nz[4]*cz; /* aVars->nx=aVars->wz=0 */
-    ret = solve_2nd_order(dt0, NULL, aVars->A[4], B, C);
+     ret = solve_2nd_order(&*dt0, NULL, aVars->A[4], B, C);
     if (ret && *dt0>10e-10 && *dt0<*dt)
     { *dt = *dt0; side=4; aVars->n_dot_v[4] = B; }
     
@@ -165,7 +152,7 @@ MCNUM a_mleft, MCNUM a_mright, MCNUM a_mtop, MCNUM a_mbottom, MCNUM a_mup, MCNUM
     /* 1=+X side: n=(l, 0, -0.5*(w2-w1)) ; W = (+w1/2, 0, 0) (left)*/ 
 
     B = aVars->nx[1]*cvx + aVars->nz[1]*cvz; C = aVars->nx[1]*(cx-aVars->wx[1]) + aVars->nz[1]*cz; /* aVars->ny=aVars->wz=0 */
-    ret = solve_2nd_order(dt0, NULL, aVars->A[1], B, C);
+     ret = solve_2nd_order(&*dt0, NULL, aVars->A[1], B, C);
     if (ret && *dt0>10e-10 && *dt0<*dt)
     { *dt = *dt0; side=1; aVars->n_dot_v[1] = B; }
     
@@ -173,7 +160,7 @@ MCNUM a_mleft, MCNUM a_mright, MCNUM a_mtop, MCNUM a_mbottom, MCNUM a_mup, MCNUM
     /* 2=-X side: n=(l, 0, +0.5*(w2-w1)) ; W = (-w1/2, 0, 0) (right) */
 
     B = aVars->nx[2]*cvx + aVars->nz[2]*cvz; C = aVars->nx[2]*(cx-aVars->wx[2]) + aVars->nz[2]*cz; /* aVars->ny=aVars->wz=0 */
-    ret = solve_2nd_order(dt0, NULL, aVars->A[2], B, C);
+     ret = solve_2nd_order(&*dt0, NULL, aVars->A[2], B, C);
     if (ret && *dt0>10e-10 && *dt0<*dt)
     { *dt = *dt0; side=2; aVars->n_dot_v[2] = B; }
 
@@ -181,7 +168,7 @@ MCNUM a_mleft, MCNUM a_mright, MCNUM a_mtop, MCNUM a_mbottom, MCNUM a_mup, MCNUM
     /* 6=+X side: n=(l, 0, -0.5*w2) ; W = (0, 0, 0) (left FeSi waver)   */ 
 
     B = aVars->nx[6]*cvx + aVars->nz[6]*cvz; C = aVars->nx[6]*(cx-aVars->wx[6]) + aVars->nz[6]*cz;
-    ret = solve_2nd_order(dt0, NULL, aVars->A[6], B, C);
+     ret = solve_2nd_order(&*dt0, NULL, aVars->A[6], B, C);
     if (ret && *dt0>10e-10 && *dt0<*dt)
     { *dt = *dt0; side=6; aVars->n_dot_v[6] = B; }
 
@@ -189,14 +176,14 @@ MCNUM a_mleft, MCNUM a_mright, MCNUM a_mtop, MCNUM a_mbottom, MCNUM a_mup, MCNUM
     /* 7=-X side: n=(-l, 0, -0.5*w2) ; W = (0, 0, 0) (right FeSi waver) */
 
     B = aVars->nx[7]*cvx + aVars->nz[7]*cvz; C = aVars->nx[7]*(cx-aVars->wx[7]) + aVars->nz[7]*cz; /* aVars->ny=aVars->wz=0 */
-    ret = solve_2nd_order(dt0, NULL, aVars->A[7], B, C);
+     ret = solve_2nd_order(&*dt0, NULL, aVars->A[7], B, C);
     if (ret && *dt0>10e-10 && *dt0<*dt)
     { *dt = *dt0; side=7; aVars->n_dot_v[7] = B; }
 
     
     return (side);
   }
-
+%include "read_table-lib"
 %}
 
 DECLARE 
@@ -218,6 +205,8 @@ DECLARE
   double Fe_cross_tot;
   double lwafer_Fe;
 
+  t_Table upTable;
+  t_Table dwTable;
 %}
 
 INITIALIZE
@@ -231,18 +220,36 @@ INITIALIZE
   Polarizer_guide_Init(&Vars, 
   w1, h1, w2, h2, l, R0,
   Qc, alpha, W,
-  mleft, mright, mtop, mbottom, mup, mdown);
+  mleft, mright, mtop, mbottom);
 
   Si_sig_i=Si_i;
   Si_sig_a=Si_a;
   Si_cross_i=   2.33 / 28.09 * Si_sig_i * 6.022 * 10;
   Si_cross_a_v= 2.33 / 28.09 * Si_sig_a * 6.022 * 10 * 2200.0;
 
-  Fe_sig_i=0.0001;
-  Fe_sig_a=0.0001;
+  Fe_sig_i=0.4;
+  Fe_sig_a=3.4;
   Fe_cross_i=   7.87 / 55.85 * Fe_sig_i * 6.022 * 10;
   Fe_cross_a_v= 7.87 / 55.85 * Fe_sig_a * 6.022 * 10 * 2200.0;
   /** (density / rel. atomic mass * sig * 6.022 * 10 * v(1.8A)) **/
+
+  if (reflectUP != NULL)
+  {
+   Table_Read(&upTable, reflectUP, 1);          /* read 1st block data from file into upTable */
+   Table_Rebin(&upTable);                       /* rebin as evenly, increasing array */
+   if (upTable.rows < 2) Table_Free(&upTable);
+   Table_Info(upTable);
+  } else upTable.data = NULL;
+
+  if (reflectDW != NULL)
+  {
+   Table_Read(&dwTable, reflectDW, 1);          /* read 1st block data from file into dwTable */
+   Table_Rebin(&dwTable);                       /* rebin as evenly, increasing array */
+   if (dwTable.rows < 2) Table_Free(&dwTable);
+   Table_Info(dwTable);
+  } else dwTable.data = NULL;
+
+
 %}
 
 
@@ -326,8 +333,11 @@ TRACE
 
       /* else reflection on a guide wall */
 
-      if(Vars.M[side] == 0 || Qc == 0)  /* walls are absorbing */
-        { ABSORB; }
+      if (side == 1 || side == 2 || side == 3 || side == 4)
+        {
+          if(Vars.M[side] == 0 || Qc == 0)  /* walls are absorbing */
+          { ABSORB; }
+        }
 
       
       if (side == 6 || side == 7 )
@@ -345,11 +355,9 @@ TRACE
           Fe_cross_tot=Fe_cross_i + Fe_cross_a_v / v;
           
 
-          if(q < Qc_down)
-           {  
-            selectF = rand01();
 
-            if(selectF <= R0_down)
+          selectF = rand01();
+          if(selectF <= Table_Value(dwTable, q, 1))
              {
               Vars.N_reflection[side]++;                       
               dt0 = 2*Vars.n_dot_v[side]/Vars.norm_n2[side];
@@ -359,50 +367,21 @@ TRACE
               SCATTER;
              }
 
-            if(selectF > R0_down)
+          if(selectF > Table_Value(dwTable, q, 1))
              {
               SCATTER;
               p=p*exp(-1.0*((Si_cross_tot*Wlen_Si)+(Fe_cross_tot*Wlen_Fe)));
              }
-           }  /* q<Qc */
 
-
-          if(q > Qc_down)
-           {
-             arg = (q-mdown*Qc_down)/W_down;
-             
-             if(arg < 10)
-             {
-               Rtemp = R0_down*0.5*(1-tanh(arg))*(1-alpha_down*(q-Qc_down));
-               selectF = rand01();
-
-               if(selectF <= Rtemp)
-                {
-                 Vars.N_reflection[side]++;                       
-                 dt0 = 2*Vars.n_dot_v[side]/Vars.norm_n2[side];
-                 vx -= Vars.nx[side]*dt0;
-                 vy -= Vars.ny[side]*dt0;
-                 vz -= Vars.nz[side]*dt0;
-                 SCATTER;
-                }
-
-               if(selectF > Rtemp)
-                {
-                 SCATTER;
-                p=p*exp(-1.0*((Si_cross_tot*Wlen_Si)+(Fe_cross_tot*Wlen_Fe)));
-                }
-             }
-             else
-             { SCATTER; 
-               p=p*exp(-1.0*((Si_cross_tot*Wlen_Si)+(Fe_cross_tot*Wlen_Fe)));
-             }; /* Cutoff ~ 1E-10, delete  ABSORB A.O. */
-            }
            Vars.N_reflection[0]++; 
-         }  /* sy<0 */
+
+          }  /* sy<0 */
+
+
 
 
         if (sy > 0) /* spin up */
-         {
+         { 
           q = 2*V2Q*fabs(Vars.n_dot_v[side])/Vars.norm_n[side];
           v = sqrt(vx*vx + vy*vy + vz*vz);
           L = (2*PI/V2K)/v;
@@ -414,57 +393,27 @@ TRACE
           
 
 
-          if(q < Qc_up)
-          {
-           selectF = rand01();
-           if (selectF <= R0_up)
-            {
-             Vars.N_reflection[side]++;
-             dt0 = 2*Vars.n_dot_v[side]/Vars.norm_n2[side];
-             vx -= Vars.nx[side]*dt0;
-             vy -= Vars.ny[side]*dt0;
-             vz -= Vars.nz[side]*dt0;
-             SCATTER;
-            }
-           if(selectF > R0_up)
-            {
-             SCATTER;
-             p=p*exp(-1.0*((Si_cross_tot*Wlen_Si)+(Fe_cross_tot*Wlen_Fe)));
-            }
-           }  /* q<Qc */
-
-          if(q > Qc_up)
-           {
-             arg = (q-mup*Qc_up)/W_up;
-             
-             if(arg < 10)
+          selectF = rand01();
+          if(selectF <= Table_Value(upTable, q, 1))
              {
-               Rtemp = R0_up*0.5*(1-tanh(arg))*(1-alpha_up*(q-Qc_up));
-               selectF = rand01();
-
-               if(selectF <= Rtemp)
-                {
-                 Vars.N_reflection[side]++;                       
-                 dt0 = 2*Vars.n_dot_v[side]/Vars.norm_n2[side];
-                 vx -= Vars.nx[side]*dt0;
-                 vy -= Vars.ny[side]*dt0;
-                 vz -= Vars.nz[side]*dt0;
-                 SCATTER;
-                }
-
-               if(selectF > Rtemp)
-                {
-                 SCATTER;
-                 p=p*exp(-1.0*((Si_cross_tot*Wlen_Si)+(Fe_cross_tot*Wlen_Fe)));
-                }
+              Vars.N_reflection[side]++;                       
+              dt0 = 2*Vars.n_dot_v[side]/Vars.norm_n2[side];
+              vx -= Vars.nx[side]*dt0;
+              vy -= Vars.ny[side]*dt0;
+              vz -= Vars.nz[side]*dt0;
+              SCATTER;
              }
-             else
-             { SCATTER; 
-               p=p*exp(-1.0*((Si_cross_tot*Wlen_Si)+(Fe_cross_tot*Wlen_Fe)));
-             }; /* Cutoff ~ 1E-10, delete  ABSORB A.O. */
-            }
+
+            if(selectF > Table_Value(upTable, q, 1))
+             {
+              SCATTER;
+              p=p*exp(-1.0*((Si_cross_tot*Wlen_Si)+(Fe_cross_tot*Wlen_Fe)));
+             }
+
            Vars.N_reflection[0]++; 
-         }  /* sy>0 */
+
+          }  /* sy>0 */
+
 
        } /* side 6,7 */ 
 
@@ -519,12 +468,22 @@ TRACE
       ABSORB;
 %}
 
+
+
+FINALLY
+%{
+  Table_Free(&upTable);
+  Table_Free(&dwTable);
+%}
+
+
+
 MCDISPLAY
 %{
  double x;
   int i;
 
-  
+  magnify("xy");
   multiline(5,
             -w1/2.0, -h1/2.0, 0.0,
              w1/2.0, -h1/2.0, 0.0,
