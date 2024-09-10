@@ -2019,15 +2019,15 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
 	    if (!strcasestr(detector.format, "list")) {
 	      mcdetector_out_axis_nexus(f, detector.xlabel, detector.xvar,
 					1, detector.m, detector.xmin, detector.xmax);
-	      
-	      mcdetector_out_axis_nexus(f, detector.ylabel, detector.yvar,
-					2, detector.n, detector.ymin, detector.ymax);
-	      
+
 	      mcdetector_out_axis_nexus(f, detector.zlabel, detector.zvar,
 					3, detector.p, detector.zmin, detector.zmax);
 	      
 	    } /* !list */
-	    
+	    // For the list mode, column significance is in axis 2, i.e. always meaningful to include
+            mcdetector_out_axis_nexus(f, detector.ylabel, detector.yvar,
+					2, detector.n, detector.ymin, detector.ymax);
+
 	    /* write the actual data (appended if already exists) */
 	    if (!strcasestr(detector.format, "list") && !strcasestr(detector.format, "pixels")) {
 	      mcdetector_out_array_nexus(f, "data", detector.p1, detector);
