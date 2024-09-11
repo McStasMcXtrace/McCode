@@ -204,7 +204,7 @@ Changes in McStas 3.5.0, September 16th, 2024
    for single-side and double-side coated V-polarisers. The component was originally developed
    by Andreas Ostermann (TUM) and has been updated by Michael Schneider from SNAG. The 
    models correspond to the simulations carried out for the publication
-   
+   https://doi.org/10.1016/j.physb.2009.06.031
    
  Core simulation framework / code-generator:
  - mcstas-pygen: A secondary code-generator is now included that translates an instrument file to
