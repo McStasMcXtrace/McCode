@@ -131,55 +131,80 @@ Changes in McStas 3.5.0, September 16th, 2024
 
  Tool enhancements:
  - The mcdisplay-webgl tool has received a MAJOR overhaul:
-   * The tool 
-   
- - mcrun now supports an set of "optimisation" switches to allow evaluating an instrument as
-   "object function". Thanks to Emmanuel Farhi for working on this.
-    --optimize          Optimize instrument variable parameters to maximize
-                        monitors
-    --optimize-maxiter=optimize_maxiter
-                        Maximum number of optimization iterations to perform
-    --optimize-tol=optimize_tol
-                        Tolerance for optimization termination. When optimize-
-                        tol is specified, the selected optimization algorithm
-                        sets some relevant solver-specific tolerance(s) equal
-                        to optimize-tol
-    --optimize-method=optimize_method
-                        Optimization solver in ['powell', 'nelder-mead', 'cg',
-                        'bfgs', 'newton-cg', 'l-bfgs-b', 'tnc', 'cobyla',
-                        'slsqp', 'trust-constr', 'dogleg', 'trust-ncg',
-                        'trust-exact', 'trust-krylov'] (default: powell) You
-                        can use your custom method method(fun, x0, args,
-                        **kwargs, **options). Please refer to scipy
-                        documentation for proper use of it: https://docs.scipy
-                        .org/doc/scipy/reference/generated/scipy.optimize.mini
-                        mize.html?highlight=minimize
-    --optimize-minimize
-                        Choose to minimize the monitors instead of maximize
-    --optimize-monitor=optimize_monitor
-                        Name of a single monitor to optimize (default is to
-                        use all)
- - McStas now ships with a "python-aware" code generator for generating "McStasScript" code, example:
-     mcstas-pygen Instrument.instr   -->   Instrument_generated.py
-   Using 'jupytext' this file may easily be converted to a notebook:
-     jupytext --to ipynb Instrument_generated.py   -->   Instrument_generated.ipynb
-   See https://github.com/PaNOSC-ViNYL/McStasScript
-   for more information on McStasScript.
- - McStasScript is included with McStas 3.4 on macOS and Windows and readily configured for use with
-   McStas 3.4 and its embedded Python version. For sake of user convenience, Jupyterlab is also included
-   on these platforms, use 'jupyter lab' from within the McStas 'environment' to work with a McStasScript
-   notebook.
+   * Support for visualisation of proper "solids" instead of "multilines". Key components 
+     have been updated with this new style, but more will come in the following releases.
+   * New react/js user-interface with options for choosing colour and transparency
+     of the individual components.
+   * Save and load of instrument visualisation and particle rays in JSON format
+   * The new features require a server-process, facilitated by the 'vite' javascript/node.js
+     oriented server. The server is by default shut down after 5 minutes - but mcdisplay-webgl
+     has an input parameter to control this behavior.
+   * On first launch the 'npm' package manager installs and builds packages to the McStas
+     user directory, so expect this first launch to take a little time.
+ - The mcgui user interface also has recieved a numner of usability changes:
+   * The main interface includes a new 'Jupylab' button that will convert a loaded
+     instrument file to McStasScript (python) format and launch Jupyterlab.
+   * The mcgui font-size can be configured via the Preferences dialogue and saved to 
+     the user-level mccode_config.json file
+   * Monitor_nD "buffersize" of a given simulation (mostly used for the list/event mode)
+     may be configured via the Preferences dialogue and saved to the user-level config
+   * When copying an instrument from the Examples / Templates, the instrument-folder is
+     copied, i.e. including both instrument and specific datafiles etc.
+ - The 'mctest' tool is now available as a user-tool. The tool
+   * Allows to test for compilation of all instruments
+   * test-executes those including with %Example lines.
+   * To test your McStas installation, simply execute 'mctest' in your McStas environment
+   * The tool creates an output folder with the tested instruments in subfolders and the
+     test simulation results in subfolders under these. Compile-time, execution-time and 
+     test numerical output is stored in JSON files.
+   * The most important commandline switches are these:
+     --ncount N selects the wanted statistic for the tests
+     --mpi=number or --mpi=auto enables mpi mode for the tests
+     --openacc enables OpenACC accelerations on Nvidia GPU on Linux
+     --instr=PATTERN only test instruments matching PATTERN
+     --testdir=DIR puts the test results under the DIR folder
+     --suffix=SUFFIX adds SUFFIX as an identifier in the output foldername
+     --nexus enables NeXus output for all tested instruments
+   * Here is an example of a run:
+     # mctest --instr=BNL_H8_simple --testdir=mcstas-test
+     loading system configuration
+     Output of test will be placed in: mcstas-test
+     ncount is: 1e6
+     Testing: 3.5.0
+     Finding instruments in: /Users/peterwillendrup/miniforge3/share/mcstas/resources/examples
+     Copying instruments to: mcstas-test/mcstas-3.5.0_BNL_H8_simple_Darwin
+     
+     Compiling instruments [seconds]...
+     BNL_H8_simple :   2.03
+     
+     Running tests...
+     BNL_H8_simple  :   0.96
+  - The 'mcviewtest' tool is now available as a user-tool. The tool may be used to render
+    an html page with results from one or more 'mctest' runs. If your results of a test run
+    was placed in e.g. mcstas-test/mcstas-3.5.0_BNL_H8_simple_Darwin:
+    * cd to mcstas-test
+    * run the command:    mcviewtest
+    * You may then open the resulting html file for visualisation in your browser and see
+      an output simmilar to that of our nightly test, see e.g.
+      https://new-nightly.mcstas.org/2024-09-11_output.html (A single test run gives
+      a single column of output - the example test demonstrated above would give only a
+      single cell since only one test was executed for a single instrument.)
+    * GRAY = instrument compiled OK, GREEN = instrument test agrees with %Example line,
+      RED = numerical result disagrees, WHITE with red text = instrument did not compile.
+    * The included numbers pr. cell includes C: compile time R: runtime and I=numerical value
 
  Components and Instruments:
- - In relation to the HighNESS project, the Wolter-optic components Conics_* have been given an
-   overhaul by Mads Bertelsen. New related instrument WOFSANS is included with McStas 3.4.
- - Thanks to the work of José Robledo (FZJ), we now have a better interface to the Small-Angle Scattering
-   models from SASview, aka. SASmodels. Due to the big number of included models that each correspond
-   to a McStas component (94 in total!), these are now found in the "sasmodels" folder of your McStas
-   installation. Two example instruments are also included: Test_SasView_bcc_paracrystal_aniso.instr and
-   Test_SasView_guinier.instr.
- - The strain-scanning instrument ILL_SALSA.instr was contributed by Daniel Lomholt Christensen,
-   Uni Copenhagen and ILL.
+ - An updated version of the strain-scanning instrument ILL_SALSA.instr was contributed by 
+   Daniel Lomholt Christensen, Uni Copenhagen and ILL. The instrument uses a new model of
+   a bent-Si monochromator (Monochromator_bent) which was benchmarked and validated against
+   the RESTRAX/SIMRES model with help from Jan Šaroun, NPI Řež. The Test_Monochromator_bent
+   is a unit test for the monochromator.
+ - From Swiss Neutronics AG we have received an Transmission_V_polarisator.comp with two
+   corresponding test-instruments (Test_V_cavity_SNAG_single_side and Test_V_cavity_SNAG_double_side)
+   for single-side and double-side coated V-polarisers. The component was originally developed
+   by Andreas Ostermann (TUM) and has been updated by Michael Schneider from SNAG. The 
+   models correspond to the simulations carried out for the publication
+   
    
  Core simulation framework / code-generator:
  - mcstas-pygen: A secondary code-generator is now included that translates an instrument file to
