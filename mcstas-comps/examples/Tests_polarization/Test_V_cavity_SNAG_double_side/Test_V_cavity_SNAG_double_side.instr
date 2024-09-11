@@ -35,19 +35,19 @@
 *
 * %E
 ******************************************************************************/
-DEFINE INSTRUMENT  Test_V_cavity_double_double_side(Lam=7.0, dLam=6.0, 
-    l_guide0=2,		// length of feeding guide (m)
-    m_hori=1.0,		// m of feeding guide
-    m_vert=3.0, 	// m of feeding guide
-    m_pol_h=1.0,	// m of guide body (m of FeSi is defined by data files)
-    m_pol_v=3.0, 	// m of guide body (m of FeSi is defined by data files)
-    W=0.024, 		// width of guide and cavity (m)
-    H=0.058, 		// height of guide and cavity (m)
-    Length_C=1.300,	// length of guide body (m)
-    tap_ang=0.55, 	// taper angle with respect to optical axis of V-cavity (deg)
-    distK=1.23864,	// distance between V-cavities (m) (applicable, if 2 cavities are installed)
-    d_Fe=6.95e-6, 	// thickness of Fe in one supermirror coating (m)
-    d=2.0)		// distance source to guide entrance (m)
+DEFINE INSTRUMENT Test_V_cavity_SNAG_double_side(Lam=7.0, dLam=6.0, 
+    l_guide0=2,
+    m_hori=1.0,
+    m_vert=3.0,
+    m_pol_h=1.0,
+    m_pol_v=3.0,
+    W=0.024,
+    H=0.058,
+    Length_C=1.300,
+    tap_ang=0.55,
+    distK=1.23864,
+    d_Fe=6.95e-6,
+    d=2.0)	
 
 DECLARE  
 %{  
