@@ -1,50 +1,81 @@
-/******************************************************************************************************
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Supermirror_thin_substrate 
+*
+* %Identification
+* Written by: Hal Lee
+* Date: 2024
+* Origin: ESS
+* %INSTRUMENT_SITE: Tests_polarization
+*
+* Test instrument for a thin-substrate supermirrror (component SupermirrorFlat)
 *
 * %Description
+* Test instrument for a thin-substrate supermirrror (component SupermirrorFlat)
 *
+* %Example: Supermirror_thin_substrate.instr src_x=0.01 Detector: spectrum_I=4.11233e-05
 *
-* %Identification 
-* 	Written by: 
-* 	Created: 
-* 	Source: 
-* 	Release: 
-* 	Version: 
+* %Parameters
+* src_x:                        [m]    Width of source
+* src_y:                        [m]    Height of source
+* W_Centre:                     [AA]   Central wavelength from source spectrum
+* W_Half_Width:                 [AA]   Source spectrum wavelength half-width
+* A_FWHM:                       [deg]  Angular divergence from source
+* Detector_Distance:            [m]    End-of-supermirror to detector distance
+* Length:                       [m]    Supermirrror length,projection along z-axis
+* Thickness_In_mm:              [mm]   Supermirror thickness in mm
+* Mirror_Coated_Side:           [str]  Specification of coating type
+* Mirror_Plus:                  [str]  Specification of coating on positive mirror side
+* Mirror_Plus_m:                [1]    Specification m value, positive mirror side
+* Mirror_Minus:                 [str]  Specification of coating on negative mirror side
+* Absorber_Coated_Side:         [str]  Specification of coating type, absorber coated side
+* Absorber:                     [str]  Specification of absorber material
+* Absorber_Thickness_In_Micron: [mu-m] Absorber thickness in mu-m
+* Substrate:                    [str]  Specification of substrate material
+* Initial_Placement_At_Origin:  [str]  Mirror orientation specifier
+* Tilt_Axis_Location:           [str]  Mirror axis location specifier 
+* Tilt_Angle_First_In_Degree:   [deg]  Mirror tilt angle (around global y)
+* Translation_Second_Y:         [m]    Mirror translation (along global y)
+* Rot_Angle_Third_In_Degree:    [deg]  Mirror rotation angle (around global z)
+* Tracking:                     [str]  Mirror event-tracking option specifier
+*
+* %Link
+* A reference/HTML link for more information
 *
 * %End
-******************************************************************************************************/
+*******************************************************************************/
 
-DEFINE INSTRUMENT TestStdSupermirrorFlatSimplified(
+DEFINE INSTRUMENT Supermirror_thin_substrate(src_x=0.01, src_y=0.09, //m
+W_Centre=5, //Å
+W_Half_Width=3, //Å
+A_FWHM=0.05, //deg
 
-src_x = 0.01, src_y = 0.09, //m
-W_Centre = 5, //Å
-W_Half_Width = 3, //Å
-A_FWHM = 0.05, //deg
+Detector_Distance=1, //m, detecot position from end of supermirror
 
-Detector_Distance = 1, //m, detecot position from end of supermirror
+Length=4, //m supermirror length projection along z-axis
+Thickness_In_mm=0.5, //mm
 
-Length = 4, //m supermirror length projection along z-axis
-Thickness_In_mm = 0.5, //mm
+string Mirror_Coated_Side="BothCoated",
+string Mirror_Plus="FeSiPlus", 
+       Mirror_Plus_m=3.5,
+string Mirror_Minus="FeSiMinus", //Mirror_Minus_m not specified or equals 0, use default value from file
 
-string Mirror_Coated_Side = "BothCoated",
-string Mirror_Plus = "FeSiPlus", 
-       Mirror_Plus_m = 3.5,
-string Mirror_Minus = "FeSiMinus", //Mirror_Minus_m not specified or equals 0, use default value from file
+string Absorber_Coated_Side="BothNotCoated",
+string Absorber="Empty",
+Absorber_Thickness_In_Micron=0, //micrometer
 
-string Absorber_Coated_Side = "BothNotCoated",
-string Absorber = "Empty",
-Absorber_Thickness_In_Micron = 0, //micrometer
+string Substrate="GlassNoAttenuation",
 
-string Substrate = "GlassNoAttenuation",
-
-string Initial_Placement_At_Origin = "TopFrontEdgeCentre",	//"TopFrontEdgeCentre","FrontSubstrateCentre","BottomFrontEdgeCentre"
-string Tilt_Axis_Location = "TopMirrorCentre", 	//"TopFrontEdge","TopMirrorCentre","TopBackEdge"
+string Initial_Placement_At_Origin="TopFrontEdgeCentre",	//"TopFrontEdgeCentre","FrontSubstrateCentre","BottomFrontEdgeCentre"
+string Tilt_Axis_Location="TopMirrorCentre", 	//"TopFrontEdge","TopMirrorCentre","TopBackEdge"
 													//"FrontSubstrateCentre","SubstrateCentre","BackSubstrateCentre", 
 													//"BottomFrontEdge","BottomMirrorCentre","BottomBackEdge"
-Tilt_Angle_First_In_Degree = 0.64, //tilt about global y-axis first
-Translation_Second_Y = 0, 
-Rot_Angle_Third_In_Degree = 0, //rotate about global z-axis second
+Tilt_Angle_First_In_Degree=0.64, //tilt about global y-axis first
+Translation_Second_Y=0, 
+Rot_Angle_Third_In_Degree=0, //rotate about global z-axis second
 
-string Tracking = "DetailTracking" //"NoTracking", "DetailTracking"
+string Tracking="DetailTracking" //"NoTracking", "DetailTracking"
 
 )
  
