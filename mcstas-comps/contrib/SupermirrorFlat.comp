@@ -24,9 +24,9 @@
 *       text entries of parameters below are not sensitive to case
 *        default regional spelling is UK, but some paramters accept other reginal spelling
 *
-*****************************************************************************
+*
 * INITIALISATION parameters:
-*****************************************************************************
+*
 * 
 * STEP 1: Specify supermirror shape, supermirror coating, absorber and substrate material
 *         In this step, supermirror is standing vertically, mirror coating = yz plane with long side along +z.
@@ -103,7 +103,7 @@
 * substrate_material_name: [string]  substrate material name in "Supermirror_substrate_materials.txt". (Material name is case-insensitive) 
 *
 *
-*****************************************************************************
+*
 * STEP 2: Orient and position the as-defined supermirror in the McStas module XYZ coordinates. 
 *
 * 1. Specify initially a location on the front side of the mirror (see parameter "initial_placement_at_origin" below). 
@@ -124,7 +124,7 @@
 * rot_about_z_third_in_degree			[°]		 Third: rotate about z-axis (beam axis) of the McStas module XYZ coordinates 
 *
 *
-*****************************************************************************
+*
 * OUTPUT: 
 * Supermirror struct with all parameter values entered and initialised
 * User declares "Supermirror supermirror;" or its equivalence, 
@@ -133,14 +133,14 @@
 * sm:	[struct Supermirror]  Supermirror structure
 *
 * 
-*****************************************************************************
+*
 * End INITIALISATION parameters
-*****************************************************************************
 *
 *
-*****************************************************************************
+*
+*
 * RAY-TRACING parameters
-*****************************************************************************
+*
 * FUNCTION IntersectStdSupermirrorFlat 
 * INPUT: 
 * 	neutron parameters: w_sm=p, t_sm=t, p_sm=coords_set(x,y,z), v_sm=coords_set(vx,vy,vz), s_sm=coords_set(sx,sy,sz)
@@ -175,9 +175,10 @@
 * 	sm_Exited, sm_Absorbed. sm_Error
 * 
 * 
-*****************************************************************************
+*
 * End RAY-TRACING parameters 
-*****************************************************************************
+*
+* %P
 *
 * %L
 *
@@ -188,37 +189,25 @@ DEFINE COMPONENT SupermirrorFlat
 
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (vector side_edge_normal={0,+1,0}, vector side_edge_point={0,+0.1,0},
-	length=0.5, //m supermirror length projection along z-axis 
-	thickness_in_mm=0.3, //mm
-	
-	//Materials name matching those defined in "Reflectivity_parameters_list.txt" overrides material spec 
-	string mirror_coated_side="BothCoated", 	//Sequential combination of keywords of
-												//position: "Both", "Top", "Bottom";
-												//surface property: "Coated", "Substrate", "NoReflection"; 
-												//e.g. "BothCoated", "BottomCoatedTopSubstrate",
-	string mirror_spin_plus_material_name="FeSiPlus", //defined in "Reflectivity_parameters_list.txt", non-polarising: use same for spin minus
+	length=0.5, thickness_in_mm=0.3,
+	string mirror_coated_side="BothCoated",
+	string mirror_spin_plus_material_name="FeSiPlus",
 	       mirror_spin_plus_m=3.5, 
-	string mirror_spin_minus_material_name="FeSiMinus", //defined in "Reflectivity_parameters_list.txt", non-polarising: use same for spin minus
+	string mirror_spin_minus_material_name="FeSiMinus", 
 	       mirror_spin_minus_m=-1, 
-	string substrate_material_name="Glass", //defined in "Supermirror_substrate_materials.txt"
-	string absorber_coated_side="BothNotCoated", //"BothCoated", "TopCoated", "BottomCoated", "BothNotCoated"
-	string absorber_material_name="Gd", //defined in "Supermirror_substrate_materials.txt"
+	string substrate_material_name="Glass", 
+	string absorber_coated_side="BothNotCoated", 
+	string absorber_material_name="Gd", 
 	       absorber_thickness_in_micron=100, 
-	
-	string initial_placement_at_origin="FrontSubstrateCentre", //"TopFrontEdgeCentre","FrontSubstrateCentre","BottomFrontEdgeCentre"
-	string tilt_y_axis_location="FrontSubstrateCentre", 	//"TopFrontEdge","TopMirrorCentre","TopBackEdge"
-															//"FrontSubstrateCentre","SubstrateCentre","BackSubstrateCentre", 
-															//"BottomFrontEdge","BottomMirrorCentre","BottomBackEdge"
-	tilt_about_y_first_in_degree=1.5, //tilt about the x-axis at selected location first
-	translation_second_x=0, //translate second, x
-	translation_second_y=0, //translate second, y
-	translation_second_z=0, //translate second, z
-	rot_about_z_third_in_degree=0, //rotate about global z-axis second
-
-	string tracking="DetailTracking", //NoTracking, DetailTracking
-	int keep_if_missed=1 
-
-)
+	string initial_placement_at_origin="FrontSubstrateCentre",
+	string tilt_y_axis_location="FrontSubstrateCentre", 
+	tilt_about_y_first_in_degree=1.5, 
+	translation_second_x=0, 
+	translation_second_y=0, 
+	translation_second_z=0, 
+	rot_about_z_third_in_degree=0, 
+	string tracking="DetailTracking", 
+	int keep_if_missed=1)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
