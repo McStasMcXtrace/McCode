@@ -1,0 +1,15 @@
+#Name, Labs[cm], Linc[cm], SLD[Å^-2]
+#Labs, Linc: 1/e attenuation length due to absorption, incoherent scattering
+#No attenuation: set to -1
+#Information from www.ncnr.nist.gov/resources/activation/
+
+Absorb, 0, 0, 0
+Empty,-1, -1, 0
+Borofloat, 0.94, 146.33, 1.668E-6
+Glass, 1046.742, 441.380, 4.186E-6
+Silicon, 210.460, 9927.652, 2.074E-6
+Si, 210.460, 9927.652, 2.074E-6
+GlassNoAttenuation, -1, -1, 4.186E-6
+GlassNoAbsorption, -1, -1, 4.186E-6
+SiliconNoAttenuation, -1, -1, 2.074E-6
+Mylar, 151.181, 0.3265, 2.585E-6

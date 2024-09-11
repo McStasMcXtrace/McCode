@@ -1,0 +1,16 @@
+#Name, Labs[cm], Linc[cm], SLD[Å^-2]
+#Labs, Linc: 1/e attenuation length due to absorption, incoherent scattering
+#No attenuation: set to -1
+#Information from www.ncnr.nist.gov/resources/activation/
+
+Absorb, 0, 0, 0
+Empty,-1, -1, 0
+Boron, 0.01798, 4.5045, 6.908E-6
+B, 0.01798, 4.5045, 6.908E-6
+B10, 0.003597, 2.5974, -0.261E-6
+B11, 2507.991, 36.04572, 8.668E-6
+Gadolinium, 0.0023028, -1, 4.149E-6
+Gd, 0.0023028, -1, 4.149E-6
+Gd2O3, 0.002966, 4.9505, 5.267E-6
+Cadmium, 0.015397, 6.135, 2.238E-6
+Cd, 0.015397, 6.135, 2.238E-6
