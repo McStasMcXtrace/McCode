@@ -21,6 +21,17 @@ This file is part of McStas / McXtrace.
 
 [![mcstas-basictest](https://github.com/McStasMcXtrace/McCode/actions/workflows/mcstas-basictest.yml/badge.svg)](https://github.com/McStasMcXtrace/McCode/actions/workflows/mcstas-basictest.yml)[![mcxtrace-basictest](https://github.com/McStasMcXtrace/McCode/actions/workflows/mcxtrace-basictest.yml/badge.svg)](https://github.com/McStasMcXtrace/McCode/actions/workflows/mcxtrace-basictest.yml)
 
+
+**Nightly builds for selected platforms:**
+* McStas (Intel Ubuntu deb's + cross-compiled Windows package)
+  https://nightly.link/McStasMcXtrace/McCode/workflows/mcstas-autobuild/main/mcstas-artefact-ubuntu-latest.gcc.python-3.11.zip
+* McStas Intel macOS
+  https://nightly.link/McStasMcXtrace/McCode/workflows/mcstas-autobuild/main/mcstas-artefact-macos-latest.clang.python-3.11.zip
+* McXtrace (Intel Ubuntu deb's + cross-compiled Windows package)
+  https://nightly.link/McStasMcXtrace/McCode/workflows/mcxtrace-autobuild/main/mcxtrace-artefacts-ubuntu-latest.gcc.python-3.11.zip
+* McXtrace Intel macOS
+  https://nightly.link/McStasMcXtrace/McCode/workflows/mcxtrace-autobuild/main/mcxtrace-artefacts-macos-latest.clang.python-3.11.zip
+
 *******************************************************************************
 ```
 This is McStas 3.x and McXtrace 3.x with GPU acceleration support
