@@ -68,8 +68,8 @@ Changes in McXtrace 3.5.0, September 16th, 2024
 
 
  Fixes of issues from last 3.x release:
- - A number of issues from 3.4 were addressed, see the relevant GitHub issues for details:
-   - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-3.4
+ - A number of issues from 3.2 were addressed, see the relevant GitHub issues for details:
+   - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcxtrace-3.2
 
  Installation:
  - Our install docs are available on the McCode GitHub page at
@@ -87,27 +87,17 @@ Changes in McXtrace 3.5.0, September 16th, 2024
  McXtrace 3.5.0 enables most components and instruments on GPU. A few components compute only on CPU:
  - Components using shared libraries from external software:
    * GNU Scientific library used in: 
-     contrib/SANSPDBFast
-     contrib/SANSNanodiscs 
-     contrib/SANSNanodiscsWithTags
-     contrib/SANSNanodiscsFast
-     contrib/SANSEllipticCylinders
-     contrib/SANSPDB
-     contrib/SANSCylinders
-     contrib/Multilayer_Sample
-   * NCrystal used in
-     contrib/NCrystal_sample
-   * Components that are not fully thread-safe / ported to GPU
-     (I.e. these may come to GPU later)
-     contrib/Single_crystal_inelastic
-     contrib/SupermirrorFlat
-     contrib/Monochromator_bent
-     samples/Single_magnetic_crystal
-     union/Union_master
-   * Components that are intentionally for CPU-only use
-     (No dealing with buffersizes etc.)
-     misc/MCPL_output_noacc
-     monitors/Monitor_nD_noacc
+     contrib/SAXSNanodiscsFast
+     contrib/SAXSEllipticCylinders
+     contrib/SAXSCylinders
+     contrib/SAXSPDB
+     contrib/SAXSNanodiscsWithTags
+     contrib/SAXSNanodiscs
+     contrib/SAXSPDBFast
+     contrib/SAXSNanodiscsWithTagsFast
+     sources/Undulator
+   * Xraylib library used in: 
+     samples/Fluorescence
 
  Tool enhancements:
  - The mxdisplay-webgl tool has received a MAJOR overhaul:
