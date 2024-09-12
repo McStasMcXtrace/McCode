@@ -625,7 +625,7 @@ class Ui_dlgStartSim(object):
         self.cbxClustering.setItemText(5, _translate("dlgStartSim", "OpenACC and MPI"))
         self.cbxClustering.setItemText(6, _translate("dlgStartSim", "OpenACC and MPI (recompile)"))
         self.lblInspect.setText(_translate("dlgStartSim", "Inspect:"))
-        self.lblAutoPlot.setText(_translate("dlgStartSim", "Autoplot: (only McCode format)"))
+        self.lblAutoPlot.setText(_translate("dlgStartSim", "Autoplot:"))
         self.lblFormat.setText(_translate("dlgStartSim", "Output format:"))
         self.lblMcdisplays.setText(_translate("dlgStartSim", "McDisplay"))
         self.gbxAdvanced.setTitle(_translate("dlgStartSim", "Advanced"))
