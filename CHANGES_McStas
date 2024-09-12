@@ -248,6 +248,13 @@ Changes in McStas 3.5.0, September 16th, 2024
    physics in the form of reflection, refraction and absorption in coating, substrate and absorber.
    The component requires multiple new SHARE libs: supermirror-lib.c/h, plane.c/h, polyhedron.c/h
    and comes with the example instrument Supermirror_thin_substrate.instr
+
+ - Incoming components and instruments:
+   * Ba. thesis student Thom van der Woude from TU Delft has written an excellent thesis on his
+     SEMSANS-related project "Design and analysis of a SEMSANS instrument for a cold source". 
+     The code is available at https://github.com/tbvanderwoude/semsans for anyone interested and
+     includes simulation scripts, McStas code and Jupyter notebooks for analysis. We foresee
+     that this work will make it to one of the next minor updates McStas 3.5.x.
    
  Core simulation framework / code-generator:
  - The McStas and McXtrace code-generators are fully synchronised from v3.5.0 onwards.
