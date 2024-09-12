@@ -229,6 +229,22 @@ Changes in McStas 3.5.0, September 16th, 2024
     * The included numbers pr. cell includes C: compile time R: runtime and I=numerical value
 
  Components and Instruments:
+ - The examples/ folder is no longer a flat directory, but has instead beceme a tree-structure,
+   subdivided into instrument categories:
+   * Facility / University / source type instruments:
+     BNL DTU ESS FZ_Juelich HZB ILL ISIS LLB Necsa PSI Risoe SNS TRIGA TUDelft
+   * Templates, tools and varioius tests:
+     Templates Tools, Tests_RNG Tests_monitors Tests_other Tests_samples Tests_MCPL_etc
+     Tests_grammar Tests_optics Tests_polarization Tests_sources
+   * Output from EU-projects etc.
+     HighNESS SINE2020 e-learning
+   * Links with other software
+     Mantid NCrystal
+   * Union-specific tests
+     Tests_union Union_demos Union_sample_environments Union_validation
+ - Each instrument has its own folder within the hierarcy, where usage-specific input files
+   etc. may also exist. In the future we may decide to distribute some McStasScript instruments
+   within this folder structure.
  - An updated version of the strain-scanning instrument ILL_SALSA.instr was contributed by 
    Daniel Lomholt Christensen, Uni Copenhagen and ILL. The instrument uses a new model of
    a bent-Si monochromator (Monochromator_bent) which was benchmarked and validated against
