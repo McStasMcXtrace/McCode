@@ -10,7 +10,7 @@ fi
 
 export MCVERSION=${1}
 
-cmake --build build-arm64 support/MacOSX/McCode-conda.app -DBUILD_MCSTAS=ON -DMCVERSION=${MCVERSION} -DARCH_ENABLE=arm64 -DCMAKE_INSTALL_PREFIX=dist-arm64/McStas-${MCVERSION}.app
+cmake --build build-arm64 -s support/MacOSX/McCode-conda.app -DBUILD_MCSTAS=ON -DMCVERSION=${MCVERSION} -DARCH_ENABLE=arm64 -DCMAKE_INSTALL_PREFIX=dist-arm64/McStas-${MCVERSION}.app
 cmake --build build-arm64 --config Release
 cmake --build build-arm64 --target install --config Release
 
