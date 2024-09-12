@@ -57,7 +57,6 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure the .py launcher
 configure_file(Contents/MacOS/mccodegui.py.in ${WORK}/mccodegui @ONLY)
 configure_file(Contents/MacOS/Miniforge-inject.command.in ${WORK}/Miniforge-inject.command @ONLY)
-configure_file(Contents/MacOS/conda-inject.command.in ${WORK}/conda-inject.command @ONLY)
 
 execute_process(COMMAND "chmod ARGS 755 work/mccodegui")
 
@@ -72,7 +71,7 @@ install (
   )
 
 install(
-    FILES "${WORK}/mccodegui" "${WORK}/Miniforge-inject.command" "${WORK}/conda-inject.command"
+    FILES "${WORK}/mccodegui" "${WORK}/Miniforge-inject.command" 
     PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ 
     DESTINATION "Contents/MacOS/"
   )
