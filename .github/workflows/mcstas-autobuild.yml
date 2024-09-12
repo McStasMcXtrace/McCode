@@ -68,7 +68,7 @@ jobs:
            set -x
            cd McCode
            export REV=`git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags origin 'v*.*.*' | tail -1 | cut -f3 -d/ | cut -f2 -dv`
-           if [ "$RUNNER_OS" == "macOS" ]; then ./buildscripts/build_macos_mcstas ${REV} && tar cfz dist-macos-conda.tgz  dist-arm64 dist-x86_64 /; fi; fi
+           if [ "$RUNNER_OS" == "macOS" ]; then ./buildscripts/build_macos_mcstas ${REV} && tar cfz dist-macos-conda.tgz  dist-arm64 dist-x86_64 /; fi;
            if [ "$RUNNER_OS" == "Linux" ]; then ./buildscripts/build_debs_mcstas ${REV} meta && tar cfz dist-${{matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}.tgz  dist/; fi
 
     - name: Cross-Build McStas for windows
