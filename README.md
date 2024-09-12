@@ -23,14 +23,10 @@ This file is part of McStas / McXtrace.
 
 
 **Nightly builds for selected platforms:**
-* McStas (Intel Ubuntu deb's + cross-compiled Windows package)
-  https://nightly.link/McStasMcXtrace/McCode/workflows/mcstas-autobuild/main/mcstas-artefact-ubuntu-latest.gcc.python-3.11.zip
-* McStas Intel macOS
-  https://nightly.link/McStasMcXtrace/McCode/workflows/mcstas-autobuild/main/mcstas-artefact-macos-latest.clang.python-3.11.zip
-* McXtrace (Intel Ubuntu deb's + cross-compiled Windows package)
-  https://nightly.link/McStasMcXtrace/McCode/workflows/mcxtrace-autobuild/main/mcxtrace-artefacts-ubuntu-latest.gcc.python-3.11.zip
-* McXtrace Intel macOS
-  https://nightly.link/McStasMcXtrace/McCode/workflows/mcxtrace-autobuild/main/mcxtrace-artefacts-macos-latest.clang.python-3.11.zip
+* [McStas Intel/x86_64 Ubuntu deb's + cross-compiled Windows package](https://nightly.link/McStasMcXtrace/McCode/workflows/mcstas-autobuild/main/mcstas-artefact-ubuntu-latest.gcc.python-3.11.zip)
+* [McStas Intel/x86_64 macOS](https://nightly.link/McStasMcXtrace/McCode/workflows/mcstas-autobuild/main/mcstas-artefact-macos-latest.clang.python-3.11.zip)
+* [McXtrace Intel/x86_64 Ubuntu deb's + cross-compiled Windows package](https://nightly.link/McStasMcXtrace/McCode/workflows/mcxtrace-autobuild/main/mcxtrace-artefacts-ubuntu-latest.gcc.python-3.11.zip)
+* [McXtrace Intel/x86_64 macOS](https://nightly.link/McStasMcXtrace/McCode/workflows/mcxtrace-autobuild/main/mcxtrace-artefacts-macos-latest.clang.python-3.11.zip)
 
 *******************************************************************************
 ```
