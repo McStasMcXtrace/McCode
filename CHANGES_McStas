@@ -126,8 +126,30 @@ Changes in McStas 3.5.0, September 16th, 2024
  - McStas 3.5.0 packages come with OpenMPI and NeXus as install-time dependencies for all supported 
    platforms.
 
- McStas 3.5.0 enables most components and instruments on GPU. A few key components (e.g. Union
- and NCrystal) compute only on CPU.
+ McStas 3.5.0 enables most components and instruments on GPU. A few components compute only on CPU:
+ - Components using shared libraries from external software:
+   * GNU Scientific library used in: 
+     contrib/SANSPDBFast
+     contrib/SANSNanodiscs 
+     contrib/SANSNanodiscsWithTags
+     contrib/SANSNanodiscsFast
+     contrib/SANSEllipticCylinders
+     contrib/SANSPDB
+     contrib/SANSCylinders
+     contrib/Multilayer_Sample
+   * NCrystal used in
+     contrib/NCrystal_sample
+   * Components that are not fully thread-safe / ported to GPU
+     (I.e. these may come to GPU later)
+     contrib/Single_crystal_inelastic
+     contrib/SupermirrorFlat
+     contrib/Monochromator_bent
+     samples/Single_magnetic_crystal
+     union/Union_master
+   * Components that are intentionally for CPU-only use
+     (No dealing with buffersizes etc.)
+     misc/MCPL_output_noacc
+     monitors/Monitor_nD_noacc
 
  Tool enhancements:
  - The mcdisplay-webgl tool has received a MAJOR overhaul:
@@ -141,6 +163,9 @@ Changes in McStas 3.5.0, September 16th, 2024
      has an input parameter to control this behavior.
    * On first launch the 'npm' package manager installs and builds packages to the McStas
      user directory, so expect this first launch to take a little time.
+   * The tool further has a '2D' mode in the style of mcdisplay-pyqtgrahph, simply use your
+     mouse wheel on the browser menu to scroll the 3D view 'up' and the 2D views will appear!
+
  - The mcgui user interface also has recieved a numner of usability changes:
    * The main interface includes a new 'Jupylab' button that will convert a loaded
      instrument file to McStasScript (python) format and launch Jupyterlab.
@@ -150,6 +175,15 @@ Changes in McStas 3.5.0, September 16th, 2024
      may be configured via the Preferences dialogue and saved to the user-level config
    * When copying an instrument from the Examples / Templates, the instrument-folder is
      copied, i.e. including both instrument and specific datafiles etc.
+
+ - Improved NeXus support:
+   * The JSON configuration file mccode_config.json now includes a HDFVIEW setting,
+     defaulting to 'nexpy' on the conda-forge based systems and HDFCompass on Debian
+     as nexpy is not yet available here. (A useful alternative is 'silx view'.)
+   * When selecting --format=NeXus and requesting '--autoplot' from mcgui/mcrun, the
+     mcplot(-pyqtgraph) and mcplot-matplotlib plotters request the HDFVIEW tool to 
+     open the resulting mccode.h5 file.
+
  - The 'mctest' tool is now available as a user-tool. The tool
    * Allows to test for compilation of all instruments
    * test-executes those including with %Example lines.
@@ -171,7 +205,7 @@ Changes in McStas 3.5.0, September 16th, 2024
      Output of test will be placed in: mcstas-test
      ncount is: 1e6
      Testing: 3.5.0
-     Finding instruments in: /Users/peterwillendrup/miniforge3/share/mcstas/resources/examples
+      Finding instruments in: /Users/peterwillendrup/miniforge3/share/mcstas/resources/examples
      Copying instruments to: mcstas-test/mcstas-3.5.0_BNL_H8_simple_Darwin
      
      Compiling instruments [seconds]...
@@ -179,6 +213,7 @@ Changes in McStas 3.5.0, September 16th, 2024
      
      Running tests...
      BNL_H8_simple  :   0.96
+
   - The 'mcviewtest' tool is now available as a user-tool. The tool may be used to render
     an html page with results from one or more 'mctest' runs. If your results of a test run
     was placed in e.g. mcstas-test/mcstas-3.5.0_BNL_H8_simple_Darwin:
@@ -205,79 +240,29 @@ Changes in McStas 3.5.0, September 16th, 2024
    by Andreas Ostermann (TUM) and has been updated by Michael Schneider from SNAG. The 
    models correspond to the simulations carried out for the publication
    https://doi.org/10.1016/j.physb.2009.06.031
+ - Please note that the Pol_guide_vmirror currently has a systematic discrepancy wrt. the SNAG model,
+   full investigation of the problem is pending but will be fixed for a later 3.5.x update release.
+   !! If your simulation problem allows, please make use of the experimentally benchmarked 
+      Transmission_V_polarisator instead !!
+ - From Hal Lee (ESS) we have received a new SupermirrorFlat component including all relevant
+   physics in the form of reflection, refraction and absorption in coating, substrate and absorber.
+   The component requires multiple new SHARE libs: supermirror-lib.c/h, plane.c/h, polyhedron.c/h
+   and comes with the example instrument Supermirror_thin_substrate.instr
    
  Core simulation framework / code-generator:
- - mcstas-pygen: A secondary code-generator is now included that translates an instrument file to
-   a .py script for use with McStasScript. If your system includes the jupytext utility
-   (McStas on Windows and macOS now does by default), the command
-     jupytext --to ipynb
-   will translate the .py output from mcstas-pygen to an iPython notebook.
- - New functions to probe the distance to a given component instance at INTITIALIZE time:
-   double index_getdistance(int first_index, int second_index)
-   /* Calculate the distance two components from their indexes*/
-   double getdistance(char* first_component, char* second_component)
-   /* Calculate the distance between two named components */
-   double checked_setpos_getdistance(int current_index, char* first_component, char* second_component)
-   /* Calculate the distance between two named components at *_setpos() time, with component index checking */
-   Thanks to Gregory S. Tucker (ESS) for contributing this functionality.
- - A new syntax for instrument parameter units has been added to the grammar:
- 
-      DEFINE INSTRUMENT template(lambda / "Aa" = 2.36)
-
-   Such unit definitions may be probed using
-   
-      ./template.out --list-parameters
-      double lambda/"Aa" = 2.36
-
-   Thanks to Gregory S. Tucker (ESS) for contributing this grammar enhancement!
- - A new syntax called METADATA has been added to the grammar, allowing users to "glue" one or more
-   pieces of information to a component instance, e.g.:
-   
-     COMPONENT Origin = Progress_bar()
-       AT (0,0,0) ABSOLUTE
-     METADATA JSON eniius_data %{
-       ...{JSON string}...
-     %}
-     METADATA Python extra_function %{
-     def the_function(a, b, c):
-        return a + b / c
-     %}
-
-   Such metadata definitions may be probed using e.g.
-   # List the components that have attached metadata:
-     ./template.out --meta-list
-     Origin
-   # List the attached metadata names for Origin:
-     ./template.out --meta-defined Origin
-     eniius_data extra_function 
-   # Probe the "type" of metadata for each metadata name:
-     ./template.out --meta-type Origin:eniius_data
-     JSON
-     ./template.out --meta-type Origin:extra_function
-     Python
-   # Print the metadata for each metadata name:
-     ./template.out --meta-data Origin:eniius_data
-     ...{JSON string}...
-     ./template.out --meta-data Origin:extra_function
-     def the_function(a, b, c):
-         return a + b / c
-   
-   Thanks to Gregory S. Tucker (ESS) for contributing this grammar enhancement!
+ - The McStas and McXtrace code-generators are fully synchronised from v3.5.0 onwards.
 
  Libraries and other runtime code:
- - NCrystal library version 3.7.1 from T. Kittelmann (ESS) and X.X. Cai (CSNS), distributed
+ - NCrystal library version 3.9.7 from T. Kittelmann (ESS) and X.X. Cai (CSNS), distributed
    with McStas on Unix platforms only. (Cross-compiles for Windows, but still needs work
    for "production" availability.)
  - MCPL library from T. Kittelmann (ESS) included at v. 1.6.2
- - On macOS NCrystal and MCPL are now installed via conda.
- - On debian and fedora we are providing new packages for NCrystal and MCPL via the
-   McCode repository, independent of the McStas release. (Both codes will also soon arrive
-   in the Debian ecosystem to beecome available with the next releases, thanks to
-   Synchrotron SOLEIL, Emmanuel Farhi and Roland Mas.)
+  - On debian and fedora we are providing new packages for NCrystal and MCPL via the
+   McCode repository, independent of the McStas release. (Both codes have further arrived
+   in the Debian ecosystem, thanks to Synchrotron SOLEIL, Emmanuel Farhi and Roland Mas.)
 
- START your migration to 3.x:
- - Following the release of 3.4, we will no longer systematically be releasing updates to the
-   2.x series.
+ Migration to 3.5.0:
+ - As mentioned above, we no longer support McStas 2.x.
  - The Wiki has a dedicated section on McStas 2.x -> McStas 3.x conversion that includes:
    * A nomenclature list containing short descriptions of new concepts and important keywords
      in McStas 3.x and OpenACC / CUDA code in general.
@@ -285,22 +270,19 @@ Changes in McStas 3.5.0, September 16th, 2024
    * A guide for 2.x -> 3.x instrument conversion.
    * A guide for 2.x -> 3.x component conversion.
  - If you are still in trouble, please write us a GitHub issue or an email to mcstas-users@mcstas.org
- - Known limitations in the GPU-implementation:
-   * The Union subsystem still works on CPU only, but can be used in the mixed GPU/CPU funnnel
-     mode as mentioned above. Union_master is a NOACC component. We expect Union_master to receive
-     GPU suport later in 2023.
-   * The same solution is applied in use of the NCrystal_sample that uses a non-accelerated library
-     without the needed #pragma's included. Several other "complicated" components such as
-     Single_crystal_inelastic are included the same way.
-   * Special NOACC versions of Monitor_nD and MCPL_output are included. These may be used in the case
-     of large event datasets, allowing more than 2e9 events to be stored.
 
  Platforms:
-  - We still support 64bit Windows 10/11 on Intel, three most recent 64bit macOS (11 Big Sur -> 13 Ventura)
-    on both Intel and Apple Silicon processors. Debian-based distros on Intel and Arm, Fedora on Intel.
-  - On macOS and Windows we bundle a Mambaforge Python with the installation.
+  - We provide packages for the following platforms / systems:
+    * conda-forge Platforms linux-64, osx-arm64, osx-64 and win-64
+    * Debian-based distros on Intel and Arm
+    * conda-forge based 'application bundles' for
+      64bit macOS 12-14 both Intel and Silicon (should also be ready for macOS 15 Sequoia)
+    * A cross-compiled 'bulky installer' for 64bit Windows 10/11 on Intel
+  - For RPM based distros please use our conda-forge solution!
+  - For e.g. FreeBSD you may roll your own using CMake.
 
 We hope you will enjoy this new release!!!
+
 
 Changes in McStas 3.4, September 19th, 2023
 
