@@ -209,6 +209,7 @@ SETTING PARAMETERS (vector side_edge_normal={0,+1,0}, vector side_edge_point={0,
 	string tracking="DetailTracking", 
 	int keep_if_missed=1)
 OUTPUT PARAMETERS ()
+NOACC
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
