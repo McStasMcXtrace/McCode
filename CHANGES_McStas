@@ -260,6 +260,16 @@ Changes in McStas 3.5.0, September 16th, 2024
  - The McStas and McXtrace code-generators are fully synchronised from v3.5.0 onwards.
 
  Libraries and other runtime code:
+ - The NeXus output is richer from McStas 3.5.0, specifically:
+   * All component global postions and orientations are placed as dataset within
+     /entry1/instrument/components/<COMP>
+   * Monitors store their detector outputs in
+     /entry1/instrument/components/<COMP>/output/<filename>
+   * Monitor_nD instances further store their spatial bin-information in 
+     /entry1/instrument/components/<COMP>/output/BINS
+   * To still support the "McStas-Mantid" NeXus variant, please use --format=NeXus --IDF
+     which will include virtual links to the above datasets within the expected 
+     /entry1/data structure 
  - NCrystal library version 3.9.7 from T. Kittelmann (ESS) and X.X. Cai (CSNS), distributed
    with McStas on Unix platforms only. (Cross-compiles for Windows, but still needs work
    for "production" availability.)
