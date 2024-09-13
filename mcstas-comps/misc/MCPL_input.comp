@@ -33,7 +33,7 @@
 * Emin: [meV]           Lower energy bound. Particles found in the MCPL-file below the limit are skipped.
 * Emax: [meV]           Upper energy bound. Particles found in the MCPL-file above the limit are skipped.
 * repeat_count: [1]     Repeat contents of the MCPL file this number of times. NB: When running MPI, repeating is implicit and is taken into account by integer division. MUST be combined with _smear options!
-* E_smear: [1]          When repeating events, make a Gaussian MC choice within E_smear*E around particle energy E
+* V_smear: [1]          When repeating events, make a Gaussian MC choice within V_smear*V around particle velocity V
 * pos_smear: [m]        When repeating events, make a flat MC choice of position within pos_smear around particle starting position
 * dir_smear: [deg]      When repeating events, make a Gaussian MC choice of direction within dir_smear around particle direction
 *
@@ -42,7 +42,7 @@
 
 DEFINE COMPONENT MCPL_input
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string filename=0, polarisationuse=1,verbose=1, Emin=0, Emax=FLT_MAX, int repeat_count=1, E_smear=0, pos_smear=0, dir_smear=0, int preload=0)
+SETTING PARAMETERS (string filename=0, polarisationuse=1,verbose=1, Emin=0, Emax=FLT_MAX, int repeat_count=1, V_smear=0, pos_smear=0, dir_smear=0, int preload=0)
 OUTPUT PARAMETERS ()
 DEPENDENCY "-Wl,-rpath,CMD(mcpl-config --show libdir) -LCMD(mcpl-config --show libdir) -lmcpl -ICMD(mcpl-config --show includedir)"
 
@@ -101,7 +101,7 @@ INITIALIZE
     }
     mcset_ncount(nparticles);
 
-    if(repeat_count>0 && E_smear==0 && pos_smear==0 && dir_smear==0) {
+    if(repeat_count>0 && V_smear==0 && pos_smear==0 && dir_smear==0) {
       fprintf(stdout, "\n\n WARNING: You have requested a repeat_count=%i but have left all *_smear parameters at 0!\n --> This is not allowed! Resetting to repeat_count=1!\n",repeat_count);
       fprintf(stderr, "\n\n WARNING: You have requested a repeat_count=%i but have left all *_smear parameters at 0!\n --> This is not allowed! Resetting to repeat_count=1!\n",repeat_count);
       repeat_count=1;
@@ -338,11 +338,7 @@ TRACE
   
   nrm = sqrt(nrm);
   if (ismpislave || repeating) {
-    // Energy-MC:
-    double tmp=(1.0+E_smear*randpm1());
-    //printf("Adjusting energy from %g to",nrm);
-    nrm *= (1+E_smear*randpm1());
-    //printf(" to %g\n",nrm);
+    nrm *= (1+V_smear*randpm1());
   }
   double d0,d1,d2;
   if (!preload) {
