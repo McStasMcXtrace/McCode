@@ -386,6 +386,15 @@ SAVE
 FINALLY
 %{
 #ifdef USE_MPI
+  if (merge_mpi && mpi_node_count > 1) {
+    mcpl_close_outfile(outputfile);
+  } else {
+    mcpl_closeandgzip_outfile(outputfile);
+  }
+#else
+  mcpl_closeandgzip_outfile(outputfile);
+#endif
+#ifdef USE_MPI
  MPI_Barrier(MPI_COMM_WORLD);
  MPI_MASTER(
      /* Only attempt merge if requested and meaningful */
@@ -436,15 +445,6 @@ FINALLY
         free(mpi_node_files);
     }
   );
-#endif
-#ifdef USE_MPI
-  if (merge_mpi && mpi_node_count > 1) {
-    mcpl_close_outfile(outputfile);
-  } else {
-    mcpl_closeandgzip_outfile(outputfile);
-  }
-#else
-  mcpl_closeandgzip_outfile(outputfile);
 #endif
   if(verbose) {
     MPI_MASTER(
