@@ -7,7 +7,7 @@ relased, follow the below instruction. **PLEASE NOTE** that our
 repo-based RPM packages are built on Fedora 37 and will require a
 reasonably new glibc!
 
-An alternative solution for you may be, to build yourself using the [repo build instructions](https://github.com/McXtraceMcXtrace/McCode/wiki/Building-McStas-McXtrace)
+An alternative solution for you may be, to build yourself using the [repo build instructions](https://github.com/McXtraceMcXtrace/McCode/wiki/Building-McXtrace-McXtrace)
 
 
 ## Add the McCode repo to your system
@@ -55,5 +55,5 @@ sudo yum install mcxtrace-suite-python
 If you want to attempt installing our RPM packages manually via rpm -i, the packages are available for download at https://download.mcxtrace.org/current/linux/mcxtrace-rpm64_x86_64_fedora
 
 ## In case of issues
-Please report any trouble with the repository to [mcxtrace-users](mailto:mcstas-users@mcxtrace.org)
+Please report any trouble with the repository to [mcxtrace-users](mailto:mcxtrace-users@mcxtrace.org)
 

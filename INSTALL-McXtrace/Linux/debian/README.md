@@ -12,33 +12,34 @@ sudo apt-get update
 # Debian only:
 On Debian you will further have to install the non-free repository to have access to all McXtrace tool parts. See https://wiki.debian.org/SourcesList
 
-# The easiest way:
-The meta-package *mcxtrace-suite-python* will allow you to install mcxtrace with the recommended set of python-tools (mcrun/mcplot etc.) by a simple apt-get command like
+# Look for McXtrace packages to install
+```bash
+mcxtrace@debian:~$ apt-cache search mcxtrace | grep -v 2.
+mcxtrace-3.5.0 - mcxtrace built using CMake
+mcxtrace-comps-3.5.0 - mcxtrace-comps built using CMake
+mcxtrace-manuals-3.5.0 - mcxtrace_manuals built using CMake
+mcxtrace-suite - A metapackage for McXtrace + perl and python tools
+mcxtrace-suite-python - A metapackage for McXtrace + python tools
+mcxtrace-tools-matlab-mcplot-3.5.0 - matlab-tools-mcplot built using CMake
+mcxtrace-tools-python-mccodelib-3.5.0 - python-tools-mccodelib built using CMake
+mcxtrace-tools-python-mcdisplay-mantid-3.5.0 - python-tools-mcdisplay-mantid built using CMake
+mcxtrace-tools-python-mcdisplay-pyqtgraph-3.5.0 - python-tools-mcdisplay-pyqtgraph built using CMake
+mcxtrace-tools-python-mcdisplay-webgl-3.5.0 - python-tools-mcdisplay-webgl built using CMake
+mcxtrace-tools-python-mcgui-3.5.0 - python-tools-mcgui built using CMake
+mcxtrace-tools-python-mcplot-pyqtgraph-3.5.0 - python-tools-mcplot-pyqtgraph built using CMake
+mcxtrace-tools-python-mcrun-3.5.0 - python-tools-mcrun built using CMake
+```
+The meta-package mcxtrace-suite-python
+allows you to install mcxtrace 3.5.0 with one or both sets of tools (mcrun/mcplot etc.) by simple apt-get commands like
 ```bash
 sudo apt-get install mcxtrace-suite-python
 ```
 The -suite packages without 'ng' in the package name will install the
-latest McXtrace 1.x package
+latest McXtrace 2.x package
 
-# Look for McXtrace packages to install
-```bash
-mcxtrace@debian:~$ apt-cache search mcxtrace | grep 3.5.0
-mcxtrace-3.5.0 - mcxtrace built using CMake
-mcxtrace-comps-3.5.0 - mcxtrace-comps built using CMake
-mcxtrace-manuals-3.5.0 - mcxtrace_manuals built using CMake
-mcxtrace-suite-python - A metapackage for McStas + python tools
-mcxtrace-tools-matlab-mxplot-3.5.0 - matlab-tools-mcplot built using CMake
-mcxtrace-tools-perl-cmdline-3.5.0 - legacy-tools-cmdline built using CMake
-mcxtrace-tools-python-mxcodelib-3.5.0 - python-tools-mccodelib built using CMake
-mcxtrace-tools-python-mxdisplay-pyqtgraph-3.5.0 - python-tools-mxdisplay-pyqtgraph built using CMake
-mcxtrace-tools-python-mxdisplay-webgl-3.5.0 - python-tools-mxdisplay-webgl built using CMake
-mcxtrace-tools-python-mxgui-3.5.0 - python-tools-mxgui built using CMake
-mcxtrace-tools-python-mxplot-pyqtgraph-3.5.0 - python-tools-mxplot-pyqtgraph built using CMake
-mcxtrace-tools-python-mxrun-3.5.0 - python-tools-mxrun built using CMake
-```
-# Using mxdoc on modern Ubuntu systems
+# Using mcdoc on modern Ubuntu systems
 Ubuntu is shipping its browsers as "snap" packages, meaning that they
-are blocked from accessing e.g. the McStas html snippets in
+are blocked from accessing e.g. the McXtrace html snippets in
 /usr/share/mcxtrace/3.5.0/.
 
 To fix this we propose to switch your browser to a proper apt based
@@ -79,8 +80,10 @@ Please report any trouble with the repository to [mcxtrace-users](mailto:mcxtrac
 
 # Installing without adding the repo
 If you want to attempt installing our debian packages manually via
-dpkg, the packages are available for download at https://download.mcxtrace.org/current/linux/mcxtrace-3.5.0-deb64/
+dpkg, the packages are available for download at https://download.mcxtrace.org/mcxtrace-3.5.0/linux/debian/
 (available for multiple processor architectures).
 
 ## In case of issues
 Please report any trouble with the repository to [mcxtrace-users](mailto:mcxtrace-users@mcxtrace.org)
+
+

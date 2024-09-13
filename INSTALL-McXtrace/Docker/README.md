@@ -1,9 +1,8 @@
-# Running McXtrace 3.5.0 in Docker
+# PENDING UPDATE!!! #
 
-McXtrace 1.7 and 3.5.0 are available on Dockerhub. To use, simply
+# Running McXtrace 3.5.0 in Docker / podman etc.
 
-* Install docker on your machine
-* run the command
-```docker run -p 8888:8888 docker.io/mccode/mcxtrace-1.7-3.5.0:1.0```
-* Connect your browser to the URL communicated by the docker command
+The container definition is available at https://github.com/McXtraceMcXtrace/jupyter-mcxtrace-desktop and is further on dockerhub under docker.io/mccode/mcxtrace-3.5.0
 
+To run the container locally, use e.g.
+```podman run -p 8888:8888 docker.io/mccode/mcxtrace-3.5.0```
