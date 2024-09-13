@@ -78,5 +78,6 @@ if [ "x$2" != "x" ]; then
     mv Output/setup.exe dist/McXtrace-Metapackage-${1}-win64.exe
     cp $WORK/INSTALL-McXtrace/Windows/README.md dist/
     mkdir dist/single-packages
+    cp -rp support/Win32/extras dist/extras
     mv dist/mcxtrace-* dist/single-packages
 fi

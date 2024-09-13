@@ -6,10 +6,10 @@
 posted under [WSL](WSL/README.md) to install the 
 "Windows subsystem for Linux" and run the Debian binaries there
 
-* To use MCPL with McStas 3.5.0, please:
- 1) Locate and run the executable `mcstas-mcpl-NSIS64-3.5.0-mingw64.exe` within the single-packages folder
+* To enable use of MCPL with McStas 3.5.0, please:
+ 1) Locate and run the executable `mcstas-mcpl-NSIS64-3.5.0-mingw64.exe` from the [single-packages folder](https://download.mcstas.org/mcstas-3.5.0/windows/single-packages)
  2) During installation, please specify `c:\mcstas-3.5.0` as installation directory
- 3) After installation, place the mcpl-related `.bat` files from the extras folder in `c:\mcstas-3.5.0\bin`
+ 3) After installation, place the mcpl-related `.bat` files from the [extras folder](https://download.mcstas.org/mcstas-3.5.0/windows/extras) folder in `c:\mcstas-3.5.0\bin`
 
 
 ## Internet access required:
