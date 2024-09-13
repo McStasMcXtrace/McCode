@@ -1,9 +1,9 @@
-# Install McStas 3.4.x through conda-forge (macOS, Linux host)
+# Install McStas 3.5.0.x through conda-forge (macOS, Linux host)
 
 **Warning: McStas through conda is considered EXPERIMENTAL and will
 for the moment only work on macOS or Linux**
 
-* We a set of conda-packages for installing McStas 3.4.x through conda
+* We a set of conda-packages for installing McStas 3.5.0.x through conda
 
 ## Get yourself a conda / mamba
 We recommend [miniforge](https://github.com/conda-forge/miniforge)
@@ -15,7 +15,7 @@ We recommend [miniforge](https://github.com/conda-forge/miniforge)
 ## Install McStas, compilers, openmpi
 * ```mamba install mcstas compilers openmpi=4```
   
-(From next McStas release newer openmpi versions are also OK, but the 3.4 version of mcrun has an issue with openmpi 5.x)
+(From next McStas release newer openmpi versions are also OK, but the 3.5.0 version of mcrun has an issue with openmpi 5.x)
 
 ## Install McStasScript, jypyterlab ipympl
 * ```mamba install pip jupyterlab ipympl```

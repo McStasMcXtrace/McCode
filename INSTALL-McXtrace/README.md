@@ -1,4 +1,4 @@
-# Installation instructions for McXtrace 3.2
+# Installation instructions for McXtrace 3.5.0
 
 Please consult the individual platform instructions:
 

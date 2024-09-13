@@ -1,22 +1,22 @@
-# Installing McStas 3.4 from preconfigured source code
+# Installing McStas 3.5.0 from preconfigured source code
 
 * Download and build the McStas source code for Unix systems:
 ```bash
-wget https://downloads.mcstas.org/mcstas-3.4/unix/mcstas-3.4-UNIX-src.tar.gz
+wget https://downloads.mcstas.org/mcstas-3.5.0/unix/mcstas-3.5.0-UNIX-src.tar.gz
 (or curl -O or fetch or...)
 ```
 * Unpack the "metapackage" tarball
 ```bash
-tar xzf mcstas-3.4-UNIX-src.tar.gz
-cd mcstas-3.4-UNIX-src/
+tar xzf mcstas-3.5.0-UNIX-src.tar.gz
+cd mcstas-3.5.0-UNIX-src/
 ```
 * Unpack the individual subpackages
 ```bash
 find . -name \*tar.gz -exec tar xzf \{\} \;
 ```
-* Next, compile the individual packages you want (minimum set is mcstas-3.4-src mcstas-comps-3.4-src) using e.g.
+* Next, compile the individual packages you want (minimum set is mcstas-3.5.0-src mcstas-comps-3.5.0-src) using e.g.
 ```bash
-cd mcstas-3.4-src
+cd mcstas-3.5.0-src
 cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/freebsd64.cmake -DBUILD_MCSTAS=1
 make
 sudo make install
