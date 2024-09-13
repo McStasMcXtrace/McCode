@@ -254,6 +254,8 @@ Changes in McStas 3.5.0, September 16th, 2024
  - Each instrument has its own folder within the hierarcy, where usage-specific input files
    etc. may also exist. In the future we may decide to distribute some McStasScript instruments
    within this folder structure.
+ - MCPL_input had a parameter change: E_smear has become v_smear since what was implemented
+   was in fact a smearing on velocity.
  - An updated version of the strain-scanning instrument ILL_SALSA.instr was contributed by 
    Daniel Lomholt Christensen, Uni Copenhagen and ILL. The instrument uses a new model of
    a bent-Si monochromator (Monochromator_bent) which was benchmarked and validated against
