@@ -82,6 +82,6 @@ if [ "x$2" != "x" ]; then
     mv Output/setup.exe dist/McStas-Metapackage-${1}-win64.exe
     cp $WORK/INSTALL-McStas/Windows/README.md dist/
     mkdir dist/single-packages
-    cp -rp support/Win32/extras dist/extras
+    cp -rp $WORK/support/Win32/extras dist/extras
     mv dist/mcstas-* dist/single-packages
 fi
