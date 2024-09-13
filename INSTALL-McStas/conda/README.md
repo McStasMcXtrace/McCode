@@ -1,4 +1,4 @@
-# Install McStas 3.5.0.x through conda-forge (macOS, Linux or Windows host)
+# Install McStas 3.5.0 through conda-forge (macOS, Linux or Windows host)
 
 * We a set of conda-packages for installing McStas 3.5.0.x through conda
 
