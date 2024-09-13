@@ -175,12 +175,21 @@ Changes in McStas 3.5.0, September 16th, 2024
      may be configured via the Preferences dialogue and saved to the user-level config
    * When copying an instrument from the Examples / Templates, the instrument-folder is
      copied, i.e. including both instrument and specific datafiles etc.
+   * The "autoplot" mode that spawns plotting post simulation completion now also functions
+     with NeXus output
+   * "Inverted" canvas can be chosen when autoplotting with mcplot(-pyqtgraph)
 
- - Improved NeXus support:
+
+ - Improved NeXus support in both mcgui and mcrun:
    * The JSON configuration file mccode_config.json now includes a HDFVIEW setting,
      defaulting to 'nexpy' on the conda-forge based systems and HDFCompass on Debian
      as nexpy is not yet available here. (A useful alternative is 'silx view'.)
-   * When selecting --format=NeXus and requesting '--autoplot' from mcgui/mcrun, the
+
+ - The primary mcplot(-pyqtgraph) tool also received a number of updates:
+   * The tool behaves correctly both in case of PyQt5 and PyQt6 based systems
+   * Visibility of legends is highly improved both on (standard) black canvas and
+     inverted white canvas (select from the mcgui prefs / run dialogue)
+   * When selecting --format=NeXus and requesting '--autoplot' from mcgui/mcrun, both the
      mcplot(-pyqtgraph) and mcplot-matplotlib plotters request the HDFVIEW tool to 
      open the resulting mccode.h5 file.
 
