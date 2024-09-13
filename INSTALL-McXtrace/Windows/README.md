@@ -1,4 +1,4 @@
-# Installation of McXtrace 3.2 on Windows 64 bit systems
+# Installation of McXtrace 3.5.0 on Windows 64 bit systems
 
 
 ## IMPORTANT A:
@@ -9,13 +9,10 @@
 	```bash
 		set HTTPS_PROXY=https://your_proxy_ip:port
 	```
-in a cmd.exe shell and start the Perl and McXtrace installers from there
+in a cmd.exe shell and start the McSta installers from there
 	
-##  IMPORTANT B:
-* Please install the [McXtrace 3.2 metapackage](https://download.mcxtrace.org/mcxtrace-3.2/windows/McXtrace-Metapackage-3.2-win64.exe)
-
-* The [extras](https://download.mcxtrace.org/mcxtrace-3.2/windows/extras)
-  folder provides binaries for Microsoft MPI and NeXus, which can be utilised by the McXtrace metapackage installation
+## IMPORTANT B:
+* Please install the [McXtrace 3.5.0 metapackage](https://download.mcxtrace.org/mcxtrace-3.5.0/windows/McXtrace-Metapackage-3.5.0-win64.exe)
 
 * An alternative to installing this version is to follow the instructions
 posted under [WSL](WSL/README.md) to install the 
