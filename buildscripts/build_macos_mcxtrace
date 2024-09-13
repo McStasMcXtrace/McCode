@@ -27,3 +27,5 @@ cd $WORKDIR/build-x86_64
 cmake $WORKDIR/support/MacOSX/McCode-conda.app -DBUILD_MCXTRACE=ON -DMCVERSION=${MCVERSION} -DARCH_ENABLE=x86_64 -DCMAKE_INSTALL_PREFIX=$WORKDIR/mcxtrace-macOS-x86_64/McXtrace-${MCVERSION}.app
 make install
 cd $WORKDIR
+cp INSTALL-McXtrace/macOS/README.md mcxtrace-macOS-arm64
+cp INSTALL-McXtrace/macOS/README.md mcxtrace-macOS-x86_64
