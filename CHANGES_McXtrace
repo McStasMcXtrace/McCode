@@ -200,9 +200,7 @@ Changes in McXtrace 3.5.0, September 16th, 2024
  - Each instrument has its own folder within the hierarcy, where usage-specific input files
    etc. may also exist. In the future we may decide to distribute some McStasScript instruments
    within this folder structure.
-
-
- - Incoming components and instruments:
+ - Fearure-updates and fixes in components and instruments:
    * Single_crystal: experimental surface diffraction mode (CTR).
    * Fluorescence: fix line-shape, handle multiple scattering.
    * SOLEIL_SIXS beam-line model, using SX component with surface CTR.

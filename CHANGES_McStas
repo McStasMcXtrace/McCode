@@ -77,7 +77,8 @@ Changes in McStas 3.5.0, September 16th, 2024
    on fewer platforms:
    * Debian packages at packages.mccode.org are provided for x86_64 and arm64 Linux
      (Thanks to the work of Emmanuel Farhi and his team at SOLEIL, official Debian
-     packages are already available in Debian Testing and Unstable and should become
+     packages are already available in Debian Testing and Unstable 
+     (see https://tracker.debian.org/pkg/mccode) and should become
      widely available with next Debian Stable, after which we might drop our "own
      channel").
    * conda-forge is to become our distribution channel for "everything else", meaning
@@ -242,7 +243,7 @@ Changes in McStas 3.5.0, September 16th, 2024
    subdivided into instrument categories:
    * Facility / University / source type instruments:
      BNL DTU ESS FZ_Juelich HZB ILL ISIS LLB Necsa PSI Risoe SNS TRIGA TUDelft
-   * Templates, tools and varioius tests:
+   * Templates, tools and various tests:
      Templates Tools, Tests_RNG Tests_monitors Tests_other Tests_samples Tests_MCPL_etc
      Tests_grammar Tests_optics Tests_polarization Tests_sources
    * Output from EU-projects etc.
