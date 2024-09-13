@@ -24,4 +24,4 @@ We expect this dependency to become available during the fall/winter of 2024.
 
 You are welcome to contact us in case of issues, e.g. via
 *   [mcxtrace-users](mailto:mcxtrace-users@mcxtrace.org)
-* by creating an issue on [the McCode issue tracker](https://github.com/McXtraceMcXtrace/McCode/issues)
+* by creating an issue on [the McCode issue tracker](https://github.com/McStasMcXtrace/McCode/issues)

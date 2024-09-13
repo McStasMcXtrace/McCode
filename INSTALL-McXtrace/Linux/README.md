@@ -15,5 +15,5 @@ specific [Debian/Ubuntu](debian/README.md).
 As of 3.5.0 we no longer build for RPM based systems. Please use our [conda-forge](../conda/README.md) packages instead.
 
 ## Favorite system not available?
-* For other systems, please build directly from the repo [build instructions](https://github.com/McXtraceMcXtrace/McCode/wiki/Building-McXtrace-McXtrace)
+* For other systems, please build directly from the repo [build instructions](https://github.com/McStasMcXtrace/McCode/wiki/Building-McXtrace-McXtrace)
  * You are welcome to contact us in case of issues, e.g. via [mcxtrace-users](mailto:mcxtrace-users@mcxtrace.org)
