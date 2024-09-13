@@ -2053,7 +2053,7 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
     NXclosegroup(f);
   } /* NXdata instrument */
   
-  if (mcnexus_embed_idf && !strcasestr(detector.format, "pixels")) {
+  if (!strcasestr(detector.format, "pixels")) {
     if (NXopengroup(f, "data", "NXdetector") == NX_OK) {
       NXmakelink(nxhandle, &pLink);
       NXclosegroup(f);
