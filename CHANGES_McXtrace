@@ -35,7 +35,8 @@ Changes in McXtrace 3.5.0, September 16th, 2024
    on fewer platforms:
    * Debian packages at packages.mccode.org are provided for x86_64 and arm64 Linux
      (Thanks to the work of Emmanuel Farhi and his team at SOLEIL, official Debian
-     packages are already available in Debian Testing and Unstable and should become
+     packages are already available in Debian Testing and Unstable 
+     (see https://tracker.debian.org/pkg/mccode) and should become
      widely available with next Debian Stable, after which we might drop our "own
      channel").
    * conda-forge is to become our distribution channel for "everything else", meaning
@@ -192,7 +193,7 @@ Changes in McXtrace 3.5.0, September 16th, 2024
    subdivided into instrument categories:
    * Facility / University / source type instruments:
      BARC DTU ESRF MAXII MAXIV NIST SAXSLAB SSRL NBI NSLS2 SOLEIL XFEL	
-   * Templates, tools and varioius tests:
+   * Templates, tools and various tests:
      Tests Tests_optics Tests_samples Templates	Tests_grammar Tests_other Tests_sources
    * AstroX - X-ray telescoe models etc.
      AstroX_ESA AstroX_NASA
@@ -202,7 +203,10 @@ Changes in McXtrace 3.5.0, September 16th, 2024
 
 
  - Incoming components and instruments:
-
+   * Single_crystal: experimental surface diffraction mode (CTR).
+   * Fluorescence: fix line-shape, handle multiple scattering.
+   * SOLEIL_SIXS beam-line model, using SX component with surface CTR.
+   * Many bug fixes in instruments and components.
    
  Core simulation framework / code-generator:
  - The McStas and McXtrace code-generators are fully synchronised from v3.5.0 onwards.
