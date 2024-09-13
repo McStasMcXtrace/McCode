@@ -4,7 +4,7 @@ Please consult the individual platform instructions:
 
 * [Windows 11 64bit](Windows/README.md)
 * [macOS 11-14 64bit](macOS/README.md)
-* [Linux (Debianvia repo)](Linux/README.md)
+* [Linux (Debian via repo)](Debian/README.md)
 * [On mac or Linux you may use conda](conda/README.md)
 * [Unix (source code)](Linux/src/README.md)
 * [Docker image](Docker/README.md)
