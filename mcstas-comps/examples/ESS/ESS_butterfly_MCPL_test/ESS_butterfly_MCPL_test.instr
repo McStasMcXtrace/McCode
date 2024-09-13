@@ -31,7 +31,7 @@
 * delta:         [m]    Parameter that allows to scan "collimator" position
 * thres:         [ ]    Weight-threshold, neutrons with higher weight are absorbed
 * repeat:        [ ]    Number of MCPL file repetitions
-* E_smear:       [1]    When repeating events, make a Gaussian MC choice within E_smear*E around particle energy E
+* V_smear:       [1]    When repeating events, make a Gaussian MC choice within V_smear*V around particle velocity V
 * pos_smear:     [m]    When repeating events, make a flat MC choice of position within pos_smear around particle starting position 
 * dir_smear:     [deg]  When repeating events, make a Gaussian MC choice of direction within dir_smear around particle direction
 *
@@ -43,7 +43,7 @@
 DEFINE INSTRUMENT ESS_butterfly_MCPL_test(string sector="N",
   int beamline=1,Lmin=0.2,Lmax=20,c_performance=1,t_performance=1,
   int index=8,dist=0,cold=1,Yheight=0.03,delta=0,thres=0.003,filter=0,repeat=1,
-  E_smear=0.1,pos_smear=0.01,dir_smear=0.01)
+  V_smear=0.1,pos_smear=0.01,dir_smear=0.01)
 
 
 DECLARE %{
@@ -158,7 +158,7 @@ COMPONENT vinROT1 = Arm()
 AT(0,0,0) RELATIVE PREVIOUS
   ROTATED (-90,0,0) RELATIVE PREVIOUS
 
-  COMPONENT vin = MCPL_input(filename=MCPLfile,verbose=1,repeat_count=repeat,E_smear=E_smear,pos_smear=pos_smear,dir_smear=dir_smear)
+  COMPONENT vin = MCPL_input(filename=MCPLfile,verbose=1,repeat_count=repeat,V_smear=V_smear,pos_smear=pos_smear,dir_smear=dir_smear)
 AT(0,0,0) RELATIVE PREVIOUS
 EXTEND %{
   SCATTER;
