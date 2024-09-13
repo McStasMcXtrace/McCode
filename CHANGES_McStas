@@ -93,7 +93,7 @@ Changes in McStas 3.5.0, September 16th, 2024
  - We are now officially on conda-forge, with feedstocks available at:
    * https://github.com/conda-forge/mcstas-suite-feedstock
    * https://github.com/conda-forge/mcxtrace-suite-feedstock
- - Via conda-forge we currently support the platforms linux-64, osx-arm64, osx-64 and win-64
+ - Via conda-forge we  support the platforms linux-64, linux-aarch64, osx-arm64, osx-64 and win-64
  - The conda-forge win-64 packages have slight shortcomings for this first release, meaning that:
    * MCPL and NCrystal are not shipped with McStas
    * MCPL is not shipped with McXtrace
@@ -318,7 +318,7 @@ Changes in McStas 3.5.0, September 16th, 2024
 
  Platforms:
   - We provide packages for the following platforms / systems:
-    * conda-forge Platforms linux-64, osx-arm64, osx-64 and win-64
+    * conda-forge Platforms linux-64, linux-aarch64 osx-arm64, osx-64 and win-64
     * Debian-based distros on Intel and Arm
     * conda-forge based 'application bundles' for
       64bit macOS 12-14 both Intel and Silicon (should also be ready for macOS 15 Sequoia)
