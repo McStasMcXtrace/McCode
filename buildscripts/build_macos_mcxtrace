@@ -19,11 +19,11 @@ mkdir -p dist-x86_64  && rm -rf dist-x86_64/*
 
 
 cd $WORKDIR/build-arm64
-cmake $WORKDIR/support/MacOSX/McCode-conda.app -DBUILD_MCXTRACE=ON -DMCVERSION=${MCVERSION} -DARCH_ENABLE=arm64 -DCMAKE_INSTALL_PREFIX=$WORKDIR/dist-arm64/McXtrace-${MCVERSION}.app
+cmake $WORKDIR/support/MacOSX/McCode-conda.app -DBUILD_MCXTRACE=ON -DMCVERSION=${MCVERSION} -DARCH_ENABLE=arm64 -DCMAKE_INSTALL_PREFIX=$WORKDIR/mcxtrace-macOS-arm64/McXtrace-${MCVERSION}.app
 make install
 cd $WORKDIR
 
 cd $WORKDIR/build-x86_64
-cmake $WORKDIR/support/MacOSX/McCode-conda.app -DBUILD_MCXTRACE=ON -DMCVERSION=${MCVERSION} -DARCH_ENABLE=x86_64 -DCMAKE_INSTALL_PREFIX=$WORKDIR/dist-x86_64/McXtrace-${MCVERSION}.app
+cmake $WORKDIR/support/MacOSX/McCode-conda.app -DBUILD_MCXTRACE=ON -DMCVERSION=${MCVERSION} -DARCH_ENABLE=x86_64 -DCMAKE_INSTALL_PREFIX=$WORKDIR/mcxtrace-macOS-x86_64/McXtrace-${MCVERSION}.app
 make install
 cd $WORKDIR

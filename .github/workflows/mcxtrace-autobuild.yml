@@ -68,8 +68,8 @@ jobs:
            set -x
            cd McCode
            export REV=`git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags origin 'v*.*.*' | tail -1 | cut -f3 -d/ | cut -f2 -dv`
-           if [ "$RUNNER_OS" == "macOS" ]; then ./buildscripts/build_macos_mcxtrace ${REV} && tar cfz dist-macos-conda.tgz  dist-arm64/ dist-x86_64/; fi;
-           if [ "$RUNNER_OS" == "Linux" ]; then ./buildscripts/build_debs_mcxtrace ${REV} meta && tar cfz dist-${{matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}.tgz  dist/; fi
+           if [ "$RUNNER_OS" == "macOS" ]; then ./buildscripts/build_macos_mcxtrace ${REV} && tar cfz mcxtrace-macOS-conda.tgz  mcxtrace-macOS-arm64/ mcxtrace-macOS-x86_64/; fi;
+           if [ "$RUNNER_OS" == "Linux" ]; then ./buildscripts/build_debs_mcxtrace ${REV} meta && mv dist mcxtrace-debian-x86_64 && tar cfz mcxtrace-debian-x86_64.tgz mcxtrace-debian-x86_64.tgz  mcxtrace-debian-x86_64/; fi
 
     - name: Cross-Build McXtrace for windows
       id: mcxtrace-mingw-build
@@ -80,16 +80,16 @@ jobs:
            cd McCode
            export REV=`git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags origin 'v*.*.*' | tail -1 | cut -f3 -d/ | cut -f2 -dv`
            if [ "$RUNNER_OS" == "Linux" ]; then rm -rf dist; fi
-           if [ "$RUNNER_OS" == "Linux" ]; then ./buildscripts/build_windows_mcxtrace ${REV}; fi
-           if [ "$RUNNER_OS" == "Linux" ]; then tar cfz dist-Windows.mingw64.python-${{ matrix.python }}.tgz dist/; fi
+           if [ "$RUNNER_OS" == "Linux" ]; then ./buildscripts/build_windows_mcxtrace ${REV} meta && mv dist mcxtrace-mingw64-Windows-x86_64; fi
+           if [ "$RUNNER_OS" == "Linux" ]; then tar cfz mcxtrace-Windows-x86_64.tgz mcxtrace-mingw64-Windows-x86_64/; fi
 
     - name: 'Upload Artifact'
       id: tar-upload
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: mcxtrace-artefacts-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
-        path: "McCode/dist-*.tgz"
+        name: mcxtrace-artefacts-${{ matrix.os }}
+        path: "McCode/mcxtrace-*.tgz"
 
     - name: Setup tmate session for manual debugging
       uses: mxschmitt/action-tmate@v3
