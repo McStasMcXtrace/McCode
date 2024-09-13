@@ -15,8 +15,8 @@ We recommend [miniforge](https://github.com/conda-forge/miniforge)
 (From next McXtrace release newer openmpi versions are also OK, but the 3.5.0 version of mcrun has an issue with openmpi 5.x)
 
 ## Note for use on Windows
-At the time of release for 3.5.0 MCPL and NCrystal are not yet available for Windows on conda-forge, so related instruments will not compile/function.
-We expect these dependencies to become available during the fall/winter of 2024.
+At the time of release for 3.5.0 MCPL is notr yet available for Windows on conda-forge, so related instruments will not compile/function.
+We expect this dependency to become available during the fall/winter of 2024.
 
 ## Install McXtraceScript, jypyterlab ipympl
 * ```mamba install pip jupyterlab ipympl```
