@@ -69,7 +69,7 @@ jobs:
            cd McCode
            export REV=`git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags origin 'v*.*.*' | tail -1 | cut -f3 -d/ | cut -f2 -dv`
            if [ "$RUNNER_OS" == "macOS" ]; then ./buildscripts/build_macos_mcstas ${REV} && tar cfz mcstas-macOS-conda.tgz  mcstas-macOS-arm64/ mcstas-macOS-x86_64/; fi;
-           if [ "$RUNNER_OS" == "Linux" ]; then ./buildscripts/build_debs_mcstas ${REV} meta && mv dist mcstas-debian-x86_64 && tar cfz mcstas-debian-x86_64.tgz mcstas-debian-x86_64.tgz  mcstas-debian-x86_64/; fi
+           if [ "$RUNNER_OS" == "Linux" ]; then ./buildscripts/build_debs_mcstas ${REV} meta && mv dist mcstas-debian-x86_64 && tar cfz mcstas-debian-x86_64.tgz mcstas-debian-x86_64/; fi
 
     - name: Cross-Build McStas for windows
       id: mcstas-mingw-build
