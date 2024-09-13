@@ -14,9 +14,6 @@ in a cmd.exe shell and start the McSta installers from there
 ## IMPORTANT B:
 * Please install the [McStas 3.5.0 metapackage](https://download.mcstas.org/mcstas-3.5.0/windows/McStas-Metapackage-3.5.0-win64.exe)
 
-* The [extras](https://download.mcstas.org/mcstas-3.5.0/windows/extras)
-  folder provides a binary for NeXus, which can be utilised by the McStas metapackage installation
-
 * An alternative to installing this version is to follow the instructions
 posted under [WSL](WSL/README.md) to install the 
 "Windows subsystem for Linux" and run the Debian binaries there
