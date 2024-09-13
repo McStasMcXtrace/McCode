@@ -1,7 +1,18 @@
 # Installation of McStas 3.5.0 on Windows 64 bit systems
 
+* Please install the [McStas 3.5.0 metapackage](https://download.mcstas.org/mcstas-3.5.0/windows/McStas-Metapackage-3.5.0-win64.exe)
 
-## IMPORTANT A:
+* An alternative to installing this version is to follow the instructions
+posted under [WSL](WSL/README.md) to install the 
+"Windows subsystem for Linux" and run the Debian binaries there
+
+* To use MCPL with McStas 3.5.0, please:
+ 1) Locate and run the executable `mcstas-mcpl-NSIS64-3.5.0-mingw64.exe` within the single-packages folder
+ 2) During installation, please specify `c:\mcstas-3.5.0` as installation directory
+ 3) After installation, place the mcpl-related `.bat` files from the extras folder in `c:\mcstas-3.5.0\bin`
+
+
+## Internet access required:
 * If you are behind a proxy server, please use the commands
 	```bash
 		set HTTP_PROXY=http://your_proxy_ip:port
@@ -9,14 +20,7 @@
 	```bash
 		set HTTPS_PROXY=https://your_proxy_ip:port
 	```
-in a cmd.exe shell and start the McSta installers from there
-	
-## IMPORTANT B:
-* Please install the [McStas 3.5.0 metapackage](https://download.mcstas.org/mcstas-3.5.0/windows/McStas-Metapackage-3.5.0-win64.exe)
-
-* An alternative to installing this version is to follow the instructions
-posted under [WSL](WSL/README.md) to install the 
-"Windows subsystem for Linux" and run the Debian binaries there
+in a cmd.exe shell and start the McStas installer from there	
 
 ## In case of issues
 Please report any trouble with the repository to [mcstas-users](mailto:mcstas-users@mcstas.org)
