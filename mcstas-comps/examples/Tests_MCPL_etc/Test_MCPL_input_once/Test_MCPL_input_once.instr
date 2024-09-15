@@ -59,7 +59,7 @@ COMPONENT Origin = Progress_bar()
   AT (0, 0, 0) ABSOLUTE/* read neutrons from an mcpl file*/
 
 /* read neutrons from an mcpl file*/
-COMPONENT vin = MCPL_input(filename=MCPLFILE,verbose=1,repeat_count=repeat,v_smear=v_smear,pos_smear=pos_smear,dir_smear=dir_smear)
+COMPONENT vin = MCPL_input_once(filename=MCPLFILE,verbose=1,v_smear=v_smear,pos_smear=pos_smear,dir_smear=dir_smear)
 AT( 0,0,0) RELATIVE PREVIOUS
 
 COMPONENT m1 = Monitor_nD(
