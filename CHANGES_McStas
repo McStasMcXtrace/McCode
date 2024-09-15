@@ -257,6 +257,8 @@ Changes in McStas 3.5.0, September 16th, 2024
    within this folder structure.
  - MCPL_input had a parameter change: E_smear has become v_smear since what was implemented
    was in fact a smearing on velocity.
+ - New component MCPL_input_once from Gregory S Tucker, ESS. Reads an MCPL file a single time,
+   and in MPI-mode with k processes, each processor reads just ~ 1/k of the file. 
  - An updated version of the strain-scanning instrument ILL_SALSA.instr was contributed by 
    Daniel Lomholt Christensen, Uni Copenhagen and ILL. The instrument uses a new model of
    a bent-Si monochromator (Monochromator_bent) which was benchmarked and validated against
