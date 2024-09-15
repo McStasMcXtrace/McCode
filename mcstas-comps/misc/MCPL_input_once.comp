@@ -175,20 +175,23 @@ INITIALIZE
 
 TRACE
 %{
-  mcpl_input_once_particle_t * ptr;
-  ptr = preload ? NULL : (mcpl_input_once_particle_t *) calloc(1, sizeof(mcpl_input_once_particle_t));
+  mcpl_input_once_particle_t * ptr = NULL;
   
   if (current_index >= maximum_index){
     // go back to the start of this worker's particles, rather than accessing out-of-range data
     current_index = 0;
+#ifndef OPENACC
     if (!preload){
+      // mcpl_seek is not available under openACC, and not used anyway
       mcpl_seek(inputfile, first_particle);
     }
+#endif
     times_replayed++;
   }
 #ifndef OPENACC
   // preload can only ever be false if OPENACC is not define (in which case it is the likely code path)
   if (!preload){
+    ptr = (mcpl_input_once_particle_t *) calloc(1, sizeof(mcpl_input_once_particle_t));
     const mcpl_particle_t *particle;// = (mcpl_particle_t *) calloc(sizeof(mcpl_particle_t),1);
     particle = mcpl_read(inputfile);
     current_index++; // track how many particles have been accessed, to ensure we don't exceed our slice of the file
