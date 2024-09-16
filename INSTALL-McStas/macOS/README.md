@@ -7,7 +7,7 @@
 ## Steps to perform
 
 * Download the package:
-  [McStas 3.5.1 for macOS](https://download.mcstas.org/mcstas-3.5.1/mac/mcstas-macOS-x86_64.tgz)
+  [McStas 3.5.1 for macOS](https://download.mcstas.org/mcstas-3.5.1/mac/mcstas-3.5.1-macOS-conda.tar.gz)
  and unpack it (e.g. double-clicking should work).
 
 * Open the relevant folder for your local processor
