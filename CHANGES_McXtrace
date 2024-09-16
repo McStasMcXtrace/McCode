@@ -15,9 +15,9 @@
 *
 * Documentation: CHANGES_McXtrace
 *************************************************************************/
-Changes in McXtrace 3.5.0, September 16th, 2024
+Changes in McXtrace 3.5.1, September 16th, 2024
 
- McXtrace 3.5.0 is the sixth official release in the 3.x series, with a modernised 
+ McXtrace 3.5.1 is the sixth official release in the 3.x series, with a modernised 
  code-generator and support for GPU acceleration on NVIDIA cards.
 
  Thanks:
@@ -27,9 +27,9 @@ Changes in McXtrace 3.5.0, September 16th, 2024
    our 3D visualisation!
 
  Important changes going forward:
- - From release 3.5.0 McStas and McXtrace are released simultaneously and with
+ - From release 3.5.1 McStas and McXtrace are released simultaneously and with
    the same versioning (meaning that McXtrace takes a jump from 3.2 up to 3.5)
- - With release 3.5.0 we are officially dropping support for the "legacy"
+ - With release 3.5.1 we are officially dropping support for the "legacy"
    McStas 2.7.2 release and the "legacy" McXtrace 1.7.1 release.
  - To minimize work required for platform support and builds, we are now focusing
    on fewer platforms:
@@ -82,10 +82,10 @@ Changes in McXtrace 3.5.0, September 16th, 2024
    support is expected to arrive "later", but you may run on your GPU via the so-called
    "Windows Subsystem for Linux" (WSL). macOS is unfortunately not supported
    by NVIDIA HPC acceleration.
- - McXtrace 3.5.0 packages come with OpenMPI and NeXus as install-time dependencies for all supported 
+ - McXtrace 3.5.1 packages come with OpenMPI and NeXus as install-time dependencies for all supported 
    platforms.
 
- McXtrace 3.5.0 enables most components and instruments on GPU. A few components compute only on CPU:
+ McXtrace 3.5.1 enables most components and instruments on GPU. A few components compute only on CPU:
  - Components using shared libraries from external software:
    * GNU Scientific library used in: 
      contrib/SAXSNanodiscsFast
@@ -162,10 +162,10 @@ Changes in McXtrace 3.5.0, September 16th, 2024
      loading system configuration
      Output of test will be placed in: mcxtrace-test
      ncount is: 1e6
-     Testing: 3.5.0
+     Testing: 3.5.1
 
      Finding instruments in: /Users/peterwillendrup/miniforge3/share/mcxtrace/resources/examples
-     Copying instruments to: mcxtrace-test/mcxtrace-3.5.0_JJ_SAXS_Darwin
+     Copying instruments to: mcxtrace-test/mcxtrace-3.5.1_JJ_SAXS_Darwin
 
      Compiling instruments [seconds]...
      JJ_SAXS :   2.10
@@ -176,7 +176,7 @@ Changes in McXtrace 3.5.0, September 16th, 2024
 
   - The 'mxviewtest' tool is now available as a user-tool. The tool may be used to render
     an html page with results from one or more 'mxtest' runs. If your results of a test run
-    was placed in e.g. mcxtrace-test/mcxtrace-3.5.0_JJ_SAXS_Darwin:
+    was placed in e.g. mcxtrace-test/mcxtrace-3.5.1_JJ_SAXS_Darwin:
     * cd to mcstas-test
     * run the command:    mxviewtest
     * You may then open the resulting html file for visualisation in your browser and see
@@ -207,10 +207,10 @@ Changes in McXtrace 3.5.0, September 16th, 2024
    * Many bug fixes in instruments and components.
    
  Core simulation framework / code-generator:
- - The McStas and McXtrace code-generators are fully synchronised from v3.5.0 onwards.
+ - The McStas and McXtrace code-generators are fully synchronised from v3.5.1 onwards.
 
  Libraries and other runtime code:
- - The NeXus output is richer from McXtrace 3.5.0, specifically:
+ - The NeXus output is richer from McXtrace 3.5.1, specifically:
    * All component global postions and orientations are placed as dataset within
      /entry1/instrument/components/<COMP>
    * Monitors store their detector outputs in
@@ -220,7 +220,7 @@ Changes in McXtrace 3.5.0, September 16th, 2024
    McCode repository, independent of the McXtrace release. (MCPL has further arrived
    in the Debian ecosystem, thanks to Synchrotron SOLEIL, Emmanuel Farhi and Roland Mas.)
 
- Migration to 3.5.0:
+ Migration to 3.5.1:
  - As mentioned above, we no longer support McXtrace 1.x.
  - The Wiki has a dedicated section on McXtrace 1.x -> McXtrace 3.x conversion that includes:
    * A nomenclature list containing short descriptions of new concepts and important keywords

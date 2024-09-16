@@ -51,15 +51,15 @@
 * Modified by: PW December 2022: versions 3.2 and 2.7.2
 * Modified by: PW March 2023: version 3.3
 * Modified by: PW September 2023: version 3.4
-* Modified by: PW September 2024: version 3.5.0
+* Modified by: PW September 2024: version 3.5.1
 *
-* This file is part of McStas 3.5.0, released September 16th 2024.
+* This file is part of McStas 3.5.1, released September 16th 2024.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas 3.5.0, September 16th, 2024
+Changes in McStas 3.5.1, September 16th, 2024
 
- McStas 3.5.0 is the sixth official release in the 3.x series, with a modernised 
+ McStas 3.5.1 is the sixth official release in the 3.x series, with a modernised 
  code-generator and support for GPU acceleration on NVIDIA cards.
 
  Thanks:
@@ -69,9 +69,9 @@ Changes in McStas 3.5.0, September 16th, 2024
    our 3D visualisation!
 
  Important changes going forward:
- - From release 3.5.0 McStas and McXtrace are released simultaneously and with
+ - From release 3.5.1 McStas and McXtrace are released simultaneously and with
    the same versioning (meaning that McXtrace takes a jump from 3.2 up to 3.5)
- - With release 3.5.0 we are officially dropping support for the "legacy"
+ - With release 3.5.1 we are officially dropping support for the "legacy"
    McStas 2.7.2 release and the "legacy" McXtrace 1.7.1 release.
  - To minimize work required for platform support and builds, we are now focusing
    on fewer platforms:
@@ -124,10 +124,10 @@ Changes in McStas 3.5.0, September 16th, 2024
    support is expected to arrive "later", but you may run on your GPU via the so-called
    "Windows Subsystem for Linux" (WSL). macOS is unfortunately not supported
    by NVIDIA HPC acceleration.
- - McStas 3.5.0 packages come with OpenMPI and NeXus as install-time dependencies for all supported 
+ - McStas 3.5.1 packages come with OpenMPI and NeXus as install-time dependencies for all supported 
    platforms.
 
- McStas 3.5.0 enables most components and instruments on GPU. A few components compute only on CPU:
+ McStas 3.5.1 enables most components and instruments on GPU. A few components compute only on CPU:
  - Components using shared libraries from external software:
    * GNU Scientific library used in: 
      contrib/SANSPDBFast
@@ -214,9 +214,9 @@ Changes in McStas 3.5.0, September 16th, 2024
      loading system configuration
      Output of test will be placed in: mcstas-test
      ncount is: 1e6
-     Testing: 3.5.0
+     Testing: 3.5.1
       Finding instruments in: /Users/peterwillendrup/miniforge3/share/mcstas/resources/examples
-     Copying instruments to: mcstas-test/mcstas-3.5.0_BNL_H8_simple_Darwin
+     Copying instruments to: mcstas-test/mcstas-3.5.1_BNL_H8_simple_Darwin
      
      Compiling instruments [seconds]...
      BNL_H8_simple :   2.03
@@ -226,7 +226,7 @@ Changes in McStas 3.5.0, September 16th, 2024
 
   - The 'mcviewtest' tool is now available as a user-tool. The tool may be used to render
     an html page with results from one or more 'mctest' runs. If your results of a test run
-    was placed in e.g. mcstas-test/mcstas-3.5.0_BNL_H8_simple_Darwin:
+    was placed in e.g. mcstas-test/mcstas-3.5.1_BNL_H8_simple_Darwin:
     * cd to mcstas-test
     * run the command:    mcviewtest
     * You may then open the resulting html file for visualisation in your browser and see
@@ -287,10 +287,10 @@ Changes in McStas 3.5.0, September 16th, 2024
      that this work will make it to one of the next minor updates McStas 3.5.x.
    
  Core simulation framework / code-generator:
- - The McStas and McXtrace code-generators are fully synchronised from v3.5.0 onwards.
+ - The McStas and McXtrace code-generators are fully synchronised from v3.5.1 onwards.
 
  Libraries and other runtime code:
- - The NeXus output is richer from McStas 3.5.0, specifically:
+ - The NeXus output is richer from McStas 3.5.1, specifically:
    * All component global postions and orientations are placed as dataset within
      /entry1/instrument/components/<COMP>
    * Monitors store their detector outputs in
@@ -308,7 +308,7 @@ Changes in McStas 3.5.0, September 16th, 2024
    McCode repository, independent of the McStas release. (Both codes have further arrived
    in the Debian ecosystem, thanks to Synchrotron SOLEIL, Emmanuel Farhi and Roland Mas.)
 
- Migration to 3.5.0:
+ Migration to 3.5.1:
  - As mentioned above, we no longer support McStas 2.x.
  - The Wiki has a dedicated section on McStas 2.x -> McStas 3.x conversion that includes:
    * A nomenclature list containing short descriptions of new concepts and important keywords
