@@ -1,0 +1,9 @@
+Package: mcstas-suite-python-ng
+Version: @VERSION@
+Section: main
+Priority: optional
+Architecture: all
+Depends: mcstas-suite-python
+Installed-Size:
+Maintainer: Peter Willendrup
+Description: A metapackage for McStas + python tools
