@@ -1,6 +1,6 @@
-# Install McStas 3.5.0 through conda-forge (macOS, Linux or Windows host)
+# Install McStas 3.5.1 through conda-forge (macOS, Linux or Windows host)
 
-* We a set of conda-packages for installing McStas 3.5.0.x through conda
+* We a set of conda-packages for installing McStas 3.5.1.x through conda
 
 ## Get yourself a conda / mamba
 We recommend [miniforge](https://github.com/conda-forge/miniforge)
@@ -12,10 +12,10 @@ We recommend [miniforge](https://github.com/conda-forge/miniforge)
 ## Install McStas, compilers, openmpi
 * ```mamba install mcstas compilers openmpi=4```
   
-(From next McStas release newer openmpi versions are also OK, but the 3.5.0 version of mcrun has an issue with openmpi 5.x)
+(From next McStas release newer openmpi versions are also OK, but the 3.5.1 version of mcrun has an issue with openmpi 5.x)
 
 ## Note for use on Windows
-At the time of release for 3.5.0 MCPL and NCrystal are not yet available for Windows on conda-forge, so related instruments will not compile/function.
+At the time of release for 3.5.1 MCPL and NCrystal are not yet available for Windows on conda-forge, so related instruments will not compile/function.
 We expect these dependencies to become available during the fall/winter of 2024.
 
 ## Install McStasScript, jypyterlab ipympl

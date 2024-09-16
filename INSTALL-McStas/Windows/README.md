@@ -1,10 +1,10 @@
-# Installation of McStas 3.5.0 on Windows 64 bit systems
+# Installation of McStas 3.5.1 on Windows 64 bit systems
 
-* Please install the [McStas 3.5.0 metapackage](https://download.mcstas.org/mcstas-3.5.0/windows/McStas-Metapackage-3.5.0-win64.exe)
-* To enable use of MCPL with McStas 3.5.0 on Windows, please:
- 1) Locate and run the executable `mcstas-mcpl-NSIS64-3.5.0-mingw64.exe` from the [single-packages folder](https://download.mcstas.org/mcstas-3.5.0/windows/single-packages)
- 2) During installation, please specify `c:\mcstas-3.5.0` as installation directory
- 3) After installation, place the mcpl-related `.bat` files from the [extras folder](https://download.mcstas.org/mcstas-3.5.0/windows/extras) folder in `c:\mcstas-3.5.0\bin`
+* Please install the [McStas 3.5.1 metapackage](https://download.mcstas.org/mcstas-3.5.1/windows/McStas-Metapackage-3.5.1-win64.exe)
+* To enable use of MCPL with McStas 3.5.1 on Windows, please:
+ 1) Locate and run the executable `mcstas-mcpl-NSIS64-3.5.1-mingw64.exe` from the [single-packages folder](https://download.mcstas.org/mcstas-3.5.1/windows/single-packages)
+ 2) During installation, please specify `c:\mcstas-3.5.1` as installation directory
+ 3) After installation, place the mcpl-related `.bat` files from the [extras folder](https://download.mcstas.org/mcstas-3.5.1/windows/extras) folder in `c:\mcstas-3.5.1\bin`
 
 
 * An alternative to installing this cross-compiled verison is to follow the instructions
