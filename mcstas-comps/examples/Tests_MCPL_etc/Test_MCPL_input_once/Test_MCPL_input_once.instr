@@ -17,13 +17,13 @@
 * 1) Beeing MPI-parallelized (no implicit "repeat" of the particles in the file, file content is shared among processes
 * 2) No implementation of "repetition", if further stats is needed downstream, SPLIT should be applied
 *
-* %Example: -n1e3 repeat=1 Detector: m1_I=2.42284e+11
+* %Example: -n1e3 v_smear=0.1 Detector: m1_I=2.42284e+11
 *
 * %Parameters
 *
-* v_smear: [1]      When repeating, make Gaussian MC choice on particle velocity with spread v_smear * particle velocity
-* pos_smear: [m]    When repeating, make uniform MC choice on sphere of radius pos_spear around particle position
-* dir_smear: [deg]  When repeating, make Gaussian MC choice in cone of opening dir_smear around particle direction
+* v_smear: [1]      Mmake Gaussian MC choice on particle velocity with spread v_smear * particle velocity
+* pos_smear: [m]    Make uniform MC choice on sphere of radius pos_spear around particle position
+* dir_smear: [deg]  Make Gaussian MC choice in cone of opening dir_smear around particle direction
 *
 * %End
 *******************************************************************************/
