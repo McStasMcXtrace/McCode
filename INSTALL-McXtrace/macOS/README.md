@@ -7,7 +7,7 @@
 ## Steps to perform
 
 * Download the package:
-  [McXtrace 3.5.1 for macOS](https://download.mcxtrace.org/mcxtrace-3.5.1/mac/mcxtrace-macOS-x86_64.tgz)
+  [McXtrace 3.5.1 for macOS](https://download.mcxtrace.org/mcxtrace-3.5.1/mac/mcxtrace-3.5.1-macOS-conda.tar.gz)
  and unpack it (e.g. double-clicking should work).
 
 * Open the relevant folder for your local processor
