@@ -3,7 +3,9 @@
 * We a set of conda-packages for installing McStas 3.5.1.x through conda
 
 ## Get yourself a conda / mamba
-We recommend [miniforge](https://github.com/conda-forge/miniforge)
+Due to the complex [licensing situation](https://discuss.scientific-python.org/t/response-to-anaconda-switch-to-paid-plans/1395) with the commercial Anaconda ecosystem, we clearly recommend McStas users to start from an open-source entry-point such as
+* [miniforge](https://github.com/conda-forge/miniforge) or
+* [micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html)
 
 ## Optionally create a dedicated environment and load it
 * ```conda create --name mcstas ```
