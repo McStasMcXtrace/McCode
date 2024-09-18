@@ -22,9 +22,6 @@ set(CPACK_PACKAGE_VERSION_MAJOR "1")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
-# Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, libnexus-dev, libxrl-dev, libgsl-dev, cif2hkl")
-
 # NSIS
 set(CPACK_NSIS_PACKAGE_NAME "${MCCODE_STRING} Components")
 set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING} Components")
@@ -43,6 +40,13 @@ if ( ENABLE_CIF2HKL )
     PROGRAMS "${PROJECT_BINARY_DIR}/cif2hkl${DOT_EXE_SUFFIX}"
     DESTINATION "${DEST_BINDIR}"
     )
+endif()
+
+# Debian
+if ( ENABLE_CIF2HKL )
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, libnexus-dev, libxrl-dev, libgsl-dev")
+else()
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, libnexus-dev, libxrl-dev, libgsl-dev, cif2hkl")
 endif()
 
 # System c-code
