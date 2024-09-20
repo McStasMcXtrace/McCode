@@ -37,7 +37,6 @@ dependencies:
   - jinja2
   - mslex
   - nodejs
+  - McStasScript
   - pip
-  - pip:
-    - guide_bot
-    - McStasScript
+
