@@ -65,32 +65,6 @@ int mcpl_file_exist (char *filename)
     struct stat   buffer;
     return (stat (filename, &buffer) == 0);
   }
-
-int run_mcpltool(char *filename)
-{
-
-  FILE *fp;
-  char path[CHAR_BUF_LENGTH];
-  char cmd[2*CHAR_BUF_LENGTH];
-
-  sprintf(cmd,"mcpltool %s",filename);
-  /* Open the command for reading. */
-  fp = popen(cmd, "r");
-  if (fp == NULL) {
-    printf("Failed to run command %s\n",cmd);
-    exit(1);
-  }
-
-  /* Read the output a line at a time - output it. */
-  while (fgets(path, sizeof(path), fp) != NULL) {
-    printf("%s", path);
-  }
-
-  /* close */
-  pclose(fp);
-
-  return 0;
-}
 %}
 
 DECLARE
@@ -201,7 +175,7 @@ INITIALIZE
 #endif
 
     if (verbose==1) {
-    printf("MCPL_output verbose mode: after generating the mcpl-file a summary from mcpltool will be printed.\n");
+    printf("MCPL_output verbose mode: after generating the mcpl-file a summary will be printed.\n");
     }
 
 #if defined (USE_MPI)
@@ -457,8 +431,8 @@ FINALLY
       }
       /* Recheck for file existance */
       if (mcpl_file_exist(finalfile)) {
-	printf("\n\nMCPL output summary from 'mcpltool %s'\n",finalfile);
-	run_mcpltool(finalfile);
+	printf("\n\nMCPL output summary from %s\n",finalfile);
+	mcpl_dump(finalfile, 0, 0, 10);
       } else {
 	printf("\n\nWarning, did not localize expected output file for stat summary!\n");
       }
