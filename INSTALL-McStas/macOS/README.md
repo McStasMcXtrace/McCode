@@ -16,10 +16,15 @@
 ![](screenshots/1_open-mcstas-from-Applications.png?raw=true)
 
 * Depending on your macOS version, security settings may initially prevent the app from opening, example from macOS 15 Sequoia:
-  - Initial warning that "McStas-3.5.1" was not opened ![](screenshots/2_mcstas-not-opened.png?raw=true)
-  - Next, go to System Preferences, Privacy and Security and select to "Open Anyway" ![](screenshots/3_mcstas-settings-open-anyway.png?raw=true)
-  - You will then receive yet another warning ![](screenshots/4_mcstas-open-anyway.png?raw=true)
-  - And finally give your password for installation to proceed  ![](screenshots/5_admin-password.png?raw=true)
+  - Initial warning that "McStas-3.5.1" was not opened 
+  ![](screenshots/2_mcstas-not-opened.png?raw=true)
+  - Next, go to System Preferences, Privacy and Security and select to
+  "Open Anyway"
+  ![](screenshots/3_mcstas-settings-open-anyway.png?raw=true)
+  - You will then receive yet another warning
+  ![](screenshots/4_mcstas-open-anyway.png?raw=true)
+  - And finally give your password for installation to proceed
+  ![](screenshots/5_admin-password.png?raw=true)
 
 * As of 3.5.1 the macOS app bundles are fully based on conda-forge and will "self-inject" all dependencies on first launch. Please follow any on-screen instructions given.
   
