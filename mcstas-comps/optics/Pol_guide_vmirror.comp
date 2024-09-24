@@ -46,6 +46,7 @@
 * 
 * rFunc: [1]       Cavity wall Reflection function
 * rPar: [1]        Cavity wall parameters array for rFunc, use with inputType = 0
+* rParFile: []     Cavity wall parameters filename for rFunc, use with inputType = 1
 * rR0: [1]         Cavity wall reflectivity below critical scattering vector, use with inputType = 2
 * rQc: [AA-1]      Cavity wall reflectivity critical scattering vector, use natural Ni (m=1 definition) value of 0.0217, use with inputType = 2
 * ralpha: [AA]     Cavity wall slope of reflectivity, use with inputType = 2   
@@ -55,6 +56,7 @@
 * 
 * rUpFunc: [1]     Mirror Reflection function for spin up
 * rUpPar: [1]      Mirror Parameters array for rUpFunc, use with inputType = 0
+* rUpParFile: []   Mirror Parameters filename for rUpFunc, use with inputType = 1
 * rUpR0: [1]       Mirror spin up reflectivity below critical scattering vector, use with inputType = 2
 * rUpQc: [AA-1]    Mirror spin up reflectivity critical scattering vector, use natural Ni (m=1 definition) value of 0.0217, use with inputType = 2
 * rUpalpha:[AA]    Mirror spin up slope of reflectivity, use with inputType = 2   
@@ -64,6 +66,7 @@
 * 
 * rDownFunc: [1]   Mirror Reflection function for spin down
 * rDownPar: [1]    Mirror Parameters for rDownFunc, use with inputType = 0
+* rDownParFile: [] Mirror Parameters filename for rDownFunc, use with inputType = 1
 * rDownR0: [1]     Mirror spin down reflectivity below critical scattering vector, use with inputType = 2
 * rDownQc: [AA-1]  Mirror spin down reflectivity critical scattering vector, use natural Ni (m=1 definition) value of 0.0217, use with inputType = 2
 * rDownalpha: [AA] Mirror spin down slope of reflectivity, use with inputType = 2   
@@ -98,7 +101,11 @@ SETTING PARAMETERS (int nvs=1,xwidth=0.1, yheight=0.1, length=0.5,
         int debug=0, allow_inside_start=0,
 	vector rPar={1.0, 0.0217, 6.5, 2, 0.00157, 80},
 	vector rUpPar={1.0, 0.0217, 2.47, 4, 0.0014},
-	vector rDownPar={1.0, 0.0217, 1, 0.65, 0.003}, int inputType=0)
+	vector rDownPar={1.0, 0.0217, 1, 0.65, 0.003}, 
+	string rParFile = "",
+	string rUpParFile = "",
+	string rDownParFile = "",
+	int inputType=0)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -174,33 +181,32 @@ if (inputType == 0) {
 	rDownParToFunc[i_index] = rDownPar[i_index];
   }
  } else if (inputType == 1) {
-  /*  rParPtr     = (t_Table*) malloc(sizeof(t_Table));
-  rUpParPtr   = (t_Table*) malloc(sizeof(t_Table));
-  rDownParPtr = (t_Table*) malloc(sizeof(t_Table));*/
-  if (Table_Read(&rParPtr, rPar, 1) <= 0) {
+  if (Table_Read(&rParPtr, rParFile, 1) <= 0) {
     fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n",
 	    NAME_CURRENT_COMP, rPar);
     exit(1);
   }
-  if (Table_Read(&rUpParPtr, rUpPar, 1) <= 0) {
+  if (Table_Read(&rUpParPtr, rUpParFile, 1) <= 0) {
     fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n",
 	    NAME_CURRENT_COMP, rUpPar);
     exit(1);
   }
-  if (Table_Read(&rDownParPtr, rDownPar, 1) <= 0) {
+  if (Table_Read(&rDownParPtr, rDownParFile, 1) <= 0) {
     fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n",
 	    NAME_CURRENT_COMP, rDownPar);
     exit(1);
   }
+  fprintf(stderr, "Pol_guide_vmirror: %s: Reading files is not possible!\n",
+          NAME_CURRENT_COMP);
+  exit(1);
  } else if (inputType == 2) {
-//Assemble the parameter array r..ParToFunc from the individual parameters
-//r..ParToFunc is sent to the reflectivity functions
+ //Assemble the parameter array r..ParToFunc from the individual parameters
+ //r..ParToFunc is sent to the reflectivity functions
 
-  for (i_index=0; i_index < 6; i_index++)
-  {
-	rParToFunc[i_index] = 0;
-	rUpParToFunc[i_index] = 0;
-	rDownParToFunc[i_index] = 0;
+  for (i_index=0; i_index < 6; i_index++) {
+    rParToFunc[i_index] = 0;
+    rUpParToFunc[i_index] = 0;
+    rDownParToFunc[i_index] = 0;
   }
   
   rParToFunc[0] = rR0;
@@ -223,7 +229,7 @@ if (inputType == 0) {
   rDownParToFunc[3] = rDownmSM;
   rDownParToFunc[4] = rDownW;
   rDownParToFunc[5] = rDownbeta;
-}
+ }
 
   if ((xwidth<=0) || (yheight<= 0) || (length<=0)) {
     fprintf(stderr, "Pol_guide_vmirror: %s: NULL or negative length scale!\n"
