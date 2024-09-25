@@ -839,7 +839,7 @@ INITIALIZE
 	if (mosaicity && radius_x) monochromator.type = bent_mosaic;
 	if (!radius_x && !mosaicity) monochromator.type = flat;
 	// Read the designated plane of reflection, for use in the monochromator.
-	enum crystal_plane plane = stringToEnum(&plane_of_reflection);
+	enum crystal_plane plane = stringToEnum((const char *)&plane_of_reflection);
 	// Set Monochromator values
 	monochromator.length = zwidth; // [m]
 	monochromator.height = yheight; // [m]
