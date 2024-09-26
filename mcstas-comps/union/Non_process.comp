@@ -57,12 +57,12 @@ SHARE
 #ifndef Union
 #define Union $Revision: 0.8 $
 
-%include "Union_functions.c"
+%include "union-lib.c"
 %include "union-init.c"
 
 #endif
 
-// Very important to add a pointer to this struct in the Union_functions.c file
+// Very important to add a pointer to this struct in the union-lib.c file
 struct Non_physics_storage_struct{
     // Variables that needs to be transfered between any of the following places:
     // The initialize in this component
