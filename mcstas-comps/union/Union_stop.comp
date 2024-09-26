@@ -58,7 +58,7 @@ SHARE
 
 #endif
 
-%include "Union_last_functions.c"
+%include "union-suffix.c"
 %}
 
 DECLARE
