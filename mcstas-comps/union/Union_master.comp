@@ -169,7 +169,7 @@ DECLARE
   double time_to_scattering;
   double length_to_scattering;
   double length_to_boundery;
-  double length_to_boundery_fp
+  double length_to_boundery_fp;
   double time_to_boundery;
   int selected_process;
   int scattering_event;
