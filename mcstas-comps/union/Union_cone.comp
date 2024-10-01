@@ -74,14 +74,7 @@ OUTPUT PARAMETERS ()
 SHARE
 %{
 #ifndef Union
-#define Union $Revision: 0.8 $
-
-%include "union-lib.c"
-%include "union-init.c"
-
-//#include "Cone_in_Cone.c"
-//#include "/ConeFunctions/r_within_Cone.c"
-
+#error "The Union_init component must be included before this Union_cone component"
 #endif
 
 void mcdisplay_cone_function(struct lines_to_draw *lines_to_draw_output,int index, struct geometry_struct **Geometries,int number_of_volumes) {

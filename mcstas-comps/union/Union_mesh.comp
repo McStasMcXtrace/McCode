@@ -73,14 +73,7 @@ OUTPUT PARAMETERS ()
 SHARE
 %{
 #ifndef Union
-#define Union $Revision: 0.8 $
-
-%include "union-lib.c"
-%include "union-init.c"
-
-//#include "mesh_in_mesh.c"
-//#include "/MeshFunctions/r_within_mesh.c"
-
+#error "The Union_init component must be included before this Union_mesh component"
 #endif
 
 

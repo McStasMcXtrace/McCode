@@ -101,11 +101,7 @@ DEPENDENCY "-Wl,-rpath,CMD(ncrystal-config --show libdir) -Wl,CMD(ncrystal-confi
 SHARE
 %{
 #ifndef Union
-#define Union $Revision: 0.8 $
-
-%include "union-lib.c"
-%include "union-init.c"
-
+#error "The Union_init component must be included before this NCrystal_process component"
 #endif
 
 #include "NCrystal/ncrystal.h"

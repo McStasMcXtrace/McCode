@@ -87,11 +87,7 @@ OUTPUT PARAMETERS ()
 SHARE
 %{
 #ifndef Union
-#define Union $Revision: 0.8 $
-
-%include "union-lib.c"
-%include "union-init.c"
-
+#error "The Union_init component must be included before this Union_logger_3D_space component"
 #endif
 
 struct temp_3DS_data_element_struct {

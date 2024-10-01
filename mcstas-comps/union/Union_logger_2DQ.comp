@@ -84,11 +84,7 @@ OUTPUT PARAMETERS ()
 SHARE
 %{
 #ifndef Union
-#define Union $Revision: 0.8 $
-
-%include "union-lib.c"
-%include "union-init.c"
-
+#error "The Union_init component must be included before this Union_logger_2DQ component"
 #endif
 
 struct temp_2DQ_data_element_struct {

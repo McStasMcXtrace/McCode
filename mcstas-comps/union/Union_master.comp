@@ -68,11 +68,7 @@ SHARE
 %{
 
 #ifndef Union
-#define Union $Revision: 0.9 $
-
-%include "union-lib.c"
-%include "union-init.c"
-
+#error "The Union_init component must be included before this Union_master component"
 #endif
 
 // TEST

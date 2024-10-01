@@ -82,11 +82,7 @@ OUTPUT PARAMETERS ()
 SHARE
 %{
 #ifndef Union
-#define Union $Revision: 0.8 $
-
-%include "union-lib.c"
-%include "union-init.c"
-
+#error "The Union_init component must be included before this Union_conditional_PSD component"
 #endif
 
 int conditional_function_PSD(union conditional_data_union *data_union, Coords *position, Coords *velocity, double *weight, double *time, int *current_volume, int *total_number_of_scattering, int *number_of_scattering_per_volume, int **number_of_scattering_per_volume_process) {

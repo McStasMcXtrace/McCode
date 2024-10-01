@@ -85,11 +85,7 @@ OUTPUT PARAMETERS ()
 SHARE
 %{
 #ifndef Union
-#define Union $Revision: 0.8 $
-
-%include "union-lib.c"
-%include "union-init.c"
-
+#error "The Union_init component must be included before this Union_logger_2D_space_time component"
 #endif
 
 struct temp_2DS_t_data_element_struct {
