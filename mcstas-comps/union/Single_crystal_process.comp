@@ -92,11 +92,7 @@ OUTPUT PARAMETERS ()
 SHARE
 %{
 #ifndef Union
-#define Union $Revision: 0.8 $
-
-%include "Union_functions.c"
-%include "Union_initialization.c"
-
+#error "The Union_init component must be included before this Single_crystal_process component"
 #endif
 
 %include "read_table-lib"
@@ -750,7 +746,7 @@ SHARE
 
 #endif /* !SINGLE_CRYSTAL_PROCESS_DECL */
 
-// Very important to add a pointer to this struct in the Union_functions.c file
+// Very important to add a pointer to this struct in the union-lib.c file
 struct Single_crystal_physics_storage_struct{
     // Variables that needs to be transfered between any of the following places:
     // The initialize in this component
