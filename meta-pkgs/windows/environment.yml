@@ -32,7 +32,5 @@ dependencies:
   - typish
   - jsons
   - nodejs
+  - McStasScript
   - pip
-  - pip:
-    - guide_bot
-    - McStasScript
