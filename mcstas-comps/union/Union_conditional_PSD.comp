@@ -82,11 +82,7 @@ OUTPUT PARAMETERS ()
 SHARE
 %{
 #ifndef Union
-#define Union $Revision: 0.8 $
-
-%include "Union_functions.c"
-%include "Union_initialization.c"
-
+#error "The Union_init component must be included before this Union_conditional_PSD component"
 #endif
 
 int conditional_function_PSD(union conditional_data_union *data_union, Coords *position, Coords *velocity, double *weight, double *time, int *current_volume, int *total_number_of_scattering, int *number_of_scattering_per_volume, int **number_of_scattering_per_volume_process) {
@@ -204,7 +200,7 @@ DECLARE
 int loop_index;
 
 // This function pointer is used to switch the logger function pointers for active and inactive logger functions.
-// Need to have the same input (defined in logger_pointer_set_struct in Union_functions.c)
+// Need to have the same input (defined in logger_pointer_set_struct in union-lib.c)
 //void (*temp_function_pointer)(Coords*, double*, double*, double, double, double, int, int, int, struct logger_struct*, struct logger_with_data_struct*);
 int return_value;
 struct pointer_to_1d_int_list accepted_loggers_all;
@@ -335,7 +331,7 @@ struct global_positions_to_transform_list_struct *global_positions_to_transform_
     }
     
     // This function pointer is used to switch the logger function pointers for active and inactive logger functions.
-    // Need to have the same input (defined in logger_pointer_set_struct in Union_functions.c)
+    // Need to have the same input (defined in logger_pointer_set_struct in union-lib.c)
     void (*temp_function_pointer)(Coords*, double*, double*, double, double, double, int, int, int, struct logger_struct*, struct logger_with_data_struct*);
     void (*temp_abs_function_pointer)(Coords*, double*, double,  double, int, int, struct abs_logger_struct*, struct abs_logger_with_data_struct*);
     for (loop_index=0;loop_index<accepted_loggers_all.num_elements;loop_index++) {

@@ -59,11 +59,7 @@ OUTPUT PARAMETERS ()
 SHARE
 %{
 #ifndef Union
-#define Union $Revision: 0.8 $
-
-%include "Union_functions.c"
-%include "Union_initialization.c"
-
+#error "The Union_init component must be included before this Texture_process component"
 #endif
 
 %include "read_table-lib"
@@ -1941,7 +1937,7 @@ int free_hkl_data_texture(struct hkl_data_texture *L)
 
 #endif /* !TEXTURE_PROCESS_DECL */
 
-// Very important to add a pointer to this struct in the Union_functions.c file
+// Very important to add a pointer to this struct in the union-lib.c file
 struct Texture_physics_storage_struct {
   // Variables that needs to be transfered between any of the following places:
   // The initialize in this component

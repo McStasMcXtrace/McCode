@@ -63,11 +63,7 @@ OUTPUT PARAMETERS ()
 SHARE
 %{
 #ifndef Union
-#define Union $Revision: 0.8 $
-
-%include "Union_functions.c"
-%include "Union_initialization.c"
-
+#error "The Union_init component must be included before this AF_HB_1D_process component"
 #endif
 
 struct physical_constants_AF_HB_1D{
@@ -81,7 +77,7 @@ struct physical_constants_AF_HB_1D{
     //double weight_factor;
 };
 
-// Very important to add a pointer to this struct in the Union_functions.c file
+// Very important to add a pointer to this struct in the union-lib.c file
 struct AF_HB_1D_physics_storage_struct{
     // Variables that needs to be transfered between any of the following places:
     // The initialize in this component
