@@ -683,7 +683,7 @@ function parstr(tag,init) {
    var str = "";
    if (val) {
      if (init==0) {
-        str = str + ",\\n";
+        str = str + ",\n";
      }
      str = str + "  " + tag + " = " + val;
    }
@@ -696,7 +696,7 @@ function addpos() {
    var zpos = getval("zpos");
    var REF = getval("REF");
 
-   var ATpos = "\) \\n AT \(";
+   var ATpos = "\) \n AT \(";
    ATpos = ATpos + xpos + ", ";
    ATpos = ATpos + ypos + ", ";
    ATpos = ATpos + zpos;
@@ -714,7 +714,7 @@ function addrot() {
    var ATrot = "";
 
    if (xrot && yrot && zrot) { 
-     ATrot = "\\n ROTATED \(";
+     ATrot = "\n ROTATED \(";
      ATrot = ATrot + xrot + ", ";
      ATrot = ATrot + yrot + ", ";
      ATrot = ATrot + zrot;
@@ -726,7 +726,7 @@ function addrot() {
 
 function compdef(type) {
   var instance = getval("instance");
-  var compstr = "COMPONENT " + instance + " = " + type +"\(\\n";
+  var compstr = "COMPONENT " + instance + " = " + type +"\(\n";
   return compstr;
 }
 
@@ -747,7 +747,7 @@ function comp() {
     Add = parstr(pars[i],init);
     if (Add) {
       init=0;
-      Text = Text + Add;",\\n ";
+      Text = Text + Add;",\n ";
     }
   }
 
