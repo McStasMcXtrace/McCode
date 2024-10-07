@@ -62,6 +62,11 @@ SHARE
     %include "conic.h"
     %include "read_table-lib"
 
+    // PW 20241007: (Unused) function pointer moved here from DECLARE
+    // where it has no meaningful place. Commented also, since it is - well, unused?!
+    // Function to handle Conic-Neutron collisions with reflectivity from McStas Tables
+    // void traceNeutronConicWithTables(_class_particle* p, ConicSurf c);
+
 /* Function originally defined in file "calciterativemirrors.h"
     
 /*! \brief Function to return an array of distances for a nested mirror assembly, see attached files. Also works reasonably well for parabolic mirrors
@@ -126,8 +131,6 @@ DECLARE
     Scene s;
     //point structure
     Point p1;
-    //Function to handle Conic-Neutron collisions with reflectivity from McStas Tables
-    void traceNeutronConicWithTables(_class_particle* p, ConicSurf c);
     double *rfront_inner;//all r-distances at lStart for all mirror surfaces
     int silicon; // +1: neutron in silicon, -1: neutron in air, 0: mirrorwidth is 0; neutron cannot be in silicon and also does not track mirror transitions
     t_Table rsTable;
