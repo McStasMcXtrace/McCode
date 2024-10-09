@@ -27,22 +27,14 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_MCPL_input_once(v_smear=0.1,pos_smear=0.001,dir_smear=0.01)
-DEPENDENCY "-DMCPLPATH=GETPATH(examples/Tests_MCPL_etc/Test_MCPL_input/voutput.mcpl)"
+DEFINE INSTRUMENT Test_MCPL_input_once(v_smear=0.1,pos_smear=0.001,dir_smear=0.01, string MCPLFILE="voutput.mcpl")
 
 DECLARE
 %{
   long long ncount_i;
-  
-  #define QUOTE(name) #name
-  #define STR(macro) QUOTE(macro)
-
-  #ifndef MCPLPATH
-  #define MCPLPATH=/usr/share/mcstas/2.3/MCPL/voutput.mcpl
-  #endif
-
-  #define MCPLFILE STR(MCPLPATH)
 %}
+)
+
 
 INITIALIZE
 %{
