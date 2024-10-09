@@ -1060,7 +1060,7 @@ TRACE
           if(fabs(arg) > 1)
             ABSORB;                   /* No bragg scattering possible*/
           if (tth_sign != 0) {
-            arg=fabs(arg)*(tth_sign > 0 : 1 : -1);
+            arg=fabs(arg)*(tth_sign > 0 ? 1 : -1);
           }
           theta = asin(arg);          /* Bragg scattering law */
 

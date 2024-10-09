@@ -857,7 +857,7 @@ INITIALIZE
 %}
 TRACE
 %{
-  double t0, t1, t2, t3, v, v1,l_full, l, l_1, dt, alpha0, alpha, theta, my_s, my_s_n, sg;
+  double t0, t1, t2, t3, v, v1,l_full, l, l_1, dt, alpha0, alpha, theta, my_s, my_s_n;
   double solid_angle;
   double neutrontype = 0;
   double ntype = 0;
@@ -1008,7 +1008,7 @@ TRACE
 			if(fabs(arg) > 1)
 				ABSORB;                   /* No bragg scattering possible*/
 			if (tth_sign != 0) {
-				arg=fabs(arg)*(tth_sign > 0 : 1 : -1);
+				arg=fabs(arg)*(tth_sign > 0 ? 1 : -1);
 			}
 			theta = asin(arg);          /* Bragg scattering law */
 			  /* Choose point on Debye-Scherrer cone */
@@ -1060,7 +1060,7 @@ TRACE
 			}
 
 			  /* v_out = rotate 'v' by 2*theta around tmp_v: Bragg angle */
-			rotate(vout_x,vout_y,vout_z, vx,vy,vz, 2*sg*theta, tmp_vx,tmp_vy,tmp_vz);
+			rotate(vout_x,vout_y,vout_z, vx,vy,vz, 2*theta, tmp_vx,tmp_vy,tmp_vz);
 			
 			/* tmp_v = rotate v_out by alpha0 around 'v' (Debye-Scherrer cone) */
 			rotate(tmp_vx,tmp_vy,tmp_vz, vout_x,vout_y,vout_z, alpha0, vx, vy, vz);
