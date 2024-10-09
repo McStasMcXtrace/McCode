@@ -320,23 +320,26 @@ SHARE
       if (ret != -1 && ret != 127) found = 1;
     }
     if (!found) {
-      snprintf(cmd,  1024, "%s%c%s%c%s -o %s %s %s",
-        getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS,
-        MC_PATHSEP_C, "bin", MC_PATHSEP_C, "cif2hkl",
-        OUTFILE, options, infile);
-      ret = system(cmd);
-      if (ret != -1 && ret != 127) found = 1;
-    }
-    // ret = -1:  child process could not be created
-    // ret = 127: shell could not be executed in the child process
-    if (!found) {
-      // try with any cif2hkl command from the system
+      // try with cif2hkl command from the system PATH
       snprintf(cmd,  1024, "%s -o %s %s %s",
         "cif2hkl", OUTFILE, options, infile);
       ret = system(cmd);
+      if (ret != -1 && ret != 127) found = 1;
     }
-      
-    if (ret == -1 || ret == 127) return(NULL);
+    if (!found) {
+      // As a last resort, attempt with cif2hkl from $MCXTRACE/bin
+      snprintf(cmd,  1024, "%s%c%s%c%s -o %s %s %s",
+        getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCXTRACE,
+        MC_PATHSEP_C, "bin", MC_PATHSEP_C, "cif2hkl",
+        OUTFILE, options, infile);
+      ret = system(cmd);
+    }
+    // ret = -1:  child process could not be created
+    // ret = 127: shell could not be executed in the child process     
+    if (ret == -1 || ret == 127) {
+      free(OUTFILE);
+      return(NULL);
+    }
       
     // test if the result file has been created
     FILE *file = Open_File(OUTFILE,"r", NULL);
