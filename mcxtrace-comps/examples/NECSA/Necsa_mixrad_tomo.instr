@@ -1,0 +1,72 @@
+/*******************************************************************************
+* Instrument: Necsa_mixrad_tomo
+*
+* %Identification
+* Written by: us all at Necsa
+* Date: Oct 11th 2024
+* Origin: Necsa
+* %INSTRUMENT_SITE: Necsa
+*
+* Nikon XTH 225 Tomograph
+*
+* %Description
+* This is a simple description of a Nikon X-ray tomograph
+*
+* Example: <parameters=values>
+*
+* %Parameters
+* source_material:  [str] source anode, e.g. W.txt
+* sample_material:  [str] sample material, e.g. chemical formulae or CIF file
+* sample_shape:     [str] OFF/PLY file
+* Emin: [keV] minimum energy at the source
+* Emax: [keV] maximum energy at the source
+* Sample_rotation: [deg] sample rotation angle around Y vertical
+* Sample_distance: [deg] sample location wrt source. detector fixed at 1.147 m.
+*
+* %L
+* <put here any reference/HTML link>
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Necsa_mixrad_tomo(string source_material="W.txt",
+ string sample_material="Fe2O3Au", string sample_shape="king.off",
+ Emin=1, Emax=75, Sample_rotation=90, Sample_distance=0.5)
+
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT anode = Source_lab(
+    width=1e-6,height=3e-6,thickness=200e-6,dist=Sample_distance,tube_current=1e-3,
+    E0=225,focus_xw=0.2,focus_yh=0.2,
+    material_datafile=source_material,
+    Emin=Emin, Emax=Emax)
+AT(0,0,0) ABSOLUTE
+
+COMPONENT source_energy_monitor = E_monitor(xwidth=1e-3, yheight=1e-3,
+  nE=1001, Emin=Emin, Emax=Emax, restore_xray=1)
+AT(0,0,300e-6) RELATIVE anode
+
+// Sample location
+COMPONENT Sample_holder = Arm()
+AT (0,0,Sample_distance) RELATIVE anode
+
+COMPONENT Sample_input = PSD_monitor(xwidth=0.2, yheight=0.2, nx=128, ny=128,
+  restore_xray=1)
+AT (0,0,0) RELATIVE Sample_holder
+
+COMPONENT Sample = Fluorescence( 
+  material="Mn", 
+  xwidth = 0.1, yheight = 0.1, zdepth = 0.1, 
+  geometry=sample_shape)
+AT (0,0,0) RELATIVE Sample_holder
+ROTATED (0, Sample_rotation, 0) RELATIVE Sample_holder
+
+COMPONENT Detector = PSD_monitor(
+  xwidth=0.4, yheight=0.4, nx=128, ny=128)
+AT (0,0,1.147) RELATIVE anode
+
+
+END
