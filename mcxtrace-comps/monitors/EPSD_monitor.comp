@@ -13,7 +13,7 @@
 * Release: McXtrace 1.5
 * Origin: DTU
 *
-* Position-sensitive monitor.
+* Position-energy-sensitive monitor.
 *
 * %Description
 * An nx times ny pixel energy resolved PSD monitor, which only counts photons with energy in an interval

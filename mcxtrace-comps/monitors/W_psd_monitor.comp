@@ -5,7 +5,7 @@
 *         DTU Physics, Kgs. Lyngby, Denmark
 *         Synchrotron SOLEIL, Saint-Aubin, France
 *
-* Component: PSD_monitor
+* Component: W_PSD_monitor
 *
 * %Identification
 * Written by: Erik Knudsen
@@ -20,7 +20,7 @@
 * An n times m pixel PSD wattage monitor. This component may also be used as a beam
 * detector.
 *
-* Example: PSD_monitor(xwidth=0.1, yheight=0.1,
+* Example: W_psd_monitor(xwidth=0.1, yheight=0.1,
 *           nx=90, ny=90, filename="Output.psd")
 *
 * %Parameters
