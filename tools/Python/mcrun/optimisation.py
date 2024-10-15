@@ -157,7 +157,7 @@ def mcsimdetectors(directory_name: str):
     if not directory.exists() and directory.is_dir():
         raise RuntimeError(f"{directory_name} is not a directory")
     filepath = directory.joinpath('mccode.sim')
-    hdfpath = directory.joinpath('mccode.h5')
+    hdfpath  = directory.joinpath('mccode.h5')
     if not filepath.exists() and hdfpath.exists():
         return
     if not filepath.exists():
@@ -169,7 +169,7 @@ def mcsimdetectors(directory_name: str):
     # with lines of the form "{key}: {value}"
     blocks = [{k.strip(): v.strip() for k, v in [z.split(':', 1) for z in b.split('\n')]} for b in blocks]
     # This object only cares about extracting the (name, I, Err, N, data file) sets for each detector
-    return [Detector(d['component'], *d['values'].split(), d['filename']) for d in blocks]
+    return [Detector(d['component'], *d['values'].split(), d['filename'], d['statistics']) for d in blocks]
 
 
 def point_at(N, key, minmax, step):
@@ -405,11 +405,17 @@ def McCode_runner(x, args):
     # add monitors that match a given name
     for d in detectors:
         if d.name in args.mcstas.options.optimize_monitor:
-            values.append(d.intensity)
+            if args.mcstas.options.optimize_eval:
+              values.append(eval(args.mcstas.options.optimize_eval))
+            else:
+              values.append(d.intensity)
     # in case monitor name is not found, we use all monitor values
     if len(values) == 0:
         for d in detectors:
-            values.append(d.intensity)
+            if args.mcstas.options.optimize_eval:
+              values.append(eval(args.mcstas.options.optimize_eval))
+            else:
+              values.append(d.intensity)
 
     values = [float(d) for d in values]
 
