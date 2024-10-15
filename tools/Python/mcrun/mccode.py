@@ -15,7 +15,7 @@ from os.path import isfile, dirname, basename, splitext, join
 from decimal import Decimal
 
 # import config
-
+import numpy
 import sys
 
 sys.path.append(join(dirname(__file__), '..'))
@@ -377,14 +377,40 @@ class McStas:
 
 
 class Detector(object):
-    ''' A detector '''
+    ''' A detector representation with its integrated values and statistics.'''
+    # this is used in optimisation.py
 
-    def __init__(self, name, intensity, error, count, path):
-        self.name = name
-        self.intensity = Decimal(intensity)
-        self.error = Decimal(error)
-        self.count = Decimal(count)
-        self.path = path
+    def __init__(self, name, intensity, error, count, path, statistics):
+        self.name  = name
+        self.intensity = float(intensity)
+        self.error = float(error)
+        self.count = float(count)
+        self.path  = path
+        self.values= numpy.array([ intensity, error, count ])
+        # get statistics
+        d = []
+        for sub in statistics.split(';'): # separate the 'name=value;' bits:
+          if '=' in sub:
+            d.append(map(str.strip, sub.split('=',1)))
+        
+        d = dict(d)
+        if not 'X0' in d:
+          d['X0'] = 0
+        if not 'dX' in d:
+          d['dX'] = 1
+        if not 'Y0' in d:
+          d['Y0'] = 0
+        if not 'dY' in d:
+          d['dY'] = 1
+        
+        self.X0 = float(d['X0'])
+        self.dX = float(d['dX'])
+        self.Y0 = float(d['Y0'])
+        self.dY = float(d['dY'])
+        if not self.dX:
+          self.dX = 1e-10
+        if not self.dY:
+          self.dY = 1e-10
 
 
 class McStasInfo:
