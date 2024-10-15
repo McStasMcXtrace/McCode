@@ -191,14 +191,14 @@ def add_mcrun_options(parser):
         metavar='optimize_eval',
         type=str,
         help='Optimization expression to evaluate for each detector "d" structure. You may combine:\n' +
-             '  d.intensity The detector intensity\n' +
-             '  d.error     The detector intensity uncertainty\n' +
-             '  d.values    An array with [intensity, error, counts]\n' +
-             '  d.X0 d.Y0   Center of signal (1st moment)\n' +
-             '  d.dX d.dY   Width  of signal (2nd moment)\n' +
-             'Default is "d.intensity". Suggestions are: \n' +
-             '  "d.intensity/d.dX"      for 1D\n' +
-             '  "d.intensity/d.dX/d.dY" for 2D',
+             '"d.intensity" The detector intensity;\n' +
+             '"d.error"     The detector intensity uncertainty;\n' +
+             '"d.values"    An array with [intensity, error, counts];\n' +
+             '"d.X0 d.Y0"   Center of signal (1st moment);\n' +
+             '"d.dX d.dY"   Width  of signal (2nd moment).\n' +
+             'Default is "d.intensity". Examples are: \n' +
+             '"d.intensity/d.dX" for 1D;\n' +
+             '"d.intensity/d.dX/d.dY" for 2D',
         nargs=1,
         default=None,
     )
