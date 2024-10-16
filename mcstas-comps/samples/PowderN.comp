@@ -145,7 +145,7 @@
 * reflections: [string] Input file for reflections (LAZ LAU CIF, FullProf, ShelX). Use only incoherent scattering if NULL or "" 
 * d_phi: [deg]         Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
 * d_omega: [deg]       Horizontal focus range (only for incoherent scattering), 0 for no focusing.
-* tth_sign: [1]        Sign of the scattering angle. If 0, the sign is chosen randomly (left and right). ONLY functional in combination with d_phi.
+* tth_sign: [1]        Sign of the scattering angle. If 0, the sign is chosen randomly (left and right). ONLY functional in combination with d_phi and ONLY applies to bragg lines.
 * focus_flip:   [1]    Controls the sense of d_phi. If 0 d_phi is measured against the xz-plane. If !=0 d_phi is measured against zy-plane.
 * pack: [1]            Packing factor.
 * delta_d_d: [0/1]     Global relative delta_d_d/d broadening when the 'w' column is not available. Use 0 if ideal.
