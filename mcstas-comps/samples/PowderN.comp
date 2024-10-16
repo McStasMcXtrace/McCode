@@ -164,7 +164,7 @@
 * weight: [g/mol]      Atomic/molecular weight of material.
 * density: [g/cm^3]    Density of material. rho=density/weight/1e24*N_A.
 * nb_atoms: [1]        Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell
-* target_index: [1]    Relative index of component to focus at, e.g. next is +1
+* target_index: [1]    Relative index of component to focus incoherent scattering at, e.g. next is +1
 *
 * OUTPUT PARAMETERS:
 * line_info: [struct]  internal structure containing many members/info
@@ -1018,7 +1018,7 @@ TRACE
 			  /* Choose point on Debye-Scherrer cone */
 			if (d_phi_thread)
 			{ /* relate height of detector to the height on DS cone */
-				arg = sin(d_phi*DEG2RAD/2)/sin(2*theta);
+				arg = sin(d_phi_thread*DEG2RAD/2)/sin(2*theta);
 				/* If full Debye-Scherrer cone is within d_phi, don't focus */
 				if (arg < -1 || arg > 1) d_phi_thread = 0;
 				/* Otherwise, determine alpha to rotate from scattering plane
@@ -1116,7 +1116,7 @@ TRACE
 
 			l_1 = v*(t3 - t2 + t1 - t0); /* Length to exit */
 
-			pmul  = Nq*l_full*my_s_n*exp(-(line_info.my_a_v/v+my_s)*(l+l_1))
+			pmul  *= Nq*l_full*my_s_n*exp(-(line_info.my_a_v/v+my_s)*(l+l_1))
 									  /(1-(p_inc+p_transmit));
 			/* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
 			if (d_phi_thread) {
