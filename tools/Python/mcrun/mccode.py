@@ -408,9 +408,12 @@ class Detector(object):
         self.Y0 = float(d['Y0'])
         self.dY = float(d['dY'])
         if not self.dX:
-          self.dX = 1e-10
+          self.dX = 1
         if not self.dY:
-          self.dY = 1e-10
+          if self.dX:
+            self.dY = self.dX
+          else:
+            self.dY = 1
 
 
 class McStasInfo:

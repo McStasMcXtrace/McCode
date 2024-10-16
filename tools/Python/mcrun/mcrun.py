@@ -197,8 +197,7 @@ def add_mcrun_options(parser):
              '"d.X0 d.Y0"   Center of signal (1st moment);\n' +
              '"d.dX d.dY"   Width  of signal (2nd moment).\n' +
              'Default is "d.intensity". Examples are: \n' +
-             '"d.intensity/d.dX" for 1D;\n' +
-             '"d.intensity/d.dX/d.dY" for 2D',
+             '"d.intensity/d.dX" and "d.intensity/d.dX/d.dY"',
         nargs=1,
         default=None,
     )
