@@ -145,7 +145,7 @@
 * reflections: [string] Input file for reflections (LAZ LAU CIF, FullProf, ShelX). Use only incoherent scattering if NULL or "" 
 * d_phi: [deg]         Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
 * d_omega: [deg]       Horizontal focus range (only for incoherent scattering), 0 for no focusing.
-* tth_sign: [1]        Sign of the scattering angle. If 0, the sign is chosen randomly (left and right).
+* tth_sign: [1]        Sign of the scattering angle. If 0, the sign is chosen randomly (left and right). ONLY functional in combination with d_phi.
 * focus_flip:   [1]    Controls the sense of d_phi. If 0 d_phi is measured against the xz-plane. If !=0 d_phi is measured against zy-plane.
 * pack: [1]            Packing factor.
 * delta_d_d: [0/1]     Global relative delta_d_d/d broadening when the 'w' column is not available. Use 0 if ideal.
@@ -857,7 +857,7 @@ INITIALIZE
 %}
 TRACE
 %{
-  double t0, t1, t2, t3, v, v1,l_full, l, l_1, dt, alpha0, alpha, theta, my_s, my_s_n;
+  double t0, t1, t2, t3, v, v1,l_full, l, l_1, dt, alpha0, alpha, theta, my_s, my_s_n, sg;
   double solid_angle;
   double neutrontype = 0;
   double ntype = 0;
@@ -1007,8 +1007,12 @@ TRACE
 			my_s_n = line_info.my_s_v2[line]/(v*v);
 			if(fabs(arg) > 1)
 				ABSORB;                   /* No bragg scattering possible*/
-			if (tth_sign != 0) {
-				arg=fabs(arg)*(tth_sign > 0 ? 1 : -1);
+			if (tth_sign == 0) {
+				sg = randpm1();
+				if (sg > 0) sg = 1; else sg=-1;
+			}
+			else  {
+			  sg = tth_sign/fabs(tth_sign);
 			}
 			theta = asin(arg);          /* Bragg scattering law */
 			  /* Choose point on Debye-Scherrer cone */
@@ -1060,7 +1064,7 @@ TRACE
 			}
 
 			  /* v_out = rotate 'v' by 2*theta around tmp_v: Bragg angle */
-			rotate(vout_x,vout_y,vout_z, vx,vy,vz, 2*theta, tmp_vx,tmp_vy,tmp_vz);
+			rotate(vout_x,vout_y,vout_z, vx,vy,vz, 2*sg*theta, tmp_vx,tmp_vy,tmp_vz);
 			
 			/* tmp_v = rotate v_out by alpha0 around 'v' (Debye-Scherrer cone) */
 			rotate(tmp_vx,tmp_vy,tmp_vz, vout_x,vout_y,vout_z, alpha0, vx, vy, vz);
@@ -1114,8 +1118,12 @@ TRACE
 
 			pmul  = Nq*l_full*my_s_n*exp(-(line_info.my_a_v/v+my_s)*(l+l_1))
 									  /(1-(p_inc+p_transmit));
-			  /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
-			if (d_phi_thread) pmul *= alpha/PI;
+			/* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
+			if (d_phi_thread) {
+			  pmul *= alpha/PI;
+			  if (tth_sign) pmul *=0.5;
+			}
+
 
 			type = 'c';
 			itype = 1;
@@ -1184,7 +1192,7 @@ TRACE
 
         l_1 = v*(t3 - t2 + t1 - t0); /* Length to exit */
 
-        pmul = l_full*line_info.my_inc*exp(-(line_info.my_a_v/v+my_s)*(l+l_1))/(p_inc);
+        pmul *= l_full*line_info.my_inc*exp(-(line_info.my_a_v/v+my_s)*(l+l_1))/(p_inc);
         pmul *= solid_angle/(4*PI);
        	lfree=1/(line_info.my_a_v/v+my_s);
         type = 'i';
@@ -1194,7 +1202,7 @@ TRACE
       else if (neutrontype == 1) {
         /* Make transmitted (absorption-corrected) event */
         /* No coordinate changes here, simply change neutron weight */
-        pmul = exp(-(line_info.my_a_v/v+my_s)*(l))/(p_transmit);
+        pmul *= exp(-(line_info.my_a_v/v+my_s)*(l))/(p_transmit);
         lfree=1/(line_info.my_a_v/v+my_s);
         type = 't';
 	itype = 3;
