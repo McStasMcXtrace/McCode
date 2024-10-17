@@ -33,16 +33,11 @@ DECLARE
 %{
   long long ncount_i;
 %}
-)
-
 
 INITIALIZE
 %{
-
-
-printf("Using the input file: %s\n", MCPLFILE);
-
- ncount_i=0;
+  printf("Using the input file: %s\n", MCPLFILE);
+  ncount_i=0;
 %}
 
 TRACE
