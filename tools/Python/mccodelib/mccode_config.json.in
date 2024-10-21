@@ -2,6 +2,7 @@
   "configuration": {
     "MCCODE_VERSION": "@MCCODE_VERSION@",
     "TERMINAL": "@TERMINAL@",
+    "MCCOGEN": "@FLAVOR@",
     "MCCODE": "@FLAVOR@",
     "MCRUN": "@MCCODE_PREFIX@run",
     "JUPYLAB": "@FLAVOR@-jupylab",
