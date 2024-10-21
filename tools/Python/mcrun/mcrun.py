@@ -334,7 +334,7 @@ def add_mcstas_options(parser):
 def expand_options(options):
     ''' Add extra options based on previous choices '''
     # McCode version and library
-    options.mccode_bin = mccode_config.configuration['MCCODE']
+    options.mccode_bin = mccode_config.configuration['MCCOGEN']
     options.mccode_lib = mccode_config.configuration['MCCODE_LIB_DIR']
 
     # MPI
