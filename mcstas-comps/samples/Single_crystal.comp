@@ -1080,6 +1080,7 @@ DECLARE
   struct hkl_info_struct hkl_info;
   off_struct             offdata;
   struct hkl_data *hkl_list;
+  struct tau_data tau_list_initial[MCSX_REFL_SLIST_SIZE];  
   struct tau_data tau_list[MCSX_REFL_SLIST_SIZE];
 %}
 
@@ -1292,7 +1293,7 @@ TRACE
     itype = 0;
     
 #ifndef OPENACC
-    T = tau_list;
+    T = tau_list_initial;
     hkl_info.type = type;
 #endif
     do {  /* Loop over multiple scattering events */
@@ -1379,10 +1380,17 @@ TRACE
 
 
       /* (2). Intersection of Ewald sphere with reciprocal lattice points */
-
+	  
       double coh_xsect = 0, coh_refl = 0;
       /* in case we use 'SPLIT' then consecutive neutrons can be identical when entering here
-         and we may skip the hkl_search call */
+         and we may skip the hkl_search call. One tau_list is reserved for data for the initial
+	     ray results so that it potentially can be reused later. */
+	  if (event_counter==0) {
+		  T = tau_list_initial;
+	  } else {
+	  	  T = tau_list;
+	  }
+	  
 #ifndef OPENACC
       if (order==1 && fabs(kix - hkl_info.kix) < deltak
         && fabs(kiy - hkl_info.kiy) < deltak
@@ -1392,8 +1400,8 @@ TRACE
         /* Restore in case of matching event (e.g. SPLIT) */
         coh_refl = hkl_info.coh_refl;
         coh_xsect = hkl_info.coh_xsect;
-        tau_count = hkl_info.tau_count;
-
+	      tau_count = hkl_info.tau_count;
+	      T = tau_list_initial;
       } else {
 #endif
         /* Max possible tau for this ki with 5*sigma delta-d/d cutoff. */
