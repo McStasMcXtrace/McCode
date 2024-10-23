@@ -145,7 +145,7 @@
 * reflections: [string] Input file for reflections (LAZ LAU CIF, FullProf, ShelX). Use only incoherent scattering if NULL or "" 
 * d_phi: [deg]         Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
 * d_omega: [deg]       Horizontal focus range (only for incoherent scattering), 0 for no focusing.
-* tth_sign: [1]        Sign of the scattering angle. If 0, the sign is chosen randomly.
+* tth_sign: [1]        Sign of the scattering angle. If 0, the sign is chosen randomly (left and right). ONLY functional in combination with d_phi and ONLY applies to bragg lines.
 * focus_flip:   [1]    Controls the sense of d_phi. If 0 d_phi is measured against the xz-plane. If !=0 d_phi is measured against zy-plane.
 * pack: [1]            Packing factor.
 * delta_d_d: [0/1]     Global relative delta_d_d/d broadening when the 'w' column is not available. Use 0 if ideal.
@@ -164,7 +164,7 @@
 * weight: [g/mol]      Atomic/molecular weight of material.
 * density: [g/cm^3]    Density of material. rho=density/weight/1e24*N_A.
 * nb_atoms: [1]        Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell
-* target_index: [1]    Relative index of component to focus at, e.g. next is +1
+* target_index: [1]    Relative index of component to focus incoherent scattering at, e.g. next is +1
 *
 * OUTPUT PARAMETERS:
 * line_info: [struct]  internal structure containing many members/info
@@ -315,23 +315,23 @@ struct line_info_struct
       ret = system(cmd);
       if (ret != -1 && ret != 127) found = 1;
     }
+   if (!found) {
+      // try with cif2hkl command from the system PATH
+      snprintf(cmd,  1024, "%s -o %s %s %s",
+        "cif2hkl", OUTFILE, options, infile);
+      ret = system(cmd);
+      if (ret != -1 && ret != 127) found = 1;
+    }
     if (!found) {
+      // As a last resort, attempt with cif2hkl from $MCSTAS/bin
       snprintf(cmd,  1024, "%s%c%s%c%s -o %s %s %s",
         getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS,
         MC_PATHSEP_C, "bin", MC_PATHSEP_C, "cif2hkl",
         OUTFILE, options, infile);
       ret = system(cmd);
-      if (ret != -1 && ret != 127) found = 1;
     }
     // ret = -1:  child process could not be created
-    // ret = 127: shell could not be executed in the child process
-    if (!found) {
-      // try with any cif2hkl command from the system
-      snprintf(cmd,  1024, "%s -o %s %s %s",
-        "cif2hkl", OUTFILE, options, infile);
-      ret = system(cmd);
-    }
-      
+    // ret = 127: shell could not be executed in the child process     
     if (ret == -1 || ret == 127) {
       free(OUTFILE);
       return(NULL);
@@ -1011,13 +1011,14 @@ TRACE
 				sg = randpm1();
 				if (sg > 0) sg = 1; else sg=-1;
 			}
-			else
-				sg = tth_sign/fabs(tth_sign);
+			else  {
+			  sg = tth_sign/fabs(tth_sign);
+			}
 			theta = asin(arg);          /* Bragg scattering law */
 			  /* Choose point on Debye-Scherrer cone */
 			if (d_phi_thread)
 			{ /* relate height of detector to the height on DS cone */
-				arg = sin(d_phi*DEG2RAD/2)/sin(2*theta);
+				arg = sin(d_phi_thread*DEG2RAD/2)/sin(2*theta);
 				/* If full Debye-Scherrer cone is within d_phi, don't focus */
 				if (arg < -1 || arg > 1) d_phi_thread = 0;
 				/* Otherwise, determine alpha to rotate from scattering plane
@@ -1115,10 +1116,14 @@ TRACE
 
 			l_1 = v*(t3 - t2 + t1 - t0); /* Length to exit */
 
-			pmul  = Nq*l_full*my_s_n*exp(-(line_info.my_a_v/v+my_s)*(l+l_1))
+			pmul  *= Nq*l_full*my_s_n*exp(-(line_info.my_a_v/v+my_s)*(l+l_1))
 									  /(1-(p_inc+p_transmit));
-			  /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
-			if (d_phi_thread) pmul *= alpha/PI;
+			/* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
+			if (d_phi_thread) {
+			  pmul *= alpha/PI;
+			  if (tth_sign) pmul *=0.5;
+			}
+
 
 			type = 'c';
 			itype = 1;
@@ -1187,7 +1192,7 @@ TRACE
 
         l_1 = v*(t3 - t2 + t1 - t0); /* Length to exit */
 
-        pmul = l_full*line_info.my_inc*exp(-(line_info.my_a_v/v+my_s)*(l+l_1))/(p_inc);
+        pmul *= l_full*line_info.my_inc*exp(-(line_info.my_a_v/v+my_s)*(l+l_1))/(p_inc);
         pmul *= solid_angle/(4*PI);
        	lfree=1/(line_info.my_a_v/v+my_s);
         type = 'i';
@@ -1197,7 +1202,7 @@ TRACE
       else if (neutrontype == 1) {
         /* Make transmitted (absorption-corrected) event */
         /* No coordinate changes here, simply change neutron weight */
-        pmul = exp(-(line_info.my_a_v/v+my_s)*(l))/(p_transmit);
+        pmul *= exp(-(line_info.my_a_v/v+my_s)*(l))/(p_transmit);
         lfree=1/(line_info.my_a_v/v+my_s);
         type = 't';
 	itype = 3;

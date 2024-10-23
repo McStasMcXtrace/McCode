@@ -12,7 +12,7 @@
 * Date: March 13, 2010
 * Origin: Risoe
 *
-* Position-sensitive monitor with phase intergration.
+* Position-sensitive monitor with phase integration.
 *
 * %Description
 * An (n times m) pixel PSD monitor taking phase into account.

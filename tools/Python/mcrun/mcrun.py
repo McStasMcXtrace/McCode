@@ -164,8 +164,9 @@ def add_mcrun_options(parser):
         "--optimize-maxiter",
         metavar="optimize_maxiter",
         type=int,
-        help="Maximum number of optimization iterations to perform",
+        help="Maximum number of optimization iterations to perform. Default=1000",
         nargs=1,
+        default=1000,
     )
     add(
         "--optimize-tol",
@@ -184,6 +185,21 @@ def add_mcrun_options(parser):
              'https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html?highlight=minimize',
         nargs=1,
         default=MINIMIZE_METHODS[0],
+    )
+    add(
+        "--optimize-eval",
+        metavar='optimize_eval',
+        type=str,
+        help='Optimization expression to evaluate for each detector "d" structure. You may combine:\n' +
+             '"d.intensity" The detector intensity;\n' +
+             '"d.error"     The detector intensity uncertainty;\n' +
+             '"d.values"    An array with [intensity, error, counts];\n' +
+             '"d.X0 d.Y0"   Center of signal (1st moment);\n' +
+             '"d.dX d.dY"   Width  of signal (2nd moment).\n' +
+             'Default is "d.intensity". Examples are: \n' +
+             '"d.intensity/d.dX" and "d.intensity/d.dX/d.dY"',
+        nargs=1,
+        default=None,
     )
     add(
         "--optimize-minimize",
@@ -318,7 +334,7 @@ def add_mcstas_options(parser):
 def expand_options(options):
     ''' Add extra options based on previous choices '''
     # McCode version and library
-    options.mccode_bin = mccode_config.configuration['MCCODE']
+    options.mccode_bin = mccode_config.configuration['MCCOGEN']
     options.mccode_lib = mccode_config.configuration['MCCODE_LIB_DIR']
 
     # MPI

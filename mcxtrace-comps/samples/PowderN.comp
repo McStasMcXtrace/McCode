@@ -130,20 +130,19 @@
 *
 * %Parameters
 * INPUT PARAMETERS
-* radius: [m]          Outer radius of sample in (x,z) plane
-* xwidth: [m]          Horiz. dimension of sample, as a width
-* yheight: [m]         Height of sample y direction
-* zdepth: [m]          Depth of box sample
-* thickness: [m]        Thickness of hollow sample.
-*                Negative value extends the hollow volume outside of the box/cylinder.
-* reflections: [str]      Input file for reflections (LAZ LAU CIF, FullProf, ShelX).
-*                Use only incoherent scattering if NULL or ""
+* radius: [m]          Outer radius of sample in (x,z) plane.
+* xwidth: [m]          Horiz. dimension of sample, as a width.
+* yheight: [m]         Height of sample y direction.
+* zdepth: [m]          Depth of box sample.
+* thickness: [m]       Thickness of hollow sample. Negative value extends the hollow volume outside of the box/cylinder.
+* reflections: [str]   Input file for reflections (LAZ LAU CIF, FullProf, ShelX). Use only incoherent scattering if NULL or "".
 *
 * Optional parameters:
 * d_phi: [deg]      Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
-* d_theta: [deg]    Longitudinal angle to focus to, i.e. lateral opening angle. This means, the maximum scattering angle, 2*theta, is equal to d_theta/2.0
-* focus_flip: [1]   Controls the sense of d_phi. If 0 d_phi is measured against the xz-plane. If !=0 d_phi is measured against zy-plane.
+* d_omega: [deg]       Horizontal focus range (only for incoherent scattering), 0 for no focusing.
+* tth_sign: [1]        Sign of the scattering angle. If 0, the sign is chosen randomly (left and right). ONLY functional in combination with d_phi and ONLY applies to bragg lines.
 * focus_flip:   [1] Controls the sense of d_phi. If 0 d_phi is measured against the xz-plane. If !=0 d_phi is measured against zy-plane.
+* tth_sign: [1]     Sign of the scattering angle. If 0, the sign is chosen randomly (left and right).
 * pack: [1]         Packing factor
 * delta_d_d: [AA]   Global relative Delta_d/d spreading when the 'w' column is not available. Use 0 if ideal.
 * format:  [{}]     Name of the format, or list of column indexes (see Description). N.b. no quotes!
@@ -155,11 +154,12 @@
 * barns:   [1]      Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2, (barns=1 for laz, barns=0 for lau type files).
 * Vc:      [AA^3]   Volume of unit cell=nb atoms per cell/density of atoms.
 * DW:      [1]      Global Debye-Waller factor when the 'DW' column is not available. Use 1 if included in F2.
-* weight:  [g/mol]  Atomic/molecular weight of material
+* weight:  [g/mol]  Atomic/molecular weight of material.
 * density: [g/cm^3] Density of material. rho=density/weight/1e24*N_A.
 * nb_atoms:[1]      Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell.
 * material: [Be.txt] File where the material parameters for the absorption may be found. Format is similar to what may be found off the NIST website. 
 * mat_format: [{}]  Format of the asorption parameter file.
+* target_index: [1]    Relative index of component to focus incoherent scattering at, e.g. next is +1
 *
 * OUTPUT PARAMETERS:
 * line_info: [struct]     Internal structure containing many members/info
@@ -197,8 +197,8 @@ SETTING PARAMETERS (
   vector format={0,0,0,0,0,0,0,0}, vector mat_format={0,0,0,0,0},
   radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
   pack=1, Vc=0, delta_d_d=0, p_inc=0.1, p_transmit=0.1,
-  DW=0, nb_atoms=1, d_phi=0, d_theta=360, p_interact=0,
-  concentric=0, density=0, weight=0, barns=1, focus_flip=0)
+  DW=0, nb_atoms=1, d_omega=0, d_phi=0, tth_sign=0, p_interact=0,
+  concentric=0, density=0, weight=0, barns=1, focus_flip=0, int target_index=0)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 SHARE
@@ -323,23 +323,26 @@ SHARE
       if (ret != -1 && ret != 127) found = 1;
     }
     if (!found) {
-      snprintf(cmd,  1024, "%s%c%s%c%s -o %s %s %s",
-        getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS,
-        MC_PATHSEP_C, "bin", MC_PATHSEP_C, "cif2hkl",
-        OUTFILE, options, infile);
-      ret = system(cmd);
-      if (ret != -1 && ret != 127) found = 1;
-    }
-    // ret = -1:  child process could not be created
-    // ret = 127: shell could not be executed in the child process
-    if (!found) {
-      // try with any cif2hkl command from the system
+      // try with cif2hkl command from the system PATH
       snprintf(cmd,  1024, "%s -o %s %s %s",
         "cif2hkl", OUTFILE, options, infile);
       ret = system(cmd);
+      if (ret != -1 && ret != 127) found = 1;
     }
-      
-    if (ret == -1 || ret == 127) return(NULL);
+    if (!found) {
+      // As a last resort, attempt with cif2hkl from $MCXTRACE/bin
+      snprintf(cmd,  1024, "%s%c%s%c%s -o %s %s %s",
+        getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCXTRACE,
+        MC_PATHSEP_C, "bin", MC_PATHSEP_C, "cif2hkl",
+        OUTFILE, options, infile);
+      ret = system(cmd);
+    }
+    // ret = -1:  child process could not be created
+    // ret = 127: shell could not be executed in the child process     
+    if (ret == -1 || ret == 127) {
+      free(OUTFILE);
+      return(NULL);
+    }
       
     // test if the result file has been created
     FILE *file = Open_File(OUTFILE,"r", NULL);
@@ -574,10 +577,9 @@ SHARE
 /* this routine looks for a pre-computed value in the Nq and sum cache tables               */
 /* when found, the earch starts from the corresponding lower element in the table           */
 #pragma acc routine
-int calc_xsect(double k, double *q, double *my_s_k2, int count, double tth_max, double *sum,
+int calc_xsect(double k, double *q, double *my_s_k2, int count, double *sum,
   struct line_info_struct *line_info) {
   int    Nq = 0, line=0, line0=0;
-  double sinth=sin(DEG2RAD*tth_max*0.5);
   *sum=0;
 
   /* check if a line_info element has been recorded already - not on OpenACC */
@@ -590,7 +592,7 @@ int calc_xsect(double k, double *q, double *my_s_k2, int count, double tth_max, 
       /* not yet set: we compute the sum up to the corresponding wavevector in the table cache */
       double line_k = line_info->k_min + line*(line_info->k_max - line_info->k_min)/CHAR_BUF_LENGTH;
       for(line0=0; line0<count; line0++) {
-        if (q[line0] <= 2*line_k*sinth) { /* q < 2*kf: restrict structural range */
+        if (q[line0] <= 2*line_k) { /* q < 2*kf: restrict structural range */
           *sum += my_s_k2[line0];
           if (Nq < line0+1) Nq=line0+1; /* determine maximum line index which can scatter */
         } else break;
@@ -606,7 +608,7 @@ int calc_xsect(double k, double *q, double *my_s_k2, int count, double tth_max, 
   #endif
 
   for(line=line0; line<count; line++) {
-    if (q[line] <= 2*k*sinth) { /* q < 2*kf: restrict structural range */
+    if (q[line] <= 2*k) { /* q < 2*kf: restrict structural range */
       *sum += my_s_k2[line];
       if (Nq < line+1) Nq=line+1; /* determine maximum line index which can scatter */
     } else break;
@@ -679,6 +681,9 @@ DECLARE
   double *columns;
   double *mat_columns;
   off_struct offdata;
+  double tgt_x;
+  double tgt_y;
+  double tgt_z;
 %}
 
 INITIALIZE
@@ -895,7 +900,7 @@ INITIALIZE
 
 TRACE
 %{
-  double l0, l1, l2, l3, k, k1,l_full, l, l_1, dl, alpha0, alpha, theta, my_s, my_s_n;
+  double l0, l1, l2, l3, k, k1,l_full, l, l_1, dl, alpha0, alpha, theta, my_s, my_s_n, sg;
   double solid_angle, photontype, ptype;
   double arg, tmp_kx, tmp_ky, tmp_kz, kout_x, kout_y, kout_z, nx, ny, nz, pmul=1;
   int    line;
@@ -995,7 +1000,7 @@ TRACE
 	my_a=line_info.my_a;
     } else {
     #endif
-        Nq = calc_xsect(k, line_info.q, line_info.my_s_k2, line_info.count, d_theta*0.5, &my_s_k2_sum, &line_info);
+        Nq = calc_xsect(k, line_info.q, line_info.my_s_k2, line_info.count, &my_s_k2_sum, &line_info);
         calc_abs_xsect(k, &my_a, &line_info);
         calc_inc_xsect(k, &my_inc, &line_info);
 	if(pack!=1){
@@ -1063,6 +1068,13 @@ TRACE
           my_s_n = pack*line_info.my_s_k2[line]/(k*k);
           if(fabs(arg) > 1)
             ABSORB;                   /* No bragg scattering possible*/
+	  if (tth_sign == 0) {
+		  sg = randpm1();
+		  if (sg > 0) sg = 1; else sg=-1;
+	  }
+          else  {
+	   sg = tth_sign/fabs(tth_sign);
+          }
           theta = asin(arg);          /* Bragg scattering law */
 
 
@@ -1080,13 +1092,7 @@ TRACE
           if (d_phi_thread) {
             /* Focusing */
             alpha = fabs(alpha);
-            /* Trick to get scattering for pos/neg theta's */
-            alpha0= 2*rand01()*alpha;
-            if (alpha0 > alpha) {
-              alpha0=M_PI+(alpha0-1.5*alpha);
-            } else {
-              alpha0=alpha0-0.5*alpha;
-            }
+	    alpha0 = 0.5*randpm1()*alpha;
             if(focus_flip){
                 alpha0+=M_PI_2;
             }
@@ -1100,15 +1106,29 @@ TRACE
            * Or
            *  (k along X) x (Z axis) -> nearly Y axis
            */
-          if (fabs(scalar_prod(1,0,0,kx/k,ky/k,kz/k)) < fabs(scalar_prod(0,0,1,kx/k,ky/k,kz/k))) {
-            nx = 1; ny = 0; nz = 0;
-          } else {
-            nx = 0; ny = 0; nz = 1;
-          }
-          vec_prod(tmp_kx,tmp_ky,tmp_kz, kx,ky,kz, nx,ny,nz);
+		   
+  /* update originating from McStas, added by JS, 1/7/2017
+    If a target is defined, try to define vertical axis as a normal to the plane 
+	defined by the incident particle velocity and target position. 
+	Check that k is not ~ parallel to the target direction.
+  */
+			double knorm=0.0;
+			if (target_index) {
+				vec_prod(tmp_kx, tmp_ky, tmp_kz, kx,ky,kz, tgt_x, tgt_y, tgt_z);
+				knorm = sqrt(tmp_kx*tmp_kx+tmp_ky*tmp_ky+tmp_kz*tmp_kz)/k;
+			}
+			// no target or direction is nearly parallel to k:
+			if (knorm<0.01) {
+				if (fabs(kx/k) < fabs(kz/k)) {
+					nx = 1; ny = 0; nz = 0;
+				} else {
+					nx = 0; ny = 0; nz = 1;
+				}
+          			vec_prod(tmp_kx,tmp_ky,tmp_kz, kx,ky,kz, nx,ny,nz);
+          		}
 
           /* k_out = rotate 'k' by 2*theta around tmp_k: Bragg angle */
-          rotate(kout_x,kout_y,kout_z, kx,ky,kz, 2*theta, tmp_kx,tmp_ky,tmp_kz);
+          rotate(kout_x,kout_y,kout_z, kx,ky,kz, 2*sg*theta, tmp_kx,tmp_ky,tmp_kz);
 
           /* tmp_k = rotate k_out by alpha0 around 'k' (Debye-Scherrer cone) */
           rotate(tmp_kx,tmp_ky,tmp_kz, kout_x,kout_y,kout_z, alpha0, kx, ky, kz);
@@ -1167,9 +1187,12 @@ TRACE
 
           l_1 = l3 - l2 + l1 - l0; /* Length to exit */
 
-          pmul  = Nq*l_full*my_s_n*exp(-(my_a+my_s)*(l+l_1))/(1-(p_inc+p_transmit));
+          pmul  *= Nq*l_full*my_s_n*exp(-(my_a+my_s)*(l+l_1))/(1-(p_inc+p_transmit));
           /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
-          if (d_phi_thread) pmul *= alpha/PI;
+	  if (d_phi_thread) {
+	    pmul *= alpha/PI;
+	    if (tth_sign) pmul *=0.5;
+	  }
 
           type = 'c';
           itype = 1;
@@ -1178,9 +1201,12 @@ TRACE
       }  /* Coherent scattering event */
       else if (photontype == 2) {  /* Make incoherent scattering event */
         /*should be replaced by Compton scattering and/or TDS*/
-        if(d_phi_thread) {
-          randvec_target_rect_angular(&kx, &ky, &kz, &solid_angle,
-                                      0, 0, 1,
+        if (d_omega && d_phi_thread) {
+			randvec_target_rect_angular(&kx, &ky, &kz, &solid_angle,
+			  tgt_x, tgt_y, tgt_z, d_omega*DEG2RAD, d_phi_thread*DEG2RAD, ROT_A_CURRENT_COMP);
+		} else if (d_phi_thread) {
+			randvec_target_rect_angular(&kx, &ky, &kz, &solid_angle,
+                                      tgt_x, tgt_y, tgt_z,
                                       2*PI, d_phi_thread*DEG2RAD, ROT_A_CURRENT_COMP);
         } else {
           randvec_target_circle(&kx, &ky, &kz,
@@ -1235,7 +1261,7 @@ TRACE
 
         l_1 = (l3 - l2 + l1 - l0); /* Length to exit */
 
-        pmul = l_full*my_inc*exp(-(my_a+my_s)*(l+l_1))/(p_inc);
+        pmul *= l_full*my_inc*exp(-(my_a+my_s)*(l+l_1))/(p_inc);
         pmul *= solid_angle/(4*PI);
 
         type = 'i';
@@ -1245,7 +1271,7 @@ TRACE
       else if (photontype == 1) {
         /* Make transmitted (absorption-corrected) event */
         /* No coordinate changes here, simply change xray weight */
-        pmul = exp(-(my_a+my_s)*(l))/(p_transmit);
+        pmul *= exp(-(my_a+my_s)*(l))/(p_transmit);
 
         type = 't';
 	itype = 3;
