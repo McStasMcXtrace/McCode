@@ -1080,8 +1080,10 @@ DECLARE
   struct hkl_info_struct hkl_info;
   off_struct             offdata;
   struct hkl_data *hkl_list;
+#ifndef OPENACC
   struct tau_data tau_list_initial[MCSX_REFL_SLIST_SIZE];  
   struct tau_data tau_list[MCSX_REFL_SLIST_SIZE];
+#endif
 %}
 
 INITIALIZE
@@ -1382,16 +1384,16 @@ TRACE
       /* (2). Intersection of Ewald sphere with reciprocal lattice points */
 	  
       double coh_xsect = 0, coh_refl = 0;
-      /* in case we use 'SPLIT' then consecutive neutrons can be identical when entering here
-         and we may skip the hkl_search call. One tau_list is reserved for data for the initial
-	     ray results so that it potentially can be reused later. */
-	  if (event_counter==0) {
-		  T = tau_list_initial;
-	  } else {
-	  	  T = tau_list;
-	  }
 	  
 #ifndef OPENACC
+      /* in case we use 'SPLIT' then consecutive neutrons can be identical when entering here
+         and we may skip the hkl_search call. One tau_list is reserved for data for the initial
+	 ray results so that it potentially can be reused later. */
+      if (event_counter==0) {
+	T = tau_list_initial;
+      } else {
+	T = tau_list;
+      }
       if (order==1 && fabs(kix - hkl_info.kix) < deltak
         && fabs(kiy - hkl_info.kiy) < deltak
         && fabs(kiz - hkl_info.kiz) < deltak) {
