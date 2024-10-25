@@ -87,8 +87,6 @@
 * %E
 ****************************************************************************/
 DEFINE COMPONENT Vertical_Bender
-DEFINITION PARAMETERS (
-)
 SETTING PARAMETERS (
   vector rTopPar={0.99, 0.219, 6.07, 0.0, 0.003},
   vector rBottomPar={0.99, 0.219, 6.07, 0.0, 0.003},

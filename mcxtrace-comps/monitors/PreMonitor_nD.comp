@@ -50,8 +50,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT PreMonitor_nD
-DEFINITION PARAMETERS (monitor_comp)
-SETTING PARAMETERS ()
+SETTING PARAMETERS (string monitor_comp)
 /* Xray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 /* Flag will be set to 1 automatically */
