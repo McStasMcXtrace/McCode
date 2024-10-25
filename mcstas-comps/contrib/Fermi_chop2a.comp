@@ -34,8 +34,7 @@
 DEFINE COMPONENT Fermi_chop2a
 
 SETTING PARAMETERS (len, w, nu, delta, tc, ymin, ymax, nchan, bw, blader)
-OUTPUT PARAMETERS (omega, r_blade, x_width, nn, tdr)
-/*STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)*/
+
 SHARE
 %{
 #ifndef FERMI_CHOP_DEFS

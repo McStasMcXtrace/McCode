@@ -53,7 +53,6 @@ SETTING PARAMETERS (
     doubleReflections = 0, //can neutrons be reflected from the backside of a mirror
     string rfront_inner_file = "NULL"//file name of the file providing the distances to the optical axis of the mirrors at the entrance, lStart, of the respective mirror
 )
-OUTPUT PARAMETERS(s, pTable, R0, Qc, W, alpha, transmit)
 
 
 SHARE

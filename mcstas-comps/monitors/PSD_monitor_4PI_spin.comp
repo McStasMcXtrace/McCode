@@ -50,7 +50,6 @@
 DEFINE COMPONENT PSD_monitor_4PI_spin
 
 SETTING PARAMETERS (int nx=90, int ny=90, radius, string filename=0, int restore_neutron=0, mx=0, my=1, mz=0)
-OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 
 DECLARE
 %{

@@ -45,8 +45,6 @@
 DEFINE COMPONENT E_4PI
 
 SETTING PARAMETERS (int ne=50, Emin=0, Emax=5, string filename=0, radius=1, restore_neutron=0)
-OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 DECLARE
 %{

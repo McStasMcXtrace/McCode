@@ -115,7 +115,6 @@ SETTING PARAMETERS(vector mosaic_AB={0,0, 0,0,0, 0,0,0}, string sqw=0, string ge
             p_transmit=-1, sigma_abs=0, sigma_inc=0,
             aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0,
             max_stored_ki=1000, max_bad=10000)
-OUTPUT PARAMETERS(hkl_info, offdata)
 NOACC
 
 SHARE

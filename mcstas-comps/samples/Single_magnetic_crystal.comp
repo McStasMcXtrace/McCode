@@ -112,7 +112,6 @@ SETTING PARAMETERS(string atom_sites=0, string geometry=NULL,
             recip_cell=0, q_min=0,q_max=-1,mx=0,my=1,mz=0,
             na=1, nb=1, nc=1, ax = 0, ay = 0, az = 0, bx = 0, by = 0, bz = 0, cx = 0, cy = 0, cz = 0,
             p_transmit = -1, sigma_abs = 0, sigma_inc = 0,order=0)
-OUTPUT PARAMETERS(hkl_info, offdata)
 NOACC
 
 SHARE

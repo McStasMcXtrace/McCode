@@ -58,8 +58,6 @@
 DEFINE COMPONENT Sans_liposomes_new
 
 SETTING PARAMETERS (R=100,dR=0.0, Phi=1e-3, Delta_rho=0.6, sigma_a=0.50, dist=6, Rdet=0.5 ,xwidth=0.01, yheight=0.01, zthick=0.005, qmax=0, dbilayer=35)
-OUTPUT PARAMETERS (my_s_v2, my_a_v)
-//STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
 %{
