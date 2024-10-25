@@ -61,7 +61,7 @@
 
 DEFINE COMPONENT Air
 
-DEFINITION PARAMETERS ()
+
 
     /* number-density (num_den) is declared and computed in TRACE !!! */
 SETTING PARAMETERS (frac=0.3, pressure=101325, temperature=273.15+21.1,

@@ -70,7 +70,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Source_spectra
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
     string spectra_stem_x="", string spectra_stem_y="", string spectra_stem="", string spectra_suffix="dsc",
     E0=0, dE=0, Emin,Emax, int nE, int randomphase=1, phase=0,

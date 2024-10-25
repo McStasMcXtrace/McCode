@@ -59,7 +59,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_multilayer_vesicle
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         volfraction=0.05,
         radius=60.0,

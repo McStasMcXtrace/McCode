@@ -40,7 +40,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Mirror
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (zdepth=0.1, xwidth=0.01, yheight=0,
   string coating="", R0=0, string geometry="")
 

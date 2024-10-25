@@ -44,7 +44,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT L_monitor
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (int nL=20, string filename=0, 
   xwidth=0.1, yheight=0.1, Lmin, Lmax, restore_xray=0)
 

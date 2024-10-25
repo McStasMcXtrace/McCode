@@ -44,7 +44,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT Lens_simple
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (xwidth=0,yheight=0,radius=1e-3, T=1 ,r=3e-4, int N=1, int verbose=0, f=0, string material_datafile="Be.txt")
 
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 

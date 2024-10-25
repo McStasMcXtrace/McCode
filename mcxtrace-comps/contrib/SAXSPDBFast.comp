@@ -43,7 +43,7 @@
 
 DEFINE COMPONENT SAXSPDBFast
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (RhoSolvent = 9.4e-14, Concentration = 0.01, AbsorptionCrosssection = 0.0,
     xwidth, yheight, zdepth, 

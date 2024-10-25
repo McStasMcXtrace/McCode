@@ -46,7 +46,7 @@
 
 DEFINE COMPONENT SAXSNanodiscs
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (AxisRatio = 1.4, NumberOfLipids = 130.0, AreaPerLipidHeadgroup = 65.0, HeightOfMSP = 24.0, 
     VolumeOfOneMSP = 26296.5, VolumeOfHeadgroup = 319.0, VolumeOfCH2Tail = 818.8, VolumeOfCH3Tail = 108.6,

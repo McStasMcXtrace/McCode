@@ -57,7 +57,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Multilayer_elliptic
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string coating="Ref_W_B4C.txt",
     theta=1.2,s1=0,s2=0,length=0.5,width=0.2,R0=1, 
     Emin=-1, Emax=-1, Estep=-1, Gamma=0, Lambda=0, rho_AB=0, int N=0,

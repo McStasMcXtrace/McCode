@@ -37,7 +37,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Lens_Kinoform
-DEFINITION PARAMETERS ()
+
   SETTING PARAMETERS (string datafile="kinoform.txt", string material_datafile="Si.txt",
   yheight=1e-2,xwidth=5.268e-4,deltaN=0)
 

@@ -48,7 +48,7 @@
 ***************************************************************************/
 
 DEFINE COMPONENT Wiggler
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (E0=0, dE=0, lambda0=0,dlambda=0, phase=0, randomphase=1, Ee=2.4, Ie=0.4, B=1.6, K=3,
     int Nper=1, length=1, sigey=0, sigex=0, focus_xw=0, focus_yh=0, dist=1, gauss_t=0, int verbose=0, Br=1.35)
 

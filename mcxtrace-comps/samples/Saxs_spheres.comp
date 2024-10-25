@@ -52,7 +52,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Saxs_spheres
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string sphere_mtrl="", R=100, Phi=1e-3, Delta_rho=0.6, 
 xwidth=0, yheight=0, zdepth=0, radius=0,
 target_x = 0, target_y = 0, target_z = 6, int target_index=0, 

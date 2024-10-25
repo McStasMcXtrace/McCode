@@ -47,7 +47,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT TwinKB_ML
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string reflectivity_datafile="Ref.txt", theta=1.2,s1,s2,length=0.6,width=0.2,R0=0)
 
 //STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)

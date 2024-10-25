@@ -43,7 +43,7 @@
 
 DEFINE COMPONENT SAXSLiposomes
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (Radius = 800.0, Thickness = 38.89, SigmaRadius = 0.20, nRadius=100,
 		    VolumeOfHeadgroup = 319.0, VolumeOfCH2Tail = 818.8, VolumeOfCH3Tail = 108.6,

@@ -58,7 +58,7 @@
 *************************************************************************/
 
 DEFINE COMPONENT Source_lab
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string material_datafile="Cu.txt", width=1e-3, height=1e-3, thickness=100e-6, E0=20, Emax=0, Emin=1, focus_xw=5e-3, focus_yh=5e-3,
     take_off=6, dist=1, tube_current=1e-3, frac=0.1, lorentzian=1, xwidth=0, yheight=0, exit_window_refpt=0 )
 

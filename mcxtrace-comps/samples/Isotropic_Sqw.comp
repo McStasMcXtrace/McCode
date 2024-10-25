@@ -219,7 +219,7 @@
 ***********************************************************/
 
 DEFINE COMPONENT Isotropic_Sqw
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS(
   vector powder_format={0,0,0,0,0,0,0,0,0}, 
   string Sqw_coh=0, string geometry=0,

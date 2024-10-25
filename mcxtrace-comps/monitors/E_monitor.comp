@@ -44,7 +44,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT E_monitor
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (nE=20, string filename=0, 
   xwidth=0.1, yheight=0.1, Emin, Emax, restore_xray=0)
 

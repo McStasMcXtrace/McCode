@@ -33,7 +33,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Arm
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS ()
 
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 

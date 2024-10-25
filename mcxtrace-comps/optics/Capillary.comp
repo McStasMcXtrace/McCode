@@ -39,7 +39,7 @@
 ***********************************************************************/
 
 DEFINE COMPONENT Capillary
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS ( string coating="Be.txt", longw=1, radius=1, length=0.2, R0=0, rtable=0, waviness=0)
 
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 

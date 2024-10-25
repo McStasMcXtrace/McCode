@@ -45,7 +45,7 @@
 
 
 DEFINE COMPONENT Mirror_parabolic
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (R0=1, a=1, b=1, xwidth=0.1, zdepth=0.1, yheight=0,
   focusx=0, focusz=0, radius=0)
 

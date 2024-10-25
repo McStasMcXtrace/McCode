@@ -211,7 +211,7 @@
 * %End
 ******************************************************************************/
 DEFINE COMPONENT Monitor_nD
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
   string user1="", string user2="", string user3="",
   xwidth=0, yheight=0, zdepth=0,

@@ -191,7 +191,7 @@
 * %End
 *****************************************************************************/
 DEFINE COMPONENT PowderN
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
   string reflections="NULL", string material="NULL", string geometry="NULL",
   vector format={0,0,0,0,0,0,0,0}, vector mat_format={0,0,0,0,0},

@@ -42,7 +42,7 @@
 
 
 DEFINE COMPONENT PSD_monitor_4PI
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (radius=1, restore_xray=0, int nx=90, int ny=90, string filename=0)
 
 DECLARE

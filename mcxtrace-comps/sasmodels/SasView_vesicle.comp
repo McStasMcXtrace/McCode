@@ -56,7 +56,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_vesicle
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         sld=0.5,
         sld_solvent=6.36,

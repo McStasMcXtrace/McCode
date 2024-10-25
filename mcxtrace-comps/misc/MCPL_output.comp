@@ -51,7 +51,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT MCPL_output
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (int polarisationuse=0, int doubleprec=0, int verbose=0, string userflag="",
   string filename=0, string userflagcomment="", merge_mpi=1, keep_mpi_unmerged=0, buffermax=0)
 

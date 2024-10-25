@@ -37,7 +37,7 @@
 
 DEFINE COMPONENT SAXSCurve
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (DeltaRho = 1.0e-14, Volume = 10000.0, 
     Concentration = 0.01, AbsorptionCrosssection = 0.0,

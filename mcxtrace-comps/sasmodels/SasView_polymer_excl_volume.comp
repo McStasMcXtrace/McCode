@@ -52,7 +52,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_polymer_excl_volume
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         rg=60.0,
         porod_exp=3.0,

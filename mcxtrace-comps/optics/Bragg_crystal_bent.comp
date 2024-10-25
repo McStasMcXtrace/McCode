@@ -78,7 +78,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Bragg_crystal_bent
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (x_a=0, y_b=1.0, z_c=1.0, lattice_x_a=0, lattice_y_b=1.0, lattice_z_c=1.0,
         length=0.05, width=0.02, V=160.1826, string form_factors="FormFactors.txt", string material="Si.txt", alpha=0.0,
         R0=0, debye_waller_B=0.4632, int crystal_type=1, int h=1, int k=1, int l=1 ,

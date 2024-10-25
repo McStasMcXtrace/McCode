@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT TOF_monitor
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (int nt=20, string filename=0, 
     xwidth=0.1, yheight=0.1, tmin=0, tmax=0, dt=1.0, restore_xray=0)
 
