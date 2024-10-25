@@ -43,7 +43,7 @@
 * signal: [string]      Name of variable to be used as an additive signal to be monitored. Default is intensity.
 * nowritefile: [1]      Flag to indicate if monitor should not save any data.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * U_N: []               Array of particle counts
 * U_p: []               Array of particle weight counts
@@ -53,14 +53,14 @@
 *******************************************************************************/
 DEFINE COMPONENT Flex_monitor_3D
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (nU1=20, nU2=20, nU3=20, string filename=0,
  		    Umin1, Umax1, uid1=-1, string ustring1="", 
 		    Umin2, Umax2, uid2=-1, string ustring2="", 
 		    Umin3, Umax3, uid3=-1, string ustring3="", 
 		    restore_xray=0, string signal="p", int nowritefile=0)
-OUTPUT PARAMETERS ()
+
 
 DECLARE
 %{

@@ -68,7 +68,7 @@
 * powder: [1]                                             Flag to indicate powder mode, for simulation of Debye-Scherrer cones via random crystallite orientation. A powder texture can be approximated with 0
 * PG: [1]                                                 Flag to indicate "Pyrolytic Graphite" mode, only meaningful with choice of Graphite.lau, models PG crystal. A powder texture can be approximated with 0
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * Template_storage          // Important to update this output paramter
 * effective_my_scattering   // Variable used in initialize
 *
@@ -78,7 +78,7 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Single_crystal_process // Remember to change the name of process here
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS(string reflections=0, delta_d_d=1e-4,
             mosaic = -1, mosaic_a = -1, mosaic_b = -1, mosaic_c = -1, vector mosaic_AB={0,0, 0,0,0, 0,0,0},
             recip_cell=0, barns=0,
@@ -87,7 +87,7 @@ SETTING PARAMETERS(string reflections=0, delta_d_d=1e-4,
             cx = 0, cy = 0, cz = 0,
 	    aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0, powder=0, PG=0,
             interact_fraction=-1, packing_factor=1, string init="init")
-OUTPUT PARAMETERS ()
+
 
 SHARE
 %{

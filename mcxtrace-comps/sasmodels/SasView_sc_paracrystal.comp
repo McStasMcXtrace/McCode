@@ -55,7 +55,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_sc_paracrystal
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         dnn=220.0,
         d_factor=0.06,

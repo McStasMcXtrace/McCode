@@ -85,10 +85,10 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Virtual_tripoli4_input
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string filename=0, string autocenter=0, repeat_count=1, verbose=0, intensity=1,
 T4_ANALYSE=10000, radius=0, T4_ANALYSE_EMIN=0, T4_ANALYSE_EMAX=0,smooth=1)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

@@ -78,7 +78,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT SNS_source_analytic
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
   string filename,
   xwidth=0.10,
@@ -95,7 +95,7 @@ SETTING PARAMETERS (
   proton_T=0.0,
   p_power=2.0,
   n_pulses=1.0)
-OUTPUT PARAMETERS ()
+
 
 
 SHARE

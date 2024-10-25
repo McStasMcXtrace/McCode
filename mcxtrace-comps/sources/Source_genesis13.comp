@@ -41,10 +41,10 @@
 ***********************************************************************/
 
 DEFINE COMPONENT Source_genesis13
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (int gridpoints=101, string fname="template.out",focus_xw=0,focus_yh=0,dist=1,E0=0, dE=0, 
     meshsize=1e-5, int nslices=102, s0=-2e-3,s1=2e-3,flux=1.0, focus_a=0.1)
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE

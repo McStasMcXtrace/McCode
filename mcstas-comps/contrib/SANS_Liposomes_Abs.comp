@@ -64,10 +64,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT SANS_Liposomes_Abs
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (R=100, dR=0.0,Phi=1e-3, Delta_rho=0.6, sigma_a=0.50, qmax=0.03, xwidth=0.01, yheight=0.01, zthick=0.001, dbilayer=35)
-OUTPUT PARAMETERS (q_v,my_a_v,isq)
-//STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
 %{

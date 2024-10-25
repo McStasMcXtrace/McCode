@@ -207,7 +207,7 @@
 * surf_FT2:          [1] Intensity |FT(real space)|^2 distribution as CTR of a single Bragg peak, length 'surf_size'.
 * surf_dir:   [nx,ny,nz] Normal vector in real space for the truncation rod spread direction. {1,0,0} is for an YZ surface, with normal along X.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * hkl_info: [structure]  Internal
 * hkl_info.type: interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent [char]
@@ -287,7 +287,7 @@ vector ki.
 */
 
 DEFINE COMPONENT Single_crystal
-DEFINITION PARAMETERS()
+
 SETTING PARAMETERS(string reflections=0, string geometry=0, vector mosaic_AB={0,0, 0,0,0, 0,0,0},
   xwidth=0, yheight=0, zdepth=0, radius=0, delta_d_d=1e-4,
   mosaic = -1, mosaic_a = -1, mosaic_b = -1, mosaic_c = -1,
@@ -299,7 +299,7 @@ SETTING PARAMETERS(string reflections=0, string geometry=0, vector mosaic_AB={0,
   aa=0, bb=0, cc=0, order=1, RX=0, RY=0, powder=0,
   deltak=1e-6, string material_datafile="Si.txt",
   int surf_size=0, vector surf_k=NULL, vector surf_FT2=NULL, vector surf_dir={0,0,0})
-OUTPUT PARAMETERS()
+
 /* photon parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 SHARE
 %{

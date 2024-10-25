@@ -32,7 +32,7 @@
 * %P
 * INPUT PARAMETERS:
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * GLOBAL PARAMETERS:
 *
@@ -42,9 +42,9 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Union_stop
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS()
-OUTPUT PARAMETERS ()
+
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

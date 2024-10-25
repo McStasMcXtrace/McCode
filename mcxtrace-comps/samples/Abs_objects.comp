@@ -43,9 +43,9 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT Abs_objects
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (int refraction=1, string objects="input_abs_objects_template.dat")
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE

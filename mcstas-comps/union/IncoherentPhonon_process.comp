@@ -44,7 +44,7 @@
 * kabsmax:           [A^-1]   Higher cut-off for the neutron wave-vector k
 * interact_fraction: [1]      How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * This_process
 * IncoherentPhonon_storage
@@ -56,7 +56,7 @@
 ******************************************************************************/
 
 DEFINE COMPONENT IncoherentPhonon_process
-DEFINITION PARAMETERS ()
+
 // default parameters for vanadium
 SETTING PARAMETERS(double T=394, double density=6.0, double M=50.94,
 		   double sigmaCoh=0.0184, double sigmaInc=5.08,
@@ -64,7 +64,7 @@ SETTING PARAMETERS(double T=394, double density=6.0, double M=50.94,
 		   int nphe_exact=1, int nphe_approx=0, int approx=0, int mph_resum=0, 
 		   int nxs=1000, double kabsmin=0.1, double kabsmax=25,
 		   int interact_fraction=-1, string init="init")
-OUTPUT PARAMETERS ()
+
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

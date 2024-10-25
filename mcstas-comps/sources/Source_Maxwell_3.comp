@@ -55,14 +55,14 @@
 
 DEFINE COMPONENT Source_Maxwell_3
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (size=0, yheight=0, xwidth=0, Lmin, Lmax, dist,
 focus_xw, focus_yh,
 T1, T2=300, T3=300, I1, I2=0, I3=0,
 int target_index=+1,lambda0=0, dlambda=0)
 
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

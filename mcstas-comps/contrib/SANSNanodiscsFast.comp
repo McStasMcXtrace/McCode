@@ -49,7 +49,7 @@
 
 DEFINE COMPONENT SANSNanodiscsFast
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (int NumberOfQBins = 200,
 	AxisRatio = 1.4, NumberOfLipids = 130.0, AreaPerLipidHeadgroup = 65.0, HeightOfMSP = 24.0,
@@ -58,7 +58,7 @@ SETTING PARAMETERS (int NumberOfQBins = 200,
 	Roughness = 5.0, Concentration = 0.01, RhoSolvent = 6.4e-14, AbsorptionCrosssection = 0.0,
 	xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius, qMin = 0.001, qMax = 1.0 )
 
-OUTPUT PARAMETERS ()
+
 DEPENDENCY " @GSLFLAGS@ "
 NOACC
 

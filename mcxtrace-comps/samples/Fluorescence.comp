@@ -110,7 +110,7 @@
 * flag_lorentzian:[1] When 1, the line shapes are assumed to be Lorentzian, else Gaussian
 * order:     [1]      Limit multiple fluorescence up to given order. Last iteration is absorption only.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * type: scattering event type 0=fluorescence, 1=Rayleigh, 2=Compton, 3=transmit
 *
 * %Link
@@ -142,7 +142,7 @@ SETTING PARAMETERS(
   target_x = 0, target_y = 0, target_z = 0, focus_r = 0,
   focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0, int target_index=0,
   int flag_compton=1, int flag_rayleigh=1, int flag_lorentzian=1, int order=1)
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 DEPENDENCY " @XRLFLAGS@ -DUSE_OFF "
 NOACC

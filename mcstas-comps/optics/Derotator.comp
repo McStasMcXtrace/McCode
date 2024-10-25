@@ -30,7 +30,7 @@
 * INPUT PARAMETERS:
 * rotator: [string]  the name of the Rotator component used to initiate the rotation
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * angle: [deg]          rotation angle
 *
 * %End

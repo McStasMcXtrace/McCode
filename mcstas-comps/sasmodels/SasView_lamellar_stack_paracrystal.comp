@@ -56,7 +56,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_lamellar_stack_paracrystal
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         thickness=33.0,
         Nlayers=20,

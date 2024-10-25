@@ -50,12 +50,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Grating_reflect
-DEFINITION PARAMETERS ()
 SETTING PARAMETERS (d_phi=1, R0=1, rho_l=800,
     order=0, phi0=0,
     zdepth=0.015, xwidth=0.136, int verbose=0)
-OUTPUT PARAMETERS (d,pdir,b,nslits)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE
 %{  

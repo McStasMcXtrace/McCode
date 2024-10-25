@@ -40,11 +40,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Lens_CRL_RTM
-DEFINITION PARAMETERS ()
 SETTING PARAMETERS (r=0.5e-3,d=0.1e-3,string material="Be.txt",int N=1,
     zdepth=2e-3,yheight=1e-3, xwidth=1.2e-3, int fast=1)
-OUTPUT PARAMETERS (Y)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{

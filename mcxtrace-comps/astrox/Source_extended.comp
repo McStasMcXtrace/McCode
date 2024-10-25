@@ -47,11 +47,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Source_extended
-DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string spectrum_file=NULL,yheight=0, xwidth=0,
   dist=0, E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,incoherent=1,phase=0, string image_path="")
-OUTPUT PARAMETERS (prms,square)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE
 %{

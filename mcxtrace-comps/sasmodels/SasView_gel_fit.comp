@@ -56,7 +56,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_gel_fit
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         guinier_scale=1.7,
         lorentz_scale=3.5,

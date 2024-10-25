@@ -39,7 +39,7 @@
 * barns:             [1]      Flag to indicate if |F|^2 from 'crystal_fn' is in barns or fm^2. barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), barns=0 for lau type files
 * order:             [1]      Limit scattering to this order
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * Template_storage          // Important to update this output paramter
 * effective_my_scattering   // Variable used in initialize
 *
@@ -50,11 +50,11 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Texture_process // Remember to change the name of process here
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS(string crystal_fn=0, string fcoef_fn=0, int lmax_user=-1,
             barns = 0, order = 0, interact_fraction = -1, packing_factor = 1,
 	        int maxNeutronSaved = 1, string init="init")
-OUTPUT PARAMETERS ()
+
 
 SHARE
 %{

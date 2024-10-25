@@ -37,9 +37,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Progress_bar
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string profile="NULL", percent=10,flag_save=0,minutes=0)
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE

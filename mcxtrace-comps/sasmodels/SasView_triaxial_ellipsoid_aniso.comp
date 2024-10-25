@@ -60,7 +60,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_triaxial_ellipsoid_aniso
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         sld=4,
         sld_solvent=1,

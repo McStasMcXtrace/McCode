@@ -187,7 +187,7 @@
 
 DEFINE COMPONENT SupermirrorFlat
 
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (vector side_edge_normal={0,+1,0}, vector side_edge_point={0,+0.1,0},
 	length=0.5, thickness_in_mm=0.3,
 	string mirror_coated_side="BothCoated",
@@ -208,7 +208,7 @@ SETTING PARAMETERS (vector side_edge_normal={0,+1,0}, vector side_edge_point={0,
 	rot_about_z_third_in_degree=0, 
 	string tracking="DetailTracking", 
 	int keep_if_missed=1)
-OUTPUT PARAMETERS ()
+
 NOACC
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE

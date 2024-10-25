@@ -36,7 +36,7 @@
 * tmax: [mu-s]           End of time window
 * nowritefile: [1]      If set, monitor will skip writing to disk
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * PSDr_N: []             Array of neutron counts
 * PSDr_p: []             Array of neutron weight counts
@@ -49,10 +49,10 @@
 *******************************************************************************/
 
 DEFINE COMPONENT TOF_PSD_monitor_rad
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (int nr=100, int nt=100, int nowritefile=0,
   string filename=0, string filename_av=0, rmax=0.2, tmin, tmax, int restore_neutron=0)
-OUTPUT PARAMETERS ()
+
 
 DECLARE
 %{

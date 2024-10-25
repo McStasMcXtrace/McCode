@@ -29,7 +29,7 @@
 * yheight:  [m] Height of detector.
 * restore_xray: [m] If set, the monitor does not influence the xray state
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * N:      Array of x.ray counts
 * p:      Array of x-ray weight counts
@@ -39,9 +39,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Monitor
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (xwidth=0.1, yheight=0.1, restore_xray=0)
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 DECLARE
 %{

@@ -57,7 +57,7 @@
 * yheight: [m]          height of monitor
 * nowritefile: [1]      If set, monitor will skip writing to disk
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * Div_N: []             Array of neutron counts
 * Div_p: []             Array of neutron weight counts
@@ -68,14 +68,14 @@
 
 DEFINE COMPONENT Brilliance_monitor
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (int nlam=101, int nt=1001, int nowritefile=0,
   lambda_0=0, lambda_1=20, int restore_neutron=0, Freq, int tofcuts=0,
   int toflambda=0, xwidth = 0.01, yheight=0.01, source_dist=1, string filename=0,
   t_0=0, t_1=20000, srcarea=1)
 
-OUTPUT PARAMETERS ()
+
 
 DECLARE
 %{

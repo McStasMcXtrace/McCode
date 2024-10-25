@@ -30,7 +30,7 @@
 *******************************************************************************/
 DEFINE COMPONENT File
 SETTING PARAMETERS (string filename=0, string metadatakey, int keep=0)
-OUTPUT PARAMETERS ()
+
 SHARE
 %{
 %}

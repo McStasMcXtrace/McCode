@@ -57,7 +57,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_core_multi_shell
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         sld_core=1.0,
         radius=200.0,

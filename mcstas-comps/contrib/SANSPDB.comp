@@ -37,12 +37,12 @@
 
 DEFINE COMPONENT SANSPDB
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (RhoSolvent = 6.4e-14, Concentration = 0.01, AbsorptionCrosssection = 0.0, string PDBFilepath="PDBfile.pdb",
 		    xwidth=0, yheight=0, zdepth=0, SampleToDetectorDistance=1, DetectorRadius=1)
 
-OUTPUT PARAMETERS ()
+
 DEPENDENCY " @GSLFLAGS@ "
 NOACC
 

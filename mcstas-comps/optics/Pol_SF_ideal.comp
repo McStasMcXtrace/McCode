@@ -38,9 +38,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_SF_ideal
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (nx=0, ny=1, nz=0, xwidth=0.1, yheight=0.1, zdepth=0.1)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 TRACE
 %{

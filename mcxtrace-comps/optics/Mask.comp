@@ -56,9 +56,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Mask
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (xwidth=0.1, yheight=0.1, string mask="Test_Mask_input_file.mask", invert=0, virtual=0)
-OUTPUT PARAMETERS ()
+
 //DEPENDENCY "-lpng -DUSE_PNG"
 
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 

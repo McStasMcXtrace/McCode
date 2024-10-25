@@ -51,7 +51,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_rectangular_prism
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         sld=6.3,
         sld_solvent=1,

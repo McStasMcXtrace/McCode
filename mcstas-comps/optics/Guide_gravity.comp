@@ -109,7 +109,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Guide_gravity
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
   R0=0.995, Qc=0.0218, alpha=4.38, m=1.0, W=0.003, nslit=1, d=0.0005,
   mleft=-1, mright=-1, mtop=-1, mbottom=-1, nhslit=1, G=0,
@@ -117,7 +117,7 @@ SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
   wavy=0, wavy_z=0, wavy_tb=0, wavy_lr=0,
   chamfers=0, chamfers_z=0, chamfers_lr=0, chamfers_tb=0, nelements=1,
   nu=0, phase=0, string reflect="NULL")
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{

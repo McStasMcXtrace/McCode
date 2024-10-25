@@ -70,12 +70,12 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Bragg_crystal_BC
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (length=0.05, width=0.02, V=160.1826, string form_factors="FormFactors.txt", string material="Si.txt",
         alphax=0.0, alphay = 1.0, alphaz = 0.0,
         R0=0, debye_waller_B=0.4632, int crystal_type=1, int h=1, int k=1, int l=1 ,
         structure_factor_scale_r=0.0, structure_factor_scale_i=0.0, int verbose=0)
-OUTPUT PARAMETERS ()
+
 DEPENDENCY "-std=c99"
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 

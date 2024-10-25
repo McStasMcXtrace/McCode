@@ -52,7 +52,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_star_polymer
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         rg_squared=100.0,
         arms=3,

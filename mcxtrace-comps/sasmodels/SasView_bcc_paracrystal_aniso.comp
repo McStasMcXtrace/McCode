@@ -58,7 +58,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_bcc_paracrystal_aniso
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         dnn=220,
         d_factor=0.06,

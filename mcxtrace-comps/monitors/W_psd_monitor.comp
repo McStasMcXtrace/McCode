@@ -33,7 +33,7 @@
 * filename: [str] Name of file in which to store the detector image
 * restore_xray: [1] If set, the monitor does not influence the xray state
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * PSD_N:    Array of xray counts
 * PSD_W:    Array of xray weight counts
@@ -43,10 +43,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT W_psd_monitor
-DEFINITION PARAMETERS ()
 SETTING PARAMETERS (int nx=90, int ny=90, string filename=0, int restore_xray=0, xwidth=0.1, yheight=0.1)
-OUTPUT PARAMETERS (PSD_N, PSD_W, PSD_W2)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE
   %{

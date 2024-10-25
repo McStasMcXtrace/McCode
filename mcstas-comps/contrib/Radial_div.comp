@@ -35,7 +35,7 @@
 * filename:        Name of file in which to store the detector image (text)
 * restore_neutron: If set, the monitor does not influence the neutron state (1)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * Div_N:           Array of neutron counts
 * Div_p:           Array of neutron weight counts
@@ -47,11 +47,11 @@
 
 DEFINE COMPONENT Radial_div
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (ndiv=20, restore_neutron=0, string filename, xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, maxdiv_r=2, Lmin, Lmax)
 
-OUTPUT PARAMETERS ()
+
 
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 

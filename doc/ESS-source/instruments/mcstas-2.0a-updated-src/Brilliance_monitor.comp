@@ -55,7 +55,7 @@
 * tofcuts:   Flag to generate TOF-distributions as function of wavelength (1)
 * toflambda: Flag to generate TOF-lambda distribution output ´ (1)
 * 
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * Div_N:    Array of neutron counts
 * Div_p:    Array of neutron weight counts

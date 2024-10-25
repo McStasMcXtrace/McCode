@@ -41,10 +41,10 @@
 *******************************************************************************/
 
 DEFINE COMPONENT EPSD_monitor
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (int nx=90, int ny=90, string filename=0, int restore_xray=0,
     xwidth=0.1, yheight=0.1, Emax=0, Emin=0, nE=1, int nowritefile=0)
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE

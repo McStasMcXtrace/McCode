@@ -60,7 +60,7 @@
 * flag4d:         [0/1] Use either (0) x,y-projections or (1) full 4D x,y,x',y' datafiles.
 * noinit:         [0/1] Do no initialize the component. Can be usefiul in conjunction with a deactivating WHEN-clause.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %Link
 * Tanaka, J. Synchrotron Rad. (2001). 8, 1221-1228. https://doi.org/10.1107/S090904950101425X
@@ -70,13 +70,13 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Source_spectra
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
     string spectra_stem_x="", string spectra_stem_y="", string spectra_stem="", string spectra_suffix="dsc",
     E0=0, dE=0, Emin,Emax, int nE, int randomphase=1, phase=0,
     int nx=0, int ny=0, int npx=0, int npy=0, int initial_serial=1, int symmetricx=0, int symmetricy=0, int verbose=0,
     int flag4d=0, int noinit=0)
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE

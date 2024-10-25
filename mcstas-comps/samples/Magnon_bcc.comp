@@ -65,7 +65,7 @@
 * target_index: [1]   relative index of component to focus at, e.g. next is +1 
 * verbose: [1]        flag for test printing (print if verbose==1)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * V_rho: [AA^-3]      Atomic density
 * V_my_s: [m^-1]      Attenuation factor due to incoherent scattering
 * V_my_a_v: [m^-1]    Attenuation factor due to absorbtion
@@ -77,10 +77,10 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Magnon_bcc
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (radius,yheight,sigma_abs,sigma_inc,a,FM=0,J1,J2,D,s,DW,T,
 target_x=0, target_y=0, target_z=0, int target_index=0,F2=1,focus_r=0,focus_xw=0,focus_yh=0,focus_aw=0,focus_ah=0,verbose=0)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{

@@ -43,7 +43,7 @@
 * interact_fraction: [1]     How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
 * init:              [string] name of Union_init component (typically "init", default)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %L
 * The test/example instrument <a href="../examples/Test_Phonon.instr">Test_Phonon.instr</a>.
@@ -52,9 +52,9 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Incoherent_process
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS(sigma=5.08, f_QE=0, gamma=0, packing_factor=1, unit_cell_volume=13.8, interact_fraction=-1, string init="init")
-OUTPUT PARAMETERS ()
+
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

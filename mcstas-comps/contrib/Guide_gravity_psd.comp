@@ -120,7 +120,7 @@
 
 DEFINE COMPONENT Guide_gravity_psd
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (nxpsd,
   string filenameT, string filenameB, string filenameL, string filenameR,
@@ -132,7 +132,7 @@ SETTING PARAMETERS (nxpsd,
   chamfers=0, chamfers_z=0, chamfers_lr=0, chamfers_tb=0, nelements=1,
   nu=0, phase=0, string reflect="NULL")
 
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

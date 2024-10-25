@@ -62,7 +62,7 @@
 
 DEFINE COMPONENT Polycrystal
 
-DEFINITION PARAMETERS()
+
 
 SETTING PARAMETERS(string MapFile = "",
                    string OrientationsFile = "",
@@ -90,7 +90,7 @@ SETTING PARAMETERS(string MapFile = "",
                    Reciprocal                = 0,
                    verbose                   = 0)
 
-OUTPUT PARAMETERS()
+
 
 SHARE
 %{

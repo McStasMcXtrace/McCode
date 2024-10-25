@@ -66,7 +66,7 @@
 * logger_conditional_extend_index: [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
 * init:                 [string] Name of Union_init component (typically "init", default)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * GLOBAL PARAMETERS:
 *
@@ -76,9 +76,9 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Union_logger_2D_kf_time
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS(string target_geometry="NULL",string target_process="NULL", Q1_min=-5, Q1_max=5, Q2_min=-5, Q2_max=5, time_min=0, time_max=1,string Q_direction_1="x", string Q_direction_2="z",string filename="NULL", n1=90, n2=90, time_bins=10, order_total=0,order_volume=0,order_volume_process=0,logger_conditional_extend_index=-1, string init="init")
-OUTPUT PARAMETERS ()
+
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

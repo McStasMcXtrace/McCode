@@ -53,9 +53,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Guide_simple
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (w1, h1, w2=0, h2=0, l, R0=0.99, Qc=0.0219, alpha=6.07, m=2, W=0.003)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{

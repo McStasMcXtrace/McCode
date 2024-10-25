@@ -41,7 +41,7 @@
 *
 * monitor_comp: name of the associated Monitor_nD where the detection should take place [no quotes]
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %Link
 * <a href="Monitor_nD.html">Monitor_nD</a>
@@ -50,8 +50,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT PreMonitor_nD
-DEFINITION PARAMETERS (monitor_comp)
-SETTING PARAMETERS ()
+SETTING PARAMETERS (string monitor_comp)
 /* Xray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 /* Flag will be set to 1 automatically */
@@ -61,18 +60,15 @@ SETTING PARAMETERS ()
 
 INITIALIZE
 %{
-    struct MonitornD_Variables *Vars = &(MC_GETPAR(monitor_comp, Vars));
+  struct MonitornD_Variables *Vars = COMP_GETPAR3(Monitor_nD, monitor_comp, Vars);
     Vars->Flag_UsePreMonitor = 1;
     strncpy(Vars->UserName1, NAME_CURRENT_COMP, 64);
 %}
 
 TRACE
 %{
-    struct MonitornD_Variables *Vars = &(MC_GETPAR(monitor_comp, Vars));
+    struct MonitornD_Variables *Vars = COMP_GETPAR3(Monitor_nD, monitor_comp, Vars);
     /* directly act on MonitornD_Variables pointer, do not need to update */
-
-    PROP_Z0;
-
     if (Vars->Flag_UsePreMonitor == 1)
     {
         Vars->cp = p;

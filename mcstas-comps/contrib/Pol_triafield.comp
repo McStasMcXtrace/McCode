@@ -47,14 +47,14 @@
 * B: [T]        Magnetic field along y-direction inside triangle 
 * Bguide: [T]   Magnetic field along y-direction inside entire box 
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_triafield
 SETTING PARAMETERS (xwidth, yheight, zdepth, B=0, Bguide=0)
-OUTPUT PARAMETERS()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

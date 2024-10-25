@@ -68,7 +68,7 @@
 * logger_conditional_extend_index: [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then access logger_conditional_extend[n] if logger_conditional_extend_index is set to n
 * init:              [string] name of Union_init component (typically "init", default)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * GLOBAL PARAMETERS:
 *
@@ -78,11 +78,11 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Union_abs_logger_1D_space
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS(string target_geometry="NULL",
                    yheight, n=100,
                    string filename="NULL", order_total=-1, order_volume=-1, logger_conditional_extend_index=-1, string init="init")
-OUTPUT PARAMETERS ()
+
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

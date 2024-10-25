@@ -46,9 +46,9 @@
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Guide_curved
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (w1, h1, l, R0=0.995, Qc=0.0218, alpha=4.38, m=2, W=0.003, curvature=2700)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{

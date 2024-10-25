@@ -205,7 +205,7 @@
 * powder_Vc: [AA^3]           volume of the unit cell
 * powder_barns: [1]           0 when |F2| data in powder file are fm^2, 1 when in barns (barns=1 for laz, barns=0 for lau type files).
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * VarSqw: []                  internal structure including  dq=wavevector transfer Kf-Ki in Angs-1; dw=energy transfer Ef-Ei in meV; type=interaction type of event as 'c' (coherent),  't' (transmitted).
 * SCATTERED: []               order of multiple scattering
 *
@@ -219,7 +219,7 @@
 ***********************************************************/
 
 DEFINE COMPONENT Isotropic_Sqw
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS(
   vector powder_format={0,0,0,0,0,0,0,0,0}, 
   string Sqw_coh=0, string geometry=0,
@@ -230,7 +230,7 @@ SETTING PARAMETERS(
   rho=0, sigma_coh=0.66524, classical=-1,
   powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
   p_interact=-1, norm=-1, powder_barns=1, string quantum_correction="Frommhold")
-OUTPUT PARAMETERS ()
+
 
 /*****************************************************************************/
 /*****************************************************************************/

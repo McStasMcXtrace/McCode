@@ -30,7 +30,7 @@
 * tmin: [s]                   minimal time of detection
 * tmax: [s]                   maximal time of detection
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * delta_t: [s]                interval of time of the detection
 * T_p: [s]                    period of the statistical chopper comp
 *
@@ -40,9 +40,9 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT StatisticalChopper_Monitor COPY Monitor_nD
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string comp, tmin=0.0, tmax=0.0)
-OUTPUT PARAMETERS()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE COPY Monitor_nD
