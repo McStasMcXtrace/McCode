@@ -40,10 +40,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Mirror_toroid_pothole
-DEFINITION PARAMETERS ()
 SETTING PARAMETERS (zdepth=0.1, xwidth=0.01, radius, radius_o,R0=0,string coating="")
-OUTPUT PARAMETERS (reflec_table, prms)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{

@@ -47,8 +47,7 @@ DEFINE COMPONENT E_monitor
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (nE=20, string filename=0, 
   xwidth=0.1, yheight=0.1, Emin, Emax, restore_xray=0)
-OUTPUT PARAMETERS (E_N, E_p, E_p2)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
 DECLARE
 %{
   DArray1d E_N;

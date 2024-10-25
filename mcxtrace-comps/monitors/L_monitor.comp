@@ -47,8 +47,7 @@ DEFINE COMPONENT L_monitor
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (int nL=20, string filename=0, 
   xwidth=0.1, yheight=0.1, Lmin, Lmax, restore_xray=0)
-OUTPUT PARAMETERS (L_N, L_p, L_p2)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
 DECLARE
 %{
   DArray1d L_N;

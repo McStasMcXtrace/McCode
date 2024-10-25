@@ -51,11 +51,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT MM_p
-DEFINITION PARAMETERS ()
 SETTING PARAMETERS (pore_th, int ring_nr, Z0, pore_height, pore_width, chamfer_width=0, gap=0, zdepth=0, string mirror_reflec="", string bottom_reflec="", string side_reflec="", string size_file="", string non_specular_file="", R_d=1, waviness=0, longw=0)
-OUTPUT PARAMETERS (nLeft, nRight, nExit, nTop, nBottom, wLeft, wRight, wExit, wall, zentry, zentry_vec, xwidth, reflec_top_table, reflec_bottom_table,
-        ref_prms,radius_p,radius_m,size_table, non_specular_prms)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE
 %{
