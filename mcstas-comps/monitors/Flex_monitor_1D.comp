@@ -32,7 +32,7 @@
 * signal: [string]      Name of variable to be used as an additive signal to be monitored. Default is intensity.
 * nowritefile: [1]      Flag to indicate if monitor should not save any data.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * U_N: []               Array of neutron counts
 * U_p: []               Array of neutron weight counts

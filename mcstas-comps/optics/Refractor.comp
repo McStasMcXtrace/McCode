@@ -110,7 +110,7 @@
 * p_reflect: [1]        flag to allow reflection (grazing angle) at the surface
 * p_refract: [1]        flag to allow refraction at the refractor surface
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * theta1: [deg]         incoming angle to the surface
 * theta2: [deg]         outgoing angle to the surface
 * SCATTERED: []         0=transmitted, 1=scattered in bulk, 2=refracted, 3=reflected

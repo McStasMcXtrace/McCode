@@ -39,7 +39,7 @@
 * xwidth: [m]     Width of monitor. Overrides xmin,xmax.
 * yheight: [m]    Height of monitor. Overrides ymin,ymax.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * none (see <b>Source_Optimizer.comp</b>)
 *

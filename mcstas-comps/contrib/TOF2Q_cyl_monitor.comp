@@ -35,7 +35,7 @@
 * filename:        Name of file in which to store the detector image (text)
 * restore_neutron: If set, the monitor does not influence the neutron state (1)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * TOFq_N:    Array of neutron counts
 * TOFq_p:    Array of neutron weight counts

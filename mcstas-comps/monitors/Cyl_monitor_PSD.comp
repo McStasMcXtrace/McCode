@@ -32,7 +32,7 @@
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
 * nowritefile: [1]      If set, monitor will skip writing to disk
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * PSD_N: []             Array of neutron counts
 * PSD_p: []             Array of neutron weight counts

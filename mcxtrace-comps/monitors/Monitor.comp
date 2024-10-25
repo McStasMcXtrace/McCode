@@ -29,7 +29,7 @@
 * yheight:  [m] Height of detector.
 * restore_xray: [m] If set, the monitor does not influence the xray state
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * N:      Array of x.ray counts
 * p:      Array of x-ray weight counts

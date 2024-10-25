@@ -55,7 +55,7 @@
 * inttol: []    tolerance of intensity            (if primary beam intensity smaller than inttol*max_intensity then discard data)
 * qcal: []      calibration of intensity (cps) to width of q-bin (non_zero = yes, zero = no)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * PSDq_N: []    Array of neutron counts
 * PSDq_p: []    Array of neutron weight counts

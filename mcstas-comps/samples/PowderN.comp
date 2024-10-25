@@ -166,7 +166,7 @@
 * nb_atoms: [1]        Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell
 * target_index: [1]    Relative index of component to focus incoherent scattering at, e.g. next is +1
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * line_info: [struct]  internal structure containing many members/info
 * line_info.type: interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent [char]
 * line_info.dq:   wavevector transfer of last coherent scattering event [Angs-1]

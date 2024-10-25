@@ -27,7 +27,7 @@
 *
 * (none)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * Nsum   : Number of neutrons hitting
 * psum   : Total weight of neutrons hitting

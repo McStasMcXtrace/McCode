@@ -38,7 +38,7 @@
 * nowritefile: [1]      If set, monitor will skip writing to disk
 * vertical: [1]         If set, measure vertical divergence instead of horizontal.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * Div_N: []             Array of neutron counts
 * Div_p: []             Array of neutron weight counts

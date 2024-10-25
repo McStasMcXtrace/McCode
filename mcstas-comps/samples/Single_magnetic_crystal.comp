@@ -96,7 +96,7 @@
 * sigma_abs:  absorption cross-section per unit cell at 2200 m/s [barns]
 * sigma_inc:  incoherent scattering cross-section per unit cell [barns]
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * hkl_info: Internal [structure]
 *

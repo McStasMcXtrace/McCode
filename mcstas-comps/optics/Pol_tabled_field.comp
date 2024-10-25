@@ -36,7 +36,7 @@
 * geometry: [str]           Name of an Object File Format (OFF) or PLY file for complex field-geometry.
 * interpol_method: [str]    Choice of interpolation method "kdtree" (default on CPU) / "regular" (default on GPU)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * %E
 ****************************************************************************/
 DEFINE COMPONENT Pol_tabled_field

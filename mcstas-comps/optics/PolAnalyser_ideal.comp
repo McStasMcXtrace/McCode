@@ -29,7 +29,7 @@
 * my: [1]  Y-component of polarisation analysis vector -1<my<1
 * mz: [1]  Z-component of polarisation analysis vector -1<mz<1
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %E
 *******************************************************************************/

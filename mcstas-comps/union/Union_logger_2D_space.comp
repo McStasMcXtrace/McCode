@@ -63,7 +63,7 @@
 * logger_conditional_extend_index: [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then acces logger_conditional_extend[n] if logger_conditional_extend_index is set to n
 * init:            [string] Name of Union_init component (typically "init", default)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * GLOBAL PARAMETERS:
 *

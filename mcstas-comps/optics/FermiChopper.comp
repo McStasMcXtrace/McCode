@@ -67,7 +67,7 @@
 * phase: [deg]      chopper phase at t=0
 * delay: [s]        sets phase so that transmision is centered on 'delay'
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * FCVars :  []     structure
 *
 * %L

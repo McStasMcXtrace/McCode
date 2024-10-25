@@ -33,7 +33,7 @@
 * fliplambda: []  lambda for calculating B field
 * flipangle: []   Angle flipped for lambda = fliplambda fliplambda and flipangle overrides B so a neutron with s= (1, 0, 0) and v = (0, 0, v(fliplambda)) will have s =(cos(flipangle), sin(flipangle), 0) after the section.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %E
 *******************************************************************************/

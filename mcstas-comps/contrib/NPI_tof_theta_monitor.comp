@@ -46,7 +46,7 @@
 * amin:	[deg]	minimum of scattering angle to be detected
 * amax: [deg]	maximum of scattering angle to be detected
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * TOF_N:    Array of neutron counts
 * TOF_p:    Array of neutron weight counts

@@ -83,7 +83,7 @@
 * drawOption: [1]    1: fine(all slits/90 points per arc), 2: normal (max 20/40), 3: rough (max 5/10) 
 * debug: [1]         if debug > 0 print out some internal parameters 
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * localG: [m/s/s]    Gravity vector in guide reference system 
 * normalXXX: [1]     Several normal vector used for defining the geometry 

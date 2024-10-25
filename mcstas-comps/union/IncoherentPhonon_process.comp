@@ -44,7 +44,7 @@
 * kabsmax:           [A^-1]   Higher cut-off for the neutron wave-vector k
 * interact_fraction: [1]      How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * This_process
 * IncoherentPhonon_storage

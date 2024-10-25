@@ -76,7 +76,7 @@
 * beta: [1]           Aggressiveness of adaptive algorithm (0 < beta <= 1)
 * filename: [string]  Optional filename for adaptive distribution output
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * p_in: []            Internal, holds initial neutron weight
 * y_0: []             Internal

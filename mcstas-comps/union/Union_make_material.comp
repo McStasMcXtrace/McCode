@@ -36,7 +36,7 @@
 * absorber:       [0/1]    Control parameter, if set to 1 the material will have no scattering processes
 * init:           [string] Name of Union_init component (typically "init", default)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * this_material:            Structure that contains information on this material
 * global_material_element:  Element of global_material_list which is a global variable
 *

@@ -57,7 +57,7 @@
 * yheight: [m]          height of monitor
 * nowritefile: [1]      If set, monitor will skip writing to disk
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * Div_N: []             Array of neutron counts
 * Div_p: []             Array of neutron weight counts

@@ -33,7 +33,7 @@
 * my:              [1] y-component of spin reference-vector
 * mz:              [1] z-component of spin reference-vector
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * PSD_N:    Array of neutron counts
 * PSD_p:    Array of neutron weight counts

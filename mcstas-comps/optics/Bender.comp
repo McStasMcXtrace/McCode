@@ -77,7 +77,7 @@
 * Optional parameters:
 * l: [m]        length of bender l=r*Win
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * bk: [m]       Width of 1 channel + 1 separating blade
 * mWin: [rad]   Angle of the deflection of the whole bender
 *

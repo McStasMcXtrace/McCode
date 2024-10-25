@@ -33,7 +33,7 @@
 * randomOn: [1]  Generate random values if randomOn!=0. 
 * normalize: [1] Normalize the polarization vector to unity length.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %E
 *******************************************************************************/

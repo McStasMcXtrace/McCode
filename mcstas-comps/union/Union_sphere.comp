@@ -52,7 +52,7 @@
 * focus_r:               [m]   focusing on circle with this radius
 * init:                  [string]    name of Union_init component (typically "init", default)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %L
 *

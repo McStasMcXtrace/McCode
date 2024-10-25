@@ -31,7 +31,7 @@
 * filename: [text]     Name of file in which to store the detector image
 * filename_av: [text]  Name of file in which to store the averaged detector image
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * PSDr_N: []           Array of neutron counts
 * PSDr_p: []           Array of neutron weight counts

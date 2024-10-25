@@ -38,7 +38,7 @@
 * sigma:            [barns]  Scattering cross section
 * unit_cell_volume: [AA^3]   Unit cell volume
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * Non_storage          // Important to update this output paramter
 * effective_my_scattering   // Variable used in initialize
 *

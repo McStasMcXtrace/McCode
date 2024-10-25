@@ -35,7 +35,7 @@
 * phase:   [deg] Phase shift
 * direction: [1] Rotation axis selection 1=x, 2=y, 3=z
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * angle: [deg]  rotation angle 
 *
 * %End

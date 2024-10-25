@@ -158,7 +158,7 @@
 * bufsize: [1]          Size of neutron output buffer default is 0, i.e. save all - recommended. 
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * PSD_N: []             Array of neutron counts
 * PSD_p: []             Array of neutron weight counts

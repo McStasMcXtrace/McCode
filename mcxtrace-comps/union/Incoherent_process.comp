@@ -44,7 +44,7 @@
 * Unit_cell_volume: [AA^3] Unit_cell_volume
 * Interact_fraction: [1]  How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %Link
 * The test/example instrument <a href="../examples/Test_Phonon.instr">Test_Phonon.instr</a>.

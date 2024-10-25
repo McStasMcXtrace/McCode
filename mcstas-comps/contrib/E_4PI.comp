@@ -28,7 +28,7 @@
 * filename: [string] Name of file in which to store the output data
 * restore_neutron: [1] If set, the monitor does not influence the neutron state
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * PSD_N:    Array of neutron counts
 * PSD_p:    Array of neutron weight counts

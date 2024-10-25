@@ -54,7 +54,7 @@
 * nowritefile: [1]   If set, monitor will skip writing to disk
 * nosum: [1]         If set, monitor will skip writing the energy-summed array to disk
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * M_N: []             3D array of neutron counts
 * M_p: []             3D array of neutron weight counts

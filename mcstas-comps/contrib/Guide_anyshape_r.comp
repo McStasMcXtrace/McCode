@@ -58,7 +58,7 @@
 * W: [AA-1]                    Width of supermirror cut-off
 * transmit: [1]                When true, non reflected neutrons are transmitted through the surfaces, instead of being absorbed. No material absorption is taken into account though
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * SCATTERED: []                number of reflected events
 *
 * %D

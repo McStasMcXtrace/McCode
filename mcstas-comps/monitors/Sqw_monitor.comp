@@ -38,7 +38,7 @@
 * filename: [string] Base filename to use, nE+1 files will be output
 * nowritefile: [1]   If set, monitor will skip writing to disk
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * M_N: []             2D array of neutron counts
 * M_p: []             2D array of neutron weight counts

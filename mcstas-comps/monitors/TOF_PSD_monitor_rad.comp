@@ -36,7 +36,7 @@
 * tmax: [mu-s]           End of time window
 * nowritefile: [1]      If set, monitor will skip writing to disk
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * PSDr_N: []             Array of neutron counts
 * PSDr_p: []             Array of neutron weight counts

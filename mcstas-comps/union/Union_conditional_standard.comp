@@ -59,7 +59,7 @@
 * init:                 [string] Name of Union_init component (typically "init", default)
 *
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * GLOBAL PARAMETERS:
 *

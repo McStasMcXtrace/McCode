@@ -34,7 +34,7 @@
 * filename: [str]  Name of file in which to store the detector image.
 * restore_xray: [ ]If set, the monitor does not influence the x-ray state.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * L_N:      Array of x-ray counts
 * L_p:      Array of x-ray weight counts

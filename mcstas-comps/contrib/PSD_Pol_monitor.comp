@@ -37,7 +37,7 @@
 * my: [1]		Define the projection axis along which the polarizatoin is evaluated, y-component
 * mz: [1]		Define the projection axis along which the polarizatoin is evaluated, z-component
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * PSDpol_N: []             Array of neutron counts
 * PSDpol_p: []             Array of neutron weighted polarization

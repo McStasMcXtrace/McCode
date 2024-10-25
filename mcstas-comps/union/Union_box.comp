@@ -58,7 +58,7 @@
 * focus_xh:              [m]      Vert. dimension of a rectangular area
 * focus_r:               [m]      Focusing on circle with this radius
 * init:                  [string] name of Union_init component (typically "init", default)
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %L
 *

@@ -161,7 +161,7 @@
 * mat_format: [{}]  Format of the asorption parameter file.
 * target_index: [1]    Relative index of component to focus incoherent scattering at, e.g. next is +1
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * line_info: [struct]     Internal structure containing many members/info
 * line_info.type: [char]  Interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent
 * line_info.dq: [Angs^-1] Wavevector transfer of last coherent scattering event.

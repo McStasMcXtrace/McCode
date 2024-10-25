@@ -56,7 +56,7 @@
 * restore_neutron: [1]          If set, the monitor does not influence the neutron state
 * live_calc: [1]                If set, the monitor directly outputs the resolution matrix
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * DEFS: [struct]                structure containing Monitor_nD Defines
 * Vars: [struct]                structure containing Monitor_nD variables

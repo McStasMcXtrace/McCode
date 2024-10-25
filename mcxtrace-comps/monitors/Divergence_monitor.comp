@@ -41,7 +41,7 @@
 * rad:  [1]             If set - divergence will be measured in radians.
 * nowritefile: [1]      If set, monitor will skip writing to disk
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * Div_N:    Array of photon ray counts
 * Div_p:    Array of photon weight counts

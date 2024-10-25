@@ -32,7 +32,7 @@
 * %P
 * INPUT PARAMETERS:
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * GLOBAL PARAMETERS:
 * global_material_list:     List of all defined materials, available in the global scope

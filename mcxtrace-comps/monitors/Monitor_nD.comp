@@ -200,7 +200,7 @@
 * geometry:   [str] Name of an OFF file to specify a complex geometry detector
 * nowritefile: [1]      If set, monitor will skip writing to disk
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * DEFS: [struct]  structure containing Monitor_nD Defines.
 * Vars: [struct]  structure containing Monitor_nD variables.

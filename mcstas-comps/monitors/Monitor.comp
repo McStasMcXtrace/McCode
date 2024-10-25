@@ -31,7 +31,7 @@
 * yheight: [m]          Height of detector. Overrides ymin,ymax. 
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state 
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * Nsum: []              Number of neutron hits
 * psum: []              Sum of neutron weights

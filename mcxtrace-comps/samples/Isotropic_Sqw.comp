@@ -205,7 +205,7 @@
 * powder_Vc: [AA^3]           volume of the unit cell
 * powder_barns: [1]           0 when |F2| data in powder file are fm^2, 1 when in barns (barns=1 for laz, barns=0 for lau type files).
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * VarSqw: []                  internal structure including  dq=wavevector transfer Kf-Ki in Angs-1; dw=energy transfer Ef-Ei in meV; type=interaction type of event as 'c' (coherent),  't' (transmitted).
 * SCATTERED: []               order of multiple scattering
 *

@@ -47,7 +47,7 @@
 * B: [T]        Magnetic field along y-direction inside triangle 
 * Bguide: [T]   Magnetic field along y-direction inside entire box 
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %E
 *******************************************************************************/

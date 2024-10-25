@@ -30,7 +30,7 @@
 * tmin: [s]                   minimal time of detection
 * tmax: [s]                   maximal time of detection
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * delta_t: [s]                interval of time of the detection
 * T_p: [s]                    period of the statistical chopper comp
 *

@@ -74,7 +74,7 @@
 * debug:        0 to 10 for zero to maximum print out - reduce number of neutrons to run !
 * alwaystrack   default 0,  1 to force tracking even when gravity is off
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * localG:       Gravity vector in guide reference system (m/s/s)
 * normalXXX:    Several normal vector used for defining the geometry (1)

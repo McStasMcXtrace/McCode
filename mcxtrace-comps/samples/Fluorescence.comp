@@ -110,7 +110,7 @@
 * flag_lorentzian:[1] When 1, the line shapes are assumed to be Lorentzian, else Gaussian
 * order:     [1]      Limit multiple fluorescence up to given order. Last iteration is absorption only.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * type: scattering event type 0=fluorescence, 1=Rayleigh, 2=Compton, 3=transmit
 *
 * %Link

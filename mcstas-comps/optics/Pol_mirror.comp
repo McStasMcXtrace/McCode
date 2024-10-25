@@ -70,7 +70,7 @@
 * useTables: [1]  Parameters are 0: Values, 1: Table names
 * p_reflect: [1]  Proportion of reflected events. Use 0 to only get the transmitted beam, and 1 to get only the reflected beam. Use -1 to use the mirror reflectivity. This value is purely computational and is not related to the actual reflectivity
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * SCATTERED: []   is 1 for reflected, and 2 for transmitted neutrons
 *
 * %L

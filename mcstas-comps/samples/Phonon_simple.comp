@@ -52,7 +52,7 @@
 * target_index: [1]   relative index of component to focus at, e.g. next is +1 
 * gap: [meV]          Bandgap energy (unphysical)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * V_rho: [AA^-3]      Atomic density
 * V_my_s: [m^-1]      Attenuation factor due to incoherent scattering
 * V_my_a_v: [m^-1]    Attenuation factor due to absorbtion

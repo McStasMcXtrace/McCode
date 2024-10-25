@@ -41,7 +41,7 @@
 * centering:    [ ] Treat all rays as if they hit the center of the pixel.
 * nowritefile:  [1] If set, monitor will skip writing to disk
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * PSD_N:    Array of xray event counts.
 * PSD_phi:  Array of xray complex weight counts (the argument consituttes the phase).

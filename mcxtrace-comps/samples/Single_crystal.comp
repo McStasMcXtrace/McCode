@@ -207,7 +207,7 @@
 * surf_FT2:          [1] Intensity |FT(real space)|^2 distribution as CTR of a single Bragg peak, length 'surf_size'.
 * surf_dir:   [nx,ny,nz] Normal vector in real space for the truncation rod spread direction. {1,0,0} is for an YZ surface, with normal along X.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * hkl_info: [structure]  Internal
 * hkl_info.type: interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent [char]

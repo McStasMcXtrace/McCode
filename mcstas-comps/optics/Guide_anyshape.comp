@@ -53,7 +53,7 @@
 * reflect: [q(Angs-1) R(0-1)]  (str)  Reflectivity file name. Format 
 * transmit: [1]                When true, non reflected neutrons are transmitted through the surfaces, instead of being absorbed. No material absorption is taken into account though
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * SCATTERED: []                number of reflected events
 *
 * %D

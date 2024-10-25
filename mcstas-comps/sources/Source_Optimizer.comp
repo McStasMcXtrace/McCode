@@ -94,7 +94,7 @@
 * options: [str]  string of options. See <b>Description<b> 
 
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * DEFS: a set of constant values used in the component (struct)
 * Vars: structure that contains variables used in the component (struct)

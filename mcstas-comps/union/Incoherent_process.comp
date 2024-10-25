@@ -43,7 +43,7 @@
 * interact_fraction: [1]     How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
 * init:              [string] name of Union_init component (typically "init", default)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %L
 * The test/example instrument <a href="../examples/Test_Phonon.instr">Test_Phonon.instr</a>.

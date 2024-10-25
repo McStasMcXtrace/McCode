@@ -60,7 +60,7 @@
 * last_volume_index:    [1]      Not used yet
 * init:                 [string] Name of Union_init component (typically "init", default)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * this_material:            Structure that contains information on this material
 * global_material_element:  Element of global_material_list which is a global variable
 *

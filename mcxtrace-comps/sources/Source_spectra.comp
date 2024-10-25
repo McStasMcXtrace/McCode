@@ -60,7 +60,7 @@
 * flag4d:         [0/1] Use either (0) x,y-projections or (1) full 4D x,y,x',y' datafiles.
 * noinit:         [0/1] Do no initialize the component. Can be usefiul in conjunction with a deactivating WHEN-clause.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %Link
 * Tanaka, J. Synchrotron Rad. (2001). 8, 1221-1228. https://doi.org/10.1107/S090904950101425X

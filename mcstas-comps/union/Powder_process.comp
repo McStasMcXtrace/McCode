@@ -50,7 +50,7 @@
 * target_index:      [1]         Relative index of component to focus at, e.g. next is +1
 * d_phi: [deg]         Angle corresponding to the vertical angular range to focus to, e.g. detector height. 0 for no focusing.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * V_rho:  [AA^-3] Atomic density
 *
 *
