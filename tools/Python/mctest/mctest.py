@@ -651,6 +651,8 @@ def main(args):
     global ncount, mpi, skipnontest, openacc, nexus
     if args.ncount:
         ncount = args.ncount[0]
+    elif args.n:
+        ncount = args.n[0]
     else:
         ncount = "1e6"
     suffix = '_' + ncount
@@ -693,6 +695,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('testversion', nargs="?", help='mccode version to test')
     parser.add_argument('--ncount', nargs=1, help='ncount sent to %s' % (mccode_config.configuration["MCRUN"]) )
+    parser.add_argument('-n', nargs=1, help='ncount sent to %s' % (mccode_config.configuration["MCRUN"]) )
     parser.add_argument('--mpi', nargs=1, help='mpi nodecount sent to %s' % (mccode_config.configuration["MCRUN"]) )
     parser.add_argument('--openacc', action='store_true', help='openacc flag sent to %s' % (mccode_config.configuration["MCRUN"]))
     parser.add_argument('--config', nargs="?", help='test this specific config only - label name or absolute path')
