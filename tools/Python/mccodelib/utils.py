@@ -686,7 +686,7 @@ def get_instr_comp_files(mydir, recursive=True, instrfilter=None, compfilter=Non
             # get instr files
             if splitext(f)[1] == '.instr':
                 if instrfilter is not None:
-                    if instrreg.search(join(dirpath,splitext(f)[0]), re.IGNORECASE):
+                    if instrreg.search(join(dirpath,f), re.IGNORECASE):
                         files_instr.append(join(dirpath, f))
                 else:
                     files_instr.append(join(dirpath, f))
@@ -694,7 +694,7 @@ def get_instr_comp_files(mydir, recursive=True, instrfilter=None, compfilter=Non
             # get comp files
             if os.path.splitext(f)[1] == '.comp':
                 if compfilter is not None:
-                    if compreg.search(splitext(f)[0]):
+                    if compreg.search(f):
                         files_comp.append(join(dirpath, f))
                 else:
                     files_comp.append(join(dirpath, f))
