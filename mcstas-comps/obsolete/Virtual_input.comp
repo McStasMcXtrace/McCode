@@ -60,9 +60,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Virtual_input
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string filename=0, verbose=0,repeat_count=1,smooth=1)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 NOACC
 

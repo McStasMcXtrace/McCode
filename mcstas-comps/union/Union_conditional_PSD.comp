@@ -73,9 +73,9 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Union_conditional_PSD
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS(string target_loggers="NULL", int master_tagging=0, int tagging_extend_index = -1, xwidth, yheight,time_min=0, time_max=0, overwrite_logger_weight=0, string init="init") // E limit, |k| limit, volumes to have visited, processes that was used, end volume, last process
-OUTPUT PARAMETERS ()
+
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

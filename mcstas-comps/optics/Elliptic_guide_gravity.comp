@@ -144,7 +144,7 @@ SETTING PARAMETERS (xwidth = 0,yheight = 0,l,
 	vector mvaluesright=NULL, vector mvaluesleft=NULL, vector mvaluestop=NULL, vector mvaluesbottom=NULL,
 		    vector seglength=NULL)
 
-OUTPUT PARAMETERS ()
+
 
 SHARE
 %{

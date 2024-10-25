@@ -33,7 +33,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius=1, R0=1, string coating="Be.txt",
   zdepth=0.2, yheight=0.2, 
   length=0, width=0)
-OUTPUT PARAMETERS()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE

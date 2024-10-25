@@ -42,9 +42,9 @@
 
 
 DEFINE COMPONENT Slit
-DEFINITION PARAMETERS ()
+
   SETTING PARAMETERS (xmin=UNSET, xmax=UNSET, ymin=UNSET, ymax=UNSET, radius=UNSET, xwidth=UNSET, yheight=UNSET)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{

@@ -88,7 +88,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT ESS_moderator_short
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (size, Lmin, Lmax, dist, focus_xw, focus_yh,
 nu=50, T=325, tau=22e-6, tau1=0, tau2=7e-6, n=5, n2=5,
 chi2=2.5, I0=9e10, I2=4.6e10, branch1=0, branch2=0.5 ,

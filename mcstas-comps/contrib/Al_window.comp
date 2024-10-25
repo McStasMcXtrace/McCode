@@ -38,9 +38,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Al_window
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (thickness=0.001)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{

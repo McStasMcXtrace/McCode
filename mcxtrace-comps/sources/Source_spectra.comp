@@ -76,7 +76,7 @@ SETTING PARAMETERS (
     E0=0, dE=0, Emin,Emax, int nE, int randomphase=1, phase=0,
     int nx=0, int ny=0, int npx=0, int npy=0, int initial_serial=1, int symmetricx=0, int symmetricy=0, int verbose=0,
     int flag4d=0, int noinit=0)
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE

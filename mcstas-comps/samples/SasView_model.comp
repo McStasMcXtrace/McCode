@@ -2154,7 +2154,7 @@
 
 DEFINE COMPONENT SasView_model
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (
   model_index=21,
@@ -2175,7 +2175,7 @@ SETTING PARAMETERS (
   focus_ah=0,
   focus_r=0)
 
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 

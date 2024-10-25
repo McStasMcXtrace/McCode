@@ -40,7 +40,7 @@
 DEFINE COMPONENT Shadow_input
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string file="", int bufsize=10000, int repeat_count=1)
-OUTPUT PARAMETERS ()
+
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)*/
 SHARE
 %{

@@ -42,7 +42,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (R = 100.0, Thickness = 5.0, Concentration = 0.01, DeltaRho = 1.0e-14, AbsorptionCrosssection = 0.0,
 		    		xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
 
-OUTPUT PARAMETERS ()
+
 
 /*X-ray PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 

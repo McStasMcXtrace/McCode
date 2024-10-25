@@ -27,7 +27,7 @@
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Spin_random
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS ()
 /* STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p) */
 /* POLARISATION PARAMETERS (sx,sy,sz) */

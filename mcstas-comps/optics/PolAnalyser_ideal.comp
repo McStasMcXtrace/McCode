@@ -35,7 +35,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT PolAnalyser_ideal
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (mx=0, my=0, mz=0)
 
 DECLARE

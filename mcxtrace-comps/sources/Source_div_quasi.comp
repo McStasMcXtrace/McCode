@@ -56,7 +56,7 @@ DEFINE COMPONENT Source_div_quasi
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string spectrum_file="", xwidth=0, yheight=0, focus_xw=0, focus_yh=0, dist=0, focus_aw=0, focus_ah=0,
     E0=0, dE=0, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, randomphase=1, phase=0, int verbose=1)
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE

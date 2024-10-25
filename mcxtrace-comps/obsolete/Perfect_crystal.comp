@@ -51,7 +51,7 @@
 DEFINE COMPONENT Perfect_crystal
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string form_factors="FormFactors.txt", string material="Si.txt",R0=0, length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alpha=0.0)
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE 

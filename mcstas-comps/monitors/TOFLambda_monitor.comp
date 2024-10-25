@@ -46,7 +46,7 @@
 
 DEFINE COMPONENT TOFLambda_monitor
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS ( int nowritefile=0,
   int nL=20, int nt=128, tmin, tmax, string filename=0,
@@ -54,7 +54,7 @@ SETTING PARAMETERS ( int nowritefile=0,
   xwidth=0, yheight=0, Lmin, Lmax,
   int restore_neutron=0)
 
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

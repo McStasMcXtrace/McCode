@@ -58,7 +58,7 @@ SETTING PARAMETERS (AxisRatio = 1.4, NumberOfLipids = 130.0, AreaPerLipidHeadgro
     Roughness = 3.5, Concentration = 0.01, AbsorptionCrosssection = 0.0,
     xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
 
-OUTPUT PARAMETERS ()
+
 DEPENDENCY " @GSLFLAGS@ "
 NOACC
 

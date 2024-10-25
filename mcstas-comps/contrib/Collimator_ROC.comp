@@ -57,10 +57,10 @@
 
 
 DEFINE COMPONENT Collimator_ROC
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (ROC_pitch=1, ROC_ri=0.4, ROC_ro=1.2, ROC_h=0.153,
 ROC_ttmin=0, ROC_ttmax=100, ROC_sign=1)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 INITIALIZE
 %{

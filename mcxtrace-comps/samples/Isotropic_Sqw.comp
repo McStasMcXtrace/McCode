@@ -230,7 +230,7 @@ SETTING PARAMETERS(
   rho=0, sigma_coh=0.66524, classical=-1,
   powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
   p_interact=-1, norm=-1, powder_barns=1, string quantum_correction="Frommhold")
-OUTPUT PARAMETERS ()
+
 
 /*****************************************************************************/
 /*****************************************************************************/

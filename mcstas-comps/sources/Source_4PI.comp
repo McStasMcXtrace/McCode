@@ -29,9 +29,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Source_4PI
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (radius=0, flux=1e14, gauss=0, E0=0, dE=0, lambda0=0, dlambda=0)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

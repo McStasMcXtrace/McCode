@@ -91,11 +91,11 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Monochromator_curved
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string reflect="NULL", string transmit="NULL",
 zwidth=0.01, yheight=0.01,gap=0.0005,int NH=11, int NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, t0=1.0,Q=1.8734,
 RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0, order=0)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 

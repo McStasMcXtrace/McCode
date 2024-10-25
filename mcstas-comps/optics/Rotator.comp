@@ -42,9 +42,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Rotator
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (nu=0, phase=0, int direction=2)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 USERVARS

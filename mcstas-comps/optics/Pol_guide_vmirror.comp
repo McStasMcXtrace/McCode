@@ -93,7 +93,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_guide_vmirror
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (int nvs=1,xwidth=0.1, yheight=0.1, length=0.5,
 	rR0=1.0, rQc=0.0217, ralpha=6.5, rmSM=2, rW=0.00157, rbeta=80,
 	rUpR0=1.0, rUpQc=0.0217, rUpalpha=2.47, rUpmSM=4, rUpW=0.0014, rUpbeta=0,
@@ -106,7 +106,7 @@ SETTING PARAMETERS (int nvs=1,xwidth=0.1, yheight=0.1, length=0.5,
 	string rUpParFile = "",
 	string rDownParFile = "",
 	int inputType=0)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

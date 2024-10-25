@@ -77,11 +77,11 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Guide_tapering
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string option=0, w1=0,h1=0,l,linw=0,loutw=0,linh=0,louth=0, R0=0.99,
 Qcx=0.021,Qcy=0.021, alphax=6.07, alphay=6.07, W=0.003,
 mx=1, my=1,segno=800,curvature=0,curvature_v=0)
-OUTPUT PARAMETERS()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

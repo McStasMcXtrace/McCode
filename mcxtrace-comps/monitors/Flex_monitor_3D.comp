@@ -60,7 +60,7 @@ SETTING PARAMETERS (nU1=20, nU2=20, nU3=20, string filename=0,
 		    Umin2, Umax2, uid2=-1, string ustring2="", 
 		    Umin3, Umax3, uid3=-1, string ustring3="", 
 		    restore_xray=0, string signal="p", int nowritefile=0)
-OUTPUT PARAMETERS ()
+
 
 DECLARE
 %{

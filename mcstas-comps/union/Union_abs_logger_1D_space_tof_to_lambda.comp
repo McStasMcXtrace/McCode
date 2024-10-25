@@ -120,7 +120,7 @@ SETTING PARAMETERS(string target_geometry="NULL",
                    lambda_t_min=-1, lambda_t_max=-1, lambda_t_bins=-1,
                    relative_measured=0, relative_min=0.5, relative_max=1.5, relative_bins=100,
                    string filename="NULL", order_total=-1, order_volume=-1, logger_conditional_extend_index=-1, string init="init")
-OUTPUT PARAMETERS ()
+
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

@@ -56,9 +56,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Annulus
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (outer_radius=0,inner_radius=0,radius=0, xwidth=0, yheight=0, zdepth=0)
-OUTPUT PARAMETERS()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

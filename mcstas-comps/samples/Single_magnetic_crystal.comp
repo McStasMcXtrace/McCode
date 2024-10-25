@@ -105,7 +105,7 @@
 ****************************************************************************/
 
 DEFINE COMPONENT Single_magnetic_crystal
-DEFINITION PARAMETERS()
+
 SETTING PARAMETERS(string atom_sites=0, string geometry=NULL,
             xwidth=0, yheight=0, zdepth=0, radius=0, delta_d_d=1e-4,
             mosaic = -1, mosaic_h = -1, mosaic_v = -1, mosaic_n = -1,

@@ -279,7 +279,7 @@ vector ki.
 */
 
 DEFINE COMPONENT Single_crystal
-DEFINITION PARAMETERS()
+
 SETTING PARAMETERS(string reflections=0, string geometry=0, vector mosaic_AB={0,0, 0,0,0, 0,0,0},
 xwidth=0, yheight=0, zdepth=0, radius=0, delta_d_d=1e-4,
 mosaic = -1, mosaic_a = -1, mosaic_b = -1, mosaic_c = -1,
@@ -290,7 +290,7 @@ cx = 0, cy = 0, cz = 0,
 p_transmit = 0.001, sigma_abs = 0, sigma_inc = 0,
 aa=0, bb=0, cc=0, order=0, RX=0, RY=0, powder=0, PG=0,
 deltak=1e-6)
-OUTPUT PARAMETERS()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{

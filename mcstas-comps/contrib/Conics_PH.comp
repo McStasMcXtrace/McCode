@@ -43,7 +43,7 @@
 *******************************************************************************/
      
 DEFINE COMPONENT Conics_PH
-DEFINITION PARAMETERS()
+
 SETTING PARAMETERS (
     rmin=0.65/2.0,rmax=1.23/2.0, focal_length=10.070, lp=0.84, lh=0.84,
     int nshells=4, m=1, mirr_thick=0, int disk=1, vector radii=NULL,

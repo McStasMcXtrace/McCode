@@ -59,7 +59,7 @@ DEFINE COMPONENT Filter
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (refraction=1,fixed_delta=0,string material_datafile="Be.txt",
     string geometry=0,xwidth=0,yheight=0,zdepth=0,radius=0)
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE

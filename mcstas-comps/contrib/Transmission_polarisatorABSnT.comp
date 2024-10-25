@@ -58,13 +58,13 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Transmission_polarisatorABSnT
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (w1, h1, w2, h2, l, waferD, Si_i, Si_a, FeD,
 R0=0.99, Qc=0.02174, alpha=4.25, W=0.001,
 R0_up=0.99, Qc_up=0.0109, alpha_up=4.25, W_up=0.0025,
 R0_down=0.99, Qc_down=0.02174, alpha_down=6.25, W_down=0.001,
 mleft=-1, mright=-1, mtop=-1, mbottom=-1, mup=-1, mdown=-1)
-OUTPUT PARAMETERS ()
+
 
 SHARE
 %{

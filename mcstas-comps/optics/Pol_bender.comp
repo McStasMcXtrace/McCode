@@ -96,7 +96,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_bender
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (xwidth, yheight, length, radius, G=9.8, int nslit=1, d=0.0, int debug=0, int endFlat=0,
 vector rTopUpPar={0.99,0.0219,6.07,2.0,0.003},
 vector rTopDownPar={0.99,0.0219,6.07,2.0,0.003},

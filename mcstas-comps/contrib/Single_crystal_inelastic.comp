@@ -104,7 +104,7 @@
 
 
 DEFINE COMPONENT Single_crystal_inelastic
-DEFINITION PARAMETERS()
+
 SETTING PARAMETERS(vector mosaic_AB={0,0, 0,0,0, 0,0,0}, string sqw=0, string geometry=0, qwidth=0.05,
             xwidth=0, yheight=0, zdepth=0, radius=0, delta_d_d=1e-4,
             mosaic=-1, mosaic_a=-1, mosaic_b=-1, mosaic_c=-1,

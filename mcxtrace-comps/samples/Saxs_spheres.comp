@@ -57,7 +57,7 @@ SETTING PARAMETERS (string sphere_mtrl="", R=100, Phi=1e-3, Delta_rho=0.6,
 xwidth=0, yheight=0, zdepth=0, radius=0,
 target_x = 0, target_y = 0, target_z = 6, int target_index=0, 
 focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0, focus_r=0, mu_c=0)
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 DECLARE
 %{

@@ -81,12 +81,12 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Union_abs_logger_1D_space_tof
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS(string target_geometry="NULL",
                    yheight, n=0.2,
                    time_min=0, time_max=1, time_bins=100,
                    string filename="NULL", order_total=-1, order_volume=-1, logger_conditional_extend_index=-1, string init="init")
-OUTPUT PARAMETERS ()
+
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

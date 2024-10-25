@@ -88,10 +88,10 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Union_abs_logger_1D_space_event
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS(string target_geometry="NULL", yheight, int n, int fake_event=0,
                    string filename="NULL", order_total=-1, order_volume=-1, logger_conditional_extend_index=-1, string init="init")
-OUTPUT PARAMETERS ()
+
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

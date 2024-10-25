@@ -53,7 +53,7 @@ DEFINE COMPONENT Divergence_monitor
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (int nh=20, int nv=20, int rad=0, string filename=0, 
     xwidth=0.1, yheight=0.1, maxdiv_h=1, maxdiv_v=1, restore_xray=0, nx=0, ny=0, nz=1, int nowritefile=0)
-OUTPUT PARAMETERS ()
+
     /* Xray  parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 DECLARE
   %{

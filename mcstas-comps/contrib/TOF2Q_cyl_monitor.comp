@@ -45,7 +45,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT TOF2Q_cyl_monitor
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (int nq=100, int nphi=100, int nh=10, int restore_neutron=0, string filename=0, radius=1.0, height=0.1, q_min=0, q_max=20, L_chop2samp=144.0, t_chop=0.004, int pixel=1)
 DECLARE
   %{

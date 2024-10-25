@@ -42,7 +42,7 @@
 DEFINE COMPONENT Collimator_linear
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin=-0.01, xmax=0.01, ymin=-0.025, ymax=0.025, xwidth=0, yheight=0, length=0.1, divergence=10, transmission=1, divergenceV=0)
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 DECLARE

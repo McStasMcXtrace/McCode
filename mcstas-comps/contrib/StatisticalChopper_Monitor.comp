@@ -40,9 +40,9 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT StatisticalChopper_Monitor COPY Monitor_nD
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string comp, tmin=0.0, tmax=0.0)
-OUTPUT PARAMETERS()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE COPY Monitor_nD

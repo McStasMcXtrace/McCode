@@ -54,7 +54,7 @@ DEFINE COMPONENT PSD_monitor_coh
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (int nx=90, int ny=90, string filename=0, restore_xray=0, 
   xwidth=0.05, yheight=0.05, ratio=1, int centering=1, int nowritefile=0)
-OUTPUT PARAMETERS ()
+
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)*/
 SHARE
 %{

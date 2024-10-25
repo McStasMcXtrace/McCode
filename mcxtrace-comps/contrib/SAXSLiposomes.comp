@@ -51,7 +51,7 @@ SETTING PARAMETERS (Radius = 800.0, Thickness = 38.89, SigmaRadius = 0.20, nRadi
 		    Concentration = 0.01, AbsorptionCrosssection = 0.0,
 		    xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
 
-OUTPUT PARAMETERS ()
+
 
 /*X-ray Parameters (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 SHARE

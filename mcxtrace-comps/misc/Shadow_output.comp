@@ -41,7 +41,7 @@
 DEFINE COMPONENT Shadow_output
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string file="", int bufsize=1000, int progress=0)
-OUTPUT PARAMETERS ()
+
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)*/
 
 SHARE

@@ -47,7 +47,7 @@ SETTING PARAMETERS (RhoSolvent = 9.4e-14, Concentration = 0.01, AbsorptionCrosss
 		    SampleToDetectorDistance, DetectorRadius,
     string PDBFilepath = "PDBfile.pdb")
 
-OUTPUT PARAMETERS ()
+
 DEPENDENCY " @GSLFLAGS@ "
 NOACC
 

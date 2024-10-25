@@ -47,7 +47,7 @@ DEFINE COMPONENT DivE_monitor
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (int nE=20, int nh=20, string filename=0, xwidth=0.1, yheight=0.1, 
   maxdiv_h=2, Emin, Emax, restore_xray=0, nx=0, ny=0, nz=1, int nowritefile=0)
-OUTPUT PARAMETERS ()
+
 /* X-ray  parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE

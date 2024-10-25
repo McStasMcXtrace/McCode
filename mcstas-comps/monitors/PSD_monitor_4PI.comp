@@ -45,11 +45,11 @@
 
 DEFINE COMPONENT PSD_monitor_4PI
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (int nx=90, int ny=90, string filename=0, int nowritefile=0, radius=1, int restore_neutron=0)
 
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

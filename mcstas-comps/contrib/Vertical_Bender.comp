@@ -96,7 +96,7 @@ SETTING PARAMETERS (
   xwidth, yheight, length, radius, G=9.8, int nchan=1, d=0.0,
   int debug=0, int endFlat=0, int drawOption=1, int alwaystrack=0, diststep1=0.020, diststep2=0.002
 )
-OUTPUT PARAMETERS()
+
 /* Neutron parameters : (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{

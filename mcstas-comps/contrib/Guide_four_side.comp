@@ -271,7 +271,7 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Guide_four_side
-DEFINITION PARAMETERS()
+
 SETTING PARAMETERS (string RIreflect=0, string LIreflect=0, string UIreflect=0, string DIreflect=0,
 		    string ROreflect=0, string LOreflect=0, string UOreflect=0, string DOreflect=0,
 		    w1l=0.002,w2l=0.002,linwl=0,loutwl=0,
@@ -288,7 +288,7 @@ SETTING PARAMETERS (string RIreflect=0, string LIreflect=0, string UIreflect=0, 
                     WxrOW=0.003,WxlOW=0.003,WyuOW=0.003,WydOW=0.003,
                     mxrOW=0, mxlOW=0, myuOW=0, mydOW=0,
 		    rwallthick=0.001,lwallthick=0.001,uwallthick=0.001,dwallthick=0.001)
-OUTPUT PARAMETERS()
+
 
 SHARE
 %{	

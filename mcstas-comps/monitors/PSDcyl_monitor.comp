@@ -43,12 +43,12 @@
 
 DEFINE COMPONENT PSDcyl_monitor
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (int nr=20, int ny=20, string filename=0, yheight=0.3, radius=1,
 		    int restore_neutron=0, thmin=0, thmax=360, int nowritefile=0)
 
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

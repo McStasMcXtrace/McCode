@@ -40,10 +40,10 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Beamstop
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
 xwidth=0, yheight=0, radius=0)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 INITIALIZE

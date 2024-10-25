@@ -62,7 +62,7 @@ SETTING PARAMETERS (AxisRatio = 1.4, NumberOfLipids = 130.0, AreaPerLipidHeadgro
     ScatteringLengthOfOneMSP = 3.34E-9, ScatteringLengthOfHeadgroup = 4.62E-11, ScatteringLengthOfCH2Tail = 6.71E-11, ScatteringLengthOfCH3Tail = 5.08E-12, ScatteringLengthOfOneHisTag = 3.89E-10,
     Roughness = 3.5, Concentration = 0.01, AbsorptionCrosssection = 0.0,
     xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius, qMin = 0.001, qMax = 1.0, int NumberOfQBins=200)
-OUTPUT PARAMETERS ()
+
 DEPENDENCY " @GSLFLAGS@ "
 NOACC
 

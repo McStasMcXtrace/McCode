@@ -44,7 +44,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string RFilename="RDetectror", string qFilename="QDetector", int NumberOfBins=100, restore_xray=0,
     RadiusDetector, DistanceFromSample, LambdaMin = 1.0, Lambda0 = 0.0, qMax=0)
 
-OUTPUT PARAMETERS ()
+
 
 /*X-ray PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 

@@ -54,7 +54,7 @@
 * %E
 ******************************************************************************/
 DEFINE COMPONENT Monochromator_bent
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (zwidth = 0.2, yheight = 0.1,
 				  xthickness = 0.0005,
 				  radius_x = 2,
@@ -68,7 +68,7 @@ SETTING PARAMETERS (zwidth = 0.2, yheight = 0.1,
 				  domainthickness = 10,
 				  temperature = 300,
 				  int verbose = 0)
-OUTPUT PARAMETERS ()
+
 NOACC
 // The component is currently "NOACC" only, there are thread race-conditions on GPU 
 

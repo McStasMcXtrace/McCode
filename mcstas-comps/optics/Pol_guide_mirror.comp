@@ -62,7 +62,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_guide_mirror
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
   vector rUpPar={1.0, 0.0219, 4.07, 3.2, 0.003},
   vector rDownPar={1.0, 0.0219, 4.07, 3.2, 0.003},
@@ -70,7 +70,7 @@ SETTING PARAMETERS (
   string rData="",string rUpData="",string rDownData="",
   xwidth, yheight, length,
   int debug=0)
-OUTPUT PARAMETERS ()
+
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

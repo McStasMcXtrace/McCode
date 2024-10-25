@@ -43,9 +43,9 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Union_init
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS()
-OUTPUT PARAMETERS ()
+
 
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */

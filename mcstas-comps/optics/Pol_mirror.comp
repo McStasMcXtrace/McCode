@@ -80,7 +80,7 @@
 
 DEFINE COMPONENT Pol_mirror
 
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
   vector rUpPar={0.99,0.0219,6.07,2.0,0.003},
   vector rDownPar={0.99,0.0219,6.07,2.0,0.003},

@@ -220,7 +220,7 @@ SETTING PARAMETERS (
   string username1="NULL", string username2="NULL", string username3="NULL"
 )
 /* these are protected C variables */
-OUTPUT PARAMETERS ()
+
 /* Xray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE

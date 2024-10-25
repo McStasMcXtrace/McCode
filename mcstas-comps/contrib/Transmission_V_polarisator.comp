@@ -50,7 +50,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Transmission_V_polarisator
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string reflectUP=0, string reflectDW=0,
 		    w1, h1, w2, h2, l, waferD, Si_i, Si_a, FeD,
                     R0=0.99, Qc=0.02174, alpha=4.25, W=0.001,

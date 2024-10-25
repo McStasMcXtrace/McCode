@@ -52,9 +52,9 @@
 
 
 DEFINE COMPONENT Sqw_monitor
-DEFINITION PARAMETERS ()
+
   SETTING PARAMETERS (qmin=0,qmax=2,Emin=0,Emax=5,int nq=90, int nE=90, string filename=0, int nowritefile=0, string vix="", string viy="", string viz="", radius=0, yheight=0)
-OUTPUT PARAMETERS ()
+
 
 DECLARE
 %{

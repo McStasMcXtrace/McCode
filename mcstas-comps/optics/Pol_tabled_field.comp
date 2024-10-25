@@ -40,7 +40,7 @@
 * %E
 ****************************************************************************/
 DEFINE COMPONENT Pol_tabled_field
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (xwidth=0, yheight=0,zdepth=0, radius=0, string filename="bfield.dat", string geometry=NULL, string interpol_method="default")
 DEPENDENCY " -DUSE_OFF " 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */

@@ -56,9 +56,9 @@
 ****************************************************************************/
 
 DEFINE COMPONENT Pol_Bfield_stop
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string geometry="", yheight=0, xwidth=0, zdepth=0, radius=0)
-OUTPUT PARAMETERS()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
