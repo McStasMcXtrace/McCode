@@ -567,9 +567,9 @@ SHARE
     if (nb_atoms > 1) { info->sigma_i *= nb_atoms; }
 
     /* special cases for the structure definition */
-    if (info->m_ax || info->m_ay || info->m_az) info->m_a=0; /* means we specify by hand the vectors */
-    if (info->m_bx || info->m_by || info->m_bz) info->m_b=0;
-    if (info->m_cx || info->m_cy || info->m_cz) info->m_c=0;
+    if (info->m_ax || info->m_ay || info->m_az) {info->m_a=0; info->m_aa=0;} /* means we specify by hand the vectors */
+    if (info->m_bx || info->m_by || info->m_bz) {info->m_b=0; info->m_bb=0;}
+    if (info->m_cx || info->m_cy || info->m_cz) {info->m_c=0; info->m_cc=0;};
 
     /* compute the norm from vector a if missing */
     if (info->m_ax || info->m_ay || info->m_az) {
