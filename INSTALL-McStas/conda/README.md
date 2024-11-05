@@ -7,14 +7,21 @@ Due to the complex [licensing situation](https://discuss.scientific-python.org/t
 * [miniforge](https://github.com/conda-forge/miniforge) or
 * [micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html)
 
-## Optionally create a dedicated environment and load it
+## If you ALREADY have a conda (be it Anaconda, blah-conda or whatever)
+* Initially, list mcstas versions available on conda-forge, just to be sure you pick them up:
+* ```conda search mcstas --channel conda-forge```, should give you many lines of the form
+* ```mcstas                         3.5.8      hce30654_1  conda-forge   ```
+* To install McStas with all needed dependencies, run
+* ```conda create --name mcstas --channel conda-forge --channel nodefaults mcstas```
+
+## If you DON'T have a conda already:
+
+### Optionally create a dedicated environment and load it
 * ```conda create --name mcstas ```
 * ```conda activate mcstas```
 
-## Install McStas, compilers, openmpi
-* ```mamba install mcstas compilers openmpi=4```
-  
-(From next McStas release newer openmpi versions are also OK, but the 3.5.1 version of mcrun has an issue with openmpi 5.x)
+### Install McStas, compilers, openmpi
+* ```mamba install mcstas```
 
 ## Note for use on Windows
 At the time of release for 3.5.1 MCPL and NCrystal are not yet available for Windows on conda-forge, so related instruments will not compile/function.
