@@ -356,7 +356,7 @@ class McStas:
                         idfargs.append(arg)
 
                 print("Spawning IDF generator:")
-                print("mccode_config.configuration['IDFGEN'] + " " + self.path + " " + " ".join(idfargs))
+                print(mccode_config.configuration['IDFGEN'] + " " + self.path + " " + " ".join(idfargs))
                 Process(mccode_config.configuration['IDFGEN'] + " " + self.path).run(idfargs, pipe=pipe)
                 # Forward --IDF request to binary
                 args.append('--IDF')
