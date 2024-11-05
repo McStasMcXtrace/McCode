@@ -8,7 +8,7 @@ Due to the complex [licensing situation](https://discuss.scientific-python.org/t
 * [micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html)
 
 ## If you ALREADY have a conda (be it Anaconda, blah-conda or whatever)
-* Initially, list mcstas version on conda-forge, just to be sure you pick them up:
+* Initially, list mcstas versions available on conda-forge, just to be sure you pick them up:
 * ```conda search mcstas --channel conda-forge```, should give you many lines of the form
 * ```mcstas                         3.5.8      hce30654_1  conda-forge   ```
 * To install McStas with all needed dependencies, run
