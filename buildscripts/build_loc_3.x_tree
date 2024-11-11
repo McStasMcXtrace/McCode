@@ -4,7 +4,7 @@ export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(python3 -c "im
 # rapid-build script for mcstas-kernel dev:
 
 
-git checkout main
+
 git pull
 
 # Ensure our 3rd party modules are in place and updated
@@ -52,8 +52,7 @@ if [[ !  -d $CONDALOCATION ]]; then
     echo
     export PATH=$CONDALOCATION/bin:$PATH 
     mamba update mamba -y
-    mamba install cmake compilers gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 nexus mcpl ncrystal -y
-    #mamba install gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 -y
+    mamba install cmake compilers flex bison nodejs gsl pyaml ply matplotlib numpy tornado scipy pillow pyqtgraph pyqt nomkl qscintilla2 nexusformat nexpy hdf5 nexus mcpl ncrystal -y
     mamba clean --all -y
 fi
 
@@ -71,7 +70,7 @@ export PATH=$CONDALOCATION/bin:$PATH
 ./mkdist mcstas-tools-python-mcdisplay-cad 3.x-dev tools/Python/mcdisplay/cad/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcdisplay-mantid 3.x-dev tools/Python/mcdisplay/mantid_xml/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-pyqtgraph 3.x-dev tools/Python/mcplot/pyqtgraph/ "" deb64 "" -- justinst
-./mkdist mcstas-tools-python-mcplot-svg 3.x-dev tools/Python/mcplot/svg/ "" deb64 "" -- justinst
+./mkdist mcstas-tools-python-mcplot-html 3.x-dev tools/Python/mcplot/html/ "" deb64 "" -- justinst
 ./mkdist mcstas-tools-python-mcplot-matplotlib 3.x-dev tools/Python/mcplot/matplotlib/ "" deb64 "" -- justinst
 cp tools/other/mcsplit/mcsplit.py $HOME/McStas/mcstas/3.x-dev/bin/
 

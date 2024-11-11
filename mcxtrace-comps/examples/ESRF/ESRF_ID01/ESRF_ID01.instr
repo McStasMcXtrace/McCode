@@ -37,7 +37,7 @@
 * Pix:                      [um]  Horizontal offset of sample
 * Piy:                      [um]  Vertical offset of sample
 * SampleMosaicity:          [moa] Mosaicity of the sample crystal lattice
-* SampleSampleDeltadoverd:  [1]   Uncertainty in lattice parameter for the sample crystal lattice
+* SampleDeltadoverd:        [1]   Uncertainty in lattice parameter for the sample crystal lattice
 *
 * %Link
 * http://www.esrf.eu/UsersAndScience/Experiments/StructMaterials/ID01

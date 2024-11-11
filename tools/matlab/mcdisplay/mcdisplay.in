@@ -1,8 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 # launcher for matlab/octave 3d geometry plotter
 
-LIB="@TOOLS_LIB@"
+@MCCODE_BASH_STANDARD_PREAMBLE@
+
+LIB="${MCCODE_TOOLDIR}/matlab/@P@display"
 TOOL="mcdisplay"
 MCRUN="@P@run"
 VERS="@MCCODE_VERSION@"
@@ -29,11 +31,49 @@ canrun_o() {
     fi
 }
 
+# defaults
+if ( canrun_m ); then RUN_MATLAB=1; else RUN_MATLAB=0; fi
+if ( canrun_o ); then RUN_OCTAVE=1; else RUN_OCTAVE=0; fi
 
-if ( canrun_m ); then
+# handle input options, overriding defaults
+while getopts hom flag
+do
+  case "${flag}" in
+  o)
+    RUN_OCTAVE=1
+    RUN_MATLAB=0
+  ;;
+  m)
+    RUN_MATLAB=1
+    RUN_OCTAVE=0
+  ;;
+  *)
+    echo "usage:"
+    echo "  $0 INSTR"
+    echo "    Displays the given McCode 3D model with its defaults/current parameters."
+    echo "  $0 INSTR name1=value1 ..."
+    echo "    Displays the given McCode model with given parameters."
+    echo "  $0 [-png|-jpg|-fig|-eps|-pdf|-tif] INSTR name1=value1 ..."
+    echo "    Same as above, and specifies an output file format to generate."
+    echo "    Possible save_as are -png -pdf -fig -tif -jpg -eps"
+    echo "  $0 --inspect=COMP INSTR name1=value1 ..."
+    echo "    Same as above, and only plot component names that match 'COMP', given as"
+    echo "      a single component word for partial match, such as Monitor"
+    echo "      a component interval such as Monok:Sample or 2:10 or 2:end"
+    echo "  $0 -m INSTR ..."
+    echo "        Explicitely request to use Matlab"
+    echo "  $0 -o INSTR ..."
+    echo "        Explicitely request to use Octave"
+    exit 1
+    ;;
+  esac
+done
+shift $((OPTIND-1))
+
+if [ "$RUN_MATLAB" == "1" ]; then
     matlab -nosplash -nodesktop -r "addpath('${LIB}');${TOOL} ${MCRUN} $*"
-elif ( canrun_o ); then
-    octave --eval "addpath('${LIB}');${TOOL} ${MCRUN} $* ; disp('--> Right-click in axis for toggles etc.'); disp('Press a key to exit @P@display-octave ...'); set(gcf,'closerequestfcn','exit'); pause"
+elif [ "$RUN_OCTAVE" == "1" ]; then
+    octave --eval "addpath('${LIB}');${TOOL} ${MCRUN} $* ; disp('--> Right-click in axis for toggles etc.'); disp('Close window to exit @P@display-matlab ...'); set(gcf,'closerequestfcn','exit'); waitfor(gcf);"
 else
     echo ":: Failed to run Matlab/Octave ${TOOL}, trying default ${TOOL} instead."
     echo ":: If this fails too, consider reinstalling ${TOOL}."

@@ -1,0 +1,10 @@
+# Dependency directories
+node_modules/
+
+# Build directories
+dist/
+
+# Project specific
+instrument.json
+particles.json
+package-lock.json

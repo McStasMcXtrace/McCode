@@ -33,13 +33,13 @@
 * randomOn: [1]  Generate random values if randomOn!=0. 
 * normalize: [1] Normalize the polarization vector to unity length.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Set_pol
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (px=0, py=0, pz=0, randomOn=0, normalize=0)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

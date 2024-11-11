@@ -85,7 +85,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Guide_multichannel
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
   R0=0.995, Qc=0, alpha=0, m=0, int nslit=1, dlam=0.0005,
   Qcx=0.0218, Qcy=0.0218, alphax=4.38, alphay=4.38, W=0.003, mx=1, my=1, string mater="absorb")

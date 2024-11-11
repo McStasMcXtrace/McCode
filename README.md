@@ -21,6 +21,16 @@ This file is part of McStas / McXtrace.
 
 [![mcstas-basictest](https://github.com/McStasMcXtrace/McCode/actions/workflows/mcstas-basictest.yml/badge.svg)](https://github.com/McStasMcXtrace/McCode/actions/workflows/mcstas-basictest.yml)[![mcxtrace-basictest](https://github.com/McStasMcXtrace/McCode/actions/workflows/mcxtrace-basictest.yml/badge.svg)](https://github.com/McStasMcXtrace/McCode/actions/workflows/mcxtrace-basictest.yml)
 
+
+**Current stable release**
+Please consult https://www.mcstas.org and https://www.mcxtrace.org or https://github.com/McStasMcXtrace/McCode/releases/
+
+**Current development builds for selected platforms:**
+* [McStas Intel/x86_64 Ubuntu deb's + cross-compiled Windows package](https://nightly.link/McStasMcXtrace/McCode/workflows/mcstas-autobuild/main/mcstas-artefacts-ubuntu-latest.zip)
+* [McStas Intel + arm64 macOS](https://nightly.link/McStasMcXtrace/McCode/workflows/mcstas-autobuild/main/mcstas-artefacts-macos-latest.zip)
+* [McXtrace Intel/x86_64 Ubuntu deb's + cross-compiled Windows package](https://nightly.link/McStasMcXtrace/McCode/workflows/mcxtrace-autobuild/main/mcxtrace-artefacts-ubuntu-latest.zip)
+* [McXtrace Intel + arm64 macOS](https://nightly.link/McStasMcXtrace/McCode/workflows/mcxtrace-autobuild/main/mcxtrace-artefacts-macos-latest.zip)
+
 *******************************************************************************
 ```
 This is McStas 3.x and McXtrace 3.x with GPU acceleration support

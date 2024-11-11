@@ -56,7 +56,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_core_shell_sphere
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         radius=60.0,
         thickness=10.0,

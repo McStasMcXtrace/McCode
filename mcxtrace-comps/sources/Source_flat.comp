@@ -28,33 +28,33 @@
 * Example: Source_flat(xwidth=1e-3,yheight=1e-3, focus_xw=0.5e-2, focus_yh=0.45e-2,dist=1, E0=E0, dE=DE)
 *
 * %Parameters
-* radius: [m]   Radius of circle in (x,y,0) plane where x-rays are generated.
-* yheight: [m]   Height of rectangle in (x,y,0) plane where x-rays are generated.
-* xwidth:  [m]   Width of rectangle in (x,y,0) plane where x-rays are generated. Overrides xmin and xmax.
-* xmax:    [m]   upper bound of x-interval where photons are generated.
-* xmin:    [m]   Lower bound of x-interval where photons are generated.
-* dist:   [m]   Distance to target along z axis.
-* focus_xw:[m]  Width of target
-* focus_yh:[m]  Height of target
-* E0:     [keV] Mean energy of xrays.
-* dE:     [keV] Energy half spread of x-rays (flat or gaussian sigma).
-* lambda0:[AA]  Mean wavelength of x-rays.
-* dlambda:[AA]  Wavelength half spread of x-rays.
-* gauss:  [1]   Gaussian (1) or Flat (0) energy/wavelength distribution
-* flux: [pht/s] total flux radiated from the source
+* radius:   [m]   Radius of circle in (x,y,0) plane where x-rays are generated.
+* yheight:  [m]   Height of rectangle in (x,y,0) plane where x-rays are generated.
+* xwidth:   [m]   Width of rectangle in (x,y,0) plane where x-rays are generated. Overrides xmin and xmax.
+* xmax:     [m]   Upper bound of x-interval where photons are generated.
+* xmin:     [m]   Lower bound of x-interval where photons are generated.
+* dist:     [m]   Distance to target along z axis.
+* focus_xw: [m]   Width of target
+* focus_yh: [m]   Height of target
+* E0:       [keV] Mean energy of xrays.
+* dE:       [keV] Energy half spread of x-rays (flat or gaussian sigma).
+* lambda0:  [AA]  Mean wavelength of x-rays.
+* dlambda:  [AA]  Wavelength half spread of x-rays.
+* gauss:    [1]   Gaussian (1) or Flat (0) energy/wavelength distribution
+* flux:     [pht/s] Total flux radiated from the source
 * randomphase: [ ] If nonzero, the phase of the emotted photon is random, i.e. source is fully incoherent. otherwise the value of phase is used.
-* phase: [ ] Set phase to something given. 
+* phase:    [rad] Set phase to something given. 
 * spectrum_file: [string] Filename for optional spectrum-file 
 * %End
 *******************************************************************************/
 
 DEFINE COMPONENT Source_flat
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (radius=0, yheight=0, xwidth=0,xmin=0,xmax=0, 
   dist=0, focus_xw=.045, focus_yh=.12, 
   E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,randomphase=1,phase=0,
   string spectrum_file="")
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE

@@ -58,7 +58,7 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Guide_wavy
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
   R0=0.995, Qc=0.0218, alpha=0, m=0, W=0,
   alpha1=4.38, m1=2, W1=0.003,
@@ -66,7 +66,7 @@ SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
   alpha3=4.38, m3=2, W3=0.003,
   alpha4=4.38, m4=2, W4=0.003,
   wavy_z=0, wavy_xy=0)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE %{
   %include "ref-lib"

@@ -29,13 +29,13 @@
 * my: [1]  Y-component of polarisation analysis vector -1<my<1
 * mz: [1]  Z-component of polarisation analysis vector -1<mz<1
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT PolAnalyser_ideal
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (mx=0, my=0, mz=0)
 
 DECLARE

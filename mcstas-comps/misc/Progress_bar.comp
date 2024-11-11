@@ -35,9 +35,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Progress_bar
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string profile="NULL", percent=10,flag_save=0,minutes=0)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{
@@ -72,7 +72,7 @@ fprintf(stdout, "[%s] Initialize\n", instrument_name);
 #ifdef USE_MPI
   sprintf(infostring, "(%i MPI processes) ", mpi_node_count);
 #else
-  sprintf(infostring, "");
+  sprintf(infostring, "(single process) ");
 #endif
 
 %}

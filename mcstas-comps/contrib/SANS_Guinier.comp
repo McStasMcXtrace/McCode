@@ -56,9 +56,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT SANS_Guinier
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (transm=0.5, Rg=100, qmax=0.03, xwidth=0.01, yheight=0.01, zdepth=0.001)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 DECLARE
 %{

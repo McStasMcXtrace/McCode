@@ -48,10 +48,10 @@ function data = mcplot(varargin)
 
 % check for input argument: filename ?
   data = {};
-  
+
   if nargin == 0
     filename = '';
-  elseif nargin == 1 && ~isempty(dir(varargin{1}))
+  elseif nargin == 1 && ischar(varargin{1}) && ~isempty(dir(varargin{1}))
     filename = varargin{1};
   else
     save_as = '';
@@ -74,8 +74,16 @@ function data = mcplot(varargin)
         continue;
       else index_out = index_out+1; end
       this_file = varargin{index};
-      if isempty(this_file), return; end
-      this_data = mcplot(this_file);
+      if isempty(this_file) || (ischar(this_file) && isempty(dir(this_file))), continue; end
+      if isstruct(this_file), 
+        this_data = mcplot_display(this_file);
+      elseif ischar(this_file),
+        this_data = mcplot(this_file);
+      else
+        disp([ mfilename ': invalid data set to plot: ' class(this_file) ])
+        whos this_file
+        return
+      end
       data{index_out} = this_data;
       
       % check for direct export options
@@ -114,9 +122,15 @@ function data = mcplot(varargin)
   end
   
   % import data set
+  if isempty(filename) || isempty(dir(filename))
+    error([ mfilename ': Invalid/empty dataset ' filename ])
+  end
   data = mcplot_load(filename);
   
   % check data structures
+  if isempty(data)
+    error([ mfilename ': Invalid/empty dataset ' filename ])
+  end
   data = mcplot_check_data(data);
   
   % plot (overview or single)
@@ -128,8 +142,8 @@ function data = mcplot(varargin)
   if exist ('OCTAVE_VERSION', 'builtin')
     if ~isempty(data)
       if nargin==0 || nargin==1
-	display('Pausing --> Please press a key in the octave terminal to continue');
-	pause();
+        display('Close window to exit the plot.');
+        waitfor(gcf);
       end
     end
   end
@@ -474,7 +488,7 @@ function data = mcplot_check_data(structure)
     if isfield(structure,'Instrument')
       structure.Source = structure.Instrument;
     else
-      structure.Source = filename;
+      structure.Source = structure.filename;
     end
   end
   if ~isfield(structure, 'component') structure.component = 'unknown'; end
@@ -721,7 +735,7 @@ end % mcplot_split_multiarray
 
 % ==============================================================================
 
-function data = mcplot_display(data, fig) 
+function [data, fig] = mcplot_display(data, fig) 
   % opens a new window, with subplots and plots each structure in axes
   % data: single monitor structure or a cell array of monitor structures
   %  fig: optional figure handle to use, else a new figure is created.

@@ -32,23 +32,20 @@
 *
 * %Parameters
 * Input parameters:
-* t0:    [s] Initial delay of the opening time
-* T:     [s] Period of the chopper
-* tau:   [s] Opening time of the chopper 
-* t_rise [s] Rise time of the chopper pulse.
-* xwidth:[m] height of the chopper opening
-* yheight:[m] width of the chopeper opening
-* isfirst: [ ] is the chopper the first chopper on a continous source.
-* tjit: [ ] Timing jitter in terms of the opening time tau. For each ray the opening window will be shifted by a random amount within t=[-tjit*.5*tau,tjit*.5*tau]  
+* t0:       [s]   Initial delay of the opening time
+* T:        [s]   Period of the chopper
+* tau:      [s]   Opening time of the chopper 
+* t_rise:   [s]   Rise time of the chopper pulse.
+* xwidth:   [m]   Height of the chopper opening
+* yheight:  [m]   Width of the chopeper opening
+* isfirst:  [0/1] Is the chopper the first chopper on a continous source.
+* tjit:     [1]   Timing jitter in terms of the opening time tau. For each ray the opening window will be shifted by a random amount within t=[-tjit*.5*tau,tjit*.5*tau]  
 *
 * %End
 *******************************************************************************/
 
 DEFINE COMPONENT Chopper_simple
-DEFINITION PARAMETERS ()
 SETTING PARAMETERS (t0=0,T=1,tau=0.1,xwidth=0.1,yheight=0.1,isfirst=0,t_rise=0, tjit=0)
-OUTPUT PARAMETERS ( )
-/*X-ray PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)*/
 
 INITIALIZE
 %{

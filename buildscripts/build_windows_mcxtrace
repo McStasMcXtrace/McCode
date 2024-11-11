@@ -34,6 +34,10 @@ WORK=`pwd`
 rsync -avz --delete --exclude=".svn/" mcxtrace-comps/ mcxtrace-comps-win
 find mcxtrace-comps-win -type f -not -name \*.off -exec unix2dos \{\} \;
 s
+
+# For now we need to use legacy file destinations on Windows
+export MCCODE_USE_LEGACY_DESTINATIONS=ON
+
 # 64-bit
 ./mkdist mcxtrace $1 "" "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-comps $1 mcxtrace-comps-win "" mingw64 "" -- nsis64
@@ -47,6 +51,7 @@ s
 ./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-tools-python-mxdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mingw64 "" -- nsis64
+./mkdist mcxtrace-tools-python-mxdisplay-webgl-classic $1 tools/Python/mcdisplay/webgl-classic/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" mingw64 "o" -- nsis64
 ./mkdist mcxtrace-tools-python-mxdoc $1 tools/Python/mcdoc/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-mcpl $1 3rdparty/mcpl-package "" mingw64 "" -- nsis64
@@ -71,7 +76,8 @@ if [ "x$2" != "x" ]; then
     sed s/@VERSION@/${1}/g McXtrace-metapackage64.iss > McXtrace-${1}-metapackage64.iss
     ./iscc McXtrace-${1}-metapackage64.iss
     mv Output/setup.exe dist/McXtrace-Metapackage-${1}-win64.exe
-    cp $WORK/INSTALL-McXtrace-3.x/Windows/README.md dist/
+    cp $WORK/INSTALL-McXtrace/Windows/README.md dist/
     mkdir dist/single-packages
+    cp -rp $WORK/support/Win32/extras dist/extras
     mv dist/mcxtrace-* dist/single-packages
 fi

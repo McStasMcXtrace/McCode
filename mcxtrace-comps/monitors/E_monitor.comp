@@ -26,15 +26,15 @@
 * %Parameters
 * INPUT PARAMETERS:
 *
-* xwidth: [m]  Width of detector. 
-* yheight: [m] Height of detector. 
-* Emin: [keV]  Minimum energy to detect.
-* Emax: [keV]  Maximum energy to detect.
-* nE: [m]      Number of energy channels.
-* filename: [str]  Name of file in which to store the detector image.
-* restore_xray: [ ]If set, the monitor does not influence the x-ray state.
+* xwidth:       [m]   Width of detector. 
+* yheight:      [m]   Height of detector. 
+* Emin:         [keV] Minimum energy to detect.
+* Emax:         [keV] Maximum energy to detect.
+* nE:           [m]   Number of energy channels.
+* filename:     [str] Name of file in which to store the detector image.
+* restore_xray: [0/1] If set, the monitor does not influence the x-ray state.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * E_N:      Array of x-ray counts
 * E_p:      Array of x-ray weight counts
@@ -44,11 +44,10 @@
 *******************************************************************************/
 
 DEFINE COMPONENT E_monitor
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (nE=20, string filename=0, 
   xwidth=0.1, yheight=0.1, Emin, Emax, restore_xray=0)
-OUTPUT PARAMETERS (E_N, E_p, E_p2)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
 DECLARE
 %{
   DArray1d E_N;

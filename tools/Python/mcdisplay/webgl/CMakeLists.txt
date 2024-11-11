@@ -36,7 +36,7 @@ set(TOOLS_NAME "Python/${P}display/webgl")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-webgl-${MCCODE_VERSION}")
-set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
+set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
 set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
@@ -51,7 +51,7 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply, python3-numpy")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply, python3-numpy, nodejs, npm, rsync")
 
 # RPM
 if (RPMPROFILE)
@@ -75,15 +75,58 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display" @ONLY)
 
-# Main script, including rename mc/mxdisplay
+# Put package.json in $WORK
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/package.json" "${WORK}/package.json" @ONLY)
+
+# Create folder for node_modules later installed by npm
+execute_process(COMMAND "mkdir" "node_modules"
+  WORKING_DIRECTORY "${WORK}")
+
+# dist
 install(
-  PROGRAMS "${PROJECT_SOURCE_DIR}/mcdisplay.py"
+  DIRECTORY "${PROJECT_SOURCE_DIR}/dist"
   DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
-  RENAME "${P}display.py"
+)
+
+# components
+install(
+  DIRECTORY "${PROJECT_SOURCE_DIR}/components"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
   )
 
+# Contexts
+install(
+  DIRECTORY "${PROJECT_SOURCE_DIR}/Contexts"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+)
+
+# data-utils
+install(
+  DIRECTORY "${PROJECT_SOURCE_DIR}/data-utils"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+)
+
+# utils
+install(
+  DIRECTORY "${PROJECT_SOURCE_DIR}/utils"
+  DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+)
+
+# Node modules
+install(
+    DIRECTORY "${WORK}/node_modules"
+    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+)
+
+# Main script, including rename mc/mxdisplay
+install(
+        PROGRAMS "${PROJECT_SOURCE_DIR}/mcdisplay.py"
+        DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
+        RENAME "${P}display.py"
+    )
+
 # Other .py infrastructure
-foreach(NAME mcdisplay.js Lut.js OrbitControls.js dat.gui.min.js jquery.min.js three.min.js template.html __init__.py)
+foreach(NAME start-vite.js package.json mcdisplay.js Lut.js OrbitControls.js dat.gui.min.js jquery.min.js three.min.js template.html __init__.py common.css main.tsx App.tsx index.html)
   install(
     FILES "${PROJECT_SOURCE_DIR}/${NAME}"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
@@ -104,4 +147,21 @@ if(NOT WINDOWS)
     DESTINATION ${DEST_BINDIR}
     RENAME "${P}display-webgl"
     )
+endif()
+
+# Script for npm instal during install part
+if (NOT WINDOWS)
+  # Configure fallback script
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/npminstall.in" "${WORK}/npminstall" @ONLY)
+  install(
+    PROGRAMS "${WORK}/npminstall"
+    DESTINATION ${DEST_TOOLDIR}/${TOOLS_NAME}
+  )
+else()
+  # Configure fallback script
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/npminstall.bat.in" "${WORK}/npminstall.bat" @ONLY)
+  install(
+    PROGRAMS "${WORK}/npminstall.bat"
+    DESTINATION ${DEST_TOOLDIR}/${TOOLS_NAME}
+  )
 endif()

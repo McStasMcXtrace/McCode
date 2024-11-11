@@ -55,7 +55,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_gauss_lorentz_gel
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         gauss_scale=100.0,
         cor_length_static=100.0,

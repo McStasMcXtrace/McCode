@@ -2,6 +2,49 @@
 List of misc comps and the
 example instruments that include them
 ---------------------------------------
+Annulus is used in 1 example(s):
+- Demo_shape_primitives.instr
+---------------------------------------
+Circle is used in 1 example(s):
+- Demo_shape_primitives.instr
+---------------------------------------
+Cone is used in 2 example(s):
+- Demo_shape_primitives.instr
+- Demo_shape_primitives_simple.instr
+---------------------------------------
+Disc is used in 1 example(s):
+- Demo_shape_primitives.instr
+---------------------------------------
+File is used in 25 example(s):
+- Vin_test.instr
+- WOFSANS.instr
+- ILL_D2B.instr
+- ILL_D2B_noenv.instr
+- ILL_D4.instr
+- ILL_H22_D1A.instr
+- ILL_H22_D1A_noenv.instr
+- ILL_H22_D1B.instr
+- ILL_H22_D1B_noenv.instr
+- ILL_H22_VIVALDI.instr
+- ILL_H53_D16.instr
+- ILL_Lagrange.instr
+- RITA-II.instr
+- McStas_Isotropic_Sqw.instr
+- McStas_PowderN.instr
+- McStas_Single_crystal.instr
+- SNS_BASIS.instr
+- RTP_DIF.instr
+- templateDIFF.instr
+- test_File.instr
+- TestSANS.instr
+- Test_SX.instr
+- vinput2mcpl.instr
+- SANSsimple.instr
+- SANSsimpleSpheres.instr
+---------------------------------------
+Legacy_circle is used in 1 example(s):
+- Demo_shape_primitives.instr
+---------------------------------------
 MCPL_input is used in 13 example(s):
 - ESS_BEER_MCPL.instr
 - ESS_butterfly_MCPL_test.instr
@@ -30,7 +73,7 @@ MCPL_output is used in 9 example(s):
 ---------------------------------------
 MCPL_output_noacc is used in 0 example(s):
 ---------------------------------------
-Progress_bar is used in 217 example(s):
+Progress_bar is used in 222 example(s):
 - BNL_H8.instr
 - h8_test_legacy.instr
 - Test_FZP_simple.instr
@@ -63,7 +106,6 @@ Progress_bar is used in 217 example(s):
 - ILL_H15.instr
 - ILL_H15_D11.instr
 - ILL_H16.instr
-- ILL_H16_Mantid.instr
 - ILL_H22.instr
 - ILL_H24.instr
 - ILL_H25.instr
@@ -75,7 +117,6 @@ Progress_bar is used in 217 example(s):
 - ILL_IN13.instr
 - ILL_IN4.instr
 - ILL_IN5.instr
-- ILL_IN5_Mantid.instr
 - ILL_IN5_Spots.instr
 - ILL_IN6.instr
 - ILL_Lagrange.instr
@@ -87,6 +128,8 @@ Progress_bar is used in 217 example(s):
 - ISIS_test.instr
 - ViewModISIStest.instr
 - LLB_6T2.instr
+- ILL_H16_Mantid.instr
+- ILL_IN5_Mantid.instr
 - ISIS_SANS2d_Mantid.instr
 - ISIS_TOSCA_preupgrade_Mantid.instr
 - Tools_ONION.instr
@@ -103,9 +146,6 @@ Progress_bar is used in 217 example(s):
 - PSI_DMC_simple.instr
 - PSI_Focus.instr
 - RITA-II.instr
-- SEMSANS_Delft.instr
-- SEMSANS_instrument.instr
-- SESANS_Delft.instr
 - linup-1.instr
 - linup-2.instr
 - linup-4.instr
@@ -120,18 +160,16 @@ Progress_bar is used in 217 example(s):
 - RTP_Laue.instr
 - RTP_NeutronRadiography.instr
 - RTP_SANS.instr
+- SEMSANS_Delft.instr
+- SEMSANS_instrument.instr
+- SESANS_Delft.instr
 - BTsimple.instr
 - Demo_shape_primitives.instr
-- Reflectometer.instr
-- SE_example.instr
-- SE_example2.instr
-- TestSANS.instr
-- Test_Pol_TripleAxis.instr
+- Demo_shape_primitives_simple.instr
+- TOF_Reflectometer.instr
 - Test_SasView_bcc_paracrystal_aniso.instr
 - Test_SasView_guinier.instr
-- Test_TasReso.instr
 - Tomography.instr
-- Unittest_SANS_benchmark2.instr
 - template.instr
 - templateDIFF.instr
 - templateLaue.instr
@@ -144,20 +182,14 @@ Progress_bar is used in 217 example(s):
 - templateTAS.instr
 - templateTOF.instr
 - template_simple.instr
-- Test_single_magnetic_crystal.instr
-- Test_Conics_pairs.instr
-- Test_Cyl_monitors.instr
-- Test_Monitor_nD.instr
-- Test_NMO.instr
-- Test_Source_quasi.instr
-- Test_Vertical_Bender.instr
 - Test_MCPL_input.instr
 - Test_MCPL_output.instr
-- Test_SSR_SSW.instr
-- Test_SSR_SSW_Guide.instr
 - Test_GROUP.instr
 - Test_Jump_Iterate.instr
+- Test_Cyl_monitors.instr
+- Test_Monitor_nD.instr
 - Test_Collimator_Radial.instr
+- Test_Conics_pairs.instr
 - Test_DiskChoppers.instr
 - Test_DiskChoppers2.instr
 - Test_Fermi.instr
@@ -166,6 +198,7 @@ Progress_bar is used in 217 example(s):
 - Test_Guides_Curved.instr
 - Test_Lens.instr
 - Test_Monochromators.instr
+- Test_NMO.instr
 - Test_PSD_Detector.instr
 - Test_Pol_Bender_Vs_Guide_Curved.instr
 - Test_PreMonitor_nD.instr
@@ -174,8 +207,12 @@ Progress_bar is used in 217 example(s):
 - Test_Source_pulsed.instr
 - Test_Sources.instr
 - Test_StatisticalChopper.instr
+- Test_Vertical_Bender.instr
 - Test_focus.instr
+- test_File.instr
 - He3_spin_filter.instr
+- SE_example.instr
+- SE_example2.instr
 - Test_Magnetic_Constant.instr
 - Test_Magnetic_Majorana.instr
 - Test_Magnetic_Rotation.instr
@@ -188,11 +225,13 @@ Progress_bar is used in 217 example(s):
 - Test_Pol_SF_ideal.instr
 - Test_Pol_Set.instr
 - Test_Pol_Tabled.instr
+- Test_Pol_TripleAxis.instr
 - Test_pol_ideal.instr
 - Samples_Incoherent.instr
 - Samples_Incoherent_off.instr
 - Samples_Isotropic_Sqw.instr
 - Samples_Phonon.instr
+- TestSANS.instr
 - Test_Incoherent.instr
 - Test_Magnon_bcc_2D.instr
 - Test_Magnon_bcc_TAS.instr
@@ -203,6 +242,10 @@ Progress_bar is used in 217 example(s):
 - Test_Single_crystal_inelastic.instr
 - Test_Sqw.instr
 - Test_Sqw_monitor.instr
+- Test_TasReso.instr
+- Test_single_magnetic_crystal.instr
+- Unittest_SANS_benchmark2.instr
+- Test_Source_quasi.instr
 - Histogrammer.instr
 - MCPL2Mantid_flat.instr
 - MCPL2hist.instr
@@ -248,6 +291,11 @@ Progress_bar is used in 217 example(s):
 - Union_unit_test_logger_2D_space_time.instr
 - Union_unit_test_logger_3D_space.instr
 - Union_unit_test_loggers_base.instr
+- Radiography_absorbing_edge.instr
+- Reflectometer.instr
+- SANSsimple.instr
+- SANSsimpleSpheres.instr
+- SimplePowderDiffractometer.instr
 ---------------------------------------
 Scatter_log_iterator is used in 0 example(s):
 ---------------------------------------
@@ -257,7 +305,7 @@ Scatter_logger is used in 0 example(s):
 ---------------------------------------
 Scatter_logger_stop is used in 0 example(s):
 ---------------------------------------
-Shape is used in 12 example(s):
+Shape is used in 13 example(s):
 - ESS_butterfly_Guide_curved_test.instr
 - ESS_butterfly_MCPL_test.instr
 - ILL_BRISP.instr
@@ -270,4 +318,7 @@ Shape is used in 12 example(s):
 - RTP_NeutronRadiography.instr
 - RTP_SANS.instr
 - Demo_shape_primitives.instr
+- Demo_shape_primitives_simple.instr
+---------------------------------------
+Shape_simple is used in 0 example(s):
 ---------------------------------------

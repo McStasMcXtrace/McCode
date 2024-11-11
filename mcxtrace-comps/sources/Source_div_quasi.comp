@@ -30,33 +30,33 @@
 * Example: Source_div_quasi(xwidth=0.1, yheight=0.1, focus_aw=2, focus_ah=2, E0=14, dE=2, gauss=0)
 *
 * %Parameters
-* xwidth: [m]     Width of source
-* yheight: [m]    Height of source
+* xwidth:   [m]   Width of source
+* yheight:  [m]   Height of source
 * focus_aw: [rad] Std. dev. (Gaussian) or maximal (uniform) horz. width divergence. focus_xw overrrides if it is more restrictive.
 * focus_ah: [rad] Std. dev. (Gaussian) or maximal (uniform) vert. height divergence. focus_yh overrrides if it is more restrictive.
 * focus_xw: [m]   Width of sampling window
 * focus_yh: [m]   Height of sampling window
-* dist: [m]     Downstream distance to place sampling target window
-* E0: [keV]       Mean energy of X-rays.
-* dE: [keV]       Energy spread of X-rays.
-* lambda0: [AA]   Mean wavelength of X-rays (only relevant for E0=0)
-* dlambda: [AA]   Wavelength half spread of X-rays.
-* gauss: [1]      Criterion: 0: uniform, 1: Gaussian distribution of energy/wavelength
-* gauss_a: [1]    Criterion: 0: uniform, 1: Gaussian divergence distribution
-* flux: [1/(s*cm**2*st*energy unit)] Flux per energy unit, Angs or meV
-* verbose: [ ]    Generate more output on the console.
-* spectrum_file: [ ] File from which to read the spectral intensity profile
-* phase:         [ ] Set to finite value to define X-ray phase (0:2 pi)
-* randomphase:   [ ] When=1, the X-ray phase is randomised 
+* dist:     [m]   Downstream distance to place sampling target window
+* E0:       [keV] Mean energy of X-rays.
+* dE:       [keV] Energy spread of X-rays.
+* lambda0:  [AA]  Mean wavelength of X-rays (only relevant for E0=0)
+* dlambda:  [AA]  Wavelength half spread of X-rays.
+* gauss:    [1]   Criterion: 0: uniform, 1: Gaussian distribution of energy/wavelength
+* gauss_a:  [1]   Criterion: 0: uniform, 1: Gaussian divergence distribution
+* flux:     [1/(s*cm**2*st*energy unit)] Flux per energy unit, Angs or meV
+* verbose:  [0/1] Generate more output on the console.
+* spectrum_file: [string] File from which to read the spectral intensity profile
+* phase:    [rad] Set to finite value to define X-ray phase (0:2 pi)
+* randomphase: [0/1] When=1, the X-ray phase is randomised 
 *
 * %End
 *******************************************************************************/
 
 DEFINE COMPONENT Source_div_quasi
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string spectrum_file="", xwidth=0, yheight=0, focus_xw=0, focus_yh=0, dist=0, focus_aw=0, focus_ah=0,
     E0=0, dE=0, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, randomphase=1, phase=0, int verbose=1)
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -250,7 +250,7 @@ TRACE
   }else if (lambda0){
     if (!dlambda){
       l=lambda0;
-    }else if (gauss){
+    }else if (gauss){mcxtrace-comps/sources/Source_div_quasi.comp
       l=lambda0+dlambda*randnorm();
     }else{
       l=randpm1()*dlambda + lambda0;

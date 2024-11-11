@@ -1,0 +1,6 @@
+.ray-button {
+  background-color: var(--background-color);
+  border: none;
+  padding: 0;
+  margin-inline: 2px;
+}

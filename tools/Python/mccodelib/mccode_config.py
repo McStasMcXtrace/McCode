@@ -167,26 +167,31 @@ def get_options():
     if configuration['MCCODE'] == "mcstas":
         prefix = "mc"
         mcdisplay_lst = [prefix+"display-webgl",
+                         prefix+"display-webgl-classic",
                          prefix+"display-pyqtgraph",
                          prefix+"display-pyqtgraph --tof",
                          prefix+"display-matplotlib",
+                         prefix+"display-matlab",
                          prefix+"display-cad",
-                         prefix+"display-mantid",
-                         prefix+"display-matlab"+suffix+" --format=Matlab"]
+                         prefix+"display-mantid"]
         mcrun_lst =     [prefix+"run", prefix+"run --format=NeXus", prefix+"run --format=NeXus --IDF"]
         format_lst =    ["McCode", "NeXus", "NeXus --IDF", "NeXus -c", "NeXus --IDF -c"]
     else:
         prefix = "mx"
         mcdisplay_lst = [prefix+"display-webgl",
+                         prefix+"display-webgl-classic",
                          prefix+"display-pyqtgraph",
                          prefix+"display-matplotlib",
-                         prefix+"display-cad",
-                         prefix+"display-matlab"+suffix+" --format=Matlab"]
+                         prefix+"display-matlab",
+                         prefix+"display-cad"]
         mcrun_lst =     [prefix+"run", prefix+"run --format=NeXus"]
         format_lst =    ["McCode", "NeXus", "NeXus -c"]
 
 
-    mcplot_lst =    [prefix+"plot-pyqtgraph",prefix+"plot-matplotlib", prefix+"plot-matlab"]
+    mcplot_lst =    [prefix+"plot-pyqtgraph",
+                     prefix+"plot-matplotlib", 
+                     prefix+"plot-matlab",
+                     prefix+"plot-html"]
 
     return mcrun_lst, mcplot_lst, mcdisplay_lst, format_lst
 

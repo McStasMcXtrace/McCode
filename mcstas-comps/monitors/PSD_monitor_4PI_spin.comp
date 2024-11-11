@@ -33,7 +33,7 @@
 * my:              [1] y-component of spin reference-vector
 * mz:              [1] z-component of spin reference-vector
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * PSD_N:    Array of neutron counts
 * PSD_p:    Array of neutron weight counts
@@ -48,9 +48,8 @@
 
 
 DEFINE COMPONENT PSD_monitor_4PI_spin
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (int nx=90, int ny=90, radius, string filename=0, int restore_neutron=0, mx=0, my=1, mz=0)
-OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 
 DECLARE
 %{

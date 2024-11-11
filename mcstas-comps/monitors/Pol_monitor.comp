@@ -32,7 +32,7 @@
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
 * nowritefile: [1]      If set, monitor will skip writing to disk
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * Pol_N: []             Array of neutron counts
 * Pol_p: []             Array of neutron weight counts
@@ -42,11 +42,11 @@
 *************************************************************************/
 DEFINE COMPONENT Pol_monitor
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (xwidth=0.1, yheight=0.1, int restore_neutron=0, mx=0, my=0, mz=0, int nowritefile=0)
 
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

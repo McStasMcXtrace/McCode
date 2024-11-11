@@ -30,7 +30,7 @@
 * %Example: Test_Absorption.instr -n1e5 index=4 Detector: emon_I=5.83067e-12
 *
 * %Parameters
-* index:    [1]    Index of the absorption component to use in 1-4
+* index:    [1]    Index of the absorption component to use in 1-4. See above.
 * material: [str]  Material file to use, e.g. Mn.txt
 * E0:       [keV]  Mean photon energy
 * dE:       [keV]  Photon energy spread, half width

@@ -110,13 +110,13 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Lens
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (r1=0,r2=0,focus1=0,focus2=0,phiy1=0,phiy2=0,
 thickness=0.001,radius=0.015,
 sigma_coh=11.74,sigma_inc=0.0816,sigma_abs=0.0822,
 density=3.148,weight=62.3018,
 p_interact=0.1,focus_aw=10,focus_ah=10,RMS=0, string geometry=0)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

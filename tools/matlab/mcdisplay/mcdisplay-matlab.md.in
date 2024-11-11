@@ -1,0 +1,74 @@
+% @MCCODE_PREFIX@DISPLAY-MATLAB(1)
+% @FLAVOR_UPPER@ @MCCODE_PARTICLE@ Ray Tracing Team
+% @MCCODE_DATE@
+
+# NAME
+
+**@MCCODE_PREFIX@display-matlab** - @MCCODE_NAME@ Graphical display of simulations using Matlab/Octave
+
+# SYNOPSIS
+
+**@MCCODE_PREFIX@display-matlab** [-hom] [-png|-jpg|-fig|-eps|-pdf|-tif] [--inspect=COMP] INSTR name=value...
+
+# DESCRIPTION
+
+The **@MCCODE_PREFIX@display-matlab** front-end is a graphical debugging tool. It presents a
+schematic drawing of the instrument definition, showing the position of the
+components and the paths of the simulated @MCCODE_PARTICLE@s through the instrument. It is
+thus very useful for debugging a simulation, for example to spot components in
+the wrong position or to find out where @MCCODE_PARTICLE@s are getting lost. To use the
+**@MCCODE_PREFIX@display-matlab** front-end with a simulation, run it as follows: 
+`@MCCODE_PREFIX@display INSTR args...` where INSTR is the name of either the instrument 
+source `INSTR.instr` or the simulation program `INSTR.out` generated with
+@MCCODE_NAME@, and `args` are the normal command line arguments for the simulation,
+as for *@MCCODE_PREFIX@run*. The `-h` option will list valid options.
+
+The default plotting backend is `mxdisplay-pyqtgraph`, but there exists a number of additional plotters such as `mxdisplay-matplotlib`, `mxdisplay-webgl-classic` (using WebGL), `mxdisplay-webgl` (using WebGL and NodeJS), `mxdisplay-matlab` (using Matlab or Octave).
+This is the Matlab/Octave plotting tool.
+
+# OPTIONS
+
+**INSTR**
+:   Displays the given @MCCODE_NAME@ 3D model with its defaults/current parameters.
+
+**name1=value1 ...**
+:   Displays the given @MCCODE_NAME@ model with given parameters.
+
+**-n N, --ncount N**
+:   Number of particles to simulate
+
+**[-png|-jpg|-fig|-eps|-pdf|-tif]**
+:   Same  as above, and specifies an output file format to generate.
+    Possible save_as are -png -pdf -fig -tif -jpg -eps
+
+**--inspect=COMP**
+:   Same as above, and only plot component names that match `COMP`, given as
+    a  single  component  word  for partial match, such as Monitor a
+    component interval such as Monok:Sample or 2:10 or 2:end
+
+**-m**
+:   Explicitely request to use Matlab
+
+**-o**
+:   Explicitely request to use Octave
+
+# FILES
+
+/usr/share/@FLAVOR@/tools/matlab
+/usr/share/@FLAVOR@/tools/Python/mccodelib/mccode_config.json
+~/.@FLAVOR@/mccode_config.json
+http://www.@FLAVOR@.org
+
+# EXAMPLES
+
+Display the *Test_SX* example (Single crystal diffraction)
+:   - `@MCCODE_PREFIX@display-matlab Test_SX.instr -n 1e2 TTH=13.4`
+
+# AUTHORS
+
+@MCCODE_NAME@ Team (@MCCODE_PREFIX@stas.org)
+
+# SEE ALSO
+
+@MCCODE_PREFIX@stas(1), @MCCODE_PREFIX@doc(1), @MCCODE_PREFIX@(1), @MCCODE_PREFIX@run(1), @MCCODE_PREFIX@gui(1), @MCCODE_PREFIX@display(1)
+

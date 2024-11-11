@@ -35,7 +35,6 @@ else
     MCNO_ALTERNATIVES=1;
 fi
 
-
 usage() {
     echo "usage: $0 name [version] [source] [target] [chain] [flags] [-- gens ...] ";
     echo "";
@@ -204,17 +203,18 @@ echo ""
 echo "=== Picked flavor: ${FLAVOR}"
 echo ""
 
-
 # Check if we are on macOS and conda is available
 UNAME=`uname`
 if [ "${UNAME}" = "Darwin" ]; then
     if [ -f "${MCINSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/miniconda3/bin/conda" ]; then
       source ${MCINSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/miniconda3/bin/activate base
-      echo CMAKE_ARGS are:
-      echo ${CMAKE_ARGS}
     fi
 fi
 
+# handle MCCODE_USE_LEGACY_DESTINATIONS
+CMAKE_ARGS+=" -DMCCODE_USE_LEGACY_DESTINATIONS=$MCCODE_USE_LEGACY_DESTINATIONS -DENABLE_CIF2HKL=$ENABLE_CIF2HKL"
+echo CMAKE_ARGS are:
+echo ${CMAKE_ARGS}
 
 
 

@@ -26,13 +26,13 @@
 * Umax: []              Maximum U to detect
 * nU: [1]               Number of U channels
 * filename: [string]    Name of file in which to store the detector image
-* restore_xray: [1]  If set, the monitor does not influence the particle state
+* restore_xray: [1]     If set, the monitor does not influence the particle state
 * uid: [1]              Integer index of uservar to be monitored. Overrides ustring.
 * ustring: [string]     Name of variable (user or particle state parameter as a string) to be monitored.  
 * signal: [string]      Name of variable to be used as an additive signal to be monitored. Default is intensity.
 * nowritefile: [1]      Flag to indicate if monitor should not save any data.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * U_N: []               Array of particle counts
 * U_p: []               Array of particle weight counts
@@ -42,12 +42,12 @@
 *******************************************************************************/
 DEFINE COMPONENT Flex_monitor_1D
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (nU=20, string filename=0,
   Umin, Umax, uid=-1, string ustring="", restore_xray=0, string signal="p", int nowritefile=0)
 
-OUTPUT PARAMETERS ()
+
 
 DECLARE
 %{

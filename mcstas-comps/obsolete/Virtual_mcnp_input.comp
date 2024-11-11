@@ -85,11 +85,11 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Virtual_mcnp_input
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string filename=0, string autocenter=0, repeat_count=1, verbose=0, intensity=0,MCNP_ANALYSE=10000,
 int surface_id=-1,
 nps=0,smooth=1)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

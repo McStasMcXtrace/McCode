@@ -57,7 +57,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_hollow_cylinder
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         radius=20.0,
         thickness=10.0,

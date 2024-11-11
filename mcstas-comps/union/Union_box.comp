@@ -58,7 +58,7 @@
 * focus_xh:              [m]      Vert. dimension of a rectangular area
 * focus_r:               [m]      Focusing on circle with this radius
 * init:                  [string] name of Union_init component (typically "init", default)
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %L
 *
@@ -66,9 +66,9 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Union_box
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS(string material_string=0, priority, xwidth, yheight, zdepth, xwidth2=-1, yheight2=-1, visualize=1, int target_index=0, target_x=0, target_y=0, target_z=0, focus_aw=0, focus_ah=0, focus_xw=0, focus_xh=0, focus_r=0, p_interact = 0, string mask_string=0, string mask_setting=0,number_of_activations=1, string init="init")
-OUTPUT PARAMETERS ()
+
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -76,11 +76,7 @@ SHARE
 %{
 
 #ifndef Union
-#define Union $Revision: 0.8 $
-
-%include "Union_functions.c"
-%include "Union_initialization.c"
-
+#error "The Union_init component must be included before this Union_box component"
 #endif
 
 void mcdisplay_box_function(struct lines_to_draw *lines_to_draw_output,int index, struct geometry_struct **Geometries,int number_of_volumes) {

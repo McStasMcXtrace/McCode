@@ -71,7 +71,7 @@
 * logger_conditional_extend_index: [1] If a conditional is used with this logger, the result of each conditional calculation can be made available in extend as a array called "logger_conditional_extend", and one would then access logger_conditional_extend[n] if logger_conditional_extend_index is set to n
 * init:              [string] name of Union_init component (typically "init", default)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * GLOBAL PARAMETERS:
 *
@@ -81,23 +81,19 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Union_abs_logger_1D_space_tof
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS(string target_geometry="NULL",
                    yheight, n=0.2,
                    time_min=0, time_max=1, time_bins=100,
                    string filename="NULL", order_total=-1, order_volume=-1, logger_conditional_extend_index=-1, string init="init")
-OUTPUT PARAMETERS ()
+
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
 #ifndef Union
-#define Union $Revision: 0.8 $
-
-%include "Union_functions.c"
-%include "Union_initialization.c"
-
+#error "The Union_init component must be included before this Union_abs_logger_1D_space_tof component"
 #endif
 
 struct temp_1D_time_abs_data_element_struct {

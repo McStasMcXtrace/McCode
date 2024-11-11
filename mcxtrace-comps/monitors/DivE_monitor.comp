@@ -30,24 +30,24 @@
 * yheight: [m] Height of detector. 
 * nE:      [1] Number of bins in energy
 * nh:      [1] Number of bins in divergence
-* nx:      [1]
+* nx:      [1] Vector definition of "forward" direction wrt. divergence, to be used e.g. when the monitor is rotated into the horizontal plane.
 * ny:      [1] Vector definition of "forward" direction wrt. divergence, to be used e.g. when the monitor is rotated into the horizontal plane.
-* nz:      [1] 
-* maxdiv_h: [deg] Maximal horizontal divergence detected
+* nz:      [1] Vector definition of "forward" direction wrt. divergence, to be used e.g. when the monitor is rotated into the horizontal plane.
+* maxdiv_h:[deg] Maximal horizontal divergence detected
 * Emin:    [keV] Minimum energy detected
 * Emax:    [keV] Maximum energy detected
-* filename: [str] Name of file in which to store the detector image
+* filename:[str] Name of file in which to store the detector image
 * restore_xray: [1] If set, the monitor does not influence the photon state
-* nowritefile: [1]  If set, monitor will skip writing to disk.
+* nowritefile:  [1] If set, monitor will skip writing to disk.
 *
 * %End
 *******************************************************************************/
 
 DEFINE COMPONENT DivE_monitor
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (int nE=20, int nh=20, string filename=0, xwidth=0.1, yheight=0.1, 
   maxdiv_h=2, Emin, Emax, restore_xray=0, nx=0, ny=0, nz=1, int nowritefile=0)
-OUTPUT PARAMETERS ()
+
 /* X-ray  parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE

@@ -27,6 +27,7 @@
 * posX: [m]     Displacement of scene along x-axis
 * posY: [m]     Displacement of scene along y-axis
 * posZ: [m]     Displacement of scene along z-axis
+* Ncount: [1]   Set X-ray particle count for the simulation (same as -n #)
 *
 * %Link
 * %End

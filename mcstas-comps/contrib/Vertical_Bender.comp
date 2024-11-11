@@ -74,7 +74,7 @@
 * debug:        0 to 10 for zero to maximum print out - reduce number of neutrons to run !
 * alwaystrack   default 0,  1 to force tracking even when gravity is off
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * localG:       Gravity vector in guide reference system (m/s/s)
 * normalXXX:    Several normal vector used for defining the geometry (1)
@@ -87,8 +87,6 @@
 * %E
 ****************************************************************************/
 DEFINE COMPONENT Vertical_Bender
-DEFINITION PARAMETERS (
-)
 SETTING PARAMETERS (
   vector rTopPar={0.99, 0.219, 6.07, 0.0, 0.003},
   vector rBottomPar={0.99, 0.219, 6.07, 0.0, 0.003},
@@ -96,7 +94,7 @@ SETTING PARAMETERS (
   xwidth, yheight, length, radius, G=9.8, int nchan=1, d=0.0,
   int debug=0, int endFlat=0, int drawOption=1, int alwaystrack=0, diststep1=0.020, diststep2=0.002
 )
-OUTPUT PARAMETERS()
+
 /* Neutron parameters : (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{

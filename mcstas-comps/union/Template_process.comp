@@ -44,7 +44,7 @@
 * interact_fraction: [1]      How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
 * init:              [string] Name of Union_init component (typically "init", default)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * Template_storage          // Important to update this output paramter
 * effective_my_scattering   // Variable used in initialize
 *
@@ -54,21 +54,17 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Template_process // Remember to change the name of process here
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS(sigma=5.08,packing_factor=1,unit_cell_volume=13.8,interact_fraction=-1, string init="init")
-OUTPUT PARAMETERS ()
+
 
 SHARE
 %{
 #ifndef Union
-#define Union $Revision: 0.8 $
-
-%include "Union_functions.c"
-%include "Union_initialization.c"
-
+#error "The Union_init component must be included before this Template_process component"
 #endif
 
-// Very important to add a pointer to this struct in the Union_functions.c file
+// Very important to add a pointer to this struct in the union-lib.c file
 struct Template_physics_storage_struct{
     // Variables that needs to be transfered between any of the following places:
     // The initialize in this component

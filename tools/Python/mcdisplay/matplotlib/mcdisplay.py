@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ''' Small script to rewrite McStas trace output to python matplotlib for plotting '''
 

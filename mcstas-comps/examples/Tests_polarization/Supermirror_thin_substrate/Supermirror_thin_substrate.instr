@@ -1,0 +1,284 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Supermirror_thin_substrate 
+*
+* %Identification
+* Written by: Hal Lee
+* Date: 2024
+* Origin: ESS
+* %INSTRUMENT_SITE: Tests_polarization
+*
+* Test instrument for a thin-substrate supermirrror (component SupermirrorFlat)
+*
+* %Description
+* Test instrument for a thin-substrate supermirrror (component SupermirrorFlat)
+*
+* %Example: Supermirror_thin_substrate.instr src_x=0.01 Detector: spectrum_I=4.11233e-05
+*
+* %Parameters
+* src_x:                        [m]    Width of source
+* src_y:                        [m]    Height of source
+* W_Centre:                     [AA]   Central wavelength from source spectrum
+* W_Half_Width:                 [AA]   Source spectrum wavelength half-width
+* A_FWHM:                       [deg]  Angular divergence from source
+* Detector_Distance:            [m]    End-of-supermirror to detector distance
+* Length:                       [m]    Supermirrror length,projection along z-axis
+* Thickness_In_mm:              [mm]   Supermirror thickness in mm
+* Mirror_Coated_Side:           [str]  Specification of coating type
+* Mirror_Plus:                  [str]  Specification of coating on positive mirror side
+* Mirror_Plus_m:                [1]    Specification m value, positive mirror side
+* Mirror_Minus:                 [str]  Specification of coating on negative mirror side 
+* Absorber_Coated_Side:         [str]  Specification of coating type, absorber coated side
+* Absorber:                     [str]  Specification of absorber material
+* Absorber_Thickness_In_Micron: [mu-m] Absorber thickness in mu-m
+* Substrate:                    [str]  Specification of substrate material
+* Initial_Placement_At_Origin:  [str]  Mirror orientation specifier ("TopFrontEdgeCentre","FrontSubstrateCentre","BottomFrontEdgeCentre")
+* Tilt_Axis_Location:           [str]  Mirror axis location specifier ("TopFrontEdge","TopMirrorCentre","TopBackEdge","FrontSubstrateCentre","SubstrateCentre","BackSubstrateCentre","BottomFrontEdge","BottomMirrorCentre","BottomBackEdge")
+* Tilt_Angle_First_In_Degree:   [deg]  Mirror tilt angle (around global y)
+* Translation_Second_Y:         [m]    Mirror translation (along global y)
+* Rot_Angle_Third_In_Degree:    [deg]  Mirror rotation angle (around global z)
+* Tracking:                     [str]  Mirror event-tracking option specifier ("NoTracking", "DetailTracking")
+*
+* %Link
+* A reference/HTML link for more information
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Supermirror_thin_substrate(src_x=0.01, src_y=0.09,
+W_Centre=5, W_Half_Width=3, A_FWHM=0.05, Detector_Distance=1, Length=4, Thickness_In_mm=0.5,
+string Mirror_Coated_Side="BothCoated", string Mirror_Plus="FeSiPlus", Mirror_Plus_m=3.5,
+string Mirror_Minus="FeSiMinus", 
+string Absorber_Coated_Side="BothNotCoated",
+string Absorber="Empty",
+Absorber_Thickness_In_Micron=0, 
+string Substrate="GlassNoAttenuation",
+string Initial_Placement_At_Origin="TopFrontEdgeCentre",
+string Tilt_Axis_Location="TopMirrorCentre", 
+Tilt_Angle_First_In_Degree=0.64, Translation_Second_Y=0, Rot_Angle_Third_In_Degree=0,
+string Tracking="DetailTracking" )
+ 
+DECLARE
+%{
+	double W_Min, W_Max, src_x, src_y, det_mx, det_my, xx, yy, cosA, sinA, det_zoom_in_x, det_zoom_in_y, det_x, det_y, det_zoom_out_x, det_zoom_out_y;
+	double det_1D_x, det_1D_y;
+	double u;
+%}
+
+
+// ======================================================
+//
+// 		INITIALIZE
+//      
+// ======================================================
+
+INITIALIZE
+%{
+
+	u = 0.000001;
+
+	W_Min = W_Centre - W_Half_Width;
+	W_Max = W_Centre + W_Half_Width;
+	
+	//geometry rotation about z-axis
+	cosA = cos(Rot_Angle_Third_In_Degree * M_PI / 180);
+	sinA = sin(Rot_Angle_Third_In_Degree * M_PI / 180);
+	
+	//rotate source accordingly
+	xx = cosA * src_x - sinA * src_y; 
+	yy = sinA * src_x + cosA * src_y;
+	src_x = fabs(xx); src_y = fabs(yy);
+	MPI_MASTER(printf("src=(%lg, %lg)\n", fabs(xx), fabs(yy));)
+	
+	//starting point is (0,1,0), before rotate about Z
+	det_mx = -sinA;
+	det_my =  cosA;
+	MPI_MASTER(printf("det_m=(%lg, %lg)\n", det_mx, det_my);)
+	
+	//rotate detectors accordingly
+	det_zoom_in_x = 0.01; det_zoom_in_y = 0.1;
+	xx = cosA * det_zoom_in_x - sinA * det_zoom_in_y; 
+	yy = sinA * det_zoom_in_x + cosA * det_zoom_in_y;
+	det_zoom_in_x = fabs(xx); det_zoom_in_y = fabs(yy);
+	MPI_MASTER(printf("det_zoom_in=(%lg, %lg)\n", fabs(xx), fabs(yy));)
+	
+	det_x = 0.06; det_y = 0.2;
+	xx = cosA * det_x - sinA * det_y; 
+	yy = sinA * det_x + cosA * det_y;
+	det_x = fabs(xx); det_y = fabs(yy);
+	MPI_MASTER(printf("det=(%lg, %lg)\n", fabs(xx), fabs(yy));)
+	
+	det_zoom_out_x = 0.3; det_zoom_out_y = 0.2;
+	xx = cosA * det_zoom_out_x - sinA * det_zoom_out_y; 
+	yy = sinA * det_zoom_out_x + cosA * det_zoom_out_y;
+	det_zoom_out_x = fabs(xx); det_zoom_out_y = fabs(yy);
+	MPI_MASTER(printf("det_zoom_out=(%lg, %lg)\n", fabs(xx), fabs(yy));)
+	
+	if ((int)floor(fabs((double)((int)floor(Rot_Angle_Third_In_Degree) % 360) / 90)) %2 == 0) { 
+		det_1D_x = 300; 
+		det_1D_y = 1; 
+	}
+	else { 
+		det_1D_x = 1; 
+		det_1D_y = 300; 
+	}
+
+	MPI_MASTER(printf("Rot_Angle_Third_In_Degree=%lg -> %d : det_1D=(%lg, %lg)\n", 
+						Rot_Angle_Third_In_Degree, 
+						(int)floor(fabs((double)((int)floor(Rot_Angle_Third_In_Degree) % 360) / 90)) %2, 
+						det_1D_x, det_1D_y);)
+	
+%}
+// End of INITIALIZE
+
+
+// ==============================================
+// 
+// 		TRACE SECTION
+// 
+// ==============================================
+
+TRACE
+
+// ==============================================
+// 		 Source 
+// ==============================================
+
+COMPONENT source = Source_div(xwidth=src_x, yheight=src_y, focus_aw=A_FWHM, focus_ah=A_FWHM, lambda0=W_Centre, dlambda=W_Half_Width, gauss=0, flux=1)
+  AT (0, 0, 0) ABSOLUTE
+
+
+COMPONENT supermirror1 = SupermirrorFlat (
+	
+	//Specify the supermirror shape, mirror coatings and substrate material
+	//Here, supermirror is lying horizontally on the xz plane with the long side along +z, in McStas module XYZ coodinates.
+	length = Length, //[m]  Supermirror length
+	thickness_in_mm = Thickness_In_mm, //[mm]  Substrate thickness in mm
+	//The two side-edges at +y and -y are taken to be symmetric about the xz-plane, only one needs to be specified. 
+	//Use InitialiseStdSupermirrorFlat_detail if not symmetric.
+	side_edge_normal = {0,1,0}, //Normal vector of one of the two side-edge surface
+	side_edge_point = {0,1,0}, //A point on the side-edge surface that has its normal specified above
+
+	//Mirror reflectivity parameters are specified by name to look up 6 parameters {R0, Qc, alpha, m, W, beta}. 
+	//R0:      [1]      reflectivity below critical scattering vector
+	//Qc:      [AA-1]   magnetude of critical scattering vector (at m=1)
+	//alpha:   [AA]     slope of reflectivity
+	//m:       [1]      m-value of material. Zero means no reflection
+	//W:       [AA-1]   width of reflectivity cut-off
+	//beta:    [AA2]    curvature of reflectivity
+	//If name = SubstrateSurface, reflectivity is calculated by 
+	//			R = R0 (when q<=Qc), R0*( (q - (q^2 - Qc^2)^1/2) / (q + (q^2 - Qc^2)^1/2) )^2 (when q>Qc), with Qc=sqrt(16 Pi SLD). 
+	//otherwise reflectivity is calculated by 
+	//			R = R0 (when q<=Qc), R = R0*0.5*(1-tanh((q - m*Qc)/W))*(1-alpha*(q-Qc)+beta*(q-Qc)*(q-Qc)) (when q>Qc).
+	//
+	//specified mirror material name matching one of those defined in "Reflectivity_parameters_list.txt". 
+	//If the mirror is non-polarising, specify the same name or parameters for spin plus and spin minus. 
+	mirror_coated_side = Mirror_Coated_Side, //[string]  which side(s) of the substrate is(are) coated. "TopSideCoated", "BothSideCoated", "BottomSideCoated"
+	mirror_spin_plus_material_name = Mirror_Plus, //[string]  mirror spin+ material name in "Reflectivity_parameters_list.txt"
+	mirror_spin_plus_m = Mirror_Plus_m, //[1]  mirror spin+ m-value
+	mirror_spin_minus_material_name = Mirror_Minus, //[string]  mirror spin- material name in "Reflectivity_parameters_list.txt"
+	
+	//Absorber parameters are either specified by name or by 1 parameters L_abs and the coating thickness. 
+	//absorber_material_name:  [string]      absorber material name in "Substrate_parameters_list.txt". (Material name is case-insensitive) 
+	//absorber_material_spec:  [cm]          Labs, absorption 1/e attenuation length for 1 Å neutrons (complete & immediate absorption: 0, no absorption: -1)
+	//abs_coating_in_micron:   [micrometer]  absorber coating thickness in micrometer
+	//
+	//BELOW: APPLY WHEN USING InitialiseStdSupermirrorFlat
+	//specify absorber material name matching one of those defined in "Substrate_parameters_list.txt". 
+	absorber_coated_side = Absorber_Coated_Side, //[string]      absorber material name in "Substrate_parameters_list.txt". (Material name is case-insensitive) 
+	absorber_material_name = Absorber, //[string]      "TopSideCoated", "BothSideCoated", "BottomSideCoated"
+	absorber_thickness_in_micron = Absorber_Thickness_In_Micron, //[micrometer]  absorber coating thickness in micrometer
+	
+	//Substrate parameters are specified by name to look up 3 parameters {L_abs, L_inc, SLD}. 
+	//L_abs:   [cm]     absorption 1/e attenuation length for 1 Å neutrons
+	//                  complete & immediate absorption: 0, no absorption: -1, Si: 210.460, SiO2: 1046.742, Boron:0.018, Gd:0.002, Borofloat:0.940
+	//L_inc:   [cm]     spin-incoherent scattering 1/e attenuation length
+	//                  complete & immediate attenuation: 0, no attenuation: -1, Si: 9927.652, SiO2: 441.380, Boron:4.505, Gd:1e9, Borofloat: 146.33
+	//SLD:     [AA-2]   Coherent scattering length density
+	//Specified substrate material name matching one of those defined in "Substrate_parameters_list.txt". 
+	substrate_material_name = Substrate, //[string]  substrate material name in "Substrate_parameters_list.txt"
+	
+	//Orient and position the as-defined supermirror in the McStas module XYZ coordinates. 
+	//1. Specify initially a location on the front side of the mirror (see parameter "initial_placement_at_origin" below). 
+	//   The supermirror is shifted so that the selected point coincides with the origin of the McStas module XYZ coordinates
+	//2. Then the orientation and position of the supermirror are specified by the movements in sequence as
+	//   1st, tilting about an axis in +x direction at a selected location (see parameters "tilt_x_axis_location" and "tilt_about_x_first_in_degree" below), 
+	//   2nd, translation, 
+	//   3rd, rotation about the z-axis of the McStas module XYZ coordinates.
+	initial_placement_at_origin = Initial_Placement_At_Origin, 	//[string] "TopFrontEdgeCentre","FrontSubstrateCentre","BottomFrontEdgeCentre" 
+																//			(insensitive to case and reginal English spelling)
+	tilt_y_axis_location = Tilt_Axis_Location, 	//[string] 	"TopFrontEdge","TopMirrorCentre","TopBackEdge"
+												//			"FrontSubstrateCentre","SubstrateCentre","BackSubstrateCentre", 
+												//			"BottomFrontEdge","BottomMirrorCentre","BottomBackEdge" 
+												//			(insensitive to case and reginal English spelling)
+	tilt_about_y_first_in_degree = Tilt_Angle_First_In_Degree, //[°]  First: tilt about the x-axis at the selected location 
+	translation_second_y = Translation_Second_Y, //[m,m,m]	 Second: translate, use Coords structure 
+	rot_about_z_third_in_degree = Rot_Angle_Third_In_Degree, //Third: rotate about z-axis (beam axis) of the McStas module XYZ coordinates 
+
+	tracking = Tracking
+
+)
+  AT (0, 0, 6) RELATIVE PREVIOUS
+  
+  
+COMPONENT Move = Arm() 
+  AT (0, 0, Length+Detector_Distance) RELATIVE PREVIOUS
+
+COMPONENT PSD_after_supermirror_zoom_in = PSD_monitor(   
+    nx = 500, ny = 500, filename = "PSD_after_supermirror_zoom_in.dat", 
+	xwidth = det_zoom_in_x, yheight = det_zoom_in_y, restore_neutron = 1)   
+  AT (0, 0, u) RELATIVE PREVIOUS 
+
+COMPONENT PSD_after_supermirror = PSD_monitor(   
+    nx = 500, ny = 500, filename = "PSD_after_supermirror.dat", 
+	xwidth = det_x, yheight = det_y, restore_neutron = 1)   
+  AT (0, 0, u) RELATIVE PREVIOUS 
+
+COMPONENT PSD_after_supermirror_zoom_out = PSD_monitor(   
+    nx = 500, ny = 500, filename = "PSD_after_supermirror_zoom_out.dat", 
+	xwidth = det_zoom_out_x, yheight = det_zoom_out_y, restore_neutron = 1)   
+  AT (0, 0, u) RELATIVE PREVIOUS 
+
+COMPONENT spectrum = L_monitor(
+   nL = 80, filename = "spectrum.dat", restore_neutron=1,
+   xwidth = det_x, yheight = det_y, Lmin = W_Min, Lmax = W_Max)
+  AT (0, 0, u) RELATIVE PREVIOUS
+  
+COMPONENT Pol_lambda = MeanPolLambda_monitor(
+			xwidth=det_zoom_in_x, yheight=det_zoom_in_y,
+		    nL=200, Lmin = W_Min, Lmax = W_Max,
+		    mx=det_mx, my=det_my, mz=0, filename="pol_lambda.dat")
+     AT (0, 0, u) RELATIVE PREVIOUS
+	 
+COMPONENT Polmap_average = PSD_Pol_monitor(
+    nx = det_1D_x, ny = det_1D_y, filename = "Polmap_average.dat", 
+	xwidth = det_x, yheight = det_y,  restore_neutron = 1,
+    mx=det_mx, my=det_my, mz = 0)
+  AT(0, 0, u) RELATIVE PREVIOUS
+
+COMPONENT Polmap_zoom_in = PSD_Pol_monitor(
+    nx = 500, ny = 500, filename = "Polmap_zoom_in.dat", 
+	xwidth = det_zoom_in_x, yheight = det_zoom_in_y,  restore_neutron = 1,
+    mx=det_mx, my=det_my, mz = 0)
+  AT(0, 0, u) RELATIVE PREVIOUS
+
+COMPONENT Polmap = PSD_Pol_monitor(
+    nx = 500, ny = 500, filename = "Polmap", 
+	xwidth = det_x, yheight = det_y,  restore_neutron = 1,
+    mx=det_mx, my=det_my, mz = 0)
+  AT(0, 0, u) RELATIVE PREVIOUS
+
+COMPONENT Polmap_zoom_out = PSD_Pol_monitor(
+    nx = 500, ny = 500, filename = "Polmap_zoom_out.dat", 
+	xwidth = det_zoom_out_x, yheight = det_zoom_out_y,  restore_neutron = 1,
+    mx=det_mx, my=det_my, mz = 0)
+  AT(0, 0, u) RELATIVE PREVIOUS
+
+FINALLY
+%{
+%}
+
+
+END
+

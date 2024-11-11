@@ -19,35 +19,35 @@ function( configure_destination_dirs resultvarname )
     message( "Choosing backwards compatible installation destinations (disable via MCCODE_USE_LEGACY_DESTINATIONS=OFF)" )
     if ( NOT WINDOWS )
       set( dest_prefix "${FLAVOR}/${MCCODE_VERSION}" )
-      destset( DEST_BINDIR "${dest_prefix}/bin" )
-      destset( DEST_LIBDIR "${dest_prefix}/libs" )
+      destset( DEST_BINDIR              "${dest_prefix}/bin" )
+      destset( DEST_LIBDIR              "${dest_prefix}/libs" )
       destset( DEST_DATADIR_TOPENVFILES "${dest_prefix}" )
-      destset( DEST_DATADIR_INFO "${dest_prefix}" )
-      destset( DEST_DATADIR_EDITORS "${dest_prefix}/editors" )
-      destset( DEST_DATADIR_DOC "${dest_prefix}/doc/manuals" )
-      destset( DEST_TOOLDIR "${dest_prefix}/tools" )
-      destset( DEST_RESOURCEDIR "${dest_prefix}")
+      destset( DEST_DATADIR_INFO        "${dest_prefix}" )
+      destset( DEST_DATADIR_EDITORS     "${dest_prefix}/editors" )
+      destset( DEST_DATADIR_DOC         "${dest_prefix}/doc/manuals" )
+      destset( DEST_TOOLDIR             "${dest_prefix}/tools" )
+      destset( DEST_RESOURCEDIR         "${dest_prefix}")
     else()
       # The rest of the path arrives via CPACK_NSIS_INSTALL_ROOT from MCUtil.cmake 
-      destset( DEST_BINDIR "bin" )
-      destset( DEST_LIBDIR "lib/libs" )
+      destset( DEST_BINDIR              "bin" )
+      destset( DEST_LIBDIR              "lib/libs" )
       destset( DEST_DATADIR_TOPENVFILES "lib" )
-      destset( DEST_DATADIR_INFO "lib" )
-      destset( DEST_DATADIR_EDITORS "lib/editors" )
-      destset( DEST_DATADIR_DOC "lib/doc/manuals" )
-      destset( DEST_TOOLDIR "lib/tools" )
-      destset( DEST_RESOURCEDIR "lib")
+      destset( DEST_DATADIR_INFO        "lib" )
+      destset( DEST_DATADIR_EDITORS     "lib/editors" )
+      destset( DEST_DATADIR_DOC         "lib/doc/manuals" )
+      destset( DEST_TOOLDIR             "lib/tools" )
+      destset( DEST_RESOURCEDIR         "lib")
     endif()
   else()
     include( GNUInstallDirs )
-    destset( DEST_BINDIR "${CMAKE_INSTALL_BINDIR}")
-    destset( DEST_LIBDIR "${CMAKE_INSTALL_LIBDIR}")
-    destset( DEST_RESOURCEDIR "${CMAKE_INSTALL_DATADIR}/${FLAVOR}/resources")
+    destset( DEST_BINDIR              "${CMAKE_INSTALL_BINDIR}")
+    destset( DEST_LIBDIR              "${CMAKE_INSTALL_LIBDIR}")
+    destset( DEST_RESOURCEDIR         "${CMAKE_INSTALL_DATADIR}/${FLAVOR}/resources")
     destset( DEST_DATADIR_TOPENVFILES "${CMAKE_INSTALL_DATADIR}/${FLAVOR}" )
-    destset( DEST_DATADIR_INFO "${CMAKE_INSTALL_DATADIR}/${FLAVOR}/info" )
-    destset( DEST_DATADIR_EDITORS "${CMAKE_INSTALL_DATADIR}/${FLAVOR}/editors" )
-    destset( DEST_DATADIR_DOC "${CMAKE_INSTALL_DATADIR}/${FLAVOR}/resources/doc/manuals" )
-    destset( DEST_TOOLDIR "${CMAKE_INSTALL_DATADIR}/${FLAVOR}/tools" )
+    destset( DEST_DATADIR_INFO        "${CMAKE_INSTALL_DATADIR}/${FLAVOR}/info" )
+    destset( DEST_DATADIR_EDITORS     "${CMAKE_INSTALL_DATADIR}/${FLAVOR}/editors" )
+    destset( DEST_DATADIR_DOC         "share/doc/${FLAVOR}" )
+    destset( DEST_TOOLDIR             "${CMAKE_INSTALL_DATADIR}/${FLAVOR}/tools" )
   endif()
   set(${resultvarname} "${provided_vars}" PARENT_SCOPE)
 endfunction()
@@ -72,9 +72,9 @@ unset( tmp_detected_var_list )
 
 set( DEST_DATADIR_DATAFILES "${DEST_RESOURCEDIR}/data")
 set( DEST_DATADIR_CODEFILES "${DEST_RESOURCEDIR}/share")
-set( DEST_DATADIR_COMPS "${DEST_RESOURCEDIR}")
-set( DEST_DATADIR_EXAMPLES "${DEST_RESOURCEDIR}/examples")
-set( DEST_INTERNALPYDIR "${DEST_TOOLDIR}/Python" )
+set( DEST_DATADIR_COMPS     "${DEST_RESOURCEDIR}")
+set( DEST_DATADIR_EXAMPLES  "${DEST_RESOURCEDIR}/examples")
+set( DEST_INTERNALPYDIR     "${DEST_TOOLDIR}/Python" )
 
 
 #Get a few relative paths, mostly for expansion in various installed files (we
@@ -83,9 +83,12 @@ set( DEST_INTERNALPYDIR "${DEST_TOOLDIR}/Python" )
 
 file(RELATIVE_PATH MCCODE_RELPATH_BINDIR2LIBDIR       "${PROJECT_BINARY_DIR}/${DEST_BINDIR}"  "${PROJECT_BINARY_DIR}/${DEST_LIBDIR}" )
 file(RELATIVE_PATH MCCODE_RELPATH_BINDIR2RESOURCEDIR  "${PROJECT_BINARY_DIR}/${DEST_BINDIR}"  "${PROJECT_BINARY_DIR}/${DEST_RESOURCEDIR}" )
+file(RELATIVE_PATH MCCODE_RELPATH_BINDIR2TOPENVFILES  "${PROJECT_BINARY_DIR}/${DEST_BINDIR}"  "${PROJECT_BINARY_DIR}/${DEST_TOPENVFILES}" )
+file(RELATIVE_PATH MCCODE_RELPATH_TOPENVFILES2BINDIR  "${PROJECT_BINARY_DIR}/${DEST_TOPENVFILES}"  "${PROJECT_BINARY_DIR}/${DEST_BINDIR}" )
 file(RELATIVE_PATH MCCODE_RELPATH_BINDIR2TOOLDIR      "${PROJECT_BINARY_DIR}/${DEST_BINDIR}"  "${PROJECT_BINARY_DIR}/${DEST_TOOLDIR}" )
 file(RELATIVE_PATH MCCODE_RELPATH_TOOLDIR2BINDIR      "${PROJECT_BINARY_DIR}/${DEST_TOOLDIR}" "${PROJECT_BINARY_DIR}/${DEST_BINDIR}" )
 file(RELATIVE_PATH MCCODE_RELPATH_TOOLDIR2LIBDIR      "${PROJECT_BINARY_DIR}/${DEST_TOOLDIR}" "${PROJECT_BINARY_DIR}/${DEST_LIBDIR}" )
+file(RELATIVE_PATH MCCODE_RELPATH_TOOLDIR2DOCDIR      "${PROJECT_BINARY_DIR}/${DEST_TOOLDIR}" "${PROJECT_BINARY_DIR}/${DEST_DATADIR_DOC}" )
 file(RELATIVE_PATH MCCODE_RELPATH_TOOLDIR2RESOURCEDIR "${PROJECT_BINARY_DIR}/${DEST_TOOLDIR}" "${PROJECT_BINARY_DIR}/${DEST_RESOURCEDIR}" )
 
 #Standard preamble for bash .in scripts (expanded from @MCCODE_BASH_STANDARD_PREAMBLE@):
@@ -136,3 +139,26 @@ function( setup_standard_bash_preamble )
   set( MCCODE_BASH_STANDARD_PREAMBLE "${tmp}" PARENT_SCOPE )
 endfunction()
 setup_standard_bash_preamble()
+
+#Preamble for bash environment script
+include( Locations )
+function( setup_env_preamble )
+  set( lines
+    "############################################"
+    "# Start of standard CMake-generated ENV preamble"
+    "set -e"
+    "FILE=\${0}"
+    "readlinkf(){ perl -MCwd -e 'print Cwd::abs_path shift' \"$1\";}"
+    "LINK=\$(readlinkf \${FILE}||true)"
+    "if [ \"x\${LINK}\" != \"x\" ]; then"
+    "  FILE=\${LINK}"
+    "fi"
+    "MCCODE_BINDIR=${CMAKE_INSTALL_PREFIX}/${DEST_BINDIR}"
+    "MCCODE_RESOURCEDIR=\"\${MCCODE_BINDIR}/${MCCODE_RELPATH_BINDIR2RESOURCEDIR}\""
+    "# End of preamble"
+    "############################################"
+    )
+  string( JOIN "\n" tmp ${lines} )
+  set( MCCODE_ENV_PREAMBLE "${tmp}" PARENT_SCOPE )
+endfunction()
+setup_env_preamble()

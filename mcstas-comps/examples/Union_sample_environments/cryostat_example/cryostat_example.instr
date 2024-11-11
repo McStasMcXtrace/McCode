@@ -1,0 +1,232 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: Union_demonstration
+*
+* %Identification
+* Written by: Mads Bertelsen
+* Date: July 2024
+* Origin: ESS DMSC
+* %INSTRUMENT_SITE: Union_sample_environments
+*
+* Cryostat model made with Union components that can be included in other instruments
+*
+* %Description
+* Model of a cryostat made using Union components that can be included in another
+* instrument or executed on its own. Several components are marked with the
+* removable keyword, meaning these are not included when this instrument is included
+* in another McStas instrument. This includes the source, but also the Union components
+* init, master and stop, which the instrument including this sample environment will need
+* to supply. This is done such that a sample can easily be added.
+* Only a simple model of Al is used for this cryostat, and it has been named Al_cryostat
+* to avoid conflicting with existing models of Al in the instrument file that includes this
+* sample environment.
+*
+* %Example: stick_displacement=0 Detector: m4pi_I=7.3e2
+*
+* %Parameters
+* stick_displacement: [m] height displacement of sample stick
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Cryostat_example(stick_displacement=0)
+
+DECLARE
+%{
+%}
+
+USERVARS %{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+REMOVABLE COMPONENT init = Union_init()
+AT (0,0,0) ABSOLUTE
+
+REMOVABLE COMPONENT cryostat_origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+REMOVABLE COMPONENT source_cryostat = Source_div(
+  xwidth=0.01, yheight=0.01,
+  focus_aw=0.05, focus_ah=0.05,
+  E0=50, dE=0, flux=1E9)
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+// Sample position
+REMOVABLE COMPONENT sample_position = Arm()
+AT (0,0,3) RELATIVE ABSOLUTE
+
+COMPONENT beam_center = Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+
+// P0
+COMPONENT Al_incoherent_cryostat = Incoherent_process(
+  sigma=4.0*0.0082, packing_factor=1, unit_cell_volume=66.4)
+AT (0,0,0) ABSOLUTE
+
+// P1
+COMPONENT Al_powder_cryostat = Powder_process(
+  reflections="Al.laz")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Al_cryostat = Union_make_material(
+  my_absorption=100*4.0*0.231/66.4,
+  process_string="Al_incoherent_cryostat,Al_powder_cryostat")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT drum_center = Arm()
+AT (0,0.38,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+// V1
+COMPONENT cryostat_mountin_plate = Union_cylinder(
+  radius=0.12, yheight=0.01,
+  priority=7, material_string="Al_cryostat")
+AT (0,-0.103,0) RELATIVE beam_center
+
+// V2
+COMPONENT cryostat_drum_walls = Union_cylinder(
+  radius=0.2, yheight=0.57,
+  priority=8,material_string="Al_cryostat")
+AT (0,0,0) RELATIVE drum_center
+
+// V3
+COMPONENT cryostat_drum_vacuum = Union_cylinder(
+  radius=0.19, yheight=0.55,
+  priority=9, material_string="Vacuum")
+AT (0,0,0) RELATIVE drum_center
+
+// V4
+COMPONENT outer_cryostat_wall = Union_cylinder(
+  radius=0.1, yheight=0.2,
+  priority=10, material_string="Al_cryostat", p_interact=0.2)
+AT (0,0,0) RELATIVE beam_center
+
+// V5
+COMPONENT outer_cryostat_vacuum = Union_cylinder(
+  radius=0.09, yheight=0.2,
+  priority=11, material_string="Vacuum")
+AT (0,0.01,0) RELATIVE beam_center
+
+// V6
+COMPONENT inner_cryostat_wall = Union_cylinder(
+  radius=0.06, yheight=0.16,
+  priority=12, material_string="Al_cryostat", p_interact=0.2)
+AT (0,0.01,0) RELATIVE beam_center
+
+// V7
+COMPONENT inner_cryostat_vacuum = Union_cylinder(
+  radius=0.05, yheight=0.15,
+  priority=13, material_string="Vacuum")
+AT (0,0.01,0) RELATIVE beam_center
+
+// V8
+COMPONENT sample_stick_walls = Union_cylinder(
+  radius=0.04, yheight=0.605,
+  priority=14, material_string="Al_cryostat")
+AT (0,0.39,0) RELATIVE beam_center
+
+// V9
+COMPONENT sample_stick_vacuum = Union_cylinder(
+  radius=0.035, yheight=0.64,
+  priority=15, material_string="Vacuum")
+AT (0,0.4,0) RELATIVE beam_center
+
+COMPONENT sample_rod_bottom = Arm()
+AT (0,0.05+stick_displacement,0) RELATIVE beam_center
+ROTATED (0,85,0) RELATIVE beam_center
+
+// V10
+COMPONENT sample_rod = Union_cylinder(
+  radius=0.0075, yheight=0.7,
+  priority=25, material_string="Al_cryostat")
+AT (0,0.35,0) RELATIVE sample_rod_bottom
+
+// V11
+COMPONENT sample_rod_collar_1 = Union_cylinder(
+  radius=0.034, yheight=0.02,
+  priority=17, material_string="Al_cryostat")
+AT (0,0.048,0) RELATIVE sample_rod_bottom
+
+// V12
+COMPONENT sample_rod_collar_2 = Union_cylinder(
+  radius=0.034, yheight=0.02,
+  priority=18, material_string="Al_cryostat")
+AT (0,0.14,0) RELATIVE sample_rod_bottom
+
+// V13
+COMPONENT sample_rod_collar_3 = Union_cylinder(
+  radius=0.034, yheight=0.02,
+  priority=19, material_string="Al_cryostat")
+AT (0,0.34,0) RELATIVE sample_rod_bottom
+
+// V14
+COMPONENT sample_rod_collar_4 = Union_cylinder(
+  radius=0.034, yheight=0.02,
+  priority=20, material_string="Al_cryostat")
+AT (0,0.635,0) RELATIVE sample_rod_bottom
+
+// V15
+COMPONENT sample_rod_collar_1_vacuum = Union_cylinder(
+  radius=0.03, yheight=0.016,
+  priority=21, material_string="Vacuum")
+AT (0,0.048-0.005,0) RELATIVE sample_rod_bottom
+
+// V16
+COMPONENT sample_rod_collar_2_vacuum = Union_cylinder(
+  radius=0.03, yheight=0.016,
+  priority=22, material_string="Vacuum")
+AT (0,0.14-0.005,0) RELATIVE sample_rod_bottom
+
+// V17
+COMPONENT sample_rod_collar_3_vacuum = Union_cylinder(
+  radius=0.03, yheight=0.016,
+  priority=23, material_string="Vacuum")
+AT (0,0.34-0.005,0) RELATIVE sample_rod_bottom
+
+// V18
+COMPONENT sample_rod_collar_4_vacuum = Union_cylinder(
+  radius=0.03, yheight=0.016,
+  priority=24, material_string="Vacuum")
+AT (0,0.635-0.005,0) RELATIVE sample_rod_bottom
+
+// Master is removed to make it easy to add to the union system describing the cryostat, for example a sample
+REMOVABLE COMPONENT master = Union_master(history_limit=1000000)
+AT(0,0,0) RELATIVE beam_center
+
+REMOVABLE COMPONENT m4pi = PSD_monitor_4PI(
+  radius=1, nx=180, ny=180, filename="Events.dat",
+  restore_neutron=1)
+AT (0, 0, 0) RELATIVE beam_center
+
+REMOVABLE COMPONENT Banana_monitor = Monitor_nD(
+  radius=1, yheight=0.1,
+  options="banana, theta limits=[20,170], bins=500",
+  filename="banana.dat",restore_neutron=1)
+AT (0,0,0) RELATIVE beam_center
+
+REMOVABLE COMPONENT detector = PSD_monitor(
+  xwidth=0.1, yheight=0.08, nx=200, ny=200,
+  filename="PSD.dat", restore_neutron=1)
+AT (0,0,0.4) RELATIVE beam_center
+
+REMOVABLE COMPONENT screen = PSD_monitor(
+  xwidth=0.45, nx=500,
+  ymin=-0.15, ymax=0.85, ny=1200,
+  filename="absoprtion_picture.dat", restore_neutron=1)
+AT (0,0,0.5) RELATIVE beam_center
+
+REMOVABLE COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
+
+
+END

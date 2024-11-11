@@ -96,7 +96,7 @@
 * sigma_abs:  absorption cross-section per unit cell at 2200 m/s [barns]
 * sigma_inc:  incoherent scattering cross-section per unit cell [barns]
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * hkl_info: Internal [structure]
 *
@@ -105,14 +105,13 @@
 ****************************************************************************/
 
 DEFINE COMPONENT Single_magnetic_crystal
-DEFINITION PARAMETERS()
+
 SETTING PARAMETERS(string atom_sites=0, string geometry=NULL,
             xwidth=0, yheight=0, zdepth=0, radius=0, delta_d_d=1e-4,
             mosaic = -1, mosaic_h = -1, mosaic_v = -1, mosaic_n = -1,
             recip_cell=0, q_min=0,q_max=-1,mx=0,my=1,mz=0,
             na=1, nb=1, nc=1, ax = 0, ay = 0, az = 0, bx = 0, by = 0, bz = 0, cx = 0, cy = 0, cz = 0,
             p_transmit = -1, sigma_abs = 0, sigma_inc = 0,order=0)
-OUTPUT PARAMETERS(hkl_info, offdata)
 NOACC
 
 SHARE

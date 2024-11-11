@@ -40,11 +40,11 @@
 * 32.44    | Sample
 *
 * Examples:
-* Copper scan: mxrun SOLEIL_ROCK.instr E0=8.500,9.500 scan=1 nbsample=1 cc=2 -N100
+* Copper scan: mxrun SOLEIL_ROCK.instr E0=8.500,9.500 scan=1 cc=2 -N100
 * Manganese and chrome scan: mxrun SOLEIL_ROCK.instr E0=5.700,6.800 scan=1 sample_file=MnCr cc=2 -N100
 * Pretty energy repartition monitor result: mxrun SOLEIL_ROCK.instr E0=17.000 cc=2 -n1e8
 *
-* %Example: E0=15.918 Detector: psd_monitor_I=2.13326e+07
+* %Example: E0=15.918 Detector: psd_monitor_I=6.9e+08
 *
 * %Parameters
 * E0:               [keV]    Energy to hit, i.e. selected by the channel-cut monochromator
@@ -70,7 +70,6 @@ DEFINE INSTRUMENT SOLEIL_ROCK (E0=15.918, dE=1,
     scan=0, 
     angle_m2a_m2b=0.008, 
     angle_m1=0.0045,
-    nbsample = 1, 
     string sample_file="CuMo", 
     string reflec_material_M1="Ir.dat",
     string reflec_material_M2A_M2B="NULL",
@@ -424,7 +423,9 @@ FINALLY
         #define NAME_CURRENT_COMP "absorption_coefficient"
         #endif           
 	Coords dummy;
-	mcdetector_out_0D("XANES EXAFS",number_events_after_sample, absorption_coefficient, absorption_coefficient_error,instrument_name,dummy);  
+	Rotation Rot;
+	rot_set_rotation(Rot,0,0,0);
+	mcdetector_out_0D("XANES EXAFS",number_events_after_sample, absorption_coefficient, absorption_coefficient_error,instrument_name,dummy,Rot);  
     }
 %}
 

@@ -40,7 +40,7 @@
 
 DEFINE COMPONENT SANSPDBFast
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (int NumberOfQBins = 200,
 	RhoSolvent = 6.4e-14, Concentration = 0.01, AbsorptionCrosssection = 0.0,
@@ -49,7 +49,7 @@ SETTING PARAMETERS (int NumberOfQBins = 200,
 	qMin = 0.001, qMax = 0.5,
 	string PDBFilepath = "PDBfile.pdb")
 
-OUTPUT PARAMETERS ()
+
 DEPENDENCY " @GSLFLAGS@ "
 NOACC
 

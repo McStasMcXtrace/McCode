@@ -1,0 +1,51 @@
+/*****************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2024, All rights reserved
+*         Technical University of Denmark, Kongens Lyngby, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Spin_random
+*
+* %I
+* Written by: Michael Schneider (SNAG)
+* Date: 2024
+* Origin: SNAG
+*
+* Set a random polarisation
+*
+* %D
+*
+* This component has no physical size or extent, it simply asigns the neutron
+* ray polarisation randomly to either spin-up or spin-down.
+*
+* %P
+* INPUT PARAMETERS:
+*
+* CALCULATED PARAMETERS:
+*
+* %E
+*******************************************************************************/
+DEFINE COMPONENT Spin_random
+
+SETTING PARAMETERS ()
+/* STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p) */
+/* POLARISATION PARAMETERS (sx,sy,sz) */
+TRACE
+%{
+    int S_check;
+    sx = 0.0;
+    sz = 0.0;
+    do
+     {
+      sy = randpm1();
+      S_check = 0;
+      if (sy < 0)
+       {sy = -1.0; S_check=1;}
+      if (sy  > 0)
+       {sy =  1.0; S_check=1;}
+     }while (S_check == 0); 
+%}
+
+END
+

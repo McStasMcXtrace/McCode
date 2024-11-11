@@ -29,11 +29,11 @@
 * %Parameters
 * INPUT PARAMETERS
 *
-* radius: Radius of slit in the z=0 plane, centered at Origo (m)
-* xwidth: Width of slit. Overrides xmin,xmax. (m)
-* yheight: Height of slit. Overrides ymin,ymax. (m)
-* N: number of slit openings along X (1)
-* d: separation of slits (m)
+* radius:   [m] Radius of slit in the z=0 plane, centered at Origo
+* xwidth:   [m] Width of slit. Overrides xmin,xmax.
+* yheight:  [m] Height of slit. Overrides ymin,ymax.
+* N:        [1] Number of slit openings along X
+* d:        [m] Separation of slits
 *
 * Optional parameters:
 * cut:  Lower limit for allowed weight (1)
@@ -43,10 +43,7 @@
 
 
 DEFINE COMPONENT Slit_N
-DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius=0, cut=0, xwidth=0, yheight=0, N=2, d=0)
-  OUTPUT PARAMETERS (xmax,ymax,xmin,ymin)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE
 %{

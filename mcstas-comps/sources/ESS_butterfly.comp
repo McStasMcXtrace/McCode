@@ -104,12 +104,12 @@
 *******************************************************************************/
 
 DEFINE COMPONENT ESS_butterfly
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string sector="N",int beamline=1, yheight=0.03, cold_frac=0.5, 
   int target_index=0, dist=0, focus_xw=0, focus_yh=0,
   c_performance=1, t_performance=1, Lmin, Lmax, tmax_multiplier=3, int n_pulses=1,
   acc_power=5,tfocus_dist=0,tfocus_time=0,tfocus_width=0)
-OUTPUT PARAMETERS ()
+
 
 SHARE %{
   %include "ESS_butterfly-lib"

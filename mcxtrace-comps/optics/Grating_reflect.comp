@@ -33,29 +33,26 @@
 *
 * %Parameters
 * Input parameters:
-* xwidth: [m]    The width of the grating.
-* zdepth: [m]    The length of the grating.
-* R0:[ ]         Constant reflecticity of the grating [0;1].
-* rho_l: [l/mm]  Number of lines pr mm of the grating. 
-* b: [AA]        Width of the spacing in Angstrom. If zero, default is found using rho_l/3.
-* d: [AA]        Width of the slits in Angstrom. If zero, default is found using rho_l.
-* N: [ ]         Number of slits. If Zero, default is found using rho_l.
-* d_phi: [deg]   Range of diffraction angle that is to be simulated -d_phi/2 ; d_phi/2.
-* order: [ ]     The target order of the grating. If non-zero d_phi will be centered around this scattering line.
-* phi0: [deg]    Target angle to center d_phi. If this is set to 0 the 0th (or any other chosen by the parameter order) order line will be used.
-* verbose: [ ]   If non-zero, more information will be displayed. Nb. generates much output.
+* xwidth: [m]     The width of the grating.
+* zdepth: [m]     The length of the grating.
+* R0:     [0-1]   Constant reflecticity of the grating [0;1].
+* rho_l:  [l/mm]  Number of lines pr mm of the grating. 
+* b:      [AA]    Width of the spacing in Angstrom. If zero, default is found using rho_l/3.
+* d:      [AA]    Width of the slits in Angstrom. If zero, default is found using rho_l.
+* N:      [1]     Number of slits. If Zero, default is found using rho_l.
+* d_phi:  [deg]   Range of diffraction angle that is to be simulated -d_phi/2 ; d_phi/2.
+* order:  [1]     The target order of the grating. If non-zero d_phi will be centered around this scattering line.
+* phi0:   [deg]   Target angle to center d_phi. If this is set to 0 the 0th (or any other chosen by the parameter order) order line will be used.
+* verbose:[0/1]   If non-zero, more information will be displayed. Nb. generates much output.
 *
 *
 * %End
 *******************************************************************************/
 
 DEFINE COMPONENT Grating_reflect
-DEFINITION PARAMETERS ()
 SETTING PARAMETERS (d_phi=1, R0=1, rho_l=800,
     order=0, phi0=0,
     zdepth=0.015, xwidth=0.136, int verbose=0)
-OUTPUT PARAMETERS (d,pdir,b,nslits)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE
 %{  

@@ -56,12 +56,12 @@
 
 DEFINE COMPONENT Selector
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (xmin=-0.015, xmax=0.015, ymin=-0.025, ymax=0.025, length=0.25,
 xwidth=0, yheight=0, nslit=72, d=0.0004, radius=0.12, alpha=48.298, nu=500)
 
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 INITIALIZE

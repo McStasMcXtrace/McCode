@@ -15,24 +15,27 @@ import sys
 import os
 import re
 import subprocess
-from datetime import datetime
 from os.path import join, basename
+import pathlib
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import utils, mccode_config
 
 def get_html_filepath(filepath):
     ''' transform from .anything to .html '''
-    return os.path.splitext(filepath)[0] + '.html'
+    h = pathlib.Path(os.path.splitext(filepath)[0] + '.html')
+    h = pathlib.Path(str(h).replace(mccode_config.directories['resourcedir'], mccode_config.directories['docdir']))
+    return h
 
 class OverviewDocWriter:
     ''' Creates the mcdoc overview html page. '''
-    def __init__(self, comp_info_lst, instr_info_lst, comp_info_local_lst, instr_info_local_lst, mccode_libdir):
+    def __init__(self, comp_info_lst, instr_info_lst, comp_info_local_lst, instr_info_local_lst, mccode_libdir, mccode_docdir):
         self.comp_info_lst = comp_info_lst
         self.instr_info_lst = instr_info_lst
         self.comp_info_local_lst = comp_info_local_lst
         self.instr_info_local_lst = instr_info_local_lst
         self.mccode_libdir = mccode_libdir
+        self.mccode_docdir = mccode_docdir
         self.text = ''
     
     def create(self):
@@ -133,6 +136,7 @@ class OverviewDocWriter:
             text = text.replace('%TABLE_ASTROX%', '')
 
         text = text.replace('%MCCODE_LIBDIR%', self.mccode_libdir)
+        text = text.replace('%MCCODE_DOCDIR%', self.mccode_docdir)
         text = text.replace('%TAB_HEAD%', self.tab_header)
         text = text.replace('%TAB_LINES_SOURCES%', sources_tab)
         text = text.replace('%TAB_LINES_OPTICS%', optics_tab)
@@ -148,7 +152,8 @@ class OverviewDocWriter:
         text = text.replace('%TAB_LINES_INSTR_LOCAL%', local_instr_tab)
         text = text.replace('%LINK_FILECOLON_DATA%', 'file://%s/data' % self.mccode_libdir)
         text = text.replace('%LINK_FILECOLON_SHARE%', 'file://%s/share' % self.mccode_libdir)
-        text = text.replace('%GENDATE%', '{0:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
+        text = text.replace('%VERSION%', '%s %s' % (mccode_config.configuration["MCCODE"],
+                                                    mccode_config.configuration["MCCODE_VERSION"]))
 
         #some McXtrace specific edits
         if (mccode_config.get_mccode_prefix() == 'mx'):
@@ -195,7 +200,7 @@ class OverviewDocWriter:
             '%TAB_LINES_LOCAL%',
             '%LINK_FILECOLON_DATA%',
             '%LINK_FILECOLON_SHARE%',
-            '%GENDATE%']
+            '%VERSION%']
     html = '''
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <HTML>
@@ -223,8 +228,8 @@ class OverviewDocWriter:
  | <A href="%LINK_FILECOLON_SHARE%">share</A> ]
 </P>
 <P ALIGN=CENTER>
-[ <a href="file://%MCCODE_LIBDIR%/doc/manuals/mcstas-manual.pdf">User Manual</a>
-| <a href="file://%MCCODE_LIBDIR%/doc/manuals/mcstas-components.pdf">Component Manual</a> ]
+[ <a href="file://%MCCODE_DOCDIR%/mcstas-manual.pdf">User Manual</a>
+| <a href="file://%MCCODE_DOCDIR%/mcstas-components.pdf">Component Manual</a> ]
 | <a href="file://%MCCODE_LIBDIR%/">McCode lib dir</a> ]
 </P>
 
@@ -368,7 +373,7 @@ class OverviewDocWriter:
 
 <P><BR>
 <ADDRESS>
-Generated on %GENDATE%
+Generated for %VERSION%
 </ADDRESS>
 </BODY>
 </HTML>
@@ -452,7 +457,8 @@ class InstrDocWriter:
             lstr = lstr + self.lnk_str % l + '\n'
         h = h.replace(t[12], lstr)
         
-        h = h.replace(t[13], '{0:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
+        h = h.replace(t[13], '%s %s' % (mccode_config.configuration["MCCODE"],
+                                        mccode_config.configuration["MCCODE_VERSION"]))
 
         self.text = h
         return self.text
@@ -470,7 +476,7 @@ class InstrDocWriter:
             '%INSTRFILE%',
             '%INSTRFILE_BASE%',
             '%LINKS%',
-            '%GENDATE%']
+            '%VERSION%']
     par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
     par_str_boldface = "<TR> <TD><strong>%s</strong></TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
     par_header = par_str % ('<strong>Name</strong>', '<strong>Unit</strong>', '<strong>Description</strong>', '<strong>Default</strong>')
@@ -534,7 +540,7 @@ the others are optional.
 </P>
 
 <ADDRESS>
-Generated on %GENDATE%
+Generated for %VERSION%
 </ADDRESS>
 </BODY></HTML>
 '''
@@ -625,7 +631,8 @@ class CompDocWriter:
             lstr = lstr + self.lnk_str % l + '\n'
         h = h.replace(t[12], lstr)
 
-        h = h.replace(t[13], '{0:%Y-%m-%d %H:%M:%S}'.format(datetime.now()))
+        h = h.replace(t[13], '%s %s' % (mccode_config.configuration["MCCODE"],
+                                        mccode_config.configuration["MCCODE_VERSION"]))
 
         self.text = h
         return self.text
@@ -643,7 +650,7 @@ class CompDocWriter:
             '%COMPFILE%',
             '%COMPFILE_BASE%',
             '%LINKS%',
-            '%GENDATE%',
+            '%VERSION%',
             '%PARLIST%']
     par_str = "<TR> <TD>%s</TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
     par_str_boldface = "<TR> <TD><strong>%s</strong></TD><TD>%s</TD><TD>%s</TD><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>"
@@ -676,7 +683,7 @@ function parstr(tag,init) {
    var str = "";
    if (val) {
      if (init==0) {
-        str = str + ",\\n";
+        str = str + ",\n";
      }
      str = str + "  " + tag + " = " + val;
    }
@@ -689,7 +696,7 @@ function addpos() {
    var zpos = getval("zpos");
    var REF = getval("REF");
 
-   var ATpos = "\) \\n AT \(";
+   var ATpos = "\) \n AT \(";
    ATpos = ATpos + xpos + ", ";
    ATpos = ATpos + ypos + ", ";
    ATpos = ATpos + zpos;
@@ -707,7 +714,7 @@ function addrot() {
    var ATrot = "";
 
    if (xrot && yrot && zrot) { 
-     ATrot = "\\n ROTATED \(";
+     ATrot = "\n ROTATED \(";
      ATrot = ATrot + xrot + ", ";
      ATrot = ATrot + yrot + ", ";
      ATrot = ATrot + zrot;
@@ -719,7 +726,7 @@ function addrot() {
 
 function compdef(type) {
   var instance = getval("instance");
-  var compstr = "COMPONENT " + instance + " = " + type +"\(\\n";
+  var compstr = "COMPONENT " + instance + " = " + type +"\(\n";
   return compstr;
 }
 
@@ -740,7 +747,7 @@ function comp() {
     Add = parstr(pars[i],init);
     if (Add) {
       init=0;
-      Text = Text + Add;",\\n ";
+      Text = Text + Add;",\n ";
     }
   }
 
@@ -828,7 +835,7 @@ the others are optional.
 </P>
 
 <ADDRESS>
-Generated on %GENDATE%
+Generated on %VERSION%
 </ADDRESS>
 </BODY></HTML>
 '''
@@ -836,6 +843,10 @@ Generated on %GENDATE%
 
 def write_file(filename, text, failsilent=False):
     try:
+        dirname = os.path.dirname(filename)
+        
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
         f = open(filename, 'w')
         f.write(text)
         f.close()
@@ -894,7 +905,8 @@ def write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files
         f = comp_files[i]
         doc = CompDocWriter(p)
         text = doc.create()
-        h = os.path.splitext(f)[0] + '.html'
+        h = pathlib.Path(os.path.splitext(f)[0] + '.html')
+        h = pathlib.Path(str(h).replace(mccode_config.directories['resourcedir'], mccode_config.directories['docdir']))
         if printlog:
             print("writing doc file... %s" % h)
         write_file(h, text, failsilent=True)
@@ -904,7 +916,8 @@ def write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files
         f = instr_files[i]
         doc = InstrDocWriter(p)
         text = doc.create()
-        h = os.path.splitext(f)[0] + '.html'
+        h = pathlib.Path(os.path.splitext(f)[0] + '.html')
+        h = pathlib.Path(str(h).replace(mccode_config.directories['resourcedir'], mccode_config.directories['docdir']))
         if printlog:
             print("writing doc file... %s" % h)
         write_file(h, text, failsilent=True)
@@ -914,10 +927,11 @@ def main(args):
     logging.basicConfig(level=logging.INFO)
 
     usedir = mccode_config.configuration["MCCODE_LIB_DIR"]
+    docdir = mccode_config.directories["docdir"]
 
     if args.dir==None and args.install==False and args.searchterm==None and args.manual==False and args.comps==False and args.web==False:
         ''' browse system docs and exit '''
-        if not os.path.isfile(os.path.join(usedir,mccode_config.get_mccode_prefix()+'doc.html')):
+        if not os.path.isfile(os.path.join(docdir,mccode_config.get_mccode_prefix()+'doc.html')):
             try:
                 sub=subprocess.Popen('%s%s -i' % (mccode_config.get_mccode_prefix(), 'doc'), shell=True)
                 sub.wait()
@@ -925,17 +939,17 @@ def main(args):
                 print("Could not write main mcdoc page, you may need admin permissions!")
                 quit()
 
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,mccode_config.get_mccode_prefix()+'doc.html')), shell=True)
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(docdir,mccode_config.get_mccode_prefix()+'doc.html')), shell=True)
         quit()
 
     elif args.manual == True:
         ''' open manual and exit '''
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'doc','manuals',mccode_config.configuration['MCCODE']+'-manual.pdf')), shell=True)
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(docdir,mccode_config.configuration['MCCODE']+'-manual.pdf')), shell=True)
         quit()
 
     elif args.comps == True:
         ''' open component manual and exit '''
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(usedir,'doc','manuals',mccode_config.configuration['MCCODE']+'-components.pdf')), shell=True)
+        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(docdir,mccode_config.configuration['MCCODE']+'-components.pdf')), shell=True)
         quit()
 
     elif args.web == True:
@@ -956,10 +970,10 @@ def main(args):
         comp_infos, instr_infos, comp_files, instr_files = parse_and_filter(usedir, recursive=True, printlog=args.verbose)
         write_doc_files_or_continue(comp_infos, instr_infos, comp_files, instr_files, args.verbose)
 
-        masterdoc = OverviewDocWriter(comp_infos, instr_infos, [], [], mccode_config.configuration['MCCODE_LIB_DIR'])
+        masterdoc = OverviewDocWriter(comp_infos, instr_infos, [], [], mccode_config.configuration['MCCODE_LIB_DIR'], mccode_config.directories['docdir'])
         text = masterdoc.create()
 
-        mcdoc_html_filepath = os.path.join(usedir,mccode_config.get_mccode_prefix()+'doc.html')
+        mcdoc_html_filepath = os.path.join(docdir,mccode_config.get_mccode_prefix()+'doc.html')
         try:
             write_file(mcdoc_html_filepath, text)
             print("master doc file: %s" % mcdoc_html_filepath)
@@ -1031,7 +1045,7 @@ def main(args):
             print("no matches found")
             quit()
 
-        masterdoc = OverviewDocWriter(comp_infos, instr_infos, comp_infos_local, instr_infos_local, usedir)
+        masterdoc = OverviewDocWriter(comp_infos, instr_infos, comp_infos_local, instr_infos_local, usedir, mccode_config.directories['docdir'])
         text = masterdoc.create()
 
         mcdoc_html_filepath = os.path.join('.', mccode_config.get_mccode_prefix()+'doc.html')

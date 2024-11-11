@@ -215,7 +215,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
 
 
     # compile, record time
-    global ncount, mpi, openacc, suffix
+    global ncount, mpi, openacc, suffix, nexus
     logging.info("")
     logging.info("Compiling instruments [seconds]...")
     for test in tests:
@@ -229,16 +229,16 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
                 log = LineLogger()
                 t1 = time.time()
                 cmd = mccode_config.configuration["MCRUN"]
+                if nexus:
+                    cmd = cmd + " --format=NeXus "
                 if version:
                     cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
                 if openacc:
                     cmd = cmd + " --openacc "
                 if mpi:
                     cmd = cmd + " --mpi=1 "
-                if not platform.system() == "Windows":
-                    cmd = cmd + " --verbose -c -n0 %s &> compile_stdout.txt" % test.localfile
-                else:
-                    cmd = cmd + " --verbose -c -n0 %s > compile_stdout.txt 2>&1" % test.localfile
+
+                cmd = cmd + " --verbose -c -n0 %s > compile_stdout.txt 2>&1" % test.instrname
                 utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
                 t2 = time.time()
                 test.compiled = os.path.exists(binfile)
@@ -275,28 +275,21 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
         # run the test, record time and runtime success/fail
         t1 = time.time()
         cmd = mccode_config.configuration["MCRUN"]
+        if nexus:
+            cmd = cmd + " --format=NeXus "
         if mpi is not None:
             if openacc is True:
                 if version:
                     cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
-                if not platform.system() == "Windows":
-                    cmd = cmd + " -s 1000 %s %s -n%s --openacc --mpi=%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
-                else:
-                    cmd = cmd + " -s 1000 %s %s -n%s --openacc --mpi=%s -d%d > run_stdout_%d.txt 2>&1" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
+                cmd = cmd + " -s 1000 %s %s -n%s --openacc --mpi=%s -d%d > run_stdout_%d.txt 2>&1" % (test.instrname, test.parvals, ncount, mpi, test.testnb, test.testnb)
             else:
                 if version:
                     cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
-                if not platform.system() == "Windows":
-                    cmd = cmd + " -s 1000 %s %s -n%s --mpi=%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
-                else:
-                    cmd = cmd + " -s 1000 %s %s -n%s --mpi=%s -d%d > run_stdout_%d.txt 2>&1" % (test.localfile, test.parvals, ncount, mpi, test.testnb, test.testnb)
+                cmd = cmd + " -s 1000 %s %s -n%s --mpi=%s -d%d > run_stdout_%d.txt 2>&1" % (test.instrname, test.parvals, ncount, mpi, test.testnb, test.testnb)
         else:
             if version:
                 cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
-            if not platform.system() == "Windows":
-                cmd = cmd + " -s 1000 %s %s -n%s -d%d &> run_stdout_%d.txt" % (test.localfile, test.parvals, ncount, test.testnb, test.testnb)
-            else:
-                cmd = cmd + " -s 1000 %s %s -n%s -d%d > run_stdout_%d.txt 2>&1" % (test.localfile, test.parvals, ncount, test.testnb, test.testnb)
+            cmd = cmd + " -s 1000 %s %s -n%s -d%d > run_stdout_%d.txt 2>&1" % (test.instrname, test.parvals, ncount, test.testnb, test.testnb)
         retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname))
         t2 = time.time()
         didwrite = os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.sim"))
@@ -592,6 +585,7 @@ ncount = None
 mpi = None
 openacc = None
 suffix = None
+nexus = None
 
 def main(args):
     # mutually excusive main branches
@@ -610,6 +604,7 @@ def main(args):
     mccoderoot = args.mccoderoot    # use non-default mccode system install location
     limit = args.limit              # only test the first [limit] instruments (useful for debugging purposes)
     instrfilter = args.instr        # test only matching instrs
+    suffix=""
 
     # set modifications first
     if verbose:
@@ -653,24 +648,34 @@ def main(args):
             quit(1)
     logging.debug("")
 
-    global ncount, mpi, skipnontest, openacc
+    global ncount, mpi, skipnontest, openacc, nexus
     if args.ncount:
         ncount = args.ncount[0]
+    elif args.n:
+        ncount = args.n[0]
     else:
         ncount = "1e6"
+    suffix = '_' + ncount
+
+    if instrfilter:
+        suffix = '_' + instrfilter
     if args.suffix:
         suffix = '_' + args.suffix[0]
-    else:
-        suffix = ""
+
     suffix=suffix + "_" + platform.system()
     logging.info("ncount is: %s" % ncount)
     if args.mpi:
         mpi = args.mpi[0]
         logging.info("mpi count is: %s" % mpi)
+        suffix = '_mpi_x_' + str(mpi) + suffix
     if args.openacc:
         openacc = True
         logging.info("openacc is enabled")
-
+        suffix = '_openacc' + suffix
+    if args.nexus:
+        nexus = True
+        suffix = '_NeXus' + suffix
+        logging.info("NeXus compilation / output format is enabled")
     # decide and run main branch
     if version and configs or version and vinfo or configs and vinfo:
         print("WARNING: version, --configs and --versions are mutually exclusive, exiting")
@@ -690,6 +695,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('testversion', nargs="?", help='mccode version to test')
     parser.add_argument('--ncount', nargs=1, help='ncount sent to %s' % (mccode_config.configuration["MCRUN"]) )
+    parser.add_argument('-n', nargs=1, help='ncount sent to %s' % (mccode_config.configuration["MCRUN"]) )
     parser.add_argument('--mpi', nargs=1, help='mpi nodecount sent to %s' % (mccode_config.configuration["MCRUN"]) )
     parser.add_argument('--openacc', action='store_true', help='openacc flag sent to %s' % (mccode_config.configuration["MCRUN"]))
     parser.add_argument('--config', nargs="?", help='test this specific config only - label name or absolute path')
@@ -702,6 +708,7 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', action='store_true', help='output a test/notest instrument status header before each test')
     parser.add_argument('--skipnontest', action='store_true', help='Skip compilation of instruments without a test')
     parser.add_argument('--suffix', nargs=1, help='Add suffix to test directory name, e.g. 3.x-dev_suffix')
+    parser.add_argument('--nexus', action='store_true', help='Compile for / use NeXus output format everywhere')
     args = parser.parse_args()
 
     try:

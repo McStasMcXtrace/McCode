@@ -75,7 +75,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Laue_crystal_BC
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (length=0.05, width=0.02, thickness=1e-4,
 	V=160.1826, string form_factors="FormFactors.txt", string material="Si.txt",
         alphax=0.0, alphay = 0.0, alphaz = 1.0,
@@ -84,7 +84,7 @@ SETTING PARAMETERS (length=0.05, width=0.02, thickness=1e-4,
         transmission_sampling=1.0,
         forward_diffraction_sampling=1.0,
         laue_sampling=1.0)
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE

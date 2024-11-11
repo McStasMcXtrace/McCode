@@ -80,7 +80,7 @@
 ****************************************************************************/
 
 DEFINE COMPONENT Pol_Bfield
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (int field_type=0, xwidth=0, yheight=0,zdepth=0, radius=0, Bx=0, By=0, Bz=0, concentric=1)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

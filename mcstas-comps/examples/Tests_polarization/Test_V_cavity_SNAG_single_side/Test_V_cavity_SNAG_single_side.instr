@@ -1,0 +1,305 @@
+/******************************************************************************
+* Instrument: Test_V_cavity_SNAG_single_side
+*
+* %Identification
+* Written by: Michael Schneider (SNAG)
+* Date: 2024
+* Origin: SNAG
+* %INSTRUMENT_SITE: Tests_polarization
+*
+* Test instrument for Transmission_V_polarisator, single layer reflectivity.
+*
+* %D
+* Test instrument for Transmission_V_polarisator, single layer reflectivity.
+*
+* %Example: Test_V_cavity_SNAG_single_side.instr Lam=7 Detector: div_lambda_hor_I=1.1e+13
+*
+* %P
+* Lam:      [AA]  Central wavelength produced at source
+* dLam:     [AA]  Wavelength spread produced at source
+* l_guide:  [m]   Length of feeding guide
+* m_hori:   [1]   m-value of feeding guide, horizontal mirrors
+* m_vert:   [1]   m-value of feeding guide, vertical mirrors
+* m_pol_h:  [1]   m-value of guide body, horizontal (m of FeSi is defined by data files)
+* m_pol_v:  [1]   m-value of guide body, vertical (m of FeSi is defined by data files)
+* W:        [m]   Width of guide and cavity
+* H:        [m]   Height of guide and cavity
+* Length_C: [m]   Length of guide body
+* tap_ang:  [deg] Taper angle with respect to optical axis of V-cavity
+* distK:    [m]   Distance between V-cavities (applicable, if 2 cavities are installed)
+* d_Fe:     [m]   Thickness of Fe in one supermirror coating
+* d:        [m]   Distance from source to guide entrance
+*
+* %L 
+* P. B&ouml;ni, W. M&uuml;nzer and A. Ostermann: <a href="https://doi.org/10.1016/j.physb.2009.06.031">Physica B: Condensed Matter Volume 404, Issue 17, 1 September 2009, Pages 2620-2623</a>
+*
+* %E
+******************************************************************************/
+DEFINE INSTRUMENT Test_V_cavity_SNAG_single_side(Lam=7.0, dLam=6.0, 
+    l_guide0=2,
+    m_hori=1.0,
+    m_vert=3.0,
+    m_pol_h=1.0,
+    m_pol_v=3.0,
+    W=0.024,
+    H=0.058,
+    Length_C=1.300,
+    tap_ang=0.55,
+    distK=1.23864,
+    d_Fe=6.95e-6,
+    d=2.0)
+
+DECLARE  
+%{  
+
+  double ldm;  
+  double ldx;  
+  double D_W; 
+  double D_H; 
+  
+%}  
+INITIALIZE  
+%{  
+
+ldm = Lam-dLam;  
+ldx = Lam+dLam;  
+D_W = 1.2*W; 
+D_H = 1.2*H; 
+
+%}  
+
+TRACE  
+COMPONENT Origin = Progress_bar()  
+     AT (0,0,0) ABSOLUTE  
+ 
+/********************************** source *************************************/  
+COMPONENT source =   
+Source_simple(yheight = 0.2, xwidth=0.2, dist = d, focus_xw = W, focus_yh = H, lambda0 = Lam,  
+	      dlambda = dLam, flux = 1e14)  
+     AT (0, 0, 0) RELATIVE Origin  
+ 
+/*****************************************************************************************************/ 
+COMPONENT makeSpin = Spin_random()  
+  AT (0,0,0.001) RELATIVE source  
+  ROTATED (0,0,0)  RELATIVE source  
+ 
+/********************************** monitors in distance d after source *************************************/  
+COMPONENT lamStart =   
+L_monitor(nL = 40, filename = "lambdaStart.dat",   
+	  xwidth = D_W, yheight = D_H,   
+	  Lmin = Lam-dLam-1, Lmax = Lam+dLam+1,
+	  restore_neutron=1)
+     AT (0, 0, d+0.001) RELATIVE Origin  
+  
+COMPONENT psdStart =   
+PSD_monitor(xwidth=D_W, yheight=D_H,  
+	  nx=40, ny=40, filename="psdStart.dat",
+	  restore_neutron=1)
+     AT (0, 0, d+0.001) RELATIVE Origin  
+ 
+COMPONENT div_s = Divergence_monitor(  
+    nh = 100, nv = 100, filename = "divsource", xwidth = D_W,  
+    yheight = D_H, maxdiv_h = 4, maxdiv_v = 4,
+	  restore_neutron=1)
+  AT (0, 0, d+0.001) RELATIVE source  
+
+
+
+/********************************* guide in front  *****************************************/
+
+COMPONENT  guide_1 = Guide_gravity(w1=W, h1=H, w2=W, h2=H, l= l_guide0, 
+                                         R0=1, Qc=0.02174, alpha=2.7, W=0.003, nslit=1, 
+                                         mleft=m_hori, mright=m_hori, mtop=m_vert, mbottom=m_vert) 
+  AT (0, 0, d+0.0011)      RELATIVE Origin
+  ROTATED (0, 0, 0) RELATIVE  Origin
+
+  
+
+
+/* ******************************* Polarisation  *************************************/ 
+COMPONENT a_POL = Arm()  
+  AT (0, 0, d+0.06 + l_guide0)   RELATIVE Origin 
+  ROTATED (0,0,0)  RELATIVE Origin  
+
+
+  
+/* ******************************* V-cavity  *************************************/    
+
+/********************************* one side coated with FeSi m=5.0 ************************/
+
+COMPONENT  cavity  = Transmission_V_polarisator(
+			    w1=W, h1=H, w2=W, h2=H, l=Length_C,  
+                                              waferD=0.0003, FeD= d_Fe,  
+                                              Si_i=0.2, Si_a=0.215, 
+                                              R0=0.99, Qc=0.02174, alpha=3.6, W=0.001,  
+                                              mleft=m_pol_h, mright=m_pol_h, mtop=m_pol_v, mbottom=m_pol_v,  
+                                              reflectUP="FeSi_m50_up.dat",reflectDW="FeSi_m50_down.dat")  
+  AT (0,0,0.00001)      RELATIVE a_POL  
+  ROTATED (0,0,0) RELATIVE a_POL  
+
+
+
+/********************************* both sides coated with FeSi m=5.0 ************************/
+/***** this approach does not take into account the multireflections within the wafer *******/
+/*
+
+COMPONENT  cavity  = Transmission_V_polarisator(
+			    w1=W, h1=H, w2=W, h2=H, l=Length_C,  
+                                              waferD=0.0003, FeD= 2*d_Fe,  
+                                              Si_i=0.2, Si_a=0.215, 
+                                              R0=0.99, Qc=0.02174, alpha=3.6, W=0.001,  
+                                              mleft=m_pol_h, mright=m_pol_h, mtop=m_pol_v, mbottom=m_pol_v,  
+                                              reflectUP="FeSi_m50_up_R2.dat",reflectDW="FeSi_m50_down_R2.dat")  
+  AT (0,0,0.00001)      RELATIVE a_POL  
+  ROTATED (0,0,0) RELATIVE a_POL  
+*/
+
+
+
+/******************* only guide gravity DB - for transmission determination*************************************/
+/*
+COMPONENT  guide_DB = Guide_gravity(
+			w1=W, h1=H, w2=W, h2=H, l= Length_C, 
+                        R0=0.99, Qc=0.02174, alpha=3.6, W=0.001, nslit=1, 
+                        mleft=m_pol_h, mright=m_pol_h, mtop=m_pol_v, mbottom=m_pol_v) 
+  AT (0,0,0.00001)      RELATIVE a_POL  
+  ROTATED (0,0,0) RELATIVE a_POL  
+*/
+
+
+
+
+
+/**********************************monitors after cavity**************************************************/
+COMPONENT armLambdaStop = Arm()  
+     AT (0, 0, 0.001+Length_C)
+     RELATIVE a_POL  
+ 
+COMPONENT lamStopPolGuide =   
+L_monitor(nL = 40, filename = "lambda_after_cav.dat",  
+	  xwidth = D_W, yheight = D_H,   
+	  Lmin = Lam-dLam-1, Lmax = Lam+dLam+1,
+	  restore_neutron=1)
+     AT (0, 0, 0.000) RELATIVE armLambdaStop  
+  
+COMPONENT psdPolGuide =   
+PSD_monitor(xwidth=D_W, yheight= D_H,  
+	    nx=100, ny=100, filename="psd_after_cav.dat",
+	  restore_neutron=1)
+     AT (0, 0, 0.000) RELATIVE armLambdaStop  
+ 
+COMPONENT PSD_sU_2m = PSD_spinUmon(xmin=-D_W/2, xmax=D_W/2, ymin=-D_H/2, ymax=D_H/2, 
+            nx=200, ny=25, filename="PSD_sU.psd")
+     AT (0, 0, 0.000) RELATIVE armLambdaStop 
+ 
+COMPONENT PSD_sD_2m = PSD_spinDmon(xmin=-D_W/2, xmax=D_W/2, ymin=-D_H/2, ymax=D_H/2, 
+            nx=200, ny=25, filename="PSD_sD.psd")
+     AT (0, 0, 0.000) RELATIVE armLambdaStop 
+ 
+COMPONENT MPLMon2Y =  
+MeanPolLambda_monitor(xwidth=D_W, yheight=D_H,  
+		      nL=100,  Lmin = Lam-dLam-1, Lmax = Lam+dLam+1,   
+		      mx=0, my=-1, mz=0, filename="MPLMon2Y.data",
+	  restore_neutron=1)
+     AT (0, 0, 0.000) RELATIVE armLambdaStop  
+
+COMPONENT div_lambda_hor = DivLambda_monitor(
+    nL=100,
+    nh=100,
+    filename="div_lambda_hor.dat",
+    xwidth = D_W,
+    yheight= D_H, 
+    maxdiv_h=2.0,
+    Lmin= Lam-dLam-1,
+    Lmax= Lam+dLam+1,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE armLambdaStop
+ROTATED (0, 0, 0) RELATIVE armLambdaStop
+
+
+
+ 
+/* This section is executed when the simulation ends (C code). Other    */  
+/* optional sections are : SAVE                                         */  
+FINALLY  
+%{  
+%}  
+/* The END token marks the instrument definition end */  
+END  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+
+

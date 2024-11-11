@@ -32,7 +32,7 @@
 * %P
 * INPUT PARAMETERS:
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * GLOBAL PARAMETERS:
 *
@@ -42,23 +42,19 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Union_stop
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS()
-OUTPUT PARAMETERS ()
+
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
 #ifndef Union
-#define Union $Revision: 0.8 $
-
-%include "Union_functions.c"
-%include "Union_initialization.c"
-
+#error "The Union_init component must be included before this Union_stop component"
 #endif
 
-%include "Union_last_functions.c"
+%include "union-suffix.c"
 %}
 
 DECLARE

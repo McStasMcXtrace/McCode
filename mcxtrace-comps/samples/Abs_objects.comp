@@ -37,15 +37,15 @@
 *
 * %Parameters
 * INPUT PARAMETERS
-* objects: [ ]     Input file where the off-shapes are defined.
-* refraction: [ ]  Flag to enable refraction at interfaces.
+* objects:    [str] Input file where the off-shapes are defined.
+* refraction: [str] Flag to enable refraction at interfaces.
 *
 * %End
 *******************************************************************************/
 DEFINE COMPONENT Abs_objects
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (int refraction=1, string objects="input_abs_objects_template.dat")
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE

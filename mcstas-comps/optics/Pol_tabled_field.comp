@@ -36,11 +36,11 @@
 * geometry: [str]           Name of an Object File Format (OFF) or PLY file for complex field-geometry.
 * interpol_method: [str]    Choice of interpolation method "kdtree" (default on CPU) / "regular" (default on GPU)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * %E
 ****************************************************************************/
 DEFINE COMPONENT Pol_tabled_field
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (xwidth=0, yheight=0,zdepth=0, radius=0, string filename="bfield.dat", string geometry=NULL, string interpol_method="default")
 DEPENDENCY " -DUSE_OFF " 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */

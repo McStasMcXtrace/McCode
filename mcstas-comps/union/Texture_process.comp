@@ -39,7 +39,7 @@
 * barns:             [1]      Flag to indicate if |F|^2 from 'crystal_fn' is in barns or fm^2. barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), barns=0 for lau type files
 * order:             [1]      Limit scattering to this order
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * Template_storage          // Important to update this output paramter
 * effective_my_scattering   // Variable used in initialize
 *
@@ -50,20 +50,16 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Texture_process // Remember to change the name of process here
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS(string crystal_fn=0, string fcoef_fn=0, int lmax_user=-1,
             barns = 0, order = 0, interact_fraction = -1, packing_factor = 1,
 	        int maxNeutronSaved = 1, string init="init")
-OUTPUT PARAMETERS ()
+
 
 SHARE
 %{
 #ifndef Union
-#define Union $Revision: 0.8 $
-
-%include "Union_functions.c"
-%include "Union_initialization.c"
-
+#error "The Union_init component must be included before this Texture_process component"
 #endif
 
 %include "read_table-lib"
@@ -1941,7 +1937,7 @@ int free_hkl_data_texture(struct hkl_data_texture *L)
 
 #endif /* !TEXTURE_PROCESS_DECL */
 
-// Very important to add a pointer to this struct in the Union_functions.c file
+// Very important to add a pointer to this struct in the union-lib.c file
 struct Texture_physics_storage_struct {
   // Variables that needs to be transfered between any of the following places:
   // The initialize in this component

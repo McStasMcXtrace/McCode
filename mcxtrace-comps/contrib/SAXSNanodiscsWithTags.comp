@@ -31,7 +31,7 @@
 * VolumeOfHeadgroup: [AA^3] Volume of one lipid headgroup - default is POPC.
 * VolumeOfCH2Tail: [AA^3]   Volume of the CH2-chains of one lipid - default is POPC.
 * VolumeOfCH3Tail: [AA^3]   Volume of the CH3-tails of one lipid - default is POPC.
-* VolumeOfOneHisTag				: [AA^3]	Volume of one his-tag.
+* VolumeOfOneHisTag: [AA^3] Volume of one his-tag.
 * ScatteringLengthOfOneMSP: [cm]    Scattering length of one belt protein - default is MSP1D1.
 * ScatteringLengthOfHeadgroup: [cm] Scattering length of one lipid headgroup - default is POPC.
 * ScatteringLengthOfCH2Tail: [cm]   Scattering length of the CH2-chains of one lipid - default is POPC.
@@ -39,9 +39,9 @@
 * Roughness: []         Factor used to smear the interfaces of the nanodisc.
 * Concentration: [mM]   Concentration of sample.
 * AbsorptionCrosssection: [1/m]	Absorption cross section of the sample.
-* xwidth: [m]  		Dimension of component in the x-direction.
-* yheight: [m]		Dimension of component in the y-direction.
-* zdepth: [m]		Dimension of component in the z-direction.
+* xwidth: [m]  Dimension of component in the x-direction.
+* yheight: [m] Dimension of component in the y-direction.
+* zdepth: [m]  Dimension of component in the z-direction.
 * SampleToDetectorDistance: [m] Distance from sample to detector (for focusing the scattered x-rays).
 * DetectorRadius: [m]   Radius of the detector (for focusing the scattered x-rays).
 *
@@ -50,7 +50,7 @@
 
 DEFINE COMPONENT SAXSNanodiscsWithTags
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (AxisRatio = 1.4, NumberOfLipids = 130.0, AreaPerLipidHeadgroup = 65.0, HeightOfMSP = 24.0, RadiusOfGyrationForHisTag = 10.0,
     VolumeOfOneMSP = 26296.5, VolumeOfHeadgroup = 319.0, VolumeOfCH2Tail = 818.8, VolumeOfCH3Tail = 108.6, VolumeOfOneHisTag = 2987.3,
@@ -58,7 +58,7 @@ SETTING PARAMETERS (AxisRatio = 1.4, NumberOfLipids = 130.0, AreaPerLipidHeadgro
     Roughness = 3.5, Concentration = 0.01, AbsorptionCrosssection = 0.0,
     xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
 
-OUTPUT PARAMETERS ()
+
 DEPENDENCY " @GSLFLAGS@ "
 NOACC
 

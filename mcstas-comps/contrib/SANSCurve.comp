@@ -37,7 +37,7 @@
 
 DEFINE COMPONENT SANSCurve
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (DeltaRho = 1.0e-14, Volume = 1000.0,
 Concentration = 0.01, AbsorptionCrosssection = 0.0,
@@ -45,7 +45,7 @@ xwidth, yheight, zdepth,
 SampleToDetectorDistance, DetectorRadius,
 string FileWithCurve = "Curve.dat")
 
-OUTPUT PARAMETERS ()
+
 
 SHARE
 %{

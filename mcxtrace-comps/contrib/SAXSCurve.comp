@@ -30,14 +30,14 @@
 * zdepth:         [m]		Dimension of component in the z-direction.
 * SampleToDetectorDistance: [m]	Distance from sample to detector (for focusing the scattered x-rays).
 * DetectorRadius: [m] 		Radius of the detector (for focusing the scattered x-rays).
-* FileWithCurve:  []		Datafile with the given I(q).
+* FileWithCurve:  [str]		Datafile with the given I(q).
 *
 * %End
 *******************************************************************************/
 
 DEFINE COMPONENT SAXSCurve
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (DeltaRho = 1.0e-14, Volume = 10000.0, 
     Concentration = 0.01, AbsorptionCrosssection = 0.0,
@@ -45,7 +45,7 @@ SETTING PARAMETERS (DeltaRho = 1.0e-14, Volume = 10000.0,
     SampleToDetectorDistance, DetectorRadius,
     string FileWithCurve = "Curve.dat")
 
-OUTPUT PARAMETERS ()
+
 /*X-ray PARAMETERS (x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p)*/
 
 

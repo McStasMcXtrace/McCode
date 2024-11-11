@@ -72,7 +72,7 @@
 
 DEFINE COMPONENT TOFRes_sample
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (thickness=0,radius=0.01,yheight=0.05,focus_r=0.05,
 time_bin=20000, time_width=10, f=50,

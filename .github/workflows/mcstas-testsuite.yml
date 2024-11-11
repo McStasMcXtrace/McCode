@@ -54,7 +54,8 @@ jobs:
       id: setup-openmpi-nexus-linux-gsl
       if: runner.os == 'Linux'
       run: |
-           sudo apt -y install libopenmpi-dev libnexus-dev curl libgsl-dev
+           sudo apt-get update
+           sudo apt-get -y install libopenmpi-dev libnexus-dev curl libgsl-dev
            sudo curl -O https://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcpl-1.6.2-deb64.deb
            sudo curl -O https://packages.mccode.org/debian/dists/stable/main/binary-amd64/ncrystal-3.7.1-deb64.deb
            sudo dpkg -i mcpl-1.6.2-deb64.deb ncrystal-3.7.1-deb64.deb

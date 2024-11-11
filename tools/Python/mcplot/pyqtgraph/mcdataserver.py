@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''
 Script for using McDataPickleServer to send mccode data over TCP/IP.
 '''

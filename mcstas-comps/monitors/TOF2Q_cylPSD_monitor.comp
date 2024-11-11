@@ -39,7 +39,7 @@
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
 * nowritefile: [1]      If set, monitor will skip writing to disk
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * TOF_N: []             Array of neutron counts
 * TOF_p: []             Array of neutron weight counts
@@ -49,9 +49,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT TOF2Q_cylPSD_monitor
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (int nQ, int ny, string filename=0, int nowritefile=0, radius, yheight,  Qmin, Qmax, ymin=0, ymax=0, T_zero, L_flight, int restore_neutron=0,theta)
-OUTPUT PARAMETERS ()
+
 
 DECLARE
 %{

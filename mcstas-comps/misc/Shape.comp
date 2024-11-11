@@ -59,9 +59,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Shape
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string geometry=0, radius=0, xwidth=0, yheight=0, zdepth=0, thickness=0, nx=0, ny=1, nz=0, int center=1)
-OUTPUT PARAMETERS()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

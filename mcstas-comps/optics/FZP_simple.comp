@@ -40,9 +40,9 @@
 ********************************************************************************/
 
 DEFINE COMPONENT FZP_simple
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (rad, dr, bs0rad = 0, order=1, eta=0.1, sigma_abs=0, sigma_inc=0, sigma_coh=0, rho=1, thickness=0, gamma=0.5)
-OUTPUT PARAMETERS ()
+
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 

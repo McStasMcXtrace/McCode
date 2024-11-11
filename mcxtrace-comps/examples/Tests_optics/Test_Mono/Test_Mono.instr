@@ -32,7 +32,7 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-* Mono:   [ ]   Which monochromator model to use.
+* Mono:   [ ]   Which monochromator model to use. See description above.
 * lambda: [AA]  Source wavelength.
 * L1:     [m]   Distance from source to monochromator.
 * OMM:    [deg] Rotation angle of monochromator, i.e. angle of incidence.
