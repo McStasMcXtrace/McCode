@@ -3432,7 +3432,7 @@ long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long
   // than l, resulting in idling. We should distribute lengths more evenly.
 
   // step 1: sort sub-arrays
-  #pragma acc parallel loop present(particles, pbuffer)
+  #pragma acc parallel loop present(particles[0:buffer_len], pbuffer[0:buffer_len])
   for (unsigned long tidx=0; tidx<SAL_THREADS; tidx++) {
     long lo = l*tidx;
     long loclen = l;
@@ -3477,7 +3477,7 @@ long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long
   }
 
   // step 2: write non-absorbed sub-arrays to psorted/output from the left
-  #pragma acc parallel loop present(pbuffer)
+  #pragma acc parallel loop present(pbuffer[0:buffer_len])
   for (unsigned long tidx=0; tidx<SAL_THREADS; tidx++) {
     long j, k;
     #pragma acc loop seq
@@ -3501,7 +3501,7 @@ long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long
     return accumlen;
 
   // copy non-absorbed block
-  #pragma acc parallel loop present(particles)
+  #pragma acc parallel loop present(particles[0:buffer_len])
   for (long tidx = 0; tidx < accumlen; tidx++) { // tidx: thread index
     unsigned long randstate[7];
     _class_particle sourcebuffer;
