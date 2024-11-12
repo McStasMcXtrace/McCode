@@ -2197,11 +2197,13 @@ int cogen_rt_funnel(struct instr_def *instr)
 
     // coordinate transformations (wrt to PREVIOUS)
     if (comp->skip_transform == 0) {
+      coutf("#ifndef MULTICORE");
       coutf("        if (_%s_var._rotation_is_identity)", comp->name);
       coutf("          coords_get("
     	"coords_add(coords_set(x,y,z), _%s_var._position_relative),"
     	"&x, &y, &z);", comp->name);
       cout( "        else");
+      coutf("#endif");
       coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
       cout( "        _particle_save = *_particle;");
     }
