@@ -2127,7 +2127,7 @@ int cogen_rt_funnel(struct instr_def *instr)
 
   // init batch
   coutf("    // init particles");
-  coutf("    #pragma acc parallel loop present(particles)");
+  coutf("    #pragma acc parallel loop present(particles[0:livebatchsize])");
   coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
   coutf("      // generate particle state, set loop index and seed");
   coutf("      particles[pidx] = mcgenstate();");
@@ -2178,7 +2178,11 @@ int cogen_rt_funnel(struct instr_def *instr)
     if (first || (comp->cpuonly != cpuonly_last) || comp->split) {
       coutf("");
       if (comp->cpuonly == 0) {
-        coutf("    #pragma acc parallel loop present(particles)");
+        coutf("    #pragma acc parallel loop present(particles[0:livebatchsize])");
+      } else {
+	coutf("    #ifdef MULTICORE");
+	coutf("    #pragma acc parallel loop device_type(host)");
+	coutf("    #endif");
       }
       coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
       coutf("      _class_particle* _particle = &particles[pidx];");
