@@ -31,7 +31,7 @@
 * filename: [str] Name of file in which to store the detector image
 * restore_xray: [1] If set, the monitor does not influence the xray state 
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * TOF_N:    Array of xray counts
 * TOF_p:    Array of xray weight counts
@@ -41,10 +41,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT TOF_monitor
-DEFINITION PARAMETERS (nt=20)
-SETTING PARAMETERS (string filename=0, 
+
+SETTING PARAMETERS (int nt=20, string filename=0, 
     xwidth=0.1, yheight=0.1, tmin=0, tmax=0, dt=1.0, restore_xray=0)
-OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2, t_min, t_max, delta_t)
 
 DECLARE
   %{

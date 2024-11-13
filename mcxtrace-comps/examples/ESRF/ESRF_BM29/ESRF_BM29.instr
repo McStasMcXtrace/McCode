@@ -24,11 +24,11 @@
 * %Example: ESRF_BM29.instr Lambda=1 Detector: QMonitor_I=5.2e-12 
 *
 * %Parameters
-* DistanceFromSourceToFirstPinhole: [m]	   Distance to first pinhole from source.
+* DistanceFromSourceToFirstPinhole: [m]    Distance to first pinhole from source.
 * DistanceFromSourceToSecondPinhole: [m]   Distance to second pinhole - used for focussing rays.
 * DistanceFromSecondPinholeToSample: [m]   Collimation length.
 * DistanceFromSampleToDetector: [m]        Sample-detector-distance.
-* RadiusOfDetector: [m]	                   Radius of the circular detector.
+* RadiusOfDetector: [m]                   Radius of the circular detector.
 * Lambda: [AA]                             Wavelength of the rays emitted from source.
 * DLambda: []                              Relative deviation of wavelength of the rays emitted from source.
 *

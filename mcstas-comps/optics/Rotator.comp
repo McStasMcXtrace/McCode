@@ -35,16 +35,16 @@
 * phase:   [deg] Phase shift
 * direction: [1] Rotation axis selection 1=x, 2=y, 3=z
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * angle: [deg]  rotation angle 
 *
 * %End
 *******************************************************************************/
 
 DEFINE COMPONENT Rotator
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (nu=0, phase=0, int direction=2)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 USERVARS
@@ -106,6 +106,7 @@ if (nu != 0 || phase != 0) { /* rotate neutron w/r to position of component */
   }
 
 %}
+
 
 MCDISPLAY
 %{

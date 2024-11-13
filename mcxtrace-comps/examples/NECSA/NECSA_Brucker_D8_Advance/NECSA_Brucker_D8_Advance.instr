@@ -1,0 +1,112 @@
+/*******************************************************************************
+* Instrument: NECSA_Brucker_D8_Advance.instr
+*
+* %Identification
+* Written by: us all in ZA !
+* Date: 2024 Oct 11th
+* Origin: Necsa, ZA
+* %INSTRUMENT_SITE: NECSA
+*
+* Brucker D8 Advance lab powder diffratometer
+*
+* %Description
+* This is a lab-scale diffractometer, Brucker D8 Advance type.
+*
+* - X-ray Tubes Cu (1.54 Å), Co (1.79 Å), Cr (2.29 Å)
+* - Beam sizes 0.1 x 15 mm2; 1 mm collimator
+* - Distance btw souurce and 1st slit: 332mm
+* - sample-detector distance: 435 mm
+* - Detector LynxEye 1D 192 pixels 14.4 x 16 mm
+*
+* Example: <parameters=values>
+*
+* %Parameters
+* source_material:  [str] anode type, among Cu.txt, Co.txt, Cr.txt
+* Emin:             [keV] minimum energy at the source
+* Emax:             [keV] maximum energy at the source
+* Gobel_radius:     [m]   Gobel curved mirror curvature radius
+* Gobel_rotation:   [deg] Gobel curved mirror rotation
+* Gobel_coating:    [str] Gobel curved mirror coating, e.g. Ir.dat
+* Sample_material:  [str] sample material, e.g. CIF/LAU/LAZ file
+*
+* %L
+* http://nanoqam.ca/wiki/lib/exe/fetch.php?media=d8_advance_discover_user_manual_vol._1_doc-m88-exx153_v6.pdf
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT NECSA_Brucker_D8_Advance(string source_material="Cu.txt",
+  Emin=1, Emax=9, 
+  Gobel_radius=0.5, Gobel_rotation=20, string Gobel_coating="Ir.dat",
+  string Sample_material="Si.laz")
+
+INITIALIZE %{
+  printf("This is a Brucker D8 Advance model, as installed at NECSA, ZA\n");
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+// insert components here (e.g. Insert -> Source -> ...)
+COMPONENT anode = Source_lab(
+    width=10e-6,height=2e-6,thickness=200e-6,dist=0.3,tube_current=40e-3,
+    E0=40,focus_xw=1e-3,focus_yh=1e-3,
+    material_datafile=source_material,
+    Emin=Emin, Emax=Emax)
+AT(0,0,0) ABSOLUTE
+
+COMPONENT source_energy_monitor = E_monitor(xwidth=1e-3, yheight=1e-3,
+  nE=1001, Emin=Emin, Emax=Emax)
+AT(0,0,300e-6) RELATIVE anode
+
+COMPONENT slit1 = Slit(xwidth=6e-3, yheight=15e-3)
+AT (0,0,0.02) RELATIVE anode
+
+// cylindrical mirror
+// mirror is in the YZ-plane curved towards positive X if radius is positive
+// coating W or Ni
+COMPONENT Gobel_mirror_holder = Arm()
+AT (0,0,0.1)                 RELATIVE anode
+ROTATED (Gobel_rotation,0,0) RELATIVE anode
+
+COMPONENT Gobel_mirror = Mirror_curved( 
+  radius=Gobel_radius, length=40e-3, width=40e-3, coating=Gobel_coating)
+AT (0,0,0)       RELATIVE Gobel_mirror_holder
+ROTATED (0,0,90) RELATIVE Gobel_mirror_holder
+
+COMPONENT Gobel_mirror_output = Arm()
+AT (0,0,0)                    RELATIVE Gobel_mirror_holder
+ROTATED (Gobel_rotation,0,0)  RELATIVE Gobel_mirror_holder
+
+COMPONENT slit2 = Arm()
+AT (0,0,0.1) RELATIVE Gobel_mirror_output
+
+COMPONENT Gobel_output = PSD_monitor(xwidth=1e-2, yheight=1e-2, nx=128, ny=128)
+AT (0,0,0)  RELATIVE PREVIOUS
+
+// slits
+// COMPONENT Soller2 = 
+COMPONENT sample_holder = Arm()
+AT (0,0,0.3) RELATIVE Gobel_mirror_output
+ROTATED (-Gobel_rotation, 0,0) RELATIVE Gobel_mirror_output
+
+COMPONENT Sample_input = PSD_monitor(xwidth=1e-2, yheight=1e-2, nx=128, ny=128, restore_xray=1)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT sample = PowderN(reflections=Sample_material, 
+  xwidth=1e-2, yheight=1e-4, zdepth=1e-2)
+AT (0,0,0) RELATIVE sample_holder
+
+COMPONENT full_detector = PSD_monitor_4PI(radius=0.1,
+nx=90, ny=90)
+AT (0,0,0) RELATIVE sample_holder
+
+
+// COMPONENT Soller2 = 
+
+// COMPONENT Ni_filter
+
+// COMPONENT detector 
+
+END

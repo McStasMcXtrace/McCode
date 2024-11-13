@@ -68,7 +68,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT GISANS_sample
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (xwidth=0.05, yheight=0.15, zsapph=0.02, zsamp=0.002, zsampsurf=0.000001, zsilicon=0.02, zsiliconsurf=5e-9,
 rhosapph=5.773e-6,       abslensapph=163.708,       inclensapph=49.815,
 rhoD2O=6.364e-6,         abslenD2O=44066.347,       inclenD2O=7.258,
@@ -77,7 +77,7 @@ rhosiliconsurf=4.123e-6, abslensiliconsurf=401.051, inclensiliconsurf=169.11,
 rhosilicon=2.079e-6,     abslensilicon=209.919,     inclensilicon=9901.6,
 phiPS = 0.1, Rad = 370.0, phirot=0.0, sc_aim=0.98, sans_aim=0.98
 )
-OUTPUT PARAMETERS ()
+
 
 SHARE
 %{

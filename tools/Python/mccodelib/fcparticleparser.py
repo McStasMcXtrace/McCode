@@ -34,46 +34,46 @@ def t_error5(args):
 
 # decision nodes implementation
 def d_isenter(args):
-    m = re.match('ENTER:', args['linegetter'].current())
+    m = re.match(r'ENTER:', args['linegetter'].current())
     return m is not None
 
 def d_done(args):
     return args['linegetter'].isempty()
 
 def d_isstate(args):
-    m = re.match('STATE:', args['linegetter'].current())
+    m = re.match(r'STATE:', args['linegetter'].current())
     return m is not None
 
 def d_isscatter(args):
-    m = re.match('SCATTER:', args['linegetter'].current())
+    m = re.match(r'SCATTER:', args['linegetter'].current())
     return m is not None
 
 def d_iscomp(args):
-    m = re.match('COMP:', args['linegetter'].current())
+    m = re.match(r'COMP:', args['linegetter'].current())
     return m is not None
 
 def d_isleave(args):
-    m = re.match('LEAVE:', args['linegetter'].current())
+    m = re.match(r'LEAVE:', args['linegetter'].current())
     return m is not None
 
 def d_iskeywd(args):
     line = args['linegetter'].current()
-    m0 = re.match('COMP:', line)
+    m0 = re.match(r'COMP:', line)
     if m0:
         return 0 
-    m1 = re.match('SCATTER:', line)
+    m1 = re.match(r'SCATTER:', line)
     if m1:
         return 1
-    m2 = re.match('ABSORB:', line)
+    m2 = re.match(r'ABSORB:', line)
     if m2:
         return 2
-    m3 = re.match('LEAVE:', line)
+    m3 = re.match(r'LEAVE:', line)
     if m3:
         return 3
-    m4 = re.match('STATE:', line)
+    m4 = re.match(r'STATE:', line)
     if m4:
         return 4
-    m5 = re.match('ENTER:', line)
+    m5 = re.match(r'ENTER:', line)
     if m5:
         return 4
     
@@ -115,11 +115,11 @@ def p_addpointclose(args):
 
 # helper functions implementation
 def _get_strcoords(line):
-    m = re.match('\w+: ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+)', line)
+    m = re.match(r'\w+: ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+)', line)
     return [m.group(1), m.group(2), m.group(3), m.group(4), m.group(5), m.group(6), m.group(7), m.group(8), m.group(9), m.group(10), m.group(11)]
 
 def _get_compname(line):
-    m = re.match('COMP: \"(\w+)\"', line)
+    m = re.match(r'COMP: \"(\w+)\"', line)
     return m.group(1)
 
 # action code helper classes

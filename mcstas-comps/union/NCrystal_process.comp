@@ -84,7 +84,7 @@
 * packing_factor:    [1]      Material packing factor
 * interact_fraction: [1]      How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * NCrystal_storage          // Storage used to communicate with the probability and scattering function
 *
 * %L
@@ -93,19 +93,14 @@
 ******************************************************************************/
 
 DEFINE COMPONENT NCrystal_process // Remember to change the name of process here
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS(string cfg = "", packing_factor=1, interact_fraction=-1, string init="init")
-OUTPUT PARAMETERS (This_process, NCrystal_storage, effective_my_scattering, params)
-DEPENDENCY "-Wl,-rpath,CMD(ncrystal-config --show libdir) CMD(ncrystal-config --show libpath) -ICMD(ncrystal-config --show includedir)"
+DEPENDENCY "-Wl,-rpath,CMD(ncrystal-config --show libdir) -Wl,CMD(ncrystal-config --show libpath) -ICMD(ncrystal-config --show includedir)"
 
 SHARE
 %{
 #ifndef Union
-#define Union $Revision: 0.8 $
-
-#include "Union_functions.c"
-#include "Union_initialization.c"
-
+#error "The Union_init component must be included before this NCrystal_process component"
 #endif
 
 #include "NCrystal/ncrystal.h"
@@ -133,7 +128,7 @@ SHARE
 #  define NCMCERR(msg) NCMCERR2(NAME_CURRENT_COMP,msg)
 #endif
 
-// Very important to add a pointer to this struct in the Union_functions.c file
+// Very important to add a pointer to this struct in the union-lib.c file
 struct NCrystal_physics_storage_struct{
     // Variables that needs to be transfered between any of the following places:
     // The initialize in this component

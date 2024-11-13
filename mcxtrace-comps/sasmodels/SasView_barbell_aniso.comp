@@ -59,7 +59,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_barbell_aniso
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         sld=4,
         sld_solvent=1,

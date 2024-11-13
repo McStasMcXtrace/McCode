@@ -157,6 +157,9 @@ def mcsimdetectors(directory_name: str):
     if not directory.exists() and directory.is_dir():
         raise RuntimeError(f"{directory_name} is not a directory")
     filepath = directory.joinpath('mccode.sim')
+    hdfpath  = directory.joinpath('mccode.h5')
+    if not filepath.exists() and hdfpath.exists():
+        return
     if not filepath.exists():
         raise RuntimeError(f'The simulation file {filepath} does not exist')
     with filepath.open('r') as file:
@@ -166,7 +169,7 @@ def mcsimdetectors(directory_name: str):
     # with lines of the form "{key}: {value}"
     blocks = [{k.strip(): v.strip() for k, v in [z.split(':', 1) for z in b.split('\n')]} for b in blocks]
     # This object only cares about extracting the (name, I, Err, N, data file) sets for each detector
-    return [Detector(d['component'], *d['values'].split(), d['filename']) for d in blocks]
+    return [Detector(d['component'], *d['values'].split(), d['filename'], d['statistics']) for d in blocks]
 
 
 def point_at(N, key, minmax, step):
@@ -257,21 +260,22 @@ class Scanner:
                 self.mcstas.run(pipe=False, extra_opts={'dir': current_dir})
                 LOG.info("Finish running step, get detectors")
                 detectors = mcsimdetectors(current_dir)
-                LOG.info("Got detectors")
-                if i == 0:
-                    LOG.info("Write headers")
-                    names = [det.name for det in detectors]
-                    outfile.write(build_header(self.mcstas.options, self.intervals.keys(), self.intervals, names))
-                    # Opening a file inside of this loop seems like a bad idea ... oh well
-                    with open(self.simfile, 'w') as simfile:
-                        simfile.write(build_mccodesim_header(self.mcstas.options, self.intervals, names,
-                                                             version=self.mcstas.version))
-                    LOG.info("Wrote headers")
-                LOG.info(f"Write step detectors line into {self.outfile}")
-                values = ['%s %s' % (d.intensity, d.error) for d in detectors]
-                line = '%s %s\n' % (' '.join(map(str, par_values)), ' '.join(values))
-                outfile.write(line)
-                outfile.flush()
+                if detectors is not None:
+                    LOG.info("Got detectors")
+                    if i == 0:
+                        LOG.info("Write headers")
+                        names = [det.name for det in detectors]
+                        outfile.write(build_header(self.mcstas.options, self.intervals.keys(), self.intervals, names))
+                        # Opening a file inside of this loop seems like a bad idea ... oh well
+                        with open(self.simfile, 'w') as simfile:
+                            simfile.write(build_mccodesim_header(self.mcstas.options, self.intervals, names,
+                                                                version=self.mcstas.version))
+                        LOG.info("Wrote headers")
+                    LOG.info(f"Write step detectors line into {self.outfile}")
+                    values = ['%s %s' % (d.intensity, d.error) for d in detectors]
+                    line = '%s %s\n' % (' '.join(map(str, par_values)), ' '.join(values))
+                    outfile.write(line)
+                    outfile.flush()
 
 
 class Optimizer:
@@ -401,11 +405,17 @@ def McCode_runner(x, args):
     # add monitors that match a given name
     for d in detectors:
         if d.name in args.mcstas.options.optimize_monitor:
-            values.append(d.intensity)
+            if args.mcstas.options.optimize_eval:
+              values.append(eval(args.mcstas.options.optimize_eval))
+            else:
+              values.append(d.intensity)
     # in case monitor name is not found, we use all monitor values
     if len(values) == 0:
         for d in detectors:
-            values.append(d.intensity)
+            if args.mcstas.options.optimize_eval:
+              values.append(eval(args.mcstas.options.optimize_eval))
+            else:
+              values.append(d.intensity)
 
     values = [float(d) for d in values]
 

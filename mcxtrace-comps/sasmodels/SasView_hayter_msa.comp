@@ -57,7 +57,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_hayter_msa
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         radius_effective=20.75,
         volfraction=0.0192,

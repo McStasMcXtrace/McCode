@@ -42,12 +42,12 @@
 
 DEFINE COMPONENT SANSSpheresPolydisperse
 
-DEFINITION PARAMETERS ()
+
 
   SETTING PARAMETERS (R = 100.0, dR=0.0, Concentration = 0.01, DeltaRho = 1.0e-14, AbsorptionCrosssection = 0.0,
 		    		xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
 
-OUTPUT PARAMETERS ()
+
 
 DECLARE
 %{

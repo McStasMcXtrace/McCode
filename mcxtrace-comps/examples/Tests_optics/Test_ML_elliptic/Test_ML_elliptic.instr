@@ -23,11 +23,11 @@
 *
 * %Parameters
 * S1: [m] Distance from source focus to multilayer centre.
-* S1: [m] Distance from multilayer centre to focal point
+* S2: [m] Distance from multilayer centre to focal point
 * gamma: [deg] Design glancing angle at centre.
 * fromfile: [ ] If nonzero read reflectivity number from a datafile ("reflectivity.txt")
 * fxw: [m] width of the beam
-* fxh: [m] height of the beam
+* fyh: [m] height of the beam
 *
 * %End
 *******************************************************************************/

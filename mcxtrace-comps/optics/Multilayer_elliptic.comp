@@ -45,22 +45,24 @@
 * Gamma: [ ]   High electron density fraction of bilayer (in kinematical appr.).
 * Lambda:[m]   Thickness of bilayer (in kinematical appr.).
 * rho_AB:[ ]   Number electron density constrast in bilayer (in kinematical appr.).
-* N:     [ ]   Number of bilayers (in kinematical appr.).
-* coating: [ ] Datafile containing reflectivity values as a function of q and E.
+* N:     [1]   Number of bilayers (in kinematical appr.).
+* coating: [str] Datafile containing reflectivity values as a function of q and E.
 * Emin:  [keV] Lower limit of energy interval in datafile. Overrides what's written in the datafile header.
 * Emax:  [keV] Upper limit of energy interval in datafile. Overrides what's written in the datafile header.
 * Estep: [keV] Step between energy sample points in datafile. Overrides what's written in the datafile header.
 * R0:    [1]   Maximal reflectivity
+* length:  [m]   alternate name for zdepth (obsolete)
+* width:   [m]   alternate name for xwidth (obsolete)
 * %End
 *******************************************************************************/
 
 DEFINE COMPONENT Multilayer_elliptic
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string coating="Ref_W_B4C.txt",
     theta=1.2,s1=0,s2=0,length=0.5,width=0.2,R0=1, 
     Emin=-1, Emax=-1, Estep=-1, Gamma=0, Lambda=0, rho_AB=0, int N=0,
     xwidth=0, zdepth=0)
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE 

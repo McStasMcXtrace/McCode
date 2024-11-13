@@ -1,0 +1,15 @@
+#Name, R0, Qc, alpha, m, W, beta
+
+Empty, 0, 0, 0, 0, 0, 0 
+NoSurfaceBoundary, 0, 0, 0, 0, 0, 0 
+NoReflection, 0, 0, 0, 0, 0, 0
+Substrate, 1, 0, 0, 0, 0, 0
+SubstrateSurface, 1, 0, 0, 0, 0, 0
+
+#SwissNeutronics profile
+FeSiPlus, 1.0, 0.0217, 2.65, 4, 0.002, 0
+FeSiMinus, 1.0, 0.011, 2.65, 0.69, 0.002, 0
+NiTi, 1.0, 0.0217, 3.3, 3.1, 0.0012, 0
+
+#publication DOI:10.1016/j.nima.2007.11.034
+NiMoTi, 1.0, 0.0217, 6.5, 3.2, 0.00157, 80 

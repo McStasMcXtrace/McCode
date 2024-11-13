@@ -36,7 +36,7 @@ set(TOOLS_NAME "Python/${P}display/pyqtgraph")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-pyqtgraph-${MCCODE_VERSION}")
-set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
+set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
 set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
@@ -75,6 +75,9 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display" @ONLY)
 
+# Configure doc
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay-pyqtgraph.md.in" "${WORK}/${P}display-pyqtgraph.md" @ONLY)
+
 # Main script, including rename mc/mxdisplay
 install(
   PROGRAMS "${PROJECT_SOURCE_DIR}/mcdisplay.py"
@@ -108,4 +111,16 @@ if(NOT WINDOWS)
     DESTINATION ${DEST_BINDIR}
     RENAME "${P}display-pyqtgraph"
     )
+  
+  install(
+    FILES "${WORK}/${P}display-pyqtgraph.md"
+    DESTINATION "${DEST_DATADIR_DOC}"
+  )
+  
+  install(
+    FILES "${WORK}/${P}display-pyqtgraph.md"
+    DESTINATION "${DEST_DATADIR_DOC}"
+    RENAME "${P}display.md"
+  )
+  
 endif()

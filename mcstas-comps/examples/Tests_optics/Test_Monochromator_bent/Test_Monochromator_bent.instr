@@ -19,6 +19,12 @@
 * Origin: ILL
 * %INSTRUMENT_SITE: Tests_optics
 * 
+* Basic test instrument for the Monochromator_bent component
+*
+* %D
+* Basic test instrument for the Monochromator_bent component
+*
+* %Example: Test_Monochromator_bent.instr mono_mos=0 Detector: PSD_exit_monitor_I=0.543355
 * 
 * %Parameters
 * 
@@ -26,8 +32,8 @@
 ********************************************************************************/
 
 DEFINE INSTRUMENT Test_Monochromator_bent (
-double mono_rotation = 43.5337 // Rotation of the monochromator, relative to the z axis.
-)
+double mono_rotation = 43.5337, // Rotation of the monochromator, relative to the z axis.
+double mono_mos = 0)            // Monochromator mosaicity
 
 DECLARE 
 %{
@@ -67,7 +73,7 @@ COMPONENT Monochromator = Monochromator_bent(
  xthickness = 0.008, radius_x = 10,
  lamella_slabs = 1, lamella_gap_size = 0.0001,
  plane_of_reflection = "Ge511", angle_to_cut_horizontal = -19.47,
- angle_to_cut_vertical = 0)
+ angle_to_cut_vertical = 0, mosaicity=mono_mos)
 AT (0,0,0) RELATIVE monochromator_arm
 ROTATED (0,-19.47,0) RELATIVE monochromator_arm
 

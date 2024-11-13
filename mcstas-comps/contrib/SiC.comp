@@ -29,9 +29,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT SiC
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (xlength, yheight)
-OUTPUT PARAMETERS()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

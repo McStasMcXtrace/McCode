@@ -1,0 +1,31 @@
+.view {
+  position: relative;
+  border: solid 1.5px var(--gray-color);
+  width: 100%;
+  height: 100%;
+}
+
+.gray-color {
+  color: var(--gray-color);
+}
+
+.two-D {
+  display: flex;
+  justify-content: center;
+}
+
+.y-axis {
+  position: absolute;
+  left: 0%;
+  top: 50%;
+}
+
+.x-axis {
+  position: absolute;
+  left: 50%;
+  top: 92.5%;
+}
+.view-name {
+  position: absolute;
+  left: 50%;
+}

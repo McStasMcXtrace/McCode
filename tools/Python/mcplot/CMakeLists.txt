@@ -3,4 +3,4 @@ cmake_policy(VERSION 3.17.0)
 
 add_subdirectory(matplotlib)
 add_subdirectory(pyqtgraph)
-add_subdirectory(svg)
+add_subdirectory(html)

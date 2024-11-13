@@ -61,7 +61,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_core_shell_bicelle
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         radius=80,
         thick_rim=10,

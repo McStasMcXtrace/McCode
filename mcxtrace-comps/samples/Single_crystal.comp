@@ -127,7 +127,7 @@
 * when 'cif2hkl' is installed. The CIF2HKL env variable can be used to point to a
 * proper executable, else the McCode or the system installed versions are used.
 *
-* <b>Satellite Bragg peaks - surface crystal truncation rods (CTR)<b>
+* <b>Satellite Bragg peaks - surface crystal truncation rods (CTR)</b>
 * It is known that scattering from a finite crystal introduces a broadening of
 * Bragg peaks, seen in surface diffraction at grazing angle [Robinson and Tweet, 
 * Rep. Prog. Phys. 55 (1992) 599)]. The CTR is specified as two vectors, which 
@@ -178,14 +178,14 @@
 *
 * recip_cell:        [1] Choice of direct/reciprocal (0/1) unit cell definition
 * ax:      [AA or AA^-1] Coordinates of first (direct/recip) unit cell vector 
-* ay:                 []   a on y axis
-* az:                 []   a on z axis
+* ay:      [AA or AA^-1]   a on y axis
+* az:      [AA or AA^-1]   a on z axis
 * bx:      [AA or AA^-1] Coordinates of second (direct/recip) unit cell vector
-* by:                 []   b on y axis
-* bz:                 []   b on z axis
+* by:      [AA or AA^-1]   b on y axis
+* bz:      [AA or AA^-1]   b on z axis
 * cx:      [AA or AA^-1] Coordinates of third (direct/recip) unit cell vector
-* cy:                 []   c on y axis
-* cz:                 []   c on z axis
+* cy:      [AA or AA^-1]   c on y axis
+* cz:      [AA or AA^-1]   c on z axis
 * reflections:  [string] File name containing structure factors of reflections (LAZ LAU CIF, FullProf, ShelX). Use empty ("") or NULL for incoherent scattering only
 * order:             [1] Limit multiple scattering up to given order (0: all, 1: first, 2: second, ...)
 *
@@ -207,7 +207,7 @@
 * surf_FT2:          [1] Intensity |FT(real space)|^2 distribution as CTR of a single Bragg peak, length 'surf_size'.
 * surf_dir:   [nx,ny,nz] Normal vector in real space for the truncation rod spread direction. {1,0,0} is for an YZ surface, with normal along X.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * hkl_info: [structure]  Internal
 * hkl_info.type: interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent [char]
@@ -287,7 +287,7 @@ vector ki.
 */
 
 DEFINE COMPONENT Single_crystal
-DEFINITION PARAMETERS()
+
 SETTING PARAMETERS(string reflections=0, string geometry=0, vector mosaic_AB={0,0, 0,0,0, 0,0,0},
   xwidth=0, yheight=0, zdepth=0, radius=0, delta_d_d=1e-4,
   mosaic = -1, mosaic_a = -1, mosaic_b = -1, mosaic_c = -1,
@@ -299,7 +299,7 @@ SETTING PARAMETERS(string reflections=0, string geometry=0, vector mosaic_AB={0,
   aa=0, bb=0, cc=0, order=1, RX=0, RY=0, powder=0,
   deltak=1e-6, string material_datafile="Si.txt",
   int surf_size=0, vector surf_k=NULL, vector surf_FT2=NULL, vector surf_dir={0,0,0})
-OUTPUT PARAMETERS()
+
 /* photon parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 SHARE
 %{
@@ -435,23 +435,26 @@ SHARE
       if (ret != -1 && ret != 127) found = 1;
     }
     if (!found) {
-      snprintf(cmd,  1024, "%s%c%s%c%s -o %s %s %s",
-        getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS,
-        MC_PATHSEP_C, "bin", MC_PATHSEP_C, "cif2hkl",
-        OUTFILE, options, infile);
-      ret = system(cmd);
-      if (ret != -1 && ret != 127) found = 1;
-    }
-    // ret = -1:  child process could not be created
-    // ret = 127: shell could not be executed in the child process
-    if (!found) {
-      // try with any cif2hkl command from the system
+      // try with cif2hkl command from the system PATH
       snprintf(cmd,  1024, "%s -o %s %s %s",
         "cif2hkl", OUTFILE, options, infile);
       ret = system(cmd);
+      if (ret != -1 && ret != 127) found = 1;
     }
-      
-    if (ret == -1 || ret == 127) return(NULL);
+    if (!found) {
+      // As a last resort, attempt with cif2hkl from $MCXTRACE/bin
+      snprintf(cmd,  1024, "%s%c%s%c%s -o %s %s %s",
+        getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCXTRACE,
+        MC_PATHSEP_C, "bin", MC_PATHSEP_C, "cif2hkl",
+        OUTFILE, options, infile);
+      ret = system(cmd);
+    }
+    // ret = -1:  child process could not be created
+    // ret = 127: shell could not be executed in the child process     
+    if (ret == -1 || ret == 127) {
+      free(OUTFILE);
+      return(NULL);
+    }
       
     // test if the result file has been created
     FILE *file = Open_File(OUTFILE,"r", NULL);
@@ -564,9 +567,9 @@ SHARE
     if (nb_atoms > 1) { info->sigma_i *= nb_atoms; }
 
     /* special cases for the structure definition */
-    if (info->m_ax || info->m_ay || info->m_az) info->m_a=0; /* means we specify by hand the vectors */
-    if (info->m_bx || info->m_by || info->m_bz) info->m_b=0;
-    if (info->m_cx || info->m_cy || info->m_cz) info->m_c=0;
+    if (info->m_ax || info->m_ay || info->m_az) {info->m_a=0; info->m_aa=0;} /* means we specify by hand the vectors */
+    if (info->m_bx || info->m_by || info->m_bz) {info->m_b=0; info->m_bb=0;}
+    if (info->m_cx || info->m_cy || info->m_cz) {info->m_c=0; info->m_cc=0;};
 
     /* compute the norm from vector a if missing */
     if (info->m_ax || info->m_ay || info->m_az) {
@@ -657,6 +660,11 @@ SHARE
 	       info->m_bx, info->m_by, info->m_bz,
 	       info->m_cx, info->m_cy, info->m_cz);
       info->V0 = fabs(scalar_prod(info->m_ax, info->m_ay, info->m_az, tmp_x, tmp_y, tmp_z));
+      if (!info->V0 || isnan(info->V0)) {
+        MPI_MASTER(
+          fprintf(stderr,
+              "Single_crystal: %s: ERROR: Lattice cell volume is found invalid V0=%g. Check crystal cell parameters.\n", __FILE__, info->V0));
+      }
 
       info->asx = 2*PI/info->V0*tmp_x;
       info->asy = 2*PI/info->V0*tmp_y;
@@ -683,9 +691,15 @@ SHARE
       vec_prod(tmp_x, tmp_y, tmp_z,
 	       info->bsx/(2*PI), info->bsy/(2*PI), info->bsz/(2*PI),
 	       info->csx/(2*PI), info->csy/(2*PI), info->csz/(2*PI));
-      info->V0 = 1/fabs(scalar_prod(info->asx/(2*PI), info->asy/(2*PI), info->asz/(2*PI), tmp_x, tmp_y, tmp_z));
+	    info->V0 = scalar_prod(info->asx/(2*PI), info->asy/(2*PI), info->asz/(2*PI), tmp_x, tmp_y, tmp_z);
+	    if (!info->V0 || isnan(info->V0)) {
+        MPI_MASTER(
+          fprintf(stderr,
+              "Single_crystal: %s: ERROR: Lattice reciprocal cell volume is found invalid V0=%g. Check crystal cell parameters.\n", __FILE__, info->V0));
+      }
+      info->V0 = 1/fabs(info->V0);
 
-      /*compute the direct cell parameters, ofr completeness*/
+      /*compute the direct cell parameters, for completeness*/
       info->m_ax = tmp_x*info->V0;
       info->m_ay = tmp_y*info->V0;
       info->m_az = tmp_z*info->V0;

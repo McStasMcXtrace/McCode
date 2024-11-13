@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# Change to mcstas-web directory
-cd /usr/local/mcstas-web/
-
-# Start worker
-./bin/start-worker.sh

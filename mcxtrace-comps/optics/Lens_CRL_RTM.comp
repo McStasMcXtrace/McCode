@@ -27,23 +27,21 @@
 * %Parameters
 * Input parameters:
 *
-* r: [m]          Radius of curavature at the lens apex.
-* yheight: [m]    Height of lens opening. If zero this is set by the lens thickness.
-* N: [m]          Number of lenslets in the stack.
-* xwidth: [m]     Width of the lenslets.
-* yheight: [m]    Physical height of aperture. This may be used to introduce a gap between lenslets.
-* zdepth: [m]     Thickness of a single lenslet.
-* material: [str]   Datafile containing f1 constants
-* fast: [m]       Use fast calculation - should be off for better display with mxdisplay
+* r:        [m]   Radius of curavature at the lens apex.
+* yheight:  [m]   Height of lens opening. If zero this is set by the lens thickness.
+* N:        [m]   Number of lenslets in the stack.
+* xwidth:   [m]   Width of the lenslets.
+* yheight:  [m]   Physical height of aperture. This may be used to introduce a gap between lenslets.
+* zdepth:   [m]   Thickness of a single lenslet.
+* material: [str] Datafile containing f1 constants
+* fast:     [m]   Use fast calculation - should be off for better display with mxdisplay
+* d:        [m]   Thickness of a single lens
 * %End
 *******************************************************************************/
 
 DEFINE COMPONENT Lens_CRL_RTM
-DEFINITION PARAMETERS ()
 SETTING PARAMETERS (r=0.5e-3,d=0.1e-3,string material="Be.txt",int N=1,
     zdepth=2e-3,yheight=1e-3, xwidth=1.2e-3, int fast=1)
-OUTPUT PARAMETERS (Y)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{

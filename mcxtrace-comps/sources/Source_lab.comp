@@ -44,24 +44,24 @@
 * take_off:   [deg]  Take off angle of beam centre.
 * dist:       [m]    Distance between centre of illuminated target and exit window.
 * E0:         [kV]   Acceleration voltage of xray tube.
-* tube_current:  [A] Electron beam current.
+* tube_current: [A]  Electron beam current.
 * Emax:       [keV]  Maximum energy to sample. Default (Emax=0) is to set it to E0.
 * Emin:       [keV]  Minimum energy to sample.
 * focus_xw:   [m]    Width of exit window.
 * focus_yh:   [m]    Height of exit window.
-* frac:       [ ]    Fraction of statistic to use for Bremsstrahlung.
-* material_datafile: [ ] Name of datafile which describes the target material.
-* lorentzian: [ ]    If nonzero Lorentzian (more correct) line profiles are used.
+* frac:       [0-1]  Fraction of statistic to use for Bremsstrahlung.
+* material_datafile: [string] Name of datafile which describes the target material.
+* lorentzian: [0/1]  If nonzero Lorentzian (more correct) line profiles are used.
 * exit_window_refpt: [m] If set, the AT position and exit window will coincide (legacy behaviour).
 *
 * %End
 *************************************************************************/
 
 DEFINE COMPONENT Source_lab
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string material_datafile="Cu.txt", width=1e-3, height=1e-3, thickness=100e-6, E0=20, Emax=0, Emin=1, focus_xw=5e-3, focus_yh=5e-3,
     take_off=6, dist=1, tube_current=1e-3, frac=0.1, lorentzian=1, xwidth=0, yheight=0, exit_window_refpt=0 )
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE

@@ -47,11 +47,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Pore_c
-DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius_m, Z0, xwidth, yheight, gap=0, chamferwidth=0, length=0, string mirror_reflec="", string bottom_reflec="", string side_reflec="", R_d=1, primary=1, dalpha=0, waviness=0, longw=0)
-OUTPUT PARAMETERS (nLeft, nRight, nExit, nTop, nBottom, wLeft, wRight, wExit, wall, zentry, zexit, alpha,radius_1, radius_2,reflec_top_table, reflec_bottom_table,reflec_side_table,
-        ref_prms)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{

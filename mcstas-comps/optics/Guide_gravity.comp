@@ -109,7 +109,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Guide_gravity
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
   R0=0.995, Qc=0.0218, alpha=4.38, m=1.0, W=0.003, nslit=1, d=0.0005,
   mleft=-1, mright=-1, mtop=-1, mbottom=-1, nhslit=1, G=0,
@@ -117,7 +117,7 @@ SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
   wavy=0, wavy_z=0, wavy_tb=0, wavy_lr=0,
   chamfers=0, chamfers_z=0, chamfers_lr=0, chamfers_tb=0, nelements=1,
   nu=0, phase=0, string reflect="NULL")
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
@@ -331,7 +331,7 @@ SHARE
 
 DECLARE
 %{
-  Gravity_guide_Vars_type GVars;
+  Gravity_guide_Vars_type GVarsGlobal;
   t_Table pTable;
   int table_present;
 %}
@@ -370,22 +370,22 @@ INITIALIZE
   mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,G,0));
   coords_get(mcLocG, &Gx, &Gy, &Gz);
 
-  strcpy(GVars.compcurname, NAME_CURRENT_COMP);
+  strcpy(GVarsGlobal.compcurname, NAME_CURRENT_COMP);
 
   if (l > 0 && nelements > 0) {
 
-    Gravity_guide_Init(&GVars,
+    Gravity_guide_Init(&GVarsGlobal,
       w1, h1, w2, h2, l, R0,
       Qc, alpha, m, W, nslit, d,
       Gx, Gy, Gz, mleft, mright, mtop,
       mbottom, nhslit, wavy_lr, wavy_tb, wavy_z, wavy,
       chamfers_z, chamfers_lr, chamfers_tb, chamfers,nu,phase,aleft,aright,atop,abottom);
-    if (!G) for (i=0; i<5; GVars.A[i++] = 0);
-    if (GVars.fc_freq != 0 || GVars.fc_phase != 0) {
+    if (!G) for (i=0; i<5; GVarsGlobal.A[i++] = 0);
+    if (GVarsGlobal.fc_freq != 0 || GVarsGlobal.fc_phase != 0) {
       if (w1 != w2 || h1 != h2)
       exit(fprintf(stderr,"Guide_gravity: %s: rotating slit pack must be straight (w1=w2 and h1=h2).\n", NAME_CURRENT_COMP));
       printf("Guide_gravity: %s: Fermi Chopper mode: frequency=%g [Hz] phase=%g [deg]\n",
-        NAME_CURRENT_COMP, GVars.fc_freq, GVars.fc_phase);
+        NAME_CURRENT_COMP, GVarsGlobal.fc_freq, GVarsGlobal.fc_phase);
     }
   } else printf("Guide_gravity: %s: unactivated (l=0 or nelements=0)\n", NAME_CURRENT_COMP);
 
@@ -393,6 +393,10 @@ INITIALIZE
 
 TRACE
 %{
+
+  Gravity_guide_Vars_type GVars = GVarsGlobal;
+  GVars.warnings = 0;
+
   if (l > 0 && nelements > 0) {
     double B, C, dt;
     int    ret, bounces = 0, i=0;
@@ -559,13 +563,16 @@ TRACE
     }
 
   } /* if l */
+
+  #pragma acc atomic
+  GVarsGlobal.warnings = GVarsGlobal.warnings + GVars.warnings;
 %}
 
 FINALLY
 %{
-if (GVars.warnings > 100) {
-  fprintf(stderr,"%s: warning: neutron has entered guide, but can not exit !\n", GVars.compcurname);
-  fprintf(stderr,"%s: warning: This message has been repeated %g times\n", GVars.compcurname, GVars.warnings);
+if (GVarsGlobal.warnings > 100) {
+  fprintf(stderr,"%s: warning: neutron has entered guide, but can not exit !\n", GVarsGlobal.compcurname);
+  fprintf(stderr,"%s: warning: This message has been repeated %g times\n", GVarsGlobal.compcurname, GVarsGlobal.warnings);
 }
 %}
 
@@ -588,16 +595,16 @@ MCDISPLAY
 
       for(j = 0; j < nhslit; j++)
       {
-        y1 = j*(GVars.h1c+d)         - h1/2.0;
-        y2 = j*(GVars.h2c+d)         - h2/2.0;
-        y3 = (j+1)*(GVars.h1c+d) - d - h1/2.0;
-        y4 = (j+1)*(GVars.h2c+d) - d - h2/2.0;
+        y1 = j*(GVarsGlobal.h1c+d)         - h1/2.0;
+        y2 = j*(GVarsGlobal.h2c+d)         - h2/2.0;
+        y3 = (j+1)*(GVarsGlobal.h1c+d) - d - h1/2.0;
+        y4 = (j+1)*(GVarsGlobal.h2c+d) - d - h2/2.0;
         for(i = 0; i < nslit; i++)
         {
-          x1 = i*(GVars.w1c+d)         - w1/2.0;
-          x2 = i*(GVars.w2c+d)         - w2/2.0;
-          x3 = (i+1)*(GVars.w1c+d) - d - w1/2.0;
-          x4 = (i+1)*(GVars.w2c+d) - d - w2/2.0;
+          x1 = i*(GVarsGlobal.w1c+d)         - w1/2.0;
+          x2 = i*(GVarsGlobal.w2c+d)         - w2/2.0;
+          x3 = (i+1)*(GVarsGlobal.w1c+d) - d - w1/2.0;
+          x4 = (i+1)*(GVarsGlobal.w2c+d) - d - w2/2.0;
 	  // Visualize i'th channel with vertical polygons
           polygon(4,
                     x1, y1, z0,

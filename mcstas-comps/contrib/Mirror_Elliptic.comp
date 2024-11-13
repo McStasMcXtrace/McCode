@@ -43,10 +43,10 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Mirror_Elliptic
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string reflect=0, focus=6.6e-4,interfocus=8.2, yheight=2e-4, zmin=0, zmax=0,
 R0=0.99, Qc=0.0219, alpha=6.07, m=1.0, W=0.003)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{

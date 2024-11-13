@@ -15,7 +15,7 @@ from os.path import isfile, dirname, basename, splitext, join
 from decimal import Decimal
 
 # import config
-
+import numpy
 import sys
 
 sys.path.append(join(dirname(__file__), '..'))
@@ -88,7 +88,7 @@ class McStas:
         self.name = splitext(basename(self.path))[0]
         self.options = None
         self.params = {}
-        self.version = '%s %s' % (mccode_config.configuration['MCCODE'], mccode_config.configuration['MCCODE_VERSION'])
+        self.version = '%s %s' % (mccode_config.configuration['MCCOGEN'], mccode_config.configuration['MCCODE_VERSION'])
 
         # Setup paths
         if os.name == 'nt':
@@ -179,17 +179,18 @@ class McStas:
                 cflags += os.environ.get('LDFLAGS') + " "
             if os.environ.get('CFLAGS'):
                 cflags += os.environ.get('CFLAGS') + " "
+
             # Special handling of NVIDIA's OpenACC-aware compiler inside a CONDA env,
             # remove certain unsupported flags:
-            if mccode_config.configuration['ISCONDAPKG']==1 and self.options.openacc and 'nvc' in mccode_config.compilation['OACC']:
-                Cflags = lexer.join(cflags)
+            if self.options.openacc and 'nvc' in mccode_config.compilation['OACC']:
+                Cflags = cflags
                 Cflags=Cflags.replace('-march=nocona', '')
                 Cflags=Cflags.replace('-ftree-vectorize', '')
                 Cflags=Cflags.replace('-fstack-protector-strong', '')
                 Cflags=Cflags.replace('-fno-plt', '')
                 Cflags=Cflags.replace('-ffunction-sections', '')
                 Cflags=Cflags.replace('-pipe', '')
-                cflags=lexer.split(Cflags)
+                cflags=Cflags
 
         # Parse for instances of CMD() ENV() GETPATH() in the loaded CFLAG entries using fct. evaluate_dependency_str
         
@@ -337,15 +338,28 @@ class McStas:
         if mccode_config.configuration["MCCODE"] == 'mcstas' and not self.options.info:
             if self.options.format.lower() == 'nexus' and self.options.IDF:
                 idfargs=[]
+                # Strip off args not understood by the IDF generator
                 for arg in args:
                     if '--trace' in arg:
-                        idfargs.append('--trace=1')
-                    elif '--ncount' in arg:
-                        idfargs.append('--ncount=0')
+                        # do nothing
+                        1
+                    elif '--format' in arg:
+                        # do nothing
+                        1
+                    elif '--dir' in arg:
+                        # do nothing
+                        1
+                    elif '--bufsiz' in arg:
+                        # do nothing
+                        1
                     else:
                         idfargs.append(arg)
 
+                print("Spawning IDF generator:")
+                print(mccode_config.configuration['IDFGEN'] + " " + self.path + " " + " ".join(idfargs))
                 Process(mccode_config.configuration['IDFGEN'] + " " + self.path).run(idfargs, pipe=pipe)
+                # Forward --IDF request to binary
+                args.append('--IDF')
 
         mpi = self.options.use_mpi
         if override_mpi or override_mpi is None and mpi:
@@ -374,14 +388,43 @@ class McStas:
 
 
 class Detector(object):
-    ''' A detector '''
+    ''' A detector representation with its integrated values and statistics.'''
+    # this is used in optimisation.py
 
-    def __init__(self, name, intensity, error, count, path):
-        self.name = name
-        self.intensity = Decimal(intensity)
-        self.error = Decimal(error)
-        self.count = Decimal(count)
-        self.path = path
+    def __init__(self, name, intensity, error, count, path, statistics):
+        self.name  = name
+        self.intensity = float(intensity)
+        self.error = float(error)
+        self.count = float(count)
+        self.path  = path
+        self.values= numpy.array([ intensity, error, count ])
+        # get statistics
+        d = []
+        for sub in statistics.split(';'): # separate the 'name=value;' bits:
+          if '=' in sub:
+            d.append(map(str.strip, sub.split('=',1)))
+        
+        d = dict(d)
+        if not 'X0' in d:
+          d['X0'] = 0
+        if not 'dX' in d:
+          d['dX'] = 1
+        if not 'Y0' in d:
+          d['Y0'] = 0
+        if not 'dY' in d:
+          d['dY'] = 1
+        
+        self.X0 = float(d['X0'])
+        self.dX = float(d['dX'])
+        self.Y0 = float(d['Y0'])
+        self.dY = float(d['dY'])
+        if not self.dX:
+          self.dX = 1
+        if not self.dY:
+          if self.dX:
+            self.dY = self.dX
+          else:
+            self.dY = 1
 
 
 class McStasInfo:

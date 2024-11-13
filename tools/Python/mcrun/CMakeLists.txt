@@ -36,7 +36,7 @@ set(TOOLS_NAME "Python/${P}run/")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}run-${MCCODE_VERSION}")
-set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
+set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
 set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
@@ -74,6 +74,9 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcrun.in" "${WORK}/${P}run" @ONLY)
+
+# Configure doc
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcrun.md.in" "${WORK}/${P}run.md" @ONLY)
 
 # Configure jupyter tool script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/jupylab.in" "${WORK}/${FLAVOR}-jupylab" @ONLY)
@@ -132,6 +135,7 @@ if(NOT WINDOWS)
   install(
     PROGRAMS "${PROJECT_SOURCE_DIR}/mcsplit.py"
     DESTINATION ${DEST_BINDIR}
+    RENAME "${P}split"
     )
 
   install(
@@ -139,4 +143,10 @@ if(NOT WINDOWS)
     DESTINATION ${DEST_BINDIR}
     RENAME "${FLAVOR}-acc_gpu_bind"
     )
+    
+  install(
+    FILES "${WORK}/${P}run.md"
+    DESTINATION "${DEST_DATADIR_DOC}"
+  )
+  
 endif()

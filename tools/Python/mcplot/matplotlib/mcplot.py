@@ -61,9 +61,10 @@ def plot_single_data(node, i, n, log):
         if log == True:
             # handle Log intensity
             invalid = np.where(y <= 0)
-            valid = np.where(y > 0)
-            min_valid = np.min(y[valid])
-            y[invalid] = min_valid/10
+            valid   = np.where(y > 0)
+            if len(valid[0]):
+                min_valid  = np.min(y[valid])
+                y[invalid] = min_valid/10
             yerr=yerr / y
             y=np.log(y)
             ylabel ="log(" + data.ylabel +")"

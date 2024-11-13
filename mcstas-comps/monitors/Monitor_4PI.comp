@@ -27,7 +27,7 @@
 *
 * (none)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * Nsum   : Number of neutrons hitting
 * psum   : Total weight of neutrons hitting
@@ -38,9 +38,9 @@
 
 
 DEFINE COMPONENT Monitor_4PI
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS ()
-OUTPUT PARAMETERS()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 DECLARE

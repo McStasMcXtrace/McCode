@@ -99,6 +99,10 @@ def add_mcrun_options(parser):
         action='store_true',
         help='Open plotter on generated dataset')
 
+    add('--invcanvas',
+        action='store_true',
+        help='Forward request for inverted canvas to plotter')
+
     add('--autoplotter',
         action='store',
         type=str,
@@ -160,8 +164,9 @@ def add_mcrun_options(parser):
         "--optimize-maxiter",
         metavar="optimize_maxiter",
         type=int,
-        help="Maximum number of optimization iterations to perform",
+        help="Maximum number of optimization iterations to perform. Default=1000",
         nargs=1,
+        default=1000,
     )
     add(
         "--optimize-tol",
@@ -180,6 +185,21 @@ def add_mcrun_options(parser):
              'https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html?highlight=minimize',
         nargs=1,
         default=MINIMIZE_METHODS[0],
+    )
+    add(
+        "--optimize-eval",
+        metavar='optimize_eval',
+        type=str,
+        help='Optimization expression to evaluate for each detector "d" structure. You may combine:\n' +
+             '"d.intensity" The detector intensity;\n' +
+             '"d.error"     The detector intensity uncertainty;\n' +
+             '"d.values"    An array with [intensity, error, counts];\n' +
+             '"d.X0 d.Y0"   Center of signal (1st moment);\n' +
+             '"d.dX d.dY"   Width  of signal (2nd moment).\n' +
+             'Default is "d.intensity". Examples are: \n' +
+             '"d.intensity/d.dX" and "d.intensity/d.dX/d.dY"',
+        nargs=1,
+        default=None,
     )
     add(
         "--optimize-minimize",
@@ -276,8 +296,8 @@ def add_mcstas_options(parser):
                  '(format list obtained from <instr>.%s -h)' % mccode_config.platform["EXESUFFIX"])
 
     add('--bufsiz',
-        metavar='BUFSIZ', default='',
-        help='Monitor_nD list/buffer-size (defaults to 1000000)')
+        metavar='BUFSIZ', default=mccode_config.configuration["NDBUFFERSIZE"],
+        help='Monitor_nD list/buffer-size (defaults to '+mccode_config.configuration["NDBUFFERSIZE"]+')')
 
     add('--vecsize',
         metavar='VECSIZE', default='',
@@ -314,7 +334,7 @@ def add_mcstas_options(parser):
 def expand_options(options):
     ''' Add extra options based on previous choices '''
     # McCode version and library
-    options.mccode_bin = mccode_config.configuration['MCCODE']
+    options.mccode_bin = mccode_config.configuration['MCCOGEN']
     options.mccode_lib = mccode_config.configuration['MCCODE_LIB_DIR']
 
     # MPI
@@ -549,6 +569,10 @@ def main():
     if isdir(options.dir):
         LOG.info('Placing instr file copy %s in dataset %s', options.instr, options.dir)
         copyfile(options.instr, join(options.dir, basename(options.instr)))
+        cfile = os.path.splitext(options.instr)[0] + ".c"
+        if os.path.exists(cfile):
+            LOG.info('Placing generated c-code copy %s in dataset %s', cfile, options.dir)
+            copyfile(cfile, join(options.dir, basename(cfile)))
 
     if options.autoplot is not None:
         autoplotter = mccode_config.configuration['MCPLOT']
@@ -557,8 +581,10 @@ def main():
             autoplotter = options.autoplotter
         if isdir(options.dir):
             LOG.info('Running plotter %s on dataset %s', autoplotter, options.dir)
-            Process(autoplotter).run([options.dir])
-
+            if not options.invcanvas:
+                Process(autoplotter).run([options.dir])
+            else:
+                Process(autoplotter).run([options.dir, '--invcanvas'])
 
 if __name__ == '__main__':
     try:

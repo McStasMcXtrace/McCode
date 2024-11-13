@@ -1,0 +1,131 @@
+/*************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: Test_texture
+*
+* Identification
+* Written by: Victor Laliena
+* Date: January 2019
+* Origin: University of Zaragoza
+* %INSTRUMENT_SITE: Tests_union
+*
+* Simple test instrument for Texture functionality in Union framework.
+*
+* %Description
+* Simple test instrument for texture sample component.
+*
+* Example: lmax=0 Detector: monitor_I=8.08899e-05
+*
+* %P
+* lmax: [AA] Maximum wavelength treated by texture process
+* crystal_fn: [string] Crystal structure file name
+* fcoef_fn: [string] Fourier component file name
+* barns: [ ] Flag to indicate if |F 2| from "crystal_fn" is in barns or fm2 (barns = 1 for laz, barns = 0 for lau type files).
+*
+* %L
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Test_texture(lmax=0,
+      string crystal_fn="Zr.laz",
+      string fcoef_fn="coef_Four_L2.txt",barns=1)
+DECLARE
+%{
+  double sample_wx = 0.01;
+  double sample_wy = 0.01;
+  double sample_wz = 0.01;
+
+  double lambda=3.0;
+  double cts, I, I2, nneutrons;
+  
+  int pack = 1;
+  double geometry_interact = 0.0;
+
+  FILE *filep;
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT init = Union_init()
+AT (0,0,0) ABSOLUTE
+
+COMPONENT texture = Texture_process(crystal_fn=crystal_fn,fcoef_fn=fcoef_fn,lmax_user=lmax,
+interact_fraction=-1,barns=barns,packing_factor=pack)
+AT (0,0,0) ABSOLUTE
+ROTATED (0,0,0) RELATIVE ABSOLUTE
+
+COMPONENT texture_material = Union_make_material(my_absorption=0,process_string="texture")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT a1 = Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+// Source
+COMPONENT source = Source_div(xwidth=sample_wx,yheight=sample_wy,
+   focus_aw=0.4, focus_ah=0.4,
+   lambda0 = lambda,dlambda = 1.0, gauss=0)
+AT (0,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
+EXTEND
+%{
+  //printf("new neutron:\n");
+  //nneutrons += 1;
+%}
+
+
+// source monitors
+COMPONENT div_mon = Divergence_monitor(
+    nh = 100, nv = 100, filename = "div_monitor.dat",
+    xwidth = sample_wx, yheight = sample_wy, maxdiv_h = 0.001, maxdiv_v = 0.001,
+    restore_neutron = 1)
+AT (0, 0, 0.0001) RELATIVE source
+
+COMPONENT lambda_monitor = L_monitor(filename="L_monitor_source.dat",
+    nL = 420, xwidth = 2.0*sample_wx, yheight = 2.0*sample_wy, Lmin = 1.9, Lmax = 6.1)
+  AT (0, 0, 0.0002) RELATIVE source
+  ROTATED (0, 0, 0) RELATIVE source
+
+// Sample position
+COMPONENT beam_center = Arm()
+AT (0,0,0.3) RELATIVE source
+ROTATED (0,0,0) RELATIVE source
+
+//sample
+COMPONENT sample = Union_box(xwidth=sample_wx,yheight=sample_wy,zdepth=sample_wz,
+priority=1, material_string="texture_material",
+p_interact=geometry_interact)
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+SPLIT 1000 COMPONENT simulation_master = Union_master()
+AT(0,0,0) RELATIVE beam_center
+ROTATED(0,0,0) RELATIVE beam_center
+
+COMPONENT monitor = L_monitor(filename="L_monitor_transmission.dat",
+    nL = 420, xwidth = 2.0*sample_wx, yheight = 2.0*sample_wy, Lmin = 1.9, Lmax = 6.1)
+  AT (0, 0, 0.1) RELATIVE beam_center
+  ROTATED (0, 0, 0) RELATIVE beam_center
+
+COMPONENT stop = Union_stop()
+AT (0,0,0) ABSOLUTE
+
+FINALLY
+%{
+
+%}
+
+
+END
+
+
+
+
+

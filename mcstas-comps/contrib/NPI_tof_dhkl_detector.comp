@@ -75,13 +75,13 @@
 *
 ******************************************************************************/
 DEFINE COMPONENT NPI_tof_dhkl_detector
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string filename=0, radius=2, yheight=0.3, zdepth=0.01, amin=75, amax=105, int nd=200, int na=800, int nt=800, int nev=1,
 d_min=1, d_max=3, time0, Linst, Lc, 
 res_x=0, res_y=0, res_t=0, mu=1.0, mod_shift=0,
 modulation=0, mod_dt=0, mod_twidth=0, string mod_d0_table=0, 
 verbose=0, restore_neutron=1)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE

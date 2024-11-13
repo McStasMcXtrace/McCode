@@ -16,6 +16,7 @@ import shutil
 try:
     from PyQt6 import QtWidgets, QtCore
     from PyQt6.QtWidgets import QApplication, QWidget
+    from PyQt6.QtGui import QFont, QFontDatabase
     import PyQt6 as PyQt
     try:
         from PyQt6 import Qsci
@@ -25,6 +26,7 @@ try:
 except ImportError:
     from PyQt5 import QtWidgets, QtCore
     from PyQt5.QtWidgets import QApplication, QWidget
+    from PyQt5.QtGui import QFont, QFontDatabase
     import PyQt5 as PyQt
     try:
         from PyQt5 import Qsci
@@ -328,6 +330,7 @@ class McGuiState(QtCore.QObject):
                 7 - output directory (str)
                 8 - autoplotter
                 9 - format
+               10 - Monitor_nD buffersize
             params[]:
                 [<par_name>, <value>] pairs
         '''
@@ -409,7 +412,12 @@ class McGuiState(QtCore.QObject):
         if Format and simtrace == 0:
             print("REDEFINING FORMAT: " + mccode_config.configuration["FORMAT"])
             runstr = runstr + ' --format=' + mccode_config.configuration["FORMAT"]
-        
+
+        # Monitor_nD buffersize
+        Bufsiz = fixed_params[10]
+        if Bufsiz and simtrace == 0:
+            runstr = runstr + ' --bufsiz=' + Bufsiz
+
         # parse instrument params
         for p in params:
             runstr = runstr + ' ' + p[0] + '=' + p[1]
@@ -650,7 +658,7 @@ class McGuiAppController():
             comps = get_compnames(text=open(self.state.getInstrumentFile(), 'rb').read().decode())
             _a, mcplots, mcdisplays, formats = mccode_config.get_options()
             fixed_params, new_instr_params, inspect, mcdisplay, autoplotter, Format = self.view.showStartSimDialog(
-                instr_params, comps, mcdisplays, mcplots, formats)
+                instr_params, comps, mcdisplays, mcplots, formats, mccode_config.configuration["NDBUFFERSIZE"])
 
             if Format != None:
                 print("SETTING FORMAT: " + Format)
@@ -869,6 +877,11 @@ class McGuiAppController():
                 self.emitter.status("Instrument saved as: " + newinstr)
     
     def handleNewInstrument(self):
+        if not self.state.getInstrumentFile() == '':
+            instrbase = pathlib.PurePath(self.state.getInstrumentFile())
+            wd = pathlib.PurePath(self.state.getWorkDir())
+            if wd.stem==instrbase.stem:
+                self.state.setWorkDir("..")
         new_instr_req = self.view.showNewInstrDialog(self.state.getWorkDir())
         if self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(new_instr_req))==False:
             return
@@ -884,6 +897,11 @@ class McGuiAppController():
                     self.emitter.status("Editing new instrument: " + os.path.basename(str(new_instr)))
     
     def handleNewFromTemplate(self, instr_templ=''):
+        if not self.state.getInstrumentFile() == '':
+            instrbase = pathlib.PurePath(self.state.getInstrumentFile())
+            wd = pathlib.PurePath(self.state.getWorkDir())
+            if wd.stem==instrbase.stem:
+                self.state.setWorkDir("..")
         new_instr_req = self.view.showNewInstrFromTemplateDialog(os.path.join(self.state.getWorkDir(), os.path.basename(os.path.dirname(str(instr_templ)))))
         if self.displayNotSavedWhitespaceError(lambda: self.state.checkInstrFileCandidate(new_instr_req))==False:
             return
@@ -1040,7 +1058,10 @@ def main():
 
         mcguiApp = QtWidgets.QApplication(sys.argv)
         mcguiApp.ctr = McGuiAppController()
-
+        font = QFont()
+        font.setFixedPitch(True)
+        font.setPointSize(int(mccode_config.configuration["GUIFONTSIZE"]))
+        mcguiApp.setFont(font)
         sys.exit(mcguiApp.exec())
 
     except Exception as e: 

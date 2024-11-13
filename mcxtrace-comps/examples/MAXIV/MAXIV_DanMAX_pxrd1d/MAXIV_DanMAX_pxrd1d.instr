@@ -43,6 +43,7 @@
 * debugMon: [ ]    If nonzero, all intermediate monitors appear for debugging purposes.
 * beamStop: [ ] If nonzero, a beamstop is in between sample and PXRD 1d-strip detector.
 * SPLITS: [ ]      Split-number at the sample-position
+* sample_radius: [m] Powder sample cylinder radius
 * %End
 *******************************************************************************/
 
@@ -54,7 +55,7 @@ DEFINE INSTRUMENT MAXIV_DanMAX_pxrd1d(E0=35,DE=0.05,undK=0,undDetune=4,
         PXRDsampleap_h=300e-6, PXRDsampleap_w=300e-6,
         DMM_angle=0, DCM_angle=0,
         DCM=1, DMM=0,
-        OH_2DCRL_N=11,EH_2DCRL_N=0, D_EH_2DCRL=0,
+        OH_2DCRL_N=11, EH_2DCRL_N=0, D_EH_2DCRL=0,
         PXRD_SIMPLE=1, sample_radius=100e-6,
         pxrd_strip_tth0=0, 
         debugMon=1, beamStop=0, int SPLITS=1410)
@@ -115,7 +116,6 @@ DECLARE
     double dm_strip_tthg;/*angle gap between strip-detector blocks*/
 
     char dm_strip_banana_options[512];/*string containing parameter for circular appr of mythen detctector.*/ 
-    double sample_radius;
 
     const double pxrd_2d_px=172e-6;
     const double pxrd_2d_py=172e-6;

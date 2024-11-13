@@ -51,11 +51,286 @@
 * Modified by: PW December 2022: versions 3.2 and 2.7.2
 * Modified by: PW March 2023: version 3.3
 * Modified by: PW September 2023: version 3.4
+* Modified by: PW September 2024: version 3.5.1
 *
-* This file is part of McStas 3.4, released September 19th 2023.
+* This file is part of McStas 3.5.1, released September 16th 2024.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas 3.5.1, September 16th, 2024
+
+ McStas 3.5.1 is the sixth official release in the 3.x series, with a modernised 
+ code-generator and support for GPU acceleration on NVIDIA cards.
+
+ Thanks:
+ - Thanks to all members of the joint McStas-McXtrace team and input from our
+   users via emails and GitHub issues alike! Further a special thanks to
+   Theodor Peter Guttesen (former DTU diploma student) who has helped modernise
+   our 3D visualisation!
+
+ Important changes going forward:
+ - From release 3.5.1 McStas and McXtrace are released simultaneously and with
+   the same versioning (meaning that McXtrace takes a jump from 3.2 up to 3.5)
+ - With release 3.5.1 we are officially dropping support for the "legacy"
+   McStas 2.7.2 release and the "legacy" McXtrace 1.7.1 release.
+ - To minimize work required for platform support and builds, we are now focusing
+   on fewer platforms:
+   * Debian packages at packages.mccode.org are provided for x86_64 and arm64 Linux
+     (Thanks to the work of Emmanuel Farhi and his team at SOLEIL, official Debian
+     packages are already available in Debian Testing and Unstable 
+     (see https://tracker.debian.org/pkg/mccode) and should become
+     widely available with next Debian Stable, after which we might drop our "own
+     channel").
+   * conda-forge is to become our distribution channel for "everything else", meaning
+     that:
+     1. Our macOS "bundles" are effectively now self-extracting conda-installers and
+        REQUIRES an active internet connection during installation
+     2. From a later release in the 3.5 series the same will be the case for Windows
+     - We are dropping builds for ALL rpm-oriented platform. Please use conda-forge instead.
+ - We want to release more "early and often" going forward, see below under conda-forge.
+
+ Conda-forge:
+ - We are now officially on conda-forge, with feedstocks available at:
+   * https://github.com/conda-forge/mcstas-suite-feedstock
+   * https://github.com/conda-forge/mcxtrace-suite-feedstock
+ - Via conda-forge we  support the platforms linux-64, linux-aarch64, osx-arm64, osx-64 and win-64
+ - The conda-forge win-64 packages have slight shortcomings for this first release, meaning that:
+   * MCPL and NCrystal are not shipped with McStas
+   * MCPL is not shipped with McXtrace
+ - We still provide cross-compiled installers for Windows (mingw builds) for now
+ - You will find that when installed via conda-forge, file locations are slightly different:
+   most of the locations may be probed via:
+   mcrun --showcfg=ITEM   Print selected cfg item and exit (paths are resolved
+                          and absolute). Allowed values are "bindir", "libdir",
+                          "resourcedir", and "tooldir".
+   (Wrt. locations of examples and components, the "resourcdir" is the same as $MCSTAS)
+ - Going forward, we will add incremental releases in the 3.5-series as work happens on the
+   main McStas/McXtrace branch - and this work will automatically go on our official
+   conda-forge and Debian channels. Other distribution channels ("bulky installers etc.)
+   may come with longer intervals.
+
+
+ Fixes of issues from last 3.x release:
+ - A number of issues from 3.4 were addressed, see the relevant GitHub issues for details:
+   - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-3.4
+
+ Installation:
+ - Our install docs are available on the McCode GitHub page at
+   https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+ - The meta-package for Debian/Ubuntu is named mcstas-suite-python
+ - OpenACC GPU (and CPU multicore) acceleration is at the time of release still ONLY
+   supported on Linux systems, as this is the only platform targeted by the NVIDIA
+   HPC package. Versions 20.x -> 24.x should all work. On Windows 64bit systems,
+   support is expected to arrive "later", but you may run on your GPU via the so-called
+   "Windows Subsystem for Linux" (WSL). macOS is unfortunately not supported
+   by NVIDIA HPC acceleration.
+ - McStas 3.5.1 packages come with OpenMPI and NeXus as install-time dependencies for all supported 
+   platforms.
+
+ McStas 3.5.1 enables most components and instruments on GPU. A few components compute only on CPU:
+ - Components using shared libraries from external software:
+   * GNU Scientific library used in: 
+     contrib/SANSPDBFast
+     contrib/SANSNanodiscs 
+     contrib/SANSNanodiscsWithTags
+     contrib/SANSNanodiscsFast
+     contrib/SANSEllipticCylinders
+     contrib/SANSPDB
+     contrib/SANSCylinders
+     contrib/Multilayer_Sample
+   * NCrystal used in
+     contrib/NCrystal_sample
+   * Components that are not fully thread-safe / ported to GPU
+     (I.e. these may come to GPU later)
+     contrib/Single_crystal_inelastic
+     contrib/SupermirrorFlat
+     contrib/Monochromator_bent
+     samples/Single_magnetic_crystal
+     union/Union_master
+   * Components that are intentionally for CPU-only use
+     (No dealing with buffersizes etc.)
+     misc/MCPL_output_noacc
+     monitors/Monitor_nD_noacc
+
+ Tool enhancements:
+ - The mcdisplay-webgl tool has received a MAJOR overhaul:
+   * Support for visualisation of proper "solids" instead of "multilines". Key components 
+     have been updated with this new style, but more will come in the following releases.
+   * New react/js user-interface with options for choosing colour and transparency
+     of the individual components.
+   * Save and load of instrument visualisation and particle rays in JSON format
+   * The new features require a server-process, facilitated by the 'vite' javascript/node.js
+     oriented server. The server is by default shut down after 5 minutes - but mcdisplay-webgl
+     has an input parameter to control this behavior.
+   * On first launch the 'npm' package manager installs and builds packages to the McStas
+     user directory, so expect this first launch to take a little time.
+   * The tool further has a '2D' mode in the style of mcdisplay-pyqtgrahph, simply use your
+     mouse wheel on the browser menu to scroll the 3D view 'up' and the 2D views will appear!
+
+ - The mcgui user interface also has recieved a numner of usability changes:
+   * The main interface includes a new 'Jupylab' button that will convert a loaded
+     instrument file to McStasScript (python) format and launch Jupyterlab.
+   * The mcgui font-size can be configured via the Preferences dialogue and saved to 
+     the user-level mccode_config.json file
+   * Monitor_nD "buffersize" of a given simulation (mostly used for the list/event mode)
+     may be configured via the Preferences dialogue and saved to the user-level config
+   * When copying an instrument from the Examples / Templates, the instrument-folder is
+     copied, i.e. including both instrument and specific datafiles etc.
+   * The "autoplot" mode that spawns plotting post simulation completion now also functions
+     with NeXus output
+   * "Inverted" canvas can be chosen when autoplotting with mcplot(-pyqtgraph)
+
+
+ - Improved NeXus support in both mcgui and mcrun:
+   * The JSON configuration file mccode_config.json now includes a HDFVIEW setting,
+     defaulting to 'nexpy' on the conda-forge based systems and HDFCompass on Debian
+     as nexpy is not yet available here. (A useful alternative is 'silx view'.)
+
+ - The primary mcplot(-pyqtgraph) tool also received a number of updates:
+   * The tool behaves correctly both in case of PyQt5 and PyQt6 based systems
+   * Visibility of legends is highly improved both on (standard) black canvas and
+     inverted white canvas (select from the mcgui prefs / run dialogue)
+   * When selecting --format=NeXus and requesting '--autoplot' from mcgui/mcrun, both the
+     mcplot(-pyqtgraph) and mcplot-matplotlib plotters request the HDFVIEW tool to 
+     open the resulting mccode.h5 file.
+
+ - The 'mctest' tool is now available as a user-tool. The tool
+   * Allows to test for compilation of all instruments
+   * test-executes those including with %Example lines.
+   * To test your McStas installation, simply execute 'mctest' in your McStas environment
+   * The tool creates an output folder with the tested instruments in subfolders and the
+     test simulation results in subfolders under these. Compile-time, execution-time and 
+     test numerical output is stored in JSON files.
+   * The most important commandline switches are these:
+     --ncount N selects the wanted statistic for the tests
+     --mpi=number or --mpi=auto enables mpi mode for the tests
+     --openacc enables OpenACC accelerations on Nvidia GPU on Linux
+     --instr=PATTERN only test instruments matching PATTERN
+     --testdir=DIR puts the test results under the DIR folder
+     --suffix=SUFFIX adds SUFFIX as an identifier in the output foldername
+     --nexus enables NeXus output for all tested instruments
+   * Here is an example of a run:
+     # mctest --instr=BNL_H8_simple --testdir=mcstas-test
+     loading system configuration
+     Output of test will be placed in: mcstas-test
+     ncount is: 1e6
+     Testing: 3.5.1
+      Finding instruments in: /Users/peterwillendrup/miniforge3/share/mcstas/resources/examples
+     Copying instruments to: mcstas-test/mcstas-3.5.1_BNL_H8_simple_Darwin
+     
+     Compiling instruments [seconds]...
+     BNL_H8_simple :   2.03
+     
+     Running tests...
+     BNL_H8_simple  :   0.96
+
+  - The 'mcviewtest' tool is now available as a user-tool. The tool may be used to render
+    an html page with results from one or more 'mctest' runs. If your results of a test run
+    was placed in e.g. mcstas-test/mcstas-3.5.1_BNL_H8_simple_Darwin:
+    * cd to mcstas-test
+    * run the command:    mcviewtest
+    * You may then open the resulting html file for visualisation in your browser and see
+      an output simmilar to that of our nightly test, see e.g.
+      https://new-nightly.mcstas.org/2024-09-11_output.html (A single test run gives
+      a single column of output - the example test demonstrated above would give only a
+      single cell since only one test was executed for a single instrument.)
+    * GRAY = instrument compiled OK, GREEN = instrument test agrees with %Example line,
+      RED = numerical result disagrees, WHITE with red text = instrument did not compile.
+    * The included numbers pr. cell includes C: compile time R: runtime and I=numerical value
+
+ Components and Instruments:
+ - The examples/ folder is no longer a flat directory, but has instead beceme a tree-structure,
+   subdivided into instrument categories:
+   * Facility / University / source type instruments:
+     BNL DTU ESS FZ_Juelich HZB ILL ISIS LLB Necsa PSI Risoe SNS TRIGA TUDelft
+   * Templates, tools and various tests:
+     Templates Tools, Tests_RNG Tests_monitors Tests_other Tests_samples Tests_MCPL_etc
+     Tests_grammar Tests_optics Tests_polarization Tests_sources
+   * Output from EU-projects etc.
+     HighNESS SINE2020 e-learning
+   * Links with other software
+     Mantid NCrystal
+   * Union-specific tests
+     Tests_union Union_demos Union_sample_environments Union_validation
+ - Each instrument has its own folder within the hierarcy, where usage-specific input files
+   etc. may also exist. In the future we may decide to distribute some McStasScript instruments
+   within this folder structure.
+ - MCPL_input had a parameter change: E_smear has become v_smear since what was implemented
+   was in fact a smearing on velocity.
+ - New component MCPL_input_once from Gregory S Tucker, ESS. Reads an MCPL file a single time,
+   and in MPI-mode with k processes, each processor reads just ~ 1/k of the file. 
+ - An updated version of the strain-scanning instrument ILL_SALSA.instr was contributed by 
+   Daniel Lomholt Christensen, Uni Copenhagen and ILL. The instrument uses a new model of
+   a bent-Si monochromator (Monochromator_bent) which was benchmarked and validated against
+   the RESTRAX/SIMRES model with help from Jan Šaroun, NPI Řež. The Test_Monochromator_bent
+   is a unit test for the monochromator.
+ - From Swiss Neutronics AG we have received an Transmission_V_polarisator.comp with two
+   corresponding test-instruments (Test_V_cavity_SNAG_single_side and Test_V_cavity_SNAG_double_side)
+   for single-side and double-side coated V-polarisers. The component was originally developed
+   by Andreas Ostermann (TUM) and has been updated by Michael Schneider from SNAG. The 
+   models correspond to the simulations carried out for the publication
+   https://doi.org/10.1016/j.physb.2009.06.031
+ - Please note that the Pol_guide_vmirror currently has a systematic discrepancy wrt. the SNAG model,
+   full investigation of the problem is pending but will be fixed for a later 3.5.x update release.
+   !! If your simulation problem allows, please make use of the experimentally benchmarked 
+      Transmission_V_polarisator instead !!
+ - From Hal Lee (ESS) we have received a new SupermirrorFlat component including all relevant
+   physics in the form of reflection, refraction and absorption in coating, substrate and absorber.
+   The component requires multiple new SHARE libs: supermirror-lib.c/h, plane.c/h, polyhedron.c/h
+   and comes with the example instrument Supermirror_thin_substrate.instr
+
+ - Incoming components and instruments:
+   * Ba. thesis student Thom van der Woude from TU Delft has written an excellent thesis on his
+     SEMSANS-related project "Design and analysis of a SEMSANS instrument for a cold source". 
+     The code is available at https://github.com/tbvanderwoude/semsans for anyone interested and
+     includes simulation scripts, McStas code and Jupyter notebooks for analysis. We foresee
+     that this work will make it to one of the next minor updates McStas 3.5.x.
+   
+ Core simulation framework / code-generator:
+ - The McStas and McXtrace code-generators are fully synchronised from v3.5.1 onwards.
+
+ Libraries and other runtime code:
+ - The NeXus output is richer from McStas 3.5.1, specifically:
+   * All component global postions and orientations are placed as dataset within
+     /entry1/instrument/components/<COMP>
+   * Monitors store their detector outputs in
+     /entry1/instrument/components/<COMP>/output/<filename>
+   * Monitor_nD instances further store their spatial bin-information in 
+     /entry1/instrument/components/<COMP>/output/BINS
+   * To still support the "McStas-Mantid" NeXus variant, please use --format=NeXus --IDF
+     which will include virtual links to the above datasets within the expected 
+     /entry1/data structure 
+ - NCrystal library version 3.9.7 from T. Kittelmann (ESS) and X.X. Cai (CSNS), distributed
+   with McStas on Unix platforms only. (Cross-compiles for Windows, but still needs work
+   for "production" availability.)
+ - MCPL library from T. Kittelmann (ESS) included at v. 1.6.2
+  - On debian and fedora we are providing new packages for NCrystal and MCPL via the
+   McCode repository, independent of the McStas release. (Both codes have further arrived
+   in the Debian ecosystem, thanks to Synchrotron SOLEIL, Emmanuel Farhi and Roland Mas.)
+
+ Migration to 3.5.1:
+ - As mentioned above, we no longer support McStas 2.x.
+ - The Wiki has a dedicated section on McStas 2.x -> McStas 3.x conversion that includes:
+   * A nomenclature list containing short descriptions of new concepts and important keywords
+     in McStas 3.x and OpenACC / CUDA code in general.
+   * A document outlining the most importand differences between 2.x and 3.x.
+   * A guide for 2.x -> 3.x instrument conversion.
+   * A guide for 2.x -> 3.x component conversion.
+ - If you are still in trouble, please write us a GitHub issue or an email to mcstas-users@mcstas.org
+
+ Platforms:
+  - We provide packages for the following platforms / systems:
+    * conda-forge Platforms linux-64, linux-aarch64 osx-arm64, osx-64 and win-64
+    * Debian-based distros on Intel and Arm
+    * conda-forge based 'application bundles' for
+      64bit macOS 12-14 both Intel and Silicon (should also be ready for macOS 15 Sequoia)
+    * A cross-compiled 'bulky installer' for 64bit Windows 10/11 on Intel
+  - For RPM based distros please use our conda-forge solution!
+  - For e.g. FreeBSD you may roll your own using CMake.
+
+We hope you will enjoy this new release!!!
+
+
 Changes in McStas 3.4, September 19th, 2023
 
  McStas 3.4 is the fifth official release in the 3.x series, with a modernised 

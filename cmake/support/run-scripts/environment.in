@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
-if [[ 1 == 1 ]]; then
+# Function to provide "readlink -f" even on systems missing -f:
+readlinkf(){
+    perl -MCwd -e 'print Cwd::abs_path shift' "$1";
+}
+
+if [[ @MCCODE_LEGACY_PATHS@ == 1 ]]; then
   # Legacy McCode PATH setup 
   TOPENV="$0"
 
@@ -9,20 +14,13 @@ if [[ 1 == 1 ]]; then
     TOPENV="$PWD/$TOPENV"
   fi
 
-  # Iterate down a (possible) chain of symlinks (macOS does not have readlink -f)
-  while [ -L "$TOPENV" ];
-  do
-    TOPENV=`readlink "$TOPENV"`
-  done
+  TOPENV=`readlinkf "$TOPENV"`
   TOPENV=`dirname $TOPENV`
-  TOPENV=`dirname $TOPENV`
-  TOPENV=`dirname $TOPENV`
-
 else
-  TOPENV="\$( cd -P \"\$( dirname \"\${BASH_SOURCE[0]}\" )\" && pwd )"
+  TOPENV=$( dirname $( readlinkf ${BASH_SOURCE[0]} ) )
 fi
 
-
+@MCCODE_ENV_PREAMBLE@
 
 ARCH=`uname -m`
 UNAME=`uname -s`
@@ -33,13 +31,13 @@ if [[ ${UNAME} = Darwin* ]]; then
     OSXVER=`sw_vers -productVersion|cut -f 1 -d.`
 fi
 
-export PATH=$TOPENV/miniconda3/bin:$PATH
+export PATH=$MCCODE_BINDIR:$PATH
 
-export @FLAVOR_UPPER@=$TOPENV/@DEST_DATADIR_COMPS@
+export @FLAVOR_UPPER@=$MCCODE_RESOURCEDIR
 
-export PATH=$TOPENV/@DEST_BINDIR@:$PATH
 # Check if we are running with miniconda-provided python libs and set PYTHONPATH accordingly
 if [ -d "$@FLAVOR_UPPER@/miniconda3" ]; then
+    export PATH=$TOPENV/miniconda3/bin:$PATH
     #Activation hook for conda 
     _conda_bindir="$@FLAVOR_UPPER@/miniconda3/bin"
     function conda() {

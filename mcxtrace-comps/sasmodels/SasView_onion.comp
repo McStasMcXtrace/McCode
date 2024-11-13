@@ -59,7 +59,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_onion
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         sld_core=1.0,
         radius_core=200.0,

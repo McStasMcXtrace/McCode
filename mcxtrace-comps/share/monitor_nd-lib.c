@@ -146,12 +146,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->Coord_Number      = 0;   /* total number of variables to monitor, plus intensity (0) */
     Vars->Coord_NumberNoPixel=0;   /* same but without counting PixelID */
 
-/* Allow to specify size of Monitor_nD buffer via a define*/
-#ifndef MONND_BUFSIZ
-    Vars->Buffer_Block      = 100000;     /* Buffer size for list or auto limits */
-#else
 	Vars->Buffer_Block      = MONND_BUFSIZ;     /* Buffer size for list or auto limits */	
-#endif
     Vars->Photon_Counter   = 0;   /* event counter, simulation total counts is mcget_ncount() */
     Vars->Buffer_Counter    = 0;   /* index in Buffer size (for realloc) */
     Vars->Buffer_Size       = 0;
@@ -1172,10 +1167,10 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
                           *(Vars->max_y-Vars->min_y)*1E4, Vars->area);
       printf("Monitor_nD: %s: beam solid angle is %g [st] (%g x %g [deg^2])\n",
         Vars->compcurname,
-        2*fabs(2*atan(Vars->mean_dx/Vars->mean_p)
-         *sin(2*atan(Vars->mean_dy/Vars->mean_p)/2)),
-        atan(Vars->mean_dx/Vars->mean_p)*RAD2DEG,
-        atan(Vars->mean_dy/Vars->mean_p)*RAD2DEG);
+        2*fabs(2*atan2(Vars->mean_dx,Vars->mean_p)
+         *sin(2*atan2(Vars->mean_dy,Vars->mean_p)/2)),
+        atan2(Vars->mean_dx,Vars->mean_p)*RAD2DEG,
+        atan2(Vars->mean_dy,Vars->mean_p)*RAD2DEG);
     }
 
     /* check Buffer flush when end of simulation reached */
@@ -1314,7 +1309,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
       if (Vars->Flag_signal != DEFS->COORD_P && Nsum > 0)
       { psum /=Nsum; p2sum /= Nsum*Nsum; }
       /* DETECTOR_OUT_0D(Vars->Monitor_Label, Vars->Nsum, Vars->psum, Vars->p2sum); */
-      detector = mcdetector_out_0D(Vars->Monitor_Label, Nsum, psum, p2sum, Vars->compcurname, Vars->compcurpos);
+      detector = mcdetector_out_0D(Vars->Monitor_Label, Nsum, psum, p2sum, Vars->compcurname, Vars->compcurpos,Vars->compcurrot);
     }
     else
     if (strlen(Vars->Mon_File) > 0)
@@ -1346,7 +1341,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
               label, "List of photon events", Coord_X_Label,
               -Vars->Buffer_Size, Vars->Coord_Number+1,
               Vars->Mon2D_Buffer,
-              fname, Vars->compcurname, Vars->compcurpos);
+              fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot, Vars->option);
       }
       if (Vars->Flag_Multiple) /* n1D: DETECTOR_OUT_1D */
       {
@@ -1377,7 +1372,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
               min1d, max1d,
               Vars->Coord_Bin[i+1],
               Vars->Mon2D_N[i],Vars->Mon2D_p[i],Vars->Mon2D_p2[i],
-              fname, Vars->compcurname, Vars->compcurpos);
+              fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
             } /* if (p2m == NULL) */
             else
             {
@@ -1420,7 +1415,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
                 min1d, max1d,
                 Vars->Coord_Bin[i+1],
                 Vars->Mon2D_N[i],p1m,p2m,
-                fname, Vars->compcurname, Vars->compcurpos);
+                fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
 
             } /* else */
             /* comment out 'free memory' lines to avoid loosing arrays if
@@ -1429,7 +1424,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
             if (p2m != NULL) free(p2m); p2m=NULL;
             */
           } else { /* 0d monitor */
-            detector = mcdetector_out_0D(label, Vars->Mon2D_p[i][0], Vars->Mon2D_p2[i][0], Vars->Mon2D_N[i][0], Vars->compcurname, Vars->compcurpos);
+            detector = mcdetector_out_0D(label, Vars->Mon2D_p[i][0], Vars->Mon2D_p2[i][0], Vars->Mon2D_N[i][0], Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
           }
 
 
@@ -1518,7 +1513,8 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
             Vars->Coord_Bin[1],
             Vars->Coord_Bin[2],
             p0m,p1m,p2m,
-            fname, Vars->compcurname, Vars->compcurpos);
+	      fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
+	  }
 
           /* comment out 'free memory' lines to avoid loosing arrays if
                'detector' structure is used by other instrument parts
@@ -1529,8 +1525,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
         }
       }
       free(fname);
-    }
-    return(detector);
+      return(detector);
   } /* end Monitor_nD_Save */
 
 /* ========================================================================= */

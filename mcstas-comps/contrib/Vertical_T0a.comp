@@ -25,10 +25,9 @@
 * %End
 *******************************************************************/
 DEFINE COMPONENT Vertical_T0a
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (len, w1,w2, nu, delta, tc, ymin, ymax)
-OUTPUT PARAMETERS (omega, r_blade, x_width, nn, tdr)
-//STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
+
 SHARE
 %{
 #ifndef FERMI_CHOP_DEFS

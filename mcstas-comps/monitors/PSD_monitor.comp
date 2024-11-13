@@ -35,7 +35,7 @@
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
 * nowritefile: [1]      If set, monitor will skip writing to disk
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * PSD_N: []             Array of neutron counts
 * PSD_p: []             Array of neutron weight counts
@@ -44,12 +44,12 @@
 * %E
 *******************************************************************************/
 DEFINE COMPONENT PSD_monitor
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (int nx=90, int ny=90, string filename=0,
   xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0,
   int restore_neutron=0, int nowritefile=0)
 
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

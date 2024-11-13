@@ -38,29 +38,29 @@
 * Absolute intensity of 4D (x,y,x',y') is nor correctly normalized.
 *
 * %Parameters
-* E0: [keV]         Mean energy of X-rays.
-* dE: [keV]         Energy spread of X-rays.
-* Emin: [keV]       Energy of low end of the Spectra-calculated data.
-* Emax: [keV]       Energy of high end of the Spectra-calculated data.
-* nE: [1]           Number of steps in the spectra-calculations.
-* randomphase: [1]  If !=0 the photon phase is chosen randomly.
-* nx: [1]           Number of grid points along x in datafiles. If zero this is computed from the files.
-* ny: [1]           Number of grid points along y in datafiles. If zero this is computed from the files.
-* npx: [1]          Number of grid points along x' in datafiles. If zero this is computed from the files.
-* npy: [1]          Number of grid points along y' in datafiles. If zero this is computed from the files.
-* phase: [1]        Value of the photon phase (only used if randomphase==0).
-* verbose: [1]      If non-zero output more warning messages.
-* initial_serial: [1]  First serial number of the series of spectra files.
-* symmetricx: [1]   If nonzero the source is mirrored in the x-axis. This to allow smaller spectra-calculations.
-* symmetricy: [1]   If nonzero the source is mirrored in the y-axis. This to allow smaller spectra-calculations.
-* spectra_stem_x: [str]  Filename stem of x-projection of source distribution. -n.xxx will be added where n is a serial number and xxx spectra_suffix.
-* spectra_stem_y: [str]  Filename stem of y-projection of source distribution. -n.xxx will be added where n is a serial number and xxx spectra_suffix.
-* spectra_stem: [str]    Filename stem of x,x',y,y'-source distribution distribution. -n.xxx will be added where n is a serial number and xxx spectra_suffix.
-* spectra_suffix: [str]  Suffix of spectra output files.
-* flag4d: [1]       Use either (0) x,y-projections or (1) full 4D x,y,x',y' datafiles.
-* noinit: [1]       Do no initialize the component. Can be usefiul in conjunction with a deactivating WHEN-clause.
+* E0:             [keV] Mean energy of X-rays.
+* dE:             [keV] Energy spread of X-rays.
+* Emin:           [keV] Energy of low end of the Spectra-calculated data.
+* Emax:           [keV] Energy of high end of the Spectra-calculated data.
+* nE:             [int] Number of steps in the spectra-calculations.
+* randomphase:    [0/1] If !=0 the photon phase is chosen randomly.
+* nx:             [int] Number of grid points along x in datafiles. If zero this is computed from the files.
+* ny:             [int] Number of grid points along y in datafiles. If zero this is computed from the files.
+* npx:            [int] Number of grid points along x' in datafiles. If zero this is computed from the files.
+* npy:            [int] Number of grid points along y' in datafiles. If zero this is computed from the files.
+* phase:          [rad] Value of the photon phase (only used if randomphase==0).
+* verbose:        [0/1] If non-zero output more warning messages.
+* initial_serial: [int] First serial number of the series of spectra files.
+* symmetricx:     [0/1] If nonzero the source is mirrored in the x-axis. This to allow smaller spectra-calculations.
+* symmetricy:     [0/1] If nonzero the source is mirrored in the y-axis. This to allow smaller spectra-calculations.
+* spectra_stem_x: [str] Filename stem of x-projection of source distribution. -n.xxx will be added where n is a serial number and xxx spectra_suffix.
+* spectra_stem_y: [str] Filename stem of y-projection of source distribution. -n.xxx will be added where n is a serial number and xxx spectra_suffix.
+* spectra_stem:   [str] Filename stem of x,x',y,y'-source distribution distribution. -n.xxx will be added where n is a serial number and xxx spectra_suffix.
+* spectra_suffix: [str] Suffix of spectra output files.
+* flag4d:         [0/1] Use either (0) x,y-projections or (1) full 4D x,y,x',y' datafiles.
+* noinit:         [0/1] Do no initialize the component. Can be usefiul in conjunction with a deactivating WHEN-clause.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %Link
 * Tanaka, J. Synchrotron Rad. (2001). 8, 1221-1228. https://doi.org/10.1107/S090904950101425X
@@ -70,13 +70,13 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Source_spectra
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
     string spectra_stem_x="", string spectra_stem_y="", string spectra_stem="", string spectra_suffix="dsc",
     E0=0, dE=0, Emin,Emax, int nE, int randomphase=1, phase=0,
     int nx=0, int ny=0, int npx=0, int npy=0, int initial_serial=1, int symmetricx=0, int symmetricy=0, int verbose=0,
     int flag4d=0, int noinit=0)
-OUTPUT PARAMETERS ()
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE

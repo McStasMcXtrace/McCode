@@ -30,7 +30,7 @@
 * INPUT PARAMETERS:
 * rotator: [string]  the name of the Rotator component used to initiate the rotation
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 * angle: [deg]          rotation angle
 *
 * %End
@@ -45,10 +45,11 @@ TRACE
   Rotation R;
 
   /* Name of Rotation uservar */
-  char* Rot_varptr = COMP_GETPAR3(Rotator, rotator, rot_var);
+  char* Rot_varptr = *COMP_GETPAR3(Rotator, rotator, rot_var);
 
   /* Invert rotation matrix for use in derotation */
-  rot_transpose((Rotation*)particle_getvar_void(_particle, Rot_varptr, NULL),R);
+  rot_transpose(*(Rotation *) particle_getvar_void(_particle, Rot_varptr, NULL), R);
+
   /* apply rotation to centered coordinates */
   Coords tmp = coords_set(x,y,z);
   coords_get(rot_apply(R, tmp), &x, &y, &z);

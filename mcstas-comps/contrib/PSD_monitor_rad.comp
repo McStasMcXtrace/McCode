@@ -31,7 +31,7 @@
 * filename: [text]     Name of file in which to store the detector image
 * filename_av: [text]  Name of file in which to store the averaged detector image
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * PSDr_N: []           Array of neutron counts
 * PSDr_p: []           Array of neutron weight counts
@@ -44,9 +44,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT PSD_monitor_rad
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (nr=100, string filename=0, string filename_av=0, rmax=0.2)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

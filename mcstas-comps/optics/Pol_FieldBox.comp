@@ -33,9 +33,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_FieldBox
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (xwidth,yheight,zdepth, Bx=0,By=1e-3,Bz=0)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

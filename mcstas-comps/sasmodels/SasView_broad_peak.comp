@@ -57,7 +57,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_broad_peak
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         porod_scale=1e-05,
         porod_exp=3.0,

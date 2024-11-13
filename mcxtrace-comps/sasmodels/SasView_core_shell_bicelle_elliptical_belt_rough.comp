@@ -63,7 +63,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_core_shell_bicelle_elliptical_belt_rough
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         radius=30,
         x_core=3,

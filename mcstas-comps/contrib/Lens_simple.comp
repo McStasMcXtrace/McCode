@@ -67,7 +67,7 @@
 
 
 DEFINE COMPONENT Lens_simple
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (rho=5.16e14, Rc=0.02, Nl=7.0, parab=1.1,
 xmin=0, xmax=0, ymin=0, ymax=0, radius=0,
 SigmaAL=0.141, d0=0.002)

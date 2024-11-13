@@ -68,13 +68,13 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Source_pulsed
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (xwidth=0.0, yheight=0.0, radius=0.010, r_i=0.0,  
                     Lmin, Lmax, t_min=0.0, t_max=0.001, 
                     int target_index=1, dist=0.0, focus_xw=0.02, focus_yh=0.02, freq, t_pulse,  
                     T1=0.0, I1=0.0, tau1=0.000125,  T2=0.0, I2=0.0, tau2=0.0,  T3=0.0, I3=0.0, tau3=0.0,  n_mod=10,
                     I_um=0.0, tau_um=0.000012, n_um=5, chi_um=2.5, kap_um=2.2)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z, vx,vy,vz, t, sx,sy,sz, p) */
 
 

@@ -2,6 +2,7 @@
   "configuration": {
     "MCCODE_VERSION": "@MCCODE_VERSION@",
     "TERMINAL": "@TERMINAL@",
+    "MCCOGEN": "@FLAVOR@",
     "MCCODE": "@FLAVOR@",
     "MCRUN": "@MCCODE_PREFIX@run",
     "JUPYLAB": "@FLAVOR@-jupylab",
@@ -13,6 +14,8 @@
     "PARTICLE": "@MCCODE_PARTICLE@",
     "BROWSER": "@BROWSER@",
     "GUICOLS": "3",
+    "GUIFONTSIZE": "12",
+    "NDBUFFERSIZE": "10000000",
     "EDITOR": "@EDITOR@",
     "FORMAT": "McCode",
     "ISCONDAPKG": "@MCCODE_IS_CONDA_PKG@"

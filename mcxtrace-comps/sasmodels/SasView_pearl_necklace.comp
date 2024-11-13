@@ -58,7 +58,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_pearl_necklace
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         radius=80.0,
         edge_sep=350.0,

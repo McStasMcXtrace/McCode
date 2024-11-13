@@ -50,10 +50,10 @@
 *******************************************************************************/
 
 DEFINE COMPONENT MCPL_output
-DEFINITION PARAMETERS ()
+
   SETTING PARAMETERS (int polarisationuse=0, int doubleprec=0, verbose=0, string userflag="",
   string filename=0, string userflagcomment="", merge_mpi=1, keep_mpi_unmerged=0, buffermax=0)
-OUTPUT PARAMETERS ()
+
 DEPENDENCY "-Wl,-rpath,CMD(mcpl-config --show libdir) -LCMD(mcpl-config --show libdir) -lmcpl -ICMD(mcpl-config --show includedir)"
 
 SHARE
@@ -86,6 +86,7 @@ DECLARE
     DArray1d P;
     DArray1d U;
     int captured;
+    char finalfile[CHAR_BUF_LENGTH];
 %}
 
 INITIALIZE
@@ -174,7 +175,7 @@ INITIALIZE
 #endif
 
     if (verbose==1) {
-    printf("MCPL_output verbose mode: after generating the mcpl-file it will be reread and a summary printed.\n");
+    printf("MCPL_output verbose mode: after generating the mcpl-file a summary will be printed.\n");
     }
 
 #if defined (USE_MPI)
@@ -196,6 +197,9 @@ INITIALIZE
       }
   }
    if (myfilename){
+       MPI_MASTER(
+         sprintf(finalfile,myfilename);
+       );
        free(myfilename);
    }
 #ifndef OPENACC
@@ -356,6 +360,15 @@ SAVE
 FINALLY
 %{
 #ifdef USE_MPI
+  if (merge_mpi && mpi_node_count > 1) {
+    mcpl_close_outfile(outputfile);
+  } else {
+    mcpl_closeandgzip_outfile(outputfile);
+  }
+#else
+  mcpl_closeandgzip_outfile(outputfile);
+#endif
+#ifdef USE_MPI
  MPI_Barrier(MPI_COMM_WORLD);
  MPI_MASTER(
      /* Only attempt merge if requested and meaningful */
@@ -398,6 +411,7 @@ FINALLY
         }
 
         /*free the string storage*/
+	sprintf(finalfile,merge_outfilename);
         free(merge_outfilename);
         for (j=0;j<mpi_node_count;j++){
             free(mpi_node_files[j]);
@@ -406,15 +420,24 @@ FINALLY
     }
   );
 #endif
-#ifdef USE_MPI
-  if (merge_mpi && mpi_node_count > 1) {
-    mcpl_close_outfile(outputfile);
-  } else {
-    mcpl_closeandgzip_outfile(outputfile);
+  if(verbose) {
+    MPI_MASTER(
+      /* check if we need to add .gz suffix */
+      if (!mcpl_file_exist(finalfile)) {
+	char *finalfilegz=malloc(CHAR_BUF_LENGTH*sizeof(char));
+	sprintf(finalfilegz,"%s.gz",finalfile);
+	sprintf(finalfile,"%s",finalfilegz);
+	free(finalfilegz);
+      }
+      /* Recheck for file existance */
+      if (mcpl_file_exist(finalfile)) {
+	printf("\n\nMCPL output summary from %s\n",finalfile);
+	mcpl_dump(finalfile, 0, 0, 10);
+      } else {
+	printf("\n\nWarning, did not localize expected output file for stat summary!\n");
+      }
+    );
   }
-#else
-  mcpl_closeandgzip_outfile(outputfile);
-#endif
 %}
 
 MCDISPLAY

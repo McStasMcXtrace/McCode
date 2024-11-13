@@ -341,11 +341,11 @@ macro(installMCCODE)
   #license file:
   install( FILES "${WORK}/COPYING" DESTINATION "${DEST_DATADIR_INFO}")
   #General library:
-  file_globsrc( general_codefiles "${WORK}/lib/share/*.h"  "${WORK}/lib/share/*.c" )
+  file( GLOB general_codefiles "${WORK}/lib/share/*.h"  "${WORK}/lib/share/*.c" )
   install( FILES ${general_codefiles} DESTINATION "${DEST_DATADIR_CODEFILES}")
 
   # Flavor-specific library
-  file_globsrc( flavor_codefiles "${FLAVOR_LIB}/share/*.h" "${FLAVOR_LIB}/share/*.c" "${FLAVOR_LIB}/share/*.cl" )
+  file( GLOB flavor_codefiles "${FLAVOR_LIB}/share/*.h" "${FLAVOR_LIB}/share/*.c" "${FLAVOR_LIB}/share/*.cl" )
   install( FILES ${flavor_codefiles} DESTINATION "${DEST_DATADIR_CODEFILES}" )
 
   if(NOT WINDOWS)
@@ -399,7 +399,7 @@ macro(installMCCODE)
     install(PROGRAMS ${WORK}/support/${FLAVOR}-labenv.bat DESTINATION "${DEST_BINDIR}")
 
     # Python/Perl related batches special handling
-    foreach (name run.bat doc.bat test.bat viewtest.bat resplot.bat plot.bat display.bat gui.bat guistart.bat plot-pyqtgraph.bat plot-matplotlib.bat plot-matlab.bat display-webgl.bat display-pyqtgraph.bat display-matplotlib.bat display-mantid.bat)
+    foreach (name run.bat doc.bat test.bat viewtest.bat resplot.bat plot.bat display.bat gui.bat guistart.bat plot-pyqtgraph.bat plot-matplotlib.bat plot-matlab.bat display-webgl.bat display-webgl-classic.bat display-pyqtgraph.bat display-matplotlib.bat display-mantid.bat)
       configure_file(
 	      cmake/support/run-scripts/${name}.in
 	      work/support/${MCCODE_PREFIX}${name}

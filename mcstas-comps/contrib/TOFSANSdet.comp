@@ -55,7 +55,7 @@
 * inttol: []    tolerance of intensity            (if primary beam intensity smaller than inttol*max_intensity then discard data)
 * qcal: []      calibration of intensity (cps) to width of q-bin (non_zero = yes, zero = no)
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * PSDq_N: []    Array of neutron counts
 * PSDq_p: []    Array of neutron weight counts
@@ -65,7 +65,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT TOFSANSdet
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
   Nq=100,
   plength=0.00286, ssdist=27.0, coldis = 20.0, Sthckn = 0.1,
@@ -79,7 +79,7 @@ SETTING PARAMETERS (
   rstneu = 0.0,
   centol = 0.1, inttol = 0.0001, qcal=1,
   string fname=0)
-OUTPUT PARAMETERS ()
+
 
 SHARE
 %{

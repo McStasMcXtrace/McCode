@@ -1,8 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 # launcher for matlab/octave/ifit data plotter
 
-LIB="@TOOLS_LIB@"
+@MCCODE_BASH_STANDARD_PREAMBLE@
+
+LIB="${MCCODE_TOOLDIR}/matlab/@P@plot"
 TOOL="mcplot"
 VERS="@MCCODE_VERSION@"
 
@@ -39,13 +41,54 @@ canrun_o() {
     fi
 }
 
+# defaults
+if ( canrun_m ); then RUN_MATLAB=1; else RUN_MATLAB=0; fi
+if ( canrun_o ); then RUN_OCTAVE=1; else RUN_OCTAVE=0; fi
+if ( canrun_i ); then RUN_IFIT=1;   else RUN_IFIT=0;   fi
 
-if ( canrun_m ); then
+# handle input options, overriding defaults
+while getopts hiom flag
+do
+  case "${flag}" in
+  o)
+    RUN_OCTAVE=1
+    RUN_MATLAB=0
+    RUN_IFIT=0
+  ;;
+  m)
+    RUN_MATLAB=1
+    RUN_OCTAVE=0
+    RUN_IFIT=0
+  ;;
+  i)
+    RUN_IFIT=1
+    RUN_MATLAB=0
+    RUN_OCTAVE=0
+  ;;
+  *)
+    echo "$0: plot a McCode simulation result using the Matlab/Octave backend."
+    echo "usage:"
+    echo "  $0 FILE|DIR"
+    echo "        Display the specified monitor file or directory."
+    echo "  $0 [-png|-jpg|-fig|-eps|-pdf] [FILE|DIR]"
+    echo "        Export the specified monitor file or directory to given format."
+    echo "  $0 -m FILE|DIR"
+    echo "        Explicitely request to use Matlab"
+    echo "  $0 -o FILE|DIR"
+    echo "        Explicitely request to use Octave"
+    exit 1
+    ;;
+  esac
+done  
+shift $((OPTIND-1))
+
+
+if [ "$RUN_MATLAB" == "1" ]; then
     matlab -nosplash -nodesktop -r "addpath('${LIB}');${TOOL} $*"
-elif ( canrun_i ); then
+elif [ "$RUN_IFIT" == "1" ]; then
     ifit -r $*
-elif ( canrun_o ); then
-    octave --eval "addpath('${LIB}');${TOOL} $*"
+elif [ "$RUN_OCTAVE" == "1" ]; then
+    octave --eval "addpath('${LIB}');${TOOL} $*;"
 else
     echo ":: Failed to run Matlab/iFit/Octave ${TOOL}, trying default ${TOOL} instead."
     echo ":: If this fails too, consider reinstalling ${TOOL}."

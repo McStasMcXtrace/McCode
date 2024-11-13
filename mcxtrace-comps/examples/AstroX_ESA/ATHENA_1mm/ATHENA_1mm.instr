@@ -69,6 +69,7 @@
 * dHrz:     [arcsec] Rotational misalignment of hyperbolic pore around z.
 * Hyper:    [ ] If non-zero the secondary mirror (hyperbolic) is active. Useful for debugging.
 * Para:     [ ] If non-zero the primary mirror is acive (parabolic) is active. Useful for debugging.
+* ringfile: [ ] File which contains deatiled plate descriptions.
 *
 * %Link
 * <a href="http://www.cosmos.esa.int/web/athena">The ATHENA web pages @ ESA</a>

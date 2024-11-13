@@ -34,19 +34,23 @@ WORK=`pwd`
 rsync -avz --delete --exclude=".svn/"  mcstas-comps/ mcstas-comps-win
 find mcstas-comps-win -type f -not -name \*.off -exec unix2dos \{\} \;
 
+# For now we need to use legacy file destinations on Windows
+export MCCODE_USE_LEGACY_DESTINATIONS=ON
+
 # 64-bit
 ./mkdist mcstas $1 "" "" mingw64 "" -- nsis64
 ./mkdist mcstas-comps $1 mcstas-comps-win "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw64 "" -- nsis64
-./mkdist mcstas-tools-python-mcplot-svg $1 tools/Python/mcplot/svg/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-python-mcplot-html $1 tools/Python/mcplot/html/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mctest $1 tools/Python/mctest/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcresplot $1 tools/Python/mcresplot/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mingw64 "" -- nsis64
+./mkdist mcstas-tools-python-mcdisplay-webgl-classic $1 tools/Python/mcdisplay/webgl-classic/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcdisplay-mantid $1 tools/Python/mcdisplay/mantid_xml/ "" mingw64 "" -- nsis64
@@ -76,7 +80,8 @@ if [ "x$2" != "x" ]; then
     sed s/@VERSION@/${1}/g McStas-metapackage64.iss > McStas-${1}-metapackage64.iss
     ./iscc McStas-${1}-metapackage64.iss
     mv Output/setup.exe dist/McStas-Metapackage-${1}-win64.exe
-    cp $WORK/INSTALL-McStas-3.x/Windows/README.md dist/
+    cp $WORK/INSTALL-McStas/Windows/README.md dist/
     mkdir dist/single-packages
+    cp -rp $WORK/support/Win32/extras dist/extras
     mv dist/mcstas-* dist/single-packages
 fi

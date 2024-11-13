@@ -38,19 +38,18 @@
 * coating: [str] Datafile containing either mirror material constants or reflectivity  numbers.
 * R0:      [1]   Reflectivity of mirror (mostly relevant for debugging, when coating="")
 * radius:  [m]   Spherical radius, Sets x_a=y_b=z_c=radius
+* length:  [m]   alternate name for zdepth (obsolete)
+* width:   [m]   alternate name for xwidth (obsolete)
 *
 * %End
 *******************************************************************************/
 
 DEFINE COMPONENT Mirror_elliptic
-DEFINITION PARAMETERS ()
 SETTING PARAMETERS (x_a=0, y_b=1.0, z_c=1.0, 
         zdepth=0.2,  xwidth=0.2,  
         R0=1,string coating="Be.txt",
         length=0,    width=0, radius=0)
-OUTPUT PARAMETERS (a2inv,b2inv,c2inv)
 DEPENDENCY "-std=c99"
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE
 %{

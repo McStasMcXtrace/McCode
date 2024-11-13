@@ -26,7 +26,7 @@
 *
 * %Parameters
 * Input parameters:
-* att_file : [".txt"] File that contains the object information. (Default: "W.txt")
+* att_file: [".txt"] File that contains the object information. (Default: "W.txt")
 * xwidth: [m] Horizontal width of the mask. (Default: 1e-1)
 * yheight: [m] Vertical height of the mask. (Default: 1e-1)
 * zdepth: [m] Thickness of the absorbing mask. (Default: 3e-3)
@@ -40,9 +40,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Attenuating_mask
-DEFINITION PARAMETERS (string att_file = "W.txt")
-SETTING PARAMETERS (xwidth = 1e-1, yheight = 1e-1, zdepth =10e-6, blocks_xwidth = 1e-3, blocks_xdist = 2.5e-3, blocks_yheight = 1e-3, blocks_ydist = 2.5e-2, holed_mask = 0)
-OUTPUT PARAMETERS ()
+
+SETTING PARAMETERS (string att_file = "W.txt", xwidth = 1e-1, yheight = 1e-1, zdepth =10e-6, blocks_xwidth = 1e-3, blocks_xdist = 2.5e-3, blocks_yheight = 1e-3, blocks_ydist = 2.5e-2, holed_mask = 0)
+
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE

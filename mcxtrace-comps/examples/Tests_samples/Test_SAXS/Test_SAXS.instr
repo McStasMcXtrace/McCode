@@ -41,14 +41,15 @@
 * %Example: SAMPLE=11 Detector: PSDMonitor_I=5.47707e-15
 *
 * %Parameters
-* DistanceFromSourceToFirstPinhole: [m]	 Distance to first pinhole from source.
+* DistanceFromSourceToFirstPinhole: [m]  Distance to first pinhole from source.
 * DistanceFromSourceToSecondPinhole: [m] Distance to second pinhole - used for focusing rays.
 * DistanceFromSecondPinholeToSample: [m] Collimation length.
 * DistanceFromSampleToDetector: [m]      Sample-detector-distance.
 * RadiusOfDetector: [m]                  Radius of the circular detector.
 * Lambda: [AA]                           Wavelength of the rays emitted from source.
 * DLambda: [ ]                           Relative deviation of wavelength of the rays emitted from source.
-* SAMPLE: [ ]                            Index of sample model
+* SAMPLE: [ ]                            Index of sample model, see above.
+* Ncount:[1]                             Override the number of rays to simulate.
 *
 * %End
 *******************************************************************************/

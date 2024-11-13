@@ -2,6 +2,7 @@
   "configuration": {
     "MCCODE_VERSION": "3.0.1beta",
     "TERMINAL": "x-terminal-emulator -e",
+    "MCCOGEN": "mcstas",
     "MCCODE": "mcstas",
     "MCRUN": "mcrun",
     "JUPYLAB": "mcstas-jupylab",

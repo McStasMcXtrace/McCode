@@ -32,7 +32,7 @@
 * signal: [string]      Name of variable to be used as an additive signal to be monitored. Default is intensity.
 * nowritefile: [1]      Flag to indicate if monitor should not save any data.
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * U_N: []               Array of neutron counts
 * U_p: []               Array of neutron weight counts
@@ -42,12 +42,12 @@
 *******************************************************************************/
 DEFINE COMPONENT Flex_monitor_1D
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (int nU=20, string filename=0,
   Umin, Umax, uid=-1, string ustring="", int restore_neutron=0, string signal="p", int nowritefile=0)
 
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

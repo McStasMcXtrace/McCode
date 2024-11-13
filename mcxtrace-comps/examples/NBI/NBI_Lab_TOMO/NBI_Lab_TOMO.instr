@@ -23,7 +23,7 @@
 * %Parameters
 * fname: [] filename which contains the emission spectrum for the source
 * d_sample_det: [m] distance between the sample and the detector
-* d_source_sample. [m] distance between source adn sample
+* d_source_sample: [m] distance between source adn sample
 * Omega: [deg] rotation angle of sample (around y-axis)
 * detw: [m] Detector width
 * deth: [m] Height of detector

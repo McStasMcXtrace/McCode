@@ -62,7 +62,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_rpa
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         case_num=1,
         vector N[4]={1000.0},

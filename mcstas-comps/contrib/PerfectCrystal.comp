@@ -118,14 +118,14 @@
 *******************************************************************************/
 
 DEFINE COMPONENT PerfectCrystal
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS ( ttmin=NAN, ttmax=NAN, tt0=NAN, ttwidth=NAN, width=NAN,
 phimin=NAN, phimax=NAN, phi0=NAN, phiwidth=NAN, height=NAN, debyescherrer=0,
 facette=0, facette_xi=0, centerfocus=0, radius=0, tau=NAN, lambda=NAN, R0=1.0,
 dtauovertau=NAN, dtauovertau_ext=0,
 ewald=1,sigma=NAN,ismirror=0,speed=0,amplitude=0,smartphase=0,
 smartwidth=NAN, exclusive=0, transmit=0, verbose=0 )
-OUTPUT PARAMETERS ()
+
 SHARE
 %{
 // convert between spherical (r,tt,phi) and cartesian (x,y,z) coordinates (angles in deg)

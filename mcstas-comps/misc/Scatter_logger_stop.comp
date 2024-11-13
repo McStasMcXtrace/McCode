@@ -27,9 +27,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Scatter_logger_stop
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string logger)
-OUTPUT PARAMETERS ()
+
 
 SHARE
 %{

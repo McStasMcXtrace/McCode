@@ -42,7 +42,7 @@
 *
 * monitor_comp: [no quotes]  name of the associated Monitor_nD where the detection should take place
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * %Link
 * <a href="Monitor_nD.html">Monitor_nD</a>

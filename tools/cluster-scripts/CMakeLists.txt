@@ -72,7 +72,7 @@ else()
   foreach(NAME "${FLAVOR}_mcsub_pbs" "${FLAVOR}_mcsub_slurm")
     install(
       FILES "${WORK}/${NAME}"
-      DESTINATION "${FLAVOR}/${MCCODE_VERSION}/bin"
+      DESTINATION "${DEST_BINDIR}"
       )
   endforeach()
 endif()

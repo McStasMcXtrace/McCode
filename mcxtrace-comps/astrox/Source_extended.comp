@@ -47,37 +47,26 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Source_extended
-DEFINITION PARAMETERS (string spectrum_file=NULL)
-SETTING PARAMETERS (yheight=0, xwidth=0,
+SETTING PARAMETERS (string spectrum_file=NULL,yheight=0, xwidth=0,
   dist=0, E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,incoherent=1,phase=0, string image_path="")
-OUTPUT PARAMETERS (prms,square)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE
 %{
   %include "read_table-lib"
-%}
-
-DECLARE
-%{
-  double pmul, srcArea;
-  int square;
-  struct {
+  struct Sextended_prms {
     double l0,dl;
     double pmul,pint;
     t_Table T;
-  } prms;
-
-  struct {
-      double xref, yref, rmax;
-      int pw, ph;
-      t_Table data;
-      double iCD[2][2];
-  } extendedParams;
-
-  double* sphericalToCartesian(double r, double theta, double phi, double* cartesian){
-    cartesian[0] = r*cos(theta)*cos(phi);
-    cartesian[1] = r*cos(theta)*sin(phi);
+  };
+  struct Sextended_table_prms {
+    double xref, yref, rmax;
+    int pw, ph;
+    t_Table data;
+    double iCD[2][2];
+  };
+  double* sphericalToCartesian(double r, double theta, double Phi, double* cartesian){
+    cartesian[0] = r*cos(theta)*cos(Phi);
+    cartesian[1] = r*cos(theta)*sin(Phi);
     cartesian[2] = r*sin(theta);
   }
 
@@ -85,7 +74,15 @@ DECLARE
     spherical[0] = sqrt(x*x + y*y + z*z);
     spherical[1] = atan2(z, sqrt(x*x + y*y));
     spherical[2] = atan2(y, x);
-  }
+  }  
+%}
+
+DECLARE
+%{
+  double srcArea;
+  int square;
+  struct Sextended_prms prms;
+  struct Sextended_table_prms extendedParams;
 %}
 
 INITIALIZE
@@ -157,8 +154,11 @@ INITIALIZE
 TRACE
 %{
   double chi,e,k,l,r, pdir;
+  char done = 0;
+  double xpix, ypix, theta, Phi;
+  double xDeg, yDeg, xRel, yRel;
 
-  phi=0;
+  Phi=0;
   z=0;
   if (square == 1) {
     x = xwidth * (rand01() - 0.5);
@@ -199,17 +199,16 @@ TRACE
   // ===========================================================================
   //  This section randomly picks a direction to emit a ray to, and samples the
   //  source image for an intensity at the appropriate point
-  char done = 0;
-  double xpix, ypix, theta, phi;
+
   while(!done){
       theta = sqrt(rand01())*extendedParams.rmax/180*M_PI; //normalized
-      phi = rand01()*2*M_PI;
+      Phi = rand01()*2*M_PI;
 
-      double xDeg = tan(theta)*cos(phi)*180/M_PI;
-      double yDeg = tan(theta)*sin(phi)*180/M_PI;
+      xDeg = tan(theta)*cos(Phi)*180/M_PI;
+      yDeg = tan(theta)*sin(Phi)*180/M_PI;
 
-      double xRel = extendedParams.iCD[0][0]*xDeg + extendedParams.iCD[0][1]*yDeg;
-      double yRel = extendedParams.iCD[1][0]*xDeg + extendedParams.iCD[1][1]*yDeg;
+      xRel = extendedParams.iCD[0][0]*xDeg + extendedParams.iCD[0][1]*yDeg;
+      yRel = extendedParams.iCD[1][0]*xDeg + extendedParams.iCD[1][1]*yDeg;
 
       xpix = xRel + extendedParams.xref;
       ypix = yRel + extendedParams.yref;
@@ -219,9 +218,9 @@ TRACE
       }
   }
   //Both are inverted because, relative to the spherical coordinate system of
-  //theta and phi, the rays are emitted 'backwards'
-  kx = -sin(theta)*cos(phi)*k;
-  ky = -sin(theta)*sin(phi)*k;
+  //theta and Phi, the rays are emitted 'backwards'
+  kx = -sin(theta)*cos(Phi)*k;
+  ky = -sin(theta)*sin(Phi)*k;
 
   kz = cos(theta)*k;
 
@@ -229,9 +228,9 @@ TRACE
 
   /*randomly pick phase or set to something real*/
   if (incoherent){
-    phi=rand01()*2*M_PI;
+    Phi=rand01()*2*M_PI;
   }else{
-    phi=phase;
+    Phi=phase;
   }
 
   /*set polarization vector*/
@@ -240,12 +239,8 @@ TRACE
 
 FINALLY
 %{
-  if(prms.T){
-    Table_Free(&(prms.T));
-  }
-  if(extendedParams.data){
-    Table_Free(&(extendedParams.data));
-  }
+  Table_Free(&(prms.T));
+  Table_Free(&(extendedParams.data));
 %}
 
 MCDISPLAY

@@ -32,7 +32,7 @@
 * restore_neutron: [1]  If set, the monitor does not influence the neutron state
 * nowritefile: [1]      If set, monitor will skip writing to disk
 *
-* OUTPUT PARAMETERS:
+* CALCULATED PARAMETERS:
 *
 * PSD_N: []             Array of neutron counts
 * PSD_p: []             Array of neutron weight counts
@@ -43,12 +43,12 @@
 
 DEFINE COMPONENT Cyl_monitor
 
-DEFINITION PARAMETERS ()
+
 
 SETTING PARAMETERS (int nr=20, string filename=0, yheight=10, radius=1, int restore_neutron=0,
 		    thmin=-180, thmax=180, int nowritefile=0)
 
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE

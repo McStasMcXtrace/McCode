@@ -125,14 +125,14 @@
 
 
 DEFINE COMPONENT Source_gen
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (string flux_file="NULL", string xdiv_file="NULL", string ydiv_file="NULL",
 radius=0.0, dist=0, focus_xw=0.045, focus_yh=0.12, focus_aw=0, focus_ah=0,
 E0=0, dE=0, lambda0=0, dlambda=0, I1=1,
 yheight=0.1, xwidth=0.1, verbose=0, T1=0,
 flux_file_perAA=0, flux_file_log=0,
 Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,zdepth=0, int target_index=+1)
-OUTPUT PARAMETERS ()
+
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE

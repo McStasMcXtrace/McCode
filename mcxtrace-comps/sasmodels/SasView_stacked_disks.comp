@@ -60,7 +60,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_stacked_disks
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         thick_core=10.0,
         thick_layer=10.0,

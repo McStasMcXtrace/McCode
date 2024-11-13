@@ -1,0 +1,136 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2024, All rights reserved
+*         Technical University of Denmark, Kongens Lyngby, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: PSD_spinUmon
+*
+* %I
+* Written by: Michael Schneider (SNAG)
+* Date: 2024
+* Origin: SNAG
+*
+* Position-sensitive monitor, measuring the spin-up component of the neutron beam.
+*
+* %D
+* An (n times m) pixel PSD monitor, measuring the spin-up component of the neutron beam.
+*
+* Example: PSD_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, nx=90, ny=90, filename="Output.psd")
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin: [m]             Lower x bound of detector opening
+* xmax: [m]             Upper x bound of detector opening
+* ymin: [m]             Lower y bound of detector opening
+* ymax: [m]             Upper y bound of detector opening
+* xwidth: [m]           Width of detector. Overrides xmin, xmax
+* yheight: [m]          Height of detector. Overrides ymin, ymax
+* nx: [1]               Number of pixel columns
+* ny: [1]               Number of pixel rows
+* filename: [string]    Name of file in which to store the detector image
+* restore_neutron: [1]  If set, the monitor does not influence the neutron state
+* nowritefile: [1]      If set, monitor will skip writing to disk
+*
+* CALCULATED PARAMETERS:
+*
+* PSD_N: []             Array of neutron counts
+* PSD_p: []             Array of neutron weight counts
+* PSD_p2: []            Array of second moments
+*
+* %E
+*******************************************************************************/
+DEFINE COMPONENT PSD_spinUmon
+
+SETTING PARAMETERS (int nx=90, int ny=90, string filename=0,
+  xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0,
+  int restore_neutron=0, int nowritefile=0)
+
+
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+DECLARE
+  %{
+    DArray2d PSD_N;
+    DArray2d PSD_p;
+    DArray2d PSD_p2;
+  %}
+INITIALIZE
+  %{
+  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+  if ((xmin >= xmax) || (ymin >= ymax)){
+    printf("PSD_monitor: %s: Null detection area !\n"
+           "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+    NAME_CURRENT_COMP);
+    exit(0);
+  }
+
+  PSD_N = create_darr2d(nx, ny);
+  PSD_p = create_darr2d(nx, ny);
+  PSD_p2 = create_darr2d(nx, ny);
+
+  // Use instance name for monitor output if no input was given
+  if (!strcmp(filename,"\0")) sprintf(filename,"%s",NAME_CURRENT_COMP);
+%}
+
+TRACE
+%{
+    int i,j;
+
+    if (sy < 0)
+     {SCATTER;}
+    else
+    {
+     PROP_Z0;
+     if (x>xmin && x<xmax && y>ymin && y<ymax)
+     {
+       i = floor((x - xmin)*nx/(xmax - xmin));
+       j = floor((y - ymin)*ny/(ymax - ymin));
+       double p2 = p*p;
+       #pragma acc atomic
+       PSD_N[i][j]  = PSD_N[i][j] +1;
+       #pragma acc atomic
+       PSD_p[i][j]  = PSD_p[i][j] + p;
+       #pragma acc atomic
+       PSD_p2[i][j] = PSD_p2[i][j] + p2;
+    
+       SCATTER;
+     }
+     if (restore_neutron) {
+       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+     }
+   }
+%}
+SAVE
+%{
+    DETECTOR_OUT_2D(
+        "PSD monitor",
+        "X position [cm]",
+        "Y position [cm]",
+        xmin*100.0, xmax*100.0, ymin*100.0, ymax*100.0,
+        nx, ny,
+        &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
+        filename);
+%}
+
+FINALLY %{
+  destroy_darr2d(PSD_N);
+  destroy_darr2d(PSD_p);
+  destroy_darr2d(PSD_p2);
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+END

@@ -60,7 +60,7 @@
 * %End
 *******************************************************************************/
 DEFINE COMPONENT SasView_raspberry
-DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (
         sld_lg=-0.4,
         sld_sm=3.5,

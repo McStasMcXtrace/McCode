@@ -53,7 +53,7 @@ else
 		    then
 			osascript -e "tell app \"System Events\" to display dialog \"Error: Failure occured during conda update conda -y... :-( \""
 		    else
-			conda env update --name base --file /tmp/@FLAVOR@-environment.yml
+			conda install -c conda-forge -c nodefaults @FLAVOR@=@MCCODE_VERSION@ jupytext jupyterlab ipympl scipy numpy mcstasscript -y
 			ret_code6=$?
 			if [ "$ret_code6" != "0" ];
 			then
