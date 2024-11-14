@@ -1756,11 +1756,7 @@ int cogen_raytrace(struct instr_def *instr)
   // we need this override, since "comp" is not defined in raytrace() - see section-wide define
   cout("  #undef ABSORB0");
   cout("  #undef ABSORB");
-  cout("  #ifndef OPENACC");
-  cout("  #define ABSORB0 do { DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(ABSORBED);} while(0)");
-  cout("  #else");
   cout("  #define ABSORB0 do { DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++;} while(0)");
-  cout("  #endif");
   cout("  #define ABSORB ABSORB0");
 
   /* Debugging (initial state). */
@@ -1916,7 +1912,7 @@ int cogen_raytrace(struct instr_def *instr)
         comp->group->last_comp_index, comp->group->last_comp);
       // final_absorb_when_all_not_scattered
       if (comp->index == comp->group->last_comp_index)
-        coutf("      else ABSORB;     // not SCATTERED at end of GROUP: removes left events", comp->group->last_comp);
+        coutf("      else ABSORBED=1;     // not SCATTERED at end of GROUP: removes left events", comp->group->last_comp);
       else // comp_absorb_sends_to_next
         coutf("      else particle_restore(_particle, &_particle_save); // not SCATTERED in GROUP, restore");
     }
@@ -2239,7 +2235,7 @@ int cogen_rt_funnel(struct instr_def *instr)
         comp->group->last_comp_index, comp->group->last_comp);
       // final_absorb_when_all_not_scattered
       if (comp->index == comp->group->last_comp_index)
-        coutf("      else ABSORB;     // not SCATTERED at end of GROUP: removes left events", comp->group->last_comp);
+        coutf("      else ABSORBED=1;     // not SCATTERED at end of GROUP: removes left events", comp->group->last_comp);
       else // comp_absorb_sends_to_next
         coutf("      else ABSORBED=0; // not SCATTERED within GROUP: always tries next");
     }
