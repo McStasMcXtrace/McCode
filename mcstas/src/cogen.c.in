@@ -1584,13 +1584,11 @@ void def_trace_section(struct instr_def *instr)
   cout("/* (Similar defines are available in each comp trace but */");
   cout("/*  those are not enough to handle external libs etc. )  */");
   cout("#ifdef OPENACC");
-  cout("#ifndef MULTICORE");
   cout("#define fprintf(stderr,...) printf(__VA_ARGS__)");
   cout("#define sprintf(string,...) printf(__VA_ARGS__)");
   cout("#define exit(...) noprintf()");
   cout("#define strcmp(a,b) str_comp(a,b)");
   cout("#define strlen(a) str_len(a)");
-  cout("#endif");
   cout("#endif");
 
   /* define SCATTERED, ABSORB and RESTORE macros for all TRACE */
@@ -1636,14 +1634,12 @@ void undef_trace_section(struct instr_def *instr)
     coutf("#undef %s", statepars_all[i]);
 
   cout("#ifdef OPENACC");
-  cout("#ifndef MULTICORE");
   cout("#undef strlen");
   cout("#undef strcmp");
   cout("#undef exit");
   cout("#undef printf");
   cout("#undef sprintf");
   cout("#undef fprintf");
-  cout("#endif");
   cout("#endif");
   cout("#undef SCATTERED");
   cout("#undef RESTORE"  );
@@ -1969,11 +1965,14 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("  unsigned long long loops;");
   coutf("  loops = ceil((double)ncount/gpu_innerloop);");
   coutf("  /* if on GPU, printf has been globally nullified, re-enable here */");
-  coutf("  #ifdef OPENACC");
-  coutf("  #ifndef MULTICORE");
-  coutf("  #undef printf");
-  coutf("  #endif");
-  coutf("  #endif");
+  cout("  #ifdef OPENACC");
+  cout("  #undef strlen");
+  cout("  #undef strcmp");
+  cout("  #undef exit");
+  cout("  #undef printf");
+  cout("  #undef sprintf");
+  cout("  #undef fprintf");
+  cout("  #endif");
   coutf("");
   coutf("  #ifdef OPENACC");
   coutf("  if (ncount>gpu_innerloop) {");
@@ -1993,11 +1992,14 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("    #endif");
   coutf("");
   coutf("    /* if on GPU, re-nullify printf */");
-  coutf("    #ifdef OPENACC");
-  coutf("    #ifndef MULTICORE");
-  coutf("    #define printf(...) noprintf()");
-  coutf("    #endif");
-  coutf("    #endif");
+  cout("     #ifdef OPENACC");
+  cout("     #undef strlen");
+  cout("     #undef strcmp");
+  cout("     #undef exit");
+  cout("     #undef printf");
+  cout("     #undef sprintf");
+  cout("     #undef fprintf");
+  cout("     #endif");
   coutf("");
   coutf("    #pragma acc parallel loop num_gangs(numgangs) vector_length(vecsize)");
   coutf("    for (unsigned long pidx=0 ; pidx < gpu_innerloop ; pidx++) {");
@@ -2016,11 +2018,14 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("    seed = seed+gpu_innerloop;");
   coutf("  } /* CPU for */");
   coutf("  /* if on GPU, printf has been globally nullified, re-enable here */");
-  coutf("  #ifdef OPENACC");
-  coutf("  #ifndef MULTICORE");
-  coutf("  #undef printf");
-  coutf("  #endif");
-  coutf("  #endif");
+  cout("     #ifdef OPENACC");
+  cout("     #undef strlen");
+  cout("     #undef strcmp");
+  cout("     #undef exit");
+  cout("     #undef printf");
+  cout("     #undef sprintf");
+  cout("     #undef fprintf");
+  cout("     #endif");
   coutf("  MPI_MASTER(");
   coutf("  printf(\"*** TRACE end *** \\n\");");
   coutf("  );");
@@ -2072,13 +2077,15 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("  unsigned long long loops;");
   coutf("");
   coutf("  /* if on GPU, printf has been globally nullified, re-enable here */");
-  coutf("  #ifdef OPENACC");
-  coutf("  #ifndef MULTICORE");
-  coutf("  #undef printf");
-  coutf("  #endif");
-  coutf("  #endif");
-  coutf("");
-    /* Check if instrument uses JUMPS */
+  cout("   #ifdef OPENACC");
+  cout("   #undef strlen");
+  cout("   #undef strcmp");
+  cout("   #undef exit");
+  cout("   #undef printf");
+  cout("   #undef sprintf");
+  cout("   #undef fprintf");
+  cout("   #endif");
+  /* Check if instrument uses JUMPS */
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL) {
     if (list_len(comp->jump) > 0) { // JUMP ITERATE counters
@@ -2123,7 +2130,7 @@ int cogen_rt_funnel(struct instr_def *instr)
 
   // init batch
   coutf("    // init particles");
-  coutf("    #pragma acc parallel loop present(particles)");
+  coutf("    #pragma acc parallel loop present(particles[0:livebatchsize])");
   coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
   coutf("      // generate particle state, set loop index and seed");
   coutf("      particles[pidx] = mcgenstate();");
@@ -2174,7 +2181,11 @@ int cogen_rt_funnel(struct instr_def *instr)
     if (first || (comp->cpuonly != cpuonly_last) || comp->split) {
       coutf("");
       if (comp->cpuonly == 0) {
-        coutf("    #pragma acc parallel loop present(particles)");
+        coutf("    #pragma acc parallel loop present(particles[0:livebatchsize])");
+      } else {
+	coutf("    #ifdef MULTICORE");
+	coutf("    #pragma acc parallel loop device_type(host)");
+	coutf("    #endif");
       }
       coutf("    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {");
       coutf("      _class_particle* _particle = &particles[pidx];");
@@ -2186,11 +2197,13 @@ int cogen_rt_funnel(struct instr_def *instr)
 
     // coordinate transformations (wrt to PREVIOUS)
     if (comp->skip_transform == 0) {
+      coutf("#ifndef MULTICORE");
       coutf("        if (_%s_var._rotation_is_identity)", comp->name);
       coutf("          coords_get("
     	"coords_add(coords_set(x,y,z), _%s_var._position_relative),"
     	"&x, &y, &z);", comp->name);
       cout( "        else");
+      coutf("#endif");
       coutf("          mccoordschange(_%s_var._position_relative, _%s_var._rotation_relative, _particle);", comp->name, comp->name);
       cout( "        _particle_save = *_particle;");
     }
