@@ -19,6 +19,7 @@
 * Modified by: PW, June 2017: Doc updates
 * Modified by: PW, Feb 2018:  GPU edits
 * Modified by: EF, June 2023: can now read CIF files
+* Modified by: MB, November 2024: Order 0.5 optimization with large split numbers
 *
 * Mosaic single crystal with multiple scattering vectors, optimised for speed
 * with large crystals and many reflections.
@@ -36,12 +37,14 @@
 * In order to dramatically improve the simulation efficiency, we recommend to
 * use a SPLIT keyword on this component (or prior to it), as well as to disable
 * the multiple scattering handling by setting order=1. This is especially powerful
-* for large reflection lists such as with macromolecular proteins. When an incoming
-* particle is identical to the preceeding, reciprocal space initialisation is 
-* skipped, and a Monte Carlo choice is done on available reflections from the last
-* repciprocal space calculation! To assist the user in choosing a "relevant" value
-* of the SPLIT, a rolling average of the number of available reflections is
-* calculated and presented in the component output.
+* for large reflection lists such as with macromolecular proteins. With order=1
+* the component still calculates extinction as the ray leaves the crystal, setting
+* order=0.5 removes this step, further increasing the gains with large reflection
+* lists and split.When an incoming particle is identical to the preceeding, 
+* reciprocal space initialisation is skipped, and a Monte Carlo choice is done on 
+* available reflections from the last repciprocal space calculation! To assist the
+* user in choosing a "relevant" value of the SPLIT, a rolling average of the number
+* of available reflections is calculated and presented in the component output.
 *
 * <b>Mosacitiy modes:</b>
 * The component features three independent ways of parametrising mosaicity:
@@ -180,7 +183,7 @@
 * cy: []                                                  c on y axis
 * cz: []                                                  c on z axis
 * reflections: [string]                                   File name containing structure factors of reflections (LAZ LAU CIF, FullProf, ShelX). Use empty ("") or NULL for incoherent scattering only
-* order: [1]                                              Limit multiple scattering up to given order (0: all, 1: first, 2: second, ...)
+* order: [1]                                              Limit multiple scattering up to given order (0: all, 1: first, 2: second, ...) Order 0.5 special case that skips coherent scattering when leaving crystal
 *
 * Optional input parameters
 *
@@ -1169,13 +1172,13 @@ INITIALIZE
     exit(fprintf(stderr,"Single_crystal: %s: powder and PG modes can not be used together!\n"
              "ERROR           Please use EITHER powder or PG mode.\n", NAME_CURRENT_COMP));
 
-  if (powder && !(order==1)) {
+  if (powder && !(order==1 || order==0.5)) {
     fprintf(stderr,"Single_crystal: %s: powder mode means implicit choice of no multiple scattering!\n"
             "WARNING setting order=1\n", NAME_CURRENT_COMP);
     order=1;
   }
 
-  if (PG && !(order==1)) {
+  if (PG && !(order==1 || order==0.5)) {
     fprintf(stderr,"Single_crystal: %s: PG mode means implicit choice of no multiple scattering!\n"
             "WARNING setting order=1\n", NAME_CURRENT_COMP);
     order=1;
@@ -1327,6 +1330,14 @@ TRACE
       }
 
       l_full = t2*v;
+	  
+	  if (order==0.5 && force_transmit) {
+		  // With order 0.5, exit before calculating coherent cross section on exit
+          // Exit due to truncated order, weight with relevant cross-sections to distance l_full
+          p*=exp(-abs_xlen*l_full);
+          intersect=0;
+          break;
+	  }
 
       /* (1). Compute incoming wave vector ki */
       if (powder) { /* orientation of crystallite is random */
@@ -1394,7 +1405,7 @@ TRACE
       } else {
 	T = tau_list;
       }
-      if (order==1 && fabs(kix - hkl_info.kix) < deltak
+      if ((order==1 || order==0.5) && fabs(kix - hkl_info.kix) < deltak
         && fabs(kiy - hkl_info.kiy) < deltak
         && fabs(kiz - hkl_info.kiz) < deltak) {
         hkl_info.nb_reuses++;
