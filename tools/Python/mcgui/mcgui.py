@@ -373,9 +373,9 @@ class McGuiState(QtCore.QObject):
             self.__dataDir = output_dir
         elif simtrace == 1: # trace (mcdisplay)
             if inspect:
-                runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + os.path.basename(self.__instrFile) + ' --no-output-files' + ' --inspect=' + inspect
+                runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + os.path.basename(self.__instrFile) + ' --inspect=' + inspect
             else:
-                runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + os.path.basename(self.__instrFile) + ' --no-output-files'
+                runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + os.path.basename(self.__instrFile)
         else:
             raise Exception('mcgui.run: invalid execution mode (simulate/trace/optimize).')
         
@@ -731,7 +731,7 @@ class McGuiAppController():
             DISPLAY="mxdisplay"
         self.emitter.status('Running ' + DISPLAY + '-webgl...')
         try:
-            cmd = DISPLAY+'-webgl --default --no-output-files -n100 ' + os.path.basename(self.state.getInstrumentFile()) + '&'
+            cmd = DISPLAY+'-webgl --default -n100 ' + os.path.basename(self.state.getInstrumentFile()) + '&'
             self.emitter.message(cmd, gui=True)
             self.emitter.message('', gui=True)
             
@@ -748,7 +748,7 @@ class McGuiAppController():
             DISPLAY="mxdisplay"
         self.emitter.status('Running ' + DISPLAY + '-pyqtgraph...')
         try:
-            cmd = DISPLAY+'-pyqtgraph --default --no-output-files -n100 ' + os.path.basename(self.state.getInstrumentFile()) + '&'
+            cmd = DISPLAY+'-pyqtgraph --default -n100 ' + os.path.basename(self.state.getInstrumentFile()) + '&'
             self.emitter.message(cmd, gui=True)
             self.emitter.message('', gui=True)
             
