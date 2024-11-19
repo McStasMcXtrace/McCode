@@ -1297,6 +1297,11 @@ TRACE
     do {  /* Loop over multiple scattering events */
       /* Angles for powder randomization */
       double Alpha, Beta, Gamma;
+	  double lab_vx, lab_vy, lab_vz;
+	  
+	  lab_vx = vx;
+	  lab_vy = vy;
+	  lab_vz = vz;
 
       if (hkl_info.shape == 0)
         intersect = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight);
@@ -1330,7 +1335,7 @@ TRACE
         intersect=0; 
         break;
       }
-
+	  
       /* (1). Compute incoming wave vector ki */
       if (powder) { /* orientation of crystallite is random */
         Alpha = randpm1()*PI*powder;
@@ -1343,14 +1348,12 @@ TRACE
         PGrotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
       }
 
-
-
       /* ------------------------------------------------------------------------- */
       /* lattice curvature option: rotate neutron velocity */
       /* WARNING: cannot be used together with the PG c-rotation! */
       curv_xangle = 0;
       curv_yangle = 0;
-
+	  
       _vx = vx;
       _vy = vy;
       _vz = vz;
@@ -1515,7 +1518,11 @@ TRACE
       else
         l = -log(1 - rand0max((1 - exp(-tot_xlen*l_full))))/tot_xlen;
     
-      /* Propagate to scattering point */
+      /* Propagate to scattering point in lab space */
+	  vx = lab_vx;
+	  vy = lab_vy;
+	  vz = lab_vz;
+	  
       PROP_DT(l/v);
       event_counter++;
     
