@@ -725,9 +725,13 @@ class McGuiAppController():
             self.emitter.status('Running plotter ...')        
     
     def handleMcDisplayWeb(self):
-        self.emitter.status('Running mcdisplay-webgl...')
+        if mccode_config.configuration["MCCODE"]=="mcstas":
+            DISPLAY="mcdisplay"
+        else:
+            DISPLAY="mxdisplay"
+        self.emitter.status('Running ' + DISPLAY + '-webgl...')
         try:
-            cmd = 'mcdisplay-webgl --default --no-output-files -n100 ' + os.path.basename(self.state.getInstrumentFile()) + '&'
+            cmd = DISPLAY+'-webgl --default --no-output-files -n100 ' + os.path.basename(self.state.getInstrumentFile()) + '&'
             self.emitter.message(cmd, gui=True)
             self.emitter.message('', gui=True)
             
@@ -738,9 +742,13 @@ class McGuiAppController():
             self.emitter.status('')
     
     def handleMcDisplay2D(self):
-        self.emitter.status('Running mcdisplay-webgl...')
+        if mccode_config.configuration["MCCODE"]=="mcstas":
+            DISPLAY="mcdisplay"
+        else:
+            DISPLAY="mxdisplay"
+        self.emitter.status('Running ' + DISPLAY + '-pyqtgraph...')
         try:
-            cmd = 'mcdisplay-pyqtgraph --default --no-output-files -n100 ' + os.path.basename(self.state.getInstrumentFile()) + '&'
+            cmd = DISPLAY+'-pyqtgraph --default --no-output-files -n100 ' + os.path.basename(self.state.getInstrumentFile()) + '&'
             self.emitter.message(cmd, gui=True)
             self.emitter.message('', gui=True)
             
