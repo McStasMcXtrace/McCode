@@ -182,6 +182,7 @@
 * cz: []                                                  c on z axis
 * reflections: [string]                                   File name containing structure factors of reflections (LAZ LAU CIF, FullProf, ShelX). Use empty ("") or NULL for incoherent scattering only
 * order: [1]                                              Limit multiple scattering up to given order (0: all, 1: first, 2: second, ...)
+* extra_order: [1]                                        When using order, allow additional multiple scattering without coherent scattering, sensible with very large unit cells (0: disable, 1: one extra, 2: two extra, ...)
 *
 * Optional input parameters
 *
@@ -289,7 +290,7 @@ ax = 0, ay = 0, az = 0,
 bx = 0, by = 0, bz = 0,
 cx = 0, cy = 0, cz = 0,
 p_transmit = 0.001, sigma_abs = 0, sigma_inc = 0,
-aa=0, bb=0, cc=0, order=0, RX=0, RY=0, powder=0, PG=0,
+aa=0, bb=0, cc=0, order=0, extra_order=0, RX=0, RY=0, powder=0, PG=0,
 deltak=1e-6)
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -1180,6 +1181,10 @@ INITIALIZE
             "WARNING setting order=1\n", NAME_CURRENT_COMP);
     order=1;
   }
+  
+  if (order==0 && extra_order) {
+     fprintf(stderr, "Single_crystal: %s: extra_order used while order=0, then this option has no effect\n", NAME_CURRENT_COMP);
+  }
 
   printf("Direct space lattice orientation:\n");
   printf("  a = [%g %g %g]\n", hkl_info.m_ax, hkl_info.m_ay, hkl_info.m_az);
@@ -1329,8 +1334,9 @@ TRACE
 
       l_full = t2*v;
 	  
-      if (order && event_counter >= order) {
-        /* Exit due to truncated order, weight with relevant cross-sections to distance l_full */
+      if (   (order && !(extra_order) && event_counter >= order)
+  		  || (order && extra_order && event_counter >= order + extra_order)) {
+        // Exit due to truncated order, weight with relevant cross-sections to distance l_full
         p*=exp(-abs_xlen*l_full);
         intersect=0; 
         break;
@@ -1391,11 +1397,13 @@ TRACE
 	  
       double coh_xsect = 0, coh_refl = 0;
 	  
+	  // Condition to skip calculation of coherent cross section when, needed for extra_order feature
+	  if (order==0 || extra_order==0 || event_counter < order) {
 #ifndef OPENACC
       /* in case we use 'SPLIT' then consecutive neutrons can be identical when entering here
          and we may skip the hkl_search call. One tau_list is reserved for data for the initial
-	 ray results so that it potentially can be reused later. */
-	T = tau_list;
+	     ray results so that it potentially can be reused later. */
+  	  T = tau_list;
       if (order==1 && fabs(kix - hkl_info.kix) < deltak
         && fabs(kiy - hkl_info.kiy) < deltak
         && fabs(kiz - hkl_info.kiz) < deltak) {
@@ -1404,7 +1412,7 @@ TRACE
         /* Restore in case of matching event (e.g. SPLIT) */
         coh_refl = hkl_info.coh_refl;
         coh_xsect = hkl_info.coh_xsect;
-	      tau_count = hkl_info.tau_count;
+	    tau_count = hkl_info.tau_count;
       } else {
 #endif
         /* Max possible tau for this ki with 5*sigma delta-d/d cutoff. */
@@ -1446,6 +1454,15 @@ TRACE
         }
       }
 #endif
+      } else {
+	      // When extra_order used, disable coherent scattering after order reached, but continue
+    	  // Set coherent cross section to zero to ignore coherent part
+          coh_refl = 0;
+          coh_xsect = 0;
+          tau_count = 0;
+      }	  
+	  
+	  
       /* (3). Probabilities of the different possible interactions. */
       /* Cross-sections are in barns = 10**-28 m**2, and unit cell volumes are
          in AA**3 = 10**-30 m**2. Hence a factor of 100 is used to convert
