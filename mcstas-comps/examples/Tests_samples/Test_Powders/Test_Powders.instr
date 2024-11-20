@@ -40,13 +40,15 @@
 * %Example: lambda=2.5 directbeam=0 comp=3 material=NaCl twotheta=78 SPLITS=1 Detector: psd_mon_I=3.4e+05
 *
 * %Parameters
+* comp:          [1] 1=PowderN, 2=Single_crystal, 3=NCrystal
 * lambda:     [Angs] Wavelength emitted from source, 1% wl-interval around.
 * L1:            [m] Source-sample distance
 * directbeam:    [1] Suppress direct beam or not
-* materi: [str] List of powder reflections for powderN
-* reflections_Single_crystal: [str] List of powder reflections for Single_crystal
+* material:    [str] Material string for picking up CIF (PowderN/Single_Crystal) and ncmat (NCrystal)
 * SPLITS:        [1] Number of SPLIT's before sample
 * frac_t:        [1] Fraction of stats assigned to unscattered, "direct beam"
+* sxmos:    [arcmin] Mosaicity to use in Single_crystal case
+* twotheta:    [deg] Angle for 2\theta detector for detailed view
 *
 * %End
 *******************************************************************************/
