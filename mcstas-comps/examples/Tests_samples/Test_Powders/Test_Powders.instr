@@ -4,43 +4,80 @@
 * Instrument: Test PowderN output
 *
 * %Identification
-* Written by: M. Bertelsen
-* Date: November 19 2024
+* Written by: M. Bertelsen and P. Willendrup
+* Date: November 2024
 * Origin: ESS DMSC
 * %INSTRUMENT_SITE: Tests_samples
 *
-* Test output of PowderN and Single_crystal on a spherical monitor / PSD.
+* Test output of PowderN, NCrystal and Single_crystal on a spherical monitor / PSD.
 *
 * %Description
 * A test instrument for Powder output from different sample components.
-* Currently does not validate, but Single_crystal should be able to
-* replicate PowderN results.
 *
-* %Example: lambda=2.5 directbeam=0 comp=1 SPLITS=1 Detector: Sph_mon_I=5.67059e+08
-* %Example: lambda=2.5 directbeam=0 comp=1 SPLITS=1 Detector: psd_mon_I=1.46997e+06
-* %Example: lambda=2.5 directbeam=0 comp=2 SPLITS=1 Detector: Sph_mon_I=5.67059e+08
-* %Example: lambda=2.5 directbeam=0 comp=2 SPLITS=1 Detector: psd_mon_I=1.46997e+06
+* %Example: lambda=2.5 directbeam=0 comp=1 material=Ge SPLITS=1 Detector: Sph_mon_I=3.9e+08
+* %Example: lambda=2.5 directbeam=0 comp=1 material=Ge SPLITS=1 Detector: psd_mon_I=8.3e+05
+* %Example: lambda=2.5 directbeam=0 comp=2 material=Ge SPLITS=1 Detector: Sph_mon_I=3.9e+08
+* %Example: lambda=2.5 directbeam=0 comp=2 material=Ge SPLITS=1 Detector: psd_mon_I=8.3e+05
+* %Example: lambda=2.5 directbeam=0 comp=3 material=Ge SPLITS=1 Detector: Sph_mon_I=3.9e+08
+* %Example: lambda=2.5 directbeam=0 comp=3 material=Ge SPLITS=1 Detector: psd_mon_I=8.3e+05
+* %Example: lambda=2.5 directbeam=0 comp=1 material=Al twotheta=76.5 SPLITS=1 Detector: Sph_mon_I=1.1e+08
+* %Example: lambda=2.5 directbeam=0 comp=1 material=Al twotheta=76.5 SPLITS=1 Detector: psd_mon_I=2e+05
+* %Example: lambda=2.5 directbeam=0 comp=2 material=Al twotheta=76.5 SPLITS=1 Detector: Sph_mon_I=1.1e+08
+* %Example: lambda=2.5 directbeam=0 comp=2 material=Al twotheta=76.5 SPLITS=1 Detector: psd_mon_I=2e+05
+* %Example: lambda=2.5 directbeam=0 comp=3 material=Al twotheta=76.5 SPLITS=1 Detector: Sph_mon_I=1.1e+08
+* %Example: lambda=2.5 directbeam=0 comp=3 material=Al twotheta=76.5 SPLITS=1 Detector: psd_mon_I=2e+05
+* %Example: lambda=2.5 directbeam=0 comp=1 material=LaMnO3 twotheta=80 SPLITS=1 Detector: Sph_mon_I=3.1e+08
+* %Example: lambda=2.5 directbeam=0 comp=1 material=LaMnO3 twotheta=80 SPLITS=1 Detector: psd_mon_I=1.9e+05
+* %Example: lambda=2.5 directbeam=0 comp=2 material=LaMnO3 twotheta=80 SPLITS=1 Detector: Sph_mon_I=3.1e+08
+* %Example: lambda=2.5 directbeam=0 comp=2 material=LaMnO3 twotheta=80 SPLITS=1 Detector: psd_mon_I=1.9e+05
+* %Example: lambda=2.5 directbeam=0 comp=3 material=LaMnO3 twotheta=80 SPLITS=1 Detector: Sph_mon_I=3.1e+08
+* %Example: lambda=2.5 directbeam=0 comp=3 material=LaMnO3 twotheta=80 SPLITS=1 Detector: psd_mon_I=1.9e+05
+* %Example: lambda=2.5 directbeam=0 comp=1 material=NaCl twotheta=78 SPLITS=1 Detector: Sph_mon_I=2.5e+08
+* %Example: lambda=2.5 directbeam=0 comp=1 material=NaCl twotheta=78 SPLITS=1 Detector: psd_mon_I=3.4e+05
+* %Example: lambda=2.5 directbeam=0 comp=2 material=NaCl twotheta=78 SPLITS=1 Detector: Sph_mon_I=2.5e+08
+* %Example: lambda=2.5 directbeam=0 comp=2 material=NaCl twotheta=78 SPLITS=1 Detector: psd_mon_I=3.4e+05
+* %Example: lambda=2.5 directbeam=0 comp=3 material=NaCl twotheta=78 SPLITS=1 Detector: Sph_mon_I=2.5e+08
+* %Example: lambda=2.5 directbeam=0 comp=3 material=NaCl twotheta=78 SPLITS=1 Detector: psd_mon_I=3.4e+05
 *
 * %Parameters
 * lambda:     [Angs] Wavelength emitted from source, 1% wl-interval around.
 * L1:            [m] Source-sample distance
 * directbeam:    [1] Suppress direct beam or not
-* reflections_powderN: [str] List of powder reflections for powderN
+* materi: [str] List of powder reflections for powderN
 * reflections_Single_crystal: [str] List of powder reflections for Single_crystal
 * SPLITS:        [1] Number of SPLIT's before sample
 * frac_t:        [1] Fraction of stats assigned to unscattered, "direct beam"
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_PowderN(int comp=1, lambda=2.5, L1=10, int directbeam=0, string reflections_powderN="Ge.laz", string reflections_Single_crystal="Ge.lau", int SPLITS=1, frac_t=0.1)
+DEFINE INSTRUMENT Test_PowderN(int comp=1, lambda=2.5, L1=10, int directbeam=0, string material="Ge", int SPLITS=1, frac_t=0.1, sxmos=60, twotheta=94)
 	
 DECLARE %{
+  char ciffile[128];
+  char ncmatfile[128];
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
+
+  if (!strcmp("Ge",material)) {
+    sprintf(ciffile,"Ge.cif");
+    sprintf(ncmatfile,"autogen_Ge_sg227_cod9011050.ncmat");
+  } else if (!strcmp("Al",material)) {
+    sprintf(ciffile,"Al.cif");
+    sprintf(ncmatfile,"autogen_Al_sg225_cod1502689.ncmat");
+  } else if (!strcmp("LaMnO3",material)) {
+    sprintf(ciffile,"LaMnO3.cif");
+    sprintf(ncmatfile,"autogen_LaMnO3_sg62_cod1006141.ncmat");
+  } else if (!strcmp("NaCl",material)) {
+    sprintf(ciffile,"NaCl.cif");
+    sprintf(ncmatfile,"autogen_ClNa_sg225_cod1000041.ncmat");
+  } else {
+    fprintf(stderr,"Material %s not supported\n",material);
+    exit(-1);
+  }
 %}
 
 /* Here comes the TRACE section, where the actual      */
@@ -62,36 +99,31 @@ SPLIT SPLITS COMPONENT sample_cradle = Arm()
   AT (0, 0, L1) RELATIVE PREVIOUS
 
 COMPONENT Pow_PowderN = PowderN(
-	radius=0.005, yheight=0.1, reflections=reflections_powderN, p_transmit=frac_t)
+	radius=0.005, yheight=0.1, reflections=ciffile, p_transmit=frac_t)
 WHEN (comp==1)
 AT (0, 0, 0) RELATIVE sample_cradle
-EXTEND %{
-  if(INSTRUMENT_GETPAR(directbeam) == 0) {
-    if (!SCATTERED) {
-      ABSORB;
-    }
-  }
-%}
 
-SPLIT SPLITS COMPONENT Pow_Single_crystal = Single_crystal(
-	radius=0.005, yheight=0.1, reflections=reflections_Single_crystal, p_transmit=frac_t,
-    powder=1, mosaic=5, order=1, barns=0)
+COMPONENT Pow_Single_crystal = Single_crystal(
+    radius=0.005, yheight=0.1, reflections=ciffile, p_transmit=frac_t,
+    powder=1, mosaic=sxmos, order=1, barns=1)
 WHEN (comp==2)
 AT (0, 0, 0) RELATIVE sample_cradle
-EXTEND %{
-  if(INSTRUMENT_GETPAR(directbeam) == 0) {
-    if (!SCATTERED) {
-      ABSORB;
-    }
-  }
-%}
 
+COMPONENT Pow_NCrystal = NCrystal_sample(
+	radius=0.005, yheight=0.1, cfg=ncmatfile)
+WHEN (comp==3)
+AT (0, 0, 0) RELATIVE sample_cradle
+
+  COMPONENT Beamstop = Beamstop(xwidth=0.015, yheight=0.105)
+WHEN (directbeam==0)
+AT (0, 0, 0.1) RELATIVE sample_cradle
+  
 COMPONENT Sph_mon = PSD_monitor_4PI(nx=360,ny=180, radius=1, restore_neutron=1, filename="Sphere")
-  AT (0, 0, 0) RELATIVE PREVIOUS
+  AT (0, 0, 0) RELATIVE sample_cradle
 	  
 COMPONENT peak_dir = Arm()
 AT (0,0,0) RELATIVE sample_cradle
-ROTATED (0, 100, 0) RELATIVE sample_cradle
+ROTATED (0, twotheta, 0) RELATIVE sample_cradle
 	  
 COMPONENT psd_mon = PSD_monitor(xwidth=0.08, yheight=0.05, nx=100, ny=100, restore_neutron=1, filename="PSD")
 AT (0,0,1) RELATIVE peak_dir
