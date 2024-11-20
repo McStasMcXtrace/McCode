@@ -21,6 +21,7 @@
 * theta: [deg]         horizontal rotation of the object
 * phi: [deg]           vertical rotation of the object
 * det_rotation: [deg]  detector rotation around the sample
+* reflections:  [str]  sample configuration
 *
 * %Link
 * <a href="http://www.nuclearmalaysia.gov.my/Plant&Facilities/reactor.php">Nuclear Malaysia</a>
@@ -29,7 +30,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT RTP_Laue(theta=0, phi=0, det_rotation=0)
+DEFINE INSTRUMENT RTP_Laue(theta=0, phi=0, det_rotation=0, string reflections="leucine.lau")
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -95,7 +96,7 @@ COMPONENT sample_position_rotated = Arm()
   %}
 
 SPLIT COMPONENT sample_outer1 = Single_crystal(xwidth=0.01, yheight=0.05, zdepth=0.01,
-  reflections="leucine.lau", mosaic=5)
+  reflections=reflections, mosaic=5, order=1)
   AT (0,0,0) RELATIVE sample_position_rotated
   EXTEND %{
     if (SCATTERED) sample_scattered+=SCATTERED;

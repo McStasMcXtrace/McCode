@@ -451,7 +451,7 @@ COMPONENT sample_Phic2 = Monitor_nD(
 
 SPLIT 50 COMPONENT sample = Single_crystal(
   xwidth=0.01, yheight=0.01, zdepth=0.01,
-  mosaic = 5, reflections="leucine.lau")
+  mosaic = 5, reflections=reflections, order=1)
   AT (0,0,0) RELATIVE sample_pos1
   ROTATED (0,5,10) RELATIVE sample_pos1
 EXTEND %{
