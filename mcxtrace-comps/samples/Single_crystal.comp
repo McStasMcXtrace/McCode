@@ -188,6 +188,7 @@
 * cz:      [AA or AA^-1]   c on z axis
 * reflections:  [string] File name containing structure factors of reflections (LAZ LAU CIF, FullProf, ShelX). Use empty ("") or NULL for incoherent scattering only
 * order:             [1] Limit multiple scattering up to given order (0: all, 1: first, 2: second, ...)
+* extra_order:       [1] When using order, allow additional multiple scattering without coherent scattering, sensible with very large unit cells (0: disable, 1: one extra, 2: two extra, ...)
 *
 * Optional input parameters
 *
@@ -296,7 +297,7 @@ SETTING PARAMETERS(string reflections=0, string geometry=0, vector mosaic_AB={0,
   bx = 0, by = 0, bz = 0,
   cx = 0, cy = 0, cz = 0,
   p_transmit = 0.001, sigma_inc = 0,
-  aa=0, bb=0, cc=0, order=1, RX=0, RY=0, powder=0,
+  aa=0, bb=0, cc=0, order=1, extra_order=0, RX=0, RY=0, powder=0,
   deltak=1e-6, string material_datafile="Si.txt",
   int surf_size=0, vector surf_k=NULL, vector surf_FT2=NULL, vector surf_dir={0,0,0})
 
@@ -1438,10 +1439,6 @@ TRACE
   char   type;      /* type of last event: t=transmit,c=coherent or i=incoherent */
   int    itype;     /* type of last event: t=1,c=2 or i=3 */
 
-  int force_transmit; /* Flag to handle cross-section weighting in case of finite order */
-
-  force_transmit=0;
-
   #ifdef OPENACC
   #ifdef USE_OFF
   off_struct thread_offdata = offdata;
@@ -1537,6 +1534,14 @@ TRACE
       }
 
       l_full = l2;
+	  
+      if (   (order && !(extra_order) && event_counter >= order)
+  		  || (order && extra_order && event_counter >= order + extra_order)) {
+        // Exit due to truncated order, weight with relevant cross-sections to distance l_full
+        p*=exp(-abs_xlen*l_full);
+        intersect=0; 
+        break;
+      }
 
       /* (1). Compute incoming wave vector ki */
       if (powder) { /* orientation of crystallite is random */
@@ -1585,6 +1590,9 @@ TRACE
       /* (2). Intersection of Ewald sphere with reciprocal lattice points */
 
       double coh_xsect = 0, coh_refl = 0;
+	  
+	  // Condition to skip calculation of coherent cross section when, needed for extra_order feature	  
+	  if (order==0 || extra_order==0 || event_counter < order) {	  
       /* in case we use 'SPLIT' then consecutive photons can be identical when entering here
          and we may skip the hkl_search call */
 #ifndef OPENACC
@@ -1628,6 +1636,14 @@ TRACE
 	      }
       }
 #endif
+      } else {
+        // When extra_order used, disable coherent scattering after order reached, but continue
+  	    // Set coherent cross section to zero to ignore coherent part
+        coh_refl = 0;
+        coh_xsect = 0;
+        tau_count = 0;
+      }
+	  
       /* (3). Probabilities of the different possible interactions. */
       /* Cross-sections are in barns = 10**-28 m**2, and unit cell volumes are
          in AA**3 = 10**-30 m**2. Hence a factor of 100 is used to convert
@@ -1640,13 +1656,6 @@ TRACE
 
       if(tot_xlen <= 0){
         ABSORB; // Should we really absorb here? If "nothing" can happen we perhaps ought to "pass" instead? 
-      }
-
-      if (force_transmit) {
-        /* Exit due to truncated order, weight with relevant cross-sections to distance l_full */
-        p*=exp(-abs_xlen*l_full);
-        intersect=0; 
-        break;
       }
       
       /* (5). Transmission */
@@ -1808,8 +1817,6 @@ TRACE
       if (powder) { /* orientation of crystallite is no longer random */
         randderotate(&kx, &ky, &kz, Alpha, Beta, Gamma);
       }
-      /* exit if multiple scattering order has been reached */
-      if (order && event_counter >= order) { force_transmit=1; }
       /* Repeat loop for next scattering event. */
     } while (intersect); /* end do (intersect) (multiple scattering loop) */
   } /* if intersect */
