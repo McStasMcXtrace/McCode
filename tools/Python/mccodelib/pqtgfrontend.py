@@ -101,7 +101,11 @@ class McPyqtgraphPlotter():
 
         # start
         if hasattr(self.app, "exec_"):
-            self.isQt6 = False
+            try:
+                import PySide6
+                self.isQt6 = True
+            except:
+                self.isQt6 = False
         else:
             self.isQt6 = True
 
