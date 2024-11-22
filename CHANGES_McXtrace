@@ -15,6 +15,71 @@
 *
 * Documentation: CHANGES_McXtrace
 *************************************************************************/
+Changes in McStas/McXtrace 3.5.12, November 22nd, 2024
+
+## What's Changed
+
+* Platform support and installation procedures
+  * McStas + McXtrace: Allow to build installable packages for linux aarch64 Debian / arm64 by @willend in https://github.com/McStasMcXtrace/McCode/pull/1702
+  * McStas + McXtrace: Install mcstasscript from conda in the meta-packages. by @willend in https://github.com/McStasMcXtrace/McCode/pull/1724
+
+* Code generator and runtime-code
+  * McStas + McXtrace: Fix for SPLIT + GROUP issue: In instruments with a SPLIT N followed by a GROUP, the last N-1 particles would become lost. by @willend in https://github.com/McStasMcXtrace/McCode/pull/1760
+  * McStas + McXtrace: Implement combined OpenACC multicore + gpu in same binary. Enable by adding 
+  `"OACCFLAGS": "-fast -Minfo=accel -acc=gpu,multicore -gpu=managed -DOPENACC -DMULTICORE",` to your `mccode_config.json` by @willend in https://github.com/McStasMcXtrace/McCode/pull/1761
+  * McStas + McXtrace: Add  -D_DARWIN_C_SOURCE on macOS, required for correctly using `#include <stdio.h>` by @willend in https://github.com/McStasMcXtrace/McCode/pull/1703
+
+* Component bugfixes and improvements
+  * McStas + McXtrace: Make use of mcpl_dump() in MCPL_output verbose mode by @willend in https://github.com/McStasMcXtrace/McCode/pull/1704
+  * McStas: MCPL_input, correction of #1733 by @willend in https://github.com/McStasMcXtrace/McCode/pull/1734
+  * McStas: [Fix] compilation error, if not behavior in Pol_guide_vmirror.comp by @g5t in https://github.com/McStasMcXtrace/McCode/pull/1708
+  * McStas: Fix contributed component type mismatches (Monochromator_bent and Statistical_Chopper) @g5t in https://github.com/McStasMcXtrace/McCode/pull/1714
+  * McStas: Union restructure share includes by @willend in https://github.com/McStasMcXtrace/McCode/pull/1716
+  * McStas: PowderN: fixing tth_sign argument by @farhi in https://github.com/McStasMcXtrace/McCode/pull/1727 and  Fix for https://github.com/McStasMcXtrace/McCode/issues/1741 by @willend in https://github.com/McStasMcXtrace/McCode/pull/1745
+  * McXtrace: Add Collimator_linear port McStas -> McXtrace by @willend in https://github.com/McStasMcXtrace/McCode/pull/1737
+  * McStas + McXtrace: Removal of all DECLARATION and OUTPUT parameters by @willend in https://github.com/McStasMcXtrace/McCode/pull/1754
+  * McStas + McXtrace Fix SX issue from minghuisvn by @willend in https://github.com/McStasMcXtrace/McCode/pull/1755
+  * Sync McStas <-> McXtrace powdern focusing algo for https://github.com/McStasMcXtrace/McCode/issues/1741 by @willend in https://github.com/McStasMcXtrace/McCode/pull/1747 + consequence-edits in https://github.com/McStasMcXtrace/McCode/pull/1748
+  * McStas + McXtrace: Source_div_quasi fix for #1735 by @ebknudsen in https://github.com/McStasMcXtrace/McCode/pull/1759
+  * McStas + McXtrace Single_crystal:
+    * McStas: Fix #1732: Single_crystal powder mode was broken by #1521 by @farhi in https://github.com/McStasMcXtrace/McCode/pull/1738
+    * Fixes for https://github.com/McStasMcXtrace/McCode/issues/1728 by @willend in https://github.com/McStasMcXtrace/McCode/pull/1731
+    * Fix of Single_crystal reuse optimization by @mads-bertelsen in https://github.com/McStasMcXtrace/McCode/pull/1726
+    * To allow compilation for GPU hardware, drop all tau_lists in OPENACC case by @willend in https://github.com/McStasMcXtrace/McCode/pull/1751
+    * Introduction of order=0.5 mode in Single_crystal by @mads-bertelsen in https://github.com/McStasMcXtrace/McCode/pull/1762
+    * Fix of order system in Single_crystal by @mads-bertelsen in https://github.com/McStasMcXtrace/McCode/pull/1764
+    * Added order_extra feature for Single_crystal by @mads-bertelsen in https://github.com/McStasMcXtrace/McCode/pull/1767
+
+* Instrument updates
+  * McStas: Test_DiskChoppers2 [Fix] missing pointer dereferences by @g5t in https://github.com/McStasMcXtrace/McCode/pull/1710
+  * McStas: Add a an updated (%)Example line for Test_StatisticalChopper by @willend in https://github.com/McStasMcXtrace/McCode/pull/1715
+  * McStas: Fix these instruments to use "local" inputfile by @willend in https://github.com/McStasMcXtrace/McCode/pull/1729
+  * McXtrace: NECSA X ray machines by @farhi in https://github.com/McStasMcXtrace/McCode/pull/1742
+  * McStas: Expand on Test_Powders from Mads by @willend in https://github.com/McStasMcXtrace/McCode/pull/1766
+
+* Python tool layer
+  * McStas + McXtrace: Fix to comp-forms in mcdoc pages by @willend in https://github.com/McStasMcXtrace/McCode/pull/1723 (fixes #1722)
+  * McStas + McXtrace: mcrun/mxrun optimization: allows to specify criteria expression by @farhi in https://github.com/McStasMcXtrace/McCode/pull/1743
+  * McStas + McXtrace: mcrun/mxrun optimisation: better choice for missing dX/dY by @farhi in https://github.com/McStasMcXtrace/McCode/pull/1744
+  * McStas + McXtrace: mccode-antlr: Add mccode_config / m[c,x]run entry for MCCOGEN by @willend in https://github.com/McStasMcXtrace/McCode/pull/1749
+  * McStas + McXtrace: config updates for the added "MCCOGEN" setting by @willend in https://github.com/McStasMcXtrace/McCode/pull/1750
+  * McStas + McXtrace: Add -n in supplement of --ncount, allow match including .instr by @willend in https://github.com/McStasMcXtrace/McCode/pull/1753
+  * McStas: Strip off arguments not understood by mcdisplay-mantid by @willend in https://github.com/McStasMcXtrace/McCode/pull/1757
+  * McStas + McXtrace: Intermediate fix for https://github.com/McStasMcXtrace/McCode/issues/1768 by @willend in https://github.com/McStasMcXtrace/McCode/pull/1769
+  * McStas + McXtrace: Fix for issue 1763 and related issue propagating --no-output-files by @willend in https://github.com/McStasMcXtrace/McCode/pull/1765
+
+* Documentation etc.
+  * Add binder link in the "Docker" / container README by @willend in https://github.com/McStasMcXtrace/McCode/pull/1700
+  * Document install steps around macOS 15 tightened security by @willend in https://github.com/McStasMcXtrace/McCode/pull/1706
+  * Installation rewording for conda-envs by @willend in https://github.com/McStasMcXtrace/McCode/pull/1756
+
+**Full Changelog**: https://github.com/McStasMcXtrace/McCode/compare/v3.5.1...v3.5.12
+
+**Specific issues solved:**: https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+label%3A%22ready+for+release%22+label%3Amcstas-3.5.1+label%3Amcxtrace-3.5.1+
+
+We hope you will enjoy this new release!!!
+
+
 Changes in McXtrace 3.5.1, September 16th, 2024
 
  McXtrace 3.5.1 is the sixth official release in the 3.x series, with a modernised 
