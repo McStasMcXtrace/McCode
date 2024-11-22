@@ -23,6 +23,8 @@ Changes in McStas/McXtrace 3.5.12, November 22nd, 2024
   * McStas + McXtrace: Allow to build installable packages for linux aarch64 Debian / arm64 by @willend in https://github.com/McStasMcXtrace/McCode/pull/1702
   * McStas + McXtrace: Install mcstasscript from conda in the meta-packages. by @willend in https://github.com/McStasMcXtrace/McCode/pull/1724
 
+* Please note that the packages are currently **NOT** available via the packages.mccode.org repo - and that you will have to manually uninstall McStas/McXtrace 3.5.1 before attempting to install 3.5.12 
+
 * Code generator and runtime-code
   * McStas + McXtrace: Fix for SPLIT + GROUP issue: In instruments with a SPLIT N followed by a GROUP, the last N-1 particles would become lost. by @willend in https://github.com/McStasMcXtrace/McCode/pull/1760
   * McStas + McXtrace: Implement combined OpenACC multicore + gpu in same binary. Enable by adding 
