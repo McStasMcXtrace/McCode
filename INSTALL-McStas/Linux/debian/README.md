@@ -80,7 +80,7 @@ Please report any trouble with the repository to [mcstas-users](mailto:mcstas-us
 
 # Installing without adding the repo
 If you want to attempt installing our debian packages manually via
-dpkg, the packages are available for download at https://download.mcstas.org/mcstas-3.5.12/linux/debian/
+dpkg, the packages are available for download at https://download.mcstas.org/mcstas-3.5.12/Linux/debian/
 (available for multiple processor architectures).
 
 ## In case of issues
