@@ -14,11 +14,11 @@
 * %Description
 * A test instrument for Powder output from different sample components.
 *
-* %Example: lambda=2.5 directbeam=0 comp=1 material=Ge SPLITS=1 Detector: Sph_mon_I=3.9e+08
+* %Example: lambda=2.5 directbeam=0 comp=1 material=Ge SPLITS=1 Detector: Sph_mon_I=4.2e+08
 * %Example: lambda=2.5 directbeam=0 comp=1 material=Ge SPLITS=1 Detector: psd_mon_I=8.3e+05
-* %Example: lambda=2.5 directbeam=0 comp=2 material=Ge SPLITS=1 Detector: Sph_mon_I=3.9e+08
+* %Example: lambda=2.5 directbeam=0 comp=2 material=Ge SPLITS=1 Detector: Sph_mon_I=4.2e+08
 * %Example: lambda=2.5 directbeam=0 comp=2 material=Ge SPLITS=1 Detector: psd_mon_I=8.3e+05
-* %Example: lambda=2.5 directbeam=0 comp=3 material=Ge SPLITS=1 Detector: Sph_mon_I=3.9e+08
+* %Example: lambda=2.5 directbeam=0 comp=3 material=Ge SPLITS=1 Detector: Sph_mon_I=4.2e+08
 * %Example: lambda=2.5 directbeam=0 comp=3 material=Ge SPLITS=1 Detector: psd_mon_I=8.3e+05
 * %Example: lambda=2.5 directbeam=0 comp=1 material=Al twotheta=76.5 SPLITS=1 Detector: Sph_mon_I=1.1e+08
 * %Example: lambda=2.5 directbeam=0 comp=1 material=Al twotheta=76.5 SPLITS=1 Detector: psd_mon_I=2e+05
