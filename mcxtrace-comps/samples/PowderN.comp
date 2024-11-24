@@ -1145,9 +1145,9 @@ TRACE
 
           if (!intersect) {
             /* Strange error: did not hit cylinder */
-            if (line_info.flag_warning < 100)
+            if (flag_warning < 100)
               printf("PowderN: %s: WARNING: Did not hit sample from inside (coh). ABSORB.\n", NAME_CURRENT_COMP);
-            line_info.flag_warning++;
+            flag_warning++;
             ABSORB;
           }
 
@@ -1274,7 +1274,7 @@ TRACE
   #endif
   // These should be updated in any case
   #pragma acc atomic write
-  line_info.flag_warning = flag_warning;
+  line_info.flag_warning += flag_warning;
 %}
 
 FINALLY
