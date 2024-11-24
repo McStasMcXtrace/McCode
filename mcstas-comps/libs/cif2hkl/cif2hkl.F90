@@ -1,5 +1,3 @@
-!! compile with: gfortran -ffree-line-length-512 cif2hkl.F90; rm *.mod
-
 !!-------------------------------------------------------
 !!---- Crystallographic Fortran Modules Library (CrysFML)
 !!-------------------------------------------------------
@@ -14678,7 +14676,7 @@ End Module CFML_GlobalDeps
 !!----
 !!---- PROCEDURES
 !!----    Functions:
-!!----
+!!----       GET_LAUE_CLASS
 !!----    Subroutines:
 !!----       GET_GENERATORS
 !!----       REMOVE_SPGR_INFO
@@ -14701,7 +14699,7 @@ End Module CFML_GlobalDeps
     private
 
     !---- List of public subroutines ----!
-    public :: get_generators
+    public :: get_generators, get_laue_class
     public :: set_spgr_info, set_system_equiv, set_wyckoff_info
     public :: remove_spgr_info, remove_system_equiv, remove_wyckoff_info
 
@@ -15329,6 +15327,52 @@ End Module CFML_GlobalDeps
 
  Contains
 
+    !!----
+    !!---- Function Get_Laue_Class(num) Result(laue)
+    !!----    integer, intent(in) :: num    !  number of the space group
+    !!----    character(len=5)    :: laue   ! Out -> symbol of the LAUE_CLASS
+    !!----
+    !!----    Obtain the symbol of the Laue-Class corresponding to a space
+    !!----    of number "num"
+    !!----
+    !!---- Update: November - 2022
+    !!
+    Function Get_Laue_Class(num) Result(laue)
+      integer, intent(in) :: num
+      character(len=5)    :: laue
+
+      integer :: i
+      Select Case(num)
+        Case(1:2)
+           i=1
+        Case(3:15)
+           i=2
+        Case(16:74)
+           i=3
+        Case(75:88)
+           i=4
+        Case(89:142)
+           i=5
+        Case(143:148)
+           i=8
+        Case(149:156)
+           i=9
+        Case(157:167)
+           i=10
+        Case(168:176)
+           i=11
+        Case(177:194)
+           i=12
+        Case(195:206)
+           i=13
+        Case(207:230)
+           i=14
+        Case Default
+           i=1
+      End Select
+      laue=laue_class(i)
+    End Function Get_Laue_Class
+
     !---------------------!
     !---- Subroutines ----!
     !---------------------!
@@ -15592,7 +15636,7 @@ End Module CFML_GlobalDeps
        spg_gen(146) =  "R 3       : x+1/3,y+2/3,z+2/3; -y,x-y,z "
        spg_gen(147) =  "P -3      : -y,x-y,z; -x,-y,-z "
        spg_gen(148) =  "R -3      : x+1/3,y+2/3,z+2/3; -y,x-y,z; -x,-y,-z "
-       spg_gen(149) =  "P 3 1 2   : -y,x-y,z; -y,-x,-z "
+       spg_gen(149) =  "P 3 1 2   : -y,x-y,z; -y,-x,-z "   !   "-3m1 ","-31m ",
        spg_gen(150) =  "P 3 2 1   : -y,x-y,z; y,x,-z "
        spg_gen(151) =  "P 31 1 2  : -y,x-y,z+1/3; -y,-x,-z+2/3 "
        spg_gen(152) =  "P 31 2 1  : -y,x-y,z+1/3; y,x,-z "
@@ -21188,8 +21232,10 @@ End Module CFML_GlobalDeps
                                               (/  0.049792, 15.112189,  0.270644,  9.158312,  0.679388,  2.880260, -0.000131/) )
        Magnetic_Form(109) = Magnetic_Form_Type("JDY2", &
                                               (/  0.175586,  5.938148,  0.228867, 11.464046,  0.583298,  2.167554,  0.011186/) )
+!       Magnetic_Form(110) = Magnetic_Form_Type("JDY3", &
+!                                              (/  0.146536, 12.639305,  0.375822,  5.511785,  0.515731,  2.090789, -0.038000/) ) ! 0.093576/) )
        Magnetic_Form(110) = Magnetic_Form_Type("JDY3", &
-                                              (/  0.146536, 12.639305,  0.375822,  5.511785,  0.515731,  2.090789,  0.093576/) )
+                                              (/  0.123500, 13.224000,  0.488130,  4.640900,  0.394310,  1.734500, -0.005998/) ) ! 0.093576/) )
        Magnetic_Form(111) = Magnetic_Form_Type("JHO2", &
                                               (/  0.023234,  0.703240,  0.270745,  9.993475,  0.677581,  2.521403,  0.027101/) )
        Magnetic_Form(112) = Magnetic_Form_Type("JHO2", &
@@ -25747,7 +25793,7 @@ End Module CFML_GlobalDeps
 
        !---- Monoclinic ----!
        else if ( (nrot_2 + nrot_2b == 1)  ) then
-          if (SpaceGroup%Centred /=1) then
+          if (SpaceGroup%Centred /= 1) then
              point_car="2/m"
           else
              if (nrot_2  == 1 ) point_car="2"
@@ -29429,11 +29475,11 @@ End Module CFML_GlobalDeps
     End Subroutine Get_T_SubGroups
 
     !!----
-    !!---- Subroutine Get_Trasfm_Symbol(Mat,tr,abc_symb,oposite)
+    !!---- Subroutine Get_Trasfm_Symbol(Mat,tr,abc_symb,opposite)
     !!----    integer, dimension(3,3), intent(in) :: Mat
     !!----    real,    dimension(3),   intent(in) :: tr
     !!----    character(len=*),        intent(out):: abc_symb
-    !!----    logical,optional,        intent(in) :: oposite
+    !!----    logical,optional,        intent(in) :: opposite
     !!----
     !!----    Provides the short symbol for a setting change defined by
     !!----    the transfomation matrix Mat and origin given by the translation
@@ -29444,17 +29490,17 @@ End Module CFML_GlobalDeps
     !!----     1  0  1                      c'=a+c
     !!----     And the change of origin given by (0.5,0.0,0.5)
     !!----     The subroutine provide the symbol: (1/2,0,1/2; a-c,2b,a+c)
-    !!----     If "oposite" is provided then the output is the symbol: (a-c,2b,a+c; 1/2,0,1/2)
+    !!----     If "opposite" is provided then the output is the symbol: (a-c,2b,a+c; 1/2,0,1/2)
     !!----     Warning! This procedure works only for integer matrices, for rational matrices
     !!----     please use the procedure Get_Symb_From_Mat in CFML_String_Utilities module.
     !!----
     !!---- Update: November - 2012, February 2016 (optional argument)
     !!
-    Subroutine Get_Trasfm_Symbol(Mat,tr,abc_symb,oposite)
+    Subroutine Get_Trasfm_Symbol(Mat,tr,abc_symb,opposite)
       integer,       dimension(3,3), intent(in) :: Mat
       real(kind=cp), dimension(3),   intent(in) :: tr
       character(len=*),              intent(out):: abc_symb
-      logical,optional,              intent(in) :: oposite
+      logical,optional,              intent(in) :: opposite
       !---- Local variables ----!
       integer :: i
       character(len=40) :: xyz_op, transl
@@ -29477,7 +29523,7 @@ End Module CFML_GlobalDeps
       end do
       transl=Pack_string(transl)
       abc_symb="("//trim(transl)//" "//trim(xyz_op)//")"
-      if(present(oposite)) then
+      if(present(opposite)) then
         i=len_trim(transl)
         abc_symb="("//trim(xyz_op)//"; "//transl(1:i-1)//")"
       end if
@@ -31597,15 +31643,14 @@ End Module CFML_GlobalDeps
        MSpGn%Parent_spg       = MSpG%Parent_spg
        MSpGn%standard_setting = .false.
        MSpGn%CrystalSys       = MSpG%CrystalSys
-       MSpGn%Centred=0
+       MSpGn%Centred=1
+       m=0
        do k=1,MSpGn%multip
          if(equal_matrix(MSpGn%SymOp(k)%Rot,-identity,3) .and. MSpGn%MSymOp(k)%Phas > 0) then
            m=k
-           MSpGn%Centred=max(MSpGn%Centred,1)
-           if(sum(abs(MSpGn%SymOp(k)%tr)) < 0.001) then
-             MSpGn%Centred=2
-             exit
-           end if
+           MSpGn%Centred= 0 !max(MSpGn%Centred,1)
+           if(sum(abs(MSpGn%SymOp(k)%tr)) < 0.001)  MSpGn%Centred=2
+           exit
          end if
        end do
        MSpGn%NumOps=MSpG%NumOps
@@ -33074,7 +33119,7 @@ End Module CFML_GlobalDeps
        write(unit=lun,fmt="(a,i3)")          " => Number of reduced set of S.O.: ", SG%NumOps
        write(unit=lun,fmt="(a,i3)")          " =>         General Multiplicitiy: ", SG%Multip
        write(unit=lun,fmt="(a,i3)")          " =>                       Centred: ", SG%Centred
-       if (SG%centred == 1) then
+       if (SG%centred == 0) then
           call Frac_Trans_1Dig(SG%Centre_coord,texto(1))
           write(unit=lun,fmt="(a,a)")        " =>                     Centre at: ", trim(texto(1))
        end if
@@ -33971,7 +34016,7 @@ End Module CFML_GlobalDeps
        real(kind=cp), dimension(3)     :: eval=    0.0   ! Eigen values in ascending order
        real(kind=cp), dimension(3)     :: evalesd= 0.0   ! Eigen values esds
        real(kind=cp), dimension(3,3)   :: evec=    0.0   ! Eigenvector components in same order: evec(1:3,i) holds the
-                                                         ! i’th vector components wrt Cartesian axes.
+                                                         ! i\92th vector components wrt Cartesian axes.
        real(kind=cp), dimension(3,3,2) :: cart_ang=0.0   ! Angles of eigenvectors to Cartesian axes cart_ang(1:3,i,1)
                                                          ! has the angles for the i'th eigenvector, cart_ang(1:3,i,2)
                                                          ! the esd
@@ -40466,6 +40511,7 @@ End Module CFML_GlobalDeps
          num_ref=num_ref+1
          hklm(:,num_ref)=hh
          sm(num_ref) = sv(i)
+         indx(num_ref) = indx(i)
        end do
        !Final assignments
        if(allocated(reflex)) deallocate(reflex)
@@ -40602,6 +40648,7 @@ End Module CFML_GlobalDeps
          num_ref=num_ref+1
          hklm(:,num_ref)=hh
          sm(num_ref) = sv(i)
+         indx(num_ref)=indx(i)
        end do
        !Final assignments
        if(allocated(reflex)) deallocate(reflex)
@@ -56105,7 +56152,10 @@ Contains
               ERR_DiffPatt_Mess=" Error in Intensity file, check your instr parameter!"
               return
            end if
-           IF (i > 10 .and. ABS(pat%x(i)) < eps1 .AND. pat%y(i) < eps1 .AND.  pat%sigma(i) < eps1) exit
+           IF (i > 10 .and. ABS(pat%x(i)) < eps1 .AND. pat%y(i) < eps1 .AND.  pat%sigma(i) < eps1) then
+            i=i-1
+            exit
+           end if
            pat%x(i)=pat%x(i)*fac_x
            pat%y(i)=pat%y(i)*fac_y
            pat%ycalc(i)=pat%ycalc(i)*fac_y
@@ -56123,7 +56173,7 @@ Contains
            end if
        end do
 
-       ntt=i-1
+       ntt=i
        pat%xmin=pat%x(1)
        pat%xmax=pat%x(ntt)
        cnorm=cnorm/REAL(ntt)
@@ -72054,28 +72104,28 @@ End Module CFML_EisPack!!-------------------------------------------------------
     Interface  Read_File_Cell
        Module Procedure Read_File_Cellc  !Last Output Argument Vector Of Six Component With The Cell Parameters
        Module Procedure Read_File_Cellt  !Last output argument object of type Crystal_cell_type
-    End interface
+    End interface Read_File_Cell
 
     Interface Read_File_Atom
        Module Procedure Read_File_Atomlist   !Last Output Argument of type Atom_list_type
        Module Procedure Read_File_Pointlist  !Last output argument of type Point_list_type
-    End Interface
+    End Interface Read_File_Atom
 
     Interface Readn_Set_Xtal_Structure
        Module Procedure Readn_Set_Xtal_Structure_Molcr ! For Molecular Crystal Type
        Module Procedure Readn_Set_Xtal_Structure_Split ! For Cell, Spg, A types
        Module Procedure Readn_Set_Xtal_Structure_Magn  ! Use Shubnikov groups
-    End Interface
+    End Interface Readn_Set_Xtal_Structure
 
     Interface Write_CFL
        Module Procedure Write_CFL_Molcrys        ! For Molecular Crystal Type
        Module Procedure Write_CFL_Atom_List_Type ! For Cell, Spg, A Types
-    End Interface
+    End Interface Write_CFL
 
     Interface Write_Atoms_CFL
        Module Procedure Write_Atoms_CFL_MOLX ! For Molecular Crystal Type
        Module Procedure Write_Atoms_CFL_ATM  ! For Cell, Spg, A Types
-    End Interface
+    End Interface Write_Atoms_CFL
 
  Contains
 
@@ -72430,7 +72480,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
          MSpG%MSymOpSymb(i)=ShOp_symb(1:j-1)
          !write(*,"(a,i6,a,i4)") ired,i, "  "//trim(MSpG%SymOpSymb(i))//"   "//trim(MSpG%MSymOpSymb(i)), nint(MSpG%MSymOp(i)%phas)
       end do
-      return
+
     End Subroutine Cleanup_Symmetry_Operators
 
     !!----
@@ -72464,7 +72514,6 @@ End Module CFML_EisPack!!-------------------------------------------------------
           call reading_Lines(trim(File_dat),nlines,file_list%line)
        end if
 
-       return
     End Subroutine File_To_FileList
 
     !!----
@@ -72744,7 +72793,6 @@ End Module CFML_EisPack!!-------------------------------------------------------
           Job_Info%cmd(i)=line(8:)
        end do
 
-       return
     End Subroutine Get_Job_Info
 
     Subroutine Get_moment_ctr(xnr,moment,Spg,codini,codes,ord,ss,att,Ipr)
@@ -72786,8 +72834,8 @@ End Module CFML_EisPack!!-------------------------------------------------------
          write(Ipr,"(/,a)")         " => Calculation of symmetry constraints for magnetic moments "
        end if
        x=xnr
-       !where(x < 0.0) x=x+1.0
-       !where(x > 1.0) x=x-1.0
+           !where(x < 0.0) x=x+1.0
+           !where(x > 1.0) x=x-1.0
 
        if(present(ord) .and. present(ss) .and. present(att)) then
          order=ord
@@ -72868,14 +72916,14 @@ End Module CFML_EisPack!!-------------------------------------------------------
          end if
 
        end if
-       return
+
     End Subroutine Get_moment_ctr
 
-    Subroutine Get_Refinement_Codes(n,vect_val,Ctr,is,multi,codd,vect_out)
+    Subroutine Get_Refinement_Codes(n,vect_val,Ctr,iss,multi,codd,vect_out)
       integer,                       intent(in)    :: n !dimension of the vector and the matrix
       real(kind=cp), dimension(:),   intent(in)    :: vect_val
       real(kind=dp), dimension(:,:), intent(in out):: Ctr
-      integer,                       intent(out)   :: is
+      integer,                       intent(out)   :: iss
       real(kind=cp), dimension(:),   intent(out)   :: multi
       character(len=*), dimension(:),intent(out)   :: codd
       real(kind=cp), dimension(:),   intent(out)   :: vect_out
@@ -72892,13 +72940,13 @@ End Module CFML_EisPack!!-------------------------------------------------------
       !The corresponding eigenvector contains the constraints of all moment components
       !Calling the general diagonalization subroutine from EisPack
       call rg_ort(n,Ctr,wr,wi,.true.,zv,ier)
-      is=0
+      iss=0
       pti=0
       kval=0
       do i=1,n
         if(abs(wr(i)-1.0_dp) < epps .and. abs(wi(i)) < epps) then
-          is=is+1   !Number of eigenvalues = 1 => number of free parameters
-          pti(is)=i !This points to the eigenvectors with eigenvalue equal to 1.
+          iss=iss+1   !Number of eigenvalues = 1 => number of free parameters
+          pti(iss)=i !This points to the eigenvectors with eigenvalue equal to 1.
           zmi=1.0e6 !normalize the eigenvectors so that the minimum (non-zero value) is 1.
           j=1
           do k=1,n
@@ -72909,49 +72957,54 @@ End Module CFML_EisPack!!-------------------------------------------------------
               j=nint(sign(1.0_dp,zv(k,i)))
             end if
           end do
-          zv(:,i)=j*zv(:,i)/zmi  !This provides directly the multipliers for a single lambda=1 eigenvalue
-          val(is)=vect_val(kval) !This is the basis value to construct the new Moment
+          zv(:,i)=j*zv(:,i)/zmi   !This provides directly the multipliers for a single lambda=1 eigenvalue
+          val(iss)=vect_val(kval) !This is the basis value to construct the new Moment
         end if
       end do
       codd="0"
       vect_out=0.0
       multi=0.0
       done=.false.
-      where(abs(vect_val) < epps) done=.true.
-      Select Case(is)
-        case(1)
-          vect_out(:)=val(1)*zv(:,pti(1))
-          where(abs(vect_out) > epps)  codd(:)=cdd(1)
-          multi(:)=zv(:,pti(1))
-        case(2:)
-          ip=0
-          do i=1,n
-            if(.not. done(i)) then
-              if(abs(vect_val(i)) > epps) then
-                ip=ip+1
-                codd(i)=cdd(ip)
-                multi(i)=1.0
-                vect_out(i)=vect_val(i)
-                done(i)=.true.
-                do j=i+1,n
-                  if(.not. done(j)) then
-                    if(abs(vect_val(i)-vect_val(j)) < epps) then
-                      codd(j)=cdd(ip)
-                      multi(j)=1.0
-                      vect_out(j)=vect_val(i)
-                      done(j)=.true.
-                    else if(abs(vect_val(i)+vect_val(j)) < epps) then
-                      codd(j)=cdd(ip)
-                      multi(j)=-1.0
-                      vect_out(j)=-vect_val(i)
-                      done(j)=.true.
-                    end if
-                  end if
-                end do
-              end if
-            end if
-          end do
+      where(abs(vect_val) < epps)
+        done=.true.
+      end where
+      Select Case(iss)
+       case(1)
+         vect_out(:)=val(1)*zv(:,pti(1))
+         where(abs(vect_out) > epps)
+            codd(:)=cdd(1)
+         end where
+         multi(:)=zv(:,pti(1))
+       case(2:)
+         ip=0
+         do i=1,n
+           if(.not. done(i)) then
+             if(abs(vect_val(i)) > epps) then
+               ip=ip+1
+               codd(i)=cdd(ip)
+               multi(i)=1.0
+               vect_out(i)=vect_val(i)
+               done(i)=.true.
+               do j=i+1,n
+                 if(.not. done(j)) then
+                   if(abs(vect_val(i)-vect_val(j)) < epps) then
+                     codd(j)=cdd(ip)
+                     multi(j)=1.0
+                     vect_out(j)=vect_val(i)
+                     done(j)=.true.
+                   else if(abs(vect_val(i)+vect_val(j)) < epps) then
+                     codd(j)=cdd(ip)
+                     multi(j)=-1.0
+                     vect_out(j)=-vect_val(i)
+                     done(j)=.true.
+                   end if
+                 end if
+               end do
+             end if
+           end if
+         end do
       End Select
+
     End Subroutine Get_Refinement_Codes
 
     !!----
@@ -73491,7 +73544,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
           exit
         end if
        end do
-       !Swapping the orinal atom at the first position with the first having full occupation
+       !Swapping the original atom at the first position with the first having full occupation
        if(First /= 1) Then
          aux_atm=atm%atom(1)
          atm%atom(1)=atm%atom(First)
@@ -73840,6 +73893,8 @@ End Module CFML_EisPack!!-------------------------------------------------------
              end if
           end if
        end if
+       np1=index(spgr_hm,":2")
+       if(np1 > 0) spgr_hm=spgr_hm(1:np1-1)
        !write(*,"(a)") " After first processing: "//spgr_hm
 
        !---- Adapting Nomenclature from ICSD to our model ----!
@@ -74032,8 +74087,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
        !nline_ini=np1
        ! TR  feb. 2015 .(re-reading the same item with another name)
        !if(len_trim(string) == 0) then
-       if(nline_ini == 1) then   ! TR june 2016
-        nline_ini=np1
+       if(nline_ini == np1) then   ! Suggested by Ross Angel
         call Read_Key_StrVal(filevar,nline_ini,nline_end, "_space_group_symop_operation_xyz",string)
        end if
 
@@ -75485,11 +75539,11 @@ End Module CFML_EisPack!!-------------------------------------------------------
                j=index(line,"<--")
                Parent=trim(Parent)//"  "//line(23:j-1)
              end if
-!C_ac  number: "9.41"                           <--Magnetic Space Group (BNS symbol and number)
-!Transform to standard:  c,-b,a;0,0,0           <--Basis transformation from current setting to standard BNS
-!Parent Space Group: Pna2_1  IT_number:   33    <--Non-magnetic Parent Group
-!123456789012345678901234567890
-!Transform from Parent:   a,2b,2c;0,0,0         <--Basis transformation from parent to current setting
+             !C_ac  number: "9.41"                           <--Magnetic Space Group (BNS symbol and number)
+             !Transform to standard:  c,-b,a;0,0,0           <--Basis transformation from current setting to standard BNS
+             !Parent Space Group: Pna2_1  IT_number:   33    <--Non-magnetic Parent Group
+             !123456789012345678901234567890
+             !Transform from Parent:   a,2b,2c;0,0,0         <--Basis transformation from parent to current setting
              !write(*,"(a)") trim(symbol)//" "//trim(setting)//" "//trim(parent)
              ! trn_to=.true. always because magCIF considers thre transformation from the current
              ! setting to the standard setting
@@ -75575,7 +75629,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
        !---- Local Variables ----!
        integer :: i,num_sym, num_constr, num_kvs,num_matom, num_mom, num_magscat, ier, j, m, n, k, L,   &
                   ncar,mult,nitems,iv, num_irreps, nitems_irreps, num_rsym, num_centering,det,kfin
-       integer,          dimension(10)     :: lugar
+       integer,          dimension(20)     :: lugar,mlugar
        integer,          dimension(7)      :: irrep_pos
        integer,          dimension(5)      :: pos
        integer,          dimension(3,3)    :: Rot
@@ -75898,7 +75952,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
                       !write(unit=*,fmt="(a)") "  Treating item: _atom_type_symbol"
                       do k=1,3
                         i=i+1
-                        if(index(mcif%line(i),"_atom_type_symbol") == 0) then
+                        if(index(mcif%line(i),"_atom_type") == 0) then
                           Err_Form=.true.
                           Err_Form_Mess=" Error reading the _atom_type_symbol in loop"
                           return
@@ -75955,12 +76009,13 @@ End Module CFML_EisPack!!-------------------------------------------------------
                       num_sym=k
                       MGp%Multip=k
 
-                   Case("_space_group_symop_magn_operation.id","_space_group_symop_magn.id") !The second item is added to be compatible with BCS error
+                   Case("_space_group_symop_magn_operation.id","_space_group_symop_magn.id","_space_group_symop.magn_operation_id") !The second item is added to be compatible with BCS error
                       !write(unit=*,fmt="(a)") "  Treating item: _space_group_symop_magn_operation.id"
 
                       i=i+1
                       j=index(mcif%line(i),"_space_group_symop_magn_operation.xyz")
-                      if(j == 0 ) then
+                      k=index(mcif%line(i),"_space_group_symop.magn_operation_xyz")
+                      if(j == 0 .and. k == 0) then
                         Err_Form=.true.
                         Err_Form_Mess=" Error reading the _space_group_symop_magn_operation loop"
                         return
@@ -76028,15 +76083,14 @@ End Module CFML_EisPack!!-------------------------------------------------------
 
                    Case("_space_group_symop.magn_centering_id")   !here we read the translations and anti-translations
                       !write(unit=*,fmt="(a)") "  Treating item: _space_group_symop_magn_centering_id"
-                      do k=1,2
-                        i=i+1
-                        if(index(mcif%line(i),"_space_group_symop.magn_centering") == 0 .and. &
-                           index(mcif%line(i),"_space_group_symop_magn_centering") == 0 ) then
-                          Err_Form=.true.
-                          Err_Form_Mess=" Error reading the _space_group_symop_magn_centering loop"
-                          return
-                        end if
-                      end do
+                      i=i+1
+                      if(index(mcif%line(i),"_space_group_symop.magn_centering") == 0 .and. &
+                         index(mcif%line(i),"_space_group_symop_magn_centering") == 0 ) then
+                        Err_Form=.true.
+                        Err_Form_Mess=" Error reading the _space_group_symop_magn_centering loop"
+                        return
+                      end if
+                      i=i+1
                       if(index(mcif%line(i),"_space_group_symop.magn_centering_mxmymz") == 0 .and. &
                          index(mcif%line(i),"_space_group_symop_magn_centering_mxmymz") == 0 ) then
                          i=i-1
@@ -76048,13 +76102,15 @@ End Module CFML_EisPack!!-------------------------------------------------------
                         if(len_trim(mcif%line(i)) == 0) exit
                         k=k+1
                         cent_strings(k)=mcif%line(i)
+                        write(*,"(i3,a)") k,"  "//trim(cent_strings(k))
                       end do
                       num_centering=k
 
                    Case("_space_group_symop_magn_centering.id")   !here we read the translations and anti-translations
                       !write(unit=*,fmt="(a)") "  Treating item: _space_group_symop_magn_centering_id"
                       i=i+1
-                      if(index(mcif%line(i),"_space_group_symop_magn_centering.xyz") == 0) then
+                      if(index(mcif%line(i),"_space_group_symop_magn_centering.xyz") == 0 .and. &
+                         index(mcif%line(i),"_space_group_symop.magn_centering.xyz") == 0) then
                         Err_Form=.true.
                         Err_Form_Mess=" Error reading the _space_group_symop_magn_centering.xyz loop"
                         return
@@ -76071,7 +76127,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
                    Case("_magnetic_atom_site_label","_atom_site_label")
                       !write(unit=*,fmt="(a)") "  Treating item: _atom_site_label"
                       !Count the number of keywords following the _loop
-                      do k=1,10
+                      do k=1,20
                         linat=adjustl(mcif%line(i+k))
                         if(linat(1:1) /=  "_") then
                           kfin=k+1
@@ -76152,40 +76208,83 @@ End Module CFML_EisPack!!-------------------------------------------------------
                       num_matom=k
                       !Treat late the list atoms
 
+
+
+
                    Case("_magnetic_atom_site_moment_label","_atom_site_moment_label","_atom_site_moment.label")
-                      !write(unit=*,fmt="(a)") "  Treating item: _atom_site_moment_label"
-                      do k=1,3
-                        i=i+1
-                        if(index(mcif%line(i),"_atom_site_moment_crystalaxis") == 0 .and. &
-                           index(mcif%line(i),"_atom_site_moment.crystalaxis") == 0) then
-                          Err_Form=.true.
-                          Err_Form_Mess=" Error reading the magnetic_atom_site_moment loop"
-                          return
+
+                      !Count the number of keywords following the _loop
+                      do k=1,20
+                        linat=adjustl(mcif%line(i+k))
+                        if(linat(1:1) /=  "_") then
+                          kfin=k+1
+                          iv=i+k
+                          exit
                         end if
                       end do
+                      mlugar=0
+                      mlugar(1)=1
+                      j=1
+                      do k=1,kfin
+                         i=i+1
+                         if(index(mcif%line(i),"_atom_site_moment.crystalaxis_x") /= 0 .or. &
+                            index(mcif%line(i),"_atom_site_moment_crystalaxis_x") /= 0 ) then
+                            j=j+1
+                            mlugar(2)=j
+                            cycle
+                         end if
+                         if(index(mcif%line(i),"_atom_site_moment.crystalaxis_y") /= 0 .or. &
+                            index(mcif%line(i),"_atom_site_moment_crystalaxis_y") /= 0 ) then
+                            j=j+1
+                            mlugar(3)=j
+                            cycle
+                         end if
+                         if(index(mcif%line(i),"_atom_site_moment.crystalaxis_z") /= 0 .or. &
+                            index(mcif%line(i),"_atom_site_moment_crystalaxis_z") /= 0 ) then
+                            j=j+1
+                            mlugar(4)=j
+                            cycle
+                         end if
+                         if(index(mcif%line(i),"_atom_site_moment.symmform") /= 0) then
+                            j=j+1
+                            mlugar(5)=j
+                            cycle
+                         end if
+                         if (index(mcif%line(i),"_atom_site_moment.spherical_modulus") /= 0 .or. &
+                             index(mcif%line(i),"_atom_site_moment.magnitude") /= 0 ) then
+                            j=j+1
+                            mlugar(6)=j
+                            cycle
+                         end if
+                         if (index(mcif%line(i),"_atom_site_moment.spherical_azimuthal") /= 0) then
+                            j=j+1
+                            mlugar(7)=j
+                            cycle
+                         end if
+                         if (index(mcif%line(i),"_atom_site_moment.spherical_polar") /= 0) then
+                            j=j+1
+                            mlugar(8)=j
+                            cycle
+                         end if
+                         exit
+                      end do
 
-                      i=i+1
-                      if(index(mcif%line(i),"_atom_site_moment.spherical_modulus") /= 0) then !should appear before symmform
-                        !write(*,*) " _atom_site_moment.spherical_modulus FOUND"
-                        mom_modulus=.true.
-                      else
-                        i=i-1
+                      if (any(mlugar(2:4) == 0)) then
+                          Err_Form=.true.
+                          Err_Form_Mess=" Error reading the magnetic moments of magnetic atoms"
+                          return
                       end if
 
-                      i=i+1
-                      if(index(mcif%line(i),"_atom_site_moment.symmform") /= 0) then
-                        !write(*,*) " _atom_site_moment.symmform FOUND"
-                        mom_symmform=.true.
-                      else
-                        i=i-1
-                      end if
+                      i=iv-1
+                      nitems=count(mlugar > 0)
+
                       k=0
                       do
                         i=i+1
                         if(i > mcif%nlines) exit
                         if(len_trim(mcif%line(i)) == 0) exit
                         k=k+1
-                        mom_strings(k)=mcif%line(i)
+                        mom_strings(k)=adjustl(mcif%line(i))
                       end do
                       num_mom=k
                       !Treat later the magnetic moment of the atoms
@@ -76206,7 +76305,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
           Err_Form_Mess=" No symmetry operators have been provided in the MCIF file "//trim(file_mcif)
           return
        else
-          if(no_cent_mxmymz) then  !Full number of symmetry operators is not separated from the centering
+          if(no_cent_mxmymz .and. num_centering < 2) then  !Full number of symmetry operators is not separated from the centering
 
             if(allocated(Mgp%SymopSymb)) deallocate(Mgp%SymopSymb)
             allocate(Mgp%SymopSymb(num_sym))
@@ -76216,19 +76315,16 @@ End Module CFML_EisPack!!-------------------------------------------------------
             allocate(Mgp%MSymopSymb(num_sym))
             if(allocated(Mgp%MSymop)) deallocate(Mgp%MSymop)
             allocate(Mgp%MSymop(num_sym))
-            !write(unit=*,fmt="(a)") "  Decoding symmetry operators 1"
+            write(unit=*,fmt="(a)") "  Decoding symmetry operators 1"
 
-            ! Decode the symmetry operators
+            ! Decode the symmetry operators in the form x,y,z,+1
             do i=1,num_sym
               line=adjustl(sym_strings(i))
               j=index(line," ")
               line=adjustl(line(j+1:))
-              j=index(line," ")
-              MGp%SymopSymb(i)=line(1:j-1)
-              line=adjustl(line(j+1:))
-              j=index(line," ")
-              MGp%MSymopSymb(i)=line(1:j-1)
-              read(unit=line(j:),fmt=*,iostat=ier) n
+              !j=index(line," ")
+              j=index(line,",",back=.true.)
+              read(unit=line(j+1:),fmt=*,iostat=ier) n
               if(ier /= 0) then
                  Err_Form=.true.
                  Err_Form_Mess=" Error reading the time inversion in line: "//trim(sym_strings(i))
@@ -76236,6 +76332,8 @@ End Module CFML_EisPack!!-------------------------------------------------------
               else
                  MGp%MSymOp(i)%phas=real(n)
               end if
+              MGp%SymopSymb(i)=line(1:j-1)
+              MGp%MSymopSymb(i)=trim(line)
               call Read_Xsym(MGp%SymopSymb(i),1,MGp%Symop(i)%Rot,MGp%Symop(i)%tr)
               line=MGp%MSymopSymb(i)
               do k=1,len_trim(line)
@@ -76266,7 +76364,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
             if(allocated(Mgp%MSymop)) deallocate(Mgp%MSymop)
             allocate(Mgp%MSymop(num_sym))
             ! Decode the symmetry operators
-            !write(unit=*,fmt="(a)") "  Decoding symmetry operators 2"
+            write(unit=*,fmt="(a)") "  Decoding symmetry operators 2"
             do i=1,num_rsym
               line=adjustl(sym_strings(i))
               j=index(line," ")
@@ -76321,7 +76419,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
             end do
             !Decode lattice translations and anti-translations
 
-            !write(unit=*,fmt="(a)") "  Decoding lattice translations and anti-translations"
+            write(unit=*,fmt="(a)") "  Decoding lattice translations and anti-translations"
             m=num_rsym
             do L=2,num_centering
               line=adjustl(cent_strings(L))
@@ -76546,38 +76644,36 @@ End Module CFML_EisPack!!-------------------------------------------------------
        !Treating moments of magnetic atoms
        if(num_mom /= 0) then
           !write(*,"(a,i4)") " Treating magnetic moments:  ",num_mom
-          m=4
-          if(mom_symmform) m=m+1
-          if(mom_modulus) m=m+1
+          !m=4
+          !if(mom_symmform) m=m+1
+          !if(mom_modulus) m=m+1
           do i=1,num_mom
             call getword(mom_strings(i),lab_items,iv)
             !write(*,"(2i6,tr4,5(a,tr3))") k,iv,lab_items(1:iv)
-            if(iv /= m) then
+            if(iv /= nitems) then
                Err_Form=.true.
                write(unit=Err_Form_Mess,fmt="(a,i4)")" Error reading magnetic moment #",i
-               Err_Form_Mess=trim(Err_Form_Mess)//" -> 4-6 items expected in this line: 'Label mx my mz', read: "// &
+               Err_Form_Mess=trim(Err_Form_Mess)//" -> The number of itemes expected for this line is not correct!, read: "// &
                                                       trim(mom_strings(i))
                return
             end if
             label=Lab_items(1)
-            kfin=3
-            if(mom_modulus) kfin=4
             do j=1,Am%natoms
                if(label == Am%Atom(j)%lab) then
-                 do k=1,kfin
-                     call getnum_std(lab_items(1+k),values,std,iv)
-                     if(k <= 3) then
-                       Am%Atom(j)%M_xyz(k)=values(1)
-                       Am%Atom(j)%sM_xyz(k)=std(1)
-                     else
-                       Am%Atom(j)%moment=values(1) !module of the magnetic moment if given
-                     end if
+                 do k=1,3
+                   call getnum_std(lab_items(mlugar(1+k)),values,std,iv)
+                   Am%Atom(j)%M_xyz(k)=values(1)
+                   Am%Atom(j)%sM_xyz(k)=std(1)
                  end do
-                 if(kfin ==3) then
-                   Am%Atom(j)%moment=99.0  !used for indicating that this atom is susceptible to bring a magnetic moment
+                 if(mlugar(6) /= 0) then
+                    call getnum_std(lab_items(mlugar(6)),values,std,iv)
+                    Am%Atom(j)%moment=values(1)
+                 else
+                    Am%Atom(j)%moment=99.0
                  end if
                end if
             end do
+
           end do
        end if
 
@@ -79811,7 +79907,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
          do
           j=j+1
           write(unit=lun,fmt="(a)") trim(info_lines(j))
-          if(u_case(info_lines(j)(1:14)) == "END_INFO_LINES") exit
+          if(u_case(info_lines(j)(1:14)) == "END_INFO_LINES" .or. j > 200) exit
          end do
        end if
 
@@ -81087,7 +81183,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
       real(kind=cp), dimension(6)              :: betas
       Real(Kind=Cp), Dimension(3,3)            :: sm,SMcos,SMsin
       complex(kind=cp),dimension(3)            :: Mc
-      logical                                  :: mag,nuc,mag_only
+      logical                                  :: mag,nuc,mag_only,magAtm
       character(len=1)                         :: tw
       real(kind=cp) :: ffr, ffi, ffx, cosr, sinr, scosr, ssinr, temp,snexi !,x1, yy, z
       real(kind=cp) :: x, arg, arg2, exparg,ssnn
@@ -81122,6 +81218,8 @@ End Module CFML_EisPack!!-------------------------------------------------------
       !---------------------------
         xi=Atm%atom(i)%x
         betas=Atm%atom(i)%U
+        magAtm=.false.
+        if(Atm%atom(i)%ind(2) > 0) magAtm=.true.
         !Modify the first atom position according to the interpretation of domains with translations
         if(present(tdom)) xi(1:3) = matmul(real(mdom),xi(1:3))+tdom(1:3)
         temp=EXP(-Atm%atom(i)%Biso*ssnn)   !exp{-Bi (sintheta/Lambda)^2}
@@ -81134,8 +81232,8 @@ End Module CFML_EisPack!!-------------------------------------------------------
            ffi=0.0
         end if
         ffx=0.0
-
-        IF(mag) Then
+        snexi=0.0
+        IF(mag .and. magAtm) Then
           ni=Atm%atom(i)%ind(2)
           ffx=Scf%Mcoef(ni)%SctM(7)
           DO ii=1,5,2
@@ -81168,7 +81266,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
           IF(Grp%centred /= 2) then
            ssinr=ssinr+sinr          !FRS= SIG fr(j,s)sin{2pi(hT Rs rj+ts)}*Ta(s)
           END IF
-          IF(mag) Then
+          IF(mag .and. magAtm) Then
             SMcos(:,:)=SMcos(:,:)+cosr*Grp%MSymop(ir)%Rot(:,:)
             SMsin(:,:)=SMsin(:,:)+sinr*Grp%MSymop(ir)%Rot(:,:)
           END IF
@@ -81192,7 +81290,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
            END IF
         end if
         !Magnetic structure factor components
-        IF(mag) Then
+        IF(mag .and. magAtm) Then
            ar = matmul(SMcos,Atm%atom(i)%M_xyz(:)/side)*side  !The introduction of Cell%cell
            br = matmul(SMsin,Atm%atom(i)%M_xyz(:)/side)*side  !of using non conventional settings for
            aa(:)= aa(:) + snexi*ar(:)
@@ -82248,7 +82346,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
        jx=0
        n=0
        do i=1,atm%natoms
-          symbcar=l_case(atm%atom(i)%SfacSymb)
+          symbcar=l_case(atm%atom(i)%chemsymb)
           do j=1,Num_Xray_Form
              if (symbcar /= Xray_form(j)%Symb) cycle
              ix(i)=j
@@ -83586,7 +83684,7 @@ End Module CFML_EisPack!!-------------------------------------------------------
 !
 !   cif2hkl: convert a CIF or CFL crystal structure file into a PowderN reflection list.
 !
-!   cif2hkl 1.4.3 (June 14th 2023) by [emmanuel.farhi@synchrotron-soleil.fr]
+!   cif2hkl 1.4.3 (Oct 2nd 2023) by [emmanuel.farhi@synchrotron-soleil.fr]
 !     Farhi E. using crysFML <https://code.ill.fr/scientific-software/crysfml/>
 !   Copyright (C) 2009-2019 Institut Laue Langevin, EUPL
 !   Copyright (C) 2020-     Synchrotron Soleil,     GPL3.
@@ -83708,7 +83806,7 @@ subroutine CFML_cif2hkl(file_in, file_out, lambda, powxtal, verbose, message, mo
   
   ! subroutine I/O
   character(len=1024)         :: file_in, file_out     ! Name of the input/output file
-  real*8                      :: lambda                ! probe wavelength
+  real*4                      :: lambda                ! probe wavelength
   character(len=1024)         :: powxtal               ! 'p' or 'x' or '-'
   integer                     :: verbose               ! 0 or 1 for verbose mode
   character*4096              :: message
@@ -84104,7 +84202,7 @@ subroutine CFML_cif2hkl(file_in, file_out, lambda, powxtal, verbose, message, mo
       return
     end if
     ! mode="nuc" (neutron), "ele" (electrons), "xra" x-rays
-    call Structure_Factors(A,SpG,hkl,mode=mode)
+    call Structure_Factors(A,SpG,hkl,mode=mode, lambda=lambda)
 
     ! get current date/time
     call idate(today)   ! today(1)=day, (2)=month, (3)=year
@@ -84196,8 +84294,8 @@ subroutine print_version(pgmname,message)
   eol=char(13)//char(10)
   
   AUTHOR ="Farhi E. [emmanuel.farhi@synchrotron-soleil.fr]"//eol//"  using crysFML <https://code.ill.fr/scientific-software/crysfml/>"
-  DATE   ="June 14th 2023"
-  VERSION="1.4.3"
+  DATE   ="Nov 2024"
+  VERSION="1.4.5"
   
   
   message = trim(pgmname)//" "//trim(VERSION)//" ("//trim(DATE)//") by "//trim(AUTHOR)//eol//&
@@ -84257,7 +84355,7 @@ program cif2hkl
   character(len=1024) :: argv
   character(len=1024) :: outfile
   character(len=1024) :: ext            ! input file name extension
-  real*8              :: lambda= 0.5    ! wavelength (determines minimum d)
+  real*4              :: lambda= 0.5    ! wavelength (determines minimum d)
   character(len=1024) :: powxtal="p"    ! 'p'=powder, 's'=SX output file, '-'=no output
   integer             :: verbose=0      ! verbose mode to display additional information
   character(len=1024) :: mode="NUC"     ! 'NUC','XRA','ELE'
