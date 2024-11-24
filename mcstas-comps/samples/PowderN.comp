@@ -1229,7 +1229,7 @@ TRACE
   #endif
   // These should be updated in any case
   #pragma acc atomic write
-  line_info.flag_warning = flag_warning;
+  line_info.flag_warning += flag_warning;
   //#pragma acc atomic write
   //line_info.neutron_passed = neutron_passed;
 
