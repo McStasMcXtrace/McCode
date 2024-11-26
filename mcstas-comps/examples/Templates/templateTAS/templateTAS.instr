@@ -148,7 +148,10 @@ DECLARE
 
   char ethmonopts[128];
   char lmonopts[128];
-  
+  /* Monochromator reflectivity file and scalar */
+  char Mono_refl[128];
+  double Mono_r0;
+
   int OpenACC;
   #pragma acc declare create(OpenACC)
   struct sample_struct {
@@ -546,7 +549,16 @@ machine_real.rah = fabs(machine_real.rah)*machine_hkl.sa;
 
 sprintf(ethmonopts,"theta limits=[-180 180] energy limits=[%g %g], banana", 0.95*EF, 1.05*EF);
 sprintf(lmonopts,"lambda limits=[%g %g] cm", 0.95*(2*PI)/fabs(KI), 1.05*(2*PI)/fabs(KI));
- 
+
+/* Based on d-spacing, figure out if we should use HOPG.refl or just use scalar reflectivity: */
+if (fabs(machine_hkl.dm-3.355) < 0.2) {
+  sprintf(Mono_refl,"HOPG.rfl");
+  Mono_r0=1;
+} else {
+  sprintf(Mono_refl,"");
+  Mono_r0=0.7;
+}
+
 %}
 /* end of INITIALIZE */
 
@@ -587,8 +599,8 @@ SPLIT COMPONENT PG1Xtal = Monochromator_curved(
   NH=NHM, NV=NVM,
   RV=machine_real.rmv, RH=machine_real.rmh,
   DM=machine_hkl.dm, mosaich = machine_hkl.etam, mosaicv = machine_hkl.etam,
-  r0 = (fabs(machine_hkl.dm-3.355) < 0.2 ? 1: 0.7),
-  reflect=(fabs(machine_hkl.dm-3.355) < 0.2 ? "HOPG.rfl" : ""))
+  r0 = Mono_r0,
+  reflect=Mono_refl)
 AT (0, 0, 0) RELATIVE Mono_Cradle
 ROTATED (0, machine_real.a1, 0) RELATIVE Mono_Cradle
 
@@ -649,8 +661,8 @@ SPLIT COMPONENT PG2Xtal = Monochromator_curved(
   NH=NHA, NV=NVA,
   RV=machine_real.rav, RH=machine_real.rah,
   DM=machine_hkl.da, mosaich = machine_hkl.etaa, mosaicv = machine_hkl.etaa,
-  r0 = (fabs(machine_hkl.dm-3.355) < 0.2 ? 1: 0.7),
-  reflect=(fabs(machine_hkl.dm-3.355) < 0.2 ? "HOPG.rfl" : ""))
+  r0 = Mono_r0,
+  reflect=Mono_refl)
 AT (0, 0, 0) RELATIVE Ana_Cradle
 ROTATED (0, machine_real.a5, 0) RELATIVE Ana_Cradle
 
