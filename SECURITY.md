@@ -5,9 +5,8 @@
 
 | Version.         | Supported                        |
 | ---------------- | -------------------------------- |
-| McStas 3.4       | :green_circle: (Fully supported) |
-| McXtrace 3.2     | :green_circle: (Fully supported) |
-| McStas 2.7.2   | :yellow_circle: (Part. supported)|
+| McStas 3.5.x     | :green_circle: (Fully supported) |
+| McXtrace 3.5.x   | :green_circle: (Fully supported) |
 | Earlier McStas   | :x:                              |
 | Earlier McXtrace | :x:                              |
 
