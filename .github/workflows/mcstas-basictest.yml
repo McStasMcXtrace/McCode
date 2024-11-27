@@ -92,8 +92,8 @@ jobs:
            mkdir build_mcstas
            cd build_mcstas
            export EXTRA_ARGS_FOR_CMAKE=""
-           if [ "$RUNNER_OS" == "macOS" ]; then; if [ -d "/opt/homebrew/opt" ]; then; export HOMEBRW="/opt/homebrew/opt"; fi; fi;
-           if [ "$RUNNER_OS" == "macOS" ]; then; if [ -d "/usr/local/opt" ]; then; export HOMEBRW="/usr/local/opt"; fi; fi;
+           if [ "$RUNNER_OS" == "macOS" ] && [ -d "/opt/homebrew/opt" ]; then; export HOMEBRW="/opt/homebrew/opt"; fi
+           if [ "$RUNNER_OS" == "macOS" ] && [ -d "/usr/local/opt" ]; then; export HOMEBRW="/usr/local/opt"; fi
            if [ "$RUNNER_OS" == "macOS" ]; then export EXTRA_ARGS_FOR_CMAKE="-DBISON_EXECUTABLE=${HOMEBRW}/bison/bin/bison -DFLEX_EXECUTABLE=${HOMEBRW}/flex/bin/flex"; fi
            if [ "$RUNNER_OS" == "Linux" ]; then export EXTRA_ARGS_FOR_CMAKE="-DNEXUSLIB=/usr/lib -DNEXUSINCLUDE=/usr/include/nexus"; fi
            cmake \
