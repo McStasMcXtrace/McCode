@@ -65,9 +65,9 @@ jobs:
       run: |
            sudo apt -y install libopenmpi-dev
 
-    - name: Setup OpenMPI (macOS-12,13)
+    - name: Setup OpenMPI (macOS)
       id: setup-openmpi-macos12
-      if: runner.os == 'macOS' && matrix.os != 'macos-11'
+      if: runner.os == 'macOS'
       run: |
            brew install openmpi
 
@@ -91,8 +91,6 @@ jobs:
            mkdir build_mcstas
            cd build_mcstas
            export EXTRA_ARGS_FOR_CMAKE=""
-           if [ "$RUNNER_OS" == "macOS" ]; then export EXTRA_ARGS_FOR_CMAKE="-DBISON_EXECUTABLE=/opt/homebrew/opt/bison/bin/bison -DFLEX_EXECUTABLE=/opt/homebrew/opt/flex/bin/flex"; fi
-           if [ "$RUNNER_OS" == "macOS" ]; then export EXTRA_ARGS_FOR_CMAKE="-DBISON_EXECUTABLE=/opt/homebrew/opt/bison/bin/bison -DFLEX_EXECUTABLE=/opt/homebrew/opt/flex/bin/flex"; fi
            if [ "$RUNNER_OS" == "macOS" ]; then export EXTRA_ARGS_FOR_CMAKE="-DBISON_EXECUTABLE=/opt/homebrew/opt/bison/bin/bison -DFLEX_EXECUTABLE=/opt/homebrew/opt/flex/bin/flex"; fi
            if [ "$RUNNER_OS" == "Linux" ]; then export EXTRA_ARGS_FOR_CMAKE="-DNEXUSLIB=/usr/lib -DNEXUSINCLUDE=/usr/include/nexus"; fi
            cmake \
@@ -144,10 +142,7 @@ jobs:
            fi
            if [ "$RUNNER_OS" == "macOS" ];
            then
-             which python3
-             find . -name mcrun -exec grep -H python \{\} \;
-             python3 -mpip install PyYAML ply --break-system-packages
-             python3 -mpip install McStasscript ncrystal --break-system-packages
+             python3 -mpip install PyYAML ply McStasScript ncrystal --break-system-packages
            fi
            if [ "$RUNNER_OS" == "Linux" ];
            then
@@ -246,7 +241,7 @@ jobs:
 
     - name: Launch NCrystal test instrument (mpi)
       id: ncrystal-test-mpi
-      if: runner.os == 'Linux' 
+      if: runner.os == 'Linux' || runner.os == 'macOS' # Linux or macOS only
       # Status: Works on Unixes ("ncrystal missing for Windows")
       run: |
            set -e
