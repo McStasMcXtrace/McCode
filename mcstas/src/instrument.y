@@ -1279,14 +1279,14 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
 	      fprintf(stderr, "  %s",line);
 	    }
 	    list_iterate_end(liter);
-	    fprintf(stderr, "\n  %%}\n");
+	    fprintf(stderr, "  %%}\n");
 	    fprintf(stderr, "\nwill be been overwritten by:\n");
 	    fprintf(stderr, "\n  EXTEND %%{\n");
 	    while((line2 = list_next(liter2))) {
 	      fprintf(stderr, "  %s",line2);
 	    }
 	    list_iterate_end(liter2);
-	    fprintf(stderr, "\n  %%}\n-----------------------------------------------------------\n");
+	    fprintf(stderr, "  %%}\n-----------------------------------------------------------\n");
 	  }
 	  comp->extend= $13;  /* EXTEND block*/
 	}
