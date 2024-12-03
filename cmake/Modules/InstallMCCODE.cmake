@@ -31,23 +31,27 @@ macro(installMCCODE)
   endif()
 
   ## CPack configuration
-  set(CPACK_PACKAGE_NAME          "${FLAVOR}-${MCCODE_VERSION}")
+  set(CPACK_PACKAGE_NAME          "${FLAVOR}")
   set(CPACK_RESOURCE_FilE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../COPYING")
   set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
-  ## Package versioning
-  set(MAJOR "1")
-  set(MINOR "0")
+  # Split incoming MCCODE_VERSION to list
+  string(REPLACE "." ";" MCCODE_VERSION_LIST ${MCCODE_VERSION})
 
-  set(CPACK_PACKAGE_VERSION       "${MAJOR}.${MINOR}")
+  ## Package versioning
+  list(GET MCCODE_VERSION_LIST 0 MAJOR)
+  list(GET MCCODE_VERSION_LIST 1 MINOR)
+  list(GET MCCODE_VERSION_LIST 2 PATCH)
+
+  set(CPACK_PACKAGE_VERSION       "${MAJOR}.${MINOR}.${PATCH}")
   set(CPACK_PACKAGE_VERSION_MAJOR "${MAJOR}")
   set(CPACK_PACKAGE_VERSION_MINOR "${MINOR}")
-
+  set(CPACK_PACKAGE_VERSION_PATCH "${PATCH}")
   ## Debian
   set(CPACK_DEBIAN_PACKAGE_DEPENDS       "build-essential, libopenmpi-dev, bash")
   set(CPACK_DEBIAN_PACKAGE_RECOMMENDS    "${FLAVOR}-comps-${MCCODE_VERSION}")
-  set(CPACK_DEBIAN_PACKAGE_CONFLICTS     "${FLAVOR}-2.1rc1")
   set(CPACK_DEBIAN_PACKAGE_SUGGESTS      "")
+  set(CPACK_DEBIAN_PACKAGE_REPLACES "${FLAVOR}-3.5.1")
 
   ## FreeBSD
   set(CPACK_FREEBSD_PACKAGE_LICENSE "GPLv3")
