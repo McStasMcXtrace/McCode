@@ -10,6 +10,13 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 include(MCUtil)
 setupMCCODE("mcstas")
 
+option( ENABLE_CIF2HKL "Build Third Party code cif2hkl (fortran)" ON )#TODO: Only enable enable Fortran if this is on
+if ( ENABLE_CIF2HKL )
+  set(DEBIDEPS "${FLAVOR}, libnexus-dev, libgsl-dev")
+else()
+  set(DEBIDEPS "${FLAVOR}, libnexus-dev, libgsl-dev, cif2hkl")
+endif()
+
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
 # CPack configuration
@@ -31,13 +38,16 @@ set(CPACK_PACKAGE_VERSION_MINOR "${MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${PATCH}")
 
 
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${DEBIDEPS}")
+set(CPACK_DEBIAN_PACKAGE_REPLACES "${FLAVOR}-comps-3.5.1")
+
+
 # NSIS
 set(CPACK_NSIS_PACKAGE_NAME "${MCCODE_STRING} Components")
 set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING} Components")
 
 include(CPack)
 
-option( ENABLE_CIF2HKL "Build Third Party code cif2hkl (fortran)" ON )#TODO: Only enable enable Fortran if this is on
 if ( ENABLE_CIF2HKL )
   enable_language( Fortran )
   add_executable(
@@ -50,14 +60,6 @@ if ( ENABLE_CIF2HKL )
     DESTINATION "${DEST_BINDIR}"
     )
 endif()
-
-# Debian
-if ( ENABLE_CIF2HKL )
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, libnexus-dev, libgsl-dev")
-else()
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, libnexus-dev, libgsl-dev, cif2hkl")
-endif()
-set(CPACK_DEBIAN_PACKAGE_REPLACES "${FLAVOR}-comps-3.5.1")
 
 option( ENABLE_NEUTRONICS "Build Third Party code neutronics (fortran)" ON )#TODO: Only enable enable Fortran if this is on
 if ( ENABLE_NEUTRONICS )
