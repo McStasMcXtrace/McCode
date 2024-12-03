@@ -13,13 +13,23 @@ setupMCCODE("mcstas")
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}-comps-${MCCODE_VERSION}")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-comps")
 set(CPACK_RESOURCE_FilE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
-set(CPACK_PACKAGE_VERSION       "1.0")
-set(CPACK_PACKAGE_VERSION_MAJOR "1")
-set(CPACK_PACKAGE_VERSION_MINOR "0")
+# Split incoming MCCODE_VERSION to list
+string(REPLACE "." ";" MCCODE_VERSION_LIST ${MCCODE_VERSION})
+
+## Package versioning
+list(GET MCCODE_VERSION_LIST 0 MAJOR)
+list(GET MCCODE_VERSION_LIST 1 MINOR)
+list(GET MCCODE_VERSION_LIST 2 PATCH)
+
+set(CPACK_PACKAGE_VERSION       "${MAJOR}.${MINOR}.${PATCH}")
+set(CPACK_PACKAGE_VERSION_MAJOR "${MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${PATCH}")
+
 
 # NSIS
 set(CPACK_NSIS_PACKAGE_NAME "${MCCODE_STRING} Components")
@@ -43,10 +53,11 @@ endif()
 
 # Debian
 if ( ENABLE_CIF2HKL )
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, libnexus-dev, libgsl-dev")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, libnexus-dev, libgsl-dev")
 else()
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, libnexus-dev, libgsl-dev, cif2hkl")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, libnexus-dev, libgsl-dev, cif2hkl")
 endif()
+set(CPACK_DEBIAN_PACKAGE_REPLACES "${FLAVOR}-comps-3.5.1")
 
 option( ENABLE_NEUTRONICS "Build Third Party code neutronics (fortran)" ON )#TODO: Only enable enable Fortran if this is on
 if ( ENABLE_NEUTRONICS )

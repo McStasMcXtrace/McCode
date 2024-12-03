@@ -53,13 +53,22 @@ else()
 endif()
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-mccodelib-${MCCODE_VERSION}")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-mccodelib")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
 
-set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
-set(CPACK_PACKAGE_VERSION_MAJOR "1")
-set(CPACK_PACKAGE_VERSION_MINOR "0")
+# Split incoming MCCODE_VERSION to list
+string(REPLACE "." ";" MCCODE_VERSION_LIST ${MCCODE_VERSION})
+
+## Package versioning
+list(GET MCCODE_VERSION_LIST 0 MAJOR)
+list(GET MCCODE_VERSION_LIST 1 MINOR)
+list(GET MCCODE_VERSION_LIST 2 PATCH)
+
+set(CPACK_PACKAGE_VERSION       "${MAJOR}.${MINOR}.${PATCH}")
+set(CPACK_PACKAGE_VERSION_MAJOR "${MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${PATCH}")
 
 
 # NSIS
@@ -69,7 +78,8 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply, hdf-compass")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, python3, python3-ply, hdf-compass")
+set(CPACK_DEBIAN_PACKAGE_REPLACES "${FLAVOR}-tools-python-mccodelib-3.5.1")
 
 # RPM
 if (RPMPROFILE)
