@@ -49,7 +49,7 @@ macro(installMCCODE)
   set(CPACK_PACKAGE_VERSION_PATCH "${PATCH}")
   ## Debian
   set(CPACK_DEBIAN_PACKAGE_DEPENDS       "build-essential, libopenmpi-dev, bash")
-  set(CPACK_DEBIAN_PACKAGE_RECOMMENDS    "${FLAVOR}-comps-${MCCODE_VERSION}")
+  set(CPACK_DEBIAN_PACKAGE_RECOMMENDS    "${FLAVOR}-comps")
   set(CPACK_DEBIAN_PACKAGE_SUGGESTS      "")
   set(CPACK_DEBIAN_PACKAGE_REPLACES "${FLAVOR}-3.5.1")
 
