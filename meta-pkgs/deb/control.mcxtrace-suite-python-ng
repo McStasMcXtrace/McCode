@@ -5,5 +5,5 @@ Priority: optional
 Architecture: all
 Depends: mcxtrace-suite-python
 Installed-Size:
-Maintainer: Erik B Knudsen <erkn@fysik.dtu.dk>
+Maintainer: Peter Willendrup <pkwi@fysik.dtu.dk>
 Description: A metapackage for McXtrace + python tools
