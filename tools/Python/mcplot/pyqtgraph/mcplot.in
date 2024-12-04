@@ -25,7 +25,7 @@ canrun() {
     done
     python3 -c "${cmd}"
 
-    python3 -c "import PySide6"
+    python3 -c "import PySide6" 2> /dev/null
     if [ $? == 0 ]; then
 	mcstas_errmsg Your Python has PySide6 - ${TOOL} will not function correctly. Please run in an environment with PyQt5 only.
 	exit 127;
