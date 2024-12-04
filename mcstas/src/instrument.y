@@ -1267,7 +1267,29 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
 	    }
 	  }
         }
-        if ($13->linenum)   comp->extend= $13;  /* EXTEND block*/
+        if ($13->linenum) {
+	  if (comp->extend->linenum>0) {
+	    fprintf(stderr, "\n-----------------------------------------------------------\n");
+	    fprintf(stderr, "WARNING: Existing (COPY) EXTEND block in COMPONENT %s:\n", comp->name);
+	    List_handle liter = list_iterate(comp->extend->lines);
+	    List_handle liter2 = list_iterate($13->lines);
+	    char *line, *line2;
+	    fprintf(stderr, "  EXTEND %%{\n");
+	    while((line = list_next(liter))) {
+	      fprintf(stderr, "  %s",line);
+	    }
+	    list_iterate_end(liter);
+	    fprintf(stderr, "  %%}\n");
+	    fprintf(stderr, "\nis overwritten by:\n");
+	    fprintf(stderr, "  EXTEND %%{\n");
+	    while((line2 = list_next(liter2))) {
+	      fprintf(stderr, "  %s",line2);
+	    }
+	    list_iterate_end(liter2);
+	    fprintf(stderr, "  %%}\n-----------------------------------------------------------\n");
+	  }
+	  comp->extend= $13;  /* EXTEND block*/
+	}
         if (list_len($14))  comp->jump  = $14;
 
         /* one or more metadata statements -- the Component definition *can also* add to this list */
