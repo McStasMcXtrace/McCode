@@ -13,13 +13,14 @@ setupMCCODE("mcxtrace")
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}-comps-${MCCODE_VERSION}")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-comps")
 set(CPACK_RESOURCE_FilE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
-set(CPACK_PACKAGE_VERSION       "1.0")
-set(CPACK_PACKAGE_VERSION_MAJOR "1")
-set(CPACK_PACKAGE_VERSION_MINOR "0")
+set(CPACK_PACKAGE_VERSION       "${MCCODE_MAJOR}.${MCCODE_MINOR}.${MCCODE_PATCH}")
+set(CPACK_PACKAGE_VERSION_MAJOR "${MCCODE_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${MCCODE_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${MCCODE_PATCH}")
 
 
 # NSIS
@@ -44,10 +45,11 @@ endif()
 
 # Debian
 if ( ENABLE_CIF2HKL )
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, libnexus-dev, libxrl-dev, libgsl-dev")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, libnexus-dev, libxrl-dev, libgsl-dev")
 else()
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, libnexus-dev, libxrl-dev, libgsl-dev, cif2hkl")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, libnexus-dev, libxrl-dev, libgsl-dev, cif2hkl")
 endif()
+set(CPACK_DEBIAN_PACKAGE_REPLACES "${FLAVOR}-comps-3.5.1")
 
 # System c-code
 install( DIRECTORY "share/" DESTINATION "${DEST_DATADIR_CODEFILES}")

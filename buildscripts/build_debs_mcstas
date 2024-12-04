@@ -64,7 +64,7 @@ rm -rf build
 mkdir build
 cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DMCPL_ENABLE_CPACK=ON
-make
+make -j10
 cpack -G DEB .
 DEB=`ls *.deb`
 DEBNAME=`echo $DEB | sed s/Linux/$MCCODE_ARCH/g`
@@ -77,7 +77,7 @@ rm -rf build
 mkdir build
 cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DNCRYSTAL_ENABLE_CPACK=ON
-make
+make -j10
 cpack -G DEB .
 DEB=`ls *.deb`
 DEBNAME=`echo $DEB | sed s/Linux/$MCCODE_ARCH/g`

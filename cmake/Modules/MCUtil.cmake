@@ -142,13 +142,26 @@ macro(setupMCCODE FLAVOR)
     if (MCVERSION)
       set(MCCODE_VERSION "${MCVERSION}")
     else ()
-      set(MCCODE_VERSION "3.9999-git")
+      set(MCCODE_VERSION "3.999.999-git")
     endif()
     set(MCCODE_NAME "${FLAVOR}")
     set(MCCODE_DATE "git")
     set(MCCODE_STRING "${NAME} ${MCCODE_VERSION}, ${MCCODE_DATE}")
     set(MCCODE_TARNAME "${FLAVOR}")
   endif()
+
+  # Split incoming MCCODE_VERSION to list
+  string(REPLACE "." ";" MCCODE_VERSION_LIST ${MCCODE_VERSION})
+
+  ## Package versioning
+  list(GET MCCODE_VERSION_LIST 0 MCCODE_MAJOR)
+  list(GET MCCODE_VERSION_LIST 1 MCCODE_MINOR)
+  list(GET MCCODE_VERSION_LIST 2 MCCODE_PATCH)
+
+  set(CPACK_PACKAGE_VERSION       "${MCCODE_MAJOR}.${MCCODE_MINOR}.${MCCODE_PATCH}")
+  set(CPACK_PACKAGE_VERSION_MAJOR "${MCCODE_MAJOR}")
+  set(CPACK_PACKAGE_VERSION_MINOR "${MCCODE_MINOR}")
+  set(CPACK_PACKAGE_VERSION_PATCH "${MCCODE_PATCH}")
 
   include(Locations)
   # During migration set these as well:

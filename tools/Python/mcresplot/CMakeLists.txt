@@ -20,14 +20,14 @@ setupMCCODE("${FLAVOR}")
 set(TOOLS_NAME "Python/mcresplot")
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-mcresplot-${MCCODE_VERSION}")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-mcresplot")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
-set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
-set(CPACK_PACKAGE_VERSION_MAJOR "1")
-set(CPACK_PACKAGE_VERSION_MINOR "0")
-
+set(CPACK_PACKAGE_VERSION       "${MCCODE_MAJOR}.${MCCODE_MINOR}.${MCCODE_PATCH}")
+set(CPACK_PACKAGE_VERSION_MAJOR "${MCCODE_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${MCCODE_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${MCCODE_PATCH}")
 
 # NSIS
 set(NSIS_NAME "Python-based mcresplot, ${MCCODE_STRING}")
@@ -36,8 +36,8 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3-matplotlib, python3-numpy")
-
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, python3-matplotlib, python3-numpy")
+set(CPACK_DEBIAN_PACKAGE_REPLACES "${FLAVOR}-tools-python-mcresplot-3.5.1")
 # RPM
 if (RPMPROFILE)
    if (RPMPROFILE STREQUAL "fedora")

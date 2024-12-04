@@ -5,5 +5,5 @@ Priority: optional
 Architecture: all
 Depends: mcstas-suite-python
 Installed-Size:
-Maintainer: Peter Willendrup
+Maintainer: Peter Willendrup <pkwi@fysik.dtu.dk>
 Description: A metapackage for McStas + python tools

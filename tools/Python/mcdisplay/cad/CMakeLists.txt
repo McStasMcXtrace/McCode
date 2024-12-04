@@ -35,14 +35,14 @@ set(P "${MCCODE_PREFIX}")
 set(TOOLS_NAME "Python/${P}display/cad")
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-cad-${MCCODE_VERSION}")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-cad")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_CONTACT       "gregory.tucker@ess.eu")
 
-set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
-set(CPACK_PACKAGE_VERSION_MAJOR "1")
-set(CPACK_PACKAGE_VERSION_MINOR "0")
-
+set(CPACK_PACKAGE_VERSION       "${MCCODE_MAJOR}.${MCCODE_MINOR}.${MCCODE_PATCH}")
+set(CPACK_PACKAGE_VERSION_MAJOR "${MCCODE_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${MCCODE_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${MCCODE_PATCH}")
 
 # NSIS
 set(NSIS_NAME "Python/cad -based ${P}display (${P}display-cad-py), ${MCCODE_STRING}")
@@ -51,8 +51,8 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply, python3-numpy")
-
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, python3, python3-ply, python3-numpy")
+set(CPACK_DEBIAN_PACKAGE_REPLACES "${FLAVOR}-tools-python-${P}display-cad-3.5.1")
 # RPM
 if (RPMPROFILE)
    if (RPMPROFILE STREQUAL "fedora")
