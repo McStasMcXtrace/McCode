@@ -1270,18 +1270,18 @@ component: removable cpuonly split "COMPONENT" instname '=' instref
         if ($13->linenum) {
 	  if (comp->extend->linenum>0) {
 	    fprintf(stderr, "\n-----------------------------------------------------------\n");
-	    fprintf(stderr, "WARNING (COMPONENT %s): Existing (COPY) EXTEND block:\n", comp->name);
+	    fprintf(stderr, "WARNING: Existing (COPY) EXTEND block in COMPONENT %s:\n", comp->name);
 	    List_handle liter = list_iterate(comp->extend->lines);
 	    List_handle liter2 = list_iterate($13->lines);
 	    char *line, *line2;
-	    fprintf(stderr, "\n  EXTEND %%{\n");
+	    fprintf(stderr, "  EXTEND %%{\n");
 	    while((line = list_next(liter))) {
 	      fprintf(stderr, "  %s",line);
 	    }
 	    list_iterate_end(liter);
 	    fprintf(stderr, "  %%}\n");
-	    fprintf(stderr, "\nwill be been overwritten by:\n");
-	    fprintf(stderr, "\n  EXTEND %%{\n");
+	    fprintf(stderr, "\nis overwritten by:\n");
+	    fprintf(stderr, "  EXTEND %%{\n");
 	    while((line2 = list_next(liter2))) {
 	      fprintf(stderr, "  %s",line2);
 	    }
