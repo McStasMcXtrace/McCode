@@ -120,7 +120,7 @@ COMPONENT Environment_in=PowderN(
   p_transmit=0.95, p_inc=0, barns=1)
   AT (0, 0, 0) RELATIVE SamplePos
 EXTEND %{
-  flag_env=SCATTERED;
+  if (SCATTERED) flag_env++;
 %}
 
 COMPONENT Container_in=PowderN(radius=0.008/2+1e-4, thickness=1e-4, yheight=0.05,
@@ -128,7 +128,7 @@ COMPONENT Container_in=PowderN(radius=0.008/2+1e-4, thickness=1e-4, yheight=0.05
   p_transmit=0.93, p_inc=0.05)
   AT (0, 0, 0) RELATIVE SamplePos
 EXTEND %{
-  flag_container=SCATTERED;
+ if (SCATTERED) flag_container++;
 %}
 
 COMPONENT Sample=Single_crystal(
@@ -145,13 +145,13 @@ EXTEND %{
 COMPONENT Container_out=COPY(Container_in)(concentric=0)
   AT (0, 0, 0) RELATIVE SamplePos
 EXTEND %{
-  if (SCATTERED) flag_container=1;
+ if (SCATTERED) flag_container++;
 %}
 
 COMPONENT Environment_out=COPY(Environment_in)(concentric=0)
   AT (0, 0, 0) RELATIVE SamplePos
 EXTEND %{
-  if (SCATTERED) flag_env=1;
+  if (SCATTERED) flag_env++;
 %}
 
 COMPONENT PSD_Vivaldi = Monitor_nD(
