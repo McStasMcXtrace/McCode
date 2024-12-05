@@ -51,7 +51,7 @@ SHARE
 
    /*routine to calculate x and y positions of a neutron in a fermi chopper */
    #pragma acc routine
-   void neutxypos(double *x, double *y, double phi, double inrad,double c[])
+   void neutxypos(double *x, double *y, double phi, double inrad, double* c)
     {      
         *x=c[0]+inrad*cos(phi);
         *y=c[1]+inrad*sin(phi);
@@ -59,7 +59,7 @@ SHARE
 
     /* routine to calculate the origin of a circle that describes the neutron path through the chopper */  
     #pragma acc routine
-    void calccenter(double c[],double zr[], double xr[]){
+    void calccenter(double* c, double* zr, double* xr){
       double denom, A,B,C,D,a,b;
       denom=2*(-zr[0]*xr[2] +zr[0]*xr[1]+ zr[1]*xr[2]+xr[0]*zr[2]-xr[0]*zr[1] - xr[1]*zr[2]);
        A=xr[1]-xr[2];B=xr[0]-xr[1];C=zr[2]-zr[1];D=zr[1]-zr[0];
@@ -85,7 +85,7 @@ SHARE
  * return 0 if neutron does not transmit return 1 with channel number if neutron will pass*/
     #pragma acc routine
     int checkabsorb(double phi,int *chan_num, double inrad,double inw, double insw, 
-                    double inbw, double blader, double off, double c[]){
+                    double inbw, double blader, double off, double* c){
      double xtmp,neuzr,neuxr;
      neutxypos(&neuzr,&neuxr,phi,inrad,c);
   // printf("xr:%g zr:%g phi: %g r: %g c[0]: %g c[1]: %g\n",neuxr,neuzr,phi,inrad,c[0],c[1]);
