@@ -34,41 +34,41 @@
 * <b>Example 1, Elliptical definition using focal points:</b>
 *
 * Elliptic_guide_gravity(
-* &emsp;&emsp;&emsp;&emsp;l=50,
-* &emsp;&emsp;&emsp;&emsp;linxw=5,linyh=5,loutxw=10,loutyh=10,
-* &emsp;&emsp;&emsp;&emsp;xwidth=0.05,yheight=0.05,
-* &emsp;&emsp;&emsp;&emsp;R0=0.99,Qc=0.0219,alpha=6.07,m=1.0,W=0.003
+*                 l=50,
+*                 linxw=5,linyh=5,loutxw=10,loutyh=10,
+*                 xwidth=0.05,yheight=0.05,
+*                 R0=0.99,Qc=0.0219,alpha=6.07,m=1.0,W=0.003
 * )
 *
 * <b>Example 2: Half elliptical definition:</b>
 *
 * Elliptic_guide_gravity(
-* &emsp;&emsp;&emsp;&emsp;l=50,
-* &emsp;&emsp;&emsp;&emsp;linxw=5,linyh=5,loutxw=10,loutyh=10,
-* &emsp;&emsp;&emsp;&emsp;xwidth=0.1,yheight=0.1,
-* &emsp;&emsp;&emsp;&emsp;R0=0.99,Qc=0.0219,alpha=6.07,m=1.0,W=0.003,
-* &emsp;&emsp;&emsp;&emsp;option = "halfEllipse",
-* &emsp;&emsp;&emsp;&emsp;dimensionsAt = "entrance"
+*                 l=50,
+*                 linxw=5,linyh=5,loutxw=10,loutyh=10,
+*                 xwidth=0.1,yheight=0.1,
+*                 R0=0.99,Qc=0.0219,alpha=6.07,m=1.0,W=0.003,
+*                 option = "halfEllipse",
+*                 dimensionsAt = "entrance"
 * )
 *
 * <b>Example 3: Parabolic approximation:</b>
 *
 * Elliptic_guide_gravity(
-* &emsp;&emsp;&emsp;&emsp;l=50,
-* &emsp;&emsp;&emsp;&emsp;linxw=5,linyh=5,loutxw=1e6,loutyh=1e6, // values larger than 1e8 may cause erroneous results
-* &emsp;&emsp;&emsp;&emsp;xwidth=0.1,yheight=0.1,
-* &emsp;&emsp;&emsp;&emsp;R0 = 0.99,Qc=0.0219,alpha=6.07,m=1.0,W=0.003,
-* &emsp;&emsp;&emsp;&emsp;dimensionsAt = "exit"
+*                 l=50,
+*                 linxw=5,linyh=5,loutxw=1e6,loutyh=1e6, // values larger than 1e8 may cause erroneous results
+*                 xwidth=0.1,yheight=0.1,
+*                 R0 = 0.99,Qc=0.0219,alpha=6.07,m=1.0,W=0.003,
+*                 dimensionsAt = "exit"
 * )
 *
 * <b>Example 4: Elliptical definition with varying m-values:</b>
 *
 * Elliptic_guide_gravity(
-* &emsp;&emsp;&emsp;&emsp;l=50,
-* &emsp;&emsp;&emsp;&emsp;linxw=5,linyh=5,loutxw=10,loutyh=10,
-* &emsp;&emsp;&emsp;&emsp;xwidth=0.1,yheight=0.1,
-* &emsp;&emsp;&emsp;&emsp;R0 = 0.99,Qc=0.0219,alpha=6.07,m=1.0,W=0.003,
-* &emsp;&emsp;&emsp;&emsp;mvaluesright=marray,mvaluesleft=marray,mvaluestop=marray,mvaluesbottom=marray
+*                 l=50,
+*                 linxw=5,linyh=5,loutxw=10,loutyh=10,
+*                 xwidth=0.1,yheight=0.1,
+*                 R0 = 0.99,Qc=0.0219,alpha=6.07,m=1.0,W=0.003,
+*                 mvaluesright=marray,mvaluesleft=marray,mvaluestop=marray,mvaluesbottom=marray
 * )
 *
 * where marray is initialized as
@@ -244,7 +244,7 @@ struct SGI
 	define geomtric of the guide or physical values for mirrors
 	@param var is the input varible there the error occurred [text]
 */
-int guide_elliptical_illegalInputLessThanZero(char var[],int verbose){
+int guide_elliptical_illegalInputLessThanZero(char* var,int verbose){
 	if (verbose)
 		printf("The user defined variable %s in %s has an illegal value"
 				" less than zero\n",var,"Elliptic_guide_gravity");
@@ -258,7 +258,7 @@ int guide_elliptical_illegalInputLessThanZero(char var[],int verbose){
 	@param in,out is the input varible there the error occurred [text]
 */
 int guide_elliptical_illegalInputFocalPointsHyperbola(
-			char in[],char out[],
+			char* in,char* out,
 			double inValue,double outValue, int verbose){
 	if (verbose){
 		printf("The user defined length of the guide, length \
@@ -277,7 +277,7 @@ int guide_elliptical_illegalInputFocalPointsHyperbola(
 	should not be accessible if the algoritmes are working correctly
 	Most likely errors are floating points and ill-defined cases
 */
-void guide_elliptical_callCriticalWarning(char func[],int verbose){
+void guide_elliptical_callCriticalWarning(char* func,int verbose){
 	if (verbose)
 		printf("A CRITICAL WARNING has been called inside %s by function %s."
 			"This is most likely due to a programming error \
@@ -525,62 +525,6 @@ int guide_elliptical_handleGuideIntersection(
 
 	return boolean;
 }
-
-/**
-	Check if the neutron is within the guide using the sign
-	of the crossproduct between the two points,
-	on each of the enclosing box surface and neutrons position.
-
-	@param x,y,z; position of the neutron. [m]
-	@param guideInfo; pointer to the guide infomation holding structure.
-	@return; return 1 if the neutron is inside the guide [boolean]
-*/
-
-/*
-int guide_elliptical_InsideEnclosingBox(double x,double y,double z,struct SGI *guideInfo){
-	int guide_elliptical_IsPointInVolume(
-			double *x,double *y,double *z,
-			double px,double py,double pz){
-		int guide_elliptical_WhichSide( 	double p1x,double p1y,double p1z,
-						double p2x,double p2y,double p2z,
-						double p3x,double p3y,double p3z,
-						double px ,double py ,double pz ){
-
-			double v1x = p1x - p2x, v1y = p1y-p2y, v1z = p1z-p2z;
-			double v2x = p3x - p2x, v2y = p3y-p2y, v2z = p3z-p2z;
-			double v3x = v2y*v1z-v2z*v1y;
-			double v3y = v2z*v1x-v2x*v1z;
-			double v3z = v2x*v1y-v2y*v1x;
-
-			return 0 >= v3x*(px-p1x)+v3y*(py-p1y)+v3z*(pz-p1z);
-		}
-
-		if(	//front
-			guide_elliptical_WhichSide(x[3],y[3],z[3],x[2],y[2],z[2],x[1],y[1],z[1],px,py,pz) &&
-			guide_elliptical_WhichSide(x[1],y[1],z[1],x[0],y[0],z[0],x[3],y[3],z[3],px,py,pz) &&
-			//back
-			guide_elliptical_WhichSide(x[5],y[5],z[5],x[6],y[6],z[6],x[7],y[7],z[7],px,py,pz) &&
-			guide_elliptical_WhichSide(x[7],y[7],z[7],x[4],y[4],z[4],x[5],y[5],z[5],px,py,pz) &&
-			//right
-			guide_elliptical_WhichSide(x[7],y[7],z[7],x[3],y[3],z[3],x[0],y[0],z[0],px,py,pz) &&
-			guide_elliptical_WhichSide(x[0],y[0],z[0],x[4],y[4],z[4],x[7],y[7],z[7],px,py,pz) &&
-			//left
-			guide_elliptical_WhichSide(x[1],y[1],z[1],x[2],y[2],z[2],x[6],y[6],z[6],px,py,pz) &&
-			guide_elliptical_WhichSide(x[6],y[6],z[6],x[5],y[5],z[5],x[1],y[1],z[1],px,py,pz) &&
-			//top
-			guide_elliptical_WhichSide(x[0],y[0],z[0],x[1],y[1],z[1],x[5],y[5],z[5],px,py,pz) &&
-			guide_elliptical_WhichSide(x[5],y[5],z[5],x[4],y[4],z[4],x[0],y[0],z[0],px,py,pz) &&
-			//bottom
-			guide_elliptical_WhichSide(x[6],y[6],z[6],x[2],y[2],z[2],x[3],y[3],z[3],px,py,pz) &&
-			guide_elliptical_WhichSide(x[3],y[3],z[3],x[7],y[7],z[7],x[6],y[6],z[6],px,py,pz) )
-			 	return 1;
-		else 	return 0;
-	}
-	return guide_elliptical_IsPointInVolume(
-				guideInfo->xArray,guideInfo->yArray,guideInfo->zArray,x,y,z);
-}
-*/
-
 
 ///////////////////////////////////////////////////////////////////////////
 /////////////// reflection functions
@@ -1124,29 +1068,6 @@ INITIALIZE
 	// Applies the properties of the mirrors in the guide given by the user.
 	// These variables are used in the reflection functions.
 
-
-	// Sets the mirror type of the guides mirrors
-	// These variables are used in the collision functions
-	// to find the type of collision
-
-	// guideInfo.OuterSide[RightSide]  =
-	// 	guide_elliptical_getMirrorTypeFromInput(outer_right_side_mirror,guideInfo.verboseSetting);
-	// guideInfo.OuterSide[TopSide]  	=
-	// 	guide_elliptical_getMirrorTypeFromInput(outer_top_side_mirror,guideInfo.verboseSetting);
-	// guideInfo.OuterSide[LeftSide]  	=
-	// 	guide_elliptical_getMirrorTypeFromInput(outer_left_side_mirror,guideInfo.verboseSetting);
-	// guideInfo.OuterSide[BottomSide] =
-	// 	guide_elliptical_getMirrorTypeFromInput(outer_bottom_side_mirror,guideInfo.verboseSetting);
-
-	// guideInfo.InnerSide[RightSide]  =
-	// 	guide_elliptical_getMirrorTypeFromInput(inner_right_side_mirror,guideInfo.verboseSetting);
-	// guideInfo.InnerSide[TopSide]  	=
-	// 	guide_elliptical_getMirrorTypeFromInput(inner_top_side_mirror,guideInfo.verboseSetting);
-	// guideInfo.InnerSide[LeftSide]  	=
-	// 	guide_elliptical_getMirrorTypeFromInput(inner_left_side_mirror,guideInfo.verboseSetting);
-	// guideInfo.InnerSide[BottomSide] =
-	// 	guide_elliptical_getMirrorTypeFromInput(inner_bottom_side_mirror,guideInfo.verboseSetting);
-
 	// Give a warning if all side of the guide is turned off,
 	// as the guide is essentially turned off
 	if(    guideInfo.OuterSide[RightSide] 	== 1
@@ -1170,10 +1091,6 @@ INITIALIZE
 														MirrorTypeabsorption;
 	if(guideInfo.mArr[BottomSide] <= 0) guideInfo.InnerSide[BottomSide] =
 														MirrorTypeabsorption;
-	/* if(directDefination == 0){ */
-	/* 	guideInfo.entranceHorizontalWidth = xwidth; */
-	/* 	guideInfo.entranceVerticalWidth = yheight; */
-	/* } */
 
 	if( strcmp(option,"halfellipse") == 0 && directDefination == 0 ){
 		guideInfo.entranceHorizontalWidth =
@@ -1194,56 +1111,6 @@ INITIALIZE
 
 
 	guideInfo.EnclosingBoxOn = 0;
-
-	/*
-	double DefaultArray1[8] = { 1.0,-1.0,-1.0, 1.0, 1.0,-1.0,-1.0, 1.0};
-	double DefaultArray2[8] = { 1.0, 1.0,-1.0,-1.0, 1.0, 1.0,-1.0,-1.0};
-	double DefaultArray3[8] = {-1.0,-1.0,-1.0,-1.0, 1.0, 1.0, 1.0, 1.0};
-
-	guideInfo.EnclosingBoxOn = 0;
-	double *xinput;
-	if ( xInput != NULL ){ xinput = xInput; guideInfo.EnclosingBoxOn = 1; }
-	else { xinput = DefaultArray1; }
-	double *yinput;
-	if ( yInput != NULL ){ yinput = yInput; guideInfo.EnclosingBoxOn = 1;}
-	else { yinput = DefaultArray2; }
-	double *zinput;
-	if ( zInput != NULL ){ zinput = zInput; guideInfo.EnclosingBoxOn = 1;}
-	else { zinput = DefaultArray3; }
-	*/
-
-	/*
-	double xarray[8] ={ guideInfo.ellipseMinorAxis[0]*xinput[0],
-						guideInfo.ellipseMinorAxis[2]*xinput[1],
-						guideInfo.ellipseMinorAxis[2]*xinput[2],
-						guideInfo.ellipseMinorAxis[0]*xinput[3],
-						guideInfo.ellipseMinorAxis[0]*xinput[4],
-						guideInfo.ellipseMinorAxis[2]*xinput[5],
-						guideInfo.ellipseMinorAxis[2]*xinput[6],
-						guideInfo.ellipseMinorAxis[0]*xinput[7] };
-	double yarray[8] ={ guideInfo.ellipseMinorAxis[1]*yinput[0],
-						guideInfo.ellipseMinorAxis[1]*yinput[1],
-						guideInfo.ellipseMinorAxis[3]*yinput[2],
-						guideInfo.ellipseMinorAxis[3]*yinput[3],
-						guideInfo.ellipseMinorAxis[1]*yinput[4],
-						guideInfo.ellipseMinorAxis[1]*yinput[5],
-						guideInfo.ellipseMinorAxis[3]*yinput[6],
-						guideInfo.ellipseMinorAxis[3]*yinput[7] };
-	double zarray[8] ={ guideInfo.Length/2*zinput[0]+guideInfo.Length/2,
-						guideInfo.Length/2*zinput[1]+guideInfo.Length/2,
-						guideInfo.Length/2*zinput[2]+guideInfo.Length/2,
-						guideInfo.Length/2*zinput[3]+guideInfo.Length/2,
-						guideInfo.Length/2*zinput[4]+guideInfo.Length/2,
-						guideInfo.Length/2*zinput[5]+guideInfo.Length/2,
-						guideInfo.Length/2*zinput[6]+guideInfo.Length/2,
-						guideInfo.Length/2*zinput[7]+guideInfo.Length/2 };
-	int i = 0;
-	for(i = 0; i < 8; i++){
-		guideInfo.xArray[i] = xarray[i];
-		guideInfo.yArray[i] = yarray[i];
-		guideInfo.zArray[i] = zarray[i];
-	}
-	*/
 
 	guideInfo.exitVerticalWidth =
 		2*sqrt(1 - ( (guideInfo.Length-guideInfo.ellipseMajorOffset[BottomSide])
@@ -1295,61 +1162,6 @@ INITIALIZE
 		}
 		else guideInfo.segLength = seglength;
 
-		/* if( guideInfo.numberOfSegments != sizeof(mvaluesright)/sizeof(mvaluesright[0]) */
-		/*  || guideInfo.numberOfSegments != sizeof(mvaluesleft)/sizeof(mvaluesleft[0]) */
-		/*  || guideInfo.numberOfSegments != sizeof(mvaluestop)/sizeof(mvaluestop[0]) */
-		/*  || guideInfo.numberOfSegments != sizeof(mvaluesbottom)/sizeof(mvaluesbottom[0]) */
-		/*  || (guideInfo.segLength == NULL */
-		/*   & guideInfo.numberOfSegments != sizeof(seglength)/sizeof(guideInfo.segLength[0]) */
-		/*   ) ) { */
-
-		/* 	printf("Error in userinput inside %s, the length of the arrays" */
-		/* 		   " mvalues and seglength are not equal\n",NAME_CURRENT_COMP); */
-		/* 	printf("The length of the arrays are: mValuesright is %lu," */
-		/* 		   " mvaluesleft is %lu, mvaluestop is %lu, mvaluesbottom is" */
-		/* 		   " %lu and seglength is %lu and should be %d \n; Above assume that the arrays are using double \n", */
-		/* 			sizeof(mvaluesright)/sizeof(double), */
-		/* 			sizeof(mvaluesleft)/sizeof(double), */
-		/* 			sizeof(mvaluestop)/sizeof(double), */
-		/* 			sizeof(mvaluesbottom)/sizeof(double), */
-		/* 			sizeof(guideInfo.segLength)/sizeof(double), */
-		/* 			guideInfo.numberOfSegments */
-		/* 			); */
-
-		/* 	if ( guideInfo.verboseSetting )	{ */
-		/* 		int i; */
-
-		/* 		printf("The Values of mvaluesright is: ["); */
-		/* 		for(i=0; i < sizeof(mvaluesright)/sizeof(mvaluesright[0]); i++) */
-		/* 				printf("%e,",guideInfo.mValuesright[i] ); */
-		/* 		printf("]\n"); */
-
-		/* 		printf("The Values of mvaluesleft is: ["); */
-		/* 		for(i=0; i < sizeof(mvaluesleft)/sizeof(mvaluesleft[0]); i++) */
-		/* 				printf("%e,",guideInfo.mValuesleft[i] ); */
-		/* 		printf("]\n"); */
-
-		/* 		printf("The Values of mvaluestop is: ["); */
-		/* 		for(i=0; i < sizeof(mvaluestop)/sizeof(mvaluestop[0]); i++) */
-		/* 				printf("%e,",guideInfo.mValuestop[i] ); */
-		/* 		printf("]\n"); */
-
-		/* 		printf("The Values of mvaluesbottom is: ["); */
-		/* 		for(i=0; i < sizeof(mvaluesbottom)/sizeof(mvaluesbottom[0]); i++) */
-		/* 				printf("%e,",guideInfo.mValuesbottom[i] ); */
-		/* 		printf("]\n"); */
-
-		/* 		printf("The Values of seglength is: ["); */
-		/* 		for(i=0; i < sizeof(guideInfo.segLength)/sizeof(guideInfo.segLength[0]); i++) */
-		/* 				printf("%e,",guideInfo.segLength[i]); */
-		/* 		printf("]\n"); */
-		/* 	} */
-		/* 	exit( printf("Exit due to critical error in userinput for the" */
-		/* 				" component %s, consider having a look at the input" */
-		/* 				" for following: mvaluesright,mvaluesleft,mvaluestop," */
-		/* 				"mvaluesbottom and/or seglength.",NAME_CURRENT_COMP) ); */
-		/* } */
-		//
 		double sumOfelements=0;
 		int i;
 		for(i=0;i< guideInfo.numberOfSegments; i++) {
