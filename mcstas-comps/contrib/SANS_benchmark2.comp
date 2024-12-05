@@ -827,6 +827,10 @@ TRACE
 
 %}
 
+FINALLY %{
+  destroy_darr2d(Idsdw);
+%}
+
 MCDISPLAY
 %{
   double radius = 0;
