@@ -221,7 +221,11 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
     for test in tests:
         # if binary exists, set compile time = 0 and continue
         binfile = os.path.splitext(test.localfile)[0] + "." + mccode_config.platform["EXESUFFIX"].lower()
-        if os.path.exists(binfile):
+        failed=os.path.splitext(test.localfile)[0] + ".failed"
+        if os.path.exists(failed):
+            test.compiled = False
+            test.compiletime = -1
+        elif os.path.exists(binfile):
             test.compiled = True
             test.compiletime = 0
         else:
@@ -252,6 +256,9 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, version=
                 else:
                     formatstr = "%-" + "%ds: COMPILE ERROR using:\n" % maxnamelen
                     logging.info(formatstr % test.instrname + cmd)
+                    f = open(failed, "a")
+                    f.write(formatstr % test.instrname + cmd)
+                    f.close()
             else:
                 logging.info("Skipping compile of " + test.instrname)
         # save (incomplete) test results to disk
