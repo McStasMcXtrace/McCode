@@ -29,7 +29,7 @@
 * monochromator, a sample stage and a detector.
 *
 * %Example: E0=12.65 sample="Mo.lau" Detector: Eiger9M_I=3e+11
-* %Example: E0=12.65 Detector: Eiger9M_I=2.1e+15
+* %Example: E0=12.65 Detector: Eiger9M_I=1.5e+15
 *
 * %Parameters
 * E0:    [keV] Energy selected at the Undulator.
