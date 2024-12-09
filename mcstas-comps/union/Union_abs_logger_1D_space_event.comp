@@ -101,7 +101,8 @@ SHARE
 #error "The Union_init component must be included before this Union_abs_logger_1D_space_event component"
 #endif
 
-%include "monitor_nd-lib" // Internally avoids double import
+// Internally avoids double import
+%include "monitor_nd-lib"
 
 struct temp_abs_1D_event_data_element_struct {
  double x_pos;
