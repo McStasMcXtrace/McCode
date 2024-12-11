@@ -113,11 +113,11 @@ double complsqrt(double re, double im, double *imsqrt) {
 };
 
 double calclayers(double xiref, double bref, double vz, double vzi, double v,
-                  double zt[8],
-                  double xi[8],   double beta[8],
-                  double v2re[8], double v2im[8],
-                  double Ot1[8],  double Ot2[8],
-                  double In1[8],  double In2[8]
+                  double* zt,
+                  double* xi,   double* beta,
+                  double* v2re, double* v2im,
+                  double* Ot1,  double* Ot2,
+                  double* In1,  double* In2
                   ) {
 /* vz und vzi haben beide das Vorzeichen der Richtung */
 int i;
@@ -540,8 +540,8 @@ return 0;
 
 DECLARE
 %{
-double phase[10][10];   /* Table of different orientations in bulk phase */
-double SigB[21][182];   /* Table of total cross sections from integral */
+DArray2d phase;   /* Table of different orientations in bulk phase */
+DArray2d SigB;    /* Table of total cross sections from integral */
 double z1[8];
 double z2[8];
 double zt[8];
@@ -584,6 +584,9 @@ double phirrr;
 
 double dvx,dvy,dvz,dvzi;
 double Qx,Qy,Qz;
+
+phase = create_darr2d(10,10);
+SigB = create_darr2d(21,182);
 
 Qmin = 1e-5;    /* reasonable smallest SANS Q, should be close to zero, but finite */
 Qminl= log10(1e-5);  /* logarithm of Qmin */
@@ -1714,6 +1717,11 @@ outsample:
 };       /* end intersect check */
 
 
+%}
+
+FINALLY %{
+  destroy_darr2d(phase);
+  destroy_darr2d(SigB);
 %}
 
 MCDISPLAY

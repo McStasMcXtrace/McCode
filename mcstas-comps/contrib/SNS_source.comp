@@ -58,7 +58,7 @@ SHARE %{
   /* ----------------------------------------------------------------
       routine to load E, I and t I data from SNS source files
   -----------------------------------------------------------------*/
-  void sns_source_load(char fname[], double *xvec, double *yvec, int xcol, int ycol,
+  void sns_source_load(char* fname, double *xvec, double *yvec, int xcol, int ycol,
     int *veclenptr, double *tcol, double *Ecol, double **Imat,int *ntvals, int *nEvals)
   {
     FILE *fp;

@@ -250,7 +250,7 @@ TRACE
   }else if (lambda0){
     if (!dlambda){
       l=lambda0;
-    }else if (gauss){mcxtrace-comps/sources/Source_div_quasi.comp
+    }else if (gauss){
       l=lambda0+dlambda*randnorm();
     }else{
       l=randpm1()*dlambda + lambda0;

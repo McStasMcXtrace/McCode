@@ -163,7 +163,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->Coord_NumberNoPixel=0;   /* same but without counting PixelID */
 
     Vars->Buffer_Block      = MONND_BUFSIZ;     /* Buffer size for list or auto limits */	
-    Vars->Neutron_Counter   = -1;   /* event counter, simulation total counts is mcget_ncount() */
+    Vars->Neutron_Counter   = 0;   /* event counter, simulation total counts is mcget_ncount() */
     Vars->Buffer_Counter    = 0;   /* index in Buffer size (for realloc) */
     Vars->Buffer_Size       = 0;
     Vars->He3_pressure      = 0;
@@ -992,6 +992,15 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
   long    While_Buffer=0;
   char    Set_Vars_Coord_Type = DEFS->COORD_NONE;
   
+  #ifdef OPENACC
+  /* For the OPENACC list buffer we need a local copy of the
+     atomically updated Neutron_counter - captured below under list mode */
+  long long ParticleCount=0;
+  #else
+  /* On CPU can make do with the global, declared one... */
+  #define ParticleCount Vars->Neutron_Counter
+  #endif
+
   /* the logic below depends mainly on:
        Flag_List:        1=store 1 buffer, 2=list all, 3=re-use buffer 
        Flag_Auto_Limits: 0 (no auto limits/list), 1 (store events into Buffer), 2 (re-emit store events)
@@ -1033,15 +1042,15 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
       Vars->Flag_List = 3;
       Vars->Buffer_Block = Vars->Buffer_Size;
       Vars->Buffer_Counter  = 0;
-      Vars->Neutron_Counter = 0;
+      ParticleCount = 0;
 
     }
     else
     {
-      Vars->Mon2D_Buffer  = (double *)realloc(Vars->Mon2D_Buffer, (Vars->Coord_Number+1)*(Vars->Neutron_Counter+Vars->Buffer_Block)*sizeof(double));
+      Vars->Mon2D_Buffer  = (double *)realloc(Vars->Mon2D_Buffer, (Vars->Coord_Number+1)*(ParticleCount+Vars->Buffer_Block)*sizeof(double));
       if (Vars->Mon2D_Buffer == NULL)
-            { printf("Monitor_nD: %s cannot reallocate Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", Vars->compcurname, i, (long int)(Vars->Neutron_Counter+Vars->Buffer_Block)*sizeof(double)); Vars->Flag_List = 1; }
-      else { Vars->Buffer_Counter = 0; Vars->Buffer_Size = Vars->Neutron_Counter+Vars->Buffer_Block; }
+            { printf("Monitor_nD: %s cannot reallocate Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", Vars->compcurname, i, (long int)(ParticleCount+Vars->Buffer_Block)*sizeof(double)); Vars->Flag_List = 1; }
+      else { Vars->Buffer_Counter = 0; Vars->Buffer_Size = ParticleCount+Vars->Buffer_Block; }
     }
   } /* end if Buffer realloc */
 #endif
@@ -1246,7 +1255,7 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_LAMBDA) { XY = sqrt(_particle->vx*_particle->vx+_particle->vy*_particle->vy+_particle->vz*_particle->vz);  XY *= V2K; if (XY != 0) XY = 2*PI/XY; }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_NCOUNT) XY = Vars->Neutron_Counter;
+        if (Set_Vars_Coord_Type == DEFS->COORD_NCOUNT) XY = ParticleCount;
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_ANGLE)
         {  XY = sqrt(_particle->vx*_particle->vx+_particle->vy*_particle->vy);
@@ -1373,13 +1382,19 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
     { /* now store Coord into Buffer (no index needed) if necessary (list or auto limits) */
       if ((Vars->Buffer_Counter < Vars->Buffer_Block) && ((Vars->Flag_List) || (Vars->Flag_Auto_Limits == 1)))
       {
-        #pragma acc atomic
-        Vars->Neutron_Counter = Vars->Neutron_Counter + 1;
+        #ifdef OPENACC
+        #pragma acc atomic capture
+        {
+	  ParticleCount=Vars->Neutron_Counter++ ;
+        } 
+        #else
+        ParticleCount++;
+	#endif
         for (i = 0; i <= Vars->Coord_Number; i++)
         {
 	  // This is is where the list is appended. How to make this "atomic"?
           #pragma acc atomic write 
-          Vars->Mon2D_Buffer[i + Vars->Neutron_Counter*(Vars->Coord_Number+1)] = Coord[i];
+          Vars->Mon2D_Buffer[i + ParticleCount*(Vars->Coord_Number+1)] = Coord[i];
         }
 	#pragma acc atomic 
         Vars->Buffer_Counter = Vars->Buffer_Counter + 1;

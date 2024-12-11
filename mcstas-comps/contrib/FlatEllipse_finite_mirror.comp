@@ -126,7 +126,6 @@ DECLARE
     //point structure
     Point p1;
     //Function to handle Conic-Neutron collisions with reflectivity from McStas Tables
-    void traceNeutronConicWithTables(_class_particle* p, ConicSurf c);
     double *rfront_inner;//all r-distances at lStart for all mirror surfaces
     int silicon; // +1: neutron in silicon, -1: neutron in air, 0: mirrorwidth is 0; neutron cannot be in silicon and also does not track mirror transitions
     t_Table rsTable;
