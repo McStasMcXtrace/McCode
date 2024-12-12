@@ -13,7 +13,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 import numpy as np
 from enum import Enum
-import PyQt5
+import qtpy
 from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
 from pyqtgraph.graphicsItems.LegendItem import LegendItem, ItemSample
