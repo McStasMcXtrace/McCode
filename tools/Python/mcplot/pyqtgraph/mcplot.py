@@ -8,6 +8,7 @@ import os
 import sys
 import subprocess
 
+import qtpy
 import plotfuncs
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
