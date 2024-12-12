@@ -7,6 +7,7 @@ import math
 import subprocess
 import numpy as np
 
+import qtpy
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
@@ -103,11 +104,11 @@ class McPyqtgraphPlotter():
         if hasattr(self.app, "exec_"):
             try:
                 import PySide6
-                self.isQt6 = True
+                self.isQt6 = False
             except:
                 self.isQt6 = False
         else:
-            self.isQt6 = True
+            self.isQt6 = False
 
         if invcanvas:
             # switch to using white background and black foreground

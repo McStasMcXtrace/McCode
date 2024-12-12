@@ -24,6 +24,7 @@ dependencies:
   - pillow
   - pyqtgraph
   - pyqt
+  - qtpy
   - qscintilla2
   - nexusformat
   - nexpy
