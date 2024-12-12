@@ -7,6 +7,7 @@ import math
 import subprocess
 import numpy as np
 
+import qtpy
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
@@ -94,20 +95,9 @@ class McPyqtgraphPlotter():
         self.graph = plotgraph
         self.sourcedir = sourcedir
         self.plot_func = plot_func
-        self.isQt6 = None
         
         # Qt app
         self.app = QtWidgets.QApplication(sys.argv)
-
-        # start
-        if hasattr(self.app, "exec_"):
-            try:
-                import PySide6
-                self.isQt6 = True
-            except:
-                self.isQt6 = False
-        else:
-            self.isQt6 = True
 
         if invcanvas:
             # switch to using white background and black foreground
@@ -128,7 +118,7 @@ class McPyqtgraphPlotter():
         self.update_statusbar(None, node, None)
 
         # start
-        if (not self.isQt6):
+        if hasattr(self.app, "exec_"):
             sys.exit(self.app.exec_())  # Qt5
         else:
             sys.exit(self.app.exec())   # Qt6
@@ -184,10 +174,7 @@ class McPyqtgraphPlotter():
 
         def get_modifiers(modname):
             ''' Get int codes for keyboardmodifiers. WARNING: String codes may be used directly in code. '''
-            if (self.isQt6):   # Qt6
-              k = QtCore.Qt.KeyboardModifier
-            else:             # Qt5
-              k = QtCore.Qt
+            k = QtCore.Qt
               
             if modname == "none":
                 return 0
@@ -374,7 +361,7 @@ class McPyqtgraphPlotter():
                 print("click modifier: %s" % str(event.modifiers()))
 
             # prevent action for modifiers mismatch
-            if (self.isQt6 and hasattr(QtCore.Qt,"KeyboardModifier")):   # Qt6
+            if (hasattr(QtCore.Qt,"KeyboardModifier")):   # Qt6
                 if not isinstance(mod, int):
                     if event.modifiers() != mod: # Qt5: int(event.modifiers()) != mod fails in Qt6
                         return
