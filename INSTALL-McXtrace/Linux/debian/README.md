@@ -34,6 +34,10 @@ the simple apt-get command
 sudo apt-get install mcxtrace-suite-python
 ```
 
+# Important note wrt. Debian packages:
+If you install both of mcstas and mcxtrace on the same Debian/Ubuntu system, you will get a collision for the file `/usr/bin/cif2hkl`. As a workaround you may allow joint installation via overriding `cif2hkl`:
+  `sudo apt-get -f install  -o Dpkg::Options::="--force-overwrite"`
+
 # Using mcdoc on modern Ubuntu systems
 Ubuntu is shipping its browsers as "snap" packages, meaning that
 e.g. the components can not be browsed from /usr/share/mcxtrace/.

@@ -31,6 +31,9 @@ Changes in McStas/McXtrace 3.5.16, November 16th, 2024
   by @willend in https://github.com/McStasMcXtrace/McCode/pull/1787
   * Ensure the MCCODE_MAJOR/MINOR/PATCH vars always have a meaning 
   by @willend in https://github.com/McStasMcXtrace/McCode/pull/1789
+  * **Important note wrt. Debian packages:** If you install both of mcstas and mcxtrace on the same Debian/Ubuntu system, you will get a collision for the file `/usr/bin/cif2hkl`. As a workaround you may allow joint installation via overriding `cif2hkl`:
+  `sudo apt-get -f install  -o Dpkg::Options::="--force-overwrite"`
+
 
 * McStas and McXtrace components and instruments
   * PowderN: fix warning message repeated for ever by 
