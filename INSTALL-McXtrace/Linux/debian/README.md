@@ -1,16 +1,42 @@
-## Install McXtrace 3.5.12 On Debian class systems (including Ubuntu, mint etc.):
+## Install McXtrace 3.5.16 On Debian class systems (including Ubuntu, mint etc.):
 The packages have been tested to work correctly on Ubuntu 22.04 and Debian 11.
 
-# For McXtrace 3.5.12 only, installation includes the following manual steps:
+# Add the McCode repository
+After following the below steps your package manager should now be aware of mcxtrace
+```bash
+cd /etc/apt/sources.list.d
+sudo wget https://packages.mccode.org/debian/mccode.list
+sudo apt-get update
+```
 
-1. Please **uninstall** McXtrace 3.5.1 if it exists on your system
-2. Please manually download the 3.5.12 packages from https://download.mcxtrace.org/mcxtrace-3.5.12/Linux/debian/
-3. Unpack and install the packages using e.g. dpkg
+# Debian only:
+On Debian you will further have to install the non-free repository to have access to all McXtrace tool parts. See https://wiki.debian.org/SourcesList
+
+# Look for McXtrace packages to install
+```bash
+mcxtrace@debian:~$ apt-cache search mcxtrace | grep -v 2.
+mcxtrace - mcxtrace built using CMake
+mcxtrace-comps - mcxtrace-comps built using CMake
+mcxtrace-manuals - mcxtrace_manuals built using CMake
+mcxtrace-suite-python - A metapackage for McXtrace + python tools
+mcxtrace-tools-matlab-mxplot - matlab-tools-mxplot built using CMake
+mcxtrace-tools-python-mccodelib - python-tools-mccodelib built using CMake
+mcxtrace-tools-python-mxdisplay-pyqtgraph - python-tools-mxdisplay-pyqtgraph built using CMake
+mcxtrace-tools-python-mxdisplay-webgl - python-tools-mxdisplay-webgl built using CMake
+mcxtrace-tools-python-mxgui - python-tools-mxgui built using CMake
+mcxtrace-tools-python-mxplot-pyqtgraph - python-tools-mxplot-pyqtgraph built using CMake
+mcxtrace-tools-python-mxrun - python-tools-mxrun built using CMake
+```
+The meta-package mcxtrace-suite-python (or mcxtrace-suite-python-ng)
+allows you to install mcxtrace 3.5.16 with tools (mcrun/mcplot etc.) by
+the simple apt-get command
+```bash
+sudo apt-get install mcxtrace-suite-python
+```
 
 # Using mcdoc on modern Ubuntu systems
-Ubuntu is shipping its browsers as "snap" packages, meaning that they
-are blocked from accessing e.g. the McXtrace html snippets in
-/usr/share/mcxtrace/3.5.12/.
+Ubuntu is shipping its browsers as "snap" packages, meaning that
+e.g. the components can not be browsed from /usr/share/mcxtrace/.
 
 To fix this we propose to switch your browser to a proper apt based
 installation, in this example firefox:

@@ -1,4 +1,4 @@
-# Installation of McXtrace 3.5.12 on macOS 
+# Installation of McXtrace 3.5.16 on macOS 
 
 ## Supported macOS releases
 * macOS 11-15 (Big Sur and later, fully supported python tool set. Supported on both Intel and Apple Silicon,
@@ -7,16 +7,16 @@
 ## Steps to perform
 
 * Download the package:
-  [McXtrace 3.5.12 for macOS](https://download.mcxtrace.org/mcxtrace-3.5.12/mac/mcxtrace-3.5.12-macOS-conda.tar.gz)
+  [McXtrace 3.5.16 for macOS](https://download.mcxtrace.org/mcxtrace-3.5.16/mac/mcxtrace-3.5.16-macOS-conda.tar.gz)
  and unpack it (e.g. double-clicking should work).
 
 * Open the relevant folder for your local processor
 
-* Drag the McXtrace-3.5.12.app to /Applications and right-click + open to start the app:<br/>
+* Drag the McXtrace-3.5.16.app to /Applications and right-click + open to start the app:<br/>
 ![](screenshots/1_open-mcxtrace-from-Applications.png?raw=true)
 
 * Depending on your macOS version, security settings may initially prevent the app from opening, example from macOS 15 Sequoia:
-  - Initial warning that "McXtrace-3.5.12" was not opened<br/>
+  - Initial warning that "McXtrace-3.5.16" was not opened<br/>
   ![](screenshots/2_mcxtrace-not-opened.png?raw=true)
   - Next, go to System Preferences, Privacy and Security and select to
   "Open Anyway"<br/>
@@ -26,7 +26,7 @@
   - And finally give your password for installation to proceed<br/>
   ![](screenshots/5_admin-password.png?raw=true)
 
-* As of 3.5.12 the macOS app bundles are fully based on conda-forge and will "self-inject" all dependencies on first launch. Please follow any on-screen instructions given.
+* As of 3.5.16 the macOS app bundles are fully based on conda-forge and will "self-inject" all dependencies on first launch. Please follow any on-screen instructions given.
   
 * In case you have trouble accessing instrument files in certain areas
   of your disk, please give the McXtrace bundle "Full Disk Access"

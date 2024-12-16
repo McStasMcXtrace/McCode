@@ -1,4 +1,4 @@
-# Install McStas 3.5.12 on Linux and Unix.
+# Install McStas 3.5.16 on Linux and Unix.
 
 * We provide Debian packages, RedHat packages, and tar.gz's of "preconfigured" source code.
 
@@ -11,7 +11,7 @@ Until McStas is broadly available in Debian/Ubuntu, you may also use our own mcc
 Please consult the specific [Debian/Ubuntu](debian/README.md).
 
 ## Other Linux
-As of 3.5.12 we no longer build for RPM based systems. Please use our [conda-forge](../conda/README.md) packages instead.
+We no longer build for RPM based systems. Please use our [conda-forge](../conda/README.md) packages instead.
 
 ## Favorite system not available?
 * For other systems, please build directly from the repo [build instructions](https://github.com/McStasMcXtrace/McCode/wiki/Building-McStas-McXtrace)

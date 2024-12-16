@@ -1,16 +1,43 @@
-## Install McStas 3.5.12 On Debian class systems (including Ubuntu, mint etc.):
+## Install McStas 3.5.16 On Debian class systems (including Ubuntu, mint etc.):
 The packages have been tested to work correctly on Ubuntu 22.04 and Debian 11.
 
-# For McStas 3.5.12 only, installation includes the following manual steps:
+# Add the McCode repository
+After following the below steps your package manager should now be aware of mcstas
+```bash
+cd /etc/apt/sources.list.d
+sudo wget https://packages.mccode.org/debian/mccode.list
+sudo apt-get update
+```
 
-1. Please **uninstall** McStas 3.5.1 if it exists on your system
-2. Please manually download the 3.5.12 packages from https://download.mcstas.org/mcstas-3.5.12/Linux/debian/
-3. Unpack and install the packages using e.g. dpkg
+# Debian only:
+On Debian you will further have to install the non-free repository to have access to all McStas tool parts. See https://wiki.debian.org/SourcesList
+
+# Look for McStas packages to install
+```bash
+mcstas@debian:~$ apt-cache search mcstas | grep -v 2.
+mcstas - mcstas built using CMake
+mcstas-comps - mcstas-comps built using CMake
+mcstas-manuals - mcstas_manuals built using CMake
+mcstas-suite-python - A metapackage for McStas + python tools
+mcstas-tools-matlab-mcplot - matlab-tools-mcplot built using CMake
+mcstas-tools-python-mccodelib - python-tools-mccodelib built using CMake
+mcstas-tools-python-mcdisplay-mantid - python-tools-mcdisplay-mantid built using CMake
+mcstas-tools-python-mcdisplay-pyqtgraph - python-tools-mcdisplay-pyqtgraph built using CMake
+mcstas-tools-python-mcdisplay-webgl - python-tools-mcdisplay-webgl built using CMake
+mcstas-tools-python-mcgui - python-tools-mcgui built using CMake
+mcstas-tools-python-mcplot-pyqtgraph - python-tools-mcplot-pyqtgraph built using CMake
+mcstas-tools-python-mcrun - python-tools-mcrun built using CMake
+```
+The meta-package mcstas-suite-python (or mcstas-suite-python-ng)
+allows you to install mcstas 3.5.16 with tools (mcrun/mcplot etc.) by
+the simple apt-get command
+```bash
+sudo apt-get install mcstas-suite-python
+```
 
 # Using mcdoc on modern Ubuntu systems
-Ubuntu is shipping its browsers as "snap" packages, meaning that they
-are blocked from accessing e.g. the McStas html snippets in
-/usr/share/mcstas/3.5.12/.
+Ubuntu is shipping its browsers as "snap" packages, meaning that
+e.g. the components can not be browsed from /usr/share/mcstas/.
 
 To fix this we propose to switch your browser to a proper apt based
 installation, in this example firefox:
