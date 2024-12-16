@@ -1,7 +1,5 @@
 # Running McStas and McXtrace 3.5.16 in Docker / podman etc.
 
-## Pending update!
-
 The container definition is available at [here](https://github.com/willend/jupyter-remote-desktop-proxy/tree/mcstas-mcxtrace-3.5) and is further on dockerhub under docker.io/mccode/mcstas-mcxtrace
 
 To run the container locally, use e.g.
