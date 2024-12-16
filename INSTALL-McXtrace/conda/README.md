@@ -1,6 +1,6 @@
-# Install McXtrace 3.5.12 through conda-forge (macOS, Linux or Windows host)
+# Install McXtrace 3.5.16 through conda-forge (macOS, Linux or Windows host)
 
-* We a set of conda-packages for installing McXtrace 3.5.12.x through conda
+* We a set of conda-packages for installing McXtrace 3.5.16.x through conda
 
 ## Get yourself a conda / mamba
 Due to the complex [licensing situation](https://discuss.scientific-python.org/t/response-to-anaconda-switch-to-paid-plans/1395) with the commercial Anaconda ecosystem, we clearly recommend McXtrace users to start from an open-source entry-point such as
@@ -24,7 +24,7 @@ Due to the complex [licensing situation](https://discuss.scientific-python.org/t
 * ```mamba install mcxtrace```
  
 ## Note for use on Windows
-At the time of release for 3.5.12 MCPL is notr yet available for Windows on conda-forge, so related instruments will not compile/function.
+At the time of release for 3.5.16 MCPL is notr yet available for Windows on conda-forge, so related instruments will not compile/function.
 We expect this dependency to become available during the fall/winter of 2024.
 
 ## Install McXtraceScript, jypyterlab ipympl

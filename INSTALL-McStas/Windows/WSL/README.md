@@ -1,4 +1,4 @@
-# Installation of McStas 3.5.12 on Windows 64 bit systems - using WSL
+# Installation of McStas 3.5.16 on Windows 64 bit systems - using WSL
 *(WSL is the Windows Subsystem for Linux, aka. bash on Ubuntu on Windows)*
 
 
@@ -11,7 +11,7 @@ available, but we recommend Ubuntu)
 * To open it again later, simply issue bash in a terminal or through
 the start menu
 
-## Install the McStas 3.5.12 Debian packages
+## Install the McStas 3.5.16 Debian packages
 * Follow the
   [normal Debian installation instructions](../../Linux/debian/README.md)
   - essentially a matter of sudo apt-get install mcstas-suite-python
@@ -51,7 +51,7 @@ DISPLAY=:0.0)
 
 ## Configuring McStas to use the Windows browser
 * Ensure the package ubuntu-wsl (or equivalent) is installed
-* Set the BROWSER="wslview" in your /usr/share/mcstas/3.5.12/tools/Python/mccodelib/mccode_config.py
+* Set the BROWSER="wslview" in your /usr/share/mcstas/tools/Python/mccodelib/mccode_config.py
 
 ## In case of issues
 Please report any trouble with the repository to [mcstas-users](mailto:mcstas-users@mcstas.org)
