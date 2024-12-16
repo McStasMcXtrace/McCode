@@ -5,4 +5,3 @@ The container definition is available at [here](https://github.com/willend/jupyt
 To run the container locally, use e.g.
 ```podman run -p 8888:8888 -p 5173:5173 docker.io/mccode/mcstas-mcxtrace```
 
-A corresponding container is also availalble on binder: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/McStasMcXtrace/jupyter-mcstas-mcxtrace-desktop/main?urlpath=desktop)
