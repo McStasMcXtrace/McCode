@@ -376,7 +376,7 @@ void destroy_darr3d(DArray3d a);
 }
 
 #ifndef MPI_REDUCE_BLOCKSIZE
-#define MPI_REDUCE_BLOCKSIZE 1000
+#define MPI_REDUCE_BLOCKSIZE 100000
 #endif
 
 int mc_MPI_Sum(double* buf, long count);
