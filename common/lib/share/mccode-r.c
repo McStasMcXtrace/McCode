@@ -2037,8 +2037,9 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
 	      mcdetector_out_array_nexus(f, "ncount", detector.p0, detector);
 	    } else if (strcasestr(detector.format, "pixels")) {
 	      mcdetector_out_array_nexus(  f, "pixels", detector.p1, detector);
-	    } else
+	    } else {
 	      mcdetector_out_array_nexus(  f, "events", detector.p1, detector);
+	    }
 	    NXclosegroup(f);
 	    NXopengroup(f, data_name, "NXdata");
 	    NXgetgroupID(nxhandle, &pLink);
@@ -2089,7 +2090,6 @@ MCDETECTOR mcdetector_out_list_slaves(MCDETECTOR detector)
      || mc_MPI_Send(detector.p1, mnp[0]*mnp[1]*mnp[2], MPI_DOUBLE, mpi_node_root) != MPI_SUCCESS)
       fprintf(stderr, "Warning: proc %i to master: MPI_Send p1 list error: mnp=%i (mcdetector_out_list_slaves)\n", mpi_node_rank, abs(mnp[0]*mnp[1]*mnp[2]));
     /* slaves are done: sent mnp and p1 */
-    return (detector);
   } /* end slaves */
 
   /* MPI master: receive data from slaves sequentially: 2 MPI_Recv calls */
@@ -2122,6 +2122,7 @@ MCDETECTOR mcdetector_out_list_slaves(MCDETECTOR detector)
 	     printf("\n** Done ** \n");
   );
   }
+  // Common return statement for slaves / master alike
   return(detector);
 }
 #endif
