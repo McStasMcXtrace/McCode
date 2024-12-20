@@ -74,6 +74,7 @@
 DEFINE COMPONENT Union_abs_logger_event
 
 SETTING PARAMETERS(string target_geometry="NULL", string filename="NULL",
+                   xwidth=0, xbins=0, yheight=0, ybins=0, zdepth=0, zbins=0,
                    order_total=-1, order_volume=-1, logger_conditional_extend_index=-1, string init="init")
 
 
@@ -120,11 +121,32 @@ struct a_event_abs_storage_struct {
   int order;
   int order_in_this_volume;
   int order_process_in_this_volume;
+
+  double stored_xwidth;
+  double stored_yheight;
+  double stored_zdepth;
+
+  int stored_xbins;
+  int stored_ybins;
+  int stored_zbins;
   
   Coords position;
   Rotation rotation;
   Rotation t_rotation;
 };
+
+double round_to_nearest_bin(double value, double w, int N) {
+    // Calculate the width of each bin
+    double bin_width = w / N;
+
+    // Calculate the index of the nearest bin
+    int bin_index = round((value + w / 2) / bin_width);
+
+    // Calculate the center of the nearest bin
+    double bin_center = (bin_index * bin_width) - (w / 2) + (bin_width / 2);
+
+    return bin_center;
+}
 
 // record_to_temp
 // Would be nice if x y z, k_new and k_old were all coords
@@ -132,7 +154,7 @@ void record_to_temp_abs_event(Coords *position, double *k, double p, double time
 
   struct a_event_abs_storage_struct *storage;
   storage = abs_logger->data_union.p_event_abs_storage;
-  
+
   int add_point = 1;
 
   if (storage->order != -1) {
@@ -141,9 +163,30 @@ void record_to_temp_abs_event(Coords *position, double *k, double p, double time
     else
       add_point = 0;
   }
-  
+
   if (storage->order_in_this_volume != -1) {
     if (storage->order_in_this_volume == scattered_in_this_volume)
+      add_point = 1;
+    else
+      add_point = 0;
+  }
+
+  if (storage->stored_xwidth != 0) {
+    if (position->x < 0.5*storage->stored_xwidth && position->x > -0.5*storage->stored_xwidth)
+      add_point = 1;
+    else
+      add_point = 0;
+  }
+
+  if (storage->stored_yheight != 0) {
+    if (position->y < 0.5*storage->stored_yheight && position->y > -0.5*storage->stored_yheight)
+      add_point = 1;
+    else
+      add_point = 0;
+  }
+
+  if (storage->stored_zdepth != 0) {
+    if (position->z < 0.5*storage->stored_zdepth && position->z > -0.5*storage->stored_xwidth)
       add_point = 1;
     else
       add_point = 0;
@@ -153,7 +196,26 @@ void record_to_temp_abs_event(Coords *position, double *k, double p, double time
 
     int i;
     double given_x_pos, given_y_pos, given_z_pos;
+    double used_x_pos, used_y_pos, used_z_pos;
     coords_get(*position, &given_x_pos, &given_y_pos, &given_z_pos);
+
+    if (storage->stored_xbins != 0) {
+        used_x_pos = round_to_nearest_bin(given_x_pos, storage->stored_xwidth, storage->stored_xbins);
+    } else {
+        used_x_pos = given_x_pos;
+    }
+
+    if (storage->stored_ybins != 0) {
+        used_y_pos = round_to_nearest_bin(given_y_pos, storage->stored_yheight, storage->stored_ybins);
+    } else {
+        used_y_pos = given_y_pos;
+    }
+
+    if (storage->stored_zbins != 0) {
+        used_z_pos = round_to_nearest_bin(given_z_pos, storage->stored_zdepth, storage->stored_zbins);
+    } else {
+        used_z_pos = given_z_pos;
+    }
     
     double given_x_vel, given_y_vel, given_z_vel;
     given_x_vel = k[0]*K2V;
@@ -162,9 +224,9 @@ void record_to_temp_abs_event(Coords *position, double *k, double p, double time
     
     if (storage->temp_abs_event_data.num_elements < storage->temp_abs_event_data.allocated_elements) {
     
-        storage->temp_abs_event_data.elements[storage->temp_abs_event_data.num_elements].x_pos = given_x_pos;
-        storage->temp_abs_event_data.elements[storage->temp_abs_event_data.num_elements].y_pos = given_y_pos;
-        storage->temp_abs_event_data.elements[storage->temp_abs_event_data.num_elements].z_pos = given_z_pos;
+        storage->temp_abs_event_data.elements[storage->temp_abs_event_data.num_elements].x_pos = used_x_pos;
+        storage->temp_abs_event_data.elements[storage->temp_abs_event_data.num_elements].y_pos = used_y_pos;
+        storage->temp_abs_event_data.elements[storage->temp_abs_event_data.num_elements].z_pos = used_z_pos;
         storage->temp_abs_event_data.elements[storage->temp_abs_event_data.num_elements].x_vel = given_x_vel;
         storage->temp_abs_event_data.elements[storage->temp_abs_event_data.num_elements].y_vel = given_y_vel;
         storage->temp_abs_event_data.elements[storage->temp_abs_event_data.num_elements].z_vel = given_z_vel;
@@ -270,12 +332,52 @@ void record_to_perm_abs_event(Coords *position, double *k, double p, double time
       add_point = 0;
   }
 
+  if (storage->stored_xwidth != 0) {
+    if (position->x < 0.5*storage->stored_xwidth && position->x > -0.5*storage->stored_xwidth)
+      add_point = 1;
+    else
+      add_point = 0;
+  }
+
+  if (storage->stored_yheight != 0) {
+    if (position->y < 0.5*storage->stored_yheight && position->y > -0.5*storage->stored_yheight)
+      add_point = 1;
+    else
+      add_point = 0;
+  }
+
+  if (storage->stored_zdepth != 0) {
+    if (position->z < 0.5*storage->stored_zdepth && position->z > -0.5*storage->stored_xwidth)
+      add_point = 1;
+    else
+      add_point = 0;
+  }
+
   if (add_point == 1) {
     //printf("storage was set \n");
     
     double given_x_pos, given_y_pos, given_z_pos;
+    double used_x_pos, used_y_pos, used_z_pos;
     coords_get(*position, &given_x_pos, &given_y_pos, &given_z_pos);
-    
+
+    if (storage->stored_xbins != 0) {
+        used_x_pos = round_to_nearest_bin(given_x_pos, storage->stored_xwidth, storage->stored_xbins);
+    } else {
+        used_x_pos = given_x_pos;
+    }
+
+    if (storage->stored_ybins != 0) {
+        used_y_pos = round_to_nearest_bin(given_y_pos, storage->stored_yheight, storage->stored_ybins);
+    } else {
+        used_y_pos = given_y_pos;
+    }
+
+    if (storage->stored_zbins != 0) {
+        used_z_pos = round_to_nearest_bin(given_z_pos, storage->stored_zdepth, storage->stored_zbins);
+    } else {
+        used_z_pos = given_z_pos;
+    }
+
     double given_x_vel, given_y_vel, given_z_vel;
     given_x_vel = k[0]*K2V;
     given_y_vel = k[1]*K2V;
@@ -283,9 +385,9 @@ void record_to_perm_abs_event(Coords *position, double *k, double p, double time
 
     _class_particle _localparticle;
     
-    _localparticle.x  = given_x_pos;
-    _localparticle.y  = given_y_pos;
-    _localparticle.z  = given_z_pos;
+    _localparticle.x  = used_x_pos;
+    _localparticle.y  = used_y_pos;
+    _localparticle.z  = used_z_pos;
       
     _localparticle.vx = given_x_vel;
     _localparticle.vy = given_y_vel;
@@ -478,8 +580,17 @@ INITIALIZE
   this_abs_storage.order = order_total;
   this_abs_storage.order_in_this_volume = order_volume;
   
+  this_abs_storage.stored_xwidth = xwidth;
+  this_abs_storage.stored_xbins = (int) xbins;
+
+  this_abs_storage.stored_yheight = yheight;
+  this_abs_storage.stored_ybins = (int) ybins;
+
+  this_abs_storage.stored_zdepth = zdepth;
+  this_abs_storage.stored_zbins = (int) zbins;
+
   this_abs_storage.temp_abs_event_data.num_elements=0;
-  
+
   this_abs_storage.temp_abs_event_data.allocated_elements = 10;
   this_abs_storage.temp_abs_event_data.elements = malloc(this_abs_storage.temp_abs_event_data.allocated_elements*sizeof(struct temp_abs_event_data_element_struct));
 
