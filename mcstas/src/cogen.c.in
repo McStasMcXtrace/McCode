@@ -1863,7 +1863,7 @@ int cogen_raytrace(struct instr_def *instr)
       // WHEN
       if (comp->when) {
         char *exp=exp_tostring(comp->when);
-        coutf("      if ((%s)) // conditional WHEN execution", exp);
+        coutf("      if ((%s)) { // conditional WHEN execution", exp);
         str_free(exp);
       }
       coutf("      class_%s_trace(&_%s_var, _particle);%s",
@@ -1916,6 +1916,14 @@ int cogen_raytrace(struct instr_def *instr)
       else // comp_absorb_sends_to_next
         coutf("      else particle_restore(_particle, &_particle_save); // not SCATTERED in GROUP, restore");
     }
+
+    // Add return-curly for WHEN if needed
+    if (list_len(comp->def->trace_code->lines) > 0 || list_len(comp->extend->lines) > 0) {
+      // WHEN
+      if (comp->when) {
+        coutf("      } // WHEN termination");
+      }
+    };
 
     coutf("      _particle->_index++;");
     if (comp->skip_transform == 0) {
