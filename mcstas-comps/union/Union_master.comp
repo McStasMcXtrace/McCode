@@ -80,6 +80,8 @@ struct abs_logger_with_data_struct abs_loggers_with_data_array;
     #define MASTER_DETECTOR dummy
 #endif
 
+%include "ref-lib"
+
 %}
 
 DECLARE
@@ -143,6 +145,7 @@ DECLARE
   int limit;
   int solution;
   int min_solution;
+  int ignore_closest;
   int min_volume;
   int time_found;
   double intersection_time;
@@ -177,6 +180,7 @@ DECLARE
   
   int done;
   int current_volume;
+  int previous_volume;
   int ray_sucseeded;
   int *number_of_solutions;
   int number_of_solutions_static;
@@ -928,6 +932,11 @@ exit(-1);
   intersection_time_table.n_elements = (int*) malloc(intersection_time_table.num_volumes * sizeof(int));
   intersection_time_table.calculated = (int*) malloc(intersection_time_table.num_volumes * sizeof(int));
   intersection_time_table.intersection_times = (double**) malloc(intersection_time_table.num_volumes * sizeof(double));
+  intersection_time_table.normal_vector_x = (double**) malloc(intersection_time_table.num_volumes * sizeof(double));
+  intersection_time_table.normal_vector_y = (double**) malloc(intersection_time_table.num_volumes * sizeof(double));
+  intersection_time_table.normal_vector_z = (double**) malloc(intersection_time_table.num_volumes * sizeof(double));
+  intersection_time_table.surface_index = (int**) malloc(intersection_time_table.num_volumes * sizeof(int));
+  
   for (iterator = 0;iterator < intersection_time_table.num_volumes;iterator++){
       if (strcmp(Volumes[iterator]->geometry.shape, "mesh") == 0) {
         intersection_time_table.n_elements[iterator] = (int) 100; // Meshes can have any number of intersections, here we allocate room for 100
@@ -942,6 +951,10 @@ exit(-1);
       }
       else {
         intersection_time_table.intersection_times[iterator] = (double*) malloc(intersection_time_table.n_elements[iterator]*sizeof(double));
+        intersection_time_table.normal_vector_x[iterator] = (double*) malloc(intersection_time_table.n_elements[iterator]*sizeof(double));
+        intersection_time_table.normal_vector_y[iterator] = (double*) malloc(intersection_time_table.n_elements[iterator]*sizeof(double));
+        intersection_time_table.normal_vector_z[iterator] = (double*) malloc(intersection_time_table.n_elements[iterator]*sizeof(double));
+		intersection_time_table.surface_index[iterator] = (int*) malloc(intersection_time_table.n_elements[iterator]*sizeof(int));
         for (solutions = 0;solutions < intersection_time_table.n_elements[iterator];solutions++) {
               intersection_time_table.intersection_times[iterator][solutions] = -1.0;
         }
@@ -1063,6 +1076,9 @@ TRACE
   // Now the initial current_volume can be found, which requires the up to date mask_status_list
   current_volume = within_which_volume_GPU(ray_position, starting_lists.reduced_start_list, starting_lists.starting_destinations_list, Volumes, &mask_status_list, number_of_volumes, pre_allocated1, pre_allocated2, pre_allocated3);
   
+  // For excluding closest intersection in search after refraction/reflection
+  ignore_closest = -1;
+  
   // Using the mask_status_list and the current volume, the current_mask_intersect_list_status can be made
   //  it contains the effective mask status of all volumes on the current volumes mask intersect list, which needs to be calculated,
   //  but only when the current volume or mask status changes, not under for example scattering inside the current volume
@@ -1142,7 +1158,12 @@ TRACE
             // Calculate intersections using intersect function imbedded in the relevant volume structure using parameters that are also imbedded in the structure.
 
             // GPU Flexible intersect_function call
-            geometry_output = intersect_function(intersection_time_table.intersection_times[*check], number_of_solutions, r_start, v, &Volumes[*check]->geometry);
+            geometry_output = intersect_function(intersection_time_table.intersection_times[*check], 
+												 intersection_time_table.normal_vector_x[*check],
+												 intersection_time_table.normal_vector_y[*check],
+												 intersection_time_table.normal_vector_z[*check],
+												 intersection_time_table.surface_index[*check],
+												 number_of_solutions, r_start, v, &Volumes[*check]->geometry);
             
             intersection_time_table.calculated[*check] = 1;
         }
@@ -1167,7 +1188,12 @@ TRACE
           // GPU allowed
           int selected_index;
           selected_index = Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator];
-          geometry_output = intersect_function(intersection_time_table.intersection_times[selected_index], number_of_solutions, r_start, v, &Volumes[selected_index]->geometry);
+          geometry_output = intersect_function(intersection_time_table.intersection_times[selected_index], 
+		 									   intersection_time_table.normal_vector_x[selected_index],
+											   intersection_time_table.normal_vector_y[selected_index],
+											   intersection_time_table.normal_vector_z[selected_index],
+											   intersection_time_table.surface_index[selected_index],
+											   number_of_solutions, r_start, v, &Volumes[selected_index]->geometry);
           
           intersection_time_table.calculated[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterator]] = 1;
           // if printf("succesfully calculated intersection times for volume *check = %d \n",*check);
@@ -1229,7 +1255,13 @@ TRACE
         #endif
         if (intersection_with_children == 0) {
             // GPU Allowed
-            geometry_output = intersect_function(intersection_time_table.intersection_times[current_volume], number_of_solutions, r_start, v, &Volumes[current_volume]->geometry);
+            geometry_output = intersect_function(intersection_time_table.intersection_times[current_volume],
+			   									 intersection_time_table.normal_vector_x[current_volume],
+												 intersection_time_table.normal_vector_y[current_volume],
+												 intersection_time_table.normal_vector_z[current_volume],
+												 intersection_time_table.surface_index[current_volume],
+												 number_of_solutions, r_start, v, &Volumes[current_volume]->geometry);
+
             intersection_time_table.calculated[current_volume] = 1;
         }
     }
@@ -1238,6 +1270,26 @@ TRACE
     #ifdef Union_trace_verbal_setting
       print_intersection_table(&intersection_time_table);
     #endif
+	  
+    // For the closest intersection to volume with index ignore_closest, the scattering with the shortest absolute time should be ignored
+    if (ignore_closest != -1) {
+        min_intersection_time = 1E9;
+        min_solution = -1;
+        for (solution = 0;solution<intersection_time_table.n_elements[ignore_closest];solution++) {
+            if (fabs(intersection_time_table.intersection_times[ignore_closest][solution]) < min_intersection_time) {
+                min_intersection_time = fabs(intersection_time_table.intersection_times[ignore_closest][solution]);
+                min_solution = solution;
+            }
+        }
+        if (min_solution != -1) {
+            // Remove the intersection closest to current point from time table
+            intersection_time_table.intersection_times[ignore_closest][min_solution] = -1;
+            #ifdef Union_trace_verbal_setting
+              printf("Removed solution nr %d for volume %d with ignore closest\n", min_solution, ignore_closest);
+              print_intersection_table(&intersection_time_table);
+            #endif
+        }
+    }
     
     // Next task is to find the next intersection time. The next intersection must be greater than the time_propagated_without_scattering (0 at start of loop)
     // Loops are eqvialent to the 3 intersection calculation loops already completed
@@ -1303,12 +1355,15 @@ TRACE
             }
         }
     }
+	
+    // Reset ingore_closest after one intersection iteration
+    ignore_closest = -1;
     
     #ifdef Union_trace_verbal_setting
-      printf("min_intersection_time = %f \n",min_intersection_time);
-      printf("min_solution          = %d \n",min_solution);
-      printf("min_volume            = %d \n",min_volume);
-      printf("time_found            = %d \n",time_found);
+      printf("min_intersection_time = %f \n", min_intersection_time);
+      printf("min_solution          = %d \n", min_solution);
+      printf("min_volume            = %d \n", min_volume);
+      printf("time_found            = %d \n", time_found);
     #endif
 
     abs_weight_factor = 1.0;
@@ -1616,9 +1671,9 @@ TRACE
             } else {
                 ray_velocity_rotated = ray_velocity;
             }
-	    #ifdef Union_trace_verbal_setting
+	        #ifdef Union_trace_verbal_setting
             printf("Kin: %g %g %g, selected_process: %i %i\n",k[0],k[1],k[2],selected_process,current_volume);
-	    coords_print(Volumes[current_volume]->geometry.focus_data_array.elements[0].Aim);
+	        coords_print(Volumes[current_volume]->geometry.focus_data_array.elements[0].Aim);
             #endif
             // test_physics_scattering(double *k_final, double *k_initial, union data_transfer_union data_transfer) {
             coords_get(coords_scalar_mult(ray_velocity_rotated,V2K), &k[0], &k[1], &k[2]);
@@ -1691,7 +1746,7 @@ TRACE
               global_all_volume_logger_list_master->elements[log_index].logger->function_pointers.active_record_function(&ray_position, k_new, k_old, p, p_old, t, scattered_flag[current_volume], scattered_flag_VP[current_volume][selected_process], number_of_scattering_events, global_all_volume_logger_list_master->elements[log_index].logger, &loggers_with_data_array);
             }
             #ifdef Union_trace_verbal_setting
-	    printf("Outgoing event: %g %g %g // %g %g %g\n",x,y,z,vx,vy,vz);
+	           printf("Outgoing event: %g %g %g // %g %g %g\n",x,y,z,vx,vy,vz);
             #endif
             SCATTER;
             ++number_of_scattering_events;
@@ -1719,6 +1774,8 @@ TRACE
             #endif
             
         } else {
+			previous_volume = current_volume;
+			
             #ifdef Union_trace_verbal_setting
               printf("Propagate out of volume %d\n", current_volume);
               printf("r = (%f,%f,%f) v = (%f,%f,%f) \n", x, y, z, vx, vy, vz);
@@ -1930,6 +1987,297 @@ TRACE
             #ifdef Union_trace_verbal_setting
               printf(" TO VOLUME %d \n",current_volume);
             #endif
+              // Need old and current volume here to compare refraction index
+              // Need information on normal vector for intersection
+              // Can then change direction accordingly
+            
+            
+              double n1, n2;
+              int perform_refraction;
+            
+              #ifdef Union_trace_verbal_setting
+                printf("Entering refraction system \n");
+                printf("r = (%f,%f,%f) v = (%f,%f,%f) \n", x, y, z, vx, vy, vz);
+				printf("min_volume = %d, min_solution = %d\n", min_volume, min_solution);
+              #endif
+            
+              perform_refraction = 1;
+            
+              // Check if the volume intersection was found with returns normal, allowing refraction calculation
+			  // todo will implement differnet solution
+              //if (Volumes[min_volume]->geometry.returns_intersection_normal == 0) perform_refraction = 0;
+              double nx, ny, nz;
+            
+              nx = intersection_time_table.normal_vector_x[min_volume][min_solution];
+              ny = intersection_time_table.normal_vector_y[min_volume][min_solution];
+              nz = intersection_time_table.normal_vector_z[min_volume][min_solution];
+              NORM(nx,ny,nz);
+            
+              v_length = sqrt(vx*vx+vy*vy+vz*vz);
+              double lambda = 3956.0032/v_length;
+            
+              if (previous_volume == 0) n1 = 1.0;
+              else {
+                  if (Volumes[previous_volume]->p_physics->has_refraction_info == 0) perform_refraction = 0;
+                  n1 = sqrt(1.0-(lambda*lambda*Volumes[previous_volume]->p_physics->refraction_rho*Volumes[previous_volume]->p_physics->refraction_bc/PI));
+                
+                  // If the intersection is found with this volume, it is leaving, and the normal needs to be flipped
+                  if (previous_volume == min_volume) {
+                      nx *= -1;
+                      ny *= -1;
+                      nz *= -1;
+                  }
+              }
+            
+              if (current_volume == 0) n2 = 1.0;
+              else {
+                  if (Volumes[current_volume]->p_physics->has_refraction_info == 0) perform_refraction = 0;
+                  n2 = sqrt(1.0-(lambda*lambda*Volumes[current_volume]->p_physics->refraction_rho*Volumes[current_volume]->p_physics->refraction_bc/PI));
+              }
+			  
+              #ifdef Union_trace_verbal_setting
+			    printf("ready to calculate refraction, current_volume = %d, n1=%lf, n2=%lf \n", current_volume, n1, n2);
+              #endif
+            
+              if (perform_refraction == 1) {
+				  
+				  // Can not rely on Qc from current volume, that may be the surrounding vacuum, this quantify needs to be calculated before perform refraction
+				  // Look into theory of what the angle of total reflection is based on the two refraction indicies, or better yet, the critical q
+                  //double par[]  = {0.99, Volumes[current_volume]->p_physics->refraction_Qc, 6.0, 1.0, 1.0/300.0};
+                  double reflectivity;
+                
+                
+                  int p_reflect = 1;
+                  int p_refract = 1;
+                
+                  // Skipping roughness
+                  //if (RMS>0) Surface_wavyness(&nx, &ny, &nz, atan(2*RMS/lambda), _particle);
+                
+                  Coords N = coords_set(nx, ny, nz);  // normal vector to surface
+                  Coords V = coords_set(vx, vy, vz);  // incoming velocity
+                  Coords I = coords_scale(V, 1/v_length);  // normalised ray = v/|v|
+                
+                  // compute reflectivity
+                  double q_normal = fabs(2*coords_sp(V, N)*V2Q);
+				  
+				  
+				  
+				  /*
+				  // Reflectivity calculation
+				  
+				  if (n2/n1 < 1)
+				    // qc exists
+				  	qc = 2*k*sin(arccos(n2/n1));
+				    if (q < qc)
+				      reflectivity = 1.0
+				    else
+				      //fresnells law
+				  else:
+				    fresnells law
+				  
+				  
+				  */
+                
+                  /* Reflectivity (see component Guide). */
+				  // todo: use reflectivity
+                  //StdReflecFunc(q_normal, par, &reflectivity);
+				  
+				  // test
+				  if (q_normal < 0.5)
+				    reflectivity = 0.9;
+				  else
+				    reflectivity = 0.0;
+                
+                  double theta1, theta2;
+                  // theta1: incident angle to the surface normal
+                  double cos_theta1 = -coords_sp(N,I); // cos(theta1) = -N.I
+                
+                  if (fabs(cos_theta1) > 1) {
+                      printf("cos_theta1 > 1, Refraction error! Asborbed ray.\n");
+                      ABSORB; // should never occur...
+                  }
+                  theta1 = acos(cos_theta1)*RAD2DEG;
+                
+                  // reflected ray: probability R
+                  // reflected beam:     I + 2cos(theta1).N
+                  Coords I_reflect = coords_add(I, coords_scale(N, 2*cos_theta1));
+                  // reflected velocity: I_reflect.v
+                  Coords V_reflect = coords_scale(I_reflect, v_length);
+                
+                  // compute refracted angle theta2...
+                  double sqr_cos_theta2 = 1-(n1/n2)*(n1/n2)*(1-cos_theta1*cos_theta1);
+                
+                  // now choose which one to use, and compute outgoing velocity
+                  if (0 < sqr_cos_theta2 && sqr_cos_theta2 < 1) {
+                      // refraction is possible
+                    
+                      // theta2: refracted angle to the surface normal
+                      double cos_theta2= sqrt(sqr_cos_theta2);
+                    
+                      // select reflection (or refraction) from Monte-Carlo choice with probability R
+                      // in this case we expect R to be small (q > Qc)
+                      if (p_reflect && 0 < reflectivity && reflectivity < 1 && rand01() < reflectivity) {
+                        
+                          // Propagate forward backwards before reflection to ensure neutron is in right volume
+                          /*
+                          x -= 1E-5*nx;
+                          y -= 1E-5*ny;
+                          z -= 1E-5*nz;
+                          */
+                        
+                          // choose reflection from MC
+                          theta2 = theta1;
+                          coords_get(V_reflect, &vx, &vy, &vz);
+                        
+                          if (current_volume == min_volume) {
+                              //excluded_volume = min_volume;
+                              ignore_closest = min_volume;
+                          } else {
+                              ignore_closest = min_volume;
+                          }
+                          current_volume = previous_volume; // Reflected, stays in current volume
+                        
+                          // Update velocity in all ways used in master
+                          v[0] = vx; v[1] = vy; v[2] = vz;
+                          v_length = sqrt(vx*vx + vy*vy + vz*vz);
+                          k_new[0] = V2K*vx; k_new[1] = V2K*vy; k_new[2] = V2K*vz;
+                          ray_velocity = coords_set(vx, vy, vz);
+                        
+                          //r[0] = x; r[1] = y; r[2] = z;
+                          //ray_position = coords_set(x,y,z);
+                        
+                          // Since velocity is updated, we need to clear the intersection time table
+                          clear_intersection_table(&intersection_time_table);
+                        
+                          // Reset origin point for ray
+                          r_start[0] = x; r_start[1] = y; r_start[2] = z;
+                          time_propagated_without_scattering = 0.0;
+                        
+                          /*
+                           #ifndef OPENACC
+                           strcpy(event, "reflect");
+                           #endif
+                           */
+                      } else if (p_refract) {
+                          // compute refracted ray
+                          theta2 = acos(cos_theta2)*RAD2DEG;
+                        
+                          Coords I_refract = coords_add(coords_scale(I, n1/n2),
+                                                        coords_scale(N, n1/n2*cos_theta1 + (cos_theta1  < 0 ? cos_theta2 : -cos_theta2) ));
+                          Coords V_refract = coords_scale(I_refract, v_length);
+                        
+                          coords_get(V_refract, &vx, &vy, &vz);
+                        
+                        
+                          // Reflected can ignore some intersections in next geometry iteration
+                          if (previous_volume == min_volume) {
+                              //excluded_volume = min_volume;
+                              ignore_closest = min_volume;
+                          } else {
+                              ignore_closest = min_volume;
+                          }
+                        
+                          ignore_closest = min_volume; // Ignore closest intersection in next geometry iteration
+                        
+                          // Update velocity in all ways used in master
+                          v[0] = vx; v[1] = vy; v[2] = vz;
+                          v_length = sqrt(vx*vx + vy*vy + vz*vz);
+                          k_new[0] = V2K*vx; k_new[1] = V2K*vy; k_new[2] = V2K*vz;
+                          ray_velocity = coords_set(vx, vy, vz);
+                        
+                          //r[0] = x; r[1] = y; r[2] = z;
+                          //ray_position = coords_set(x,y,z);
+                        
+                          // Since velocity is updated, we need to clear the intersection time table
+                          clear_intersection_table(&intersection_time_table);
+                        
+                          // Reset origin point for ray
+                          r_start[0] = x; r_start[1] = y; r_start[2] = z;
+                          time_propagated_without_scattering = 0.0;
+                        
+                          /*
+                        
+                           #ifndef OPENACC
+                           strcpy(event, "refract");
+                           #endif
+                           */
+                          //SCATTER; /* 3 */
+                      }
+                  } else if (p_reflect) {
+                      // only reflection: below total reflection
+                    
+                      // Propagate forward backwards before reflection to ensure neutron is in right volume
+                      /*
+                      x -= 1E-5*nx;
+                      y -= 1E-5*ny;
+                      z -= 1E-5*nz;
+                       */
+                    
+                      theta2 = theta1;
+                      if (0 < reflectivity && reflectivity < 1) p *= reflectivity; // should be R0
+                      coords_get(V_reflect, &vx, &vy, &vz);
+                    
+                      // Reflected can ignore some intersections in next geometry iteration
+                      if (current_volume == min_volume) {
+                          //excluded_volume = min_volume;
+                          ignore_closest = min_volume;
+                      } else {
+                          ignore_closest = min_volume;
+                      }
+                      current_volume = previous_volume; // Reflected, stays in current volume
+                    
+                      // Update velocity in all ways used in master
+                      v[0] = vx; v[1] = vy; v[2] = vz;
+                      v_length = sqrt(vx*vx + vy*vy + vz*vz);
+                      k_new[0] = V2K*vx; k_new[1] = V2K*vy; k_new[2] = V2K*vz;
+                      ray_velocity = coords_set(vx, vy, vz);
+                    
+                      //r[0] = x; r[1] = y; r[2] = z;
+                      //ray_position = coords_set(x,y,z);
+                    
+                      // Since velocity is updated, we need to clear the intersection time table
+                      clear_intersection_table(&intersection_time_table);
+                    
+                      // Reset origin point for ray
+                      r_start[0] = x; r_start[1] = y; r_start[2] = z;
+                      time_propagated_without_scattering = 0.0;
+                      /*
+                       #ifndef OPENACC
+                       strcpy(event, "reflect");
+                       #endif
+                       */
+                  }
+                
+                  /*
+                  x += 1E-12*vx;
+                  y += 1E-12*vy;
+                  z += 1E-12*vz;
+                  t += 1E-12;
+                  */
+                
+                  /*
+                  // Update velocity in all ways used in master
+                  v[0] = vx; v[1] = vy; v[2] = vz;
+                  v_length = sqrt(vx*vx + vy*vy + vz*vz);
+                  k_new[0] = V2K*vx; k_new[1] = V2K*vy; k_new[2] = V2K*vz;
+                  ray_velocity = coords_set(vx, vy, vz);
+                
+                  r[0] = x; r[1] = y; r[2] = z;
+                  ray_position = coords_set(x,y,z);
+                
+                  // Since velocity is updated, we need to clear the intersection time table
+                  clear_intersection_table(&intersection_time_table);
+                
+                  // Reset origin point for ray
+                  r_start[0] = x; r_start[1] = y; r_start[2] = z;
+                  time_propagated_without_scattering = 0.0;
+                  */
+              }
+			  
+		  #ifdef Union_trace_verbal_setting
+			  	printf("After refraction system \n");
+				printf("r = (%f,%f,%f) v = (%f,%f,%f) \n", x, y, z, vx, vy, vz);
+		  #endif
         }
         
     } else { // Here because a shortest time is not found
@@ -2157,11 +2505,19 @@ free(Geometries);
 if (finally_verbal) printf("Freeing intersection_time_table \n");
 for (iterator = 1;iterator < intersection_time_table.num_volumes;iterator++){
     free(intersection_time_table.intersection_times[iterator]);
+	free(intersection_time_table.normal_vector_x[iterator]);
+	free(intersection_time_table.normal_vector_y[iterator]);
+	free(intersection_time_table.normal_vector_z[iterator]);		
+	free(intersection_time_table.surface_index[iterator]);			
 }
 
 free(intersection_time_table.n_elements);
 free(intersection_time_table.calculated);
 free(intersection_time_table.intersection_times);
+free(intersection_time_table.normal_vector_x);
+free(intersection_time_table.normal_vector_y);
+free(intersection_time_table.normal_vector_z);
+free(intersection_time_table.surface_index);
 
 if (free_tagging_conditioanl_list == 1) free(tagging_conditional_list);
 

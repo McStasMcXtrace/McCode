@@ -34,6 +34,9 @@
 * process_string: [string] Comma seperated names of physical processes
 * my_absorption:  [1/m]    Inverse penetration depth from absorption at standard energy
 * absorber:       [0/1]    Control parameter, if set to 1 the material will have no scattering processes
+* refraction_sigma_coh: [barn]     coherent cross section of refracting material. Use negative value to indicate a negative coherent scattering length
+* refraction_density: [g/cm3]      density of the refracting material. density < 0 means the material is outside/before the shape.
+* refraction_weight: [g/mol]       molar mass of the refracting material
 * init:           [string] Name of Union_init component (typically "init", default)
 *
 * CALCULATED PARAMETERS:
@@ -50,7 +53,7 @@
 
 DEFINE COMPONENT Union_make_material
 
-SETTING PARAMETERS(string process_string="NULL", my_absorption,absorber=0, string init="init")
+SETTING PARAMETERS(string process_string="NULL", my_absorption,absorber=0, refraction_density=0, refraction_sigma_coh=0, refraction_weight=0, string init="init")
 
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -134,7 +137,6 @@ int manual_linking_function(char *name, char *input_string) {
    /* walk through other tokens */
    while( token != NULL ) 
    {
-      //printf( " %s\n", token );
       if (strcmp(token,name) == 0) return_integer=1;
       
       token = strtok(NULL,",");
@@ -177,13 +179,6 @@ INITIALIZE
 
   accepted_processes.num_elements = 0;
   accepted_processes.elements = NULL;
-
-  /*
-  // Comma test
-  printf("Starting comma test on string: %s \n",process_string);
-  printf("Number of commas in string: %d \n",count_commas(process_string));
-  exit(1);
-  */
   
 
   if (0 == strcmp(NAME_CURRENT_COMP,"vacuum") || 0 == strcmp(NAME_CURRENT_COMP,"Vacuum")) {
@@ -239,10 +234,29 @@ struct pointer_to_global_process_list *global_process_list = COMP_GETPAR3(Union_
   this_material.my_a = my_absorption;  // add the absorption to this material
   sprintf(this_material.name,"%s",NAME_CURRENT_COMP);
   
+  
+  this_material.has_refraction_info = 0;
+  if (refraction_density != 0 || refraction_weight != 0 || refraction_sigma_coh != 0) {
+      if (refraction_density==0 || refraction_weight<=0)
+        exit(printf("Union_make_material: %s: FATAL: invalid material density or molar weight: density=%g weight=%g\n",
+          NAME_CURRENT_COMP, refraction_density, refraction_weight));
+      this_material.refraction_rho = fabs(refraction_density)*6.02214179*1e23*1e-24/refraction_weight; // per at/Angs^3
+        
+      if (refraction_sigma_coh==0)
+        exit(printf("Refractor: %s: FATAL: invalid material coherent cross section: sigma_coh=%g\n",
+          NAME_CURRENT_COMP, refraction_sigma_coh));
+      this_material.refraction_bc = sqrt(fabs(refraction_sigma_coh)*100/4/PI)*1e-5;         // bound coherent scattering length
+      if (refraction_sigma_coh<0) this_material.refraction_bc *= -1;
+    
+      this_material.refraction_Qc = 4*sqrt(PI*this_material.refraction_rho*fabs(this_material.refraction_bc));
+    
+      this_material.has_refraction_info = 1;
+  }
+  
   // packing the information into the global_material_element, which is then included in the global_material_list.
   sprintf(global_material_element.name,"%s",NAME_CURRENT_COMP);
   global_material_element.component_index = INDEX_CURRENT_COMP;
-  global_material_element.physics = &this_material; // Would be nicer if this material was a pointer, now we have the (small) data two places
+  global_material_element.physics = &this_material;
   add_element_to_material_list(global_material_list, global_material_element);
   
  %}

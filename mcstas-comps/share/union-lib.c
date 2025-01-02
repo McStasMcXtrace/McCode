@@ -41,11 +41,13 @@ int num_volumes;
 int *calculated;
 int *n_elements;
 double **intersection_times;
+double **normal_vector_x;
+double **normal_vector_y;
+double **normal_vector_z;
+int **surface_index;
 };
 
 struct line_segment{
-//struct position point1;
-//struct position point2;
 Coords point1;
 Coords point2;
 int number_of_dashes;
@@ -74,12 +76,6 @@ int number_of_lines;
 struct line_segment *lines;
 #pragma acc shape(lines[0:number_of_lines]) init_needed(number_of_lines)
 };
-
-// 2D lists not needed anyway
-// struct pointer_to_2d_int_list {
-// int n_lists;
-// struct pointer_to_1d_int_list *lists;
-// }
 
 // Todo: see if the union geometry_parameter_union and other geometry structs can be here
 union geometry_parameter_union{
@@ -404,8 +400,8 @@ struct pointer_to_1d_int_list focus_array_indices; // Add 1D integer array with 
 
 
 // intersect_function takes position/velocity of ray and parameters, returns time list
-int (*intersect_function)(double*,int*,double*,double*,struct geometry_struct*);
-//                        t_array,n_ar,r      ,v
+int (*intersect_function)(double*, double*, double*, double*, int*, int*,double*,double*,struct geometry_struct*);
+//                        t_array, nx array, ny array, nz array, surface_index  array, n arary, r ,v
 
 // within_function that checks if the ray origin is within this volume
 int (*within_function)(Coords,struct geometry_struct*);
@@ -455,6 +451,12 @@ double my_a;
 int number_of_processes;
 // pointer to array of pointers to physics_sub structures that each describe a scattering process
 struct scattering_process_struct *p_scattering_array;
+
+// refraction related
+int has_refraction_info;
+double refraction_rho;
+double refraction_bc;
+double refraction_Qc;
 };
 
 union data_transfer_union{
@@ -1722,6 +1724,7 @@ int clear_intersection_table(struct intersection_time_table_struct *intersection
 };
 
 void print_intersection_table(struct intersection_time_table_struct *intersection_time_table) {
+	printf("debug print\n");
     int num_volumes,iterate,solutions;
     int max_number_of_solutions = 0;
     
@@ -1914,10 +1917,16 @@ struct lines_to_draw draw_line_with_highest_priority(Coords position1,Coords pos
     direction[2] = r2[2] - r1[2];
     int geometry_output;
     
+	// Todo: switch to nicer intersect function call
+	double double_dummy;
+	int int_dummy;
+	
+	
     // Find intersections
     for (volume_index = 1;volume_index < number_of_volumes; volume_index++) {
         if (volume_index != N) {
-            geometry_output = Geometries[volume_index]->intersect_function(temp_intersection,&number_of_solutions,r1,direction,Geometries[volume_index]);
+            geometry_output = Geometries[volume_index]->intersect_function(temp_intersection, &double_dummy, &double_dummy, &double_dummy, &int_dummy, 
+			                                                               &number_of_solutions,r1,direction,Geometries[volume_index]);
              // printf("No solutions for intersection (Volume %d) with %d \n",N,volume_index);
                 for (iterate=0;iterate<number_of_solutions;iterate++) {
                     // print_1d_double_list(intersection_list,"intersection_list");
@@ -2388,7 +2397,7 @@ int A_overlaps_B(struct geometry_struct *child, struct geometry_struct *parent) 
 
 // -------------    Functions for box ray tracing used in trace ---------------------------------
 // These functions needs to be fast, as they may be used many times for each ray
-int sample_box_intersect_advanced(double *t,int *num_solutions,double *r,double *v,struct geometry_struct *geometry) {
+int sample_box_intersect_advanced(double *t, double *nx, double *ny, double *nz, int *surface_index, int *num_solutions,double *r,double *v,struct geometry_struct *geometry) {
     // possible approaches
     // rotate to a simple coordinate system by rotating the ray (easier to switch to McStas standard)
     
@@ -2582,7 +2591,7 @@ void box_corners_local_frame(Coords *corner_points, struct geometry_struct *geom
     corner_points[7] = coords_add(corner_points[4],coords_scalar_mult(y_vector,height2));
 };
 
-int sample_box_intersect_simple(double *t,int *num_solutions,double *r,double *v,struct geometry_struct *geometry) {
+int sample_box_intersect_simple(double *t, double *nx, double *ny, double *nz, int *surface_index, int *num_solutions, double *r, double *v, struct geometry_struct *geometry) {
     double width = geometry->geometry_parameters.p_box_storage->x_width1;
     double height = geometry->geometry_parameters.p_box_storage->y_height1;
     double depth = geometry->geometry_parameters.p_box_storage->z_depth;
@@ -2597,28 +2606,75 @@ int sample_box_intersect_simple(double *t,int *num_solutions,double *r,double *v
     
     Coords coordinates = coords_set(x_new,y_new,z_new);
     Coords rotated_coordinates;
-    // printf("Cords coordinates = (%f,%f,%f)\n",coordinates.x,coordinates.y,coordinates.z);
+    //printf("Cords coordinates = (%f,%f,%f)\n",coordinates.x,coordinates.y,coordinates.z);
     
     // Rotate the position of the neutron around the center of the cylinder
     rotated_coordinates = rot_apply(geometry->transpose_rotation_matrix,coordinates);
     // rotated_coordinates = rot_apply(rotation_matrix_debug,coordinates);
-    //     printf("Cords rotated_coordinates = (%f,%f,%f)\n",rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z);
+    //printf("Cords rotated_coordinates = (%f,%f,%f)\n",rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z);
     
     Coords velocity = coords_set(v[0],v[1],v[2]);
     Coords rotated_velocity;
-    //     printf("Cords velocity = (%f,%f,%f)\n",velocity.x,velocity.y,velocity.z);
+    //printf("Cords velocity = (%f,%f,%f)\n",velocity.x,velocity.y,velocity.z);
     
     // Rotate the position of the neutron around the center of the cylinder
     rotated_velocity = rot_apply(geometry->transpose_rotation_matrix,velocity);
     // rotated_velocity = rot_apply(rotation_matrix_debug,velocity);
-    //     printf("Cords rotated_velocity = (%f,%f,%f)\n",rotated_velocity.x,rotated_velocity.y,rotated_velocity.z);
+    //printf("Cords rotated_velocity = (%f,%f,%f)\n",rotated_velocity.x,rotated_velocity.y,rotated_velocity.z);
     
     int output;
-    // Run McStas built in sphere intersect funtion (sphere centered around origin)
+    // Run McStas built in box intersect funtion (box centered around origin)
     if ((output = box_intersect(&t[0],&t[1],rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z,rotated_velocity.x,rotated_velocity.y,rotated_velocity.z,width,height,depth)) == 0) {
         *num_solutions = 0;t[0]=-1;t[1]=-1;}
     else if (t[1] != 0) *num_solutions = 2;
     else {*num_solutions = 1;t[1]=-1;} // t[2] is a memory error!
+	
+    // Rewritten code from refractor.comp
+    int index;
+    double x, y, z, dt;
+    double rotated_nx, rotated_ny, rotated_nz;
+    Coords normal_vector_rotated;
+    Coords normal_vector;
+    for (index=0; index<*num_solutions; index++) {
+
+        dt = t[index];
+        
+        // Intersection point in box coordinate system
+        x = rotated_coordinates.x + dt*rotated_velocity.x;
+        y = rotated_coordinates.y + dt*rotated_velocity.y;
+        z = rotated_coordinates.z + dt*rotated_velocity.z;
+        
+        // determine hit face: difference to plane is closest to 0 (in box coordinate system)
+        normal_vector_rotated = coords_set(trunc(2.002*x/width), trunc(2.002*y/height), trunc(2.002*z/depth));
+        
+		// Set surface index
+		if (normal_vector_rotated.z < -0.5)
+			// back
+			surface_index[index] = 0;
+		else if(normal_vector_rotated.z > 0.5)
+			// front
+			surface_index[index] = 1;
+		else if(normal_vector_rotated.x > 0.5)
+			// left
+			surface_index[index] = 2;			
+		else if(normal_vector_rotated.x < -0.5)
+			// right
+			surface_index[index] = 3;			
+		else if(normal_vector_rotated.y > 0.5)
+			// top
+			surface_index[index] = 4;			
+		else if(normal_vector_rotated.y < -0.5)
+			// bottom
+			surface_index[index] = 5;
+		
+        // Rotate back to master coordinate system
+        normal_vector = rot_apply(geometry->rotation_matrix, normal_vector_rotated);
+        
+        // Set the normal vector components
+        nx[index] = normal_vector.x;
+        ny[index] = normal_vector.y;
+        nz[index] = normal_vector.z;
+    }
     
     return output;
 };
@@ -3547,7 +3603,12 @@ int existence_of_intersection(Coords point1, Coords point2, struct geometry_stru
 
     start_point[0] = point1.x;start_point[1] = point1.y;start_point[2] = point1.z;
     vector_between_v[0] = vector_between.x;vector_between_v[1] = vector_between.y;vector_between_v[2] = vector_between.z;
-    geometry->intersect_function(temp_solution,&number_of_solutions,start_point,vector_between_v,geometry);
+	
+	// todo: Switch to nicer intersect call
+	double dummy_double;
+	int dummy_int;
+	
+    geometry->intersect_function(temp_solution, &dummy_double, &dummy_double, &dummy_double, &dummy_int, &number_of_solutions,start_point,vector_between_v,geometry);
     if (number_of_solutions > 0) {
         if (temp_solution[0] > 0 && temp_solution[0] < 1) return 1;
         if (number_of_solutions == 2) {
@@ -5866,26 +5927,38 @@ int box_within_cone(struct geometry_struct *geometry_child,struct geometry_struc
 
 
 // Flexible intersection function
-int intersect_function(double *t,int *num_solutions,double *r,double *v,struct geometry_struct *geometry) {
+int intersect_function(double *t, double *nx, double *ny, double *nz, int *surface_index, int *num_solutions, double *r, double *v, struct geometry_struct *geometry) {
     int output = 0;
     switch(geometry->eShape) {
         case box:
-            if (geometry->geometry_parameters.p_box_storage->is_rectangle == 1)
-                output = sample_box_intersect_simple(t, num_solutions, r, v, geometry);
-            else
-                output = sample_box_intersect_advanced(t, num_solutions, r, v, geometry);
+            if (geometry->geometry_parameters.p_box_storage->is_rectangle == 1) {
+                output = sample_box_intersect_simple(t, nx, ny, nz, surface_index, num_solutions, r, v, geometry);
+			    }
+            else {
+				printf("Intersection function: box advanced not updated for normals yet!");
+  			    exit(1);
+                output = sample_box_intersect_advanced(t, nx, ny, nz, surface_index, num_solutions, r, v, geometry);
+				}
             break;
         case sphere:
+			printf("Intersection function: sphere not updated for normals yet!");
+			exit(1);
             output = sample_sphere_intersect(t, num_solutions, r, v, geometry);
             break;
         case cylinder:
+			printf("Intersection function: cylinder not updated for normals yet!");
+			exit(1);
             output = sample_cylinder_intersect(t, num_solutions, r, v, geometry);
             break;
         case cone:
+			printf("Intersection function: cone not updated for normals yet!");
+			exit(1);
             output = sample_cone_intersect(t, num_solutions, r, v, geometry);
             break;
         #ifndef OPENACC
         case mesh:
+			printf("Intersection function: mesh not updated for normals yet!");
+			exit(1);
             output = sample_mesh_intersect(t, num_solutions, r, v, geometry);
             break;
         #endif
@@ -5893,7 +5966,7 @@ int intersect_function(double *t,int *num_solutions,double *r,double *v,struct g
             printf("Intersection function: No matching geometry found!");
             break;
     }
-    
+	
     return output;
 };
 
