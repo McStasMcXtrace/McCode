@@ -1724,7 +1724,7 @@ int clear_intersection_table(struct intersection_time_table_struct *intersection
 };
 
 void print_intersection_table(struct intersection_time_table_struct *intersection_time_table) {
-	printf("debug print\n");
+
     int num_volumes,iterate,solutions;
     int max_number_of_solutions = 0;
     
@@ -1744,7 +1744,10 @@ void print_intersection_table(struct intersection_time_table_struct *intersectio
     printf("           ");
     printf("| CALCULATED  |");
     for (solutions = 0;solutions < max_number_of_solutions;solutions++) {
-        printf(" - SOLUTION %d - |",solutions);
+        printf(" - SOLUTION %d - |", solutions);
+    }
+    for (solutions = 0;solutions < max_number_of_solutions;solutions++) {
+        printf(" - SURFACE %d - |", solutions);
     }
 
     printf("\n");
@@ -1759,6 +1762,12 @@ void print_intersection_table(struct intersection_time_table_struct *intersectio
              printf("   %1.8f   |",intersection_time_table->intersection_times[iterate][solutions]);
             else
              printf("   %1.7f   |",intersection_time_table->intersection_times[iterate][solutions]);
+          else
+            printf("                |");
+        }
+        for (solutions = 0;solutions < max_number_of_solutions;solutions++) {
+          if (intersection_time_table->n_elements[iterate] > solutions && intersection_time_table->calculated[iterate] == 1)
+             printf("   %1.6d   |",intersection_time_table->surface_index[iterate][solutions]);
           else
             printf("                |");
         }
@@ -2595,7 +2604,7 @@ int sample_box_intersect_simple(double *t, double *nx, double *ny, double *nz, i
     double width = geometry->geometry_parameters.p_box_storage->x_width1;
     double height = geometry->geometry_parameters.p_box_storage->y_height1;
     double depth = geometry->geometry_parameters.p_box_storage->z_depth;
-    
+	
     // Declare variables for the function
     double x_new,y_new,z_new;
     
@@ -2646,7 +2655,7 @@ int sample_box_intersect_simple(double *t, double *nx, double *ny, double *nz, i
         
         // determine hit face: difference to plane is closest to 0 (in box coordinate system)
         normal_vector_rotated = coords_set(trunc(2.002*x/width), trunc(2.002*y/height), trunc(2.002*z/depth));
-        
+		
 		// Set surface index
 		if (normal_vector_rotated.z < -0.5)
 			// back
@@ -2669,7 +2678,7 @@ int sample_box_intersect_simple(double *t, double *nx, double *ny, double *nz, i
 		
         // Rotate back to master coordinate system
         normal_vector = rot_apply(geometry->rotation_matrix, normal_vector_rotated);
-        
+		
         // Set the normal vector components
         nx[index] = normal_vector.x;
         ny[index] = normal_vector.y;
