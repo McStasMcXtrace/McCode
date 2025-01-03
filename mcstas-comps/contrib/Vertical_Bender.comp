@@ -92,7 +92,8 @@ SETTING PARAMETERS (
   vector rBottomPar={0.99, 0.219, 6.07, 0.0, 0.003},
   vector rSidesPar={0.99, 0.219, 6.07, 0.0, 0.003},
   xwidth, yheight, length, radius, G=9.8, int nchan=1, d=0.0,
-  int debug=0, int endFlat=0, int drawOption=1, int alwaystrack=0, diststep1=0.020, diststep2=0.002
+  int debug=0, int endFlat=0, int drawOption=1, int alwaystrack=0, diststep1=0.020, diststep2=0.002,
+  int recurse_max=1000
 )
 
 /* Neutron parameters : (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -312,9 +313,10 @@ TRACE
      Rbottom = absR - hhalf;
 
    }
-
+  
+  int counter=0;
   for(;;) {
-
+    counter++;
     double tLeft, tRight, tTop, tBot, tIn, tOut, tMirror;
     double tUp, tSide, time, endtime;
     double R, Q;
@@ -477,6 +479,11 @@ TRACE
     p *= weight;
 
     if(p == 0) {
+      // Neutron is dead. Kill it!
+      ABSORB;
+      break;
+    }
+    if (counter>recurse_max) {
       // Neutron is dead. Kill it!
       ABSORB;
       break;
