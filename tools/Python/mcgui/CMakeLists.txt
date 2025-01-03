@@ -52,7 +52,7 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, ${FLAVOR}-tools-python-${P}doc, ${FLAVOR}-tools-python-mccodelib, python3, python3-pyqt5.qsci")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, ${FLAVOR}-tools-python-${P}doc, ${FLAVOR}-tools-python-mccodelib, python3, python3-pyqt6.qsci")
 set(CPACK_DEBIAN_PACKAGE_REPLACES "${FLAVOR}-tools-python-${P}gui-3.5.1")
 
 # RPM

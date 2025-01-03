@@ -314,7 +314,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
             edt = QtWidgets.QLineEdit()
             edt = subject
             # handle focus on
-            if event.type() == QtCore.QEvent.FocusIn:
+            if event.type() == QtCore.QEvent.Type.FocusIn:
                 if edt.text() == 'search...':
                     edt.setText('')
                     font = QtGui.QFont()
@@ -323,7 +323,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
                     edt.setStyleSheet("color: black;")
 
             # handle focus off
-            elif event.type() == QtCore.QEvent.FocusOut:
+            elif event.type() == QtCore.QEvent.Type.FocusOut:
                 if edt.text() == '':
                     font = QtGui.QFont()
                     font.setItalic(True)
@@ -332,7 +332,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
                     edt.setText('search...')
 
             # handle enter keypress (search)
-            elif event.type() == QtCore.QEvent.KeyPress:
+            elif event.type() == QtCore.QEvent.Type.KeyPress:
                 # return & enter
                 if event.key() in [0x01000004, 0x01000005]:
                     self.__search(subject.text().casefold())
@@ -503,7 +503,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
         font.setPointSize(int(mccode_config.configuration["GUIFONTSIZE"]))
 
         # brace matching
-        scintilla.setBraceMatching(Qsci.QsciScintilla.SloppyBraceMatch)
+        scintilla.setBraceMatching(Qsci.QsciScintilla.BraceMatch.SloppyBraceMatch)
 
         # set lexer
         lexer = Qsci.QsciLexerCPP()
@@ -518,14 +518,14 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
         scintilla.__myApi = Qsci.QsciAPIs(lexer)
 
         scintilla.setAutoCompletionThreshold(1)
-        scintilla.setAutoCompletionSource(Qsci.QsciScintilla.AcsAPIs)
+        scintilla.setAutoCompletionSource(Qsci.QsciScintilla.AutoCompletionSource.AcsAPIs)
 
         # remove horizontal scrollbar
         scintilla.SendScintilla(Qsci.QsciScintilla.SCI_SETHSCROLLBAR, 0)
 
         # display default line numbers
         fm = QtGui.QFontMetrics(font)
-        scintilla.setMarginWidth(0, fm.width( "00000" ))
+        scintilla.setMarginWidth(0, fm.horizontalAdvance( "00000" ))
         scintilla.setMarginLineNumbers(0, True)
         ########################
 
@@ -595,7 +595,7 @@ class McCodeEditorWindow(QtWidgets.QMainWindow):
         # TODO: create a ctr-a on a menu to __scintilla.selectAll(bool select)
 
         def __keyEventFilterFct(subject, object, event):
-            if event.type() == QtCore.QEvent.KeyRelease:
+            if event.type() == QtCore.QEvent.Type.KeyRelease:
                 # ctrl-q
                 if event.key() == 81 and int(event.modifiers()) == 67108864:
                     self.close()
@@ -1024,7 +1024,7 @@ class McInsertComponentDialog(QtWidgets.QDialog):
             edt = QtWidgets.QLineEdit()
             edt = subject
             # handle focus on
-            if event.type() == QtCore.QEvent.FocusIn:
+            if event.type() == QtCore.QEvent.Type.FocusIn:
                 if edt.text() == edt.defval:
                     edt.setText('')
                     font = QtGui.QFont()
@@ -1034,7 +1034,7 @@ class McInsertComponentDialog(QtWidgets.QDialog):
                     edt.setCursorPosition(0)
             
             # handle focus off
-            elif event.type() == QtCore.QEvent.FocusOut:
+            elif event.type() == QtCore.QEvent.Type.FocusOut:
                 if edt.text() == '':
                     font = QtGui.QFont()
                     font.setItalic(True)

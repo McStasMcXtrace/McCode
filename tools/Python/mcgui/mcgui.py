@@ -18,6 +18,7 @@ try:
     from PyQt6.QtWidgets import QApplication, QWidget
     from PyQt6.QtGui import QFont, QFontDatabase
     import PyQt6 as PyQt
+
     try:
         from PyQt6 import Qsci
     except ImportError:
@@ -28,6 +29,7 @@ except ImportError:
     from PyQt5.QtWidgets import QApplication, QWidget
     from PyQt5.QtGui import QFont, QFontDatabase
     import PyQt5 as PyQt
+
     try:
         from PyQt5 import Qsci
     except ImportError:
