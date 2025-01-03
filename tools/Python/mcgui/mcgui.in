@@ -31,13 +31,6 @@ canrun() {
     if ! [ -x ${UTILDIR}/${TOOL}.py ]; then
         exit 127;
     fi
-
-    modules="PyQt5"
-    cmd=""
-    for name in ${modules}; do
-        cmd="${cmd}import ${name}; "
-    done
-    python3 -c "${cmd}"
 }
 
 if ( canrun ); then
