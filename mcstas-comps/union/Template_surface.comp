@@ -1,0 +1,206 @@
+/*******************************************************************************
+*
+*  McStas, neutron ray-tracing package
+*  Copyright(C) 2007 Risoe National Laboratory.
+*
+* %I
+* Written by: Mads Bertelsen
+* Date: 20.08.15
+* Version: $Revision: 0.1 $
+* Origin: University of Copenhagen
+*
+* A template process for building Union processes
+*
+* %D
+*
+* This is a template for a new contributor to create their own physical process.
+* The comments in this file are meant to teach the user about creating their own 
+*  process file, rather than explaining this one. For comments on how this code works,
+*  look in the Incoherent_process.comp.
+*
+* Part of the Union components, a set of components that work together and thus
+*  sperates geometry and physics within McStas.
+* The use of this component requires other components to be used.
+*
+* 1) One specifies a number of processes using process components like this one
+* 2) These are gathered into material definitions using Union_make_material
+* 3) Geometries are placed using Union_box / Union_cylinder, assigned a material
+* 4) A Union_master component placed after all of the above
+*
+* Only in step 4 will any simulation happen, and per default all geometries
+*  defined before the master, but after the previous will be simulated here.
+*
+* There is a dedicated manual available for the Union_components
+*
+*
+* Algorithm:
+* Described elsewhere
+*
+* %P
+* INPUT PARAMETERS:
+* sigma:             [barns]  Incoherent scattering cross section
+* packing_factor:    [1]      How dense is the material compared to optimal 0-1
+* unit_cell_volume:  [AA^3]   Unit_cell_volume
+* interact_fraction: [1]      How large a part of the scattering events should use this process 0-1 (sum of all processes in material = 1)
+* init:              [string] Name of Union_init component (typically "init", default)
+*
+* CALCULATED PARAMETERS:
+* Template_storage          // Important to update this output paramter
+* effective_my_scattering   // Variable used in initialize
+*
+* %L
+*
+* %E
+******************************************************************************/
+
+DEFINE COMPONENT Template_surface // Remember to change the name of process here
+
+SETTING PARAMETERS(string reflect=0, R0=0.99, Qc=0.0219, alpha=6.07, m=2, W=0.003, string init="init")
+
+
+SHARE
+%{
+#ifndef Union
+#error "The Union_init component must be included before this Template_surface component"
+#endif
+	
+	
+%include "read_table-lib"
+%include "ref-lib"
+
+// Very important to add a pointer to this struct in the union-lib.c file
+struct Template_surface_storage_struct{
+    // Variables that needs to be transfered between any of the following places:
+    // The initialize in this component
+    // The function for calculating my
+    // The function for calculating scattering
+    
+    // Avoid duplicates of output parameters and setting parameters in naming
+	double par[5];
+	t_Table pTable;
+	int table_present;	
+};
+
+// Function for handling surface physics
+// The input for this function and its order may not be changed, but the names may be updated.
+int Template_surface_function(union surface_data_transfer_union data_transfer, // data in struct defined above, can have data stored in initialize and other calls to this function
+                              double *weight, double *wavevector, int *continues, // given weight and wavevector, to be updated, and pointer to continues which should be provided by function
+							  double *normal_vector, enum in_or_out inward_or_outward, // normal_vector of surface and information on whether the neutron is going into or out of this surface
+							  _class_particle *_particle) {
+
+    // wavevector and normal_vector are a pointers to a simple array with 3 doubles, wavevector[0], wavevector[1], wavevector[2] which describes the vector
+
+	// Retrieve data storage struct
+	struct Template_surface_storage_struct *storage;
+	storage = data_transfer.pointer_to_a_Template_surface_storage_struct;
+
+	double k_n_dot = wavevector[0]*normal_vector[0] + wavevector[1]*normal_vector[1] + wavevector[2]*normal_vector[2];
+
+	// Calculate q normal
+	double q_normal = 2.0*fabs(k_n_dot);
+
+	// Calculate or read reflectivity
+	double reflectivity;
+	if (storage->table_present == 1) {
+	    TableReflecFunc(q_normal, &storage->pTable, &reflectivity);
+	} else {
+	    StdReflecFunc(q_normal, storage->par, &reflectivity);
+	}
+
+	// Take monte carlo choice on whether to be reflected by the mirror or not
+	// Parameter to influence this?
+	if (rand01() > reflectivity) {
+		*continues = 1; // Tells algorithm the ray goes through this surface
+	} else {
+		// mirror ray
+		wavevector[0] = wavevector[0] - 2.0 * k_n_dot * normal_vector[0];
+		wavevector[1] = wavevector[1] - 2.0 * k_n_dot * normal_vector[1];
+		wavevector[2] = wavevector[2] - 2.0 * k_n_dot * normal_vector[2];				
+		
+		*continues = 0; // Tells algorithm the ray goes through this surface
+	}
+
+    return 1;
+	
+    // There is access to the data_transfer from within this function
+    // In this case the only variable is my, but it could be read by:
+    // double my = data_transfer.pointer_to_a_Template_physics_storage_struct->my_scattering;
+};
+
+// These lines help with future error correction, and tell other Union components
+//  that at least one surface have been defined.
+#ifndef SURFACE_DETECTOR
+    #define SURFACE_DETECTOR dummy
+#endif
+#ifndef SURFACE_PROCESS_TEMPLATE_DETECTOR
+    #define SURFACE_PROCESS_TEMPLATE_DETECTOR dummy
+#endif
+%}
+
+DECLARE
+%{
+// Declare for this component, to do calculations on the input / store in the transported data
+struct Template_surface_storage_struct Template_storage; // Replace template with your own name here
+
+// Variables needed in initialize of this function.
+double effective_my_scattering;
+
+// Needed for transport to the main component, will be the same for all processes
+struct global_surface_element_struct global_surface_element;
+struct surface_process_struct This_surface;
+%}
+
+INITIALIZE
+%{
+  // Initialize done in the component
+  if (reflect && strlen(reflect) && strcmp(reflect,"NULL") && strcmp(reflect,"0")) {
+	    if (Table_Read(&Template_storage.pTable, reflect, 1) <= 0) /* read 1st block data from file into pTable */
+	      exit(fprintf(stderr,"Template_surface: %s: can not read file %s\n", NAME_CURRENT_COMP, reflect));
+	    Template_storage.table_present=1;
+  } else {
+	    Template_storage.table_present=0;
+	    if (W < 0 || R0 < 0 || Qc < 0 || m < 0)
+	    { fprintf(stderr,"Template_surface: %s: W R0 Qc must be >0.\n", NAME_CURRENT_COMP);
+	      exit(-1); }
+  }
+  
+  Template_storage.par[0] = R0;
+  Template_storage.par[1] = Qc;
+  Template_storage.par[2] = alpha;
+  Template_storage.par[3] = m;
+  Template_storage.par[4] = W;  
+
+  // Will need to do similar system for surfaces
+  // Need to specify if this process is isotropic
+  //This_process.non_isotropic_rot_index = -1; // Yes (powder)
+  //This_process.non_isotropic_rot_index =  1;  // No (single crystal)
+  //rot_copy(This_surface.rotation_matrix, ROT_A_CURRENT_COMP);
+
+  // The type of the process must be saved in the global enum process
+  This_surface.eSurface = SurfaceTemplate;
+
+  // Packing the data into a structure that is transported to the main component
+  This_surface.data_transfer.pointer_to_a_Template_surface_storage_struct = &Template_storage;
+
+  // This will be the same for all process's, and can thus be moved to an include.
+  sprintf(This_surface.name,"%s",NAME_CURRENT_COMP);
+  sprintf(global_surface_element.name,"%s",NAME_CURRENT_COMP);
+  global_surface_element.component_index = INDEX_CURRENT_COMP;
+  global_surface_element.p_surface_process = &This_surface;
+
+if (_getcomp_index(init) < 0) {
+fprintf(stderr,"Template_surface:%s: Error identifying Union_init component, %s is not a known component name.\n",
+NAME_CURRENT_COMP, init);
+exit(-1);
+}
+
+struct pointer_to_global_surface_list *global_surface_list = COMP_GETPAR3(Union_init, init, global_surface_list);
+  add_element_to_surface_list(global_surface_list, global_surface_element);
+ %}
+
+TRACE
+%{
+    // Trace should be empty, the simulation is done in Union_master
+%}
+
+END

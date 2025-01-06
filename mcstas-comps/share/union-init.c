@@ -48,10 +48,14 @@
 // Initialize global_process_list
   // Used to facilitate communication between processes and the other types of Union components
   struct pointer_to_global_process_list global_process_list = {0,NULL};
-
+  
 // Initialize global_material_list
   // Used to facilitate communication between materials and the other types of Union components
   struct pointer_to_global_material_list global_material_list = {0,NULL};
+  
+// Initialize global_surface_list
+  // Used to facilitate communication between surface components and other types of Union components
+  struct pointer_to_global_surface_list global_surface_list = {0,NULL};
 
 // Initialize global_geometry_list
   // Used to facilitate communication between geometries and the other types of Union components

@@ -57,6 +57,14 @@
 * focus_xw:              [m]      Horiz. dimension of a rectangular area
 * focus_xh:              [m]      Vert. dimension of a rectangular area
 * focus_r:               [m]      Focusing on circle with this radius
+* plus_x_surface         [string] Comma seperated string of Union surface definitions defined prior to this component, applied to +x face of box
+* minus_x_surface        [string] Comma seperated string of Union surface definitions defined prior to this component, applied to -x face of box
+* plus_y_surface         [string] Comma seperated string of Union surface definitions defined prior to this component, applied to +y face of box
+* minus_y_surface        [string] Comma seperated string of Union surface definitions defined prior to this component, applied to -z face of box
+* plus_z_surface         [string] Comma seperated string of Union surface definitions defined prior to this component, applied to +z face of box
+* minus_z_surface        [string] Comma seperated string of Union surface definitions defined prior to this component, applied to -z face of box
+* all_face_surface       [string] Comma seperated string of Union surface definitions defined prior to this component, applied to all faces above
+* cur_surface            [string] Comma seperated string of Union surface definitions defined prior to this component, applied to all internal cuts
 * init:                  [string] name of Union_init component (typically "init", default)
 * CALCULATED PARAMETERS:
 *
@@ -67,7 +75,12 @@
 
 DEFINE COMPONENT Union_box
 
-SETTING PARAMETERS(string material_string=0, priority, xwidth, yheight, zdepth, xwidth2=-1, yheight2=-1, visualize=1, int target_index=0, target_x=0, target_y=0, target_z=0, focus_aw=0, focus_ah=0, focus_xw=0, focus_xh=0, focus_r=0, p_interact = 0, string mask_string=0, string mask_setting=0,number_of_activations=1, string init="init")
+SETTING PARAMETERS(string material_string=0, priority,
+                   xwidth, yheight, zdepth, xwidth2=-1, yheight2=-1, 
+				   visualize=1, int target_index=0, target_x=0, target_y=0, target_z=0, focus_aw=0, focus_ah=0, focus_xw=0, focus_xh=0, focus_r=0,
+				   string all_face_surface=0, string cut_surface=0, string plus_z_surface=0, string minus_z_surface=0,
+				   string plus_x_surface=0, string minus_x_surface=0, string plus_y_surface=0, string minus_y_surface=0,
+				   p_interact = 0, string mask_string=0, string mask_setting=0, number_of_activations=1, string init="init")
 
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -194,7 +207,6 @@ struct pointer_to_1d_coords_list box_shell_points(struct geometry_struct *geomet
 
 #ifndef ANY_GEOMETRY_DETECTOR_DECLARE
     #define ANY_GEOMETRY_DETECTOR_DECLARE dummy
-    //struct pointer_to_global_geometry_list global_geometry_list = {0,NULL};
 #endif
 
 %}
@@ -213,6 +225,13 @@ double z_component;
 struct Volume_struct this_box_volume;
 struct box_storage this_box_storage;
 
+struct surface_stack_struct plus_x_surface_stack;
+struct surface_stack_struct minus_x_surface_stack;
+struct surface_stack_struct plus_y_surface_stack;
+struct surface_stack_struct minus_y_surface_stack;
+struct surface_stack_struct plus_z_surface_stack;
+struct surface_stack_struct minus_z_surface_stack;
+struct surface_stack_struct cut_surface_stack;
 %}
 
 INITIALIZE
@@ -357,6 +376,7 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
     this_box_volume.p_physics = global_material_list->elements[global_material_list->num_elements-1].physics;
 }
 
+
 sprintf(this_box_volume.name,"%s",NAME_CURRENT_COMP);
 sprintf(this_box_volume.geometry.shape,"box");
 this_box_volume.geometry.eShape = box;
@@ -424,6 +444,38 @@ this_box_volume.geometry.copy_geometry_parameters = &allocate_box_storage_copy;
 
 rot_copy(this_box_volume.geometry.rotation_matrix,ROT_A_CURRENT_COMP); //check how ROT_R_CURRENT_COMP would work
 rot_transpose(ROT_A_CURRENT_COMP,this_box_volume.geometry.transpose_rotation_matrix);
+
+// Handle surface input
+if (all_face_surface && strlen(all_face_surface) && strcmp(all_face_surface, "NULL") && strcmp(all_face_surface, "0")) {
+	// Overwrite all other surfaces that have no input (if one wants a surface left without anything, None can be used)
+    overwrite_if_empty(plus_x_surface, all_face_surface);
+    overwrite_if_empty(minus_x_surface, all_face_surface);
+    overwrite_if_empty(plus_y_surface, all_face_surface);
+    overwrite_if_empty(minus_y_surface, all_face_surface);
+	overwrite_if_empty(plus_z_surface, all_face_surface);		
+    overwrite_if_empty(minus_z_surface, all_face_surface);
+}
+
+this_box_volume.geometry.number_of_faces = 6;
+this_box_volume.geometry.surface_stack_for_each_face = malloc(this_box_volume.geometry.number_of_faces*sizeof(struct surface_stack_struct*));
+	
+// This could be inserted into the fill_surface_stack function
+this_box_volume.geometry.surface_stack_for_each_face[0] = &minus_z_surface_stack;
+this_box_volume.geometry.surface_stack_for_each_face[1] = &plus_z_surface_stack;
+this_box_volume.geometry.surface_stack_for_each_face[2] = &plus_x_surface_stack;
+this_box_volume.geometry.surface_stack_for_each_face[3] = &minus_x_surface_stack;
+this_box_volume.geometry.surface_stack_for_each_face[4] = &plus_y_surface_stack;
+this_box_volume.geometry.surface_stack_for_each_face[5] = &minus_y_surface_stack;
+this_box_volume.geometry.internal_cut_surface_stack = &cut_surface_stack; // This surface is used if the volume is cut by overlapping of higher priority volume
+
+struct pointer_to_global_surface_list *global_surface_list = COMP_GETPAR3(Union_init, init, global_surface_list);
+fill_surface_stack(plus_x_surface, global_surface_list, NAME_CURRENT_COMP, &plus_x_surface_stack);
+fill_surface_stack(minus_x_surface, global_surface_list, NAME_CURRENT_COMP, &minus_x_surface_stack);
+fill_surface_stack(plus_y_surface, global_surface_list, NAME_CURRENT_COMP, &plus_y_surface_stack);
+fill_surface_stack(minus_y_surface, global_surface_list, NAME_CURRENT_COMP, &minus_y_surface_stack);
+fill_surface_stack(plus_z_surface, global_surface_list, NAME_CURRENT_COMP, &plus_z_surface_stack);
+fill_surface_stack(minus_z_surface, global_surface_list, NAME_CURRENT_COMP, &minus_z_surface_stack);
+fill_surface_stack(cut_surface, global_surface_list, NAME_CURRENT_COMP, &cut_surface_stack);
 
 // Initialize loggers
 this_box_volume.loggers.num_elements = 0;

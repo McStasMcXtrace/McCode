@@ -94,13 +94,13 @@ void manual_linking_function_material(char *input_string, struct pointer_to_glob
    // get the first token
    token = strtok(local_string,",");
    
-   // walk through other tokens
+   // walk through tokens
    while( token != NULL ) 
    {
       //printf( " %s\n", token );
       for (loop_index=0;loop_index<global_process_list->num_elements;loop_index++) {
         if (strcmp(token,global_process_list->elements[loop_index].name) == 0) {
-          add_element_to_int_list(accepted_processes,loop_index);
+          add_element_to_int_list(accepted_processes, loop_index);
           break;
         }
         

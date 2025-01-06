@@ -79,6 +79,10 @@ DECLARE
   // Used to facilitate communication between materials and the other types of Union components
   struct pointer_to_global_material_list global_material_list;
 
+// Initialize global_surface_list
+  // Used to facilitate communication between surface components and other types of Union components
+  struct pointer_to_global_surface_list global_surface_list;
+
 // Initialize global_geometry_list
   // Used to facilitate communication between geometries and the other types of Union components
   struct pointer_to_global_geometry_list global_geometry_list;
@@ -118,6 +122,9 @@ global_process_list.elements = NULL;
 
 global_material_list.num_elements = 0;
 global_material_list.elements = NULL;
+
+global_surface_list.num_elements = 0;
+global_surface_list.elements = NULL;
 
 global_geometry_list.num_elements = 0;
 global_geometry_list.elements = NULL;

@@ -36,6 +36,16 @@ enum process {
   Template
 };
 
+enum surface {
+  Mirror,
+  SurfaceTemplate	  	
+};
+
+enum in_or_out {
+	inward_bound,
+	outward_bound
+};
+
 struct intersection_time_table_struct {
 int num_volumes;
 int *calculated;
@@ -440,6 +450,12 @@ struct pointer_to_1d_int_list masked_by_mask_index_list;
 //struct indexed_mask_lists_struct mask_intersect_lists;
 // Simpler way of storing the mask_intersect_lists
 struct pointer_to_1d_int_list mask_intersect_list;
+
+// Surfaces
+// Could make structure for this and support functions?
+int number_of_faces;
+struct surface_stack_struct **surface_stack_for_each_face;
+struct surface_stack_struct *internal_cut_surface_stack;
 };
 
 struct physics_struct
@@ -498,6 +514,26 @@ int (*scattering_function)(double*,double*,double*,union data_transfer_union,str
 //                         k_f,    k_i,    weight, parameters               , focus data / function
 };
 
+
+union surface_data_transfer_union 
+{
+	//struct Mirror_surface_storage_struct *pointer_to_a_Mirror_surface_storage_struct;
+	struct Template_surface_storage_struct *pointer_to_a_Template_surface_storage_struct;	
+};
+
+struct surface_process_struct
+{
+char name[256];
+enum surface eSurface;
+union surface_data_transfer_union data_transfer;
+};
+
+struct surface_stack_struct
+{
+int number_of_surfaces;
+struct surface_process_struct **p_surface_array;
+};
+
 struct Volume_struct
 {
 char name[256]; // User defined volume name
@@ -518,19 +554,34 @@ struct pointer_to_1d_int_list start_logic_list;
 struct pointer_to_1d_int_list starting_destinations_list;
 };
 
-struct global_positions_to_transform_list_struct {
+struct global_positions_to_transform_list_struct
+{
 int num_elements;
 Coords **positions;
 };
 
-struct global_rotations_to_transform_list_struct {
+struct global_rotations_to_transform_list_struct
+{
 int num_elements;
 Rotation **rotations;
 };
 
+struct global_surface_element_struct
+{
+char name[256]; // Name of the process
+int component_index;
+struct surface_process_struct *p_surface_process;
+};
+
+struct pointer_to_global_surface_list 
+{
+int num_elements;
+struct global_surface_element_struct *elements;
+};
+
 struct global_process_element_struct
 {
-char name[128]; // Name of the process
+char name[256]; // Name of the process
 int component_index;
 struct scattering_process_struct *p_scattering_process;
 };
@@ -1021,8 +1072,8 @@ void add_element_to_process_list(struct pointer_to_global_process_list *list,str
 void add_element_to_material_list(struct pointer_to_global_material_list *list,struct global_material_element_struct new_element) {
     if (list->num_elements == 0) {
     list->num_elements++;
-    list-> elements = malloc(list->num_elements*sizeof(struct global_material_element_struct));
-    list-> elements[0] = new_element;
+    list->elements = malloc(list->num_elements*sizeof(struct global_material_element_struct));
+    list->elements[0] = new_element;
     }
     else {
     struct global_material_element_struct *temp=malloc(list->num_elements*sizeof(struct global_material_element_struct));
@@ -1037,11 +1088,53 @@ void add_element_to_material_list(struct pointer_to_global_material_list *list,s
     }
 };
 
+void add_element_to_surface_list(struct pointer_to_global_surface_list *list, struct global_surface_element_struct new_element) {
+    if (list->num_elements == 0) {
+    list->num_elements++;
+    list->elements = malloc(list->num_elements*sizeof(struct global_surface_element_struct));
+    list->elements[0] = new_element;
+    }
+    else {
+      struct global_surface_element_struct *temp=malloc(list->num_elements*sizeof(struct global_surface_element_struct));
+    int iterate;
+    for (iterate=0;iterate<list->num_elements;iterate++) temp[iterate] = list->elements[iterate];
+    free(list->elements);
+    list->num_elements++;
+    list-> elements = malloc(list->num_elements*sizeof(struct global_surface_element_struct));
+    for (iterate=0;iterate<list->num_elements-1;iterate++) list->elements[iterate] = temp[iterate];
+    free(temp);
+    list->elements[list->num_elements-1] = new_element;
+    }
+};
+
+void add_element_to_surface_stack(struct surface_stack_struct *list, struct surface_process_struct *new_element) {
+    if (list->number_of_surfaces == 0) {
+        list->p_surface_array = malloc(sizeof(struct surface_process_struct*));
+        if (!list->p_surface_array) {
+            fprintf(stderr, "Memory allocation failed\n");
+            exit(EXIT_FAILURE);
+        }
+        list->p_surface_array[0] = new_element;
+        list->number_of_surfaces = 1;
+    } else {
+        // Reallocate with space for one more element
+        struct surface_process_struct **temp = realloc(list->p_surface_array, 
+            (list->number_of_surfaces + 1) * sizeof(struct surface_process_struct*));
+        if (!temp) {
+            fprintf(stderr, "Memory reallocation failed\n");
+            exit(EXIT_FAILURE);
+        }
+        list->p_surface_array = temp;
+        list->p_surface_array[list->number_of_surfaces] = new_element;
+        list->number_of_surfaces++;
+    }
+};
+
 void add_element_to_geometry_list(struct pointer_to_global_geometry_list *list,struct global_geometry_element_struct new_element) {
     if (list->num_elements == 0) {
     list->num_elements++;
-    list-> elements = malloc(list->num_elements*sizeof(struct global_geometry_element_struct));
-    list-> elements[0] = new_element;
+    list->elements = malloc(list->num_elements*sizeof(struct global_geometry_element_struct));
+    list->elements[0] = new_element;
     }
     else {
     struct global_geometry_element_struct *temp=malloc(list->num_elements*sizeof(struct global_geometry_element_struct));
@@ -1059,8 +1152,8 @@ void add_element_to_geometry_list(struct pointer_to_global_geometry_list *list,s
 void add_element_to_logger_list(struct pointer_to_global_logger_list *list,struct global_logger_element_struct new_element) {
     if (list->num_elements == 0) {
     list->num_elements++;
-    list-> elements = malloc(list->num_elements*sizeof(struct global_logger_element_struct));
-    list-> elements[0] = new_element;
+    list->elements = malloc(list->num_elements*sizeof(struct global_logger_element_struct));
+    list->elements[0] = new_element;
     }
     else {
     struct global_logger_element_struct *temp=malloc(list->num_elements*sizeof(struct global_logger_element_struct));
@@ -8510,5 +8603,71 @@ void record_abs_to_file(double *r, double t1, double *r_old, double t2, double w
 
 };
 
+void manual_linking_function_surface(char *input_string, struct pointer_to_global_surface_list *global_surface_list, struct pointer_to_1d_int_list *accepted_surfaces, char *component_name) {
 
+   char *token;
+   int loop_index;
+   char local_string[256];
+   
+   strcpy(local_string, input_string);
+   
+   // get the first token
+   token = strtok(local_string,",");
+   
+   // walk through tokens
+   while(token != NULL) 
+   {
+      //printf( " %s\n", token );
+      for (loop_index=0; loop_index<global_surface_list->num_elements; loop_index++) {
+        if (strcmp(token, global_surface_list->elements[loop_index].name) == 0) {
+          add_element_to_int_list(accepted_surfaces, loop_index);
+          break;
+        }
+        
+        if (loop_index == global_surface_list->num_elements - 1) {
+          // All possible surface names have been looked through, and the break was not executed.
+          // Alert the user to this problem by showing the surface name that was not found and the currently available surface definitions
+            printf("\n");
+            printf("ERROR: The surface string \"%s\" in Union geometry \"%s\" had an entry that did not match a specified surface definition. \n", input_string, component_name);
+            printf("       The unrecoignized surface name was: \"%s\" \n",token);
+            printf("       The surfaces available at this point (need to be defined before the geometry): \n");
+            for (loop_index=0; loop_index<global_surface_list->num_elements; loop_index++)
+              printf("         %s\n",global_surface_list->elements[loop_index].name);
+            exit(1);
+        }
+      }
+      
+      // Updates the token
+      token = strtok(NULL,",");
+   }
+}
+
+void fill_surface_stack(char *input_string, struct pointer_to_global_surface_list *global_surface_list, char *component_name,
+                        struct surface_stack_struct *surface_stack) {
+	// Takes empty surface_stack struct, allocates the memory and fills it with appropriate pointers to the surfaces requested in input_string
+				   
+	if (input_string && strlen(input_string) && strcmp(input_string, "NULL") && strcmp(input_string, "0") && strcmp(input_string, "None")) {
+
+      struct pointer_to_1d_int_list accepted_surfaces;
+	  manual_linking_function_surface(input_string, global_surface_list, &accepted_surfaces, component_name);
+	 
+	  surface_stack->number_of_surfaces = accepted_surfaces.num_elements;
+	  surface_stack->p_surface_array = malloc(surface_stack->number_of_surfaces*sizeof(struct surface_process_struct*));
+	
+	  int loop_index;
+  	  for (loop_index=0; loop_index<accepted_surfaces.num_elements; loop_index++) {
+	      surface_stack->p_surface_array[loop_index]=global_surface_list->elements[accepted_surfaces.elements[loop_index]].p_surface_process;
+	  }
+		
+	} else {
+	  surface_stack->number_of_surfaces = 0;
+	}
+
+}
+
+void overwrite_if_empty(char *input_string, char *overwrite) {
+   if (!(input_string && strlen(input_string) && strcmp(input_string, "NULL") && strcmp(input_string, "0"))) {
+	   strcpy(input_string, overwrite);
+   }
+}
 

@@ -121,3 +121,31 @@ int physics_scattering(enum process choice, double *k_final, double *k_initial, 
     #endif
     return output;
 }
+
+int physics_surface(struct surface_process_struct *surface,                 // surface struct, has enum for choice and pointer to data
+                    double *weight, double *wavevector,                     // information to surface_process, but also things it should update
+					int *continues,                                         // output, whether the ray continues to next layer or not
+					double *normal_vector, enum in_or_out in_out,           // information that should not be changed
+					_class_particle *_particle) {                           // particle struct
+
+    enum surface choice = surface->eSurface;
+
+    int output = 0; // Error return value
+    #ifdef SURFACE_DETECTOR
+    switch(choice) {
+        #ifdef SURFACE_PROCESS_MIRROR_DETECTOR
+        case Mirror:
+            output = Mirror_surface_function(surface->data_transfer, weight, wavevector, continues, normal_vector, in_out, _particle);
+            break;
+        #endif
+        #ifdef SURFACE_PROCESS_TEMPLATE_DETECTOR
+        case SurfaceTemplate:
+            output = Template_surface_function(surface->data_transfer, weight, wavevector, continues, normal_vector, in_out, _particle);
+            break;
+        #endif
+        default: printf("physics_surface: No surface process matches input!\n");
+            break;
+    }
+    #endif
+    return output;
+}

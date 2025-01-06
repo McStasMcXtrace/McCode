@@ -80,7 +80,7 @@ struct abs_logger_with_data_struct abs_loggers_with_data_array;
     #define MASTER_DETECTOR dummy
 #endif
 
-%include "ref-lib"
+//%include "ref-lib"
 
 %}
 
@@ -91,6 +91,7 @@ DECLARE
   struct global_rotations_to_transform_list_struct *global_rotations_to_transform_list_master;
   struct pointer_to_global_process_list *global_process_list_master;
   struct pointer_to_global_material_list *global_material_list_master;
+  struct pointer_to_global_surface_list *global_surface_list_master;
   struct pointer_to_global_geometry_list *global_geometry_list_master;
   struct pointer_to_global_logger_list *global_all_volume_logger_list_master;
   struct pointer_to_global_logger_list *global_specific_volumes_logger_list_master;
@@ -291,7 +292,9 @@ DECLARE
   double abs_distance;
   double abs_max_length;
   
-  
+  // Surfaces
+  int longest_surface_stack;
+  struct surface_stack_struct interface_stack;
 %}
 
 INITIALIZE
@@ -306,6 +309,7 @@ exit(-1);
   global_rotations_to_transform_list_master = COMP_GETPAR3(Union_init, init, global_rotations_to_transform_list);
   global_process_list_master = COMP_GETPAR3(Union_init, init, global_process_list);
   global_material_list_master = COMP_GETPAR3(Union_init, init, global_material_list);
+  global_surface_list_master = COMP_GETPAR3(Union_init, init, global_surface_list);
   global_geometry_list_master = COMP_GETPAR3(Union_init, init, global_geometry_list);
   global_all_volume_logger_list_master = COMP_GETPAR3(Union_init, init, global_all_volume_logger_list);
   global_specific_volumes_logger_list_master = COMP_GETPAR3(Union_init, init, global_specific_volumes_logger_list);
@@ -329,6 +333,9 @@ exit(-1);
   // For masks
   number_of_masks = 0;
   number_of_masked_volumes = 0;
+  
+  // For surfaces
+  longest_surface_stack = 0;
 
   // Use sanitation
   #ifndef ANY_GEOMETRY_DETECTOR_DECLARE
@@ -778,7 +785,15 @@ exit(-1);
           }
         }
       }
-      
+	  
+	  // Find longest surface length
+	  int surfaces_in_this_stack;
+      for (iterator=0;iterator<Volumes[volume_index]->geometry.number_of_faces;iterator++) {  
+		surfaces_in_this_stack = Volumes[volume_index]->geometry.surface_stack_for_each_face[iterator]->number_of_surfaces;
+        if (surfaces_in_this_stack > longest_surface_stack) {
+        	longest_surface_stack = surfaces_in_this_stack;
+        }
+      }
     
     }
   } // Initialization for each volume done
@@ -796,6 +811,10 @@ exit(-1);
   pre_allocated1 = malloc(number_of_volumes * sizeof(int));
   pre_allocated2 = malloc(number_of_volumes * sizeof(int));
   pre_allocated3 = malloc(number_of_volumes * sizeof(int));
+  
+  // Pre allocated memory to fit all surfaces in an interface
+  interface_stack.number_of_surfaces = 2*longest_surface_stack;
+  interface_stack.p_surface_array = malloc(interface_stack.number_of_surfaces*sizeof(struct surface_process_struct*));
   
   // Allocate memory for logger_conditional_extend_array used in the extend section of the master component, if it is needed.
   if (max_conditional_extend_index > -1) {
@@ -993,6 +1012,8 @@ exit(-1);
   
   abs_loggers_with_data_array.allocated_elements = 0;
   abs_loggers_with_data_array.used_elements = 0;
+  
+  // Initialize data structure needed for surfaces
   
   
   // Signal initialization complete
@@ -1793,7 +1814,7 @@ TRACE
             #endif
             
         } else {
-			previous_volume = current_volume;
+			previous_volume = current_volume; // Record the current volume as previous, as this will change in this branch of the code
 			
             #ifdef Union_trace_verbal_setting
               printf("Propagate out of volume %d\n", current_volume);
@@ -1999,38 +2020,225 @@ TRACE
                 #endif
                 
             }
-            if (Volumes[current_volume]->geometry.is_exit_volume==1) {
-                    done = 1; // Exit volumes allow the ray to escape the component
-                    ray_sucseeded = 1; // Allows the ray to
-            }
             #ifdef Union_trace_verbal_setting
               printf(" TO VOLUME %d \n",current_volume);
             #endif
+			  
+              double n1, n2;
+              int perform_refraction;
+			  
+			  perform_refraction = 1;	  
+			  
+              double nx;
+		      double ny;
+		      double nz;
+			  double surface_wavevector_before[3];
+			  double surface_wavevector[3];
+			  double normal_vector[3];
+            
+              nx = intersection_time_table.normal_vector_x[min_volume][min_solution];
+              ny = intersection_time_table.normal_vector_y[min_volume][min_solution];
+              nz = intersection_time_table.normal_vector_z[min_volume][min_solution];
+              NORM(nx,ny,nz);
+			  			  
+			  // loop over surface processes
+			  // Need face index of both the geometry the ray is leaving and entering, only one from scattering
+			  
+			  // List of surfaces from geometry ray is leaving, bottom to top (length n_leaving)
+			  int relevant_surface_index, n_leaving, n_entering;
+			  struct surface_stack_struct *leaving_stack;
+			  struct surface_stack_struct *entering_stack;
+			  
+			#ifdef Union_trace_verbal_setting
+			  	printf(" Creating leaving surface stack %d \n",current_volume);
+			#endif
+			
+			  if (previous_volume == 0) {
+				n_leaving = 0; // surrounding vacuum has no stack
+			  } else {
+			    if (previous_volume == min_volume) {
+				  // ray left previous volume on a face of that volume, use that for the list
+				  relevant_surface_index = intersection_time_table.surface_index[min_volume][min_solution];
+				  leaving_stack = Volumes[previous_volume]->geometry.surface_stack_for_each_face[relevant_surface_index];
+			    } else {
+			  	  // ray left previous volume through an internal cut of some kind
+				  leaving_stack = Volumes[previous_volume]->geometry.internal_cut_surface_stack;				
+  			    }
+			    n_leaving = leaving_stack->number_of_surfaces;
+		      }
+			  
+			#ifdef Union_trace_verbal_setting
+			  	printf(" Creating entering surface stack %d \n",current_volume);
+			#endif
+			  
+			  if (current_volume == 0) {
+			  	n_entering = 0;
+			  } else {
+				
+			    // List of surfaces from geometry ray is entering, top to bottom (length n_entering)
+			    if (current_volume == min_volume) {
+				  // ray entered current volume on a face of that volume, use that for the list
+				  relevant_surface_index = intersection_time_table.surface_index[min_volume][min_solution];
+				  entering_stack = Volumes[current_volume]->geometry.surface_stack_for_each_face[relevant_surface_index];
+			    } else {
+			  	  // ray left previous volume through an internal cut of some kind
+				  entering_stack = Volumes[current_volume]->geometry.internal_cut_surface_stack;				
+			    }
+			    n_entering = entering_stack->number_of_surfaces;
+			  }
+			  
+			  int n_total = n_leaving + n_entering;
+			  
+			#ifdef Union_trace_verbal_setting
+			  	printf(" Combining into one surface stack %d \n",current_volume);
+			#endif
+			  
+			  // Make combined list, leaving bottom to top followed by entering top to bottom
+			  // Stacks are naturally from bottom to top
+			  for (iterator=0; iterator<n_total; iterator++) {
+				  if (iterator < n_leaving) {
+					  // grab from leaving stack in natural order
+					  interface_stack.p_surface_array[iterator] = leaving_stack->p_surface_array[iterator];
+				  } else {
+				  	  // grab from entering stack in reverse order
+					  interface_stack.p_surface_array[iterator] = entering_stack->p_surface_array[n_entering - iterator + n_leaving - 1];
+				  }
+			  }
+				  
+		      // struct surface_process_struct **surface_list; could do interface_struct like this instead
+			  			 
+			  int surface_transverse_index = 0;
+			  int surface_direction = 1;
+		      int surface_iterations = 0;
+			  int in_direction;
+			  int continues;
+			  enum in_or_out inward_or_outward;
+			  
+			  struct surface_process_struct *surface_pointer;
+			  
+			  // todo:
+			  // get weight and wavevector into the surface_function
+			  // get normal_vector into the surface function
+			  // complete the Template_surface process
+			  
+			  surface_wavevector[0] = V2K*vx; surface_wavevector[1] = V2K*vy; surface_wavevector[2] = V2K*vz;
+			  surface_wavevector_before[0] = surface_wavevector[0];
+			  surface_wavevector_before[1] = surface_wavevector[1];
+			  surface_wavevector_before[2] = surface_wavevector[2];
+			  
+		      #ifdef Union_trace_verbal_setting
+			  	printf(" Entering surface stack loop %d \n",current_volume);
+ 			  #endif
+			  
+			  while (1) {
+				  
+				#ifdef Union_trace_verbal_setting
+				  	printf(" Start of surface stack with transverse_index = %d \n", surface_transverse_index);
+				#endif
+				  
+  			    // Escape conditions on each side of stack
+  			  	if (surface_transverse_index < 0) {
+  			      // Escaped from incoming direction
+                  perform_refraction = 0;					
+  			      current_volume = previous_volume;
+				  
+				  #ifdef Union_trace_verbal_setting
+				  	printf(" Left stack to incoming side \n");
+				  #endif
+				  
+  			      break;
+  			    }
+			  
+  			    if (surface_transverse_index >= n_total) {
+  			      // Went through all layers, continue to refraction as normal
+				  #ifdef Union_trace_verbal_setting
+					printf(" Left stack by going all the way through \n");
+				  #endif					
+  			      break;
+  			    }
+				  
+				surface_pointer = interface_stack.p_surface_array[surface_transverse_index];
+			  
+			    if (surface_transverse_index < n_leaving) in_direction = 1; else in_direction = -1;
+			  	if (surface_direction == in_direction) inward_or_outward = inward_bound; else inward_or_outward = outward_bound; 
+				
+				// fresh normal in case surface function messed with it
+				normal_vector[0] = nx; normal_vector[1] = ny; normal_vector[2] = nz;
+
+                // p, wavevector and continues updated by surface_function
+				#ifdef Union_trace_verbal_setting
+					printf(" Running physics_surface with transverse_index = %d \n", surface_transverse_index);
+				#endif
+			    physics_surface(surface_pointer, &p, surface_wavevector, &continues, normal_vector, inward_or_outward, _particle);
+				#ifdef Union_trace_verbal_setting
+					printf(" physics_surface reported continues = %d \n", continues);
+				#endif
+				
+				// insert logging
+				
+				if (!continues) surface_direction = -surface_direction; // Flip stack direction if the ray does not continue
+				
+			  	surface_transverse_index += surface_direction; // Go to next element in stack
+			    surface_iterations += 1;
+			  
+				if (surface_iterations > 10000) {
+					printf("ERROR: Ray stuck in surface stack, ABSORBED\n");
+					done = 1;
+					ray_sucseeded = 0;
+					break;
+				}
+			  }
+			  
+			  // Need to check if velocity altered
+			  int velocity_updated_by_surface_stack;
+
+			  if (surface_wavevector_before[0] != surface_wavevector[0] || 
+			      surface_wavevector_before[1] != surface_wavevector[1] || 
+			      surface_wavevector_before[2] != surface_wavevector[2]) {
+			    velocity_updated_by_surface_stack = 1;
+			  } 
+			  
+			  if (velocity_updated_by_surface_stack == 1) {  
+  
+				vx = surface_wavevector[0]*K2V;
+				vy = surface_wavevector[1]*K2V;
+				vz = surface_wavevector[2]*K2V;			  			  
+				#ifdef Union_trace_verbal_setting
+					printf(" ray direction updtaed by surface stack \n", continues);
+					printf("r = (%f,%f,%f) v = (%f,%f,%f) \n", x, y, z, vx, vy, vz);
+				#endif
+
+			    // Report new velocity back, 
+                // Update velocity in all ways used in master
+                v[0] = vx; v[1] = vy; v[2] = vz;
+                v_length = sqrt(vx*vx + vy*vy + vz*vz);
+                k_new[0] = V2K*vx; k_new[1] = V2K*vy; k_new[2] = V2K*vz;
+                ray_velocity = coords_set(vx, vy, vz);
+			  
+                ignore_closest = min_volume;
+		        ignore_surface_index = intersection_time_table.surface_index[min_volume][min_solution];
+            
+                // Since velocity is updated, we need to clear the intersection time table
+                clear_intersection_table(&intersection_time_table);
+            
+                // Reset origin point for ray
+                r_start[0] = x; r_start[1] = y; r_start[2] = z;
+                time_propagated_without_scattering = 0.0;
+		      }
+			  
               // Need old and current volume here to compare refraction index
               // Need information on normal vector for intersection
               // Can then change direction accordingly
-            
-            
-              double n1, n2;
-              int perform_refraction;
-            
+
               #ifdef Union_trace_verbal_setting
                 printf("Entering refraction system \n");
                 printf("r = (%f,%f,%f) v = (%f,%f,%f) \n", x, y, z, vx, vy, vz);
 				printf("min_volume = %d, min_solution = %d\n", min_volume, min_solution);
               #endif
             
-              perform_refraction = 1;
-            
               // Check if the volume intersection was found with returns normal, allowing refraction calculation
 			  // todo will implement differnet solution
               //if (Volumes[min_volume]->geometry.returns_intersection_normal == 0) perform_refraction = 0;
-              double nx, ny, nz;
-            
-              nx = intersection_time_table.normal_vector_x[min_volume][min_solution];
-              ny = intersection_time_table.normal_vector_y[min_volume][min_solution];
-              nz = intersection_time_table.normal_vector_z[min_volume][min_solution];
-              NORM(nx,ny,nz);
             
               v_length = sqrt(vx*vx+vy*vy+vz*vz);
               double lambda = 3956.0032/v_length;
@@ -2055,7 +2263,10 @@ TRACE
               }
 			  
               #ifdef Union_trace_verbal_setting
+			    if (perform_refraction == 1)
 			    printf("ready to calculate refraction, current_volume = %d, n1=%lf, n2=%lf \n", current_volume, n1, n2);
+				else
+			    printf("skipping refraction system, current_volume = %d, n1=%lf, n2=%lf \n", current_volume, n1, n2);	
               #endif
             
               if (perform_refraction == 1) {
@@ -2096,6 +2307,7 @@ TRACE
 					  use_fresnel = 0;
 				    }
 					  // NEUTRON REFLECTION: PRINCIPLES AND EXAMPLES OF APPLICATIONS: Robert Cubitt and Giovanna Fragneto
+					  // This expression only works when a qc exists
 					  //q_qc_quadratic_diff = sqrt(q_normal*q_normal - qc*qc)
 					  //reflectivity = pow((q_normal - q_qc_quadratic_diff)/(q_normal + q_qc_quadratic_diff), 2);
 				  }
@@ -2239,36 +2451,18 @@ TRACE
                        #endif
                        */
                   }
-                
-                  /*
-                  x += 1E-12*vx;
-                  y += 1E-12*vy;
-                  z += 1E-12*vz;
-                  t += 1E-12;
-                  */
-                
-                  /*
-                  // Update velocity in all ways used in master
-                  v[0] = vx; v[1] = vy; v[2] = vz;
-                  v_length = sqrt(vx*vx + vy*vy + vz*vz);
-                  k_new[0] = V2K*vx; k_new[1] = V2K*vy; k_new[2] = V2K*vz;
-                  ray_velocity = coords_set(vx, vy, vz);
-                
-                  r[0] = x; r[1] = y; r[2] = z;
-                  ray_position = coords_set(x,y,z);
-                
-                  // Since velocity is updated, we need to clear the intersection time table
-                  clear_intersection_table(&intersection_time_table);
-                
-                  // Reset origin point for ray
-                  r_start[0] = x; r_start[1] = y; r_start[2] = z;
-                  time_propagated_without_scattering = 0.0;
-                  */
+              }
+			  
+  		  	  // todo: decide how surface on an exit volume should be treated
+              if (Volumes[current_volume]->geometry.is_exit_volume==1) {
+                      done = 1; // Exit volumes allow the ray to escape the component
+                      ray_sucseeded = 1; // Allows the ray to leave loop
               }
 			  
 		  #ifdef Union_trace_verbal_setting
 			  	printf("After refraction system \n");
 				printf("r = (%f,%f,%f) v = (%f,%f,%f) \n", x, y, z, vx, vy, vz);
+				printf("CURRENT_VOLUME = %d \n", current_volume);				
 		  #endif
         }
         
@@ -2581,6 +2775,8 @@ if (geometry_component_index_list.num_elements>0) free(geometry_component_index_
 if (finally_verbal) printf("Freeing Volumes \n");
 free(Volumes);
 
+if (interface_stack.number_of_surfaces > 0) free(interface_stack.p_surface_array);
+
 // Free global allocated arrays if this is the last master union component in the instrument file
 
 if (global_master_list_master->elements[global_master_list_master->num_elements-1].component_index == INDEX_CURRENT_COMP) {
@@ -2593,6 +2789,9 @@ if (global_master_list_master->elements[global_master_list_master->num_elements-
 
     if (finally_verbal) printf("Freeing global material list \n");
     if (global_material_list_master->num_elements > 0) free(global_material_list_master->elements);
+	
+    if (finally_verbal) printf("Freeing global surface list \n");
+    if (global_surface_list_master->num_elements > 0) free(global_surface_list_master->elements);
 
     if (finally_verbal) printf("Freeing global geometry list \n");
     if (global_geometry_list_master->num_elements > 0) free(global_geometry_list_master->elements);
