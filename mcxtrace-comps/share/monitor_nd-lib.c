@@ -748,6 +748,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 /* Monitor_nD_Trace: this routine is used to monitor one propagating particle */
 /* return values: 0=photon was absorbed, -1=photon was outside bounds, 1=photon was measured*/
 /* ========================================================================= */
+
 int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars, _class_particle* _particle)
 {
 
@@ -759,14 +760,13 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
   long    While_Buffer=0;
   char    Set_Vars_Coord_Type = DEFS->COORD_NONE;
   
-  #ifdef OPENACC
-  /* For the OPENACC list buffer we need a local copy of the
-     atomically updated Neutron_counter - captured below under list mode */
-  long long ParticleCount=0;
-  #else
-  /* On CPU can make do with the global, declared one... */
-  #define ParticleCount Vars->Photon_Counter
-  #endif
+  /* For the OPENACC list buffer an atomic capture/update of the
+     updated Neutron_counter - captured below under list mode */
+  long long ParticleCount;
+  #pragma acc atomic capture
+  {
+    ParticleCount=Vars->Photon_Counter++;
+  }
 
   /* the logic below depends mainly on:
        Flag_List:        1=store 1 buffer, 2=list all, 3=re-use buffer 
@@ -809,8 +809,7 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
       Vars->Flag_List = 3;
       Vars->Buffer_Block = Vars->Buffer_Size;
       Vars->Buffer_Counter  = 0;
-      ParticleCount = 0;
-
+      Vars->Photon_Counter = 0;
     }
     else
     {
@@ -1113,14 +1112,6 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
     { /* now store Coord into Buffer (no index needed) if necessary (list or auto limits) */
       if ((Vars->Buffer_Counter < Vars->Buffer_Block) && ((Vars->Flag_List) || (Vars->Flag_Auto_Limits == 1)))
       {
-        #ifdef OPENACC
-        #pragma acc atomic capture
-        {
-	  ParticleCount=Vars->Photon_Counter++ ;
-        } 
-        #else
-        ParticleCount++;
-	#endif
         for (i = 0; i <= Vars->Coord_Number; i++)
         {
 	  // This is is where the list is appended. How to make this "atomic"?
