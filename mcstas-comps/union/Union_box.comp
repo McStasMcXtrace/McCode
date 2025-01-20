@@ -64,7 +64,7 @@
 * plus_z_surface         [string] Comma seperated string of Union surface definitions defined prior to this component, applied to +z face of box
 * minus_z_surface        [string] Comma seperated string of Union surface definitions defined prior to this component, applied to -z face of box
 * all_face_surface       [string] Comma seperated string of Union surface definitions defined prior to this component, applied to all faces above
-* cur_surface            [string] Comma seperated string of Union surface definitions defined prior to this component, applied to all internal cuts
+* cut_surface            [string] Comma seperated string of Union surface definitions defined prior to this component, applied to all internal cuts
 * init:                  [string] name of Union_init component (typically "init", default)
 * CALCULATED PARAMETERS:
 *
@@ -408,15 +408,15 @@ this_box_storage.normal_vectors[0] = coords_set(0,0,1);
 this_box_storage.normal_vectors[1] = coords_set(0,0,1);
 
 // for sides with y component = 0
-x_component = 2*zdepth/sqrt((xwidth-xwidth2)*(xwidth-xwidth2)+4*zdepth*zdepth);
-z_component = (xwidth-xwidth2)/sqrt(4*zdepth*zdepth+(xwidth-xwidth2)*(xwidth-xwidth2));
+x_component = 2.0*zdepth/sqrt((xwidth-xwidth2)*(xwidth-xwidth2)+4.0*zdepth*zdepth);
+z_component = (xwidth-xwidth2)/sqrt(4.0*zdepth*zdepth+(xwidth-xwidth2)*(xwidth-xwidth2));
 
-this_box_storage.normal_vectors[2] = coords_set(x_component,0,z_component);
-this_box_storage.normal_vectors[3] = coords_set(-x_component,0,z_component);
+this_box_storage.normal_vectors[2] = coords_set(x_component,0.0,z_component);
+this_box_storage.normal_vectors[3] = coords_set(-x_component,0.0,z_component);
 
 // for sides with x component = 0
-y_component = 2*zdepth/sqrt((yheight-yheight2)*(yheight-yheight2)+4*zdepth*zdepth);
-z_component = (yheight-yheight2)/sqrt(4*zdepth*zdepth+(yheight-yheight2)*(yheight-yheight2));
+y_component = 2.0*zdepth/sqrt((yheight-yheight2)*(yheight-yheight2)+4.0*zdepth*zdepth);
+z_component = (yheight-yheight2)/sqrt(4.0*zdepth*zdepth+(yheight-yheight2)*(yheight-yheight2));
 
 this_box_storage.normal_vectors[4] = coords_set(0,y_component,z_component);
 this_box_storage.normal_vectors[5] = coords_set(0,-y_component,z_component);

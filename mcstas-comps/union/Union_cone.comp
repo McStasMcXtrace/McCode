@@ -55,6 +55,11 @@
 * focus_xw:              [m]      Horiz. dimension of a rectangular area
 * focus_xh:              [m]      Vert. dimension of a rectangular area
 * focus_r:               [m]      Focusing on circle with this radius
+* curved_surface         [string] Comma seperated string of Union surface definitions defined prior to this component, applied to curved wall of cone
+* top_surface            [string] Comma seperated string of Union surface definitions defined prior to this component, applied to +y top face of cone
+* bottom_surface         [string] Comma seperated string of Union surface definitions defined prior to this component, applied to -y bottom face of cone
+* all_face_surface       [string] Comma seperated string of Union surface definitions defined prior to this component, applied to all faces above
+* cut_surface            [string] Comma seperated string of Union surface definitions defined prior to this component, applied to all internal cuts
 * init:                  [string] Name of Union_init component (typically "init", default)
 *
 * CALCULATED PARAMETERS:
@@ -66,7 +71,11 @@
 
 DEFINE COMPONENT Union_cone
 
-SETTING PARAMETERS(string material_string=0, priority, radius=0,radius_top=0,radius_bottom=0, yheight, visualize=1, int target_index=0, target_x=0, target_y=0, target_z=0, focus_aw=0, focus_ah=0, focus_xw=0, focus_xh=0, focus_r=0, p_interact=0, string mask_string=0, string mask_setting=0,number_of_activations=1, string init="init")
+SETTING PARAMETERS(string material_string=0, priority, radius=0,radius_top=0,radius_bottom=0, yheight, visualize=1,
+                   int target_index=0, target_x=0, target_y=0, target_z=0, focus_aw=0, focus_ah=0, focus_xw=0, focus_xh=0, focus_r=0, 
+				   p_interact=0, string mask_string=0, string mask_setting=0,number_of_activations=1, 
+				   string all_face_surface=0, string cut_surface=0, string curved_surface=0, string top_surface=0, string bottom_surface=0,
+				   string init="init")
 
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -203,6 +212,11 @@ int material_index;
 
 struct Volume_struct this_cone_volume;
 struct cone_storage this_cone_storage;
+
+struct surface_stack_struct curved_surface_stack;
+struct surface_stack_struct top_surface_stack;
+struct surface_stack_struct bottom_surface_stack;
+struct surface_stack_struct cut_surface_stack;
 %}
 
 INITIALIZE
@@ -351,6 +365,28 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
 
 
 
+// Handle surface input
+if (all_face_surface && strlen(all_face_surface) && strcmp(all_face_surface, "NULL") && strcmp(all_face_surface, "0")) {
+	// Overwrite all other surfaces that have no input (if one wants a surface left without anything, None can be used)
+    overwrite_if_empty(curved_surface, all_face_surface);
+    overwrite_if_empty(top_surface, all_face_surface);
+    overwrite_if_empty(bottom_surface, all_face_surface);
+}
+
+this_cone_volume.geometry.number_of_faces = 3;
+this_cone_volume.geometry.surface_stack_for_each_face = malloc(this_cone_volume.geometry.number_of_faces*sizeof(struct surface_stack_struct*));
+	
+// This could be inserted into the fill_surface_stack function
+this_cone_volume.geometry.surface_stack_for_each_face[0] = &curved_surface_stack;
+this_cone_volume.geometry.surface_stack_for_each_face[1] = &top_surface_stack;
+this_cone_volume.geometry.surface_stack_for_each_face[2] = &bottom_surface_stack;
+this_cone_volume.geometry.internal_cut_surface_stack = &cut_surface_stack; // This surface is used if the volume is cut by overlapping of higher priority volume
+
+struct pointer_to_global_surface_list *global_surface_list = COMP_GETPAR3(Union_init, init, global_surface_list);
+fill_surface_stack(curved_surface, global_surface_list, NAME_CURRENT_COMP, &curved_surface_stack);
+fill_surface_stack(top_surface, global_surface_list, NAME_CURRENT_COMP, &top_surface_stack);
+fill_surface_stack(bottom_surface, global_surface_list, NAME_CURRENT_COMP, &bottom_surface_stack);
+fill_surface_stack(cut_surface, global_surface_list, NAME_CURRENT_COMP, &cut_surface_stack);
 
 
 // check if this is a cylinder and add coordinates of tip if it is a cone

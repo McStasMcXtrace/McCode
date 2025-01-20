@@ -970,7 +970,7 @@ exit(-1);
            intersection_time_table.intersection_times[0] = NULL;
       }
       else {
-		printf("allocating memory for volume %d \n", iterator);
+		//printf("allocating memory for volume %d \n", iterator);
         intersection_time_table.intersection_times[iterator] = (double*) malloc(intersection_time_table.n_elements[iterator]*sizeof(double));
         intersection_time_table.normal_vector_x[iterator] = (double*) malloc(intersection_time_table.n_elements[iterator]*sizeof(double));
         intersection_time_table.normal_vector_y[iterator] = (double*) malloc(intersection_time_table.n_elements[iterator]*sizeof(double));
