@@ -666,7 +666,7 @@ int line_polyhedron_intersect(double line_t, Coords line_p, Coords line_v,
 	int *plane_number = (int*)malloc(a->nf * sizeof(int));
 	int *type = (int*)malloc(a->nf * sizeof(int));
 
-	if (dtype == NULL || dpoint == NULL || time == NULL || point == NULL || plan_number == NULL || type == NULL) {
+	if (dtime == NULL || dpoint == NULL || time == NULL || point == NULL || plane_number == NULL || type == NULL) {
 		// Handle memory allocation failure
 		fprintf(stderr, "Memory allocation failed in line_polyhedron_intersect\n");
 		free(dtime);
