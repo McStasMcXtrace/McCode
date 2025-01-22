@@ -657,13 +657,26 @@ int line_polyhedron_intersect(double line_t, Coords line_p, Coords line_v,
 	Coords lp_dp; //intersect dspace
 	double lp_t; //intersect time absolute
 	Coords lp_p; //intersect position absolute
-	
-	double dtime[a->nf];
-	Coords dpoint[a->nf];
-	double time[a->nf];
-	Coords point[a->nf];
-	int plane_number[a->nf];
-	int type[a->nf];
+
+
+	double *dtime = (double*)malloc(a->nf * sizeof(double));
+  Coords *dpoint = (Coords*)malloc(a->nf * sizeof(Coords));
+  double *time = (double*)malloc(a->nf * sizeof(double));
+  Coords *point = (Coords*)malloc(a->nf * sizeof(Coords));
+  int *plane_number = (int*)malloc(a->nf * sizeof(int));
+  int *type = (int*)malloc(a->nf * sizeof(int));
+
+  if (dtype==NULL || dpoint==NULL || time==NULL || point == NULL || plan_number==null || type == NULL) {
+    // Handle memory allocation failure
+    fprintf(stderr, "Memory allocation failed in line_polyhedron_intersect\n");
+    free(dtime);
+    free(dpoint);
+    free(time);
+    free(point);
+    free(plane_number);
+    exit(EXIT_FAILURE);
+  }
+
 
 	//first find all the potential intersects that happens immediately or in the future.
 	LinePolyhedronIntersect *lpi = &(a->lpi);
@@ -760,7 +773,16 @@ int line_polyhedron_intersect(double line_t, Coords line_p, Coords line_v,
 	if (n_intersect_found == 0) {
 		//no intersect
 		*num_intersect = 0;
-		return 1;
+
+    // Ensure to free the allocated memory after use
+    free(dtime);
+    free(dpoint);
+    free(time);
+    free(point);
+    free(plane_number);
+    free(type);
+
+    return 1;
 	}
 	
 	if (*num_intersect <= 0) {
@@ -806,7 +828,17 @@ int line_polyhedron_intersect(double line_t, Coords line_p, Coords line_v,
 	
 	*num_intersect = n_intersect_found;
 
-	return 1;
+
+  // Ensure to free the allocated memory after use
+  free(dtime);
+  free(dpoint);
+  free(time);
+  free(point);
+  free(plane_number);
+  free(type);
+
+
+  return 1;
 }
 
 /*****************************************************/
