@@ -1947,7 +1947,7 @@ calls: 		line_polyhedron_intersect
 	//si->type: 1=x plane, 2=x edge, 3=x vertex, 4=on plane, 5=on edge
 	//SupermirrorIntersect *si = &((sm->proc).si);
 	int skip_plane[] = {0, 1};
-	int n_skip_plane = (int)(sizeof(skip_plane) / sizeof(int));
+	int n_skip_plane = 2;
 	int num_intersect = 1; //only use values of the first intersect
 	line_polyhedron_intersect(state->t, state->p, state->v, &(sm->geo), Maximum_On_Plane_Distance, n_skip_plane, skip_plane,  
 								state->last_time, state->last_point, state->last_plane, 
@@ -2149,7 +2149,7 @@ calls: 		line_polyhedron_intersect
 	//Skip the current plane in finding intersect, neutron should propagate to other planes.
 	//Also, refraction may result in trajectory almost parallel to current plane, can unphysically transmit out due to numerical precision limit. 
 	int skip_plane[] = {state->plane};
-	int n_skip_plane = (int)(sizeof(skip_plane) / sizeof(int)); // 1
+	int n_skip_plane = 1;
 	line_polyhedron_intersect(state->t, state->p, state->v, &(sm->geo), Maximum_On_Plane_Distance, n_skip_plane, skip_plane,  
 								state->last_time, state->last_point, state->last_plane, 
 								&num_intersect, &idt, 0, 0, 0, &iplane, &itype); 
@@ -3139,9 +3139,8 @@ int sm_internal_reflections(SimState *state, Supermirror *sm, double ws_target)
 	//ir.1 Calculate how long it takes to reach one of the edges of the supermirror using surface velocity
 	//Find line-polyhedron intersects
 	//state->itype: 1=x plane, 2=x edge, 3=x vertex, 4=on plane, 5=on edge
-
-	int n_skip_plane = 2; int skip_plane[n_skip_plane];
-	skip_plane[0] = 0; skip_plane[1] = 1; 
+	int skip_plane[] = {0, 1};
+	int n_skip_plane = 2;
 	int num_intersect = 1; //only use values of the first intersect
 	line_polyhedron_intersect(state->t, state->p, state->v, &(sm->geo), Maximum_On_Plane_Distance, n_skip_plane, skip_plane, 
 								state->last_time, state->last_point, state->last_plane, 
