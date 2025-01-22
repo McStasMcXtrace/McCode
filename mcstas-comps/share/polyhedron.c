@@ -660,23 +660,23 @@ int line_polyhedron_intersect(double line_t, Coords line_p, Coords line_v,
 
 
 	double *dtime = (double*)malloc(a->nf * sizeof(double));
-  Coords *dpoint = (Coords*)malloc(a->nf * sizeof(Coords));
-  double *time = (double*)malloc(a->nf * sizeof(double));
-  Coords *point = (Coords*)malloc(a->nf * sizeof(Coords));
-  int *plane_number = (int*)malloc(a->nf * sizeof(int));
-  int *type = (int*)malloc(a->nf * sizeof(int));
+	Coords *dpoint = (Coords*)malloc(a->nf * sizeof(Coords));
+	double *time = (double*)malloc(a->nf * sizeof(double));
+	Coords *point = (Coords*)malloc(a->nf * sizeof(Coords));
+	int *plane_number = (int*)malloc(a->nf * sizeof(int));
+	int *type = (int*)malloc(a->nf * sizeof(int));
 
-  if (dtype==NULL || dpoint==NULL || time==NULL || point == NULL || plan_number==null || type == NULL) {
-    // Handle memory allocation failure
-    fprintf(stderr, "Memory allocation failed in line_polyhedron_intersect\n");
-    free(dtime);
-    free(dpoint);
-    free(time);
-    free(point);
-    free(plane_number);
-    return 0;
-  }
-
+	if (dtype == NULL || dpoint == NULL || time == NULL || point == NULL || plan_number == NULL || type == NULL) {
+		// Handle memory allocation failure
+		fprintf(stderr, "Memory allocation failed in line_polyhedron_intersect\n");
+		free(dtime);
+		free(dpoint);
+		free(time);
+		free(point);
+		free(plane_number);
+		free(type);
+		return 0;
+	}
 
 	//first find all the potential intersects that happens immediately or in the future.
 	LinePolyhedronIntersect *lpi = &(a->lpi);
@@ -773,16 +773,14 @@ int line_polyhedron_intersect(double line_t, Coords line_p, Coords line_v,
 	if (n_intersect_found == 0) {
 		//no intersect
 		*num_intersect = 0;
-
-    // Ensure to free the allocated memory after use
-    free(dtime);
-    free(dpoint);
-    free(time);
-    free(point);
-    free(plane_number);
-    free(type);
-
-    return 1;
+		// Ensure to free the allocated memory after use
+		free(dtime);
+		free(dpoint);
+		free(time);
+		free(point);
+		free(plane_number);
+		free(type);
+		return 1;
 	}
 	
 	if (*num_intersect <= 0) {
@@ -836,8 +834,6 @@ int line_polyhedron_intersect(double line_t, Coords line_p, Coords line_v,
   free(point);
   free(plane_number);
   free(type);
-
-
   return 1;
 }
 
