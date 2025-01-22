@@ -674,7 +674,7 @@ int line_polyhedron_intersect(double line_t, Coords line_p, Coords line_v,
     free(time);
     free(point);
     free(plane_number);
-    exit(EXIT_FAILURE);
+    return 0;
   }
 
 
