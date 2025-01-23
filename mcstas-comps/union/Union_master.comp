@@ -578,7 +578,6 @@ exit(-1);
   //  activation counter input for geometries, and is here condensed to the active variable.
   // Volumes that were used before
   
-  
   max_number_of_processes = 0; // The maximum number of processes in a volume is assumed 0 and updated during the following loop
   
   volume_index = 0;
@@ -816,6 +815,7 @@ exit(-1);
   interface_stack.number_of_surfaces = 2*longest_surface_stack;
   interface_stack.p_surface_array = malloc(interface_stack.number_of_surfaces*sizeof(struct surface_process_struct*));
   
+  
   // Allocate memory for logger_conditional_extend_array used in the extend section of the master component, if it is needed.
   if (max_conditional_extend_index > -1) {
     logger_conditional_extend_array = malloc((max_conditional_extend_index + 1)*sizeof(int));
@@ -845,6 +845,7 @@ exit(-1);
         Volumes[volume_index]->geometry.masked_by_mask_index_list.elements[iterator] = find_on_int_list(mask_volume_index_list,Volumes[volume_index]->geometry.masked_by_list.elements[iterator]);
   }
   
+  
   int volume_index_main;
   
   // Checking for equal priorities in order to alert the user to a potential input error
@@ -858,7 +859,6 @@ exit(-1);
             }
         }
   }
-  
   
   // Printing the generated lists for all volumes.
   MPI_MASTER(
@@ -2299,7 +2299,7 @@ TRACE
                   //StdReflecFunc(q_normal, par, &reflectivity);
 				  
 				  // Reflectivity calculation
-				  if (n2/n1 < 1) {
+				  if (n2/n1 < 1.0) {
 				    // qc exists
 				  	qc = 4.0*PI*sin(acos(n2/n1))/lambda;
 				    if (q_normal < qc) {
@@ -2335,7 +2335,7 @@ TRACE
                 
                   // reflected ray: probability R
                   // reflected beam:     I + 2cos(theta1).N
-                  Coords I_reflect = coords_add(I, coords_scale(N, 2*cos_theta1));
+                  Coords I_reflect = coords_add(I, coords_scale(N, 2.0*cos_theta1));
                   // reflected velocity: I_reflect.v
                   Coords V_reflect = coords_scale(I_reflect, v_length);
                 
@@ -2374,6 +2374,13 @@ TRACE
                           // Reset origin point for ray
                           r_start[0] = x; r_start[1] = y; r_start[2] = z;
                           time_propagated_without_scattering = 0.0;
+						  
+						  /*
+						  if (vx*nx + vy*ny + nz*vz < 0) {
+							  printf("Negative dot product betwen v and n after reflection, problem? value = %lf\n", vx*nx + vy*ny + nz*vz);
+							  //ABSORB;							  
+						  }
+						  */
                         
                           /*
                            #ifndef OPENACC
@@ -2408,6 +2415,13 @@ TRACE
                           // Reset origin point for ray
                           r_start[0] = x; r_start[1] = y; r_start[2] = z;
                           time_propagated_without_scattering = 0.0;
+						  
+						  /*
+						  if (vx*nx + vy*ny + nz*vz > 0) {
+							  printf("Positive dot product betwen v and n after refraction, problem? value = %lf\n", vx*nx + vy*ny + nz*vz);
+							  //ABSORB;
+						  }
+						  */
                         
                           /*
                         
@@ -2445,6 +2459,14 @@ TRACE
                       // Reset origin point for ray
                       r_start[0] = x; r_start[1] = y; r_start[2] = z;
                       time_propagated_without_scattering = 0.0;
+					  
+					  /*
+					  if (vx*nx + vy*ny + nz*vz < 0) {
+						  printf("Negative dot product betwen v and n after reflection, problem? value = %lf\n", vx*nx + vy*ny + nz*vz);
+						  // ABSORB;						  
+					  }
+					  */
+					  
                       /*
                        #ifndef OPENACC
                        strcpy(event, "reflect");
@@ -2853,6 +2875,7 @@ MCDISPLAY
   magnify("xyz");
   struct lines_to_draw lines_to_draw_master;
   for (volume_index=1; volume_index<number_of_volumes; volume_index++) {
+	  
         if (Volumes[volume_index]->geometry.visualization_on == 1) {
             lines_to_draw_master.number_of_lines = 0;
             

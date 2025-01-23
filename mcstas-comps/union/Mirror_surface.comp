@@ -9,19 +9,17 @@
 * Version: $Revision: 0.1 $
 * Origin: University of Copenhagen
 *
-* A template process for building Union surface processes
+* A Mirror surface process
 *
 * %D
 *
-* This is a template for a new contributor to create their own surface process.
-* The comments in this file are meant to teach the user about creating their own 
-*  surface component, rather than explaining this one. For comments on how this 
-*  code works, look in the Mirror_surface.comp.
-* To add a new surface process, three changes are needed in other files:
-*  Add entry in surface enum (match your process)
-*  Add storage struct in the union-lib.c file
-*  Add the surface function in inion-suffix.c switch
-*
+* This is a Union surface process that describes a supermirror or other surface
+*  that only have specular reflection. The reflectivity can be given as a file
+*  or using the standard reflectivity inputs. To use this in a simulation an
+*  instance of this component should be defined in the instrument file, then
+*  attatched to one or more geometries in their surface stacks pertaining to
+*  each face of the geometry.
+*  
 * Part of the Union components, a set of components that work together and thus
 *  sperates geometry and physics within McStas.
 * The use of this component requires other components to be used.
@@ -55,7 +53,7 @@
 * %E
 ******************************************************************************/
 
-DEFINE COMPONENT Template_surface // Remember to change the name of process here
+DEFINE COMPONENT Mirror_surface // Remember to change the name of process here
 
 SETTING PARAMETERS(string reflect=0, R0=0.99, Qc=0.0219, alpha=6.07, m=2, W=0.003, string init="init")
 
@@ -63,7 +61,7 @@ SETTING PARAMETERS(string reflect=0, R0=0.99, Qc=0.0219, alpha=6.07, m=2, W=0.00
 SHARE
 %{
 #ifndef Union
-#error "The Union_init component must be included before this Template_surface component"
+#error "The Union_init component must be included before this Mirror_surface component"
 #endif
 	
 	
@@ -71,7 +69,7 @@ SHARE
 %include "ref-lib"
 
 // Very important to add a pointer to this struct in the union-lib.c file
-struct Template_surface_storage_struct{
+struct Mirror_surface_storage_struct{
     // Variables that needs to be transfered between any of the following places:
     // The initialize in this component
     // The function for calculating my
@@ -85,7 +83,7 @@ struct Template_surface_storage_struct{
 
 // Function for handling surface physics
 // The input for this function and its order may not be changed, but the names may be updated.
-int Template_surface_function(union surface_data_transfer_union data_transfer, // data in struct defined above, can have data stored in initialize and other calls to this function
+int Mirror_surface_function(union surface_data_transfer_union data_transfer, // data in struct defined above, can have data stored in initialize and other calls to this function
                               double *weight, double *wavevector, int *continues, // given weight and wavevector, to be updated, and pointer to continues which should be provided by function
 							  double *normal_vector, enum in_or_out inward_or_outward, // normal_vector of surface and information on whether the neutron is going into or out of this surface
 							  _class_particle *_particle) {
@@ -93,8 +91,8 @@ int Template_surface_function(union surface_data_transfer_union data_transfer, /
     // wavevector and normal_vector are a pointers to a simple array with 3 doubles, wavevector[0], wavevector[1], wavevector[2] which describes the vector
 
 	// Retrieve data storage struct
-	struct Template_surface_storage_struct *storage;
-	storage = data_transfer.pointer_to_a_Template_surface_storage_struct;
+	struct Mirror_surface_storage_struct *storage;
+	storage = data_transfer.pointer_to_a_Mirror_surface_storage_struct;
 
 	double k_n_dot = wavevector[0]*normal_vector[0] + wavevector[1]*normal_vector[1] + wavevector[2]*normal_vector[2];
 
@@ -124,7 +122,7 @@ int Template_surface_function(union surface_data_transfer_union data_transfer, /
     return 1;
 	
     // There is access to the data_transfer from within this function:
-    // int table_present = data_transfer.pointer_to_a_Template_physics_storage_struct->table_present;
+    // int table_present = data_transfer.pointer_to_a_Mirror_physics_storage_struct->table_present;
 	// Its even possible to write to this data structure and use results for a later ray if relevant
 };
 
@@ -133,15 +131,15 @@ int Template_surface_function(union surface_data_transfer_union data_transfer, /
 #ifndef SURFACE_DETECTOR
     #define SURFACE_DETECTOR dummy
 #endif
-#ifndef SURFACE_PROCESS_TEMPLATE_DETECTOR
-    #define SURFACE_PROCESS_TEMPLATE_DETECTOR dummy
+#ifndef SURFACE_PROCESS_MIRROR_DETECTOR
+    #define SURFACE_PROCESS_MIRROR_DETECTOR dummy
 #endif
 %}
 
 DECLARE
 %{
 // Declare for this component, to do calculations on the input / store in the transported data
-struct Template_surface_storage_struct Template_storage; // Replace template with your own name here
+struct Mirror_surface_storage_struct Mirror_storage; // Replace Mirror with your own name here
 
 // Needed for transport to the main component, will be the same for all surface processes
 struct global_surface_element_struct global_surface_element;
@@ -152,23 +150,23 @@ INITIALIZE
 %{
   // Initialize done in the component
   if (reflect && strlen(reflect) && strcmp(reflect,"NULL") && strcmp(reflect,"0")) {
-	    if (Table_Read(&Template_storage.pTable, reflect, 1) <= 0) /* read 1st block data from file into pTable */
-	      exit(fprintf(stderr,"Template_surface: %s: can not read file %s\n", NAME_CURRENT_COMP, reflect));
-	    Template_storage.table_present=1;
+	    if (Table_Read(&Mirror_storage.pTable, reflect, 1) <= 0) /* read 1st block data from file into pTable */
+	      exit(fprintf(stderr,"Mirror_surface: %s: can not read file %s\n", NAME_CURRENT_COMP, reflect));
+	    Mirror_storage.table_present=1;
   } else {
-	    Template_storage.table_present=0;
+	    Mirror_storage.table_present=0;
 	    if (W < 0 || R0 < 0 || Qc < 0 || m < 0) { 
-			fprintf(stderr,"Template_surface: %s: W R0 Qc must be >0.\n", NAME_CURRENT_COMP);
+			fprintf(stderr,"Mirror_surface: %s: W R0 Qc must be >0.\n", NAME_CURRENT_COMP);
 	        exit(-1); 
 	    }
   }
   
   // Insert input parameter to par array as required for the standard reflectivity function
-  Template_storage.par[0] = R0;
-  Template_storage.par[1] = Qc;
-  Template_storage.par[2] = alpha;
-  Template_storage.par[3] = m;
-  Template_storage.par[4] = W;  
+  Mirror_storage.par[0] = R0;
+  Mirror_storage.par[1] = Qc;
+  Mirror_storage.par[2] = alpha;
+  Mirror_storage.par[3] = m;
+  Mirror_storage.par[4] = W;  
 
   // Will need to do similar system for surfaces
   // Need to specify if this process is isotropic
@@ -177,10 +175,10 @@ INITIALIZE
   //rot_copy(This_surface.rotation_matrix, ROT_A_CURRENT_COMP);
 
   // The type of the process must be saved in the global enum process located in union-lib.c
-  This_surface.eSurface = SurfaceTemplate;
+  This_surface.eSurface = Mirror;
 
   // Packing the data into a structure that is transported to the main component
-  This_surface.data_transfer.pointer_to_a_Template_surface_storage_struct = &Template_storage;
+  This_surface.data_transfer.pointer_to_a_Mirror_surface_storage_struct = &Mirror_storage;
 
   // This will be the same for all process's, and can thus be moved to an include.
   sprintf(This_surface.name,"%s",NAME_CURRENT_COMP);
@@ -189,7 +187,7 @@ INITIALIZE
   global_surface_element.p_surface_process = &This_surface;
 
   if (_getcomp_index(init) < 0) {
-    fprintf(stderr,"Template_surface:%s: Error identifying Union_init component, %s is not a known component name.\n",
+    fprintf(stderr,"Mirror_surface:%s: Error identifying Union_init component, %s is not a known component name.\n",
     NAME_CURRENT_COMP, init);
     exit(-1);
   }
@@ -204,3 +202,4 @@ TRACE
 %}
 
 END
+

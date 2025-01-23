@@ -38,7 +38,7 @@ enum process {
 
 enum surface {
   Mirror,
-  SurfaceTemplate	  	
+  SurfaceTemplate  	
 };
 
 enum in_or_out {
@@ -410,8 +410,8 @@ struct pointer_to_1d_int_list focus_array_indices; // Add 1D integer array with 
 
 
 // intersect_function takes position/velocity of ray and parameters, returns time list
-int (*intersect_function)(double*, double*, double*, double*, int*, int*,double*,double*,struct geometry_struct*);
-//                        t_array, nx array, ny array, nz array, surface_index  array, n arary, r ,v
+int (*intersect_function)(double*, double*, double*, double*, int*, int*, double*, double*, struct geometry_struct*);
+//                        t_array, nx array, ny array, nz array, surface_index array, n arary, r ,v
 
 // within_function that checks if the ray origin is within this volume
 int (*within_function)(Coords,struct geometry_struct*);
@@ -517,7 +517,7 @@ int (*scattering_function)(double*,double*,double*,union data_transfer_union,str
 
 union surface_data_transfer_union 
 {
-	//struct Mirror_surface_storage_struct *pointer_to_a_Mirror_surface_storage_struct;
+	struct Mirror_surface_storage_struct *pointer_to_a_Mirror_surface_storage_struct;
 	struct Template_surface_storage_struct *pointer_to_a_Template_surface_storage_struct;	
 };
 
@@ -2020,15 +2020,15 @@ struct lines_to_draw draw_line_with_highest_priority(Coords position1,Coords pos
     int geometry_output;
     
 	// Todo: switch to nicer intersect function call
-	double double_dummy;
-	int int_dummy;
+	double double_dummy[2];
+	int int_dummy[2];
 	
 	
     // Find intersections
     for (volume_index = 1;volume_index < number_of_volumes; volume_index++) {
         if (volume_index != N) {
-            geometry_output = Geometries[volume_index]->intersect_function(temp_intersection, &double_dummy, &double_dummy, &double_dummy, &int_dummy, 
-			                                                               &number_of_solutions,r1,direction,Geometries[volume_index]);
+            geometry_output = Geometries[volume_index]->intersect_function(temp_intersection, double_dummy, double_dummy, double_dummy, int_dummy, 
+			                                                               &number_of_solutions, r1, direction, Geometries[volume_index]);
              // printf("No solutions for intersection (Volume %d) with %d \n",N,volume_index);
                 for (iterate=0;iterate<number_of_solutions;iterate++) {
                     // print_1d_double_list(intersection_list,"intersection_list");
@@ -2793,7 +2793,8 @@ int sample_box_intersect_simple(double *t, double *nx, double *ny, double *nz, i
     int output;
     // Run McStas built in box intersect funtion (box centered around origin)
     if ((output = box_intersect(&t[0],&t[1],rotated_coordinates.x,rotated_coordinates.y,rotated_coordinates.z,rotated_velocity.x,rotated_velocity.y,rotated_velocity.z,width,height,depth)) == 0) {
-        *num_solutions = 0;t[0]=-1;t[1]=-1;}
+        *num_solutions = 0;t[0]=-1;t[1]=-1;
+	}
     else if (t[1] != 0) *num_solutions = 2;
     else {*num_solutions = 1;t[1]=-1;} // t[2] is a memory error!
 	
@@ -2813,7 +2814,18 @@ int sample_box_intersect_simple(double *t, double *nx, double *ny, double *nz, i
         z = rotated_coordinates.z + dt*rotated_velocity.z;
         
         // determine hit face: difference to plane is closest to 0 (in box coordinate system)
-        normal_vector_rotated = coords_set(trunc(2.002*x/width), trunc(2.002*y/height), trunc(2.002*z/depth));
+		// A deviation of 0 means its on that surface, due to finite accuracy it will never be exact, so the closest is chosen
+		double x_deviation = fabs(fabs(x/width) - 0.5); 
+	    double y_deviation =  fabs(fabs(y/height) - 0.5);
+		double z_deviation = fabs(fabs(z/depth) - 0.5);
+		
+		if (x_deviation <= y_deviation && x_deviation <= z_deviation) {
+		    normal_vector_rotated = coords_set(x > 0 ? 1.0 : -1.0, 0.0, 0.0);
+		} else if (y_deviation <= x_deviation && y_deviation <= z_deviation) {
+		    normal_vector_rotated = coords_set(0.0, y > 0 ? 1.0 : -1.0, 0.0);
+		} else {
+		    normal_vector_rotated = coords_set(0.0, 0.0, z > 0 ? 1.0 : -1.0);
+		}
 		
 		// Set surface index
 		if (normal_vector_rotated.z < -0.5)
@@ -2842,6 +2854,8 @@ int sample_box_intersect_simple(double *t, double *nx, double *ny, double *nz, i
         nx[index] = normal_vector.x;
         ny[index] = normal_vector.y;
         nz[index] = normal_vector.z;
+		
+		NORM(nx[index], ny[index], nz[index]);
     }
     
     return output;
@@ -3933,10 +3947,10 @@ int existence_of_intersection(Coords point1, Coords point2, struct geometry_stru
     vector_between_v[0] = vector_between.x;vector_between_v[1] = vector_between.y;vector_between_v[2] = vector_between.z;
 	
 	// todo: Switch to nicer intersect call
-	double dummy_double;
-	int dummy_int;
+	double dummy_double[2];
+	int dummy_int[2];
 	
-    geometry->intersect_function(temp_solution, &dummy_double, &dummy_double, &dummy_double, &dummy_int, &number_of_solutions,start_point,vector_between_v,geometry);
+    geometry->intersect_function(temp_solution, dummy_double, dummy_double, dummy_double, dummy_int, &number_of_solutions, start_point, vector_between_v, geometry);
     if (number_of_solutions > 0) {
         if (temp_solution[0] > 0 && temp_solution[0] < 1) return 1;
         if (number_of_solutions == 2) {
