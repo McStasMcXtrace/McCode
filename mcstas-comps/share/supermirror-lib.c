@@ -295,6 +295,11 @@ int to_lower_case(char *in, char **out)
 /********************************************************************************/
 FILE *sm_open_file(char *File, const char *Mode, char *Path, int*file_location_option) {
 
+/* portability - for VC on Windows */
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
 	char path[PATH_MAX];
 	FILE *hfile = NULL;
 	
