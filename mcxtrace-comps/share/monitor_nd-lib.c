@@ -711,6 +711,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     }
       /* no Mon2D allocated for
        * (Vars->Coord_Number != 2) && !Vars->Flag_Multiple && Vars->Flag_List */
+
     Vars->psum  = 0;
     Vars->p2sum = 0;
     Vars->Nsum  = 0;
@@ -985,7 +986,7 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_LAMBDA) { if (k!=0) XY = 2*M_PI/k; }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_NCOUNT) XY = ParticleCount;
+	  if (Set_Vars_Coord_Type == DEFS->COORD_NCOUNT) XY = _particle->_uid;
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_ANGLE)
         {  XY = sqrt(_particle->kx*_particle->kx+_particle->ky*_particle->ky);
@@ -1147,6 +1148,7 @@ int Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Var
 /* ========================================================================= */
 /* Monitor_nD_Save: this routine is used to save data files                  */
 /* ========================================================================= */
+
 MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars)
   {
     char   *fname;
@@ -1339,7 +1341,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
           if (strchr(Vars->Mon_File,'.') == NULL)
           { strcat(fname, "."); strcat(fname, Vars->Coord_Var[i]); }
         }
-        if (Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", Vars->compcurname, fname,Vars->Photon_Counter,Vars->Coord_Number);
+        if (Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", Vars->compcurname, fname,(long int)Vars->Photon_Counter,Vars->Coord_Number);
 
         /* handle the type of list output */
         strcpy(label, Vars->Monitor_Label);
@@ -1510,7 +1512,18 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
           if (Vars->Coord_Bin[1]*Vars->Coord_Bin[2] > 1
            && Vars->Flag_signal == DEFS->COORD_P)
             strcat(label, " per bin");
-
+	  if (Vars->Flag_List) {
+            detector = mcdetector_out_2D_list(
+              label,
+              Vars->Coord_Label[1],
+	      Vars->Coord_Label[2],
+	      min1d, max1d,
+	      min2d, max2d,
+	      Vars->Coord_Bin[1],
+	      Vars->Coord_Bin[2],
+	      p0m,p1m,p2m,
+	      fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot,Vars->option);
+	  } else {
           detector = mcdetector_out_2D(
             label,
             Vars->Coord_Label[1],
@@ -1532,6 +1545,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
         }
       }
       free(fname);
+    }
       return(detector);
   } /* end Monitor_nD_Save */
 
@@ -1658,8 +1672,10 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
       int issphere;
       issphere = (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE);
       width = (hdiv_max-hdiv_min)/NH;
-      if (!issphere) NV=1; /* cylinder has vertical axis */
-      else height= (vdiv_max-vdiv_min)/NV;
+      if (!issphere) {
+	NV=1; /* cylinder has vertical axis */
+      }
+      height= (vdiv_max-vdiv_min)/NV;
       
       /* check width and height of elements (sphere) to make sure the nb
          of plates remains limited */
