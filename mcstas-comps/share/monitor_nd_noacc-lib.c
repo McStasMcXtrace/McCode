@@ -171,7 +171,7 @@ void Monitor_nd_noaccInit(Monitornd_noaccDefines_type *DEFS,
     Vars->Coord_NumberNoPixel=0;   /* same but without counting PixelID */
 
     Vars->Buffer_Block      = MONND_BUFSIZ;     /* Buffer size for list or auto limits */	
-    Vars->Neutron_Counter   = -1;   /* event counter, simulation total counts is mcget_ncount() */
+    Vars->Neutron_Counter   = 0;   /* event counter, simulation total counts is mcget_ncount() */
     Vars->Buffer_Counter    = 0;   /* index in Buffer size (for realloc) */
     Vars->Buffer_Size       = 0;
     Vars->He3_pressure      = 0;
@@ -1000,6 +1000,9 @@ int Monitor_nd_noaccTrace(Monitornd_noaccDefines_type *DEFS, Monitornd_noaccVari
   long    While_Buffer=0;
   char    Set_Vars_Coord_Type = DEFS->COORD_NONE;
   
+  long long ParticleCount;
+    ParticleCount=Vars->Neutron_Counter++;
+
   /* the logic below depends mainly on:
        Flag_List:        1=store 1 buffer, 2=list all, 3=re-use buffer 
        Flag_Auto_Limits: 0 (no auto limits/list), 1 (store events into Buffer), 2 (re-emit store events)
@@ -1042,18 +1045,17 @@ int Monitor_nd_noaccTrace(Monitornd_noaccDefines_type *DEFS, Monitornd_noaccVari
       Vars->Buffer_Block = Vars->Buffer_Size;
       Vars->Buffer_Counter  = 0;
       Vars->Neutron_Counter = 0;
-
     }
     else
     {
-      Vars->Mon2D_Buffer  = (double *)realloc(Vars->Mon2D_Buffer, (Vars->Coord_Number+1)*(Vars->Neutron_Counter+Vars->Buffer_Block)*sizeof(double));
+      Vars->Mon2D_Buffer  = (double *)realloc(Vars->Mon2D_Buffer, (Vars->Coord_Number+1)*(ParticleCount+Vars->Buffer_Block)*sizeof(double));
       if (Vars->Mon2D_Buffer == NULL)
-            { printf("Monitor_nD: %s cannot reallocate Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", Vars->compcurname, i, (long int)(Vars->Neutron_Counter+Vars->Buffer_Block)*sizeof(double)); Vars->Flag_List = 1; }
-      else { Vars->Buffer_Counter = 0; Vars->Buffer_Size = Vars->Neutron_Counter+Vars->Buffer_Block; }
+            { printf("Monitor_nD: %s cannot reallocate Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", Vars->compcurname, i, (long int)(ParticleCount+Vars->Buffer_Block)*sizeof(double)); Vars->Flag_List = 1; }
+      else { Vars->Buffer_Counter = 0; Vars->Buffer_Size = ParticleCount+Vars->Buffer_Block; }
     }
   } /* end if Buffer realloc */
 #endif
- 
+
   char    outsidebounds=0;
   while (!While_End)
   { /* we generate Coord[] and Coord_index[] from Buffer (auto limits) or passing neutron */
@@ -1254,7 +1256,7 @@ int Monitor_nd_noaccTrace(Monitornd_noaccDefines_type *DEFS, Monitornd_noaccVari
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_LAMBDA) { XY = sqrt(_particle->vx*_particle->vx+_particle->vy*_particle->vy+_particle->vz*_particle->vz);  XY *= V2K; if (XY != 0) XY = 2*PI/XY; }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_NCOUNT) XY = Vars->Neutron_Counter;
+	  if (Set_Vars_Coord_Type == DEFS->COORD_NCOUNT) XY = _particle->_uid;
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_ANGLE)
         {  XY = sqrt(_particle->vx*_particle->vx+_particle->vy*_particle->vy);
@@ -1381,13 +1383,9 @@ int Monitor_nd_noaccTrace(Monitornd_noaccDefines_type *DEFS, Monitornd_noaccVari
     { /* now store Coord into Buffer (no index needed) if necessary (list or auto limits) */
       if ((Vars->Buffer_Counter < Vars->Buffer_Block) && ((Vars->Flag_List) || (Vars->Flag_Auto_Limits == 1)))
       {
-        #pragma acc atomic
-        Vars->Neutron_Counter = Vars->Neutron_Counter + 1;
         for (i = 0; i <= Vars->Coord_Number; i++)
         {
-	  // This is is where the list is appended. How to make this "atomic"?
-          #pragma acc atomic write 
-          Vars->Mon2D_Buffer[i + Vars->Neutron_Counter*(Vars->Coord_Number+1)] = Coord[i];
+          Vars->Mon2D_Buffer[i + ParticleCount*(Vars->Coord_Number+1)] = Coord[i];
         }
 	#pragma acc atomic 
         Vars->Buffer_Counter = Vars->Buffer_Counter + 1;
@@ -1994,13 +1992,11 @@ void Monitor_nd_noaccMcDisplay(Monitornd_noaccDefines_type *DEFS,
         }
       if (Vars->Flag_mantid) {
 	/* First define the base pixel type */
-	#ifndef OPENACC
 	double dt, dy;
 	dt = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
 	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
-	printf("MANTID_BANANA_DET:  %g, %g, %g, %g, %g, %li, %li, %g\n", radius, 
-	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2], Vars->Coord_Min[4]); 
-	#endif
+	printf("MANTID_BANANA_DET:  %g, %g, %g, %g, %g, %li, %li, %llu\n", radius, 
+	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2], (long long unsigned)Vars->Coord_Min[4]); 
       }
     }
     /* disk (circle) */
@@ -2022,14 +2018,12 @@ void Monitor_nd_noaccMcDisplay(Monitornd_noaccDefines_type *DEFS,
              (double)xmin, (double)ymin, 0.0);
       
       if (Vars->Flag_mantid) {
-	#ifndef OPENACC
 	/* First define the base pixel type */
 	double dx, dy;
 	dx = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
 	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
-	printf("MANTID_RECTANGULAR_DET:  %g, %g, %g, %g, %li, %li, %g\n", 
-	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2], Vars->Coord_Min[4]);
-	#endif
+	printf("MANTID_RECTANGULAR_DET:  %g, %g, %g, %g, %li, %li, %llu\n", 
+	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2], (long long unsigned)Vars->Coord_Min[4]);
       }
     }
     /* full cylinder/banana */
