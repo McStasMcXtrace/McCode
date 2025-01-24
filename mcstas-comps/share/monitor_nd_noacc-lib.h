@@ -190,8 +190,6 @@
     char   compcurname[128];
     Coords compcurpos;
     Rotation compcurrot;
-  } MonitornD_Variables_type;
-
   } Monitornd_noaccVariables_type;
 
 /* monitor_nd_noacc-lib function prototypes */
