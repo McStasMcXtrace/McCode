@@ -111,7 +111,7 @@ INITIALIZE
   if (strlen(rUpData) && strcmp(rUpData,"NULL")){
     if (Table_Read(&rUpTable, rUpData, 1) <= 0) {
       fprintf(stderr,"Pol_mirror: %s: can not read file %s\n",
-          NAME_CURRENT_COMP, rUpPar);
+          NAME_CURRENT_COMP, rUpData);
       exit(1);
     }
     rUpTableFlag=1;
@@ -121,7 +121,7 @@ INITIALIZE
   if (strlen(rUpData) && strcmp(rUpData,"NULL")){
     if (Table_Read(&rDownTable, rDownData, 1) <= 0) {
       fprintf(stderr,"Pol_mirror: %s: can not read file %s\n",
-          NAME_CURRENT_COMP, rDownPar);
+          NAME_CURRENT_COMP, rDownData);
       exit(1);
     }
     rDownTableFlag=1;
