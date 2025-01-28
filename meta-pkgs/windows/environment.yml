@@ -6,6 +6,8 @@ channels:
 
 dependencies:
   - m2-msys2-runtime
+  - m2-which
+  - m2-sed
   - m2w64-gcc
   - m2w64-gsl
   - msmpi
