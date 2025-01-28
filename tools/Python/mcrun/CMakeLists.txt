@@ -90,8 +90,8 @@ install(
   RENAME "${P}run.py"
   )
 
-# Other .py infrastructure
-foreach(NAME "__init__.py" "log.py" "mccode.py" "optimisation.py" "mcsplit.py")
+# Copy in place .py and other infrastructure
+foreach(NAME "__init__.py" "log.py" "mccode.py" "optimisation.py" "mcsplit.py" "template.ipynb.in")
   install(
     FILES "${PROJECT_SOURCE_DIR}/${NAME}"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"

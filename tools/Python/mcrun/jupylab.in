@@ -33,10 +33,9 @@ canrun() {
 if ( canrun ); then
     INSTR=$1 # We can actually assume a single input here
     BASE=`basename ${INSTR} .instr`
-    PYINSTR="${BASE}_generated.py"
     JUPYBK="${BASE}_generated.ipynb"
     @FLAVOR@-pygen ${INSTR}
-    jupytext --to ipynb ${PYINSTR}
+    sed s/@INSTR@/${INSTR}g ${UTILDIR}/template.ipynb.in > ${JUPYBK}
     jupyter lab ${JUPYBK}
 else
     @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
