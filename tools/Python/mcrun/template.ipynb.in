@@ -7,7 +7,7 @@
    "outputs": [],
    "source": [
     "import mcstasscript as ms\n",
-    "from @INSTR@_generated import make"
+    "from INSTRUMENT_generated import make"
    ]
   },
   {

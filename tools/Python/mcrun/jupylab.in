@@ -35,7 +35,7 @@ if ( canrun ); then
     BASE=`basename ${INSTR} .instr`
     JUPYBK="${BASE}_generated.ipynb"
     @FLAVOR@-pygen ${INSTR}
-    sed s/@INSTR@/${INSTR}g ${UTILDIR}/template.ipynb.in > ${JUPYBK}
+    sed s/INSTRUMENT/${BASE}/g ${UTILDIR}/template.ipynb.in > ${JUPYBK}
     jupyter lab ${JUPYBK}
 else
     @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
