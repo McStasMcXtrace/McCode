@@ -116,6 +116,8 @@ int Mirror_surface_function(union surface_data_transfer_union data_transfer, // 
 		wavevector[1] = wavevector[1] - 2.0 * k_n_dot * normal_vector[1];
 		wavevector[2] = wavevector[2] - 2.0 * k_n_dot * normal_vector[2];				
 		
+		if ((wavevector[0]*normal_vector[0] + wavevector[1]*normal_vector[1] + wavevector[2]*normal_vector[2])*k_n_dot > 0) printf("w.n same sign before and after reflection?? \n");
+		
 		*continues = 0; // Tells algorithm the ray does not go through this surface
 	}
 

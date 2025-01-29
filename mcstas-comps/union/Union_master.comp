@@ -2024,6 +2024,7 @@ TRACE
               printf(" TO VOLUME %d \n",current_volume);
             #endif
 			  
+			if (previous_volume != current_volume) { // With masks, it can happen that the ray takes an extra iteration within the same volume, can skip surface / refraction
               double n1, n2;
               int perform_refraction;
 			  
@@ -2050,7 +2051,7 @@ TRACE
 			  struct surface_stack_struct *entering_stack;
 			  
 			#ifdef Union_trace_verbal_setting
-			  	printf(" Creating leaving surface stack %d \n",current_volume);
+			  	printf(" Creating leaving surface stack %d \n",previous_volume);
 			#endif
 			
 			  if (previous_volume == 0) {
@@ -2090,7 +2091,7 @@ TRACE
 			  int n_total = n_leaving + n_entering;
 			  
 			#ifdef Union_trace_verbal_setting
-			  	printf(" Combining into one surface stack %d \n",current_volume);
+			  	printf(" Combining into one surface stack \n");
 			#endif
 			  
 			  // Make combined list, leaving bottom to top followed by entering top to bottom
@@ -2127,7 +2128,7 @@ TRACE
 			  surface_wavevector_before[2] = surface_wavevector[2];
 			  
 		      #ifdef Union_trace_verbal_setting
-			  	printf(" Entering surface stack loop %d \n",current_volume);
+			  	printf(" Entering surface stack loop \n");
  			  #endif
 			  
 			  while (1) {
@@ -2245,22 +2246,56 @@ TRACE
             
               if (previous_volume == 0) n1 = 1.0;
               else {
-                  if (Volumes[previous_volume]->p_physics->has_refraction_info == 0) perform_refraction = 0;
-                  n1 = sqrt(1.0-(lambda*lambda*Volumes[previous_volume]->p_physics->refraction_rho*Volumes[previous_volume]->p_physics->refraction_bc/PI));
+                  if (Volumes[previous_volume]->p_physics->has_refraction_info == 0 && Volumes[previous_volume]->p_physics->is_vacuum == 0) {
+                  	  perform_refraction = 0;
+                  } else {
+					
+				    if (Volumes[previous_volume]->p_physics->is_vacuum == 1) {
+					  n1 = 1.0;					  
+			        } else {
+                      n1 = sqrt(1.0-(lambda*lambda*Volumes[previous_volume]->p_physics->refraction_rho*Volumes[previous_volume]->p_physics->refraction_bc/PI));
+			        }
                 
-                  // If the intersection is found with this volume, it is leaving, and the normal needs to be flipped
-                  if (previous_volume == min_volume) {
+                    // If the intersection is found with this volume, it is leaving, and the normal needs to be flipped
+                    if (previous_volume == min_volume) {
                       nx *= -1;
                       ny *= -1;
                       nz *= -1;
-                  }
+					  
+                    }
+			      }
               }
             
               if (current_volume == 0) n2 = 1.0;
               else {
-                  if (Volumes[current_volume]->p_physics->has_refraction_info == 0) perform_refraction = 0;
-                  n2 = sqrt(1.0-(lambda*lambda*Volumes[current_volume]->p_physics->refraction_rho*Volumes[current_volume]->p_physics->refraction_bc/PI));
+                  if (Volumes[current_volume]->p_physics->has_refraction_info == 0 && Volumes[current_volume]->p_physics->is_vacuum == 0) {
+					   perform_refraction = 0;
+				  } else {
+					  
+				    if (Volumes[current_volume]->p_physics->is_vacuum == 1) {					  
+					  n2 = 1.0;
+				    } else {
+					  n2 = sqrt(1.0-(lambda*lambda*Volumes[current_volume]->p_physics->refraction_rho*Volumes[current_volume]->p_physics->refraction_bc/PI));
+			        }
+				  }
               }
+			  
+			  // Check if the two materials are the same, no need to check for refraction / reflection.
+			  if (perform_refraction == 1 && previous_volume != 0 && current_volume != 0) {
+				  if (strcmp(Volumes[previous_volume]->p_physics->name, Volumes[current_volume]->p_physics->name) == 0 ) {
+					  perform_refraction = 0;
+				  }
+			  }
+			  
+			  if (previous_volume == 0 && current_volume == 0) {
+			  	perform_refraction = 0; // Vacuum to vacuum
+			  } else if (previous_volume == 0) {
+			  	  if (Volumes[current_volume]->p_physics->is_vacuum == 1) perform_refraction = 0; // Vacuum to vacuum
+			  } else if (current_volume == 0) {
+			  	  if (Volumes[previous_volume]->p_physics->is_vacuum == 1) perform_refraction = 0; // Vacuum to vacuum
+			  } else {
+				  if (Volumes[previous_volume]->p_physics->is_vacuum == 1 && Volumes[current_volume]->p_physics->is_vacuum == 1) perform_refraction = 0; // Vacuum to vacuum
+			  }
 			  
               #ifdef Union_trace_verbal_setting
 			    if (perform_refraction == 1)
@@ -2293,7 +2328,6 @@ TRACE
 				  int use_fresnel;
 				  
 				  use_fresnel = 1;
-				  
 				  
                   /* Reflectivity (see component Guide). */
                   //StdReflecFunc(q_normal, par, &reflectivity);
@@ -2358,6 +2392,10 @@ TRACE
                           coords_get(V_reflect, &vx, &vy, &vz);
                         
                           current_volume = previous_volume; // Reflected, stays in current volume
+						  
+							#ifdef Union_trace_verbal_setting
+						  		printf(" Refraction system : ray reflected, (branch 1) going back to volume %d\n", previous_volume);
+							#endif
                         
                           // Update velocity in all ways used in master
                           v[0] = vx; v[1] = vy; v[2] = vz;
@@ -2397,6 +2435,9 @@ TRACE
                         
                           coords_get(V_refract, &vx, &vy, &vz);
                         
+                          #ifdef Union_trace_verbal_setting
+                          	printf(" Refraction system : ray refracted, continues to to volume %d\n", current_volume);
+                          #endif
 
                         
                           // Update velocity in all ways used in master
@@ -2438,8 +2479,11 @@ TRACE
                       if (0 < reflectivity && reflectivity < 1) p *= reflectivity; // should be R0
                       coords_get(V_reflect, &vx, &vy, &vz);
                     
-
                       current_volume = previous_volume; // Reflected, stays in current volume
+					  
+					  #ifdef Union_trace_verbal_setting
+					  	printf(" Refraction system : ray reflected (branch 3), going back to volume %d\n", previous_volume);
+					  #endif					  
                     
                       // Update velocity in all ways used in master
                       v[0] = vx; v[1] = vy; v[2] = vz;
@@ -2480,13 +2524,16 @@ TRACE
                       done = 1; // Exit volumes allow the ray to escape the component
                       ray_sucseeded = 1; // Allows the ray to leave loop
               }
+			
 			  
 		  #ifdef Union_trace_verbal_setting
 			  	printf("After refraction system \n");
 				printf("r = (%f,%f,%f) v = (%f,%f,%f) \n", x, y, z, vx, vy, vz);
 				printf("CURRENT_VOLUME = %d \n", current_volume);				
 		  #endif
-        }
+				
+		    } // End of if (previous_volume != current_volume)
+        } // End of scattering or propagation if
         
     } else { // Here because a shortest time is not found
         if (current_volume == 0) {
