@@ -815,6 +815,21 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     	long pix=Vars->Coord_Min[Vars->Coord_Number-1]; // Second to last col is min. pixel id
 		  
     	MCDETECTOR detector;
+	char nexuscomp[CHAR_BUF_LENGTH];
+	char pref[5];
+	if (Vars->compcurindex < 10) {
+	  sprintf(pref,"000");
+	} else if (Vars->compcurindex < 100) {
+	  sprintf(pref,"00");
+	} else if (Vars->compcurindex < 1000) {
+	  sprintf(pref,"0");
+	} else if (Vars->compcurindex < 10000) {
+	  sprintf(pref,"");
+	} else {
+	  fprintf(stderr,"Error, no support for more than 10k McStas comps at the moment!\n");
+	  exit(-1);
+	}
+
     	/* Init - perhaps better with an init-function in mccode-r? */
     	detector.m = 0;
     	detector.xmin = 0;
@@ -844,6 +859,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 
     	sprintf(detector.filename,"BINS");
     	sprintf(detector.component,"%s",Vars->compcurname);
+	sprintf(detector.nexuscomp,"%s%d_%s",pref,Vars->compcurindex-1,detector.component);
     	sprintf(detector.format,"pixels");
 	
     	if(!Vars->Flag_OFF) {
@@ -886,7 +902,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     	}
 	  
     	long k,l,m;
-	  
     	if (N_spatial_dims==1) { // 1D case or ND
     	  detector.m=numbins;
     	  detector.n=1;
@@ -1583,7 +1598,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
       if (Vars->Flag_signal != DEFS->COORD_P && Nsum > 0)
       { psum /=Nsum; p2sum /= Nsum*Nsum; }
       /* DETECTOR_OUT_0D(Vars->Monitor_Label, Vars->Nsum, Vars->psum, Vars->p2sum); */
-      detector = mcdetector_out_0D(Vars->Monitor_Label, Nsum, psum, p2sum, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
+      detector = mcdetector_out_0D(Vars->Monitor_Label, Nsum, psum, p2sum, Vars->compcurname, Vars->compcurpos, Vars->compcurrot,Vars->compcurindex);
     }
     else
     if (strlen(Vars->Mon_File) > 0)
@@ -1615,7 +1630,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
               label, "List of neutron events", Coord_X_Label,
               -Vars->Buffer_Size, Vars->Coord_Number+1,
               Vars->Mon2D_Buffer,
-              fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot, Vars->option);
+              fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot, Vars->option,Vars->compcurindex);
       }
       if (Vars->Flag_Multiple) /* n1D: DETECTOR_OUT_1D */
       {
@@ -1646,7 +1661,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
               min1d, max1d,
               Vars->Coord_Bin[i+1],
               Vars->Mon2D_N[i],Vars->Mon2D_p[i],Vars->Mon2D_p2[i],
-              fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
+              fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot,Vars->compcurindex);
             } /* if (p2m == NULL) */
             else
             {
@@ -1689,7 +1704,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
                 min1d, max1d,
                 Vars->Coord_Bin[i+1],
                 Vars->Mon2D_N[i],p1m,p2m,
-                fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
+                fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot,Vars->compcurindex);
 
             } /* else */
             /* comment out 'free memory' lines to avoid loosing arrays if
@@ -1698,7 +1713,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
             if (p2m != NULL) free(p2m); p2m=NULL;
             */
           } else { /* 0d monitor */
-            detector = mcdetector_out_0D(label, Vars->Mon2D_p[i][0], Vars->Mon2D_p2[i][0], Vars->Mon2D_N[i][0], Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
+            detector = mcdetector_out_0D(label, Vars->Mon2D_p[i][0], Vars->Mon2D_p2[i][0], Vars->Mon2D_N[i][0], Vars->compcurname, Vars->compcurpos, Vars->compcurrot,Vars->compcurindex);
           }
 
 
@@ -1787,7 +1802,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
 	      Vars->Coord_Bin[1],
 	      Vars->Coord_Bin[2],
 	      p0m,p1m,p2m,
-	      fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot,Vars->option);
+	      fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot,Vars->option,Vars->compcurindex);
 	  } else {
             detector = mcdetector_out_2D(
               label,
@@ -1798,7 +1813,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
 	      Vars->Coord_Bin[1],
 	      Vars->Coord_Bin[2],
 	      p0m,p1m,p2m,
-	      fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
+	      fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot,Vars->compcurindex);
 	  }
 
           /* comment out 'free memory' lines to avoid loosing arrays if
