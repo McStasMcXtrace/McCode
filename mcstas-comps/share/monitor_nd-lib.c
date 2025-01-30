@@ -817,13 +817,13 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     	MCDETECTOR detector;
 	char nexuscomp[CHAR_BUF_LENGTH];
 	char pref[5];
-	if (Vars->compcurindex < 10) {
+	if (Vars->compcurindex-1 < 10) {
 	  sprintf(pref,"000");
-	} else if (Vars->compcurindex < 100) {
+	} else if (Vars->compcurindex-1 < 100) {
 	  sprintf(pref,"00");
-	} else if (Vars->compcurindex < 1000) {
+	} else if (Vars->compcurindex-1 < 1000) {
 	  sprintf(pref,"0");
-	} else if (Vars->compcurindex < 10000) {
+	} else if (Vars->compcurindex-1 < 10000) {
 	  sprintf(pref,"");
 	} else {
 	  fprintf(stderr,"Error, no support for > 10000 comps at the moment!\n");

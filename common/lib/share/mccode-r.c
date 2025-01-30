@@ -933,13 +933,13 @@ MCDETECTOR detector_import(
   strncpy (detector.component, component ? component : MCCODE_STRING " component", CHAR_BUF_LENGTH);
   #ifdef USE_NEXUS
   char pref[5];
-  if (index < 10) {
+  if (index-1 < 10) {
     sprintf(pref,"000");
-  } else if (index < 100) {
+  } else if (index-1 < 100) {
     sprintf(pref,"00");
-  } else if (index < 1000) {
+  } else if (index-1 < 1000) {
     sprintf(pref,"0");
-  } else if (index < 10000) {
+  } else if (index-1 < 10000) {
     sprintf(pref,"");
   } else {
     fprintf(stderr,"Error, no support for > 10000 comps at the moment!\n");

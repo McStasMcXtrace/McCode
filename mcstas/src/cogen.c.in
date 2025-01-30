@@ -999,13 +999,13 @@ int cogen_comp_setpos(
   cogen_comp_init_position(comp, last, instr); // specific to each instance
 
   char pref[5];
-  if (comp->index < 10) {
+  if (comp->index-1 < 10) {
     sprintf(pref,"000");
-  } else if (comp->index < 100) {
+  } else if (comp->index-1 < 100) {
     sprintf(pref,"00");
-  } else if (comp->index < 1000) {
+  } else if (comp->index-1 < 1000) {
     sprintf(pref,"0");
-  } else if (comp->index < 10000) {
+  } else if (comp->index-1 < 10000) {
     sprintf(pref,"");
   } else {
     printf(stderr,"Error, no support for > 10000 comps at the moment!\n");
