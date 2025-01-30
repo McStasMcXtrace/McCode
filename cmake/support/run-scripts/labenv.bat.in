@@ -13,8 +13,9 @@ SET EXT=%%~xi
 
 @IF "%EXT%"==".instr" (
   @FLAVOR@-pygen %INSTRUMENT%
-  SET INSTRUMENT="%BASE%_generated.py"
-  goto :JupyText 
+  sed s/INSTRUMENT/%BASE%/g %BINDIR%\@MCCODE_RELPATH_BINDIR2TOOLDIR@\Python\@MCCODE_PREFIX@run\template.ipynb.in > %BASE%_generated.ipynb
+  SET INSTRUMENT="%BASE%_generated.ipynb"
+  goto :JupyLaunch 
 ) ELSE IF "%EXT%"==".py" (
   goto :JupyLaunch
 ) ELSE IF "%EXT%"==".ipynb" (

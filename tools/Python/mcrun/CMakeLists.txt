@@ -51,7 +51,7 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, python3-yaml")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, python3-yaml, python3-numpy")
 set(CPACK_DEBIAN_PACKAGE_REPLACES "${FLAVOR}-tools-python-${P}run-3.5.1")
 
 # RPM
@@ -90,8 +90,8 @@ install(
   RENAME "${P}run.py"
   )
 
-# Other .py infrastructure
-foreach(NAME "__init__.py" "log.py" "mccode.py" "optimisation.py" "mcsplit.py")
+# Copy in place .py and other infrastructure
+foreach(NAME "__init__.py" "log.py" "mccode.py" "optimisation.py" "mcsplit.py" "template.ipynb.in")
   install(
     FILES "${PROJECT_SOURCE_DIR}/${NAME}"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
