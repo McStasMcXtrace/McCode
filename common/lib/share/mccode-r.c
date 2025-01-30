@@ -1756,13 +1756,15 @@ static void mcinfo_out_nexus(NXhandle f)
 } /* mcinfo_out_nexus */
 
 /*******************************************************************************
-* mccomp_placement_nexus:
-*   Output absolute (3x1) position and (3x3) rotation of component instance into
-*   the attribute
+* mccomp_placement_type_nexus:
+*   Places
+*    - absolute (3x1) position
+*    - absolute (3x3) rotation
+*    - type / class of component instance into attributes under
 *     entry<N>/instrument/compname
 *   requires: NXentry to be opened
 *******************************************************************************/
-static void mccomp_placement_nexus(NXhandle nxhandle, char* component, Coords position, Rotation rotation)
+static void mccomp_placement_type_nexus(NXhandle nxhandle, char* component, Coords position, Rotation rotation, char* comptype)
 {
   /* open NeXus instrument group */
 
@@ -1797,6 +1799,7 @@ static void mccomp_placement_nexus(NXhandle nxhandle, char* component, Coords po
 		fprintf(stderr, "Warning: could not open Rotation field for component %s\n",component);
 	      }
 	    }
+	    nxprintf(nxhandle, "Component_type", comptype);
 	    NXclosegroup(nxhandle); // component
 	  } else {
 	    printf("FAILED to open comp data group %s\n",component);
@@ -1817,6 +1820,57 @@ static void mccomp_placement_nexus(NXhandle nxhandle, char* component, Coords po
   }
   #endif
 } /* mccomp_placement_nexus */
+
+/*******************************************************************************
+* mccomp_param_nexus:
+*   Output parameter/value pair for component instance into
+*   the attribute
+*     entry<N>/instrument/compname/parameter
+*   requires: NXentry to be opened
+*******************************************************************************/
+static void mccomp_param_nexus(NXhandle nxhandle, char* component, char* parameter, char* defval, char* value, char* type)
+{
+  /* open NeXus instrument group */
+
+  #ifdef USE_NEXUS
+  if(nxhandle) {
+    if (NXopengroup(nxhandle, "instrument", "NXinstrument") == NX_OK) {
+      if (NXopengroup(nxhandle, "components", "NXdata") == NX_OK) {
+	if (NXopengroup(nxhandle, component, "NXdata") == NX_OK) {
+	  NXMDisableErrorReporting(); /* unactivate NeXus error messages, as creation may fail */
+	  NXmakegroup(nxhandle, "parameters", "NXdata");
+	  NXMEnableErrorReporting();  /* re-enable NeXus error messages */
+	  if (NXopengroup(nxhandle, "parameters", "NXdata") == NX_OK) {
+	    NXmakegroup(nxhandle, parameter, "NXnote");
+	    if (NXopengroup(nxhandle, parameter, "NXnote") == NX_OK) {
+	      nxprintattr(nxhandle, "type", type);
+	      nxprintattr(nxhandle, "default",  defval);
+	      nxprintattr(nxhandle, "value",  value);
+	      NXclosegroup(nxhandle); // parameter
+	    } else {
+	      printf("FAILED to open parameters %s data group \n",parameter);
+	    }
+	    NXclosegroup(nxhandle); // "parameters"
+	  } else {
+	    printf("FAILED to open comp/parameters data group \n");
+	  }
+	  NXclosegroup(nxhandle); // component
+	  } else {
+	  printf("FAILED to open comp data group %s\n",component);
+	}
+	NXclosegroup(nxhandle); // components
+      } else {
+	printf("Failed to open NeXus component hierarchy\n");
+      }
+      NXclosegroup(nxhandle); // instrument
+    } else {
+      printf("Failed to open NeXus instrument hierarchy\n");
+    }
+  } else {
+    fprintf(stderr,"NO NEXUS FILE\n");
+  }
+#endif
+} /* mccomp_param_nexus */
 
 /*******************************************************************************
 * mcdatainfo_out_nexus: output detector header

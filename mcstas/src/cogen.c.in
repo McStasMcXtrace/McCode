@@ -1008,7 +1008,7 @@ int cogen_comp_setpos(
   } else if (comp->index-1 < 10000) {
     sprintf(pref,"");
   } else {
-    printf(stderr,"Error, no support for > 10000 comps at the moment!\n");
+    fprintf(stderr,"Error, no support for > 10000 comps at the moment!\n");
     exit(-1);
   }
 
@@ -1019,7 +1019,27 @@ int cogen_comp_setpos(
   coutf("  if(nxhandle) {");
   coutf("    if ((!mcdotrace) && mcformat && strcasestr(mcformat, \"NeXus\")) {");
   coutf("    MPI_MASTER(");
-  coutf("        mccomp_placement_nexus(nxhandle,\"%s%d_%s\", _%s_var._position_absolute, _%s_var._rotation_absolute);", pref, comp->index-1, comp->name, comp->name, comp->name);
+  coutf("        mccomp_placement_type_nexus(nxhandle,\"%s%d_%s\", _%s_var._position_absolute, _%s_var._rotation_absolute, \"%s\");", pref, comp->index-1, comp->name, comp->name, comp->name, comp->def->name);
+
+  List_handle piter;
+  struct comp_iformal *par;
+  struct Symtab_entry *entry;
+  char *val, *defval;
+  piter = list_iterate(comp->def->set_par);
+  while((par = list_next(piter)) != NULL) {
+    // get parameter value from component parameters name-value structure
+    entry = symtab_lookup(comp->setpar, par->id);
+    val = exp_tostring(entry->val);
+    defval =  par->isoptional ? exp_tostring(par->default_value) : "NONE";
+    //    defval = exp_tostring(entry->default_value);
+    if (par->type == instr_type_string) {
+      coutf("        mccomp_param_nexus(nxhandle,\"%s%d_%s\", \"%s\", %s, %s, \"%s\");", pref, comp->index-1, comp->name, par->id, defval, val, instr_formal_type_names_real[par->type]);
+    } else {
+      coutf("        mccomp_param_nexus(nxhandle,\"%s%d_%s\", \"%s\", \"%s\", \"%s\",\"%s\");", pref, comp->index-1, comp->name, par->id, defval,val, instr_formal_type_names_real[par->type]);
+    }
+  }
+  list_iterate_end(piter);
+
   coutf("      );");
   coutf("    }");
   coutf("  } else {");
