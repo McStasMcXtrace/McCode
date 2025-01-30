@@ -826,7 +826,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	} else if (Vars->compcurindex < 10000) {
 	  sprintf(pref,"");
 	} else {
-	  fprintf(stderr,"Error, no support for more than 10k McStas comps at the moment!\n");
+	  fprintf(stderr,"Error, no support for > 10000 comps at the moment!\n");
 	  exit(-1);
 	}
 

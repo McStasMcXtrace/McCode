@@ -1008,7 +1008,7 @@ int cogen_comp_setpos(
   } else if (comp->index < 10000) {
     sprintf(pref,"");
   } else {
-    printf(stderr,"Error, no support for more than 10k McStas comps at the moment!\n");
+    printf(stderr,"Error, no support for > 10000 comps at the moment!\n");
     exit(-1);
   }
 

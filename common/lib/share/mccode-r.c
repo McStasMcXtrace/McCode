@@ -942,7 +942,7 @@ MCDETECTOR detector_import(
   } else if (index < 10000) {
     sprintf(pref,"");
   } else {
-    fprintf(stderr,"Error, no support for more than 10k McStas comps at the moment!\n");
+    fprintf(stderr,"Error, no support for > 10000 comps at the moment!\n");
     exit(-1);
   }
   sprintf(detector.nexuscomp,"%s%d_%s",pref,index-1,detector.component);
