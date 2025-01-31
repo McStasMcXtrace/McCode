@@ -743,7 +743,93 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->Coord_BinProd[0]=1;
     for (i = 1; i <= Vars->Coord_Number; i++)
       Vars->Coord_BinProd[i]=Vars->Coord_Bin[i]*Vars->Coord_BinProd[i-1];
-  } /* end Monitor_nD_Init */
+    
+    #ifdef USE_NEXUS
+
+    #ifdef USE_MPI
+    if(mpi_node_rank == mpi_node_root) {
+    #endif
+      if(nxhandle) {
+
+	/* This section of code writes detector shape information to
+	   entryN/instrument/components/'name'/geometry in the NeXus file */
+
+	char nexuscomp[CHAR_BUF_LENGTH];
+	char pref[5];
+	if (Vars->compcurindex-1 < 10) {
+	  sprintf(pref,"000");
+	} else if (Vars->compcurindex-1 < 100) {
+	  sprintf(pref,"00");
+	} else if (Vars->compcurindex-1 < 1000) {
+	  sprintf(pref,"0");
+	} else if (Vars->compcurindex-1 < 10000) {
+	  sprintf(pref,"");
+	} else {
+	  fprintf(stderr,"Error, no support for > 10000 comps at the moment!\n");
+	  exit(-1);
+	}
+	sprintf(nexuscomp,"%s%d_%s",pref,Vars->compcurindex-1,Vars->compcurname);
+
+	if (NXopengroup(nxhandle, "instrument", "NXinstrument") == NX_OK) {
+	  if (NXopengroup(nxhandle, "components", "NXdata") == NX_OK) {
+	    if (NXopengroup(nxhandle, nexuscomp, "NXdata") == NX_OK) {
+	      if (NXmakegroup(nxhandle, "Geometry", "NXdata") == NX_OK) {
+		if (NXopengroup(nxhandle, "Geometry", "NXdata") == NX_OK) {
+		  char tmp[CHAR_BUF_LENGTH];
+		  sprintf(tmp,"%g",Vars->Sphere_Radius);
+		  nxprintattr(nxhandle, "radius", tmp);
+
+		  sprintf(tmp,"%g",Vars->Cylinder_Height);
+		  nxprintattr(nxhandle, "height", tmp);
+
+		  sprintf(tmp,"%g",Vars->mxmin);
+		  nxprintattr(nxhandle, "xmin",  tmp);
+		  sprintf(tmp,"%g",Vars->mxmax);
+		  nxprintattr(nxhandle, "xmax",  tmp);
+
+		  sprintf(tmp,"%g",Vars->mymin);
+		  nxprintattr(nxhandle, "ymin",  tmp);
+		  sprintf(tmp,"%g",Vars->mymax);
+		  nxprintattr(nxhandle, "ymax",  tmp);
+
+		  sprintf(tmp,"%g",Vars->mzmin);
+		  nxprintattr(nxhandle, "zmin",  tmp);
+		  sprintf(tmp,"%g",Vars->mzmax);
+		  nxprintattr(nxhandle, "zmax",  tmp);
+
+		  sprintf(tmp,"%g",Vars->mzmin);
+		  nxprintattr(nxhandle, "zmin",  tmp);
+		  sprintf(tmp,"%g",Vars->mzmax);
+		  nxprintattr(nxhandle, "zmax",  tmp);
+
+		  sprintf(tmp,"%i",Vars->Flag_Shape);
+		  nxprintattr(nxhandle, "Shape identifier",  tmp);
+		  sprintf(tmp,"%s",Vars->Monitor_Label);
+		  nxprintattr(nxhandle, "Shape string",  tmp);
+		  sprintf(tmp,"%s",Vars->option);
+		  nxprintattr(nxhandle, "Option string",  tmp);
+
+		  NXclosegroup(nxhandle); // Geometry
+		} else {
+		  printf("Failed to open component NeXus component Geometry group\n");
+		}
+	      } else {
+		printf("Failed to create component NeXus component Geometry group\n");
+	      }
+	      NXclosegroup(nxhandle); // component
+	    }
+	    NXclosegroup(nxhandle); // components
+	  } else {
+	    printf("Failed to open NeXus component hierarchy\n");
+	  }
+	  NXclosegroup(nxhandle); // instrument
+	} // nxhandle available
+    #ifdef USE_MPI
+      } // Master only
+    #endif
+
+    #endif // USE_NEXUS
+    } /* end Monitor_nD_Init */
 
 /* ========================================================================= */
 /* Monitor_nD_Trace: this routine is used to monitor one propagating particle */
@@ -1168,7 +1254,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
     double  ratio;
 
     MCDETECTOR detector;
-
+    strcpy(detector.options,Vars->option);
     ratio = 100.0*mcget_run_num()/mcget_ncount();
     if (Vars->Flag_Verbose && Vars->Flag_per_cm2) {
       printf("Monitor_nD: %s: active flat detector area is %g [cm^2], total area is %g [cm^2]\n",
@@ -1318,7 +1404,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
       if (Vars->Flag_signal != DEFS->COORD_P && Nsum > 0)
       { psum /=Nsum; p2sum /= Nsum*Nsum; }
       /* DETECTOR_OUT_0D(Vars->Monitor_Label, Vars->Nsum, Vars->psum, Vars->p2sum); */
-      detector = mcdetector_out_0D(Vars->Monitor_Label, Nsum, psum, p2sum, Vars->compcurname, Vars->compcurpos,Vars->compcurrot);
+      detector = mcdetector_out_0D(Vars->Monitor_Label, Nsum, psum, p2sum, Vars->compcurname, Vars->compcurpos,Vars->compcurrot,Vars->compcurindex);
     }
     else
     if (strlen(Vars->Mon_File) > 0)
@@ -1350,7 +1436,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
               label, "List of photon events", Coord_X_Label,
               -Vars->Buffer_Size, Vars->Coord_Number+1,
               Vars->Mon2D_Buffer,
-              fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot, Vars->option);
+              fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot, Vars->option,Vars->compcurindex);
       }
       if (Vars->Flag_Multiple) /* n1D: DETECTOR_OUT_1D */
       {
@@ -1381,7 +1467,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
               min1d, max1d,
               Vars->Coord_Bin[i+1],
               Vars->Mon2D_N[i],Vars->Mon2D_p[i],Vars->Mon2D_p2[i],
-              fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
+              fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot,Vars->compcurindex);
             } /* if (p2m == NULL) */
             else
             {
@@ -1424,7 +1510,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
                 min1d, max1d,
                 Vars->Coord_Bin[i+1],
                 Vars->Mon2D_N[i],p1m,p2m,
-                fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
+                fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot,Vars->compcurindex);
 
             } /* else */
             /* comment out 'free memory' lines to avoid loosing arrays if
@@ -1433,7 +1519,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
             if (p2m != NULL) free(p2m); p2m=NULL;
             */
           } else { /* 0d monitor */
-            detector = mcdetector_out_0D(label, Vars->Mon2D_p[i][0], Vars->Mon2D_p2[i][0], Vars->Mon2D_N[i][0], Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
+            detector = mcdetector_out_0D(label, Vars->Mon2D_p[i][0], Vars->Mon2D_p2[i][0], Vars->Mon2D_N[i][0], Vars->compcurname, Vars->compcurpos, Vars->compcurrot,Vars->compcurindex);
           }
 
 
@@ -1522,7 +1608,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
 	      Vars->Coord_Bin[1],
 	      Vars->Coord_Bin[2],
 	      p0m,p1m,p2m,
-	      fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot,Vars->option);
+	      fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot,Vars->option,Vars->compcurindex);
 	  } else {
           detector = mcdetector_out_2D(
             label,
@@ -1533,7 +1619,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
             Vars->Coord_Bin[1],
             Vars->Coord_Bin[2],
             p0m,p1m,p2m,
-	      fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot);
+	      fname, Vars->compcurname, Vars->compcurpos, Vars->compcurrot,Vars->compcurindex);
 	  }
 
           /* comment out 'free memory' lines to avoid loosing arrays if

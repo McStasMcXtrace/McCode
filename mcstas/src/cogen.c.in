@@ -998,6 +998,20 @@ int cogen_comp_setpos(
   /* position/rotation */
   cogen_comp_init_position(comp, last, instr); // specific to each instance
 
+  char pref[5];
+  if (comp->index-1 < 10) {
+    sprintf(pref,"000");
+  } else if (comp->index-1 < 100) {
+    sprintf(pref,"00");
+  } else if (comp->index-1 < 1000) {
+    sprintf(pref,"0");
+  } else if (comp->index-1 < 10000) {
+    sprintf(pref,"");
+  } else {
+    fprintf(stderr,"Error, no support for > 10000 comps at the moment!\n");
+    exit(-1);
+  }
+
   coutf("  instrument->counter_N[%i]  = instrument->counter_P[%i] = instrument->counter_P2[%i] = 0;",
         comp->index, comp->index, comp->index);
   coutf("  instrument->counter_AbsorbProp[%i]= 0;", comp->index);
@@ -1005,7 +1019,34 @@ int cogen_comp_setpos(
   coutf("  if(nxhandle) {");
   coutf("    if ((!mcdotrace) && mcformat && strcasestr(mcformat, \"NeXus\")) {");
   coutf("    MPI_MASTER(");
-  coutf("        mccomp_placement_nexus(nxhandle,\"%s\", _%s_var._position_absolute, _%s_var._rotation_absolute);", comp->name, comp->name, comp->name);
+  coutf("        mccomp_placement_type_nexus(nxhandle,\"%s%d_%s\", _%s_var._position_absolute, _%s_var._rotation_absolute, \"%s\");", pref, comp->index-1, comp->name, comp->name, comp->name, comp->def->name);
+
+  List_handle piter;
+  struct comp_iformal *par;
+  struct Symtab_entry *entry;
+  char *val, *defval;
+  piter = list_iterate(comp->def->set_par);
+  while((par = list_next(piter)) != NULL) {
+    // get parameter value from component parameters name-value structure
+    entry = symtab_lookup(comp->setpar, par->id);
+    val = exp_tostring(entry->val);
+    if (!par->isoptional) {
+      if (par->type==instr_type_string) {
+	defval="\"NONE\"";
+      } else {
+	defval="NONE";
+      }
+    } else {
+      defval=exp_tostring(par->default_value);
+    }
+    if (par->type==instr_type_string) { // value and defval "come with quotes" or are symbolic
+      coutf("        mccomp_param_nexus(nxhandle,\"%s%d_%s\", \"%s\", %s, %s, \"%s\");", pref, comp->index-1, comp->name, par->id, defval, val, instr_formal_type_names_real[par->type]);
+    } else {                            // both need quoting
+      coutf("        mccomp_param_nexus(nxhandle,\"%s%d_%s\", \"%s\", \"%s\", \"%s\",\"%s\");", pref, comp->index-1, comp->name, par->id, defval,val, instr_formal_type_names_real[par->type]);
+    }
+  }
+  list_iterate_end(piter);
+
   coutf("      );");
   coutf("    }");
   coutf("  } else {");

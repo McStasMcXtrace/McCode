@@ -262,6 +262,7 @@ INITIALIZE
 %{
   char tmp[CHAR_BUF_LENGTH];
   strcpy(Vars.compcurname, NAME_CURRENT_COMP);
+  Vars.compcurindex=INDEX_CURRENT_COMP;
   if (options != NULL)
     strncpy(Vars.option, options, CHAR_BUF_LENGTH);
   else {

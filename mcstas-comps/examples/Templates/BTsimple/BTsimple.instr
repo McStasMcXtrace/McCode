@@ -178,7 +178,7 @@ FINALLY
 		  "BT",
 		  "L", lambda-dlambda, lambda+dlambda, 101,
 		  &BT_N[0],&BT_p[0],&BT_p2[0],
-		  "Brilliance_transfer", "BTransfer", coords_set(0,0,0),Rot);
+		  "Brilliance_transfer", "BTransfer", coords_set(0,0,0),Rot,9999);
 
 %}
 

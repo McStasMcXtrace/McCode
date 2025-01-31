@@ -910,7 +910,7 @@ MCDETECTOR detector_import(
   double x1, double x2, double y1, double y2, double z1, double z2,
   char *filename,
   double *p0, double *p1, double *p2,
-  Coords position, Rotation rotation)
+  Coords position, Rotation rotation, int index)
 {
   time_t t;       /* for detector.date */
   long   date_l;  /* date as a long number */
@@ -931,6 +931,22 @@ MCDETECTOR detector_import(
     strcat(detector.filename, ".dat");
   }
   strncpy (detector.component, component ? component : MCCODE_STRING " component", CHAR_BUF_LENGTH);
+  #ifdef USE_NEXUS
+  char pref[5];
+  if (index-1 < 10) {
+    sprintf(pref,"000");
+  } else if (index-1 < 100) {
+    sprintf(pref,"00");
+  } else if (index-1 < 1000) {
+    sprintf(pref,"0");
+  } else if (index-1 < 10000) {
+    sprintf(pref,"");
+  } else {
+    fprintf(stderr,"Error, no support for > 10000 comps at the moment!\n");
+    exit(-1);
+  }
+  sprintf(detector.nexuscomp,"%s%d_%s",pref,index-1,detector.component);
+  #endif
 
   snprintf(detector.instrument, CHAR_BUF_LENGTH, "%s (%s)", instrument_name, instrument_source);
   snprintf(detector.user, CHAR_BUF_LENGTH,      "%s on %s",
@@ -1740,13 +1756,15 @@ static void mcinfo_out_nexus(NXhandle f)
 } /* mcinfo_out_nexus */
 
 /*******************************************************************************
-* mccomp_placement_nexus:
-*   Output absolute (3x1) position and (3x3) rotation of component instance into
-*   the attribute
+* mccomp_placement_type_nexus:
+*   Places
+*    - absolute (3x1) position
+*    - absolute (3x3) rotation
+*    - type / class of component instance into attributes under
 *     entry<N>/instrument/compname
 *   requires: NXentry to be opened
 *******************************************************************************/
-static void mccomp_placement_nexus(NXhandle nxhandle, char* component, Coords position, Rotation rotation)
+static void mccomp_placement_type_nexus(NXhandle nxhandle, char* component, Coords position, Rotation rotation, char* comptype)
 {
   /* open NeXus instrument group */
 
@@ -1781,6 +1799,7 @@ static void mccomp_placement_nexus(NXhandle nxhandle, char* component, Coords po
 		fprintf(stderr, "Warning: could not open Rotation field for component %s\n",component);
 	      }
 	    }
+	    nxprintf(nxhandle, "Component_type", comptype);
 	    NXclosegroup(nxhandle); // component
 	  } else {
 	    printf("FAILED to open comp data group %s\n",component);
@@ -1803,6 +1822,57 @@ static void mccomp_placement_nexus(NXhandle nxhandle, char* component, Coords po
 } /* mccomp_placement_nexus */
 
 /*******************************************************************************
+* mccomp_param_nexus:
+*   Output parameter/value pair for component instance into
+*   the attribute
+*     entry<N>/instrument/compname/parameter
+*   requires: NXentry to be opened
+*******************************************************************************/
+static void mccomp_param_nexus(NXhandle nxhandle, char* component, char* parameter, char* defval, char* value, char* type)
+{
+  /* open NeXus instrument group */
+
+  #ifdef USE_NEXUS
+  if(nxhandle) {
+    if (NXopengroup(nxhandle, "instrument", "NXinstrument") == NX_OK) {
+      if (NXopengroup(nxhandle, "components", "NXdata") == NX_OK) {
+	if (NXopengroup(nxhandle, component, "NXdata") == NX_OK) {
+	  NXMDisableErrorReporting(); /* unactivate NeXus error messages, as creation may fail */
+	  NXmakegroup(nxhandle, "parameters", "NXdata");
+	  NXMEnableErrorReporting();  /* re-enable NeXus error messages */
+	  if (NXopengroup(nxhandle, "parameters", "NXdata") == NX_OK) {
+	    NXmakegroup(nxhandle, parameter, "NXnote");
+	    if (NXopengroup(nxhandle, parameter, "NXnote") == NX_OK) {
+	      nxprintattr(nxhandle, "type", type);
+	      nxprintattr(nxhandle, "default",  defval);
+	      nxprintattr(nxhandle, "value",  value);
+	      NXclosegroup(nxhandle); // parameter
+	    } else {
+	      printf("FAILED to open parameters %s data group \n",parameter);
+	    }
+	    NXclosegroup(nxhandle); // "parameters"
+	  } else {
+	    printf("FAILED to open comp/parameters data group \n");
+	  }
+	  NXclosegroup(nxhandle); // component
+	  } else {
+	  printf("FAILED to open comp data group %s\n",component);
+	}
+	NXclosegroup(nxhandle); // components
+      } else {
+	printf("Failed to open NeXus component hierarchy\n");
+      }
+      NXclosegroup(nxhandle); // instrument
+    } else {
+      printf("Failed to open NeXus instrument hierarchy\n");
+    }
+  } else {
+    fprintf(stderr,"NO NEXUS FILE\n");
+  }
+#endif
+} /* mccomp_param_nexus */
+
+/*******************************************************************************
 * mcdatainfo_out_nexus: output detector header
 *   mcdatainfo_out_nexus(detector) create group and write info to NeXus data file
 *   open data:NXdetector then filename:NXdata and write headers/attributes
@@ -1822,8 +1892,8 @@ mcdatainfo_out_nexus(NXhandle f, MCDETECTOR detector)
   if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
     if (NXopengroup(f, "components", "NXdata") == NX_OK) {
       NXMDisableErrorReporting(); /* unactivate NeXus error messages, as creation may fail */
-      NXmakegroup(f, detector.component, "NXdata");
-      if (NXopengroup(f, detector.component, "NXdata") == NX_OK) {
+      NXmakegroup(f, detector.nexuscomp, "NXdata");
+      if (NXopengroup(f, detector.nexuscomp, "NXdata") == NX_OK) {
 	NXmakegroup(f, "output", "NXdetector");
 	if (NXopengroup(f, "output", "NXdetector") == NX_OK) {
 	  if (NXmakegroup(f, data_name, "NXdata") == NX_OK) {
@@ -1871,7 +1941,7 @@ mcdatainfo_out_nexus(NXhandle f, MCDETECTOR detector)
 	  }
 	}
 	NXclosegroup(f); // output
-	NXclosegroup(f); // detector.component
+	NXclosegroup(f); // detector.nexuscomp
       }
       NXclosegroup(f); // components
     }
@@ -2005,7 +2075,7 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
   /* the NXdetector group has been created in mcinfo_out_nexus (siminfo_init) */
   if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
     if (NXopengroup(f, "components", "NXdata") == NX_OK) {
-      if (NXopengroup(f, detector.component, "NXdata") == NX_OK) {
+      if (NXopengroup(f, detector.nexuscomp, "NXdata") == NX_OK) {
 	if (NXopengroup(f, "output", "NXdetector") == NX_OK) {
 
 	  /* the NXdata group has been created in mcdatainfo_out_nexus */
@@ -2048,7 +2118,7 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
 	  NXclosegroup(f);
 	} /* NXdetector output */
 	NXclosegroup(f);
-      } /* NXdata detector.component */
+      } /* NXdata detector.nexuscomp */
       NXclosegroup(f);
     } /* NXdata components */
     NXclosegroup(f);
@@ -2300,7 +2370,7 @@ void siminfo_close()
 *   Title is t, component name is c.
 *******************************************************************************/
 MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
-			     char *c, Coords posa, Rotation rota)
+			     char *c, Coords posa, Rotation rota, int index)
 {
   /* import and perform basic detector analysis (and handle MPI reduce) */
   MCDETECTOR detector = detector_import(mcformat,
@@ -2309,7 +2379,7 @@ MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
     "I", "", "",
     "I", "", "",
     0, 0, 0, 0, 0, 0, c,
-    &p0, &p1, &p2, posa, rota); /* write Detector: line */
+    &p0, &p1, &p2, posa, rota, index); /* write Detector: line */
 
 #ifdef USE_NEXUS
   if (strcasestr(detector.format, "NeXus"))
@@ -2349,7 +2419,7 @@ MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
         char *xvar, double x1, double x2,
         long n,
         double *p0, double *p1, double *p2, char *f,
-	char *c, Coords posa, Rotation rota)
+        char *c, Coords posa, Rotation rota, int index)
 {
   /* import and perform basic detector analysis (and handle MPI_Reduce) */
   // detector_import calls mcdetector_statistics, which will return different
@@ -2361,7 +2431,7 @@ MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
     xl, yl, (n > 1 ? "Signal per bin" : " Signal"),
     xvar, "(I,I_err)", "I",
     x1, x2, 0, 0, 0, 0, f,
-    p0, p1, p2, posa, rota); /* write Detector: line */
+    p0, p1, p2, posa, rota, index); /* write Detector: line */
   if (!detector.p1 || !detector.m) return(detector);
 
 #ifdef USE_NEXUS
@@ -2413,7 +2483,7 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
                   double x1, double x2, double y1, double y2,
                   long m, long n,
                   double *p0, double *p1, double *p2, char *f,
-		  char *c, Coords posa, Rotation rota)
+		  char *c, Coords posa, Rotation rota, int index)
 {
   char xvar[CHAR_BUF_LENGTH];
   char yvar[CHAR_BUF_LENGTH];
@@ -2434,7 +2504,7 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
       yl, "", "Signal per bin",
       yvar, "(I,Ierr)", "I",
       y1, y2, x1, x2, 0, 0, f,
-      p0, p1, p2, posa, rota); /* write Detector: line */
+      p0, p1, p2, posa, rota, index); /* write Detector: line */
   } else if (labs(n)==1) {/* m>1 on X, n==1 on Y: 1D, no Y axis*/
     detector = detector_import(mcformat,
       c, (t ? t : MCCODE_STRING " 1D data"),
@@ -2442,7 +2512,7 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
       xl, "", "Signal per bin",
       xvar, "(I,Ierr)", "I",
       x1, x2, y1, y2, 0, 0, f,
-      p0, p1, p2, posa, rota); /* write Detector: line */
+      p0, p1, p2, posa, rota, index); /* write Detector: line */
   }else {
     detector = detector_import(mcformat,
       c, (t ? t : MCCODE_STRING " 2D data"),
@@ -2450,7 +2520,7 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
       xl, yl, "Signal per bin",
       xvar, yvar, "I",
       x1, x2, y1, y2, 0, 0, f,
-      p0, p1, p2, posa, rota); /* write Detector: line */
+      p0, p1, p2, posa, rota, index); /* write Detector: line */
   }
 
   if (!detector.p1 || !detector.m) return(detector);
@@ -2494,7 +2564,7 @@ MCDETECTOR mcdetector_out_2D_list(char *t, char *xl, char *yl,
                   double x1, double x2, double y1, double y2,
                   long m, long n,
                   double *p0, double *p1, double *p2, char *f,
-		  char *c, Coords posa, Rotation rota, char* options)
+		  char *c, Coords posa, Rotation rota, char* options, int index)
 {
   char xvar[CHAR_BUF_LENGTH];
   char yvar[CHAR_BUF_LENGTH];
@@ -2515,7 +2585,7 @@ MCDETECTOR mcdetector_out_2D_list(char *t, char *xl, char *yl,
       yl, "", "Signal per bin",
       yvar, "(I,Ierr)", "I",
       y1, y2, x1, x2, 0, 0, f,
-      p0, p1, p2, posa, rota); /* write Detector: line */
+      p0, p1, p2, posa, rota, index); /* write Detector: line */
   } else if (labs(n)==1) {/* m>1 on X, n==1 on Y: 1D, no Y axis*/
     detector = detector_import(mcformat,
       c, (t ? t : MCCODE_STRING " 1D data"),
@@ -2523,7 +2593,7 @@ MCDETECTOR mcdetector_out_2D_list(char *t, char *xl, char *yl,
       xl, "", "Signal per bin",
       xvar, "(I,Ierr)", "I",
       x1, x2, y1, y2, 0, 0, f,
-      p0, p1, p2, posa, rota); /* write Detector: line */
+      p0, p1, p2, posa, rota, index); /* write Detector: line */
   }else {
     detector = detector_import(mcformat,
       c, (t ? t : MCCODE_STRING " 2D data"),
@@ -2531,7 +2601,7 @@ MCDETECTOR mcdetector_out_2D_list(char *t, char *xl, char *yl,
       xl, yl, "Signal per bin",
       xvar, yvar, "I",
       x1, x2, y1, y2, 0, 0, f,
-      p0, p1, p2, posa, rota); /* write Detector: line */
+     p0, p1, p2, posa, rota, index); /* write Detector: line */
   }
 
   MPI_MASTER(
@@ -2560,7 +2630,7 @@ MCDETECTOR mcdetector_out_2D_list(char *t, char *xl, char *yl,
 MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
                   long m, long n,
                   double *p1, char *f,
-			       char *c, Coords posa, Rotation rota, char* options)
+			       char *c, Coords posa, Rotation rota, char* options, int index)
 {
   char       format_new[CHAR_BUF_LENGTH];
   char      *format_org;
@@ -2574,7 +2644,7 @@ MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
                   1,labs(m),1,labs(n),
                   m,n,
                   NULL, p1, NULL, f,
-		  c, posa,rota,options);
+		  c, posa,rota,options, index);
 
   mcformat = format_org;
   return(detector);

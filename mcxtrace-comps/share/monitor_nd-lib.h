@@ -164,6 +164,7 @@
     char   compcurname[128];
     Coords compcurpos;
     Rotation compcurrot;
+    int compcurindex;
   } MonitornD_Variables_type;
 
 /* monitor_nd-lib function prototypes */

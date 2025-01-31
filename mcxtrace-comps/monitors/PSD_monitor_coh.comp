@@ -227,7 +227,7 @@ SAVE
         
         
         mcdetector_out_0D("Coh. Phase monitor (argument)",
-          (double) PSD_N[0][0], PSD_p_arg[0], PSD_p2[0][0], fname1,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP);
+			  (double) PSD_N[0][0], PSD_p_arg[0], PSD_p2[0][0], fname1,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP,INDEX_CURRENT_COMP);
     }else if(nx==1){
         DETECTOR_OUT_1D(
                 "Coh. PSD_monitor (magnitude)","Y Position[m]", "Intensity", "Y",
@@ -236,7 +236,7 @@ SAVE
         mcdetector_out_1D(
                 "Coh. PSD_monitor (argument)","Y Position[m]", "Phase", "Y",
                 ymin,ymax,ny,PSD_N[0],PSD_p_arg,PSD_p2[0],filename_arg,
-                fname1,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP);
+                fname1,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP,INDEX_CURRENT_COMP);
     }else if (ny==1){
         DETECTOR_OUT_1D(
                 "Coh. PSD_monitor (magnitude)","X Position[m]", "Intensity", "X",
@@ -244,7 +244,7 @@ SAVE
         mcdetector_out_1D(
                 "Coh. PSD_monitor (argument)","X Position[m]", "Phase", "X",
                 xmin,xmax,nx,PSD_N[0],PSD_p_arg,PSD_p2[0],filename_arg,
-                fname1,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP);
+                fname1,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP,INDEX_CURRENT_COMP);
     }else{
         /*don't do the internal gather in DETECTOR_OUT_2D*/
         //MPI_NOGATHER;
@@ -263,7 +263,7 @@ SAVE
                 xmin, xmax, ymin, ymax, nx, ny,
                 (PSD_N[0]),PSD_p_arg,PSD_p2[0],
                 filename_arg,
-                fname1,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP);
+                fname1,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP,INDEX_CURRENT_COMP);
     }
   }
 %}

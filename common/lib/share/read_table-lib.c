@@ -1114,14 +1114,14 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
                       "x", x1, x2,
                       Table.rows * Table.columns,
                       NULL, Table.data, NULL,
-		      file, file, coords, rot);
+		      file, file, coords, rot,9999);
   } else {
     detector = mcdetector_out_2D(Table.filename,
                       xl ? xl : "", yl ? yl : "",
                       x1, x2, y1, y2,
                       Table.rows, Table.columns,
                       NULL, Table.data, NULL,
-		      file, file, coords, rot);
+		      file, file, coords, rot,9999);
   }
   return(detector);
 }

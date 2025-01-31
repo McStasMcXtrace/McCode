@@ -425,7 +425,7 @@ FINALLY
 	Coords dummy;
 	Rotation Rot;
 	rot_set_rotation(Rot,0,0,0);
-	mcdetector_out_0D("XANES EXAFS",number_events_after_sample, absorption_coefficient, absorption_coefficient_error,instrument_name,dummy,Rot);  
+	mcdetector_out_0D("XANES EXAFS",number_events_after_sample, absorption_coefficient, absorption_coefficient_error,instrument_name,dummy,Rot,9999);  
     }
 %}
 
