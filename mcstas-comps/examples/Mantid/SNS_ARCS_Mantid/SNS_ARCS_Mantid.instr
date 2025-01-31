@@ -11,7 +11,7 @@
 * Written by: G. Granroth
 * Date: Nov 2014
 * Origin: SNS
-* %INSTRUMENT_SITE: Mantid
+* %INSTRUMENT_SITE:Mantid
 *
 * Model of the ARCS spectrometer from SNS with Mantid support.
 *
@@ -46,10 +46,9 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT SNS_ARCS_Mantid(string filename="source_sct521_bu_17_1.dat",Fermi_nu=420,T0_nu=90,nrad=0.58,nchans=40,Edes=50,Et=25,ttheta=25,T0_off=0,sxmin=-0.04,sxmax=0.04,symin=-0.04,symax=0.04,run_num=1)
-DEPENDENCY " -DLOADPATH=GETPATH(data) @NEXUSFLAGS@ "
+DEPENDENCY " @NEXUSFLAGS@ "
 
 DECLARE %{
-   char fullfile[256];
    
    double Emin,Emax;
    /* guide reflectivity profile parameters */
@@ -75,16 +74,6 @@ DECLARE %{
 %}
 INITIALIZE
 %{
-#define QUOTE(name) #name
-#define STR(macro) QUOTE(macro)
-
-#ifndef LOADPATH
-#define LOADPATH=/usr/share/mcstas/3.1/data
-#endif
-
-#define LOADPATH_ STR(LOADPATH)
-   sprintf(fullfile,"%s/%s",LOADPATH_,filename);
-   printf("Using the input file: %s\n", fullfile);
   
    detoptstr=malloc(150*sizeof(char));
    tfilename=malloc(50*sizeof(char));
@@ -122,7 +111,7 @@ INITIALIZE
    sprintf(v_fname,"virt_src_ARCS_E%1.2f_F_nu_%g_T0_nu_%g_%g.dat",Edes,Fermi_nu,T0_nu,run_num);
   %}
 TRACE
-COMPONENT mod=SNS_source(filename=fullfile,
+COMPONENT mod=SNS_source(filename=filename,
                          xwidth=0.1,
                          yheight=0.12,
                          dist=2.5,
@@ -131,15 +120,7 @@ COMPONENT mod=SNS_source(filename=fullfile,
                          Emin=Emin,
                          Emax=Emax)
 AT(0,0,-13.61) ABSOLUTE
-// COMPONENT mod=SNS_source(S_filename="source_sct521_bu_17_1.dat",
-//                          width=0.1,
-//                          height=0.12,
-//                          dist=2.5,
-//                          xw=0.1,
-//                          yh=0.12,
-//                          Emin=Emin,
-//                          Emax=Emax)
-// AT(0,0,0) ABSOLUTE
+
 COMPONENT sourceMantid=Arm()
 AT(0,0,0) RELATIVE mod
 COMPONENT core_ves=Guide_channeled(w1=0.094285,h1=0.11323,w2=0.084684,h2=0.102362,l=1.2444,
@@ -198,8 +179,6 @@ COMPONENT Guide_1_3_3=Guide_channeled(w1=0.06440,h1=0.07609,w2=0.06342,h2=0.0744
             W=Gu_W,nslit=1,d=0.0,alphax=Gu_alpha,alphay=Gu_alpha)
 AT(0,0,8.04145) RELATIVE mod
 
-/*COMPONENT T0_chopp=Arm()*/
-
 COMPONENT t0_chopp=Vertical_T0a(len=0.474,w1=0.08,w2=0.101,nu=T0_nu,delta=0.0,tc=phase_T0,
                  ymin=-0.045,ymax=0.045)
 AT(0,0,LT0)RELATIVE mod
@@ -234,7 +213,6 @@ AT(0,0,11.08340) RELATIVE mod
 COMPONENT fermi_chopp=Fermi_chop2a(len=0.10,w=0.06,ymin=-.0325,ymax=.0325,
                                         nu=Fermi_nu,delta=0.0,tc=phasefc1
                                        ,nchan=nchans,bw=0.0005,blader=nrad)
-/*COMPONENT fermi_chopp=Arm()*/
 AT (0,0,LF) RELATIVE mod
 /* COMPONENT Monitor1=TOF_monitor(xmin=-0.035,xmax=0.035,ymin=-0.035,ymax=0.035, */
 /*                 tmin=tplotmin, */
