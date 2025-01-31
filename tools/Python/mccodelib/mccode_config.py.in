@@ -123,7 +123,7 @@ def load_config(path=None):
     directories['exampledir'] = str( resourcedir / 'examples' )
 
 
-def save_user_config():
+def save_user_config(Edit=False):
     ''' attempts to save the current values to a local .json file '''
     text = json.dumps({'configuration' : configuration, 'compilation' : compilation, 'platform' : platform, 'directories' : directories}, indent=2)
 
@@ -155,7 +155,19 @@ def save_user_config():
     finally:
         if f:
             f.close()
-
+    if Edit:
+        cmd = configuration["EDITOR"] + " " + userconfig
+        errmsg = lambda : f'Errors encountered while executing cmd: {cmd}'
+        try:
+            returncode = 1
+            with subprocess.Popen( cmd,
+                                   shell=True,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE ) as proc:
+                    returncode = proc.returncode
+        except:
+            print(errmsg())
+            raise
 
 def get_options():
     ''' values below are not enforced in the dicts, but probably used to populate certain gui menus '''

@@ -1141,6 +1141,7 @@ class McConfigDialog(QtWidgets.QDialog):
 
         self.ui.btnOk.clicked.connect(self.accept)
         self.ui.btnSave.clicked.connect(self.save)
+        self.ui.btnSaveEdit.clicked.connect(self.saveedit)
         self.ui.btnCancel.clicked.connect(self.reject)
         
         # set labels mccode-prefix
@@ -1260,6 +1261,10 @@ class McConfigDialog(QtWidgets.QDialog):
     def save(self):
         self.__pullValuesTo_mccode_config()
         mccode_config.save_user_config()
+
+    def saveedit(self):
+        self.__pullValuesTo_mccode_config()
+        mccode_config.save_user_config(Edit=True)
 
         # finally
         super(McConfigDialog, self).accept()

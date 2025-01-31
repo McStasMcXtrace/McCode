@@ -209,7 +209,7 @@ COMPONENT Guide_2_1_5=Guide_channeled(w1=0.05745,h1=0.06417,w2=0.05637,h2=0.0622
             W=Gu_W,nslit=1,d=0.0,alphax=Gu_alpha,alphay=Gu_alpha)
 AT(0,0,11.08340) RELATIVE mod
 
-  COMPONENT fermi_chopp=Fermi_chop2a(len=0.10,w=0.06,ymin=-.0325,ymax=.0325,
+COMPONENT fermi_chopp=Fermi_chop2a(len=0.10,w=0.06,ymin=-.0325,ymax=.0325,
                                         nu=Fermi_nu,delta=0.0,tc=phasefc1
                                        ,nchan=nchans,bw=0.0005,blader=nrad)
 AT (0,0,LF) RELATIVE mod
