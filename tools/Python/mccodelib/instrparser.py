@@ -34,7 +34,7 @@ class InstrTraceParser:
         'start'       : 'STARTKWLC',
         'end'         : 'ENDKWLC',
         'component'   : 'COMPKWLC',
-        
+
         'magnify'     : 'DRAWCALL',
         'line'        : 'DRAWCALL',
         'dashed_line' : 'DRAWCALL',
@@ -56,9 +56,9 @@ class InstrTraceParser:
         'MANTID_PIXEL': 'MANTID_PIXEL',
         'MANTID_BANANA_DET': 'MANTID_BANANA_DET',
         'MANTID_RECTANGULAR_DET': 'MANTID_RECTANGULAR_DET',
-        
+
     }
-    
+
     # tokens 
     tokens = [
               'LB',
@@ -68,8 +68,7 @@ class InstrTraceParser:
               'SQUOTE',
               'COMMA',
               'NL',
-              
-              'ABSPATH',
+              'INSTRPATH',
               'DEC',
               'ID',
               'INSTRNAME',
@@ -88,8 +87,8 @@ class InstrTraceParser:
         self.lexer.lineno += 1
         return t
     
-    def t_ABSPATH(self, t):
-        r'[/\w\\\:\-\.]+(\.instr)?'
+    def t_INSTRPATH(self, t):
+        r'[/\w\\\:\-\.]+\.instr?'
         return t
     
     def t_DEC(self, t):
@@ -100,7 +99,7 @@ class InstrTraceParser:
         r'[a-zA-Z_]\w*'
         t.type = self.reserved.get(t.value, 'ID')
         return t
-    
+
     def t_INSTRNAME(self, t):
         r'\w[\w\-0-9\.]*'
         return t
@@ -132,7 +131,8 @@ class InstrTraceParser:
     
     instr = None
     def p_instr_open(self, p):
-        'instr_open : INSTRUMENT COLON NL INSTRKW SQUOTE instr_name SQUOTE LB ABSPATH RB NL'
+        '''instr_open : INSTRUMENT COLON NL INSTRKW SQUOTE instr_name SQUOTE LB INSTRPATH RB NL
+                      | INSTRUMENT COLON NL INSTRKW SQUOTE instr_name SQUOTE LB ID RB NL'''
         self.instr = Node(type='instrument', children=[p[6], Node(type='abspath', leaf=p[9])])
     
     def p_instr_end(self, p):
