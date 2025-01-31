@@ -743,8 +743,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->Coord_BinProd[0]=1;
     for (i = 1; i <= Vars->Coord_Number; i++)
       Vars->Coord_BinProd[i]=Vars->Coord_Bin[i]*Vars->Coord_BinProd[i-1];
-    }
-
+    
     #ifdef USE_NEXUS
 
     #ifdef USE_MPI
@@ -824,14 +823,13 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	    printf("Failed to open NeXus component hierarchy\n");
 	  }
 	  NXclosegroup(nxhandle); // instrument
-	}
-      } // nxhandle available
+	} // nxhandle available
     #ifdef USE_MPI
-    } // Master only
+      } // Master only
     #endif
 
     #endif // USE_NEXUS
-  } /* end Monitor_nD_Init */
+    } /* end Monitor_nD_Init */
 
 /* ========================================================================= */
 /* Monitor_nD_Trace: this routine is used to monitor one propagating particle */
