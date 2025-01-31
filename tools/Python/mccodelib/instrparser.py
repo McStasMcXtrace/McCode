@@ -88,7 +88,7 @@ class InstrTraceParser:
         return t
     
     def t_INSTRPATH(self, t):
-        r'[/\w\\\:\-\.]+\.instr?'
+        r'[/\w\\\:\-\.]+\.instr'
         return t
     
     def t_DEC(self, t):
