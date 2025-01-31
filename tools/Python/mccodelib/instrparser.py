@@ -89,7 +89,7 @@ class InstrTraceParser:
         return t
     
     def t_ABSPATH(self, t):
-        r'[/\w\\\:\-]+\.instr'
+        r'[/\w\\\:\-\.]+(\.instr)?'
         return t
     
     def t_DEC(self, t):
@@ -102,7 +102,7 @@ class InstrTraceParser:
         return t
     
     def t_INSTRNAME(self, t):
-        r'\w[\w\-0-9]*'
+        r'\w[\w\-0-9\.]*'
         return t
 
     def t_JSON(self, t):
