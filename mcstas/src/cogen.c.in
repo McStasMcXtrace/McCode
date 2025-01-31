@@ -1030,11 +1030,18 @@ int cogen_comp_setpos(
     // get parameter value from component parameters name-value structure
     entry = symtab_lookup(comp->setpar, par->id);
     val = exp_tostring(entry->val);
-    defval =  par->isoptional ? exp_tostring(par->default_value) : "NONE";
-    //    defval = exp_tostring(entry->default_value);
-    if (par->type == instr_type_string) {
-      coutf("        mccomp_param_nexus(nxhandle,\"%s%d_%s\", \"%s\", %s, %s, \"%s\");", pref, comp->index-1, comp->name, par->id, defval, val, instr_formal_type_names_real[par->type]);
+    if (!par->isoptional) {
+      if (par->type==instr_type_string) {
+	defval="\"NONE\"";
+      } else {
+	defval="NONE";
+      }
     } else {
+      defval=exp_tostring(par->default_value);
+    }
+    if (par->type==instr_type_string) { // value and defval "come with quotes" or are symbolic
+      coutf("        mccomp_param_nexus(nxhandle,\"%s%d_%s\", \"%s\", %s, %s, \"%s\");", pref, comp->index-1, comp->name, par->id, defval, val, instr_formal_type_names_real[par->type]);
+    } else {                            // both need quoting
       coutf("        mccomp_param_nexus(nxhandle,\"%s%d_%s\", \"%s\", \"%s\", \"%s\",\"%s\");", pref, comp->index-1, comp->name, par->id, defval,val, instr_formal_type_names_real[par->type]);
     }
   }
