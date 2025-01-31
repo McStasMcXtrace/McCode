@@ -743,6 +743,94 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->Coord_BinProd[0]=1;
     for (i = 1; i <= Vars->Coord_Number; i++)
       Vars->Coord_BinProd[i]=Vars->Coord_Bin[i]*Vars->Coord_BinProd[i-1];
+    }
+
+    #ifdef USE_NEXUS
+
+    #ifdef USE_MPI
+    if(mpi_node_rank == mpi_node_root) {
+    #endif
+      if(nxhandle) {
+
+	/* This section of code writes detector shape information to
+	   entryN/instrument/components/'name'/geometry in the NeXus file */
+
+	char nexuscomp[CHAR_BUF_LENGTH];
+	char pref[5];
+	if (Vars->compcurindex-1 < 10) {
+	  sprintf(pref,"000");
+	} else if (Vars->compcurindex-1 < 100) {
+	  sprintf(pref,"00");
+	} else if (Vars->compcurindex-1 < 1000) {
+	  sprintf(pref,"0");
+	} else if (Vars->compcurindex-1 < 10000) {
+	  sprintf(pref,"");
+	} else {
+	  fprintf(stderr,"Error, no support for > 10000 comps at the moment!\n");
+	  exit(-1);
+	}
+	sprintf(nexuscomp,"%s%d_%s",pref,Vars->compcurindex-1,Vars->compcurname);
+
+	if (NXopengroup(nxhandle, "instrument", "NXinstrument") == NX_OK) {
+	  if (NXopengroup(nxhandle, "components", "NXdata") == NX_OK) {
+	    if (NXopengroup(nxhandle, nexuscomp, "NXdata") == NX_OK) {
+	      if (NXmakegroup(nxhandle, "Geometry", "NXdata") == NX_OK) {
+		if (NXopengroup(nxhandle, "Geometry", "NXdata") == NX_OK) {
+		  char tmp[CHAR_BUF_LENGTH];
+		  sprintf(tmp,"%g",Vars->Sphere_Radius);
+		  nxprintattr(nxhandle, "radius", tmp);
+
+		  sprintf(tmp,"%g",Vars->Cylinder_Height);
+		  nxprintattr(nxhandle, "height", tmp);
+
+		  sprintf(tmp,"%g",Vars->mxmin);
+		  nxprintattr(nxhandle, "xmin",  tmp);
+		  sprintf(tmp,"%g",Vars->mxmax);
+		  nxprintattr(nxhandle, "xmax",  tmp);
+
+		  sprintf(tmp,"%g",Vars->mymin);
+		  nxprintattr(nxhandle, "ymin",  tmp);
+		  sprintf(tmp,"%g",Vars->mymax);
+		  nxprintattr(nxhandle, "ymax",  tmp);
+
+		  sprintf(tmp,"%g",Vars->mzmin);
+		  nxprintattr(nxhandle, "zmin",  tmp);
+		  sprintf(tmp,"%g",Vars->mzmax);
+		  nxprintattr(nxhandle, "zmax",  tmp);
+
+		  sprintf(tmp,"%g",Vars->mzmin);
+		  nxprintattr(nxhandle, "zmin",  tmp);
+		  sprintf(tmp,"%g",Vars->mzmax);
+		  nxprintattr(nxhandle, "zmax",  tmp);
+
+		  sprintf(tmp,"%i",Vars->Flag_Shape);
+		  nxprintattr(nxhandle, "Shape identifier",  tmp);
+		  sprintf(tmp,"%s",Vars->Monitor_Label);
+		  nxprintattr(nxhandle, "Shape string",  tmp);
+		  sprintf(tmp,"%s",Vars->option);
+		  nxprintattr(nxhandle, "Option string",  tmp);
+
+		  NXclosegroup(nxhandle); // Geometry
+		} else {
+		  printf("Failed to open component NeXus component Geometry group\n");
+		}
+	      } else {
+		printf("Failed to create component NeXus component Geometry group\n");
+	      }
+	      NXclosegroup(nxhandle); // component
+	    }
+	    NXclosegroup(nxhandle); // components
+	  } else {
+	    printf("Failed to open NeXus component hierarchy\n");
+	  }
+	  NXclosegroup(nxhandle); // instrument
+	}
+      } // nxhandle available
+    #ifdef USE_MPI
+    } // Master only
+    #endif
+
+    #endif // USE_NEXUS
   } /* end Monitor_nD_Init */
 
 /* ========================================================================= */
