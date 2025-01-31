@@ -802,19 +802,10 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     if(mpi_node_rank == mpi_node_root) {
     #endif
       if(nxhandle) {
-    	char metadata[CHAR_BUF_LENGTH];
-    	char metadatatmp[CHAR_BUF_LENGTH];
-    	// Vars for 1D, >3D, OFF
-    	long numbins;
-    	long minbins = 0;
-    	long maxbins = 0;
-    	char binlabel[CHAR_BUF_LENGTH];
-    	char binvar[CHAR_BUF_LENGTH];
-    	sprintf(binlabel,"none");
-    	sprintf(binvar,"none");
-    	long pix=Vars->Coord_Min[Vars->Coord_Number-1]; // Second to last col is min. pixel id
-		  
-    	MCDETECTOR detector;
+
+	/* This section of code writes detector shape information to
+	   entryN/instrument/components/'name'/geometry in the NeXus file */
+
 	char nexuscomp[CHAR_BUF_LENGTH];
 	char pref[5];
 	if (Vars->compcurindex-1 < 10) {
@@ -829,6 +820,77 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	  fprintf(stderr,"Error, no support for > 10000 comps at the moment!\n");
 	  exit(-1);
 	}
+	sprintf(nexuscomp,"%s%d_%s",pref,Vars->compcurindex-1,Vars->compcurname);
+
+	if (NXopengroup(nxhandle, "instrument", "NXinstrument") == NX_OK) {
+	  if (NXopengroup(nxhandle, "components", "NXdata") == NX_OK) {
+	    if (NXopengroup(nxhandle, nexuscomp, "NXdata") == NX_OK) {
+	      if (NXmakegroup(nxhandle, "Geometry", "NXdata") == NX_OK) {
+		if (NXopengroup(nxhandle, "Geometry", "NXdata") == NX_OK) {
+		  char tmp[CHAR_BUF_LENGTH];
+		  sprintf(tmp,"%g",Vars->Sphere_Radius);
+		  nxprintattr(nxhandle, "radius", tmp);
+
+		  sprintf(tmp,"%g",Vars->Cylinder_Height);
+		  nxprintattr(nxhandle, "height", tmp);
+
+		  sprintf(tmp,"%g",Vars->mxmin);
+		  nxprintattr(nxhandle, "xmin",  tmp);
+		  sprintf(tmp,"%g",Vars->mxmax);
+		  nxprintattr(nxhandle, "xmax",  tmp);
+
+		  sprintf(tmp,"%g",Vars->mymin);
+		  nxprintattr(nxhandle, "ymin",  tmp);
+		  sprintf(tmp,"%g",Vars->mymax);
+		  nxprintattr(nxhandle, "ymax",  tmp);
+
+		  sprintf(tmp,"%g",Vars->mzmin);
+		  nxprintattr(nxhandle, "zmin",  tmp);
+		  sprintf(tmp,"%g",Vars->mzmax);
+		  nxprintattr(nxhandle, "zmax",  tmp);
+
+		  sprintf(tmp,"%g",Vars->mzmin);
+		  nxprintattr(nxhandle, "zmin",  tmp);
+		  sprintf(tmp,"%g",Vars->mzmax);
+		  nxprintattr(nxhandle, "zmax",  tmp);
+
+		  sprintf(tmp,"%i",Vars->Flag_Shape);
+		  nxprintattr(nxhandle, "Shape identifier",  tmp);
+		  sprintf(tmp,"%s",Vars->Monitor_Label);
+		  nxprintattr(nxhandle, "Shape string",  tmp);
+		  sprintf(tmp,"%s",Vars->option);
+		  nxprintattr(nxhandle, "Option string",  tmp);
+
+		  NXclosegroup(nxhandle); // Geometry
+		} else {
+		  printf("Failed to open component NeXus component Geometry group\n");
+		}
+	      } else {
+		printf("Failed to create component NeXus component Geometry group\n");
+	      }
+	      NXclosegroup(nxhandle); // component
+	    }
+	    NXclosegroup(nxhandle); // components
+	  } else {
+	    printf("Failed to open NeXus component hierarchy\n");
+	  }
+	  NXclosegroup(nxhandle); // instrument
+	}
+
+	/* Below code communicates geometry-oriented "BINS" for the detector. */
+	char metadata[CHAR_BUF_LENGTH];
+	char metadatatmp[CHAR_BUF_LENGTH];
+	// Vars for 1D, >3D, OFF
+	long numbins;
+	long minbins = 0;
+	long maxbins = 0;
+	char binlabel[CHAR_BUF_LENGTH];
+	char binvar[CHAR_BUF_LENGTH];
+	sprintf(binlabel,"none");
+	sprintf(binvar,"none");
+	long pix=Vars->Coord_Min[Vars->Coord_Number-1]; // Second to last col is min. pixel id
+
+	MCDETECTOR detector;
 
     	/* Init - perhaps better with an init-function in mccode-r? */
     	detector.m = 0;
