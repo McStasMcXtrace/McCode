@@ -99,9 +99,8 @@ class InstrState(LineHandlerState):
     def add_line(self, line):
         if self.first and re.match('INSTRUMENT:', line):
             self.databox.add_instrdef(line)
-            self.first = False
-            self.second = True
-        elif self.second and re.match(r'Instrument \'[\w\-]+\' \([/\w\\\:\-]+.instr\)', line):
+            self.first, self.second = False, True
+        elif self.second and re.match(r'Instrument \'[\w\-\.]+\' \([/\w\\\:\-\.]+(\.instr)?\)', line):
             self.databox.add_instrdef(line)
             self.second = False
         elif re.match('COMPONENT:', line):
