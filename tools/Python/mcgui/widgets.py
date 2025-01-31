@@ -967,6 +967,10 @@ class Ui_dlgConfig(object):
         self.btnSave.setDefault(False)
         self.btnSave.setObjectName("btnSave")
         self.hlayoutButtons.addWidget(self.btnSave)
+        self.btnSaveEdit = QtWidgets.QPushButton(dlgConfig)
+        self.btnSaveEdit.setDefault(False)
+        self.btnSaveEdit.setObjectName("btnSaveEdit")
+        self.hlayoutButtons.addWidget(self.btnSaveEdit)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         self.hlayoutButtons.addItem(spacerItem)
         self.btnCancel = QtWidgets.QPushButton(dlgConfig)
@@ -987,7 +991,8 @@ class Ui_dlgConfig(object):
         dlgConfig.setTabOrder(self.edtNumCols, self.editor)
         dlgConfig.setTabOrder(self.editor, self.btnOk)
         dlgConfig.setTabOrder(self.btnOk, self.btnSave)
-        dlgConfig.setTabOrder(self.btnSave, self.btnCancel)
+        dlgConfig.setTabOrder(self.btnSave, self.btnSaveEdit)
+        dlgConfig.setTabOrder(self.btnSaveEdit, self.btnCancel)
 
     def retranslateUi(self, dlgConfig):
         _translate = QtCore.QCoreApplication.translate
@@ -1008,4 +1013,6 @@ class Ui_dlgConfig(object):
         self.btnOk.setText(_translate("dlgConfig", "Ok"))
         self.btnSave.setToolTip(_translate("dlgConfig", "Keep & save configuration to disk"))
         self.btnSave.setText(_translate("dlgConfig", "Save"))
+        self.btnSaveEdit.setToolTip(_translate("dlgConfig", "Save & Open in editor"))
+        self.btnSaveEdit.setText(_translate("dlgConfig", "Save/Editor"))
         self.btnCancel.setText(_translate("dlgConfig", "Cancel"))
