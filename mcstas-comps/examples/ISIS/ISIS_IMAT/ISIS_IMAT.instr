@@ -40,6 +40,7 @@
 *******************************************************************************/
 
 DEFINE INSTRUMENT ISIS_IMAT(l_min=1, l_max=10, t_min=0, t_max=0.2, theta=90)
+DEPENDENCY " @NEXUSFLAGS@ "
 
 DECLARE
 %{ 
