@@ -329,11 +329,11 @@ void write_temp_to_perm_abs_1D_event(union abs_logger_data_union *data_union) {
   storage = data_union->p_1D_event_abs_storage;
 
   int index;
-  // Add all data points to the historgram, they are saved as index / weight combinations
+  // Add all data points to the histogram, they are saved as index / weight combinations
   for (index=0;index<storage->temp_abs_1D_event_data.num_elements;index++) {
 
     _class_particle _localparticle;
-    
+
     _localparticle.x  = storage->temp_abs_1D_event_data.elements[index].x_pos;
     _localparticle.y  = storage->temp_abs_1D_event_data.elements[index].y_pos;
     _localparticle.z  = storage->temp_abs_1D_event_data.elements[index].z_pos;
@@ -362,11 +362,11 @@ void write_temp_to_perm_final_p_abs_1D_event(union abs_logger_data_union *data_u
   storage = data_union->p_1D_event_abs_storage;
 
   int index;
-  // Add all data points to the historgram, they are saved as index / weight combinations
+  // Add all data points to the histogram, they are saved as index / weight combinations
   for (index=0;index<storage->temp_abs_1D_event_data.num_elements;index++) {
-    
+
     _class_particle _localparticle;
-    
+
     _localparticle.x  = storage->temp_abs_1D_event_data.elements[index].x_pos;
     _localparticle.y  = storage->temp_abs_1D_event_data.elements[index].y_pos;
     _localparticle.z  = storage->temp_abs_1D_event_data.elements[index].z_pos;
@@ -391,9 +391,9 @@ void write_temp_to_perm_final_p_abs_1D_event(union abs_logger_data_union *data_u
 // Only need to define linking function for loggers once.
 #ifndef UNION_ABS_LOGGER
 #define UNION_ABS_LOGGER Dummy
-// Linking function for loggers, finds the indicies of the specified geometries on the global_geometry_list
+// Linking function for loggers, finds the indices of the specified geometries on the global_geometry_list
 void manual_linking_function_abs_logger_volumes(char *input_string, struct pointer_to_global_geometry_list *global_geometry_list, struct pointer_to_1d_int_list *accepted_volumes, char *component_name) {
-    // Need to check a input_string of text for an occurance of name. If it is in the inputstring, yes return 1, otherwise 0.
+    // Need to check a input_string of text for an occurrence of name. If it is in the inputstring, yes return 1, otherwise 0.
    char *token;
    int loop_index;
    char local_string[512];
@@ -529,7 +529,7 @@ exit(-1);
   // Adding fake event to combat MPI writing bug
   if (fake_event) {
     _class_particle _localparticle;
-     
+
     _localparticle.x  = 0.0;
     _localparticle.y  = 0.0;
     _localparticle.z  = -1.0;
@@ -573,11 +573,11 @@ exit(-1);
   struct pointer_to_global_geometry_list *global_geometry_list = COMP_GETPAR3(Union_init, init, global_geometry_list);
   struct pointer_to_global_abs_logger_list *global_specific_volumes_abs_logger_list = COMP_GETPAR3(Union_init, init, global_specific_volumes_abs_logger_list);
   // In order to run the logger at the right times, pointers to this logger is stored in each volume it logs,
-  //  and additionally for each avaiable process. If a process is not logged, the pointer is simply not stored.
+  //  and additionally for each available process. If a process is not logged, the pointer is simply not stored.
   int process_index;
   // Need to find the volumes for which the processes should have a reference to this logger
   if (target_geometry && strlen(target_geometry) && strcmp(target_geometry,"NULL") && strcmp(target_geometry, "0")) {
-    // Certain volumes were selected, find the indicies in the global_geometry_list
+    // Certain volumes were selected, find the indices in the global_geometry_list
     manual_linking_function_abs_logger_volumes(target_geometry, global_geometry_list, &accepted_volumes, NAME_CURRENT_COMP);
     // Add this logger to the global_specific_volumes_logger_list (so that conditionals can affect it)
     add_element_to_abs_logger_list(global_specific_volumes_abs_logger_list, abs_logger_list_element);
@@ -637,4 +637,3 @@ MCDISPLAY
 %}
 
 END
-
