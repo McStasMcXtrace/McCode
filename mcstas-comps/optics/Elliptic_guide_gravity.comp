@@ -1213,7 +1213,6 @@ TRACE
   latestParticleCollision.collisionType=0;
 
   PROP_Z0;
-  SCATTER;
 
   double Gloc;
   double Gx,Gy,Gz;
@@ -1229,6 +1228,7 @@ TRACE
 		    || fabs(y) > guideInfo.entranceVerticalWidth/2.0 )
 		  ABSORB;
 
+    SCATTER;
 
 	int bounces = 0;
 	for(bounces = 0; bounces <= 1000; bounces++){
