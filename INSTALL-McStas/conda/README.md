@@ -24,6 +24,10 @@ Due to the complex [licensing situation](https://discuss.scientific-python.org/t
 * ```mamba install mcstas```
 
 ## Note for use on Windows
+On Windows you will further need to install "c++ build tools for VS code" manually:
+
+Depending on your needs and available hard drive space, you can either directly install VC-2019 using the [Visual Studio Build Tools 2019 installer](https://aka.ms/vs/16/release/vs_BuildTools.exe), or you can install both VC-2022 and VC-2019 using the [Visual Studio Build Tools 2022 installer](https://aka.ms/vs/17/release/vs_BuildTools.exe), making sure to check the optional box for "MSVC v142 - VS 2019 C++ x64/x86 build tools (v14.29)".
+
 At the time of release for 3.5.16 MCPL and NCrystal are not yet available for Windows on conda-forge, so related instruments will not compile/function.
 We expect these dependencies to become available during the fall/winter of 2024.
 
