@@ -57,7 +57,6 @@ export MCCODE_USE_LEGACY_DESTINATIONS=ON
 ./mkdist mcstas-tools-python-mcdisplay-cad $1 tools/Python/mcdisplay/cad/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mingw64 "" -- nsis64
 ./mkdist mcstas-tools-python-mcdoc $1 tools/Python/mcdoc/ "" mingw64 "" -- nsis64
-./mkdist mcstas-ncrystal $1 3rdparty/ncrystal-package "" mingw64 "" -- nsis64
 ./mkdist mcstas-mcpl $1 3rdparty/mcpl-package "" mingw64 "" -- nsis64
 
 if [ "x$2" != "x" ]; then
