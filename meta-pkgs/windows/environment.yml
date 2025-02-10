@@ -26,6 +26,7 @@ dependencies:
   - nexpy
   - hdf5
   - xraylib
+  - ncrystal
   - jupytext
   - jupyterlab
   - ipympl
