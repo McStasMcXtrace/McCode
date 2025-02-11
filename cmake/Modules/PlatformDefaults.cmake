@@ -133,7 +133,7 @@ function( detect_platform_variables resultvarname )
   #MPI / OACC variables (don't attempt to detect, just expose here so it is
   #clear how to change them at the CMake cfg level):
 
-  set(OACCFLAGS "-fast -Minfo=accel -acc=gpu -gpu=managed -DOPENACC")
+  set(OACCFLAGS "-fast -Minfo=accel -acc=gpu -gpu=mem:managed -DOPENACC")
   provide_var( OACCFLAGS )
   set(OACC "nvc")
   provide_var( OACC )
