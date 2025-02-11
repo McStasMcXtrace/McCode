@@ -17,10 +17,10 @@
     "ISCONDAPKG": "0"
   },
   "compilation": {
-    "CFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=managed -DOPENACC -DUSE_MPI -lmpi -I/usr/lib/x86_64-linux-gnu/openmpi/include/ -L/usr/lib/x86_64-linux-gnu/openmpi/lib/",
+    "CFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=mem:managed -DOPENACC -DUSE_MPI -lmpi -I/usr/lib/x86_64-linux-gnu/openmpi/include/ -L/usr/lib/x86_64-linux-gnu/openmpi/lib/",
     "NEXUSFLAGS": "-DUSE_NEXUS -lNeXus",
     "MPIFLAGS": "-DUSE_MPI -lmpi -I/usr/lib/x86_64-linux-gnu/openmpi/include/ -L/usr/lib/x86_64-linux-gnu/openmpi/lib/",
-    "OACCFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=managed -DOPENACC",
+    "OACCFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=mem:managed -DOPENACC",
     "CC": "gcc",
     "OACC": "nvc",
     "MPICC": "mpicc",

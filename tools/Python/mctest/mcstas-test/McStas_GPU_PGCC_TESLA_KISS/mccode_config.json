@@ -18,10 +18,10 @@
     "ISCONDAPKG": "0"
   },
   "compilation": {
-    "CFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=managed -Minfo=accel -DOPENACC",
+    "CFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=mem:managed -Minfo=accel -DOPENACC",
     "NEXUSFLAGS": "-Wl,-rpath,GETPATH(lib) -LGETPATH(lib) -DUSE_NEXUS -lNeXus -IGETPATH(include/nexus)",
     "MPIFLAGS": "-DUSE_MPI -lmpi",
-    "OACCFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=managed -DOPENACC",
+    "OACCFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=mem:managed -DOPENACC",
     "CC": "nvc",
     "OACC": "nvc",
     "MPICC": "mpicc",
