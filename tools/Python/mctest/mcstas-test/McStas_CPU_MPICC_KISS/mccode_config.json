@@ -21,7 +21,7 @@
     "CFLAGS": "-g -lm -O2 -DUSE_MPI -lmpi -std=c99 -D_POSIX_SOURCE",
     "NEXUSFLAGS": "-Wl,-rpath,GETPATH(miniconda3/lib) -LGETPATH(miniconda3/lib) -DUSE_NEXUS -lNeXus -IGETPATH(miniconda3/include/nexus)",
     "MPIFLAGS": "-DUSE_MPI -lmpi",
-    "OACCFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=managed -DOPENACC",
+    "OACCFLAGS": "-fast -Minfo=accel -acc=gpu -gpu=mem:managed -DOPENACC",
     "GSLFLAGS": "-Wl,-rpath,GETPATH(miniconda3/lib) -LGETPATH(miniconda3/lib) -lgsl -lgslcblas -IGETPATH(miniconda3/include/)",
     "XRLFLAGS": "",
     "CC": "mpicc",
