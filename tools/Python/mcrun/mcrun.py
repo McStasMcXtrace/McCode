@@ -63,6 +63,10 @@ def add_mcrun_options(parser):
         action='store_true',
         help='force rebuilding of instrument')
 
+    add('--cogen',
+        metavar='cogen',
+        help='Choice of code-generator (implies -c)')
+    
     add('-I',
         metavar='I',
         help='Append to McCode search path (implies -c)')
@@ -339,7 +343,10 @@ def add_mcstas_options(parser):
 def expand_options(options):
     ''' Add extra options based on previous choices '''
     # McCode version and library
-    options.mccode_bin = mccode_config.configuration['MCCOGEN']
+    if options.cogen is None:
+        options.mccode_bin = mccode_config.configuration['MCCOGEN']
+    else:
+        options.mccode_bin = options.cogen
     options.mccode_lib = mccode_config.configuration['MCCODE_LIB_DIR']
 
     # MPI
