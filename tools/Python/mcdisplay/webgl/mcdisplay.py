@@ -5,6 +5,7 @@ mcdisplay webgl script.
 '''
 import os
 import sys
+import re
 import signal
 import time
 import logging
@@ -156,10 +157,11 @@ def write_browse(instrument, raybundle, dirname, instrname, timeout, nobrowse=No
             npmexe = "npm"
         else:
             npmexe = "npm.cmd"
-
+        ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
         try:
             proc = subprocess.Popen([npmexe,"run","dev"], cwd=str(destdist), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             for line in proc.stdout:
+                line = ansi_escape.sub('', line)
                 print(line)
                 if 'Local:' in line:
                     parts = line.strip().split(' ')
@@ -197,10 +199,11 @@ def write_browse(instrument, raybundle, dirname, instrname, timeout, nobrowse=No
     if port_container['process']:
         signal.signal(signal.SIGTERM, signal_handler)
         signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGUSR1, signal_handler)
-        signal.signal(signal.SIGUSR2, signal_handler)
+
         if not os.name == 'nt':
-            print('Press Ctrl+C to exit\n(visualisation server willterminate server after ' + str(timeout) + ' s)')
+            signal.signal(signal.SIGUSR1, signal_handler)
+            signal.signal(signal.SIGUSR2, signal_handler)
+            print('Press Ctrl+C to exit\n(visualisation server will terminate server after ' + str(timeout) + ' s)')
             time.sleep(timeout)
             print("Sending SIGTERM to npm/vite server")
             port_container['process'].send_signal(signal.SIGTERM)
