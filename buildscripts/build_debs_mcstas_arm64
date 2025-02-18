@@ -72,7 +72,7 @@ mv $DEB $WORK/dist/$DEBNAME
 
 cd $WORK
 
-cd 3rdparty/ncrystal
+cd 3rdparty/ncrystal/ncrystal_core
 rm -rf build
 mkdir build
 cd build
