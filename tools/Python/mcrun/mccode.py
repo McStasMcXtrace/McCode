@@ -249,6 +249,9 @@ class McStas:
                 # Insert NEXUSFLAGS if instrument/comps request this
                 flags = re.sub(r'\@NEXUSFLAGS\@', mccode_config.compilation['NEXUSFLAGS'], flags)
 
+                # Insert NCRYSTALFLAGS if instrument/comps request this
+                flags = re.sub(r'\@NCRYSTALFLAGS\@', mccode_config.compilation['NCRYSTALFLAGS'], flags)
+
                 # Insert GSLFLAGS if instrument/comps request this
                 flags = re.sub(r'\@GSLFLAGS\@', mccode_config.compilation['GSLFLAGS'], flags)
 
