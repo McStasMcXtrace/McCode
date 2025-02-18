@@ -72,13 +72,23 @@ function( detect_platform_variables resultvarname )
   endif()
   provide_var( EDITOR )
 
-  #idf-generator:
+  #McStas/McXtrace switches:
+  # - idf-generator
+  # - NCrystal flags
   if ( BUILD_MCSTAS )
     set( IDFGEN mcdisplay-mantid )
+    set( NCRYSTALFLAGS "CMD(ncrystal-config --show buildflags)" )
+
+    # Temporary solution for NCrystal on Windows 'MingW cross-compiled' systems
+    if ( WINDOWS AND NOT MCCODE_BUILD_CONDA_PKG )
+      set( NCRYSTALFLAGS "-Wl,-rpath,CMD(ncrystal-config --show libdir) -Wl,CMD(ncrystal-config --show libpath) -ICMD(ncrystal-config --show includedir)" )
+    endif()
   else()
     set( IDFGEN "" )
+    set( NCRYSTALFLAGS "")
   endif()
   provide_var( IDFGEN )
+  provide_var( NCRYSTALFLAGS )
 
   #HDF viewer
   if ( NOT HDFVIEW )
