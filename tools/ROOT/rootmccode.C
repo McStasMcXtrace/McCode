@@ -120,7 +120,6 @@ Mccoderun::Mccoderun(string instrument, unsigned long long n, string outdir, str
   stringstream tmp;
   tmp << "mcrun " << instrument << (help?" -h":"") << (fc?" -c":"") << (ft?" -t":"") << (outdir!=""?" -d "+outdir:"") << " -n " << n;
   this->command = tmp.str();
-  cout << "meh command to run is: " << this->command<<endl;
   this->instrument=instrument;
   this->outfile=instrument.substr(0,instrument.find_last_of('.')) + ".out";
   this->cfile=instrument.substr(0,instrument.find_last_of('.')) + ".c";
@@ -130,7 +129,6 @@ Mccoderun::Mccoderun(string instrument, unsigned long long n, string outdir, str
   this->np=mpi;
   this->ft=ft;
 }
-
 
 int Mccoderun::run(){
   /*stat the files referenced and do the system calls necessary*/
