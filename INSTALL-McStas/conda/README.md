@@ -1,6 +1,6 @@
-# Install McStas 3.5.16 through conda-forge (macOS, Linux or Windows host)
+# Install McStas 3.5.24 through conda-forge (macOS, Linux or Windows host)
 
-* We a set of conda-packages for installing McStas 3.5.16.x through conda
+* We a set of conda-packages for installing McStas 3.5.24.x through conda
 
 ## Get yourself a conda / mamba
 Due to the complex [licensing situation](https://discuss.scientific-python.org/t/response-to-anaconda-switch-to-paid-plans/1395) with the commercial Anaconda ecosystem, we clearly recommend McStas users to start from an open-source entry-point such as
@@ -28,7 +28,7 @@ On Windows you will further need to install "c++ build tools for VS code" manual
 
 Depending on your needs and available hard drive space, you can either directly install VC-2019 using the [Visual Studio Build Tools 2019 installer](https://aka.ms/vs/16/release/vs_BuildTools.exe), or you can install both VC-2022 and VC-2019 using the [Visual Studio Build Tools 2022 installer](https://aka.ms/vs/17/release/vs_BuildTools.exe), making sure to check the optional box for "MSVC v142 - VS 2019 C++ x64/x86 build tools (v14.29)".
 
-At the time of release for 3.5.16 MCPL and NCrystal are not yet available for Windows on conda-forge, so related instruments will not compile/function.
+At the time of release for 3.5.24 MCPL and NCrystal are not yet available for Windows on conda-forge, so related instruments will not compile/function.
 We expect these dependencies to become available during the fall/winter of 2024.
 
 ## Install McStasScript, jypyterlab ipympl

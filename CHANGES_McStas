@@ -54,11 +54,101 @@
 * Modified by: PW September 2024: version 3.5.1
 * Modified by: PW November 2024: version 3.5.12
 * Modified by: PW December 2024: version 3.5.16
+* Modified by: PW December 2025: version 3.5.24
 *
-* This file is part of McStas 3.5.16, released December 16th 2024.
+* This file is part of McStas 3.5.24, released February 19th 2025.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas/McXtrace 3.5.24, February 19th, 2025
+## What's Changed
+
+### Important note
+* McStas and McXtrace will soon change organisation-name on GitHub - from McStasMcXtrace -> mccode-dev
+
+### User interfaces and tools
+* [Feature] `mcgui/mxgui` Let configuration dialogue spawn your `EDITOR` to edit your local `mccode_config.json` 
+by @willend in https://github.com/McStasMcXtrace/McCode/pull/1838 (available also by `--edit-user-config` from `mcrun/mxrun`)
+* [Feature] `mcrun/mxrun`: New switch --cogen to allow on-demand switch to non-standard code generator. 
+See also interoperability with `mccode-antlr` below 
+by @willend in https://github.com/McStasMcXtrace/McCode/pull/1851
+* [Feature] `mcrun/mxrun` Solution for picking up code generator from PATH if not found where expected 
+by @willend in https://github.com/McStasMcXtrace/McCode/pull/1840
+* [Feature] pygen minor revision: Build importable make() function and call from generic notebook 
+by @willend in https://github.com/McStasMcXtrace/McCode/pull/1827
+* [Fix] Support Scintilla editor on Debian with Qt6 
+by @willend in https://github.com/McStasMcXtrace/McCode/pull/1813
+* [Fix] Drop hard-coded check for PyQt5 
+by @willend in https://github.com/McStasMcXtrace/McCode/pull/1814
+* [Fix] No more hidden Perl dependencies! (perl -> python 1-liner readlinkf()) 
+by @willend in https://github.com/McStasMcXtrace/McCode/pull/1824
+* [Fix] too-restrictive `mcdisplay/mxdisplay` instrument line parsing 
+by @g5t in https://github.com/McStasMcXtrace/McCode/pull/1834
+* [Fix] Patches for `mcdisplay/mxdisplay` in Windows 
+from @LelandWH https://github.com/McStasMcXtrace/McCode/issues/1853
+
+### Components and instruments
+* [Fix] McStas `Vertical_bender`: Add max iteration criterion for while loop (default 1000). 
+by @willend in https://github.com/McStasMcXtrace/McCode/pull/1815
+* [Fix] McStas `NCrystal_sample`: Remove possible out-of-bounds memory access 
+by @g5t in https://github.com/McStasMcXtrace/McCode/pull/1821
+* [Fix] McStas `Elliptic_guide_gravity` and `Pol_mirror`: Minor comp revisions, suppresses compilation warnings from clang 
+by @willend in https://github.com/McStasMcXtrace/McCode/pull/1826
+* [Fix] McStas `SNS_ARCS.instr` edits 
+by @willend in https://github.com/McStasMcXtrace/McCode/pull/1838
+* [Fix] McStas `ISIS_IMAT.instr` DEPENDENCY " @NEXUSFLAGS@ " added 
+by @willend in https://github.com/McStasMcXtrace/McCode/pull/1839
+* [Fix] McStas `Union_master` Adjustment of default parameter 
+by @willend in https://github.com/McStasMcXtrace/McCode/pull/1840
+* [Fix] McStas `Union`-related fixes and imports from DMSC school 
+by @willend in https://github.com/McStasMcXtrace/McCode/pull/1841
+* [Fix] McStas `Elliptical_guide_gravity` did not work in GROUPS as it always SCATTERS 
+by @mads-bertelsen in https://github.com/McStasMcXtrace/McCode/pull/1843
+* [Fix] `Monitor_nD` on GPU: Adjustments for coherence between CPU and GPU particle lists 
+by @willend in https://github.com/McStasMcXtrace/McCode/pull/1816
+
+### Core simulation toolkit
+* [Feature] NeXus: sort comp instances by index and include comp parameter information 
+by @willend in https://github.com/McStasMcXtrace/McCode/pull/1828
+* [Fix] Increased stability in  NeXus x wide MPI 
+by @willend in https://github.com/McStasMcXtrace/McCode/pull/1811
+* [Fix] Portability, Windows + `cl.exe`: Remove variable length array allocations for issue #1817 
+by @g5t in https://github.com/McStasMcXtrace/McCode/pull/1819 and
+  https://github.com/McStasMcXtrace/McCode/issues/1818 by @willend in https://github.com/McStasMcXtrace/McCode/pull/1822
+
+### Interfaces and interoperability with other codes
+#### [NCrystal](https://github.com/mctools/ncrystal/wiki) 
+* Thanks to @tkittel for ping-pong on this :)
+* [Feature] McStas 3.5.24 and later now depends on NCrystal 4.0.0 and later. NCrystal is now available also on Windows! 
+by @willend in https://github.com/McStasMcXtrace/McCode/pull/1848 and  https://github.com/McStasMcXtrace/McCode/pull/1855
+
+#### [`mccode-antlr`](https://github.com/McStasMcXtrace/mccode-antlr)
+* Thanks to @g5t for ping-pong on this :)
+* [Feature] `mccode-antlr` is an alternative code-generator for McStas and McXtrace - a new development by @g5t and based on `ANTLR` instead of `lex/yacc`. The new tool is mainly written in python and thus has a lower barrier for changes in language syntax and code generation. The tool implementations `mcstas-antlr` and `mcxtrace-antlr` are thus a candidate implementations to potentially replace the classic `mcstas` and `mcxtrace` code generators in the future. Current status is that
+  * McStas: `mcstas-antlr` is fully feature complete wrt. `mcstas` for CPU simulations and close to complete for GPU simulations
+  * McXtrace: Not all instruments will compile using `mcxtrace-antlr` but basic functionality is in place
+  * To try: 
+    1. Install `mccode-antlr` from `conda-forge` or via `pip`
+    2. Adapt your configuration to use e.g. `mcstas-antlr` by 
+      * Setting the new `--cogen=mcstas-antlr` option in `mcrun`
+      * Enable or edit the `MCCOGEN` field of `mccode_config.json` using the new `Save/Edit configuration` in `mcgui`
+      * (The antlr tools default to download comps etc. to an internal cache: Add e.g. `-I${MCSTAS}` to prefer ingredients fromyour local library)
+    3. Use the `mcrun-antlr/mxrun-antlr` tools provided directly by `mccode-antlr`
+
+### Platform support
+* Debian/Ubuntu
+  * [Fix] Make hidden numpy dependency explicit also on Debian by @willend in https://github.com/McStasMcXtrace/McCode/pull/1825
+  * [Fix] McXtrace meta-pkgs for Debian add libgsl-dev as dependency by @farhi in https://github.com/McStasMcXtrace/McCode/pull/185
+* Windows
+  * [Feature] NCrystal is now available with McStas on Windows
+  * [Info] Windows via cross-compiled `.exe`installer from `mccode.org`: 
+  Please place the MCPL-related `.bat` files from the `extras` folder in e.g. `c:\mcstas-3.5.24\bin` to enable MCPL
+  (May require giving your user 'full access' permissions to the bin folder)
+  * [Info] Windows via conda-forge: MCPL is not yet available but expected during the spring
+
+
+**Full Changelog**: https://github.com/McStasMcXtrace/McCode/compare/v3.5.16...v3.5.24
+
 Changes in McStas/McXtrace 3.5.16, November 16th, 2024
 
 ## What's Changed
