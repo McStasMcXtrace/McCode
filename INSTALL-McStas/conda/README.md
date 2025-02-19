@@ -31,10 +31,6 @@ Depending on your needs and available hard drive space, you can either directly 
 At the time of release for 3.5.24 MCPL is not yet available for Windows on conda-forge, so related instruments will not compile/function.
 We expect this dependency to become available during the spring of 2025.
 
-## Install McStasScript, jypyterlab ipympl
-* ```mamba install pip jupyterlab ipympl```
-* ```pip install mcstasscript```
-
 You are welcome to contact us in case of issues, e.g. via
 *   [mcstas-users](mailto:mcstas-users@mcstas.org)
 * by creating an issue on [the McCode issue tracker](https://github.com/McStasMcXtrace/McCode/issues)
