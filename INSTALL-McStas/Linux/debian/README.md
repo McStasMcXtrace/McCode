@@ -1,5 +1,5 @@
-## Install McStas 3.5.16 On Debian class systems (including Ubuntu, mint etc.):
-The packages have been tested to work correctly on Ubuntu 22.04 and Debian 11.
+## Install McStas 3.5.24 On Debian class systems (including Ubuntu, mint etc.):
+The packages have been tested to work correctly on Ubuntu 24.04.
 
 # Add the McCode repository
 After following the below steps your package manager should now be aware of mcstas
@@ -29,7 +29,7 @@ mcstas-tools-python-mcplot-pyqtgraph - python-tools-mcplot-pyqtgraph built using
 mcstas-tools-python-mcrun - python-tools-mcrun built using CMake
 ```
 The meta-package mcstas-suite-python (or mcstas-suite-python-ng)
-allows you to install mcstas 3.5.16 with tools (mcrun/mcplot etc.) by
+allows you to install mcstas 3.5.24 with tools (mcrun/mcplot etc.) by
 the simple apt-get command
 ```bash
 sudo apt-get install mcstas-suite-python
