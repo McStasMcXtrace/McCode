@@ -63,6 +63,9 @@
 Changes in McStas/McXtrace 3.5.24, February 19th, 2025
 ## What's Changed
 
+### Important note
+* McStas and McXtrace will soon change organisation-name on GitHub - from McStasMcXtrace -> mccode-dev
+
 ### User interfaces and tools
 * [Feature] `mcgui/mxgui` Let configuration dialogue spawn your `EDITOR` to edit your local `mccode_config.json` 
 by @willend in https://github.com/McStasMcXtrace/McCode/pull/1838 (available also by `--edit-user-config` from `mcrun/mxrun`)
