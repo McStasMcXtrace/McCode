@@ -8,7 +8,7 @@
 #
 # @descr This tool comes from Takin 2: https://dx.doi.org/10.5281/zenodo.4117437
 # @descr For a good explanation of the covariance matrix method, see T. Arens et al., "Mathematik", 2015, ISBN: 978-3-642-44919-2, pp. 795 and 1372.
-# @descr Reimplements the functionality of https://github.com/McStasMcXtrace/McCode/blob/master/tools/Legacy-Perl/mcresplot.pl
+# @descr Reimplements the functionality of https://github.com/mccode-dev/McCode/blob/master/tools/Legacy-Perl/mcresplot.pl
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

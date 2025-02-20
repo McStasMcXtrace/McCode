@@ -15,7 +15,7 @@ then
     rm ${BASEDIR}/Contents/Resources/INJECTING
     exit
 else
-    (cd /tmp && curl -L -O https://raw.githubusercontent.com/McStasMcXtrace/McCode/main/@FLAVOR@-environment.yml)
+    (cd /tmp && curl -L -O https://raw.githubusercontent.com/mccode-dev/McCode/main/@FLAVOR@-environment.yml)
     ret_code1=$?
     if [ "$ret_code1" != "0" ];
     then
