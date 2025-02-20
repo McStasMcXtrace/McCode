@@ -13,5 +13,5 @@
 ## Reporting an Issue or Vulnerability
 
 Please either
-* post an issue through https://github.com/McStasMcXtrace/McCode/issues
+* post an issue through https://github.com/mccode-dev/McCode/issues
 * post an email to mcstas-users@mcstas.org or mcxtrace-users@mcxtrace.org

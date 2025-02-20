@@ -33,4 +33,4 @@ We expect this dependency to become available during the spring of 2025.
 
 You are welcome to contact us in case of issues, e.g. via
 *   [mcstas-users](mailto:mcstas-users@mcstas.org)
-* by creating an issue on [the McCode issue tracker](https://github.com/McStasMcXtrace/McCode/issues)
+* by creating an issue on [the McCode issue tracker](https://github.com/mccode-dev/McCode/issues)

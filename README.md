@@ -19,17 +19,17 @@ This file is part of McStas / McXtrace.
 * <a href="http://www.mcstas.org">Official McStas website</a>
 * <a href="http://www.mcxtrace.org">Official McXtrace website</a>
 
-[![mcstas-basictest](https://github.com/McStasMcXtrace/McCode/actions/workflows/mcstas-basictest.yml/badge.svg)](https://github.com/McStasMcXtrace/McCode/actions/workflows/mcstas-basictest.yml)[![mcxtrace-basictest](https://github.com/McStasMcXtrace/McCode/actions/workflows/mcxtrace-basictest.yml/badge.svg)](https://github.com/McStasMcXtrace/McCode/actions/workflows/mcxtrace-basictest.yml)
+[![mcstas-basictest](https://github.com/mccode-dev/McCode/actions/workflows/mcstas-basictest.yml/badge.svg)](https://github.com/mccode-dev/McCode/actions/workflows/mcstas-basictest.yml)[![mcxtrace-basictest](https://github.com/mccode-dev/McCode/actions/workflows/mcxtrace-basictest.yml/badge.svg)](https://github.com/mccode-dev/McCode/actions/workflows/mcxtrace-basictest.yml)
 
 
 **Current stable release**
-Please consult https://www.mcstas.org and https://www.mcxtrace.org or https://github.com/McStasMcXtrace/McCode/releases/
+Please consult https://www.mcstas.org and https://www.mcxtrace.org or https://github.com/mccode-dev/McCode/releases/
 
 **Current development builds for selected platforms:**
-* [McStas Intel/x86_64 Ubuntu deb's + cross-compiled Windows package](https://nightly.link/McStasMcXtrace/McCode/workflows/mcstas-autobuild/main/mcstas-artefacts-ubuntu-latest.zip)
-* [McStas Intel + arm64 macOS](https://nightly.link/McStasMcXtrace/McCode/workflows/mcstas-autobuild/main/mcstas-artefacts-macos-latest.zip)
-* [McXtrace Intel/x86_64 Ubuntu deb's + cross-compiled Windows package](https://nightly.link/McStasMcXtrace/McCode/workflows/mcxtrace-autobuild/main/mcxtrace-artefacts-ubuntu-latest.zip)
-* [McXtrace Intel + arm64 macOS](https://nightly.link/McStasMcXtrace/McCode/workflows/mcxtrace-autobuild/main/mcxtrace-artefacts-macos-latest.zip)
+* [McStas Intel/x86_64 Ubuntu deb's + cross-compiled Windows package](https://nightly.link/mccode-dev/McCode/workflows/mcstas-autobuild/main/mcstas-artefacts-ubuntu-latest.zip)
+* [McStas Intel + arm64 macOS](https://nightly.link/mccode-dev/McCode/workflows/mcstas-autobuild/main/mcstas-artefacts-macos-latest.zip)
+* [McXtrace Intel/x86_64 Ubuntu deb's + cross-compiled Windows package](https://nightly.link/mccode-dev/McCode/workflows/mcxtrace-autobuild/main/mcxtrace-artefacts-ubuntu-latest.zip)
+* [McXtrace Intel + arm64 macOS](https://nightly.link/mccode-dev/McCode/workflows/mcxtrace-autobuild/main/mcxtrace-artefacts-macos-latest.zip)
 
 *******************************************************************************
 ```

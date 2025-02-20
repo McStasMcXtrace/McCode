@@ -6,7 +6,7 @@
 *         Institut Laue Langevin, Grenoble, France
 *
 * McStas and McXtrace share code repository at
-* https://github.com/McStasMcXtrace/McCode
+* https://github.com/mccode-dev/McCode
 *
 * Both codes are released under GPL v3
 *
@@ -68,61 +68,61 @@ Changes in McStas/McXtrace 3.5.24, February 19th, 2025
 
 ### User interfaces and tools
 * [Feature] `mcgui/mxgui` Let configuration dialogue spawn your `EDITOR` to edit your local `mccode_config.json` 
-by @willend in https://github.com/McStasMcXtrace/McCode/pull/1838 (available also by `--edit-user-config` from `mcrun/mxrun`)
+by @willend in https://github.com/mccode-dev/McCode/pull/1838 (available also by `--edit-user-config` from `mcrun/mxrun`)
 * [Feature] `mcrun/mxrun`: New switch --cogen to allow on-demand switch to non-standard code generator. 
 See also interoperability with `mccode-antlr` below 
-by @willend in https://github.com/McStasMcXtrace/McCode/pull/1851
+by @willend in https://github.com/mccode-dev/McCode/pull/1851
 * [Feature] `mcrun/mxrun` Solution for picking up code generator from PATH if not found where expected 
-by @willend in https://github.com/McStasMcXtrace/McCode/pull/1840
+by @willend in https://github.com/mccode-dev/McCode/pull/1840
 * [Feature] pygen minor revision: Build importable make() function and call from generic notebook 
-by @willend in https://github.com/McStasMcXtrace/McCode/pull/1827
+by @willend in https://github.com/mccode-dev/McCode/pull/1827
 * [Fix] Support Scintilla editor on Debian with Qt6 
-by @willend in https://github.com/McStasMcXtrace/McCode/pull/1813
+by @willend in https://github.com/mccode-dev/McCode/pull/1813
 * [Fix] Drop hard-coded check for PyQt5 
-by @willend in https://github.com/McStasMcXtrace/McCode/pull/1814
+by @willend in https://github.com/mccode-dev/McCode/pull/1814
 * [Fix] No more hidden Perl dependencies! (perl -> python 1-liner readlinkf()) 
-by @willend in https://github.com/McStasMcXtrace/McCode/pull/1824
+by @willend in https://github.com/mccode-dev/McCode/pull/1824
 * [Fix] too-restrictive `mcdisplay/mxdisplay` instrument line parsing 
-by @g5t in https://github.com/McStasMcXtrace/McCode/pull/1834
+by @g5t in https://github.com/mccode-dev/McCode/pull/1834
 * [Fix] Patches for `mcdisplay/mxdisplay` in Windows 
-from @LelandWH https://github.com/McStasMcXtrace/McCode/issues/1853
+from @LelandWH https://github.com/mccode-dev/McCode/issues/1853
 
 ### Components and instruments
 * [Fix] McStas `Vertical_bender`: Add max iteration criterion for while loop (default 1000). 
-by @willend in https://github.com/McStasMcXtrace/McCode/pull/1815
+by @willend in https://github.com/mccode-dev/McCode/pull/1815
 * [Fix] McStas `NCrystal_sample`: Remove possible out-of-bounds memory access 
-by @g5t in https://github.com/McStasMcXtrace/McCode/pull/1821
+by @g5t in https://github.com/mccode-dev/McCode/pull/1821
 * [Fix] McStas `Elliptic_guide_gravity` and `Pol_mirror`: Minor comp revisions, suppresses compilation warnings from clang 
-by @willend in https://github.com/McStasMcXtrace/McCode/pull/1826
+by @willend in https://github.com/mccode-dev/McCode/pull/1826
 * [Fix] McStas `SNS_ARCS.instr` edits 
-by @willend in https://github.com/McStasMcXtrace/McCode/pull/1838
+by @willend in https://github.com/mccode-dev/McCode/pull/1838
 * [Fix] McStas `ISIS_IMAT.instr` DEPENDENCY " @NEXUSFLAGS@ " added 
-by @willend in https://github.com/McStasMcXtrace/McCode/pull/1839
+by @willend in https://github.com/mccode-dev/McCode/pull/1839
 * [Fix] McStas `Union_master` Adjustment of default parameter 
-by @willend in https://github.com/McStasMcXtrace/McCode/pull/1840
+by @willend in https://github.com/mccode-dev/McCode/pull/1840
 * [Fix] McStas `Union`-related fixes and imports from DMSC school 
-by @willend in https://github.com/McStasMcXtrace/McCode/pull/1841
+by @willend in https://github.com/mccode-dev/McCode/pull/1841
 * [Fix] McStas `Elliptical_guide_gravity` did not work in GROUPS as it always SCATTERS 
-by @mads-bertelsen in https://github.com/McStasMcXtrace/McCode/pull/1843
+by @mads-bertelsen in https://github.com/mccode-dev/McCode/pull/1843
 * [Fix] `Monitor_nD` on GPU: Adjustments for coherence between CPU and GPU particle lists 
-by @willend in https://github.com/McStasMcXtrace/McCode/pull/1816
+by @willend in https://github.com/mccode-dev/McCode/pull/1816
 
 ### Core simulation toolkit
 * [Feature] NeXus: sort comp instances by index and include comp parameter information 
-by @willend in https://github.com/McStasMcXtrace/McCode/pull/1828
+by @willend in https://github.com/mccode-dev/McCode/pull/1828
 * [Fix] Increased stability in  NeXus x wide MPI 
-by @willend in https://github.com/McStasMcXtrace/McCode/pull/1811
+by @willend in https://github.com/mccode-dev/McCode/pull/1811
 * [Fix] Portability, Windows + `cl.exe`: Remove variable length array allocations for issue #1817 
-by @g5t in https://github.com/McStasMcXtrace/McCode/pull/1819 and
-  https://github.com/McStasMcXtrace/McCode/issues/1818 by @willend in https://github.com/McStasMcXtrace/McCode/pull/1822
+by @g5t in https://github.com/mccode-dev/McCode/pull/1819 and
+  https://github.com/mccode-dev/McCode/issues/1818 by @willend in https://github.com/mccode-dev/McCode/pull/1822
 
 ### Interfaces and interoperability with other codes
 #### [NCrystal](https://github.com/mctools/ncrystal/wiki) 
 * Thanks to @tkittel for ping-pong on this :)
 * [Feature] McStas 3.5.24 and later now depends on NCrystal 4.0.0 and later. NCrystal is now available also on Windows! 
-by @willend in https://github.com/McStasMcXtrace/McCode/pull/1848 and  https://github.com/McStasMcXtrace/McCode/pull/1855
+by @willend in https://github.com/mccode-dev/McCode/pull/1848 and  https://github.com/mccode-dev/McCode/pull/1855
 
-#### [`mccode-antlr`](https://github.com/McStasMcXtrace/mccode-antlr)
+#### [`mccode-antlr`](https://github.com/mccode-dev/mccode-antlr)
 * Thanks to @g5t for ping-pong on this :)
 * [Feature] `mccode-antlr` is an alternative code-generator for McStas and McXtrace - a new development by @g5t and based on `ANTLR` instead of `lex/yacc`. The new tool is mainly written in python and thus has a lower barrier for changes in language syntax and code generation. The tool implementations `mcstas-antlr` and `mcxtrace-antlr` are thus a candidate implementations to potentially replace the classic `mcstas` and `mcxtrace` code generators in the future. Current status is that
   * McStas: `mcstas-antlr` is fully feature complete wrt. `mcstas` for CPU simulations and close to complete for GPU simulations
@@ -137,8 +137,8 @@ by @willend in https://github.com/McStasMcXtrace/McCode/pull/1848 and  https://g
 
 ### Platform support
 * Debian/Ubuntu
-  * [Fix] Make hidden numpy dependency explicit also on Debian by @willend in https://github.com/McStasMcXtrace/McCode/pull/1825
-  * [Fix] McXtrace meta-pkgs for Debian add libgsl-dev as dependency by @farhi in https://github.com/McStasMcXtrace/McCode/pull/185
+  * [Fix] Make hidden numpy dependency explicit also on Debian by @willend in https://github.com/mccode-dev/McCode/pull/1825
+  * [Fix] McXtrace meta-pkgs for Debian add libgsl-dev as dependency by @farhi in https://github.com/mccode-dev/McCode/pull/185
 * Windows
   * [Feature] NCrystal is now available with McStas on Windows
   * [Info] Windows via cross-compiled `.exe`installer from `mccode.org`: 
@@ -147,120 +147,120 @@ by @willend in https://github.com/McStasMcXtrace/McCode/pull/1848 and  https://g
   * [Info] Windows via conda-forge: MCPL is not yet available but expected during the spring
 
 
-**Full Changelog**: https://github.com/McStasMcXtrace/McCode/compare/v3.5.16...v3.5.24
+**Full Changelog**: https://github.com/mccode-dev/McCode/compare/v3.5.16...v3.5.24
 
 Changes in McStas/McXtrace 3.5.16, November 16th, 2024
 
 ## What's Changed
 * Tools, McStas and McXtrace:
   * m[c,x]gui Reorder m[c,x]gui config dialogue for better visibility on "small screens"
-  by @willend in https://github.com/McStasMcXtrace/McCode/pull/1775
+  by @willend in https://github.com/mccode-dev/McCode/pull/1775
   * m[c,x]plot-pyqtgraph Fix to support for all combinations of Qt5, Qt6, PySide6 #1768 
-  by @willend in https://github.com/McStasMcXtrace/McCode/pull/1798 and https://github.com/McStasMcXtrace/McCode/pull/1797
+  by @willend in https://github.com/mccode-dev/McCode/pull/1798 and https://github.com/mccode-dev/McCode/pull/1797
   * m[c,x]test avoid recompile-attempts for already failed instruments by 
-  @willend in https://github.com/McStasMcXtrace/McCode/pull/1792
+  @willend in https://github.com/mccode-dev/McCode/pull/1792
 
 * McStas, McXtrace packaging:
   * Fix debian package structure/versioning (#1783) 
-  by @willend in https://github.com/McStasMcXtrace/McCode/pull/1787
+  by @willend in https://github.com/mccode-dev/McCode/pull/1787
   * Ensure the MCCODE_MAJOR/MINOR/PATCH vars always have a meaning 
-  by @willend in https://github.com/McStasMcXtrace/McCode/pull/1789
+  by @willend in https://github.com/mccode-dev/McCode/pull/1789
   * **Important note wrt. Debian packages:** If you install both of mcstas and mcxtrace on the same Debian/Ubuntu system, you will get a collision for the file `/usr/bin/cif2hkl`. As a workaround you may allow joint installation via overriding `cif2hkl`:
   `sudo apt-get -f install  -o Dpkg::Options::="--force-overwrite"`
 
 
 * McStas and McXtrace components and instruments
   * PowderN: fix warning message repeated for ever by 
-  @farhi in https://github.com/McStasMcXtrace/McCode/pull/1777
+  @farhi in https://github.com/mccode-dev/McCode/pull/1777
   * McXtrace fixes to 3 instrument models (expected values) and one component (compile error) ->  "all green" status
-  by @willend in https://github.com/McStasMcXtrace/McCode/pull/1793
+  by @willend in https://github.com/mccode-dev/McCode/pull/1793
   * Fix issue 1794 monitor_nd to ensure **atomic** list-mode on GPU
-  by @willend in https://github.com/McStasMcXtrace/McCode/pull/1796
+  by @willend in https://github.com/mccode-dev/McCode/pull/1796
 
 * McStas, increased support for mcstas-antlr code generator:
   * Let mcstas-antlr produce output for 1-2 SNS instruments by 
-  @willend in https://github.com/McStasMcXtrace/McCode/pull/1776
+  @willend in https://github.com/mccode-dev/McCode/pull/1776
   * Use DECLARE/INIT vars to set up Mono/Ana in templateTAS 
-  @willend in https://github.com/McStasMcXtrace/McCode/pull/1778
+  @willend in https://github.com/mccode-dev/McCode/pull/1778
   * Print warning when overwriting COPY EXTEND %{%} block from instance by 
-  @willend in https://github.com/McStasMcXtrace/McCode/pull/1786
+  @willend in https://github.com/mccode-dev/McCode/pull/1786
   * Minor fix for I`LL_H22_VIVALDI.instr `
-  by @willend in https://github.com/McStasMcXtrace/McCode/pull/1788
+  by @willend in https://github.com/mccode-dev/McCode/pull/1788
   * ANTLR-support: Replace nasty type var[] in fact headers by 
-  @willend in https://github.com/McStasMcXtrace/McCode/pull/1790
+  @willend in https://github.com/mccode-dev/McCode/pull/1790
   * Various minor comp instr fixes 
-  by @willend in https://github.com/McStasMcXtrace/McCode/pull/1795  
+  by @willend in https://github.com/mccode-dev/McCode/pull/1795  
 
-**Full Changelog**: https://github.com/McStasMcXtrace/McCode/compare/v3.5.12...v3.5.16
+**Full Changelog**: https://github.com/mccode-dev/McCode/compare/v3.5.12...v3.5.16
 **Specific issues solved:**:
-* https://github.com/McStasMcXtrace/McCode/issues/1794
-* https://github.com/McStasMcXtrace/McCode/issues/1785
-* https://github.com/McStasMcXtrace/McCode/issues/1783
-* https://github.com/McStasMcXtrace/McCode/issues/1768
+* https://github.com/mccode-dev/McCode/issues/1794
+* https://github.com/mccode-dev/McCode/issues/1785
+* https://github.com/mccode-dev/McCode/issues/1783
+* https://github.com/mccode-dev/McCode/issues/1768
 
 Changes in McStas/McXtrace 3.5.12, November 22nd, 2024
 
 ## What's Changed
 
 * Platform support and installation procedures
-  * McStas + McXtrace: Allow to build installable packages for linux aarch64 Debian / arm64 by @willend in https://github.com/McStasMcXtrace/McCode/pull/1702
-  * McStas + McXtrace: Install mcstasscript from conda in the meta-packages. by @willend in https://github.com/McStasMcXtrace/McCode/pull/1724
+  * McStas + McXtrace: Allow to build installable packages for linux aarch64 Debian / arm64 by @willend in https://github.com/mccode-dev/McCode/pull/1702
+  * McStas + McXtrace: Install mcstasscript from conda in the meta-packages. by @willend in https://github.com/mccode-dev/McCode/pull/1724
 
 * Please note that the packages are currently **NOT** available via the packages.mccode.org repo - and that you will have to manually uninstall McStas/McXtrace 3.5.1 before attempting to install 3.5.12 
 
 * Code generator and runtime-code
-  * McStas + McXtrace: Fix for SPLIT + GROUP issue: In instruments with a SPLIT N followed by a GROUP, the last N-1 particles would become lost. by @willend in https://github.com/McStasMcXtrace/McCode/pull/1760
+  * McStas + McXtrace: Fix for SPLIT + GROUP issue: In instruments with a SPLIT N followed by a GROUP, the last N-1 particles would become lost. by @willend in https://github.com/mccode-dev/McCode/pull/1760
   * McStas + McXtrace: Implement combined OpenACC multicore + gpu in same binary. Enable by adding 
-  `"OACCFLAGS": "-fast -Minfo=accel -acc=gpu,multicore -gpu=managed -DOPENACC -DMULTICORE",` to your `mccode_config.json` by @willend in https://github.com/McStasMcXtrace/McCode/pull/1761
-  * McStas + McXtrace: Add  -D_DARWIN_C_SOURCE on macOS, required for correctly using `#include <stdio.h>` by @willend in https://github.com/McStasMcXtrace/McCode/pull/1703
+  `"OACCFLAGS": "-fast -Minfo=accel -acc=gpu,multicore -gpu=managed -DOPENACC -DMULTICORE",` to your `mccode_config.json` by @willend in https://github.com/mccode-dev/McCode/pull/1761
+  * McStas + McXtrace: Add  -D_DARWIN_C_SOURCE on macOS, required for correctly using `#include <stdio.h>` by @willend in https://github.com/mccode-dev/McCode/pull/1703
 
 * Component bugfixes and improvements
-  * McStas + McXtrace: Make use of mcpl_dump() in MCPL_output verbose mode by @willend in https://github.com/McStasMcXtrace/McCode/pull/1704
-  * McStas: MCPL_input, correction of #1733 by @willend in https://github.com/McStasMcXtrace/McCode/pull/1734
-  * McStas: [Fix] compilation error, if not behavior in Pol_guide_vmirror.comp by @g5t in https://github.com/McStasMcXtrace/McCode/pull/1708
-  * McStas: Fix contributed component type mismatches (Monochromator_bent and Statistical_Chopper) @g5t in https://github.com/McStasMcXtrace/McCode/pull/1714
-  * McStas: Union restructure share includes by @willend in https://github.com/McStasMcXtrace/McCode/pull/1716
-  * McStas: PowderN: fixing tth_sign argument by @farhi in https://github.com/McStasMcXtrace/McCode/pull/1727 and  Fix for https://github.com/McStasMcXtrace/McCode/issues/1741 by @willend in https://github.com/McStasMcXtrace/McCode/pull/1745
-  * McXtrace: Add Collimator_linear port McStas -> McXtrace by @willend in https://github.com/McStasMcXtrace/McCode/pull/1737
-  * McStas + McXtrace: Removal of all DECLARATION and OUTPUT parameters by @willend in https://github.com/McStasMcXtrace/McCode/pull/1754
-  * McStas + McXtrace Fix SX issue from minghuisvn by @willend in https://github.com/McStasMcXtrace/McCode/pull/1755
-  * Sync McStas <-> McXtrace powdern focusing algo for https://github.com/McStasMcXtrace/McCode/issues/1741 by @willend in https://github.com/McStasMcXtrace/McCode/pull/1747 + consequence-edits in https://github.com/McStasMcXtrace/McCode/pull/1748
-  * McStas + McXtrace: Source_div_quasi fix for #1735 by @ebknudsen in https://github.com/McStasMcXtrace/McCode/pull/1759
+  * McStas + McXtrace: Make use of mcpl_dump() in MCPL_output verbose mode by @willend in https://github.com/mccode-dev/McCode/pull/1704
+  * McStas: MCPL_input, correction of #1733 by @willend in https://github.com/mccode-dev/McCode/pull/1734
+  * McStas: [Fix] compilation error, if not behavior in Pol_guide_vmirror.comp by @g5t in https://github.com/mccode-dev/McCode/pull/1708
+  * McStas: Fix contributed component type mismatches (Monochromator_bent and Statistical_Chopper) @g5t in https://github.com/mccode-dev/McCode/pull/1714
+  * McStas: Union restructure share includes by @willend in https://github.com/mccode-dev/McCode/pull/1716
+  * McStas: PowderN: fixing tth_sign argument by @farhi in https://github.com/mccode-dev/McCode/pull/1727 and  Fix for https://github.com/mccode-dev/McCode/issues/1741 by @willend in https://github.com/mccode-dev/McCode/pull/1745
+  * McXtrace: Add Collimator_linear port McStas -> McXtrace by @willend in https://github.com/mccode-dev/McCode/pull/1737
+  * McStas + McXtrace: Removal of all DECLARATION and OUTPUT parameters by @willend in https://github.com/mccode-dev/McCode/pull/1754
+  * McStas + McXtrace Fix SX issue from minghuisvn by @willend in https://github.com/mccode-dev/McCode/pull/1755
+  * Sync McStas <-> McXtrace powdern focusing algo for https://github.com/mccode-dev/McCode/issues/1741 by @willend in https://github.com/mccode-dev/McCode/pull/1747 + consequence-edits in https://github.com/mccode-dev/McCode/pull/1748
+  * McStas + McXtrace: Source_div_quasi fix for #1735 by @ebknudsen in https://github.com/mccode-dev/McCode/pull/1759
   * McStas + McXtrace Single_crystal:
-    * McStas: Fix #1732: Single_crystal powder mode was broken by #1521 by @farhi in https://github.com/McStasMcXtrace/McCode/pull/1738
-    * Fixes for https://github.com/McStasMcXtrace/McCode/issues/1728 by @willend in https://github.com/McStasMcXtrace/McCode/pull/1731
-    * Fix of Single_crystal reuse optimization by @mads-bertelsen in https://github.com/McStasMcXtrace/McCode/pull/1726
-    * To allow compilation for GPU hardware, drop all tau_lists in OPENACC case by @willend in https://github.com/McStasMcXtrace/McCode/pull/1751
-    * Introduction of order=0.5 mode in Single_crystal by @mads-bertelsen in https://github.com/McStasMcXtrace/McCode/pull/1762
-    * Fix of order system in Single_crystal by @mads-bertelsen in https://github.com/McStasMcXtrace/McCode/pull/1764
-    * Added order_extra feature for Single_crystal by @mads-bertelsen in https://github.com/McStasMcXtrace/McCode/pull/1767
+    * McStas: Fix #1732: Single_crystal powder mode was broken by #1521 by @farhi in https://github.com/mccode-dev/McCode/pull/1738
+    * Fixes for https://github.com/mccode-dev/McCode/issues/1728 by @willend in https://github.com/mccode-dev/McCode/pull/1731
+    * Fix of Single_crystal reuse optimization by @mads-bertelsen in https://github.com/mccode-dev/McCode/pull/1726
+    * To allow compilation for GPU hardware, drop all tau_lists in OPENACC case by @willend in https://github.com/mccode-dev/McCode/pull/1751
+    * Introduction of order=0.5 mode in Single_crystal by @mads-bertelsen in https://github.com/mccode-dev/McCode/pull/1762
+    * Fix of order system in Single_crystal by @mads-bertelsen in https://github.com/mccode-dev/McCode/pull/1764
+    * Added order_extra feature for Single_crystal by @mads-bertelsen in https://github.com/mccode-dev/McCode/pull/1767
 
 * Instrument updates
-  * McStas: Test_DiskChoppers2 [Fix] missing pointer dereferences by @g5t in https://github.com/McStasMcXtrace/McCode/pull/1710
-  * McStas: Add a an updated (%)Example line for Test_StatisticalChopper by @willend in https://github.com/McStasMcXtrace/McCode/pull/1715
-  * McStas: Fix these instruments to use "local" inputfile by @willend in https://github.com/McStasMcXtrace/McCode/pull/1729
-  * McXtrace: NECSA X ray machines by @farhi in https://github.com/McStasMcXtrace/McCode/pull/1742
-  * McStas: Expand on Test_Powders from Mads by @willend in https://github.com/McStasMcXtrace/McCode/pull/1766
+  * McStas: Test_DiskChoppers2 [Fix] missing pointer dereferences by @g5t in https://github.com/mccode-dev/McCode/pull/1710
+  * McStas: Add a an updated (%)Example line for Test_StatisticalChopper by @willend in https://github.com/mccode-dev/McCode/pull/1715
+  * McStas: Fix these instruments to use "local" inputfile by @willend in https://github.com/mccode-dev/McCode/pull/1729
+  * McXtrace: NECSA X ray machines by @farhi in https://github.com/mccode-dev/McCode/pull/1742
+  * McStas: Expand on Test_Powders from Mads by @willend in https://github.com/mccode-dev/McCode/pull/1766
 
 * Python tool layer
-  * McStas + McXtrace: Fix to comp-forms in mcdoc pages by @willend in https://github.com/McStasMcXtrace/McCode/pull/1723 (fixes #1722)
-  * McStas + McXtrace: mcrun/mxrun optimization: allows to specify criteria expression by @farhi in https://github.com/McStasMcXtrace/McCode/pull/1743
-  * McStas + McXtrace: mcrun/mxrun optimisation: better choice for missing dX/dY by @farhi in https://github.com/McStasMcXtrace/McCode/pull/1744
-  * McStas + McXtrace: mccode-antlr: Add mccode_config / m[c,x]run entry for MCCOGEN by @willend in https://github.com/McStasMcXtrace/McCode/pull/1749
-  * McStas + McXtrace: config updates for the added "MCCOGEN" setting by @willend in https://github.com/McStasMcXtrace/McCode/pull/1750
-  * McStas + McXtrace: Add -n in supplement of --ncount, allow match including .instr by @willend in https://github.com/McStasMcXtrace/McCode/pull/1753
-  * McStas: Strip off arguments not understood by mcdisplay-mantid by @willend in https://github.com/McStasMcXtrace/McCode/pull/1757
-  * McStas + McXtrace: Intermediate fix for https://github.com/McStasMcXtrace/McCode/issues/1768 by @willend in https://github.com/McStasMcXtrace/McCode/pull/1769
-  * McStas + McXtrace: Fix for issue 1763 and related issue propagating --no-output-files by @willend in https://github.com/McStasMcXtrace/McCode/pull/1765
+  * McStas + McXtrace: Fix to comp-forms in mcdoc pages by @willend in https://github.com/mccode-dev/McCode/pull/1723 (fixes #1722)
+  * McStas + McXtrace: mcrun/mxrun optimization: allows to specify criteria expression by @farhi in https://github.com/mccode-dev/McCode/pull/1743
+  * McStas + McXtrace: mcrun/mxrun optimisation: better choice for missing dX/dY by @farhi in https://github.com/mccode-dev/McCode/pull/1744
+  * McStas + McXtrace: mccode-antlr: Add mccode_config / m[c,x]run entry for MCCOGEN by @willend in https://github.com/mccode-dev/McCode/pull/1749
+  * McStas + McXtrace: config updates for the added "MCCOGEN" setting by @willend in https://github.com/mccode-dev/McCode/pull/1750
+  * McStas + McXtrace: Add -n in supplement of --ncount, allow match including .instr by @willend in https://github.com/mccode-dev/McCode/pull/1753
+  * McStas: Strip off arguments not understood by mcdisplay-mantid by @willend in https://github.com/mccode-dev/McCode/pull/1757
+  * McStas + McXtrace: Intermediate fix for https://github.com/mccode-dev/McCode/issues/1768 by @willend in https://github.com/mccode-dev/McCode/pull/1769
+  * McStas + McXtrace: Fix for issue 1763 and related issue propagating --no-output-files by @willend in https://github.com/mccode-dev/McCode/pull/1765
 
 * Documentation etc.
-  * Add binder link in the "Docker" / container README by @willend in https://github.com/McStasMcXtrace/McCode/pull/1700
-  * Document install steps around macOS 15 tightened security by @willend in https://github.com/McStasMcXtrace/McCode/pull/1706
-  * Installation rewording for conda-envs by @willend in https://github.com/McStasMcXtrace/McCode/pull/1756
+  * Add binder link in the "Docker" / container README by @willend in https://github.com/mccode-dev/McCode/pull/1700
+  * Document install steps around macOS 15 tightened security by @willend in https://github.com/mccode-dev/McCode/pull/1706
+  * Installation rewording for conda-envs by @willend in https://github.com/mccode-dev/McCode/pull/1756
 
-**Full Changelog**: https://github.com/McStasMcXtrace/McCode/compare/v3.5.1...v3.5.12
+**Full Changelog**: https://github.com/mccode-dev/McCode/compare/v3.5.1...v3.5.12
 
-**Specific issues solved:**: https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+label%3A%22ready+for+release%22+label%3Amcstas-3.5.1+label%3Amcxtrace-3.5.1+
+**Specific issues solved:**: https://github.com/mccode-dev/McCode/issues?q=is%3Aissue+label%3A%22ready+for+release%22+label%3Amcstas-3.5.1+label%3Amcxtrace-3.5.1+
 
 We hope you will enjoy this new release!!!
 
@@ -320,11 +320,11 @@ Changes in McStas 3.5.1, September 16th, 2024
 
  Fixes of issues from last 3.x release:
  - A number of issues from 3.4 were addressed, see the relevant GitHub issues for details:
-   - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-3.4
+   - https://github.com/mccode-dev/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-3.4
 
  Installation:
  - Our install docs are available on the McCode GitHub page at
-   https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+   https://github.com/mccode-dev/McCode/tree/master/INSTALL-McStas
  - The meta-package for Debian/Ubuntu is named mcstas-suite-python
  - OpenACC GPU (and CPU multicore) acceleration is at the time of release still ONLY
    supported on Linux systems, as this is the only platform targeted by the NVIDIA
@@ -551,11 +551,11 @@ Changes in McStas 3.4, September 19th, 2023
 
  Fixes of issues from last 3.x release:
  - A number of issues from 3.3 were addressed, see the relevant GitHub issues for details:
-   - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-3.3
+   - https://github.com/mccode-dev/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-3.3
 
  Installation:
  - As usual, our install docs are available on the McCode GitHub page at
-   https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+   https://github.com/mccode-dev/McCode/tree/master/INSTALL-McStas
  - The meta-packages for Debian/Ubuntu and RedHat/Centos/Fedora are named e.g.
    mcstas-suite-python-ng for 'next generation' for coexistance with the 2.x
    series packages. (Please note that there will be no future 2.x releases!)
@@ -740,11 +740,11 @@ Changes in McStas 3.3, March 31st, 2023
 
  Fixes of issues from last 3.x release:
  - A number of issues from 3.2 were addressed, see the relevant GitHub issues for details:
-   - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-3.2
+   - https://github.com/mccode-dev/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-3.2
 
  Installation:
  - As usual, our install docs are available on the McCode GitHub page at
-   https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+   https://github.com/mccode-dev/McCode/tree/master/INSTALL-McStas
  - The meta-packages for Debian/Ubuntu and RedHat/Centos/Fedora are named e.g.
    mcstas-suite-python-ng for 'next generation' for coexistance with the 2.x
    series packages
@@ -772,7 +772,7 @@ Changes in McStas 3.3, March 31st, 2023
    a NeXus-based simulation, i.e. for "one-click" support of output in Mantid-compatible NeXus
    format with an embedded IDF. Please consult the naming-conventions for sourceMantid, sampleMantid
    and nD_Mantid_xx found in
-   https://github.com/McStasMcXtrace/McCode/wiki/McStas-and-Mantid#mcstas-mantid-workflow
+   https://github.com/mccode-dev/McCode/wiki/McStas-and-Mantid#mcstas-mantid-workflow
    to succesfully generate your IDF. Please also inspire from the example instruments in the 'Mantid'
    category, see mcgui -> File -> New from template -> Mantid .
  - mcrun now forwards the -I input to the code-generator, which allows you to add a chosen folder
@@ -870,7 +870,7 @@ Changes in McStas 3.2, December 12th, 2022
 
  Fixes of issues from last 3.x release:
  - A large number of issues from 3.1 were addressed, see the relevant GitHub issues for details:
-   - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-3.1
+   - https://github.com/mccode-dev/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-3.1
 
  Documentation & guides:
  - All 3.2 component and instrument headers have been given an overhaul and should
@@ -886,7 +886,7 @@ Changes in McStas 3.2, December 12th, 2022
    
  Installation:
  - As usual, our install docs are available on the McCode GitHub page at
-   https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+   https://github.com/mccode-dev/McCode/tree/master/INSTALL-McStas
  - The meta-packages for Debian/Ubuntu and RedHat/Centos/Fedora are named e.g.
    mcstas-suite-python-ng for 'next generation' for coexistance with the 2.x
    series packages
@@ -986,17 +986,17 @@ Changes in McStas 3.2, December 12th, 2022
  - The (r-)interoff-lib.c family of codes have received multiple updates, thanks to McStas users
    Kyle Grammer (ORNL) and Gaetano Mangiapia (HZH):
    * The intersection routines now work correctly with gravity
-     (see https://github.com/McStasMcXtrace/McCode/issues/1248)
+     (see https://github.com/mccode-dev/McCode/issues/1248)
    * The r-interoff-lib (and the related Guide_anyshape_r component) now support specifying
      a "full" reflectivity curve pr. OFF face, columns of m, alpha and W values should be
      added in this order to the OFF face. See example input file data/Guide_r.off.
-     (see https://github.com/McStasMcXtrace/McCode/issues/1250)
+     (see https://github.com/mccode-dev/McCode/issues/1250)
  - A flaw was spotted in our NeXus implementation in the case of event lists: A small chunk-size
    of (1,6) was used, leading to slow I/O and lots of size-overhead. Our new NeXus files are
    generally a factor of (at least) 2-3 smaller and load much faster in e.g. Mantid.
  - A correction to ref-lib.c was recieved from Gaetano Mangiapia (HZH), allowing closer
    correspondance between simulated and measured mirror-reflectivities.
-   (see https://github.com/McStasMcXtrace/McCode/issues/1247)
+   (see https://github.com/mccode-dev/McCode/issues/1247)
  - Updated version 3.5.1 NCrystal library from T. Kittelmann (ESS) and X.X. Cai (CSNS), distributed
    with McStas on Unix platforms only. (Now also cross-compiles for Windows, but still needs work
    for "production" availability.)
@@ -1033,7 +1033,7 @@ Changes in McStas 3.2, December 12th, 2022
   - During the last McStas-McXtrace hackathon we worked on "standardizing" our CMake code, which will
     mean smoother integration with other codes and easier configuration and build of our code for
     various platforms. Try it out if you like, directly from the McCode repo.
-    (https://github.com/McStasMcXtrace/McCode/)
+    (https://github.com/mccode-dev/McCode/)
 
 We hope you will enjoy this new release!!!
 
@@ -1060,7 +1060,7 @@ Changes in McStas 2.7.2, December 12th, 2022
 
  Fixes of issues from last release:
  - A number of minor issues from 2.7.1 were addressed, see the relevant GitHub issues for details:
-   - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-2.7.1
+   - https://github.com/mccode-dev/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-2.7.1
 
  Documentation & guides:
  - mcdoc has been made "less picky" wrt. component and instrument structure for a more robust
@@ -1074,7 +1074,7 @@ Changes in McStas 2.7.2, December 12th, 2022
    
  Installation:
  - As usual, our install docs are available on the McCode GitHub page at
-   https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+   https://github.com/mccode-dev/McCode/tree/master/INSTALL-McStas
  - The meta-packages for Debian/Ubuntu and Fedora are named e.g.
    mcstas-suite-python for coexistance with the 3.x series packages that are named
    mcstas-suite-python-ng.
@@ -1134,17 +1134,17 @@ Changes in McStas 2.7.2, December 12th, 2022
  - The (r-)interoff-lib.c family of codes have received multiple updates, thanks to McStas users
    Kyle Grammer (ORNL) and Gaetano Mangiapia (HZH):
    * The intersection routines now work correctly with gravity
-     (see https://github.com/McStasMcXtrace/McCode/issues/1248)
+     (see https://github.com/mccode-dev/McCode/issues/1248)
    * The r-interoff-lib (and the related Guide_anyshape_r component) now support specifying
      a "full" reflectivity curve pr. OFF face, columns of m, alpha and W values should be
      added in this order to the OFF face. See example input file data/Guide_r.off.
-     (see https://github.com/McStasMcXtrace/McCode/issues/1250)
+     (see https://github.com/mccode-dev/McCode/issues/1250)
  - A flaw was spotted in our NeXus implementation in the case of event lists: A small chunk-size
    of (1,6) was used, leading to slow I/O and lots of size-overhead. Our new NeXus files are
    generally a factor of (at least) 2-3 smaller and load much faster in e.g. Mantid.
  - A correction to ref-lib.c was recieved from Gaetano Mangiapia (HZH), allowing closer
    correspondance between simulated and measured mirror-reflectivities.
-   (see https://github.com/McStasMcXtrace/McCode/issues/1247)
+   (see https://github.com/mccode-dev/McCode/issues/1247)
  - Updated version 3.5.1 NCrystal library from T. Kittelmann (ESS) and X.X. Cai (CSNS), distributed
    with McStas on Unix platforms only. (Now also cross-compiles for Windows, but still needs work
    for "production" availability.)
@@ -1162,7 +1162,7 @@ Changes in McStas 2.7.2, December 12th, 2022
   - During the last McStas-McXtrace hackathon we worked on "standardizing" our CMake code, which will
     mean smoother integration with other codes and easier configuration and build of our code for
     various platforms. Try it out if you like, directly from the McCode repo.
-    (https://github.com/McStasMcXtrace/McCode/)
+    (https://github.com/mccode-dev/McCode/)
 
 We hope you will enjoy this new release!!!
 
@@ -1177,7 +1177,7 @@ Changes in McStas 3.1, November 24th, 2021
 
  Fixes of issues from last 3.x release:
  - A largetnumber of issues from 3.0 were addressed, see the relevant GitHub issues for details:
-   - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-3.0
+   - https://github.com/mccode-dev/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-3.0
    - Many GPU-related bugs fixes in all layers of the code, be it components, instruments or
      libraries.
 
@@ -1192,7 +1192,7 @@ Changes in McStas 3.1, November 24th, 2021
 
  Installation:
  - Our install docs are available on the McCode GitHub page at
-   https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+   https://github.com/mccode-dev/McCode/tree/master/INSTALL-McStas
  - The meta-packages for Debian/Ubuntu and RedHat/Centos/Fedora are named e.g.
    mcstas-suite-python-ng for 'next generation' for coexistance with the 2.x
    series packages
@@ -1267,7 +1267,7 @@ Changes in McStas 3.1, November 24th, 2021
      - These instruments use 162 of our components
      - 181 tests produce credible output data on GPU
    * We don't ship an updated set of manuals for McStas 3.1, but essential documentation is available
-     on the McCode GitHub wiki https://github.com/McStasMcXtrace/McCode/wiki
+     on the McCode GitHub wiki https://github.com/mccode-dev/McCode/wiki
 
 Components:
  - A new source component Source_pulsed form Klaus Lieutentant (FZJ/Vitess) has been added with a
@@ -1316,12 +1316,12 @@ Changes in McStas v.2.7.1, October 4th, 2021
 
  Installation:
  - Our install docs are available on the McCode GitHub page at
- https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+ https://github.com/mccode-dev/McCode/tree/master/INSTALL-McStas
 
 
 Fixes of issues from last release:
  - A number of minor issues from 2.7 were addressed, see the relevant GitHub issues for details:
-   - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-2.7
+   - https://github.com/mccode-dev/McCode/issues?q=is%3Aissue+is%3Aclosed+label%3Amcstas-2.7
    
 Tools:
  - mcgui allows definition of an "external editor", see the configuration menu.
@@ -1372,7 +1372,7 @@ Changes in McStas 3.0, December 15th, 2020
 
  Installation:
  - Our install docs are now available on the McCode GitHub page at
-   https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+   https://github.com/mccode-dev/McCode/tree/master/INSTALL-McStas
  - The meta-packages for Debian/Ubuntu and RedHat/Centos/Fedora are named e.g.
    mcstas-suite-python-ng for 'next generation' for coexistance with the 2.x
    series packages
@@ -1473,7 +1473,7 @@ Changes in McStas 3.0, December 15th, 2020
      - McStas 3.0 ships with 211 instruments that succesfully compiles
      - These instruments use 147 of our components
    * We don't ship an updated set of manuals for McStas 3.0, but essential documentation is available
-     on the McCode GitHub wiki https://github.com/McStasMcXtrace/McCode/wiki
+     on the McCode GitHub wiki https://github.com/mccode-dev/McCode/wiki
 
 
 Tools:
@@ -1528,12 +1528,12 @@ Changes in McStas v.2.7, Novmeber 27th, 2020
 
  Installation:
  - Our install docs are now available on the McCode GitHub page at
- https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+ https://github.com/mccode-dev/McCode/tree/master/INSTALL-McStas
 
 
 Fixes of issues from last release:
  - A number of minor issues from 2.6.1 were addressed, see the relevant GitHub issues for details:
-   - https://github.com/McStasMcXtrace/McCode/issues?q=label%3A%22McStas+2.6.1%22+label%3A%22ready+for+release+on+master%22+is%3Aclosed
+   - https://github.com/mccode-dev/McCode/issues?q=label%3A%22McStas+2.6.1%22+label%3A%22ready+for+release+on+master%22+is%3Aclosed
 
 Tools:
  - On macOS (from 11.0 Big Sur onwards), mcgui will assume light/dark mode with the system settings.
@@ -1598,11 +1598,11 @@ Changes in McStas v.2.6.1, May 4th, 2020
 
  Installation:
  - Our install docs are now available on the McCode GitHub page at
- https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+ https://github.com/mccode-dev/McCode/tree/master/INSTALL-McStas
 
  Fixes of issues from last release:
  - A number of minor issues from 2.6 were addressed, see the relevant GitHub issues for details:
-   - https://github.com/McStasMcXtrace/McCode/issues?q=is%3Aissue++label%3A%22McStas+2.6%22+
+   - https://github.com/mccode-dev/McCode/issues?q=is%3Aissue++label%3A%22McStas+2.6%22+
 
 
 Changes in McStas 3.0 technology preview, Feburary 25th, 2020
@@ -1700,19 +1700,19 @@ Changes in McStas v.2.6, January 24th, 2020
 
  Installation:
  - Our install docs are now available on the McCode GitHub page at
- https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+ https://github.com/mccode-dev/McCode/tree/master/INSTALL-McStas
  
  Fixes of issues from last release:
  - A number of issues from 2.5 were corrected, see the relevant GitHub issues for details:
-   - https://github.com/McStasMcXtrace/McCode/issues?utf8=✓&q=is%3Aissue+is%3Aclosed+label%3A%22McStas+2.5%22+
+   - https://github.com/mccode-dev/McCode/issues?utf8=✓&q=is%3Aissue+is%3Aclosed+label%3A%22McStas+2.5%22+
 
  Plus lots of work in general:
- https://github.com/McStasMcXtrace/McCode/issues?page=1&q=is%3Aissue+is%3Aclosed++project%3AMcStasMcXtrace%2FMcCode%2F5&utf8=✓
+ https://github.com/mccode-dev/McCode/issues?page=1&q=is%3Aissue+is%3Aclosed++project%3Amccode-dev%2FMcCode%2F5&utf8=✓
  
  Tools:
  - As for the earlier few releases the default set of tools are Python-based and developed by Jakob Garde, DTU. 
    The Perl ones are still around as a backup solution, handy for those that prefer "the oldschool way"
-   - See https://github.com/McStasMcXtrace/McCode/wiki/User-documentation-for-the-2017--Python-tool-set for usage
+   - See https://github.com/mccode-dev/McCode/wiki/User-documentation-for-the-2017--Python-tool-set for usage
    - On Unix platforms, the Perl tools are accessible by adding .pl to the wanted tool (mcgui.pl etc.)
    - On Windows, the Perl tools are accessible by adding -pl to the wanted tool (mcgui-pl etc.)
    - BUT: Please use the Python tools and provide feedback rather than sticking with the Perl! :-)
@@ -1790,7 +1790,7 @@ Changes in McStas v.2.6, January 24th, 2020
    development mcresplot.py.
  - Tools_ONION, instrument to investigate q-resolution via Mantid, by Thomas Huegle, ORNL. See also
    https://doi.org/10.1016/j.nima.2019.162711 and the related python code available at 
-   https://github.com/McStasMcXtrace/McCode-contribution-support-docs/tree/master/McStas/2.6_Onion_tool_T_Huegle
+   https://github.com/mccode-dev/McCode-contribution-support-docs/tree/master/McStas/2.6_Onion_tool_T_Huegle
  - templateSANS_MCPL, behaves like the normal templateSANS but dumps all events in an MCPL file.
  - MCPL-oriented tool-instruments by Peter Willendrup
    - MCPL2Mantid_flat: Read MCPL input and write Mantid-compatible NeXus output
@@ -1840,19 +1840,19 @@ Changes in McStas v.2.5, December 12th, 2018
 
  Installation:
  - Our install docs are now available on the McCode GitHub page at
- https://github.com/McStasMcXtrace/McCode/tree/master/INSTALL-McStas
+ https://github.com/mccode-dev/McCode/tree/master/INSTALL-McStas
  
  Fixes of issues from last release:
  - A number of issues from 2.4.1 were corrected, see the relevant GitHub issues for details:
-   - https://github.com/McStasMcXtrace/McCode/issues?utf8=✓&q=is%3Aissue+is%3Aclosed+label%3A%22McStas+2.4.1%22+
+   - https://github.com/mccode-dev/McCode/issues?utf8=✓&q=is%3Aissue+is%3Aclosed+label%3A%22McStas+2.4.1%22+
 
  Plus lots of work in general:
- https://github.com/McStasMcXtrace/McCode/issues?utf8=✓&q=is%3Aissue+is%3Aclosed++project%3AMcStasMcXtrace%2FMcCode%2F1+
+ https://github.com/mccode-dev/McCode/issues?utf8=✓&q=is%3Aissue+is%3Aclosed++project%3Amccode-dev%2FMcCode%2F1+
 
  Tools:
  - As for the earlier few releases the default set of tools are Python-based and developed by Jakob Garde, DTU. 
    The Perl ones are still around as a backup solution, handy for those that prefer "the oldschool way"
-   - See https://github.com/McStasMcXtrace/McCode/wiki/User-documentation-for-the-2017--Python-tool-set for usage
+   - See https://github.com/mccode-dev/McCode/wiki/User-documentation-for-the-2017--Python-tool-set for usage
    - On Unix platforms, the Perl tools are accessible by adding .pl to the wanted tool (mcgui.pl etc.)
    - On Windows, the Perl tools are accessible by adding -pl to the wanted tool (mcgui-pl etc.)
    - BUT: Please use the Python tools and provide feedback rather than sticking with the Perl! :-)
@@ -1944,12 +1944,12 @@ Changes in McStas v.2.4.1, June 26th, 2017
 
  Fixes of issues from last release:
  - A number of issues from 2.4 were corrected, see the relevant GitHub issues for details:
-   - https://github.com/McStasMcXtrace/McCode/issues?utf8=✓&q=is%3Aissue%20is%3Aclosed%20label%3A%22McStas%202.4%22%20
+   - https://github.com/mccode-dev/McCode/issues?utf8=✓&q=is%3Aissue%20is%3Aclosed%20label%3A%22McStas%202.4%22%20
 
  Tools:
  - As for 2.4 we the default set of tools are Python-based and developed by Jakob Garde, DTU. 
    The perl ones will stay around as a backup solution
-   - See https://github.com/McStasMcXtrace/McCode/wiki/User-documentation-for-the-2017--Python-tool-set for usage
+   - See https://github.com/mccode-dev/McCode/wiki/User-documentation-for-the-2017--Python-tool-set for usage
    - On Unix platforms, the perl tools are accessible by adding .pl to the wanted tool (mcgui.pl etc.)
    - On Windows, the perl tools are accessible by adding -pl to the wanted tool (mcgui-pl etc.)
    - BUT: Please use the Python tools and provide feedback rather that sticking with the Perl! :-)
@@ -1986,7 +1986,7 @@ Changes in McStas v.2.4, May 17th, 2017
  Tools:
  - From 2.4 we will default to use our new set of Python tools, developed by Jakob Garde, DTU. 
    The perl ones will stay around as a backup solution
-   - See https://github.com/McStasMcXtrace/McCode/wiki/User-documentation-for-the-2017--Python-tool-set for usage
+   - See https://github.com/mccode-dev/McCode/wiki/User-documentation-for-the-2017--Python-tool-set for usage
    - On Unix platforms, the perl tools are accessible by adding .pl to the wanted tool (mcgui.pl etc.)
    - On Windows, the perl tools are accessible by adding -pl to the wanted tool (mcgui-pl etc.)
    - BUT: Please use the Python tools and provide feedback rather that sticking with the Perl! :-)
@@ -2033,7 +2033,7 @@ Changes in McStas v.2.4, May 17th, 2017
  - A version of Isotropic_Sqw from the McStas 2.0 release has been imported under the name of Isotropic_Sqw_legacy, 
    since some users reported that release being in better agreement with experiments. 
    - Some issues were corrected since 2.0 and fixed in today's component
-   - Today's component has a different set of issues, see e.g. https://github.com/McStasMcXtrace/McCode/issues/300
+   - Today's component has a different set of issues, see e.g. https://github.com/mccode-dev/McCode/issues/300
  - By the help of a Japanse user, we have identified issues with the performance of the supermirror coating option
    in FermiChopper.comp. We will investigate further and adress the issue over the course of 2017. Note that the 
    component works as expected when not implementing supermirror slits.
@@ -2060,7 +2060,7 @@ Changes in McStas v.2.3, April 6th, 2016
  provides important new developments.
 
  IMPORTANT: Please ensure to use our "migration scripts" for McStas 2.0 and 1.12c if you want
- these to co-exist with 2.3. See https://github.com/McStasMcXtrace/McCode/tree/master/tools/migration-tool
+ these to co-exist with 2.3. See https://github.com/mccode-dev/McCode/tree/master/tools/migration-tool
  Also, please read the platform-specific notes below!
 
  Thanks:
@@ -2072,7 +2072,7 @@ Changes in McStas v.2.3, April 6th, 2016
    by Thomas Kittelmann, ESS. The format aims to allow easier interchange of particle event data between monte
    carlo codes, and read/write functionality has been implemented for MCNP, Geant4 and McStas.
  - Interoperability with Mantid has been improved, as OFF-based detectors can be used to define detector geometries
-   in Mantid-oriented simulation runs. See https://github.com/McStasMcXtrace/McCode/wiki/McStas-and-Mantid for
+   in Mantid-oriented simulation runs. See https://github.com/mccode-dev/McCode/wiki/McStas-and-Mantid for
    more documentation on the use.
 
  Infrastructure:
@@ -2083,7 +2083,7 @@ Changes in McStas v.2.3, April 6th, 2016
    other things, it features a web-simulator powered by McStas. Once you have signed up, you will have access
    to many interesting things, among these this "close to complete" list of McStas instruments that can be run
    on the web: https://www.e-neutrons.org/mcstas-distrib
- - We have started populating the McCode wiki at https://github.com/McStasMcXtrace/McCode/wiki with information
+ - We have started populating the McCode wiki at https://github.com/mccode-dev/McCode/wiki with information
    for developers and others who want to work on the McStas code at a 'deeper' level.
 
  Components:
@@ -2166,7 +2166,7 @@ Changes in McStas v2.2a, May 29th, 2015
  plus provide important new developments.
 
  IMPORTANT: Please ensure to use our "migration scripts" for McStas 2.0 and 1.12c if you want
- these to co-exist with 2.2a. See https://github.com/McStasMcXtrace/McCode/tree/master/tools/migration-tool
+ these to co-exist with 2.2a. See https://github.com/mccode-dev/McCode/tree/master/tools/migration-tool
  Also, please read the platform-specific notes below!
 
  Thanks:
@@ -2188,9 +2188,9 @@ Changes in McStas v2.2a, May 29th, 2015
 
  Infrastructure:
  - McStas (and its X-ray counterpart McXtrace) are now on GitHub, see
-   https://github.com/McStasMcXtrace/McCode
+   https://github.com/mccode-dev/McCode
  - We will continually provide various bits of "missing information" on the related Wiki at
-   https://github.com/McStasMcXtrace/McCode/wiki
+   https://github.com/mccode-dev/McCode/wiki
  - If you want to contribute instrument models or components, the future way of doing that is to
    fork / clone our GitHub repo, make your changes and send us a pull-request
  - We will later provide a "cheat sheet" - McStas and GitHub for physicist... :-)

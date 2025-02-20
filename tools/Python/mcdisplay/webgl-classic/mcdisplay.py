@@ -130,7 +130,7 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
     file_save(json_particles, dest.joinpath('_particles.js'))
 
     # Workaround for allowing non-relative paths to instrname
-    # see https://github.com/McStasMcXtrace/McCode/issues/1426
+    # see https://github.com/mccode-dev/McCode/issues/1426
     temp_instrname = Path(instrname)
     instrname = temp_instrname.name
 
