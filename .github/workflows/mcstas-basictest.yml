@@ -266,7 +266,7 @@ jobs:
               export NUM_MPI=2
               ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=${NUM_MPI} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
            else
-               ../install_mcstas/bin/${MCUN_EXECUTABLE} --mpi=1 NCrystal_example.instr -n0
+               ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=1 NCrystal_example.instr -n0
                sudo dtruss ./NCrystal_example.out sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x" -d run0
                sudo dtruss mpirun --allow-run-as-root -np 1 ./NCrystal_example.out sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x" -d run1
                arch -x86_64 valgrind --tool=memcheck mpirun -np 1 NCrystal_example.out sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x" -d run2
