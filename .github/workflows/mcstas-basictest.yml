@@ -70,7 +70,9 @@ jobs:
       id: setup-openmpi-macos12
       if: runner.os == 'macOS'
       run: |
-           brew install openmpi valgrind
+           brew install openmpi
+           brew tap LouisBrunner/valgrind
+           brew install --HEAD LouisBrunner/valgrind/valgrind
 
     - name: Check versions
       id: version-checks
