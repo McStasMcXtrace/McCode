@@ -5,7 +5,7 @@ The packages have been tested to work correctly on Ubuntu 24.04.
 After following the below steps your package manager should now be aware of mcstas
 ```bash
 cd /etc/apt/sources.list.d
-sudo wget https://packages.mccode.org/debian/mccode.list
+sudo -E wget https://packages.mccode.org/debian/mccode.list
 sudo apt-get update
 ```
 
