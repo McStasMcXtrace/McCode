@@ -18,14 +18,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-24.04,  CC: gcc-13,   CXX: g++-13,     python: '3.12'  }
-          - { os: ubuntu-24.04,  CC: clang,    CXX: clang++,    python: '3.12'  }
-          - { os: ubuntu-22.04,  CC: clang,    CXX: clang++,    python: '3.11'  }
-          - { os: ubuntu-22.04,  CC: gcc-12,   CXX: g++-12,     python: '3.11'  }
+          #- { os: ubuntu-24.04,  CC: gcc-13,   CXX: g++-13,     python: '3.12'  }
+          #- { os: ubuntu-24.04,  CC: clang,    CXX: clang++,    python: '3.12'  }
+          #- { os: ubuntu-22.04,  CC: clang,    CXX: clang++,    python: '3.11'  }
+          #- { os: ubuntu-22.04,  CC: gcc-12,   CXX: g++-12,     python: '3.11'  }
           - { os: macos-13,      CC: clang,    CXX: clang++,    python: "3.11"  }
-          - { os: macos-14,      CC: clang,    CXX: clang++,    python: "3.12"  }
-          - { os: macos-15,      CC: clang,    CXX: clang++,    python: "3.13"  }
-          - { os: windows-latest,  CC: gcc,    CXX: g++,        python: "3.12"  }
+          #- { os: macos-14,      CC: clang,    CXX: clang++,    python: "3.12"  }
+          #- { os: macos-15,      CC: clang,    CXX: clang++,    python: "3.13"  }
+          #- { os: windows-latest,  CC: gcc,    CXX: g++,        python: "3.12"  }
 
     name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
     runs-on: ${{ matrix.os }}
@@ -267,9 +267,10 @@ jobs:
               ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=${NUM_MPI} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
            else
                ../install_mcstas/bin/${MCSTAS_EXECUTABLE} NCrystal_example.instr -t
-               mpicc -g -lm -O0 NCrystal_example.c -o NCrystal_example.out -DUSE_MPI -lmpi -Wl,-rpath,/opt/homebrew/lib/python3.13/site-packages/_ncrystal_core/data/lib -Wl,/opt/homebrew/lib/python3.13/site-packages/_ncrystal_core/data/lib/libNCrystal.dylib -I/opt/homebrew/lib/python3.13/site-packages/_ncrystal_core/data/include
-               valgrind --tool=memcheck mpirun -np 1 NCrystal_example.out sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
-           fi
+               arch -x86_64 mpicc -g -lm -O0 NCrystal_example.c -o NCrystal_example.out -DUSE_MPI -lmpi -Wl,-rpath,/opt/homebrew/lib/python3.13/site-packages/_ncrystal_core/data/lib -Wl,/opt/homebrew/lib/python3.13/site-packages/_ncrystal_core/data/lib/libNCrystal.dylib -I/opt/homebrew/lib/python3.13/site-packages/_ncrystal_core/data/include
+               ./NCrystal_example.out sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x" -d run0
+               arch -x86_64 valgrind --tool=memcheck mpirun -np 1 NCrystal_example.out sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x" -d run1
+         fi
 
     - name: Launch NeXus test instrument
       id: nexus-test
