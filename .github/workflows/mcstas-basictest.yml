@@ -260,12 +260,13 @@ jobs:
            clang --version
            mpirun --version
            ncrystal-config --version
-           if [ "x$(uname)" == "xLinux" ]; then
            export NUM_MPI=2
+           if [ "x$(uname)" == "xLinux" ]; then
+               ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=${NUM_MPI} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
            else
-               export NUM_MPI=1
+               ../install_mcstas/bin/${MCRUN_EXECUTABLE} -c --mpi=1 -n0 NCrystal_example.instr
+               sudo dtruss mpirun --allow-run-as-root -np ${NUM_MPI} NCrystal_example.out sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat"
            fi
-           ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=${NUM_MPI} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
 
     - name: Launch NeXus test instrument
       id: nexus-test
