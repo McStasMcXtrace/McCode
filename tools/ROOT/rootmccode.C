@@ -1,17 +1,15 @@
-/* 
+/*
 Macro to produce ROOT histograms from McStas simulations (.dat or .sim file).
 Authors: Erik B Knudsen and Esben Klinkby. Partly based on macro inherited from Peter Christiansen.
 
-This to be considered experimental. 
+This to be considered experimental.
 Testing has so far been mimimal - plotting works with ROOT v. 5.34/14 on linux.
 
 Milage reports are welcome (good or bad) to erkn_AT_fysik.dtu.dk
 */
-
 #ifndef ROOT_TH1
 #include "TH1.h"
 #endif
-
 #ifndef ROOT_TH2
 #include "TH2.h"
 #endif
@@ -34,14 +32,69 @@ Milage reports are welcome (good or bad) to erkn_AT_fysik.dtu.dk
 #include <vector>
 #include <cstdlib>
 #include <cerrno>
+#include <sstream>
 
 #include "TMap.h"
 #include "TString.h"
 #include "TObjString.h"
 #include "TObject.h"
+#include "TPad.h"
+#include "TSystem.h"
+#include "TCanvas.h"
+#include "TFile.h"
+
+//#include "rootmccode.h"
 
 using std::cout;
 using std::endl;
+
+/*non-class functions*/
+TObject *mccode_plot_hist(const Char_t *filename, const Char_t *histname, Float_t scaleX=1.0, Float_t scaleY=1.0, bool verbose=false);
+TH1F *mccode_plot_1dhist(const Char_t *filename, const Char_t *histname, Float_t scaleX=1.0, Float_t scaleY=1.0, bool verbose=false);
+TH2F *mccode_plot_2dhist(const Char_t *filename, const Char_t *histname, Float_t scaleX=1.0, Float_t scaleY=1.0, bool verbose=false);
+TH1F *plot_vector(std::vector<Double_t> y, TPad *g0);
+TH1F *plot_vector(std::vector<Double_t> x, std::vector<Double_t> y, TPad *g0);
+
+TH1F *plot_vector(std::vector<Double_t> y, TPad *g0){
+    //plot a vector of number on a new canvas if none is passed through
+    TPad *g;
+    if (g0!=NULL){
+        g=g0;
+        g->cd();
+    } else {
+        g = new TCanvas();
+    }
+    TH1F *h1 = new TH1F("h1", "Histogram 1", y.size(), -.5, y.size()+.5);
+    for (int i=0; i<y.size(); i++){
+        //SetBinContent uses 1-indexing for some strange reason
+        h1->SetBinContent(i+1,y[i]);
+    }
+    h1->Draw();
+    return h1;
+}
+
+TH1F *plot_vector(std::vector<Double_t> x, std::vector<Double_t> y, TPad *g0){
+    TPad *g;
+    if (g0!=NULL){
+        g=g0;
+        g->cd();
+    } else {
+        g = new TCanvas();
+    }
+    //for now assume constant bin width
+    auto binw=x[1]-x[0];
+
+    TH1F *h1 = new TH1F("h1", "", y.size(), x[0]-binw/2.0, x[x.size()-1]+binw/2.0);
+
+    for (int i=0; i<y.size(); i++){
+        h1->Fill(x[i],y[i]);
+    }
+    for (int i=0;i<y.size()+1;i++){
+        h1->SetBinError(i,0.0);
+    }
+    h1->Draw();
+    return h1;
+}
 
 class Mccoderun {
   TString command;
@@ -56,9 +109,7 @@ class Mccoderun {
 
   //Mccoderun(string instrument="",int help=0, int mpi=0, int fc=0, int ft=0, int trace=0, string instrument="", string outdir="", unsigned long long n=1000000);
   Mccoderun(string instrument="instrument.instr",unsigned long long n=1000000, string outdir="", string args="", int help=0, int mpi=0, int fc=0, int ft=0, int trace=0);
-  Mccoderun(string,unsigned long long n=1000000,string);
-  Mccoderun(string);
-  int set_flavour();
+  int set_flavour(string flavour="mcstas");
   int run();
   int exec();
   int generate_c();
@@ -69,7 +120,6 @@ Mccoderun::Mccoderun(string instrument, unsigned long long n, string outdir, str
   stringstream tmp;
   tmp << "mcrun " << instrument << (help?" -h":"") << (fc?" -c":"") << (ft?" -t":"") << (outdir!=""?" -d "+outdir:"") << " -n " << n;
   this->command = tmp.str();
-  cout << "meh command to run is: " <<this->command<<endl;
   this->instrument=instrument;
   this->outfile=instrument.substr(0,instrument.find_last_of('.')) + ".out";
   this->cfile=instrument.substr(0,instrument.find_last_of('.')) + ".c";
@@ -78,32 +128,6 @@ Mccoderun::Mccoderun(string instrument, unsigned long long n, string outdir, str
   this->ncount=n;
   this->np=mpi;
   this->ft=ft;
-}
-
-Mccoderun::Mccoderun(string instrument, unsigned long long ncount,string args){
-  char tmpcommand[512];
-  snprintf(tmpcommand,512,"mcrun %s %s -n %ld\n",instrument.c_str(),args.c_str(),ncount);
-  this->command = tmpcommand;
-  cout << "command to run is: " <<this->command<<endl; 
-  this->instrument=instrument;
-  this->outfile=instrument.substr(0,instrument.find_last_of('.')) + ".out";
-  this->cfile=instrument.substr(0,instrument.find_last_of('.')) + ".c";
-  this->outdir="";
-  this->args=args;
-  this->ft=ft;
-}
-
-Mccoderun::Mccoderun(string instrument){ 
-  cout << "construct from single string"<<endl;
-  /*this shoudl actually try to read default configs from file*/
-  this->instrument=instrument;
-  this->outfile=instrument.substr(0,instrument.find_last_of('.')) + ".out";
-  this->cfile=instrument.substr(0,instrument.find_last_of('.')) + ".c";
-  this->help=0;
-  this->outdir="";
-  this->args="";
-  this->np=1;
-  this->ncount=1000000;
 }
 
 int Mccoderun::run(){
@@ -123,7 +147,7 @@ int Mccoderun::run(){
     if(rc || mtime_c < mtime_instr){
       this->generate_c();
     }
- 
+
     ro=gSystem->GetPathInfo(this->outfile.c_str(),&id,&size,&flags,&mtime_out);
     if(ro || mtime_out < mtime_c){
       this->compile();
@@ -135,45 +159,49 @@ int Mccoderun::run(){
   }
 
   /*and - now run the actual simulation*/
-  this->exec();
-
+  int status = this->exec();
+  return status;
 }
 
 int Mccoderun::generate_c(){
   stringstream ss;
+  int ret = 0;
   ss << this->flavour << " -t " << this->instrument << " -o" << this->cfile;
   cout << ss.str() <<endl;
-  system(ss.str().c_str());
-  return 0;
+  ret = system(ss.str().c_str());
+  return ret;
 }
 
 int Mccoderun::exec(){
   string tmp;
   stringstream cmdlo,total;
+  int ret = 0;
   cout << "About to run this file: "<< this->outfile <<endl;
   cmdlo << ((this->help)?" -h":"") << ((this->ft)?" -t":"") << ((this->outdir)!=""?" -d "+(this->outdir):"") << " -n " << (this->ncount);
   total << "./" << this->outfile << cmdlo.str() << " " << this->args;
   cout <<"Complete command: " << total.str() << endl;
-  system(total.str().c_str());
+  ret = system(total.str().c_str());
+  return ret;
 }
 
 int Mccoderun::compile(){
+  int ret = 0;
   if(this->np>1){
     /*compile with mpi and set a flag*/
     this->compd_with_mpi=true;
     cout << "mpi not supported yet" <<endl;
-    return 0;
+    ret = 1;
   }else{
     this->compd_with_mpi=false;
     stringstream ss;
     ss << "cc " << this->cfile << " -o" << this->outfile << " -lm";
     cout << ss.str() << endl;
-    system(ss.str().c_str());
-    return 0;
+    ret = system(ss.str().c_str());
   }
+  return ret;
 }
 
-int set_flavour(string flavour){
+int Mccoderun::set_flavour(string flavour){
   if ( flavour=="mcstas"||flavour=="McStas" || flavour=="MCSTAS")
     this->flavour="mcstas";
   else if (flavour=="mcxtrace" || flavour=="McXtrace" || flavour=="MCXTRACE")
@@ -189,9 +217,9 @@ Mccoderun* mcrun(string instrument, string args){
   string s;
   stringstream ss(args); // Insert the string into a stream
   vector<string> tokens; // Create vector to hold instrument defined arguments
-  
+
   Mccoderun *r1= new Mccoderun(instrument);
-  this->set_flavour("mcstas");
+  r1->set_flavour("mcstas");
   unsigned long long ul;
 
   while (ss >> s){
@@ -201,7 +229,7 @@ Mccoderun* mcrun(string instrument, string args){
       r1->ncount=ul;
       if(ul==ULONG_MAX){
         cerr << "Error converting ncount argument: "<< s << ". Aborting" << endl;
-        return 1;
+        return NULL;
       }else{
         cout << "found ncount " <<r1->ncount<<endl;
       }
@@ -214,7 +242,7 @@ Mccoderun* mcrun(string instrument, string args){
       r1->np= ul;
       if(ul){
         cerr << "Error converting mpi argument: "<< s << ". Aborting" << endl;
-        return 1;
+        return NULL;
       }
     }else if (s=="-h" || s=="--help"){
       cout << "Print usage" << endl;
@@ -224,7 +252,7 @@ Mccoderun* mcrun(string instrument, string args){
   }
   /*all the non-caught arguments are in the token vector*/
   for (auto it = tokens.begin(); it!=tokens.end(); ++it){
-    if (!r1->args !="") {
+    if (r1->args != "") {
       r1->args += " ";
     }
     r1->args+=*it;
@@ -239,9 +267,9 @@ Mccoderun* mxrun(string instrument, string args){
   string s;
   stringstream ss(args); // Insert the string into a stream
   vector<string> tokens; // Create vector to hold instrument defined arguments
-  
+
   Mccoderun *r1= new Mccoderun(instrument);
-  this->set_flavour("mcxtrace");
+  r1->set_flavour("mcxtrace");
   unsigned long long ul;
 
   while (ss >> s){
@@ -251,7 +279,7 @@ Mccoderun* mxrun(string instrument, string args){
       r1->ncount=ul;
       if(ul==ULONG_MAX){
         cerr << "Error converting ncount argument: "<< s << ". Aborting" << endl;
-        return 1;
+        return NULL;
       }else{
         cout << "found ncount " <<r1->ncount<<endl;
       }
@@ -264,7 +292,7 @@ Mccoderun* mxrun(string instrument, string args){
       r1->np= ul;
       if(ul){
         cerr << "Error converting mpi argument: "<< s << ". Aborting" << endl;
-        return 1;
+        return NULL;
       }
     }else if (s=="-h" || s=="--help"){
       cout << "Print usage" << endl;
@@ -274,7 +302,7 @@ Mccoderun* mxrun(string instrument, string args){
   }
   /*all the non-caught arguments are in the token vector*/
   for (auto it = tokens.begin(); it!=tokens.end(); ++it){
-    if (!r1->args !="") {
+    if (r1->args !="") {
       r1->args += " ";
     }
     r1->args+=*it;
@@ -292,20 +320,23 @@ class Mcplot {
   TObject *plots[256];
   TPad *pads[256];
   TString files[256];
+
   public:
-  Mcplot();
-  overviewplot();
-  singleplot(int);
-  overviewplotlog();
-  singleplotlog(int);
+  Mcplot(string infilename="mccode.sim", bool verbose=0, bool doplot=1);
+  int plot(int verbose = 0);
+  void overviewplot();
+  void singleplot(int);
+  void overviewplotlog();
+  void singleplotlog(int);
 };
 
-Mcplot::Mcplot(string infilename="mccode.sim", bool verbose=0, bool doplot=1) {
+
+Mcplot::Mcplot(string infilename, bool verbose, bool doplot) {
   /*basically do what the script below does*/
   /*this functionality should be in a read method*/
 
   /*is infilename a directory or a regular file?
-   * if dir ->search for a mccode file and read in the data by parsing the mccode.sim file 
+   * if dir ->search for a mccode file and read in the data by parsing the mccode.sim file
    * if regular -> set plotc to 1 and only read that data*/
   cout << infilename << " recieved from outside." <<endl;
   FileStat_t buf;
@@ -326,11 +357,11 @@ Mcplot::Mcplot(string infilename="mccode.sim", bool verbose=0, bool doplot=1) {
       infilename += "/mccode.sim";
     }
 
-  } 
+  }
   r=gSystem->GetPathInfo(infilename.c_str(),&id,&size,&flags,&mtime);
   if( r || flags){
     cout << "Cannot open file "<<infilename<<" Aborting." <<endl;
-    return NULL;
+    return;
   }
   /*So we've now caught a single file*/
   int n=infilename.find_last_of('/');
@@ -341,13 +372,13 @@ Mcplot::Mcplot(string infilename="mccode.sim", bool verbose=0, bool doplot=1) {
   }
 
   cout << "So I\'ve figured out that I should open the file: "<<infilename << " in the directory: " << workdir <<endl;
-  /*so now infilename contains what we want to plot*/ 
+  /*so now infilename contains what we want to plot*/
   /*open the file and read it*/
   std::string line;
   ifstream infile(infilename.c_str());
   if(!infile.good()){
     cout << "Cannot open file: " << infilename << endl;
-    return NULL;
+    return;
   }
   this->plotc=0;
   while (std::getline(infile, line, '\n')){
@@ -369,14 +400,16 @@ Mcplot::Mcplot(string infilename="mccode.sim", bool verbose=0, bool doplot=1) {
       }
       files[this->plotc] = workdir + t;
       this->plotc++;
-      files[this->plotc]=0;
+      files[this->plotc] = "";
     }
   }
 }
 
-int Mcplot::plot(int verbose=0){
+int Mcplot::plot(int verbose){
   Int_t nx=1;
   Int_t ny=1;
+  TCanvas *c1 = NULL;
+
   while (nx*ny<this->plotc){
     if (nx<=ny) nx++;
     else ny++;
@@ -388,24 +421,24 @@ int Mcplot::plot(int verbose=0){
   }
   /*iterate through map and plot each datafile in pads on a canvas*/
   c1->Divide(nx,ny);
-  
+
   for (int i=0; i<plotc; i++){
     c1->cd(i+1);
-    char *s=files[i].Data();
-    if(verbose) cout <<i<<"Plotting: "<<s<<endl;
+    const char *s=files[i].Data();
+    if(verbose) cout << i << "Plotting: " << s << endl;
     plots[i]=mccode_plot_hist(s,"",1.0,1.0,verbose=verbose);
-    plots[i]->Draw();   
+    plots[i]->Draw();
   }
   return 0;
 }
 
-Mcplot mcplot(string infilename="mccode.sim", int verbose=0){
+Mcplot *mcplot(string infilename="mccode.sim", int verbose=0){
   Mcplot *mp = new Mcplot(infilename,verbose=verbose);
   mp->plot();
   return mp;
 }
 
-Mcplot mxplot(string infilename="mccode.sim", int verbose=0){
+Mcplot *mxplot(string infilename="mccode.sim", int verbose=0){
   Mcplot *mp = new Mcplot(infilename,verbose=verbose);
   mp->plot();
   return mp;
@@ -423,20 +456,18 @@ Mcplot mxplot(string infilename="mccode.sim", int verbose=0){
  */
 
 
-TObject *mccode_plot_hist(const Char_t *filename, const Char_t *histname, Float_t scaleX=1.0,
-		 Float_t scaleY=1.0,
-		 bool verbose=0){
-    
+TObject *mccode_plot_hist(const Char_t *filename, const Char_t *histname, Float_t scaleX, Float_t scaleY, bool verbose){
+
     ifstream infile(filename);
     if(!infile.good()){
       cout << "Cannot open file: " << filename << endl;
       return 0;
     }
-    
+
     std::string line;
     /*read and parse the file header*/
     TMap *header = new TMap;
-    
+
     std::getline(infile, line, '\n');
     while(line[0]=='#') {
       TString tline(line.erase(0,1));
@@ -449,12 +480,14 @@ TObject *mccode_plot_hist(const Char_t *filename, const Char_t *histname, Float_
       t1->Remove(TString::kBoth,' ');
       header->Add(new TObjString(*t0),new TObjString(*t1));
       std::getline(infile, line, '\n');
-    } 
+    }
     infile.close();
 
     TString str;
     str = ( (TObjString *) (header->GetValue("type")))->GetString();
-    /*now we know what kind it is*/
+    /* now we know what kind it is */
+    /* TODO: There should be a possibility here of a list-mode monitor. In which case the object returned should be
+     * a dataframe*/
     if (str.Contains("array_1d")){
       return mccode_plot_1dhist(filename, histname, scaleX, scaleY, verbose=verbose);
     }else if(str.Contains("array_2d")){
@@ -462,11 +495,11 @@ TObject *mccode_plot_hist(const Char_t *filename, const Char_t *histname, Float_
     }
 }
 
-TH1F *mccode_plot_1dhist(const Char_t *filename, const Char_t *histname, Float_t scaleX=1.0,
-		 Float_t scaleY=1.0,
-		 bool verbose=0){
+TH1F *mccode_plot_1dhist(const Char_t *filename, const Char_t *histname, Float_t scaleX,
+		 Float_t scaleY,
+		 bool verbose){
     // Read the content of a PGPLOT file into a histogram
-    
+
     TH1F* hist = 0;
 
     Int_t nBins = 0;
@@ -478,11 +511,11 @@ TH1F *mccode_plot_1dhist(const Char_t *filename, const Char_t *histname, Float_t
       cout << "Cannot open file: " << filename << endl;
       return 0;
     }
-    
+
     std::string line;
     /*read and parse the file header*/
     TMap *header = new TMap;
-    
+
     std::getline(infile, line, '\n');
     while(line[0]=='#') {
       TString tline(line.erase(0,1));
@@ -496,65 +529,66 @@ TH1F *mccode_plot_1dhist(const Char_t *filename, const Char_t *histname, Float_t
       if (verbose) cout << "# " << "key: " << *t0 << " value: " << *t1 <<endl;
       header->Add(new TObjString(*t0),new TObjString(*t1));
       std::getline(infile, line, '\n');
-    } 
-      
+    }
+
     /*extract some important values from the header - */
     std::string str;
     str = ( (TObjString *) (header->GetValue("type")))->GetString();
     sscanf (str.c_str(),"array_1d(%d)",&nBins);
     str = ( (TObjString *) (header->GetValue("xlimits")))->GetString();
     sscanf (str.c_str(),"%f %f",&xmin,&xmax);
-    TString xlabel=( (TObjString *) (header->GetValue("xlabel")))->GetString(); 
-    TString ylabel=( (TObjString *) (header->GetValue("ylabel")))->GetString(); 
-    
+    TString xlabel=( (TObjString *) (header->GetValue("xlabel")))->GetString();
+    TString ylabel=( (TObjString *) (header->GetValue("ylabel")))->GetString();
+
     /*build title of detector name and statistics etc>*/
     TString compname=( (TObjString *) (header->GetValue("component")))->GetString();
     TString outfilename=( (TObjString *) (header->GetValue("filename")))->GetString();
     TString statistics=( (TObjString *) (header->GetValue("statistics")))->GetString();
 
     /*Now read the data block 1D*/
-    if(hist==0)
-      if (histname!=""){
-      hist = new TH1F(histname, 0, nBins, scaleX*xmin, scaleX*xmax);
-      }else{
+    if(hist==0) {
+      if ( strcmp(histname,"") == 0 ) {
+        hist = new TH1F(histname, 0, nBins, scaleX*xmin, scaleX*xmax);
+      } else {
         hist = new TH1F(filename, 0, nBins, scaleX*xmin, scaleX*xmax);
-      }   
+      }
+    }
     hist->Sumw2();
-    
+
     while(std::getline(infile, line, '\n')){
       Int_t res = sscanf(line.c_str(), "%f %f %f %f", &x, &y, &ey, &nsim);
-	
+
       if (res < 2) {
       // not a data line
         continue;
       }
       x *= scaleX;
-	
+
       Int_t bin = hist->GetXaxis()->FindBin(x);
       hist->SetBinContent(bin, y);
       hist->SetBinError(bin, ey);
     }
-  
-  /*set a few plot details*/    
-  
+
+  /*set a few plot details*/
+
     hist->GetYaxis()->SetTitle(ylabel);
     hist->GetXaxis()->SetTitle(xlabel);
-  
+
     hist->SetLineWidth(1);
     hist->SetStats(0);
     hist->SetTitle(compname +" ["+outfilename+"] " + statistics.ReplaceAll(";",""));
-    hist->SetOption("E1"); 
-  
-    return hist;
-} 
+    hist->SetOption("E1");
 
-TH2F *mccode_plot_2dhist(const Char_t *filename, const Char_t *histname, Float_t scaleX=1.0,
-		 Float_t scaleY=1.0,
-		 bool verbose=0){
+    return hist;
+}
+
+TH2F *mccode_plot_2dhist(const Char_t *filename, const Char_t *histname, Float_t scaleX,
+		 Float_t scaleY,
+		 bool verbose){
     // Read the content of a PGPLOT file into a histogram
-    
+
     TH2F* hist = 0;
-     
+
     Int_t nBinsX = 0, nBinsY;
     Float_t xmin = 0, xmax = 0;
     Float_t ymin = 0, ymax = 0;
@@ -565,11 +599,11 @@ TH2F *mccode_plot_2dhist(const Char_t *filename, const Char_t *histname, Float_t
       cout << "Cannot open file: " << filename << endl;
       return 0;
     }
-    
+
     std::string line;
     /*read and parse the file header*/
     TMap *header = new TMap;
-    
+
     std::getline(infile, line, '\n');
     while(line[0]=='#') {
       TString tline(line.erase(0,1));
@@ -583,8 +617,8 @@ TH2F *mccode_plot_2dhist(const Char_t *filename, const Char_t *histname, Float_t
       if (verbose) cout << "# " << "key: " << *t0 << " value: " << *t1 <<endl;
       header->Add(new TObjString(*t0),new TObjString(*t1));
       if (!t0->BeginsWith("Data")) std::getline(infile, line, '\n');
-    } 
-      
+    }
+
     /*extract some important values from the header - */
     std::string str;
     str = ( (TObjString *) (header->GetValue("type")))->GetString();
@@ -592,10 +626,10 @@ TH2F *mccode_plot_2dhist(const Char_t *filename, const Char_t *histname, Float_t
     str = ( (TObjString *) (header->GetValue("xylimits")))->GetString();
     sscanf (str.c_str(),"%f %f %f %f",&xmin,&xmax,&ymin,&ymax);
     str = ( (TObjString *) (header->GetValue("variables")))->GetString();
-    TString xlabel=( (TObjString *) (header->GetValue("xlabel")))->GetString(); 
-    TString ylabel=( (TObjString *) (header->GetValue("ylabel")))->GetString(); 
-    TString zlabel=( (TObjString *) (header->GetValue("zlabel")))->GetString(); 
-  
+    TString xlabel=( (TObjString *) (header->GetValue("xlabel")))->GetString();
+    TString ylabel=( (TObjString *) (header->GetValue("ylabel")))->GetString();
+    TString zlabel=( (TObjString *) (header->GetValue("zlabel")))->GetString();
+
     /*build title of detector name and statistics etc>*/
     TString compname=( (TObjString *) (header->GetValue("component")))->GetString();
     TString outfilename=( (TObjString *) (header->GetValue("filename")))->GetString();
@@ -603,14 +637,14 @@ TH2F *mccode_plot_2dhist(const Char_t *filename, const Char_t *histname, Float_t
 
     xmin*=scaleX; xmax*=scaleX;
     ymin*=scaleY; ymax*=scaleY;
-	
+
     hist = new TH2F(histname, 0, nBinsX, xmin, xmax,
 			nBinsY, ymin, ymax);
-	
+
     const Float_t dx = (xmax-xmin)/Float_t(nBinsX);
     const Float_t dy = (ymax-ymin)/Float_t(nBinsY);
-    Int_t *binx=malloc(nBinsX*sizeof(Int_t));
-    Int_t *biny=malloc(nBinsY*sizeof(Int_t));
+    Int_t *binx = (Int_t *) malloc(nBinsX*sizeof(Int_t));
+    Int_t *biny = (Int_t *) malloc(nBinsY*sizeof(Int_t));
     Double_t val;
 
     for(Int_t i = 0; i < nBinsX; i++){
@@ -627,47 +661,60 @@ TH2F *mccode_plot_2dhist(const Char_t *filename, const Char_t *histname, Float_t
         infile >> val;
 	hist->SetBinContent(bin, Float_t(val));
       }
-    }	
+    }
+
+    // skip the intermediate line
+    cout << line << endl;
+    while (line[0]!='#' ){
+      std::getline(infile, line, '\n');
+      cout << line << endl;
+    }
+    //do the same again, but now fill with values for the errors
+    for(Int_t j = 1; j <= nBinsY; j++) {
+      for(Int_t i = 1; i <= nBinsX; i++) {
+        Int_t bin=hist->GetBin(i,j);
+        infile >> val;
+        hist->SetBinError(bin, Float_t(val));
+      }
+    }
 
     hist->GetXaxis()->SetTitle(xlabel);
     hist->GetYaxis()->SetTitle(ylabel);
     hist->GetZaxis()->SetTitle(zlabel);
-
     hist->SetStats(0);
     hist->SetTitle(compname +" ["+outfilename+"] " + statistics.ReplaceAll(";",""));
     //hist->GetZaxis()->SetTitleOffset(1.4);
-    hist->SetOption("colz"); 
+    hist->SetOption("colz");
     return hist;
 }
 
-void mcstas2root(const Char_t* filename, 
+void mcstas2root(const Char_t* filename,
 		 const Char_t* histname="myhistogram.root",
 		 Float_t scaleX=1.0,
 		 Float_t scaleY=1.0,
 		 bool verbose=0)
-{ 
+{
   TFile *file = new TFile(histname,"RECREATE");
   //  std::cout<<format<<std::endl;
   string strhash = "";
   string strdummy = "";
-  char strfilename[80]='\0';
+  char strfilename[80]="";
 
   //  ! ".L /home/klinkby/rootalias.C;"
   //  ! "setpawstyle();"
   // Read the content of a PGPLOT file into a histogram
-  
+
 
   //  Int_t nBins = 0;
   //  Float_t xmin = 0, xmax = 0;
   //  Float_t x, y, ey, nsim;
 
-  
   ifstream infile(filename);
   if(!infile.good()){
     cout << "Cannot open file: " << filename << endl;
-    return 0;
+    return;
   }
-  
+
   std::string line;
   bool plot2D = false;
   while(std::getline(infile, line, '\n')) {
@@ -677,8 +724,8 @@ void mcstas2root(const Char_t* filename,
     if (helpString.Contains("filename")) std::istringstream(line,ios_base::in) >> strhash >> strdummy >> strfilename;
     if (helpString.Contains("zvar")) plot2D = true;
   }
-  
-  
+
+
 
   if (verbose==true) {
     if (plot2D == false) std::cout<<" Plot 1D found "<<std::endl;
@@ -686,51 +733,51 @@ void mcstas2root(const Char_t* filename,
   }
 
 
-    string xlab="";
-    string ylab="";
-    
-    string str1 = "";
-    char str2[80]='\0';
-    char str3[80]='\0';
-    char str4[80]='\0';
-    char str5[80]='\0';
-    char str_xlab[80] = '\0';
-    char str_ylab[80] = '\0';
+  string xlab="";
+  string ylab="";
 
-		  
+  string str1 = "";
+  char str2[80]="";
+  char str3[80]="";
+  char str4[80]="";
+  char str5[80]="";
+  char str_xlab[80] = "";
+  char str_ylab[80] = "";
+
+  TCanvas *c1;
 
   // Case 1D
   if (!plot2D) {
     // Read the content of a PGPLOT file into a histogram
-    
+
     TH1F* hist = 0;
-  
+
     Int_t nBins = 0;
     Float_t xmin = 0, xmax = 0;
     Float_t x, y, ey, nsim;
-  
+
     ifstream infile(filename);
     if(!infile.good()){
       //     MakeZombie();
       cout << "Cannot open file: " << filename << endl;
-      return 0;
+      return;
     }
-    
+
     std::string line;
     while(std::getline(infile, line, '\n')) {
-      
+
       TString helpString(line);
-      
+
       if(helpString.Contains("#")) {
-	
+
 	if(helpString.Contains("type")) {
-	  
+
         	  sscanf (line.c_str(),"# type: array_1d(%d)",&nBins);
 	} else if(helpString.Contains("xlimits")){
-	  
-	  sscanf (line.c_str(),"# xlimits: %f %f", &xmin, &xmax);	
+
+	  sscanf (line.c_str(),"# xlimits: %f %f", &xmin, &xmax);
 	}
-	
+
 	else if(helpString.Contains("xlabel")) {
 	  std::istringstream(line,ios_base::in) >> strhash >> str1>> str2 >>str3;
 	  strcat(str_xlab,str2);
@@ -743,29 +790,29 @@ void mcstas2root(const Char_t* filename,
 	  strcat(str_ylab,str4);
 	  strcat(str_ylab,str5);
       }
-	
-	//Done reading header, starting reading the data		
+
+	//Done reading header, starting reading the data
       } else {
 	Float_t offset = 27.;
 	if(hist==0)
 	  hist = new TH1F(histname, 0, nBins, scaleX*xmin+offset, scaleX*xmax+offset);
-	
+
 	Int_t res = sscanf(line.c_str(), "%f %f %f %f", &x, &y, &ey, &nsim);
-	
+
 	if (res < 2) {
 	  // not a data line
 	  continue;
 	}
-	
+
 	x *= scaleX;
 	x += offset;
-	
+
 	Int_t bin = hist->GetXaxis()->FindBin(x);
 	hist->SetBinContent(bin, y);
 	hist->SetBinError(bin, ey);
       }
     }
-    
+
     hist->GetYaxis()->SetTitle(str_ylab);
     hist->GetXaxis()->SetTitle(str_xlab);
 
@@ -773,7 +820,7 @@ void mcstas2root(const Char_t* filename,
     hist->SetLineWidth(2);
     hist->SetStats(0);
     hist->Write();
-    
+
 
     //  char imagefile[80]='\0';
     //  char form2[80]="pdf";
@@ -784,98 +831,102 @@ void mcstas2root(const Char_t* filename,
 
     c1->Print("1Dplot.pdf");
     c1->Print("1Dplot.eps");
-    
+
     return;
 
 
-    
+
     //Case 2D
   } else {
-    
+
     // Read the content of a PGPLOT file into a histogram
-    
+
     TH2F* hist = 0;
-  
+
     int  nBinsX = 0, nBinsY = 0;
     Float_t xmin = 0, xmax = 0, ymin = 0, ymax = 0;
-    
-    
+
+    unsigned int nx;
+    unsigned int ny;
+    Float_t dx;
+    Float_t dy;
+    int *binx;
+    int *biny;
+
     ifstream infile(filename);
     if(!infile.good()){
       //     MakeZombie();
       cout << "Cannot open file: " << filename << endl;
-      return 0;
+      return;
     }
-    
+
     std::string line;
     double val = 0;
-    
+
 
     while(std::getline(infile, line, '\n')) {
       if (verbose==true)  cout<<line<<endl;
-    
+
       TString helpString(line);
-      
+
       if(helpString.Contains("#")) {
-	
-	if(helpString.Contains("type")) {
-	  sscanf (line.c_str(),"# type: array_2d(%d, %d)",&nBinsX, &nBinsY);
 
-      } else if(helpString.Contains("xylimits")){
-	sscanf (line.c_str(),"# xylimits: %f %f %f %f", 
-		&xmin, &xmax, &ymin, &ymax);	
+        if(helpString.Contains("type")) {
+          sscanf (line.c_str(),"# type: array_2d(%d, %d)",&nBinsX, &nBinsY);
 
-      } else if(helpString.Contains("variables")){
-	xmin*=scaleX;
-	xmax*=scaleX;
-	ymin*=scaleY;
-	ymax*=scaleY;
-	//	cout << "X: " << nBinsX << ", " << xmin << ", " << xmax << endl;
-	//	cout << "Y: " << nBinsY << ", " << ymin << ", " << ymax << endl;
-	
-	hist = new TH2F(histname, 0, nBinsX, xmin, xmax,
-			nBinsY, ymin, ymax);
-	
-	const int *nx = nBinsX;
-	const int *ny = nBinsY;
-	const Float_t dx = (xmax-xmin)/Float_t(nx);
-	const Float_t dy = (ymax-ymin)/Float_t(ny);
-	int binx[&nx];
-	int biny[&ny];
+        } else if(helpString.Contains("xylimits")){
+          sscanf (line.c_str(),"# xylimits: %f %f %f %f",
+              &xmin, &xmax, &ymin, &ymax);
 
-	for(Int_t i = 0; i < nBinsX; i++) 
-	  binx[i] = hist->GetXaxis()->FindBin(xmin+(Float_t(i)+0.5)*dx);
-	
-	for(Int_t i = 0; i < nBinsY; i++)
-	  biny[i] = hist->GetYaxis()->FindBin(ymin+(Float_t(i)+0.5)*dy);
+        } else if(helpString.Contains("variables")){
+          xmin*=scaleX;
+          xmax*=scaleX;
+          ymin*=scaleY;
+          ymax*=scaleY;
+          //	cout << "X: " << nBinsX << ", " << xmin << ", " << xmax << endl;
+          //	cout << "Y: " << nBinsY << ", " << ymin << ", " << ymax << endl;
+
+          hist = new TH2F(histname, 0, nBinsX, xmin, xmax,
+              nBinsY, ymin, ymax);
+
+          nx = nBinsX;
+          ny = nBinsY;
+          dx = (xmax-xmin)/Float_t(nx);
+          dy = (ymax-ymin)/Float_t(ny);
+          binx = (int *) calloc(nx, sizeof(int));
+          biny = (int *) calloc(ny, sizeof(int));
+
+          for(Int_t i = 0; i < nBinsX; i++)
+            binx[i] = hist->GetXaxis()->FindBin(xmin+(Float_t(i)+0.5)*dx);
+
+          for(Int_t i = 0; i < nBinsY; i++)
+            biny[i] = hist->GetYaxis()->FindBin(ymin+(Float_t(i)+0.5)*dy);
+        }
+
+        if(helpString.Contains("xlabel")) {
+          std::istringstream(line,ios_base::in) >> strhash >> str1>> str2 >>str3;
+          strcat(str_xlab,str2);
+          strcat(str_xlab,str3);
+        }
+
+        if(helpString.Contains("ylabel")) {
+          strhash = "";
+          str1 = "";
+          std::istringstream(line,ios_base::in) >> strhash >> str1>> str4 >>str5;
+          strcat(str_ylab,str4);
+          strcat(str_ylab,str5);
+        }
       }
-
-      if(helpString.Contains("xlabel")) {
-        std::istringstream(line,ios_base::in) >> strhash >> str1>> str2 >>str3;
-	strcat(str_xlab,str2);
-	strcat(str_xlab,str3);
-      }
-
-      if(helpString.Contains("ylabel")) {
-	strhash = "";
-	str1 = "";
-        std::istringstream(line,ios_base::in) >> strhash >> str1>> str4 >>str5;
-	strcat(str_ylab,str4);
-	strcat(str_ylab,str5);
-      }
-
-    }
     //done reading header, starting to read the data
       else {
-
-	for(Int_t j = 0; j < nBinsY; j++) {
+        for(Int_t j = 0; j < nBinsY; j++) {
 	  for(Int_t i = 0; i < nBinsX; i++) {
 	    infile >> val;
 	    hist->SetCellContent(binx[i], biny[j], Float_t(val));
 	  }
-	}	
+        }
+      }
     }
-  }
 
     // hist->GetYaxis()->SetTitle(str_ylab);
     //  hist->GetXaxis()->SetTitle(str_xlab);
@@ -894,7 +945,7 @@ void mcstas2root(const Char_t* filename,
 
     c1->Print("2Dplot.pdf");
     c1->Print("2Dplot.eps");
-  
+
   //  char imagefile[80] = '\0';
   //  strcat(imagefile,filename);
   //  strcat(imagefile,format);
@@ -910,10 +961,10 @@ TGraphErrors* ReadPGPLOTGraph(const char *filename, Float_t scaleX)
 {
   // Read the content of a PGPLOT file into a graph
   TGraphErrors* graph = new TGraphErrors(300);
-  
+
   //  CtorAllocate();
   Double_t x, y, ey, nsim;
-  
+
   ifstream infile(filename);
   if(!infile.good()){
     //     MakeZombie();
@@ -921,14 +972,14 @@ TGraphErrors* ReadPGPLOTGraph(const char *filename, Float_t scaleX)
     delete graph;
     return 0;
   }
-  
+
   Int_t np = 0;
-  
+
   std::string line;
   while(std::getline(infile, line, '\n')) {
-    
+
     Int_t res = sscanf(line.c_str(), "%lg %lg %lg %lg", &x, &y, &ey, &nsim);
-    
+
     if (res < 2) {
       // not a data line
       continue;
@@ -951,11 +1002,11 @@ Double_t FindGraphMax(TGraph* graph)
   Float_t max = 0;
 
   for(Int_t i = 0; i < nExp; i++) {
-    
+
     if(graph->GetY()[i]>max)
       max = graph->GetY()[i];
-  } 
-  
+  }
+
   return max;
 }
 
@@ -968,18 +1019,17 @@ Int_t FindGraphMaxBin(TGraph* graph)
   Int_t   bin = -1;
 
   for(Int_t i = 0; i < nExp; i++) {
-    
+
     if(graph->GetY()[i]>max) {
       max = graph->GetY()[i];
       bin = i;
     }
-  } 
-  
+  }
+
   return bin;
-}       
+}
 
 //______________________________________________________________________________
 int plot(int d) {
   return 2*d;
 }
-

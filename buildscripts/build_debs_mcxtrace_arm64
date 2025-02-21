@@ -34,7 +34,7 @@ FLAVOUR=mcxtrace
 # From 2.1 onwards, let McStas reside in /usr/share on Debian-like systems
 export MCINSTALL_PREFIX=/usr              # Debian standard /usr/bin and /usr/share/$FLAVOUR
 export MCCODE_USE_LEGACY_DESTINATIONS=OFF # install in e.g. /usr/share/$FLAVOUR/resources
-export ENABLE_CIF2HKL=ON                  # cif2hkl is available as a separate package
+export ENABLE_CIF2HKL=OFF                 # cif2hkl is available as a separate package
 
 ./mkdist $FLAVOUR                                         $1 "" "" $MCCODE_ARCH "" -- deb
 ./mkdist $FLAVOUR-comps                                   $1 "" "" $MCCODE_ARCH "" -- deb

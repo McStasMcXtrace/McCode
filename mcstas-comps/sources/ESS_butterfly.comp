@@ -75,7 +75,7 @@
 * <li><A HREF="http://essbutterfly.mcstas.org/PDFs/BFpaper_LZ_latest.pdf">Release document "Description and performance of the new baseline ESS moderators, latest version"</a>
 * <li><A HREF="http://essbutterfly.mcstas.org/">http://essbutterfly.mcstas.org/</a> benchmarking website with comparative McStas-MCNP figures
 * <li><a href="http://essbutterfly.mcstas.org/visualisation">html-based, interactive 3D model of moderators and monolith, as seen from beamline N4</a>.
-* <li><A HREF="https://github.com/McStasMcXtrace/McCode/blob/master/mcstas-comps/sources/ESS_butterfly.comp">Source code</A> for <CODE>ESS_butterfly.comp</CODE> at GitHub.
+* <li><A HREF="https://github.com/mccode-dev/McCode/blob/master/mcstas-comps/sources/ESS_butterfly.comp">Source code</A> for <CODE>ESS_butterfly.comp</CODE> at GitHub.
 * </ol>
 * %P
 * Input parameters:

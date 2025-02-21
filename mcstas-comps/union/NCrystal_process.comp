@@ -95,7 +95,7 @@
 DEFINE COMPONENT NCrystal_process // Remember to change the name of process here
 
 SETTING PARAMETERS(string cfg = "", packing_factor=1, interact_fraction=-1, string init="init")
-DEPENDENCY "CMD(ncrystal-config --show buildflags)"
+DEPENDENCY "@NCRYSTALFLAGS@"
 
 SHARE
 %{

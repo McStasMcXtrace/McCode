@@ -1,10 +1,10 @@
-# Installation of McXtrace 3.5.16 on Windows 64 bit systems
+# Installation of McXtrace 3.5.24 on Windows 64 bit systems
 
-* Please install the [McXtrace 3.5.16 metapackage](https://download.mcxtrace.org/mcxtrace-3.5.16/Windows/McXtrace-Metapackage-3.5.16-win64.exe)
-* To enable use of MCPL with McXtrace 3.5.16 on Windows, please:
- 1) Locate and run the executable `mcxtrace-mcpl-NSIS64-3.5.16-mingw64.exe` from the [single-packages folder](https://download.mcxtrace.org/mcxtrace-3.5.16/Windows/single-packages)
- 2) During installation, please specify `c:\mcxtrace-3.5.16` as installation directory
- 3) After installation, place the mcpl-related `.bat` files from the [extras folder](https://download.mcxtrace.org/mcxtrace-3.5.16/Windows/extras) folder in `c:\mcxtrace-3.5.16\bin`
+* Please install the [McXtrace 3.5.24 metapackage](https://download.mcxtrace.org/mcxtrace-3.5.24/Windows/McXtrace-Metapackage-3.5.24-win64.exe)
+* To enable use of MCPL with McXtrace 3.5.24 on Windows, please:
+ 1) Locate and run the executable `mcxtrace-mcpl-NSIS64-3.5.24-mingw64.exe` from the [single-packages folder](https://download.mcxtrace.org/mcxtrace-3.5.24/Windows/single-packages)
+ 2) During installation, please specify `c:\mcxtrace-3.5.24` as installation directory
+ 3) After installation, place the mcpl-related `.bat` files from the [extras folder](https://download.mcxtrace.org/mcxtrace-3.5.24/Windows/extras) folder in `c:\mcxtrace-3.5.24\bin`
 
 
 * An alternative to installing this cross-compiled verison is to follow the instructions

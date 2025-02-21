@@ -19,7 +19,7 @@
 * The model is naturally very challenging to run because of the indirect TOF geometry
 * and would benefit from an adaptive sampling approach.
 *
-* Please follow instructions at https://github.com/McStasMcXtrace/McCode/wiki/McStas-and-Mantid
+* Please follow instructions at https://github.com/mccode-dev/McCode/wiki/McStas-and-Mantid
 * to compile with NeXus and generate a Mantid-IDF before attempting to use with Mantid.
 *
 * To generate the right flightpath length in Mantid, this version of the instrument has 

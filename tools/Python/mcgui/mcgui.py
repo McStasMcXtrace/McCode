@@ -504,7 +504,7 @@ class McGuiAppController():
                         
         # Shouldn't really be necessary, but otherwise App menu is inactive on macOS
         # (was initially put in message/status update mechanism, but that caused other side-effects, see
-        #  https://github.com/McStasMcXtrace/McCode/issues/570 )
+        #  https://github.com/mccode-dev/McCode/issues/570 )
         QtWidgets.QApplication.processEvents()
         self.view.showMainWindow()
         

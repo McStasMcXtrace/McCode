@@ -23,12 +23,12 @@ then
 	fi
 	if [ "$ret_code00" != "0" ];
 	then
-	    osascript -e "tell app \"System Events\" to display dialog \"Conda looks to be in place, yet something is wrong... :-( Please create an issue at https://github.com/McStasMcXtrace/McCode/issues \""
+	    osascript -e "tell app \"System Events\" to display dialog \"Conda looks to be in place, yet something is wrong... :-( Please create an issue at https://github.com/mccode-dev/McCode/issues \""
 	    exit
 	fi
     else
 	if [ -f ${BASEDIR}/Contents/Resources/INJECTING ]; then
-	    osascript -e "tell app \"System Events\" to display dialog \"Sorry, conda injection already started - please wait until completion - of in the envent of failure create an issue at https://github.com/McStasMcXtrace/McCode/issues \""
+	    osascript -e "tell app \"System Events\" to display dialog \"Sorry, conda injection already started - please wait until completion - of in the envent of failure create an issue at https://github.com/mccode-dev/McCode/issues \""
 	    exit
 	else
 	    osascript -e "tell app \"System Events\" to display dialog \"Your @FLAVOR@ app does not yet include a conda environment, now proceeding to download. A notification should appear again once the process is over. :-) \""
@@ -70,7 +70,7 @@ then
 	then
 	    $SCRIPT $* > /dev/null 2>&1
 	else
-	    osascript -e "tell app \"System Events\" to display dialog \"Sorry, your @FLAVOR@ app (@GUIPREFIX@gui) can not be started, please create an issue at https://github.com/McStasMcXtrace/McCode/issues \""
+	    osascript -e "tell app \"System Events\" to display dialog \"Sorry, your @FLAVOR@ app (@GUIPREFIX@gui) can not be started, please create an issue at https://github.com/mccode-dev/McCode/issues \""
 	fi
     fi
 else

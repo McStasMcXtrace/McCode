@@ -1156,7 +1156,7 @@ int r_off_intersect_all(double* t0, double* t3,
       }
 
       // Lines added, from Gaetano Mangiapia, Helmholtz-Zentrum Hereon
-      // see https://github.com/McStasMcXtrace/McCode/issues/1250
+      // see https://github.com/mccode-dev/McCode/issues/1250
       if (faceindex0) *faceindex0 = intersect4[i].index;
       if (faceindex3) *faceindex3 = intersect4[i+1].index;
 
