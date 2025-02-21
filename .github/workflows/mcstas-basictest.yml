@@ -72,7 +72,8 @@ jobs:
       run: |
            brew install openmpi
            brew tap LouisBrunner/valgrind
-           brew install --HEAD LouisBrunner/valgrind/valgrind
+           find /opt/homebrew/Library/Taps/louisbrunner/homebrew-valgrind
+           #brew install --HEAD LouisBrunner/valgrind/valgrind
 
     - name: Check versions
       id: version-checks
