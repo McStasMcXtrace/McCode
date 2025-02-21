@@ -267,7 +267,7 @@ jobs:
               ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=${NUM_MPI} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
            else
                ../install_mcstas/bin/${MCSTAS_EXECUTABLE} NCrystal_example.instr -t
-               export BUILDF=`ncrystal-config --show buildflags`  && mpicc -g -lm -O0 NCrystal_example.c -o NCrystal_example.out -DUSE_MPI -lmpi ${BULDF}
+               CFLAGS=`ncrystal-config --show buildflags`  mpicc -g -lm -O0 NCrystal_example.c -o NCrystal_example.out -DUSE_MPI -lmpi 
                valgrind --tool=memcheck mpirun -np 1 NCrystal_example.out sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
            fi
 
