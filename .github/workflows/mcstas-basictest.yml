@@ -270,7 +270,7 @@ jobs:
                arch -x86_64 mpicc -g -lm -O0 NCrystal_example.c -o NCrystal_example.out -DUSE_MPI -lmpi -Wl,-rpath,/opt/homebrew/lib/python3.13/site-packages/_ncrystal_core/data/lib -Wl,/opt/homebrew/lib/python3.13/site-packages/_ncrystal_core/data/lib/libNCrystal.dylib -I/opt/homebrew/lib/python3.13/site-packages/_ncrystal_core/data/include
                ./NCrystal_example.out sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x" -d run0
                arch -x86_64 valgrind --tool=memcheck mpirun -np 1 NCrystal_example.out sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x" -d run1
-         fi
+           fi
 
     - name: Launch NeXus test instrument
       id: nexus-test
