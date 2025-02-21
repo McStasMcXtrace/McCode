@@ -265,7 +265,7 @@ jobs:
                ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=${NUM_MPI} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
            else
                ../install_mcstas/bin/${MCRUN_EXECUTABLE} -c --mpi=1 -n0 NCrystal_example.instr
-               sudo dtrace mpirun --allow-run-as-root -np ${NUM_MPI} NCrystal_example.out sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x" -dOutput
+               leaks --atExit -- mpirun -np ${NUM_MPI} NCrystal_example.out sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x" -dOutput
            fi
 
     - name: Launch NeXus test instrument
