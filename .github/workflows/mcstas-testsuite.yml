@@ -165,7 +165,7 @@ jobs:
            then
              ../install_mcstas/bin/mctest --testdir $PWD --mpi=2 --suffix ${{ matrix.os }} --instr=PSI
            else
-             ../install_mcstas/bin/mctest --testdir $PWD --suffix ${{ matrix.os }} --instr=PSI
+             ../install_mcstas/bin/mctest.bat --testdir $PWD --suffix ${{ matrix.os }} --instr=PSI
            fi
 
     - name: 'Tar output files'
