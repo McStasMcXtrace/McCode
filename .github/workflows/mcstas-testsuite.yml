@@ -51,6 +51,7 @@ jobs:
       if: runner.os == 'Windows'
       run: |
            choco install winflexbison3
+           pip install mslex
 
     - name: Setup OpenMPI (Linux)
       id: setup-openmpi-nexus-linux-gsl
@@ -92,7 +93,9 @@ jobs:
            mkdir build_mcstas
            cd build_mcstas
            export EXTRA_ARGS_FOR_CMAKE=""
-           if [ "$RUNNER_OS" == "macOS" ]; then export EXTRA_ARGS_FOR_CMAKE="-DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DFLEX_EXECUTABLE=/usr/local/opt/flex/bin/flex"; fi
+           if [ "$RUNNER_OS" == "macOS" ] && [ -f "/opt/homebrew/opt/flex/bin/flex" ]; then export HOMEBRW="/opt/homebrew/opt"; fi
+           if [ "$RUNNER_OS" == "macOS" ] && [ -f "/usr/local/opt/flex/bin/flex" ]; then export HOMEBRW="/usr/local/opt"; fi
+           if [ "$RUNNER_OS" == "macOS" ]; then export EXTRA_ARGS_FOR_CMAKE="-DBISON_EXECUTABLE=${HOMEBRW}/bison/bin/bison -DFLEX_EXECUTABLE=${HOMEBRW}/flex/bin/flex"; fi
            if [ "$RUNNER_OS" == "Linux" ]; then export EXTRA_ARGS_FOR_CMAKE="-DNEXUSLIB=/usr/lib -DNEXUSINCLUDE=/usr/include/nexus"; fi
            cmake \
                -DCMAKE_INSTALL_PREFIX=../install_mcstas \
