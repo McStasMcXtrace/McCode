@@ -18,7 +18,7 @@ jobs:
         include:
           - { os: ubuntu-latest, CC: clang,    CXX: clang++,    python: '3.12' }
           - { os: macos-latest, CC: clang,    CXX: clang++,    python: '3.12' }
-          - { os: windows-latest, CC: clang,    CXX: clang++,    python: '3.12' }
+          - { os: windows-latest, CC: gcc,    CXX: g++,    python: '3.12' }
 
     name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
     runs-on: ${{ matrix.os }}
