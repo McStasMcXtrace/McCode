@@ -163,9 +163,9 @@ jobs:
            mkdir run_test-suite && cd run_test-suite
            if [ "$RUNNER_OS" != "Windows" ];
            then
-             mctest --testdir $PWD --mpi=2 --suffix ${{ matrix.os }} --instr=PSI
+             ../install_mcstas/bin/mctest --testdir $PWD --mpi=2 --suffix ${{ matrix.os }} --instr=PSI
            else
-             mctest --testdir $PWD --suffix ${{ matrix.os }} --instr=PSI
+             ../install_mcstas/bin/mctest --testdir $PWD --suffix ${{ matrix.os }} --instr=PSI
            fi
 
     - name: 'Tar output files'
