@@ -140,11 +140,17 @@ jobs:
            set -e
            set -u
            set -x
-           if [ "$RUNNER_OS" != macOS ];
+           if [ "$RUNNER_OS" == "Windows" ];
+           then
+             python3 -mpip install PyYAML ply McStasscript
+           fi
+           if [ "$RUNNER_OS" == "macOS" ];
+           then
+             python3 -mpip install PyYAML ply McStasScript ncrystal --break-system-packages
+           fi
+           if [ "$RUNNER_OS" == "Linux" ];
            then
              python3 -mpip install PyYAML ply McStasscript ncrystal
-           else
-             pip3 install PyYAML ply McStasscript ncrystal
            fi
 
     - name: Test suite, up to 2-core MPI
