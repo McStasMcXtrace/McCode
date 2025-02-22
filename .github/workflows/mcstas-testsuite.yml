@@ -144,7 +144,7 @@ jobs:
            then
              python3 -mpip install PyYAML ply McStasscript ncrystal
            else
-             pip install PyYAML ply McStasscript ncrystal
+             pip3 install PyYAML ply McStasscript ncrystal
            fi
 
     - name: Test suite, up to 2-core MPI
