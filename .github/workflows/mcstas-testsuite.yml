@@ -16,8 +16,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, CC: clang,    CXX: clang++,    python: '3.11' }
-  
+          - { os: ubuntu-latest, CC: clang,    CXX: clang++,    python: '3.12' }
+          - { os: macos-latest, CC: clang,    CXX: clang++,    python: '3.12' }
+          - { os: windows-latest, CC: gcc,    CXX: g++,    python: '3.12' }
+
     name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
     runs-on: ${{ matrix.os }}
     env:
@@ -49,6 +51,7 @@ jobs:
       if: runner.os == 'Windows'
       run: |
            choco install winflexbison3
+           pip install mslex
 
     - name: Setup OpenMPI (Linux)
       id: setup-openmpi-nexus-linux-gsl
@@ -57,13 +60,13 @@ jobs:
            sudo apt-get update
            sudo apt-get -y install libopenmpi-dev libnexus-dev curl libgsl-dev
            sudo curl -O https://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcpl-1.6.2-deb64.deb
-           sudo curl -O https://packages.mccode.org/debian/dists/stable/main/binary-amd64/ncrystal-3.7.1-deb64.deb
-           sudo dpkg -i mcpl-1.6.2-deb64.deb ncrystal-3.7.1-deb64.deb
+           sudo curl -O https://packages.mccode.org/debian/dists/stable/main/binary-amd64/NCrystal-4.0.0-deb64.deb
+           sudo dpkg -i mcpl-1.6.2-deb64.deb NCrystal-4.0.0-deb64.deb
            sudo apt-get -f install
 
-    - name: Setup OpenMPI (macOS-12,13)
+    - name: Setup OpenMPI (macOS)
       id: setup-openmpi-macos
-      if: runner.os == 'macOS' && matrix.os != 'macos-11'
+      if: runner.os == 'macOS'
       run: |
            set -e
            set -u
@@ -90,7 +93,9 @@ jobs:
            mkdir build_mcstas
            cd build_mcstas
            export EXTRA_ARGS_FOR_CMAKE=""
-           if [ "$RUNNER_OS" == "macOS" ]; then export EXTRA_ARGS_FOR_CMAKE="-DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DFLEX_EXECUTABLE=/usr/local/opt/flex/bin/flex"; fi
+           if [ "$RUNNER_OS" == "macOS" ] && [ -f "/opt/homebrew/opt/flex/bin/flex" ]; then export HOMEBRW="/opt/homebrew/opt"; fi
+           if [ "$RUNNER_OS" == "macOS" ] && [ -f "/usr/local/opt/flex/bin/flex" ]; then export HOMEBRW="/usr/local/opt"; fi
+           if [ "$RUNNER_OS" == "macOS" ]; then export EXTRA_ARGS_FOR_CMAKE="-DBISON_EXECUTABLE=${HOMEBRW}/bison/bin/bison -DFLEX_EXECUTABLE=${HOMEBRW}/flex/bin/flex"; fi
            if [ "$RUNNER_OS" == "Linux" ]; then export EXTRA_ARGS_FOR_CMAKE="-DNEXUSLIB=/usr/lib -DNEXUSINCLUDE=/usr/include/nexus"; fi
            cmake \
                -DCMAKE_INSTALL_PREFIX=../install_mcstas \
@@ -135,13 +140,20 @@ jobs:
            set -e
            set -u
            set -x
-           python3 -mpip install PyYAML ply McStasscript
-           if [ "$RUNNER_OS" != "Windows" ];
+           if [ "$RUNNER_OS" == "Windows" ];
            then
-             python3 -mpip install ncrystal
+             python3 -mpip install PyYAML ply McStasscript
+           fi
+           if [ "$RUNNER_OS" == "macOS" ];
+           then
+             python3 -mpip install PyYAML ply McStasScript ncrystal --break-system-packages
+           fi
+           if [ "$RUNNER_OS" == "Linux" ];
+           then
+             python3 -mpip install PyYAML ply McStasscript ncrystal
            fi
 
-    - name: Test suite, 2-core MPI
+    - name: Test suite, up to 2-core MPI
       id: test-suite
       run: |
            set -e
@@ -149,7 +161,12 @@ jobs:
            set -x
            export PATH=$PWD/install_mcstas/bin/:$PATH
            mkdir run_test-suite && cd run_test-suite
-           mctest --testdir $PWD --mpi=2 --suffix ${{ matrix.os }}
+           if [ "$RUNNER_OS" != "Windows" ];
+           then
+             ../install_mcstas/bin/mctest --verbose --testdir $PWD --suffix ${{ matrix.os }} --mpi=1
+           else
+             ../install_mcstas/bin/mctest.bat --verbose --testdir $PWD --suffix ${{ matrix.os }}
+           fi
 
     - name: 'Tar output files'
       id: tar-package
