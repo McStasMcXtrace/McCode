@@ -154,7 +154,7 @@ jobs:
              mxtest --testdir $PWD --mpi=2 --suffix ${{ matrix.os }}
            else
              mxtest --testdir $PWD --suffix ${{ matrix.os }}
-           endif
+           fi
 
     - name: 'Tar output files'
       id: tar-package
