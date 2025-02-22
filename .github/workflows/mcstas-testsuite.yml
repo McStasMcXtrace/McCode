@@ -140,14 +140,8 @@ jobs:
            set -e
            set -u
            set -x
-           if [ "$RUNNER_OS" != "macOS" ];
-           then
-             python3 -mpip install PyYAML ply McStasscript
-             python3 -mpip install ncrystal
-           else
-             python3 -mpip --break-system-packages install PyYAML ply McStasscript
-             python3 -mpip --break-system-packages install ncrystal
-           fi
+           python3 -mpip install PyYAML ply McStasscript ncrystal
+
     - name: Test suite, up to 2-core MPI
       id: test-suite
       run: |
