@@ -162,9 +162,9 @@ jobs:
            mkdir run_test-suite && cd run_test-suite
            if [ "$RUNNER_OS" != "Windows" ];
            then
-             ../install_mcstas/bin/mxtest --verbose --testdir $PWD --suffix ${{ matrix.os }} --mpi=1
+             ../install_mcxtrace/bin/mxtest --verbose --testdir $PWD --suffix ${{ matrix.os }} --mpi=1
            else
-             ../install_mcstas/bin/mxtest.bat --verbose --testdir $PWD --suffix ${{ matrix.os }}
+             ../install_mcxtrace/bin/mxtest.bat --verbose --testdir $PWD --suffix ${{ matrix.os }}
            fi
 
     - name: 'Tar output files'
