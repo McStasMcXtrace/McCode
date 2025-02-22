@@ -18,7 +18,7 @@ jobs:
         include:
           - { os: ubuntu-latest, CC: clang,    CXX: clang++,    python: '3.12' }
           - { os: macos-latest, CC: clang,    CXX: clang++,    python: '3.12' }
-          - { os: windows-latest, CC: clang,    CXX: clang++,    python: '3.12' }
+          - { os: windows-latest, CC: gcc,    CXX: g++,    python: '3.12' }
 
     name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
     runs-on: ${{ matrix.os }}
@@ -139,7 +139,18 @@ jobs:
            set -e
            set -u
            set -x
-           python3 -mpip install PyYAML ply McStasscript
+           if [ "$RUNNER_OS" == "Windows" ];
+           then
+             python3 -mpip install PyYAML ply McStasscript
+           fi
+           if [ "$RUNNER_OS" == "macOS" ];
+           then
+             python3 -mpip install PyYAML ply McStasScript --break-system-packages
+           fi
+           if [ "$RUNNER_OS" == "Linux" ];
+           then
+             python3 -mpip install PyYAML ply McStasscript
+           fi
 
     - name: Test suite, up to 2-core MPI
       id: test-suite
@@ -151,9 +162,9 @@ jobs:
            mkdir run_test-suite && cd run_test-suite
            if [ "$RUNNER_OS" != "Windows" ];
            then
-             mxtest --testdir $PWD --mpi=2 --suffix ${{ matrix.os }}
+             ../install_mcstas/bin/mxtest --verbose --testdir $PWD --suffix ${{ matrix.os }} --mpi=1
            else
-             mxtest --testdir $PWD --suffix ${{ matrix.os }}
+             ../install_mcstas/bin/mxtest.bat --verbose --testdir $PWD --suffix ${{ matrix.os }}
            fi
 
     - name: 'Tar output files'
