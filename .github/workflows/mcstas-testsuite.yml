@@ -141,6 +141,7 @@ jobs:
            set -u
            set -x
            if [ "$RUNNER_OS" == macOS ];
+           then
              python3 -mpip install PyYAML ply McStasscript
              python3 -mpip install ncrystal
            else
