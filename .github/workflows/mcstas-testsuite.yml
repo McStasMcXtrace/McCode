@@ -16,9 +16,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, CC: clang,    CXX: clang++,    python: '3.11' }
-  
-    name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
+          - { os: ubuntu-latest, CC: clang,    CXX: clang++,    python: '3.12' }
+          - { os: macos-latest, CC: clang,    CXX: clang++,    python: '3.12' }
+          - { os: windows-latest, CC: clang,    CXX: clang++,    python: '3.12' }
+
+        name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
     runs-on: ${{ matrix.os }}
     env:
       CC: ${{ matrix.CC }}
@@ -57,13 +59,13 @@ jobs:
            sudo apt-get update
            sudo apt-get -y install libopenmpi-dev libnexus-dev curl libgsl-dev
            sudo curl -O https://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcpl-1.6.2-deb64.deb
-           sudo curl -O https://packages.mccode.org/debian/dists/stable/main/binary-amd64/ncrystal-3.7.1-deb64.deb
-           sudo dpkg -i mcpl-1.6.2-deb64.deb ncrystal-3.7.1-deb64.deb
+           sudo curl -O https://packages.mccode.org/debian/dists/stable/main/binary-amd64/NCrystal-4.0.0-deb64.deb
+           sudo dpkg -i mcpl-1.6.2-deb64.deb NCrystal-4.0.0-deb64.deb
            sudo apt-get -f install
 
-    - name: Setup OpenMPI (macOS-12,13)
+    - name: Setup OpenMPI (macOS)
       id: setup-openmpi-macos
-      if: runner.os == 'macOS' && matrix.os != 'macos-11'
+      if: runner.os == 'macOS'
       run: |
            set -e
            set -u
@@ -136,12 +138,9 @@ jobs:
            set -u
            set -x
            python3 -mpip install PyYAML ply McStasscript
-           if [ "$RUNNER_OS" != "Windows" ];
-           then
-             python3 -mpip install ncrystal
-           fi
+           python3 -mpip install ncrystal
 
-    - name: Test suite, 2-core MPI
+    - name: Test suite, up to 2-core MPI
       id: test-suite
       run: |
            set -e
@@ -149,7 +148,12 @@ jobs:
            set -x
            export PATH=$PWD/install_mcstas/bin/:$PATH
            mkdir run_test-suite && cd run_test-suite
-           mctest --testdir $PWD --mpi=2 --suffix ${{ matrix.os }}
+           if [ "$RUNNER_OS" != "Windows" ];
+           then
+             mctest --testdir $PWD --mpi=2 --suffix ${{ matrix.os }}
+           else
+             mctest --testdir $PWD --suffix ${{ matrix.os }}
+           endif
 
     - name: 'Tar output files'
       id: tar-package

@@ -16,8 +16,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, CC: clang,    CXX: clang++,    python: '3.11' }
-  
+          - { os: ubuntu-latest, CC: clang,    CXX: clang++,    python: '3.12' }
+          - { os: macos-latest, CC: clang,    CXX: clang++,    python: '3.12' }
+          - { os: windows-latest, CC: clang,    CXX: clang++,    python: '3.12' }
+
     name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
     runs-on: ${{ matrix.os }}
     env:
@@ -60,9 +62,9 @@ jobs:
            sudo dpkg -i mcpl-1.6.2-deb64.deb
            sudo apt-get -f install
 
-    - name: Setup OpenMPI (macOS-12,13)
+    - name: Setup OpenMPI (macOS)
       id: setup-openmpi-macos
-      if: runner.os == 'macOS' && matrix.os != 'macos-11'
+      if: runner.os == 'macOS'
       run: |
            set -e
            set -u
@@ -135,12 +137,8 @@ jobs:
            set -u
            set -x
            python3 -mpip install PyYAML ply McStasscript
-           if [ "$RUNNER_OS" != "Windows" ];
-           then
-             python3 -mpip install ncrystal
-           fi
 
-    - name: Test suite, 2-core MPI
+    - name: Test suite, up to 2-core MPI
       id: test-suite
       run: |
            set -e
@@ -148,7 +146,12 @@ jobs:
            set -x
            export PATH=$PWD/install_mcxtrace/bin/:$PATH
            mkdir run_test-suite && cd run_test-suite
-           mxtest --testdir $PWD --mpi=2 --suffix ${{ matrix.os }}
+           if [ "$RUNNER_OS" != "Windows" ];
+           then
+             mxtest --testdir $PWD --mpi=2 --suffix ${{ matrix.os }}
+           else
+             mxtest --testdir $PWD --suffix ${{ matrix.os }}
+           endif
 
     - name: 'Tar output files'
       id: tar-package
