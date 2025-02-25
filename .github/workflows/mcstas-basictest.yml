@@ -66,11 +66,11 @@ jobs:
       run: |
            sudo apt -y install libopenmpi-dev
 
-    - name: Setup OpenMPI (macOS)
-      id: setup-openmpi-macos12
+    - name: Setup MPICH (macOS)
+      id: setup-mpi-macos
       if: runner.os == 'macOS'
       run: |
-           brew install openmpi
+           brew install mpich
 
     - name: Check versions
       id: version-checks
@@ -261,12 +261,7 @@ jobs:
            mpirun --version
            ncrystal-config --version
            export NUM_MPI=2
-           if [ "x$(uname)" == "xLinux" ]; then
-               ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=${NUM_MPI} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
-           else
-               ../install_mcstas/bin/${MCRUN_EXECUTABLE} -c --mpi=1 -n0 NCrystal_example.instr
-               leaks --atExit -- mpirun -np ${NUM_MPI} NCrystal_example.out sample_cfg=Y2O3_sg206_Yttrium_Oxide.ncmat -dOutput
-           fi
+           ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=${NUM_MPI} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
 
     - name: Launch NeXus test instrument
       id: nexus-test
