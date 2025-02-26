@@ -24,7 +24,7 @@ function(git_fetch package min_version fetch_version_or_branch source required s
           endwhile()
         endif()
         if (NOT "${package}_POPULATED")
-            FetchContent_Populate(${package})
+            FetchContent_MakeAvailable(${package})
             add_subdirectory("${${package}_SOURCE_DIR}" "${${package}_BINARY_DIR}")
         endif()
         set(${package}_FOUND ON PARENT_SCOPE)
