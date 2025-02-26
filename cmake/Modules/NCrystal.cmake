@@ -43,4 +43,4 @@ endif()
 
 unset( tmp_instprefix )
 
-git_fetch(ncrystal "${NCRYSTAL_MINIMUM_VERSION}" "master" "${NCRYSTAL_REPO}" ${NCRYSTAL_REQUIRE_PREINSTALL} "${ncrystal_fetch_params}")
+git_fetch(ncrystal "${NCRYSTAL_MINIMUM_VERSION}" "main" "${NCRYSTAL_REPO}" ${NCRYSTAL_REQUIRE_PREINSTALL} "${ncrystal_fetch_params}")
