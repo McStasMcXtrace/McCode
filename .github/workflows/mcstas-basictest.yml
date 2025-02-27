@@ -231,8 +231,6 @@ jobs:
 
     - name: Launch NCrystal test instrument
       id: ncrystal-test
-      if: runner.os == 'Linux' || runner.os == 'macOS' # Linux or macOS only
-      # Status: Works on Unixes ("ncrystal missing for Windows")
       run: |
            set -e
            set -u
@@ -253,8 +251,6 @@ jobs:
 
     - name: Launch NCrystal test instrument (mpi)
       id: ncrystal-test-mpi
-      if: runner.os == 'Linux' || runner.os == 'macOS'  # Linux or macOS only
-      # Status: Works on Unixes ("ncrystal missing for Windows")
       run: |
            set -e
            set -u
