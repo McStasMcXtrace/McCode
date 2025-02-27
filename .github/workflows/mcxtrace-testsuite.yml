@@ -88,7 +88,7 @@ jobs:
                -S ../src \
                -G "Unix Makefiles" \
                -DMCVERSION="3.99.99" \
-               -DMCCODE_BUILD_CONDA_PKG=ON \
+               -DMCCODE_BUILD_CONDA_PKG=OFF \
                -DBUILD_SHARED_LIBS=ON \
                -DCMAKE_INSTALL_LIBDIR=lib \
                -DCMAKE_BUILD_TYPE=Release \
@@ -109,6 +109,11 @@ jobs:
            then
              export MCXTRACE_EXECUTABLE="mcxtrace.exe"
              export MXRUN_EXECUTABLE="mxrun.bat"
+             cd ../install_mcxtrace/
+             TOPDIR=`cygpath -m $PWD`
+             cd -
+             sed 's+@CPACK_NSIS_INSTALL_ROOT@+'${TOPDIR}'+g' ../src/3rdparty/mcpl-package/batches/mcpl-config.bat.in > ../install_mcxtrace/bin/mcpl-config.bat
+             cat ../install_mcxtrace/bin/mcpl-config.bat
            fi
            test -f "../install_mcxtrace/bin/${MCXTRACE_EXECUTABLE}"
            test -f "../install_mcxtrace/bin/${MXRUN_EXECUTABLE}"

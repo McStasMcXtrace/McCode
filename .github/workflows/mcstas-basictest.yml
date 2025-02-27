@@ -95,7 +95,7 @@ jobs:
                -S ../src \
                -G "Unix Makefiles" \
                -DMCVERSION="3.99.99" \
-               -DMCCODE_BUILD_CONDA_PKG=ON \
+               -DMCCODE_BUILD_CONDA_PKG=OFF \
                -DBUILD_SHARED_LIBS=ON \
                -DCMAKE_INSTALL_LIBDIR=lib \
                -DCMAKE_BUILD_TYPE=Release \
@@ -116,6 +116,11 @@ jobs:
            then
              export MCSTAS_EXECUTABLE="mcstas.exe"
              export MCRUN_EXECUTABLE="mcrun.bat"
+             cd ../install_mcstas/
+             TOPDIR=`cygpath -m $PWD`
+             cd -
+             sed 's+@CPACK_NSIS_INSTALL_ROOT@+'${TOPDIR}'+g' ../src/3rdparty/mcpl-package/batches/mcpl-config.bat.in > ../install_mcstas/bin/mcpl-config.bat
+             cat ../install_mcstas/bin/mcpl-config.bat
            fi
            test -f "../install_mcstas/bin/${MCSTAS_EXECUTABLE}"
            test -f "../install_mcstas/bin/${MCRUN_EXECUTABLE}"
@@ -192,14 +197,17 @@ jobs:
 
     - name: Launch MCPL test instrument
       id: mcpl-test
-      if: runner.os == 'Linux' || runner.os == 'macOS' # Linux or macOS only
-      # Status: Works on Unixes ("wrapper batches missing for Windows")
       run: |
            set -e
            set -u
            set -x
            export MCSTAS_EXECUTABLE="mcstas"
            export MCRUN_EXECUTABLE="mcrun"
+           if [ "$RUNNER_OS" == "Windows" ];
+           then
+             export MCSTAS_EXECUTABLE="mcstas.exe"
+             export MCRUN_EXECUTABLE="mcrun.bat"
+           fi
            export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
@@ -209,8 +217,6 @@ jobs:
 
     - name: Launch MCPL test instrument (mpi)
       id: mcpl-test-mpi
-      if: runner.os == 'Linux'  || runner.os == 'macOS' # Linux or macos only
-      # Status: Works on Unixes ("wrapper batches missing for Windows")
       run: |
            set -e
            set -u
@@ -231,8 +237,6 @@ jobs:
 
     - name: Launch NCrystal test instrument
       id: ncrystal-test
-      if: runner.os == 'Linux' || runner.os == 'macOS' # Linux or macOS only
-      # Status: Works on Unixes ("ncrystal missing for Windows")
       run: |
            set -e
            set -u
@@ -249,28 +253,29 @@ jobs:
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_NCrystal_example && cd run_NCrystal_example
            cp ../install_mcstas/share/mcstas/resources/examples/NCrystal/NCrystal_example/NCrystal_example.instr .
-            ../install_mcstas/bin/${MCRUN_EXECUTABLE} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
+            ../install_mcstas/bin/${MCRUN_EXECUTABLE} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat;density=0.6x"
 
     - name: Launch NCrystal test instrument (mpi)
       id: ncrystal-test-mpi
-      if: runner.os == 'Linux' || runner.os == 'macOS'  # Linux or macOS only
-      # Status: Works on Unixes ("ncrystal missing for Windows")
       run: |
            set -e
            set -u
            set -x
            export MCSTAS_EXECUTABLE="mcstas"
            export MCRUN_EXECUTABLE="mcrun"
+           if [ "$RUNNER_OS" == "Windows" ];
+           then
+             export MCSTAS_EXECUTABLE="mcstas.exe"
+             export MCRUN_EXECUTABLE="mcrun.bat"
+           fi
            export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_NCrystal_example_mpi && cd run_NCrystal_example_mpi
            cp ../install_mcstas/share/mcstas/resources/examples/NCrystal/NCrystal_example/NCrystal_example.instr .
-           clang --version
-           mpirun --version
            ncrystal-config --version
            export NUM_MPI=2
-           ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=${NUM_MPI} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
+           ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=${NUM_MPI} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat;density=0.6x"
 
     - name: Launch NeXus test instrument
       id: nexus-test
