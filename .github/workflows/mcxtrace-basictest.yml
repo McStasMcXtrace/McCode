@@ -178,6 +178,11 @@ jobs:
            export MCXTRACE_EXECUTABLE="mcxtrace"
            export MCXTRACE_PYGEN_EXECUTABLE="mcxtrace-pygen"
            export MXRUN_EXECUTABLE="mxrun"
+           if [ "$RUNNER_OS" == "Windows" ];
+           then
+             export MCXTRACE_EXECUTABLE="mcxtrace.exe"
+             export MXRUN_EXECUTABLE="mxrun.bat"
+           fi
            test -f ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE}
            ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE} --version
            mkdir run_JJ_SAXS_mpi && cd run_JJ_SAXS_mpi
