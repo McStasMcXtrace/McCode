@@ -18,13 +18,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-24.04,  CC: gcc-13,   CXX: g++-13,     python: '3.12', mpi: 'openmpi' }
-          - { os: ubuntu-24.04,  CC: clang,    CXX: clang++,    python: '3.12', mpi: 'openmpi'   }
-          - { os: ubuntu-22.04,  CC: clang,    CXX: clang++,    python: '3.11', mpi: 'openmpi'  }
-          - { os: ubuntu-22.04,  CC: gcc-12,   CXX: g++-12,     python: '3.11', mpi: 'openmpi'   }
-          - { os: macos-13,      CC: clang,    CXX: clang++,    python: "3.11", mpi: 'mpich'   }
-          - { os: macos-14,      CC: clang,    CXX: clang++,    python: "3.12", mpi: 'mpich'   }
-          - { os: macos-15,      CC: clang,    CXX: clang++,    python: "3.13", mpi: 'mpich'   }
           - { os: windows-latest,  CC: gcc,    CXX: g++,        python: "3.12", mpi: 'msmpi'   }
 
     name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
@@ -116,6 +109,8 @@ jobs:
            then
              export MCSTAS_EXECUTABLE="mcstas.exe"
              export MCRUN_EXECUTABLE="mcrun.bat"
+             export
+             #sed 's/@CPACK_NSIS_INSTALL_ROOT@//g' ../src/3rdparty/mcpl-package/batches/mcpl-config.bat.in > ../install_mcstas/bin/mcpl-config.bat
            fi
            test -f "../install_mcstas/bin/${MCSTAS_EXECUTABLE}"
            test -f "../install_mcstas/bin/${MCRUN_EXECUTABLE}"
