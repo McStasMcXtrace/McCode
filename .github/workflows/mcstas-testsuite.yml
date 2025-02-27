@@ -62,7 +62,7 @@ jobs:
       id: setup-Linux
       if: runner.os == 'Linux'
       run: |
-           sudo apt install libgsl-dev
+           sudo apt install libgsl-dev libnexus-dev
 
     - name: Check versions
       id: version-checks
