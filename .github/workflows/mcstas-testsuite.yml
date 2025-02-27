@@ -163,7 +163,6 @@ jobs:
            then
              export MCTEST_EXECUTABLE="mctest.bat"
            fi
-           which ${MCTEST_EXECUTABLE}
            echo $PATH
            ${MCTEST_EXECUTABLE} --verbose --testdir $PWD --suffix ${{ matrix.os }} --mpi=2
 
