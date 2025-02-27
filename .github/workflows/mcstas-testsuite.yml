@@ -45,18 +45,24 @@ jobs:
       with:
         mpi: ${{ matrix.mpi }}
 
-    - name: Setup Bison (macOS)
-      id: setup-flex-bison-macos
+    - name: Setup macOS
+      id: setup-macos
       if: runner.os == 'macOS'
       run: |
-           brew install bison flex
+           brew install bison flex gsl
 
-    - name: Setup Bison (Windows)
-      id: setup-flex-bison-Windows
+    - name: Setup Windows
+      id: setup-Windows
       if: runner.os == 'Windows'
       run: |
            choco install winflexbison3
            pip install mslex
+
+    - name: Setup Linux
+      id: setup-Linux
+      if: runner.os == 'Linux'
+      run: |
+           sudo apt install libgsl-dev
 
     - name: Check versions
       id: version-checks
@@ -150,14 +156,15 @@ jobs:
            set -e
            set -u
            set -x
-           export PATH=$PWD/install_mcstas/bin/:$PATH
+           export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
            mkdir run_test-suite && cd run_test-suite
-           if [ "$RUNNER_OS" != "Windows" ];
+           export MCTEST_EXECUTABLE="mctest"
+           if [ "$RUNNER_OS" == "Windows" ];
            then
-             ../install_mcstas/bin/mctest --verbose --testdir $PWD --suffix ${{ matrix.os }} --mpi=2
-           else
-             ../install_mcstas/bin/mctest.bat --verbose --testdir $PWD --suffix ${{ matrix.os }} --mpi=2
+             export MCTEST_EXECUTABLE="mctest.bat"
            fi
+           echo $PATH
+           ${MCTEST_EXECUTABLE} --verbose --testdir $PWD --suffix ${{ matrix.os }} --mpi=2
 
     - name: 'Tar output files'
       id: tar-package
