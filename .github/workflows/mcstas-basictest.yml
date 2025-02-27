@@ -113,6 +113,7 @@ jobs:
              BINDIR=`cygpath -w $PWD`
              cd -
              sed 's/@CPACK_NSIS_INSTALL_ROOT@/'${BINDIR}'/g' ../src/3rdparty/mcpl-package/batches/mcpl-config.bat.in > ../install_mcstas/bin/mcpl-config.bat
+             cat ../install_mcstas/bin/mcpl-config.bat
            fi
            test -f "../install_mcstas/bin/${MCSTAS_EXECUTABLE}"
            test -f "../install_mcstas/bin/${MCRUN_EXECUTABLE}"
