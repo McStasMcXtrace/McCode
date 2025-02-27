@@ -159,8 +159,6 @@ jobs:
            set -u
            set -x
            export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
-           which mxtest
-           which mcpl-config
            mkdir run_test-suite && cd run_test-suite
            if [ "$RUNNER_OS" != "Windows" ];
            then
