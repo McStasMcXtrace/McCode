@@ -150,7 +150,11 @@ jobs:
            set -e
            set -u
            set -x
-           export PATH=$PWD/install_mcstas/bin/:$PATH
+           export WRKDIR=$PWD
+           export PATH=$WRKDIR/install_mcstas/bin/:$PATH
+           echo $PATH
+           which mctest
+           which mcpl-config
            mkdir run_test-suite && cd run_test-suite
            if [ "$RUNNER_OS" != "Windows" ];
            then
