@@ -157,7 +157,7 @@ jobs:
            set -u
            set -x
            export WRKDIR=$PWD
-           export PATH=$WRKDIR/install_mcstas/bin/:$PATH
+           export PATH=$PWD/install_mcstas/bin/:$PATH
            echo $PATH
            which mctest
            which mcpl-config
