@@ -18,14 +18,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-24.04,  CC: gcc-13,   CXX: g++-13,     python: '3.12'  }
-          - { os: ubuntu-24.04,  CC: clang,    CXX: clang++,    python: '3.12'  }
-          - { os: ubuntu-22.04,  CC: clang,    CXX: clang++,    python: '3.11'  }
-          - { os: ubuntu-22.04,  CC: gcc-12,   CXX: g++-12,     python: '3.11'  }
-          - { os: macos-13,      CC: clang,    CXX: clang++,    python: "3.11"  }
-          - { os: macos-14,      CC: clang,    CXX: clang++,    python: "3.12"  }
-          - { os: macos-15,      CC: clang,    CXX: clang++,    python: "3.13"  }
-          - { os: windows-latest,  CC: gcc,    CXX: g++,        python: "3.12"  }
+          - { os: ubuntu-24.04,  CC: gcc-13,   CXX: g++-13,     python: '3.12', mpi:'openmpi' }
+          - { os: ubuntu-24.04,  CC: clang,    CXX: clang++,    python: '3.12', mpi:'openmpi'   }
+          - { os: ubuntu-22.04,  CC: clang,    CXX: clang++,    python: '3.11', mpi:'openmpi'  }
+          - { os: ubuntu-22.04,  CC: gcc-12,   CXX: g++-12,     python: '3.11', mpi:'openmpi'   }
+          - { os: macos-13,      CC: clang,    CXX: clang++,    python: "3.11", mpi:'mpich'   }
+          - { os: macos-14,      CC: clang,    CXX: clang++,    python: "3.12", mpi:'mpich'   }
+          - { os: macos-15,      CC: clang,    CXX: clang++,    python: "3.13", mpi:'mpich'   }
+          - { os: windows-latest,  CC: gcc,    CXX: g++,        python: "3.12", mpi:'msmpi'   }
 
     name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
     runs-on: ${{ matrix.os }}
@@ -47,6 +47,11 @@ jobs:
       with:
         python-version: ${{ matrix.python }}
 
+    - name: Setup MPI
+      uses: mpi4py/setup-mpi@v1
+      with:
+        mpi: ${{ matrix.mpi }}
+
     - name: Setup Bison (macOS)
       id: setup-flex-bison-macos
       if: runner.os == 'macOS'
@@ -59,18 +64,6 @@ jobs:
       run: |
            choco install winflexbison3
            pip install mslex
-
-    - name: Setup OpenMPI (Linux)
-      id: setup-openmpi-linux
-      if: runner.os == 'Linux'
-      run: |
-           sudo apt -y install libopenmpi-dev
-
-    - name: Setup MPICH (macOS)
-      id: setup-mpi-macos
-      if: runner.os == 'macOS'
-      run: |
-           brew install mpich
 
     - name: Check versions
       id: version-checks
@@ -96,6 +89,7 @@ jobs:
            if [ "$RUNNER_OS" == "macOS" ] && [ -f "/usr/local/opt/flex/bin/flex" ]; then export HOMEBRW="/usr/local/opt"; fi
            if [ "$RUNNER_OS" == "macOS" ]; then export EXTRA_ARGS_FOR_CMAKE="-DBISON_EXECUTABLE=${HOMEBRW}/bison/bin/bison -DFLEX_EXECUTABLE=${HOMEBRW}/flex/bin/flex"; fi
            if [ "$RUNNER_OS" == "Linux" ]; then export EXTRA_ARGS_FOR_CMAKE="-DNEXUSLIB=/usr/lib -DNEXUSINCLUDE=/usr/include/nexus"; fi
+           if [ "$RUNNER_OS" == "Windows" ]; then export MPIINC=`cygpath -m -s  "${MSMPI_INC}"`; export MPILIB=`cygpath -m -s  "${MSMPI_LIB64}"`; export EXTRA_ARGS_FOR_CMAKE="-DMPILIBDIR=${MPILIB} -DMPIINCLUDEDIR=${MPIINC}"; fi
            cmake \
                -DCMAKE_INSTALL_PREFIX=../install_mcstas \
                -S ../src \
@@ -141,7 +135,7 @@ jobs:
            set -x
            if [ "$RUNNER_OS" == "Windows" ];
            then
-             python3 -mpip install PyYAML ply McStasscript
+             python3 -mpip install PyYAML ply McStasscript ncrystal
            fi
            if [ "$RUNNER_OS" == "macOS" ];
            then
@@ -172,12 +166,11 @@ jobs:
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_BNL_H8 && cd run_BNL_H8
            cp ../install_mcstas/share/mcstas/resources/examples/BNL/BNL_H8/BNL_H8.instr .
-           ../install_mcstas/bin/${MCRUN_EXECUTABLE} BNL_H8.instr lambda=2.36
+           ../install_mcstas/bin/${MCRUN_EXECUTABLE} -c  BNL_H8.instr lambda=2.36
            ../install_mcstas/bin/${MCSTAS_PYGEN_EXECUTABLE} BNL_H8.instr
 
     - name: Launch BNL_H8 instrument (MPI)
       id: h8-test-mpi
-      if: runner.os == 'Linux'  || (runner.os == 'macOS' )
       run: |
            set -e
            set -u
@@ -185,11 +178,17 @@ jobs:
            export MCSTAS_EXECUTABLE="mcstas"
            export MCSTAS_PYGEN_EXECUTABLE="mcstas-pygen"
            export MCRUN_EXECUTABLE="mcrun"
+           if [ "$RUNNER_OS" == "Windows" ];
+           then
+             export MCSTAS_EXECUTABLE="mcstas.exe"
+             export MCSTAS_PYGEN_EXECUTABLE="mcstas-pygen.exe"
+             export MCRUN_EXECUTABLE="mcrun.bat"
+           fi
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_BNL_H8_mpi && cd run_BNL_H8_mpi
            cp ../install_mcstas/share/mcstas/resources/examples/BNL/BNL_H8/BNL_H8.instr .
-           ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=2 BNL_H8.instr lambda=2.36
+           ../install_mcstas/bin/${MCRUN_EXECUTABLE} -c --mpi=2 BNL_H8.instr lambda=2.36
 
     - name: Launch MCPL test instrument
       id: mcpl-test
@@ -218,12 +217,17 @@ jobs:
            set -x
            export MCSTAS_EXECUTABLE="mcstas"
            export MCRUN_EXECUTABLE="mcrun"
+           if [ "$RUNNER_OS" == "Windows" ];
+           then
+             export MCSTAS_EXECUTABLE="mcstas.exe"
+             export MCRUN_EXECUTABLE="mcrun.bat"
+           fi
            export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_ESS_BEER_MCPL_mpi && cd run_ESS_BEER_MCPL_mpi
            cp ../install_mcstas/share/mcstas/resources/examples/ESS/ESS_BEER_MCPL/* .
-            ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=2 ESS_BEER_MCPL.instr repetition=100
+            ../install_mcstas/bin/${MCRUN_EXECUTABLE} -c --mpi=2 ESS_BEER_MCPL.instr repetition=100
 
     - name: Launch NCrystal test instrument
       id: ncrystal-test
@@ -235,12 +239,17 @@ jobs:
            set -x
            export MCSTAS_EXECUTABLE="mcstas"
            export MCRUN_EXECUTABLE="mcrun"
+           if [ "$RUNNER_OS" == "Windows" ];
+           then
+             export MCSTAS_EXECUTABLE="mcstas.exe"
+             export MCRUN_EXECUTABLE="mcrun.bat"
+           fi
            export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
            mkdir run_NCrystal_example && cd run_NCrystal_example
            cp ../install_mcstas/share/mcstas/resources/examples/NCrystal/NCrystal_example/NCrystal_example.instr .
-            ../install_mcstas/bin/${MCRUN_EXECUTABLE} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
+            ../install_mcstas/bin/${MCRUN_EXECUTABLE} -c NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
 
     - name: Launch NCrystal test instrument (mpi)
       id: ncrystal-test-mpi
@@ -261,7 +270,7 @@ jobs:
            mpirun --version
            ncrystal-config --version
            export NUM_MPI=2
-           ../install_mcstas/bin/${MCRUN_EXECUTABLE} --mpi=${NUM_MPI} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
+           ../install_mcstas/bin/${MCRUN_EXECUTABLE} -c --mpi=${NUM_MPI} NCrystal_example.instr sample_cfg="Y2O3_sg206_Yttrium_Oxide.ncmat\;density=0.6x"
 
     - name: Launch NeXus test instrument
       id: nexus-test
