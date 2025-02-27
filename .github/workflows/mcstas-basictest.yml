@@ -257,6 +257,11 @@ jobs:
            set -x
            export MCSTAS_EXECUTABLE="mcstas"
            export MCRUN_EXECUTABLE="mcrun"
+           if [ "$RUNNER_OS" == "Windows" ];
+           then
+             export MCSTAS_EXECUTABLE="mcstas.exe"
+             export MCRUN_EXECUTABLE="mcrun.bat"
+           fi
            export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
            test -f ./install_mcstas/bin/${MCSTAS_EXECUTABLE}
            ./install_mcstas/bin/${MCSTAS_EXECUTABLE} --version
