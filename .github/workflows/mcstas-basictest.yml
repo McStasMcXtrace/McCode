@@ -109,10 +109,10 @@ jobs:
            then
              export MCSTAS_EXECUTABLE="mcstas.exe"
              export MCRUN_EXECUTABLE="mcrun.bat"
-             cd ../install_mcstas/bin
-             BINDIR=`cygpath -m $PWD`
+             cd ../install_mcstas/
+             TOPDIR=`cygpath -m $PWD`
              cd -
-             sed 's+@CPACK_NSIS_INSTALL_ROOT@+'${BINDIR}'+g' ../src/3rdparty/mcpl-package/batches/mcpl-config.bat.in > ../install_mcstas/bin/mcpl-config.bat
+             sed 's+@CPACK_NSIS_INSTALL_ROOT@+'${TOPDIR}'+g' ../src/3rdparty/mcpl-package/batches/mcpl-config.bat.in > ../install_mcstas/bin/mcpl-config.bat
              cat ../install_mcstas/bin/mcpl-config.bat
              find ../install_mcstas/share/mcstas/resources -name \*.comp -exec grep -iH mcpl-config \{\} \; | cut -f1 -d: | xargs -n1 sed -i 's/mcpl-config/mcpl-config.bat/g'
              ../install_mcstas/bin/mcpl-config.bat --show libdir
