@@ -214,6 +214,9 @@ jobs:
            mkdir run_ESS_BEER_MCPL && cd run_ESS_BEER_MCPL
            cp ../install_mcstas/share/mcstas/resources/examples/ESS/ESS_BEER_MCPL/* .
            ../install_mcstas/bin/${MCRUN_EXECUTABLE} ESS_BEER_MCPL.instr repetition=50
+           which ${MCSTAS_EXECUTABLE}
+           which mctest
+           mctest --instr=MCPL
 
     - name: Launch MCPL test instrument (mpi)
       id: mcpl-test-mpi
