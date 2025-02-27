@@ -110,7 +110,7 @@ jobs:
              export MCSTAS_EXECUTABLE="mcstas.exe"
              export MCRUN_EXECUTABLE="mcrun.bat"
              export
-             find ../install_mcstas -name -name mcpl-config\*
+             find ../install_mcstas -name mcpl-config\*
              #sed 's/@CPACK_NSIS_INSTALL_ROOT@//g' ../src/3rdparty/mcpl-package/batches/mcpl-config.bat.in > ../install_mcstas/bin/mcpl-config.bat
            fi
            test -f "../install_mcstas/bin/${MCSTAS_EXECUTABLE}"
