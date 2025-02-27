@@ -109,10 +109,8 @@ jobs:
            then
              export MCSTAS_EXECUTABLE="mcstas.exe"
              export MCRUN_EXECUTABLE="mcrun.bat"
-             cd ../install_mcstas/bin
-             BINDIR=`cygpath -m $PWD`
-             cd -
-             sed 's/@CPACK_NSIS_INSTALL_ROOT@/'${BINDIR}'/g' ../src/3rdparty/mcpl-package/batches/mcpl-config.bat.in > ../install_mcstas/bin/mcpl-config.bat
+             echo BINDIR=%~dp0 > ../install_mcstas/bin/mcpl-config.bat
+             sed 's/@CPACK_NSIS_INSTALL_ROOT@/%BINDIR%/g' ../src/3rdparty/mcpl-package/batches/mcpl-config.bat.in >> ../install_mcstas/bin/mcpl-config.bat
              cat ../install_mcstas/bin/mcpl-config.bat
            fi
            test -f "../install_mcstas/bin/${MCSTAS_EXECUTABLE}"
