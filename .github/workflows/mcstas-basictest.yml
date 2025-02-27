@@ -114,9 +114,6 @@ jobs:
              cd -
              sed 's+@CPACK_NSIS_INSTALL_ROOT@+'${TOPDIR}'+g' ../src/3rdparty/mcpl-package/batches/mcpl-config.bat.in > ../install_mcstas/bin/mcpl-config.bat
              cat ../install_mcstas/bin/mcpl-config.bat
-             #find ../install_mcstas/share/mcstas/resources -name \*.comp -exec grep -iH mcpl-config \{\} \; | cut -f1 -d: | xargs -n1 sed -i 's/mcpl-config/mcpl-config.bat/g'
-             #../install_mcstas/bin/mcpl-config.bat --show libdir
-             #../install_mcstas/bin/mcpl-config.bat --show includedir
            fi
            test -f "../install_mcstas/bin/${MCSTAS_EXECUTABLE}"
            test -f "../install_mcstas/bin/${MCRUN_EXECUTABLE}"
