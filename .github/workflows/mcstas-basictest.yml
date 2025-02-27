@@ -88,7 +88,7 @@ jobs:
                -S ../src \
                -G "Unix Makefiles" \
                -DMCVERSION="3.99.99" \
-               -DMCCODE_BUILD_CONDA_PKG=ON \
+               -DMCCODE_BUILD_CONDA_PKG=OFF \
                -DBUILD_SHARED_LIBS=ON \
                -DCMAKE_INSTALL_LIBDIR=lib \
                -DCMAKE_BUILD_TYPE=Release \
