@@ -1,6 +1,6 @@
 name: mcxtrace-basictest
 on:
-  #push:
+  push:
   pull_request:
   schedule:
     - cron: '55 23 * * 0'  # 23:55 every Sunday
