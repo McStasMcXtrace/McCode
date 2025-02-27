@@ -16,9 +16,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, CC: clang,    CXX: clang++,    python: '3.12' }
-          - { os: macos-latest, CC: clang,    CXX: clang++,    python: '3.12' }
-          - { os: windows-latest, CC: gcc,    CXX: g++,    python: '3.12' }
+          - { os: ubuntu-latest, CC: clang,    CXX: clang++,    python: '3.12', mpi: 'openmpi' }
+          - { os: macos-latest, CC: clang,    CXX: clang++,    python: '3.12', mpi: 'mpich' }
+          - { os: windows-latest, CC: gcc,    CXX: g++,    python: '3.12', mpi: 'msmpi' }
 
     name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
     runs-on: ${{ matrix.os }}
@@ -40,6 +40,11 @@ jobs:
       with:
         python-version: ${{ matrix.python }}
 
+    - name: Setup MPI
+      uses: mpi4py/setup-mpi@v1
+      with:
+        mpi: ${{ matrix.mpi }}
+
     - name: Setup Bison (macOS)
       id: setup-flex-bison-macos
       if: runner.os == 'macOS'
@@ -52,26 +57,6 @@ jobs:
       run: |
            choco install winflexbison3
            pip install mslex
-
-    - name: Setup OpenMPI (Linux)
-      id: setup-openmpi-nexus-linux-gsl
-      if: runner.os == 'Linux'
-      run: |
-           sudo apt-get update
-           sudo apt-get -y install libopenmpi-dev libnexus-dev curl libgsl-dev
-           sudo curl -O https://packages.mccode.org/debian/dists/stable/main/binary-amd64/mcpl-1.6.2-deb64.deb
-           sudo curl -O https://packages.mccode.org/debian/dists/stable/main/binary-amd64/NCrystal-4.0.0-deb64.deb
-           sudo dpkg -i mcpl-1.6.2-deb64.deb NCrystal-4.0.0-deb64.deb
-           sudo apt-get -f install
-
-    - name: Setup OpenMPI (macOS)
-      id: setup-openmpi-macos
-      if: runner.os == 'macOS'
-      run: |
-           set -e
-           set -u
-           set -x
-           brew install openmpi
 
     - name: Check versions
       id: version-checks
@@ -97,6 +82,7 @@ jobs:
            if [ "$RUNNER_OS" == "macOS" ] && [ -f "/usr/local/opt/flex/bin/flex" ]; then export HOMEBRW="/usr/local/opt"; fi
            if [ "$RUNNER_OS" == "macOS" ]; then export EXTRA_ARGS_FOR_CMAKE="-DBISON_EXECUTABLE=${HOMEBRW}/bison/bin/bison -DFLEX_EXECUTABLE=${HOMEBRW}/flex/bin/flex"; fi
            if [ "$RUNNER_OS" == "Linux" ]; then export EXTRA_ARGS_FOR_CMAKE="-DNEXUSLIB=/usr/lib -DNEXUSINCLUDE=/usr/include/nexus"; fi
+           if [ "$RUNNER_OS" == "Windows" ]; then export MPIINC=`cygpath -m -s  "${MSMPI_INC}"`; export MPILIB=`cygpath -m -s  "${MSMPI_LIB64}"`; export EXTRA_ARGS_FOR_CMAKE="-DMPILIBDIR=${MPILIB} -DMPIINCLUDEDIR=${MPIINC}"; fi
            cmake \
                -DCMAKE_INSTALL_PREFIX=../install_mcstas \
                -S ../src \
@@ -163,9 +149,9 @@ jobs:
            mkdir run_test-suite && cd run_test-suite
            if [ "$RUNNER_OS" != "Windows" ];
            then
-             ../install_mcstas/bin/mctest --verbose --testdir $PWD --suffix ${{ matrix.os }} --mpi=1
+             ../install_mcstas/bin/mctest --verbose --testdir $PWD --suffix ${{ matrix.os }} --mpi=2
            else
-             ../install_mcstas/bin/mctest.bat --verbose --testdir $PWD --suffix ${{ matrix.os }}
+             ../install_mcstas/bin/mctest.bat --verbose --testdir $PWD --suffix ${{ matrix.os }} --mpi=2
            fi
 
     - name: 'Tar output files'
