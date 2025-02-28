@@ -4286,25 +4286,27 @@ rng.html>
 /* [ x, y, z, w, carry, k, m ] */
 
 unsigned long *kiss_srandom(unsigned long state[7], unsigned long seed) {
-  if (seed == 0) seed = 1;
-  state[0] = seed | 1; // x
-  state[1] = seed | 2; // y
-  state[2] = seed | 4; // z
-  state[3] = seed | 8; // w
-  state[4] = 0;        // carry
-  return 0;
+  if (seed == 0) seed = 1ul;
+  state[0] = seed | 1ul; // x
+  state[1] = seed | 2ul; // y
+  state[2] = seed | 4ul; // z
+  state[3] = seed | 8ul; // w
+  state[4] = 0ul;        // carry
+  state[5] = 0ul;        // carry
+  state[6] = 0ul;        // carry
+  return NULL;
 }
 
 unsigned long kiss_random(unsigned long state[7]) {
-    state[0] = state[0] * 69069 + 1;
-    state[1] ^= state[1] << 13;
-    state[1] ^= state[1] >> 17;
-    state[1] ^= state[1] << 5;
-    state[5] = (state[2] >> 2) + (state[3] >> 3) + (state[4] >> 2);
+    state[0] = state[0] * 69069ul + 1ul;
+    state[1] ^= state[1] << 13ul;
+    state[1] ^= state[1] >> 17ul;
+    state[1] ^= state[1] << 5ul;
+    state[5] = (state[2] >> 2ul) + (state[3] >> 3ul) + (state[4] >> 2ul);
     state[6] = state[3] + state[3] + state[2] + state[4];
     state[2] = state[3];
     state[3] = state[6];
-    state[4] = state[5] >> 30;
+    state[4] = state[5] >> 30ul;
     return state[0] + state[1] + state[3];
 }
 /* end of "KISS" rng */
@@ -4322,8 +4324,8 @@ unsigned long kiss_random(unsigned long state[7]) {
 //        what-integer-hash-function-are-good-that-accepts-an-integer-hash-key
 //////////////////////////////////////////////////////////////////////////////
 randstate_t _hash(randstate_t x) {
-  x = ((x >> 16) ^ x) * 0x45d9f3b;
-  x = ((x >> 16) ^ x) * 0x45d9f3b;
+  x = ((x >> 16) ^ x) * (randstate_t)0x45d9f3b;
+  x = ((x >> 16) ^ x) * (randstate_t)0x45d9f3b;
   x = ((x >> 16) ^ x);
   return x;
 }
