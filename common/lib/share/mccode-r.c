@@ -4292,6 +4292,8 @@ unsigned long *kiss_srandom(unsigned long state[7], unsigned long seed) {
   state[2] = seed | 4; // z
   state[3] = seed | 8; // w
   state[4] = 0;        // carry
+  state[5] = 0;        // carry
+  state[6] = 0;        // carry
   return 0;
 }
 
@@ -4322,8 +4324,8 @@ unsigned long kiss_random(unsigned long state[7]) {
 //        what-integer-hash-function-are-good-that-accepts-an-integer-hash-key
 //////////////////////////////////////////////////////////////////////////////
 randstate_t _hash(randstate_t x) {
-  x = ((x >> 16) ^ x) * 0x45d9f3b;
-  x = ((x >> 16) ^ x) * 0x45d9f3b;
+  x = ((x >> 16) ^ x) * (randstate_t)0x45d9f3b;
+  x = ((x >> 16) ^ x) * (randstate_t)0x45d9f3b;
   x = ((x >> 16) ^ x);
   return x;
 }
