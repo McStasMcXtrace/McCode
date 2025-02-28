@@ -158,7 +158,7 @@ jobs:
            set -e
            set -u
            set -x
-           export PATH=${PATH}:${PWD}/install_mcstas/bin/:${PWD}/install_mcstas/mcstas/3.99.99/bin/
+           export PATH=${PATH}:${PWD}/install_mcxtrace/bin/:${PWD}/install_mcxtrace/mcxtrace/3.99.99/bin/
            mkdir run_test-suite && cd run_test-suite
            export MXTEST_EXECUTABLE="mxtest"
            if [ "$RUNNER_OS" == "Windows" ];
