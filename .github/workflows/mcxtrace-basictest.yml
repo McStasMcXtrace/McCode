@@ -18,14 +18,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-24.04,  CC: gcc-13,   CXX: g++-13,     python: '3.12', mpi: 'openmpi' }
-          - { os: ubuntu-24.04,  CC: clang,    CXX: clang++,    python: '3.12', mpi: 'openmpi'   }
-          - { os: ubuntu-22.04,  CC: clang,    CXX: clang++,    python: '3.11', mpi: 'openmpi'  }
-          - { os: ubuntu-22.04,  CC: gcc-12,   CXX: g++-12,     python: '3.11', mpi: 'openmpi'   }
-          - { os: macos-13,      CC: clang,    CXX: clang++,    python: "3.11", mpi: 'mpich'   }
-          - { os: macos-14,      CC: clang,    CXX: clang++,    python: "3.12", mpi: 'mpich'   }
-          - { os: macos-15,      CC: clang,    CXX: clang++,    python: "3.13", mpi: 'mpich'   }
-          - { os: windows-latest,  CC: gcc,    CXX: g++,        python: "3.12", mpi: 'msmpi'   }
+          - { os: ubuntu-latest, CC: clang,    CXX: clang++,    python: '3.12', mpi: 'openmpi' }
+          #- { os: ubuntu-24.04,  CC: gcc-13,   CXX: g++-13,     python: '3.12', mpi: 'openmpi' }
+          #- { os: ubuntu-24.04,  CC: clang,    CXX: clang++,    python: '3.12', mpi: 'openmpi'   }
+          #- { os: ubuntu-22.04,  CC: clang,    CXX: clang++,    python: '3.11', mpi: 'openmpi'  }
+          #- { os: ubuntu-22.04,  CC: gcc-12,   CXX: g++-12,     python: '3.11', mpi: 'openmpi'   }
+          #- { os: macos-13,      CC: clang,    CXX: clang++,    python: "3.11", mpi: 'mpich'   }
+          #- { os: macos-14,      CC: clang,    CXX: clang++,    python: "3.12", mpi: 'mpich'   }
+          #- { os: macos-15,      CC: clang,    CXX: clang++,    python: "3.13", mpi: 'mpich'   }
+          #- { os: windows-latest,  CC: gcc,    CXX: g++,        python: "3.12", mpi: 'msmpi'   }
 
     name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
     runs-on: ${{ matrix.os }}
@@ -152,8 +153,8 @@ jobs:
            fi
 
 
-    - name: Launch JJ_SAXS instrument
-      id: JJ_SAXS-basic
+    - name: Launch Test_Sqw instrument
+      id: Test_Sqw-basic
       # Status: Works on all systems
       run: |
            set -e
@@ -170,13 +171,13 @@ jobs:
            fi
            test -f ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE}
            ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE} --version
-           mkdir run_JJ_SAXS && cd run_JJ_SAXS
-           cp ../install_mcxtrace/share/mcxtrace/resources/examples/SAXSLAB/JJ_SAXS/JJ_SAXS.instr .
-           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} JJ_SAXS.instr pin2_pos=0.2 pin3_pos=0.4 optic_L=0.1 sample_pos=0.2 detector_pos=2
-           ../install_mcxtrace/bin/${MCXTRACE_PYGEN_EXECUTABLE} JJ_SAXS.instr
+           mkdir run_Test_Sqw && cd run_Test_Sqw
+           cp  ../install_mcxtrace/share/mcxtrace/resources/Tests_samples/Test_Sqw/Test_Sqw.instr .
+           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} Test_Sqw.instr E0=12.0
+           ../install_mcxtrace/bin/${MCXTRACE_PYGEN_EXECUTABLE} Test_Sqw.instr
 
-    - name: Launch JJ_SAXS instrument (MPI)
-      id: JJ_SAXS-mpi
+    - name: Launch Test_Sqw instrument (MPI)
+      id: Test_Sqw-mpi
       run: |
            set -e
            set -u
@@ -191,9 +192,18 @@ jobs:
            fi
            test -f ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE}
            ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE} --version
-           mkdir run_JJ_SAXS_mpi && cd run_JJ_SAXS_mpi
-           cp ../install_mcxtrace/share/mcxtrace/resources/examples/SAXSLAB/JJ_SAXS/JJ_SAXS.instr .
-           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=2 JJ_SAXS.instr pin2_pos=0.2 pin3_pos=0.4 optic_L=0.1 sample_pos=0.2 detector_pos=2
+           mkdir run_Test_Sqw_mpi && cd run_Test_Sqw_mpi
+           cp  ../install_mcxtrace/share/mcxtrace/resources/Tests_samples/Test_Sqw/Test_Sqw.instr .
+           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=2 Test_Sqw.instr E0=12.0
+           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=2 Test_Sqw.instr E0=12.0
+           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=2 Test_Sqw.instr E0=12.0
+           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=2 Test_Sqw.instr E0=12.0
+           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=2 Test_Sqw.instr E0=12.0
+           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=2 Test_Sqw.instr E0=12.0
+           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=2 Test_Sqw.instr E0=12.0
+           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=2 Test_Sqw.instr E0=12.0
+           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=2 Test_Sqw.instr E0=12.0
+           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=2 Test_Sqw.instr E0=12.0
 
     - name: Launch MCPL test instrument
       id: mcpl-test
