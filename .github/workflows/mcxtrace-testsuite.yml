@@ -17,6 +17,10 @@ jobs:
       matrix:
         include:
           - { os: ubuntu-latest, CC: clang,    CXX: clang++,    python: '3.12', mpi: 'openmpi' }
+          - { os: ubuntu-latest, CC: clang,    CXX: clang++,    python: '3.12', mpi: 'mpich' }
+          - { os: ubuntu-latest, CC: gcc,    CXX: g++,    python: '3.12', mpi: 'openmpi' }
+          - { os: ubuntu-latest, CC: gcc,    CXX: g++,    python: '3.12', mpi: 'mpich' }
+          - { os: macos-latest, CC: clang,    CXX: clang++,    python: '3.12', mpi: 'openmpi' }
           - { os: macos-latest, CC: clang,    CXX: clang++,    python: '3.12', mpi: 'mpich' }
           - { os: windows-latest, CC: gcc,    CXX: g++,    python: '3.12', mpi: 'msmpi' }
 
@@ -127,6 +131,7 @@ jobs:
            test -f "../install_mcxtrace/bin/${MXRUN_EXECUTABLE}"
            test -f "../install_mcxtrace/share/mcxtrace/tools/Python/mccodelib/__init__.py"
            test -d "../install_mcxtrace/share/mcxtrace/resources/data"
+           if [ "${{ matrix.mpi }}" == "openmpi" ]; then sed -i 's/mpirun/mpirun\ --mca\ btl\ self,vader,tcp/g' ../install_mcxtrace/share/mcxtrace/tools/Python/mccodelib/mccode_config.json ; fi
            echo *******************************************************************************
            echo Resulting mccode_config.json:
            echo *******************************************************************************
@@ -175,15 +180,15 @@ jobs:
            set -e
            set -u
            set -x
-           tar cvfz mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}_output.tgz run_*
+           tar cvfz mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.${{ matrix.mpi }}.python-${{ matrix.python }}_output.tgz run_*
 
     - name: 'Upload Artifact'
       id: tar-upload
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: mcxtrace-artefacts-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
-        path: "mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}_output.tgz"
+        name: mcxtrace-artefacts-${{ matrix.os }}.${{ matrix.CC }}.${{ matrix.mpi }}.python-${{ matrix.python }}
+        path: "mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.${{ matrix.mpi }}.python-${{ matrix.python }}_output.tgz"
 
     - name: Setup tmate session for manual debugging
       uses: mxschmitt/action-tmate@v3
