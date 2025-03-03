@@ -30,7 +30,7 @@ jobs:
           - { os: macos-15,      CC: clang,    CXX: clang++,    python: "3.13", mpi: 'openmpi'   }
           - { os: windows-latest,  CC: gcc,    CXX: g++,        python: "3.12", mpi: 'msmpi'   }
 
-    name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
+    name: ${{ matrix.os }}.${{ matrix.CC }}.${{ matrix.mpi }}.python-${{ matrix.python }}
     runs-on: ${{ matrix.os }}
     env:
       CC: ${{ matrix.CC }}
@@ -246,15 +246,15 @@ jobs:
            set -e
            set -u
            set -x
-           tar cvfz mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}_output.tgz run_*
+           tar cvfz mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.${{ matrix.mpi }}.python-${{ matrix.python }}_output.tgz run_*
 
     - name: 'Upload Artifact'
       id: tar-upload
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: mcxtrace-artefacts-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
-        path: "mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}_output.tgz"
+        name: mcxtrace-artefacts-${{ matrix.os }}.${{ matrix.CC }}.${{ matrix.mpi }}.python-${{ matrix.python }}
+        path: "mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.${{ matrix.mpi }}.python-${{ matrix.python }}_output.tgz"
 
     - name: Setup tmate session for manual debugging
       uses: mxschmitt/action-tmate@v3
