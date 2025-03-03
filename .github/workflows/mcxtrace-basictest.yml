@@ -194,6 +194,7 @@ jobs:
            ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE} --version
            mkdir run_Test_Sqw_mpi && cd run_Test_Sqw_mpi
            cp  ../install_mcxtrace/share/mcxtrace/resources/examples/Tests_samples/Test_Sqw/Test_Sqw.instr .
+           cp  ../install_mcxtrace/share/mcxtrace/resources/data/Rb_liq_coh.sqw .
            ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=1 Test_Sqw.instr E0=12.0
            ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=1 Test_Sqw.instr E0=12.0
            ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=1 Test_Sqw.instr E0=12.0
