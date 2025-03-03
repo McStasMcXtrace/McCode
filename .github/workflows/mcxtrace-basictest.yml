@@ -206,7 +206,7 @@ jobs:
            ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=1 Test_Sqw.instr E0=12.0
            ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=1 Test_Sqw.instr E0=12.0
            echo "___________________________________________________  <-- end of single-core MPI via mcrun"
-           mpirun --mca btl self,sm,tcp --verbose -np 2 Test_Sqw.out E0=12.0 -d mpi_2_1
+           mpirun --mca btl self,vader,tcp --verbose -np 2 Test_Sqw.out E0=12.0 -d mpi_2_1
            mpirun --verbose -np 2 Test_Sqw.out E0=12.0 -d mpi_2_2
            mpirun --verbose -np 2 Test_Sqw.out E0=12.0 -d mpi_2_3
            mpirun --verbose -np 2 Test_Sqw.out E0=12.0 -d mpi_2_4
