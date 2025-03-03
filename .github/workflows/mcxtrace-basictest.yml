@@ -197,7 +197,7 @@ jobs:
            ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE} --version
            mkdir run_JJ_SAXS_mpi && cd run_JJ_SAXS_mpi
            cp ../install_mcxtrace/share/mcxtrace/resources/examples/SAXSLAB/JJ_SAXS/JJ_SAXS.instr .
-           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=2 JJ_SAXS.instr pin2_pos=0.2 pin3_pos=0.4 optic_L=0.1 sample_pos=0.2 detector_pos=2
+           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --verbose --mpi=2 JJ_SAXS.instr pin2_pos=0.2 pin3_pos=0.4 optic_L=0.1 sample_pos=0.2 detector_pos=2
 
     - name: Launch MCPL test instrument
       id: mcpl-test
@@ -237,7 +237,7 @@ jobs:
            ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE} --version
            mkdir run_Test_MCPL_input_mpi && cd run_Test_MCPL_input_mpi
            cp ../install_mcxtrace/share/mcxtrace/resources/examples/Tests/Test_MCPL_input/Test_MCPL_input.instr .
-           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=2 Test_MCPL_input.instr repeat=20
+           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --verbose --mpi=2 Test_MCPL_input.instr repeat=20
 
     - name: 'Tar output files'
       id: tar-package
