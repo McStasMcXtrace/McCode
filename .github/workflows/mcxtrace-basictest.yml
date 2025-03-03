@@ -183,6 +183,7 @@ jobs:
            set -e
            set -u
            set -x
+           export PATH=${PATH}:${PWD}/install_mcxtrace/bin/:${PWD}/install_mcxtrace/mcxtrace/3.99.99/bin/
            export MCXTRACE_EXECUTABLE="mcxtrace"
            export MCXTRACE_PYGEN_EXECUTABLE="mcxtrace-pygen"
            export MXRUN_EXECUTABLE="mxrun"
