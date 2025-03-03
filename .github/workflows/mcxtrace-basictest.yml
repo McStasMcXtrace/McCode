@@ -25,9 +25,12 @@ jobs:
           - { os: macos-13,      CC: clang,    CXX: clang++,    python: "3.11", mpi: 'mpich'   }
           - { os: macos-14,      CC: clang,    CXX: clang++,    python: "3.12", mpi: 'mpich'   }
           - { os: macos-15,      CC: clang,    CXX: clang++,    python: "3.13", mpi: 'mpich'   }
+          - { os: macos-13,      CC: clang,    CXX: clang++,    python: "3.11", mpi: 'openmpi'   }
+          - { os: macos-14,      CC: clang,    CXX: clang++,    python: "3.12", mpi: 'openmpi'   }
+          - { os: macos-15,      CC: clang,    CXX: clang++,    python: "3.13", mpi: 'openmpi'   }
           - { os: windows-latest,  CC: gcc,    CXX: g++,        python: "3.12", mpi: 'msmpi'   }
 
-    name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
+    name: ${{ matrix.os }}.${{ matrix.CC }}.${{ matrix.mpi }}.python-${{ matrix.python }}
     runs-on: ${{ matrix.os }}
     env:
       CC: ${{ matrix.CC }}
@@ -126,6 +129,7 @@ jobs:
            test -f "../install_mcxtrace/bin/${MXRUN_EXECUTABLE}"
            test -f "../install_mcxtrace/share/mcxtrace/tools/Python/mccodelib/__init__.py"
            test -d "../install_mcxtrace/share/mcxtrace/resources/data"
+           if [ "${{ matrix.mpi }}" == "openmpi" ]; then sed -i.bak 's/mpirun/mpirun\ --mca\ btl\ self,vader,tcp/g' ../install_mcxtrace/share/mcxtrace/tools/Python/mccodelib/mccode_config.json ; fi
            echo *******************************************************************************
            echo Resulting mccode_config.json:
            echo *******************************************************************************
@@ -193,7 +197,7 @@ jobs:
            ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE} --version
            mkdir run_JJ_SAXS_mpi && cd run_JJ_SAXS_mpi
            cp ../install_mcxtrace/share/mcxtrace/resources/examples/SAXSLAB/JJ_SAXS/JJ_SAXS.instr .
-           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=2 JJ_SAXS.instr pin2_pos=0.2 pin3_pos=0.4 optic_L=0.1 sample_pos=0.2 detector_pos=2
+           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --verbose --mpi=2 JJ_SAXS.instr pin2_pos=0.2 pin3_pos=0.4 optic_L=0.1 sample_pos=0.2 detector_pos=2
 
     - name: Launch MCPL test instrument
       id: mcpl-test
@@ -233,7 +237,7 @@ jobs:
            ./install_mcxtrace/bin/${MCXTRACE_EXECUTABLE} --version
            mkdir run_Test_MCPL_input_mpi && cd run_Test_MCPL_input_mpi
            cp ../install_mcxtrace/share/mcxtrace/resources/examples/Tests/Test_MCPL_input/Test_MCPL_input.instr .
-           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=2 Test_MCPL_input.instr repeat=20
+           ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --verbose --mpi=2 Test_MCPL_input.instr repeat=20
 
     - name: 'Tar output files'
       id: tar-package
@@ -242,15 +246,15 @@ jobs:
            set -e
            set -u
            set -x
-           tar cvfz mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}_output.tgz run_*
+           tar cvfz mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.${{ matrix.mpi }}.python-${{ matrix.python }}_output.tgz run_*
 
     - name: 'Upload Artifact'
       id: tar-upload
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: mcxtrace-artefacts-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
-        path: "mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}_output.tgz"
+        name: mcxtrace-artefacts-${{ matrix.os }}.${{ matrix.CC }}.${{ matrix.mpi }}.python-${{ matrix.python }}
+        path: "mcxtrace-${{ matrix.os }}.${{ matrix.CC }}.${{ matrix.mpi }}.python-${{ matrix.python }}_output.tgz"
 
     - name: Setup tmate session for manual debugging
       uses: mxschmitt/action-tmate@v3
