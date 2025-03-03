@@ -129,7 +129,7 @@ jobs:
            test -f "../install_mcstas/bin/${MCRUN_EXECUTABLE}"
            test -f "../install_mcstas/share/mcstas/tools/Python/mccodelib/__init__.py"
            test -d "../install_mcstas/share/mcstas/resources/data"
-           if [ "${{ matrix.mpi }}" == "openmpi" ]; then sed -i 's/mpirun/mpirun\ --mca\ btl\ self,vader,tcp/g' ../install_mcstas/share/mcstas/tools/Python/mccodelib/mccode_config.json ; fi
+           if [ "${{ matrix.mpi }}" == "openmpi" ]; then sed -i.bak 's/mpirun/mpirun\ --mca\ btl\ self,vader,tcp/g' ../install_mcstas/share/mcstas/tools/Python/mccodelib/mccode_config.json ; fi
            echo *******************************************************************************
            echo Resulting mccode_config.json:
            echo *******************************************************************************

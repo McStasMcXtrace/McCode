@@ -25,6 +25,9 @@ jobs:
           - { os: macos-13,      CC: clang,    CXX: clang++,    python: "3.11", mpi: 'mpich'   }
           - { os: macos-14,      CC: clang,    CXX: clang++,    python: "3.12", mpi: 'mpich'   }
           - { os: macos-15,      CC: clang,    CXX: clang++,    python: "3.13", mpi: 'mpich'   }
+          - { os: macos-13,      CC: clang,    CXX: clang++,    python: "3.11", mpi: 'openmpi'   }
+          - { os: macos-14,      CC: clang,    CXX: clang++,    python: "3.12", mpi: 'openmpi'   }
+          - { os: macos-15,      CC: clang,    CXX: clang++,    python: "3.13", mpi: 'openmpi'   }
           - { os: windows-latest,  CC: gcc,    CXX: g++,        python: "3.12", mpi: 'msmpi'   }
 
     name: ${{ matrix.os }}.${{ matrix.CC }}.python-${{ matrix.python }}
@@ -126,7 +129,7 @@ jobs:
            test -f "../install_mcstas/bin/${MCRUN_EXECUTABLE}"
            test -f "../install_mcstas/share/mcstas/tools/Python/mccodelib/__init__.py"
            test -d "../install_mcstas/share/mcstas/resources/data"
-           if [ "${{ matrix.mpi }}" == "openmpi" ]; then sed -i 's/mpirun/mpirun\ --mca\ btl\ self,vader,tcp/g' ../install_mcstas/share/mcstas/tools/Python/mccodelib/mccode_config.json ; fi
+           if [ "${{ matrix.mpi }}" == "openmpi" ]; then sed -i.bak 's/mpirun/mpirun\ --mca\ btl\ self,vader,tcp/g' ../install_mcstas/share/mcstas/tools/Python/mccodelib/mccode_config.json ; fi
            echo *******************************************************************************
            echo Resulting mccode_config.json:
            echo *******************************************************************************
