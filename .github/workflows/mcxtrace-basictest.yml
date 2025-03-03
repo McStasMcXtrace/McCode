@@ -205,16 +205,17 @@ jobs:
            ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=1 Test_Sqw.instr E0=12.0
            ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=1 Test_Sqw.instr E0=12.0
            ../install_mcxtrace/bin/${MXRUN_EXECUTABLE} --mpi=1 Test_Sqw.instr E0=12.0
-           mpirun -np 2 Test_Sqw.out E0=12.0 -d mpi_2_1
-           mpirun -np 2 Test_Sqw.out E0=12.0 -d mpi_2_2
-           mpirun -np 2 Test_Sqw.out E0=12.0 -d mpi_2_3
-           mpirun -np 2 Test_Sqw.out E0=12.0 -d mpi_2_4
-           mpirun -np 2 Test_Sqw.out E0=12.0 -d mpi_2_5
-           mpirun -np 2 Test_Sqw.out E0=12.0 -d mpi_2_6
-           mpirun -np 2 Test_Sqw.out E0=12.0 -d mpi_2_7
-           mpirun -np 2 Test_Sqw.out E0=12.0 -d mpi_2_8
-           mpirun -np 2 Test_Sqw.out E0=12.0 -d mpi_2_9
-           mpirun -np 2 Test_Sqw.out E0=12.0 -d mpi_2_10
+           echo "___________________________________________________  <-- end of single-core MPI via mcrun"
+           mpirun --verbose -np 2 Test_Sqw.out E0=12.0 -d mpi_2_1
+           mpirun --verbose -np 2 Test_Sqw.out E0=12.0 -d mpi_2_2
+           mpirun --verbose -np 2 Test_Sqw.out E0=12.0 -d mpi_2_3
+           mpirun --verbose -np 2 Test_Sqw.out E0=12.0 -d mpi_2_4
+           mpirun --verbose -np 2 Test_Sqw.out E0=12.0 -d mpi_2_5
+           mpirun --verbose -np 2 Test_Sqw.out E0=12.0 -d mpi_2_6
+           mpirun --verbose -np 2 Test_Sqw.out E0=12.0 -d mpi_2_7
+           mpirun --verbose -np 2 Test_Sqw.out E0=12.0 -d mpi_2_8
+           mpirun --verbose -np 2 Test_Sqw.out E0=12.0 -d mpi_2_9
+           mpirun --verbose -np 2 Test_Sqw.out E0=12.0 -d mpi_2_10
 
     - name: Launch MCPL test instrument
       id: mcpl-test
