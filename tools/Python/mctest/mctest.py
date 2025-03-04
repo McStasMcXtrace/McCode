@@ -120,23 +120,27 @@ def _monitorname_filename_match(dfolder, monname):
     returns the filename or None
     '''
     look_for_filename = False
-    lns = open(join(dfolder, "mccode.sim")).read().splitlines()
-    for l in lns:
-        if re.match(r"  component: %s$" % monname, l):
-            # flag this data section 
-            look_for_filename = True
-        if look_for_filename:
-            m = re.match(r"\s*filename:\s+(.+)", l)
-            if m:
-                filename = m.group(1) 
-                if os.path.isfile(join(dfolder,filename)):
-                    return filename 
-            if re.match(r"end data", l):
-                # the filename can for 0D monitors be monname.dat
-                zeroDfilename = join(dfolder, monname + ".dat")
-                if os.path.isfile(zeroDfilename):
-                    return zeroDfilename
-                return None
+    simfile=pathlib.Path(dfolder,"mccode.sim")
+    if simfile.is_file():
+        lns = open(str(simfile)).read().splitlines()
+        for l in lns:
+            if re.match(r"  component: %s$" % monname, l):
+                # flag this data section
+                look_for_filename = True
+            if look_for_filename:
+                m = re.match(r"\s*filename:\s+(.+)", l)
+                if m:
+                    filename = m.group(1)
+                    if os.path.isfile(join(dfolder,filename)):
+                        return filename
+                if re.match(r"end data", l):
+                    # the filename can for 0D monitors be monname.dat
+                    zeroDfilename = join(dfolder, monname + ".dat")
+                    if os.path.isfile(zeroDfilename):
+                        return zeroDfilename
+                    return None
+    else:
+        return None
 
 def extract_testvals(datafolder, monitorname):
     '''
