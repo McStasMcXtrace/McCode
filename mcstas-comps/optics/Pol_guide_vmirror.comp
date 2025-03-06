@@ -433,6 +433,10 @@ TRACE
 
       GetMonoPolFNFM(Rup, Rdown, &FN, &FM);
       GetMonoPolRefProb(FN, FM, sy, &refWeight);
+      /* Output of PW discussions with Hal Lee 2024/03/08
+	 We have now done our QM "measurement", thus
+	 forcing the spin to assume up/down: */
+      sx=0; sz=0;
       // check that refWeight is meaningfull
       if (refWeight <  0) ABSORB;
       if (refWeight >  1) refWeight =1 ;

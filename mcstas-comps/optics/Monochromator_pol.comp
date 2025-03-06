@@ -159,7 +159,10 @@ TRACE
 
     // calculate peak reflection probability
     GetMonoPolRefProb(FN, FM, sy, &R0);
-
+    /* Output of PW discussions with Hal Lee 2024/03/08
+       We have now done our QM "measurement", thus
+       forcing the spin to assume up/down: */
+    sx=0; sz=0;
     // calculate reflection probability
     p_reflect = R0*exp(-dlambda2/(2.0*sigmaLambda2));
 
