@@ -26,6 +26,8 @@
   - And finally give your password for installation to proceed<br/>
   ![](screenshots/5_admin-password.png?raw=true)
 
+* :warning: In case the last warning still does not allow to open the application, you may issue the following command in a Terminal: `sudo xattr -dr com.apple.quarantine /Applications/McXtrace-3.5.24.app`
+
 * McXtrace 3.5.24 macOS app bundles are fully based on conda-forge and will "self-inject" all dependencies on first launch. Please follow any on-screen instructions given.
   
 * In case you have trouble accessing instrument files in certain areas
