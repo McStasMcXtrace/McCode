@@ -172,7 +172,7 @@ MCDISPLAY %{
                       double len = sqrt(dx*dx + dy*dy + dz*dz);
                       if (len > 0)
                           cylinder(0.5*(prevx + x), 0.5*(prevy + y), 0.5*(prevz + z),
-                                   0.5*pen_thickness, len, 0,
+                                   0.5*size*pen_thickness, len, 0,
                                    dx/len, dy/len, dz/len);
                   } else
                       line(prevx, prevy, prevz, x, y, z);
