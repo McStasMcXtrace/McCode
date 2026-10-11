@@ -143,9 +143,9 @@ def add_mcrun_adv_options(parser):
              '(see -N/--numpoints). ')
 
     add("--scan_split",
-        type=int,
         metavar="scan_split",
-        help='Scan by parallelising steps as individual cpu threads. Initialise by number of wanted threads (e.g. your number of cores).')
+        help='Scan by parallelising steps as individual cpu threads. Initialise by number of wanted threads (e.g. your number of cores), '
+             'or "auto" (or 0) for the number of cores minus one.')
 
     add('--seeds',
         metavar='SEEDS',
@@ -323,7 +323,8 @@ def add_mcstas_options(parser):
 
     add('-s', '--seed',
         metavar='SEED', type=int, action='callback', callback=check_seed,
-        help='Set random seed (must be: SEED != 0)')
+        help='Set random seed (must be: SEED != 0). In a scan, point i uses SEED+i*1024 '
+             '(without --seed, the base seed is taken from the current time and logged)')
 
     add('-n', '--ncount',
         metavar='COUNT', type=float, default=1000000,
@@ -904,8 +905,12 @@ def main():
             interval_points = LinearInterval.from_range(options.numpoints, intervals)
 
 
-    # Check that mpi and scan split are not both used. Default to mpi if they are
-    if options.scan_split is not None and options.mpi is not None:
+    # Check that mpi and scan split are not both used. Default to mpi if they are.
+    # --mpi defaults to 1 (compile with MPI, run single-process), so only an
+    # explicit multi-process --mpi request should override --scan_split
+    if options.scan_split is not None and options.mpi is not None and str(options.mpi) != '1':
+        LOG.warning('--mpi=%s given, ignoring --scan_split=%s (scan points run serially via MPI)',
+                    options.mpi, options.scan_split)
         options.scan_split = None
         
     # Parameters for linear scanning present
@@ -917,8 +922,9 @@ def main():
         scanner.run()  # in optimisation.py
 
     elif options.scan_split is not None:
-        if options.scan_split == 0:
-            options.scan_split = multiprocessing.cpu_count()-1
+        if options.scan_split in ("auto", "0"):
+            options.scan_split = max(1, multiprocessing.cpu_count()-1)
+        options.scan_split = int(options.scan_split)
         split_scanner = Scanner_split(mcstas, intervals, options.scan_split)
         split_scanner.set_points(interval_points)
         if (not options.dir == ''):

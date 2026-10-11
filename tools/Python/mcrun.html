@@ -160,7 +160,7 @@ in help text, and the McStas-only <code>-g</code>/<code>--gravitation</code> fla
 </tr>
 <tr>
 <td><code>--scan_split scan_split</code></td>
-<td>Scan by parallelising steps as individual cpu threads. Initialise by number of wanted threads (e.g. your number of cores).</td>
+<td>Scan by parallelising steps as individual cpu threads. Initialise by number of wanted threads (e.g. your number of cores), or "auto" (or 0) for the number of cores minus one. Ignored, with a warning, when an explicit multi-process <code>--mpi</code> is given.</td>
 </tr>
 <tr>
 <td><code>--seeds SEEDS</code></td>
@@ -255,7 +255,7 @@ in help text, and the McStas-only <code>-g</code>/<code>--gravitation</code> fla
 </tr>
 <tr>
 <td><code>-s SEED</code>, <code>--seed SEED</code></td>
-<td>Set random seed (must be: SEED != 0)</td>
+<td>Set random seed (must be: SEED != 0). In a scan, point i uses SEED+i*1024 (without --seed, the base seed is taken from the current time and logged)</td>
 </tr>
 <tr>
 <td><code>-n COUNT</code>, <code>--ncount COUNT</code></td>

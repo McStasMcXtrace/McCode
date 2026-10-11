@@ -43,8 +43,6 @@
 * along x, y, z for both samples), and (h, l) = (1, 0) is the magnetic zone
 * centre MnF2 (1 0 0).
 *
-* Example: mcrun Test_Dispersion_relation_TAS.instr -M -N 21,21 -n 2e5 h=0.6,1.4 l=0.6,1.4 dE=5 sample_choice=0
-*
 * The dispersion files are written by the SHELL command below when the
 * instrument is compiled, if they do not exist yet, by
 * generate_dispersion_files.py (Python with numpy).
@@ -54,6 +52,11 @@
 * %Example: h=1.2 l=1 dE=5 sample_choice=0 primitive_cell=1 Detector: detector_I=1.46e-11
 * %Example: h=1.15 l=0 dE=3 T=2 sample_choice=2 Detector: detector_I=8.91e-10
 * %Example: h=1.15 l=0 dE=3 T=2 sample_choice=3 Detector: detector_I=9.41e-10
+* %Scan: mcrun Test_Dispersion_relation_TAS.instr -M -N 5,5 -n 2e5 h=0.6,1.4 l=0.6,1.4 dE=5 sample_choice=0 Detector: detector_I={
+*   0.0,0.0,0.0,0.0,0.0,0.0,1.2167e-12,3.52579e-11,
+*   2.26406e-12,0.0,0.0,1.17383e-11,0.0,1.39525e-11,0.0,0.0,
+*   6.10596e-12,1.00579e-11,8.66923e-12,0.0,0.0,0.0,0.0,0.0,
+*   0.0 }
 *
 * %Parameters
 * h: [r.l.u.]       Scattering vector component along a* (sample x axis)
