@@ -126,6 +126,40 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
              * Table that has been constructed from code - not read from file. Return 0x1 to flag it for
              * collection.*/
             return (void *) 0x1 ;
+        case REBIN:
+            /* item is a Table whose data block has just been replaced (Table_Rebin),
+             * item_modifier is its old data pointer. The cache holds its own copy of
+             * the Table, so it must be told:
+             *  - sole user (ref_count 1): point the cache entry at the new data, so
+             *    later readers of the same file get the rebinned table. Caller frees
+             *    the old data. Returns NULL.
+             *  - shared (ref_count > 1): others still use the old data. Detach the
+             *    caller from the entry (it now owns its new data privately) and
+             *    keep the old data alive. Returns 0x1: caller must NOT free it.
+             *  - not cached: returns NULL, caller frees the old data. */
+            tr=read_table_file_list;
+            while ( tr->table_ref!=NULL ){
+                if ( item_modifier != NULL && tr->table_ref->data == (double *) item_modifier &&
+                        tr->table_ref->block_number == ((t_Table *)item)->block_number){
+                    if (tr->ref_count>1){
+                        /* the header is shared too: give the detached Table its own */
+                        t_Table *tab = (t_Table *) item;
+                        if (tab->header) {
+                          char *h = (char *) malloc(strlen(tab->header) + 1);
+                          if (h) strcpy(h, tab->header);
+                          tab->header = h;
+                        }
+                        tr->ref_count--;
+                        return (void *) 0x1;
+                    }else{
+                        t_Table *entry = tr->table_ref;
+                        *entry = *((t_Table *) item);
+                        return NULL;
+                    }
+                }
+                tr++;
+            }
+            return NULL;
     }
     /* If we arrive here, nothing worked, return NULL */
     return NULL;
@@ -756,9 +790,14 @@ void *Table_File_List_store(t_Table *tab){
       Table->max_x = Table->min_x + (Length_Table-1)*new_step; 
       /*max might not be the same anymore
        * Use Length_Table -1 since the first and laset rows are the limits of the defined interval.*/
-      free(Table->data);
-      Table->data = New_Table;
-      Table->constantstep=1;
+      {
+        double *Old_Table = Table->data;
+        Table->data = New_Table;
+        Table->constantstep=1;
+        /* keep the file cache consistent: it may hold (a copy of) this Table */
+        if (Table_File_List_Handler(REBIN, Table, Old_Table) == NULL)
+          free(Old_Table);
+      }
     } /* end else (!constantstep) */
     return (Table->rows*Table->columns);
   } /* end Table_Rebin */
