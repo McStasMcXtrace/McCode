@@ -90,7 +90,7 @@ COMPONENT Source = Bending_magnet(
     E0=E0, dE = dE,
     Ee = 2.75, Ie = 0.5, B = 1.72, sigex=45.5e-6, sigey=18.4e-6
     )
-AT (0, 0, 0) RELATIVE Origin
+AT (0, 0, 0) RELATIVE PREVIOUS
 
 //____________________________________________________________  ??? 4.13? m : Diaphragm  ==> trapezoidal?
 //At 4.13 ma trapezoidal diaphragm reshapes thebeam and represents the optical aper-ture with maximum tolerances accom-modating beam position shifts while maintaining a constantbeam shape (dimensions: length 165.8 mm; inner and outerheight of the trapeze shape with respect to the storage ring:45.1 and 38.2 mm, respectively)
