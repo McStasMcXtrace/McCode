@@ -124,7 +124,7 @@ COMPONENT Source = Undulator(
   sigepy = 4.61e-6,
   focus_xw=Slit1Width, focus_yh=Slit1Height,
   dist=DistanceSourceToSlit1)
-AT (0, 0, 0) RELATIVE origin
+AT (0, 0, 0) RELATIVE PREVIOUS
 
 /* -------------------------------------- Primary slit s1 */
 COMPONENT slit1 = Slit(
