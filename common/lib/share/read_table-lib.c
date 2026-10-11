@@ -74,10 +74,24 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
             }
             return NULL;
         case STORE:
-            /*find an available slot and store references to table there*/
-            tr=&(read_table_file_list[read_table_file_count++]);
-            tr->table_ref = ((t_Table *) item);
-            tr->ref_count++;
+            /* Store a private heap copy of the table header, never the caller's
+             * pointer: callers usually pass a stack-local t_Table (PowderN's
+             * read_line_data, Table_Read_Array's loop variable, ...). A borrowed
+             * pointer outlives that stack frame, and FIND would later compare
+             * against whatever happens to occupy that stack slot - a false
+             * "Reusing input file" hit returning stale, already-freed data.
+             * Empty tables are not cached, and the last slot stays NULL as the
+             * list terminator. */
+            if (!item || !((t_Table *) item)->data) return NULL;
+            if (read_table_file_count >= 1023) return NULL;
+            {
+              t_Table *copy = (t_Table *) malloc(sizeof(t_Table));
+              if (!copy) return NULL;
+              *copy = *((t_Table *) item);
+              tr=&(read_table_file_list[read_table_file_count++]);
+              tr->table_ref = copy;
+              tr->ref_count = 1;
+            }
             return NULL;
         case GC:
             /* Should this item be garbage collected (freed) - if so scratch the entry and return the address of the item - 
@@ -85,7 +99,8 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
              * A non-NULL return expects the item to actually be freed afterwards.*/
             tr=read_table_file_list;
             while ( tr->table_ref!=NULL ){
-                if ( tr->table_ref->data ==((t_Table *)item)->data && 
+                if ( ((t_Table *)item)->data != NULL &&
+                        tr->table_ref->data ==((t_Table *)item)->data &&
                         tr->table_ref->block_number == ((t_Table *)item)->block_number){
                     /*matching item found*/
                     if (tr->ref_count>1){
@@ -96,6 +111,7 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
                         /* The item is found and the reference counter is 1.
                          * This means we should garbage collect. Move remaining list items up one slot,
                          * and return the table for garbage collection by caller*/
+                        free(tr->table_ref); /* our private copy; caller frees data/header */
                         while (tr->table_ref!=NULL){
                             *tr=*(tr+1);
                             tr++;
