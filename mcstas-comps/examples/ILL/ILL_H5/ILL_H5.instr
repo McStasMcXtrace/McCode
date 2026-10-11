@@ -1214,6 +1214,40 @@ AT (0,0,0) RELATIVE Core
 COMPONENT H2O_Vessel = Shape (radius=4.9, yheight=1.2)
 AT (0,0,0) RELATIVE Core
 
+/* Reactor label, 2 m above Core */
+COMPONENT ILL_label = Text(text="ILL", size=1.5, plane="XY")
+AT (0,2,0) RELATIVE Core
+ROTATED (0,-90,0) ABSOLUTE
+
+/* instrument names, 2 m above each sample position */
+COMPONENT IN14_label = Text(text="IN14", size=1, plane="XY")
+AT (0,2,0) RELATIVE H53_IN14_Sample
+ROTATED (0,-90,0) ABSOLUTE
+
+COMPONENT IN16_label = Text(text="IN16", size=1, plane="XY")
+AT (0,2,0) RELATIVE H53_IN16_Sample
+ROTATED (0,-90,0) ABSOLUTE
+
+COMPONENT D16_label = Text(text="D16", size=1, plane="XY")
+AT (0,2,0) RELATIVE H53_D16_Sample
+ROTATED (0,-90,0) ABSOLUTE
+
+COMPONENT SADAM_label = Text(text="SuperADAM", size=1, plane="XY")
+AT (0,2,0) RELATIVE H53_SADAM_Sample
+ROTATED (0,-90,0) ABSOLUTE
+
+COMPONENT CryoEDM_label = Text(text="CryoEDM", size=1, plane="XY")
+AT (0,2,0) RELATIVE H53_CryoEDM_Sample_L
+ROTATED (0,-90,0) ABSOLUTE
+
+COMPONENT IN15_label = Text(text="IN15", size=1, plane="XY")
+AT (0,2,0) RELATIVE H511_IN15_Sample
+ROTATED (0,-90,0) ABSOLUTE
+
+COMPONENT D22_label = Text(text="D22", size=1, plane="XY")
+AT (0,2,0) RELATIVE D22_Sample_Pos
+ROTATED (0,-90,0) ABSOLUTE
+
 /* H20 radius=4.9 m, ILL5=707 pixels=31.5 m,
    D22 V at 40.54m from HCS
    D22 V to sample=20.85 m
