@@ -26,12 +26,12 @@
 * text:       [str] Text to draw.
 * size:       [m]   Size of text.
 * plane:      [str] "XY","YZ",or "XZ"
-* pen_thickness: [m] Stroke diameter. 0 draws thin lines, >0 draws each stroke as a cylinder with spherical joints.
+* pen_thickness: [1] Stroke diameter as fraction of text size. 0 draws thin lines, >0 draws each stroke as a cylinder with spherical joints.
 * %End
 *******************************************************************************/
 DEFINE COMPONENT Text
 
-SETTING PARAMETERS(string text, size=0.5, string plane="XY", pen_thickness=0)
+SETTING PARAMETERS(string text, size=0.5, string plane="XY", pen_thickness=0.1)
 
 SHARE %{
 
@@ -119,6 +119,11 @@ INITIALIZE %{
   else if (plane[1] == 'X' && plane[0] == 'Z') pl = 2;
   else 
     exit(-fprintf (stderr, "Error (%s): Invalid plane specification. Must be XY, YZ or XZ\n", NAME_CURRENT_COMP));
+
+  if (mcdotrace==1) {
+    /* For legacy mcdisplay line-mode, run with 0 thickness */
+    pen_thickness=0;
+  }
 %}
 
 TRACE %{
@@ -175,7 +180,7 @@ MCDISPLAY %{
 
               /* round joints and stroke ends: sphere at every vertex */
               if (pen_thickness > 0)
-                  sphere(x, y, z, 0.5*pen_thickness);
+                  sphere(x, y, z, 0.5*size*pen_thickness);
 
               prevx = x; prevy = y; prevz = z;
               pen = 1;
