@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* McXtrace, x-ray tracing package
+* McStas, neutron ray-tracing package
 *         Copyright, All rights reserved
 *         DTU Physics, Kgs. Lyngby, Denmark
 *         Synchrotron SOLEIL, Saint-Aubin, France
@@ -11,7 +11,7 @@
 * Written by: Emmanuel Farhi
 * Date: Oct 10, 2026
 * Origin: SOLEIL
-* Release: McXtrace 3.9
+* Release: McStas 3.9
 *
 * Draw a text
 *
