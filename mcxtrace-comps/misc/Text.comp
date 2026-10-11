@@ -126,9 +126,9 @@ TRACE %{
 
 MCDISPLAY %{
     
-  float s   = size / 6.0f;          /* grid height = 6 units  */
-  float adv = 50.0f * s;            /* 4 units + 1 unit gap   */
-  float u0  = 0.0f;
+  float s   = size / 6.0f;          /* metres per grid unit; glyph height = 6 units */
+  float adv = 5.0f;                 /* pen advance in grid units: 4 wide + 1 gap    */
+  float u0  = 0.0f;                 /* pen position in grid units                   */
 
   for (const char *t = text; *t; t++, u0 += adv) {
       int c = toupper((unsigned char)*t);
