@@ -1576,7 +1576,7 @@ double reflectNeutronConic(_class_particle* _particle, ConicSurf s) {
         _particle->vx = _particle->vx-2*vn*n.x;
         _particle->vy = _particle->vy-2*vn*n.y; 
         _particle->vz = _particle->vz-2*vn*n.z; 
-        double q = V2Q*(-2)*vn/sqrt(pv.x*pv.x + pv.y*pv.y + pv.z*pv.z);
+        double q = V2Q*(-2)*vn;
         double par[5] = {s.R0, s.Qc, s.alpha, s.m, s.W};
         StdReflecFunc(q, par, &ref);
 	_particle->p = _particle->p * ref;
@@ -1657,7 +1657,7 @@ double reflectNeutronFlat(_class_particle* _particle, FlatSurf s) {
     double gc = 6.84459399932*s.m/v;
     double ref=1.0;
 
-    double q = V2Q*(-2)*vn/sqrt(pv.x*pv.x + pv.y*pv.y + pv.z*pv.z);
+    double q = V2Q*(-2)*vn;
     double par[5] = {s.R0, s.Qc, s.alpha, s.m, s.W};
     StdReflecFunc(q, par, &ref);
 
