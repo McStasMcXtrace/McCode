@@ -598,16 +598,6 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
                 cmd = cmd + " --no-mpi -s %s %s %s -n%s -d%d > run_stdout_%d.txt 2>&1" % (seed, test.instrname, parvals, testncount, test.testnb, test.testnb)
 
             retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname),timeout=timeout)
-            # OpenMPI 5 (PMIx) occasionally fails to start mpirun on CI runners, before
-            # the simulation runs. Retry such a launch failure once, keeping the log.
-            if retcode[0] != 0 and not retcode[1] and mpi is not None:
-                runlog = join(testdir, test.instrname, "run_stdout_%d.txt" % test.testnb)
-                with open(runlog, errors="replace") as f:
-                    launchfail = "PMIx server's listener thread failed to start" in f.read()
-                if launchfail and not os.path.exists(join(testdir, test.instrname, str(test.testnb))):
-                    os.replace(runlog, join(testdir, test.instrname, "run_stdout_%d_launchfail.txt" % test.testnb))
-                    logging.info("%s: mpirun launch failure (PMIx), retrying once" % test.get_display_name())
-                    retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname),timeout=timeout)
             t2 = time.time()
             didwrite = os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.sim"))
             didwrite_nexus = os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.h5"))
