@@ -1661,8 +1661,6 @@ double reflectNeutronFlat(_class_particle* _particle, FlatSurf s) {
     double par[5] = {s.R0, s.Qc, s.alpha, s.m, s.W};
     StdReflecFunc(q, par, &ref);
 
-    _particle->p = _particle->p * ref;
-
     if (ref < 0) {
         printf("this happens?");
         absorb_class_particle(_particle);
