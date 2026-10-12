@@ -484,7 +484,7 @@ class McStas:
                 mpi_flags = mpi_flags + [mccode_config.directories['bindir'] + '/' + mccode_config.configuration['MCCODE'] + '-acc_gpu_bind']
             args = mpi_flags + [self.binpath] + args
 
-        if binpath == self.options.mpirun:
+        if binpath != self.binpath:  # run via mpirun
             # OpenMPI 5 (PMIx) occasionally fails to start mpirun on macOS, before
             # the simulation runs (exit status 213). Retry such a launch failure once.
             try:
