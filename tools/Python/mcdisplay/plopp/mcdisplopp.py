@@ -3,7 +3,7 @@
 mcdisplopp: draw a McStas/McXtrace instrument and traced rays with plopp (scipp).
 
 UI:      mcdisplopp.py <instr> [-n 100] [param=value ...]   (opens JupyterLab, 3D)
-Static:  mcdisplopp.py <instr> [-n 100] [param=value ...] -o out.png   (2D projections)
+Static:  mcdisplopp.py <instr> [-n 100] [-y] [param=value ...] -o out.png   (2D projections)
 '''
 import argparse
 import json
@@ -18,10 +18,12 @@ import plopp as pp
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from mccodelib.mcdisplayutils import McDisplayReader
-from mccodelib.instrgeom import Vector3d, DrawLine, DrawMultiline, DrawCircle
+from mccodelib.instrgeom import (Vector3d, DrawLine, DrawMultiline, DrawCircle, DrawNewCircle, DrawSphere,
+                                  DrawCone, DrawCylinder, DrawDisc, DrawAnnulus, DrawBox, DrawPolyhedron)
 
 warnings.filterwarnings('ignore', 'The input contains a coordinate with unsorted', RuntimeWarning)  # polylines, not histograms
 BREAK = [(np.nan,) * 3]  # NaN between polylines lifts the pen, so one line per component
+K = 24  # segments around circles and solids of revolution
 
 
 def _xyz(v):
@@ -29,31 +31,142 @@ def _xyz(v):
 
 
 def _polylines(pls):
-    return np.array([p for pl in pls for p in list(pl) + BREAK]).reshape(-1, 3)
+    return np.array([p for pl in pls for p in list(pl) + BREAK], dtype=float).reshape(-1, 3)
 
 
-def trace(instr, n=100, params=()):
-    ''' run mcrun --trace (unset params take defaults); returns ({component: (N,3) xyz}, (M,3) ray xyz), NaN-separated '''
-    reader = McDisplayReader(instr=instr, n=n, options=list(params), no_mpi=True, default=True)
+def _frame(n):
+    ''' unit axis n plus two unit vectors u, v spanning the plane normal to it '''
+    n = np.asarray(n, float) / np.linalg.norm(n)
+    u = np.cross(n, [1., 0, 0] if abs(n[0]) < 0.9 else [0., 1, 0])
+    u /= np.linalg.norm(u)
+    return n, u, np.cross(n, u)
+
+
+def _loft(rings, closed=False):
+    ''' (m, k, 3) stack of k-point rings -> (vertices, triangles) joining ring i to i+1 (and last to first) '''
+    m, k = rings.shape[:2]
+    i, j = np.arange(m if closed else m - 1)[:, None], np.arange(k)[None]
+    a, b = i * k + j, i * k + (j + 1) % k
+    c, d = (i + 1) % m * k + j, (i + 1) % m * k + (j + 1) % k
+    return rings.reshape(-1, 3), np.stack([np.stack([a, b, d], -1), np.stack([a, d, c], -1)], 2).reshape(-1, 3)
+
+
+def _revolve(c, n, rr, hh, closed=False):
+    ''' solid of revolution about axis n through c: profile points (radius rr, height hh along n) '''
+    n, u, v = _frame(n)
+    th = 2 * np.pi * np.arange(K) / K
+    ring = np.cos(th)[:, None] * u + np.sin(th)[:, None] * v
+    rings = np.asarray(c, float) + np.asarray(hh, float)[:, None, None] * n + np.asarray(rr, float)[:, None, None] * ring
+    return _loft(rings, closed)
+
+
+def _rot_y_to(n):
+    ''' rotation taking +y onto n (as three.js setFromUnitVectors, used by mcdisplay-webgl for boxes) '''
+    n = np.asarray(n, float) / np.linalg.norm(n)
+    w, c = np.cross([0., 1, 0], n), n[1]
+    if c < -1 + 1e-9:
+        return np.diag([1., -1, -1])
+    W = np.array([[0, -w[2], w[1]], [w[2], 0, -w[0]], [-w[1], w[0], 0]])
+    return np.eye(3) + W + W @ W / (1 + c)
+
+
+def _box(x, y, z, w, h, l, t, nx, ny, nz):
+    ''' box of size (w, h, l) about (x, y, z), local y turned onto n; t > 0: hollow, open along local y '''
+    rect = lambda hx, hz, yy: [(-hx, yy, -hz), (hx, yy, -hz), (hx, yy, hz), (-hx, yy, hz)]
+    hx, hy, hz = w / 2, h / 2, l / 2
+    if t > 0:
+        v, f = _loft(np.array([rect(hx - t, hz - t, -hy), rect(hx, hz, -hy), rect(hx, hz, hy), rect(hx - t, hz - t, hy)]), True)
+    else:
+        v, f = _loft(np.array([[(0, -hy, 0)] * 4, rect(hx, hz, -hy), rect(hx, hz, hy), [(0, hy, 0)] * 4]))
+    return v @ _rot_y_to((nx, ny, nz)).T + (x, y, z), f
+
+
+def _polyhedron(js):
+    ''' OFF/polygon JSON from the runtime; polygon faces fanned into triangles '''
+    d = json.loads(js)
+    tri = [(f[0], f[i], f[i + 1]) for face in d['faces'] for f in [face['face']] for i in range(1, len(f) - 1)]
+    return np.array(d['vertices'], float).reshape(-1, 3), np.array(tri, int).reshape(-1, 3)
+
+
+def _wire(d):
+    ''' polyline (local coords) for the line-like draw calls, else None '''
+    if isinstance(d, DrawLine):
+        return [_xyz(d.point_1), _xyz(d.point_2)]
+    if isinstance(d, DrawMultiline):
+        return [_xyz(p) for p in d.points]
+    if isinstance(d, DrawCircle):
+        return [_xyz(p) for p in d.get_points_on_circle(K + 1)]
+    if isinstance(d, DrawNewCircle):
+        x, y, z, r, *n = d.args
+        n, u, v = _frame(n)
+        th = 2 * np.pi * np.arange(K + 1) / K
+        return (np.array([x, y, z]) + r * (np.cos(th)[:, None] * u + np.sin(th)[:, None] * v)).tolist()
+
+
+def _solid(d):
+    ''' (vertices, triangles) in local coords for --trace=2 solids, else None. Centred shapes along n, as
+        mcdisplay-webgl (the annulus "inner_radius" is a ring width there and in mcdisplay-matplotlib) '''
+    if isinstance(d, DrawPolyhedron):
+        return _polyhedron(d.faces_vertices)
+    a = d.args
+    if isinstance(d, DrawSphere):
+        x, y, z, r = a
+        phi = np.linspace(0, np.pi, K // 2 + 1)
+        return _revolve((x, y, z), (0, 1, 0), r * np.sin(phi), -r * np.cos(phi))
+    if isinstance(d, DrawCone):
+        x, y, z, r, h, *n = a
+        return _revolve((x, y, z), n, [0, r, 0], [-h / 2, -h / 2, h / 2])
+    if isinstance(d, DrawCylinder):
+        x, y, z, r, h, t, *n = a
+        if t > 0:
+            return _revolve((x, y, z), n, [r - t, r, r, r - t], [-h / 2, -h / 2, h / 2, h / 2], closed=True)
+        return _revolve((x, y, z), n, [0, r, r, 0], [-h / 2, -h / 2, h / 2, h / 2])
+    if isinstance(d, DrawDisc):
+        x, y, z, r, *n = a
+        return _revolve((x, y, z), n, [0, r], [0, 0])
+    if isinstance(d, DrawAnnulus):
+        x, y, z, r, w, *n = a
+        return _revolve((x, y, z), n, [r - w, r], [0, 0])
+    if isinstance(d, DrawBox):
+        return _box(*a[:10])
+
+
+def _merge(parts):
+    ''' [(vertices, triangles), ...] -> one (vertices, triangles) '''
+    parts = [p for p in parts if len(p[0])] or [(np.zeros((0, 3)), np.zeros((0, 3), int))]
+    off = np.cumsum([0] + [len(v) for v, f in parts[:-1]])
+    return np.concatenate([v for v, f in parts]), np.concatenate([f + o for (v, f), o in zip(parts, off)])
+
+
+def trace(instr, n=100, params=(), yes=False):
+    ''' run mcrun --trace=2; yes forwards -y (unset params take defaults), otherwise mcrun prompts for them.
+        Returns ({component: (lines, solid vertices, solid triangles)}, ray xyz); lines/rays are NaN-separated
+        (N,3) polylines, all in instrument coordinates '''
+    reader = McDisplayReader(instr=instr, n=n, options=list(params) + ['-y'] * yes, no_mpi=True, trace=2)
     instrument = reader.read_instrument()
     bundle = reader.read_particles()
 
     geom = {}
     for c in instrument.components:
-        pls = []
-        for d in c.drawcalls:
-            # ponytail: wireframe primitives only (as mcdisplay-pyqtgraph); --trace=2 solids are skipped
-            pts = ([d.point_1, d.point_2] if isinstance(d, DrawLine) else d.points if isinstance(d, DrawMultiline)
-                   else d.get_points_on_circle(24) if isinstance(d, DrawCircle) else None)  # 60 by default; 24 is round enough
-            if pts:
-                pls.append([_xyz(c.transform.apply(p)) for p in pts])
-        if pls:
-            geom[c.name] = _polylines(pls)
+        t = c.transform
+        M = np.array([[t.a11, t.a12, t.a13], [t.a21, t.a22, t.a23], [t.a31, t.a32, t.a33]])
+        t0 = np.array([t.a14, t.a24, t.a34])
+        wires = [w for w in map(_wire, c.drawcalls) if w]
+        solids = [s for s in map(_solid, c.drawcalls) if s is not None]
+        if wires or solids:
+            v, f = _merge(solids)
+            geom[c.name] = (_polylines(wires) @ M.T + t0, v @ M.T + t0, f)  # ponytail: DrawPolygon (unused at trace=2) skipped
 
     tf = {c.name: c.transform for c in instrument.components}
     ray_pls = [[_xyz(tf[g.compname].apply(Vector3d(*e.args[:3]))) for g in story.groups if g.compname in tf
                 for e in g.events] for story in (bundle.rays if bundle else [])]
     return geom, _polylines(ray_pls)
+
+
+def _edges(v, f):
+    ''' triangle outlines as NaN-separated polylines, for the 2D view '''
+    tri = v[f]
+    return np.concatenate([tri, tri[:, :1], np.full((len(f), 1, 3), np.nan)], 1).reshape(-1, 3)
 
 
 def _projection(xyz, h, v):
@@ -64,13 +177,14 @@ def _projection(xyz, h, v):
 
 
 def view(geom, rays):
-    ''' top (z-x) above side (z-y) projection; one colour per component, rays in grey '''
-    z = np.concatenate([rays[:, 2]] + [xyz[:, 2] for xyz in geom.values()])
+    ''' top (z-x) above side (z-y) projection; one colour per component (solids as triangle outlines), rays in grey '''
+    flat = {name: np.concatenate([lines, _edges(v, f)]) for name, (lines, v, f) in geom.items()}
+    z = np.concatenate([rays[:, 2]] + [xyz[:, 2] for xyz in flat.values()])
     pad = 0.02 * (np.nanmax(z) - np.nanmin(z))  # plopp's autoscale overshoots on the NaN separators
     figs = []
     for v in 'xy':
         lines = {'rays': _projection(rays, 'z', v)}  # first, so components draw on top
-        lines.update({name: _projection(xyz, 'z', v) for name, xyz in geom.items()})
+        lines.update({name: _projection(xyz, 'z', v) for name, xyz in flat.items()})
         figs.append(pp.plot(lines, linestyle='-', marker='', legend=False,
                             color={'rays': 'lightgrey'}, ylabel=f'{v} [m]', title=f'z-{v}',
                             xmin=np.nanmin(z) - pad, xmax=np.nanmax(z) + pad))
@@ -111,17 +225,18 @@ def _tubes(xyz, r, k=6):
 
 
 def view3d(geom, rays, thickness=2.5e-4):
-    ''' 3D (Jupyter/pythreejs): components as tubes coloured per component, rays as thinner grey tubes.
+    ''' 3D (Jupyter/pythreejs): solids as meshes, lines as tubes, coloured per component; rays as thinner grey tubes.
         Tube radius = thickness x the instrument's bounding-box diagonal; rays get half of it '''
-    allpts = np.concatenate([rays] + list(geom.values()))
+    allpts = np.concatenate([rays] + [np.concatenate([lines, v]) for lines, v, f in geom.values()])
     r = thickness * np.linalg.norm(np.nanmax(allpts, 0) - np.nanmin(allpts, 0))
-    parts = [(_tubes(xyz, r), i % 20) for i, xyz in enumerate(geom.values())] + [(_tubes(rays, r / 2), np.nan)]
-    verts, faces, cols, off = [], [], [], 0
-    for (vv, ff), c in parts:
-        verts.append(vv), faces.append(ff + off), cols.append(np.full(len(vv), c, dtype=float))
-        off += len(vv)
-    return pp.mesh3d(vertices=sc.vectors(dims=['vertices'], values=np.concatenate(verts), unit='m'),
-                     faces=sc.array(dims=['faces', 'vertex'], values=np.concatenate(faces)),
+    parts, cols = [], []
+    for i, (lines, v, f) in enumerate(geom.values()):
+        for part in (_tubes(lines, r), (v, f)):
+            parts.append(part), cols.append(np.full(len(part[0]), i % 20, dtype=float))
+    parts.append(_tubes(rays, r / 2)), cols.append(np.full(len(parts[-1][0]), np.nan))
+    verts, faces = _merge(parts)
+    return pp.mesh3d(vertices=sc.vectors(dims=['vertices'], values=verts, unit='m'),
+                     faces=sc.array(dims=['faces', 'vertex'], values=faces),
                      vertexcolors=sc.array(dims=['vertices'], values=np.concatenate(cols)),
                      cmap='tab20', cmin=0, cmax=19, nan_color='lightgrey', figsize=(900, 600))
 
@@ -146,7 +261,7 @@ def ui(instr, n=100, params=''):
         go.disabled = True
         try:
             with out:
-                last['trace'] = trace(instr, rays.value, pars.value.split())
+                last['trace'] = trace(instr, rays.value, pars.value.split(), yes=True)  # a widget can't answer prompts
             draw()
         finally:
             go.disabled = False
@@ -174,11 +289,13 @@ def main():
     p.add_argument('params', nargs='*', help='instrument parameters, name=value')
     p.add_argument('-n', type=int, default=100, help='number of rays to trace')
     p.add_argument('-o', '--output', help='write a static png/pdf/svg instead of opening the UI')
+    p.add_argument('-y', '--yes', action='store_true', help='forwarded to mcrun: use defaults for unset parameters '
+                   '(always on in the UI)')
     args = p.parse_args()
     if not args.output:
         return launch(f'import mcdisplopp; mcdisplopp.ui({os.path.abspath(args.instr)!r}, {args.n}, {" ".join(args.params)!r})')
 
-    view(*trace(args.instr, args.n, args.params)).save(args.output)
+    view(*trace(args.instr, args.n, args.params, args.yes)).save(args.output)
     print(f'saved {args.output}')
 
 
