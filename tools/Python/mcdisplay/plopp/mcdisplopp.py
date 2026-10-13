@@ -224,7 +224,7 @@ def _tubes(xyz, r, k=6):
     return np.concatenate([cyl, sph]), np.concatenate([cyl_f, sph_f])
 
 
-def view3d(geom, rays, thickness=2.5e-4):
+def view3d(geom, rays, thickness=1e-4):
     ''' 3D (Jupyter/pythreejs): solids as meshes, lines as tubes, coloured per component; rays as thinner grey tubes.
         Tube radius = thickness x the instrument's bounding-box diagonal; rays get half of it '''
     allpts = np.concatenate([rays] + [np.concatenate([lines, v]) for lines, v, f in geom.values()])
@@ -248,7 +248,7 @@ def ui(instr, n=100, params=''):
     pars = w.Text(value=params, description='params', placeholder='lambda=2.36 ...', layout={'width': '40em'})
     rays = w.IntText(value=n, description='rays')
     go = w.Button(description='Trace', button_style='primary')
-    thick = w.FloatLogSlider(value=2.5e-4, base=10, min=-5, max=-2, description='thickness', readout_format='.1e')
+    thick = w.FloatLogSlider(value=1e-4, base=10, min=-6, max=-3, description='thickness', readout_format='.1e')
     out = w.Output()
     last = {}
 
