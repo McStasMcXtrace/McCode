@@ -20,19 +20,24 @@
 * between e.g. MCNP(X), Geant4 and McXtrace.
 *
 * The --ncount given on the commandline is overwritten by
-* (#photons in the file) x repeat_count. With preload=1 (and always on GPU)
-* only the photons within [Emin, Emax] are counted.
+* (#particles in the file) x repeat_count. Particles that are not photons, or are
+* outside [Emin, Emax], are counted but ABSORBed.
 *
-* When used with MPI, the file is split between the MPI processes: each process
-* reads (and preloads) only its own slice of about (#events in the file) / (#MPI processes),
-* so that every event in the file is used once per repetition across the whole run.
-* (Before Oct 2026, MCPL_input instead let every process read the whole file and
-* smeared all events on the non-master processes.)
+* The rays form a stream that runs through the file repeat_count times. As in McStas'
+* KDSource, this stream is split into one contiguous chunk per MPI process: each process
+* seeks once to its start and reads on, wrapping around to the start of the file (with
+* preload=1 it loads only the part of the file its chunk covers). Every event is thus used
+* repeat_count times across the whole run, and its weight is divided by repeat_count.
+* All passes after the first are smeared using E_smear, pos_smear and dir_smear (the first
+* pass is too if always_smear is set), so repeat_count > 1 MUST be combined with at least
+* one *_smear option; if all are 0, repeat_count is reset to 1.
 *
-* repeat_count > 1 replays each process' slice that many times, with the event weight
-* divided accordingly. All replays after the first are smeared using E_smear, pos_smear and
-* dir_smear (the first pass is too if always_smear is set), so repeat_count > 1 MUST be
-* combined with at least one *_smear option; if all are 0, repeat_count is reset to 1.
+* With replicate_across_processes=0 (the default) the file is shared between the
+* MPI processes and --mpi=N does not change the number of rays.
+* replicate_across_processes=1 restores the pre-Oct 2026 MPI behaviour: repeat_count is
+* rounded up to a multiple of the number of MPI processes, so that every process runs
+* through the whole file at least once, and all but the first pass on the master are
+* smeared (or, with all *_smear=0, are identical copies).
 *
 * This is the same implementation as McStas' MCPL_input, adapted to photons.
 *
@@ -52,13 +57,14 @@
 * pos_smear: [m]        When replaying events, make a flat MC choice of position within pos_smear around particle starting position
 * dir_smear: [deg]      When replaying events, make an MC choice of direction within dir_smear around particle direction
 * always_smear: [ ]     If !=0, also smear the events on their first pass through the file
+* replicate_across_processes: [ ] If !=0, with MPI round repeat_count up to a multiple of the number of processes, so that each process runs through the whole file
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT MCPL_input
 
-SETTING PARAMETERS (string filename=0, polarisationuse=1, verbose=0, Emin=0, Emax=FLT_MAX, int repeat_count=1, E_smear=0, pos_smear=0, dir_smear=0, int preload=0, int always_smear=0)
+SETTING PARAMETERS (string filename=0, polarisationuse=1, verbose=0, Emin=0, Emax=FLT_MAX, int repeat_count=1, E_smear=0, pos_smear=0, dir_smear=0, int preload=0, int always_smear=0, int replicate_across_processes=0)
 
 DEPENDENCY "@MCPLFLAGS@"
 
@@ -76,6 +82,7 @@ SHARE
     double _kx, _ky, _kz;
     double _Ex, _Ey, _Ez;
     double _t, _p;
+    int _keep; // 0: not a photon, 1: outside [Emin, Emax], 2: used
   } mcplinput_particle_t;
 
   /* MCPL units -> McXtrace units */
@@ -120,17 +127,14 @@ DECLARE
 %{
   mcpl_file_t inputfile;
   uint64_t nparticles;
-  uint64_t first_particle;
-  uint64_t slice_len;
-  uint64_t nevents;
+  uint64_t first_ray;
+  uint64_t node_ncount;
+  uint64_t stream_index;
   uint64_t read_photons;
   uint64_t used_photons;
   uint64_t emitted_photons;
-  uint64_t current_index;
-  uint64_t uid_offset;
-  int times_replayed;
+  int repeat_tot;
   int file_open;
-  double weight_factor;
   double weight_scale;
   mcplinput_particle_t* particles;
   char* resolved_filename;
@@ -200,35 +204,32 @@ INITIALIZE
                          NAME_CURRENT_COMP, repeat_count););
     repeat_count = 1;
   }
-
-  /* This process' slice of the file: [first_particle, first_particle + slice_len) */
-  first_particle = 0;
-  slice_len = nparticles;
+  /* Number of passes through the file across all processes */
+  repeat_tot = repeat_count;
   #if defined (USE_MPI)
-  {
-    uint64_t particles_per_node = nparticles / mpi_node_count;
-    // at least 1 particle per node
-    if (particles_per_node < 1)
-      particles_per_node = 1;
-    first_particle = particles_per_node * mpi_node_rank;
-    if (first_particle >= nparticles) {
-      // more MPI processes than particles: this process gets nothing
-      first_particle = nparticles;
-      slice_len = 0;
-    } else if (mpi_node_rank == mpi_node_count - 1) {
-      // the last process takes the remainder, to cover the full file
-      slice_len = nparticles - first_particle;
-    } else {
-      slice_len = particles_per_node;
-    }
-  }
+  if (replicate_across_processes)
+    repeat_tot = mpi_node_count * ((repeat_count + mpi_node_count - 1) / mpi_node_count);
   #endif
+
+  /* The rays are a stream of nparticles x repeat_tot events, split into one contiguous chunk
+     per process. Ray _uid = first_ray + i is event _uid % nparticles on pass _uid / nparticles */
+  if (!mcdotrace) {
+    mcset_ncount (nparticles * repeat_tot);
+    MPI_MASTER (if (repeat_tot > 1) printf ("Message(%s): ncount set to %llu x %i = %llu.\n", NAME_CURRENT_COMP, (unsigned long long)nparticles,
+                                            repeat_tot, (unsigned long long)(nparticles * repeat_tot)););
+  }
+  // the main loop gives each MPI process floor(ncount / #processes) rays
+  node_ncount = (uint64_t)mcget_ncount ();
+  first_ray = 0;
+  #if defined (USE_MPI)
+  node_ncount /= mpi_node_count;
+  first_ray = (uint64_t)mpi_node_rank * node_ncount;
+  #endif
+  stream_index = first_ray;
 
   read_photons = 0;
   used_photons = 0;
   emitted_photons = 0;
-  current_index = 0;
-  times_replayed = 0;
   particles = NULL;
 
   #ifdef OPENACC
@@ -236,122 +237,76 @@ INITIALIZE
   MPI_MASTER (printf ("Message(%s): OpenACC, preload implicit.\n", NAME_CURRENT_COMP););
   #endif
 
-  // Move this process' pointer into the file to its first particle
-  if (slice_len)
-    mcpl_seek (inputfile, first_particle);
+  // Move this process' pointer into the file to the start of its chunk
+  if (first_ray % nparticles)
+    mcpl_seek (inputfile, first_ray % nparticles);
 
   if (preload) {
-    MPI_MASTER (printf ("Message(%s): Preload requested, loading MCPL file in INITIALIZE.\n", NAME_CURRENT_COMP););
-    if (slice_len) {
-      particles = (mcplinput_particle_t*)calloc (slice_len, sizeof (mcplinput_particle_t));
+    // load only the part of the file this process' chunk covers, in stream order
+    uint64_t nload = node_ncount < nparticles ? node_ncount : nparticles;
+    MPI_MASTER (printf ("Message(%s): Preload requested, loading %llu particles per process in INITIALIZE.\n", NAME_CURRENT_COMP, (unsigned long long)nload););
+    if (nload) {
+      particles = (mcplinput_particle_t*)calloc (nload, sizeof (mcplinput_particle_t));
       if (!particles) {
-        fprintf (stderr, "ERROR(%s): Could not allocate memory for %llu particles.\n", NAME_CURRENT_COMP, (unsigned long long)slice_len);
+        fprintf (stderr, "ERROR(%s): Could not allocate memory for %llu particles.\n", NAME_CURRENT_COMP, (unsigned long long)nload);
         exit (-1);
       }
     }
-    for (uint64_t loop = 0; loop < slice_len; loop++) {
+    for (uint64_t j = 0; j < nload; j++) {
+      if (j && (first_ray + j) % nparticles == 0)
+        mcpl_rewind (inputfile);
       const mcpl_particle_t* particle = mcpl_read (inputfile);
       if (particle && particle->pdgcode == 22) {
-        MPI_MASTER (if (verbose && read_photons < 10) mcplinput_print (NAME_CURRENT_COMP, read_photons, particle););
-        if (particle->ekin > Emin * 1e-3 && particle->ekin < Emax * 1e-3) {
-          mcplinput_translator (polarisationuse, weight_scale, particle, particles + used_photons++);
-        }
-        read_photons++;
+        MPI_MASTER (if (verbose && j < 10) mcplinput_print (NAME_CURRENT_COMP, (first_ray + j) % nparticles, particle););
+        mcplinput_translator (polarisationuse, weight_scale, particle, particles + j);
+        particles[j]._keep = (particle->ekin > Emin * 1e-3 && particle->ekin < Emax * 1e-3) ? 2 : 1;
       }
     }
     mcpl_close_file (inputfile);
     file_open = 0;
-    // only the kept photons are replayed
-    nevents = used_photons;
-  } else {
-    // events are read in TRACE, those not passing the filters are ABSORBed
-    nevents = slice_len;
   }
-
-  /* Total number of events across all processes */
-  uint64_t total_events = nevents;
-  #if defined (USE_MPI)
-  MPI_Allreduce (&nevents, &total_events, 1, MPI_UINT64_T, MPI_SUM, MPI_COMM_WORLD);
-  #endif
-  if (total_events == 0) {
-    fprintf (stderr, "ERROR(%s): No usable photons in MCPL file %s (E=[%g,%g] keV). Aborting.\n", NAME_CURRENT_COMP, resolved_filename, Emin, Emax);
-    exit (-1);
-  }
-  if (preload) {
-    MPI_MASTER (printf ("Message(%s): Done reading MCPL file, kept %llu photons in total.\n", NAME_CURRENT_COMP, (unsigned long long)total_events););
-  }
-
-  uint64_t node_ncount;
-  if (!mcdotrace) {
-    // the main loop gives each MPI process floor(ncount / #processes) rays
-    mcset_ncount (total_events * repeat_count);
-    node_ncount = total_events * repeat_count;
-    #if defined (USE_MPI)
-    node_ncount /= mpi_node_count;
-    #endif
-    MPI_MASTER (if (repeat_count > 1) printf ("Message(%s): repeat_count=%i, ncount set to %llu x %i = %llu.\n", NAME_CURRENT_COMP, repeat_count,
-                                              (unsigned long long)total_events, repeat_count, (unsigned long long)(total_events * repeat_count)););
-  } else {
-    node_ncount = (uint64_t)mcget_ncount ();
-  }
-
-  /* Each of this process' nevents events is emitted node_ncount/nevents times on average
-     (= repeat_count without MPI), so its weight is scaled by the inverse */
-  weight_factor = (nevents && node_ncount) ? (double)nevents / (double)node_ncount : 1.0;
-
-  /* _uid of this process' first ray, used to find the event when preloaded */
-  uid_offset = 0;
-  #if defined (USE_MPI)
-  uid_offset = (uint64_t)mpi_node_rank * node_ncount;
-  #endif
 %}
 
 TRACE
 %{
   mcplinput_particle_t buffer;
   mcplinput_particle_t* ptr = NULL;
-  uint64_t pass = 0;
-
-  if (nevents == 0)
-    ABSORB;
+  uint64_t g;
 
   #ifndef OPENACC
   // preload can only be false without OpenACC
   if (!preload) {
-    if (current_index >= slice_len) {
-      // go back to the start of this process' slice and replay it
-      current_index = 0;
-      mcpl_seek (inputfile, first_particle);
-      times_replayed++;
-    }
+    g = stream_index++;
+    // wrap around to the start of the file
+    if (g != first_ray && g % nparticles == 0)
+      mcpl_rewind (inputfile);
     const mcpl_particle_t* particle = mcpl_read (inputfile);
-    current_index++;
-    pass = times_replayed;
-    if (!particle || particle->pdgcode != 22) {
-      ABSORB;
+    buffer._keep = 0;
+    if (particle && particle->pdgcode == 22) {
+      MPI_MASTER (if (verbose && g - first_ray < 10) mcplinput_print (NAME_CURRENT_COMP, g % nparticles, particle););
+      mcplinput_translator (polarisationuse, weight_scale, particle, &buffer);
+      buffer._keep = (particle->ekin > Emin * 1e-3 && particle->ekin < Emax * 1e-3) ? 2 : 1;
     }
-    if (!times_replayed) {
-      MPI_MASTER (if (verbose && read_photons < 10) mcplinput_print (NAME_CURRENT_COMP, read_photons, particle););
-      read_photons++;
-    }
-    if (particle->ekin < Emin * 1e-3 || particle->ekin > Emax * 1e-3) {
-      ABSORB;
-    }
-    if (!times_replayed)
-      used_photons++;
-    mcplinput_translator (polarisationuse, weight_scale, particle, &buffer);
     ptr = &buffer;
   } else {
     #endif
-    uint64_t local_index = (uint64_t)_particle->_uid;
-    if (local_index >= uid_offset)
-      local_index -= uid_offset;
-    pass = local_index / nevents;
-    ptr = particles + (local_index % nevents);
+    g = (uint64_t)_particle->_uid;
+    ptr = particles + (g - first_ray) % nparticles;
     #ifndef OPENACC
   }
   #endif
+  uint64_t pass = g / nparticles;
 
+  if (pass == 0 && ptr->_keep) {
+    #pragma acc atomic
+    read_photons++;
+  }
+  if (ptr->_keep != 2)
+    ABSORB;
+  if (pass == 0) {
+    #pragma acc atomic
+    used_photons++;
+  }
   #pragma acc atomic
   emitted_photons++;
 
@@ -365,8 +320,8 @@ TRACE
   Ey = ptr->_Ey;
   Ez = ptr->_Ez;
   t = ptr->_t;
-  // correct for replaying (repeat_count and/or uneven MPI slices)
-  p = ptr->_p * weight_factor;
+  // each event is emitted repeat_tot times
+  p = ptr->_p / repeat_tot;
 
   if (always_smear || pass > 0) {
     if (pos_smear) {
@@ -409,35 +364,32 @@ FINALLY
   #endif
 
   uint64_t requested_photons = (uint64_t)mcget_ncount ();
-  uint64_t events = nevents;
   uint64_t tolerance = 1;
   #if defined (USE_MPI)
   // the main loop rounds the number of rays per process down
   tolerance = mpi_node_count;
-  uint64_t accumulated[5], distributed[5];
+  uint64_t accumulated[4], distributed[4];
   distributed[0] = used_photons;
   distributed[1] = read_photons;
   distributed[2] = emitted_photons;
   distributed[3] = requested_photons;
-  distributed[4] = nevents;
-  MPI_Reduce (distributed, accumulated, 5, MPI_UINT64_T, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce (distributed, accumulated, 4, MPI_UINT64_T, MPI_SUM, 0, MPI_COMM_WORLD);
   if (mpi_node_rank == 0) {
     used_photons = accumulated[0];
     read_photons = accumulated[1];
     emitted_photons = accumulated[2];
     requested_photons = accumulated[3];
-    events = accumulated[4];
     #endif
     if (used_photons != read_photons) {
       fprintf (stdout, "Message(%s): You have used %llu of %llu photons available in the MCPL file.\n", NAME_CURRENT_COMP, (unsigned long long)used_photons,
                (unsigned long long)read_photons);
     }
-    uint64_t expected = events * (uint64_t)repeat_count;
+    uint64_t expected = nparticles * (uint64_t)repeat_tot;
     if (requested_photons + tolerance <= expected || requested_photons >= expected + tolerance) {
       fprintf (stderr,
-               "Warning(%s): %llu rays were traced, but the MCPL file holds %llu usable events x repeat_count=%i = %llu,\n"
+               "Warning(%s): %llu rays were traced, but the MCPL file holds %llu particles x %i passes = %llu,\n"
                "so events were %s%s. %llu photons were emitted in total. Please examine the recorded intensities carefully.\n",
-               NAME_CURRENT_COMP, (unsigned long long)requested_photons, (unsigned long long)events, repeat_count, (unsigned long long)expected,
+               NAME_CURRENT_COMP, (unsigned long long)requested_photons, (unsigned long long)nparticles, repeat_tot, (unsigned long long)expected,
                requested_photons > expected ? "replayed" : "left unused",
                (requested_photons > expected && E_smear == 0 && pos_smear == 0 && dir_smear == 0) ? " WITHOUT smearing" : "",
                (unsigned long long)emitted_photons);

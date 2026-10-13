@@ -13,11 +13,11 @@ Source-like component that reads photon state parameters from a binary mcpl-file
 
 MCPL is short for Monte Carlo Particle List, and is a format for sharing events between e.g. MCNP(X), Geant4 and McXtrace.
 
-The --ncount given on the commandline is overwritten by (\#photons in the file) x repeat\_count. With preload=1 (and always on GPU) only the photons within [Emin, Emax] are counted.
+The --ncount given on the commandline is overwritten by (\#particles in the file) x repeat\_count. Particles that are not photons, or are outside [Emin, Emax], are counted but ABSORBed.
 
-When used with MPI, the file is split between the MPI processes: each process reads (and preloads) only its own slice of about (\#events in the file) / (\#MPI processes), so that every event in the file is used once per repetition across the whole run. (Before Oct 2026, MCPL\_input instead let every process read the whole file and smeared all events on the non-master processes.)
+The rays form a stream that runs through the file repeat\_count times. As in McStas' KDSource, this stream is split into one contiguous chunk per MPI process: each process seeks once to its start and reads on, wrapping around to the start of the file (with preload=1 it loads only the part of the file its chunk covers). Every event is thus used repeat\_count times across the whole run, and its weight is divided by repeat\_count. All passes after the first are smeared using E\_smear, pos\_smear and dir\_smear (the first pass is too if always\_smear is set), so repeat\_count \textgreater{} 1 MUST be combined with at least one *\_smear option; if all are 0, repeat\_count is reset to 1.
 
-repeat\_count \textgreater{} 1 replays each process' slice that many times, with the event weight divided accordingly. All replays after the first are smeared using E\_smear, pos\_smear and dir\_smear (the first pass is too if always\_smear is set), so repeat\_count \textgreater{} 1 MUST be combined with at least one *\_smear option; if all are 0, repeat\_count is reset to 1.
+With replicate\_across\_processes=0 (the default) the file is shared between the MPI processes and --mpi=N does not change the number of rays. replicate\_across\_processes=1 restores the pre-Oct 2026 MPI behaviour: repeat\_count is rounded up to a multiple of the number of MPI processes, so that every process runs through the whole file at least once, and all but the first pass on the master are smeared (or, with all *\_smear=0, are identical copies).
 
 This is the same implementation as McStas' MCPL\_input, adapted to photons.
 
@@ -42,6 +42,7 @@ pos\_smear & m & When replaying events, make a flat MC choice of position within
 dir\_smear & deg & When replaying events, make an MC choice of direction within dir\_smear around particle direction & 0 \\
 preload &   & Load particles during INITIALIZE. On GPU preload is forced & 0 \\
 always\_smear &   & If !=0, also smear the events on their first pass through the file & 0 \\
+replicate\_across\_processes &   & If !=0, with MPI round repeat\_count up to a multiple of the number of processes, so that each process runs through the whole file & 0 \\
 \bottomrule
 \end{longtable}
 

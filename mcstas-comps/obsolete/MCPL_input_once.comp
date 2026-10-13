@@ -15,10 +15,11 @@
 * %D
 * Source-like component that reads neutron state parameters from a MCPL-file one time.
 *
-* Since Oct 2026 MCPL_input_once is MCPL_input under its old name: everything,
-* including the parameters, is inherited from MCPL_input, which now splits the file
-* between MPI processes the way MCPL_input_once did. With the default repeat_count=1,
-* every event in the file is used exactly once. See MCPL_input for the full documentation.
+* Since Oct 2026 MCPL_input_once is MCPL_input with repeat_count=1 (and the default
+* replicate_across_processes=0) forced: the file is shared between MPI processes and
+* every event in the file is used exactly once. The parameters are inherited from
+* MCPL_input; repeat_count and replicate_across_processes are ignored.
+* See MCPL_input for the full documentation.
 *
 * MCPL is short for Monte Carlo Particle List, and is a format for sharing events
 * between e.g. MCNP(X), Geant4 and McStas.
@@ -36,7 +37,6 @@
 * polarisationuse: [ ]  If !=0 read polarisation vectors from file.
 * Emin: [meV]           Lower energy bound. Particles found in the MCPL-file below the limit are skipped.
 * Emax: [meV]           Upper energy bound. Particles found in the MCPL-file above the limit are skipped.
-* repeat_count: [1]     Replay the contents of the MCPL file this number of times (see MCPL_input).
 * v_smear: [1]          Relative fraction for randomness in replayed particle velocity v *= (1 + v_smear * randpm1())
 * pos_smear: [m]        Maximum extent of random position for replayed particles
 * dir_smear: [deg]      Maximum deviation of random direction for replayed particles
@@ -47,5 +47,12 @@
 *******************************************************************************/
 
 DEFINE COMPONENT MCPL_input_once INHERIT MCPL_input
+
+INITIALIZE
+%{
+  repeat_count = 1;
+  replicate_across_processes = 0;
+%}
+INHERIT MCPL_input
 
 END
