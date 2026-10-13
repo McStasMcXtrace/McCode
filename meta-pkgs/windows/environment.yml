@@ -40,6 +40,8 @@ dependencies:
   - jupytext
   - jupyterlab
   - ipympl
+  - scipp
+  - plopp
   - jinja2
   - mslex
   - typish
