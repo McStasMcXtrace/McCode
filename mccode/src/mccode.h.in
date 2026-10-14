@@ -75,8 +75,6 @@
 * Functions defined in memory.c
 *******************************************************************************/
 
-typedef struct Pool_header *Pool;
-
 void *mem(size_t);        /* Allocate memory. */
 void memfree(void *);     /* Free memory. */
 char *str_dup(char *);    /* Allocate new copy of string. */
@@ -84,10 +82,6 @@ char *str_dup_n(char *string, int n); /* Copies only first N chars. */
 char *str_cat(char *first, ...);/* Concatenate strings to allocated string. */
 char *str_quote(char *string);  /* Quote string for inclusion in C code */
 void str_free(char *);    /* Free memory for string. */
-
-Pool pool_create(void);   /* Create pool. */
-void pool_free(Pool p);   /* Free pool and associated memory. */
-void *pool_mem(Pool p, size_t size); /* Allocate memory in pool. */
 
 /* Allocate memory to a pointer. If p is a pointer to type t, palloc(p) will
    make p point to dynamically allocated memory for one element of type
@@ -270,6 +264,10 @@ extern Symtab read_components;
 extern char verbose;
 /* Lint mode */
 extern char lint;
+/* Python generator: instrument name to use (NULL means default) */
+extern char *pygen_instrument_name;
+/* Python generator: do not translate %Example lines into tests */
+extern char pygen_no_tests;
 /* Will store component instance for PREVIOUS reference */
 extern char embed_instrument_file;
 /* Will store component instance for PREVIOUS reference */
@@ -313,6 +311,7 @@ FILE *open_component_search(char *name);
 FILE *open_file_search_sys(char *name);
 /* Add a directory to the search path. */
 void add_search_dir(char *name);
+void record_search(char *path, int shell);
 /* get default system directory (where libraries are) */
 char *get_sys_dir(void);
 
@@ -534,6 +533,14 @@ struct instr_def
     List user_vars;           /* stores custom particle user variables */
     List user_vars_types;     /* stores custom particle user variable types */
     List metadata;            /* stores all components' literal code blocks */
+    List searches;            /* SEARCH statements (struct search_def), in order */
+  };
+
+/* SEARCH statement */
+struct search_def
+  {
+    char *path;   /* directory, or command for SEARCH SHELL */
+    int shell;    /* 1 for SEARCH SHELL */
   };
 
 struct metadata_struct

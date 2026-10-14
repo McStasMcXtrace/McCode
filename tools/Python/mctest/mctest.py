@@ -12,6 +12,7 @@ import sys
 import re
 import time
 import math
+import statistics
 import pathlib
 import shutil
 import platform
@@ -42,34 +43,116 @@ def paths_overlap(a: pathlib.Path, b: pathlib.Path) -> bool:
 # Functionality
 #
 
-def create_instr_test_objs(sourcefile, localfile, header):
-    ''' returns a list containing one initialized test object pr %Example within the instr file '''
+def split_test_line(line):
+    ''' Splits the parameter part of a %Example/%Scan line into (parvals, ncount).
+    "mcrun"/"mxrun" and "*.instr" tokens are dropped, since the test setup defines those,
+    and a -n/--ncount is taken out of parvals and returned separately (or None). '''
+    toks = line.split()
+    parvals = []
+    ncount = None
+    i = 0
+    while i < len(toks):
+        t = toks[i]
+        m = re.match(r"(-n|--ncount)=?(.*)$", t)
+        if m:
+            ncount = m.group(2)
+            if not ncount and i + 1 < len(toks):
+                i += 1
+                ncount = toks[i]
+        elif t not in ("mcrun", "mxrun") and not t.endswith(".instr"):
+            parvals.append(t)
+        i += 1
+    return " ".join(parvals), ncount
+
+def scan_first_point(parvals):
+    ''' parvals for a single run at the first point of a %Scan, e.g. for mcdisplay:
+    scan options (-N, -L, -M, ...) are dropped and each "par=a,b,..." or "par=a:delta:b"
+    is reduced to "par=a" '''
+    out = []
+    for t in parvals.split():
+        if t.startswith("-") or "=" not in t:
+            continue
+        key, value = t.split("=", 1)
+        numeric = re.fullmatch(r"[0-9.eE+:,-]+", value)
+        out.append(key + "=" + re.split(r"[:,]" if numeric else r"(?<!\\),", value)[0])
+    return " ".join(out)
+
+def combined_err(testerr, targeterr):
+    ''' error bar of testval - targetval. A target recorded without its _ERR is assumed to
+    come from the unscaled ncount, i.e. to have testerr*sqrt(statfactor), giving
+    sqrt(1 + statfactor)*testerr (sqrt(2)*testerr without --statfactor) '''
+    return math.hypot(testerr, targeterr) if targeterr is not None else math.sqrt(1 + statfactor) * testerr
+
+# error bars are only trusted for --nsigma/--pvalue from at least this many effective events,
+# N_eff = (I/ERR)^2 (the number of unweighted events giving the same relative error);
+# a value from a handful of rays falls back to the 20% rule
+NSIGMA_MIN_EVENTS = 100
+
+def nsigma_usable(testval, testerr, targetval, targeterr=None):
+    ''' --nsigma/--pvalue is given and the error bars come from enough events to judge by '''
+    def ok(v, e):
+        return v != 0 and bool(e) and (v / e) ** 2 >= NSIGMA_MIN_EVENTS
+    return nsigma is not None and ok(testval, testerr) and (targeterr is None or ok(targetval, targeterr))
+
+def accepted(testval, testerr, targetval, targeterr=None):
+    ''' testval agrees with targetval: within 20% or, with --nsigma, within nsigma x the combined
+    error bar. A target given with its _ERR is judged by the error bars alone. Error bars from
+    too few events (see NSIGMA_MIN_EVENTS) are not used, the 20% rule applies. '''
+    within20 = abs(round(percent_of(testval, targetval)) - 100) <= 20
+    if not nsigma_usable(testval, testerr, targetval, targeterr):
+        return within20
+    insigma = abs(testval - targetval) <= nsigma * combined_err(testerr, targeterr)
+    return insigma if targeterr is not None else (within20 or insigma)
+
+def percent_of(testval, targetval):
+    ''' testval in percent of targetval, a 0 target counts as 100% only for a 0 testval '''
+    if targetval == 0:
+        return 100 if testval == 0 else 0
+    return 100.0 * testval / targetval
+
+def create_instr_test_objs(sourcefile, localfile, header, noscans=False):
+    ''' returns a list containing one initialized test object pr %Example/%Test and %Scan/%TestScan within the instr file '''
     tests = []
-    ms = re.findall(r"\%Example:([^\n]*)Detector\:([^\n]*)_I=([0-9.+-e]+)", header)
-    if len(ms) > 0:
-        testnb = 1
-        for m in ms:
-            parvals = m[0].strip()
-            detector = m[1].strip()
-            targetval = float(m[2].strip())
-            tests.append(InstrExampleTest(sourcefile, localfile, parvals, detector, targetval, testnb))
-            testnb = testnb + 1
-    else:
+    # the target may be followed by its error bar, as in the simulation's own output:
+    #   Detector: NAME_I=2.00752e+08 NAME_ERR=2.28872e+06 NAME_N=50752 "NAME.L_U1"
+    for m in re.findall(r"\%(?:Example|Test):([^\n]*)Detector\:([^\n]*)_I=([0-9.+-e]+)([^\n]*)", header):
+        parvals, ncount = split_test_line(m[0])
+        detector = m[1].strip()
+        err = re.search(r"%s_ERR=([0-9.+-eE]+)" % re.escape(detector), m[3])
+        tests.append(InstrExampleTest(sourcefile, localfile, parvals, detector, float(m[2].strip()), len(tests) + 1, ncount=ncount,
+                                      targeterr=float(err.group(1)) if err else None))
+    if not noscans:
+        # the target values (and their optional NAME_ERR={...} error bars) are {}-enclosed,
+        # comma-separated lists that may span several header lines
+        for m in re.findall(r"\%(?:Scan|TestScan):([^\n]*)Detector\:([^\n]*)_I=\{([^}]*)\}(?:[\s*]*\S+_ERR=\{([^}]*)\})?", header):
+            parvals, ncount = split_test_line(m[0])
+            targetvals = [float(v) for v in m[2].replace("*", " ").split(",") if v.strip()]
+            targeterrs = [float(v) for v in m[3].replace("*", " ").split(",") if v.strip()] or None
+            if targeterrs and len(targeterrs) != len(targetvals):
+                logging.info("WARNING: %s: %%Scan has %d _I but %d _ERR values, ignoring the _ERR values" % (sourcefile, len(targetvals), len(targeterrs)))
+                targeterrs = None
+            tests.append(InstrExampleTest(sourcefile, localfile, parvals, m[1].strip(), targetvals, len(tests) + 1, scan=True, ncount=ncount,
+                                          targeterr=targeterrs))
+    if not tests:
         tests.append(InstrExampleTest(sourcefile, localfile))
     return tests
 
 class InstrExampleTest:
-    ''' instruent test house keeping object '''
-    def __init__(self, sourcefile, localfile, parvals=None, detector=None, targetval=None, testnb=0):
+    ''' instruent test house keeping object, for a %Scan targetval and testval are lists '''
+    def __init__(self, sourcefile, localfile, parvals=None, detector=None, targetval=None, testnb=0, scan=False, ncount=None, targeterr=None):
         self.sourcefile = sourcefile
         self.localfile = localfile
         self.instrname = splitext(basename(sourcefile))[0]
         self.testnb = testnb
-        
+        self.scan = scan
+        self.ncount = ncount
+
         self.parvals = parvals
         self.detector = detector
         self.targetval = targetval
         self.testval = None
+        self.testerr = None
+        self.targeterr = targeterr
 
         self.linted = None
         self.compiled = None
@@ -87,11 +170,17 @@ class InstrExampleTest:
             "localfile"    : self.localfile,
             "instrname"    : self.instrname,
             "testnb"       : self.testnb,
+            "scan"         : self.scan,
+            "ncount"       : self.ncount,
 
             "parvals"      : self.parvals,
             "detector"     : self.detector,
             "targetval"    : self.targetval,
             "testval"      : self.testval,
+            "testerr"      : self.testerr,
+            "targeterr"    : self.targeterr,
+            "nsigma"       : nsigma,
+            "statfactor"   : statfactor,
 
             "linted"       : self.linted,
             "compiled"     : self.compiled,
@@ -116,10 +205,14 @@ class InstrExampleTest:
             self.localfile=obj['localfile']
             self.instrname=obj['instrname']
             self.testnb=obj['testnb']
+            self.scan=obj.get('scan', False)
+            self.ncount=obj.get('ncount')
             self.parvals=obj['parvals']
             self.detector=obj['detector']
             self.targetval=obj['targetval']
             self.testval=obj['testval']
+            self.testerr=obj.get('testerr')
+            self.targeterr=obj.get('targeterr')
             self.linted=obj['linted']
             self.compiled=obj['compiled']
             self.compiletime=obj['compiletime']
@@ -208,47 +301,69 @@ def extract_testvals(datafolder, monitorname):
                 return (I, I_err, N)
                 break
 
+def extract_scanvals(datafolder, monitorname):
+    '''
+    Extract the list of monitor I values pr. scan point from the mccode.dat that mcrun
+    writes for a scan (in both the McCode and NeXus formats).
+
+    Returns (values, errors), or None if mccode.dat or the monitor column is missing.
+    '''
+    datfile = join(datafolder, "mccode.dat")
+    if not os.path.isfile(datfile):
+        return None
+    column = None
+    vals, errs = [], []
+    for l in open(datfile).read().splitlines():
+        if l.startswith("# variables:"):
+            variables = l.split(":", 1)[1].split()
+            if monitorname + "_I" not in variables or monitorname + "_ERR" not in variables:
+                return None
+            column = variables.index(monitorname + "_I")
+            errcolumn = variables.index(monitorname + "_ERR")
+        elif l.strip() and not l.startswith("#") and column is not None:
+            vals.append(float(l.split()[column]))
+            errs.append(float(l.split()[errcolumn]))
+    return (vals, errs) if column is not None else None
+
 def parse_detector_I_value(resfile_path, detector_name):
     """
-    Return (value_float, success_bool, raw_value_str_or_None).
-    value_float is the parsed float (or -1.0 on failure).
-    success_bool is True when a value was parsed successfully.
-    raw_value_str_or_None is the string extracted (before conversion) or None.
+    (I, ERR) from the simulation's stdout line
+      Detector: NAME_I=2.00752e+08 NAME_ERR=2.28872e+06 NAME_N=50752 "NAME.L_U1"
+    or None if the line is missing or unreadable.
     """
-    prefix = f"Detector: {detector_name}_I="
+    rx = re.compile(r"Detector: %s_I=(\S+) %s_ERR=(\S+)" % (re.escape(detector_name), re.escape(detector_name)))
     try:
         with open(resfile_path, "r", encoding="utf-8", errors="replace") as f:
             for line in f:
-                if line.startswith(prefix):
-                    # extract after first '=' then take up to first whitespace
-                    # matches the shell pipeline: cut -f2 -d= | cut -f1 -d' '
-                    _, _, after_eq = line.partition("=")
-                    raw = after_eq.split()[0] if after_eq else ""
-                    if raw == "":
-                        return -1.0, False, None
-                    try:
-                        return float(raw), True, raw
-                    except ValueError:
-                        return -1.0, False, raw
-        return -1.0, False, None
-    except FileNotFoundError:
-        return -1.0, False, None
-    except OSError:
-        return -1.0, False, None
+                m = rx.match(line)
+                if m:
+                    return float(m.group(1)), float(m.group(2))
+    except (OSError, ValueError):
+        pass
+    return None
 
-def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilter=None, version=None):
-    ''' this main test function tests the given mccode branch/version '''
+def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilter=None, configdir=None):
+    ''' this main test function tests the given mccode installation, optionally with the
+    mccode_config.json in configdir (passed to mcrun --override-config) '''
     skipped=False
     global runLocal
     # copy instr files and record info
     if not runLocal:
-        logging.info("Finding instruments in: %s" % str(pathlib.Path(branchdir,"examples").resolve()))
-        instrs, _ = utils.get_instr_comp_files(str(pathlib.Path(branchdir,"examples").resolve()), recursive=True, instrfilter=instrfilter, withcomp=compfilter)
+        searchdir = str(pathlib.Path(branchdir,"examples").resolve())
+        logging.info("Finding instruments in: %s" % searchdir)
     else:
+        searchdir = str(pathlib.Path(runLocal).resolve())
         logging.info("Adding instruments from subfolders in: %s" % str(pathlib.Path(".").resolve()))
-        instrs, _ = utils.get_instr_comp_files(str(pathlib.Path(runLocal).resolve()), recursive=True, instrfilter=instrfilter, withcomp=compfilter)
+    if instrfilter is not None and compfilter is not None:
+        # --instr and --comp together: union, i.e. instruments matching --instr
+        # plus instruments using any of the --comp components (single-pass test)
+        instrs, _ = utils.get_instr_comp_files(searchdir, recursive=True, instrfilter=instrfilter)
+        users, _ = utils.get_instr_comp_files(searchdir, recursive=True, withcomp=compfilter)
+        instrs = list(set(instrs) | set(users))
+    else:
+        instrs, _ = utils.get_instr_comp_files(searchdir, recursive=True, instrfilter=instrfilter, withcomp=compfilter)
     if compfilter is not None:
-        logging.info("(Instrument list filtered by those using component %s )" % compfilter)
+        logging.info("(Instrument list includes those using component(s) %s )" % compfilter)
     instrs.sort()
 
     # limt runs if required
@@ -274,7 +389,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
         text = open(f, encoding='utf-8').read()
         f_new=str(pathlib.Path(join(instrdir,os.path.basename(f))).as_posix())
         # create a test object for every test defined in the instrument header
-        instrtests = create_instr_test_objs(sourcefile=f, localfile=f_new, header=text)
+        instrtests = create_instr_test_objs(sourcefile=f, localfile=f_new, header=text, noscans=noscans)
         try:
             shutil.copytree(os.path.dirname(f),instrdir)
             tests = tests + instrtests
@@ -311,7 +426,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
     anyfailed=False
 
     # compile, record time
-    global ncount, no_mpi, mpi, openacc, suffix, nexus, lint, permissive, compilemax, displaymax, runmax, seed, strict
+    global ncount, no_mpi, mpi, openacc, suffix, nexus, lint, permissive, compilemax, displaymax, runmax, seed, strict, noplots
     logging.info("")
     if not lint:
         logging.info("Compiling instruments [seconds]...")
@@ -348,8 +463,8 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
                 else:
                     if nexus:
                         cmd = cmd + " --format=NeXus "
-                    if version:
-                        cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
+                    if configdir:
+                        cmd = cmd + " --override-config=" + configdir
                     if openacc:
                         cmd = cmd + " --openacc "
                     mpiswitch = ''
@@ -375,7 +490,8 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
                     # Run mcdisplay (single particle only)
                     t1 = time.time()
                     if test.testnb>0:
-                        cmd = mccode_config.configuration["MCDISPLAY"]+'-classic %s --nobrowse %s %s -n0 -d display > displaylog.txt 2>&1' % (mpiswitch, test.instrname+'.instr', test.parvals)
+                        dispvals = scan_first_point(test.parvals) if test.scan else test.parvals
+                        cmd = mccode_config.configuration["MCDISPLAY"]+'-classic %s --nobrowse %s %s -n0 -d display > displaylog.txt 2>&1' % (mpiswitch, test.instrname+'.instr', dispvals if dispvals else '-y')
                     else:
                         cmd = mccode_config.configuration["MCDISPLAY"]+'-classic %s --nobrowse %s -y -n0 -d display > displaylog.txt 2>&1' % (mpiswitch, test.instrname+'.instr')
                     retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname), timeout=displaymax)
@@ -395,6 +511,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
                         test.linted = True
                     else:
                         num_compilefail = num_compilefail + 1
+                        anyfailed = True
                         formatstr = "%-" + "%ds: COMPILE ERROR using:\n" % maxnamelen
                         logging.info(formatstr % test.instrname + cmd)
                         f = open(compilefailed, "a")
@@ -445,30 +562,50 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
         cmd = mccode_config.configuration["MCRUN"]
 
         suffix=""
+        # An instrument run without any parameters asks for their values
+        # interactively, so for a %Example line without parameters, mcrun is
+        # told to use the default values (-y can not be combined with
+        # parameter values, since the instrument then ignores those):
+        parvals = test.parvals if test.parvals else "-y"
+        # A %Scan uses its own -n if given, else at most 1e5 pr. point, and runs
+        # its points in parallel unless MPI already does that within each point
+        testncount = ncount
+        timeout = runmax
+        if test.scan:
+            testncount = test.ncount or "%g" % min(float(ncount), 1e5)
+            timeout = runmax * len(test.targetval)
+        if statfactor != 1:
+            testncount = "%g" % (float(testncount) * statfactor)
+            timeout = timeout * max(1, statfactor)
+            if mpi is None:
+                parvals = parvals + " --scan_split=auto"
         # Did test run already?
         if not os.path.exists(join(testdir, test.instrname, str(test.testnb))):      
             if nexus:
                 cmd = cmd + " --format=NeXus "
             if mpi is not None:
                 if openacc is True:
-                    if version:
-                        cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
-                    cmd = cmd + " -s %s %s %s -n%s --openacc --mpi=%s -d%d > run_stdout_%d.txt 2>&1" % (seed, test.instrname, test.parvals, ncount, mpi, test.testnb, test.testnb)
+                    if configdir:
+                        cmd = cmd + " --override-config=" + configdir
+                    cmd = cmd + " -s %s %s %s -n%s --openacc --mpi=%s -d%d > run_stdout_%d.txt 2>&1" % (seed, test.instrname, parvals, testncount, mpi, test.testnb, test.testnb)
                 else:
-                    if version:
-                        cmd = cmd + " --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
-                    cmd = cmd + " -s %s %s %s -n%s --mpi=%s -d%d > run_stdout_%d.txt 2>&1" % (seed, test.instrname, test.parvals, ncount, mpi, test.testnb, test.testnb)
+                    if configdir:
+                        cmd = cmd + " --override-config=" + configdir
+                    cmd = cmd + " -s %s %s %s -n%s --mpi=%s -d%d > run_stdout_%d.txt 2>&1" % (seed, test.instrname, parvals, testncount, mpi, test.testnb, test.testnb)
             else:
-                if version:
-                    cmd = cmd + " --no-mpi --override-config=" + join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test",version)
-                cmd = cmd + " --no-mpi -s %s %s %s -n%s -d%d > run_stdout_%d.txt 2>&1" % (seed, test.instrname, test.parvals, ncount, test.testnb, test.testnb)
+                if configdir:
+                    cmd = cmd + " --no-mpi --override-config=" + configdir
+                cmd = cmd + " --no-mpi -s %s %s %s -n%s -d%d > run_stdout_%d.txt 2>&1" % (seed, test.instrname, parvals, testncount, test.testnb, test.testnb)
 
-            retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname),timeout=runmax)
+            retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname),timeout=timeout)
             t2 = time.time()
             didwrite = os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.sim"))
             didwrite_nexus = os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.h5"))
 
-            test.didrun = retcode != 0 or didwrite or didwrite_nexus
+            # retcode is a tuple: (returncode, timed_out)
+            # a scan always writes mccode.dat, but not always a top-level mccode.sim/mccode.h5 (NeXus + --scan_split)
+            didwrite_scan = test.scan and os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.dat"))
+            test.didrun = retcode[0] == 0 and not retcode[1] and (didwrite or didwrite_nexus or didwrite_scan)
             test.runtime = t2 - t1
         else:
             suffix=" (cached)"
@@ -478,16 +615,29 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
         # log to terminal
         if not test.didrun:
             formatstr = "%-" + "%ds: RUNTIME ERROR" % (maxnamelen+1)
-            logging.info(formatstr % instrname + ", " + cmd)
-            runfailed=True
+            logging.info(formatstr % test.get_display_name() + ", " + cmd)
+            num_runfail = num_runfail + 1
+            anyfailed = True
+            runfailed = False
+            suffix = ""
+            test.testcomplete = True
+            if not skipped:
+                test.save(infolder=join(testdir, test.instrname))
             continue
 
         resbase="(No file)"
         # test value extraction
-        if not didwrite_nexus:
+        if test.scan:
+            extraction = extract_scanvals(join(testdir, test.instrname, str(test.testnb)), test.detector)
+            if extraction is None:
+                runfailed=True
+            else:
+                test.testval, test.testerr = extraction
+            resbase ="run_stdout_%d.txt" % (test.testnb)
+        elif not didwrite_nexus:
             extraction = extract_testvals(join(testdir, test.instrname, str(test.testnb)), test.detector)
             if type(extraction) is tuple:
-                test.testval = extraction[0]
+                test.testval, test.testerr = extraction[0], extraction[1]
             else:
                 test.testval = -1
                 runfailed=True
@@ -498,9 +648,9 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
             metalog = LineLogger()
             resbase ="run_stdout_%d.txt" % (test.testnb)
             resfile = join(testdir,test.instrname,resbase)
-            val, ok, raw = parse_detector_I_value(resfile, test.detector)
-            if ok:
-                test.testval = val
+            extraction = parse_detector_I_value(resfile, test.detector)
+            if extraction:
+                test.testval, test.testerr = extraction
             else:
                 test.testval=-1
                 runfailed=True
@@ -513,9 +663,43 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
                 suffix += " + !! RUNTIME FAILURE - see %s !! " % (resbase)
             formatstr = "%-" + "%ds: " % (maxnamelen+1) + \
                 "{:3d}.".format(math.floor(test.runtime)) + str(test.runtime-int(test.runtime)).split('.')[1][:2]
-            if test.targetval!=0: # Normal situation, non-zero target value
+            if nsigma is None:
+                tolerance = "20%"
+            elif not test.scan and not nsigma_usable(test.testval, test.testerr, test.targetval, test.targeterr):
+                tolerance = "20%%, fewer than %d events for sigma" % NSIGMA_MIN_EVENTS
+            elif test.targeterr is not None:
+                tolerance = "%g sigma" % nsigma
+            else:   # no _ERR on the target line: target error assumed = test run's
+                tolerance = "20%% or %g sigma" % nsigma
+            if test.scan:
+                testvals = test.testval or []
+                testerrs = test.testerr or []
+                percents = [round(percent_of(t, r)) for t, r in zip(testvals, test.targetval)]
+                targeterrs = test.targeterr or [None] * len(test.targetval)
+                numoff = len([1 for t, e, r, re_ in zip(testvals, testerrs, test.targetval, targeterrs) if not accepted(t, e, r, re_)])
+                if len(testvals) != len(test.targetval) or numoff > 0:
+                    suffix += " <--- BIG DISCREPANCY??"
+                    num_valfail = num_valfail + 1
+                    anyfailed=True
+                worst = max(percents, key=lambda p: abs(p-100)) if percents else 0
+                if nsigma is not None:
+                    nlow = len([1 for t, e, r, re_ in zip(testvals, testerrs, test.targetval, targeterrs) if not nsigma_usable(t, e, r, re_)])
+                    if nlow:
+                        tolerance += " (%d pts on 20%%, fewer than %d events)" % (nlow, NSIGMA_MIN_EVENTS)
+                logging.info(formatstr % test.get_display_name() + "    [scan: %d/%d points within %s, worst %d %%, %d/%d points run]"
+                             % (len(percents)-numoff, len(test.targetval), tolerance, worst, len(testvals), len(test.targetval)) + suffix)
+            elif nsigma is not None: # --nsigma: |I - target| <= nsigma * combined error bar
+                if not accepted(test.testval, test.testerr, test.targetval, test.targeterr):
+                    suffix += " <--- BIG DISCREPANCY??"
+                    num_valfail = num_valfail + 1
+                    anyfailed=True
+                diff = test.testval - test.targetval
+                err = combined_err(test.testerr, test.targeterr)
+                nsig = diff / err if err else (0.0 if diff == 0 else float('inf'))
+                logging.info(formatstr % test.get_display_name() + "    [val: %s / %s, %.1f sigma (within %s)]" % (test.testval, test.targetval, nsig, tolerance) + suffix)
+            elif test.targetval!=0: # Normal situation, non-zero target value
                 percent=round(100.0*test.testval/test.targetval)
-                if percent<80 or percent>120:
+                if not accepted(test.testval, test.testerr, test.targetval, test.targeterr):
                     suffix += " <--- BIG DISCREPANCY??"
                     num_valfail = num_valfail + 1
                     anyfailed=True
@@ -523,15 +707,17 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
             else:                 # Special case, expected test target value is 0
                 logging.info(formatstr % test.get_display_name() + "    [val: " + str(test.testval) + " vs " + str(test.targetval) + " (absolute vs 0) ]" + suffix)
                         # if output is not h5, launch plotter on the output data
-            if didwrite:
+            if didwrite and not noplots:
                 # PDF overview plot
                 matplotter  = mccode_config.configuration["MCPLOT"].split('-')[0] + "-matplotlib"
                 cmd = matplotter + " %d/ --format=pdf --output %d/01_overview.pdf" %  (test.testnb, test.testnb)
-                plot1 = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname),timeout=runmax)
+                retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname),timeout=runmax)
+                plot1 = retcode[0] == 0 and not retcode[1]
                 # Interactive html plots
                 htmlplotter = mccode_config.configuration["MCPLOT"].split('-')[0] + "-html"
                 cmd = htmlplotter + " %d/ --nobrowse --output %d/02_plots.html" %  (test.testnb, test.testnb)
-                plot2 = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname),timeout=runmax)
+                retcode = utils.run_subtool_noread(cmd, cwd=join(testdir, test.instrname),timeout=runmax)
+                plot2 = retcode[0] == 0 and not retcode[1]
                 if plot1 and plot2:
                     logging.info(" - Test %d plots generated OK" % test.testnb)
                 elif plot1:
@@ -539,7 +725,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
                 elif plot2:
                     logging.info(" - Test %d HTML plot OK, Overview plot Failure!" % test.testnb)
                 else:
-                    logging.info(" - Generating plots Failed!" % test.testnb)
+                    logging.info(" - Test %d plots generation Failed!" % test.testnb)
         else:
             logging.info((formatstr % test.get_display_name()) + (" !! [TEST INDICATES RUNTIME ERROR - see %s  + suffix ] !!" % (resbase)))
         suffix=""
@@ -591,11 +777,11 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
 # Utility
 #
 
-def activate_mccode_version(version, mccoderoot):
+def activate_mccode_version(mccoderoot):
     '''
     Modify environment, returns path as it was.
     
-    branchdir: mccode version install directory
+    mccoderoot: mccode install directory
     '''
     branchdir = mccoderoot
     os.environ["MCSTAS"] = branchdir
@@ -675,103 +861,84 @@ def run_default_test(testdir, mccoderoot, limit, instrfilter, compfilter, suffix
     else:
         print("SUCCESS")
 
-def run_version_test(testdir, mccoderoot, limit, instrfilter, compfilter, version, suffix):
-    ''' as run_default_test, but activates/deactivates and ses a specific mccode version if it exists '''
-
-    # verify that version exists
-    if not os.path.isfile(os.path.join(mccoderoot, version, "environment")):
-        print("mccode version %s could not be found, exiting..." % version)
-        quit(1)
-
-    # create single-run test directory
-    labeldir = create_label_dir(testdir, version + suffix)
-
-    oldpath = activate_mccode_version(version, mccoderoot)
-    try:
-        logging.info("Testing: %s" % version)
-        logging.info("")
-
-        results, failed, num_compilefail, num_runfail, num_valfail = mccode_test(mccoderoot, labeldir, limit, instrfilter, compfilter, version)
-    finally:
-        deactivate_mccode_version(oldpath)
-
-    reportfile = os.path.join(labeldir, "testresults_%s.json" % (version+suffix))
-    open(os.path.join(reportfile), "w").write(json.dumps(results, indent=2))
-
-    logging.debug("")
-    logging.debug("Test results written to: %s" % reportfile)
-
-
 def run_config_test(testdir, mccoderoot, limit, configfilter, instrfilter, compfilter, suffix):
     '''
-    Test a suite of configs, each a mccode_config_LABEL.py file, that is copied to the dist dir
-    prior to starting the test. This action modifies the C-flags and the compiler used during
-    the test. The original mccode_config.py file is restored after each test.
+    Test a suite of configs, each a directory holding a mccode_config.json file. Every
+    selected config is tested in turn by passing its directory to mcrun via
+    --override-config, so the compiler, C-flags, MPI setup etc. of that config are used.
     '''
 
-    def activate_config(version, mccoderoot, configfile):
-        ''' activate a confige given by configfile, returns bckfile for use with deactivate_config '''
-        libdir = join(mccoderoot, version, "tools", "Python", "mccodelib")
-        os.rename(join(libdir, "mccode_config.py"), join(libdir, "mccode_config.py_BAK"))
-        open(join(libdir, "mccode_config.py"), "w").write(open(configfile).read())
-        return join(libdir, "mccode_config.py_BAK")
-    
-    def deactivate_config(bckfile):
-        ''' use to restore changes made by activate_config '''
-        restoreto = join(os.path.dirname(bckfile), "mccode_config.py")
-        os.rename(bckfile, restoreto)
-    
     def extract_config_mccode_version(configfile):
-        for l in open(configfile).read().splitlines():
-            m = re.match(r"\s*\"MCCODE_VERSION\": (.+),", l)
-            if m:
-                return m.group(1).strip("\""), os.path.basename(os.path.dirname(configfile))
-    
-    def get_config_files(configfltr):
-        ''' look in "__file__/../mccodelib/MCCODE-test" location or config files'''
-        lookin = join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test")
-        print("getting config files...")
-        print(configfltr + " vs " + os.path.join(lookin,configfltr,'mccode_config.json'))
-        if configfltr is not None and os.path.isfile(os.path.join(lookin,configfltr,'mccode_config.json')):
-            print("returning " + os.path.join(lookin,configfltr,'mccode_config.json'))
-            return [ os.path.join(lookin,configfltr,'mccode_config.json') ]
-        for (_, _, files) in os.walk(lookin):
-            print("Looking")
-            if configfltr is not None:
-                return [join(lookin, f) for f in files if re.search(r"^%s/mccode_config.json$" % configfltr, f)]
-            else:
-                return [join(lookin, f) for f in files if re.search(r"^mccode_config.json$", f)]
+        ''' (MCCODE_VERSION, label) of a mccode_config.json, or None '''
+        label = os.path.basename(os.path.dirname(configfile))
+        text = open(configfile, encoding='utf-8').read()
+        try:
+            version = json.loads(text).get("configuration", {}).get("MCCODE_VERSION")
+        except ValueError:
+            m = re.search(r'"MCCODE_VERSION"\s*:\s*"([^"]*)"', text)
+            version = m.group(1) if m else None
+        return (version, label) if version else None
 
-    # get test directory datetime string
-    datetime = utils.get_datetimestr()
+    def get_config_files(configfltr):
+        ''' mccode_config.json files to test: configfltr is an absolute path (to a config
+        directory or its mccode_config.json), a label (subdirectory of the MCCODE-test
+        folder next to this script) or a regex matched against those label names '''
+        lookin = join(os.path.dirname(__file__), mccode_config.configuration["MCCODE"] + "-test")
+        for cand in (configfltr, join(configfltr, 'mccode_config.json'), join(lookin, configfltr, 'mccode_config.json')):
+            if os.path.isabs(cand) and os.path.basename(cand) == 'mccode_config.json' and os.path.isfile(cand):
+                return [cand]
+        found = []
+        for (dirpath, _, files) in os.walk(lookin):
+            if 'mccode_config.json' in files and re.search(configfltr, os.path.basename(dirpath)):
+                found.append(join(dirpath, 'mccode_config.json'))
+        return sorted(found)
+
+    configfiles = get_config_files(configfilter)
+    if not configfiles:
+        logging.info("No mccode_config.json found for --config=%s" % configfilter)
+        quit(1)
 
     # test labels loop
-    for f in get_config_files(configfilter):
-        [version,label] = extract_config_mccode_version(f)
+    anyfailed = False
+    for f in configfiles:
+        found = extract_config_mccode_version(f)
+        if not found:
+            logging.info("No MCCODE_VERSION in %s, skipping" % f)
+            anyfailed = True
+            continue
+        [version,label] = found
 
-        oldpath = activate_mccode_version(version, mccoderoot)
+        oldpath = activate_mccode_version(mccoderoot)
         try:
-            #bckfile = activate_config(version, mccoderoot, f)
-            try:
-                logging.info("")
-                label0=label
-                label=label+suffix+"_"+ncount
-                logging.info("Testing label: %s" % label)
+            logging.info("")
+            configdir = os.path.dirname(f)   # passed on to mcrun --override-config
+            label = label + suffix           # suffix already ends in _<ncount>_<platform>_<uid>
+            logging.info("Testing label: %s" % label)
 
-                # craete the proper test dir
-                labeldir = create_label_dir(testdir, label)
-                results, failed, num_compilefail, num_runfail, num_valfail, num_noexample= mccode_test(mccoderoot, labeldir, limit, instrfilter, compfilter, label0)
+            # create the proper test dir
+            labeldir = create_label_dir(testdir, label)
+            results, failed, num_compilefail, num_runfail, num_valfail, num_noexample = mccode_test(mccoderoot, labeldir, limit, instrfilter, compfilter, configdir)
 
-                # write local test result
-                reportfile = os.path.join(labeldir, "testresults_%s.json" % (os.path.basename(labeldir)))
-                open(os.path.join(reportfile), "w").write(json.dumps(results, indent=2))
-            
-                logging.debug("")
-                logging.debug("Test results written to: %s" % reportfile)
-            finally:
-                pass
+            # write local test result
+            reportfile = os.path.join(labeldir, "testresults_%s.json" % (os.path.basename(labeldir)))
+            open(os.path.join(reportfile), "w").write(json.dumps(results, indent=2))
+
+            logging.debug("")
+            logging.debug("Test results written to: %s" % reportfile)
+            counts = "%d compile errs / %d runtime errs / %d values off" % (num_compilefail, num_runfail, num_valfail)
+            if strict:
+                counts = counts + " / %d missing %%Example(s)" % num_noexample
+            print("%s: %s (%s)" % (label, "FAILED" if failed else "SUCCESS", counts))
+            anyfailed = anyfailed or failed
         finally:
             deactivate_mccode_version(oldpath)
+
+    print("======================================")
+    print("Overall test result:")
+    if anyfailed and not permissive:
+        print("FAILED! One or more configs errored")
+        exit(-1)
+    print("Failures reported but tool was run in permissive mode" if anyfailed else "SUCCESS")
 
 
 
@@ -786,11 +953,13 @@ runLocal = None
 runmax = None
 compilemax = None
 displaymax = None
+noplots = None
+noscans = None
+nsigma = None
+statfactor = 1
 
 def main(args):
-    # mutually excusive main branches
-    default = None                  # test system mccode version as-is
-    configfilter = args.config      # test only config matching this label
+    configfilter = args.config      # test only config matching this label (default: as installed)
 
     # modifying options
     verbose = args.verbose          # display more info during runs
@@ -845,7 +1014,7 @@ def main(args):
             quit(1)
     logging.debug("")
 
-    global ncount, no_mpi, mpi, skipnontest, openacc, nexus, lint, permissive, runLocal, compilemax, displaymax, runmax, seed, strict
+    global ncount, no_mpi, mpi, skipnontest, openacc, nexus, lint, permissive, runLocal, compilemax, displaymax, runmax, seed, strict, noplots, noscans, nsigma, statfactor
     ncount = "1e6"
     no_mpi = False
     if args.ncount:
@@ -891,7 +1060,10 @@ def main(args):
 
     if compfilter:
         compfilter=str(compfilter[0])
-        suffix = suffix + '_' + compfilter
+        suffix = suffix + '_' + compfilter.replace(',', '_')
+
+    # filters may be regexes: keep the label directory name filesystem-safe
+    suffix = re.sub(r'[^\w.+-]', '_', suffix)
 
     if args.suffix:
         if (len(suffix)<30):
@@ -904,6 +1076,13 @@ def main(args):
     else:
         uid = "_" + args.uid[0]
 
+    if args.statfactor is not None:
+        if args.statfactor <= 0:
+            logging.error("ERROR: --statfactor must be positive!")
+            exit(-1)
+        statfactor = args.statfactor
+        suffix = suffix + "_statfactor%g" % statfactor
+        logging.info("Statistics of every test scaled by %g" % statfactor)
     suffix=suffix + "_" + ncount + "_" + platform.system() + uid
     if runLocal:
         suffix = suffix + '_LOCAL'
@@ -939,7 +1118,7 @@ def main(args):
     if args.compilemax:
         compilemax=int(args.compilemax[0])
     else:
-        compilemax=600
+        compilemax=1800
     if lint:
         compilemax=100*compilemax
     if args.displaymax:
@@ -960,10 +1139,28 @@ def main(args):
         strict = True
         logging.info("Strict mode, tool will report failure for instruments without %Example")
 
+    noplots = args.noplots
+    noscans = args.noscans
+    if args.nsigma is not None and args.pvalue is not None:
+        logging.error("ERROR: --nsigma and --pvalue are two ways to give the same threshold, use one of them!")
+        exit(-1)
+    if args.pvalue is not None:
+        # two-sided Gaussian: p = 2*(1 - Phi(nsigma))
+        nsigma = statistics.NormalDist().inv_cdf(1 - args.pvalue / 2)
+        logging.info("--pvalue %g corresponds to --nsigma %.3g" % (args.pvalue, nsigma))
+    elif args.nsigma is not None:
+        nsigma = args.nsigma
+    if nsigma is not None:
+        logging.info("Test values accepted within %.3g x the combined error bar (from >= %d events)" % (nsigma, NSIGMA_MIN_EVENTS))
+    if noscans:
+        logging.info("%Scan tests are skipped")
+    if noplots:
+        logging.info("No plots of the test output will be generated")
+
     if not configfilter:
         run_default_test(testdir, mccoderoot, limit, instrfilter, compfilter, suffix)
     else:
-        run_config_test(testdir, mccoderoot, limit, configfilter, compfilter, instrfilter, suffix)
+        run_config_test(testdir, mccoderoot, limit, configfilter, instrfilter, compfilter, suffix)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
@@ -974,9 +1171,9 @@ if __name__ == '__main__':
     parser.add_argument('--mpi', nargs=1, help='mpi nodecount sent to %s' % (mccode_config.configuration["MCRUN"]) )
     parser.add_argument('--no-mpi', action='store_true', help='MPI compilation disabled via %s --no-mpi' % (mccode_config.configuration["MCRUN"]) )
     parser.add_argument('--openacc', action='store_true', help='openacc flag sent to %s' % (mccode_config.configuration["MCRUN"]))
-    parser.add_argument('--config', nargs="?", help='test this specific config only - label name or absolute path')
-    parser.add_argument('--instr', nargs="?", help='test only intruments matching this filter (py regex). Comma-separated list allowed for multiple filters.')
-    parser.add_argument('--comp', nargs=1, help='test only intruments utilising COMP. Useful for testing the instrument suite after component changes.')
+    parser.add_argument('--config', nargs="?", help='test this specific config only - label name (regex) or absolute path')
+    parser.add_argument('--instr', nargs="?", help='test only intruments matching this filter (py regex). Comma-separated list allowed for multiple filters. Combined with --comp, instruments matching either are tested.')
+    parser.add_argument('--comp', nargs=1, help='test only intruments utilising COMP (whole-word match). Comma-separated list allowed. Useful for testing the instrument suite after component changes.')
     parser.add_argument('--mccoderoot', nargs='?', help='manually select root search folder for mccode installations')
     parser.add_argument('--testdir', nargs='?', help='output test results directly in this dir (default CWD). Used testdir and --local path can not overlap!')
     parser.add_argument('--limit', nargs=1, help='test only the first [LIMIT] instrs')
@@ -986,11 +1183,16 @@ if __name__ == '__main__':
     parser.add_argument('--uid', nargs=1, help='Unique identifier for suffix, e.g. CI worker id (if unset a timestamp is used)')
     parser.add_argument('--nexus', action='store_true', help='Compile for / use NeXus output format everywhere')
     parser.add_argument('--lint', action='store_true', help='Just run the c-linter')
-    parser.add_argument('--compilemax', nargs=1, help='Maximum time (s) allowed pr. compilation (default 600s)(if run with --lint muliplied x100)')
+    parser.add_argument('--compilemax', nargs=1, help='Maximum time (s) allowed pr. compilation (default 1800s)(if run with --lint muliplied x100)')
     parser.add_argument('--runmax', nargs=1, help='Maximum time (s) allowed pr. test Example run (default 3600s)')
     parser.add_argument('--displaymax', nargs=1, help='Maximum time allowed pr. test Example DISPLAY run (default 60s)')
     parser.add_argument('--permissive', action='store_true', help='Use zero return-value even if some tests fail. Useful for full test con systems that are only partially functional. Can not be combined with --strict.')
     parser.add_argument('--strict', action='store_true', help='Let instruments without %%Example line(s) instantly fail. Can not be combined with --permissive.')
+    parser.add_argument('--noplots', action='store_true', help='Do not generate plots (01_overview.pdf and 02_plots.html) of the test output. Useful e.g. in CI, where the plots are not looked at, and can take long for instruments with many monitors.')
+    parser.add_argument('--nsigma', type=float, help='Accept a test value (each point for %%Scan tests) within NSIGMA x the combined error bar sqrt(ERR_test^2 + ERR_target^2), if the target line gives NAME_ERR. Targets without NAME_ERR are assumed to have the test run\'s ERR, and are also accepted within 20%%. Error bars from fewer than 100 effective events, (I/ERR)^2, are not used: the 20%% rule applies.')
+    parser.add_argument('--statfactor', type=float, help='Scale the ncount of every test (and pr. scan point) by this factor, e.g. 0.01 for quick runs or 100 for reference-quality ones. With --nsigma/--pvalue a target without NAME_ERR is assumed to come from the unscaled ncount, i.e. the combined error bar is sqrt(1 + STATFACTOR) x ERR_test.')
+    parser.add_argument('--pvalue', type=float, help='As --nsigma, but given as a two-sided Gaussian p-value, e.g. --pvalue 0.0027 for --nsigma 3, or 5.7e-7 for 5')
+    parser.add_argument('--noscans', action='store_true', help='Skip the %%Scan tests, only run the %%Example tests.')
     parser.add_argument('--local', help='Instruments to test are NOT picked up from MCCODE installation, instead from --local=DIR. Local path and --testdir can not overlap!')
     args = parser.parse_args()
 

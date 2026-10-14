@@ -203,6 +203,24 @@ def resolve_simfile(path):
     return simfile, simdir
 
 
+def monitor_basename(data):
+    """ Unique per-monitor file name: the monitor's own output file (e.g.
+        'PSD.dat'), or for a scan curve - which all share filename
+        'mccode.dat' - the per-curve name the loader gives it (e.g.
+        'detector_I'), which is also what mcplot-html names its pages by. """
+    return os.path.basename(data.filepath) if data.filepath else data.filename
+
+
+def _dat_name(data, prefix):
+    name = prefix + monitor_basename(data)
+    return name if os.path.splitext(name)[1] else name + '.dat'
+
+
+def _total(data):
+    """ Total intensity; scan curves carry no 'values' triplet, so sum the curve """
+    return data.values[0] if data.values else float(np.sum(data.yvals))
+
+
 def load_monitors(path):
     """ Loads a simulation (folder or single monitor file) and returns
         (monitors, directory), where monitors is a dict mapping a monitor
@@ -227,7 +245,7 @@ def load_monitors(path):
         if not isinstance(data, (Data1D, Data2D)):
             # skip 0D / event-list / unknown monitors: nothing sensible to subtract
             continue
-        key = data.filename if data.filename else data.component
+        key = monitor_basename(data) or data.component
         if key in monitors:
             # extremely unlikely (duplicate filenames), disambiguate by component
             key = '%s__%s' % (key, data.component)
@@ -301,7 +319,7 @@ def diff_1d(key, a, b, label_a, label_b):
         N = 0
     d.values = (I, Ierr, N)
     d.statistics = '%s: %s\n%s: %s' % (label_a, a.statistics, label_b, b.statistics)
-    pct_str = _pct_diff_str(a.values[0], b.values[0])
+    pct_str = _pct_diff_str(_total(a), _total(b))
     d.diff_pct_str = pct_str
     d.title = ' - Diff (A - B), with:\n \nA=%s\nB=%s\nDiff: %s\n \n%s' % (label_a, label_b, pct_str, a.title)
 
@@ -536,8 +554,7 @@ def _common_header_lines(data):
 
 
 def _write_1d_dat(data, outdir, prefix):
-    filename = prefix + data.filename
-    filepath = os.path.join(outdir, filename)
+    filepath = os.path.join(outdir, _dat_name(data, prefix))
 
     lines = _common_header_lines(data)
     # Required: mcplotloader.py's _load_monitor() reads this line to decide
@@ -548,9 +565,13 @@ def _write_1d_dat(data, outdir, prefix):
     lines.append('# xlabel: %s' % _sanitize(data.xlabel))
     lines.append('# ylabel: %s' % _sanitize(data.ylabel))
     lines.append('# xvar: %s' % _sanitize(data.xvar))
-    lines.append('# yvar: (%s,%s)' % (data.yvar[0], data.yvar[1]))
+    yvar = data.yvar
+    if isinstance(yvar, str):
+        # scan curve: single 'detector_I' name rather than an (I, ERR) pair
+        yvar = (yvar, re.sub(r'_I$', '', yvar) + '_ERR')
+    lines.append('# yvar: (%s,%s)' % (yvar[0], yvar[1]))
     lines.append('# xlimits: %s %s' % (_fmt(data.xlimits[0]), _fmt(data.xlimits[1])))
-    lines.append('# variables: %s %s %s N' % (data.xvar, data.yvar[0], data.yvar[1]))
+    lines.append('# variables: %s %s %s N' % (data.xvar, yvar[0], yvar[1]))
     lines.append('# values: %s %s %s' % (_fmt(data.values[0]), _fmt(data.values[1]), _fmt(data.values[2])))
     # The standard "# statistics: X0=...; dX=...;" field is a
     # weighted centroid/width, which assumes a non-negative intensity
@@ -565,15 +586,15 @@ def _write_1d_dat(data, outdir, prefix):
 
     with open(filepath, 'w') as f:
         f.write('\n'.join(lines) + '\n')
-        for x, y, yerr, n in zip(data.xvals, data.yvals, data.y_err_vals, data.Nvals):
+        Nvals = data.Nvals or [0] * len(data.xvals)  # scan curves have no N column
+        for x, y, yerr, n in zip(data.xvals, data.yvals, data.y_err_vals, Nvals):
             f.write('%s %s %s %s\n' % (_fmt(x), _fmt(y), _fmt(yerr), _fmt(n)))
 
     return filepath
 
 
 def _write_2d_dat(data, outdir, prefix):
-    filename = prefix + data.filename
-    filepath = os.path.join(outdir, filename)
+    filepath = os.path.join(outdir, _dat_name(data, prefix))
 
     lines = _common_header_lines(data)
     zshape = np.shape(data.zvals) if data.zvals else (0, 0)
@@ -715,7 +736,7 @@ def write_mccode_sim(diffs, outdir, label_a=None, label_b=None, instrument='diff
         # This is the one line mcplotloader.py's _get_filenames_from_mccodesim()
         # actually looks for - it must match the real file written by
         # write_mccode_dat()/write_all_mccode_dat() with the same prefix.
-        lines.append('  filename: %s' % (prefix + data.filename))
+        lines.append('  filename: %s' % _dat_name(data, prefix))
         lines.append('end data')
         lines.append('')
 

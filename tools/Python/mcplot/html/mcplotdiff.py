@@ -36,7 +36,7 @@ from mccodelib import mccode_config
 from mccodelib import mcplotdiffloader as diffloader
 from mccodelib.mcplotdiffloader import (
     path_base_name, default_labels, dirsafe_name, load_monitors, compute_diffs, find_original_plot,
-    write_mccode_dat, write_mccode_sim,
+    write_mccode_dat, write_mccode_sim, monitor_basename,
 )
 
 global WIDTH, HEIGHT
@@ -280,7 +280,7 @@ def plot_diff_single(data, outdir, use_logscale, dat_basename=None):
     global logscale
     logscale = use_logscale
 
-    basename = 'diff_' + path_base_name(data.filename)
+    basename = 'diff_' + path_base_name(monitor_basename(data))
     fname = basename + ('_log.html' if use_logscale else '.html')
     f = os.path.join(outdir, fname)
 
@@ -522,8 +522,8 @@ def main(args):
 
         # locate any pre-existing mcplot-html plots for this monitor, so
         # we can link to the original a/b data alongside the diff plot
-        a_lin, a_log = find_original_plot(dir_a, data.filename)
-        b_lin, b_log = find_original_plot(dir_b, data.filename)
+        a_lin, a_log = find_original_plot(dir_a, monitor_basename(data))
+        b_lin, b_log = find_original_plot(dir_b, monitor_basename(data))
         if not (a_lin or a_log):
             print("Note: no existing mcplot-html output found for '%s' in '%s'" % (data.filename, args.a))
         if not (b_lin or b_log):

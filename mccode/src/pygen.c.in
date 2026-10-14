@@ -28,7 +28,15 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
 #include "mccode.h"
+#if defined(WIN32) || defined(_WIN32)
+#include <direct.h>
+#define getcwd _getcwd
+#else
+#include <unistd.h>
+#endif
 
 #define GENERATE_PY 1
 
@@ -92,30 +100,6 @@ int get_codeblock_vars_allcustom(struct code_block *code, List custom_vars,
 
 int get_codeblock_vars(struct code_block *code, List vars, List types,
          char* block_name, char* movetoblock_name);
-
-int parse_curlybrackets_vector(char* string, double* values) {
-  char* s = string;
-  int vidx = 0;
-  char* r;
-  while(*s != '\0') {
-    // jump to a non-trivial position
-    if (*s == ' ' || *s == ',' || *s == '{') {
-      ++s;
-      continue;
-    }
-    if (*s == '}') return vidx;
-
-    // extract a value
-    double val = strtod(s, &r);
-    if (values!=NULL) values[vidx] = val;
-    ++vidx;
-
-    // iterate
-    if (*r == '\0') return vidx;
-    s = r + 1;
-  }
-  return vidx;
-}
 
 /* Functions for outputting code. */
 
@@ -306,6 +290,35 @@ int var_in_list(List lst, struct comp_iformal* var) {
 }
 
 
+/* Single-quoted Python string literal for s (to be freed with memfree). */
+static char *
+pygen_pystr(char *s)
+{
+  char *res = mem(2*strlen(s) + 3);
+  char *p = res;
+  *p++ = '\'';
+  for (; *s; ++s) {
+    if (*s == '\\' || *s == '\'')
+      *p++ = '\\';
+    *p++ = *s;
+  }
+  *p++ = '\'';
+  *p = '\0';
+  return res;
+}
+
+/* Single-quoted Python string literal holding the text of the expression e,
+   e.g. for parameter values and AT/WHEN/JUMP expressions, which can contain
+   quotes (to be freed with memfree). */
+static char *
+pygen_pyexp(CExp e)
+{
+  char *text = exp_tostring(e);
+  char *res = pygen_pystr(text);
+  memfree(text);
+  return res;
+}
+
 /*******************************************************************************
 * cogen_decls: write the declaration part from the instrument description
 *   that is the particle definition, the instrument parameters, the DECLARE part,
@@ -366,15 +379,28 @@ int cogen_decls(struct instr_def *instr)
 	  pyid=i_formal->id;
 	}
 
+	/* The value= argument, for the default value (none for parameters
+	   without a default value): */
+	char *value;
+	if (!i_formal->isoptional || !i_formal->default_value) {
+	  value = str_dup("");
+	} else if (i_formal->type == instr_type_string) {
+	  char *q = pygen_pyexp(i_formal->default_value);
+	  value = str_cat(", value=", q, NULL);
+	  memfree(q);
+	} else {
+	  value = str_cat(", value=", exp_tostring(i_formal->default_value), NULL);
+	}
+
 	if (i_formal->type == instr_type_string) {
 	  type="string";
-	  coutf("    %s = instr.add_parameter('%s', '%s', value='%s', comment='Parameter type (string) added by McCode py-generator')", pyid, type, i_formal->id, exp_tostring(i_formal->default_value));
+	  coutf("    %s = instr.add_parameter('%s', '%s'%s, comment='Parameter type (string) added by McCode py-generator')", pyid, type, i_formal->id, value);
 	} else if (i_formal->type == instr_type_int) {
 	  type="int";
-	  coutf("    %s = instr.add_parameter('%s', '%s', value=%s, comment='Parameter type (int) added by McCode py-generator')", pyid, type, i_formal->id, exp_tostring(i_formal->default_value));
+	  coutf("    %s = instr.add_parameter('%s', '%s'%s, comment='Parameter type (int) added by McCode py-generator')", pyid, type, i_formal->id, value);
 	} else if (i_formal->type == instr_type_double) {
 	  type="double";
-	  coutf("    %s = instr.add_parameter('%s', '%s', value=%s, comment='Parameter type (double) added by McCode py-generator')", pyid, type, i_formal->id, exp_tostring(i_formal->default_value));
+	  coutf("    %s = instr.add_parameter('%s', '%s'%s, comment='Parameter type (double) added by McCode py-generator')", pyid, type, i_formal->id, value);
 	} else {
 	  type="";
 	  fprintf(stderr,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
@@ -382,8 +408,9 @@ int cogen_decls(struct instr_def *instr)
 	  fprintf(stderr,"!!! an undefined type (i.e. not string, int or double).         !!!\n");
 	  fprintf(stderr,"!!! Compilation will likely fail...                             !!!\n");
 	  fprintf(stderr,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-	  coutf("    %s = instr.add_parameter('%s', '%s', value=%s, comment='Parameter of undefined type added by McCode py-generator')", pyid, type, i_formal->id, exp_tostring(i_formal->default_value));
+	  coutf("    %s = instr.add_parameter('%s', '%s'%s, comment='Parameter of undefined type added by McCode py-generator')", pyid, type, i_formal->id, value);
 	}
+	memfree(value);
 
         numipar++;
       }
@@ -487,6 +514,7 @@ int cogen_raytrace(struct instr_def *instr)
   while((comp = list_next(liter)) != NULL) {
     
     char *x, *y, *z, *rx, *ry, *rz;
+    char *qx, *qy, *qz, *qrx, *qry, *qrz; /* the same, as Python string literals */
     char *poslabel, *rotlabel;
     struct comp_inst *relposcomp = comp->pos->place_rel;  /* Component relative to. */
     struct comp_inst *relrotcomp = comp->pos->orientation_rel;  /* Component relative to. */
@@ -507,42 +535,49 @@ int cogen_raytrace(struct instr_def *instr)
     rx = exp_tostring(comp->pos->orientation.x);
     ry = exp_tostring(comp->pos->orientation.y);
     rz = exp_tostring(comp->pos->orientation.z);
+    qx = pygen_pystr(x); qy = pygen_pystr(y); qz = pygen_pystr(z);
+    qrx = pygen_pystr(rx); qry = pygen_pystr(ry); qrz = pygen_pystr(rz);
     
     coutf("    # Comp instance %s, placement and parameters", comp->name);
     /* Case 1, both AT and ROTATED in absolute coordinates */
     if (!strcmp(poslabel, "ABSOLUTE") && !strcmp(rotlabel, "ABSOLUTE")) {
       if (strcmp(rx,"0.0") || strcmp(ry,"0.0") || strcmp(rz,"0.0")) {
-	coutf("    %s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], ROTATED=['%s', '%s', '%s'])",
-	      comp->name, comp->name, comp->def->name, x, y, z, rx, ry, rz);
+	coutf("    %s = instr.add_component('%s','%s', AT=[%s, %s, %s], ROTATED=[%s, %s, %s])",
+	      comp->name, comp->name, comp->def->name, qx, qy, qz, qrx, qry, qrz);
       } else if (strcmp(x,"0") || strcmp(y,"0") || strcmp(z,"0")) {
-	coutf("    %s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'])", comp->name, comp->name, comp->def->name, x, y, z);
+	coutf("    %s = instr.add_component('%s','%s', AT=[%s, %s, %s])", comp->name, comp->name, comp->def->name, qx, qy, qz);
       } else {
 	coutf("    %s = instr.add_component('%s','%s')", comp->name, comp->name, comp->def->name);
       }
     } else if (!strcmp(poslabel, "ABSOLUTE")) {
       if (strcmp(rx,"0.0") || strcmp(ry,"0.0") || strcmp(rz,"0.0")) {
-	coutf("    %s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], ROTATED=['%s', '%s', '%s'], ROTATED_RELATIVE='%s')",
-	      comp->name, comp->name, comp->def->name, x, y, z, rx, ry, rz, rotlabel);
+	coutf("    %s = instr.add_component('%s','%s', AT=[%s, %s, %s], ROTATED=[%s, %s, %s], ROTATED_RELATIVE='%s')",
+	      comp->name, comp->name, comp->def->name, qx, qy, qz, qrx, qry, qrz, rotlabel);
       } else if (strcmp(x,"0") || strcmp(y,"0") || strcmp(z,"0")) {
-	coutf("    %s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'])", comp->name, comp->name, comp->def->name, x, y, z);
+	coutf("    %s = instr.add_component('%s','%s', AT=[%s, %s, %s])", comp->name, comp->name, comp->def->name, qx, qy, qz);
       } else {
 	coutf("    %s = instr.add_component('%s','%s')", comp->name, comp->name, comp->def->name);
       }
     } else if (!strcmp(rotlabel, "ABSOLUTE")) {
       if (strcmp(rx,"0.0") || strcmp(ry,"0.0") || strcmp(rz,"0.0")) {
-	coutf("    %s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], AT_RELATIVE='%s', ROTATED=['%s', '%s', '%s'])",
-	      comp->name, comp->name, comp->def->name, x, y, z, poslabel, rx, ry, rz);
+	coutf("    %s = instr.add_component('%s','%s', AT=[%s, %s, %s], AT_RELATIVE='%s', ROTATED=[%s, %s, %s])",
+	      comp->name, comp->name, comp->def->name, qx, qy, qz, poslabel, qrx, qry, qrz);
       } else {
-	coutf("    %s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], AT_RELATIVE='%s',)", comp->name, comp->name, comp->def->name, x, y, z, poslabel);
+	coutf("    %s = instr.add_component('%s','%s', AT=[%s, %s, %s], AT_RELATIVE='%s',)", comp->name, comp->name, comp->def->name, qx, qy, qz, poslabel);
       }
     } else {
-      coutf("    %s = instr.add_component('%s','%s', AT=['%s', '%s', '%s'], AT_RELATIVE='%s', ROTATED=['%s', '%s', '%s'], ROTATED_RELATIVE='%s')",
-	    comp->name, comp->name, comp->def->name, x, y, z, poslabel, rx, ry, rz, rotlabel);
+      coutf("    %s = instr.add_component('%s','%s', AT=[%s, %s, %s], AT_RELATIVE='%s', ROTATED=[%s, %s, %s], ROTATED_RELATIVE='%s')",
+	    comp->name, comp->name, comp->def->name, qx, qy, qz, poslabel, qrx, qry, qrz, rotlabel);
     }
+    
+    memfree(qx); memfree(qy); memfree(qz);
+    memfree(qrx); memfree(qry); memfree(qrz);
     
     if (comp->split) {
       coutf("    # SPLIT %s times at %s", exp_tostring(comp->split) ,comp->name);
-      coutf("    %s.set_SPLIT('%s')",comp->name, exp_tostring(comp->split));
+      char *q = pygen_pyexp(comp->split);
+      coutf("    %s.set_SPLIT(%s)",comp->name, q);
+      memfree(q);
     }
 
     if (list_len(comp->jump) > 0) {
@@ -551,19 +586,21 @@ int cogen_raytrace(struct instr_def *instr)
       struct jump_struct *this_jump;
       List_handle literJ = list_iterate(comp->jump);
       while((this_jump = list_next(literJ))) {
-        char *exp = exp_tostring(this_jump->condition);
-	if(this_jump->iterate) {
-	  coutf("    %s.set_JUMP('%s ITERATE %s')",comp->name,this_jump->target,exp);
-	} else {
-	  coutf("    %s.set_JUMP('%s WHEN %s')",comp->name,this_jump->target,exp);
-	}
+        char *jump = str_cat(this_jump->target, this_jump->iterate ? " ITERATE " : " WHEN ",
+                             exp_tostring(this_jump->condition), NULL);
+        char *q = pygen_pystr(jump);
+        coutf("    %s.set_JUMP(%s)",comp->name,q);
+        memfree(q);
+        memfree(jump);
       }
       list_iterate_end(literJ);
     }
 
     if (comp->when) {
       coutf("    # WHEN %s at %s", exp_tostring(comp->when) ,comp->name);
-      coutf("    %s.set_WHEN('%s')",comp->name, exp_tostring(comp->when));
+      char *q = pygen_pyexp(comp->when);
+      coutf("    %s.set_WHEN(%s)",comp->name, q);
+      memfree(q);
     }
 
     if (comp->group) {
@@ -599,8 +636,9 @@ int cogen_raytrace(struct instr_def *instr)
     while((par = list_next(piter)) != NULL) {
       // get parameter value from component parameters name-value structure
       entry = symtab_lookup(comp->setpar, par->id);
-      val = exp_tostring(entry->val);
-      coutf("    %s.%s = '%s'",comp->name, par->id, val);
+      val = pygen_pyexp(entry->val);
+      coutf("    %s.%s = %s",comp->name, par->id, val);
+      memfree(val);
     }
     list_iterate_end(piter);
     cout("    ");
@@ -617,13 +655,48 @@ int cogen_raytrace(struct instr_def *instr)
 * right files during compilation and linking, but this may be changed using
 * the --no-runtime compiler switch.
 *******************************************************************************/
+/* Emit instr.add_search() calls. Relative paths are made relative to the script,
+   or absolute if the script is not written to the working directory. */
+static void
+cogen_searches(struct instr_def *instr, char *output_name)
+{
+  List_handle liter;
+  struct search_def *sd;
+  char cwd[1024];
+  int script_in_cwd = output_name && output_name[0] && strcmp(output_name, "-")
+                      && !strchr(output_name, '/') && !strchr(output_name, MC_PATHSEP_C);
+
+  if (!instr->searches || !list_len(instr->searches))
+    return;
+  if (!script_in_cwd && !getcwd(cwd, sizeof(cwd)))
+    fatal_error("Could not determine the current working directory\n");
+  cout("    # SEARCH statements");
+  liter = list_iterate(instr->searches);
+  while ((sd = list_next(liter))) {
+    char *q;
+    int is_abs = sd->path[0] == '/' || sd->path[0] == '\\' || (sd->path[0] && sd->path[1] == ':');
+    if (sd->shell || is_abs || script_in_cwd) {
+      q = pygen_pystr(sd->path);
+    } else {
+      char *abspath = str_cat(cwd, MC_PATHSEP_S, sd->path, NULL);
+      q = pygen_pystr(abspath);
+      str_free(abspath);
+    }
+    if (sd->shell)
+      coutf("    instr.add_search(%s, SHELL=True)", q);
+    else if (!is_abs && script_in_cwd)
+      coutf("    instr.add_search(os.path.join(os.path.dirname(os.path.abspath(__file__)), %s))", q);
+    else
+      coutf("    instr.add_search(%s)", q);
+    memfree(q);
+  }
+  list_iterate_end(liter);
+  cout("");
+}
+
 static void
 cogen_header(struct instr_def *instr, char *output_name)
 {
-  char *sysdir_orig;
-  char *sysdir_new;
-  char  pathsep[3];
-  int   i,j=0;
   time_t t;
   char  date[128];
   long  index=0;
@@ -647,33 +720,35 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("");
   cout("import mcstasscript as ms");
   cout("import argparse");
+  cout("import os");
   cout("");
 #if MCCODE_PROJECT == 1     /* neutron */
   cout("# Python McStas instrument description");
   cout("def make(input_path=None):");
-  coutf("    instr = ms.McStas_instr(\"%s_generated\", author = \"McCode Py-Generator\", origin = \"ESS DMSC\", input_path=input_path)",instr->name);
+  cout("    # Default: the directory of this script");
+  cout("    if input_path is None:");
+  cout("        input_path = os.path.dirname(os.path.abspath(__file__))");
+  if (pygen_instrument_name)
+    coutf("    instr = ms.McStas_instr(\"%s\", author = \"McCode Py-Generator\", origin = \"ESS DMSC\", input_path=input_path)",pygen_instrument_name);
+  else
+    coutf("    instr = ms.McStas_instr(\"%s_generated\", author = \"McCode Py-Generator\", origin = \"ESS DMSC\", input_path=input_path)",instr->name);
 #elif MCCODE_PROJECT == 2   /* xray */
   cout("# Python McXtrace instrument description");
   cout("def make(input_path=None):");
-  coutf("    instr = ms.McXtrace_instr(\"%s_generated\", author = \"McCode Py-Generator\", origin = \"ESS DMSC\", input_path=input_path)",instr->name);
+  cout("    # Default: the directory of this script");
+  cout("    if input_path is None:");
+  cout("        input_path = os.path.dirname(os.path.abspath(__file__))");
+  if (pygen_instrument_name)
+    coutf("    instr = ms.McXtrace_instr(\"%s\", author = \"McCode Py-Generator\", origin = \"ESS DMSC\", input_path=input_path)",pygen_instrument_name);
+  else
+    coutf("    instr = ms.McXtrace_instr(\"%s_generated\", author = \"McCode Py-Generator\", origin = \"ESS DMSC\", input_path=input_path)",instr->name);
 #endif
   cout("    \n# Add collected DEPENDENCY strings");
-  coutf("    instr.set_dependency('%s')",instr->dependency);
-  /* handles Windows '\' chararcters for embedding sys_dir into source code */
-  if (MC_PATHSEP_C != '\\') strcpy(pathsep, MC_PATHSEP_S);
-  else strcpy(pathsep, "\\\\");
-
-  sysdir_orig = get_sys_dir();
-  sysdir_new  = (char *)mem(2*strlen(sysdir_orig));
-  for (i=0; i < strlen(sysdir_orig); i++)
   {
-    if (sysdir_orig[i] == '\\')
-    { sysdir_new[j] = '\\'; j++; sysdir_new[j] = '\\'; }
-    else sysdir_new[j] = sysdir_orig[i];
-    j++;
+    char *q = pygen_pystr(instr->dependency);
+    coutf("    instr.set_dependency(%s)",q);
+    memfree(q);
   }
-  sysdir_new[j] = '\0';
-
   instr->user_vars = list_create();
   instr->user_vars_types = list_create();
   int uvlist = get_codeblock_vars(instr->vars, instr->user_vars, instr->user_vars_types, "USERVARS", "EXTEND");
@@ -682,9 +757,10 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("    # *****************************************************************************");
   coutf("    # * Start of instrument '%s' generated code", instr->name);
   cout("    # *****************************************************************************");
-  coutf("    # " MCCODE_LIBENV " system dir is \"%s%s\"", sysdir_new,pathsep);
 
   cout("");
+
+  cogen_searches(instr, output_name);
 
 } /* cogen_header */
 
@@ -952,6 +1028,157 @@ void detect_skipable_transforms(struct instr_def *instr) {
 * cogen: the code generator
 *   Generate the output file (in C).
 *******************************************************************************/
+
+/*******************************************************************************
+* Translation of %Test lines (older name: %Example) in the instrument file into
+* McStasScript tests (instr.add_test). The lines are parsed like mctest does, i.e. as
+*   %Test: PAR1=VAL1 PAR2=VAL2 ... Detector: MONITOR_I=VALUE
+* (%TestScan lines describe parameter scans and have no add_test equivalent.)
+*******************************************************************************/
+
+/* Copy of [begin,end) with surrounding whitespace removed. */
+static char *
+pygen_strip(char *begin, char *end)
+{
+  while (begin < end && isspace((unsigned char)*begin)) begin++;
+  while (end > begin && isspace((unsigned char)end[-1])) end--;
+  return str_dup_n(begin, end - begin);
+}
+
+static int
+pygen_is_number(char *s)
+{
+  char *endp;
+  strtod(s, &endp);
+  return s[0] && !*endp;
+}
+
+/* Print warning about ignored %Test/%Example line, and return 0. */
+static int
+pygen_ignore(char *line, char *reason)
+{
+  fprintf(stderr, "Warning: Ignoring %%Test/%%Example line (%s): %s\n", reason, line);
+  return 0;
+}
+
+/* Translate one %Test/%Example line (text after the tag, without newline) into
+   an instr.add_test call. Returns 0 if the line was ignored (with warning). */
+static int
+pygen_translate_example(struct instr_def *instr, char *line, int ntests)
+{
+  char *det = strstr(line, "Detector:");
+  char *iu = det ? strstr(det, "_I=") : NULL;
+  char *monitor, *value, *tok, *next;
+  char *setpars = "", *inclpars = "";
+
+  if (!iu)
+    return pygen_ignore(line, "no \"Detector: MONITOR_I=VALUE\"");
+  monitor = pygen_strip(det + strlen("Detector:"), iu);
+  value = str_dup_n(iu + 3, strspn(iu + 3, "0123456789.+-eE"));
+  if (!monitor[0] || monitor[strspn(monitor, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")]
+      || !pygen_is_number(value))
+    return pygen_ignore(line, "invalid monitor name or value");
+
+  /* Parameter settings (whitespace separated NAME=VALUE tokens): */
+  for (tok = pygen_strip(line, det); *tok; tok = next) {
+    char *eq, *val;
+    struct instr_formal *formal = NULL, *f;
+    List_handle liter;
+    next = tok + strcspn(tok, " \t");
+    if (*next) {
+      *next++ = '\0';
+      next += strspn(next, " \t");
+    }
+    eq = strchr(tok, '=');
+    if (!eq || eq == tok)
+      return pygen_ignore(line, str_cat("invalid parameter setting \"", tok, "\"", NULL));
+    *eq = '\0';
+    val = eq + 1;
+    liter = list_iterate(instr->formals);
+    while ((f = list_next(liter)))
+      if (f->id && !strcmp(f->id, tok))
+        formal = f;
+    list_iterate_end(liter);
+    if (!formal)
+      return pygen_ignore(line, str_cat("unknown parameter \"", tok, "\"", NULL));
+    if (formal->type == instr_type_string) {
+      /* Strip quotes. The value is given to McStasScript without the double
+         quotes usually needed for string parameters, since add_test would
+         otherwise put those quotes into the test line: */
+      size_t n = strlen(val);
+      if (n >= 2 && (val[0] == '"' || val[0] == '\'') && val[n-1] == val[0]) {
+        val[n-1] = '\0';
+        val++;
+      }
+      if (strpbrk(val, "\"'\\"))
+        return pygen_ignore(line, str_cat("unsupported string value for \"", tok, "\"", NULL));
+      val = str_cat("'", val, "'", NULL);
+    } else if (formal->type != instr_type_int && formal->type != instr_type_double) {
+      return pygen_ignore(line, str_cat("unsupported type of \"", tok, "\"", NULL));
+    } else if (!pygen_is_number(val)) {
+      return pygen_ignore(line, str_cat("non-numeric value for \"", tok, "\"", NULL));
+    }
+    setpars = str_cat(setpars, setpars[0] ? ", " : "", "'", tok, "': ", val, NULL);
+    inclpars = str_cat(inclpars, inclpars[0] ? ", " : "", "'", tok, "'", NULL);
+  }
+
+  if (!ntests) {
+    cout("    # Tests corresponding to the %Test/%Example lines of the instrument. The");
+    cout("    # parameter values are restored afterwards, since add_test uses the");
+    cout("    # current parameter values:");
+    cout("    _parameter_values = {p: instr.parameters[p].value for p in instr.get_parameter_names()}");
+  }
+  if (setpars[0])
+    coutf("    instr.set_parameters({%s})", setpars);
+  coutf("    instr.add_test('%s', intensity=%s, included_pars=[%s])", monitor, value, inclpars);
+  return 1;
+}
+
+/* Next %Test: or %Example: tag at or after p (the earlier of the two), or NULL;
+   *len is set to the length of the tag. "%Test:" does not match "%TestScan:". */
+static char *
+pygen_next_test(char *p, size_t *len)
+{
+  char *ex = strstr(p, "%Example:"), *te = strstr(p, "%Test:");
+  if (ex && (!te || ex < te)) {
+    *len = strlen("%Example:");
+    return ex;
+  }
+  *len = strlen("%Test:");
+  return te;
+}
+
+/* Emit McStasScript tests for all %Test/%Example lines in the instrument file. */
+static void
+cogen_tests(struct instr_def *instr)
+{
+  FILE *f;
+  long size;
+  char *text, *p;
+  size_t taglen;
+  int ntests = 0;
+
+  if (!instr->source || !(f = fopen(instr->source, "rb"))) {
+    fprintf(stderr, "Warning: Could not read instrument file to look for %%Test/%%Example lines\n");
+    return;
+  }
+  fseek(f, 0, SEEK_END);
+  size = ftell(f);
+  fseek(f, 0, SEEK_SET);
+  text = mem(size + 1);
+  text[fread(text, 1, size, f)] = '\0';
+  fclose(f);
+
+  for (p = pygen_next_test(text, &taglen); p; p = pygen_next_test(p, &taglen)) {
+    p += taglen;
+    ntests += pygen_translate_example(instr, pygen_strip(p, p + strcspn(p, "\r\n")), ntests);
+  }
+  if (ntests) {
+    cout("    instr.set_parameters(_parameter_values)");
+    cout("");
+  }
+}
+
 void
 cogen(char *output_name, struct instr_def *instr)
 {
@@ -982,6 +1209,9 @@ cogen(char *output_name, struct instr_def *instr)
   def_uservars(instr);
 
   warnings += cogen_raytrace(instr); 
+
+  if (!lint && !pygen_no_tests)
+    cogen_tests(instr);
 
   cout("    # Instruct McStasscript not to 'check everythng'");
   cout("    instr.settings(checks=False)");

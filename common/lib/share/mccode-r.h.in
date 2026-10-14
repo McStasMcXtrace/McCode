@@ -390,10 +390,17 @@ int mc_MPI_Sum(double* buf, long count);
 int mc_MPI_Send(void *sbuf, long count, MPI_Datatype dtype, int dest);
 int mc_MPI_Recv(void *rbuf, long count, MPI_Datatype dtype, int source);
 
-/* MPI_Finalize exits gracefully and should be preferred to MPI_Abort */
+/* Evaluate the exit code first: it is often exit(fprintf(stderr, ...)), and
+ * the message must be printed before MPI is torn down. MPI_Finalize is
+ * collective, so it is only used for a normal (code 0) exit. An error exit
+ * from a single rank (e.g. a component INITIALISE failure) must MPI_Abort,
+ * otherwise that rank blocks in MPI_Finalize while the others wait for it in
+ * MPI_Allreduce - a silent deadlock until the job is killed. */
 #define exit(code) do {                                   \
-    MPI_Finalize();                                       \
-    exit(code);                                           \
+    int mc_exit_code_ = (int)(code);                      \
+    if (mc_exit_code_) MPI_Abort(MPI_COMM_WORLD, mc_exit_code_); \
+    else MPI_Finalize();                                  \
+    exit(mc_exit_code_);                                  \
   } while(0)
 
 #else /* !USE_MPI */
@@ -948,6 +955,7 @@ typedef struct mcdetector_struct MCDETECTOR;
 static   char *dirname             = NULL;      /* name of output directory */
 static   char *siminfo_name        = "mccode";  /* default output sim file name */
 char    *mcformat                    = NULL;      /* NULL (default) or a specific format */
+static   int   mcsave_final        = 0;         /* 1 during the final save, done by all MPI nodes together (see mccode_main) */
 
 /* file I/O definitions and function prototypes */
 
@@ -989,6 +997,8 @@ MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
 #ifdef USE_NEXUS
 #include "napi.h"
 NXhandle nxhandle;
+/* store post-INIT values of component SETTING parameters (called after init()) */
+void mccomp_param_runtime_nexus_all(NXhandle f);
 #endif
 
 #endif /* ndef MCCODE_R_IO_H */

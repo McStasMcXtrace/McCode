@@ -1,0 +1,114 @@
+/*******************************************************************************
+* Instrument: Test_Mirror_FlatEllipse
+*
+* %I
+* Written by: Peter Willendrup
+* Date: October 2026
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests_optics
+*
+* Compares a (nearly flat) FlatEllipse_finite_mirror with Mirror.comp
+*
+* %D
+* A collimated, polychromatic beam hits a single mirror at grazing angle theta.
+* The mirror is either Mirror.comp with transmit=1, or a single-mirror
+* FlatEllipse_finite_mirror (conic.h, mirror_width=0) with foci at +/- focus,
+* which for the default focus=10 km is flat to within ~1e-10 rad over the mirror.
+* Reflected and transmitted beams are recorded separately as function of wavelength,
+* and the two COMP settings should give the same result.
+*
+* COMP=0: Mirror, transmit=1
+* COMP=1: FlatEllipse_finite_mirror, nummirror=1, mirror_width=0
+*
+* %Example: COMP=0 Detector: L_refl_I=8.98208e-07
+* %Example: COMP=1 Detector: L_refl_I=8.98208e-07
+* %Example: COMP=0 Detector: L_trans_I=7.01789e-07
+* %Example: COMP=1 Detector: L_trans_I=7.01789e-07
+*
+* %P
+* COMP:   [1]     Mirror implementation, see description
+* theta:  [deg]   Grazing angle of the beam on the mirror
+* length: [m]     Mirror length
+* m:      [1]     Mirror m-value
+* R0:     [1]     Low-angle reflectivity
+* Qc:     [AA^-1] Critical scattering vector
+* alpha:  [AA]    Slope of reflectivity
+* W:      [AA^-1] Width of supermirror cut-off
+* Lmin:   [AA]    Minimum source wavelength
+* Lmax:   [AA]    Maximum source wavelength
+* focus:  [m]     Distance from the mirror centre to each of the ellipse foci
+* r0:     [m]     Distance from the FlatEllipse_finite_mirror optical axis to the mirror
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Test_Mirror_FlatEllipse(int COMP=0, theta=1, length=1, m=2, R0=0.99, Qc=0.0217, alpha=6.07, W=0.003, Lmin=1, Lmax=11,
+                                          focus=1e4, r0=0.1)
+
+DECLARE
+%{
+  double v_refl;
+%}
+
+USERVARS
+%{
+  int reflected;
+%}
+
+INITIALIZE
+%{
+  /* Transverse velocity threshold separating reflected from transmitted neutrons */
+  v_refl = sin (DEG2RAD * theta);
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT source = Source_simple(
+    xwidth=0.002, yheight=0.01, dist=5, focus_xw=0.002, focus_yh=0.01,
+    lambda0=(Lmin+Lmax)/2, dlambda=(Lmax-Lmin)/2, flux=1)
+AT (0, 0, 0) RELATIVE origin
+
+COMPONENT L_in = L_monitor(nL=100, filename="L_in", xwidth=0.01, yheight=0.02,
+    Lmin=Lmin, Lmax=Lmax, restore_neutron=1)
+AT (0, 0, 4.9) RELATIVE origin
+
+/* Mirror frame: mirror surface is the local y-z plane, from z=0 to z=length,
+   reflecting side x<0. The beam axis hits the mirror centre. */
+COMPONENT mirror_arm = Arm()
+AT (length/2*sin(DEG2RAD*theta), 0, 5-length/2*cos(DEG2RAD*theta)) RELATIVE origin
+ROTATED (0, -theta, 0) RELATIVE origin
+
+COMPONENT mirror = Mirror(xwidth=length, yheight=0.1, center=1, transmit=1,
+    R0=R0, Qc=Qc, alpha=alpha, m=m, W=W)
+WHEN (COMP==0)
+AT (0, 0, length/2) RELATIVE mirror_arm
+ROTATED (0, 90, 0) RELATIVE mirror_arm
+
+/* The FlatEllipse_finite_mirror optical axis is at x=-r0 in the mirror frame */
+COMPONENT flat_ellipse = FlatEllipse_finite_mirror(
+    sourceDist=-focus, LStart=-focus, LEnd=focus, lStart=-length/2, lEnd=length/2,
+    r_0=r0, nummirror=1, mf=m, mb=0, mirror_width=0, mirror_sidelength=0.1,
+    R0=R0, Qc=Qc, alpha=alpha, W=W)
+WHEN (COMP==1)
+AT (-r0, 0, length/2) RELATIVE mirror_arm
+
+COMPONENT sorter = Arm()
+AT (0, 0, 5+length) RELATIVE origin
+EXTEND
+%{
+  reflected = (fabs (vx) > v_refl * sqrt (vx * vx + vy * vy + vz * vz));
+%}
+
+COMPONENT L_refl = L_monitor(nL=100, filename="L_refl", xwidth=1, yheight=0.2,
+    Lmin=Lmin, Lmax=Lmax, restore_neutron=1)
+WHEN (reflected)
+AT (0, 0, 0.01) RELATIVE sorter
+
+COMPONENT L_trans = L_monitor(nL=100, filename="L_trans", xwidth=1, yheight=0.2,
+    Lmin=Lmin, Lmax=Lmax, restore_neutron=1)
+WHEN (!reflected)
+AT (0, 0, 0.01) RELATIVE sorter
+
+END

@@ -107,7 +107,12 @@ printf("%s: Undulator %s E0=%g [eV] lambda=%g [Angs] M1_angle=%g [deg] PG_angle=
 
 TRACE
 
-COMPONENT Origin = Progress_bar() 
+// electronic beam spec along storage ring 354m diameter
+// BeamLineName| Long_Pos(m)| RMS_H_Size(µm)| RMS_V_Size(µm)| RMS_H_div(µrad)| RMS_V_div(µrad)
+// -----------|--------|-----|----|----|--
+// CASSIOPEE_1|308,0047|217,4|10,6|31,4|4,2
+// CASSIOPEE_2|310,6492|214,7|8,2 |31,4|4,2
+REMOVABLE COMPONENT Origin = Progress_bar() 
 AT (0, 0, 0) ABSOLUTE
 
 /* -------------------------------------------------- Source HU60 */
@@ -122,7 +127,7 @@ COMPONENT Source_HU60 = Undulator(
     sigepx = 31.4e-6,
     sigepy = 4.2e-6)
 WHEN undulator_index == 1
-AT (0, 0, 0) RELATIVE Origin
+AT (0, 0, 0) RELATIVE PREVIOUS
 
 
 
@@ -139,13 +144,13 @@ COMPONENT Source_HU256 = Undulator(
     sigepx = 31.4e-6,
     sigepy = 4.2e-6)
 WHEN undulator_index == 2
-AT (0, 0, 2.727) RELATIVE Origin
+AT (0, 0, 2.727) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- Plane mirror M1a */
 /* dimensions 130x25 mm (e=60 mm) */
 
 COMPONENT M1a_location = Arm()
-AT (0, 0, 21.83)          RELATIVE Origin
+AT (0, 0, 21.83)          RELATIVE Source_HU60
 
 COMPONENT M1a = Mirror_curved( // in YZ plane
   coating = mirror_material,

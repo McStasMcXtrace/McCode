@@ -41,19 +41,24 @@
 * %Example: lambda=5 Detector: H5_I=1.03234e+14
 *
 * %Parameters
-*      lambda:  central wavelength band for guide illumination [AA]
-*     dlambda:  half width of guide wavelength band [AA]
-* ThALES_lambda:ThALES monochromator setting wavelength. Usual 2.4 and 4.2 [AA]
-* WASP_lambda:  IN16 monochromator setting wavelength. Usual 3.3 and 6.3 [AA]
-*  D16_lambda:  D16  monochromator setting wavelength. Usual 4.7 and 5.6 [AA]
-* SADAM_lambda: SuperADAM monochromator setting wavelength. Usual 4.4 [AA]
-*  IN15_lambda: IN15 velocity selector setting wavelength [AA]
-*   D22_lambda: D22  velocity selector setting wavelength [AA]
-* ThALES_sample:ThALES liquid/powder/amorphous sample [string]
-*   D16_sample: D16  liquid/powder/amorphous sample [string]
-* SADAM_sample: SuperADAM liquid/powder/amorphous sample [string]
-*   D22_sample: D22  liquid/powder/amorphous sample [string]
-* D22_collimation: D22 collimation length and sample-detector distance [m]
+* lambda: [AA] central wavelength band for guide illumination
+* dlambda: [AA] half width of guide wavelength band
+* ThALES_lambda: [AA] ThALES monochromator setting wavelength. Usual 2.4 and 4.2
+* WASP_lambda: [AA] IN16 monochromator setting wavelength. Usual 3.3 and 6.3
+* D16_lambda: [AA] D16  monochromator setting wavelength. Usual 4.7 and 5.6
+* SADAM_lambda: [AA] SuperADAM monochromator setting wavelength. Usual 4.4
+* IN15_lambda: [AA] IN15 velocity selector setting wavelength
+* D22_lambda: [AA] D22  velocity selector setting wavelength
+* ThALES_sample: [string] ThALES liquid/powder/amorphous sample
+* WASP_sample: [string] WASP liquid/powder/amorphous sample
+* D16_sample: [string] D16  liquid/powder/amorphous sample
+* SADAM_sample: [string] SuperADAM liquid/powder/amorphous sample
+* D22_sample: [string] D22  liquid/powder/amorphous sample
+* D22_collimation: [m] D22 collimation length and sample-detector distance
+* ThALES_RMV: [m] ThALES monochromator vertical curvature radius, -1 for automatic setting
+* D16_RMV: [m] D16 monochromator vertical curvature radius, -1 for automatic setting
+* SADAM_RMV: [m] SuperADAM monochromator vertical curvature radius, -1 for automatic setting
+* ThALES_RMH: [m] ThALES monochromator horizontal curvature radius, -1 for automatic setting
 *
 * %Link
 * The NoteDPT11 at the ILL
@@ -1660,6 +1665,40 @@ AT (0,0,0) RELATIVE Core
 /* H2O vessel radius=1.25 m */
 COMPONENT H2O_Vessel = Shape (radius=4.9, yheight=1.2)
 AT (0,0,0) RELATIVE Core
+
+/* Reactor label, 2 m above Core */
+COMPONENT ILL_label = Text(text="ILL", size=1.5, plane="XY")
+AT (0,2,0) RELATIVE Core
+ROTATED (0,-90,0) ABSOLUTE
+
+/* instrument names, 2 m above each sample position */
+COMPONENT ThALES_label = Text(text="ThALES", size=1, plane="XY")
+AT (0,2,0) RELATIVE H53_ThALES_Sample
+ROTATED (0,-90,0) ABSOLUTE
+
+COMPONENT D16_label = Text(text="D16", size=1, plane="XY")
+AT (0,2,0) RELATIVE H521_D16_Sample
+ROTATED (0,-90,0) ABSOLUTE
+
+COMPONENT SADAM_label = Text(text="SuperADAM", size=1, plane="XY")
+AT (0,2,0) RELATIVE H521_SADAM_Sample
+ROTATED (0,-90,0) ABSOLUTE
+
+COMPONENT WASP_label = Text(text="WASP", size=1, plane="XY")
+AT (0,2,0) RELATIVE H522_WASP_Sample
+ROTATED (0,-90,0) ABSOLUTE
+
+COMPONENT CryoEDM_label = Text(text="CryoEDM", size=1, plane="XY")
+AT (0,2,0) RELATIVE H523_CryoEDM_Sample_L
+ROTATED (0,-90,0) ABSOLUTE
+
+COMPONENT IN15_label = Text(text="IN15", size=1, plane="XY")
+AT (0,2,0) RELATIVE H511_IN15_Sample
+ROTATED (0,-90,0) ABSOLUTE
+
+COMPONENT D22_label = Text(text="D22", size=1, plane="XY")
+AT (0,2,0) RELATIVE D22_Sample_Pos
+ROTATED (0,-90,0) ABSOLUTE
 
 END
 

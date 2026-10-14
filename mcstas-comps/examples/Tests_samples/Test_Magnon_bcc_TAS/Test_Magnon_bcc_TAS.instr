@@ -13,7 +13,10 @@
 * Generic TAS instrument for test of samples with dispersions. Modeled over the RITA-2 instrument at PSI (one analyzer only). The instrument is able to position in q-space at q=(h 0 0) and fixed Ei and Ef. This can be used to longitudinal constant-E scans or constant-q scans. In addition, transverse constant-E scans can be made by scanning the sample orientation A3.
 * 
 * %Example: Test_Magnon_bcc_TAS.instr hw=0.5 Detector: e_monitor1_I=460000
-* Example: Test_Magnon_bcc_TAS.instr hw=0,1 -N21
+* %Scan: mcrun Test_Magnon_bcc_TAS.instr hw=0,1 -N21 -n1e6 Detector: e_monitor_I={
+*   5541440.0,5681320.0,4956300.0,4947280.0,4886770.0,4370310.0,3596940.0,3900100.0,
+*   3656700.0,3712310.0,3128430.0,3254960.0,2708640.0,2961760.0,2536780.0,2524220.0,
+*   2570960.0,2493820.0,2173830.0,2275870.0,2174740.0 }
 * 
 * %P 
 * hw:        [meV] Neutron energy transfer

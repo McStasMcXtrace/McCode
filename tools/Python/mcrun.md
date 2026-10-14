@@ -34,7 +34,7 @@ in help text, and the McStas-only `-g`/`--gravitation` flag, differ).
 | `-N NP`, `--numpoints NP` | Set number of scan points. Two input modes available:  1) A single integer applies the same point count to every    scanned parameter (default, and only valid form without -M) 2) Together with -M/--multi, a comma-separated list    (e.g. -N=5,10,20) gives each scanned parameter its    own point count, in the order in which parameters are listed    on the command line. If a parameter is given as par="min:delta:max"   the point count is instead computed from the requested bin width. |
 | `-L`, `--list` | Use list-mode scanning. Multiple input modes available:  1) If multiple lists (of identical length) are given (and -M is     not requested) the lists are scanned together in lockstep. 2) Combined with -M/--multi, the cartesian product of each    parameter's own list is used to set up a multidimensional    'grid' scan (lists may have different lengths) 3) Any parameter given as "min:delta:max" is expanded into its    own explicit list of equidistant points and may be freely mixed    with other, explicitly-listed parameters    (e.g. a list of filenames) under -L. |
 | `-M`, `--multi` | Run a multi-dimensional scan (cartesian product of every scanned parameter's points, rather than a co-linear scan). Combine with -L/--list or give -N as a comma-separated list (see -N/--numpoints). |
-| `--scan_split scan_split` | Scan by parallelising steps as individual cpu threads. Initialise by number of wanted threads (e.g. your number of cores). |
+| `--scan_split scan_split` | Scan by parallelising steps as individual cpu threads. Initialise by number of wanted threads (e.g. your number of cores), or "auto" (or 0) for the number of cores minus one. Ignored, with a warning, when an explicit multi-process `--mpi` is given. |
 | `--seeds SEEDS` | Set range of seeds to scan (each must be: SEED != 0) |
 | `--optimize` | Optimize instrument variable parameters to maximize monitors |
 | `--optimize-maxiter optimize_maxiter` | Maximum number of optimization iterations to perform. Default=1000 |
@@ -53,13 +53,14 @@ in help text, and the McStas-only `-g`/`--gravitation` flag, differ).
 | `--invcanvas` | Forward request for inverted canvas to plotter |
 | `--autoplotter AUTOPLOTTER` | Specify the plotter used with --autoplot |
 | `--mpi NB_CPU` | Spread simulation over NB_CPU machines using MPI |
+| `--no-mpi` | Do NOT compile with MPI |
 | `--machines machines` | Defines path of MPI machinefile to use in parallel mode |
 | `--openacc` | parallelize using openacc |
 | `--funnel` | funneling simulation flow, e.g. for mixed CPU/GPU |
 | `--vecsize VECSIZE` | vector length in OpenACC parallel scenarios |
 | `--numgangs NUMGANGS` | number of 'gangs' in OpenACC parallel scenarios |
 | `--gpu_innerloop INNERLOOP` | Maximum particles in an OpenACC kernel run. (If INNERLOOP is smaller than ncount we repeat) |
-| `-s SEED`, `--seed SEED` | Set random seed (must be: SEED != 0) |
+| `-s SEED`, `--seed SEED` | Set random seed (must be: SEED != 0). In a scan, point i uses SEED+i*1024 (without --seed, the base seed is taken from the current time and logged) |
 | `-n COUNT`, `--ncount COUNT` | Set number of neutrons to simulate |
 | `-t trace`, `--trace trace` | Enable trace of neutrons through instrument |
 | `--no-trace` | Disable trace of neutrons in instrument (combine with -c) |

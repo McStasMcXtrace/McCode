@@ -13,16 +13,28 @@
 *
 * %Description
 * Instrument to study tomographic imaging by means of the feature of OFF shape samples.
+* The sample (geometry, an OFF file, default socket.off) is rotated by omega around the
+* vertical axis, and the transmitted beam is recorded on a 2D detector (monitor).
 *
-* Example: mcrun Tomography.instr offfile=bunny.off -n1e4 -N18 omega=0,340 -d TomoScan
-* (Note that to achieve proper statistics for tomographic reconstruction, MUCH higher ncounts
+* A tomography is a scan of omega over a full rotation, e.g.
+*   mcrun Tomography.instr omega=0,355 -N72 -n1e7 -d TomoScan
+* (to achieve proper statistics for tomographic reconstruction, MUCH higher ncounts
 *  are needed)
 *
-* Use the provided Matlab tomo_recon.m function (requires imaging toolbox, PGPLOT output data
-* and a Unix/Mac) in the tools/matlab folder to reconstruct a 3D volume of the object. Use e.g. 
-* isosurface to do thresholding for extraction of the object surface.
+* Use the provided tomo_recon.py (numpy + matplotlib) in this folder to reconstruct a 3D
+* volume of the object from the scan directory: python tomo_recon.py TomoScan [--save]
 *
-* %Example: omega=0 Detector: monitor_I=2.23492e-09
+* %Example: omega=0 Detector: monitor_I=9.37708e-10
+* %Scan: mcrun Tomography.instr omega=0,355 -N72 -n1e6 Detector: monitor_I={
+*   9.42128e-10,9.25881e-10,9.14476e-10,9.04288e-10,8.94769e-10,8.8652e-10,8.84254e-10,8.86881e-10,
+*   8.87397e-10,8.86793e-10,8.80893e-10,8.80094e-10,8.82899e-10,8.84653e-10,8.8854e-10,8.9252e-10,
+*   9.01629e-10,9.10865e-10,9.22842e-10,9.09788e-10,8.99241e-10,8.92795e-10,8.87909e-10,8.83615e-10,
+*   8.80372e-10,8.81549e-10,8.8362e-10,8.86581e-10,8.88443e-10,8.89103e-10,8.85436e-10,8.86795e-10,
+*   8.92286e-10,9.02972e-10,9.15912e-10,9.25596e-10,9.39192e-10,9.28645e-10,9.15208e-10,9.03769e-10,
+*   8.93097e-10,8.87378e-10,8.87768e-10,8.88077e-10,8.88221e-10,8.88865e-10,8.84663e-10,8.81642e-10,
+*   8.83464e-10,8.85594e-10,8.8875e-10,8.90938e-10,8.98263e-10,9.09941e-10,9.22377e-10,9.11957e-10,
+*   8.98938e-10,8.90529e-10,8.85399e-10,8.83245e-10,8.80727e-10,8.78931e-10,8.82134e-10,8.84583e-10,
+*   8.84924e-10,8.87263e-10,8.88867e-10,8.87931e-10,8.92295e-10,9.00247e-10,9.15281e-10,9.26476e-10 }
 *
 * %Parameters
 * geometry: [string]  Name of the OFF file describing the sample shape
@@ -42,7 +54,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Tomography(string geometry="socket.off", omega=0, sigma_abs=100, frac_scatt=0, div_v=1e-4, div_h=1e-4, source_w=0.4, source_h=0.2, det_w=0.4, det_h=0.2, string opts="x bins=80 y bins=40")
+DEFINE INSTRUMENT Tomography(string geometry="socket.off", omega=0, sigma_abs=100, frac_scatt=0, div_v=1e-4, div_h=1e-4, source_w=0.4, source_h=0.2, det_w=0.25, det_h=0.15, string opts="x bins=128 y bins=64")
 DEPENDENCY " -DUSE_OFF "
 
 TRACE

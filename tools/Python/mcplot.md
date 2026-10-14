@@ -9,7 +9,7 @@ loader/matching layer:
 - **mcplotdiff / mxplotdiff** — plot the *difference* `a - b` between two simulations (2 datasets only)
 - **mccoplot / mxcoplot** — *overlay* 2 or more simulations' monitors on the same axes
 
-Each has three rendering variants: **html**, **matplotlib**, **pyqtgraph**. Plain `mcplot` additionally has a fourth, legacy **matlab** variant (see bottom of this page).
+Each has three rendering variants: **html**, **matplotlib**, **pyqtgraph**. Plain `mcplot` additionally has a **terminal** variant (text output) and a legacy **matlab** variant (see bottom of this page).
 
 ## mcplot / mxplot
 
@@ -45,6 +45,20 @@ Each has three rendering variants: **html**, **matplotlib**, **pyqtgraph**. Plai
 | `simulation` | file or directory to plot |
 | `-t`, `--test` | data-loader test run |
 | `--invcanvas` | invert canvas background (black &rarr; white) |
+
+### mcplot-terminal / mxplot-terminal
+
+Draws the monitors as text in the terminal: 1D as bar charts, 2D as colour maps (Unicode half blocks), or with shading characters when the output is not a terminal (e.g. redirected to a file). Falls back to plain ASCII if the terminal encoding can not show Unicode. Needs only numpy.
+
+| Option | Description |
+|---|---|
+| `simulation` | file or directory to plot (default: current directory) |
+| `-l`, `--log` | enable log scale |
+| `-m`, `--monitor NAME ...` | only plot monitors whose filename or component name contains one of these strings |
+| `-W`, `--width N` | plot width in characters (default: terminal width, up to 100) |
+| `-H`, `--height N` | plot height in lines (default: 15) |
+| `--ascii` | plain ASCII characters only (no Unicode, no colour) |
+| `--no-color` | draw 2D maps with shading characters instead of colours (also when `NO_COLOR` is set) |
 
 ## mcplotdiff / mxplotdiff
 
@@ -100,6 +114,8 @@ Overlays **2 or more** datasets (unlike mcplotdiff, not limited to two).
 | `datasets` | 2+ simulation files/directories to overlay |
 | `-L`, `--labels A,B,C` | comma-separated short labels, one per dataset (default: derived from each path) |
 | `-C`, `--colours c1,c2,...` | comma-separated overlay colours, one per dataset |
+| `--no-legends` | do not draw the on-plot legend box (the compact A/B/C/... letters) |
+| `--no-titles` | do not draw the in-plot title and the "A=.../B=..." dataset identity line |
 | `-n`, `--nobrowse` | do not open a web browser |
 | `-l`, `--log` | also produce log-scale plot (single-file mode) |
 | `-o`, `--output DIR` | output directory |
@@ -114,6 +130,8 @@ Overlays **2 or more** datasets (unlike mcplotdiff, not limited to two).
 | `datasets` | 2+ simulation files/directories to overlay |
 | `-L`, `--labels A,B,C` | comma-separated short labels per dataset |
 | `-C`, `--colours c1,c2,...` | comma-separated overlay colours per dataset |
+| `--no-legends` | do not draw the per-panel legend (the compact A/B/C/... letters) |
+| `--no-titles` | do not draw the panel titles and the figure-level dataset identity note |
 | `-t`, `--test` | print matched monitor groups before plotting |
 | `--html` | save to html via mpld3 (Linux only) |
 | `--format FMT` / `--output FILE` | save to file without opening a window |
@@ -127,6 +145,8 @@ Overlays **2 or more** datasets (unlike mcplotdiff, not limited to two).
 | `datasets` | 2+ simulation files/directories to overlay |
 | `-L`, `--labels A,B,C` | comma-separated short labels per dataset |
 | `-C`, `--colours c1,c2,...` | comma-separated overlay colours per dataset |
+| `--no-legends` | do not draw the per-panel legend (the compact A/B/C/... letters) |
+| `--no-titles` | do not draw the panel titles and the on-canvas dataset identity header |
 | `-t`, `--test` | print matched monitor groups before plotting |
 | `--invcanvas` | invert canvas background |
 
@@ -134,7 +154,7 @@ Overlays **2 or more** datasets (unlike mcplotdiff, not limited to two).
 
 ## mcplot-matlab / mxplot-matlab *(legacy Matlab/Octave/iFit variant)*
 
-A second, older implementation of plain `mcplot` (single-simulation plotting only — no `mcplotdiff`/`mccoplot` equivalent exists for this variant), living under `tools/matlab` as a bash wrapper around a `.m` script rather than Python. Runs under **Matlab**, **Octave**, or **iFit** (a Matlab-compiler-based standalone runtime, see <https://ifit.mccode.org>) — the wrapper auto-detects whichever is available, preferring Matlab, then Octave, then iFit, and falls back to the plain Python `mcplot` if none of the three are found.
+A second, older implementation of plain `mcplot` (single-simulation plotting only — no `mcplotdiff`/`mccoplot` equivalent exists for this variant), living under `tools/matlab` as a bash wrapper around a `.m` script rather than Python. Runs under **Matlab**, **Octave**, or **iFit** (a Matlab-compiler-based standalone runtime, see <https://ifit.mccode.org>) — the wrapper auto-detects whichever is available, preferring Matlab, then iFit, then Octave, and falls back to the plain Python `mcplot` if none of the three are found.
 
 | Option | Description |
 |---|---|

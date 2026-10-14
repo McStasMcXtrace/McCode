@@ -12,6 +12,7 @@ from optparse import OptionParser, OptionGroup, OptionValueError
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
 import multiprocessing
+import re
 from mccode import McStas, Process
 from optimisation import Scanner, Scanner_split, LinearInterval, MultiInterval, Optimizer
 
@@ -131,7 +132,8 @@ def add_mcrun_adv_options(parser):
              ' 3) Any parameter given as "min:delta:max" is expanded into its '
              '   own explicit list of equidistant points and may be freely mixed '
              '   with other, explicitly-listed parameters '
-             '   (e.g. a list of filenames) under -L.')
+             '   (e.g. a list of filenames) under -L.'
+             ' Commas within a list entry must be escaped as "\\,".')
 
     add('-M', '--multi',
         action='store_true',
@@ -141,9 +143,9 @@ def add_mcrun_adv_options(parser):
              '(see -N/--numpoints). ')
 
     add("--scan_split",
-        type=int,
         metavar="scan_split",
-        help='Scan by parallelising steps as individual cpu threads. Initialise by number of wanted threads (e.g. your number of cores).')
+        help='Scan by parallelising steps as individual cpu threads. Initialise by number of wanted threads (e.g. your number of cores), '
+             'or "auto" (or 0) for the number of cores minus one.')
 
     add('--seeds',
         metavar='SEEDS',
@@ -321,7 +323,8 @@ def add_mcstas_options(parser):
 
     add('-s', '--seed',
         metavar='SEED', type=int, action='callback', callback=check_seed,
-        help='Set random seed (must be: SEED != 0)')
+        help='Set random seed (must be: SEED != 0). In a scan, point i uses SEED+i*1024 '
+             '(without --seed, the base seed is taken from the current time and logged)')
 
     add('-n', '--ncount',
         metavar='COUNT', type=float, default=1000000,
@@ -536,18 +539,29 @@ def get_parameters(options):
         if '=' in param:
             key, value = param.split('=', 1)
 
+            # Only values made of numbers separated by ":" or "," are scan
+            # syntax. Other values, like NCrystal cfg-strings (e.g.
+            # "Ge_sg227.ncmat;dir1=@crys_hkl:5,1,1@lab:0,0,1"), are used as
+            # they are, except with -L, where they are lists separated by
+            # commas (commas within an entry must be escaped as "\,"):
+            numeric = all(is_decimal(p) for p in re.split('[:,]', value) if p)
+            if not numeric and not options.list:
+                # Earlier versions of mcrun ignored trailing commas (with a
+                # warning), so keep doing that to not break existing commands:
+                if value.endswith(','):
+                    LOG.warning('Ignoring trailing comma(s) in parameter "%s"', key)
+                    value = value.rstrip(',')
+                fixed_params[key] = value
+                continue
+
             # "par=a:delta:b" - an equidistant scan specified by its bin
             # width (delta) rather than an explicit point count: mcrun
             # computes how many points are needed to cover [a, b] in steps
             # of (approximately - see rounding below) delta, rather than
             # the user needing to work out -N by hand. Checked before the
             # comma-based interval parsing below, since a colon can never
-            # appear in a numeric value/list, so a colon anywhere in the
-            # value would otherwise unambiguously mean this syntax was
-            # intended - EXCEPT double-colon syntax from NCrystal-backed
-            # reflections="stdlib::ZnO_sg186_ZincOxide.ncmat;temp=300K"
-            # used in context of PowderN. Filter out from the start:
-            if ':' in value and '::' not in value:
+            # appear in a numeric value/list:
+            if ':' in value and numeric:
                 parts = value.split(':')
                 if len(parts) != 3:
                     raise OptionValueError(
@@ -598,7 +612,7 @@ def get_parameters(options):
                               key, intervals[key], delta, n_points)
                 continue
 
-            interval = value.split(',')
+            interval = [v.replace('\\,', ',') for v in re.split(r'(?<!\\),', value)]
             # Protect against trailing (or doubled) commas (empty-string entries
             n_before = len(interval)
             interval = [v for v in interval if v != '']
@@ -891,8 +905,12 @@ def main():
             interval_points = LinearInterval.from_range(options.numpoints, intervals)
 
 
-    # Check that mpi and scan split are not both used. Default to mpi if they are
-    if options.scan_split is not None and options.mpi is not None:
+    # Check that mpi and scan split are not both used. Default to mpi if they are.
+    # --mpi defaults to 1 (compile with MPI, run single-process), so only an
+    # explicit multi-process --mpi request should override --scan_split
+    if options.scan_split is not None and options.mpi is not None and str(options.mpi) != '1':
+        LOG.warning('--mpi=%s given, ignoring --scan_split=%s (scan points run serially via MPI)',
+                    options.mpi, options.scan_split)
         options.scan_split = None
         
     # Parameters for linear scanning present
@@ -904,8 +922,9 @@ def main():
         scanner.run()  # in optimisation.py
 
     elif options.scan_split is not None:
-        if options.scan_split == 0:
-            options.scan_split = multiprocessing.cpu_count()-1
+        if options.scan_split in ("auto", "0"):
+            options.scan_split = max(1, multiprocessing.cpu_count()-1)
+        options.scan_split = int(options.scan_split)
         split_scanner = Scanner_split(mcstas, intervals, options.scan_split)
         split_scanner.set_points(interval_points)
         if (not options.dir == ''):

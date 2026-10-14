@@ -395,7 +395,10 @@ def parse_header(text):
     tag_E=2
     tag_P=3
     tag_L=4
-    lst = [text.find('%I'), text.find('%D'), text.find('%Ex'), text.find('%P'), text.find('%L')]
+    # %Scan: (and %Test:/%TestScan:, the future names of %Example:/%Scan:) lines are tests too,
+    # so the test section starts at the first of them
+    tag_E_pos = min([p for p in (text.find('%Ex'), text.find('%Scan:'), text.find('%Test:'), text.find('%TestScan:')) if p != -1], default=-1)
+    lst = [text.find('%I'), text.find('%D'), tag_E_pos, text.find('%P'), text.find('%L')]
     # missing %Example tag
     if lst[tag_E] == -1:
         lst[tag_E] = lst[tag_P]
@@ -459,6 +462,7 @@ def parse_header(text):
     
     # params
     par_doc = None
+    cont = False
     for l in bites[tag_P].splitlines():
         # regex is tolerant for mising ':' in  param: [unit] description
         m = re.match(r'(\w+)[: \t]*\[([ \w\/\(\)\\\~\-.,\":\%\^\|\{\};\*\&\#]*)\][ \t]*(.*)', l)
@@ -466,11 +470,19 @@ def parse_header(text):
         if m:
             par_doc = (m.group(1), m.group(2), m.group(3).strip())
             info.params_docs.append(par_doc)
+            cont = True
         else:
             m = re.match(r'(\w+):[ \t]*(.*)', l)
             if m:
                 par_doc = (m.group(1), "", m.group(2).strip())
                 info.params_docs.append(par_doc)
+                cont = True
+            elif cont and l.strip() and not re.match(r'[%/]', l):
+                # continuation line of a multi-line parameter doc string
+                n, u, d = info.params_docs[-1]
+                info.params_docs[-1] = (n, u, (d + ' ' + l.strip()).strip())
+            else:
+                cont = False
     
     # links
     for l in bites[tag_L].splitlines():
@@ -484,9 +496,9 @@ def format_examples(test_text):
     '''
     Splits the raw %Example header text (as stored in
     InstrCompHeaderInfo.test) into an ordered list of (line, is_example)
-    tuples. Lines starting with the '%Example:' tag have the leading
-    '%Example:' tag replaced with 'Test:' (so they render as
-    'Test: ...') and are flagged True so that doc writers can highlight
+    tuples. Lines starting with the '%Example:'/'%Test:' (or '%Scan:'/'%TestScan:')
+    tag have the leading tag replaced with 'Test:' (or 'TestScan:') (so they render as
+    'Test: ...' / 'TestScan: ...') and are flagged True so that doc writers can highlight
     them (e.g. in bold); all other lines are passed through unchanged and
     flagged False. Order is preserved even when %Example: lines are
     interspersed with other text.
@@ -494,10 +506,12 @@ def format_examples(test_text):
     lines = []
     if not test_text:
         return lines
+    # a %Scan: {...} list of target values may span several lines, show it as "{N values}"
+    test_text = re.sub(r'\{([-0-9.+eE,\s]*)\}', lambda m: '{%d values}' % len([v for v in m.group(1).split(',') if v.strip()]), test_text)
     for l in test_text.splitlines():
-        m = re.match(r'%Example:\s*(.*)', l)
+        m = re.match(r'%(Example|Test|Scan|TestScan):\s*(.*)', l)
         if m:
-            lines.append(('Test: ' + m.group(1), True))
+            lines.append((('Test: ' if m.group(1) in ('Example', 'Test') else 'TestScan: ') + m.group(2), True))
         else:
             lines.append((l, False))
     return lines
@@ -634,8 +648,7 @@ def parse_params(params_line):
         tpe = None
         dval = None
         name = None
-        if re.search(r'^ ', part):
-            part = part[1:]
+        part = part.strip()
         if re.match(r'double ', part):
             part = part.replace('double ', '').strip()
         if re.match(r'string ', part):
@@ -727,6 +740,7 @@ def get_instr_comp_files(mydir, recursive=True, instrfilter=None, withcomp=None,
     181211: added recursive, defaults to True to preserve backwards compatibility
     191114: added instrfilter and compfilter, which filters results based on filename (before the dot)
     061225: added withcomp, for filtering instruments using a certain comp
+    261004: withcomp may be a comma-separated list of comps; matched as whole words
     260828: added pruning of EXCLUDED_INSTR_DIRNAMES (e.g. generated_includes),
             which hold generated/included .instr snippets rather than standalone instruments
     '''
@@ -738,6 +752,11 @@ def get_instr_comp_files(mydir, recursive=True, instrfilter=None, withcomp=None,
     files_instr = [] 
     files_comp = []
 
+    comprx = None
+    if withcomp is not None:
+        # comma-separated list allowed; whole-word match, so Guide != Guide_gravity
+        comprx = re.compile(r'\b(%s)\b' % '|'.join(re.escape(c.strip()) for c in withcomp.split(',') if c.strip()))
+
     for (dirpath, dirnames, files) in os.walk(mydir):
         dirnames[:] = [d for d in dirnames if d not in EXCLUDED_INSTR_DIRNAMES]
         for f in files:
@@ -748,15 +767,15 @@ def get_instr_comp_files(mydir, recursive=True, instrfilter=None, withcomp=None,
                     numfilters=len(filters)
                     for filter in filters:
                         instrreg = re.compile(filter)
-                        if instrreg.search(join(dirpath,f), re.IGNORECASE):
+                        if instrreg.search(join(dirpath,f)) and join(dirpath, f) not in files_instr:
                             if withcomp is not None:
-                                if withcomp in Path(join(dirpath, f)).read_text(encoding="utf8"):
+                                if comprx.search(Path(join(dirpath, f)).read_text(encoding="utf8")):
                                     files_instr.append(join(dirpath, f))
                             else:
                                 files_instr.append(join(dirpath, f))
                 else:
                     if withcomp is not None:
-                        if withcomp in Path(join(dirpath, f)).read_text(encoding="utf8"):
+                        if comprx.search(Path(join(dirpath, f)).read_text(encoding="utf8")):
                             files_instr.append(join(dirpath, f))
                     else:
                         files_instr.append(join(dirpath, f))

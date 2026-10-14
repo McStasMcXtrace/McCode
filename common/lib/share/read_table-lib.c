@@ -74,10 +74,24 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
             }
             return NULL;
         case STORE:
-            /*find an available slot and store references to table there*/
-            tr=&(read_table_file_list[read_table_file_count++]);
-            tr->table_ref = ((t_Table *) item);
-            tr->ref_count++;
+            /* Store a private heap copy of the table header, never the caller's
+             * pointer: callers usually pass a stack-local t_Table (PowderN's
+             * read_line_data, Table_Read_Array's loop variable, ...). A borrowed
+             * pointer outlives that stack frame, and FIND would later compare
+             * against whatever happens to occupy that stack slot - a false
+             * "Reusing input file" hit returning stale, already-freed data.
+             * Empty tables are not cached, and the last slot stays NULL as the
+             * list terminator. */
+            if (!item || !((t_Table *) item)->data) return NULL;
+            if (read_table_file_count >= 1023) return NULL;
+            {
+              t_Table *copy = (t_Table *) malloc(sizeof(t_Table));
+              if (!copy) return NULL;
+              *copy = *((t_Table *) item);
+              tr=&(read_table_file_list[read_table_file_count++]);
+              tr->table_ref = copy;
+              tr->ref_count = 1;
+            }
             return NULL;
         case GC:
             /* Should this item be garbage collected (freed) - if so scratch the entry and return the address of the item - 
@@ -85,7 +99,8 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
              * A non-NULL return expects the item to actually be freed afterwards.*/
             tr=read_table_file_list;
             while ( tr->table_ref!=NULL ){
-                if ( tr->table_ref->data ==((t_Table *)item)->data && 
+                if ( ((t_Table *)item)->data != NULL &&
+                        tr->table_ref->data ==((t_Table *)item)->data &&
                         tr->table_ref->block_number == ((t_Table *)item)->block_number){
                     /*matching item found*/
                     if (tr->ref_count>1){
@@ -96,6 +111,7 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
                         /* The item is found and the reference counter is 1.
                          * This means we should garbage collect. Move remaining list items up one slot,
                          * and return the table for garbage collection by caller*/
+                        free(tr->table_ref); /* our private copy; caller frees data/header */
                         while (tr->table_ref!=NULL){
                             *tr=*(tr+1);
                             tr++;
@@ -110,6 +126,40 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
              * Table that has been constructed from code - not read from file. Return 0x1 to flag it for
              * collection.*/
             return (void *) 0x1 ;
+        case REBIN:
+            /* item is a Table whose data block has just been replaced (Table_Rebin),
+             * item_modifier is its old data pointer. The cache holds its own copy of
+             * the Table, so it must be told:
+             *  - sole user (ref_count 1): point the cache entry at the new data, so
+             *    later readers of the same file get the rebinned table. Caller frees
+             *    the old data. Returns NULL.
+             *  - shared (ref_count > 1): others still use the old data. Detach the
+             *    caller from the entry (it now owns its new data privately) and
+             *    keep the old data alive. Returns 0x1: caller must NOT free it.
+             *  - not cached: returns NULL, caller frees the old data. */
+            tr=read_table_file_list;
+            while ( tr->table_ref!=NULL ){
+                if ( item_modifier != NULL && tr->table_ref->data == (double *) item_modifier &&
+                        tr->table_ref->block_number == ((t_Table *)item)->block_number){
+                    if (tr->ref_count>1){
+                        /* the header is shared too: give the detached Table its own */
+                        t_Table *tab = (t_Table *) item;
+                        if (tab->header) {
+                          char *h = (char *) malloc(strlen(tab->header) + 1);
+                          if (h) strcpy(h, tab->header);
+                          tab->header = h;
+                        }
+                        tr->ref_count--;
+                        return (void *) 0x1;
+                    }else{
+                        t_Table *entry = tr->table_ref;
+                        *entry = *((t_Table *) item);
+                        return NULL;
+                    }
+                }
+                tr++;
+            }
+            return NULL;
     }
     /* If we arrive here, nothing worked, return NULL */
     return NULL;
@@ -158,6 +208,10 @@ void *Table_File_List_store(t_Table *tab){
 /*******************************************************************************
 * FILE *Open_File(char *name, char *Mode, char *path)
 *   ACTION: search for a file and open it. Optionally return the opened path.
+*           Searched: as given, then in the directories of the instrument file
+*           and executable, and in data/ and contrib/ of the McStas/McXtrace
+*           installation. Keep in sync with mccode_setup_ncrystal_search_paths()
+*           in mcstas-comps/share/mccode-ncrystal-lib.c.
 *   input   name:  file name from which table should be extracted
 *           mode: "r", "w", "a" or any valid fopen mode
 *           path:  NULL or a pointer to at least 1024 allocated chars
@@ -208,12 +262,6 @@ void *Table_File_List_store(t_Table *tab){
             hfile = fopen(path, Mode);
           }
         }
-      }
-      if (!hfile) /* search in HOME or . */
-      {
-        strcpy(dir, getenv("HOME") ? getenv("HOME") : ".");
-        snprintf(path, 1024, "%s%c%s", dir, MC_PATHSEP_C, File);
-        hfile = fopen(path, Mode);
       }
       if (!hfile) /* search in MCSTAS/data */
       {
@@ -742,9 +790,14 @@ void *Table_File_List_store(t_Table *tab){
       Table->max_x = Table->min_x + (Length_Table-1)*new_step; 
       /*max might not be the same anymore
        * Use Length_Table -1 since the first and laset rows are the limits of the defined interval.*/
-      free(Table->data);
-      Table->data = New_Table;
-      Table->constantstep=1;
+      {
+        double *Old_Table = Table->data;
+        Table->data = New_Table;
+        Table->constantstep=1;
+        /* keep the file cache consistent: it may hold (a copy of) this Table */
+        if (Table_File_List_Handler(REBIN, Table, Old_Table) == NULL)
+          free(Old_Table);
+      }
     } /* end else (!constantstep) */
     return (Table->rows*Table->columns);
   } /* end Table_Rebin */
@@ -1325,6 +1378,29 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
 #define MyNL_ARGMAX 50
 #endif
 
+static int Table_ParseHeader_wordchar(char c) {
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
+}
+
+/* Find symbol in header as a whole word (like regex \b...\b), not case
+   sensitive. Word boundaries are only required where the symbol itself starts
+   or ends with a word character, so "sigma_a " or "e_min=" match as given.
+   E.g. "Vc" must not match inside a file name such as /tmp/tmp.0.aVcX9q,
+   which cif2hkl writes into the header before the real "Vc" line. */
+static char *Table_ParseHeader_find(char *header, char *symbol) {
+  size_t len = strlen(symbol);
+  char *pos = header;
+  while ((pos = (char*)strcasestr(pos, symbol))) {
+    int start_ok = !Table_ParseHeader_wordchar(symbol[0])
+                || pos == header || !Table_ParseHeader_wordchar(pos[-1]);
+    int end_ok   = !Table_ParseHeader_wordchar(symbol[len-1])
+                || !Table_ParseHeader_wordchar(pos[len]);
+    if (start_ok && end_ok) return pos;
+    pos++;
+  }
+  return NULL;
+}
+
 char **Table_ParseHeader_backend(char *header, ...){
   va_list ap;
   char exit_flag=0;
@@ -1352,7 +1428,7 @@ char **Table_ParseHeader_backend(char *header, ...){
       exit_flag = 1; break;
     }
     /* search for the symbol in the header */
-    pos = (char*)strcasestr(header, arg_char);
+    pos = Table_ParseHeader_find(header, arg_char);
     if (pos) {
       char *eol_pos;
       eol_pos = strchr(pos+strlen(arg_char), '\n');

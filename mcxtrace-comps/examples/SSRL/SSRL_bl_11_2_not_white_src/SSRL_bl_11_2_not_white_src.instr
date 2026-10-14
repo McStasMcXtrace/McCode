@@ -19,7 +19,11 @@
 * Documentation and results of the .instr here: https://gitlab.synchrotron-soleil.fr/grades/beamlines/-/tree/main/glitches
 * A jupyter notebook will soon be available regrouping everything.
 * You may scan like so for example:
-*   mxrun -n 1e7 SSRL_bl_11_2_not_white_src.instr -N601 Etohit=6900,7500
+* %Scan: mxrun SSRL_bl_11_2_not_white_src.instr -N31 Etohit=6900,7500 -n1e6 Detector: EnergyMonitor_first_I={
+*   13328900000.0,13634200000.0,14541900000.0,13884900000.0,13898100000.0,13682000000.0,13694000000.0,14507100000.0,
+*   13206900000.0,13610500000.0,13946900000.0,15010800000.0,14594000000.0,15530700000.0,14609000000.0,13841600000.0,
+*   14696400000.0,14927300000.0,15831200000.0,15905500000.0,16147000000.0,16044900000.0,16097800000.0,15847300000.0,
+*   15588300000.0,16880100000.0,16423800000.0,18149700000.0,17975600000.0,17924000000.0,18274500000.0 }
 *
 * Example: Etohit=6900 Detector: EnergyMonitor_first_I=1.3e+10
 *

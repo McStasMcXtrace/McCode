@@ -1,0 +1,53 @@
+\section{The \texttt{Guide\_anyshape\_r} McStas Component}
+OBSOLETE: use Guide\_anyshape(file\_coatings=1) instead.
+Reflecting surface (guide and mirror) with any shape, defined from an OFF file
+and a patch to allow m-, alpha- and W-values added per polygon face.
+Derived from Guide\_anyshape / Guide\_anyshape\_r .
+
+\subsection*{Identification}
+\begin{itemize}
+  \item \textbf{Author:} Emmanuel Farhi, adapted by Peter Link and Gaetano Mangiapia
+  \item \textbf{Origin:} ILL/MLZ
+  \item \textbf{Date:} August 4th 2010
+\end{itemize}
+
+\subsection*{Description}
+OBSOLETE: this component has been merged into Guide\_anyshape. The per-face coating mode of Guide\_anyshape\_r(m=0, alpha=0, W=0, ...) is obtained with Guide\_anyshape(geometry=..., file\_coatings=1, R0=..., Qc=...) and the parameter override mode (any of m, alpha, W non-zero) with Guide\_anyshape(geometry=..., m=..., alpha=..., W=...) This version is kept only for backward compatibility of existing instruments.
+
+This is a reflecting object component, derived from Guide\_anyshape. Its shape, as well as m-, alpha- and W-values (IN THIS ORDER) for each face, are defined from an OFF file, given with its file name. The object size is set as given from the file, where dimensions should be in meters. The bounding box may be re-scaled by specifying xwidth,yheight,zdepth parameters. The object may optionally be centered when using 'center=1'.
+
+If in input only the values of R0 and Qc are specified, leaving m, alpha and W all null, then Guide\_anyshape\_g will use the values of these last three parameters that are specified in the OFF file for each face: floating point based values may be provided for them. In case at least one among m, alpha and W is not null, then Guide\_anyshape\_g will use these values as input (common for all the faces), ignoring those specified in the OFF file
+
+The complex OFF/PLY geometry option handles any closed non-convex polyhedra. It supports the OFF and NOFF file format but not COFF (colored faces). Standard .OFF files may be generated from XYZ data using: qhull \textless{} coordinates.xyz Qx Qv Tv o \textgreater{} geomview.off or powercrust coordinates.xyz and viewed with geomview or java -jar jroff.jar (see below). The default size of the object depends of the OFF file data, but its bounding box may be resized using xwidth,yheight and zdepth. PLY geometry files are also supported.
+
+\subsection*{Input parameters}
+Parameters in \textbf{boldface} are required; the others are optional.
+
+\begin{longtable}{p{0.22\textwidth}p{0.12\textwidth}p{0.46\textwidth}p{0.14\textwidth}}
+\toprule
+\textbf{Name} & \textbf{Unit} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\endhead
+xwidth & m & Redimension the object bounding box on X axis is non-zero & 0 \\
+yheight & m & Redimension the object bounding box on Y axis is non-zero & 0 \\
+zdepth & m & Redimension the object bounding box on Z axis is non-zero & 0 \\
+center & 1 & When set to 1, the object will be centered w.r.t. the local coordinate frame & 0 \\
+transmit & 1 & When true, non reflected neutrons are transmitted through the surfaces, instead of being absorbed. No material absorption is taken into account though & 0 \\
+R0 & 1 & Low-angle reflectivity & 0.99 \\
+Qc & \AA{}$^{-1}$ & Critical scattering vector & 0.0219 \\
+alpha & \AA{} & Slope of reflectivity & 0 \\
+m & 1 & m-value of material. Zero means completely absorbing. & 0 \\
+W & \AA{}$^{-1}$ & Width of supermirror cut-off & 0 \\
+geometry & str & Name of the OFF/PLY file describing the guide geometry & 0 \\
+\bottomrule
+\end{longtable}
+
+\subsection*{Links}
+\begin{itemize}
+  \item Component source code found in file \texttt{Guide\_anyshape\_r.comp}.
+  \item \htmladdnormallink{Geomview and Object File Format (OFF)}{http://www.geomview.org}
+  \item Java version of Geomview (display only) \htmladdnormallink{jroff.jar}{http://www.holmes3d.net/graphics/roffview/}
+  \item \htmladdnormallink{qhull}{http://qhull.org}
+  \item \htmladdnormallink{powercrust}{http://www.cs.ucdavis.edu/\textasciitilde{}amenta/powercrust.html}
+\end{itemize}
+\IfFileExists{obsolete/Guide_anyshape_r_static.tex}{\input{obsolete/Guide_anyshape_r_static.tex}}{}

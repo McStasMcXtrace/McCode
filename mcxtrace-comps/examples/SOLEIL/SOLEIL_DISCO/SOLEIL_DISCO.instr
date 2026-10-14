@@ -13,7 +13,10 @@
 * %Description
 * DISCO beamline description here: https://hal.archives-ouvertes.fr/hal-01479318/document
 * You may scan the grating monochromator with e.g.:
-*   mxrun -n 1e5 SOLEIL_DISCO.instr -N84 x_screw=20,103 scan=1
+* %Scan: mxrun SOLEIL_DISCO.instr -N21 x_screw=20,103 scan=1 Detector: Wavelength_I={
+*   2019.39,2365.97,2837.41,3242.59,3655.92,4070.23,4487.58,4921.15,
+*   5306.77,5738.39,6151.91,6565.99,6979.47,7395.13,7786.17,8199.52,
+*   8631.53,9051.46,9483.21,9913.98,10299.5 }
 *
 * %Example: grazing_angle_one=22.5 -n 1e5 Detector: second_HFP_I=2.08292e+11
 *
@@ -75,7 +78,11 @@ INITIALIZE
 
 TRACE
 
-COMPONENT Origin = Progress_bar() 
+// electronic beam spec along storage ring 354m diameter
+// BeamLineName| Long_Pos(m)| RMS_H_Size(µm)| RMS_V_Size(µm)| RMS_H_div(µrad)| RMS_V_div(µrad)
+// -----|-------|----|----|-----|--
+// DISCO|78,4205|45,5|18,4|113,1|2
+REMOVABLE COMPONENT Origin = Progress_bar() 
 AT (0, 0, 0) ABSOLUTE
 
 /* -------------------------------------------------- Source */
@@ -83,7 +90,7 @@ COMPONENT Source = Bending_magnet(
     E0=E0, dE = dE,
     Ee = 2.75, Ie = 0.5, B = 1.72, sigex=45.5e-6, sigey=18.4e-6
     )
-AT (0, 0, 0) RELATIVE Origin
+AT (0, 0, 0) RELATIVE PREVIOUS
 
 //____________________________________________________________  ??? 4.13? m : Diaphragm  ==> trapezoidal?
 //At 4.13 ma trapezoidal diaphragm reshapes thebeam and represents the optical aper-ture with maximum tolerances accom-modating beam position shifts while maintaining a constantbeam shape (dimensions: length 165.8 mm; inner and outerheight of the trapeze shape with respect to the storage ring:45.1 and 38.2 mm, respectively)

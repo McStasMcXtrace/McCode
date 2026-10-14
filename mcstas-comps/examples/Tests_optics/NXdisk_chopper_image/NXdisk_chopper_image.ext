@@ -1,0 +1,18 @@
+{
+  "name": "mcstas-chopper-lib",
+  "homepage": "https://github.com/mcdotstar/mcstas-chopper-lib",
+  "git": "https://github.com/mcdotstar/mcstas-chopper-lib.git",
+  "version": "v4.2.3",
+  "license": "BSD-3-Clause",
+  "archive": {
+    "url": "https://github.com/mcdotstar/mcstas-chopper-lib/archive/refs/tags/v4.2.3.tar.gz",
+    "sha256": "efa9baeb7e8dd2fc36e99bece89958dd2979afa0723fec1301eb91191789090d",
+    "strip": 1
+  },
+  "files": [
+    {
+      "name": "NXdisk_chopper_image.instr",
+      "sha256": "edc8f28f2e70787fd154a51a960519e0bb7883a5763b6c83d69d02bd30d8dfd4"
+    }
+  ]
+}

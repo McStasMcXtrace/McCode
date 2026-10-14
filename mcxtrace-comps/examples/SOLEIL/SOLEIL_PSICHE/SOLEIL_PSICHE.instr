@@ -78,7 +78,11 @@ INITIALIZE
 
 TRACE
 
-COMPONENT origin = Progress_bar()
+// electronic beam spec along storage ring 354m diameter
+// BeamLineName| Long_Pos(m)| RMS_H_Size(µm)| RMS_V_Size(µm)| RMS_H_div(µrad)| RMS_V_div(µrad)
+// ------|-------|-----|---|--|--
+// PSICHE|55,4572|333,3|5,9|17|5,3
+REMOVABLE COMPONENT origin = Progress_bar()
 AT (0, 0, 0) RELATIVE ABSOLUTE
 
 // The photon source -----------------------------------------------------------
@@ -86,7 +90,7 @@ AT (0, 0, 0) RELATIVE ABSOLUTE
 COMPONENT source = Wiggler(E0 = E0, dE = dE, phase = 0, randomphase = 1, Ee = 2.4,
    Ie = 0.5, B = 2.1, Nper=41, sigey=9.3e-6, sigex=215.7e-6, length=38*50e-3, verbose=1,
    K=10)
-AT (0,0,0) RELATIVE origin
+AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT mon_src_e = Monitor_nD(xwidth=1e-2, yheight=1e-2, 
   bins=512, options="energy", min=E0-1.1*dE, max=E0+1.1*dE)

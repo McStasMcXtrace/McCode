@@ -67,7 +67,11 @@ INITIALIZE
 
 TRACE
 
-COMPONENT origin = Progress_bar()
+// electronic beam spec along storage ring 354m diameter
+// BeamLineName| Long_Pos(m)| RMS_H_Size(µm)| RMS_V_Size(µm)| RMS_H_div(µrad)| RMS_V_div(µrad)
+// -----|-------|-----|-|--|--
+// LUCIA|332,067|218,2|8|30|3,7
+REMOVABLE COMPONENT origin = Progress_bar()
 AT (0, 0, 0) RELATIVE ABSOLUTE
 
 // the photon source -----------------------------------------------------------
@@ -84,7 +88,7 @@ COMPONENT source = Undulator(
   sigey  = 8.2e-6,
   sigepx = 30e-6,
   sigepy = 3.7e-6) 
-AT (0,0,0) RELATIVE origin
+AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT mon_src_xy = Monitor_nD(
   options="x y", xwidth=2e-3, yheight=2e-3, bins=128)
