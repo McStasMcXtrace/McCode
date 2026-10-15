@@ -25,9 +25,12 @@
 #define GEOMETRY_MESH_LIB_C "$Revision$"
 
 #include <ctype.h>
+#include <limits.h>
 #include <stdint.h>
 
 #ifdef OPENACC
+/* fprintf and stderr are not available in GPU device code, so error
+   messages are sent through printf instead (as in interoff-lib) */
 #define fprintf(stderr,...) printf(__VA_ARGS__)
 #endif
 
@@ -35,70 +38,138 @@
 /*  Small helpers                                                             */
 /* ========================================================================== */
 
-#pragma acc routine seq
-double gmesh_coord(Coords c, int k) { return k == 0 ? c.x : (k == 1 ? c.y : c.z); }
-
+/* realloc that exits on failure. A request of 0 bytes is made as 1 byte, since
+   realloc(p, 0) may free p and return NULL, which would look like a failure. */
 static void *gmesh_xrealloc(void *p, size_t n)
 {
-  void *q = realloc(p, n ? n : 1);
-  if (!q) { fprintf(stderr, "Error: memory allocation of %lu bytes failed (geometry-mesh-lib)\n", (unsigned long)n); exit(-1); }
+  void *q;
+  if (n == 0) {
+    n = 1;
+  }
+  q = realloc(p, n);
+  if (!q) {
+    fprintf(stderr, "Error: memory allocation of %lu bytes failed (geometry-mesh-lib)\n", (unsigned long)n);
+    exit(-1);
+  }
   return q;
 }
 
-/* read the rest of the current line (without '\n'); -1 at EOF with nothing read */
-static long gmesh_readline(FILE *f, char **buf, size_t *cap)
+/* read the rest of the current line into *buf (without '\n'), growing the
+   buffer of *cap bytes as needed. Returns the line length, -1 at EOF with
+   nothing read. Exits if a line is longer than INT_MAX (e.g. a binary file). */
+static int gmesh_readline(FILE *f, char **buf, size_t *cap)
 {
-  long n = 0; int c;
-  if (!*buf || !*cap) { *cap = 1024; *buf = gmesh_xrealloc(NULL, *cap); }
+  int n = 0;
+  int c;
+  if (!*buf || !*cap) {
+    *cap = 1024;
+    *buf = gmesh_xrealloc(NULL, *cap);
+  }
   while ((c = fgetc(f)) != EOF && c != '\n') {
-    if ((size_t)(n+1) >= *cap) { *cap *= 2; *buf = gmesh_xrealloc(*buf, *cap); }
-    (*buf)[n++] = (char)c;
+    if ((size_t)n + 1 >= *cap) {
+      if (*cap > INT_MAX/2) {
+        fprintf(stderr, "Error: line longer than %d characters, not a text file? (geometry-mesh-lib)\n", INT_MAX/2);
+        exit(-1);
+      }
+      *cap *= 2;
+      *buf = gmesh_xrealloc(*buf, *cap);
+    }
+    (*buf)[n] = (char)c;
+    n++;
   }
   (*buf)[n] = '\0';
   if (c == EOF && n == 0) return -1;
   return n;
 }
 
-/* raw geometry as read from a file: vertices, polygons, per-face properties */
+/* Raw geometry as read from a file, before welding and triangulation.
+   Each array is grown by doubling: *_cap is the number of elements currently
+   allocated, the matching count is the number of elements in use. */
 typedef struct gmesh_raw {
-  Coords *v;  long nv, capv;
-  unsigned long *f; long fs, capf; long nf;
-  double *p; long np, capp;          /* all properties, row-major */
-  long *poff; int *pcnt; long capfaces;
-  int nprops, mixed;
+  Coords *verts;               /* vertex coordinates */
+  long nverts, verts_cap;
+  unsigned long *faces;        /* polygons, flattened: [n i1 .. in | n i1 .. in | ...] */
+  long faces_len, faces_cap;   /* used and allocated elements of faces */
+  long nfaces;                 /* number of polygons in faces */
+  /* Optional numbers given after the vertex indices of a face (OFF) or scalar
+     face properties (PLY), e.g. m, alpha, W of a guide wall as in interoff-lib.
+     The values of face i are props[prop_start[i] .. prop_start[i]+prop_count[i]-1]. */
+  double *props;
+  long nprops, props_cap;
+  long *prop_start;
+  int *prop_count;
+  long face_props_cap;         /* allocated elements of prop_start and prop_count */
 } gmesh_raw;
 
 static void gmesh_raw_vertex(gmesh_raw *r, double x, double y, double z)
 {
-  if (r->nv >= r->capv) { r->capv = r->capv ? 2*r->capv : 1024; r->v = gmesh_xrealloc(r->v, r->capv*sizeof(Coords)); }
-  r->v[r->nv++] = coords_set(x, y, z);
+  if (r->nverts >= r->verts_cap) {
+    if (r->verts_cap == 0) {
+      r->verts_cap = 1024;
+    } else {
+      r->verts_cap *= 2;
+    }
+    r->verts = gmesh_xrealloc(r->verts, r->verts_cap*sizeof(Coords));
+  }
+  r->verts[r->nverts] = coords_set(x, y, z);
+  r->nverts++;
 }
 
-/* start a new polygon with nv vertices; indices are then added with gmesh_raw_index */
-static void gmesh_raw_face(gmesh_raw *r, long nv)
+/* start a new polygon with nverts vertices: stores nverts in faces, the vertex
+   indices then follow as faces[faces_len++] = index */
+static void gmesh_raw_face(gmesh_raw *r, int nverts)
 {
-  if (r->fs + nv + 1 > r->capf) {
-    while (r->fs + nv + 1 > r->capf) r->capf = r->capf ? 2*r->capf : 4096;
-    r->f = gmesh_xrealloc(r->f, r->capf*sizeof(unsigned long));
+  long needed = r->faces_len + nverts + 1;
+  if (needed > r->faces_cap) {
+    if (r->faces_cap == 0) {
+      r->faces_cap = 4096;
+    }
+    while (needed > r->faces_cap) {
+      r->faces_cap *= 2;
+    }
+    r->faces = gmesh_xrealloc(r->faces, r->faces_cap*sizeof(unsigned long));
   }
-  if (r->nf >= r->capfaces) {
-    r->capfaces = r->capfaces ? 2*r->capfaces : 1024;
-    r->poff = gmesh_xrealloc(r->poff, r->capfaces*sizeof(long));
-    r->pcnt = gmesh_xrealloc(r->pcnt, r->capfaces*sizeof(int));
+  if (r->nfaces >= r->face_props_cap) {
+    if (r->face_props_cap == 0) {
+      r->face_props_cap = 1024;
+    } else {
+      r->face_props_cap *= 2;
+    }
+    r->prop_start = gmesh_xrealloc(r->prop_start, r->face_props_cap*sizeof(long));
+    r->prop_count = gmesh_xrealloc(r->prop_count, r->face_props_cap*sizeof(int));
   }
-  r->f[r->fs++] = nv;
-  r->poff[r->nf] = r->np; r->pcnt[r->nf] = 0;
-  r->nf++;
+  r->faces[r->faces_len] = nverts;
+  r->faces_len++;
+  r->prop_start[r->nfaces] = r->nprops;
+  r->prop_count[r->nfaces] = 0;
+  r->nfaces++;
 }
-static void gmesh_raw_index(gmesh_raw *r, unsigned long i) { r->f[r->fs++] = i; }
+
+/* append one property value to the most recently started face */
 static void gmesh_raw_prop(gmesh_raw *r, double val)
 {
-  if (r->np >= r->capp) { r->capp = r->capp ? 2*r->capp : 1024; r->p = gmesh_xrealloc(r->p, r->capp*sizeof(double)); }
-  r->p[r->np++] = val; r->pcnt[r->nf-1]++;
+  if (r->nprops >= r->props_cap) {
+    if (r->props_cap == 0) {
+      r->props_cap = 1024;
+    } else {
+      r->props_cap *= 2;
+    }
+    r->props = gmesh_xrealloc(r->props, r->props_cap*sizeof(double));
+  }
+  r->props[r->nprops] = val;
+  r->nprops++;
+  r->prop_count[r->nfaces-1]++;
 }
+
+/* free the arrays held by r and reset it to an empty gmesh_raw
+   (r itself is not freed, it lives on the caller's stack) */
 static void gmesh_raw_free(gmesh_raw *r)
 {
-  free(r->v); free(r->f); free(r->p); free(r->poff); free(r->pcnt);
+  free(r->verts);
+  free(r->faces);
+  free(r->props);
+  free(r->prop_start);
+  free(r->prop_count);
   memset(r, 0, sizeof(gmesh_raw));
 }
 
@@ -108,69 +179,110 @@ static void gmesh_raw_free(gmesh_raw *r)
 
 static int gmesh_read_off(FILE *f, char *filename, gmesh_raw *r)
 {
-  char *line = NULL; size_t cap = 0; long len, nv = 0, nf = 0, i;
+  char *line = NULL;
+  size_t cap = 0;
+  int len;
+  long nv = 0, nf = 0, i;
   int extra = 0;
-  char *hdr, *p;
-  do { len = gmesh_readline(f, &line, &cap); } while (len >= 0 && strspn(line, " \t\r") == (size_t)len);
-  if (len < 0) { fprintf(stderr, "Error: empty file %s (geometry-mesh-lib)\n", filename); free(line); return 0; }
-  hdr = line + strspn(line, " \t");
-  p = hdr;
-  while (*p && strchr("STCN", *p)) p++;
-  if (strncmp(p, "OFF", 3) || (p[3] && !isspace((unsigned char)p[3]))) {
-    fprintf(stderr, "Error: %s: header '%s' is not a supported OFF header (geometry-mesh-lib)\n", filename, hdr);
-    free(line); return 0;
+  char *header;   /* the header line without leading blanks, e.g. "COFF 8 6 0" */
+  char *keyword;  /* the "OFF" in header, after any S/T/C/N prefix letters */
+  char *text = NULL;  /* a line without leading blanks */
+
+  /* skip blank lines before the header */
+  len = gmesh_readline(f, &line, &cap);
+  while (len >= 0 && strspn(line, " \t\r") == (size_t)len) {
+    len = gmesh_readline(f, &line, &cap);
   }
-  extra = (p != hdr);
-  if (sscanf(p+3, "%ld %ld", &nv, &nf) != 2) {
-    do {
-      len = gmesh_readline(f, &line, &cap);
-      if (len < 0) break;
-      hdr = line + strspn(line, " \t\r");
-    } while (hdr[0] == '#' || hdr[0] == '\0');
-    if (len < 0 || sscanf(hdr, "%ld %ld", &nv, &nf) != 2) {
+  if (len < 0) {
+    fprintf(stderr, "Error: empty file %s (geometry-mesh-lib)\n", filename);
+    free(line);
+    return 0;
+  }
+  header = line + strspn(line, " \t");
+  keyword = header;
+  while (*keyword && strchr("STCN", *keyword)) {
+    keyword++;
+  }
+  if (strncmp(keyword, "OFF", 3) || (keyword[3] && !isspace((unsigned char)keyword[3]))) {
+    fprintf(stderr, "Error: %s: header '%s' is not a supported OFF header (geometry-mesh-lib)\n", filename, header);
+    free(line);
+    return 0;
+  }
+  /* prefixed headers (COFF, NOFF, ...) have extra numbers after each vertex */
+  extra = (keyword != header);
+  /* the counts are either on the header line or on the next non-comment line */
+  if (sscanf(keyword+3, "%ld %ld", &nv, &nf) != 2) {
+    for (len = gmesh_readline(f, &line, &cap); len >= 0; len = gmesh_readline(f, &line, &cap)) {
+      text = line + strspn(line, " \t\r");
+      if (text[0] != '#' && text[0] != '\0') break;
+    }
+    if (len < 0 || sscanf(text, "%ld %ld", &nv, &nf) != 2) {
       fprintf(stderr, "Error: %s: can not read the numbers of vertices and faces (geometry-mesh-lib)\n", filename);
-      free(line); return 0;
+      free(line);
+      return 0;
     }
   }
   if (nv <= 0 || nf <= 0) {
     fprintf(stderr, "Error: %s defines %ld vertices and %ld faces (geometry-mesh-lib)\n", filename, nv, nf);
-    free(line); return 0;
+    free(line);
+    return 0;
   }
-  for (i = 0; i < nv; ) {
+  for (i = 0; i < nv; i++) {
     double x, y, z;
     int ret = fscanf(f, "%lg %lg %lg", &x, &y, &z);
-    if (ret == 0) { gmesh_readline(f, &line, &cap); continue; } /* comment */
+    /* fscanf returns 0 on a non-number, i.e. a comment line: skip it */
+    while (ret == 0) {
+      gmesh_readline(f, &line, &cap);
+      ret = fscanf(f, "%lg %lg %lg", &x, &y, &z);
+    }
     if (ret != 3) {
       fprintf(stderr, "Error: %s: can not read vertex %ld (geometry-mesh-lib)\n", filename, i);
-      free(line); return 0;
+      free(line);
+      return 0;
     }
-    if (extra) gmesh_readline(f, &line, &cap);
+    if (extra) {
+      gmesh_readline(f, &line, &cap);
+    }
     gmesh_raw_vertex(r, x, y, z);
-    i++;
   }
-  for (i = 0; i < nf; ) {
-    long n, j; double idx;
-    int ret = fscanf(f, "%ld", &n);
-    if (ret == 0) { gmesh_readline(f, &line, &cap); continue; }
+  for (i = 0; i < nf; i++) {
+    int n, j;
+    double idx;
+    int ret = fscanf(f, "%d", &n);
+    while (ret == 0) {
+      gmesh_readline(f, &line, &cap);
+      ret = fscanf(f, "%d", &n);
+    }
     if (ret != 1 || n < 1) {
       fprintf(stderr, "Error: %s: can not read face %ld (geometry-mesh-lib)\n", filename, i);
-      free(line); return 0;
+      free(line);
+      return 0;
     }
     gmesh_raw_face(r, n);
     for (j = 0; j < n; j++) {
       if (fscanf(f, "%lg", &idx) != 1 || idx < 0 || idx >= nv || idx != floor(idx)) {
-        fprintf(stderr, "Error: %s: invalid vertex index #%ld of face %ld (geometry-mesh-lib)\n", filename, j, i);
-        free(line); return 0;
+        fprintf(stderr, "Error: %s: invalid vertex index #%d of face %ld (geometry-mesh-lib)\n", filename, j, i);
+        free(line);
+        return 0;
       }
-      gmesh_raw_index(r, (unsigned long)idx);
+      r->faces[r->faces_len] = (unsigned long)idx;
+      r->faces_len++;
     }
-    /* optional per-face numbers until the end of the line */
+    /* optional per-face numbers until the end of the line or a '#' comment */
     if (gmesh_readline(f, &line, &cap) > 0) {
-      char *s = line, *end, *hash = strchr(line, '#');
-      if (hash) *hash = '\0';
-      for (;;) { double val = strtod(s, &end); if (end == s) break; gmesh_raw_prop(r, val); s = end; }
+      char *s = line;
+      char *end;
+      char *hash = strchr(line, '#');
+      if (hash) {
+        *hash = '\0';
+      }
+      for (;;) {
+        double val = strtod(s, &end);
+        if (end == s) break;
+        gmesh_raw_prop(r, val);
+        s = end;
+      }
     }
-    i++;
   }
   free(line);
   return 1;
@@ -218,7 +330,8 @@ static int gmesh_read_stl(char *filename, gmesh_raw *r)
       gmesh_raw_face(r, 3);
       for (k = 0; k < 3; k++) {
         gmesh_raw_vertex(r, xyz[3*k], xyz[3*k+1], xyz[3*k+2]);
-        gmesh_raw_index(r, r->nv-1);
+        r->faces[r->faces_len] = r->nverts-1;
+        r->faces_len++;
       }
     }
   } else {
@@ -226,7 +339,7 @@ static int gmesh_read_stl(char *filename, gmesh_raw *r)
     fseek(f, 0, SEEK_SET);
     while (gmesh_readline(f, &line, &cap) >= 0) {
       char *s = line + strspn(line, " \t");
-      if (!strncmp(s, "outer", 5))       { first = r->nv; nloop = 0; }
+      if (!strncmp(s, "outer", 5))       { first = r->nverts; nloop = 0; }
       else if (!strncmp(s, "vertex", 6)) {
         double x, y, z;
         if (sscanf(s+6, "%lg %lg %lg", &x, &y, &z) != 3) {
@@ -238,13 +351,16 @@ static int gmesh_read_stl(char *filename, gmesh_raw *r)
         long k;
         if (nloop >= 1) {
           gmesh_raw_face(r, nloop);
-          for (k = 0; k < nloop; k++) gmesh_raw_index(r, first+k);
+          for (k = 0; k < nloop; k++) {
+            r->faces[r->faces_len] = first+k;
+            r->faces_len++;
+          }
         }
         nloop = 0;
       }
     }
     free(line);
-    if (!r->nf) { fprintf(stderr, "Error: %s: no facets found in ASCII STL (geometry-mesh-lib)\n", filename); fclose(f); return 0; }
+    if (!r->nfaces) { fprintf(stderr, "Error: %s: no facets found in ASCII STL (geometry-mesh-lib)\n", filename); fclose(f); return 0; }
   }
   fclose(f);
   return 1;
@@ -368,7 +484,8 @@ static int gmesh_read_ply(FILE *f, char *filename, gmesh_raw *r)
                 fprintf(stderr, "Error: %s: invalid vertex index %g in face %ld (geometry-mesh-lib)\n", filename, val, i);
                 return 0;
               }
-              gmesh_raw_index(r, (unsigned long)val);
+              r->faces[r->faces_len] = (unsigned long)val;
+              r->faces_len++;
             }
           } else for (j = 0; j < nitem; j++) if (!gmesh_ply_value(f, fmt, P->type, &val)) goto trunc;
         } else {
@@ -508,8 +625,12 @@ static long gmesh_triangulate(Coords *v, unsigned long *idx, long n, long **tri,
 static Coords *gmesh_sort_cent; static int gmesh_sort_axis;
 static int gmesh_cmp_cent(const void *a, const void *b)
 {
-  double ca = gmesh_coord(gmesh_sort_cent[*(const long*)a], gmesh_sort_axis);
-  double cb = gmesh_coord(gmesh_sort_cent[*(const long*)b], gmesh_sort_axis);
+  Coords pa = gmesh_sort_cent[*(const long*)a];
+  Coords pb = gmesh_sort_cent[*(const long*)b];
+  double va[3] = {pa.x, pa.y, pa.z};
+  double vb[3] = {pb.x, pb.y, pb.z};
+  double ca = va[gmesh_sort_axis];
+  double cb = vb[gmesh_sort_axis];
   return (ca < cb) ? -1 : (ca > cb) ? 1 : 0;
 }
 
@@ -624,12 +745,12 @@ long gmesh_init(char *filename, double scale, double xwidth, double yheight,
     else ok = gmesh_read_off(f, filename, &r);
     if (f) fclose(f);
   }
-  if (!ok || !r.nv || !r.nf) { gmesh_raw_free(&r); return 0; }
+  if (!ok || !r.nverts || !r.nfaces) { gmesh_raw_free(&r); return 0; }
 
   /* scale, resize and center (same conventions as interoff-lib) */
   if (!scale) scale = 1;
-  for (i = 0; i < r.nv; i++) {
-    Coords *p = &r.v[i];
+  for (i = 0; i < r.nverts; i++) {
+    Coords *p = &r.verts[i];
     p->x *= scale; p->y *= scale; p->z *= scale;
     if (p->x<minx) minx=p->x;
     if (p->x>maxx) maxx=p->x;
@@ -656,10 +777,10 @@ long gmesh_init(char *filename, double scale, double xwidth, double yheight,
       if (!yheight) fy = fz;
     }
     if (!(notcenter && fx == 1 && fy == 1 && fz == 1))  /* else: coordinates kept exactly */
-    for (i = 0; i < r.nv; i++) {
-      r.v[i].x = (r.v[i].x - cx)*fx + bx;
-      r.v[i].y = (r.v[i].y - cy)*fy + by;
-      r.v[i].z = (r.v[i].z - cz)*fz + bz;
+    for (i = 0; i < r.nverts; i++) {
+      r.verts[i].x = (r.verts[i].x - cx)*fx + bx;
+      r.verts[i].y = (r.verts[i].y - cy)*fy + by;
+      r.verts[i].z = (r.verts[i].z - cz)*fz + bz;
     }
     if (!(notcenter && fx == 1 && fy == 1 && fz == 1)) {
     minx = (minx-cx)*fx + bx; maxx = (maxx-cx)*fx + bx;
@@ -672,19 +793,19 @@ long gmesh_init(char *filename, double scale, double xwidth, double yheight,
   if (m->length_scale <= 0) m->length_scale = 1;
 
   /* weld vertices: identical within GMESH_WELD_TOL*diagonal (grid rounding) */
-  map = malloc(r.nv*sizeof(long));
-  m->vtx = malloc(r.nv*sizeof(Coords));
+  map = malloc(r.nverts*sizeof(long));
+  m->vtx = malloc(r.nverts*sizeof(Coords));
   if (!map || !m->vtx) { fprintf(stderr, "Error: memory allocation (geometry-mesh-lib)\n"); exit(-1); }
   {
     double tol = GMESH_WELD_TOL*m->length_scale;
     long hcap = 16, *htab;
-    while (hcap < 2*r.nv) hcap *= 2;
+    while (hcap < 2*r.nverts) hcap *= 2;
     htab = malloc(hcap*sizeof(long));
     if (!htab) { fprintf(stderr, "Error: memory allocation (geometry-mesh-lib)\n"); exit(-1); }
     for (i = 0; i < hcap; i++) htab[i] = -1;
     m->nverts = 0;
-    for (i = 0; i < r.nv; i++) {
-      Coords p = r.v[i];
+    for (i = 0; i < r.nverts; i++) {
+      Coords p = r.verts[i];
       int64_t q[3];
       uint64_t h;
       long s;
@@ -705,25 +826,25 @@ long gmesh_init(char *filename, double scale, double xwidth, double yheight,
       }
     }
     free(htab);
-    m->nwelded = r.nv - m->nverts;
+    m->nwelded = r.nverts - m->nverts;
     m->vtx = gmesh_xrealloc(m->vtx, m->nverts*sizeof(Coords));
   }
 
   /* faces with welded indices (consecutive repeats removed), triangulation */
-  m->nfaces = r.nf;
-  m->faceArray = malloc((r.fs)*sizeof(unsigned long));
+  m->nfaces = r.nfaces;
+  m->faceArray = malloc((r.faces_len)*sizeof(unsigned long));
   if (!m->faceArray) { fprintf(stderr, "Error: memory allocation (geometry-mesh-lib)\n"); exit(-1); }
   {
     long pos = 0, fi = 0, ntri = 0;
     long *tri = NULL, *tface = NULL, tcap = 0;
     m->faceSize = 0;
-    while (pos < r.fs) {
-      long n = r.f[pos], nn = 0, start = m->faceSize, j, before;
+    while (pos < r.faces_len) {
+      long n = r.faces[pos], nn = 0, start = m->faceSize, j, before;
       unsigned long *out;
       m->faceArray[m->faceSize++] = 0;
       out = &m->faceArray[m->faceSize];
       for (j = 0; j < n; j++) {
-        unsigned long id = map[r.f[pos+1+j]];
+        unsigned long id = map[r.faces[pos+1+j]];
         if (nn && out[nn-1] == id) continue;
         out[nn++] = id;
       }
@@ -743,16 +864,15 @@ long gmesh_init(char *filename, double scale, double xwidth, double yheight,
   free(map);
 
   /* per-face properties (column-major, missing values 0) */
-  for (i = 0; i < r.nf; i++) {
-    if (r.pcnt[i] > m->nfaceprops) m->nfaceprops = r.pcnt[i];
-    if (i && r.pcnt[i] != r.pcnt[i-1]) r.mixed = 1;
+  for (i = 0; i < r.nfaces; i++) {
+    if (r.prop_count[i] > m->nfaceprops) m->nfaceprops = r.prop_count[i];
   }
   if (m->nfaceprops) {
-    m->facePropSize = (long)m->nfaceprops*r.nf;
+    m->facePropSize = (long)m->nfaceprops*r.nfaces;
     m->facePropArray = calloc(m->facePropSize, sizeof(double));
     if (!m->facePropArray) { fprintf(stderr, "Error: memory allocation (geometry-mesh-lib)\n"); exit(-1); }
-    for (i = 0; i < r.nf; i++) for (k = 0; k < r.pcnt[i]; k++)
-      m->facePropArray[k*r.nf + i] = r.p[r.poff[i]+k];
+    for (i = 0; i < r.nfaces; i++) for (k = 0; k < r.prop_count[i]; k++)
+      m->facePropArray[k*r.nfaces + i] = r.props[r.prop_start[i]+k];
   }
   gmesh_raw_free(&r);
 
@@ -878,9 +998,13 @@ long gmesh_init(char *filename, double scale, double xwidth, double yheight,
 #pragma acc routine seq
 static int gmesh_slab(Coords lo, Coords hi, Coords o, Coords d, double tlo, double thi)
 {
+  double o_xyz[3]  = {o.x, o.y, o.z};
+  double d_xyz[3]  = {d.x, d.y, d.z};
+  double lo_xyz[3] = {lo.x, lo.y, lo.z};
+  double hi_xyz[3] = {hi.x, hi.y, hi.z};
   int k;
   for (k = 0; k < 3; k++) {
-    double ok = gmesh_coord(o,k), dk = gmesh_coord(d,k), l = gmesh_coord(lo,k), h = gmesh_coord(hi,k);
+    double ok = o_xyz[k], dk = d_xyz[k], l = lo_xyz[k], h = hi_xyz[k];
     double pad = 1e-9*(h - l) + 1e-12*(fabs(l) + fabs(h)) + 1e-300;
     l -= pad; h += pad;
     if (dk == 0) { if (ok < l || ok > h) return 0; }
