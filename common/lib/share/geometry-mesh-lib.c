@@ -301,6 +301,13 @@ static int gmesh_read_off(FILE *f, char *filename, gmesh_raw *r)
 /*  STL reader                                                                */
 /* ========================================================================== */
 
+//TODO Throughout this file I want you to adhere to some rules:
+//TODO Never write multiple lines of code on one line separated by ;
+//TODO Every function should have a header explaining what it does
+//TODO Don't use long boolean operators
+//TODO Stay away from tertiary operators except when it is the obvious way to do it
+//TODO The parameters should be full words that explain their use.
+
 static int gmesh_read_stl(char *filename, gmesh_raw *r)
 {
   FILE *f = Open_File(filename, "rb", NULL);
@@ -308,7 +315,7 @@ static int gmesh_read_stl(char *filename, gmesh_raw *r)
   long size, ntri = 0, i;
   int binary = 0;
   if (!f) return 0;
-  fseek(f, 0, SEEK_END); size = ftell(f); fseek(f, 0, SEEK_SET);
+  fseek(f, 0, SEEK_END); size = ftell(f); fseek(f, 0, SEEK_SET); 
   if (size >= 84 && fread(head, 1, 84, f) == 84) {
     uint32_t n = (uint32_t)head[80] | ((uint32_t)head[81] << 8) | ((uint32_t)head[82] << 16) | ((uint32_t)head[83] << 24);
     ntri = (long)n;
