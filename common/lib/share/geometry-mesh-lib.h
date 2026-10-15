@@ -26,7 +26,7 @@
 *   (STEP is not supported: export the geometry as STL, OFF or PLY)
 *
 * What the library does at init
-*   - optional scaling (e.g. 1e-3 for files in mm), re-sizing and centring
+*   - optional scaling (e.g. 1e-3 for files in mm), no re-sizing or centring
 *   - welds duplicated vertices (STL stores 3 vertices per triangle)
 *   - triangulates polygons (ear clipping, works for non-convex polygons)
 *   - computes unit normals, area, volume and mesh topology: number of edges,
@@ -37,8 +37,8 @@
 *     O(log N) instead of O(N) triangle tests, without any allocation per ray.
 *
 * Ray tracing
+*   gmesh_count_hits()     upper bound of the number of intersections
 *   gmesh_intersect()      all intersections of a straight line, sorted in t
-*   gmesh_intersect_t0t3() the off_intersect() convention of interoff-lib
 *   gmesh_inside()         point-in-mesh test (deterministic, no random numbers)
 *   Hits exactly on an edge or vertex shared by several triangles are
 *   reported once.
@@ -125,44 +125,37 @@ typedef struct gmesh_struct {
 } gmesh_struct;
 
 /*******************************************************************************
-* long gmesh_init(char *filename, double scale, double xwidth, double yheight,
-*                 double zdepth, int notcenter, gmesh_struct *mesh)
+* long gmesh_init(char *filename, double scale, gmesh_struct *mesh)
 * ACTION: read an STL/OFF/PLY file and build the mesh structure.
 * INPUT:  scale: multiply file coordinates (1 for m, 1e-3 for mm, 0 same as 1)
-*         xwidth,yheight,zdepth: when non-zero, re-size the bounding box (as interoff)
-*         notcenter: when 0, center the bounding box on (0,0,0)
 * RETURN: number of triangles, 0 on error
 *******************************************************************************/
-long gmesh_init(char *filename, double scale, double xwidth, double yheight,
-                double zdepth, int notcenter, gmesh_struct *mesh);
+long gmesh_init(char *filename, double scale, gmesh_struct *mesh);
+
+/*******************************************************************************
+* long gmesh_count_hits(gmesh_struct *mesh, Coords position, Coords direction,
+*                       double t_min)
+* ACTION: count the intersections of the line position + t*direction with the
+*         mesh for t > t_min, without storing them. A hit on an edge or vertex
+*         shared by several triangles is counted for each triangle, so this is
+*         an upper bound of what gmesh_intersect finds: allocate that many hits.
+* RETURN: number of triangle hits
+*******************************************************************************/
+#pragma acc routine seq
+long gmesh_count_hits(gmesh_struct *mesh, Coords position, Coords direction, double t_min);
 
 /*******************************************************************************
 * int gmesh_intersect(gmesh_struct *mesh, Coords position, Coords direction,
 *                     double t_min, gmesh_hit *hits, int max_hits, long *total_hits)
 * ACTION: intersections of the line position + t*direction with the mesh, for
 *         t > t_min (use -FLT_MAX for the whole line). The max_hits hits with
-*         the smallest t are stored in 'hits', sorted by increasing t.
+*         the smallest t are stored in 'hits', sorted by increasing t. To get
+*         every hit, use max_hits = gmesh_count_hits(...).
 * RETURN: number of hits stored; *total_hits (if not NULL) = number of hits found
 *******************************************************************************/
 #pragma acc routine seq
 int gmesh_intersect(gmesh_struct *mesh, Coords position, Coords direction, double t_min,
                     gmesh_hit *hits, int max_hits, long *total_hits);
-
-/*******************************************************************************
-* int gmesh_intersect_t0t3(double *t0, double *t3, Coords *normal0, Coords *normal3,
-*        long *face0, long *face3, double x, double y, double z,
-*        double vx, double vy, double vz, gmesh_struct *mesh)
-* ACTION: same result convention as off_intersect() of interoff-lib (straight
-*         line only): t0/t3 are the largest negative and smallest positive
-*         times, or the two smallest positive times when the particle is outside.
-*         normal0/normal3 are the normals and face0/face3 the face indices
-*         at t0/t3 (any of them may be NULL).
-* RETURN: number of intersections (capped at 4)
-*******************************************************************************/
-#pragma acc routine seq
-int gmesh_intersect_t0t3(double *t0, double *t3, Coords *normal0, Coords *normal3,
-                         long *face0, long *face3, double x, double y, double z,
-                         double vx, double vy, double vz, gmesh_struct *mesh);
 
 /*******************************************************************************
 * int gmesh_inside(gmesh_struct *mesh, Coords position)

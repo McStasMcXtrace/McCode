@@ -344,14 +344,15 @@ static int gmesh_read_off(FILE *file, char *filename, gmesh_raw *raw)
       char *position = raw->line;
       char *end;
       char *hash = strchr(raw->line, '#');
+      double value;
       if (hash) {
         *hash = '\0';
       }
-      for (;;) {//TODO Don't use an infinite loop
-        double value = strtod(position, &end);
-        if (end == position) break;
+      value = strtod(position, &end);
+      while (end != position) {
         gmesh_raw_prop(raw, value);
         position = end;
+        value = strtod(position, &end);
       }
     }
   }
@@ -1229,22 +1230,12 @@ static int gmesh_read_file(char *filename, const char *extension, gmesh_raw *raw
 }
 
 /* read an STL/OFF/PLY file into mesh, see geometry-mesh-lib.h */
-long gmesh_init(char *filename, double scale, double xwidth, double yheight,
-                double zdepth, int notcenter, gmesh_struct *mesh)
+long gmesh_init(char *filename, double scale, gmesh_struct *mesh)
 {
-  //TODO Why would this init need xwidth yheigh and zdepth as well as notcenter? 
-  //TODO The bounding box should be a part of the mesh struct
-  //TODO Is the edge writing absolutely necessary? It doesn't seem so to me
   gmesh_raw raw;
   const char *extension;
   int ok = 0;
   long i, k;
-  double minx = FLT_MAX;
-  double maxx = -FLT_MAX;
-  double miny = FLT_MAX;
-  double maxy = -FLT_MAX;
-  double minz = FLT_MAX;
-  double maxz = -FLT_MAX;
   long *map;
 
   if (!mesh || !filename) return 0;
@@ -1275,77 +1266,23 @@ long gmesh_init(char *filename, double scale, double xwidth, double yheight,
     return 0;
   }
 
-  /* scale, resize and center (same conventions as interoff-lib) */
+  /* scale, and bounding box */
   if (!scale) scale = 1;
+  mesh->bbmin = coords_set(FLT_MAX, FLT_MAX, FLT_MAX);
+  mesh->bbmax = coords_set(-FLT_MAX, -FLT_MAX, -FLT_MAX);
   for (i = 0; i < raw.nverts; i++) {
     Coords *p = &raw.verts[i];
     p->x *= scale;
     p->y *= scale;
     p->z *= scale;
-    if (p->x < minx) minx = p->x;
-    if (p->x > maxx) maxx = p->x;
-    if (p->y < miny) miny = p->y;
-    if (p->y > maxy) maxy = p->y;
-    if (p->z < minz) minz = p->z;
-    if (p->z > maxz) maxz = p->z;
+    if (p->x < mesh->bbmin.x) mesh->bbmin.x = p->x;
+    if (p->x > mesh->bbmax.x) mesh->bbmax.x = p->x;
+    if (p->y < mesh->bbmin.y) mesh->bbmin.y = p->y;
+    if (p->y > mesh->bbmax.y) mesh->bbmax.y = p->y;
+    if (p->z < mesh->bbmin.z) mesh->bbmin.z = p->z;
+    if (p->z > mesh->bbmax.z) mesh->bbmax.z = p->z;
   }
-  {
-    double rx = maxx-minx;
-    double ry = maxy-miny;
-    double rz = maxz-minz;
-    double fx = 1;
-    double fy = 1;
-    double fz = 1;
-    double cx = (minx+maxx)/2;
-    double cy = (miny+maxy)/2;
-    double cz = (minz+maxz)/2;
-    double bx = 0;
-    double by = 0;
-    double bz = 0;
-    int unscaled;
-    /* scale around the bounding box center, then optionally put it back */
-    if (notcenter) {
-      bx = cx;
-      by = cy;
-      bz = cz;
-    }
-    if (xwidth && rx) {
-      fx = xwidth/rx;
-      fy = fx;
-      fz = fx;
-    }
-    if (yheight && ry) {
-      fy = yheight/ry;
-      fz = fy;
-      if (!xwidth) fx = fy;
-    }
-    if (zdepth && rz) {
-      fz = zdepth/rz;
-      if (!xwidth) fx = fz;
-      if (!yheight) fy = fz;
-    }
-    unscaled = (fx == 1 && fy == 1);
-    if (fz != 1) {
-      unscaled = 0;
-    }
-    /* when not centered and not scaled the coordinates are kept exactly */
-    if (!notcenter || !unscaled) {
-      for (i = 0; i < raw.nverts; i++) {
-        raw.verts[i].x = (raw.verts[i].x - cx)*fx + bx;
-        raw.verts[i].y = (raw.verts[i].y - cy)*fy + by;
-        raw.verts[i].z = (raw.verts[i].z - cz)*fz + bz;
-      }
-      minx = (minx-cx)*fx + bx;
-      maxx = (maxx-cx)*fx + bx;
-      miny = (miny-cy)*fy + by;
-      maxy = (maxy-cy)*fy + by;
-      minz = (minz-cz)*fz + bz;
-      maxz = (maxz-cz)*fz + bz;
-    }
-  }
-  mesh->bbmin = coords_set(minx, miny, minz);
-  mesh->bbmax = coords_set(maxx, maxy, maxz);
-  mesh->length_scale = sqrt((maxx-minx)*(maxx-minx) + (maxy-miny)*(maxy-miny) + (maxz-minz)*(maxz-minz));
+  mesh->length_scale = coords_len(coords_sub(mesh->bbmax, mesh->bbmin));
   if (mesh->length_scale <= 0) mesh->length_scale = 1;
 
   /* weld vertices: identical within GMESH_WELD_TOL*diagonal (grid rounding) */
@@ -1366,27 +1303,25 @@ long gmesh_init(char *filename, double scale, double xwidth, double yheight,
     for (i = 0; i < raw.nverts; i++) {
       Coords p = raw.verts[i];
       int64_t key[3];
+      int64_t other_key[3];
       uint64_t hash;
       long slot;
       gmesh_quantize(p, tolerance, key);
       hash = gmesh_mix((uint64_t)key[0] ^ gmesh_mix((uint64_t)key[1] ^ gmesh_mix((uint64_t)key[2])));
       slot = (long)(hash & (uint64_t)(hash_cap-1));
-      for (;;) {
-        long j = hash_table[slot];
-        int64_t other_key[3];
-        if (j < 0) {
-          hash_table[slot] = mesh->nverts;
-          mesh->vtx[mesh->nverts] = p;
-          map[i] = mesh->nverts;
-          mesh->nverts++;
-          break;
-        }
-        gmesh_quantize(mesh->vtx[j], tolerance, other_key);
-        if (!memcmp(other_key, key, sizeof(key))) {
-          map[i] = j;
-          break;
-        }
+      /* probe until an empty slot or a welded vertex with the same key */
+      while (hash_table[slot] >= 0) {
+        gmesh_quantize(mesh->vtx[hash_table[slot]], tolerance, other_key);
+        if (!memcmp(other_key, key, sizeof(key))) break;
         slot = (slot+1) & (hash_cap-1);
+      }
+      if (hash_table[slot] >= 0) {
+        map[i] = hash_table[slot];
+      } else {
+        hash_table[slot] = mesh->nverts;
+        mesh->vtx[mesh->nverts] = p;
+        map[i] = mesh->nverts;
+        mesh->nverts++;
       }
     }
     free(hash_table);
@@ -1612,9 +1547,8 @@ long gmesh_init(char *filename, double scale, double xwidth, double yheight,
 /* ========================================================================== */
 
 /* slab test of the line origin + t*direction against the box [lower, upper],
-   for t in [t_start, t_end]. Returns 1 when that part of the line meets the box. */
-//TODO Is this function absolutely necessary? Could we not just use the tri_hit?
-//TODO Also use trihit for the BVH test?
+   for t in [t_start, t_end]. Returns 1 when that part of the line meets the box.
+   The BVH traversal uses it to skip every node whose box the line misses. */
 #pragma acc routine seq
 static int gmesh_slab(Coords lower, Coords upper, Coords origin, Coords direction, double t_start, double t_end)
 {
@@ -1686,16 +1620,16 @@ static int gmesh_tri_hit(gmesh_struct *mesh, long triangle, Coords origin, Coord
   return 1;
 }
 
-/* BVH traversal for the line origin + t*direction, t > t_min. mode 0: the
-   max_hits nearest hits sorted in hits, 1: four slots as in interoff (hits[0]
-   the latest hit at t < 0, hits[1..3] the first ones at t >= 0), 2: count only,
-   with *ambiguous = 1 when a hit is on an edge or at the origin.
-   Returns the number of hits found. */
-//TODO The number of hits are arbitrary. Lets set it to 4 but reallocate if more are found
+/* BVH traversal for the line origin + t*direction, t > t_min. Stores the
+   max_hits nearest hits in hits, sorted by t, with hits on shared edges and
+   vertices kept once. When hits is NULL the hits are only counted, each
+   triangle hit once, with *ambiguous = 1 when a hit is on an edge or at the
+   origin. Returns the number of hits found. */
 #pragma acc routine seq
-static long gmesh_trace(gmesh_struct *mesh, Coords origin, Coords direction, double t_min, int mode,
+static long gmesh_trace(gmesh_struct *mesh, Coords origin, Coords direction, double t_min,
                         gmesh_hit *hits, int max_hits, int *stored_count, int *ambiguous)
 {
+  int count_only = (hits == NULL);
   long stack[GMESH_BVH_STACK+2];
   int top = 0;
   long total = 0;
@@ -1713,7 +1647,7 @@ static long gmesh_trace(gmesh_struct *mesh, Coords origin, Coords direction, dou
     top--;
     node = &mesh->node[stack[top]];
     /* a full sorted buffer: only nearer hits are of interest */
-    if (mode == 0 && max_hits > 0) {
+    if (!count_only && max_hits > 0) {
       if (*stored_count == max_hits) t_max = hits[max_hits-1].t + t_tolerance;
     }
     if (!gmesh_slab(node->lo, node->hi, origin, direction, t_min, t_max)) continue;
@@ -1731,7 +1665,7 @@ static long gmesh_trace(gmesh_struct *mesh, Coords origin, Coords direction, dou
       int on_edge;
       int in_out;
       int k;
-      int ncompare;
+      int position;
       int duplicate = 0;
       gmesh_hit hit;
       if (!gmesh_tri_hit(mesh, t, origin, direction, &hit_t, &on_edge)) continue;
@@ -1741,7 +1675,7 @@ static long gmesh_trace(gmesh_struct *mesh, Coords origin, Coords direction, dou
       } else {
         in_out = -1;
       }
-      if (mode == 2) {
+      if (count_only) {
         total++;
         if (on_edge || fabs(hit_t) <= t_tolerance) *ambiguous = 1;
         continue;
@@ -1753,12 +1687,7 @@ static long gmesh_trace(gmesh_struct *mesh, Coords origin, Coords direction, dou
       hit.in_out = in_out;
       hit.edge = on_edge;
       /* hits on shared edges/vertices: keep once */
-      if (mode == 1) {
-        ncompare = 4;
-      } else {
-        ncompare = *stored_count;
-      }
-      for (k = 0; k < ncompare; k++) {
+      for (k = 0; k < *stored_count; k++) {
         if (hits[k].in_out == in_out && fabs(hits[k].t - hit_t) <= t_tolerance) {
           duplicate = 1;
           break;
@@ -1766,38 +1695,19 @@ static long gmesh_trace(gmesh_struct *mesh, Coords origin, Coords direction, dou
       }
       if (duplicate) continue;
       total++;
-      if (mode == 1) {
-        gmesh_hit swap;
-        if (hit_t < 0) {
-          if (hit_t > hits[0].t) hits[0] = hit;
-        } else if (hit_t < hits[3].t) {
-          hits[3] = hit;
-          if (hits[3].t < hits[2].t) {
-            swap = hits[2];
-            hits[2] = hits[3];
-            hits[3] = swap;
-          }
-          if (hits[2].t < hits[1].t) {
-            swap = hits[1];
-            hits[1] = hits[2];
-            hits[2] = swap;
-          }
-        }
+      position = *stored_count;
+      if (position == max_hits) {
+        if (max_hits == 0) continue;
+        if (hit_t >= hits[max_hits-1].t) continue;
+        position = max_hits-1;
       } else {
-        int position = *stored_count;
-        if (position == max_hits) {
-          if (max_hits == 0) continue;
-          if (hit_t >= hits[max_hits-1].t) continue;
-          position = max_hits-1;
-        } else {
-          (*stored_count)++;
-        }
-        while (position > 0 && hits[position-1].t > hit_t) {
-          hits[position] = hits[position-1];
-          position--;
-        }
-        hits[position] = hit;
+        (*stored_count)++;
       }
+      while (position > 0 && hits[position-1].t > hit_t) {
+        hits[position] = hits[position-1];
+        position--;
+      }
+      hits[position] = hit;
     }
   }
   return total;
@@ -1810,52 +1720,18 @@ int gmesh_intersect(gmesh_struct *mesh, Coords position, Coords direction, doubl
 {
   int stored = 0;
   int ambiguous = 0;
-  long total = gmesh_trace(mesh, position, direction, t_min, 0, hits, max_hits, &stored, &ambiguous);
+  long total = gmesh_trace(mesh, position, direction, t_min, hits, max_hits, &stored, &ambiguous);
   if (total_hits) *total_hits = total;
   return stored;
 }
 
-/* intersections of a line with mesh as off_intersect of interoff-lib,
-   see geometry-mesh-lib.h */
-//TODO Remove gmesh intersect t0t3. It limits us in number of intersections
-//TODO We should instead change the components use of the intersection algorithm which will be done at a later stage
+/* upper bound of the number of hits gmesh_intersect can find, see geometry-mesh-lib.h */
 #pragma acc routine seq
-int gmesh_intersect_t0t3(double *t0, double *t3, Coords *normal0, Coords *normal3,
-                         long *face0, long *face3, double x, double y, double z,
-                         double vx, double vy, double vz, gmesh_struct *mesh)
+long gmesh_count_hits(gmesh_struct *mesh, Coords position, Coords direction, double t_min)
 {
-  gmesh_hit hits[4];
-  int k;
   int stored = 0;
   int ambiguous = 0;
-  int first;
-  long total;
-  for (k = 0; k < 4; k++) {
-    hits[k].t = FLT_MAX;
-    hits[k].normal = coords_set(0,0,0);
-    hits[k].tri = 0;
-    hits[k].face = 0;
-    hits[k].in_out = 0;
-    hits[k].edge = 0;
-  }
-  hits[0].t = -FLT_MAX;
-  total = gmesh_trace(mesh, coords_set(x,y,z), coords_set(vx,vy,vz), -FLT_MAX, 1, hits, 4, &stored, &ambiguous);
-  if (!total) return 0;
-  /* without a hit before the start, use the first two hits after it */
-  if (hits[0].t == -FLT_MAX) {
-    first = 1;
-  } else {
-    first = 0;
-  }
-  if (t0) *t0 = hits[first].t;
-  if (normal0) *normal0 = hits[first].normal;
-  if (face0) *face0 = hits[first].face;
-  if (t3) *t3 = hits[first+1].t;
-  if (normal3) *normal3 = hits[first+1].normal;
-  if (face3) *face3 = hits[first+1].face;
-  if (hits[1].t == FLT_MAX && t3) *t3 = 0.0;
-  if (total > 4) return 4;
-  return (int)total;
+  return gmesh_trace(mesh, position, direction, t_min, NULL, 0, &stored, &ambiguous);
 }
 
 /* 1 when point is inside the box [lower, upper], borders included */
@@ -1881,7 +1757,7 @@ int gmesh_inside(gmesh_struct *mesh, Coords position)
     int stored = 0;
     int ambiguous = 0;
     Coords direction = coords_set(D[j][0], D[j][1], D[j][2]);
-    long n = gmesh_trace(mesh, position, direction, 0, 2, NULL, 0, &stored, &ambiguous);
+    long n = gmesh_trace(mesh, position, direction, 0, NULL, 0, &stored, &ambiguous);
     if (!ambiguous) return (int)(n % 2);
     votes += (int)(n % 2);
   }
