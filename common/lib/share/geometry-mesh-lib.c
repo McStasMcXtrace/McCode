@@ -80,7 +80,7 @@ static int gmesh_readline(FILE *f, char **buf, size_t *cap)
   (*buf)[n] = '\0';
   if (c == EOF && n == 0) return -1;
   return n;
-}
+}// TODO While the cap should not just be multiplied by 2 every time it is exceeded, we should still allow for binary files. So change the behaviour to increasing cap by cap whenever it is exceeded.
 
 /* Raw geometry as read from a file, before welding and triangulation.
    Each array is grown by doubling: *_cap is the number of elements currently
@@ -99,7 +99,8 @@ typedef struct gmesh_raw {
   long *prop_start;
   int *prop_count;
   long face_props_cap;         /* allocated elements of prop_start and prop_count */
-} gmesh_raw;
+} gmesh_raw; // TODO None of the above numbers have to be longs. Change them to ints. 
+             // TODO the faces should be a pointer array[3,N] where each value is a pointer to a vertex in the Coords verts struct
 
 static void gmesh_raw_vertex(gmesh_raw *r, double x, double y, double z)
 {
@@ -108,7 +109,8 @@ static void gmesh_raw_vertex(gmesh_raw *r, double x, double y, double z)
       r->verts_cap = 1024;
     } else {
       r->verts_cap *= 2;
-    }
+    }//TODO Why not just set it to be equal to nverts? 
+     //TODO We should do a scan of the file on load, to find the number of raw verts and the number of faces and allocate the correct number on the first shot.
     r->verts = gmesh_xrealloc(r->verts, r->verts_cap*sizeof(Coords));
   }
   r->verts[r->nverts] = coords_set(x, y, z);
