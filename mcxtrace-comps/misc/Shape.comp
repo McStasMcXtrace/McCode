@@ -57,7 +57,7 @@
 *
 * %End
 *******************************************************************************/
-Legacy_circle.comp
+
 DEFINE COMPONENT Shape
 
 SETTING PARAMETERS (string geometry=0, radius=0, xwidth=0, yheight=0, zdepth=0, thickness=0, int center=1)
