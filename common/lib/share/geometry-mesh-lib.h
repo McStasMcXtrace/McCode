@@ -26,7 +26,7 @@
 *   (STEP is not supported: export the geometry as STL, OFF or PLY)
 *
 * What the library does at init
-*   - optional scaling (e.g. 1e-3 for files in mm), re-sizing and centring
+*   - optional scaling (e.g. 1e-3 for files in mm), no re-sizing or centring
 *   - welds duplicated vertices (STL stores 3 vertices per triangle)
 *   - triangulates polygons (ear clipping, works for non-convex polygons)
 *   - computes unit normals, area, volume and mesh topology: number of edges,
@@ -37,8 +37,8 @@
 *     O(log N) instead of O(N) triangle tests, without any allocation per ray.
 *
 * Ray tracing
-*   gmesh_intersect()      all intersections of a straight line, sorted in t
-*   gmesh_intersect_t0t3() the off_intersect() convention of interoff-lib
+*   gmesh_intersect()      the GMESH_MAX_HITS nearest intersections of a
+*                          straight line, sorted in t
 *   gmesh_inside()         point-in-mesh test (deterministic, no random numbers)
 *   Hits exactly on an edge or vertex shared by several triangles are
 *   reported once.
@@ -69,6 +69,11 @@
 /* traversal stack depth (the tree depth is limited accordingly at build) */
 #ifndef GMESH_BVH_STACK
 #define GMESH_BVH_STACK 64
+#endif
+/* size of the hit buffer of gmesh_intersect. To change it from an instrument,
+   add DEPENDENCY " -DGMESH_MAX_HITS=20 " after its DEFINE INSTRUMENT line */
+#ifndef GMESH_MAX_HITS
+#define GMESH_MAX_HITS 4
 #endif
 #ifndef GMESH_DISPLAY_MAX
 #define GMESH_DISPLAY_MAX 200000
@@ -125,65 +130,49 @@ typedef struct gmesh_struct {
 } gmesh_struct;
 
 /*******************************************************************************
-* long gmesh_init(char *filename, double scale, double xwidth, double yheight,
-*                 double zdepth, int notcenter, gmesh_struct *m)
+* long gmesh_init(char *filename, double scale, gmesh_struct *mesh)
 * ACTION: read an STL/OFF/PLY file and build the mesh structure.
 * INPUT:  scale: multiply file coordinates (1 for m, 1e-3 for mm, 0 same as 1)
-*         xwidth,yheight,zdepth: when non-zero, re-size the bounding box (as interoff)
-*         notcenter: when 0, center the bounding box on (0,0,0)
 * RETURN: number of triangles, 0 on error
 *******************************************************************************/
-long gmesh_init(char *filename, double scale, double xwidth, double yheight,
-                double zdepth, int notcenter, gmesh_struct *m);
+long gmesh_init(char *filename, double scale, gmesh_struct *mesh);
 
 /*******************************************************************************
-* int gmesh_intersect(gmesh_struct *m, Coords pos, Coords dir, double tmin,
-*                     gmesh_hit *hits, int maxhits, long *ntotal)
-* ACTION: intersections of the line pos + t*dir with the mesh, for t > tmin
-*         (use -FLT_MAX for the whole line). The maxhits hits with the smallest
-*         t are stored in 'hits', sorted by increasing t.
-* RETURN: number of hits stored; *ntotal (if not NULL) = number of hits found
+* int gmesh_intersect(gmesh_struct *mesh, Coords position, Coords direction,
+*                     double t_min, gmesh_hit hits[GMESH_MAX_HITS])
+* ACTION: intersections of the line position + t*direction with the mesh, for
+*         t > t_min (use -FLT_MAX for the whole line). The GMESH_MAX_HITS hits
+*         with the smallest t are stored in 'hits', sorted by increasing t.
+*         When the line has more hits, the farther ones are dropped and a
+*         warning (shown once) explains how to raise GMESH_MAX_HITS.
+* RETURN: number of hits stored
 *******************************************************************************/
 #pragma acc routine seq
-int gmesh_intersect(gmesh_struct *m, Coords pos, Coords dir, double tmin,
-                    gmesh_hit *hits, int maxhits, long *ntotal);
+int gmesh_intersect(gmesh_struct *mesh, Coords position, Coords direction, double t_min,
+                    gmesh_hit hits[GMESH_MAX_HITS]);
 
 /*******************************************************************************
-* int gmesh_intersect_t0t3(double *t0, double *t3, Coords *n0, Coords *n3,
-*        long *f0, long *f3, double x, double y, double z,
-*        double vx, double vy, double vz, gmesh_struct *m)
-* ACTION: same result convention as off_intersect() of interoff-lib (straight
-*         line only): t0/t3 are the largest negative and smallest positive
-*         times, or the two smallest positive times when the particle is outside.
-*         f0/f3 are the face indices (may be NULL).
-* RETURN: number of intersections (capped at 4)
-*******************************************************************************/
-#pragma acc routine seq
-int gmesh_intersect_t0t3(double *t0, double *t3, Coords *n0, Coords *n3,
-                         long *f0, long *f3, double x, double y, double z,
-                         double vx, double vy, double vz, gmesh_struct *m);
-
-/*******************************************************************************
-* int gmesh_inside(gmesh_struct *m, Coords pos)
+* int gmesh_inside(gmesh_struct *mesh, Coords position)
 * ACTION: point in (closed) mesh test, parity of ray crossings along fixed
 *         directions. Does not use random numbers.
 * RETURN: 1 inside, 0 outside
 *******************************************************************************/
 #pragma acc routine seq
-int gmesh_inside(gmesh_struct *m, Coords pos);
+int gmesh_inside(gmesh_struct *mesh, Coords position);
 
-/* per-face property k of face 'face', or def when not given in the file */
+/* per-face property number 'property' of face 'face', or fallback when it is
+   not given in the file */
 #pragma acc routine seq
-double gmesh_face_prop(gmesh_struct *m, long face, int k, double def);
+double gmesh_face_prop(gmesh_struct *mesh, long face, int property, double fallback);
 
 /* print a summary of the mesh (sizes, topology, volume) */
-void gmesh_print_info(gmesh_struct *m);
+void gmesh_print_info(gmesh_struct *mesh);
 
 /* draw the polygon edges (each once), or a polyhedron with mcdotrace==2 */
-void gmesh_display(gmesh_struct *m);
+void gmesh_display(gmesh_struct *mesh);
 
 /* release the memory held by the mesh */
-void gmesh_free(gmesh_struct *m);
+void gmesh_free(gmesh_struct *mesh);
 
 #endif
 
