@@ -38,19 +38,19 @@ AT (0, 0, 0) RELATIVE ABSOLUTE
 COMPONENT shape0 = Shape(radius=0.5)
 AT(0,0,.5) RELATIVE PREVIOUS
 
-COMPONENT shape1 = Shape(radius=0.5, yheight=0.5, thickness=0.0, nx=0,ny=0,nz=1)
+COMPONENT shape1 = Shape(radius=0.5, yheight=0.5, thickness=0.0)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape2 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234, thickness=0, nx=0,ny=0,nz=1)
+COMPONENT shape2 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234, thickness=0)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape3 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234,thickness=0.0125, nx=0,ny=0,nz=1)
+COMPONENT shape3 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234,thickness=0.0125)
 AT(0,0,1) RELATIVE PREVIOUS
 
 COMPONENT shape4 = Cone(radius=0.5, yheight=0.5)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape5 = Shape(radius=0.5, yheight=0.5, thickness=0.25, nx=0,ny=1,nz=1)
+COMPONENT shape5 = Shape(radius=0.5, yheight=0.5, thickness=0.25)
 AT(0,0,1) RELATIVE PREVIOUS
 
 COMPONENT shape6 = Circle(radius=0.5)
@@ -74,43 +74,40 @@ AT(0,0,1) RELATIVE PREVIOUS
 COMPONENT shape12 = Shape(radius=0.5, yheight=0.5)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape13 = Shape(radius=0.5, yheight=0.5, thickness=0, nx=0,ny=1,nz=0)
+COMPONENT shape13 = Shape(radius=0.5, yheight=0.5, thickness=0)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape14 = Shape(radius=0.5, yheight=0.5, thickness=0.1, nx=0,ny=1,nz=0)
+COMPONENT shape14 = Shape(radius=0.5, yheight=0.5, thickness=0.1)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape15 = Shape(radius=0.5, yheight=0.5, thickness=0, nx=0,ny=0,nz=1)
+COMPONENT shape15 = Shape(radius=0.5, yheight=0.5, thickness=0)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape16 = Shape(radius=0.5, yheight=0.5, thickness=0.1, nx=0,ny=0,nz=1)
+COMPONENT shape16 = Shape(radius=0.5, yheight=0.5, thickness=0.1)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape17 = Shape(radius=0.5, yheight=0.5, thickness=0, nx=1,ny=0,nz=0)
+COMPONENT shape17 = Shape(radius=0.5, yheight=0.5, thickness=0)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape18 = Shape(radius=0.5, yheight=0.5, thickness=0.1, nx=1,ny=0,nz=0)
+COMPONENT shape18 = Shape(radius=0.5, yheight=0.5, thickness=0.1)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape19 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234, thickness=0, nx=0,ny=1,nz=0)
+COMPONENT shape19 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234, thickness=0)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape20 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234,thickness=0.0125, nx=0,ny=1,nz=0)
+COMPONENT shape20 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234,thickness=0.0125)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape21 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234, thickness=0, nx=0,ny=0,nz=1)
+COMPONENT shape21 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234, thickness=0)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape22 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234,thickness=0.0125, nx=0,ny=0,nz=1)
+COMPONENT shape22 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234,thickness=0.0125)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape23 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234, thickness=0, nx=1,ny=0,nz=0)
+COMPONENT shape23 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234, thickness=0)
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT shape24 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234,thickness=0.0125, nx=1,ny=0,nz=0)
-AT(0,0,1) RELATIVE PREVIOUS
-
-COMPONENT Shape25 = Guide_channeled(w1=0.5, h1=1, l=2)
+COMPONENT shape24 = Shape(xwidth=0.25, yheight=0.8,zdepth=0.1234,thickness=0.0125)
 AT(0,0,1) RELATIVE PREVIOUS
 
 COMPONENT shape26 = Disc(radius=0.5, nx=0,ny=0,nz=1)
