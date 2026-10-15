@@ -17,17 +17,10 @@ canrun() {
     if ! [ -x "${UTILDIR}/${TOOL}.py" ]; then
         exit 127;
     fi
-
-    modules="numpy scipp plopp ipywidgets ipympl"
-    cmd=""
-    for name in ${modules}; do
-        cmd="${cmd}import ${name}; "
-    done
-    python3 -c "${cmd}"
 }
 
 if ( canrun ); then
     python3 -u ${UTILDIR}/${TOOL}.py "$@"
 else
-    @FLAVOR@_errmsg Failed to run Python ${TOOL} - missing dependencies\? Try: python3 -m pip install plopp ipympl jupyterlab
+    @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions\?
 fi

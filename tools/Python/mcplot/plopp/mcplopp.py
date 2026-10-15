@@ -14,8 +14,14 @@ import subprocess
 import sys
 
 import numpy as np
-import scipp as sc
-import plopp as pp
+try:
+    import scipp as sc
+    import plopp as pp
+except ImportError as e:
+    sys.exit(f'mcplot-plopp: {e}. scipp and plopp are required for this tool to function '
+             '(plus ipympl and jupyterlab for the interactive UI), e.g.:\n'
+             '  conda install -c conda-forge plopp ipympl jupyterlab\n'
+             '  python3 -m pip install plopp ipympl jupyterlab')
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from mccodelib.mcplotloader import McCodeDataLoader, Data1D, Data2D
