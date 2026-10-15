@@ -347,7 +347,7 @@ static int gmesh_read_off(FILE *file, char *filename, gmesh_raw *raw)
       if (hash) {
         *hash = '\0';
       }
-      for (;;) {
+      for (;;) {//TODO Don't use an infinite loop
         double value = strtod(position, &end);
         if (end == position) break;
         gmesh_raw_prop(raw, value);
@@ -1232,6 +1232,9 @@ static int gmesh_read_file(char *filename, const char *extension, gmesh_raw *raw
 long gmesh_init(char *filename, double scale, double xwidth, double yheight,
                 double zdepth, int notcenter, gmesh_struct *mesh)
 {
+  //TODO Why would this init need xwidth yheigh and zdepth as well as notcenter? 
+  //TODO The bounding box should be a part of the mesh struct
+  //TODO Is the edge writing absolutely necessary? It doesn't seem so to me
   gmesh_raw raw;
   const char *extension;
   int ok = 0;
@@ -1610,6 +1613,8 @@ long gmesh_init(char *filename, double scale, double xwidth, double yheight,
 
 /* slab test of the line origin + t*direction against the box [lower, upper],
    for t in [t_start, t_end]. Returns 1 when that part of the line meets the box. */
+//TODO Is this function absolutely necessary? Could we not just use the tri_hit?
+//TODO Also use trihit for the BVH test?
 #pragma acc routine seq
 static int gmesh_slab(Coords lower, Coords upper, Coords origin, Coords direction, double t_start, double t_end)
 {
@@ -1686,6 +1691,7 @@ static int gmesh_tri_hit(gmesh_struct *mesh, long triangle, Coords origin, Coord
    the latest hit at t < 0, hits[1..3] the first ones at t >= 0), 2: count only,
    with *ambiguous = 1 when a hit is on an edge or at the origin.
    Returns the number of hits found. */
+//TODO The number of hits are arbitrary. Lets set it to 4 but reallocate if more are found
 #pragma acc routine seq
 static long gmesh_trace(gmesh_struct *mesh, Coords origin, Coords direction, double t_min, int mode,
                         gmesh_hit *hits, int max_hits, int *stored_count, int *ambiguous)
@@ -1811,6 +1817,8 @@ int gmesh_intersect(gmesh_struct *mesh, Coords position, Coords direction, doubl
 
 /* intersections of a line with mesh as off_intersect of interoff-lib,
    see geometry-mesh-lib.h */
+//TODO Remove gmesh intersect t0t3. It limits us in number of intersections
+//TODO We should instead change the components use of the intersection algorithm which will be done at a later stage
 #pragma acc routine seq
 int gmesh_intersect_t0t3(double *t0, double *t3, Coords *normal0, Coords *normal3,
                          long *face0, long *face3, double x, double y, double z,
