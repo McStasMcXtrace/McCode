@@ -37,8 +37,8 @@
 *     O(log N) instead of O(N) triangle tests, without any allocation per ray.
 *
 * Ray tracing
-*   gmesh_count_hits()     upper bound of the number of intersections
-*   gmesh_intersect()      all intersections of a straight line, sorted in t
+*   gmesh_intersect()      the GMESH_MAX_HITS nearest intersections of a
+*                          straight line, sorted in t
 *   gmesh_inside()         point-in-mesh test (deterministic, no random numbers)
 *   Hits exactly on an edge or vertex shared by several triangles are
 *   reported once.
@@ -69,6 +69,11 @@
 /* traversal stack depth (the tree depth is limited accordingly at build) */
 #ifndef GMESH_BVH_STACK
 #define GMESH_BVH_STACK 64
+#endif
+/* size of the hit buffer of gmesh_intersect. To change it from an instrument,
+   add DEPENDENCY " -DGMESH_MAX_HITS=20 " after its DEFINE INSTRUMENT line */
+#ifndef GMESH_MAX_HITS
+#define GMESH_MAX_HITS 10
 #endif
 #ifndef GMESH_DISPLAY_MAX
 #define GMESH_DISPLAY_MAX 200000
@@ -133,29 +138,18 @@ typedef struct gmesh_struct {
 long gmesh_init(char *filename, double scale, gmesh_struct *mesh);
 
 /*******************************************************************************
-* long gmesh_count_hits(gmesh_struct *mesh, Coords position, Coords direction,
-*                       double t_min)
-* ACTION: count the intersections of the line position + t*direction with the
-*         mesh for t > t_min, without storing them. A hit on an edge or vertex
-*         shared by several triangles is counted for each triangle, so this is
-*         an upper bound of what gmesh_intersect finds: allocate that many hits.
-* RETURN: number of triangle hits
-*******************************************************************************/
-#pragma acc routine seq
-long gmesh_count_hits(gmesh_struct *mesh, Coords position, Coords direction, double t_min);
-
-/*******************************************************************************
 * int gmesh_intersect(gmesh_struct *mesh, Coords position, Coords direction,
-*                     double t_min, gmesh_hit *hits, int max_hits, long *total_hits)
+*                     double t_min, gmesh_hit hits[GMESH_MAX_HITS])
 * ACTION: intersections of the line position + t*direction with the mesh, for
-*         t > t_min (use -FLT_MAX for the whole line). The max_hits hits with
-*         the smallest t are stored in 'hits', sorted by increasing t. To get
-*         every hit, use max_hits = gmesh_count_hits(...).
-* RETURN: number of hits stored; *total_hits (if not NULL) = number of hits found
+*         t > t_min (use -FLT_MAX for the whole line). The GMESH_MAX_HITS hits
+*         with the smallest t are stored in 'hits', sorted by increasing t.
+*         When the line has more hits, the farther ones are dropped and a
+*         warning (shown once) explains how to raise GMESH_MAX_HITS.
+* RETURN: number of hits stored
 *******************************************************************************/
 #pragma acc routine seq
 int gmesh_intersect(gmesh_struct *mesh, Coords position, Coords direction, double t_min,
-                    gmesh_hit *hits, int max_hits, long *total_hits);
+                    gmesh_hit hits[GMESH_MAX_HITS]);
 
 /*******************************************************************************
 * int gmesh_inside(gmesh_struct *mesh, Coords position)

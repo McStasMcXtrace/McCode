@@ -1622,7 +1622,8 @@ static int gmesh_tri_hit(gmesh_struct *mesh, long triangle, Coords origin, Coord
 
 /* BVH traversal for the line origin + t*direction, t > t_min. Stores the
    max_hits nearest hits in hits, sorted by t, with hits on shared edges and
-   vertices kept once. When hits is NULL the hits are only counted, each
+   vertices kept once; every hit is visited, so a return value above
+   *stored_count means hits were dropped. When hits is NULL the hits are only counted, each
    triangle hit once, with *ambiguous = 1 when a hit is on an edge or at the
    origin. Returns the number of hits found. */
 #pragma acc routine seq
@@ -1642,15 +1643,10 @@ static long gmesh_trace(gmesh_struct *mesh, Coords origin, Coords direction, dou
   top++;
   while (top > 0) {
     gmesh_node *node;
-    double t_max = FLT_MAX;
     long t;
     top--;
     node = &mesh->node[stack[top]];
-    /* a full sorted buffer: only nearer hits are of interest */
-    if (!count_only && max_hits > 0) {
-      if (*stored_count == max_hits) t_max = hits[max_hits-1].t + t_tolerance;
-    }
-    if (!gmesh_slab(node->lo, node->hi, origin, direction, t_min, t_max)) continue;
+    if (!gmesh_slab(node->lo, node->hi, origin, direction, t_min, FLT_MAX)) continue;
     if (node->count == 0) {
       /* cannot happen: depth limited at build */
       if (top + 2 > GMESH_BVH_STACK) continue;
@@ -1713,25 +1709,27 @@ static long gmesh_trace(gmesh_struct *mesh, Coords origin, Coords direction, dou
   return total;
 }
 
+/* set once a hit buffer overflow has been reported */
+int gmesh_overflow_warned = 0;
+#pragma acc declare create ( gmesh_overflow_warned )
+
 /* intersections of a line with mesh, see geometry-mesh-lib.h */
 #pragma acc routine seq
 int gmesh_intersect(gmesh_struct *mesh, Coords position, Coords direction, double t_min,
-                    gmesh_hit *hits, int max_hits, long *total_hits)
+                    gmesh_hit hits[GMESH_MAX_HITS])
 {
   int stored = 0;
   int ambiguous = 0;
-  long total = gmesh_trace(mesh, position, direction, t_min, hits, max_hits, &stored, &ambiguous);
-  if (total_hits) *total_hits = total;
+  long total = gmesh_trace(mesh, position, direction, t_min, hits, GMESH_MAX_HITS, &stored, &ambiguous);
+  if (total > stored && !gmesh_overflow_warned) {
+    gmesh_overflow_warned = 1;
+    fprintf(stderr, "Warning: %s: a ray crossed the mesh %ld times, but only the %d nearest hits are kept "
+            "(geometry-mesh-lib).\n"
+            "  To keep more, add this line after the DEFINE INSTRUMENT line of your .instr file:\n"
+            "    DEPENDENCY \" -DGMESH_MAX_HITS=%ld \"\n"
+            "  This warning is shown once.\n", mesh->filename, total, GMESH_MAX_HITS, total);
+  }
   return stored;
-}
-
-/* upper bound of the number of hits gmesh_intersect can find, see geometry-mesh-lib.h */
-#pragma acc routine seq
-long gmesh_count_hits(gmesh_struct *mesh, Coords position, Coords direction, double t_min)
-{
-  int stored = 0;
-  int ambiguous = 0;
-  return gmesh_trace(mesh, position, direction, t_min, NULL, 0, &stored, &ambiguous);
 }
 
 /* 1 when point is inside the box [lower, upper], borders included */
