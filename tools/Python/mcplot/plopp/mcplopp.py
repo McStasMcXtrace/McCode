@@ -2,8 +2,8 @@
 '''
 mcplopp: plot McStas/McXtrace output with plopp (scipp).
 
-UI:      mcplopp.py <dir|mccode.sim|monitor.dat>       (opens JupyterLab)
-Static:  mcplopp.py <dir|mccode.sim|monitor.dat> -o out.png [--log]
+UI:      mcplopp.py <dir|mccode.sim|monitor.dat|mccode.h5>       (opens JupyterLab)
+Static:  mcplopp.py <dir|mccode.sim|monitor.dat|mccode.h5> -o out.png [--log]
 '''
 import argparse
 import json
@@ -38,28 +38,88 @@ def _edges(label, lo, hi, n):
     return dim, sc.linspace(dim, lo, hi, n + 1, unit=unit or '')
 
 
+def _curve(I, err, xlabel, lim):
+    x, ex = _edges(xlabel, *lim, len(I))
+    return sc.DataArray(sc.array(dims=[x], values=I, variances=np.square(err)), coords={x: ex})
+
+
+def _image(z, err, xlabel, ylabel, lim):
+    ''' z is (ny, nx), rows are y, as in the ASCII files and the matplotlib frontend '''
+    x, ex = _edges(xlabel, *lim[:2], z.shape[1])
+    y, ey = _edges(ylabel, *lim[2:4], z.shape[0])
+    if y == x:
+        y += ' (y)'
+        ey = ey.rename_dims({x: y})
+    return sc.DataArray(sc.array(dims=[y, x], values=z, variances=None if err is None else np.square(err)),
+                        coords={x: ex, y: ey})
+
+
 def to_dataarray(d):
     ''' Data1D/Data2D -> DataArray with bin edges; 0D/event lists -> None '''
     if isinstance(d, Data1D):
-        x, ex = _edges(d.xlabel, *d.xlimits, len(d.yvals))
-        da = sc.DataArray(sc.array(dims=[x], values=d.yvals, variances=np.square(d.y_err_vals)), coords={x: ex})
+        da = _curve(d.yvals, d.y_err_vals, d.xlabel, d.xlimits)
     elif isinstance(d, Data2D):
-        z = np.array(d.zvals)  # rows are y: (ny, nx), as in the matplotlib frontend
-        x, ex = _edges(d.xlabel, *d.xlimits[:2], z.shape[1])
-        y, ey = _edges(d.ylabel, *d.xlimits[2:], z.shape[0])
-        if y == x:
-            y += ' (y)'
-            ey = ey.rename_dims({x: y})
         # ponytail: no variances for 2D, mcplotloader skips the "# Errors" block
-        da = sc.DataArray(sc.array(dims=[y, x], values=z), coords={x: ex, y: ey})
+        da = _image(np.array(d.zvals), None, d.xlabel, d.ylabel, d.xlimits)
     else:
         return None
     da.name = 'I'  # colorbar/y label; the title goes in the load() key
     return da
 
 
+def _nx_dataarray(g):
+    ''' McCode NeXus monitor (NXdata group) -> (title, DataArray), None for 0D / event lists '''
+    a = {k: v.decode() if isinstance(v, bytes) else v for k, v in g.attrs.items()}
+    typ = a.get('type', '')
+    if typ.startswith('array_1d'):
+        da = _curve(g['data'][()], g['errors'][()], a['xlabel'], [float(v) for v in a['xlimits'].split()])
+    elif typ.startswith('array_2d'):
+        # NeXus stores (nx, ny) with axis=1 on x, i.e. the transpose of the ASCII block
+        da = _image(g['data'][()].T, g['errors'][()].T, a['xlabel'], a['ylabel'], [float(v) for v in a['xylimits'].split()])
+    else:
+        return None
+    da.name = 'I'
+    return a.get('title', '').strip(), da
+
+
+def load_nexus(path):
+    ''' {name: DataArray} from a McCode mccode.h5; one NXentry per scan step, stacked over the scanned
+        parameter (taken from entry*/simulation/Param) as in load() '''
+    try:
+        import h5py
+    except ImportError as e:
+        sys.exit(f'mcplot-plopp: {e}. h5py is required to read NeXus files')
+    with h5py.File(path, 'r') as f:
+        entries = sorted(f, key=lambda e: int(re.sub(r'\D', '', e) or 0))
+        steps = []
+        for e in entries:
+            comps = f[e]['instrument/components']
+            mons = [_nx_dataarray(comps[c]['output'][m]) for c in sorted(comps) if 'output' in comps[c]
+                    for m in comps[c]['output']]
+            par = f[e]['simulation/Param'].attrs if 'simulation/Param' in f[e] else {}
+            steps.append(([m for m in mons if m], {k: v.decode() if isinstance(v, bytes) else v for k, v in par.items()}))
+
+    if len(steps) == 1:
+        return {f'{t} [{i}]': da for i, (t, da) in enumerate(steps[0][0])}
+    pars = [p for _, p in steps]
+    scanned = [k for k in pars[0] if k != 'NX_class' and len({p.get(k) for p in pars}) > 1]
+    dim = scanned[0] if scanned else 'step'  # ponytail: first varying parameter only, as mccode.dat's single xvar
+    vals = [float(p[dim]) for p in pars] if scanned else np.arange(len(steps))
+    out = {}
+    for i, (t, _) in enumerate(steps[0][0]):
+        da = sc.concat([mons[i][1] for mons, _ in steps], dim=dim)
+        da.coords[dim] = sc.array(dims=[dim], values=vals)
+        out[f'{t} [{i}]'] = da
+    return out
+
+
 def load(path):
     ''' {name: DataArray}. Scans stack each monitor over the scan parameter (1D->2D, 2D->3D). '''
+    h5 = os.path.join(path, 'mccode.h5')
+    if path.endswith(('.h5', '.nxs')):
+        return load_nexus(path)
+    if os.path.isfile(h5) and not os.path.isfile(os.path.join(path, 'mccode.sim')):  # as the matplotlib frontend
+        return load_nexus(h5)
     loader = McCodeDataLoader(simfile=path)
     loader.load()
     root = loader.plot_graph
@@ -134,7 +194,7 @@ def figures(das, log=False):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument('simfile', nargs='?', default='.', help='output dir, mccode.sim, or a monitor file')
+    p.add_argument('simfile', nargs='?', default='.', help='output dir, mccode.sim, a monitor file, or mccode.h5 (NeXus)')
     p.add_argument('-o', '--output', help='write a static png/pdf/svg instead of opening the UI')
     p.add_argument('--log', action='store_true', help='log intensity scale')
     args = p.parse_args()
