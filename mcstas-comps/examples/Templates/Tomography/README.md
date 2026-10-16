@@ -21,8 +21,10 @@ mcrun Tomography.instr omega=0,355 -N72 -n1e7 -d TomoScan
 (to achieve proper statistics for tomographic reconstruction, MUCH higher ncounts
 are needed)
 
-Use the provided tomo_recon.py (numpy + matplotlib) in this folder to reconstruct a 3D
+Use the provided tomo_recon.py (numpy, scipy, matplotlib, pyqtgraph, h5py) in this folder to reconstruct a 3D
 volume of the object from the scan directory: python tomo_recon.py TomoScan [--save]
+(3 central slices + 3D isosurface; --save writes vol.nxs NeXus volume and surface.png;
+--sirt 100 --median 3 gives fewer streaks than the default Hann FBP, see -h)
 ```
 
 ## Examples
