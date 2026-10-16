@@ -3632,6 +3632,9 @@ void mcdis_cone( double x, double y, double z,
     printf("MCDISPLAY: mcdiscone(%g, %g, %g, %g, %g, %g, %g, %g)\n",
        x, y, z, r, height, nx, ny, nz);
   } else {
+    /* (x,y,z) is the cone centre, as drawn at --trace=2 */
+    NORM(nx,ny,nz);
+    x -= 0.5*height*nx; y -= 0.5*height*ny; z -= 0.5*height*nz;
     mcdis_Circle(x, y, z, r, nx, ny, nz);
     mcdis_Circle(x+0.25*height*nx, y+0.25*height*ny, z+0.25*height*nz, 0.75*r, nx, ny, nz);
     mcdis_Circle(x+0.5*height*nx, y+0.5*height*ny, z+0.5*height*nz, 0.5*r, nx, ny, nz);
