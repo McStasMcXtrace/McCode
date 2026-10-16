@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Reconstruct a volume from a Tomography.instr omega scan, e.g.
 
-    mcrun Tomography.instr omega=0,350 -N36 -n1e7 -d TomoScan
+    mcrun Tomography.instr omega=0:5:355 -n4e6 sigma_abs=1 -d TomoScan
     python tomo_recon.py TomoScan
 
 Filtered back-projection (ramp filter with Matlab iradon's windows, default
