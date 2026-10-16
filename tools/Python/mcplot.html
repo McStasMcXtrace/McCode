@@ -63,7 +63,7 @@ loader/matching layer:</p>
 <li><strong>mcplotdiff / mxplotdiff</strong> — plot the <em>difference</em> <code>a - b</code> between two simulations (2 datasets only)</li>
 <li><strong>mccoplot / mxcoplot</strong> — <em>overlay</em> 2 or more simulations' monitors on the same axes</li>
 </ul>
-<p>Each has three rendering variants: <strong>html</strong>, <strong>matplotlib</strong>, <strong>pyqtgraph</strong>. Plain <code>mcplot</code> additionally has a fourth, legacy <strong>matlab</strong> variant (see bottom of this page).</p>
+<p>Each has three rendering variants: <strong>html</strong>, <strong>matplotlib</strong>, <strong>pyqtgraph</strong>. Plain <code>mcplot</code> additionally has a <strong>terminal</strong> variant (text output) and a legacy <strong>matlab</strong> variant (see bottom of this page).</p>
 <h2 id="mcplot-mxplot">mcplot / mxplot</h2>
 <h3 id="mcplot-html-mxplot-html">mcplot-html / mxplot-html</h3>
 <table>
@@ -167,6 +167,46 @@ loader/matching layer:</p>
 <tr>
 <td><code>--invcanvas</code></td>
 <td>invert canvas background (black &rarr; white)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="mcplot-terminal-mxplot-terminal">mcplot-terminal / mxplot-terminal</h3>
+<p>Draws the monitors as text in the terminal: 1D as bar charts, 2D as colour maps (Unicode half blocks), or with shading characters when the output is not a terminal (e.g. redirected to a file). Falls back to plain ASCII if the terminal encoding can not show Unicode. Needs only numpy.</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>simulation</code></td>
+<td>file or directory to plot (default: current directory)</td>
+</tr>
+<tr>
+<td><code>-l</code>, <code>--log</code></td>
+<td>enable log scale</td>
+</tr>
+<tr>
+<td><code>-m</code>, <code>--monitor NAME ...</code></td>
+<td>only plot monitors whose filename or component name contains one of these strings</td>
+</tr>
+<tr>
+<td><code>-W</code>, <code>--width N</code></td>
+<td>plot width in characters (default: terminal width, up to 100)</td>
+</tr>
+<tr>
+<td><code>-H</code>, <code>--height N</code></td>
+<td>plot height in lines (default: 15)</td>
+</tr>
+<tr>
+<td><code>--ascii</code></td>
+<td>plain ASCII characters only (no Unicode, no colour)</td>
+</tr>
+<tr>
+<td><code>--no-color</code></td>
+<td>draw 2D maps with shading characters instead of colours (also when <code>NO_COLOR</code> is set)</td>
 </tr>
 </tbody>
 </table>
