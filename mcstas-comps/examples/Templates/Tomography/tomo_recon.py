@@ -7,8 +7,9 @@
 Filtered back-projection (ramp filter with Matlab iradon's windows, default
 'hann', optional --cutoff), or with --sirt N: N iterations of SIRT with
 non-negativity, which suppresses FBP streaks for few/noisy projections.
---median K applies a KxK median filter to each projection first. Shows 3 central slices and a 3D isosurface
-(marching cubes, threshold slider). --save writes vol.nxs (NeXus/HDF5 NXdata,
+--median K applies a KxK median filter to each projection first. Reads text
+or NeXus (mcrun --format=NeXus, mccode.h5) scans. Shows 3 central slices and
+a 3D isosurface (marching cubes, threshold slider). --save writes vol.nxs (NeXus/HDF5 NXdata,
 readable by e.g. ParaView, Fiji, silx, nexusformat) and surface.png on close.
 Python port of tools/matlab/tomo_recon.m (PW, 20080620).
 """
@@ -122,18 +123,32 @@ def main(datadir, save=False, window='hann', cutoff=1.0, iters=0, median=1):
     lo, hi = map(float, header(dat, 'xlimits:').split())
     theta = np.linspace(lo, hi, nproj)
 
-    mons = []
-    for j in range(nproj):
-        f = glob.glob(os.path.join(datadir, str(j), '*.x_y'))[0]
-        I = np.loadtxt(f)
-        mons.append(I[:len(I) // 3])           # I block only, rows = y slices
-    geometry = header(f, 'Param: geometry=')
-    xmin, xmax, ymin, ymax = map(float, header(f, 'xylimits:').split())
+    h5 = os.path.join(datadir, 'mccode.h5')
+    if os.path.exists(h5):                     # mcrun --format=NeXus: one entry<j+1> per scan step
+        import h5py
+        mons = []
+        with h5py.File(h5, 'r') as fh:
+            for j in range(nproj):
+                e = fh['entry%d' % (j + 1)]
+                m = e['data'][next(k for k in e['data'] if k.endswith('_x_y'))]
+                mons.append(m['data'][()].T)   # stored (x, y) -> rows = y slices
+            geometry = e['simulation/Param'].attrs['geometry'].decode()
+            xylimits = m.attrs['xylimits'].decode()
+    else:
+        mons = []
+        for j in range(nproj):
+            f = glob.glob(os.path.join(datadir, str(j), '*.x_y'))[0]
+            I = np.loadtxt(f)
+            mons.append(I[:len(I) // 3])       # I block only, rows = y slices
+        geometry = header(f, 'Param: geometry=')
+        xylimits = header(f, 'xylimits:')
+    xmin, xmax, ymin, ymax = map(float, xylimits.split())
     mons = np.array(mons)                      # (nproj, nslice, nbins)
     pos = mons[mons > 0]
     mons = np.maximum(mons, pos.min() if pos.size else 1)  # avoid log(0)
 
-    P = np.log(mons.max(axis=(0, 2), keepdims=True) / mons)  # I0 per detector row
+    # I0 per detector row; log difference, as max/min overflows for subnormal min
+    P = np.log(mons.max(axis=(0, 2), keepdims=True)) - np.log(mons)
     if median > 1:
         P = median_filter(P, size=(1, median, median))
     nx, ny = mons.shape[2], mons.shape[1]
@@ -159,7 +174,7 @@ def main(datadir, save=False, window='hann', cutoff=1.0, iters=0, median=1):
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('datadir', help='mcrun scan directory')
+    ap.add_argument('datadir', help='mcrun scan directory (text or NeXus format)')
     ap.add_argument('--save', action='store_true', help='write vol.nxs and surface.png')
     ap.add_argument('--filter', default='hann', choices=WINDOWS, help='FBP window (default hann)')
     ap.add_argument('--cutoff', type=float, default=1.0, help='FBP cutoff, fraction of Nyquist (default 1)')
