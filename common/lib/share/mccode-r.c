@@ -3514,7 +3514,20 @@ void mcdis_circle(char *plane, double x, double y, double z, double r){
   printf("MCDISPLAY: mcdiscircle('%s',%g,%g,%g,%g)\n", plane, x, y, z, r);
 }
 
+/* A zero axis n=(0,0,0) has no direction: draw along +y, the identity orientation
+ * of the --trace=2 primitives, and warn once (to stderr, outside the MCDISPLAY stream) */
+static void mcdis_check_axis(const char *what, double *nx, double *ny, double *nz){
+  static int warned = 0;
+  if (*nx == 0 && *ny == 0 && *nz == 0) {
+    if (!warned++)
+      fprintf(stderr, "Warning: mcdisplay %s() called with axis n=(0,0,0), using (0,1,0) "
+              "(further occurrences not reported)\n", what);
+    *ny = 1;
+  }
+}
+
 void mcdis_new_circle(double x, double y, double z, double r, double nx, double ny, double nz){
+  mcdis_check_axis("new_circle", &nx, &ny, &nz);
   printf("MCDISPLAY: mcdisnew_circle(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, r, nx, ny, nz);
 }
 
@@ -3523,6 +3536,7 @@ void mcdis_new_circle(double x, double y, double z, double r, double nx, double 
  * with normal (nx,ny,nz)*/
 void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, double nz){
     int i;
+    mcdis_check_axis("Circle", &nx, &ny, &nz);
     if(nx==0 && ny && nz==0){
         for (i=0;i<24; i++){
             mcdis_line(x+r*sin(i*2*PI/24),y,z+r*cos(i*2*PI/24),
@@ -3569,6 +3583,7 @@ void mcdis_legacy_box(double x, double y, double z,
     width (deltax), height (deltay), length (deltaz) */
 void mcdis_box(double x, double y, double z,
 	       double width, double height, double length, double thickness, double nx, double ny, double nz){
+  mcdis_check_axis("box", &nx, &ny, &nz);
   if (mcdotrace==2) {
     printf("MCDISPLAY: mcdisbox(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness, nx, ny, nz);
   } else {
@@ -3615,6 +3630,7 @@ Draws a cylinder with center at (x,y,z) with extent (r,height).
  * The cylinder axis is along the vector nx,ny,nz.*/
 void mcdis_cylinder( double x, double y, double z,
         double r, double height, double thickness, double nx, double ny, double nz){
+  mcdis_check_axis("cylinder", &nx, &ny, &nz);
   if (mcdotrace==2) {
       printf("MCDISPLAY: mcdiscylinder(%g, %g, %g, %g, %g, %g, %g, %g, %g)\n",
          x, y, z, r, height, thickness, nx, ny, nz);
@@ -3628,10 +3644,14 @@ void mcdis_cylinder( double x, double y, double z,
  * The cone axis is along the vector nx,ny,nz.*/
 void mcdis_cone( double x, double y, double z,
         double r, double height, double nx, double ny, double nz){
+  mcdis_check_axis("cone", &nx, &ny, &nz);
   if (mcdotrace==2) {
     printf("MCDISPLAY: mcdiscone(%g, %g, %g, %g, %g, %g, %g, %g)\n",
        x, y, z, r, height, nx, ny, nz);
   } else {
+    /* (x,y,z) is the cone centre, as drawn at --trace=2 */
+    NORM(nx,ny,nz);
+    x -= 0.5*height*nx; y -= 0.5*height*ny; z -= 0.5*height*nz;
     mcdis_Circle(x, y, z, r, nx, ny, nz);
     mcdis_Circle(x+0.25*height*nx, y+0.25*height*ny, z+0.25*height*nz, 0.75*r, nx, ny, nz);
     mcdis_Circle(x+0.5*height*nx, y+0.5*height*ny, z+0.5*height*nz, 0.5*r, nx, ny, nz);
@@ -3644,6 +3664,7 @@ void mcdis_cone( double x, double y, double z,
  * The disc axis is along the vector nx,ny,nz.*/
 void mcdis_disc( double x, double y, double z,
         double r, double nx, double ny, double nz){
+  mcdis_check_axis("disc", &nx, &ny, &nz);
   printf("MCDISPLAY: mcdisdisc(%g, %g, %g, %g, %g, %g, %g)\n",
      x, y, z, r, nx, ny, nz);
 }
@@ -3652,6 +3673,7 @@ void mcdis_disc( double x, double y, double z,
  * The annulus axis is along the vector nx,ny,nz.*/
 void mcdis_annulus( double x, double y, double z,
         double outer_radius, double thickness, double nx, double ny, double nz){
+  mcdis_check_axis("annulus", &nx, &ny, &nz);
   printf("MCDISPLAY: mcdisannulus(%g, %g, %g, %g, %g, %g, %g, %g)\n",
      x, y, z, outer_radius, thickness, nx, ny, nz);
 }
