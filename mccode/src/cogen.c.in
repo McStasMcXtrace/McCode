@@ -2140,9 +2140,9 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("    for (unsigned long pidx=0 ; pidx < gpu_innerloop ; pidx++) {");
   coutf("      _class_particle particleN = mcgenstate(); // initial particle");
   coutf("      _class_particle* _particle = &particleN;");
-  coutf("      particleN._uid = pidx;");
+  coutf("      particleN._uid = cloop*gpu_innerloop + pidx;");
   coutf("      #ifdef USE_MPI");
-  coutf("      particleN._uid += mpi_node_rank * ncount; ");
+  coutf("      particleN._uid += mpi_node_rank * loops*gpu_innerloop;");
   coutf("      #endif");
   coutf("");
   coutf("      srandom(_hash(_hash(seed) + cloop*gpu_innerloop + pidx));");
@@ -2278,9 +2278,9 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("      // generate particle state, set loop index and seed");
   coutf("      particles[pidx] = mcgenstate();");
   coutf("      _class_particle* _particle = particles + pidx;");
-  coutf("      _particle->_uid = pidx;");
+  coutf("      _particle->_uid = cloop*gpu_innerloop + pidx;");
   coutf("      #ifdef USE_MPI");
-  coutf("      _particle->_uid += mpi_node_rank * ncount; ");
+  coutf("      _particle->_uid += mpi_node_rank * loops*gpu_innerloop;");
   coutf("      #endif");
   coutf("      srandom(_hash(_hash(seed) + cloop*gpu_innerloop + pidx)); // _particle->state usage built into srandom macro");
   coutf("    }");
