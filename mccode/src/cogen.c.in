@@ -2145,11 +2145,10 @@ int cogen_raytrace(struct instr_def *instr)
   coutf("      particleN._uid += mpi_node_rank * ncount; ");
   coutf("      #endif");
   coutf("");
-  coutf("      srandom(_hash((pidx+1)*(seed+1)));");
+  coutf("      srandom(_hash(_hash(seed) + cloop*gpu_innerloop + pidx));");
   coutf("");
   coutf("      raytrace(_particle);");
   coutf("    } /* inner for */");
-  coutf("    seed = seed+gpu_innerloop;");
   coutf("  } /* CPU for */");
   coutf("  /* if on GPU, printf has been globally nullified, re-enable here */");
   cout("     #ifdef OPENACC");
@@ -2283,7 +2282,7 @@ int cogen_rt_funnel(struct instr_def *instr)
   coutf("      #ifdef USE_MPI");
   coutf("      _particle->_uid += mpi_node_rank * ncount; ");
   coutf("      #endif");
-  coutf("      srandom(_hash((pidx+1)*(seed+1))); // _particle->state usage built into srandom macro");
+  coutf("      srandom(_hash(_hash(seed) + cloop*gpu_innerloop + pidx)); // _particle->state usage built into srandom macro");
   coutf("    }");
   cout( "");
 
@@ -2394,8 +2393,6 @@ int cogen_rt_funnel(struct instr_def *instr)
   cout( "");
   list_iterate_end(liter);
 
-  coutf("    // jump to next viable seed");
-  coutf("    seed = seed + gpu_innerloop;");
   coutf("  } // outer loop / particle batches");
   cout( "");
   coutf("  free(particles);");
