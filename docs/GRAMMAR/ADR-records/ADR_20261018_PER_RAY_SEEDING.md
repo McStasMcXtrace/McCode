@@ -52,6 +52,11 @@ no new helper: a SplitMix64 mixer was tried and gave the same results.
   (32-bit `long`) behaves like the other platforms.
 * On CPU (`loops=1`, `gpu_innerloop=ncount`) `_uid` values are unchanged.
   On GPU they are unique across batches.
+* The particle's `randstate` is now sized by `RANDSTATE_LEN` (was a hard-coded
+  `[7]`), and `sort_absorb_last()` (FUNNEL + SPLIT) copies `RANDSTATE_LEN` words
+  instead of 7 hand-written ones. No change for KISS (7); the MT struct shrinks to
+  1 word. This lets an RNG with another state length be added without
+  out-of-bounds copies.
 * mccode-antlr must port the same lines by hand (mccode-dev/mccode-antlr#392). Until it does, the two
   code generators give different results for the same seed.
 

@@ -2564,8 +2564,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  double _mctmp_a; /* temp a */");
   cout("  double _mctmp_b; /* temp b */");
   cout("  double _mctmp_c; /* temp c */");
-  //cout("  randstate_t randstate[RANDSTATE_LEN]");
-  cout("  randstate_t randstate[7];"); // for the KISS generator
+  cout("  randstate_t randstate[RANDSTATE_LEN];");
   cout("  double t, p;     /* time, event weight */");
   cout("  long long _uid;  /* Unique event ID */");
   cout("  long _index;     /* component index where to send this event */");
