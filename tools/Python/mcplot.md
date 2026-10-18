@@ -9,7 +9,7 @@ loader/matching layer:
 - **mcplotdiff / mxplotdiff** — plot the *difference* `a - b` between two simulations (2 datasets only)
 - **mccoplot / mxcoplot** — *overlay* 2 or more simulations' monitors on the same axes
 
-Each has three rendering variants: **html**, **matplotlib**, **pyqtgraph**. Plain `mcplot` additionally has a fourth, legacy **matlab** variant (see bottom of this page).
+Each has three rendering variants: **html**, **matplotlib**, **pyqtgraph**. Plain `mcplot` additionally has a **terminal** variant (text output) and a legacy **matlab** variant (see bottom of this page).
 
 ## mcplot / mxplot
 
@@ -45,6 +45,20 @@ Each has three rendering variants: **html**, **matplotlib**, **pyqtgraph**. Plai
 | `simulation` | file or directory to plot |
 | `-t`, `--test` | data-loader test run |
 | `--invcanvas` | invert canvas background (black &rarr; white) |
+
+### mcplot-terminal / mxplot-terminal
+
+Draws the monitors as text in the terminal: 1D as bar charts, 2D as colour maps (Unicode half blocks), or with shading characters when the output is not a terminal (e.g. redirected to a file). Falls back to plain ASCII if the terminal encoding can not show Unicode. Needs only numpy.
+
+| Option | Description |
+|---|---|
+| `simulation` | file or directory to plot (default: current directory) |
+| `-l`, `--log` | enable log scale |
+| `-m`, `--monitor NAME ...` | only plot monitors whose filename or component name contains one of these strings |
+| `-W`, `--width N` | plot width in characters (default: terminal width, up to 100) |
+| `-H`, `--height N` | plot height in lines (default: 15) |
+| `--ascii` | plain ASCII characters only (no Unicode, no colour) |
+| `--no-color` | draw 2D maps with shading characters instead of colours (also when `NO_COLOR` is set) |
 
 ## mcplotdiff / mxplotdiff
 
