@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# CPU-vs-GPU check of the per-ray RNG streams (KISS and TinyMT64).
+#
+# Builds Test_RNG_rand01 with nvc for CPU and for GPU (OpenACC), in the
+# legacy and FUNNEL ray loops, runs it with the same seed, and requires
+# bit-identical monitor output. The large run uses --gpu_innerloop so the
+# GPU path goes through several batches (cloop > 0); the CPU run does one.
+# Also checks the CI md5 references and that RNG_ALG=1 refuses OpenACC.
+#
+# Usage: mccode-test-rng-gpu [workdir]     (needs mcstas from this branch and nvc on PATH)
+set -euo pipefail
+
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+INSTR="$REPO/mcstas-comps/examples/Tests_RNG/Test_RNG_rand01/Test_RNG_rand01.instr"
+WORK="${1:-$(mktemp -d "${TMPDIR:-/tmp}/rng-gpu.XXXXXX")}"
+CPUFLAGS="-O2"
+GPUFLAGS="-fast -acc=gpu -gpu=mem:managed -Minfo=accel -DOPENACC"
+NBIG=1000000; INNER=100000          # 10 GPU batches
+ci_md5() { case $1 in 2) echo 6c203d69205b0656c1391555e6068c93;; 3) echo 753159792665dde568a61d3afd8e42ae;; esac; }
+
+command -v nvc    >/dev/null || { echo "nvc not found on PATH"; exit 2; }
+command -v mcstas >/dev/null || { echo "mcstas not found on PATH"; exit 2; }
+if command -v md5sum >/dev/null; then MD5() { md5sum | cut -d' ' -f1; }; else MD5() { md5 -q; }; fi
+data() { grep -v '^#' "$1/rngout.dat"; }
+
+mkdir -p "$WORK"; cd "$WORK"; echo "workdir: $WORK"
+mcstas -t -o T.c "$INSTR" >gen.log 2>&1 || { cat gen.log; exit 2; }
+grep -q tinymt64_random T.c || { echo "FAIL: generated code has no TinyMT64; is mcstas built from rng-gpu-mt-design?"; exit 2; }
+grep -q '_hash(_hash(seed)' T.c || { echo "FAIL: generated code lacks the #2808 per-ray seeding"; exit 2; }
+
+fail=0
+report() { printf '%-58s %s\n' "$1" "$2"; [[ "$2" == PASS* ]] || fail=1; }
+
+for alg in 2 3; do
+  for loop in legacy funnel; do
+    d=""; [[ $loop == funnel ]] && d="-DFUNNEL"
+    nvc $CPUFLAGS $d -DRNG_ALG=$alg -o cpu_${alg}_$loop T.c -lm >build_cpu_${alg}_$loop.log 2>&1 \
+      || { cat build_cpu_${alg}_$loop.log; exit 2; }
+    nvc $GPUFLAGS $d -DRNG_ALG=$alg -o gpu_${alg}_$loop T.c -lm >build_gpu_${alg}_$loop.log 2>&1 \
+      || { cat build_gpu_${alg}_$loop.log; exit 2; }
+
+    # CI settings (single batch)
+    for dev in cpu gpu; do
+      rm -rf ci_${dev}_${alg}_$loop
+      ./${dev}_${alg}_$loop -s 1000 --dir=ci_${dev}_${alg}_$loop Ncount=1000 seed=0 >run.log 2>&1 </dev/null \
+        || { cat run.log; exit 2; }
+    done
+    for dev in cpu gpu; do
+      m=$(data ci_${dev}_${alg}_$loop | MD5)
+      [[ $m == "$(ci_md5 $alg)" ]] && r=PASS || r="FAIL (md5 $m)"
+      report "ALG $alg $loop $dev: CI md5 (-s 1000 Ncount=1000)" "$r"
+    done
+
+    # large run, GPU in $((NBIG/INNER)) batches
+    rm -rf big_cpu_${alg}_$loop big_gpu_${alg}_$loop
+    ./cpu_${alg}_$loop -s 7 --dir=big_cpu_${alg}_$loop Ncount=$NBIG seed=0 >run.log 2>&1 </dev/null || { cat run.log; exit 2; }
+    ./gpu_${alg}_$loop -s 7 --gpu_innerloop=$INNER --dir=big_gpu_${alg}_$loop Ncount=$NBIG seed=0 >run.log 2>&1 </dev/null || { cat run.log; exit 2; }
+    ndiff=$(paste -d' ' <(data big_cpu_${alg}_$loop | tr -s ' ' '\n' | grep -v '^$') \
+                        <(data big_gpu_${alg}_$loop | tr -s ' ' '\n' | grep -v '^$') | awk '$1!=$2' | wc -l)
+    [[ $ndiff -eq 0 ]] && r=PASS || r="FAIL ($ndiff values differ)"
+    report "ALG $alg $loop: CPU == GPU, Ncount=$NBIG, $((NBIG/INNER)) GPU batches" "$r"
+  done
+done
+
+# MT19937 must refuse an OpenACC build
+if nvc $GPUFLAGS -DRNG_ALG=1 -o gpu_1 T.c -lm >build_gpu_1.log 2>&1; then
+  report "ALG 1 with OpenACC refused (#error)" "FAIL (it built)"
+else
+  grep -q "CPU only" build_gpu_1.log && r=PASS || r="FAIL (other build error, see build_gpu_1.log)"
+  report "ALG 1 with OpenACC refused (#error)" "$r"
+fi
+
+echo; nvc --version | head -2; command -v nvidia-smi >/dev/null && nvidia-smi --query-gpu=name,driver_version --format=csv,noheader
+[[ $fail -eq 0 ]] && echo "ALL PASS" || echo "SOME CHECKS FAILED (logs in $WORK)"
+exit $fail
