@@ -29,6 +29,9 @@
 * of the full package or the width 'w' of each single slit. The other parameter
 * is calculated by: xwidth = nslit*w. The slit package may be made curved and use
 * super-mirror coating.
+* Neutrons that miss the chopper cylinder are transmitted unchanged, so a realistic
+* set-up needs shielding or a beam-defining slit around it; a monitor downstream that
+* is wider than the chopper also counts the unchopped beam.
 *
 * Example:
 * FermiChopper(phase=-50.0, radius=0.04, nu=100, yheight=0.08, w=0.00022475, nslit=200.0, R0=0.0, Qc=0.02176, alpha=2.33, m=0.0, length=0.012, eff=0.95)
@@ -46,7 +49,9 @@
 * Geometrical chopper constants:
 * radius: [m]       chopper cylinder radius
 * nslit: [1]        number of chopper slits
-* length: [m]       channel length of the Fermi chopper
+* length: [m]       channel length of the Fermi chopper. The default suits the fine
+*                   200-slit package of the Example; set it for any other package
+*                   (the curved packages in ISIS_MERLIN use about 0.1 m).
 * w: [m]            width of one chopper slit
 * xwidth: [m]       optional total width of slit package
 * yheight: [m]      height of slit package
