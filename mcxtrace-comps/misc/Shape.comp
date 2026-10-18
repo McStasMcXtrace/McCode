@@ -13,20 +13,17 @@
 * Origin: ILL
 * Modified by: E. Farhi, based on Incoherent
 *
-* A geometric shape without effect on X-raysX, for instrument display purpose.
+* A geometric shape without effect on X-rays, for instrument display purpose.
 *
 * %Description
 * An inactive geometrical shape, for drawing purposes only.
 * It does not propagate X-rays, nor interact.
 * <b>Shape:</b>
 * Geometric shape may be a cylinder, a sphere, a box or any other shape
-*   box/plate:       xwidth x yheight x zdepth (thickness=0)
-*   hollow box/plate:xwidth x yheight x zdepth and thickness>0
-*   cylinder:        radius x yheight (thickness=0)
-*   hollow cylinder: radius x yheight and thickness>0
-*   sphere:          radius (yheight=0 thickness=0)
-*   hollow sphere:   radius and thickness>0 (yheight=0)
-*   any shape:       geometry=OFF file
+*   box/plate:       xwidth x yheight x zdepth
+*   cylinder:        radius x yheight (along Y axis)
+*   sphere:          radius
+*   any shape:       geometry=OFF/PLY_file
 *
 *   The complex geometry option handles any closed non-convex polyhedra.
 *   It computes the intersection points of the X ray with the object
@@ -46,9 +43,7 @@
 * xwidth: [m]      Horiz. dimension of sample (bounding box if off file), as a width 
 * yheight: [m]     Vert.  dimension of sample (bounding box if off file), as a height. A sphere shape is used when 0 and radius is set 
 * zdepth: [m]      Depth of sample (bounding box if off file) 
-* thickness: [m]   Thickness of hollow sample 
 * geometry: [str]  Name of an Object File Format (OFF) file for complex geometry. The OFF file may be generated from XYZ coordinates using qhull/powercrust 
-* center: [1]      Flag to determine if OFF object is centered on its centre of mass.
 *
 * %Link
 * Geomview and Object File Format (OFF) <http|://www.geomview.org>
@@ -60,7 +55,7 @@
 
 DEFINE COMPONENT Shape
 
-SETTING PARAMETERS (string geometry=0, radius=0, xwidth=0, yheight=0, zdepth=0, thickness=0, int center=1)
+SETTING PARAMETERS (string geometry=0, radius=0, xwidth=0, yheight=0, zdepth=0)
 
 
 SHARE
