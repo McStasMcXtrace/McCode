@@ -1019,7 +1019,8 @@ def main(instr=None, dirname=None, **kwds):
         dirname = str(p.parent.joinpath(f"{p.stem}_{dt.strftime(dt.now(), '%Y%m%d_%H%M%S')}"))
 
     from mccodelib.mcdisplayutils import McDisplayReader
-    reader = McDisplayReader(dir=dirname, instr=instr, trace=2, **kwds)
+    kwds.setdefault('trace', 2)
+    reader = McDisplayReader(dir=dirname, instr=instr, **kwds)
     instrument = reader.read_instrument()
     bundle = reader.read_particles()  # None unless -n > 0
 
@@ -1059,6 +1060,7 @@ if __name__ == '__main__':
     parser.add_argument('--dirname', help='output directory name override')
     parser.add_argument('-n', '--ncount', dest='n', type=float, default=0, help='Number of particle rays to trace and include in the output (default 0: geometry only)')
     parser.add_argument('-s', '--segments', dest='segments', type=int, default=16, help='Tessellation resolution (circle segments); lower = smaller/lighter files, e.g. 32 or 16. Default: 16')
+    parser.add_argument('-t', '--trace', dest='trace', type=int, default=2, help='mcrun --trace level: 2 (default) gives solid primitives, 1 the legacy wireframe drawing. NB: with 1, surface-only formats (STL) may come out empty and many viewers ignore lines in OBJ/PLY; add --tubes to get solids')
     parser.add_argument('--tubes', action='store_true', help='Draw lines (multiline etc.) as solid cylinders with spheres at the corners, as in mcdisplay-plopp. NB: with -n > 0 the particle rays are tubed too, which can make files very large (e.g. ~150 MB STEP for 100 rays in PSI_DMC)')
     parser.add_argument('-f', '--format', dest='format', type=output_format, default='glb', help='Output CAD file format (STEP, STL, VRML, GLTF, GLB, OBJ, PLY, XML/X3D, VTK and VTKJS). Default: GLB')
 
