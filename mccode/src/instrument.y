@@ -1879,6 +1879,9 @@ jumpname: "PREVIOUS"
       $$.index = +atoi($3);    }
   | TOK_ID
     {
+      if (symtab_lookup(comp_instances, $1) == NULL)
+        print_error("ERROR: Reference to undefined JUMP target %s at line %s:%d.\n",
+        $1, instr_current_filename, instr_current_line);
       $$.name  = str_dup($1);
       $$.index = 0;
     }
@@ -2803,7 +2806,7 @@ read_component(char *name)
         "ERROR: Cannot find file containing definition of component '%s'.\n"
         "  Check the " MCCODE_LIBENV " library installation and environment variable\n"
         "  or copy the component definition file locally.\n  Current library search path: %s\n", name, get_sys_dir());
-      return NULL;
+      exit(-1);;
     }
     push_autoload(file);
     /* Note: the str_dup copy of the file name is stored in codeblocks, and
@@ -2824,7 +2827,7 @@ read_component(char *name)
     else
     {
       print_error("ERROR: Definition of component %s not found (file was found but does not contain the component definition).\n", name);
-      return NULL;
+      exit(-1);
     }
   }
 }

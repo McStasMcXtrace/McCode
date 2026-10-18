@@ -21,9 +21,13 @@ target value per scan point, which may span several header lines:
       86.04,101.892,108.731,...,
       85.406 }
 
-`mcrun`/`mxrun` and `*.instr` tokens on test lines are ignored. A scan uses its
-own `-n` if given, otherwise at most `1e5` per point, and runs its points in
-parallel (`--scan_split=auto`) unless MPI is used. A value, or every point of a
+`mcrun`/`mxrun` and `*.instr` tokens on test lines are ignored. A `%Test:`
+always runs at the global `--ncount` (scaled by `--statfactor`): a `-n` on its
+line is only a hint for users (`mcdoc` shows it) and is ignored, with a log
+message. To get better statistics in a `%Test:`, change the instrument (e.g.
+`SPLIT`) rather than adding `-n`. A scan uses its own `-n` if given, otherwise
+at most `1e5` per point, and runs its points in parallel (`--scan_split=auto`)
+unless MPI is used. A value, or every point of a
 scan, passes when it is within 20 % of its target, or, with `--nsigma` or
 `--pvalue`, within the statistical tolerance described below.
 
