@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 '''
 Converts MCDISPLAY geometry information, read from an instrument binary,
-to common CAD / 3D formats WITHOUT CadQuery / OpenCASCADE.
+to common CAD / 3D formats.
 
 Supported output formats: glTF (.gltf), GLB, OBJ (+MTL), STL, PLY, VRML97 (.wrl),
 X3D (also as legacy 'xml'), VTK legacy (.vtk), STEP (AP214 faceted BREP, pure
 Python), and VTKJS (.vtkjs zip of the vtk.js JSON scene format).
-No CadQuery/OpenCASCADE is required for any format.
 
 Each instrument component is assigned a color from a cycling palette, so
 adjacent components are visually distinguishable in the output.
@@ -25,7 +24,7 @@ All primitives are tessellated in pure Python/numpy:
   - polyhedron                         -> triangulated faces (fan)
 Every draw call is placed in global coordinates via the component m4 matrix.
 '''
-__author__ = "Gregory Tucker (CadQuery version); dependency-free version"
+__author__ = "Gregory Tucker (CadQuery version); Emmanuel Farhi (drop CadQuery depends)"
 __date__ = "2026-10-17"
 
 import sys
@@ -369,10 +368,10 @@ def _polyhedron(faces_vertices):
 # instrument -> parts
 # ---------------------------------------------------------------------------
 
-def component_to_part(comp, color):
+def component_to_part(comp, color, segments=64):
     part = Part(comp.name, color)
     for d in comp.drawcalls:
-        mesh, lines = tessellate(d)
+        mesh, lines = tessellate(d, segments)
         if mesh is not None:
             part.add_mesh(mesh)
         for l in lines:
@@ -380,12 +379,12 @@ def component_to_part(comp, color):
     return part.transformed(comp.m4)
 
 
-def instrument_to_parts(inst):
+def instrument_to_parts(inst, segments=64):
     ''' convert components to parts, assigning a cycling color per component '''
     parts = []
     ci = 0  # color index over all components (so colors differ even if some are empty)
     for comp in inst.components:
-        part = component_to_part(comp, color_for(ci))
+        part = component_to_part(comp, color_for(ci), segments)
         ci += 1
         if not part.is_empty():
             parts.append(part)
@@ -595,8 +594,8 @@ def export_vtk(parts, path):
                 f.write(' '.join(f'{c:.4g}' for c in p.color) + '\n')
 
 
-def _tube_mesh(p0, p1, radius, segments=6):
-    ''' open cylinder (no caps) between two points, as a triangle mesh;
+def _tube_mesh(p0, p1, radius, segments=4):
+    ''' open 4-sided cylinder (no caps) between two points, as a triangle mesh;
     viewers see the inside via doubleSided materials '''
     p0 = np.asarray(p0, dtype=np.float64).reshape(3)
     p1 = np.asarray(p1, dtype=np.float64).reshape(3)
@@ -656,9 +655,12 @@ def _gltf_buffers(parts):
         all_pts.extend(p.polylines)
     diag = float(np.linalg.norm(np.vstack(all_pts).max(axis=0) - np.vstack(all_pts).min(axis=0))) \
         if all_pts else 1.0
-    tube_r = max(diag * 0.00002, 1e-6)
-    for i, p in enumerate(parts):
-        mat_idx = add_material(p.color)
+    tube_r = max(diag * 2e-5, 1e-6)
+    # Merge all components sharing the same color into ONE mesh: web viewers
+    # (castle-model-viewer, three.js) spend memory and time per node/mesh/draw
+    # call, so a few large meshes load much faster than hundreds of small ones.
+    by_color = {}  # color tuple -> [merged_mesh, [component names]]
+    for p in parts:
         mesh = p.mesh
         if p.polylines:
             tubes = None
@@ -681,11 +683,18 @@ def _gltf_buffers(parts):
             if tubes is not None:
                 mesh = tubes if mesh is None else mesh.merge(tubes)
         if mesh is not None and not mesh.empty():
-            pv = add(mesh.verts, 'float32', 34962)
-            pi = add(mesh.tris.reshape(-1), 'uint32', 34963)
-            meshes.append({'primitives': [{'attributes': {'POSITION': pv}, 'indices': pi,
-                                           'mode': 4, 'material': mat_idx}]})
-            nodes.append({'mesh': len(meshes) - 1, 'name': p.name})
+            entry = by_color.setdefault(tuple(p.color), [None, []])
+            entry[0] = mesh if entry[0] is None else entry[0].merge(mesh)
+            entry[1].append(p.name)
+    nodes, meshes = [], []
+    for gi, (color, (mesh, names)) in enumerate(by_color.items()):
+        mat_idx = add_material(color)
+        pv = add(mesh.verts, 'float32', 34962)
+        pi = add(mesh.tris.reshape(-1), 'uint32', 34963)
+        meshes.append({'primitives': [{'attributes': {'POSITION': pv}, 'indices': pi,
+                                       'mode': 4, 'material': mat_idx}]})
+        nm = names[0] if len(names) == 1 else f'color_group_{gi} ({len(names)} components)'
+        nodes.append({'mesh': len(meshes) - 1, 'name': nm})
     blob = b''.join(bin_chunks)
     gltf = {'asset': {'version': '2.0', 'generator': 'mcdisplay (dependency-free)'},
             'scene': 0,
@@ -946,6 +955,7 @@ def main(instr=None, dirname=None, **kwds):
     basicConfig(level=INFO)
 
     fmt = kwds.get('format', 'stl')
+    segments = int(kwds.pop('segments', 64) or 64)  # tessellation resolution
 
     # output directory
     if dirname is None:
@@ -962,7 +972,7 @@ def main(instr=None, dirname=None, **kwds):
     root.mkdir(parents=True, exist_ok=True)
 
     # Convert the instrument into tessellated parts, then save
-    parts = instrument_to_parts(instrument)
+    parts = instrument_to_parts(instrument, segments)
     output = str(root.joinpath(f"{Path(instr).stem}{EXPORTERS[fmt][1]}"))
     EXPORTERS[fmt][0](parts, output)
     print(f"Wrote {output} ({len(parts)} components)")
@@ -977,7 +987,7 @@ def output_format(astring):
     if f in ('step', 'stl', 'xml', 'vrml', 'gltf', 'vtkjs', 'obj', 'ply', 'glb', 'x3d', 'vtk'):
         return f
     print(f"Unknown file format {astring}. Choose between STEP, STL, VRML, GLTF, GLB, "
-          f"OBJ, PLY, X3D, VTK, VTKJS, and XML (X3D)")
+          f"OBJ, PLY, XML/X3D, VTK, VTKJS")
     return 'stl'
 
 
@@ -988,7 +998,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--dirname', help='output directory name override')
     parser.add_argument('-n', '--ncount', dest='n', type=float, default=0, help='Number of particles to simulate')
-    parser.add_argument('-f', '--format', dest='format', type=output_format, default='stl', help='Output CAD file format (STEP, STL, VRML, GLTF, GLB, OBJ, PLY, X3D, VTK, and XML/X3D)')
+    parser.add_argument('-s', '--segments', dest='segments', type=int, default=16, help='Tessellation resolution (circle segments); lower = smaller/lighter files, e.g. 32 or 16. Default: 16')
+    parser.add_argument('-f', '--format', dest='format', type=output_format, default='glb', help='Output CAD file format (STEP, STL, VRML, GLTF, GLB, OBJ, PLY, XML/X3D, VTK and VTKJS). Default: GLB')
 
     args, unknown = parser.parse_known_args()
     # if --inspect --first or --last are given after instr, the remaining args become "unknown",
