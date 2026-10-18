@@ -1879,6 +1879,9 @@ jumpname: "PREVIOUS"
       $$.index = +atoi($3);    }
   | TOK_ID
     {
+      if (symtab_lookup(comp_instances, $1) == NULL)
+        print_error("ERROR: Reference to undefined JUMP target %s at line %s:%d.\n",
+        $1, instr_current_filename, instr_current_line);
       $$.name  = str_dup($1);
       $$.index = 0;
     }
