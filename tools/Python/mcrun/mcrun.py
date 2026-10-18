@@ -956,7 +956,7 @@ def main():
         autoplotter = None
 
     if options.autoplot is not None:
-        # if no autoplotters selected, fall back to config
+        # if no autoplotter was selected, fall back to config
         if autoplotter is None:
             autoplotter = mccode_config.configuration['MCPLOT']
         if isdir(options.dir):
