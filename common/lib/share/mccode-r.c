@@ -4992,6 +4992,89 @@ uint64_t kiss_random(uint64_t state[7]) {
 /* end of "KISS" rng */
 
 
+/* "TinyMT64", by Mutsuo Saito and Makoto Matsumoto.
+   https://github.com/MersenneTwister-Lab/TinyMT (tinymt/tinymt64.[ch])
+   Period 2^127-1, 64-bit output. Adapted for McCode: the 2-word state lives
+   on the particle, and the parameter set (default mat1, mat2, tmat) is
+   compiled in, so the code is GPU-safe (no globals, no tables).
+
+   Copyright (c) 2011, 2013 Mutsuo Saito, Makoto Matsumoto,
+   Hiroshima University and The University of Tokyo.
+   All rights reserved.
+
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions are
+   met:
+
+       * Redistributions of source code must retain the above copyright
+         notice, this list of conditions and the following disclaimer.
+       * Redistributions in binary form must reproduce the above
+         copyright notice, this list of conditions and the following
+         disclaimer in the documentation and/or other materials provided
+         with the distribution.
+       * Neither the name of the Hiroshima University nor the names of
+         its contributors may be used to endorse or promote products
+         derived from this software without specific prior written
+         permission.
+
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+#define TINYMT64_MAT1 0xfa051f40U
+#define TINYMT64_MAT2 0xffd0fff4U
+#define TINYMT64_TMAT 0x58d02ffeffbfffbcULL
+#define TINYMT64_MASK 0x7fffffffffffffffULL
+
+void tinymt64_srandom(uint64_t state[2], uint64_t seed) {
+    unsigned int i;
+    state[0] = seed ^ ((uint64_t)TINYMT64_MAT1 << 32);
+    state[1] = TINYMT64_MAT2 ^ TINYMT64_TMAT;
+    for (i = 1; i < 8; i++)
+        state[i & 1] ^= i + 6364136223846793005ULL
+            * (state[(i - 1) & 1] ^ (state[(i - 1) & 1] >> 62));
+    if ((state[0] & TINYMT64_MASK) == 0 && state[1] == 0) { /* period certification */
+        state[0] = 'T';
+        state[1] = 'M';
+    }
+}
+
+uint64_t tinymt64_random(uint64_t state[2]) {
+    uint64_t x;
+    /* next state */
+    state[0] &= TINYMT64_MASK;
+    x = state[0] ^ state[1];
+    x ^= x << 12;
+    x ^= x >> 32;
+    x ^= x << 32;
+    x ^= x << 11;
+    state[0] = state[1];
+    state[1] = x;
+    if (x & 1) {
+        state[0] ^= TINYMT64_MAT1;
+        state[1] ^= (uint64_t)TINYMT64_MAT2 << 32;
+    }
+    /* temper */
+    x = state[0] + state[1];
+    x ^= state[0] >> 8;
+    if (x & 1) x ^= TINYMT64_TMAT;
+    return x;
+}
+#undef TINYMT64_MAT1
+#undef TINYMT64_MAT2
+#undef TINYMT64_TMAT
+#undef TINYMT64_MASK
+/* end of "TinyMT64" rng */
+
+
 /* FAST KISS in another implementation (Hundt) */
 
 //////////////////////////////////////////////////////////////////////////////

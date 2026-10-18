@@ -2501,6 +2501,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("/* available random number generators */");
   cout("#define _RNG_ALG_MT         1");
   cout("#define _RNG_ALG_KISS       2");
+  cout("#define _RNG_ALG_TINYMT     3");
   cout("/* selection of random number generator */");
   cout("#ifndef RNG_ALG");
   cout("#  define RNG_ALG  _RNG_ALG_KISS");
@@ -2511,6 +2512,9 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("#elif RNG_ALG == _RNG_ALG_KISS  // KISS");
   cout("#define randstate_t uint64_t");
   cout("#define RANDSTATE_LEN 7");
+  cout("#elif RNG_ALG == _RNG_ALG_TINYMT  // TinyMT64");
+  cout("#define randstate_t uint64_t");
+  cout("#define RANDSTATE_LEN 2");
   cout("#endif");
   cout("");
 

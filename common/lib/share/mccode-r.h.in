@@ -625,6 +625,9 @@ void mcdis_sphere(double x, double y, double z, double r);
 /* random number generation. ================================================ */
 
 #if RNG_ALG == _RNG_ALG_MT  // MT (currently not functional for GPU)
+#  ifdef OPENACC
+#    error "RNG_ALG=1 (MT19937) is CPU only, use RNG_ALG=3 (TinyMT64) on GPU"
+#  endif
 #  define MC_RAND_MAX ((uint32_t)0xffffffffUL)
 #  ifndef RANDSTATE_LEN
 #    define RANDSTATE_LEN 1
@@ -643,6 +646,17 @@ void mcdis_sphere(double x, double y, double z, double r);
 #  define srandom(seed) kiss_srandom(_particle->randstate, seed)
 #  define random() kiss_random(_particle->randstate)
 #  define _random() kiss_random(state)
+#elif RNG_ALG == _RNG_ALG_TINYMT  // TinyMT64
+#  ifndef UINT64_MAX
+#    define UINT64_MAX ((uint64_t)0xffffffffffffffffULL)
+#  endif
+#  define MC_RAND_MAX UINT64_MAX
+#  ifndef RANDSTATE_LEN
+#    define RANDSTATE_LEN 2
+#  endif
+#  define srandom(seed) tinymt64_srandom(_particle->randstate, seed)
+#  define random() tinymt64_random(_particle->randstate)
+#  define _random() tinymt64_random(state)
 #endif
 
 #pragma acc routine
@@ -666,6 +680,12 @@ void mt_srandom_empty();
 uint64_t *kiss_srandom(uint64_t state[7], uint64_t seed);
 #pragma acc routine
 uint64_t kiss_random(uint64_t state[7]);
+
+// TinyMT64 rng
+#pragma acc routine seq
+void tinymt64_srandom(uint64_t state[2], uint64_t seed);
+#pragma acc routine seq
+uint64_t tinymt64_random(uint64_t state[2]);
 
 // Scrambler / hash function
 #pragma acc routine seq
