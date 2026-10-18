@@ -370,6 +370,18 @@ def component_to_part(comp, color, segments=64):
     return part.transformed(comp.m4)
 
 
+def rays_to_part(inst, bundle):
+    ''' one grey part holding every particle ray as a polyline, in instrument coordinates '''
+    m4 = {c.name: c.m4 for c in inst.components}
+    part = Part('rays', (0.75, 0.75, 0.75))
+    for story in bundle.rays:
+        pts = [transform_points(m4[g.compname], [e.args[:3] for e in g.events])
+               for g in story.groups if g.compname in m4 and g.events]
+        if pts:
+            part.add_polyline(np.vstack(pts))
+    return part
+
+
 def instrument_to_parts(inst, segments=64):
     ''' convert components to parts, assigning a cycling color per component '''
     parts = []
@@ -792,7 +804,7 @@ def export_step(parts, path):
 
     def r(x):
         # STEP REAL needs a decimal point: 0 -> 0., 1E-05 -> 1.E-05
-        m, e, x = f'{x:.6G}'.partition('E')
+        m, e, x = f'{x:.12G}'.partition('E')
         return (m if '.' in m else m + '.') + e + x
 
     def r3(p):
@@ -1009,6 +1021,7 @@ def main(instr=None, dirname=None, **kwds):
     from mccodelib.mcdisplayutils import McDisplayReader
     reader = McDisplayReader(dir=dirname, instr=instr, trace=2, **kwds)
     instrument = reader.read_instrument()
+    bundle = reader.read_particles()  # None unless -n > 0
 
     # The reader fails if this is done before reader.read_instrument() above ?!
     root = Path(dirname)
@@ -1016,6 +1029,8 @@ def main(instr=None, dirname=None, **kwds):
 
     # Convert the instrument into tessellated parts, then save
     parts = instrument_to_parts(instrument, segments)
+    if bundle and bundle.rays:
+        parts.append(rays_to_part(instrument, bundle))
     if tubes:
         lines_to_tubes(parts)
     output = str(root.joinpath(f"{Path(instr).stem}{EXPORTERS[fmt][1]}"))
@@ -1042,9 +1057,9 @@ if __name__ == '__main__':
     parser, prefix = make_common_parser(__file__, __doc__)
 
     parser.add_argument('--dirname', help='output directory name override')
-    parser.add_argument('-n', '--ncount', dest='n', type=float, default=0, help='Number of particles to simulate')
+    parser.add_argument('-n', '--ncount', dest='n', type=float, default=0, help='Number of particle rays to trace and include in the output (default 0: geometry only)')
     parser.add_argument('-s', '--segments', dest='segments', type=int, default=16, help='Tessellation resolution (circle segments); lower = smaller/lighter files, e.g. 32 or 16. Default: 16')
-    parser.add_argument('--tubes', action='store_true', help='Draw lines (multiline etc.) as solid cylinders with spheres at the corners, as in mcdisplay-plopp')
+    parser.add_argument('--tubes', action='store_true', help='Draw lines (multiline etc.) as solid cylinders with spheres at the corners, as in mcdisplay-plopp. NB: with -n > 0 the particle rays are tubed too, which can make files very large (e.g. ~150 MB STEP for 100 rays in PSI_DMC)')
     parser.add_argument('-f', '--format', dest='format', type=output_format, default='glb', help='Output CAD file format (STEP, STL, VRML, GLTF, GLB, OBJ, PLY, XML/X3D, VTK and VTKJS). Default: GLB')
 
     args, unknown = parser.parse_known_args()
