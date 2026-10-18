@@ -28,6 +28,7 @@ __author__ = "Gregory Tucker (CadQuery version); Emmanuel Farhi (drop CadQuery d
 __date__ = "2026-10-17"
 
 import sys
+import json
 import math
 import struct
 from pathlib import Path
@@ -335,29 +336,19 @@ def tessellate(d, segments=64):
     return None, []
 
 
-def _polyhedron(faces_vertices):
-    ''' best-effort polyhedron: accepts [ [ (x,y,z)... ] per face ] or
-    [ [(x,y,z)...], ... ] style structures produced by instrparser '''
+def _polyhedron(json_str):
+    ''' polyhedron from the --trace=2 JSON: {"vertices": [[x,y,z],...], "faces": [{"face": [i,j,k,...]},...]} '''
     try:
-        faces = faces_vertices
-        # accept (vertices, faces-as-index-lists) tuple
-        if isinstance(faces, tuple) and len(faces) == 2:
-            verts, idxs = faces
-            verts = np.asarray(verts, dtype=np.float64).reshape((-1, 3))
-            faces = [verts[np.asarray(ix).astype(int)] for ix in idxs]
-        meshes, lines = [], []
-        for f in faces:
-            f = np.asarray(f, dtype=np.float64).reshape((-1, 3))
+        data = json.loads(json_str)
+        V = np.asarray(data['vertices'], dtype=np.float64).reshape((-1, 3))
+        mesh, lines = None, []
+        for f in data['faces']:
+            f = V[np.asarray(f['face'], dtype=np.int64)]
             if len(f) < 3:
-                if len(f) == 2:
-                    lines.append(f)
                 continue
-            tris = np.array([[0, i, i + 1] for i in range(1, len(f) - 1)], dtype=np.int64)
-            meshes.append(Mesh(f, tris))
-            lines.append(np.vstack((f, f[0])))
-        mesh = None
-        for m in meshes:
+            m = Mesh(f, [[0, i, i + 1] for i in range(1, len(f) - 1)])
             mesh = m if mesh is None else mesh.merge(m)
+            lines.append(np.vstack((f, f[0])))
         return mesh, lines
     except Exception as e:
         print(f"Polyhedron interpretation failed ({e}); skipped")
@@ -605,6 +596,55 @@ def _tube_mesh(p0, p1, radius, segments=4):
     return _strip(p0 + ring, p1 + ring)
 
 
+_G = (1 + 5 ** 0.5) / 2  # icosahedron: the sphere at each polyline corner
+ICO_V = np.array([(-1, _G, 0), (1, _G, 0), (-1, -_G, 0), (1, -_G, 0), (0, -1, _G), (0, 1, _G),
+                  (0, -1, -_G), (0, 1, -_G), (_G, 0, -1), (_G, 0, 1), (-_G, 0, -1), (-_G, 0, 1)]) / np.hypot(1, _G)
+ICO_F = np.array([(0, 11, 5), (0, 5, 1), (0, 1, 7), (0, 7, 10), (0, 10, 11), (1, 5, 9), (5, 11, 4),
+                  (11, 10, 2), (10, 7, 6), (7, 1, 8), (3, 9, 4), (3, 4, 2), (3, 2, 6), (3, 6, 8),
+                  (3, 8, 9), (4, 9, 5), (2, 4, 11), (6, 2, 10), (8, 6, 7), (9, 8, 1)])
+
+
+def _tubes(xyz, r, k=6):
+    ''' NaN-separated polylines -> Mesh: a k-sided open cylinder per segment, a sphere per corner
+    (same construction as the mcdisplay-plopp 3D view) '''
+    a, b = xyz[:-1], xyz[1:]
+    keep = np.isfinite(a).all(1) & np.isfinite(b).all(1) & (np.linalg.norm(b - a, axis=1) > 0)
+    a, b = a[keep], b[keep]
+    d = (b - a) / np.linalg.norm(b - a, axis=1, keepdims=True)
+    u = np.cross(d, np.where(abs(d[:, :1]) < 0.9, [1., 0, 0], [0., 1, 0]))  # helper axis not parallel to d
+    u /= np.linalg.norm(u, axis=1, keepdims=True)
+    v = np.cross(d, u)
+    th = 2 * np.pi * np.arange(k) / k
+    ring = r * (np.cos(th)[None, :, None] * u[:, None] + np.sin(th)[None, :, None] * v[:, None])  # (n, k, 3)
+    cyl = np.concatenate([a[:, None] + ring, b[:, None] + ring], axis=1).reshape(-1, 3)
+    j, j1 = np.arange(k), (np.arange(k) + 1) % k
+    side = np.concatenate([np.stack([j, j1, k + j], 1), np.stack([j1, k + j1, k + j], 1)])
+    cyl_f = (side[None] + 2 * k * np.arange(len(a))[:, None, None]).reshape(-1, 3)
+
+    d1, d2 = xyz[1:-1] - xyz[:-2], xyz[2:] - xyz[1:-1]  # joints only where the polyline turns > ~20 deg;
+    with np.errstate(invalid='ignore', divide='ignore'):  # NaN breaks, ends and smooth arcs get none
+        cos = (d1 * d2).sum(1) / (np.linalg.norm(d1, axis=1) * np.linalg.norm(d2, axis=1))
+    pts = xyz[1:-1][cos < 0.94]
+    sph = (pts[:, None] + r * ICO_V[None]).reshape(-1, 3)
+    sph_f = (ICO_F[None] + len(cyl) + 12 * np.arange(len(pts))[:, None, None]).reshape(-1, 3)
+    return Mesh(np.concatenate([cyl, sph]), np.concatenate([cyl_f, sph_f]))
+
+
+def lines_to_tubes(parts, thickness=1e-4):
+    ''' replace every part's polylines by solid tubes; radius = thickness x scene bounding-box diagonal '''
+    # ponytail: fixed thickness as in mcdisplay-plopp; expose it on the CLI if 1e-4 doesn't suit
+    pts = [p.mesh.verts for p in parts if p.mesh is not None] + [pl for p in parts for pl in p.polylines]
+    if not pts:
+        return
+    pts = np.vstack(pts)
+    r = thickness * np.linalg.norm(pts.max(0) - pts.min(0))
+    nan = np.full((1, 3), np.nan)
+    for p in parts:
+        if p.polylines:
+            p.add_mesh(_tubes(np.vstack([np.vstack((pl, nan)) for pl in p.polylines]), r))
+            p.polylines = []
+
+
 def _gltf_buffers(parts):
     ''' build accessor+buffers for all parts; returns glTF dict + binary blob '''
     bin_chunks = []
@@ -709,14 +749,12 @@ def export_gltf(parts, path):
     gltf, blob = _gltf_buffers(parts)
     gltf['buffers'][0]['uri'] = Path(path).name + '.bin'
     with open(path, 'w') as f:
-        import json
         json.dump(gltf, f, separators=(',', ':'))
     with open(str(path) + '.bin', 'wb') as f:
         f.write(blob)
 
 
 def export_glb(parts, path):
-    import json
     gltf, blob = _gltf_buffers(parts)
     gltf['buffers'][0]['bufferView'] = len(gltf['bufferViews'])
     gltf['bufferViews'].append({'buffer': 0, 'byteOffset': 0, 'byteLength': len(blob)})
@@ -735,8 +773,8 @@ def export_step(parts, path):
     ''' Pure-Python STEP (AP214-ish) writer -- no CadQuery/OpenCASCADE needed.
 
     Each component becomes one PRODUCT:
-      - components with a mesh -> faceted BREP: OPEN_SHELL of ADVANCED_FACEs,
-        each triangle a PLANE bounded by a POLY_LOOP of 3 VERTEX_POINTs,
+      - components with a mesh -> faceted BREP: OPEN_SHELL of FACE_SURFACEs,
+        each triangle a PLANE bounded by a POLY_LOOP of 3 CARTESIAN_POINTs,
         wrapped in a SHELL_BASED_SURFACE_MODEL
         (MANIFOLD_SURFACE_SHAPE_REPRESENTATION)
       - wireframe-only components -> GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_
@@ -750,23 +788,31 @@ def export_step(parts, path):
         nonlocal nid
         nid += 1
         entities.append(f'#{nid}={text};')
-        return nid
+        return f'#{nid}'
+
+    def r(x):
+        # STEP REAL needs a decimal point: 0 -> 0., 1E-05 -> 1.E-05
+        m, e, x = f'{x:.6G}'.partition('E')
+        return (m if '.' in m else m + '.') + e + x
+
+    def r3(p):
+        return f'({r(p[0])},{r(p[1])},{r(p[2])})'
 
     def pt(p):
-        return E(f"CARTESIAN_POINT('',({_fmt(p[0])},{_fmt(p[1])},{_fmt(p[2])}))")
+        return E(f"CARTESIAN_POINT('',{r3(p)})")
 
     # --- global contexts and units ---
     appctx = E("APPLICATION_CONTEXT('core data for automotive mechanical design processes')")
     E(f"APPLICATION_PROTOCOL_DEFINITION('international standard','automotive_design',2010,{appctx})")
-    lu = E('SI_UNIT($,.METRE.)')
-    pau = E('SI_UNIT($,.RADIAN.)')
-    sau = E('SI_UNIT($,.STERADIAN.)')
+    lu = E('(LENGTH_UNIT()NAMED_UNIT(*)SI_UNIT($,.METRE.))')
+    pau = E('(NAMED_UNIT(*)PLANE_ANGLE_UNIT()SI_UNIT($,.RADIAN.))')
+    sau = E('(NAMED_UNIT(*)SI_UNIT($,.STERADIAN.)SOLID_ANGLE_UNIT())')
     unc = E(f"UNCERTAINTY_MEASURE_WITH_UNIT(LENGTH_MEASURE(1.E-07),{lu},"
             f"'distance_accuracy_value','')")
     # one complex instance for the representation context
     nid += 1
-    ctx = nid
-    entities.append(f"#{ctx}=(GEOMETRIC_REPRESENTATION_CONTEXT(3)"
+    ctx = f'#{nid}'
+    entities.append(f"{ctx}=(GEOMETRIC_REPRESENTATION_CONTEXT(3)"
                     f"GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT(({unc}))"
                     f"GLOBAL_UNIT_ASSIGNED_CONTEXT(({lu},{pau},{sau}))"
                     f"REPRESENTATION_CONTEXT('',''));" )
@@ -793,25 +839,22 @@ def export_step(parts, path):
                     continue  # skip degenerate triangles
                 n = n / ln
                 pa, pb, pc = pt(a), pt(b), pt(c)
-                va = E(f'VERTEX_POINT(\'\',{pa})')
-                vb = E(f'VERTEX_POINT(\'\',{pb})')
-                vc = E(f'VERTEX_POINT(\'\',{pc})')
-                loop = E(f'POLY_LOOP(\'\',({va},{vb},{vc}),.T.)')
+                loop = E(f"POLY_LOOP('',({pa},{pb},{pc}))")
                 fb = E(f'FACE_OUTER_BOUND(\'\',{loop},.T.)')
-                dn = E(f"DIRECTION('',({_fmt(n[0])},{_fmt(n[1])},{_fmt(n[2])}))")
+                dn = E(f"DIRECTION('',{r3(n)})")
                 ref = np.array([1.0, 0.0, 0.0]) if abs(n[0]) < 0.9 else np.array([0.0, 1.0, 0.0])
                 dr = np.cross(n, ref)
                 dr /= np.linalg.norm(dr)
-                dd = E(f"DIRECTION('',({_fmt(dr[0])},{_fmt(dr[1])},{_fmt(dr[2])}))")
+                dd = E(f"DIRECTION('',{r3(dr)})")
                 ax = E(f'AXIS2_PLACEMENT_3D(\'\',{pa},{dn},{dd})')
                 pl = E(f'PLANE(\'\',{ax})')
-                faces.append(E(f'ADVANCED_FACE(\'\',({fb}),{pl},.T.)'))
+                faces.append(E(f"FACE_SURFACE('',({fb}),{pl},.T.)"))
             if faces:
                 shell = E(f"OPEN_SHELL('',({','.join(map(str, faces))}))")
                 sbsm = E(f'SHELL_BASED_SURFACE_MODEL(\'\',({shell}))')
                 rep = E(f'MANIFOLD_SURFACE_SHAPE_REPRESENTATION(\'\',({sbsm}),{ctx})')
                 # attach the component color to every face
-                col = E(f"COLOUR_RGB('',{p.color[0]:.4g},{p.color[1]:.4g},{p.color[2]:.4g})")
+                col = E(f"COLOUR_RGB('',{','.join(r(x) for x in p.color)})")
                 fasc = E(f'FILL_AREA_STYLE_COLOUR(\'\',{col})')
                 fas = E(f'FILL_AREA_STYLE(\'\',({fasc}))')
                 ssf = E(f'SURFACE_STYLE_FILL_AREA({fas})')
@@ -840,7 +883,7 @@ def export_step(parts, path):
         f.write('HEADER;\n')
         f.write("FILE_DESCRIPTION(('MCDISPLAY geometry export'),'2;1');\n")
         f.write(f"FILE_NAME('{Path(path).name}','{__date__}',('mcdisplay'),"
-                f"('McCode'),'mcdisplay dependency-free','');\n")
+                f"('McCode'),'mcdisplay dependency-free','McCode','');\n")
         f.write("FILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));\n")
         f.write('ENDSEC;\nDATA;\n')
         f.write('\n'.join(entities) + '\n')
@@ -858,7 +901,6 @@ def export_vtkjs(parts, path):
                              connectivity), plus a per-component RGB point
                              data array for the cycling colors. '''
     import base64
-    import json
     import zipfile
 
     def b64(arr, dtype):
@@ -956,6 +998,7 @@ def main(instr=None, dirname=None, **kwds):
 
     fmt = kwds.get('format', 'stl')
     segments = int(kwds.pop('segments', 64) or 64)  # tessellation resolution
+    tubes = kwds.pop('tubes', False)
 
     # output directory
     if dirname is None:
@@ -964,7 +1007,7 @@ def main(instr=None, dirname=None, **kwds):
         dirname = str(p.parent.joinpath(f"{p.stem}_{dt.strftime(dt.now(), '%Y%m%d_%H%M%S')}"))
 
     from mccodelib.mcdisplayutils import McDisplayReader
-    reader = McDisplayReader(dir=dirname, instr=instr, **kwds)
+    reader = McDisplayReader(dir=dirname, instr=instr, trace=2, **kwds)
     instrument = reader.read_instrument()
 
     # The reader fails if this is done before reader.read_instrument() above ?!
@@ -973,6 +1016,8 @@ def main(instr=None, dirname=None, **kwds):
 
     # Convert the instrument into tessellated parts, then save
     parts = instrument_to_parts(instrument, segments)
+    if tubes:
+        lines_to_tubes(parts)
     output = str(root.joinpath(f"{Path(instr).stem}{EXPORTERS[fmt][1]}"))
     EXPORTERS[fmt][0](parts, output)
     print(f"Wrote {output} ({len(parts)} components)")
@@ -999,6 +1044,7 @@ if __name__ == '__main__':
     parser.add_argument('--dirname', help='output directory name override')
     parser.add_argument('-n', '--ncount', dest='n', type=float, default=0, help='Number of particles to simulate')
     parser.add_argument('-s', '--segments', dest='segments', type=int, default=16, help='Tessellation resolution (circle segments); lower = smaller/lighter files, e.g. 32 or 16. Default: 16')
+    parser.add_argument('--tubes', action='store_true', help='Draw lines (multiline etc.) as solid cylinders with spheres at the corners, as in mcdisplay-plopp')
     parser.add_argument('-f', '--format', dest='format', type=output_format, default='glb', help='Output CAD file format (STEP, STL, VRML, GLTF, GLB, OBJ, PLY, XML/X3D, VTK and VTKJS). Default: GLB')
 
     args, unknown = parser.parse_known_args()
