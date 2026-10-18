@@ -4254,7 +4254,6 @@ long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long
   // copy non-absorbed block
   #pragma acc parallel loop present(particles[0:buffer_len])
   for (long tidx = 0; tidx < accumlen; tidx++) { // tidx: thread index
-    randstate_t randstate[7];
     _class_particle sourcebuffer;
     _class_particle targetbuffer;
     // assign reduced weight to all particles
@@ -4266,13 +4265,8 @@ long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long
       // buffer full particle struct
       targetbuffer = particles[tidx];
       // reassign previous randstate
-      targetbuffer.randstate[0] = sourcebuffer.randstate[0];
-      targetbuffer.randstate[1] = sourcebuffer.randstate[1];
-      targetbuffer.randstate[2] = sourcebuffer.randstate[2];
-      targetbuffer.randstate[3] = sourcebuffer.randstate[3];
-      targetbuffer.randstate[4] = sourcebuffer.randstate[4];
-      targetbuffer.randstate[5] = sourcebuffer.randstate[5];
-      targetbuffer.randstate[6] = sourcebuffer.randstate[6];
+      for (int ridx = 0; ridx < RANDSTATE_LEN; ridx++)
+        targetbuffer.randstate[ridx] = sourcebuffer.randstate[ridx];
       // apply
       particles[bidx*accumlen + tidx] = targetbuffer;
     }
