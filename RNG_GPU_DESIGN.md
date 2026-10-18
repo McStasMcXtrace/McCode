@@ -95,10 +95,19 @@ All tests on macOS arm64, clang, CPU:
 | `Unittest_SPLIT`, normal and FUNNEL mode, `RNG_ALG` 1/2/3, ASan + UBSan | clean (after rebase: UBSan + array bounds; before rebase also ASan) |
 | `RNG_ALG=1` built with OpenACC | stops with the new `#error` |
 
+**GPU** (`devel/bin/mccode-test-rng-gpu`; nvc 26.1, x86-64 Linux, NVIDIA T600, driver 580.178.04):
+all checks pass. For KISS and TinyMT64, in both the legacy and FUNNEL ray loops:
+- the CI checksums match on CPU and on GPU;
+- a 1e6-ray run gives **bit-identical** monitor output on CPU and GPU, with the GPU tracing it in 10 batches (`--gpu_innerloop`);
+- building `RNG_ALG=1` with OpenACC is refused.
+
+**TestU01** (`devel/bin/mccode-test-rng-crush`, generators taken verbatim from `mccode-r.c`):
+SmallCrush passes for KISS and TinyMT64, both per-ray and as a single stream, on both the high and low 32 bits (8/8).
+Crush and BigCrush (several hours per run) have not been run yet.
+
 **Not yet tested:**
-- an nvc/OpenACC GPU build; the key check is that CPU and GPU give bit-identical output for the same seed;
-- Linux (gcc, clang) and Windows (MSVC);
-- TestU01 BigCrush on per-ray streams.
+- Linux CPU builds with gcc/clang, and Windows (MSVC);
+- Crush and BigCrush.
 
 ## Related findings
 
@@ -108,6 +117,9 @@ All tests on macOS arm64, clang, CPU:
   calls it, but it is public API.
 - **`_rand01()` can return exactly 1.0**: it divides a full 64-bit integer by 2^64, so the top values round
   up (p ≈ 2^-54 per draw). Using `(x >> 11) * 2^-53` gives [0, 1) exactly. Fixing it changes results.
+- **KISS has no warm-up after seeding**: from a small raw seed its first outputs are poor (seed 1000
+  gives high words `00000000`, `00004307`, …). McCode always seeds with a hashed per-ray key, so this
+  doesn't show in simulations, but `--mode single` in the TestU01 script exposes it.
 - **KISS quality has never been tested** with BigCrush. It is a 64-bit adaptation of a 32-bit design,
   and all four sub-generators are seeded with nearly the same value. A BigCrush run would show whether a
   second generator is nice to have or necessary.
@@ -118,4 +130,6 @@ All tests on macOS arm64, clang, CPU:
    (then Philox, rather than desprng)?
 2. Should TinyMT64 stay opt-in, or become the default later? A new default changes results for
    everyone, so it should come only after the #2808 reference re-evaluation, not mixed with it.
-3. Who can run the nvc GPU build and the MSVC build?
+3. Who can run the MSVC build, and Crush/BigCrush (several hours per run)? For example:
+   `devel/bin/mccode-test-rng-crush --build-testu01 ~/testu01 --battery big --alg tinymt`
+   then the same with `--alg kiss`, and with `--bits lo`.
