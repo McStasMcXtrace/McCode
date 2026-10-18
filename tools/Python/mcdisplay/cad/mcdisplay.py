@@ -272,10 +272,10 @@ def tessellate(d, segments=64):
         nu, nv = segments, max(8, segments // 2)
         u = np.linspace(0, 2 * np.pi, nu, endpoint=False)
         v = np.linspace(0, np.pi, nv)
-        uu, vv = np.meshgrid(u, v)
+        uu, vv = (g.ravel() for g in np.meshgrid(u, v))  # row-major: index i*nu + j
         pts = np.column_stack((c[0] + r * np.cos(uu) * np.sin(vv),
                                c[1] + r * np.sin(uu) * np.sin(vv),
-                               c[2] + r * np.cos(vv))).reshape(-1, 3)
+                               c[2] + r * np.cos(vv)))
         tris = []
         for i in range(nv - 1):
             for j in range(nu):
