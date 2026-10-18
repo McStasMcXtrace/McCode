@@ -293,6 +293,11 @@ INITIALIZE
     FCVars.ph0 = fmod (-delay * nu * 360, 360) * DEG2RAD;
   } else
     FCVars.ph0 = phase * DEG2RAD;
+  if (nu && !phase && !delay && zero_time != 2) {
+    printf ("FermiChopper: %s: WARNING: phase=0 and delay=0, so the chopper opens at t=0 whatever\n"
+            "    the incident energy. Set delay (or phase) to transmit a chosen energy.\n",
+            NAME_CURRENT_COMP);
+  }
   FCVars.sum_t = FCVars.sum_v = FCVars.sum_N = FCVars.sum_N_pass = 0;
 
   /* check of input parameters */
