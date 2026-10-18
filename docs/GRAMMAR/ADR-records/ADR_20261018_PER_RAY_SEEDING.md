@@ -52,7 +52,7 @@ no new helper: a SplitMix64 mixer was tried and gave the same results.
   (32-bit `long`) behaves like the other platforms.
 * On CPU (`loops=1`, `gpu_innerloop=ncount`) `_uid` values are unchanged.
   On GPU they are unique across batches.
-* mccode-antlr must port (mccode-dev/mccode-antlr#392) the same lines by hand. Until it does, the two
+* mccode-antlr must port the same lines by hand (mccode-dev/mccode-antlr#392). Until it does, the two
   code generators give different results for the same seed.
 
 ## Behaviour
