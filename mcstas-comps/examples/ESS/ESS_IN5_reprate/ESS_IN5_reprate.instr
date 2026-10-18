@@ -259,7 +259,7 @@ COMPONENT Fastchop2 = DiskChopper(
   AT (0, 0.04, Length) RELATIVE Origin
 
 COMPONENT Fastchop2counter = DiskChopper(
-    yheight=0.35, theta_0 = FAST_THETA, radius = 0.35, nu = -F_fast2, nslit = N_fast, delay = -t_fast2a)
+    yheight=0.35, theta_0 = FAST_THETA, radius = 0.35, nu = -F_fast2, nslit = N_fast, delay = t_fast2a)
   AT (0, 0.04, Length+GUI_GAP) RELATIVE Origin
 
 COMPONENT FOchop3 = DiskChopper(
