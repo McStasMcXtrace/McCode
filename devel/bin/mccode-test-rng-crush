@@ -55,6 +55,10 @@ if [[ -n $build ]]; then
   git clone -q "$TESTU01_URL" "$src"
   git -C "$src" checkout -q "$TESTU01_REV"
   chmod +x "$src"/configure "$src"/install-sh "$src"/mkinstalldirs "$src"/missing "$src"/depcomp "$src"/config.guess "$src"/config.sub  # repo lacks exec bits
+  # git gives all files the checkout time; make the shipped autotools output newer than
+  # its sources, or make tries to rerun automake-1.10/autoconf-2.61
+  ( cd "$src" && touch aclocal.m4 && sleep 1 && touch configure && sleep 1 \
+      && touch Makefile.in */Makefile.in include/config.h.in include/gdefconf.h.in )
   host=(); [[ $(uname -s) == Darwin ]] && host=(--build="$(uname -m | sed 's/arm64/aarch64/')-apple-darwin")
   (cd "$src" && ./configure -q --prefix="$build" --disable-shared "${host[@]}" CFLAGS="-O2 -std=gnu89 -w" \
      && make -s -j"$( (nproc || sysctl -n hw.ncpu) 2>/dev/null)" && make -s install) >"$src/build.log" 2>&1 \
