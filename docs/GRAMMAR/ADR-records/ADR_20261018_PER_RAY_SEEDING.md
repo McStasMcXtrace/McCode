@@ -3,7 +3,7 @@
 ## Status
 
 *Proposed* and *implemented* in mccode-dev/McCode#2808 (fixes
-mccode-dev/McCode#2807). Needs a matching change in mccode-antlr, whose
+mccode-dev/McCode#2807). Needs a matching change in mccode-antlr (mccode-dev/mccode-antlr#392), whose
 `translators/c_raytrace.py` holds its own copy of these lines.
 
 ## Context
@@ -52,7 +52,7 @@ no new helper: a SplitMix64 mixer was tried and gave the same results.
   (32-bit `long`) behaves like the other platforms.
 * On CPU (`loops=1`, `gpu_innerloop=ncount`) `_uid` values are unchanged.
   On GPU they are unique across batches.
-* mccode-antlr must port the same lines by hand. Until it does, the two
+* mccode-antlr must port (mccode-dev/mccode-antlr#392) the same lines by hand. Until it does, the two
   code generators give different results for the same seed.
 
 ## Behaviour
