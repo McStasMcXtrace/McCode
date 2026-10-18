@@ -52,11 +52,11 @@
 * %Example: h=1.2 l=1 dE=5 sample_choice=0 primitive_cell=1 Detector: detector_I=1.85e-10
 * %Example: h=1.15 l=0 dE=3 T=2 sample_choice=2 Detector: detector_I=8.91e-10
 * %Example: h=1.15 l=0 dE=3 T=2 sample_choice=3 Detector: detector_I=9.41e-10
-* %Scan: mcrun Test_Dispersion_relation_TAS.instr -M -N 5,5 -n 2e5 h=0.6,1.4 l=0.6,1.4 dE=5 sample_choice=0 Detector: detector_I={
-*   0.0,0.0,0.0,0.0,0.0,0.0,1.5422e-11,4.46901e-10,
-*   2.86974e-11,0.0,0.0,1.48785e-10,0.0,1.76851e-10,0.0,0.0,
-*   7.73942e-11,1.27486e-10,1.09884e-10,0.0,0.0,0.0,0.0,0.0,
-*   0.0 }
+* %Scan: mcrun Test_Dispersion_relation_TAS.instr -M -N 5,5 -n 2e5 h=0.8,1.2 l=1.1,1.3 dE=5 sample_choice=0 Detector: detector_I={
+*   8.964e-12,1.086e-11,8.771e-12,1.261e-11,1.151e-11,7.748e-12,1.057e-11,1.137e-11,
+*   1.199e-11,1.014e-11,6.126e-12,8.926e-12,1.006e-11,1.007e-11,8.424e-12,3.55e-12,
+*   7.184e-12,8.291e-12,8.243e-12,5.35e-12,9.55e-13,4.109e-12,5.612e-12,4.924e-12,
+*   1.74e-12 }
 *
 * %Parameters
 * h: [r.l.u.]       Scattering vector component along a* (sample x axis)
