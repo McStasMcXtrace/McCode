@@ -146,7 +146,7 @@ jobs:
              test "$(command -v mxtest)" == "/usr/bin/mxtest"
            fi
            # Run the test with 2 core mpi
-           ${MXTEST_EXECUTABLE} --verbose --testdir $PWD --suffix ${{ matrix.os }}_${{ matrix.mpi }}${{ matrix.method == 'debian' && '_debian' || '' }} --mpi=${{ matrix.nmpi }} --uid=${MYWORKERID}
+           ${MXTEST_EXECUTABLE} --verbose --nsigma 5 --testdir $PWD --suffix ${{ matrix.os }}_${{ matrix.mpi }}${{ matrix.method == 'debian' && '_debian' || '' }} --mpi=${{ matrix.nmpi }} --uid=${MYWORKERID}
 
     - name: 'Tar output files'
       id: tar-package

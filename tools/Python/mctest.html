@@ -58,9 +58,30 @@ em { color: #57606a; }
 <h1 id="mctest-family">mctest family</h1>
 <p>Installation testing / benchmarking tools, under <code>tools/Python/mctest</code>.</p>
 <h2 id="mctest-mxtest">mctest / mxtest</h2>
-<p>Runs every <code>%Example</code> test embedded in the instrument library, compiling,
-displaying (single-particle), and running each one, then compares the
-result against the target value recorded in the instrument header.</p>
+<p>Runs every test embedded in the instrument library, compiling, displaying
+(single-particle), and running each one, then compares the result against the
+target value recorded in the instrument header. A <code>%Test:</code> header line (older
+name: <code>%Example:</code>) defines a single-value test:</p>
+<pre><code>%Test: lambda=2.36 Detector: He3H_I=9.84026e-10
+</code></pre>
+<p>A <code>%TestScan:</code> header line (older name: <code>%Scan:</code>) defines a parameter scan. The
+parameters use the <code>mcrun</code> scan syntax, followed by a <code>{}</code>-enclosed list of one
+target value per scan point, which may span several header lines:</p>
+<pre><code>%TestScan: dBz=-0.0001,0.0001 -N41 -n1e5 Detector: detector_I={
+  86.04,101.892,108.731,...,
+  85.406 }
+</code></pre>
+<p><code>mcrun</code>/<code>mxrun</code> and <code>*.instr</code> tokens on test lines are ignored. A scan uses its
+own <code>-n</code> if given, otherwise at most <code>1e5</code> per point, and runs its points in
+parallel (<code>--scan_split=auto</code>) unless MPI is used. A value, or every point of a
+scan, passes when it is within 20 % of its target, or, with <code>--nsigma</code> or
+<code>--pvalue</code>, within the statistical tolerance described below.</p>
+<p>A target may carry its error bar, written as in the simulation's own output, e.g.
+<code>%Test: ... Detector: NAME_I=2.00752e+08 NAME_ERR=2.28872e+06</code> or, for a scan,
+<code>Detector: NAME_I={...} NAME_ERR={...}</code>. It is used with <code>--nsigma</code>/<code>--pvalue</code>.</p>
+<p>How <code>--nsigma</code>, <code>--pvalue</code> and <code>--statfactor</code> judge test values against their
+targets, and where that can mislead, is explained in
+<a href="mctest-statistics.html">Statistical acceptance in mctest</a>.</p>
 <table>
 <thead>
 <tr>
@@ -127,7 +148,7 @@ result against the target value recorded in the instrument header.</p>
 </tr>
 <tr>
 <td><code>--skipnontest</code></td>
-<td>skip compiling instruments that have no <code>%Example</code> test</td>
+<td>skip compiling instruments that have no <code>%Test</code>/<code>%TestScan</code> test</td>
 </tr>
 <tr>
 <td><code>--suffix SUFFIX</code></td>
@@ -150,6 +171,22 @@ result against the target value recorded in the instrument header.</p>
 <td>max seconds allowed per test display run (default: 60)</td>
 </tr>
 <tr>
+<td><code>--nsigma N</code></td>
+<td>accept a test value (each point of a scan) within N × the combined error bar <code>sqrt(ERR_test² + ERR_target²)</code>, when the target line gives <code>NAME_ERR</code>; targets without it are assumed to come from the unscaled ncount (<code>√(1+F)·ERR_test</code> with <code>--statfactor F</code>, <code>√2·ERR_test</code> by default) and are also accepted within 20 %. Error bars from fewer than 100 effective events <code>(I/ERR)²</code> are not used: the 20 % rule applies</td>
+</tr>
+<tr>
+<td><code>--statfactor F</code></td>
+<td>scale the ncount of every test (and per scan point) by F, e.g. <code>0.01</code> for quick runs or <code>100</code> for reference-quality ones; with <code>--nsigma</code>/<code>--pvalue</code>, a target without <code>NAME_ERR</code> is assumed to come from the unscaled ncount (combined error bar <code>√(1+F)·ERR_test</code>)</td>
+</tr>
+<tr>
+<td><code>--pvalue P</code></td>
+<td>as <code>--nsigma</code>, given as a two-sided Gaussian p-value (e.g. <code>0.0027</code> = 3σ, <code>5.7e-7</code> = 5σ)</td>
+</tr>
+<tr>
+<td><code>--noscans</code></td>
+<td>skip the <code>%TestScan</code> tests, only run the <code>%Test</code> tests</td>
+</tr>
+<tr>
 <td><code>--noplots</code></td>
 <td>do not generate plots (<code>01_overview.pdf</code>, <code>02_plots.html</code>) of the test output</td>
 </tr>
@@ -159,7 +196,7 @@ result against the target value recorded in the instrument header.</p>
 </tr>
 <tr>
 <td><code>--strict</code></td>
-<td>let instruments without <code>%Example</code> line(s) fail immediately (cannot be combined with <code>--permissive</code>)</td>
+<td>let instruments without <code>%Test</code>/<code>%TestScan</code> line(s) fail immediately (cannot be combined with <code>--permissive</code>)</td>
 </tr>
 <tr>
 <td><code>--verbose</code></td>
@@ -170,7 +207,11 @@ result against the target value recorded in the instrument header.</p>
 <h2 id="mcviewtest-mxviewtest">mcviewtest / mxviewtest</h2>
 <p>Builds a single browsable HTML comparison report from one or more <code>mctest</code>
 result sets (as written by <code>mctest --testdir</code>), diffing/co-plotting each
-row against a chosen reference column via <code>mcplotdiff-html</code>/<code>mccoplot-html</code>.</p>
+row against a chosen reference column via <code>mcplotdiff-html</code>/<code>mccoplot-html</code>.
+Each test, and each scan, is one row. Cells are coloured pass/fail by the same
+rule <code>mctest</code> used for that result set (20 %, or the <code>--nsigma</code>/<code>--pvalue</code> and
+<code>--statfactor</code> stored with the results); a scan cell shows how many points
+passed, and hovering it lists every point's value, target and percentage.</p>
 <table>
 <thead>
 <tr>

@@ -3514,7 +3514,20 @@ void mcdis_circle(char *plane, double x, double y, double z, double r){
   printf("MCDISPLAY: mcdiscircle('%s',%g,%g,%g,%g)\n", plane, x, y, z, r);
 }
 
+/* A zero axis n=(0,0,0) has no direction: draw along +y, the identity orientation
+ * of the --trace=2 primitives, and warn once (to stderr, outside the MCDISPLAY stream) */
+static void mcdis_check_axis(const char *what, double *nx, double *ny, double *nz){
+  static int warned = 0;
+  if (*nx == 0 && *ny == 0 && *nz == 0) {
+    if (!warned++)
+      fprintf(stderr, "Warning: mcdisplay %s() called with axis n=(0,0,0), using (0,1,0) "
+              "(further occurrences not reported)\n", what);
+    *ny = 1;
+  }
+}
+
 void mcdis_new_circle(double x, double y, double z, double r, double nx, double ny, double nz){
+  mcdis_check_axis("new_circle", &nx, &ny, &nz);
   printf("MCDISPLAY: mcdisnew_circle(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, r, nx, ny, nz);
 }
 
@@ -3523,6 +3536,7 @@ void mcdis_new_circle(double x, double y, double z, double r, double nx, double 
  * with normal (nx,ny,nz)*/
 void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, double nz){
     int i;
+    mcdis_check_axis("Circle", &nx, &ny, &nz);
     if(nx==0 && ny && nz==0){
         for (i=0;i<24; i++){
             mcdis_line(x+r*sin(i*2*PI/24),y,z+r*cos(i*2*PI/24),
@@ -3569,6 +3583,7 @@ void mcdis_legacy_box(double x, double y, double z,
     width (deltax), height (deltay), length (deltaz) */
 void mcdis_box(double x, double y, double z,
 	       double width, double height, double length, double thickness, double nx, double ny, double nz){
+  mcdis_check_axis("box", &nx, &ny, &nz);
   if (mcdotrace==2) {
     printf("MCDISPLAY: mcdisbox(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness, nx, ny, nz);
   } else {
@@ -3615,6 +3630,7 @@ Draws a cylinder with center at (x,y,z) with extent (r,height).
  * The cylinder axis is along the vector nx,ny,nz.*/
 void mcdis_cylinder( double x, double y, double z,
         double r, double height, double thickness, double nx, double ny, double nz){
+  mcdis_check_axis("cylinder", &nx, &ny, &nz);
   if (mcdotrace==2) {
       printf("MCDISPLAY: mcdiscylinder(%g, %g, %g, %g, %g, %g, %g, %g, %g)\n",
          x, y, z, r, height, thickness, nx, ny, nz);
@@ -3628,10 +3644,14 @@ void mcdis_cylinder( double x, double y, double z,
  * The cone axis is along the vector nx,ny,nz.*/
 void mcdis_cone( double x, double y, double z,
         double r, double height, double nx, double ny, double nz){
+  mcdis_check_axis("cone", &nx, &ny, &nz);
   if (mcdotrace==2) {
     printf("MCDISPLAY: mcdiscone(%g, %g, %g, %g, %g, %g, %g, %g)\n",
        x, y, z, r, height, nx, ny, nz);
   } else {
+    /* (x,y,z) is the cone centre, as drawn at --trace=2 */
+    NORM(nx,ny,nz);
+    x -= 0.5*height*nx; y -= 0.5*height*ny; z -= 0.5*height*nz;
     mcdis_Circle(x, y, z, r, nx, ny, nz);
     mcdis_Circle(x+0.25*height*nx, y+0.25*height*ny, z+0.25*height*nz, 0.75*r, nx, ny, nz);
     mcdis_Circle(x+0.5*height*nx, y+0.5*height*ny, z+0.5*height*nz, 0.5*r, nx, ny, nz);
@@ -3644,16 +3664,18 @@ void mcdis_cone( double x, double y, double z,
  * The disc axis is along the vector nx,ny,nz.*/
 void mcdis_disc( double x, double y, double z,
         double r, double nx, double ny, double nz){
+  mcdis_check_axis("disc", &nx, &ny, &nz);
   printf("MCDISPLAY: mcdisdisc(%g, %g, %g, %g, %g, %g, %g)\n",
      x, y, z, r, nx, ny, nz);
 }
 
-/* Draws a annulus with center at (x,y,z) with extent (outer_radius) and remove inner_radius.
+/* Draws a annulus with center at (x,y,z) with extent (outer radius) and remove inner thickness.
  * The annulus axis is along the vector nx,ny,nz.*/
 void mcdis_annulus( double x, double y, double z,
-        double outer_radius, double inner_radius, double nx, double ny, double nz){
+        double outer_radius, double thickness, double nx, double ny, double nz){
+  mcdis_check_axis("annulus", &nx, &ny, &nz);
   printf("MCDISPLAY: mcdisannulus(%g, %g, %g, %g, %g, %g, %g, %g)\n",
-     x, y, z, outer_radius, inner_radius, nx, ny, nz);
+     x, y, z, outer_radius, thickness, nx, ny, nz);
 }
 
 /* draws a sphere with center at (x,y,z) with extent (r)*/
@@ -4149,9 +4171,8 @@ mcstatic void norm_func(double *x, double *y, double *z) {
 #ifdef FUNNEL
 long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long len, long buffer_len, long flag_split, long* multiplier) {
   #define SAL_THREADS 1024 // num parallel sections
-  if (len<SAL_THREADS) return sort_absorb_last_serial(particles, len);
-
   if (multiplier != NULL) *multiplier = -1; // set default out value for multiplier
+  if (len<SAL_THREADS) return sort_absorb_last_serial(particles, len);
   long newlen = 0;
   long los[SAL_THREADS]; // target array startidxs
   long lens[SAL_THREADS]; // target array sublens
@@ -4219,8 +4240,8 @@ long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long
   }
   //for (int ii=0;ii<accumlen;ii++) printf("%ld ", (psorted[ii]->_absorbed));
 
-  // return (no SPLIT)
-  if (flag_split != 1)
+  // return (no SPLIT, or nothing left to split)
+  if (flag_split != 1 || accumlen == 0)
     return accumlen;
 
   // SPLIT - repeat the non-absorbed block N-1 times, where len % accumlen = N + R
@@ -4233,7 +4254,6 @@ long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long
   // copy non-absorbed block
   #pragma acc parallel loop present(particles[0:buffer_len])
   for (long tidx = 0; tidx < accumlen; tidx++) { // tidx: thread index
-    randstate_t randstate[7];
     _class_particle sourcebuffer;
     _class_particle targetbuffer;
     // assign reduced weight to all particles
@@ -4245,13 +4265,8 @@ long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long
       // buffer full particle struct
       targetbuffer = particles[tidx];
       // reassign previous randstate
-      targetbuffer.randstate[0] = sourcebuffer.randstate[0];
-      targetbuffer.randstate[1] = sourcebuffer.randstate[1];
-      targetbuffer.randstate[2] = sourcebuffer.randstate[2];
-      targetbuffer.randstate[3] = sourcebuffer.randstate[3];
-      targetbuffer.randstate[4] = sourcebuffer.randstate[4];
-      targetbuffer.randstate[5] = sourcebuffer.randstate[5];
-      targetbuffer.randstate[6] = sourcebuffer.randstate[6];
+      for (int ridx = 0; ridx < RANDSTATE_LEN; ridx++)
+        targetbuffer.randstate[ridx] = sourcebuffer.randstate[ridx];
       // apply
       particles[bidx*accumlen + tidx] = targetbuffer;
     }

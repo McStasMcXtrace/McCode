@@ -144,7 +144,7 @@ COMPONENT Source = Bending_magnet(
     Ee = 2.75, Ie = 0.5, B = 1.71, sigex=79.6e-6, sigey=25.3e-6,
     dist=DistanceToPrimarySlit1
     )
-AT (0, 0, 0) RELATIVE origin
+AT (0, 0, 0) RELATIVE PREVIOUS
 
 /*Wavelength*/
 COMPONENT displaySourceLength = Monitor_nD(

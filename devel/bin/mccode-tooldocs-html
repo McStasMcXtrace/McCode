@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+'''
+Regenerate the .html twins of the tool docs in tools/Python/ from their .md
+sources, keeping each page's existing <head> (title and style).
+
+  mcdoc.md is written to mcdoc_tool.html (and links to it are rewritten so),
+  every other NAME.md to NAME.html; links to .md files become links to .html.
+  A page without an .html twin yet gets the head of mctest.html.
+
+Requires python-markdown (conda/pip package "markdown").
+
+Usage: mccode-tooldocs-html [NAME ...]    (NAME without .md; default: all)
+'''
+import pathlib
+import re
+import sys
+
+try:
+    import markdown
+except ImportError:
+    raise SystemExit('ERROR: python-markdown is needed, e.g. "conda install markdown" or "pip install markdown"')
+
+DOCDIR = pathlib.Path(__file__).absolute().parent.parent.parent / 'tools' / 'Python'
+HTML_NAME = {'mcdoc': 'mcdoc_tool'}   # mcdoc.html would clash with mcdoc's own output
+
+
+def html_path(name):
+    return DOCDIR / (HTML_NAME.get(name, name) + '.html')
+
+
+def convert(name):
+    md = (DOCDIR / (name + '.md')).read_text(encoding='utf-8')
+    body = markdown.markdown(md, extensions=['tables', 'toc', 'fenced_code'])
+    body = re.sub(r'href="([^"#:]+)\.md(#[^"]*)?"',
+                  lambda m: 'href="%s.html%s"' % (HTML_NAME.get(m.group(1), m.group(1)), m.group(2) or ''), body)
+    out = html_path(name)
+    template = out if out.exists() else DOCDIR / 'mctest.html'
+    head = template.read_text(encoding='utf-8')
+    head = head[:head.index('<body>') + len('<body>')]
+    title = re.search(r'^# (.+)$', md, re.M)
+    if title:
+        head = re.sub(r'<title>.*?</title>', lambda m: '<title>%s</title>' % title.group(1).strip(), head)
+    out.write_text(head + '\n' + body + '\n</body>\n</html>\n', encoding='utf-8')
+    return out
+
+
+def main(argv):
+    if any(a in ('-h', '--help') for a in argv[1:]):
+        sys.stdout.write(__doc__)
+        return 0
+    names = argv[1:] or sorted(p.stem for p in DOCDIR.glob('*.md'))
+    for name in names:
+        if not (DOCDIR / (name + '.md')).is_file():
+            raise SystemExit('ERROR: no %s.md in %s' % (name, DOCDIR))
+        print('wrote', convert(name).relative_to(DOCDIR.parent.parent))
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))

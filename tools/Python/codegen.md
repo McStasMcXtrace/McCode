@@ -36,7 +36,7 @@ A binary code-generator tool, sibling to `mcstas`/`mcxtrace` themselves: transla
 | `--verbose` | display compilation process steps |
 | `--lint` | generate a `.py` script for McStasScript-style "diagnostic" linting |
 | `--instrument-name=NAME` | name of the generated McStasScript instrument (default: instrument name + `_generated`) |
-| `--no-tests` | do not translate `%Example` lines into McStasScript tests (`instr.add_test`) |
+| `--no-tests` | do not translate `%Test` (or `%Example`) lines into McStasScript tests (`instr.add_test`) |
 
 *(Its usage synopsis also lists `-I dir1 ...`, `-t`, `-p`, `--no-main`, and `--no-runtime`, inherited from sharing the same usage line as `mcstas`/`mcxtrace`. They are C-generator options only: `mcstas-pygen`/`mcxtrace-pygen` rejects them with a usage error.)*
 

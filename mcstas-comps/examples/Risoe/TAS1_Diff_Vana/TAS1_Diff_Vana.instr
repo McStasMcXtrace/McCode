@@ -27,6 +27,10 @@
 * sample is a vanadium cylinder and there is no analyzer.
 *
 * %Example: PHM=-37.077 Detector: sng_I=1.95173e-09
+* %Scan: mcrun TAS1_Diff_Vana.instr TT=31.52,35.52 -N21 -n1e6 Detector: sng_I={
+*   1.8001e-09,1.87932e-09,1.86258e-09,1.89395e-09,1.86904e-09,1.86482e-09,1.85878e-09,1.87728e-09,
+*   1.81479e-09,1.84234e-09,1.91997e-09,1.89089e-09,1.82982e-09,1.9059e-09,1.88333e-09,1.775e-09,
+*   1.80894e-09,1.99095e-09,1.89532e-09,1.94438e-09,1.94377e-09 }
 *
 * %Parameters
 * PHM:  [deg] Monochromator arm angle, aka A1
@@ -34,7 +38,7 @@
 * TT:   [deg] Take-off angle at the sample position, aka A4
 * TTA:  [deg] Take-off angle at the analyzer position, aka A6
 * C1:   [min] Collimator 1 aperture (mono-sample arm)
-* OMC1: [deg] Tilt angle of the Collimator 1
+* OMC1: [arcmin] Tilt angle of the Collimator 1
 * C2:   [min] Collimator 2 aperture (sample-ana arm)
 * C3:   [min] Collimator 3 aperture (ana-detector arm)
 *

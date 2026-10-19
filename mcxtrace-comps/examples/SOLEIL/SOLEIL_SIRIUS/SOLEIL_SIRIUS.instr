@@ -93,14 +93,14 @@ COMPONENT origin = Progress_bar()
 COMPONENT source = Bending_magnet(
     E0 = E0, dE = dE,
     Ee = 2.75, Ie = 0.5, B = 1.72, sigex=60e-6, sigey=25e-6)
-AT (0, 0, 0) RELATIVE origin
+AT (0, 0, 0) RELATIVE PREVIOUS
 
 // -----------------------------------------------------------------------------
 // OPTICS 1: Primary Mirrors (M1 & M2 - Vertically Focusing)
 // -----------------------------------------------------------------------------
 COMPONENT M1_loc = Monitor_nD(
   xwidth=0.02, yheight=0.02, options="x y", restore_xray=1)
-AT (0, 0, 14) RELATIVE origin
+AT (0, 0, 14) RELATIVE source
 
 COMPONENT M1_rot = Arm()
 AT (0, 0, 0) RELATIVE M1_loc
