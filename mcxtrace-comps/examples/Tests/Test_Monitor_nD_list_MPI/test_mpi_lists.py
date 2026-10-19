@@ -13,7 +13,11 @@ timeout, and checks that
     per-node files mccode_node<N>.h5, which reads back (with h5py) as exactly
     their concatenation in rank order, no mccode_node*.h5 file holds events
     that mccode.h5 does not reference, and 'h5repack -l CONTI' (when found on
-    PATH) turns it into a self-contained file with the same events.
+    PATH) turns it into a self-contained file with the same events,
+  * NeXus, POSIX with pkill: a run killed with SIGTERM (sent to mpirun and
+    all ranks, as 'pkill -TERM' does) saves once per rank, with no duplicate
+    events in mccode_node*.h5, warns that the lists are not linked from
+    mccode.h5, and nexus_vds.py then links all of them.
 
 Usage (from any directory):
   python3 test_mpi_lists.py [--np 2] [--formats auto] [--mcrun mxrun]
@@ -143,6 +147,63 @@ def check_nexus(outdir, h5repack=None):
     return rows, problems
 
 
+def check_sigterm(mcrun, workdir, np_, ncount, timeout):
+    """Interrupt a NeXus MPI run with SIGTERM; return a list of problems."""
+    import h5py
+    import numpy as np
+    out = "NeXus_sigterm"
+    outdir = workdir / out
+    shutil.rmtree(outdir, ignore_errors=True)
+    pattern = rf"[{INSTR.stem[0]}]{INSTR.stem[1:]}\.out.*--dir={out}( |$)"
+    with open(workdir / f"{out}.log", "w") as log:
+        proc = subprocess.Popen([mcrun, INSTR.name, f"--mpi={np_}", f"--ncount={int(ncount)}", f"--dir={out}",
+                                 "--format=NeXus", f"--bufsiz={BUFSIZ}", "mode=2"],
+                                cwd=workdir, stdout=log, stderr=subprocess.STDOUT)
+        t0 = time.time()
+        while len(list(outdir.glob("mccode_node*.h5"))) < np_ and proc.poll() is None and time.time() - t0 < timeout:
+            time.sleep(0.2)
+        if proc.poll() is not None:
+            return [f"run ended before it could be interrupted (exit status {proc.returncode})"]
+        time.sleep(1)
+        subprocess.run(["pkill", "-TERM", "-f", pattern])  # mpirun forwards it: ranks get it twice
+        try:
+            proc.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            subprocess.run(["pkill", "-KILL", "-f", pattern])
+            proc.kill()
+            return [f"no exit within {timeout:.0f} s after SIGTERM (hang)"]
+    text = (workdir / f"{out}.log").read_text(errors="replace")
+    problems = []
+    saves = text.count("Finishing simulation")
+    if not 1 <= saves <= np_:
+        problems.append(f"{saves} final saves for {np_} ranks")
+    if "Warning: interrupted MPI run" not in text or "nexus_vds.py" not in text:
+        problems.append("no warning naming mccode_node*.h5 and nexus_vds.py")
+    rows = 0
+    for node in sorted(outdir.glob("mccode_node*.h5")):
+        with h5py.File(node, "r") as nf:
+            for ds in nf.values():
+                data = ds[()]
+                rows += data.shape[0]
+                dup = data.shape[0] - np.unique(data, axis=0).shape[0]
+                if dup:
+                    problems.append(f"{node.name}: {dup} duplicate events")
+    helper = None
+    r = subprocess.run([mcrun, "--showcfg=tooldir"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+    if r.returncode == 0 and r.stdout.strip():
+        helper = Path(r.stdout.strip().splitlines()[-1]) / "Python" / "mccodelib" / "nexus_vds.py"
+    if not helper or not helper.exists():
+        return problems + [f"nexus_vds.py not found ({helper})"]
+    r = subprocess.run([sys.executable, str(helper), str(outdir)],
+                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    if r.returncode:
+        return problems + [f"nexus_vds.py failed: {r.stdout[-500:]}"]
+    linked, link_problems = check_nexus(outdir)
+    if linked != rows:
+        problems.append(f"{linked} events linked in mccode.h5, {rows} in mccode_node*.h5")
+    return problems + link_problems
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--np", type=int, default=2, help="number of MPI processes (>= 2, default 2)")
@@ -152,6 +213,8 @@ def main():
     parser.add_argument("--ncount", type=float, default=1e4, help="photons for modes 0-3,5 (default 1e4)")
     parser.add_argument("--flush-ncount", type=float, default=None,
                         help="photons for mode 4 (default 2.2e6 per node, i.e. unequal TRACE-time flushes); 0 skips mode 4")
+    parser.add_argument("--sigterm-ncount", type=float, default=1e8,
+                        help="rays for the NeXus SIGTERM check (POSIX, needs pkill; default 1e8); 0 skips it")
     parser.add_argument("--timeout", type=float, default=600, help="seconds per simulation (default 600)")
     parser.add_argument("--workdir", default=None,
                         help="work directory (default: a temporary one); simulation output is removed on success")
@@ -240,6 +303,17 @@ def main():
             else:
                 print(f"ok   {label}: {got} events in {dt:.1f} s")
 
+    if "NeXus" in formats and args.sigterm_ncount > 0 and os.name == "posix" and shutil.which("pkill"):
+        label = f"NeXus  SIGTERM np={args.np}"
+        problems = check_sigterm(mcrun, workdir, args.np, args.sigterm_ncount, args.timeout)
+        if problems:
+            failures.append(f"{label}: " + "; ".join(problems))
+            print(f"FAIL {label}: " + "; ".join(problems))
+        else:
+            print(f"ok   {label}: one save per rank, no duplicate events, linked by nexus_vds.py")
+    elif "NeXus" in formats and args.sigterm_ncount > 0:
+        print("SKIP: NeXus SIGTERM check (needs POSIX and pkill)")
+
     if failures:
         print(f"\n{len(failures)} failure(s), output kept in {workdir}:")
         for f in failures:
@@ -253,6 +327,7 @@ def main():
             for fmt in formats:
                 for mode, _ in cases:
                     shutil.rmtree(workdir / f"{fmt}_mode{mode}", ignore_errors=True)
+            shutil.rmtree(workdir / "NeXus_sigterm", ignore_errors=True)
         else:
             shutil.rmtree(workdir, ignore_errors=True)
     print("\nAll MPI list-output checks passed.")

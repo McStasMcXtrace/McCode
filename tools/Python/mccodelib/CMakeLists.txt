@@ -70,7 +70,7 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, python3, python3-ply, hdf-compass")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, python3, python3-ply, python3-h5py, hdf-compass")
 set(CPACK_DEBIAN_PACKAGE_REPLACES "${FLAVOR}-tools-python-mccodelib-3.5.1")
 
 # RPM
@@ -125,7 +125,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mccode_config.py.in" "${WORK}/mccode
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mccode_config.json.in" "${WORK}/mccode_config.json" @ONLY)
 
 # Python files
-foreach(name __init__.py fcparticleparser.py utils.py flowchart.py instrgeom.py instrparser.py mcdisplayutils.py mcplotloader.py mcplotdiffloader.py nodetree.py particleparser.py pipetools.py plotgraph.py pqtgfrontend.py cflags.py)
+foreach(name __init__.py fcparticleparser.py utils.py flowchart.py instrgeom.py instrparser.py mcdisplayutils.py mcplotloader.py mcplotdiffloader.py nodetree.py particleparser.py pipetools.py plotgraph.py pqtgfrontend.py cflags.py nexus_vds.py)
   install(
     FILES "${PROJECT_SOURCE_DIR}/${name}"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
