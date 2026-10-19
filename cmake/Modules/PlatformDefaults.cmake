@@ -242,6 +242,12 @@ function( detect_platform_variables resultvarname )
     if ( NEXUSINCLUDE )
       set(NEXUSFLAGS "${NEXUSFLAGS} -I${NEXUSINCLUDE}")
     endif()
+    # Debian/Ubuntu libhdf5-dev: serial HDF5 headers in /usr/include/hdf5/serial,
+    # library linkable as libhdf5_serial (in the multiarch dir, any architecture)
+    if ( NOT WINDOWS AND NOT MCCODE_BUILD_CONDA_PKG AND EXISTS "/usr/include/hdf5/serial/hdf5.h" )
+      string(REPLACE "-lhdf5" "-lhdf5_serial" NEXUSFLAGS "${NEXUSFLAGS}")
+      set(NEXUSFLAGS "${NEXUSFLAGS} -I/usr/include/hdf5/serial")
+    endif()
   endif()
   provide_var( NEXUSFLAGS )
 
