@@ -21,50 +21,68 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <layout class="QGridLayout" name="gridGrid">
-        <item row="0" column="0">
-         <widget class="QLabel" name="lblGridDummy">
-          <property name="text">
-           <string>lambda (D):</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3">
-         <widget class="QLineEdit" name="edtGridDummy2">
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QLabel" name="lblGridDummy2">
-          <property name="text">
-           <string>R (D):</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="4">
-         <widget class="QLabel" name="lblGridDummy3">
-          <property name="text">
-           <string>R_curve (D):</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLineEdit" name="edtGridDummy">
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="5">
-         <widget class="QLineEdit" name="edtGridDummy3">
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <widget class="QScrollArea" name="scrlaParams">
+        <property name="widgetResizable">
+         <bool>true</bool>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <widget class="QWidget" name="wgtParams">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>432</width>
+           <height>48</height>
+          </rect>
+         </property>
+         <layout class="QGridLayout" name="gridGrid">
+          <item row="0" column="0">
+           <widget class="QLabel" name="lblGridDummy">
+            <property name="text">
+             <string>lambda (D):</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="edtGridDummy">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="lblGridDummy2">
+            <property name="text">
+             <string>R (D):</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLineEdit" name="edtGridDummy2">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="QLabel" name="lblGridDummy3">
+            <property name="text">
+             <string>R_curve (D):</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="5">
+           <widget class="QLineEdit" name="edtGridDummy3">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
       </item>
      </layout>
     </widget>

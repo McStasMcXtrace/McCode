@@ -445,8 +445,20 @@ class Ui_dlgStartSim(object):
         self.edtGridDummy3.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.edtGridDummy3.setObjectName("edtGridDummy3")
         self.gridGrid.addWidget(self.edtGridDummy3, 0, 5, 1, 1)
-        self.verticalLayout_2.addLayout(self.gridGrid)
+        # wrap the parameter grid in a scrollable container
+        self.scrlaParams = QtWidgets.QScrollArea(self.gbxGrid)
+        self.scrlaParams.setObjectName("scrlaParams")
+        self.scrlaParams.setWidgetResizable(True)
+        self.scrlaParams.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
+
+        self.wgtParams = QtWidgets.QWidget()
+        self.wgtParams.setObjectName("wgtParams")
+        self.wgtParams.setLayout(self.gridGrid)   # reparents the grid + its dummy widgets
+
+        self.scrlaParams.setWidget(self.wgtParams)
+        self.verticalLayout_2.addWidget(self.scrlaParams)
         self.verticalLayout_5.addWidget(self.gbxGrid)
+        
         self.gbxSim = QtWidgets.QGroupBox(dlgStartSim)
         self.gbxSim.setObjectName("gbxSim")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.gbxSim)

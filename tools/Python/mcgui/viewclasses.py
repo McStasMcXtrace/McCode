@@ -652,6 +652,9 @@ class McStartSimDialog(QtWidgets.QDialog):
         self._last_buffersize = mccode_config.configuration["NDBUFFERSIZE"]
         self.ui = Ui_dlgStartSim()
         self.ui.setupUi(self)
+        self._setupAdvancedCollapse()
+        sheight = QtGui.QGuiApplication.primaryScreen().availableGeometry().height()
+        self.ui.scrlaParams.setMaximumHeight(max(300, sheight // 3))
         if not mccode_config.configuration["PARTICLE"] == "neutron":
             self.ui.lblGravity.setHidden(True)
             self.ui.cbxGravity.setHidden(True)
@@ -661,6 +664,31 @@ class McStartSimDialog(QtWidgets.QDialog):
         self._set_inspect_visible(False)
         self.ui.cbxSimTrace.currentIndexChanged.connect(lambda i: self._set_inspect_visible(i))
 
+    def _setupAdvancedCollapse(self):
+        ''' replace the static "Advanced" group box with a roll-up section:
+            a QToolButton with arrow toggles gbxAdvanced visibility '''
+        btn = QtWidgets.QToolButton(self)
+        btn.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        btn.setArrowType(QtCore.Qt.ArrowType.RightArrow)
+        btn.setText('Advanced')
+        btn.setCheckable(True)
+        btn.setChecked(False)
+        btn.setStyleSheet('QToolButton { border: none; font-weight: bold; }')
+        btn.toggled.connect(self._toggleAdvanced)
+
+        self.__btnAdvanced = btn
+        self.ui.gbxAdvanced.setVisible(False)
+
+        # insert the button directly above the group box in the dialog layout
+        lay = self.ui.verticalLayout_5
+        lay.insertWidget(lay.indexOf(self.ui.gbxAdvanced), btn)
+
+    def _toggleAdvanced(self, on):
+        self.ui.gbxAdvanced.setVisible(on)
+        self.__btnAdvanced.setArrowType(
+            QtCore.Qt.ArrowType.DownArrow if on else QtCore.Qt.ArrowType.RightArrow)
+        self.adjustSize()   # shrink/grow the dialog to match                   
+    
     def set_components(self, compnames):
         if compnames == self._last_inspect_compnames:
             return
