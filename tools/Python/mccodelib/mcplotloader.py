@@ -483,6 +483,10 @@ def _load_multiplot_1D_lst(f_dat):
             data.yvar = yvars[2*i]
             data.title = '%s' % (data.yvar)
             data.component = data.title
+            # no per-curve file exists, so give each curve a unique path in
+            # the scan dir (frontends like mcplot-html derive output names
+            # from it; empty would make all curves collide on '.html')
+            data.filepath = join(dirname(f_dat), data.yvar)
             data.y_err_vals = yvals_err_lst[i]
             data_handle_lst.append(DataHandle(load_fct=None, data=data))
 

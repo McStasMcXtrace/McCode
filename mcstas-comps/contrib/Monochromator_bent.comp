@@ -1662,7 +1662,7 @@ MCDISPLAY
       double origo[3] = { 0, 0, 0 };
       rotate_point (origo, &mono_arr.crystal[crystal]);
       // Set the box
-      box (origo[0], origo[1], origo[2], xthickness, yheight, zwidth, xthickness, 0, 0, 0);
+      box (origo[0], origo[1], origo[2], xthickness, yheight, zwidth, 0, 0, 1, 0);
     }
   }
 %}	

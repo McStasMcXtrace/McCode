@@ -108,7 +108,7 @@ typedef struct t_Read_table_file_item {
     t_Table *table_ref;
 } t_Read_table_file_item;
 
-typedef enum enum_Read_table_file_actions {STORE,FIND,GC}  t_Read_table_file_actions;
+typedef enum enum_Read_table_file_actions {STORE,FIND,GC,REBIN}  t_Read_table_file_actions;
 
 /* read_table-lib function prototypes */
 /* ========================================================================= */

@@ -6,14 +6,18 @@ Drop-in replacement for `git diff --name-only BASE [TARGET]` that leaves out
 A .comp/.instr file is listed only if its "code" differs between BASE and
 TARGET, where code means:
   - everything from the DEFINE COMPONENT / DEFINE INSTRUMENT line onward, and
-  - the %Example: lines of the header (mctest uses them as test definitions),
-    so a header edit that touches %Example: lines still triggers a test run.
+  - the %Example:/%Test: and %Scan:/%TestScan: lines of the header (mctest
+    uses them as test definitions), so a header edit that touches them still
+    triggers a test run.
+    A %Scan: line includes its {}-enclosed target values (and optional _ERR
+    values), which may span several header lines; re-wrapping those values is
+    not a change.
 Other header edits (mcdoc text, %P parameter docs, typos, units) are ignored,
 and so are whitespace-only edits: indentation, blank lines, re-wrapped lines,
 spacing around operators. Whitespace between two words (int a vs inta) and the
 line break after a #-preprocessor line or a line with // are still significant.
 
-For each listed .comp/.instr file, the reason (new, code, %Example) is written
+For each listed .comp/.instr file, the reason (new, code, %Example/%Scan) is written
 to stderr; stdout carries only the file names.
 
 Added or renamed files are always listed; deleted files never are (nothing to
@@ -27,7 +31,8 @@ import subprocess
 import sys
 
 DEFINE = re.compile(r'^[ \t]*DEFINE[ \t]+(COMPONENT|INSTRUMENT)\b', re.M)
-EXAMPLE = re.compile(r'%Example:.*')
+# a %Scan: line runs on to the } closing its target values, possibly over several lines
+TESTLINE = re.compile(r'%(?:(?:Example|Test):[^\n]*|(?:Scan|TestScan):[^\n{]*(?:\{[^}]*\}(?:[\s*]*\S+_ERR=\{[^}]*\})?[^\n]*)?)')
 
 
 def git(*args):
@@ -65,11 +70,14 @@ def squash(text):
 
 
 def split(text):
-    ''' (%Example lines, code body) of a .comp/.instr file, whitespace-insensitive. '''
+    ''' (%Example/%Scan lines, code body) of a .comp/.instr file, whitespace-insensitive. '''
     m = DEFINE.search(text)
     if not m:
         return '', squash(text)  # unrecognised layout: compare everything
-    return squash('\n'.join(EXAMPLE.findall(text[:m.start()]))), squash(text[m.start():])
+    # the header's * line prefixes inside a multi-line {} value list are layout, not content
+    tests = [re.sub(r'\{[^}]*\}', lambda v: v.group(0).replace('*', ' '), t)
+             for t in TESTLINE.findall(text[:m.start()])]
+    return squash('\n'.join(tests)), squash(text[m.start():])
 
 
 def main(argv):
@@ -85,7 +93,7 @@ def main(argv):
                 why = 'new'
             else:
                 (ex0, body0), (ex1, body1) = split(old), split(new)
-                why = ', '.join(w for w, a, b in (('code', body0, body1), ('%Example', ex0, ex1)) if a != b)
+                why = ', '.join(w for w, a, b in (('code', body0, body1), ('%Example/%Scan', ex0, ex1)) if a != b)
                 if not why:
                     continue
             sys.stderr.write('mccode-git-diff-code: %s (%s)\n' % (path, why))

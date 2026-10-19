@@ -113,7 +113,7 @@ COMPONENT Source =Wiggler(
     sigex = 206.5e-6/*9.3e-6*/, length = 0.1642, K = 1.37,
     focus_xw = 1.5e-3, focus_yh = 3e-3, dist = 19.4292
 )
-AT (0, 0, 0) RELATIVE origin
+AT (0, 0, 0) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- Vertical slit 1 */
 COMPONENT slit1 = Slit(

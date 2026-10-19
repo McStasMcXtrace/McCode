@@ -350,17 +350,14 @@ FINALLY
 
 MCDISPLAY
 %{
-  switch (geoparams.shape) {
-  case NC_CYLINDER:
-    mcdis_cylinder (0., 0., 0., geoparams.rradius, geoparams.dy, 0, 0.0, 1.0, 0.0);
-    break;
-  case NC_BOX:
-    mcdis_box (0., 0., 0., geoparams.dx, geoparams.dy, geoparams.dz, 0, 0, 1, 0);
-    break;
-  case NC_SPHERE:
-    mcdis_sphere (0.0, 0.0, 0.0, geoparams.rradius);
-    break;
-  };
+  // From the parameters rather than geoparams (filled in INITIALIZE), so tools
+  // drawing an instrument without running it can show the sample:
+  if (radius > 0 && yheight > 0)
+    mcdis_cylinder (0., 0., 0., radius, yheight, 0, 0.0, 1.0, 0.0);
+  else if (radius > 0)
+    mcdis_sphere (0.0, 0.0, 0.0, radius);
+  else
+    mcdis_box (0., 0., 0., xwidth, yheight, zdepth, 0, 0, 1, 0);
 %}
 
 END

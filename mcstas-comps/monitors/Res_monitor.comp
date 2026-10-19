@@ -397,13 +397,14 @@ FINALLY %{
   if(live_calc) {
     free(reso_events);
     free(reso_probabilities);
+    /* Created in INITIALIZE only when live_calc is set */
+    destroy_darr2d(Covar_p);
+    destroy_darr2d(Covar_p2);
+    destroy_darr2d(Covar_N);
+    destroy_darr2d(Res_p);
+    destroy_darr2d(Res_p2);
+    destroy_darr2d(Res_N);
   }
-  destroy_darr2d(Covar_p);
-  destroy_darr2d(Covar_p2);
-  destroy_darr2d(Covar_N);
-  destroy_darr2d(Res_p);
-  destroy_darr2d(Res_p2);
-  destroy_darr2d(Res_N);
 %}
 
 

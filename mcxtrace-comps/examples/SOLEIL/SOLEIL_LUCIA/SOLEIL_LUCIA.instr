@@ -88,7 +88,7 @@ COMPONENT source = Undulator(
   sigey  = 8.2e-6,
   sigepx = 30e-6,
   sigepy = 3.7e-6) 
-AT (0,0,0) RELATIVE origin
+AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT mon_src_xy = Monitor_nD(
   options="x y", xwidth=2e-3, yheight=2e-3, bins=128)

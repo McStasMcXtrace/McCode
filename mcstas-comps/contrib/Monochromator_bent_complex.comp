@@ -364,7 +364,7 @@ MCDISPLAY
       double origo[3] = { 0, 0, 0 };
       rotate_point (origo, mono);
       // Set the box
-      box (origo[0], origo[1], origo[2], mono->thickness, mono->height, mono->length, mono->thickness, 0, 0, 0);
+      box (origo[0], origo[1], origo[2], mono->thickness, mono->height, mono->length, 0, 0, 1, 0);
     }
   }
 %}	

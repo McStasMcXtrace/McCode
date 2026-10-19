@@ -392,8 +392,26 @@ class MultiInterval:
 class InvalidInterval(McRunException):
     pass
 
+def point_seed(base, i):
+    """ Seed for scan point i: the base seed shifted by i*1024, so every point
+        gets its own random sequence, reproducibly (a seed of 0 is not allowed) """
+    return (base + i*1024) or 1
+
+def scan_base_seed(mcstas, intervals):
+    """ The base seed for point_seed(): --seed if given, else the current Unix
+        epoch (logged, so the scan can be reproduced). None when --seed is itself
+        scanned (--seeds), in which case the scanned seeds are used unchanged. """
+    if '--seed' in intervals:
+        return None
+    if mcstas.options.seed is None:
+        mcstas.options.seed = int(datetime.now().timestamp())
+        LOG.info('No incoming seed from cmdline, scan base seed set from current Unix epoch: %d' % mcstas.options.seed)
+    else:
+        LOG.info('Scan base seed: %d' % mcstas.options.seed)
+    return mcstas.options.seed
+
 def _simulate_point(args):
-    i, point, intervals, mcstas_config, mcstas_dir = args
+    i, point, intervals, mcstas_config, mcstas_dir, base_seed = args
 
     from shutil import copyfile
     from os.path import join
@@ -405,8 +423,8 @@ def _simulate_point(args):
     # Ensure we get a mccode.sim pr. thread subdir (e.g. for monitoring seed value
     mcstas.simfile      = join(mcstas_dir, 'mccode.sim')
 
-    # Shift thread seed to avoid duplicate simulations / biasing
-    mcstas.options.seed = (i*1024)+mcstas.options.seed
+    if base_seed is not None:
+        mcstas.options.seed = point_seed(base_seed, i)
 
     for key in intervals:
         mcstas.set_parameter(key, point[key])
@@ -487,9 +505,12 @@ class Scanner:
         points = list(self.points)
         header_written = False
         skipped = []
+        base_seed = scan_base_seed(self.mcstas, self.intervals)
 
         with open(self.outfile, 'w') as outfile:
             for i, point in enumerate(points):
+                if base_seed is not None:
+                    self.mcstas.options.seed = point_seed(base_seed, i)
                 par_values = []
                 for key in self.intervals:
                     self.mcstas.set_parameter(key, point[key])
@@ -637,14 +658,11 @@ class Scanner_split:
 
         mcstas_dir = self.mcstas.options.dir or '.'
 
-        if self.mcstas.options.seed is None:
-          dt=datetime.now()
-          LOG.info('No incoming seed from cmdline, setting to current Unix epoch (%d)!' % dt.timestamp())
-          self.mcstas.options.seed=dt.timestamp()
+        base_seed = scan_base_seed(self.mcstas, self.intervals)
 
         # Prepare data to pass into processes
         args_list = [
-            (i, point, self.intervals, self.mcstas, mcstas_dir)
+            (i, point, self.intervals, self.mcstas, mcstas_dir, base_seed)
             for i, point in enumerate(self.points)
         ]
 
@@ -653,6 +671,20 @@ class Scanner_split:
 
         # Sort results to preserve order
         results.sort(key=lambda r: r['index'])
+
+        if self.mcstas.options.format.lower() == 'nexus':
+            # Parallel steps can't safely append to one HDF5 file, so each wrote
+            # its own dir/i/mccode.h5 - merge them as entry1..N like a serial scan.
+            import os, shutil, subprocess
+            merged = join(mcstas_dir, 'mccode.h5')
+            steps = [join(mcstas_dir, str(r['index']), 'mccode.h5') for r in results]
+            steps = [s for s in steps if os.path.exists(s)]
+            for n, step in enumerate(steps):
+                if n == 0:
+                    shutil.copy(step, merged)
+                else:
+                    subprocess.run(['h5copy', '-i', step, '-o', merged,
+                                    '-s', '/entry1', '-d', f'/entry{n+1}'], check=True)
 
         skipped = [r['index'] for r in results if not r['detectors']]
 
