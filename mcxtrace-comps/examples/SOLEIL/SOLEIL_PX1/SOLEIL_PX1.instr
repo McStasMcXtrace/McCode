@@ -87,8 +87,7 @@
 * - Electron beam sizes are nominal SOLEIL short straight section values
 *   (beta_x=2.19 m, beta_y=1.09 m, emittance 3.74 nm rad, 1% coupling).
 *
-* %Example: PX1_E0=12.67 PX1_K=1.4028 sample="adrenaline.lau" splits=1500 Detector: psd4pi_I=1.75e+12
-* %Example: PX1_E0=12.67 sample="adrenaline.lau" splits=4200 Detector: EigerX16M_I=3.8e+15
+* %Example: PX1_E0=12.67 Detector: PX1_sample_monitor_I=1.232e+20
 *
 * %Parameters
 * PX1_E0:     [keV] Energy selected at the Undulator (reference energy 12.67 keV, standard range 6.5-15 keV).
@@ -135,17 +134,6 @@ INITIALIZE
       exit(fprintf(stderr, "ERROR: Monochromator can not reach this energy (arg=%g > 1)\n",
         arg));
     PX1_calculated_angle = RAD2DEG*asin(arg);
-    /* Ensure that we are running with at least 1e7 neutrons/core if not 'displaying' */
-    #ifndef USE_MPI
-    #define mpi_node_count 1
-    #endif
-    if (!mcdotrace) {
-      if (mcget_ncount()<=1e7) {
-        MPI_MASTER(printf("This instrument needs higher statistics to converge. Increasing your ncount=%llu to ",mcget_ncount()));
-        mcset_ncount(mpi_node_count*1e7);
-        MPI_MASTER(printf("%llu\n",mcget_ncount()));
-      }
-    }
   }
 %}
 
