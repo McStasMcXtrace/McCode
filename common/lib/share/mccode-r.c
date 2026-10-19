@@ -3589,6 +3589,26 @@ static MCDETECTOR mcdetector_out_2D_list_write(char *t, char *xl, char *yl,
 
 } /* mcdetector_out_2D_list_write */
 
+#ifndef NOSIGNALS
+/* end of an event list write: handle a signal that came during it. Called
+   with the global mcformat as the caller found it (see mcdetector_out_list):
+   the replayed save must not see a temporary list format, or it would skip
+   the MPI reductions of all histograms while other nodes do them (hang). */
+static void mcsig_end_write(double *p1)
+{
+  mcsig_busy--;
+  if (!mcsig_busy && mcsig_pending) {
+    int sig = mcsig_pending;
+    mcsig_pending = 0;
+    mcsig_skip_p1 = p1; /* the block just written */
+    mcsig_replay  = 1;
+    sighandler(sig);    /* returns only for save/status signals */
+    mcsig_replay  = 0;
+    mcsig_skip_p1 = NULL;
+  }
+}
+#endif
+
 MCDETECTOR mcdetector_out_2D_list(char *t, char *xl, char *yl,
                   double x1, double x2, double y1, double y2,
                   long m, long n,
@@ -3607,16 +3627,7 @@ MCDETECTOR mcdetector_out_2D_list(char *t, char *xl, char *yl,
   detector = mcdetector_out_2D_list_write(t, xl, yl, x1, x2, y1, y2, m, n,
     p0, p1, p2, f, c, posa, rota, options, index);
 #ifndef NOSIGNALS
-  mcsig_busy--;
-  if (!mcsig_busy && mcsig_pending) { /* a signal came during the write: handle it now */
-    int sig = mcsig_pending;
-    mcsig_pending = 0;
-    mcsig_skip_p1 = p1;
-    mcsig_replay  = 1;
-    sighandler(sig); /* returns only for save/status signals */
-    mcsig_replay  = 0;
-    mcsig_skip_p1 = NULL;
-  }
+  mcsig_end_write(p1);
 #endif
   return(detector);
 } /* mcdetector_out_2D_list */
@@ -3634,6 +3645,9 @@ MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
   char      *format_org;
   MCDETECTOR detector;
 
+#ifndef NOSIGNALS
+  mcsig_busy++; /* a signal during the write is handled once mcformat is restored */
+#endif
   format_org = mcformat;
   strcpy(format_new, mcformat);
   strcat(format_new, " list");
@@ -3645,6 +3659,9 @@ MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
 		  c, posa,rota,options, index);
 
   mcformat = format_org;
+#ifndef NOSIGNALS
+  mcsig_end_write(p1);
+#endif
   return(detector);
 }
 
