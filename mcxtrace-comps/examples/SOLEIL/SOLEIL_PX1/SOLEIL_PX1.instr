@@ -58,7 +58,7 @@
 * SaS                | ~23.7        | Sample slits; collimation of the beam down to 40 x 20 um. Not modeled. | EH
 * FS                 | ~23.8        | Fast shutter. Not modeled. | EH
 * SG (sample)        | 23.846       | Sample position: SmarGon chi-geometry 3-axis goniometer, Oxford Cryosystems 700 series, KETEK SDD, CATS sample changer (3 Unipucks, 48 samples). | EH
-* PAD (detector)     | 23.846+det_dist | EigerX-16M single-photon-counting pixel-array detector, 311 x 328 mm2, 75 um pixels, routinely used at 100 Hz. Sample-to-detector distance 0.096-1.55 m. | EH
+* PAD (detector)     | 23.846+PX1_det_dist | EigerX-16M single-photon-counting pixel-array detector, 311 x 328 mm2, 75 um pixels, routinely used at 100 Hz. Sample-to-detector distance 0.096-1.55 m. | EH
 *
 * Notes:
 * - Undulator harmonics: at the fixed minimum gap of 5.5 mm (K=1.66), the
@@ -71,12 +71,12 @@
 *   with E1=E0/harmonic. Available odd harmonics (3,5,7,...) cover 5-20 keV.
 * - KB focusing: the default radii focus the source (undulator) onto the
 *   sample, using the cylindrical mirror formula R = 2*p*q/((p+q)*sin(grazing angle)):
-*   vfm_radius = 2*21.45*2.396/((21.45+2.396)*4.1e-3)      = 1051 m
-*   hfm_radius = 2*21.90*1.946/((21.90+1.946)*4.1e-3)      =  872 m
+*   PX1_vfm_radius = 2*21.45*2.396/((21.45+2.396)*4.1e-3)      = 1051 m
+*   PX1_hfm_radius = 2*21.90*1.946/((21.90+1.946)*4.1e-3)      =  872 m
 *   In reality the KB pair focuses slightly downstream of the sample, onto
 *   the detector surface when placed at the most common distance (about
 *   0.46 m past the sample for a 2 A outer-shell resolution); use
-*   vfm_radius=1230 and hfm_radius=1058 to model this configuration.
+*   PX1_vfm_radius=1230 and PX1_hfm_radius=1058 to model this configuration.
 *   The real beam size is dominated by the mirror figure errors (first
 *   generation KB), not by the source demagnification, so the simulated
 *   focus is sharper than the measured 120 (H) x 20 (V) um.
@@ -87,21 +87,22 @@
 * - Electron beam sizes are nominal SOLEIL short straight section values
 *   (beta_x=2.19 m, beta_y=1.09 m, emittance 3.74 nm rad, 1% coupling).
 *
-* %Example: E0=12.67 K=1.4028 sample="adrenaline.lau" SPLITs=1500 Detector: psd4pi_I=1.75e+12
-* %Example: E0=12.67 sample="adrenaline.lau" SPLITs=4200 Detector: EigerX16M_I=3.8e+15
+* %Example: PX1_E0=12.67 PX1_K=1.4028 sample="adrenaline.lau" splits=1500 Detector: psd4pi_I=1.75e+12
+* %Example: PX1_E0=12.67 sample="adrenaline.lau" splits=4200 Detector: EigerX16M_I=3.8e+15
 *
 * %Parameters
-* E0:    [keV] Energy selected at the Undulator (reference energy 12.67 keV, standard range 6.5-15 keV).
-* K:     [1] Undulator deflection parameter (K=1.4028: 7th harmonic at 12.67 keV; K_max=1.66 at 5.5 mm gap).
-* vfm_radius: [m] vertically focusing mirror radius (tangential).
-* hfm_radius: [m] horizontally focusing mirror radius (tangential).
-* mirror_grazing_angle: [rad] Tilt angle of the KB mirrors (4.1 mrad).
-* det_dist: [m] Sample-to-detector distance (0.096-1.55 m).
-* sample: [str] Sample structure file, LAU/CIF format.
-* rotX:  [deg] Sample rotation around X
-* rotY:  [deg] Sample rotation around Y
-* rotZ:  [deg] Sample rotation around Z
-* SPLITs:[1]   Ray splitting factor at the sample.
+* PX1_E0:     [keV] Energy selected at the Undulator (reference energy 12.67 keV, standard range 6.5-15 keV).
+* PX1_dE:     [keV]  Energy half-bandwidth at the source.
+* PX1_K:          [1] Undulator deflection parameter (K=1.4028: 7th harmonic at 12.67 keV; K_max=1.66 at 5.5 mm gap).
+* PX1_vfm_radius: [m] vertically focusing mirror radius (tangential).
+* PX1_hfm_radius: [m] horizontally focusing mirror radius (tangential).
+* PX1_mirror_grazing_angle: [rad] Tilt angle of the KB mirrors (4.1 mrad).
+* PX1_det_dist: [m] Sample-to-detector distance (0.096-1.55 m).
+* PX1_sample: [str] Sample structure file, LAU/CIF format.
+* PX1_rotX:  [deg] Sample rotation around X
+* PX1_rotY:  [deg] Sample rotation around Y
+* PX1_rotZ:  [deg] Sample rotation around Z
+* splits:[1]   Ray splitting factor at the sample.
 *
 * %Link
 * https://www.synchrotron-soleil.fr/en/beamlines/proxima-1
@@ -110,14 +111,14 @@
 *******************************************************************************/
 
 DEFINE INSTRUMENT SOLEIL_PX1(
-  E0=12.67, K=1.4028, vfm_radius=1051, hfm_radius=872,
-  mirror_grazing_angle=4.1e-3, det_dist=0.2,
-  string sample="adrenaline.lau",
-  rotX=0, rotY=0, rotZ=0, SPLITs=10)
+  PX1_E0=12.67, PX1_dE=0.1, PX1_K=1.4028, PX1_vfm_radius=1051, PX1_hfm_radius=872,
+  PX1_mirror_grazing_angle=4.1e-3, PX1_det_dist=0.2,
+  string PX1_sample="adrenaline.lau",
+  PX1_rotX=0, PX1_rotY=0, PX1_rotZ=0, int splits=10)
 DEPENDENCY " -DMCSX_REFL_SLIST_SIZE=1024 "
 DECLARE
 %{
-    double calculated_angle;
+    double PX1_calculated_angle;
 %}
 
 USERVARS %{
@@ -128,27 +129,29 @@ USERVARS %{
 INITIALIZE
 %{
   /* Si(111) Bragg angle for the channel-cut monochromator */
-  double arg=  12398.42*sqrt(3)/(2*5.4309*E0*1e3);
-  if (fabs(arg) > 1)
-    exit(fprintf(stderr, "ERROR: Monochromator can not reach this energy (arg=%g > 1)\n",
-      arg));
-  calculated_angle = RAD2DEG*asin(arg);
-  /* Ensure that we are running with at least 1e7 neutrons/core if not 'displaying' */
-  #ifndef USE_MPI
-  #define mpi_node_count 1
-  #endif
-  if (!mcdotrace) {
-    if (mcget_ncount()<=1e7) {
-      MPI_MASTER(printf("This instrument needs higher statistics to converge. Increasing your ncount=%llu to ",mcget_ncount()));
-      mcset_ncount(mpi_node_count*1e7);
-      MPI_MASTER(printf("%llu\n",mcget_ncount()));
+  {
+    double arg=  12398.42*sqrt(3)/(2*5.4309*PX1_E0*1e3);
+    if (fabs(arg) > 1)
+      exit(fprintf(stderr, "ERROR: Monochromator can not reach this energy (arg=%g > 1)\n",
+        arg));
+    PX1_calculated_angle = RAD2DEG*asin(arg);
+    /* Ensure that we are running with at least 1e7 neutrons/core if not 'displaying' */
+    #ifndef USE_MPI
+    #define mpi_node_count 1
+    #endif
+    if (!mcdotrace) {
+      if (mcget_ncount()<=1e7) {
+        MPI_MASTER(printf("This instrument needs higher statistics to converge. Increasing your ncount=%llu to ",mcget_ncount()));
+        mcset_ncount(mpi_node_count*1e7);
+        MPI_MASTER(printf("%llu\n",mcget_ncount()));
+      }
     }
   }
 %}
 
 TRACE
 
-REMOVABLE COMPONENT Origin = Progress_bar()
+REMOVABLE COMPONENT origin = Progress_bar()
 AT (0,0,0) ABSOLUTE
 
 // Undulator U20 (in vacuum): 100 periods of 20 mm, minimum gap 5.5 mm.
@@ -156,13 +159,13 @@ AT (0,0,0) ABSOLUTE
 // (fundamental E1=1.81 keV). At the minimum gap of 5.5 mm, K_max=1.66
 // (fundamental 1.507 keV, harmonics up to 15 keV). E1st is computed from
 // K and lu. dist is the distance to the first optical element (the CCM).
-COMPONENT undulator = Undulator(
-    E0=E0,
-    dE=.1,
+COMPONENT PX1_undulator = Undulator(
+    E0=PX1_E0,
+    dE=PX1_dE,
     Ee=2.75,
     dEe=0.001,
     Ie=0.5,
-    K=K,
+    K=PX1_K,
     Nper=100,
     lu=2.0e-2,
     sigey=6.4e-6,
@@ -174,34 +177,34 @@ AT (0, 0, 0) RELATIVE PREVIOUS
 
 // Channel_cut Si(111) monochromator (CCM) at 16.397 m -------------------------
 // LN2-cooled, first optical element. Channel gap 6 mm.
-COMPONENT bragg_crystal_location = Arm()
+COMPONENT PX1_bragg_crystal_location = Arm()
 AT (0,0,16.397) RELATIVE PREVIOUS
 
-COMPONENT bragg_crystal = Bragg_crystal(
+COMPONENT PX1_bragg_crystal = Bragg_crystal(
     crystal_type=2)
 AT (0, 0, 0) RELATIVE PREVIOUS
-ROTATED (-calculated_angle, 0, 0) RELATIVE PREVIOUS
+ROTATED (-PX1_calculated_angle, 0, 0) RELATIVE PREVIOUS
 
-COMPONENT arm = Arm()
+COMPONENT PX1_arm = Arm()
 AT (0, 0, 0) RELATIVE PREVIOUS
-ROTATED (-calculated_angle, 0, 0) RELATIVE PREVIOUS
+ROTATED (-PX1_calculated_angle, 0, 0) RELATIVE PREVIOUS
 
-COMPONENT bragg_crystal_two = Bragg_crystal(
+COMPONENT PX1_bragg_crystal_two = Bragg_crystal(
     crystal_type=2)
-AT (0, 0.006, calculated_angle ? 0.006/tan(calculated_angle*DEG2RAD) : 0) RELATIVE bragg_crystal
-ROTATED (calculated_angle, 0, 0) RELATIVE PREVIOUS
+AT (0, 0.006, PX1_calculated_angle ? 0.006/tan(PX1_calculated_angle*DEG2RAD) : 0) RELATIVE PX1_bragg_crystal
+ROTATED (PX1_calculated_angle, 0, 0) RELATIVE PREVIOUS
 
-COMPONENT arm_two = Arm()
-AT (0, 0, 0) RELATIVE bragg_crystal_two
-ROTATED (calculated_angle, 0, 0) RELATIVE bragg_crystal_two
+COMPONENT PX1_arm_two = Arm()
+AT (0, 0, 0) RELATIVE PX1_bragg_crystal_two
+ROTATED (PX1_calculated_angle, 0, 0) RELATIVE PX1_bragg_crystal_two
 
-COMPONENT bragg_crystal_out = E_monitor(Emin=E0-.1, Emax=E0+.1, nE=512,
+COMPONENT PX1_bragg_crystal_out = E_monitor(Emin=PX1_E0-PX1_dE, Emax=PX1_E0+PX1_dE, nE=512,
   xwidth=0.1, yheight=0.1)
 AT(0,0,0.2) RELATIVE PREVIOUS
 
 // Secondary slits (SeS) at 18.5 m --------------------------------------------
-COMPONENT secondary_slits = Slit(xwidth=1e-3, yheight=1e-3)
-AT (0, 0, 18.5-16.397) RELATIVE arm_two
+COMPONENT PX1_secondary_slits = Slit(xwidth=1e-3, yheight=1e-3)
+AT (0, 0, 18.5-16.397) RELATIVE PX1_arm_two
 
 // KB pair ---------------------------------------------------------------------
 // Vertically focusing mirror at 21.45 m, horizontally focusing at 21.9 m.
@@ -209,79 +212,79 @@ AT (0, 0, 18.5-16.397) RELATIVE arm_two
 // could use Mirror_elliptic
 
 // KB 1st mirror: vertical focusing, at 2.4 m from the sample
-COMPONENT vfm_location = Monitor_nD(xwidth=0.01, yheight=0.01, options="x y", bins=100)
-AT (0,0,21.45-18.5) RELATIVE secondary_slits
+COMPONENT PX1_vfm_location = Monitor_nD(xwidth=0.01, yheight=0.01, options="x y", bins=100)
+AT (0,0,21.45-18.5) RELATIVE PX1_secondary_slits
 
-COMPONENT vfm_in_xz_plane = Arm()
-AT (0,0,0) RELATIVE vfm_location
-ROTATED (0,0,-90) RELATIVE vfm_location // YZ -> XZ
+COMPONENT PX1_vfm_in_xz_plane = Arm()
+AT (0,0,0)        RELATIVE PX1_vfm_location
+ROTATED (0,0,-90) RELATIVE PX1_vfm_location // YZ -> XZ
 
-COMPONENT vfm = Mirror_curved(
+COMPONENT PX1_vfm = Mirror_curved(
   coating="Rh.txt",
   length=450e-3,
   width=0.1,
-  radius=vfm_radius)
-AT (0,0,0) RELATIVE vfm_location
-ROTATED (0,-mirror_grazing_angle,0) RELATIVE vfm_in_xz_plane
+  radius=PX1_vfm_radius)
+AT (0,0,0)                          RELATIVE PX1_vfm_location
+ROTATED (0,-PX1_mirror_grazing_angle,0) RELATIVE PX1_vfm_in_xz_plane
 EXTEND %{
   flag_vfm=SCATTERED;
 %}
 
-COMPONENT vfm_takeoff = COPY(vfm_location)
-AT (0,0,0) RELATIVE vfm_in_xz_plane
-ROTATED (-2*mirror_grazing_angle, 0, 0) RELATIVE vfm_location
+COMPONENT PX1_vfm_takeoff = COPY(PX1_vfm_location)
+AT (0,0,0) RELATIVE PX1_vfm_in_xz_plane
+ROTATED (-2*PX1_mirror_grazing_angle, 0, 0) RELATIVE PX1_vfm_location
 
 // KB 2nd mirror: horizontal focusing, at 1.95 m from the sample
-COMPONENT hfm_location = COPY(vfm_location)
-AT (0,0,21.9-21.45) RELATIVE vfm_takeoff
+COMPONENT PX1_hfm_location = COPY(PX1_vfm_location)
+AT (0,0,21.9-21.45) RELATIVE PX1_vfm_takeoff
 
-COMPONENT hfm = Mirror_curved(
+COMPONENT PX1_hfm = Mirror_curved(
   coating="Rh.txt",
   length=450e-3,
   width=0.1,
-  radius=hfm_radius)
-AT (0,0,0) RELATIVE hfm_location
-ROTATED (0,-mirror_grazing_angle,0) RELATIVE hfm_location
+  radius=PX1_hfm_radius)
+AT (0,0,0)                          RELATIVE PX1_hfm_location
+ROTATED (0,-PX1_mirror_grazing_angle,0) RELATIVE PX1_hfm_location
 EXTEND %{
   flag_hfm=SCATTERED;
 %}
 
-COMPONENT hfm_takeoff = COPY(vfm_location)
-AT (0,0,0) RELATIVE hfm_location
-ROTATED (0,-2*mirror_grazing_angle,0) RELATIVE hfm_location
+COMPONENT PX1_hfm_takeoff = COPY(PX1_vfm_location)
+AT (0,0,0)                            RELATIVE PX1_hfm_location
+ROTATED (0,-2*PX1_mirror_grazing_angle,0) RELATIVE PX1_hfm_location
 
 // Sample ----------------------------------------------------------------------
 // We centre the beam after the KB. Sample position (SG) at 23.846 m.
-COMPONENT sample_stage = Arm()
-AT (0,0,23.846-21.9) RELATIVE hfm_takeoff
+COMPONENT PX1_sample_stage = Arm()
+AT (0,0,23.846-21.9) RELATIVE PX1_hfm_takeoff
 EXTEND %{
   if (!flag_hfm || !flag_vfm) ABSORB;
 %}
 
-COMPONENT sample_monitor = Monitor_nD(
+COMPONENT PX1_sample_monitor = Monitor_nD(
   xwidth = 0.01, yheight = 0.01,
   options = "x y", bins=100)
-AT (0, 0, 0) RELATIVE sample_stage
+AT (0, 0, 0) RELATIVE PX1_sample_stage
 
-SPLIT SPLITs COMPONENT sample = Single_crystal(reflections=sample, material_datafile="NULL",
+SPLIT splits COMPONENT PX1_sample = Single_crystal(reflections=PX1_sample, material_datafile="NULL",
   radius = .5e-4, yheight = 5e-3, p_transmit = 0, mosaic=0.1, order=1)
-  AT (0, 0, 0) RELATIVE sample_stage
-  ROTATED (rotX,rotY,rotZ) RELATIVE sample_stage
+  AT (0, 0, 0)             RELATIVE PX1_sample_stage
+  ROTATED (PX1_rotX,PX1_rotY,PX1_rotZ) RELATIVE PX1_sample_stage
 EXTEND %{
   if (!SCATTERED) ABSORB;
 %}
 
-COMPONENT psd4pi = PSD_monitor_4PI(
+COMPONENT PX1_psd4pi = PSD_monitor_4PI(
     nx = 180, ny = 180, filename = "psd4pi", radius = 0.1, restore_xray = 1)
-AT (0, 0, 0) RELATIVE sample
+AT (0, 0, 0) RELATIVE PX1_sample
 
 // Detector: EigerX-16M pixel-array detector, 311 x 328 mm2, 75 um pixels
-COMPONENT EigerX16M = PSD_monitor(
+COMPONENT PX1_EigerX16M = PSD_monitor(
   nx=4150, ny=4371,
   xwidth = 311.2e-3,
   yheight= 327.8e-3,
   filename="EigerX16M.dat"
 )
-AT (0,0,det_dist) RELATIVE sample_stage
+AT (0,0,PX1_det_dist) RELATIVE PX1_sample_stage
 
 END
