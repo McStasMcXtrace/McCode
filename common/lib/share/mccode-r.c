@@ -3074,7 +3074,7 @@ static void mcdetector_list_write(MCDETECTOR detector, int append_raw)
 *
 *   NeXus is different: event lists are neither sent nor copied. Every node,
 *   the master included, appends its blocks to its own HDF5 file
-*   dirname/mccode_node<rank>.h5 (deflate-compressed). The final save only
+*   dirname/mccode_node<rank>.h5 (compressed as set by NX_COMPRESSION). The final save only
 *   gathers the row counts, and the master writes the 'events' data set of
 *   mccode.h5 as an HDF5 virtual data set (VDS) concatenating the nodes in rank
 *   order (see mclist_vds_write). The mccode_node*.h5 files are part of the
@@ -3139,16 +3139,18 @@ static long long mclist_node_append(char *dset, long long rows, long long cols, 
       H5Sclose(space);
     }
   } else if (rows && cols) {
-    /* 2D, chunked (~1 MB), unlimited along events, compressed */
+    /* 2D, chunked (~1 MB), unlimited along events, deflate as NX_COMPRESSION */
     hsize_t maxdims[2] = {H5S_UNLIMITED, cols};
     hsize_t chunk[2]   = {cols < 131072 ? 131072/cols : 1, cols};
     hid_t   plist      = H5Pcreate(H5P_DATASET_CREATE);
     dims[1] = cols;
     space   = H5Screate_simple(2, dims, maxdims);
     H5Pset_chunk(plist, 2, chunk);
-    if (H5Zfilter_avail(H5Z_FILTER_DEFLATE) > 0) {
+    int     level      = NX_COMPRESSION == NX_COMP_LZW ? 6 /* NAPI default */
+                       : NX_COMPRESSION/100 == NX_COMP_LZW ? NX_COMPRESSION%100 : -1;
+    if (level >= 0 && H5Zfilter_avail(H5Z_FILTER_DEFLATE) > 0) {
       H5Pset_shuffle(plist);
-      H5Pset_deflate(plist, 1);
+      H5Pset_deflate(plist, level);
     }
     did = H5Dcreate2(fid, dset, H5T_NATIVE_DOUBLE, space, H5P_DEFAULT, plist, H5P_DEFAULT);
     H5Sclose(space);

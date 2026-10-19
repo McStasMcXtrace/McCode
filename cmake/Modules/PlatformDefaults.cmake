@@ -225,15 +225,15 @@ function( detect_platform_variables resultvarname )
 
   #NeXus-flags:
   if ( NOT NEXUSFLAGS )
-    set(NEXUSFLAGS "-DUSE_NEXUS -lNeXus -lhdf5")#?? should probably have another value
+    set(NEXUSFLAGS "-DUSE_NEXUS -DNX_COMPRESSION=NX_COMP_LZW_LVL1 -lNeXus -lhdf5")#?? should probably have another value
     if ( MCCODE_BUILD_CONDA_PKG )
-      set( NEXUSFLAGS "-DUSE_NEXUS -I\$\{CONDA_PREFIX\}/include/nexus -I\$\{CONDA_PREFIX\}/include -Wl,-rpath,$\{CONDA_PREFIX\}/lib -L\$\{CONDA_PREFIX\}/lib -lNeXus -lhdf5" )
+      set( NEXUSFLAGS "-DUSE_NEXUS -DNX_COMPRESSION=NX_COMP_LZW_LVL1 -I\$\{CONDA_PREFIX\}/include/nexus -I\$\{CONDA_PREFIX\}/include -Wl,-rpath,$\{CONDA_PREFIX\}/lib -L\$\{CONDA_PREFIX\}/lib -lNeXus -lhdf5" )
     endif()
     if ( WINDOWS )
       if ( "${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC" )
-        set( NEXUSFLAGS " /DUSE_NEXUS /DH5_BUILT_AS_DYNAMIC_LIB /I\$\{CONDA_PREFIX\}/Library/include/nexus /I\$\{CONDA_PREFIX\}/Library/include /link /LIBPATH:\$\{CONDA_PREFIX\}/Library/lib NeXus.lib hdf5.lib" )
+        set( NEXUSFLAGS " /DUSE_NEXUS /DNX_COMPRESSION=NX_COMP_LZW_LVL1 /DH5_BUILT_AS_DYNAMIC_LIB /I\$\{CONDA_PREFIX\}/Library/include/nexus /I\$\{CONDA_PREFIX\}/Library/include /link /LIBPATH:\$\{CONDA_PREFIX\}/Library/lib NeXus.lib hdf5.lib" )
       else()
-	set( NEXUSFLAGS "-DUSE_NEXUS -DH5_BUILT_AS_DYNAMIC_LIB -I\$\{CONDA_PREFIX\}/Library/include/nexus -I\$\{CONDA_PREFIX\}/Library/include -Wl,-rpath,$\{CONDA_PREFIX\}/Library/lib -L\$\{CONDA_PREFIX\}/Library/lib -lNeXus -lhdf5" )
+	set( NEXUSFLAGS "-DUSE_NEXUS -DNX_COMPRESSION=NX_COMP_LZW_LVL1 -DH5_BUILT_AS_DYNAMIC_LIB -I\$\{CONDA_PREFIX\}/Library/include/nexus -I\$\{CONDA_PREFIX\}/Library/include -Wl,-rpath,$\{CONDA_PREFIX\}/Library/lib -L\$\{CONDA_PREFIX\}/Library/lib -lNeXus -lhdf5" )
       endif()
     endif()
     if ( NEXUSLIB )
