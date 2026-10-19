@@ -1852,7 +1852,8 @@ jumpcondition: "WHEN" exp
 ;
 
 /* JUMP target. index is relative (PREVIOUS=-1, NEXT=+1, MYSELF=0) or 0 for
-   a named target. cogen.c (detect_skipable_transforms) makes it absolute. */
+   a named target. cogen.c (detect_skipable_transforms) makes it absolute and
+   reports unknown names; it can not be checked here, the target may come later. */
 jumpname: "PREVIOUS"
     {
       $$.name  = str_dup("PREVIOUS");
@@ -1879,9 +1880,6 @@ jumpname: "PREVIOUS"
       $$.index = +atoi($3);    }
   | TOK_ID
     {
-      if (symtab_lookup(comp_instances, $1) == NULL)
-        print_error("ERROR: Reference to undefined JUMP target %s at line %s:%d.\n",
-        $1, instr_current_filename, instr_current_line);
       $$.name  = str_dup($1);
       $$.index = 0;
     }

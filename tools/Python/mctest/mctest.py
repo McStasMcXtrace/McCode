@@ -117,6 +117,8 @@ def create_instr_test_objs(sourcefile, localfile, header, noscans=False):
     #   Detector: NAME_I=2.00752e+08 NAME_ERR=2.28872e+06 NAME_N=50752 "NAME.L_U1"
     for m in re.findall(r"\%(?:Example|Test):([^\n]*)Detector\:([^\n]*)_I=([0-9.+-e]+)([^\n]*)", header):
         parvals, ncount = split_test_line(m[0])
+        if ncount:
+            logging.info("%s: -n%s on a %%Test/%%Example line is ignored, the test runs at the global --ncount" % (sourcefile, ncount))
         detector = m[1].strip()
         err = re.search(r"%s_ERR=([0-9.+-eE]+)" % re.escape(detector), m[3])
         tests.append(InstrExampleTest(sourcefile, localfile, parvals, detector, float(m[2].strip()), len(tests) + 1, ncount=ncount,
@@ -567,6 +569,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
         # told to use the default values (-y can not be combined with
         # parameter values, since the instrument then ignores those):
         parvals = test.parvals if test.parvals else "-y"
+        # A %Test/%Example always runs at the global ncount (its own -n is ignored).
         # A %Scan uses its own -n if given, else at most 1e5 pr. point, and runs
         # its points in parallel unless MPI already does that within each point
         testncount = ncount

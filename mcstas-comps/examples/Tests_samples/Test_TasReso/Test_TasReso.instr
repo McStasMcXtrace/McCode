@@ -30,7 +30,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see http://www.gnu.org/licenses/.
 *
-* %Example: src_lam=4.5 Detector: emon_I=887.137
+* %Example: src_lam=4.5 Detector: emon_I=960
 *
 * %Parameters 
 * src_lam:     [AA] Source mean wavelength
@@ -277,7 +277,7 @@ ROTATED (0, 0, 0) RELATIVE mono_arm2
 /* ----------------------------------------------------------------------------- */
 /* Samples */
 
-COMPONENT sample_arm1 = Arm()
+SPLIT 50 COMPONENT sample_arm1 = Arm()
 AT(0, 0, dist_mono_sample) RELATIVE mono_arm2
 ROTATED (0, 0, 0) RELATIVE mono_arm2
 

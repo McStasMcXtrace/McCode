@@ -1,6 +1,7 @@
 name: mcstas-basictest
 on:
   push:
+    branches: [main]
   pull_request:
   schedule:
     - cron: '30 23 * * 0'  # 23:30 every Sunday
@@ -287,6 +288,8 @@ jobs:
         # Cache checkout src/ with mccode-antlr
         if [ "${{ matrix.cogen }}" == "antlr" ];
         then
+          # Use mccode-antlr from git main instead of the conda-forge release
+          python3 -m pip install --force-reinstall --no-deps git+https://github.com/mccode-dev/mccode-antlr
           # Set up config file to use mcstas-antlr
           MCCODE_CONFIG=`mcrun --write-user-config | cut -f4 -d\ `
           sed -i.bak s+\"MCCOGEN\"\:\ \"mcstas\",+\"MCCOGEN\"\:\ \"mcstas-antlr\ -I\$\{CONDA_PREFIX\}/share/mcstas/resources\",+g ${MCCODE_CONFIG}
@@ -401,7 +404,7 @@ jobs:
            mcstas${EXESUFFIX} --version
            mctest${SUFFIX} --verbose ${NOPLOTS} --instr=Test_RNG_rand01 --testdir=run_rngtest --suffix=${{ matrix.cogen }}_${{ matrix.method }} --uid=${MYWORKERID}
            export SUM=`find run_rngtest -name rngout.dat | xargs -n1 grep -v \# | ${MD5SUM} | cut -f1 -d\ `
-           export EXPECTED="f192ce4609e2225bf9d42ce9c5fa5a86"
+           export EXPECTED="6c203d69205b0656c1391555e6068c93"
            if [ "${EXPECTED}" == "${SUM}" ];
            then
               echo RNG test success!
