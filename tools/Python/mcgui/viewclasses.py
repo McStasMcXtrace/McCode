@@ -653,8 +653,6 @@ class McStartSimDialog(QtWidgets.QDialog):
         self.ui = Ui_dlgStartSim()
         self.ui.setupUi(self)
         self._setupAdvancedCollapse()
-        sheight = QtGui.QGuiApplication.primaryScreen().availableGeometry().height()
-        self.ui.scrlaParams.setMaximumHeight(max(300, sheight // 3))
         if not mccode_config.configuration["PARTICLE"] == "neutron":
             self.ui.lblGravity.setHidden(True)
             self.ui.cbxGravity.setHidden(True)
@@ -671,6 +669,7 @@ class McStartSimDialog(QtWidgets.QDialog):
         btn.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         btn.setArrowType(QtCore.Qt.ArrowType.RightArrow)
         btn.setText('Advanced')
+        btn.setToolTip('Random seed and Monitor_nD buffer size')
         btn.setCheckable(True)
         btn.setChecked(False)
         btn.setStyleSheet('QToolButton { border: none; font-weight: bold; }')
@@ -687,7 +686,19 @@ class McStartSimDialog(QtWidgets.QDialog):
         self.ui.gbxAdvanced.setVisible(on)
         self.__btnAdvanced.setArrowType(
             QtCore.Qt.ArrowType.DownArrow if on else QtCore.Qt.ArrowType.RightArrow)
-        self.adjustSize()   # shrink/grow the dialog to match                   
+        QtCore.QTimer.singleShot(0, self._fitParams) # after the layout has taken in gbxAdvanced
+
+    def _fitParams(self):
+        ''' size the params area to its content, within the on-screen budget, then fit
+            the dialog; also called on Advanced open/close to grow/shrink the window '''
+        sa = self.ui.scrlaParams
+        sa.setMinimumHeight(min(self.ui.wgtParams.sizeHint().height(), max(100, self._budget)))
+        sa.setMinimumWidth(min(self.ui.wgtParams.sizeHint().width() + sa.verticalScrollBar().sizeHint().width(), self._maxwidth))
+        for g in (self.ui.gbxGrid, self.ui.gbxSim): g.updateGeometry() # else the dialog uses stale cached hints
+        self.layout().invalidate()
+        self.layout().activate() # update the window minimum first, or macOS clamps the resize to the old one
+        # height = minimum, i.e. the params height chosen above (on macOS this must happen before show)
+        self.resize(self.sizeHint().width(), self.minimumSizeHint().height())
     
     def set_components(self, compnames):
         if compnames == self._last_inspect_compnames:
@@ -867,6 +878,24 @@ class McStartSimDialog(QtWidgets.QDialog):
         # prepare new params widgets
         self._wParams = []
 
+        # fit on screen: the params area gets the height left by the rest of the dialog
+        # (with room to expand Advanced); use more than GUICOLS columns if the rows would not fit
+        self.ensurePolished() # style-dependent hints differ before the first show
+        screen = QtGui.QGuiApplication.primaryScreen().availableGeometry()
+        self.ui.scrlaParams.setMinimumSize(0, 0) # drop the previous instrument's minimum
+        for g in (self.ui.gbxGrid, self.ui.gbxSim): g.updateGeometry() # refresh hints Qt caches while hidden
+        self.layout().invalidate() # else a hidden Advanced may still be counted
+        rest = self.minimumSizeHint().height() - self.ui.scrlaParams.minimumSizeHint().height() # minimum: the dialog is sized to it
+        if self.ui.gbxAdvanced.isHidden(): # keep room to expand Advanced
+            rest += self.ui.gbxAdvanced.sizeHint().height()
+        self._budget = screen.height() - rest - 50 # 50: window title bar
+        self._maxwidth = screen.width() - 100
+        row_h = self.ui.edtNeutronCnt.sizeHint().height() + 6 # ponytail: approx grid spacing
+        fm = self.fontMetrics()
+        pair_w = max([fm.horizontalAdvance(p[0] + ':') for p in params], default=0) + fm.horizontalAdvance('0' * 12) + 24
+        cols = int(mccode_config.configuration["GUICOLS"])
+        cols = max(cols, min(-(-len(params) // max(1, self._budget // row_h)), self._maxwidth // pair_w))
+
         # insert custom params widgets
         i = -1
         x = 0
@@ -885,8 +914,8 @@ class McStartSimDialog(QtWidgets.QDialog):
                     value = old_value
 
             i = i + 1
-            x = i % (int(mccode_config.configuration["GUICOLS"])*2)
-            y = i // (int(mccode_config.configuration["GUICOLS"])*2)
+            x = i % (cols*2)
+            y = i // (cols*2)
 
             lbl = QtWidgets.QLabel(self.ui.gbxGrid)
             lbl.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
@@ -895,7 +924,7 @@ class McStartSimDialog(QtWidgets.QDialog):
             self.ui.gridGrid.addWidget(lbl, y, x, 1, 1)
 
             i = i + 1
-            x = i % (int(mccode_config.configuration["GUICOLS"])*2)
+            x = i % (cols*2)
 
             edt = QtWidgets.QLineEdit(self.ui.gbxGrid)
             edt.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
@@ -907,6 +936,7 @@ class McStartSimDialog(QtWidgets.QDialog):
 
             p_index += 1
                 
+        self._fitParams()
         self.ui.btnStart.setFocus()
 
 class SimTraceEnum:
