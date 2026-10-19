@@ -1770,6 +1770,8 @@ static void mcinfo_out_nexus(NXhandle f)
       nxprintattr(f, "Trace",     mcdotrace ?     "yes" : "no");
       nxprintattr(f, "Gravitation",mcgravitation ? "yes" : "no");
       nxprintattr(f, "Seed",      "%li", mcseed);
+      /* written before mccode_main splits the rays over MPI nodes */
+      nxprintattr(f, "Ncount_requested", "%llu", mcget_ncount());
       nxprintattr(f, "Directory", dirname);
     #ifdef USE_MPI
       if (mpi_node_count > 1)
