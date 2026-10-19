@@ -14,10 +14,10 @@ timeout, and checks that
     their concatenation in rank order, no mccode_node*.h5 file holds events
     that mccode.h5 does not reference, and 'h5repack -l CONTI' (when found on
     PATH) turns it into a self-contained file with the same events,
-  * NeXus, POSIX with pkill: a run killed with SIGTERM (sent to mpirun and
-    all ranks, as 'pkill -TERM' does) saves once per rank, with no duplicate
-    events in mccode_node*.h5, warns that the lists are not linked from
-    mccode.h5, and nexus_vds.py then links all of them.
+  * NeXus, POSIX with pkill/pgrep: a run whose ranks get SIGTERM twice (as
+    when mpirun forwards a 'pkill -TERM') saves once per rank, with no
+    duplicate events in mccode_node*.h5, warns that the lists are not linked
+    from mccode.h5, and nexus_vds.py then links all of them.
 
 Usage (from any directory):
   python3 test_mpi_lists.py [--np 2] [--formats auto] [--mcrun mcrun]
@@ -154,7 +154,8 @@ def check_sigterm(mcrun, workdir, np_, ncount, timeout):
     out = "NeXus_sigterm"
     outdir = workdir / out
     shutil.rmtree(outdir, ignore_errors=True)
-    pattern = rf"[{INSTR.stem[0]}]{INSTR.stem[1:]}\.out.*--dir={out}( |$)"
+    # the ranks only: mpirun stays alive and keeps forwarding their output
+    pattern = rf"^\./[{INSTR.stem[0]}]{INSTR.stem[1:]}\.out.*--dir={out}( |$)"
     with open(workdir / f"{out}.log", "w") as log:
         proc = subprocess.Popen([mcrun, INSTR.name, f"--mpi={np_}", f"--ncount={int(ncount)}", f"--dir={out}",
                                  "--format=NeXus", f"--bufsiz={BUFSIZ}", "mode=2"],
@@ -165,9 +166,17 @@ def check_sigterm(mcrun, workdir, np_, ncount, timeout):
         if proc.poll() is not None:
             return [f"run ended before it could be interrupted (exit status {proc.returncode})"]
         time.sleep(1)
-        subprocess.run(["pkill", "-TERM", "-f", pattern])  # mpirun forwards it: ranks get it twice
+        for _ in range(2):  # twice, as when mpirun forwards a SIGTERM the ranks also got
+            subprocess.run(["pkill", "-TERM", "-f", pattern])
+            time.sleep(0.05)
         try:
             proc.wait(timeout=timeout)
+            # ranks may outlive mpirun/mcrun while saving: wait for them (and their file locks)
+            t0 = time.time()
+            while subprocess.run(["pgrep", "-f", pattern], stdout=subprocess.DEVNULL).returncode == 0:
+                if time.time() - t0 > timeout:
+                    raise subprocess.TimeoutExpired("ranks", timeout)
+                time.sleep(0.2)
         except subprocess.TimeoutExpired:
             subprocess.run(["pkill", "-KILL", "-f", pattern])
             proc.kill()
@@ -303,7 +312,8 @@ def main():
             else:
                 print(f"ok   {label}: {got} events in {dt:.1f} s")
 
-    if "NeXus" in formats and args.sigterm_ncount > 0 and os.name == "posix" and shutil.which("pkill"):
+    if "NeXus" in formats and args.sigterm_ncount > 0 and os.name == "posix" and shutil.which("pkill") \
+            and shutil.which("pgrep"):
         label = f"NeXus  SIGTERM np={args.np}"
         problems = check_sigterm(mcrun, workdir, args.np, args.sigterm_ncount, args.timeout)
         if problems:
@@ -312,7 +322,7 @@ def main():
         else:
             print(f"ok   {label}: one save per rank, no duplicate events, linked by nexus_vds.py")
     elif "NeXus" in formats and args.sigterm_ncount > 0:
-        print("SKIP: NeXus SIGTERM check (needs POSIX and pkill)")
+        print("SKIP: NeXus SIGTERM check (needs POSIX, pkill and pgrep)")
 
     if failures:
         print(f"\n{len(failures)} failure(s), output kept in {workdir}:")
