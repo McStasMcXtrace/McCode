@@ -13,16 +13,38 @@
 *
 * %Description
 * Instrument to study tomographic imaging by means of the feature of OFF shape samples.
+* The sample (geometry, an OFF file, default socket.off) is rotated by omega around the
+* vertical axis, and the transmitted beam is recorded on a 2D detector (monitor).
 *
-* Example: mcrun Tomography.instr offfile=bunny.off -n1e4 -N18 omega=0,340 -d TomoScan
-* (Note that to achieve proper statistics for tomographic reconstruction, MUCH higher ncounts
-*  are needed)
+* A tomography is a scan of omega over a full rotation. Settings suitable for a
+* full 3D reconstruction (72 projections of 4e6 rays each):
+*   mcrun Tomography.instr omega=0:5:355 -n4e6 sigma_abs=1 -d TomoScan
 *
-* Use the provided Matlab tomo_recon.m function (requires imaging toolbox, PGPLOT output data
-* and a Unix/Mac) in the tools/matlab folder to reconstruct a 3D volume of the object. Use e.g. 
-* isosurface to do thresholding for extraction of the object surface.
+* Use the provided tomo_recon.py (numpy, scipy, matplotlib, pyqtgraph, h5py) in this folder to reconstruct a 3D
+* volume of the object from the scan directory: python tomo_recon.py TomoScan [--save]
+* (3 central slices + 3D isosurface; --save writes vol.nxs NeXus volume and surface.png;
+* --sirt 100 --median 3 gives fewer streaks than the default Hann FBP, see -h)
 *
-* %Example: omega=0 Detector: monitor_I=2.23492e-09
+* %Test: omega=0 -n4e6 Detector: monitor_I=1.0321e-09 monitor_ERR=7.92929e-13
+* %TestScan: mcrun Tomography.instr --scan_split=auto omega=0,355 -N72 -n4e6 Detector: monitor_I={
+*   1.03298e-09,1.02997e-09,1.02038e-09,1.0119e-09,1.00785e-09,1.00414e-09,1.00338e-09,1.00233e-09,
+*   1.00217e-09,1.0034e-09,1.00206e-09,1.00326e-09,1.00427e-09,1.00367e-09,1.00389e-09,1.0032e-09,
+*   1.00435e-09,1.00688e-09,1.00746e-09,1.00633e-09,1.00583e-09,1.00316e-09,1.00297e-09,1.00258e-09,
+*   1.00318e-09,1.00182e-09,1.00251e-09,1.00172e-09,1.00188e-09,1.00234e-09,1.00286e-09,1.00299e-09,
+*   1.00493e-09,1.00736e-09,1.01396e-09,1.02158e-09,1.03176e-09,1.02861e-09,1.02104e-09,1.01139e-09,
+*   1.00643e-09,1.00479e-09,1.00283e-09,1.00114e-09,9.99718e-10,1.00102e-09,1.00149e-09,1.00066e-09,
+*   1.0015e-09,1.00221e-09,1.00205e-09,1.0033e-09,1.00368e-09,1.00676e-09,1.00651e-09,1.00652e-09,
+*   1.00538e-09,1.00481e-09,1.00225e-09,1.00262e-09,1.00135e-09,1.00095e-09,1.00205e-09,1.00138e-09,
+*   1.00124e-09,9.99837e-10,1.00233e-09,1.00374e-09,1.00471e-09,1.0072e-09,1.01272e-09,1.02222e-09 } monitor_ERR={
+*   7.9327e-13,7.92112e-13,7.88409e-13,7.85123e-13,7.83547e-13,7.82101e-13,7.81801e-13,7.81389e-13,
+*   7.81328e-13,7.81804e-13,7.81284e-13,7.8175e-13,7.82145e-13,7.81911e-13,7.81997e-13,7.81729e-13,
+*   7.82176e-13,7.83161e-13,7.83388e-13,7.8295e-13,7.82751e-13,7.81713e-13,7.81637e-13,7.81486e-13,
+*   7.81717e-13,7.81187e-13,7.81458e-13,7.81152e-13,7.81212e-13,7.81392e-13,7.81598e-13,7.81648e-13,
+*   7.82408e-13,7.83354e-13,7.85922e-13,7.88875e-13,7.92801e-13,7.91588e-13,7.88667e-13,7.84924e-13,
+*   7.82995e-13,7.82351e-13,7.81586e-13,7.80927e-13,7.8037e-13,7.80877e-13,7.81061e-13,7.80736e-13,
+*   7.81063e-13,7.81342e-13,7.8128e-13,7.81767e-13,7.81915e-13,7.83116e-13,7.83017e-13,7.83021e-13,
+*   7.8258e-13,7.82354e-13,7.81356e-13,7.815e-13,7.81006e-13,7.80847e-13,7.81279e-13,7.81017e-13,
+*   7.80961e-13,7.80416e-13,7.81391e-13,7.81943e-13,7.82324e-13,7.83295e-13,7.85441e-13,7.89122e-13 }
 *
 * %Parameters
 * geometry: [string]  Name of the OFF file describing the sample shape
@@ -42,7 +64,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Tomography(string geometry="socket.off", omega=0, sigma_abs=100, frac_scatt=0, div_v=1e-4, div_h=1e-4, source_w=0.4, source_h=0.2, det_w=0.4, det_h=0.2, string opts="x bins=80 y bins=40")
+DEFINE INSTRUMENT Tomography(string geometry="socket.off", omega=0, sigma_abs=1, frac_scatt=0, div_v=1e-4, div_h=1e-4, source_w=0.4, source_h=0.2, det_w=0.25, det_h=0.15, string opts="x bins=128 y bins=64")
 DEPENDENCY " -DUSE_OFF "
 
 TRACE
@@ -59,6 +81,7 @@ ROTATED (0,omega,0) RELATIVE Origin
 
 COMPONENT sample=Incoherent(p_interact = frac_scatt, geometry = geometry, yheight=0.1, sigma_abs=sigma_abs, focus_xw=det_w, focus_yh=det_h, target_index=1)
 AT (0,0,0) RELATIVE samplearm 
+ROTATED (92,0,2) RELATIVE samplearm 
 
 COMPONENT monitor = Monitor_nD(xwidth=det_w,yheight=det_h,options=opts)
 AT (0, 0, 2) RELATIVE source

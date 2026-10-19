@@ -109,6 +109,8 @@ jobs:
         # Cache checkout src/ with mccode-antlr
         if [ "${{ matrix.cogen }}" == "antlr" ];
         then
+          # Use mccode-antlr from git main instead of the conda-forge release
+          python3 -m pip install --force-reinstall --no-deps git+https://github.com/mccode-dev/mccode-antlr
           # Set up config file to use mcstas-antlr
           MCCODE_CONFIG=`mcrun --write-user-config | cut -f4 -d\ `
           sed -i.bak s+\"MCCOGEN\"\:\ \"mcstas\",+\"MCCOGEN\"\:\ \"mcstas-antlr\ -I\$\{CONDA_PREFIX\}/share/mcstas/resources\",+g ${MCCODE_CONFIG}
@@ -174,7 +176,7 @@ jobs:
              test "$(command -v mctest)" == "/usr/bin/mctest"
            fi
            # Run the test with 2 core mpi
-           ${MCTEST_EXECUTABLE} --verbose --testdir $PWD --suffix ${{ matrix.cogen }}_${{ matrix.os }}_${{ matrix.mpi }}${{ matrix.method == 'debian' && '_debian' || '' }} --mpi=${{ matrix.nmpi }} --uid=${MYWORKERID}
+           ${MCTEST_EXECUTABLE} --verbose --nsigma 5 --testdir $PWD --suffix ${{ matrix.cogen }}_${{ matrix.os }}_${{ matrix.mpi }}${{ matrix.method == 'debian' && '_debian' || '' }} --mpi=${{ matrix.nmpi }} --uid=${MYWORKERID}
     - name: 'Tar output files'
       id: tar-package
       if: always()

@@ -21,7 +21,7 @@ a dash, e.g. `mcplot-html` / `mxplot-html`.
 | [mcrun](mcrun.md) | `mcrun` / `mxrun` |
 | [mcplot family](mcplot.md) | `mcplot` / `mxplot`, `mcplotdiff` / `mxplotdiff`, `mccoplot` / `mxcoplot` — html / matplotlib / pyqtgraph / matlab variants |
 | [mcdisplay family](mcdisplay.md) | `mcdisplay` / `mxdisplay` — pyqtgraph (default) / matplotlib / webgl / webgl-classic / cad / matlab variants |
-| [mctest family](mctest.md) | `mctest` / `mxtest`, `mcviewtest` / `mxviewtest` |
+| [mctest family](mctest.md) | `mctest` / `mxtest`, `mcviewtest` / `mxviewtest`; [statistical acceptance](mctest-statistics.md) of test values |
 | [mcdoc](mcdoc.md) | `mcdoc` / `mxdoc` |
 
 ## Quick reference: which tool for which job?

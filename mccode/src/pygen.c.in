@@ -101,30 +101,6 @@ int get_codeblock_vars_allcustom(struct code_block *code, List custom_vars,
 int get_codeblock_vars(struct code_block *code, List vars, List types,
          char* block_name, char* movetoblock_name);
 
-int parse_curlybrackets_vector(char* string, double* values) {
-  char* s = string;
-  int vidx = 0;
-  char* r;
-  while(*s != '\0') {
-    // jump to a non-trivial position
-    if (*s == ' ' || *s == ',' || *s == '{') {
-      ++s;
-      continue;
-    }
-    if (*s == '}') return vidx;
-
-    // extract a value
-    double val = strtod(s, &r);
-    if (values!=NULL) values[vidx] = val;
-    ++vidx;
-
-    // iterate
-    if (*r == '\0') return vidx;
-    s = r + 1;
-  }
-  return vidx;
-}
-
 /* Functions for outputting code. */
 
 /* Handle for output file. */
@@ -721,10 +697,6 @@ cogen_searches(struct instr_def *instr, char *output_name)
 static void
 cogen_header(struct instr_def *instr, char *output_name)
 {
-  char *sysdir_orig;
-  char *sysdir_new;
-  char  pathsep[3];
-  int   i,j=0;
   time_t t;
   char  date[128];
   long  index=0;
@@ -777,21 +749,6 @@ cogen_header(struct instr_def *instr, char *output_name)
     coutf("    instr.set_dependency(%s)",q);
     memfree(q);
   }
-  /* handles Windows '\' chararcters for embedding sys_dir into source code */
-  if (MC_PATHSEP_C != '\\') strcpy(pathsep, MC_PATHSEP_S);
-  else strcpy(pathsep, "\\\\");
-
-  sysdir_orig = get_sys_dir();
-  sysdir_new  = (char *)mem(2*strlen(sysdir_orig));
-  for (i=0; i < strlen(sysdir_orig); i++)
-  {
-    if (sysdir_orig[i] == '\\')
-    { sysdir_new[j] = '\\'; j++; sysdir_new[j] = '\\'; }
-    else sysdir_new[j] = sysdir_orig[i];
-    j++;
-  }
-  sysdir_new[j] = '\0';
-
   instr->user_vars = list_create();
   instr->user_vars_types = list_create();
   int uvlist = get_codeblock_vars(instr->vars, instr->user_vars, instr->user_vars_types, "USERVARS", "EXTEND");
@@ -800,7 +757,6 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("    # *****************************************************************************");
   coutf("    # * Start of instrument '%s' generated code", instr->name);
   cout("    # *****************************************************************************");
-  coutf("    # " MCCODE_LIBENV " system dir is \"%s%s\"", sysdir_new,pathsep);
 
   cout("");
 
@@ -1074,9 +1030,10 @@ void detect_skipable_transforms(struct instr_def *instr) {
 *******************************************************************************/
 
 /*******************************************************************************
-* Translation of %Example lines in the instrument file into McStasScript tests
-* (instr.add_test). The lines are parsed like mctest does, i.e. as
-*   %Example: PAR1=VAL1 PAR2=VAL2 ... Detector: MONITOR_I=VALUE
+* Translation of %Test lines (older name: %Example) in the instrument file into
+* McStasScript tests (instr.add_test). The lines are parsed like mctest does, i.e. as
+*   %Test: PAR1=VAL1 PAR2=VAL2 ... Detector: MONITOR_I=VALUE
+* (%TestScan lines describe parameter scans and have no add_test equivalent.)
 *******************************************************************************/
 
 /* Copy of [begin,end) with surrounding whitespace removed. */
@@ -1096,15 +1053,15 @@ pygen_is_number(char *s)
   return s[0] && !*endp;
 }
 
-/* Print warning about ignored %Example line, and return 0. */
+/* Print warning about ignored %Test/%Example line, and return 0. */
 static int
 pygen_ignore(char *line, char *reason)
 {
-  fprintf(stderr, "Warning: Ignoring %%Example line (%s): %s\n", reason, line);
+  fprintf(stderr, "Warning: Ignoring %%Test/%%Example line (%s): %s\n", reason, line);
   return 0;
 }
 
-/* Translate one %Example line (text after "%Example:", without newline) into
+/* Translate one %Test/%Example line (text after the tag, without newline) into
    an instr.add_test call. Returns 0 if the line was ignored (with warning). */
 static int
 pygen_translate_example(struct instr_def *instr, char *line, int ntests)
@@ -1147,7 +1104,7 @@ pygen_translate_example(struct instr_def *instr, char *line, int ntests)
     if (formal->type == instr_type_string) {
       /* Strip quotes. The value is given to McStasScript without the double
          quotes usually needed for string parameters, since add_test would
-         otherwise put those quotes into the %Example line: */
+         otherwise put those quotes into the test line: */
       size_t n = strlen(val);
       if (n >= 2 && (val[0] == '"' || val[0] == '\'') && val[n-1] == val[0]) {
         val[n-1] = '\0';
@@ -1166,7 +1123,7 @@ pygen_translate_example(struct instr_def *instr, char *line, int ntests)
   }
 
   if (!ntests) {
-    cout("    # Tests corresponding to the %Example lines of the instrument. The");
+    cout("    # Tests corresponding to the %Test/%Example lines of the instrument. The");
     cout("    # parameter values are restored afterwards, since add_test uses the");
     cout("    # current parameter values:");
     cout("    _parameter_values = {p: instr.parameters[p].value for p in instr.get_parameter_names()}");
@@ -1177,17 +1134,32 @@ pygen_translate_example(struct instr_def *instr, char *line, int ntests)
   return 1;
 }
 
-/* Emit McStasScript tests for all %Example lines in the instrument file. */
+/* Next %Test: or %Example: tag at or after p (the earlier of the two), or NULL;
+   *len is set to the length of the tag. "%Test:" does not match "%TestScan:". */
+static char *
+pygen_next_test(char *p, size_t *len)
+{
+  char *ex = strstr(p, "%Example:"), *te = strstr(p, "%Test:");
+  if (ex && (!te || ex < te)) {
+    *len = strlen("%Example:");
+    return ex;
+  }
+  *len = strlen("%Test:");
+  return te;
+}
+
+/* Emit McStasScript tests for all %Test/%Example lines in the instrument file. */
 static void
 cogen_tests(struct instr_def *instr)
 {
   FILE *f;
   long size;
   char *text, *p;
+  size_t taglen;
   int ntests = 0;
 
   if (!instr->source || !(f = fopen(instr->source, "rb"))) {
-    fprintf(stderr, "Warning: Could not read instrument file to look for %%Example lines\n");
+    fprintf(stderr, "Warning: Could not read instrument file to look for %%Test/%%Example lines\n");
     return;
   }
   fseek(f, 0, SEEK_END);
@@ -1197,8 +1169,8 @@ cogen_tests(struct instr_def *instr)
   text[fread(text, 1, size, f)] = '\0';
   fclose(f);
 
-  for (p = strstr(text, "%Example:"); p; p = strstr(p, "%Example:")) {
-    p += strlen("%Example:");
+  for (p = pygen_next_test(text, &taglen); p; p = pygen_next_test(p, &taglen)) {
+    p += taglen;
     ntests += pygen_translate_example(instr, pygen_strip(p, p + strcspn(p, "\r\n")), ntests);
   }
   if (ntests) {

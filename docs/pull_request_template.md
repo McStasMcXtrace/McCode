@@ -36,7 +36,7 @@ _Please describe what OS you developed and tested your additions on, and if any 
   * [ ] I have used the `mcdoc` utility and **rendered** a reasonable documentation page for the instrument (please attach as screenshot in comments!)
   * [ ] I have ensured that basic use of the instrument is OK (e.g. it compiles?)
   * [ ] ... and provided reasonable default parameters in that instrument that produce reasonable output
-  * [ ] ... and maybe even added a `%Example:` line to describe expected behaviour
+  * [ ] ... and maybe even added a `%Test:` line (or a `%TestScan:` line for a parameter scan) to describe expected behaviour
   * [ ] I have used the `mcrun --c-lint` "linter" and followed advice to remove most / all warnings that are raised
   * [ ] My new instrument is added within the `examples` hierarchy in a folder in the style of `examples/ESS/New_stuff/New_stuff.instr`
   * [ ] My new instrument has a new, unique filename, not clashing with existing example instruments

@@ -374,9 +374,6 @@ def plotfunc_single(data, f = None, use_logscale=False):
         else:
             f = data.filepath + ".html"
     
-    if os.path.exists(f):
-        os.remove(f)
-    
     # create 1D html
     if type(data) is Data1D:
         text = get_html('template_1d.html', get_params_str_1D(data), os.path.basename(data.filename), use_logscale)

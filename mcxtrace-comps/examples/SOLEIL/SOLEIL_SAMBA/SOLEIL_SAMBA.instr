@@ -99,13 +99,13 @@ COMPONENT origin = Progress_bar()
 COMPONENT BM_source = Bending_magnet(
     E0 = E0, dE = dE,
     Ee = 2.75, Ie = 0.5, B = 1.72, sigex=60.1e-6, sigey=24.9e-6)
-AT (0, 0, 0) RELATIVE origin
+AT (0, 0, 0) RELATIVE PREVIOUS
 
 // -----------------------------------------------------------------------------
 // OPTICS 1: M1 Collimating Mirror (at 14 m)
 // -----------------------------------------------------------------------------
 COMPONENT M1_location = Arm()
-AT (0, 0, 14) RELATIVE origin
+AT (0, 0, 14) RELATIVE BM_source
 
 COMPONENT M1_rotated = Arm()
 AT (0, 0, 0) RELATIVE M1_location

@@ -59,6 +59,12 @@
 * %Example: SAMPLE=8 STOP=1 -n 1e5 Detector: PSD_Sphere_4pi_I=1.3233e+06
 * %Example: SAMPLE=9 STOP=1 -n 1e5 Detector: PSD_Sphere_4pi_I=1.3239e+06
 * %Example: SAMPLE=10 STOP=1 -n 1e5 Detector: PSD_Sphere_4pi_I=1.28905e+06
+* %Scan: mcrun Samples_Incoherent.instr SAMPLE=1,5 -N5 STOP=1 Detector: PSD_Sphere_4pi_I={
+*   1326220.0,1245050.0,1322310.0,1321210.0,1326550.0 }
+* %Scan: mcrun Samples_Incoherent.instr SAMPLE=2,5 -N4 STOP=0 Detector: PSD_Sphere_4pi_I={
+*   12415200.0,7154040.0,7759140.0,1327980.0 }
+* %Scan: mcrun Samples_Incoherent.instr SAMPLE=2,5 -N4 STOP=0 DB=1 Detector: Dirbeam_I={
+*   11195400.0,5833780.0,6441470.0,5783.69 }
 *
 * %Parameters
 * L_min: [AA]         Minimum wavelength of neutrons
