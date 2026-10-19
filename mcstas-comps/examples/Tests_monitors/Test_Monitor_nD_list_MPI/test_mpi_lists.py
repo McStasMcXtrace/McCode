@@ -8,7 +8,12 @@ timeout, and checks that
   * the simulation terminates (list output used to hang under MPI when a
     node had no events, or when nodes flushed their buffers unequally),
   * the list holds exactly the expected number of events,
-  * no MPI spool files (mcspool_*.tmp) are left in the output directory.
+  * no MPI spool files (mcspool_*.tmp) are left in the output directory,
+  * NeXus: the 'events' data set in mccode.h5 is a virtual data set over the
+    per-node files mccode_node<N>.h5, which reads back (with h5py) as exactly
+    their concatenation in rank order, no mccode_node*.h5 file holds events
+    that mccode.h5 does not reference, and 'h5repack -l CONTI' (when found on
+    PATH) turns it into a self-contained file with the same events.
 
 Usage (from any directory):
   python3 test_mpi_lists.py [--np 2] [--formats auto] [--mcrun mcrun]
@@ -20,6 +25,7 @@ Exit status is 0 when all checks pass.
 import argparse
 import math
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -73,12 +79,18 @@ def count_ascii(outdir):
         return sum(1 for line in f if line.strip() and not line.startswith("#"))
 
 
-def count_nexus(outdir):
+def check_nexus(outdir, h5repack=None):
+    """Return (number of listed events, list of problems) for NeXus output;
+    (None, []) when there is no mccode.h5."""
     import h5py
+    import numpy as np
     path = outdir / "mccode.h5"
     if not path.exists():
-        return None
+        return None, []
     rows = 0
+    problems = []
+    referenced = set()
+    events = {}
     with h5py.File(path, "r") as f:
         comps = f["entry1/instrument/components"]
         for comp in comps.values():
@@ -86,9 +98,49 @@ def count_nexus(outdir):
             if output is None:
                 continue
             for name, grp in output.items():
-                if name.startswith("events_list") and "events" in grp:
-                    rows += grp["events"].shape[0]
-    return rows
+                if not (name.startswith("events_list") and "events" in grp):
+                    continue
+                ds = grp["events"]
+                data = ds[()]  # full read, through the virtual data set
+                rows += data.shape[0]
+                events[grp.name] = data
+                if not ds.is_virtual:
+                    continue
+                parts, ranks = [], []
+                for src in ds.virtual_sources():
+                    referenced.add(src.file_name)
+                    m = re.fullmatch(r"mccode_node(\d+)\.h5", src.file_name)
+                    if not m:
+                        problems.append(f"{name}: unexpected VDS source file '{src.file_name}'")
+                        continue
+                    ranks.append(int(m.group(1)))
+                    with h5py.File(outdir / src.file_name, "r") as sf:
+                        parts.append(sf[src.dset_name][()])
+                if ranks != sorted(set(ranks)):
+                    problems.append(f"{name}: VDS sources not in rank order {ranks}")
+                if parts and not np.array_equal(np.vstack(parts), data):
+                    problems.append(f"{name}: VDS differs from the concatenated mccode_node*.h5 data")
+    for node in sorted(outdir.glob("mccode_node*.h5")):
+        if node.name in referenced:
+            continue
+        with h5py.File(node, "r") as nf:
+            n = sum(d.shape[0] for d in nf.values() if isinstance(d, h5py.Dataset))
+        if n:
+            problems.append(f"{node.name}: {n} events not referenced by mccode.h5")
+    if h5repack and events:
+        flat = outdir / "flat.h5"
+        r = subprocess.run([h5repack, "-l", "CONTI", str(path), str(flat)],
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        if r.returncode:
+            problems.append(f"h5repack failed: {r.stdout[-500:]}")
+        else:
+            with h5py.File(flat, "r") as f:
+                for name, data in events.items():
+                    ds = f[name + "/events"]
+                    if ds.is_virtual or not np.array_equal(ds[()], data):
+                        problems.append(f"{name}: h5repack -l CONTI did not give the same, flat events")
+            flat.unlink()
+    return rows, problems
 
 
 def main():
@@ -136,6 +188,10 @@ def main():
     if flush_ncount > 0:
         cases.append((4, flush_ncount))
 
+    h5repack = shutil.which("h5repack")
+    if "NeXus" in formats and not h5repack:
+        print("NOTE: h5repack not found, NeXus output is not flattened")
+
     failures = []
     for fmt in formats:
         compiled = False
@@ -161,7 +217,11 @@ def main():
                 continue
             per = math.floor(ncount / args.np)
             expected = expected_events(mode, args.np, per)
-            got = count_ascii(outdir) if fmt == "McCode" else count_nexus(outdir)
+            problems = []
+            if fmt == "McCode":
+                got = count_ascii(outdir)
+            else:
+                got, problems = check_nexus(outdir, h5repack)
             if fmt == "NeXus" and got is None:
                 failures.append(f"{label}: no mccode.h5 written")
                 print(f"FAIL {label}: no mccode.h5 written")
@@ -172,6 +232,8 @@ def main():
                 status = f"expected {expected} events, got {got}"
             if leftovers:
                 status = (status if status != "ok" else "") + f" left-over spool files {leftovers}"
+            if problems:
+                status = (status if status != "ok" else "") + " " + "; ".join(problems)
             if status != "ok":
                 failures.append(f"{label}: {status}")
                 print(f"FAIL {label}: {status}")
