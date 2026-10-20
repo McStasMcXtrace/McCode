@@ -190,10 +190,8 @@ DECLARE
 
 INITIALIZE
 %{
-  /*if noinit is set - return early from the init function*/
-  if (noinit) {
-    return (_comp);
-  }
+  /*if noinit is set - skip initialization*/
+  if (!noinit) {
 
   int num, status;
   long offset, orig_offset;
@@ -410,6 +408,7 @@ INITIALIZE
   if (dE && ((E0 - dE > Emin) || E0 + dE < Emax)) {
     pmul *= 2 * dE / (Emax - Emin);
   }
+  } /* !noinit */
 %}
 
 TRACE
