@@ -327,104 +327,18 @@ export function addCylinder(
     opacity: transparency,
     side: THREE.DoubleSide,
   });
-  let original_axis = new THREE.Vector3(0, 1, 0);
-
-  if (thickness === 0) {
-    const geometry = new THREE.CylinderGeometry(radius, radius, height, radSeg);
+  const align_axis = new THREE.Vector3(nx, ny, nz).normalize();
+  const add = (geometry) => {
     const cylinder = new THREE.Mesh(geometry, material);
-
-    cylinder.position.x = x;
-    cylinder.position.y = y;
-    cylinder.position.z = z;
-
-    const align_axis = new THREE.Vector3(nx, ny, nz).normalize();
-    cylinder.quaternion.setFromUnitVectors(original_axis, align_axis.clone());
-
+    cylinder.position.set(x, y, z);
+    cylinder.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), align_axis);
     parent.add(cylinder);
-  } else {
-    //openended outer and inner cylinder
-    let outer_geometry = new THREE.CylinderGeometry(
-      radius,
-      radius,
-      height,
-      radSeg,
-      1,
-      true
-    );
-    let inner_geometry = new THREE.CylinderGeometry(
-      radius - thickness,
-      radius - thickness,
-      height,
-      radSeg,
-      1,
-      true
-    );
-
-    const outer_cylinder = new THREE.Mesh(outer_geometry, material);
-    const inner_cylinder = new THREE.Mesh(inner_geometry, material);
-
-    outer_cylinder.position.x = x;
-    outer_cylinder.position.y = y;
-    outer_cylinder.position.z = z;
-    inner_cylinder.position.x = x;
-    inner_cylinder.position.y = y;
-    inner_cylinder.position.z = z;
-
-    const align_axis = new THREE.Vector3(nx, ny, nz).normalize();
-    outer_cylinder.quaternion.setFromUnitVectors(
-      original_axis,
-      align_axis.clone()
-    );
-    inner_cylinder.quaternion.setFromUnitVectors(
-      original_axis,
-      align_axis.clone()
-    );
-
-    parent.add(outer_cylinder);
-    parent.add(inner_cylinder);
-
-    const halfheight = height / 2;
-    const upper_lid_center = new THREE.Vector3(
-      x + halfheight * align_axis.x,
-      y + halfheight * align_axis.y,
-      z + halfheight * align_axis.z
-    );
-    const lower_lid_center = new THREE.Vector3(
-      x - halfheight * align_axis.x,
-      y - halfheight * align_axis.y,
-      z - halfheight * align_axis.z
-    );
-
-    //lid top
-    addAnnulus(
-      upper_lid_center.x,
-      upper_lid_center.y,
-      upper_lid_center.z,
-      radius,
-      thickness,
-      nx,
-      ny,
-      nz,
-      radSeg,
-      parent,
-      color,
-      transparency
-    );
-    //lid bottom
-    addAnnulus(
-      lower_lid_center.x,
-      lower_lid_center.y,
-      lower_lid_center.z,
-      radius,
-      thickness,
-      nx,
-      ny,
-      nz,
-      radSeg,
-      parent,
-      color,
-      transparency
-    );
+  };
+  add(new THREE.CylinderGeometry(radius, radius, height, radSeg));
+  // hollow: closed inner cavity, as in e.g. Incoherent
+  if (thickness > 0 && radius > thickness && height > 2 * thickness) {
+    const r = radius - thickness;
+    add(new THREE.CylinderGeometry(r, r, height - 2 * thickness, radSeg));
   }
 }
 
@@ -540,111 +454,25 @@ export function addBox(
   color,
   transparency
 ) {
-  let geometry = new THREE.BoxGeometry(xwidth, yheight, zdepth);
-  let original_axis = new THREE.Vector3(0, 1, 0);
-
-  if (thickness > 0) {
-    //Hollow box using BufferGeometry with vertices and faces
-    const a = xwidth;
-    const b = yheight;
-    const c = zdepth;
-
-    let vertices = new Float32Array([
-      a,
-      0,
-      0,
-      0,
-      b,
-      0,
-      0,
-      0,
-      c,
-      0,
-      0,
-      0,
-      a,
-      0,
-      c,
-      a,
-      b,
-      0,
-      a,
-      b,
-      c,
-      0,
-      b,
-      c,
-
-      //inner vertices
-      a - thickness,
-      0,
-      0 + thickness,
-      0 + thickness,
-      b,
-      0 + thickness,
-      0 + thickness,
-      0,
-      c - thickness,
-      0 + thickness,
-      0,
-      0 + thickness,
-      a - thickness,
-      0,
-      c - thickness,
-      a - thickness,
-      b,
-      0 + thickness,
-      a - thickness,
-      b,
-      c - thickness,
-      0 + thickness,
-      b,
-      c - thickness,
-    ]);
-
-    const center = [a / 2, b / 2, c / 2];
-
-    const centeredVertices = new Float32Array(vertices.length);
-    for (let i = 0; i < vertices.length; i += 3) {
-      centeredVertices[i] = vertices[i] - center[0];
-      centeredVertices[i + 1] = vertices[i + 1] - center[1];
-      centeredVertices[i + 2] = vertices[i + 2] - center[2];
-    }
-
-    let faces = [
-      8, 11, 9, 8, 9, 13, 8, 12, 14, 8, 14, 13, 12, 10, 15, 12, 15, 14, 10, 11,
-      9, 10, 9, 15, 0, 3, 1, 0, 1, 5, 0, 4, 6, 0, 6, 5, 4, 2, 7, 4, 7, 6, 2, 3,
-      1, 2, 1, 7, 0, 8, 11, 0, 11, 3, 1, 9, 13, 1, 13, 5, 4, 12, 10, 4, 10, 2,
-      7, 15, 14, 7, 14, 6, 0, 8, 4, 0, 4, 12, 11, 3, 2, 11, 2, 10, 1, 9, 7, 1,
-      7, 15, 13, 5, 6, 13, 6, 14,
-    ];
-
-    geometry = new THREE.BufferGeometry();
-
-    geometry.setIndex(faces);
-    geometry.setAttribute(
-      "position",
-      new THREE.BufferAttribute(centeredVertices, 3)
-    );
-    geometry.computeVertexNormals();
-  }
-
   const material = new THREE.MeshLambertMaterial({
     color: color,
     transparent: true,
     opacity: transparency,
     side: THREE.DoubleSide,
   });
-  const box = new THREE.Mesh(geometry, material);
-
-  let align_axis = new THREE.Vector3(nx, ny, nz).normalize();
-  box.quaternion.setFromUnitVectors(original_axis, align_axis.clone());
-
-  box.position.x = x;
-  box.position.y = y;
-  box.position.z = z;
-
-  parent.add(box);
+  const align_axis = new THREE.Vector3(nx, ny, nz).normalize();
+  const add = (geometry) => {
+    const box = new THREE.Mesh(geometry, material);
+    box.position.set(x, y, z);
+    box.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), align_axis);
+    parent.add(box);
+  };
+  add(new THREE.BoxGeometry(xwidth, yheight, zdepth));
+  // hollow: closed inner cavity, as in e.g. Incoherent
+  const t2 = 2 * thickness;
+  if (thickness > 0 && xwidth > t2 && yheight > t2 && zdepth > t2) {
+    add(new THREE.BoxGeometry(xwidth - t2, yheight - t2, zdepth - t2));
+  }
 }
 
 export function addPolyhedron(faces_vertices, parent, color, transparency) {

@@ -535,6 +535,7 @@ class DrawBox(DrawCommand):
     yheight = None
     zlength = None
     thickness = None
+    axis_vector = None
 
     def __init__(self, args):
         super(DrawBox, self).__init__(args)
@@ -545,6 +546,7 @@ class DrawBox(DrawCommand):
         self.yheight = float(args[4])
         self.zlength = float(args[5])
         self.thickness = float(args[6])
+        self.axis_vector = Vector3d(*map(float, args[7:10])) if len(args) >= 10 else Vector3d(0, 1, 0)
 
     def _get_points(self):
         return _cube_points(self.center, math.sqrt(self.xwidth**2 + self.yheight**2 + self.zlength**2)/2)
