@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "node start-vite.js",
+    "dev": "vite",
     "build": "vite build"
   },
   "keywords": [],
@@ -12,15 +12,12 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@uiw/color-convert": "^2.3.0",
     "@uiw/react-color-sketch": "^2.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-loader-spinner": "^6.1.6",
     "react-plotly.js": "^2.6.0",
-    "three": "^0.165.0",
-    "three-lut": "^79.0.2",
-    "three-orbitcontrols": "^2.110.3"
+    "three": "^0.165.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",
