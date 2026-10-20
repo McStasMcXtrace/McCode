@@ -477,11 +477,10 @@ export function addBox(
 
 export function addPolyhedron(faces_vertices, parent, color, transparency) {
   const parsed_faces_vertices = JSON.parse(faces_vertices);
-  let faces = parsed_faces_vertices.faces.flatMap((index) => index.face);
-  if (parsed_faces_vertices.faces[0].face.length === 4) {
-    //transform faces to rank 3
-    faces = getRank3Indices(faces);
-  }
+  // fan-triangulate each face, whatever its number of vertices
+  let faces = parsed_faces_vertices.faces.flatMap(({ face: f }) =>
+    f.slice(1, -1).flatMap((v, j) => [f[0], v, f[j + 2]])
+  );
 
   let vertices = new Float32Array(
     parsed_faces_vertices.vertices.flatMap((vertex) => vertex)
@@ -491,6 +490,8 @@ export function addPolyhedron(faces_vertices, parent, color, transparency) {
 
   geometry.setIndex(faces);
   geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
+  // non-indexed: flat per-face normals instead of averaging across edges
+  geometry = geometry.toNonIndexed();
   geometry.computeVertexNormals();
   const material = new THREE.MeshLambertMaterial({
     color: color,
@@ -507,25 +508,6 @@ export function addPolyhedron(faces_vertices, parent, color, transparency) {
     */
 
   parent.add(polyhedron);
-}
-
-function getRank3Indices(rank4indices) {
-  let rank3indices = [];
-
-  for (let i = 0; i < rank4indices.length; i += 4) {
-    let face = [];
-    for (let j = 0; j < 4; j++) {
-      face.push(rank4indices[i + j]);
-    }
-    rank3indices.push(face[0]);
-    rank3indices.push(face[1]);
-    rank3indices.push(face[2]);
-
-    rank3indices.push(face[0]);
-    rank3indices.push(face[2]);
-    rank3indices.push(face[3]);
-  }
-  return rank3indices;
 }
 
 export function addPolygon(faces_vertices, parent, color, transparency) {
