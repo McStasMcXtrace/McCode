@@ -21,6 +21,8 @@
 * with both elastic, quasielastic (Lorentzian), and tunneling (sharp)
 * components. No multiple scattering. Absorbtion included.
 * The shape of the sample may be a box with dimensions xwidth, yheight, zdepth.
+* With thickness>0 the cylinder is hollow, with no lids: the cavity spans the
+* full yheight, as a sample can without lids.
 * The area to scatter to is a disk of radius 'focus_r' situated at the target.
 * This target area may also be rectangular if specified focus_xw and focus_yh
 * or focus_aw and focus_ah, respectively in meters and degrees.
