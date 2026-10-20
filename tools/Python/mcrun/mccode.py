@@ -487,8 +487,26 @@ class McStas:
             if self.options.openacc and not os.name == 'nt':
                 mpi_flags = mpi_flags + [mccode_config.directories['bindir'] + '/' + mccode_config.configuration['MCCODE'] + '-acc_gpu_bind']
             args = mpi_flags + [self.binpath] + args
+            from subprocess import CalledProcessError
+            try:
+                return Process(binpath).run(args, pipe=pipe)
+            except CalledProcessError:
+                self.hint_nexus_lists()
+                raise
 
         return Process(binpath).run(args, pipe=pipe)
+
+    def hint_nexus_lists(self):
+        """ After a failed (e.g. interrupted) MPI NeXus run, event lists may be
+        left in the per-node files mccode_node*.h5 without links in mccode.h5 """
+        outdir = self.options.dir
+        if not outdir or 'nexus' not in str(self.options.format).lower():
+            return
+        if not list(pathlib.Path(outdir).glob('mccode_node*.h5')):
+            return
+        helper = pathlib.Path(mccode_config.directories['tooldir']) / 'Python' / 'mccodelib' / 'nexus_vds.py'
+        LOG.warning('The simulation did not end normally: event lists in %s may not be linked '
+                    'from mccode.h5. Link them with: python3 "%s" "%s"', join(outdir, 'mccode_node*.h5'), helper, outdir)
 
     def get_info(self):
         return McStasInfo(self.runMPI(['--info'], pipe=True))
