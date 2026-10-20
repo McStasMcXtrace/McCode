@@ -5,7 +5,6 @@ mcdisplay webgl-classic script.
 '''
 import sys
 import json
-import subprocess
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
@@ -106,7 +105,7 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
     
     # open a web-browser in a cross-platform way
     try:
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], html_filepath), shell=True)
+        mccode_config.open_in_browser(html_filepath)
     except Exception as e:
         raise Exception('Os-specific open browser: %s' % e.__str__())
     
