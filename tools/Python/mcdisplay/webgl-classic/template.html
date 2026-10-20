@@ -106,6 +106,9 @@
 		<button id="btnTop", onclick="handleViewTop();" style="width: 60px;">Top</button>
 		<label id="lblView" style="color: white; background-color: black; display: inline-block; text-align:right; width: 120px;">Show BB</label>
 		<input id="cbxBoundingbox" type="checkbox">
+		<label id="lblSurfaces" style="color: white; background-color: black; display: inline-block; text-align:right; width: 120px;">
+			Surfaces<input id="cbxSurfaces" type="checkbox" checked autocomplete="off" onchange="controller.main.showSurfaces(this.checked);">
+		</label>
 	</div>
 	<div id="3dcanvas"></div>
 
