@@ -326,7 +326,8 @@ def tessellate(d, segments=64):
         _, u, v = _basis_from_axis(_v3(d.axis_vector))
         th = np.linspace(0, 2 * np.pi, segments, endpoint=False)
         outer = c + d.outer_radius * (np.outer(np.cos(th), u) + np.outer(np.sin(th), v))
-        inner = c + d.inner_radius * (np.outer(np.cos(th), u) + np.outer(np.sin(th), v))
+        r_in = max(0.0, d.outer_radius - d.inner_radius)  # instrgeom's inner_radius holds the ring width (mcdis_annulus thickness)
+        inner = c + r_in * (np.outer(np.cos(th), u) + np.outer(np.sin(th), v))
         mesh = _strip(outer, inner, flip=True)
         return mesh, [np.vstack((outer, outer[0])), np.vstack((inner, inner[0]))]
     if isinstance(d, DrawPolyhedron):
