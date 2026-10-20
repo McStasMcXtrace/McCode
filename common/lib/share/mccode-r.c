@@ -3578,6 +3578,33 @@ void mcdis_legacy_box(double x, double y, double z,
 	     x+width/2, y+height/2, z+length/2);
 }
 
+/* --trace=1 box: the legacy box with its local y axis rotated onto (nx,ny,nz),
+ * as drawn at --trace=2 */
+static void mcdis_rotated_box(double x, double y, double z,
+	       double width, double height, double length, double nx, double ny, double nz){
+  double c[8][3], ax, ay, az;
+  int i, j;
+  NORM(nx,ny,nz);
+  if (nx == 0 && ny > 0 && nz == 0) {
+    mcdis_legacy_box(x, y, z, width, height, length);
+    return;
+  }
+  vec_prod(ax,ay,az, 0,1,0, nx,ny,nz);
+  if (ax == 0 && az == 0) az = 1; /* n = -y: half turn around z */
+  for (i = 0; i < 8; i++) {
+    double px = (i & 1 ? 0.5 : -0.5)*width;
+    double py = (i & 2 ? 0.5 : -0.5)*height;
+    double pz = (i & 4 ? 0.5 : -0.5)*length;
+    rotate(c[i][0],c[i][1],c[i][2], px,py,pz, acos(ny < -1 ? -1 : ny), ax,ay,az);
+  }
+  /* 12 edges: corners differing in one bit */
+  for (i = 0; i < 8; i++)
+    for (j = 1; j < 8; j <<= 1)
+      if (!(i & j))
+        mcdis_line(x+c[i][0], y+c[i][1], z+c[i][2],
+                   x+c[i|j][0], y+c[i|j][1], z+c[i|j][2]);
+}
+
 /*  NEW 3D IMPLEMENTATION OF BOX SUPPORTS HOLLOW ALSO
     draws a box with center at (x, y, z) and
     width (deltax), height (deltay), length (deltaz) */
@@ -3587,9 +3614,10 @@ void mcdis_box(double x, double y, double z,
   if (mcdotrace==2) {
     printf("MCDISPLAY: mcdisbox(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness, nx, ny, nz);
   } else {
-    mcdis_legacy_box(x, y, z, width, height, length);
-    if (thickness)
-      mcdis_legacy_box(x, y, z, width-thickness, height-thickness, length);
+    mcdis_rotated_box(x, y, z, width, height, length, nx, ny, nz);
+    /* hollow: closed inner cavity, as in e.g. Incoherent */
+    if (thickness > 0 && width-2*thickness > 0 && height-2*thickness > 0 && length-2*thickness > 0)
+      mcdis_rotated_box(x, y, z, width-2*thickness, height-2*thickness, length-2*thickness, nx, ny, nz);
   }
 }
 
@@ -3637,6 +3665,10 @@ void mcdis_cylinder( double x, double y, double z,
   } else {
     mcdis_legacy_cylinder(x, y, z,
 			  r, height, 12, nx, ny, nz);
+    /* hollow: closed inner cavity, as in e.g. Incoherent */
+    if (thickness > 0 && r-thickness > 0 && height-2*thickness > 0)
+      mcdis_legacy_cylinder(x, y, z,
+			    r-thickness, height-2*thickness, 12, nx, ny, nz);
   }
 }
 
