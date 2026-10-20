@@ -32,7 +32,6 @@ import os
 import re
 import sys
 import json
-import subprocess
 
 from shutil import copyfile
 
@@ -42,7 +41,7 @@ from mccodelib.mcplotloader import Data1D, Data2D
 from mccodelib import mccode_config
 from mccodelib.mcplotdiffloader import (
     path_base_name, resolve_labels, resolve_colours, dirsafe_name,
-    load_monitors, find_original_plot, match_monitors_multi, DEFAULT_PALETTE,
+    load_monitors, find_original_plot, match_monitors_multi, DEFAULT_PALETTE, monitor_basename,
 )
 
 # The bare html-plotter (mcplot-html itself, or mxplot-html under McXtrace),
@@ -179,7 +178,7 @@ def _ensure_html_plots(path):
 
 def browse(html_filepath):
     try:
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], html_filepath), shell=True)
+        mccode_config.open_in_browser(html_filepath)
     except Exception as e:
         raise Exception('Os-specific open browser: %s' % e.__str__())
 
@@ -195,7 +194,7 @@ def coplot_single(key, datas, outdir, use_logscale, colours, dat_links, identiti
     global logscale
     logscale = use_logscale
 
-    basename = 'coplot_' + path_base_name(datas[0].filename)
+    basename = 'coplot_' + path_base_name(monitor_basename(datas[0]))
     fname = basename + ('_log.html' if use_logscale else '.html')
     f = os.path.join(outdir, fname)
 
@@ -447,7 +446,7 @@ def main(args):
         # mcplotdiff.py does
         dat_links = []
         for d, data in zip(dirs, datas):
-            lin, log = find_original_plot(d, data.filename)
+            lin, log = find_original_plot(d, monitor_basename(data))
             dat_links.append(_relhref(lin, outdir))
 
         f = coplot_single(key, datas, outdir, False, colours, dat_links, identities,

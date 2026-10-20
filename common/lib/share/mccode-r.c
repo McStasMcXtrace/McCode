@@ -114,6 +114,17 @@ mcstatic unsigned long long int mcrun_num            = 0;
 #define NX_COMPRESSION NX_COMP_NONE
 #endif
 
+#ifndef NOSIGNALS
+/* a signal arriving while an event list is written (e.g. a Monitor_nD buffer
+   flushed during TRACE) is replayed once the write is done, see
+   mcdetector_out_2D_list and sighandler */
+static volatile int mcsig_busy    = 0;    /* event list write in progress */
+static volatile int mcsig_pending = 0;    /* signal to replay after it */
+static volatile int mcsig_replay  = 0;    /* sighandler called for the replay */
+static double      *mcsig_skip_p1 = NULL; /* block written just before the replay */
+void sighandler(int sig);
+#endif
+
 /* String nullification on GPU and other replacements */
 #ifdef OPENACC
 int noprintf() {
@@ -1556,6 +1567,9 @@ static char *strcpy_valid(char *valid, char *original)
 
 #ifdef USE_NEXUS
 
+/* name of the NXentry opened by mcinfo_out_nexus (used by mclist_vds_write) */
+static char mcnxentry[CHAR_BUF_LENGTH] = "entry1";
+
 /* ========================================================================== */
 
 /*                               NeXus output                                 */
@@ -1657,6 +1671,7 @@ static void mcinfo_out_nexus(NXhandle f)
   /* count the number of existing NXentry and create the next one */
   NXgetgroupinfo(f, &count, name, class);
   sprintf(entry0, "entry%i", count+1);
+  strcpy(mcnxentry, entry0);
 
   /* create the main NXentry (mandatory in NeXus) */
   if (NXmakegroup(f, entry0, "NXentry") == NX_OK)
@@ -1766,6 +1781,8 @@ static void mcinfo_out_nexus(NXhandle f)
       nxprintattr(f, "Trace",     mcdotrace ?     "yes" : "no");
       nxprintattr(f, "Gravitation",mcgravitation ? "yes" : "no");
       nxprintattr(f, "Seed",      "%li", mcseed);
+      /* written before mccode_main splits the rays over MPI nodes */
+      nxprintattr(f, "Ncount_requested", "%llu", mcget_ncount());
       nxprintattr(f, "Directory", dirname);
     #ifdef USE_MPI
       if (mpi_node_count > 1)
@@ -1818,6 +1835,10 @@ static void mcinfo_out_nexus(NXhandle f)
 *   - int -> int, char* -> char[16384], char -> char, double -> double (symbol),
 *     MCNUM -> double, MCNUM* (vector) or MCNUM[n] (static {..} vector, sized
 *     from the FIRST instance of the component type)
+*   - mccode-antlr writes the same layout with other type strings: "char *",
+*     "double" for MCNUM and "double*" for vectors, where a literal vector
+*     "a,b,c" is a calloc'ed double* holding those elements
+*     Type strings are compared with whitespace removed.
 * The layout is validated at setpos time (strings by content, numbers when the
 * literal is a plain number); mismatching instances are not reported.
 *
@@ -1833,7 +1854,7 @@ static void mcinfo_out_nexus(NXhandle f)
 #endif
 
 enum mcrtpar_kind {
-  MCRTPAR_INT, MCRTPAR_STRING, MCRTPAR_CHAR, MCRTPAR_DOUBLE, MCRTPAR_SYMBOL,
+  MCRTPAR_INT, MCRTPAR_STRING, MCRTPAR_CHAR, MCRTPAR_DOUBLE,
   MCRTPAR_VECTOR_PTR, MCRTPAR_VECTOR_ARR, MCRTPAR_UNKNOWN
 };
 
@@ -1855,7 +1876,7 @@ struct mcrtpar_struct {
   char  *value;         /* literal (or string value) from setpos */
   int    kind;
   size_t offset;
-  long   nelem;         /* for MCRTPAR_VECTOR_ARR */
+  long   nelem;         /* for MCRTPAR_VECTOR_ARR, and MCRTPAR_VECTOR_PTR from a literal */
 };
 
 static struct mcrtcomp_struct *mcrtcomp_list  = NULL;
@@ -1997,7 +2018,8 @@ static void mcrt_register_param(char *nexuscomp, char *parameter, char *defval,
   struct mcrtcomp_struct *c = NULL;
   struct mcrtpar_struct  *p;
   long   ci;
-  size_t size = 0, align = 1;
+  size_t size = 0, align = 1, i, j = 0;
+  char   t[32];
 
   if (!nexuscomp || !parameter || !type) return;
   for (ci = mcrtcomp_num-1; ci >= 0; ci--)
@@ -2016,16 +2038,26 @@ static void mcrt_register_param(char *nexuscomp, char *parameter, char *defval,
   p->parameter = mcrt_strdup(parameter);
   p->value     = mcrt_strdup(value);
 
+  /* type string without whitespace: mccode-antlr writes e.g. "char *" */
+  for (i = 0; type[i] && j < sizeof(t)-1; i++)
+    if (!isspace((unsigned char)type[i])) t[j++] = type[i];
+  t[j] = '\0';
+
   /* map type string (instr_formal_type_names_real in cogen.c.in) to kind/size */
-  if (!strcmp(type, "int")) {
+  if (!strcmp(t, "int")) {
     p->kind = MCRTPAR_INT;    size = sizeof(int);    align = MCRT_ALIGN_INT;
-  } else if (!strcmp(type, "char*")) {
+  } else if (!strcmp(t, "char*")) {
     p->kind = MCRTPAR_STRING; size = MCCODE_COMP_STRING_PAR_LEN; align = 1;
-  } else if (!strcmp(type, "char")) {
+  } else if (!strcmp(t, "char")) {
     p->kind = MCRTPAR_CHAR;   size = 1;              align = 1;
-  } else if (!strcmp(type, "double")) {
-    p->kind = MCRTPAR_SYMBOL; size = sizeof(double); align = MCRT_ALIGN_DBL;
-  } else if (!strcmp(type, "MCNUM")) {
+  } else if (!strcmp(t, "double")) {
+    p->kind = MCRTPAR_DOUBLE; size = sizeof(double); align = MCRT_ALIGN_DBL;
+  } else if (!strcmp(t, "double*")) {
+    /* mccode-antlr vector: a literal "a,b,c" was calloc'ed with that many elements */
+    p->kind = MCRTPAR_VECTOR_PTR; size = sizeof(double*); align = MCRT_ALIGN_PTR;
+    if (p->value && mcrt_numeric_start(p->value))
+      p->nelem = mcrt_parse_curly(p->value, NULL, 0);
+  } else if (!strcmp(t, "MCNUM")) {
     /* double, vector pointer or static vector: all share this type string */
     const char *first = mcrt_first_instance_literal(ci, parameter, p->value);
     if (first && first[0] == '{') {
@@ -2079,8 +2111,15 @@ static void mcrt_register_param(char *nexuscomp, char *parameter, char *defval,
         }
         break;
       }
-      case MCRTPAR_VECTOR_ARR: {
-        if (p->value && p->value[0] == '{' && p->nelem > 0) {
+      case MCRTPAR_VECTOR_ARR:
+      case MCRTPAR_VECTOR_PTR: {
+        char *data = addr;
+        if (p->kind == MCRTPAR_VECTOR_PTR) {
+          double *ptr;
+          memcpy(&ptr, addr, sizeof(ptr));
+          data = (char *)ptr;
+        }
+        if (data && p->value && (p->value[0] == '{' || mcrt_numeric_start(p->value)) && p->nelem > 0) {
           long k, n;
           double *vals = calloc(p->nelem, sizeof(double));
           if (vals) {
@@ -2089,7 +2128,7 @@ static void mcrt_register_param(char *nexuscomp, char *parameter, char *defval,
             if (n > p->nelem) n = p->nelem;
             for (k = 0; k < n; k++) {
               double v;
-              memcpy(&v, addr + k*sizeof(double), sizeof(double));
+              memcpy(&v, data + k*sizeof(double), sizeof(double));
               if (v != vals[k]) ok = 0;
             }
             if (ok) c->n_checked++; else c->n_failed++;
@@ -2098,7 +2137,7 @@ static void mcrt_register_param(char *nexuscomp, char *parameter, char *defval,
         }
         break;
       }
-      default: break; /* CHAR, SYMBOL, VECTOR_PTR: not checkable */
+      default: break; /* CHAR: not checkable */
     }
   }
 }
@@ -2191,10 +2230,9 @@ void mccomp_param_runtime_nexus_all(NXhandle f)
           if (buffer) { memcpy(buffer, addr, len); buffer[len] = '\0'; strval = buffer; }
           break;
         }
-        case MCRTPAR_DOUBLE:
-        case MCRTPAR_SYMBOL: {
+        case MCRTPAR_DOUBLE: {
           double v; memcpy(&v, addr, sizeof(double));
-          if (p->kind == MCRTPAR_DOUBLE && mcrt_looks_like_pointer(v))
+          if (mcrt_looks_like_pointer(v))
             status = "unsupported:pointer";
           else {
             if (is_unset(v)) strcpy(num, "UNSET");
@@ -2203,9 +2241,17 @@ void mccomp_param_runtime_nexus_all(NXhandle f)
           }
           break;
         }
-        case MCRTPAR_VECTOR_ARR: {
+        case MCRTPAR_VECTOR_ARR:
+        case MCRTPAR_VECTOR_PTR: {
           long k;
           size_t blen = (size_t)p->nelem*32 + 4;
+          if (p->kind == MCRTPAR_VECTOR_PTR) {
+            /* only mccode-antlr literal vectors have a known length */
+            double *ptr;
+            memcpy(&ptr, addr, sizeof(ptr));
+            addr = (char *)ptr;
+            if (!addr || p->nelem <= 0) { status = "unsupported:pointer"; break; }
+          }
           buffer = malloc(blen);
           if (buffer) {
             size_t pos = 0;
@@ -2221,9 +2267,6 @@ void mccomp_param_runtime_nexus_all(NXhandle f)
           }
           break;
         }
-        case MCRTPAR_VECTOR_PTR:
-          status = "unsupported:pointer";
-          break;
         default:
           status = "unsupported:unknown-type";
       }
@@ -2756,6 +2799,10 @@ FILE *siminfo_init(FILE *f)
 
 } /* siminfo_init */
 
+#if defined(USE_MPI) && defined(USE_NEXUS)
+static void mclist_vds_write(void);
+#endif
+
 /*******************************************************************************
 *   siminfo_close:  close SIM
 *******************************************************************************/
@@ -2772,6 +2819,9 @@ void siminfo_close()
       nxprintf(nxhandle, "duration", "%li", (long)t-mcstartdate);
       NXclosegroup(nxhandle); /* NXentry */
       NXclose(&nxhandle);
+#ifdef USE_MPI
+      mclist_vds_write(); /* event lists from all nodes, needs NXclose */
+#endif
     } else {
 #endif
       fclose(siminfo_file);
@@ -3060,7 +3110,296 @@ static void mcdetector_list_write(MCDETECTOR detector, int append_raw)
 *   node and must not communicate: the master writes its block directly, the
 *   other nodes append theirs to a local spool file which is sent to the master
 *   during the final save and then removed.
+*
+*   NeXus is different: event lists are neither sent nor copied. Every node,
+*   the master included, appends its blocks to its own HDF5 file
+*   dirname/mccode_node<rank>.h5 (compressed as set by NX_COMPRESSION). The final save only
+*   gathers the row counts, and the master writes the 'events' data set of
+*   mccode.h5 as an HDF5 virtual data set (VDS) concatenating the nodes in rank
+*   order (see mclist_vds_write). The mccode_node*.h5 files are part of the
+*   result; 'h5repack -l CONTI' makes a self-contained copy.
 *******************************************************************************/
+#ifdef USE_NEXUS
+#include <hdf5.h>
+
+/* one VDS to create in mccode.h5 after NXclose (master only) */
+struct mclist_vds {
+  char       path[4*CHAR_BUF_LENGTH]; /* /entry/.../events in mccode.h5 */
+  char       dset[2*CHAR_BUF_LENGTH]; /* data set in the mccode_node*.h5 files */
+  char       short_name[CHAR_BUF_LENGTH];
+  char       long_name[2*CHAR_BUF_LENGTH];
+  long long  cols;
+  long long *rows;                    /* per node */
+  struct mclist_vds *next;
+};
+static struct mclist_vds *mclist_vds_list = NULL;
+static int mclist_node_file_created = 0;
+
+/* name of the event data set of a list monitor in the per-node files */
+static void mclist_node_dset(char *dset, char *f, char *c, int index)
+{
+  char valid[CHAR_BUF_LENGTH+1];
+  if (!strcpy_valid(valid, (f && strlen(f)) ? f : c)) strcpy(valid, "list");
+  snprintf(dset, 2*CHAR_BUF_LENGTH, "list%d_%s", index, valid);
+}
+
+/* string attribute on an HDF5 object */
+static void mclist_vds_attr(hid_t obj, char *name, char *value)
+{
+  hid_t type  = H5Tcopy(H5T_C_S1);
+  hid_t space = H5Screate(H5S_SCALAR);
+  hid_t attr;
+  H5Tset_size(type, strlen(value) ? strlen(value) : 1);
+  attr = H5Acreate2(obj, name, type, space, H5P_DEFAULT, H5P_DEFAULT);
+  if (attr >= 0) { H5Awrite(attr, type, value); H5Aclose(attr); }
+  H5Sclose(space);
+  H5Tclose(type);
+}
+
+/* append rows*cols values to data set dset of this node's file (created,
+   truncated, on the first append of the run). nxpath is where the events go
+   in mccode.h5, below the NXentry (stored as attribute 'mccode_path', for
+   nexus_vds.py). Returns the number of rows now in the data set (0 if none),
+   or -1 on error. No MPI communication. */
+static long long mclist_node_append(char *dset, char *nxpath, long long rows, long long cols, double *data)
+{
+  char      name[CHAR_BUF_LENGTH];
+  char     *file;
+  hid_t     fid, did = -1, space;
+  hsize_t   dims[2] = {0, 0};
+  long long total = -1;
+
+  snprintf(name, sizeof(name), "mccode_node%d", mpi_node_rank);
+  if (!rows && !mclist_node_file_created) {
+    /* nothing yet: only make sure no file of an earlier run is left over */
+    static int checked = 0;
+    if (!checked) { file = mcfull_file(name, "h5"); remove(file); free(file); checked = 1; }
+    return(0);
+  }
+
+  file = mcfull_file(name, "h5");
+  if (!mclist_node_file_created) {
+    fid = H5Fcreate(file, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    if (fid >= 0) mclist_node_file_created = 1;
+  } else
+    fid = H5Fopen(file, H5F_ACC_RDWR, H5P_DEFAULT);
+  if (fid < 0) {
+    fprintf(stderr, "Error: [MPI node %i] could not open '%s' to store %lli events (mclist_node_append)\n",
+      mpi_node_rank, file, rows);
+    free(file);
+    return(-1);
+  }
+
+  if (H5Lexists(fid, dset, H5P_DEFAULT) > 0) {
+    did = H5Dopen2(fid, dset, H5P_DEFAULT);
+    if (did >= 0) {
+      space = H5Dget_space(did);
+      H5Sget_simple_extent_dims(space, dims, NULL);
+      H5Sclose(space);
+    }
+  } else if (rows && cols) {
+    /* 2D, chunked (~1 MB), unlimited along events, deflate as NX_COMPRESSION */
+    hsize_t maxdims[2] = {H5S_UNLIMITED, cols};
+    hsize_t chunk[2]   = {cols < 131072 ? 131072/cols : 1, cols};
+    hid_t   plist      = H5Pcreate(H5P_DATASET_CREATE);
+    dims[1] = cols;
+    space   = H5Screate_simple(2, dims, maxdims);
+    H5Pset_chunk(plist, 2, chunk);
+    int     level      = NX_COMPRESSION == NX_COMP_LZW ? 6 /* NAPI default */
+                       : NX_COMPRESSION/100 == NX_COMP_LZW ? NX_COMPRESSION%100 : -1;
+    if (level >= 0 && H5Zfilter_avail(H5Z_FILTER_DEFLATE) > 0) {
+      H5Pset_shuffle(plist);
+      H5Pset_deflate(plist, level);
+    }
+    did = H5Dcreate2(fid, dset, H5T_NATIVE_DOUBLE, space, H5P_DEFAULT, plist, H5P_DEFAULT);
+    if (did >= 0) mclist_vds_attr(did, "mccode_path", nxpath);
+    H5Sclose(space);
+    H5Pclose(plist);
+  } else { /* no data set and nothing to add */
+    H5Fclose(fid);
+    free(file);
+    return(0);
+  }
+
+  if (did >= 0) {
+    total = (long long)dims[0];
+    if (rows && dims[1] != (hsize_t)cols)
+      fprintf(stderr, "Error: [MPI node %i] %lli events of %lli columns can not be appended to %llu columns in '%s' (mclist_node_append)\n",
+        mpi_node_rank, rows, cols, (unsigned long long)dims[1], file);
+    else if (rows) {
+      hsize_t start[2] = {dims[0], 0}, count[2] = {rows, cols};
+      hid_t   mspace   = H5Screate_simple(2, count, NULL);
+      dims[0] += rows;
+      if (H5Dset_extent(did, dims) >= 0
+       && (space = H5Dget_space(did)) >= 0) {
+        H5Sselect_hyperslab(space, H5S_SELECT_SET, start, NULL, count, NULL);
+        if (H5Dwrite(did, H5T_NATIVE_DOUBLE, mspace, space, H5P_DEFAULT, data) >= 0)
+          total = (long long)dims[0];
+        H5Sclose(space);
+      }
+      H5Sclose(mspace);
+      if (total != (long long)dims[0])
+        fprintf(stderr, "Error: [MPI node %i] could not write %lli events to '%s' (mclist_node_append)\n",
+          mpi_node_rank, rows, file);
+    }
+    H5Dclose(did);
+  }
+  H5Fflush(fid, H5F_SCOPE_LOCAL);
+  H5Fclose(fid);
+  free(file);
+  return(total);
+} /* mclist_node_append */
+
+/* master, on a terminating signal: an interrupted run makes no collective call,
+   so event lists stay in the per-node files without VDS in mccode.h5 */
+static void mclist_interrupt_note(void)
+{
+  char *dir = dirname && strlen(dirname) ? dirname : ".";
+  if (mpi_node_count < 2 || mpi_node_rank != mpi_node_root
+   || !mcformat || !strcasestr(mcformat, "NeXus") || mcdisable_output_files) return;
+  fprintf(stderr, "Warning: interrupted MPI run: event lists (if any) stay in %s%smccode_node*.h5, not linked from mccode.h5. "
+    "Link them with: python3 \"$(%s --showcfg=tooldir)/Python/mccodelib/nexus_vds.py\" %s\n",
+    dir, MC_PATHSEP_S, strcmp(MCCODE_NAME, "mcxtrace") ? "mcrun" : "mxrun", dir);
+}
+
+/* master, after NXclose: create the VDS registered by mcdetector_out_list_nexus_mpi */
+static void mclist_vds_write(void)
+{
+  char  *file;
+  hid_t  fid;
+  if (!mclist_vds_list) return;
+
+  file = mcfull_file(siminfo_name, "h5");
+  fid  = H5Fopen(file, H5F_ACC_RDWR, H5P_DEFAULT);
+  if (fid < 0)
+    fprintf(stderr, "Error: could not reopen '%s' to add event lists (mclist_vds_write)\n", file);
+
+  while (mclist_vds_list) {
+    struct mclist_vds *v = mclist_vds_list;
+    if (fid >= 0) {
+      long long total = 0;
+      hsize_t   off = 0, vdims[2];
+      hid_t     vspace, plist, did;
+      int       node_i, signal = 1;
+      for (node_i = 0; node_i < mpi_node_count; node_i++) total += v->rows[node_i];
+      vdims[0] = total; vdims[1] = v->cols;
+      vspace = H5Screate_simple(2, vdims, NULL);
+      plist  = H5Pcreate(H5P_DATASET_CREATE);
+      /* nodes in rank order, empty nodes left out. Relative source file names:
+         resolved from the directory of mccode.h5 */
+      for (node_i = 0; node_i < mpi_node_count; node_i++) {
+        char    src[CHAR_BUF_LENGTH];
+        hsize_t start[2] = {off, 0}, count[2] = {v->rows[node_i], v->cols};
+        hid_t   sspace;
+        if (!v->rows[node_i]) continue;
+        sspace = H5Screate_simple(2, count, NULL);
+        H5Sselect_hyperslab(vspace, H5S_SELECT_SET, start, NULL, count, NULL);
+        snprintf(src, sizeof(src), "mccode_node%d.h5", node_i);
+        H5Pset_virtual(plist, vspace, src, v->dset, sspace);
+        H5Sclose(sspace);
+        off += v->rows[node_i];
+      }
+      H5Sselect_all(vspace);
+      did = H5Dcreate2(fid, v->path, H5T_NATIVE_DOUBLE, vspace, H5P_DEFAULT, plist, H5P_DEFAULT);
+      if (did >= 0) {
+        hid_t ascalar = H5Screate(H5S_SCALAR);
+        hid_t attr    = H5Acreate2(did, "signal", H5T_NATIVE_INT, ascalar, H5P_DEFAULT, H5P_DEFAULT);
+        if (attr >= 0) { H5Awrite(attr, H5T_NATIVE_INT, &signal); H5Aclose(attr); }
+        H5Sclose(ascalar);
+        mclist_vds_attr(did, "short_name", v->short_name);
+        mclist_vds_attr(did, "long_name",  v->long_name);
+        H5Dclose(did);
+        printf("Events:   \"%s\" (%lli events from %i nodes, in mccode_node*.h5)\n",
+          v->short_name, total, mpi_node_count);
+      } else
+        fprintf(stderr, "Error: could not create event list '%s' in '%s' (mclist_vds_write)\n", v->path, file);
+      H5Pclose(plist);
+      H5Sclose(vspace);
+    }
+    mclist_vds_list = v->next;
+    free(v->rows);
+    free(v);
+  }
+  if (fid >= 0) H5Fclose(fid);
+  free(file);
+} /* mclist_vds_write */
+
+static MCDETECTOR mcdetector_out_list_nexus_mpi(char *t, char *xl, char *yl,
+                  double x1, double x2, double y1, double y2,
+                  long m, long n,
+                  double *p0, double *p1, double *p2, char *f,
+                  char *c, Coords posa, Rotation rota, char* options, int index,
+                  MCDETECTOR detector)
+{
+  long long rows = p1 ? labs(m) : 0;
+  long long cols = labs(n);
+  long long total, mine[2];
+  long long *counts = NULL;
+  char      dset[2*CHAR_BUF_LENGTH];
+  char      nxpath[4*CHAR_BUF_LENGTH] = "";
+
+  mclist_node_dset(dset, f, c, index);
+  if (rows && cols) { /* detector is valid: where the events go in mccode.h5 */
+    char data_name[CHAR_BUF_LENGTH];
+    strcpy_valid(data_name, strlen(detector.filename) ? detector.filename : detector.component);
+    snprintf(nxpath, sizeof(nxpath), "instrument/components/%s/output/%s/events",
+      detector.nexuscomp, data_name);
+  }
+  total = mclist_node_append(dset, nxpath, rows && cols ? rows : 0, cols, p1);
+  if (!mcsave_final) return(detector);
+
+  /* final save: collective, only the row counts are sent */
+  mine[0] = total > 0 ? total : 0;
+  mine[1] = total > 0 ? cols  : 0;
+  if (mpi_node_rank == mpi_node_root)
+    counts = (long long *)calloc(2*mpi_node_count, sizeof(long long));
+  MPI_Gather(mine, 2, MPI_LONG_LONG, counts, 2, MPI_LONG_LONG,
+    mpi_node_root, MPI_COMM_WORLD);
+
+  if (mpi_node_rank == mpi_node_root) {
+    long long all = 0, allcols = 0;
+    int node_i;
+    for (node_i = 0; node_i < mpi_node_count; node_i++) {
+      if (!counts[2*node_i]) continue;
+      if (!allcols) allcols = counts[2*node_i+1];
+      if (counts[2*node_i+1] != allcols) {
+        fprintf(stderr, "Warning: MPI node %i has %lli columns for %s, expected %lli. Its %lli events are left out.\n",
+          node_i, counts[2*node_i+1], c, allcols, counts[2*node_i]);
+        counts[2*node_i] = 0;
+      }
+      all += counts[2*node_i];
+    }
+    if (all) {
+      /* data set info (attributes) for all events; the data set itself is
+         a VDS written by mclist_vds_write after NXclose */
+      double dummy = 0;
+      char   data_name[CHAR_BUF_LENGTH];
+      struct mclist_vds *v = (struct mclist_vds *)calloc(1, sizeof(struct mclist_vds));
+      MCDETECTOR info = mcdetector_list_import(t, xl, yl, x1, x2, y1, y2, (long)all, (long)allcols,
+        NULL, &dummy, NULL, f, c, posa, rota, options, index);
+      info.p1 = NULL; /* attributes and links only */
+      mcdatainfo_out_nexus(nxhandle, info);
+      mcdetector_out_data_nexus(nxhandle, info);
+      if (!v || !(v->rows = (long long *)calloc(mpi_node_count, sizeof(long long))))
+        exit(-fprintf(stderr, "Error: Out of memory (mcdetector_out_list_nexus_mpi)\n"));
+      strcpy_valid(data_name, strlen(info.filename) ? info.filename : info.component);
+      snprintf(v->path, sizeof(v->path), "/%s/instrument/components/%s/output/%s/events",
+        mcnxentry, info.nexuscomp, data_name);
+      strcpy(v->dset, dset);
+      snprintf(v->short_name, sizeof(v->short_name), "%s",
+        strlen(info.filename) ? info.filename : info.component);
+      snprintf(v->long_name, sizeof(v->long_name), "events '%s'", info.title);
+      v->cols = allcols;
+      for (node_i = 0; node_i < mpi_node_count; node_i++) v->rows[node_i] = counts[2*node_i];
+      v->next = mclist_vds_list;
+      mclist_vds_list = v;
+    }
+    free(counts);
+  }
+  return(detector);
+} /* mcdetector_out_list_nexus_mpi */
+#endif /* USE_NEXUS */
+
 static char *mclist_spool_name(char *f, char *c, int index, int node)
 {
   char valid[CHAR_BUF_LENGTH+1];
@@ -3108,6 +3447,12 @@ static MCDETECTOR mcdetector_out_list_mpi(char *t, char *xl, char *yl,
     p0, p1, p2, f, c, posa, rota, options, index);
 
   if (mcdisable_output_files) return(detector);
+
+#ifdef USE_NEXUS
+  if (mcformat && strcasestr(mcformat, "NeXus"))
+    return(mcdetector_out_list_nexus_mpi(t, xl, yl, x1, x2, y1, y2, m, n,
+      p0, p1, p2, f, c, posa, rota, options, index, detector));
+#endif
 
   if (!mcsave_final) {
     /* nodes are not synchronised: write (master) or spool (others) locally */
@@ -3241,7 +3586,7 @@ static MCDETECTOR mcdetector_out_list_mpi(char *t, char *xl, char *yl,
 *   posa: ?
 *   rota: ?
 *******************************************************************************/
-MCDETECTOR mcdetector_out_2D_list(char *t, char *xl, char *yl,
+static MCDETECTOR mcdetector_out_2D_list_write(char *t, char *xl, char *yl,
                   double x1, double x2, double y1, double y2,
                   long m, long n,
                   double *p0, double *p1, double *p2, char *f,
@@ -3268,6 +3613,49 @@ MCDETECTOR mcdetector_out_2D_list(char *t, char *xl, char *yl,
 #endif
     return(mcdetector_out_2D_ascii(detector));
 
+} /* mcdetector_out_2D_list_write */
+
+#ifndef NOSIGNALS
+/* end of an event list write: handle a signal that came during it. Called
+   with the global mcformat as the caller found it (see mcdetector_out_list):
+   the replayed save must not see a temporary list format, or it would skip
+   the MPI reductions of all histograms while other nodes do them (hang). */
+static void mcsig_end_write(double *p1)
+{
+  mcsig_busy--;
+  if (!mcsig_busy && mcsig_pending) {
+    int sig = mcsig_pending;
+    mcsig_pending = 0;
+    mcsig_skip_p1 = p1; /* the block just written */
+    mcsig_replay  = 1;
+    sighandler(sig);    /* returns only for save/status signals */
+    mcsig_replay  = 0;
+    mcsig_skip_p1 = NULL;
+  }
+}
+#endif
+
+MCDETECTOR mcdetector_out_2D_list(char *t, char *xl, char *yl,
+                  double x1, double x2, double y1, double y2,
+                  long m, long n,
+                  double *p0, double *p1, double *p2, char *f,
+		  char *c, Coords posa, Rotation rota, char* options, int index)
+{
+  MCDETECTOR detector;
+#ifndef NOSIGNALS
+  /* the replayed save must not write the block of the interrupted flush again
+     (the component resets its buffer only after this call returns) */
+  if (mcsig_skip_p1 && p1 == mcsig_skip_p1)
+    return(mcdetector_list_import(t, xl, yl, x1, x2, y1, y2, m, n,
+      p0, p1, p2, f, c, posa, rota, options, index));
+  mcsig_busy++;
+#endif
+  detector = mcdetector_out_2D_list_write(t, xl, yl, x1, x2, y1, y2, m, n,
+    p0, p1, p2, f, c, posa, rota, options, index);
+#ifndef NOSIGNALS
+  mcsig_end_write(p1);
+#endif
+  return(detector);
 } /* mcdetector_out_2D_list */
 
 /*******************************************************************************
@@ -3283,6 +3671,9 @@ MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
   char      *format_org;
   MCDETECTOR detector;
 
+#ifndef NOSIGNALS
+  mcsig_busy++; /* a signal during the write is handled once mcformat is restored */
+#endif
   format_org = mcformat;
   strcpy(format_new, mcformat);
   strcat(format_new, " list");
@@ -3294,6 +3685,9 @@ MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
 		  c, posa,rota,options, index);
 
   mcformat = format_org;
+#ifndef NOSIGNALS
+  mcsig_end_write(p1);
+#endif
   return(detector);
 }
 
@@ -3514,7 +3908,20 @@ void mcdis_circle(char *plane, double x, double y, double z, double r){
   printf("MCDISPLAY: mcdiscircle('%s',%g,%g,%g,%g)\n", plane, x, y, z, r);
 }
 
+/* A zero axis n=(0,0,0) has no direction: draw along +y, the identity orientation
+ * of the --trace=2 primitives, and warn once (to stderr, outside the MCDISPLAY stream) */
+static void mcdis_check_axis(const char *what, double *nx, double *ny, double *nz){
+  static int warned = 0;
+  if (*nx == 0 && *ny == 0 && *nz == 0) {
+    if (!warned++)
+      fprintf(stderr, "Warning: mcdisplay %s() called with axis n=(0,0,0), using (0,1,0) "
+              "(further occurrences not reported)\n", what);
+    *ny = 1;
+  }
+}
+
 void mcdis_new_circle(double x, double y, double z, double r, double nx, double ny, double nz){
+  mcdis_check_axis("new_circle", &nx, &ny, &nz);
   printf("MCDISPLAY: mcdisnew_circle(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, r, nx, ny, nz);
 }
 
@@ -3523,6 +3930,7 @@ void mcdis_new_circle(double x, double y, double z, double r, double nx, double 
  * with normal (nx,ny,nz)*/
 void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, double nz){
     int i;
+    mcdis_check_axis("Circle", &nx, &ny, &nz);
     if(nx==0 && ny && nz==0){
         for (i=0;i<24; i++){
             mcdis_line(x+r*sin(i*2*PI/24),y,z+r*cos(i*2*PI/24),
@@ -3564,17 +3972,46 @@ void mcdis_legacy_box(double x, double y, double z,
 	     x+width/2, y+height/2, z+length/2);
 }
 
+/* --trace=1 box: the legacy box with its local y axis rotated onto (nx,ny,nz),
+ * as drawn at --trace=2 */
+static void mcdis_rotated_box(double x, double y, double z,
+	       double width, double height, double length, double nx, double ny, double nz){
+  double c[8][3], ax, ay, az;
+  int i, j;
+  NORM(nx,ny,nz);
+  if (nx == 0 && ny > 0 && nz == 0) {
+    mcdis_legacy_box(x, y, z, width, height, length);
+    return;
+  }
+  vec_prod(ax,ay,az, 0,1,0, nx,ny,nz);
+  if (ax == 0 && az == 0) az = 1; /* n = -y: half turn around z */
+  for (i = 0; i < 8; i++) {
+    double px = (i & 1 ? 0.5 : -0.5)*width;
+    double py = (i & 2 ? 0.5 : -0.5)*height;
+    double pz = (i & 4 ? 0.5 : -0.5)*length;
+    rotate(c[i][0],c[i][1],c[i][2], px,py,pz, acos(ny < -1 ? -1 : ny), ax,ay,az);
+  }
+  /* 12 edges: corners differing in one bit */
+  for (i = 0; i < 8; i++)
+    for (j = 1; j < 8; j <<= 1)
+      if (!(i & j))
+        mcdis_line(x+c[i][0], y+c[i][1], z+c[i][2],
+                   x+c[i|j][0], y+c[i|j][1], z+c[i|j][2]);
+}
+
 /*  NEW 3D IMPLEMENTATION OF BOX SUPPORTS HOLLOW ALSO
     draws a box with center at (x, y, z) and
     width (deltax), height (deltay), length (deltaz) */
 void mcdis_box(double x, double y, double z,
 	       double width, double height, double length, double thickness, double nx, double ny, double nz){
+  mcdis_check_axis("box", &nx, &ny, &nz);
   if (mcdotrace==2) {
     printf("MCDISPLAY: mcdisbox(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness, nx, ny, nz);
   } else {
-    mcdis_legacy_box(x, y, z, width, height, length);
-    if (thickness)
-      mcdis_legacy_box(x, y, z, width-thickness, height-thickness, length);
+    mcdis_rotated_box(x, y, z, width, height, length, nx, ny, nz);
+    /* hollow: closed inner cavity, as in e.g. Incoherent */
+    if (thickness > 0 && width-2*thickness > 0 && height-2*thickness > 0 && length-2*thickness > 0)
+      mcdis_rotated_box(x, y, z, width-2*thickness, height-2*thickness, length-2*thickness, nx, ny, nz);
   }
 }
 
@@ -3615,12 +4052,17 @@ Draws a cylinder with center at (x,y,z) with extent (r,height).
  * The cylinder axis is along the vector nx,ny,nz.*/
 void mcdis_cylinder( double x, double y, double z,
         double r, double height, double thickness, double nx, double ny, double nz){
+  mcdis_check_axis("cylinder", &nx, &ny, &nz);
   if (mcdotrace==2) {
       printf("MCDISPLAY: mcdiscylinder(%g, %g, %g, %g, %g, %g, %g, %g, %g)\n",
          x, y, z, r, height, thickness, nx, ny, nz);
   } else {
     mcdis_legacy_cylinder(x, y, z,
 			  r, height, 12, nx, ny, nz);
+    /* hollow: closed inner cavity, as in e.g. Incoherent */
+    if (thickness > 0 && r-thickness > 0 && height-2*thickness > 0)
+      mcdis_legacy_cylinder(x, y, z,
+			    r-thickness, height-2*thickness, 12, nx, ny, nz);
   }
 }
 
@@ -3628,10 +4070,14 @@ void mcdis_cylinder( double x, double y, double z,
  * The cone axis is along the vector nx,ny,nz.*/
 void mcdis_cone( double x, double y, double z,
         double r, double height, double nx, double ny, double nz){
+  mcdis_check_axis("cone", &nx, &ny, &nz);
   if (mcdotrace==2) {
     printf("MCDISPLAY: mcdiscone(%g, %g, %g, %g, %g, %g, %g, %g)\n",
        x, y, z, r, height, nx, ny, nz);
   } else {
+    /* (x,y,z) is the cone centre, as drawn at --trace=2 */
+    NORM(nx,ny,nz);
+    x -= 0.5*height*nx; y -= 0.5*height*ny; z -= 0.5*height*nz;
     mcdis_Circle(x, y, z, r, nx, ny, nz);
     mcdis_Circle(x+0.25*height*nx, y+0.25*height*ny, z+0.25*height*nz, 0.75*r, nx, ny, nz);
     mcdis_Circle(x+0.5*height*nx, y+0.5*height*ny, z+0.5*height*nz, 0.5*r, nx, ny, nz);
@@ -3644,16 +4090,18 @@ void mcdis_cone( double x, double y, double z,
  * The disc axis is along the vector nx,ny,nz.*/
 void mcdis_disc( double x, double y, double z,
         double r, double nx, double ny, double nz){
+  mcdis_check_axis("disc", &nx, &ny, &nz);
   printf("MCDISPLAY: mcdisdisc(%g, %g, %g, %g, %g, %g, %g)\n",
      x, y, z, r, nx, ny, nz);
 }
 
-/* Draws a annulus with center at (x,y,z) with extent (outer_radius) and remove inner_radius.
+/* Draws a annulus with center at (x,y,z) with extent (outer radius) and remove inner thickness.
  * The annulus axis is along the vector nx,ny,nz.*/
 void mcdis_annulus( double x, double y, double z,
-        double outer_radius, double inner_radius, double nx, double ny, double nz){
+        double outer_radius, double thickness, double nx, double ny, double nz){
+  mcdis_check_axis("annulus", &nx, &ny, &nz);
   printf("MCDISPLAY: mcdisannulus(%g, %g, %g, %g, %g, %g, %g, %g)\n",
-     x, y, z, outer_radius, inner_radius, nx, ny, nz);
+     x, y, z, outer_radius, thickness, nx, ny, nz);
 }
 
 /* draws a sphere with center at (x,y,z) with extent (r)*/
@@ -3726,13 +4174,6 @@ void mcdis_polygon(int count, ...){
   } else {
     x0 /= count; y0 /= count; z0 /= count;
     /* Build up a json string for a "polyhedron" */
-    // Estimate size of the JSON string
-    const int VERTEX_OVERHEAD = 30;
-    const int FACE_OVERHEAD_BASE = 20;
-    const int FACE_INDEX_OVERHEAD = 15;
-    int estimated_size = 256; // Base size
-    estimated_size += count * VERTEX_OVERHEAD;
-
     int faceSize;
     int vtxSize;
     if (count > 3) {
@@ -3744,11 +4185,9 @@ void mcdis_polygon(int count, ...){
       vtxSize=count;
     }
     
-    for (int i = 0; i < faceSize;) {
-        int num_indices = 3;
-        estimated_size += FACE_OVERHEAD_BASE + num_indices * FACE_INDEX_OVERHEAD;
-        i += num_indices + 1;
-    }
+    /* Upper bound: a vertex "[%g, %g, %g], " is at most 3*13+8 chars, a face
+       "{ \"face\": [%d, %d, %d]}, " at most 3*11+17 */
+    size_t estimated_size = 64 + (size_t)vtxSize*48 + (size_t)faceSize*64;
 
     char *json_string = malloc(estimated_size);
     if (json_string == NULL) {
@@ -3777,14 +4216,10 @@ void mcdis_polygon(int count, ...){
       ptr += sprintf(ptr, "0, 1, 2");
       ptr += sprintf(ptr, "]}");
     } else {
+      /* Fan of triangles (i, i+1, centre), all with the polygon's own winding */
       for (int i = 0; i < faceSize; i++) {
-        int num = 3;
         ptr += sprintf(ptr, "{ \"face\": [");
-	if (i < faceSize - 1) {
-	  ptr += sprintf(ptr, "%d, %d, %d",i,i+1,count);
-	} else {
-	  ptr += sprintf(ptr, "%d, %d, %d",i,count,0);
-	}
+	ptr += sprintf(ptr, "%d, %d, %d", i, (i+1) % count, count);
 	ptr += sprintf(ptr, "]}");
 	if (i < faceSize-1) {
 	  ptr += sprintf(ptr, ", ");
@@ -4149,9 +4584,8 @@ mcstatic void norm_func(double *x, double *y, double *z) {
 #ifdef FUNNEL
 long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long len, long buffer_len, long flag_split, long* multiplier) {
   #define SAL_THREADS 1024 // num parallel sections
-  if (len<SAL_THREADS) return sort_absorb_last_serial(particles, len);
-
   if (multiplier != NULL) *multiplier = -1; // set default out value for multiplier
+  if (len<SAL_THREADS) return sort_absorb_last_serial(particles, len);
   long newlen = 0;
   long los[SAL_THREADS]; // target array startidxs
   long lens[SAL_THREADS]; // target array sublens
@@ -4219,8 +4653,8 @@ long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long
   }
   //for (int ii=0;ii<accumlen;ii++) printf("%ld ", (psorted[ii]->_absorbed));
 
-  // return (no SPLIT)
-  if (flag_split != 1)
+  // return (no SPLIT, or nothing left to split)
+  if (flag_split != 1 || accumlen == 0)
     return accumlen;
 
   // SPLIT - repeat the non-absorbed block N-1 times, where len % accumlen = N + R
@@ -4233,7 +4667,6 @@ long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long
   // copy non-absorbed block
   #pragma acc parallel loop present(particles[0:buffer_len])
   for (long tidx = 0; tidx < accumlen; tidx++) { // tidx: thread index
-    randstate_t randstate[7];
     _class_particle sourcebuffer;
     _class_particle targetbuffer;
     // assign reduced weight to all particles
@@ -4245,13 +4678,8 @@ long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long
       // buffer full particle struct
       targetbuffer = particles[tidx];
       // reassign previous randstate
-      targetbuffer.randstate[0] = sourcebuffer.randstate[0];
-      targetbuffer.randstate[1] = sourcebuffer.randstate[1];
-      targetbuffer.randstate[2] = sourcebuffer.randstate[2];
-      targetbuffer.randstate[3] = sourcebuffer.randstate[3];
-      targetbuffer.randstate[4] = sourcebuffer.randstate[4];
-      targetbuffer.randstate[5] = sourcebuffer.randstate[5];
-      targetbuffer.randstate[6] = sourcebuffer.randstate[6];
+      for (int ridx = 0; ridx < RANDSTATE_LEN; ridx++)
+        targetbuffer.randstate[ridx] = sourcebuffer.randstate[ridx];
       // apply
       particles[bidx*accumlen + tidx] = targetbuffer;
     }
@@ -5527,6 +5955,43 @@ void sighandler(int sig)
 #define SIG_STAT 2
 #define SIG_ABRT 3
 
+  /* one final save only: a further terminate/save signal while the final save
+     runs is ignored. mpirun forwards signals, so a rank may get SIGTERM twice,
+     the second one possibly in another thread while the first is saving.
+     The flag is set right away to keep that window small. */
+  {
+    static volatile int terminating = 0;
+    int term = 0, save = 0, replay = mcsig_replay;
+    mcsig_replay = 0; /* only this call is the replay */
+#ifdef SIGINT
+    if (sig == SIGINT)   term = 1;
+#endif
+#ifdef SIGTERM
+    if (sig == SIGTERM)  term = 1;
+#endif
+#ifdef SIGQUIT
+    if (sig == SIGQUIT)  term = 1;
+#endif
+#ifdef SIGUSR2
+    if (sig == SIGUSR2)  save = 1;
+#endif
+#ifdef SIGHUP
+    if (sig == SIGHUP)   save = 1;
+#endif
+#ifdef SIGBREAK
+    if (sig == SIGBREAK) save = 1;
+#endif
+    if (!replay && (term || save) && (terminating || mcsave_final)) {
+      printf("\n# " MCCODE_STRING ": [pid %i] Signal %i ignored: final save in progress\n", getpid(), sig);
+      return;
+    }
+    if (term) terminating = 1;
+    if ((term || save) && mcsig_busy && !replay) { /* inside an event list write: finish it first */
+      mcsig_pending = sig;
+      return;
+    }
+  }
+
   printf("\n# " MCCODE_STRING ": [pid %i] Signal %i detected", getpid(), sig);
 #ifdef USE_MPI
   printf(" [proc %i]", mpi_node_rank);
@@ -5621,6 +6086,9 @@ void sighandler(int sig)
   if (sig == SIG_TERM)
   {
     printf("# " MCCODE_STRING ": Finishing simulation (save results and exit)\n");
+#if defined(USE_MPI) && defined(USE_NEXUS)
+    mclist_interrupt_note();
+#endif
     finally();
     exit(0);
   }

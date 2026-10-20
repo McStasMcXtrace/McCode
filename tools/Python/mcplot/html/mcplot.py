@@ -9,7 +9,6 @@ import numpy as np
 import io
 import base64
 import json
-import subprocess
 import concurrent.futures
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -227,7 +226,7 @@ def get_params_str_2D(data):
 def browse(html_filepath):
     # open a web-browser in a cross-platform way
     try:
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], html_filepath), shell=True)
+        mccode_config.open_in_browser(html_filepath)
     except Exception as e:
         raise Exception('Os-specific open browser: %s' % e.__str__())
 
@@ -373,9 +372,6 @@ def plotfunc_single(data, f = None, use_logscale=False):
             f = data.filepath + "_log.html"
         else:
             f = data.filepath + ".html"
-    
-    if os.path.exists(f):
-        os.remove(f)
     
     # create 1D html
     if type(data) is Data1D:

@@ -22,7 +22,7 @@
 *
 * The sample handles absorption, with edge contrast, as well as fluorescence.
 *
-* %Example: -n 1e6 E0=25 sample_material="Ag0.6In0.2Sn0.2" Detector: mon_spl_xy_I=7.61e+13
+* %Example: E0=25 sample_material="Ag0.6In0.2Sn0.2" Detector: mon_spl_xy_I=7.61e+13
 *
 * %Parameters
 * E0: [keV] Nominal energy at the Wiggler. Sets the monochromator angle when DCM_present
@@ -90,7 +90,7 @@ AT (0, 0, 0) RELATIVE ABSOLUTE
 COMPONENT source = Wiggler(E0 = E0, dE = dE, phase = 0, randomphase = 1, Ee = 2.4,
    Ie = 0.5, B = 2.1, Nper=41, sigey=9.3e-6, sigex=215.7e-6, length=38*50e-3, verbose=1,
    K=10)
-AT (0,0,0) RELATIVE origin
+AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT mon_src_e = Monitor_nD(xwidth=1e-2, yheight=1e-2, 
   bins=512, options="energy", min=E0-1.1*dE, max=E0+1.1*dE)

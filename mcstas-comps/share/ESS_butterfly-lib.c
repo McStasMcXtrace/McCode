@@ -132,7 +132,7 @@ void ESS_2015_Schoenfeldt_thermal(double *t, double *p, double lambda, double tf
   }
 
   /* Troels Schoenfeldt function for timestructure */
-  *p *= tmultiplier*ESS_2015_Schoenfeldt_thermal_timedist(*t, lambda, 3 /* cm height */, ESS_SOURCE_DURATION);  
+  *p *= tmultiplier*ESS_2015_Schoenfeldt_thermal_timedist(*t, lambda, 100*height_c, ESS_SOURCE_DURATION);  
   if (height_c == 0.03) {
     // 3cm case
     *p *= ESS_2015_Schoenfeldt_thermal_y0(100*Y) * ESS_2015_Schoenfeldt_thermal_x0(100*X, beamportangle, Mwidth_t);
@@ -159,7 +159,7 @@ void ESS_2015_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocu
   }
 
   /* Troels Schoenfeldt function for timestructure */
-  *p *= tmultiplier*ESS_2015_Schoenfeldt_cold_timedist(*t, lambda, 3 /* cm height */, ESS_SOURCE_DURATION);
+  *p *= tmultiplier*ESS_2015_Schoenfeldt_cold_timedist(*t, lambda, 100*height_c, ESS_SOURCE_DURATION);
   
   if (height_c == 0.03) {
     // 3cm case

@@ -1,0 +1,37 @@
+\section{The \texttt{MCPL\_input\_once} McStas Component}
+Source-like component that reads neutron state parameters from a MCPL-file one time.
+
+\subsection*{Identification}
+\begin{itemize}
+  \item \textbf{Author:} Gregory S Tucker
+  \item \textbf{Origin:} European Spallation Source ERIC
+  \item \textbf{Date:} Sep 2024, reduced to an INHERIT of MCPL\_input Oct 2026
+\end{itemize}
+
+\subsection*{Description}
+Source-like component that reads neutron state parameters from a MCPL-file one time.
+
+Since Oct 2026 MCPL\_input\_once is MCPL\_input with repeat\_count=1 (and the default replicate\_across\_processes=0) forced: the file is shared between MPI processes and every event in the file is used exactly once. The parameters are inherited from MCPL\_input; repeat\_count and replicate\_across\_processes are ignored. See MCPL\_input for the full documentation.
+
+MCPL is short for Monte Carlo Particle List, and is a format for sharing events between e.g. MCNP(X), Geant4 and McStas.
+
+When used with MPI, the file contents are shared between workers with each accessing approximately (\#events in the file) / (\#MPI nodes)
+
+Example: MCPL\_input\_once(filename=voutput,v\_smear=0.1,pos\_smear=0.001,dir\_smear=0.01)
+
+\subsection*{Input parameters}
+Parameters in \textbf{boldface} are required; the others are optional.
+
+\begin{longtable}{p{0.22\textwidth}p{0.12\textwidth}p{0.46\textwidth}p{0.14\textwidth}}
+\toprule
+\textbf{Name} & \textbf{Unit} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\endhead
+\bottomrule
+\end{longtable}
+
+\subsection*{Links}
+\begin{itemize}
+  \item Component source code found in file \texttt{MCPL\_input\_once.comp}.
+\end{itemize}
+\IfFileExists{obsolete/MCPL_input_once_static.tex}{\input{obsolete/MCPL_input_once_static.tex}}{}

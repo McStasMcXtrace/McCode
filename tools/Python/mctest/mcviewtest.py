@@ -3,19 +3,51 @@
 import logging
 import argparse
 import json
+import math
 import sys
 import os
 from os.path import join, dirname, isdir
 from os import walk
-import subprocess
 import shutil
 import concurrent.futures
 import jinja2
 
 ERROR_PERCENT_THRESSHOLD_ACCEPT = 20
 
+# Skip diff/coplot for data dirs holding a file larger than this: an 18 Mpixel
+# PSD (~100 MB .dat) needs ~5 GB RAM per mcplotdiff-html job, and N parallel
+# jobs OOM-kill a 16 GB CI runner (the resulting html is unviewable anyway).
+DIFF_MAX_FILESIZE = 50 * 1024 * 1024
+
+def has_huge_file(*dirs):
+    return any(e.is_file() and e.stat().st_size > DIFF_MAX_FILESIZE
+               for d in dirs for e in os.scandir(d))
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import utils, mccode_config
+
+def percent_of(testval, targetval):
+    ''' testval in percent of targetval, a 0 target counts as 100% only for a 0 testval '''
+    if targetval == 0:
+        return 100 if testval == 0 else 0
+    return 100.0 * testval / targetval
+
+NSIGMA_MIN_EVENTS = 100   # as in mctest: error bars from fewer effective events are not used
+
+def accepted(testval, testerr, targetval, targeterr=None, nsigma=None, statfactor=None):
+    ''' same rule as mctest: within 20% or, if the test ran with --nsigma, within nsigma x the
+    combined error bar (a target without _ERR is assumed to come from the unscaled ncount,
+    i.e. sqrt(1 + statfactor) x the test run's error bar);
+    a target given with its _ERR is judged by the error bars alone. Error bars from fewer
+    than NSIGMA_MIN_EVENTS effective events (I/ERR)^2 are not used, the 20% rule applies. '''
+    within20 = abs(percent_of(testval, targetval) - 100) <= ERROR_PERCENT_THRESSHOLD_ACCEPT
+    def ok(v, e):
+        return v != 0 and bool(e) and (v / e) ** 2 >= NSIGMA_MIN_EVENTS
+    if nsigma is None or not ok(testval, testerr) or (targeterr is not None and not ok(targetval, targeterr)):
+        return within20
+    err = math.hypot(testerr, targeterr) if targeterr is not None else math.sqrt(1 + (statfactor or 1)) * testerr
+    insigma = abs(testval - targetval) <= nsigma * err
+    return insigma if targeterr is not None else (within20 or insigma)
 
 def scantree(path):
     """Recursively yield DirEntry objects for given directory."""
@@ -125,6 +157,9 @@ def run_normal_mode(testdir, reflabel, nodiff=False, diffmax=300, diffall=True, 
         if not (os.path.isfile(join(test_abs, "mccode.sim")) and os.path.isfile(join(ref_abs, "mccode.sim"))):
             # NeXus-only output (mccode.h5) or otherwise nothing mcplotdiff-html can compare
             return None
+        if has_huge_file(test_abs, ref_abs):
+            logging.info("Skipping mcplotdiff-html for %s: data file > %d MB" % (url, DIFF_MAX_FILESIZE // 2**20))
+            return None
 
         outdir_rel = join(url, "diff_vs_%s" % reflabel)
         outdir_abs = join(testdir, outdir_rel)
@@ -165,6 +200,9 @@ def run_normal_mode(testdir, reflabel, nodiff=False, diffmax=300, diffall=True, 
         ref_abs = join(testdir, ref_url)
         if not (os.path.isfile(join(test_abs, "mccode.sim")) and os.path.isfile(join(ref_abs, "mccode.sim"))):
             # NeXus-only output (mccode.h5) or otherwise nothing mcplot-coplot-html can compare
+            return None
+        if has_huge_file(test_abs, ref_abs):
+            logging.info("Skipping mcplot-coplot-html for %s: data file > %d MB" % (url, DIFF_MAX_FILESIZE // 2**20))
             return None
 
         outdir_rel = join(url, "coplot_vs_%s" % reflabel)
@@ -249,6 +287,26 @@ def run_normal_mode(testdir, reflabel, nodiff=False, diffmax=300, diffall=True, 
                 compiletime = ""
             state = 2
             return (state, compiletime, runtime, testval, "", url, display, displayurl)
+        elif cellobj.get("scan"):
+            # one cell pr. %Scan, per-point details in the hover tooltip
+            runtime = "%.2f s" % cellobj["runtime"]
+            compiletime = "%.2f s" % cellobj["compiletime"] if cellobj["testnb"] <= 1 else ""
+            testvals = cellobj["testval"]
+            refvals = cellobj["targetval"]
+            percents = [percent_of(t, r) for t, r in zip(testvals, refvals)]
+            testerrs = cellobj.get("testerr") or [0] * len(testvals)
+            targeterrs = cellobj.get("targeterr") or [None] * len(refvals)
+            numok = len([1 for t, e, r, re_ in zip(testvals, testerrs, refvals, targeterrs) if accepted(t, e, r, re_, cellobj.get("nsigma"), cellobj.get("statfactor"))])
+            state = 1 if numok == len(percents) == len(refvals) else 2
+            testval = "scan, %d/%d pts" % (len(testvals), len(refvals))
+            refp = "%d/%d pts OK" % (numok, len(refvals))
+            tooltip = "\n".join("%d: %.4g / %.4g = %.0f%%" % (i, t, r, p) for i, (t, r, p) in enumerate(zip(testvals, refvals, percents)))
+            diffurl = None
+            coplotUrl = None
+            if diffall or state == 2:
+                diffurl = plan_diff_link(refcellobj, url, label, row, col_idx)
+                coplotUrl = plan_coplot_link(refcellobj, url, label, row, col_idx)
+            return (state, compiletime, runtime, testval, refp, url, display, displayurl, diffurl, coplotUrl, tooltip)
         else:
             testval = "%.2g" % float(cellobj["testval"])
             runtime = "%.2f s" % cellobj["runtime"]
@@ -259,15 +317,8 @@ def run_normal_mode(testdir, reflabel, nodiff=False, diffmax=300, diffall=True, 
             # Always use embedded target value
             refval = float(cellobj["targetval"])
             testval = float(cellobj["testval"])
-            # Special case, target test value is 0 explicitly:
-            if refval==0:
-                if testval==0:
-                    refp=100
-                else:
-                    refp=0
-            else: # Standard case, target test value is non-zero
-                refp = abs(testval/refval*100)
-            if abs(refp-100) > ERROR_PERCENT_THRESSHOLD_ACCEPT:
+            refp = abs(percent_of(testval, refval))
+            if not accepted(testval, cellobj.get("testerr") or 0, refval, cellobj.get("targeterr"), cellobj.get("nsigma"), cellobj.get("statfactor")):
                 state = 2
             else:
                 state = 1
@@ -510,7 +561,7 @@ def main(args):
                         diffall=diffall, diffworkers=diffworkers)
 
     if not args.nobrowse:
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], ofile), shell=True)
+        mccode_config.open_in_browser(ofile)
         quit()
 
 

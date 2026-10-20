@@ -47,12 +47,10 @@ Thin bash wrapper piping `mcrun --trace` output into a matplotlib 3D viewer — 
 | `-t`, `--trace N` | visualisation mode (default: 2) |
 | `-d`, `--dirname DIR` | override output directory name |
 | `--inspect COMP` | show only rays reaching component `COMP` |
-| `--first COMP` / `--last COMP` | zoom range start/end component |
-| `--invcanvas` | invert canvas background |
 | `--nobrowse` | do not open a web browser |
-| `--timeout SEC` | shutdown time of the npm/vite dev server (default: 300) |
+| `--timeout SEC` | shutdown time of the local viewer web server (default: 300) |
 
-*(First run performs a one-time `npm`/`vite` module install, which needs internet access and can take minutes.)*
+*(The viewer ships prebuilt; only if its `dist/` is missing does the first run perform a one-time `npm install && npm run build`, which needs internet access and can take minutes.)*
 
 ## mcdisplay-webgl-classic / mxdisplay-webgl-classic
 
@@ -63,7 +61,7 @@ Thin bash wrapper piping `mcrun --trace` output into a matplotlib 3D viewer — 
 | `--default` | automatically use instrument default parameter values |
 | `--no-mpi` | forward `--no-mpi` to `mcrun` (simulate without MPI) |
 | `-n`, `--ncount N` | number of particles to trace (default: 300) |
-| `-t`, `--trace N` | visualisation mode (default: 1) |
+| `-t`, `--trace N` | visualisation mode (default: 2) |
 | `-d`, `--dirname DIR` | override output directory name |
 | `--inspect COMP` | show only rays reaching component `COMP` |
 | `--first COMP` / `--last COMP` | zoom range start/end component |

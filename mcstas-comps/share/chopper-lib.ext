@@ -3,17 +3,17 @@
   "description": "Chopper opening/closing times and (inverse velocity, time) masks, shared by the contributed NXdisk_chopper, Masked_ESS_butterfly and Polygon_ESS_butterfly components.",
   "homepage": "https://github.com/mcdotstar/mcstas-chopper-lib",
   "git": "https://github.com/mcdotstar/mcstas-chopper-lib.git",
-  "version": "v4.2.2",
+  "version": "v4.4.0",
   "license": "BSD-3-Clause",
-  "base": "https://raw.githubusercontent.com/mcdotstar/mcstas-chopper-lib/v4.2.2/",
+  "base": "https://raw.githubusercontent.com/mcdotstar/mcstas-chopper-lib/v4.4.0/",
   "files": [
     {
       "name": "chopper-lib.h",
-      "sha256": "4b46c090ddcb8d0dd3a324ba0634ecd64bc3627471c497a703d7915fc0fc9041"
+      "sha256": "7dd297a004ab1a278b8bb3df5580d3468f87d5f500c3b2ea810063c9e5881917"
     },
     {
       "name": "chopper-lib.c",
-      "sha256": "ca70dfbc5923e9cd7995967470cb7560c5e1b78bacde1c16fd62348c52b78d47"
+      "sha256": "2d1b24a4a3fdf570b8238e66fcfcef5f4b7b48a9101e09e1892e2a00fb03173e"
     },
     {
       "name": "LICENSE",

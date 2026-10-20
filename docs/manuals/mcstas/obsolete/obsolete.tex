@@ -29,6 +29,17 @@ authoritative, current pointer.
   model, superseded by \texttt{ESS\_butterfly} (see the Sources chapter).
 \item \texttt{Beam\_spy} -- a diagnostic/debugging component superseded by
   more general monitor components (e.g. \texttt{Monitor\_nD}).
+\item \texttt{SasView\_model} -- the generic interface to SasView's
+  scattering kernels, superseded by the individual \texttt{SasView\_*}
+  components of the \texttt{sasmodels} category (chapter~\ref{c:sasmodels}).
+\item \texttt{Guide\_anyshape\_r} -- merged into \texttt{Guide\_anyshape}
+  (see the Optics chapter): per-face m, alpha, W values given in the OFF/PLY
+  file are used with \texttt{Guide\_anyshape(file\_coatings=1)}.
+\item \texttt{MCPL\_input\_once} -- merged into \texttt{MCPL\_input}
+  (see the Misc chapter), which by default shares the MCPL file between
+  MPI processes the same way and also supports \texttt{repeat\_count}.
+  \texttt{MCPL\_input\_once} is kept as an \texttt{INHERIT} of
+  \texttt{MCPL\_input} with \texttt{repeat\_count=1} forced.
 \end{itemize}
 
 \input{obsolete/V_sample}
@@ -45,3 +56,6 @@ authoritative, current pointer.
 \input{obsolete/Vitess_output}
 \input{obsolete/ESS_moderator_short}
 \input{obsolete/Beam_spy}
+\input{obsolete/SasView_model}
+\input{obsolete/Guide_anyshape_r}
+\input{obsolete/MCPL_input_once}
