@@ -167,6 +167,31 @@ jobs:
         name: mcxtrace-artefacts-${{ matrix.os }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite
         path: "mcxtrace-${{ matrix.os }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite_output.tgz"
 
+    - name: 'Tar logs of failed tests'
+      id: tar-failedlogs
+      if: always()
+      run: |
+           set -e
+           set -u
+           set -x
+           # Logs from instrument folders with a compile error (<Instr>.failed)
+           # or a runtime error / value off (mctest "failed" flag in the test json)
+           { find run_* -name '*.failed' 2>/dev/null || true
+             grep -rl --include='*.json' --exclude='testresults_*' '"failed": true' run_* 2>/dev/null || true
+           } | sed 's#/[^/]*$##' | sort -u | while read -r d; do
+             find "$d" -maxdepth 1 -type f \( -name '*.txt' -o -name '*.failed' -o -name '*.json' \)
+           done > failed_logs.txt
+           if [ -s failed_logs.txt ]; then tar cvfz mcxtrace-${{ matrix.os }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite_failedlogs.tgz -T failed_logs.txt; fi
+
+    - name: 'Upload failed-test logs'
+      id: failedlogs-upload
+      uses: actions/upload-artifact@v6
+      if: always()
+      with:
+        name: mcxtrace-failedlogs-${{ matrix.os }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite
+        path: "mcxtrace-${{ matrix.os }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite_failedlogs.tgz"
+        if-no-files-found: ignore
+
     - name: Setup tmate session for manual debugging
       uses: mxschmitt/action-tmate@v3
       if: always() && (inputs.manual-debugging == true)
