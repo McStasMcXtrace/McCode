@@ -7,6 +7,7 @@ import os
 import sys
 import signal
 import json
+import re
 import subprocess
 import webbrowser
 from pathlib import Path
@@ -33,6 +34,12 @@ def write_browse(instrument, raybundle, dirname, timeout, nobrowse=None, **kwds)
 
     # Copy the pre-built app files - i.e. creating dest
     copytree(sysdir.joinpath('dist'), dest)
+
+    # dist/ is shared by McStas and McXtrace - set the flavour in the page title
+    index = dest.joinpath('index.html')
+    flavor = {'mcstas': 'McStas', 'mcxtrace': 'McXtrace'}[mccode_config.configuration['MCCODE']]
+    index.write_text(re.sub(r'<title>.*?</title>', f'<title>{flavor} Trace</title>',
+                            index.read_text(encoding='utf-8')), encoding='utf-8')
 
     # Write instrument
     json_instr = '%s' % json.dumps(instrument.jsonize(), indent=2)

@@ -77,9 +77,6 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display" @ONLY)
 
-# Configure index.html template
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/index.html.in" "${WORK}/index.html" @ONLY)
-
 # dist
 install(
   DIRECTORY "${PROJECT_SOURCE_DIR}/dist"
@@ -123,14 +120,8 @@ install(
         RENAME "${P}display.py"
     )
 
-# Configured index.html
-install(
-    FILES "${WORK}/index.html"
-    DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
-)
-
 # Other .py infrastructure
-foreach(NAME package.json vite.config.mts tsconfig.json tsconfig.node.json custom.d.ts __init__.py common.css main.tsx App.tsx)
+foreach(NAME package.json vite.config.mts tsconfig.json tsconfig.node.json custom.d.ts index.html __init__.py common.css main.tsx App.tsx)
   install(
     FILES "${PROJECT_SOURCE_DIR}/${NAME}"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
