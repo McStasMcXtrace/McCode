@@ -7,6 +7,8 @@ import react from "@vitejs/plugin-react";
 // this build config (a previous vite-plugin-static-copy step here pointed
 // at placeholder paths that were never real files and was removed).
 export default defineConfig({
+  // relative asset paths, so the output dir can be served from any URL path
+  base: "./",
   plugins: [react()],
   server: {
     hmr: {

@@ -25,10 +25,9 @@ var Main = function ()
     this.compColors = [0xf80000, 0x00f800, 0x0000f8, 0x00f8f8, 0xf800f8, 0x00f880, 0xf8f800, 0xf88000, 0x80f800, 0x0080f8, 0x800f8, 0xf80080, 0xa8a8a8];
     this.iColor = -1;
 
-    this.rayColor = 0x00ffff;
-    this.aCompVertices
-    this.rayobj;
     this.raynodes = [];
+    this.wirenodes = []; // --trace=2 shapes as wireframe, hidden while surfaces are shown
+    this.surfnodes = []; // --trace=2 shapes as surfaces
 
     this.iRay = -1;
 
@@ -38,7 +37,6 @@ var Main = function ()
 //
 Main.prototype.addCircle = function(plane, x, y, z, radius, parent, linecolor)
 {
-    console.log(plane, x, y, z, radius);
     if (radius == 0)
     {
         return;
@@ -66,17 +64,53 @@ Main.prototype.addCircle = function(plane, x, y, z, radius, parent, linecolor)
 
     parent.add( circle );
 }
-// add sphere
-//		radius
-//		wseg 	- width segments
-//		hseg 	- height segments
-Main.prototype.addSphere = function(radius, wseg, hseg)
+// add a geometry as a semi-transparent surface and as a wireframe (unless outline: lines only),
+// centred at (x, y, z), turning the geometry's own axis (a THREE.Vector3) to n = [nx, ny, nz] (--trace=2 shapes)
+Main.prototype.addShape = function(geometry, x, y, z, axis, n, parent, linecolor, outline)
 {
-    var geometry = new THREE.SphereGeometry(radius, wseg, hseg);
-    var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
-    var sphereMaterial = new THREE.MeshLambertMaterial({ color: 0xCC0000 });
-    var sphere = new THREE.Mesh( geometry, sphereMaterial );
-    this.scene.add( sphere );
+    var node = new THREE.Object3D();
+    var material = new THREE.LineBasicMaterial({color: linecolor});
+    var wire = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), material);
+    node.add(wire);
+    if (!outline) {
+        // surface: edges between faces meeting at < 20 deg (facets of curved surfaces) are left to the shading
+        var surf = new THREE.LineSegments(new THREE.EdgesGeometry(geometry, 20), material);
+        surf.add(new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({color: linecolor, transparent: true, opacity: 0.4, side: THREE.DoubleSide, depthWrite: false})));
+        node.add(surf);
+        wire.visible = false;
+        this.wirenodes.push(wire);
+        this.surfnodes.push(surf);
+    }
+    node.quaternion.setFromUnitVectors(axis, new THREE.Vector3(n[0], n[1], n[2]).normalize());
+    node.position.set(x, y, z);
+    parent.add(node);
+}
+// show --trace=2 shapes as surfaces (true) or wireframes (false)
+Main.prototype.showSurfaces = function(show)
+{
+    for (var i = 0; i < this.surfnodes.length; i++) {
+        this.surfnodes[i].visible = show;
+        this.wirenodes[i].visible = !show;
+    }
+}
+// add a polyhedron given as {"vertices": [[x,y,z], ...], "faces": [{"face": [i,j,k,...]}, ...]}
+// (OFF files and polygons at --trace=2)
+Main.prototype.addPolyhedron = function(json, parent, linecolor)
+{
+    var data = JSON.parse(json);
+    var geometry = new THREE.Geometry();
+    for (var i = 0; i < data.vertices.length; i++)
+    {
+        var v = data.vertices[i];
+        geometry.vertices.push(new THREE.Vector3(v[0], v[1], v[2]));
+    }
+    for (var i = 0; i < data.faces.length; i++)
+    {
+        var f = data.faces[i].face; // n-gon: fan of triangles
+        for (var j = 1; j < f.length - 1; j++) { geometry.faces.push(new THREE.Face3(f[0], f[j], f[j+1])); }
+    }
+    geometry.computeFaceNormals(); // flat shading
+    this.addShape(geometry, 0, 0, 0, Y_AXIS, [0, 1, 0], parent, linecolor);
 }
 // add pointlight
 // 		center 	- THREE.Vector3 instance
@@ -88,14 +122,17 @@ Main.prototype.addLight = function(center)
     pointLight.position.y = center.y;
     pointLight.position.z = center.z;
     this.scene.add(pointLight);
+    this.scene.add(new THREE.AmbientLight(0x404040));
 }
 //  initialize the scene
 //
-Main.prototype.init = function(campos, invert)
+Main.prototype.init = function(campos, invert, box)
 {
     this.scene = new THREE.Scene();
 
-    this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.001, 130);
+    // far plane: keep long instruments (box = [x1, x2, y1, y2, z1, z2]) in view when zooming out
+    var span = Math.max(box[1] - box[0], box[3] - box[2], box[5] - box[4]);
+    this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.001, Math.max(130, 10*span));
     this.camera.position.x = campos.x; // -50;
     this.camera.position.y = campos.y; // 0;
     this.camera.position.z = campos.z; // 50;
@@ -108,8 +145,6 @@ Main.prototype.init = function(campos, invert)
         this.renderer.setClearColor( 0xffffff );
     }
 
-    element = document.getElementById("3dcanvas");
-    console.log(element);
     document.getElementById("3dcanvas").appendChild(this.renderer.domElement);
 
     this.controls = new THREE.OrbitControls(this.camera);
@@ -135,13 +170,6 @@ Main.prototype.setCameraView = function(campos)
     this.controls.target.z = campos.z;
 
     this.camera.lookAt(this.controls.target);
-}
-//  set a bounding box around the components
-//
-Main.prototype.setNativeBoundingBox = function()
-{
-    var box = new THREE.BoxHelper(this.rootnode, 0x808080);
-    this.scene.add(box);
 }
 // add multiline
 // 		arrVector3  -  an array of THREE.Vector3 instances
@@ -191,8 +219,6 @@ Main.prototype.setLutRange = function(min, max)
     this.lut = new THREE.Lut( "cooltowarm", 512 );
     this.lut.setMin(min);
     this.lut.setMax(max);
-    console.log("Lut min value: " + min);
-    console.log("Lut max value: " + max);
 }
 // add a ray node
 //
@@ -200,7 +226,6 @@ Main.prototype.addRayNode = function(rayObj, vertices, speed)
 {
     var lut_color = this.lut.getColor(speed);
     rayObj.lut_color = lut_color;
-    console.log("lut_color: " + lut_color);
 
     var multilinematerial = new THREE.LineBasicMaterial({color: lut_color});
     var multilinegeometry = new THREE.Geometry();
@@ -236,18 +261,6 @@ Main.prototype.getNextComponentColor = function()
     }
     return this.compColors[this.iColor];
 }
-// show all rays in this.raynodes
-//
-Main.prototype.showAllRays = function()
-{
-    for (var i = 0; i < this.raynodes.length; i++)
-    {
-        node = this.raynodes[i];
-        // NOTE: the following two lines should instead hvae been implemented via a function called "update" and set in a proper manor
-        if (node.parent == null) { this.putScatterPoints(node); this.rootnode.add(node); };
-        this.raynodes[i].visible = true;
-    }
-}
 // remove all rays in this.raynodes from the scene graph
 //
 Main.prototype.hideAllRays = function()
@@ -276,25 +289,6 @@ Main.prototype.showCubes = function()
         ray = this.raynodes[i];
         ray.annotcubes.visible = true;
     }
-}
-// iterates to attach the next ray in the global ray sequence
-//
-Main.prototype.showNextRay = function()
-{
-    if (this.raynodes.length == 0) { return; }
-
-    lastRay = this.iRay;
-    this.iRay += 1;
-    if (this.iRay >= this.raynodes.length)
-    {
-        this.iRay = 0;
-    }
-    newnode = this.raynodes[this.iRay];
-    // NOTE: the following two lines should instead hvae been implemented via a function called "update" and set in a proper manor
-    if (node.parent == null) { this.putScatterPoints(newnode); this.rootnode.add(newnode); };
-    newnode.visible = true;
-
-    this.raynodes[lastRay].visible = false;
 }
 // iterates to attach the next ray in the global ray sequence
 //
@@ -355,6 +349,38 @@ TraceLoader.prototype.loadInstr = function()
         }
         if (key == 'circle') {
             main.addCircle(args[0], args[1], args[2], args[3], args[4], parentnode, color);
+        }
+        // --trace=2 shapes (disc, annulus, new_circle are also sent at --trace=1),
+        // args as in mccodelib/instrgeom.py: centre x, y, z first, axis n last
+        var a = args;
+        if (key == 'new_circle' || key == 'disc') {
+            main.addShape(new THREE.CircleGeometry(a[3], SEGMENTS), a[0], a[1], a[2], Z_AXIS, a.slice(4, 7), parentnode, color, key == 'new_circle');
+        }
+        if (key == 'annulus') { // outer radius, thickness
+            main.addShape(new THREE.RingGeometry(Math.max(0, a[3] - a[4]), a[3], SEGMENTS), a[0], a[1], a[2], Z_AXIS, a.slice(5, 8), parentnode, color);
+        }
+        if (key == 'sphere') {
+            main.addShape(new THREE.SphereGeometry(a[3], SEGMENTS, SEGMENTS/2), a[0], a[1], a[2], Y_AXIS, [0, 1, 0], parentnode, color);
+        }
+        if (key == 'cone') { // radius, height
+            main.addShape(new THREE.CylinderGeometry(0, a[3], a[4], SEGMENTS), a[0], a[1], a[2], Y_AXIS, a.slice(5, 8), parentnode, color);
+        }
+        if (key == 'cylinder') { // radius, height, thickness: hollow = closed inner cavity, as in e.g. Incoherent
+            var r = a[3], h = a[4], t = a[5], n = a.slice(6, 9);
+            main.addShape(new THREE.CylinderGeometry(r, r, h, SEGMENTS), a[0], a[1], a[2], Y_AXIS, n, parentnode, color);
+            if (t > 0 && r > t && h > 2*t) {
+                main.addShape(new THREE.CylinderGeometry(r-t, r-t, h-2*t, SEGMENTS), a[0], a[1], a[2], Y_AXIS, n, parentnode, color);
+            }
+        }
+        if (key == 'box') { // xwidth, yheight, zdepth, thickness: hollow as for cylinder
+            var w = a[3], h = a[4], l = a[5], t = a[6], n = a.slice(7, 10);
+            main.addShape(new THREE.BoxGeometry(w, h, l), a[0], a[1], a[2], Y_AXIS, n, parentnode, color);
+            if (t > 0 && w > 2*t && h > 2*t && l > 2*t) {
+                main.addShape(new THREE.BoxGeometry(w-2*t, h-2*t, l-2*t), a[0], a[1], a[2], Y_AXIS, n, parentnode, color);
+            }
+        }
+        if (key == 'polyhedron') {
+            main.addPolyhedron(args[0], parentnode, color);
         }
     }
 
@@ -465,7 +491,7 @@ var Controller = function(campos_x, campos_y, campos_z, box_lst, invert_canvas)
     this.main = new Main();
     this.loader = new TraceLoader(MCDATA_instrdata, MCDATA_particledata, this.main);
     this.numRays = MCDATA_particledata["numrays"]
-    this.viewmodel = new ViewModel(numRays = this.numRays);
+    this.viewmodel = new ViewModel(this.numRays);
 }
 Controller.prototype.setUpdateGuiFunc = function(updateGuiFunc)
 {
@@ -476,7 +502,7 @@ Controller.prototype.setUpdateGuiFunc = function(updateGuiFunc)
 Controller.prototype.run = function()
 {
     // init mcdisplay
-    this.main.init(this.camPosInitial, this.invert_canvas);
+    this.main.init(this.camPosInitial, this.invert_canvas, this.box_lst);
 
     // execution loops
     var _this = this;
@@ -493,11 +519,6 @@ Controller.prototype.run = function()
         busy = true;
 
         // show/hide ray nodes
-        if (_this.viewmodel.playBack == PlayBack.ALL)
-        {
-            _this.showAllRays();
-            return;
-        }
         if (_this.viewmodel.playBack == PlayBack.RUN)
         {
             _this.incSingleRay();
@@ -543,14 +564,9 @@ Controller.prototype.run = function()
     // load data - possibly heavy
     this.loader.loadInstr();
     this.loader.loadParticles();
-    //this.main.setNativeBoundingBox();
 
     // set pause playback mode now after everything else, in case of zero or one rays
     if (this.numRays <= 1) { this.viewmodel.playBack = PlayBack.PAUSE }
-}
-Controller.prototype.showAllRays = function()
-{
-    this.main.showAllRays();
 }
 Controller.prototype.hidePrevRays = function()
 {
@@ -596,9 +612,15 @@ Controller.prototype.setViewHome = function()
     this.main.setCameraView(this.camPosInitial);
 }
 
+//  default axes of three.js shapes, and segments for round ones (as the C fallbacks)
+//
+var Y_AXIS = new THREE.Vector3(0, 1, 0);
+var Z_AXIS = new THREE.Vector3(0, 0, 1);
+var SEGMENTS = 24;
+
 //  enum for playback state
 //
-PlayBack = { RUN : 0, PAUSE : 1, ALL : 3 };
+PlayBack = { RUN : 0, PAUSE : 1 };
 
 //  displaymode e.g. keep rays animated or display one at the time
 //
@@ -658,6 +680,7 @@ ViewModel.prototype.getShowScatterCubes = function()
 }
 ViewModel.prototype.setRayIdx = function(idx)
 {
+    if (this.numRays == 0) { return; }
     // the socalled "js modulus bug" for negative numbers, using ((n % m) + m) % m;
     idx = ((idx % this.numRays) + this.numRays) % this.numRays;
     this.rayIdx.push(idx);

@@ -1929,22 +1929,22 @@ def main(args):
                 print("Could not write main mcdoc page, you may need admin permissions!")
                 quit()
 
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(docdir,mccode_config.get_mccode_prefix()+'doc.html')), shell=True)
+        mccode_config.open_in_browser(os.path.join(docdir,mccode_config.get_mccode_prefix()+'doc.html'))
         quit()
 
     elif args.manual == True:
         ''' open manual and exit '''
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(docdir,mccode_config.configuration['MCCODE']+'-manual.pdf')), shell=True)
+        mccode_config.open_in_browser(os.path.join(docdir,mccode_config.configuration['MCCODE']+'-manual.pdf'))
         quit()
 
     elif args.comps == True:
         ''' open component manual and exit '''
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(docdir,mccode_config.configuration['MCCODE']+'-components.pdf')), shell=True)
+        mccode_config.open_in_browser(os.path.join(docdir,mccode_config.configuration['MCCODE']+'-components.pdf'))
         quit()
 
     elif args.web == True:
         ''' open website and exit '''
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], 'https://www.'+mccode_config.configuration['MCCODE']+'.org'), shell=True)
+        mccode_config.open_in_browser('https://www.'+mccode_config.configuration['MCCODE']+'.org')
         quit()
 
     elif args.install == True:
@@ -2014,7 +2014,7 @@ def main(args):
                     info = InstrParser(f).parse()
                     info.filepath = os.path.abspath(f)
                     write_doc_files_or_continue([], [info], [], [f], formats=formats)
-                    subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], f_html), shell=True)
+                    mccode_config.open_in_browser(f_html)
                 elif comp:
                     f_base = os.path.splitext(os.path.basename(f))[0] + ".html"
                     f_class = os.path.basename(os.path.dirname(f))
@@ -2022,7 +2022,7 @@ def main(args):
                     info = CompParser(f).parse()
                     info.filepath = os.path.abspath(f)
                     write_doc_files_or_continue([info], [], [f], [], formats=formats)
-                    subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], f_html), shell=True)
+                    mccode_config.open_in_browser(f_html)
                 quit()
             # there were multiple matches - fall back to general search term mode
             else:
@@ -2054,7 +2054,7 @@ def main(args):
                             formats=formats,
                             printlog=args.verbose)
 
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], os.path.join(_INVOCATION_CWD, mccode_config.get_mccode_prefix()+'doc.html')), shell=True)
+        mccode_config.open_in_browser(os.path.join(_INVOCATION_CWD, mccode_config.get_mccode_prefix()+'doc.html'))
 
 
 if __name__ == '__main__':

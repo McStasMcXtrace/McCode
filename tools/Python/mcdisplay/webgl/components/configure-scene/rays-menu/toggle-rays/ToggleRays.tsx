@@ -33,7 +33,7 @@ const ToggleRays = () => {
   const handleClick = () => {
     if (rays.rays.length === 0) {
       console.log("initialize rays");
-      fetchJSON("../particles.json").then((data) => {
+      fetchJSON("./particles.json").then((data) => {
         if (data) {
           const rayData = initializeRays(data);
           setRays(rayData);
@@ -46,6 +46,7 @@ const ToggleRays = () => {
   };
 
   const handleShowRays = async () => {
+    if (!sceneRef.current) return; // first render: no scene (and no rays) yet
     setLoading(true);
     if (!showRays || (showRays && !showAllRays)) {
       setRaysInvisible(sceneRef.current);

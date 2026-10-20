@@ -6,9 +6,8 @@ mcdisplay webgl script.
 import os
 import sys
 import signal
-import time
-import logging
 import json
+import re
 import subprocess
 import webbrowser
 from pathlib import Path
@@ -19,83 +18,11 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from mccodelib import mccode_config
 from mccodelib.mcdisplayutils import McDisplayReader
-from mccodelib.instrgeom import Vector3d
-from mccodelib.utils import get_file_text_direct
-from shutil import copy as shutil_copy, copytree, ignore_patterns
+from shutil import copytree
 
-class SimpleWriter(object):
-    ''' a minimal, django-omiting "glue file" writer tightly coupled to some comments in the file template.html '''
-    def __init__(self, templatefile, html_filename, invcanvas):
-        self.template = templatefile
-        self.html_filename = html_filename
-        self.invcanvas = invcanvas
-
-    def write(self):
-        # load and modify
-        template = get_file_text_direct(self.template)
-        lines = template.splitlines()
-        for i in range(len(lines)):
-            if 'INSERT_CAMPOS_HERE' in lines[i]:
-                lines[i+2] = '        invert_canvas = %s; // line written by SimpleWriter' % 'true' if self.invcanvas else 'false'
-        self.text = '\n'.join(lines)
-
-        # write to disk
-        try:
-            f = open(self.html_filename, 'w')
-            f.write(self.text)
-        finally:
-            f.close()
-
-class DjangoWriter(object):
-    ''' writes a django template from the instrument representation '''
-    instrument = None
-    text = ''
-    templatefile = ''
-    campos = None
-
-    def __init__(self, instrument, templatefile, campos):
-        self.instrument = instrument
-        self.templatefile = templatefile
-        self.campos = campos
-
-        # django stuff
-        from django.template import Context
-        from django.template import Template
-        self.Context = Context
-        self.Template = Template
-        from django.conf import settings
-        settings.configure()
-
-    def build(self):
-        templ = get_file_text_direct(self.templatefile)
-        t = self.Template(templ)
-        c = self.Context({'instrument': self.instrument,
-            'campos_x': self.campos.x, 'campos_y': self.campos.y, 'campos_z': self.campos.z,})
-        self.text = t.render(c)
-
-    def save(self, filename):
-        ''' save template to disk '''
-        try:
-            f = open(filename, 'w')
-            f.write(self.text)
-        finally:
-            f.close()
-
-def _write_html(instrument, html_filepath, first=None, last=None, invcanvas=False):
-    ''' writes instrument definition to html/js '''
-
-    # create camera view coordinates given the bounding box
-
-    # render html
-    templatefile = Path(__file__).absolute().parent.joinpath("template.html")
-    writer = SimpleWriter(templatefile, html_filepath, invcanvas)
-    writer.write()
-
-def write_browse(instrument, raybundle, dirname, instrname, timeout, nobrowse=None, first=None, last=None, invcanvas=None, **kwds):
+def write_browse(instrument, raybundle, dirname, timeout, nobrowse=None, **kwds):
     ''' writes instrument definitions to html/ js, then serves them as plain static files '''
     print("Launching WebGL... Once launched, server will run for " + str(timeout) + " s")
-    def copy(a, b):
-        shutil_copy(str(a), str(b))
 
     # The pre-built, static webgl app always lives next to this script -
     # whether that's a conda-installed tool dir or a dev checkout.
@@ -107,6 +34,12 @@ def write_browse(instrument, raybundle, dirname, instrname, timeout, nobrowse=No
 
     # Copy the pre-built app files - i.e. creating dest
     copytree(sysdir.joinpath('dist'), dest)
+
+    # dist/ is shared by McStas and McXtrace - set the flavour in the page title
+    index = dest.joinpath('index.html')
+    flavor = {'mcstas': 'McStas', 'mcxtrace': 'McXtrace'}[mccode_config.configuration['MCCODE']]
+    index.write_text(re.sub(r'<title>.*?</title>', f'<title>{flavor} Trace</title>',
+                            index.read_text(encoding='utf-8')), encoding='utf-8')
 
     # Write instrument
     json_instr = '%s' % json.dumps(instrument.jsonize(), indent=2)
@@ -167,8 +100,6 @@ def file_save(data, filename):
         f.write(data)
 
 def main(instr=None, dirname=None, debug=None, n=None, timeout=None, **kwds):
-    logging.basicConfig(level=logging.INFO)
-
     sysdir = Path(__file__).resolve().parent
 
     # Build the static webgl app (npm install && npm run build), directly in
@@ -182,19 +113,10 @@ def main(instr=None, dirname=None, debug=None, n=None, timeout=None, **kwds):
             errtool += ".bat"
 
         warning="Warning: First launch of WEBGL display tool. Building the WebGL viewer (one-off, requires internet access, may take a minute or two). Please do not abort execution..."
-        proc = subprocess.Popen([errtool, warning], stdout=subprocess.PIPE)
-        try:
-            proc = subprocess.Popen([npminst], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            print("Building WebGL viewer (npm install && npm run build)")
-            for line in proc.stdout:
-                 print(line.rstrip())
-            print("Building WebGL viewer - stderr:")
-            for line in proc.stderr:
-                 print(line.rstrip())
-            print("Done building WebGL viewer")
-        except subprocess.CalledProcessError as e:
-            print(f"npminstall failed: {e}")
-            return None
+        subprocess.Popen([errtool, warning], stdout=subprocess.PIPE)
+        print("Building WebGL viewer (npm install && npm run build)")
+        subprocess.run([npminst], check=True)
+        print("Done building WebGL viewer")
 
     # 1st run setup (or a fresh dev checkout / repackage): build dist/ once if missing
     if not (sysdir / 'dist').is_dir():
@@ -216,12 +138,7 @@ def main(instr=None, dirname=None, debug=None, n=None, timeout=None, **kwds):
     raybundle = reader.read_particles()
 
     # write output files
-    write_browse(instrument, raybundle, dirname, instr, timeout, **kwds)
-
-    if debug:
-        # this should enable template.html to load directly
-        jsonized = json.dumps(instrument.jsonize(), indent=0)
-        file_save(jsonized, 'jsonized.json')
+    write_browse(instrument, raybundle, dirname, timeout, **kwds)
 
 if __name__ == '__main__':
     from mccodelib.mcdisplayutils import make_common_parser
@@ -230,16 +147,13 @@ if __name__ == '__main__':
     parser.add_argument('--dirname', '-d', help='output directory name override')
     parser.add_argument('--inspect', help='display only particle rays reaching this component')
     parser.add_argument('--nobrowse', action='store_true', help='do not open a webbrowser viewer')
-    parser.add_argument('--invcanvas', action='store_true', help='invert canvas background from black to white')
-    parser.add_argument('--first', help='zoom range first component')
-    parser.add_argument('--last', help='zoom range last component')
     parser.add_argument('-n', '--ncount', dest='n', type=float, default=300, help='Number of particles to simulate')
     parser.add_argument('-t', '--trace', dest='trace', type=int, default=2, help='Select visualization mode')
     parser.add_argument('--timeout', dest='timeout', type=int, default=300, help='Shutdown time of the WebGL viewer server')
     args, unknown = parser.parse_known_args()
     # Convert the defined arguments in the args Namespace structure to a dict
     args = {k: args.__getattribute__(k) for k in dir(args) if k[0] != '_'}
-    # if --inspect --first or --last are given after instr, the remaining args become "unknown",
+    # if --inspect is given after instr, the remaining args become "unknown",
     # but we assume that they are instr_options
     if len(unknown):
         args['options'] = unknown
