@@ -57,7 +57,8 @@ NOACC
 
 SHARE
 %{
-  %include "read_table-lib"; // for Open_File
+  // for Open_File
+  %include "read_table-lib"
 
   #include <gsl/gsl_sf_legendre.h>
   #include <gsl/gsl_sf_bessel.h>
