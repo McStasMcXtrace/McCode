@@ -2,11 +2,11 @@
   "name": "mcstas-chopper-lib",
   "homepage": "https://github.com/mcdotstar/mcstas-chopper-lib",
   "git": "https://github.com/mcdotstar/mcstas-chopper-lib.git",
-  "version": "v4.3.0",
+  "version": "v4.4.0",
   "license": "BSD-3-Clause",
   "archive": {
-    "url": "https://github.com/mcdotstar/mcstas-chopper-lib/archive/refs/tags/v4.3.0.tar.gz",
-    "sha256": "70d74198f5f4f6d4aefb34a5f3b3cc75e1ed5b6defb937fc60917d567d698709",
+    "url": "https://github.com/mcdotstar/mcstas-chopper-lib/archive/refs/tags/v4.4.0.tar.gz",
+    "sha256": "f7bb2381cb174d9544d09abc0fe28649ae6e3c87803b8afc9112f0e9c5b50da4",
     "strip": 1
   },
   "files": [
