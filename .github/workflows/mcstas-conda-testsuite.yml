@@ -9,7 +9,13 @@ on:
         type: boolean
         description: Launch manual debugging tmate for inspection (automatic in case of errors)
         default: false
+      comparison:
+        type: boolean
+        description: Run mcviewtest comparison tables across all platforms
+        default: false
 
+# The mcviewtest comparison is off by default (schedule); request it via the
+# "comparison" tickbox when running the workflow manually
 jobs:
   build:
     strategy:
@@ -230,7 +236,8 @@ jobs:
   compare:
     name: mcstas-conda-testsuite-comparison
     needs: build
-    if: always()
+    # Only when requested (manual runs with the "comparison" tickbox)
+    if: always() && inputs.comparison
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -315,10 +322,10 @@ jobs:
       id: viewtest
       run: |
            cd "$PWD/mcstas-nightly"
-           if [ -z "$REFLABEL" ]; then
+           if [ -n "${REFLABEL:-}" ]; then
              mcviewtest --reflabel "$REFLABEL" --nobrowse
            else
-             mcviewtest --reflabel --nobrowse
+             mcviewtest --nobrowse
            fi
 
     - name: 'Tar mcstas-nightly output (all platform folders + comparison table)'

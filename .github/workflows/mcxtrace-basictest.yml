@@ -706,7 +706,7 @@ jobs:
            set -x
            if [ -d changes/ ]; then
              cd changes
-             if [ -z "$REFLABEL" ]; then
+             if [ -n "${REFLABEL:-}" ]; then
                mxviewtest --reflabel "$REFLABEL" --nobrowse
              else
                mxviewtest --nobrowse

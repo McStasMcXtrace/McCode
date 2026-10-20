@@ -14,6 +14,15 @@ import jinja2
 
 ERROR_PERCENT_THRESSHOLD_ACCEPT = 20
 
+# Skip diff/coplot for data dirs holding a file larger than this: an 18 Mpixel
+# PSD (~100 MB .dat) needs ~5 GB RAM per mcplotdiff-html job, and N parallel
+# jobs OOM-kill a 16 GB CI runner (the resulting html is unviewable anyway).
+DIFF_MAX_FILESIZE = 50 * 1024 * 1024
+
+def has_huge_file(*dirs):
+    return any(e.is_file() and e.stat().st_size > DIFF_MAX_FILESIZE
+               for d in dirs for e in os.scandir(d))
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import utils, mccode_config
 
@@ -148,6 +157,9 @@ def run_normal_mode(testdir, reflabel, nodiff=False, diffmax=300, diffall=True, 
         if not (os.path.isfile(join(test_abs, "mccode.sim")) and os.path.isfile(join(ref_abs, "mccode.sim"))):
             # NeXus-only output (mccode.h5) or otherwise nothing mcplotdiff-html can compare
             return None
+        if has_huge_file(test_abs, ref_abs):
+            logging.info("Skipping mcplotdiff-html for %s: data file > %d MB" % (url, DIFF_MAX_FILESIZE // 2**20))
+            return None
 
         outdir_rel = join(url, "diff_vs_%s" % reflabel)
         outdir_abs = join(testdir, outdir_rel)
@@ -188,6 +200,9 @@ def run_normal_mode(testdir, reflabel, nodiff=False, diffmax=300, diffall=True, 
         ref_abs = join(testdir, ref_url)
         if not (os.path.isfile(join(test_abs, "mccode.sim")) and os.path.isfile(join(ref_abs, "mccode.sim"))):
             # NeXus-only output (mccode.h5) or otherwise nothing mcplot-coplot-html can compare
+            return None
+        if has_huge_file(test_abs, ref_abs):
+            logging.info("Skipping mcplot-coplot-html for %s: data file > %d MB" % (url, DIFF_MAX_FILESIZE // 2**20))
             return None
 
         outdir_rel = join(url, "coplot_vs_%s" % reflabel)
