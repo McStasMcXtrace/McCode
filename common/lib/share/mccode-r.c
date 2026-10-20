@@ -4174,13 +4174,6 @@ void mcdis_polygon(int count, ...){
   } else {
     x0 /= count; y0 /= count; z0 /= count;
     /* Build up a json string for a "polyhedron" */
-    // Estimate size of the JSON string
-    const int VERTEX_OVERHEAD = 30;
-    const int FACE_OVERHEAD_BASE = 20;
-    const int FACE_INDEX_OVERHEAD = 15;
-    int estimated_size = 256; // Base size
-    estimated_size += count * VERTEX_OVERHEAD;
-
     int faceSize;
     int vtxSize;
     if (count > 3) {
@@ -4192,11 +4185,9 @@ void mcdis_polygon(int count, ...){
       vtxSize=count;
     }
     
-    for (int i = 0; i < faceSize;) {
-        int num_indices = 3;
-        estimated_size += FACE_OVERHEAD_BASE + num_indices * FACE_INDEX_OVERHEAD;
-        i += num_indices + 1;
-    }
+    /* Upper bound: a vertex "[%g, %g, %g], " is at most 3*13+8 chars, a face
+       "{ \"face\": [%d, %d, %d]}, " at most 3*11+17 */
+    size_t estimated_size = 64 + (size_t)vtxSize*48 + (size_t)faceSize*64;
 
     char *json_string = malloc(estimated_size);
     if (json_string == NULL) {
@@ -4225,14 +4216,10 @@ void mcdis_polygon(int count, ...){
       ptr += sprintf(ptr, "0, 1, 2");
       ptr += sprintf(ptr, "]}");
     } else {
+      /* Fan of triangles (i, i+1, centre), all with the polygon's own winding */
       for (int i = 0; i < faceSize; i++) {
-        int num = 3;
         ptr += sprintf(ptr, "{ \"face\": [");
-	if (i < faceSize - 1) {
-	  ptr += sprintf(ptr, "%d, %d, %d",i,i+1,count);
-	} else {
-	  ptr += sprintf(ptr, "%d, %d, %d",i,count,0);
-	}
+	ptr += sprintf(ptr, "%d, %d, %d", i, (i+1) % count, count);
 	ptr += sprintf(ptr, "]}");
 	if (i < faceSize-1) {
 	  ptr += sprintf(ptr, ", ");
