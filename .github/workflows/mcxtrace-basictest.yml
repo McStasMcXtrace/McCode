@@ -36,7 +36,7 @@ jobs:
           - { method: debian, os: ubuntu-24.04,   CC: gcc,      CXX: g++,        python: '3.12', mpi: 'openmpi', nmpi: 'auto', cogen: 'classic'}
           # --- built via conda ---
           - { method: conda,  os: ubuntu-latest,  CC: gcc,   CXX: g++,  python: '3.13', mpi: 'openmpi', nmpi: 'auto', cogen: 'classic'}
-          # - { method: conda,  os: ubuntu-latest,  CC: gcc,   CXX: g++,  python: '3.13', mpi: 'openmpi', nmpi: 'auto', cogen: 'antlr'}
+          - { method: conda,  os: ubuntu-latest,  CC: gcc,   CXX: g++,  python: '3.13', mpi: 'openmpi', nmpi: 'auto', cogen: 'antlr'}
           - { method: conda,  os: macos-latest,  CC: clang,  CXX: clang++,   python: '3.13', mpi: 'openmpi', nmpi: '2', cogen: 'classic'}
           - { method: conda,  os: windows-latest, CC: CL,   CXX: CL,  python: "3.13",  mpi: 'msmpi', nmpi: 'auto', cogen: 'classic'}
 
@@ -290,11 +290,12 @@ jobs:
     - name: Setup mcxtrace-antlr
       id: setup-mcxtrace-antlr
       if: matrix.cogen == 'antlr'
-      continue-on-error: true
       run: |
         # Cache checkout src/ with mccode-antlr
         if [ "${{ matrix.cogen }}" == "antlr" ];
         then
+          # Use mccode-antlr from git main instead of the conda-forge release
+          python3 -m pip install --force-reinstall --no-deps git+https://github.com/mccode-dev/mccode-antlr
           # Set up config file to use mcxtrace-antlr
           MCCODE_CONFIG=`mxrun --write-user-config | cut -f4 -d\ `
           sed -i.bak s+\"MCCOGEN\"\:\ \"mcxtrace\",+\"MCCOGEN\"\:\ \"mcxtrace-antlr\ -I\$\{CONDA_PREFIX\}/share/mcxtrace/resources\",+g ${MCCODE_CONFIG}
