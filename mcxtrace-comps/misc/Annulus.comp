@@ -13,13 +13,13 @@
 * Origin: SOLEIL
 * Modified by: E. Farhi, based on McStas/Annulus
 *
-* A flat annulus shape without effect on neutron, for instrument display purpose.
+* A flat annulus shape without effect on X-rays, for instrument display purpose.
 *
 * %D
 * An inactive geometrical shape (annulus), for drawing purposes only.
 * Derived from the <b><a href="Shape.html">Shape</a></b> component
 *
-* Example: Annulus(radius=0.05, thickness=0.1)
+* Example: Annulus(radius=0.05, thickness=0.01)
 *
 * %P
 * INPUT PARAMETERS:
@@ -34,9 +34,7 @@
 
 DEFINE COMPONENT Annulus
 
-SETTING PARAMETERS (outer_radius=0,inner_radius=0,radius=0, thickness=0)
-
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+SETTING PARAMETERS (radius=0, thickness=0)
 
 SHARE
 %{
@@ -48,7 +46,6 @@ DECLARE
 
 INITIALIZE
 %{
-  // radius=outer_radius=80, inner_radius=thickness=10
 %}
 
 
@@ -58,8 +55,8 @@ TRACE %{
 
 MCDISPLAY
 %{
-  // Draws a annulus with center at (x,y,z) with extent (outer radius) and remove inner thickness.
-  mcdis_annulus (0, 0, 0, outer_radius, inner_radius, 0, 1, 0);
+  // Draws a annulus with center at (x,y,z) with extent (radius) and remove thickness.
+  mcdis_annulus (0, 0, 0, radius, thickness, 0, 1, 0);
 %}
 
 END

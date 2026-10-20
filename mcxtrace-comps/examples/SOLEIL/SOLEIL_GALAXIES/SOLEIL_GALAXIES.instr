@@ -1,0 +1,458 @@
+/*******************************************************************************
+* Instrument: SOLEIL_GALAXIES
+*
+* %Identification
+* Written by: E. Farhi, from SOLEIL technical notes by T. Moreno
+* Date: 2026
+* Origin: Synchrotron SOLEIL
+* Version: 0.1
+* %INSTRUMENT_SITE: SOLEIL
+*
+* The GALAXIES beam-line at Synchrotron SOLEIL - RIXS branch.
+*
+* %Description
+* GALAXIES is dedicated to inelastic X-ray scattering (IXS/RIXS) and hard
+* X-ray photoemission (HAXPES), in the 2.3-12 keV range, with high resolution
+* and micro-beam. This model implements the RIXS station (35.5 m diffractometer
+* with a 1-2 m radius IXS spectrometer, multi-analyzer 4x1 or 2x2 setup).
+* The HAXPES branch ends at the secondary slits (28.2 m).
+*
+* Optical layout (distances from the undulator center, EXP-OPT-CDC-1029):
+*
+* Position | Element
+* ---------|--------------------------------------------------------------------
+* 0        | U20 undulator, 98 periods, lambda_u=20 mm, short section
+* 10       | Absorber 2.5 x 2.5 mm^2
+* 11.7     | Diaphragm 1.8 x 0.6 mm^2 (H x V): beamline acceptance
+* 17       | Primary slits 2.0 x 0.7 mm^2 (H x V)
+* 19       | Si(111) DCM, fixed exit, crystals 10x50 mm^2 (T x L)
+* 22       | M1 spherical mirror R=8.81 km, 5 mrad, face up, 200 mm, B4C/Pd
+* 23.5     | 2 channel-cuts (anti-symmetric) Si311 (1st order) / Si220 (2nd order)
+* 24.89    | M2A toroid (microfocus): focus at secondary slits 28.2 m [HAXPES]
+* 28.2     | Secondary slits 30x30 um^2 min (M2A focal plane, HAXPES sample)
+* 32.20    | M2B toroid (intermediate focus): focus at RIXS sample 35.5 m
+* 34.1     | VFM elliptical KB mirror, p=5.9 m, q=1.4 m, 320 mm, Pd
+* 34.5     | HFM elliptical KB mirror, p=6.3 m, q=1.0 m, 320 mm, Pd
+* 35.5     | RIXS sample / diffractometer
+* +R       | IXS spectrometer: spherical Si analyzers (Rowland R=0.5-2 m)
+*
+* Toroid radii and M2 positions are the post-metrology (SESO measured) values
+* from EXP-OPT-CDC-1936: Rt=1.335 km, Rs=30.47 mm, M2A at 24.89 m and M2B at
+* 32.20 m, grazing angle 4.95 mrad, so that the foci stay at 28.2 m (HAXPES)
+* and 35.5 m (RIXS).
+*
+* The electron beam in the short section (EXP-OPT-CDC-0771):
+*   sigma_x=388 um, sigma_z=8.1 um, sigma'_x=14.5 urad, sigma'_z=4.6 urad.
+*
+* Expected performance (ray tracing, EXP-OPT-CDC-1029):
+*   - M2B focus:  75 x 35 um^2 FWHM (H x V), ~6e13 ph/s @ 8 keV
+*   - KB focus:   14 x  9 um^2 FWHM (open sec. slits), 5x7 um^2 (30x30 um^2 slits)
+*
+* Example: GALAXIES_E0=10 Detector: GALAXIES_mon_dcm_xy_I=6.05992e+12
+*
+* %Parameters
+* GALAXIES_E0:          [keV]  Nominal energy (2.3 - 12).
+* GALAXIES_dE:          [keV]  Energy half-bandwidth at the source.
+* GALAXIES_hrm:         [1]    1 = insert the high resolution channel-cuts.
+* GALAXIES_hrm_ref:     [str]  "Si311" (1st order, >=5 keV) or "Si220" (2nd order, >=8 keV).
+* GALAXIES_sec_slits:   [m]    Secondary slits opening (H and V) at the M2A focus (28.2 m).
+* GALAXIES_ana_R:       [m]    Analyzer Rowland radius (0.5 - 2 m).
+* GALAXIES_ana_deg:     [deg]  Spectrometer scattering angle (2-theta at the sample).
+* GALAXIES_sample:    [str]  Sample LAU/CIF structure file for the RIXS sample. 
+*
+* %Link
+* https://www.synchrotron-soleil.fr/en/beamlines/galaxies
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT SOLEIL_GALAXIES(
+  GALAXIES_E0=10, GALAXIES_dE=0.1,
+  GALAXIES_hrm=0, string GALAXIES_hrm_ref="Si311",
+  GALAXIES_sec_slits=0.1,
+  GALAXIES_ana_R=1.0, GALAXIES_ana_deg=10, 
+  string GALAXIES_sample="Si.lau", int splits=10)
+
+DECLARE
+%{
+  // Source: U20, 98 periods, short section (EXP-OPT-CDC-0771)
+  double GALAXIES_lu = 20e-3;      // [m] undulator period
+  int    GALAXIES_Nper = 98;       // number of periods
+  double GALAXIES_K = 1.575;       // undulator deflection parameter (tune with E0)
+  double GALAXIES_sigex  = 388e-6; // [m] e-beam H size   (short section)
+  double GALAXIES_sigey  = 8.1e-6; // [m] e-beam V size
+  double GALAXIES_sigepx = 14.5e-6; // [rad] e-beam H divergence
+  double GALAXIES_sigepy = 4.61e-6; // [rad] e-beam V divergence
+
+  // Front end / slits
+  double GALAXIES_DistanceToAbsorber    = 10.0;
+  double GALAXIES_AbsorberWidth = 2.5e-3, GALAXIES_AbsorberHeight = 2.5e-3;
+  double GALAXIES_DistanceToDiaphragm    = 11.7;
+  double GALAXIES_DiaphragmWidth = 1.8e-3, GALAXIES_DiaphragmHeight = 0.6e-3;
+  double GALAXIES_DistanceToPrimarySlit  = 17.0;
+  double GALAXIES_PrimarySlitWidth = 2.0e-3, GALAXIES_PrimarySlitHeight = 0.7e-3;
+
+  // DCM Si(111) at 19 m
+  double GALAXIES_DistanceToDCM = 19.0;
+  double GALAXIES_DcmGap = 0.01;   // vertical offset between the 2 crystals [m]
+  double GALAXIES_dcm_theta;        // computed in INITIALIZE
+
+  // M1 spherical mirror at 22 m
+  double GALAXIES_DistanceToM1 = 22.0;
+  double GALAXIES_M1_angle = 5.0;   // [mrad] grazing angle
+  double GALAXIES_M1_R = -8810.0;   // [m] spherical radius (collimating, face up)
+  double GALAXIES_M1_length = 0.200, GALAXIES_M1_width = 0.02;
+
+  // Channel-cuts (HRM) at 23.5 m
+  double GALAXIES_DistanceToHRM = 23.5;
+
+  // Toroids M2A/M2B: post-metrology values (EXP-OPT-CDC-1936)
+  double GALAXIES_M2_Rt = 1335.0;   // [m] tangential radius (SESO measured)
+  double GALAXIES_M2_Rs = 0.03047;  // [m] sagittal radius  (SESO measured)
+  double GALAXIES_M2_angle = 4.95;  // [mrad] grazing angle after metrology
+  double GALAXIES_DistanceToM2A = 24.89; // focus at 28.2 m (HAXPES/secondary slits)
+  double GALAXIES_DistanceToM2B = 32.20; // focus at 35.5 m (RIXS)
+  double GALAXIES_M2_length = 0.220, GALAXIES_M2_width = 0.02;
+
+  // Secondary slits at the M2A focal plane
+  double GALAXIES_DistanceToSecSlits = 28.2;
+
+  // KB pair
+  double GALAXIES_DistanceToVFM = 34.1, GALAXIES_DistanceToHFM = 34.5;
+  double GALAXIES_KB_angle = 5.0;   // [mrad]
+  double GALAXIES_VFM_p = 5.9, GALAXIES_VFM_q = 1.4; // from secondary slits / to sample
+  double GALAXIES_HFM_p = 6.3, GALAXIES_HFM_q = 1.0;
+  double GALAXIES_KB_length = 0.320, GALAXIES_KB_width = 0.02;
+  double GALAXIES_vfm_radius, GALAXIES_hfm_radius; // computed in INITIALIZE (spherical approx)
+
+  // Sample / spectrometer
+  double GALAXIES_DistanceToSample = 35.5;
+%}
+
+USERVARS
+%{
+  int flag_scatt;
+%}
+
+INITIALIZE
+%{
+  {
+    // --- DCM Si(111) Bragg angle from GALAXIES_E0
+    double DM = 5.4909;      // Si d-spacing
+    double d111 = DM/sqrt(3);
+    double sin_theta = 2*PI/E2K/GALAXIES_E0 / 2 / d111;
+    if (fabs(sin_theta) >= 1)
+      exit(fprintf(stderr, "%s: ERROR: DCM Si(111) can not reflect E0=%g keV. Aborting.\n", NAME_INSTRUMENT, GALAXIES_E0));
+    GALAXIES_dcm_theta = asin(sin_theta)*RAD2DEG;
+
+    // --- KB mirrors: spherical approximation of the ellipse, R = 2 p q / (p+q)
+    GALAXIES_vfm_radius = 2*GALAXIES_VFM_p*GALAXIES_VFM_q/(GALAXIES_VFM_p+GALAXIES_VFM_q);
+    GALAXIES_hfm_radius = 2*GALAXIES_HFM_p*GALAXIES_HFM_q/(GALAXIES_HFM_p+GALAXIES_HFM_q);
+
+    if (fabs(GALAXIES_dE/GALAXIES_E0) > 0.1) GALAXIES_dE = 0.1*GALAXIES_E0;
+    MPI_MASTER(
+      printf("%s: E0=%g [keV] DCM Si(111) theta=%g [deg]\n", NAME_INSTRUMENT, GALAXIES_E0, GALAXIES_dcm_theta);
+      printf("%s: hrm=%d (%s) ana_R=%g m 2theta=%g deg\n",
+        NAME_INSTRUMENT, GALAXIES_hrm, GALAXIES_hrm_ref, GALAXIES_ana_R, GALAXIES_ana_deg);
+    );
+  }
+%}
+
+TRACE
+
+REMOVABLE COMPONENT origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+// the photon source ------------------------------------------------------------
+// U20 undulator, 98 periods, short section. Full undulator ray tracing.
+// K should be tuned with E0 (EXP-OPT-CDC-1029 tab.2: K=1.517 @5 keV 3rd
+// harmonic, K=1.575 @8 keV 5th, K=1.478 @12 keV 7th).
+COMPONENT  GALAXIES_Source_U20 = Undulator(
+    E0 = GALAXIES_E0, dE = GALAXIES_dE,
+    Ee = 2.75, Ie = 0.5,
+    K = GALAXIES_K, Nper = GALAXIES_Nper, lu = GALAXIES_lu,
+    sigex = GALAXIES_sigex, sigey = GALAXIES_sigey,
+    sigepx = GALAXIES_sigepx, sigepy = GALAXIES_sigepy,
+    dist = GALAXIES_DistanceToPrimarySlit)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT  GALAXIES_mon_src_xy = Monitor_nD(
+  options="x y", xwidth=5e-3, yheight=2e-3, bins=128,
+  filename="GALAXIES_mon_src_xy", restore_xray=1)
+AT (0, 0, GALAXIES_DistanceToPrimarySlit-0.1) RELATIVE GALAXIES_Source_U20
+
+COMPONENT  GALAXIES_mon_src_e = Monitor_nD(
+  options="energy", xwidth=5e-3, yheight=2e-3, bins=256,
+  min=GALAXIES_E0-GALAXIES_dE*1.2, max=GALAXIES_E0+GALAXIES_dE*1.2, filename="GALAXIES_mon_src_e", restore_xray=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+// front end --------------------------------------------------------------------
+// Absorber 2.5 x 2.5 mm^2 at 10 m
+COMPONENT  GALAXIES_absorber = Slit(xwidth=GALAXIES_AbsorberWidth, yheight=GALAXIES_AbsorberHeight)
+AT (0, 0, GALAXIES_DistanceToAbsorber) RELATIVE GALAXIES_Source_U20
+
+// Diaphragm 1.8 x 0.6 mm^2 at 11.7 m: defines the beamline acceptance
+COMPONENT  GALAXIES_diaphragme = Slit(xwidth=GALAXIES_DiaphragmWidth, yheight=GALAXIES_DiaphragmHeight)
+AT (0, 0, GALAXIES_DistanceToDiaphragm) RELATIVE GALAXIES_Source_U20
+
+// Primary slits 2.0 x 0.7 mm^2 at 17 m
+COMPONENT  GALAXIES_fentes_primaires = Slit(xwidth=GALAXIES_PrimarySlitWidth, yheight=GALAXIES_PrimarySlitHeight)
+AT (0, 0, GALAXIES_DistanceToPrimarySlit) RELATIVE GALAXIES_Source_U20
+
+COMPONENT  GALAXIES_mon_prim_xy = COPY(GALAXIES_mon_src_xy)(filename="GALAXIES_mon_prim_xy")
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+// The double crystal monochromator (Si111, fixed exit) --------------------------
+COMPONENT  GALAXIES_DCM_location = Arm()
+AT (0, 0, GALAXIES_DistanceToDCM) RELATIVE GALAXIES_Source_U20
+
+COMPONENT  GALAXIES_dcm_xtal0 = Bragg_crystal(
+    length=0.05, width=0.01,
+    h=1, k=1, l=1, material="Si.txt", V=160.1826, crystal_type=2)
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (-GALAXIES_dcm_theta, 0, 0) RELATIVE PREVIOUS
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT  GALAXIES_dcm0 = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (-GALAXIES_dcm_theta, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT  GALAXIES_dcm_xtal1 = COPY(GALAXIES_dcm_xtal0)
+AT (0, GALAXIES_DcmGap, GALAXIES_dcm_theta ? GALAXIES_DcmGap/tan(GALAXIES_dcm_theta*DEG2RAD) : 0) RELATIVE GALAXIES_dcm_xtal0
+ROTATED (GALAXIES_dcm_theta, 0, 0) RELATIVE GALAXIES_dcm0
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT  GALAXIES_dcm1 = Arm()
+AT (0, 0, 0) RELATIVE GALAXIES_dcm_xtal1
+ROTATED (GALAXIES_dcm_theta, 0, 0) RELATIVE GALAXIES_dcm_xtal1
+
+COMPONENT  GALAXIES_mon_dcm_e = COPY(GALAXIES_mon_src_e)(filename="GALAXIES_mon_dcm_e")
+AT (0, 0, 0.2) RELATIVE PREVIOUS
+
+COMPONENT  GALAXIES_mon_dcm_xy = COPY(GALAXIES_mon_src_xy)(filename="GALAXIES_mon_dcm_xy")
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+// M1 spherical mirror at 22 m --------------------------------------------------
+// 5 mrad, face up, Si/B4C/Pd stripes (harmonic rejection + vertical collimation
+// for the channel-cuts). Use the Si stripe below 5 keV, Pd above.
+COMPONENT  GALAXIES_M1_location = Arm()
+AT (0, 0, GALAXIES_DistanceToM1-GALAXIES_DistanceToDCM) RELATIVE GALAXIES_dcm1
+
+COMPONENT  GALAXIES_M1_rotated = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (-GALAXIES_M1_angle*RAD2DEG/1000, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT  GALAXIES_M1 = Mirror_curved( // vertical deflection (YZ plane)
+    length=GALAXIES_M1_length, width=GALAXIES_M1_width,
+    coating="Pd.txt", radius=GALAXIES_M1_R)
+AT (0, 0, 0) RELATIVE GALAXIES_M1_rotated
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT  GALAXIES_M1_out = Arm() // restore beam direction (exit parallel, offset up)
+AT (0, 0, 0) RELATIVE GALAXIES_M1_rotated
+ROTATED (GALAXIES_M1_angle*RAD2DEG/1000, 0, 0) RELATIVE GALAXIES_M1_rotated
+
+// Channel-cut high resolution monochromator (HRM) -------------------------------
+// Two channel-cuts in anti-symmetric configuration at 23.5 m.
+// Si311 1st order (>=5 keV) or Si220 2nd order (>=8 keV).
+// Full Bragg_crystal implementation left as a TODO (see NOTES 1); here we only
+// gate the beam so that the hrm flag can be used to compare flux budgets.
+COMPONENT  GALAXIES_HRM_gate_in = Slit( // blocks the beam when hrm=0
+    xwidth=(GALAXIES_hrm ? 0.010 : 0), yheight=(GALAXIES_hrm ? 0.005 : 0))
+AT (0, 0, GALAXIES_DistanceToHRM-GALAXIES_DistanceToM1) RELATIVE GALAXIES_M1_out
+
+// M2A microfocus toroid: focus at the secondary slits (28.2 m) ------------------
+// M2A in the beam. Otherwise M2A is translated out of the beam
+// (in the real line by a TZ translation normal to the surface) and M2B focuses
+// on the RIXS sample.
+COMPONENT  GALAXIES_M2A_location = Arm()
+AT (0, 0, GALAXIES_DistanceToM2A-GALAXIES_DistanceToHRM) RELATIVE GALAXIES_HRM_gate_in
+
+COMPONENT  GALAXIES_M2A_rotated = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (-GALAXIES_M2_angle*RAD2DEG/1000, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT  GALAXIES_M2A = Mirror_toroid(
+    zdepth=GALAXIES_M2_length, xwidth=GALAXIES_M2_width,
+    radius=GALAXIES_M2_Rt, radius_o=GALAXIES_M2_Rs,
+    coating="Pd.txt")
+AT (0, 0, 0) RELATIVE GALAXIES_M2A_rotated
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT  GALAXIES_M2A_out = Arm()
+AT (0, 0, 0) RELATIVE GALAXIES_M2A_rotated
+ROTATED (GALAXIES_M2_angle*RAD2DEG/1000, 0, 0) RELATIVE GALAXIES_M2A_rotated
+
+// Secondary slits at the M2A focal plane (HAXPES sample position, 28.2 m).
+// Closing them reduces the KB spot down to ~5x7 um^2 FWHM with 30x30 um^2.
+COMPONENT  GALAXIES_secondary_slits = Slit(
+    xwidth=GALAXIES_sec_slits, yheight=GALAXIES_sec_slits)
+AT (0, 0, GALAXIES_DistanceToSecSlits-GALAXIES_DistanceToM2A) RELATIVE GALAXIES_M2A_out
+
+COMPONENT  GALAXIES_mon_sec_xy = Monitor_nD(
+  options="x y", xwidth=2e-3, yheight=2e-3, bins=128,
+  filename="GALAXIES_mon_sec_xy", restore_xray=1)
+AT (0, 0, 0.01) RELATIVE PREVIOUS
+
+// M2B intermediate focus toroid: focus on the RIXS sample (35.5 m) -------------
+COMPONENT  GALAXIES_M2B_location = Arm()
+AT (0, 0, GALAXIES_DistanceToM2B-GALAXIES_DistanceToSecSlits) RELATIVE GALAXIES_secondary_slits
+
+COMPONENT  GALAXIES_M2B_rotated = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (-GALAXIES_M2_angle*RAD2DEG/1000, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT  GALAXIES_M2B = Mirror_toroid(
+    zdepth=GALAXIES_M2_length, xwidth=GALAXIES_M2_width,
+    radius=GALAXIES_M2_Rt, radius_o=GALAXIES_M2_Rs,
+    coating="Pd.txt")
+AT (0, 0, 0) RELATIVE GALAXIES_M2B_rotated
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT  GALAXIES_M2B_out = Arm()
+AT (0, 0, 0) RELATIVE GALAXIES_M2B_rotated
+ROTATED (GALAXIES_M2_angle*RAD2DEG/1000, 0, 0) RELATIVE GALAXIES_M2B_rotated
+
+// KB pair (microfocus) ----------------------------------------------------------
+// VFM (vertical deflection) at 34.1 m: images the secondary slits (28.2 m)
+// onto the sample. HFM (horizontal deflection) at 34.5 m, modelled as in SIXS
+// M2 with a 90 deg rotation to work in the XZ plane.
+COMPONENT  GALAXIES_VFM_location = Arm()
+AT (0, 0, GALAXIES_DistanceToVFM-GALAXIES_DistanceToM2B) RELATIVE GALAXIES_M2B_out
+
+COMPONENT  GALAXIES_VFM_rotated = Arm()
+AT (0, 0, 0) RELATIVE PREVIOUS
+ROTATED (-GALAXIES_KB_angle*RAD2DEG/1000, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT  GALAXIES_VFM = Mirror_curved(
+    length=GALAXIES_KB_length, width=GALAXIES_KB_width,
+    coating="Pd.txt", radius=GALAXIES_vfm_radius)
+AT (0, 0, 0) RELATIVE GALAXIES_VFM_rotated
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT  GALAXIES_VFM_out = Arm()
+AT (0, 0, 0) RELATIVE GALAXIES_VFM_rotated
+ROTATED (GALAXIES_KB_angle*RAD2DEG/1000, 0, 0) RELATIVE GALAXIES_VFM_rotated
+
+COMPONENT  GALAXIES_HFM_rotated = Arm() // horizontal deflection: YZ -> XZ plane
+AT (0, 0, GALAXIES_DistanceToHFM-GALAXIES_DistanceToVFM) RELATIVE GALAXIES_VFM_out
+ROTATED (-GALAXIES_KB_angle*RAD2DEG/1000, 0, 90) RELATIVE GALAXIES_VFM_out
+
+COMPONENT  GALAXIES_HFM = Mirror_curved(
+    length=GALAXIES_KB_length, width=GALAXIES_KB_width,
+    coating="Pd.txt", radius=GALAXIES_hfm_radius)
+AT (0, 0, 0) RELATIVE GALAXIES_HFM_rotated
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT  GALAXIES_HFM_out = Arm()
+AT (0, 0, 0) RELATIVE GALAXIES_HFM_rotated
+ROTATED (GALAXIES_KB_angle*RAD2DEG/1000, 0, -90) RELATIVE GALAXIES_HFM_rotated
+
+// The RIXS sample at 35.5 m -----------------------------------------------------
+// Spot monitors placed on both branch paths (they share the sample position).
+COMPONENT  GALAXIES_mon_sample_xy_kb = Monitor_nD(
+  options="x y", xwidth=1e-3, yheight=1e-3, bins=256,
+  filename="GALAXIES_mon_sample_xy", restore_xray=1)
+AT (0, 0, GALAXIES_DistanceToSample-GALAXIES_DistanceToHFM) RELATIVE GALAXIES_HFM_out
+
+COMPONENT  GALAXIES_mon_sample_e = COPY(GALAXIES_mon_src_e)(filename="GALAXIES_mon_sample_e")
+AT (0, 0, 0.001) RELATIVE PREVIOUS
+
+COMPONENT  GALAXIES_sample_stage = Arm()
+AT (0, 0, GALAXIES_DistanceToSample-GALAXIES_DistanceToM2B) RELATIVE GALAXIES_M2B_out
+EXTEND %{
+  flag_scatt = 0;
+%}
+
+// Elastic scattering of the sample towards the analyzer arm.
+// For RIXS, an inelastic energy shift may be applied by the user in an EXTEND
+// block after scattering (modify the photon wavelength), to study the
+// spectrometer energy resolution and analyzer acceptance.
+SPLIT splits COMPONENT  GALAXIES_sample = FluoCrystal(
+    material=GALAXIES_sample,
+    xwidth=1e-3, yheight=1e-3, zdepth=1e-3,
+    mosaic=1e-4, p_interact=0.9, flag_kissel=1)
+AT (0, 0, 0) RELATIVE GALAXIES_sample_stage
+EXTEND %{
+  if (SCATTERED) flag_scatt++;
+  else ABSORB;
+%}
+
+COMPONENT  GALAXIES_sample_out = Arm()
+AT (0, 0, 0) RELATIVE GALAXIES_sample_stage
+EXTEND %{
+  if (!flag_scatt) ABSORB;
+%}
+
+// IXS spectrometer ---------------------------------------------------------------
+// Spherical Si analyzer on a Rowland circle of radius ana_R, symmetric
+// geometry: analyzer at 2theta=ana_deg from the sample, detector at 2*ana_deg.
+COMPONENT  GALAXIES_ana_arm = Arm()
+AT (0, 0, 0) RELATIVE GALAXIES_sample_out
+ROTATED (0, -GALAXIES_ana_deg, 0) RELATIVE GALAXIES_sample_out
+
+// Si(620) analyzer, d=1.01741 AA
+COMPONENT  GALAXIES_analyzer = Bragg_crystal(
+    length=0.1, width=0.05,
+    h=6, k=2, l=0, material="Si.txt", V=160.1826, crystal_type=2)
+AT (0, 0, GALAXIES_ana_R) RELATIVE GALAXIES_ana_arm
+ROTATED (-asin(2*PI/E2K/GALAXIES_E0/(2*(5.4909/sqrt(6*6+2*2))))*RAD2DEG, 0, 0) RELATIVE GALAXIES_ana_arm
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT  GALAXIES_ana_out = Arm()
+AT (0, 0, 0) RELATIVE GALAXIES_analyzer
+ROTATED (asin(2*PI/E2K/GALAXIES_E0/(2*(5.4909/sqrt(40))))*RAD2DEG, 0, 0) RELATIVE GALAXIES_analyzer
+
+// detector at the Rowland focus, symmetric position
+COMPONENT  GALAXIES_IXS_det = Monitor_nD(
+    options="x y", xwidth=0.02, yheight=0.02, bins=128,
+    filename="GALAXIES_IXS_det", restore_xray=0)
+AT (0, 0, GALAXIES_ana_R) RELATIVE GALAXIES_ana_out
+
+END
+
+/*******************************************************************************
+* NOTES
+*
+* 1. HRM: the channel-cut pair is currently gated by the 'hrm' flag only
+*    (blocking the beam when hrm=0). To fully model it, insert two Bragg_crystal
+*    components (Si311, d=1.63747 AA, 1st order; or Si220, d=1.92016 AA, 2nd
+*    order) between HRM_gate_in and M2A_location, following the DCM pattern
+*    above (anti-symmetric (+,-) configuration for a fixed exit).
+*
+* 2. Slope errors and roughness (M1/M2: 1.5 urad RMS, KB: 1 urad RMS, roughness
+*    3 AA RMS) are not yet applied. Add them to the mirror components to
+*    reproduce the documented spot sizes: 75x35 um^2 (M2B), 14x9 um^2 (KB, open
+*    slits), 5x7 um^2 (KB, 30x30 um^2 secondary slits).
+*
+* 3. The M2B branch is 22 mm below the microfocus branch at 27.2 m and 42 mm
+*    at 29.2 m (EXP-OPT-CDC-1029). Here the branches are selected with ABSORB
+*    in EXTEND blocks; for a simultaneous model, offset one branch in Y.
+*
+* 4. The analyzer uses Si(620) (d=1.01741 AA) as in standard IXS spectrometers.
+*    Adjust h,k,l and the Rowland geometry (Johann vs Johansson) as needed.
+*
+* 5. Undulator harmonics: set K so that the n-th harmonic matches E0
+*    (EXP-OPT-CDC-1029, tab.2). A proper undulator source file (e.g. generated
+*    with SRW/Shadow) may replace the Undulator component for flux accuracy.
+*
+* 6. K parameters vs energy (EXP-OPT-CDC-1029 tab.2):
+*      2.3 keV: n=1, K=1.051 ; 3 keV: n=1, K=0.615 ; 5 keV: n=3, K=1.517
+*      8 keV: n=5, K=1.575   ; 12 keV: n=7, K=1.478
+*******************************************************************************/

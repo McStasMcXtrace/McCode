@@ -84,7 +84,7 @@ install(
   )
 
 # Other .py infrastructure
-foreach(NAME mcdisplay.js Lut.js OrbitControls.js dat.gui.min.js jquery.min.js three.min.js template.html __init__.py)
+foreach(NAME mcdisplay.js Lut.js OrbitControls.js three.min.js template.html __init__.py)
   install(
     FILES "${PROJECT_SOURCE_DIR}/${NAME}"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"

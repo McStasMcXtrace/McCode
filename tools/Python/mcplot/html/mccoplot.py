@@ -32,7 +32,6 @@ import os
 import re
 import sys
 import json
-import subprocess
 
 from shutil import copyfile
 
@@ -179,7 +178,7 @@ def _ensure_html_plots(path):
 
 def browse(html_filepath):
     try:
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], html_filepath), shell=True)
+        mccode_config.open_in_browser(html_filepath)
     except Exception as e:
         raise Exception('Os-specific open browser: %s' % e.__str__())
 

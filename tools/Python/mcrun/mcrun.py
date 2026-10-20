@@ -949,11 +949,16 @@ def main():
             LOG.info('Placing generated c-code copy %s in dataset %s', cfile, options.dir)
             copyfile(cfile, join(options.dir, basename(cfile)))
 
+    if options.autoplotter is not None:
+        autoplotter = options.autoplotter
+        options.autoplot = True
+    else:
+        autoplotter = None
+
     if options.autoplot is not None:
-        autoplotter = mccode_config.configuration['MCPLOT']
-        # apply selected autoplotter, if used
-        if options.autoplotter is not None:
-            autoplotter = options.autoplotter
+        # if no autoplotter was selected, fall back to config
+        if autoplotter is None:
+            autoplotter = mccode_config.configuration['MCPLOT']
         if isdir(options.dir):
             LOG.info('Running plotter %s on dataset %s', autoplotter, options.dir)
             if not options.invcanvas:

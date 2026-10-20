@@ -162,6 +162,7 @@ class InstrExampleTest:
         self.didrun = None
         self.runtime = None
         self.errmsg = None
+        self.failed = None
 
     def get_json_repr(self):
         return {
@@ -190,6 +191,7 @@ class InstrExampleTest:
             "didrun"       : self.didrun,
             "runtime"      : self.runtime,
             "errmsg"       : self.errmsg,
+            "failed"       : self.failed,
         }
     def save(self, infolder):
         text = json.dumps(self.get_json_repr(), indent=2)
@@ -221,6 +223,7 @@ class InstrExampleTest:
             self.didrun=obj['didrun']
             self.runtime=obj['runtime']
             self.errmsg=obj['errmsg']
+            self.failed=obj.get('failed')
             return True
         else:
             return False
@@ -567,9 +570,10 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
         # told to use the default values (-y can not be combined with
         # parameter values, since the instrument then ignores those):
         parvals = test.parvals if test.parvals else "-y"
-        # A %Scan uses its own -n if given, else at most 1e5 pr. point, and runs
-        # its points in parallel unless MPI already does that within each point
-        testncount = ncount
+        # A %Test/%Example or %Scan uses its own -n if given, else the global ncount
+        # (a %Scan at most 1e5 pr. point). A %Scan runs its points in parallel
+        # unless MPI already does that within each point
+        testncount = test.ncount or ncount
         timeout = runmax
         if test.scan:
             testncount = test.ncount or "%g" % min(float(ncount), 1e5)
@@ -617,6 +621,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
             formatstr = "%-" + "%ds: RUNTIME ERROR" % (maxnamelen+1)
             logging.info(formatstr % test.get_display_name() + ", " + cmd)
             num_runfail = num_runfail + 1
+            test.failed = True
             anyfailed = True
             runfailed = False
             suffix = ""
@@ -659,6 +664,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
         if test.didrun:
             if runfailed:
                 num_runfail = num_runfail + 1
+                test.failed = True
                 anyfailed=True
                 suffix += " + !! RUNTIME FAILURE - see %s !! " % (resbase)
             formatstr = "%-" + "%ds: " % (maxnamelen+1) + \
@@ -680,6 +686,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
                 if len(testvals) != len(test.targetval) or numoff > 0:
                     suffix += " <--- BIG DISCREPANCY??"
                     num_valfail = num_valfail + 1
+                    test.failed = True
                     anyfailed=True
                 worst = max(percents, key=lambda p: abs(p-100)) if percents else 0
                 if nsigma is not None:
@@ -692,6 +699,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
                 if not accepted(test.testval, test.testerr, test.targetval, test.targeterr):
                     suffix += " <--- BIG DISCREPANCY??"
                     num_valfail = num_valfail + 1
+                    test.failed = True
                     anyfailed=True
                 diff = test.testval - test.targetval
                 err = combined_err(test.testerr, test.targeterr)
@@ -702,6 +710,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
                 if not accepted(test.testval, test.testerr, test.targetval, test.targeterr):
                     suffix += " <--- BIG DISCREPANCY??"
                     num_valfail = num_valfail + 1
+                    test.failed = True
                     anyfailed=True
                 logging.info(formatstr % test.get_display_name() + "    [val: " + str(test.testval) + " / " + str(test.targetval) + " = " + str(percent) + " %]" + suffix)
             else:                 # Special case, expected test target value is 0

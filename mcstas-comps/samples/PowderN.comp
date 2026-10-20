@@ -46,7 +46,7 @@
 *   box/plate:       xwidth x yheight x zdepth (thickness=0)
 *   hollow box/plate:xwidth x yheight x zdepth and thickness>0
 *   cylinder:        radius x yheight (thickness=0)
-*   hollow cylinder: radius x yheight and thickness>0
+*   hollow cylinder: radius x yheight and thickness>0 (no lids: the cavity spans the full yheight, as a sample can without lids)
 *   sphere:          radius (yheight=0 thickness=0)
 *   hollow sphere:   radius and thickness>0 (yheight=0)
 *   any shape:       geometry=OFF_file

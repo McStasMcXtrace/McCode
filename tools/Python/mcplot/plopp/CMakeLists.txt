@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.19)
 cmake_policy(VERSION 3.17.0)
 
-# This will install McStas or McXtrace mc/mxplot-terminal
-project(python-tools-mcplot-terminal C)
+# This will install McStas or McXtrace mc/mxplot-plopp
+project(python-tools-mcplot-plopp C)
 
 message(STATUS "Configure ${CMAKE_PROJECT_NAME} ${FLAVOR} ${PROJECT_NAME}")
 
@@ -32,10 +32,10 @@ setupMCCODE("${FLAVOR}")
 # Select prefix
 set(P "${MCCODE_PREFIX}")
 
-set(TOOLS_NAME "Python/${P}plot/terminal")
+set(TOOLS_NAME "Python/${P}plot/plopp")
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}plot-terminal")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}plot-plopp")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
@@ -45,48 +45,33 @@ set(CPACK_PACKAGE_VERSION_MINOR "${MCCODE_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${MCCODE_PATCH}")
 
 # NSIS
-set(NSIS_NAME "Python-based mcplot (mcplot-terminal), ${MCCODE_STRING}")
+set(NSIS_NAME "Plopp-based mcplot (mcplot-plopp), ${MCCODE_STRING}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
-
-# Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, ${FLAVOR}-tools-python-mccodelib, python3-numpy")
-
-# RPM
-if (RPMPROFILE AND RPMPROFILE STREQUAL "fedora")
-  set(PYDEPS " python3-numpy")
-else()
-  set(PYDEPS "")
-endif()
-
-set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, ${PYDEPS}"
-)
 
 include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
 # Configure fallback script
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot-terminal" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot-plopp" @ONLY)
 
-# Main script, including rename mc/mxplot
+# Main script - NOT renamed per flavor: the generated notebook imports it by this name
 install(
-  PROGRAMS "${PROJECT_SOURCE_DIR}/mcplot.py"
+  PROGRAMS "${PROJECT_SOURCE_DIR}/mcplopp.py"
   DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
-  RENAME "${P}plot.py"
   )
 
 # Wrapper-scripts on windows are handled via
-# cmake Modules/InstallMCCODE
+# cmake Modules/MCUtil
 if(NOT WINDOWS)
   add_custom_target(
-    "CREATE_${PROJECT_NAME}_SYMLINK" ALL DEPENDS "${WORK}/${P}plot-terminal"
+    "CREATE_${PROJECT_NAME}_SYMLINK" ALL DEPENDS "${WORK}/${P}plot-plopp"
     )
 
   install(
-    PROGRAMS "${WORK}/${P}plot-terminal"
+    PROGRAMS "${WORK}/${P}plot-plopp"
     DESTINATION ${DEST_BINDIR}
     )
 endif()

@@ -45,7 +45,7 @@ export const InstrumentProvider: React.FC<InstrumentProviderProps> = ({
   });
 
   useEffect(() => {
-    fetchJSON("../instrument.json").then((data) => {
+    fetchJSON("./instrument.json").then((data) => {
       if (data) {
         const instrument = initializeInstrument(data);
         _setInstrument(instrument);

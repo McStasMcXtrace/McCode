@@ -672,6 +672,20 @@ class Scanner_split:
         # Sort results to preserve order
         results.sort(key=lambda r: r['index'])
 
+        if self.mcstas.options.format.lower() == 'nexus':
+            # Parallel steps can't safely append to one HDF5 file, so each wrote
+            # its own dir/i/mccode.h5 - merge them as entry1..N like a serial scan.
+            import os, shutil, subprocess
+            merged = join(mcstas_dir, 'mccode.h5')
+            steps = [join(mcstas_dir, str(r['index']), 'mccode.h5') for r in results]
+            steps = [s for s in steps if os.path.exists(s)]
+            for n, step in enumerate(steps):
+                if n == 0:
+                    shutil.copy(step, merged)
+                else:
+                    subprocess.run(['h5copy', '-i', step, '-o', merged,
+                                    '-s', '/entry1', '-d', f'/entry{n+1}'], check=True)
+
         skipped = [r['index'] for r in results if not r['detectors']]
 
         with open(self.outfile, 'w') as outfile:
