@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Statistical acceptance in mctest</title>
+<style>
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    line-height: 1.6;
+    color: #1a1a1a;
+    background: #fff;
+}
+h1, h2, h3 { line-height: 1.25; }
+h1 { border-bottom: 2px solid #e1e4e8; padding-bottom: 0.4rem; }
+h2 { border-bottom: 1px solid #e1e4e8; padding-bottom: 0.3rem; margin-top: 2.2rem; }
+h3 { margin-top: 1.6rem; }
+a { color: #0969da; text-decoration: none; }
+a:hover { text-decoration: underline; }
+code {
+    background: #f6f8fa;
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.9em;
+}
+pre {
+    background: #f6f8fa;
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+}
+pre code { background: none; padding: 0; }
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0 1.5rem;
+    font-size: 0.95em;
+}
+th, td {
+    border: 1px solid #d0d7de;
+    padding: 0.5rem 0.8rem;
+    text-align: left;
+    vertical-align: top;
+}
+th { background: #f6f8fa; font-weight: 600; }
+tr:nth-child(even) { background: #fbfbfb; }
+hr { border: none; border-top: 1px solid #e1e4e8; margin: 2rem 0; }
+em { color: #57606a; }
+.nav-top, .nav-bottom { margin-bottom: 1.5rem; }
+.nav-bottom { margin-top: 2.5rem; }
+</style>
+</head>
+<body>
+<p><a href="README.html">&larr; back to overview</a> · <a href="mctest.html">mctest</a></p>
+<h1 id="statistical-acceptance-in-mctest">Statistical acceptance in mctest</h1>
+<p>mctest can judge a test value against its target using the Monte Carlo error
+bars that every McStas and McXtrace run prints, instead of only a fixed ±20 %
+window. This note explains the rule, the assumptions behind it, and where it can
+mislead.</p>
+<h2 id="tldr">TL;DR</h2>
+<ul>
+<li><strong>Nothing changes unless you ask for it.</strong> Without new options, mctest still
+  passes a value within ±20 % of its target.</li>
+<li><strong><code>mctest --nsigma 5</code></strong> also passes a value that is within 5 error bars of its
+  target. This helps noisy, low-statistics tests that miss ±20 % by bad luck. It
+  never fails anything ±20 % would pass, as long as targets carry no error bar
+  (and none do yet).</li>
+<li><strong>Error bars from too few particles are ignored.</strong> Fewer than ~100 effective
+  events, and mctest falls back to ±20 %, so a nearly empty run can't slip through.</li>
+<li><strong><code>--pvalue</code></strong> is the same threshold for people who think in p-values:
+  <code>--pvalue 5.7e-7</code> is <code>--nsigma 5</code>.</li>
+<li><strong><code>--statfactor F</code></strong> runs every test with F times the particles: <code>0.1</code> for a
+  quick check, <code>100</code> for reference-quality numbers.</li>
+<li><strong>Use 5, not 3.</strong> A full test run judges thousands of values, and at 3σ a few
+  of them would fail by chance alone every time.</li>
+<li><strong>Error bars can lie.</strong> Instruments using <code>SPLIT</code> report error bars that are
+  too small, and some targets are a few per cent off for non-statistical
+  reasons. That's why ±20 % stays in place for now.</li>
+</ul>
+<h2 id="what-a-test-compares">What a test compares</h2>
+<p>Each test definition in an instrument header gives a target intensity for one
+monitor, either as a single value (<code>%Test:</code>, also accepted under its older name
+<code>%Example:</code>) or as one value per point of a parameter scan (<code>%TestScan:</code>). A test
+run produces, for that monitor, the intensity <em>I</em> and its error bar <em>ERR</em>, as in
+the simulation's own summary line:</p>
+<pre><code>Detector: transmitted_I=2.00752e+08 transmitted_ERR=2.28872e+06 transmitted_N=50752 "transmitted.L_U1"
+</code></pre>
+<p>mctest reads <em>I</em> and <em>ERR</em> from the monitor file's <code># values:</code> line, from this
+stdout line for NeXus output, or from the <code>NAME_I</code> and <code>NAME_ERR</code> columns of a
+scan's <code>mccode.dat</code>. In McCode, <em>I</em> = Σ p<sub>i</sub> over the N neutron or
+photon weights p<sub>i</sub> reaching the monitor, and
+ERR² = N/(N−1)·(Σ p<sub>i</sub>² − (Σ p<sub>i</sub>/N)²), which is
+Σ p<sub>i</sub>² to a very good approximation for any N worth testing. A single
+event gives ERR = <em>I</em>.</p>
+<p>A target may also carry its own error bar, written the same way:
+<code>Detector: NAME_I=… NAME_ERR=…</code> on a <code>%Test:</code> line, or <code>NAME_ERR={…}</code> after the
+<code>NAME_I={…}</code> list of a <code>%TestScan:</code> line. No instrument does this yet.</p>
+<h2 id="the-acceptance-rule">The acceptance rule</h2>
+<p>With Δ = I<sub>test</sub> − I<sub>target</sub> and a threshold <em>n</em> given by
+<code>--nsigma n</code> (or <code>--pvalue p</code>, see below), each value, or each point of a scan,
+is accepted as follows.</p>
+<table>
+<thead>
+<tr>
+<th>Threshold given</th>
+<th>Target line</th>
+<th>Error bars usable</th>
+<th>Accepted when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>no</td>
+<td>any</td>
+<td>not used</td>
+<td>within ±20 % of the target</td>
+</tr>
+<tr>
+<td>yes</td>
+<td>no <code>_ERR</code></td>
+<td>yes</td>
+<td>within ±20 % <strong>or</strong> |Δ| ≤ n·√(1+f)·ERR<sub>test</sub></td>
+</tr>
+<tr>
+<td>yes</td>
+<td>has <code>_ERR</code></td>
+<td>yes</td>
+<td>|Δ| ≤ n·√(ERR<sub>test</sub>² + ERR<sub>target</sub>²), error bars alone</td>
+</tr>
+<tr>
+<td>yes</td>
+<td>any</td>
+<td>no</td>
+<td>within ±20 % of the target</td>
+</tr>
+</tbody>
+</table>
+<p>Here <em>f</em> is the <code>--statfactor</code> (default 1, giving √2·ERR<sub>test</sub>). A scan
+passes only if every point passes and the number of points matches the target
+list. mcviewtest colours its report by the same rule, using the threshold and
+factor stored with each result.</p>
+<p>The ±20 % rule is kept as an equal alternative while targets carry no <code>_ERR</code>, so
+an error-bar threshold can only widen acceptance, never narrow it. It is dropped
+for a target that states its own error bar: such a target is a deliberate
+statistical statement and is judged by the error bars alone.</p>
+<h2 id="the-targets-error-bar-when-it-is-not-recorded">The target's error bar, when it is not recorded</h2>
+<p>A comparison of two Monte Carlo estimates needs both variances:
+σ<sub>Δ</sub>² = σ<sub>test</sub>² + σ<sub>target</sub>². Today's targets were
+recorded without their error bar. mctest assumes the target was produced at the
+unscaled ncount of the test, so that its error bar is that of the test run
+scaled back by the statistics factor:</p>
+<pre><code>σ_target = σ_test · √f        ⇒        σ_Δ = σ_test · √(1 + f)
+</code></pre>
+<p>Without <code>--statfactor</code> this is σ<sub>Δ</sub> = √2·σ<sub>test</sub>. Most targets
+were in fact made at higher statistics than the default test, so the assumption
+usually overstates σ<sub>target</sub> and errs towards accepting: it reduces
+false alarms, while a real regression still shows up as a large deviation. If a
+target came from fewer events than the test, the test becomes stricter than
+intended. Recording <code>_ERR</code> on the target line replaces the assumption with the
+real value.</p>
+<h2 id="when-error-bars-are-not-trusted">When error bars are not trusted</h2>
+<p>An error bar from a handful of particles is itself very uncertain, and a large
+one would let almost any value through. For example, with only a hundred
+neutrons, a test value at 28 % of its target is only 2.2σ away. mctest therefore
+uses error bars only from enough effective events:</p>
+<pre><code>N_eff = (I / ERR)² ≈ (Σ p_i)² / Σ p_i²   ≥ 100
+</code></pre>
+<p>N<sub>eff</sub> is Kish's effective sample size of the weighted particles
+reaching the monitor: the number of unweighted events that would give the same
+relative error, which is then 1/√N<sub>eff</sub>, at most 10 % here. Below the
+limit, the value is judged by the ±20 % rule, and mctest says so in its log. For
+a target with <code>_ERR</code>, its own N<sub>eff</sub> must pass the limit as well. A zero
+result, or a missing error bar, always falls back to the ±20 % rule.</p>
+<h2 id="choosing-the-threshold">Choosing the threshold</h2>
+<p>For a Gaussian-distributed Δ, accepting |Δ| ≤ n·σ<sub>Δ</sub> is the same test as
+accepting a two-sided p-value of at least p = 2·(1 − Φ(n)). <code>--pvalue p</code> is
+converted to <em>n</em> with this relation, so the two options are equivalent ways to
+set one threshold.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">n (σ)</th>
+<th style="text-align: right;">Two-sided p</th>
+<th style="text-align: right;">Coverage</th>
+<th style="text-align: right;">Expected false failures per 2000 values</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">2.17</td>
+<td style="text-align: right;">0.03</td>
+<td style="text-align: right;">97 %</td>
+<td style="text-align: right;">60</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2.7 × 10⁻³</td>
+<td style="text-align: right;">99.73 %</td>
+<td style="text-align: right;">5.4</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">6.3 × 10⁻⁵</td>
+<td style="text-align: right;">99.994 %</td>
+<td style="text-align: right;">0.13</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">5.7 × 10⁻⁷</td>
+<td style="text-align: right;">99.99994 %</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+</tbody>
+</table>
+<p>The number of comparisons decides the threshold. A full test suite judges a few
+thousand values once every scan point is counted, so a per-value threshold that
+sounds strict still produces several spurious failures per run at 3σ. The CI
+test suites therefore run with <code>--nsigma 5</code>, which keeps the expected number of
+false alarms per run far below one.</p>
+<h2 id="scaling-the-statistics">Scaling the statistics</h2>
+<p><code>--statfactor f</code> multiplies the ncount of every test by <em>f</em>: the general ncount
+(<code>-n</code>, default 10⁶) for single-value tests, and the per-point ncount of each
+scan (the scan line's own <code>-n</code>, else at most 10⁵ per point). Small factors give
+quick, rough runs; large factors give runs good enough to record new targets
+with their error bars. Run timeouts grow with <em>f</em>, and the factor is part of the
+result directory's name.</p>
+<p>The test run's own ERR follows the reduced or increased statistics
+automatically, so nothing needs to be back-projected from the target. Only the
+unrecorded target error depends on <em>f</em>, through the √(1+f) above.</p>
+<h2 id="known-limitations">Known limitations</h2>
+<ul>
+<li><strong>Correlated weights.</strong> ERR assumes that the particle histories are
+  independent. Instruments that use <code>SPLIT</code> reuse each history several times,
+  so their error bars understate the real scatter between runs. Measured
+  examples: SSRL_bl_11_2_white_src (two <code>SPLIT 10</code> crystals) scattered 8–12 %
+  between seeds at 10⁶ against reported errors of 3–5 %; LLB_6T2 scattered
+  5–10 % against a reported 0.2 %. For such instruments, a pure error-bar test
+  with a recorded target <code>_ERR</code> would fail spuriously.</li>
+<li><strong>Systematic differences.</strong> A target that is a few per cent off for reasons
+  other than statistics, such as an older code version, fails a pure error-bar
+  test as soon as the statistics are high. Test_KDSource at full statistics is
+  3 % below its target, which is −13σ and −42σ for its high-statistics variants.
+  Such tests pass today only through the ±20 % alternative. Record a target's
+  <code>_ERR</code> only together with a freshly generated, high-statistics target value.</li>
+<li><strong>Tests whose statistics do not depend on ncount.</strong> Instruments that read
+  their particles from a file (MCPL or KDSource input) give the same value and
+  error bar whatever the ncount, so <code>--statfactor</code> changes only the assumed
+  target error for them. The √(1+f) assumption does not apply there.</li>
+<li><strong>Random streams.</strong> With MPI, each rank seeds from the base seed plus its
+  rank, and scans give each point its own seed. Results therefore differ between
+  rank counts and from serial runs even with a fixed <code>--seed</code>, which is why
+  acceptance must allow for statistical scatter in the first place.</li>
+<li><strong>Gaussian approximation.</strong> The threshold assumes Δ is Gaussian. That holds
+  well above the N<sub>eff</sub> limit, but not for a handful of events, which is
+  one reason those fall back to the ±20 % rule.</li>
+</ul>
+<h2 id="results-on-the-ci-basic-tests">Results on the CI basic tests</h2>
+<p>The McStas basic-test instruments at 10⁶ particles with MPI, judged with
+<code>--nsigma 5</code>. Deviations use the √2·ERR assumption, and only the tests where the
+two rules disagree, or come close, are shown.</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th style="text-align: right;">% of target</th>
+<th style="text-align: right;">Deviation</th>
+<th style="text-align: right;">N<sub>eff</sub></th>
+<th>±20 %</th>
+<th>Used rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BNL_H8_simple</td>
+<td style="text-align: right;">76 %</td>
+<td style="text-align: right;">−1.0σ</td>
+<td style="text-align: right;">≈19</td>
+<td>fail</td>
+<td>fail (below N<sub>eff</sub> limit, ±20 %)</td>
+</tr>
+<tr>
+<td>Test_KDSource_3</td>
+<td style="text-align: right;">97 %</td>
+<td style="text-align: right;">−13σ</td>
+<td style="text-align: right;">≈4×10⁵</td>
+<td>pass</td>
+<td>pass (±20 %)</td>
+</tr>
+<tr>
+<td>Test_KDSource_4</td>
+<td style="text-align: right;">97 %</td>
+<td style="text-align: right;">−42σ</td>
+<td style="text-align: right;">≈4×10⁶</td>
+<td>pass</td>
+<td>pass (±20 %)</td>
+</tr>
+<tr>
+<td>ESS_BEER_MCPL</td>
+<td style="text-align: right;">109 %</td>
+<td style="text-align: right;">+4.6σ</td>
+<td style="text-align: right;">≈6×10³</td>
+<td>pass</td>
+<td>pass</td>
+</tr>
+<tr>
+<td>BNL_H8</td>
+<td style="text-align: right;">96 %</td>
+<td style="text-align: right;">−4.2σ</td>
+<td style="text-align: right;">≈2×10⁴</td>
+<td>pass</td>
+<td>pass</td>
+</tr>
+</tbody>
+</table>
+<p>All other basic-test values, McStas and McXtrace, are within 3.7σ and 9 % of
+their targets. BNL_H8_simple has too few effective events at 10⁶ to be judged
+by its error bar and is a genuinely noisy test; it needs a higher ncount in its
+own test line.</p>
+<h3 id="with-scaled-statistics">With scaled statistics</h3>
+<p>The same McStas tests plus the 41-point SE_example scans, at
+<code>--statfactor 0.1</code> (10⁵ particles per value, 10⁴ per scan point) and
+<code>--statfactor 10</code> (10⁷ and 10⁶), with <code>--nsigma 5</code>.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Factor</th>
+<th>Result</th>
+<th>What happened</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">0.1</td>
+<td>5 tests fail</td>
+<td>BNL_H8_simple got zero counts, templateSANS_Mantid came out at 149 %, and both SE_example scans had points outside ±20 %. All of these fell below the N<sub>eff</sub> limit and were judged by the ±20 % rule: at this factor the tests lack the statistics to be judged, which the rule reports instead of hiding.</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td>all pass</td>
+<td>BNL_H8_simple, which fails ±20 % at the default ncount, comes out at 100.8 %. The scans pass with every point within 11 % of target.</td>
+</tr>
+</tbody>
+</table>
+<p>Test_KDSource and ESS_BEER_MCPL return identical values at every factor, because
+they read a fixed particle file. Their reported deviation still changes with <em>f</em>
+(Test_KDSource_3: −17.9σ at 0.1, −13σ at 1, −5.7σ at 10), purely through the
+assumed target error σ<sub>test</sub>·√f. This is the limitation for file-input
+tests described above.</p>
+<h2 id="usage">Usage</h2>
+<pre><code>mctest --nsigma 5                     # error bars, else ±20 %
+mctest --pvalue 5.7e-7                # the same threshold as a p-value
+mctest --nsigma 5 --statfactor 0.1    # quick run, 10× fewer particles
+mctest --nsigma 5 --statfactor 100    # reference run, e.g. to record targets with _ERR
+</code></pre>
+<p>Without <code>--nsigma</code> or <code>--pvalue</code>, mctest behaves as before: every value is
+judged by the ±20 % rule.</p>
+</body>
+</html>

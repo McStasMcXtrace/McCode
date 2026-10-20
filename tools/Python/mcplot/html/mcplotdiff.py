@@ -23,7 +23,6 @@ import sys
 import io
 import base64
 import json
-import subprocess
 
 import numpy as np
 from PIL import Image
@@ -36,7 +35,7 @@ from mccodelib import mccode_config
 from mccodelib import mcplotdiffloader as diffloader
 from mccodelib.mcplotdiffloader import (
     path_base_name, default_labels, dirsafe_name, load_monitors, compute_diffs, find_original_plot,
-    write_mccode_dat, write_mccode_sim,
+    write_mccode_dat, write_mccode_sim, monitor_basename,
 )
 
 global WIDTH, HEIGHT
@@ -265,7 +264,7 @@ def get_params_str_2D_diff(data):
 
 def browse(html_filepath):
     try:
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], html_filepath), shell=True)
+        mccode_config.open_in_browser(html_filepath)
     except Exception as e:
         raise Exception('Os-specific open browser: %s' % e.__str__())
 
@@ -280,7 +279,7 @@ def plot_diff_single(data, outdir, use_logscale, dat_basename=None):
     global logscale
     logscale = use_logscale
 
-    basename = 'diff_' + path_base_name(data.filename)
+    basename = 'diff_' + path_base_name(monitor_basename(data))
     fname = basename + ('_log.html' if use_logscale else '.html')
     f = os.path.join(outdir, fname)
 
@@ -522,8 +521,8 @@ def main(args):
 
         # locate any pre-existing mcplot-html plots for this monitor, so
         # we can link to the original a/b data alongside the diff plot
-        a_lin, a_log = find_original_plot(dir_a, data.filename)
-        b_lin, b_log = find_original_plot(dir_b, data.filename)
+        a_lin, a_log = find_original_plot(dir_a, monitor_basename(data))
+        b_lin, b_log = find_original_plot(dir_b, monitor_basename(data))
         if not (a_lin or a_log):
             print("Note: no existing mcplot-html output found for '%s' in '%s'" % (data.filename, args.a))
         if not (b_lin or b_log):

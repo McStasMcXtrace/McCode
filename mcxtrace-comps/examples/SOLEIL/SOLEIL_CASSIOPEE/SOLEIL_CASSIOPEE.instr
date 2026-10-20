@@ -127,7 +127,7 @@ COMPONENT Source_HU60 = Undulator(
     sigepx = 31.4e-6,
     sigepy = 4.2e-6)
 WHEN undulator_index == 1
-AT (0, 0, 0) RELATIVE Origin
+AT (0, 0, 0) RELATIVE PREVIOUS
 
 
 
@@ -144,13 +144,13 @@ COMPONENT Source_HU256 = Undulator(
     sigepx = 31.4e-6,
     sigepy = 4.2e-6)
 WHEN undulator_index == 2
-AT (0, 0, 2.727) RELATIVE Origin
+AT (0, 0, 2.727) RELATIVE PREVIOUS
 
 /* -------------------------------------------------- Plane mirror M1a */
 /* dimensions 130x25 mm (e=60 mm) */
 
 COMPONENT M1a_location = Arm()
-AT (0, 0, 21.83)          RELATIVE Origin
+AT (0, 0, 21.83)          RELATIVE Source_HU60
 
 COMPONENT M1a = Mirror_curved( // in YZ plane
   coating = mirror_material,

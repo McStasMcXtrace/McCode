@@ -22,7 +22,7 @@
 * 29       | Sample location
 * 29.1     | Fluorescence Detector at 90 deg
 *
-* %Example: -n 1e7 E0=3.09 Detector: mon_spl_SDD_I=9.69081e+09
+* %Example: E0=3.09 Detector: mon_spl_SDD_I=9.69081e+09
 *
 * %Parameters
 * E0: [keV] Nominal energy at the source, in 0.6-8 keV.
@@ -88,7 +88,7 @@ COMPONENT source = Undulator(
   sigey  = 8.2e-6,
   sigepx = 30e-6,
   sigepy = 3.7e-6) 
-AT (0,0,0) RELATIVE origin
+AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT mon_src_xy = Monitor_nD(
   options="x y", xwidth=2e-3, yheight=2e-3, bins=128)

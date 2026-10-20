@@ -25,7 +25,8 @@
 *
 * The shape of the sample is either:
 * 1. Hollow cylinder (Please note that the cylinder **must** be specified with both 
-*    a radius and a wall-thickness!)
+*    a radius and a wall-thickness!). It has no lids: the cavity spans the
+*    full yheight, as a sample can without lids.
 * 2. A massive, rectangular box specified with dimensions xwidth, yheight, zdepth.
 *    (i.e. **withouht** a thickness)
 *

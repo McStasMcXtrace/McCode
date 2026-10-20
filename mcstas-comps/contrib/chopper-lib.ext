@@ -3,21 +3,21 @@
   "description": "Disk chopper timing from NeXus NXdisk_chopper descriptions, and ESS butterfly moderators with a masked or polygonal emission surface.",
   "homepage": "https://github.com/mcdotstar/mcstas-chopper-lib",
   "git": "https://github.com/mcdotstar/mcstas-chopper-lib.git",
-  "version": "v4.2.2",
+  "version": "v4.4.0",
   "license": "BSD-3-Clause",
-  "base": "https://raw.githubusercontent.com/mcdotstar/mcstas-chopper-lib/v4.2.2/",
+  "base": "https://raw.githubusercontent.com/mcdotstar/mcstas-chopper-lib/v4.4.0/",
   "files": [
     {
       "name": "NXdisk_chopper.comp",
-      "sha256": "9e244d48928cd21c40ab995a7f2a9b0c3a58b68140806c293e834e2395f98dc6"
+      "sha256": "03af09582d085511f27993f5ffc2f2d9a142498debab3a9a239c394d878d3a58"
     },
     {
       "name": "Masked_ESS_butterfly.comp",
-      "sha256": "9d180a72aae449f4dee2791c025a46cf9441cfc96704f497dc549879d8e7a7c7"
+      "sha256": "6e6093bba18ebe685bc596c07159d74f24136930479dae96dccbdaa2fed9bece"
     },
     {
       "name": "Polygon_ESS_butterfly.comp",
-      "sha256": "2062ec33f2af0fe1d4945d203c1fd816c28c79a013d5c66492f4996daefaaeca"
+      "sha256": "c2579b1f3dc2e801c5e17c0a406edfe629de70452ca4ca457e1aee622c80a928"
     }
   ]
 }

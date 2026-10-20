@@ -44,12 +44,15 @@ export MCCODE_USE_LEGACY_DESTINATIONS=ON
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw64 "" -- nsis64
+./mkdist mcxtrace-tools-python-mxplot-plopp $1 tools/Python/mcplot/plopp/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-tools-python-mxplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mingw64 "" -- nsis64
+./mkdist mcxtrace-tools-python-mxplot-html $1 tools/Python/mcplot/html/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-tools-python-mxtest $1 tools/Python/mctest/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-tools-python-mxdisplay-pyqtgraph $1 tools/Python/mcdisplay/pyqtgraph/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-tools-python-mxdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mingw64 "" -- nsis64
+./mkdist mcxtrace-tools-python-mxdisplay-plopp $1 tools/Python/mcdisplay/plopp/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-tools-python-mxdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-tools-python-mxdisplay-webgl-classic $1 tools/Python/mcdisplay/webgl-classic/ "" mingw64 "" -- nsis64
 ./mkdist mcxtrace-manuals $1 docpkg/manuals/mcxtrace/ "" mingw64 "o" -- nsis64
@@ -73,7 +76,7 @@ if [ "x$2" != "x" ]; then
     sed s/@FLAVOR@/mcxtrace/g docupdate.bat.in.3 > docupdate.bat
 
     sed s/@VERSION@/${1}/g McXtrace-metapackage64-MinGW.iss > McXtrace-${1}-metapackage64-MinGW.iss
-    ./iscc McXtrace-${1}-metapackage64-MinGW.iss
+    ./iscc McXtrace-${1}-metapackage64-MinGW.iss || { echo "ERROR: Inno Setup compilation of McXtrace-${1}-metapackage64-MinGW.iss failed" >&2; exit 1; }
     mv Output/McXtrace-Metapackage-${1}-MinGW-win64.exe dist/
     cp $WORK/INSTALL-McXtrace/Windows/README.md dist/
     mkdir dist/single-packages

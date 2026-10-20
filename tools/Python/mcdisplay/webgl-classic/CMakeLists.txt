@@ -51,7 +51,7 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, python3, python3-ply, python3-numpy")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, ${FLAVOR}-tools-python-mccodelib, python3, python3-ply, python3-numpy")
 set(CPACK_DEBIAN_PACKAGE_REPLACES "${FLAVOR}-tools-python-${P}display-webgl-classic-3.5.1")
 
 # RPM
@@ -84,7 +84,7 @@ install(
   )
 
 # Other .py infrastructure
-foreach(NAME mcdisplay.js Lut.js OrbitControls.js dat.gui.min.js jquery.min.js three.min.js template.html __init__.py)
+foreach(NAME mcdisplay.js Lut.js OrbitControls.js three.min.js template.html __init__.py)
   install(
     FILES "${PROJECT_SOURCE_DIR}/${NAME}"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"

@@ -3,6 +3,7 @@ import pathlib
 import json
 import platform as OsPlatform
 import subprocess
+import shlex
 
 thisdir = pathlib.Path(__file__).parent.absolute().resolve()
 tooldir = ( thisdir / '..' / '..' ).absolute().resolve()
@@ -23,7 +24,7 @@ def check_env_vars():
     MCCODE_MPICC_OVERRIDE  = configuration["MCCODE"].upper() + '_MPICC_OVERRIDE'
     MCCODE_MPIRUN_OVERRIDE  = configuration["MCCODE"].upper() + '_MPIRUN_OVERRIDE'
 
-        # MCCODE_LIB_DIR
+    # MCCODE_LIB_DIR
     if os.getenv(MCCODE_OVERRIDE) is not None:
         configuration['MCCODE_LIB_DIR'] = os.getenv(MCCODE_OVERRIDE)
     # CFLAGS
@@ -38,6 +39,10 @@ def check_env_vars():
     # MPIRUN
     if os.getenv(MCCODE_MPIRUN_OVERRIDE) is not None:
         compilation['MPIRUN'] = os.getenv(MCCODE_MPIRUN_OVERRIDE)
+    # In case of macOS with a long $TMPDIR, plug /tmp instead...
+    if OsPlatform.system() == 'Darwin':
+        if len(os.getenv('TMPDIR')) > 40:
+            os.environ['TMPDIR']='/tmp'
 
 def load_config(path=None):
     ''' loads a json user config to the dictionaries in this module '''
@@ -232,6 +237,17 @@ def get_mccode_prefix():
         return "mc"
     else:
         return "mx"
+
+def open_in_browser(path):
+    ''' opens a file or URL with the configured BROWSER command, quoting the path for the shell '''
+    browser = configuration['BROWSER']
+    if os.name == 'nt':
+        # cmd.exe: double-quote the path; 'start' takes the first quoted argument as window title
+        title = '"" ' if browser.strip().lower() == 'start' else ''
+        cmd = '%s %s"%s"' % (browser, title, path)
+    else:
+        cmd = '%s %s' % (browser, shlex.quote(str(path)))
+    subprocess.Popen(cmd, shell=True)
 
 '''
 mcstas/mcxtrace configuration.
