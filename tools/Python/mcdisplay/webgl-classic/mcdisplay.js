@@ -25,9 +25,6 @@ var Main = function ()
     this.compColors = [0xf80000, 0x00f800, 0x0000f8, 0x00f8f8, 0xf800f8, 0x00f880, 0xf8f800, 0xf88000, 0x80f800, 0x0080f8, 0x800f8, 0xf80080, 0xa8a8a8];
     this.iColor = -1;
 
-    this.rayColor = 0x00ffff;
-    this.aCompVertices
-    this.rayobj;
     this.raynodes = [];
 
     this.iRay = -1;
@@ -38,7 +35,6 @@ var Main = function ()
 //
 Main.prototype.addCircle = function(plane, x, y, z, radius, parent, linecolor)
 {
-    console.log(plane, x, y, z, radius);
     if (radius == 0)
     {
         return;
@@ -65,18 +61,6 @@ Main.prototype.addCircle = function(plane, x, y, z, radius, parent, linecolor)
     circle.position.z = z;
 
     parent.add( circle );
-}
-// add sphere
-//		radius
-//		wseg 	- width segments
-//		hseg 	- height segments
-Main.prototype.addSphere = function(radius, wseg, hseg)
-{
-    var geometry = new THREE.SphereGeometry(radius, wseg, hseg);
-    var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
-    var sphereMaterial = new THREE.MeshLambertMaterial({ color: 0xCC0000 });
-    var sphere = new THREE.Mesh( geometry, sphereMaterial );
-    this.scene.add( sphere );
 }
 // add pointlight
 // 		center 	- THREE.Vector3 instance
@@ -108,8 +92,6 @@ Main.prototype.init = function(campos, invert)
         this.renderer.setClearColor( 0xffffff );
     }
 
-    element = document.getElementById("3dcanvas");
-    console.log(element);
     document.getElementById("3dcanvas").appendChild(this.renderer.domElement);
 
     this.controls = new THREE.OrbitControls(this.camera);
@@ -135,13 +117,6 @@ Main.prototype.setCameraView = function(campos)
     this.controls.target.z = campos.z;
 
     this.camera.lookAt(this.controls.target);
-}
-//  set a bounding box around the components
-//
-Main.prototype.setNativeBoundingBox = function()
-{
-    var box = new THREE.BoxHelper(this.rootnode, 0x808080);
-    this.scene.add(box);
 }
 // add multiline
 // 		arrVector3  -  an array of THREE.Vector3 instances
@@ -191,8 +166,6 @@ Main.prototype.setLutRange = function(min, max)
     this.lut = new THREE.Lut( "cooltowarm", 512 );
     this.lut.setMin(min);
     this.lut.setMax(max);
-    console.log("Lut min value: " + min);
-    console.log("Lut max value: " + max);
 }
 // add a ray node
 //
@@ -200,7 +173,6 @@ Main.prototype.addRayNode = function(rayObj, vertices, speed)
 {
     var lut_color = this.lut.getColor(speed);
     rayObj.lut_color = lut_color;
-    console.log("lut_color: " + lut_color);
 
     var multilinematerial = new THREE.LineBasicMaterial({color: lut_color});
     var multilinegeometry = new THREE.Geometry();
@@ -236,18 +208,6 @@ Main.prototype.getNextComponentColor = function()
     }
     return this.compColors[this.iColor];
 }
-// show all rays in this.raynodes
-//
-Main.prototype.showAllRays = function()
-{
-    for (var i = 0; i < this.raynodes.length; i++)
-    {
-        node = this.raynodes[i];
-        // NOTE: the following two lines should instead hvae been implemented via a function called "update" and set in a proper manor
-        if (node.parent == null) { this.putScatterPoints(node); this.rootnode.add(node); };
-        this.raynodes[i].visible = true;
-    }
-}
 // remove all rays in this.raynodes from the scene graph
 //
 Main.prototype.hideAllRays = function()
@@ -276,25 +236,6 @@ Main.prototype.showCubes = function()
         ray = this.raynodes[i];
         ray.annotcubes.visible = true;
     }
-}
-// iterates to attach the next ray in the global ray sequence
-//
-Main.prototype.showNextRay = function()
-{
-    if (this.raynodes.length == 0) { return; }
-
-    lastRay = this.iRay;
-    this.iRay += 1;
-    if (this.iRay >= this.raynodes.length)
-    {
-        this.iRay = 0;
-    }
-    newnode = this.raynodes[this.iRay];
-    // NOTE: the following two lines should instead hvae been implemented via a function called "update" and set in a proper manor
-    if (node.parent == null) { this.putScatterPoints(newnode); this.rootnode.add(newnode); };
-    newnode.visible = true;
-
-    this.raynodes[lastRay].visible = false;
 }
 // iterates to attach the next ray in the global ray sequence
 //
@@ -465,7 +406,7 @@ var Controller = function(campos_x, campos_y, campos_z, box_lst, invert_canvas)
     this.main = new Main();
     this.loader = new TraceLoader(MCDATA_instrdata, MCDATA_particledata, this.main);
     this.numRays = MCDATA_particledata["numrays"]
-    this.viewmodel = new ViewModel(numRays = this.numRays);
+    this.viewmodel = new ViewModel(this.numRays);
 }
 Controller.prototype.setUpdateGuiFunc = function(updateGuiFunc)
 {
@@ -493,11 +434,6 @@ Controller.prototype.run = function()
         busy = true;
 
         // show/hide ray nodes
-        if (_this.viewmodel.playBack == PlayBack.ALL)
-        {
-            _this.showAllRays();
-            return;
-        }
         if (_this.viewmodel.playBack == PlayBack.RUN)
         {
             _this.incSingleRay();
@@ -543,14 +479,9 @@ Controller.prototype.run = function()
     // load data - possibly heavy
     this.loader.loadInstr();
     this.loader.loadParticles();
-    //this.main.setNativeBoundingBox();
 
     // set pause playback mode now after everything else, in case of zero or one rays
     if (this.numRays <= 1) { this.viewmodel.playBack = PlayBack.PAUSE }
-}
-Controller.prototype.showAllRays = function()
-{
-    this.main.showAllRays();
 }
 Controller.prototype.hidePrevRays = function()
 {
@@ -598,7 +529,7 @@ Controller.prototype.setViewHome = function()
 
 //  enum for playback state
 //
-PlayBack = { RUN : 0, PAUSE : 1, ALL : 3 };
+PlayBack = { RUN : 0, PAUSE : 1 };
 
 //  displaymode e.g. keep rays animated or display one at the time
 //
@@ -658,6 +589,7 @@ ViewModel.prototype.getShowScatterCubes = function()
 }
 ViewModel.prototype.setRayIdx = function(idx)
 {
+    if (this.numRays == 0) { return; }
     // the socalled "js modulus bug" for negative numbers, using ((n % m) + m) % m;
     idx = ((idx % this.numRays) + this.numRays) % this.numRays;
     this.rayIdx.push(idx);

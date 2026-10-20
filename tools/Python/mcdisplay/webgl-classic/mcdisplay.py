@@ -4,7 +4,6 @@
 mcdisplay webgl-classic script.
 '''
 import sys
-import logging
 import json
 import subprocess
 from pathlib import Path
@@ -34,47 +33,12 @@ class SimpleWriter(object):
                 lines[i] = '        campos_x = %s, campos_y = %s, campos_z = %s; // line written by SimpleWriter' % (str(self.campos.x), str(self.campos.y), str(self.campos.z))
                 box = self.box
                 lines[i+1] = '        box_x1 = %s, box_x2 = %s, box_y1 = %s, box_y2 = %s, box_z1 = %s, box_z2 = %s; // line written by SimpleWriter' % (str(box.x1), str(box.x2), str(box.y1), str(box.y2), str(box.z1), str(box.z2))
-                lines[i+2] = '        invert_canvas = %s; // line written by SimpleWriter' % 'true' if self.invcanvas else 'false'
+                lines[i+2] = '        invert_canvas = %s; // line written by SimpleWriter' % ('true' if self.invcanvas else 'false')
         self.text = '\n'.join(lines)
         
         # write to disk
         try:
             f = open(self.html_filename, 'w')
-            f.write(self.text)
-        finally:
-            f.close()
-
-class DjangoWriter(object):
-    ''' writes a django template from the instrument representation '''
-    instrument = None
-    text = ''
-    templatefile = ''
-    campos = None
-    
-    def __init__(self, instrument, templatefile, campos):
-        self.instrument = instrument
-        self.templatefile = templatefile
-        self.campos = campos
-        
-        # django stuff
-        from django.template import Context
-        from django.template import Template
-        self.Context = Context
-        self.Template = Template
-        from django.conf import settings
-        settings.configure()
-    
-    def build(self):
-        templ = get_file_text_direct(self.templatefile)
-        t = self.Template(templ)
-        c = self.Context({'instrument': self.instrument, 
-            'campos_x': self.campos.x, 'campos_y': self.campos.y, 'campos_z': self.campos.z,})
-        self.text = t.render(c)
-    
-    def save(self, filename):
-        ''' save template to disk '''
-        try:
-            f = open(filename, 'w')
             f.write(self.text)
         finally:
             f.close()
@@ -114,7 +78,7 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
     # copy mcdisplay.js to _mcdisplay.js
     copy(source.joinpath('mcdisplay.js'), dest.joinpath('_mcdisplay.js'))
     # copy JavaScript files without name changes
-    for file in ('three.min', 'dat.gui.min', 'OrbitControls', 'Lut', 'jquery.min'):
+    for file in ('three.min', 'OrbitControls', 'Lut'):
         copy(source.joinpath(f'{file}.js'), dest.joinpath(f'{file}.js'))
     
     # write html
@@ -130,16 +94,11 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
         json_particles = 'MCDATA_particledata = %s;' % json.dumps(raybundle.jsonize(), indent=0)
     else:
         # write empty list
-        json_particles = 'MCDATA_particledata = [];'
+        json_particles = 'MCDATA_particledata = {"numrays": 0, "rays": [], "vmin": 0, "vmax": 0};'
     file_save(json_particles, dest.joinpath('_particles.js'))
 
-    # Workaround for allowing non-relative paths to instrname
-    # see https://github.com/mccode-dev/McCode/issues/1426
-    temp_instrname = Path(instrname)
-    instrname = temp_instrname.name
-
     # copy McCode instrument (this *may* be a binary!)
-    shutil_copy(instrname, str(dest.joinpath(instrname)))
+    copy(instrname, dest.joinpath(Path(instrname).name))
     
     # exit if nobrowse flag has been set
     if nobrowse is not None and nobrowse:
@@ -157,8 +116,6 @@ def file_save(data, filename):
         f.write(data)
 
 def main(instr=None, dirname=None, debug=None, n=None, **kwds):
-    logging.basicConfig(level=logging.INFO)
-    
     # output directory
     if dirname is None:
         from datetime import datetime as dt
@@ -172,11 +129,6 @@ def main(instr=None, dirname=None, debug=None, n=None, **kwds):
     
     # write output files
     write_browse(instrument, raybundle, dirname, instr, **kwds)
-
-    if debug:
-        # this should enable template.html to load directly
-        jsonized = json.dumps(instrument.jsonize(), indent=0)
-        file_save(jsonized, 'jsonized.json')
 
 if __name__ == '__main__':
     from mccodelib.mcdisplayutils import make_common_parser
