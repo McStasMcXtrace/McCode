@@ -575,7 +575,7 @@ if __name__ == '__main__':
     args = {k: args.__getattribute__(k) for k in dir(args) if k[0] != '_'}
 
     if len(unknown):
-        args['options'] = unknown
+        args['options'] += unknown
 
     try:
         main(**args)
