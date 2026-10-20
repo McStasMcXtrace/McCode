@@ -33,7 +33,10 @@ def closed(v, f):  # welded by position, every edge shared by exactly two triang
 v, f = _box(1, 2, 3, 0.2, 0.4, 0.6, 0, 0, 1, 0)  # solid, unrotated: extents w, h, l about the centre
 assert np.allclose(v.min(0), (0.9, 1.8, 2.7)) and np.allclose(v.max(0), (1.1, 2.2, 3.3))
 v, f = _box(0, 0, 0, 0.2, 0.4, 0.6, 0.05, 0, 0, 1)  # hollow, local y (height 0.4) turned onto z
-assert np.allclose(v.max(0), (0.1, 0.3, 0.2)) and len(v) == 16
+assert np.allclose(v.max(0), (0.1, 0.3, 0.2)) and len(v) == 32 and closed(v, f)
+assert np.allclose(v[16:].max(0), (0.05, 0.25, 0.15))  # closed inner cavity (w-2t, l-2t, h-2t), as Incoherent
+v, f = _box(0, 0, 0, 0.2, 0.4, 0.6, 0.1, 0, 1, 0)  # wall too thick: solid
+assert len(v) == 16
 assert np.allclose(_rot_y_to((0, 0, 1)) @ (0, 1, 0), (0, 0, 1)) and np.allclose(_rot_y_to((0, -1, 0)) @ (0, 1, 0), (0, -1, 0))
 
 v, f = _revolve((0, 0, 0), (1, 0, 0), [0, 0.5, 0.5, 0], [-1, -1, 1, 1])  # closed cylinder along x

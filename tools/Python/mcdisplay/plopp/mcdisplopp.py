@@ -30,6 +30,7 @@ from mccodelib.instrgeom import (Vector3d, DrawLine, DrawMultiline, DrawCircle, 
 warnings.filterwarnings('ignore', 'The input contains a coordinate with unsorted', RuntimeWarning)  # polylines, not histograms
 BREAK = [(np.nan,) * 3]  # NaN between polylines lifts the pen, so one line per component
 K = 24  # segments around circles and solids of revolution
+HOLLOW_OPACITY = 0.4  # 3D view: components with a hollow box/cylinder, so the closed inner cavity shows
 
 
 def _xyz(v):
@@ -77,13 +78,14 @@ def _rot_y_to(n):
 
 
 def _box(x, y, z, w, h, l, t, nx, ny, nz):
-    ''' box of size (w, h, l) about (x, y, z), local y turned onto n; t > 0: hollow, open along local y '''
+    ''' box of size (w, h, l) about (x, y, z), local y turned onto n; t > 0: closed inner cavity (w-2t, h-2t, l-2t),
+        as in e.g. Incoherent '''
     rect = lambda hx, hz, yy: [(-hx, yy, -hz), (hx, yy, -hz), (hx, yy, hz), (-hx, yy, hz)]
-    hx, hy, hz = w / 2, h / 2, l / 2
-    if t > 0:
-        v, f = _loft(np.array([rect(hx - t, hz - t, -hy), rect(hx, hz, -hy), rect(hx, hz, hy), rect(hx - t, hz - t, hy)]), True)
-    else:
-        v, f = _loft(np.array([[(0, -hy, 0)] * 4, rect(hx, hz, -hy), rect(hx, hz, hy), [(0, hy, 0)] * 4]))
+    solid = lambda hx, hy, hz: _loft(np.array([[(0, -hy, 0)] * 4, rect(hx, hz, -hy), rect(hx, hz, hy), [(0, hy, 0)] * 4]))
+    parts = [solid(w / 2, h / 2, l / 2)]
+    if t > 0 and min(w, h, l) > 2 * t:
+        parts.append(solid(w / 2 - t, h / 2 - t, l / 2 - t))
+    v, f = _merge(parts)
     return v @ _rot_y_to((nx, ny, nz)).T + (x, y, z), f
 
 
@@ -124,9 +126,10 @@ def _solid(d):
         return _revolve((x, y, z), n, [0, r, 0], [-h / 2, -h / 2, h / 2])
     if isinstance(d, DrawCylinder):
         x, y, z, r, h, t, *n = a
-        if t > 0:
-            return _revolve((x, y, z), n, [r - t, r, r, r - t], [-h / 2, -h / 2, h / 2, h / 2], closed=True)
-        return _revolve((x, y, z), n, [0, r, r, 0], [-h / 2, -h / 2, h / 2, h / 2])
+        can = lambda r, h: _revolve((x, y, z), n, [0, r, r, 0], [-h / 2, -h / 2, h / 2, h / 2])
+        if t > 0 and r > t and h > 2 * t:  # closed inner cavity, as in e.g. Incoherent
+            return _merge([can(r, h), can(r - t, h - 2 * t)])
+        return can(r, h)
     if isinstance(d, DrawDisc):
         x, y, z, r, *n = a
         return _revolve((x, y, z), n, [0, r], [0, 0])
@@ -146,8 +149,8 @@ def _merge(parts):
 
 def trace(instr, n=100, params=(), yes=False):
     ''' run mcrun --trace=2; yes forwards -y (unset params take defaults), otherwise mcrun prompts for them.
-        Returns ({component: (lines, solid vertices, solid triangles)}, ray xyz); lines/rays are NaN-separated
-        (N,3) polylines, all in instrument coordinates '''
+        Returns ({component: (lines, solid vertices, solid triangles, hollow)}, ray xyz); lines/rays are NaN-separated
+        (N,3) polylines, all in instrument coordinates; hollow: the component draws a box/cylinder with thickness > 0 '''
     reader = McDisplayReader(instr=instr, n=n, options=list(params) + ['-y'] * yes, no_mpi=True, trace=2)
     instrument = reader.read_instrument()
     bundle = reader.read_particles()
@@ -161,7 +164,8 @@ def trace(instr, n=100, params=(), yes=False):
         solids = [s for s in map(_solid, c.drawcalls) if s is not None]
         if wires or solids:
             v, f = _merge(solids)
-            geom[c.name] = (_polylines(wires) @ M.T + t0, v @ M.T + t0, f)  # ponytail: DrawPolygon (unused at trace=2) skipped
+            hollow = any(isinstance(d, (DrawBox, DrawCylinder)) and d.thickness > 0 for d in c.drawcalls)
+            geom[c.name] = (_polylines(wires) @ M.T + t0, v @ M.T + t0, f, hollow)  # ponytail: DrawPolygon (unused at trace=2) skipped
 
     tf = {c.name: c.transform for c in instrument.components}
     ray_pls = [[_xyz(tf[g.compname].apply(Vector3d(*e.args[:3]))) for g in story.groups if g.compname in tf
@@ -184,7 +188,7 @@ def _projection(xyz, h, v):
 
 def view(geom, rays):
     ''' top (z-x) above side (z-y) projection; one colour per component (solids as triangle outlines), rays in grey '''
-    flat = {name: np.concatenate([lines, _edges(v, f)]) for name, (lines, v, f) in geom.items()}
+    flat = {name: np.concatenate([lines, _edges(v, f)]) for name, (lines, v, f, _) in geom.items()}
     z = np.concatenate([rays[:, 2]] + [xyz[:, 2] for xyz in flat.values()])
     pad = 0.02 * (np.nanmax(z) - np.nanmin(z))  # plopp's autoscale overshoots on the NaN separators
     figs = []
@@ -230,21 +234,33 @@ def _tubes(xyz, r, k=6):
     return np.concatenate([cyl, sph]), np.concatenate([cyl_f, sph_f])
 
 
+def _mesh(parts, cols):
+    ''' plopp graph node holding one mesh (vertices, faces, per-vertex colour index), as plopp.mesh3d builds it '''
+    verts, faces = _merge(parts)
+    v = sc.vectors(dims=['vertices'], values=verts, unit='m')
+    return pp.Node(sc.DataArray(sc.array(dims=['vertices'], values=np.concatenate(cols) if cols else np.zeros(0)),
+                                coords={'x': v.fields.x, 'y': v.fields.y, 'z': v.fields.z, 'vertices': v,
+                                        'faces': sc.scalar(sc.array(dims=['faces', 'vertex'], values=faces))}))
+
+
 def view3d(geom, rays, thickness=1e-4):
     ''' 3D (Jupyter/pythreejs): solids as meshes, lines as tubes, coloured per component; rays as thinner grey tubes.
-        Tube radius = thickness x the instrument's bounding-box diagonal; rays get half of it '''
-    allpts = np.concatenate([rays] + [np.concatenate([lines, v]) for lines, v, f in geom.values()])
+        Tube radius = thickness x the instrument's bounding-box diagonal; rays get half of it.
+        Components with hollow shapes go in a second, translucent mesh so their inner cavity shows '''
+    from plopp.graphics import mesh3dfigure
+    allpts = np.concatenate([rays] + [np.concatenate([lines, v]) for lines, v, f, _ in geom.values()])
     r = thickness * np.linalg.norm(np.nanmax(allpts, 0) - np.nanmin(allpts, 0))
-    parts, cols = [], []
-    for i, (lines, v, f) in enumerate(geom.values()):
+    parts, cols = {False: [], True: []}, {False: [], True: []}
+    for i, (lines, v, f, hollow) in enumerate(geom.values()):
         for part in (_tubes(lines, r), (v, f)):
-            parts.append(part), cols.append(np.full(len(part[0]), i % 20, dtype=float))
-    parts.append(_tubes(rays, r / 2)), cols.append(np.full(len(parts[-1][0]), np.nan))
-    verts, faces = _merge(parts)
-    return pp.mesh3d(vertices=sc.vectors(dims=['vertices'], values=verts, unit='m'),
-                     faces=sc.array(dims=['faces', 'vertex'], values=faces),
-                     vertexcolors=sc.array(dims=['vertices'], values=np.concatenate(cols)),
-                     cmap='tab20', cmin=0, cmax=19, nan_color='lightgrey', figsize=(900, 600))
+            parts[hollow].append(part), cols[hollow].append(np.full(len(part[0]), i % 20, dtype=float))
+    parts[False].append(_tubes(rays, r / 2)), cols[False].append(np.full(len(parts[False][-1][0]), np.nan))
+    nodes = {h: _mesh(parts[h], cols[h]) for h in (False, True) if parts[h]}
+    fig = mesh3dfigure(*nodes.values(), vertexcolors=True, cmap='tab20', cmin=0, cmax=19, nan_color='lightgrey',
+                       figsize=(900, 600))
+    if True in nodes:
+        fig.view.artists[nodes[True].id].opacity = HOLLOW_OPACITY
+    return fig
 
 
 def ui(instr, n=100, params=''):
