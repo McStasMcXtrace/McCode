@@ -15,8 +15,8 @@
 Places display-only components that together use every mcdisplay
 primitive, to check the mcdisplay tools at --trace=1 and --trace=2:
 - cone (Arm, Cone)
-- box, hollow box and box tilted along (nx, ny, nz) (Shape)
-- cylinder, hollow cylinder and cylinder along z (Shape)
+- box, hollow box, box tilted along (nx, ny, nz) and tilted hollow box (Shape)
+- cylinder, hollow cylinder, cylinder along z and hollow cylinder along z (Shape)
 - sphere (Shape)
 - polyhedron from an OFF file (Shape)
 - disc, annulus and circle (Disc, Annulus, Circle)

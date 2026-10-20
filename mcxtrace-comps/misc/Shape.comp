@@ -25,7 +25,6 @@
 *   cylinder:        radius x yheight (thickness=0)
 *   hollow cylinder: radius x yheight and thickness>0
 *   sphere:          radius (yheight=0 thickness=0)
-*   hollow sphere:   radius and thickness>0 (yheight=0)
 *   any shape:       geometry=OFF file
 *
 *   The complex geometry option handles any closed non-convex polyhedra.
@@ -46,7 +45,7 @@
 * xwidth:     [m]  Horiz. dimension of sample (bounding box if off file), as a width 
 * yheight:    [m]  Vert.  dimension of sample (bounding box if off file), as a height. A sphere shape is used when 0 and radius is set 
 * zdepth:     [m]  Depth of sample (bounding box if off file) 
-* thickness:  [m]  Thickness of hollow sample 
+* thickness:  [m]  Thickness of hollow box or cylinder (spheres are drawn solid)
 * geometry: [str]  Name of an Object File Format (OFF) file for complex geometry. The OFF file may be generated from XYZ coordinates using qhull/powercrust 
 * center:     [1]  Flag to determine if OFF object is centered on its centre of mass.
 * nx:         [1]  x-comp of orientation vector

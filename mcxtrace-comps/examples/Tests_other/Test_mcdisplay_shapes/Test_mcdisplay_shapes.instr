@@ -13,8 +13,8 @@
 * Places display-only components that together use every mcdisplay
 * primitive, to check the mcdisplay tools at --trace=1 and --trace=2:
 * - cone (Arm, Cone)
-* - box, hollow box and box tilted along (nx, ny, nz) (Shape)
-* - cylinder, hollow cylinder and cylinder along z (Shape)
+* - box, hollow box, box tilted along (nx, ny, nz) and tilted hollow box (Shape)
+* - cylinder, hollow cylinder, cylinder along z and hollow cylinder along z (Shape)
 * - sphere (Shape)
 * - polyhedron from an OFF file (Shape)
 * - disc, annulus and circle (Disc, Annulus, Circle)
@@ -50,6 +50,12 @@ AT (0, 0, 0.5) RELATIVE Origin
 COMPONENT BoxHollow = Shape(xwidth=0.2, yheight=0.1, zdepth=0.15, thickness=0.02)
 AT (0.4, 0, 2.5) RELATIVE Origin
 
+COMPONENT BoxHollowTilted = Shape(xwidth=0.2, yheight=0.1, zdepth=0.15, thickness=0.02, nx=1, ny=1, nz=0)
+AT (0.8, 0, 2.5) RELATIVE Origin
+
+COMPONENT CylinderHollowZ = Shape(radius=0.08, yheight=0.2, thickness=0.02, nx=0, ny=0, nz=1)
+AT (0.8, 0, 3) RELATIVE Origin
+
 COMPONENT BoxTilted = Shape(xwidth=0.1, yheight=0.2, zdepth=0.05, nx=1, ny=1, nz=0)
 AT (-0.4, 0, 2.5) RELATIVE Origin
 
@@ -71,7 +77,7 @@ AT (0, 0.3, 3.5) RELATIVE Origin
 COMPONENT DiscZ = Disc(radius=0.05, nx=0, ny=0, nz=1)
 AT (0.4, 0, 4) RELATIVE Origin
 
-COMPONENT AnnulusY = Annulus(outer_radius=0.06, inner_radius=0.02)
+COMPONENT AnnulusY = Annulus(radius=0.06, thickness=0.02)
 AT (-0.4, 0, 4) RELATIVE Origin
 
 COMPONENT CircleY = Circle(radius=0.07)
