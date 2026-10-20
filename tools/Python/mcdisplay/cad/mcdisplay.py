@@ -32,7 +32,6 @@ import json
 import math
 import struct
 from pathlib import Path
-import subprocess
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from mccodelib.instrgeom import (Vector3d, DrawMagnify, DrawLine, DrawDashedLine,
@@ -1039,7 +1038,7 @@ def main(instr=None, dirname=None, **kwds):
 
     # Use mccode_config / the OS to open the resulting file...
     if Path(output).is_file():
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], output), shell=True)
+        mccode_config.open_in_browser(output)
 
 
 def output_format(astring):

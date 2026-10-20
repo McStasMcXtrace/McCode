@@ -8,7 +8,6 @@ import sys
 import os
 from os.path import join, dirname, isdir
 from os import walk
-import subprocess
 import shutil
 import concurrent.futures
 import jinja2
@@ -547,7 +546,7 @@ def main(args):
                         diffall=diffall, diffworkers=diffworkers)
 
     if not args.nobrowse:
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], ofile), shell=True)
+        mccode_config.open_in_browser(ofile)
         quit()
 
 

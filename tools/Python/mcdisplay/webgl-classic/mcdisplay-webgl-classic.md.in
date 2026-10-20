@@ -8,7 +8,7 @@
 
 # SYNOPSIS
 
-**@MCCODE_PREFIX@display-webgl-classic** [-h] [--default] [--dirname DIRNAME] [--inspect INSPECT] [--nobrowse] [--invcanvas] [--first FIRST] [--last LAST] [-n N] INSTR [options ...]
+**@MCCODE_PREFIX@display-webgl-classic** [-h] [--default] [--dirname DIRNAME] [--inspect INSPECT] [--nobrowse] [--invcanvas] [--first FIRST] [--last LAST] [-n N] [-t N] INSTR [options ...]
 
 # DESCRIPTION
 
@@ -59,6 +59,9 @@ This is the classic WebGL (browser) plotting tool.
 
 **-n N, --ncount N**
 :   Number of particles to simulate
+
+**-t N, --trace N**
+:   Visualisation mode: 2 (default) draws boxes, cylinders, OFF geometry etc. as 3D shapes, 1 draws the legacy line approximations
 
 # FILES
 

@@ -5,7 +5,6 @@ mcdisplay webgl-classic script.
 '''
 import sys
 import json
-import subprocess
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
@@ -106,7 +105,7 @@ def write_browse(instrument, raybundle, dirname, instrname, nobrowse=None, first
     
     # open a web-browser in a cross-platform way
     try:
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], html_filepath), shell=True)
+        mccode_config.open_in_browser(html_filepath)
     except Exception as e:
         raise Exception('Os-specific open browser: %s' % e.__str__())
     
@@ -141,7 +140,7 @@ if __name__ == '__main__':
     parser.add_argument('--first', help='zoom range first component')
     parser.add_argument('--last', help='zoom range last component')
     parser.add_argument('-n', '--ncount', dest='n', type=float, default=300, help='Number of particles to simulate')
-    parser.add_argument('-t', '--trace', dest='trace', type=int, default=1, help='Select visualization mode')
+    parser.add_argument('-t', '--trace', dest='trace', type=int, default=2, help='Select visualization mode')
 
     args, unknown = parser.parse_known_args()
     # Convert the defined arguments in the args Namespace structure to a dict

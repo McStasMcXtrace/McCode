@@ -62,6 +62,33 @@ Main.prototype.addCircle = function(plane, x, y, z, radius, parent, linecolor)
 
     parent.add( circle );
 }
+// add the edges of a geometry as lines, centred at (x, y, z), turning the
+// geometry's own axis (a THREE.Vector3) to n = [nx, ny, nz] (--trace=2 shapes)
+Main.prototype.addEdges = function(geometry, x, y, z, axis, n, parent, linecolor)
+{
+    var edges = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({color: linecolor}));
+    edges.quaternion.setFromUnitVectors(axis, new THREE.Vector3(n[0], n[1], n[2]).normalize());
+    edges.position.set(x, y, z);
+    parent.add(edges);
+}
+// add a polyhedron given as {"vertices": [[x,y,z], ...], "faces": [{"face": [i,j,k,...]}, ...]}
+// (OFF files and polygons at --trace=2)
+Main.prototype.addPolyhedron = function(json, parent, linecolor)
+{
+    var data = JSON.parse(json);
+    var geometry = new THREE.Geometry();
+    for (var i = 0; i < data.vertices.length; i++)
+    {
+        var v = data.vertices[i];
+        geometry.vertices.push(new THREE.Vector3(v[0], v[1], v[2]));
+    }
+    for (var i = 0; i < data.faces.length; i++)
+    {
+        var f = data.faces[i].face; // n-gon: fan of triangles
+        for (var j = 1; j < f.length - 1; j++) { geometry.faces.push(new THREE.Face3(f[0], f[j], f[j+1])); }
+    }
+    this.addEdges(geometry, 0, 0, 0, Y_AXIS, [0, 1, 0], parent, linecolor);
+}
 // add pointlight
 // 		center 	- THREE.Vector3 instance
 Main.prototype.addLight = function(center)
@@ -75,11 +102,13 @@ Main.prototype.addLight = function(center)
 }
 //  initialize the scene
 //
-Main.prototype.init = function(campos, invert)
+Main.prototype.init = function(campos, invert, box)
 {
     this.scene = new THREE.Scene();
 
-    this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.001, 130);
+    // far plane: keep long instruments (box = [x1, x2, y1, y2, z1, z2]) in view when zooming out
+    var span = Math.max(box[1] - box[0], box[3] - box[2], box[5] - box[4]);
+    this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.001, Math.max(130, 10*span));
     this.camera.position.x = campos.x; // -50;
     this.camera.position.y = campos.y; // 0;
     this.camera.position.z = campos.z; // 50;
@@ -297,6 +326,38 @@ TraceLoader.prototype.loadInstr = function()
         if (key == 'circle') {
             main.addCircle(args[0], args[1], args[2], args[3], args[4], parentnode, color);
         }
+        // --trace=2 shapes (disc, annulus, new_circle are also sent at --trace=1),
+        // args as in mccodelib/instrgeom.py: centre x, y, z first, axis n last
+        var a = args;
+        if (key == 'new_circle' || key == 'disc') {
+            main.addEdges(new THREE.CircleGeometry(a[3], SEGMENTS), a[0], a[1], a[2], Z_AXIS, a.slice(4, 7), parentnode, color);
+        }
+        if (key == 'annulus') { // outer radius, thickness
+            main.addEdges(new THREE.RingGeometry(Math.max(0, a[3] - a[4]), a[3], SEGMENTS), a[0], a[1], a[2], Z_AXIS, a.slice(5, 8), parentnode, color);
+        }
+        if (key == 'sphere') {
+            main.addEdges(new THREE.SphereGeometry(a[3], SEGMENTS, SEGMENTS/2), a[0], a[1], a[2], Y_AXIS, [0, 1, 0], parentnode, color);
+        }
+        if (key == 'cone') { // radius, height
+            main.addEdges(new THREE.CylinderGeometry(0, a[3], a[4], SEGMENTS), a[0], a[1], a[2], Y_AXIS, a.slice(5, 8), parentnode, color);
+        }
+        if (key == 'cylinder') { // radius, height, thickness: hollow = closed inner cavity, as in e.g. Incoherent
+            var r = a[3], h = a[4], t = a[5], n = a.slice(6, 9);
+            main.addEdges(new THREE.CylinderGeometry(r, r, h, SEGMENTS), a[0], a[1], a[2], Y_AXIS, n, parentnode, color);
+            if (t > 0 && r > t && h > 2*t) {
+                main.addEdges(new THREE.CylinderGeometry(r-t, r-t, h-2*t, SEGMENTS), a[0], a[1], a[2], Y_AXIS, n, parentnode, color);
+            }
+        }
+        if (key == 'box') { // xwidth, yheight, zdepth, thickness: hollow as for cylinder
+            var w = a[3], h = a[4], l = a[5], t = a[6], n = a.slice(7, 10);
+            main.addEdges(new THREE.BoxGeometry(w, h, l), a[0], a[1], a[2], Y_AXIS, n, parentnode, color);
+            if (t > 0 && w > 2*t && h > 2*t && l > 2*t) {
+                main.addEdges(new THREE.BoxGeometry(w-2*t, h-2*t, l-2*t), a[0], a[1], a[2], Y_AXIS, n, parentnode, color);
+            }
+        }
+        if (key == 'polyhedron') {
+            main.addPolyhedron(args[0], parentnode, color);
+        }
     }
 
     // INSTRUMENT
@@ -417,7 +478,7 @@ Controller.prototype.setUpdateGuiFunc = function(updateGuiFunc)
 Controller.prototype.run = function()
 {
     // init mcdisplay
-    this.main.init(this.camPosInitial, this.invert_canvas);
+    this.main.init(this.camPosInitial, this.invert_canvas, this.box_lst);
 
     // execution loops
     var _this = this;
@@ -526,6 +587,12 @@ Controller.prototype.setViewHome = function()
 {
     this.main.setCameraView(this.camPosInitial);
 }
+
+//  default axes of three.js shapes, and segments for round ones (as the C fallbacks)
+//
+var Y_AXIS = new THREE.Vector3(0, 1, 0);
+var Z_AXIS = new THREE.Vector3(0, 0, 1);
+var SEGMENTS = 24;
 
 //  enum for playback state
 //
