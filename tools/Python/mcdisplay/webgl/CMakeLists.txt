@@ -121,7 +121,7 @@ install(
     )
 
 # Other .py infrastructure
-foreach(NAME package.json vite.config.mts tsconfig.json tsconfig.node.json custom.d.ts index.html __init__.py common.css main.tsx App.tsx)
+foreach(NAME package.json package-lock.json vite.config.mts tsconfig.json tsconfig.node.json custom.d.ts index.html __init__.py common.css main.tsx App.tsx)
   install(
     FILES "${PROJECT_SOURCE_DIR}/${NAME}"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
