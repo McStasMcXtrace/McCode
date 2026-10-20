@@ -1818,6 +1818,10 @@ static void mcinfo_out_nexus(NXhandle f)
 *   - int -> int, char* -> char[16384], char -> char, double -> double (symbol),
 *     MCNUM -> double, MCNUM* (vector) or MCNUM[n] (static {..} vector, sized
 *     from the FIRST instance of the component type)
+*   - mccode-antlr writes the same layout with other type strings: "char *",
+*     "double" for MCNUM and "double*" for vectors, where a literal vector
+*     "a,b,c" is a calloc'ed double* holding those elements
+*     Type strings are compared with whitespace removed.
 * The layout is validated at setpos time (strings by content, numbers when the
 * literal is a plain number); mismatching instances are not reported.
 *
@@ -1833,7 +1837,7 @@ static void mcinfo_out_nexus(NXhandle f)
 #endif
 
 enum mcrtpar_kind {
-  MCRTPAR_INT, MCRTPAR_STRING, MCRTPAR_CHAR, MCRTPAR_DOUBLE, MCRTPAR_SYMBOL,
+  MCRTPAR_INT, MCRTPAR_STRING, MCRTPAR_CHAR, MCRTPAR_DOUBLE,
   MCRTPAR_VECTOR_PTR, MCRTPAR_VECTOR_ARR, MCRTPAR_UNKNOWN
 };
 
@@ -1855,7 +1859,7 @@ struct mcrtpar_struct {
   char  *value;         /* literal (or string value) from setpos */
   int    kind;
   size_t offset;
-  long   nelem;         /* for MCRTPAR_VECTOR_ARR */
+  long   nelem;         /* for MCRTPAR_VECTOR_ARR, and MCRTPAR_VECTOR_PTR from a literal */
 };
 
 static struct mcrtcomp_struct *mcrtcomp_list  = NULL;
@@ -1997,7 +2001,8 @@ static void mcrt_register_param(char *nexuscomp, char *parameter, char *defval,
   struct mcrtcomp_struct *c = NULL;
   struct mcrtpar_struct  *p;
   long   ci;
-  size_t size = 0, align = 1;
+  size_t size = 0, align = 1, i, j = 0;
+  char   t[32];
 
   if (!nexuscomp || !parameter || !type) return;
   for (ci = mcrtcomp_num-1; ci >= 0; ci--)
@@ -2016,16 +2021,26 @@ static void mcrt_register_param(char *nexuscomp, char *parameter, char *defval,
   p->parameter = mcrt_strdup(parameter);
   p->value     = mcrt_strdup(value);
 
+  /* type string without whitespace: mccode-antlr writes e.g. "char *" */
+  for (i = 0; type[i] && j < sizeof(t)-1; i++)
+    if (!isspace((unsigned char)type[i])) t[j++] = type[i];
+  t[j] = '\0';
+
   /* map type string (instr_formal_type_names_real in cogen.c.in) to kind/size */
-  if (!strcmp(type, "int")) {
+  if (!strcmp(t, "int")) {
     p->kind = MCRTPAR_INT;    size = sizeof(int);    align = MCRT_ALIGN_INT;
-  } else if (!strcmp(type, "char*")) {
+  } else if (!strcmp(t, "char*")) {
     p->kind = MCRTPAR_STRING; size = MCCODE_COMP_STRING_PAR_LEN; align = 1;
-  } else if (!strcmp(type, "char")) {
+  } else if (!strcmp(t, "char")) {
     p->kind = MCRTPAR_CHAR;   size = 1;              align = 1;
-  } else if (!strcmp(type, "double")) {
-    p->kind = MCRTPAR_SYMBOL; size = sizeof(double); align = MCRT_ALIGN_DBL;
-  } else if (!strcmp(type, "MCNUM")) {
+  } else if (!strcmp(t, "double")) {
+    p->kind = MCRTPAR_DOUBLE; size = sizeof(double); align = MCRT_ALIGN_DBL;
+  } else if (!strcmp(t, "double*")) {
+    /* mccode-antlr vector: a literal "a,b,c" was calloc'ed with that many elements */
+    p->kind = MCRTPAR_VECTOR_PTR; size = sizeof(double*); align = MCRT_ALIGN_PTR;
+    if (p->value && mcrt_numeric_start(p->value))
+      p->nelem = mcrt_parse_curly(p->value, NULL, 0);
+  } else if (!strcmp(t, "MCNUM")) {
     /* double, vector pointer or static vector: all share this type string */
     const char *first = mcrt_first_instance_literal(ci, parameter, p->value);
     if (first && first[0] == '{') {
@@ -2079,8 +2094,15 @@ static void mcrt_register_param(char *nexuscomp, char *parameter, char *defval,
         }
         break;
       }
-      case MCRTPAR_VECTOR_ARR: {
-        if (p->value && p->value[0] == '{' && p->nelem > 0) {
+      case MCRTPAR_VECTOR_ARR:
+      case MCRTPAR_VECTOR_PTR: {
+        char *data = addr;
+        if (p->kind == MCRTPAR_VECTOR_PTR) {
+          double *ptr;
+          memcpy(&ptr, addr, sizeof(ptr));
+          data = (char *)ptr;
+        }
+        if (data && p->value && (p->value[0] == '{' || mcrt_numeric_start(p->value)) && p->nelem > 0) {
           long k, n;
           double *vals = calloc(p->nelem, sizeof(double));
           if (vals) {
@@ -2089,7 +2111,7 @@ static void mcrt_register_param(char *nexuscomp, char *parameter, char *defval,
             if (n > p->nelem) n = p->nelem;
             for (k = 0; k < n; k++) {
               double v;
-              memcpy(&v, addr + k*sizeof(double), sizeof(double));
+              memcpy(&v, data + k*sizeof(double), sizeof(double));
               if (v != vals[k]) ok = 0;
             }
             if (ok) c->n_checked++; else c->n_failed++;
@@ -2098,7 +2120,7 @@ static void mcrt_register_param(char *nexuscomp, char *parameter, char *defval,
         }
         break;
       }
-      default: break; /* CHAR, SYMBOL, VECTOR_PTR: not checkable */
+      default: break; /* CHAR: not checkable */
     }
   }
 }
@@ -2191,10 +2213,9 @@ void mccomp_param_runtime_nexus_all(NXhandle f)
           if (buffer) { memcpy(buffer, addr, len); buffer[len] = '\0'; strval = buffer; }
           break;
         }
-        case MCRTPAR_DOUBLE:
-        case MCRTPAR_SYMBOL: {
+        case MCRTPAR_DOUBLE: {
           double v; memcpy(&v, addr, sizeof(double));
-          if (p->kind == MCRTPAR_DOUBLE && mcrt_looks_like_pointer(v))
+          if (mcrt_looks_like_pointer(v))
             status = "unsupported:pointer";
           else {
             if (is_unset(v)) strcpy(num, "UNSET");
@@ -2203,9 +2224,17 @@ void mccomp_param_runtime_nexus_all(NXhandle f)
           }
           break;
         }
-        case MCRTPAR_VECTOR_ARR: {
+        case MCRTPAR_VECTOR_ARR:
+        case MCRTPAR_VECTOR_PTR: {
           long k;
           size_t blen = (size_t)p->nelem*32 + 4;
+          if (p->kind == MCRTPAR_VECTOR_PTR) {
+            /* only mccode-antlr literal vectors have a known length */
+            double *ptr;
+            memcpy(&ptr, addr, sizeof(ptr));
+            addr = (char *)ptr;
+            if (!addr || p->nelem <= 0) { status = "unsupported:pointer"; break; }
+          }
           buffer = malloc(blen);
           if (buffer) {
             size_t pos = 0;
@@ -2221,9 +2250,6 @@ void mccomp_param_runtime_nexus_all(NXhandle f)
           }
           break;
         }
-        case MCRTPAR_VECTOR_PTR:
-          status = "unsupported:pointer";
-          break;
         default:
           status = "unsupported:unknown-type";
       }
