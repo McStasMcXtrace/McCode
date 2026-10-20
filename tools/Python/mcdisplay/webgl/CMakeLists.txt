@@ -130,7 +130,7 @@ install(
 )
 
 # Other .py infrastructure
-foreach(NAME package.json vite.config.mts tsconfig.json tsconfig.node.json custom.d.ts mcdisplay.js Lut.js OrbitControls.js dat.gui.min.js jquery.min.js three.min.js template.html __init__.py common.css main.tsx App.tsx)
+foreach(NAME package.json vite.config.mts tsconfig.json tsconfig.node.json custom.d.ts __init__.py common.css main.tsx App.tsx)
   install(
     FILES "${PROJECT_SOURCE_DIR}/${NAME}"
     DESTINATION "${DEST_TOOLDIR}/${TOOLS_NAME}"
