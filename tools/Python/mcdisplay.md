@@ -63,7 +63,7 @@ Thin bash wrapper piping `mcrun --trace` output into a matplotlib 3D viewer — 
 | `--default` | automatically use instrument default parameter values |
 | `--no-mpi` | forward `--no-mpi` to `mcrun` (simulate without MPI) |
 | `-n`, `--ncount N` | number of particles to trace (default: 300) |
-| `-t`, `--trace N` | visualisation mode (default: 1) |
+| `-t`, `--trace N` | visualisation mode (default: 2) |
 | `-d`, `--dirname DIR` | override output directory name |
 | `--inspect COMP` | show only rays reaching component `COMP` |
 | `--first COMP` / `--last COMP` | zoom range start/end component |
