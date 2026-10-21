@@ -9,21 +9,28 @@ on:
         type: boolean
         description: Launch manual debugging tmate for inspection (automatic in case of errors)
         default: false
+      comparison:
+        type: boolean
+        description: Run mxviewtest comparison tables across all platforms
+        default: false
 
+# The mxviewtest comparison is off by default (schedule); request it via the
+# "comparison" tickbox when running the workflow manually
 jobs:
   build:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, mpi: 'openmpi', nmpi: 'auto', method: 'conda' }
-          - { os: macos-latest, mpi: 'openmpi', nmpi: '2', method: 'conda' }
-          - { os: windows-latest, mpi: 'msmpi', nmpi: 'auto', method: 'conda' }
+          - { os: ubuntu-latest, mpi: 'openmpi', nmpi: 'auto', cogen: 'classic', method: 'conda' }
+          - { os: ubuntu-latest, mpi: 'openmpi', nmpi: 'auto', cogen: 'antlr', method: 'conda' }
+          - { os: macos-latest, mpi: 'openmpi', nmpi: '2', cogen: 'classic', method: 'conda' }
+          - { os: windows-latest, mpi: 'msmpi', nmpi: 'auto', cogen: 'classic', method: 'conda' }
           # mccode.org-style .deb packages from buildscripts/build_debs_mcxtrace, installed
           # in /usr with no $MCXTRACE set (as for users of the mccode.org apt repo)
-          - { os: ubuntu-24.04, mpi: 'openmpi', nmpi: 'auto', method: 'debian' }
+          - { os: ubuntu-24.04, mpi: 'openmpi', nmpi: 'auto', cogen: 'classic', method: 'debian' }
 
-    name: ${{ matrix.os }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite
+    name: ${{ matrix.os }}.${{ matrix.mpi }}.${{ matrix.cogen }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -75,6 +82,8 @@ jobs:
            set -e
            set -u
            set -x
+           # mccode.org apt repo, as for users: provides mcpl, ncrystal and cif2hkl (>= 1.5.0)
+           echo "deb [trusted=yes] https://packages.mccode.org/debian stable main" | sudo tee /etc/apt/sources.list.d/mccode.list
            sudo apt-get update
            # Build dependencies, as in dependency-scripts/getdeps_debian (minus LaTeX/equivs:
            # the manuals package and the suite metapackage are not needed for testing)
@@ -90,6 +99,25 @@ jobs:
            test -x /usr/bin/mcxtrace
            test -x /usr/bin/mxtest
            test -d /usr/share/mcxtrace/resources/data
+
+    - name: Setup mcxtrace-antlr
+      id: setup-mcxtrace-antlr
+      if: matrix.cogen == 'antlr'
+      run: |
+        # Cache checkout src/ with mccode-antlr
+        if [ "${{ matrix.cogen }}" == "antlr" ];
+        then
+          # Use mccode-antlr from git main instead of the conda-forge release
+          python3 -m pip install --force-reinstall --no-deps git+https://github.com/mccode-dev/mccode-antlr
+          # Set up config file to use mcxtrace-antlr
+          MCCODE_CONFIG=`mxrun --write-user-config | cut -f4 -d\ `
+          sed -i.bak s+\"MCCOGEN\"\:\ \"mcxtrace\",+\"MCCOGEN\"\:\ \"mcxtrace-antlr\ -I\$\{CONDA_PREFIX\}/share/mcxtrace/resources\",+g ${MCCODE_CONFIG}
+          grep -H COGEN ${MCCODE_CONFIG}
+          MCCODEANTLR_FLAGS__NEXUS=`grep NEXUSFLAGS ${MCCODE_CONFIG} |cut -f4 -d\"`
+          echo "MCCODEANTLR_FLAGS__NEXUS=${MCCODEANTLR_FLAGS__NEXUS}" >> "$GITHUB_ENV"
+          # Pre-poulate mccode-antlr cache
+          mccode-antlr cache populate --from-path src/ --flavor mcxtrace --no-strict --check-hashes
+        fi
 
     - name: Validate build output
       id: build-validation
@@ -146,7 +174,7 @@ jobs:
              test "$(command -v mxtest)" == "/usr/bin/mxtest"
            fi
            # Run the test with 2 core mpi
-           ${MXTEST_EXECUTABLE} --verbose --nsigma 5 --testdir $PWD --suffix ${{ matrix.os }}_${{ matrix.mpi }}${{ matrix.method == 'debian' && '_debian' || '' }} --mpi=${{ matrix.nmpi }} --uid=${MYWORKERID}
+           ${MXTEST_EXECUTABLE} --verbose --nsigma 5 --testdir $PWD --suffix ${{ matrix.cogen }}_${{ matrix.os }}_${{ matrix.mpi }}${{ matrix.method == 'debian' && '_debian' || '' }} --mpi=${{ matrix.nmpi }} --uid=${MYWORKERID}
 
     - name: 'Tar output files'
       id: tar-package
@@ -157,15 +185,40 @@ jobs:
            set -x
            # Clear out binaries from sim dir and tar up artifact
            ls | grep run_ | xargs -n1 ./src/devel/bin/mccode-simdir-cleanfiles -d 
-           tar cvfz mcxtrace-${{ matrix.os }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite_output.tgz run_test-suite
+           tar cvfz mcxtrace-${{ matrix.cogen }}.${{ matrix.os }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite_output.tgz run_test-suite
 
     - name: 'Upload Artifact'
       id: tar-upload
       uses: actions/upload-artifact@v6
       if: always()
       with:
-        name: mcxtrace-artefacts-${{ matrix.os }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite
-        path: "mcxtrace-${{ matrix.os }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite_output.tgz"
+        name: mcxtrace-artefacts-${{ matrix.os }}.${{ matrix.cogen }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite
+        path: "mcxtrace-${{ matrix.cogen }}.${{ matrix.os }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite_output.tgz"
+
+    - name: 'Tar logs of failed tests'
+      id: tar-failedlogs
+      if: always()
+      run: |
+           set -e
+           set -u
+           set -x
+           # Logs from instrument folders with a compile error (<Instr>.failed)
+           # or a runtime error / value off (mctest "failed" flag in the test json)
+           { find run_* -name '*.failed' 2>/dev/null || true
+             grep -rl --include='*.json' --exclude='testresults_*' '"failed": true' run_* 2>/dev/null || true
+           } | sed 's#/[^/]*$##' | sort -u | while read -r d; do
+             find "$d" -maxdepth 1 -type f \( -name '*.txt' -o -name '*.failed' -o -name '*.json' \)
+           done > failed_logs.txt
+           if [ -s failed_logs.txt ]; then tar cvfz mcxtrace-${{ matrix.os }}.${{ matrix.cogen }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite_failedlogs.tgz -T failed_logs.txt; fi
+
+    - name: 'Upload failed-test logs'
+      id: failedlogs-upload
+      uses: actions/upload-artifact@v6
+      if: always()
+      with:
+        name: mcxtrace-failedlogs-${{ matrix.os }}.${{ matrix.cogen }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite
+        path: "mcxtrace-${{ matrix.os }}.${{ matrix.cogen }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite_failedlogs.tgz"
+        if-no-files-found: ignore
 
     - name: Setup tmate session for manual debugging
       uses: mxschmitt/action-tmate@v3
@@ -176,7 +229,8 @@ jobs:
   compare:
     name: mcxtrace-conda-testsuite-comparison
     needs: build
-    if: always()
+    # Only when requested (manual runs with the "comparison" tickbox)
+    if: always() && inputs.comparison
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -262,10 +316,10 @@ jobs:
       id: viewtest
       run: |
            cd "$PWD/mcxtrace-nightly"
-           if [ -z "$REFLABEL" ]; then
+           if [ -n "${REFLABEL:-}" ]; then
              mxviewtest --reflabel "$REFLABEL" --nobrowse
            else
-             mxviewtest --reflabel --nobrowse
+             mxviewtest --nobrowse
            fi
 
     - name: 'Tar mcxtrace-nightly output (all platform folders + comparison table)'

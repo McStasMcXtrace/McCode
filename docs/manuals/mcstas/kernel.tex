@@ -1594,21 +1594,9 @@ is a pointer to the first element.
 
 \paragraph{Three-dimensional detectors/monitors}
 
-\indexMCCH{DETECTOR\_OUT\_3D}{textbf}
-The results of a three-dimensional detector/\discretionary{}{}{}mon\-i\-tor are written to a file using the
-following macro:
-\begin{mcstas}
-DETECTOR_OUT_3D(t,
-        xlabel, ylabel,
-        xvar, x_min, x_max, m, n, j,
-        &N[0][0][0], &p[0][0][0], &p2[0][0][0],
-       filename)
-\end{mcstas}
-
-The meaning of parameters is the same as those used in the 1D and 2D
-versions of DETECTOR\_OUT. The available data format currently saves
-the 3D arrays as 2D, with the 3rd dimension specified in the
-\textit{type} field of the data header.
+There is no three-dimensional DETECTOR\_OUT macro. Three-dimensional
+data can be recorded in NeXus format with \texttt{Monitor\_nD} in event
+(list) mode, using pixel identifiers.
 
 %-------------------------------------------------------------------------------
 \subsection{The \texttt{FINALLY} section}

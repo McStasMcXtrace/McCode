@@ -2,7 +2,7 @@
 import json
 from collections import Counter
 import numpy as np
-from mccodelib.instrgeom import DrawSphere, DrawCylinder, DrawCone, DrawBox, DrawDisc, DrawPolyhedron
+from mccodelib.instrgeom import DrawSphere, DrawCylinder, DrawCone, DrawBox, DrawDisc, DrawAnnulus, DrawPolyhedron
 from mcdisplay import tessellate, _tubes
 
 
@@ -30,6 +30,9 @@ assert np.allclose(m.verts.min(0), (0.9, 1.8, 2.7)) and np.allclose(m.verts.max(
 
 m, _ = tessellate(DrawDisc([0, 0, 1, 0.5, 0, 0, 1]), 16)
 assert np.allclose(m.verts[:, 2], 1) and np.isclose(np.linalg.norm(m.verts[:, :2], axis=1).max(), 0.5)
+
+m, _ = tessellate(DrawAnnulus([0, 0, 0, 0.06, 0.02, 0, 1, 0]), 16)  # 5th arg is the ring width, as in Annulus.comp
+assert np.allclose(m.verts[:, 1], 0) and set(np.round(np.linalg.norm(m.verts[:, [0, 2]], axis=1), 9)) == {0.04, 0.06}
 
 js = json.dumps({'vertices': [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]],
                  'faces': [{'face': [0, 2, 1]}, {'face': [0, 1, 3]}, {'face': [0, 3, 2]}, {'face': [1, 2, 3]}]})

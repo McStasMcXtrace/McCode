@@ -143,73 +143,19 @@ def draw_cone(center, radius, height, axis_vector):
     return x, y, z
 
 
-def draw_box(center, a, b, c):
-    #spherical coordinates cube
-    phi = np.arange(1, 10, 2)*np.pi/4
-    phi, theta = np.meshgrid(phi, phi)
-    x = center[0] + (np.cos(phi)*np.sin(theta))*a
-    y = center[1] + (np.sin(phi)*np.sin(theta))*b
-    z = center[2] + (np.cos(theta)/np.sqrt(2))*c
-
-    return x, y, z
-
-
-def draw_hollow_box(center, a, b, c, thickness):
-    outer_vertices = np.array([
-        [a, 0, 0],
-        [0, b, 0],
-        [0, 0, c],
-        [0, 0, 0],
-        [a, 0, c],
-        [a, b, 0],
-        [a, b, c],
-        [0, b, c]
-    ], dtype=float)
-
-    inner_vertices = np.array([
-        [a-thickness, 0+thickness, 0],
-        [0+thickness, b-thickness, 0],
-        [0+thickness, 0+thickness, c],
-        [0+thickness, 0+thickness, 0],
-
-        [a-thickness, 0+thickness, c],
-        [a-thickness, b-thickness, 0],
-        [a-thickness, b-thickness, c],
-        [0+thickness, b-thickness, c]
-    ], dtype=float)
-
-    #Center
-    outer_vertices -= [a/2, b/2, c/2]
-    inner_vertices -= [a/2, b/2, c/2]
-
-    # Translate vertices to the center position
-    outer_vertices += center
-    inner_vertices += center
-
-    # Combine outer and inner vertices
-    vertices = np.vstack([outer_vertices, inner_vertices])
-
-    faces = [
-        [0, 4, 6, 5],
-        [1, 5, 6, 7],
-        [3, 0, 4, 2],
-        [3, 1, 7, 2],
-
-        [8, 12, 14, 13],
-        [9, 13, 14, 15],
-        [11, 8, 12, 10],
-        [11, 9, 15, 10],
-
-        [0, 8, 11, 3],
-        [3, 11, 9, 1],
-        [1, 9, 13, 5],
-        [5, 13, 8, 0],
-
-        [4, 12, 10, 2],
-        [2, 10, 15, 7],
-        [7, 15, 14, 6],
-        [6, 14, 12, 4]
-    ]
+def draw_box(center, a, b, c, axis_vector):
+    ''' closed box (faces, vertices) of size a x b x c, its local y axis rotated onto axis_vector
+        (smallest rotation, half turn around z for -y), as in the webgl viewers and --trace=1 '''
+    n = np.asarray(axis_vector, dtype=float)
+    n = n / np.linalg.norm(n)
+    if n[1] < -1 + 1e-12:
+        rot = np.diag([-1.0, -1.0, 1.0])
+    else:
+        k = np.array([[0, n[0], 0], [-n[0], 0, -n[2]], [0, n[2], 0]])  # cross((0,1,0), n) as a matrix
+        rot = np.eye(3) + k + k @ k / (1 + n[1])
+    vertices = np.array([[sx*a/2, sy*b/2, sz*c/2] for sx in (-1, 1) for sy in (-1, 1) for sz in (-1, 1)])
+    vertices = vertices @ rot.T + center
+    faces = [[0, 1, 3, 2], [4, 5, 7, 6], [0, 1, 5, 4], [2, 3, 7, 6], [0, 2, 6, 4], [1, 3, 7, 5]]
     return faces, vertices
 
 

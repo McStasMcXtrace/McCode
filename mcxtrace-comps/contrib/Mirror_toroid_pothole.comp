@@ -117,7 +117,7 @@ TRACE
       break;
     do {
       /*this to do a test propagation*/
-      double op[13];
+      double op[12];
       op[0] = x;
       op[1] = y;
       op[2] = z;
@@ -129,7 +129,7 @@ TRACE
       op[8] = Ex;
       op[9] = Ey;
       op[10] = Ez;
-      op[12] = p;
+      op[11] = p;
       mcPROP_DL (l1);
       (tx) = x;
       (ty) = y;
@@ -145,17 +145,17 @@ TRACE
       Ex = op[8];
       Ey = op[9];
       Ez = op[10];
-      p = op[12];
+      p = op[11];
     } while (0);
     /*check mirror limits of intersectio point.*/
     if (tz < -zdepth / 2.0 || tz > zdepth / 2.0)
       break;
     /*check if the width is OK*/
-    double xmax = acos (xwidth / (2.0 * radius)) * radius;
+    double xmax = sin(xwidth / (2.0 * radius)) * radius;
     if (tx < -xmax || tx > xmax)
       break;
 
-    status = ellipsoid_intersect (&l2, &l3, x, y - radius, z, kx, ky, kz, radius, radius, radius_o + radius, NULL);
+    status = ellipsoid_intersect(&l2, &l3, x, y-radius, z, kx, ky, kz, radius, radius, sqrt(radius*(radius_o+radius)), NULL);
     if (!status)
       break;
     if (l3 < 0)
@@ -167,7 +167,7 @@ TRACE
     double nx, ny, nz;
     nx = 2 * x / (radius * radius);
     ny = 2 * (y - radius) / (radius * radius); /*ellipsoid is displaced to put Origin on the surface*/
-    nz = 2 * z / ((radius + radius_o) * (radius + radius_o));
+    nz = 2 * z / (radius*(radius+radius_o));
     NORM (nx, ny, nz);
 
     /*By definition the normal vector points out from the ellipsoid*/

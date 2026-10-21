@@ -9,7 +9,13 @@ on:
         type: boolean
         description: Launch manual debugging tmate for inspection (automatic in case of errors)
         default: false
+      comparison:
+        type: boolean
+        description: Run mcviewtest comparison tables across all platforms
+        default: false
 
+# The mcviewtest comparison is off by default (schedule); request it via the
+# "comparison" tickbox when running the workflow manually
 jobs:
   build:
     strategy:
@@ -76,6 +82,8 @@ jobs:
            set -e
            set -u
            set -x
+           # mccode.org apt repo, as for users: provides mcpl, ncrystal and cif2hkl (>= 1.5.0)
+           echo "deb [trusted=yes] https://packages.mccode.org/debian stable main" | sudo tee /etc/apt/sources.list.d/mccode.list
            sudo apt-get update
            # Build dependencies, as in dependency-scripts/getdeps_debian (minus LaTeX/equivs:
            # the manuals package and the suite metapackage are not needed for testing)
@@ -104,7 +112,6 @@ jobs:
     - name: Setup mcstas-antlr
       id: setup-mcstas-antlr
       if: matrix.cogen == 'antlr'
-      continue-on-error: true
       run: |
         # Cache checkout src/ with mccode-antlr
         if [ "${{ matrix.cogen }}" == "antlr" ];
@@ -196,6 +203,31 @@ jobs:
         name: mcstas-artefacts-${{ matrix.os }}.${{ matrix.cogen }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite
         path: "mcstas-${{ matrix.cogen }}.${{ matrix.os }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite_output.tgz"
 
+    - name: 'Tar logs of failed tests'
+      id: tar-failedlogs
+      if: always()
+      run: |
+           set -e
+           set -u
+           set -x
+           # Logs from instrument folders with a compile error (<Instr>.failed)
+           # or a runtime error / value off (mctest "failed" flag in the test json)
+           { find run_* -name '*.failed' 2>/dev/null || true
+             grep -rl --include='*.json' --exclude='testresults_*' '"failed": true' run_* 2>/dev/null || true
+           } | sed 's#/[^/]*$##' | sort -u | while read -r d; do
+             find "$d" -maxdepth 1 -type f \( -name '*.txt' -o -name '*.failed' -o -name '*.json' \)
+           done > failed_logs.txt
+           if [ -s failed_logs.txt ]; then tar cvfz mcstas-${{ matrix.os }}.${{ matrix.cogen }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite_failedlogs.tgz -T failed_logs.txt; fi
+
+    - name: 'Upload failed-test logs'
+      id: failedlogs-upload
+      uses: actions/upload-artifact@v6
+      if: always()
+      with:
+        name: mcstas-failedlogs-${{ matrix.os }}.${{ matrix.cogen }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite
+        path: "mcstas-${{ matrix.os }}.${{ matrix.cogen }}.${{ matrix.mpi }}${{ matrix.method == 'debian' && '.debian' || '' }}.conda-testsuite_failedlogs.tgz"
+        if-no-files-found: ignore
+
     - name: Setup tmate session for manual debugging
       uses: mxschmitt/action-tmate@v3
       if: always() && (inputs.manual-debugging == true)
@@ -205,7 +237,8 @@ jobs:
   compare:
     name: mcstas-conda-testsuite-comparison
     needs: build
-    if: always()
+    # Only when requested (manual runs with the "comparison" tickbox)
+    if: always() && inputs.comparison
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -290,10 +323,10 @@ jobs:
       id: viewtest
       run: |
            cd "$PWD/mcstas-nightly"
-           if [ -z "$REFLABEL" ]; then
+           if [ -n "${REFLABEL:-}" ]; then
              mcviewtest --reflabel "$REFLABEL" --nobrowse
            else
-             mcviewtest --reflabel --nobrowse
+             mcviewtest --nobrowse
            fi
 
     - name: 'Tar mcstas-nightly output (all platform folders + comparison table)'

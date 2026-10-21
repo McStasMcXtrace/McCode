@@ -32,7 +32,6 @@ import json
 import math
 import struct
 from pathlib import Path
-import subprocess
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from mccodelib.instrgeom import (Vector3d, DrawMagnify, DrawLine, DrawDashedLine,
@@ -200,6 +199,29 @@ def _strip(ring_a, ring_b, flip=False):
     return Mesh(verts, np.array(tris, dtype=np.int64))
 
 
+def _rot_y_to(axis):
+    ''' smallest rotation taking local y onto axis (half turn around z for -y), as in the webgl viewers and --trace=1 '''
+    n = np.asarray(axis, dtype=np.float64)
+    n = n / np.linalg.norm(n)
+    if n[1] < -1 + 1e-12:
+        return np.diag([-1.0, -1.0, 1.0])
+    k = np.array([[0, n[0], 0], [-n[0], 0, -n[2]], [0, n[2], 0]])  # cross((0,1,0), n) as a matrix
+    return np.eye(3) + k + k @ k / (1 + n[1])
+
+
+def _box(c, rot, xw, yh, zl):
+    ''' closed box mesh + face outlines, centred at c, local axes rotated by rot '''
+    V = np.array([(sx*xw/2, sy*yh/2, sz*zl/2)
+                  for sz in (-1, 1) for sy in (-1, 1) for sx in (-1, 1)]) @ rot.T + c
+    # faces: bottom(z-), top(z+), sides
+    F = [[0, 1, 3, 2], [4, 6, 7, 5], [0, 4, 5, 1], [2, 3, 7, 6], [0, 2, 6, 4], [1, 5, 7, 3]]
+    tris, lines = [], []
+    for f in F:
+        tris += [[f[0], f[1], f[2]], [f[0], f[2], f[3]]]
+        lines.append(np.vstack((V[f], V[f[0]])))
+    return Mesh(V, tris), lines
+
+
 def _v3(p):
     return (p.x, p.y, p.z)
 
@@ -240,26 +262,15 @@ def tessellate(d, segments=64):
         mesh = Mesh(quad, [[0, 1, 2], [0, 2, 3]])
         return mesh, [closed]
     if isinstance(d, DrawBox):
-        c = _v3(d.center)
-        x, y, z = d.xwidth / 2.0, d.yheight / 2.0, d.zlength / 2.0
-        if getattr(d, 'thickness', 0) and d.thickness > 0:
-            t = d.thickness / 2.0
-            # hollow box: keep the outline of the two faces (simple wireframe)
-            lines = []
-            for s in (+1, -1):
-                r = [(c[0]-x, c[1]-y, c[2]+s*z), (c[0]+x, c[1]-y, c[2]+s*z),
-                     (c[0]+x, c[1]+y, c[2]+s*z), (c[0]-x, c[1]+y, c[2]+s*z)]
-                lines.append(np.vstack((r, r[0])))
-            return None, lines
-        V = np.array([(sx*x+c[0], sy*y+c[1], sz*z+c[2])
-                      for sz in (-1, 1) for sy in (-1, 1) for sx in (-1, 1)])
-        # faces: bottom(z-), top(z+), sides
-        F = [[0, 1, 3, 2], [4, 6, 7, 5], [0, 4, 5, 1], [2, 3, 7, 6], [0, 2, 6, 4], [1, 5, 7, 3]]
-        tris, lines = [], []
-        for f in F:
-            tris += [[f[0], f[1], f[2]], [f[0], f[2], f[3]]]
-            lines.append(np.vstack((V[f], V[f[0]])))
-        return Mesh(V, tris), lines
+        c = np.asarray(_v3(d.center))
+        rot = _rot_y_to(_v3(d.axis_vector))
+        mesh, lines = _box(c, rot, d.xwidth, d.yheight, d.zlength)
+        t2 = 2 * d.thickness
+        if d.thickness > 0 and d.xwidth > t2 and d.yheight > t2 and d.zlength > t2:
+            # hollow: closed inner cavity, as in e.g. Incoherent
+            inner, inlines = _box(c, rot, d.xwidth - t2, d.yheight - t2, d.zlength - t2)
+            mesh, lines = mesh.merge(inner), lines + inlines
+        return mesh, lines
     if isinstance(d, DrawCircle):
         axis = {'xy': (0, 0, 1), 'xz': (0, 1, 0), 'yz': (1, 0, 0),
                 'yx': (0, 0, 1), 'zx': (0, 1, 0), 'zy': (1, 0, 0)}.get(d.plane.lower(), (0, 0, 1))
@@ -297,22 +308,23 @@ def tessellate(d, segments=64):
     if isinstance(d, DrawCylinder):
         c = np.asarray(_v3(d.center))
         w, u, v = _basis_from_axis(_v3(d.axis_vector))
-        r, h = d.radius, d.height
         th = np.linspace(0, 2 * np.pi, segments, endpoint=False)
-        ring = c + r * (np.outer(np.cos(th), u) + np.outer(np.sin(th), v))
-        bot = ring - w * (h / 2.0)
-        top = ring + w * (h / 2.0)
-        mesh = _strip(bot, top)
-        mesh = mesh.merge(_fan(c - w * (h / 2.0), bot))
-        mesh = mesh.merge(_fan(c + w * (h / 2.0), top))
-        t = getattr(d, 'thickness', 0.0) or 0.0
-        lines = []
-        if 0 < t < r:  # hollow tube: add inner wall lines
-            inring = c + (r - t) * (np.outer(np.cos(th), u) + np.outer(np.sin(th), v))
-            for rr in (bot, top, inring - w * (h / 2.0), inring + w * (h / 2.0)):
-                lines.append(np.vstack((rr, rr[0])))
-        else:
-            lines = [np.vstack((bot, bot[0])), np.vstack((top, top[0]))]
+
+        def closed_cylinder(r, h):
+            ring = c + r * (np.outer(np.cos(th), u) + np.outer(np.sin(th), v))
+            bot = ring - w * (h / 2.0)
+            top = ring + w * (h / 2.0)
+            mesh = _strip(bot, top)
+            mesh = mesh.merge(_fan(c - w * (h / 2.0), bot))
+            mesh = mesh.merge(_fan(c + w * (h / 2.0), top))
+            return mesh, [np.vstack((bot, bot[0])), np.vstack((top, top[0]))]
+
+        mesh, lines = closed_cylinder(d.radius, d.height)
+        t = d.thickness
+        if t > 0 and d.radius > t and d.height > 2 * t:
+            # hollow: closed inner cavity, as in e.g. Incoherent
+            inner, inlines = closed_cylinder(d.radius - t, d.height - 2 * t)
+            mesh, lines = mesh.merge(inner), lines + inlines
         return mesh, lines
     if isinstance(d, DrawDisc):
         th = np.linspace(0, 2 * np.pi, segments, endpoint=False)
@@ -327,7 +339,8 @@ def tessellate(d, segments=64):
         _, u, v = _basis_from_axis(_v3(d.axis_vector))
         th = np.linspace(0, 2 * np.pi, segments, endpoint=False)
         outer = c + d.outer_radius * (np.outer(np.cos(th), u) + np.outer(np.sin(th), v))
-        inner = c + d.inner_radius * (np.outer(np.cos(th), u) + np.outer(np.sin(th), v))
+        r_in = max(0.0, d.outer_radius - d.inner_radius)  # instrgeom's inner_radius holds the ring width (mcdis_annulus thickness)
+        inner = c + r_in * (np.outer(np.cos(th), u) + np.outer(np.sin(th), v))
         mesh = _strip(outer, inner, flip=True)
         return mesh, [np.vstack((outer, outer[0])), np.vstack((inner, inner[0]))]
     if isinstance(d, DrawPolyhedron):
@@ -1039,7 +1052,7 @@ def main(instr=None, dirname=None, **kwds):
 
     # Use mccode_config / the OS to open the resulting file...
     if Path(output).is_file():
-        subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], output), shell=True)
+        mccode_config.open_in_browser(output)
 
 
 def output_format(astring):
@@ -1068,6 +1081,6 @@ if __name__ == '__main__':
     # but we assume that they are instr_options
     args = {k: args.__getattribute__(k) for k in dir(args) if k[0] != '_'}
     if len(unknown):
-        args['options'] = unknown
+        args['options'] += unknown
 
     main(**args)
