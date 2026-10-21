@@ -15,7 +15,7 @@
  * %Example: Test_Conics_pairs OPTIC=1 Detector: psd_i_I=6.71864e-13
  * %Example: Test_Conics_pairs OPTIC=1 Detector: psd_i_reflections_2_I=6.71864e-13
  * %Example: Test_Conics_pairs OPTIC=2 fs=100000 Detector: psd_i_I=2.75574e-21
- * %Example: Test_Conics_pairs OPTIC=2 fs=100000 Detector: psd_i_reflections_2_I=2.75574e-21
+ * %Example: Test_Conics_pairs OPTIC=2 fs=100000 Detector: psd_i_reflections_2_I=2.75512e-21
  * %Example: Test_Conics_pairs OPTIC=3 Detector: psd_i_I=6.71864e-13
  * %Example: Test_Conics_pairs OPTIC=4 ssize=1e-4 Detector: psd_i_I=8.42691e-09
  * %Example: Test_Conics_pairs quadratic=1 Detector: psd_i_I=4.93027e-13
