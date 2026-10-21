@@ -1,0 +1,31 @@
+mcstas simulation description file for Text2OFF.
+Date:    Wed Oct 21 13:40:05 2026
+Program:  3.99.99, git
+
+begin instrument: Text2OFF
+  File: Text2OFF_20261021_134004/mccode
+  Source: Text2OFF.instr
+  Parameters:  letters(string) size(double) plane(string) thickness(double) rx(double) ry(double) rz(double)
+  Trace_enabled: yes
+  Default_main: yes
+  Embedded_runtime: yes
+end instrument
+
+begin simulation: Text2OFF_20261021_134004
+  Format: McCode with text headers
+  URL: http://www.mccode.org
+  Creator:  3.99.99, git
+  Instrument: Text2OFF.instr
+  Ncount: 1
+  Trace: no
+  Gravitation: no
+  Seed: 1792582805751356
+  Directory: Text2OFF_20261021_134004
+  Param: letters=McStas
+  Param: size=0.5
+  Param: plane=XY
+  Param: thickness=0.1
+  Param: rx=0
+  Param: ry=0
+  Param: rz=0
+end simulation
