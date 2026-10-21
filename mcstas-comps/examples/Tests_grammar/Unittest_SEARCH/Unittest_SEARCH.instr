@@ -26,7 +26,6 @@ DEFINE INSTRUMENT Unittest_SEARCH(frac=1)
 TRACE
 
 SEARCH "localcomps"
-// using "localcomps/" would even include localcomps subdirectories if any.
 
 COMPONENT source = Source_simple(xwidth=0.1, yheight=0.1, dist=1, focus_xw=0.1, focus_yh=0.1, lambda0=5, dlambda=1, flux=1)
 AT (0, 0, 0) ABSOLUTE

@@ -309,7 +309,7 @@ FILE *open_file_search(char *name);
 FILE *open_component_search(char *name);
 /* Open file, searching only the system directory. */
 FILE *open_file_search_sys(char *name);
-/* Add a directory to the search path.  "name/" = recursive */
+/* Add a directory to the search path. */
 void add_search_dir(char *name);
 void record_search(char *path, int shell);
 /* get default system directory (where libraries are) */
