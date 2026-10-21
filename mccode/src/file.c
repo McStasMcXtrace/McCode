@@ -36,76 +36,11 @@ static List search_list = NULL;
 /* MOD: P. Willendrup, May 22 2023: Add contrib subdir "sasmodels" */
 #if MCCODE_PROJECT == 1   /* neutron */
 static char *sys_subdir_table[] =
-  { "samples", "monitors", "sources", "optics", "misc" , "obsolete", "contrib",
-    "union", "sasmodels", "share", "examples/" };   /* trailing '/' = recursive */
+  { "samples", "monitors", "sources", "optics", "misc" , "obsolete", "contrib", "union", "sasmodels", "share", "examples" };
 #elif MCCODE_PROJECT == 2 /* xray */
 static char *sys_subdir_table[] =
-  { "samples", "monitors", "sources", "optics", "misc" , "obsolete", "contrib",
-    "union", "sasmodels", "astrox", "share", "examples/" };
+  { "samples", "monitors", "sources", "optics", "misc" , "obsolete", "contrib", "union", "sasmodels", "astrox", "share", "examples" };
 #endif
-
-#include <sys/stat.h>
-#ifndef S_ISDIR
-#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)   /* MSVC */
-#endif
-
-/* Max depth below a recursive root; also protects against symlink loops */
-#define MC_MAX_SEARCH_DEPTH 8
-
-static int is_directory(const char *path)
-{
-  struct stat st;
-  return stat(path, &st) == 0 && S_ISDIR(st.st_mode);
-}
-
-static int cmp_names(const void *a, const void *b)
-{
-  return strcmp(*(char * const *)a, *(char * const *)b);
-}
-
-/* Look for NAME in DIR, then depth-first in its sub-directories (sorted
-   alphabetically so the result is reproducible). Works with any try_open
-   callback (files or components). */
-static FILE *
-try_open_recursive(char *dir, char *name,
-                   FILE *(*try_open)(char *, char *), int depth)
-{
-  DIR *dfd;
-  struct dirent *dp;
-  char **subs = NULL;
-  int n = 0, cap = 0, i;
-  FILE *f;
-
-  if (dir == NULL || depth > MC_MAX_SEARCH_DEPTH)
-    return NULL;
-  if ((f = (*try_open)(dir, name)) != NULL)
-    return f;
-  if ((dfd = opendir(dir)) == NULL)
-    return NULL;
-
-  while ((dp = readdir(dfd)) != NULL) {
-    char *sub;
-    if (dp->d_name[0] == '.')              /* ., .., .git, hidden dirs */
-      continue;
-    sub = str_cat(dir, MC_PATHSEP_S, dp->d_name, NULL);
-    if (!is_directory(sub)) { str_free(sub); continue; }
-    if (n == cap) {
-      cap = cap ? 2*cap : 16;
-      subs = (char **)realloc(subs, cap*sizeof(char *));
-    }
-    subs[n++] = sub;
-  }
-  closedir(dfd);
-
-  if (n > 1) qsort(subs, n, sizeof(char *), cmp_names);
-  for (i = 0; i < n; i++) {
-    if (f == NULL)
-      f = try_open_recursive(subs[i], name, try_open, depth + 1);
-    str_free(subs[i]);
-  }
-  free(subs);
-  return f;
-}
 
 /* Attempt to open FILE in directory DIR (or current directory if DIR is
    NULL). */
@@ -270,29 +205,18 @@ generic_open_file_search(char *name, FILE *(*try_open)(char *, char *))
   f = (*try_open)(get_sys_dir(), name);
   if(f != NULL)
     return f;
-    /* Finally look in the fixed list of system subdirectories.
-     An entry ending with '/' (e.g. "examples/") is searched recursively. */
+  /* Finally look in the fixed list of system subdirectories. */
   for(i = 0; i < sizeof(sys_subdir_table)/sizeof(char *); i++) {
-    char *entry = sys_subdir_table[i];
-    size_t len  = strlen(entry);
-    int recursive = (len > 1 && entry[len-1] == '/');
-    char *subdir  = recursive ? str_dup_n(entry, len-1) : str_dup(entry);
-
-    dir = str_cat(get_sys_dir(), MC_PATHSEP_S, subdir, NULL);
-    f = recursive ? try_open_recursive(dir, name, try_open, 0)
-                  : (*try_open)(dir, name);
+    dir = str_cat(get_sys_dir(), MC_PATHSEP_S, sys_subdir_table[i], NULL);
+    f = (*try_open)(dir, name);
     str_free(dir);
     if(f != NULL)
-    {
-      if (!strcmp(subdir, "obsolete")) fprintf(stderr, "Warning: '%s' is an obsolete component (not maintained).\n", name);
-      if (!strcmp(subdir, "contrib"))  fprintf(stderr, "Info:    '%s' is a contributed component.\n", name);
-      str_free(subdir);
-      return f;
-    }
-    str_free(subdir);
+      {
+        if (!strcmp(sys_subdir_table[i], "obsolete")) fprintf(stderr, "Warning: '%s' is an obsolete component (not maintained).\n", name);
+        if (!strcmp(sys_subdir_table[i], "contrib"))  fprintf(stderr, "Info:    '%s' is a contributed component.\n", name);
+        return f;
+      }
   }
-  /* Not found. */
-  return NULL;
   /* Not found. */
   return NULL;
 }
@@ -319,7 +243,7 @@ open_file_search_sys(char *name)
 }
 
 
-/* Add a directory to the search path. 'name/' = recursive */
+/* Add a directory to the search path. */
 void
 add_search_dir(char *name)
 {
