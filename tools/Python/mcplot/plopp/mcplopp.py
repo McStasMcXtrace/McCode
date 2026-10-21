@@ -156,15 +156,16 @@ def load_events(path, source, sample):
     return ev
 
 
-def event_figures(ev, threed=False):
-    ''' pixel intensity map (3D scatter in Jupyter, z-x top view otherwise) + time-of-flight and wavelength spectra '''
-    pix = ev.bins.sum()
+def event_figures(ev, threed=False, size=0.015):
+    ''' pixel intensity map, log scale (3D scatter in Jupyter, z-x top view otherwise) + time-of-flight and
+        wavelength spectra. size: 3D marker size in m, roughly the detector pixel pitch '''
+    pix = ev.hist()
     if threed:
-        det = pp.scatter3d(pix, pos='position', cbar=True, title='pixel intensity')
+        det = pp.scatter3d(pix, pos='position', size=size, cbar=True, norm='log', title='pixel intensity')
     else:
         for ax in 'xz':
             pix.coords[ax] = pix.coords['position'].fields.__getattribute__(ax)
-        det = pp.scatter(pix, x='z', y='x', cbar=True, title='pixel intensity (top view)')
+        det = pp.scatter(pix, x='z', y='x', cbar=True, norm='log', title='pixel intensity (top view)')
     allev = ev.bins.concat()
     return [det, pp.plot(allev.hist(t=200), title='time of flight'), pp.plot(allev.hist(wavelength=200), title='wavelength')]
 
