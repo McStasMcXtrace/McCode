@@ -875,7 +875,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   i=0;    //index in faceArray
   while (i<faceSize)
   {
-    polygon p;
+    polygon p = {0};
     p.npol=faceArray[i];
     p.vtx =vtxArray;
     p.idx =&faceArray[i+1];
