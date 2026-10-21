@@ -152,6 +152,22 @@ foreach(TOOLDOCS_HTML_PAGE ${TOOLDOCS_HTML_PAGES})
   )
 endforeach()
 
+# Local MathJax (Apache-2.0) for TeX in component/instrument pages,
+# referenced relative to DEST_DATADIR_DOC by the html that mcdoc writes.
+# Pinned: MathJax 4 moves fonts to separate packages, so tex-svg.js alone
+# would no longer be self-contained. Offline builds can point
+# FETCHCONTENT_SOURCE_DIR_MATHJAX at an unpacked npm tarball.
+include( FetchContent )
+FetchContent_Declare( mathjax
+  URL https://registry.npmjs.org/mathjax/-/mathjax-3.2.2.tgz
+  URL_HASH SHA256=1b9c0a1c44df864e915690558e72adb9cc5203360daefd385084ced3b6c64c09 )
+FetchContent_MakeAvailable( mathjax )
+install(
+  FILES "${mathjax_SOURCE_DIR}/es5/tex-svg.js"
+        "${mathjax_SOURCE_DIR}/LICENSE"
+  DESTINATION "${DEST_DATADIR_DOC}/mathjax"
+)
+
 # McStas/McXtrace language grammar reference (kept generic, not
 # per-flavor). Installed under its own Component/ and Instrument/
 # subdirectories so the relative cross-links between the two pages
