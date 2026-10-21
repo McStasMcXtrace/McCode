@@ -37,7 +37,7 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT SOLEIL_LUCIA(LUCIA_E0=3.09, LUCIA_dE=0.02, LUCIA_dcm_theta=38.9, 
-  string LUCIA_sample_material="CaCO3AlP", string LUCIA_sample_geometry="plant_cell.ply")
+  string LUCIA_sample_material="CaCO3AlP", string LUCIA_sample_geometry="plant_cell.ply", int splits=10)
 
 DECLARE
 %{
