@@ -39,7 +39,8 @@
 * alpha: [AA]           Slope of reflectivity for reflectivity curve approximation
 * W: [AA^-1]             Width of supermirror cut-off
 * transmit: [1]         Fraction of statistics to assign to transmitted beam - NOT YET IMPLEMENTED
-* sigma_m: [rad]        RMS meridional slope (figure) error of the mirror surfaces
+* sigma_m: [rad]        RMS meridional slope (figure) error of the mirror surfaces; for grazing angles
+*                       below 10*sigma_m the waviness model of Hansen et al., arXiv:1612.03763 is used
 * sigma_s: [rad]        RMS sagittal slope (figure) error of the mirror surfaces
 * mirr_thick: [m]       Thickness of mirror shell surfaces - NOT YET IMPLEMENTED
 *
