@@ -1,0 +1,9314 @@
+/* Automatically generated file. Do not edit. 
+ * Format:     ANSI C source code
+ * Creator:    McStas <http://www.mcstas.org>
+ * Instrument: Text2OFF.instr (Text2OFF)
+ * Date:       Wed Oct 21 13:39:55 2026
+ * File:       ./Text2OFF.c
+ * CFLAGS=
+ */
+
+#ifndef WIN32
+#  ifndef OPENACC
+#    define _GNU_SOURCE
+#  endif
+#  define _POSIX_C_SOURCE 200809L
+#endif
+/* In case of cl.exe on Windows, supppress warnings about #pragma acc */
+#ifdef _MSC_EXTENSIONS
+#pragma warning(disable: 4068)
+#endif
+
+#define MCCODE_STRING " 3.99.99, git"
+#define FLAVOR        "mcstas"
+#define FLAVOR_UPPER  "MCSTAS"
+
+#define MC_USE_DEFAULT_MAIN
+#define MC_TRACE_ENABLED
+
+#include <string.h>
+#include <inttypes.h>
+
+typedef double MCNUM;
+typedef struct {MCNUM x, y, z;} Coords;
+typedef MCNUM Rotation[3][3];
+#define MCCODE_BASE_TYPES
+
+/* available random number generators */
+#define _RNG_ALG_MT         1
+#define _RNG_ALG_KISS       2
+/* selection of random number generator */
+#ifndef RNG_ALG
+#  define RNG_ALG  _RNG_ALG_KISS
+#endif
+#if RNG_ALG == _RNG_ALG_MT // MT 
+#define randstate_t uint32_t
+#define RANDSTATE_LEN 1
+#elif RNG_ALG == _RNG_ALG_KISS  // KISS
+#define randstate_t uint64_t
+#define RANDSTATE_LEN 7
+#endif
+
+#ifndef MC_NUSERVAR
+#define MC_NUSERVAR 10
+#endif
+
+/* Particle JUMP control logic */
+struct particle_logic_struct {
+int dummy;
+};
+
+struct _struct_particle {
+  double x,y,z; /* position [m] */
+  double vx,vy,vz; /* velocity [m/s] */
+  double sx,sy,sz; /* spin [0-1] */
+  int mcgravitation; /* gravity-state */
+  void *mcMagnet;    /* precession-state */
+  int allow_backprop; /* allow backprop */
+  /* Generic Temporaries: */
+  /* May be used internally by components e.g. for special */
+  /* return-values from functions used in trace, thusreturned via */
+  /* particle struct. (Example: Wolter Conics from McStas, silicon slabs.) */
+  double _mctmp_a; /* temp a */
+  double _mctmp_b; /* temp b */
+  double _mctmp_c; /* temp c */
+  randstate_t randstate[RANDSTATE_LEN];
+  double t, p;     /* time, event weight */
+  long long _uid;  /* Unique event ID */
+  long _index;     /* component index where to send this event */
+  long _absorbed;  /* flag set to TRUE when this event is to be removed/ignored */
+  long _scattered; /* flag set to TRUE when this event has interacted with the last component instance */
+  long _restore;   /* set to true if neutron event must be restored */
+  long flag_nocoordschange;   /* set to true if particle is jumping */
+  struct particle_logic_struct _logic;
+};
+typedef struct _struct_particle _class_particle;
+
+_class_particle _particle_global_randnbuse_var;
+_class_particle* _particle = &_particle_global_randnbuse_var;
+
+#pragma acc routine
+_class_particle mcgenstate(void);
+#pragma acc routine
+_class_particle mcsetstate(double x, double y, double z, double vx, double vy, double vz,
+			   double t, double sx, double sy, double sz, double p, int mcgravitation, void *mcMagnet, int mcallowbackprop);
+#pragma acc routine
+_class_particle mcgetstate(_class_particle mcneutron, double *x, double *y, double *z,
+                           double *vx, double *vy, double *vz, double *t,
+                           double *sx, double *sy, double *sz, double *p);
+
+extern int mcgravitation;      /* flag to enable gravitation */
+#pragma acc declare create ( mcgravitation )
+
+_class_particle mcgenstate(void) {
+  _class_particle particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, NULL, 0);
+  return(particle);
+}
+/*Generated user variable handlers:*/
+
+#pragma acc routine
+double particle_getvar(_class_particle *p, char *name, int *suc);
+
+#ifdef OPENACC
+#pragma acc routine
+int str_comp(char *str1, char *str2);
+#endif
+
+double particle_getvar(_class_particle *p, char *name, int *suc){
+#ifndef OPENACC
+#define str_comp strcmp
+#endif
+  int s=1;
+  double rval=0;
+  if(!str_comp("x",name)){rval=p->x;s=0;}
+  if(!str_comp("y",name)){rval=p->y;s=0;}
+  if(!str_comp("z",name)){rval=p->z;s=0;}
+  if(!str_comp("vx",name)){rval=p->vx;s=0;}
+  if(!str_comp("vy",name)){rval=p->vy;s=0;}
+  if(!str_comp("vz",name)){rval=p->vz;s=0;}
+  if(!str_comp("sx",name)){rval=p->sx;s=0;}
+  if(!str_comp("sy",name)){rval=p->sy;s=0;}
+  if(!str_comp("sz",name)){rval=p->sz;s=0;}
+  if(!str_comp("t",name)){rval=p->t;s=0;}
+  if(!str_comp("p",name)){rval=p->p;s=0;}
+  if(!str_comp("_mctmp_a",name)){rval=p->_mctmp_a;s=0;}
+  if(!str_comp("_mctmp_b",name)){rval=p->_mctmp_b;s=0;}
+  if(!str_comp("_mctmp_c",name)){rval=p->_mctmp_c;s=0;}
+  if (suc!=0x0) {*suc=s;}
+  return rval;
+}
+
+#pragma acc routine
+void* particle_getvar_void(_class_particle *p, char *name, int *suc);
+
+#ifdef OPENACC
+#pragma acc routine
+int str_comp(char *str1, char *str2);
+#endif
+
+void* particle_getvar_void(_class_particle *p, char *name, int *suc){
+#ifndef OPENACC
+#define str_comp strcmp
+#endif
+  int s=1;
+  void* rval=0;
+  if(!str_comp("x",name)) {rval=(void*)&(p->x); s=0;}
+  if(!str_comp("y",name)) {rval=(void*)&(p->y); s=0;}
+  if(!str_comp("z",name)) {rval=(void*)&(p->z); s=0;}
+  if(!str_comp("vx",name)){rval=(void*)&(p->vx);s=0;}
+  if(!str_comp("vy",name)){rval=(void*)&(p->vy);s=0;}
+  if(!str_comp("vz",name)){rval=(void*)&(p->vz);s=0;}
+  if(!str_comp("sx",name)){rval=(void*)&(p->sx);s=0;}
+  if(!str_comp("sy",name)){rval=(void*)&(p->sy);s=0;}
+  if(!str_comp("sz",name)){rval=(void*)&(p->sz);s=0;}
+  if(!str_comp("t",name)) {rval=(void*)&(p->t); s=0;}
+  if(!str_comp("p",name)) {rval=(void*)&(p->p); s=0;}
+  if (suc!=0x0) {*suc=s;}
+  return rval;
+}
+
+#pragma acc routine
+int particle_setvar_void(_class_particle *, char *, void*);
+
+int particle_setvar_void(_class_particle *p, char *name, void* value){
+#ifndef OPENACC
+#define str_comp strcmp
+#endif
+  int rval=1;
+  if(!str_comp("x",name)) {memcpy(&(p->x),  value, sizeof(double)); rval=0;}
+  if(!str_comp("y",name)) {memcpy(&(p->y),  value, sizeof(double)); rval=0;}
+  if(!str_comp("z",name)) {memcpy(&(p->z),  value, sizeof(double)); rval=0;}
+  if(!str_comp("vx",name)){memcpy(&(p->vx), value, sizeof(double)); rval=0;}
+  if(!str_comp("vy",name)){memcpy(&(p->vy), value, sizeof(double)); rval=0;}
+  if(!str_comp("vz",name)){memcpy(&(p->vz), value, sizeof(double)); rval=0;}
+  if(!str_comp("sx",name)){memcpy(&(p->sx), value, sizeof(double)); rval=0;}
+  if(!str_comp("sy",name)){memcpy(&(p->sy), value, sizeof(double)); rval=0;}
+  if(!str_comp("sz",name)){memcpy(&(p->sz), value, sizeof(double)); rval=0;}
+  if(!str_comp("p",name)) {memcpy(&(p->p),  value, sizeof(double)); rval=0;}
+  if(!str_comp("t",name)) {memcpy(&(p->t),  value, sizeof(double)); rval=0;}
+  return rval;
+}
+
+#pragma acc routine
+int particle_setvar_void_array(_class_particle *, char *, void*, int);
+
+int particle_setvar_void_array(_class_particle *p, char *name, void* value, int elements){
+#ifndef OPENACC
+#define str_comp strcmp
+#endif
+  int rval=1;
+  return rval;
+}
+
+#pragma acc routine
+void particle_restore(_class_particle *p, _class_particle *p0);
+
+void particle_restore(_class_particle *p, _class_particle *p0) {
+  p->x  = p0->x;  p->y  = p0->y;  p->z  = p0->z;
+  p->vx = p0->vx; p->vy = p0->vy; p->vz = p0->vz;
+  p->sx = p0->sx; p->sy = p0->sy; p->sz = p0->sz;
+  p->t = p0->t;  p->p  = p0->p;
+  p->_absorbed=0; p->_restore=0;
+}
+
+#pragma acc routine
+double particle_getuservar_byid(_class_particle *p, int id, int *suc){
+  int s=1;
+  double rval=0;
+  switch(id){
+  }
+  if (suc!=0x0) {*suc=s;}
+  return rval;
+}
+
+#pragma acc routine
+void particle_uservar_init(_class_particle *p){
+}
+
+#define MC_EMBEDDED_RUNTIME
+/* embedding file "mccode-r.h" */
+
+/*******************************************************************************
+*
+* McCode, neutron/xray ray-tracing package
+*         Copyright (C) 1997-2009, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Runtime: share/mccode-r.h
+*
+* %Identification
+* Written by: KN
+* Date:    Aug 29, 1997
+* Release: mcstas 3.99.99
+* Version: $Revision$
+*
+* Runtime system header for McStas/McXtrace.
+*
+* In order to use this library as an external library, the following variables
+* and macros must be declared (see details in the code)
+*
+*   struct mcinputtable_struct mcinputtable[];
+*   int numipar;
+*   metadata_table_t metadata_table[];
+*   int num_metadata;
+*   char instrument_name[], instrument_source[];
+*   int traceenabled, defaultmain;
+*   extern MCNUM  mccomp_storein[];
+*   extern MCNUM  mcAbsorbProp[];
+*   extern MCNUM  mcScattered;
+*   #define MCCODE_STRING "the McStas/McXtrace version"
+*
+* Usage: Automatically embbeded in the c code.
+*
+* $Id$
+*
+*******************************************************************************/
+
+#ifndef MCCODE_R_H
+#define MCCODE_R_H "$Revision$"
+
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <limits.h>
+#include <errno.h>
+#include <time.h>
+#ifndef _MSC_EXTENSIONS
+#include <sys/time.h>
+#endif
+#include <float.h>
+#include <inttypes.h>
+#include <stdint.h>
+#ifdef OPENACC
+#include <openacc.h>
+#ifndef GCCOFFLOAD
+#include <accelmath.h>
+#else
+#include <math.h>
+#endif
+#pragma acc routine
+int noprintf();
+#pragma acc routine
+size_t str_len(const char *s);
+#else
+#include <math.h>
+#endif
+
+/* In case of gcc / clang, ensure to use
+   the built-in isnan/isinf functions */
+#if defined(__GNUC__) || defined(__clang__)
+#  ifdef isnan
+#    undef isnan
+#  endif
+#  ifdef isinf
+#    undef isinf
+#  endif
+#  define isnan(x) __builtin_isnan(x)
+#  define isinf(x) __builtin_isinf(x)
+#endif
+
+#ifdef _MSC_EXTENSIONS
+#ifndef _TIMES_H
+#define _TIMES_H
+
+#if defined(WIN32) || defined(_WIN32)
+#include <sys/timeb.h>
+#include <sys/types.h>
+#include <winsock2.h>
+
+int gettimeofday(struct timeval* t,void* timezone);
+
+#define __need_clock_t
+#include <time.h>
+
+
+/* Structure describing CPU time used by a process and its children.  */
+struct tms
+  {
+    clock_t tms_utime;          /* User CPU time.  */
+    clock_t tms_stime;          /* System CPU time.  */
+
+    clock_t tms_cutime;         /* User CPU time of dead children.  */
+    clock_t tms_cstime;         /* System CPU time of dead children.  */
+  };
+
+/* Store the CPU time used by this process and all its
+   dead children (and their dead children) in BUFFER.
+   Return the elapsed real time, or (clock_t) -1 for errors.
+   All times are in CLK_TCKths of a second.  */
+clock_t times (struct tms *__buffer);
+
+typedef long long suseconds_t ;
+
+
+
+int gettimeofday(struct timeval* t,void* timezone)
+{       struct _timeb timebuffer;
+        _ftime( &timebuffer );
+        t->tv_sec=timebuffer.time;
+        t->tv_usec=1000*timebuffer.millitm;
+		return 0;
+}
+
+clock_t times (struct tms *__buffer) {
+
+	__buffer->tms_utime = clock();
+	__buffer->tms_stime = 0;
+	__buffer->tms_cstime = 0;
+	__buffer->tms_cutime = 0;
+	return __buffer->tms_utime;
+}
+
+
+#endif
+#endif
+#endif
+
+/* If the runtime is embedded in the simulation program, some definitions can
+   be made static. */
+
+#ifdef MC_EMBEDDED_RUNTIME
+#  define mcstatic
+#else
+#  define mcstatic
+#endif
+
+#ifdef __dest_os
+#  if (__dest_os == __mac_os)
+#    define MAC
+#  endif
+#endif
+
+#ifdef __FreeBSD__
+#  define NEED_STAT_H
+#endif
+
+#if defined(__APPLE__) && defined(__GNUC__)
+#  define NEED_STAT_H
+#endif
+
+#if defined(WIN32) || defined(_WIN32)
+#  define NEED_STAT_H
+#  define NEED_TYPES_H
+#endif
+
+#ifdef NEED_STAT_H
+#  include <sys/stat.h>
+#endif
+
+#ifdef NEED_TYPES_H
+#  include <sys/types.h>
+#endif
+
+#ifndef MC_PATHSEP_C
+#if defined(WIN32) || defined(_WIN32)
+#    define MC_PATHSEP_C '\\'
+#    define MC_PATHSEP_S "\\"
+#  else  /* !WIN32 */
+#    define MC_PATHSEP_C '/'
+#    define MC_PATHSEP_S "/"
+#  endif /* !WIN32 */
+#endif /* MC_PATHSEP_C */
+
+#if defined(WIN32) || defined(_WIN32)
+#if defined _MSC_VER
+#include <direct.h>
+#elif defined __GNUC__
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
+#define mkdir(a,b) mkdir(a)
+#define getpid() _getpid()
+#endif
+
+/* the version string is replaced when building distribution with mkdist */
+#ifndef MCCODE_STRING
+#  define MCCODE_STRING " 3.99.99, git"
+#endif
+
+#ifndef MCCODE_DATE
+#  define MCCODE_DATE "git"
+#endif
+
+#ifndef MCCODE_VERSION
+#  define MCCODE_VERSION "3.99.99"
+#endif
+
+#ifndef __MCCODE_VERSION__
+#define __MCCODE_VERSION__ 399099L
+#endif
+
+#ifndef MCCODE_NAME
+#  define MCCODE_NAME "mcstas"
+#endif
+
+#ifndef MCCODE_PARTICLE
+#  define MCCODE_PARTICLE "neutron"
+#endif
+
+#ifndef MCCODE_PARTICLE_CODE
+#  define MCCODE_PARTICLE_CODE 2112
+#endif
+
+#ifndef MCCODE_LIBENV
+#  define MCCODE_LIBENV "MCSTAS"
+#endif
+
+#ifndef FLAVOR_UPPER
+#  define FLAVOR_UPPER MCCODE_NAME
+#endif
+
+#ifdef MC_PORTABLE
+#  ifndef NOSIGNALS
+#    define NOSIGNALS 1
+#  endif
+#endif
+
+#ifdef MAC
+#  ifndef NOSIGNALS
+#    define NOSIGNALS 1
+#  endif
+#endif
+
+#if (USE_MPI == 0)
+#  undef USE_MPI
+#endif
+
+#ifdef USE_MPI  /* default is to disable signals with MPI, as MPICH uses them to communicate */
+#  ifndef NOSIGNALS
+#    define NOSIGNALS 1
+#  endif
+#endif
+
+#ifdef OPENACC  /* default is to disable signals with PGI/OpenACC */
+#  ifndef NOSIGNALS
+#    define NOSIGNALS 1
+#  endif
+#endif
+
+#ifndef OPENACC
+#  ifndef USE_OFF  /* default is to enable OFF when not using PGI/OpenACC */
+#    define USE_OFF
+#  endif
+#  ifndef CPUFUNNEL  /* allow to enable FUNNEL-mode on CPU */
+#  ifdef FUNNEL      /* by default disable FUNNEL-mode when not using PGI/OpenACC */
+#    undef FUNNEL
+#  endif
+#  endif
+#endif
+
+#if (NOSIGNALS == 0)
+#  undef NOSIGNALS
+#endif
+
+/** Header information for metadata-r.c ----------------------------------------------------------------------------- */
+struct metadata_table_struct { /* stores metadata strings from components */
+  char * source;  // component name which provided the metadata
+  char * name;    // the name of the metadata
+  char * type;    // the MIME type of the metadata (free form, valid identifier)
+  char * value;   // the metadata string contents
+};
+typedef struct metadata_table_struct metadata_table_t;
+char * metadata_table_key_component(char* key);
+char * metadata_table_key_literal(char * key);
+int metadata_table_defined(int, metadata_table_t *, char *);
+char * metadata_table_name(int, metadata_table_t *, char *);
+char * metadata_table_type(int, metadata_table_t *, char *);
+char * metadata_table_literal(int, metadata_table_t *, char *);
+void metadata_table_print_all_keys(int no, metadata_table_t * tab);
+int metadata_table_print_all_components(int no, metadata_table_t * tab);
+int metadata_table_print_component_keys(int no, metadata_table_t * tab, char * key);
+/* -------------------------------------------------------------------------- Header information for metadata-r.c --- */
+
+/* Note: the enum instr_formal_types definition MUST be kept
+   synchronized with the one in mccode.h and with the
+   instr_formal_type_names array in cogen.c. */
+enum instr_formal_types
+  {
+    instr_type_int,
+    instr_type_string, instr_type_char,
+    instr_type_vector, instr_type_double
+  };
+struct mcinputtable_struct { /* defines instrument parameters */
+  char *name; /* name of parameter */
+  void *par;  /* pointer to instrument parameter (variable) */
+  enum instr_formal_types type;
+  char *val;  /* default value */
+  char *unit; /* expected unit for parameter; informational only */
+};
+
+
+#ifndef MCCODE_BASE_TYPES
+typedef double MCNUM;
+typedef struct {MCNUM x, y, z;} Coords;
+typedef MCNUM Rotation[3][3];
+#endif
+
+/* the following variables are defined in the McStas generated C code
+   but should be defined externally in case of independent library usage */
+#ifndef DANSE
+extern struct mcinputtable_struct mcinputtable[];         /* list of instrument parameters */
+extern int    numipar;                                    /* number of instrument parameters */
+extern metadata_table_t metadata_table[];                 /* list of component-defined string metadata */
+extern int    num_metadata;                               /* number of component-defined string metadata */
+extern char   instrument_name[], instrument_source[]; /* instrument name and filename */
+extern char  *instrument_exe;                           /* executable path = argv[0] or NULL */
+extern char   instrument_code[];                        /* contains the initial 'instr' file */
+
+#ifndef MC_ANCIENT_COMPATIBILITY
+extern int traceenabled, defaultmain;
+#endif
+#endif
+
+
+/* Useful macros ============================================================ */
+
+
+/* SECTION: Dynamic Arrays */
+typedef int* IArray1d;
+IArray1d create_iarr1d(int n);
+void destroy_iarr1d(IArray1d a);
+
+typedef int** IArray2d;
+IArray2d create_iarr2d(int nx, int ny);
+void destroy_iarr2d(IArray2d a);
+
+typedef int*** IArray3d;
+IArray3d create_iarr3d(int nx, int ny, int nz);
+void destroy_iarr3d(IArray3d a);
+
+typedef double* DArray1d;
+DArray1d create_darr1d(int n);
+void destroy_darr1d(DArray1d a);
+
+typedef double** DArray2d;
+DArray2d create_darr2d(int nx, int ny);
+void destroy_darr2d(DArray2d a);
+
+typedef double*** DArray3d;
+DArray3d create_darr3d(int nx, int ny, int nz);
+void destroy_darr3d(DArray3d a);
+
+
+/* MPI stuff */
+#ifdef USE_MPI
+#include "mpi.h"
+
+#ifdef OMPI_MPI_H  /* openmpi does not use signals: we may install our sighandler */
+#ifndef OPENACC    /* ... but only if we are not also running on GPU */
+#undef NOSIGNALS
+#endif
+#endif
+
+/*
+ * MPI_MASTER(i):
+ * execution of i only on master node
+ */
+#define MPI_MASTER(statement) { \
+  if(mpi_node_rank == mpi_node_root)\
+  { statement; } \
+}
+
+#ifndef MPI_REDUCE_BLOCKSIZE
+#define MPI_REDUCE_BLOCKSIZE 100000
+#endif
+
+int mc_MPI_Sum(double* buf, long count);
+int mc_MPI_Send(void *sbuf, long count, MPI_Datatype dtype, int dest);
+int mc_MPI_Recv(void *rbuf, long count, MPI_Datatype dtype, int source);
+
+/* Evaluate the exit code first: it is often exit(fprintf(stderr, ...)), and
+ * the message must be printed before MPI is torn down. MPI_Finalize is
+ * collective, so it is only used for a normal (code 0) exit. An error exit
+ * from a single rank (e.g. a component INITIALISE failure) must MPI_Abort,
+ * otherwise that rank blocks in MPI_Finalize while the others wait for it in
+ * MPI_Allreduce - a silent deadlock until the job is killed. */
+#define exit(code) do {                                   \
+    int mc_exit_code_ = (int)(code);                      \
+    if (mc_exit_code_) MPI_Abort(MPI_COMM_WORLD, mc_exit_code_); \
+    else MPI_Finalize();                                  \
+    exit(mc_exit_code_);                                  \
+  } while(0)
+
+#else /* !USE_MPI */
+#define MPI_MASTER(instr) instr
+#endif /* USE_MPI */
+
+
+#ifdef USE_MPI
+static int mpi_node_count;
+#endif
+
+#ifdef USE_THREADS  /* user want threads */
+#error Threading (USE_THREADS) support has been removed for very poor efficiency. Use MPI/SSH grid instead.
+#endif
+
+
+void   mcset_ncount(unsigned long long count);    /* wrapper to get mcncount */
+#pragma acc routine
+unsigned long long int mcget_ncount(void);            /* wrapper to set mcncount */
+unsigned long long mcget_run_num(void);           /* wrapper to get mcrun_num=0:mcncount-1 */
+
+/* Following part is only embedded when not redundant with mccode.h ========= */
+
+#ifndef MCCODE_H
+
+#ifndef NOSIGNALS
+#include <signal.h>
+char  *mcsig_message;
+#define SIG_MESSAGE(msg) mcsig_message=(char *)(msg);
+#else
+#define SIG_MESSAGE(...)
+#endif /* !NOSIGNALS */
+
+
+/* Useful macros and constants ============================================== */
+
+
+#ifndef FLT_MAX
+#define FLT_MAX         3.40282347E+38F /* max decimal value of a "float" */
+#endif
+
+#ifndef MIN
+#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef MAX
+#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#endif
+#ifndef SQR
+#define SQR(x) ( (x) * (x) )
+#endif
+#ifndef SIGN
+#define SIGN(x) (((x)>0.0)?(1):(-1))
+#endif
+
+
+#  ifndef M_E
+#    define M_E        2.71828182845904523536  // e
+#  endif
+#  ifndef M_LOG2E
+#    define M_LOG2E    1.44269504088896340736  //  log2(e)
+#  endif
+#  ifndef M_LOG10E
+#    define M_LOG10E   0.434294481903251827651 //  log10(e)
+#  endif
+#  ifndef M_LN2
+#    define M_LN2      0.693147180559945309417 //  ln(2)
+#  endif
+#  ifndef M_LN10
+#    define M_LN10     2.30258509299404568402  //  ln(10)
+#  endif
+#  ifndef M_PI
+#    define M_PI       3.14159265358979323846  //  pi
+#  endif
+#  ifndef PI
+#    define PI       M_PI                      //  pi - also used in some places
+#  endif
+#  ifndef M_PI_2
+#    define M_PI_2     1.57079632679489661923  //  pi/2
+#  endif
+#  ifndef M_PI_4
+#    define M_PI_4     0.785398163397448309616 //  pi/4
+#  endif
+#  ifndef M_1_PI
+#    define M_1_PI     0.318309886183790671538 //  1/pi
+#  endif
+#  ifndef M_2_PI
+#    define M_2_PI     0.636619772367581343076 //  2/pi
+#  endif
+#  ifndef M_2_SQRTPI
+#    define M_2_SQRTPI 1.12837916709551257390  //  2/sqrt(pi)
+#  endif
+#  ifndef M_SQRT2
+#    define M_SQRT2    1.41421356237309504880  //  sqrt(2)
+#  endif
+#  ifndef M_SQRT1_2
+#    define M_SQRT1_2  0.707106781186547524401 //  1/sqrt(2)
+#  endif
+
+#define RAD2MIN  ((180*60)/PI)
+#define MIN2RAD  (PI/(180*60))
+#define DEG2RAD  (PI/180)
+#define RAD2DEG  (180/PI)
+#define FWHM2RMS 0.424660900144    /* Convert between full-width-half-max and */
+#define RMS2FWHM 2.35482004503     /* root-mean-square (standard deviation) */
+#define HBAR     1.05457168e-34    /* [Js] h bar Planck constant CODATA 2002 */
+#define MNEUTRON 1.67492728e-27    /* [kg] mass of neutron CODATA 2002 */
+#define GRAVITY  9.81              /* [m/s^2] gravitational acceleration */
+#define NA       6.02214179e23     /* [#atoms/g .mole] Avogadro's number*/
+
+
+#define UNSET nan("0x6E6F74736574")
+int nans_match(double, double);
+int is_unset(double);
+int is_valid(double);
+int is_set(double);
+int all_unset(int n, ...);
+int all_set(int n, ...);
+int any_unset(int n, ...);
+int any_set(int n, ...);
+
+
+/* wrapper to get absolute and relative position of comp */
+/* mccomp_posa and mccomp_posr are defined in McStas generated C code */
+#define POS_A_COMP_INDEX(index) (instrument->_position_absolute[index])
+#define POS_R_COMP_INDEX(index) (instrument->_position_relative[index])
+
+/* setting parameters based COMP_GETPAR (returned as pointer)         */
+/* compname must be given as a string, type and par are symbols.      */
+#define COMP_GETPAR3(type, compname, par) \
+    &( ((_class_ ## type ##_parameters *) _getvar_parameters(compname))->par )
+/* the body of this function depends on component instances, and is cogen'd */
+void* _getvar_parameters(char* compname);
+
+int _getcomp_index(char* compname);
+
+/* Note: The two-stage approach to COMP_GETPAR is NOT redundant; without it,
+* after #define C sample, COMP_GETPAR(C,x) would refer to component C, not to
+* component sample. Such are the joys of ANSI C.
+
+* Anyway the usage of COMP_GETPAR requires that we use sometimes bare names...
+* NOTE: This can ONLY be used in instrument descriptions, not components.
+*/
+#define COMP_GETPAR2(comp, par) (_ ## comp ## _var._parameters.par)
+#define COMP_GETPAR(comp, par) COMP_GETPAR2(comp,par)
+
+#define INSTRUMENT_GETPAR(par) (_instrument_var._parameters.par)
+
+/* Current component name, index, position and orientation */
+/* These macros work because, using class-based functions, "comp" is usually
+*  the local variable of the active/current component. */
+#define INDEX_CURRENT_COMP (_comp->_index)
+#define NAME_CURRENT_COMP (_comp->_name)
+#define TYPE_CURRENT_COMP (_comp->_type)
+#define POS_A_CURRENT_COMP (_comp->_position_absolute)
+#define POS_R_CURRENT_COMP (_comp->_position_relative)
+#define ROT_A_CURRENT_COMP (_comp->_rotation_absolute)
+#define ROT_R_CURRENT_COMP (_comp->_rotation_relative)
+
+#define NAME_INSTRUMENT (instrument->_name)
+
+
+/* MCDISPLAY/trace and debugging message sent to stdout */
+#ifdef MC_TRACE_ENABLED
+#define DEBUG
+#endif
+
+#ifdef DEBUG
+#define DEBUG_INSTR() if(!mcdotrace); else { printf("INSTRUMENT:\n"); printf("Instrument '%s' (%s)\n", instrument_name, instrument_source); }
+#define DEBUG_COMPONENT(name,c,t) if(!mcdotrace); else {\
+     printf("COMPONENT: \"%s\"\n"					  \
+     "POS: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
+     name, c.x, c.y, c.z, t[0][0], t[0][1], t[0][2], \
+     t[1][0], t[1][1], t[1][2], t[2][0], t[2][1], t[2][2]); \
+     fflush(stdout);\
+     printf("Component %30s AT (%g,%g,%g)\n", name, c.x, c.y, c.z);\
+     fflush(stdout);}
+#define DEBUG_INSTR_END() if(!mcdotrace); else printf("INSTRUMENT END:\n");
+#define DEBUG_ENTER() if(!mcdotrace); else printf("ENTER:\n");
+#define DEBUG_COMP(c) if(!mcdotrace); else printf("COMP: \"%s\"\n", c);
+#define DEBUG_LEAVE() if(!mcdotrace); else printf("LEAVE:\n");
+#define DEBUG_ABSORB() if(!mcdotrace); else printf("ABSORB:\n");
+#else
+#define DEBUG_INSTR()
+#define DEBUG_COMPONENT(name,c,t)
+#define DEBUG_INSTR_END()
+#define DEBUG_ENTER()
+#define DEBUG_COMP(c)
+#define DEBUG_LEAVE()
+#define DEBUG_ABSORB()
+#endif
+
+// mcDEBUG_STATE and mcDEBUG_SCATTER are defined by mcstas-r.h and mcxtrace-r.h
+
+
+
+#ifdef TEST
+#define test_printf printf
+#else
+#define test_printf while(0) printf
+#endif
+
+/* send MCDISPLAY message to stdout to show gemoetry */
+void mcdis_magnify(char *what);
+void mcdis_line(double x1, double y1, double z1,
+                double x2, double y2, double z2);
+void mcdis_dashed_line(double x1, double y1, double z1,
+		       double x2, double y2, double z2, int n);
+void mcdis_multiline(int count, ...);
+void mcdis_rectangle(char* plane, double x, double y, double z,
+		     double width, double height);
+void mcdis_box(double x, double y, double z,
+	       double width, double height, double length, double thickness, double nx, double ny, double nz);
+void mcdis_circle(char *plane, double x, double y, double z, double r);
+void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, double nz);
+void mcdis_cylinder( double x, double y, double z,
+		     double r, double height, double thickness, double nx, double ny, double nz);
+void mcdis_cone( double x, double y, double z,
+        double r, double height, double nx, double ny, double nz);
+void mcdis_sphere(double x, double y, double z, double r);
+
+
+/* random number generation. ================================================ */
+
+#if RNG_ALG == _RNG_ALG_MT  // MT (currently not functional for GPU)
+#  define MC_RAND_MAX ((uint32_t)0xffffffffUL)
+#  ifndef RANDSTATE_LEN
+#    define RANDSTATE_LEN 1
+#  endif
+#  define srandom(seed) mt_srandom_empty()
+#  define random() mt_random()
+#  define _random() mt_random()
+#elif RNG_ALG == _RNG_ALG_KISS  // KISS
+#  ifndef UINT64_MAX
+#    define UINT64_MAX ((uint64_t)0xffffffffffffffffULL)
+#  endif
+#  define MC_RAND_MAX UINT64_MAX
+#  ifndef RANDSTATE_LEN
+#    define RANDSTATE_LEN 7
+#  endif
+#  define srandom(seed) kiss_srandom(_particle->randstate, seed)
+#  define random() kiss_random(_particle->randstate)
+#  define _random() kiss_random(state)
+#endif
+
+#pragma acc routine
+double _randnorm2(randstate_t* state);
+
+// Component writer interface
+#define randnorm() _randnorm2(_particle->randstate)        // NOTE: can't use _randnorm on GPU
+#define rand01() _rand01(_particle->randstate)
+#define randpm1() _randpm1(_particle->randstate)
+#define rand0max(p1) _rand0max(p1, _particle->randstate)
+#define randminmax(p1, p2) _randminmax(p1, p2, _particle->randstate)
+#define randtriangle() _randtriangle(_particle->randstate)
+
+// Mersenne Twister rng
+uint32_t mt_random(void);
+void mt_srandom (uint32_t x);
+void mt_srandom_empty();
+
+// KISS rng
+#pragma acc routine
+uint64_t *kiss_srandom(uint64_t state[7], uint64_t seed);
+#pragma acc routine
+uint64_t kiss_random(uint64_t state[7]);
+
+// Scrambler / hash function
+#pragma acc routine seq
+randstate_t _hash(randstate_t x);
+
+// internal RNG (transforms) interface
+#pragma acc routine
+double _rand01(randstate_t* state);
+#pragma acc routine
+double _randpm1(randstate_t* state);
+#pragma acc routine
+double _rand0max(double max, randstate_t* state);
+#pragma acc routine
+double _randminmax(double min, double max, randstate_t* state);
+#pragma acc routine
+double _randtriangle(randstate_t* state);
+// version which pass randstate_t* as opague void*
+#pragma acc routine
+double _rand01_opague(void* state);
+
+
+#ifdef USE_OPENCL
+#include "opencl-lib.h"
+#include "opencl-lib.c"
+#endif
+
+#ifndef DANSE
+int init(void);
+int raytrace(_class_particle*);
+int save(FILE *);
+int finally(void);
+int display(void);
+#endif
+
+
+/* GPU related algorithms =================================================== */
+
+/*
+*  Divide-and-conquer strategy for parallel sort absorbed last.
+*/
+#ifdef FUNNEL
+long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long len, long buffer_len, long flag_split, long* multiplier);
+#endif
+long sort_absorb_last_serial(_class_particle* particles, long len);
+
+
+/* simple vector algebra ==================================================== */
+
+
+#define vec_prod(x, y, z, x1, y1, z1, x2, y2, z2) \
+	vec_prod_func(&x, &y, &z, x1, y1, z1, x2, y2, z2)
+#pragma acc routine seq
+mcstatic void vec_prod_func(double *x, double *y, double *z,
+		double x1, double y1, double z1, double x2, double y2, double z2);
+
+#pragma acc routine seq
+mcstatic double scalar_prod(
+		double x1, double y1, double z1, double x2, double y2, double z2);
+
+#pragma acc routine seq
+mcstatic void norm_func(double *x, double *y, double *z);
+#define NORM(x,y,z)	norm_func(&x, &y, &z)
+
+#pragma acc routine seq
+void normal_vec(double *nx, double *ny, double *nz,
+    double x, double y, double z);
+
+/**
+ * Rotate the vector vx,vy,vz psi radians around the vector ax,ay,az
+ * and put the result in x,y,z.
+ */
+#define rotate(x, y, z, vx, vy, vz, phi, ax, ay, az) \
+  do { \
+    double mcrt_tmpx = (ax), mcrt_tmpy = (ay), mcrt_tmpz = (az); \
+    double mcrt_vp, mcrt_vpx, mcrt_vpy, mcrt_vpz; \
+    double mcrt_vnx, mcrt_vny, mcrt_vnz, mcrt_vn1x, mcrt_vn1y, mcrt_vn1z; \
+    double mcrt_bx, mcrt_by, mcrt_bz; \
+    double mcrt_cos, mcrt_sin; \
+    NORM(mcrt_tmpx, mcrt_tmpy, mcrt_tmpz); \
+    mcrt_vp = scalar_prod((vx), (vy), (vz), mcrt_tmpx, mcrt_tmpy, mcrt_tmpz); \
+    mcrt_vpx = mcrt_vp*mcrt_tmpx; \
+    mcrt_vpy = mcrt_vp*mcrt_tmpy; \
+    mcrt_vpz = mcrt_vp*mcrt_tmpz; \
+    mcrt_vnx = (vx) - mcrt_vpx; \
+    mcrt_vny = (vy) - mcrt_vpy; \
+    mcrt_vnz = (vz) - mcrt_vpz; \
+    vec_prod(mcrt_bx, mcrt_by, mcrt_bz, \
+             mcrt_tmpx, mcrt_tmpy, mcrt_tmpz, mcrt_vnx, mcrt_vny, mcrt_vnz); \
+    mcrt_cos = cos((phi)); mcrt_sin = sin((phi)); \
+    mcrt_vn1x = mcrt_vnx*mcrt_cos + mcrt_bx*mcrt_sin; \
+    mcrt_vn1y = mcrt_vny*mcrt_cos + mcrt_by*mcrt_sin; \
+    mcrt_vn1z = mcrt_vnz*mcrt_cos + mcrt_bz*mcrt_sin; \
+    (x) = mcrt_vpx + mcrt_vn1x; \
+    (y) = mcrt_vpy + mcrt_vn1y; \
+    (z) = mcrt_vpz + mcrt_vn1z; \
+  } while(0)
+
+/**
+ * Mirror (xyz) in the plane given by the point (rx,ry,rz) and normal (nx,ny,nz)
+ *
+ * TODO: This define is seemingly never used...
+ */
+#define mirror(x,y,z,rx,ry,rz,nx,ny,nz) \
+  do { \
+    double mcrt_tmpx= (nx), mcrt_tmpy = (ny), mcrt_tmpz = (nz); \
+    double mcrt_tmpt; \
+    NORM(mcrt_tmpx, mcrt_tmpy, mcrt_tmpz); \
+    mcrt_tmpt=scalar_prod((rx),(ry),(rz),mcrt_tmpx,mcrt_tmpy,mcrt_tmpz); \
+    (x) = rx -2 * mcrt_tmpt*mcrt_rmpx; \
+    (y) = ry -2 * mcrt_tmpt*mcrt_rmpy; \
+    (z) = rz -2 * mcrt_tmpt*mcrt_rmpz; \
+  } while (0)
+
+#pragma acc routine
+Coords coords_set(MCNUM x, MCNUM y, MCNUM z);
+#pragma acc routine
+Coords coords_get(Coords a, MCNUM *x, MCNUM *y, MCNUM *z);
+#pragma acc routine
+Coords coords_add(Coords a, Coords b);
+#pragma acc routine
+Coords coords_sub(Coords a, Coords b);
+#pragma acc routine
+Coords coords_neg(Coords a);
+#pragma acc routine
+Coords coords_scale(Coords b, double scale);
+#pragma acc routine
+double coords_sp(Coords a, Coords b);
+#pragma acc routine
+Coords coords_xp(Coords b, Coords c);
+#pragma acc routine
+double coords_len(Coords a);
+#pragma acc routine seq
+void   coords_print(Coords a);
+#pragma acc routine seq
+mcstatic void coords_norm(Coords* c);
+
+#pragma acc routine seq
+void rot_set_rotation(Rotation t, double phx, double phy, double phz);
+#pragma acc routine seq
+int  rot_test_identity(Rotation t);
+#pragma acc routine seq
+void rot_mul(Rotation t1, Rotation t2, Rotation t3);
+#pragma acc routine seq
+void rot_copy(Rotation dest, Rotation src);
+#pragma acc routine seq
+void rot_transpose(Rotation src, Rotation dst);
+#pragma acc routine seq
+Coords rot_apply(Rotation t, Coords a);
+
+#pragma acc routine seq
+void mccoordschange(Coords a, Rotation t, _class_particle *particle);
+#pragma acc routine seq
+void mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz);
+
+double mcestimate_error(double N, double p1, double p2);
+void mcreadparams(void);
+
+/* this is now in mcstas-r.h and mcxtrace-r.h as the number of state parameters
+is no longer equal */
+
+_class_particle mcgenstate(void);
+
+// trajectory/shape intersection routines
+#pragma acc routine seq
+int inside_rectangle(double, double, double, double);
+#pragma acc routine seq
+int box_intersect(double *dt_in, double *dt_out, double x, double y, double z,
+      double vx, double vy, double vz, double dx, double dy, double dz);
+#pragma acc routine seq
+int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
+      double vx, double vy, double vz, double r, double h);
+#pragma acc routine seq
+int sphere_intersect(double *t0, double *t1, double x, double y, double z,
+      double vx, double vy, double vz, double r);
+// second order equation roots
+#pragma acc routine seq
+int solve_2nd_order(double *t1, double *t2,
+      double A,  double B,  double C);
+
+// random vector generation to shape
+// defines silently introducing _particle as the last argument
+#define randvec_target_circle(xo, yo, zo, solid_angle, xi, yi, zi, radius) \
+  _randvec_target_circle(xo, yo, zo, solid_angle, xi, yi, zi, radius, _particle)
+#define randvec_target_rect_angular(xo, yo, zo, solid_angle, xi, yi, zi, height, width, A) \
+  _randvec_target_rect_angular(xo, yo, zo, solid_angle, xi, yi, zi, height, width, A, _particle)
+#define randvec_target_rect_real(xo, yo, zo, solid_angle, xi, yi, zi, height, width, A, lx, ly, lz, order) \
+  _randvec_target_rect_real(xo, yo, zo, solid_angle, xi, yi, zi, height, width, A, lx, ly, lz, order, _particle)
+// defines forwarding to "inner" functions
+#define randvec_target_sphere randvec_target_circle
+#define randvec_target_rect(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9) \
+  randvec_target_rect_real(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,0,0,0,1)
+// headers for randvec
+#pragma acc routine seq
+void _randvec_target_circle(double *xo, double *yo, double *zo,
+  double *solid_angle, double xi, double yi, double zi, double radius,
+  _class_particle* _particle);
+#pragma acc routine seq
+void _randvec_target_rect_angular(double *xo, double *yo, double *zo,
+  double *solid_angle, double xi, double yi, double zi, double height,
+  double width, Rotation A,
+  _class_particle* _particle);
+#pragma acc routine seq
+void _randvec_target_rect_real(double *xo, double *yo, double *zo, double *solid_angle,
+  double xi, double yi, double zi, double height, double width, Rotation A,
+  double lx, double ly, double lz, int order,
+  _class_particle* _particle);
+
+
+// this is the main()
+int mccode_main(int argc, char *argv[]);
+
+
+#endif /* !MCCODE_H */
+
+#ifndef MCCODE_R_IO_H
+#define MCCODE_R_IO_H "$Revision$"
+
+#if (USE_NEXUS == 0)
+#undef USE_NEXUS
+#endif
+
+#ifndef CHAR_BUF_LENGTH
+#define CHAR_BUF_LENGTH 1024
+#endif
+
+
+/* I/O section part ========================================================= */
+
+/* ========================================================================== */
+
+/*                               MCCODE_R_IO_C                                */
+
+/* ========================================================================== */
+
+
+/* main DETECTOR structure which stores most information to write to data files */
+struct mcdetector_struct {
+  char   filename[CHAR_BUF_LENGTH];   /* file name of monitor */
+  double Position[3];                 /* position of detector component*/
+  char   position[CHAR_BUF_LENGTH];   /* position of detector component (string)*/
+  Rotation Rotation;                  /* position of detector component*/
+  char   options[CHAR_BUF_LENGTH];    /* Monitor_nD style list-mode'options' (string)*/
+  char   component[CHAR_BUF_LENGTH];  /* component instance name */
+  char   nexuscomp[CHAR_BUF_LENGTH];  /* component naming in NeXus/HDF case */
+  char   instrument[CHAR_BUF_LENGTH]; /* instrument name */
+  char   type[CHAR_BUF_LENGTH];       /* data type, e.g. 0d, 1d, 2d, 3d */
+  char   user[CHAR_BUF_LENGTH];       /* user name, e.g. HOME */
+  char   date[CHAR_BUF_LENGTH];       /* date of simulation end/write time */
+  char   title[CHAR_BUF_LENGTH];      /* title of detector */
+  char   xlabel[CHAR_BUF_LENGTH];     /* X axis label */
+  char   ylabel[CHAR_BUF_LENGTH];     /* Y axis label */
+  char   zlabel[CHAR_BUF_LENGTH];     /* Z axis label */
+  char   xvar[CHAR_BUF_LENGTH];       /* X variable name */
+  char   yvar[CHAR_BUF_LENGTH];       /* Y variable name */
+  char   zvar[CHAR_BUF_LENGTH];       /* Z variable name */
+  char   ncount[CHAR_BUF_LENGTH];     /* number of events initially generated */
+  char   limits[CHAR_BUF_LENGTH];     /* X Y Z limits, e.g. [xmin xmax ymin ymax zmin zmax] */
+  char   variables[CHAR_BUF_LENGTH];  /* variables written into data block */
+  char   statistics[CHAR_BUF_LENGTH]; /* center, mean and half width along axis */
+  char   signal[CHAR_BUF_LENGTH];     /* min max and mean of signal (data block) */
+  char   values[CHAR_BUF_LENGTH];     /* integrated values e.g. [I I_err N] */
+  double xmin,xmax;                   /* min max of axes */
+  double ymin,ymax;
+  double zmin,zmax;
+  double intensity;                   /* integrated values for data block */
+  double error;
+  double events;
+  double min;                         /* statistics for data block */
+  double max;
+  double mean;
+  double centerX;                     /* statistics for axes */
+  double halfwidthX;
+  double centerY;
+  double halfwidthY;
+  int    rank;                        /* dimensionaly of monitor, e.g. 0 1 2 3 */
+  char   istransposed;                /* flag to transpose matrix for some formats */
+
+  long   m,n,p;                       /* dimensions of data block and along axes */
+  long   date_l;                      /* same as date, but in sec since 1970 */
+
+  double *p0, *p1, *p2;               /* pointers to saved data, NULL when freed */
+  char   format[CHAR_BUF_LENGTH];    /* format for file generation */
+};
+
+typedef struct mcdetector_struct MCDETECTOR;
+
+static   char *dirname             = NULL;      /* name of output directory */
+static   char *siminfo_name        = "mccode";  /* default output sim file name */
+char    *mcformat                    = NULL;      /* NULL (default) or a specific format */
+static   int   mcsave_final        = 0;         /* 1 during the final save, done by all MPI nodes together (see mccode_main) */
+
+/* file I/O definitions and function prototypes */
+
+#ifndef MC_EMBEDDED_RUNTIME /* the mcstatic variables (from mccode-r.c) */
+extern FILE * siminfo_file;     /* handle to the output siminfo file */
+extern int    mcgravitation;      /* flag to enable gravitation */
+extern int    mcdotrace;          /* flag to print MCDISPLAY messages */
+#else
+mcstatic FILE *siminfo_file        = NULL;
+#endif
+
+/* I/O function prototypes ================================================== */
+
+// from msysgit: https://code.google.com/p/msysgit/source/browse/compat/strcasestr.c
+char *strcasestr(const char *haystack, const char *needle);
+
+/* output functions */
+MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c, Coords pos, Rotation rot, int index);
+MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
+                  char *xvar, double x1, double x2, long n,
+                  double *p0, double *p1, double *p2, char *f, char *c, Coords pos, Rotation rot, int index);
+MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
+                  double x1, double x2, double y1, double y2, long m,
+                  long n, double *p0, double *p1, double *p2, char *f,
+                  char *c, Coords pos, Rotation rot, int index);
+MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
+                  long m, long n,
+                  double *p1, char *f,
+	          char *c, Coords posa, Rotation rot,char* options, int index);
+
+/* wrappers to output functions, that automatically set NAME and POSITION */
+#define DETECTOR_OUT(p0,p1,p2) mcdetector_out_0D(NAME_CURRENT_COMP,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP,INDEX_CURRENT_COMP)
+#define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP,INDEX_CURRENT_COMP)
+#define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) \
+     mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP,INDEX_CURRENT_COMP)
+#define DETECTOR_OUT_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f) \
+     mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP,INDEX_CURRENT_COMP)
+
+#ifdef USE_NEXUS
+#include "napi.h"
+NXhandle nxhandle;
+/* store post-INIT values of component SETTING parameters (called after init()) */
+void mccomp_param_runtime_nexus_all(NXhandle f);
+#endif
+
+#endif /* ndef MCCODE_R_IO_H */
+
+#endif /* MCCODE_R_H */
+/* End of file "mccode-r.h". */
+
+/* embedding file "mcstas-r.h" */
+
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2009, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Runtime: share/mcstas-r.h
+*
+* %Identification
+* Written by: KN
+* Date:    Aug 29, 1997
+* Release: McStas X.Y
+* Version: $Revision$
+*
+* Runtime system header for McStas.
+*
+* In order to use this library as an external library, the following variables
+* and macros must be declared (see details in the code)
+*
+*   struct mcinputtable_struct mcinputtable[];
+*   int mcnumipar;
+*   char instrument_name[], instrument_source[];
+*   int traceenabled, defaultmain;
+*   extern MCNUM  mccomp_storein[];
+*   extern MCNUM  instrument.counter_AbsorbProp[];
+*   extern MCNUM  mcScattered;
+*   #define MCCODE_STRING "the McStas version"
+*
+* Usage: Automatically embbeded in the c code.
+*
+* $Id$
+*
+*******************************************************************************/
+
+#ifndef MCSTAS_R_H
+#define MCSTAS_R_H "$Revision$"
+
+/* Following part is only embedded when not redundent with mcstas.h */
+
+#ifndef MCCODE_H
+
+#define AA2MS    629.622368        /* Convert k[1/AA] to v[m/s] */
+#define MS2AA    1.58825361e-3     /* Convert v[m/s] to k[1/AA] */
+#define K2V      AA2MS
+#define V2K      MS2AA
+#define Q2V      AA2MS
+#define V2Q      MS2AA
+#define SE2V     437.393377        /* Convert sqrt(E)[meV] to v[m/s] */
+#define VS2E     5.22703725e-6     /* Convert (v[m/s])**2 to E[meV] */
+
+#define SCATTER0 do {DEBUG_SCATTER(); SCATTERED++;} while(0)
+#define SCATTER SCATTER0
+
+void SCATTER_func(_class_particle *_particle); /* provides function to SCATTER from within libaries */
+
+#define JUMPTOCOMP(comp) mcneutron->_index = INDEX_COMP(comp);
+
+#define MAGNET_ON \
+  do { \
+    mcMagnet = 1; \
+  } while(0)
+
+#define MAGNET_OFF \
+  do { \
+    mcMagnet = 0; \
+  } while(0)
+
+#define ALLOW_BACKPROP \
+  do { \
+    allow_backprop = 1; \
+  } while(0)
+
+#define DISALLOW_BACKPROP \
+  do { \
+    allow_backprop = 0; \
+  } while(0)
+
+#define PROP_MAGNET(dt) \
+  do { \
+  } while (0)
+    /* change coordinates from local system to magnet system */
+/*    Rotation rotLM, rotTemp; \
+      Coords   posLM = coords_sub(POS_A_CURRENT_COMP, mcMagnetPos); \
+      rot_transpose(ROT_A_CURRENT_COMP, rotTemp); \
+      rot_mul(rotTemp, mcMagnetRot, rotLM); \
+      mcMagnetPrecession(x, y, z, t, vx, vy, vz, \
+               &sx, &sy, &sz, dt, posLM, rotLM); \
+      } while(0)
+*/
+
+#define mcPROP_DT(dt) \
+  do { \
+    if (mcMagnet && dt > 0) PROP_MAGNET(dt);\
+    x += vx*(dt); \
+    y += vy*(dt); \
+    z += vz*(dt); \
+    t += (dt); \
+    if (isnan(p) || isinf(p)) { ABSORB; }\
+  } while(0)
+
+/* ADD: E. Farhi, Aug 6th, 2001 PROP_GRAV_DT propagation with acceleration */
+#define PROP_GRAV_DT(dt, Ax, Ay, Az) \
+  do { \
+    if(dt < 0 && allow_backprop == 0) { ABSORB; }\
+    if (mcMagnet) /*printf("Spin precession gravity\n")*/; \
+    x  += vx*(dt) + (Ax)*(dt)*(dt)/2; \
+    y  += vy*(dt) + (Ay)*(dt)*(dt)/2; \
+    z  += vz*(dt) + (Az)*(dt)*(dt)/2; \
+    vx += (Ax)*(dt); \
+    vy += (Ay)*(dt); \
+    vz += (Az)*(dt); \
+    t  += (dt); \
+    DISALLOW_BACKPROP;\
+  } while(0)
+
+
+#define PROP_DT(dt) \
+  do { \
+    if(dt < 0 && allow_backprop == 0) { RESTORE=1; ABSORB; }; \
+    if (mcgravitation) { Coords mcLocG; double mc_gx, mc_gy, mc_gz; \
+    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
+    coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
+    PROP_GRAV_DT(dt, mc_gx, mc_gy, mc_gz); } \
+    else mcPROP_DT(dt); \
+    DISALLOW_BACKPROP;\
+  } while(0)
+
+
+#define PROP_Z0 \
+  do { \
+    if (mcgravitation) { Coords mcLocG; int mc_ret; \
+    double mc_dt, mc_gx, mc_gy, mc_gz; \
+    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
+    coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
+    mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gz/2, -vz, -z); \
+    if (mc_ret) {PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); z=0;}\
+    else if (allow_backprop == 0 && mc_dt < 0) { ABSORB; }; } \
+    else mcPROP_Z0; \
+    DISALLOW_BACKPROP;\
+  } while(0)
+
+#define mcPROP_Z0 \
+  do { \
+    double mc_dt; \
+    if(vz == 0) { ABSORB; }; \
+    mc_dt = -z/vz; \
+    if(mc_dt < 0 && allow_backprop == 0) { ABSORB; }; \
+    mcPROP_DT(mc_dt); \
+    z = 0; \
+    DISALLOW_BACKPROP;\
+  } while(0)
+
+#define PROP_X0 \
+  do { \
+    if (mcgravitation) { Coords mcLocG; int mc_ret; \
+    double mc_dt, mc_gx, mc_gy, mc_gz; \
+    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
+    coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
+    mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gx/2, -vx, -x); \
+    if (mc_ret) {PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); x=0;}\
+    else if (allow_backprop == 0 && mc_dt < 0) { ABSORB; }; } \
+    else mcPROP_X0; \
+    DISALLOW_BACKPROP;\
+  } while(0)
+
+#define mcPROP_X0 \
+  do { \
+    double mc_dt; \
+    if(vx == 0) { ABSORB; }; \
+    mc_dt = -x/vx; \
+    if(mc_dt < 0 && allow_backprop == 0) { ABSORB; }; \
+    mcPROP_DT(mc_dt); \
+    x = 0; \
+    DISALLOW_BACKPROP;\
+  } while(0)
+
+#define PROP_Y0 \
+  do { \
+    if (mcgravitation) { Coords mcLocG; int mc_ret; \
+    double mc_dt, mc_gx, mc_gy, mc_gz; \
+    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
+    coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
+    mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gy/2, -vy, -y); \
+    if (mc_ret) {PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); y=0;}\
+    else if (allow_backprop == 0 && mc_dt < 0) { ABSORB; }; } \
+    else mcPROP_Y0; \
+    DISALLOW_BACKPROP;\
+  } while(0)
+
+
+#define mcPROP_Y0 \
+  do { \
+    double mc_dt; \
+    if(vy == 0) { ABSORB; }; \
+    mc_dt = -y/vy; \
+    if(mc_dt < 0 && allow_backprop == 0) { ABSORB; }; \
+    mcPROP_DT(mc_dt); \
+    y = 0; \
+    DISALLOW_BACKPROP; \
+  } while(0)
+
+
+/* Propagation variants that always use straight-line motion. */
+#define PROP_NO_G_DT(dt) \
+  do { \
+    if(dt < 0 && allow_backprop == 0) { RESTORE=1; ABSORB; }; \
+    mcPROP_DT(dt); \
+    DISALLOW_BACKPROP; \
+  } while(0)
+
+#define PROP_NO_G_Z0 \
+  do { \
+    mcPROP_Z0; \
+  } while(0)
+
+#define PROP_NO_G_X0 \
+  do { \
+    mcPROP_X0; \
+  } while(0)
+
+#define PROP_NO_G_Y0 \
+  do { \
+    mcPROP_Y0; \
+  } while(0)
+
+
+#ifdef DEBUG
+
+#define DEBUG_STATE() if(!mcdotrace); else \
+  printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
+         x,y,z,vx,vy,vz,t,sx,sy,sz,p);
+#define DEBUG_SCATTER() if(!mcdotrace); else \
+  printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
+         x,y,z,vx,vy,vz,t,sx,sy,sz,p);
+
+#else
+
+#define DEBUG_STATE()
+#define DEBUG_SCATTER()
+
+#endif
+
+#endif /* !MCCODE_H */
+
+#endif /* MCSTAS_R_H */
+/* End of file "mcstas-r.h". */
+
+/* embedding file "mccode-r.c" */
+
+/*******************************************************************************
+*
+* McCode, neutron/xray ray-tracing package
+*         Copyright (C) 1997-2009, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Runtime: share/mccode-r.c
+*
+* %Identification
+* Written by: KN
+* Date:    Aug 29, 1997
+* Release: McStas X.Y/McXtrace X.Y
+* Version: $Revision$
+*
+* Runtime system for McStas and McXtrace.
+* Embedded within instrument in runtime mode.
+* Contains SECTIONS:
+*   MPI handling (sum, send, recv)
+*   format definitions
+*   I/O
+*   mcdisplay support
+*   random numbers
+*   coordinates handling
+*   vectors math (solve 2nd order, normals, randvec...)
+*   parameter handling
+*   signal and main handlers
+*
+* Usage: Automatically embbeded in the c code whenever required.
+*
+* $Id$
+*
+*******************************************************************************/
+
+/*******************************************************************************
+* The I/O format definitions and functions
+*******************************************************************************/
+
+
+/** Include header files to avoid implicit declarations (not allowed on LLVM) */
+#include <ctype.h>
+#include <stddef.h> /* offsetof, used by NeXus runtime parameter capture */
+#include <sys/types.h>
+#ifndef _MSC_EXTENSIONS
+#include <dirent.h>
+#else
+/* McCode includes its own 'dirent' for use with MSVC on Windows */
+#include <windirent.h>
+#define popen _popen
+#define pclose _pclose
+#endif
+#include <errno.h>
+
+// UNIX specific headers (non-Windows)
+#if defined(__unix__) || defined(__APPLE__)
+#include <unistd.h>
+#include <sys/stat.h>
+#endif
+
+
+#ifndef DANSE
+#ifdef MC_ANCIENT_COMPATIBILITY
+int traceenabled = 0;
+int defaultmain  = 0;
+#endif
+/* else defined directly in the McCode generated C code */
+
+static   long mcseed                 = 0; /* seed for random generator */
+#pragma acc declare create ( mcseed )
+static   long mcstartdate            = 0; /* start simulation time */
+static   int  mcdisable_output_files = 0; /* --no-output-files */
+mcstatic int  mcgravitation          = 0; /* use gravitation flag, for PROP macros */
+mcstatic int  mcusedefaults          = 0; /* assume default value for all parameters */
+mcstatic int  mcappend               = 0; /* flag to allow append mode on datasets/directories */
+mcstatic int  mcdotrace              = 0; /* flag for --trace and messages for DISPLAY */
+mcstatic int  mcnexus_embed_idf      = 0; /* flag to embed xml-formatted IDF file for Mantid */
+#pragma acc declare create ( mcdotrace )
+int      mcallowbackprop             = 0;         /* flag to enable negative/backprop */
+
+/* OpenACC-related segmentation parameters: */
+int vecsize = 128;
+int numgangs = 7813;
+long gpu_innerloop = 2147483647;
+
+/* Monitor_nD list/buffer-size default */
+/* Starting value may be defined using -DND_BUFFER=N */
+/* Can further be controlled dynamically using --bufsiz input */
+long MONND_BUFSIZ = 10000000;
+#ifdef ND_BUFFER
+MONND_BUFSIZ = ND_BUFFER;
+#endif
+ 
+
+/* Number of particle histories to simulate. */
+#ifdef NEUTRONICS
+mcstatic unsigned long long int mcncount             = 1;
+mcstatic unsigned long long int mcrun_num            = 0;
+#else
+#ifdef MCDEFAULT_NCOUNT
+mcstatic unsigned long long int mcncount             = MCDEFAULT_NCOUNT;
+#else
+mcstatic unsigned long long int mcncount             = 1000000;
+#endif
+#pragma acc declare create ( mcncount )
+mcstatic unsigned long long int mcrun_num            = 0;
+#pragma acc declare create ( mcrun_num )
+#endif /* NEUTRONICS */
+
+#else
+#include "mcstas-globals.h"
+#endif /* !DANSE */
+
+#ifndef NX_COMPRESSION
+#define NX_COMPRESSION NX_COMP_NONE
+#endif
+
+#ifndef NOSIGNALS
+/* a signal arriving while an event list is written (e.g. a Monitor_nD buffer
+   flushed during TRACE) is replayed once the write is done, see
+   mcdetector_out_2D_list and sighandler */
+static volatile int mcsig_busy    = 0;    /* event list write in progress */
+static volatile int mcsig_pending = 0;    /* signal to replay after it */
+static volatile int mcsig_replay  = 0;    /* sighandler called for the replay */
+static double      *mcsig_skip_p1 = NULL; /* block written just before the replay */
+void sighandler(int sig);
+#endif
+
+/* String nullification on GPU and other replacements */
+#ifdef OPENACC
+int noprintf() {
+  return 0;
+}
+
+int str_comp(char *str1, char *str2) {
+  while (*str1 && *str1 == *str2) {
+    str1++;
+    str2++;
+  }
+  return (*str1 - *str2);
+}
+
+size_t str_len(const char *s)
+{
+  size_t len = 0;
+  if(s != NULL)
+  {
+    while(*s != '\0')
+    {
+      ++len;
+      ++s;
+    }
+  }
+  return len;
+}
+
+#endif
+
+/* SECTION: Predefine (component) parameters ================================= */
+
+int nans_match(double a, double b){
+  return (*(uint64_t*)&a == *(uint64_t*)&b);
+}
+int is_unset(double x){
+  return nans_match(x, UNSET);
+}
+int is_set(double x){
+  return !nans_match(x, UNSET);
+}
+int is_valid(double x){
+  return !isnan(x)||is_unset(x);
+}
+int all_unset(int n, ...){
+  va_list ptr;
+  va_start(ptr, n);
+  int ret=1;
+  for (int i=0; i<n; ++i) if(is_set(va_arg(ptr, double))) ret=0;
+  va_end(ptr);
+  return ret;
+}
+int all_set(int n, ...){
+  va_list ptr;
+  va_start(ptr, n);
+  int ret=1;
+  for (int i=0; i<n; ++i) if(is_unset(va_arg(ptr, double))) ret=0;
+  va_end(ptr);
+  return ret;
+}
+int any_unset(int n, ...){
+  va_list ptr;
+  va_start(ptr, n);
+  int ret=0;
+  for (int i=0; i<n; ++i) if(is_unset(va_arg(ptr, double))) ret=1;
+  va_end(ptr);
+  return ret;
+}
+int any_set(int n, ...){
+  va_list ptr;
+  va_start(ptr, n);
+  int ret=0;
+  for (int i=0; i<n; ++i) if(is_set(va_arg(ptr, double))) ret=1;
+  va_end(ptr);
+  return ret;
+}
+
+
+/* SECTION: Dynamic Arrays ================================================== */
+IArray1d create_iarr1d(int n){
+  IArray1d arr1d;
+  arr1d = calloc(n, sizeof(int));
+  if (!arr1d) {
+    fprintf(stderr, "Error allocating IArray1d of dimension %i\n",n);
+    exit(-1);
+  }
+  return arr1d;
+}
+
+void destroy_iarr1d(IArray1d a){
+  free(a);
+}
+
+IArray2d create_iarr2d(int nx, int ny){
+  IArray2d arr2d;
+  arr2d = calloc(nx, sizeof(int *));
+  if (!arr2d) {
+    fprintf(stderr, "Error allocating IArray2d of dimension %i x %i\n",nx,ny);
+    exit(-1);
+  }
+
+  int *p1;
+  p1 = calloc(nx*ny, sizeof(int));
+
+  if (!p1) {
+    fprintf(stderr, "Error allocating int* array of dimension %i\n",nx*ny);
+    exit(-1);
+  }
+  
+  int i;
+  for (i=0; i<nx; i++){
+    arr2d[i] = &(p1[i*ny]);
+  }
+  return arr2d;
+}
+
+void destroy_iarr2d(IArray2d a){
+  free(a[0]);
+  free(a);
+}
+
+IArray3d create_iarr3d(int nx, int ny, int nz){
+  IArray3d arr3d;
+  int i, j;
+
+  // 1d
+  arr3d = calloc(nx, sizeof(int **));
+  if (!arr3d) {
+    fprintf(stderr, "Error allocating IArray3d of dimension %i x %i x %i\n",nx,ny,nz);
+    exit(-1);
+  }
+
+  // d2
+  int **p1;
+  p1 = calloc(nx*ny, sizeof(int *));
+
+  if (!p1) {
+    fprintf(stderr, "Error allocating int** array of dimension %i\n",nx*ny);
+    exit(-1);
+  }
+  
+  for (i=0; i<nx; i++){
+    arr3d[i] = &(p1[i*ny]);
+  }
+
+  // 3d
+  int *p2;
+  p2 = calloc(nx*ny*nz, sizeof(int));
+  if (!p2) {
+    fprintf(stderr, "Error allocating int* array of dimension %i\n",nx*ny*nz);
+    exit(-1);
+  }
+  for (i=0; i<nx; i++){
+    for (j=0; j<ny; j++){
+      arr3d[i][j] = &(p2[(i*ny+j)*nz]);
+    }
+  }
+  return arr3d;
+}
+
+void destroy_iarr3d(IArray3d a){
+  free(a[0][0]);
+  free(a[0]);
+  free(a);
+}
+
+DArray1d create_darr1d(int n){
+  DArray1d arr1d;
+  arr1d = calloc(n, sizeof(double));
+  if (!arr1d) {
+    fprintf(stderr, "Error allocating DArray1d of dimension %i\n",n);
+    exit(-1);
+  }
+  return arr1d;
+}
+
+void destroy_darr1d(DArray1d a){
+  free(a);
+}
+
+DArray2d create_darr2d(int nx, int ny){
+  DArray2d arr2d;
+  arr2d = calloc(nx, sizeof(double *));
+  if (!arr2d) {
+    fprintf(stderr, "Error allocating DArray2d of dimension %i x %i\n",nx,ny);
+    exit(-1);
+  }
+  double *p1;
+  p1 = calloc(nx*ny, sizeof(double));
+  if (!p1) {
+    fprintf(stderr, "Error allocating double* array of dimension %i\n",nx*ny);
+    exit(-1);
+  }
+  int i;
+  for (i=0; i<nx; i++){
+    arr2d[i] = &(p1[i*ny]);
+  }
+  return arr2d;
+}
+
+void destroy_darr2d(DArray2d a){
+  free(a[0]);
+  free(a);
+}
+
+DArray3d create_darr3d(int nx, int ny, int nz){
+  DArray3d arr3d;
+
+  int i, j;
+
+  // 1d
+  arr3d = calloc(nx, sizeof(double **));
+  if (!arr3d) {
+    fprintf(stderr, "Error allocating DArray3d of dimension %i x %i x %i\n",nx,ny,nz);
+    exit(-1);
+  }
+  // d2
+  double **p1;
+  p1 = calloc(nx*ny, sizeof(double *));
+  if (!p1) {
+    fprintf(stderr, "Error allocating double** array of dimension %i\n",nx*ny);
+    exit(-1);
+  }
+  for (i=0; i<nx; i++){
+    arr3d[i] = &(p1[i*ny]);
+  }
+
+  // 3d
+  double *p2;
+  p2 = calloc(nx*ny*nz, sizeof(double));
+  if (!p2) {
+    fprintf(stderr, "Error allocating double* array of dimension %i\n",nx*ny*nz);
+    exit(-1);
+  }
+  for (i=0; i<nx; i++){
+    for (j=0; j<ny; j++){
+      arr3d[i][j] = &(p2[(i*ny+j)*nz]);
+    }
+  }
+  return arr3d;
+}
+
+void destroy_darr3d(DArray3d a){
+  free(a[0][0]);
+  free(a[0]);
+  free(a);
+}
+
+
+/* SECTION: MPI handling ==================================================== */
+
+#ifdef USE_MPI
+/* MPI rank */
+static int mpi_node_rank;
+static int mpi_node_root = 0;
+
+
+/*******************************************************************************
+* mc_MPI_Reduce: Gathers arrays from MPI nodes using Reduce function.
+*******************************************************************************/
+int mc_MPI_Sum(double *sbuf, long count)
+{
+  if (!sbuf || count <= 0) return(MPI_SUCCESS); /* nothing to reduce */
+  else {
+    /* we must cut the buffer into blocks not exceeding the MPI max buffer size of 32000 */
+    long   offset=0;
+    double *rbuf=NULL;
+    int    length=MPI_REDUCE_BLOCKSIZE; /* defined in mccode-r.h */
+    int    i=0;
+    rbuf = calloc(count, sizeof(double));
+    if (!rbuf)
+      exit(-fprintf(stderr, "Error: Out of memory %zi (mc_MPI_Sum)\n", count*sizeof(double)));
+    while (offset < count) {
+      if (!length || offset+length > count-1) length=count-offset;
+      else length=MPI_REDUCE_BLOCKSIZE;
+      if (MPI_Allreduce((double*)(sbuf+offset), (double*)(rbuf+offset),
+              length, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD) != MPI_SUCCESS)
+        return MPI_ERR_COUNT;
+      offset += length;
+    }
+
+    for (i=0; i<count; i++) sbuf[i] = rbuf[i];
+    free(rbuf);
+  }
+  return MPI_SUCCESS;
+} /* mc_MPI_Sum */
+
+/*******************************************************************************
+* mc_MPI_Send: Send array to MPI node by blocks to avoid buffer limit
+*******************************************************************************/
+int mc_MPI_Send(void *sbuf,
+                  long count, MPI_Datatype dtype,
+                  int dest)
+{
+  int dsize;
+  long offset=0;
+  int  tag=1;
+  int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mccode-r.h */
+
+  if (!sbuf || count <= 0) return(MPI_SUCCESS); /* nothing to send */
+  MPI_Type_size(dtype, &dsize);
+
+  while (offset < count) {
+    if (offset+length > count-1) length=count-offset;
+    else length=MPI_REDUCE_BLOCKSIZE;
+    if (MPI_Send((void*)((char*)sbuf+offset*dsize), length, dtype, dest, tag++, MPI_COMM_WORLD) != MPI_SUCCESS)
+      return MPI_ERR_COUNT;
+    offset += length;
+  }
+
+  return MPI_SUCCESS;
+} /* mc_MPI_Send */
+
+/*******************************************************************************
+* mc_MPI_Recv: Receives arrays from MPI nodes by blocks to avoid buffer limit
+*             the buffer must have been allocated previously.
+*******************************************************************************/
+int mc_MPI_Recv(void *sbuf,
+                  long count, MPI_Datatype dtype,
+                  int source)
+{
+  int dsize;
+  long offset=0;
+  int  tag=1;
+  int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mccode-r.h */
+
+  if (!sbuf || count <= 0) return(MPI_SUCCESS); /* nothing to recv */
+  MPI_Type_size(dtype, &dsize);
+
+  while (offset < count) {
+    if (offset+length > count-1) length=count-offset;
+    else length=MPI_REDUCE_BLOCKSIZE;
+    if (MPI_Recv((void*)((char*)sbuf+offset*dsize), length, dtype, source, tag++,
+            MPI_COMM_WORLD, MPI_STATUS_IGNORE) != MPI_SUCCESS)
+      return MPI_ERR_COUNT;
+    offset += length;
+  }
+
+  return MPI_SUCCESS;
+} /* mc_MPI_Recv */
+
+#endif /* USE_MPI */
+
+/* SECTION: parameters handling ============================================= */
+
+/* Instrument input parameter type handling. */
+/*******************************************************************************
+* mcparm_double: extract double value from 's' into 'vptr'
+*******************************************************************************/
+static int
+mcparm_double(char *s, void *vptr)
+{
+  char *p;
+  double *v = (double *)vptr;
+
+  if (!s) { *v = 0; return(1); }
+  *v = strtod(s, &p);
+  if(*s == '\0' || (p != NULL && *p != '\0') || errno == ERANGE)
+    return 0;                        /* Failed */
+  else
+    return 1;                        /* Success */
+}
+
+/*******************************************************************************
+* mcparminfo_double: display parameter type double
+*******************************************************************************/
+static char *
+mcparminfo_double(char *parmname)
+{
+  return "double";
+}
+
+/*******************************************************************************
+* mcparmerror_double: display error message when failed extract double
+*******************************************************************************/
+static void
+mcparmerror_double(char *parm, char *val)
+{
+  fprintf(stderr, "Error: Invalid value '%s' for floating point parameter %s (mcparmerror_double)\n",
+          val, parm);
+}
+
+/*******************************************************************************
+* mcparmprinter_double: convert double to string
+*******************************************************************************/
+static void
+mcparmprinter_double(char *f, void *vptr)
+{
+  double *v = (double *)vptr;
+  sprintf(f, "%g", *v);
+}
+
+/*******************************************************************************
+* mcparm_int: extract int value from 's' into 'vptr'
+*******************************************************************************/
+static int
+mcparm_int(char *s, void *vptr)
+{
+  char *p;
+  int *v = (int *)vptr;
+  long x;
+
+  if (!s) { *v = 0; return(1); }
+  *v = 0;
+  x = strtol(s, &p, 10);
+  if(x < INT_MIN || x > INT_MAX)
+    return 0;                        /* Under/overflow */
+  *v = x;
+  if(*s == '\0' || (p != NULL && *p != '\0') || errno == ERANGE)
+    return 0;                        /* Failed */
+  else
+    return 1;                        /* Success */
+}
+
+/*******************************************************************************
+* mcparminfo_int: display parameter type int
+*******************************************************************************/
+static char *
+mcparminfo_int(char *parmname)
+{
+  return "int";
+}
+
+/*******************************************************************************
+* mcparmerror_int: display error message when failed extract int
+*******************************************************************************/
+static void
+mcparmerror_int(char *parm, char *val)
+{
+  fprintf(stderr, "Error: Invalid value '%s' for integer parameter %s (mcparmerror_int)\n",
+          val, parm);
+}
+
+/*******************************************************************************
+* mcparmprinter_int: convert int to string
+*******************************************************************************/
+static void
+mcparmprinter_int(char *f, void *vptr)
+{
+  int *v = (int *)vptr;
+  sprintf(f, "%d", *v);
+}
+
+/*******************************************************************************
+* mcparm_string: extract char* value from 's' into 'vptr' (copy)
+*******************************************************************************/
+static int
+mcparm_string(char *s, void *vptr)
+{
+  char **v = (char **)vptr;
+  if (!s) { *v = NULL; return(1); }
+  *v = (char *)malloc(strlen(s) + 1);
+  if(*v == NULL)
+  {
+    exit(-fprintf(stderr, "Error: Out of memory %li (mcparm_string).\n", (long)strlen(s) + 1));
+  }
+  strcpy(*v, s);
+  return 1;                        /* Success */
+}
+
+/*******************************************************************************
+* mcparminfo_string: display parameter type string
+*******************************************************************************/
+static char *
+mcparminfo_string(char *parmname)
+{
+  return "string";
+}
+
+/*******************************************************************************
+* mcparmerror_string: display error message when failed extract string
+*******************************************************************************/
+static void
+mcparmerror_string(char *parm, char *val)
+{
+  fprintf(stderr, "Error: Invalid value '%s' for string parameter %s (mcparmerror_string)\n",
+          val, parm);
+}
+
+/*******************************************************************************
+* mcparmprinter_string: convert string to string (including esc chars)
+*******************************************************************************/
+static void
+mcparmprinter_string(char *f, void *vptr)
+{
+  char **v = (char **)vptr;
+  char *p;
+
+  if (!*v) { *f='\0'; return; }
+  strcpy(f, "");
+  for(p = *v; *p != '\0'; p++)
+  {
+    switch(*p)
+    {
+      case '\n':
+        strcat(f, "\\n");
+        break;
+      case '\r':
+        strcat(f, "\\r");
+        break;
+      case '"':
+        strcat(f, "\\\"");
+        break;
+      case '\\':
+        strcat(f, "\\\\");
+        break;
+      default:
+        strncat(f, p, 1);
+    }
+  }
+  /* strcat(f, "\""); */
+} /* mcparmprinter_string */
+
+/* now we may define the parameter structure, using previous functions */
+static struct
+  {
+    int (*getparm)(char *, void *);
+    char * (*parminfo)(char *);
+    void (*error)(char *, char *);
+    void (*printer)(char *, void *);
+} mcinputtypes[] = {
+  {
+    mcparm_int, mcparminfo_int, mcparmerror_int,
+    mcparmprinter_int
+  }, {
+    mcparm_string, mcparminfo_string, mcparmerror_string,
+    mcparmprinter_string
+  }, {
+    mcparm_string, mcparminfo_string, mcparmerror_string,
+    mcparmprinter_string
+  }, {
+    mcparm_double, mcparminfo_double, mcparmerror_double,
+    mcparmprinter_double
+  }, {
+    mcparm_double, mcparminfo_double, mcparmerror_double,
+    mcparmprinter_double
+  }
+};
+
+/*******************************************************************************
+* mcestimate_error: compute sigma from N,p,p2 in Gaussian large numbers approx
+*******************************************************************************/
+double mcestimate_error(double N, double p1, double p2)
+{
+  double pmean, n1;
+  if(N <= 1)
+    return p1;
+  pmean = p1 / N;
+  n1 = N - 1;
+  /* Note: underflow may cause p2 to become zero; the fabs() below guards
+     against this. */
+  return sqrt((N/n1)*fabs(p2 - pmean*pmean));
+}
+
+double (*mcestimate_error_p)
+  (double V2, double psum, double p2sum)=mcestimate_error;
+
+/* ========================================================================== */
+
+/*                               MCCODE_R_IO_C                                */
+
+/* ========================================================================== */
+
+#ifndef MCCODE_R_IO_C
+#define MCCODE_R_IO_C "$Revision$"
+
+/* SECTION: file i/o handling ================================================ */
+
+#ifndef HAVE_STRCASESTR
+// from msysgit: https://code.google.com/p/msysgit/source/browse/compat/strcasestr.c
+char *strcasestr(const char *haystack, const char *needle)
+{
+  int nlen = strlen(needle);
+  int hlen = strlen(haystack) - nlen + 1;
+  int i;
+
+  for (i = 0; i < hlen; i++) {
+    int j;
+    for (j = 0; j < nlen; j++) {
+            unsigned char c1 = haystack[i+j];
+            unsigned char c2 = needle[j];
+            if (toupper(c1) != toupper(c2))
+                    goto next;
+    }
+    return (char *) haystack + i;
+  next:
+    ;
+  }
+  return NULL;
+}
+
+
+#endif
+#ifndef HAVE_STRCASECMP
+int strcasecmp( const char *s1, const char *s2 )
+{
+  int c1, c2;
+  do {
+    c1 = tolower( (unsigned char) *s1++ );
+    c2 = tolower( (unsigned char) *s2++ );
+  } while (c1 == c2 && c1 != 0);
+  return c2 > c1 ? -1 : c1 > c2;
+}
+#endif
+
+#ifndef STRACPY
+/* this is a replacement to strncpy, but ensures that the copy ends with NULL */
+/* http://stracpy.blogspot.fr/2011/04/stracpy-strncpy-replacement.html */
+#define STRACPY
+char *stracpy(char *destination, const char *source, size_t amount)
+{
+        if (!destination || !source || !amount) return(NULL);
+        while(amount--)
+          if((*destination++ = *source++) == '\0') break;
+        *destination = '\0';
+        return destination;
+}
+#endif
+
+/*******************************************************************************
+* mcfull_file: allocates a full file name=dirname+file. Catenate extension if missing.
+*******************************************************************************/
+char *mcfull_file(char *name, char *ext)
+{
+  int   dirlen=0;
+  char *mem   =NULL;
+
+  dirlen = dirname ? strlen(dirname) : 0;
+  mem = (char*)malloc(dirlen + strlen(name) + CHAR_BUF_LENGTH);
+  if(!mem) {
+    exit(-fprintf(stderr, "Error: Out of memory %li (mcfull_file)\n", (long)(dirlen + strlen(name) + 256)));
+  }
+  strcpy(mem, "");
+
+  /* prepend directory name to path if name does not contain a path */
+  if (dirlen > 0 && !strchr(name, MC_PATHSEP_C)) {
+    strcat(mem, dirname);
+    strcat(mem, MC_PATHSEP_S);
+  } /* dirlen */
+
+  strcat(mem, name);
+  if (!strchr(name, '.') && ext && strlen(ext))
+  { /* add extension if not in file name already */
+    strcat(mem, ".");
+    strcat(mem, ext);
+  }
+  return(mem);
+} /* mcfull_file */
+
+/*******************************************************************************
+* mcnew_file: opens a new file within dirname if non NULL
+*             the file is opened in "a" (append, create if does not exist)
+*             the extension 'ext' is added if the file name does not include one.
+*             the last argument is set to 0 if file did not exist, else to 1.
+*******************************************************************************/
+FILE *mcnew_file(char *name, char *ext, int *exists)
+{
+  char *mem;
+  FILE *file=NULL;
+
+  if (!name || strlen(name) == 0 || mcdisable_output_files) return(NULL);
+
+  mem  = mcfull_file(name, ext); /* create dirname/name.ext */
+
+  /* check for existence */
+  file = fopen(mem, "r"); /* for reading -> fails if does not exist */
+  if (file) {
+    fclose(file);
+    *exists=1;
+  } else
+    *exists=0;
+
+  /* open the file for writing/appending */
+#ifdef USE_NEXUS
+  if (mcformat && strcasestr(mcformat, "NeXus")) {
+    /* NXhandle nxhandle is defined in the .h with USE_NEXUS */
+    NXaccess mode = (*exists ? NXACC_CREATE5 | NXACC_RDWR : NXACC_CREATE5);
+
+    if (NXopen(mem, mode, &nxhandle) != NX_OK)
+      file = NULL;
+    else
+      file = (FILE*)&nxhandle; /* to make it non NULL */
+  } else
+#endif
+    file = fopen(mem, "a+");
+
+  if(!file)
+    fprintf(stderr, "Warning: could not open output file '%s' for %s (mcnew_file)\n",
+      mem, *exists ? "append" : "create");
+  free(mem);
+
+  return file;
+} /* mcnew_file */
+
+/*******************************************************************************
+* mcdetector_statistics: compute detector statistics, error bars, [x I I_err N] 1D
+* RETURN:            updated detector structure
+* Used by: detector_import
+*******************************************************************************/
+MCDETECTOR mcdetector_statistics(
+  MCDETECTOR detector)
+{
+
+  if (!detector.p1 || !detector.m)
+    return(detector);
+
+  /* compute statistics and update MCDETECTOR structure ===================== */
+  double sum_z  = 0, min_z  = 0, max_z  = 0;
+  double fmon_x =0,  smon_x = 0, fmon_y =0, smon_y=0, mean_z=0;
+  double Nsum=0, P2sum=0;
+
+  double sum_xz = 0, sum_yz = 0, sum_x = 0, sum_y = 0, sum_x2z = 0, sum_y2z = 0;
+  int    i,j;
+  char   hasnan=0, hasinf=0;
+  char   israw = ((char*)strcasestr(detector.format,"raw") != NULL);
+  double *this_p1=NULL; /* new 1D McCode array [x I E N]. Freed after writing data */
+
+  /* if McCode/PGPLOT and rank==1 we create a new m*4 data block=[x I E N] */
+  if (detector.rank == 1 && strcasestr(detector.format,"McCode")) {
+    this_p1 = (double *)calloc(detector.m*detector.n*detector.p*4, sizeof(double));
+    if (!this_p1)
+      exit(-fprintf(stderr, "Error: Out of memory creating %zi 1D " MCCODE_STRING " data set for file '%s' (detector_import)\n",
+        detector.m*detector.n*detector.p*4*sizeof(double*), detector.filename));
+  }
+
+  max_z = min_z = detector.p1[0];
+
+  /* compute sum and moments (not for lists) */
+  if (!strcasestr(detector.format,"list") && detector.m)
+  for(j = 0; j < detector.n*detector.p; j++)
+  {
+    for(i = 0; i < detector.m; i++)
+    {
+      double x,y,z;
+      double N, E;
+      long   index= !detector.istransposed ? i*detector.n*detector.p + j : i+j*detector.m;
+      char   hasnaninf=0;
+
+      if (detector.m)
+        x = detector.xmin + (i + 0.5)/detector.m*(detector.xmax - detector.xmin);
+      else x = 0;
+      if (detector.n && detector.p)
+        y = detector.ymin + (j + 0.5)/detector.n/detector.p*(detector.ymax - detector.ymin);
+      else y = 0;
+      z = detector.p1[index];
+      N = detector.p0 ? detector.p0[index] : 1;
+      E = detector.p2 ? detector.p2[index] : 0;
+      if (detector.p2 && !israw)
+        detector.p2[index] = (*mcestimate_error_p)(detector.p0[index],detector.p1[index],detector.p2[index]); /* set sigma */
+
+      if (detector.rank == 1 && this_p1 && strcasestr(detector.format,"McCode")) {
+        /* fill-in 1D McCode array [x I E N] */
+        this_p1[index*4]   = x;
+        this_p1[index*4+1] = z;
+        this_p1[index*4+2] = detector.p2 ? detector.p2[index] : 0;
+        this_p1[index*4+3] = N;
+      }
+
+      if (isnan(z) || isnan(E) || isnan(N)) hasnaninf=hasnan=1;
+      if (isinf(z) || isinf(E) || isinf(N)) hasnaninf=hasinf=1;
+
+      /* compute stats integrals */
+      if (!hasnaninf) {
+        sum_xz += x*z;
+        sum_yz += y*z;
+        sum_x  += x;
+        sum_y  += y;
+        sum_z  += z;
+        sum_x2z += x*x*z;
+        sum_y2z += y*y*z;
+        if (z > max_z) max_z = z;
+        if (z < min_z) min_z = z;
+
+        Nsum += N;
+        P2sum += E;
+      }
+
+    }
+  } /* for j */
+
+  /* compute 1st and 2nd moments. For lists, sum_z=0 so this is skipped. */
+  if (sum_z && detector.n*detector.m*detector.p)
+  {
+    fmon_x = sum_xz/sum_z;
+    fmon_y = sum_yz/sum_z;
+    smon_x = sum_x2z/sum_z-fmon_x*fmon_x; smon_x = smon_x > 0 ? sqrt(smon_x) : 0;
+    smon_y = sum_y2z/sum_z-fmon_y*fmon_y; smon_y = smon_y > 0 ? sqrt(smon_y) : 0;
+    mean_z = sum_z/detector.n/detector.m/detector.p;
+  }
+  /* store statistics into detector */
+  detector.intensity = sum_z;
+  detector.error     = Nsum ? (*mcestimate_error_p)(Nsum, sum_z, P2sum) : 0;
+  detector.events    = Nsum;
+  detector.min       = min_z;
+  detector.max       = max_z;
+  detector.mean      = mean_z;
+  detector.centerX   = fmon_x;
+  detector.halfwidthX= smon_x;
+  detector.centerY   = fmon_y;
+  detector.halfwidthY= smon_y;
+
+  /* if McCode/PGPLOT and rank==1 replace p1 with new m*4 1D McCode and clear others */
+  if (detector.rank == 1 && this_p1 && strcasestr(detector.format,"McCode")) {
+
+    detector.p1 = this_p1;
+    detector.n  = detector.m; detector.m  = 4;
+    detector.p0 = detector.p2 = NULL;
+    detector.istransposed = 1;
+  }
+
+  if (detector.n*detector.m*detector.p > 1)
+    snprintf(detector.signal, CHAR_BUF_LENGTH,
+      "Min=%g; Max=%g; Mean=%g;", detector.min, detector.max, detector.mean);
+  else
+    strcpy(detector.signal, "None");
+  snprintf(detector.values, CHAR_BUF_LENGTH,
+    "%g %g %g", detector.intensity, detector.error, detector.events);
+
+  switch (detector.rank) {
+    case 1:  snprintf(detector.statistics, CHAR_BUF_LENGTH, "X0=%g; dX=%g;",
+      detector.centerX, detector.halfwidthX); break;
+    case 2:
+    case 3:  snprintf(detector.statistics, CHAR_BUF_LENGTH, "X0=%g; dX=%g; Y0=%g; dY=%g;",
+      detector.centerX, detector.halfwidthX, detector.centerY, detector.halfwidthY);
+      break;
+    default: strcpy(detector.statistics, "None");
+  }
+
+  if (hasnan)
+    printf("WARNING: Nan detected in component/file %s %s\n",
+      detector.component, strlen(detector.filename) ? detector.filename : "");
+  if (hasinf)
+    printf("WARNING: Inf detected in component/file %s %s\n",
+      detector.component, strlen(detector.filename) ? detector.filename : "");
+
+  return(detector);
+
+} /* mcdetector_statistics */
+
+/*******************************************************************************
+* detector_import: build detector structure, merge non-lists from MPI
+*                    compute basic stat, write "Detector:" line
+* RETURN:            detector structure. Invalid data if detector.p1 == NULL
+*                    Invalid detector sets m=0 and filename=""
+*                    Simulation data  sets m=0 and filename=siminfo_name
+* This function is equivalent to the old 'mcdetector_out', returning a structure
+*******************************************************************************/
+MCDETECTOR detector_import(
+  char *format,
+  char *component, char *title,
+  long m, long n,  long p,
+  char *xlabel, char *ylabel, char *zlabel,
+  char *xvar, char *yvar, char *zvar,
+  double x1, double x2, double y1, double y2, double z1, double z2,
+  char *filename,
+  double *p0, double *p1, double *p2,
+  Coords position, Rotation rotation, int index)
+{
+  time_t t;       /* for detector.date */
+  long   date_l;  /* date as a long number */
+  char   istransposed=0;
+  char   c[CHAR_BUF_LENGTH]; /* temp var for signal label */
+
+  MCDETECTOR detector;
+
+  /* build MCDETECTOR structure ============================================= */
+  /* make sure we do not have NULL for char fields */
+
+  /* these also apply to simfile */
+  strncpy (detector.filename,  filename ? filename : "",        CHAR_BUF_LENGTH);
+  strncpy (detector.format,    format   ? format   : "McCode" , CHAR_BUF_LENGTH);
+  /* add extension if missing */
+  if (strlen(detector.filename) && !strchr(detector.filename, '.'))
+  { /* add extension if not in file name already */
+    strcat(detector.filename, ".dat");
+  }
+  strncpy (detector.component, component ? component : MCCODE_STRING " component", CHAR_BUF_LENGTH);
+  #ifdef USE_NEXUS
+  char pref[5];
+  if (index-1 < 10) {
+    sprintf(pref,"000");
+  } else if (index-1 < 100) {
+    sprintf(pref,"00");
+  } else if (index-1 < 1000) {
+    sprintf(pref,"0");
+  } else if (index-1 < 10000) {
+    sprintf(pref,"");
+  } else {
+    fprintf(stderr,"Error, no support for > 10000 comps at the moment!\n");
+    exit(-1);
+  }
+  sprintf(detector.nexuscomp,"%s%d_%s",pref,index-1,detector.component);
+  #endif
+
+  snprintf(detector.instrument, CHAR_BUF_LENGTH, "%s (%s)", instrument_name, instrument_source);
+  snprintf(detector.user, CHAR_BUF_LENGTH,      "%s on %s",
+        getenv("USER") ? getenv("USER") : MCCODE_NAME,
+        getenv("HOST") ? getenv("HOST") : "localhost");
+  time(&t);         /* get current write time */
+  date_l = (long)t; /* same but as a long */
+  snprintf(detector.date, CHAR_BUF_LENGTH, "%s", ctime(&t));
+  if (strlen(detector.date))   detector.date[strlen(detector.date)-1] = '\0'; /* remove last \n in date */
+  detector.date_l = date_l;
+
+  if (!mcget_run_num() || mcget_run_num() >= mcget_ncount())
+    snprintf(detector.ncount, CHAR_BUF_LENGTH, "%llu", mcget_ncount()
+#ifdef USE_MPI
+*mpi_node_count
+#endif
+  );
+  else
+    snprintf(detector.ncount, CHAR_BUF_LENGTH, "%g/%g", (double)mcget_run_num(), (double)mcget_ncount());
+
+  detector.p0         = p0;
+  detector.p1         = p1;
+  detector.p2         = p2;
+
+  /* handle transposition (not for NeXus) */
+  if (!strcasestr(detector.format, "NeXus")) {
+    if (m<0 || n<0 || p<0)             istransposed = !istransposed;
+    if (strcasestr(detector.format, "transpose")) istransposed = !istransposed;
+    if (istransposed) { /* do the swap once for all */
+      long i=m; m=n; n=i;
+    }
+  }
+
+  m=labs(m); n=labs(n); p=labs(p); /* make sure dimensions are positive */
+  detector.istransposed = istransposed;
+
+  /* determine detector rank (dimensionality) */
+  if (!m || !n || !p || !p1) detector.rank = 4; /* invalid: exit with m=0 filename="" */
+  else if (m*n*p == 1)       detector.rank = 0; /* 0D */
+  else if ((n == 1 || m == 1)
+        && !strcasestr(detector.format, "list")) detector.rank = 1; /* 1D (a single-event list stays a list) */
+  else if (p == 1)           detector.rank = 2; /* 2D */
+  else                       detector.rank = 3; /* 3D */
+
+  /* from rank, set type */
+  switch (detector.rank) {
+    case 0:  strcpy(detector.type,  "array_0d"); m=n=p=1; break;
+    case 1:  snprintf(detector.type, CHAR_BUF_LENGTH, "array_1d(%ld)", m*n*p); m *= n*p; n=p=1; break;
+    case 2:  if(!strcasestr(detector.format,"list")) {
+               snprintf(detector.type, CHAR_BUF_LENGTH, "array_2d(%ld, %ld)", m, n*p); n *= p; p=1;
+             } else {
+               snprintf(detector.type, CHAR_BUF_LENGTH, "list(%ld, %ld)", m, n*p); n *= p; p=1;
+             } break;
+    case 3:  snprintf(detector.type, CHAR_BUF_LENGTH, "array_3d(%ld, %ld, %ld)", m, n, p); break;
+    default: m=0; strcpy(detector.type, ""); strcpy(detector.filename, "");/* invalid */
+  }
+
+  detector.m    = m;
+  detector.n    = n;
+  detector.p    = p;
+
+  /* these only apply to detector files ===================================== */
+
+  detector.Position[0]=position.x;
+  detector.Position[1]=position.y;
+  detector.Position[2]=position.z;
+  rot_copy(detector.Rotation,rotation);
+  snprintf(detector.position, CHAR_BUF_LENGTH, "%g %g %g", position.x, position.y, position.z);
+  /* may also store actual detector orientation in the future */
+
+  strncpy(detector.title,      title && strlen(title) ? title : component,       CHAR_BUF_LENGTH);
+  strncpy(detector.xlabel,     xlabel && strlen(xlabel) ? xlabel : "X", CHAR_BUF_LENGTH); /* axis labels */
+  strncpy(detector.ylabel,     ylabel && strlen(ylabel) ? ylabel : "Y", CHAR_BUF_LENGTH);
+  strncpy(detector.zlabel,     zlabel && strlen(zlabel) ? zlabel : "Z", CHAR_BUF_LENGTH);
+  strncpy(detector.xvar,       xvar && strlen(xvar) ? xvar :       "x", CHAR_BUF_LENGTH); /* axis variables */
+  strncpy(detector.yvar,       yvar && strlen(yvar) ? yvar :       detector.xvar, CHAR_BUF_LENGTH);
+  strncpy(detector.zvar,       zvar && strlen(zvar) ? zvar :       detector.yvar, CHAR_BUF_LENGTH);
+
+  /* set "variables" as e.g. "I I_err N" */
+  strcpy(c, "I ");
+  if (strlen(detector.zvar))      strncpy(c, detector.zvar,32);
+  else if (strlen(detector.yvar)) strncpy(c, detector.yvar,32);
+  else if (strlen(detector.xvar)) strncpy(c, detector.xvar,32);
+
+  if (detector.rank == 1)
+    snprintf(detector.variables, CHAR_BUF_LENGTH, "%s %s %s_err N", detector.xvar, c, c);
+  else
+    snprintf(detector.variables, CHAR_BUF_LENGTH, "%s %s_err N", c, c);
+
+  /* limits */
+  detector.xmin = x1;
+  detector.xmax = x2;
+  detector.ymin = y1;
+  detector.ymax = y2;
+  detector.zmin = z1;
+  detector.zmax = z2;
+  if (abs(detector.rank) == 1)
+    snprintf(detector.limits, CHAR_BUF_LENGTH, "%g %g", x1, x2);
+  else if (detector.rank == 2)
+    snprintf(detector.limits, CHAR_BUF_LENGTH, "%g %g %g %g", x1, x2, y1, y2);
+  else
+    snprintf(detector.limits, CHAR_BUF_LENGTH, "%g %g %g %g %g %g", x1, x2, y1, y2, z1, z2);
+
+  /* if MPI and nodes_nb > 1: reduce data sets when using MPI =============== */
+#ifdef USE_MPI
+  if (!strcasestr(detector.format,"list") && mpi_node_count > 1 && m) {
+    /* we save additive data: reduce everything into mpi_node_root */
+    if (p0) mc_MPI_Sum(p0, m*n*p);
+    if (p1) mc_MPI_Sum(p1, m*n*p);
+    if (p2) mc_MPI_Sum(p2, m*n*p);
+    if (!p0) {  /* additive signal must be then divided by the number of nodes */
+      int i;
+      for (i=0; i<m*n*p; i++) {
+        p1[i] /= mpi_node_count;
+        if (p2) p2[i] /= mpi_node_count;
+      }
+    }
+  }
+#endif /* USE_MPI */
+
+  /* compute statistics, Nsum, intensity, Error bars */
+  detector = mcdetector_statistics(detector);
+
+#ifdef USE_MPI
+  /* slaves are done */
+  if(mpi_node_rank != mpi_node_root) {
+    return detector;
+  }
+#endif
+
+  /* output "Detector:" line ================================================ */
+  /* when this is a detector written by a component (not the SAVE from instrument),
+     not an event lists */
+  if (!m) return(detector);
+  if (!strcasestr(detector.format,"list")) {
+    if (!strcmp(detector.component, instrument_name)) {
+      if (strlen(detector.filename))  /* we name it from its filename, or from its title */
+        strncpy(c, detector.filename, CHAR_BUF_LENGTH);
+      else
+        snprintf(c, CHAR_BUF_LENGTH, "%s", instrument_name);
+    } else
+      strncpy(c, detector.component, CHAR_BUF_LENGTH);  /* usual detectors written by components */
+
+    printf("Detector: %s_I=%g %s_ERR=%g %s_N=%g",
+           c, detector.intensity,
+           c, detector.error,
+           c, detector.events);
+    printf(" \"%s\"\n", strlen(detector.filename) ? detector.filename : detector.component);
+  }
+
+
+  return(detector);
+} /* detector_import */
+
+/* end MCDETECTOR import section ============================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========================================================================== */
+
+/*                               ASCII output                                 */
+/*     The SIM file is YAML based, the data files have '#' headers            */
+
+/* ========================================================================== */
+
+
+/*******************************************************************************
+* mcinfo_out: output instrument tags/info (only in SIM)
+* Used in: siminfo_init (ascii), mcinfo(stdout)
+*******************************************************************************/
+static void mcinfo_out(char *pre, FILE *f)
+{
+  char Parameters[CHAR_BUF_LENGTH] = "";
+  int  i;
+
+  if (!f || mcdisable_output_files) return;
+
+  /* create parameter string ================================================ */
+  for(i = 0; i < numipar; i++)
+  {
+    char ThisParam[CHAR_BUF_LENGTH];
+    if (strlen(mcinputtable[i].name) > CHAR_BUF_LENGTH) break;
+    snprintf(ThisParam, CHAR_BUF_LENGTH, " %s(%s)", mcinputtable[i].name,
+            (*mcinputtypes[mcinputtable[i].type].parminfo)
+                (mcinputtable[i].name));
+    if (strlen(Parameters) + strlen(ThisParam) + 1 >= CHAR_BUF_LENGTH) break;
+    strcat(Parameters, ThisParam);
+  }
+
+  /* output data ============================================================ */
+  if (f != stdout)
+    fprintf(f, "%sFile: %s%c%s\n",    pre, dirname, MC_PATHSEP_C, siminfo_name);
+  else
+    fprintf(f, "%sCreator: %s\n",     pre, MCCODE_STRING);
+
+  fprintf(f, "%sSource: %s\n",   pre, instrument_source);
+  fprintf(f, "%sParameters: %s\n",    pre, Parameters);
+
+  fprintf(f, "%sTrace_enabled: %s\n", pre, traceenabled ? "yes" : "no");
+  fprintf(f, "%sDefault_main: %s\n",  pre, defaultmain ?  "yes" : "no");
+#ifdef MC_EMBEDDED_RUNTIME
+  fprintf(f, "%sEmbedded_runtime: %s\n", pre, "yes");
+#else
+  fprintf(f, "%sEmbedded_runtime: %s\n", pre, "no");
+#endif
+
+  fflush(f);
+} /* mcinfo_out */
+
+/*******************************************************************************
+* mcruninfo_out: output simulation tags/info (both in SIM and data files)
+* Used in: siminfo_init (ascii case), mcdetector_out_xD_ascii
+*******************************************************************************/
+static void mcruninfo_out(char *pre, FILE *f)
+{
+  int i;
+  char Parameters[CHAR_BUF_LENGTH];
+
+  if (!f || mcdisable_output_files) return;
+
+  fprintf(f, "%sFormat: %s%s\n",      pre,
+    mcformat && strlen(mcformat) ? mcformat : MCCODE_NAME,
+    mcformat && strcasestr(mcformat,"McCode") ? " with text headers" : "");
+  fprintf(f, "%sURL: %s\n",         pre, "http://www.mccode.org");
+  fprintf(f, "%sCreator: %s\n",     pre, MCCODE_STRING);
+  fprintf(f, "%sInstrument: %s\n", pre, instrument_source);
+  fprintf(f, "%sNcount: %llu\n",        pre, mcget_ncount());
+  fprintf(f, "%sTrace: %s\n",       pre, mcdotrace ? "yes" : "no");
+  fprintf(f, "%sGravitation: %s\n", pre, mcgravitation ? "yes" : "no");
+  snprintf(Parameters, CHAR_BUF_LENGTH, "%ld", mcseed);
+  fprintf(f, "%sSeed: %s\n",        pre, Parameters);
+  fprintf(f, "%sDirectory: %s\n",        pre, dirname ? dirname : ".");
+#ifdef USE_MPI
+  if (mpi_node_count > 1)
+    fprintf(f, "%sNodes: %i\n",        pre, mpi_node_count);
+#endif
+
+  // TODO Consider replacing this by a a call to `mcparameterinfo_out(pre+"Param: ", f)`
+  /* output parameter string ================================================ */
+  for(i = 0; i < numipar; i++) {
+      if (mcinputtable[i].par){
+	/* Parameters with a default value */
+	if(mcinputtable[i].val && strlen(mcinputtable[i].val)){
+	  (*mcinputtypes[mcinputtable[i].type].printer)(Parameters, mcinputtable[i].par);
+	  fprintf(f, "%sParam: %s=%s\n", pre, mcinputtable[i].name, Parameters);
+        /* ... and those without */
+	}else{
+	  fprintf(f, "%sParam: %s=NULL\n", pre, mcinputtable[i].name);
+	}
+      }
+  }
+  fflush(f);
+} /* mcruninfo_out */
+
+/*******************************************************************************
+ * @brief Print parameter information to the specified file
+ * @param pre any beginning-of-line padding
+ * @param f the output file
+ */
+static void mcparameterinfo_out(char * pre, FILE *f){
+  if (!f || mcdisable_output_files) return;
+
+  unsigned int nchar = 4;
+  for (int i=0; i < numipar; ++i){
+    if (mcinputtable[i].par && mcinputtable[i].val && strlen(mcinputtable[i].val) > nchar)
+      nchar = strlen(mcinputtable[i].val);
+  }
+  char * buffer = calloc(nchar+1, sizeof(char));
+
+  if (!buffer) {
+    exit(1);
+  }
+
+  for (int i=0; i < numipar; ++i) {
+    if (mcinputtable[i].par) {
+      char * name = mcinputtable[i].name;
+      if (mcinputtable[i].val && strlen(mcinputtable[i].val)) {
+        mcinputtypes[mcinputtable[i].type].printer(buffer, mcinputtable[i].par);
+      } else {
+        strcpy(buffer, "NULL");
+      }
+      if (strlen(mcinputtable[i].unit)){
+        //fprintf(f, "%s%s %s (\"%s\") = %s\n", pre, mcinputtypes[mcinputtable[i].type].parminfo(name), name, mcinputtable[i].unit, buffer);
+        fprintf(f, "%s%s %s/\"%s\" = %s\n", pre, mcinputtypes[mcinputtable[i].type].parminfo(name), name, mcinputtable[i].unit, buffer);
+      } else {
+        fprintf(f, "%s%s %s = %s\n", pre, mcinputtypes[mcinputtable[i].type].parminfo(name), name, buffer);
+      }
+    }
+  }
+
+  free(buffer);
+}
+
+/*******************************************************************************
+* siminfo_out:    wrapper to fprintf(siminfo_file)
+*******************************************************************************/
+void siminfo_out(char *format, ...)
+{
+  va_list ap;
+
+  if(siminfo_file && !mcdisable_output_files)
+  {
+    va_start(ap, format);
+    vfprintf(siminfo_file, format, ap);
+    va_end(ap);
+  }
+} /* siminfo_out */
+
+
+/*******************************************************************************
+* mcdatainfo_out: output detector header
+*   mcdatainfo_out(prefix, file_handle, detector) writes info to data file
+*******************************************************************************/
+static void
+mcdatainfo_out(char *pre, FILE *f, MCDETECTOR detector)
+{
+  if (!f || !detector.m || mcdisable_output_files) return;
+
+  /* output data ============================================================ */
+  fprintf(f, "%sDate: %s (%li)\n",       pre, detector.date, detector.date_l);
+  fprintf(f, "%stype: %s\n",       pre, detector.type);
+  fprintf(f, "%sSource: %s\n",     pre, detector.instrument);
+  fprintf(f, "%scomponent: %s\n",  pre, detector.component);
+  fprintf(f, "%sposition: %s\n",   pre, detector.position);
+
+  fprintf(f, "%stitle: %s\n",      pre, detector.title);
+  fprintf(f, !mcget_run_num() || mcget_run_num() >= mcget_ncount() ?
+             "%sNcount: %s\n" :
+             "%sratio: %s\n",  pre, detector.ncount);
+
+  if (strlen(detector.filename)) {
+    fprintf(f, "%sfilename: %s\n", pre, detector.filename);
+  }
+
+  fprintf(f, "%sstatistics: %s\n", pre, detector.statistics);
+  fprintf(f, "%ssignal: %s\n",     pre, detector.signal);
+  fprintf(f, "%svalues: %s\n",     pre, detector.values);
+
+  if (detector.rank >= 1)
+  {
+    fprintf(f, "%sxvar: %s\n",     pre, detector.xvar);
+    fprintf(f, "%syvar: %s\n",     pre, detector.yvar);
+    fprintf(f, "%sxlabel: %s\n",   pre, detector.xlabel);
+    fprintf(f, "%sylabel: %s\n",   pre, detector.ylabel);
+    if (detector.rank > 1) {
+      fprintf(f, "%szvar: %s\n",   pre, detector.zvar);
+      fprintf(f, "%szlabel: %s\n", pre, detector.zlabel);
+    }
+  }
+
+  fprintf(f,
+    abs(detector.rank)==1 ?
+             "%sxlimits: %s\n" :
+             "%sxylimits: %s\n", pre, detector.limits);
+  fprintf(f, "%svariables: %s\n", pre,
+    strcasestr(detector.format, "list") ? detector.ylabel : detector.variables);
+
+  fflush(f);
+
+} /* mcdatainfo_out */
+
+/* mcdetector_out_array_ascii: output a single array to a file
+ *   m: columns
+ *   n: rows
+ *   p: array
+ *   f: file handle (already opened)
+ */
+static void mcdetector_out_array_ascii(long m, long n, double *p, FILE *f, char istransposed)
+{
+  if(f)
+  {
+    int i,j;
+    for(j = 0; j < n; j++)
+    {
+      for(i = 0; i < m; i++)
+      {
+          fprintf(f, "%.10g ", p[!istransposed ? i*n + j : j*m+i]);
+      }
+      fprintf(f,"\n");
+    }
+  }
+} /* mcdetector_out_array_ascii */
+
+/*******************************************************************************
+* mcdetector_out_0D_ascii: called by mcdetector_out_0D for ascii output
+*******************************************************************************/
+MCDETECTOR mcdetector_out_0D_ascii(MCDETECTOR detector)
+{
+  int exists=0;
+  FILE *outfile = NULL;
+
+  /* Write data set information to simulation description file. */
+  MPI_MASTER(
+    siminfo_out("\nbegin data\n"); // detector.component
+    mcdatainfo_out("  ", siminfo_file, detector);
+    siminfo_out("end data\n");
+    /* Don't write if filename is NULL: mcnew_file handles this (return NULL) */
+    outfile = mcnew_file(detector.component, "dat", &exists);
+    if(outfile)
+    {
+      /* write data file header and entry in simulation description file */
+      mcruninfo_out( "# ", outfile);
+      mcdatainfo_out("# ", outfile, detector);
+      /* write I I_err N */
+      fprintf(outfile, "%g %g %g\n",
+        detector.intensity, detector.error, detector.events);
+      fclose(outfile);
+    }
+  ); /* MPI_MASTER */
+  return(detector);
+} /* mcdetector_out_0D_ascii */
+
+/*******************************************************************************
+* mcdetector_out_1D_ascii: called by mcdetector_out_1D for ascii output
+*******************************************************************************/
+MCDETECTOR mcdetector_out_1D_ascii(MCDETECTOR detector)
+{
+  int exists=0;
+  FILE *outfile = NULL;
+
+  MPI_MASTER(
+    /* Write data set information to simulation description file. */
+    siminfo_out("\nbegin data\n"); // detector.filename
+    mcdatainfo_out("  ", siminfo_file, detector);
+    siminfo_out("end data\n");
+    /* Loop over array elements, writing to file. */
+    /* Don't write if filename is NULL: mcnew_file handles this (return NULL) */
+    outfile = mcnew_file(detector.filename, "dat", &exists);
+    if(outfile)
+    {
+      /* write data file header and entry in simulation description file */
+      mcruninfo_out( "# ", outfile);
+      mcdatainfo_out("# ", outfile, detector);
+      /* output the 1D array columns */
+      mcdetector_out_array_ascii(detector.m, detector.n, detector.p1, outfile, detector.istransposed);
+
+      fclose(outfile);
+    }
+  ); /* MPI_MASTER */
+  return(detector);
+
+}  /* mcdetector_out_1D_ascii */
+
+/*******************************************************************************
+* mcdetector_out_2D_ascii: called by mcdetector_out_2D for ascii output
+*******************************************************************************/
+MCDETECTOR mcdetector_out_2D_ascii(MCDETECTOR detector)
+{
+  int exists=0;
+  FILE *outfile = NULL;
+
+  MPI_MASTER(
+    /* Loop over array elements, writing to file. */
+    /* Don't write if filename is NULL: mcnew_file handles this (return NULL) */
+    outfile = mcnew_file(detector.filename, "dat", &exists);
+    if(outfile)
+    {
+      /* write header only if file has just been created (not appending) */
+      if (!exists) {
+        /* Write data set information to simulation description file. */
+        siminfo_out("\nbegin data\n"); // detector.filename
+        mcdatainfo_out("  ", siminfo_file, detector);
+        siminfo_out("end data\n");
+
+        mcruninfo_out( "# ", outfile);
+        mcdatainfo_out("# ", outfile,   detector);
+      }
+      /* Add # Data entry for any write to the file (e.g. via -USR2, see GitHub issue #2174 ) */
+      fprintf(outfile, "# Data [%s/%s] %s:\n", detector.component, detector.filename, detector.zvar);
+      mcdetector_out_array_ascii(detector.m, detector.n*detector.p, detector.p1,
+        outfile, detector.istransposed);
+      if (detector.p2) {
+        fprintf(outfile, "# Errors [%s/%s] %s_err:\n", detector.component, detector.filename, detector.zvar);
+        mcdetector_out_array_ascii(detector.m, detector.n*detector.p, detector.p2,
+          outfile, detector.istransposed);
+      }
+      if (detector.p0) {
+        fprintf(outfile, "# Events [%s/%s] N:\n", detector.component, detector.filename);
+        mcdetector_out_array_ascii(detector.m, detector.n*detector.p, detector.p0,
+          outfile, detector.istransposed);
+      }
+      fclose(outfile);
+
+      if (!exists) {
+        if (strcasestr(detector.format, "list"))
+          printf("Events:   \"%s\"\n",
+            strlen(detector.filename) ? detector.filename : detector.component);
+      }
+    } /* if outfile */
+  ); /* MPI_MASTER */
+  /* MPI list mode: rows from all nodes are written by the master in
+     mcdetector_out_list_mpi (see mcdetector_out_2D_list) */
+  return(detector);
+} /* mcdetector_out_2D_ascii */
+
+/*******************************************************************************
+* strcpy_valid: makes a valid string for variable names.
+*   copy 'original' into 'valid', replacing invalid characters by '_'
+*   char arrays must be pre-allocated
+*******************************************************************************/
+static char *strcpy_valid(char *valid, char *original)
+{
+  long i;
+  int  n=CHAR_BUF_LENGTH; /* max length of valid names */
+
+  if (original == NULL || !strlen(original)) return(NULL);
+
+  if (n > strlen(original)) n = strlen(original);
+  else original += strlen(original)-n;
+  strncpy(valid, original, n);
+
+  for (i=0; i < n; i++)
+  {
+    if ( (valid[i] > 122)
+      || (valid[i] < 32)
+      || (strchr("!\"#$%&'()*+,-.:;<=>?@[\\]^`/ \n\r\t", valid[i]) != NULL) )
+    {
+      if (i) valid[i] = '_'; else valid[i] = 'm';
+    }
+  }
+  valid[i] = '\0';
+
+  return(valid);
+} /* strcpy_valid */
+
+/* end ascii output section ================================================= */
+
+
+
+
+
+
+
+#ifdef USE_NEXUS
+
+/* name of the NXentry opened by mcinfo_out_nexus (used by mclist_vds_write) */
+static char mcnxentry[CHAR_BUF_LENGTH] = "entry1";
+
+/* ========================================================================== */
+
+/*                               NeXus output                                 */
+
+/* ========================================================================== */
+
+#define nxprintf(...)    nxstr('d', __VA_ARGS__)
+#define nxprintattr(...) nxstr('a', __VA_ARGS__)
+
+/*******************************************************************************
+* nxstr: output a tag=value data set (char) in NeXus/current group
+*   when 'format' is larger that 1024 chars it is used as value for the 'tag'
+*   else the value is assembled with format and following arguments.
+*   type='d' -> data set
+*        'a' -> attribute for current data set
+*******************************************************************************/
+static int nxstr(char type, NXhandle *f, char *tag, char *format, ...)
+{
+  va_list ap;
+  char value[CHAR_BUF_LENGTH];
+  int  i;
+  int  ret=NX_OK;
+
+  if (!tag || !format || !strlen(tag) || !strlen(format)) return(NX_OK);
+
+  /* assemble the value string */
+  if (strlen(format) < CHAR_BUF_LENGTH) {
+    va_start(ap, format);
+    ret = vsnprintf(value, CHAR_BUF_LENGTH, format, ap);
+    va_end(ap);
+
+    i = strlen(value);
+  } else {
+    i = strlen(format);
+  }
+
+  if (type == 'd') {
+    /* open/put/close data set */
+    if (NXmakedata (f, tag, NX_CHAR, 1, &i) != NX_OK) return(NX_ERROR);
+    NXopendata (f, tag);
+    if (strlen(format) < CHAR_BUF_LENGTH)
+      ret = NXputdata  (f, value);
+    else
+      ret = NXputdata  (f, format);
+    NXclosedata(f);
+  } else {
+    if (strlen(format) < CHAR_BUF_LENGTH)
+      ret = NXputattr  (f, tag, value, strlen(value), NX_CHAR);
+    else
+      ret = NXputattr  (f, tag, format, strlen(format), NX_CHAR);
+  }
+
+  return(ret);
+
+} /* nxstr */
+
+/*******************************************************************************
+* mcinfo_readfile: read a full file into a string buffer which is allocated
+*   Think to free the buffer after use.
+* Used in: mcinfo_out_nexus (nexus)
+*******************************************************************************/
+char *mcinfo_readfile(char *filename)
+{
+  FILE *f = fopen(filename, "rb");
+  if (!f) return(NULL);
+  fseek(f, 0, SEEK_END);
+  long fsize = ftell(f);
+  rewind(f);
+  char *string = malloc(fsize + 1);
+  if (string) {
+    int n = fread(string, fsize, 1, f);
+    fclose(f);
+
+    string[fsize] = 0;
+  }
+  return(string);
+}
+
+/*******************************************************************************
+* mcinfo_out: output instrument/simulation groups in NeXus file
+* Used in: siminfo_init (nexus)
+*******************************************************************************/
+static void mcinfo_out_nexus(NXhandle f)
+{
+  FILE  *fid;     /* for intrument source code/C/IDF */
+  char  *buffer=NULL;
+  time_t t     =time(NULL); /* for date */
+  char   entry0[CHAR_BUF_LENGTH];
+  int    count=0;
+  char   name[CHAR_BUF_LENGTH];
+  char   class[CHAR_BUF_LENGTH];
+
+  if (!f || mcdisable_output_files) return;
+
+  /* write NeXus NXroot attributes */
+  /* automatically added: file_name, HDF5_Version, file_time, NeXus_version */
+  nxprintattr(f, "creator",   "%s generated with " MCCODE_STRING, instrument_name);
+
+  /* count the number of existing NXentry and create the next one */
+  NXgetgroupinfo(f, &count, name, class);
+  sprintf(entry0, "entry%i", count+1);
+  strcpy(mcnxentry, entry0);
+
+  /* create the main NXentry (mandatory in NeXus) */
+  if (NXmakegroup(f, entry0, "NXentry") == NX_OK)
+  if (NXopengroup(f, entry0, "NXentry") == NX_OK) {
+    nxprintf(nxhandle, "program_name", MCCODE_STRING);
+    nxprintf(f, "start_time", ctime(&t));
+    nxprintf(f, "title", "%s%s%s simulation generated by instrument %s",
+      dirname && strlen(dirname) ? dirname : ".", MC_PATHSEP_S, siminfo_name,
+      instrument_name);
+    nxprintattr(f, "program_name", MCCODE_STRING);
+    nxprintattr(f, "instrument",   instrument_name);
+    nxprintattr(f, "simulation",   "%s%s%s",
+        dirname && strlen(dirname) ? dirname : ".", MC_PATHSEP_S, siminfo_name);
+
+    /* write NeXus instrument group */
+    if (NXmakegroup(f, "instrument", "NXinstrument") == NX_OK)
+    if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+      int   i;
+      char *string=NULL;
+
+      /* write NeXus parameters(types) data =================================== */
+      string = (char*)malloc(CHAR_BUF_LENGTH);
+      if (string) {
+        strcpy(string, "");
+        for(i = 0; i < numipar; i++)
+        {
+          char ThisParam[CHAR_BUF_LENGTH];
+          snprintf(ThisParam, CHAR_BUF_LENGTH, " %s(%s)", mcinputtable[i].name,
+                  (*mcinputtypes[mcinputtable[i].type].parminfo)
+                      (mcinputtable[i].name));
+          if (strlen(string) + strlen(ThisParam) < CHAR_BUF_LENGTH)
+            strcat(string, ThisParam);
+        }
+        nxprintattr(f, "Parameters",    string);
+        free(string);
+      }
+
+      nxprintattr(f, "name",          instrument_name);
+      nxprintf   (f, "name",          instrument_name);
+      nxprintattr(f, "Source",        instrument_source);
+
+      nxprintattr(f, "Trace_enabled", traceenabled ? "yes" : "no");
+      nxprintattr(f, "Default_main",  defaultmain ?  "yes" : "no");
+#ifdef MC_EMBEDDED_RUNTIME
+      nxprintattr(f, "Embedded_runtime", "yes");
+#else
+      nxprintattr(f, "Embedded_runtime", "no");
+#endif
+
+      /* add instrument source code when available */
+      buffer = mcinfo_readfile(instrument_source);
+      if (buffer && strlen(buffer)) {
+        long length=strlen(buffer);
+        nxprintf (f, "description", buffer);
+        NXopendata(f,"description");
+        nxprintattr(f, "file_name", instrument_source);
+        nxprintattr(f, "file_size", "%li", length);
+        nxprintattr(f, "MCCODE_STRING", MCCODE_STRING);
+        NXclosedata(f);
+        nxprintf (f,"instrument_source", "%s " MCCODE_NAME " " MCCODE_PARTICLE " Monte Carlo simulation", instrument_name);
+        free(buffer);
+      } else
+        nxprintf (f, "description", "File %s not found (instrument description %s is missing)",
+          instrument_source, instrument_name);
+
+      if (mcnexus_embed_idf) {
+        /* add Mantid/IDF.xml when available */
+        char *IDFfile=NULL;
+        IDFfile = (char*)malloc(CHAR_BUF_LENGTH);
+        sprintf(IDFfile,"%s%s",instrument_source,".xml");
+        buffer = mcinfo_readfile(IDFfile);
+        if (buffer && strlen(buffer)) {
+          NXmakegroup (nxhandle, "instrument_xml", "NXnote");
+          NXopengroup (nxhandle, "instrument_xml", "NXnote");
+          nxprintf(f, "data", buffer);
+          nxprintf(f, "description", "IDF.xml file found with instrument %s", instrument_source);
+          nxprintf(f, "type", "text/xml");
+          NXclosegroup(f); /* instrument_xml */
+          free(buffer);
+        }
+        free(IDFfile);
+      }
+
+      /* Add "components" entry */
+      if (NXmakegroup(f, "components", "NXdata") == NX_OK) {
+        NXopengroup(f, "components", "NXdata");
+        nxprintattr(f, "description", "Component list for instrument %s",  instrument_name);
+	NXclosegroup(f); /* components */
+      } else {
+	printf("Failed to create NeXus component hierarchy\n");
+      }
+      NXclosegroup(f); /* instrument */
+    } /* NXinstrument */
+
+    /* write NeXus simulation group */
+    if (NXmakegroup(f, "simulation", "NXnote") == NX_OK)
+    if (NXopengroup(f, "simulation", "NXnote") == NX_OK) {
+
+      nxprintattr(f, "name",   "%s%s%s",
+        dirname && strlen(dirname) ? dirname : ".", MC_PATHSEP_S, siminfo_name);
+
+      nxprintf   (f, "name",      "%s",     siminfo_name);
+      nxprintattr(f, "Format",    mcformat && strlen(mcformat) ? mcformat : MCCODE_NAME);
+      nxprintattr(f, "URL",       "http://www.mccode.org");
+      nxprintattr(f, "program",   MCCODE_STRING);
+      nxprintattr(f, "Instrument",instrument_source);
+      nxprintattr(f, "Trace",     mcdotrace ?     "yes" : "no");
+      nxprintattr(f, "Gravitation",mcgravitation ? "yes" : "no");
+      nxprintattr(f, "Seed",      "%li", mcseed);
+      /* written before mccode_main splits the rays over MPI nodes */
+      nxprintattr(f, "Ncount_requested", "%llu", mcget_ncount());
+      nxprintattr(f, "Directory", dirname);
+    #ifdef USE_MPI
+      if (mpi_node_count > 1)
+        nxprintf(f, "Nodes", "%i",        mpi_node_count);
+    #endif
+
+      /* output parameter string ================================================ */
+      if (NXmakegroup(f, "Param", "NXparameters") == NX_OK) {
+	NXopengroup(f,"Param", "NXparameters");
+        int i;
+        char string[CHAR_BUF_LENGTH];
+        for(i = 0; i < numipar; i++) {
+          if (mcget_run_num() || (mcinputtable[i].val && strlen(mcinputtable[i].val))) {
+            if (mcinputtable[i].par == NULL)
+              strncpy(string, (mcinputtable[i].val ? mcinputtable[i].val : ""), CHAR_BUF_LENGTH);
+            else
+              (*mcinputtypes[mcinputtable[i].type].printer)(string, mcinputtable[i].par);
+
+            nxprintf(f,  mcinputtable[i].name, "%s", string);
+            nxprintattr(f, mcinputtable[i].name, string);
+          }
+        }
+        NXclosegroup(f); /* Param */
+      } /* NXparameters */
+      NXclosegroup(f); /* simulation */
+    } /* NXsimulation */
+
+    /* create a group to hold all links for all monitors */
+    NXmakegroup(f, "data", "NXdetector");
+
+    /* leave the NXentry opened (closed at exit) */
+  } /* NXentry */
+} /* mcinfo_out_nexus */
+
+/*******************************************************************************
+* Runtime capture of component SETTING parameter values (NeXus only)
+*
+* mccomp_param_nexus() only receives the literal parameter expressions from the
+* instrument file. To also store the numerical value present at the end of
+* INITIALIZE, the runtime keeps a small registry, filled from the existing
+* (generated) calls in _<comp>_setpos():
+*
+*   mccomp_placement_type_nexus() -> mcrt_register_comp()  (instance + type)
+*   mccomp_param_nexus()          -> mcrt_register_param() (one per SETTING par)
+*
+* The parameter struct base comes from the generated _getvar_parameters(name).
+* Member offsets are reconstructed from the order of the calls and the type
+* strings, following the struct layout written by cogen_comp_declare():
+*   - SETTING parameters come first, in set_par order (= order of the calls)
+*   - int -> int, char* -> char[16384], char -> char, double -> double (symbol),
+*     MCNUM -> double, MCNUM* (vector) or MCNUM[n] (static {..} vector, sized
+*     from the FIRST instance of the component type)
+*   - mccode-antlr writes the same layout with other type strings: "char *",
+*     "double" for MCNUM and "double*" for vectors, where a literal vector
+*     "a,b,c" is a calloc'ed double* holding those elements
+*     Type strings are compared with whitespace removed.
+* The layout is validated at setpos time (strings by content, numbers when the
+* literal is a plain number); mismatching instances are not reported.
+*
+* mccomp_param_runtime_nexus_all(), called from mccode_main() after init(),
+* adds 'runtime_value' and 'runtime_value_status' attributes to
+*   entry<N>/instrument/components/NNNN_<comp>/parameters/<par>
+*******************************************************************************/
+
+/* MUST match the char[16384] declaration of string parameters in
+   cogen_comp_declare() (mccode/src/cogen.c.in) */
+#ifndef MCCODE_COMP_STRING_PAR_LEN
+#define MCCODE_COMP_STRING_PAR_LEN 16384
+#endif
+
+enum mcrtpar_kind {
+  MCRTPAR_INT, MCRTPAR_STRING, MCRTPAR_CHAR, MCRTPAR_DOUBLE,
+  MCRTPAR_VECTOR_PTR, MCRTPAR_VECTOR_ARR, MCRTPAR_UNKNOWN
+};
+
+struct mcrtcomp_struct {
+  char  *nexuscomp;     /* e.g. 0003_Mon      */
+  char  *name;          /* e.g. Mon           */
+  char  *comptype;      /* e.g. PSD_monitor   */
+  void  *base;          /* &_Mon_var._parameters */
+  size_t next_offset;   /* running offset while registering pars */
+  long   first_of_type; /* registry index of first instance of comptype */
+  int    n_checked;     /* number of successful layout checks */
+  int    n_failed;      /* number of failed layout checks */
+  int    unknown_type;  /* a parameter type could not be mapped */
+};
+
+struct mcrtpar_struct {
+  long   comp;          /* index in mcrtcomp_list */
+  char  *parameter;
+  char  *value;         /* literal (or string value) from setpos */
+  int    kind;
+  size_t offset;
+  long   nelem;         /* for MCRTPAR_VECTOR_ARR, and MCRTPAR_VECTOR_PTR from a literal */
+};
+
+static struct mcrtcomp_struct *mcrtcomp_list  = NULL;
+static long                    mcrtcomp_num   = 0;
+static long                    mcrtcomp_alloc = 0;
+static struct mcrtpar_struct  *mcrtpar_list   = NULL;
+static long                    mcrtpar_num    = 0;
+static long                    mcrtpar_alloc  = 0;
+
+/* portable alignment probes */
+struct mcrt_align_int { char c; int     t; };
+struct mcrt_align_dbl { char c; double  t; };
+struct mcrt_align_ptr { char c; double *t; };
+#define MCRT_ALIGN_INT offsetof(struct mcrt_align_int, t)
+#define MCRT_ALIGN_DBL offsetof(struct mcrt_align_dbl, t)
+#define MCRT_ALIGN_PTR offsetof(struct mcrt_align_ptr, t)
+
+static char *mcrt_strdup(const char *s)
+{
+  char  *d;
+  size_t n;
+  if (!s) s = "";
+  n = strlen(s) + 1;
+  d = (char *)malloc(n);
+  if (d) memcpy(d, s, n);
+  return d;
+}
+
+/* mirrors parse_curlybrackets_vector() in cogen.c.in, which sizes MCNUM[n] */
+static long mcrt_parse_curly(const char *string, double *values, long maxn)
+{
+  const char *s = string;
+  char *r;
+  long vidx = 0;
+  if (!s) return 0;
+  while (*s != '\0') {
+    double val;
+    if (*s == ' ' || *s == ',' || *s == '{') { ++s; continue; }
+    if (*s == '}') return vidx;
+    val = strtod(s, &r);
+    if (values && vidx < maxn) values[vidx] = val;
+    ++vidx;
+    if (*r == '\0') return vidx;
+    s = r + 1;
+  }
+  return vidx;
+}
+
+/* plain numeric literal check: only digits/sign/dot start, no identifiers */
+static int mcrt_numeric_start(const char *s)
+{
+  while (*s && isspace((unsigned char)*s)) s++;
+  if (*s == '+' || *s == '-') s++;
+  return (isdigit((unsigned char)*s) || (*s == '.' && isdigit((unsigned char)s[1])));
+}
+
+static int mcrt_literal_double(const char *s, double *v)
+{
+  char *end;
+  if (!s || !mcrt_numeric_start(s)) return 0;
+  errno = 0;
+  *v = strtod(s, &end);
+  while (*end && isspace((unsigned char)*end)) end++;
+  return (*end == '\0' && errno == 0);
+}
+
+static int mcrt_literal_long(const char *s, long *v)
+{
+  char *end;
+  if (!s || !mcrt_numeric_start(s)) return 0;
+  errno = 0;
+  *v = strtol(s, &end, 0); /* base 0: C literal semantics (0x.., 0..) */
+  while (*end && isspace((unsigned char)*end)) end++;
+  return (*end == '\0' && errno == 0);
+}
+
+/* shortest of %.15g/%.17g that reads back to exactly the same double */
+static void mcrt_format_double(char *buf, size_t n, double v)
+{
+  snprintf(buf, n, "%.15g", v);
+  if (strtod(buf, NULL) != v) snprintf(buf, n, "%.17g", v);
+}
+
+/* non-zero subnormal: what a heap/static pointer typically looks like as a double */
+static int mcrt_looks_like_pointer(double v)
+{
+  uint64_t bits;
+  memcpy(&bits, &v, sizeof(bits));
+  return (((bits >> 52) & 0x7ff) == 0) && ((bits & 0xfffffffffffffULL) != 0);
+}
+
+static void mcrt_register_comp(char *nexuscomp, char *comptype)
+{
+  struct mcrtcomp_struct *c;
+  long i;
+  char *n;
+
+  if (!nexuscomp || !comptype) return;
+  if (mcrtcomp_num >= mcrtcomp_alloc) {
+    long na = mcrtcomp_alloc ? 2*mcrtcomp_alloc : 64;
+    struct mcrtcomp_struct *tmp = realloc(mcrtcomp_list, na*sizeof(*tmp));
+    if (!tmp) return;
+    mcrtcomp_list = tmp; mcrtcomp_alloc = na;
+  }
+  c = &mcrtcomp_list[mcrtcomp_num];
+  memset(c, 0, sizeof(*c));
+  c->nexuscomp = mcrt_strdup(nexuscomp);
+  c->comptype  = mcrt_strdup(comptype);
+  /* strip the 4-digit 'NNNN_' prefix written by cogen_comp_setpos() */
+  n = nexuscomp;
+  if (strlen(n) > 5 && isdigit((unsigned char)n[0]) && isdigit((unsigned char)n[1])
+      && isdigit((unsigned char)n[2]) && isdigit((unsigned char)n[3]) && n[4] == '_')
+    n += 5;
+  c->name = mcrt_strdup(n);
+  c->base = c->name ? _getvar_parameters(c->name) : NULL;
+  c->first_of_type = mcrtcomp_num;
+  for (i = 0; i < mcrtcomp_num; i++)
+    if (!strcmp(mcrtcomp_list[i].comptype, c->comptype)) {
+      c->first_of_type = mcrtcomp_list[i].first_of_type;
+      break;
+    }
+  mcrtcomp_num++;
+}
+
+/* literal of the same parameter for the first instance of this comp type */
+static const char *mcrt_first_instance_literal(long compidx, const char *parameter, const char *own)
+{
+  long i, first = mcrtcomp_list[compidx].first_of_type;
+  if (first == compidx) return own;
+  for (i = 0; i < mcrtpar_num; i++)
+    if (mcrtpar_list[i].comp == first && !strcmp(mcrtpar_list[i].parameter, parameter))
+      return mcrtpar_list[i].value;
+  return own;
+}
+
+static void mcrt_register_param(char *nexuscomp, char *parameter, char *defval,
+                                char *value, char *type)
+{
+  struct mcrtcomp_struct *c = NULL;
+  struct mcrtpar_struct  *p;
+  long   ci;
+  size_t size = 0, align = 1, i, j = 0;
+  char   t[32];
+
+  if (!nexuscomp || !parameter || !type) return;
+  for (ci = mcrtcomp_num-1; ci >= 0; ci--)
+    if (!strcmp(mcrtcomp_list[ci].nexuscomp, nexuscomp)) { c = &mcrtcomp_list[ci]; break; }
+  if (!c) return;
+
+  if (mcrtpar_num >= mcrtpar_alloc) {
+    long na = mcrtpar_alloc ? 2*mcrtpar_alloc : 256;
+    struct mcrtpar_struct *tmp = realloc(mcrtpar_list, na*sizeof(*tmp));
+    if (!tmp) return;
+    mcrtpar_list = tmp; mcrtpar_alloc = na;
+  }
+  p = &mcrtpar_list[mcrtpar_num];
+  memset(p, 0, sizeof(*p));
+  p->comp      = ci;
+  p->parameter = mcrt_strdup(parameter);
+  p->value     = mcrt_strdup(value);
+
+  /* type string without whitespace: mccode-antlr writes e.g. "char *" */
+  for (i = 0; type[i] && j < sizeof(t)-1; i++)
+    if (!isspace((unsigned char)type[i])) t[j++] = type[i];
+  t[j] = '\0';
+
+  /* map type string (instr_formal_type_names_real in cogen.c.in) to kind/size */
+  if (!strcmp(t, "int")) {
+    p->kind = MCRTPAR_INT;    size = sizeof(int);    align = MCRT_ALIGN_INT;
+  } else if (!strcmp(t, "char*")) {
+    p->kind = MCRTPAR_STRING; size = MCCODE_COMP_STRING_PAR_LEN; align = 1;
+  } else if (!strcmp(t, "char")) {
+    p->kind = MCRTPAR_CHAR;   size = 1;              align = 1;
+  } else if (!strcmp(t, "double")) {
+    p->kind = MCRTPAR_DOUBLE; size = sizeof(double); align = MCRT_ALIGN_DBL;
+  } else if (!strcmp(t, "double*")) {
+    /* mccode-antlr vector: a literal "a,b,c" was calloc'ed with that many elements */
+    p->kind = MCRTPAR_VECTOR_PTR; size = sizeof(double*); align = MCRT_ALIGN_PTR;
+    if (p->value && mcrt_numeric_start(p->value))
+      p->nelem = mcrt_parse_curly(p->value, NULL, 0);
+  } else if (!strcmp(t, "MCNUM")) {
+    /* double, vector pointer or static vector: all share this type string */
+    const char *first = mcrt_first_instance_literal(ci, parameter, p->value);
+    if (first && first[0] == '{') {
+      p->kind  = MCRTPAR_VECTOR_ARR;
+      p->nelem = mcrt_parse_curly(first, NULL, 0);
+      size = p->nelem*sizeof(double); align = MCRT_ALIGN_DBL;
+    } else if ((defval && !strcmp(defval, "NULL"))
+            || (p->value && (!strcmp(p->value, "NULL") || p->value[0] == '&'))) {
+      p->kind = MCRTPAR_VECTOR_PTR; size = sizeof(double*); align = MCRT_ALIGN_PTR;
+    } else {
+      p->kind = MCRTPAR_DOUBLE; size = sizeof(double); align = MCRT_ALIGN_DBL;
+    }
+  } else {
+    p->kind = MCRTPAR_UNKNOWN;
+    c->unknown_type = 1;
+  }
+
+  p->offset = (c->next_offset + align - 1) / align * align;
+  c->next_offset = p->offset + size;
+  mcrtpar_num++;
+
+  /* validate reconstructed layout against the values just assigned in setpos */
+  if (!c->base || c->unknown_type) return;
+  {
+    char *addr = (char *)c->base + p->offset;
+    switch (p->kind) {
+      case MCRTPAR_STRING: {
+        const char *expect = value ? value : "";
+        if (strncmp(addr, expect, MCCODE_COMP_STRING_PAR_LEN-1)) c->n_failed++;
+        else c->n_checked++;
+        break;
+      }
+      case MCRTPAR_INT: {
+        long l; int iv;
+        memcpy(&iv, addr, sizeof(int));
+        if (mcrt_literal_long(p->value, &l)) {
+          if ((long)iv == l) c->n_checked++; else c->n_failed++;
+        }
+        break;
+      }
+      case MCRTPAR_DOUBLE: {
+        double d, v;
+        memcpy(&v, addr, sizeof(double));
+        if (mcrt_literal_double(p->value, &d)) {
+          if (v == d) c->n_checked++; else c->n_failed++;
+        } else if (p->value && !strcmp(p->value, "UNSET")) {
+          /* UNSET is a NaN with a specific payload: a strong layout check */
+          if (is_unset(v)) c->n_checked++; else c->n_failed++;
+        } else if (mcrt_looks_like_pointer(v)) {
+          p->kind = MCRTPAR_VECTOR_PTR; /* same size and alignment on LP64/LLP64 */
+        }
+        break;
+      }
+      case MCRTPAR_VECTOR_ARR:
+      case MCRTPAR_VECTOR_PTR: {
+        char *data = addr;
+        if (p->kind == MCRTPAR_VECTOR_PTR) {
+          double *ptr;
+          memcpy(&ptr, addr, sizeof(ptr));
+          data = (char *)ptr;
+        }
+        if (data && p->value && (p->value[0] == '{' || mcrt_numeric_start(p->value)) && p->nelem > 0) {
+          long k, n;
+          double *vals = calloc(p->nelem, sizeof(double));
+          if (vals) {
+            int ok = 1;
+            n = mcrt_parse_curly(p->value, vals, p->nelem);
+            if (n > p->nelem) n = p->nelem;
+            for (k = 0; k < n; k++) {
+              double v;
+              memcpy(&v, data + k*sizeof(double), sizeof(double));
+              if (v != vals[k]) ok = 0;
+            }
+            if (ok) c->n_checked++; else c->n_failed++;
+            free(vals);
+          }
+        }
+        break;
+      }
+      default: break; /* CHAR: not checkable */
+    }
+  }
+}
+
+/* write runtime_value/runtime_value_status into an existing parameter NXnote */
+static void mcrt_write_attrs(NXhandle f, char *nexuscomp, char *parameter,
+                             const char *value, const char *status)
+{
+  NXMDisableErrorReporting();
+  if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+    if (NXopengroup(f, "components", "NXdata") == NX_OK) {
+      if (NXopengroup(f, nexuscomp, "NXdata") == NX_OK) {
+        if (NXopengroup(f, "parameters", "NXdata") == NX_OK) {
+          if (NXopengroup(f, parameter, "NXnote") == NX_OK) {
+            /* zero-length attributes are not supported: omit empty values */
+            if (value && strlen(value))
+              NXputattr(f, "runtime_value", (void *)value, strlen(value), NX_CHAR);
+            NXputattr(f, "runtime_value_status", (void *)status, strlen(status), NX_CHAR);
+            NXclosegroup(f); /* parameter */
+          }
+          NXclosegroup(f);   /* parameters */
+        }
+        NXclosegroup(f);     /* component */
+      }
+      NXclosegroup(f);       /* components */
+    }
+    NXclosegroup(f);         /* instrument */
+  }
+  NXMEnableErrorReporting();
+}
+
+static void mcrt_free_registry(void)
+{
+  long i;
+  for (i = 0; i < mcrtpar_num; i++) {
+    free(mcrtpar_list[i].parameter); free(mcrtpar_list[i].value);
+  }
+  for (i = 0; i < mcrtcomp_num; i++) {
+    free(mcrtcomp_list[i].nexuscomp); free(mcrtcomp_list[i].name);
+    free(mcrtcomp_list[i].comptype);
+  }
+  free(mcrtpar_list);  mcrtpar_list  = NULL; mcrtpar_num  = mcrtpar_alloc  = 0;
+  free(mcrtcomp_list); mcrtcomp_list = NULL; mcrtcomp_num = mcrtcomp_alloc = 0;
+}
+
+/*******************************************************************************
+* mccomp_param_runtime_nexus_all: write post-INIT values of all registered
+*   component SETTING parameters. Called from mccode_main() after init().
+*   requires: NXentry to be opened
+*******************************************************************************/
+void mccomp_param_runtime_nexus_all(NXhandle f)
+{
+  long i;
+
+  if (!f || mcdisable_output_files) { mcrt_free_registry(); return; }
+
+  for (i = 0; i < mcrtcomp_num; i++)
+    if (mcrtcomp_list[i].n_failed) {
+      fprintf(stderr, "Warning: NeXus runtime parameter values not stored for component %s=%s() "
+              "(parameter layout check failed %i times) (mccomp_param_runtime_nexus_all)\n",
+              mcrtcomp_list[i].name, mcrtcomp_list[i].comptype, mcrtcomp_list[i].n_failed);
+    }
+
+  for (i = 0; i < mcrtpar_num; i++) {
+    struct mcrtpar_struct  *p = &mcrtpar_list[i];
+    struct mcrtcomp_struct *c = &mcrtcomp_list[p->comp];
+    const char *status = NULL;
+    char  num[64];
+    char *buffer = NULL;
+    const char *strval = NULL;
+
+    if (!c->base)              status = "unsupported:no-instance";
+    else if (c->unknown_type)  status = "unsupported:unknown-type";
+    else if (c->n_failed)      status = "layout-mismatch";
+    else {
+      char *addr = (char *)c->base + p->offset;
+      switch (p->kind) {
+        case MCRTPAR_INT: {
+          int iv; memcpy(&iv, addr, sizeof(int));
+          snprintf(num, sizeof(num), "%d", iv); strval = num;
+          break;
+        }
+        case MCRTPAR_CHAR:
+          snprintf(num, sizeof(num), "%d", (int)*addr); strval = num;
+          break;
+        case MCRTPAR_STRING: {
+          size_t len = 0;
+          while (len < MCCODE_COMP_STRING_PAR_LEN-1 && addr[len]) len++;
+          buffer = malloc(len+1);
+          if (buffer) { memcpy(buffer, addr, len); buffer[len] = '\0'; strval = buffer; }
+          break;
+        }
+        case MCRTPAR_DOUBLE: {
+          double v; memcpy(&v, addr, sizeof(double));
+          if (mcrt_looks_like_pointer(v))
+            status = "unsupported:pointer";
+          else {
+            if (is_unset(v)) strcpy(num, "UNSET");
+            else mcrt_format_double(num, sizeof(num), v);
+            strval = num;
+          }
+          break;
+        }
+        case MCRTPAR_VECTOR_ARR:
+        case MCRTPAR_VECTOR_PTR: {
+          long k;
+          size_t blen = (size_t)p->nelem*32 + 4;
+          if (p->kind == MCRTPAR_VECTOR_PTR) {
+            /* only mccode-antlr literal vectors have a known length */
+            double *ptr;
+            memcpy(&ptr, addr, sizeof(ptr));
+            addr = (char *)ptr;
+            if (!addr || p->nelem <= 0) { status = "unsupported:pointer"; break; }
+          }
+          buffer = malloc(blen);
+          if (buffer) {
+            size_t pos = 0;
+            pos += snprintf(buffer+pos, blen-pos, "{");
+            for (k = 0; k < p->nelem; k++) {
+              double v; char elem[32];
+              memcpy(&v, addr + k*sizeof(double), sizeof(double));
+              mcrt_format_double(elem, sizeof(elem), v);
+              pos += snprintf(buffer+pos, blen-pos, "%s%s", k ? ", " : "", elem);
+            }
+            snprintf(buffer+pos, blen-pos, "}");
+            strval = buffer;
+          }
+          break;
+        }
+        default:
+          status = "unsupported:unknown-type";
+      }
+      if (!status) status = c->n_checked ? "ok" : "unverified";
+    }
+    mcrt_write_attrs(f, c->nexuscomp, p->parameter, strval, status);
+    free(buffer);
+  }
+  mcrt_free_registry();
+} /* mccomp_param_runtime_nexus_all */
+
+/*******************************************************************************
+* mccomp_placement_type_nexus:
+*   Places
+*    - absolute (3x1) position
+*    - absolute (3x3) rotation
+*    - type / class of component instance into attributes under
+*     entry<N>/instrument/compname
+*   requires: NXentry to be opened
+*******************************************************************************/
+static void mccomp_placement_type_nexus(NXhandle nxhandle, char* component, Coords position, Rotation rotation, char* comptype)
+{
+  /* open NeXus instrument group */
+
+  #ifdef USE_NEXUS
+  if(nxhandle) {
+    mcrt_register_comp(component, comptype); /* for post-INIT runtime values */
+    if (NXopengroup(nxhandle, "instrument", "NXinstrument") == NX_OK) {
+      if (NXopengroup(nxhandle, "components", "NXdata") == NX_OK) {
+	if (NXmakegroup(nxhandle, component, "NXdata") == NX_OK) {
+	  if (NXopengroup(nxhandle, component, "NXdata") == NX_OK) {
+	    int64_t pdims[3]; pdims[0]=3; pdims[1]=0; pdims[2]=0;
+	    if (NXcompmakedata64(nxhandle, "Position", NX_FLOAT64, 1, pdims, NX_COMPRESSION, pdims) == NX_OK) {
+	      if (NXopendata(nxhandle, "Position") == NX_OK) {
+		double pos[3]; coords_get(position, &pos[0], &pos[1], &pos[2]);
+		if (NXputdata (nxhandle, pos) == NX_OK) {
+		  NXclosedata(nxhandle);
+		} else {
+		  fprintf(stderr, "COULD NOT PUT Position field for component %s\n",component);
+		}
+	      } else {
+		fprintf(stderr, "Warning: could not open Position field for component %s\n",component);
+	      }
+	    }
+	    int64_t rdims[3]; rdims[0]=3; rdims[1]=3; rdims[2]=0;
+	    if (NXcompmakedata64(nxhandle, "Rotation", NX_FLOAT64, 2, rdims, NX_COMPRESSION, rdims) == NX_OK) {
+	      if (NXopendata(nxhandle, "Rotation") == NX_OK) {
+		if (NXputdata (nxhandle, rotation) == NX_OK) {
+		  NXclosedata(nxhandle);
+		} else {
+		  fprintf(stderr, "COULD NOT PUT Rotation field for component %s\n",component);
+		}
+	      } else {
+		fprintf(stderr, "Warning: could not open Rotation field for component %s\n",component);
+	      }
+	    }
+	    nxprintf(nxhandle, "Component_type", comptype);
+	    NXclosegroup(nxhandle); // component
+	  } else {
+	    printf("FAILED to open comp data group %s\n",component);
+	  }
+	} else {
+	  printf("FAILED to create comp data group %s\n",component);
+	}
+	NXclosegroup(nxhandle); // components
+      } else {
+	printf("Failed to open NeXus component hierarchy\n");
+      }
+      NXclosegroup(nxhandle); // instrument
+    } else {
+      printf("Failed to open NeXus instrument hierarchy\n");
+    }
+  } else {
+    fprintf(stderr,"NO NEXUS FILE\n");
+  }
+  #endif
+} /* mccomp_placement_nexus */
+
+/*******************************************************************************
+* mccomp_param_nexus:
+*   Output parameter/value pair for component instance into
+*   the attribute
+*     entry<N>/instrument/compname/parameter
+*   requires: NXentry to be opened
+*******************************************************************************/
+static void mccomp_param_nexus(NXhandle nxhandle, char* component, char* parameter, char* defval, char* value, char* type)
+{
+  /* open NeXus instrument group */
+
+  #ifdef USE_NEXUS
+  if(nxhandle) {
+    mcrt_register_param(component, parameter, defval, value, type); /* for post-INIT runtime values */
+    if (NXopengroup(nxhandle, "instrument", "NXinstrument") == NX_OK) {
+      if (NXopengroup(nxhandle, "components", "NXdata") == NX_OK) {
+	if (NXopengroup(nxhandle, component, "NXdata") == NX_OK) {
+	  NXMDisableErrorReporting(); /* inactivate NeXus error messages, as creation may fail */
+	  NXmakegroup(nxhandle, "parameters", "NXdata");
+	  NXMEnableErrorReporting();  /* re-enable NeXus error messages */
+	  if (NXopengroup(nxhandle, "parameters", "NXdata") == NX_OK) {
+	    NXmakegroup(nxhandle, parameter, "NXnote");
+	    if (NXopengroup(nxhandle, parameter, "NXnote") == NX_OK) {
+	      nxprintattr(nxhandle, "type", type);
+	      nxprintattr(nxhandle, "default",  defval);
+	      nxprintattr(nxhandle, "value",  value);
+	      NXclosegroup(nxhandle); // parameter
+	    } else {
+	      printf("FAILED to open parameters %s data group \n",parameter);
+	    }
+	    NXclosegroup(nxhandle); // "parameters"
+	  } else {
+	    printf("FAILED to open comp/parameters data group \n");
+	  }
+	  NXclosegroup(nxhandle); // component
+	  } else {
+	  printf("FAILED to open comp data group %s\n",component);
+	}
+	NXclosegroup(nxhandle); // components
+      } else {
+	printf("Failed to open NeXus component hierarchy\n");
+      }
+      NXclosegroup(nxhandle); // instrument
+    } else {
+      printf("Failed to open NeXus instrument hierarchy\n");
+    }
+  } else {
+    fprintf(stderr,"NO NEXUS FILE\n");
+  }
+#endif
+} /* mccomp_param_nexus */
+
+/*******************************************************************************
+* mcdatainfo_out_nexus: output detector header
+*   mcdatainfo_out_nexus(detector) create group and write info to NeXus data file
+*   open data:NXdetector then filename:NXdata and write headers/attributes
+*   requires: NXentry to be opened
+*******************************************************************************/
+static void
+mcdatainfo_out_nexus(NXhandle f, MCDETECTOR detector)
+{
+  char data_name[CHAR_BUF_LENGTH];
+  if (!f || !detector.m || mcdisable_output_files) return;
+
+  strcpy_valid(data_name,
+    strlen(detector.filename) ?
+      detector.filename : detector.component);
+
+  /* the NXdetector group has been created in mcinfo_out_nexus (siminfo_init) */
+  if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+    if (NXopengroup(f, "components", "NXdata") == NX_OK) {
+      NXMDisableErrorReporting(); /* inactivate NeXus error messages, as creation may fail */
+      NXmakegroup(f, detector.nexuscomp, "NXdata");
+      if (NXopengroup(f, detector.nexuscomp, "NXdata") == NX_OK) {
+	NXmakegroup(f, "output", "NXdetector");
+	if (NXopengroup(f, "output", "NXdetector") == NX_OK) {
+	  if (NXmakegroup(f, data_name, "NXdata") == NX_OK) {
+	    if (NXopengroup(f, data_name, "NXdata") == NX_OK) {
+	      /* output metadata (as attributes) ======================================== */
+	      nxprintattr(f, "Date",       detector.date);
+	      nxprintattr(f, "type",       detector.type);
+	      nxprintattr(f, "Source",     detector.instrument);
+	      nxprintattr(f, "component",  detector.component);
+	      nxprintattr(f, "position",   detector.position);
+
+	      nxprintattr(f, "title",      detector.title);
+	      nxprintattr(f, !mcget_run_num() || mcget_run_num() >= mcget_ncount() ?
+			  "Ncount" :
+			  "ratio",  detector.ncount);
+
+	      if (strlen(detector.filename)) {
+		nxprintattr(f, "filename", detector.filename);
+	      }
+
+	      nxprintattr(f, "statistics", detector.statistics);
+	      nxprintattr(f, "signal",     detector.signal);
+	      nxprintattr(f, "values",     detector.values);
+
+	      if (detector.rank >= 1)
+		{
+		  nxprintattr(f, "xvar",     detector.xvar);
+		  nxprintattr(f, "yvar",     detector.yvar);
+		  nxprintattr(f, "xlabel",   detector.xlabel);
+		  nxprintattr(f, "ylabel",   detector.ylabel);
+		  if (detector.rank > 1) {
+		    nxprintattr(f, "zvar",   detector.zvar);
+		    nxprintattr(f, "zlabel", detector.zlabel);
+		  }
+		}
+
+	      nxprintattr(f, abs(detector.rank)==1 ?
+			  "xlimits" :
+			  "xylimits", detector.limits);
+	      nxprintattr(f, "variables",
+			  strcasestr(detector.format, "list") ? detector.ylabel : detector.variables);
+
+	      NXclosegroup(f); // data_name
+	    }
+	  }
+	}
+	NXclosegroup(f); // output
+	NXclosegroup(f); // detector.nexuscomp
+      }
+      NXclosegroup(f); // components
+    }
+    NXMEnableErrorReporting();  /* re-enable NeXus error messages */
+    NXclosegroup(f); // instrument
+  } /* NXdetector (instrument) */ 
+} /* mcdatainfo_out_nexus */
+
+/*******************************************************************************
+* mcdetector_out_axis_nexus: write detector axis into current NXdata
+*   requires: NXdata to be opened
+*******************************************************************************/
+int mcdetector_out_axis_nexus(NXhandle f, char *label, char *var, int rank, long length, double min, double max)
+{
+  if (!f || length <= 1 || mcdisable_output_files || max == min) return(NX_OK);
+  else {
+    double *axis;
+    axis=malloc(sizeof(double)*length);
+    if (!axis ) {
+      printf("Fatal memory error allocating NeXus axis of length %li, exiting!\n", length);
+      return(NX_ERROR);
+    }
+    char *valid;
+    valid=malloc(sizeof(char)*CHAR_BUF_LENGTH);
+    if (!valid ) {
+      printf("Fatal memory error allocating label axis of length %i, exiting!\n", CHAR_BUF_LENGTH);
+      free(axis);
+      return(NX_ERROR);
+    }
+    int dim=(int)length;
+    int i;
+    int nprimary=1;
+    /* create an axis from [min:max] */
+    for(i = 0; i < length; i++)
+      axis[i] = min+(max-min)*(i+0.5)/length;
+    /* create the data set */
+    strcpy_valid(valid, label);
+    NXcompmakedata(f, valid, NX_FLOAT64, 1, &dim, NX_COMPRESSION, &dim);
+    /* open it */
+    if (NXopendata(f, valid) != NX_OK) {
+      fprintf(stderr, "Warning: could not open axis rank %i '%s' (NeXus)\n",
+        rank, valid);
+      free(axis);
+      free(valid);
+      return(NX_ERROR);
+    }
+    /* put the axis and its attributes */
+    NXputdata  (f, axis);
+    nxprintattr(f, "long_name",  label);
+    nxprintattr(f, "short_name", var);
+    NXputattr  (f, "axis",       &rank,     1, NX_INT32);
+    nxprintattr(f, "units",      var);
+    NXputattr  (f, "primary",    &nprimary, 1, NX_INT32);
+    NXclosedata(f);
+    free(axis);
+    free(valid);
+    return(NX_OK);
+  }
+} /* mcdetector_out_axis_nexus */
+
+/*******************************************************************************
+* mcdetector_out_array_nexus: write detector array into current NXdata (1D,2D)
+*   requires: NXdata to be opened
+*******************************************************************************/
+int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR detector)
+{
+
+  int64_t dims[3]={detector.m,detector.n,detector.p};  /* number of elements to write */
+  int64_t fulldims[3]={detector.m,detector.n,detector.p};
+  int signal=1;
+  int exists=0;
+  int64_t current_dims[3]={0,0,0};
+  int ret=NX_OK;
+
+  if (!f || !data || !detector.m || mcdisable_output_files) return(NX_OK);
+
+  /* when this is a list, we set 1st dimension to NX_UNLIMITED for creation */
+  if (strcasestr(detector.format, "list")) fulldims[0] = NX_UNLIMITED;
+
+  /* create the data set in NXdata group */
+  NXMDisableErrorReporting(); /* inactivate NeXus error messages, as creation may fail */
+  ret = NXcompmakedata64(f, part, NX_FLOAT64, detector.rank, fulldims, NX_COMPRESSION, dims);
+  if (ret != NX_OK) {
+    /* failed: data set already exists */
+    int datatype=0;
+    int rank=0;
+    exists=1;
+    /* inquire current size of data set (nb of events stored) */
+    NXopendata(f, part);
+    NXgetinfo64(f, &rank, current_dims, &datatype);
+    NXclosedata(f);
+  }
+  NXMEnableErrorReporting();  /* re-enable NeXus error messages */
+
+  /* open the data set */
+  if (NXopendata(f, part) == NX_ERROR) {
+    fprintf(stderr, "Warning: could not open DataSet %s '%s' (NeXus)\n",
+      part, detector.title);
+    return(NX_ERROR);
+  }
+  if (strcasestr(detector.format, "list")) {
+    current_dims[1] = current_dims[2] = 0; /* set starting location for writing slab */
+    NXputslab64(f, data, current_dims, dims);
+    if (!exists)
+      printf("Events:   \"%s\"\n",
+        strlen(detector.filename) ? detector.filename : detector.component);
+    else
+      printf("Append:   \"%s\"\n",
+	     strlen(detector.filename) ? detector.filename : detector.component);
+  } else {
+    NXputdata (f, data);
+  }
+
+  if (strstr(part,"data") || strstr(part, "events")) {
+    NXputattr(f, "signal", &signal, 1, NX_INT32);
+    nxprintattr(f, "short_name", strlen(detector.filename) ?
+      detector.filename : detector.component);
+  }
+  nxprintattr(f, "long_name", "%s '%s'", part, detector.title);
+  NXclosedata(f);
+
+  return(NX_OK);
+} /* mcdetector_out_array_nexus */
+
+/*******************************************************************************
+* mcdetector_out_data_nexus: write detector axes+data into current NXdata
+*   The data:NXdetector is opened, then filename:NXdata
+*   requires: NXentry to be opened
+*******************************************************************************/
+int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
+{
+  char data_name[CHAR_BUF_LENGTH];
+
+  if (!f || !detector.m || mcdisable_output_files) return(NX_OK);
+
+  strcpy_valid(data_name,
+    strlen(detector.filename) ?
+      detector.filename : detector.component);
+  NXlink pLink;
+  /* the NXdetector group has been created in mcinfo_out_nexus (siminfo_init) */
+  if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+    if (NXopengroup(f, "components", "NXdata") == NX_OK) {
+      if (NXopengroup(f, detector.nexuscomp, "NXdata") == NX_OK) {
+	if (NXopengroup(f, "output", "NXdetector") == NX_OK) {
+
+	  /* the NXdata group has been created in mcdatainfo_out_nexus */
+	  if (NXopengroup(f, data_name, "NXdata") == NX_OK) {
+	    
+	    MPI_MASTER(
+		       nxprintattr(f, "options",
+				   strlen(detector.options) ? detector.options : "None");
+		       );
+	    /* write axes, for histogram data sets, not for lists */
+	    if (!strcasestr(detector.format, "list")) {
+	      mcdetector_out_axis_nexus(f, detector.xlabel, detector.xvar,
+					1, detector.m, detector.xmin, detector.xmax);
+	      mcdetector_out_axis_nexus(f, detector.ylabel, detector.yvar,
+					2, detector.n, detector.ymin, detector.ymax);
+	      mcdetector_out_axis_nexus(f, detector.zlabel, detector.zvar,
+					3, detector.p, detector.zmin, detector.zmax); 
+	    } else {
+	      	    MPI_MASTER(
+			       nxprintattr(f, "dataset columns",
+					   strlen(detector.ylabel) ? detector.ylabel : "None");
+		    );
+	    }
+
+	    /* write the actual data (appended if already exists) */
+	    if (!strcasestr(detector.format, "list") && !strcasestr(detector.format, "pixels")) {
+	      mcdetector_out_array_nexus(f, "data", detector.p1, detector);
+	      mcdetector_out_array_nexus(f, "errors", detector.p2, detector);
+	      mcdetector_out_array_nexus(f, "ncount", detector.p0, detector);
+	    } else if (strcasestr(detector.format, "pixels")) {
+	      mcdetector_out_array_nexus(  f, "pixels", detector.p1, detector);
+	    } else {
+	      mcdetector_out_array_nexus(  f, "events", detector.p1, detector);
+	    }
+	    NXclosegroup(f);
+	    NXopengroup(f, data_name, "NXdata");
+	    NXgetgroupID(nxhandle, &pLink);
+	    NXclosegroup(f);
+	  } /* NXdata data_name*/
+	  NXclosegroup(f);
+	} /* NXdetector output */
+	NXclosegroup(f);
+      } /* NXdata detector.nexuscomp */
+      NXclosegroup(f);
+    } /* NXdata components */
+    NXclosegroup(f);
+  } /* NXdata instrument */
+  
+  if (!strcasestr(detector.format, "pixels")) {
+    if (NXopengroup(f, "data", "NXdetector") == NX_OK) {
+      NXmakelink(nxhandle, &pLink);
+      NXclosegroup(f);
+    }
+  }
+  return(NX_OK);
+} /* mcdetector_out_array_nexus */
+
+
+MCDETECTOR mcdetector_out_0D_nexus(MCDETECTOR detector)
+{
+  /* Write data set information to NeXus file. */
+  MPI_MASTER(
+    mcdatainfo_out_nexus(nxhandle, detector);
+  );
+
+  return(detector);
+} /* mcdetector_out_0D_ascii */
+
+MCDETECTOR mcdetector_out_1D_nexus(MCDETECTOR detector)
+{
+  MPI_MASTER(
+  mcdatainfo_out_nexus(nxhandle, detector);
+  mcdetector_out_data_nexus(nxhandle, detector);
+  );
+  return(detector);
+} /* mcdetector_out_1D_ascii */
+
+MCDETECTOR mcdetector_out_2D_nexus(MCDETECTOR detector)
+{
+  MPI_MASTER(
+  mcdatainfo_out_nexus(nxhandle, detector);
+  mcdetector_out_data_nexus(nxhandle, detector);
+  );
+
+
+  return(detector);
+} /* mcdetector_out_2D_nexus */
+
+MCDETECTOR mcdetector_out_3D_nexus(MCDETECTOR detector)
+{
+  printf("Received detector from %s\n",detector.component);
+  MPI_MASTER(
+  mcdatainfo_out_nexus(nxhandle, detector);
+  mcdetector_out_data_nexus(nxhandle, detector);
+  );
+  return(detector);
+} /* mcdetector_out_3D_nexus */
+
+
+#endif /* USE_NEXUS*/
+
+
+
+
+
+
+
+
+/* ========================================================================== */
+
+/*                            Main input functions                            */
+/*            DETECTOR_OUT_xD function calls -> ascii or NeXus                */
+
+/* ========================================================================== */
+
+/*******************************************************************************
+* siminfo_init:   open SIM and write header
+*******************************************************************************/
+FILE *siminfo_init(FILE *f)
+{
+  int exists=0;
+
+  /* check format */
+  if (!mcformat || !strlen(mcformat)
+   || !strcasecmp(mcformat, "MCSTAS") || !strcasecmp(mcformat, "MCXTRACE")
+   || !strcasecmp(mcformat, "PGPLOT") || !strcasecmp(mcformat, "GNUPLOT") || !strcasecmp(mcformat, "MCCODE")
+   || !strcasecmp(mcformat, "MATLAB")) {
+    mcformat="McCode";
+#ifdef USE_NEXUS
+  } else if (strcasestr(mcformat, "NeXus")) {
+    /* Do nothing */
+#endif
+  } else {
+    fprintf(stderr,
+	    "Warning: You have requested the output format %s which is unsupported by this binary. Resetting to standard %s format.\n",mcformat ,"McCode");
+    mcformat="McCode";
+  }
+
+  /* open the SIM file if not defined yet */
+  if (siminfo_file || mcdisable_output_files)
+    return (siminfo_file);
+
+#ifdef USE_NEXUS
+  /* only master writes NeXus header: calls NXopen(nxhandle) */
+  if (mcformat && strcasestr(mcformat, "NeXus")) {
+	  MPI_MASTER(
+	  siminfo_file = mcnew_file(siminfo_name, "h5", &exists);
+    if(!siminfo_file)
+      fprintf(stderr,
+	      "Warning: could not open simulation description file '%s'\n",
+	      siminfo_name);
+	  else
+	    mcinfo_out_nexus(nxhandle);
+	  );
+    return(siminfo_file); /* points to nxhandle */
+  }
+#endif
+
+  /* write main description file (only MASTER) */
+  MPI_MASTER(
+
+  siminfo_file = mcnew_file(siminfo_name, "sim", &exists);
+  if(!siminfo_file)
+    fprintf(stderr,
+	    "Warning: could not open simulation description file '%s'\n",
+	    siminfo_name);
+  else
+  {
+    /* write SIM header */
+    time_t t=time(NULL);
+    siminfo_out("%s simulation description file for %s.\n",
+      MCCODE_NAME, instrument_name);
+    siminfo_out("Date:    %s", ctime(&t)); /* includes \n */
+    siminfo_out("Program: %s\n\n", MCCODE_STRING);
+
+    siminfo_out("begin instrument: %s\n", instrument_name);
+    mcinfo_out(   "  ", siminfo_file);
+    siminfo_out("end instrument\n");
+
+    siminfo_out("\nbegin simulation: %s\n", dirname);
+    mcruninfo_out("  ", siminfo_file);
+    siminfo_out("end simulation\n");
+
+  }
+  ); /* MPI_MASTER */
+  return (siminfo_file);
+
+} /* siminfo_init */
+
+#if defined(USE_MPI) && defined(USE_NEXUS)
+static void mclist_vds_write(void);
+#endif
+
+/*******************************************************************************
+*   siminfo_close:  close SIM
+*******************************************************************************/
+void siminfo_close()
+{
+#ifdef USE_MPI
+  if(mpi_node_rank == mpi_node_root) {
+#endif
+  if(siminfo_file && !mcdisable_output_files) {
+#ifdef USE_NEXUS
+    if (mcformat && strcasestr(mcformat, "NeXus")) {
+      time_t t=time(NULL);
+      nxprintf(nxhandle, "end_time", ctime(&t));
+      nxprintf(nxhandle, "duration", "%li", (long)t-mcstartdate);
+      NXclosegroup(nxhandle); /* NXentry */
+      NXclose(&nxhandle);
+#ifdef USE_MPI
+      mclist_vds_write(); /* event lists from all nodes, needs NXclose */
+#endif
+    } else {
+#endif
+      fclose(siminfo_file);
+#ifdef USE_NEXUS
+    }
+#endif
+#ifdef USE_MPI
+  }
+#endif
+    siminfo_file = NULL;
+  }
+} /* siminfo_close */
+
+/*******************************************************************************
+* mcdetector_out_0D: wrapper for 0D (single value).
+*   Output single detector/monitor data (p0, p1, p2).
+*   Title is t, component name is c.
+*******************************************************************************/
+MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
+			     char *c, Coords posa, Rotation rota, int index)
+{
+  /* import and perform basic detector analysis (and handle MPI reduce) */
+  MCDETECTOR detector = detector_import(mcformat,
+    c, (t ? t : MCCODE_STRING " data"),
+    1, 1, 1,
+    "I", "", "",
+    "I", "", "",
+    0, 0, 0, 0, 0, 0, c,
+    &p0, &p1, &p2, posa, rota, index); /* write Detector: line */
+
+#ifdef USE_NEXUS
+  if (strcasestr(detector.format, "NeXus"))
+    return(mcdetector_out_0D_nexus(detector));
+  else
+#endif
+    return(mcdetector_out_0D_ascii(detector));
+
+} /* mcdetector_out_0D */
+
+
+
+/*******************************************************************************
+* mcdetector_out_1D: wrapper for 1D.
+*   Output 1d detector data (p0, p1, p2) for n bins linearly
+*   distributed across the range x1..x2 (x1 is lower limit of first
+*   bin, x2 is upper limit of last bin). Title is t, axis labels are xl
+*   and yl. File name is f, component name is c.
+*
+*   t:    title
+*   xl:   x-label
+*   yl:   y-label
+*   xvar: measured variable length
+*   x1:   x axus min
+*   x2:   x axis max
+*   n:    1d data vector lenght
+*   p0:   pntr to start of data block#0
+*   p1:   pntr to start of data block#1
+*   p2:   pntr to start of data block#2
+*   f:    filename
+*
+*   Not included in the macro, and here forwarded to detector_import:
+*   c:    ?
+*   posa: ?
+*******************************************************************************/
+MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
+        char *xvar, double x1, double x2,
+        long n,
+        double *p0, double *p1, double *p2, char *f,
+        char *c, Coords posa, Rotation rota, int index)
+{
+  /* import and perform basic detector analysis (and handle MPI_Reduce) */
+  // detector_import calls mcdetector_statistics, which will return different
+  // MCDETECTOR versions for 1-D data based on the value of mcformat.
+  //
+  MCDETECTOR detector = detector_import(mcformat,
+    c, (t ? t : MCCODE_STRING " 1D data"),
+    n, 1, 1,
+    xl, yl, (n > 1 ? "Signal per bin" : " Signal"),
+    xvar, "(I,I_err)", "I",
+    x1, x2, 0, 0, 0, 0, f,
+    p0, p1, p2, posa, rota, index); /* write Detector: line */
+  if (!detector.p1 || !detector.m) return(detector);
+
+#ifdef USE_NEXUS
+  if (strcasestr(detector.format, "NeXus"))
+    detector = mcdetector_out_1D_nexus(detector);
+  else
+#endif
+    detector = mcdetector_out_1D_ascii(detector);
+  if (detector.p1 != p1 && detector.p1) {
+    // mcdetector_statistics allocated memory but it hasn't been freed.
+    free(detector.p1);
+    // plus undo the other damage done there:
+    detector.p0 = p0; // was set to NULL
+    detector.p1 = p1; // was set to this_p1
+    detector.p2 = p2; // was set to NULL
+    detector.m = detector.n; // (e.g., labs(n))
+    detector.n = 1;  // not (n x n)
+    detector.istransposed = n < 0 ? 1 : 0;
+  }
+  return detector;
+
+} /* mcdetector_out_1D */
+
+/*******************************************************************************
+* mcdetector_out_2D: wrapper for 2D.
+*   Special case for list: master creates file first, then slaves append their
+*   blocks without header-
+*
+*   t:    title
+*   xl:   x-label
+*   yl:   y-label
+*   x1:   x axus min
+*   x2:   x axis max
+*   y1:   y axis min
+*   y2:   y axis max
+*   m:    dim 1 (x) size
+*   n:    dim 2 (y) size
+*   p0:   pntr to start of data block#0
+*   p1:   pntr to start of data block#1
+*   p2:   pntr to start of data block#2
+*   f:    filename
+*
+*   Not included in the macro, and here forwarded to detector_import:
+*   c:    ?
+*   posa: ?
+*   rota: ?
+*******************************************************************************/
+MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
+                  double x1, double x2, double y1, double y2,
+                  long m, long n,
+                  double *p0, double *p1, double *p2, char *f,
+		  char *c, Coords posa, Rotation rota, int index)
+{
+  char xvar[CHAR_BUF_LENGTH];
+  char yvar[CHAR_BUF_LENGTH];
+
+  /* create short axes labels */
+  if (xl && strlen(xl)) { strncpy(xvar, xl, CHAR_BUF_LENGTH); xvar[2]='\0'; }
+  else strcpy(xvar, "x");
+  if (yl && strlen(yl)) { strncpy(yvar, yl, CHAR_BUF_LENGTH); yvar[2]='\0'; }
+  else strcpy(yvar, "y");
+
+  MCDETECTOR detector;
+
+  /* import and perform basic detector analysis (and handle MPI_Reduce) */
+  if (labs(m) == 1) {/* n>1 on Y, m==1 on X: 1D, no X axis*/
+    detector = detector_import(mcformat,
+      c, (t ? t : MCCODE_STRING " 1D data"),
+      n, 1, 1,
+      yl, "", "Signal per bin",
+      yvar, "(I,Ierr)", "I",
+      y1, y2, x1, x2, 0, 0, f,
+      p0, p1, p2, posa, rota, index); /* write Detector: line */
+  } else if (labs(n)==1) {/* m>1 on X, n==1 on Y: 1D, no Y axis*/
+    detector = detector_import(mcformat,
+      c, (t ? t : MCCODE_STRING " 1D data"),
+      m, 1, 1,
+      xl, "", "Signal per bin",
+      xvar, "(I,Ierr)", "I",
+      x1, x2, y1, y2, 0, 0, f,
+      p0, p1, p2, posa, rota, index); /* write Detector: line */
+  }else {
+    detector = detector_import(mcformat,
+      c, (t ? t : MCCODE_STRING " 2D data"),
+      m, n, 1,
+      xl, yl, "Signal per bin",
+      xvar, yvar, "I",
+      x1, x2, y1, y2, 0, 0, f,
+      p0, p1, p2, posa, rota, index); /* write Detector: line */
+  }
+
+  if (!detector.p1 || !detector.m) return(detector);
+
+#ifdef USE_NEXUS
+  if (strcasestr(detector.format, "NeXus"))
+    return(mcdetector_out_2D_nexus(detector));
+  else
+#endif
+    return(mcdetector_out_2D_ascii(detector));
+
+} /* mcdetector_out_2D */
+
+/*******************************************************************************
+* mcdetector_list_import: build the MCDETECTOR structure for a 2D_list call
+*   (no MPI communication for event lists, histograms are MPI_Reduce'd as usual)
+*******************************************************************************/
+static MCDETECTOR mcdetector_list_import(char *t, char *xl, char *yl,
+                  double x1, double x2, double y1, double y2,
+                  long m, long n,
+                  double *p0, double *p1, double *p2, char *f,
+                  char *c, Coords posa, Rotation rota, char* options, int index)
+{
+  char xvar[CHAR_BUF_LENGTH];
+  char yvar[CHAR_BUF_LENGTH];
+  int  islist = (mcformat && strcasestr(mcformat, "list") != NULL);
+
+  /* create short axes labels */
+  if (xl && strlen(xl)) { strncpy(xvar, xl, CHAR_BUF_LENGTH); xvar[2]='\0'; }
+  else strcpy(xvar, "x");
+  if (yl && strlen(yl)) { strncpy(yvar, yl, CHAR_BUF_LENGTH); yvar[2]='\0'; }
+  else strcpy(yvar, "y");
+
+  MCDETECTOR detector;
+
+  /* import and perform basic detector analysis (and handle MPI_Reduce) */
+  if (!islist && labs(m) == 1) {/* n>1 on Y, m==1 on X: 1D, no X axis*/
+    detector = detector_import(mcformat,
+      c, (t ? t : MCCODE_STRING " 1D data"),
+      n, 1, 1,
+      yl, "", "Signal per bin",
+      yvar, "(I,Ierr)", "I",
+      y1, y2, x1, x2, 0, 0, f,
+      p0, p1, p2, posa, rota, index); /* write Detector: line */
+  } else if (!islist && labs(n)==1) {/* m>1 on X, n==1 on Y: 1D, no Y axis*/
+    detector = detector_import(mcformat,
+      c, (t ? t : MCCODE_STRING " 1D data"),
+      m, 1, 1,
+      xl, "", "Signal per bin",
+      xvar, "(I,Ierr)", "I",
+      x1, x2, y1, y2, 0, 0, f,
+      p0, p1, p2, posa, rota, index); /* write Detector: line */
+  }else {
+    detector = detector_import(mcformat,
+      c, (t ? t : MCCODE_STRING " 2D data"),
+      m, n, 1,
+      xl, yl, "Signal per bin",
+      xvar, yvar, "I",
+      x1, x2, y1, y2, 0, 0, f,
+     p0, p1, p2, posa, rota, index); /* write Detector: line */
+  }
+
+  if (options && strlen(options)) {
+    strncpy(detector.options, options, CHAR_BUF_LENGTH-1);
+    detector.options[CHAR_BUF_LENGTH-1] = '\0';
+  } else {
+    strcpy(detector.options,"None");
+  }
+
+
+  return(detector);
+} /* mcdetector_list_import */
+
+/*******************************************************************************
+* mcdetector_list_write: write one imported block (local, no MPI communication).
+*   append_raw=0: full write (NeXus data info + data, or ASCII header/# Data + rows)
+*   append_raw=1: continuation block, rows are appended to the existing data set
+*******************************************************************************/
+static void mcdetector_list_write(MCDETECTOR detector, int append_raw)
+{
+  if (!detector.p1 || !detector.m || mcdisable_output_files) return;
+
+#ifdef USE_NEXUS
+  if (strcasestr(detector.format, "NeXus")) {
+    if (!append_raw) mcdatainfo_out_nexus(nxhandle, detector);
+    mcdetector_out_data_nexus(nxhandle, detector);
+    return;
+  }
+#endif
+  if (!append_raw) {
+    mcdetector_out_2D_ascii(detector);
+  } else {
+    int   exists  = 0;
+    FILE *outfile = mcnew_file(detector.filename, "dat", &exists);
+    if (outfile) {
+      mcdetector_out_array_ascii(detector.m, detector.n*detector.p, detector.p1,
+        outfile, detector.istransposed);
+      fclose(outfile);
+    }
+  }
+} /* mcdetector_list_write */
+
+#ifdef USE_MPI
+/*******************************************************************************
+* MPI event-list output
+*
+*   Event lists are concatenated on the master node, which is the only writer.
+*
+*   During the final save (mcsave_final=1, set by mccode_main before finally())
+*   every node executes the same SAVE sequence, so the exchange is collective:
+*   the number of blocks per node is gathered first, hence nodes without any
+*   event still take part, and the master receives exactly what is announced.
+*
+*   Any other call (a list buffer flushed during TRACE, e.g. Monitor_nD
+*   'list all', or a signal-triggered save) happens at a different time on each
+*   node and must not communicate: the master writes its block directly, the
+*   other nodes append theirs to a local spool file which is sent to the master
+*   during the final save and then removed.
+*
+*   NeXus is different: event lists are neither sent nor copied. Every node,
+*   the master included, appends its blocks to its own HDF5 file
+*   dirname/mccode_node<rank>.h5 (compressed as set by NX_COMPRESSION). The final save only
+*   gathers the row counts, and the master writes the 'events' data set of
+*   mccode.h5 as an HDF5 virtual data set (VDS) concatenating the nodes in rank
+*   order (see mclist_vds_write). The mccode_node*.h5 files are part of the
+*   result; 'h5repack -l CONTI' makes a self-contained copy.
+*******************************************************************************/
+#ifdef USE_NEXUS
+#include <hdf5.h>
+
+/* one VDS to create in mccode.h5 after NXclose (master only) */
+struct mclist_vds {
+  char       path[4*CHAR_BUF_LENGTH]; /* /entry/.../events in mccode.h5 */
+  char       dset[2*CHAR_BUF_LENGTH]; /* data set in the mccode_node*.h5 files */
+  char       short_name[CHAR_BUF_LENGTH];
+  char       long_name[2*CHAR_BUF_LENGTH];
+  long long  cols;
+  long long *rows;                    /* per node */
+  struct mclist_vds *next;
+};
+static struct mclist_vds *mclist_vds_list = NULL;
+static int mclist_node_file_created = 0;
+
+/* name of the event data set of a list monitor in the per-node files */
+static void mclist_node_dset(char *dset, char *f, char *c, int index)
+{
+  char valid[CHAR_BUF_LENGTH+1];
+  if (!strcpy_valid(valid, (f && strlen(f)) ? f : c)) strcpy(valid, "list");
+  snprintf(dset, 2*CHAR_BUF_LENGTH, "list%d_%s", index, valid);
+}
+
+/* string attribute on an HDF5 object */
+static void mclist_vds_attr(hid_t obj, char *name, char *value)
+{
+  hid_t type  = H5Tcopy(H5T_C_S1);
+  hid_t space = H5Screate(H5S_SCALAR);
+  hid_t attr;
+  H5Tset_size(type, strlen(value) ? strlen(value) : 1);
+  attr = H5Acreate2(obj, name, type, space, H5P_DEFAULT, H5P_DEFAULT);
+  if (attr >= 0) { H5Awrite(attr, type, value); H5Aclose(attr); }
+  H5Sclose(space);
+  H5Tclose(type);
+}
+
+/* append rows*cols values to data set dset of this node's file (created,
+   truncated, on the first append of the run). nxpath is where the events go
+   in mccode.h5, below the NXentry (stored as attribute 'mccode_path', for
+   nexus_vds.py). Returns the number of rows now in the data set (0 if none),
+   or -1 on error. No MPI communication. */
+static long long mclist_node_append(char *dset, char *nxpath, long long rows, long long cols, double *data)
+{
+  char      name[CHAR_BUF_LENGTH];
+  char     *file;
+  hid_t     fid, did = -1, space;
+  hsize_t   dims[2] = {0, 0};
+  long long total = -1;
+
+  snprintf(name, sizeof(name), "mccode_node%d", mpi_node_rank);
+  if (!rows && !mclist_node_file_created) {
+    /* nothing yet: only make sure no file of an earlier run is left over */
+    static int checked = 0;
+    if (!checked) { file = mcfull_file(name, "h5"); remove(file); free(file); checked = 1; }
+    return(0);
+  }
+
+  file = mcfull_file(name, "h5");
+  if (!mclist_node_file_created) {
+    fid = H5Fcreate(file, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    if (fid >= 0) mclist_node_file_created = 1;
+  } else
+    fid = H5Fopen(file, H5F_ACC_RDWR, H5P_DEFAULT);
+  if (fid < 0) {
+    fprintf(stderr, "Error: [MPI node %i] could not open '%s' to store %lli events (mclist_node_append)\n",
+      mpi_node_rank, file, rows);
+    free(file);
+    return(-1);
+  }
+
+  if (H5Lexists(fid, dset, H5P_DEFAULT) > 0) {
+    did = H5Dopen2(fid, dset, H5P_DEFAULT);
+    if (did >= 0) {
+      space = H5Dget_space(did);
+      H5Sget_simple_extent_dims(space, dims, NULL);
+      H5Sclose(space);
+    }
+  } else if (rows && cols) {
+    /* 2D, chunked (~1 MB), unlimited along events, deflate as NX_COMPRESSION */
+    hsize_t maxdims[2] = {H5S_UNLIMITED, cols};
+    hsize_t chunk[2]   = {cols < 131072 ? 131072/cols : 1, cols};
+    hid_t   plist      = H5Pcreate(H5P_DATASET_CREATE);
+    dims[1] = cols;
+    space   = H5Screate_simple(2, dims, maxdims);
+    H5Pset_chunk(plist, 2, chunk);
+    int     level      = NX_COMPRESSION == NX_COMP_LZW ? 6 /* NAPI default */
+                       : NX_COMPRESSION/100 == NX_COMP_LZW ? NX_COMPRESSION%100 : -1;
+    if (level >= 0 && H5Zfilter_avail(H5Z_FILTER_DEFLATE) > 0) {
+      H5Pset_shuffle(plist);
+      H5Pset_deflate(plist, level);
+    }
+    did = H5Dcreate2(fid, dset, H5T_NATIVE_DOUBLE, space, H5P_DEFAULT, plist, H5P_DEFAULT);
+    if (did >= 0) mclist_vds_attr(did, "mccode_path", nxpath);
+    H5Sclose(space);
+    H5Pclose(plist);
+  } else { /* no data set and nothing to add */
+    H5Fclose(fid);
+    free(file);
+    return(0);
+  }
+
+  if (did >= 0) {
+    total = (long long)dims[0];
+    if (rows && dims[1] != (hsize_t)cols)
+      fprintf(stderr, "Error: [MPI node %i] %lli events of %lli columns can not be appended to %llu columns in '%s' (mclist_node_append)\n",
+        mpi_node_rank, rows, cols, (unsigned long long)dims[1], file);
+    else if (rows) {
+      hsize_t start[2] = {dims[0], 0}, count[2] = {rows, cols};
+      hid_t   mspace   = H5Screate_simple(2, count, NULL);
+      dims[0] += rows;
+      if (H5Dset_extent(did, dims) >= 0
+       && (space = H5Dget_space(did)) >= 0) {
+        H5Sselect_hyperslab(space, H5S_SELECT_SET, start, NULL, count, NULL);
+        if (H5Dwrite(did, H5T_NATIVE_DOUBLE, mspace, space, H5P_DEFAULT, data) >= 0)
+          total = (long long)dims[0];
+        H5Sclose(space);
+      }
+      H5Sclose(mspace);
+      if (total != (long long)dims[0])
+        fprintf(stderr, "Error: [MPI node %i] could not write %lli events to '%s' (mclist_node_append)\n",
+          mpi_node_rank, rows, file);
+    }
+    H5Dclose(did);
+  }
+  H5Fflush(fid, H5F_SCOPE_LOCAL);
+  H5Fclose(fid);
+  free(file);
+  return(total);
+} /* mclist_node_append */
+
+/* master, on a terminating signal: an interrupted run makes no collective call,
+   so event lists stay in the per-node files without VDS in mccode.h5 */
+static void mclist_interrupt_note(void)
+{
+  char *dir = dirname && strlen(dirname) ? dirname : ".";
+  if (mpi_node_count < 2 || mpi_node_rank != mpi_node_root
+   || !mcformat || !strcasestr(mcformat, "NeXus") || mcdisable_output_files) return;
+  fprintf(stderr, "Warning: interrupted MPI run: event lists (if any) stay in %s%smccode_node*.h5, not linked from mccode.h5. "
+    "Link them with: python3 \"$(%s --showcfg=tooldir)/Python/mccodelib/nexus_vds.py\" %s\n",
+    dir, MC_PATHSEP_S, strcmp(MCCODE_NAME, "mcxtrace") ? "mcrun" : "mxrun", dir);
+}
+
+/* master, after NXclose: create the VDS registered by mcdetector_out_list_nexus_mpi */
+static void mclist_vds_write(void)
+{
+  char  *file;
+  hid_t  fid;
+  if (!mclist_vds_list) return;
+
+  file = mcfull_file(siminfo_name, "h5");
+  fid  = H5Fopen(file, H5F_ACC_RDWR, H5P_DEFAULT);
+  if (fid < 0)
+    fprintf(stderr, "Error: could not reopen '%s' to add event lists (mclist_vds_write)\n", file);
+
+  while (mclist_vds_list) {
+    struct mclist_vds *v = mclist_vds_list;
+    if (fid >= 0) {
+      long long total = 0;
+      hsize_t   off = 0, vdims[2];
+      hid_t     vspace, plist, did;
+      int       node_i, signal = 1;
+      for (node_i = 0; node_i < mpi_node_count; node_i++) total += v->rows[node_i];
+      vdims[0] = total; vdims[1] = v->cols;
+      vspace = H5Screate_simple(2, vdims, NULL);
+      plist  = H5Pcreate(H5P_DATASET_CREATE);
+      /* nodes in rank order, empty nodes left out. Relative source file names:
+         resolved from the directory of mccode.h5 */
+      for (node_i = 0; node_i < mpi_node_count; node_i++) {
+        char    src[CHAR_BUF_LENGTH];
+        hsize_t start[2] = {off, 0}, count[2] = {v->rows[node_i], v->cols};
+        hid_t   sspace;
+        if (!v->rows[node_i]) continue;
+        sspace = H5Screate_simple(2, count, NULL);
+        H5Sselect_hyperslab(vspace, H5S_SELECT_SET, start, NULL, count, NULL);
+        snprintf(src, sizeof(src), "mccode_node%d.h5", node_i);
+        H5Pset_virtual(plist, vspace, src, v->dset, sspace);
+        H5Sclose(sspace);
+        off += v->rows[node_i];
+      }
+      H5Sselect_all(vspace);
+      did = H5Dcreate2(fid, v->path, H5T_NATIVE_DOUBLE, vspace, H5P_DEFAULT, plist, H5P_DEFAULT);
+      if (did >= 0) {
+        hid_t ascalar = H5Screate(H5S_SCALAR);
+        hid_t attr    = H5Acreate2(did, "signal", H5T_NATIVE_INT, ascalar, H5P_DEFAULT, H5P_DEFAULT);
+        if (attr >= 0) { H5Awrite(attr, H5T_NATIVE_INT, &signal); H5Aclose(attr); }
+        H5Sclose(ascalar);
+        mclist_vds_attr(did, "short_name", v->short_name);
+        mclist_vds_attr(did, "long_name",  v->long_name);
+        H5Dclose(did);
+        printf("Events:   \"%s\" (%lli events from %i nodes, in mccode_node*.h5)\n",
+          v->short_name, total, mpi_node_count);
+      } else
+        fprintf(stderr, "Error: could not create event list '%s' in '%s' (mclist_vds_write)\n", v->path, file);
+      H5Pclose(plist);
+      H5Sclose(vspace);
+    }
+    mclist_vds_list = v->next;
+    free(v->rows);
+    free(v);
+  }
+  if (fid >= 0) H5Fclose(fid);
+  free(file);
+} /* mclist_vds_write */
+
+static MCDETECTOR mcdetector_out_list_nexus_mpi(char *t, char *xl, char *yl,
+                  double x1, double x2, double y1, double y2,
+                  long m, long n,
+                  double *p0, double *p1, double *p2, char *f,
+                  char *c, Coords posa, Rotation rota, char* options, int index,
+                  MCDETECTOR detector)
+{
+  long long rows = p1 ? labs(m) : 0;
+  long long cols = labs(n);
+  long long total, mine[2];
+  long long *counts = NULL;
+  char      dset[2*CHAR_BUF_LENGTH];
+  char      nxpath[4*CHAR_BUF_LENGTH] = "";
+
+  mclist_node_dset(dset, f, c, index);
+  if (rows && cols) { /* detector is valid: where the events go in mccode.h5 */
+    char data_name[CHAR_BUF_LENGTH];
+    strcpy_valid(data_name, strlen(detector.filename) ? detector.filename : detector.component);
+    snprintf(nxpath, sizeof(nxpath), "instrument/components/%s/output/%s/events",
+      detector.nexuscomp, data_name);
+  }
+  total = mclist_node_append(dset, nxpath, rows && cols ? rows : 0, cols, p1);
+  if (!mcsave_final) return(detector);
+
+  /* final save: collective, only the row counts are sent */
+  mine[0] = total > 0 ? total : 0;
+  mine[1] = total > 0 ? cols  : 0;
+  if (mpi_node_rank == mpi_node_root)
+    counts = (long long *)calloc(2*mpi_node_count, sizeof(long long));
+  MPI_Gather(mine, 2, MPI_LONG_LONG, counts, 2, MPI_LONG_LONG,
+    mpi_node_root, MPI_COMM_WORLD);
+
+  if (mpi_node_rank == mpi_node_root) {
+    long long all = 0, allcols = 0;
+    int node_i;
+    for (node_i = 0; node_i < mpi_node_count; node_i++) {
+      if (!counts[2*node_i]) continue;
+      if (!allcols) allcols = counts[2*node_i+1];
+      if (counts[2*node_i+1] != allcols) {
+        fprintf(stderr, "Warning: MPI node %i has %lli columns for %s, expected %lli. Its %lli events are left out.\n",
+          node_i, counts[2*node_i+1], c, allcols, counts[2*node_i]);
+        counts[2*node_i] = 0;
+      }
+      all += counts[2*node_i];
+    }
+    if (all) {
+      /* data set info (attributes) for all events; the data set itself is
+         a VDS written by mclist_vds_write after NXclose */
+      double dummy = 0;
+      char   data_name[CHAR_BUF_LENGTH];
+      struct mclist_vds *v = (struct mclist_vds *)calloc(1, sizeof(struct mclist_vds));
+      MCDETECTOR info = mcdetector_list_import(t, xl, yl, x1, x2, y1, y2, (long)all, (long)allcols,
+        NULL, &dummy, NULL, f, c, posa, rota, options, index);
+      info.p1 = NULL; /* attributes and links only */
+      mcdatainfo_out_nexus(nxhandle, info);
+      mcdetector_out_data_nexus(nxhandle, info);
+      if (!v || !(v->rows = (long long *)calloc(mpi_node_count, sizeof(long long))))
+        exit(-fprintf(stderr, "Error: Out of memory (mcdetector_out_list_nexus_mpi)\n"));
+      strcpy_valid(data_name, strlen(info.filename) ? info.filename : info.component);
+      snprintf(v->path, sizeof(v->path), "/%s/instrument/components/%s/output/%s/events",
+        mcnxentry, info.nexuscomp, data_name);
+      strcpy(v->dset, dset);
+      snprintf(v->short_name, sizeof(v->short_name), "%s",
+        strlen(info.filename) ? info.filename : info.component);
+      snprintf(v->long_name, sizeof(v->long_name), "events '%s'", info.title);
+      v->cols = allcols;
+      for (node_i = 0; node_i < mpi_node_count; node_i++) v->rows[node_i] = counts[2*node_i];
+      v->next = mclist_vds_list;
+      mclist_vds_list = v;
+    }
+    free(counts);
+  }
+  return(detector);
+} /* mcdetector_out_list_nexus_mpi */
+#endif /* USE_NEXUS */
+
+static char *mclist_spool_name(char *f, char *c, int index, int node)
+{
+  char valid[CHAR_BUF_LENGTH+1];
+  char name[2*CHAR_BUF_LENGTH];
+
+  if (!strcpy_valid(valid, (f && strlen(f)) ? f : c)) strcpy(valid, "list");
+  snprintf(name, sizeof(name), "mcspool_%d_%s_node%d", index, valid, node);
+  return(mcfull_file(name, "tmp")); /* dirname/name.tmp, to be freed */
+}
+
+/* number of complete blocks in a spool file; the file is rewound.
+   Sequential reads only (no fseek/ftell), so spool files may exceed 2 GB. */
+static long long mclist_spool_blocks(FILE *sp)
+{
+  long long blocks = 0, hdr[2];
+  double    scratch[4096];
+  if (!sp) return(0);
+  rewind(sp);
+  while (fread(hdr, sizeof(hdr), 1, sp) == 1) {
+    long long count = llabs(hdr[0])*llabs(hdr[1]);
+    while (count > 0) {
+      size_t chunk = count > 4096 ? 4096 : (size_t)count;
+      if (fread(scratch, sizeof(double), chunk, sp) != chunk) break;
+      count -= chunk;
+    }
+    if (count) break; /* incomplete last block: ignored */
+    blocks++;
+  }
+  rewind(sp);
+  return(blocks);
+}
+
+static MCDETECTOR mcdetector_out_list_mpi(char *t, char *xl, char *yl,
+                  double x1, double x2, double y1, double y2,
+                  long m, long n,
+                  double *p0, double *p1, double *p2, char *f,
+                  char *c, Coords posa, Rotation rota, char* options, int index)
+{
+  long long rows = p1 ? labs(m) : 0;
+  long long cols = labs(n);
+  MCDETECTOR detector;
+
+  /* local block: no MPI communication is done for lists in detector_import */
+  detector = mcdetector_list_import(t, xl, yl, x1, x2, y1, y2, m, n,
+    p0, p1, p2, f, c, posa, rota, options, index);
+
+  if (mcdisable_output_files) return(detector);
+
+#ifdef USE_NEXUS
+  if (mcformat && strcasestr(mcformat, "NeXus"))
+    return(mcdetector_out_list_nexus_mpi(t, xl, yl, x1, x2, y1, y2, m, n,
+      p0, p1, p2, f, c, posa, rota, options, index, detector));
+#endif
+
+  if (!mcsave_final) {
+    /* nodes are not synchronised: write (master) or spool (others) locally */
+    if (mpi_node_rank == mpi_node_root)
+      mcdetector_list_write(detector, 0);
+    else if (rows && cols) {
+      char *spool = mclist_spool_name(f, c, index, mpi_node_rank);
+      FILE *sp    = spool ? fopen(spool, "ab") : NULL;
+      long long hdr[2] = { m, n };
+      if (!sp
+       || fwrite(hdr, sizeof(hdr), 1, sp) != 1
+       || fwrite(p1, sizeof(double), rows*cols, sp) != (size_t)(rows*cols))
+        fprintf(stderr, "Warning: [MPI node %i] could not spool %lli events of %s to '%s' (mcdetector_out_list_mpi)\n",
+          mpi_node_rank, rows, c, spool ? spool : "(null)");
+      if (sp) fclose(sp);
+      free(spool);
+    }
+    return(detector);
+  }
+
+  /* final save: collective, every node takes part whatever its number of events */
+  long long  nblocks = 0, spooled = 0;
+  long long *blocks  = NULL;
+  char      *spool   = NULL;
+  FILE      *sp      = NULL;
+
+  if (mpi_node_rank != mpi_node_root) {
+    spool = mclist_spool_name(f, c, index, mpi_node_rank);
+    if (spool) sp = fopen(spool, "rb");
+    spooled = mclist_spool_blocks(sp);
+    nblocks = spooled + (rows && cols ? 1 : 0);
+  } else
+    blocks = (long long *)calloc(mpi_node_count, sizeof(long long));
+
+  MPI_Gather(&nblocks, 1, MPI_LONG_LONG, blocks, 1, MPI_LONG_LONG,
+    mpi_node_root, MPI_COMM_WORLD);
+
+  if (mpi_node_rank != mpi_node_root) {
+    /* send spooled blocks, then the current one */
+    long long hdr[2], sent = 0;
+    while (sent < nblocks) {
+      double *buf = NULL;
+      long long count;
+      if (sent < spooled) {
+        count = 0;
+        buf   = NULL;
+        if (fread(hdr, sizeof(hdr), 1, sp) == 1) {
+          count = llabs(hdr[0])*llabs(hdr[1]);
+          buf   = (double *)malloc(count*sizeof(double));
+        }
+        if (!buf || fread(buf, sizeof(double), count, sp) != (size_t)count) {
+          fprintf(stderr, "Error: [MPI node %i] could not read spooled events from '%s' (mcdetector_out_list_mpi)\n",
+            mpi_node_rank, spool);
+          MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+      } else { /* spool exhausted: current block */
+        hdr[0] = m; hdr[1] = n; count = rows*cols;
+        buf = p1;
+      }
+      mc_MPI_Send(hdr, 2, MPI_LONG_LONG, mpi_node_root);
+      mc_MPI_Send(buf, count, MPI_DOUBLE, mpi_node_root);
+      if (buf != p1) free(buf);
+      sent++;
+    }
+    if (sp) fclose(sp);
+    if (spool) { remove(spool); free(spool); }
+  } else {
+    /* master: own block first, then the other nodes in rank order */
+    int written = 0;
+    int node_i;
+    if (rows && cols && detector.m) { mcdetector_list_write(detector, 0); written = 1; }
+    for (node_i = 0; node_i < mpi_node_count; node_i++) {
+      long long k;
+      if (node_i == mpi_node_root) continue;
+      for (k = 0; k < blocks[node_i]; k++) {
+        long long hdr[2] = {0, 0};
+        long long count;
+        double   *buf;
+        MCDETECTOR block;
+        if (mc_MPI_Recv(hdr, 2, MPI_LONG_LONG, node_i) != MPI_SUCCESS) {
+          fprintf(stderr, "Error: MPI master could not receive event list header from node %i (mcdetector_out_list_mpi)\n", node_i);
+          MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+        count = llabs(hdr[0])*llabs(hdr[1]);
+        buf   = (double *)malloc((count ? count : 1)*sizeof(double));
+        if (!buf || mc_MPI_Recv(buf, count, MPI_DOUBLE, node_i) != MPI_SUCCESS) {
+          fprintf(stderr, "Error: MPI master could not receive %lli event list values from node %i (mcdetector_out_list_mpi)\n", count, node_i);
+          MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+        if (llabs(hdr[1]) != cols)
+          fprintf(stderr, "Warning: MPI node %i sent %lli columns for %s, master has %lli. Appending anyway.\n",
+            node_i, llabs(hdr[1]), c, cols);
+        if (count) {
+          block = mcdetector_list_import(t, xl, yl, x1, x2, y1, y2, (long)hdr[0], (long)hdr[1],
+            NULL, buf, NULL, f, c, posa, rota, options, index);
+          mcdetector_list_write(block, written);
+          written = 1;
+        }
+        free(buf);
+      }
+    }
+    free(blocks);
+  }
+  return(detector);
+} /* mcdetector_out_list_mpi */
+#endif /* USE_MPI */
+
+/*******************************************************************************
+* mcdetector_out_2D_list: List mode 2D including forwarding "options" from
+* Monitor_nD
+*
+*   With MPI, event lists from all nodes are written by the master, see
+*   mcdetector_out_list_mpi.
+*
+*   t:    title
+*   xl:   x-label
+*   yl:   y-label
+*   x1:   x axus min
+*   x2:   x axis max
+*   y1:   y axis min
+*   y2:   y axis max
+*   m:    dim 1 (x) size
+*   n:    dim 2 (y) size
+*   p0:   pntr to start of data block#0
+*   p1:   pntr to start of data block#1
+*   p2:   pntr to start of data block#2
+*   f:    filename
+*
+*   Not included in the macro, and here forwarded to detector_import:
+*   c:    ?
+*   posa: ?
+*   rota: ?
+*******************************************************************************/
+static MCDETECTOR mcdetector_out_2D_list_write(char *t, char *xl, char *yl,
+                  double x1, double x2, double y1, double y2,
+                  long m, long n,
+                  double *p0, double *p1, double *p2, char *f,
+		  char *c, Coords posa, Rotation rota, char* options, int index)
+{
+  MCDETECTOR detector;
+
+#ifdef USE_MPI
+  /* event lists: all nodes must take part, also those without events */
+  if (mpi_node_count > 1 && mcformat && strcasestr(mcformat, "list"))
+    return(mcdetector_out_list_mpi(t, xl, yl, x1, x2, y1, y2, m, n,
+      p0, p1, p2, f, c, posa, rota, options, index));
+#endif
+
+  detector = mcdetector_list_import(t, xl, yl, x1, x2, y1, y2, m, n,
+    p0, p1, p2, f, c, posa, rota, options, index);
+
+  if (!detector.p1 || !detector.m) return(detector);
+
+#ifdef USE_NEXUS
+  if (strcasestr(detector.format, "NeXus"))
+    return(mcdetector_out_2D_nexus(detector));
+  else
+#endif
+    return(mcdetector_out_2D_ascii(detector));
+
+} /* mcdetector_out_2D_list_write */
+
+#ifndef NOSIGNALS
+/* end of an event list write: handle a signal that came during it. Called
+   with the global mcformat as the caller found it (see mcdetector_out_list):
+   the replayed save must not see a temporary list format, or it would skip
+   the MPI reductions of all histograms while other nodes do them (hang). */
+static void mcsig_end_write(double *p1)
+{
+  mcsig_busy--;
+  if (!mcsig_busy && mcsig_pending) {
+    int sig = mcsig_pending;
+    mcsig_pending = 0;
+    mcsig_skip_p1 = p1; /* the block just written */
+    mcsig_replay  = 1;
+    sighandler(sig);    /* returns only for save/status signals */
+    mcsig_replay  = 0;
+    mcsig_skip_p1 = NULL;
+  }
+}
+#endif
+
+MCDETECTOR mcdetector_out_2D_list(char *t, char *xl, char *yl,
+                  double x1, double x2, double y1, double y2,
+                  long m, long n,
+                  double *p0, double *p1, double *p2, char *f,
+		  char *c, Coords posa, Rotation rota, char* options, int index)
+{
+  MCDETECTOR detector;
+#ifndef NOSIGNALS
+  /* the replayed save must not write the block of the interrupted flush again
+     (the component resets its buffer only after this call returns) */
+  if (mcsig_skip_p1 && p1 == mcsig_skip_p1)
+    return(mcdetector_list_import(t, xl, yl, x1, x2, y1, y2, m, n,
+      p0, p1, p2, f, c, posa, rota, options, index));
+  mcsig_busy++;
+#endif
+  detector = mcdetector_out_2D_list_write(t, xl, yl, x1, x2, y1, y2, m, n,
+    p0, p1, p2, f, c, posa, rota, options, index);
+#ifndef NOSIGNALS
+  mcsig_end_write(p1);
+#endif
+  return(detector);
+} /* mcdetector_out_2D_list */
+
+/*******************************************************************************
+* mcdetector_out_list: wrapper for list output (calls out_2D with mcformat+"list").
+*   m=number of events, n=size of each event
+*******************************************************************************/
+MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
+                  long m, long n,
+                  double *p1, char *f,
+			       char *c, Coords posa, Rotation rota, char* options, int index)
+{
+  char       format_new[CHAR_BUF_LENGTH];
+  char      *format_org;
+  MCDETECTOR detector;
+
+#ifndef NOSIGNALS
+  mcsig_busy++; /* a signal during the write is handled once mcformat is restored */
+#endif
+  format_org = mcformat;
+  strcpy(format_new, mcformat);
+  strcat(format_new, " list");
+  mcformat = format_new;
+  detector = mcdetector_out_2D_list(t, xl, yl,
+                  1,labs(m),1,labs(n),
+                  m,n,
+                  NULL, p1, NULL, f,
+		  c, posa,rota,options, index);
+
+  mcformat = format_org;
+#ifndef NOSIGNALS
+  mcsig_end_write(p1);
+#endif
+  return(detector);
+}
+
+/*******************************************************************************
+ * mcuse_dir: set data/sim storage directory and create it,
+ * or exit with error if exists
+ ******************************************************************************/
+static void
+mcuse_dir(char *dir)
+{
+  if (!dir || !strlen(dir)) return;
+#ifdef MC_PORTABLE
+  fprintf(stderr, "Error: "
+          "Directory output cannot be used with portable simulation (mcuse_dir)\n");
+  exit(1);
+#else  /* !MC_PORTABLE */
+  /* handle file://directory URL type */
+  if (strncmp(dir, "file://", strlen("file://")))
+    dirname = dir;
+  else
+    dirname = dir+strlen("file://");
+
+
+#ifdef USE_MPI
+  if(mpi_node_rank == mpi_node_root) {
+#endif
+    int exists=0;
+    DIR* handle = opendir(dirname);
+    if (handle) {
+      /* Directory exists. */
+      closedir(handle);
+      exists=1;
+    }
+    if(mkdir(dirname, 0777)) {
+#ifndef DANSE
+      if(!mcappend) {
+	fprintf(stderr, "Error: unable to create directory '%s' (mcuse_dir)\n", dir);
+	fprintf(stderr, "(Maybe the directory already exists?)\n");
+#endif
+#ifdef USE_MPI
+	MPI_Abort(MPI_COMM_WORLD, -1);
+#endif
+	exit(-1);
+      }
+    }
+#ifdef USE_MPI
+    }
+#endif
+
+  /* remove trailing PATHSEP (if any) */
+  while (strlen(dirname) && dirname[strlen(dirname) - 1] == MC_PATHSEP_C)
+    dirname[strlen(dirname) - 1]='\0';
+#endif /* !MC_PORTABLE */
+} /* mcuse_dir */
+
+/*******************************************************************************
+* mcinfo: display instrument simulation info to stdout and exit
+*******************************************************************************/
+static void
+mcinfo(void)
+{
+  fprintf(stdout, "begin instrument: %s\n", instrument_name);
+  mcinfo_out("  ", stdout);
+  fprintf(stdout, "end instrument\n");
+  fprintf(stdout, "begin simulation: %s\n", dirname ? dirname : ".");
+  mcruninfo_out("  ", stdout);
+  fprintf(stdout, "end simulation\n");
+  exit(0); /* includes MPI_Finalize in MPI mode */
+} /* mcinfo */
+
+/*******************************************************************************
+* mcparameterinfo: display instrument parameter info to stdout and exit
+*******************************************************************************/
+static void
+mcparameterinfo(void)
+{
+  mcparameterinfo_out("  ", stdout);
+  exit(0); /* includes MPI_Finalize in MPI mode */
+} /* mcparameterinfo */
+
+
+
+#endif /* ndef MCCODE_R_IO_C */
+
+/* end of the I/O section =================================================== */
+
+
+
+
+
+
+
+/*******************************************************************************
+* mcset_ncount: set total number of rays to generate
+*******************************************************************************/
+void mcset_ncount(unsigned long long int count)
+{
+  mcncount = count;
+}
+
+/* mcget_ncount: get total number of rays to generate */
+unsigned long long int mcget_ncount(void)
+{
+  return mcncount;
+}
+
+/* mcget_run_num: get curent number of rays */
+/* Within the TRACE scope we are now using _particle->uid directly */
+unsigned long long int mcget_run_num() // shuld be (_class_particle* _particle) somehow
+{
+  /* This function only remains for the few cases outside TRACE where we need to know
+     the number of simulated particles */
+  return mcrun_num;
+}
+
+/* mcsetn_arg: get ncount from a string argument */
+static void
+mcsetn_arg(char *arg)
+{
+  mcset_ncount((long long int) strtod(arg, NULL));
+}
+
+/* mcsetseed: set the random generator seed from a string argument */
+static void
+mcsetseed(char *arg)
+{
+  mcseed = atol(arg);
+  if(!mcseed) {
+  //  srandom(mcseed);
+  //} else {
+    fprintf(stderr, "Error: seed must not be zero (mcsetseed)\n");
+    exit(1);
+  }
+}
+
+/* Following part is only embedded when not redundent with mccode-r.h ========= */
+
+#ifndef MCCODE_H
+
+/* SECTION: MCDISPLAY support. =============================================== */
+
+/*******************************************************************************
+* Just output MCDISPLAY keywords to be caught by an external plotter client.
+*******************************************************************************/
+
+void mcdis_magnify(char *what){
+  // Do nothing here, better use interactive zoom from the tools
+}
+
+void mcdis_line(double x1, double y1, double z1,
+                double x2, double y2, double z2){
+  printf("MCDISPLAY: multiline(2,%g,%g,%g,%g,%g,%g)\n",
+         x1,y1,z1,x2,y2,z2);
+}
+
+void mcdis_dashed_line(double x1, double y1, double z1,
+		       double x2, double y2, double z2, int n){
+  int i;
+  const double dx = (x2-x1)/(2*n+1);
+  const double dy = (y2-y1)/(2*n+1);
+  const double dz = (z2-z1)/(2*n+1);
+
+  for(i = 0; i < n+1; i++)
+    mcdis_line(x1 + 2*i*dx,     y1 + 2*i*dy,     z1 + 2*i*dz,
+	       x1 + (2*i+1)*dx, y1 + (2*i+1)*dy, z1 + (2*i+1)*dz);
+}
+
+void mcdis_multiline(int count, ...){
+  va_list ap;
+  double x,y,z;
+
+  printf("MCDISPLAY: multiline(%d", count);
+  va_start(ap, count);
+  while(count--)
+    {
+    x = va_arg(ap, double);
+    y = va_arg(ap, double);
+    z = va_arg(ap, double);
+    printf(",%g,%g,%g", x, y, z);
+    }
+  va_end(ap);
+  printf(")\n");
+}
+
+void mcdis_rectangle(char* plane, double x, double y, double z,
+		     double width, double height){
+  /* draws a rectangle in the plane           */
+  /* x is ALWAYS width and y is ALWAYS height */
+  if (strcmp("xy", plane)==0) {
+    mcdis_multiline(5,
+		    x - width/2, y - height/2, z,
+		    x + width/2, y - height/2, z,
+		    x + width/2, y + height/2, z,
+		    x - width/2, y + height/2, z,
+		    x - width/2, y - height/2, z);
+  } else if (strcmp("xz", plane)==0) {
+    mcdis_multiline(5,
+		    x - width/2, y, z - height/2,
+		    x + width/2, y, z - height/2,
+		    x + width/2, y, z + height/2,
+		    x - width/2, y, z + height/2,
+		    x - width/2, y, z - height/2);
+  } else if (strcmp("yz", plane)==0) {
+    mcdis_multiline(5,
+		    x, y - height/2, z - width/2,
+		    x, y - height/2, z + width/2,
+		    x, y + height/2, z + width/2,
+		    x, y + height/2, z - width/2,
+		    x, y - height/2, z - width/2);
+  } else {
+
+    fprintf(stderr, "Error: Definition of plane %s unknown\n", plane);
+    exit(1);
+  }
+}
+
+void mcdis_circle(char *plane, double x, double y, double z, double r){
+  printf("MCDISPLAY: mcdiscircle('%s',%g,%g,%g,%g)\n", plane, x, y, z, r);
+}
+
+/* A zero axis n=(0,0,0) has no direction: draw along +y, the identity orientation
+ * of the --trace=2 primitives, and warn once (to stderr, outside the MCDISPLAY stream) */
+static void mcdis_check_axis(const char *what, double *nx, double *ny, double *nz){
+  static int warned = 0;
+  if (*nx == 0 && *ny == 0 && *nz == 0) {
+    if (!warned++)
+      fprintf(stderr, "Warning: mcdisplay %s() called with axis n=(0,0,0), using (0,1,0) "
+              "(further occurrences not reported)\n", what);
+    *ny = 1;
+  }
+}
+
+void mcdis_new_circle(double x, double y, double z, double r, double nx, double ny, double nz){
+  mcdis_check_axis("new_circle", &nx, &ny, &nz);
+  printf("MCDISPLAY: mcdisnew_circle(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, r, nx, ny, nz);
+}
+
+
+/* Draws a circle with center (x,y,z), radius (r), and in the plane
+ * with normal (nx,ny,nz)*/
+void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, double nz){
+    int i;
+    mcdis_check_axis("Circle", &nx, &ny, &nz);
+    if(nx==0 && ny && nz==0){
+        for (i=0;i<24; i++){
+            mcdis_line(x+r*sin(i*2*PI/24),y,z+r*cos(i*2*PI/24),
+                    x+r*sin((i+1)*2*PI/24),y,z+r*cos((i+1)*2*PI/24));
+        }
+    }else{
+        double mx,my,mz;
+        /*generate perpendicular vector using (nx,ny,nz) and (0,1,0)*/
+        vec_prod(mx,my,mz, 0,1,0, nx,ny,nz);
+        NORM(mx,my,mz);
+        /*draw circle*/
+        for (i=0;i<24; i++){
+            double ux,uy,uz;
+            double wx,wy,wz;
+            rotate(ux,uy,uz, mx,my,mz, i*2*PI/24, nx,ny,nz);
+            rotate(wx,wy,wz, mx,my,mz, (i+1)*2*PI/24, nx,ny,nz);
+            mcdis_line(x+ux*r,y+uy*r,z+uz*r,
+                    x+wx*r,y+wy*r,z+wz*r);
+        }
+    }
+}
+
+
+/*  OLD IMPLEMENTATION
+    draws a box with center at (x, y, z) and
+    width (deltax), height (deltay), length (deltaz) */
+void mcdis_legacy_box(double x, double y, double z,
+	       double width, double height, double length){
+
+  mcdis_rectangle("xy", x, y, z-length/2, width, height);
+  mcdis_rectangle("xy", x, y, z+length/2, width, height);
+  mcdis_line(x-width/2, y-height/2, z-length/2,
+	     x-width/2, y-height/2, z+length/2);
+  mcdis_line(x-width/2, y+height/2, z-length/2,
+	     x-width/2, y+height/2, z+length/2);
+  mcdis_line(x+width/2, y-height/2, z-length/2,
+	     x+width/2, y-height/2, z+length/2);
+  mcdis_line(x+width/2, y+height/2, z-length/2,
+	     x+width/2, y+height/2, z+length/2);
+}
+
+/* --trace=1 box: the legacy box with its local y axis rotated onto (nx,ny,nz),
+ * as drawn at --trace=2 */
+static void mcdis_rotated_box(double x, double y, double z,
+	       double width, double height, double length, double nx, double ny, double nz){
+  double c[8][3], ax, ay, az;
+  int i, j;
+  NORM(nx,ny,nz);
+  if (nx == 0 && ny > 0 && nz == 0) {
+    mcdis_legacy_box(x, y, z, width, height, length);
+    return;
+  }
+  vec_prod(ax,ay,az, 0,1,0, nx,ny,nz);
+  if (ax == 0 && az == 0) az = 1; /* n = -y: half turn around z */
+  for (i = 0; i < 8; i++) {
+    double px = (i & 1 ? 0.5 : -0.5)*width;
+    double py = (i & 2 ? 0.5 : -0.5)*height;
+    double pz = (i & 4 ? 0.5 : -0.5)*length;
+    rotate(c[i][0],c[i][1],c[i][2], px,py,pz, acos(ny < -1 ? -1 : ny), ax,ay,az);
+  }
+  /* 12 edges: corners differing in one bit */
+  for (i = 0; i < 8; i++)
+    for (j = 1; j < 8; j <<= 1)
+      if (!(i & j))
+        mcdis_line(x+c[i][0], y+c[i][1], z+c[i][2],
+                   x+c[i|j][0], y+c[i|j][1], z+c[i|j][2]);
+}
+
+/*  NEW 3D IMPLEMENTATION OF BOX SUPPORTS HOLLOW ALSO
+    draws a box with center at (x, y, z) and
+    width (deltax), height (deltay), length (deltaz) */
+void mcdis_box(double x, double y, double z,
+	       double width, double height, double length, double thickness, double nx, double ny, double nz){
+  mcdis_check_axis("box", &nx, &ny, &nz);
+  if (mcdotrace==2) {
+    printf("MCDISPLAY: mcdisbox(%g,%g,%g,%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, width, height, length, thickness, nx, ny, nz);
+  } else {
+    mcdis_rotated_box(x, y, z, width, height, length, nx, ny, nz);
+    /* hollow: closed inner cavity, as in e.g. Incoherent */
+    if (thickness > 0 && width-2*thickness > 0 && height-2*thickness > 0 && length-2*thickness > 0)
+      mcdis_rotated_box(x, y, z, width-2*thickness, height-2*thickness, length-2*thickness, nx, ny, nz);
+  }
+}
+
+
+/* OLD IMPLEMENTATION
+Draws a cylinder with center at (x,y,z) with extent (r,height).
+ * The cylinder axis is along the vector nx,ny,nz. */
+void mcdis_legacy_cylinder( double x, double y, double z,
+        double r, double height, int N, double nx, double ny, double nz){
+    int i;
+    /*no lines make little sense - so trigger the default*/
+    if(N<=0) N=5;
+
+    NORM(nx,ny,nz);
+    double h_2=height/2.0;
+    mcdis_Circle(x+nx*h_2,y+ny*h_2,z+nz*h_2,r,nx,ny,nz);
+    mcdis_Circle(x-nx*h_2,y-ny*h_2,z-nz*h_2,r,nx,ny,nz);
+
+    double mx,my,mz;
+    /*generate perpendicular vector using (nx,ny,nz) and (0,1,0)*/
+    if(nx==0 && ny && nz==0){
+        mx=my=0;mz=1;
+    }else{
+        vec_prod(mx,my,mz, 0,1,0, nx,ny,nz);
+        NORM(mx,my,mz);
+    }
+    /*draw circle*/
+    for (i=0; i<24; i++){
+        double ux,uy,uz;
+        rotate(ux,uy,uz, mx,my,mz, i*2*PI/24, nx,ny,nz);
+        mcdis_line(x+nx*h_2+ux*r, y+ny*h_2+uy*r, z+nz*h_2+uz*r,
+                 x-nx*h_2+ux*r, y-ny*h_2+uy*r, z-nz*h_2+uz*r);
+    }
+}
+
+/* NEW 3D IMPLEMENTATION ALSO SUPPORTING HOLLOW
+Draws a cylinder with center at (x,y,z) with extent (r,height).
+ * The cylinder axis is along the vector nx,ny,nz.*/
+void mcdis_cylinder( double x, double y, double z,
+        double r, double height, double thickness, double nx, double ny, double nz){
+  mcdis_check_axis("cylinder", &nx, &ny, &nz);
+  if (mcdotrace==2) {
+      printf("MCDISPLAY: mcdiscylinder(%g, %g, %g, %g, %g, %g, %g, %g, %g)\n",
+         x, y, z, r, height, thickness, nx, ny, nz);
+  } else {
+    mcdis_legacy_cylinder(x, y, z,
+			  r, height, 12, nx, ny, nz);
+    /* hollow: closed inner cavity, as in e.g. Incoherent */
+    if (thickness > 0 && r-thickness > 0 && height-2*thickness > 0)
+      mcdis_legacy_cylinder(x, y, z,
+			    r-thickness, height-2*thickness, 12, nx, ny, nz);
+  }
+}
+
+/* Draws a cone with center at (x,y,z) with extent (r,height).
+ * The cone axis is along the vector nx,ny,nz.*/
+void mcdis_cone( double x, double y, double z,
+        double r, double height, double nx, double ny, double nz){
+  mcdis_check_axis("cone", &nx, &ny, &nz);
+  if (mcdotrace==2) {
+    printf("MCDISPLAY: mcdiscone(%g, %g, %g, %g, %g, %g, %g, %g)\n",
+       x, y, z, r, height, nx, ny, nz);
+  } else {
+    /* (x,y,z) is the cone centre, as drawn at --trace=2 */
+    NORM(nx,ny,nz);
+    x -= 0.5*height*nx; y -= 0.5*height*ny; z -= 0.5*height*nz;
+    mcdis_Circle(x, y, z, r, nx, ny, nz);
+    mcdis_Circle(x+0.25*height*nx, y+0.25*height*ny, z+0.25*height*nz, 0.75*r, nx, ny, nz);
+    mcdis_Circle(x+0.5*height*nx, y+0.5*height*ny, z+0.5*height*nz, 0.5*r, nx, ny, nz);
+    mcdis_Circle(x+0.75*height*nx, y+0.75*height*ny, z+0.75*height*nz, 0.25*r, nx, ny, nz);
+    mcdis_line(x, y, z, x+height*nx, y+height*ny, z+height*nz);
+  }
+}
+
+/* Draws a disc with center at (x,y,z) with extent (r).
+ * The disc axis is along the vector nx,ny,nz.*/
+void mcdis_disc( double x, double y, double z,
+        double r, double nx, double ny, double nz){
+  mcdis_check_axis("disc", &nx, &ny, &nz);
+  printf("MCDISPLAY: mcdisdisc(%g, %g, %g, %g, %g, %g, %g)\n",
+     x, y, z, r, nx, ny, nz);
+}
+
+/* Draws a annulus with center at (x,y,z) with extent (outer radius) and remove inner thickness.
+ * The annulus axis is along the vector nx,ny,nz.*/
+void mcdis_annulus( double x, double y, double z,
+        double outer_radius, double thickness, double nx, double ny, double nz){
+  mcdis_check_axis("annulus", &nx, &ny, &nz);
+  printf("MCDISPLAY: mcdisannulus(%g, %g, %g, %g, %g, %g, %g, %g)\n",
+     x, y, z, outer_radius, thickness, nx, ny, nz);
+}
+
+/* draws a sphere with center at (x,y,z) with extent (r)*/
+void mcdis_sphere(double x, double y, double z, double r){
+  if (mcdotrace==2) {
+    printf("MCDISPLAY: mcdissphere(%g,%g,%g,%g)\n", x, y, z, r);
+  } else {
+    double nx,ny,nz;
+    int i;
+    int N=12;
+
+    nx=0;ny=0;nz=1;
+    mcdis_Circle(x,y,z,r,nx,ny,nz);
+    for (i=1;i<N;i++){
+        rotate(nx,ny,nz, nx,ny,nz, PI/N, 0,1,0);
+        mcdis_Circle(x,y,z,r,nx,ny,nz);
+    }
+    /*lastly draw a great circle perpendicular to all N circles*/
+    //mcdis_Circle(x,y,z,radius,1,0,0);
+
+    for (i=1;i<=N;i++){
+        double yy=-r+ 2*r*((double)i/(N+1));
+        mcdis_Circle(x,y+yy ,z,  sqrt(r*r-yy*yy) ,0,1,0);
+    }
+  }
+}
+/* POLYHEDRON IMPLEMENTATION*/
+
+void mcdis_polyhedron(char *vertices_faces){
+  printf("MCDISPLAY: polyhedron %s\n", vertices_faces);
+}
+
+/* POLYGON IMPLEMENTATION */
+void mcdis_polygon(int count, ...){
+  va_list ap;
+  double *x,*y,*z;
+
+  double x0=0,y0=0,z0=0; /* Used for centre-of-mass in trace==2 */
+
+  x=malloc(count*sizeof(double));
+  y=malloc(count*sizeof(double));
+  z=malloc(count*sizeof(double));
+  if (!x || !y || !z) {
+    fprintf(stderr,"Error initializing polygon set size %i\n",count);
+    exit(-1);
+  }
+  va_start(ap, count);
+  // Fallback for trace==1 is multiline, one rank higher
+  if (mcdotrace==1) {
+    printf("MCDISPLAY: multiline(%i,",count+1);
+  }
+  
+  int j;
+  for (j=0; j<count; j++) {
+    x[j] = va_arg(ap, double);
+    y[j] = va_arg(ap, double);
+    z[j] = va_arg(ap, double);
+    if (mcdotrace==1) {
+      printf("%g,%g,%g,",x[j],y[j],z[j]);
+    } else {
+      // Calculation of polygon centre of mass
+      x0 += x[j]; y0 += y[j]; z0 += z[j];
+    }
+  }
+  va_end(ap);
+
+  /* Patch data for multiline(count+1, ... use 0th point*/
+  if (mcdotrace==1) {
+    printf("%g,%g,%g)\n",x[0],y[0],z[0]);
+  } else {
+    x0 /= count; y0 /= count; z0 /= count;
+    /* Build up a json string for a "polyhedron" */
+    int faceSize;
+    int vtxSize;
+    if (count > 3) {
+      /* Split in triangles - as many as polygon rank */
+      faceSize=count;
+      vtxSize=count+1;
+    } else {
+      faceSize=1;
+      vtxSize=count;
+    }
+    
+    /* Upper bound: a vertex "[%g, %g, %g], " is at most 3*13+8 chars, a face
+       "{ \"face\": [%d, %d, %d]}, " at most 3*11+17 */
+    size_t estimated_size = 64 + (size_t)vtxSize*48 + (size_t)faceSize*64;
+
+    char *json_string = malloc(estimated_size);
+    if (json_string == NULL) {
+        fprintf(stderr, "Memory allocation failed.\n");
+        return;
+    }
+
+    char *ptr = json_string;
+    ptr += sprintf(ptr, "{ \"vertices\": [");
+
+    if (count==3) { // Single, basic triangle
+      ptr += sprintf(ptr, "[%g, %g, %g], [%g, %g, %g], [%g, %g, %g]", x[0], y[0], z[0], x[1], y[1], z[1], x[2], y[2], z[2]);
+    } else {
+      for (int i = 0; i < vtxSize-1; i++) {
+        ptr += sprintf(ptr, "[%g, %g, %g]", x[i], y[i], z[i]);
+        if (i < vtxSize - 2) {
+	  ptr += sprintf(ptr, ", ");
+        } else {
+	  ptr += sprintf(ptr, ", [%g, %g, %g]", x0, y0, z0);
+	}
+      }
+    }
+    ptr += sprintf(ptr, "], \"faces\": [");
+    if (count==3) { // Single, basic triangle, 1 face...
+      ptr += sprintf(ptr, "{ \"face\": [");
+      ptr += sprintf(ptr, "0, 1, 2");
+      ptr += sprintf(ptr, "]}");
+    } else {
+      /* Fan of triangles (i, i+1, centre), all with the polygon's own winding */
+      for (int i = 0; i < faceSize; i++) {
+        ptr += sprintf(ptr, "{ \"face\": [");
+	ptr += sprintf(ptr, "%d, %d, %d", i, (i+1) % count, count);
+	ptr += sprintf(ptr, "]}");
+	if (i < faceSize-1) {
+	  ptr += sprintf(ptr, ", ");
+	}
+      }
+    }
+    ptr += sprintf(ptr, "]}");
+    mcdis_polyhedron(json_string);
+
+    free(json_string);
+  }
+  free(x);free(y);free(z);
+}
+/* END NEW POLYGON IMPLEMENTATION*/
+
+/*
+void polygon(double x1, double y1, double z1,
+                double x2, double y2, double z2){
+  printf("MCDISPLAY: polygon(2,%g,%g,%g,%g,%g,%g)\n",
+         x1,y1,z1,x2,y2,z2);
+}
+*/
+
+/* SECTION: coordinates handling ============================================ */
+
+/*******************************************************************************
+* Since we use a lot of geometric calculations using Cartesian coordinates,
+* we collect some useful routines here. However, it is also permissible to
+* work directly on the underlying struct coords whenever that is most
+* convenient (that is, the type Coords is not abstract).
+*
+* Coordinates are also used to store rotation angles around x/y/z axis.
+*
+* Since coordinates are used much like a basic type (such as double), the
+* structure itself is passed and returned, rather than a pointer.
+*
+* At compile-time, the values of the coordinates may be unknown (for example
+* a motor position). Hence coordinates are general expressions and not simple
+* numbers. For this we used the type Coords_exp which has three CExp
+* fields. For runtime (or calculations possible at compile time), we use
+* Coords which contains three double fields.
+*******************************************************************************/
+
+/* coords_set: Assign coordinates. */
+Coords coords_set(MCNUM x, MCNUM y, MCNUM z)
+{
+  Coords a;
+
+  a.x = x;
+  a.y = y;
+  a.z = z;
+  return a;
+}
+
+/* coords_get: get coordinates. Required when 'x','y','z' are #defined as ray pars */
+Coords coords_get(Coords a, MCNUM *x, MCNUM *y, MCNUM *z)
+{
+  *x = a.x;
+  *y = a.y;
+  *z = a.z;
+  return a;
+}
+
+/* coords_add: Add two coordinates. */
+Coords coords_add(Coords a, Coords b)
+{
+  Coords c;
+
+  c.x = a.x + b.x;
+  c.y = a.y + b.y;
+  c.z = a.z + b.z;
+  if (fabs(c.z) < 1e-14) c.z=0.0;
+  return c;
+}
+
+/* coords_sub: Subtract two coordinates. */
+Coords coords_sub(Coords a, Coords b)
+{
+  Coords c;
+
+  c.x = a.x - b.x;
+  c.y = a.y - b.y;
+  c.z = a.z - b.z;
+  if (fabs(c.z) < 1e-14) c.z=0.0;
+  return c;
+}
+
+/* coords_neg: Negate coordinates. */
+Coords coords_neg(Coords a)
+{
+  Coords b;
+
+  b.x = -a.x;
+  b.y = -a.y;
+  b.z = -a.z;
+  return b;
+}
+
+/* coords_scale: Scale a vector. */
+Coords coords_scale(Coords b, double scale) {
+  Coords a;
+
+  a.x = b.x*scale;
+  a.y = b.y*scale;
+  a.z = b.z*scale;
+  return a;
+}
+
+/* coords_sp: Scalar product: a . b */
+double coords_sp(Coords a, Coords b) {
+  double value;
+
+  value = a.x*b.x + a.y*b.y + a.z*b.z;
+  return value;
+}
+
+/* coords_xp: Cross product: a = b x c. */
+Coords coords_xp(Coords b, Coords c) {
+  Coords a;
+
+  a.x = b.y*c.z - c.y*b.z;
+  a.y = b.z*c.x - c.z*b.x;
+  a.z = b.x*c.y - c.x*b.y;
+  return a;
+}
+
+/* coords_len: Gives length of coords set. */
+double coords_len(Coords a) {
+  return sqrt(a.x*a.x + a.y*a.y + a.z*a.z);
+}
+
+/* coords_mirror: Mirror a in plane (through the origin) defined by normal n*/
+Coords coords_mirror(Coords a, Coords n) {
+  double t = scalar_prod(n.x, n.y, n.z, n.x, n.y, n.z);
+  Coords b;
+  if (t!=1) {
+    t = sqrt(t);
+    n.x /= t;
+    n.y /= t;
+    n.z /= t;
+  }
+  t=scalar_prod(a.x, a.y, a.z, n.x, n.y, n.z);
+  b.x = a.x-2*t*n.x;
+  b.y = a.y-2*t*n.y;
+  b.z = a.z-2*t*n.z;
+  return b;
+}
+
+/* coords_print: Print out vector values. */
+void coords_print(Coords a) {
+  #ifndef OPENACC
+  fprintf(stdout, "(%f, %f, %f)\n", a.x, a.y, a.z);
+  #endif
+  return;
+}
+
+mcstatic void coords_norm(Coords* c) {
+	double temp = coords_sp(*c,*c);
+
+	// Skip if we will end dividing by zero
+	if (temp == 0) return;
+
+	temp = sqrt(temp);
+
+	c->x /= temp;
+	c->y /= temp;
+	c->z /= temp;
+}
+
+/* coords_test_zero: check if zero vector*/
+int coords_test_zero(Coords a){
+  return ( a.x==0 && a.y==0 && a.z==0 );
+}
+
+/*******************************************************************************
+* The Rotation type implements a rotation transformation of a coordinate
+* system in the form of a double[3][3] matrix.
+*
+* Contrary to the Coords type in coords.c, rotations are passed by
+* reference. Functions that yield new rotations do so by writing to an
+* explicit result parameter; rotations are not returned from functions. The
+* reason for this is that arrays cannot by returned from functions (though
+* structures can; thus an alternative would have been to wrap the
+* double[3][3] array up in a struct). Such are the ways of C programming.
+*
+* A rotation represents the tranformation of the coordinates of a vector when
+* changing between coordinate systems that are rotated with respect to each
+* other. For example, suppose that coordinate system Q is rotated 45 degrees
+* around the Z axis with respect to coordinate system P. Let T be the
+* rotation transformation representing a 45 degree rotation around Z. Then to
+* get the coordinates of a vector r in system Q, apply T to the coordinates
+* of r in P. If r=(1,0,0) in P, it will be (sqrt(1/2),-sqrt(1/2),0) in
+* Q. Thus we should be careful when interpreting the sign of rotation angles:
+* they represent the rotation of the coordinate systems, not of the
+* coordinates (which has opposite sign).
+*******************************************************************************/
+
+/*******************************************************************************
+* rot_set_rotation: Get transformation for rotation first phx around x axis,
+* then phy around y, then phz around z.
+*******************************************************************************/
+void rot_set_rotation(Rotation t, double phx, double phy, double phz)
+{
+  if ((phx == 0) && (phy == 0) && (phz == 0)) {
+    t[0][0] = 1.0;
+    t[0][1] = 0.0;
+    t[0][2] = 0.0;
+    t[1][0] = 0.0;
+    t[1][1] = 1.0;
+    t[1][2] = 0.0;
+    t[2][0] = 0.0;
+    t[2][1] = 0.0;
+    t[2][2] = 1.0;
+  } else {
+    double cx = cos(phx);
+    double sx = sin(phx);
+    double cy = cos(phy);
+    double sy = sin(phy);
+    double cz = cos(phz);
+    double sz = sin(phz);
+
+    t[0][0] = cy*cz;
+    t[0][1] = sx*sy*cz + cx*sz;
+    t[0][2] = sx*sz - cx*sy*cz;
+    t[1][0] = -cy*sz;
+    t[1][1] = cx*cz - sx*sy*sz;
+    t[1][2] = sx*cz + cx*sy*sz;
+    t[2][0] = sy;
+    t[2][1] = -sx*cy;
+    t[2][2] = cx*cy;
+  }
+}
+
+/*******************************************************************************
+* rot_test_identity: Test if rotation is identity
+*******************************************************************************/
+int rot_test_identity(Rotation t)
+{
+  return (t[0][0] + t[1][1] + t[2][2] == 3);
+}
+
+/*******************************************************************************
+* rot_mul: Matrix multiplication of transformations (this corresponds to
+* combining transformations). After rot_mul(T1, T2, T3), doing T3 is
+* equal to doing first T2, then T1.
+* Note that T3 must not alias (use the same array as) T1 or T2.
+*******************************************************************************/
+void rot_mul(Rotation t1, Rotation t2, Rotation t3)
+{
+  if (rot_test_identity(t1)) {
+    rot_copy(t3, t2);
+  } else if (rot_test_identity(t2)) {
+    rot_copy(t3, t1);
+  } else {
+    int i,j;
+    for(i = 0; i < 3; i++)
+      for(j = 0; j < 3; j++)
+	t3[i][j] = t1[i][0]*t2[0][j] + t1[i][1]*t2[1][j] + t1[i][2]*t2[2][j];
+  }
+}
+
+/*******************************************************************************
+* rot_copy: Copy a rotation transformation (arrays cannot be assigned in C).
+*******************************************************************************/
+void rot_copy(Rotation dest, Rotation src)
+{
+  int i,j;
+  for(i = 0; i < 3; i++)
+    for(j = 0; j < 3; j++)
+      dest[i][j] = src[i][j];
+}
+
+/*******************************************************************************
+* rot_transpose: Matrix transposition, which is inversion for Rotation matrices
+*******************************************************************************/
+void rot_transpose(Rotation src, Rotation dst)
+{
+  dst[0][0] = src[0][0];
+  dst[0][1] = src[1][0];
+  dst[0][2] = src[2][0];
+  dst[1][0] = src[0][1];
+  dst[1][1] = src[1][1];
+  dst[1][2] = src[2][1];
+  dst[2][0] = src[0][2];
+  dst[2][1] = src[1][2];
+  dst[2][2] = src[2][2];
+}
+
+/*******************************************************************************
+* rot_apply: returns t*a
+*******************************************************************************/
+Coords rot_apply(Rotation t, Coords a)
+{
+  Coords b;
+  if (rot_test_identity(t)) {
+    return a;
+  } else {
+    b.x = t[0][0]*a.x + t[0][1]*a.y + t[0][2]*a.z;
+    b.y = t[1][0]*a.x + t[1][1]*a.y + t[1][2]*a.z;
+    b.z = t[2][0]*a.x + t[2][1]*a.y + t[2][2]*a.z;
+    return b;
+  }
+}
+
+/**
+ * Pretty-printing of rotation matrices.
+ */
+void rot_print(Rotation rot) {
+	printf("[ %4.2f %4.2f %4.2f ]\n",
+			rot[0][0], rot[0][1], rot[0][2]);
+	printf("[ %4.2f %4.2f %4.2f ]\n",
+			rot[1][0], rot[1][1], rot[1][2]);
+	printf("[ %4.2f %4.2f %4.2f ]\n\n",
+			rot[2][0], rot[2][1], rot[2][2]);
+}
+
+/**
+ * Vector product: used by vec_prod (mccode-r.h). Use coords_xp for Coords.
+ */
+void vec_prod_func(double *x, double *y, double *z,
+		double x1, double y1, double z1,
+		double x2, double y2, double z2) {
+    *x = (y1)*(z2) - (y2)*(z1);
+    *y = (z1)*(x2) - (z2)*(x1);
+    *z = (x1)*(y2) - (x2)*(y1);
+}
+
+/**
+ * Scalar product: use coords_sp for Coords.
+ */
+double scalar_prod(
+		double x1, double y1, double z1,
+		double x2, double y2, double z2) {
+	return ((x1 * x2) + (y1 * y2) + (z1 * z2));
+}
+
+mcstatic void norm_func(double *x, double *y, double *z) {
+	double temp = (*x * *x) + (*y * *y) + (*z * *z);
+	if (temp != 0) {
+		temp = sqrt(temp);
+		*x /= temp;
+		*y /= temp;
+		*z /= temp;
+	}
+}
+
+
+/* SECTION: GPU algorithms ================================================== */
+
+
+/*
+*  Divide-and-conquer strategy for parallelizing this task: Sort absorbed
+*  particles last.
+*
+*   particles:  the particle array, required to checking _absorbed
+*   pbuffer:    same-size particle buffer array required for parallel sort
+*   len:        sorting area-of-interest size (e.g. from previous calls)
+*   buffer_len: total array size
+*   flag_split: if set, multiply live particles into absorbed slots, up to buffer_len
+*   multiplier: output arg, becomes the  SPLIT multiplier if flag_split is set
+*/
+#ifdef FUNNEL
+long sort_absorb_last(_class_particle* particles, _class_particle* pbuffer, long len, long buffer_len, long flag_split, long* multiplier) {
+  #define SAL_THREADS 1024 // num parallel sections
+  if (multiplier != NULL) *multiplier = -1; // set default out value for multiplier
+  if (len<SAL_THREADS) return sort_absorb_last_serial(particles, len);
+  long newlen = 0;
+  long los[SAL_THREADS]; // target array startidxs
+  long lens[SAL_THREADS]; // target array sublens
+  long l = floor(len/(SAL_THREADS-1)); // subproblem_len
+  long ll = len - l*(SAL_THREADS-1); // last_subproblem_len
+
+  // TODO: The l vs ll is too simplistic, since ll can become much larger
+  // than l, resulting in idling. We should distribute lengths more evenly.
+
+  // step 1: sort sub-arrays
+  #pragma acc parallel loop present(particles[0:buffer_len], pbuffer[0:buffer_len])
+  for (unsigned long tidx=0; tidx<SAL_THREADS; tidx++) {
+    long lo = l*tidx;
+    long loclen = l;
+    if (tidx==(SAL_THREADS-1)) loclen = ll; // last sub-problem special case
+    long i = lo;
+    long j = lo + loclen - 1;
+
+    // write into pbuffer at i and j
+    #pragma acc loop seq
+    while (i < j) {
+      #pragma acc loop seq
+      while (!particles[i]._absorbed && i<j) {
+        pbuffer[i] = particles[i];
+        i++;
+      }
+      #pragma acc loop seq
+      while (particles[j]._absorbed && i<j) {
+        pbuffer[j] = particles[j];
+        j--;
+      }
+      if (i < j) {
+        pbuffer[j] = particles[i];
+        pbuffer[i] = particles[j];
+        i++;
+        j--;
+      }
+    }
+    // transfer edge case
+    if (i==j)
+      pbuffer[i] = particles[i];
+
+    lens[tidx] = i - lo;
+    if (i==j && !particles[i]._absorbed) lens[tidx]++;
+  }
+
+  // determine lo's
+  long accumlen = 0;
+  #pragma acc loop seq
+  for (long idx=0; idx<SAL_THREADS; idx++) {
+    los[idx] = accumlen;
+    accumlen = accumlen + lens[idx];
+  }
+
+  // step 2: write non-absorbed sub-arrays to psorted/output from the left
+  #pragma acc parallel loop present(pbuffer[0:buffer_len])
+  for (unsigned long tidx=0; tidx<SAL_THREADS; tidx++) {
+    long j, k;
+    #pragma acc loop seq
+    for (long i=0; i<lens[tidx]; i++) {
+      j = i + l*tidx;
+      k = i + los[tidx];
+      particles[k] = pbuffer[j];
+    }
+  }
+  //for (int ii=0;ii<accumlen;ii++) printf("%ld ", (psorted[ii]->_absorbed));
+
+  // return (no SPLIT, or nothing left to split)
+  if (flag_split != 1 || accumlen == 0)
+    return accumlen;
+
+  // SPLIT - repeat the non-absorbed block N-1 times, where len % accumlen = N + R
+  int mult = buffer_len / accumlen; // TODO: possibly use a new arg, bufferlen, rather than len
+
+  // not enough space for full-block split, return
+  if (mult <= 1)
+    return accumlen;
+
+  // copy non-absorbed block
+  #pragma acc parallel loop present(particles[0:buffer_len])
+  for (long tidx = 0; tidx < accumlen; tidx++) { // tidx: thread index
+    _class_particle sourcebuffer;
+    _class_particle targetbuffer;
+    // assign reduced weight to all particles
+    particles[tidx].p=particles[tidx].p/mult;
+    #pragma acc loop seq
+    for (long bidx = 1; bidx < mult; bidx++) { // bidx: block index
+      // preserve absorbed particle (for randstate)
+      sourcebuffer = particles[bidx*accumlen + tidx];
+      // buffer full particle struct
+      targetbuffer = particles[tidx];
+      // reassign previous randstate
+      for (int ridx = 0; ridx < RANDSTATE_LEN; ridx++)
+        targetbuffer.randstate[ridx] = sourcebuffer.randstate[ridx];
+      // apply
+      particles[bidx*accumlen + tidx] = targetbuffer;
+    }
+  }
+
+  // set out split multiplier value
+  *multiplier = mult;
+
+  // return expanded array size
+  return accumlen * mult;
+}
+
+#endif
+
+/*
+*  Fallback serial version of the one above.
+*/
+long sort_absorb_last_serial(_class_particle* particles, long len) {
+  long i = 0;
+  long j = len - 1;
+  _class_particle pbuffer;
+
+  // bubble
+  while (i < j) {
+    while (!particles[i]._absorbed && i<j) i++;
+    while (particles[j]._absorbed && i<j) j--;
+    if (i < j) {
+      pbuffer = particles[j];
+      particles[j] = particles[i];
+      particles[i] = pbuffer;
+      i++;
+      j--;
+    }
+  }
+
+  // return new length
+  if (i==j && !particles[i]._absorbed)
+    return i + 1;
+  else
+    return i;
+}
+
+/*******************************************************************************
+* mccoordschange: applies rotation to (x y z) and (vx vy vz) and Spin (sx,sy,sz)
+*******************************************************************************/
+void mccoordschange(Coords a, Rotation t, _class_particle *particle)
+{
+  Coords b, c;
+
+  b.x = particle->x;
+  b.y = particle->y;
+  b.z = particle->z;
+  c = rot_apply(t, b);
+  b = coords_add(c, a);
+  particle->x = b.x;
+  particle->y = b.y;
+  particle->z = b.z;
+
+#if MCCODE_PARTICLE_CODE == 2112
+    if (particle->vz != 0.0 || particle->vx != 0.0 || particle->vy != 0.0)
+      mccoordschange_polarisation(t, &(particle->vx), &(particle->vy), &(particle->vz));
+
+    if (particle->sz != 0.0 || particle->sx != 0.0 || particle->sy != 0.0)
+      mccoordschange_polarisation(t, &(particle->sx), &(particle->sy), &(particle->sz));
+#elif MCCODE_PARTICLE_CODE == 22
+    if (particle->kz != 0.0 || particle->kx != 0.0 || particle->ky != 0.0)
+      mccoordschange_polarisation(t, &(particle->kx), &(particle->ky), &(particle->kz));
+
+    if (particle->Ez != 0.0 || particle->Ex != 0.0 || particle->Ey != 0.0)
+      mccoordschange_polarisation(t, &(particle->Ex), &(particle->Ey), &(particle->Ez));
+#endif
+}
+
+/*******************************************************************************
+* mccoordschange_polarisation: applies rotation to vector (sx sy sz)
+*******************************************************************************/
+void mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz)
+{
+  Coords b, c;
+
+  b.x = *sx;
+  b.y = *sy;
+  b.z = *sz;
+  c = rot_apply(t, b);
+  *sx = c.x;
+  *sy = c.y;
+  *sz = c.z;
+}
+
+/* SECTION: vector math  ==================================================== */
+
+/* normal_vec_func: Compute normal vector to (x,y,z). */
+void normal_vec(double *nx, double *ny, double *nz,
+                double x, double y, double z)
+{
+  double ax = fabs(x);
+  double ay = fabs(y);
+  double az = fabs(z);
+  double l;
+  if(x == 0 && y == 0 && z == 0)
+  {
+    *nx = 0;
+    *ny = 0;
+    *nz = 0;
+    return;
+  }
+  if(ax < ay)
+  {
+    if(ax < az)
+    {                           /* Use X axis */
+      l = sqrt(z*z + y*y);
+      *nx = 0;
+      *ny = z/l;
+      *nz = -y/l;
+      return;
+    }
+  }
+  else
+  {
+    if(ay < az)
+    {                           /* Use Y axis */
+      l = sqrt(z*z + x*x);
+      *nx = z/l;
+      *ny = 0;
+      *nz = -x/l;
+      return;
+    }
+  }
+  /* Use Z axis */
+  l = sqrt(y*y + x*x);
+  *nx = y/l;
+  *ny = -x/l;
+  *nz = 0;
+} /* normal_vec */
+
+/*******************************************************************************
+ * solve_2nd_order: second order equation solve: A*t^2 + B*t + C = 0
+ * solve_2nd_order(&t1, NULL, A,B,C)
+ *   returns 0 if no solution was found, or set 't1' to the smallest positive
+ *   solution.
+ * solve_2nd_order(&t1, &t2, A,B,C)
+ *   same as with &t2=NULL, but also returns the second solution.
+ * EXAMPLE usage for intersection of a trajectory with a plane in gravitation
+ * field (gx,gy,gz):
+ * The neutron starts at point r=(x,y,z) with velocityv=(vx vy vz). The plane
+ * has a normal vector n=(nx,ny,nz) and contains the point W=(wx,wy,wz).
+ * The problem consists in solving the 2nd order equation:
+ *      1/2.n.g.t^2 + n.v.t + n.(r-W) = 0
+ * so that A = 0.5 n.g; B = n.v; C = n.(r-W);
+ * Without acceleration, t=-n.(r-W)/n.v
+ ******************************************************************************/
+int solve_2nd_order_old(double *t1, double *t2,
+                  double A,  double B,  double C)
+{
+  int ret=0;
+
+  if (!t1) return 0;
+  *t1 = 0;
+  if (t2) *t2=0;
+
+  if (fabs(A) < 1E-10) /* approximate to linear equation: A ~ 0 */
+  {
+    if (B) {  *t1 = -C/B; ret=1; if (t2) *t2=*t1; }
+    /* else no intersection: A=B=0 ret=0 */
+  }
+  else
+  {
+    double D;
+    D = B*B - 4*A*C;
+    if (D >= 0) /* Delta > 0: two solutions */
+    {
+      double sD, dt1, dt2;
+      sD = sqrt(D);
+      dt1 = (-B + sD)/2/A;
+      dt2 = (-B - sD)/2/A;
+      /* we identify very small values with zero */
+      if (fabs(dt1) < 1e-10) dt1=0.0;
+      if (fabs(dt2) < 1e-10) dt2=0.0;
+
+      /* now we choose the smallest positive solution */
+      if      (dt1<=0.0 && dt2>0.0) ret=2; /* dt2 positive */
+      else if (dt2<=0.0 && dt1>0.0) ret=1; /* dt1 positive */
+      else if (dt1> 0.0 && dt2>0.0)
+      {  if (dt1 < dt2) ret=1; else ret=2; } /* all positive: min(dt1,dt2) */
+      /* else two solutions are negative. ret=-1 */
+      if (ret==1) { *t1 = dt1;  if (t2) *t2=dt2; }
+      else        { *t1 = dt2;  if (t2) *t2=dt1; }
+      ret=2;  /* found 2 solutions and t1 is the positive one */
+    } /* else Delta <0: no intersection. ret=0 */
+  }
+  return(ret);
+} /* solve_2nd_order */
+
+int solve_2nd_order(double *t0, double *t1, double A, double B, double C){
+  int retval=0;
+  double sign=copysign(1.0,B);
+  double dt0,dt1;
+
+  dt0=0;
+  dt1=0;
+  if(t1){ *t1=0;}
+
+  /*protect against rounding errors by locally equating DBL_EPSILON with 0*/
+  if (fabs(A)<DBL_EPSILON){
+    A=0;
+  }
+  if (fabs(B)<DBL_EPSILON){
+    B=0;
+  }
+  if (fabs(C)<DBL_EPSILON){
+    C=0;
+  }
+
+  /*check if coefficient are sane*/
+  if( A==0  && B==0){
+    retval=0;
+  }else{
+    if(A==0){
+      /*equation is linear*/
+      dt0=-C/B;
+      retval=1;
+    }else if (C==0){
+      /*one root is 0*/
+      if(sign<0){
+        dt0=0;dt1=-B/A;
+      }else{
+        dt0=-B/A;dt1=0;
+      }
+      retval=2;
+    }else{
+      /*a regular 2nd order eq. Also works out fine for B==0.*/
+      double D;
+      D=B*B-4*A*C;
+      if (D>=0){
+        dt0=(-B - sign*sqrt(B*B-4*A*C))/(2*A);
+        dt1=C/(A*dt0);
+        retval=2;
+      }else{
+        /*no real roots*/
+        retval=0;
+      }
+    }
+    /*sort the solutions*/
+    if (retval==1){
+      /*put both solutions in t0 and t1*/
+      *t0=dt0;
+      if(t1) *t1=dt1;
+    }else{
+      /*we have two solutions*/
+      /*swap if both are positive and t1 smaller than t0 or t1 the only positive*/
+      int swap=0;
+      if(dt1>0 && ( dt1<dt0 || dt0<=0) ){
+        swap=1;
+      }
+      if (swap){
+        *t0=dt1;
+        if(t1) *t1=dt0;
+      }else{
+        *t0=dt0;
+        if(t1) *t1=dt1;
+      }
+    }
+
+  }
+  return retval;
+
+} /*solve_2nd_order_improved*/
+
+
+/*******************************************************************************
+ * randvec_target_circle: Choose random direction towards target at (x,y,z)
+ * with given radius.
+ * If radius is zero, choose random direction in full 4PI, no target.
+ ******************************************************************************/
+void _randvec_target_circle(double *xo, double *yo, double *zo, double *solid_angle,
+        double xi, double yi, double zi, double radius,
+        _class_particle* _particle)
+{
+  double l2, phi, theta, nx, ny, nz, xt, yt, zt, xu, yu, zu;
+
+  if(radius == 0.0)
+  {
+    /* No target, choose uniformly a direction in full 4PI solid angle. */
+    theta = acos(1 - rand0max(2));
+    phi = rand0max(2 * PI);
+    if(solid_angle)
+      *solid_angle = 4*PI;
+    nx = 1;
+    ny = 0;
+    nz = 0;
+    yi = sqrt(xi*xi+yi*yi+zi*zi);
+    zi = 0;
+    xi = 0;
+  }
+  else
+  {
+    double costheta0;
+    l2 = xi*xi + yi*yi + zi*zi; /* sqr Distance to target. */
+    costheta0 = sqrt(l2/(radius*radius+l2));
+    if (radius < 0) costheta0 *= -1;
+    if(solid_angle)
+    {
+      /* Compute solid angle of target as seen from origin. */
+        *solid_angle = 2*PI*(1 - costheta0);
+    }
+
+    /* Now choose point uniformly on circle surface within angle theta0 */
+    theta = acos (1 - rand0max(1 - costheta0)); /* radius on circle */
+    phi = rand0max(2 * PI); /* rotation on circle at given radius */
+    /* Now, to obtain the desired vector rotate (xi,yi,zi) angle theta around a
+       perpendicular axis u=i x n and then angle phi around i. */
+    if(xi == 0 && zi == 0)
+    {
+      nx = 1;
+      ny = 0;
+      nz = 0;
+    }
+    else
+    {
+      nx = -zi;
+      nz = xi;
+      ny = 0;
+    }
+  }
+
+  /* [xyz]u = [xyz]i x n[xyz] (usually vertical) */
+  vec_prod(xu,  yu,  zu, xi, yi, zi,        nx, ny, nz);
+  /* [xyz]t = [xyz]i rotated theta around [xyz]u */
+  rotate  (xt,  yt,  zt, xi, yi, zi, theta, xu, yu, zu);
+  /* [xyz]o = [xyz]t rotated phi around n[xyz] */
+  rotate (*xo, *yo, *zo, xt, yt, zt, phi, xi, yi, zi);
+}
+/* randvec_target_circle */
+
+/*******************************************************************************
+ * randvec_target_rect_angular: Choose random direction towards target at
+ * (xi,yi,zi) with given ANGULAR dimension height x width. height=phi_x=[0,PI],
+ * width=phi_y=[0,2*PI] (radians)
+ * If height or width is zero, choose random direction in full 4PI, no target.
+ *******************************************************************************/
+void _randvec_target_rect_angular(double *xo, double *yo, double *zo, double *solid_angle,
+        double xi, double yi, double zi, double width, double height, Rotation A,
+        _class_particle* _particle)
+{
+  double theta, phi, nx, ny, nz, xt, yt, zt, xu, yu, zu;
+  Coords tmp;
+  Rotation Ainverse;
+
+  rot_transpose(A, Ainverse);
+
+  if(height == 0.0 || width == 0.0)
+  {
+    randvec_target_circle(xo, yo, zo, solid_angle, xi, yi, zi, 0);
+    return;
+  }
+  else
+  {
+    if(solid_angle)
+    {
+      /* Compute solid angle of target as seen from origin. */
+      *solid_angle = 2*fabs(width*sin(height/2));
+    }
+
+    /* Go to global coordinate system */
+
+    tmp = coords_set(xi, yi, zi);
+    tmp = rot_apply(Ainverse, tmp);
+    coords_get(tmp, &xi, &yi, &zi);
+
+    /* Now choose point uniformly on the unit sphere segment with angle theta/phi */
+    phi   = width*randpm1()/2.0;
+    theta = asin(randpm1()*sin(height/2.0));
+    /* Now, to obtain the desired vector rotate (xi,yi,zi) angle theta around
+       n, and then phi around u. */
+    if(xi == 0 && zi == 0)
+    {
+      nx = 1;
+      ny = 0;
+      nz = 0;
+    }
+    else
+    {
+      nx = -zi;
+      nz = xi;
+      ny = 0;
+    }
+  }
+
+  /* [xyz]u = [xyz]i x n[xyz] (usually vertical) */
+  vec_prod(xu,  yu,  zu, xi, yi, zi,        nx, ny, nz);
+  /* [xyz]t = [xyz]i rotated theta around [xyz]u */
+  rotate  (xt,  yt,  zt, xi, yi, zi, theta, nx, ny, nz);
+  /* [xyz]o = [xyz]t rotated phi around n[xyz] */
+  rotate (*xo, *yo, *zo, xt, yt, zt, phi, xu,  yu,  zu);
+
+  /* Go back to local coordinate system */
+  tmp = coords_set(*xo, *yo, *zo);
+  tmp = rot_apply(A, tmp);
+  coords_get(tmp, &*xo, &*yo, &*zo);
+}
+/* randvec_target_rect_angular */
+
+/*******************************************************************************
+ * randvec_target_rect_real: Choose random direction towards target at (xi,yi,zi)
+ * with given dimension height x width (in meters !).
+ *
+ * Local emission coordinate is taken into account and corrected for 'order' times.
+ * (See remarks posted to mcstas-users by George Apostolopoulus <gapost@ipta.demokritos.gr>)
+ *
+ * If height or width is zero, choose random direction in full 4PI, no target.
+ *
+ * Traditionally, this routine had the name randvec_target_rect - this is now a
+ * a define (see mcstas-r.h) pointing here. If you use the old rouine, you are NOT
+ * taking the local emmission coordinate into account.
+*******************************************************************************/
+void _randvec_target_rect_real(double *xo, double *yo, double *zo, double *solid_angle,
+        double xi, double yi, double zi,
+        double width, double height, Rotation A,
+        double lx, double ly, double lz, int order,
+        _class_particle* _particle)
+{
+  double dx, dy, dist, dist_p, nx, ny, nz, mx, my, mz, n_norm, m_norm;
+  double cos_theta;
+  Coords tmp;
+  Rotation Ainverse;
+
+  rot_transpose(A, Ainverse);
+
+  if(height == 0.0 || width == 0.0)
+  {
+    randvec_target_circle(xo, yo, zo, solid_angle,
+               xi, yi, zi, 0);
+    return;
+  }
+  else
+  {
+    /* Now choose point uniformly on rectangle within width x height */
+    dx = width*randpm1()/2.0;
+    dy = height*randpm1()/2.0;
+
+    /* Determine distance to target plane*/
+    dist = sqrt(xi*xi + yi*yi + zi*zi);
+    /* Go to global coordinate system */
+
+    tmp = coords_set(xi, yi, zi);
+    tmp = rot_apply(Ainverse, tmp);
+    coords_get(tmp, &xi, &yi, &zi);
+
+    /* Determine vector normal to trajectory axis (z) and gravity [0 1 0] */
+    vec_prod(nx, ny, nz, xi, yi, zi, 0, 1, 0);
+
+    /* This now defines the x-axis, normalize: */
+    n_norm=sqrt(nx*nx + ny*ny + nz*nz);
+    nx = nx/n_norm;
+    ny = ny/n_norm;
+    nz = nz/n_norm;
+
+    /* Now, determine our y-axis (vertical in many cases...) */
+    vec_prod(mx, my, mz, xi, yi, zi, nx, ny, nz);
+    m_norm=sqrt(mx*mx + my*my + mz*mz);
+    mx = mx/m_norm;
+    my = my/m_norm;
+    mz = mz/m_norm;
+
+    /* Our output, random vector can now be defined by linear combination: */
+
+    *xo = xi + dx * nx + dy * mx;
+    *yo = yi + dx * ny + dy * my;
+    *zo = zi + dx * nz + dy * mz;
+
+    /* Go back to local coordinate system */
+    tmp = coords_set(*xo, *yo, *zo);
+    tmp = rot_apply(A, tmp);
+    coords_get(tmp, &*xo, &*yo, &*zo);
+
+    /* Go back to local coordinate system */
+    tmp = coords_set(xi, yi, zi);
+    tmp = rot_apply(A, tmp);
+    coords_get(tmp, &xi, &yi, &zi);
+
+    if (solid_angle) {
+      /* Calculate vector from local point to remote random point */
+      lx = *xo - lx;
+      ly = *yo - ly;
+      lz = *zo - lz;
+      dist_p = sqrt(lx*lx + ly*ly + lz*lz);
+
+      /* Adjust the 'solid angle' */
+      /* 1/r^2 to the chosen point times cos(\theta) between the normal */
+      /* vector of the target rectangle and direction vector of the chosen point. */
+      cos_theta = (xi * lx + yi * ly + zi * lz) / (dist * dist_p);
+      *solid_angle = width * height / (dist_p * dist_p);
+      int counter;
+      for (counter = 0; counter < order; counter++) {
+        *solid_angle = *solid_angle * cos_theta;
+      }
+    }
+  }
+}
+/* randvec_target_rect_real */
+
+
+/* SECTION: random numbers ==================================================
+
+  How to add a new RNG:
+
+  - Use an rng with a manegable state vector, e.g. of lengt 4 or 7. The state
+  will sit on the particle struct as a "randstate_t state[RANDSTATE_LEN]"
+  - If the rng has a long state (as MT), set an empty "srandom" and initialize
+  it explicitly using the appropriate define (RNG_ALG)
+  - Add a seed and a random function (the transforms will be reused)
+  - Write the proper defines in mccode-r.h, e.g. randstate_t and RANDSTATE_LEN,
+  srandom and random.
+  - Compile using -DRNG_ALG=<selector int value>
+
+============================================================================= */
+
+
+/* "Mersenne Twister", by Makoto Matsumoto and Takuji Nishimura. */
+/* See http://www.math.keio.ac.jp/~matumoto/emt.html for original source. */
+/*
+   A C-program for MT19937, with initialization improved 2002/1/26.
+   Coded by Takuji Nishimura and Makoto Matsumoto.
+
+   Before using, initialize the state by using mt_srandom(seed)
+   or init_by_array(init_key, key_length).
+
+   Copyright (C) 1997 - 2002, Makoto Matsumoto and Takuji Nishimura,
+   All rights reserved.
+
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions
+   are met:
+
+     1. Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+
+     2. Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in the
+        documentation and/or other materials provided with the distribution.
+
+     3. The names of its contributors may not be used to endorse or promote
+        products derived from this software without specific prior written
+        permission.
+
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+   A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+   EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+   PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+   Any feedback is very welcome.
+   http://www.math.keio.ac.jp/matumoto/emt.html
+   email: matumoto@math.keio.ac.jp
+*/
+#include <stdio.h>
+#include <stdint.h>   // for uint32_t
+#include <stddef.h>   // for size_t
+
+/* Period parameters */
+#define N 624
+#define M 397
+#define MATRIX_A 0x9908b0dfU   /* constant vector a */
+#define UPPER_MASK 0x80000000U /* most significant w-r bits */
+#define LOWER_MASK 0x7fffffffU /* least significant r bits */
+
+static uint32_t mt[N]; /* the array for the state vector  */
+static int mti = N + 1; /* mti==N+1 means mt[N] is not initialized */
+
+// Required for compatibility with common RNG interface (e.g., kiss/mt polymorphism)
+void mt_srandom_empty(void) {}
+
+// Initializes mt[N] with a seed
+void mt_srandom(uint32_t seed) {
+    mt[0] = seed;
+    for (mti = 1; mti < N; mti++) {
+        mt[mti] = 1812433253U * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti;
+        /* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
+        /* In the previous versions, MSBs of the seed affect   */
+        /* only MSBs of the array mt[].                        */
+        /* 2002/01/09 modified by Makoto Matsumoto             */
+        mt[mti] &= 0xffffffffU;
+        /* for >32 bit machines */
+    }
+}
+/* Initialize by an array with array-length.
+   Init_key is the array for initializing keys.
+   key_length is its length. */
+void init_by_array(uint32_t init_key[], size_t key_length) {
+    size_t i = 1, j = 0, k;
+    mt_srandom(19650218U);
+    k = (N > key_length ? N : key_length);
+    for (; k; k--) {
+        mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1664525U))
+              + init_key[j] + (uint32_t)j;
+        mt[i] &= 0xffffffffU;
+        i++; j++;
+        if (i >= N) { mt[0] = mt[N - 1]; i = 1; }
+        if (j >= key_length) j = 0;
+    }
+    for (k = N - 1; k; k--) {
+        mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1566083941U))
+              - (uint32_t)i;
+        mt[i] &= 0xffffffffU;
+        i++;
+        if (i >= N) { mt[0] = mt[N - 1]; i = 1; }
+    }
+    mt[0] = 0x80000000U; /* MSB is 1; ensuring non-zero initial array */
+}
+
+// Generates a random number on [0, 0xffffffff]-interval
+uint32_t mt_random(void) {
+    uint32_t y;
+    static const uint32_t mag01[2] = { 0x0U, MATRIX_A };
+    /* mag01[x] = x * MATRIX_A  for x=0,1 */
+
+    if (mti >= N) { /* generate N words at one time */
+        int kk;
+
+        if (mti == N + 1)   /* if mt_srandom() has not been called, */ 
+            mt_srandom(5489U);  /* a default initial seed is used */
+
+        for (kk = 0; kk < N - M; kk++) {
+            y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
+            mt[kk] = mt[kk + M] ^ (y >> 1) ^ mag01[y & 0x1U];
+        }
+        for (; kk < N - 1; kk++) {
+            y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
+            mt[kk] = mt[kk + (M - N)] ^ (y >> 1) ^ mag01[y & 0x1U];
+        }
+        y = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
+        mt[N - 1] = mt[M - 1] ^ (y >> 1) ^ mag01[y & 0x1U];
+
+        mti = 0;
+    }
+
+    y = mt[mti++];
+
+    /* Tempering */
+    y ^= (y >> 11);
+    y ^= (y << 7) & 0x9d2c5680U;
+    y ^= (y << 15) & 0xefc60000U;
+    y ^= (y >> 18);
+
+    return y;
+}
+#undef N
+#undef M
+#undef MATRIX_A
+#undef UPPER_MASK
+#undef LOWER_MASK
+/* End of "Mersenne Twister". */
+
+
+/*
+KISS
+
+ From: http://www.helsbreth.org/random/rng_kiss.html
+ Scott Nelson 1999
+
+ Based on Marsaglia's KISS or (KISS+SWB) <http://www.cs.yorku.ca/~oz/marsaglia-
+rng.html>
+
+ KISS - Keep it Simple Stupid PRNG
+
+ the idea is to use simple, fast, individually promising
+ generators to get a composite that will be fast, easy to code
+ have a very long period and pass all the tests put to it.
+ The three components of KISS are
+        x(n)=a*x(n-1)+1 mod 2^32
+        y(n)=y(n-1)(I+L^13)(I+R^17)(I+L^5),
+        z(n)=2*z(n-1)+z(n-2) +carry mod 2^32
+ The y's are a shift register sequence on 32bit binary vectors
+ period 2^32-1;
+ The z's are a simple multiply-with-carry sequence with period
+ 2^63+2^32-1.  The period of KISS is thus
+      2^32*(2^32-1)*(2^63+2^32-1) > 2^127
+
+ In 2025 adapted for consistent 64-bit behavior across platforms.
+*/
+
+/* the KISS state is stored as a vector of 7 uint64_t        */
+/*   0  1  2  3  4      5  6   */
+/* [ x, y, z, w, carry, k, m ] */
+
+uint64_t *kiss_srandom(uint64_t state[7], uint64_t seed) {
+    if (seed == 0) seed = 1ull;
+    state[0] = seed | 1ull; // x
+    state[1] = seed | 2ull; // y
+    state[2] = seed | 4ull; // z
+    state[3] = seed | 8ull; // w
+    state[4] = 0ull;        // carry
+    state[5] = 0ull;        // k
+    state[6] = 0ull;        // m
+    return state;
+}
+
+uint64_t kiss_random(uint64_t state[7]) {
+    // Linear congruential generator
+    state[0] = state[0] * 69069ull + 1ull;
+
+    // Xorshift
+    state[1] ^= state[1] << 13ull;
+    state[1] ^= state[1] >> 17ull;
+    state[1] ^= state[1] << 5ull;
+
+    // Multiply-with-carry
+    state[5] = (state[2] >> 2ull) + (state[3] >> 3ull) + (state[4] >> 2ull);
+    state[6] = state[3] + state[3] + state[2] + state[4];
+    state[2] = state[3];
+    state[3] = state[6];
+    state[4] = state[5] >> 62ull;  // Top bit of carry (adjusted for 64-bit)
+
+    return state[0] + state[1] + state[3];
+}
+/* end of "KISS" rng */
+
+
+/* FAST KISS in another implementation (Hundt) */
+
+//////////////////////////////////////////////////////////////////////////////
+// fast keep it simple stupid generator
+//////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+// Thomas Mueller hash for initialization of rngs
+// http://stackoverflow.com/questions/664014/
+//        what-integer-hash-function-are-good-that-accepts-an-integer-hash-key
+//////////////////////////////////////////////////////////////////////////////
+randstate_t _hash(randstate_t x) {
+  x = ((x >> 16) ^ x) * (randstate_t)0x45d9f3b;
+  x = ((x >> 16) ^ x) * (randstate_t)0x45d9f3b;
+  x = ((x >> 16) ^ x);
+  return x;
+}
+
+
+// SECTION: random number transforms ==========================================
+
+
+
+// generate a random number from normal law
+double _randnorm(randstate_t* state)
+{
+  static double v1, v2, s; /* removing static breaks comparison with McStas <= 2.5 */
+  static int phase = 0;
+  double X, u1, u2;
+
+  if(phase == 0)
+  {
+    do
+    {
+      u1 = _rand01(state);
+      u2 = _rand01(state);
+      v1 = 2*u1 - 1;
+      v2 = 2*u2 - 1;
+      s = v1*v1 + v2*v2;
+    } while(s >= 1 || s == 0);
+
+    X = v1*sqrt(-2*log(s)/s);
+  }
+  else
+  {
+    X = v2*sqrt(-2*log(s)/s);
+  }
+
+  phase = 1 - phase;
+  return X;
+}
+// another one
+double _randnorm2(randstate_t* state) {
+  double x, y, r;
+  do {
+      x = 2.0 * _rand01(state) - 1.0;
+      y = 2.0 * _rand01(state) - 1.0;
+      r = x*x + y*y;
+  } while (r == 0.0 || r >= 1.0);
+  return x * sqrt((-2.0 * log(r)) / r);
+}
+
+// Generate a random number from -1 to 1 with triangle distribution
+double _randtriangle(randstate_t* state) {
+	double randnum = _rand01(state);
+	if (randnum>0.5) return(1-sqrt(2*(randnum-0.5)));
+	else return(sqrt(2*randnum)-1);
+}
+double _rand01(randstate_t* state) {
+	double randnum;
+	randnum = (double) _random();
+  // TODO: can we mult instead of div?
+	randnum /= (double) MC_RAND_MAX + 1;
+	return randnum;
+}
+double _rand01_opague(void* opague_state) {
+	randstate_t* state = (randstate_t*)opague_state;
+	// Following lines exactly like in _rand01 just above (repeated to
+	// avoid another layer of indirection):
+	double randnum;
+	randnum = (double) _random();
+	// TODO: can we mult instead of div?
+	randnum /= (double) MC_RAND_MAX + 1;
+	return randnum;
+}
+// Return a random number between 1 and -1
+double _randpm1(randstate_t* state) {
+	double randnum;
+	randnum = (double) _random();
+	randnum /= ((double) MC_RAND_MAX + 1) / 2;
+	randnum -= 1;
+	return randnum;
+}
+// Return a random number between 0 and max.
+double _rand0max(double max, randstate_t* state) {
+	double randnum;
+	randnum = (double) _random();
+	randnum /= ((double) MC_RAND_MAX + 1) / max;
+	return randnum;
+}
+// Return a random number between min and max.
+double _randminmax(double min, double max, randstate_t* state) {
+	return _rand0max(max - min, state) + max;
+}
+
+
+/* SECTION: main and signal handlers ======================================== */
+
+/*******************************************************************************
+* mchelp: displays instrument executable help with possible options
+*******************************************************************************/
+static void
+mchelp(char *pgmname)
+{
+  int i;
+
+  fprintf(stderr, "%s (%s) instrument simulation, generated with " MCCODE_STRING " (" MCCODE_DATE ")\n", instrument_name, instrument_source);
+  fprintf(stderr, "Usage: %s [options] [parm=value ...]\n", pgmname);
+  fprintf(stderr,
+"Options are:\n"
+"  -s SEED   --seed=SEED      Set random seed (must be != 0)\n"
+"  -n COUNT  --ncount=COUNT   Set number of particles to simulate.\n"
+"  -d DIR    --dir=DIR        Put all data files in directory DIR.\n"
+"  -a        --append         Append data files to those in directory DIR.\n"	  
+"  -t        --trace          Enable trace of " MCCODE_PARTICLE "s through instrument.\n"
+"                             (Use -t=2 or --trace=2 for modernised mcdisplay rendering)\n"
+"  -g        --gravitation    Enable gravitation for all trajectories.\n"
+"  --no-output-files          Do not write any data files.\n"
+"  -h        --help           Show this help message.\n"
+"  -i        --info           Detailed instrument information.\n"
+"  --list-parameters          Print the instrument parameters to standard out\n"
+"  -y        --yes            Assume default values for parameters not given\n"
+"  --meta-list                Print names of components which defined metadata\n"
+"  --meta-defined COMP[:NAME] Print component defined metadata names, or (0,1) if NAME provided\n"
+"  --meta-type COMP:NAME      Print metadata format type specified in definition\n"
+"  --meta-data COMP:NAME      Print the metadata text\n"
+"  --source                   Show the instrument code which was compiled.\n"
+#ifdef OPENACC
+"\n"
+"  --vecsize                  OpenACC vector-size (default: 128)\n"
+"  --numgangs                 Number of OpenACC gangs (default: 7813)\n"
+"  --gpu_innerloop            Maximum rays to process pr. OpenACC \n"
+"                             kernel run (default: 2147483647)\n"
+"\n"
+#endif
+"\n"
+"  --bufsiz                   Monitor_nD list/buffer-size (default: 1000000)\n"
+"  --format=FORMAT            Output data files using FORMAT="
+   FLAVOR_UPPER
+#ifdef USE_NEXUS
+   " NEXUS\n"
+"  --IDF                      Embed an xml-formatted IDF instrument definition\n"
+"                             in the NeXus file (if existent in .)\n\n"
+#else
+"\n\n"
+#endif
+);
+#ifdef USE_MPI
+  fprintf(stderr,
+  "This instrument has been compiled with MPI support.\n  Use 'mpirun %s [options] [parm=value ...]'.\n", pgmname);
+#endif
+#ifdef OPENACC
+  fprintf(stderr,
+  "This instrument has been compiled with NVIDIA GPU support through OpenACC.\n  Running on systems without such devices will lead to segfaults.\nFurter, fprintf, sprintf and printf have been removed from any component TRACE.\n");
+#endif
+
+  if(numipar > 0)
+  {
+    fprintf(stderr, "Instrument parameters are:\n");
+    for(i = 0; i < numipar; i++)
+      if (mcinputtable[i].val && strlen(mcinputtable[i].val))
+        fprintf(stderr, "  %-16s(%s) [default='%s']\n", mcinputtable[i].name,
+        (*mcinputtypes[mcinputtable[i].type].parminfo)(mcinputtable[i].name),
+        mcinputtable[i].val);
+      else
+        fprintf(stderr, "  %-16s(%s)\n", mcinputtable[i].name,
+        (*mcinputtypes[mcinputtable[i].type].parminfo)(mcinputtable[i].name));
+  }
+
+#ifndef NOSIGNALS
+  fprintf(stderr, "Known signals are: "
+#ifdef SIGUSR1
+  "USR1 (status) "
+#endif
+#ifdef SIGUSR2
+  "USR2 (save) "
+#endif
+#ifdef SIGBREAK
+  "BREAK (save) "
+#endif
+#ifdef SIGTERM
+  "TERM (save and exit)"
+#endif
+  "\n");
+#endif /* !NOSIGNALS */
+} /* mchelp */
+
+
+/* mcshowhelp: show help and exit with 0 */
+static void
+mcshowhelp(char *pgmname)
+{
+  mchelp(pgmname);
+  exit(0);
+}
+
+/* mcusage: display usage when error in input arguments and exit with 1 */
+static void
+mcusage(char *pgmname)
+{
+  fprintf(stderr, "Error: incorrect command line arguments\n");
+  mchelp(pgmname);
+  exit(1);
+}
+
+/* mcenabletrace: enable trace/mcdisplay or error if requires recompile */
+static void
+mcenabletrace(int mode)
+{
+ if(traceenabled) {
+  mcdotrace = mode;
+  #pragma acc update device ( mcdotrace )
+ } else {
+   if (mode>0) {
+     fprintf(stderr,
+	     "Error: trace not enabled (mcenabletrace)\n"
+	     "Please re-run the " MCCODE_NAME " compiler "
+	     "with the --trace option, or rerun the\n"
+	     "C compiler with the MC_TRACE_ENABLED macro defined.\n");
+     exit(1);
+   }
+ }
+}
+
+/*******************************************************************************
+* mcreadparams: request parameters from the prompt (or use default)
+*******************************************************************************/
+void
+mcreadparams(void)
+{
+  int i,j,status;
+  static char buf[CHAR_BUF_LENGTH];
+  char *p;
+  int len;
+
+  MPI_MASTER(printf("Instrument parameters for %s (%s)\n",
+                    instrument_name, instrument_source));
+
+  for(i = 0; mcinputtable[i].name != 0; i++)
+  {
+    do
+    {
+      MPI_MASTER(
+                 if (mcinputtable[i].val && strlen(mcinputtable[i].val))
+                   printf("Set value of instrument parameter %s (%s) [default='%s']:\n",
+                          mcinputtable[i].name,
+                          (*mcinputtypes[mcinputtable[i].type].parminfo)
+                          (mcinputtable[i].name), mcinputtable[i].val);
+                 else
+                   printf("Set value of instrument parameter %s (%s):\n",
+                          mcinputtable[i].name,
+                          (*mcinputtypes[mcinputtable[i].type].parminfo)
+                          (mcinputtable[i].name));
+                 fflush(stdout);
+                 );
+#ifdef USE_MPI
+      if(mpi_node_rank == mpi_node_root)
+        {
+          p = fgets(buf, CHAR_BUF_LENGTH, stdin);
+          if(p == NULL)
+            {
+              fprintf(stderr, "Error: empty input for paramater %s (mcreadparams)\n", mcinputtable[i].name);
+              exit(1);
+            }
+        }
+      else
+        p = buf;
+      MPI_Bcast(buf, CHAR_BUF_LENGTH, MPI_CHAR, mpi_node_root, MPI_COMM_WORLD);
+#else /* !USE_MPI */
+      p = fgets(buf, CHAR_BUF_LENGTH, stdin);
+      if(p == NULL)
+        {
+          fprintf(stderr, "Error: empty input for paramater %s (mcreadparams)\n", mcinputtable[i].name);
+          exit(1);
+        }
+#endif /* USE_MPI */
+      len = strlen(buf);
+      if (!len || (len == 1 && (buf[0] == '\n' || buf[0] == '\r')))
+      {
+        if (mcinputtable[i].val && strlen(mcinputtable[i].val)) {
+          strncpy(buf, mcinputtable[i].val, CHAR_BUF_LENGTH);  /* use default value */
+          len = strlen(buf);
+        }
+      }
+      for(j = 0; j < 2; j++)
+      {
+        if(len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r'))
+        {
+          len--;
+          buf[len] = '\0';
+        }
+      }
+
+      status = (*mcinputtypes[mcinputtable[i].type].getparm)
+                   (buf, mcinputtable[i].par);
+      if(!status)
+      {
+        (*mcinputtypes[mcinputtable[i].type].error)(mcinputtable[i].name, buf);
+        if (!mcinputtable[i].val || strlen(mcinputtable[i].val)) {
+          fprintf(stderr, "       Change %s default value in instrument definition.\n", mcinputtable[i].name);
+          exit(1);
+        }
+      }
+    } while(!status);
+  }
+} /* mcreadparams */
+
+/*******************************************************************************
+* mcparseoptions: parse command line arguments (options, parameters)
+*******************************************************************************/
+void
+mcparseoptions(int argc, char *argv[])
+{
+  int i, j;
+  char *p;
+  int paramset = 0, *paramsetarray;
+  char *usedir=NULL;
+
+  /* Add one to numipar to avoid allocating zero size memory block. */
+  paramsetarray = (int*)malloc((numipar + 1)*sizeof(*paramsetarray));
+  if(paramsetarray == NULL)
+  {
+    fprintf(stderr, "Error: insufficient memory (mcparseoptions)\n");
+    exit(1);
+  }
+  for(j = 0; j < numipar; j++)
+    {
+      paramsetarray[j] = 0;
+      if (mcinputtable[j].val != NULL && strlen(mcinputtable[j].val))
+      {
+        int  status;
+        char buf[CHAR_BUF_LENGTH];
+        strncpy(buf, mcinputtable[j].val, CHAR_BUF_LENGTH);
+        status = (*mcinputtypes[mcinputtable[j].type].getparm)
+                   (buf, mcinputtable[j].par);
+        if(!status) fprintf(stderr, "Invalid '%s' default value %s in instrument definition (mcparseoptions)\n", mcinputtable[j].name, buf);
+        else paramsetarray[j] = 1;
+      } else {
+        (*mcinputtypes[mcinputtable[j].type].getparm)
+          (NULL, mcinputtable[j].par);
+        paramsetarray[j] = 0;
+      }
+    }
+  for(i = 1; i < argc; i++)
+  {
+    if(!strcmp("-s", argv[i]) && (i + 1) < argc)
+      mcsetseed(argv[++i]);
+    else if(!strncmp("-s", argv[i], 2))
+      mcsetseed(&argv[i][2]);
+    else if(!strcmp("--seed", argv[i]) && (i + 1) < argc)
+      mcsetseed(argv[++i]);
+    else if(!strncmp("--seed=", argv[i], 7))
+      mcsetseed(&argv[i][7]);
+    else if(!strcmp("-n", argv[i]) && (i + 1) < argc)
+      mcsetn_arg(argv[++i]);
+    else if(!strncmp("-n", argv[i], 2))
+      mcsetn_arg(&argv[i][2]);
+    else if(!strcmp("--ncount", argv[i]) && (i + 1) < argc)
+      mcsetn_arg(argv[++i]);
+    else if(!strncmp("--ncount=", argv[i], 9))
+      mcsetn_arg(&argv[i][9]);
+    else if(!strcmp("-d", argv[i]) && (i + 1) < argc)
+      usedir=argv[++i];  /* will create directory after parsing all arguments (end of this function) */
+    else if(!strncmp("-d", argv[i], 2))
+      usedir=&argv[i][2];
+    else if(!strcmp("--dir", argv[i]) && (i + 1) < argc)
+      usedir=argv[++i];
+    else if(!strncmp("-a", argv[i], 2))
+      mcappend = 1;
+    else if(!strcmp("--append", argv[i]))
+      mcappend = 1;
+    else if(!strncmp("--dir=", argv[i], 6))
+      usedir=&argv[i][6];
+    else if(!strcmp("-h", argv[i]))
+      mcshowhelp(argv[0]);
+    else if(!strcmp("--help", argv[i]) || !strcmp("--version", argv[i]))
+      mcshowhelp(argv[0]);
+    else if(!strcmp("-i", argv[i])) {
+      mcformat=FLAVOR_UPPER;
+      mcinfo();
+    }
+    else if(!strcmp("--info", argv[i]))
+      mcinfo();
+    else if (!strcmp("--list-parameters", argv[i]))
+      mcparameterinfo();
+    else if (!strcmp("--meta-list", argv[i]) && ((i+1) >= argc || argv[i+1][0] == '-')){
+      //printf("Components with metadata defined:\n");
+      exit(metadata_table_print_all_components(num_metadata, metadata_table) == 0);
+    }
+    else if (!strcmp("--meta-defined", argv[i]) && (i+1) < argc){
+      exit(metadata_table_print_component_keys(num_metadata, metadata_table, argv[i+1]) == 0);
+    }
+    else if (!strcmp("--meta-type", argv[i]) && (i+1) < argc){
+      char * literal_type = metadata_table_type(num_metadata, metadata_table, argv[i+1]);
+      if (literal_type == NULL) exit(1);
+      printf("%s\n", literal_type);
+      exit(0);
+    }
+    else if (!strcmp("--meta-data", argv[i]) && (i+1) < argc){
+      char * literal = metadata_table_literal(num_metadata, metadata_table, argv[i+1]);
+      if (literal == NULL) exit(1);
+      printf("%s\n", literal);
+      exit(0);
+    }
+    else if(!strncmp("--trace=", argv[i], 8)) {
+      mcenabletrace(atoi(&argv[i][8]));
+    } else if(!strncmp("-t=", argv[i], 3) || !strcmp("--verbose", argv[i])) {
+      mcenabletrace(atoi(&argv[i][3]));
+    } else if(!strcmp("-t", argv[i]))
+      mcenabletrace(1);
+    else if(!strcmp("--trace", argv[i]) || !strcmp("--verbose", argv[i]))
+      mcenabletrace(1);
+    else if(!strcmp("--gravitation", argv[i]))
+      mcgravitation = 1;
+    else if(!strcmp("-g", argv[i]))
+      mcgravitation = 1;
+    else if(!strcmp("--yes", argv[i]))
+      mcusedefaults = 1;
+    else if(!strcmp("-y", argv[i]))
+      mcusedefaults = 1;
+    else if(!strncmp("--format=", argv[i], 9)) {
+      mcformat=&argv[i][9];
+    }
+    else if(!strcmp("--format", argv[i]) && (i + 1) < argc) {
+      mcformat=argv[++i];
+    }
+#ifdef USE_NEXUS
+    else if(!strcmp("--IDF", argv[i])) {
+      mcnexus_embed_idf = 1;
+    }
+#endif
+    else if(!strncmp("--vecsize=", argv[i], 10)) {
+      vecsize=atoi(&argv[i][10]);
+    }    
+    else if(!strcmp("--vecsize", argv[i]) && (i + 1) < argc) {
+      vecsize=atoi(argv[++i]);
+    }
+    else if(!strncmp("--bufsiz=", argv[i], 9)) {
+      MONND_BUFSIZ=atoi(&argv[i][9]);
+    }
+    else if(!strcmp("--bufsiz", argv[i]) && (i + 1) < argc) {
+      MONND_BUFSIZ=atoi(argv[++i]);
+    }
+    else if(!strncmp("--numgangs=", argv[i], 11)) {
+      numgangs=atoi(&argv[i][11]);
+    }
+    else if(!strcmp("--numgangs", argv[i]) && (i + 1) < argc) {
+      numgangs=atoi(argv[++i]);
+    }
+    else if(!strncmp("--gpu_innerloop=", argv[i], 16)) {
+      gpu_innerloop=(long)strtod(&argv[i][16], NULL);
+    }
+    else if(!strcmp("--gpu_innerloop", argv[i]) && (i + 1) < argc) {
+      gpu_innerloop=(long)strtod(argv[++i], NULL);
+    }
+
+    else if(!strcmp("--no-output-files", argv[i]))
+      mcdisable_output_files = 1;
+    else if(!strcmp("--source", argv[i])) {
+      printf("/* Source code %s from %s: */\n"
+        "/******************************************************************************/\n"
+        "%s\n"
+        "/******************************************************************************/\n"
+        "/* End of source code %s from %s */\n",
+        instrument_name, instrument_source, instrument_code,
+        instrument_name, instrument_source);
+      exit(1);
+    }
+    else if(argv[i][0] != '-' && (p = strchr(argv[i], '=')) != NULL)
+    {
+      *p++ = '\0';
+
+      for(j = 0; j < numipar; j++)
+        if(!strcmp(mcinputtable[j].name, argv[i]))
+        {
+          int status;
+          status = (*mcinputtypes[mcinputtable[j].type].getparm)(p,
+                        mcinputtable[j].par);
+          if(!status || !strlen(p))
+          {
+            (*mcinputtypes[mcinputtable[j].type].error)
+              (mcinputtable[j].name, p);
+            exit(1);
+          }
+          paramsetarray[j] = 1;
+          paramset = 1;
+          break;
+        }
+      if(j == numipar)
+      {                                /* Unrecognized parameter name */
+        fprintf(stderr, "Error: unrecognized parameter %s (mcparseoptions)\n", argv[i]);
+        exit(1);
+      }
+    }
+    else if(argv[i][0] == '-') {
+      fprintf(stderr, "Error: unrecognized option argument %s (mcparseoptions). Ignored.\n", argv[i++]);
+    }
+    else {
+      fprintf(stderr, "Error: unrecognized argument %s (mcparseoptions). Aborting.\n", argv[i]);
+      mcusage(argv[0]);
+    }
+  }
+  if (mcusedefaults) {
+    MPI_MASTER(
+     printf("Using default values for parameters not given\n");
+    );
+    paramset = 1; /* defaults were already set above */
+  }
+  if(!paramset)
+    mcreadparams();                /* Prompt for parameters if not specified. */
+  else
+  {
+    for(j = 0; j < numipar; j++)
+      if(!paramsetarray[j])
+      {
+        fprintf(stderr, "Error: Instrument parameter %s left unset (mcparseoptions)\n",
+                mcinputtable[j].name);
+        exit(1);
+      }
+  }
+  free(paramsetarray);
+#ifdef USE_MPI
+  if (mcdotrace) mpi_node_count=1; /* disable threading when in trace mode */
+#endif
+  if (usedir && strlen(usedir) && !mcdisable_output_files) mcuse_dir(usedir);
+} /* mcparseoptions */
+
+#ifndef NOSIGNALS
+/*******************************************************************************
+* sighandler: signal handler that makes simulation stop, and save results
+*******************************************************************************/
+void sighandler(int sig)
+{
+  /* MOD: E. Farhi, Sep 20th 2001: give more info */
+  time_t t1, t0;
+#define SIG_SAVE 0
+#define SIG_TERM 1
+#define SIG_STAT 2
+#define SIG_ABRT 3
+
+  /* one final save only: a further terminate/save signal while the final save
+     runs is ignored. mpirun forwards signals, so a rank may get SIGTERM twice,
+     the second one possibly in another thread while the first is saving.
+     The flag is set right away to keep that window small. */
+  {
+    static volatile int terminating = 0;
+    int term = 0, save = 0, replay = mcsig_replay;
+    mcsig_replay = 0; /* only this call is the replay */
+#ifdef SIGINT
+    if (sig == SIGINT)   term = 1;
+#endif
+#ifdef SIGTERM
+    if (sig == SIGTERM)  term = 1;
+#endif
+#ifdef SIGQUIT
+    if (sig == SIGQUIT)  term = 1;
+#endif
+#ifdef SIGUSR2
+    if (sig == SIGUSR2)  save = 1;
+#endif
+#ifdef SIGHUP
+    if (sig == SIGHUP)   save = 1;
+#endif
+#ifdef SIGBREAK
+    if (sig == SIGBREAK) save = 1;
+#endif
+    if (!replay && (term || save) && (terminating || mcsave_final)) {
+      printf("\n# " MCCODE_STRING ": [pid %i] Signal %i ignored: final save in progress\n", getpid(), sig);
+      return;
+    }
+    if (term) terminating = 1;
+    if ((term || save) && mcsig_busy && !replay) { /* inside an event list write: finish it first */
+      mcsig_pending = sig;
+      return;
+    }
+  }
+
+  printf("\n# " MCCODE_STRING ": [pid %i] Signal %i detected", getpid(), sig);
+#ifdef USE_MPI
+  printf(" [proc %i]", mpi_node_rank);
+#endif
+#if defined(SIGUSR1) && defined(SIGUSR2) && defined(SIGKILL)
+  if (!strcmp(mcsig_message, "sighandler") && (sig != SIGUSR1) && (sig != SIGUSR2))
+  {
+    printf("\n# Fatal : unrecoverable loop ! Suicide (naughty boy).\n");
+    kill(0, SIGKILL); /* kill myself if error occurs within sighandler: loops */
+  }
+#endif
+  switch (sig) {
+#ifdef SIGINT
+    case SIGINT : printf(" SIGINT (interrupt from terminal, Ctrl-C)"); sig = SIG_TERM; break;
+#endif
+#ifdef SIGILL
+    case SIGILL  : printf(" SIGILL (Illegal instruction)"); sig = SIG_ABRT; break;
+#endif
+#ifdef SIGFPE
+    case SIGFPE  : printf(" SIGFPE (Math Error)"); sig = SIG_ABRT; break;
+#endif
+#ifdef SIGSEGV
+    case SIGSEGV : printf(" SIGSEGV (Mem Error)"); sig = SIG_ABRT; break;
+#endif
+#ifdef SIGTERM
+    case SIGTERM : printf(" SIGTERM (Termination)"); sig = SIG_TERM; break;
+#endif
+#ifdef SIGABRT
+    case SIGABRT : printf(" SIGABRT (Abort)"); sig = SIG_ABRT; break;
+#endif
+#ifdef SIGQUIT
+    case SIGQUIT : printf(" SIGQUIT (Quit from terminal)"); sig = SIG_TERM; break;
+#endif
+#ifdef SIGTRAP
+    case SIGTRAP : printf(" SIGTRAP (Trace trap)"); sig = SIG_ABRT; break;
+#endif
+#ifdef SIGPIPE
+    case SIGPIPE : printf(" SIGPIPE (Broken pipe)"); sig = SIG_ABRT; break;
+#endif
+#ifdef SIGUSR1
+    case SIGUSR1 : printf(" SIGUSR1 (Display info)"); sig = SIG_STAT; break;
+#endif
+#ifdef SIGUSR2
+    case SIGUSR2 : printf(" SIGUSR2 (Save simulation)"); sig = SIG_SAVE; break;
+#endif
+#ifdef SIGHUP
+    case SIGHUP  : printf(" SIGHUP (Hangup/update)"); sig = SIG_SAVE; break;
+#endif
+#ifdef SIGBUS
+    case SIGBUS  : printf(" SIGBUS (Bus error)"); sig = SIG_ABRT; break;
+#endif
+#ifdef SIGURG
+    case SIGURG  : printf(" SIGURG (Urgent socket condition)"); sig = SIG_ABRT; break;
+#endif
+#ifdef SIGBREAK
+    case SIGBREAK: printf(" SIGBREAK (Break signal, Ctrl-Break)"); sig = SIG_SAVE; break;
+#endif
+    default : printf(" (look at signal list for signification)"); sig = SIG_ABRT; break;
+  }
+  printf("\n");
+  printf("# Simulation: %s (%s) \n", instrument_name, instrument_source);
+  printf("# Breakpoint: %s ", mcsig_message);
+  if (strstr(mcsig_message, "Save") && (sig == SIG_SAVE))
+    sig = SIG_STAT;
+  SIG_MESSAGE("sighandler");
+  if (mcget_ncount() == 0)
+    printf("(0 %%)\n" );
+  else
+  {
+    printf("%.2f %% (%10.1f/%10.1f)\n", 100.0*mcget_run_num()/mcget_ncount(), 1.0*mcget_run_num(), 1.0*mcget_ncount());
+  }
+  t0 = (time_t)mcstartdate;
+  t1 = time(NULL);
+  printf("# Date:      %s", ctime(&t1));
+  printf("# Started:   %s", ctime(&t0));
+
+  if (sig == SIG_STAT)
+  {
+    printf("# " MCCODE_STRING ": Resuming simulation (continue)\n");
+    fflush(stdout);
+    return;
+  }
+  else
+  if (sig == SIG_SAVE)
+  {
+    printf("# " MCCODE_STRING ": Saving data and resume simulation (continue)\n");
+    save(NULL);
+    fflush(stdout);
+    return;
+  }
+  else
+  if (sig == SIG_TERM)
+  {
+    printf("# " MCCODE_STRING ": Finishing simulation (save results and exit)\n");
+#if defined(USE_MPI) && defined(USE_NEXUS)
+    mclist_interrupt_note();
+#endif
+    finally();
+    exit(0);
+  }
+  else
+  {
+    fflush(stdout);
+    perror("# Last I/O Error");
+    printf("# " MCCODE_STRING ": Simulation stop (abort).\n");
+// This portion of the signal handling only works on UNIX
+#if defined(__unix__) || defined(__APPLE__)
+    signal(sig, SIG_DFL); /* force to use default sighandler now */
+    kill(getpid(), sig);  /* and trigger it with the current signal */
+#endif
+    exit(-1);
+  }
+#undef SIG_SAVE
+#undef SIG_TERM
+#undef SIG_STAT
+#undef SIG_ABRT
+
+} /* sighandler */
+#endif /* !NOSIGNALS */
+
+#ifdef NEUTRONICS
+/*Main neutronics function steers the McStas calls, initializes parameters etc */
+/* Only called in case NEUTRONICS = TRUE */
+void neutronics_main_(float *inx, float *iny, float *inz, float *invx, float *invy, float *invz, float *intime, float *insx, float *insy, float *insz, float *inw, float *outx, float *outy, float *outz, float *outvx, float *outvy, float *outvz, float *outtime, float *outsx, float *outsy, float *outsz, float *outwgt)
+{
+
+  extern double mcnx, mcny, mcnz, mcnvx, mcnvy, mcnvz;
+  extern double mcnt, mcnsx, mcnsy, mcnsz, mcnp;
+
+  /* External code governs iteration - McStas is iterated once per call to neutronics_main. I.e. below counter must be initiancated for each call to neutronics_main*/
+  mcrun_num=0;
+
+  time_t t;
+  t = (time_t)mcstartdate;
+  mcstartdate = t;  /* set start date before parsing options and creating sim file */
+  init();
+
+  /* *** parse options *** */
+  SIG_MESSAGE("[" __FILE__ "] main START");
+  mcformat=getenv(FLAVOR_UPPER "_FORMAT") ?
+           getenv(FLAVOR_UPPER "_FORMAT") : FLAVOR_UPPER;
+
+  /* Set neutron state based on input from neutronics code */
+  mcsetstate(*inx,*iny,*inz,*invx,*invy,*invz,*intime,*insx,*insy,*insz,*inw);
+
+  /* main neutron event loop - runs only one iteration */
+
+  //mcstas_raytrace(&mcncount); /* prior to McStas 1.12 */
+
+  mcallowbackprop = 1; //avoid absorbtion from negative dt
+  int argc=1;
+  char *argv[0];
+  int dummy = mccode_main(argc, argv);
+
+  *outx =  mcnx;
+  *outy =  mcny;
+  *outz =  mcnz;
+  *outvx =  mcnvx;
+  *outvy =  mcnvy;
+  *outvz =  mcnvz;
+  *outtime =  mcnt;
+  *outsx =  mcnsx;
+  *outsy =  mcnsy;
+  *outsz =  mcnsz;
+  *outwgt =  mcnp;
+
+  return;
+} /* neutronics_main */
+
+#endif /*NEUTRONICS*/
+
+#endif /* !MCCODE_H */
+/* End of file "mccode-r.c". */
+/* End of file "mccode-r.c". */
+
+/* embedding file "mcstas-r.c" */
+
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2009, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Runtime: share/mcstas-r.c
+*
+* %Identification
+* Written by: KN
+* Date:    Aug 29, 1997
+* Release: McStas X.Y
+* Version: $Revision$
+*
+* Runtime system for McStas.
+* Embedded within instrument in runtime mode.
+*
+* Usage: Automatically embbeded in the c code whenever required.
+*
+* $Id$
+*
+*******************************************************************************/
+
+#ifndef MCSTAS_R_H
+#include "mcstas-r.h"
+#endif
+#ifdef DANSE
+#include "mcstas-globals.h"
+#endif
+
+/*******************************************************************************
+* The I/O format definitions and functions
+*******************************************************************************/
+
+/*the magnet stack*/
+#ifdef MC_POL_COMPAT
+void (*mcMagnetPrecession) (double, double, double, double, double, double,
+    double, double*, double*, double*, double, Coords, Rotation)=NULL;
+Coords   mcMagnetPos;
+Rotation mcMagnetRot;
+double*  mcMagnetData                = NULL;
+/* mcMagneticField(x, y, z, t, Bx, By, Bz) */
+int (*mcMagneticField) (double, double, double, double,
+    double*, double*, double*, void *) = NULL;
+#endif
+
+#ifndef MCSTAS_H
+
+/*******************************************************************************
+* mcsetstate: transfer parameters into global McStas variables
+*******************************************************************************/
+_class_particle mcsetstate(double x, double y, double z, double vx, double vy, double vz,
+			   double t, double sx, double sy, double sz, double p, int mcgravitation, void *mcMagnet, int mcallowbackprop)
+{
+  _class_particle mcneutron;
+
+  mcneutron.x  = x;
+  mcneutron.y  = y;
+  mcneutron.z  = z;
+  mcneutron.vx = vx;
+  mcneutron.vy = vy;
+  mcneutron.vz = vz;
+  mcneutron.t  = t;
+  mcneutron.sx = sx;
+  mcneutron.sy = sy;
+  mcneutron.sz = sz;
+  mcneutron.p  = p;
+  mcneutron.mcgravitation = mcgravitation;
+  mcneutron.mcMagnet = mcMagnet;
+  mcneutron.allow_backprop = mcallowbackprop;
+  mcneutron._uid       = 0;
+  mcneutron._index     = 1;
+  mcneutron._absorbed  = 0;
+  mcneutron._restore   = 0;
+  mcneutron._scattered = 0;
+  mcneutron.flag_nocoordschange = 0;
+  
+  /* init tmp-vars - FIXME are they used? */
+  mcneutron._mctmp_a = mcneutron._mctmp_b =  mcneutron._mctmp_c = 0;
+  // what about mcneutron._logic ?
+  mcneutron._logic.dummy=1;
+  // init uservars via cogen'd-function
+  particle_uservar_init(&mcneutron);
+
+  return(mcneutron);
+} /* mcsetstate */
+
+/*******************************************************************************
+* mcgetstate: get neutron parameters from particle structure
+*******************************************************************************/
+_class_particle mcgetstate(_class_particle mcneutron, double *x, double *y, double *z,
+               double *vx, double *vy, double *vz, double *t,
+               double *sx, double *sy, double *sz, double *p)
+{
+  *x  =  mcneutron.x;
+  *y  =  mcneutron.y;
+  *z  =  mcneutron.z;
+  *vx =  mcneutron.vx;
+  *vy =  mcneutron.vy;
+  *vz =  mcneutron.vz;
+  *t  =  mcneutron.t;
+  *sx =  mcneutron.sx;
+  *sy =  mcneutron.sy;
+  *sz =  mcneutron.sz;
+  *p  =  mcneutron.p;
+
+  return(mcneutron);
+} /* mcgetstate */
+
+/*******************************************************************************
+* SCATTER_func: provides function to SCATTER from within libaries
+*******************************************************************************/
+void SCATTER_func(_class_particle *_particle) {
+  if(mcdotrace) {
+    printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", 
+           _particle->x,_particle->y,_particle->z,
+           _particle->vx,_particle->vy,_particle->vz,
+		   _particle->t,
+		   _particle->sx,_particle->sy,_particle->sz,
+		   _particle->p);
+  }
+  if (!_particle->_absorbed) _particle->_scattered++;
+}  /* SCATTER_func */
+
+/*******************************************************************************
+* mcgenstate: set default neutron parameters
+*******************************************************************************/
+// Moved to generated code
+/* #pragma acc routine seq */
+/* _class_particle mcgenstate(void) */
+/* { */
+/*   return(mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, mcMagnet, mcallowbackprop)); */
+/* } */
+
+/*******************************************************************************
+* mccoordschanges: old style rotation routine rot -> (x y z) ,(vx vy vz),(sx,sy,sz)
+*******************************************************************************/
+void
+mccoordschanges(Coords a, Rotation t, double *x, double *y, double *z,
+               double *vx, double *vy, double *vz, double *sx, double *sy, double *sz)
+{
+  Coords b, c;
+
+  b.x = *x;
+  b.y = *y;
+  b.z = *z;
+  c = rot_apply(t, b);
+  b = coords_add(c, a);
+  *x = b.x;
+  *y = b.y;
+  *z = b.z;
+
+  if ( (vz && vy  && vx) && (*vz != 0.0 || *vx != 0.0 || *vy != 0.0) )
+    mccoordschange_polarisation(t, vx, vy, vz);
+
+  if ( (sz && sy  && sx) && (*sz != 0.0 || *sx != 0.0 || *sy != 0.0) )
+    mccoordschange_polarisation(t, sx, sy, sz);
+
+}
+
+/* intersection routines ==================================================== */
+
+/*******************************************************************************
+* inside_rectangle: Check if (x,y) is inside rectangle (xwidth, yheight)
+* return 0 if outside and 1 if inside
+*******************************************************************************/
+int inside_rectangle(double x, double y, double xwidth, double yheight)
+{
+  if (x>-xwidth/2 && x<xwidth/2 && y>-yheight/2 && y<yheight/2)
+    return 1;
+  else
+    return 0;
+}
+
+/*******************************************************************************
+ * box_intersect: compute time intersection with a box
+ * returns 0 when no intersection is found
+ *      or 1 in case of intersection with resulting times dt_in and dt_out
+ * This function written by Stine Nyborg, 1999.
+ *******************************************************************************/
+int box_intersect(double *dt_in, double *dt_out,
+                  double x, double y, double z,
+                  double vx, double vy, double vz,
+                  double dx, double dy, double dz)
+{
+  double x_in, y_in, z_in, tt, t[6], a, b;
+  int i, count, s;
+
+      /* Calculate intersection time for each of the six box surface planes
+       *  If the box surface plane is not hit, the result is zero.*/
+
+  if(vx != 0)
+   {
+    tt = -(dx/2 + x)/vx;
+    y_in = y + tt*vy;
+    z_in = z + tt*vz;
+    if( y_in > -dy/2 && y_in < dy/2 && z_in > -dz/2 && z_in < dz/2)
+      t[0] = tt;
+    else
+      t[0] = 0;
+
+    tt = (dx/2 - x)/vx;
+    y_in = y + tt*vy;
+    z_in = z + tt*vz;
+    if( y_in > -dy/2 && y_in < dy/2 && z_in > -dz/2 && z_in < dz/2)
+      t[1] = tt;
+    else
+      t[1] = 0;
+   }
+  else
+    t[0] = t[1] = 0;
+
+  if(vy != 0)
+   {
+    tt = -(dy/2 + y)/vy;
+    x_in = x + tt*vx;
+    z_in = z + tt*vz;
+    if( x_in > -dx/2 && x_in < dx/2 && z_in > -dz/2 && z_in < dz/2)
+      t[2] = tt;
+    else
+      t[2] = 0;
+
+    tt = (dy/2 - y)/vy;
+    x_in = x + tt*vx;
+    z_in = z + tt*vz;
+    if( x_in > -dx/2 && x_in < dx/2 && z_in > -dz/2 && z_in < dz/2)
+      t[3] = tt;
+    else
+      t[3] = 0;
+   }
+  else
+    t[2] = t[3] = 0;
+
+  if(vz != 0)
+   {
+    tt = -(dz/2 + z)/vz;
+    x_in = x + tt*vx;
+    y_in = y + tt*vy;
+    if( x_in > -dx/2 && x_in < dx/2 && y_in > -dy/2 && y_in < dy/2)
+      t[4] = tt;
+    else
+      t[4] = 0;
+
+    tt = (dz/2 - z)/vz;
+    x_in = x + tt*vx;
+    y_in = y + tt*vy;
+    if( x_in > -dx/2 && x_in < dx/2 && y_in > -dy/2 && y_in < dy/2)
+      t[5] = tt;
+    else
+      t[5] = 0;
+   }
+  else
+    t[4] = t[5] = 0;
+
+  /* The intersection is evaluated and *dt_in and *dt_out are assigned */
+
+  a = b = s = 0;
+  count = 0;
+
+  for( i = 0; i < 6; i = i + 1 )
+    if( t[i] == 0 )
+      s = s+1;
+    else if( count == 0 )
+    {
+      a = t[i];
+      count = 1;
+    }
+    else
+    {
+      b = t[i];
+      count = 2;
+    }
+
+  if ( a == 0 && b == 0 )
+    return 0;
+  else if( a < b )
+  {
+    *dt_in = a;
+    *dt_out = b;
+    return 1;
+  }
+  else
+  {
+    *dt_in = b;
+    *dt_out = a;
+    return 1;
+  }
+
+} /* box_intersect */
+
+/*******************************************************************************
+ * cylinder_intersect: compute intersection with a cylinder
+ * returns 0 when no intersection is found
+ *      or 2/4/8/16 bits depending on intersection,
+ *     and resulting times t0 and t1
+ * Written by: EM,NB,ABA 4.2.98
+  *******************************************************************************/
+int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
+                   double vx, double vy, double vz, double r, double h)
+{
+  double D, t_in, t_out, y_in, y_out;
+  int ret=1;
+
+  D = (2*vx*x + 2*vz*z)*(2*vx*x + 2*vz*z)
+    - 4*(vx*vx + vz*vz)*(x*x + z*z - r*r);
+
+  if (D>=0)
+  {
+    if (vz*vz + vx*vx) {
+      t_in  = (-(2*vz*z + 2*vx*x) - sqrt(D))/(2*(vz*vz + vx*vx));
+      t_out = (-(2*vz*z + 2*vx*x) + sqrt(D))/(2*(vz*vz + vx*vx));
+    } else if (vy) { /* trajectory parallel to cylinder axis */
+      t_in = (-h/2-y)/vy;
+      t_out = (h/2-y)/vy;
+      if (t_in>t_out){
+        double tmp=t_in;
+        t_in=t_out;t_out=tmp;
+      }
+    } else return 0;
+    y_in = vy*t_in + y;
+    y_out =vy*t_out + y;
+
+    if ( (y_in > h/2 && y_out > h/2) || (y_in < -h/2 && y_out < -h/2) )
+      return 0;
+    else
+    {
+      if (y_in > h/2)
+        { t_in = ((h/2)-y)/vy; ret += 2; }
+      else if (y_in < -h/2)
+        { t_in = ((-h/2)-y)/vy; ret += 4; }
+      if (y_out > h/2)
+        { t_out = ((h/2)-y)/vy; ret += 8; }
+      else if (y_out < -h/2)
+        { t_out = ((-h/2)-y)/vy; ret += 16; }
+    }
+    *t0 = t_in;
+    *t1 = t_out;
+    return ret;
+  }
+  else
+  {
+    *t0 = *t1 = 0;
+    return 0;
+  }
+} /* cylinder_intersect */
+
+
+/*******************************************************************************
+ * sphere_intersect: Calculate intersection between a line and a sphere.
+ * returns 0 when no intersection is found
+ *      or 1 in case of intersection with resulting times t0 and t1
+ *******************************************************************************/
+int sphere_intersect(double *t0, double *t1, double x, double y, double z,
+                 double vx, double vy, double vz, double r)
+{
+  double A, B, C, D, v;
+
+  v = sqrt(vx*vx + vy*vy + vz*vz);
+  A = v*v;
+  B = 2*(x*vx + y*vy + z*vz);
+  C = x*x + y*y + z*z - r*r;
+  D = B*B - 4*A*C;
+  if(D < 0)
+    return 0;
+  D = sqrt(D);
+  *t0 = (-B - D) / (2*A);
+  *t1 = (-B + D) / (2*A);
+  return 1;
+} /* sphere_intersect */
+
+/*******************************************************************************
+ * plane_intersect: Calculate intersection between a plane and a line.
+ * returns 0 when no intersection is found (i.e. line is parallel to the plane)
+ * returns 1 or -1 when intersection time is positive and negative respectively
+ *******************************************************************************/
+int plane_intersect(double *t, double x, double y, double z,
+                 double vx, double vy, double vz, double nx, double ny, double nz, double wx, double wy, double wz)
+{
+  double s;
+  if (fabs(s=scalar_prod(nx,ny,nz,vx,vy,vz))<FLT_EPSILON) return 0;
+  *t = - scalar_prod(nx,ny,nz,x-wx,y-wy,z-wz)/s;
+  if (*t<0) return -1;
+  else return 1;
+} /* plane_intersect */
+
+#endif /* !MCSTAS_H */
+/* End of file "mcstas-r.c". */
+
+
+/* *****************************************************************************
+* Start of instrument 'Text2OFF' generated code
+***************************************************************************** */
+
+#ifdef MC_TRACE_ENABLED
+int traceenabled = 1;
+#else
+int traceenabled = 0;
+#endif
+#define MCSTAS "/Users/peterwillendrup/micromamba/envs/mccode-dev/share/mcstas/resources/"
+int   defaultmain         = 1;
+char  instrument_name[]   = "Text2OFF";
+char  instrument_source[] = "Text2OFF.instr";
+char *instrument_exe      = NULL; /* will be set to argv[0] in main */
+char  instrument_code[]   = "Instrument Text2OFF source code Text2OFF.instr is not embedded in this executable.\n  Use --source option when running mcstas.\n";
+
+int main(int argc, char *argv[]){return mccode_main(argc, argv);}
+
+/* *****************************************************************************
+* instrument 'Text2OFF' and components DECLARE
+***************************************************************************** */
+
+/* Instrument parameters: structure and a table for the initialisation
+   (Used in e.g. inputparse and I/O function (e.g. detector_out) */
+
+struct _struct_instrument_parameters {
+  char* letters;
+  MCNUM size;
+  char* plane;
+  MCNUM thickness;
+  MCNUM rx;
+  MCNUM ry;
+  MCNUM rz;
+};
+typedef struct _struct_instrument_parameters _class_instrument_parameters;
+
+struct _instrument_struct {
+  char   _name[256]; /* the name of this instrument e.g. 'Text2OFF' */
+/* Counters per component instance */
+  double counter_AbsorbProp[3]; /* absorbed events in PROP routines */
+  double counter_N[3], counter_P[3], counter_P2[3]; /* event counters after each component instance */
+  _class_particle _trajectory[3]; /* current trajectory for STORE/RESTORE */
+/* Components position table (absolute and relative coords) */
+  Coords _position_relative[3]; /* positions of all components */
+  Coords _position_absolute[3];
+  _class_instrument_parameters _parameters; /* instrument parameters */
+} _instrument_var;
+struct _instrument_struct *instrument = & _instrument_var;
+#pragma acc declare create ( _instrument_var )
+#pragma acc declare create ( instrument )
+
+int numipar = 7;
+struct mcinputtable_struct mcinputtable[] = {
+  "letters", &(_instrument_var._parameters.letters), instr_type_string, "McStas", "",
+  "size", &(_instrument_var._parameters.size), instr_type_double, "0.5", "",
+  "plane", &(_instrument_var._parameters.plane), instr_type_string, "XY", "",
+  "thickness", &(_instrument_var._parameters.thickness), instr_type_double, "0.1", "",
+  "rx", &(_instrument_var._parameters.rx), instr_type_double, "0", "",
+  "ry", &(_instrument_var._parameters.ry), instr_type_double, "0", "",
+  "rz", &(_instrument_var._parameters.rz), instr_type_double, "0", "",
+  NULL, NULL, instr_type_double, ""
+};
+
+struct metadata_table_struct metadata_table[] = {
+  "", "", "", ""
+};
+int num_metadata = 0;
+
+/* ************************************************************************** */
+/*             SHARE user declarations for all components                     */
+/* ************************************************************************** */
+
+/* Shared user declarations for all components types 'Text'. */
+
+  /* ------------------------------------------------------------------ */
+  /* Stroke font (4 wide x 6 tall grid). NULL = blank (space).          */
+  /* Extend it by adding entries here.                                  */
+  /* ------------------------------------------------------------------ */
+  static const char *glyph[128] = {
+      ['A'] = "0,0 2,6 4,0|1,2 3,2",
+      ['B'] = "0,6 0,0 3,0 4,1 4,2 3,3 0,3|3,3 4,4 4,5 3,6 0,6",
+      ['C'] = "4,5 3,6 1,6 0,5 0,1 1,0 3,0 4,1",
+      ['D'] = "0,6 0,0 2,0 4,2 4,4 2,6 0,6",
+      ['E'] = "4,6 0,6 0,0 4,0|0,3 3,3",
+      ['F'] = "4,6 0,6 0,0|0,3 3,3",
+      ['G'] = "4,5 3,6 1,6 0,5 0,1 1,0 3,0 4,1 4,3 2,3",
+      ['H'] = "0,6 0,0|4,6 4,0|0,3 4,3",
+      ['I'] = "1,6 3,6|2,6 2,0|1,0 3,0",
+      ['J'] = "3,6 3,1 2,0 1,0 0,1",
+      ['K'] = "0,6 0,0|0,2 4,6|1,3 4,0",
+      ['L'] = "0,6 0,0 4,0",
+      ['M'] = "0,0 0,6 2,3 4,6 4,0",
+      ['N'] = "0,0 0,6 4,0 4,6",
+      ['O'] = "1,0 3,0 4,1 4,5 3,6 1,6 0,5 0,1 1,0",
+      ['P'] = "0,0 0,6 3,6 4,5 4,4 3,3 0,3",
+      ['Q'] = "1,0 3,0 4,1 4,5 3,6 1,6 0,5 0,1 1,0|2,2 4,0",
+      ['R'] = "0,0 0,6 3,6 4,5 4,4 3,3 0,3|2,3 4,0",
+      ['S'] = "4,5 3,6 1,6 0,5 0,4 1,3 3,3 4,2 4,1 3,0 1,0 0,1",
+      ['T'] = "0,6 4,6|2,6 2,0",
+      ['U'] = "0,6 0,1 1,0 3,0 4,1 4,6",
+      ['V'] = "0,6 2,0 4,6",
+      ['W'] = "0,6 1,0 2,4 3,0 4,6",
+      ['X'] = "0,0 4,6|0,6 4,0",
+      ['Y'] = "0,6 2,3 4,6|2,3 2,0",
+      ['Z'] = "0,6 4,6 0,0 4,0",
+      ['0'] = "1,0 3,0 4,1 4,5 3,6 1,6 0,5 0,1 1,0|0,1 4,5",
+      ['1'] = "1,5 2,6 2,0|0,0 4,0",
+      ['2'] = "0,5 1,6 3,6 4,5 4,4 0,0 4,0",
+      ['3'] = "0,6 4,6 2,3 4,0 0,0",
+      ['4'] = "3,6 3,0|4,2 0,2 3,6",
+      ['5'] = "4,6 0,6 0,3 3,3 4,2 4,1 3,0 0,0",
+      ['6'] = "4,5 3,6 1,6 0,5 0,1 1,0 3,0 4,1 4,2 3,3 0,3",
+      ['7'] = "0,6 4,6 1,0",
+      ['8'] = "1,0 3,0 4,1 4,2 3,3 1,3 0,2 0,1 1,0"
+              "|1,3 0,4 0,5 1,6 3,6 4,5 4,4 3,3 1,3",
+      ['9'] = "0,1 1,0 3,0 4,1 4,5 3,6 1,6 0,5 0,4 1,3 4,3",
+      ['-'] = "0,3 4,3",
+      ['+'] = "0,3 4,3|2,1 2,5",
+      ['.'] = "1,0 1,1",
+      [','] = "1,1 2,0",
+      [':'] = "1,1 2,1|1,4 2,4",
+      ['/'] = "0,0 4,6",
+      ['('] = "3,6 2,5 2,1 3,0",
+      [')'] = "1,6 2,5 2,1 1,0",
+      ['!'] = "2,6 2,1|1,0 3,0",
+      ['?'] = "0,5 1,6 3,6 4,5 4,4 2,2 2,0",
+      ['_'] = "0,0 4,0",
+      ['='] = "0,2 4,2|0,4 4,4",
+      ['*'] = "2,2 2,6|0,3 4,5|0,5 4,3",
+      [' '] = NULL,
+  };
+
+  /* ------------------------------------------------------------------ */
+  /* Core: draw one glyph at pen position (u0,0), scaled.                */
+  /* plane: 0 = XY, 1 = YZ, 2 = ZX. Text runs along the first axis,       */
+  /* letter height grows along the second axis.                          */
+  /* ------------------------------------------------------------------ */
+  
+
+
+
+/* ************************************************************************** */
+/*             End of SHARE user declarations for all components              */
+/* ************************************************************************** */
+
+
+/* ********************** component definition declarations. **************** */
+
+/* component label=Text() [1] DECLARE */
+/* Parameter definition for component type 'Text' */
+struct _struct_Text_parameters {
+  /* Component type 'Text' setting parameters */
+  char text[16384];
+  MCNUM size;
+  char plane[16384];
+  MCNUM pen_thickness;
+  /* Component type 'Text' private parameters */
+  int  pl;
+}; /* _struct_Text_parameters */
+typedef struct _struct_Text_parameters _class_Text_parameters;
+
+/* Parameters for component type 'Text' */
+struct _struct_Text {
+  char     _name[256]; /* e.g. label */
+  char     _type[256]; /* Text */
+  long     _index; /* e.g. 1 index in TRACE list */
+  Coords   _position_absolute;
+  Coords   _position_relative; /* wrt PREVIOUS */
+  Rotation _rotation_absolute;
+  Rotation _rotation_relative; /* wrt PREVIOUS */
+  int      _rotation_is_identity;
+  int      _position_relative_is_zero;
+  _class_Text_parameters _parameters;
+};
+typedef struct _struct_Text _class_Text;
+_class_Text _label_var;
+#pragma acc declare create ( _label_var )
+
+int mcNUMCOMP = 1;
+
+/* User declarations from instrument definition. Can define functions. */
+
+#undef compcurname
+#undef compcurtype
+#undef compcurindex
+/* end of instrument 'Text2OFF' and components DECLARE */
+
+/* *****************************************************************************
+* instrument 'Text2OFF' and components INITIALISE
+***************************************************************************** */
+
+double index_getdistance(int first_index, int second_index)
+/* Calculate the distance two components from their indexes*/
+{
+  return coords_len(coords_sub(POS_A_COMP_INDEX(first_index), POS_A_COMP_INDEX(second_index)));
+}
+
+double getdistance(char* first_component, char* second_component)
+/* Calculate the distance between two named components */
+{
+  int first_index = _getcomp_index(first_component);
+  int second_index = _getcomp_index(second_component);
+  return index_getdistance(first_index, second_index);
+}
+
+double checked_setpos_getdistance(int current_index, char* first_component, char* second_component)
+/* Calculate the distance between two named components at *_setpos() time, with component index checking */
+{
+  int first_index = _getcomp_index(first_component);
+  int second_index = _getcomp_index(second_component);
+  if (first_index >= current_index || second_index >= current_index) {
+    printf("setpos_getdistance can only be used with the names of components before the current one!\n");
+    return 0;
+  }
+  return index_getdistance(first_index, second_index);
+}
+#define setpos_getdistance(first, second) checked_setpos_getdistance(current_setpos_index, first, second)
+
+/* component label=Text() SETTING, POSITION/ROTATION */
+int _label_setpos(void)
+{ /* sets initial component parameters, position and rotation */
+  SIG_MESSAGE("[_label_setpos] component label=Text() SETTING [/Users/peterwillendrup/micromamba/envs/mccode-dev/share/mcstas/resources/misc/Text.comp:108]");
+  stracpy(_label_var._name, "label", 16384);
+  stracpy(_label_var._type, "Text", 16384);
+  _label_var._index=1;
+  int current_setpos_index = 1;
+  if(_instrument_var._parameters.letters && strlen(_instrument_var._parameters.letters))
+    stracpy(_label_var._parameters.text, _instrument_var._parameters.letters ? _instrument_var._parameters.letters : "", 16384);
+  else 
+  _label_var._parameters.text[0]='\0';
+  _label_var._parameters.size = _instrument_var._parameters.size;
+  if(_instrument_var._parameters.plane && strlen(_instrument_var._parameters.plane))
+    stracpy(_label_var._parameters.plane, _instrument_var._parameters.plane ? _instrument_var._parameters.plane : "", 16384);
+  else 
+  _label_var._parameters.plane[0]='\0';
+  _label_var._parameters.pen_thickness = _instrument_var._parameters.thickness;
+
+
+  /* component label=Text() AT ROTATED */
+  {
+    Coords tc1, tc2;
+    tc1 = coords_set(0,0,0);
+    tc2 = coords_set(0,0,0);
+    Rotation tr1;
+    rot_set_rotation(tr1,0,0,0);
+    rot_set_rotation(_label_var._rotation_absolute,
+      (_instrument_var._parameters.rx)*DEG2RAD, (_instrument_var._parameters.ry)*DEG2RAD, (_instrument_var._parameters.rz)*DEG2RAD);
+    rot_copy(_label_var._rotation_relative, _label_var._rotation_absolute);
+    _label_var._rotation_is_identity =  rot_test_identity(_label_var._rotation_relative);
+    _label_var._position_absolute = coords_set(
+      0, 0, 0);
+    tc1 = coords_neg(_label_var._position_absolute);
+    _label_var._position_relative = rot_apply(_label_var._rotation_absolute, tc1);
+  } /* label=Text() AT ROTATED */
+  DEBUG_COMPONENT("label", _label_var._position_absolute, _label_var._rotation_absolute);
+  instrument->_position_absolute[1] = _label_var._position_absolute;
+  instrument->_position_relative[1] = _label_var._position_relative;
+    _label_var._position_relative_is_zero =  coords_test_zero(_label_var._position_relative);
+  instrument->counter_N[1]  = instrument->counter_P[1] = instrument->counter_P2[1] = 0;
+  instrument->counter_AbsorbProp[1]= 0;
+  #ifdef USE_NEXUS
+  if(nxhandle) {
+    if ((!mcdotrace) && mcformat && strcasestr(mcformat, "NeXus")) {
+    MPI_MASTER(
+        mccomp_placement_type_nexus(nxhandle,"0000_label", _label_var._position_absolute, _label_var._rotation_absolute, "Text");
+        mccomp_param_nexus(nxhandle,"0000_label", "text", "NONE", _instrument_var._parameters.letters, "char*");
+        mccomp_param_nexus(nxhandle,"0000_label", "size", "0.5", "_instrument_var._parameters.size","MCNUM");
+        mccomp_param_nexus(nxhandle,"0000_label", "plane", "XY", _instrument_var._parameters.plane, "char*");
+        mccomp_param_nexus(nxhandle,"0000_label", "pen_thickness", "0.1", "_instrument_var._parameters.thickness","MCNUM");
+      );
+    }
+  } else {
+    // fprintf(stderr,"NO NEXUS FILE");
+  }
+  #endif
+  return(0);
+} /* _label_setpos */
+
+_class_Text *class_Text_init(_class_Text *_comp
+) {
+  #define text (_comp->_parameters.text)
+  #define size (_comp->_parameters.size)
+  #define plane (_comp->_parameters.plane)
+  #define pen_thickness (_comp->_parameters.pen_thickness)
+  #define pl (_comp->_parameters.pl)
+  SIG_MESSAGE("[_label_init] component label=Text() INITIALISE [/Users/peterwillendrup/micromamba/envs/mccode-dev/share/mcstas/resources/misc/Text.comp:108]");
+
+  if (!text || !plane || size <= 0.0f || pen_thickness < 0) {
+    exit(-fprintf (stderr, "Error (%s): Text has invalid parameters.\n", NAME_CURRENT_COMP));
+    exit (-1);
+  }
+  if (strlen(plane) != 2)
+    exit(-fprintf (stderr, "Error (%s): Invalid plane.\n", NAME_CURRENT_COMP));
+    
+  if      (plane[0] == 'X' && plane[1] == 'Y') pl = 0;
+  else if (plane[0] == 'Y' && plane[1] == 'Z') pl = 1;
+  else if (plane[0] == 'X' && plane[1] == 'Z') pl = 2;
+  else if (plane[1] == 'X' && plane[0] == 'Z') pl = 2;
+  else 
+    exit(-fprintf (stderr, "Error (%s): Invalid plane specification. Must be XY, YZ or XZ\n", NAME_CURRENT_COMP));
+
+  if (mcdotrace==1) {
+    /* For legacy mcdisplay line-mode, run with 0 thickness */
+    pen_thickness=0;
+  }
+  #undef text
+  #undef size
+  #undef plane
+  #undef pen_thickness
+  #undef pl
+  return(_comp);
+} /* class_Text_init */
+
+
+
+int init(void) { /* called by mccode_main for Text2OFF:INITIALISE */
+  DEBUG_INSTR();
+  // Initialise rng
+  srandom(_hash(mcseed-1));
+
+  /* code_main/parseoptions/readparams sets instrument parameters value */
+  stracpy(instrument->_name, "Text2OFF", 256);
+
+  _label_setpos(); /* type Text */
+
+  /* call iteratively all components INITIALISE */
+  class_Text_init(&_label_var);
+
+  if (mcdotrace) display();
+  DEBUG_INSTR_END();
+
+#ifdef OPENACC
+#include <openacc.h>
+#pragma acc update device(_label_var)
+#pragma acc update device(_instrument_var)
+#endif
+
+  return(0);
+} /* init */
+
+/*******************************************************************************
+* components TRACE
+*******************************************************************************/
+
+#define x (_particle->x)
+#define y (_particle->y)
+#define z (_particle->z)
+#define vx (_particle->vx)
+#define vy (_particle->vy)
+#define vz (_particle->vz)
+#define t (_particle->t)
+#define sx (_particle->sx)
+#define sy (_particle->sy)
+#define sz (_particle->sz)
+#define p (_particle->p)
+#define mcgravitation (_particle->mcgravitation)
+#define mcMagnet (_particle->mcMagnet)
+#define allow_backprop (_particle->allow_backprop)
+#define _mctmp_a (_particle->_mctmp_a)
+#define _mctmp_b (_particle->_mctmp_b)
+#define _mctmp_c (_particle->_mctmp_c)
+/* if on GPU, globally nullify sprintf,fprintf,printfs   */
+/* (Similar defines are available in each comp trace but */
+/*  those are not enough to handle external libs etc. )  */
+#ifdef OPENACC
+#define fprintf(stderr,...) printf(__VA_ARGS__)
+#define sprintf(string,...) printf(__VA_ARGS__)
+#define exit(...) noprintf()
+#define strcmp(a,b) str_comp(a,b)
+#define strlen(a) str_len(a)
+#endif
+#define SCATTERED (_particle->_scattered)
+#define RESTORE (_particle->_restore)
+#define RESTORE_NEUTRON(_index, ...) _particle->_restore = _index;
+#define ABSORB0 do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return; } while(0)
+#define ABSORBED (_particle->_absorbed)
+#define mcget_run_num() _particle->_uid
+#define ABSORB ABSORB0
+#pragma acc routine
+void class_Text_trace(_class_Text *_comp
+  , _class_particle *_particle) {
+  ABSORBED=SCATTERED=RESTORE=0;
+  #define text (_comp->_parameters.text)
+  #define size (_comp->_parameters.size)
+  #define plane (_comp->_parameters.plane)
+  #define pen_thickness (_comp->_parameters.pen_thickness)
+  #define pl (_comp->_parameters.pl)
+  SIG_MESSAGE("[_label_trace] component label=Text() TRACE [/Users/peterwillendrup/micromamba/envs/mccode-dev/share/mcstas/resources/misc/Text.comp:129]");
+
+  /* component Text does nothing */
+#ifndef NOABSORB_INF_NAN
+  /* Check for nan or inf particle parms */ 
+  if(isnan(p + t + vx + vy + vz + x + y + z)) ABSORB;
+  if(isinf(fabs(p) + fabs(t) + fabs(vx) + fabs(vy) + fabs(vz) + fabs(x) + fabs(y) + fabs(z))) ABSORB;
+#else
+  if(isnan(p)  ||  isinf(p)) printf("NAN or INF found in p,  %s (particle %lld)\n",_comp->_name,_particle->_uid);
+  if(isnan(t)  ||  isinf(t)) printf("NAN or INF found in t,  %s (particle %lld)\n",_comp->_name,_particle->_uid);
+  if(isnan(vx) || isinf(vx)) printf("NAN or INF found in vx, %s (particle %lld)\n",_comp->_name,_particle->_uid);
+  if(isnan(vy) || isinf(vy)) printf("NAN or INF found in vy, %s (particle %lld)\n",_comp->_name,_particle->_uid);
+  if(isnan(vz) || isinf(vz)) printf("NAN or INF found in vz, %s (particle %lld)\n",_comp->_name,_particle->_uid);
+  if(isnan(x)  ||  isinf(x)) printf("NAN or INF found in x,  %s (particle %lld)\n",_comp->_name,_particle->_uid);
+  if(isnan(y)  ||  isinf(y)) printf("NAN or INF found in y,  %s (particle %lld)\n",_comp->_name,_particle->_uid);
+  if(isnan(z)  ||  isinf(z)) printf("NAN or INF found in z,  %s (particle %lld)\n",_comp->_name,_particle->_uid);
+#endif
+  #undef text
+  #undef size
+  #undef plane
+  #undef pen_thickness
+  #undef pl
+  return;
+} /* class_Text_trace */
+
+/* *****************************************************************************
+* instrument 'Text2OFF' TRACE
+***************************************************************************** */
+
+#ifndef FUNNEL
+#pragma acc routine
+int raytrace(_class_particle* _particle) { /* single event propagation, called by mccode_main for Text2OFF:TRACE */
+
+  /* init variables and counters for TRACE */
+  #undef ABSORB0
+  #undef ABSORB
+  #define ABSORB0 do { DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++;} while(0)
+  #define ABSORB ABSORB0
+  DEBUG_ENTER();
+  DEBUG_STATE();
+  _particle->flag_nocoordschange=0; /* Init */
+  _class_particle _particle_save=*_particle;
+  /* the main iteration loop for one incoming event */
+  while (!ABSORBED) { /* iterate event until absorbed */
+    /* send particle event to component instance, one after the other */
+    /* begin component label=Text() [1] */
+    if (!_particle->flag_nocoordschange) { // flag activated by JUMP to pass coords change
+      if (_label_var._rotation_is_identity) {
+        if(!_label_var._position_relative_is_zero) {
+          coords_get(coords_add(coords_set(x,y,z), _label_var._position_relative),&x, &y, &z);
+        }
+      } else {
+          mccoordschange(_label_var._position_relative, _label_var._rotation_relative, _particle);
+      }
+    }
+    if (!ABSORBED && _particle->_index == 1) {
+      _particle->flag_nocoordschange=0; /* Reset if we came here from a JUMP */
+      _particle_save = *_particle;
+      DEBUG_COMP(_label_var._name);
+      DEBUG_STATE();
+      class_Text_trace(&_label_var, _particle);
+      if (_particle->_restore)
+        particle_restore(_particle, &_particle_save);
+      _particle->_index++;
+      if (!ABSORBED) { DEBUG_STATE(); }
+    } /* end component label [1] */
+    if (_particle->_index > 1)
+      ABSORBED++; /* absorbed when passed all components */
+  } /* while !ABSORBED */
+
+  DEBUG_LEAVE()
+  particle_restore(_particle, &_particle_save);
+  DEBUG_STATE()
+
+  return(_particle->_index);
+} /* raytrace */
+
+/* loop to generate events and call raytrace() propagate them */
+void raytrace_all(unsigned long long ncount, unsigned long seed) {
+
+  // if on GPU and mcdotrace just exit
+  #ifdef OPENACC
+  if (!mcdotrace) {
+  #endif
+
+  /* CPU-loop */
+  unsigned long long loops;
+  loops = ceil((double)ncount/gpu_innerloop);
+  /* if on GPU, printf has been globally nullified, re-enable here */
+  #ifdef OPENACC
+  #undef strlen
+  #undef strcmp
+  #undef exit
+  #undef printf
+  #undef sprintf
+  #undef fprintf
+  #endif
+
+  #ifdef OPENACC
+  if (ncount>gpu_innerloop) {
+    printf("Defining %llu CPU loops around GPU kernel and adjusting ncount\n",loops);
+    mcset_ncount(loops*gpu_innerloop);
+  } else {
+    #endif
+    loops=1;
+    gpu_innerloop = ncount;
+    #ifdef OPENACC
+  }
+    #endif
+
+  for (unsigned long long cloop=0; cloop<loops; cloop++) {
+    #ifdef OPENACC
+    if (loops>1) fprintf(stdout, "%d..", (int)cloop); fflush(stdout);
+    #endif
+
+    /* if on GPU, re-nullify printf */
+     #ifdef OPENACC
+     #undef strlen
+     #undef strcmp
+     #undef exit
+     #undef printf
+     #undef sprintf
+     #undef fprintf
+     #endif
+
+    #pragma acc parallel loop num_gangs(numgangs) vector_length(vecsize)
+    for (unsigned long pidx=0 ; pidx < gpu_innerloop ; pidx++) {
+      _class_particle particleN = mcgenstate(); // initial particle
+      _class_particle* _particle = &particleN;
+      particleN._uid = cloop*gpu_innerloop + pidx;
+      #ifdef USE_MPI
+      particleN._uid += mpi_node_rank * loops*gpu_innerloop;
+      #endif
+
+      srandom(_hash(_hash(seed) + cloop*gpu_innerloop + pidx));
+
+      raytrace(_particle);
+    } /* inner for */
+  } /* CPU for */
+  /* if on GPU, printf has been globally nullified, re-enable here */
+     #ifdef OPENACC
+     #undef strlen
+     #undef strcmp
+     #undef exit
+     #undef printf
+     #undef sprintf
+     #undef fprintf
+     #endif
+  MPI_MASTER(
+  printf("*** TRACE end *** \n");
+  );
+
+  // if on GPU and mcdotrace just exit
+  #ifdef OPENACC
+  }
+  #endif
+
+} /* raytrace_all */
+
+#endif //no-FUNNEL
+
+#ifdef FUNNEL
+// Alternative raytrace algorithm which iterates all particles through
+// one component at the time, can remove absorbs from the next loop and
+// switch between cpu/gpu.
+void raytrace_all_funnel(unsigned long long ncount, unsigned long seed) {
+
+  // if on GPU and mcdotrace just exit
+  #ifdef OPENACC
+  if (!mcdotrace) {
+  #endif
+  // set up outer (CPU) loop / particle batches
+  unsigned long long loops;
+
+  /* if on GPU, printf has been globally nullified, re-enable here */
+   #ifdef OPENACC
+   #undef strlen
+   #undef strcmp
+   #undef exit
+   #undef printf
+   #undef sprintf
+   #undef fprintf
+   #endif
+  #ifdef OPENACC
+  loops = ceil((double)ncount/gpu_innerloop);
+  if (ncount>gpu_innerloop) {
+    printf("Defining %llu CPU loops around kernel and adjusting ncount\n",loops);
+    mcset_ncount(loops*gpu_innerloop);
+  } else {
+  #endif
+    loops=1;
+    gpu_innerloop = ncount;
+  #ifdef OPENACC
+  }
+  #endif
+
+  // create particles struct and pointer arrays (same memory used by all batches)
+  _class_particle* particles = malloc(gpu_innerloop*sizeof(_class_particle));
+  _class_particle* pbuffer = malloc(gpu_innerloop*sizeof(_class_particle));
+  if (!particles || !pbuffer) {
+    fprintf(stderr, "Error: cannot allocate %ld particles (raytrace_all_funnel). Use a smaller --gpu_innerloop.\n", gpu_innerloop);
+    exit(1);
+  }
+  long livebatchsize = gpu_innerloop;
+
+  #undef ABSORB0
+  #undef ABSORB
+  #define ABSORB0 do { DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; } while(0)
+  #define ABSORB ABSORB0
+  // outer loop / particle batches
+  for (unsigned long long cloop=0; cloop<loops; cloop++) {
+    if (loops>1) fprintf(stdout, "%d..", (int)cloop); fflush(stdout);
+
+    livebatchsize = gpu_innerloop; // a SPLIT in the previous batch may have changed it
+    // init particles
+    #pragma acc parallel loop present(particles[0:livebatchsize])
+    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {
+      // generate particle state, set loop index and seed
+      particles[pidx] = mcgenstate();
+      _class_particle* _particle = particles + pidx;
+      _particle->_uid = cloop*gpu_innerloop + pidx;
+      #ifdef USE_MPI
+      _particle->_uid += mpi_node_rank * loops*gpu_innerloop;
+      #endif
+      srandom(_hash(_hash(seed) + cloop*gpu_innerloop + pidx)); // _particle->state usage built into srandom macro
+    }
+
+    // iterate components
+
+    #pragma acc parallel loop present(particles[0:livebatchsize])
+    for (unsigned long pidx=0 ; pidx < livebatchsize ; pidx++) {
+      _class_particle* _particle = &particles[pidx];
+      _class_particle _particle_save;
+
+      // label
+    if (!ABSORBED && _particle->_index == 1) {
+#ifndef MULTICORE
+        if (_label_var._rotation_is_identity)
+          coords_get(coords_add(coords_set(x,y,z), _label_var._position_relative),&x, &y, &z);
+        else
+#endif
+          mccoordschange(_label_var._position_relative, _label_var._rotation_relative, _particle);
+        _particle_save = *_particle;
+        class_Text_trace(&_label_var, _particle);
+        if (_particle->_restore)
+        particle_restore(_particle, &_particle_save);
+        _particle->_index++;
+      }
+
+    }
+
+  } // outer loop / particle batches
+
+  free(particles);
+  free(pbuffer);
+
+  printf("\n");
+  // if on GPU and mcdotrace just exit
+  #ifdef OPENACC
+  }
+  #endif
+} /* raytrace_all_funnel */
+#endif // FUNNEL
+
+#undef x
+#undef y
+#undef z
+#undef vx
+#undef vy
+#undef vz
+#undef t
+#undef sx
+#undef sy
+#undef sz
+#undef p
+#undef mcgravitation
+#undef mcMagnet
+#undef allow_backprop
+#undef _mctmp_a
+#undef _mctmp_b
+#undef _mctmp_c
+#ifdef OPENACC
+#undef strlen
+#undef strcmp
+#undef exit
+#undef printf
+#undef sprintf
+#undef fprintf
+#endif
+#undef SCATTERED
+#undef RESTORE
+#undef RESTORE_NEUTRON
+#undef STORE_NEUTRON
+#undef ABSORBED
+#undef ABSORB
+#undef ABSORB0
+/* *****************************************************************************
+* instrument 'Text2OFF' and components SAVE
+***************************************************************************** */
+
+
+
+int save(FILE *handle) { /* called by mccode_main for Text2OFF:SAVE */
+  if (!handle) siminfo_init(NULL);
+
+  /* call iteratively all components SAVE */
+
+  if (!handle) siminfo_close(); 
+
+  return(0);
+} /* save */
+
+/* *****************************************************************************
+* instrument 'Text2OFF' and components FINALLY
+***************************************************************************** */
+
+
+
+int finally(void) { /* called by mccode_main for Text2OFF:FINALLY */
+#pragma acc update host(_label_var)
+#pragma acc update host(_instrument_var)
+
+  siminfo_init(NULL);
+  save(siminfo_file); /* save data when simulation ends */
+
+  /* call iteratively all components FINALLY */
+
+  siminfo_close(); 
+
+  return(0);
+} /* finally */
+
+/* *****************************************************************************
+* instrument 'Text2OFF' and components DISPLAY
+***************************************************************************** */
+
+  #define magnify     mcdis_magnify
+  #define line        mcdis_line
+  #define dashed_line mcdis_dashed_line
+  #define multiline   mcdis_multiline
+  #define rectangle   mcdis_rectangle
+  #define box         mcdis_box
+  #define circle      mcdis_circle
+  #define cylinder    mcdis_cylinder
+  #define sphere      mcdis_sphere
+  #define cone        mcdis_cone
+  #define polygon     mcdis_polygon
+  #define polyhedron  mcdis_polyhedron
+_class_Text *class_Text_display(_class_Text *_comp
+) {
+  #define text (_comp->_parameters.text)
+  #define size (_comp->_parameters.size)
+  #define plane (_comp->_parameters.plane)
+  #define pen_thickness (_comp->_parameters.pen_thickness)
+  #define pl (_comp->_parameters.pl)
+  SIG_MESSAGE("[_label_display] component label=Text() DISPLAY [/Users/peterwillendrup/micromamba/envs/mccode-dev/share/mcstas/resources/misc/Text.comp:133]");
+
+  printf("MCDISPLAY: component %s\n", _comp->_name);
+    
+  float s   = size / 6.0f;          /* metres per grid unit; glyph height = 6 units */
+  float adv = 5.0f;                 /* pen advance in grid units: 4 wide + 1 gap    */
+  float u0  = 0.0f;                 /* pen position in grid units                   */
+
+  for (const char *t = text; *t; t++, u0 += adv) {
+      int c = toupper((unsigned char)*t);
+      if (c < 128 && glyph[c]) {
+          float ox=0,oy=0,oz=0;
+          const char *p = glyph[c];
+          float prevx = 0, prevy = 0, prevz = 0;
+          int pen = 0;                      /* pen down? */
+
+          while (*p) {
+              if (*p == '|') { pen = 0; p++; continue; }
+              while (*p == ' ') p++;
+              if (!*p) break;
+
+              /* parse "x,y" (strtol also tolerates future negative coords) */
+              char *end;
+              long gx = strtol(p, &end, 10); p = end;
+              if (*p == ',') p++;
+              long gy = strtol(p, &end, 10); p = end;
+
+              float u = (u0 + (float)gx) * s;   /* along text direction   */
+              float v = (float)gy * s;          /* along letter height    */
+
+              float x, y, z;
+              switch (pl) {
+              case 0:  x = ox + u;  y = oy + v;  z = oz;      break;  /* XY */
+              case 1:  x = ox;      y = oy + u;  z = oz + v;  break;  /* YZ */
+              default: x = ox + v;  y = oy;      z = oz + u;  break;  /* ZX */
+              }
+
+              if (pen) {
+                  if (pen_thickness > 0) {
+                      /* stroke as a cylinder centred on the segment midpoint, axis along it */
+                      double dx = x - prevx, dy = y - prevy, dz = z - prevz;
+                      double len = sqrt(dx*dx + dy*dy + dz*dz);
+                      if (len > 0)
+                          cylinder(0.5*(prevx + x), 0.5*(prevy + y), 0.5*(prevz + z),
+                                   0.5*size*pen_thickness, len, 0,
+                                   dx/len, dy/len, dz/len);
+                  } else
+                      line(prevx, prevy, prevz, x, y, z);
+              }
+
+              /* round joints and stroke ends: sphere at every vertex */
+              if (pen_thickness > 0)
+                  sphere(x, y, z, 0.5*size*pen_thickness);
+
+              prevx = x; prevy = y; prevz = z;
+              pen = 1;
+          }
+      }
+  }
+  #undef text
+  #undef size
+  #undef plane
+  #undef pen_thickness
+  #undef pl
+  return(_comp);
+} /* class_Text_display */
+
+
+  #undef magnify
+  #undef line
+  #undef dashed_line
+  #undef multiline
+  #undef rectangle
+  #undef box
+  #undef circle
+  #undef cylinder
+  #undef sphere
+  #undef cone
+  #undef polygon
+  #undef polyhedron
+
+int display(void) { /* called by mccode_main for Text2OFF:DISPLAY */
+  printf("MCDISPLAY: start\n");
+
+  /* call iteratively all components DISPLAY */
+  class_Text_display(&_label_var);
+
+  printf("MCDISPLAY: end\n");
+
+  return(0);
+} /* display */
+
+void* _getvar_parameters(char* compname)
+/* enables settings parameters based use of the GETPAR macro */
+{
+  #ifdef OPENACC
+    #define strcmp(a,b) str_comp(a,b)
+  #endif
+  if (!strcmp(compname, "label")) return (void *) &(_label_var._parameters);
+  return 0;
+}
+
+void* _get_particle_var(char *token, _class_particle *p)
+/* enables setpars based use of GET_PARTICLE_DVAR macro and similar */
+{
+  return 0;
+}
+
+int _getcomp_index(char* compname)
+/* Enables retrieving the component position & rotation when the index is not known.
+ * Component indexing into MACROS, e.g., POS_A_COMP_INDEX, are 1-based! */
+{
+  if (!strcmp(compname, "label")) return 1;
+  return -1;
+}
+
+/* embedding file "metadata-r.c" */
+
+/** --- Contents of  metadata-r.c ---------------------------------------------------------------------------------- */
+// Created by Gregory Tucker, Data Management Software Centre, European Spallation Source ERIC on 07/07/23.
+#ifndef MCCODE_NAME
+#include "metadata-r.h"
+#endif
+
+char * metadata_table_key_component(char* key){
+  if (strlen(key) == 0) return NULL;
+  char sep[2] = ":\0"; // matches any number of repeated colons
+  // look for the separator in the provided key; strtok is allowed to modify the string, so copy it
+  char * tok = malloc((strlen(key) + 1) * sizeof(char));
+  if (!tok) {
+    fprintf(stderr,"Error allocating token\n");
+    exit(-1);
+  }
+  strcpy(tok, key);
+  char * pch = strtok(tok, sep); // this *is* the component name (if provided) -- but we need to move the pointer
+  char * comp = malloc((1 + strlen(pch)) * sizeof(char));
+  if (!comp) {
+    fprintf(stderr,"Error allocating comp\n");
+    exit(-1);
+  }
+  strcpy(comp, pch);
+  if (tok) free(tok);
+  return comp;
+}
+char * metadata_table_key_literal(char * key){
+  if (strlen(key) == 0) return NULL;
+  char sep[3] = ":\0";
+  char * tok = malloc((strlen(key) + 1 ) * sizeof(char));
+  if (!tok) {
+    fprintf(stderr,"Error allocating token\n");
+    exit(-1);
+  }
+  strcpy(tok, key);
+  char * pch = strtok(tok, sep); // this *is* the component name (if provided)
+  if (pch) pch = strtok(NULL, sep); // either NULL or the literal name
+  char * name = NULL;
+  if (pch) {
+    name = malloc((1 + strlen(pch)) * sizeof(char));
+    if (!name) {
+      fprintf(stderr,"Error allocating name\n");
+	exit(-1);
+    }
+    strcpy(name, pch);
+  }
+  if (tok) free(tok);
+  return name;
+}
+int metadata_table_defined(int no, metadata_table_t * tab, char * key){
+  if (strlen(key) == 0){
+    /* This is 0 instead of `no` independent of any wildcard-matching logic
+     * because a caller _already_ knows `no` and can verify
+     * that `key` is not "" at call-time. So returning `no` is useless.
+     */
+    return 0;
+  }
+  char * comp = metadata_table_key_component(key);
+  char * name = metadata_table_key_literal(key);
+  // look through the table for the matching component and literal names
+  int number = 0;
+  for (int i=0; i<no; ++i){
+    if (!strcmp(comp, tab[i].source)){
+      if (name == NULL || !strcmp(name, tab[i].name)) ++number;
+    }
+  }
+  if (comp) free(comp);
+  if (name) free(name);
+  return number;
+}
+
+char * metadata_table_name(int no, metadata_table_t * tab, char *key){
+    if (strlen(key) == 0){
+        return NULL;
+    }
+    char * comp = metadata_table_key_component(key);
+    char * name = metadata_table_key_literal(key);
+    if (name == NULL) {
+        for (int i=0; i<no; ++i){
+            if (!strcmp(comp, tab[i].source)){
+                name = malloc((strlen(tab[i].name) + 1) * sizeof(char));
+		if (!name) {
+		  fprintf(stderr,"Error allocating metadata_table_name\n");
+		  exit(-1);
+		}
+                strcpy(name, tab[i].name);
+                break;
+            }
+        }
+    } else {
+        int found=0;
+        for (int i=0; i<no; ++i){
+            if (!strcmp(comp, tab[i].source) && !strcmp(name, tab[i].name)) {
+                found = 1;
+                break;
+            }
+        }
+        if (!found) free(name);
+    }
+    free(comp);
+    return name;
+}
+
+char * metadata_table_type(int no, metadata_table_t * tab, char * key){
+  if (strlen(key) == 0) {
+    fprintf(stderr, "Unable to check type of non-existent key\n");
+    exit(1);
+  }
+  char * comp = metadata_table_key_component(key);
+  char * name = metadata_table_key_literal(key);
+  if (name == NULL){
+    fprintf(stderr, "Unable to check type of literal for component %s without its name\n", comp);
+    free(comp);
+    exit(1);
+  }
+  char * type = NULL;
+  for (int i=0; i<no; ++i){
+    if (!strcmp(comp, tab[i].source) && !strcmp(name, tab[i].name)) type = tab[i].type;
+  }
+  if (comp) free(comp);
+  if (name) free(name);
+  return type;
+}
+
+char * metadata_table_literal(int no, metadata_table_t * tab, char * key){
+  if (strlen(key) == 0) {
+    fprintf(stderr, "Unable to retrieve literal for non-existent key\n");
+    exit(1);
+  }
+  char * comp = metadata_table_key_component(key);
+  char * name = metadata_table_key_literal(key);
+  if (name == NULL){
+    fprintf(stderr, "Unable to retrieve literal for component %s without its name\n", comp);
+    free(comp);
+    exit(1);
+  }
+  char * type = NULL;
+  for (int i=0; i<no; ++i){
+    if (!strcmp(comp, tab[i].source) && !strcmp(name, tab[i].name)) type = tab[i].value;
+  }
+  if (comp) free(comp);
+  if (name) free(name);
+  return type;
+}
+void metadata_table_print_all_keys(int no, metadata_table_t * tab){
+  for (int i=0; i<no; ++i){
+    printf("%s::%s ", tab[i].source, tab[i].name);
+  }
+  printf("\n");
+}
+int metadata_table_print_all_components(int no, metadata_table_t * tab){
+  int count = 0;
+  char ** known = malloc(no * sizeof(char*));
+  if (!known) {
+    fprintf(stderr,"Error allocating table of known metadata\n");
+    exit(-1);
+  }
+  for (int i=0; i<no; ++i){
+    int unknown = 1;
+    for (int j=0; j<count; ++j) if (!strcmp(tab[i].source, known[j])) unknown = 0;
+    if (unknown) known[count++] = tab[i].source;
+  }
+  size_t nchar = 0;
+  for (int i=0; i<count; ++i) nchar += strlen(known[i]) + 1;
+  char * line = malloc((nchar + 1) * sizeof(char));
+  char * linetmp = malloc((nchar + 1) * sizeof(char));
+  if (!line || !linetmp) {
+    fprintf(stderr,"Error allocating metadata print arrays\n");
+    exit(-1);
+  }
+  line[0] = '\0';
+  for (int i=0; i<count; ++i) sprintf(linetmp, "%s%s ", line, known[i]);
+  line=linetmp;
+  line[strlen(line)] = '\0'; // eat the trailing space
+  printf("%s\n", line);
+  free(line);
+  free(linetmp);
+  free(known);
+  return count;
+}
+int metadata_table_print_component_keys(int no, metadata_table_t * tab, char * key){
+  char * comp = metadata_table_key_component(key);
+  char * name = metadata_table_key_literal(key);
+  int count = 0;
+  for (int i=0; i<no; ++i) if (!strcmp(tab[i].source, comp) && (name == NULL || !strcmp(tab[i].name, name))) {
+    if (name == NULL) printf("%s ", tab[i].name);
+    ++count;
+  }
+  if (name != NULL) printf("%d", count); // replace count by strlen(tab[i].value)?
+  printf("\n");
+  return count;
+}
+/* -------------------------------------------------------------------------------------Contents of  metadata-r.c --- */
+/* End of file "metadata-r.c". */
+
+/* embedding file "mccode_main.c" */
+
+/*******************************************************************************
+* mccode_main: McCode main() function.
+*******************************************************************************/
+int mccode_main(int argc, char *argv[])
+{
+  /*  double run_num = 0; */
+  time_t  t;
+  clock_t ct;
+
+#ifdef USE_MPI
+  char mpi_node_name[MPI_MAX_PROCESSOR_NAME];
+  int  mpi_node_name_len;
+#endif /* USE_MPI */
+
+#ifdef MAC
+  argc = ccommand(&argv);
+#endif
+
+#ifdef USE_MPI
+  MPI_Init(&argc,&argv);
+  MPI_Comm_size(MPI_COMM_WORLD, &mpi_node_count); /* get number of nodes */
+  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_node_rank);
+  /* PW 2026100 - workaround for issue on macOS arm64 with openmpi=5:
+    https://github.com/open-mpi/ompi/issues/14558
+    MPI_Comm_set_name(MPI_COMM_WORLD, instrument_name); */
+  MPI_Get_processor_name(mpi_node_name, &mpi_node_name_len);
+#endif /* USE_MPI */
+
+  ct = clock();
+
+  // device and host functional RNG seed
+  struct timeval tm;
+  gettimeofday(&tm, NULL);
+  mcseed = (long) tm.tv_sec*1000000 + tm.tv_usec;
+  mcstartdate = (long)tm.tv_sec;  /* set start date before parsing options and creating sim file */
+  // init global _particle.randstate for random number use
+  // during init(), finally() and display(). NOTE: during trace, a local
+  // "_particle" variable is present and thus used instead.
+  //
+  // PW: srandom deferred until init() since we did not read seed input from commandline
+  //srandom(_hash(mcseed-1));
+
+#ifdef USE_MPI
+  /* *** print number of nodes *********************************************** */
+  if (mpi_node_count > 1) {
+    MPI_MASTER(
+    printf("Simulation '%s' (%s): running on %i nodes (master is '%s', MPI version %i.%i).\n",
+      instrument_name, instrument_source, mpi_node_count, mpi_node_name, MPI_VERSION, MPI_SUBVERSION);
+    );
+    /* share the same seed, then adapt random seed for each node */
+    MPI_Bcast(&mcseed, 1, MPI_LONG, 0, MPI_COMM_WORLD); /* root sends its seed to slaves */
+    mcseed += mpi_node_rank; /* make sure we use different seeds per noe */
+  }
+#endif /* USE_MPI */
+
+#ifdef OPENACC
+#ifdef USE_MPI
+  int num_devices = acc_get_num_devices(acc_device_nvidia);
+  if(num_devices>0){
+    int my_device = mpi_node_rank % num_devices;
+    acc_set_device_num( my_device, acc_device_nvidia );
+    printf("Have found %d GPU devices on rank %d. Will use device %d.\n", num_devices, mpi_node_rank, my_device);
+  }else{
+    printf("There was an issue probing acc_get_num_devices, fallback to host\n");
+    acc_set_device_type( acc_device_host );
+  }
+#endif
+#endif
+
+  /* *** parse options ******************************************************* */
+  SIG_MESSAGE("[" __FILE__ "] main START");
+  mcformat = getenv(FLAVOR_UPPER "_FORMAT") ?
+             getenv(FLAVOR_UPPER "_FORMAT") : FLAVOR_UPPER;
+  instrument_exe = argv[0]; /* store the executable path */
+  /* read simulation parameters and options */
+  mcparseoptions(argc, argv); /* sets output dir and format */
+
+
+#ifdef USE_MPI
+  if (mpi_node_count > 1) {
+    /* share the same seed, then adapt random seed for each node */
+    MPI_Bcast(&mcseed, 1, MPI_LONG, 0, MPI_COMM_WORLD); /* root sends its seed to slaves */
+    mcseed += mpi_node_rank; /* make sure we use different seeds per node */
+  }
+#endif
+
+
+/* *** install sig handler, but only once !! after parameters parsing ******* */
+#ifndef NOSIGNALS
+#ifdef SIGQUIT
+  if (signal( SIGQUIT ,sighandler) == SIG_IGN)
+    signal( SIGQUIT,SIG_IGN);   /* quit (ASCII FS) */
+#endif
+#ifdef SIGABRT
+  if (signal( SIGABRT ,sighandler) == SIG_IGN)
+    signal( SIGABRT,SIG_IGN);   /* used by abort, replace SIGIOT in the future */
+#endif
+#ifdef SIGTERM
+  if (signal( SIGTERM ,sighandler) == SIG_IGN)
+    signal( SIGTERM,SIG_IGN);   /* software termination signal from kill */
+#endif
+#ifdef SIGUSR1
+  if (signal( SIGUSR1 ,sighandler) == SIG_IGN)
+    signal( SIGUSR1,SIG_IGN);   /* display simulation status */
+#endif
+#ifdef SIGUSR2
+  if (signal( SIGUSR2 ,sighandler) == SIG_IGN)
+    signal( SIGUSR2,SIG_IGN);
+#endif
+#ifdef SIGHUP
+  if (signal( SIGHUP ,sighandler) == SIG_IGN)
+    signal( SIGHUP,SIG_IGN);
+#endif
+#ifdef SIGILL
+  if (signal( SIGILL ,sighandler) == SIG_IGN)
+    signal( SIGILL,SIG_IGN);    /* illegal instruction (not reset when caught) */
+#endif
+#ifdef SIGFPE
+  if (signal( SIGFPE ,sighandler) == SIG_IGN)
+    signal( SIGSEGV,SIG_IGN);    /* floating point exception */
+#endif
+#ifdef SIGBUS
+  if (signal( SIGBUS ,sighandler) == SIG_IGN)
+    signal( SIGSEGV,SIG_IGN);    /* bus error */
+#endif
+#ifdef SIGSEGV
+  if (signal( SIGSEGV ,sighandler) == SIG_IGN)
+    signal( SIGSEGV,SIG_IGN);   /* segmentation violation */
+#endif
+#endif /* !NOSIGNALS */
+
+
+  // init executed by master/host
+  siminfo_init(NULL); /* open SIM */
+  SIG_MESSAGE("[" __FILE__ "] main INITIALISE");
+  init();
+
+#ifdef USE_NEXUS
+  /* store component SETTING parameter values as present at end of INITIALISE */
+  MPI_MASTER(
+    if (nxhandle && !mcdotrace && mcformat && strcasestr(mcformat, "NeXus"))
+      mccomp_param_runtime_nexus_all(nxhandle);
+  );
+#endif
+
+
+#ifndef NOSIGNALS
+#ifdef SIGINT
+  if (signal( SIGINT ,sighandler) == SIG_IGN)
+    signal( SIGINT,SIG_IGN);    /* interrupt (rubout) only after INIT */
+#endif
+#endif /* !NOSIGNALS */
+
+/* ================ main particle generation/propagation loop ================ */
+#ifdef USE_MPI
+  /* sliced Ncount on each MPI node */
+  mcncount = mpi_node_count > 1 ?
+    floor(mcncount / mpi_node_count) :
+    mcncount; /* number of rays per node */
+#endif
+
+// MT specific init, note that per-ray init is empty
+#if RNG_ALG == 1
+  mt_srandom(mcseed);
+#endif
+
+
+// main raytrace work loop
+#ifndef FUNNEL
+  // legacy version
+  raytrace_all(mcncount, mcseed);
+#else
+  MPI_MASTER(
+  // "funneled" version in which propagation is more parallelizable
+  printf("\nNOTE: CPU COMPONENT grammar activated:\n 1) \"FUNNEL\" raytrace algorithm enabled.\n 2) Any SPLIT's are dynamically allocated based on available buffer size. \n");
+	     );
+  raytrace_all_funnel(mcncount, mcseed);
+#endif
+
+
+#ifdef USE_MPI
+ /* merge run_num from MPI nodes */
+  if (mpi_node_count > 1) {
+  double mcrun_num_double = (double)mcrun_num;
+  mc_MPI_Sum(&mcrun_num_double, 1);
+  mcrun_num = (unsigned long long)mcrun_num_double;
+  }
+#endif
+
+
+  // save/finally executed by master node/thread/host
+  // All MPI nodes reach this final save together: collective output (e.g.
+  // gathering event lists on the master) is only allowed from here on.
+  mcsave_final = 1;
+  finally();
+
+
+#ifdef USE_MPI
+  MPI_Finalize();
+#endif /* USE_MPI */
+
+
+  return 0;
+} /* mccode_main */
+/* End of file "mccode_main.c". */
+
+/* end of generated C code ./Text2OFF.c */
