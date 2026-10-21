@@ -374,7 +374,7 @@ INITIALIZE
     exit (1);
   }
   if (!mesh_data.closed) {
-    printf ("\n\nERROR: Input mesh %s of %s is not closed: %ld boundary and %ld non-manifold edges."
+    printf ("\n\nERROR: Input mesh %s of %s is not closed: %d boundary and %d non-manifold edges."
             "\nUnion_mesh requires a closed (watertight) mesh.\n\n",
             filename, NAME_CURRENT_COMP, mesh_data.nboundary, mesh_data.nnonmanifold);
     exit (1);

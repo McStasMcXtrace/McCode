@@ -84,47 +84,47 @@
 typedef struct gmesh_hit {
   double t;        /* position along the line: pos + t*dir */
   Coords normal;   /* unit normal of the triangle hit (outward for closed oriented meshes) */
-  long   tri;      /* triangle index (BVH order) */
-  long   face;     /* index of the face (polygon) in the file, 0-based */
+  int   tri;      /* triangle index (BVH order) */
+  int   face;     /* index of the face (polygon) in the file, 0-based */
   int    in_out;   /* +1 entering (normal.dir < 0), -1 leaving */
   int    edge;     /* 1 when the hit is within tolerance of a triangle edge */
 } gmesh_hit;
 
 typedef struct gmesh_node {
   Coords lo, hi;   /* node bounding box */
-  long   first;    /* leaf: first triangle; inner node: index of left child (right = first+1) */
+  int   first;    /* leaf: first triangle; inner node: index of left child (right = first+1) */
   int    count;    /* leaf: number of triangles; inner node: 0 */
 } gmesh_node;
 
 typedef struct gmesh_struct {
-  long    nverts;           /* number of (welded) vertices */
-  long    ntris;            /* number of triangles */
-  long    nfaces;           /* number of faces (polygons) in the file */
-  long    nnodes;           /* number of BVH nodes */
+  int    nverts;           /* number of (welded) vertices */
+  int    ntris;            /* number of triangles */
+  int    nfaces;           /* number of faces (polygons) in the file */
+  int    nnodes;           /* number of BVH nodes */
   Coords* vtx;              /* [nverts] */
   #pragma acc shape(vtx[0:nverts]) init_needed(nverts)
-  long*   tri;              /* [3*ntris] vertex indices, in BVH order */
+  int*   tri;              /* [3*ntris] vertex indices, in BVH order */
   #pragma acc shape(tri[0:ntris3]) init_needed(ntris3)
-  long    ntris3;           /* = 3*ntris */
-  long*   tri_face;         /* [ntris] face each triangle comes from */
+  int    ntris3;           /* = 3*ntris */
+  int*   tri_face;         /* [ntris] face each triangle comes from */
   #pragma acc shape(tri_face[0:ntris]) init_needed(ntris)
   Coords* tri_normal;       /* [ntris] unit normals */
   #pragma acc shape(tri_normal[0:ntris]) init_needed(ntris)
   gmesh_node* node;         /* [nnodes] BVH, node 0 is the root */
   #pragma acc shape(node[0:nnodes]) init_needed(nnodes)
-  unsigned long* faceArray; /* polygons as in the file: [nv i1 .. inv | nv ...] */
-  long    faceSize;
+  int* faceArray; /* polygons as in the file: [nv i1 .. inv | nv ...] */
+  int    faceSize;
   int     nfaceprops;       /* per-face properties, column-major [k*nfaces+face] */
   double* facePropArray;
   #pragma acc shape(facePropArray[0:facePropSize]) init_needed(facePropSize)
-  long    facePropSize;
+  int    facePropSize;
   Coords  bbmin, bbmax;     /* bounding box */
   Coords  bscenter;         /* bounding sphere */
   double  bsradius;
   double  length_scale;     /* bounding box diagonal */
   double  area, volume;     /* surface area, enclosed volume (closed meshes) */
-  long    nedges, nboundary, nnonmanifold, ndegenerate, nwelded;
-  long    nduplicate;       /* faces given more than once (all copies removed) */
+  int    nedges, nboundary, nnonmanifold, ndegenerate, nwelded;
+  int    nduplicate;       /* faces given more than once (all copies removed) */
   int     euler;            /* V - E + F (2 for a closed genus-0 surface) */
   int     closed;           /* every edge shared by exactly two triangles */
   int     oriented;         /* shared edges run in opposite directions */
@@ -140,13 +140,13 @@ typedef struct gmesh_struct {
 #define GMESH_PROPS_REQUIRED 2  /* error unless every face has properties */
 
 /*******************************************************************************
-* long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh)
+* int gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh)
 * ACTION: read an STL/OFF/PLY file and build the mesh structure.
 * INPUT:  scale: multiply file coordinates (1 for m, 1e-3 for mm, 0 same as 1)
 *         face_props: GMESH_PROPS_IGNORE, GMESH_PROPS_OPTIONAL or GMESH_PROPS_REQUIRED
 * RETURN: number of triangles, 0 on error
 *******************************************************************************/
-long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh);
+int gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh);
 
 /*******************************************************************************
 * int gmesh_intersect(gmesh_struct *mesh, Coords position, Coords direction,
@@ -174,7 +174,7 @@ int gmesh_inside(gmesh_struct *mesh, Coords position);
 /* per-face property number 'property' of face 'face', or fallback when it is
    not given in the file */
 #pragma acc routine seq
-double gmesh_face_prop(gmesh_struct *mesh, long face, int property, double fallback);
+double gmesh_face_prop(gmesh_struct *mesh, int face, int property, double fallback);
 
 /* print a summary of the mesh (sizes, topology, volume) */
 void gmesh_print_info(gmesh_struct *mesh);
