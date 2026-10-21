@@ -1,0 +1,89 @@
+/*******************************************************************************
+* Instrument: Test_mcdisplay_shapes
+*
+* %I
+* Written by: Peter Willendrup
+* Date: 20261020
+* Origin: DTU
+* %INSTRUMENT_SITE: Tests_other
+*
+* Test instrument showing all mcdisplay drawing primitives
+*
+* %D
+* Places display-only components that together use every mcdisplay
+* primitive, to check the mcdisplay tools at --trace=1 and --trace=2:
+* - cone (Arm, Cone)
+* - box, hollow box, box tilted along (nx, ny, nz) and tilted hollow box (Shape)
+* - cylinder, hollow cylinder, cylinder along z and hollow cylinder along z (Shape)
+* - sphere (Shape)
+* - polyhedron from an OFF file (Shape)
+* - disc, annulus and circle (Disc, Annulus, Circle)
+*
+* The shapes are display-only and sit beside the beam. No McXtrace component
+* draws polygons, but those are drawn as polyhedra at --trace=2, as covered
+* by the OFF file.
+*
+* Example: mxdisplay-webgl-classic Test_mcdisplay_shapes.instr --trace=2 -n 20
+*
+* %Example: -n1e5 Detector: Mon_I=7.96e-06
+*
+* %P
+* offfile: [str] OFF file for the polyhedron Shape
+*
+* %L
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Test_mcdisplay_shapes(string offfile="king.off")
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+COMPONENT Src = Source_flat(radius=0.02, dist=5, focus_xw=0.05, focus_yh=0.05, E0=12, dE=1)
+AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT ArmCones = Arm()
+AT (0, 0, 0.5) RELATIVE Origin
+
+COMPONENT BoxHollow = Shape(xwidth=0.2, yheight=0.1, zdepth=0.15, thickness=0.02)
+AT (0.4, 0, 2.5) RELATIVE Origin
+
+COMPONENT BoxHollowTilted = Shape(xwidth=0.2, yheight=0.1, zdepth=0.15, thickness=0.02, nx=1, ny=1, nz=0)
+AT (0.8, 0, 2.5) RELATIVE Origin
+
+COMPONENT CylinderHollowZ = Shape(radius=0.08, yheight=0.2, thickness=0.02, nx=0, ny=0, nz=1)
+AT (0.8, 0, 3) RELATIVE Origin
+
+COMPONENT BoxTilted = Shape(xwidth=0.1, yheight=0.2, zdepth=0.05, nx=1, ny=1, nz=0)
+AT (-0.4, 0, 2.5) RELATIVE Origin
+
+COMPONENT CylinderHollow = Shape(radius=0.08, yheight=0.2, thickness=0.02)
+AT (0.4, 0, 3) RELATIVE Origin
+
+COMPONENT CylinderZ = Shape(radius=0.05, yheight=0.2, nx=0, ny=0, nz=1)
+AT (-0.4, 0, 3) RELATIVE Origin
+
+COMPONENT Sphere = Shape(radius=0.06)
+AT (0.4, 0, 3.5) RELATIVE Origin
+
+COMPONENT Polyhedron = Shape(geometry=offfile, xwidth=0.1, yheight=0.1, zdepth=0.1)
+AT (-0.4, 0, 3.5) RELATIVE Origin
+
+COMPONENT ConeY = Cone(radius=0.05, yheight=0.1)
+AT (0, 0.3, 3.5) RELATIVE Origin
+
+COMPONENT DiscZ = Disc(radius=0.05, nx=0, ny=0, nz=1)
+AT (0.4, 0, 4) RELATIVE Origin
+
+COMPONENT AnnulusY = Annulus(radius=0.06, thickness=0.02)
+AT (-0.4, 0, 4) RELATIVE Origin
+
+COMPONENT CircleY = Circle(radius=0.07)
+AT (0, 0, 4.5) RELATIVE Origin
+
+COMPONENT Mon = PSD_monitor(xwidth=0.1, yheight=0.1, filename="Mon.dat")
+AT (0, 0, 5) RELATIVE Origin
+
+END

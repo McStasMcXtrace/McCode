@@ -16,6 +16,12 @@ const colors = [
   "#A8A8A8",
 ];
 
+// hollow box/cylinder (thickness > 0): translucent by default, so the closed inner cavity shows
+const HOLLOW_TRANSPARENCY = 0.4;
+const isHollow = (drawcall: any): boolean =>
+  (drawcall.key === "box" && drawcall.args[6] > 0) ||
+  (drawcall.key === "cylinder" && drawcall.args[5] > 0);
+
 export function initializeInstrument(data: any): Instrument {
   return {
     ...data,
@@ -25,7 +31,7 @@ export function initializeInstrument(data: any): Instrument {
       m4: component.m4,
       drawcalls: component.drawcalls,
       color: colors[index % colors.length], // Assigning color from the colors array
-      transparency: 1,
+      transparency: component.drawcalls.some(isHollow) ? HOLLOW_TRANSPARENCY : 1,
     })),
   };
 }

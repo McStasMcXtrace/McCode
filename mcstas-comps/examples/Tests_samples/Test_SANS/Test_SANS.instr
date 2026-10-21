@@ -28,7 +28,7 @@
 * SANSNanodiscsWithTagsFast SAMPLE=10
 * SANSPDBFast               SAMPLE=11
 *
-* %Example: SAMPLE=0 Detector: PSDMonitor_I=2.529e-09
+* %Example: SAMPLE=0 Detector: PSDMonitor_I=2.9e-09
 * %Example: SAMPLE=1 Detector: PSDMonitor_I=2.486e-10
 * %Example: SAMPLE=2 Detector: PSDMonitor_I=2.297e-10
 * %Example: SAMPLE=3 Detector: PSDMonitor_I=8.720e-11

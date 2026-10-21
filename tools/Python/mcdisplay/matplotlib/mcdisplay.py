@@ -12,7 +12,7 @@ import sys
 import os
 
 from util import (parse_multiline, rotate, rotate_points, draw_circle, get_line,
-                  draw_box, draw_sphere, draw_cylinder, draw_disc, rotate_xyz, draw_cone, draw_hollow_box, draw_annulus, draw_new_circle)
+                  draw_box, draw_sphere, draw_cylinder, draw_disc, rotate_xyz, draw_cone, draw_annulus, draw_new_circle)
 
 UC_COMP = 'COMPONENT:'
 
@@ -46,6 +46,8 @@ MC_STOP = 'INSTRUMENT END:'
 COLORS = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow']
 #transparency will be a user controlled parameter eventually
 transparency = 1
+# hollow box/cylinder (thickness > 0): translucent, so the closed inner cavity shows
+HOLLOW_TRANSPARENCY = 0.4
 #for setting axis limits when using polygon
 x_max_polygon = y_max_polygon = z_max_polygon = float('-inf')
 x_min_polygon = y_min_polygon = z_min_polygon = float('inf')
@@ -255,40 +257,23 @@ def process_cylinder(ax, line, comp, color, transparency):
     height = float(items[4])
     thickness = float(items[5])
     axis_vector = [float(x) for x in items[6:9]]
-
-    (x, y, z) = draw_cylinder(center, radius, height, axis_vector)
-    (x, y, z) = rotate_xyz(x, y, z, comp)
-
     axis_vector_normalized = axis_vector / np.linalg.norm(axis_vector)
-    # Calculate half of the height vector
-    half_height_vector = (height / 2) * axis_vector_normalized
-
-    # Calculate the centers for the upper and lower lid
-    center_upper_lid = center + half_height_vector
-    center_lower_lid = center - half_height_vector
-
-    if thickness == 0:
-        (x_upper_lid, y_upper_lid, z_upper_lid) = draw_disc(center_upper_lid, radius, axis_vector)
-        (x_lower_lid, y_lower_lid, z_lower_lid) = draw_disc(center_lower_lid, radius, axis_vector)
-        (x_cylinder_upper_lid, y_upper_lid, z_upper_lid) = rotate_xyz(x_upper_lid, y_upper_lid, z_upper_lid, comp)
-        (x_lower_lid, y_lower_lid, z_lower_lid) = rotate_xyz(x_lower_lid, y_lower_lid, z_lower_lid, comp)
-        ax.plot_surface(z_upper_lid, x_upper_lid, y_upper_lid, color=color, alpha=transparency)
-        ax.plot_surface(z_lower_lid, x_lower_lid, y_lower_lid, color=color, alpha=transparency)
-
     if thickness > 0:
-        (x_inner, y_inner, z_inner) = draw_cylinder(center, radius - thickness, height, axis_vector)
-        (x_inner, y_inner, z_inner) = rotate_xyz(x_inner, y_inner, z_inner, comp)
-        ax.plot_surface(z_inner, x_inner, y_inner, color=color, alpha=transparency)
-        (x_upper_lid, y_upper_lid, z_upper_lid) = draw_annulus(center_upper_lid, radius, radius - thickness,
-                                                               axis_vector)
-        (x_lower_lid, y_lower_lid, z_lower_lid) = draw_annulus(center_lower_lid, radius, radius - thickness,
-                                                               axis_vector)
-        (x_upper_lid, y_upper_lid, z_upper_lid) = rotate_xyz(x_upper_lid, y_upper_lid, z_upper_lid, comp)
-        (x_lower_lid, y_lower_lid, z_lower_lid) = rotate_xyz(x_lower_lid, y_lower_lid, z_lower_lid, comp)
-        ax.plot_surface(z_upper_lid, x_upper_lid, y_upper_lid, color=color, alpha=transparency)
-        ax.plot_surface(z_lower_lid, x_lower_lid, y_lower_lid, color=color, alpha=transparency)
+        transparency = min(transparency, HOLLOW_TRANSPARENCY)
 
-    ax.plot_surface(z, x, y, color=color, alpha=transparency)
+    def closed_cylinder(r, h):
+        (x, y, z) = draw_cylinder(center, r, h, axis_vector)
+        (x, y, z) = rotate_xyz(x, y, z, comp)
+        ax.plot_surface(z, x, y, color=color, alpha=transparency)
+        for s in (1, -1):
+            (x, y, z) = draw_disc(center + s * (h / 2) * axis_vector_normalized, r, axis_vector)
+            (x, y, z) = rotate_xyz(x, y, z, comp)
+            ax.plot_surface(z, x, y, color=color, alpha=transparency)
+
+    closed_cylinder(radius, height)
+    # hollow: closed inner cavity, as in e.g. Incoherent
+    if thickness > 0 and radius > thickness and height > 2 * thickness:
+        closed_cylinder(radius - thickness, height - 2 * thickness)
 
 
 def process_disc(ax, line, comp, color, transparency):
@@ -358,16 +343,17 @@ def process_box(ax, line, comp, color, transparency):
     b = float(items[4])
     c = float(items[5])
     thickness = float(items[6])
-
+    axis_vector = [float(x) for x in items[7:10]]
     if thickness > 0:
-       faces, vertices = draw_hollow_box(center, a, b, c, thickness)
-       rotated_vertices = rotate_polygon(vertices, comp)
-       show_polygon(ax, color, transparency, faces, rotated_vertices)
+        transparency = min(transparency, HOLLOW_TRANSPARENCY)
 
-    else:
-        (x, y, z) = draw_box(center, a, b, c)
-        (x, y, z) = rotate_xyz(x, y, z, comp)
-        ax.plot_surface(z, x, y, color=color, alpha=transparency)
+    faces, vertices = draw_box(center, a, b, c, axis_vector)
+    show_polygon(ax, color, transparency, faces, rotate_polygon(vertices, comp))
+    # hollow: closed inner cavity, as in e.g. Incoherent
+    t2 = 2 * thickness
+    if thickness > 0 and a > t2 and b > t2 and c > t2:
+        faces, vertices = draw_box(center, a - t2, b - t2, c - t2, axis_vector)
+        show_polygon(ax, color, transparency, faces, rotate_polygon(vertices, comp))
 
 
 def process_polygon(ax, line, comp, color, transparency):

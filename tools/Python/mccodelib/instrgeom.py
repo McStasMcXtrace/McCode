@@ -4,6 +4,7 @@ and classes used for organizing component drawing calls.
 '''
 import numpy as np
 import math
+import json
 
 class InstrumentSpecific(object):
     ''' represents a mcstas instrument with params choice '''
@@ -384,6 +385,10 @@ def drawclass_factory(commandname, args, reduced=False):
     except Exception as e:
         raise Exception('DrawCommandFactory: error with commandname: %s, args: %s, error: %s' % (commandname, args, e.__str__()))
 
+def _cube_points(center, r):
+    ''' corners of a cube of half-side r around center: an extent of the --trace=2 shapes valid for any orientation '''
+    return [center.add(Vector3d(sx*r, sy*r, sz*r)) for sx in (-1, 1) for sy in (-1, 1) for sz in (-1, 1)]
+
 class DrawCommand(object):
     ''' superclass of all draw commands '''
     def __init__(self, args=[]):
@@ -530,6 +535,7 @@ class DrawBox(DrawCommand):
     yheight = None
     zlength = None
     thickness = None
+    axis_vector = None
 
     def __init__(self, args):
         super(DrawBox, self).__init__(args)
@@ -540,6 +546,10 @@ class DrawBox(DrawCommand):
         self.yheight = float(args[4])
         self.zlength = float(args[5])
         self.thickness = float(args[6])
+        self.axis_vector = Vector3d(*map(float, args[7:10])) if len(args) >= 10 else Vector3d(0, 1, 0)
+
+    def _get_points(self):
+        return _cube_points(self.center, math.sqrt(self.xwidth**2 + self.yheight**2 + self.zlength**2)/2)
 
 
 class DrawCircle(DrawCommand):
@@ -615,6 +625,9 @@ class DrawNewCircle(DrawCommand):
         self.radius = float(args[3])
         self.axis_vector = Vector3d(float(args[4]), float(args[5]), float(args[6]))
 
+    def _get_points(self):
+        return _cube_points(self.center, self.radius)
+
 
 class DrawSphere(DrawCommand):
     center = None
@@ -626,6 +639,9 @@ class DrawSphere(DrawCommand):
 
         self.center = Vector3d(float(args[0]), float(args[1]), float(args[2]))
         self.radius = float(args[3])
+
+    def _get_points(self):
+        return _cube_points(self.center, self.radius)
 
 
 class DrawCone(DrawCommand):
@@ -643,6 +659,9 @@ class DrawCone(DrawCommand):
         self.radius = float(args[3])
         self.height = float(args[4])
         self.axis_vector = Vector3d(float(args[5]), float(args[6]), float(args[7]))
+
+    def _get_points(self):
+        return _cube_points(self.center, math.hypot(self.radius, self.height/2))
 
 
 class DrawCylinder(DrawCommand):
@@ -662,6 +681,9 @@ class DrawCylinder(DrawCommand):
         self.thickness = float(args[5])
         self.axis_vector = Vector3d(float(args[6]), float(args[7]), float(args[8]))
 
+    def _get_points(self):
+        return _cube_points(self.center, math.hypot(self.radius, self.height/2))
+
 
 class DrawDisc(DrawCommand):
     center = None
@@ -675,6 +697,9 @@ class DrawDisc(DrawCommand):
         self.center = Vector3d(float(args[0]), float(args[1]), float(args[2]))
         self.radius = float(args[3])
         self.axis_vector = Vector3d(float(args[4]), float(args[5]), float(args[6]))
+
+    def _get_points(self):
+        return _cube_points(self.center, self.radius)
 
 
 class DrawAnnulus(DrawCommand):
@@ -692,6 +717,9 @@ class DrawAnnulus(DrawCommand):
         self.inner_radius = float(args[4])
         self.axis_vector = Vector3d(float(args[5]), float(args[6]), float(args[7]))
 
+    def _get_points(self):
+        return _cube_points(self.center, self.outer_radius)
+
 
 class DrawPolyhedron(DrawCommand):
     faces_vertices = None
@@ -699,6 +727,9 @@ class DrawPolyhedron(DrawCommand):
         super(DrawPolyhedron, self).__init__(args)
         self.key = 'polyhedron'
         self.faces_vertices = args[0]
+
+    def _get_points(self):
+        return [Vector3d(*v) for v in json.loads(self.faces_vertices)['vertices']]
 
 
 class DrawPolygon(DrawCommand):

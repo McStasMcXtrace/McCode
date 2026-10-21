@@ -38,7 +38,7 @@ Short form — a JSON array of fully self-describing file entries:
 ```json
 [
   { "name": "chopper-lib.h",
-    "url": "https://raw.githubusercontent.com/mcdotstar/mcstas-chopper-lib/v4.1.0/chopper-lib.h",
+    "url": "https://raw.githubusercontent.com/<owner>/<repo>/<tag>/chopper-lib.h",
     "sha256": "0965f6660850acce12d665d7a57064389ccb570e218f21c1dbad9155ee7d8ef9" }
 ]
 ```
@@ -51,10 +51,10 @@ applies to every entry that does not override it:
 {
   "name": "mcstas-chopper-lib",
   "description": "Chopper opening/closing times and (inverse velocity, time) masks.",
-  "homepage": "https://github.com/mcdotstar/mcstas-chopper-lib",
-  "git": "https://github.com/mcdotstar/mcstas-chopper-lib.git",
-  "version": "v4.1.0",
-  "base": "https://raw.githubusercontent.com/mcdotstar/mcstas-chopper-lib/v4.1.0/",
+  "homepage": "https://github.com/<owner>/<repo>",
+  "git": "https://github.com/<owner>/<repo>.git",
+  "version": "<tag>",
+  "base": "https://raw.githubusercontent.com/<owner>/<repo>/<tag>/",
   "files": [
     { "name": "chopper-lib.h", "sha256": "0965f666..." },
     { "name": "chopper-lib.c", "sha256": "d914a307..." }
@@ -64,6 +64,9 @@ applies to every entry that does not override it:
 
 Prefer the long form: it is the one that records *what* the contribution is,
 not just where some bytes live.
+
+For a real, current manifest see
+[`mcstas-comps/share/chopper-lib.ext`](../mcstas-comps/share/chopper-lib.ext).
 
 ### File-entry keys
 
@@ -133,10 +136,10 @@ credentials.
 `mcext` needs only Python 3.9+. Without installing anything:
 
 ```sh
-pipx run --spec git+https://github.com/mccode-dev/external-registrar@v1 mcext --help
+pipx run --spec https://github.com/mccode-dev/external-registrar/archive/refs/tags/v1.tar.gz mcext --help
 ```
 
-or `pip install git+https://github.com/mccode-dev/external-registrar@v1` to
+or `pip install https://github.com/mccode-dev/external-registrar/archive/refs/tags/v1.tar.gz` to
 put `mcext` on your path. The steps below assume the latter.
 
 1. Create the directory the files belong in, if it does not exist.

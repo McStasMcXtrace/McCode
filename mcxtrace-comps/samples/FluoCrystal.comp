@@ -330,14 +330,14 @@ INITIALIZE %{
       if (!sx_refl || !strlen(sx_refl) || !strcmp(sx_refl, "NULL") || !strcmp(sx_refl, "0"))
         strcpy(sx_refl, material);
       i = read_hkl_data(sx_refl, &hkl_info, &hkl_list, mosaic, mosaic_a, mosaic_b, mosaic_c, mosaic_ABin,
-                        hkl_info.ctr_size,hkl_info.ctr_k,hkl_info.ctr_FT2,hkl_info.ctr_dir);
+                        hkl_info.ctr_size,hkl_info.ctr_k,hkl_info.ctr_FT2,hkl_info.ctr_dir); // returns hkl_info.count
       if (i == 0) {
         MPI_MASTER(
         fprintf(stderr,"WARNING: FluoCrystal: %s: mosaic or material file %s is not valid (CIF/LAU). Ignoring diffraction process.\n",
                       NAME_CURRENT_COMP, sx_refl);
         );
-        flag_sx=0;
-      } else if (hkl_info.count) {
+        flag_sx=0; // The failed read_hkl_data has set hkl_info.count = 0
+      } else {
         MPI_MASTER(
           printf("FluoCrystal: %s: Read %d reflections from file '%s'\n",
                           NAME_CURRENT_COMP, hkl_info.count, sx_refl);
@@ -350,7 +350,7 @@ INITIALIZE %{
           printf("  b* = [%g %g %g]\n", hkl_info.bsx, hkl_info.bsy, hkl_info.bsz);
           printf("  c* = [%g %g %g]\n", hkl_info.csx, hkl_info.csy, hkl_info.csz);
         );
-      } else flag_sx = 0;
+      }
     }
 
     strncpy(material, formula, 16384);

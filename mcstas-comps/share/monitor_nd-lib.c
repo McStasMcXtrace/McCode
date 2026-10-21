@@ -389,7 +389,9 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
           { Set_Vars_Coord_Type = DEFS->COORD_V; strcpy(Set_Vars_Coord_Label,"Velocity [m/s]"); strcpy(Set_Vars_Coord_Var,"v"); lmin = 0; lmax = 10000; }
         if (!strcmp(token, "t") || !strcmp(token, "time") || !strcmp(token, "tof"))
           { Set_Vars_Coord_Type = DEFS->COORD_T; strcpy(Set_Vars_Coord_Label,"TOF [s]"); strcpy(Set_Vars_Coord_Var,"t"); lmin = 0; lmax = 1.0; }
-        if ((!strcmp(token, "p") || !strcmp(token, "i") || !strcmp(token, "intensity") || !strcmp(token, "flux")))
+        /* "intensity"/"flux" only name the default signal: a variable after "signal=", else a no-op word (#2445) */
+        if (!strcmp(token, "p") || !strcmp(token, "i")
+         || ((!strcmp(token, "intensity") || !strcmp(token, "flux")) && Set_Coord_Mode == DEFS->COORD_SIGNAL))
           { Set_Vars_Coord_Type = DEFS->COORD_P;
             strcpy(Set_Vars_Coord_Label,"Intensity");
             strncat(Set_Vars_Coord_Label, " [n/s", 30);
@@ -401,6 +403,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
             lmin = 0; lmax = FLT_MAX;
             if (Flag_auto>0) Flag_auto=0;
           }
+        else if (!strcmp(token, "intensity") || !strcmp(token, "flux")) iskeyword=1;
 
         if (!strcmp(token, "vx"))
           { Set_Vars_Coord_Type = DEFS->COORD_VX; strcpy(Set_Vars_Coord_Label,"vx [m/s]"); strcpy(Set_Vars_Coord_Var,"vx"); lmin = -1000; lmax = 1000; }

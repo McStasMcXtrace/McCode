@@ -22,7 +22,8 @@
 * triple-axis or inverse-geometry time-of-flight instruments.
 *
 * The shape of the sample is either a hollow cylinder or a rectangular box. The
-* hollow cylinder shape is specified with an inner and outer radius.
+* hollow cylinder shape is specified with an inner and outer radius. It has
+* no lids: the cavity spans the full yheight, as a sample can without lids.
 * The box is specified with dimensions xwidth, yheight, zdepth.
 *
 * The scattered neutrons will have directions towards a given disk and

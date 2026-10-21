@@ -26,8 +26,8 @@
 * 2) Generate an IDF using mcdisplay templateSANS_Mantid --format=Mantid -n0
 * 3) mcrun templateSANS_Mantid -n1e6 --format=NeXus
 *
-* %Example: lambda=6 Detector: PSDrad_I=105000000
-* %Example: lambda=6 --format=NeXus Detector: PSDrad_I=105000000
+* %Example: lambda=6 Detector: PSDrad_I=9.6e7
+* %Example: lambda=6 --format=NeXus Detector: PSDrad_I=9.6e7
 *
 * %Parameters
 * lambda: [AA]          Mean wavelength of neutrons
@@ -78,7 +78,7 @@ COMPONENT LdetectorPRE = L_monitor(
 AT (0,0,0.05) RELATIVE coll2
 
 
-SPLIT COMPONENT sampleMantid = Sans_spheres(
+SPLIT 100 COMPONENT sampleMantid = Sans_spheres(
   R=r, Phi=PHI, Delta_rho=Delta_Rho, sigma_abs=sigma_abs,
   xwidth=0.01, yheight=0.01, zdepth=0.005)
    AT (0,0,0.2) RELATIVE coll2

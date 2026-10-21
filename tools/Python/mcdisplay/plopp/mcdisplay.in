@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Wrapper script for @P@plot-terminal
+# Wrapper script for @P@display-plopp
 
 @MCCODE_BASH_STANDARD_PREAMBLE@
 
-TOOL="@P@plot"
-UTILDIR="${MCCODE_TOOLDIR}/Python/@P@plot/terminal"
+TOOL="mcdisplopp"
+UTILDIR="${MCCODE_TOOLDIR}/Python/@P@display/plopp"
 
 
 #NB: miniconda should be installed next to the tool folder:
@@ -17,11 +17,10 @@ canrun() {
     if ! [ -x "${UTILDIR}/${TOOL}.py" ]; then
         exit 127;
     fi
-
 }
 
 if ( canrun ); then
     python3 -u ${UTILDIR}/${TOOL}.py "$@"
 else
-    @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions or missing dependencies\?
+    @FLAVOR@_errmsg Failed to run Python ${TOOL} - permissions\?
 fi
