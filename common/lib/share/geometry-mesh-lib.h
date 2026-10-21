@@ -75,7 +75,7 @@
   /* size of the hit buffer of gmesh_intersect. To change it from an instrument,
      add DEPENDENCY " -DGMESH_MAX_HITS=20 " after its DEFINE INSTRUMENT line */
   #ifndef GMESH_MAX_HITS
-    #define GMESH_MAX_HITS 4
+    #define GMESH_MAX_HITS 50
   #endif
   #ifndef GMESH_DISPLAY_MAX
     #define GMESH_DISPLAY_MAX 200000
