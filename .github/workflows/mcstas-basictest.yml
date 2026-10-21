@@ -336,7 +336,7 @@ jobs:
            set -u
            set -x
            # mccode.org apt repo, as for users: provides mcpl, ncrystal and cif2hkl (>= 1.5.1)
-           echo "deb [trusted=yes] https://packages.mccode.org/debian stable main" | sudo tee /etc/apt/sources.list.d/mccode.list
+           sudo curl -fsSLo /etc/apt/sources.list.d/mccode.sources https://packages.mccode.org/debian/mccode.sources
            sudo apt-get update
            # Build dependencies, as in dependency-scripts/getdeps_debian (minus LaTeX/equivs:
            # the manuals package and the suite metapackage are not needed for testing)
