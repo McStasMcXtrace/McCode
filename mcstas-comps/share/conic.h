@@ -171,22 +171,22 @@ int main() {
     Contains items general to the simulation
     @{
 */
-//! Max number of ConicSurf allowed in a Scene
+//! Max number of FlatSurf allowed in a Scene
 #ifndef MAX_FLATSURF
 #define MAX_FLATSURF 200
 #endif
 
 //! Max number of ConicSurf allowed in a Scene
-/* Default RMS figure (slope) errors of ConicSurf mirrors, see reflectNeutronConic() */
+#ifndef MAX_CONICSURF
+#define MAX_CONICSURF 100
+#endif
+
+//! Default RMS figure (slope) errors of ConicSurf mirrors, see reflectNeutronConic()
 #ifndef CONIC_SIGMA_M
 #define CONIC_SIGMA_M 1e-6
 #endif
 #ifndef CONIC_SIGMA_S
 #define CONIC_SIGMA_S 250e-6
-#endif
-
-#ifndef MAX_CONICSURF
-#define MAX_CONICSURF 100
 #endif
 
 //! Max number of Disks allowed in a Scene
@@ -1690,12 +1690,9 @@ before computing reflection
 double reflectNeutronFlat(_class_particle* _particle, FlatSurf s) {
     Vec n = getNormFlat(get_class_particlePos(*_particle),s);
     Vec pv = get_class_particleVel(*_particle);
-    //printf("nothing");
     double v = getMagVec(pv);
     double vn = dotVec(pv,n);
-    //printf("before %f \n", p->w);
-    //Hitting shell from outside For FlatSurface this has to be checked
-    // make it able to reflect from the outside
+    // FlatSurf mirrors reflect from both sides, hence no check of which side is hit
     double ga = fabs(acos(vn/v)) - M_PI/2;
     double ref=1.0;
 
@@ -1703,36 +1700,31 @@ double reflectNeutronFlat(_class_particle* _particle, FlatSurf s) {
     double par[5] = {s.R0, s.Qc, s.alpha, s.m, s.W};
     StdReflecFunc(q, par, &ref);
 
-    {//here we need to implement the refraction
-        if (rand01() <= ref){//to be updated to use the mcstas random function or quasoi deterministic model
-            //printf("oh a reflections\n");
-            //printf("this total reflection?");
-            _particle->vx = _particle->vx-2*vn*n.x;
-            _particle->vy = _particle->vy-2*vn*n.y;
-            _particle->vz = _particle->vz-2*vn*n.z;
-            return ga;
-        }
-        else{//
-            //printf("enter the refraction process");
-            double m1 = 0;
-            double m2 = 0;
-            //if no mirrorwidth is specified no refraction has to be calc
-            if (_particle->_mctmp_a == 0){
-                return ga;
-            }
-            if (_particle->_mctmp_a == 1){
-                m1 = m_Si;
-                m2 = 0;
-            }
-            if (_particle->_mctmp_a == -1){
-                m1 = 0;
-                m2 = m_Si;                
-            }
-            //printf("k1 %f k2 %f k3 %f x %f y %f z %f\n", s.k1, s.k2, s.k3, p->_x, p->_y, p->_z);
-            refractNeutronFlat(_particle, n, m1, m2);// this can still lead to total reflection, we miss the supermirror, but are still reflected by the silicon takes care of change of material for refraction
-            return ga;
-        }
+    // Reflect with probability ref, otherwise the neutron is transmitted through the coating
+    if (rand01() <= ref){
+        _particle->vx = _particle->vx-2*vn*n.x;
+        _particle->vy = _particle->vy-2*vn*n.y;
+        _particle->vz = _particle->vz-2*vn*n.z;
+        return ga;
     }
+
+    // Transmitted: without a substrate (_mctmp_a == 0) the neutron continues unaffected.
+    // Otherwise it is refracted at the air/silicon interface (_mctmp_a = -1: coming from
+    // air, +1: coming from silicon), which can still lead to total reflection by the silicon.
+    double m1 = 0;
+    double m2 = 0;
+    if (_particle->_mctmp_a == 0){
+        return ga;
+    }
+    if (_particle->_mctmp_a == 1){
+        m1 = m_Si;
+        m2 = 0;
+    }
+    if (_particle->_mctmp_a == -1){
+        m1 = 0;
+        m2 = m_Si;
+    }
+    refractNeutronFlat(_particle, n, m1, m2); // also updates _mctmp_a on a change of material
     return ga;
 }
 
