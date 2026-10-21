@@ -1080,9 +1080,8 @@ void Monitor_nd_noaccInit(Monitornd_noaccDefines_type *DEFS,
 	    if (Vars->Flag_Verbose) printf("2D case %ld x %ld \n",Vars->Coord_Bin[1],Vars->Coord_Bin[2]);
 	    for (k=0; k<Vars->Coord_Bin[1]; k++) {
 	      for (l=0; l<Vars->Coord_Bin[2]; l++) {
-		if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld] = %ld\n",l,k,pix);
-		detector.p1[k*Vars->Coord_Bin[2]+l]=pix;
-		pix++;
+		if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld] = %ld\n",k,l,pix + k + l*Vars->Coord_BinProd[1]);
+		detector.p1[k*Vars->Coord_Bin[2]+l]=pix + k + l*Vars->Coord_BinProd[1];
 	      }
 	    }
 	    mcdetector_out_2D_nexus(detector);
@@ -1113,9 +1112,8 @@ void Monitor_nd_noaccInit(Monitornd_noaccDefines_type *DEFS,
 	    for (k=0; k<Vars->Coord_Bin[1]; k++) {
 	      for (l=0; l<Vars->Coord_Bin[2]; l++) {
 		for (m=0; m<Vars->Coord_Bin[3]; m++) {
-		  if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld,%ld] = %ld\n",m,l,k,pix);
-		  detector.p1[k*Vars->Coord_Bin[2]*Vars->Coord_Bin[3] + l*Vars->Coord_Bin[3] + m]=pix;
-		  pix++;
+		  if (Vars->Flag_Verbose) printf("Assigning pixel no [%ld,%ld,%ld] = %ld\n",k,l,m,pix + k + l*Vars->Coord_BinProd[1] + m*Vars->Coord_BinProd[2]);
+		  detector.p1[k*Vars->Coord_Bin[2]*Vars->Coord_Bin[3] + l*Vars->Coord_Bin[3] + m]=pix + k + l*Vars->Coord_BinProd[1] + m*Vars->Coord_BinProd[2];
 		}
 	      }
 	    }
