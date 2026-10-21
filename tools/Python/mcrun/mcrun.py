@@ -74,7 +74,7 @@ def add_mcrun_cogen_options(parser):
 
     add('-I',
         metavar='I',
-        help='Append to McCode search path (implies -c)')
+        help='Append to McCode search path (implies -c). When "path/" is given, subdirectories are included')
 
     add('--D1',
         metavar='D1',
