@@ -70,7 +70,7 @@ def to_dataarray(d):
 
 def _nx_dataarray(g):
     ''' McCode NeXus monitor (NXdata group) -> (title, DataArray), None for 0D / event lists '''
-    a = {k: v.decode() if isinstance(v, bytes) else v for k, v in g.attrs.items()}
+    a = {k: v.decode(errors='replace') if isinstance(v, bytes) else v for k, v in g.attrs.items()}  # older runtimes wrote uninitialised 'options' for 0D/1D monitors
     typ = a.get('type', '')
     if typ.startswith('array_1d'):
         da = _curve(g['data'][()], g['errors'][()], a['xlabel'], [float(v) for v in a['xlimits'].split()])
