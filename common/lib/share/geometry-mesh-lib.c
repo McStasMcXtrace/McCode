@@ -106,6 +106,7 @@ typedef struct gmesh_polygon {
    allocated with exactly these sizes and the second pass fills them. */
 typedef struct gmesh_raw {
   int counting;
+  int keep_props;     /* 0: per-face properties in the file are skipped */
   Coords *verts;
   int nverts;
   gmesh_polygon *faces;
@@ -192,9 +193,11 @@ static Coords **gmesh_raw_face(gmesh_raw *raw, int vertex_count)
   return corners;
 }
 
-/* append one property value to the most recently started polygon */
+/* append one property value to the most recently started polygon
+   (ignored when raw->keep_props is 0) */
 static void gmesh_raw_prop(gmesh_raw *raw, double value)
 {
+  if (!raw->keep_props) return;
   if (!raw->counting) {
     raw->props[raw->nprops] = value;
     raw->faces[raw->nfaces-1].nprops++;
@@ -1230,7 +1233,7 @@ static int gmesh_read_file(char *filename, const char *extension, gmesh_raw *raw
 }
 
 /* read an STL/OFF/PLY file into mesh, see geometry-mesh-lib.h */
-long gmesh_init(char *filename, double scale, gmesh_struct *mesh)
+long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh)
 {
   gmesh_raw raw;
   const char *extension;
@@ -1253,6 +1256,7 @@ long gmesh_init(char *filename, double scale, gmesh_struct *mesh)
   }
   /* counting pass, then allocate and read again to fill the arrays */
   raw.counting = 1;
+  raw.keep_props = (face_props != GMESH_PROPS_IGNORE);
   ok = gmesh_read_file(filename, extension, &raw);
   if (!raw.nverts || !raw.nfaces) {
     ok = 0;
@@ -1260,6 +1264,17 @@ long gmesh_init(char *filename, double scale, gmesh_struct *mesh)
   if (ok) {
     gmesh_raw_alloc(&raw);
     ok = gmesh_read_file(filename, extension, &raw);
+  }
+  /* a component that needs the properties gets them for every face */
+  if (ok && face_props == GMESH_PROPS_REQUIRED) {
+    for (i = 0; i < raw.nfaces; i++) {
+      if (raw.faces[i].nprops == 0) {
+        fprintf(stderr, "Error: %s: face %ld has no per-face properties, which this component requires (geometry-mesh-lib)\n",
+                filename, i);
+        ok = 0;
+        break;
+      }
+    }
   }
   if (!ok) {
     gmesh_raw_free(&raw);
