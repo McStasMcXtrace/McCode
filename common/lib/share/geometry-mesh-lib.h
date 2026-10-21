@@ -129,13 +129,21 @@ typedef struct gmesh_struct {
   char*   filename;
 } gmesh_struct;
 
+/* face_props argument of gmesh_init: what the component does with the
+   per-face properties of the file (numbers after the vertex indices of an
+   OFF face, scalar face properties of a PLY file) */
+#define GMESH_PROPS_IGNORE   0  /* not read; nfaceprops is 0 */
+#define GMESH_PROPS_OPTIONAL 1  /* read when given; missing values are 0 */
+#define GMESH_PROPS_REQUIRED 2  /* error unless every face has properties */
+
 /*******************************************************************************
-* long gmesh_init(char *filename, double scale, gmesh_struct *mesh)
+* long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh)
 * ACTION: read an STL/OFF/PLY file and build the mesh structure.
 * INPUT:  scale: multiply file coordinates (1 for m, 1e-3 for mm, 0 same as 1)
+*         face_props: GMESH_PROPS_IGNORE, GMESH_PROPS_OPTIONAL or GMESH_PROPS_REQUIRED
 * RETURN: number of triangles, 0 on error
 *******************************************************************************/
-long gmesh_init(char *filename, double scale, gmesh_struct *mesh);
+long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh);
 
 /*******************************************************************************
 * int gmesh_intersect(gmesh_struct *mesh, Coords position, Coords direction,
