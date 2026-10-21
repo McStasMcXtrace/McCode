@@ -989,6 +989,7 @@ MCDETECTOR detector_import(
   char   c[CHAR_BUF_LENGTH]; /* temp var for signal label */
 
   MCDETECTOR detector;
+  detector.options[0] = '\0'; /* only the 2D/list paths set it; the NeXus writer reads it for all */
 
   /* build MCDETECTOR structure ============================================= */
   /* make sure we do not have NULL for char fields */
