@@ -1047,6 +1047,76 @@ static Coords gmesh_farthest_vertex(gmesh_struct *mesh, Coords point, double *di
   return farthest;
 }
 
+/* polygons as sorted vertex lists ([n i1 .. in] at gmesh_sort_key_start[face]),
+   used by gmesh_cmp_faces while sorting with qsort */
+static unsigned long *gmesh_sort_keys;
+static long *gmesh_sort_key_start;
+
+/* qsort comparison of two polygon numbers by their sorted vertex lists:
+   the number of vertices first, then the vertices in order */
+static int gmesh_cmp_faces(const void *first, const void *second)
+{
+  const unsigned long *first_key = &gmesh_sort_keys[gmesh_sort_key_start[*(const long*)first]];
+  const unsigned long *second_key = &gmesh_sort_keys[gmesh_sort_key_start[*(const long*)second]];
+  unsigned long k;
+  if (first_key[0] < second_key[0]) return -1;
+  if (first_key[0] > second_key[0]) return 1;
+  for (k = 1; k <= first_key[0]; k++) {
+    if (first_key[k] < second_key[k]) return -1;
+    if (first_key[k] > second_key[k]) return 1;
+  }
+  return 0;
+}
+
+/* qsort comparison of two vertex indices */
+static int gmesh_cmp_indices(const void *first, const void *second)
+{
+  unsigned long first_index = *(const unsigned long*)first;
+  unsigned long second_index = *(const unsigned long*)second;
+  if (first_index < second_index) return -1;
+  if (first_index > second_index) return 1;
+  return 0;
+}
+
+/* mark in duplicate[] every polygon of faces[0..size-1] (polygon i starts at
+   face_start[i]) whose set of vertices is given more than once, e.g. the inner
+   faces of a volumetric mesh, each shared by two cells.
+   Returns the number of marked polygons. */
+static long gmesh_find_duplicates(unsigned long *faces, long size, long *face_start, long nfaces, char *duplicate)
+{
+  unsigned long *keys = gmesh_xrealloc(NULL, size*sizeof(unsigned long));
+  long *order = gmesh_xrealloc(NULL, nfaces*sizeof(long));
+  long nduplicate = 0;
+  long i, j, k;
+  memcpy(keys, faces, size*sizeof(unsigned long));
+  for (i = 0; i < nfaces; i++) {
+    unsigned long *key = &keys[face_start[i]];
+    qsort(key + 1, key[0], sizeof(unsigned long), gmesh_cmp_indices);
+    order[i] = i;
+  }
+  gmesh_sort_keys = keys;
+  gmesh_sort_key_start = face_start;
+  qsort(order, nfaces, sizeof(long), gmesh_cmp_faces);
+  i = 0;
+  while (i < nfaces) {
+    j = i + 1;
+    while (j < nfaces && gmesh_cmp_faces(&order[i], &order[j]) == 0) {
+      j++;
+    }
+    /* polygons of less than 3 vertices give no triangles anyway */
+    if (j - i > 1 && keys[face_start[order[i]]] >= 3) {
+      for (k = i; k < j; k++) {
+        duplicate[order[k]] = 1;
+        nduplicate++;
+      }
+    }
+    i = j;
+  }
+  free(keys);
+  free(order);
+  return nduplicate;
+}
+
 /* ========================================================================== */
 /*  BVH build                                                                 */
 /* ========================================================================== */
@@ -1344,11 +1414,14 @@ long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh
     mesh->vtx = gmesh_xrealloc(mesh->vtx, mesh->nverts*sizeof(Coords));
   }
 
-  /* faces with welded indices (consecutive repeats removed), triangulation */
+  /* faces with welded indices (consecutive repeats removed) */
   mesh->nfaces = raw.nfaces;
   mesh->faceArray = gmesh_xrealloc(NULL, (raw.nfaces + raw.ncorners)*sizeof(unsigned long));
   {
+    long *face_start = gmesh_xrealloc(NULL, raw.nfaces*sizeof(long));
+    char *duplicate = gmesh_xcalloc(raw.nfaces, 1);
     long face_index;
+    long write;
     long ntri = 0;
     long *tri = NULL;
     long *tri_face = NULL;
@@ -1359,8 +1432,8 @@ long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh
       long nn = 0;
       long start = mesh->faceSize;
       long j;
-      long before;
       unsigned long *out;
+      face_start[face_index] = start;
       mesh->faceArray[start] = 0;
       mesh->faceSize++;
       out = &mesh->faceArray[mesh->faceSize];
@@ -1375,7 +1448,24 @@ long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh
       }
       mesh->faceArray[start] = nn;
       mesh->faceSize += nn;
-      before = ntri;
+    }
+    /* polygons given more than once (inner faces of a volumetric mesh) are removed */
+    mesh->nduplicate = gmesh_find_duplicates(mesh->faceArray, mesh->faceSize, face_start, raw.nfaces, duplicate);
+    /* triangulation; removed polygons stay as empty polygons, so that the face
+       numbers still match the file */
+    write = 0;
+    for (face_index = 0; face_index < raw.nfaces; face_index++) {
+      long nn = (long)mesh->faceArray[face_start[face_index]];
+      long before = ntri;
+      long j;
+      unsigned long *out;
+      if (duplicate[face_index]) {
+        nn = 0;
+      }
+      memmove(&mesh->faceArray[write + 1], &mesh->faceArray[face_start[face_index] + 1], nn*sizeof(unsigned long));
+      mesh->faceArray[write] = nn;
+      out = &mesh->faceArray[write + 1];
+      write += nn + 1;
       if (nn >= 3) {
         gmesh_triangulate(mesh->vtx, out, nn, &tri, &ntri, &tri_cap);
       }
@@ -1386,6 +1476,9 @@ long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh
         }
       }
     }
+    mesh->faceSize = write;
+    free(face_start);
+    free(duplicate);
     mesh->tri = tri;
     mesh->tri_face = tri_face;
     mesh->ntris = ntri;
@@ -1796,6 +1889,7 @@ void gmesh_print_info(gmesh_struct *mesh)
 {
   printf("  %s: %ld vertices (%ld duplicates welded), %ld faces, %ld triangles",
          mesh->filename, mesh->nverts, mesh->nwelded, mesh->nfaces, mesh->ntris);
+  if (mesh->nduplicate) printf(" (%ld duplicated faces removed)", mesh->nduplicate);
   if (mesh->ndegenerate) printf(" (%ld degenerate dropped)", mesh->ndegenerate);
   printf("\n  Bounding box [%g:%g]x[%g:%g]x[%g:%g], area %g",
          mesh->bbmin.x, mesh->bbmax.x, mesh->bbmin.y, mesh->bbmax.y, mesh->bbmin.z, mesh->bbmax.z, mesh->area);

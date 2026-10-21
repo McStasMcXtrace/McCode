@@ -28,6 +28,8 @@
 * What the library does at init
 *   - optional scaling (e.g. 1e-3 for files in mm), no re-sizing or centring
 *   - welds duplicated vertices (STL stores 3 vertices per triangle)
+*   - removes faces given more than once (all copies), e.g. the inner faces
+*     of a volumetric mesh shared by two cells
 *   - triangulates polygons (ear clipping, works for non-convex polygons)
 *   - computes unit normals, area, volume and mesh topology: number of edges,
 *     boundary / non-manifold edges, Euler characteristic, consistent
@@ -122,6 +124,7 @@ typedef struct gmesh_struct {
   double  length_scale;     /* bounding box diagonal */
   double  area, volume;     /* surface area, enclosed volume (closed meshes) */
   long    nedges, nboundary, nnonmanifold, ndegenerate, nwelded;
+  long    nduplicate;       /* faces given more than once (all copies removed) */
   int     euler;            /* V - E + F (2 for a closed genus-0 surface) */
   int     closed;           /* every edge shared by exactly two triangles */
   int     oriented;         /* shared edges run in opposite directions */

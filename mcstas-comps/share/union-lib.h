@@ -19,12 +19,6 @@
 // which each McCode code generator emits once per instrument: this header
 // ahead of all component SHARE sections, and union-lib.c either straight
 // after it or after the SHARE sections.
-
-// Union_master keeps the intersection times of a volume until the ray scatters,
-// so a mesh must report every crossing: as many as the 100 the master stores
-#ifndef GMESH_MAX_HITS
-#define GMESH_MAX_HITS 100
-#endif
 %include "geometry-mesh-lib"
 
 #ifndef UNION_LIB_H
@@ -231,7 +225,7 @@ union geometry_parameter_union{
     struct cylinder_storage *p_cylinder_storage;
     struct box_storage      *p_box_storage;
     struct cone_storage     *p_cone_storage;
-    struct mesh_storage     *p_mesh_storage;
+    gmesh_struct            *p_mesh;
     // add as many pointers to structs as wanted, without increasing memory footprint.
 };
 
@@ -1080,9 +1074,6 @@ double height;
 Coords direction_vector;
 };
 
-struct mesh_storage{
-gmesh_struct mesh; // triangles, welded vertices and BVH in the frame of the component
-};
 
 // A number of functions below use Dot() as scalar product, replace by coords_sp define
 #define Dot(a, b) coords_sp(a, b)
@@ -1100,7 +1091,7 @@ union geometry_parameter_union allocate_sphere_storage_copy(union geometry_param
 
 union geometry_parameter_union allocate_cone_storage_copy(union geometry_parameter_union *union_input);
 
-union geometry_parameter_union allocate_mesh_storage_copy(union geometry_parameter_union *union_input);
+union geometry_parameter_union allocate_mesh_copy(union geometry_parameter_union *union_input);
 
 // -------------    Surroundings  ---------------------------------------------------------------
 int r_within_surroundings(Coords pos,struct geometry_struct *geometry);

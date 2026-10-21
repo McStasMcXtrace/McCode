@@ -27,9 +27,10 @@
 *
 * The mesh component loads a 3D OFF, STL or PLY file as the geometry, using
 * geometry-mesh-lib (polygons are triangulated, duplicated vertices welded).
+* Faces given more than once are removed, so a volumetric mesh (cells sharing
+* faces) gives its outer surface.
 * The mesh geometry that is loaded must be a watertight mesh: every edge must be
-* shared by exactly two triangles. A user can set the skip_convex_check
-* parameter in order to not have this check performed.
+* shared by exactly two triangles.
 *
 * It is allowed to overlap components, but it is not allowed to have two
 *  parallel planes that coincides. This will crash the code on run time.
@@ -55,7 +56,6 @@
 * focus_xw:      [m]   horiz. dimension of a rectangular area
 * focus_xh:      [m]   vert. dimension of a rectangular area
 * focus_r:       [m]   focusing on circle with this radius
-* skip_convex_check: [1] when set to 1, skips the check for whether the input mesh is closed.
 * coordinate_scale [1e-3] Multiplier that the vertex positions are multiplied by. Set to 1 for input coordinates in meters. Set to 1e-3 for input coordinates in mm.
 * all_surfaces:       [string] Comma seperated string of Union surface definitions defined prior to this component
 * cut_surface:   [string] Comma seperated string of Union surface definitions defined prior to this component, applied to all internal cuts
@@ -89,7 +89,6 @@ SETTING PARAMETERS(string filename = 0,
    string mask_string=0,
    string mask_setting=0,
    number_of_activations=1,
-   int skip_convex_check = 0,
     coordinate_scale = 1e-3, string init=""
    )
 
@@ -124,7 +123,7 @@ SHARE
   void
   mcdisplay_mesh_function (struct lines_to_draw* lines_to_draw_output, int index, struct geometry_struct** Geometries, int number_of_volumes) {
     // Draws each edge of the polygons in the file once, in the frame of the master component
-    gmesh_struct* triangle_mesh = &Geometries[index]->geometry_parameters.p_mesh_storage->mesh;
+    gmesh_struct* triangle_mesh = Geometries[index]->geometry_parameters.p_mesh;
     struct pointer_to_1d_coords_list points_struct = Geometries[index]->shell_points (Geometries[index], 1);
     Coords* points = points_struct.elements;
     long* edges = malloc (2 * triangle_mesh->faceSize * sizeof (long));
@@ -163,7 +162,7 @@ SHARE
   struct pointer_to_1d_coords_list
   allocate_shell_points (struct geometry_struct* geometry, int max_number_of_points) {
     // Function that returns all vertex points in the frame of the master component
-    gmesh_struct* triangle_mesh = &geometry->geometry_parameters.p_mesh_storage->mesh;
+    gmesh_struct* triangle_mesh = geometry->geometry_parameters.p_mesh;
     struct pointer_to_1d_coords_list mesh_shell_array;
 
     mesh_shell_array.elements = malloc (triangle_mesh->nverts * sizeof (Coords));
@@ -204,7 +203,7 @@ DECLARE
   struct Volume_struct mesh_vol;
 
   // Mesh storage contains the triangle mesh read with geometry-mesh-lib
-  struct mesh_storage mesh_data;
+  gmesh_struct mesh_data;
 
   // Structs for surface effects
   struct surface_stack_struct surface_stack;
@@ -218,7 +217,6 @@ INITIALIZE
 %{
   struct union_state_struct* union_state_p = union_acquire ();
   geometry_struct_init (&(mesh_vol.geometry));
-  mesh_vol.geometry.skip_hierarchy_optimization = skip_convex_check;
   // Initializes the focusing system for this volume including input sanitation.
   focus_initialize (&mesh_vol.geometry, POS_A_COMP_INDEX (INDEX_CURRENT_COMP + target_index), POS_A_CURRENT_COMP, ROT_A_CURRENT_COMP, target_index, target_x,
                     target_y, target_z, focus_aw, focus_ah, focus_xw, focus_xh, focus_r, NAME_CURRENT_COMP);
@@ -360,15 +358,14 @@ INITIALIZE
   //                       READ FILE
   //==============================================================================
   // Read the STL/OFF/PLY file in the frame of this component, scaled by coordinate_scale
-  if (!gmesh_init (filename, coordinate_scale, GMESH_PROPS_IGNORE, &mesh_data.mesh)) {
+  if (!gmesh_init (filename, coordinate_scale, GMESH_PROPS_IGNORE, &mesh_data)) {
     printf ("\nERROR IN %s: could not read the geometry file %s\n", NAME_CURRENT_COMP, filename);
     exit (1);
   }
-  if (!mesh_data.mesh.closed && !skip_convex_check) {
+  if (!mesh_data.closed) {
     printf ("\n\nERROR: Input mesh %s of %s is not closed: %ld boundary and %ld non-manifold edges."
-            "\nUnion_mesh requires a closed (watertight) mesh.\n"
-            "If you are sure that it is, set skip_convex_check to 1\n\n",
-            filename, NAME_CURRENT_COMP, mesh_data.mesh.nboundary, mesh_data.mesh.nnonmanifold);
+            "\nUnion_mesh requires a closed (watertight) mesh.\n\n",
+            filename, NAME_CURRENT_COMP, mesh_data.nboundary, mesh_data.nnonmanifold);
     exit (1);
   }
 
@@ -389,13 +386,13 @@ INITIALIZE
   mesh_vol.geometry.visualization_on = visualize;
   mesh_vol.geometry.geometry_p_interact = p_interact;
   mesh_vol.geometry.within_function = &r_within_mesh;
-  mesh_vol.geometry.geometry_parameters.p_mesh_storage = &mesh_data;
+  mesh_vol.geometry.geometry_parameters.p_mesh = &mesh_data;
   mesh_vol.geometry.intersect_function = &sample_mesh_intersect;
   mesh_vol.geometry.mcdisplay_function = &mcdisplay_mesh_function;
   mesh_vol.geometry.shell_points = &allocate_shell_points;
   mesh_vol.geometry.initialize_from_main_function = &initialize_mesh_geometry_from_main_component;
   mesh_vol.geometry.process_rot_allocated = 0;
-  mesh_vol.geometry.copy_geometry_parameters = &allocate_mesh_storage_copy;
+  mesh_vol.geometry.copy_geometry_parameters = &allocate_mesh_copy;
   mesh_vol.geometry.center = POS_A_CURRENT_COMP;
   rot_copy (mesh_vol.geometry.rotation_matrix, ROT_A_CURRENT_COMP);
   rot_transpose (ROT_A_CURRENT_COMP, mesh_vol.geometry.transpose_rotation_matrix);
