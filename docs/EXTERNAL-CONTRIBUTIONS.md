@@ -31,6 +31,17 @@ manifest in each:
 Manifests are not installed: the `install( DIRECTORY ... )` rules that cover
 those directories carry `PATTERN "*.ext" EXCLUDE`.
 
+### Sources that are compiled: cif2hkl
+
+`mcstas-comps/libs/cif2hkl/cif2hkl.ext` (McXtrace: a symlink to it) pins the
+SOLEIL [cif2hkl](https://gitlab.com/soleil-data-treatment/soleil-software-projects/cif2hkl)
+Fortran sources. Its `mccode_install_externals()` call has no `DESTINATION`,
+so the files are only staged, never installed; `OUTPUT_VARIABLE` hands them
+to `add_executable( cif2hkl ... )`. cif2hkl lives on GitLab, which the poll
+job below does not query, so move it to a new release by hand with
+`mcext update mcstas-comps/libs/cif2hkl/cif2hkl.ext -v <tag>` (and bump the
+`cif2hkl >=` conda and Debian pins to match).
+
 ## Manifest format
 
 Short form — a JSON array of fully self-describing file entries:

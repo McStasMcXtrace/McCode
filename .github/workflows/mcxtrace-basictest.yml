@@ -342,7 +342,7 @@ jobs:
            set -e
            set -u
            set -x
-           # mccode.org apt repo, as for users: provides mcpl, ncrystal and cif2hkl (>= 1.5.0)
+           # mccode.org apt repo, as for users: provides mcpl, ncrystal and cif2hkl (>= 1.5.1)
            echo "deb [trusted=yes] https://packages.mccode.org/debian stable main" | sudo tee /etc/apt/sources.list.d/mccode.list
            sudo apt-get update
            # Build dependencies, as in dependency-scripts/getdeps_debian (minus LaTeX/equivs:

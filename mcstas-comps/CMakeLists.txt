@@ -15,7 +15,7 @@ option( ENABLE_CIF2HKL "Build Third Party code cif2hkl (fortran)" ON )#TODO: Onl
 if ( ENABLE_CIF2HKL )
   set(DEBIDEPS "${FLAVOR}, libnexus-dev, libgsl-dev, mcpl (>= 2.2.0), ncrystal (>= 4.2.0)")
 else()
-  set(DEBIDEPS "${FLAVOR}, libnexus-dev, libgsl-dev, mcpl (>= 2.2.0), ncrystal (>= 4.2.0), cif2hkl (>= 1.5.0)")
+  set(DEBIDEPS "${FLAVOR}, libnexus-dev, libgsl-dev, mcpl (>= 2.2.0), ncrystal (>= 4.2.0), cif2hkl (>= 1.5.1)")
 endif()
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
@@ -42,13 +42,12 @@ set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING} Components")
 include(CPack)
 
 if ( ENABLE_CIF2HKL )
-  # Upstream SOLEIL cif2hkl release, built by its own CMakeLists.txt
-  include( FetchContent )
-  FetchContent_Declare( cif2hkl
-    URL https://gitlab.com/soleil-data-treatment/soleil-software-projects/cif2hkl/-/archive/v1.5.0/cif2hkl-v1.5.0.tar.gz
-    URL_HASH SHA256=3ba5c5ceb2aeaae2c81a66f644fccf70d366b7ea73bc2e785626f7c434a4bed6 )
-  set( cif2hkl_BINDIR "${DEST_BINDIR}" )
-  FetchContent_MakeAvailable( cif2hkl )
+  enable_language( Fortran )
+  # Upstream SOLEIL cif2hkl sources, pinned in libs/cif2hkl/cif2hkl.ext
+  mccode_install_externals( DIRECTORY "libs/cif2hkl" OUTPUT_VARIABLE cif2hkl_src )
+  add_executable( cif2hkl ${cif2hkl_src} )
+  target_compile_options( cif2hkl PUBLIC "-ffree-line-length-512" )
+  install( TARGETS cif2hkl DESTINATION "${DEST_BINDIR}" )
 endif()
 
 option( ENABLE_NEUTRONICS "Build Third Party code neutronics (fortran)" ON )#TODO: Only enable enable Fortran if this is on
