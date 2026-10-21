@@ -102,7 +102,7 @@ COMPONENT MARS_pos    = Text(text="MARS")
   ROTATED (0, -51.5, 0) RELATIVE origin
 COMPONENT MARS        = Arm()
   AT (0,0,0)            RELATIVE PREVIOUS
-%include "SOLEIL_MARS.instr"
+%include "SOLEIL/SOLEIL_MARS/SOLEIL_MARS.instr"
 COMPONENT COPY(beamdump) = Beamstop()
   AT (0,0,0)              RELATIVE PREVIOUS
   EXTEND %{
@@ -114,7 +114,7 @@ COMPONENT PSICHE_pos  = Text(text="PSICHE")
   ROTATED (0, -56.4, 0) RELATIVE origin
 COMPONENT PSICHE      = Arm()
   AT (0,0,0)            RELATIVE PREVIOUS
-%include "SOLEIL_PSICHE.instr"
+%include "SOLEIL/SOLEIL_PSICHE/SOLEIL_PSICHE.instr"
 COMPONENT COPY(beamdump) = Beamstop()
   AT (0,0,0)              RELATIVE PREVIOUS
   EXTEND %{
@@ -130,7 +130,7 @@ COMPONENT DISCO_pos   = Text(text="DISCO")
   ROTATED (0, -79.749, 0) RELATIVE origin
 COMPONENT DISCO       = Arm()
   AT (0,0,0)              RELATIVE PREVIOUS
-%include "SOLEIL_DISCO.instr"
+%include "SOLEIL/SOLEIL_DISCO/SOLEIL_DISCO.instr"
 COMPONENT COPY(beamdump) = Beamstop()
   AT (0,0,0)              RELATIVE PREVIOUS
   EXTEND %{
@@ -150,7 +150,7 @@ COMPONENT PUMA_pos    = Text(text="PUMA")
   ROTATED (0, -112.424, 0) RELATIVE origin
 COMPONENT PUMA        = Arm()
   AT (0,0,0)               RELATIVE PREVIOUS
-%include "SOLEIL_PUMA.instr"
+%include "SOLEIL/SOLEIL_PUMA/SOLEIL_PUMA.instr"
 COMPONENT COPY(beamdump) = Beamstop()
   AT (0,0,0)              RELATIVE PREVIOUS
   EXTEND %{
@@ -162,7 +162,7 @@ COMPONENT CRISTAL_pos = Text(text="CRISTAL")
   ROTATED (0, -123.814, 0) RELATIVE origin
 COMPONENT CRISTAL     = Arm()
   AT (0,0,0)               RELATIVE PREVIOUS
-%include "SOLEIL_CRISTAL.instr"
+%include "SOLEIL/SOLEIL_CRISTAL/SOLEIL_CRISTAL.instr"
 COMPONENT COPY(beamdump) = Beamstop()
   AT (0,0,0)              RELATIVE PREVIOUS
   EXTEND %{
@@ -178,7 +178,7 @@ COMPONENT GALAXIES_pos= Text(text="GALAXIES")
   ROTATED (0, -146.420, 0) RELATIVE origin
 COMPONENT GALAXIES    = Arm()
   AT (0,0,0)               RELATIVE PREVIOUS
-%include "SOLEIL_GALAXIES.instr"
+%include "SOLEIL/SOLEIL_GALAXIES/SOLEIL_GALAXIES.instr"
 COMPONENT COPY(beamdump) = Beamstop()
   AT (0,0,0)               RELATIVE PREVIOUS
   EXTEND %{
@@ -194,7 +194,7 @@ COMPONENT SAMBA_pos   = Text(text="SAMBA")
   ROTATED (0, -195.163, 0) RELATIVE origin
 COMPONENT SAMBA       = Arm()
   AT (0,0,0)               RELATIVE PREVIOUS
-%include "SOLEIL_SAMBA.instr"
+%include "SOLEIL/SOLEIL_SAMBA/SOLEIL_SAMBA.instr"
 COMPONENT COPY(beamdump) = Beamstop()
   AT (0,0,0)              RELATIVE PREVIOUS
   EXTEND %{
@@ -210,7 +210,7 @@ COMPONENT PX1_pos     = Text(text="PX1")
   ROTATED (0, -213.834, 0) RELATIVE origin
 COMPONENT PX1     = Arm()
   AT (0,0,0)               RELATIVE PREVIOUS
-%include "SOLEIL_PX1.instr"
+%include "SOLEIL/SOLEIL_PX1/SOLEIL_PX1.instr"
 COMPONENT COPY(beamdump)   = Beamstop()
   AT (0,0,0)               RELATIVE PREVIOUS
   EXTEND %{
@@ -222,7 +222,7 @@ COMPONENT PX2a_pos    = Text(text="PX2a")
   ROTATED (0, -226.607, 0) RELATIVE origin
 COMPONENT PX2a        = Arm()
   AT (0,0,0)               RELATIVE PREVIOUS
-%include "SOLEIL_PX2a.instr"
+%include "SOLEIL/SOLEIL_PX2a/SOLEIL_PX2a.instr"
 COMPONENT COPY(beamdump) = Beamstop()
   AT (0,0,0)              RELATIVE PREVIOUS
   EXTEND %{
@@ -234,7 +234,7 @@ COMPONENT SWING_pos   = Text(text="SWING")
   ROTATED (0, -236.451, 0) RELATIVE origin
 COMPONENT SWING       = Arm()
   AT (0,0,0)               RELATIVE PREVIOUS
-%include "SOLEIL_SWING.instr"
+%include "SOLEIL/SOLEIL_SWING/SOLEIL_SWING.instr"
 COMPONENT COPY(beamdump) = Beamstop()
   AT (0,0,0)              RELATIVE PREVIOUS
   EXTEND %{
@@ -250,7 +250,7 @@ COMPONENT ROCK_pos    = Text(text="ROCK")
   ROTATED (0, -259.668, 0) RELATIVE origin
 COMPONENT ROCK        = Arm()
   AT (0,0,0)               RELATIVE PREVIOUS
-%include "SOLEIL_ROCK.instr"
+%include "SOLEIL/SOLEIL_ROCK/SOLEIL_ROCK.instr"
 COMPONENT COPY(beamdump) = Beamstop()
   AT (0,0,0)              RELATIVE PREVIOUS
   EXTEND %{
@@ -262,7 +262,7 @@ COMPONENT ANATOMIX_pos = Text(text="ANATOMIX")
   ROTATED (0, -266.6441, 0) RELATIVE origin
 COMPONENT ANATOMIX     = Arm()
   AT (0,0,0)                RELATIVE PREVIOUS
-%include "SOLEIL_ANATOMIX.instr"
+%include "SOLEIL/SOLEIL_ANATOMIX/SOLEIL_ANATOMIX.instr"
 COMPONENT COPY(beamdump) = Beamstop()
   AT (0,0,0)              RELATIVE PREVIOUS
   EXTEND %{
@@ -274,7 +274,7 @@ COMPONENT NANOSCOPIUM_pos = Text(text="NANOSCOPIUM")
   ROTATED (0, -273.5085, 0) RELATIVE origin
 COMPONENT NANOSCOPIUM     = Arm()
   AT (0,0,0)                RELATIVE PREVIOUS
-%include "SOLEIL_NANOSCOPIUM.instr"
+%include "SOLEIL/SOLEIL_NANOSCOPIUM/SOLEIL_NANOSCOPIUM.instr"
 COMPONENT COPY(beamdump)   = Beamstop()
   AT (0,0,0)                RELATIVE PREVIOUS
   EXTEND %{
@@ -286,7 +286,7 @@ COMPONENT DIFFABS_pos = Text(text="DIFFABS")
   ROTATED (0, -285.193, 0)  RELATIVE origin
 COMPONENT DIFFABS     = Arm()
   AT (0,0,0)                RELATIVE PREVIOUS
-%include "SOLEIL_DIFFABS.instr"
+%include "SOLEIL/SOLEIL_DIFFABS/SOLEIL_DIFFABS.instr"
 COMPONENT COPY(beamdump) = Beamstop()
   AT (0,0,0)              RELATIVE PREVIOUS
   EXTEND %{
@@ -302,7 +302,7 @@ COMPONENT SIXS_pos    = Text(text="SIXS")
   ROTATED (0, -303.864, 0)  RELATIVE origin
 COMPONENT SIXS = Arm()
   AT (0,0,0)                RELATIVE PREVIOUS
-%include "SOLEIL_SIXS.instr"
+%include "SOLEIL/SOLEIL_SIXS/SOLEIL_SIXS.instr"
 // SOLEIL_SIXS_updated.instr
 COMPONENT COPY(beamdump) = Beamstop()
   AT (0,0,0)              RELATIVE PREVIOUS
@@ -315,7 +315,7 @@ COMPONENT CASSIOPEE_pos = Text(text="CASSIOPEE")
   ROTATED (0, -313.220, 0)  RELATIVE origin
 COMPONENT CASSIOPEE     = Arm()
   AT (0,0,0)                RELATIVE PREVIOUS
-%include "SOLEIL_CASSIOPEE.instr"
+%include "SOLEIL/SOLEIL_CASSIOPEE/SOLEIL_CASSIOPEE.instr"
 COMPONENT COPY(beamdump) = Beamstop()
   AT (0,0,0)              RELATIVE PREVIOUS
   EXTEND %{
@@ -327,7 +327,7 @@ COMPONENT SIRIUS_pos    = Text(text="SIRIUS")
   ROTATED (0, -326.390, 0)  RELATIVE origin
 COMPONENT SIRIUS        = Arm()
   AT (0,0,0)                RELATIVE PREVIOUS
-%include "SOLEIL_SIRIUS.instr"
+%include "SOLEIL/SOLEIL_SIRIUS/SOLEIL_SIRIUS.instr"
 COMPONENT COPY(beamdump) = Beamstop()
   AT (0,0,0)              RELATIVE PREVIOUS
   EXTEND %{
@@ -339,7 +339,7 @@ COMPONENT LUCIA_pos     = Text(text="LUCIA")
   ROTATED (0, -337.698, 0) RELATIVE origin
 COMPONENT LUCIA         = Arm()
   AT (0,0,0)              RELATIVE PREVIOUS
-%include "SOLEIL_LUCIA.instr"
+%include "SOLEIL/SOLEIL_LUCIA/SOLEIL_LUCIA.instr"
 COMPONENT COPY(beamdump) = Beamstop()
   AT (0,0,0)              RELATIVE PREVIOUS
   EXTEND %{
