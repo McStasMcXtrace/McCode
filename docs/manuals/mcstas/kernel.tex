@@ -1929,9 +1929,9 @@ Additionally, optional keys \verb+%VALIDATION+ and \verb+%BUGS+ may be found to 
 \item 
   \indexDOCSEC{\%EXAMPLE}{\%EX[AMPLE]}{textbf}\sloppy
   \index{Example!McDoc section|textbf}
-  The \verb+%EXAMPLE:+
+  The \verb+%EXAMPLE:+ (or \verb+%TEST:+)
   lines in instrument headers indicate an example parameter set or command that may be
-  run to test the instrument. A following \texttt{Detector: $<$name$>$\_I=$<$value$>$}
+  run to test the instrument. A \verb+%TESTSCAN:+ (older name \verb+%SCAN:+) line defines a parameter scan test with one expected value per scan point. A following \texttt{Detector: $<$name$>$\_I=$<$value$>$}
   indicates what value should be obtained for a given monitor. More than one example
   line may be specified in instruments.
 \item
