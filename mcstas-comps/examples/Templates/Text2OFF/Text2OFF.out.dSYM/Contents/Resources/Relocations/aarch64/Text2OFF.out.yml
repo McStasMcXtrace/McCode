@@ -1,5 +1,0 @@
----
-triple:          'arm64-apple-darwin'
-binary-path:     './Text2OFF.out'
-relocations:     []
-...
