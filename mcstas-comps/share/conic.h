@@ -1516,9 +1516,50 @@ double calcSupermirrorReflectivity(double q, double m, double R_0, double Q_c){
     return weight;
 }
 
+/*! \brief Function to sample the outgoing angle from a wavy surface
+
+Implements the effective waviness model of
+U. B. Hansen, M. Bertelsen, E. B. Knudsen and K. Lefmann,
+"Simulation of waviness in neutron guides", arXiv:1612.03763 (2016).
+There, the distribution of the final angle theta_f (relative to the mean surface)
+for a ray with incidence angle theta_i on a surface with RMS slope w, including
+illumination, shading and multiple reflections, is approximated by eq. (22),
+  f3(y) = alpha3 exp(-(y - kappa3 x)^2/8) tanh(beta3 y/x),  x = theta_i/w, y = theta_f/w,
+with beta3(x) and kappa3(x) given by eq. (23) and Table 1. As f3 is used for sampling
+only, the normalisation alpha3 is not needed.
+
+Note: kappa3 = k1 x^(-k2) + 1, i.e. with a negative exponent as shown in Fig. 11 of
+the paper; the minus sign is missing in the printed eq. (23).
+The model was fitted for 0.22 <= x <= 10; smaller values of x are extrapolated.
+
+@param x theta_i/w, > 0
+@param _particle Pointer to particle (for the random number generator)
+
+@return theta_f/w, or -1 if sampling failed
+*/
+double sampleWavyThetaf(double x, _class_particle* _particle) {
+    double beta3 = x < 1.38 ? 0.395*pow(x,2.5)+0.076 : (x < 4.5 ? 0.541*pow(x,1.9)+0.007 : 11);
+    double kx = (0.61*pow(x,-1.39)+1)*x;  // kappa3*x, centre of the Gaussian factor
+    double ymax = kx+12;                  // exp(-12^2/8) ~ 1.5e-8
+    int i;
+    for (i = 0; i < 1000; i++) {          // hit-and-miss sampling, f3/alpha3 <= 1
+        double y = ymax*rand01();
+        if (rand01() < exp(-(y-kx)*(y-kx)/8)*tanh(beta3*y/x))
+            return y;
+    }
+    return -1;
+}
+
 /*! \brief Function to handle reflection of neutron for a ConicSurf.
 
 @note Uses StdReflecFunc for reflectivity, applied as a weight factor
+
+@note Figure error: if the grazing angle theta_i on the mean surface is at most
+10 times the RMS meridional slope error s.figerr_m, the outgoing angle is sampled
+from the waviness model of Hansen et al. (arXiv:1612.03763), see sampleWavyThetaf(),
+which accounts for illumination, shading and multiple reflections. Otherwise
+Gaussian slope errors are applied to the surface normal, for which these effects
+are negligible.
 
 @warning Make sure particle has been moved to surface of mirror
 before computing reflection
@@ -1541,10 +1582,26 @@ double reflectNeutronConic(_class_particle* _particle, ConicSurf s) {
         Vec n_p = makeVec(-n.y/nr,n.x/nr,0); //define a vector perpendicular to norm
         double len_p2 = sqrt((n.x*n.x+n.y*n.y)*(n.x*n.x+n.y*n.y+n.z*n.z));
         Vec n_p2 = makeVec(-n.x*n.z/len_p2, -n.y*n.z/len_p2, (n.x*n.x+n.y*n.y)/len_p2); //define a vector perpendicular to both n and n_p
-        double phi1 = s.figerr_m*randnorm();
-        double theta1 = s.figerr_s*randnorm();
-        Vec R1 = rotateM(n,phi1,n_p);	//rotate n by phi according to n_p
-        n = rotateM(R1,theta1,n_p2);	//rotate R1 by theta according to n_p2
+        // grazing angle on the mean surface; for small values relative to the meridional
+        // slope error use the waviness model of Hansen et al., arXiv:1612.03763
+        double vn0 = dotVec(pv,n);
+        double thi = vn0 < 0 ? asin(-vn0/getMagVec(pv)) : 0;
+        double yf = (thi > 0 && thi <= 10*s.figerr_m) ? sampleWavyThetaf(thi/s.figerr_m, _particle) : -1;
+        if (yf >= 0) {
+            // tilt n by delta towards the incoming ray, in the plane of n and the ray, giving
+            // a local grazing angle theta_i+delta and theta_f = theta_i+2*delta on the mean surface
+            double delta = (yf*s.figerr_m - thi)/2;
+            Vec tv = difVec(pv, skalarVec(n, vn0));
+            tv = skalarVec(tv, 1/getMagVec(tv));
+            Vec R1 = sumVec(skalarVec(n, cos(delta)), skalarVec(tv, -sin(delta)));
+            double theta1 = s.figerr_s*randnorm();
+            n = rotateM(R1,theta1,n_p2);	//rotate R1 by theta according to n_p2
+        } else {
+            double phi1 = s.figerr_m*randnorm();
+            double theta1 = s.figerr_s*randnorm();
+            Vec R1 = rotateM(n,phi1,n_p);	//rotate n by phi according to n_p
+            n = rotateM(R1,theta1,n_p2);	//rotate R1 by theta according to n_p2
+        }
     }
     // end of adding figure error
 
