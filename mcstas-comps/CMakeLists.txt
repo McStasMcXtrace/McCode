@@ -15,7 +15,7 @@ option( ENABLE_CIF2HKL "Build Third Party code cif2hkl (fortran)" ON )#TODO: Onl
 if ( ENABLE_CIF2HKL )
   set(DEBIDEPS "${FLAVOR}, libnexus-dev, libgsl-dev, mcpl (>= 2.2.0), ncrystal (>= 4.2.0)")
 else()
-  set(DEBIDEPS "${FLAVOR}, libnexus-dev, libgsl-dev, mcpl (>= 2.2.0), ncrystal (>= 4.2.0), cif2hkl")
+  set(DEBIDEPS "${FLAVOR}, libnexus-dev, libgsl-dev, mcpl (>= 2.2.0), ncrystal (>= 4.2.0), cif2hkl (>= 1.5.0)")
 endif()
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
