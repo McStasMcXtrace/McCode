@@ -14,9 +14,13 @@
 * SOLEIL model
 *
 * %Description
+*
 * This is a model of the Synchrotron SOLEIL with a set of beam-lines.
 * It has been assembled mostly for rendering purposes.
 * For any beam-line study, you are encouraged to refer to its specific model.
+*
+* %Parameters
+* splits:    [1] shared SPLIT level.
 *
 * %End
 *******************************************************************************/
