@@ -28,7 +28,7 @@ set(CPACK_PACKAGE_VERSION_PATCH "${MCCODE_PATCH}")
 if ( NOT DEFINED ENABLE_CIF2HKL OR ENABLE_CIF2HKL )
   set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, libnexus-dev, libxrl-dev, libgsl-dev, mcpl (>= 2.2.0)")
 else()
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, libnexus-dev, libxrl-dev, libgsl-dev, mcpl (>= 2.2.0), cif2hkl")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}, libnexus-dev, libxrl-dev, libgsl-dev, mcpl (>= 2.2.0), cif2hkl (>= 1.5.0)")
 endif()
 set(CPACK_DEBIAN_PACKAGE_REPLACES "${FLAVOR}-comps-3.5.1")
 
@@ -41,16 +41,13 @@ include(CPack)
 
 option( ENABLE_CIF2HKL "Build Third Party code cif2hkl (fortran)" ON )#TODO: Only enable Fortran if this is on
 if ( ENABLE_CIF2HKL )
-  enable_language( Fortran )
-  add_executable(
-    cif2hkl
-    ${CMAKE_CURRENT_SOURCE_DIR}/libs/cif2hkl/cif2hkl.F90
-    )
-  target_compile_options(cif2hkl PUBLIC "-ffree-line-length-512")
-  install (
-    TARGETS cif2hkl
-    DESTINATION "${DEST_BINDIR}"
-    )
+  # Upstream SOLEIL cif2hkl release, built by its own CMakeLists.txt
+  include( FetchContent )
+  FetchContent_Declare( cif2hkl
+    URL https://gitlab.com/soleil-data-treatment/soleil-software-projects/cif2hkl/-/archive/v1.5.0/cif2hkl-v1.5.0.tar.gz
+    URL_HASH SHA256=3ba5c5ceb2aeaae2c81a66f644fccf70d366b7ea73bc2e785626f7c434a4bed6 )
+  set( cif2hkl_BINDIR "${DEST_BINDIR}" )
+  FetchContent_MakeAvailable( cif2hkl )
 endif()
 
 
