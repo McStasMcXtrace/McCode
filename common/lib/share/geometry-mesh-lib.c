@@ -339,7 +339,7 @@ static int gmesh_read_off(FILE *file, char *filename, gmesh_raw *raw)
         return 0;
       }
       if (corners) {
-        corners[j] = &raw->verts[(long)index];
+        corners[j] = &raw->verts[(int)index];
       }
     }
     /* optional per-face numbers until the end of the line or a '#' comment */
@@ -386,7 +386,7 @@ static int gmesh_read_stl(char *filename, gmesh_raw *raw)
     if (size == 84 + 50*ntriangles) {
       binary = 1;
     } else {
-      long k = 0;
+      int k = 0;
       while (k < 80 && isspace(head[k])) {
         k++;
       }
@@ -718,7 +718,7 @@ static int gmesh_read_ply(FILE *file, char *filename, gmesh_raw *raw)
                 return 0;
               }
               if (corners) {
-                corners[j] = &raw->verts[(long)value];
+                corners[j] = &raw->verts[(int)value];
               }
             }
           } else {
@@ -778,21 +778,21 @@ static uint64_t gmesh_mix(uint64_t hash)
 /* edge table entry: undirected edge (a < b), number of uses n, direction sum
    dir (+1 per use as a->b, -1 per use as b->a) and the first two triangles */
 typedef struct gmesh_edge {
-  long a, b;
+  int a, b;
   int n;
   int dir;
-  long t0, t1;
+  int t0, t1;
 } gmesh_edge;
 
 /* open addressing hash table of edges: cap entries (a power of 2), n used */
 typedef struct gmesh_etab {
   gmesh_edge *e;
-  long cap, n;
+  int cap, n;
 } gmesh_etab;
 
 /* allocate an empty edge table for up to nedges edges, at most about half
    full so that the probe sequences stay short */
-static void gmesh_etab_alloc(gmesh_etab *table, long nedges)
+static void gmesh_etab_alloc(gmesh_etab *table, int nedges)
 {
   table->cap = 16;
   while (table->cap < 2*nedges+16) {
@@ -804,19 +804,19 @@ static void gmesh_etab_alloc(gmesh_etab *table, long nedges)
 
 /* the entry of the undirected edge (vertex_a, vertex_b) in table, added
    with n = 0 when the edge is not in the table yet */
-static gmesh_edge *gmesh_edge_get(gmesh_etab *table, long vertex_a, long vertex_b)
+static gmesh_edge *gmesh_edge_get(gmesh_etab *table, int vertex_a, int vertex_b)
 {
-  long low = vertex_a;
-  long high = vertex_b;
+  int low = vertex_a;
+  int high = vertex_b;
   uint64_t hash;
-  long i;
+  int i;
   gmesh_edge *edge;
   if (vertex_b < vertex_a) {
     low = vertex_b;
     high = vertex_a;
   }
   hash = gmesh_mix((uint64_t)low * 0x9E3779B97F4A7C15ULL ^ (uint64_t)high);
-  i = (long)(hash & (uint64_t)(table->cap-1));
+  i = (int)(hash & (uint64_t)(table->cap-1));
   while (table->e[i].n) {
     if (table->e[i].a == low && table->e[i].b == high) return &table->e[i];
     i = (i+1) & (table->cap-1);
@@ -832,14 +832,14 @@ static gmesh_edge *gmesh_edge_get(gmesh_etab *table, long vertex_a, long vertex_
 }
 
 /* build the edge table of the ntriangles triangles in triangles[3*ntriangles] */
-static void gmesh_etab_build(gmesh_etab *table, long *triangles, long ntriangles)
+static void gmesh_etab_build(gmesh_etab *table, int *triangles, int ntriangles)
 {
-  long i, k;
+  int i, k;
   gmesh_etab_alloc(table, 3*ntriangles);
   for (i = 0; i < ntriangles; i++) {
     for (k = 0; k < 3; k++) {
-      long a = triangles[3*i+k];
-      long b = triangles[3*i+(k+1)%3];
+      int a = triangles[3*i+k];
+      int b = triangles[3*i+(k+1)%3];
       gmesh_edge *edge = gmesh_edge_get(table, a, b);
       if (edge->n == 0) {
         edge->t0 = i;
@@ -862,11 +862,11 @@ static void gmesh_etab_build(gmesh_etab *table, long *triangles, long ntriangles
 
 /* normal of the polygon vertices[indices[0..count-1]] by Newell's method,
    right-handed with respect to the vertex order; its length is twice the area */
-static Coords gmesh_newell(Coords *vertices, unsigned long *indices, long count)
+static Coords gmesh_newell(Coords *vertices, int *indices, int count)
 {
   Coords normal = coords_set(0,0,0);
-  long i;
-  long previous = count-1;
+  int i;
+  int previous = count-1;
   for (i = 0; i < count; i++) {
     Coords a = vertices[indices[i]];
     Coords b = vertices[indices[previous]];
@@ -879,9 +879,9 @@ static Coords gmesh_newell(Coords *vertices, unsigned long *indices, long count)
 }
 
 /* append the triangle (a, b, c) to triangles, which has room for it */
-static void gmesh_add_triangle(long *triangles, long *triangle_count, long a, long b, long c)
+static void gmesh_add_triangle(int *triangles, int *triangle_count, int a, int b, int c)
 {
-  long n = *triangle_count;
+  int n = *triangle_count;
   triangles[3*n] = a;
   triangles[3*n+1] = b;
   triangles[3*n+2] = c;
@@ -890,7 +890,7 @@ static void gmesh_add_triangle(long *triangles, long *triangle_count, long a, lo
 
 /* twice the signed area of the 2D triangle (a, b, point) with coordinates
    x[], y[]: positive when point lies to the left of the edge a->b */
-static double gmesh_turn(double *x, double *y, long a, long b, long point)
+static double gmesh_turn(double *x, double *y, int a, int b, int point)
 {
   return (x[b]-x[a])*(y[point]-y[a]) - (y[b]-y[a])*(x[point]-x[a]);
 }
@@ -898,11 +898,11 @@ static double gmesh_turn(double *x, double *y, long a, long b, long point)
 /* ear-clipping triangulation of the polygon vertices[indices[0..count-1]]
    (welded, no repeats). Appends the triangles to *triangles, of *capacity
    triangles, grown as needed. Returns the number of triangles added. */
-static long gmesh_triangulate(Coords *vertices, unsigned long *indices, long count,
-                              long **triangles, long *triangle_count, long *capacity)
+static int gmesh_triangulate(Coords *vertices, int *indices, int count,
+                              int **triangles, int *triangle_count, int *capacity)
 {
-  long added = 0;
-  long i;
+  int added = 0;
+  int i;
   if (count < 3) return 0;
   if (*triangle_count + count > *capacity) {
     if (*capacity == 0) {
@@ -911,7 +911,7 @@ static long gmesh_triangulate(Coords *vertices, unsigned long *indices, long cou
     while (*triangle_count + count > *capacity) {
       *capacity *= 2;
     }
-    *triangles = gmesh_xrealloc(*triangles, 3*(*capacity)*sizeof(long));
+    *triangles = gmesh_xrealloc(*triangles, 3*(*capacity)*sizeof(int));
   }
   if (count == 3) {
     gmesh_add_triangle(*triangles, triangle_count, indices[0], indices[1], indices[2]);
@@ -924,9 +924,9 @@ static long gmesh_triangulate(Coords *vertices, unsigned long *indices, long cou
     double az = fabs(normal.z);
     double sign;
     int px, py;   /* the two coordinates of the projection plane */
-    long remaining = count;
-    long guard = 0;
-    long *corner = gmesh_xrealloc(NULL, count*sizeof(long));   /* corners not clipped yet */
+    int remaining = count;
+    int guard = 0;
+    int *corner = gmesh_xrealloc(NULL, count*sizeof(int));   /* corners not clipped yet */
     double *X = gmesh_xrealloc(NULL, count*sizeof(double));
     double *Y = gmesh_xrealloc(NULL, count*sizeof(double));
     /* project on the plane most perpendicular to the normal */
@@ -958,15 +958,15 @@ static long gmesh_triangulate(Coords *vertices, unsigned long *indices, long cou
     while (remaining > 3 && guard < 2*count*count) {
       int found = 0;
       for (i = 0; i < remaining && !found; i++) {
-        long ia = corner[(i+remaining-1)%remaining];
-        long ib = corner[i];
-        long ic = corner[(i+1)%remaining];
-        long j;
+        int ia = corner[(i+remaining-1)%remaining];
+        int ib = corner[i];
+        int ic = corner[(i+1)%remaining];
+        int j;
         /* reflex or flat corner */
         if (gmesh_turn(X, Y, ia, ib, ic)*sign <= 0) continue;
         /* no other vertex inside the ear */
         for (j = 0; j < remaining; j++) {
-          long ip = corner[j];
+          int ip = corner[j];
           int inside;
           if (ip == ia || ip == ib) continue;
           if (ip == ic) continue;
@@ -1013,16 +1013,16 @@ static void gmesh_quantize(Coords point, double tolerance, int64_t key[3])
 }
 
 /* reverse the vertex order (and the normal) of a triangle of mesh */
-static void gmesh_flip_triangle(gmesh_struct *mesh, long triangle)
+static void gmesh_flip_triangle(gmesh_struct *mesh, int triangle)
 {
-  long swap = mesh->tri[3*triangle+1];
+  int swap = mesh->tri[3*triangle+1];
   mesh->tri[3*triangle+1] = mesh->tri[3*triangle+2];
   mesh->tri[3*triangle+2] = swap;
   mesh->tri_normal[triangle] = coords_scale(mesh->tri_normal[triangle], -1);
 }
 
 /* 1 when a triangle of mesh runs along the edge from -> to in this direction */
-static int gmesh_tri_has_edge(gmesh_struct *mesh, long triangle, long from, long to)
+static int gmesh_tri_has_edge(gmesh_struct *mesh, int triangle, int from, int to)
 {
   int k;
   for (k = 0; k < 3; k++) {
@@ -1035,7 +1035,7 @@ static int gmesh_tri_has_edge(gmesh_struct *mesh, long triangle, long from, long
 static Coords gmesh_farthest_vertex(gmesh_struct *mesh, Coords point, double *distance)
 {
   Coords farthest = point;
-  long i;
+  int i;
   *distance = -1;
   for (i = 0; i < mesh->nverts; i++) {
     double d = coords_len(coords_sub(mesh->vtx[i], point));
@@ -1045,6 +1045,76 @@ static Coords gmesh_farthest_vertex(gmesh_struct *mesh, Coords point, double *di
     }
   }
   return farthest;
+}
+
+/* polygons as sorted vertex lists ([n i1 .. in] at gmesh_sort_key_start[face]),
+   used by gmesh_cmp_faces while sorting with qsort */
+static int *gmesh_sort_keys;
+static int *gmesh_sort_key_start;
+
+/* qsort comparison of two polygon numbers by their sorted vertex lists:
+   the number of vertices first, then the vertices in order */
+static int gmesh_cmp_faces(const void *first, const void *second)
+{
+  const int *first_key = &gmesh_sort_keys[gmesh_sort_key_start[*(const int*)first]];
+  const int *second_key = &gmesh_sort_keys[gmesh_sort_key_start[*(const int*)second]];
+  int k;
+  if (first_key[0] < second_key[0]) return -1;
+  if (first_key[0] > second_key[0]) return 1;
+  for (k = 1; k <= first_key[0]; k++) {
+    if (first_key[k] < second_key[k]) return -1;
+    if (first_key[k] > second_key[k]) return 1;
+  }
+  return 0;
+}
+
+/* qsort comparison of two vertex indices */
+static int gmesh_cmp_indices(const void *first, const void *second)
+{
+  int first_index = *(const int*)first;
+  int second_index = *(const int*)second;
+  if (first_index < second_index) return -1;
+  if (first_index > second_index) return 1;
+  return 0;
+}
+
+/* mark in duplicate[] every polygon of faces[0..size-1] (polygon i starts at
+   face_start[i]) whose set of vertices is given more than once, e.g. the inner
+   faces of a volumetric mesh, each shared by two cells.
+   Returns the number of marked polygons. */
+static int gmesh_find_duplicates(int *faces, int size, int *face_start, int nfaces, char *duplicate)
+{
+  int *keys = gmesh_xrealloc(NULL, size*sizeof(int));
+  int *order = gmesh_xrealloc(NULL, nfaces*sizeof(int));
+  int nduplicate = 0;
+  int i, j, k;
+  memcpy(keys, faces, size*sizeof(int));
+  for (i = 0; i < nfaces; i++) {
+    int *key = &keys[face_start[i]];
+    qsort(key + 1, key[0], sizeof(int), gmesh_cmp_indices);
+    order[i] = i;
+  }
+  gmesh_sort_keys = keys;
+  gmesh_sort_key_start = face_start;
+  qsort(order, nfaces, sizeof(int), gmesh_cmp_faces);
+  i = 0;
+  while (i < nfaces) {
+    j = i + 1;
+    while (j < nfaces && gmesh_cmp_faces(&order[i], &order[j]) == 0) {
+      j++;
+    }
+    /* polygons of less than 3 vertices give no triangles anyway */
+    if (j - i > 1 && keys[face_start[order[i]]] >= 3) {
+      for (k = i; k < j; k++) {
+        duplicate[order[k]] = 1;
+        nduplicate++;
+      }
+    }
+    i = j;
+  }
+  free(keys);
+  free(order);
+  return nduplicate;
 }
 
 /* ========================================================================== */
@@ -1059,8 +1129,8 @@ static int gmesh_sort_axis;
    centroids along gmesh_sort_axis */
 static int gmesh_cmp_cent(const void *first, const void *second)
 {
-  Coords first_centroid = gmesh_sort_cent[*(const long*)first];
-  Coords second_centroid = gmesh_sort_cent[*(const long*)second];
+  Coords first_centroid = gmesh_sort_cent[*(const int*)first];
+  Coords second_centroid = gmesh_sort_cent[*(const int*)second];
   double first_xyz[3] = {first_centroid.x, first_centroid.y, first_centroid.z};
   double second_xyz[3] = {second_centroid.x, second_centroid.y, second_centroid.z};
   double first_value = first_xyz[gmesh_sort_axis];
@@ -1071,7 +1141,7 @@ static int gmesh_cmp_cent(const void *first, const void *second)
 }
 
 /* grow the box [lower, upper] to contain a triangle of triangles[] */
-static void gmesh_box_tri(gmesh_struct *mesh, long *triangles, long triangle, Coords *lower, Coords *upper)
+static void gmesh_box_tri(gmesh_struct *mesh, int *triangles, int triangle, Coords *lower, Coords *upper)
 {
   int k;
   for (k = 0; k < 3; k++) {
@@ -1087,14 +1157,14 @@ static void gmesh_box_tri(gmesh_struct *mesh, long *triangles, long triangle, Co
 
 /* a BVH node still to be built from the triangles order[start..end-1] */
 typedef struct gmesh_bvh_task {
-  long node;
-  long start;
-  long end;
+  int node;
+  int start;
+  int end;
   int depth;
 } gmesh_bvh_task;
 
 /* push a node to build on the stack of *top tasks */
-static void gmesh_bvh_push(gmesh_bvh_task *stack, long *top, long node, long start, long end, int depth)
+static void gmesh_bvh_push(gmesh_bvh_task *stack, int *top, int node, int start, int end, int depth)
 {
   stack[*top].node = node;
   stack[*top].start = start;
@@ -1107,13 +1177,13 @@ static void gmesh_bvh_push(gmesh_bvh_task *stack, long *top, long node, long sta
    longest axis of the centroids) and put the triangles in BVH order */
 static void gmesh_build_bvh(gmesh_struct *mesh)
 {
-  long n = mesh->ntris;
-  long i;
-  long top = 0;
-  long *order = gmesh_xrealloc(NULL, n*sizeof(long));
+  int n = mesh->ntris;
+  int i;
+  int top = 0;
+  int *order = gmesh_xrealloc(NULL, n*sizeof(int));
   Coords *cent = gmesh_xrealloc(NULL, n*sizeof(Coords));
-  long *sorted_tri;
-  long *sorted_face;
+  int *sorted_tri;
+  int *sorted_face;
   Coords *sorted_normal;
   gmesh_bvh_task stack[2*GMESH_BVH_STACK+2];
   mesh->node = gmesh_xrealloc(NULL, (2*n+1)*sizeof(gmesh_node));
@@ -1155,8 +1225,8 @@ static void gmesh_build_bvh(gmesh_struct *mesh)
       double dx = chi.x-clo.x;
       double dy = chi.y-clo.y;
       double dz = chi.z-clo.z;
-      long mid = (task.start + task.end)/2;
-      long left = mesh->nnodes;
+      int mid = (task.start + task.end)/2;
+      int left = mesh->nnodes;
       if (dx >= dy && dx >= dz) {
         gmesh_sort_axis = 0;
       } else if (dy >= dz) {
@@ -1165,7 +1235,7 @@ static void gmesh_build_bvh(gmesh_struct *mesh)
         gmesh_sort_axis = 2;
       }
       gmesh_sort_cent = cent;
-      qsort(order + task.start, task.end - task.start, sizeof(long), gmesh_cmp_cent);
+      qsort(order + task.start, task.end - task.start, sizeof(int), gmesh_cmp_cent);
       node->first = left;
       node->count = 0;
       mesh->nnodes += 2;
@@ -1174,11 +1244,11 @@ static void gmesh_build_bvh(gmesh_struct *mesh)
     }
   }
   /* permute the triangles into BVH order */
-  sorted_tri = gmesh_xrealloc(NULL, 3*n*sizeof(long));
-  sorted_face = gmesh_xrealloc(NULL, n*sizeof(long));
+  sorted_tri = gmesh_xrealloc(NULL, 3*n*sizeof(int));
+  sorted_face = gmesh_xrealloc(NULL, n*sizeof(int));
   sorted_normal = gmesh_xrealloc(NULL, n*sizeof(Coords));
   for (i = 0; i < n; i++) {
-    long o = order[i];
+    int o = order[i];
     sorted_tri[3*i] = mesh->tri[3*o];
     sorted_tri[3*i+1] = mesh->tri[3*o+1];
     sorted_tri[3*i+2] = mesh->tri[3*o+2];
@@ -1233,13 +1303,13 @@ static int gmesh_read_file(char *filename, const char *extension, gmesh_raw *raw
 }
 
 /* read an STL/OFF/PLY file into mesh, see geometry-mesh-lib.h */
-long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh)
+int gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh)
 {
   gmesh_raw raw;
   const char *extension;
   int ok = 0;
-  long i, k;
-  long *map;
+  int i, k;
+  int *map;
 
   if (!mesh || !filename) return 0;
   if (!strlen(filename)) return 0;
@@ -1269,7 +1339,7 @@ long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh
   if (ok && face_props == GMESH_PROPS_REQUIRED) {
     for (i = 0; i < raw.nfaces; i++) {
       if (raw.faces[i].nprops == 0) {
-        fprintf(stderr, "Error: %s: face %ld has no per-face properties, which this component requires (geometry-mesh-lib)\n",
+        fprintf(stderr, "Error: %s: face %d has no per-face properties, which this component requires (geometry-mesh-lib)\n",
                 filename, i);
         ok = 0;
         break;
@@ -1301,16 +1371,16 @@ long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh
   if (mesh->length_scale <= 0) mesh->length_scale = 1;
 
   /* weld vertices: identical within GMESH_WELD_TOL*diagonal (grid rounding) */
-  map = gmesh_xrealloc(NULL, raw.nverts*sizeof(long));
+  map = gmesh_xrealloc(NULL, raw.nverts*sizeof(int));
   mesh->vtx = gmesh_xrealloc(NULL, raw.nverts*sizeof(Coords));
   {
     double tolerance = GMESH_WELD_TOL*mesh->length_scale;
-    long hash_cap = 16;
-    long *hash_table;
+    int hash_cap = 16;
+    int *hash_table;
     while (hash_cap < 2*raw.nverts) {
       hash_cap *= 2;
     }
-    hash_table = gmesh_xrealloc(NULL, hash_cap*sizeof(long));
+    hash_table = gmesh_xrealloc(NULL, hash_cap*sizeof(int));
     for (i = 0; i < hash_cap; i++) {
       hash_table[i] = -1;
     }
@@ -1320,10 +1390,10 @@ long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh
       int64_t key[3];
       int64_t other_key[3];
       uint64_t hash;
-      long slot;
+      int slot;
       gmesh_quantize(p, tolerance, key);
       hash = gmesh_mix((uint64_t)key[0] ^ gmesh_mix((uint64_t)key[1] ^ gmesh_mix((uint64_t)key[2])));
-      slot = (long)(hash & (uint64_t)(hash_cap-1));
+      slot = (int)(hash & (uint64_t)(hash_cap-1));
       /* probe until an empty slot or a welded vertex with the same key */
       while (hash_table[slot] >= 0) {
         gmesh_quantize(mesh->vtx[hash_table[slot]], tolerance, other_key);
@@ -1344,28 +1414,31 @@ long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh
     mesh->vtx = gmesh_xrealloc(mesh->vtx, mesh->nverts*sizeof(Coords));
   }
 
-  /* faces with welded indices (consecutive repeats removed), triangulation */
+  /* faces with welded indices (consecutive repeats removed) */
   mesh->nfaces = raw.nfaces;
-  mesh->faceArray = gmesh_xrealloc(NULL, (raw.nfaces + raw.ncorners)*sizeof(unsigned long));
+  mesh->faceArray = gmesh_xrealloc(NULL, (raw.nfaces + raw.ncorners)*sizeof(int));
   {
-    long face_index;
-    long ntri = 0;
-    long *tri = NULL;
-    long *tri_face = NULL;
-    long tri_cap = 0;
+    int *face_start = gmesh_xrealloc(NULL, raw.nfaces*sizeof(int));
+    char *duplicate = gmesh_xcalloc(raw.nfaces, 1);
+    int face_index;
+    int write;
+    int ntri = 0;
+    int *tri = NULL;
+    int *tri_face = NULL;
+    int tri_cap = 0;
     mesh->faceSize = 0;
     for (face_index = 0; face_index < raw.nfaces; face_index++) {
       gmesh_polygon *face = &raw.faces[face_index];
-      long nn = 0;
-      long start = mesh->faceSize;
-      long j;
-      long before;
-      unsigned long *out;
+      int nn = 0;
+      int start = mesh->faceSize;
+      int j;
+      int *out;
+      face_start[face_index] = start;
       mesh->faceArray[start] = 0;
       mesh->faceSize++;
       out = &mesh->faceArray[mesh->faceSize];
       for (j = 0; j < face->nverts; j++) {
-        unsigned long id = map[face->verts[j] - raw.verts];
+        int id = map[face->verts[j] - raw.verts];
         if (nn && out[nn-1] == id) continue;
         out[nn] = id;
         nn++;
@@ -1375,17 +1448,37 @@ long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh
       }
       mesh->faceArray[start] = nn;
       mesh->faceSize += nn;
-      before = ntri;
+    }
+    /* polygons given more than once (inner faces of a volumetric mesh) are removed */
+    mesh->nduplicate = gmesh_find_duplicates(mesh->faceArray, mesh->faceSize, face_start, raw.nfaces, duplicate);
+    /* triangulation; removed polygons stay as empty polygons, so that the face
+       numbers still match the file */
+    write = 0;
+    for (face_index = 0; face_index < raw.nfaces; face_index++) {
+      int nn = (int)mesh->faceArray[face_start[face_index]];
+      int before = ntri;
+      int j;
+      int *out;
+      if (duplicate[face_index]) {
+        nn = 0;
+      }
+      memmove(&mesh->faceArray[write + 1], &mesh->faceArray[face_start[face_index] + 1], nn*sizeof(int));
+      mesh->faceArray[write] = nn;
+      out = &mesh->faceArray[write + 1];
+      write += nn + 1;
       if (nn >= 3) {
         gmesh_triangulate(mesh->vtx, out, nn, &tri, &ntri, &tri_cap);
       }
       if (ntri > before) {
-        tri_face = gmesh_xrealloc(tri_face, tri_cap*sizeof(long));
+        tri_face = gmesh_xrealloc(tri_face, tri_cap*sizeof(int));
         for (j = before; j < ntri; j++) {
           tri_face[j] = face_index;
         }
       }
     }
+    mesh->faceSize = write;
+    free(face_start);
+    free(duplicate);
     mesh->tri = tri;
     mesh->tri_face = tri_face;
     mesh->ntris = ntri;
@@ -1397,7 +1490,7 @@ long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh
     if (raw.faces[i].nprops > mesh->nfaceprops) mesh->nfaceprops = raw.faces[i].nprops;
   }
   if (mesh->nfaceprops) {
-    mesh->facePropSize = (long)mesh->nfaceprops*raw.nfaces;
+    mesh->facePropSize = (int)mesh->nfaceprops*raw.nfaces;
     mesh->facePropArray = gmesh_xcalloc(mesh->facePropSize, sizeof(double));
     for (i = 0; i < raw.nfaces; i++) {
       for (k = 0; k < raw.faces[i].nprops; k++) {
@@ -1410,7 +1503,7 @@ long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh
   /* normals; drop zero-area triangles */
   mesh->tri_normal = gmesh_xrealloc(NULL, mesh->ntris*sizeof(Coords));
   {
-    long kept = 0;
+    int kept = 0;
     for (i = 0; i < mesh->ntris; i++) {
       Coords a = mesh->vtx[mesh->tri[3*i]];
       Coords b = mesh->vtx[mesh->tri[3*i+1]];
@@ -1440,26 +1533,26 @@ long gmesh_init(char *filename, double scale, int face_props, gmesh_struct *mesh
   /* topology, and consistent orientation by propagation over shared edges */
   {
     gmesh_etab edges;
-    long nused = 0;
-    long *queue = gmesh_xrealloc(NULL, mesh->ntris*sizeof(long));
-    long *visited = gmesh_xcalloc(mesh->ntris, sizeof(long));
+    int nused = 0;
+    int *queue = gmesh_xrealloc(NULL, mesh->ntris*sizeof(int));
+    int *visited = gmesh_xcalloc(mesh->ntris, sizeof(int));
     char *used = gmesh_xcalloc(mesh->nverts, 1);
     gmesh_etab_build(&edges, mesh->tri, mesh->ntris);
     /* BFS: flip triangles so that shared (manifold) edges run in opposite directions */
     for (i = 0; i < mesh->ntris; i++) {
-      long head = 0;
-      long tail = 0;
+      int head = 0;
+      int tail = 0;
       if (visited[i]) continue;
       visited[i] = 1;
       queue[tail] = i;
       tail++;
       while (head < tail) {
-        long t = queue[head];
+        int t = queue[head];
         head++;
         for (k = 0; k < 3; k++) {
-          long a = mesh->tri[3*t+k];
-          long b = mesh->tri[3*t+(k+1)%3];
-          long other;
+          int a = mesh->tri[3*t+k];
+          int b = mesh->tri[3*t+(k+1)%3];
+          int other;
           gmesh_edge *edge = gmesh_edge_get(&edges, a, b);
           if (edge->n != 2) continue;
           if (edge->t0 == t) {
@@ -1602,7 +1695,7 @@ static int gmesh_slab(Coords lower, Coords upper, Coords origin, Coords directio
    triangle of mesh, with tolerant barycentric coordinates. Returns 1 on a
    hit, with its t in *hit_t and *on_edge = 1 when it is close to an edge. */
 #pragma acc routine seq
-static int gmesh_tri_hit(gmesh_struct *mesh, long triangle, Coords origin, Coords direction,
+static int gmesh_tri_hit(gmesh_struct *mesh, int triangle, Coords origin, Coords direction,
                          double *hit_t, int *on_edge)
 {
   Coords v0 = mesh->vtx[mesh->tri[3*triangle]];
@@ -1642,13 +1735,13 @@ static int gmesh_tri_hit(gmesh_struct *mesh, long triangle, Coords origin, Coord
    triangle hit once, with *ambiguous = 1 when a hit is on an edge or at the
    origin. Returns the number of hits found. */
 #pragma acc routine seq
-static long gmesh_trace(gmesh_struct *mesh, Coords origin, Coords direction, double t_min,
+static int gmesh_trace(gmesh_struct *mesh, Coords origin, Coords direction, double t_min,
                         gmesh_hit *hits, int max_hits, int *stored_count, int *ambiguous)
 {
   int count_only = (hits == NULL);
-  long stack[GMESH_BVH_STACK+2];
+  int stack[GMESH_BVH_STACK+2];
   int top = 0;
-  long total = 0;
+  int total = 0;
   double direction_length = coords_len(direction);
   double t_tolerance;
   if (direction_length <= 0) return 0;
@@ -1658,7 +1751,7 @@ static long gmesh_trace(gmesh_struct *mesh, Coords origin, Coords direction, dou
   top++;
   while (top > 0) {
     gmesh_node *node;
-    long t;
+    int t;
     top--;
     node = &mesh->node[stack[top]];
     if (!gmesh_slab(node->lo, node->hi, origin, direction, t_min, FLT_MAX)) continue;
@@ -1735,13 +1828,13 @@ int gmesh_intersect(gmesh_struct *mesh, Coords position, Coords direction, doubl
 {
   int stored = 0;
   int ambiguous = 0;
-  long total = gmesh_trace(mesh, position, direction, t_min, hits, GMESH_MAX_HITS, &stored, &ambiguous);
+  int total = gmesh_trace(mesh, position, direction, t_min, hits, GMESH_MAX_HITS, &stored, &ambiguous);
   if (total > stored && !gmesh_overflow_warned) {
     gmesh_overflow_warned = 1;
-    fprintf(stderr, "Warning: %s: a ray crossed the mesh %ld times, but only the %d nearest hits are kept "
+    fprintf(stderr, "Warning: %s: a ray crossed the mesh %d times, but only the %d nearest hits are kept "
             "(geometry-mesh-lib).\n"
             "  To keep more, add this line after the DEFINE INSTRUMENT line of your .instr file:\n"
-            "    DEPENDENCY \" -DGMESH_MAX_HITS=%ld \"\n"
+            "    DEPENDENCY \" -DGMESH_MAX_HITS=%d \"\n"
             "  This warning is shown once.\n", mesh->filename, total, GMESH_MAX_HITS, total);
   }
   return stored;
@@ -1770,7 +1863,7 @@ int gmesh_inside(gmesh_struct *mesh, Coords position)
     int stored = 0;
     int ambiguous = 0;
     Coords direction = coords_set(D[j][0], D[j][1], D[j][2]);
-    long n = gmesh_trace(mesh, position, direction, 0, NULL, 0, &stored, &ambiguous);
+    int n = gmesh_trace(mesh, position, direction, 0, NULL, 0, &stored, &ambiguous);
     if (!ambiguous) return (int)(n % 2);
     votes += (int)(n % 2);
   }
@@ -1779,12 +1872,12 @@ int gmesh_inside(gmesh_struct *mesh, Coords position)
 
 /* per-face property, see geometry-mesh-lib.h */
 #pragma acc routine seq
-double gmesh_face_prop(gmesh_struct *mesh, long face, int property, double fallback)
+double gmesh_face_prop(gmesh_struct *mesh, int face, int property, double fallback)
 {
   if (!mesh || !mesh->facePropArray) return fallback;
   if (property < 0 || property >= mesh->nfaceprops) return fallback;
   if (face < 0 || face >= mesh->nfaces) return fallback;
-  return mesh->facePropArray[(long)property*mesh->nfaces + face];
+  return mesh->facePropArray[(int)property*mesh->nfaces + face];
 }
 
 /* ========================================================================== */
@@ -1794,17 +1887,18 @@ double gmesh_face_prop(gmesh_struct *mesh, long face, int property, double fallb
 /* print a summary of mesh (sizes, topology, volume) */
 void gmesh_print_info(gmesh_struct *mesh)
 {
-  printf("  %s: %ld vertices (%ld duplicates welded), %ld faces, %ld triangles",
+  printf("  %s: %d vertices (%d duplicates welded), %d faces, %d triangles",
          mesh->filename, mesh->nverts, mesh->nwelded, mesh->nfaces, mesh->ntris);
-  if (mesh->ndegenerate) printf(" (%ld degenerate dropped)", mesh->ndegenerate);
+  if (mesh->nduplicate) printf(" (%d duplicated faces removed)", mesh->nduplicate);
+  if (mesh->ndegenerate) printf(" (%d degenerate dropped)", mesh->ndegenerate);
   printf("\n  Bounding box [%g:%g]x[%g:%g]x[%g:%g], area %g",
          mesh->bbmin.x, mesh->bbmax.x, mesh->bbmin.y, mesh->bbmax.y, mesh->bbmin.z, mesh->bbmax.z, mesh->area);
   if (mesh->volume) printf(", volume %g", mesh->volume);
-  printf("\n  Topology: %ld edges, Euler characteristic %d, %s, %s%s\n", mesh->nedges, mesh->euler,
+  printf("\n  Topology: %d edges, Euler characteristic %d, %s, %s%s\n", mesh->nedges, mesh->euler,
          mesh->closed ? "closed" : "OPEN", mesh->oriented ? "consistently oriented" : "NOT consistently oriented",
          mesh->flipped ? " (orientation reversed to outward normals)" : "");
   if (!mesh->closed) {
-    printf("  Warning: %ld boundary and %ld non-manifold edges: the mesh does not enclose a volume.\n",
+    printf("  Warning: %d boundary and %d non-manifold edges: the mesh does not enclose a volume.\n",
            mesh->nboundary, mesh->nnonmanifold);
   }
   if (mesh->nfaceprops) printf("  Per-face properties: %d\n", mesh->nfaceprops);
@@ -1835,7 +1929,7 @@ static void gmesh_append(char **buffer, size_t *capacity, size_t *length, const 
 /* draw the polygon edges of mesh (each once), or a polyhedron with mcdotrace==2 */
 void gmesh_display(gmesh_struct *mesh)
 {
-  long i, j;
+  int i, j;
   if (!mesh || !mesh->faceSize) return;
   if (mcdotrace == 2) {
     /* polyhedron as JSON, polygons as in the file */
@@ -1853,12 +1947,12 @@ void gmesh_display(gmesh_struct *mesh)
     gmesh_append(&json, &capacity, &length, "], \"faces\": [");
     i = 0;
     while (i < mesh->faceSize) {
-      long n = mesh->faceArray[i];
+      int n = mesh->faceArray[i];
       gmesh_append(&json, &capacity, &length, "{ \"face\": [");
       for (j = 1; j <= n; j++) {
         const char *separator = ", ";
         if (j == n) separator = "";
-        gmesh_append(&json, &capacity, &length, "%lu%s", mesh->faceArray[i+j], separator);
+        gmesh_append(&json, &capacity, &length, "%d%s", mesh->faceArray[i+j], separator);
       }
       gmesh_append(&json, &capacity, &length, "]}");
       i += n + 1;
@@ -1870,7 +1964,7 @@ void gmesh_display(gmesh_struct *mesh)
   } else {
     /* each polygon edge once, a random subset when there are too many */
     gmesh_etab edges;
-    long ncorners = 0;
+    int ncorners = 0;
     double ratio = GMESH_DISPLAY_MAX;
     for (i = 0; i < mesh->faceSize; i += mesh->faceArray[i] + 1) {
       ncorners += mesh->faceArray[i];
@@ -1878,10 +1972,10 @@ void gmesh_display(gmesh_struct *mesh)
     gmesh_etab_alloc(&edges, ncorners);
     if (ncorners > 0) ratio = (double)GMESH_DISPLAY_MAX/(double)ncorners;
     for (i = 0; i < mesh->faceSize; i += mesh->faceArray[i] + 1) {
-      long n = mesh->faceArray[i];
+      int n = mesh->faceArray[i];
       for (j = 0; j < n; j++) {
-        long a = mesh->faceArray[i+1+j];
-        long b = mesh->faceArray[i+1+(j+1)%n];
+        int a = mesh->faceArray[i+1+j];
+        int b = mesh->faceArray[i+1+(j+1)%n];
         gmesh_edge *edge;
         if (a == b) continue;
         edge = gmesh_edge_get(&edges, a, b);
