@@ -128,7 +128,8 @@ DEPENDENCY " -DSOME_DEFINE -lsome -L/some/lib -I/some/include "
 
   ```c
   TRACE
-  SEARCH "/add/a/component/search/directory/"
+  SEARCH "/add/a/component/search/directory " // without subdirectories
+  SEARCH "/add/a/component/search/directory/" // with subdirectories
   SEARCH SHELL "wget https://some/component/file.comp"
   COMPONENT Origin = Progress_bar() AT (0,0,0) ABSOLUTE
   ...

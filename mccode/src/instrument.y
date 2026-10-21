@@ -2274,7 +2274,7 @@ print_usage(void)
   fprintf(stderr, "              --version-num      Prints " MCCODE_NAME " version number only.\n");
   fprintf(stderr, "      --verbose                  Display compilation process steps.\n");
 #if defined(GENERATE_C)
-  fprintf(stderr, "      -I DIR  --search-dir=DIR   Append DIR to the component search list. \n");
+  fprintf(stderr, "      -I DIR  --search-dir=DIR   Append DIR to the component search list. 'DIR/' is appended recursively\n");
   fprintf(stderr, "      -t      --trace            Enable 'trace' mode for instrument display. (Enabled by default)\n");
   fprintf(stderr, "              --no-trace         Disable 'trace' mode for instrument display.\n");
   fprintf(stderr, "      --no-main                  Do not create main(), for external embedding.\n");

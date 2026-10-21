@@ -164,7 +164,7 @@ as C variable names. The list of these reserved keywords is shown in table~\ref{
       \texttt{REMOVABLE} & I & Indicates that this component will be removed when the instrument is inserted into an other one using the \texttt{\%include} keyword. \\
       \texttt{ROTATED} & I & Indicates the orientation of a component in an instrument definition. \\
       \texttt{SAVE} & I,C & Embedded C code to execute when saving data. \\
-      \texttt{SEARCH} & I,C & Appends an additional instrument/component search directory (optionally computed by an external \texttt{SHELL} command), see section \ref{s:search}. \\
+      \texttt{SEARCH} & I,C & Appends an additional instrument/component search directory (optionally computed by an external \texttt{SHELL} command), see section \ref{s:search}. A directory ending with '/' is searched recursively. \\
       \texttt{SETTING} & C & Defines component parameters that are
       variables. \\
       \texttt{SHARE} & C & Declares global functions and variables to be shared. \\
@@ -353,6 +353,9 @@ outside the standard \MCS installation, without requiring users to remember
 to pass \texttt{-I} manually. Like \texttt{DEPENDENCY}, \texttt{SEARCH} may
 appear at instrument level (before \texttt{DECLARE}) or inside a component
 definition.
+
+A search directory specification ending with the '/' character implies a recursive
+search in subdirectories.
 
 A second form computes the path (or a newline-separated list of paths) by
 running an external command:

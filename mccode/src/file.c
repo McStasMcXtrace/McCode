@@ -319,7 +319,7 @@ open_file_search_sys(char *name)
 }
 
 
-/* Add a directory to the search path. 'name/' = recursive */
+/* Add a directory to the search path. "name/" = recursive */
 void
 add_search_dir(char *name)
 {
