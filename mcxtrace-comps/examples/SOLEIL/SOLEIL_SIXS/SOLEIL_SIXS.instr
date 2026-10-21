@@ -44,7 +44,7 @@
 * 33       | multipurpose diffractometer
 * 42       | UHV diffractometer (not modelled here)
 *
-* %Example: SIXS_E0=13 Detector: SIXS_detector_bulk_I=3.37342e+09
+* Example: SIXS_E0=13 Detector: SIXS_detector_bulk_I=3.37342e+09
 *
 * %Parameters
 * SIXS_E0:             [keV]  Nominal energy at the Wiggler.

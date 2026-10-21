@@ -41,7 +41,7 @@
 * 31.45    | sample stage with e.g. Fluorescence and/or PowderN components. At 13.99 from DCM.
 * 32.09    | a set of detectors (transmission, XRD and XRF), radius 654 mm
 *
-* %Example: DIFFABS_E0=13 Detector: DIFFABS_sample_stage_I=2.20096e+10
+* Example: DIFFABS_E0=13 Detector: DIFFABS_sample_stage_I=2.20096e+10
 *
 * %Parameters
 * DIFFABS_E0:       [keV]  Central energy of the interval to be looked at
