@@ -113,7 +113,12 @@ or WhiteDune with \\\verb+apt-get install whitedune+.}
 \item{If you have access to Matlab(R) or alternatively the free iFit replacement from \\\htmladdnormallink{http://ifit.mccode.com/}{http://ifit.mccode.com/}, install it prior to McStas, so that the configuration can detect it.}
 \item{Download the packages from \verb+http://www.mcstas.org/download+}
 \item{Double click the packages files (starting from the 'mcstas' one) or alternatively, as root, issue the command \\\verb+dpkg -i mcstas-2.x-amd64.deb+ (or \\\verb+dpkg -i mcstas-2.x-i386.deb+ on 32 bit systems). This later step may be replaced by a manual build from the Mctas tarball (see below)}
-\item{Alternatively, as root, issue the commands \verb+sudo apt-add-repository 'deb http://packages.mccode.org/debian stable main ; apt-get update ; apt-get install mcstas-suite'+ :
+\item{Alternatively, add the McCode apt repository and install from it, as root:
+\\\verb+cd /etc/apt/sources.list.d+
+\\\verb+rm -f mccode.list+
+\\\verb+wget https://packages.mccode.org/debian/mccode.sources+
+\\\verb+apt-get update+
+\\\verb+apt-get install mcstas-suite+}
 \end{enumerate}
 Updating your operating system to a new release \emph{may} in some cases require you to re-install McStas following the procedure above. 
 
