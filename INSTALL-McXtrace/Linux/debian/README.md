@@ -5,7 +5,8 @@ The packages have been tested to work correctly on Ubuntu 24.04.
 After following the below steps your package manager should now be aware of mcxtrace
 ```bash
 cd /etc/apt/sources.list.d
-sudo -E wget https://packages.mccode.org/debian/mccode.list
+sudo rm -f mccode.list   # older one-line format, replaced by mccode.sources
+sudo -E wget https://packages.mccode.org/debian/mccode.sources
 sudo apt-get update
 ```
 
