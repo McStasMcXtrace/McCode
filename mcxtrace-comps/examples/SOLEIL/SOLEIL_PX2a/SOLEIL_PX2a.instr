@@ -28,7 +28,7 @@
 * This is a simplified model with an Undulator, mirrors, a double crystal 
 * monochromator, a sample stage and a detector.
 *
-* %Example: PX2a_E0=12.65 sample="Mo.lau" PX2a_SPLITs=1500 Detector: psd4pi_I=1.75e+12
+* %Example: PX2a_E0=12.65 sample="Mo.lau" PX2a_SPLITs=1500 Detector: PX2a_psd4pi_I=1.75147e+15
 *
 * %Parameters
 * PX2a_E0:    [keV] Energy selected at the Undulator.
