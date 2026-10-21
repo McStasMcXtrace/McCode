@@ -124,8 +124,10 @@ jobs:
           grep -H COGEN ${MCCODE_CONFIG}
           MCCODEANTLR_FLAGS__NEXUS=`grep NEXUSFLAGS ${MCCODE_CONFIG} |cut -f4 -d\"`
           echo "MCCODEANTLR_FLAGS__NEXUS=${MCCODEANTLR_FLAGS__NEXUS}" >> "$GITHUB_ENV"
-          # Pre-poulate mccode-antlr cache
-          mccode-antlr cache populate --from-path src/ --flavor mcstas --no-strict --check-hashes
+          # Pre-populate mccode-antlr cache from registries minted from this checkout (mccode-antlr#118)
+          mccode-antlr cache register src common/lib/share mccode/nlib/share mccode/xlib/share -o regs/libc-registry.txt
+          mccode-antlr cache register src mcstas-comps -o regs/mcstas-registry.txt
+          mccode-antlr cache populate --from-path src --flavor mcstas --registry-dir regs
         fi
 
     - name: Validate build output
