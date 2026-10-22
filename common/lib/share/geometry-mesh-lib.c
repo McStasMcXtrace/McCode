@@ -30,18 +30,18 @@
   #include <stdint.h>
 
   #ifdef OPENACC
-    /* fprintf and stderr are not available in GPU device code, so error
-       messages are sent through printf instead (as in interoff-lib) */
+    // fprintf and stderr are not available in GPU device code, so error
+    // messages are sent through printf instead (as in interoff-lib)
     #define fprintf(stderr, ...) printf (__VA_ARGS__)
   #endif
 
-/* ========================================================================== */
-/*  Small helpers                                                             */
-/* ========================================================================== */
+// ==========================================================================
+// Small helpers
+// ==========================================================================
 
-/* realloc that exits on failure. A request of 0 bytes is made as 1 byte, since
-   realloc(pointer, 0) may free pointer and return NULL, which would look like
-   a failure. */
+// realloc that exits on failure. A request of 0 bytes is made as 1 byte, since
+// realloc(pointer, 0) may free pointer and return NULL, which would look like
+// a failure.
 static void*
 gmesh_xrealloc (void* pointer, size_t size) {
   void* result;
@@ -56,7 +56,7 @@ gmesh_xrealloc (void* pointer, size_t size) {
   return result;
 }
 
-/* calloc of count elements of size bytes (all zero) that exits on failure */
+// calloc of count elements of size bytes (all zero) that exits on failure
 static void*
 gmesh_xcalloc (size_t count, size_t size) {
   void* result;
@@ -71,7 +71,7 @@ gmesh_xcalloc (size_t count, size_t size) {
   return result;
 }
 
-/* 1 when extension (may be NULL) equals lower or upper, e.g. ".stl" or ".STL" */
+// 1 when extension (may be NULL) equals lower or upper, e.g. ".stl" or ".STL"
 static int
 gmesh_is_extension (const char* extension, const char* lower, const char* upper) {
   if (!extension)
@@ -81,7 +81,7 @@ gmesh_is_extension (const char* extension, const char* lower, const char* upper)
   return !strcmp (extension, upper);
 }
 
-/* the unsigned 32 bit integer stored little endian in bytes[0..3] */
+// the unsigned 32 bit integer stored little endian in bytes[0..3]
 static uint32_t
 gmesh_uint32_le (const unsigned char* bytes) {
   uint32_t value = (uint32_t)bytes[0];
@@ -91,10 +91,10 @@ gmesh_uint32_le (const unsigned char* bytes) {
   return value;
 }
 
-/* One polygon of a gmesh_raw: nverts pointers into gmesh_raw.verts, and the
-   nprops optional numbers given for it in the file (OFF: numbers after the
-   vertex indices, PLY: scalar face properties), e.g. m, alpha, W of a guide
-   wall as in interoff-lib. */
+// One polygon of a gmesh_raw: nverts pointers into gmesh_raw.verts, and the
+// nprops optional numbers given for it in the file (OFF: numbers after the
+// vertex indices, PLY: scalar face properties), e.g. m, alpha, W of a guide
+// wall as in interoff-lib.
 typedef struct gmesh_polygon {
   int nverts;
   Coords** verts;
@@ -102,28 +102,28 @@ typedef struct gmesh_polygon {
   double* props;
 } gmesh_polygon;
 
-/* Raw geometry as read from a file, before welding and triangulation.
-   A file is read twice: the counting pass (counting = 1) only counts the
-   vertices, polygons, polygon corners and properties. The arrays are then
-   allocated with exactly these sizes and the second pass fills them. */
+// Raw geometry as read from a file, before welding and triangulation.
+// A file is read twice: the counting pass (counting = 1) only counts the
+// vertices, polygons, polygon corners and properties. The arrays are then
+// allocated with exactly these sizes and the second pass fills them.
 typedef struct gmesh_raw {
   int counting;
-  int keep_props; /* 0: per-face properties in the file are skipped */
+  int keep_props; // 0: per-face properties in the file are skipped
   Coords* verts;
   int nverts;
   gmesh_polygon* faces;
   int nfaces;
-  Coords** corners; /* storage for the vertex pointers of all polygons */
+  Coords** corners; // storage for the vertex pointers of all polygons
   int ncorners;
-  double* props; /* storage for the properties of all polygons */
+  double* props; // storage for the properties of all polygons
   int nprops;
-  char* line; /* line buffer, holds the longest line of the file */
+  char* line; // line buffer, holds the longest line of the file
   int line_cap;
 } gmesh_raw;
 
-/* allocate raw->line to hold the longest line of file, from the current
-   position to the end of the file. Lines of binary data longer than
-   INT_MAX-1 are allowed, but only their first INT_MAX-1 characters are kept. */
+// allocate raw->line to hold the longest line of file, from the current
+// position to the end of the file. Lines of binary data longer than
+// INT_MAX-1 are allowed, but only their first INT_MAX-1 characters are kept.
 static void
 gmesh_alloc_line (FILE* file, gmesh_raw* raw) {
   long start = ftell (file);
@@ -149,8 +149,8 @@ gmesh_alloc_line (FILE* file, gmesh_raw* raw) {
   raw->line = gmesh_xrealloc (NULL, raw->line_cap);
 }
 
-/* read the rest of the current line of file into raw->line (without '\n').
-   Returns the line length, -1 at EOF with nothing read. */
+// read the rest of the current line of file into raw->line (without '\n').
+// Returns the line length, -1 at EOF with nothing read.
 static int
 gmesh_readline (FILE* file, gmesh_raw* raw) {
   int length = 0;
@@ -172,7 +172,7 @@ gmesh_readline (FILE* file, gmesh_raw* raw) {
   return length;
 }
 
-/* append the vertex (x, y, z) to raw (only counted in the counting pass) */
+// append the vertex (x, y, z) to raw (only counted in the counting pass)
 static void
 gmesh_raw_vertex (gmesh_raw* raw, double x, double y, double z) {
   if (!raw->counting) {
@@ -181,8 +181,8 @@ gmesh_raw_vertex (gmesh_raw* raw, double x, double y, double z) {
   raw->nverts++;
 }
 
-/* start a new polygon with vertex_count corners. Returns the array where the
-   reader stores its vertex_count vertex pointers, NULL in the counting pass. */
+// start a new polygon with vertex_count corners. Returns the array where the
+// reader stores its vertex_count vertex pointers, NULL in the counting pass.
 static Coords**
 gmesh_raw_face (gmesh_raw* raw, int vertex_count) {
   Coords** corners = NULL;
@@ -199,8 +199,8 @@ gmesh_raw_face (gmesh_raw* raw, int vertex_count) {
   return corners;
 }
 
-/* append one property value to the most recently started polygon
-   (ignored when raw->keep_props is 0) */
+// append one property value to the most recently started polygon
+// (ignored when raw->keep_props is 0)
 static void
 gmesh_raw_prop (gmesh_raw* raw, double value) {
   if (!raw->keep_props)
@@ -212,8 +212,8 @@ gmesh_raw_prop (gmesh_raw* raw, double value) {
   raw->nprops++;
 }
 
-/* after the counting pass: allocate the arrays with the counted sizes and
-   reset the counts for the filling pass */
+// after the counting pass: allocate the arrays with the counted sizes and
+// reset the counts for the filling pass
 static void
 gmesh_raw_alloc (gmesh_raw* raw) {
   raw->verts = gmesh_xrealloc (NULL, raw->nverts * sizeof (Coords));
@@ -227,8 +227,8 @@ gmesh_raw_alloc (gmesh_raw* raw) {
   raw->counting = 0;
 }
 
-/* free the arrays held by raw and reset it to an empty gmesh_raw
-   (raw itself is not freed, it lives on the caller's stack) */
+// free the arrays held by raw and reset it to an empty gmesh_raw
+// (raw itself is not freed, it lives on the caller's stack)
 static void
 gmesh_raw_free (gmesh_raw* raw) {
   free (raw->verts);
@@ -239,11 +239,11 @@ gmesh_raw_free (gmesh_raw* raw) {
   memset (raw, 0, sizeof (gmesh_raw));
 }
 
-/* ========================================================================== */
-/*  OFF reader                                                                */
-/* ========================================================================== */
+// ==========================================================================
+// OFF reader
+// ==========================================================================
 
-/* 1 when index is a whole number in [0, count), else 0 */
+// 1 when index is a whole number in [0, count), else 0
 static int
 gmesh_valid_index (double index, long count) {
   if (index < 0)
@@ -253,8 +253,8 @@ gmesh_valid_index (double index, long count) {
   return index == floor (index);
 }
 
-/* read an OFF file (also COFF, NOFF, STOFF, ...) into raw.
-   Returns 1 on success, 0 on error (with a message). */
+// read an OFF file (also COFF, NOFF, STOFF, ...) into raw.
+// Returns 1 on success, 0 on error (with a message).
 static int
 gmesh_read_off (FILE* file, char* filename, gmesh_raw* raw) {
   int length;
@@ -263,11 +263,11 @@ gmesh_read_off (FILE* file, char* filename, gmesh_raw* raw) {
   long i;
   int extra = 0;
   int is_off;
-  char* header;      /* the header line without leading blanks, e.g. "COFF 8 6 0" */
-  char* keyword;     /* the "OFF" in header, after any S/T/C/N prefix letters */
-  char* text = NULL; /* a line without leading blanks */
+  char* header; // the header line without leading blanks, e.g. "COFF 8 6 0"
+  char* keyword; // the "OFF" in header, after any S/T/C/N prefix letters
+  char* text = NULL; // a line without leading blanks
 
-  /* skip blank lines before the header */
+  // skip blank lines before the header
   length = gmesh_readline (file, raw);
   while (length >= 0 && strspn (raw->line, " \t\r") == (size_t)length) {
     length = gmesh_readline (file, raw);
@@ -281,7 +281,7 @@ gmesh_read_off (FILE* file, char* filename, gmesh_raw* raw) {
   while (*keyword && strchr ("STCN", *keyword)) {
     keyword++;
   }
-  /* "OFF" must be followed by the end of the word */
+  // "OFF" must be followed by the end of the word
   is_off = !strncmp (keyword, "OFF", 3);
   if (is_off && keyword[3]) {
     is_off = isspace ((unsigned char)keyword[3]);
@@ -290,9 +290,9 @@ gmesh_read_off (FILE* file, char* filename, gmesh_raw* raw) {
     fprintf (stderr, "Error: %s: header '%s' is not a supported OFF header (geometry-mesh-lib)\n", filename, header);
     return 0;
   }
-  /* prefixed headers (COFF, NOFF, ...) have extra numbers after each vertex */
+  // prefixed headers (COFF, NOFF, ...) have extra numbers after each vertex
   extra = (keyword != header);
-  /* the counts are either on the header line or on the next non-comment line */
+  // the counts are either on the header line or on the next non-comment line
   if (sscanf (keyword + 3, "%ld %ld", &nvertices, &nfaces) != 2) {
     for (length = gmesh_readline (file, raw); length >= 0; length = gmesh_readline (file, raw)) {
       text = raw->line + strspn (raw->line, " \t\r");
@@ -311,7 +311,7 @@ gmesh_read_off (FILE* file, char* filename, gmesh_raw* raw) {
   for (i = 0; i < nvertices; i++) {
     double x, y, z;
     int result = fscanf (file, "%lg %lg %lg", &x, &y, &z);
-    /* fscanf returns 0 on a non-number, i.e. a comment line: skip it */
+    // fscanf returns 0 on a non-number, i.e. a comment line: skip it
     while (result == 0) {
       gmesh_readline (file, raw);
       result = fscanf (file, "%lg %lg %lg", &x, &y, &z);
@@ -352,7 +352,7 @@ gmesh_read_off (FILE* file, char* filename, gmesh_raw* raw) {
         corners[j] = &raw->verts[(int)index];
       }
     }
-    /* optional per-face numbers until the end of the line or a '#' comment */
+    // optional per-face numbers until the end of the line or a '#' comment
     if (gmesh_readline (file, raw) > 0) {
       char* position = raw->line;
       char* end;
@@ -372,12 +372,12 @@ gmesh_read_off (FILE* file, char* filename, gmesh_raw* raw) {
   return 1;
 }
 
-/* ========================================================================== */
-/*  STL reader                                                                */
-/* ========================================================================== */
+// ==========================================================================
+// STL reader
+// ==========================================================================
 
-/* read an ASCII or binary STL file into raw.
-   Returns 1 on success, 0 on error (with a message). */
+// read an ASCII or binary STL file into raw.
+// Returns 1 on success, 0 on error (with a message).
 static int
 gmesh_read_stl (char* filename, gmesh_raw* raw) {
   FILE* file = Open_File (filename, "rb", NULL);
@@ -393,7 +393,7 @@ gmesh_read_stl (char* filename, gmesh_raw* raw) {
   fseek (file, 0, SEEK_SET);
   if (size >= 84 && fread (head, 1, 84, file) == 84) {
     ntriangles = (long)gmesh_uint32_le (head + 80);
-    /* binary when the size matches exactly, whatever the header says */
+    // binary when the size matches exactly, whatever the header says
     if (size == 84 + 50 * ntriangles) {
       binary = 1;
     } else {
@@ -422,7 +422,7 @@ gmesh_read_stl (char* filename, gmesh_raw* raw) {
         fclose (file);
         return 0;
       }
-      /* little endian float32 coordinates, after the normal */
+      // little endian float32 coordinates, after the normal
       for (k = 0; k < 9; k++) {
         uint32_t bits = gmesh_uint32_le (record + 12 + 4 * k);
         memcpy (&xyz[k], &bits, 4);
@@ -476,15 +476,15 @@ gmesh_read_stl (char* filename, gmesh_raw* raw) {
   return 1;
 }
 
-/* ========================================================================== */
-/*  PLY reader (ascii and binary)                                             */
-/* ========================================================================== */
+// ==========================================================================
+// PLY reader (ascii and binary)
+// ==========================================================================
 
 typedef struct gmesh_ply_prop {
   char name[64];
-  int type;       /* scalar type, or item type for lists */
-  int list;       /* 1 for list properties */
-  int count_type; /* count type for lists */
+  int type; // scalar type, or item type for lists
+  int list; // 1 for list properties
+  int count_type; // count type for lists
 } gmesh_ply_prop;
 
 typedef struct gmesh_ply_elem {
@@ -494,10 +494,10 @@ typedef struct gmesh_ply_elem {
   gmesh_ply_prop prop[32];
 } gmesh_ply_elem;
 
-/* type codes: size in bytes, sign/float encoded */
+// type codes: size in bytes, sign/float encoded
 enum { GMP_I8 = 1, GMP_U8, GMP_I16, GMP_U16, GMP_I32, GMP_U32, GMP_F32, GMP_F64 };
 
-/* type code of a PLY type name, 0 when unknown */
+// type code of a PLY type name, 0 when unknown
 static int
 gmesh_ply_type (const char* name) {
   if (!strcmp (name, "char") || !strcmp (name, "int8"))
@@ -519,7 +519,7 @@ gmesh_ply_type (const char* name) {
   return 0;
 }
 
-/* size in bytes of a value of the given type code */
+// size in bytes of a value of the given type code
 static int
 gmesh_ply_size (int type) {
   if (type <= GMP_U8)
@@ -531,8 +531,8 @@ gmesh_ply_size (int type) {
   return 8;
 }
 
-/* format code of a PLY format name: 0 ascii, 1 binary little endian,
-   2 binary big endian, -1 when unknown */
+// format code of a PLY format name: 0 ascii, 1 binary little endian,
+// 2 binary big endian, -1 when unknown
 static int
 gmesh_ply_format (const char* name) {
   if (!strcmp (name, "ascii"))
@@ -544,8 +544,8 @@ gmesh_ply_format (const char* name) {
   return -1;
 }
 
-/* read one value of the given type code from file into *value, in the given
-   format code (see gmesh_ply_format). Returns 1 on success, 0 on error. */
+// read one value of the given type code from file into *value, in the given
+// format code (see gmesh_ply_format). Returns 1 on success, 0 on error.
 static int
 gmesh_ply_value (FILE* file, int format, int type, double* value) {
   unsigned char bytes[8];
@@ -561,7 +561,7 @@ gmesh_ply_value (FILE* file, int format, int type, double* value) {
     return 0;
   memcpy (&first_byte, &one, 1);
   host_little_endian = (first_byte == 1);
-  /* reverse the bytes when the file and host byte orders differ */
+  // reverse the bytes when the file and host byte orders differ
   if (file_big_endian == host_little_endian) {
     for (k = 0; k < size / 2; k++) {
       unsigned char swap = bytes[k];
@@ -618,8 +618,8 @@ gmesh_ply_value (FILE* file, int format, int type, double* value) {
   return 1;
 }
 
-/* read an ASCII or binary PLY file into raw.
-   Returns 1 on success, 0 on error (with a message). */
+// read an ASCII or binary PLY file into raw.
+// Returns 1 on success, 0 on error (with a message).
 static int
 gmesh_read_ply (FILE* file, char* filename, gmesh_raw* raw) {
   gmesh_ply_elem elements[16];
@@ -716,7 +716,7 @@ gmesh_read_ply (FILE* file, char* filename, gmesh_raw* raw) {
       nvertices = element->count;
     }
     if (is_face) {
-      /* the vertex list is "vertex_indices" or "vertex_index", else the first list */
+      // the vertex list is "vertex_indices" or "vertex_index", else the first list
       for (k = 0; k < element->nprop; k++) {
         const char* name = element->prop[k].name;
         int is_index_list = (!strcmp (name, "vertex_indices") || !strcmp (name, "vertex_index"));
@@ -778,7 +778,7 @@ gmesh_read_ply (FILE* file, char* filename, gmesh_raw* raw) {
             }
           }
           if (is_face) {
-            /* scalar face property (e.g. colour, m value) */
+            // scalar face property (e.g. colour, m value)
             scalars[nscalars] = value;
             nscalars++;
           }
@@ -800,11 +800,11 @@ truncated:
   return 0;
 }
 
-/* ========================================================================== */
-/*  Hash for vertex welding and edges                                         */
-/* ========================================================================== */
+// ==========================================================================
+// Hash for vertex welding and edges
+// ==========================================================================
 
-/* 64 bit hash finaliser (MurmurHash3 fmix64) */
+// 64 bit hash finaliser (MurmurHash3 fmix64)
 static uint64_t
 gmesh_mix (uint64_t hash) {
   hash ^= hash >> 33;
@@ -815,8 +815,8 @@ gmesh_mix (uint64_t hash) {
   return hash;
 }
 
-/* edge table entry: undirected edge (a < b), number of uses n, direction sum
-   dir (+1 per use as a->b, -1 per use as b->a) and the first two triangles */
+// edge table entry: undirected edge (a < b), number of uses n, direction sum
+// dir (+1 per use as a->b, -1 per use as b->a) and the first two triangles
 typedef struct gmesh_edge {
   int a, b;
   int n;
@@ -824,14 +824,14 @@ typedef struct gmesh_edge {
   int t0, t1;
 } gmesh_edge;
 
-/* open addressing hash table of edges: cap entries (a power of 2), n used */
+// open addressing hash table of edges: cap entries (a power of 2), n used
 typedef struct gmesh_etab {
   gmesh_edge* e;
   int cap, n;
 } gmesh_etab;
 
-/* allocate an empty edge table for up to nedges edges, at most about half
-   full so that the probe sequences stay short */
+// allocate an empty edge table for up to nedges edges, at most about half
+// full so that the probe sequences stay short
 static void
 gmesh_etab_alloc (gmesh_etab* table, int nedges) {
   table->cap = 16;
@@ -842,8 +842,8 @@ gmesh_etab_alloc (gmesh_etab* table, int nedges) {
   table->n = 0;
 }
 
-/* the entry of the undirected edge (vertex_a, vertex_b) in table, added
-   with n = 0 when the edge is not in the table yet */
+// the entry of the undirected edge (vertex_a, vertex_b) in table, added
+// with n = 0 when the edge is not in the table yet
 static gmesh_edge*
 gmesh_edge_get (gmesh_etab* table, int vertex_a, int vertex_b) {
   int low = vertex_a;
@@ -872,7 +872,7 @@ gmesh_edge_get (gmesh_etab* table, int vertex_a, int vertex_b) {
   return edge;
 }
 
-/* build the edge table of the ntriangles triangles in triangles[3*ntriangles] */
+// build the edge table of the ntriangles triangles in triangles[3*ntriangles]
 static void
 gmesh_etab_build (gmesh_etab* table, int* triangles, int ntriangles) {
   int i, k;
@@ -897,12 +897,12 @@ gmesh_etab_build (gmesh_etab* table, int* triangles, int ntriangles) {
   }
 }
 
-/* ========================================================================== */
-/*  Geometry helpers                                                          */
-/* ========================================================================== */
+// ==========================================================================
+// Geometry helpers
+// ==========================================================================
 
-/* normal of the polygon vertices[indices[0..count-1]] by Newell's method,
-   right-handed with respect to the vertex order; its length is twice the area */
+// normal of the polygon vertices[indices[0..count-1]] by Newell's method,
+// right-handed with respect to the vertex order; its length is twice the area
 static Coords
 gmesh_newell (Coords* vertices, int* indices, int count) {
   Coords normal = coords_set (0, 0, 0);
@@ -919,7 +919,7 @@ gmesh_newell (Coords* vertices, int* indices, int count) {
   return normal;
 }
 
-/* append the triangle (a, b, c) to triangles, which has room for it */
+// append the triangle (a, b, c) to triangles, which has room for it
 static void
 gmesh_add_triangle (int* triangles, int* triangle_count, int a, int b, int c) {
   int n = *triangle_count;
@@ -929,16 +929,16 @@ gmesh_add_triangle (int* triangles, int* triangle_count, int a, int b, int c) {
   (*triangle_count)++;
 }
 
-/* twice the signed area of the 2D triangle (a, b, point) with coordinates
-   x[], y[]: positive when point lies to the left of the edge a->b */
+// twice the signed area of the 2D triangle (a, b, point) with coordinates
+// x[], y[]: positive when point lies to the left of the edge a->b
 static double
 gmesh_turn (double* x, double* y, int a, int b, int point) {
   return (x[b] - x[a]) * (y[point] - y[a]) - (y[b] - y[a]) * (x[point] - x[a]);
 }
 
-/* ear-clipping triangulation of the polygon vertices[indices[0..count-1]]
-   (welded, no repeats). Appends the triangles to *triangles, of *capacity
-   triangles, grown as needed. Returns the number of triangles added. */
+// ear-clipping triangulation of the polygon vertices[indices[0..count-1]]
+// (welded, no repeats). Appends the triangles to *triangles, of *capacity
+// triangles, grown as needed. Returns the number of triangles added.
 static int
 gmesh_triangulate (Coords* vertices, int* indices, int count, int** triangles, int* triangle_count, int* capacity) {
   int added = 0;
@@ -964,13 +964,13 @@ gmesh_triangulate (Coords* vertices, int* indices, int count, int** triangles, i
     double ay = fabs (normal.y);
     double az = fabs (normal.z);
     double sign;
-    int px, py; /* the two coordinates of the projection plane */
+    int px, py; // the two coordinates of the projection plane
     int remaining = count;
     int guard = 0;
-    int* corner = gmesh_xrealloc (NULL, count * sizeof (int)); /* corners not clipped yet */
+    int* corner = gmesh_xrealloc (NULL, count * sizeof (int)); // corners not clipped yet
     double* X = gmesh_xrealloc (NULL, count * sizeof (double));
     double* Y = gmesh_xrealloc (NULL, count * sizeof (double));
-    /* project on the plane most perpendicular to the normal */
+    // project on the plane most perpendicular to the normal
     if (az >= ax && az >= ay) {
       px = 0;
       py = 1;
@@ -1003,10 +1003,10 @@ gmesh_triangulate (Coords* vertices, int* indices, int count, int** triangles, i
         int ib = corner[i];
         int ic = corner[(i + 1) % remaining];
         int j;
-        /* reflex or flat corner */
+        // reflex or flat corner
         if (gmesh_turn (X, Y, ia, ib, ic) * sign <= 0)
           continue;
-        /* no other vertex inside the ear */
+        // no other vertex inside the ear
         for (j = 0; j < remaining; j++) {
           int ip = corner[j];
           int inside;
@@ -1028,7 +1028,7 @@ gmesh_triangulate (Coords* vertices, int* indices, int count, int** triangles, i
         remaining--;
         found = 1;
       }
-      /* self-intersecting / degenerate: fan the rest */
+      // self-intersecting / degenerate: fan the rest
       if (!found)
         break;
       guard++;
@@ -1044,8 +1044,8 @@ gmesh_triangulate (Coords* vertices, int* indices, int count, int** triangles, i
   return added;
 }
 
-/* integer key of point for welding: the coordinates rounded to multiples of
-   tolerance, or the bits of the coordinates when tolerance is 0 */
+// integer key of point for welding: the coordinates rounded to multiples of
+// tolerance, or the bits of the coordinates when tolerance is 0
 static void
 gmesh_quantize (Coords point, double tolerance, int64_t key[3]) {
   if (tolerance > 0) {
@@ -1059,7 +1059,7 @@ gmesh_quantize (Coords point, double tolerance, int64_t key[3]) {
   }
 }
 
-/* reverse the vertex order (and the normal) of a triangle of mesh */
+// reverse the vertex order (and the normal) of a triangle of mesh
 static void
 gmesh_flip_triangle (gmesh_struct* mesh, int triangle) {
   int swap = mesh->tri[3 * triangle + 1];
@@ -1068,7 +1068,7 @@ gmesh_flip_triangle (gmesh_struct* mesh, int triangle) {
   mesh->tri_normal[triangle] = coords_scale (mesh->tri_normal[triangle], -1);
 }
 
-/* 1 when a triangle of mesh runs along the edge from -> to in this direction */
+// 1 when a triangle of mesh runs along the edge from -> to in this direction
 static int
 gmesh_tri_has_edge (gmesh_struct* mesh, int triangle, int from, int to) {
   int k;
@@ -1079,7 +1079,7 @@ gmesh_tri_has_edge (gmesh_struct* mesh, int triangle, int from, int to) {
   return 0;
 }
 
-/* the vertex of mesh farthest from point, and its distance in *distance */
+// the vertex of mesh farthest from point, and its distance in *distance
 static Coords
 gmesh_farthest_vertex (gmesh_struct* mesh, Coords point, double* distance) {
   Coords farthest = point;
@@ -1095,13 +1095,13 @@ gmesh_farthest_vertex (gmesh_struct* mesh, Coords point, double* distance) {
   return farthest;
 }
 
-/* polygons as sorted vertex lists ([n i1 .. in] at gmesh_sort_key_start[face]),
-   used by gmesh_cmp_faces while sorting with qsort */
+// polygons as sorted vertex lists ([n i1 .. in] at gmesh_sort_key_start[face]),
+// used by gmesh_cmp_faces while sorting with qsort
 static int* gmesh_sort_keys;
 static int* gmesh_sort_key_start;
 
-/* qsort comparison of two polygon numbers by their sorted vertex lists:
-   the number of vertices first, then the vertices in order */
+// qsort comparison of two polygon numbers by their sorted vertex lists:
+// the number of vertices first, then the vertices in order
 static int
 gmesh_cmp_faces (const void* first, const void* second) {
   const int* first_key = &gmesh_sort_keys[gmesh_sort_key_start[*(const int*)first]];
@@ -1120,7 +1120,7 @@ gmesh_cmp_faces (const void* first, const void* second) {
   return 0;
 }
 
-/* qsort comparison of two vertex indices */
+// qsort comparison of two vertex indices
 static int
 gmesh_cmp_indices (const void* first, const void* second) {
   int first_index = *(const int*)first;
@@ -1132,10 +1132,10 @@ gmesh_cmp_indices (const void* first, const void* second) {
   return 0;
 }
 
-/* mark in duplicate[] every polygon of faces[0..size-1] (polygon i starts at
-   face_start[i]) whose set of vertices is given more than once, e.g. the inner
-   faces of a volumetric mesh, each shared by two cells.
-   Returns the number of marked polygons. */
+// mark in duplicate[] every polygon of faces[0..size-1] (polygon i starts at
+// face_start[i]) whose set of vertices is given more than once, e.g. the inner
+// faces of a volumetric mesh, each shared by two cells.
+// Returns the number of marked polygons.
 static int
 gmesh_find_duplicates (int* faces, int size, int* face_start, int nfaces, char* duplicate) {
   int* keys = gmesh_xrealloc (NULL, size * sizeof (int));
@@ -1157,7 +1157,7 @@ gmesh_find_duplicates (int* faces, int size, int* face_start, int nfaces, char* 
     while (j < nfaces && gmesh_cmp_faces (&order[i], &order[j]) == 0) {
       j++;
     }
-    /* polygons of less than 3 vertices give no triangles anyway */
+    // polygons of less than 3 vertices give no triangles anyway
     if (j - i > 1 && keys[face_start[order[i]]] >= 3) {
       for (k = i; k < j; k++) {
         duplicate[order[k]] = 1;
@@ -1171,16 +1171,16 @@ gmesh_find_duplicates (int* faces, int size, int* face_start, int nfaces, char* 
   return nduplicate;
 }
 
-/* ========================================================================== */
-/*  BVH build                                                                 */
-/* ========================================================================== */
+// ==========================================================================
+// BVH build
+// ==========================================================================
 
-/* centroids and axis used by gmesh_cmp_cent while sorting with qsort */
+// centroids and axis used by gmesh_cmp_cent while sorting with qsort
 static Coords* gmesh_sort_cent;
 static int gmesh_sort_axis;
 
-/* qsort comparison of two triangle numbers by the coordinate of their
-   centroids along gmesh_sort_axis */
+// qsort comparison of two triangle numbers by the coordinate of their
+// centroids along gmesh_sort_axis
 static int
 gmesh_cmp_cent (const void* first, const void* second) {
   Coords first_centroid = gmesh_sort_cent[*(const int*)first];
@@ -1196,7 +1196,7 @@ gmesh_cmp_cent (const void* first, const void* second) {
   return 0;
 }
 
-/* grow the box [lower, upper] to contain a triangle of triangles[] */
+// grow the box [lower, upper] to contain a triangle of triangles[]
 static void
 gmesh_box_tri (gmesh_struct* mesh, int* triangles, int triangle, Coords* lower, Coords* upper) {
   int k;
@@ -1217,7 +1217,7 @@ gmesh_box_tri (gmesh_struct* mesh, int* triangles, int triangle, Coords* lower, 
   }
 }
 
-/* a BVH node still to be built from the triangles order[start..end-1] */
+// a BVH node still to be built from the triangles order[start..end-1]
 typedef struct gmesh_bvh_task {
   int node;
   int start;
@@ -1225,7 +1225,7 @@ typedef struct gmesh_bvh_task {
   int depth;
 } gmesh_bvh_task;
 
-/* push a node to build on the stack of *top tasks */
+// push a node to build on the stack of *top tasks
 static void
 gmesh_bvh_push (gmesh_bvh_task* stack, int* top, int node, int start, int end, int depth) {
   stack[*top].node = node;
@@ -1235,8 +1235,8 @@ gmesh_bvh_push (gmesh_bvh_task* stack, int* top, int node, int start, int end, i
   (*top)++;
 }
 
-/* build the bounding volume hierarchy of mesh (median split along the
-   longest axis of the centroids) and put the triangles in BVH order */
+// build the bounding volume hierarchy of mesh (median split along the
+// longest axis of the centroids) and put the triangles in BVH order
 static void
 gmesh_build_bvh (gmesh_struct* mesh) {
   int n = mesh->ntris;
@@ -1263,7 +1263,7 @@ gmesh_build_bvh (gmesh_struct* mesh) {
     gmesh_node* node;
     Coords lo = coords_set (FLT_MAX, FLT_MAX, FLT_MAX);
     Coords hi = coords_set (-FLT_MAX, -FLT_MAX, -FLT_MAX);
-    Coords clo = lo; /* box of the centroids */
+    Coords clo = lo; // box of the centroids
     Coords chi = hi;
     top--;
     task = stack[top];
@@ -1311,7 +1311,7 @@ gmesh_build_bvh (gmesh_struct* mesh) {
       gmesh_bvh_push (stack, &top, left + 1, mid, task.end, task.depth + 1);
     }
   }
-  /* permute the triangles into BVH order */
+  // permute the triangles into BVH order
   sorted_tri = gmesh_xrealloc (NULL, 3 * n * sizeof (int));
   sorted_face = gmesh_xrealloc (NULL, n * sizeof (int));
   sorted_normal = gmesh_xrealloc (NULL, n * sizeof (Coords));
@@ -1334,12 +1334,12 @@ gmesh_build_bvh (gmesh_struct* mesh) {
   free (cent);
 }
 
-/* ========================================================================== */
-/*  Init                                                                      */
-/* ========================================================================== */
+// ==========================================================================
+// Init
+// ==========================================================================
 
-/* read filename (STL, PLY or OFF) into raw, choosing the reader from the
-   extension or the first bytes. Returns 1 on success, 0 on error. */
+// read filename (STL, PLY or OFF) into raw, choosing the reader from the
+// extension or the first bytes. Returns 1 on success, 0 on error.
 static int
 gmesh_read_file (char* filename, const char* extension, gmesh_raw* raw) {
   FILE* file;
@@ -1358,7 +1358,7 @@ gmesh_read_file (char* filename, const char* extension, gmesh_raw* raw) {
   }
   fseek (file, 0, SEEK_SET);
   if (!strncmp (head, "sol", 3)) {
-    /* STL without .stl extension */
+    // STL without .stl extension
     fclose (file);
     return gmesh_read_stl (filename, raw);
   }
@@ -1371,7 +1371,7 @@ gmesh_read_file (char* filename, const char* extension, gmesh_raw* raw) {
   return ok;
 }
 
-/* read an STL/OFF/PLY file into mesh, see geometry-mesh-lib.h */
+// read an STL/OFF/PLY file into mesh, see geometry-mesh-lib.h
 int
 gmesh_init (char* filename, double scale, int face_props, gmesh_struct* mesh) {
   gmesh_raw raw;
@@ -1395,7 +1395,7 @@ gmesh_init (char* filename, double scale, int face_props, gmesh_struct* mesh) {
     fprintf (stderr, "Error: %s: STEP files are not supported, please export the geometry as STL, OFF or PLY (geometry-mesh-lib)\n", filename);
     return 0;
   }
-  /* counting pass, then allocate and read again to fill the arrays */
+  // counting pass, then allocate and read again to fill the arrays
   raw.counting = 1;
   raw.keep_props = (face_props != GMESH_PROPS_IGNORE);
   ok = gmesh_read_file (filename, extension, &raw);
@@ -1406,7 +1406,7 @@ gmesh_init (char* filename, double scale, int face_props, gmesh_struct* mesh) {
     gmesh_raw_alloc (&raw);
     ok = gmesh_read_file (filename, extension, &raw);
   }
-  /* a component that needs the properties gets them for every face */
+  // a component that needs the properties gets them for every face
   if (ok && face_props == GMESH_PROPS_REQUIRED) {
     for (i = 0; i < raw.nfaces; i++) {
       if (raw.faces[i].nprops == 0) {
@@ -1421,7 +1421,7 @@ gmesh_init (char* filename, double scale, int face_props, gmesh_struct* mesh) {
     return 0;
   }
 
-  /* scale, and bounding box */
+  // scale, and bounding box
   if (!scale)
     scale = 1;
   mesh->bbmin = coords_set (FLT_MAX, FLT_MAX, FLT_MAX);
@@ -1448,7 +1448,7 @@ gmesh_init (char* filename, double scale, int face_props, gmesh_struct* mesh) {
   if (mesh->length_scale <= 0)
     mesh->length_scale = 1;
 
-  /* weld vertices: identical within GMESH_WELD_TOL*diagonal (grid rounding) */
+  // weld vertices: identical within GMESH_WELD_TOL*diagonal (grid rounding)
   map = gmesh_xrealloc (NULL, raw.nverts * sizeof (int));
   mesh->vtx = gmesh_xrealloc (NULL, raw.nverts * sizeof (Coords));
   {
@@ -1472,7 +1472,7 @@ gmesh_init (char* filename, double scale, int face_props, gmesh_struct* mesh) {
       gmesh_quantize (p, tolerance, key);
       hash = gmesh_mix ((uint64_t)key[0] ^ gmesh_mix ((uint64_t)key[1] ^ gmesh_mix ((uint64_t)key[2])));
       slot = (int)(hash & (uint64_t)(hash_cap - 1));
-      /* probe until an empty slot or a welded vertex with the same key */
+      // probe until an empty slot or a welded vertex with the same key
       while (hash_table[slot] >= 0) {
         gmesh_quantize (mesh->vtx[hash_table[slot]], tolerance, other_key);
         if (!memcmp (other_key, key, sizeof (key)))
@@ -1493,7 +1493,7 @@ gmesh_init (char* filename, double scale, int face_props, gmesh_struct* mesh) {
     mesh->vtx = gmesh_xrealloc (mesh->vtx, mesh->nverts * sizeof (Coords));
   }
 
-  /* faces with welded indices (consecutive repeats removed) */
+  // faces with welded indices (consecutive repeats removed)
   mesh->nfaces = raw.nfaces;
   mesh->faceArray = gmesh_xrealloc (NULL, (raw.nfaces + raw.ncorners) * sizeof (int));
   {
@@ -1529,10 +1529,10 @@ gmesh_init (char* filename, double scale, int face_props, gmesh_struct* mesh) {
       mesh->faceArray[start] = nn;
       mesh->faceSize += nn;
     }
-    /* polygons given more than once (inner faces of a volumetric mesh) are removed */
+    // polygons given more than once (inner faces of a volumetric mesh) are removed
     mesh->nduplicate = gmesh_find_duplicates (mesh->faceArray, mesh->faceSize, face_start, raw.nfaces, duplicate);
-    /* triangulation; removed polygons stay as empty polygons, so that the face
-       numbers still match the file */
+    // triangulation; removed polygons stay as empty polygons, so that the face
+    // numbers still match the file
     write = 0;
     for (face_index = 0; face_index < raw.nfaces; face_index++) {
       int nn = (int)mesh->faceArray[face_start[face_index]];
@@ -1565,7 +1565,7 @@ gmesh_init (char* filename, double scale, int face_props, gmesh_struct* mesh) {
   }
   free (map);
 
-  /* per-face properties (column-major, missing values 0) */
+  // per-face properties (column-major, missing values 0)
   for (i = 0; i < raw.nfaces; i++) {
     if (raw.faces[i].nprops > mesh->nfaceprops)
       mesh->nfaceprops = raw.faces[i].nprops;
@@ -1581,7 +1581,7 @@ gmesh_init (char* filename, double scale, int face_props, gmesh_struct* mesh) {
   }
   gmesh_raw_free (&raw);
 
-  /* normals; drop zero-area triangles */
+  // normals; drop zero-area triangles
   mesh->tri_normal = gmesh_xrealloc (NULL, mesh->ntris * sizeof (Coords));
   {
     int kept = 0;
@@ -1611,7 +1611,7 @@ gmesh_init (char* filename, double scale, int face_props, gmesh_struct* mesh) {
     return 0;
   }
 
-  /* topology, and consistent orientation by propagation over shared edges */
+  // topology, and consistent orientation by propagation over shared edges
   {
     gmesh_etab edges;
     int nused = 0;
@@ -1619,7 +1619,7 @@ gmesh_init (char* filename, double scale, int face_props, gmesh_struct* mesh) {
     int* visited = gmesh_xcalloc (mesh->ntris, sizeof (int));
     char* used = gmesh_xcalloc (mesh->nverts, 1);
     gmesh_etab_build (&edges, mesh->tri, mesh->ntris);
-    /* BFS: flip triangles so that shared (manifold) edges run in opposite directions */
+    // BFS: flip triangles so that shared (manifold) edges run in opposite directions
     for (i = 0; i < mesh->ntris; i++) {
       int head = 0;
       int tail = 0;
@@ -1645,7 +1645,7 @@ gmesh_init (char* filename, double scale, int face_props, gmesh_struct* mesh) {
           }
           if (visited[other])
             continue;
-          /* other uses the edge a->b in the same direction: flip it */
+          // other uses the edge a->b in the same direction: flip it
           if (gmesh_tri_has_edge (mesh, other, a, b)) {
             gmesh_flip_triangle (mesh, other);
           }
@@ -1687,7 +1687,7 @@ gmesh_init (char* filename, double scale, int face_props, gmesh_struct* mesh) {
     free (used);
   }
 
-  /* volume (divergence theorem); outward normals for closed oriented meshes */
+  // volume (divergence theorem); outward normals for closed oriented meshes
   {
     double volume = 0;
     int has_inside = (mesh->closed && mesh->oriented);
@@ -1709,7 +1709,7 @@ gmesh_init (char* filename, double scale, int face_props, gmesh_struct* mesh) {
     }
   }
 
-  /* bounding sphere (Ritter) */
+  // bounding sphere (Ritter)
   {
     double distance;
     double radius;
@@ -1734,15 +1734,15 @@ gmesh_init (char* filename, double scale, int face_props, gmesh_struct* mesh) {
 
   MPI_MASTER (gmesh_print_info (mesh););
   return mesh->ntris;
-} /* gmesh_init */
+} // gmesh_init
 
-  /* ========================================================================== */
-  /*  Ray tracing                                                               */
-  /* ========================================================================== */
+  // ==========================================================================
+  // Ray tracing
+  // ==========================================================================
 
-  /* slab test of the line origin + t*direction against the box [lower, upper],
-     for t in [t_start, t_end]. Returns 1 when that part of the line meets the box.
-     The BVH traversal uses it to skip every node whose box the line misses. */
+  // slab test of the line origin + t*direction against the box [lower, upper],
+  // for t in [t_start, t_end]. Returns 1 when that part of the line meets the box.
+  // The BVH traversal uses it to skip every node whose box the line misses.
   #pragma acc routine seq
 static int
 gmesh_slab (Coords lower, Coords upper, Coords origin, Coords direction, double t_start, double t_end) {
@@ -1781,9 +1781,9 @@ gmesh_slab (Coords lower, Coords upper, Coords origin, Coords direction, double 
   return 1;
 }
 
-  /* Moeller-Trumbore intersection of the line origin + t*direction with a
-     triangle of mesh, with tolerant barycentric coordinates. Returns 1 on a
-     hit, with its t in *hit_t and *on_edge = 1 when it is close to an edge. */
+  // Moeller-Trumbore intersection of the line origin + t*direction with a
+  // triangle of mesh, with tolerant barycentric coordinates. Returns 1 on a
+  // hit, with its t in *hit_t and *on_edge = 1 when it is close to an edge.
   #pragma acc routine seq
 static int
 gmesh_tri_hit (gmesh_struct* mesh, int triangle, Coords origin, Coords direction, double* hit_t, int* on_edge) {
@@ -1800,7 +1800,7 @@ gmesh_tri_hit (gmesh_struct* mesh, int triangle, Coords origin, Coords direction
   double u;
   double v;
   double eps = GMESH_EPSILON;
-  /* parallel */
+  // parallel
   if (fabs (det) <= 1e-12 * coords_len (e1) * coords_len (e2) * coords_len (direction))
     return 0;
   inv = 1 / det;
@@ -1820,12 +1820,12 @@ gmesh_tri_hit (gmesh_struct* mesh, int triangle, Coords origin, Coords direction
   return 1;
 }
 
-  /* BVH traversal for the line origin + t*direction, t > t_min. Stores the
-     max_hits nearest hits in hits, sorted by t, with hits on shared edges and
-     vertices kept once; every hit is visited, so a return value above
-     *stored_count means hits were dropped. When hits is NULL the hits are only counted, each
-     triangle hit once, with *ambiguous = 1 when a hit is on an edge or at the
-     origin. Returns the number of hits found. */
+  // BVH traversal for the line origin + t*direction, t > t_min. Stores the
+  // max_hits nearest hits in hits, sorted by t, with hits on shared edges and
+  // vertices kept once; every hit is visited, so a return value above
+  // *stored_count means hits were dropped. When hits is NULL the hits are only counted, each
+  // triangle hit once, with *ambiguous = 1 when a hit is on an edge or at the
+  // origin. Returns the number of hits found.
   #pragma acc routine seq
 static int
 gmesh_trace (gmesh_struct* mesh, Coords origin, Coords direction, double t_min, gmesh_hit* hits, int max_hits, int* stored_count, int* ambiguous) {
@@ -1850,7 +1850,7 @@ gmesh_trace (gmesh_struct* mesh, Coords origin, Coords direction, double t_min, 
     if (!gmesh_slab (node->lo, node->hi, origin, direction, t_min, FLT_MAX))
       continue;
     if (node->count == 0) {
-      /* cannot happen: depth limited at build */
+      // cannot happen: depth limited at build
       if (top + 2 > GMESH_BVH_STACK)
         continue;
       stack[top] = node->first;
@@ -1888,7 +1888,7 @@ gmesh_trace (gmesh_struct* mesh, Coords origin, Coords direction, double t_min, 
       hit.face = mesh->tri_face[t];
       hit.in_out = in_out;
       hit.edge = on_edge;
-      /* hits on shared edges/vertices: keep once */
+      // hits on shared edges/vertices: keep once
       for (k = 0; k < *stored_count; k++) {
         if (hits[k].in_out == in_out && fabs (hits[k].t - hit_t) <= t_tolerance) {
           duplicate = 1;
@@ -1918,11 +1918,11 @@ gmesh_trace (gmesh_struct* mesh, Coords origin, Coords direction, double t_min, 
   return total;
 }
 
-/* set once a hit buffer overflow has been reported */
+// set once a hit buffer overflow has been reported
 int gmesh_overflow_warned = 0;
   #pragma acc declare create(gmesh_overflow_warned)
 
-  /* intersections of a line with mesh, see geometry-mesh-lib.h */
+  // intersections of a line with mesh, see geometry-mesh-lib.h
   #pragma acc routine seq
 int
 gmesh_intersect (gmesh_struct* mesh, Coords position, Coords direction, double t_min, gmesh_hit hits[GMESH_MAX_HITS]) {
@@ -1942,7 +1942,7 @@ gmesh_intersect (gmesh_struct* mesh, Coords position, Coords direction, double t
   return stored;
 }
 
-  /* 1 when point is inside the box [lower, upper], borders included */
+  // 1 when point is inside the box [lower, upper], borders included
   #pragma acc routine seq
 static int
 gmesh_in_box (Coords point, Coords lower, Coords upper) {
@@ -1955,11 +1955,11 @@ gmesh_in_box (Coords point, Coords lower, Coords upper) {
   return 1;
 }
 
-  /* point in (closed) mesh test, see geometry-mesh-lib.h */
+  // point in (closed) mesh test, see geometry-mesh-lib.h
   #pragma acc routine seq
 int
 gmesh_inside (gmesh_struct* mesh, Coords position) {
-  /* fixed, "irrational" directions: no random numbers are consumed */
+  // fixed, "irrational" directions: no random numbers are consumed
   const double D[3][3] = { { 0.4719, 0.6213, 0.6254 }, { 0.8017, -0.3259, 0.5012 }, { -0.2263, 0.9147, -0.3349 } };
   int j;
   int votes = 0;
@@ -1977,7 +1977,7 @@ gmesh_inside (gmesh_struct* mesh, Coords position) {
   return votes >= 2;
 }
 
-  /* per-face property, see geometry-mesh-lib.h */
+  // per-face property, see geometry-mesh-lib.h
   #pragma acc routine seq
 double
 gmesh_face_prop (gmesh_struct* mesh, int face, int property, double fallback) {
@@ -1990,11 +1990,11 @@ gmesh_face_prop (gmesh_struct* mesh, int face, int property, double fallback) {
   return mesh->facePropArray[(int)property * mesh->nfaces + face];
 }
 
-/* ========================================================================== */
-/*  Info, display, free                                                       */
-/* ========================================================================== */
+// ==========================================================================
+// Info, display, free
+// ==========================================================================
 
-/* print a summary of mesh (sizes, topology, volume) */
+// print a summary of mesh (sizes, topology, volume)
 void
 gmesh_print_info (gmesh_struct* mesh) {
   printf ("  %s: %d vertices (%d duplicates welded), %d faces, %d triangles", mesh->filename, mesh->nverts, mesh->nwelded, mesh->nfaces, mesh->ntris);
@@ -2015,8 +2015,8 @@ gmesh_print_info (gmesh_struct* mesh) {
     printf ("  Per-face properties: %d\n", mesh->nfaceprops);
 }
 
-/* append printf-style text to the string *buffer of *capacity bytes that
-   holds *length characters, growing the buffer as needed */
+// append printf-style text to the string *buffer of *capacity bytes that
+// holds *length characters, growing the buffer as needed
 static void
 gmesh_append (char** buffer, size_t* capacity, size_t* length, const char* format, ...) {
   va_list arguments;
@@ -2038,14 +2038,14 @@ gmesh_append (char** buffer, size_t* capacity, size_t* length, const char* forma
   *length += written;
 }
 
-/* draw the polygon edges of mesh (each once), or a polyhedron with mcdotrace==2 */
+// draw the polygon edges of mesh (each once), or a polyhedron with mcdotrace==2
 void
 gmesh_display (gmesh_struct* mesh) {
   int i, j;
   if (!mesh || !mesh->faceSize)
     return;
   if (mcdotrace == 2) {
-    /* polyhedron as JSON, polygons as in the file */
+    // polyhedron as JSON, polygons as in the file
     size_t capacity = 4096;
     size_t length = 0;
     char* json = gmesh_xrealloc (NULL, capacity);
@@ -2077,7 +2077,7 @@ gmesh_display (gmesh_struct* mesh) {
     mcdis_polyhedron (json);
     free (json);
   } else {
-    /* each polygon edge once, a random subset when there are too many */
+    // each polygon edge once, a random subset when there are too many
     gmesh_etab edges;
     int ncorners = 0;
     double ratio = GMESH_DISPLAY_MAX;
@@ -2108,7 +2108,7 @@ gmesh_display (gmesh_struct* mesh) {
   }
 }
 
-/* release the memory held by mesh */
+// release the memory held by mesh
 void
 gmesh_free (gmesh_struct* mesh) {
   if (!mesh)
@@ -2123,6 +2123,6 @@ gmesh_free (gmesh_struct* mesh) {
   memset (mesh, 0, sizeof (gmesh_struct));
 }
 
-#endif /* GEOMETRY_MESH_LIB_C */
+#endif // GEOMETRY_MESH_LIB_C
 
-/* end of geometry-mesh-lib.c */
+// end of geometry-mesh-lib.c
