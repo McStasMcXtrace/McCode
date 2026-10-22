@@ -30,6 +30,8 @@ DEFINE INSTRUMENT SOLEIL(splits=1)
 DECLARE
 %{
   int BEAMLINE_MAX=18;
+  #pragma acc declare create(BEAMLINE_MAX)
+  #pragma acc update device(BEAMLINE_MAX)
 %}
 
 USERVARS %{
