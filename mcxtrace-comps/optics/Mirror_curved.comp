@@ -8,6 +8,7 @@
 * Written by: Erik Knudsen
 * Date: September 25th, 2009
 * Origin: Risoe
+* Revised: geometry/intersection fixes (see TRACE)
 *
 * A cylindrically curved mirror (in YZ)
 *
@@ -15,7 +16,7 @@
 * mirror is in the YZ-plane curved towards positive X if radius is positive
 *
 * Example: Mirror_curved( radius=2, length=20e-3, width=40e-3, coating="AlMgF2_disco.dat")
-* 
+*
 * %Parameters
 * radius: [m]   Radius of curvature, along Z.
 * yheight:[m]   Width of the mirror along Y.
@@ -31,10 +32,10 @@
 DEFINE COMPONENT Mirror_curved
 
 SETTING PARAMETERS (radius=1, R0=1, string coating="Be.txt",
-  zdepth=0.2, yheight=0.2, 
+  zdepth=0.2, yheight=0.2,
   length=0, width=0)
 
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 SHARE
 %{
@@ -59,12 +60,31 @@ INITIALIZE
   if (coating && strlen (coating) && strcmp (coating, "NULL")) {
     status = reflec_Init (&re, COATING_UNDEFINED, coating, NULL);
   } else {
-    /*assume a constant reflectivity*/
+    /* Assume a constant reflectivity */
     status = reflec_Init (&re, CONSTANT, NULL, &(R0));
   }
+  /* Check that reflectivity initialization succeeded */
+  if (status != REFLEC_OK) {
+    fprintf (stderr, "ERROR (%s): Could not interpret reflectivity (coating='%s'). Aborting.\n",
+             NAME_CURRENT_COMP, coating ? coating : "");
+    exit (-1);
+  }
+
+  /* Validate geometry instead of silently producing nonsense */
   if (!radius)
-    radius = 1e6;
-  // compatibility with older use
+    radius = 1e6;                     /* flat-mirror fallback */
+  if (fabs (radius) < 1e-6) {
+    fprintf (stderr, "WARNING (%s): |radius| < 1 um is physically meaningless. Aborting.\n",
+             NAME_CURRENT_COMP);
+    exit (-1);
+  }
+  if (zdepth <= 0 || yheight <= 0) {
+    fprintf (stderr, "ERROR (%s): mirror must have positive zdepth and yheight. Aborting.\n",
+             NAME_CURRENT_COMP);
+    exit (-1);
+  }
+
+  /* Compatibility with older use */
   if (length)
     zdepth = length;
   if (width)
@@ -73,64 +93,104 @@ INITIALIZE
 
 TRACE
 %{
-  double l0, l1, dl, alpha, n, nx, nz, s, k, knx, knz;
-  /* dl init - cppcheck complains about algorithm below */
-  dl=0;
-  /*do we hit the mirror within range?*/
-  // PROP_Z0;
-  k = sqrt (scalar_prod (kx, 0, kz, kx, 0, kz));
-  knx = kx / k;
-  knz = kz / k;
-  if (solve_2nd_order (&l0, &l1, knx* knx + knz * knz, 2 * (x * knx + z * knz - radius * knx), x* x - 2 * x * radius + z * z)) {
-    if (l0 < 0 && l1 > 0) {
-      dl = l1;
-    } else if (l1 < 0 && l0 > 0) {
-      dl = l0;
-    } else if (l0 > 0 && l1 > 0) {
-      if (fabs (z + knz * l0) < zdepth / 2.0 && fabs (x + knx * l0) < fabs (radius)) {
-        /*this means that the first positive match is on the mirror z-wise
-          - this should be picked. This would work even if mirror is hit from behind*/
-        dl = l0;
-      } else {
-        dl = l1;
-      }
-    } else {
-      /*particle misses the mirror completely (l0<0 and l1<0)*/
-      RESTORE_XRAY (INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
-    }
+  double l0, l1, dl, alpha, n, nx, nz, s, k, knx, knz, k_xz2;
+  int hit;
 
-    /*correction for only solving in xz-plane*/
-    dl *= sqrt (scalar_prod (kx, ky, kz, kx, ky, kz) / scalar_prod (kx, 0, kz, kx, 0, kz));
-
-    PROP_DL (dl);
-    alpha = asin (z / radius);
-    if ((zdepth < radius * alpha) || (fabs (y) > yheight / 2.0)) {
-      RESTORE_XRAY (INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
-    } else {
-      SCATTER;
-      /*reflection*/
-      nx = radius - x;
-      nz = -z;
-      n = sqrt (nx * nx + nz * nz);
-      nx /= n;
-      nz /= n;
-
-      s = scalar_prod (kx, 0, kz, nx, 0, nz);
-      kx = kx - 2 * s * nx;
-      kz = kz - 2 * s * nz;
-
-      double Q;
-      /*length of wavevector transfer may be compute from s and n_ above*/
-      Q = fabs (2 * s * sqrt (nx * nx + nz * nz));
-      cdouble R = refleccq (re, Q, 0, k, fabs (90 - acos (s / k) * RAD2DEG));
-      p *= sqrt (creal (cmul(R, conj (R))));
-      phi += atan2 (cimag (R), creal (R));
-    }
-  } else if (fabs (kx) < DBL_EPSILON && fabs (kz) < DBL_EPSILON && ky != 0) {
-    /*This to catch the extreme case where k//y.*/
-    if (y == 0) {
-      /*We hit the "side" of the mirror.*/
+  /* FIX: handle the degenerate k // y case explicitly, before any division
+     by the xz-plane wavevector norm. The old code relied on NaN propagation
+     through solve_2nd_order, which is fragile. */
+  k_xz2 = kx * kx + kz * kz;
+  if (k_xz2 < DBL_EPSILON * DBL_EPSILON) {
+    if (ky != 0 && fabs (y) < DBL_EPSILON) {
+      /* Travelling along the mirror plane, in the plane of the mirror:
+         hits the "side" (edge) of the mirror. */
       ABSORB;
+    }
+    /* k // y but off the mirror plane: the mirror is never reached. */
+    RESTORE_XRAY (INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
+  } else {
+    k = sqrt (scalar_prod (kx, 0, kz, kx, 0, kz));
+    knx = kx / k;
+    knz = kz / k;
+
+    hit = 0;
+    if (solve_2nd_order (&l0, &l1, knx * knx + knz * knz,
+                         2 * (x * knx + z * knz - radius * knx),
+                         x * x - 2 * x * radius + z * z)) {
+      if (l0 < 0 && l1 > 0) {
+        dl = l1;
+        hit = 1;
+      } else if (l1 < 0 && l0 > 0) {
+        dl = l0;
+        hit = 1;
+      } else if (l0 > 0 && l1 > 0) {
+        /* Both intersections ahead: pick the first one that is plausibly on
+           the mirror strip. test BOTH candidates.
+           Use the arc coordinate (as below) for consistency. */
+        double arc0 = radius * asin ((z + knz * l0) / radius);
+        if (fabs (arc0) <= zdepth / 2.0
+            && fabs (x + knx * l0) < fabs (radius)
+            && fabs (y + ky / k * l0) <= yheight / 2.0) {
+          dl = l0;
+          hit = 1;
+        } else {
+          double arc1 = radius * asin ((z + knz * l1) / radius);
+          if (fabs (arc1) <= zdepth / 2.0
+              && fabs (x + knx * l1) < fabs (radius)) {
+            dl = l1;
+            hit = 1;
+          }
+        }
+      }
+      /* If both roots are behind us, or neither root is on the strip:
+         hit stays 0 and the ray is restored below. FIX: the old code fell
+         through to PROP_DL(0) + reflection at the current position. */
+    }
+
+    if (!hit) {
+      RESTORE_XRAY (INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
+    } else {
+      /* Correction for only solving in xz-plane */
+      dl *= sqrt (scalar_prod (kx, ky, kz, kx, ky, kz) / k_xz2);
+
+      PROP_DL (dl);
+
+      /* Use the signed arc coordinate consistently:
+         - fabs(radius*alpha) so the limit holds for both mirror halves
+           and for negative radius;
+         - compare against zdepth/2.0 */
+      alpha = asin (z / radius);
+      if (fabs (radius * alpha) > zdepth / 2.0 || fabs (y) > yheight / 2.0) {
+        /* Hit the cylinder, but outside the mirror strip */
+        RESTORE_XRAY (INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
+      } else {
+        /* Reflection: normal points towards the cylinder center (concave side) */
+        nx = radius - x;
+        nz = -z;
+        n = sqrt (nx * nx + nz * nz);
+        nx /= n;
+        nz /= n;
+
+        s = scalar_prod (kx, 0, kz, nx, 0, nz);
+
+        /* Reject hits from the convex (back) side. s >= 0 means the ray moves
+           along the surface normal, i.e. it approaches from behind the
+           coating. Physically the substrate absorbs. */
+        if (s >= 0) {
+          ABSORB;
+        } else {
+          SCATTER;
+          kx = kx - 2 * s * nx;
+          kz = kz - 2 * s * nz;
+
+          double Q;
+          /* wavevector transfer: n is normalized, so Q = 2|s| */
+          Q = fabs (2 * s);
+          cdouble R = refleccq (re, Q, 0, k, fabs (90 - acos (s / k) * RAD2DEG));
+          p *= sqrt (creal (cmul (R, conj (R))));
+          phi += atan2 (cimag (R), creal (R));
+        }
+      }
     }
   }
 %}
