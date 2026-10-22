@@ -6,12 +6,12 @@
 *         Synchrotron SOLEIL, Saint-Aubin, France
 *
 * Component: Bragg_crystal
-* 
+*
 * %Identification
 * Written by: Marcus H Mendenhall, NIST <marcus.mendenhall@nist.gov>
 * Based on: Perfect_crystal.comp written by Anette Vickery, Andrea Prodi, Erik Knudsen
-* Date: December 1, 2016
-* Version: 2.1
+* Date: December 1st, 2016
+* Version: 2.2
 * Origin: NIST, Gaithersburg, MD, USA
 *
 * Perfect, reflecting crystal with common cubic structures (diamond, fcc, or bcc, and others if symmetry form factor multipliers provided explicitly)
@@ -20,7 +20,7 @@
 * Bragg_crystal.comp supercedes Perfect_Crystal.comp with major edits and corrections.
 *
 * For details see:
-* The optics of focusing bent-crystal monochromators on X-ray powder diffractometers with application to lattice parameter determination and microstructure analysis, 
+* The optics of focusing bent-crystal monochromators on X-ray powder diffractometers with application to lattice parameter determination and microstructure analysis,
 * Marcus H. Mendenhall,* David Black and James P. Cline, J. Appl. Cryst. (2019). 52, https://doi.org/10.1107/S1600576719010951
 *
 * Reads atomic formfactors from a data input file.
@@ -30,24 +30,16 @@
 * by an angle alpha about the Y axis with respect to the crystal surface.
 *
 * The crystal itself is set in the X-Z plane positioned such that the long axis of the crystal surface coincides with
-* the Z-axis, with its normam pointing in the positve Y-direction. The angle between the Bragg planes and the crystal surface is alpha
+* the Z-axis, with its normal pointing in the positive Y-direction. The angle between the Bragg planes and the crystal surface is alpha
 *
 * This code has been validated against both experimental data
 * (2 channel-cut 3-bounce Si 440 crystals together in non-dispersive mode, at Cu kalpha)
 * and against theoretical rocking rocking curves from XOP for Si220 at Sc kalpha and Si440 at Cu kalpha.
 *
-* Changelog:  
-* - Off-axis rays fixed June 2015 so axial divergence corrections are right
-* - Inclusion of polarization and temperature dependence (via Debye-Waller factor), June-September 2015
-* - Errors in complex arithmetic in DarwinReflectivity2 corrected, September 2015, MHM
-* - Symmetries for form factors corrected 20150924
-* - Rotation code updated to use exact DarwinReflectivity Theta0, Thetah so answer is right even if alpha != 0. 20151009 MHM
-* - Results for (1,1,1) etc. with complex form factor made to agree with XOP. December 1st, 2016
-*
-* Notation follows Tadashi Matsushita and Hiro-O Hashizume, X-RAY MONOCHROMATORS. Handbook on Synchrotron Radiation,North-Holland Publishing Company, 1:263–274, 1983.
+* Notation follows Tadashi Matsushita and Hiro-O Hashizume, X-RAY MONOCHROMATORS. Handbook on Synchrotron Radiation,North-Holland Publishing Company, 1:263-274, 1983.
 *
 * Non-copyright notice:
-* Contributed by the National Institute of Standards and Technology; not subject to copyright in the United States. 
+* Contributed by the National Institute of Standards and Technology; not subject to copyright in the United States.
 * This is not an official contribution, in that the results are in no way certified by NIST.
 *
 * Example: Bragg_crystal(
@@ -73,6 +65,20 @@
 * %End
 *******************************************************************************/
 
+
+/* 
+* Changelog:
+* - Off-axis rays fixed June 2015 so axial divergence corrections are right
+* - Inclusion of polarization and temperature dependence (via Debye-Waller factor), June-September 2015
+* - Errors in complex arithmetic in DarwinReflectivity2 corrected, September 2015, MHM
+* - Symmetries for form factors corrected 20150924
+* - Rotation code updated to use exact DarwinReflectivity Theta0, Thetah so answer is right even if alpha != 0. 20151009 MHM
+* - Results for (1,1,1) etc. with complex form factor made to agree with XOP. December 1st, 2016
+* - v2.2: guarded degenerate ray directions (k//y, kz=0, kyu=0) that previously produced NaN
+*   after SCATTER; rotation implemented via Rodrigues' formula (no singular denominators);
+*   INITIALIZE errors now abort; inner shadowed copies of the incoming ray renamed. Physics unchanged.
+*/
+
 DEFINE COMPONENT Bragg_crystal
 SETTING PARAMETERS (length=0.05, width=0.02, V=160.1826, string form_factors="FormFactors.txt", string material="Si.txt", alpha=0.0,
         R0=0, debye_waller_B=0.4632, int crystal_type=1, int h=1, int k=1, int l=1,
@@ -89,8 +95,6 @@ DECLARE
   int Z;
   double rho;
   double At;
-  double f_rel;
-  double f_nt;
   t_Table m_t;
   t_Table f0_t;
 %}
@@ -98,7 +102,9 @@ DECLARE
 INITIALIZE
 %{
   int status;
-  if (material) {
+  /* a missing material file is a fatal error, not a warning - TRACE would
+     otherwise run with an uninitialized table and silently produce garbage. */
+  if (material && strlen (material) && strcmp (material, "NULL")) {
     if ((status = Table_Read (&(m_t), material, 0)) == -1) {
       fprintf (stderr, "Error(%s): Could not parse file \"%s\"\n", NAME_CURRENT_COMP, material);
       exit (-1);
@@ -114,172 +120,174 @@ INITIALIZE
     if (header_parsed[1]) {
       At = strtod (header_parsed[1], NULL);
     }
+    /* without Z, f00 = 0 and the f0 lookup uses column 0 -> silently
+       wrong reflectivity. Abort instead. */
+    if (!Z) {
+      fprintf (stderr, "Error(%s): material file \"%s\" does not define Z. Aborting.\n", NAME_CURRENT_COMP, material);
+      exit (-1);
+    }
   } else {
-    fprintf (stderr, "Error(%s): No material file specified\n", NAME_CURRENT_COMP);
+    fprintf (stderr, "Error(%s): No material file specified. Aborting.\n", NAME_CURRENT_COMP);
+    exit (-1);
   }
-  if (form_factors) {
+  if (form_factors && strlen (form_factors) && strcmp (form_factors, "NULL")) {
     if ((status = Table_Read (&(f0_t), form_factors, 0)) == -1) {
       fprintf (stderr, "Error(%s): Could not parse file \"%s\"\n", NAME_CURRENT_COMP, form_factors);
       exit (-1);
     }
+  } else {
+    fprintf (stderr, "Error(%s): No form factor file specified. Aborting.\n", NAME_CURRENT_COMP);
+    exit (-1);
+  }
+  if (width <= 0 || length <= 0) {
+    fprintf (stderr, "Error(%s): crystal must have positive width and length. Aborting.\n", NAME_CURRENT_COMP);
+    exit (-1);
   }
 %}
 
 TRACE
 %{
-  double E;                   // (keV) x-ray energy
-  double K;                   // length of k-vector
-  double kxu, kyu, kzu;       // unit vector in the direction of k-vector.
-  double tin;                 // 'time' of intersection of ray with y=0 plane (which include the crystal surface)
-  double x_int, y_int, z_int; // intersection with the y=0 plane
-  double dist;                // distance from position at t=0 to the y=0 plane
-  double f00, f0h, fp, fpp;   // atomic form factors for Q=0 is (f00 + fp + i*fpp) and for Q= ha*+kb*+lc* it is (f0h + fp + i*fpp).
-  double Thetain;             // (rad) angle between the crystal surface and the incident ray
-  double Theta0;              // (rad) angle between the Bragg planes and the incident ray
-  double Thetah;              // (rad) angle between the Bragg planes and the reflected ray
-  double Thetaout;            // (rad) angle between the crystal surface and the reflected ray
-  double DeltaTheta0;         // (rad) the center of the reflectivity curve is at asin(n*lambda/(2*d)) + DeltaTheta0
-  double Rpi, Rsig, R;        // Reflectivity value calculated by DarwinReflectivity() function for each incoming photon
-  double x0, y0, z0, kx0, ky0, kz0, phi0, t0, Ex0, Ey0, Ez0, p0;
+  double E;                   /* (keV) x-ray energy */
+  double K;                   /* length of k-vector */
+  double kxu, kyu, kzu;       /* unit vector in the direction of k-vector. */
+  double tin;                 /* 'time' of intersection of ray with y=0 plane (which includes the crystal surface) */
+  double x_int, z_int;        /* intersection with the y=0 plane */
+  double dist;                /* distance from position at t=0 to the y=0 plane */
+  double f00, f0h, fp, fpp;   /* atomic form factors for Q=0 is (f00 + fp + i*fpp) and for Q= ha*+kb*+lc* it is (f0h + fp + i*fpp). */
+  double Thetain;             /* (rad) angle between the crystal surface and the incident ray */
+  double Theta0;              /* (rad) angle between the Bragg planes and the incident ray */
+  double Thetah;              /* (rad) angle between the Bragg planes and the reflected ray */
+  double DeltaTheta0;         /* (rad) the center of the reflectivity curve is at asin(n*lambda/(2*d)) + DeltaTheta0 */
+  double Rpi, Rsig, R;        /* Reflectivity value calculated by DarwinReflectivity() function for each incoming photon */
 
-  x0 = x;
-  y0 = y;
-  z0 = z;
-  kx0 = kx;
-  ky0 = ky;
-  kz0 = kz;
-  phi0 = phi;
-  t0 = t;
-  Ex0 = Ex;
-  Ey0 = Ey;
-  Ez0 = Ez;
-  p0 = p;
   /* get the photon's kvector and energy */
   K = sqrt (kx * kx + ky * ky + kz * kz);
   E = K2E * K; /* use built-in constants for consistency */
+
+  /* guard the degenerate k // y case BEFORE normalizing and before any
+     cross product with the surface normal. A face-on ray never interacts with 
+     the surface reflection, so it is absorbed. */
+  if (kx * kx + kz * kz < DBL_EPSILON * DBL_EPSILON) {
+    ABSORB;
+  }
+
   /* make unit vector in the direction of k :*/
   kxu = kx;
   kyu = ky;
   kzu = kz;
   NORM (kxu, kyu, kzu);
-  /* printf("incoming kx,ky,kz, Ex, Ey, Ez, k.E: %f %f %f %g %g %g %g\n", kx,ky,kz,Ex,Ey,Ez, kxu*Ex+kyu*Ey+kzu*Ez); */
 
   /*intersection calculation*/
-  tin = -y / kyu;
-  if (tin >= 0) {
-    /* check whether our intersection lies within the boundaries of the crystal*/
-    x_int = x + kxu * tin;
-    y_int = y + kyu * tin;
-    z_int = z + kzu * tin;
+  /* guard kyu == 0 (ray parallel to the crystal surface). Such a
+     ray cannot hit the surface: let it pass unchanged. */
+  if (fabs (kyu) < DBL_EPSILON) {
+    /* ray parallel to the surface: no interaction, pass through unchanged. */
+  } else {
+    tin = -y / kyu;
+    if (tin >= 0) {
+      /* check whether our intersection lies within the boundaries of the crystal*/
+      x_int = x + kxu * tin;
+      z_int = z + kzu * tin;
 
-    if (fabs (x_int) <= width / 2 && fabs (z_int) <= length / 2) {
-      dist = sqrt (SQR (x - x_int) + SQR (y - y_int) + SQR (z - z_int));
-      PROP_DL (dist); /* now the photon is on the crystal surface, ready to be reflected... */
-      SCATTER;
-      Thetain = fabs (asin (kyu));                          /* k(x,y,z)u is a unit vector, the y component is sin(theta) */
-      double d = cbrt (V) / (sqrt (h * h + k * k + l * l)); /*this is valid only for cubic structures*/
-      f00 = Z;
-      f0h = Table_Value (f0_t, 1 / (2 * d), Z);
-      fp = Table_Value (m_t, E, 1) - Z;
-      fpp = Table_Value (m_t, E, 2);
+      if (fabs (x_int) <= width / 2 && fabs (z_int) <= length / 2) {
+        dist = tin; /* k is a unit-normalized direction: distance = tin */
+        PROP_DL (dist); /* now the photon is on the crystal surface, ready to be reflected... */
+        SCATTER;
+        Thetain = fabs (asin (kyu));                          /* k(x,y,z)u is a unit vector, the y component is sin(theta) */
+        double d = cbrt (V) / (sqrt (h * h + k * k + l * l)); /*this is valid only for cubic structures*/
+        f00 = Z;
+        f0h = Table_Value (f0_t, 1 / (2 * d), Z);
+        fp = Table_Value (m_t, E, 1) - Z;
+        fpp = Table_Value (m_t, E, 2);
 
-      double alpha1 = alpha;
-      /* check for 3rd & 1st quadrant hits, backward hit from above or forward hit from below and reverse sense of alpha */
-      if ((ky < 0 && kz < 0) || (ky > 0 && kz > 0))
-        alpha1 = -alpha1;
-      Mx_DarwinReflectivity (&Rpi, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, alpha1, h, k, l, debye_waller_B, E, Thetain, 1, crystal_type,
-                             structure_factor_scale_r, structure_factor_scale_i);
-      Mx_DarwinReflectivity (&Rsig, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, alpha1, h, k, l, debye_waller_B, E, Thetain, 2, crystal_type,
-                             structure_factor_scale_r, structure_factor_scale_i);
+        double alpha1 = alpha;
+        /* check for 3rd & 1st quadrant hits, backward hit from above or forward hit from below and reverse sense of alpha */
+        if ((ky < 0 && kz < 0) || (ky > 0 && kz > 0))
+          alpha1 = -alpha1;
+        Mx_DarwinReflectivity (&Rpi, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, alpha1, h, k, l, debye_waller_B, E, Thetain, 1, crystal_type,
+                               structure_factor_scale_r, structure_factor_scale_i);
+        Mx_DarwinReflectivity (&Rsig, &Thetah, &Theta0, f00, f0h, fp, fpp, V, alpha1, h, k, l, debye_waller_B, E, Thetain, 2, crystal_type,
+                               structure_factor_scale_r, structure_factor_scale_i);
 
-      double pi_x, pi_y, pi_z, sig_x, sig_y, sig_z;
-      double kx0 = kx, ky0 = ky, kz0 = kz, Ex0 = Ex, Ey0 = Ey, Ez0 = Ez;
+        double kin_x = kx, kin_y = ky, kin_z = kz, Ein_x = Ex, Ein_y = Ey, Ein_z = Ez;
+        double pi_x, pi_y, pi_z, sig_x, sig_y, sig_z;
 
-      /* sig_x,y,z is k(in) x surface_normal i.e. the direction of sigma polarization */
-      vec_prod_func (&sig_x, &sig_y, &sig_z, kx0, ky0, kz0, 0, -1, 0);
-      NORM (sig_x, sig_y, sig_z);
-      /* pi is a vector perpendicular to k_in and sig i.e. the direction of pi polarization incoming */
-      vec_prod_func (&pi_x, &pi_y, &pi_z, kx0, ky0, kz0, sig_x, sig_y, sig_z);
-      NORM (pi_x, pi_y, pi_z);
+        /* sig_x,y,z is k(in) x surface_normal i.e. the direction of sigma polarization */
+        vec_prod_func (&sig_x, &sig_y, &sig_z, kin_x, kin_y, kin_z, 0, -1, 0);
+        NORM (sig_x, sig_y, sig_z);
+        /* pi is a vector perpendicular to k_in and sig i.e. the direction of pi polarization incoming */
+        vec_prod_func (&pi_x, &pi_y, &pi_z, kin_x, kin_y, kin_z, sig_x, sig_y, sig_z);
+        NORM (pi_x, pi_y, pi_z);
 
-      #ifdef MCDEBUG
-      printf ("%s: Thetain: %.3f sigma: (%g, %g, %g) pi: (%g, %g, %g) \n", NAME_CURRENT_COMP, Thetain * 180 / PI, sig_x, sig_y, sig_z, pi_x, pi_y, pi_z);
-      #endif
+        #ifdef MCDEBUG
+        printf ("%s: Thetain: %.3f sigma: (%g, %g, %g) pi: (%g, %g, %g) \n", NAME_CURRENT_COMP, Thetain * 180 / PI, sig_x, sig_y, sig_z, pi_x, pi_y, pi_z);
+        #endif
 
-      double sth = sin (Theta0 + Thetah), cth = cos (Theta0 + Thetah);
-      if (sig_x * pi_y * pi_z > 0) { /* backwards hit, rotate the other way */
-        sth = -sth;
+        double sth = sin (Theta0 + Thetah), cth = cos (Theta0 + Thetah);
+        if (sig_x * pi_y * pi_z > 0) { /* backwards hit, rotate the other way */
+          sth = -sth;
+        }
+
+        /* Rodrigues rotation formula below with no singular denominators anywhere. */
+        double c1m = 1 - cth;
+        double m[3][3] = { cth + sig_x * sig_x * c1m,
+                           sig_x * sig_y * c1m - sig_z * sth,
+                           sig_x * sig_z * c1m + sig_y * sth,
+                           sig_x * sig_y * c1m + sig_z * sth,
+                           cth + sig_y * sig_y * c1m,
+                           sig_y * sig_z * c1m - sig_x * sth,
+                           sig_x * sig_z * c1m - sig_y * sth,
+                           sig_y * sig_z * c1m + sig_x * sth,
+                           cth + sig_z * sig_z * c1m };
+
+        #ifdef MCDEBUG
+        printf ("%s matrix=\n%12.3f %12.3f %12.3f\n%12.3f %12.3f %12.3f\n%12.3f %12.3f %12.3f\n", NAME_CURRENT_COMP, m[0][0], m[0][1], m[0][2], m[1][0], m[1][1],
+                m[1][2], m[2][0], m[2][1], m[2][2]);
+        #endif
+
+        /* execute the rotation about the sigma vector */
+        kx = m[0][0] * kin_x + m[0][1] * kin_y + m[0][2] * kin_z;
+        ky = m[1][0] * kin_x + m[1][1] * kin_y + m[1][2] * kin_z;
+        kz = m[2][0] * kin_x + m[2][1] * kin_y + m[2][2] * kin_z;
+
+        /* resolve incoming polarization into sig and pi bits, and scale by sqrt(reflectivity) which is amplitude scale */
+        double Esig = (Ein_x * sig_x + Ein_y * sig_y + Ein_z * sig_z), Epi = (Ein_x * pi_x + Ein_y * pi_y + Ein_z * pi_z);
+        if (Esig == 0 && Epi == 0) { /* someone didn't set the polarization direction; set it now to a random value and it will propagate */
+          double psi = rand01 () * PI / 2;
+          Esig = cos (psi);
+          Epi = sin (psi);
+        }
+        Esig = Esig * sqrt (Rsig);
+        Epi = Epi * sqrt (Rpi);
+        R = Esig * Esig + Epi * Epi; /* projected reflectivity, squared back to intensity */
+
+        /* pi is now a vector perpendicular to k_out and sig i.e. the direction of pi polarization outgoing */
+        vec_prod_func (&pi_x, &pi_y, &pi_z, kx, ky, kz, sig_x, sig_y, sig_z);
+        NORM (pi_x, pi_y, pi_z);
+
+        /* a linear combination of these is still perpendicular to k, but has the correct polarization weighting */
+        Ex = Epi * pi_x + Esig * sig_x;
+        Ey = Epi * pi_y + Esig * sig_y;
+        Ez = Epi * pi_z + Esig * sig_z;
+        NORM (Ex, Ey, Ez);
+        #ifdef MCDEBUG
+        printf ("%s: Rsig, Rpi, R, k0, k1, e0, e1: %g %g %g (%g, %g, %g) (%g, %g, %g) (%g, %g, %g) (%g, %g, %g)\n", NAME_CURRENT_COMP, Rsig, Rpi, R, kin_x, kin_y,
+                kin_z, kx, ky, kz, Ein_x, Ein_y, Ein_z, Ex, Ey, Ez);
+        #endif
+        /* apply Darwin reflectivity if not is supplied from outside*/
+        /* R0 < 0 explicitly selects the computed Darwin reflectivity,
+           so R0=0 can force zero reflectivity (ABSORB) instead of being
+           indistinguishable from the default. */
+        if (R0 >= 0) {
+          p *= R0;
+        } else {
+          p *= R;
+        }
+        /*catch dead rays*/
+        if (p == 0)
+          ABSORB;
       }
-      double sx2 = sig_x * sig_x, sy2 = sig_y * sig_y, sz2 = sig_z * sig_z, r2 = sig_x * sig_x + sig_y * sig_y;
-
-      /* initialize a rotation matrix by the appropriate angle around the sigma axis, this from Mathematica RotationMatrix[] */
-      double m[3][3] = { sx2 + (cth * (sy2 + sx2 * sz2)) / r2,
-                         sig_x * sig_y - sig_z * sth + (cth * sig_x * sig_y * (-1 + sz2)) / r2,
-                         sig_x * sig_z - cth * sig_x * sig_z + sig_y * sth,
-                         sig_x * sig_y + sig_z * sth + (cth * sig_x * sig_y * (-1 + sz2)) / r2,
-                         sy2 + (cth * (sx2 + sy2 * sz2)) / r2,
-                         sig_y * sig_z - cth * sig_y * sig_z - sig_x * sth,
-                         sig_x * sig_z - cth * sig_x * sig_z - sig_y * sth,
-                         sig_y * sig_z - cth * sig_y * sig_z + sig_x * sth,
-                         cth * r2 + sz2 };
-
-      #ifdef MCDEBUG
-      printf ("%s matrix=\n%12.3f %12.3f %12.3f\n%12.3f %12.3f %12.3f\n%12.3f %12.3f %12.3f\n", NAME_CURRENT_COMP, m[0][0], m[0][1], m[0][2], m[1][0], m[1][1],
-              m[1][2], m[2][0], m[2][1], m[2][2]);
-      #endif
-
-      /* execute the rotation about the sigma vector */
-      kx = m[0][0] * kx0 + m[0][1] * ky0 + m[0][2] * kz0;
-      ky = m[1][0] * kx0 + m[1][1] * ky0 + m[1][2] * kz0;
-      kz = m[2][0] * kx0 + m[2][1] * ky0 + m[2][2] * kz0;
-
-      /* resolve incoming polarization into sig and pi bits, and scale by sqrt(reflectivity) which is amplitude scale */
-      double Esig = (Ex * sig_x + Ey * sig_y + Ez * sig_z), Epi = (Ex * pi_x + Ey * pi_y + Ez * pi_z);
-      if (Esig == 0 && Epi == 0) { /* someone didn't set the polarization direction; set it now to a random value and it will propagate */
-        double psi = rand01 () * PI / 2;
-        Esig = cos (psi);
-        Epi = sin (psi);
-      }
-      Esig = Esig * sqrt (Rsig);
-      Epi = Epi * sqrt (Rpi);
-      R = Esig * Esig + Epi * Epi; /* projected reflectivity, squared back to intensity */
-
-      /* pi is now a vector perpendicular to k_out and sig i.e. the direction of pi polarization outgoing */
-      vec_prod_func (&pi_x, &pi_y, &pi_z, kx, ky, kz, sig_x, sig_y, sig_z);
-      NORM (pi_x, pi_y, pi_z);
-
-      /* a linear combination of these is still perpendicular to k, but has the correct polarization weighting */
-      Ex = Epi * pi_x + Esig * sig_x;
-      Ey = Epi * pi_y + Esig * sig_y;
-      Ez = Epi * pi_z + Esig * sig_z;
-      NORM (Ex, Ey, Ez);
-      #ifdef MCDEBUG
-      printf ("%s: Rsig, Rpi, R, k0, k1, e0, e1: %g %g %g (%g, %g, %g) (%g, %g, %g) (%g, %g, %g) (%g, %g, %g)\n", NAME_CURRENT_COMP, Rsig, Rpi, R, kx0, ky0, kz0,
-              kx, ky, kz, Ex0, Ey0, Ez0, Ex, Ey, Ez);
-      #endif
-      /* apply Darwin reflectivity if not is supplied from outside*/
-      if (!R0) {
-        p *= R;
-      } else {
-        p *= R0;
-      }
-      /*catch dead rays*/
-      if (p == 0)
-        ABSORB;
-    } else {
-      // RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);//
-      x = x0;
-      y = y0;
-      z = z0;
-      kx = kx0;
-      ky = ky0;
-      kz = kz0;
-      phi = phi0;
-      t = t0;
-      Ex = Ex0;
-      Ey = Ey0;
-      Ez = Ez0;
-      p = p0;
+      /* A ray whose footprint misses the crystal simply continues unchanged. */
     }
   }
 %}
