@@ -70,7 +70,7 @@ def to_dataarray(d):
 
 def _nx_dataarray(g):
     ''' McCode NeXus monitor (NXdata group) -> (title, DataArray), None for 0D / event lists '''
-    a = {k: v.decode() if isinstance(v, bytes) else v for k, v in g.attrs.items()}
+    a = {k: v.decode(errors='replace') if isinstance(v, bytes) else v for k, v in g.attrs.items()}  # older runtimes wrote uninitialised 'options' for 0D/1D monitors
     typ = a.get('type', '')
     if typ.startswith('array_1d'):
         da = _curve(g['data'][()], g['errors'][()], a['xlabel'], [float(v) for v in a['xlimits'].split()])
@@ -156,11 +156,12 @@ def load_events(path, source, sample):
     return ev
 
 
-def event_figures(ev, threed=False):
-    ''' pixel intensity map (3D scatter in Jupyter, z-x top view otherwise) + time-of-flight and wavelength spectra '''
-    pix = ev.bins.sum()
+def event_figures(ev, threed=False, size=0.015):
+    ''' pixel intensity map (3D scatter in Jupyter, z-x top view otherwise) + time-of-flight and
+        wavelength spectra. size: 3D marker size in m, roughly the detector pixel pitch '''
+    pix = ev.hist()
     if threed:
-        det = pp.scatter3d(pix, pos='position', cbar=True, title='pixel intensity')
+        det = pp.scatter3d(pix, pos='position', size=size, cbar=True, title='pixel intensity')
     else:
         for ax in 'xz':
             pix.coords[ax] = pix.coords['position'].fields.__getattribute__(ax)
