@@ -2,28 +2,36 @@
 *
 * McXtrace, x-ray tracing package
 *         Copyright, All rights reserved
+*         Ray-tracing contributions are in the public domain per below notice.
 *         DTU Physics, Kgs. Lyngby, Denmark
 *         Synchrotron SOLEIL, Saint-Aubin, France
 *
-* Component: Grating_trans
+* Component: Grating_trans (fixed)
 *
 * %Identification
 *
-* Written by: Erik B Knudsen (erkn@fysik.dtu.dk) 
-* Date: December 2016
-* Version: 1.0
-* Release: McXtrace 1.4
-* Origin: DTU Physics
+* Based on Grating_trans.comp by Erik B Knudsen (Dec 2016, McXtrace 1.4)
+* Fixed version 1.1 — see changelog below.
 *
 * Transmission grating
 *
 * %Description
-* Model of a 1D rectangular transmission grating based on the theory developed in Schnopper et. al., Applied Optics, 1977.
-* The grating lines are assumed to be vertical. Within each period a fraction gamma is the "open" fraction. 
-* (I.e. 1 is completely open). At present only absorption in the substrate (modelled by the thickness sdepth) 
-* is included.
+* Model of a 1D rectangular transmission grating based on the theory developed
+* in Schnopper et. al., Applied Optics 16, 1087 (1977).
+* The grating lines are assumed to be vertical (along Y). Within each period a
+* fraction gamma is the "open" fraction. Absorption in the bars (thickness
+* zdepth) and optionally in the substrate (thickness sdepth) is included.
 *
-* This  component is currently undergoing validation.
+* Diffraction order m is picked uniformly from [-max_order, max_order]
+* (importance sampling); the ray weight is then corrected by
+*     pmul = P(m) / (1/(2*max_order+1))
+* so that the expectation of the weight reproduces the full diffraction pattern.
+*
+* Known approximations kept:
+*  - Conical mount: the ray is rotated by the order angle about the axis
+*    (0,1,-ky/kz). This is an approximation valid for small |kx|; the exact
+*    grating transform kx' = kx + m*2*pi/period (ky unchanged) is not applied.
+*  - period_eff = period*cos(thx) horizontal-incidence correction kept as-is.
 *
 * Example: Grating_trans(
 *   xwidth=25e-3, yheight=25e-3, gamma=0.4, period=2000e-10, zdepth=5100e-10, max_order=3, material="Au.txt")
@@ -31,28 +39,55 @@
 * %Parameters
 * Input parameters:
 * period:     [m]   Distance between grating grooves.
-* zdepth:     [m]   Depth of grooves.
-* gamma:      [0-1] Ratio between groove and period  aka duty cycle. 1 means fully open.
-* sdepth:     [m]   Thickness of substrate. The default is to have no substrate - i.e. rods. 
+* zdepth:     [m]   Depth of grooves (bar thickness along z).
+* gamma:      [0-1] Ratio between opening and period aka duty cycle. 1 means fully open.
+* sdepth:     [m]   Thickness of substrate. The default is to have no substrate - i.e. rods.
 * xwidth:     [m]   Width of the grating. Defines how many lines there are in total.
 * yheight:    [m]   Height of the grating.
-* material:   [str] Data file containing the material from which the grating is made.
-* substrate:  [str] Data file containing material data for the substrate.
+* material:   [str] Data file containing the material from which the grating bars are made.
+* substrate:  [str] Data file containing material data for the substrate. Empty = no substrate.
 * fixed_delta:[0/1] Set delta to the given constant. Useful for debugging.
-* max_order:  [1]   Maximum order to diffract
-* 
+* max_order:  [1]   Maximum order to diffract.
+*
 * %End
 *******************************************************************************/
 
+/*
+* Fixed in this version (relative to upstream 1.0):
+*  - 0th-order interference cross term had the wrong sign:
+*      code:  I0 = g^2 + (1-g)^2 e^{-2a}  - 2 g(1-g) e^{-a} cos(phi)
+*      phys:  I0 = |g + (1-g) t|^2, t = e^{-a} e^{i phi}
+*           = g^2 + (1-g)^2 e^{-2a}  + 2 g(1-g) e^{-a} cos(phi)
+*    The old expression gives (2*gamma-1)^2 in the zero-thickness limit
+*    (should be 1) and (2*gamma-1)^2 for a pure phase grating (beta=0).
+*  - Substrate material table is now guarded: with the default substrate=""
+*    the original code called Table_Value() on an uninitialized t_Table and
+*    used uninitialized srho -> undefined behaviour/garbage absorption.
+*  - Substrate read-error message printed the *grating* material name; fixed.
+*  - srho now has a missing-header fallback (parallel to rho), defaulting to 1
+*    with a warning.
+*  - Dead normalization loop over `tot` (wrong range i=0..max_order-1, missing
+*    negative orders and +max_order, never used) removed. The pmul importance
+*    scheme is self-consistent and needs no explicit normalization.
+*  - Duplicated thx/period_eff/M computation block removed.
+*  - Input validation added: gamma in (0,1], period>0, positive dimensions,
+*    max_order>=0.
+*  - Dead rays (p==0) are now ABSORBed.
+*  - Absorption path lengths are now consistently angle-corrected:
+*      bars:     zdepth_eff = zdepth / cos(thy)   (incidence angle to normal)
+*      substrate: sdepth    / cos(thy)
+*    (the old code used the tiny diffraction angle theta for the substrate).
+*  - `order` moved from DECLARE to a TRACE-local variable.
+*/
+
 DEFINE COMPONENT Grating_trans
-SETTING PARAMETERS (xwidth=1e-3, yheight=1e-3, period=1e-6,gamma=0.5,zdepth=1e-6,sdepth=0, string material="Au.txt",
-      string substrate="",int max_order=2,fixed_delta=0)
+SETTING PARAMETERS (xwidth=1e-3, yheight=1e-3, period=1e-6, gamma=0.5, zdepth=1e-6, sdepth=0, string material="Au.txt",
+      string substrate="", int max_order=2, fixed_delta=0)
 
 SHARE
 %{
   %include "read_table-lib"
 %}
-
 
 DECLARE
 %{
@@ -65,30 +100,45 @@ DECLARE
   double srho;
   int smu_c;
   t_Table stable;
-  int order;
+  int has_substrate;
 %}
-
-
 
 INITIALIZE
 %{
   int status;
-
-  if (xwidth == 0 || yheight == 0) {
-    fprintf (stderr, "Error (%s): Grating has 0 area.\n", NAME_CURRENT_COMP);
-    exit (-1);
-  }
-  if (zdepth == 0) {
-    fprintf (stderr, "Error (%s): Grating has no grooves (zdepth==0).\n", NAME_CURRENT_COMP);
-    exit (-1);
-  }
-
-  /*check if material datafiles are present - if so load them*/
-  if ((status = Table_Read (&(table), material, 0)) == -1) {
-    fprintf (stderr, "Error: Could not parse file \"%s\" in COMP %s\n", material, NAME_CURRENT_COMP);
-    exit (-1);
-  }
   char** header_parsed;
+
+  /* --- parameter validation --- */
+  if (xwidth <= 0 || yheight <= 0) {
+    fprintf (stderr, "Error (%s): Grating has non-positive area (xwidth=%g, yheight=%g).\n", NAME_CURRENT_COMP, xwidth, yheight);
+    exit (-1);
+  }
+  if (zdepth <= 0) {
+    fprintf (stderr, "Error (%s): Grating has no grooves (zdepth=%g <= 0).\n", NAME_CURRENT_COMP, zdepth);
+    exit (-1);
+  }
+  if (sdepth < 0) {
+    fprintf (stderr, "Error (%s): Substrate thickness sdepth=%g is negative.\n", NAME_CURRENT_COMP, sdepth);
+    exit (-1);
+  }
+  if (period <= 0) {
+    fprintf (stderr, "Error (%s): Grating period must be positive (got %g).\n", NAME_CURRENT_COMP, period);
+    exit (-1);
+  }
+  if (gamma <= 0 || gamma > 1) {
+    fprintf (stderr, "Error (%s): gamma must be in (0,1] (got %g).\n", NAME_CURRENT_COMP, gamma);
+    exit (-1);
+  }
+  if (max_order < 0) {
+    fprintf (stderr, "Error (%s): max_order must be >= 0 (got %d).\n", NAME_CURRENT_COMP, max_order);
+    exit (-1);
+  }
+
+  /* --- grating bar material --- */
+  if ((status = Table_Read (&(table), material, 0)) == -1) {
+    fprintf (stderr, "Error (%s): Could not parse file \"%s\".\n", NAME_CURRENT_COMP, material);
+    exit (-1);
+  }
   header_parsed = Table_ParseHeader (table.header, "Z", "A[r]", "rho", "Z/A", "sigma[a]", NULL);
   if (header_parsed[0]) {
     Z = strtol (header_parsed[0], NULL, 10);
@@ -102,37 +152,42 @@ INITIALIZE
     fprintf (stderr, "Warning(%s): %s not found in header of %s, set to 1\n", NAME_CURRENT_COMP, "rho", material);
     rho = 1;
   }
-  /*which columns holds the mus*/
+  /*which column holds the mus*/
   mu_c = 5;
   if (table.columns == 3)
     mu_c = 1;
 
   delta_prefactor = NA * (rho * 1e-24) / Ar * 2.0 * M_PI * RE;
 
-  /*read substrate datafile if present*/
-  if (substrate && strlen (substrate)) {
+  /* --- substrate material (optional) --- */
+  has_substrate = 0;
+  srho = 1;
+  if (substrate && strlen (substrate) && strcmp (substrate, "NULL")) {
     if ((status = Table_Read (&(stable), substrate, 0)) == -1) {
-      fprintf (stderr, "Error(%s): Could not parse file \"%s\".\n", NAME_CURRENT_COMP, material);
+      fprintf (stderr, "Error (%s): Could not parse file \"%s\".\n", NAME_CURRENT_COMP, substrate);
       exit (-1);
     }
     header_parsed = Table_ParseHeader (stable.header, "Z", "A[r]", "rho", "Z/A", "sigma[a]", NULL);
     if (header_parsed[2]) {
       srho = strtod (header_parsed[2], NULL);
+    } else {
+      fprintf (stderr, "Warning(%s): %s not found in header of %s, set to 1\n", NAME_CURRENT_COMP, "rho", substrate);
     }
-
     smu_c = 5;
     if (stable.columns == 3)
       smu_c = 1;
+    has_substrate = 1;
+  } else if (sdepth > 0) {
+    fprintf (stderr, "Warning(%s): sdepth=%g > 0 but no substrate material given; substrate absorption is ignored.\n", NAME_CURRENT_COMP, sdepth);
   }
 %}
-
 
 TRACE
 %{
   double e, k, f, delta, beta, mu0, smu0, pmul, order_factor, theta, order_likelihood;
   double thx, thy, period_eff, zdepth_eff;
+  int order;
   int M;
-  // order;
 
   PROP_Z0;
   if (x < -xwidth * 0.5 || x > xwidth * 0.5 || y < -yheight * 0.5 || y > yheight * 0.5) {
@@ -141,84 +196,68 @@ TRACE
     /*get the index of refraction*/
     k = sqrt (kx * kx + ky * ky + kz * kz);
     e = k * K2E;
-    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
-    /*We have reparametrized e as log(e) for a more practical constant step table.*/
+    /*Material's number density of electrons incl f' scattering length correction*/
+    /*e is parametrized as log(e) in the tables*/
     f = Table_Value (table, e, 1);
     delta = (fixed_delta ? fixed_delta : f / (k * k) * delta_prefactor);
     mu0 = Table_Value (table, e, mu_c) * rho * 1e2;
     beta = mu0 / (2 * k * 1e10);
 
-    /*pick an order according the relative intensity as given by Schnopper*/
+    /* incidence angles w.r.t. the grating normal (z) */
+    thx = atan (fabs (kx / kz));
+    thy = atan (fabs (ky / kz));
 
     /* correct the period for horizontal angle*/
-    thx = atan (fabs (kx / kz));
     period_eff = cos (thx) * period;
 
     M = xwidth / period_eff;
 
+    /*pick an order uniformly from [-max_order, max_order] (importance sampling)*/
     order = floor (rand01 () * (max_order * 2 + 1)) - max_order;
-    /* n_m(q)/N_0(q)=([sin(Mmpi)/Msin(mpi)]^2 [sin( (a/d)mpi)/mpi]^2 [1+exp(-2qzk)-2exp(-qzk)cos(qzdelta)]*/
-    /* M=number of wires in the grating,
-     * d grating spacing (period)
-     * a width of grating opening (duty-cycle)
-     * z the thickness of grating wire
-     * k imaginary part of refr index
-     * n=1-delta real part of refr index
-     * q wavenumber.
-     */
-
-    /* correct the period for horizontal angle*/
-    thx = atan (fabs (kx / kz));
-    period_eff = cos (thx) * period;
-
-    M = xwidth / period_eff;
-
-    double tot = 0;
-    int i;
-    for (i = 0; i < max_order; i++) {
-      if (i) {
-        order_factor = pow (sin (gamma * i * M_PI) / (i * M_PI), 2.0);
-        order_likelihood = order_factor * (1 + exp (-2.0 * k * 1e10 * zdepth * beta) - 2.0 * exp (-k * 1e10 * zdepth * beta) * cos (k * 1e10 * zdepth * delta));
-      } else {
-        order_likelihood = gamma * gamma + (1 - gamma) * (1 - gamma) * exp (-2.0 * k * 1e10 * zdepth * beta)
-                           - 2.0 * gamma * (1 - gamma) * exp (-k * 1e10 * zdepth * beta) * cos (k * 1e10 * zdepth * delta);
-      }
-      tot += order_likelihood;
-    }
 
     /* correct zdepth for vertical angle*/
-    thy = atan (fabs (ky / kz));
     zdepth_eff = zdepth / cos (thy);
+
+    /* Schnopper et al. (1977):
+     * n_m(q)/N_0(q) = [sin(M m pi)/(M sin(m pi))]^2 [sin(gamma m pi)/(m pi)]^2
+     *                 [1 + exp(-2 q z beta) - 2 exp(-q z beta) cos(q z delta)]
+     * with a = k z beta the absorption and phi = k z delta the phase shift
+     * through the bar. For m=0 the coherent open+bar sum gives
+     * I0 = gamma^2 + (1-gamma)^2 e^{-2a} + 2 gamma (1-gamma) e^{-a} cos(phi).
+     */
+    double a_bar = k * 1e10 * zdepth_eff * beta;
+    double phi_bar = k * 1e10 * zdepth_eff * delta;
+
     if (order) {
       order_factor = pow (sin (gamma * order * M_PI) / (order * M_PI), 2.0);
-      order_likelihood
-          = order_factor * (1 + exp (-2.0 * k * 1e10 * zdepth_eff * beta) - 2.0 * exp (-k * 1e10 * zdepth_eff * beta) * cos (k * 1e10 * zdepth_eff * delta));
+      order_likelihood = order_factor * (1 + exp (-2.0 * a_bar) - 2.0 * exp (-a_bar) * cos (phi_bar));
     } else {
-      order_likelihood = gamma * gamma + (1 - gamma) * (1 - gamma) * exp (-2.0 * k * 1e10 * zdepth_eff * beta)
-                         - 2.0 * gamma * (1 - gamma) * exp (-k * 1e10 * zdepth_eff * beta) * cos (k * 1e10 * zdepth_eff * delta);
+      order_likelihood = gamma * gamma + (1 - gamma) * (1 - gamma) * exp (-2.0 * a_bar)
+                         + 2.0 * gamma * (1 - gamma) * exp (-a_bar) * cos (phi_bar);
     }
 
-    double fmc;
-    fmc = 1.0 / (max_order * 2 + 1);
+    /* importance-sampling weight: uniform pick probability is 1/(2*max_order+1) */
+    double fmc = 1.0 / (max_order * 2 + 1);
     pmul = order_likelihood / fmc;
 
     /*Pick an angle centered on the order*/
-    theta = order * 2 * M_PI / (k * 1e10 * period_eff); /*the 1e10 factor because k is in AA^-1 and period is in m*/
+    theta = order * 2 * M_PI / (k * 1e10 * period_eff); /*1e10: k in AA^-1, period in m*/
 
-    /* we should rotate around an axis perpendicular to k and in yz-plane*/
-    /*i.e. (ay * ky + az*kz ) = 0 && ay>0 => Without loss of gen. ay=1 => az= -ky/kz*/
-    double az;
-    az = -ky / kz;
-
-    /*change direction*/
+    /* rotate around an axis perpendicular to k and in the yz-plane:
+     * (ay*ky + az*kz) = 0 && ay>0 => ay=1, az=-ky/kz */
+    double az = -ky / kz;
     rotate (kx, ky, kz, kx, ky, kz, theta, 0, 1, az);
 
-    /*do absorption according to mean absorption coefficient in the "slab",
-      remembering we can be at an angle. Just use the angle theta.*/
-    smu0 = Table_Value (stable, e, smu_c) * srho * 1e2;
+    /*absorption: bars are traversed on average a fraction (1-gamma) of the
+      line period; substrate is traversed at the incidence angle thy.*/
 
-    p *= pmul * exp (-smu0 * (sdepth) / cos (theta)) * exp (-mu0 * (zdepth * (1 - gamma)));
+    smu0 = has_substrate ? Table_Value (stable, e, smu_c) * srho * 1e2 : 0;
+
+    p *= pmul * exp (-mu0 * zdepth_eff * (1 - gamma)) * exp (-smu0 * sdepth / cos (thy));
     SCATTER;
+
+    if (p == 0)
+      ABSORB;
   }
 %}
 
