@@ -801,7 +801,7 @@ FILE *mcnew_file(char *name, char *ext, int *exists)
 #ifdef USE_NEXUS
   if (mcformat && strcasestr(mcformat, "NeXus")) {
     /* NXhandle nxhandle is defined in the .h with USE_NEXUS */
-    NXaccess mode = (*exists ? NXACC_CREATE5 | NXACC_RDWR : NXACC_CREATE5);
+    NXaccess mode = (*exists ? NXACC_RDWR : NXACC_CREATE5);
 
     if (NXopen(mem, mode, &nxhandle) != NX_OK)
       file = NULL;
@@ -1333,6 +1333,9 @@ void siminfo_out(char *format, ...)
 {
   va_list ap;
 
+#ifdef USE_NEXUS
+  if (siminfo_file == (FILE*)&nxhandle) return; /* NeXus: not a FILE */
+#endif
   if(siminfo_file && !mcdisable_output_files)
   {
     va_start(ap, format);
@@ -1568,6 +1571,313 @@ static char *strcpy_valid(char *valid, char *original)
 
 #ifdef USE_NEXUS
 
+/* ========================================================================== */
+
+/*         NeXus API subset (napi.h) on native HDF5, see mccode-r.h           */
+
+/* ========================================================================== */
+
+NXhandle nxhandle = NULL;
+
+/* The open groups are a stack of HDF5 ids, so names are resolved by HDF5
+   relative to the current group: no path buffers, and a failed open leaves
+   the stack unchanged. At most one data set is open (napi semantics). */
+#define MCNX_MAXDEPTH 32
+struct mcnx_file { hid_t fid, d, g[MCNX_MAXDEPTH]; int depth; };
+static int mcnx_quiet = 0; /* nesting depth of NXMDisableErrorReporting (napi5 did not nest) */
+
+void NXMDisableErrorReporting(void) { mcnx_quiet++; }
+void NXMEnableErrorReporting(void)  { if (mcnx_quiet) mcnx_quiet--; }
+
+static NXstatus mcnx_error(const char *what, const char *name)
+{
+  if (!mcnx_quiet) fprintf(stderr, "NeXus error: %s '%s'\n", what, name ? name : "");
+  return(NX_ERROR);
+}
+
+/* current group, the file id standing for the root group */
+static hid_t mcnx_loc(struct mcnx_file *f) { return f->depth ? f->g[f->depth-1] : f->fid; }
+
+static hid_t mcnx_type(int type)
+{
+  return type == NX_INT32 ? H5T_NATIVE_INT : type == NX_FLOAT64 ? H5T_NATIVE_DOUBLE : -1;
+}
+
+/* scalar attribute, replacing an existing one (napi5) */
+static herr_t mcnx_attr(hid_t obj, const char *name, hid_t type, const void *data)
+{
+  hid_t  space = H5Screate(H5S_SCALAR), a;
+  herr_t ret   = -1;
+  if (H5Aexists_by_name(obj, ".", name, H5P_DEFAULT) > 0)
+    H5Adelete_by_name(obj, ".", name, H5P_DEFAULT);
+  a = H5Acreate_by_name(obj, ".", name, type, space, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  if (a >= 0) { ret = H5Awrite(a, type, data); H5Aclose(a); }
+  H5Sclose(space);
+  return(ret);
+}
+
+/* fixed-length string attribute without terminating NUL; HDF5 has no empty fixed strings */
+static herr_t mcnx_attr_str(hid_t obj, const char *name, const char *value, size_t len)
+{
+  hid_t  t;
+  herr_t ret;
+  if (!len) return(-1);
+  t = H5Tcopy(H5T_C_S1);
+  H5Tset_size(t, len);
+  ret = mcnx_attr(obj, name, t, value);
+  H5Tclose(t);
+  return(ret);
+}
+
+NXstatus NXopen(const char *filename, NXaccess am, NXhandle *h)
+{
+  struct mcnx_file *f = calloc(1, sizeof(*f));
+  hid_t fapl;
+
+  *h = NULL;
+  if (!f) return(mcnx_error("out of memory opening", filename));
+  H5Eset_auto2(H5E_DEFAULT, NULL, NULL); /* failures are reported here, as napi5 did */
+  fapl = H5Pcreate(H5P_FILE_ACCESS);
+  H5Pset_fclose_degree(fapl, H5F_CLOSE_STRONG); /* H5Fclose also closes ids left open */
+  f->fid = am == NXACC_CREATE5 ? H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, fapl)
+                               : H5Fopen(filename, H5F_ACC_RDWR, fapl);
+  H5Pclose(fapl);
+  if (f->fid < 0) { free(f); return(mcnx_error("cannot open file", filename)); }
+  if (am == NXACC_CREATE5) { /* root attributes, as written by napi5 */
+    unsigned maj, min, rel;
+    char     ver[32], date[64];
+    time_t   t = time(NULL);
+    size_t   n = strftime(date, sizeof(date), "%Y-%m-%dT%H:%M:%S%z", localtime(&t));
+    if (n == 24) { memmove(date+23, date+22, 3); date[22] = ':'; n = 25; } /* +hhmm -> +hh:mm */
+    H5get_libversion(&maj, &min, &rel);
+    snprintf(ver, sizeof(ver), "%u.%u.%u", maj, min, rel);
+    mcnx_attr_str(f->fid, "NeXus_version", "4.4.2", 5); /* ponytail: last napi version, kept for readers checking it */
+    mcnx_attr_str(f->fid, "file_name",     filename, strlen(filename));
+    mcnx_attr_str(f->fid, "HDF5_Version",  ver, strlen(ver));
+    mcnx_attr_str(f->fid, "file_time",     date, n); /* no NX_class: the napi 4.4.3 builds in use never wrote it */
+  }
+  *h = f;
+  return(NX_OK);
+}
+
+NXstatus NXclose(NXhandle *h)
+{
+  struct mcnx_file *f = *h;
+  herr_t ret;
+  if (!f) return(NX_ERROR);
+  ret = H5Fclose(f->fid); /* closes open groups/data set too (H5F_CLOSE_STRONG) */
+  free(f);
+  *h = NULL;
+  return(ret < 0 ? mcnx_error("cannot close file", NULL) : NX_OK);
+}
+
+NXstatus NXmakegroup(NXhandle h, const char *name, const char *nxclass)
+{
+  struct mcnx_file *f = h;
+  hid_t  g = H5Gcreate2(mcnx_loc(f), name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  herr_t ret;
+  if (g < 0) return(mcnx_error("could not create group", name));
+  ret = mcnx_attr_str(g, "NX_class", nxclass, strlen(nxclass));
+  H5Gclose(g);
+  return(ret < 0 ? mcnx_error("failed to store class of group", name) : NX_OK);
+}
+
+/* ponytail: the NX_class of the group is not checked against nxclass (napi5 did) */
+NXstatus NXopengroup(NXhandle h, const char *name, const char *nxclass)
+{
+  struct mcnx_file *f = h;
+  hid_t g;
+  if (f->depth == MCNX_MAXDEPTH) return(mcnx_error("groups nested too deep at", name));
+  g = H5Gopen2(mcnx_loc(f), name, H5P_DEFAULT);
+  if (g < 0) return(mcnx_error("group does not exist", name));
+  f->g[f->depth++] = g;
+  return(NX_OK);
+}
+
+NXstatus NXclosegroup(NXhandle h)
+{
+  struct mcnx_file *f = h;
+  if (!f->depth) return(mcnx_error("no group open to close", NULL)); /* napi5: silent */
+  H5Gclose(f->g[--f->depth]);
+  return(NX_OK);
+}
+
+NXstatus NXcompmakedata64(NXhandle h, const char *name, int type, int rank,
+                          int64_t dims[], int comp, int64_t chunk[])
+{
+  struct mcnx_file *f = h;
+  hsize_t cur[H5S_MAX_RANK], max[H5S_MAX_RANK], ch[H5S_MAX_RANK];
+  hid_t   t, s, p, d;
+  int     i, unlimited = 0;
+  int     lzw   = comp == NX_COMP_LZW || comp/100 == NX_COMP_LZW;
+  int     level = comp == NX_COMP_LZW ? 6 : comp % 100;
+  double  bytes;
+
+  if (!f->depth || rank < 1 || rank > H5S_MAX_RANK
+   || (type != NX_CHAR && mcnx_type(type) < 0))
+    return(mcnx_error("cannot create data set (no group, rank or type)", name));
+  for (i = 0; i < rank; i++) {
+    unlimited |= dims[i] <= 0;
+    cur[i] = dims[i] > 0 ? dims[i] : 1;
+    max[i] = dims[i] > 0 ? dims[i] : H5S_UNLIMITED;
+    ch[i]  = chunk[i] > 0 ? chunk[i] : 1;
+  }
+  if (type == NX_CHAR) { /* napi5: the last dimension is the string length */
+    t = H5Tcopy(H5T_C_S1);
+    H5Tset_size(t, cur[rank-1]);
+    cur[rank-1] = max[rank-1] = ch[rank-1] = 1;
+  } else t = H5Tcopy(mcnx_type(type));
+  p = H5Pcreate(H5P_DATASET_CREATE);
+  if (lzw || unlimited) {
+    /* HDF5 refuses chunks of 4 GiB or more: napi5 then lost the whole data set */
+    for (bytes = H5Tget_size(t), i = 0; i < rank; i++) bytes *= ch[i];
+    if (bytes >= 4294967295.0) ch[0] = ch[0]/(hsize_t)(bytes/4294967295.0 + 1) + 1;
+    H5Pset_chunk(p, rank, ch);
+    if (lzw) { H5Pset_shuffle(p); H5Pset_deflate(p, level); }
+  }
+  s = H5Screate_simple(rank, cur, max);
+  d = H5Dcreate2(mcnx_loc(f), name, t, s, H5P_DEFAULT, p, H5P_DEFAULT);
+  H5Sclose(s); H5Pclose(p); H5Tclose(t);
+  if (d < 0) return(mcnx_error("could not create data set", name));
+  H5Dclose(d);
+  return(NX_OK);
+}
+
+NXstatus NXcompmakedata(NXhandle h, const char *name, int type, int rank, int dims[], int comp, int chunk[])
+{
+  int64_t d[H5S_MAX_RANK], c[H5S_MAX_RANK];
+  int i;
+  for (i = 0; i < rank && i < H5S_MAX_RANK; i++) { d[i] = dims[i]; c[i] = chunk[i]; }
+  return(NXcompmakedata64(h, name, type, rank, d, comp, c));
+}
+
+NXstatus NXmakedata(NXhandle h, const char *name, int type, int rank, int dims[])
+{
+  return(NXcompmakedata(h, name, type, rank, dims, NX_COMP_NONE, dims));
+}
+
+NXstatus NXopendata(NXhandle h, const char *name)
+{
+  struct mcnx_file *f = h;
+  if (f->d) H5Dclose(f->d);
+  f->d = H5Dopen2(mcnx_loc(f), name, H5P_DEFAULT);
+  if (f->d < 0) { f->d = 0; return(mcnx_error("data set not found", name)); }
+  return(NX_OK);
+}
+
+NXstatus NXclosedata(NXhandle h)
+{
+  struct mcnx_file *f = h;
+  if (!f->d) return(mcnx_error("no data set open to close", NULL));
+  H5Dclose(f->d);
+  f->d = 0;
+  return(NX_OK);
+}
+
+/* write data with the type of the data set (napi5); only used with fixed-size data sets */
+NXstatus NXputdata(NXhandle h, const void *data)
+{
+  struct mcnx_file *f = h;
+  hid_t  t;
+  herr_t ret;
+  if (!f->d) return(mcnx_error("no data set open to write", NULL));
+  t   = H5Dget_type(f->d);
+  ret = H5Dwrite(f->d, t, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+  H5Tclose(t);
+  return(ret < 0 ? mcnx_error("failure to write data", NULL) : NX_OK);
+}
+
+/* write a slab, extending unlimited dimensions as needed */
+NXstatus NXputslab64(NXhandle h, const void *data, const int64_t start[], const int64_t size[])
+{
+  struct mcnx_file *f = h;
+  hsize_t s0[H5S_MAX_RANK], n[H5S_MAX_RANK], ext[H5S_MAX_RANK], max[H5S_MAX_RANK];
+  hid_t   fs, ms, t;
+  herr_t  ret = -1;
+  int     i, rank, grow = 0;
+
+  if (!f->d) return(mcnx_error("no data set open to write", NULL));
+  fs   = H5Dget_space(f->d);
+  rank = H5Sget_simple_extent_dims(fs, ext, max);
+  for (i = 0; i < rank; i++) {
+    s0[i] = start[i]; n[i] = size[i];
+    if (max[i] == H5S_UNLIMITED && s0[i] + n[i] > ext[i]) { ext[i] = s0[i] + n[i]; grow = 1; }
+  }
+  if (grow) { H5Sclose(fs); H5Dset_extent(f->d, ext); fs = H5Dget_space(f->d); }
+  ms = H5Screate_simple(rank, n, NULL);
+  t  = H5Dget_type(f->d);
+  if (H5Sselect_hyperslab(fs, H5S_SELECT_SET, s0, NULL, n, NULL) >= 0)
+    ret = H5Dwrite(f->d, t, ms, fs, H5P_DEFAULT, data);
+  H5Tclose(t); H5Sclose(ms); H5Sclose(fs);
+  return(ret < 0 ? mcnx_error("writing slab failed", NULL) : NX_OK);
+}
+
+/* attribute of the open data set, else of the current group (root included) */
+NXstatus NXputattr(NXhandle h, const char *name, const void *data, int len, int type)
+{
+  struct mcnx_file *f = h;
+  hid_t  obj = f->d ? f->d : mcnx_loc(f);
+  herr_t ret = type == NX_CHAR ? mcnx_attr_str(obj, name, data, len > 0 ? len : 0)
+             : mcnx_type(type) >= 0 ? mcnx_attr(obj, name, mcnx_type(type), data) : -1;
+  return(ret < 0 ? mcnx_error("attribute cannot be created", name) : NX_OK);
+}
+
+NXstatus NXgetinfo64(NXhandle h, int *rank, int64_t dims[], int *type)
+{
+  struct mcnx_file *f = h;
+  hsize_t d[H5S_MAX_RANK];
+  hid_t   s, t;
+  int     i;
+  if (!f->d) return(mcnx_error("no data set open", NULL));
+  s = H5Dget_space(f->d); t = H5Dget_type(f->d);
+  *rank = H5Sget_simple_extent_dims(s, d, NULL);
+  for (i = 0; i < *rank; i++) dims[i] = d[i];
+  /* ponytail: only the types McCode writes; napi5 also mapped sizes/signedness */
+  *type = H5Tget_class(t) == H5T_STRING ? NX_CHAR : H5Tget_class(t) == H5T_INTEGER ? NX_INT32 : NX_FLOAT64;
+  H5Tclose(t); H5Sclose(s);
+  return(NX_OK);
+}
+
+/* number of items in the current group; name/class only for the root (all McCode uses) */
+NXstatus NXgetgroupinfo(NXhandle h, int *n, NXname name, NXname nxclass)
+{
+  struct mcnx_file *f = h;
+  H5G_info_t info;
+  if (H5Gget_info(mcnx_loc(f), &info) < 0) return(mcnx_error("cannot get group info", NULL));
+  *n = (int)info.nlinks;
+  strcpy(name,    f->depth ? "" : "root");
+  strcpy(nxclass, f->depth ? "" : "NXroot");
+  return(NX_OK);
+}
+
+NXstatus NXgetgroupID(NXhandle h, NXlink *link)
+{
+  struct mcnx_file *f = h;
+  ssize_t len;
+  if (!f->depth) return(NX_ERROR);
+  len = H5Iget_name(f->g[f->depth-1], link->targetPath, sizeof(link->targetPath));
+  if (len <= 0 || len >= (ssize_t)sizeof(link->targetPath))
+    return(mcnx_error("group path too long to link", NULL));
+  link->linkType = 0;
+  return(NX_OK);
+}
+
+/* hard link to link->targetPath in the current group, and 'target' attribute on it */
+NXstatus NXmakelink(NXhandle h, NXlink *link)
+{
+  struct mcnx_file *f = h;
+  const char *item = strrchr(link->targetPath, '/');
+  hid_t  obj;
+  herr_t ret;
+  if (!f->depth || !item) return(mcnx_error("cannot link", link->targetPath));
+  H5Lcreate_hard(f->fid, link->targetPath, mcnx_loc(f), item+1, H5P_DEFAULT, H5P_DEFAULT); /* an existing link is kept (napi5) */
+  obj = H5Oopen(f->fid, link->targetPath, H5P_DEFAULT);
+  if (obj < 0) return(mcnx_error("link target does not exist", link->targetPath));
+  ret = mcnx_attr_str(obj, "target", link->targetPath, strlen(link->targetPath));
+  H5Oclose(obj);
+  return(ret < 0 ? mcnx_error("cannot set link target", link->targetPath) : NX_OK);
+}
+
 /* name of the NXentry opened by mcinfo_out_nexus (used by mclist_vds_write) */
 static char mcnxentry[CHAR_BUF_LENGTH] = "entry1";
 
@@ -1582,47 +1892,39 @@ static char mcnxentry[CHAR_BUF_LENGTH] = "entry1";
 
 /*******************************************************************************
 * nxstr: output a tag=value data set (char) in NeXus/current group
-*   when 'format' is larger that 1024 chars it is used as value for the 'tag'
-*   else the value is assembled with format and following arguments.
+*   the value is assembled with format and following arguments: a string
+*   value must be passed as nxstr(.., "%s", value). Empty values are skipped.
 *   type='d' -> data set
 *        'a' -> attribute for current data set
 *******************************************************************************/
-static int nxstr(char type, NXhandle *f, char *tag, char *format, ...)
+static int nxstr(char type, NXhandle f, char *tag, char *format, ...)
 {
   va_list ap;
-  char value[CHAR_BUF_LENGTH];
-  int  i;
-  int  ret=NX_OK;
+  char   *value;
+  int     len, ret;
 
   if (!tag || !format || !strlen(tag) || !strlen(format)) return(NX_OK);
 
   /* assemble the value string */
-  if (strlen(format) < CHAR_BUF_LENGTH) {
-    va_start(ap, format);
-    ret = vsnprintf(value, CHAR_BUF_LENGTH, format, ap);
-    va_end(ap);
-
-    i = strlen(value);
-  } else {
-    i = strlen(format);
-  }
+  va_start(ap, format);
+  len = vsnprintf(NULL, 0, format, ap);
+  va_end(ap);
+  if (len <= 0) return(NX_OK);
+  if (!(value = malloc(len+1))) return(NX_ERROR);
+  va_start(ap, format);
+  vsnprintf(value, len+1, format, ap);
+  va_end(ap);
 
   if (type == 'd') {
-    /* open/put/close data set */
-    if (NXmakedata (f, tag, NX_CHAR, 1, &i) != NX_OK) return(NX_ERROR);
-    NXopendata (f, tag);
-    if (strlen(format) < CHAR_BUF_LENGTH)
-      ret = NXputdata  (f, value);
-    else
-      ret = NXputdata  (f, format);
-    NXclosedata(f);
-  } else {
-    if (strlen(format) < CHAR_BUF_LENGTH)
-      ret = NXputattr  (f, tag, value, strlen(value), NX_CHAR);
-    else
-      ret = NXputattr  (f, tag, format, strlen(format), NX_CHAR);
-  }
-
+    /* create/open/put/close data set */
+    ret = NXmakedata(f, tag, NX_CHAR, 1, &len);
+    if (ret == NX_OK && (ret = NXopendata(f, tag)) == NX_OK) {
+      ret = NXputdata(f, value);
+      NXclosedata(f);
+    }
+  } else
+    ret = NXputattr(f, tag, value, len, NX_CHAR);
+  free(value);
   return(ret);
 
 } /* nxstr */
@@ -1639,13 +1941,9 @@ char *mcinfo_readfile(char *filename)
   fseek(f, 0, SEEK_END);
   long fsize = ftell(f);
   rewind(f);
-  char *string = malloc(fsize + 1);
-  if (string) {
-    int n = fread(string, fsize, 1, f);
-    fclose(f);
-
-    string[fsize] = 0;
-  }
+  char *string = fsize >= 0 ? malloc(fsize + 1) : NULL;
+  if (string) string[fread(string, 1, fsize, f)] = 0;
+  fclose(f);
   return(string);
 }
 
@@ -1677,13 +1975,13 @@ static void mcinfo_out_nexus(NXhandle f)
   /* create the main NXentry (mandatory in NeXus) */
   if (NXmakegroup(f, entry0, "NXentry") == NX_OK)
   if (NXopengroup(f, entry0, "NXentry") == NX_OK) {
-    nxprintf(nxhandle, "program_name", MCCODE_STRING);
-    nxprintf(f, "start_time", ctime(&t));
+    nxprintf(f, "program_name", MCCODE_STRING);
+    nxprintf(f, "start_time", "%s", ctime(&t));
     nxprintf(f, "title", "%s%s%s simulation generated by instrument %s",
       dirname && strlen(dirname) ? dirname : ".", MC_PATHSEP_S, siminfo_name,
       instrument_name);
     nxprintattr(f, "program_name", MCCODE_STRING);
-    nxprintattr(f, "instrument",   instrument_name);
+    nxprintattr(f, "instrument", "%s",   instrument_name);
     nxprintattr(f, "simulation",   "%s%s%s",
         dirname && strlen(dirname) ? dirname : ".", MC_PATHSEP_S, siminfo_name);
 
@@ -1706,16 +2004,16 @@ static void mcinfo_out_nexus(NXhandle f)
           if (strlen(string) + strlen(ThisParam) < CHAR_BUF_LENGTH)
             strcat(string, ThisParam);
         }
-        nxprintattr(f, "Parameters",    string);
+        nxprintattr(f, "Parameters", "%s",    string);
         free(string);
       }
 
-      nxprintattr(f, "name",          instrument_name);
-      nxprintf   (f, "name",          instrument_name);
-      nxprintattr(f, "Source",        instrument_source);
+      nxprintattr(f, "name", "%s",          instrument_name);
+      nxprintf   (f, "name", "%s",          instrument_name);
+      nxprintattr(f, "Source", "%s",        instrument_source);
 
-      nxprintattr(f, "Trace_enabled", traceenabled ? "yes" : "no");
-      nxprintattr(f, "Default_main",  defaultmain ?  "yes" : "no");
+      nxprintattr(f, "Trace_enabled", "%s", traceenabled ? "yes" : "no");
+      nxprintattr(f, "Default_main", "%s",  defaultmain ?  "yes" : "no");
 #ifdef MC_EMBEDDED_RUNTIME
       nxprintattr(f, "Embedded_runtime", "yes");
 #else
@@ -1726,9 +2024,9 @@ static void mcinfo_out_nexus(NXhandle f)
       buffer = mcinfo_readfile(instrument_source);
       if (buffer && strlen(buffer)) {
         long length=strlen(buffer);
-        nxprintf (f, "description", buffer);
+        nxprintf (f, "description", "%s", buffer);
         NXopendata(f,"description");
-        nxprintattr(f, "file_name", instrument_source);
+        nxprintattr(f, "file_name", "%s", instrument_source);
         nxprintattr(f, "file_size", "%li", length);
         nxprintattr(f, "MCCODE_STRING", MCCODE_STRING);
         NXclosedata(f);
@@ -1745,14 +2043,15 @@ static void mcinfo_out_nexus(NXhandle f)
         sprintf(IDFfile,"%s%s",instrument_source,".xml");
         buffer = mcinfo_readfile(IDFfile);
         if (buffer && strlen(buffer)) {
-          NXmakegroup (nxhandle, "instrument_xml", "NXnote");
-          NXopengroup (nxhandle, "instrument_xml", "NXnote");
-          nxprintf(f, "data", buffer);
-          nxprintf(f, "description", "IDF.xml file found with instrument %s", instrument_source);
-          nxprintf(f, "type", "text/xml");
-          NXclosegroup(f); /* instrument_xml */
-          free(buffer);
+          NXmakegroup (f, "instrument_xml", "NXnote");
+          if (NXopengroup(f, "instrument_xml", "NXnote") == NX_OK) {
+            nxprintf(f, "data", "%s", buffer);
+            nxprintf(f, "description", "IDF.xml file found with instrument %s", instrument_source);
+            nxprintf(f, "type", "text/xml");
+            NXclosegroup(f); /* instrument_xml */
+          }
         }
+        free(buffer);
         free(IDFfile);
       }
 
@@ -1775,16 +2074,16 @@ static void mcinfo_out_nexus(NXhandle f)
         dirname && strlen(dirname) ? dirname : ".", MC_PATHSEP_S, siminfo_name);
 
       nxprintf   (f, "name",      "%s",     siminfo_name);
-      nxprintattr(f, "Format",    mcformat && strlen(mcformat) ? mcformat : MCCODE_NAME);
+      nxprintattr(f, "Format", "%s",    mcformat && strlen(mcformat) ? mcformat : MCCODE_NAME);
       nxprintattr(f, "URL",       "http://www.mccode.org");
       nxprintattr(f, "program",   MCCODE_STRING);
-      nxprintattr(f, "Instrument",instrument_source);
-      nxprintattr(f, "Trace",     mcdotrace ?     "yes" : "no");
-      nxprintattr(f, "Gravitation",mcgravitation ? "yes" : "no");
+      nxprintattr(f, "Instrument", "%s",instrument_source);
+      nxprintattr(f, "Trace", "%s",     mcdotrace ?     "yes" : "no");
+      nxprintattr(f, "Gravitation", "%s",mcgravitation ? "yes" : "no");
       nxprintattr(f, "Seed",      "%li", mcseed);
       /* written before mccode_main splits the rays over MPI nodes */
       nxprintattr(f, "Ncount_requested", "%llu", mcget_ncount());
-      nxprintattr(f, "Directory", dirname);
+      nxprintattr(f, "Directory", "%s", dirname ? dirname : "");
     #ifdef USE_MPI
       if (mpi_node_count > 1)
         nxprintf(f, "Nodes", "%i",        mpi_node_count);
@@ -1803,7 +2102,7 @@ static void mcinfo_out_nexus(NXhandle f)
               (*mcinputtypes[mcinputtable[i].type].printer)(string, mcinputtable[i].par);
 
             nxprintf(f,  mcinputtable[i].name, "%s", string);
-            nxprintattr(f, mcinputtable[i].name, string);
+            nxprintattr(f, mcinputtable[i].name, "%s", string);
           }
         }
         NXclosegroup(f); /* Param */
@@ -2324,7 +2623,7 @@ static void mccomp_placement_type_nexus(NXhandle nxhandle, char* component, Coor
 		fprintf(stderr, "Warning: could not open Rotation field for component %s\n",component);
 	      }
 	    }
-	    nxprintf(nxhandle, "Component_type", comptype);
+	    nxprintf(nxhandle, "Component_type", "%s", comptype ? comptype : "");
 	    NXclosegroup(nxhandle); // component
 	  } else {
 	    printf("FAILED to open comp data group %s\n",component);
@@ -2369,9 +2668,9 @@ static void mccomp_param_nexus(NXhandle nxhandle, char* component, char* paramet
 	  if (NXopengroup(nxhandle, "parameters", "NXdata") == NX_OK) {
 	    NXmakegroup(nxhandle, parameter, "NXnote");
 	    if (NXopengroup(nxhandle, parameter, "NXnote") == NX_OK) {
-	      nxprintattr(nxhandle, "type", type);
-	      nxprintattr(nxhandle, "default",  defval);
-	      nxprintattr(nxhandle, "value",  value);
+	      nxprintattr(nxhandle, "type", "%s", type ? type : "");
+	      nxprintattr(nxhandle, "default", "%s",  defval ? defval : "");
+	      nxprintattr(nxhandle, "value", "%s",  value ? value : "");
 	      NXclosegroup(nxhandle); // parameter
 	    } else {
 	      printf("FAILED to open parameters %s data group \n",parameter);
@@ -2425,48 +2724,48 @@ mcdatainfo_out_nexus(NXhandle f, MCDETECTOR detector)
 	  if (NXmakegroup(f, data_name, "NXdata") == NX_OK) {
 	    if (NXopengroup(f, data_name, "NXdata") == NX_OK) {
 	      /* output metadata (as attributes) ======================================== */
-	      nxprintattr(f, "Date",       detector.date);
-	      nxprintattr(f, "type",       detector.type);
-	      nxprintattr(f, "Source",     detector.instrument);
-	      nxprintattr(f, "component",  detector.component);
-	      nxprintattr(f, "position",   detector.position);
+	      nxprintattr(f, "Date", "%s",       detector.date);
+	      nxprintattr(f, "type", "%s",       detector.type);
+	      nxprintattr(f, "Source", "%s",     detector.instrument);
+	      nxprintattr(f, "component", "%s",  detector.component);
+	      nxprintattr(f, "position", "%s",   detector.position);
 
-	      nxprintattr(f, "title",      detector.title);
+	      nxprintattr(f, "title", "%s",      detector.title);
 	      nxprintattr(f, !mcget_run_num() || mcget_run_num() >= mcget_ncount() ?
 			  "Ncount" :
-			  "ratio",  detector.ncount);
+			  "ratio", "%s",  detector.ncount);
 
 	      if (strlen(detector.filename)) {
-		nxprintattr(f, "filename", detector.filename);
+		nxprintattr(f, "filename", "%s", detector.filename);
 	      }
 
-	      nxprintattr(f, "statistics", detector.statistics);
-	      nxprintattr(f, "signal",     detector.signal);
-	      nxprintattr(f, "values",     detector.values);
+	      nxprintattr(f, "statistics", "%s", detector.statistics);
+	      nxprintattr(f, "signal", "%s",     detector.signal);
+	      nxprintattr(f, "values", "%s",     detector.values);
 
 	      if (detector.rank >= 1)
 		{
-		  nxprintattr(f, "xvar",     detector.xvar);
-		  nxprintattr(f, "yvar",     detector.yvar);
-		  nxprintattr(f, "xlabel",   detector.xlabel);
-		  nxprintattr(f, "ylabel",   detector.ylabel);
+		  nxprintattr(f, "xvar", "%s",     detector.xvar);
+		  nxprintattr(f, "yvar", "%s",     detector.yvar);
+		  nxprintattr(f, "xlabel", "%s",   detector.xlabel);
+		  nxprintattr(f, "ylabel", "%s",   detector.ylabel);
 		  if (detector.rank > 1) {
-		    nxprintattr(f, "zvar",   detector.zvar);
-		    nxprintattr(f, "zlabel", detector.zlabel);
+		    nxprintattr(f, "zvar", "%s",   detector.zvar);
+		    nxprintattr(f, "zlabel", "%s", detector.zlabel);
 		  }
 		}
 
 	      nxprintattr(f, abs(detector.rank)==1 ?
 			  "xlimits" :
-			  "xylimits", detector.limits);
-	      nxprintattr(f, "variables",
+			  "xylimits", "%s", detector.limits);
+	      nxprintattr(f, "variables", "%s",
 			  strcasestr(detector.format, "list") ? detector.ylabel : detector.variables);
 
 	      NXclosegroup(f); // data_name
 	    }
 	  }
+	  NXclosegroup(f); // output
 	}
-	NXclosegroup(f); // output
 	NXclosegroup(f); // detector.nexuscomp
       }
       NXclosegroup(f); // components
@@ -2505,7 +2804,9 @@ int mcdetector_out_axis_nexus(NXhandle f, char *label, char *var, int rank, long
       axis[i] = min+(max-min)*(i+0.5)/length;
     /* create the data set */
     strcpy_valid(valid, label);
+    NXMDisableErrorReporting(); /* exists when a list buffer was flushed before */
     NXcompmakedata(f, valid, NX_FLOAT64, 1, &dim, NX_COMPRESSION, &dim);
+    NXMEnableErrorReporting();
     /* open it */
     if (NXopendata(f, valid) != NX_OK) {
       fprintf(stderr, "Warning: could not open axis rank %i '%s' (NeXus)\n",
@@ -2516,10 +2817,10 @@ int mcdetector_out_axis_nexus(NXhandle f, char *label, char *var, int rank, long
     }
     /* put the axis and its attributes */
     NXputdata  (f, axis);
-    nxprintattr(f, "long_name",  label);
-    nxprintattr(f, "short_name", var);
+    nxprintattr(f, "long_name", "%s",  label);
+    nxprintattr(f, "short_name", "%s", var);
     NXputattr  (f, "axis",       &rank,     1, NX_INT32);
-    nxprintattr(f, "units",      var);
+    nxprintattr(f, "units", "%s",      var);
     NXputattr  (f, "primary",    &nprimary, 1, NX_INT32);
     NXclosedata(f);
     free(axis);
@@ -2583,7 +2884,7 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
 
   if (strstr(part,"data") || strstr(part, "events")) {
     NXputattr(f, "signal", &signal, 1, NX_INT32);
-    nxprintattr(f, "short_name", strlen(detector.filename) ?
+    nxprintattr(f, "short_name", "%s", strlen(detector.filename) ?
       detector.filename : detector.component);
   }
   nxprintattr(f, "long_name", "%s '%s'", part, detector.title);
@@ -2607,6 +2908,7 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
     strlen(detector.filename) ?
       detector.filename : detector.component);
   NXlink pLink;
+  int    linked = 0;
   /* the NXdetector group has been created in mcinfo_out_nexus (siminfo_init) */
   if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
     if (NXopengroup(f, "components", "NXdata") == NX_OK) {
@@ -2617,7 +2919,7 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
 	  if (NXopengroup(f, data_name, "NXdata") == NX_OK) {
 	    
 	    MPI_MASTER(
-		       nxprintattr(f, "options",
+		       nxprintattr(f, "options", "%s",
 				   strlen(detector.options) ? detector.options : "None");
 		       );
 	    /* write axes, for histogram data sets, not for lists */
@@ -2630,7 +2932,7 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
 					3, detector.p, detector.zmin, detector.zmax); 
 	    } else {
 	      	    MPI_MASTER(
-			       nxprintattr(f, "dataset columns",
+			       nxprintattr(f, "dataset columns", "%s",
 					   strlen(detector.ylabel) ? detector.ylabel : "None");
 		    );
 	    }
@@ -2645,9 +2947,7 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
 	    } else {
 	      mcdetector_out_array_nexus(  f, "events", detector.p1, detector);
 	    }
-	    NXclosegroup(f);
-	    NXopengroup(f, data_name, "NXdata");
-	    NXgetgroupID(nxhandle, &pLink);
+	    linked = NXgetgroupID(f, &pLink) == NX_OK;
 	    NXclosegroup(f);
 	  } /* NXdata data_name*/
 	  NXclosegroup(f);
@@ -2659,9 +2959,9 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
     NXclosegroup(f);
   } /* NXdata instrument */
   
-  if (!strcasestr(detector.format, "pixels")) {
+  if (linked && !strcasestr(detector.format, "pixels")) {
     if (NXopengroup(f, "data", "NXdetector") == NX_OK) {
-      NXmakelink(nxhandle, &pLink);
+      NXmakelink(f, &pLink);
       NXclosegroup(f);
     }
   }
@@ -2701,7 +3001,6 @@ MCDETECTOR mcdetector_out_2D_nexus(MCDETECTOR detector)
 
 MCDETECTOR mcdetector_out_3D_nexus(MCDETECTOR detector)
 {
-  printf("Received detector from %s\n",detector.component);
   MPI_MASTER(
   mcdatainfo_out_nexus(nxhandle, detector);
   mcdetector_out_data_nexus(nxhandle, detector);
@@ -2816,7 +3115,7 @@ void siminfo_close()
 #ifdef USE_NEXUS
     if (mcformat && strcasestr(mcformat, "NeXus")) {
       time_t t=time(NULL);
-      nxprintf(nxhandle, "end_time", ctime(&t));
+      nxprintf(nxhandle, "end_time", "%s", ctime(&t));
       nxprintf(nxhandle, "duration", "%li", (long)t-mcstartdate);
       NXclosegroup(nxhandle); /* NXentry */
       NXclose(&nxhandle);
@@ -3121,8 +3420,6 @@ static void mcdetector_list_write(MCDETECTOR detector, int append_raw)
 *   result; 'h5repack -l CONTI' makes a self-contained copy.
 *******************************************************************************/
 #ifdef USE_NEXUS
-#include <hdf5.h>
-
 /* one VDS to create in mccode.h5 after NXclose (master only) */
 struct mclist_vds {
   char       path[4*CHAR_BUF_LENGTH]; /* /entry/.../events in mccode.h5 */
