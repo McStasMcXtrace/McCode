@@ -572,6 +572,36 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     if (!Vars->Flag_List && nexusbins==1) Vars->Flag_nexusbins=1;
 
     free(option_copy);
+
+    /* Mantid LoadMcStas needs both x and y event columns (p x y n id t):
+       add the missing one with a single bin for 1D x or y banks (#2178) */
+    if (Vars->Flag_mantid && abs(Vars->Flag_Shape) == DEFS->SHAPE_SQUARE && Vars->Coord_Number < MONnD_COORD_NMAX-1) {
+      long ix=0, iy=0, k;
+      for (i=1; i<=Vars->Coord_Number; i++) {
+        int ct = Vars->Coord_Type[i] & (DEFS->COORD_LOG-1);
+        if (ct==DEFS->COORD_X && !ix) ix=i;
+        if (ct==DEFS->COORD_Y && !iy) iy=i;
+      }
+      if (!ix != !iy) {
+        k = ix ? ix+1 : iy; /* keep x before y */
+        for (i=Vars->Coord_Number; i>=k; i--) {
+          Vars->Coord_Type[i+1]=Vars->Coord_Type[i];
+          memcpy(Vars->Coord_Label[i+1],Vars->Coord_Label[i],30);
+          memcpy(Vars->Coord_Var[i+1],Vars->Coord_Var[i],30);
+          Vars->Coord_Bin[i+1]=Vars->Coord_Bin[i];
+          Vars->Coord_Min[i+1]=Vars->Coord_Min[i];
+          Vars->Coord_Max[i+1]=Vars->Coord_Max[i];
+        }
+        Vars->Coord_Type[k] = ix ? DEFS->COORD_Y : DEFS->COORD_X;
+        strcpy(Vars->Coord_Label[k], ix ? "y [m]" : "x [m]");
+        strcpy(Vars->Coord_Var[k], ix ? "y" : "x");
+        Vars->Coord_Bin[k] = 1;
+        Vars->Coord_Min[k] = ix ? Vars->mymin : Vars->mxmin;
+        Vars->Coord_Max[k] = ix ? Vars->mymax : Vars->mxmax;
+        Vars->Coord_Number++;
+        Vars->Coord_NumberNoPixel++;
+      }
+    }
     if (carg == 128) printf("Monitor_nD: %s reached max number of tokens (%i). Skipping.\n", Vars->compcurname, 128);
 
     if ((Vars->Flag_Shape == DEFS->SHAPE_BOX) && (fabs(Vars->mzmax - Vars->mzmin) == 0)) Vars->Flag_Shape = DEFS->SHAPE_SQUARE;
@@ -2160,12 +2190,16 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
              (double)xmin, (double)ymin, 0.0);
       
       if (Vars->Flag_mantid) {
-	/* First define the base pixel type */
-	double dx, dy;
-	dx = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
-	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
+	/* x, y and pixel coordinates may come in any order (#2178) */
+	int ix=1, iy=2, ip=4;
+	for (i=1; i<=Vars->Coord_Number; i++) {
+	  int ct = Vars->Coord_Type[i] & (DEFS->COORD_LOG-1);
+	  if (ct==DEFS->COORD_X) ix=i;
+	  if (ct==DEFS->COORD_Y) iy=i;
+	  if (ct==DEFS->COORD_PIXELID) ip=i;
+	}
 	printf("MANTID_RECTANGULAR_DET:  %g, %g, %g, %g, %li, %li, %llu\n", 
-	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2], (long long unsigned)Vars->Coord_Min[4]);
+	       Vars->Coord_Min[ix],Vars->Coord_Max[ix], Vars->Coord_Min[iy],Vars->Coord_Max[iy], Vars->Coord_Bin[ix], Vars->Coord_Bin[iy], (long long unsigned)Vars->Coord_Min[ip]);
       }
     }
     /* full cylinder/banana */
