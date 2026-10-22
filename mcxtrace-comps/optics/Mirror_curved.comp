@@ -170,7 +170,7 @@ TRACE
         /* Reject hits from the convex (back) side. s >= 0 means the ray moves
            along the surface normal, i.e. it approaches from behind the
            coating. Physically the substrate absorbs. */
-        if (s >= 0) {
+        if (s <= 0) {
           ABSORB;
         } else {
           SCATTER;

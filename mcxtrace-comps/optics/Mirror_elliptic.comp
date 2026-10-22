@@ -193,7 +193,7 @@ TRACE
 
       /* one-sided mirror. A ray arriving from the convex (back) side
          moves along the inner normal (kdotn < 0); Absorb backside hits. */
-      if (kdotn <= 0) {
+      if (kdotn >= 0) {
         ABSORB;
       } else {
         double kfx, kfy, kfz;
