@@ -105,9 +105,13 @@ TRACE
     r_div = sqrt (h_div * h_div + v_div * v_div);
     if (r_div < maxdiv_r) {
       i = floor ((r_div)*ndiv / (maxdiv_r));
-      Div_N[i]++;
-      Div_p[i] += p;
-      Div_p2[i] += p * p;
+      double p2 = p * p;
+      #pragma acc atomic
+      Div_N[i] = Div_N[i] + 1;
+      #pragma acc atomic
+      Div_p[i] = Div_p[i] + p;
+      #pragma acc atomic
+      Div_p2[i] = Div_p2[i] + p2;
       SCATTER;
     }
   }
