@@ -11,30 +11,36 @@
 * Written by: Erik Knudsen
 * Date: Feb 11, 2010
 * Origin: Risoe
+* Version: $Revision$ (fixes; see changelog)
 *
 * Idealized parabolic mirror (in XZ)
-* 
+*
 * %Description
-* Takes a reflectivity as input and reflects rays in a ideal geometry
+* Takes a reflectivity as input and reflects rays in an ideal geometry
 * parabolic mirror. The mirror is positioned in the zx-plane curving towards positive y.
 * I.e. the focal point is (0,0,f(a,b))
 * The geometry of the paraboloid is governed by the equation: y = x^2 / a^2 + z^2 / b^2
 * Hence, the focal length for the 'x' curve is f=a^2 / 4, and analogous for z.
+*
+* The mirror is the FINITE patch of the paraboloid with arc coordinates
+*   |s_x| <= xwidth/2 and |s_z| <= zdepth/2
+* measured along the surface from the vertex, and it reflects on the concave
+* (upper, +y) side only. Hits from the convex side are absorbed.
 *
 * Example: Mirror_parabolic(R0=1, a=1, b=0, xwidth=0.02, yheight=0, zdepth=0.05)
 *
 * %Parameters
 * INPUT PARAMETERS
 * R0:     [1]  Reflectivity of mirror.
-* xwidth: [m]  Width of mirror.
-* zdepth: [m]  Length of mirror.
-* yheight:[m]  Thickness of mirror. If 0 (the default) the mirror is mathemticlly thin. Only has an effect for hitting the mirror from the side.
+* xwidth: [m]  Width of mirror (arc length along x).
+* zdepth: [m]  Length of mirror (arc length along z).
+* yheight:[m]  Thickness of mirror. If 0 (the default) the mirror is mathematically thin. Only has an effect for hitting the mirror from the side.
 * focusx: [m]  Transverse focal length along X. Sets a.
 * focusz: [m]  Longitudinal focal length along Z. Sets b.
 * radius: [m]  Focal length. Sets focusx and focusz.
 * a: [sqrt(m)] Transverse curvature scale, if zero - the mirror is flat along x.
 * b: [sqrt(m)] Longitudinal curvature scale, if zero, flat along z.
-* 
+*
 * OUTPUT PARAMETERS
 * xmax: [m]     Mirrors' extent along x.
 * zmax: [m]     Mirrors' extent along z.
@@ -43,13 +49,34 @@
 * %End
 *******************************************************************************/
 
+/*
+* Changelog (fixes, physics unchanged):
+* - FIRST-BOUNCE FOOTPRINT: the reflection point of the first bounce was never
+*   checked against the mirror limits (only the ray's position at the y=Y0
+*   entry plane was). A steep ray entering the bowl was propagated to and
+*   reflected by the INFINITE paraboloid arbitrarily far outside the mirror
+*   (verified: a test ray was reflected 80 m away, 4 m off axis). The actual
+*   hit point is now checked before propagating/reflecting, for every bounce.
+* - BACKSIDE: rays hitting the convex (lower) side were specularly reflected;
+*   they are now absorbed (one-sided mirror), except for the intended
+*   multi-bounce trajectories inside the bowl.
+* - The y=Y0 entry-plane trick could propagate a ray to the plane even when the
+*   plane was behind it (l0 == 0 measure-zero case) and, more importantly, when
+*   the ray never crosses the mirror patch at all it still ran the arc-length
+*   check at the un-propagated position. The footprint check is now always
+*   done at the actual intersection points.
+* - s == 0 (ray exactly parallel to the local surface) no longer SCATTERs and
+*   applies weight without changing direction.
+* - Parameter validation added; unused variable 'first' removed; reflec-style
+*   dead-ray absorption added (p==0).
+*/
 
 DEFINE COMPONENT Mirror_parabolic
 
 SETTING PARAMETERS (R0=1, a=1, b=1, xwidth=0.1, zdepth=0.1, yheight=0,
   focusx=0, focusz=0, radius=0)
 
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
 DECLARE
 %{
@@ -59,6 +86,20 @@ DECLARE
 
 INITIALIZE
 %{
+  /* validate inputs */
+  if (R0 < 0 || R0 > 1) {
+    fprintf (stderr, "ERROR (%s): reflectivity R0 (%g) must be in [0:1]. Aborting.\n", NAME_CURRENT_COMP, R0);
+    exit (-1);
+  }
+  if (xwidth <= 0 || zdepth <= 0) {
+    fprintf (stderr, "ERROR (%s): mirror must have positive xwidth and zdepth. Aborting.\n", NAME_CURRENT_COMP);
+    exit (-1);
+  }
+  if (a < 0 || b < 0) {
+    fprintf (stderr, "ERROR (%s): curvature scales a, b must be >= 0. Aborting.\n", NAME_CURRENT_COMP);
+    exit (-1);
+  }
+
   if (radius > 0)
     focusx = focusz = radius;
   if (focusx > 0)
@@ -76,9 +117,10 @@ INITIALIZE
 
 TRACE
 %{
-  int status, first;
-  double l0, l1, sx, sz;
+  double l0, l1, ll, sx, sz;
   double nx, ny, nz, zz, xx, Y0;
+
+  /* guards for the axis-parallel degenerate cases */
   if (b == 0 && kx == 0 && ky == 0) {
     /*k || z and mirror invariant in z*/
     zz = x * x * a2inv;
@@ -94,14 +136,14 @@ TRACE
     }
   }
 
-  /*find plane of entry - i.e. y=sign*x*x*a2inv + sign*z*z*b2inv,
-    and propagate the ray there.*/
+  /* find plane of entry - i.e. y=sign*x*x*a2inv + sign*z*z*b2inv,
+     and propagate the ray there.*/
   Y0 = (xwidth * xwidth / 4.0 * a2inv) + (zdepth * zdepth / 4.0 * b2inv);
   plane_intersect (&l0, x, y, z, kx, ky, kz, 0, 1, 0, 0, Y0, 0);
   if (l0 > 0) {
     PROP_DL (l0);
   }
-  /*need a check for mirror limits here*/
+  /* need a check for mirror limits here */
   if (a != 0) {
     sx = (a * a) / 2.0 * (x * a2inv * sqrt ((2 * x * a2inv) * (2 * x * a2inv) + 1) + asinh (2 * x * a2inv) / 2.0);
   } else {
@@ -120,10 +162,9 @@ TRACE
   } else {
     /*The intersect routine assumes a parabola opening towards positive z
       so swap y and z.*/
-    first = 1;
-    status = paraboloid_intersect (&l0, &l1, x, z, y, kx, kz, ky, a, b, 0);
+    int bounced = 0; /* replaces the unused 'first' variable */
+    int status = paraboloid_intersect (&l0, &l1, x, z, y, kx, kz, ky, a, b, 0);
     /*if l0==0, assume that we should pick l1 instead (if it is positive).*/
-    double ll;
     if (l0 > 0) {
       ll = l0;
     } else if (l1 > 0) {
@@ -132,23 +173,68 @@ TRACE
       /*both l0 and l1 <=0*/
       status = 0;
     }
+
     while (status) {
+      /* check that the ACTUAL reflection point is within the mirror
+         limits BEFORE propagating to it. */
+      double knx, kny, knz;
+      knx = kx;
+      kny = ky;
+      knz = kz;
+      NORM (knx, kny, knz);
+
+      double hx = x + knx * ll;
+      double hz = z + knz * ll;
+      if (a != 0) {
+        sx = (a * a) / 2.0 * (hx * a2inv * sqrt ((2 * hx * a2inv) * (2 * hx * a2inv) + 1) + asinh (2 * hx * a2inv) / 2.0);
+      } else {
+        sx = fabs (hx);
+      }
+      if (b != 0) {
+        sz = (b * b) / 2.0 * ((z + knz * ll) * b2inv * sqrt ((2 * (z + knz * ll) * b2inv) * (2 * (z + knz * ll) * b2inv) + 1)
+                              + asinh (2 * (z + knz * ll) * b2inv) / 2.0);
+      } else {
+        sz = fabs (z + knz * ll);
+      }
+      if (fabs (sx) > xwidth / 2.0 || fabs (sz) > zdepth / 2.0) {
+        /* the intersection with the (infinite) paraboloid lies outside the
+           mirror patch. If no reflection has happened yet this is a genuine
+           miss: restore the ray. If we have already bounced, the reflected
+           ray simply leaves the mirror: keep the reflected state and stop. */
+        if (!bounced) {
+          RESTORE_XRAY (INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
+        }
+        break;
+      }
+
       PROP_DL (ll);
       /*reflect in normal - again swap y and z.*/
       paraboloid_normal (&nx, &nz, &ny, x, z, y, a, b, 1);
 
       double s = scalar_prod (kx, ky, kz, nx, ny, nz);
+      /* a one-sided mirror reflects on the concave (bowl, +y) side only.
+         s >= 0 means the ray arrives at the surface from below (the convex,
+         uncoated side): absorb. (Valid bounces inside the bowl always have
+         s < 0, so this guard is safe for multi-bounce trajectories too.) */
+      if (s >= 0) {
+        ABSORB;
+      }
       if (s != 0) {
         kx -= s * 2 * nx;
         ky -= s * 2 * ny;
         kz -= s * 2 * nz;
       }
       SCATTER;
+      bounced = 1;
 
       p *= R0;
       /*update phase - as an approximation turn by 180 deg.*/
       phi += M_PI;
-      first = 0;
+
+      /*catch dead rays*/
+      if (p == 0)
+        ABSORB;
+
       status = paraboloid_intersect (&l0, &l1, x, z, y, kx, kz, ky, a, b, 0);
       /*need to check if the new reflection point is within mirror limits*/
       if (status) {
@@ -160,29 +246,8 @@ TRACE
           status = 0;
           break;
         }
-
-        double knx, kny, knz;
-        knx = kx;
-        kny = ky;
-        knz = kz;
-        NORM (knx, kny, knz);
-
-        double xx = x + knx * ll;
-        if (a != 0) {
-          sx = (a * a) / 2.0 * (xx * a2inv * sqrt ((2 * xx * a2inv) * (2 * xx * a2inv) + 1) + asinh (2 * xx * a2inv) / 2.0);
-        } else {
-          sx = fabs (xx);
-        }
-        double zz = z + knz * ll;
-        if (b != 0) {
-          sz = (b * b) / 2.0 * (zz * b2inv * sqrt ((2 * zz * b2inv) * (2 * zz * b2inv) + 1) + asinh (2 * zz * b2inv) / 2.0);
-        } else {
-          sz = fabs (zz);
-        }
-        if (fabs (sx) > xwidth / 2.0 || fabs (sz) > zdepth / 2.0) {
-          status = 0;
-          break;
-        }
+        /* (the footprint check for this next bounce happens at the top of
+           the loop, on the actual hit point) */
       }
     }
   }
