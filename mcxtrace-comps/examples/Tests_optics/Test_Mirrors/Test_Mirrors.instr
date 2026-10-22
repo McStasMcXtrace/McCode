@@ -86,7 +86,7 @@ COMPONENT mirror_stage = Arm() // at distance L
 AT(0,0,L) RELATIVE Origin
 ROTATED (gamma, 0, 0) RELATIVE Origin
 
-COMPONENT psd1 = PSD_monitor(filename="ps10", xwidth=5e-2, yheight=2e-1, nx=200, ny=200, restore_xray=1)
+COMPONENT psd1 = PSD_monitor(filename="psd1", xwidth=5e-2, yheight=2e-1, nx=200, ny=200, restore_xray=1)
 AT(0,0,0) RELATIVE mirror_stage
 ROTATED (90, 0, 0) RELATIVE mirror_stage
 
