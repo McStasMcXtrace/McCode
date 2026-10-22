@@ -31,7 +31,7 @@ DECLARE
 %{
   int BEAMLINE_MAX=18;
   #pragma acc declare create(BEAMLINE_MAX)
-  #pragma acc device update(BEAMLINE_MAX)
+  #pragma acc update device(BEAMLINE_MAX)
 %}
 
 USERVARS %{
