@@ -277,10 +277,10 @@ TRACE
                 kin_z, kx, ky, kz, Ein_x, Ein_y, Ein_z, Ex, Ey, Ez);
         #endif
         /* apply Darwin reflectivity if not is supplied from outside*/
-        /* R0 < 0 explicitly selects the computed Darwin reflectivity,
+        /* R0 <= 0 explicitly selects the computed Darwin reflectivity,
            so R0=0 can force zero reflectivity (ABSORB) instead of being
            indistinguishable from the default. */
-        if (R0 >= 0) {
+        if (R0 > 0) {
           p *= R0;
         } else {
           p *= R;
