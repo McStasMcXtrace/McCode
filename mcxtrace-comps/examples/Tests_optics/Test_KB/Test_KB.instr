@@ -15,7 +15,7 @@
 * are set for a focusing f_m=f_s= 10 m.
 * The KB should satisfy f_m=R.sin(theta/2) and f_s=R/2.sin(theta)
 *
-* Example: Test_KB L=12
+* Example: L=12 Detector: e_monitor_I=0.000652414
 *
 * %Parameters
 * L:     [m]   Distance to the PSD detector, with a shift by 1.5 m
