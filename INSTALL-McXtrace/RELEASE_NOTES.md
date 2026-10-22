@@ -10,10 +10,10 @@ Changes in McStas/McXtrace 3.10.0
 * **Much improved instrument display**: `mcdisplay-webgl-classic` now shows the detailed `--trace=2` component shapes by default, shaded and with a wireframe toggle. Hollow boxes and cylinders are drawn as the cavities they are in the physics, polyhedra with faces of any size display correctly, and `mcdisplay-cad` exports to STEP, PLY and plain OFF, including particle rays. By @willend and @farhi.
 * **New `Text` component in McStas and McXtrace**: puts 3D text labels into your instrument drawings. With the new `Text2OFF` template instrument, any text can also be turned into OFF geometry for components that read OFF files. By @farhi and @willend.
 * **More accurate conic mirrors**: the `conic.h` library behind the `ConicSurf`/`FlatEllipse` mirror family now applies the reflectivity once and with the correct scattering vector, no longer re-hits the surface it just reflected from, and has a configurable figure error (waviness model of Hansen et al.). New `Mirror_conic` test component and test instruments. By @willend (fixes #2787).
-* **Statistically smarter testing with `mctest`**: new `%Scan:` (or `%TestScan:`) lines run a test over a whole parameter scan. Tests can now pass on Monte Carlo error bars (`--nsigma`/`--pvalue`) instead of only a fixed ±20 % window, and `--statfactor` scales the statistics of every test. `%Example:` lines are now called `%Test:`. By @willend.
+* **Statistically smarter testing with `mctest`**: new `%TestScan:` (aka `%Scan:`) lines run a test over a whole parameter scan. Tests can now pass on Monte Carlo error bars (`--nsigma`/`--pvalue`) instead of only a fixed ±20 % window, and `--statfactor` scales the statistics of every test. `%Example:` lines are now called `%Test:`. By @willend.
 * **Union framework refactored**: the inner scattering loop of Union was reorganised for clarity and maintainability. By Daniel Lomholt Christensen (@Lomholy), @mads-bertelsen-agentic and @willend.
 * **More SOLEIL in McXtrace**: new PX1, NANOSCOPIUM and GALAXIES beamlines, plus a model of the full SOLEIL synchrotron assembling the beamlines, mainly for rendering. By @farhi.
-* **`MCPL_input` consolidated**: `MCPL_input` now includes the MPI splitting and `repeat_count` features of `MCPL_input_once`, which is moved to the obsolete components. `MCPL_output` now uses `weight_mode=1` by default, which records the initial ray count and rescales weights. By @willend.
+* **`MCPL_input` consolidated**: `MCPL_input` now includes the MPI splitting of `MCPL_input_once` yet allows to repeat by `repeat_count`. `MCPL_input_once` is moved to the obsolete components. `MCPL_output` now uses `weight_mode=1` by default, which records the initial ray count and rescales weights, adapting with the [`stat:sum` convention](https://mctools.github.io/mcpl/format_statsum/) from MCPL. By @willend.
 
 ## What's Changed
 
@@ -50,9 +50,9 @@ Changes in McStas/McXtrace 3.10.0
 * Data file cache (`read_table-lib`) kept consistent, and errors in MPI runs abort cleanly, by @willend in #2784
 
 #### Testing (`mctest`)
-* New `%Scan:` test lines, used in many example instruments, by @willend in #2772
+* New `%TestScan:` (aka `%Scan:`) test lines, used in many example instruments, by @willend in #2772
 * Statistical acceptance (`--nsigma`, `--pvalue`) and `--statfactor`, with a new documentation page. `%Example:` lines renamed `%Test:` (old name still accepted), by @willend in #2776
-* `-n` on `%Test:`/`%Example:` lines is now honoured, as for `%Scan:`, by @willend in #2820, #2841
+* `-n` on `%Test:`/`%Example:` lines is now honoured, as for `%TestScan:`/`%Scan:`, by @willend in #2820, #2841
 
 #### Documentation
 * `mcdoc` renders TeX with a locally installed MathJax (#2871) and writes search results to a separate page (#2855), by @willend
@@ -72,7 +72,7 @@ Changes in McStas/McXtrace 3.10.0
 
 #### Components
 * `Monitor_nD` in Mantid mode: square monitors binned only in x or y now get the event columns Mantid expects (previously Mantid silently loaded no events), `y ... x` no longer gives a rotated detector, and `mcdisplay-mantid` places pixels at their centres instead of half a pixel off, by @willend in #2888 (fixes #2178)
-* `MCPL_input` consolidated with `MCPL_input_once` (MPI splitting, `repeat_count`). `MCPL_input_once` moved to obsolete. By @willend in #2780. `MCPL_output` defaults to `weight_mode=1` (#2779)
+* `MCPL_input` consolidated with `MCPL_input_once` (MPI splitting, `repeat_count`). `MCPL_input_once` moved to obsolete. By @willend in #2780. `MCPL_output` defaults to `weight_mode=1`, following the MCPL [`stat:sum` convention](https://mctools.github.io/mcpl/format_statsum/) (#2779)
 * Conic mirrors (`conic.h`): reflectivity applied once with the correct scattering vector (#2789), configurable figure error with a waviness model, `StdReflecFunc` reflectivity only, `FlatEllipse_finite_mirror` `sourceDist` fix (#2793), no spurious re-hit of the surface just reflected from (#2794). New `Mirror_conic` test component. By @willend, fixes #2787
 * New `Text` component for 3D text labels, used to label the ILL H5 instruments, by @farhi and @willend in #2782. New `Text2OFF` template instrument (#2869)
 * `NCrystal_sample` draws its shape from the component parameters, by @tkittel in #2777
