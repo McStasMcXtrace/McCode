@@ -10,8 +10,7 @@
 *
 * %Identification
 *
-* Based on Grating_trans.comp by Erik B Knudsen (Dec 2016, McXtrace 1.4)
-* Fixed version 1.1 — see changelog below.
+* 1D rectangular transmission grating
 *
 * Transmission grating
 *
@@ -26,12 +25,6 @@
 * (importance sampling); the ray weight is then corrected by
 *     pmul = P(m) / (1/(2*max_order+1))
 * so that the expectation of the weight reproduces the full diffraction pattern.
-*
-* Known approximations kept:
-*  - Conical mount: the ray is rotated by the order angle about the axis
-*    (0,1,-ky/kz). This is an approximation valid for small |kx|; the exact
-*    grating transform kx' = kx + m*2*pi/period (ky unchanged) is not applied.
-*  - period_eff = period*cos(thx) horizontal-incidence correction kept as-is.
 *
 * Example: Grating_trans(
 *   xwidth=25e-3, yheight=25e-3, gamma=0.4, period=2000e-10, zdepth=5100e-10, max_order=3, material="Au.txt")
@@ -78,6 +71,24 @@
 *      substrate: sdepth    / cos(thy)
 *    (the old code used the tiny diffraction angle theta for the substrate).
 *  - `order` moved from DECLARE to a TRACE-local variable.
+*
+* v1.2 (this version) — exact conical-mount kinematics:
+*  - The rotation-by-theta approximation about (0,1,-ky/kz) is replaced by the
+*    exact grating transform. Grating lines run along Y, so the reciprocal
+*    lattice vector is G = (2*pi/period, 0, 0). Elastic diffraction gives
+*        kx' = kx + m * 2*pi/period     (kx in AA^-1, period in m)
+*        ky' = ky                       (momentum along the lines is conserved)
+*        kz' = sqrt(k^2 - kx'^2 - ky^2) (|k| preserved, forward after PROP_Z0)
+*    This is exact for arbitrary in-plane (conical) incidence kx and preserves
+*    ky exactly, which the rotation only did to second order in the deflection
+*    angle. The old period_eff = period*cos(thx) correction and the order
+*    angle theta are no longer needed; the true period is used everywhere.
+*    The Schnopper scalar intensity model is retained for the weights (pmul).
+*  - Evanescent orders (kx'^2 + ky^2 > k^2) cannot propagate: pmul is set to 0
+*    and the ray is absorbed. This keeps the importance sampling unbiased since
+*    the true P(m) of a non-propagating order is zero.
+*  - Dead variables thx/period_eff/M removed (M was computed but never used
+*    after the change; the sin(M m pi)/(M sin(m pi)) term is 1 for integer M).
 */
 
 DEFINE COMPONENT Grating_trans
@@ -184,10 +195,9 @@ INITIALIZE
 
 TRACE
 %{
-  double e, k, f, delta, beta, mu0, smu0, pmul, order_factor, theta, order_likelihood;
-  double thx, thy, period_eff, zdepth_eff;
+  double e, k, f, delta, beta, mu0, smu0, pmul, order_likelihood;
+  double thy, zdepth_eff, kxp, kzp;
   int order;
-  int M;
 
   PROP_Z0;
   if (x < -xwidth * 0.5 || x > xwidth * 0.5 || y < -yheight * 0.5 || y > yheight * 0.5) {
@@ -203,14 +213,8 @@ TRACE
     mu0 = Table_Value (table, e, mu_c) * rho * 1e2;
     beta = mu0 / (2 * k * 1e10);
 
-    /* incidence angles w.r.t. the grating normal (z) */
-    thx = atan (fabs (kx / kz));
+    /* incidence angle w.r.t. the grating normal (z) */
     thy = atan (fabs (ky / kz));
-
-    /* correct the period for horizontal angle*/
-    period_eff = cos (thx) * period;
-
-    M = xwidth / period_eff;
 
     /*pick an order uniformly from [-max_order, max_order] (importance sampling)*/
     order = floor (rand01 () * (max_order * 2 + 1)) - max_order;
@@ -229,7 +233,7 @@ TRACE
     double phi_bar = k * 1e10 * zdepth_eff * delta;
 
     if (order) {
-      order_factor = pow (sin (gamma * order * M_PI) / (order * M_PI), 2.0);
+      double order_factor = pow (sin (gamma * order * M_PI) / (order * M_PI), 2.0);
       order_likelihood = order_factor * (1 + exp (-2.0 * a_bar) - 2.0 * exp (-a_bar) * cos (phi_bar));
     } else {
       order_likelihood = gamma * gamma + (1 - gamma) * (1 - gamma) * exp (-2.0 * a_bar)
@@ -240,13 +244,21 @@ TRACE
     double fmc = 1.0 / (max_order * 2 + 1);
     pmul = order_likelihood / fmc;
 
-    /*Pick an angle centered on the order*/
-    theta = order * 2 * M_PI / (k * 1e10 * period_eff); /*1e10: k in AA^-1, period in m*/
-
-    /* rotate around an axis perpendicular to k and in the yz-plane:
-     * (ay*ky + az*kz) = 0 && ay>0 => ay=1, az=-ky/kz */
-    double az = -ky / kz;
-    rotate (kx, ky, kz, kx, ky, kz, theta, 0, 1, az);
+    /* Exact conical-mount diffraction: grating lines run along Y, so the
+     * reciprocal-lattice vector is G = (2*pi/period, 0, 0). Elastic scattering:
+     *   kx' = kx + m*2*pi/period   (kx in AA^-1, period in m -> /1e10)
+     *   ky' = ky                  (momentum along the lines is conserved)
+     *   kz' = sqrt(k^2 - kx'^2 - ky^2)  (|k| preserved, forward: kz>0 after PROP_Z0)
+     */
+    kxp = kx + order * 2.0 * M_PI / (period * 1e10);
+    if (kxp * kxp + ky * ky > k * k) {
+      /* evanescent order: cannot propagate, P(m) = 0 */
+      pmul = 0.0;
+      ABSORB;
+    }
+    kzp = sqrt (k * k - kxp * kxp - ky * ky);
+    kx = kxp;
+    kz = kzp;
 
     /*absorption: bars are traversed on average a fraction (1-gamma) of the
       line period; substrate is traversed at the incidence angle thy.*/
