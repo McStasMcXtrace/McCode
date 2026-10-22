@@ -58,16 +58,10 @@ INITIALIZE
   int status;
 
   if (coating && strlen (coating) && strcmp (coating, "NULL")) {
-    status = reflec_Init (&re, COATING_UNDEFINED, coating, NULL);
+    status = reflec_Init (&re, COATING_UNDEFINED, coating, NULL); // exit(-1) in case of init error
   } else {
     /* Assume a constant reflectivity */
-    status = reflec_Init (&re, CONSTANT, NULL, &(R0));
-  }
-  /* Check that reflectivity initialization succeeded */
-  if (status != REFLEC_OK) {
-    fprintf (stderr, "ERROR (%s): Could not interpret reflectivity (coating='%s'). Aborting.\n",
-             NAME_CURRENT_COMP, coating ? coating : "");
-    exit (-1);
+    status = reflec_Init (&re, CONSTANT, NULL, &(R0)); // exit(-1) in case of init error
   }
 
   /* Validate geometry instead of silently producing nonsense */

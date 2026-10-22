@@ -204,10 +204,12 @@ TRACE
         /* check for 3rd & 1st quadrant hits, backward hit from above or forward hit from below and reverse sense of alpha */
         if ((ky < 0 && kz < 0) || (ky > 0 && kz > 0))
           alpha1 = -alpha1;
-        Mx_DarwinReflectivity (&Rpi, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, alpha1, h, k, l, debye_waller_B, E, Thetain, 1, crystal_type,
-                               structure_factor_scale_r, structure_factor_scale_i);
-        Mx_DarwinReflectivity (&Rsig, &Thetah, &Theta0, f00, f0h, fp, fpp, V, alpha1, h, k, l, debye_waller_B, E, Thetain, 2, crystal_type,
-                               structure_factor_scale_r, structure_factor_scale_i);
+        Mx_DarwinReflectivity (&Rpi, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, 
+          fp, fpp, V, alpha1, h, k, l, debye_waller_B, E, Thetain, 1, crystal_type,
+          structure_factor_scale_r, structure_factor_scale_i);
+        Mx_DarwinReflectivity (&Rsig, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, 
+          fp, fpp, V, alpha1, h, k, l, debye_waller_B, E, Thetain, 2, crystal_type,
+          structure_factor_scale_r, structure_factor_scale_i);
 
         double kin_x = kx, kin_y = ky, kin_z = kz, Ein_x = Ex, Ein_y = Ey, Ein_z = Ez;
         double pi_x, pi_y, pi_z, sig_x, sig_y, sig_z;

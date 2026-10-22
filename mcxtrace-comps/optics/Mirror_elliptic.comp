@@ -118,13 +118,7 @@ INITIALIZE
     status = reflec_Init (&re, COATING_UNDEFINED, coating, NULL);
   } else {
     /*assume a constant reflectivity*/
-    status = reflec_Init (&re, CONSTANT, NULL, &(R0));
-  }
-  /* check that reflectivity initialization succeeded */
-  if (status != REFLEC_OK) {
-    fprintf (stderr, "ERROR (%s): Could not interpret reflectivity (coating='%s'). Aborting.\n",
-             NAME_CURRENT_COMP, coating ? coating : "");
-    exit (-1);
+    status = reflec_Init (&re, CONSTANT, NULL, &(R0)); // exit(-1) in case of init error
   }
 
   a2inv = (x_a) ? 1 / (x_a * x_a) : 0; /* 0 really means infinity for x direction */
