@@ -84,7 +84,7 @@ Changes in McStas/McXtrace 3.10.0
 * **New `Text` component in McStas and McXtrace**: puts 3D text labels into your instrument drawings. With the new `Text2OFF` template instrument, any text can also be turned into OFF geometry for components that read OFF files. By @farhi and @willend.
 * **More accurate conic mirrors**: the `conic.h` library behind the `ConicSurf`/`FlatEllipse` mirror family now applies the reflectivity once and with the correct scattering vector, no longer re-hits the surface it just reflected from, and has a configurable figure error (waviness model of Hansen et al.). New `Mirror_conic` test component and test instruments. By @willend (fixes #2787).
 * **Statistically smarter testing with `mctest`**: new `%TestScan:` (aka `%Scan:`) lines run a test over a whole parameter scan. Tests can now pass on Monte Carlo error bars (`--nsigma`/`--pvalue`) instead of only a fixed ±20 % window, and `--statfactor` scales the statistics of every test. `%Example:` lines are now called `%Test:`. By @willend.
-* **Union framework refactored**: the inner scattering loop of Union was reorganised for clarity and maintainability. By Daniel Lomholt Christensen (@Lomholy), @mads-bertelsen-agentic and @willend.
+* **Union framework refactored**: the inner scattering loop of Union was reorganised for clarity and maintainability, and `Union_mesh` now uses a new general triangle-mesh library (`geometry-mesh-lib`) that reads STL, OFF and PLY files and ray-traces them efficiently. By Daniel Lomholt Christensen (@Lomholy), @mads-bertelsen-agentic and @willend.
 * **More SOLEIL in McXtrace**: new PX1, NANOSCOPIUM and GALAXIES beamlines, plus a model of the full SOLEIL synchrotron assembling the beamlines, mainly for rendering. By @farhi.
 * **`MCPL_input` consolidated**: `MCPL_input` now includes the MPI splitting of `MCPL_input_once` yet allows to repeat by `repeat_count`. `MCPL_input_once` is moved to the obsolete components. `MCPL_output` now uses `weight_mode=1` by default, which records the initial ray count and rescales weights, adapting with the [`stat:sum` convention](https://mctools.github.io/mcpl/format_statsum/) from MCPL. By @willend.
 
@@ -102,7 +102,7 @@ Changes in McStas/McXtrace 3.10.0
 * The text-based `mcplot-terminal` was added and then deferred to a later release, by @willend in #2785, #2822
 
 #### Running simulations (`mcrun`/`mxrun`, `mcgui`/`mxgui`)
-* `mcrun`: `--scan_split` scans give one NeXus file, by @willend in #2804
+* `mcrun`: `--scan_split` scans give one NeXus file, laid out as for a serial NeXus scan, by @willend in #2804, #2891
 * `mcrun`: `--verbose` now also applies to compilation, by @farhi in #2821
 * `mcrun`: setting `--autoplotter` now opens the plot automatically, by @willend in #2825
 * `mcgui`/`mxgui`: the run dialogue scrolls for instruments with many parameters and fits the screen, by @farhi and @willend in #2829. Unused interface files removed in #2831
@@ -133,7 +133,7 @@ Changes in McStas/McXtrace 3.10.0
 * Clearer external-contributions guide, by @willend in #2860 (fixes #2771). Component example-coverage lists regenerated (#2861)
 
 #### GPU / OpenACC
-* OpenACC fixes for instruments, the SOLEIL models and test components, by @willend in #2797, #2881. `Dispersion_relation` GPU race fixed in #2769
+* OpenACC fixes for instruments, the SOLEIL models and test components, by @willend in #2797, #2881. `Dispersion_relation` GPU race fixed in #2769, `Radial_div` monitor accumulation made GPU-safe in #2890
 
 #### Installation, platforms and packaging
 * `cif2hkl` is now built from the upstream SOLEIL release and required at version 1.5.0 or newer (now 1.5.1) for conda and Debian packages, by @willend in #2864, #2873
@@ -158,6 +158,7 @@ Changes in McStas/McXtrace 3.10.0
 
 #### Union
 * Refactored scattering loop, by Daniel Lomholt Christensen (@Lomholy), @mads-bertelsen-agentic and @willend in #2571
+* `Union_mesh` now built on the new `geometry-mesh-lib`: STL (ASCII/binary), OFF and PLY files, polygons of any size, duplicate vertices and faces cleaned up, and a bounding volume hierarchy for fast ray tracing of large meshes. Each triangle gets its own surface entry. By Daniel Lomholt Christensen (@Lomholy) and @willend in #2866
 
 #### Python instruments (`mcstas-pygen`)
 * Generated scripts no longer contain the McCode system directory, by @tkittel in #2774
