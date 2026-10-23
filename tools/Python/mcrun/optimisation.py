@@ -633,19 +633,21 @@ class Scanner:
             LOG.info('Scan complete: all %d point(s) succeeded.', len(points))
 
 
-def merge_nexus_steps(mcstas_dir, indices):
-    """ Merges the mccode.h5 of each --scan_split step dir mcstas_dir/i into
-        mcstas_dir/mccode.h5 as entry1..N, as a serial NeXus scan writes it, and
-        removes the step dirs. Each step wrote its data as its own entry1 in its
-        own dir, so the copied entries refer to those: the 'target' attribute of
-        each linked monitor (e.g. /entry1/instrument/... in entry2, which NeXus
-        readers such as nexusformat/NeXpy follow, showing entry1's data), and the
-        step dir in the simulation metadata. Both are rewritten here. """
-    import os, shutil
+def merge_nexus_steps(mcstas_dir, indices, keep_steps=False):
+    """ Merges the mccode.h5 of each (successful) --scan_split step dir
+        mcstas_dir/i into mcstas_dir/mccode.h5 as entry1..N, as a serial NeXus
+        scan writes it, and removes the step dirs unless keep_steps (e.g. when
+        a step failed, to leave its output for inspection). Each step wrote its
+        data as its own entry1 in its own dir, so the copied entries refer to
+        those: the 'target' attribute of each linked monitor (e.g.
+        /entry1/instrument/... in entry2, which NeXus readers such as
+        nexusformat/NeXpy follow, showing entry1's data), and the step dir in the
+        simulation metadata. Both are rewritten here. """
+    import shutil
     import h5py
     import numpy as np
     # step dirs as passed to the step runs, see _simulate_point()
-    stepdirs = [f'{mcstas_dir}/{i}' for i in indices if os.path.exists(f'{mcstas_dir}/{i}/mccode.h5')]
+    stepdirs = [f'{mcstas_dir}/{i}' for i in indices]
     with h5py.File(join(mcstas_dir, 'mccode.h5'), 'w') as merged:
         for n, stepdir in enumerate(stepdirs, 1):
 
@@ -673,6 +675,10 @@ def merge_nexus_steps(mcstas_dir, indices):
                 f.copy('entry1', merged, name=f'entry{n}')
             fix_all(f'entry{n}', merged[f'entry{n}'])
             merged[f'entry{n}'].visititems(fix_all)
+    if keep_steps:
+        LOG.info('NeXus scan steps merged into %s; step dirs kept since not all steps succeeded',
+                 join(mcstas_dir, 'mccode.h5'))
+        return
     for stepdir in stepdirs:
         shutil.rmtree(stepdir)
 
@@ -719,7 +725,10 @@ class Scanner_split:
         if self.mcstas.options.format.lower() == 'nexus':
             # Parallel steps can't safely append to one HDF5 file, so each wrote
             # its own dir/i/mccode.h5 - merge them as entry1..N like a serial scan.
-            merge_nexus_steps(mcstas_dir, [r['index'] for r in results])
+            # A failed step can leave a partial, unreadable mccode.h5: merge only the
+            # steps that gave detector values (the rows of mccode.dat)
+            ok = [r['index'] for r in results if r['detectors']]
+            merge_nexus_steps(mcstas_dir, ok, keep_steps=len(ok) < len(results))
 
         skipped = [r['index'] for r in results if not r['detectors']]
 
