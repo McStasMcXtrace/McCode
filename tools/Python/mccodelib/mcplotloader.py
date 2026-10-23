@@ -392,6 +392,10 @@ def _nx_load_monitor(h5file, path):
             g = f[path]
             a = {k: v.decode(errors='replace') if isinstance(v, bytes) else v for k, v in g.attrs.items()}
             typ = a.get('type', '')
+            # no file per monitor: the ASCII file name for entry1 (as monitor key in mcplotdiff/mccoplot),
+            # entryN_ prefixed for later scan steps (unique path, mcplot-html writes <filepath>.html)
+            entry, fname = path.split('/')[1], a.get('filename', '')
+            filepath = join(dirname(h5file), fname if entry == 'entry1' else '%s_%s' % (entry, fname))
             if typ.startswith('array_1d'):
                 data = Data1D()
                 data.xvar = a['xvar'].strip()
@@ -414,6 +418,7 @@ def _nx_load_monitor(h5file, path):
                 print('load_monitor: Not loading %s dataset %s' % (typ, path))
                 data = Data0D()
                 data.title = {'array_0d': 'zero-dim monitor', 'list': 'event list'}.get(typ.split('(')[0], 'Unknown format')
+                data.filepath = filepath
                 return data
             data.component = a.get('component', '')
             data.filename = a.get('filename', '')
@@ -423,10 +428,7 @@ def _nx_load_monitor(h5file, path):
             v = a['values'].split()
             data.values = (Decimal(v[0]), Decimal(v[1]), float(v[2]))
             data.statistics = re.sub(r'=([^;]+);', lambda m: '=%.2E;' % Decimal(m.group(1)), a.get('statistics', ''))
-            # no file per monitor: the ASCII file name for entry1 (as monitor key in mcplotdiff/mccoplot),
-            # entryN_ prefixed for later scan steps (unique path, mcplot-html writes <filepath>.html)
-            entry = path.split('/')[1]
-            data.filepath = join(dirname(h5file), data.filename if entry == 'entry1' else '%s_%s' % (entry, data.filename))
+            data.filepath = filepath
             return data
     return DataHandle(load_fct=load)
 
@@ -714,6 +716,11 @@ def is_nexus(args):
 
 def is_nexus_sweep(args):
     return isfile(join(args['directory'], 'mccode.dat'))
+
+
+def nexus_suffix(path):
+    ''' ' (NeXus)' for a NeXus file or output dir, to mark it in plot titles '''
+    return ' (NeXus)' if is_nexus({'simfile': path}) else ''
 
 
 def is_mccodesim_or_mccodedat(args):

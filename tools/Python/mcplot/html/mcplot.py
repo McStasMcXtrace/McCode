@@ -13,7 +13,7 @@ import concurrent.futures
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from mccodelib.mcplotloader import McCodeDataLoader, Data1D, Data2D
+from mccodelib.mcplotloader import McCodeDataLoader, Data1D, Data2D, nexus_suffix
 from mccodelib.plotgraph import PNSingle, PNMultiple
 from mccodelib import mccode_config
 from shutil import copyfile
@@ -230,7 +230,7 @@ def browse(html_filepath):
     except Exception as e:
         raise Exception('Os-specific open browser: %s' % e.__str__())
 
-def plotfunc(node, filename=None):
+def plotfunc(node, filename=None, suffix=''):
     ''' plot a plotnode to a html file as an svg-plot using plotfuncs.js and d3.v4.min.js '''
 
     if isinstance(filename, list):
@@ -279,7 +279,7 @@ def plotfunc(node, filename=None):
             
         with open(filename, 'w') as outfile:
             outfile.write("<html><head>\n")
-            outfile.write(f"<title>Simulation results in folder {baseinstr}/{directory}</title>\n")
+            outfile.write(f"<title>Simulation results in folder {baseinstr}/{directory}{suffix}</title>\n")
             gridgap = int(round(WIDTH * 0.05))
             initial_scale = 0.5
             init_w = WIDTH * initial_scale
@@ -297,7 +297,7 @@ def plotfunc(node, filename=None):
             outfile.write("  #sizecontrol input[type=range] { vertical-align: middle; margin: 0 8px; }\n")
             outfile.write("</style>\n")
             outfile.write("</head><body>\n")
-            outfile.write(f"<h1>Simulation results {baseinstr}/{directory}</h1>\n")
+            outfile.write(f"<h1>Simulation results {baseinstr}/{directory}{suffix}</h1>\n")
             outfile.write("<div id='sizecontrol'>\n")
             outfile.write("  <label for='sizeslider'>Figure size:</label>\n")
             outfile.write(f"  <input type='range' id='sizeslider' min='20' max='200' value='{init_pct}' step='5'>\n")
@@ -455,7 +455,7 @@ def main(args):
     rootnode = loader.plot_graph
 
     # generate html file(s)
-    f = plotfunc(rootnode, args.output) # can be a single or multiple 'plotnode'
+    f = plotfunc(rootnode, args.output, nexus_suffix(simfile)) # can be a single or multiple 'plotnode'
     print(f"Generated: {f}")
 
     # browse if input was a specific, and therefore browsable, file

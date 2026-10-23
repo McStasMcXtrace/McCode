@@ -99,6 +99,10 @@ def main():
     compare(load("ascii_scan/0").getdata_lst(), load("nexus_single").getdata_lst(), "single run")
     compare(load("ascii_scan/0").getdata_lst(), load("nexus_single/mccode.h5").getdata_lst(), "single mccode.h5")
 
+    # mcplot-html names its pages (and places index.html) by the monitor file paths
+    names = [[Path(d.filepath).name for d in load(p).getdata_lst()] for p in ("ascii_scan/0", "nexus_single")]
+    check(names[0] == names[1], f"single run: monitor file names {names[0]}" + ("" if names[0] == names[1] else f" vs {names[1]}"))
+
     # mcplotdiff/mccoplot pair monitors across simulations by these keys
     from mccodelib.mcplotdiffloader import load_monitors
     for x, y in (("ascii_scan/0", "nexus_single"), ("ascii_scan/0", "nexus_single/mccode.h5"), ("ascii_scan", "nexus_scan")):
