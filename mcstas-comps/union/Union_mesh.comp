@@ -380,10 +380,15 @@ INITIALIZE
     exit (1);
   }
 
-  mesh_vol.geometry.number_of_faces = 1;
-  mesh_vol.geometry.surface_stack_for_each_face = malloc (mesh_vol.geometry.number_of_faces * sizeof (struct surface_stack_struct));
-
-  mesh_vol.geometry.surface_stack_for_each_face[0] = &surface_stack;
+  // surface_index of a mesh hit is the triangle index, all triangles share one surface stack
+  mesh_vol.geometry.number_of_faces = mesh_data.ntris;
+  mesh_vol.geometry.surface_stack_for_each_face = malloc (mesh_vol.geometry.number_of_faces * sizeof (struct surface_stack_struct*));
+  if (!mesh_vol.geometry.surface_stack_for_each_face) {
+    printf ("\nERROR IN %s: could not allocate surface stacks\n", NAME_CURRENT_COMP);
+    exit (1);
+  }
+  for (int face_index = 0; face_index < mesh_vol.geometry.number_of_faces; face_index++)
+    mesh_vol.geometry.surface_stack_for_each_face[face_index] = &surface_stack;
   mesh_vol.geometry.internal_cut_surface_stack = &cut_surface_stack;
 
   struct pointer_to_global_surface_list* global_surface_list = &union_state_p->u_surface_list;
