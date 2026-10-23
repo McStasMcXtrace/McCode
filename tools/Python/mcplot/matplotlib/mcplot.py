@@ -46,11 +46,13 @@ def main(args):
                 if not os.path.isabs(h5file):
                     h5file = os.path.join(os.getcwd(),h5file)
                 # Open the dedicated HDF5 viewer alongside, and plot the NeXus data here too
-                try:
-                    print('Spawning ' + mccode_config.configuration['HDFVIEW'])
-                    subprocess.Popen(mccode_config.configuration['HDFVIEW'] + ' ' + h5file, shell=True)
-                except:
-                    print("Could not launch " + mccode_config.configuration['HDFVIEW'] + " on " + h5file)
+                # (not when only writing a file, e.g. from mctest)
+                if not (args.format or args.output or args.html):
+                    try:
+                        print('Spawning ' + mccode_config.configuration['HDFVIEW'])
+                        subprocess.Popen(mccode_config.configuration['HDFVIEW'] + ' ' + h5file, shell=True)
+                    except:
+                        print("Could not launch " + mccode_config.configuration['HDFVIEW'] + " on " + h5file)
                 simfile = h5file
                 title = '%s (NeXus)' % h5file
 

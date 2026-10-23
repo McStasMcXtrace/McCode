@@ -19,6 +19,10 @@ ERROR_PERCENT_THRESSHOLD_ACCEPT = 20
 # jobs OOM-kill a 16 GB CI runner (the resulting html is unviewable anyway).
 DIFF_MAX_FILESIZE = 50 * 1024 * 1024
 
+def has_output(d):
+    ''' simulation output the plot loader reads: McCode format, NeXus, or a scan's mccode.dat '''
+    return any(os.path.isfile(os.path.join(d, f)) for f in ("mccode.sim", "mccode.h5", "mccode.dat"))
+
 def has_huge_file(*dirs):
     return any(e.is_file() and e.stat().st_size > DIFF_MAX_FILESIZE
                for d in dirs for e in os.scandir(d))
@@ -154,8 +158,8 @@ def run_normal_mode(testdir, reflabel, nodiff=False, diffmax=300, diffall=True, 
         ref_url = get_data_url(refcellobj)
         test_abs = join(testdir, url)
         ref_abs = join(testdir, ref_url)
-        if not (os.path.isfile(join(test_abs, "mccode.sim")) and os.path.isfile(join(ref_abs, "mccode.sim"))):
-            # NeXus-only output (mccode.h5) or otherwise nothing mcplotdiff-html can compare
+        if not (has_output(test_abs) and has_output(ref_abs)):
+            # nothing mcplotdiff-html can compare
             return None
         if has_huge_file(test_abs, ref_abs):
             logging.info("Skipping mcplotdiff-html for %s: data file > %d MB" % (url, DIFF_MAX_FILESIZE // 2**20))
@@ -198,8 +202,8 @@ def run_normal_mode(testdir, reflabel, nodiff=False, diffmax=300, diffall=True, 
         ref_url = get_data_url(refcellobj)
         test_abs = join(testdir, url)
         ref_abs = join(testdir, ref_url)
-        if not (os.path.isfile(join(test_abs, "mccode.sim")) and os.path.isfile(join(ref_abs, "mccode.sim"))):
-            # NeXus-only output (mccode.h5) or otherwise nothing mcplot-coplot-html can compare
+        if not (has_output(test_abs) and has_output(ref_abs)):
+            # nothing mcplot-coplot-html can compare
             return None
         if has_huge_file(test_abs, ref_abs):
             logging.info("Skipping mcplot-coplot-html for %s: data file > %d MB" % (url, DIFF_MAX_FILESIZE // 2**20))
