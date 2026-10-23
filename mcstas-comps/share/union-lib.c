@@ -2840,24 +2840,48 @@ int existence_of_intersection(Coords point1, Coords point2, struct geometry_stru
     Coords vector_between = coords_sub(point2,point1);
     double start_point[3],vector_between_v[3];
     // room for every crossing of a mesh, at most GMESH_MAX_HITS
-    double temp_solution[GMESH_MAX_HITS];
+    double* temp_solution;
+	  double* dummy_double;
+	  int* dummy_int;
+
+    if (geometry->eshape != mesh){
+      temp_solution = (double *)malloc(GMESH_MAX_HITS * sizeof(double));
+      dummy_double = (double *)malloc(GMESH_MAX_HITS * sizeof(double));
+      dummy_int = (int *)malloc(GMESH_MAX_HITS * sizeof(int));
+    } else{
+      temp_solution = (double *)malloc( 2* sizeof(double));
+      dummy_double = (double *)malloc( 2* sizeof(double));
+      dummy_int = (int *)malloc( 2* sizeof(int));   
+    }
+
     int number_of_solutions;
 
     start_point[0] = point1.x;start_point[1] = point1.y;start_point[2] = point1.z;
     vector_between_v[0] = vector_between.x;vector_between_v[1] = vector_between.y;vector_between_v[2] = vector_between.z;
 	
-	// todo: Switch to nicer intersect call
-	double dummy_double[GMESH_MAX_HITS];
-	int dummy_int[GMESH_MAX_HITS];
+
 	
     //printf("\nChecking the existence of intersections");	
     geometry->intersect_function(temp_solution, dummy_double, dummy_double, dummy_double, dummy_int, &number_of_solutions, start_point, vector_between_v, geometry);
     if (number_of_solutions > 0) {
-        if (temp_solution[0] > 0 && temp_solution[0] < 1) return 1;
+        if (temp_solution[0] > 0 && temp_solution[0] < 1) {
+          free(temp_solution);
+          free(dummy_double);
+          free(dummy_int);
+          return 1;
+        }
         if (number_of_solutions == 2) {
-            if (temp_solution[1] > 0 && temp_solution[1] < 1) return 1;
+            if (temp_solution[1] > 0 && temp_solution[1] < 1) {
+              free(temp_solution);
+              free(dummy_double);
+              free(dummy_int);
+              return 1;
+            }
         }
     }
+    free(temp_solution);
+    free(dummy_double);
+    free(dummy_int);
     return 0;
 }
 
