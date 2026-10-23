@@ -2844,7 +2844,7 @@ int existence_of_intersection(Coords point1, Coords point2, struct geometry_stru
 	  double* dummy_double;
 	  int* dummy_int;
 
-    if (geometry->eshape != mesh){
+    if (geometry->eShape != mesh){
       temp_solution = (double *)malloc(GMESH_MAX_HITS * sizeof(double));
       dummy_double = (double *)malloc(GMESH_MAX_HITS * sizeof(double));
       dummy_int = (int *)malloc(GMESH_MAX_HITS * sizeof(int));
