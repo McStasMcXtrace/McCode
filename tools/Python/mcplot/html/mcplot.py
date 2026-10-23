@@ -293,15 +293,16 @@ def plotfunc(node, filename=None, suffix=''):
             mons = [d for d in (steps[i] if i < len(steps) else []) if type(d) in (Data1D, Data2D)]
             if mons:
                 curve = data_lst[i]
-                stepfile = os.path.join(directory, os.path.basename(curve.filepath) + "_steps.html")
                 xvals = getattr(curve, 'xvals', [])
-                write_grid(stepfile, f"{curve.title} per scan step, {baseinstr}/{directory}{suffix}",
-                           [(d.filepath + ".html",
-                             [(d.filepath + ".html", f"{curve.xvar} = {xvals[j]:g}" if len(xvals) == len(mons) else f"step {j}"),
-                              (d.filepath + "_log.html", "log")])
-                            for j, d in enumerate(mons)],
-                           back=filename)
-                links.append((stepfile, "per step"))
+                for log, other in (("", "_log"), ("_log", "")):
+                    stepfile = os.path.join(directory, os.path.basename(curve.filepath) + "_steps" + log + ".html")
+                    write_grid(stepfile, f"{curve.title} per scan step{' (log)' if log else ''}, {baseinstr}/{directory}{suffix}",
+                               [(d.filepath + log + ".html",
+                                 [(d.filepath + log + ".html", f"{curve.xvar} = {xvals[j]:g}" if len(xvals) == len(mons) else f"step {j}"),
+                                  (d.filepath + other + ".html", "log" if other else "lin")])
+                                for j, d in enumerate(mons)],
+                               back=filename)
+                    links.append((stepfile, "per step" + (" (log)" if log else "")))
             cells.append((fname, links))
         write_grid(filename, f"Simulation results {baseinstr}/{directory}{suffix}", cells)
         return filename
