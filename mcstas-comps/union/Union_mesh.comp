@@ -33,7 +33,7 @@
 * shared by exactly two triangles.
 *
 * Number of intersections per ray: for each mesh, Union_master stores the
-* GMESH_MAX_HITS (default 4) nearest crossings of the ray with the mesh surface.
+* GMESH_MAX_HITS (default 50) nearest crossings of the ray with the mesh surface.
 * A concave mesh, or one made of several parts, can be crossed more often. Then
 * the farther crossings are lost, the ray can not find the surface where it
 * leaves the mesh, and Union_master reports trace errors. geometry-mesh-lib
