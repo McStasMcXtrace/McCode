@@ -2854,7 +2854,15 @@ int existence_of_intersection(Coords point1, Coords point2, struct geometry_stru
       dummy_int     = malloc(GMESH_MAX_HITS * sizeof(int));
     }
 
-    int number_of_solutions;
+    if (!temp_solution || !dummy_double || !dummy_int) {
+      fprintf(stderr, "Union existence_of_intersection: memory allocation failed\n");
+      free(temp_solution);    
+      free(dummy_double);
+      free(dummy_int);
+      exit(EXIT_FAILURE);
+    }
+
+    int number_of_solutions = 0;
 
     start_point[0] = point1.x;start_point[1] = point1.y;start_point[2] = point1.z;
     vector_between_v[0] = vector_between.x;vector_between_v[1] = vector_between.y;vector_between_v[2] = vector_between.z;
