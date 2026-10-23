@@ -908,37 +908,32 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 		if (NXopengroup(nxhandle, "Geometry", "NXdata") == NX_OK) {
 		  char tmp[CHAR_BUF_LENGTH];
 		  sprintf(tmp,"%g",Vars->Sphere_Radius);
-		  nxprintattr(nxhandle, "radius", tmp);
+		  nxprintattr(nxhandle, "radius", "%s", tmp);
 
 		  sprintf(tmp,"%g",Vars->Cylinder_Height);
-		  nxprintattr(nxhandle, "height", tmp);
+		  nxprintattr(nxhandle, "height", "%s", tmp);
 
 		  sprintf(tmp,"%g",Vars->mxmin);
-		  nxprintattr(nxhandle, "xmin",  tmp);
+		  nxprintattr(nxhandle, "xmin", "%s",  tmp);
 		  sprintf(tmp,"%g",Vars->mxmax);
-		  nxprintattr(nxhandle, "xmax",  tmp);
+		  nxprintattr(nxhandle, "xmax", "%s",  tmp);
 
 		  sprintf(tmp,"%g",Vars->mymin);
-		  nxprintattr(nxhandle, "ymin",  tmp);
+		  nxprintattr(nxhandle, "ymin", "%s",  tmp);
 		  sprintf(tmp,"%g",Vars->mymax);
-		  nxprintattr(nxhandle, "ymax",  tmp);
+		  nxprintattr(nxhandle, "ymax", "%s",  tmp);
 
 		  sprintf(tmp,"%g",Vars->mzmin);
-		  nxprintattr(nxhandle, "zmin",  tmp);
+		  nxprintattr(nxhandle, "zmin", "%s",  tmp);
 		  sprintf(tmp,"%g",Vars->mzmax);
-		  nxprintattr(nxhandle, "zmax",  tmp);
-
-		  sprintf(tmp,"%g",Vars->mzmin);
-		  nxprintattr(nxhandle, "zmin",  tmp);
-		  sprintf(tmp,"%g",Vars->mzmax);
-		  nxprintattr(nxhandle, "zmax",  tmp);
+		  nxprintattr(nxhandle, "zmax", "%s",  tmp);
 
 		  sprintf(tmp,"%i",Vars->Flag_Shape);
-		  nxprintattr(nxhandle, "Shape identifier",  tmp);
+		  nxprintattr(nxhandle, "Shape identifier", "%s",  tmp);
 		  sprintf(tmp,"%s",Vars->Monitor_Label);
-		  nxprintattr(nxhandle, "Shape string",  tmp);
+		  nxprintattr(nxhandle, "Shape string", "%s",  tmp);
 		  sprintf(tmp,"%s",Vars->option);
-		  nxprintattr(nxhandle, "Option string",  tmp);
+		  nxprintattr(nxhandle, "Option string", "%s",  tmp);
 
 		  NXclosegroup(nxhandle); // Geometry
 		} else {
@@ -971,39 +966,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	  
 	  MCDETECTOR detector;
 	  
-	  /* Init - perhaps better with an init-function in mccode-r? */
-	  detector.m = 0;
-	  detector.xmin = 0;
-	  detector.xmax = 0;
-	  detector.ymin = 0;
-	  detector.ymax = 0;
-	  detector.zmin = 0;
-	  detector.zmax = 0;
-	  detector.intensity = 0;
-	  detector.error = 0;
-	  detector.events = 0;
-	  detector.min = 0;
-	  detector.max = 0;
-	  detector.mean = 0;
-	  detector.centerX = 0;
-	  detector.halfwidthX = 0;
-	  detector.centerY = 0;
-	  detector.halfwidthY = 0;
-	  detector.rank = 0;
-	  detector.istransposed = 0;
-	  detector.n = 0;
-	  detector.p = 0;
-	  detector.date_l = 0;
-	  detector.p0 = NULL;
-	  detector.p1 = NULL;
-	  detector.p2 = NULL;
-	  sprintf(detector.ncount,"%s","");
-	  sprintf(detector.xvar,"%s","");
-	  sprintf(detector.xlabel,"%s","");
-	  sprintf(detector.yvar,"%s","");
-	  sprintf(detector.ylabel,"%s","");
-	  sprintf(detector.zvar,"%s","");
-	  sprintf(detector.zvar,"%s","");
+	  memset(&detector, 0, sizeof(detector));
 	  sprintf(detector.statistics,"%s","None");
 	  sprintf(detector.variables,"%s","None");
 	  sprintf(detector.signal,"%s","Pixel index");

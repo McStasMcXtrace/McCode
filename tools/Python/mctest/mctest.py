@@ -578,11 +578,11 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
         if test.scan:
             testncount = test.ncount or "%g" % min(float(ncount), 1e5)
             timeout = runmax * len(test.targetval)
+            if mpi is None:
+                parvals = parvals + " --scan_split=auto"
         if statfactor != 1:
             testncount = "%g" % (float(testncount) * statfactor)
             timeout = timeout * max(1, statfactor)
-            if mpi is None:
-                parvals = parvals + " --scan_split=auto"
         # Did test run already?
         if not os.path.exists(join(testdir, test.instrname, str(test.testnb))):      
             if nexus:
