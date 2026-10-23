@@ -40,7 +40,7 @@ Changes in McStas/McXtrace 3.10.0
 * New `mcplot-plopp` and `mcdisplay-plopp` prototypes based on Scipp and Plopp by @willend in #2799, with event pixel maps (#2870), NeXus attribute fixes (#2878) and `mcgui` menu entries (#2879)
 * `mcdisplay-webgl-classic`: `--trace=2` shapes by default with the new `Test_mcdisplay_shapes` example (#2836, #2840), shaded shapes with wireframe toggle (#2848), dead code removed and `-n 0`/`--invcanvas` fixed (#2833), all by @willend
 * `mcdisplay-webgl`: polyhedron faces of any size (#2847), legacy code removed and the viewer rebuilt (#2832), by @willend
-* `mcdisplay`: hollow boxes and cylinders drawn as closed cavities (#2844), simple `--trace=1` box/cylinder/cone drawings now match the detailed ones (#2837, #2802), correct polygon winding in `--trace=2` output (#2843), instrument parameters given before `-n` are kept (#2854, fixes #747), closing the pyqtgraph window no longer raises an error (#2800), by @willend
+* `mcdisplay`: hollow boxes and cylinders drawn as closed cavities (#2844, documented with tilted test cases in #2845), simple `--trace=1` box/cylinder/cone drawings now match the detailed ones (#2837, #2802), correct polygon winding in `--trace=2` output (#2843), instrument parameters given before `-n` are kept (#2854, fixes #747), closing the pyqtgraph window no longer raises an error (#2800), by @willend
 * `mcdisplay-cad`: much faster and more complete, with STEP output, particle rays, `--tubes` and `-t/--trace` (#2824, by @farhi and @willend), plain OFF output and PLY files readable by the OFF/PLY library (#2868), `Annulus` drawn with the correct ring width (#2846)
 * Python tools now quote file paths when opening them in a browser, by @willend in #2836
 * The text-based `mcplot-terminal` was added and then deferred to a later release, by @willend in #2785, #2822
@@ -88,7 +88,7 @@ Changes in McStas/McXtrace 3.10.0
 ### McStas only
 
 #### Components
-* `Monitor_nD` in Mantid mode: square monitors binned only in x or y now get the event columns Mantid expects (previously Mantid silently loaded no events), `y ... x` no longer gives a rotated detector, and `mcdisplay-mantid` places pixels at their centres instead of half a pixel off, by @willend in #2888 (fixes #2178)
+* `Monitor_nD` in Mantid mode: square monitors binned only in x or y now get the event columns Mantid expects (previously Mantid silently loaded no events), `y ... x` no longer gives a rotated detector, and `mcdisplay-mantid` places pixels at their centres instead of half a pixel off, by @willend in #2892 (fixes #2178)
 * `MCPL_input` consolidated with `MCPL_input_once` (MPI splitting, `repeat_count`). `MCPL_input_once` moved to obsolete. By @willend in #2780. `MCPL_output` defaults to `weight_mode=1`, following the MCPL [`stat:sum` convention](https://mctools.github.io/mcpl/format_statsum/) (#2779)
 * Conic mirrors (`conic.h`): reflectivity applied once with the correct scattering vector (#2789), configurable figure error with a waviness model, `StdReflecFunc` reflectivity only, `FlatEllipse_finite_mirror` `sourceDist` fix (#2793), no spurious re-hit of the surface just reflected from (#2794). New `Mirror_conic` test component. By @willend, fixes #2787
 * New `Text` component for 3D text labels, used to label the ILL H5 instruments, by @farhi and @willend in #2782. New `Text2OFF` template instrument (#2869)
@@ -98,6 +98,7 @@ Changes in McStas/McXtrace 3.10.0
 * `Res_monitor` and `TOFRes_monitor` no longer free arrays they did not create, by @henrikjacobsenfys in #2810
 * `Radial_div`: obsolete grammar removed, new `Test_Radial_div`, by @willend in #2857 (fixes #2678)
 * `Annulus`: clearer parameters, by @farhi in #2801
+* `Tomography` template: the `tomo_recon.py` reconstruction script now shows a 3D isosurface, reads and writes NeXus and offers SIRT and filter options, with a full-rotation `%TestScan:` test, by @willend in #2772, #2803
 * `mcstas-chopper-lib` updated to v4.3.0, v4.4.0 and v4.4.1: transmission weighted by how likely a neutron gets through, the depth of moderator emission surfaces, parked discs open while any of the beam crosses an opening, and more. By @g5t, registered in #2805, #2842, #2867
 
 #### Union
