@@ -2845,13 +2845,13 @@ int existence_of_intersection(Coords point1, Coords point2, struct geometry_stru
 	  int* dummy_int;
 
     if (geometry->eShape != mesh){
-      temp_solution = (double *)malloc(GMESH_MAX_HITS * sizeof(double));
-      dummy_double = (double *)malloc(GMESH_MAX_HITS * sizeof(double));
-      dummy_int = (int *)malloc(GMESH_MAX_HITS * sizeof(int));
+      temp_solution = malloc( 2* sizeof(double));
+      dummy_double  = malloc( 2* sizeof(double));
+      dummy_int     = malloc( 2* sizeof(int)); 
     } else{
-      temp_solution = (double *)malloc( 2* sizeof(double));
-      dummy_double = (double *)malloc( 2* sizeof(double));
-      dummy_int = (int *)malloc( 2* sizeof(int));   
+      temp_solution = malloc(GMESH_MAX_HITS * sizeof(double));
+      dummy_double  = malloc(GMESH_MAX_HITS * sizeof(double));
+      dummy_int     = malloc(GMESH_MAX_HITS * sizeof(int));
     }
 
     int number_of_solutions;
@@ -2863,20 +2863,12 @@ int existence_of_intersection(Coords point1, Coords point2, struct geometry_stru
 	
     //printf("\nChecking the existence of intersections");	
     geometry->intersect_function(temp_solution, dummy_double, dummy_double, dummy_double, dummy_int, &number_of_solutions, start_point, vector_between_v, geometry);
-    if (number_of_solutions > 0) {
-        if (temp_solution[0] > 0 && temp_solution[0] < 1) {
+    for (int i = 0; i < number_of_solutions; i++){
+      if (temp_solution[i] > 0 && temp_solution[i] < 1) {
           free(temp_solution);
           free(dummy_double);
           free(dummy_int);
           return 1;
-        }
-        if (number_of_solutions == 2) {
-            if (temp_solution[1] > 0 && temp_solution[1] < 1) {
-              free(temp_solution);
-              free(dummy_double);
-              free(dummy_int);
-              return 1;
-            }
         }
     }
     free(temp_solution);
