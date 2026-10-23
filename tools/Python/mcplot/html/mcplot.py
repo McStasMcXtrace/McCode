@@ -410,7 +410,8 @@ def main(args):
             simdir = os.path.dirname(simfile)
         elif os.path.isdir(simfile):
             simdir = simfile
-            simfile = os.path.join(simdir,'mccode.sim')
+            if os.path.isfile(os.path.join(simdir,'mccode.sim')):
+                simfile = os.path.join(simdir,'mccode.sim')
         else:
             print(simfile + " is neither a .sim file or directory, exiting")
             exit(-1)

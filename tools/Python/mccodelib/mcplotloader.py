@@ -384,6 +384,61 @@ def _load_monitor(monitorfile):
     return data
 
 
+def _nx_load_monitor(h5file, path):
+    ''' deferred loading of the monitor group at path in a McCode NeXus file, as _load_monitor() '''
+    def load():
+        import h5py
+        with h5py.File(h5file, 'r') as f:
+            g = f[path]
+            a = {k: v.decode(errors='replace') if isinstance(v, bytes) else v for k, v in g.attrs.items()}
+            typ = a.get('type', '')
+            if typ.startswith('array_1d'):
+                data = Data1D()
+                data.xvar = a['xvar'].strip()
+                data.xlimits = tuple(float(v) for v in a['xlimits'].split())
+                data.yvar = tuple(a['yvar'].strip().strip('()').split(','))
+                axis = [k for k in g if k not in ('data', 'errors', 'ncount')][0]
+                data.xvals = g[axis][()].tolist()
+                data.yvals = g['data'][()].tolist()
+                data.y_err_vals = g['errors'][()].tolist()
+                data.Nvals = g['ncount'][()].tolist()
+            elif typ.startswith('array_2d'):
+                data = Data2D()
+                data.xvar, data.yvar, data.zvar = (a.get(k, '').strip() for k in ('xvar', 'yvar', 'zvar'))
+                data.xlimits = tuple(float(v) for v in a['xylimits'].split()[:4])
+                data.signal = a.get('signal', '')
+                # NeXus stores (nx, ny), the ASCII "# Data" block is (ny, nx)
+                data.zvals = g['data'][()].T.tolist()
+                data.counts = g['ncount'][()].T.tolist()
+            else:
+                print('load_monitor: Not loading %s dataset %s' % (typ, path))
+                data = Data0D()
+                data.title = typ
+                return data
+            data.component = a.get('component', '')
+            data.filename = a.get('filename', '')
+            data.title = a.get('title', '')
+            data.xlabel = a.get('xlabel', '')
+            data.ylabel = a.get('ylabel', '')
+            v = a['values'].split()
+            data.values = (Decimal(v[0]), Decimal(v[1]), float(v[2]))
+            data.statistics = re.sub(r'=([^;]+);', lambda m: '=%.2E;' % Decimal(m.group(1)), a.get('statistics', ''))
+            # no file per monitor: a unique path in the output dir (mcplot-html writes <filepath>.html)
+            data.filepath = join(dirname(h5file), '%s_%s' % (path.split('/')[1], data.filename))
+            return data
+    return DataHandle(load_fct=load)
+
+
+def _nx_monitors_by_entry(h5file):
+    ''' [[monitor data handle, ...] per NXentry] of a McCode NeXus file, entries in numeric order '''
+    import h5py
+    with h5py.File(h5file, 'r') as f:
+        entries = sorted(f, key=lambda e: int(re.sub(r'\D', '', e) or 0))
+        return [[_nx_load_monitor(h5file, comps[c]['output'][m].name)
+                 for c in sorted(comps) if 'output' in comps[c] for m in comps[c]['output']]
+                for comps in (f[e]['instrument/components'] for e in entries)]
+
+
 def _get_filenames_from_mccodesim(mccodesim):
     dir = dirname(mccodesim)
 
@@ -642,6 +697,23 @@ def has_filename(args):
         return True
 
 
+def is_nexus(args):
+    ''' a McCode NeXus file, or an output dir with mccode.h5 and no mccode.sim; called first, sets directory '''
+    f = args['simfile'] or '.'
+    if isfile(f) and f.endswith(('.h5', '.nxs')):
+        args['h5file'] = f
+    elif isdir(f) and isfile(join(f, 'mccode.h5')) and not isfile(join(f, 'mccode.sim')):
+        args['h5file'] = join(f, 'mccode.h5')
+    else:
+        return False
+    args['directory'] = dirname(args['h5file']) or '.'
+    return True
+
+
+def is_nexus_sweep(args):
+    return isfile(join(args['directory'], 'mccode.dat'))
+
+
 def is_mccodesim_or_mccodedat(args):
     f = args['simfile']
     f_name = basename(f)
@@ -794,6 +866,16 @@ def load_simulation(args):
     root.set_primaries(primnodes)
     root.set_secondaries(primnodes) # there is only one way to click here...could also be None
 
+    return root
+
+
+def load_nexus(args):
+    ''' single NeXus dataset: one entry, the same two-level graph as load_simulation() '''
+    data_lst = _nx_monitors_by_entry(args['h5file'])[0]
+    root = PNMultiple(data_lst)
+    primnodes = [PNSingle(data) for data in data_lst]
+    root.set_primaries(primnodes)
+    root.set_secondaries(primnodes)
     return root
 
 
@@ -977,6 +1059,7 @@ class McCodeDataLoader():
         exit_term_case3  = FCNTerminal(key = "case3",  fct = load_sweep)
         exit_term_case3fallback = FCNTerminal(key = "case3-fallback", fct = load_sweep_dat_only)
         exit_term_case4  = FCNTerminal(key = "case4",  fct = load_monitor_folder)
+        exit_term_case5  = FCNTerminal(key = "case5",  fct = load_nexus)
 
         # decision nodes (assembled in backwards order)
         dec_multiplefiles        = FCNDecisionBool(fct = has_multiple_datfiles,
@@ -1003,9 +1086,15 @@ class McCodeDataLoader():
         dec_hasfilename          = FCNDecisionBool(fct = has_filename,
                                                    node_T = dec_ismccodesimordat,
                                                    node_F = dec_issweepfolder)
+        dec_isnexussweep         = FCNDecisionBool(fct = is_nexus_sweep,
+                                                   node_T = exit_term_case3,
+                                                   node_F = exit_term_case5)
+        dec_isnexus              = FCNDecisionBool(fct = is_nexus,
+                                                   node_T = dec_isnexussweep,
+                                                   node_F = dec_hasfilename)
 
         # enter terminal node
-        enter_term_simfile = FCNTerminal(key = 'enter', node_next = dec_hasfilename)
+        enter_term_simfile = FCNTerminal(key = 'enter', node_next = dec_isnexus)
 
         # get the "args" which is just the simfile, a string,
         # which may correspond to a file or a folder
