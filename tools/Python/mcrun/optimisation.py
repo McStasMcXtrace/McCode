@@ -633,6 +633,50 @@ class Scanner:
             LOG.info('Scan complete: all %d point(s) succeeded.', len(points))
 
 
+def merge_nexus_steps(mcstas_dir, indices):
+    """ Merges the mccode.h5 of each --scan_split step dir mcstas_dir/i into
+        mcstas_dir/mccode.h5 as entry1..N, as a serial NeXus scan writes it, and
+        removes the step dirs. Each step wrote its data as its own entry1 in its
+        own dir, so the copied entries refer to those: the 'target' attribute of
+        each linked monitor (e.g. /entry1/instrument/... in entry2, which NeXus
+        readers such as nexusformat/NeXpy follow, showing entry1's data), and the
+        step dir in the simulation metadata. Both are rewritten here. """
+    import os, shutil
+    import h5py
+    import numpy as np
+    # step dirs as passed to the step runs, see _simulate_point()
+    stepdirs = [f'{mcstas_dir}/{i}' for i in indices if os.path.exists(f'{mcstas_dir}/{i}/mccode.h5')]
+    with h5py.File(join(mcstas_dir, 'mccode.h5'), 'w') as merged:
+        for n, stepdir in enumerate(stepdirs, 1):
+
+            def fix(v, entry=True):
+                s = v.decode() if isinstance(v, bytes) else v
+                if entry:
+                    s = re.sub(r'/entry1\b', f'/entry{n}', s)
+                s = s.replace(stepdir, mcstas_dir)
+                return np.bytes_(s.encode()) if isinstance(v, bytes) else s  # fixed-length, as written by the runtime
+
+            def fix_all(name, obj):
+                for k, v in obj.attrs.items():
+                    if isinstance(v, (bytes, str)):
+                        obj.attrs[k] = fix(v)
+                if isinstance(obj, h5py.Dataset) and obj.dtype.kind == 'S' and obj.size == 1:
+                    # fixed-length, null-terminated string (e.g. title): rewritten only
+                    # when it changes, by the step dir fix, which shortens it so it fits
+                    v = obj[()] if not obj.shape else obj[0]
+                    if fix(v, False) != v:
+                        obj[...] = fix(v, False)
+
+            with h5py.File(f'{stepdir}/mccode.h5', 'r') as f:
+                if n == 1:
+                    merged.attrs.update({k: fix(v) if isinstance(v, (bytes, str)) else v for k, v in f.attrs.items()})
+                f.copy('entry1', merged, name=f'entry{n}')
+            fix_all(f'entry{n}', merged[f'entry{n}'])
+            merged[f'entry{n}'].visititems(fix_all)
+    for stepdir in stepdirs:
+        shutil.rmtree(stepdir)
+
+
 class Scanner_split:
     """ Perform a series of simulation steps along a given set of points,
         Where each simulation is controlled by its own thread. """
@@ -675,16 +719,7 @@ class Scanner_split:
         if self.mcstas.options.format.lower() == 'nexus':
             # Parallel steps can't safely append to one HDF5 file, so each wrote
             # its own dir/i/mccode.h5 - merge them as entry1..N like a serial scan.
-            import os, shutil, subprocess
-            merged = join(mcstas_dir, 'mccode.h5')
-            steps = [join(mcstas_dir, str(r['index']), 'mccode.h5') for r in results]
-            steps = [s for s in steps if os.path.exists(s)]
-            for n, step in enumerate(steps):
-                if n == 0:
-                    shutil.copy(step, merged)
-                else:
-                    subprocess.run(['h5copy', '-i', step, '-o', merged,
-                                    '-s', '/entry1', '-d', f'/entry{n+1}'], check=True)
+            merge_nexus_steps(mcstas_dir, [r['index'] for r in results])
 
         skipped = [r['index'] for r in results if not r['detectors']]
 
