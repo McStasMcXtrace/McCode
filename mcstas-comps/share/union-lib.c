@@ -2785,7 +2785,7 @@ int sample_mesh_intersect(double *t,
     nx[i] = normal.x;
     ny[i] = normal.y;
     nz[i] = normal.z;
-    surface_index[i] = 0;
+    surface_index[i] = hits[i].tri;
   }
   return *num_solutions > 0;
 }
