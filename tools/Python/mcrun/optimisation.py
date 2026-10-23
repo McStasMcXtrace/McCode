@@ -1,5 +1,5 @@
 from os.path import basename
-from log import McRunException, getLogger
+from log import McRunException, getLogger, setupLogger
 from datetime import datetime
 from decimal import Decimal
 from os.path import join 
@@ -410,8 +410,16 @@ def scan_base_seed(mcstas, intervals):
         LOG.info('Scan base seed: %d' % mcstas.options.seed)
     return mcstas.options.seed
 
+def _init_worker():
+    """ mcrun's logging in a --scan_split worker process: needed with the spawn
+        start method (macOS, Windows), inherited already with fork (Linux) """
+    import logging
+    if not logging.getLogger().handlers:
+        setupLogger()
+
+
 def _simulate_point(args):
-    i, point, intervals, mcstas_config, mcstas_dir, base_seed = args
+    i, npoints, point, intervals, mcstas_config, mcstas_dir, base_seed = args
 
     from shutil import copyfile
     from os.path import join
@@ -455,8 +463,8 @@ def _simulate_point(args):
             # whose stdout didn't contain any "Detector: ..." lines at
             # all) - treated the same as a runtime failure below: skip
             # this point rather than writing an empty/malformed row.
-            LOG.warning('Scan step %d produced no detector data - skipping this point. Parameters were: %s',
-                        i, ', '.join(f'{k}={v}' for k, v in point.items()))
+            LOG.warning('Scan step %d/%d produced no detector data - skipping this point. Parameters were: %s',
+                        i + 1, npoints, ', '.join(f'{k}={v}' for k, v in point.items()))
             detectors = None
     except Exception as e:
         # A single failed scan point (simulation crash, non-zero exit,
@@ -465,8 +473,8 @@ def _simulate_point(args):
         # already skips any result with detectors=None rather than writing
         # a row for it, so the scan carries on to the remaining points and
         # mccode.dat simply omits this one.
-        LOG.warning('Scan step %d failed (%s: %s) - skipping this point and continuing with the rest of the scan. '
-                    'Parameters were: %s', i, type(e).__name__, e, ', '.join(f'{k}={v}' for k, v in point.items()))
+        LOG.warning('Scan step %d/%d failed (%s: %s) - skipping this point and continuing with the rest of the scan. '
+                    'Parameters were: %s', i + 1, npoints, type(e).__name__, e, ', '.join(f'{k}={v}' for k, v in point.items()))
         detectors = None
 
     result = {
@@ -711,12 +719,13 @@ class Scanner_split:
         base_seed = scan_base_seed(self.mcstas, self.intervals)
 
         # Prepare data to pass into processes
+        points = list(self.points)
         args_list = [
-            (i, point, self.intervals, self.mcstas, mcstas_dir, base_seed)
-            for i, point in enumerate(self.points)
+            (i, len(points), point, self.intervals, self.mcstas, mcstas_dir, base_seed)
+            for i, point in enumerate(points)
         ]
 
-        with Pool(processes=self.nb_cpu) as pool:
+        with Pool(processes=self.nb_cpu, initializer=_init_worker) as pool:
             results = pool.map(_simulate_point, args_list)
 
         # Sort results to preserve order
