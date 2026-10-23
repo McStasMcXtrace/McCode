@@ -572,6 +572,36 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     if (!Vars->Flag_List && nexusbins==1) Vars->Flag_nexusbins=1;
 
     free(option_copy);
+
+    /* Mantid LoadMcStas needs both x and y event columns (p x y n id t):
+       add the missing one with a single bin for 1D x or y banks (#2178) */
+    if (Vars->Flag_mantid && abs(Vars->Flag_Shape) == DEFS->SHAPE_SQUARE && Vars->Coord_Number < MONnD_COORD_NMAX-1) {
+      long ix=0, iy=0, k;
+      for (i=1; i<=Vars->Coord_Number; i++) {
+        int ct = Vars->Coord_Type[i] & (DEFS->COORD_LOG-1);
+        if (ct==DEFS->COORD_X && !ix) ix=i;
+        if (ct==DEFS->COORD_Y && !iy) iy=i;
+      }
+      if (!ix != !iy) {
+        k = ix ? ix+1 : iy; /* keep x before y */
+        for (i=Vars->Coord_Number; i>=k; i--) {
+          Vars->Coord_Type[i+1]=Vars->Coord_Type[i];
+          memcpy(Vars->Coord_Label[i+1],Vars->Coord_Label[i],30);
+          memcpy(Vars->Coord_Var[i+1],Vars->Coord_Var[i],30);
+          Vars->Coord_Bin[i+1]=Vars->Coord_Bin[i];
+          Vars->Coord_Min[i+1]=Vars->Coord_Min[i];
+          Vars->Coord_Max[i+1]=Vars->Coord_Max[i];
+        }
+        Vars->Coord_Type[k] = ix ? DEFS->COORD_Y : DEFS->COORD_X;
+        strcpy(Vars->Coord_Label[k], ix ? "y [m]" : "x [m]");
+        strcpy(Vars->Coord_Var[k], ix ? "y" : "x");
+        Vars->Coord_Bin[k] = 1;
+        Vars->Coord_Min[k] = ix ? Vars->mymin : Vars->mxmin;
+        Vars->Coord_Max[k] = ix ? Vars->mymax : Vars->mxmax;
+        Vars->Coord_Number++;
+        Vars->Coord_NumberNoPixel++;
+      }
+    }
     if (carg == 128) printf("Monitor_nD: %s reached max number of tokens (%i). Skipping.\n", Vars->compcurname, 128);
 
     if ((Vars->Flag_Shape == DEFS->SHAPE_BOX) && (fabs(Vars->mzmax - Vars->mzmin) == 0)) Vars->Flag_Shape = DEFS->SHAPE_SQUARE;
@@ -878,37 +908,32 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 		if (NXopengroup(nxhandle, "Geometry", "NXdata") == NX_OK) {
 		  char tmp[CHAR_BUF_LENGTH];
 		  sprintf(tmp,"%g",Vars->Sphere_Radius);
-		  nxprintattr(nxhandle, "radius", tmp);
+		  nxprintattr(nxhandle, "radius", "%s", tmp);
 
 		  sprintf(tmp,"%g",Vars->Cylinder_Height);
-		  nxprintattr(nxhandle, "height", tmp);
+		  nxprintattr(nxhandle, "height", "%s", tmp);
 
 		  sprintf(tmp,"%g",Vars->mxmin);
-		  nxprintattr(nxhandle, "xmin",  tmp);
+		  nxprintattr(nxhandle, "xmin", "%s",  tmp);
 		  sprintf(tmp,"%g",Vars->mxmax);
-		  nxprintattr(nxhandle, "xmax",  tmp);
+		  nxprintattr(nxhandle, "xmax", "%s",  tmp);
 
 		  sprintf(tmp,"%g",Vars->mymin);
-		  nxprintattr(nxhandle, "ymin",  tmp);
+		  nxprintattr(nxhandle, "ymin", "%s",  tmp);
 		  sprintf(tmp,"%g",Vars->mymax);
-		  nxprintattr(nxhandle, "ymax",  tmp);
+		  nxprintattr(nxhandle, "ymax", "%s",  tmp);
 
 		  sprintf(tmp,"%g",Vars->mzmin);
-		  nxprintattr(nxhandle, "zmin",  tmp);
+		  nxprintattr(nxhandle, "zmin", "%s",  tmp);
 		  sprintf(tmp,"%g",Vars->mzmax);
-		  nxprintattr(nxhandle, "zmax",  tmp);
-
-		  sprintf(tmp,"%g",Vars->mzmin);
-		  nxprintattr(nxhandle, "zmin",  tmp);
-		  sprintf(tmp,"%g",Vars->mzmax);
-		  nxprintattr(nxhandle, "zmax",  tmp);
+		  nxprintattr(nxhandle, "zmax", "%s",  tmp);
 
 		  sprintf(tmp,"%i",Vars->Flag_Shape);
-		  nxprintattr(nxhandle, "Shape identifier",  tmp);
+		  nxprintattr(nxhandle, "Shape identifier", "%s",  tmp);
 		  sprintf(tmp,"%s",Vars->Monitor_Label);
-		  nxprintattr(nxhandle, "Shape string",  tmp);
+		  nxprintattr(nxhandle, "Shape string", "%s",  tmp);
 		  sprintf(tmp,"%s",Vars->option);
-		  nxprintattr(nxhandle, "Option string",  tmp);
+		  nxprintattr(nxhandle, "Option string", "%s",  tmp);
 
 		  NXclosegroup(nxhandle); // Geometry
 		} else {
@@ -941,39 +966,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 	  
 	  MCDETECTOR detector;
 	  
-	  /* Init - perhaps better with an init-function in mccode-r? */
-	  detector.m = 0;
-	  detector.xmin = 0;
-	  detector.xmax = 0;
-	  detector.ymin = 0;
-	  detector.ymax = 0;
-	  detector.zmin = 0;
-	  detector.zmax = 0;
-	  detector.intensity = 0;
-	  detector.error = 0;
-	  detector.events = 0;
-	  detector.min = 0;
-	  detector.max = 0;
-	  detector.mean = 0;
-	  detector.centerX = 0;
-	  detector.halfwidthX = 0;
-	  detector.centerY = 0;
-	  detector.halfwidthY = 0;
-	  detector.rank = 0;
-	  detector.istransposed = 0;
-	  detector.n = 0;
-	  detector.p = 0;
-	  detector.date_l = 0;
-	  detector.p0 = NULL;
-	  detector.p1 = NULL;
-	  detector.p2 = NULL;
-	  sprintf(detector.ncount,"%s","");
-	  sprintf(detector.xvar,"%s","");
-	  sprintf(detector.xlabel,"%s","");
-	  sprintf(detector.yvar,"%s","");
-	  sprintf(detector.ylabel,"%s","");
-	  sprintf(detector.zvar,"%s","");
-	  sprintf(detector.zvar,"%s","");
+	  memset(&detector, 0, sizeof(detector));
 	  sprintf(detector.statistics,"%s","None");
 	  sprintf(detector.variables,"%s","None");
 	  sprintf(detector.signal,"%s","Pixel index");
@@ -2160,12 +2153,16 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
              (double)xmin, (double)ymin, 0.0);
       
       if (Vars->Flag_mantid) {
-	/* First define the base pixel type */
-	double dx, dy;
-	dx = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
-	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
+	/* x, y and pixel coordinates may come in any order (#2178) */
+	int ix=1, iy=2, ip=4;
+	for (i=1; i<=Vars->Coord_Number; i++) {
+	  int ct = Vars->Coord_Type[i] & (DEFS->COORD_LOG-1);
+	  if (ct==DEFS->COORD_X) ix=i;
+	  if (ct==DEFS->COORD_Y) iy=i;
+	  if (ct==DEFS->COORD_PIXELID) ip=i;
+	}
 	printf("MANTID_RECTANGULAR_DET:  %g, %g, %g, %g, %li, %li, %llu\n", 
-	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2], (long long unsigned)Vars->Coord_Min[4]);
+	       Vars->Coord_Min[ix],Vars->Coord_Max[ix], Vars->Coord_Min[iy],Vars->Coord_Max[iy], Vars->Coord_Bin[ix], Vars->Coord_Bin[iy], (long long unsigned)Vars->Coord_Min[ip]);
       }
     }
     /* full cylinder/banana */
