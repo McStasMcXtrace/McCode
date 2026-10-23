@@ -413,7 +413,7 @@ def _nx_load_monitor(h5file, path):
             else:
                 print('load_monitor: Not loading %s dataset %s' % (typ, path))
                 data = Data0D()
-                data.title = typ
+                data.title = {'array_0d': 'zero-dim monitor', 'list': 'event list'}.get(typ.split('(')[0], 'Unknown format')
                 return data
             data.component = a.get('component', '')
             data.filename = a.get('filename', '')
