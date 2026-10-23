@@ -895,7 +895,11 @@ def load_sweep(args):
     root.set_primaries(primnodes_lst)
 
     # load secondary data_handle, sweep data_handle points organized by monitor
-    monitors = _load_sweep_monitors(d)
+    if 'h5file' in args:
+        # NeXus scan: one entry per step, transposed to a list of steps per monitor
+        monitors = [list(m) for m in zip(*_nx_monitors_by_entry(args['h5file']))]
+    else:
+        monitors = _load_sweep_monitors(d)
 
     # secondary modes (individual sweep monitors)
     secnodes_lst = []
