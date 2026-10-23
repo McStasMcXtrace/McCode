@@ -67,6 +67,7 @@
 * focus_xw:      [m]   horiz. dimension of a rectangular area
 * focus_xh:      [m]   vert. dimension of a rectangular area
 * focus_r:       [m]   focusing on circle with this radius
+* bvh_display_layers: [1] mcdisplay draws the bounding boxes of this layer of the mesh BVH (the root is layer 1) when the BVH has more layers than this, otherwise the triangle edges. Set to 0 to always draw the triangle edges.
 * coordinate_scale [1e-3] Multiplier that the vertex positions are multiplied by. Set to 1 for input coordinates in meters. Set to 1e-3 for input coordinates in mm.
 * all_surfaces:       [string] Comma seperated string of Union surface definitions defined prior to this component
 * cut_surface:   [string] Comma seperated string of Union surface definitions defined prior to this component, applied to all internal cuts
@@ -100,7 +101,8 @@ SETTING PARAMETERS(string filename = 0,
    string mask_string=0,
    string mask_setting=0,
    number_of_activations=1,
-    coordinate_scale = 1e-3, string init=""
+    coordinate_scale = 1e-3, string init="",
+    int bvh_display_layers = 12
    )
 
 
@@ -131,9 +133,77 @@ SHARE
     return 0;
   }
 
+  int
+  mesh_bvh_layers (gmesh_struct* triangle_mesh) {
+    // Number of layers of the BVH, the root alone is one layer
+    int node_stack[GMESH_BVH_STACK + 2];
+    int layer_stack[GMESH_BVH_STACK + 2];
+    int top = 0, layers = 0;
+    node_stack[0] = 0;
+    layer_stack[0] = 1;
+    top = 1;
+    while (top > 0) {
+      top--;
+      gmesh_node* node = &triangle_mesh->node[node_stack[top]];
+      int layer = layer_stack[top];
+      if (layer > layers)
+        layers = layer;
+      if (node->count == 0) {
+        node_stack[top] = node->first;
+        layer_stack[top++] = layer + 1;
+        node_stack[top] = node->first + 1;
+        layer_stack[top++] = layer + 1;
+      }
+    }
+    return layers;
+  }
+
+  void
+  mcdisplay_mesh_bvh_boxes (struct lines_to_draw* lines_to_draw_output, int index, struct geometry_struct** Geometries, int number_of_volumes) {
+    // Draws the bounding box of every BVH node in layer mesh_display_layer, and of the leaves above it,
+    // in the frame of the master component
+    struct geometry_struct* geometry = Geometries[index];
+    gmesh_struct* triangle_mesh = geometry->geometry_parameters.p_mesh;
+    int node_stack[GMESH_BVH_STACK + 2];
+    int layer_stack[GMESH_BVH_STACK + 2];
+    // corner bits (x, y, z) of the 12 box edges
+    const int box_edges[12][2] = { { 0, 1 }, { 2, 3 }, { 4, 5 }, { 6, 7 }, { 0, 2 }, { 1, 3 }, { 4, 6 }, { 5, 7 }, { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 } };
+    int top = 1;
+    int corner, edge;
+    struct lines_to_draw lines_to_draw_temp;
+    node_stack[0] = 0;
+    layer_stack[0] = 1;
+    while (top > 0) {
+      top--;
+      gmesh_node* node = &triangle_mesh->node[node_stack[top]];
+      int layer = layer_stack[top];
+      if (node->count == 0 && layer < geometry->mesh_display_layer) {
+        node_stack[top] = node->first;
+        layer_stack[top++] = layer + 1;
+        node_stack[top] = node->first + 1;
+        layer_stack[top++] = layer + 1;
+        continue;
+      }
+      Coords corners[8];
+      for (corner = 0; corner < 8; corner++) {
+        Coords local = coords_set ((corner & 1) ? node->hi.x : node->lo.x, (corner & 2) ? node->hi.y : node->lo.y, (corner & 4) ? node->hi.z : node->lo.z);
+        corners[corner] = coords_add (rot_apply (geometry->rotation_matrix, local), geometry->center);
+      }
+      for (edge = 0; edge < 12; edge++) {
+        lines_to_draw_temp = draw_line_with_highest_priority (corners[box_edges[edge][0]], corners[box_edges[edge][1]], index, Geometries, number_of_volumes, 100);
+        merge_lines_to_draw (lines_to_draw_output, &lines_to_draw_temp);
+      }
+    }
+  }
+
   void
   mcdisplay_mesh_function (struct lines_to_draw* lines_to_draw_output, int index, struct geometry_struct** Geometries, int number_of_volumes) {
-    // Draws each edge of the polygons in the file once, in the frame of the master component
+    // Draws each edge of the polygons in the file once, in the frame of the master component,
+    // or the BVH boxes of layer mesh_display_layer when that is set
+    if (Geometries[index]->mesh_display_layer > 0) {
+      mcdisplay_mesh_bvh_boxes (lines_to_draw_output, index, Geometries, number_of_volumes);
+      return;
+    }
     gmesh_struct* triangle_mesh = Geometries[index]->geometry_parameters.p_mesh;
     struct pointer_to_1d_coords_list points_struct = Geometries[index]->shell_points (Geometries[index], 1);
     Coords* points = points_struct.elements;
@@ -400,6 +470,16 @@ INITIALIZE
   mesh_vol.geometry.eShape = mesh;
   mesh_vol.geometry.priority_value = priority;
   mesh_vol.geometry.visualization_on = visualize;
+  mesh_vol.geometry.mesh_display_layer = 0;
+  if (bvh_display_layers > 0) {
+    int layers = mesh_bvh_layers (&mesh_data);
+    if (layers > bvh_display_layers) {
+      mesh_vol.geometry.mesh_display_layer = bvh_display_layers;
+      if (mcdotrace)
+        MPI_MASTER (printf ("Union_mesh %s: mcdisplay draws the BVH boxes of layer %d of %d instead of the %d triangles\n", NAME_CURRENT_COMP,
+                            bvh_display_layers, layers, mesh_data.ntris);)
+    }
+  }
   mesh_vol.geometry.geometry_p_interact = p_interact;
   mesh_vol.geometry.within_function = &r_within_mesh;
   mesh_vol.geometry.geometry_parameters.p_mesh = &mesh_data;

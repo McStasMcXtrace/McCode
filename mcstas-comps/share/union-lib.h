@@ -522,6 +522,7 @@ int process_rot_allocated;  // Keeps track of allocation status of rot_matrix_ar
 
 struct rotation_struct rotation; // Not used, is the x y and z rotation angles.
 int visualization_on; // If visualization_on is true, the volume will be drawn in mcdisplay, otherwise not
+int mesh_display_layer; // mesh only: BVH layer whose boxes mcdisplay draws, 0 to draw the triangle edges
 int is_exit_volume; // If is exit volume = 1, the ray will exit the component when it enters this volume.
 int is_mask_volume; // 1 if volume itself is a mask (masking the ones in it's mask list), otherwise 0
 int mask_index;
