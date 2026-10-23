@@ -423,8 +423,10 @@ def _nx_load_monitor(h5file, path):
             v = a['values'].split()
             data.values = (Decimal(v[0]), Decimal(v[1]), float(v[2]))
             data.statistics = re.sub(r'=([^;]+);', lambda m: '=%.2E;' % Decimal(m.group(1)), a.get('statistics', ''))
-            # no file per monitor: a unique path in the output dir (mcplot-html writes <filepath>.html)
-            data.filepath = join(dirname(h5file), '%s_%s' % (path.split('/')[1], data.filename))
+            # no file per monitor: the ASCII file name for entry1 (as monitor key in mcplotdiff/mccoplot),
+            # entryN_ prefixed for later scan steps (unique path, mcplot-html writes <filepath>.html)
+            entry = path.split('/')[1]
+            data.filepath = join(dirname(h5file), data.filename if entry == 'entry1' else '%s_%s' % (entry, data.filename))
             return data
     return DataHandle(load_fct=load)
 

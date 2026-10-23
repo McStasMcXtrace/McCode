@@ -198,6 +198,8 @@ def resolve_simfile(path):
     elif os.path.isdir(path):
         simdir = path
         simfile = os.path.join(simdir, 'mccode.sim')
+        if not os.path.isfile(simfile):
+            simfile = simdir  # e.g. NeXus output, mccode.h5 without mccode.sim
     else:
         raise Exception(path + " is neither a file or a directory")
     return simfile, simdir

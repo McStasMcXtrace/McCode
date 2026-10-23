@@ -10,6 +10,7 @@ formats:
   * scan curves (mccode.dat)
   * every 0D/1D/2D monitor of every scan step (step subfolders / NeXus entries)
   * a single run (ASCII step 0 / single-entry mccode.h5)
+  * the monitor keys mcplotdiff/mccoplot match simulations by (load_monitors)
 
 Usage: python3 test_mcplot_loader.py [--mcrun mcrun] [--workdir DIR]
 mccodelib is imported from the Python path, else from mcrun --showcfg tooldir.
@@ -97,6 +98,12 @@ def main():
             compare([x], [y], f"scan step {i}")
     compare(load("ascii_scan/0").getdata_lst(), load("nexus_single").getdata_lst(), "single run")
     compare(load("ascii_scan/0").getdata_lst(), load("nexus_single/mccode.h5").getdata_lst(), "single mccode.h5")
+
+    # mcplotdiff/mccoplot pair monitors across simulations by these keys
+    from mccodelib.mcplotdiffloader import load_monitors
+    for x, y in (("ascii_scan/0", "nexus_single"), ("ascii_scan/0", "nexus_single/mccode.h5"), ("ascii_scan", "nexus_scan")):
+        ka, kn = (sorted(load_monitors(str(cwd / p))[0]) for p in (x, y))
+        check(ka == kn, f"load_monitors {x} vs {y}: monitor keys {ka}" + ("" if ka == kn else f" vs {kn}"))
 
     print(f"\n{len(failures)} check(s) failed" if failures else "\nAll checks passed")
     return 1 if failures else 0
