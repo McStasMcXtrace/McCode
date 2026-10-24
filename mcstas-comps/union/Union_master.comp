@@ -3132,6 +3132,12 @@ MCDISPLAY
   for (volume_index = 1; volume_index < number_of_volumes; volume_index++) {
 
     if (Volumes[volume_index]->geometry.visualization_on == 1) {
+      #ifdef UNION_POLYHEDRON
+      if (Geometries[volume_index]->is_mask_volume == 0) { // masks stay wireframe
+        union_mcdisplay_polyhedron (volume_index, Geometries, number_of_volumes);
+        continue;
+      }
+      #endif
       lines_to_draw_master.number_of_lines = 0;
 
       Volumes[volume_index]->geometry.mcdisplay_function (&lines_to_draw_master, volume_index, Geometries, number_of_volumes);
