@@ -615,6 +615,7 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
             suffix=" (cached)"
             didwrite = os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.sim"))
             didwrite_nexus = os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.h5"))
+            didwrite_scan = test.scan and os.path.exists(join(testdir, test.instrname, str(test.testnb), "mccode.dat"))
 
         # log to terminal
         if not test.didrun:
@@ -715,8 +716,8 @@ def mccode_test(branchdir, testdir, limitinstrs=None, instrfilter=None, compfilt
                 logging.info(formatstr % test.get_display_name() + "    [val: " + str(test.testval) + " / " + str(test.targetval) + " = " + str(percent) + " %]" + suffix)
             else:                 # Special case, expected test target value is 0
                 logging.info(formatstr % test.get_display_name() + "    [val: " + str(test.testval) + " vs " + str(test.targetval) + " (absolute vs 0) ]" + suffix)
-                        # if output is not h5, launch plotter on the output data
-            if didwrite and not noplots:
+            # launch plotters on the output data (McCode or NeXus format, or a scan's mccode.dat)
+            if (didwrite or didwrite_nexus or didwrite_scan) and not noplots:
                 # PDF overview plot
                 matplotter  = mccode_config.configuration["MCPLOT"].split('-')[0] + "-matplotlib"
                 cmd = matplotter + " %d/ --format=pdf --output %d/01_overview.pdf" %  (test.testnb, test.testnb)
