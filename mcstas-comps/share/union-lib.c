@@ -1804,14 +1804,14 @@ union geometry_parameter_union allocate_cone_storage_copy(union geometry_paramet
 
 union geometry_parameter_union allocate_mesh_copy(union geometry_parameter_union *union_input) {
   union geometry_parameter_union union_output;
-  // Allocate the space for a gmesh_struct in the new union_output (union as the c structre)
-  union_output.p_mesh = malloc(sizeof(gmesh_struct));
-  if (!union_output.p_mesh) {
+  // Allocate the space for a mesh_storage in the new union_output (union as the c structre)
+  union_output.p_mesh_storage = malloc(sizeof(struct mesh_storage));
+  if (!union_output.p_mesh_storage) {
     fprintf(stderr,"Failure allocating list in Union function allocate_mesh_copy - Exit!\n");
     exit(EXIT_FAILURE);
   }
   // Copy the input storage to the output
-  *union_output.p_mesh = *union_input->p_mesh;
+  *union_output.p_mesh_storage = *union_input->p_mesh_storage;
   
   return union_output;
 }
@@ -2887,7 +2887,7 @@ This function was created by Martin Olsen at NBI on september 20, 2018.
 int r_within_mesh(Coords pos,struct geometry_struct *geometry) {
   // Point in mesh test (parity of ray crossings) in the frame of the mesh component
   Coords local_position = rot_apply(geometry->transpose_rotation_matrix, coords_sub(pos, geometry->center));
-  return gmesh_inside(geometry->geometry_parameters.p_mesh, local_position);
+  return gmesh_inside(&geometry->geometry_parameters.p_mesh_storage->mesh, local_position);
 }
 
 int sample_mesh_intersect(double *t,
@@ -2898,7 +2898,7 @@ int sample_mesh_intersect(double *t,
   // Times of intersection with a mesh component, nearest first, with the unit
   // outward normals rotated back to the frame of the master component.
   // Hits slightly before r are kept, so that the surface the ray leaves is found.
-  gmesh_struct *triangle_mesh = geometry->geometry_parameters.p_mesh;
+  gmesh_struct *triangle_mesh = &geometry->geometry_parameters.p_mesh_storage->mesh;
   gmesh_hit hits[GMESH_MAX_HITS];
   Coords position = rot_apply(geometry->transpose_rotation_matrix, coords_sub(coords_set(r[0], r[1], r[2]), geometry->center));
   Coords velocity = rot_apply(geometry->transpose_rotation_matrix, coords_set(v[0], v[1], v[2]));
@@ -4290,7 +4290,7 @@ int mesh_overlaps_mesh(struct geometry_struct *geometry1,struct geometry_struct 
     }
     // Secondary check with edges intersecting on faces
     if (geometry1->eShape==mesh){
-      gmesh_struct *mesh1 = geometry1->geometry_parameters.p_mesh;
+      gmesh_struct *mesh1 = &geometry1->geometry_parameters.p_mesh_storage->mesh;
       Coords vert1, vert2, vert3;
       for (i = 0; i < mesh1->ntris; i++){
         vert1 = shell_points1.elements[mesh1->tri[3*i]];
@@ -4314,7 +4314,7 @@ int mesh_overlaps_mesh(struct geometry_struct *geometry1,struct geometry_struct 
       }
     }
     if (geometry2->eShape==mesh){
-      gmesh_struct *mesh2 = geometry2->geometry_parameters.p_mesh;
+      gmesh_struct *mesh2 = &geometry2->geometry_parameters.p_mesh_storage->mesh;
       Coords vert1, vert2, vert3;
       for (i = 0; i < mesh2->ntris; i++){
         vert1 = shell_points2.elements[mesh2->tri[3*i]];
