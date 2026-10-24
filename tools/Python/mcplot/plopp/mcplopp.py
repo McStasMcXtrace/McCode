@@ -203,10 +203,13 @@ def scan_slicer(da, log=False):
 
 
 def ui(path):
-    ''' Jupyter (%matplotlib widget): pick a monitor; scans get the step player, log via the plot toolbar '''
+    ''' Jupyter (%matplotlib widget): pick a monitor; scans get the step player, log via the plot toolbar.
+        Displays the UI and returns the data as a scipp DataGroup keyed like the dropdown; loading event
+        data adds it under 'events' '''
     import ipywidgets as w
     from IPython.display import display
     das = load(path)
+    data = sc.DataGroup(das)
     pick = w.Dropdown(options=list(das), description='monitor', layout={'width': '40em'})
     out = w.Output()
 
@@ -232,11 +235,13 @@ def ui(path):
         def show_events(_=None):
             evout.clear_output(wait=True)
             with evout:
-                det, tof, lam = event_figures(load_events(path, src.value, smp.value), threed=True)
+                data['events'] = load_events(path, src.value, smp.value)
+                det, tof, lam = event_figures(data['events'], threed=True)
                 display(w.VBox([det, w.HBox([tof, lam])]))
         go.on_click(show_events)
         rows += [w.HTML('<b>Event data</b> (McStasToX)'), w.HBox([src, smp, go]), evout]
-    return w.VBox(rows)
+    display(w.VBox(rows))
+    return data
 
 
 def launch(call):
@@ -274,7 +279,7 @@ def main():
     p.add_argument('--sample', help='event data (NeXus, McStasToX): name of the sample component')
     args = p.parse_args()
     if not args.output:
-        return launch(f'import mcplopp; mcplopp.ui({os.path.abspath(args.simfile)!r})')
+        return launch(f'import mcplopp\ndata = mcplopp.ui({os.path.abspath(args.simfile)!r})  # scipp DataGroup')
 
     figs = figures(load(args.simfile), args.log)
     if args.source and args.sample:
