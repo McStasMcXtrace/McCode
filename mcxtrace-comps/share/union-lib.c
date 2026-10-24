@@ -1293,39 +1293,36 @@ void print_intersection_table(struct intersection_time_table_struct *intersectio
     }
 
 void merge_lines_to_draw(struct lines_to_draw *lines_master,struct lines_to_draw *lines_new) {
-    if (lines_master->number_of_lines == 0) {
-    lines_master->number_of_lines = lines_new->number_of_lines;
-    if (!lines_master->number_of_lines) {
-      fprintf(stderr,"Failure allocating list in Union function merge_lines_to_draw 1 - Exit!\n");
-      exit(EXIT_FAILURE);
+    // Appends the lines of lines_new to lines_master, then frees lines_new->lines
+    // and leaves lines_new empty.
+    // The allocation behind lines_master->lines is only ever made here, and its
+    // capacity is always the smallest power of two holding number_of_lines, so it
+    // need not be stored: appending one line at a time costs amortized O(1).
+    // A master is started by setting number_of_lines = 0.
+    int capacity, needed, iterate;
+    if (lines_new->number_of_lines <= 0) return;
+    needed = lines_master->number_of_lines + lines_new->number_of_lines;
+    capacity = 0; // an empty master owns no allocation (lines may be unset)
+    if (lines_master->number_of_lines > 0) {
+      capacity = 1;
+      while (capacity < lines_master->number_of_lines) capacity *= 2;
     }
-    lines_master->lines = malloc(lines_master->number_of_lines*sizeof(struct line_segment));
-    if (!lines_master->lines) {
-      fprintf(stderr,"Failure allocating list in Union function merge_lines_to_draw 2 - Exit!\n");
-      exit(EXIT_FAILURE);
+    if (needed > capacity) {
+      int new_capacity = capacity > 0 ? capacity : 1;
+      struct line_segment *grown;
+      while (new_capacity < needed) new_capacity *= 2;
+      grown = realloc(capacity > 0 ? lines_master->lines : NULL, new_capacity*sizeof(struct line_segment));
+      if (!grown) {
+        fprintf(stderr,"Failure allocating list in Union function merge_lines_to_draw - Exit!\n");
+        exit(EXIT_FAILURE);
+      }
+      lines_master->lines = grown;
     }
-    lines_master->lines = lines_new->lines;
-    // One could free lines_new->lines;
-    } else {
-    int iterate;
-    struct line_segment *temp_lines;
-    temp_lines = malloc(lines_master->number_of_lines*sizeof(struct line_segment));
-    if (!temp_lines) {
-      fprintf(stderr,"Failure allocating list in Union function merge_lines_to_draw 3 - Exit!\n");
-      exit(EXIT_FAILURE);
-    }
-    for (iterate = 0;iterate < lines_master->number_of_lines;iterate++) temp_lines[iterate] = lines_master->lines[iterate];
-    free(lines_master->lines);
-    lines_master->lines = malloc((lines_master->number_of_lines+lines_new->number_of_lines)*sizeof(struct line_segment));
-    if (!lines_master->lines) {
-      fprintf(stderr,"Failure allocating list in Union function merge_lines_to_draw 4 - Exit!\n");
-      exit(EXIT_FAILURE);
-    }
-    for (iterate = 0;iterate < lines_master->number_of_lines;iterate++) lines_master->lines[iterate] = temp_lines[iterate];
-    for (iterate = 0;iterate < lines_new->number_of_lines;iterate++) lines_master->lines[iterate+lines_master->number_of_lines] = lines_new->lines[iterate];
-    lines_master->number_of_lines = lines_master->number_of_lines + lines_new->number_of_lines;
-    free(temp_lines);
-    }
+    for (iterate = 0;iterate < lines_new->number_of_lines;iterate++) lines_master->lines[lines_master->number_of_lines+iterate] = lines_new->lines[iterate];
+    lines_master->number_of_lines = needed;
+    free(lines_new->lines);
+    lines_new->lines = NULL;
+    lines_new->number_of_lines = 0;
     }
 
 int r_has_highest_priority(Coords point,int N,struct geometry_struct **Geometries,int number_of_volumes) {
@@ -1473,6 +1470,7 @@ struct lines_to_draw draw_line_with_highest_priority(Coords position1,Coords pos
 
         }
     }
+    free(temp_intersection);
     // Now we have a list of intersection distances between r1 and r2 and all volumes.
     // This list needs to be sorted before we continue!
 
@@ -1534,9 +1532,9 @@ struct lines_to_draw draw_line_with_highest_priority(Coords position1,Coords pos
               draw_order.lines[draw_order.number_of_lines++] = lines[iterate];
             }
         }
-        if (intersection_list.num_elements > 0) free(intersection_list.elements);
     }
-    
+    if (intersection_list.num_elements > 0) free(intersection_list.elements);
+
     free(points);
     free(lines);
     free(draw_logic);
@@ -1729,6 +1727,128 @@ Coords point_on_circle(Coords center, Coords direction, double radius, int point
     
     return output;
 }
+// Polyhedron display: triangulate the volume surface and keep the triangles where it has highest priority
+struct union_tri_list {
+  Coords *v; // 3 vertices per triangle
+  int n, size;
+  int N, number_of_volumes;
+  struct geometry_struct **Geometries;
+};
+
+void union_tri_emit(struct union_tri_list *t, Coords a, Coords b, Coords c) {
+  if (t->n == t->size) {
+    t->size = t->size ? 2*t->size : 256;
+    t->v = realloc(t->v, 3*t->size*sizeof(Coords));
+    if (!t->v) {
+      fprintf(stderr,"Failure allocating list in Union function union_tri_emit - Exit!\n");
+      exit(EXIT_FAILURE);
+    }
+  }
+  t->v[3*t->n] = a; t->v[3*t->n+1] = b; t->v[3*t->n+2] = c;
+  t->n++;
+}
+
+#define UNION_TRI_DEPTH 6
+// Splits while the priority test disagrees between the 4 sub-triangles, down to depth 0. Depth above UNION_TRI_DEPTH forces a split.
+// ponytail: priority sampled only at sub-triangle centroids, an intersecting feature that hits none of them is missed
+void union_tri_add(struct union_tri_list *t, Coords a, Coords b, Coords c, int depth) {
+  Coords ab = coords_scalar_mult(coords_add(a,b),0.5);
+  Coords bc = coords_scalar_mult(coords_add(b,c),0.5);
+  Coords ca = coords_scalar_mult(coords_add(c,a),0.5);
+  Coords sub[4][3] = {{a,ab,ca},{ab,b,bc},{ca,bc,c},{ab,bc,ca}};
+  int keep[4], i;
+  for (i=0;i<4;i++)
+    keep[i] = r_has_highest_priority(coords_scalar_mult(coords_add(coords_add(sub[i][0],sub[i][1]),sub[i][2]),1.0/3.0),
+                                     t->N,t->Geometries,t->number_of_volumes) != 0;
+  int mixed = keep[0]!=keep[1] || keep[0]!=keep[2] || keep[0]!=keep[3];
+  if (!mixed && depth <= UNION_TRI_DEPTH) {
+    if (keep[0]) union_tri_emit(t,a,b,c);
+    return;
+  }
+  for (i=0;i<4;i++) {
+    if (depth > 0) union_tri_add(t,sub[i][0],sub[i][1],sub[i][2],depth-1);
+    else if (keep[i]) union_tri_emit(t,sub[i][0],sub[i][1],sub[i][2]);
+  }
+}
+
+// Surface of revolution through profile points (z[k], r[k]) along axis, with caps where r != 0 at the ends
+void union_tri_lathe(struct union_tri_list *t, Coords center, Coords axis, double *z, double *r, int np) {
+  int nseg = 32, i, k;
+  Coords c0 = coords_add(center,coords_scalar_mult(axis,z[0]));
+  Coords c1 = coords_add(center,coords_scalar_mult(axis,z[np-1]));
+  for (i=0;i<nseg;i++) {
+    for (k=0;k<np-1;k++) {
+      Coords zk = coords_add(center,coords_scalar_mult(axis,z[k]));
+      Coords zk1 = coords_add(center,coords_scalar_mult(axis,z[k+1]));
+      Coords p00 = point_on_circle(zk,axis,r[k],i,nseg),   p01 = point_on_circle(zk,axis,r[k],i+1,nseg);
+      Coords p10 = point_on_circle(zk1,axis,r[k+1],i,nseg), p11 = point_on_circle(zk1,axis,r[k+1],i+1,nseg);
+      if (r[k] > 0)   union_tri_add(t,p00,p01,p11,UNION_TRI_DEPTH);
+      if (r[k+1] > 0) union_tri_add(t,p00,p11,p10,UNION_TRI_DEPTH);
+    }
+    if (r[0] > 0) union_tri_add(t,c0,point_on_circle(c0,axis,r[0],i+1,nseg),point_on_circle(c0,axis,r[0],i,nseg),UNION_TRI_DEPTH);
+    if (r[np-1] > 0) union_tri_add(t,c1,point_on_circle(c1,axis,r[np-1],i,nseg),point_on_circle(c1,axis,r[np-1],i+1,nseg),UNION_TRI_DEPTH);
+  }
+}
+
+// Draws volume N as one polyhedron in the frame of the master component, returns 0 if the volume should be drawn as lines instead
+int union_mcdisplay_polyhedron(int N, struct geometry_struct **Geometries, int number_of_volumes) {
+  struct geometry_struct *g = Geometries[N];
+  struct union_tri_list t = {NULL,0,0,N,number_of_volumes,Geometries};
+  int i, j;
+
+  if (g->eShape == box) {
+    struct box_storage *b = g->geometry_parameters.p_box_storage;
+    Coords s[2][4];
+    double w[2] = {b->x_width1,b->x_width2}, h[2] = {b->y_height1,b->y_height2}, zz[2] = {-0.5,0.5};
+    for (j=0;j<2;j++) {
+      s[j][0] = coords_add(coords_add(coords_add(g->center,coords_scalar_mult(b->z_vector,zz[j]*b->z_depth)),
+                                      coords_scalar_mult(b->x_vector,-0.5*w[j])),coords_scalar_mult(b->y_vector,-0.5*h[j]));
+      s[j][1] = coords_add(s[j][0],coords_scalar_mult(b->x_vector,w[j]));
+      s[j][2] = coords_add(s[j][1],coords_scalar_mult(b->y_vector,h[j]));
+      s[j][3] = coords_add(s[j][0],coords_scalar_mult(b->y_vector,h[j]));
+    }
+    for (j=0;j<2;j++) {
+      union_tri_add(&t,s[j][0],s[j][1],s[j][2],UNION_TRI_DEPTH+2);
+      union_tri_add(&t,s[j][0],s[j][2],s[j][3],UNION_TRI_DEPTH+2);
+    }
+    for (i=0;i<4;i++) {
+      union_tri_add(&t,s[0][i],s[0][(i+1)%4],s[1][(i+1)%4],UNION_TRI_DEPTH+2);
+      union_tri_add(&t,s[0][i],s[1][(i+1)%4],s[1][i],UNION_TRI_DEPTH+2);
+    }
+  } else if (g->eShape == cylinder) {
+    struct cylinder_storage *c = g->geometry_parameters.p_cylinder_storage;
+    double z[2] = {-0.5*c->height,0.5*c->height}, r[2] = {c->cyl_radius,c->cyl_radius};
+    union_tri_lathe(&t,g->center,c->direction_vector,z,r,2);
+  } else if (g->eShape == cone) {
+    struct cone_storage *c = g->geometry_parameters.p_cone_storage;
+    double z[2] = {-0.5*c->height,0.5*c->height}, r[2] = {c->cone_radius_bottom,c->cone_radius_top};
+    union_tri_lathe(&t,g->center,c->direction_vector,z,r,2);
+  } else if (g->eShape == sphere) {
+    double R = g->geometry_parameters.p_sphere_storage->sph_radius, z[17], r[17];
+    for (i=0;i<17;i++) { z[i] = -R*cos(PI*i/16); r[i] = (i==0 || i==16) ? 0 : R*sin(PI*i/16); }
+    union_tri_lathe(&t,g->center,coords_set(0,1,0),z,r,17);
+  }
+  if (t.n == 0) return 1;
+
+  // Same json layout as mcdis_polygon, bounds per vertex / face as there
+  char *json = malloc(64 + (size_t)t.n*(3*48 + 64));
+  if (!json) {
+    fprintf(stderr,"Failure allocating list in Union function union_mcdisplay_polyhedron - Exit!\n");
+    exit(EXIT_FAILURE);
+  }
+  char *p = json + sprintf(json,"{ \"vertices\": [");
+  for (i=0;i<3*t.n;i++)
+    p += sprintf(p,"%s[%g, %g, %g]",i ? ", " : "",t.v[i].x,t.v[i].y,t.v[i].z);
+  p += sprintf(p,"], \"faces\": [");
+  for (i=0;i<t.n;i++)
+    p += sprintf(p,"%s{ \"face\": [%d, %d, %d]}",i ? ", " : "",3*i,3*i+1,3*i+2);
+  sprintf(p,"]}");
+  mcdis_polyhedron(json);
+  free(json);
+  free(t.v);
+  return 1;
+}
+
 
 void points_on_circle(Coords *output, Coords center, Coords direction, double radius, int number_of_points) {
 
