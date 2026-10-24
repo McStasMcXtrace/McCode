@@ -2473,10 +2473,9 @@ MCDISPLAY
   struct lines_to_draw lines_to_draw_master;
   for (volume_index = 1; volume_index < number_of_volumes; volume_index++) {
     if (Volumes[volume_index]->geometry.visualization_on == 1) {
-      if (mcdotrace == 2 && display_mode != 1 && Geometries[volume_index]->is_mask_volume == 0) { // polyhedra, masks stay wireframe
-        union_mcdisplay_polyhedron (volume_index, Geometries, number_of_volumes);
+      if (mcdotrace == 2 && display_mode != 1 && Geometries[volume_index]->is_mask_volume == 0 // polyhedra, masks stay wireframe
+          && union_mcdisplay_polyhedron (volume_index, Geometries, number_of_volumes))
         continue;
-      }
       lines_to_draw_master.number_of_lines = 0;
 
       Volumes[volume_index]->geometry.mcdisplay_function (&lines_to_draw_master, volume_index, Geometries, number_of_volumes);

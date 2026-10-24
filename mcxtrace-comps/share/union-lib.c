@@ -1790,8 +1790,8 @@ void union_tri_lathe(struct union_tri_list *t, Coords center, Coords axis, doubl
   }
 }
 
-// Draws volume N as one polyhedron in the frame of the master component
-void union_mcdisplay_polyhedron(int N, struct geometry_struct **Geometries, int number_of_volumes) {
+// Draws volume N as one polyhedron in the frame of the master component, returns 0 if the volume should be drawn as lines instead
+int union_mcdisplay_polyhedron(int N, struct geometry_struct **Geometries, int number_of_volumes) {
   struct geometry_struct *g = Geometries[N];
   struct union_tri_list t = {NULL,0,0,N,number_of_volumes,Geometries};
   int i, j;
@@ -1828,7 +1828,7 @@ void union_mcdisplay_polyhedron(int N, struct geometry_struct **Geometries, int 
     for (i=0;i<17;i++) { z[i] = -R*cos(PI*i/16); r[i] = (i==0 || i==16) ? 0 : R*sin(PI*i/16); }
     union_tri_lathe(&t,g->center,coords_set(0,1,0),z,r,17);
   }
-  if (t.n == 0) return;
+  if (t.n == 0) return 1;
 
   // Same json layout as mcdis_polygon, bounds per vertex / face as there
   char *json = malloc(64 + (size_t)t.n*(3*48 + 64));
@@ -1846,6 +1846,7 @@ void union_mcdisplay_polyhedron(int N, struct geometry_struct **Geometries, int 
   mcdis_polyhedron(json);
   free(json);
   free(t.v);
+  return 1;
 }
 
 

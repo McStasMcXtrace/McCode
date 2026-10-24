@@ -1910,8 +1910,8 @@ void union_tri_lathe(struct union_tri_list *t, Coords center, Coords axis, doubl
   }
 }
 
-// Draws volume N as one polyhedron in the frame of the master component
-void union_mcdisplay_polyhedron(int N, struct geometry_struct **Geometries, int number_of_volumes) {
+// Draws volume N as one polyhedron in the frame of the master component, returns 0 if the volume should be drawn as lines instead
+int union_mcdisplay_polyhedron(int N, struct geometry_struct **Geometries, int number_of_volumes) {
   struct geometry_struct *g = Geometries[N];
   struct union_tri_list t = {NULL,0,0,N,number_of_volumes,Geometries};
   int i, j;
@@ -1948,14 +1948,15 @@ void union_mcdisplay_polyhedron(int N, struct geometry_struct **Geometries, int 
     for (i=0;i<17;i++) { z[i] = -R*cos(PI*i/16); r[i] = (i==0 || i==16) ? 0 : R*sin(PI*i/16); }
     union_tri_lathe(&t,g->center,coords_set(0,1,0),z,r,17);
   } else if (g->eShape == mesh) {
-    gmesh_struct *m = g->geometry_parameters.p_mesh;
+    if (g->geometry_parameters.p_mesh_storage->display_layer > 0) return 0; // coarse BVH boxes are drawn as lines
+    gmesh_struct *m = &g->geometry_parameters.p_mesh_storage->mesh;
     struct pointer_to_1d_coords_list pts = g->shell_points(g,1); // all vertices, master frame
     for (i=0;i<m->faceSize;i+=m->faceArray[i]+1)
       for (j=1;j<m->faceArray[i]-1;j++) // fan over each polygon
         union_tri_add(&t,pts.elements[m->faceArray[i+1]],pts.elements[m->faceArray[i+1+j]],pts.elements[m->faceArray[i+2+j]],UNION_TRI_DEPTH);
     free(pts.elements);
   }
-  if (t.n == 0) return;
+  if (t.n == 0) return 1;
 
   // Same json layout as mcdis_polygon, bounds per vertex / face as there
   char *json = malloc(64 + (size_t)t.n*(3*48 + 64));
@@ -1973,6 +1974,7 @@ void union_mcdisplay_polyhedron(int N, struct geometry_struct **Geometries, int 
   mcdis_polyhedron(json);
   free(json);
   free(t.v);
+  return 1;
 }
 
 void points_on_circle(Coords *output, Coords center, Coords direction, double radius, int number_of_points) {
