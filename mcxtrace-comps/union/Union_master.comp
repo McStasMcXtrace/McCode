@@ -39,6 +39,7 @@
 *   history_limit:               [1]Limit the number of unique histories that are saved
 *   enable_conditionals:  [0/1] Use conditionals with this master
 *   inherit_number_of_scattering_events: [0/1] Inherit the number of scattering events from last master
+*   display_mode:                        [0/1/2] Volume display in mcdisplay: 0 follows --trace, 1 forces lines, 2 polyhedra (only with --trace=2, --trace=1 always gives lines)
 * init:              [string]    Deprecated and unused. Accepted so that instruments written for McStas/McXtrace 3.8.7 and earlier, which name the Union_init component here, still compile.
 *
 * OUTPUT PARAMETERS:
@@ -57,7 +58,7 @@ SETTING PARAMETERS(verbal = 1,
                    enable_tagging = 0,
                    history_limit=300000,
                    enable_conditionals=1,
-                    inherit_number_of_scattering_events=0, string init=""
+                    inherit_number_of_scattering_events=0, int display_mode=0, string init=""
                    )
 OUTPUT PARAMETERS ()
 NOACC
@@ -2472,6 +2473,10 @@ MCDISPLAY
   struct lines_to_draw lines_to_draw_master;
   for (volume_index = 1; volume_index < number_of_volumes; volume_index++) {
     if (Volumes[volume_index]->geometry.visualization_on == 1) {
+      if (mcdotrace == 2 && display_mode != 1 && Geometries[volume_index]->is_mask_volume == 0) { // polyhedra, masks stay wireframe
+        union_mcdisplay_polyhedron (volume_index, Geometries, number_of_volumes);
+        continue;
+      }
       lines_to_draw_master.number_of_lines = 0;
 
       Volumes[volume_index]->geometry.mcdisplay_function (&lines_to_draw_master, volume_index, Geometries, number_of_volumes);
